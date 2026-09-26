@@ -1,0 +1,20 @@
+# Dépendances & build
+node_modules/
+.next/
+out/
+build/
+
+# Environnement (le .env.example, lui, est versionné)
+.env
+.env.local
+.env.*.local
+
+# Artefacts de génération (non servis, non versionnés)
+reports/
+
+# Divers
+.DS_Store
+*.log
+npm-debug.log*
+tsconfig.tsbuildinfo
+next-env.d.ts

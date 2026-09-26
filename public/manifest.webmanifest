@@ -1,0 +1,19 @@
+{
+  "name": "CreatorDeck",
+  "short_name": "CreatorDeck",
+  "description": "Collectionne les créateurs francophones.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090812",
+  "theme_color": "#090812",
+  "orientation": "portrait",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
