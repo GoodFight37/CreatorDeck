@@ -13,10 +13,5 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
-    // src/db/index.ts lève une erreur sans DATABASE_URL ; un URL factice suffit
-    // ici car le pool pg ne se connecte pas à l'import.
-    env: {
-      DATABASE_URL: "postgresql://user:pass@localhost:5432/creatordeck_test",
-    },
   },
 });

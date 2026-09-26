@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Archive,
@@ -15,27 +9,28 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleUserRound,
+  ClipboardCopy,
+  ClipboardPaste,
   Clock3,
   Coins,
-  Download,
-  FileArchive,
   Gem,
   Home,
   Hourglass,
-  Image as ImageIcon,
   Layers3,
   LoaderCircle,
   Radio,
+  RotateCcw,
   Search,
   ShieldCheck,
-  Smartphone,
   Sparkles,
   Target,
   Trophy,
+  WifiOff,
   X,
   Zap,
 } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
+import { useGame, useNow } from "@/hooks/use-game";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
@@ -46,78 +41,37 @@ import {
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
+import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { gameStore } from "@/lib/game-store";
 
-type OwnedCard = {
-  id: string;
-  creatorSlug: string;
-  rarity: Rarity;
-  variant: CardVariant;
-  obtainedAt: string;
-};
-
-type GameState = {
-  player: {
-    level: number;
-    xp: number;
-    xpNext: number;
-    points: number;
-    hourglasses: number;
-    livePacks: number;
-    archivePacks: number;
-    nextLiveAt: string | null;
-    nextArchiveAt: string | null;
-  };
-  cards: OwnedCard[];
-  stats: {
-    uniqueCreators: number;
-    totalCards: number;
-    openings: number;
-  };
-};
-
-type DrawnCard = {
-  id: string;
-  creatorSlug: string;
-  rarity: Rarity;
-  variant: CardVariant;
-  isNew: boolean;
-};
-
+type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "profile";
 type CollectionFilter = "all" | "owned" | Rarity;
+
+/** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
+const OPENING_DELAY_MS = 650;
+
+const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
+  (acc, creator) => {
+    acc[creator.rarity] += 1;
+    return acc;
+  },
+  { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
+);
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("fr-FR").format(value);
 }
 
-function formatCountdown(date: string | null, now: number) {
+function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
-  const remaining = Math.max(0, new Date(date).getTime() - now);
+  const remaining = Math.max(0, date - now);
   const hours = Math.floor(remaining / 3_600_000);
   const minutes = Math.floor((remaining % 3_600_000) / 60_000);
   const seconds = Math.floor((remaining % 60_000) / 1_000);
   return hours > 0
     ? `${hours}h ${String(minutes).padStart(2, "0")}m`
     : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-}
-
-/**
- * Horloge réactive sans `setState` dans un effet (la règle ESLint
- * react-hooks/set-state-in-effect interdit l'ancien `setInterval(() => setNow(...))`).
- * Le snapshot est arrondi à l'intervalle pour ne changer qu'une fois par tick.
- */
-function useNow(intervalMs = 1_000) {
-  const read = () => Math.floor(Date.now() / intervalMs) * intervalMs;
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const id = window.setInterval(onStoreChange, intervalMs);
-      return () => window.clearInterval(id);
-    },
-    read,
-    // Obligatoire pour le SSR : sans 3e argument, Next lève
-    // « Missing getServerSnapshot » et bascule tout le rendu côté client.
-    read,
-  );
 }
 
 function LoadingScreen() {
@@ -204,77 +158,6 @@ function PackArtwork({ packType }: { packType: PackType }) {
   );
 }
 
-function DownloadsPanel() {
-  // Les poids affichés sont mesurés sur les fichiers réels (route /api/downloads)
-  // au lieu d'être codés en dur : ils restaient faux après chaque rebuild.
-  const [sizes, setSizes] = useState<{
-    apk?: { exists: boolean; label: string };
-    assets?: { exists: boolean; label: string };
-  }>({});
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/downloads", { cache: "no-store" })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((body) => {
-        if (!cancelled && body) setSizes(body);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSizes({
-            apk: { exists: true, label: "4.2 Mo" },
-            assets: { exists: true, label: "45 Mo" },
-          });
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return (
-    <section className="downloads-card" aria-label="Téléchargements APK et Assets">
-      <div className="downloads-head">
-        <div>
-          <p className="eyebrow">LIVRABLES ANDROID & WEB</p>
-          <h2>APK signé & Pack Assets Top 500</h2>
-        </div>
-        <span className="completion-pill">500 / 500 photos</span>
-      </div>
-      <p className="downloads-sub">
-        L’APK embarque hors-ligne les 500 streameurs français et leurs 500 photos de profil
-        dans <code>photos.js</code> (avec <code>window.PHOTOS</code> corrigé).
-      </p>
-      <div className="downloads-actions">
-        <a
-          href="/downloads/creatordeck-top500.apk"
-          download="creatordeck-top500.apk"
-          className="download-btn primary"
-        >
-          <Smartphone size={17} />
-          <div>
-            <strong>Télécharger l’APK Android</strong>
-            <small>creatordeck-top500.apk · {sizes.apk?.label ?? "…"} · Signé v1+v2</small>
-          </div>
-          <Download size={16} />
-        </a>
-        <a
-          href="/downloads/creatordeck-assets-top500.zip"
-          download="creatordeck-assets-top500.zip"
-          className="download-btn secondary"
-        >
-          <FileArchive size={17} />
-          <div>
-            <strong>Télécharger les Assets + Sources</strong>
-            <small>creatordeck-assets-top500.zip · {sizes.assets?.label ?? "…"} · 500 JPG + photos.js</small>
-          </div>
-          <Download size={16} />
-        </a>
-      </div>
-    </section>
-  );
-}
-
 function HomeView({
   game,
   selectedPack,
@@ -299,9 +182,7 @@ function HomeView({
     selectedPack === "live" ? game.player.livePacks : game.player.archivePacks;
   const nextAt =
     selectedPack === "live" ? game.player.nextLiveAt : game.player.nextArchiveAt;
-  const latest = [...game.cards]
-    .sort((a, b) => +new Date(b.obtainedAt) - +new Date(a.obtainedAt))
-    .slice(0, 4);
+  const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
 
   return (
     <div className="view home-view">
@@ -388,8 +269,6 @@ function HomeView({
           </span>
         </div>
       </section>
-
-      <DownloadsPanel />
 
       <section className="section-block">
         <div className="section-heading">
@@ -533,11 +412,11 @@ function CollectionView({ game }: { game: GameState }) {
           [
             ["all", `Toutes (${CREATORS.length})`],
             ["owned", `Obtenues (${game.stats.uniqueCreators})`],
-            ["legendary", "Légendaires (25)"],
-            ["epic", "Épiques (60)"],
-            ["rare", "Rares (115)"],
-            ["uncommon", "Peu communes (150)"],
-            ["common", "Communes (150)"],
+            ["legendary", `Légendaires (${RARITY_COUNTS.legendary})`],
+            ["epic", `Épiques (${RARITY_COUNTS.epic})`],
+            ["rare", `Rares (${RARITY_COUNTS.rare})`],
+            ["uncommon", `Peu communes (${RARITY_COUNTS.uncommon})`],
+            ["common", `Communes (${RARITY_COUNTS.common})`],
           ] as [CollectionFilter, string][]
         ).map(([value, label]) => (
           <button
@@ -700,7 +579,53 @@ function MissionsView({ game }: { game: GameState }) {
   );
 }
 
-function ProfileView({ game }: { game: GameState }) {
+function ProfileView({
+  game,
+  onNotice,
+  onError,
+}: {
+  game: GameState;
+  onNotice: (message: string) => void;
+  onError: (message: string) => void;
+}) {
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [exportText, setExportText] = useState<string | null>(null);
+
+  async function handleExport() {
+    const json = gameStore.exportSave();
+    try {
+      await navigator.clipboard.writeText(json);
+      setExportText(null);
+      onNotice("Sauvegarde copiée dans le presse-papiers.");
+    } catch {
+      // Presse-papiers indisponible (permission, WebView ancienne) : on affiche
+      // le texte pour une copie manuelle.
+      setExportText(json);
+    }
+  }
+
+  function handleImport() {
+    try {
+      gameStore.importSave(importText);
+      setImportText("");
+      setImportOpen(false);
+      onNotice("Sauvegarde importée. Bon retour dans ton classeur !");
+    } catch (caught) {
+      onError(caught instanceof Error ? caught.message : "Import impossible.");
+    }
+  }
+
+  function handleReset() {
+    if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.")) {
+      return;
+    }
+    gameStore.reset();
+    setExportText(null);
+    setImportOpen(false);
+    onNotice("Nouvelle partie lancée.");
+  }
+
   return (
     <div className="view profile-view">
       <section className="profile-card">
@@ -722,7 +647,7 @@ function ProfileView({ game }: { game: GameState }) {
         </article>
         <article>
           <BookOpen size={18} />
-          <strong>{game.stats.uniqueCreators}/500</strong>
+          <strong>{game.stats.uniqueCreators}/{CREATORS.length}</strong>
           <span>streameurs</span>
         </article>
         <article>
@@ -732,33 +657,77 @@ function ProfileView({ game }: { game: GameState }) {
         </article>
       </div>
 
-      <DownloadsPanel />
-
-      <section className="settings-list">
+      <div className="section-heading compact-heading">
+        <div>
+          <p className="eyebrow">SAUVEGARDE</p>
+          <h2>Ta progression reste sur cet appareil</h2>
+        </div>
+      </div>
+      <section className="settings-list" aria-label="Gestion de la sauvegarde">
         <div className="settings-row">
-          <span className="settings-icon green"><ImageIcon size={17} /></span>
+          <span className="settings-icon green"><WifiOff size={17} /></span>
           <div>
-            <strong>Portraits du Top 500 Twitch FR</strong>
-            <span>500/500 photos de profil officielles validées</span>
+            <strong>Jeu 100 % hors ligne</strong>
+            <span>Aucun compte, aucune connexion : tout est stocké localement.</span>
           </div>
           <Check size={18} className="success-icon" />
         </div>
-        <div className="settings-row">
-          <span className="settings-icon blue"><ShieldCheck size={17} /></span>
+        <button type="button" className="settings-row settings-action" onClick={() => void handleExport()}>
+          <span className="settings-icon blue"><ClipboardCopy size={17} /></span>
           <div>
-            <strong>Bug window.PHOTOS corrigé</strong>
-            <span>Affichage garanti sur Android WebView et navigateur</span>
+            <strong>Copier ma sauvegarde</strong>
+            <span>Pour la transférer sur un autre téléphone ou la garder au chaud.</span>
           </div>
-          <Check size={18} className="success-icon" />
-        </div>
-        <div className="settings-row">
-          <span className="settings-icon purple"><Radio size={17} /></span>
+          <ChevronRight size={16} />
+        </button>
+        <button
+          type="button"
+          className="settings-row settings-action"
+          onClick={() => setImportOpen((open) => !open)}
+          aria-expanded={importOpen}
+        >
+          <span className="settings-icon purple"><ClipboardPaste size={17} /></span>
           <div>
-            <strong>APK Android autonome signé</strong>
-            <span>Fonctionne 100 % hors-ligne avec les 500 cartes</span>
+            <strong>Importer une sauvegarde</strong>
+            <span>Colle le texte copié depuis l’autre appareil.</span>
           </div>
-          <Check size={18} className="success-icon" />
-        </div>
+          <ChevronRight size={16} style={{ transform: importOpen ? "rotate(90deg)" : undefined }} />
+        </button>
+        {importOpen ? (
+          <div className="save-editor">
+            <textarea
+              value={importText}
+              onChange={(event) => setImportText(event.target.value)}
+              placeholder='{ "version": 1, "playerId": "…" }'
+              aria-label="Sauvegarde à importer"
+              rows={5}
+              spellCheck={false}
+            />
+            <button
+              type="button"
+              className="secondary-action"
+              onClick={handleImport}
+              disabled={!importText.trim()}
+            >
+              <ClipboardPaste size={15} />
+              <span>Remplacer ma progression par cette sauvegarde</span>
+            </button>
+          </div>
+        ) : null}
+        {exportText ? (
+          <div className="save-editor">
+            <p>Copie manuelle : sélectionne tout le texte ci-dessous.</p>
+            <textarea value={exportText} readOnly rows={5} aria-label="Sauvegarde exportée" onFocus={(event) => event.currentTarget.select()} />
+          </div>
+        ) : null}
+        <button type="button" className="settings-row settings-action danger" onClick={handleReset}>
+          <span className="settings-icon red"><RotateCcw size={17} /></span>
+          <div>
+            <strong>Réinitialiser la progression</strong>
+            <span>Repart de zéro avec les boosters de départ.</span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
       </section>
     </div>
   );
@@ -817,102 +786,61 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Accueil", icon: <Home size={21} /> },
   { id: "collection", label: "Classeur (500)", icon: <BookOpen size={21} /> },
   { id: "missions", label: "Objectifs", icon: <Target size={21} /> },
-  { id: "profile", label: "APK & Profil", icon: <CircleUserRound size={21} /> },
+  { id: "profile", label: "Profil", icon: <CircleUserRound size={21} /> },
 ];
 
 export function CreatorDeckApp() {
-  const [game, setGame] = useState<GameState | null>(null);
+  const state = useGame();
+  const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
   const [selectedPack, setSelectedPack] = useState<PackType>("live");
-  const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const now = useNow(1_000);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const loadGame = useCallback(async () => {
-    // Pas de setLoading(true) ici : `loading` démarre à true pour le premier
-    // rendu, et un rechargement silencieux (après ouverture de pack) ne doit pas
-    // faire clignoter l'écran de chargement. Cela évite aussi un setState
-    // synchrone dans l'effet (règle react-hooks/set-state-in-effect).
-    try {
-      const response = await fetch("/api/game", { cache: "no-store" });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Chargement impossible.");
-      setGame(body);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Chargement impossible.");
-    } finally {
-      setLoading(false);
-    }
+  // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
+  // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
+  const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
+
+  const showError = useCallback((message: string) => {
+    setNotice(null);
+    setError(message);
+  }, []);
+  const showNotice = useCallback((message: string) => {
+    setError(null);
+    setNotice(message);
   }, []);
 
-  // Chargement initial : les setState vivent dans des callbacks .then/.catch/.finally
-  // (et non appelés de façon synchrone dans le corps de l'effet), ce qui satisfait
-  // react-hooks/set-state-in-effect. `loadGame` reste utilisé pour les
-  // rechargements déclenchés par les actions (ouverture de pack, etc.).
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch("/api/game", { cache: "no-store", signal: controller.signal })
-      .then((response) => response.json().then((body) => ({ response, body })))
-      .then(({ response, body }) => {
-        if (!response.ok) throw new Error(body?.error || "Chargement impossible.");
-        setGame(body);
-        setError(null);
-      })
-      .catch((caught: unknown) => {
-        if (controller.signal.aborted) return;
-        setError(caught instanceof Error ? caught.message : "Chargement impossible.");
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
-      });
-    return () => controller.abort();
-  }, []);
-
-  async function handleOpenPack() {
+  function handleOpenPack() {
     if (!game || opening) return;
     setOpening(true);
     setError(null);
-    try {
-      const response = await fetch("/api/packs/open", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          packType: selectedPack,
-          idempotencyKey: window.crypto.randomUUID(),
-        }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Ouverture impossible.");
-      setGame(body.state);
-      setDrawnCards(body.cards);
-      setRevealIndex(0);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Ouverture impossible.");
-    } finally {
-      setOpening(false);
-    }
+    // Petit délai volontaire : le tirage est instantané en local, mais la
+    // révélation mérite son moment de suspense.
+    window.setTimeout(() => {
+      try {
+        const cards = gameStore.openPack(selectedPack);
+        setDrawnCards(cards);
+        setRevealIndex(0);
+      } catch (caught) {
+        showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
+      } finally {
+        setOpening(false);
+      }
+    }, OPENING_DELAY_MS);
   }
 
-  async function handleUseHourglass() {
+  function handleUseHourglass() {
     if (!game || usingHourglass) return;
     setUsingHourglass(true);
     setError(null);
     try {
-      const response = await fetch("/api/packs/hourglass", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ packType: selectedPack }),
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || "Impossible d'utiliser un sablier.");
-      setGame(body.state);
+      gameStore.useHourglass(selectedPack);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");
+      showError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");
     } finally {
       setUsingHourglass(false);
     }
@@ -923,19 +851,7 @@ export function CreatorDeckApp() {
     setRevealIndex(0);
   }
 
-  if (loading && !game) return <LoadingScreen />;
-  if (!game) {
-    return (
-      <main className="app-shell fatal-screen">
-        <div className="brand-mark large"><span>CD</span></div>
-        <h1>Connexion impossible</h1>
-        <p>{error}</p>
-        <button className="primary-action" onClick={() => void loadGame()}>
-          Réessayer
-        </button>
-      </main>
-    );
-  }
+  if (!game) return <LoadingScreen />;
 
   return (
     <main className="app-shell">
@@ -946,8 +862,8 @@ export function CreatorDeckApp() {
             game={game}
             selectedPack={selectedPack}
             setSelectedPack={setSelectedPack}
-            onOpen={() => void handleOpenPack()}
-            onUseHourglass={() => void handleUseHourglass()}
+            onOpen={handleOpenPack}
+            onUseHourglass={handleUseHourglass}
             opening={opening}
             usingHourglass={usingHourglass}
             now={now}
@@ -955,7 +871,9 @@ export function CreatorDeckApp() {
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
         {tab === "missions" ? <MissionsView game={game} /> : null}
-        {tab === "profile" ? <ProfileView game={game} /> : null}
+        {tab === "profile" ? (
+          <ProfileView game={game} onNotice={showNotice} onError={showError} />
+        ) : null}
       </div>
 
       <nav className="bottom-nav" aria-label="Navigation principale">
@@ -978,11 +896,17 @@ export function CreatorDeckApp() {
           <button onClick={() => setError(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
+      {notice ? (
+        <div className="toast-error toast-notice" role="status">
+          <span>{notice}</span>
+          <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
+        </div>
+      ) : null}
       {opening ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
           <strong>Scellement du tirage Top 500…</strong>
-          <span>Le serveur prépare {PACKS[selectedPack].size} cartes uniques.</span>
+          <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
         </div>
       ) : null}
       {drawnCards.length ? (
