@@ -11,6 +11,17 @@ build/
 
 # Artefacts de génération (non servis, non versionnés)
 reports/
+.tmp-creatordeck-bundle/
+
+# Livrables binaires : à publier via GitHub Releases, pas dans Git
+public/downloads/
+*.apk
+*.aab
+*.idsig
+
+# IDE
+.idea/
+.vscode/
 
 # Divers
 .DS_Store
