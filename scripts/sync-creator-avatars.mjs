@@ -1,3 +1,5 @@
+// Charge TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET depuis `.env` (voir .env.example).
+import "dotenv/config";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
