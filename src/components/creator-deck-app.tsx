@@ -139,8 +139,6 @@ function PackArtwork({ packType }: { packType: PackType }) {
             alt=""
             width={92}
             height={122}
-            quality={88}
-            sizes="92px"
             style={{ "--person-index": index } as React.CSSProperties}
           />
         ))}
