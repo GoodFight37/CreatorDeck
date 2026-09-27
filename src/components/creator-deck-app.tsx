@@ -1,7 +1,5 @@
 "use client";
-
 import { useCallback, useMemo, useState } from "react";
-import Image from "next/image";
 import {
   Archive,
   BookOpen,
@@ -29,27 +27,27 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { Card3D } from "@/components/card3d";
 import { CreatorCard } from "@/components/creator-card";
+import { PackArtwork } from "@/components/pack-artwork";
+import { PackOpening } from "@/components/pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
   PACKS,
   RARITY_META,
-  creatorImage,
   type CardVariant,
+  type Creator,
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
-import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { getGameView, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "profile";
 type CollectionFilter = "all" | "owned" | Rarity;
-
-/** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
-const OPENING_DELAY_MS = 650;
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
@@ -118,43 +116,6 @@ function TopBar({ game }: { game: GameState }) {
         </div>
       </div>
     </header>
-  );
-}
-
-function PackArtwork({ packType }: { packType: PackType }) {
-  const people =
-    packType === "live"
-      ? [CREATORS[0], CREATORS[1], CREATORS[2]]
-      : [CREATORS[5], CREATORS[6], CREATORS[7]];
-  return (
-    <div className={`pack-artwork pack-${packType}`}>
-      <div className="pack-noise" />
-      <div className="pack-orbit one" />
-      <div className="pack-orbit two" />
-      <div className="pack-people">
-        {people.map((creator, index) => (
-          <Image
-            key={creator.slug}
-            src={creatorImage(creator)}
-            alt=""
-            width={92}
-            height={122}
-            quality={88}
-            sizes="92px"
-            style={{ "--person-index": index } as React.CSSProperties}
-          />
-        ))}
-      </div>
-      <div className="pack-brand">
-        <span>CREATOR</span>
-        <strong>DECK</strong>
-      </div>
-      <div className="pack-edition">
-        {packType === "live" ? <Radio size={13} /> : <Archive size={13} />}
-        {packType === "live" ? "TOP 500 LIVE" : "ARCHIVES 500"}
-      </div>
-      <small>{PACKS[packType].size} CARTES</small>
-    </div>
   );
 }
 
@@ -453,24 +414,49 @@ function CollectionView({ game }: { game: GameState }) {
       </div>
 
       <div className="collection-grid">
-        {visibleCreators.map((creator) => {
-          const item = owned.get(creator.slug);
-          return (
-            <CreatorCard
-              key={creator.slug}
-              creator={creator}
-              variant={item?.bestVariant}
-              count={item?.count}
-              locked={!item}
-              compact
-            />
-          );
-        })}
+        {visibleCreators.map((creator) => (
+          <BinderCard key={creator.slug} creator={creator} item={owned.get(creator.slug)} />
+        ))}
       </div>
       {!filtered.length ? (
         <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Carte du classeur : inclinable au doigt (scroll vertical préservé) et
+ * retournable au tap. Les cartes non obtenues restent plates — il n'y a rien à
+ * retourner, le dos masquerait le cadenas.
+ */
+function BinderCard({
+  creator,
+  item,
+}: {
+  creator: Creator;
+  item: { count: number; bestVariant: CardVariant } | undefined;
+}) {
+  const [faceUp, setFaceUp] = useState(true);
+  if (!item) return <CreatorCard creator={creator} locked compact />;
+  return (
+    <Card3D
+      rarity={creator.rarity}
+      variant={item.bestVariant}
+      faceUp={faceUp}
+      mode="scroll-safe"
+      onFlip={() => setFaceUp((value) => !value)}
+      flipLabel={faceUp ? `Voir le dos de ${creator.displayName}` : `Voir ${creator.displayName}`}
+      className="binder-card"
+      face={
+        <CreatorCard
+          creator={creator}
+          variant={item.bestVariant}
+          count={item.count}
+          compact
+        />
+      }
+    />
   );
 }
 
@@ -733,55 +719,6 @@ function ProfileView({
   );
 }
 
-function RevealOverlay({
-  cards,
-  index,
-  onNext,
-  onClose,
-}: {
-  cards: DrawnCard[];
-  index: number;
-  onNext: () => void;
-  onClose: () => void;
-}) {
-  const card = cards[index];
-  const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
-  if (!card || !creator) return null;
-  const isLast = index === cards.length - 1;
-  return (
-    <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
-      <div className={`reveal-ambient rarity-${card.rarity}`} />
-      <div className="reveal-header">
-        <span>{index + 1} / {cards.length}</span>
-        <div className="reveal-dots">
-          {cards.map((item, dotIndex) => (
-            <i key={item.id} className={dotIndex <= index ? "active" : ""} />
-          ))}
-        </div>
-        <button onClick={onClose} aria-label="Fermer"><X size={20} /></button>
-      </div>
-      <div className="reveal-stage">
-        {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-        <CreatorCard
-          key={card.id}
-          creator={creator}
-          variant={card.variant}
-          className="reveal-card"
-        />
-        <div className="reveal-name">
-          <p>#{creator.rank} · {RARITY_META[card.rarity].label}</p>
-          <h2>{creator.displayName}</h2>
-          <span>{creator.category}</span>
-        </div>
-      </div>
-      <button className="reveal-next" onClick={isLast ? onClose : onNext}>
-        <span>{isLast ? "Ranger dans le classeur" : "Révéler la suivante"}</span>
-        {isLast ? <BookOpen size={18} /> : <ChevronRight size={18} />}
-      </button>
-    </div>
-  );
-}
-
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Accueil", icon: <Home size={21} /> },
   { id: "collection", label: "Classeur (500)", icon: <BookOpen size={21} /> },
@@ -794,10 +731,9 @@ export function CreatorDeckApp() {
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
   const [selectedPack, setSelectedPack] = useState<PackType>("live");
-  const [opening, setOpening] = useState(false);
+  // Booster en cours d'ouverture : `null` = pas de cinématique à l'écran.
+  const [cinemaPack, setCinemaPack] = useState<PackType | null>(null);
   const [usingHourglass, setUsingHourglass] = useState(false);
-  const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
-  const [revealIndex, setRevealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -814,24 +750,26 @@ export function CreatorDeckApp() {
     setNotice(message);
   }, []);
 
+  /**
+   * Ouvre la cinématique. Le tirage n'a PAS lieu ici : il est déclenché par la
+   * cinématique au moment où la déchirure aboutit, pour que le suspense précède
+   * réellement la consommation du booster.
+   */
   function handleOpenPack() {
-    if (!game || opening) return;
-    setOpening(true);
+    if (!game || cinemaPack) return;
+    const stock = selectedPack === "live" ? game.player.livePacks : game.player.archivePacks;
+    if (stock <= 0) {
+      showError("Aucun booster disponible pour le moment.");
+      return;
+    }
     setError(null);
-    // Petit délai volontaire : le tirage est instantané en local, mais la
-    // révélation mérite son moment de suspense.
-    window.setTimeout(() => {
-      try {
-        const cards = gameStore.openPack(selectedPack);
-        setDrawnCards(cards);
-        setRevealIndex(0);
-      } catch (caught) {
-        showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
-      } finally {
-        setOpening(false);
-      }
-    }, OPENING_DELAY_MS);
+    setCinemaPack(selectedPack);
   }
+
+  const drawCinemaPack = useCallback(() => {
+    if (!cinemaPack) throw new Error("Aucun booster à ouvrir.");
+    return gameStore.openPack(cinemaPack);
+  }, [cinemaPack]);
 
   function handleUseHourglass() {
     if (!game || usingHourglass) return;
@@ -844,11 +782,6 @@ export function CreatorDeckApp() {
     } finally {
       setUsingHourglass(false);
     }
-  }
-
-  function closeReveal() {
-    setDrawnCards([]);
-    setRevealIndex(0);
   }
 
   if (!game) return <LoadingScreen />;
@@ -864,7 +797,7 @@ export function CreatorDeckApp() {
             setSelectedPack={setSelectedPack}
             onOpen={handleOpenPack}
             onUseHourglass={handleUseHourglass}
-            opening={opening}
+            opening={cinemaPack !== null}
             usingHourglass={usingHourglass}
             now={now}
           />
@@ -902,19 +835,12 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {opening ? (
-        <div className="opening-loader" aria-live="polite">
-          <div className="mini-pack"><span>CD</span></div>
-          <strong>Scellement du tirage Top 500…</strong>
-          <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
-        </div>
-      ) : null}
-      {drawnCards.length ? (
-        <RevealOverlay
-          cards={drawnCards}
-          index={revealIndex}
-          onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
-          onClose={closeReveal}
+      {cinemaPack ? (
+        <PackOpening
+          packType={cinemaPack}
+          onDraw={drawCinemaPack}
+          onClose={() => setCinemaPack(null)}
+          onError={showError}
         />
       ) : null}
     </main>
