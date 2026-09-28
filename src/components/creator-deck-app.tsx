@@ -23,6 +23,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  Volume2,
   WifiOff,
   X,
   Zap,
@@ -32,6 +33,7 @@ import { CreatorCard } from "@/components/creator-card";
 import { PackArtwork } from "@/components/pack-artwork";
 import { PackOpening } from "@/components/pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useSoundSettings } from "@/hooks/use-sound-settings";
 import { useTestMode } from "@/hooks/use-test-mode";
 import {
   CREATORS,
@@ -45,6 +47,7 @@ import {
 } from "@/lib/catalog";
 import { getGameView, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
+import { soundSettings } from "@/lib/sound-settings";
 import { testModeStore } from "@/lib/test-mode";
 
 type GameState = GameView;
@@ -599,6 +602,7 @@ function ProfileView({
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 }) {
+  const soundOn = useSoundSettings();
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [exportText, setExportText] = useState<string | null>(null);
@@ -671,10 +675,10 @@ function ProfileView({
       <div className="section-heading compact-heading">
         <div>
           <p className="eyebrow">OUTILS</p>
-          <h2>Tester les animations</h2>
+          <h2>Outils et réglages</h2>
         </div>
       </div>
-      <section className="settings-list" aria-label="Mode test">
+      <section className="settings-list" aria-label="Outils et réglages">
         <button
           type="button"
           className={`settings-row settings-action ${testMode ? "is-on" : ""}`}
@@ -688,6 +692,23 @@ function ProfileView({
             <span>
               Rejoue l&apos;ouverture en boucle : ni booster consommé, ni carte,
               ni XP ajoutés. Ta vraie progression n&apos;est pas touchée.
+            </span>
+          </div>
+          <span className="switch" aria-hidden="true"><i /></span>
+        </button>
+        <button
+          type="button"
+          className={`settings-row settings-action ${soundOn ? "is-on" : ""}`}
+          role="switch"
+          aria-checked={soundOn}
+          onClick={() => soundSettings.set(!soundOn)}
+        >
+          <span className="settings-icon blue"><Volume2 size={17} /></span>
+          <div>
+            <strong>Son et vibrations de l&apos;ouverture</strong>
+            <span>
+              Crissement du foil, souffle des cartes, clic du retournement —
+              tout est synthétisé, aucun fichier son n&apos;est embarqué.
             </span>
           </div>
           <span className="switch" aria-hidden="true"><i /></span>

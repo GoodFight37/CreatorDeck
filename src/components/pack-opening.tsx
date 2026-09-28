@@ -33,6 +33,7 @@ import {
   useUnityBuildAvailable,
 } from "@/components/unity-pack-opening";
 import { usePointerGesture } from "@/hooks/use-pointer-gesture";
+import { haptic, playPackSound } from "@/lib/pack-sound";
 import { usePrefersReducedMotion } from "@/hooks/use-reduced-motion";
 import {
   CREATOR_BY_SLUG,
@@ -151,6 +152,8 @@ export function PackOpening({
   const itemsRef = useRef<Array<HTMLElement | null>>([]);
   const trackRef = useRef<HTMLDivElement | null>(null);
   const carouselStartRef = useRef(0);
+  /** Le crissement du foil ne joue qu'une fois par déchirure. */
+  const tearSoundedRef = useRef(false);
   /** Dernière distance de glissement : sépare le clic du glissement. */
   const lastDragPx = useRef(0);
 
@@ -198,6 +201,12 @@ export function PackOpening({
 
   const completeTear = useCallback(() => {
     if (stageRef.current !== "sealed" && stageRef.current !== "tearing") return;
+    if (!tearSoundedRef.current) {
+      tearSoundedRef.current = true;
+      playPackSound("tear");
+    }
+    playPackSound("whoosh");
+    haptic([25, 30, 45]);
     let drawn: DrawnCard[];
     try {
       drawn = onDraw();
@@ -242,7 +251,10 @@ export function PackOpening({
     // accepté depuis la première version, le reste aussi.
     axis: "any",
     disabled: stage !== "sealed" && stage !== "tearing",
-    onStart: () => setStage("tearing"),
+    onStart: () => {
+      tearSoundedRef.current = false;
+      setStage("tearing");
+    },
     onMove: (snapshot) => {
       const progress = Math.max(
         tearProgress(Math.abs(snapshot.dx), snapshot.width),
@@ -251,6 +263,12 @@ export function PackOpening({
       );
       tearRef.current = progress;
       paintTear(progress);
+      // Dès que le foil « cède », le crissement suit le doigt.
+      if (!tearSoundedRef.current && progress >= 0.12) {
+        tearSoundedRef.current = true;
+        playPackSound("tear");
+        haptic(30);
+      }
     },
     onEnd: (end) => {
       if (end.isTap || tearCompletes(tearRef.current, end.velocity)) {
@@ -297,6 +315,8 @@ export function PackOpening({
   const choosePack = useCallback(() => {
     if (stageRef.current !== "choosing") return;
     setStage("sealed");
+    playPackSound("tick");
+    haptic(8);
   }, [setStage]);
 
   const handleCarouselItemClick = useCallback(
@@ -374,6 +394,13 @@ export function PackOpening({
     const otherState: Stage = slow ? "revealing" : "rare-flip";
     setStage(slowState);
     if (slow) setParticles(true);
+    playPackSound("flip");
+    if (slow) {
+      playPackSound("rare");
+      haptic([15, 35, 30]);
+    } else {
+      haptic(12);
+    }
     resetSwipe();
     const active = timingsRef.current;
     const flipMs = flipDurationMs(card, active);
@@ -427,11 +454,15 @@ export function PackOpening({
     if (indexRef.current >= cards.length - 1) {
       setParticles(false);
       setStage("summary");
+      playPackSound("chime");
+      haptic([10, 40, 12]);
       return;
     }
     setParticles(false);
     setIndex(indexRef.current + 1);
     setStage("pile");
+    playPackSound("tick");
+    haptic(8);
   }, [cards.length, setIndex, setStage]);
 
   const handleClose = useCallback(() => {
