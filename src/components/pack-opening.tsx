@@ -187,6 +187,16 @@ export function PackOpening({
     rootRef.current?.focus();
   }, []);
 
+  // Sans bouton en pied d'écran, le clavier agit depuis le dialogue : si le
+  // focus retombe sur <body> (élément focalisé démonté au changement de
+  // phase), on le ravitaille pour que la touche d'activation continue de
+  // fonctionner.
+  useEffect(() => {
+    const root = rootRef.current;
+    const active = document.activeElement;
+    if (!root || !active || active === document.body) root?.focus();
+  }, [stage]);
+
   /* ------------------------------------------------------------------ *
    * Déchirure du pack.
    * ------------------------------------------------------------------ */

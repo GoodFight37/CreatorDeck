@@ -1676,8 +1676,10 @@ input:focus-visible {
  * ========================================================================= */
 
 .booster3d {
-  --bw: 178px;
-  --bh: 268px;
+  /* Présence façon Pocket : le pack occupe ~35 % de la hauteur d'écran.
+     Géométrie 100 % en variables — arêtes, crimp et reflet suivent. */
+  --bw: 192px;
+  --bh: 288px;
   --bd: 7px;
   --crimp-h: 18px;
   --sheen: 0.5;
