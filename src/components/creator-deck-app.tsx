@@ -32,6 +32,7 @@ import { CreatorCard } from "@/components/creator-card";
 import { PackArtwork } from "@/components/pack-artwork";
 import { PackOpening } from "@/components/pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useTestMode } from "@/hooks/use-test-mode";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
@@ -44,6 +45,7 @@ import {
 } from "@/lib/catalog";
 import { getGameView, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
+import { testModeStore } from "@/lib/test-mode";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "profile";
@@ -127,6 +129,7 @@ function HomeView({
   onUseHourglass,
   opening,
   usingHourglass,
+  testMode,
   now,
 }: {
   game: GameState;
@@ -136,6 +139,7 @@ function HomeView({
   onUseHourglass: () => void;
   opening: boolean;
   usingHourglass: boolean;
+  testMode: boolean;
   now: number;
 }) {
   const pack = PACKS[selectedPack];
@@ -189,11 +193,25 @@ function HomeView({
       </section>
 
       <section className="open-panel">
+        {testMode ? (
+          <p className="testmode-banner" role="status">
+            <Zap size={13} />
+            Mode test : ouvertures illimitées, ta collection n&apos;est pas modifiée
+          </p>
+        ) : null}
         <div className="stock-row">
           <div>
             <span>Disponibles</span>
             <strong>
-              {stock}<small>/{pack.max}</small>
+              {testMode ? (
+                <>
+                  ∞<small> illimité</small>
+                </>
+              ) : (
+                <>
+                  {stock}<small>/{pack.max}</small>
+                </>
+              )}
             </strong>
           </div>
           <div className="timer-copy">
@@ -204,16 +222,21 @@ function HomeView({
         <button
           className="primary-action"
           onClick={onOpen}
-          disabled={stock <= 0 || opening}
+          disabled={(!testMode && stock <= 0) || opening}
         >
           {opening ? <LoaderCircle className="spin" size={19} /> : <Zap size={19} />}
-          <span>{stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}</span>
-          {stock > 0 ? <ChevronRight size={19} /> : null}
+          <span>{testMode || stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}</span>
+          {testMode || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
         <button
           className="secondary-action"
           onClick={onUseHourglass}
-          disabled={stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
+          disabled={
+            testMode ||
+            stock >= pack.max ||
+            game.player.hourglasses <= 0 ||
+            usingHourglass
+          }
         >
           <Hourglass size={15} />
           <span>
@@ -567,10 +590,12 @@ function MissionsView({ game }: { game: GameState }) {
 
 function ProfileView({
   game,
+  testMode,
   onNotice,
   onError,
 }: {
   game: GameState;
+  testMode: boolean;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -642,6 +667,32 @@ function ProfileView({
           <span>boosters</span>
         </article>
       </div>
+
+      <div className="section-heading compact-heading">
+        <div>
+          <p className="eyebrow">OUTILS</p>
+          <h2>Tester les animations</h2>
+        </div>
+      </div>
+      <section className="settings-list" aria-label="Mode test">
+        <button
+          type="button"
+          className={`settings-row settings-action ${testMode ? "is-on" : ""}`}
+          role="switch"
+          aria-checked={testMode}
+          onClick={() => testModeStore.set(!testMode)}
+        >
+          <span className="settings-icon purple"><Zap size={17} /></span>
+          <div>
+            <strong>Mode test — ouvertures illimitées</strong>
+            <span>
+              Rejoue l&apos;ouverture en boucle : ni booster consommé, ni carte,
+              ni XP ajoutés. Ta vraie progression n&apos;est pas touchée.
+            </span>
+          </div>
+          <span className="switch" aria-hidden="true"><i /></span>
+        </button>
+      </section>
 
       <div className="section-heading compact-heading">
         <div>
@@ -731,6 +782,7 @@ export function CreatorDeckApp() {
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
   const [selectedPack, setSelectedPack] = useState<PackType>("live");
+  const testMode = useTestMode();
   // Booster en cours d'ouverture : `null` = pas de cinématique à l'écran.
   const [cinemaPack, setCinemaPack] = useState<PackType | null>(null);
   const [usingHourglass, setUsingHourglass] = useState(false);
@@ -758,7 +810,7 @@ export function CreatorDeckApp() {
   function handleOpenPack() {
     if (!game || cinemaPack) return;
     const stock = selectedPack === "live" ? game.player.livePacks : game.player.archivePacks;
-    if (stock <= 0) {
+    if (!testMode && stock <= 0) {
       showError("Aucun booster disponible pour le moment.");
       return;
     }
@@ -768,8 +820,9 @@ export function CreatorDeckApp() {
 
   const drawCinemaPack = useCallback(() => {
     if (!cinemaPack) throw new Error("Aucun booster à ouvrir.");
-    return gameStore.openPack(cinemaPack);
-  }, [cinemaPack]);
+    // Mode test : même tirage, mais rien n'est écrit dans la sauvegarde.
+    return testMode ? gameStore.previewPack(cinemaPack) : gameStore.openPack(cinemaPack);
+  }, [cinemaPack, testMode]);
 
   function handleUseHourglass() {
     if (!game || usingHourglass) return;
@@ -799,13 +852,19 @@ export function CreatorDeckApp() {
             onUseHourglass={handleUseHourglass}
             opening={cinemaPack !== null}
             usingHourglass={usingHourglass}
+            testMode={testMode}
             now={now}
           />
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
         {tab === "missions" ? <MissionsView game={game} /> : null}
         {tab === "profile" ? (
-          <ProfileView game={game} onNotice={showNotice} onError={showError} />
+          <ProfileView
+            game={game}
+            testMode={testMode}
+            onNotice={showNotice}
+            onError={showError}
+          />
         ) : null}
       </div>
 
