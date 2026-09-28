@@ -1380,7 +1380,6 @@ input:focus-visible {
   font-size: 10px;
   text-align: center;
 }
-.pack-cinema-next { width: 100%; }
 
 /* ---- 1-3. Pack fermé, déchirure, éclatement ---------------------------- */
 
@@ -1533,7 +1532,8 @@ input:focus-visible {
   height: 100%;
   transform-style: preserve-3d;
 }
-.pack-cinema.stage-pile .card-pile-slot.is-active .card-pile-drag {
+.pack-cinema.stage-pile .card-pile-slot.is-active .card-pile-drag,
+.pack-cinema.stage-revealed .card-pile-slot.is-active .card-pile-drag {
   transform: translate3d(var(--drag-x, 0px), calc(var(--drag-lift, 0px) * -1), 0) rotate(var(--drag-rot, 0deg));
 }
 
@@ -1974,16 +1974,15 @@ input:focus-visible {
   color: var(--muted);
   font-size: 10px;
 }
+/* Un simple texte guidé : sans bordure ni fond, il ne doit pas se
+   déguiser en bouton cliquable. */
 .carousel-hint {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin-top: 10px;
-  padding: 7px 13px;
-  border: 1px solid var(--line-strong);
-  border-radius: 999px;
+  padding: 0;
   color: #ded4ff;
-  background: rgba(255, 255, 255, 0.07);
   font-size: 10px;
   font-weight: 750;
 }
@@ -2026,11 +2025,7 @@ input:focus-visible {
 }
 .pack-cinema.is-light .pack-cinema-dots i { background: rgba(30, 20, 70, 0.16); }
 .pack-cinema.is-light .pack-cinema-dots i.done { background: #7b4fe0; }
-.pack-cinema.is-light .carousel-hint {
-  color: #3d2f77;
-  border-color: rgba(30, 20, 70, 0.18);
-  background: rgba(255, 255, 255, 0.72);
-}
+.pack-cinema.is-light .carousel-hint { color: #3d2f77; }
 .pack-cinema.is-light .carousel-caption p { color: #5a5480; }
 .pack-cinema.is-light .reveal-name p { color: #6a3fd8; }
 .pack-cinema.is-light .reveal-name h2 { color: #171131; }

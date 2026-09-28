@@ -6,7 +6,8 @@
  *   0. `choosing`  — carrousel 3D : on fait glisser les paquets au doigt pour
  *                     choisir celui qu'on ouvre ;
  *   1. `sealed`    — le pack fermé lévite au centre ;
- *   2. `tearing`   — on glisse le doigt vers le HAUT : le rabat se soulève, la
+ *   2. `tearing`   — on trace le pack du doigt (à travers le haut, façon
+ *                     Pocket, ou vers le haut) : le rabat se soulève, la
  *                     dentelure se creuse et le pack tremble ;
  *   3. `burst`     — la déchirure aboutit, le tirage est effectué à cet instant
  *                     précis (jamais avant) et les cartes jaillissent ;
@@ -22,16 +23,7 @@
  * DOM. Le tirage lui-même reste dans `game-store` / `game-engine`.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  BookOpen,
-  ChevronRight,
-  FastForward,
-  Hand,
-  LoaderCircle,
-  Sparkles,
-  X,
-  Zap,
-} from "lucide-react";
+import { Hand, Sparkles, X } from "lucide-react";
 import { Card3D } from "@/components/card3d";
 import { CreatorCard } from "@/components/creator-card";
 import { Booster3D } from "@/components/booster3d";
@@ -184,7 +176,6 @@ export function PackOpening({
   const pack = PACKS[packType];
   const current = cards[index];
   const currentCreator = current ? CREATOR_BY_SLUG.get(current.creatorSlug) : undefined;
-  const isLastCard = cards.length > 0 && index === cards.length - 1;
 
   /* ------------------------------------------------------------------ *
    * Focus clavier à l'ouverture.
@@ -247,12 +238,17 @@ export function PackOpening({
   }, [frame, paintTear]);
 
   const packGesture = usePointerGesture({
-    axis: "y",
+    // Pocket trace à travers le haut du pack ; le glissement vers le haut,
+    // accepté depuis la première version, le reste aussi.
+    axis: "any",
     disabled: stage !== "sealed" && stage !== "tearing",
     onStart: () => setStage("tearing"),
     onMove: (snapshot) => {
-      // Le doigt monte : `dy` est négatif.
-      const progress = tearProgress(-snapshot.dy, snapshot.height);
+      const progress = Math.max(
+        tearProgress(Math.abs(snapshot.dx), snapshot.width),
+        // Le doigt monte : `dy` est négatif.
+        tearProgress(-snapshot.dy, snapshot.height),
+      );
       tearRef.current = progress;
       paintTear(progress);
     },
@@ -399,7 +395,8 @@ export function PackOpening({
     // La carte du dessus capture déjà le pointeur pour son inclinaison : si le
     // conteneur capturait aussi, les `pointermove` n'atteindraient plus la carte.
     capture: false,
-    disabled: stage !== "pile" || cards.length === 0,
+    disabled:
+      (stage !== "pile" && stage !== "revealed") || cards.length === 0,
     onMove: (snapshot) => paintSwipe(snapshot.dx, snapshot.width),
     onEnd: (end) => {
       if (end.cancelled) {
@@ -407,7 +404,14 @@ export function PackOpening({
         return;
       }
       const progress = swipeProgress(end.dx, end.width);
-      if (end.isTap || swipeReveals(progress, end.velocity)) {
+      const advance = end.isTap || swipeReveals(progress, end.velocity);
+      if (stageRef.current === "revealed") {
+        // Carte déjà retournée : le balayage (ou le tap) enchaîne la suivante.
+        resetSwipe();
+        if (advance) goToNextCard();
+        return;
+      }
+      if (advance) {
         revealTop();
       } else {
         resetSwipe();
@@ -430,23 +434,57 @@ export function PackOpening({
     setStage("pile");
   }, [cards.length, setIndex, setStage]);
 
-  const skipToSummary = useCallback(() => {
-    if (!cards.length) {
-      // Rien n'a encore été tiré : on force la déchirure plutôt que de perdre
-      // le booster déjà affiché à l'écran.
-      completeTear();
-      return;
-    }
-    setParticles(false);
-    setRevealedCount(cards.length);
-    setIndex(cards.length - 1);
-    setStage("summary");
-  }, [cards.length, completeTear, setIndex, setStage]);
-
   const handleClose = useCallback(() => {
     setParticles(false);
     onClose();
   }, [onClose]);
+
+  /**
+   * Aucun bouton visible dans la cinématique : le clavier enchaîne les phases
+   * depuis le dialogue lui-même. Le geste au doigt reste la façon amusante de
+   * faire, pas la seule.
+   */
+  const handleRootKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        handleClose();
+        return;
+      }
+      if (event.key !== "Enter" && event.key !== " " && event.key !== "ArrowRight") {
+        return;
+      }
+      // Un <button> focalisé (paquet, croix) gère sa propre touche : on n'agit
+      // que quand la frappe arrive au dialogue, pour éviter le double déclenchement.
+      const target = event.target as HTMLElement | null;
+      if ((event.key === "Enter" || event.key === " ") && target?.closest("button")) {
+        return;
+      }
+      event.preventDefault();
+      switch (stageRef.current) {
+        case "choosing":
+          choosePack();
+          break;
+        case "sealed":
+        case "tearing":
+          completeTear();
+          break;
+        case "pile":
+          revealTop();
+          break;
+        case "revealed":
+          goToNextCard();
+          break;
+        case "summary":
+          handleClose();
+          break;
+        default:
+          // burst / revealing / rare-flip : on laisse l'animation se jouer.
+          break;
+      }
+    },
+    [choosePack, completeTear, revealTop, goToNextCard, handleClose],
+  );
 
   /* ------------------------------------------------------------------ *
    * Repli : si un build Unity est présent, il pilote la cinématique.
@@ -477,10 +515,10 @@ export function PackOpening({
   const stageHint = (() => {
     switch (stage) {
       case "choosing":
-        return "Glisse pour choisir, puis ouvre le booster";
+        return "Glisse pour choisir · touche le pack pour l’ouvrir";
       case "sealed":
       case "tearing":
-        return "Glisse le doigt vers le haut pour déchirer le pack";
+        return "Glisse à travers le haut du pack pour le déchirer";
       case "burst":
         return "";
       case "pile":
@@ -489,9 +527,10 @@ export function PackOpening({
       case "rare-flip":
         return "";
       case "revealed":
-        return currentCreator ? `#${currentCreator.rank} · ${currentCreator.category}` : "";
+        // L'étiquette du haut (`reveal-name`) affiche déjà rang et catégorie.
+        return "Glisse pour continuer";
       case "summary":
-        return `${pack.size} cartes ajoutées au classeur`;
+        return "Touche pour ranger dans le classeur";
       default:
         return "";
     }
@@ -512,6 +551,7 @@ export function PackOpening({
       aria-modal="true"
       aria-label={`Ouverture du booster ${pack.label}`}
       tabIndex={-1}
+      onKeyDown={handleRootKeyDown}
     >
       <div className={`pack-cinema-ambient pack-${packType}`} aria-hidden="true" />
 
@@ -573,7 +613,11 @@ export function PackOpening({
           </div>
         </section>
       ) : stage === "summary" ? (
-        <section className="pack-summary" aria-label="Récapitulatif du booster">
+        <section
+          className="pack-summary"
+          aria-label="Récapitulatif du booster"
+          onClick={handleClose}
+        >
           <h2>{pack.label}</h2>
           <p className="pack-summary-gain">
             +{pack.points} points · +{pack.xp} XP
@@ -627,7 +671,7 @@ export function PackOpening({
               <div className="pack-tear-seam" aria-hidden="true" />
               <p className="pack-tear-hint">
                 <Hand size={15} />
-                Glisse vers le haut
+                Glisse pour déchirer
               </p>
             </div>
           ) : null}
@@ -722,55 +766,10 @@ export function PackOpening({
       )}
 
       <footer className="pack-cinema-footer">
+        {/* Plus aucun bouton : gestes au doigt, clavier via `handleRootKeyDown`. */}
         <p className="pack-cinema-hint" aria-live="polite">
           {stageHint}
         </p>
-        {/*
-          Chaque phase a toujours une action primaire atteignable au clavier :
-          le geste au doigt est la façon amusante de faire, pas la seule.
-        */}
-        {stage === "choosing" ? (
-          <button type="button" className="primary-action pack-cinema-next" onClick={choosePack}>
-            <span>Ouvrir ce booster</span>
-            <Zap size={18} />
-          </button>
-        ) : null}
-        {stage === "sealed" || stage === "tearing" ? (
-          <button type="button" className="primary-action pack-cinema-next" onClick={completeTear}>
-            <span>Ouvrir d&apos;un coup</span>
-            <FastForward size={18} />
-          </button>
-        ) : null}
-        {stage === "pile" ? (
-          <button type="button" className="primary-action pack-cinema-next" onClick={revealTop}>
-            <span>Révéler la carte</span>
-            <ChevronRight size={18} />
-          </button>
-        ) : null}
-        {stage === "revealing" || stage === "rare-flip" ? (
-          <button type="button" className="primary-action pack-cinema-next" disabled>
-            <span>{stage === "rare-flip" ? "Retournement rare…" : "Retournement…"}</span>
-            <LoaderCircle className="spin" size={16} />
-          </button>
-        ) : null}
-        {stage === "revealed" ? (
-          <button type="button" className="primary-action pack-cinema-next" onClick={goToNextCard}>
-            <span>{isLastCard ? "Voir le récapitulatif" : "Carte suivante"}</span>
-            <ChevronRight size={18} />
-          </button>
-        ) : null}
-        {stage === "summary" ? (
-          <button type="button" className="primary-action pack-cinema-next" onClick={handleClose}>
-            <span>Ranger dans le classeur</span>
-            <BookOpen size={18} />
-          </button>
-        ) : null}
-        {stage === "pile" || stage === "revealing" || stage === "rare-flip" ? (
-          <button type="button" className="secondary-action" onClick={skipToSummary}>
-            <FastForward size={15} />
-            <span>Passer au récapitulatif</span>
-          </button>
-        ) : null}
       </footer>
     </div>
   );
