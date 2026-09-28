@@ -1670,3 +1670,476 @@ input:focus-visible {
   background: transparent;
   touch-action: none;
 }
+
+/* =========================================================================
+ * BOOSTER 3D — sachet scellé, matière métallique, sol réfléchissant
+ * ========================================================================= */
+
+.booster3d {
+  --bw: 178px;
+  --bh: 268px;
+  --bd: 7px;
+  --crimp-h: 18px;
+  --sheen: 0.5;
+  position: relative;
+  width: var(--bw);
+  height: var(--bh);
+  transform-style: preserve-3d;
+}
+
+.booster-shell {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.booster-face {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 5px 5px 4px 4px;
+  background: #141022;
+}
+
+/* Le sachet est « soufflé » : l'impression est en avant, le dos en arrière. */
+.booster-front { transform: translateZ(var(--bd)); }
+.booster-back {
+  transform: translateZ(calc(var(--bd) * -1)) rotateY(180deg);
+  background: linear-gradient(180deg, #241a44 0%, #150f2c 55%, #0d0a18 100%);
+}
+
+/* Bande de dos : la couture longitudinale du sachet. */
+.booster-back-panel {
+  position: absolute;
+  inset: 8px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 40%);
+}
+.booster-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 14px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14) 45%, rgba(0, 0, 0, 0.35) 55%, transparent);
+  transform: translateX(-50%);
+}
+
+/* Bords latéraux : c'est eux qui donnent l'épaisseur du sachet vu de 3/4. */
+.booster-edge {
+  position: absolute;
+  left: 50%;
+  top: var(--crimp-h);
+  bottom: var(--crimp-h);
+  width: calc(var(--bd) * 2);
+  margin-left: calc(var(--bd) * -1);
+  background: linear-gradient(180deg, #aab2c8 0%, #6a7189 22%, #3b4055 62%, #868da4 100%);
+}
+.booster-edge-left {
+  transform: translateX(calc(var(--bw) / -2)) rotateY(-90deg);
+  background: linear-gradient(180deg, #c9d0e2 0%, #7d859d 24%, #454a60 64%, #989fb6 100%);
+}
+.booster-edge-right {
+  transform: translateX(calc(var(--bw) / 2)) rotateY(-90deg);
+  background: linear-gradient(180deg, #aeb6cc 0%, #666d85 24%, #363b4f 64%, #868da4 100%);
+}
+
+/* ---- Soudures scellées (le fameux « crimp » des vrais boosters) --------- */
+
+.booster-crimp {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  width: 100%;
+  height: var(--crimp-h);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.14) 1px 3px),
+    linear-gradient(180deg, #d9dfef 0%, #a7afc6 38%, #7d8499 70%, #cfd6e8 100%);
+  transform: translateZ(calc(var(--bd) + 0.6px));
+}
+.booster-crimp-top {
+  top: 0;
+  clip-path: var(--crimp-top);
+}
+.booster-crimp-bottom {
+  bottom: 0;
+  clip-path: var(--crimp-bottom);
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.16) 0 1px, rgba(0, 0, 0, 0.14) 1px 3px),
+    linear-gradient(0deg, #d9dfef 0%, #a7afc6 38%, #7d8499 70%, #cfd6e8 100%);
+}
+
+/* Trait de scellement : la ligne brillante sous la soudure. */
+.booster-seal {
+  position: absolute;
+  z-index: 4;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9) 25%, rgba(255, 255, 255, 0.55) 75%, transparent);
+  filter: blur(0.3px);
+  transform: translateZ(calc(var(--bd) + 1px));
+}
+.booster-seal-top { top: var(--crimp-h); }
+.booster-seal-bottom { bottom: var(--crimp-h); }
+
+/* ---- Impression + matière --------------------------------------------- */
+
+/* L'art du jeu remplit le sachet : on neutralise la mise en page de l'accueil. */
+.booster-front .pack-artwork {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  animation: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Plis verticaux du film métallisé. */
+.booster-wrinkle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    repeating-linear-gradient(92deg, rgba(255, 255, 255, 0.07) 0 2px, transparent 2px 9px, rgba(0, 0, 0, 0.09) 9px 13px, transparent 13px 27px);
+}
+
+.booster-foil,
+.booster-gloss,
+.booster-shade {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Spéculaires fixes : le côté métallique du sachet. */
+.booster-foil {
+  background:
+    linear-gradient(104deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.45) 6%,
+      rgba(255, 255, 255, 0) 14%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0.3) 49%,
+      rgba(255, 255, 255, 0) 58%,
+      rgba(255, 255, 255, 0) 84%,
+      rgba(255, 255, 255, 0.24) 93%,
+      rgba(255, 255, 255, 0) 100%);
+  mix-blend-mode: screen;
+}
+
+/* Reflet balayant : suit l'orientation du paquet dans le carrousel. */
+.booster-gloss {
+  background: linear-gradient(
+    118deg,
+    rgba(255, 255, 255, 0) calc(var(--sheen) * 100% - 26%),
+    rgba(255, 255, 255, 0.55) calc(var(--sheen) * 100%),
+    rgba(255, 255, 255, 0) calc(var(--sheen) * 100% + 26%)
+  );
+  mix-blend-mode: screen;
+}
+
+/* Assombrissement des bords : donne le galet du sachet. */
+.booster-shade {
+  border-radius: 5px;
+  box-shadow:
+    inset 3px 0 10px -6px rgba(0, 0, 0, 0.75),
+    inset -3px 0 10px -6px rgba(0, 0, 0, 0.75),
+    inset 0 -16px 22px -18px rgba(0, 0, 0, 0.9),
+    inset 0 14px 20px -16px rgba(0, 0, 0, 0.7);
+}
+
+/* ---- Réflexion sur le sol ---------------------------------------------- */
+
+.booster-with-reflection {
+  position: relative;
+}
+/* En position absolue : le reflet n'ajoute aucune hauteur au paquet, il
+   déborde sous lui et la scène le rogne naturellement. */
+.booster-reflection {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  left: 0;
+  opacity: 0.42;
+  filter: blur(1.1px) saturate(0.85);
+  transform: scaleY(-1);
+  transform-origin: top center;
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 62%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent 62%);
+  pointer-events: none;
+}
+.booster-reflection .booster3d { pointer-events: none; }
+
+/* =========================================================================
+ * CARROUSEL 3D — parcourir et choisir le booster au doigt
+ * ========================================================================= */
+
+.carousel-stage {
+  position: relative;
+  width: 100%;
+  height: min(56vh, 400px);
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  perspective: 1100px;
+  perspective-origin: 50% 44%;
+}
+.carousel-stage.is-dragging { cursor: grabbing; }
+
+/* Sol clair + halo : le paquet se reflète comme sur une vitrine. */
+.carousel-floor {
+  position: absolute;
+  right: -20%;
+  bottom: 0;
+  left: -20%;
+  height: 46%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.55) 40%, transparent);
+}
+.carousel-glow {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  width: 460px;
+  height: 300px;
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(154, 122, 255, 0.3), transparent 62%);
+  filter: blur(6px);
+  transform: translate(-50%, -50%);
+}
+.booster-archive ~ .carousel-glow,
+.carousel-glow.archive {
+  background: radial-gradient(circle, rgba(255, 183, 64, 0.34), transparent 62%);
+}
+
+.carousel-track {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.carousel-item {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  transform-style: preserve-3d;
+  transform:
+    translate(-50%, -50%)
+    translateX(var(--cx, 0px))
+    translateZ(var(--cz, 0px))
+    rotateY(var(--cang, 0deg))
+    scale(var(--cs, 1));
+  transition: transform 460ms cubic-bezier(0.2, 0.85, 0.25, 1), opacity 320ms ease;
+  will-change: transform;
+}
+/* Pendant le geste, le paquet suit le doigt : pas de transition qui traîne. */
+.carousel-track.is-dragging .carousel-item {
+  transition: none;
+}
+.carousel-item.is-active { z-index: 5; }
+.carousel-item.is-out { opacity: 0; pointer-events: none; }
+
+.carousel-item .booster3d {
+  filter: drop-shadow(0 26px 30px rgba(40, 30, 80, 0.32));
+}
+.carousel-item:not(.is-active) .booster3d {
+  filter: drop-shadow(0 18px 24px rgba(40, 30, 80, 0.2)) saturate(0.9) brightness(0.94);
+}
+
+/* Bandeau d'information du paquet sélectionné. */
+.carousel-caption {
+  position: relative;
+  z-index: 4;
+  margin-top: 4px;
+  text-align: center;
+  animation: name-in 320ms ease both;
+}
+.carousel-caption .eyebrow { margin: 0 0 3px; }
+.carousel-caption h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 27px;
+  letter-spacing: -.04em;
+}
+.carousel-caption p {
+  margin: 4px auto 0;
+  max-width: 260px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.carousel-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  color: #ded4ff;
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+/* Pastilles du carrousel. */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.carousel-dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transition: background 200ms ease, transform 200ms ease;
+}
+.carousel-dots i.active {
+  background: var(--purple-light);
+  transform: scale(1.35);
+}
+
+/* =========================================================================
+ * SCÈNE CLAIRE — le flux d'ouverture se déroule sur fond clair,
+ * comme sur la référence fournie.
+ * ========================================================================= */
+
+.pack-cinema.is-light {
+  background: linear-gradient(180deg, #eef1fa 0%, #dfe6f7 46%, #cfd9f2 100%);
+  color: #191333;
+}
+.pack-cinema.is-light .pack-cinema-ambient { opacity: 0; }
+.pack-cinema.is-light .pack-cinema-header > span,
+.pack-cinema.is-light .pack-cinema-hint { color: #5a5480; }
+.pack-cinema.is-light .pack-cinema-header button {
+  color: #453f6b;
+  border-color: rgba(30, 20, 70, 0.16);
+  background: rgba(255, 255, 255, 0.7);
+}
+.pack-cinema.is-light .pack-cinema-dots i { background: rgba(30, 20, 70, 0.16); }
+.pack-cinema.is-light .pack-cinema-dots i.done { background: #7b4fe0; }
+.pack-cinema.is-light .carousel-hint {
+  color: #3d2f77;
+  border-color: rgba(30, 20, 70, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+}
+.pack-cinema.is-light .carousel-caption p { color: #5a5480; }
+.pack-cinema.is-light .reveal-name p { color: #6a3fd8; }
+.pack-cinema.is-light .reveal-name h2 { color: #171131; }
+.pack-cinema.is-light .reveal-name span { color: #625b86; }
+.pack-cinema.is-light .secondary-action {
+  color: #3d2f77;
+  border-color: rgba(30, 20, 70, 0.2);
+  background: rgba(255, 255, 255, 0.66);
+}
+.pack-cinema.is-light .pack-tear-hint {
+  color: #3d2f77;
+  border-color: rgba(30, 20, 70, 0.18);
+  background: rgba(255, 255, 255, 0.78);
+}
+.pack-cinema.is-light .pack-summary h2 { color: #171131; }
+.pack-cinema.is-light .pack-summary-gain { color: #a06b00; }
+.pack-cinema.is-light .card-back-mark,
+.pack-cinema.is-light .card-back-word,
+.pack-cinema.is-light .card-back-sub { color: #171131; }
+
+/* =========================================================================
+ * PILE DE CARTES VISIBLE DERRIÈRE LA CARTE INSPÉCTIONNÉE
+ * =========================================================================
+ * Sur la référence, la carte à l'écran est au sommet d'un vrai paquet : on
+ * voit son tranche, décomposée en couches arc-en-ciel. C'est ce bord qui donne
+ * immédiatement la sensation de « vraie carte en main ».
+ * ========================================================================= */
+
+.card3d-stack {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform-style: preserve-3d;
+}
+.card3d-stack i {
+  position: absolute;
+  inset: 0;
+  border-radius: 13px;
+  background: #161124;
+  box-shadow: inset 0 0 0 1.4px hsl(var(--h) 78% 66% / 0.95);
+  transform:
+    translateX(calc(var(--i) * -0.95px))
+    translateZ(calc(var(--i) * -1.5px));
+}
+/* Plusieurs couches superposées forment l'arc-en-ciel de la tranche. */
+.card3d-stack i:nth-child(1) { --h: 0; }
+.card3d-stack i:nth-child(2) { --h: 28; }
+.card3d-stack i:nth-child(3) { --h: 56; }
+.card3d-stack i:nth-child(4) { --h: 84; }
+.card3d-stack i:nth-child(5) { --h: 112; }
+.card3d-stack i:nth-child(6) { --h: 140; }
+.card3d-stack i:nth-child(7) { --h: 178; }
+.card3d-stack i:nth-child(8) { --h: 216; }
+.card3d-stack i:nth-child(9) { --h: 264; }
+.card3d-stack i:nth-child(10) { --h: 312; }
+
+/* La pile ne se voit qu'en 3/4 : à plat, elle est entièrement masquée. */
+.card3d:not(.has-rest) .card3d-stack { opacity: 0; }
+.card3d-stack { transition: opacity 260ms ease; }
+
+/* ---- Écran de choix (carrousel) ---------------------------------------- */
+
+.carousel-screen {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  padding: 0 0 6px;
+  flex-direction: column;
+}
+
+/* Chaque paquet du carrousel est un vrai bouton : sélectionnable au clavier. */
+.carousel-item {
+  padding: 0;
+  border: 0;
+  outline-offset: 6px;
+  background: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.carousel-item:focus-visible { outline: 2px solid #7b4fe0; }
+
+@media (max-width: 390px) {
+  .carousel-stage { height: min(52vh, 340px); }
+}
+
+/* ---- Déchirure sur scène claire ----------------------------------------
+ * La lueur par l'écart du sachet doit se lire sur un fond pâle : on la rend
+ * saturée plutôt que blanche (le blanc s'y confondrait).
+ * ------------------------------------------------------------------------ */
+.pack-cinema.is-light .pack-tear-inside {
+  background: radial-gradient(56% 40% at 50% 44%, #ffffff 0%, #b892ff 34%, rgba(147, 100, 255, 0) 74%);
+}
+.pack-cinema.is-light .pack-tear-seam {
+  background: radial-gradient(130% 34% at 50% calc((52 - var(--tear) * 16) * 1%), rgba(255, 255, 255, 0.98), rgba(196, 168, 255, 0.75) 58%, transparent 82%);
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 0 4px rgba(126, 76, 240, 0.75));
+}
+/* L'éclatement gagne un flash chaud, plus lisible sur fond clair. */
+.pack-cinema.is-light.stage-burst .pack-tear-inside {
+  filter: blur(26px) saturate(1.4);
+}
+/* Les cartes doivent se détacher du fond clair. */
+.pack-cinema.is-light .card-pile-slot .creator-card {
+  box-shadow:
+    0 16px 30px -16px rgba(40, 30, 90, 0.75),
+    0 0 22px -8px rgba(143, 100, 255, 0.55),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}

@@ -841,6 +841,10 @@ export function CreatorDeckApp() {
           onDraw={drawCinemaPack}
           onClose={() => setCinemaPack(null)}
           onError={showError}
+          onSelectPackType={(type) => {
+            setCinemaPack(type);
+            setSelectedPack(type);
+          }}
         />
       ) : null}
     </main>

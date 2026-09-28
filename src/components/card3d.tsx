@@ -45,8 +45,15 @@ export type Card3DProps = {
   faceUp?: boolean;
   onFlip?: () => void;
   mode?: TiltMode;
+  /**
+   * Angle de repos en degrés `{ x, y }` : la carte est alors tenue en 3/4
+   * comme sur une vraie carte que l'on examine, et le doigt s'y ajoute.
+   */
+  restAngle?: { x: number; y: number };
   /** Coupe l'inclinaison (ex. carte déjà en cours d'animation de vol). */
   tilt?: boolean;
+  /** Masque la pile de cartes sous la carte (carte unique). */
+  stack?: boolean;
   className?: string;
   flipDurationMs?: number;
   style?: CSSProperties;
@@ -62,7 +69,9 @@ export function Card3D({
   faceUp = true,
   onFlip,
   mode = "free",
+  restAngle,
   tilt = true,
+  stack = false,
   className = "",
   flipDurationMs = PACK_TIMINGS.cardRevealFlip,
   style,
@@ -70,9 +79,13 @@ export function Card3D({
 }: Card3DProps) {
   const { ref, handlers, dragging } = useTilt({
     mode,
+    restX: restAngle?.x ?? 0,
+    restY: restAngle?.y ?? 0,
     enabled: tilt && Boolean(onFlip),
     onTap: onFlip,
   });
+  const hasRest = Boolean(restAngle);
+  const layerCount = 10;
 
   const meta = RARITY_META[rarity];
   const variables = {
@@ -90,11 +103,18 @@ export function Card3D({
       ref={ref}
       className={`card3d mode-${mode} ${faceUp ? "is-face-up" : "is-face-down"} ${
         dragging ? "is-dragging" : ""
-      } ${className}`}
+      } ${hasRest ? "has-rest" : ""} ${className}`}
       style={variables}
       {...handlers}
     >
       <div className="card3d-tilt">
+        {stack ? (
+          <div className="card3d-stack" aria-hidden="true">
+            {Array.from({ length: layerCount }, (_, index) => (
+              <i key={index} style={{ "--i": index + 1 } as CSSProperties} />
+            ))}
+          </div>
+        ) : null}
         <div className={`card3d-flipper ${faceUp ? "" : "is-face-down"}`}>
           <div className="card3d-face card3d-front">{face}</div>
           <div className="card3d-face card3d-back">{back ?? <CardBack />}</div>

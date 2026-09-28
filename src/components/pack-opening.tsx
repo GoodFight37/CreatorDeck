@@ -3,6 +3,8 @@
 /**
  * Cinématique d'ouverture de booster, dans l'esprit Pokémon TCG Pocket :
  *
+ *   0. `choosing`  — carrousel 3D : on fait glisser les paquets au doigt pour
+ *                     choisir celui qu'on ouvre ;
  *   1. `sealed`    — le pack fermé lévite au centre ;
  *   2. `tearing`   — on glisse le doigt vers le HAUT : le rabat se soulève, la
  *                     dentelure se creuse et le pack tremble ;
@@ -28,10 +30,11 @@ import {
   LoaderCircle,
   Sparkles,
   X,
+  Zap,
 } from "lucide-react";
 import { Card3D } from "@/components/card3d";
 import { CreatorCard } from "@/components/creator-card";
-import { PackArtwork } from "@/components/pack-artwork";
+import { Booster3D } from "@/components/booster3d";
 import { ParticleBurst } from "@/components/particle-burst";
 import {
   UnityPackOpening,
@@ -46,7 +49,12 @@ import {
   type PackType,
 } from "@/lib/catalog";
 import type { DrawnCard } from "@/lib/game-engine";
+
 import {
+  CAROUSEL_SPACING_PX,
+  carouselSlot,
+  carouselSnap,
+  clamp01,
   effectIntensity,
   easeOutCubic,
   flipDurationMs,
@@ -67,8 +75,17 @@ import {
   type PackTimings,
 } from "@/lib/pack-animation";
 
-/** `revealed` = sous-état local : la carte a fini de se retourner. */
-type Stage = PackPhase | "revealed";
+/** Les boosters proposés dans le carrousel, dans l'ordre de l'arc. */
+const PACK_TYPES: PackType[] = ["live", "archive"];
+
+/**
+ * Étapes locales de la cinématique :
+ *  - `choosing`  : carrousel 3D, on choisit le booster au doigt ;
+ *  - `revealed`  : la carte a fini de se retourner.
+ * Ce sont des écrans d'entrée/sortie, pas des phases de la chorégraphie de
+ * déchirure (cf. `PackPhase`), d'où ce type étendu local.
+ */
+type Stage = PackPhase | "choosing" | "revealed";
 
 export type PackOpeningProps = {
   packType: PackType;
@@ -76,6 +93,8 @@ export type PackOpeningProps = {
   onDraw: () => DrawnCard[];
   onClose: () => void;
   onError: (message: string) => void;
+  /** Le choix du carrousel remonte au parent (il pilote `onDraw`). */
+  onSelectPackType?: (packType: PackType) => void;
 };
 
 /** Petits délais chaînés, tous annulés au démontage. */
@@ -104,7 +123,13 @@ function useScheduler() {
   return { schedule, frame };
 }
 
-export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningProps) {
+export function PackOpening({
+  packType,
+  onDraw,
+  onClose,
+  onError,
+  onSelectPackType,
+}: PackOpeningProps) {
   // Appelé avant tout `return` conditionnel : les hooks doivent s'exécuter dans
   // le même ordre à chaque rendu, que Unity soit là ou non.
   const unityDetected = useUnityBuildAvailable();
@@ -112,7 +137,11 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
   const timings = useMemo<PackTimings>(() => timingsFor(reducedMotion), [reducedMotion]);
   const { schedule, frame } = useScheduler();
 
-  const [stage, setStageState] = useState<Stage>("sealed");
+  const [stage, setStageState] = useState<Stage>("choosing");
+  const [activeSlot, setActiveSlot] = useState(() =>
+    Math.max(0, PACK_TYPES.indexOf(packType)),
+  );
+  const [carouselDragging, setCarouselDragging] = useState(false);
   const [cards, setCards] = useState<DrawnCard[]>([]);
   const [index, setIndexState] = useState(0);
   const [revealedCount, setRevealedCount] = useState(0);
@@ -124,9 +153,15 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
 
   // Refs synchrones : les gestes peuvent se déclencher deux fois dans le même
   // tick (tilt + balayage), il faut donc verrouiller sans attendre le render.
-  const stageRef = useRef<Stage>("sealed");
+  const stageRef = useRef<Stage>("choosing");
   const indexRef = useRef(0);
   const tearRef = useRef(0);
+  const itemsRef = useRef<Array<HTMLElement | null>>([]);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const carouselStartRef = useRef(0);
+  /** Dernière distance de glissement : sépare le clic du glissement. */
+  const lastDragPx = useRef(0);
+
   const timingsRef = useRef(timings);
   // Les handlers de geste lisent les durées au moment du geste, pas au render.
   useEffect(() => {
@@ -228,6 +263,89 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
         setStage("sealed");
         snapBack();
       }
+    },
+  });
+
+  /* ------------------------------------------------------------------ *
+   * Carrousel 3D : parcourir et choisir le booster au doigt.
+   *
+   * Pendant le geste, l'index courant est fractionnaire et chaque paquet est
+   * peint directement en variables CSS (aucun re-render par frame) ; au
+   * relâchement, `carouselSnap` cale sur l'entier le plus proche et la
+   * transition CSS fait l'animation d'accroche.
+   * ------------------------------------------------------------------ */
+  const paintCarousel = useCallback((activeFloat: number, dragging: boolean) => {
+    const track = trackRef.current;
+    track?.classList.toggle("is-dragging", dragging);
+    PACK_TYPES.forEach((type, index) => {
+      const node = itemsRef.current[index];
+      if (!node) return;
+      const slot = carouselSlot(index, activeFloat);
+      node.style.setProperty("--cx", `${slot.x}px`);
+      node.style.setProperty("--cz", `${slot.z}px`);
+      node.style.setProperty("--cang", `${slot.rotateY}deg`);
+      node.style.setProperty("--cs", slot.scale.toFixed(3));
+      node.style.setProperty(
+        "--sheen",
+        clamp01(0.5 + slot.rotateY / 120).toFixed(3),
+      );
+      node.classList.toggle("is-out", slot.hidden);
+      node.classList.toggle("is-active", index === Math.round(activeFloat));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (stage === "choosing") paintCarousel(activeSlot, false);
+  }, [stage, activeSlot, paintCarousel]);
+
+  const choosePack = useCallback(() => {
+    if (stageRef.current !== "choosing") return;
+    setStage("sealed");
+  }, [setStage]);
+
+  const handleCarouselItemClick = useCallback(
+    (index: number) => {
+      // Un glissement vient de se terminer au-dessus du paquet : ce n'est pas
+      // un clic, on n'en tient pas compte.
+      if (lastDragPx.current > 12) return;
+      const type = PACK_TYPES[index];
+      if (!type) return;
+      if (index === activeSlot) {
+        choosePack();
+        return;
+      }
+      setActiveSlot(index);
+      if (type !== packType) onSelectPackType?.(type);
+    },
+    [activeSlot, choosePack, onSelectPackType, packType],
+  );
+
+  const carouselGesture = usePointerGesture({
+    axis: "x",
+    capture: false,
+    disabled: stage !== "choosing",
+    onStart: () => {
+      carouselStartRef.current = activeSlot;
+      setCarouselDragging(true);
+      paintCarousel(activeSlot, true);
+    },
+    onMove: (snapshot) => {
+      const activeFloat = carouselStartRef.current - snapshot.dx / CAROUSEL_SPACING_PX;
+      paintCarousel(activeFloat, true);
+    },
+    onEnd: (end) => {
+      setCarouselDragging(false);
+      lastDragPx.current = Math.abs(end.dx);
+      // Tap pur : c'est le clic sur un paquet qui décide (voir plus bas).
+      if (end.cancelled || end.isTap) {
+        paintCarousel(activeSlot, false);
+        return;
+      }
+      const next = carouselSnap(carouselStartRef.current, end.dx, PACK_TYPES.length);
+      const type = PACK_TYPES[next] ?? packType;
+      setActiveSlot(next);
+      paintCarousel(next, false);
+      if (type !== packType) onSelectPackType?.(type);
     },
   });
 
@@ -358,6 +476,8 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
 
   const stageHint = (() => {
     switch (stage) {
+      case "choosing":
+        return "Glisse pour choisir, puis ouvre le booster";
       case "sealed":
       case "tearing":
         return "Glisse le doigt vers le haut pour déchirer le pack";
@@ -378,6 +498,7 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
   })();
 
   const showPack = stage === "sealed" || stage === "tearing" || stage === "burst";
+  const showCarousel = stage === "choosing";
   const showPile = cards.length > 0 && stage !== "summary";
   // Le nom n'apparaît qu'une fois le retournement terminé : l'afficher pendant
   // le flip gâcherait la surprise de la carte rare.
@@ -386,7 +507,7 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
   return (
     <div
       ref={rootRef}
-      className={`pack-cinema stage-${stage} rarity-${current?.rarity ?? "common"}`}
+      className={`pack-cinema is-light stage-${stage} rarity-${current?.rarity ?? "common"}`}
       role="dialog"
       aria-modal="true"
       aria-label={`Ouverture du booster ${pack.label}`}
@@ -408,7 +529,50 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
         </button>
       </header>
 
-      {stage === "summary" ? (
+      {showCarousel ? (
+        <section className="carousel-screen" aria-label="Choix du booster">
+          <div
+            className={`carousel-stage ${carouselDragging ? "is-dragging" : ""}`}
+            {...carouselGesture.handlers}
+          >
+            <div className="carousel-glow" aria-hidden="true" />
+            <div className="carousel-floor" aria-hidden="true" />
+            <div className="carousel-track" ref={trackRef}>
+              {PACK_TYPES.map((type, index) => (
+                <button
+                  type="button"
+                  key={type}
+                  ref={(node) => {
+                    itemsRef.current[index] = node;
+                  }}
+                  className={`carousel-item ${index === activeSlot ? "is-active" : ""}`}
+                  onClick={() => handleCarouselItemClick(index)}
+                  aria-label={`Choisir ${PACKS[type].label}`}
+                  aria-pressed={index === activeSlot}
+                >
+                  <Booster3D packType={type} reflection />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="carousel-caption">
+            <p className="eyebrow">{PACKS[packType].eyebrow}</p>
+            <h2>{PACKS[packType].label}</h2>
+            <p>{PACKS[packType].description}</p>
+            <span className="carousel-hint">
+              <Hand size={14} />
+              Glisse pour changer de booster
+            </span>
+          </div>
+
+          <div className="carousel-dots" aria-hidden="true">
+            {PACK_TYPES.map((type, index) => (
+              <i key={type} className={index === activeSlot ? "active" : ""} />
+            ))}
+          </div>
+        </section>
+      ) : stage === "summary" ? (
         <section className="pack-summary" aria-label="Récapitulatif du booster">
           <h2>{pack.label}</h2>
           <p className="pack-summary-gain">
@@ -455,10 +619,10 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
             >
               <div className="pack-tear-inside" aria-hidden="true" />
               <div className="pack-tear-base">
-                <PackArtwork packType={packType} />
+                <Booster3D packType={packType} />
               </div>
               <div className="pack-tear-flap" aria-hidden="true">
-                <PackArtwork packType={packType} />
+                <Booster3D packType={packType} />
               </div>
               <div className="pack-tear-seam" aria-hidden="true" />
               <p className="pack-tear-hint">
@@ -511,6 +675,12 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
                         faceUp={faceUp}
                         mode="free"
                         tilt={!collected}
+                        stack
+                        restAngle={
+                          stage === "revealed" && isActive
+                            ? { x: 7, y: -18 }
+                            : undefined
+                        }
                         onFlip={isActive && stage === "pile" ? revealTop : undefined}
                         flipDurationMs={flipDurationMs(card, timings)}
                         flipLabel={`Révéler ${creator.displayName}`}
@@ -559,6 +729,12 @@ export function PackOpening({ packType, onDraw, onClose, onError }: PackOpeningP
           Chaque phase a toujours une action primaire atteignable au clavier :
           le geste au doigt est la façon amusante de faire, pas la seule.
         */}
+        {stage === "choosing" ? (
+          <button type="button" className="primary-action pack-cinema-next" onClick={choosePack}>
+            <span>Ouvrir ce booster</span>
+            <Zap size={18} />
+          </button>
+        ) : null}
         {stage === "sealed" || stage === "tearing" ? (
           <button type="button" className="primary-action pack-cinema-next" onClick={completeTear}>
             <span>Ouvrir d&apos;un coup</span>

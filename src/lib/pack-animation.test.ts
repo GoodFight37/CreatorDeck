@@ -12,8 +12,13 @@ import {
   TEAR_VELOCITY,
   TILT_MAX_DEG,
   TILT_MAX_DEG_SCROLL_SAFE,
+  CAROUSEL_SPACING_PX,
+  CAROUSEL_VISIBILITY,
   cardRank,
   clamp,
+  carouselDeltaToSlots,
+  carouselSlot,
+  carouselSnap,
   clamp01,
   easeInOutCubic,
   easeOutBack,
@@ -30,6 +35,7 @@ import {
   swipeProgress,
   swipeReveals,
   swipeRotation,
+  crimpClipPath,
   tearBaseClipPath,
   tearClipPath,
   tearCompletes,
@@ -332,5 +338,104 @@ describe("phases", () => {
 
   it("garde l'inclinaison du classeur plus discrete que celle de la revelation", () => {
     expect(TILT_MAX_DEG_SCROLL_SAFE).toBeLessThan(TILT_MAX_DEG);
+  });
+});
+
+
+describe("soudures du sachet (crimp)", () => {
+  it("produit un polygon CSS valide et borné", () => {
+    for (const edge of ["top", "bottom"] as const) {
+      const path = crimpClipPath(22, edge);
+      expect(path.startsWith("polygon(")).toBe(true);
+      const points = path.slice("polygon(".length, -1).split(", ");
+      expect(points.length).toBe(25); // 2 coins + (22 dents + 1)
+      for (const point of points) {
+        const [x, y] = point.split(" ").map((value) => Number.parseFloat(value));
+        expect(Number.isNaN(x)).toBe(false);
+        expect(Number.isNaN(y)).toBe(false);
+        expect(x).toBeGreaterThanOrEqual(0);
+        expect(x).toBeLessThanOrEqual(100);
+        expect(y).toBeGreaterThanOrEqual(0);
+        expect(y).toBeLessThanOrEqual(100);
+      }
+    }
+  });
+
+  it("crante le bord intérieur et laisse le bord extérieur plat", () => {
+    const path = (edge: "top" | "bottom") =>
+      crimpClipPath(8, edge)
+        .slice("polygon(".length, -1)
+        .split(", ")
+        .map((point) => Number.parseFloat(point.split(" ")[1]));
+
+    // Soudure du haut : bord extérieur = 0 %, bord intérieur dentelé vers 100 %.
+    const top = path("top");
+    expect(top[0]).toBe(0);
+    expect(top[1]).toBe(0);
+    expect(Math.max(...top.slice(2))).toBe(100);
+    expect(Math.min(...top.slice(2))).toBeLessThan(100); // les dents mordent
+    expect(Math.min(...top.slice(2))).toBeGreaterThan(80);
+
+    // Soudure du bas : bord extérieur = 100 %, bord intérieur dentelé vers 0 %.
+    const bottom = path("bottom");
+    expect(bottom[0]).toBe(100);
+    expect(bottom[1]).toBe(100);
+    expect(Math.min(...bottom.slice(2))).toBe(0);
+    expect(Math.max(...bottom.slice(2))).toBeGreaterThan(0);
+    expect(Math.max(...bottom.slice(2))).toBeLessThan(20);
+  });
+
+  it("est déterministe et tolère des bornes absurdes", () => {
+    expect(crimpClipPath(22, "top")).toBe(crimpClipPath(22, "top"));
+    expect(crimpClipPath(1, "top")).not.toBe("");
+    expect(crimpClipPath(0, "top").split(", ").length).toBeGreaterThan(3);
+  });
+});
+
+describe("carrousel 3D des boosters", () => {
+  it("centre le paquet sélectionné", () => {
+    expect(carouselSlot(1, 1)).toMatchObject({ x: 0, z: 0, rotateY: 0, scale: 1, hidden: false });
+  });
+
+  it("écarte, enfonce et pivote les voisins", () => {
+    const right = carouselSlot(2, 1);
+    const left = carouselSlot(0, 1);
+    expect(right.x).toBe(CAROUSEL_SPACING_PX);
+    expect(right.z).toBeLessThan(0);
+    expect(right.scale).toBeLessThan(1);
+    expect(right.hidden).toBe(false);
+    // Symétrie : le voisin de gauche est le miroir exact (position et angle).
+    expect(left.x).toBe(-right.x);
+    expect(left.z).toBe(right.z);
+    expect(left.rotateY).toBe(-right.rotateY);
+    expect(left.scale).toBe(right.scale);
+  });
+
+  it("fait pivoter les paquets vers l'intérieur de l'arc", () => {
+    // À droite : le bord droit doit s'éloigner (rotateY positif) pour que la
+    // face du paquet regarde le centre de l'arc.
+    expect(carouselSlot(2, 1).rotateY).toBeGreaterThan(0);
+    expect(carouselSlot(0, 1).rotateY).toBeLessThan(0);
+  });
+
+  it("masque les paquets trop éloignés", () => {
+    expect(carouselSlot(1 + CAROUSEL_VISIBILITY, 1).hidden).toBe(false);
+    expect(carouselSlot(1 + CAROUSEL_VISIBILITY + 1, 1).hidden).toBe(true);
+  });
+
+  it("inverse le sens du glissement (on tire vers soi pour avancer)", () => {
+    expect(carouselDeltaToSlots(CAROUSEL_SPACING_PX)).toBe(-1);
+    expect(carouselDeltaToSlots(-CAROUSEL_SPACING_PX)).toBe(1);
+  });
+
+  it("cale l'index sur le cran le plus proche et le borne", () => {
+    const count = 3;
+    expect(carouselSnap(1, 0, count)).toBe(1);
+    expect(carouselSnap(1, -CAROUSEL_SPACING_PX, count)).toBe(2);
+    expect(carouselSnap(1, CAROUSEL_SPACING_PX, count)).toBe(0);
+    expect(carouselSnap(2, -CAROUSEL_SPACING_PX * 3, count)).toBe(2); // borné à count-1
+    expect(carouselSnap(0, CAROUSEL_SPACING_PX * 9, count)).toBe(0); // borné à 0
+    expect(carouselSnap(0, 0, 0)).toBe(0);
+    expect(carouselSnap(1, -CAROUSEL_SPACING_PX * 0.4, count)).toBe(1);
   });
 });

@@ -337,3 +337,106 @@ export function summaryDelayMs(index: number, timings: PackTimings = PACK_TIMING
 export function hasReachedPhase(phase: PackPhase, target: PackPhase): boolean {
   return PACK_PHASE_ORDER.indexOf(phase) >= PACK_PHASE_ORDER.indexOf(target);
 }
+
+/* =========================================================================
+ * GÉOMÉTRIE DU PAQUET ET DU CARROUSEL
+ * ========================================================================= */
+
+/**
+ * Découpe dentelée d'une soudure de sachet (le « crimp » en haut et en bas
+ * d'un vrai booster). La dentelure est du point de vue de l'observateur :
+ * `top` crante le bord bas de la bande du haut, `bottom` le bord haut de la
+ * bande du bas. C'est ce qui donne au paquet son aspect de sachet soufflé et
+ * scellé plutôt que de simple rectangle.
+ *
+ * Pure et testée : la forme du sachet est une donnée de jeu comme une autre.
+ */
+export function crimpClipPath(
+  teeth = 22,
+  edge: "top" | "bottom" = "top",
+  toothPct = 3.4,
+): string {
+  const count = Math.max(2, Math.round(teeth));
+  const depth = clamp(toothPct, 0.4, 14);
+  // On parcourt toujours de droite à gauche : la première dent tombe pile sur
+  // le coin droit, la dernière sur le coin gauche (aucun point dédoublonné).
+  const tooth = (index: number): { x: number; y: number } => {
+    const x = 100 - (index / count) * 100;
+    const inner = index % 2 === 0;
+    const y =
+      edge === "top"
+        ? inner
+          ? 100 - depth
+          : 100
+        : inner
+          ? depth
+          : 0;
+    return { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
+  };
+
+  const points: string[] =
+    edge === "top"
+      ? ["0% 0%", "100% 0%"] // bord extérieur du haut, bien plat
+      : ["100% 100%", "0% 100%"]; // bord extérieur du bas, bien plat
+  for (let index = 0; index <= count; index += 1) {
+    const { x, y } = tooth(index);
+    points.push(`${x}% ${y}%`);
+  }
+  return `polygon(${points.join(", ")})`;
+}
+
+/** Un paquet du carrousel : position dans l'arc, profondeur et orientation. */
+export type CarouselSlot = {
+  /** Décalage horizontal, en px (0 = sélectionné, au centre). */
+  x: number;
+  /** Recul sur l'axe Z, en px (négatif = derrière). */
+  z: number;
+  /** Angle de présentation, en degrés (les paquets voisins montrent leur face). */
+  rotateY: number;
+  scale: number;
+  /** En dehors de cette distance, le paquet n'est plus rendu. */
+  hidden: boolean;
+};
+
+/** Espacement horizontal entre deux paquets de l'arc, en px. */
+export const CAROUSEL_SPACING_PX = 150;
+/** Recul en profondeur par cran, en px. */
+export const CAROUSEL_DEPTH_PX = 190;
+/** Angle de présentation par cran, en degrés. */
+export const CAROUSEL_ANGLE_DEG = 34;
+/** Nombre de paquets gardés visibles de part et d'autre du centre. */
+export const CAROUSEL_VISIBILITY = 2;
+
+/**
+ * Emplacement d'un paquet dans l'arc. Un décalage de +1 est à droite du
+ * centre : il recule, se réduit et pivote pour montrer sa face vers l'intérieur
+ * de l'arc (à droite, donc `rotateY` positif éloigne le bord droit).
+ */
+export function carouselSlot(index: number, active: number): CarouselSlot {
+  const offset = index - active;
+  const distance = Math.abs(offset);
+  return {
+    x: offset * CAROUSEL_SPACING_PX,
+    // `distance === 0` explicite : `-0 * 190` produirait un `-0`.
+    z: distance === 0 ? 0 : -distance * CAROUSEL_DEPTH_PX,
+    rotateY: offset * CAROUSEL_ANGLE_DEG,
+    scale: 1 - distance * 0.14,
+    hidden: distance > CAROUSEL_VISIBILITY,
+  };
+}
+
+/** Déplacement horizontal (px) → nombre de crans parcourus. */
+export function carouselDeltaToSlots(deltaPx: number): number {
+  if (!CAROUSEL_SPACING_PX) return 0;
+  return -deltaPx / CAROUSEL_SPACING_PX;
+}
+
+/**
+ * Index sélectionné après relâcher : on se cale sur le cran le plus proche,
+ * en bornant aux paquets réellement disponibles (l'arc n'est pas une boucle).
+ */
+export function carouselSnap(active: number, deltaPx: number, count: number): number {
+  if (count <= 0) return 0;
+  const target = active + Math.round(carouselDeltaToSlots(deltaPx));
+  return clamp(target, 0, count - 1);
+}
