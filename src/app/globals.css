@@ -1889,7 +1889,7 @@ input:focus-visible {
   touch-action: none;
   cursor: grab;
   perspective: 1100px;
-  perspective-origin: 50% 44%;
+  perspective-origin: 50% 50%;
 }
 .carousel-stage.is-dragging { cursor: grabbing; }
 
@@ -1905,7 +1905,7 @@ input:focus-visible {
 }
 .carousel-glow {
   position: absolute;
-  top: 34%;
+  top: 50%;
   left: 50%;
   width: 460px;
   height: 300px;
@@ -1927,7 +1927,7 @@ input:focus-visible {
 
 .carousel-item {
   position: absolute;
-  top: 44%;
+  top: 50%;
   left: 50%;
   transform-style: preserve-3d;
   transform:
@@ -2103,6 +2103,10 @@ input:focus-visible {
   padding: 0 0 6px;
   flex-direction: column;
 }
+/* Marges auto plutôt que justify-content : centré, mais sans débordement
+   au-dessus de l'en-tête sur les écrans très courts. */
+.carousel-screen > .carousel-stage { margin-top: auto; }
+.carousel-screen > .carousel-dots { margin-bottom: auto; }
 
 /* Chaque paquet du carrousel est un vrai bouton : sélectionnable au clavier. */
 .carousel-item {
