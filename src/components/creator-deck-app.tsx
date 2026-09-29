@@ -1,7 +1,6 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
 import {
-  Archive,
   BookOpen,
   Check,
   ChevronLeft,
@@ -16,7 +15,6 @@ import {
   Hourglass,
   Layers3,
   LoaderCircle,
-  Radio,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -127,7 +125,6 @@ function TopBar({ game }: { game: GameState }) {
 function HomeView({
   game,
   selectedPack,
-  setSelectedPack,
   onOpen,
   onUseHourglass,
   opening,
@@ -137,7 +134,6 @@ function HomeView({
 }: {
   game: GameState;
   selectedPack: PackType;
-  setSelectedPack: (pack: PackType) => void;
   onOpen: () => void;
   onUseHourglass: () => void;
   opening: boolean;
@@ -165,24 +161,8 @@ function HomeView({
         </div>
       </section>
 
-      <div className="pack-tabs" role="tablist" aria-label="Choix du booster">
-        {(["live", "archive"] as PackType[]).map((type) => {
-          const amount = type === "live" ? game.player.livePacks : game.player.archivePacks;
-          return (
-            <button
-              key={type}
-              className={selectedPack === type ? "active" : ""}
-              onClick={() => setSelectedPack(type)}
-              role="tab"
-              aria-selected={selectedPack === type}
-            >
-              {type === "live" ? <Radio size={15} /> : <Archive size={15} />}
-              <span>{PACKS[type].label}</span>
-              <b>{amount}</b>
-            </button>
-          );
-        })}
-      </div>
+      {/* Onglets de choix de booster retirés : un seul booster pour
+          l'instant (le second concept reviendra plus tard). */}
 
       <section className={`pack-stage stage-${selectedPack}`}>
         <div className="stage-glow" />
@@ -802,7 +782,8 @@ export function CreatorDeckApp() {
   const state = useGame();
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
-  const [selectedPack, setSelectedPack] = useState<PackType>("live");
+  // Un seul booster pour l'instant : le second concept reviendra plus tard.
+  const selectedPack: PackType = "live";
   const testMode = useTestMode();
   // Booster en cours d'ouverture : `null` = pas de cinématique à l'écran.
   const [cinemaPack, setCinemaPack] = useState<PackType | null>(null);
@@ -868,7 +849,6 @@ export function CreatorDeckApp() {
           <HomeView
             game={game}
             selectedPack={selectedPack}
-            setSelectedPack={setSelectedPack}
             onOpen={handleOpenPack}
             onUseHourglass={handleUseHourglass}
             opening={cinemaPack !== null}
@@ -921,10 +901,7 @@ export function CreatorDeckApp() {
           onDraw={drawCinemaPack}
           onClose={() => setCinemaPack(null)}
           onError={showError}
-          onSelectPackType={(type) => {
-            setCinemaPack(type);
-            setSelectedPack(type);
-          }}
+          onSelectPackType={setCinemaPack}
         />
       ) : null}
     </main>

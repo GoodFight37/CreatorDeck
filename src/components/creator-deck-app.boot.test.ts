@@ -53,6 +53,8 @@ test("le boot sort de l'écran de chargement et affiche l'application", async ()
   const text = container.textContent ?? "";
   expect(text).not.toContain("Préparation du Top 500");
   expect(text).toContain("CreatorDeck");
+  // Un seul booster : le libellé « Archives » n'a plus rien à faire à l'accueil.
+  expect(text).not.toContain("Archives");
 
   await act(async () => {
     root.unmount();

@@ -4,7 +4,9 @@
  * Cinématique d'ouverture de booster, dans l'esprit Pokémon TCG Pocket :
  *
  *   0. `choosing`  — carrousel 3D : on fait glisser les paquets au doigt pour
- *                     choisir celui qu'on ouvre ;
+ *                     choisir celui qu'on ouvre (uniquement s'il y a plusieurs
+ *                     boosteurs ; un seul → on démarre directement en
+ *                     `sealed`) ;
  *   1. `sealed`    — le pack fermé lévite au centre ;
  *   2. `tearing`   — on trace le pack du doigt (à travers le haut, façon
  *                     Pocket, ou vers le haut) : le rabat se soulève, la
@@ -68,8 +70,12 @@ import {
   type PackTimings,
 } from "@/lib/pack-animation";
 
-/** Les boosters proposés dans le carrousel, dans l'ordre de l'arc. */
-const PACK_TYPES: PackType[] = ["live", "archive"];
+/**
+ * Les boosters proposés dans le carrousel, dans l'ordre de l'arc.
+ * Un seul booster pour l'instant : le second concept reviendra plus tard —
+ * il suffira de le ré-ajouter à cette liste pour réactiver le carrousel.
+ */
+const PACK_TYPES: PackType[] = ["live"];
 
 /**
  * Étapes locales de la cinématique :
@@ -79,6 +85,11 @@ const PACK_TYPES: PackType[] = ["live", "archive"];
  * déchirure (cf. `PackPhase`), d'où ce type étendu local.
  */
 type Stage = PackPhase | "choosing" | "revealed";
+
+/** Pas de carrousel de choix quand il n'y a rien à choisir : on démarre sur
+ * le pack fermé. Le scénario repasse par `choosing` dès qu'un second booster
+ * rejoint `PACK_TYPES`. */
+const START_STAGE: Stage = PACK_TYPES.length > 1 ? "choosing" : "sealed";
 
 export type PackOpeningProps = {
   packType: PackType;
@@ -130,7 +141,7 @@ export function PackOpening({
   const timings = useMemo<PackTimings>(() => timingsFor(reducedMotion), [reducedMotion]);
   const { schedule, frame } = useScheduler();
 
-  const [stage, setStageState] = useState<Stage>("choosing");
+  const [stage, setStageState] = useState<Stage>(START_STAGE);
   const [activeSlot, setActiveSlot] = useState(() =>
     Math.max(0, PACK_TYPES.indexOf(packType)),
   );
@@ -146,7 +157,7 @@ export function PackOpening({
 
   // Refs synchrones : les gestes peuvent se déclencher deux fois dans le même
   // tick (tilt + balayage), il faut donc verrouiller sans attendre le render.
-  const stageRef = useRef<Stage>("choosing");
+  const stageRef = useRef<Stage>(START_STAGE);
   const indexRef = useRef(0);
   const tearRef = useRef(0);
   const itemsRef = useRef<Array<HTMLElement | null>>([]);
