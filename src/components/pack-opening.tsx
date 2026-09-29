@@ -698,6 +698,8 @@ export function PackOpening({
                   "--tear-base-clip": tearBaseClipPath(0),
                   "--burst-ms": `${timings.burst}ms`,
                   "--settle-ms": `${timings.pileSettle}ms`,
+                  // Lévitation du pack fermé : période du clip réel du jeu.
+                  "--float-ms": `${timings.sealedFloat}ms`,
                 } as React.CSSProperties
               }
               {...packGesture.handlers}

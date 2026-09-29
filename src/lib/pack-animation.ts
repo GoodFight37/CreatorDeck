@@ -48,11 +48,11 @@ export const PACK_PHASE_ORDER: PackPhase[] = [
  * | Clé                | Durée  | Ce que le joueur voit                                  |
  * |--------------------|--------|--------------------------------------------------------|
  * | sealedIn           | 320 ms | le pack fermé apparaît et se pose au centre             |
- * | sealedFloat        | 2400 ms| cycle de lévitation du pack (boucle infinie)            |
+ * | sealedFloat        | 3333 ms| lévitation du pack (clip réel `C_PackOpen_Pack_float`)  |
  * | tearSnapBack       | 260 ms | retour élastique quand le geste est relâché trop tôt    |
  * | burst              | 620 ms | déchirure du pack + projection des cartes               |
  * | pileSettle         | 340 ms | atterrissage de la pile                                 |
- * | cardRevealFlip     | 420 ms | retournement d'une carte ordinaire                      |
+ * | cardRevealFlip     | 500 ms | retournement d'une carte (clip réel `C_CardGet_Card_flip_L`) |
  * | cardLift           | 240 ms | la carte balayée sort de la pile                        |
  * | rareFlip           | 1500 ms| retournement lent de la rare ou mieux                   |
  * | rareParticles      | 1200 ms| durée de vie de l'effet de particules                   |
@@ -62,11 +62,13 @@ export const PACK_PHASE_ORDER: PackPhase[] = [
  */
 export const PACK_TIMINGS = {
   sealedIn: 320,
-  sealedFloat: 2400,
+  /** Vrai cycle du jeu : `POCKET_CLIPS.float.cycleMs` (voir pocket-anim.ts). */
+  sealedFloat: 3333,
   tearSnapBack: 260,
   burst: 620,
   pileSettle: 340,
-  cardRevealFlip: 420,
+  /** Durée du clip réel `C_CardGet_Card_flip_L` (voir pocket-anim.ts). */
+  cardRevealFlip: 500,
   cardLift: 240,
   rareFlip: 1500,
   rareParticles: 1200,

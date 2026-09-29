@@ -27,6 +27,40 @@ html {
   background: #06050a;
 }
 
+/* =========================================================================
+ * POLICES — extraites de GoodFight37/pkmn (dump du jeu), voir public/fonts.
+ *   PocketGill  : Gill Sans Nova, texte et interface (comme l'app d'origine)
+ *   PocketFutura: Futura LT Pro Heavy, titres display et marques
+ * ========================================================================= */
+@font-face {
+  font-family: "PocketFutura";
+  src: url("/fonts/TPC_FuturaLTProHeavy.otf") format("opentype");
+  /* Un seul graisse embarquée (Heavy) : on la sert pour toutes les
+     demandes de graisse pour éviter le faux-gras synthétique. */
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PocketGill";
+  src: url("/fonts/TPC_GillSansNovaMedium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PocketGill";
+  src: url("/fonts/TPC_GillSansNovaBold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --font-ui: "PocketGill", Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "PocketFutura", Futura, "Trebuchet MS", sans-serif;
+}
+
 body {
   min-height: 100%;
   margin: 0;
@@ -34,7 +68,7 @@ body {
   background:
     radial-gradient(circle at 50% -8%, rgba(111, 65, 221, 0.18), transparent 34rem),
     #06050a;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -386,7 +420,8 @@ input:focus-visible {
     0 0 45px rgba(116, 71, 229, 0.25),
     inset 0 0 0 2px rgba(255, 255, 255, 0.06);
   transform: perspective(900px) rotateY(-5deg) rotateZ(2deg);
-  animation: pack-float 4s ease-in-out infinite;
+  /* Période réelle de `C_PackOpen_Pack_float` (3,333 s, boucle). */
+  animation: pack-float 3.333s ease-in-out infinite;
 }
 
 .pack-archive {
@@ -462,7 +497,7 @@ input:focus-visible {
 }
 
 .pack-brand strong {
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 27px;
   letter-spacing: -0.05em;
 }
@@ -815,7 +850,7 @@ input:focus-visible {
 .card-copy h3 {
   margin: 0;
   overflow: hidden;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(11px, 3.2vw, 17px);
   line-height: 1.05;
   letter-spacing: -.035em;
@@ -1066,7 +1101,7 @@ input:focus-visible {
 .new-badge { position: relative; z-index: 5; justify-content: center; gap: 4px; margin-bottom: 9px; padding: 5px 9px; color: #231139; border-radius: 7px; background: #d4bfff; font-size: 8px; font-weight: 900; letter-spacing: .08em; }
 .reveal-name { margin-top: 16px; text-align: center; }
 .reveal-name p { margin: 0 0 3px; color: var(--purple-light); font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-.reveal-name h2 { margin: 0; font-family: Georgia, serif; font-size: 25px; letter-spacing: -.04em; }
+.reveal-name h2 { margin: 0; font-family: var(--font-display); font-size: 25px; letter-spacing: -.04em; }
 .reveal-name span { color: var(--muted); font-size: 9px; }
 
 .loading-screen {
@@ -1132,7 +1167,7 @@ input:focus-visible {
   --shine-y: 50%;
   --tilt-scale: 1;
   --holo: 0.3;
-  --flip-ms: 420ms;
+  --flip-ms: 500ms; /* `C_CardGet_Card_flip_L` : clip de 500 ms */
   user-select: none;
   -webkit-user-select: none;
 }
@@ -1158,7 +1193,9 @@ input:focus-visible {
   position: absolute;
   inset: 0;
   transform-style: preserve-3d;
-  transition: transform var(--flip-ms) cubic-bezier(.34, .78, .26, 1);
+  /* Courbe mesurée sur `C_CardGet_Card_flip_L` : −71,6° → 0°, forte
+     décélération (≈ easeOutQuint : la moitié du swing en 33 ms). */
+  transition: transform var(--flip-ms) cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform;
 }
 .card3d-flipper.is-face-down { transform: rotateY(180deg); }
@@ -1227,7 +1264,7 @@ input:focus-visible {
 }
 .card-back-mark {
   position: relative;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-size: clamp(26px, 8vw, 40px);
   font-weight: 900;
   line-height: 1;
@@ -1478,6 +1515,16 @@ input:focus-visible {
 
 /* Éclatement : le rabat s'envole, le pack résiduel s'efface, la lumière
  * grandit avant que les cartes ne jaillissent. */
+/* Lévitation du pack fermé : même période que le clip du jeu. Le geste de
+ * déchirure la coupe (la scène `tearing` reprend la main sur le transform). */
+.pack-cinema.stage-sealed .pack-tear-wrap {
+  animation: pocket-float var(--float-ms, 3333ms) ease-in-out infinite;
+}
+@keyframes pocket-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
 .pack-cinema.stage-burst .pack-tear-flap {
   transform: translateY(-420px) rotate(-16deg) scale(1.05);
   opacity: 0;
@@ -1544,7 +1591,9 @@ input:focus-visible {
   100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 1; }
 }
 .pack-cinema.stage-burst .card-pile-drag {
-  animation: pile-fly-in var(--burst-ms, 620ms) cubic-bezier(.2, .85, .3, 1) both;
+  /* Sortie des cartes : ease-in-out mesuré sur
+     `C_PackOpen_Card_cardappear_front_01` (montée 0 → 3,73 u). */
+  animation: pile-fly-in var(--burst-ms, 620ms) cubic-bezier(0.45, 0, 0.55, 1) both;
   animation-delay: calc(var(--stagger, 0) * 1ms);
 }
 
@@ -1603,7 +1652,7 @@ input:focus-visible {
 
 .pack-summary h2 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 24px;
   letter-spacing: -.04em;
   text-align: center;
@@ -1966,7 +2015,7 @@ input:focus-visible {
 .carousel-caption .eyebrow { margin: 0 0 3px; }
 .carousel-caption h2 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-display);
   font-size: 27px;
   letter-spacing: -.04em;
 }
