@@ -14,10 +14,31 @@ Capacitor 8 (Android) · Vitest.
 
 ## Démarrage rapide
 
-```bash
-npm install
-npm run dev        # http://localhost:3000 (rechargement à chaud)
-```
+**Récupérer le code et le lancer sur ton ordinateur** (aucune dépendance à la
+plateforme d'aperçu — rien n'est coupé chez toi) :
+
+1. Installe **Node.js LTS ≥ 20** : <https://nodejs.org> — clique sur le bouton
+   **LTS**, puis « Suivant » partout, « Terminer » à la fin.
+2. Récupère le code. La branche en cours de travail est
+   `arena/01a0e506-test` — **pas** `main` (qui ne contient pas les dernières
+   fonctionnalités) :
+   - **Téléchargement direct** (sans git) — décompresse l'archive obtenue :
+     <https://github.com/GoodFight37/test/archive/refs/heads/arena/01a0e506-test.zip>
+   - **Avec git** :
+     `git clone -b arena/01a0e506-test https://github.com/GoodFight37/test.git`
+3. Ouvre un terminal **dans le dossier du projet** — Windows : dans
+   l'Explorateur, clique dans la barre d'adresse du dossier, tape `cmd` puis
+   Entrée ; macOS : Applications → Utilitaires → Terminal.
+4. Installe les dépendances (première fois seulement, ~2 min), puis lance :
+
+   ```bash
+   npm install
+   npm run dev
+   ```
+
+5. Ouvre <http://localhost:3000> dans ton navigateur — le jeu s'affiche.
+   Si le port 3000 est déjà pris : `npm run dev -- --port 3001` puis
+   <http://localhost:3001>.
 
 Aucune variable d'environnement n'est nécessaire pour l'application.
 `.env.example` ne concerne que le script optionnel de synchronisation des avatars.
