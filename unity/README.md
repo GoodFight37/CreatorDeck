@@ -30,14 +30,16 @@ toujours fait par le jeu (React), jamais par Unity.
 
 ## Étape 2 — Importer les assets pkmn
 
-1. Télécharge le dépôt `GoodFight37/pkmn` (bouton **Code → Download ZIP**).
-2. Dans le projet Unity, crée `Assets/Pkmn/` puis copie dedans, depuis l'archive :
-   - `Font/` (les `.otf` — sertira les titres du récapitulatif) ;
-   - `AnimationClip/C_PackOpen_*.anim` (les chorégraphies de pochette) ;
-   - le **modèle du pack** (un dossier `Animator/ANxxxx…` contenant le `.fbx`
-     du pack — repère-le : ce sont les objets animés par les clips
-     `C_PackOpen_*`) ainsi que ses `Material/` associés.
-3. Retour dans Unity : tout s'importe automatiquement. Laisse les réglages
+**Tout est déjà embarqué dans ce dépôt** — pas besoin de télécharger les
+752 Mo de `GoodFight37/pkmn` : `unity/Pkmn-Assets/` contient le sous-ensemble
+exact (69 clips, 62 modèles FBX, polices ; voir `Pkmn-Assets/README.md`).
+
+1. Copie le dossier **`unity/Pkmn-Assets/`** dans `Assets/` de ton projet
+   Unity en le renommant **`Pkmn`** (résultat : `Assets/Pkmn/Font`,
+   `Assets/Pkmn/AnimationClip`, `Assets/Pkmn/Animator`).
+2. Retourne dans Unity : l'import démarre tout seul (~30 s). Laisse les
+   réglages par défaut. Les avertissements éventuels (textures absentes du
+   dump) sont inoffensifs : les modèles s'affichent avec leurs matériaux
    par défaut.
 
 ## Étape 3 — Ajouter les scripts du kit
@@ -49,7 +51,30 @@ toujours fait par le jeu (React), jamais par Unity.
 
 ## Étape 4 — Construire la scène
 
-Crée une scène `Cinematic.unity` avec :
+### Jalon A — le pont, sans aucune animation (10 min : à faire en premier)
+
+La scène minimale prouve que **tout le contrat fonctionne** avant de toucher
+à la chorégraphie — et elle suffit déjà à ouvrir des boosters dans le jeu.
+
+1. *File → New Scene → Save As* → `Assets/Scenes/Cinematic.unity`.
+2. *GameObject → Create Empty* → nom **exact** `CreatorDeckCinematic`
+   (ce nom est le contrat).
+3. *Add Component → CreatorDeck Cinematic* (le script du kit).
+4. Pour voir quelque chose : *GameObject → 3D Object → Quad* → nomme-la
+   `pack`, position (0, 0, 0), échelle (0.8, 1.1, 1) — pochette provisoire.
+5. **Play** : la Console affiche `[CreatorDeck] ready`. C'est gagné.
+
+> ⚠️ **Les clips `pkmn` sortent d'un export dont les chemins d'attachement
+> sont hashés** (le dépôt ne contient ni scène ni contrôleur). Teste chaque
+> clip dans l'éditeur (double-clic → aperçu) ; s'il ne bouge rien sur ton
+> objet, **recrée-le en deux minutes** avec le bouton *Record* d'Unity —
+> l'ossature est simple (pochette, rabat, cartes). Le pont, lui, ne dépend
+> d'aucun clip : l'Animator reste facultatif tant que les paramètres du
+> Jalon B portent les bons noms.
+
+### Jalon B — l'Animator (le visuel)
+
+Sur la même scène, ajoute :
 
 1. **Camera** nommée `Main Camera` (position z = −3, fond noir).
 2. L'objet du **pack** au centre de la vue.
