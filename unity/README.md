@@ -62,6 +62,9 @@ La scène minimale prouve que **tout le contrat fonctionne** avant de toucher
 3. *Add Component → CreatorDeck Cinematic* (le script du kit).
 4. Pour voir quelque chose : *GameObject → 3D Object → Quad* → nomme-la
    `pack`, position (0, 0, 0), échelle (0.8, 1.1, 1) — pochette provisoire.
+   **Variante avancée** : glisse plutôt
+   `Assets/Pkmn/Animator/AN001_0010_00_000/AN001_0010_00_000.fbx` (le vrai
+   corps de pochette) à la place de la Quad.
 5. **Play** : la Console affiche `[CreatorDeck] ready`. C'est gagné.
 
 > ⚠️ **Les clips `pkmn` sortent d'un export dont les chemins d'attachement
