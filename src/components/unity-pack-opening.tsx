@@ -34,6 +34,21 @@ export type UnityPackOpeningProps = {
   onUnavailable: () => void;
 };
 
+/**
+ * Libère le contexte WebGL de l'instance : la WebView Android n'en possède
+ * qu'un nombre restreint — sans `Quit()` à la fermeture, chaque ouverture en
+ * consommerait un nouveau jusqu'à plantage.
+ */
+function quitInstance(instance: UnityInstance | null) {
+  if (!instance || typeof instance.Quit !== "function") return;
+  try {
+    const result = instance.Quit();
+    if (result && typeof result.catch === "function") result.catch(() => {});
+  } catch {
+    /* le repli web n'en dépend jamais */
+  }
+}
+
 export function UnityPackOpening({
   packType,
   onDraw,
@@ -45,6 +60,9 @@ export function UnityPackOpening({
   const instanceRef = useRef<UnityInstance | null>(null);
   const drawRef = useRef(onDraw);
   const failRef = useRef(onUnavailable);
+  /** Vrai dès que le booster est consommé : on ne doit plus jamais
+   *  rebasculer sur la cinématique web (elle re-tirerait une seconde fois). */
+  const drewRef = useRef(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +81,10 @@ export function UnityPackOpening({
     };
 
     loadUnityBuild(canvas).then((instance) => {
-      if (cancelled) return;
+      if (cancelled) {
+        quitInstance(instance);
+        return;
+      }
       if (!instance) {
         fail();
         return;
@@ -79,6 +100,7 @@ export function UnityPackOpening({
           if (event.type === "tear-complete") {
             try {
               const cards = drawRef.current();
+              drewRef.current = true;
               instance.SendMessage(
                 "CreatorDeckCinematic",
                 "SetCards",
@@ -96,7 +118,10 @@ export function UnityPackOpening({
           }
           if (event.type === "error") {
             onError(event.message);
-            fail();
+            // Booster déjà tiré : fermer sans rebondir sur la cinématique
+            // web, qui re-tirerait. Avant le tirage : repli web normal.
+            if (drewRef.current) onClose();
+            else fail();
           }
         },
       };
@@ -106,7 +131,9 @@ export function UnityPackOpening({
     return () => {
       cancelled = true;
       delete window.CreatorDeckUnity;
+      const instance = instanceRef.current;
       instanceRef.current = null;
+      quitInstance(instance);
     };
   }, [packType, onClose, onError]);
 
