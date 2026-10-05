@@ -1,0 +1,45 @@
+{
+  "name": "creatordeck",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "serve out",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "android:sync": "npm run build && cap sync android",
+    "android:open": "cap open android",
+    "android:debug": "npm run android:sync && node scripts/android-gradle.mjs assembleDebug",
+    "android:apk": "npm run android:sync && node scripts/android-gradle.mjs assembleRelease",
+    "assets:regen": "node scripts/regen-avatars.mjs",
+    "catalog:build": "node scripts/build-catalog.mjs",
+    "catalog:check": "node scripts/build-catalog.mjs --check",
+    "catalog:source": "node scripts/build-twitch-catalog.mjs",
+    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/core": "^8.5.2",
+    "lucide-react": "^1.48.0",
+    "next": "^16.3.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.2",
+    "@tailwindcss/postcss": "4.1.17",
+    "@types/node": "22.19.15",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "dotenv": "17.3.1",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "postcss": "^8.5.28",
+    "serve": "^14.2.4",
+    "sharp": "^0.35.4",
+    "tailwindcss": "4.1.17",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

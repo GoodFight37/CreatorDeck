@@ -1,0 +1,10 @@
+{
+  "expectedSize": 1000,
+  "scope": "world",
+  "scopeLabel": "mondial",
+  "audience": "créateurs du monde entier",
+  "label": "Top 1000 Twitch",
+  "eyebrow": "TOP 1000 TWITCH",
+  "edition": "ÉDITION TOP 1000 TWITCH",
+  "note": "Périmètre et libellés du catalogue, écrits par scripts/build-twitch-catalog.mjs. L'application lit ces valeurs : changer de périmètre (FR -> monde) ne touche aucun composant. expectedSize est vérifié par npm run catalog:check."
+}

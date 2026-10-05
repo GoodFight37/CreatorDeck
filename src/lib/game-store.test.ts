@@ -1,0 +1,112 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { PACKS } from "@/lib/catalog";
+import { SAVE_KEY } from "@/lib/save-store";
+
+/**
+ * Le store est un singleton de module : chaque test le ré-importe à neuf
+ * (`vi.resetModules`) au-dessus d'un `window` factice doté d'un localStorage
+ * en mémoire.
+ */
+function fakeWindow() {
+  const data = new Map<string, string>();
+  const localStorage = {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => void data.set(key, value),
+    removeItem: (key: string) => void data.delete(key),
+  };
+  const win = {
+    localStorage,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+  };
+  return { win, data };
+}
+
+async function freshStore() {
+  vi.resetModules();
+  return (await import("@/lib/game-store")).gameStore;
+}
+
+describe("gameStore", () => {
+  let data: Map<string, string>;
+
+  beforeEach(() => {
+    const fake = fakeWindow();
+    data = fake.data;
+    vi.stubGlobal("window", fake.win);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("ne lit rien avant le premier abonnement, puis crée et persiste une partie", async () => {
+    const store = await freshStore();
+    expect(store.getSnapshot()).toBeNull();
+    expect(store.getServerSnapshot()).toBeNull();
+
+    const listener = vi.fn();
+    const unsubscribe = store.subscribe(listener);
+    expect(listener).toHaveBeenCalledTimes(1);
+    const state = store.getSnapshot();
+    expect(state).not.toBeNull();
+    expect(state?.packs).toBe(3);
+    expect(data.has(SAVE_KEY)).toBe(true);
+    unsubscribe();
+  });
+
+  it("recharge une sauvegarde existante", async () => {
+    const first = await freshStore();
+    first.subscribe(() => {});
+    const cards = first.openPack(Date.now());
+    expect(cards).toHaveLength(PACKS.live.size);
+    const persisted = first.getSnapshot();
+
+    const second = await freshStore();
+    second.subscribe(() => {});
+    expect(second.getSnapshot()).toEqual(persisted);
+    expect(second.getSnapshot()?.cards).toHaveLength(PACKS.live.size);
+  });
+
+  it("notifie les abonnés à chaque mutation et persiste", async () => {
+    const store = await freshStore();
+    const listener = vi.fn();
+    store.subscribe(listener);
+    listener.mockClear();
+
+    store.openPack();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").openings).toBe(1);
+
+    store.useHourglass();
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").hourglasses).toBe(11);
+  });
+
+  it("propage les erreurs du moteur sans corrompre l'état", async () => {
+    const store = await freshStore();
+    store.subscribe(() => {});
+    // Épuise les 3 boosters d'accueil.
+    for (let i = 0; i < 3; i += 1) store.openPack();
+    const before = store.getSnapshot();
+    expect(() => store.openPack()).toThrowError(/booster/i);
+    expect(store.getSnapshot()).toBe(before);
+  });
+
+  it("réinitialise et importe une sauvegarde", async () => {
+    const store = await freshStore();
+    store.subscribe(() => {});
+    store.openPack();
+    const exported = store.exportSave();
+    const playerId = store.getSnapshot()?.playerId;
+
+    store.reset();
+    expect(store.getSnapshot()?.cards).toHaveLength(0);
+    expect(store.getSnapshot()?.playerId).not.toBe(playerId);
+
+    store.importSave(exported);
+    expect(store.getSnapshot()?.playerId).toBe(playerId);
+    expect(store.getSnapshot()?.cards).toHaveLength(PACKS.live.size);
+    expect(() => store.importSave("nope")).toThrowError(/JSON/);
+  });
+});

@@ -1,0 +1,68 @@
+{
+  "pointsPerCreator": 4,
+  "hourglassesPerSeason": 3,
+  "waveSize": 150,
+  "families": [
+    {
+      "id": "S01",
+      "name": "France & francophonie",
+      "tagline": "Le talk, le jeu et la bonne humeur, en français.",
+      "languages": ["fr"]
+    },
+    {
+      "id": "S02",
+      "name": "Espagne & Amérique latine",
+      "tagline": "La comunidad hispanohablante, de Madrid à Buenos Aires.",
+      "languages": ["es"]
+    },
+    {
+      "id": "S03",
+      "name": "Brésil & Portugal",
+      "tagline": "Do Brasil a Portugal, la plus grande torcida du direct.",
+      "languages": ["pt"]
+    },
+    {
+      "id": "S04",
+      "name": "Anglophonie",
+      "tagline": "Les chaînes les plus suivies de la planète, d'un océan à l'autre.",
+      "languages": ["en"]
+    },
+    {
+      "id": "S05",
+      "name": "Europe du Nord & germanique",
+      "tagline": "Deutsch, Nederlands, skandinavisk — la scène du nord.",
+      "languages": ["de", "nl", "sv", "da", "no", "fi", "is"]
+    },
+    {
+      "id": "S06",
+      "name": "Europe de l'Est",
+      "tagline": "Русский, polski, čeština : l'Est en direct.",
+      "languages": ["ru", "uk", "pl", "cs", "sk", "hu", "ro", "bg", "sr", "hr", "lt", "lv", "et", "sl"]
+    },
+    {
+      "id": "S07",
+      "name": "Europe du Sud",
+      "tagline": "L'Italie, la Grèce et toute la Méditerranée.",
+      "languages": ["it", "el", "ca", "gl", "eu"]
+    },
+    {
+      "id": "S08",
+      "name": "Asie",
+      "tagline": "Corée, Japon, Chine et toute l'Asie du Sud-Est.",
+      "languages": ["ko", "ja", "zh", "zh-tw", "th", "vi", "id", "ms", "tl", "hi", "bn", "ta"]
+    },
+    {
+      "id": "S09",
+      "name": "Moyen-Orient & Afrique",
+      "tagline": "العربية, türkçe, עברית — du Maghreb au Golfe.",
+      "languages": ["ar", "he", "fa", "tr", "ur", "sw", "af"]
+    }
+  ],
+  "catchAll": {
+    "id": "S10",
+    "name": "Sans frontière",
+    "tagline": "Langues rares, streams multilingues et chaînes sans langue déclarée.",
+    "maxSize": 150
+  },
+  "note": "Familles de collection CreatorDeck : les créateurs sont regroupés par langue de diffusion (le signal le plus stable sur Twitch — un streameur change de jeu, pas de langue), pas par jeu joué. Le générateur écrit l'identifiant de la famille dans le champ « region » de chaque créateur (src/data/creators.json) ; l'application en déduit les saisons. Une famille trop grande est découpée en vagues de waveSize par ordre de classement. Les langues non listées et les chaînes sans langue déclarée tombent dans la saison fourre-tout « Sans frontière ». Tout est configurable ici : ajouter une langue à une famille, déplacer une langue, ou créer une famille."
+}

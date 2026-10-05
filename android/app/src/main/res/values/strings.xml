@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CreatorDeck</string>
+    <string name="title_activity_main">CreatorDeck</string>
+    <string name="package_name">com.monnom.monapp</string>
+    <string name="custom_url_scheme">com.monnom.monapp</string>
+</resources>
