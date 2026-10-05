@@ -1,7 +1,7 @@
 {
   "name": "CreatorDeck",
   "short_name": "CreatorDeck",
-  "description": "Collectionne les créateurs francophones.",
+  "description": "Ouvre des boosters et complète ta collection de créateurs.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#090812",

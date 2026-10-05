@@ -1,20 +1,24 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { CATALOG_AUDIENCE, CATALOG_LABEL } from "@/lib/catalog";
 import "./globals.css";
 
+// Titre et description suivent le périmètre du catalogue (FR ou monde) : en
+// changer ne demande aucune retouche de ce fichier.
+const TAGLINE = `CreatorDeck — collectionne les ${CATALOG_AUDIENCE}`;
+const DESCRIPTION = `Ouvre des boosters et complète ta collection de ${CATALOG_AUDIENCE} (${CATALOG_LABEL}).`;
+
 export const metadata: Metadata = {
-  title: "CreatorDeck — collectionne les créateurs francophones",
-  description:
-    "Ouvre des boosters et complète ta collection de créateurs francophones.",
+  title: TAGLINE,
+  description: DESCRIPTION,
   applicationName: "CreatorDeck",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: "/icon.svg",
   },
   openGraph: {
-    title: "CreatorDeck — collectionne les créateurs francophones",
-    description:
-      "Ouvre des boosters et complète ta collection de créateurs francophones.",
+    title: TAGLINE,
+    description: DESCRIPTION,
     siteName: "CreatorDeck",
     type: "website",
     locale: "fr_FR",
@@ -22,8 +26,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "CreatorDeck",
-    description:
-      "Ouvre des boosters et complète ta collection de créateurs francophones.",
+    description: DESCRIPTION,
   },
 };
 

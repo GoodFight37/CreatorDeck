@@ -37,6 +37,7 @@ import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
+  CATALOG_AUDIENCE,
   CATALOG_EDITION,
   CATALOG_EYEBROW,
   CATALOG_LABEL,
@@ -96,7 +97,7 @@ function LoadingScreen() {
         <span>CD</span>
       </div>
       <LoaderCircle className="spin" size={26} />
-      <p>Préparation du {CATALOG_LABEL} Twitch FR…</p>
+      <p>Préparation du {CATALOG_LABEL}…</p>
     </main>
   );
 }
@@ -115,7 +116,7 @@ function TopBar({ game }: { game: GameState }) {
         </div>
         <div>
           <strong>CreatorDeck</strong>
-          <small>{CATALOG_LABEL} Twitch FR · S01</small>
+          <small>{CATALOG_LABEL} · S01</small>
         </div>
       </div>
       <div className="top-actions">
@@ -553,7 +554,7 @@ function MissionsView({
           <Trophy size={27} />
         </div>
         <div>
-          <span>Collection {CATALOG_LABEL} Twitch FR</span>
+          <span>Collection {CATALOG_LABEL}</span>
           <strong>{game.stats.uniqueCreators} / {CREATORS.length}</strong>
           <div className="progress-track">
             <i
@@ -603,7 +604,7 @@ function MissionsView({
         <MissionRow
           icon={<Sparkles size={19} />}
           label="Maître du Twitch Game"
-          detail={`Compléter les ${CATALOG_SIZE} streameurs francophones`}
+          detail={`Compléter les ${CATALOG_SIZE} ${CATALOG_AUDIENCE}`}
           progress={game.stats.uniqueCreators}
           target={CATALOG_SIZE}
         />
@@ -672,7 +673,7 @@ function ProfileView({
         <div>
           <p className="eyebrow">COLLECTIONNEUR</p>
           <h1>Mon profil</h1>
-          <span>Édition {CATALOG_LABEL} Twitch FR</span>
+          <span>{CATALOG_EDITION}</span>
         </div>
       </section>
 

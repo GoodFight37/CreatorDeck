@@ -54,7 +54,7 @@ async function readJson(file) {
  * Vérifie la cohérence du catalogue des créateurs.
  *
  * La taille attendue vient de `src/data/catalog.config.json` (écrit par
- * scripts/build-twitch-fr.mjs) ou de `--expect N` : un catalogue tronqué est
+ * scripts/build-twitch-catalog.mjs) ou de `--expect N` : un catalogue tronqué est
  * donc détecté, quelle que soit la cible (500, 1000, 2000…).
  */
 function validateCreators(creators, expectedSize) {
@@ -201,6 +201,12 @@ async function main() {
   ]);
 
   const expectedSize = EXPECT_OPTION ?? catalogConfig?.expectedSize ?? null;
+  // Les libellés de l'app viennent de catalog.config.json : on vérifie qu'ils
+  // ne mentent pas sur la taille ou le périmètre du catalogue réel.
+  const label = catalogConfig?.label;
+  if (typeof label === "string" && expectedSize && !label.includes(String(expectedSize))) {
+    fail(`catalog.config.json : le libellé « ${label} » ne mentionne pas la taille ${expectedSize}.`);
+  }
   if (EXPECT_OPTION && catalogConfig?.expectedSize && EXPECT_OPTION !== catalogConfig.expectedSize) {
     warn(
       `--expect ${EXPECT_OPTION} diffère de catalog.config.json (${catalogConfig.expectedSize}) : c'est la valeur de --expect qui est vérifiée.`,
@@ -230,6 +236,11 @@ async function main() {
   console.log(
     `\n✅ Catalogue valide : ${creators.length} créateurs${expectedSize ? ` (attendu : ${expectedSize})` : ""}, ${byRarity.legendary} légendaires.`,
   );
+  if (catalogConfig?.label) {
+    console.log(
+      `   Périmètre : ${catalogConfig.scope ?? "?"} — « ${catalogConfig.label} » (${catalogConfig.audience ?? "audience inconnue"})`,
+    );
+  }
   const portraitWarnings = warnings.filter((message) => message.startsWith("portrait manquant")).length;
   if (portraitWarnings) {
     console.log(

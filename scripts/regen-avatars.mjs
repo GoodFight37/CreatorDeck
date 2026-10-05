@@ -42,11 +42,11 @@ const FORCE = process.argv.includes("--force");
 /**
  * Résolution cible : celle du pipeline (600 px) par défaut, surchargée par
  * `AVATAR_PX` quand le catalogue grossit — un Top 2000 en 600 px pèserait
- * ~70 Mo de JPEG dans l'APK, contre ~35 Mo en 300 px (voir docs/passer-a-2000.md).
+ * ~70 Mo de JPEG dans l'APK, contre ~35 Mo en 300 px (voir docs/catalogue-twitch.md).
  */
 const TARGET_SIZE = Math.max(150, Math.floor(Number(process.env.AVATAR_PX ?? AVATAR_SIZE)));
 // Client-ID public du site web Twitch (API GQL non officielle, déjà employé
-// par scripts/build-twitch-fr.mjs).
+// par scripts/build-twitch-catalog.mjs).
 const GQL_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
 await mkdir(OUT_DIR, { recursive: true });

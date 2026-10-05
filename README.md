@@ -1,6 +1,7 @@
-# CreatorDeck — collectionne les créateurs francophones
+# CreatorDeck — collectionne les créateurs Twitch
 
-Jeu mobile de cartes à collectionner façon TCG basé sur le Top 500 Twitch FR.
+Jeu mobile de cartes à collectionner façon TCG basé sur le classement Twitch
+(périmètre configurable : monde entier par défaut, ou une langue précise).
 **100 % hors ligne** : la logique de jeu tourne sur l'appareil et la
 progression est sauvegardée localement — aucun compte, aucun serveur.
 Boosters aux **taux de drop publiés**, événement « Perfect », atelier de
@@ -39,7 +40,7 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
-| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch (`--count 2000` pour viser plus grand, voir `docs/passer-a-2000.md`) |
+| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch (`--count 2000`, `--languages FR`, voir `docs/catalogue-twitch.md`) |
 
 ## Architecture
 
@@ -63,7 +64,7 @@ public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
-docs/passer-a-2000.md    passer à un Top 1000/2000 (budget images, réglages, runbook)
+docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
 android/                 projet Capacitor Android
 ```
 
@@ -79,10 +80,11 @@ Principes :
   v1 sont **migrées automatiquement** (aucune collection perdue) puis relues
   sous la nouvelle clé. L'onglet Profil permet de la copier / importer
   (transfert entre téléphones) et de la réinitialiser.
-- **Aucune taille codée en dur** : libellés, jalons d'objectifs et raretés
-  dérivent du catalogue (`CATALOG_SIZE`, `scripts/lib/rarity-ladder.mjs`).
-  Passer de 500 à 2000 créateurs est un changement de données — voir
-  `docs/passer-a-2000.md`.
+- **Ni taille ni périmètre codés en dur** : libellés, métadonnées, audience,
+  jalons d'objectifs et raretés dérivent du catalogue et de
+  `src/data/catalog.config.json` (`CATALOG_SIZE`, `CATALOG_SCOPE`,
+  `scripts/lib/rarity-ladder.mjs`). Basculer du Top 500 FR au Top 2000 mondial
+  est un changement de données — voir `docs/catalogue-twitch.md`.
 - **Les probabilités sont des données, pas du code** : le tirage lit
   `src/data/pull-rates.json` (une table par slot, slot garanti, événement
   « Perfect ») et l'écran « Taux de drop » recalcule ses chiffres depuis le
@@ -182,9 +184,9 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 - `npm run assets:regen` met à jour `public/creators/` (reprenable : un portrait
   déjà en 600 px est ignoré, `--force` pour tout ré-encoder). Le rapport va dans
   `reports/` (non versionné). Compter ~34 Ko par portrait 600 px (~18 Ko en
-  300 px) : le budget images est détaillé dans `docs/passer-a-2000.md`.
-- `scripts/build-twitch-fr.mjs` reconstruit `src/data/creators.json` depuis
+  300 px) : le budget images est détaillé dans `docs/catalogue-twitch.md`.
+- `scripts/build-twitch-catalog.mjs` reconstruit `src/data/creators.json` depuis
   l'API GQL de Twitch (Client-ID public du site web : non officiel, peut casser
   sans préavis ; `--dry-run` pour mesurer avant d'écrire, `--count N` pour la
-  cible) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
+  cible, `--languages FR` pour restreindre le périmètre) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
   officielle si `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` sont renseignés.

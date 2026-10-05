@@ -1,5 +1,10 @@
 {
   "expectedSize": 500,
+  "scope": "FR",
+  "scopeLabel": "FR",
+  "audience": "créateurs francophones",
   "label": "Top 500 Twitch FR",
-  "note": "Écrit par scripts/build-twitch-fr.mjs. expectedSize est vérifié par npm run catalog:check."
+  "eyebrow": "TOP 500 TWITCH FR",
+  "edition": "ÉDITION TOP 500 FR",
+  "note": "Périmètre et libellés du catalogue, écrits par scripts/build-twitch-catalog.mjs. L'application lit ces valeurs : changer de périmètre (FR -> monde) ne touche aucun composant. expectedSize est vérifié par npm run catalog:check."
 }

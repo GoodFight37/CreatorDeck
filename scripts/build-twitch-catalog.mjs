@@ -2,19 +2,30 @@
  * Génère le catalogue CreatorDeck depuis Twitch : `src/data/creators.json` et
  * les portraits de `public/creators/`.
  *
+ * Périmètre : par défaut **le monde entier** (classement mondial Twitch), avec
+ * la possibilité de restreindre à une ou plusieurs langues de diffusion.
+ *
  * Usage :
- *   node scripts/build-twitch-fr.mjs                          # Top 500 (historique)
- *   node scripts/build-twitch-fr.mjs --count 2000             # Top 2000
- *   node scripts/build-twitch-fr.mjs --count 2000 --dry-run   # découvre sans rien écrire
- *   AVATAR_PX=300 node scripts/build-twitch-fr.mjs --count 2000
+ *   node scripts/build-twitch-catalog.mjs                       # Top 500 mondial
+ *   node scripts/build-twitch-catalog.mjs --count 2000          # Top 2000 mondial
+ *   node scripts/build-twitch-catalog.mjs --languages FR        # Top FR (historique)
+ *   node scripts/build-twitch-catalog.mjs --languages FR,EN     # plusieurs langues
+ *   node scripts/build-twitch-catalog.mjs --count 2000 --dry-run
+ *   AVATAR_PX=300 node scripts/build-twitch-catalog.mjs --count 2000
  *
  * Options :
  *   --count N        taille du catalogue à produire (défaut 500, env TOP_N)
+ *   --languages L    langues de diffusion à retenir, séparées par des virgules
+ *                    (FR, EN, ES, PT, DE…). Vide = toutes (défaut).
  *   --pages N        profondeur de pagination Twitch par jeu (défaut 2)
  *   --concurrency N  téléchargements simultanés (défaut 24)
  *   --dry-run        s'arrête après la découverte (écrit reports/candidates-<N>.json)
  *   --seed FILE      réutilise une découverte existante au lieu d'interroger Twitch
  *   --force          re-télécharge les portraits déjà présents
+ *
+ * Le périmètre retenu est écrit dans `src/data/catalog.config.json` (scope,
+ * label, accroches) : l'application n'a aucun libellé « FR » en dur, elle lit
+ * ces valeurs.
  *
  * La rareté n'est pas un nombre de rangs en dur : elle est calculée en part du
  * classement par `scripts/lib/rarity-ladder.mjs`, donc la même échelle vaut pour
@@ -25,11 +36,14 @@
  *
  * Panneau de bord : `npm run catalog:check` vérifie ensuite que le catalogue
  * produit est complet (rangs contigus, catégories, poids de tirage).
+ *
+ * Mode d'emploi complet : docs/catalogue-twitch.md.
  */
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AVATAR_SIZE, downloadLargestAvatar, encodeAvatar, readAvatarSize } from "./lib/avatars.mjs";
+import { scopeConfig } from "./lib/catalog-scope.mjs";
 import { rarityCounts, rarityForRank } from "./lib/rarity-ladder.mjs";
 
 const ROOT = process.cwd();
@@ -55,11 +69,77 @@ const CONCURRENCY = Math.max(1, Math.floor(Number(option("concurrency", 24))));
 const DRY_RUN = argv.includes("--dry-run");
 const FORCE = argv.includes("--force");
 const SEED_FILE = option("seed", null);
+/**
+ * Langues de diffusion retenues. Vide = monde entier (aucun filtre), ce qui est
+ * le comportement par défaut depuis l'ouverture au périmètre mondial.
+ */
+const LANGUAGES = (option("languages", process.env.TOP_LANGUAGES ?? "") || "")
+  .split(",")
+  .map((code) => code.trim().toUpperCase())
+  .filter(Boolean);
+/** Un catalogue limité à la France garde sa liste curée dédiée. */
+const SCOPE_IS_FR = LANGUAGES.length === 1 && LANGUAGES[0] === "FR";
 /** Résolution des portraits écrits (600 px par défaut, voir scripts/lib/avatars.mjs). */
 const AVATAR_PX = Math.max(150, Math.floor(Number(process.env.AVATAR_PX ?? AVATAR_SIZE)));
 /** Marge de sécurité : on découvre bien plus de chaînes qu'il n'en faut. */
 const CANDIDATE_TARGET = Math.max(COUNT * 2, 620);
 
+
+/**
+ * Chaînes mondiales incontournables, résolues par login.
+ *
+ * Rôle : garantir que les têtes d'affiche **entrent dans le catalogue même
+ * quand elles ne sont pas en direct** au moment de la génération. Le classement
+ * final reste dominé par les followers réels (le boost ci-dessous ne fait que
+ * les faire émerger, il ne les propulse pas artificiellement en tête).
+ *
+ * Un login inexistant n'est pas une erreur : l'API renvoie `null` et l'entrée
+ * est simplement ignorée.
+ */
+const CURATED_WORLD_LOGINS = [
+  // Amérique du Nord
+  "xqc", "kaicenat", "ninja", "shroud", "jynxzi", "tarik", "summit1g", "ishowspeed",
+  "adinross", "hasanabi", "trainwreckstv", "sodapoppin", "asmongold", "tyler1",
+  "doublelift", "pokimane", "lilypichu", "sykkuno", "valkyrae", "mizkif", "nmplol",
+  "esfandtv", "greekgodx", "forsen", "lirik", "drdisrespect", "timthetatman",
+  "cloakzy", "nickmercs", "couragejd", "scump", "nadeshot", "amouranth", "alinity",
+  "pokelawls", "qtcinderella", "emiru", "extraemily", "cyr", "willneff", "ludwig",
+  "penguinz0", "caseoh_", "ohnepixel", "s1mple", "loserfruit", "lazarbeam",
+  "muselk", "typicalgamer", "tommyinnit", "philza", "dream", "georgenotfound",
+  "sapnap", "karljacobs", "quackity",
+  // Amérique latine et Espagne
+  "ibai", "auronplay", "rubius", "thegrefg", "xokas", "illojuan", "rivers_gg",
+  "spreen", "elmariana", "juansguarnizo", "missasinfonia", "coscu", "carola",
+  // Brésil et Portugal
+  "gaules", "casimito", "alanzoka", "loud_coringa", "baiano", "cellbit", "felps",
+  // Allemagne
+  "trymacs", "montanablack88", "knossi", "papaplatte", "rewinside",
+  // Corée, Japon, Océanie
+  "faker", "kato_junichi0817",
+  // Pologne, Italie, Turquie, Russie
+  "ewroon", "baddo", "jahrein", "bratishkinoff", "buster",
+  // France (intégrée au classement mondial)
+  "squeezie", "aminematue", "gotaga", "kamet0", "zerator", "domingo", "mastu",
+  "inoxtag", "michou", "antoinedaniel", "mistermv", "etoiles", "ponce", "bagherajones",
+  "horty", "ultia", "angledroit", "maghla", "locklear", "sardoche", "terracid",
+  "laink", "wankilstudio", "joyca", "amixem", "mcflyetcarlito", "jltomy",
+  "rebeudeter", "zacknani", "rivenzi", "littlebigwhale", "jeel", "gom4rt", "poko",
+  "alphacast", "fildrong", "bob_lennon", "aypierre", "doigby", "shaunz", "traytonlol",
+  "anyme023", "nico_la", "sylvainlyve", "byilhann", "clemquicourt", "maximebiaggi",
+  "lucasmorotv", "hugodelire", "wissksr", "nikof", "anaee", "mynthos", "dfg",
+  "jolavanille", "deujna", "xari", "kaatsup", "alderiate", "lebouseuh", "chap",
+  "misterjday", "sheshounet", "pollynette", "zevent", "samueletienne", "jeanmassiet",
+  "hugodecrypte", "notabene", "at0mium", "kenbogard", "kayane", "shisheyu_mayamoto",
+  "damdamdeo", "lutti", "kotei", "wakz", "lrb", "narkuss", "skyyart", "gobgg",
+  "nisqy", "hanssama", "cabochardlol", "saken_lol", "targamas", "rhobalas_lol",
+  "solary", "karminecorp", "gentlemates", "vitality", "mandatory", "chowh1",
+  "wisethug", "brokybrawks", "skyroz", "moman", "jirayalol", "krl_stream", "1pvcs",
+  "shaiiko", "sixquatre", "vatira_", "zenrl", "kaydop", "fairy_peak", "alpha54",
+  "ferra", "kinstaar", "airwaks", "valouzz", "pidi", "theodort", "avamin", "snakou",
+  "gaspow", "loupiote", "modiiie",
+];
+
+/** Liste curée utilisée quand on génère explicitement un catalogue FR. */
 const CURATED_FR_LOGINS = [
   "squeezie", "aminematue", "kamet0", "gotaga", "zerator", "domingo", "mastu", "inoxtag",
   "michou", "antoinedaniel", "mistermv", "joueur_du_grenier", "etoiles", "ponce", "bagherajones",
@@ -140,6 +220,14 @@ async function gqlRequest(query, variables = {}) {
   throw new Error("Twitch GQL request failed");
 }
 
+/**
+ * Fragment `options: { broadcasterLanguages: […] }` des requêtes de direct.
+ * Vide quand aucune langue n'est demandée : on obtient alors le direct mondial.
+ */
+function languageOptions() {
+  return LANGUAGES.length ? `, options: { broadcasterLanguages: [${LANGUAGES.join(", ")}] }` : "";
+}
+
 /** Champs communs à toutes les récupérations de chaînes. */
 const STREAM_NODE_FIELDS = `
   viewersCount
@@ -157,7 +245,7 @@ const STREAM_NODE_FIELDS = `
  * `after` est le curseur renvoyé par la page précédente (null pour la première).
  */
 async function fetchStreamConnection({ gameName = null, after = null, first = 30 }) {
-  const args = [`first: ${first}`, `options: { broadcasterLanguages: [FR] }`];
+  const args = [`first: ${first}${languageOptions()}`];
   if (after) args.push(`after: ${JSON.stringify(after)}`);
   const query = gameName
     ? `query { game(name: ${JSON.stringify(gameName)}) {
@@ -240,7 +328,7 @@ async function fetchCuratedUsers(logins) {
  * détermine combien de pages on descend par jeu — c'est ce qui permet de
  * viser un Top 2000 là où une seule page plafonnait à ~600 chaînes.
  */
-async function fetchLiveFrenchStreams(target) {
+async function fetchLiveStreams(target) {
   // 1. Direct FR global, page par page.
   let cursor = null;
   for (let page = 0; page < PAGES; page += 1) {
@@ -251,7 +339,9 @@ async function fetchLiveFrenchStreams(target) {
     cursor = connection.pageInfo.endCursor;
     if (discovery.collected.length >= target) break;
   }
-  console.log(`   -> direct FR global : ${discovery.collected.length} chaînes`);
+  console.log(
+    `   -> direct ${LANGUAGES.length ? LANGUAGES.join("/") : "mondial"} : ${discovery.collected.length} chaînes`,
+  );
 
   // 2. Liste des jeux : top Twitch + jeux complémentaires.
   const gamesBody = await gqlRequest(`query { games(first: 100) { edges { node { name } } } }`);
@@ -274,7 +364,7 @@ async function fetchLiveFrenchStreams(target) {
         (gameName, idx) => `
           g${idx}: game(name: ${JSON.stringify(gameName)}) {
             displayName
-            streams(first: 30, options: { broadcasterLanguages: [FR] }) {
+            streams(first: 30${languageOptions()}) {
               pageInfo { hasNextPage endCursor }
               edges { node { ${STREAM_NODE_FIELDS} } }
             }
@@ -306,7 +396,7 @@ async function fetchLiveFrenchStreams(target) {
           ([gameName, after], idx) => `
             g${idx}: game(name: ${JSON.stringify(gameName)}) {
               displayName
-              streams(first: 50, after: ${JSON.stringify(after)}, options: { broadcasterLanguages: [FR] }) {
+              streams(first: 50, after: ${JSON.stringify(after)}${languageOptions()}) {
                 pageInfo { hasNextPage endCursor }
                 edges { node { ${STREAM_NODE_FIELDS} } }
               }
@@ -436,7 +526,8 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(REPORTS_DIR, { recursive: true });
   console.log(
-    `Catalogue CreatorDeck — objectif ${COUNT} créateurs, portraits ${AVATAR_PX}px, ` +
+    `Catalogue CreatorDeck — objectif ${COUNT} créateurs, périmètre ` +
+      `${LANGUAGES.length ? LANGUAGES.join("/") : "mondial"}, portraits ${AVATAR_PX}px, ` +
       `pagination ${PAGES} page(s)/jeu${DRY_RUN ? ", découverte seule" : ""}.\n`,
   );
 
@@ -447,12 +538,17 @@ async function main() {
     if (!Array.isArray(allCandidates)) throw new Error(`${SEED_FILE} : clé « candidates » attendue.`);
     console.log(`   -> ${allCandidates.length} candidats rechargés.`);
   } else {
-    console.log("1/4 Résolution des créateurs FR incontournables sur Twitch GQL…");
-    const curated = await fetchCuratedUsers(CURATED_FR_LOGINS);
-    console.log(`   -> ${curated.length} créateurs historiques résolus.`);
+    const curatedLogins = SCOPE_IS_FR ? CURATED_FR_LOGINS : CURATED_WORLD_LOGINS;
+    console.log(
+      `1/4 Résolution des têtes d'affiche ${SCOPE_IS_FR ? "FR" : "mondiales"} (${curatedLogins.length} logins curés)…`,
+    );
+    const curated = await fetchCuratedUsers(curatedLogins);
+    console.log(`   -> ${curated.length} créateurs incontournables résolus.`);
 
-    console.log("2/4 Pagination des chaînes Twitch francophones actives…");
-    const liveStreams = await fetchLiveFrenchStreams(CANDIDATE_TARGET);
+    console.log(
+      `2/4 Pagination des chaînes actives ${LANGUAGES.length ? `(${LANGUAGES.join(", ")})` : "dans le monde"}…`,
+    );
+    const liveStreams = await fetchLiveStreams(CANDIDATE_TARGET);
     console.log(`   -> ${liveStreams.length} chaînes FR actives récupérées.`);
 
     const byLogin = new Map();
@@ -475,6 +571,7 @@ async function main() {
     await writeReport(`candidates-${COUNT}.json`, {
       generatedAt: new Date().toISOString(),
       target: COUNT,
+      languages: LANGUAGES,
       pages: PAGES,
       candidates: allCandidates,
     });
@@ -482,7 +579,7 @@ async function main() {
     if (allCandidates.length < COUNT) {
       throw new Error(
         `Seulement ${allCandidates.length} chaînes trouvées pour un objectif de ${COUNT}. ` +
-          `Élargis la découverte avec --pages ${PAGES + 1}, ou complète CURATED_FR_LOGINS.`,
+          `Élargis la découverte avec --pages ${PAGES + 1}, ou complète la liste curée.`,
       );
     }
   }
@@ -497,6 +594,7 @@ async function main() {
         `${Object.keys(byCategory).length} catégories. Rien n'a été écrit dans src/ ni public/.`,
     );
     console.log(`   Rapport détaillé : reports/candidates-${COUNT}.json`);
+    console.log(`   Périmètre : ${LANGUAGES.length ? LANGUAGES.join("/") : "mondial (toutes langues)"}`);
     console.log(`   Aperçu : ${allCandidates.slice(0, 10).map((c) => c.login).join(", ")}…\n`);
     return;
   }
@@ -505,25 +603,18 @@ async function main() {
   const { catalog, stats } = await buildCatalog(allCandidates);
 
   await writeFile(DATA_FILE, `${JSON.stringify(catalog, null, 2)}\n`);
-  // La taille attendue est écrite ici pour que `npm run catalog:check` puisse
-  // détecter une troncature accidentelle du catalogue.
-  await writeFile(
-    CONFIG_FILE,
-    `${JSON.stringify(
-      {
-        expectedSize: catalog.length,
-        label: `Top ${catalog.length} Twitch FR`,
-        note: "Écrit par scripts/build-twitch-fr.mjs. expectedSize est vérifié par npm run catalog:check.",
-      },
-      null,
-      2,
-    )}\n`,
-  );
+  // La taille et le périmètre sont écrits ici : `npm run catalog:check` détecte
+  // une troncature, et l'application en déduit tous ses libellés (aucun « FR »
+  // ni « 500 » n'est écrit dans le code).
+  const scope = scopeConfig({ size: catalog.length, languages: LANGUAGES });
+  await writeFile(CONFIG_FILE, `${JSON.stringify(scope, null, 2)}\n`);
 
   const counts = rarityCounts(catalog.length);
   await writeReport(`top${COUNT}.json`, {
     generatedAt: new Date().toISOString(),
     total: catalog.length,
+    languages: LANGUAGES,
+    scope: SCOPE_IS_FR ? "FR" : "world",
     candidates: allCandidates.length,
     pages: PAGES,
     avatarPx: AVATAR_PX,
@@ -533,7 +624,7 @@ async function main() {
   });
 
   console.log(
-    `4/4 Top ${catalog.length} Twitch FR généré : ${stats.downloaded} portraits téléchargés, ` +
+    `4/4 Top ${catalog.length} Twitch${SCOPE_IS_FR ? " FR" : ""} généré : ${stats.downloaded} portraits téléchargés, ` +
       `${stats.reused} réutilisés, ${stats.failures} échecs.`,
   );
   console.log(

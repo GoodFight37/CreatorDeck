@@ -1,13 +1,13 @@
 {
   "version": 1,
-  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du Top 500. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit (Top 1000/2000).",
+  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du catalogue. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit.",
   "pointsPerCreator": 4,
   "hourglassesPerSeason": 3,
   "seasons": [
     {
       "id": "S01",
       "name": "Accueil & IRL",
-      "tagline": "Le canapé du Twitch FR : talk, events, sport et musique.",
+      "tagline": "Le canapé du Twitch : talk, events, sport et musique.",
       "categories": [
         "Just Chatting",
         "IRL",
@@ -117,7 +117,7 @@
   "catchAll": {
     "id": "S07",
     "name": "Découverte",
-    "tagline": "Le reste du Top 500 : les pépites à dénicher.",
+    "tagline": "Le reste du classement : les pépites à dénicher.",
     "maxSize": 60
   }
 }

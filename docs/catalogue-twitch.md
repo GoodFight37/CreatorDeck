@@ -1,8 +1,51 @@
-# Passer à un Top 1000 / 2000 Twitch FR
+# Construire le catalogue Twitch : périmètre et taille
 
-Le jeu n'a plus aucune taille codée en dur : passer de 500 à 2000 créateurs est
-un **changement de données**, pas de code. Ce document est le mode d'emploi,
-avec les chiffres mesurés sur ce dépôt.
+Le jeu ne code en dur ni la taille (« 500 ») ni le périmètre (« FR ») : passer
+au monde entier, à 1000 ou à 2000 créateurs est un **changement de données**,
+pas de code. Ce document est le mode d'emploi, avec les chiffres mesurés sur ce
+dépôt.
+
+## Périmètre : monde entier, ou langues restreintes
+
+`scripts/build-twitch-catalog.mjs` interroge Twitch **sans filtre de langue par
+défaut** : le classement est mondial.
+
+```bash
+npm run catalog:source -- --count 2000                  # monde entier
+npm run catalog:source -- --count 500 --languages FR    # France (comportement historique)
+npm run catalog:source -- --count 1000 --languages FR,EN,ES
+```
+
+Le périmètre retenu est écrit dans `src/data/catalog.config.json` :
+
+```json
+{
+  "scope": "world",
+  "scopeLabel": "mondial",
+  "audience": "créateurs du monde entier",
+  "label": "Top 2000 Twitch",
+  "eyebrow": "TOP 2000 TWITCH",
+  "edition": "ÉDITION TOP 2000 TWITCH"
+}
+```
+
+L'application lit ces valeurs (titre de l'onglet, accroches, métadonnées Open
+Graph, jusqu'au texte de secours des cartes) : **aucun composant ne contient le
+mot « FR »**, et un catalogue mondial ne peut donc pas afficher « francophones ».
+`npm run catalog:check` refuse un libellé qui mentirait sur la taille.
+
+### Têtes d'affiche
+
+Deux listes curées existent : `CURATED_WORLD_LOGINS` (monde, la France y est
+incluse) et `CURATED_FR_LOGINS` (utilisée uniquement pour un run `--languages FR`).
+Elles servent à faire entrer dans le catalogue les grandes chaînes **même
+quand elles ne sont pas en direct** au moment de la génération : le classement
+final reste dominé par les followers réels. Un login inexistant est ignoré sans
+erreur — la liste peut vieillir sans casser le build.
+
+> ⚠️ Le classement est échantillonné au moment de la génération (directs du
+> moment + listes curées). C'est une photo, pas un classement officiel : relance
+> la génération pour la rafraîchir.
 
 ## Ce qui est déjà prêt
 
@@ -12,16 +55,16 @@ avec les chiffres mesurés sur ce dépôt.
 | Raretés | échelle en part du classement (`scripts/lib/rarity-ladder.mjs`), pas en rangs fixes |
 | Saisons | calculées depuis `seasons.config.json` ; le fourre-tout « Découverte » est découpé automatiquement en morceaux de ≤ 60 |
 | Validation | `npm run catalog:check` compare la taille réelle à `src/data/catalog.config.json` (`--expect N` pour forcer) |
-| Générateur | `scripts/build-twitch-fr.mjs --count N`, avec pagination Twitch et reprise sur incident |
+| Générateur | `scripts/build-twitch-catalog.mjs --count N`, avec pagination Twitch et reprise sur incident |
 | Taux de tirage | exprimés en raretés, donc indépendants de la taille du catalogue |
 
 ## Marche à suivre (à lancer **sur ta machine**)
 
 ```bash
-# 1. Découverte seule : combien de chaînes FR sont réellement atteignables ?
+# 1. Découverte seule : combien de chaînes sont réellement atteignables ?
 npm run catalog:source -- --count 2000 --dry-run
 #    -> reports/candidates-2000.json (aucune écriture dans src/ ni public/)
-#    Si le total est insuffisant : --pages 3, ou complète CURATED_FR_LOGINS.
+#    Si le total est insuffisant : --pages 3, ou complète la liste curée.
 
 # 2. Génération du catalogue + des portraits (reprenable)
 npm run catalog:source -- --count 2000
@@ -36,9 +79,9 @@ npm test                   # 58 tests, agnostiques à la taille du catalogue
 npm run build              # export statique
 ```
 
-`npm run catalog:source -- --help` n'existe pas : les options sont listées en
-tête de `scripts/build-twitch-fr.mjs` (`--count`, `--pages`, `--concurrency`,
-`--dry-run`, `--seed`, `--force`).
+Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
+(`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
+`--force`).
 
 > ⚠️ Le script interroge l'API GQL **non officielle** de Twitch avec le
 > Client-ID public du site web. Elle ne répond pas depuis un CI ou un sandbox
@@ -82,8 +125,9 @@ réglages à ajuster, tous dans des fichiers de données.
 
 1. **Saisons** (`src/data/seasons.config.json`)
    - Regarde la sortie de `npm run catalog:check` : si une saison dépasse ~150
-     créateurs (typiquement « Découverte » ou un gros jeu comme *Just Chatting*),
-     déplace des catégories dans un groupe dédié, ou baisse `catchAll.maxSize`.
+     créateurs (typiquement « Découverte », qui grandit vite en périmètre
+     mondial), déplace des catégories dans un groupe dédié, ou baisse
+     `catchAll.maxSize` (défaut 60).
    - `pointsPerCreator` × taille de saison donne la récompense : à 2000, les
      saisons rapportent mécaniquement plus de points.
 2. **Boosters** (`src/lib/catalog.ts` → `PACKS`)

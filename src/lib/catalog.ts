@@ -1,3 +1,4 @@
+import catalogConfig from "@/data/catalog.config.json";
 import creatorData from "@/data/creators.json";
 
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
@@ -18,20 +19,42 @@ export type Creator = {
 export const CREATORS = creatorData as Creator[];
 
 /**
- * Taille du catalogue, dérivée des données.
+ * Taille et périmètre du catalogue, dérivés des données.
  *
- * Rien dans l'application ne doit écrire « 500 » en dur : passer à un
- * Top 1000/2000 doit être un changement de données (`scripts/build-twitch-fr.mjs`
- * puis `npm run catalog:build`), pas une chasse aux littéraux. Les libellés
- * ci-dessous sont la seule source des textes qui mentionnent la taille.
+ * Rien dans l'application ne code en dur ni la taille (« 500 ») ni le périmètre
+ * (« FR ») : tout vient de `src/data/catalog.config.json`, écrit par
+ * `scripts/build-twitch-catalog.mjs`. Passer au monde entier, à 1000 ou à 2000
+ * créateurs est donc un changement de données, pas de code — les constantes
+ * ci-dessous sont la seule source des textes concernés.
  */
+type CatalogConfig = {
+  scope?: string;
+  scopeLabel?: string;
+  audience?: string;
+  label?: string;
+  eyebrow?: string;
+  edition?: string;
+};
+
+const CONFIG = catalogConfig as CatalogConfig;
+
 export const CATALOG_SIZE = CREATORS.length;
-/** « Top 500 » — libellé court, utilisable en milieu de phrase. */
-export const CATALOG_LABEL = `Top ${CATALOG_SIZE}`;
-/** « TOP 500 TWITCH FR » — libellé d'accroche (majuscules). */
-export const CATALOG_EYEBROW = `TOP ${CATALOG_SIZE} TWITCH FR`;
+/** « FR » ou « world » : périmètre du catalogue. */
+export const CATALOG_SCOPE = CONFIG.scope ?? "world";
+/** « FR » / « mondial » : le même périmètre, écrit dans une phrase. */
+export const CATALOG_SCOPE_LABEL =
+  CONFIG.scopeLabel ?? (CATALOG_SCOPE === "world" ? "mondial" : CATALOG_SCOPE);
+/** « créateurs francophones » / « créateurs du monde entier ». */
+export const CATALOG_AUDIENCE = CONFIG.audience ?? "créateurs";
+
+const SCOPE_SUFFIX = CATALOG_SCOPE === "world" ? "" : ` ${CATALOG_SCOPE}`;
+
+/** « Top 500 Twitch FR » — libellé complet, utilisable en milieu de phrase. */
+export const CATALOG_LABEL = CONFIG.label ?? `Top ${CATALOG_SIZE} Twitch${SCOPE_SUFFIX}`;
+/** « TOP 500 TWITCH FR » — accroche (majuscules). */
+export const CATALOG_EYEBROW = CONFIG.eyebrow ?? CATALOG_LABEL.toUpperCase();
 /** « ÉDITION TOP 500 FR » — accroche de la page d'accueil. */
-export const CATALOG_EDITION = `ÉDITION TOP ${CATALOG_SIZE} FR`;
+export const CATALOG_EDITION = CONFIG.edition ?? `ÉDITION ${CATALOG_EYEBROW}`;
 
 export const CREATOR_BY_SLUG = new Map(
   CREATORS.map((creator) => [creator.slug, creator]),
@@ -152,7 +175,7 @@ export function creatorImage(creator: Pick<Creator, "slug">) {
 }
 
 export function formatFollowersCount(followers?: number) {
-  if (!followers || followers <= 0) return "Twitch FR";
+  if (!followers || followers <= 0) return `Twitch ${CATALOG_SCOPE_LABEL}`;
   if (followers >= 1_000_000) {
     return `${(followers / 1_000_000).toFixed(1).replace(".", ",")} M suiv.`;
   }
