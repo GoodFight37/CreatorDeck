@@ -139,9 +139,13 @@ Principes :
   octet ajouté à l'APK, aucune licence ; bouton on/off dans le profil.
 - **Thèmes de collection** (Profil → Thème) : chaque famille complétée débloque
   la teinte de son emblème, et toutes les compléter débloque « Grand chelem ».
-  Un thème n'est qu'un jeu de variables CSS appliqué à l'application (fond
-  compris) : aucune image, aucun téléchargement, et un thème verrouillé retombe
-  sur le thème d'origine même dans une sauvegarde trafiquée.
+  Un thème repeint toute l'application — fond, panneaux, bordures, textes,
+  accents, dégradés — via ~20 variables CSS dérivées de la teinte de la famille
+  (`src/lib/cosmetics.ts`) : aucune image, aucun téléchargement, et un thème
+  verrouillé retombe sur le thème d'origine même dans une sauvegarde trafiquée.
+  `globals.css` ne code plus aucune couleur d'interface en dur ; les seules
+  couleurs figées sont celles qui portent un sens (or des légendaires, vert de
+  réussite, rouge d'erreur, couleurs de rareté).
 
 Les tables de tirage s'inspirent du format `pullRates.json` de
 [pokemon-tcg-pocket-database](https://github.com/flibustier/pokemon-tcg-pocket-database)

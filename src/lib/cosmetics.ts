@@ -17,14 +17,96 @@
  */
 import { SEASONS } from "@/lib/seasons";
 
-/** Variables CSS appliquées quand le thème est équipé. */
+/**
+ * Palette complète d'un thème.
+ *
+ * Un thème ne re-teinte pas seulement l'accent : il repeint la surface de
+ * l'application (fond, panneaux, bordures, textes) et les dégradés. Tous ces
+ * jetons sont dérivés de la même teinte — c'est ce qui fait qu'un thème change
+ * vraiment l'allure générale au lieu de déplacer trois boutons.
+ *
+ * Les couleurs porteuses de sens (or des légendaires, vert de réussite, rouge
+ * d'erreur, couleurs de rareté) ne sont **pas** thématisées : elles doivent
+ * rester reconnaissables quel que soit le thème équipé.
+ */
 export type ThemeTokens = {
+  /** Accent principal : boutons, jauges, navigation. */
   purple: string;
+  /** Accent clair : survols, bordures actives. */
   purpleLight: string;
+  /** Accent adouci : libellés secondaires. */
+  purpleSoft: string;
+  /** Accent très clair : pastilles et badges. */
+  purpleTint: string;
+  /** Accent en triplet `r g b`, pour les fonds translucides (`rgb(var(--purple-rgb) / .12)`). */
+  purpleRgb: string;
+  /** Accent clair en triplet `r g b`. */
+  purpleLightRgb: string;
+  /** Accent sombre en triplet `r g b` (halos, ombres colorées). */
+  purpleDarkRgb: string;
+  /** Fond en triplet `r g b` (voiles, dégradés de fondu). */
+  bgRgb: string;
+  /** Accent profond : dégradés soutenus. */
+  purpleDeep: string;
+  /** Accent sombre : fonds de dégradé, ombres colorées. */
+  purpleDark: string;
+  /** Accent le plus sombre : arrêts de dégradé profonds. */
+  purpleNight: string;
+  /** Halo de la révélation de carte. */
+  purpleGlow: string;
+  /** Or : récompenses, légendaires, saisons. */
   gold: string;
   /** Halo d'ambiance derrière l'application. */
   glow: string;
+  /** Fond le plus profond (html/body). */
+  bgDeep: string;
+  /** Fond de l'application. */
+  bg: string;
+  /** Fond alterné (barres, pieds de panneau). */
+  bgSoft: string;
+  /** Panneau standard (cartes, feuilles). */
+  panel: string;
+  /** Panneau surélevé. */
+  panel2: string;
+  /** Panneau le plus clair (champs, pastilles). */
+  panel3: string;
+  /** Texte principal. */
+  text: string;
+  /** Texte secondaire. */
+  muted: string;
+  /** Texte discret. */
+  muted2: string;
 };
+
+/** Nom CSS `--kebab-case` de chaque jeton, dans l'ordre du type. */
+export const THEME_VAR_NAMES: Record<keyof ThemeTokens, string> = {
+  purple: "--purple",
+  purpleLight: "--purple-light",
+  purpleSoft: "--purple-soft",
+  purpleTint: "--purple-tint",
+  purpleRgb: "--purple-rgb",
+  purpleLightRgb: "--purple-light-rgb",
+  purpleDarkRgb: "--purple-dark-rgb",
+  bgRgb: "--bg-rgb",
+  purpleDeep: "--purple-deep",
+  purpleDark: "--purple-dark",
+  purpleNight: "--purple-night",
+  purpleGlow: "--purple-glow",
+  gold: "--gold",
+  glow: "--glow",
+  bgDeep: "--bg-deep",
+  bg: "--bg",
+  bgSoft: "--bg-soft",
+  panel: "--panel",
+  panel2: "--panel-2",
+  panel3: "--panel-3",
+  text: "--text",
+  muted: "--muted",
+  muted2: "--muted-2",
+};
+
+/** Liste des variables CSS écrites par un thème équipé. */
+export const THEME_VARS = Object.values(THEME_VAR_NAMES);
 
 /** Condition d'obtention d'un thème. */
 export type ThemeUnlock =
@@ -105,13 +187,53 @@ export function seasonHue(seasonId: string): number {
   return FAMILY_HUES[hash % FAMILY_HUES.length];
 }
 
-function tokensFor(hue: number): ThemeTokens {
-  return {
-    purple: `hsl(${hue} 82% 66%)`,
-    purpleLight: `hsl(${hue} 92% 84%)`,
-    gold: `hsl(${(hue + 38) % 360} 88% 64%)`,
-    glow: `hsla(${hue} 82% 58% / .2)`,
+/**
+ * Palette dérivée d'une teinte : la surface prend la couleur de la famille,
+ * l'accent est franc, l'or reste chaud (une « légendaire » doit briller pareil
+ * dans tous les thèmes). Les surcharges servent au thème d'origine, calé sur le
+ * design historique du classeur.
+ */
+/**
+ * HSL → triplet `r g b`. Sert aux fonds translucides : `rgb(var(--purple-rgb) / .12)`
+ * suit le thème, là où un `rgba(143, 100, 255, .12)` figé resterait violet.
+ */
+function hslToRgb(hue: number, saturation: number, lightness: number): string {
+  const a = (saturation / 100) * Math.min(lightness / 100, 1 - lightness / 100);
+  const channel = (offset: number) => {
+    const k = (offset + hue / 30) % 12;
+    const value = lightness / 100 - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+    return Math.round(255 * value);
   };
+  return [channel(0), channel(8), channel(4)].join(" ");
+}
+
+function tokensFor(hue: number, overrides: Partial<ThemeTokens> = {}): ThemeTokens {
+  const base: ThemeTokens = {
+    purple: `hsl(${hue} 100% 70%)`,
+    purpleLight: `hsl(${hue} 100% 84%)`,
+    purpleSoft: `hsl(${hue} 100% 79%)`,
+    purpleTint: `hsl(${hue} 100% 89%)`,
+    purpleRgb: hslToRgb(hue, 100, 70),
+    purpleLightRgb: hslToRgb(hue, 100, 84),
+    purpleDarkRgb: hslToRgb(hue, 57, 32),
+    bgRgb: hslToRgb(hue, 38, 5),
+    purpleDeep: `hsl(${hue} 68% 52%)`,
+    purpleDark: `hsl(${hue} 57% 32%)`,
+    purpleNight: `hsl(${hue} 32% 19%)`,
+    purpleGlow: `hsla(${hue} 89% 65% / .34)`,
+    gold: "hsl(38 100% 66%)",
+    glow: `hsla(${hue} 88% 56% / .18)`,
+    bgDeep: `hsl(${hue} 33% 3%)`,
+    bg: `hsl(${hue} 38% 5%)`,
+    bgSoft: `hsl(${hue} 35% 7%)`,
+    panel: `hsl(${hue} 29% 10%)`,
+    panel2: `hsl(${hue} 28% 12%)`,
+    panel3: `hsl(${hue} 32% 16%)`,
+    text: `hsl(${hue} 100% 98%)`,
+    muted: `hsl(${hue} 12% 63%)`,
+    muted2: `hsl(${hue} 10% 45%)`,
+  };
+  return { ...base, ...overrides };
 }
 
 const STARTER: CollectionTheme = {
@@ -119,12 +241,32 @@ const STARTER: CollectionTheme = {
   name: "Améthyste",
   description: "Le thème d'origine du classeur : violet et or.",
   unlock: { kind: "starter" },
-  tokens: {
+  // Teinte 256 : les surcharges reproduisent le design historique au pixel.
+  tokens: tokensFor(256, {
     purple: "#8f64ff",
     purpleLight: "#c1a8ff",
+    purpleSoft: "#b795ff",
+    purpleTint: "#d8c8ff",
+    purpleRgb: "143 100 255",
+    purpleLightRgb: "193 168 255",
+    purpleDarkRgb: "62 34 127",
+    bgRgb: "9 8 18",
+    purpleDeep: "#5430d9",
+    purpleDark: "#3e227f",
+    purpleNight: "#261947",
+    purpleGlow: "rgba(135, 83, 246, .34)",
     gold: "#ffbe55",
     glow: "rgba(111, 65, 221, .18)",
-  },
+    bgDeep: "#06050a",
+    bg: "#090812",
+    bgSoft: "#0e0c19",
+    panel: "#141120",
+    panel2: "#1a1629",
+    panel3: "#211a36",
+    text: "#f7f5ff",
+    muted: "#9a94ad",
+    muted2: "#6f687f",
+  }),
 };
 
 /** Un thème par famille, dans l'ordre du catalogue. */
@@ -145,12 +287,19 @@ const GRAND_SLAM: CollectionTheme = {
   name: "Grand chelem",
   description: "Toutes les familles complétées : le classeur passe à l'arc-en-ciel.",
   unlock: { kind: "all-families" },
-  tokens: {
+  tokens: tokensFor(285, {
     purple: "hsl(280 90% 68%)",
     purpleLight: "hsl(315 95% 86%)",
+    purpleSoft: "hsl(300 92% 78%)",
+    purpleTint: "hsl(315 95% 90%)",
+    purpleRgb: "208 87 246",
+    purpleLightRgb: "248 165 232",
+    purpleDarkRgb: "127 36 160",
+    bgRgb: "11 9 18",
+    purpleGlow: "hsla(300 85% 62% / .36)",
     gold: "hsl(45 95% 66%)",
     glow: "hsla(300 85% 62% / .22)",
-  },
+  }),
 };
 
 export const THEMES: CollectionTheme[] = [STARTER, ...FAMILY_THEMES, GRAND_SLAM];

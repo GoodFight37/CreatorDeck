@@ -32,9 +32,10 @@ export function ThemeSheet({
         </header>
 
         <p className="odds-intro">
-          Chaque famille de jeux complétée (son emblème récupéré) débloque sa teinte, et toutes
-          les compléter débloque le <strong>Grand chelem</strong>. Le thème re-teinte les accents
-          et le fond de l&apos;application : aucun téléchargement, tout est calculé.
+          Chaque famille complétée (son emblème récupéré) débloque sa teinte, et toutes les
+          compléter débloque le <strong>Grand chelem</strong>. Un thème repeint le fond, les
+          panneaux, les textes et les accents de l&apos;application : aucun téléchargement, tout
+          est calculé.
         </p>
 
         <div className="theme-grid">
@@ -49,7 +50,9 @@ export function ThemeSheet({
               <span
                 className="theme-swatch"
                 style={{
-                  background: `linear-gradient(135deg, ${theme.tokens.purple}, ${theme.tokens.purpleLight} 55%, ${theme.tokens.gold})`,
+                  // Aperçu honnête : le fond, les panneaux puis les accents,
+                  // c'est-à-dire ce que le thème change réellement à l'écran.
+                  background: `linear-gradient(120deg, ${theme.tokens.bg} 0%, ${theme.tokens.panel3} 42%, ${theme.tokens.purple} 78%, ${theme.tokens.gold} 100%)`,
                 }}
                 aria-hidden="true"
               >

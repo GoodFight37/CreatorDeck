@@ -58,6 +58,7 @@ import {
 import { regionLabel } from "@/lib/regions";
 import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { THEME_VARS, THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
 
 type GameState = GameView;
@@ -967,17 +968,13 @@ export function CreatorDeckApp() {
   useEffect(() => {
     const root = document.documentElement;
     const theme = game?.themes.find((entry) => entry.id === activeThemeId);
-    if (!theme) {
-      root.style.removeProperty("--purple");
-      root.style.removeProperty("--purple-light");
-      root.style.removeProperty("--gold");
-      root.style.removeProperty("--glow");
-      return;
+    // Toute la palette est écrite (fond, panneaux, textes, accents) : retirer un
+    // jeton suffit à revenir au thème d'origine défini dans `globals.css`.
+    for (const name of THEME_VARS) root.style.removeProperty(name);
+    if (!theme) return;
+    for (const [token, name] of Object.entries(THEME_VAR_NAMES)) {
+      root.style.setProperty(name, theme.tokens[token as keyof typeof THEME_VAR_NAMES]);
     }
-    root.style.setProperty("--purple", theme.tokens.purple);
-    root.style.setProperty("--purple-light", theme.tokens.purpleLight);
-    root.style.setProperty("--gold", theme.tokens.gold);
-    root.style.setProperty("--glow", theme.tokens.glow);
   }, [game?.themes, activeThemeId]);
 
   function handleEquipTheme(themeId: string) {
