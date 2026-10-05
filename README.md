@@ -270,7 +270,7 @@ serveur.
 
 Profil → **Échanges** : cherche un joueur par son pseudo, choisis une de tes
 cartes et une carte qu'il possède (l'app demande au serveur les variantes qu'il
-a pour ce créateur), puis propose. Une carte contre une carte, jusqu'à trois de
+a pour ce créateur), puis propose. Une carte contre une carte, jusqu'à cinq de
 chaque côté.
 
 Rien de tout cela n'est décidé par les téléphones : `respond_trade()`
@@ -283,6 +283,33 @@ d'échange qui empêche de l'appliquer deux fois. Une carte épinglée qui part 
 échange quitte la vitrine publique (elle n'y serait plus défendable). La collection des autres joueurs
 reste privée : le serveur ne dit que les variantes possédées d'un créateur
 donné, jamais la collection entière.
+
+### Le profil public et le classement enrichi
+
+Touche une ligne du classement : la fiche du joueur s'ouvre en plein écran —
+vitrine, **complétion du catalogue** (« 137 / 1000 », le serveur fait la
+division), rang (complétion et total de cartes), répartition par rareté
+(« 12 / 50 légendaires »), cartes, Holo et Gold. Un bouton fabrique une
+**affiche de partage** (1080×1350) directement sur l'appareil : pas besoin d'un
+serveur pour une image dynamique, le canvas s'en charge (`src/lib/poster.ts`).
+
+Côté base, `0006_profil_public.sql` ajoute `player_profile()` et une
+**projection** : `public.user_cards` reçoit une ligne par carte possédée,
+recalculée par un trigger à chaque écriture de sauvegarde. La sauvegarde JSON
+reste la source de vérité ; la table n'est qu'un index — RLS active, **aucune
+politique**, donc aucun client ne peut la lire, seules les fonctions du serveur
+la consultent. C'est elle qui portera le marché entre joueurs.
+
+Trois garde-fous sur les chiffres publics : les compteurs ne retiennent que les
+créateurs **du catalogue** (sinon 900 slugs inventés fabriquaient 90 % de
+complétion), la rareté est relue au catalogue et non dans la sauvegarde, et un
+joueur dont la sauvegarde est jugée invraisemblable n'est pas classé.
+
+Le **lien de partage** est `…/?profil=<identifiant>` : un export statique ne
+peut pas créer une page par joueur, donc une seule adresse avec un paramètre.
+Dans l'APK, où l'app tourne sur `https://localhost`, l'écran propose l'affiche
+plutôt que le lien — pour que le lien marche pour quelqu'un d'autre, il faut la
+version web hébergée.
 
 - Trois façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
   aucun SMTP — le compte vit avec la session de l'appareil) ; **invité + adresse
@@ -332,6 +359,9 @@ donné, jamais la collection entière.
   Côté comptes, l'appel `PUT /auth/v1/user` (adresse + mot de passe) et
   `POST /auth/v1/token?grant_type=password` complètent le code à 6 chiffres :
   c'est le chemin de récupération qui ne dépend d'aucun envoi d'e-mail.
+  `supabase/migrations/0006_profil_public.sql` ajoute `player_profile()`, la
+  projection `user_cards` (une ligne par carte, recalculée par trigger) et les
+  compteurs Gold/Holo du classement.
   `supabase/migrations/0005_echanges.sql` ajoute la table `trades` (lecture
   réservée aux deux joueurs concernés, **aucune** écriture directe possible) et
   les fonctions d'échange : `search_players()`, `player_variants()`,

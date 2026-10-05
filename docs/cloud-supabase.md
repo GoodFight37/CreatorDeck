@@ -1,4 +1,4 @@
-# Compte, sauvegarde cloud, vitrine, classement et échanges (Supabase)
+# Compte, sauvegarde cloud, profil public, classements et échanges (Supabase)
 
 CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
 `localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
@@ -35,6 +35,8 @@ les saisons restent jouables hors ligne.
 | Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
 | Contenu des boosters | **Serveur** | le tirage est décidé par la fonction `open_pack()` ; le client ne peut pas choisir ni inventer les cartes |
 | Réserve de boosters | **Serveur** | `pack_status()` à la connexion ; le client adopte le compteur et l'ancre de recharge, sans rien consommer |
+| Cartes possédées, en lignes | **Serveur** | table `user_cards` : une **projection** de ta sauvegarde, recalculée à chaque écriture. Aucune politique RLS : aucun client ne la lit, seules les fonctions du serveur la consultent |
+| Complétion, rangs, variantes d'une collection | **Serveur** | calculés par `player_profile()` et `leaderboard()` ; un joueur ne voit des autres que des compteurs et la vitrine |
 | Échanges (offres en attente, historique) | Cloud | table `trades` : lecture réservée aux deux joueurs concernés, écriture par les fonctions du serveur uniquement |
 | Cartes données et reçues | **Serveur** | déplacées par `respond_trade()` dans la même transaction ; l'appareil applique ensuite le même mouvement pour rester d'accord |
 
@@ -159,6 +161,11 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      → **Run** pour activer les échanges de cartes (`create_trade()`,
      `respond_trade()`, `cancel_trade()`, `list_trades()`, `search_players()`,
      `player_variants()`).
+   - [`supabase/migrations/0006_profil_public.sql`](../supabase/migrations/0006_profil_public.sql)
+     → **Run** pour activer le profil public et les classements enrichis
+     (`player_profile()`, projection `user_cards`, complétion, compteurs Gold et
+     Holo, tri Gold). Il recalcule les statistiques de tous les joueurs déjà en
+     ligne : c'est normal qu'il travaille quelques secondes.
 
 > **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
 > un Postgres jetable, en local, sans toucher au projet Supabase :
@@ -168,13 +175,15 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les cinq migrations** (`0001` à `0005`) pour de vrai, dans
+> Le script exécute **les six migrations** (`0001` à `0006`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une variante « live » garantie), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
 > `pull-rates.json` — 400 boosters) et **les échanges joués de bout en bout**
 > avec trois joueurs : recherche, offre, refus, annulation, acceptation
-> atomique, carte disparue entre-temps, droits et lecture par un tiers. Les
+> atomique, carte disparue entre-temps, droits et lecture par un tiers — plus
+> le profil public (projection, complétion, rangs, tri Gold) sur trois autres
+> joueurs, dont un dont la sauvegarde est invraisemblable. Les
 > deux dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
@@ -299,12 +308,55 @@ sauvegarde fabriquée à la main peut encore mentir sur les points, l'XP ou le
 niveau (calculés localement), mais plus sur les cartes — c'est le prérequis
 des échanges.
 
+Depuis la migration `0006_profil_public.sql`, les compteurs qui servent au
+**profil public** ne retiennent que les créateurs qui existent au catalogue :
+`unique_creators`, `legendary_cards`, `gold_cards`… sont recompilés en croisant
+la sauvegarde avec `public.creators`. Sans ce garde-fou, une sauvegarde
+inventant 900 slugs fabriquait une complétion de 90 % sans posséder une seule
+carte réelle. `total_cards`, lui, reste le compte brut de la sauvegarde.
+
 ### Ce que le serveur ne vérifie pas (volontairement)
 
 Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
 contenu des boosters (et donc les cartes) est décidé par le serveur. Hors
 périmètre actuel : une sauvegarde trafiquée peut encore gonfler les compteurs
-de ressources, mais pas la collection.
+de ressources — et, en trichant sur des créateurs **réels**, gonfler sa
+complétion. Ce qui n'est pas falsifiable, c'est ce qui passe par le serveur :
+le tirage et les échanges.
+
+### Le profil public, calculé par le serveur
+
+Ouvrir le classement puis toucher une ligne affiche la fiche d'un joueur :
+vitrine, complétion du catalogue, rang, répartition par rareté, et une affiche
+à partager (dessinée sur l'appareil, voir `src/lib/poster.ts`).
+
+Tout vient de `player_profile(p_user_id)` en un appel :
+
+* les chiffres de `public.stats` (recalculés à chaque sauvegarde) ;
+* la **complétion** = créateurs uniques / taille du catalogue, calculée côté
+  serveur — le client ne fait pas la division ;
+* le **rang** = nombre de joueurs vérifiés devant, sur la complétion et sur le
+  nombre total de cartes ;
+* la **répartition par rareté** (« 12 / 50 légendaires ») : la rareté est relue
+  dans `public.creators`, pas dans la sauvegarde ;
+* les **quatre cartes épinglées** : les seuls noms de cartes qui sortent d'un
+  profil public — jamais la collection.
+
+La lecture se fait par une **projection** : `public.user_cards` reçoit une ligne
+par carte possédée, recalculée par le trigger `project_cards()` à chaque
+écriture de `saves`. C'est ce qui rend ces questions répondables sans ouvrir
+toutes les sauvegardes à chaque requête — et c'est cette table qui portera le
+marché entre joueurs. Elle porte une RLS active **sans aucune politique** :
+même le joueur dont les cartes y sont ne peut pas la lire directement. La
+sauvegarde JSON reste la source de vérité ; la table n'est qu'un index que le
+serveur reconstruit tout seul.
+
+Le **lien de partage** est de la forme `…/?profil=<identifiant>`. Une
+application sans serveur ne peut pas fabriquer une page par joueur (l'export
+statique n'a pas de route dynamique) : c'est donc une adresse unique avec un
+paramètre, qui ouvre la fiche. Dans l'APK, où l'app est servie depuis
+`https://localhost`, elle n'a de sens que sur place — l'écran le dit, et
+propose l'affiche à la place.
 
 ### Les échanges sont tranchés par le serveur
 
@@ -391,20 +443,27 @@ compteur et le compte à rebours se réalignent sur le serveur immédiatement.
 
 ## 9. Suite : notifications
 
-**Fait :** vitrine de quatre cartes et profil public consultable depuis le
-classement ; tirage des boosters côté serveur (`0004_tirage.sql`, les cartes
-sont infalsifiables) ; échanges de cartes arbitrés par le serveur
-(`0005_echanges.sql`, une carte contre une carte jusqu'à trois de chaque côté) ;
-compte gardable par adresse + mot de passe, **sans SMTP**.
+**Fait :** vitrine de quatre cartes ; **profil public complet** et classements
+enrichis (`0006_profil_public.sql` : projection `user_cards`, complétion, rangs,
+Gold et Holo, affiche de partage) ; tirage des boosters côté serveur
+(`0004_tirage.sql`, les cartes sont infalsifiables) ; échanges de cartes
+arbitrés par le serveur (`0005_echanges.sql`, une carte contre une carte
+jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
+**sans SMTP**.
 
 **Reste à faire, dans cet ordre :**
 
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
   brancher quand elles auront un usage produit — c'est ce qui rendra les offres
   d'échange visibles sans ouvrir l'écran Compte ;
-* idées non engagées : échanges avec plusieurs partenaires à la fois (l'API SQL
-  accepte jusqu'à cinq cartes par côté, l'interface en propose trois),
-  historique complet des échanges, recherche de joueur par slug de créateur.
+* **complétion par famille de langue ou par saison** : la table `creators` ne
+  stocke pas encore la famille de langue (elle est dans `src/data/creators.json`)
+  — il faudra l'ajouter à la migration générée `0003_catalogue.sql` ;
+* **marché entre joueurs** : la projection `user_cards` est prête, les règles
+  (prix en points, anti-duplication, expiration) restent à écrire ;
+* idées non engagées : échanges avec plusieurs partenaires à la fois,
+  historique complet des échanges, recherche de joueur par slug de créateur,
+  temps réel sur les offres (aujourd'hui : rafraîchissement manuel).
 
 ## 10. Dépannage
 
@@ -417,6 +476,9 @@ compte gardable par adresse + mot de passe, **sans SMTP**.
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
 | « Réseau injoignable » **dans l'APK** alors que le même appel marche dans Chrome | le WebView sert l'app depuis `https://localhost`, origine que Supabase peut refuser en CORS. Les appels passent par le client HTTP natif (`src/lib/cloud/transport.ts`, `CapacitorHttp`) depuis la PR #7 : si le message persiste, il nomme désormais l'hôte, le chemin et la cause — colle-les dans le ticket |
 | « Les échanges ne sont pas installés sur ce projet » | `0005_echanges.sql` n'a pas été collé : § 3 |
+| « Le profil public n'est pas installé sur ce projet » | `0006_profil_public.sql` n'a pas été collé : § 3 |
+| Le classement affiche « 0 % » ou pas de rang | le joueur n'a jamais envoyé sa collection, ou sa sauvegarde a été jugée invraisemblable (« collection en cours de vérification ») |
+| Une carte présente dans la sauvegarde n'apparaît pas dans la complétion | son créateur n'existe pas au catalogue, ou sa rareté ne correspond pas : le serveur ne compte que ce qui existe vraiment |
 | « Supabase refuse d'attacher une adresse à un compte invité tant que Confirm email… » | bug GoTrue connu : désactive **Confirm email** (Authentication → Sign In / Providers → Email) puis réessaie |
 | « Un e-mail de confirmation a été envoyé à … » | le projet a « Confirm email » activé : ouvre le lien reçu (SMTP requis) ou désactive le réglage pour que l'adresse soit enregistrée tout de suite |
 | « E-mail ou mot de passe incorrect » | mot de passe saisi différemment, ou compte créé par code (sans mot de passe) : attache-en un depuis l'appareil d'origine |
