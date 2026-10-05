@@ -38,6 +38,7 @@ import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
+import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
@@ -939,6 +940,15 @@ export function CreatorDeckApp() {
   // réseau sinon, la partie reste strictement locale.
   useCloudAutoSync();
 
+  // Lien de partage : `?profil=<identifiant>` ouvre la fiche publique au
+  // démarrage. C'est la seule forme de « route publique » possible sans
+  // serveur — l'export statique ne peut pas fabriquer une page par joueur.
+  // Le serveur reste juge : sans cloud configuré, l'écran le dit simplement.
+  useEffect(() => {
+    const target = new URLSearchParams(window.location.search).get("profil");
+    if (target) void cloudStore.openProfile(target);
+  }, []);
+
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
@@ -1181,6 +1191,7 @@ export function CreatorDeckApp() {
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
       {accountOpen ? <AccountSheet onClose={() => setAccountOpen(false)} /> : null}
+      {cloud.profile || cloud.profileBusy ? <PublicProfileSheet /> : null}
       {themeOpen && game ? (
         <ThemeSheet
           themes={game.themes}

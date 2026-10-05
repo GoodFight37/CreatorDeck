@@ -284,7 +284,50 @@ describe("classement", () => {
     }), storage);
     const rows = await api.leaderboard(20, "legendary_cards");
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "legendary_cards" });
-    expect(rows[0]).toMatchObject({ rank: 1, displayName: "Kaicenat", legendaryCards: 48, showcaseSlugs: ["kaicenat"] });
+    expect(rows[0]).toMatchObject({
+      rank: 1,
+      displayName: "Kaicenat",
+      legendaryCards: 48,
+      showcaseSlugs: ["kaicenat"],
+      // Champs ajoutés par `0006_profil_public.sql` : une réponse d'une version
+      // antérieure du serveur ne doit pas casser l'écran (zéro par défaut).
+      epicCards: 0,
+      goldCards: 0,
+      holoCards: 0,
+      completion: 0,
+    });
+  });
+
+  it("transmet le tri Gold et lit la complétion", async () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    const { api, calls } = client(() => ({
+      body: [
+        {
+          rank: 1,
+          user_id: "u2",
+          display_name: "Diane",
+          unique_creators: 137,
+          total_cards: 402,
+          legendary_cards: 9,
+          epic_cards: 31,
+          gold_cards: 3,
+          holo_cards: 12,
+          level: 12,
+          points: 640,
+          // PostgREST renvoie `numeric` en nombre, le pilote local en chaîne :
+          // les deux formes doivent être lues.
+          completion: "0.1370",
+          showcase_slugs: [],
+        },
+      ],
+    }), storage);
+    const rows = await api.leaderboard(20, "gold_cards");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "gold_cards" });
+    expect(rows[0]).toMatchObject({ goldCards: 3, holoCards: 12, epicCards: 31, completion: 0.137 });
   });
 
   it("tolère une réponse vide ou inattendue", async () => {
@@ -295,6 +338,79 @@ describe("classement", () => {
     );
     const { api } = client(() => ({ body: { pas: "un tableau" } }), storage);
     expect(await api.leaderboard()).toEqual([]);
+  });
+});
+
+describe("profil public", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  const PROFILE = {
+    user_id: "u2",
+    display_name: "Diane",
+    level: 12,
+    points: 640,
+    verified: true,
+    unique_creators: 137,
+    total_cards: 402,
+    legendary_cards: 9,
+    epic_cards: 31,
+    gold_cards: 3,
+    holo_cards: 12,
+    catalog_size: 1000,
+    completion: 0.137,
+    rank_completion: 42,
+    rank_cards: 118,
+    showcase_slugs: ["kaicenat", "ibai"],
+    by_rarity: {
+      common: { owned: 60, total: 300 },
+      legendary: { owned: 4, total: 50 },
+      rare: { owned: 40, total: 230 },
+    },
+  };
+
+  it("lit un profil complet, du plus rare au plus commun", async () => {
+    const { api, calls } = client(() => ({ body: PROFILE }), signedIn());
+    const profile = await api.playerProfile("u2");
+
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/player_profile");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user_id: "u2" });
+    expect(profile).toMatchObject({
+      userId: "u2",
+      displayName: "Diane",
+      completion: 0.137,
+      rankCompletion: 42,
+      goldCards: 3,
+      catalogSize: 1000,
+      showcaseSlugs: ["kaicenat", "ibai"],
+    });
+    // Les raretés absentes de la réponse ne sont pas inventées, et l'ordre est
+    // celui de l'affichage (legendary → common), pas celui du hasard de JSON.
+    expect(profile?.byRarity.map((row) => row.rarity)).toEqual(["legendary", "rare", "common"]);
+  });
+
+  it("ne demande aucun identifiant pour son propre profil", async () => {
+    const { api, calls } = client(() => ({ body: PROFILE }), signedIn());
+    await api.playerProfile();
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user_id: null });
+  });
+
+  it("renvoie null quand le joueur n'a jamais envoyé sa partie", async () => {
+    const { api } = client(() => ({ body: null }), signedIn());
+    expect(await api.playerProfile("u3")).toBeNull();
+  });
+
+  it("ne montre aucun rang à un joueur non vérifié", async () => {
+    const { api } = client(() => ({ body: { ...PROFILE, verified: false, rank_completion: null, rank_cards: null } }), signedIn());
+    const profile = await api.playerProfile("u2");
+    expect(profile?.verified).toBe(false);
+    expect(profile?.rankCompletion).toBeNull();
   });
 });
 

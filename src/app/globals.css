@@ -1424,3 +1424,33 @@ input:focus-visible {
 .leaderboard-stats li { display: flex; flex-direction: column; flex: 1 1 28%; padding: 5px 7px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-3); }
 .leaderboard-stats b { font-size: 11px; font-variant-numeric: tabular-nums; }
 .leaderboard-stats span { color: var(--muted-2); font-size: 8px; }
+
+/* Fiche publique d'un joueur : le plein écran ouvert depuis le classement ou
+   depuis un lien ?profil=<identifiant>. */
+.profile-sheet { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column; padding: 16px 14px 28px; overflow-y: auto; background: rgba(4, 3, 10, .93); backdrop-filter: blur(6px); }
+.profile-sheet-panel { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 460px; margin: 0 auto; padding: 15px; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--panel-2); box-shadow: 0 24px 60px rgb(0 0 0 / .5); }
+.profile-sheet-head { display: flex; align-items: center; gap: 8px; }
+.profile-sheet-title { display: inline-flex; align-items: center; flex: 1; gap: 6px; color: var(--muted-2); font-size: 8.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+.profile-sheet-close { display: grid; width: 30px; height: 30px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255, 255, 255, .02); cursor: pointer; }
+.profile-sheet-id h2 { margin: 0; font-size: 21px; letter-spacing: -.03em; }
+.profile-sheet-id p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+.profile-completion { display: flex; flex-direction: column; gap: 5px; }
+.profile-completion-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.profile-completion-head b { font-size: 17px; }
+.profile-completion-head span { color: var(--muted); font-size: 9px; text-align: right; }
+.profile-bar { overflow: hidden; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .07); }
+.profile-bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--purple), var(--purple-light)); }
+.profile-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.profile-stats li { display: flex; flex-direction: column; gap: 1px; padding: 7px 8px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel-3); }
+.profile-stats b { font-size: 13px; font-variant-numeric: tabular-nums; }
+.profile-stats span { color: var(--muted-2); font-size: 7.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+.profile-rarity { display: flex; flex-direction: column; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.profile-rarity li { display: flex; align-items: center; gap: 7px; font-size: 9px; }
+.profile-rarity-label { width: 78px; color: var(--muted); text-transform: capitalize; }
+.profile-rarity-bar { overflow: hidden; flex: 1; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .07); }
+.profile-rarity-bar i { display: block; height: 100%; border-radius: 999px; background: var(--purple-light); }
+.profile-rarity b { width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+.poster-modal { position: fixed; inset: 0; z-index: 70; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 16px 30px; overflow-y: auto; background: rgba(4, 3, 10, .97); }
+.poster-modal img { width: 100%; max-width: 420px; border: 1px solid var(--line-strong); border-radius: 16px; box-shadow: 0 24px 60px rgb(0 0 0 / .55); }
+.poster-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.poster-actions a { text-decoration: none; }

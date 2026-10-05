@@ -105,10 +105,51 @@ export type LeaderboardRow = {
   uniqueCreators: number;
   totalCards: number;
   legendaryCards: number;
+  epicCards: number;
+  goldCards: number;
+  holoCards: number;
   level: number;
   points: number;
+  /** Part du catalogue possédée, entre 0 et 1 (calculée par le serveur). */
+  completion: number;
   showcaseSlugs: string[];
 };
+
+/** Ce qu'un joueur possède d'une rareté, sur ce que le catalogue contient. */
+export type ProfileRarity = {
+  rarity: string;
+  owned: number;
+  total: number;
+};
+
+/**
+ * Le profil public d'un joueur (`player_profile`). Le serveur envoie des
+ * compteurs et les quatre cartes que le joueur a épinglées — jamais sa
+ * collection.
+ */
+export type PlayerProfile = {
+  userId: string;
+  displayName: string;
+  level: number;
+  points: number;
+  /** Faux si le serveur a jugé la sauvegarde invraisemblable : pas de rang. */
+  verified: boolean;
+  uniqueCreators: number;
+  totalCards: number;
+  legendaryCards: number;
+  epicCards: number;
+  goldCards: number;
+  holoCards: number;
+  catalogSize: number;
+  completion: number;
+  rankCompletion: number | null;
+  rankCards: number | null;
+  showcaseSlugs: string[];
+  byRarity: ProfileRarity[];
+};
+
+/** Tri du classement, tel que l'accepte `leaderboard()` côté serveur. */
+export type LeaderboardMetric = "unique_creators" | "total_cards" | "legendary_cards" | "gold_cards";
 
 /** Traduit les erreurs de l'API en phrases utilisables dans l'interface. */
 function messageFor(status: number, code: string, raw: string): string {
@@ -220,6 +261,49 @@ function parseSaveRow(raw: unknown): RemoteSaveRow | null {
     updatedAt: typeof record.updated_at === "string" ? record.updated_at : "",
     verified: record.verified !== false,
   };
+}
+
+/** Lit le profil public renvoyé par `player_profile()` (null si inconnu). */
+function parseProfile(raw: unknown): PlayerProfile | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const userId = String(record.user_id ?? "");
+  if (!userId) return null;
+  const rank = (value: unknown): number | null =>
+    value === null || value === undefined ? null : Number(value);
+  return {
+    userId,
+    displayName: String(record.display_name ?? "Collectionneur"),
+    level: Number(record.level ?? 1),
+    points: Number(record.points ?? 0),
+    verified: record.verified !== false,
+    uniqueCreators: Number(record.unique_creators ?? 0),
+    totalCards: Number(record.total_cards ?? 0),
+    legendaryCards: Number(record.legendary_cards ?? 0),
+    epicCards: Number(record.epic_cards ?? 0),
+    goldCards: Number(record.gold_cards ?? 0),
+    holoCards: Number(record.holo_cards ?? 0),
+    catalogSize: Number(record.catalog_size ?? 0),
+    completion: Number(record.completion ?? 0),
+    rankCompletion: rank(record.rank_completion),
+    rankCards: rank(record.rank_cards),
+    showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
+    byRarity: parseRarityBreakdown(record.by_rarity),
+  };
+}
+
+/** `{ legendary: { owned, total }, … }` → liste triée du plus rare au plus commun. */
+function parseRarityBreakdown(raw: unknown): ProfileRarity[] {
+  const record = asRecord(raw);
+  if (!record) return [];
+  const order = ["legendary", "epic", "rare", "uncommon", "common"];
+  return Object.entries(record)
+    .flatMap(([rarity, value]) => {
+      const row = asRecord(value);
+      if (!row) return [];
+      return [{ rarity, owned: Number(row.owned ?? 0), total: Number(row.total ?? 0) }];
+    })
+    .sort((left, right) => order.indexOf(left.rarity) - order.indexOf(right.rarity));
 }
 
 function parseTradeCard(raw: unknown): TradeCard | null {
@@ -643,6 +727,16 @@ export class CloudApi {
   }
 
   /**
+   * Le profil public d'un joueur (`player_profile`) : identité, chiffres,
+   * complétion, rangs et vitrine. Sans identifiant, celui du compte connecté.
+   * `null` si ce joueur n'a jamais envoyé sa partie au cloud.
+   */
+  async playerProfile(userId?: string): Promise<PlayerProfile | null> {
+    const result = await this.rpc("player_profile", { p_user_id: userId ?? null });
+    return parseProfile(result);
+  }
+
+  /**
    * Propose un échange : `given` (ce que j'offre) contre `wanted` (ce que je
    * demande). Le serveur recopie la rareté depuis le catalogue et vérifie que je
    * possède bien ce que j'offre, sur ma **sauvegarde cloud**.
@@ -760,7 +854,7 @@ export class CloudApi {
     return parseSaveRow(result);
   }
 
-  async leaderboard(limit = 20, metric: "unique_creators" | "total_cards" | "legendary_cards" = "unique_creators"): Promise<LeaderboardRow[]> {
+  async leaderboard(limit = 20, metric: LeaderboardMetric = "unique_creators"): Promise<LeaderboardRow[]> {
     const result = await this.rpc("leaderboard", { p_limit: limit, p_metric: metric });
     if (!Array.isArray(result)) return [];
     return result.flatMap((row) => {
@@ -774,8 +868,12 @@ export class CloudApi {
           uniqueCreators: Number(record.unique_creators ?? 0),
           totalCards: Number(record.total_cards ?? 0),
           legendaryCards: Number(record.legendary_cards ?? 0),
+          epicCards: Number(record.epic_cards ?? 0),
+          goldCards: Number(record.gold_cards ?? 0),
+          holoCards: Number(record.holo_cards ?? 0),
           level: Number(record.level ?? 1),
           points: Number(record.points ?? 0),
+          completion: Number(record.completion ?? 0),
           showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
         },
       ];

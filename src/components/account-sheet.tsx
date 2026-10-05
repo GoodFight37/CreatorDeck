@@ -35,37 +35,16 @@ import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "@/lib/cloud/showcase";
 import { describeSync } from "@/lib/cloud/sync";
 import { CREATORS, CREATOR_BY_SLUG, VARIANT_META, creatorImage, RARITY_META, type CardVariant } from "@/lib/catalog";
+import { ShowcaseCard } from "@/components/showcase-card";
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: "unique_creators", label: "Cartes uniques" },
   { id: "total_cards", label: "Cartes" },
   { id: "legendary_cards", label: "Légendaires" },
+  { id: "gold_cards", label: "Gold" },
 ];
 
 const PICKER_LIMIT = 60;
-
-function ShowcaseCard({ slug, small = false }: { slug: string; small?: boolean }) {
-  const creator = CREATOR_BY_SLUG.get(slug);
-  if (!creator) return null;
-
-  const rarity = RARITY_META[creator.rarity];
-  const style = {
-    "--rarity": rarity.color,
-    "--rarity-glow": rarity.glow,
-  } as CSSProperties;
-
-  return (
-    <figure className={`showcase-card${small ? " is-small" : ""}`} style={style}>
-      <span className="showcase-photo">
-        <Image src={creatorImage(creator)} width={96} height={96} alt={creator.displayName} unoptimized />
-      </span>
-      <figcaption>
-        <b>{creator.displayName}</b>
-        <span>{rarity.label}</span>
-      </figcaption>
-    </figure>
-  );
-}
 
 /**
  * Écran « Compte & cloud » : identification, synchronisation de la partie et
@@ -99,7 +78,6 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
   const [keepPassword, setKeepPassword] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
-  const [openProfile, setOpenProfile] = useState<string | null>(null);
   const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
   const pinned = knownShowcase(cloud.showcase);
   const selection = showcaseDraft ?? pinned;
@@ -631,54 +609,31 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                 </div>
                 {cloud.leaderboard.length ? (
                   <ol className="leaderboard">
-                    {cloud.leaderboard.map((row) => {
-                      const expanded = openProfile === row.userId;
-                      const profileShowcase = knownShowcase(row.showcaseSlugs);
-                      const profileId = `leaderboard-profile-${row.userId}`;
-                      return (
-                        <li key={`${row.rank}-${row.userId}`} className={row.userId === cloud.userId ? "me" : ""}>
-                          <button
-                            type="button"
-                            className="leaderboard-row"
-                            aria-expanded={expanded}
-                            aria-controls={profileId}
-                            onClick={() => setOpenProfile(expanded ? null : row.userId)}
-                          >
-                            <b>{row.rank}</b>
-                            <span className="leaderboard-name">
-                              {row.displayName}
-                              {row.userId === cloud.userId ? " (toi)" : ""}
-                            </span>
-                            <span className="leaderboard-value">
-                              {cloud.leaderboardMetric === "total_cards"
-                                ? `${row.totalCards} cartes`
-                                : cloud.leaderboardMetric === "legendary_cards"
-                                  ? `${row.legendaryCards} légendaires`
-                                  : `${row.uniqueCreators} uniques`}
-                            </span>
-                            {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
-                          </button>
-                          {expanded ? (
-                            <div id={profileId} className="leaderboard-profile">
-                              {profileShowcase.length ? (
-                                <div className="showcase-grid">
-                                  {profileShowcase.map((slug) => <ShowcaseCard key={slug} slug={slug} />)}
-                                </div>
-                              ) : (
-                                <p className="account-hint">Pas de vitrine pour l&apos;instant.</p>
-                              )}
-                              <ul className="leaderboard-stats">
-                                <li><b>{row.uniqueCreators.toLocaleString("fr-FR")}</b><span>Créateurs uniques</span></li>
-                                <li><b>{row.totalCards.toLocaleString("fr-FR")}</b><span>Cartes</span></li>
-                                <li><b>{row.legendaryCards.toLocaleString("fr-FR")}</b><span>Légendaires</span></li>
-                                <li><b>{row.level.toLocaleString("fr-FR")}</b><span>Niveau</span></li>
-                                <li><b>{row.points.toLocaleString("fr-FR")}</b><span>Points</span></li>
-                              </ul>
-                            </div>
-                          ) : null}
-                        </li>
-                      );
-                    })}
+                    {cloud.leaderboard.map((row) => (
+                      <li key={`${row.rank}-${row.userId}`} className={row.userId === cloud.userId ? "me" : ""}>
+                        <button
+                          type="button"
+                          className="leaderboard-row"
+                          onClick={() => void cloudStore.openProfile(row.userId)}
+                        >
+                          <b>{row.rank}</b>
+                          <span className="leaderboard-name">
+                            {row.displayName}
+                            {row.userId === cloud.userId ? " (toi)" : ""}
+                          </span>
+                          <span className="leaderboard-value">
+                            {cloud.leaderboardMetric === "total_cards"
+                              ? `${row.totalCards} cartes`
+                              : cloud.leaderboardMetric === "legendary_cards"
+                                ? `${row.legendaryCards} légendaires`
+                                : cloud.leaderboardMetric === "gold_cards"
+                                  ? `${row.goldCards} Gold`
+                                  : `${Math.round(row.completion * 1000) / 10} % du catalogue`}
+                          </span>
+                          {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
+                        </button>
+                      </li>
+                    ))}
                   </ol>
                 ) : (
                   <p className="account-hint">
@@ -686,8 +641,9 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                   </p>
                 )}
                 <p className="account-hint">
-                  Touche une ligne du classement pour voir la vitrine et les chiffres publics du joueur. Le serveur
-                  recalcule les statistiques depuis chaque sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
+                  Touche une ligne pour ouvrir la fiche publique du joueur : vitrine, complétion du catalogue,
+                  répartition par rareté, rang — et une affiche à partager. Le serveur recalcule les statistiques
+                  depuis chaque sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
                 </p>
               </section>
             ) : null}
@@ -700,7 +656,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
 
 
 const TRADE_QUERY_MIN = 2;
-const TRADE_PICK_LIMIT = 3;
+const TRADE_PICK_LIMIT = 5;
 const TRADE_RESULT_LIMIT = 8;
 
 const TRADE_STATUS_LABEL: Record<TradeStatus, string> = {
@@ -730,7 +686,7 @@ function TradeCardTag({ card }: { card: TradeCard }) {
  *
  * Le serveur arbitre tout : il relit les deux collections avant de déplacer
  * une carte, dans une seule transaction. Ici on ne fait que composer l'offre
- * (une carte contre une carte, jusqu'à trois de chaque côté) et afficher les
+ * (une carte contre une carte, jusqu'à cinq de chaque côté) et afficher les
  * réponses.
  *
  * Deux cartes ne s'échangent pas à l'aveugle : demander la variante Gold d'un
@@ -1105,7 +1061,7 @@ function TradesPanel() {
               </button>
             </div>
             <p className="account-hint">
-              Une carte contre une carte (jusqu&apos;à trois de chaque côté). Ta collection est envoyée au cloud juste
+              Une carte contre une carte (jusqu&apos;à cinq de chaque côté). Ta collection est envoyée au cloud juste
               avant : c&apos;est elle que le serveur vérifie. Une offre reste valable jusqu&apos;à ce que le joueur
               réponde ou que tu l&apos;annules.
             </p>

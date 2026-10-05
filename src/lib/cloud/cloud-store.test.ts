@@ -79,6 +79,7 @@ type FakeApi = {
   pushSave: ReturnType<typeof vi.fn>;
   pullSave: ReturnType<typeof vi.fn>;
   leaderboard: ReturnType<typeof vi.fn>;
+  playerProfile: ReturnType<typeof vi.fn>;
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
   ping: ReturnType<typeof vi.fn>;
@@ -123,11 +124,34 @@ function harness(options: {
         uniqueCreators: 900,
         totalCards: 4000,
         legendaryCards: 40,
+        epicCards: 120,
+        goldCards: 7,
+        holoCards: 33,
+        completion: 0.9,
         level: 50,
         points: 9000,
         showcaseSlugs: [],
       } satisfies LeaderboardRow,
     ]),
+    playerProfile: vi.fn(async (userId?: string) => ({
+      userId: userId ?? SESSION.userId,
+      displayName: "Diane",
+      level: 12,
+      points: 640,
+      verified: true,
+      uniqueCreators: 137,
+      totalCards: 402,
+      legendaryCards: 9,
+      epicCards: 31,
+      goldCards: 3,
+      holoCards: 12,
+      catalogSize: 1000,
+      completion: 0.137,
+      rankCompletion: 42,
+      rankCards: 118,
+      showcaseSlugs: ["kaicenat"],
+      byRarity: [{ rarity: "legendary", owned: 4, total: 50 }],
+    })),
     openPack: vi.fn(async () => ({
       packs: 2,
       lastRegenAt: "2026-03-01T10:00:00Z",
@@ -840,5 +864,69 @@ describe("compte gardable (adresse + mot de passe)", () => {
     expect(api.pullSave).not.toHaveBeenCalled();
     expect(state.current).toBe(local);
     expect(store.getSnapshot().message).toMatch(/envoie-la quand tu veux/);
+  });
+});
+
+describe("fiche publique d'un joueur", () => {
+  it("charge la fiche et laisse le serveur calculer les chiffres", async () => {
+    const { store, api } = harness();
+
+    await store.openProfile("u2");
+
+    expect(api.playerProfile).toHaveBeenCalledWith("u2");
+    const cloud = store.getSnapshot();
+    expect(cloud.profile?.displayName).toBe("Diane");
+    expect(cloud.profile?.completion).toBeCloseTo(0.137);
+    expect(cloud.profileBusy).toBe(false);
+    expect(cloud.isError).toBe(false);
+  });
+
+  it("dit simplement quand le joueur n'a jamais envoyé sa partie", async () => {
+    const { store, api } = harness();
+    api.playerProfile.mockResolvedValueOnce(null);
+
+    await store.openProfile("u3");
+
+    expect(store.getSnapshot().profile).toBeNull();
+    expect(store.getSnapshot().message).toMatch(/pas encore envoyé sa collection/);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("ferme la fiche sans rien garder", async () => {
+    const { store } = harness();
+    await store.openProfile("u2");
+    store.closeProfile();
+
+    expect(store.getSnapshot().profile).toBeNull();
+    expect(store.getSnapshot().profileBusy).toBe(false);
+  });
+
+  it("explique un build sans cloud au lieu d'afficher une fiche vide", async () => {
+    const { store, api } = harness({ configured: false });
+
+    await store.openProfile("u2");
+
+    expect(api.playerProfile).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toBeTruthy();
+    expect(store.getSnapshot().profile).toBeNull();
+  });
+
+  it("ne casse rien hors ligne : la fiche reste fermée avec une explication", async () => {
+    const { store, api } = harness();
+    api.playerProfile.mockRejectedValueOnce(new CloudError("Réseau injoignable.", "network", 0));
+
+    await store.openProfile("u2");
+
+    expect(store.getSnapshot().profile).toBeNull();
+    expect(store.getSnapshot().profileBusy).toBe(false);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("oublie la fiche à la déconnexion", async () => {
+    const { store } = harness();
+    await store.openProfile("u2");
+    await store.signOut();
+
+    expect(store.getSnapshot().profile).toBeNull();
   });
 });

@@ -24,7 +24,9 @@ import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/
 import {
   CloudApi,
   CloudError,
+  type LeaderboardMetric,
   type LeaderboardRow,
+  type PlayerProfile,
   type PlayerSearchResult,
   type TradeListItem,
 } from "@/lib/cloud/api";
@@ -39,7 +41,8 @@ import { gameStore, onPersist } from "@/lib/game-store";
 /** Délai après la dernière action avant l'envoi automatique de la partie. */
 export const AUTO_PUSH_DEBOUNCE_MS = 20_000;
 
-export type LeaderboardMetric = "unique_creators" | "total_cards" | "legendary_cards";
+/** Tri du classement : le type vient du client (`leaderboard()` en base). */
+export type { LeaderboardMetric };
 
 export type CloudState = {
   /** Un projet Supabase est-il configuré dans ce build ? */
@@ -67,6 +70,14 @@ export type CloudState = {
   pending: boolean;
   leaderboard: LeaderboardRow[];
   leaderboardMetric: LeaderboardMetric;
+  /**
+   * Profil public ouvert (`player_profile`) : celui d'un autre joueur ou le
+   * sien. `null` tant qu'aucune fiche n'est affichée — c'est aussi ce qui ferme
+   * la fiche.
+   */
+  profile: PlayerProfile | null;
+  /** La fiche affichée est en cours de chargement. */
+  profileBusy: boolean;
   /** Offres d'échange du joueur, en attente d'abord (serveur = source de vérité). */
   trades: TradeListItem[];
   /** Horodatage local du dernier chargement des offres. */
@@ -156,6 +167,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   pending: false,
   leaderboard: [],
   leaderboardMetric: "unique_creators",
+  profile: null,
+  profileBusy: false,
   trades: [],
   tradesAt: null,
 });
@@ -1046,6 +1059,8 @@ export function createCloudStore(deps: CloudDeps) {
         decision: null,
         remoteUpdatedAt: null,
         leaderboard: [],
+        profile: null,
+        profileBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1105,6 +1120,42 @@ export function createCloudStore(deps: CloudDeps) {
       } catch {
         // Sans réseau, on garde le dernier nom connu.
       }
+    },
+
+    /**
+     * Ouvre la fiche publique d'un joueur. Le serveur renvoie des compteurs et
+     * la vitrine, jamais sa collection — et `null` s'il n'a jamais envoyé sa
+     * partie, ce que l'écran dit simplement.
+     */
+    async openProfile(userId: string): Promise<void> {
+      const api = resolve();
+      if (!api) {
+        publish({ profileBusy: false, profile: null, message: CLOUD_DISABLED_HINT, isError: true });
+        return;
+      }
+      if (!networkReady(api)) return;
+      publish({ profileBusy: true, profile: null, message: null, isError: false });
+      try {
+        const profile = await api.playerProfile(userId);
+        if (!profile) {
+          publish({
+            profileBusy: false,
+            profile: null,
+            message: "Ce joueur n'a pas encore envoyé sa collection au cloud.",
+            isError: true,
+          });
+          return;
+        }
+        publish({ profileBusy: false, profile, message: null, isError: false });
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Profil indisponible.");
+        publish({ profileBusy: false, profile: null, message: refusal.message, isError: true });
+      }
+    },
+
+    /** Ferme la fiche publique. */
+    closeProfile(): void {
+      publish({ profile: null, profileBusy: false });
     },
 
     async loadLeaderboard(metric: LeaderboardMetric = state.leaderboardMetric): Promise<void> {
