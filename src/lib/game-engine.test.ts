@@ -8,6 +8,7 @@ import {
   HOURGLASS_REDUCTION_MS,
   SAVE_VERSION,
   XP_PER_LEVEL,
+  applyPackResult,
   claimSeason,
   craftCreator,
   createInitialState,
@@ -176,6 +177,92 @@ describe("openPack", () => {
       state = result.state;
     }
     expect(getGameView(state, T0 + 10).stats.uniqueCreators).toBe(owned.size);
+  });
+});
+
+describe("applyPackResult", () => {
+  const SERVER_CARDS = [
+    { creatorSlug: "kaicenat", rarity: "legendary" as Rarity, variant: "live" as CardVariant, rareDrop: false },
+    { creatorSlug: "ibai", rarity: "epic" as Rarity, variant: "holo" as CardVariant, rareDrop: false },
+    { creatorSlug: "ninja", rarity: "rare" as Rarity, variant: "standard" as CardVariant, rareDrop: false },
+    { creatorSlug: "auronplay", rarity: "uncommon" as Rarity, variant: "standard" as CardVariant, rareDrop: false },
+    { creatorSlug: "rubius", rarity: "common" as Rarity, variant: "standard" as CardVariant, rareDrop: false },
+  ];
+
+  it("applique les cartes du serveur, crédite points et XP, met à jour les compteurs", () => {
+    const state = makeState({ packs: 2, openings: 5 });
+    const lastRegen = new Date(T0).toISOString();
+    const { state: next, cards } = applyPackResult(state, SERVER_CARDS, 1, lastRegen, 6, T0);
+
+    expect(cards).toHaveLength(5);
+    expect(next.packs).toBe(1);
+    expect(next.openings).toBe(6);
+    expect(next.points).toBe(state.points + PACKS.live.points);
+    expect(next.xp).toBe(PACKS.live.xp);
+    expect(next.cards).toHaveLength(5);
+    expect(next.lastPackRegen).toBe(T0);
+    expect(next.updatedAt).toBe(T0);
+  });
+
+  it("marque isNew correctement selon les cartes déjà possédées", () => {
+    const state = makeState({
+      packs: 1,
+      cards: [
+        {
+          id: "existing-1",
+          creatorSlug: "kaicenat",
+          rarity: "legendary",
+          variant: "standard",
+          obtainedAt: T0 - 1000,
+          rareDrop: false,
+        },
+      ],
+    });
+    const { cards } = applyPackResult(state, SERVER_CARDS, 0, T0, 1, T0);
+    const kaicenat = cards.find((c) => c.creatorSlug === "kaicenat");
+    const ibai = cards.find((c) => c.creatorSlug === "ibai");
+    expect(kaicenat?.isNew).toBe(false);
+    expect(ibai?.isNew).toBe(true);
+  });
+
+  it("accepte un epoch ms pour lastRegenAt", () => {
+    const state = makeState({ packs: 1 });
+    const { state: next } = applyPackResult(state, SERVER_CARDS, 0, T0, 1, T0);
+    expect(next.lastPackRegen).toBe(T0);
+  });
+
+  it("calcule correctement la montée de niveau", () => {
+    const state = makeState({ packs: 1, xp: XP_PER_LEVEL - 1, level: 1 });
+    const { state: next } = applyPackResult(state, SERVER_CARDS, 0, T0, 1, T0);
+    expect(next.level).toBe(2);
+    expect(next.hourglasses).toBe(state.hourglasses + HOURGLASSES_PER_LEVEL);
+  });
+
+  it("préserve les cartes existantes", () => {
+    const state = makeState({
+      packs: 1,
+      cards: [
+        {
+          id: "old-card",
+          creatorSlug: "xqc",
+          rarity: "legendary",
+          variant: "gold",
+          obtainedAt: T0 - 1000,
+          rareDrop: true,
+        },
+      ],
+    });
+    const { state: next } = applyPackResult(state, SERVER_CARDS, 0, T0, 1, T0);
+    expect(next.cards).toHaveLength(6);
+    expect(next.cards[0]?.creatorSlug).toBe("xqc");
+  });
+
+  it("ne modifie pas l'état d'origine (pureté)", () => {
+    const state = makeState({ packs: 2 });
+    applyPackResult(state, SERVER_CARDS, 1, T0, 1, T0);
+    expect(state.packs).toBe(2);
+    expect(state.cards).toHaveLength(0);
+    expect(state.openings).toBe(0);
   });
 });
 

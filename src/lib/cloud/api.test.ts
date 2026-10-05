@@ -328,3 +328,88 @@ describe("vitrine", () => {
     expect(await api.setShowcase(["kaicenat"])).toEqual([]);
   });
 });
+
+describe("tirage serveur", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("ouvre un booster et renvoie les cartes + compteurs", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          packs: 2,
+          last_regen_at: "2026-01-01T12:30:00Z",
+          openings: 7,
+          cards: [
+            { creatorSlug: "kaicenat", rarity: "legendary", variant: "live", rareDrop: false },
+            { creatorSlug: "ibai", rarity: "epic", variant: "holo", rareDrop: false },
+            { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+            { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+            { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
+          ],
+        },
+      }),
+      signedIn(),
+    );
+    const result = await api.openPack();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/open_pack");
+    expect(result.packs).toBe(2);
+    expect(result.openings).toBe(7);
+    expect(result.cards).toHaveLength(5);
+    expect(result.cards[0]).toMatchObject({ creatorSlug: "kaicenat", rarity: "legendary", variant: "live" });
+  });
+
+  it("refuse sans session", async () => {
+    const { api } = client(() => ({ body: {} }));
+    await expect(api.openPack()).rejects.toThrowError(/Connecte-toi/);
+  });
+
+  it("renvoie une erreur lisible si le serveur refuse le tirage", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "tirage : aucun booster disponible pour le moment" } }),
+      signedIn(),
+    );
+    await expect(api.openPack()).rejects.toThrowError(/Aucun booster/);
+  });
+
+  it("lit le statut de la réserve sans rien consommer", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          packs: 3,
+          last_regen_at: "2026-01-01T12:00:00Z",
+          openings: 5,
+          next_pack_at: "2026-01-01T12:30:00Z",
+        },
+      }),
+      signedIn(),
+    );
+    const status = await api.packStatus();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/pack_status");
+    expect(status.packs).toBe(3);
+    expect(status.nextPackAt).toBe("2026-01-01T12:30:00Z");
+  });
+
+  it("renvoie next_pack_at=null quand la réserve est pleine", async () => {
+    const { api } = client(
+      () => ({
+        body: {
+          packs: 4,
+          last_regen_at: "2026-01-01T12:00:00Z",
+          openings: 10,
+          next_pack_at: null,
+        },
+      }),
+      signedIn(),
+    );
+    const status = await api.packStatus();
+    expect(status.packs).toBe(4);
+    expect(status.nextPackAt).toBeNull();
+  });
+});

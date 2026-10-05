@@ -41,8 +41,9 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
-| `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») |
+| `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
+| `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
 
 ## Architecture
 
@@ -62,9 +63,11 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0004)
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
-                         image, échelle de raretés), build du catalogue
+                         image, échelle de raretés), build du catalogue,
+                         seed Supabase (build-supabase-catalogue.mjs)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
 android/                 projet Capacitor Android
@@ -236,11 +239,25 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 ## Compte, cloud et classement (facultatif)
 
 L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute quatre choses :
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute cinq choses :
 un compte (invité par défaut, e-mail + code à 6 chiffres en option), la
 sauvegarde pour retrouver sa partie sur un autre appareil, une vitrine de quatre
-cartes sur le profil public et un classement mondial recalculé par le serveur.
+cartes sur le profil public, un classement mondial recalculé par le serveur,
+et le **tirage des boosters décidé par le serveur** (les cartes sont
+infalsifiables, prérequis des échanges).
 Marche à suivre : **`docs/cloud-supabase.md`**.
+
+### Le tirage est décidé par le serveur
+
+Quand le cloud est configuré, ouvrir un booster demande une connexion : la
+fonction `open_pack()` de Supabase tire les 5 cartes avec le même algorithme
+que le moteur local, et le client ne peut ni les choisir ni les inventer. Hors
+ligne, le bouton « Ouvrir un booster » explique qu'il faut se connecter (avec
+un raccourci vers l'écran Compte) — **pas de repli silencieux**.
+
+Hors périmètre (volontaire) : les points, l'XP et le niveau restent calculés
+sur l'appareil ; seul le contenu des boosters (et donc les cartes) devient
+serveur.
 
 - Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
   aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
@@ -262,6 +279,10 @@ Marche à suivre : **`docs/cloud-supabase.md`**.
   `leaderboard()`. `push_save()` arbitre les conflits entre appareils.
   `supabase/migrations/0002_vitrine.sql` ajoute `set_showcase()` : la fonction
   contrôle les 4 slugs et leur possession avant de les publier sur le profil.
+  `supabase/migrations/0003_catalogue.sql` peuple la table `creators` (fichier
+  généré par `scripts/build-supabase-catalogue.mjs`). `supabase/migrations/0004_tirage.sql`
+  ajoute `open_pack()` et `pack_status()` : le tirage des boosters est décidé
+  par le serveur, les cartes sont infalsifiables.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

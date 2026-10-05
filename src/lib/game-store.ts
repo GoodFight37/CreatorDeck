@@ -7,6 +7,7 @@
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
 import {
+  applyPackResult,
   claimSeason as engineClaimSeason,
   craftCreator as engineCraftCreator,
   equipTheme as engineEquipTheme,
@@ -17,6 +18,7 @@ import {
   type DrawnCard,
   type PlayerState,
 } from "@/lib/game-engine";
+import type { CardVariant, Rarity } from "@/lib/catalog";
 import { deviceStorage } from "@/lib/storage";
 import {
   SAVE_KEY,
@@ -137,6 +139,32 @@ export const gameStore = {
 
   openPack(now = Date.now()): DrawnCard[] {
     const result = engineOpenPack(current(), now);
+    persist(result.state);
+    return result.cards;
+  },
+
+  /**
+   * Applique un tirage décidé par le serveur.
+   *
+   * Les cartes viennent du serveur (infalsifiables). Les compteurs de
+   * boosters sont ceux renvoyés par la fonction `open_pack()`. Les points,
+   * l'XP et les niveaux restent calculés localement.
+   */
+  applyServerPack(
+    cards: Array<{ creatorSlug: string; rarity: Rarity; variant: CardVariant; rareDrop: boolean }>,
+    serverPacks: number,
+    serverLastRegenAt: string,
+    serverOpenings: number,
+    now = Date.now(),
+  ): DrawnCard[] {
+    const result = applyPackResult(
+      current(),
+      cards,
+      serverPacks,
+      serverLastRegenAt,
+      serverOpenings,
+      now,
+    );
     persist(result.state);
     return result.cards;
   },

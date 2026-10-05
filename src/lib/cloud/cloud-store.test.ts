@@ -56,6 +56,8 @@ type FakeApi = {
   pushSave: ReturnType<typeof vi.fn>;
   pullSave: ReturnType<typeof vi.fn>;
   leaderboard: ReturnType<typeof vi.fn>;
+  openPack: ReturnType<typeof vi.fn>;
+  packStatus: ReturnType<typeof vi.fn>;
 };
 
 function harness(options: {
@@ -94,6 +96,24 @@ function harness(options: {
         showcaseSlugs: [],
       } satisfies LeaderboardRow,
     ]),
+    openPack: vi.fn(async () => ({
+      packs: 2,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 4,
+      cards: [
+        { creatorSlug: "kaicenat", rarity: "legendary", variant: "live", rareDrop: false },
+        { creatorSlug: "ibai", rarity: "epic", variant: "holo", rareDrop: false },
+        { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+        { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
+      ],
+    })),
+    packStatus: vi.fn(async () => ({
+      packs: 3,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 3,
+      nextPackAt: "2026-03-01T10:30:00Z",
+    })),
   };
 
   const store = createCloudStore({
@@ -315,6 +335,52 @@ describe("store cloud", () => {
     await store.loadLeaderboard("total_cards");
     expect(store.getSnapshot().leaderboardMetric).toBe("total_cards");
     expect(store.getSnapshot().leaderboard[0]?.displayName).toBe("Kaicenat");
+  });
+
+  it("ouvre un booster côté serveur et pousse immédiatement la partie", async () => {
+    const { store, api } = harness({ signedIn: true });
+    store.subscribe(() => {});
+    const count = await store.openPack();
+    expect(count).toBe(5);
+    expect(api.openPack).toHaveBeenCalled();
+    // Après le tirage, la sauvegarde est poussée immédiatement (pas de debounce).
+    expect(api.pushSave).toHaveBeenCalled();
+    const snapshot = store.getSnapshot();
+    expect(snapshot.message).toContain("5 cartes");
+    expect(snapshot.isError).toBe(false);
+  });
+
+  it("échoue proprement quand le serveur refuse le tirage", async () => {
+    const { store, api } = harness({ signedIn: true });
+    store.subscribe(() => {});
+    api.openPack.mockRejectedValueOnce(new CloudError("Aucun booster disponible.", "no_packs", 400));
+    const count = await store.openPack();
+    expect(count).toBe(0);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("refuse sans session connectée", async () => {
+    const { store } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    const count = await store.openPack();
+    expect(count).toBe(0);
+  });
+
+  it("lit le statut de la réserve", async () => {
+    const { store, api } = harness({ signedIn: true });
+    store.subscribe(() => {});
+    const status = await store.packStatus();
+    expect(status).not.toBeNull();
+    expect(status?.packs).toBe(3);
+    expect(api.packStatus).toHaveBeenCalled();
+  });
+
+  it("renvoie null si le statut est indisponible", async () => {
+    const { store, api } = harness({ signedIn: true });
+    store.subscribe(() => {});
+    api.packStatus.mockRejectedValueOnce(new Error("hors ligne"));
+    const status = await store.packStatus();
+    expect(status).toBeNull();
   });
 });
 

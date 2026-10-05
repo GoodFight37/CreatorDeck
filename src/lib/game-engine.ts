@@ -720,6 +720,82 @@ export function openPack(
   return { state: next, cards };
 }
 
+/**
+ * Applique le résultat d'un tirage décidé par le serveur.
+ *
+ * Le serveur fournit les cartes (infalsifiables) et les compteurs de boosters
+ * (`packs`, `lastPackRegen`, `openings`). Le client calcule localement les
+ * points, l'XP et les niveaux : ces valeurs ne concernent que l'appareil.
+ *
+ * Réutilisée par le chemin serveur (cloud configuré + connecté) et par le
+ * chemin local (cloud non configuré), ce qui garantit que les deux appliquent
+ * la même économie.
+ */
+export function applyPackResult(
+  state: PlayerState,
+  serverCards: Array<{
+    creatorSlug: string;
+    rarity: Rarity;
+    variant: CardVariant;
+    rareDrop: boolean;
+  }>,
+  serverPacks: number,
+  serverLastRegenAt: string | number,
+  serverOpenings: number,
+  now = Date.now(),
+): { state: PlayerState; cards: DrawnCard[] } {
+  const owned = ownedSlugs(state);
+  const pack = PACKS[ACTIVE_PACK];
+  const nextXp = state.xp + pack.xp;
+  const nextLevel = Math.floor(nextXp / XP_PER_LEVEL) + 1;
+  const gainedLevels = Math.max(0, nextLevel - state.level);
+
+  // lastPackRegen : le serveur renvoie un timestamptz ISO (ou un epoch ms).
+  let lastRegenMs: number;
+  if (typeof serverLastRegenAt === "number") {
+    lastRegenMs = serverLastRegenAt;
+  } else {
+    lastRegenMs = Date.parse(serverLastRegenAt);
+    if (!Number.isFinite(lastRegenMs)) {
+      lastRegenMs = now;
+    }
+  }
+
+  const cards: DrawnCard[] = serverCards.map((card) => ({
+    id: randomUUID(),
+    creatorSlug: card.creatorSlug,
+    rarity: card.rarity,
+    variant: card.variant,
+    isNew: !owned.has(card.creatorSlug),
+    rareDrop: card.rareDrop,
+  }));
+
+  const next: PlayerState = {
+    ...state,
+    updatedAt: now,
+    packs: serverPacks,
+    lastPackRegen: lastRegenMs,
+    points: state.points + pack.points,
+    xp: nextXp,
+    level: nextLevel,
+    hourglasses: state.hourglasses + gainedLevels * HOURGLASSES_PER_LEVEL,
+    openings: serverOpenings,
+    cards: [
+      ...state.cards,
+      ...cards.map<OwnedCard>((card) => ({
+        id: card.id,
+        creatorSlug: card.creatorSlug,
+        rarity: card.rarity,
+        variant: card.variant,
+        obtainedAt: now,
+        rareDrop: card.rareDrop,
+      })),
+    ],
+  };
+
+  return { state: next, cards };
+}
+
 /** Dépense un sablier pour avancer la recharge du booster choisi. */
 export function spendHourglass(state: PlayerState, now = Date.now()): PlayerState {
   const refreshed = refreshBalances(state, now);

@@ -16,7 +16,8 @@
     "catalog:build": "node scripts/build-catalog.mjs",
     "catalog:check": "node scripts/build-catalog.mjs --check",
     "catalog:source": "node scripts/build-twitch-catalog.mjs",
-    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars"
+    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars && node scripts/build-supabase-catalogue.mjs --check",
+    "supabase:catalogue": "node scripts/build-supabase-catalogue.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
