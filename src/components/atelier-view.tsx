@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import {
+  CATALOG_SIZE,
   CREATORS,
   CREATOR_BY_SLUG,
   RARITY_META,
@@ -245,7 +246,7 @@ export function AtelierView({
           {!craftable.length ? (
             <div className="no-results">
               {missingCount === 0
-                ? "Collection complète : les 500 créateurs sont dans ton classeur !"
+                ? `Collection complète : les ${CATALOG_SIZE} créateurs sont dans ton classeur !`
                 : "Aucun créateur ne correspond à ce filtre."}
             </div>
           ) : null}

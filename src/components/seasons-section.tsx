@@ -4,7 +4,7 @@ import { Check, Coins, Hourglass, Lock, Unlock } from "lucide-react";
 import type { SeasonView } from "@/lib/game-engine";
 
 /**
- * Saisons de collection : les 500 créateurs sont répartis en familles de jeux
+ * Saisons de collection : les créateurs du catalogue sont répartis en familles de jeux
  * (comme les séries d'un TCG). Compléter une famille débloque une récompense
  * à réclamer ici.
  */

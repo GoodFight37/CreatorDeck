@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du Top 500. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison.",
+  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du Top 500. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit (Top 1000/2000).",
   "pointsPerCreator": 4,
   "hourglassesPerSeason": 3,
   "seasons": [
@@ -117,6 +117,7 @@
   "catchAll": {
     "id": "S07",
     "name": "Découverte",
-    "tagline": "Le reste du Top 500 : les pépites à dénicher."
+    "tagline": "Le reste du Top 500 : les pépites à dénicher.",
+    "maxSize": 60
   }
 }

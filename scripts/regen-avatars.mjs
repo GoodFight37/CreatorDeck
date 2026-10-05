@@ -39,8 +39,14 @@ const REPORTS_DIR = path.join(ROOT, "reports");
 const BATCH = 30; // alias par requête GQL
 const CONCURRENCY = 8; // le CDN jtvnw encaisse, les agrégateurs non
 const FORCE = process.argv.includes("--force");
+/**
+ * Résolution cible : celle du pipeline (600 px) par défaut, surchargée par
+ * `AVATAR_PX` quand le catalogue grossit — un Top 2000 en 600 px pèserait
+ * ~70 Mo de JPEG dans l'APK, contre ~35 Mo en 300 px (voir docs/passer-a-2000.md).
+ */
+const TARGET_SIZE = Math.max(150, Math.floor(Number(process.env.AVATAR_PX ?? AVATAR_SIZE)));
 // Client-ID public du site web Twitch (API GQL non officielle, déjà employé
-// par scripts/build-top500-fr.mjs).
+// par scripts/build-twitch-fr.mjs).
 const GQL_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
 await mkdir(OUT_DIR, { recursive: true });
@@ -113,14 +119,14 @@ const report = [];
 for (const creator of creators) {
   const target = path.join(OUT_DIR, `${creator.slug}.jpg`);
   const current = await readAvatarSize(target);
-  if (!FORCE && current === AVATAR_SIZE) {
-    report.push({ slug: creator.slug, ok: true, source: `deja-${AVATAR_SIZE}`, size: current });
+  if (!FORCE && current === TARGET_SIZE) {
+    report.push({ slug: creator.slug, ok: true, source: `deja-${TARGET_SIZE}`, size: current });
   } else {
     pending.push({ creator, target, current });
   }
 }
 console.log(
-  `${creators.length} créateurs : ${report.length} déjà en ${AVATAR_SIZE}px, ` +
+  `${creators.length} créateurs : ${report.length} déjà en ${TARGET_SIZE}px, ` +
     `${pending.length} à régénérer.\n`,
 );
 
@@ -175,9 +181,9 @@ await Promise.all(
           }
         }
 
-        const size = await encodeAvatar(bytes, target);
+        const size = await encodeAvatar(bytes, target, { size: TARGET_SIZE });
         report.push({ slug: creator.slug, ok: true, source, size });
-        if (size < AVATAR_SIZE) {
+        if (size < TARGET_SIZE) {
           process.stderr.write(`ℹ ${creator.slug}: seulement ${size}px disponible\n`);
         }
       } catch (error) {
@@ -185,7 +191,7 @@ await Promise.all(
         const cause = [...reasons, detail].join(" | ");
         try {
           await encodePlaceholder(creator, target);
-          report.push({ slug: creator.slug, ok: true, source: "placeholder", size: AVATAR_SIZE, cause });
+          report.push({ slug: creator.slug, ok: true, source: "placeholder", size: TARGET_SIZE, cause });
           process.stderr.write(`⚠ ${creator.slug}: portrait de secours (${cause})\n`);
         } catch {
           report.push({ slug: creator.slug, ok: false, error: cause });
@@ -216,7 +222,7 @@ await writeFile(
   `${JSON.stringify(
     {
       generatedAt: new Date().toISOString(),
-      targetSize: AVATAR_SIZE,
+      targetSize: TARGET_SIZE,
       total: report.length,
       parSource: bySource,
       parTaille: bySize,

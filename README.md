@@ -39,11 +39,12 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
+| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch (`--count 2000` pour viser plus grand, voir `docs/passer-a-2000.md`) |
 
 ## Architecture
 
 ```
-src/lib/catalog.ts       catalogue (500 créateurs, raretés, boosters, économie) + constantes d'UI
+src/lib/catalog.ts       catalogue (créateurs, raretés, boosters, économie) + constantes d'UI
 src/lib/pull-rates.ts    lecture des tables de tirage + calcul des probabilités publiées
 src/lib/seasons.ts       saisons de collection (complétion par famille de jeux)
 src/lib/random.ts        aléa cryptographique portable (Web Crypto)
@@ -54,12 +55,15 @@ src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet)
 src/app/                 layout, page, styles globaux
-src/data/creators.json   les 500 créateurs
+src/data/creators.json   les créateurs du catalogue (500 aujourd'hui)
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
+src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
 public/creators/         portraits (600×600 via `npm run assets:regen`)
-scripts/                 génération des données et des avatars (scripts/lib/avatars.mjs = pipeline image), build du catalogue
+scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
+                         image, échelle de raretés), build du catalogue
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
+docs/passer-a-2000.md    passer à un Top 1000/2000 (budget images, réglages, runbook)
 android/                 projet Capacitor Android
 ```
 
@@ -75,6 +79,10 @@ Principes :
   v1 sont **migrées automatiquement** (aucune collection perdue) puis relues
   sous la nouvelle clé. L'onglet Profil permet de la copier / importer
   (transfert entre téléphones) et de la réinitialiser.
+- **Aucune taille codée en dur** : libellés, jalons d'objectifs et raretés
+  dérivent du catalogue (`CATALOG_SIZE`, `scripts/lib/rarity-ladder.mjs`).
+  Passer de 500 à 2000 créateurs est un changement de données — voir
+  `docs/passer-a-2000.md`.
 - **Les probabilités sont des données, pas du code** : le tirage lit
   `src/data/pull-rates.json` (une table par slot, slot garanti, événement
   « Perfect ») et l'écran « Taux de drop » recalcule ses chiffres depuis le
@@ -90,10 +98,11 @@ Principes :
   d'artisanat de sa rareté, et les **Légendaires ne s'artisanent pas** — elles
   se méritent en booster, comme les raretés hautes non échangeables de TCG
   Pocket.
-- **Saisons** (écran Objectifs) : les 500 créateurs sont répartis en 7 familles
-  de jeux (`src/data/seasons.config.json`) ; compléter une famille débloque une
-  récompense à réclamer. Le découpage est vérifié par les tests : chaque
-  créateur appartient à exactement une saison.
+- **Saisons** (écran Objectifs) : les créateurs sont répartis en familles de
+  jeux (`src/data/seasons.config.json`, 7 groupes aujourd'hui) ; compléter une
+  famille débloque une récompense à réclamer. Le découpage est vérifié par les
+  tests : chaque créateur appartient à exactement une saison, et le fourre-tout
+  « Découverte » se découpe automatiquement quand le catalogue grandit.
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing.
@@ -172,8 +181,10 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
   avec l'ancien montage 300 px plein cadre.
 - `npm run assets:regen` met à jour `public/creators/` (reprenable : un portrait
   déjà en 600 px est ignoré, `--force` pour tout ré-encoder). Le rapport va dans
-  `reports/` (non versionné). Compter ~20 Mo pour les 500 fichiers.
-- `scripts/build-top500-fr.mjs` reconstruit `src/data/creators.json` depuis
+  `reports/` (non versionné). Compter ~34 Ko par portrait 600 px (~18 Ko en
+  300 px) : le budget images est détaillé dans `docs/passer-a-2000.md`.
+- `scripts/build-twitch-fr.mjs` reconstruit `src/data/creators.json` depuis
   l'API GQL de Twitch (Client-ID public du site web : non officiel, peut casser
-  sans préavis) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
+  sans préavis ; `--dry-run` pour mesurer avant d'écrire, `--count N` pour la
+  cible) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
   officielle si `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` sont renseignés.

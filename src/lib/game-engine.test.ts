@@ -123,7 +123,7 @@ describe("drawPack", () => {
 
   it("marque isNew selon la collection possédée", () => {
     expect(drawPack("live", new Set()).every((card) => card.isNew)).toBe(true);
-    const owned = new Set(["squeezie", "gotaga", "antoinedaniel", "michou"]);
+    const owned = new Set(CREATORS.slice(0, 4).map((creator) => creator.slug));
     for (let i = 0; i < 25; i += 1) {
       for (const card of drawPack("live", owned)) {
         expect(card.isNew).toBe(!owned.has(card.creatorSlug));
@@ -243,6 +243,17 @@ describe("getGameView", () => {
   });
 });
 
+/**
+ * Premier créateur du catalogue d'une rareté donnée : les tests restent valides
+ * quelle que soit la taille du catalogue (Top 500, 1000, 2000) et donc quelle
+ * que soit la rareté attribuée à tel ou tel streameur.
+ */
+function creatorOfRarity(rarity: Rarity) {
+  const creator = CREATORS.find((entry) => entry.rarity === rarity);
+  if (!creator) throw new Error(`Aucun créateur de rareté « ${rarity} » dans le catalogue.`);
+  return creator;
+}
+
 function ownedCard(
   id: string,
   creatorSlug: string,
@@ -290,17 +301,18 @@ describe("Perfect (Rare Drop)", () => {
 
 describe("Atelier · recyclage", () => {
   it("ne voit un doublon que dans une même variante", () => {
+    const legendary = creatorOfRarity("legendary");
     const state = makeState({
       cards: [
-        ownedCard("a", "gotaga", "legendary"),
-        ownedCard("b", "gotaga", "legendary"),
-        ownedCard("c", "gotaga", "legendary", "holo"),
+        ownedCard("a", legendary.slug, "legendary"),
+        ownedCard("b", legendary.slug, "legendary"),
+        ownedCard("c", legendary.slug, "legendary", "holo"),
       ],
     });
     const groups = duplicateGroups(state);
     expect(groups).toHaveLength(1);
     expect(groups[0]).toMatchObject({
-      creatorSlug: "gotaga",
+      creatorSlug: legendary.slug,
       variant: "standard",
       count: 2,
       unitValue: RARITY_META.legendary.recycleValue,
@@ -313,11 +325,12 @@ describe("Atelier · recyclage", () => {
   });
 
   it("crédite la valeur de la rareté et retire la carte", () => {
+    const rare = creatorOfRarity("rare");
     const state = makeState({
       points: 0,
       cards: [
-        ownedCard("a", "gobgg", "rare"),
-        ownedCard("b", "gobgg", "rare"),
+        ownedCard("a", rare.slug, "rare"),
+        ownedCard("b", rare.slug, "rare"),
       ],
     });
     const next = recycleCard(state, "b", T0);
@@ -327,7 +340,8 @@ describe("Atelier · recyclage", () => {
   });
 
   it("refuse une carte absente ou unique", () => {
-    const state = makeState({ cards: [ownedCard("a", "gobgg", "rare")] });
+    const rare = creatorOfRarity("rare");
+    const state = makeState({ cards: [ownedCard("a", rare.slug, "rare")] });
     expect(() => recycleCard(state, "zzz", T0)).toThrowError(/collection/i);
     expect(() => recycleCard(state, "a", T0)).toThrowError(/seule copie/i);
   });
@@ -336,12 +350,13 @@ describe("Atelier · recyclage", () => {
 describe("Atelier · artisanat", () => {
   it("débite les points et ajoute une carte Standard", () => {
     const cost = RARITY_META.uncommon.craftCost as number;
+    const target = creatorOfRarity("uncommon");
     const state = makeState({ points: cost + 5 });
-    const next = craftCreator(state, "frenchwargame", T0);
+    const next = craftCreator(state, target.slug, T0);
     expect(next.points).toBe(5);
     expect(next.cards).toHaveLength(1);
     expect(next.cards[0]).toMatchObject({
-      creatorSlug: "frenchwargame",
+      creatorSlug: target.slug,
       rarity: "uncommon",
       variant: "standard",
       obtainedAt: T0,
@@ -352,25 +367,27 @@ describe("Atelier · artisanat", () => {
 
   it("refuse les créateurs inconnus, déjà possédés, non artisanables ou trop chers", () => {
     const rich = makeState({ points: 10_000 });
+    const rare = creatorOfRarity("rare");
+    const legendary = creatorOfRarity("legendary");
     expect(() => craftCreator(rich, "inconnu-xyz", T0)).toThrowError(/inconnu/i);
     expect(() =>
       craftCreator(
-        makeState({ points: 10_000, cards: [ownedCard("a", "gobgg", "rare")] }),
-        "gobgg",
+        makeState({ points: 10_000, cards: [ownedCard("a", rare.slug, rare.rarity)] }),
+        rare.slug,
         T0,
       ),
     ).toThrowError(/déjà/i);
 
     // Les Légendaires ne s'artisanent pas : elles se tirent en booster.
-    expect(() => craftCreator(rich, "squeezie", T0)).toThrowError(/booster/i);
+    expect(() => craftCreator(rich, legendary.slug, T0)).toThrowError(/booster/i);
     expect(RARITY_META.legendary.craftable).toBe(false);
 
-    expect(() => craftCreator(makeState({ points: 10 }), "gobgg", T0)).toThrowError(/points/i);
+    expect(() => craftCreator(makeState({ points: 10 }), rare.slug, T0)).toThrowError(/points/i);
   });
 });
 
 describe("saisons", () => {
-  it("couvre les 500 créateurs, sans doublon ni oubli", () => {
+  it("couvre tout le catalogue, sans doublon ni oubli", () => {
     expect(seasonsCoverage()).toBe(CREATORS.length);
     const slugs = SEASONS.flatMap((season) => season.slugs);
     expect(new Set(slugs).size).toBe(CREATORS.length);

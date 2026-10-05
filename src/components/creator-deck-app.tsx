@@ -37,6 +37,10 @@ import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
+  CATALOG_EDITION,
+  CATALOG_EYEBROW,
+  CATALOG_LABEL,
+  CATALOG_SIZE,
   CREATORS,
   CREATOR_BY_SLUG,
   PACKS,
@@ -55,6 +59,12 @@ type CollectionFilter = "all" | "owned" | Rarity;
 
 /** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
 const OPENING_DELAY_MS = 650;
+
+/** Jalons de collection, exprimés en part du catalogue (25 puis 100 sur 500). */
+const MILESTONES = {
+  first: Math.round(CATALOG_SIZE * 0.05),
+  half: Math.round(CATALOG_SIZE * 0.2),
+};
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
@@ -86,7 +96,7 @@ function LoadingScreen() {
         <span>CD</span>
       </div>
       <LoaderCircle className="spin" size={26} />
-      <p>Préparation du Top 500 Twitch FR…</p>
+      <p>Préparation du {CATALOG_LABEL} Twitch FR…</p>
     </main>
   );
 }
@@ -105,7 +115,7 @@ function TopBar({ game }: { game: GameState }) {
         </div>
         <div>
           <strong>CreatorDeck</strong>
-          <small>Top 500 Twitch FR · S01</small>
+          <small>{CATALOG_LABEL} Twitch FR · S01</small>
         </div>
       </div>
       <div className="top-actions">
@@ -154,7 +164,7 @@ function PackArtwork({ packType }: { packType: PackType }) {
       </div>
       <div className="pack-edition">
         {packType === "live" ? <Radio size={13} /> : <Archive size={13} />}
-        {packType === "live" ? "TOP 500 LIVE" : "ARCHIVES 500"}
+        {packType === "live" ? `TOP ${CATALOG_SIZE} LIVE` : `ARCHIVES ${CATALOG_SIZE}`}
       </div>
       <small>{PACKS[packType].size} CARTES</small>
     </div>
@@ -193,12 +203,12 @@ function HomeView({
     <div className="view home-view">
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">ÉDITION TOP 500 FR</p>
+          <p className="eyebrow">{CATALOG_EDITION}</p>
           <h1>Prêt pour un nouveau drop&nbsp;?</h1>
         </div>
         <div className="season-badge">
           <Trophy size={15} />
-          <span>500 Cartes</span>
+          <span>{CATALOG_SIZE} Cartes</span>
         </div>
       </section>
 
@@ -308,7 +318,7 @@ function HomeView({
           <div className="empty-collection">
             <Layers3 size={25} />
             <div>
-              <strong>Ton classeur de 500 streameurs t’attend</strong>
+              <strong>Ton classeur de {CATALOG_SIZE} streameurs t’attend</strong>
               <span>Ouvre ton premier booster pour lancer la collection.</span>
             </div>
           </div>
@@ -376,7 +386,7 @@ function CollectionView({ game }: { game: GameState }) {
     <div className="view collection-view">
       <section className="page-title-row">
         <div>
-          <p className="eyebrow">TOP 500 TWITCH FR</p>
+          <p className="eyebrow">{CATALOG_EYEBROW}</p>
           <h1>Mon classeur</h1>
         </div>
         <div className="collection-score">
@@ -401,7 +411,7 @@ function CollectionView({ game }: { game: GameState }) {
             setQuery(event.target.value);
             setPage(0);
           }}
-          placeholder="Rechercher un streameur, rang (#1 à #500) ou jeu…"
+          placeholder={`Rechercher un streameur, rang (#1 à #${CATALOG_SIZE}) ou jeu…`}
           aria-label="Rechercher un créateur"
         />
         {query ? (
@@ -529,7 +539,7 @@ function MissionsView({
     <div className="view missions-view">
       <section className="page-title-row">
         <div>
-          <p className="eyebrow">OBJECTIFS TOP 500</p>
+          <p className="eyebrow">OBJECTIFS TOP {CATALOG_SIZE}</p>
           <h1>Progression</h1>
         </div>
         <div className="streak-pill">
@@ -543,7 +553,7 @@ function MissionsView({
           <Trophy size={27} />
         </div>
         <div>
-          <span>Collection Top 500 Twitch FR</span>
+          <span>Collection {CATALOG_LABEL} Twitch FR</span>
           <strong>{game.stats.uniqueCreators} / {CREATORS.length}</strong>
           <div className="progress-track">
             <i
@@ -579,23 +589,23 @@ function MissionsView({
         <MissionRow
           icon={<BookOpen size={19} />}
           label="Début du classeur"
-          detail="Découvrir 25 streameurs du Top 500"
+          detail={`Découvrir ${MILESTONES.first} streameurs du ${CATALOG_LABEL}`}
           progress={game.stats.uniqueCreators}
           target={25}
         />
         <MissionRow
           icon={<Gem size={19} />}
           label="Chasseur de cartes"
-          detail="Découvrir 100 streameurs du Top 500"
+          detail={`Découvrir ${MILESTONES.half} streameurs du ${CATALOG_LABEL}`}
           progress={game.stats.uniqueCreators}
           target={100}
         />
         <MissionRow
           icon={<Sparkles size={19} />}
           label="Maître du Twitch Game"
-          detail="Compléter les 500 streameurs francophones"
+          detail={`Compléter les ${CATALOG_SIZE} streameurs francophones`}
           progress={game.stats.uniqueCreators}
-          target={500}
+          target={CATALOG_SIZE}
         />
       </div>
 
@@ -662,7 +672,7 @@ function ProfileView({
         <div>
           <p className="eyebrow">COLLECTIONNEUR</p>
           <h1>Mon profil</h1>
-          <span>Édition Top 500 Twitch FR</span>
+          <span>Édition {CATALOG_LABEL} Twitch FR</span>
         </div>
       </section>
 
@@ -826,7 +836,7 @@ function RevealOverlay({
 
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Accueil", icon: <Home size={21} /> },
-  { id: "collection", label: "Classeur (500)", icon: <BookOpen size={21} /> },
+  { id: "collection", label: `Classeur (${CATALOG_SIZE})`, icon: <BookOpen size={21} /> },
   { id: "missions", label: "Objectifs", icon: <Target size={21} /> },
   { id: "atelier", label: "Atelier", icon: <Hammer size={21} /> },
   { id: "profile", label: "Profil", icon: <CircleUserRound size={21} /> },
@@ -974,7 +984,7 @@ export function CreatorDeckApp() {
       {opening ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
-          <strong>Scellement du tirage Top 500…</strong>
+          <strong>Scellement du tirage {CATALOG_LABEL}…</strong>
           <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
         </div>
       ) : null}

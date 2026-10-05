@@ -16,6 +16,23 @@ export type Creator = {
 };
 
 export const CREATORS = creatorData as Creator[];
+
+/**
+ * Taille du catalogue, dérivée des données.
+ *
+ * Rien dans l'application ne doit écrire « 500 » en dur : passer à un
+ * Top 1000/2000 doit être un changement de données (`scripts/build-twitch-fr.mjs`
+ * puis `npm run catalog:build`), pas une chasse aux littéraux. Les libellés
+ * ci-dessous sont la seule source des textes qui mentionnent la taille.
+ */
+export const CATALOG_SIZE = CREATORS.length;
+/** « Top 500 » — libellé court, utilisable en milieu de phrase. */
+export const CATALOG_LABEL = `Top ${CATALOG_SIZE}`;
+/** « TOP 500 TWITCH FR » — libellé d'accroche (majuscules). */
+export const CATALOG_EYEBROW = `TOP ${CATALOG_SIZE} TWITCH FR`;
+/** « ÉDITION TOP 500 FR » — accroche de la page d'accueil. */
+export const CATALOG_EDITION = `ÉDITION TOP ${CATALOG_SIZE} FR`;
+
 export const CREATOR_BY_SLUG = new Map(
   CREATORS.map((creator) => [creator.slug, creator]),
 );
@@ -110,7 +127,7 @@ export const VARIANT_META: Record<
 export const PACKS = {
   live: {
     label: "Live Drop",
-    eyebrow: "TOP 500 TWITCH FR",
+    eyebrow: CATALOG_EYEBROW,
     description: "5 cartes · une variante Live garantie",
     size: 5,
     points: 12,
@@ -120,7 +137,7 @@ export const PACKS = {
   },
   archive: {
     label: "Archives",
-    eyebrow: "COLLECTION TOP 500",
+    eyebrow: `COLLECTION TOP ${CATALOG_SIZE}`,
     description: "3 cartes · une Rare ou mieux garantie",
     size: 3,
     points: 25,

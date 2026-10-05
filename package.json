@@ -14,7 +14,8 @@
     "android:apk": "npm run android:sync && node scripts/android-gradle.mjs assembleRelease",
     "assets:regen": "node scripts/regen-avatars.mjs",
     "catalog:build": "node scripts/build-catalog.mjs",
-    "catalog:check": "node scripts/build-catalog.mjs --check"
+    "catalog:check": "node scripts/build-catalog.mjs --check",
+    "catalog:source": "node scripts/build-twitch-fr.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

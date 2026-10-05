@@ -1,0 +1,5 @@
+{
+  "expectedSize": 500,
+  "label": "Top 500 Twitch FR",
+  "note": "Écrit par scripts/build-twitch-fr.mjs. expectedSize est vérifié par npm run catalog:check."
+}

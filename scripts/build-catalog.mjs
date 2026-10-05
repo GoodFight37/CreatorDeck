@@ -18,11 +18,18 @@ import path from "node:path";
 
 const ROOT = process.cwd();
 const CHECK_ONLY = process.argv.includes("--check");
+const argv = process.argv.slice(2);
+/** Taille attendue du catalogue : `--expect N`, sinon src/data/catalog.config.json. */
+const EXPECT_OPTION = (() => {
+  const index = argv.indexOf("--expect");
+  return index >= 0 && argv[index + 1] ? Number(argv[index + 1]) : null;
+})();
 
 const CREATORS_FILE = path.join(ROOT, "src/data/creators.json");
 const SEASONS_FILE = path.join(ROOT, "src/data/seasons.config.json");
 const RATES_FILE = path.join(ROOT, "src/data/pull-rates.json");
 const PORTRAITS_DIR = path.join(ROOT, "public/creators");
+const CATALOG_CONFIG_FILE = path.join(ROOT, "src/data/catalog.config.json");
 const PACKAGE_FILE = path.join(ROOT, "package.json");
 const OUT_DIR = path.join(ROOT, "dist/catalog");
 
@@ -43,14 +50,22 @@ async function readJson(file) {
   return JSON.parse(await readFile(file, "utf8"));
 }
 
-/** Vérifie la cohérence du catalogue des 500 créateurs. */
-function validateCreators(creators) {
+/**
+ * Vérifie la cohérence du catalogue des créateurs.
+ *
+ * La taille attendue vient de `src/data/catalog.config.json` (écrit par
+ * scripts/build-twitch-fr.mjs) ou de `--expect N` : un catalogue tronqué est
+ * donc détecté, quelle que soit la cible (500, 1000, 2000…).
+ */
+function validateCreators(creators, expectedSize) {
   if (!Array.isArray(creators)) {
     fail("creators.json : tableau attendu.");
     return;
   }
-  if (creators.length !== 500) {
-    fail(`creators.json : 500 créateurs attendus, ${creators.length} trouvés.`);
+  if (expectedSize && creators.length !== expectedSize) {
+    fail(
+      `creators.json : ${expectedSize} créateurs attendus (catalog.config.json), ${creators.length} trouvés.`,
+    );
   }
 
   const slugs = new Set();
@@ -74,7 +89,7 @@ function validateCreators(creators) {
   }
 
   for (let rank = 1; rank <= creators.length; rank += 1) {
-    if (!ranks.has(rank)) fail(`creators.json : rang ${rank} absent du Top 500.`);
+    if (!ranks.has(rank)) fail(`creators.json : rang ${rank} absent du classement.`);
   }
 
   return creators;
@@ -98,13 +113,29 @@ function validateSeasons(creators, config) {
   const known = new Set(creators.map((creator) => creator.category));
   const unassigned = [...known].filter((category) => !seen.has(category));
   const missing = [...seen.keys()].filter((category) => !known.has(category));
-  if (missing.length) fail(`Catégories inconnues du catalogue : ${missing.join(", ")}.`);
+  // Une catégorie listée mais absente du catalogue n'est pas une erreur : le
+  // jeu peut simplement ne plus être streamé (le cas arrive à chaque
+  // régénération). On le signale pour que la config reste propre.
+  if (missing.length) {
+    warn(`Catégories listées mais absentes du catalogue : ${missing.join(", ")}.`);
+  }
+  for (const season of config.seasons) {
+    const members = creators.filter((creator) => season.categories.includes(creator.category));
+    if (!members.length) {
+      warn(`Saison ${season.id} (${season.name}) sans créateur : elle sera ignorée par l'app.`);
+    }
+  }
 
   const covered = creators.filter((creator) => seen.has(creator.category)).length;
   return {
     unassigned,
     covered,
-    catchAll: { id: config.catchAll.id, name: config.catchAll.name, creators: creators.length - covered },
+    catchAll: {
+      id: config.catchAll.id,
+      name: config.catchAll.name,
+      creators: creators.length - covered,
+      maxSize: config.catchAll.maxSize,
+    },
     seasons: config.seasons.map((season) => ({
       id: season.id,
       name: season.name,
@@ -161,14 +192,22 @@ function catalogVersion(pkg) {
 }
 
 async function main() {
-  const [creators, seasonsConfig, rates, pkg] = await Promise.all([
+  const [creators, seasonsConfig, rates, pkg, catalogConfig] = await Promise.all([
     readJson(CREATORS_FILE),
     readJson(SEASONS_FILE),
     readJson(RATES_FILE),
     readJson(PACKAGE_FILE),
+    readJson(CATALOG_CONFIG_FILE).catch(() => null),
   ]);
 
-  validateCreators(creators);
+  const expectedSize = EXPECT_OPTION ?? catalogConfig?.expectedSize ?? null;
+  if (EXPECT_OPTION && catalogConfig?.expectedSize && EXPECT_OPTION !== catalogConfig.expectedSize) {
+    warn(
+      `--expect ${EXPECT_OPTION} diffère de catalog.config.json (${catalogConfig.expectedSize}) : c'est la valeur de --expect qui est vérifiée.`,
+    );
+  }
+
+  validateCreators(creators, expectedSize);
   validateRates(rates);
   const seasonReport = validateSeasons(creators, seasonsConfig);
 
@@ -188,13 +227,24 @@ async function main() {
     RARITIES.map((rarity) => [rarity, creators.filter((c) => c.rarity === rarity).length]),
   );
 
-  console.log(`\n✅ Catalogue valide : ${creators.length} créateurs, ${byRarity.legendary} légendaires.`);
+  console.log(
+    `\n✅ Catalogue valide : ${creators.length} créateurs${expectedSize ? ` (attendu : ${expectedSize})` : ""}, ${byRarity.legendary} légendaires.`,
+  );
+  const portraitWarnings = warnings.filter((message) => message.startsWith("portrait manquant")).length;
+  if (portraitWarnings) {
+    console.log(
+      `   ℹ️  ${portraitWarnings} portrait(s) manquant(s) — lance npm run assets:regen pour les compléter.`,
+    );
+  }
   for (const season of seasonReport.seasons) {
     console.log(`   ${season.id} ${season.name} — ${season.creators} créateurs (${season.categories} catégories)`);
   }
   if (seasonReport.catchAll.creators) {
+    const maxSize = seasonReport.catchAll.maxSize ?? 60;
+    const chunks = Math.max(1, Math.ceil(seasonReport.catchAll.creators / maxSize));
     console.log(
-      `   ${seasonReport.catchAll.id} ${seasonReport.catchAll.name} — ${seasonReport.catchAll.creators} créateurs (catégories non listées)`,
+      `   ${seasonReport.catchAll.id} ${seasonReport.catchAll.name} — ${seasonReport.catchAll.creators} créateurs (catégories non listées)` +
+        (chunks > 1 ? ` → découpée en ${chunks} saisons de ≤ ${maxSize}` : ""),
     );
   }
 
@@ -211,7 +261,12 @@ async function main() {
     generatedAt: new Date().toISOString(),
     source: "src/data/creators.json",
     checksum: sha256(raw),
-    counts: { creators: creators.length, byRarity, seasons: seasonReport.seasons.length + (seasonReport.catchAll.creators ? 1 : 0) },
+    counts: {
+      creators: creators.length,
+      byRarity,
+      seasons: seasonReport.seasons.length + (seasonReport.catchAll.creators ? 1 : 0),
+      catchAll: seasonReport.catchAll.creators,
+    },
     packs: rates.packs,
   };
 
