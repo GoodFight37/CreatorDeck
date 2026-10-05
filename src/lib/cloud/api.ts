@@ -95,6 +95,15 @@ function messageFor(status: number, code: string, raw: string): string {
   if (code === "P0001" && raw.includes("connecte-toi")) {
     return "Connecte-toi pour ouvrir un booster.";
   }
+  // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
+  // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
+  // PostgREST (« Could not find the function public.open_pack »).
+  if (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) {
+    return "Le tirage serveur n'est pas installé sur ce projet : colle supabase/migrations/0003_catalogue.sql puis 0004_tirage.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+  }
+  if (code === "42P01" || /relation .* does not exist/i.test(raw)) {
+    return "Table manquante côté serveur : toutes les migrations de supabase/migrations/ n'ont pas été exécutées (docs/cloud-supabase.md, § 3).";
+  }
   if (status === 429) return "Trop de tentatives : patiente une minute avant de redemander un code.";
   if (status === 401 || status === 403) return "Session expirée : reconnecte-toi avec un nouveau code.";
   if (status === 0) return "Réseau injoignable : vérifie ta connexion, ta partie locale est intacte.";

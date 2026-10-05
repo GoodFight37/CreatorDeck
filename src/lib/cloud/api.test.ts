@@ -396,6 +396,29 @@ describe("tirage serveur", () => {
     expect(status.nextPackAt).toBe("2026-01-01T12:30:00Z");
   });
 
+  it("explique quoi coller dans Supabase quand les migrations manquent", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: {
+          code: "PGRST202",
+          message: "Could not find the function public.open_pack(p_user_id) in the schema cache",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.openPack()).rejects.toThrowError(/0003_catalogue\.sql puis 0004_tirage\.sql/);
+    await expect(api.packStatus()).rejects.toThrowError(/SQL Editor/);
+  });
+
+  it("explique quoi faire quand une table manque", async () => {
+    const { api } = client(
+      () => ({ status: 404, body: { code: "42P01", message: 'relation "public.pack_state" does not exist' } }),
+      signedIn(),
+    );
+    await expect(api.openPack()).rejects.toThrowError(/Table manquante/);
+  });
+
   it("traduit une coupure réseau en phrase française, sans repli local", async () => {
     const { api } = client(() => {
       throw new TypeError("fetch failed");
