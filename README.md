@@ -279,7 +279,8 @@ cartes données et ajoute les cartes reçues **dans la même transaction**, sous
 verrou. Si une carte a disparu entre-temps, l'exception annule tout : personne
 ne perd rien. Les points, l'XP, le niveau et les boosters ne bougent pas — un
 troc ne fait que déplacer des cartes, et les cartes reçues portent un numéro
-d'échange qui empêche de l'appliquer deux fois. La collection des autres joueurs
+d'échange qui empêche de l'appliquer deux fois. Une carte épinglée qui part en
+échange quitte la vitrine publique (elle n'y serait plus défendable). La collection des autres joueurs
 reste privée : le serveur ne dit que les variantes possédées d'un créateur
 donné, jamais la collection entière.
 

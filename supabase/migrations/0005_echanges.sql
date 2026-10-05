@@ -15,6 +15,9 @@
 --   * `public.player_variants()` : quelles variantes ce joueur possède pour un
 --     créateur donné (collection privée, réponse ciblée).
 --
+-- Un troc accepté nettoie aussi les **vitrines** des deux joueurs : une carte
+-- échangée ne peut plus être épinglée sur le profil public.
+--
 -- Pourquoi le serveur s'en occupe : un échange déplace des cartes entre deux
 -- collections. Si le client décidait seul, il suffirait de modifier sa
 -- sauvegarde pour s'offrir les cartes d'un autre. Ici les deux collections
@@ -414,6 +417,39 @@ end;
 $$;
 
 -- --------------------------------------------------------------------------
+-- Nettoyer la vitrine après un troc
+-- --------------------------------------------------------------------------
+-- La vitrine ne montre que des cartes possédées (`set_showcase` le vérifie à
+-- l'écriture). Un troc peut faire partir une carte épinglée : on retire alors
+-- le créateur du profil public, sinon la vitrine d'un joueur afficherait une
+-- carte qu'il n'a plus.
+create or replace function public._trade_clean_showcase(p_user uuid, p_state jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_owned text[];
+begin
+  select coalesce(array_agg(distinct value ->> 'creatorSlug'), '{}'::text[])
+    into v_owned
+    from jsonb_array_elements(coalesce(p_state -> 'cards', '[]'::jsonb));
+
+  update public.profiles p
+     set showcase_slugs = coalesce(
+           (select array_agg(slug order by position)
+              from unnest(p.showcase_slugs) with ordinality as u(slug, position)
+             where slug = any (v_owned)),
+           '{}'::text[]),
+         updated_at = now()
+   where p.user_id = p_user
+     and p.showcase_slugs is not null
+     and not (p.showcase_slugs <@ v_owned);
+end;
+$$;
+
+-- --------------------------------------------------------------------------
 -- Répondre à un échange (accepter ou refuser)
 -- --------------------------------------------------------------------------
 -- C'est ici que les deux collections bougent, dans une seule transaction :
@@ -542,6 +578,10 @@ begin
          updated_at = v_now
    where user_id = v_trade.recipient_id;
 
+  -- Une carte épinglée qui part en échange quitte la vitrine publique.
+  perform public._trade_clean_showcase(v_trade.proposer_id, v_proposer_state);
+  perform public._trade_clean_showcase(v_trade.recipient_id, v_recipient_state);
+
   update public.trades
      set status = 'accepted', resolved_at = v_now
    where id = p_trade
@@ -664,3 +704,4 @@ revoke all on function public._trade_missing(jsonb, jsonb) from public, anon, au
 revoke all on function public._trade_remove(jsonb, jsonb) from public, anon, authenticated;
 revoke all on function public._trade_add(jsonb, bigint, timestamptz) from public, anon, authenticated;
 revoke all on function public._trade_json(public.trades) from public, anon, authenticated;
+revoke all on function public._trade_clean_showcase(uuid, jsonb) from public, anon, authenticated;

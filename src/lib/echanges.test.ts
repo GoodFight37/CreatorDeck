@@ -39,7 +39,14 @@ const PUBLIC_FUNCTIONS = [
   "cancel_trade",
   "list_trades",
 ] as const;
-const INTERNAL_FUNCTIONS = ["_trade_cards", "_trade_missing", "_trade_remove", "_trade_add", "_trade_json"] as const;
+const INTERNAL_FUNCTIONS = [
+  "_trade_cards",
+  "_trade_missing",
+  "_trade_remove",
+  "_trade_add",
+  "_trade_json",
+  "_trade_clean_showcase",
+] as const;
 
 const card = (id: string, variant: OwnedCard["variant"], obtainedAt: number): OwnedCard => ({
   id,
@@ -148,7 +155,8 @@ describe("0005_echanges.sql", () => {
   });
 
   it("écrit les deux collections dans la même fonction, sous verrou", () => {
-    const body = CODE.slice(CODE.indexOf("function public.respond_trade("));
+    const full = CODE.slice(CODE.indexOf("function public.respond_trade("));
+    const body = full.slice(0, full.indexOf("create or replace function"));
     expect(body).toContain("for update");
     expect(body.match(/update public\.saves/g)?.length).toBe(2);
     expect(body).toContain("_trade_remove(v_trade.proposer_cards");
@@ -158,6 +166,16 @@ describe("0005_echanges.sql", () => {
     expect(body).toContain("public.save_problems(v_proposer_state)");
     expect(body).toContain("public.save_problems(v_recipient_state)");
     expect(body).toContain("state_checksum = md5(");
+  });
+
+  it("retire de la vitrine les cartes qui partent en échange", () => {
+    const full = CODE.slice(CODE.indexOf("function public.respond_trade("));
+    const body = full.slice(0, full.indexOf("create or replace function"));
+    expect(body.match(/_trade_clean_showcase\(/g)?.length).toBe(2);
+    const helper = CODE.slice(CODE.indexOf("function public._trade_clean_showcase("));
+    expect(helper.slice(0, helper.indexOf("$$"))).toContain("security definer");
+    expect(helper).toContain("update public.profiles");
+    expect(helper).toContain("slug = any (v_owned)");
   });
 
   it("ne réserve la réponse qu'au destinataire et une seule fois", () => {

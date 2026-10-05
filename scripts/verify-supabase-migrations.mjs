@@ -314,7 +314,7 @@ try {
   }
 
   await player(A, "Alix", [alixOld, alixRecent, card("alix-rare", "chowh1", "epic", "live", 900)]);
-  await player(B, "Bruno", [brunoSkin]);
+  await player(B, "Bruno", [brunoSkin, card("bruno-std", "auronplay", "legendary", "standard", 500)]);
   await player(C, "Chloé", [card("chloe-1", "auronplay", "rare", "standard", 400)]);
 
   // --- Trouver un partenaire ------------------------------------------------
@@ -559,6 +559,41 @@ try {
   );
   const tradesStill = (await client.query("select count(*)::int as n from public.trades")).rows[0].n;
   check("migration échanges rejouable : table conservée", tradesStill >= 4, String(tradesStill));
+
+  // --- Vitrine nettoyée par un troc -----------------------------------------
+  await asPlayer(B, "select public.set_showcase($1)", [["ibai", "auronplay"]]);
+  const beforeShowcase = (
+    await client.query("select showcase_slugs as s from public.profiles where user_id = $1", [B])
+  ).rows[0].s;
+  check(
+    "vitrine : les deux créateurs sont épinglés avant l'échange",
+    JSON.stringify(beforeShowcase) === JSON.stringify(["ibai", "auronplay"]),
+    JSON.stringify(beforeShowcase),
+  );
+
+  const showcaseTrade = (
+    await asPlayer(A, "select public.create_trade($1, $2, $3) as r", [
+      B,
+      JSON.stringify([{ creatorSlug: "chowh1", variant: "live" }]),
+      JSON.stringify([{ creatorSlug: "auronplay", variant: "standard" }]),
+    ])
+  ).rows[0].r.trade.id;
+  check("vitrine : l'offre est acceptée", (await asPlayer(B, "select public.respond_trade($1, true) as r", [showcaseTrade])).rows[0].r.status === "accepted");
+
+  const afterShowcase = (
+    await client.query("select showcase_slugs as s from public.profiles where user_id = $1", [B])
+  ).rows[0].s;
+  check(
+    "vitrine : le créateur échangé quitte le profil public, l'autre reste",
+    JSON.stringify(afterShowcase) === JSON.stringify(["ibai"]),
+    JSON.stringify(afterShowcase),
+  );
+
+  // La vitrine de l'autre joueur n'est pas touchée : il n'a rien épinglé.
+  check(
+    "vitrine : celle de l'autre joueur reste vide",
+    (await client.query("select showcase_slugs as s from public.profiles where user_id = $1", [A])).rows[0].s.length === 0,
+  );
 
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);

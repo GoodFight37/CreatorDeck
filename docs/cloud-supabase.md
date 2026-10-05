@@ -284,7 +284,9 @@ logique vit donc entièrement dans `0005_echanges.sql` :
   vérifiée » au classement. Les statistiques sont recalculées par le trigger
   habituel (`refresh_stats`) ;
 * un troc **ne touche ni aux points, ni à l'XP, ni au niveau, ni aux
-  boosters** : il ne fait que déplacer des cartes. Les cartes reçues portent
+  boosters** : il ne fait que déplacer des cartes. En revanche, une carte
+  épinglée qui part en échange **quitte la vitrine publique** (`set_showcase`
+  n'aurait jamais accepté de l'y laisser) ; Les cartes reçues portent
   `fromTrade` (numéro de l'échange), ce qui permet au client d'appliquer le
   mouvement **une seule fois** — même si l'appareil recharge sa partie après
   coup ;
