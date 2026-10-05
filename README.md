@@ -41,6 +41,8 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
+| `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») |
+| `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 
 ## Architecture
 
@@ -157,6 +159,8 @@ téléchargement public, sans connexion GitHub.
 https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
 ```
 
+- l'APK embarque le catalogue **committé dans la branche** : portraits compris
+  (voir « Embarquer le catalogue dans l'APK » dans `docs/catalogue-twitch.md`) ;
 - signature **debug** : parfait pour tester sur un téléphone (activer
   « installer des applications inconnues »), **pas** publiable sur le Play Store ;
 - reconstruit à chaque push sur `main` (`.github/workflows/android-apk.yml`) et

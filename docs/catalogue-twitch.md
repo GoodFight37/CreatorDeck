@@ -200,6 +200,59 @@ en direct.
 > (les domaines Twitch y sont filtrés) : lance-le depuis une machine connectée.
 > Elle peut casser sans préavis — c'est un risque assumé du projet.
 
+## Embarquer le catalogue dans l'APK
+
+Le catalogue est un **fichier de données versionné** (`src/data/creators.json`,
+`src/data/catalog.config.json`) accompagné des portraits (`public/creators/`).
+La CI construit l'APK à partir du dépôt : pour que l'APK contienne le catalogue
+généré sur ta machine, il faut donc le committer.
+
+```powershell
+# 1. Compléter les portraits manquants et supprimer les orphelins
+node scripts/regen-avatars.mjs --prune
+
+# 2. Vérifier ce qui sera embarqué (échec si un portrait manque ou est orphelin)
+npm run catalog:ci
+
+# 3. Committer le catalogue (données + images)
+git add src/data/creators.json src/data/catalog.config.json public/creators
+git status --short          # ~1000 ajouts, ~370 suppressions attendues
+git commit -m "data(catalogue): Top 1000 mondial — 1000 portraits 600 px"
+git push
+```
+
+Puis lancer le build Android : le workflow se déclenche tout seul à chaque push
+sur `main` (donc à la fusion de la PR), ou à la demande sur une branche :
+
+```powershell
+gh workflow run "APK Android (debug)" --ref arena/01a10b32-test
+# … ou : GitHub → Actions → « APK Android (debug) » → Run workflow → choisir la branche
+```
+
+L'APK apparaît ensuite sur la pré-release roulante (voir le README).
+
+### Pourquoi `--prune` est important
+
+Une régénération qui change de périmètre ne supprime rien : les anciens
+portraits restent sur le disque, partent dans l'APK **et** dans Git sans jamais
+être affichés. Passer d'un Top 500 FR à un Top 1000 mondial laisse ainsi
+plusieurs centaines de fichiers inutilisés. `--prune` les retire, et
+`npm run catalog:ci` refuse de construire un APK qui en contient — ou auquel il
+manque un portrait.
+
+### Poids à prévoir
+
+`catalog:ci` affiche le poids réel des portraits embarqués :
+
+```text
+   Portraits : 34.2 Mo utilisés dans l'APK
+```
+
+Chaque commit de catalogue ajoute ce poids à l'historique Git, définitivement.
+Deux habitudes pour que ça reste supportable : régénérer rarement et en une
+seule fois, et **squasher** la fusion de la PR pour ne pas multiplier les
+versions d'images dans l'historique.
+
 ## Choisir la taille : ce que dit la simulation
 
 `scripts/study-top-size.mjs` rejoue l'ouverture de boosters avec les taux réels

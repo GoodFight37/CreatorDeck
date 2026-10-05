@@ -13,13 +13,28 @@
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { splitSeason } from "./lib/seasons-split.mjs";
+import {
+  formatBytes,
+  selectMissing,
+  selectOrphans,
+  sumFileSizes,
+} from "./lib/portraits.mjs";
 
 const ROOT = process.cwd();
 const CHECK_ONLY = process.argv.includes("--check");
 const argv = process.argv.slice(2);
+/**
+ * Contrôle renforcé (CI) : un portrait manquant ou orphelin fait échouer la
+ * vérification au lieu d'avertir. C'est ce qu'exige un catalogue embarqué dans
+ * l'APK : une image absente laisse un trou, une image orpheline pèse pour rien.
+ */
+const STRICT_AVATARS =
+  process.argv.includes("--strict-avatars") ||
+  ["1", "true", "oui"].includes(String(process.env.STRICT_AVATARS ?? "").toLowerCase());
 /** Taille attendue du catalogue : `--expect N`, sinon src/data/catalog.config.json. */
 const EXPECT_OPTION = (() => {
   const index = argv.indexOf("--expect");
@@ -85,7 +100,9 @@ function validateCreators(creators, expectedSize) {
       fail(`creators.json : rareté inconnue « ${creator.rarity} » (${creator.slug}).`);
     }
     if (!existsSync(path.join(PORTRAITS_DIR, `${creator.slug}.jpg`))) {
-      warn(`portrait manquant : public/creators/${creator.slug}.jpg`);
+      const message = `portrait manquant : public/creators/${creator.slug}.jpg`;
+      if (STRICT_AVATARS) fail(message);
+      else warn(message);
     }
   }
 
@@ -246,6 +263,31 @@ async function main() {
   validateRates(rates);
   const seasonReport = validateSeasons(creators, seasonsConfig);
 
+  // --- Portraits : ce qui part réellement dans l'APK -----------------------
+  // Contrôlé ici, avant le rapport d'erreurs : en mode strict, un portrait
+  // manquant ou orphelin doit faire échouer la commande.
+  let portraitFiles = [];
+  try {
+    portraitFiles = await readdir(PORTRAITS_DIR);
+  } catch {
+    portraitFiles = [];
+  }
+  const portraitSlugs = creators.map((creator) => creator.slug);
+  const missingPortraits = selectMissing(portraitFiles, portraitSlugs);
+  const orphanPortraits = selectOrphans(portraitFiles, portraitSlugs);
+  const usedBytes = await sumFileSizes(
+    PORTRAITS_DIR,
+    portraitFiles.filter((name) => !orphanPortraits.includes(name)),
+  );
+  const orphanBytes = await sumFileSizes(PORTRAITS_DIR, orphanPortraits);
+  if (orphanPortraits.length) {
+    const message =
+      `portraits orphelins : ${orphanPortraits.length} fichier(s), ${formatBytes(orphanBytes)} ` +
+      `inutiles dans public/creators (${orphanPortraits.slice(0, 3).join(", ")}…)`;
+    if (STRICT_AVATARS) fail(message);
+    else warn(message);
+  }
+
   if (warnings.length) {
     console.log(`\n⚠️  ${warnings.length} avertissement(s) :`);
     for (const message of warnings.slice(0, 10)) console.log(`   - ${message}`);
@@ -265,15 +307,21 @@ async function main() {
   console.log(
     `\n✅ Catalogue valide : ${creators.length} créateurs${expectedSize ? ` (attendu : ${expectedSize})` : ""}, ${byRarity.legendary} légendaires.`,
   );
+  console.log(`   Portraits : ${formatBytes(usedBytes)} utilisés dans l'APK`);
+  if (missingPortraits.length) {
+    console.log(
+      `   ℹ️  ${missingPortraits.length} portrait(s) manquant(s) — lance npm run assets:regen pour les compléter.`,
+    );
+  }
+  if (orphanPortraits.length) {
+    console.log(
+      `   🧹 ${orphanPortraits.length} portrait(s) orphelin(s) (${formatBytes(orphanBytes)}) — ` +
+        `node scripts/regen-avatars.mjs --prune`,
+    );
+  }
   if (catalogConfig?.label) {
     console.log(
       `   Périmètre : ${catalogConfig.scope ?? "?"} — « ${catalogConfig.label} » (${catalogConfig.audience ?? "audience inconnue"})`,
-    );
-  }
-  const portraitWarnings = warnings.filter((message) => message.startsWith("portrait manquant")).length;
-  if (portraitWarnings) {
-    console.log(
-      `   ℹ️  ${portraitWarnings} portrait(s) manquant(s) — lance npm run assets:regen pour les compléter.`,
     );
   }
   for (const season of seasonReport.seasons) {

@@ -28,6 +28,9 @@ jobs:
       - run: npm run lint && npm run typecheck && npm test
       # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
       - run: npm run catalog:check
+      # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
+      # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
+      - run: npm run catalog:ci
       - run: npm run android:debug
 
       # 1. Artefact du run : pratique pour un test ponctuel, mais son

@@ -15,7 +15,8 @@
     "assets:regen": "node scripts/regen-avatars.mjs",
     "catalog:build": "node scripts/build-catalog.mjs",
     "catalog:check": "node scripts/build-catalog.mjs --check",
-    "catalog:source": "node scripts/build-twitch-catalog.mjs"
+    "catalog:source": "node scripts/build-twitch-catalog.mjs",
+    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

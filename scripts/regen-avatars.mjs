@@ -12,15 +12,20 @@
  * sollicite en parallèle : c'est pour ça que la résolution passe par le GQL.
  *
  * Usage :
- *   npm run assets:regen                 # complète/valide les 500 en 600 px
+ *   npm run assets:regen                     # comble et valide les portraits
  *   node scripts/regen-avatars.mjs --force   # ré-encode même si déjà conforme
+ *   node scripts/regen-avatars.mjs --prune   # supprime les portraits orphelins
+ *
+ * `--prune` (env PRUNE=1) est utile avant de committer : une régénération
+ * changeant de périmètre laisse les anciens portraits sur le disque, et ils
+ * partiraient dans l'APK sans être affichés.
  *
  * Reprenable : un portrait déjà à la bonne taille est ignoré, donc on peut
  * relancer après une coupure sans tout re-télécharger. Un portrait resté en
  * 300 px (source Twitch sans variante 600) est retenté à chaque exécution.
  * Le rapport est écrit dans reports/avatars-regen.json (non versionné).
  */
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   AVATAR_SIZE,
@@ -29,6 +34,7 @@ import {
   encodePlaceholder,
   readAvatarSize,
 } from "./lib/avatars.mjs";
+import { formatBytes, pruneOrphans, selectMissing, sumFileSizes } from "./lib/portraits.mjs";
 
 const ROOT = process.cwd();
 const CATALOG = path.join(ROOT, "src/data/creators.json");
@@ -39,6 +45,10 @@ const REPORTS_DIR = path.join(ROOT, "reports");
 const BATCH = 30; // alias par requête GQL
 const CONCURRENCY = 8; // le CDN jtvnw encaisse, les agrégateurs non
 const FORCE = process.argv.includes("--force");
+/** Supprime les portraits qui ne correspondent à aucun créateur du catalogue. */
+const PRUNE = process.argv.includes("--prune") || ["1", "true", "oui"].includes(
+  String(process.env.PRUNE ?? "").toLowerCase(),
+);
 /**
  * Résolution cible : celle du pipeline (600 px) par défaut, surchargée par
  * `AVATAR_PX` quand le catalogue grossit — un Top 2000 en 600 px pèserait
@@ -241,4 +251,31 @@ console.log(
 if (failures.length) {
   console.log("Échecs :", failures.map((f) => f.slug).join(", "));
   process.exitCode = 1;
+}
+
+// --- 5. Entretien du dossier ---------------------------------------------
+// Portraits sans créateur : du poids mort dans Git et dans l'APK.
+const slugs = creators.map((creator) => creator.slug);
+const files = await readdir(OUT_DIR).catch(() => []);
+const missing = selectMissing(files, slugs);
+if (missing.length) {
+  console.log(
+    `\n⚠ ${missing.length} créateur(s) sans portrait : ${missing.slice(0, 10).join(", ")}` +
+      `${missing.length > 10 ? "…" : ""} — relance sans interruption pour les compléter, ` +
+      `ou vérifie que ces chaînes existent encore sur Twitch.`,
+  );
+}
+
+const pruned = await pruneOrphans({ dir: OUT_DIR, slugs, apply: PRUNE });
+if (pruned.orphans.length) {
+  const kept = await sumFileSizes(OUT_DIR, files.filter((name) => !pruned.orphans.includes(name)));
+  console.log(
+    PRUNE
+      ? `🧹 ${pruned.removed} portrait(s) orphelin(s) supprimé(s) — ${formatBytes(pruned.bytes)} libérés.`
+      : `🧹 ${pruned.orphans.length} portrait(s) orphelin(s) (${formatBytes(pruned.bytes)}) ne ` +
+        `correspondent à aucun créateur : relance avec --prune pour les supprimer.`,
+  );
+  if (PRUNE) console.log(`   Le dossier pèse désormais ${formatBytes(kept)}.`);
+} else {
+  console.log(`\nDossier public/creators : ${files.length} fichier(s), aucun orphelin.`);
 }
