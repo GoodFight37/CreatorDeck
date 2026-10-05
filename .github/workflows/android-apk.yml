@@ -32,6 +32,12 @@ jobs:
       # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
       - run: npm run catalog:ci
       - run: npm run android:debug
+        env:
+          # Facultatif : variables de dépôt (Settings → Secrets and variables →
+          # Actions → Variables). Vides, l'APK se construit sans cloud et reste
+          # 100 % hors ligne. Voir docs/cloud-supabase.md.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       # 1. Artefact du run : pratique pour un test ponctuel, mais son
       #    téléchargement exige d'être connecté à GitHub.

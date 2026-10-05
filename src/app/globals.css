@@ -1305,3 +1305,39 @@ input:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------- compte */
+/* Écran « Compte & cloud » : identification, synchronisation, classement. */
+.account-card { display: flex; flex-direction: column; gap: 11px; margin-bottom: 12px; padding: 13px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); }
+.account-who { display: flex; align-items: center; gap: 11px; }
+.account-who strong { display: block; font-size: 12px; }
+.account-who span { color: var(--muted); font-size: 9px; }
+.account-badge { margin-left: auto; padding: 3px 8px; color: var(--gold); border: 1px solid rgb(var(--purple-rgb) / 0.3); border-radius: 999px; font-size: 8px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+.account-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.account-button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 12px; color: var(--text); border: 1px solid var(--line-strong); border-radius: 11px; background: rgb(var(--purple-rgb) / 0.14); font-size: 10px; font-weight: 800; cursor: pointer; }
+.account-button:disabled { opacity: 0.55; cursor: default; }
+.account-button.wide { justify-content: center; }
+.account-button.ghost { color: var(--muted); background: none; }
+.account-button.danger { color: var(--text); border-color: var(--danger); background: rgb(255 109 130 / 0.18); }
+.account-hint { margin: 0; color: var(--muted-2); font-size: 9px; line-height: 1.5; }
+.account-hint code { padding: 1px 4px; color: var(--purple-soft); border-radius: 5px; background: rgb(var(--purple-rgb) / 0.14); }
+.account-intro { margin: 0; color: var(--muted); font-size: 10px; line-height: 1.5; }
+.account-field { display: flex; flex-direction: column; gap: 5px; }
+.account-field span { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.account-field input { padding: 10px 11px; color: var(--text); border: 1px solid var(--line-strong); border-radius: 10px; outline: 0; background: var(--panel-3); font-size: 12px; }
+.account-field input:focus { border-color: var(--purple-light); }
+.account-note { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 12px; padding: 10px 11px; border-radius: 11px; font-size: 9.5px; line-height: 1.45; }
+.account-note.neutral { color: var(--muted); border: 1px solid var(--line); background: var(--panel); }
+.account-note.ok { color: var(--green); border: 1px solid rgba(80, 217, 160, 0.28); background: rgba(80, 217, 160, 0.08); }
+.account-note.error { color: var(--danger); border: 1px solid rgba(255, 109, 130, 0.3); background: rgba(255, 109, 130, 0.08); }
+.account-head { display: flex; align-items: center; gap: 7px; }
+.account-head strong { font-size: 11px; }
+.account-refresh { margin-left: auto; padding: 5px; color: var(--muted); border: 0; border-radius: 8px; background: none; cursor: pointer; }
+.pending-icon { color: var(--gold); }
+.leaderboard { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.leaderboard li { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: rgba(255, 255, 255, 0.02); font-size: 10px; }
+.leaderboard li.me { border-color: var(--purple-light); background: rgb(var(--purple-rgb) / 0.12); }
+.leaderboard b { width: 22px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.leaderboard-name { overflow: hidden; flex: 1; text-overflow: ellipsis; white-space: nowrap; }
+.leaderboard-value { color: var(--muted); font-size: 9px; }
+.leaderboard-crown { color: var(--gold); }

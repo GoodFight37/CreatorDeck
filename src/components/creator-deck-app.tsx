@@ -34,12 +34,14 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
+import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
   CATALOG_AUDIENCE,
@@ -596,6 +598,7 @@ function ProfileView({
   onShowOdds,
   onShowThemes,
   onShowStudio,
+  onShowAccount,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -603,7 +606,9 @@ function ProfileView({
   onShowOdds: () => void;
   onShowThemes: () => void;
   onShowStudio: () => void;
+  onShowAccount: () => void;
 }) {
+  const cloud = useCloud();
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [exportText, setExportText] = useState<string | null>(null);
@@ -700,6 +705,22 @@ function ProfileView({
           </div>
           <Check size={18} className="success-icon" />
         </div>
+        <button type="button" className="settings-row settings-action" onClick={onShowAccount}>
+          <span className={`settings-icon ${cloud.userId ? "green" : "blue"}`}>
+            <CloudBadge />
+          </span>
+          <div>
+            <strong>Sauvegarde cloud{cloud.email ? ` · ${cloud.email}` : ""}</strong>
+            <span>
+              {!cloud.configured
+                ? "Non configuré dans cette version : la partie reste sur cet appareil."
+                : cloud.userId
+                  ? "Compte connecté — envoi automatique et classement mondial."
+                  : "Connecte-toi pour retrouver ta collection sur un autre appareil."}
+            </span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
         <button
           type="button"
           className="settings-row settings-action"
@@ -883,6 +904,11 @@ export function CreatorDeckApp() {
   const [oddsOpen, setOddsOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
+
+  // Envoi automatique (débounce) quand un compte est connecté : aucun appel
+  // réseau sinon, la partie reste strictement locale.
+  useCloudAutoSync();
 
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
@@ -1023,6 +1049,7 @@ export function CreatorDeckApp() {
             onShowOdds={() => setOddsOpen(true)}
             onShowThemes={() => setThemeOpen(true)}
             onShowStudio={() => setStudioOpen(true)}
+            onShowAccount={() => setAccountOpen(true)}
           />
         ) : null}
       </div>
@@ -1062,6 +1089,7 @@ export function CreatorDeckApp() {
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
+      {accountOpen ? <AccountSheet onClose={() => setAccountOpen(false)} /> : null}
       {themeOpen && game ? (
         <ThemeSheet
           themes={game.themes}

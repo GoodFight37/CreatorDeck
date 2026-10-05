@@ -233,6 +233,35 @@ Le même export `out/` est aussi une PWA installable (manifeste inclus) ; pour
 un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 (non inclus pour l'instant — l'APK, lui, embarque tout).
 
+## Compte, cloud et classement (facultatif)
+
+L'application est jouable **sans aucun serveur** : partie dans le
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute trois choses —
+un compte (e-mail + code à 6 chiffres, sans mot de passe), la sauvegarde de la
+partie pour la retrouver sur un autre appareil, et un classement mondial
+recalculé par le serveur. Marche à suivre : **`docs/cloud-supabase.md`**.
+
+- Côté application : `src/lib/cloud/`
+  - `config.ts` lit les deux variables publiques et désactive tout si elles
+    manquent ;
+  - `api.ts` est un client Supabase minimal (code à 6 chiffres, envoi/lecture de
+    la sauvegarde, classement) — pas de SDK embarqué dans l'APK ;
+  - `sync.ts` contient les décisions (envoyer, charger, ne rien faire, demander
+    au joueur) sous forme de fonctions pures, testées ;
+  - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
+    ~20 s après la dernière action quand un compte est connecté.
+- Côté base : `supabase/migrations/0001_comptes_cloud.sql` — tables `profiles`,
+  `saves`, `stats`, politiques RLS, statistiques **recalculées par le serveur**
+  (on ne peut pas mentir sur les chiffres sans publier des cartes) et fonction
+  `leaderboard()`. `push_save()` arbitre les conflits entre appareils.
+- Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
+  `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
+  affiche « cloud non configuré ». Ces deux valeurs sont publiques par
+  conception ; la clé **`service_role`** ne doit jamais entrer dans l'app.
+- Deux appareils qui ont joué en même temps : l'app ne fusionne **jamais**
+  toute seule, elle propose d'envoyer la partie locale ou de charger celle du
+  cloud (« Charger le cloud » demande deux appuis).
+
 ## Images des créateurs
 
 - Le CDN Twitch sert chaque photo de profil en tailles fixes (28 → **600 px**) :

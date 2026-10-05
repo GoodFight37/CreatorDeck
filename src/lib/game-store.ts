@@ -17,6 +17,7 @@ import {
   type DrawnCard,
   type PlayerState,
 } from "@/lib/game-engine";
+import { deviceStorage } from "@/lib/storage";
 import {
   SAVE_KEY,
   clearState,
@@ -33,19 +34,22 @@ let state: PlayerState | null = null;
 let loaded = false;
 const listeners = new Set<Listener>();
 
-function storage(): KeyValueStorage | null {
-  if (typeof window === "undefined") return null;
-  try {
-    return window.localStorage;
-  } catch {
-    // Stockage désactivé (navigation privée stricte, quota…) : la partie
-    // vivra en mémoire le temps de la session.
-    return null;
-  }
-}
+// Stockage désactivé (navigation privée stricte, quota…) : la partie vivra en
+// mémoire le temps de la session.
+const storage = deviceStorage;
+
+/**
+ * Abonnés aux écritures : le cloud s'en sert pour programmer un envoi après une
+ * partie jouée, sans que le moteur ait besoin de connaître le réseau.
+ */
+const persistListeners = new Set<(state: PlayerState) => void>();
 
 function emit() {
   for (const listener of listeners) listener();
+}
+
+function notifyPersist(next: PlayerState) {
+  for (const listener of persistListeners) listener(next);
 }
 
 function persist(next: PlayerState) {
@@ -59,6 +63,13 @@ function persist(next: PlayerState) {
     }
   }
   emit();
+  notifyPersist(next);
+}
+
+/** S'abonne aux écritures de la partie (renvoie la fonction de désabonnement). */
+export function onPersist(listener: (state: PlayerState) => void): () => void {
+  persistListeners.add(listener);
+  return () => persistListeners.delete(listener);
 }
 
 function ensureLoaded() {
@@ -158,6 +169,15 @@ export const gameStore = {
     const target = storage();
     if (target) clearState(target);
     persist(createInitialState(now));
+  },
+
+  /**
+   * Remplace la partie locale par une sauvegarde venue d'ailleurs (cloud,
+   * fichier importé). Passe par `persist()` : les abonnés sont prévenus, donc
+   * le cloud ne se renvoie pas sa propre sauvegarde en boucle.
+   */
+  replaceState(next: PlayerState): void {
+    persist(next);
   },
 
   exportSave(): string {
