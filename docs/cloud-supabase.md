@@ -2,14 +2,16 @@
 
 CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
 `localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
-ajoute quatre choses, et rien de plus :
+ajoute cinq choses, et rien de plus :
 
 1. **un compte** (invité par défaut, ou adresse e-mail + code à 6 chiffres en
    option — pas de mot de passe) ;
 2. **une sauvegarde cloud** de la partie, pour retrouver sa collection sur un
    autre appareil ;
 3. **une vitrine publique** de quatre cartes épinglées sur le profil ;
-4. **un classement mondial** calculé par le serveur.
+4. **un classement mondial** calculé par le serveur ;
+5. **le tirage des boosters** décidé par le serveur (les cartes sont
+   infalsifiables, prérequis des échanges).
 
 Tout le reste continue de fonctionner hors ligne, y compris si le projet
 Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
@@ -26,6 +28,7 @@ Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
 | Adresse e-mail | Cloud | sert uniquement à te renvoyer ton code |
 | Statistiques (cartes uniques, légendaires…) | Cloud | recalculées **par le serveur** depuis ta sauvegarde, visibles dans le classement |
 | Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
+| Contenu des boosters | **Serveur** | le tirage est décidé par la fonction `open_pack()` ; le client ne peut pas choisir ni inventer les cartes |
 
 Aucun mot de passe n'est stocké. Les données restent locales tant que tu ne
 crées pas de compte invité ou ne valides pas ton code ; « Déconnexion » efface
@@ -88,10 +91,18 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
 2. **SQL Editor** → *New query* → colle tout le contenu de
    [`supabase/migrations/0001_comptes_cloud.sql`](../supabase/migrations/0001_comptes_cloud.sql)
    → **Run**. La requête crée les tables, les politiques RLS, les déclencheurs
-   et les fonctions d'envoi / lecture / classement. Exécute-la en premier ;
-   ouvre ensuite une nouvelle requête et colle
-   [`supabase/migrations/0002_vitrine.sql`](../supabase/migrations/0002_vitrine.sql)
-   → **Run** pour activer la vitrine et le contrôle de possession.
+   et les fonctions d'envoi / lecture / classement. Exécute-la en premier, puis
+   ouvre une nouvelle requête pour chacune des migrations suivantes, dans
+   l'ordre :
+   - [`supabase/migrations/0002_vitrine.sql`](../supabase/migrations/0002_vitrine.sql)
+     → **Run** pour activer la vitrine et le contrôle de possession.
+   - [`supabase/migrations/0003_catalogue.sql`](../supabase/migrations/0003_catalogue.sql)
+     → **Run** pour peupler la table des créateurs (utilisée par le tirage
+     serveur). **Fichier généré** par `scripts/build-supabase-catalogue.mjs`
+     depuis `src/data/creators.json` : ne pas modifier à la main.
+   - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
+     → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
+     et `pack_status()`).
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
    pour la voie invitée. Garde **Email** activé si tu veux aussi proposer
    l'adresse + code ; « Confirm email » reste au choix (le code à 6 chiffres
@@ -194,24 +205,53 @@ l'appareil doit d'abord être envoyée. L'écriture directe de `showcase_slugs`
 est révoquée par privilège de colonne : le client ne peut modifier directement
 que `display_name` (et son horodatage), la vitrine passe par cette fonction.
 
-En revanche, le serveur ne rejoue pas le moteur : il ne peut pas prouver qu'une
-carte a bien été tirée par un booster. Tant que le tirage se fait sur
-l'appareil, une sauvegarde fabriquée à la main peut donc gonfler une
-collection. La suite logique est de déplacer le tirage côté serveur
-(`pg_cron` + fonction Postgres, ou Edge Function) — c'est le prérequis avant
-d'ouvrir les **échanges**.
+Depuis la migration `0004_tirage.sql`, le **contenu des boosters est décidé
+par le serveur** : la fonction `open_pack()` tire les 5 cartes avec le même
+algorithme que le moteur local (mêmes poids, mêmes variantes, même événement
+« Perfect »), et le client ne peut ni les choisir ni les inventer. Une
+sauvegarde fabriquée à la main peut encore mentir sur les points, l'XP ou le
+niveau (calculés localement), mais plus sur les cartes — c'est le prérequis
+des échanges.
 
-## 9. Suite : tirage serveur, échanges, notifications
+### Ce que le serveur ne vérifie pas (volontairement)
+
+Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
+contenu des boosters (et donc les cartes) est décidé par le serveur. Hors
+périmètre actuel : une sauvegarde trafiquée peut encore gonfler les compteurs
+de ressources, mais pas la collection.
+
+### Le tirage est décidé par le serveur
+
+Depuis la migration `0004_tirage.sql`, ouvrir un booster demande une
+connexion. La fonction `open_pack()` tire les 5 cartes avec exactement le même
+algorithme que le moteur local (`src/lib/game-engine.ts`) : mêmes poids par
+slot (recopiés depuis `src/data/pull-rates.json` avec un commentaire qui pointe
+le fichier), même événement « Perfect » (5 ‰), même Fisher-Yates, aucun
+créateur en double dans un même booster.
+
+Trois situations possibles côté client :
+
+| Situation | Comportement |
+| --- | --- |
+| Cloud configuré + connecté | ouverture via `open_pack()` ; les cartes sont poussées immédiatement (`sync("push")`) |
+| Cloud configuré + hors ligne ou sans compte | message « Connecte-toi pour ouvrir un booster » + raccourci vers l'écran Compte ; **pas de repli silencieux** |
+| Cloud non configuré (dev, tests) | tirage local inchangé : le moteur local reste le comportement par défaut |
+
+**Pas de repli silencieux** : si le cloud est configuré et que la connexion
+est coupée, on n'ouvre pas « en attendant » côté local. L'écran explique
+qu'il faut se connecter, et propose un accès direct à l'écran Compte.
+
+## 9. Suite : échanges, notifications
 
 **Fait :** vitrine de quatre cartes et profil public consultable depuis le
-classement.
+classement ; tirage des boosters côté serveur (`0004_tirage.sql`, les cartes
+sont infalsifiables).
 
 **Reste à faire, dans cet ordre :**
 
-* déplacer le tirage côté serveur (RNG) : c'est le prérequis avant d'ouvrir les
-  échanges, pour qu'une collection ne puisse pas être fabriquée sur l'appareil ;
 * `supabase/migrations/0003_echanges.sql` — troc avec transaction atomique :
-  les deux collections changent ou aucune ;
+  les deux collections changent ou aucune (le journal `pack_draws` permet de
+  vérifier qu'une carte échangée provient d'un tirage réel) ;
 * permettre d'attacher une adresse e-mail à un compte invité (récupération
   multi-appareil), sans rendre le SMTP obligatoire pour les comptes invités ;
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
