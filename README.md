@@ -255,6 +255,12 @@ que le moteur local, et le client ne peut ni les choisir ni les inventer. Hors
 ligne, le bouton « Ouvrir un booster » explique qu'il faut se connecter (avec
 un raccourci vers l'écran Compte) — **pas de repli silencieux**.
 
+Dès qu'un compte est connecté, la réserve affichée est celle du serveur :
+`pack_status()` la relit sans rien consommer (compteur et date du prochain
+booster ne dépendent plus de l'horloge de l'appareil). Le sablier, qui ne sait
+avancer qu'une réserve locale, est donc désactivé quand le cloud est configuré ;
+il reste utilisable dans les builds sans cloud (dev, tests).
+
 Hors périmètre (volontaire) : les points, l'XP et le niveau restent calculés
 sur l'appareil ; seul le contenu des boosters (et donc les cartes) devient
 serveur.
@@ -280,7 +286,8 @@ serveur.
   `supabase/migrations/0002_vitrine.sql` ajoute `set_showcase()` : la fonction
   contrôle les 4 slugs et leur possession avant de les publier sur le profil.
   `supabase/migrations/0003_catalogue.sql` peuple la table `creators` (fichier
-  généré par `scripts/build-supabase-catalogue.mjs`). `supabase/migrations/0004_tirage.sql`
+  généré par `scripts/build-supabase-catalogue.mjs`) et la passe en lecture
+  seule pour les clients. `supabase/migrations/0004_tirage.sql`
   ajoute `open_pack()` et `pack_status()` : le tirage des boosters est décidé
   par le serveur, les cartes sont infalsifiables.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir

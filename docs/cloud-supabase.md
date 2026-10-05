@@ -15,7 +15,10 @@ ajoute cinq choses, et rien de plus :
 
 Tout le reste continue de fonctionner hors ligne, y compris si le projet
 Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
-« cloud non configuré ».
+« cloud non configuré » et la réserve de boosters reste locale. Dans un build
+**avec** cloud, la seule action qui exige une connexion est l'ouverture d'un
+booster (son contenu est décidé par le serveur) : la collection, l'Atelier et
+les saisons restent jouables hors ligne.
 
 ---
 
@@ -29,6 +32,7 @@ Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
 | Statistiques (cartes uniques, légendaires…) | Cloud | recalculées **par le serveur** depuis ta sauvegarde, visibles dans le classement |
 | Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
 | Contenu des boosters | **Serveur** | le tirage est décidé par la fonction `open_pack()` ; le client ne peut pas choisir ni inventer les cartes |
+| Réserve de boosters | **Serveur** | `pack_status()` à la connexion ; le client adopte le compteur et l'ancre de recharge, sans rien consommer |
 
 Aucun mot de passe n'est stocké. Les données restent locales tant que tu ne
 crées pas de compte invité ou ne valides pas ton code ; « Déconnexion » efface
@@ -98,8 +102,9 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
      → **Run** pour activer la vitrine et le contrôle de possession.
    - [`supabase/migrations/0003_catalogue.sql`](../supabase/migrations/0003_catalogue.sql)
      → **Run** pour peupler la table des créateurs (utilisée par le tirage
-     serveur). **Fichier généré** par `scripts/build-supabase-catalogue.mjs`
-     depuis `src/data/creators.json` : ne pas modifier à la main.
+     serveur) et la passer en lecture seule pour les clients (RLS activée).
+     **Fichier généré** par `scripts/build-supabase-catalogue.mjs` depuis
+     `src/data/creators.json` : ne pas modifier à la main.
    - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
      → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
      et `pack_status()`).
@@ -241,6 +246,24 @@ Trois situations possibles côté client :
 est coupée, on n'ouvre pas « en attendant » côté local. L'écran explique
 qu'il faut se connecter, et propose un accès direct à l'écran Compte.
 
+**La réserve aussi vient du serveur.** Dès qu'un compte est connecté, le client
+lit `pack_status()` — même calcul de recharge que `open_pack()`, sans rien
+consommer — et adopte le compteur et l'ancre (`last_regen_at`) dans la partie
+locale : l'affichage et le tirage ne divergent plus si l'horloge de l'appareil
+dérive ou si la sauvegarde locale a été bricolée. Le sablier (`spendHourglass`)
+ne sait avancer qu'une réserve locale : il est donc désactivé dans les builds
+avec cloud (l'écran l'explique), et reste actif dans les builds sans cloud.
+
+**Le catalogue est en lecture seule.** La table `public.creators`
+(`0003_catalogue.sql`) a la RLS activée et **aucune politique d'écriture** : ni
+le client ni un appel direct à l'API ne peuvent changer une rareté, un nom ou
+un rang. Seul le SQL Editor (propriétaire des tables) la modifie — c'est ce qui
+garantit que le tirage serveur lit toujours le catalogue publié.
+
+En cas de refus « aucun booster », le client relit aussitôt `pack_status()` :
+si un sablier ou une horloge locale avait gonflé la réserve affichée, le
+compteur et le compte à rebours se réalignent sur le serveur immédiatement.
+
 ## 9. Suite : échanges, notifications
 
 **Fait :** vitrine de quatre cartes et profil public consultable depuis le
@@ -266,6 +289,7 @@ sont infalsifiables).
 | « Trop de tentatives » | limite d'envoi d'e-mails de Supabase (1 par minute) : attends |
 | « Session expirée : reconnecte-toi » | jeton révoqué ou projet migré : redemande un code |
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
+| « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |
 | « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
 | « Les comptes invités sont désactivés » | Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** |
 | « Le service d'e-mail par défaut n'écrit qu'aux adresses de l'équipe » | normal : branche un SMTP, ou passe par un compte invité |
