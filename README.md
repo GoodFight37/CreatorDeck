@@ -278,7 +278,12 @@ serveur.
   - `sync.ts` contient les décisions (envoyer, charger, ne rien faire, demander
     au joueur) sous forme de fonctions pures, testées ;
   - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
-    ~20 s après la dernière action quand un compte est connecté.
+    ~20 s après la dernière action quand un compte est connecté ;
+  - `transport.ts` envoie les appels par le client HTTP natif dans l'APK
+    (le WebView sert l'app depuis `https://localhost`, origine que Supabase peut
+    refuser en CORS) et par `fetch` dans le navigateur.
+  - `public/diagnostic.html` rejoue les appels un par un pour situer une panne
+    (voir la fin de `docs/cloud-supabase.md`).
 - Côté base : `supabase/migrations/0001_comptes_cloud.sql` — tables `profiles`,
   `saves`, `stats`, politiques RLS, statistiques **recalculées par le serveur**
   (on ne peut pas mentir sur les chiffres sans publier des cartes) et fonction

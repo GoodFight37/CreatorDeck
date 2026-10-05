@@ -308,6 +308,8 @@ sont infalsifiables).
 | « Trop de tentatives » | limite d'envoi d'e-mails de Supabase (1 par minute) : attends |
 | « Session expirée : reconnecte-toi » | jeton révoqué ou projet migré : redemande un code |
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
+| « Réseau injoignable » **dans l'APK** alors que le même appel marche dans Chrome | le WebView sert l'app depuis `https://localhost`, origine que Supabase peut refuser en CORS. Les appels passent par le client HTTP natif (`src/lib/cloud/transport.ts`, `CapacitorHttp`) depuis la PR #7 : si le message persiste, il nomme désormais l'hôte, le chemin et la cause — colle-les dans le ticket |
+| « Le tirage serveur n'est pas installé sur ce projet » | `0003_catalogue.sql` et `0004_tirage.sql` ne sont pas (ou pas à jour) : § 3 |
 | « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |
 | « set-returning functions are not allowed in CASE », « BY value of FOR loop must be greater than zero » ou un `cards` NULL | `0004_tirage.sql` collé est une version antérieure : recolle le fichier (il est rejouable, `create or replace`) |
 | « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
@@ -317,3 +319,28 @@ sont infalsifiables).
 | « 4 cartes maximum » | une vitrine contient au plus quatre cartes ; retire-en une avant d'en ajouter une autre |
 | « nom de créateur invalide » | la vitrine n'accepte que les slugs de créateur au format attendu |
 | Supabase réclame un « custom SMTP » | son service intégré est réservé aux tests : ce n'est pas un bug de l'app |
+
+### Diagnostiquer un souci de connexion
+
+Deux outils, dans l'ordre :
+
+1. **Dans l'app** — Profil → Sauvegarde cloud → **« Tester la connexion au
+   cloud »** : joint `/auth/v1/health` en lecture seule et affiche le nom d'hôte.
+   Un échec nomme l'hôte, le chemin **et** la cause technique.
+2. **Dans un navigateur** — la page `public/diagnostic.html` (servie avec
+   l'application) rejoue les appels un par un : lecture simple, lecture sans
+   CORS, écriture simple, écriture avec les en-têtes de l'app, puis la séquence
+   complète (compte invité → `pack_status` → `leaderboard`). Elle distingue un
+   blocage réseau d'un refus CORS, et affiche la session enregistrée par le jeu.
+
+### Pourquoi les appels passent par le client HTTP natif dans l'APK
+
+Le WebView sert l'application depuis `https://localhost` : ce n'est pas une
+adresse publique, et un `fetch` y est soumis au CORS. Sur certains projets
+Supabase, ce preflight est refusé — l'échec apparaît alors comme une panne
+réseau (« Réseau injoignable ») alors que le même appel fonctionne dans Chrome.
+`src/lib/cloud/transport.ts` fait donc passer les appels par `CapacitorHttp`
+(module du cœur de Capacitor, aucune dépendance en plus) sur un appareil, et par
+`fetch` partout ailleurs. Appel **explicite** au plugin, et non son patch
+automatique de `fetch` : l'interception Android des requêtes du WebView ne voit
+pas le corps des POST, ce qui laissait échouer la création de compte invité.
