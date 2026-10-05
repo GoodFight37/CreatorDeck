@@ -34,10 +34,15 @@ jobs:
       - run: npm run android:debug
         env:
           # Facultatif : variables de dépôt (Settings → Secrets and variables →
-          # Actions → Variables). Vides, l'APK se construit sans cloud et reste
-          # 100 % hors ligne. Voir docs/cloud-supabase.md.
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          # Actions → onglet « Variables »). Vides, l'APK se construit sans cloud
+          # et reste 100 % hors ligne. Voir docs/cloud-supabase.md.
+          #
+          # Le repli sur les « Secrets » évite le piège classique : une valeur
+          # rangée dans Secrets au lieu de Variables était ignorée en silence.
+          # La clé anon est publique par conception — Variables reste l'endroit
+          # recommandé, Secrets est accepté et fonctionne tout autant.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
       # Diagnostic cloud : un APK construit sans les deux variables est
       # 100 % hors ligne (aucun écran de compte). C'est la cause n°1 d'un
@@ -45,16 +50,15 @@ jobs:
       # dans le journal du run, sans jamais afficher les valeurs.
       - name: Vérifier que le cloud est embarqué
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
-          echo "Variable URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s)"
-          echo "Variable clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
+          echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
           if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
             echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
           else
-            echo "::warning::Cloud absent du bundle : l'APK sera hors ligne (aucun compte). Vérifie Settings → Secrets and variables → Actions → onglet Variables (pas Secrets), portée du dépôt, noms NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY, puis relance ce workflow."
+            echo "::warning::Cloud absent du bundle : l'APK sera hors ligne (aucun compte). Vérifie Settings → Secrets and variables → Actions, portée du dépôt, noms exacts NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY (Variables ou Secrets, les deux marchent), puis relance ce workflow."
           fi
 
       # 1. Artefact du run : pratique pour un test ponctuel, mais son
