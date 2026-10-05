@@ -17,6 +17,16 @@
  *   node scripts/build-twitch-catalog.mjs --dry-run             # mesurer sans écrire
  *   AVATAR_PX=300 node scripts/build-twitch-catalog.mjs         # portraits plus légers
  *
+ * Windows / PowerShell : `npm run catalog:source -- --dry-run` ne transmet PAS
+ * les options (PowerShell avale le `--`, npm ignore alors le drapeau — une
+ * « simulation » lancerait une vraie génération). Deux façons sûres :
+ *
+ *   node scripts/build-twitch-catalog.mjs --dry-run     # commande native : arguments intacts
+ *   $env:DRY_RUN = "1"; npm run catalog:source          # variable d'environnement
+ *
+ * Les mêmes variables existent pour les autres réglages : TOP_N, PAGES,
+ * TOP_LANGUAGES, AVATAR_PX, FORCE.
+ *
  * Options :
  *   --count N        taille du catalogue à produire (défaut 1000, env TOP_N)
  *   --languages L    langues de diffusion à retenir, séparées par des virgules
@@ -24,6 +34,7 @@
  *   --pages N        profondeur de pagination Twitch par jeu (défaut 2)
  *   --concurrency N  téléchargements simultanés (défaut 24)
  *   --dry-run        s'arrête après la découverte (écrit reports/candidates-<N>.json)
+ *                    (env DRY_RUN=1)
  *   --seed FILE      réutilise une découverte existante au lieu d'interroger Twitch
  *   --force          re-télécharge les portraits déjà présents
  *
@@ -66,12 +77,17 @@ function option(name, fallback) {
   return index >= 0 && argv[index + 1] ? argv[index + 1] : fallback;
 }
 
+/** Variable d'environnement interprétée comme un vrai booléen de shell. */
+function truthy(value) {
+  return ["1", "true", "yes", "oui", "on"].includes(String(value ?? "").trim().toLowerCase());
+}
+
 const COUNT = Math.max(1, Math.floor(Number(option("count", process.env.TOP_N ?? 1000))));
 /** Profondeur de pagination : 1 = top 30 par jeu, 2 = jusqu'à 60, etc. */
-const PAGES = Math.max(1, Math.floor(Number(option("pages", 2))));
+const PAGES = Math.max(1, Math.floor(Number(option("pages", process.env.PAGES ?? 2))));
 const CONCURRENCY = Math.max(1, Math.floor(Number(option("concurrency", 24))));
-const DRY_RUN = argv.includes("--dry-run");
-const FORCE = argv.includes("--force");
+const DRY_RUN = argv.includes("--dry-run") || truthy(process.env.DRY_RUN);
+const FORCE = argv.includes("--force") || truthy(process.env.FORCE);
 const SEED_FILE = option("seed", null);
 /**
  * Langues de diffusion retenues. Vide = monde entier (aucun filtre), ce qui est

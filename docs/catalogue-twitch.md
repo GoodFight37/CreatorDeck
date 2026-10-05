@@ -64,11 +64,12 @@ erreur — la liste peut vieillir sans casser le build.
 
 ## Marche à suivre — catalogue mondial 1000 (à lancer **sur ta machine**)
 
+#### Sur macOS / Linux (bash)
+
 ```bash
 # 1. Découverte seule : combien de chaînes sont réellement atteignables ?
 npm run catalog:source -- --dry-run
 #    -> reports/candidates-1000.json (aucune écriture dans src/ ni public/)
-#    Si le total est insuffisant : --pages 3, ou complète la liste curée.
 
 # 2. Génération du catalogue + des portraits (reprenable, 600 px par défaut)
 npm run catalog:source
@@ -77,10 +78,56 @@ npm run catalog:source
 npm run assets:regen
 
 # 4. Valider et vérifier
-npm run catalog:check      # 1000 attendus, rangs contigus, saisons couvertes
-npm test                   # 65 tests, agnostiques à la taille du catalogue
-npm run build              # export statique
+npm run catalog:check && npm test && npm run build
 ```
+
+#### Sous Windows (PowerShell)
+
+PowerShell ne sait pas transmettre les options à travers npm : dans
+`npm run catalog:source -- --dry-run`, le `--` est avalé et **le drapeau est
+ignoré en silence**. Sur `--dry-run`, la conséquence serait grave — la
+« simulation » lancerait une vraie génération, écrirait dans `src/data/` et
+`public/creators/` et interrogerait Twitch. On passe donc par une commande
+native, ou par une variable d'environnement :
+
+```powershell
+# 1. Découverte seule (node reçoit l'option telle quelle)
+node scripts/build-twitch-catalog.mjs --dry-run
+
+# … ou l'équivalent par variable d'environnement
+$env:DRY_RUN = "1"; npm run catalog:source
+
+# 2. Génération réelle
+npm run catalog:source
+
+# 3. Portraits manquants
+npm run assets:regen
+
+# 4. Vérifications (une commande par ligne : « && » n'existe pas
+#    dans Windows PowerShell 5.1)
+npm run catalog:check
+npm test
+npm run build
+```
+
+**Si la découverte ne ramène pas assez de chaînes** : `PAGES=3` (`--pages 3`), ou
+complète la liste curée dans le script.
+
+Les variables d'environnement reconnues : `TOP_N`, `PAGES`, `TOP_LANGUAGES`,
+`AVATAR_PX`, `DRY_RUN`, `FORCE`.
+
+> ⚠️ Une variable posée reste active pour **toute la session PowerShell**. Si tu
+> as fait `$env:DRY_RUN = "1"` puis que tu lances la génération réelle dans la
+> même fenêtre, elle refera une simple mesure — sans rien casser, mais sans rien
+> produire non plus. D'où la forme recommandée pour la mesure (commande native,
+> aucune variable laissée derrière) :
+>
+> ```powershell
+> node scripts/build-twitch-catalog.mjs --dry-run
+> ```
+>
+> Et si tu as posé une variable, retire-la :
+> `Remove-Item Env:DRY_RUN`, `Remove-Item Env:TOP_N`, etc.
 
 Compter ~30 à 90 min pour l'étape 2 (découverte + ~1000 téléchargements
 d'images). `src/data/catalog.config.json` passera tout seul à
@@ -90,6 +137,16 @@ toucher.
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
 `--force`).
+
+| Sous bash | Sous PowerShell |
+|---|---|
+| `npm run catalog:source -- --dry-run` | `$env:DRY_RUN = "1"; npm run catalog:source` |
+| `npm run catalog:source -- --count 2000` | `$env:TOP_N = "2000"; npm run catalog:source` |
+| `npm run catalog:source -- --pages 3` | `$env:PAGES = "3"; npm run catalog:source` |
+| `npm run catalog:source -- --languages FR` | `$env:TOP_LANGUAGES = "FR"; npm run catalog:source` |
+| `AVATAR_PX=300 npm run catalog:source` | `$env:AVATAR_PX = "300"; npm run catalog:source` |
+| `a && b` | une commande par ligne (`&&` arrive avec PowerShell 7) |
+| `./gradlew` | `npm run android:debug` (le script choisit `gradlew.bat`) |
 
 > ⚠️ Le script interroge l'API GQL **non officielle** de Twitch avec le
 > Client-ID public du site web. Elle ne répond pas depuis un CI ou un sandbox
@@ -150,6 +207,12 @@ Changer d'avis plus tard est une simple variable d'environnement :
 ```bash
 AVATAR_PX=300 npm run catalog:source   # tout regénérer en 300 px
 AVATAR_PX=300 npm run assets:regen     # ou convertir l'existant
+```
+
+```powershell
+$env:AVATAR_PX = "300"   # puis les mêmes commandes npm
+npm run catalog:source
+npm run assets:regen
 ```
 
 ## Réglages de jeu à revoir après la bascule
