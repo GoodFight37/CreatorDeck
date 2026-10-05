@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { CREATORS } from "@/lib/catalog";
+import { CATCH_ALL_REGION, REGION_BY_ID, isKnownRegion } from "@/lib/regions";
 import { SEASONS, emptySeasonIds, seasonOf, seasonsCoverage, splitSeason } from "@/lib/seasons";
 
+/**
+ * Familles de collection : le catalogue est découpé par **langue de diffusion**
+ * (champ `region`), pas par jeu joué — un streameur change de jeu, pas de
+ * langue. Ces tests tiennent aussi bien sur un catalogue régénéré (régions
+ * présentes) que sur un catalogue antérieur, où tout tombe dans la famille
+ * fourre-tout « Sans frontière ».
+ */
 describe("seasons", () => {
   it("a des identifiants uniques et des paliers cohérents", () => {
     const ids = SEASONS.map((season) => season.id);
@@ -10,7 +18,7 @@ describe("seasons", () => {
     for (const season of SEASONS) {
       expect(season.slugs.length).toBeGreaterThan(0);
       expect(season.tiers.length).toBeGreaterThan(0);
-      // Chaque saison appartient à une famille, et les morceaux d'une famille
+      // Chaque vague appartient à une famille, et les vagues d'une famille
       // découpée partagent cette famille (identité visuelle unique).
       expect(season.familyId.length).toBeGreaterThan(0);
       expect(season.id === season.familyId || season.id.startsWith(`${season.familyId}-`)).toBe(true);
@@ -46,7 +54,7 @@ describe("seasons", () => {
     }
   });
 
-  it("marque un seul morceau final par famille", () => {
+  it("marque une seule vague finale par famille", () => {
     const families = new Map<string, typeof SEASONS>();
     for (const season of SEASONS) {
       families.set(season.familyId, [...(families.get(season.familyId) ?? []), season]);
@@ -61,41 +69,43 @@ describe("seasons", () => {
     }
   });
 
-  it("donne moins de paliers à une petite saison, jamais de doublon", () => {
-    const small = splitSeason(
-      [
-        { slug: "a", category: "Jeu" },
-        { slug: "b", category: "Jeu" },
-        { slug: "c", category: "Jeu" },
-      ],
-      { id: "T01", name: "Test", tagline: "" },
-      60,
-    )[0];
-    expect(small.slugs.length).toBe(3);
-    // 3 créateurs ne peuvent pas produire 4 paliers distincts.
-    expect(small.tiers.length).toBe(3);
-    expect(small.tiers.map((tier) => tier.required)).toEqual([1, 2, 3]);
-    expect(small.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(12);
-
-    const single = splitSeason([{ slug: "a", category: "Jeu" }], { id: "T02", name: "Solo", tagline: "" }, 60)[0];
-    expect(single.tiers.length).toBe(1);
-    expect(single.tiers[0].required).toBe(1);
-    expect(single.tiers[0].emblem).toBe(true);
-  });
-
-  it("ne classe chaque créateur que dans sa propre catégorie Twitch", () => {
+  it("range chaque créateur dans la famille de sa langue", () => {
+    // C'est l'invariant central : la famille d'une carte vient de son champ
+    // `region`, jamais du jeu qu'elle joue au moment de la génération.
     for (const season of SEASONS) {
       for (const slug of season.slugs) {
         const creator = CREATORS.find((entry) => entry.slug === slug);
         expect(creator).toBeDefined();
-        expect(season.categories).toContain(creator?.category);
+        const expected = creator?.region && isKnownRegion(creator.region)
+          ? creator.region
+          : CATCH_ALL_REGION.id;
+        expect(season.familyId).toBe(expected);
       }
     }
   });
 
-  it("ignore les saisons configurées mais sans créateur", () => {
-    // Dans le catalogue courant toutes les saisons ont des membres ; on vérifie
-    // la cohérence des deux vues (liste des vides ↔ saisons présentes).
+  it("n'attribue jamais une famille inconnue, et décrit la famille de chaque vague", () => {
+    for (const season of SEASONS) {
+      expect(REGION_BY_ID.has(season.familyId), `famille ${season.familyId}`).toBe(true);
+      expect(season.regions).toEqual([season.familyId]);
+    }
+  });
+
+  it("décrit les membres d'une famille, même sans région dans les données", () => {
+    // Un catalogue généré avant l'arrivée des régions n'a pas le champ : tout
+    // tombe dans la fourre-tout, et rien ne disparaît.
+    const withoutRegion = CREATORS.filter((creator) => !creator.region);
+    const orphans = SEASONS.filter((season) => season.familyId === CATCH_ALL_REGION.id).reduce(
+      (sum, season) => sum + season.slugs.length,
+      0,
+    );
+    const unknownRegions = CREATORS.filter(
+      (creator) => creator.region && !isKnownRegion(creator.region),
+    ).length;
+    expect(orphans).toBe(withoutRegion.length + unknownRegions);
+  });
+
+  it("ignore les familles configurées mais sans créateur", () => {
     for (const id of emptySeasonIds()) {
       expect(SEASONS.some((season) => season.id === id)).toBe(false);
     }
@@ -111,82 +121,48 @@ describe("seasons", () => {
 });
 
 describe("splitSeason", () => {
-  const meta = { id: "S07", name: "Découverte", tagline: "Le reste du catalogue." };
-  const entries = (count: number, category = "Jeu Niche") =>
-    Array.from({ length: count }, (_, index) => ({ slug: `chaine-${index}`, category }));
+  const meta = { id: "S10", name: "Sans frontière", tagline: "Le reste du catalogue." };
+  const entries = (count: number, region = "S10") =>
+    Array.from({ length: count }, (_, index) => ({ slug: `chaine-${index}`, region }));
 
-  it("garde une seule saison quand le fourre-tout est petit", () => {
+  it("garde une seule saison quand la famille est petite", () => {
     const seasons = splitSeason(entries(3), meta, 60);
     expect(seasons).toHaveLength(1);
-    expect(seasons[0].id).toBe("S07");
-    expect(seasons[0].name).toBe("Découverte");
+    expect(seasons[0].id).toBe("S10");
+    expect(seasons[0].name).toBe("Sans frontière");
     expect(seasons[0].slugs).toHaveLength(3);
-    expect(seasons[0].categories).toEqual(["Jeu Niche"]);
+    expect(seasons[0].regions).toEqual(["S10"]);
   });
 
-  it("découpe un gros fourre-tout en morceaux de taille bornée", () => {
+  it("découpe une grosse famille en vagues de taille bornée", () => {
     const seasons = splitSeason(entries(130), meta, 60);
     expect(seasons).toHaveLength(3);
-    expect(seasons.map((season) => season.id)).toEqual(["S07-1", "S07-2", "S07-3"]);
+    expect(seasons.map((season) => season.id)).toEqual(["S10-1", "S10-2", "S10-3"]);
     expect(seasons.map((season) => season.name)).toEqual([
-      "Découverte · 1/3",
-      "Découverte · 2/3",
-      "Découverte · 3/3",
+      "Sans frontière · 1/3",
+      "Sans frontière · 2/3",
+      "Sans frontière · 3/3",
     ]);
-    // Les morceaux sont pleins à maxSize tant qu'il reste de quoi remplir.
+    // Les vagues sont pleines tant qu'il reste de quoi remplir.
     expect(seasons.map((season) => season.slugs.length)).toEqual([60, 60, 10]);
-    // Aucun créateur perdu, aucun doublon entre les morceaux.
+    // Aucun créateur perdu, aucun doublon entre les vagues.
     const all = seasons.flatMap((season) => season.slugs);
     expect(new Set(all).size).toBe(130);
   });
 
-  it("décrit les catégories réellement présentes dans chaque morceau", () => {
-    const mixed = [
-      ...entries(40, "Jeu Niche A"),
-      ...entries(30, "Jeu Niche B"),
-      ...entries(40, "Jeu Niche C"),
-    ].map((entry, index) => ({ ...entry, slug: `chaine-${index}` }));
-    const seasons = splitSeason(mixed, meta, 60);
-    // Aucun couple ne tient sous 60 (40+30, 30+40) : les trois catégories font
-    // donc trois morceaux, sans jamais couper une catégorie en deux.
-    expect(seasons.map((season) => season.categories)).toEqual([
-      ["Jeu Niche A"],
-      ["Jeu Niche B"],
-      ["Jeu Niche C"],
-    ]);
-    expect(seasons.map((season) => season.slugs.length)).toEqual([40, 30, 40]);
-    // Une catégorie n'apparaît que dans un seul morceau (hors découpe d'un jeu
-    // trop gros, cas dans lequel les tranches partagent la catégorie).
-    const categories = seasons.flatMap((season) => season.categories);
-    expect(new Set(categories).size).toBe(categories.length);
+  it("respecte l'ordre du classement : la première vague, ce sont les têtes d'affiche", () => {
+    const ordered = Array.from({ length: 200 }, (_, index) => ({
+      slug: `rang-${index + 1}`,
+      region: "S04",
+    }));
+    const seasons = splitSeason(ordered, { id: "S04", name: "Anglophonie", tagline: "" }, 150);
+    expect(seasons.map((season) => season.slugs.length)).toEqual([150, 50]);
+    expect(seasons[0].slugs[0]).toBe("rang-1");
+    expect(seasons[0].slugs.at(-1)).toBe("rang-150");
+    expect(seasons[1].slugs[0]).toBe("rang-151");
   });
 
   it("ne produit rien sans créateur à classer", () => {
     expect(splitSeason([], meta, 60)).toEqual([]);
-  });
-});
-
-describe("splitSeason sur une saison thématique", () => {
-  const meta = { id: "S01", name: "Accueil & IRL", tagline: "Talk et events." };
-  const entries = (count: number, category = "Just Chatting") =>
-    Array.from({ length: count }, (_, index) => ({ slug: `chaine-${index}`, category }));
-
-  it("laisse intacte une saison de taille raisonnable", () => {
-    const seasons = splitSeason(entries(80), meta, 150);
-    expect(seasons).toHaveLength(1);
-    expect(seasons[0].id).toBe("S01");
-    expect(seasons[0].slugs).toHaveLength(80);
-  });
-
-  it("découpe une famille devenue énorme en périmètre mondial", () => {
-    // Cas réel : « Just Chatting » au niveau mondial dépasse largement 150.
-    const seasons = splitSeason(entries(520), meta, 150);
-    expect(seasons).toHaveLength(4);
-    expect(seasons.map((season) => season.id)).toEqual(["S01-1", "S01-2", "S01-3", "S01-4"]);
-    expect(seasons.map((season) => season.slugs.length)).toEqual([150, 150, 150, 70]);
-    expect(seasons[0].name).toBe("Accueil & IRL · 1/4");
-    // La famille reste identifiable et aucun créateur n'est perdu.
-    expect(new Set(seasons.flatMap((season) => season.slugs)).size).toBe(520);
-    expect(seasons.every((season) => season.categories.includes("Just Chatting"))).toBe(true);
   });
 });

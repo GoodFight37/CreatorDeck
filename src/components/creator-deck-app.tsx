@@ -27,6 +27,8 @@ import {
   Sparkles,
   Target,
   Trophy,
+  Volume2,
+  VolumeX,
   FlaskConical,
   Paintbrush,
   WifiOff,
@@ -55,6 +57,8 @@ import {
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
+import { regionLabel } from "@/lib/regions";
+import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 
@@ -637,6 +641,18 @@ function ProfileView({
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
   const [exportText, setExportText] = useState<string | null>(null);
+  // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
+  // afficher le bon libellé et à redessiner le bouton.
+  const [soundOn, setSoundOn] = useState(() => !isMuted());
+
+  function toggleSound() {
+    const next = !soundOn;
+    setSoundOn(next);
+    setMuted(!next);
+    // On joue le carillon à l'activation : l'utilisateur entend tout de suite
+    // ce qu'il vient de rallumer (et rien s'il coupe).
+    if (next) playReward();
+  }
 
   async function handleExport() {
     const json = gameStore.exportSave();
@@ -718,6 +734,24 @@ function ProfileView({
           </div>
           <Check size={18} className="success-icon" />
         </div>
+        <button
+          type="button"
+          className="settings-row settings-action"
+          onClick={toggleSound}
+          aria-pressed={soundOn}
+        >
+          <span className={`settings-icon ${soundOn ? "purple" : "blue"}`}>
+            {soundOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
+          </span>
+          <div>
+            <strong>Son {soundOn ? "activé" : "coupé"}</strong>
+            <span>
+              Ouverture de booster, swipe de carte, palier réclamé — sons synthétisés, rien à
+              télécharger.
+            </span>
+          </div>
+          <Check size={18} className={soundOn ? "success-icon" : "muted-icon"} />
+        </button>
         <button type="button" className="settings-row settings-action" onClick={onShowOdds}>
           <span className="settings-icon purple"><BadgeInfo size={17} /></span>
           <div>
@@ -851,7 +885,7 @@ function RevealOverlay({
         <div className="reveal-name">
           <p>#{creator.rank} · {RARITY_META[card.rarity].label}</p>
           <h2>{creator.displayName}</h2>
-          <span>{creator.category}</span>
+          <span>{regionLabel(creator.region)}</span>
         </div>
       </div>
       <button className="reveal-next" onClick={isLast ? onClose : onNext}>
@@ -907,6 +941,10 @@ export function CreatorDeckApp() {
     window.setTimeout(() => {
       try {
         const cards = gameStore.openPack(selectedPack);
+        // Le son accompagne le geste, jamais l'attente : c'est l'instant du
+        // « wouip » qui compte, et il faut un geste utilisateur pour que le
+        // navigateur autorise l'audio.
+        playPackOpening();
         setDrawnCards(cards);
         setRevealIndex(0);
       } catch (caught) {
@@ -930,6 +968,14 @@ export function CreatorDeckApp() {
     }
   }
 
+  // Une carte se révèle → son propre son. La première carte est accompagnée du
+  // son du paquet (index 0) : pas de doublon, pas d'accord qui se superpose.
+  useEffect(() => {
+    if (!drawnCards.length || revealIndex === 0) return;
+    const card = drawnCards[revealIndex];
+    if (card) playReveal(card.rarity, card.variant);
+  }, [drawnCards, revealIndex]);
+
   function handleClaimSeason(seasonId: string) {
     // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
     const before = game?.seasons.find((entry) => entry.id === seasonId);
@@ -941,6 +987,7 @@ export function CreatorDeckApp() {
         before && before.claimable > 1 ? `${before.claimable} paliers` : "",
       ].filter(Boolean);
       const emblem = before?.tiers.some((tier) => tier.emblem && !tier.claimed && tier.unlocked);
+      playReward();
       showNotice(
         before
           ? `Saison ${before.id} : ${parts.join(", ") || "récompense réclamée"}${emblem ? " — emblème obtenu !" : ""}`

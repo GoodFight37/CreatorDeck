@@ -10,6 +10,7 @@ import {
   type CardVariant,
   type Creator,
 } from "@/lib/catalog";
+import { regionLabel } from "@/lib/regions";
 import { LockKeyhole, Radio, Sparkles } from "lucide-react";
 
 type CreatorCardProps = {
@@ -69,7 +70,9 @@ export function CreatorCard({
       ) : null}
 
       <div className="card-copy">
-        <p>{creator.category}</p>
+        {/* La famille (langue de diffusion) est une étiquette stable ; le jeu
+            joué au moment de la génération ne dit rien de fiable. */}
+        <p>{regionLabel(creator.region)}</p>
         <h3>{locked ? "???" : creator.displayName}</h3>
         <div className="card-footerline">
           <span>{locked ? rarity.label : formatFollowersCount(creator.followers)}</span>

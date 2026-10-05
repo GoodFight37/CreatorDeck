@@ -1,141 +1,68 @@
 {
   "pointsPerCreator": 4,
   "hourglassesPerSeason": 3,
-  "seasonMaxSize": 150,
-  "seasons": [
+  "waveSize": 150,
+  "families": [
     {
       "id": "S01",
-      "name": "Accueil & IRL",
-      "tagline": "Le canapé du Twitch : talk, events, sport, musique et streams d'ambiance.",
-      "categories": [
-        "Just Chatting",
-        "IRL",
-        "Special Events",
-        "Variété & Live",
-        "Sports",
-        "Music",
-        "Art",
-        "Talk Shows & Podcasts",
-        "ASMR",
-        "Always On",
-        "I'm Only Sleeping",
-        "Animals, Aquariums, and Zoos"
-      ]
+      "name": "France & francophonie",
+      "tagline": "Le talk, le jeu et la bonne humeur, en français.",
+      "languages": ["fr"]
     },
     {
       "id": "S02",
-      "name": "FPS & Battle Royale",
-      "tagline": "Ça vise vite et ça parle fort.",
-      "categories": [
-        "VALORANT",
-        "Call of Duty: Warzone",
-        "Fortnite",
-        "Apex Legends",
-        "Overwatch",
-        "Counter-Strike",
-        "Rainbow Six Siege",
-        "Delta Force",
-        "Battlefield 6",
-        "ARC Raiders",
-        "REMATCH",
-        "Z1: Battle Royale",
-        "WARDOGS",
-        "Deadlock",
-        "Marvel Rivals",
-        "World of Tanks",
-        "Escape from Tarkov",
-        "PUBG: BATTLEGROUNDS"
-      ]
+      "name": "Espagne & Amérique latine",
+      "tagline": "La comunidad hispanohablante, de Madrid à Buenos Aires.",
+      "languages": ["es"]
     },
     {
       "id": "S03",
-      "name": "MMO & RPG",
-      "tagline": "Des heures de farm, des niveaux par milliers.",
-      "categories": [
-        "World of Warcraft",
-        "Dofus",
-        "DOFUS Touch",
-        "ELDEN RING",
-        "Monster Hunter Wilds",
-        "Hades II",
-        "The Blood of Dawnwalker",
-        "Kingdom Hearts HD 1.5 + 2.5 ReMIX",
-        "Dragon Ball: Xenoverse",
-        "Dune: Awakening",
-        "Valheim",
-        "Oxygen Not Included",
-        "Graveyard Keeper II",
-        "Shakes and Fidget",
-        "SILENT HILL: townfall",
-        "How to Fish",
-        "The Witcher 3: Wild Hunt Remastered",
-        "AION 2",
-        "Tibia"
-      ]
+      "name": "Brésil & Portugal",
+      "tagline": "Do Brasil a Portugal, la plus grande torcida du direct.",
+      "languages": ["pt"]
     },
     {
       "id": "S04",
-      "name": "Sandbox & Créatif",
-      "tagline": "Construire, casser, recommencer.",
-      "categories": [
-        "Minecraft",
-        "Rust",
-        "Sea of Thieves",
-        "Planet Coaster 2",
-        "TCG Card Shop Simulator",
-        "Hello Neighbor",
-        "Happy Wheels",
-        "Waterpark Simulator",
-        "Police Chief Simulator",
-        "Find The Needle",
-        "Rivage",
-        "Keep It Up!",
-        "Keep it Up",
-        "Furyball: Rogue Revenge",
-        "nanos world",
-        "GeoGuessr",
-        "Conan Exiles",
-        "DayZ"
-      ]
+      "name": "Anglophonie",
+      "tagline": "Les chaînes les plus suivies de la planète, d'un océan à l'autre.",
+      "languages": ["en"]
     },
     {
       "id": "S05",
-      "name": "Versus & Sport",
-      "tagline": "La win ou rien.",
-      "categories": [
-        "League of Legends",
-        "Teamfight Tactics",
-        "Rocket League",
-        "EA Sports FC 27",
-        "TEKKEN 8",
-        "Street Fighter 6",
-        "Super Smash Bros. Ultimate",
-        "Trackmania",
-        "Chess",
-        "Hearthstone",
-        "Mario Kart World",
-        "Dota 2"
-      ]
+      "name": "Europe du Nord & germanique",
+      "tagline": "Deutsch, Nederlands, skandinavisk — la scène du nord.",
+      "languages": ["de", "nl", "sv", "da", "no", "fi", "is"]
     },
     {
       "id": "S06",
-      "name": "Open World & Horreur",
-      "tagline": "Les grands espaces, les vieux classiques et les nuits blanches.",
-      "categories": [
-        "Grand Theft Auto V",
-        "Dead by Daylight",
-        "CONTROL Resonant",
-        "Total War: WARHAMMER III",
-        "SHINOBI: Art of Vengeance",
-        "Retro"
-      ]
+      "name": "Europe de l'Est",
+      "tagline": "Русский, polski, čeština : l'Est en direct.",
+      "languages": ["ru", "uk", "pl", "cs", "sk", "hu", "ro", "bg", "sr", "hr", "lt", "lv", "et", "sl"]
+    },
+    {
+      "id": "S07",
+      "name": "Europe du Sud",
+      "tagline": "L'Italie, la Grèce et toute la Méditerranée.",
+      "languages": ["it", "el", "ca", "gl", "eu"]
+    },
+    {
+      "id": "S08",
+      "name": "Asie",
+      "tagline": "Corée, Japon, Chine et toute l'Asie du Sud-Est.",
+      "languages": ["ko", "ja", "zh", "zh-tw", "th", "vi", "id", "ms", "tl", "hi", "bn", "ta"]
+    },
+    {
+      "id": "S09",
+      "name": "Moyen-Orient & Afrique",
+      "tagline": "العربية, türkçe, עברית — du Maghreb au Golfe.",
+      "languages": ["ar", "he", "fa", "tr", "ur", "sw", "af"]
     }
   ],
   "catchAll": {
-    "id": "S07",
-    "name": "Découverte",
-    "tagline": "Le reste du classement : les pépites à dénicher.",
-    "maxSize": 60
+    "id": "S10",
+    "name": "Sans frontière",
+    "tagline": "Langues rares, streams multilingues et chaînes sans langue déclarée.",
+    "maxSize": 150
   },
-  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du catalogue. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit."
+  "note": "Familles de collection CreatorDeck : les créateurs sont regroupés par langue de diffusion (le signal le plus stable sur Twitch — un streameur change de jeu, pas de langue), pas par jeu joué. Le générateur écrit l'identifiant de la famille dans le champ « region » de chaque créateur (src/data/creators.json) ; l'application en déduit les saisons. Une famille trop grande est découpée en vagues de waveSize par ordre de classement. Les langues non listées et les chaînes sans langue déclarée tombent dans la saison fourre-tout « Sans frontière ». Tout est configurable ici : ajouter une langue à une famille, déplacer une langue, ou créer une famille."
 }

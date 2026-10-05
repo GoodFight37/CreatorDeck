@@ -1,7 +1,14 @@
 /**
- * Saisons de collection : les créateurs du catalogue sont regroupés en grandes familles
- * de jeux (façon séries/sets d'un TCG), ce qui donne des objectifs de
- * complétion intermédiaires entre « 1 carte » et le catalogue entier.
+ * Saisons de collection : les créateurs du catalogue sont regroupés en grandes
+ * familles **par langue de diffusion** (façon séries/sets d'un TCG), ce qui
+ * donne des objectifs de complétion intermédiaires entre « 1 carte » et le
+ * catalogue entier.
+ *
+ * Pourquoi la langue et pas le jeu joué : un streameur change de jeu toutes les
+ * semaines — le classer par genre revient à l'enfermer dans un hasard du
+ * moment. Sa langue de diffusion, elle, ne bouge pas, et c'est la seule donnée
+ * que le générateur peut établir pour les 1000 chaînes (les jeux hors direct ne
+ * sont même pas publiés par Twitch).
  *
  * Le découpage vit dans `src/data/seasons.config.json` ; tout est calculé ici à
  * partir du catalogue, donc aucune donnée ne peut se désynchroniser. Chaque
@@ -9,9 +16,15 @@
  * l'écran Objectifs : les points tombent en cours de route, le dernier palier
  * donne les sabliers et l'emblème de la famille.
  */
-import seasonConfig from "@/data/seasons.config.json";
 import { CREATORS } from "@/lib/catalog";
+import {
+  CATCH_ALL_REGION,
+  REGION_FAMILIES,
+  REGION_WAVE_SIZE,
+  type RegionFamily,
+} from "@/lib/regions";
 import { familyIdOf, pieceOf, splitSeason as splitSeasonBase } from "../../scripts/lib/seasons-split.mjs";
+import seasonConfig from "@/data/seasons.config.json";
 
 export type SeasonReward = { points: number; hourglasses: number };
 
@@ -36,45 +49,33 @@ export type Season = {
   id: string;
   name: string;
   tagline: string;
-  /** Catégories Twitch couvertes (vide pour la saison fourre-tout). */
-  categories: string[];
+  /** Familles couvertes par ce morceau (une seule en pratique). */
+  regions: string[];
   slugs: string[];
   tiers: SeasonTier[];
   /**
    * Identifiant de la famille (`S01-2` → `S01`).
    *
-   * Une famille trop grande est découpée en morceaux pour rester un objectif
-   * jouable ; ces morceaux appartiennent toujours à la même famille, ce qui
-   * sert aux cosmétiques : une teinte, un emblème et un thème par famille, pas
-   * par morceau.
+   * Une famille trop grande est découpée en vagues pour rester un objectif
+   * jouable ; ces vagues appartiennent toujours à la même famille, ce qui sert
+   * aux cosmétiques : une teinte, un emblème et un thème par famille, pas par
+   * vague.
    */
   familyId: string;
-  /** Numéro du morceau dans sa famille (1 pour une famille entière). */
+  /** Numéro de la vague dans sa famille (1 pour une famille entière). */
   piece: number;
-  /** Vrai si c'est le dernier morceau : c'est lui qui referme la famille. */
+  /** Vrai si c'est la dernière vague : c'est elle qui referme la famille. */
   finalPiece: boolean;
 };
 
-type SeasonDefinition = { id: string; name: string; tagline: string; categories: string[] };
 type SeasonConfig = {
   pointsPerCreator: number;
   hourglassesPerSeason: number;
-  /** Taille maximale d'une saison thématique avant découpage (défaut : 150). */
-  seasonMaxSize?: number;
-  seasons: SeasonDefinition[];
+  /** Taille maximale d'une famille avant découpage en vagues (défaut : 150). */
+  waveSize?: number;
+  families: RegionFamily[];
   catchAll: { id: string; name: string; tagline: string; maxSize?: number };
 };
-
-/** Taille maximale d'une saison fourre-tout avant découpage (défaut : 60). */
-const DEFAULT_CATCH_ALL_MAX = 60;
-/**
- * Taille maximale d'une saison thématique avant découpage (défaut : 150).
- *
- * En périmètre mondial, une famille comme « Just Chatting » réunit plusieurs
- * centaines de créateurs : une saison infinissable n'est pas un objectif. On la
- * découpe en morceaux qui gardent l'étiquette de la famille (« S01-1/3 »).
- */
-const DEFAULT_SEASON_MAX = 150;
 
 const CONFIG = seasonConfig as SeasonConfig;
 
@@ -126,24 +127,12 @@ function tiersFor(size: number): SeasonTier[] {
   });
 }
 
-/** Entrée d'une saison : le slug et la catégorie Twitch, pour décrire chaque morceau. */
-export type SeasonEntry = { slug: string; category: string };
+/** Entrée d'une saison : le slug et sa famille, pour décrire chaque vague. */
+export type SeasonEntry = { slug: string; region?: string };
 
 /**
- * Découpe une saison en morceaux de taille raisonnable.
- *
- * Deux usages : le fourre-tout « Découverte » (des dizaines de petites
- * catégories, maxSize 60) et les saisons thématiques devenues trop grosses en
- * périmètre mondial (maxSize 150). Les créateurs d'une même catégorie restent
- * ensemble — un morceau ne mélange pas la moitié d'un jeu avec la moitié d'un
- * autre — sauf si la catégorie dépasse à elle seule `maxSize`, auquel cas elle
- * est découpée en tranches.
- *
- * Pure et exportée pour être testable indépendamment du catalogue réel.
- */
-/**
- * Découpe une saison en morceaux jouables, puis complète chaque morceau avec
- * ses paliers et son appartenance de famille.
+ * Découpe une famille en vagues jouables, puis complète chaque vague avec ses
+ * paliers et son appartenance de famille.
  *
  * Le découpage lui-même vit dans `scripts/lib/seasons-split.mjs`, partagé avec
  * `npm run catalog:check` : les deux ne peuvent pas diverger.
@@ -151,7 +140,7 @@ export type SeasonEntry = { slug: string; category: string };
 export function splitSeason(
   entries: SeasonEntry[],
   meta: { id: string; name: string; tagline: string },
-  maxSize = DEFAULT_CATCH_ALL_MAX,
+  maxSize = REGION_WAVE_SIZE,
 ): Season[] {
   const pieces = splitSeasonBase(entries, meta, maxSize);
   return pieces.map((piece, index) => ({
@@ -165,40 +154,44 @@ export function splitSeason(
 
 type BuiltSeasons = {
   seasons: Season[];
-  /** Identifiants de configuration ayant donné au moins une saison. */
+  /** Identifiants de famille ayant donné au moins une saison. */
   populated: Set<string>;
 };
 
 function buildSeasons(): BuiltSeasons {
-  const explicitCategories = new Set(CONFIG.seasons.flatMap((season) => season.categories));
+  const families = CONFIG.families?.length ? CONFIG.families : REGION_FAMILIES;
+  const catchAll = CONFIG.catchAll ?? CATCH_ALL_REGION;
+  const waveSize = CONFIG.waveSize ?? REGION_WAVE_SIZE;
+  const knownRegions = new Set(families.map((family) => family.id));
+
   const seasons: Season[] = [];
   const populated = new Set<string>();
-  const seasonMax = CONFIG.seasonMaxSize ?? DEFAULT_SEASON_MAX;
 
-  for (const definition of CONFIG.seasons) {
-    const members: SeasonEntry[] = CREATORS.filter((creator) =>
-      definition.categories.includes(creator.category),
-    ).map((creator) => ({ slug: creator.slug, category: creator.category }));
-    // Une catégorie peut disparaître du catalogue au fil des régénérations
-    // (jeu plus streamé) : une saison vide ne s'affiche pas.
+  for (const family of families) {
+    // L'ordre du catalogue est celui du classement : la première vague d'une
+    // famille, ce sont ses têtes d'affiche.
+    const members: SeasonEntry[] = CREATORS.filter((creator) => creator.region === family.id).map(
+      (creator) => ({ slug: creator.slug, region: creator.region }),
+    );
+    // Une famille peut être vide dans le catalogue courant (aucune chaîne de
+    // cette langue dans le Top 1000) : elle ne s'affiche pas.
     if (!members.length) continue;
-    populated.add(definition.id);
-    seasons.push(...splitSeason(members, definition, seasonMax));
+    populated.add(family.id);
+    seasons.push(...splitSeason(members, family, waveSize));
   }
 
-  // Les catégories non listées (petits jeux, événements ponctuels) atterrissent
-  // dans une saison « Découverte » : aucun créateur n'est laissé de côté.
-  const leftovers = CREATORS.filter((creator) => !explicitCategories.has(creator.category));
+  // Les créateurs dont la famille n'existe pas dans la configuration (langue
+  // non listée, ou catalogue généré avant l'arrivée des régions) atterrissent
+  // dans la saison fourre-tout : aucun créateur n'est laissé de côté.
+  const leftovers = CREATORS.filter((creator) => !creator.region || !knownRegions.has(creator.region));
   if (leftovers.length) {
     seasons.push(
       ...splitSeason(
-        leftovers.map((creator) => ({ slug: creator.slug, category: creator.category })),
-        {
-          id: CONFIG.catchAll.id,
-          name: CONFIG.catchAll.name,
-          tagline: CONFIG.catchAll.tagline,
-        },
-        CONFIG.catchAll.maxSize ?? DEFAULT_CATCH_ALL_MAX,
+        // Leur famille **est** la fourre-tout : la vague doit le dire, même si
+        // la donnée d'origine n'a pas de région (catalogue antérieur).
+        leftovers.map((creator) => ({ slug: creator.slug, region: catchAll.id })),
+        { id: catchAll.id, name: catchAll.name, tagline: catchAll.tagline },
+        catchAll.maxSize ?? waveSize,
       ),
     );
   }
@@ -221,14 +214,12 @@ export function seasonOf(slug: string): Season | undefined {
 }
 
 /**
- * Saisons annoncées par la configuration mais sans aucun créateur dans le
- * catalogue courant (catégorie renommée ou jeu plus streamé). Le build les
- * signale en avertissement ; l'application les ignore.
+ * Familles annoncées par la configuration mais sans aucun créateur dans le
+ * catalogue courant. Le build les signale en avertissement ; l'application les
+ * ignore.
  */
 export function emptySeasonIds(): string[] {
-  return (seasonConfig as SeasonConfig).seasons
-    .map((season) => season.id)
-    .filter((id) => !BUILT.populated.has(id));
+  return (CONFIG.families ?? []).map((family) => family.id).filter((id) => !BUILT.populated.has(id));
 }
 
 /** Nombre total de créateurs couverts par les saisons (vaut la taille du catalogue). */

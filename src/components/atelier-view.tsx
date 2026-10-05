@@ -21,6 +21,7 @@ import {
   creatorImage,
   type Rarity,
 } from "@/lib/catalog";
+import { regionLabel } from "@/lib/regions";
 import { duplicateGroups, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 
@@ -209,7 +210,7 @@ export function AtelierView({
                   <div className="atelier-copy">
                     <strong>{creator.displayName}</strong>
                     <span>
-                      #{creator.rank} · {creator.category}
+                      #{creator.rank} · {regionLabel(creator.region)}
                     </span>
                   </div>
                   <span

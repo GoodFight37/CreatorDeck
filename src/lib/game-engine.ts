@@ -122,7 +122,8 @@ export type SeasonView = {
   id: string;
   name: string;
   tagline: string;
-  categories: string[];
+  /** Familles (langues) couvertes par ce morceau de saison. */
+  regions: string[];
   owned: number;
   total: number;
   complete: boolean;
@@ -556,7 +557,7 @@ export function seasonViews(state: PlayerState): SeasonView[] {
       id: season.id,
       name: season.name,
       tagline: season.tagline,
-      categories: season.categories,
+      regions: season.regions,
       owned: count,
       total: season.slugs.length,
       complete: count >= season.slugs.length,

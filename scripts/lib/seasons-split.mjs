@@ -1,76 +1,57 @@
 /**
- * Découpage d'une saison en morceaux de taille raisonnable.
+ * Découpage d'une famille de collection en vagues de taille raisonnable.
  *
  * Module partagé, sans dépendance : il est utilisé par l'application
  * (`src/lib/seasons.ts`, via ses déclarations `.d.mts`) **et** par l'outil de
  * vérification (`scripts/build-catalog.mjs`). Sans ce partage, le rapport de
- * `catalog:check` annonçait une famille de 170 créateurs là où l'application en
- * affichait déjà deux morceaux de 150 et 20 — un rapport qui ment est pire
- * qu'une absence de rapport.
+ * `catalog:check` annoncerait une famille de 276 créateurs là où l'application
+ * en affiche déjà deux vagues — un rapport qui ment est pire qu'une absence de
+ * rapport.
  *
  * Règles :
- *   1. regroupement par catégorie — un morceau ne mélange pas la moitié d'un
- *      jeu avec la moitié d'un autre ;
- *   2. remplissage glouton, jamais au-delà de `maxSize` ;
- *   3. une catégorie plus grosse que `maxSize` à elle seule est découpée en
- *      tranches (un jeu très représenté chez les petits streamers) ;
- *   4. un seul morceau → l'identifiant d'origine est conservé ;
- *      plusieurs morceaux → `S01-1`, `S01-2`… et le nom porte « · 1/2 ».
+ *   1. **ordre du classement** — la première vague d'une famille, ce sont ses
+ *      têtes d'affiche : c'est l'objectif naturel du début de collection ;
+ *   2. une vague ne dépasse jamais `maxSize` ;
+ *   3. une famille qui tient en une seule vague garde son identifiant
+ *      d'origine ; au-delà, les morceaux deviennent `S04-1`, `S04-2`… et le nom
+ *      porte « · 1/3 ».
+ *
+ * Historique : le découpage groupait autrefois par catégorie de jeu. Le
+ * classement par langue rend ce regroupement inutile (et faux : un streameur
+ * change de jeu en cours de route), donc les vagues suivent simplement l'ordre
+ * du classement.
  */
 
 /**
- * @param {{slug: string, category: string}[]} entries
+ * @param {{slug: string, region?: string}[]} entries
  * @param {{id: string, name: string, tagline: string}} meta
  * @param {number} [maxSize]
- * @returns {{id: string, name: string, tagline: string, categories: string[], slugs: string[]}[]}
+ * @returns {{id: string, name: string, tagline: string, regions: string[], slugs: string[]}[]}
  */
-export function splitSeason(entries, { id, name, tagline }, maxSize = 60) {
+export function splitSeason(entries, { id, name, tagline }, maxSize = 150) {
   if (!entries.length) return [];
+  const regionsOf = (list) => [...new Set(list.map((entry) => entry.region).filter(Boolean))].sort();
   const whole = () => [
     {
       id,
       name,
       tagline,
-      categories: [...new Set(entries.map((entry) => entry.category))].sort(),
+      regions: regionsOf(entries),
       slugs: entries.map((entry) => entry.slug),
     },
   ];
-  if (maxSize < 1) return whole();
+  if (!(maxSize >= 1) || entries.length <= maxSize) return whole();
 
-  // 1. Regroupement par catégorie.
-  const byCategory = new Map();
-  for (const entry of entries) {
-    const bucket = byCategory.get(entry.category);
-    if (bucket) bucket.push(entry);
-    else byCategory.set(entry.category, [entry]);
+  const pieces = [];
+  for (let index = 0; index < entries.length; index += maxSize) {
+    pieces.push(entries.slice(index, index + maxSize));
   }
 
-  // 2. Remplissage glouton.
-  const packed = [];
-  let current = [];
-  for (const bucket of byCategory.values()) {
-    if (current.length && current.length + bucket.length > maxSize) {
-      packed.push(current);
-      current = [];
-    }
-    if (bucket.length > maxSize) {
-      // 3. Catégorie à elle seule trop grosse : découpage en tranches.
-      for (let index = 0; index < bucket.length; index += maxSize) {
-        packed.push(bucket.slice(index, index + maxSize));
-      }
-      continue;
-    }
-    current.push(...bucket);
-  }
-  if (current.length) packed.push(current);
-
-  if (packed.length === 1) return whole();
-
-  return packed.map((chunk, index) => ({
+  return pieces.map((chunk, index) => ({
     id: `${id}-${index + 1}`,
-    name: `${name} · ${index + 1}/${packed.length}`,
+    name: `${name} · ${index + 1}/${pieces.length}`,
     tagline,
-    categories: [...new Set(chunk.map((entry) => entry.category))].sort(),
+    regions: regionsOf(chunk),
     slugs: chunk.map((entry) => entry.slug),
   }));
 }
@@ -80,7 +61,7 @@ export function familyIdOf(seasonId) {
   return String(seasonId).replace(/-\d+$/, "");
 }
 
-/** Numéro de morceau d'une saison (1 pour une famille entière). */
+/** Numéro de vague d'une saison (1 pour une famille entière). */
 export function pieceOf(seasonId) {
   const match = /-(\d+)$/.exec(String(seasonId));
   return match ? Number(match[1]) : 1;

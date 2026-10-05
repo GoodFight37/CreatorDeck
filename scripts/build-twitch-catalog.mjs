@@ -43,14 +43,17 @@
  *   --seed FILE      réutilise une découverte existante au lieu d'interroger Twitch
  *   --force          re-télécharge les portraits déjà présents
  *
- * Étiquettes : pour une chaîne **hors direct**, Twitch n'expose que le dernier
- * jeu programmé (`broadcastSettings`), souvent périmé — d'où des têtes
- * d'affiche légendaires étiquetées « Among Us » ou « Magic: The Gathering »
- * alors qu'elles font du talk. Le générateur ne garde ce jeu que s'il
- * correspond à une catégorie modélisée par `src/data/seasons.config.json` ;
- * sinon l'entrée prend « Variété & Live », que la première catégorie réellement
- * observée remplacera. Règle isolée et testée :
- * `scripts/lib/curated-category.mjs`, `src/lib/curated-category.test.ts`.
+ * Familles : chaque créateur est classé par **langue de diffusion**
+ * (`Stream.language`), pas par jeu joué — un streameur change de jeu toutes les
+ * semaines, pas de langue, et Twitch ne publie de toute façon aucun jeu pour
+ * une chaîne hors direct. Hors direct, on retombe sur le groupe de la liste
+ * curée, puis sur « Sans frontière ». Le champ `region` écrit ici est la seule
+ * clé du découpage en saisons de l'application.
+ *
+ * Étiquettes de jeu : elles restent **observées**, jamais déduites d'un
+ * `broadcastSettings` périmé (c'est ce qui affichait « ibai → Among Us »). Hors
+ * direct, l'étiquette est « Variété & Live », et la famille, elle, reste
+ * juste.
  *
  * Le périmètre retenu est écrit dans `src/data/catalog.config.json` (scope,
  * label, accroches) : l'application n'a aucun libellé « FR » en dur, elle lit
@@ -77,10 +80,16 @@ import {
   scopeConfig,
   scopeLogLabel,
 } from "./lib/catalog-scope.mjs";
-import { FALLBACK_CATEGORY, curatedCategory } from "./lib/curated-category.mjs";
+import { regionIdForLanguage } from "./lib/regions.mjs";
 import { rarityCounts, rarityForRank } from "./lib/rarity-ladder.mjs";
 
 const ROOT = process.cwd();
+/**
+ * Familles de collection (langues), lues depuis `src/data/seasons.config.json`
+ * au démarrage : la même source de vérité que l'application, sinon un créateur
+ * pourrait être classé dans une famille que l'app ne connaît pas.
+ */
+const REGIONS = { families: [], catchAllId: "S99" };
 const OUT_DIR = path.join(ROOT, "public/creators");
 // Rapport interne (artefact de génération) : hors de public/ pour ne pas
 // l'exposer sur le site.
@@ -128,58 +137,88 @@ const CANDIDATE_TARGET = Math.max(COUNT * 2, 620);
 
 
 /**
- * Chaînes mondiales incontournables, résolues par login.
+ * Chaînes mondiales incontournables, groupées **par famille de collection**.
  *
  * Rôle : garantir que les têtes d'affiche **entrent dans le catalogue même
  * quand elles ne sont pas en direct** au moment de la génération. Le classement
- * final reste dominé par les followers réels (le boost ci-dessous ne fait que
- * les faire émerger, il ne les propulse pas artificiellement en tête).
+ * final reste dominé par les followers réels (le boost ne fait que les faire
+ * émerger, il ne les propulse pas en tête).
  *
- * Un login inexistant n'est pas une erreur : l'API renvoie `null` et l'entrée
- * est simplement ignorée.
+ * Le groupe sert de famille de repli : une chaîne en direct est classée d'après
+ * la langue qu'elle diffuse **observée à ce moment-là** ; hors direct, Twitch ne
+ * publie aucune langue, donc on retombe sur ce classement — qui est justement
+ * à quoi sert une liste curée. Un login inexistant est ignoré sans erreur.
+ *
+ * Les identifiants de famille sont ceux de `src/data/seasons.config.json` :
+ * S01 francophonie, S02 hispanophonie, S03 lusophonie, S04 anglophonie,
+ * S05 Europe du Nord & germanique, S06 Europe de l'Est, S07 Europe du Sud,
+ * S08 Asie, S09 Moyen-Orient & Afrique.
  */
-const CURATED_WORLD_LOGINS = [
-  // Amérique du Nord
-  "xqc", "kaicenat", "ninja", "shroud", "jynxzi", "tarik", "summit1g", "ishowspeed",
-  "adinross", "hasanabi", "trainwreckstv", "sodapoppin", "asmongold", "tyler1",
-  "doublelift", "pokimane", "lilypichu", "sykkuno", "valkyrae", "mizkif", "nmplol",
-  "esfandtv", "greekgodx", "forsen", "lirik", "drdisrespect", "timthetatman",
-  "cloakzy", "nickmercs", "couragejd", "scump", "nadeshot", "amouranth", "alinity",
-  "pokelawls", "qtcinderella", "emiru", "extraemily", "cyr", "willneff", "ludwig",
-  "penguinz0", "caseoh_", "ohnepixel", "s1mple", "loserfruit", "lazarbeam",
-  "muselk", "typicalgamer", "tommyinnit", "philza", "dream", "georgenotfound",
-  "sapnap", "karljacobs", "quackity",
-  // Amérique latine et Espagne
-  "ibai", "auronplay", "rubius", "thegrefg", "xokas", "illojuan", "rivers_gg",
-  "spreen", "elmariana", "juansguarnizo", "missasinfonia", "coscu", "carola",
-  // Brésil et Portugal
-  "gaules", "casimito", "alanzoka", "loud_coringa", "baiano", "cellbit", "felps",
-  // Allemagne
-  "trymacs", "montanablack88", "knossi", "papaplatte", "rewinside",
-  // Corée, Japon, Océanie
-  "faker", "kato_junichi0817",
-  // Pologne, Italie, Turquie, Russie
-  "ewroon", "baddo", "jahrein", "bratishkinoff", "buster",
+const CURATED_REGIONS = {
   // France (intégrée au classement mondial)
-  "squeezie", "aminematue", "gotaga", "kamet0", "zerator", "domingo", "mastu",
-  "inoxtag", "michou", "antoinedaniel", "mistermv", "etoiles", "ponce", "bagherajones",
-  "horty", "ultia", "angledroit", "maghla", "locklear", "sardoche", "terracid",
-  "laink", "wankilstudio", "joyca", "amixem", "mcflyetcarlito", "jltomy",
-  "rebeudeter", "zacknani", "rivenzi", "littlebigwhale", "jeel", "gom4rt", "poko",
-  "alphacast", "fildrong", "bob_lennon", "aypierre", "doigby", "shaunz", "traytonlol",
-  "anyme023", "nico_la", "sylvainlyve", "byilhann", "clemquicourt", "maximebiaggi",
-  "lucasmorotv", "hugodelire", "wissksr", "nikof", "anaee", "mynthos", "dfg",
-  "jolavanille", "deujna", "xari", "kaatsup", "alderiate", "lebouseuh", "chap",
-  "misterjday", "sheshounet", "pollynette", "zevent", "samueletienne", "jeanmassiet",
-  "hugodecrypte", "notabene", "at0mium", "kenbogard", "kayane", "shisheyu_mayamoto",
-  "damdamdeo", "lutti", "kotei", "wakz", "lrb", "narkuss", "skyyart", "gobgg",
-  "nisqy", "hanssama", "cabochardlol", "saken_lol", "targamas", "rhobalas_lol",
-  "solary", "karminecorp", "gentlemates", "vitality", "mandatory", "chowh1",
-  "wisethug", "brokybrawks", "skyroz", "moman", "jirayalol", "krl_stream", "1pvcs",
-  "shaiiko", "sixquatre", "vatira_", "zenrl", "kaydop", "fairy_peak", "alpha54",
-  "ferra", "kinstaar", "airwaks", "valouzz", "pidi", "theodort", "avamin", "snakou",
-  "gaspow", "loupiote", "modiiie",
-];
+  S01: [
+    "squeezie", "aminematue", "gotaga", "kamet0", "zerator", "domingo", "mastu",
+    "inoxtag", "michou", "antoinedaniel", "mistermv", "etoiles", "ponce", "bagherajones",
+    "horty", "ultia", "angledroit", "maghla", "locklear", "sardoche", "terracid",
+    "laink", "wankilstudio", "joyca", "amixem", "mcflyetcarlito", "jltomy",
+    "rebeudeter", "zacknani", "rivenzi", "littlebigwhale", "jeel", "gom4rt", "poko",
+    "alphacast", "fildrong", "bob_lennon", "aypierre", "doigby", "shaunz", "traytonlol",
+    "anyme023", "nico_la", "sylvainlyve", "byilhann", "clemquicourt", "maximebiaggi",
+    "lucasmorotv", "hugodelire", "wissksr", "nikof", "anaee", "mynthos", "dfg",
+    "jolavanille", "deujna", "xari", "kaatsup", "alderiate", "lebouseuh", "chap",
+    "misterjday", "sheshounet", "pollynette", "zevent", "samueletienne", "jeanmassiet",
+    "hugodecrypte", "notabene", "at0mium", "kenbogard", "kayane", "shisheyu_mayamoto",
+    "damdamdeo", "lutti", "kotei", "wakz", "lrb", "narkuss", "skyyart", "gobgg",
+    "nisqy", "hanssama", "cabochardlol", "saken_lol", "targamas", "rhobalas_lol",
+    "solary", "karminecorp", "gentlemates", "vitality", "mandatory", "chowh1",
+    "wisethug", "brokybrawks", "skyroz", "moman", "jirayalol", "krl_stream", "1pvcs",
+    "shaiiko", "sixquatre", "vatira_", "zenrl", "kaydop", "fairy_peak", "alpha54",
+    "ferra", "kinstaar", "airwaks", "valouzz", "pidi", "theodort", "avamin", "snakou",
+    "gaspow", "loupiote", "modiiie",
+  ],
+  // Espagne et Amérique latine hispanophone
+  S02: [
+    "ibai", "auronplay", "rubius", "thegrefg", "xokas", "illojuan", "rivers_gg",
+    "spreen", "elmariana", "juansguarnizo", "missasinfonia", "coscu", "carola",
+  ],
+  // Brésil et Portugal
+  S03: [
+    "gaules", "casimito", "alanzoka", "loud_coringa", "baiano", "cellbit", "felps",
+  ],
+  // Amérique du Nord et Océanie anglophones
+  S04: [
+    "xqc", "kaicenat", "ninja", "shroud", "jynxzi", "tarik", "summit1g", "ishowspeed",
+    "adinross", "hasanabi", "trainwreckstv", "sodapoppin", "asmongold", "tyler1",
+    "doublelift", "pokimane", "lilypichu", "sykkuno", "valkyrae", "mizkif", "nmplol",
+    "esfandtv", "greekgodx", "forsen", "lirik", "drdisrespect", "timthetatman",
+    "cloakzy", "nickmercs", "couragejd", "scump", "nadeshot", "amouranth", "alinity",
+    "pokelawls", "qtcinderella", "emiru", "extraemily", "cyr", "willneff", "ludwig",
+    "penguinz0", "caseoh_", "ohnepixel", "loserfruit", "lazarbeam", "muselk",
+    "typicalgamer", "tommyinnit", "philza", "dream", "georgenotfound", "sapnap",
+    "karljacobs", "quackity",
+  ],
+  // Allemagne, Benelux et pays nordiques
+  S05: ["trymacs", "montanablack88", "knossi", "papaplatte", "rewinside"],
+  // Europe de l'Est et Russie
+  // s1mple (Ukraine) diffuse en russe et en anglais : famille de l'Est.
+  S06: ["bratishkinoff", "buster", "ewroon", "s1mple"],
+  // Italie, Grèce, Méditerranée
+  S07: ["baddo"],
+  // Corée, Japon, Chine, Asie du Sud-Est
+  S08: ["faker", "kato_junichi0817"],
+  // Turquie, Moyen-Orient, Afrique
+  S09: ["jahrein"],
+};
+
+/** Tous les logins curés, toutes familles confondues. */
+const CURATED_WORLD_LOGINS = Object.values(CURATED_REGIONS).flat();
+
+/** Login → famille de repli (chaîne vue hors direct). */
+const CURATED_REGION_BY_LOGIN = new Map(
+  Object.entries(CURATED_REGIONS).flatMap(([region, logins]) =>
+    logins.map((login) => [login.toLowerCase(), region]),
+  ),
+);
 
 /** Liste curée utilisée quand on génère explicitement un catalogue FR. */
 const CURATED_FR_LOGINS = [
@@ -203,6 +242,9 @@ const CURATED_FR_LOGINS = [
   "kaydop", "fairy_peak", "alpha54", "ferra", "kinstaar", "airwaks", "valouzz", "pidi",
   "lebouseuh", "theodort", "avamin", "snakou", "gaspow", "loupiote", "modiiie"
 ];
+/** Étiquette des chaînes dont on n'observe aucun jeu. */
+const FALLBACK_CATEGORY = "Variété & Live";
+
 const BLOCKED_CATEGORIES = new Set([
   "Slots",
   "Virtual Casino",
@@ -289,6 +331,7 @@ function languageOptions() {
 /** Champs communs à toutes les récupérations de chaînes. */
 const STREAM_NODE_FIELDS = `
   viewersCount
+  language
   game { displayName }
   broadcaster {
     login
@@ -345,6 +388,7 @@ function ingestEdges(edges, fallbackCategory = "Just Chatting") {
       followers: broadcaster.followers?.totalCount || 0,
       viewers: node.viewersCount || 0,
       category,
+      region: regionFor(broadcaster.login, node.language),
       // Catégorie relevée en direct : un fait, pas une déduction.
       live: true,
       avatarUrl: broadcaster.profileImageURL,
@@ -354,17 +398,19 @@ function ingestEdges(edges, fallbackCategory = "Just Chatting") {
 }
 
 /**
- * Catégories réellement modélisées par les familles de saisons
- * (`src/data/seasons.config.json`). Sert à décider si le dernier jeu programmé
- * d'une chaîne hors direct peut lui servir d'étiquette (voir plus bas).
+ * Lit les familles de collection (`src/data/seasons.config.json`).
+ *
+ * Le fichier est obligatoire : sans lui, impossible de classer les chaînes par
+ * langue. Mieux vaut échouer bruyamment que produire 1000 créateurs dans la
+ * mauvaise famille.
  */
-async function loadKnownCategories() {
+async function loadRegionConfig() {
   let raw;
   try {
     raw = await readFile(SEASONS_FILE, "utf8");
   } catch {
     throw new Error(
-      `seasons.config.json introuvable (${SEASONS_FILE}) : impossible d'étiqueter les têtes d'affiche hors direct.`,
+      `seasons.config.json introuvable (${SEASONS_FILE}) : impossible de classer les créateurs par famille.`,
     );
   }
   let config;
@@ -373,11 +419,24 @@ async function loadKnownCategories() {
   } catch (err) {
     throw new Error(`seasons.config.json illisible : ${err.message}`);
   }
-  const known = new Set();
-  for (const season of config.seasons ?? []) {
-    for (const category of season.categories ?? []) known.add(category);
-  }
-  return known;
+  const families = (config.families ?? []).map((family) => ({
+    id: family.id,
+    languages: family.languages ?? [],
+  }));
+  if (!families.length) throw new Error("seasons.config.json : aucune famille déclarée.");
+  REGIONS.families = families;
+  REGIONS.catchAllId = config.catchAll?.id ?? "S99";
+  return { families, catchAllId: REGIONS.catchAllId };
+}
+
+/**
+ * Famille d'une chaîne : langue **observée** d'abord (c'est un fait), repli de
+ * la liste curée ensuite (chaîne hors direct), fourre-tout sinon.
+ */
+function regionFor(login, language) {
+  const observed = regionIdForLanguage(language, REGIONS.families, "");
+  if (observed) return observed;
+  return CURATED_REGION_BY_LOGIN.get(String(login).toLowerCase()) ?? REGIONS.catchAllId;
 }
 
 /**
@@ -390,7 +449,7 @@ async function loadKnownCategories() {
  * part dans « Variété & Live », et la première catégorie réelle observée la
  * remplacera. Règle testée : `src/lib/curated-category.test.ts`.
  */
-async function fetchCuratedUsers(logins, knownCategories) {
+async function fetchCuratedUsers(logins) {
   const uniqueLogins = [...new Set(logins.map((l) => l.toLowerCase()))];
   const results = [];
   const chunkSize = 25;
@@ -400,7 +459,7 @@ async function fetchCuratedUsers(logins, knownCategories) {
     const fields = chunk
       .map(
         (login, idx) =>
-          `u${idx}: user(login: "${login.replace(/[^a-z0-9_]/g, "")}") { id login displayName followers { totalCount } profileImageURL(width: 300) stream { viewersCount game { displayName } } broadcastSettings { game { displayName } } }`,
+          `u${idx}: user(login: "${login.replace(/[^a-z0-9_]/g, "")}") { id login displayName followers { totalCount } profileImageURL(width: 300) stream { viewersCount language game { displayName } } broadcastSettings { game { displayName } } }`,
       )
       .join("\n");
     const body = await gqlRequest(`query { ${fields} }`);
@@ -408,12 +467,10 @@ async function fetchCuratedUsers(logins, knownCategories) {
     for (let idx = 0; idx < chunk.length; idx += 1) {
       const u = data[`u${idx}`];
       if (!u || !u.login || !isValidAvatar(u.profileImageURL)) continue;
-      const category = curatedCategory({
-        liveGame: u.stream?.game?.displayName,
-        lastGame: u.broadcastSettings?.game?.displayName,
-        knownCategories,
-        fallback: FALLBACK_CATEGORY,
-      });
+      // Jeu observé en direct uniquement : hors direct, Twitch ne publie que le
+      // dernier jeu *programmé*, qui peut dater de plusieurs mois — l'afficher
+      // reviendrait à inventer une étiquette (« ibai → Among Us »).
+      const category = u.stream?.game?.displayName || FALLBACK_CATEGORY;
       if (BLOCKED_CATEGORIES.has(category)) continue;
       results.push({
         login: u.login.toLowerCase(),
@@ -421,6 +478,7 @@ async function fetchCuratedUsers(logins, knownCategories) {
         followers: u.followers?.totalCount || 0,
         viewers: u.stream?.viewersCount || 0,
         category,
+        region: regionFor(u.login, u.stream?.language),
         // Vrai seulement si la chaîne était en direct : une étiquette déduite
         // du dernier jeu programmé ne doit jamais battre un fait observé.
         live: Boolean(u.stream?.game?.displayName),
@@ -649,7 +707,8 @@ async function buildCatalog(candidates) {
         slug: item.slug,
         displayName: item.displayName,
         login: item.login,
-        category: item.category || "Just Chatting",
+        category: item.category || FALLBACK_CATEGORY,
+        region: item.region || REGIONS.catchAllId,
         rarity: rarityForRank(rank, COUNT),
         rank,
         followers: item.followers,
@@ -707,6 +766,7 @@ async function main() {
   }
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(REPORTS_DIR, { recursive: true });
+  await loadRegionConfig();
   console.log(
     `Catalogue CreatorDeck — objectif ${COUNT} créateurs, périmètre ` +
       `${LANGUAGES.length ? LANGUAGES.join("/") : "mondial"}, portraits ${AVATAR_PX}px, ` +
@@ -724,7 +784,7 @@ async function main() {
     console.log(
       `1/4 Résolution des têtes d'affiche ${SCOPE_IS_FR ? "FR" : "mondiales"} (${curatedLogins.length} logins curés)…`,
     );
-    const curated = await fetchCuratedUsers(curatedLogins, await loadKnownCategories());
+    const curated = await fetchCuratedUsers(curatedLogins);
     const offline = curated.filter((creator) => !creator.viewers).length;
     console.log(
       `   -> ${curated.length} créateurs incontournables résolus` +
@@ -755,6 +815,8 @@ async function main() {
         } else if (!existing.category || existing.category === FALLBACK_CATEGORY) {
           existing.category = item.category;
         }
+        // Même logique pour la famille : une langue observée bat un repli curé.
+        if (item.region && (item.live || !existing.region)) existing.region = item.region;
       }
     }
     allCandidates = [...byLogin.values()].sort((a, b) => score(b) - score(a));

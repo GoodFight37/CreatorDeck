@@ -1022,6 +1022,8 @@ input:focus-visible {
 .settings-row strong { font-size: 10px; }
 .settings-row span { color: var(--muted); font-size: 8px; }
 .success-icon { color: var(--green); }
+/* Réglage éteint (son coupé) : présent mais discret, pas une erreur. */
+.muted-icon { color: var(--muted); opacity: .45; }
 .settings-icon.red { color: #ff8b9c; background: rgba(255,109,130,.1); }
 .settings-action { width: 100%; color: inherit; text-align: left; background: transparent; cursor: pointer; font: inherit; transition: background 150ms ease; }
 .settings-action:active { background: rgba(255,255,255,.04); }

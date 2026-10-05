@@ -9,7 +9,23 @@ export type Creator = {
   slug: string;
   displayName: string;
   login: string;
+  /**
+   * Dernière catégorie Twitch observée : le jeu joué **au moment de la
+   * génération**, ou « Variété & Live » pour une chaîne hors direct (Twitch ne
+   * publie alors que le dernier jeu programmé, qui n'est pas une information
+   * fiable — voir `scripts/lib/curated-category.mjs`).
+   *
+   * Ce n'est plus un axe de collection : la famille d'un créateur est sa langue
+   * (`region`). La catégorie reste utile à la recherche.
+   */
   category: string;
+  /**
+   * Famille de collection : identifiant d'une famille de
+   * `src/data/seasons.config.json` (langue de diffusion). Absent d'un catalogue
+   * généré avant l'arrivée des régions — l'application le range alors dans
+   * « Sans frontière ».
+   */
+  region?: string;
   rarity: Rarity;
   rank: number;
   followers?: number;

@@ -113,71 +113,81 @@ function validateCreators(creators, expectedSize) {
   return creators;
 }
 
-/** Vérifie le découpage des saisons (source : seasons.config.json). */
-function validateSeasons(creators, config) {
-  const seen = new Map();
-  for (const season of config.seasons) {
-    if (!season.id || !season.name) fail(`seasons.config.json : saison sans identifiant ou nom.`);
-    const members = creators.filter((creator) => season.categories.includes(creator.category));
-    if (!members.length) fail(`Saison ${season.id} : aucune catégorie ne correspond au catalogue.`);
-    for (const category of season.categories) {
-      if (seen.has(category)) {
-        fail(`Catégorie « ${category} » présente dans ${seen.get(category)} et ${season.id}.`);
+/**
+ * Vérifie les familles de collection (source : seasons.config.json).
+ *
+ * Depuis la bascule « langues » : le générateur écrit un champ `region` sur
+ * chaque créateur (sa langue de diffusion), la configuration décrit les
+ * familles, et le rapport applique **le même découpage en vagues que
+ * l'application** (module partagé) — sinon le rapport annoncerait une famille de
+ * 276 créateurs là où l'app en affiche déjà deux vagues.
+ */
+function validateRegions(creators, config) {
+  const families = config.families ?? [];
+  const catchAll = config.catchAll ?? { id: "S99", name: "Sans frontière", maxSize: 150 };
+  const waveSize = config.waveSize ?? 150;
+  if (!families.length) fail("seasons.config.json : aucune famille déclarée.");
+
+  const seenIds = new Set();
+  const seenLanguages = new Map();
+  for (const family of families) {
+    if (!family.id || !family.name) fail("seasons.config.json : famille sans identifiant ou nom.");
+    if (seenIds.has(family.id)) fail(`seasons.config.json : famille ${family.id} déclarée deux fois.`);
+    seenIds.add(family.id);
+    for (const language of family.languages ?? []) {
+      if (seenLanguages.has(language)) {
+        fail(`Langue « ${language} » présente dans ${seenLanguages.get(language)} et ${family.id}.`);
       }
-      seen.set(category, season.id);
+      seenLanguages.set(language, family.id);
     }
   }
 
-  const known = new Set(creators.map((creator) => creator.category));
-  const unassigned = [...known].filter((category) => !seen.has(category));
-  const missing = [...seen.keys()].filter((category) => !known.has(category));
-  // Une catégorie listée mais absente du catalogue n'est pas une erreur : le
-  // jeu peut simplement ne plus être streamé (le cas arrive à chaque
-  // régénération). On le signale pour que la config reste propre.
-  if (missing.length) {
-    warn(`Catégories listées mais absentes du catalogue : ${missing.join(", ")}.`);
+  const known = new Set(families.map((family) => family.id));
+  const unknown = creators.filter((creator) => !creator.region || !known.has(creator.region));
+  // Un catalogue antérieur aux régions n'a pas ce champ : ce n'est pas une
+  // erreur, tout tombe dans « Sans frontière » en attendant la régénération.
+  if (unknown.length) {
+    warn(
+      `${unknown.length} créateurs sans famille connue → « ${catchAll.name} » ` +
+        `(catalogue généré avant les régions ? relance npm run catalog:source).`,
+    );
   }
-  for (const season of config.seasons) {
-    const members = creators.filter((creator) => season.categories.includes(creator.category));
-    if (!members.length) {
-      warn(`Saison ${season.id} (${season.name}) sans créateur : elle sera ignorée par l'app.`);
-    }
+  const empty = families.filter(
+    (family) => !creators.some((creator) => creator.region === family.id),
+  );
+  if (empty.length) {
+    warn(`Familles sans créateur dans ce catalogue : ${empty.map((family) => family.id).join(", ")}.`);
+  }
+  if (catchAll.id && known.has(catchAll.id)) {
+    fail(`seasons.config.json : la famille fourre-tout ${catchAll.id} est aussi déclarée comme famille.`);
   }
 
-  const covered = creators.filter((creator) => seen.has(creator.category)).length;
+  const entriesOf = (list) =>
+    list.map((creator) => ({ slug: creator.slug, region: creator.region }));
+
   return {
-    unassigned,
-    covered,
+    covered: creators.length - unknown.length,
+    unassigned: unknown.length,
     catchAll: {
-      id: config.catchAll.id,
-      name: config.catchAll.name,
-      creators: creators.length - covered,
-      maxSize: config.catchAll.maxSize,
-      // Tailles réelles des morceaux du fourre-tout (même découpage que l'app).
+      id: catchAll.id,
+      name: catchAll.name,
+      creators: unknown.length,
+      maxSize: catchAll.maxSize ?? waveSize,
+      // Tailles réelles des vagues du fourre-tout (même découpage que l'app).
       sizes: splitSeason(
-        creators
-          .filter((creator) => !seen.has(creator.category))
-          .map((creator) => ({ slug: creator.slug, category: creator.category })),
-        {
-          id: config.catchAll.id,
-          name: config.catchAll.name,
-          tagline: config.catchAll.tagline ?? "",
-        },
-        config.catchAll.maxSize ?? 60,
+        entriesOf(unknown),
+        { id: catchAll.id, name: catchAll.name, tagline: catchAll.tagline ?? "" },
+        catchAll.maxSize ?? waveSize,
       ).map((piece) => piece.slugs.length),
     },
-    // Morceaux réels : on applique le **même** découpage que l'application
-    // (module partagé), sinon le rapport annonce 170 créateurs là où l'app en
-    // affiche deux morceaux de 150 et 20.
-    seasons: config.seasons.map((season) => {
-      const members = creators
-        .filter((creator) => season.categories.includes(creator.category))
-        .map((creator) => ({ slug: creator.slug, category: creator.category }));
-      const pieces = splitSeason(members, season, seasonMaxSize(config));
+    // Vagues réelles : on applique le même découpage que l'application.
+    seasons: families.map((family) => {
+      const members = entriesOf(creators.filter((creator) => creator.region === family.id));
+      const pieces = splitSeason(members, family, waveSize);
       return {
-        id: season.id,
-        name: season.name,
-        categories: season.categories.length,
+        id: family.id,
+        name: family.name,
+        languages: (family.languages ?? []).length,
         creators: members.length,
         pieces: pieces.map((piece) => ({ id: piece.id, size: piece.slugs.length })),
       };
@@ -261,7 +271,7 @@ async function main() {
 
   validateCreators(creators, expectedSize);
   validateRates(rates);
-  const seasonReport = validateSeasons(creators, seasonsConfig);
+  const seasonReport = validateRegions(creators, seasonsConfig);
 
   // --- Portraits : ce qui part réellement dans l'APK -----------------------
   // Contrôlé ici, avant le rapport d'erreurs : en mode strict, un portrait
@@ -332,15 +342,15 @@ async function main() {
             .join(" + ")})`
         : "";
     console.log(
-      `   ${season.id} ${season.name} — ${season.creators} créateurs (${season.categories} catégories)${split}`,
+      `   ${season.id} ${season.name} — ${season.creators} créateurs (${season.languages} langue(s))${split}`,
     );
   }
   if (seasonReport.catchAll.creators) {
-    const maxSize = seasonReport.catchAll.maxSize ?? 60;
+    const maxSize = seasonReport.catchAll.maxSize ?? 150;
     const sizes = seasonReport.catchAll.sizes ?? [];
     const chunks = sizes.length || Math.max(1, Math.ceil(seasonReport.catchAll.creators / maxSize));
     console.log(
-      `   ${seasonReport.catchAll.id} ${seasonReport.catchAll.name} — ${seasonReport.catchAll.creators} créateurs (catégories non listées)` +
+      `   ${seasonReport.catchAll.id} ${seasonReport.catchAll.name} — ${seasonReport.catchAll.creators} créateurs (langues non listées ou inconnues)` +
         (chunks > 1 ? ` → découpée en ${chunks} saisons de ≤ ${maxSize}` : ""),
     );
   }
