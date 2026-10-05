@@ -4,8 +4,8 @@
  * Le stockage est injecté (interface `KeyValueStorage`) : `window.localStorage`
  * en production (navigateur, PWA, WebView Capacitor), une Map en test.
  *
- * Une sauvegarde d'une version antérieure est migrée à la lecture (voir
- * `migrateState`) : passer en v2 (Atelier + saisons) ne fait perdre aucune
+ * Une sauvegarde d'une version antérieure est migrée à la lecture : passer en
+ * v2 (Atelier + saisons) ou en v3 (paliers de saison) ne fait perdre aucune
  * collection.
  */
 import { CREATOR_BY_SLUG, PACKS, type CardVariant, type Rarity } from "@/lib/catalog";
@@ -19,9 +19,9 @@ import { SEASON_BY_ID } from "@/lib/seasons";
 /** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
 /** Clés des versions précédentes, migrées puis supprimées à la lecture. */
-export const LEGACY_SAVE_KEYS = ["creatordeck.save.v1"] as const;
+export const LEGACY_SAVE_KEYS = ["creatordeck.save.v2", "creatordeck.save.v1"] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -75,6 +75,31 @@ function sanitizeCard(value: unknown): OwnedCard | null {
   };
 }
 
+/**
+ * Paliers réclamés par saison.
+ *
+ * v3 stocke `{ seasonId: nombreDePaliers }`. Les sauvegardes v1/v2 stockaient
+ * `claimedSeasons: string[]`, où réclamer une saison la soldait d'un bloc : on
+ * les migre en créditant tous les paliers, ce qui laisse le total de points et
+ * de sabliers identique (la répartition par paliers somme exactement l'ancienne
+ * récompense unique).
+ */
+function sanitizeClaimedTiers(value: unknown, legacySeasons: unknown): Record<string, number> {
+  const claimed: Record<string, number> = {};
+  if (isRecord(value)) {
+    for (const [seasonId, count] of Object.entries(value)) {
+      const season = SEASON_BY_ID.get(seasonId);
+      if (!season) continue;
+      claimed[seasonId] = Math.min(season.tiers.length, nonNegativeInt(count, 0));
+    }
+  }
+  for (const seasonId of sanitizeSeasons(legacySeasons)) {
+    const season = SEASON_BY_ID.get(seasonId);
+    if (season) claimed[seasonId] = Math.max(claimed[seasonId] ?? 0, season.tiers.length);
+  }
+  return claimed;
+}
+
 function sanitizeSeasons(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
@@ -124,7 +149,7 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     lastArchiveRegen: epochMs(raw.lastArchiveRegen, now),
     openings: nonNegativeInt(raw.openings, 0),
     cards: uniqueCards,
-    claimedSeasons: sanitizeSeasons(raw.claimedSeasons),
+    claimedTiers: sanitizeClaimedTiers(raw.claimedTiers, raw.claimedSeasons),
   };
 }
 

@@ -4,14 +4,32 @@
  * complétion intermédiaires entre « 1 carte » et le catalogue entier.
  *
  * Le découpage vit dans `src/data/seasons.config.json` ; tout est calculé ici à
- * partir du catalogue, donc aucune donnée ne peut se désynchroniser. Une
- * saison est complète quand tous ses créateurs sont possédés : le joueur peut
- * alors réclamer sa récompense (points + sabliers) depuis l'écran Objectifs.
+ * partir du catalogue, donc aucune donnée ne peut se désynchroniser. Chaque
+ * saison est jalonnée de paliers (25/50/75/100 %) que le joueur réclame depuis
+ * l'écran Objectifs : les points tombent en cours de route, le dernier palier
+ * donne les sabliers et l'emblème de la famille.
  */
 import seasonConfig from "@/data/seasons.config.json";
 import { CREATORS } from "@/lib/catalog";
 
 export type SeasonReward = { points: number; hourglasses: number };
+
+/**
+ * Palier de progression d'une saison, façon trophées (bronze → arc-en-ciel).
+ *
+ * Une saison ne paie plus uniquement à 100 % : chaque palier débloqué crédite
+ * sa part de points, et le dernier donne les sabliers et l'emblème de la
+ * famille. Les seuils sont relatifs (25/50/75/100 %), donc une saison reste
+ * jouable quelle que soit sa taille après découpage.
+ */
+export type SeasonTier = {
+  label: string;
+  /** Nombre de créateurs de la saison à posséder pour débloquer le palier. */
+  required: number;
+  reward: SeasonReward;
+  /** Le dernier palier est celui de la saison complète : il donne l'emblème. */
+  emblem: boolean;
+};
 
 export type Season = {
   id: string;
@@ -20,7 +38,7 @@ export type Season = {
   /** Catégories Twitch couvertes (vide pour la saison fourre-tout). */
   categories: string[];
   slugs: string[];
-  reward: SeasonReward;
+  tiers: SeasonTier[];
 };
 
 type SeasonDefinition = { id: string; name: string; tagline: string; categories: string[] };
@@ -46,11 +64,52 @@ const DEFAULT_SEASON_MAX = 150;
 
 const CONFIG = seasonConfig as SeasonConfig;
 
-function rewardFor(size: number): SeasonReward {
-  return {
-    points: CONFIG.pointsPerCreator * size,
-    hourglasses: CONFIG.hourglassesPerSeason,
-  };
+/** Libellés des paliers, du plus accessible au plus rare. */
+const TIER_LABELS = ["Bronze", "Argent", "Or", "Arc-en-ciel"] as const;
+/** Parts du total de points attribuées aux paliers (cumulées à l'usage). */
+const TIER_SHARES = [0.15, 0.4, 0.7, 1];
+
+/**
+ * Seuils d'une saison de `size` créateurs : 25 %, 50 %, 75 % et 100 %, toujours
+ * strictement croissants et jamais supérieurs à la taille. Une petite saison a
+ * donc moins de paliers (jamais deux paliers identiques ni un palier
+ * inatteignable).
+ */
+function tierThresholds(size: number): number[] {
+  const thresholds: number[] = [];
+  for (const share of [0.25, 0.5, 0.75, 1]) {
+    const wanted = Math.max(Math.ceil(share * size), (thresholds.at(-1) ?? 0) + 1);
+    const bounded = Math.min(size, wanted);
+    if (bounded !== thresholds.at(-1)) thresholds.push(bounded);
+  }
+  return thresholds;
+}
+
+/**
+ * Paliers d'une saison. Les points sont répartis par cumul arrondi : la somme
+ * des paliers retombe **exactement** sur le total historique
+ * (`pointsPerCreator × taille`), donc l'économie du jeu ne bouge pas — elle est
+ * simplement versée en cours de route au lieu d'attendre la complétion.
+ */
+function tiersFor(size: number): SeasonTier[] {
+  const thresholds = tierThresholds(size);
+  const totalPoints = CONFIG.pointsPerCreator * size;
+  const shares = TIER_SHARES.slice(0, thresholds.length);
+  shares[shares.length - 1] = 1;
+
+  let previous = 0;
+  return thresholds.map((required, index) => {
+    const cumulative = Math.round(totalPoints * shares[index]);
+    const points = Math.max(1, cumulative - previous);
+    previous = cumulative;
+    const last = index === thresholds.length - 1;
+    return {
+      label: TIER_LABELS[index] ?? TIER_LABELS[TIER_LABELS.length - 1],
+      required,
+      reward: { points, hourglasses: last ? CONFIG.hourglassesPerSeason : 0 },
+      emblem: last,
+    };
+  });
 }
 
 /** Entrée d'une saison : le slug et la catégorie Twitch, pour décrire chaque morceau. */
@@ -68,7 +127,7 @@ function toSeason(
     // d'une saison reste exacte, même découpée.
     categories: [...new Set(entries.map((entry) => entry.category))].sort(),
     slugs: entries.map((entry) => entry.slug),
-    reward: rewardFor(entries.length),
+    tiers: tiersFor(entries.length),
   };
 }
 

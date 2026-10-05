@@ -167,7 +167,9 @@ réglages à ajuster, tous dans des fichiers de données.
    - Si tu veux des objectifs plus courts, baisse `seasonMaxSize` ; si tu
      préfères des saisons plus thématiques, déplace des catégories dans un
      groupe dédié plutôt que de monter la limite.
-   - `pointsPerCreator` × taille de saison donne la récompense : à 2000, les
+   - `pointsPerCreator` × taille de saison donne le total des points distribués
+     par les paliers (aucun réglage à faire : le total est le même qu'avant les
+     paliers, il est simplement versé en quatre fois). À 2000, les
      saisons rapportent mécaniquement plus de points.
 2. **Boosters** (`src/lib/catalog.ts` → `PACKS`)
    - **Rien à changer à 1000.** La simulation donne 30 jours pour la moitié du

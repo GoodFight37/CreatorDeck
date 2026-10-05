@@ -1201,6 +1201,20 @@ input:focus-visible {
 .season-state { display: flex; align-items: center; gap: 4px; color: var(--muted-2); font-size: 9px; }
 .season-state.done { color: var(--green); }
 .season-claim { display: flex; align-items: center; gap: 5px; padding: 7px 11px; color: #2a1b06; border: 0; border-radius: 9px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 9px; font-weight: 900; cursor: pointer; }
+.season-summary { display: flex; align-items: center; gap: 7px; }
+.season-pending { padding: 4px 8px; color: #ffe1ad; border: 1px solid rgba(255,190,85,.3); border-radius: 999px; background: rgba(255,190,85,.1); font-size: 8px; font-weight: 800; letter-spacing: .03em; }
+.season-title { display: flex; align-items: center; gap: 8px; }
+/* Paliers : le jalon franchi se colore, le jalon réclamé passe au vert. */
+.season-tiers { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.season-tier { display: flex; align-items: center; gap: 3px; padding: 3px 7px; color: var(--muted-2); border: 1px solid var(--line); border-radius: 999px; font-size: 8px; font-weight: 700; letter-spacing: .02em; }
+.season-tier span { opacity: .6; font-size: 7px; }
+.season-tier.reached { color: #ffd9a0; border-color: rgba(255,190,85,.34); background: rgba(255,190,85,.08); }
+.season-tier.claimed { color: var(--green); border-color: rgba(80,217,160,.32); background: rgba(80,217,160,.09); }
+/* Emblèmes : monogramme coloré dérivé de la saison, aucune image importée. */
+.emblem { display: grid; flex: 0 0 auto; place-items: center; color: #fff; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.45), 0 2px 8px rgba(0,0,0,.35); font-weight: 900; letter-spacing: .01em; animation: emblem-in 420ms cubic-bezier(.2,.9,.25,1.3) both; }
+.emblem-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 10px; }
+.emblem-strip-label { display: flex; align-items: center; gap: 4px; margin-right: 3px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+@keyframes emblem-in { from { transform: scale(.55) rotate(-14deg); opacity: 0; } to { transform: none; opacity: 1; } }
 
 /* ---------- Taux de drop ---------- */
 .odds-link { display: flex; width: 100%; align-items: center; gap: 7px; margin-top: 10px; padding: 10px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.02); font-size: 9px; font-weight: 700; cursor: pointer; }

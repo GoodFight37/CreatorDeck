@@ -101,11 +101,16 @@ Principes :
   se méritent en booster, comme les raretés hautes non échangeables de TCG
   Pocket.
 - **Saisons** (écran Objectifs) : les créateurs sont répartis en familles de
-  jeux (`src/data/seasons.config.json`, 7 groupes aujourd'hui) ; compléter une
-  famille débloque une récompense à réclamer. Le découpage est vérifié par les
-  tests : chaque créateur appartient à exactement une saison, et toute saison
-  qui grossit (famille mondiale ou fourre-tout « Découverte ») est découpée
-  automatiquement en morceaux (`seasonMaxSize`, `catchAll.maxSize`).
+  jeux (`src/data/seasons.config.json`, 7 groupes aujourd'hui). Chaque famille
+  est jalonnée de **quatre paliers** (Bronze → Arc-en-ciel, à 25/50/75/100 %)
+  qui créditent leurs points en cours de route ; le dernier palier donne les
+  sabliers et l'**emblème** de la famille (un monogramme coloré dérivé de la
+  saison, affiché dans le bandeau « Emblèmes »). La répartition est vérifiée par
+  les tests : la somme des paliers vaut exactement l'ancienne récompense unique,
+  donc l'économie du jeu ne bouge pas. Le découpage aussi est vérifié : chaque
+  créateur appartient à exactement une saison, et toute saison qui grossit
+  (famille mondiale ou fourre-tout « Découverte ») est découpée automatiquement
+  en morceaux (`seasonMaxSize`, `catchAll.maxSize`).
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing.

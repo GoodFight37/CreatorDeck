@@ -25,10 +25,10 @@ import {
   type Rarity,
 } from "@/lib/catalog";
 import { PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
-import { SEASONS, SEASON_BY_ID, type SeasonReward } from "@/lib/seasons";
+import { SEASONS, SEASON_BY_ID, type SeasonReward, type SeasonTier } from "@/lib/seasons";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 2 as const;
+export const SAVE_VERSION = 3 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -82,9 +82,18 @@ export type PlayerState = {
   lastArchiveRegen: number;
   openings: number;
   cards: OwnedCard[];
-  /** Identifiants des saisons dont la récompense a déjà été réclamée. */
-  claimedSeasons: string[];
+  /**
+   * Nombre de paliers déjà réclamés par saison (`seasonId` → compteur).
+   *
+   * Les paliers d'une saison se réclament dans l'ordre : stocker le compteur
+   * suffit, et une sauvegarde v1/v2 (où la saison entière se réclamait d'un
+   * bloc) se migre en créditant tous ses paliers.
+   */
+  claimedTiers: Record<string, number>;
 };
+
+/** Palier prêt à afficher : débloqué et/ou déjà réclamé. */
+export type SeasonTierView = SeasonTier & { unlocked: boolean; claimed: boolean };
 
 /** Vue dérivée d'une saison, prête à afficher. */
 export type SeasonView = {
@@ -95,8 +104,17 @@ export type SeasonView = {
   owned: number;
   total: number;
   complete: boolean;
+  /** Tous les paliers sont réclamés. */
   claimed: boolean;
-  reward: SeasonReward;
+  /** Nombre de paliers débloqués mais pas encore réclamés. */
+  claimable: number;
+  /** Points encore à récupérer sur les paliers débloqués. */
+  claimablePoints: number;
+  /** Sabliers encore à récupérer (0 sauf si le dernier palier est débloqué). */
+  claimableHourglasses: number;
+  tiers: SeasonTierView[];
+  /** Emblème gagné : le dernier palier est réclamé. */
+  emblem: boolean;
 };
 
 /** Vue dérivée consommée par l'interface. */
@@ -153,7 +171,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     lastArchiveRegen: now,
     openings: 0,
     cards: [],
-    claimedSeasons: [],
+    claimedTiers: {},
   };
 }
 
@@ -467,12 +485,21 @@ export function craftCreator(
   };
 }
 
-/** Progression des saisons : complétion et récompense à réclamer. */
+/** Progression des saisons : complétion, paliers débloqués et à réclamer. */
 export function seasonViews(state: PlayerState): SeasonView[] {
   const owned = ownedSlugs(state);
-  const claimed = new Set(state.claimedSeasons);
   return SEASONS.map((season) => {
     const count = season.slugs.filter((slug) => owned.has(slug)).length;
+    const claimedCount = Math.min(
+      state.claimedTiers[season.id] ?? 0,
+      season.tiers.length,
+    );
+    const tiers: SeasonTierView[] = season.tiers.map((tier, index) => ({
+      ...tier,
+      unlocked: count >= tier.required,
+      claimed: index < claimedCount,
+    }));
+    const pending = tiers.filter((tier) => tier.unlocked && !tier.claimed);
     return {
       id: season.id,
       name: season.name,
@@ -481,13 +508,23 @@ export function seasonViews(state: PlayerState): SeasonView[] {
       owned: count,
       total: season.slugs.length,
       complete: count >= season.slugs.length,
-      claimed: claimed.has(season.id),
-      reward: season.reward,
+      claimed: claimedCount >= season.tiers.length && season.tiers.length > 0,
+      claimable: pending.length,
+      claimablePoints: pending.reduce((sum, tier) => sum + tier.reward.points, 0),
+      claimableHourglasses: pending.reduce((sum, tier) => sum + tier.reward.hourglasses, 0),
+      tiers,
+      emblem: claimedCount >= season.tiers.length && season.tiers.length > 0,
     };
   });
 }
 
-/** Réclame la récompense d'une saison complète (points + sabliers). */
+/**
+ * Réclame les paliers débloqués d'une saison (points de chaque palier, plus les
+ * sabliers et l'emblème sur le dernier).
+ *
+ * Tous les paliers franchis et non réclamés sont crédités d'un coup : inutile
+ * de cliquer quatre fois pour la même saison.
+ */
 export function claimSeason(
   state: PlayerState,
   seasonId: string,
@@ -497,13 +534,21 @@ export function claimSeason(
   if (!season) {
     throw new GameError("Saison inconnue.", "UNKNOWN_SEASON");
   }
-  if (state.claimedSeasons.includes(seasonId)) {
+  const claimedCount = Math.min(state.claimedTiers[seasonId] ?? 0, season.tiers.length);
+  if (claimedCount >= season.tiers.length) {
     throw new GameError("Récompense déjà réclamée.", "SEASON_CLAIMED");
   }
+
   const owned = ownedSlugs(state);
-  if (!season.slugs.every((slug) => owned.has(slug))) {
+  const ownedCount = season.slugs.filter((slug) => owned.has(slug)).length;
+  const unlocked = season.tiers.filter(
+    (tier, index) => index >= claimedCount && ownedCount >= tier.required,
+  );
+  if (!unlocked.length) {
+    const next = season.tiers[claimedCount];
+    const missing = Math.max(1, next.required - ownedCount);
     throw new GameError(
-      "Saison incomplète : découvre tous ses créateurs d'abord.",
+      `Saison incomplète : ${missing} créateur${missing > 1 ? "s" : ""} manquant${missing > 1 ? "s" : ""} pour « ${next.label} ».`,
       "SEASON_INCOMPLETE",
     );
   }
@@ -511,9 +556,10 @@ export function claimSeason(
   return {
     ...state,
     updatedAt: now,
-    points: state.points + season.reward.points,
-    hourglasses: state.hourglasses + season.reward.hourglasses,
-    claimedSeasons: [...state.claimedSeasons, seasonId],
+    points: state.points + unlocked.reduce((sum, tier) => sum + tier.reward.points, 0),
+    hourglasses:
+      state.hourglasses + unlocked.reduce((sum, tier) => sum + tier.reward.hourglasses, 0),
+    claimedTiers: { ...state.claimedTiers, [seasonId]: claimedCount + unlocked.length },
   };
 }
 

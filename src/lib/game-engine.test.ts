@@ -6,6 +6,7 @@ import {
   GameError,
   HOURGLASSES_PER_LEVEL,
   HOURGLASS_REDUCTION_MS,
+  SAVE_VERSION,
   XP_PER_LEVEL,
   claimSeason,
   craftCreator,
@@ -40,7 +41,7 @@ describe("createInitialState", () => {
   it("donne les ressources de départ", () => {
     const state = createInitialState(T0);
     expect(state).toMatchObject({
-      version: 2,
+      version: SAVE_VERSION,
       level: 1,
       xp: 0,
       points: 120,
@@ -49,7 +50,7 @@ describe("createInitialState", () => {
       archivePacks: 1,
       openings: 0,
       cards: [],
-      claimedSeasons: [],
+      claimedTiers: {},
       createdAt: T0,
     });
     expect(state.playerId).toMatch(/^[0-9a-f-]{36}$/);
@@ -406,13 +407,60 @@ describe("saisons", () => {
 
     expect(seasonViews(state).find((view) => view.id === season.id)?.complete).toBe(true);
     const next = claimSeason(state, season.id, T0);
-    expect(next.points).toBe(season.reward.points);
-    expect(next.hourglasses).toBe(season.reward.hourglasses);
-    expect(next.claimedSeasons).toEqual([season.id]);
-    expect(seasonViews(next).find((view) => view.id === season.id)?.claimed).toBe(true);
+    // Saison complète : tous les paliers sont soldés d'un coup, donc le total
+    // reste celui d'avant l'introduction des paliers.
+    const points = season.tiers.reduce((sum, tier) => sum + tier.reward.points, 0);
+    const hourglasses = season.tiers.reduce((sum, tier) => sum + tier.reward.hourglasses, 0);
+    expect(next.points).toBe(points);
+    expect(next.hourglasses).toBe(hourglasses);
+    expect(next.claimedTiers[season.id]).toBe(season.tiers.length);
+    const view = seasonViews(next).find((entry) => entry.id === season.id);
+    expect(view?.claimed).toBe(true);
+    expect(view?.emblem).toBe(true);
+    expect(view?.claimable).toBe(0);
 
     expect(() => claimSeason(next, season.id, T0)).toThrowError(/déjà/i);
     expect(() => claimSeason(makeState(), season.id, T0)).toThrowError(/incomplète/i);
     expect(() => claimSeason(next, "S99", T0)).toThrowError(/inconnue/i);
+  });
+
+  it("paie les paliers au fur et à mesure, dans l'ordre", () => {
+    const season = [...SEASONS].sort((a, b) => a.slugs.length - b.slugs.length)[0];
+    const [first, second] = season.tiers;
+    // Un seul palier franchi : la saison n'est pas complète mais paie déjà.
+    const partial = makeState({
+      cards: season.slugs.slice(0, first.required).map((slug) => {
+        const creator = CREATORS.find((entry) => entry.slug === slug) as (typeof CREATORS)[number];
+        return ownedCard(`card-${slug}`, slug, creator.rarity);
+      }),
+      points: 0,
+      hourglasses: 0,
+    });
+
+    const view = seasonViews(partial).find((entry) => entry.id === season.id);
+    expect(view?.complete).toBe(false);
+    expect(view?.claimable).toBe(1);
+    expect(view?.claimablePoints).toBe(first.reward.points);
+    expect(view?.claimableHourglasses).toBe(0);
+
+    const claimedOnce = claimSeason(partial, season.id, T0);
+    expect(claimedOnce.points).toBe(first.reward.points);
+    expect(claimedOnce.hourglasses).toBe(0);
+    expect(claimedOnce.claimedTiers[season.id]).toBe(1);
+    expect(seasonViews(claimedOnce).find((entry) => entry.id === season.id)?.claimable).toBe(0);
+
+    // Rien de nouveau à réclamer tant que le palier suivant n'est pas atteint.
+    expect(() => claimSeason(claimedOnce, season.id, T0)).toThrowError(/incomplète/i);
+
+    // Un palier intermédiaire de plus : un seul clic solde les deux.
+    const further = makeState({ ...claimedOnce, cards: partial.cards.concat(
+      season.slugs.slice(first.required, second.required).map((slug) => {
+        const creator = CREATORS.find((entry) => entry.slug === slug) as (typeof CREATORS)[number];
+        return ownedCard(`card-${slug}`, slug, creator.rarity);
+      }),
+    ) });
+    const claimedTwice = claimSeason(further, season.id, T0);
+    expect(claimedTwice.points).toBe(first.reward.points + second.reward.points);
+    expect(claimedTwice.claimedTiers[season.id]).toBe(2);
   });
 });

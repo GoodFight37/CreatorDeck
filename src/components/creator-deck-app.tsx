@@ -902,12 +902,19 @@ export function CreatorDeckApp() {
   }
 
   function handleClaimSeason(seasonId: string) {
+    // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
+    const before = game?.seasons.find((entry) => entry.id === seasonId);
     try {
       gameStore.claimSeason(seasonId);
-      const season = game?.seasons.find((entry) => entry.id === seasonId);
+      const parts = [
+        before && before.claimablePoints > 0 ? `+${before.claimablePoints} points` : "",
+        before && before.claimableHourglasses > 0 ? `+${before.claimableHourglasses} sabliers` : "",
+        before && before.claimable > 1 ? `${before.claimable} paliers` : "",
+      ].filter(Boolean);
+      const emblem = before?.tiers.some((tier) => tier.emblem && !tier.claimed && tier.unlocked);
       showNotice(
-        season
-          ? `Saison ${season.id} complétée : +${season.reward.points} points et +${season.reward.hourglasses} sabliers.`
+        before
+          ? `Saison ${before.id} : ${parts.join(", ") || "récompense réclamée"}${emblem ? " — emblème obtenu !" : ""}`
           : "Récompense de saison réclamée.",
       );
     } catch (caught) {

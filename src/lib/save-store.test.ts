@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { PACKS } from "@/lib/catalog";
-import { createInitialState, openPack } from "@/lib/game-engine";
+import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
+import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
 import {
   LEGACY_SAVE_KEYS,
   SAVE_KEY,
@@ -62,7 +63,7 @@ describe("sanitizeState", () => {
     expect(sanitizeState(null)).toBeNull();
     expect(sanitizeState("x")).toBeNull();
     expect(sanitizeState({})).toBeNull();
-    expect(sanitizeState({ ...createInitialState(T0), version: 3 })).toBeNull();
+    expect(sanitizeState({ ...createInitialState(T0), version: SAVE_VERSION + 1 })).toBeNull();
     expect(sanitizeState({ ...createInitialState(T0), cards: "nope" })).toBeNull();
   });
 
@@ -97,7 +98,7 @@ describe("sanitizeState", () => {
 
 describe("migration", () => {
   it("met à niveau une sauvegarde v1 sans perdre la collection", () => {
-    const legacy = LEGACY_SAVE_KEYS[0];
+    const legacy = "creatordeck.save.v1";
     const v1 = {
       ...createInitialState(T0),
       version: 1,
@@ -112,22 +113,58 @@ describe("migration", () => {
 
     const state = loadState(storage, T0 + 5);
     expect(state).not.toBeNull();
-    expect(state?.version).toBe(2);
+    expect(state?.version).toBe(3);
     expect(state?.points).toBe(310);
     expect(state?.cards).toEqual([
       { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0, rareDrop: false },
     ]);
     // La sauvegarde migrée est réécrite sous la clé courante, l'ancienne disparaît.
-    expect(state?.claimedSeasons).toEqual([]);
+    expect(state?.claimedTiers).toEqual({});
     expect(storage.data.has(legacy)).toBe(false);
-    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(2);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(3);
     expect(loadState(storage, T0 + 6)).toEqual(state);
   });
 
-  it("filtre les saisons réclamées inconnues", () => {
-    const raw = { ...createInitialState(T0), claimedSeasons: ["S01", "inconnue", 42, "S01"] };
-    expect(sanitizeState(raw, T0)?.claimedSeasons).toEqual(["S01"]);
-    expect(sanitizeState({ ...createInitialState(T0), claimedSeasons: "S01" }, T0)?.claimedSeasons).toEqual([]);
+  it("convertit une saison réclamée en v2 en tous ses paliers", () => {
+    // En v2 une saison se soldait d'un bloc : la migration doit créditer tous
+    // les paliers, sinon le joueur perdrait la récompense déjà touchée.
+    const first = SEASONS[0];
+    const second = SEASONS[1];
+    const v2 = {
+      ...createInitialState(T0),
+      version: 2,
+      claimedSeasons: [first.id, second.id, "S99"],
+    };
+    delete (v2 as Record<string, unknown>).claimedTiers;
+
+    const storage = memoryStorage();
+    storage.setItem("creatordeck.save.v2", JSON.stringify(v2));
+    const state = loadState(storage, T0 + 5);
+
+    expect(state?.version).toBe(3);
+    expect(state?.claimedTiers[first.id]).toBe(first.tiers.length);
+    expect(state?.claimedTiers[second.id]).toBe(second.tiers.length);
+    // Une saison inconnue ne crée pas de palier fantôme.
+    expect(Object.keys(state?.claimedTiers ?? {})).toEqual([first.id, second.id]);
+    // Le total récupéré reste celui de l'ancienne récompense unique.
+    const view = { tiers: SEASON_BY_ID.get(first.id)?.tiers ?? [] };
+    expect(view.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(first.slugs.length * 4);
+  });
+
+  it("filtre les paliers réclamés inconnus et borne les compteurs", () => {
+    const season = SEASONS[0];
+    const raw = {
+      ...createInitialState(T0),
+      claimedTiers: { [season.id]: 99, inconnue: 2, autre: "3" },
+    };
+    expect(sanitizeState(raw, T0)?.claimedTiers).toEqual({ [season.id]: season.tiers.length });
+
+    expect(
+      sanitizeState({ ...createInitialState(T0), claimedTiers: "S01" }, T0)?.claimedTiers,
+    ).toEqual({});
+    expect(
+      sanitizeState({ ...createInitialState(T0), claimedTiers: { [season.id]: -4 } }, T0)?.claimedTiers,
+    ).toEqual({ [season.id]: 0 });
   });
 });
 

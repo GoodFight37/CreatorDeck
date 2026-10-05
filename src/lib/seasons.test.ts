@@ -3,18 +3,64 @@ import { CREATORS } from "@/lib/catalog";
 import { SEASONS, emptySeasonIds, seasonOf, seasonsCoverage, splitSeason } from "@/lib/seasons";
 
 describe("seasons", () => {
-  it("a des identifiants uniques et des récompenses cohérentes", () => {
+  it("a des identifiants uniques et des paliers cohérents", () => {
     const ids = SEASONS.map((season) => season.id);
     expect(new Set(ids).size).toBe(ids.length);
 
     for (const season of SEASONS) {
       expect(season.slugs.length).toBeGreaterThan(0);
-      expect(season.reward.points).toBeGreaterThan(0);
-      expect(season.reward.hourglasses).toBeGreaterThan(0);
+      expect(season.tiers.length).toBeGreaterThan(0);
+      // Seuils croissants, jamais au-delà de la taille de la saison.
+      const required = season.tiers.map((tier) => tier.required);
+      expect([...required].sort((a, b) => a - b)).toEqual(required);
+      expect(new Set(required).size).toBe(required.length);
+      expect(Math.max(...required)).toBe(season.slugs.length);
+      for (const tier of season.tiers) {
+        expect(tier.reward.points).toBeGreaterThan(0);
+        expect(tier.required).toBeGreaterThan(0);
+      }
+      // Les sabliers et l'emblème sont réservés à la saison complète.
+      expect(season.tiers.at(-1)?.emblem).toBe(true);
+      expect(season.tiers.slice(0, -1).every((tier) => !tier.emblem)).toBe(true);
+      expect(season.tiers.slice(0, -1).every((tier) => tier.reward.hourglasses === 0)).toBe(true);
+      expect(season.tiers.at(-1)?.reward.hourglasses).toBeGreaterThan(0);
       for (const slug of season.slugs) {
         expect(seasonOf(slug)).toBe(season);
       }
     }
+  });
+
+  it("répartit exactement l'ancienne récompense unique en paliers", () => {
+    // L'économie du jeu ne bouge pas : la somme des paliers vaut le total
+    // historique (pointsPerCreator × taille, sabliers de la saison).
+    for (const season of SEASONS) {
+      const points = season.tiers.reduce((sum, tier) => sum + tier.reward.points, 0);
+      const hourglasses = season.tiers.reduce((sum, tier) => sum + tier.reward.hourglasses, 0);
+      expect(points).toBe(season.slugs.length * 4);
+      expect(hourglasses).toBe(3);
+    }
+  });
+
+  it("donne moins de paliers à une petite saison, jamais de doublon", () => {
+    const small = splitSeason(
+      [
+        { slug: "a", category: "Jeu" },
+        { slug: "b", category: "Jeu" },
+        { slug: "c", category: "Jeu" },
+      ],
+      { id: "T01", name: "Test", tagline: "" },
+      60,
+    )[0];
+    expect(small.slugs.length).toBe(3);
+    // 3 créateurs ne peuvent pas produire 4 paliers distincts.
+    expect(small.tiers.length).toBe(3);
+    expect(small.tiers.map((tier) => tier.required)).toEqual([1, 2, 3]);
+    expect(small.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(12);
+
+    const single = splitSeason([{ slug: "a", category: "Jeu" }], { id: "T02", name: "Solo", tagline: "" }, 60)[0];
+    expect(single.tiers.length).toBe(1);
+    expect(single.tiers[0].required).toBe(1);
+    expect(single.tiers[0].emblem).toBe(true);
   });
 
   it("ne classe chaque créateur que dans sa propre catégorie Twitch", () => {
