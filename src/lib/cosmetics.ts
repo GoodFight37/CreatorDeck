@@ -1,10 +1,15 @@
 /**
  * Cosmétiques de collection : des thèmes qui re-tintent le classeur.
  *
+ * Unité de référence : la **famille**, pas la saison. Une grande famille est
+ * découpée en plusieurs saisons pour rester un objectif jouable, mais elle reste
+ * une identité : une teinte, un emblème, un thème — sinon un « Accueil & IRL »
+ * coupé en deux produirait deux badges identiques et deux thèmes clonés.
+ *
  * Rien à importer — un thème n'est qu'un jeu de variables CSS et une condition
- * de déblocage. Compléter une famille de jeux (son emblème, donc son dernier
- * palier) débloque la teinte de cette famille, et compléter **toutes** les
- * familles débloque le thème « Grand chelem ».
+ * de déblocage. **Tous** les morceaux d'une famille réclamés débloquent la
+ * teinte de cette famille, et compléter toutes les familles débloque le thème
+ * « Grand chelem ».
  *
  * Les thèmes sont dérivés du catalogue comme le reste : si une famille
  * apparaît, disparaît ou se découpe à la régénération, les thèmes suivent sans
@@ -24,8 +29,8 @@ export type ThemeTokens = {
 /** Condition d'obtention d'un thème. */
 export type ThemeUnlock =
   | { kind: "starter" }
-  | { kind: "season"; seasonId: string }
-  | { kind: "all-seasons" };
+  | { kind: "family"; familyId: string }
+  | { kind: "all-families" };
 
 export type CollectionTheme = {
   id: string;
@@ -47,9 +52,35 @@ const FAMILY_HUES = [268, 232, 205, 176, 318, 342, 14, 34, 96, 148];
 /** Ordre des familles dans la configuration, indexé sans les suffixes de découpage. */
 const FAMILY_INDEX = new Map<string, number>();
 for (const season of SEASONS) {
-  const base = season.id.replace(/-\d+$/, "");
-  if (!FAMILY_INDEX.has(base)) FAMILY_INDEX.set(base, FAMILY_INDEX.size);
+  if (!FAMILY_INDEX.has(season.familyId)) FAMILY_INDEX.set(season.familyId, FAMILY_INDEX.size);
 }
+
+/**
+ * Familles du catalogue : une famille = une ou plusieurs saisons (morceaux).
+ * L'ordre suit celui de la configuration, donc il est stable d'une
+ * régénération à l'autre tant que la config ne bouge pas.
+ */
+export type Family = { id: string; name: string; seasonIds: string[] };
+
+export const FAMILIES: Family[] = (() => {
+  const byId = new Map<string, Family>();
+  for (const season of SEASONS) {
+    const existing = byId.get(season.familyId);
+    if (existing) {
+      existing.seasonIds.push(season.id);
+      continue;
+    }
+    byId.set(season.familyId, {
+      id: season.familyId,
+      // « Accueil & IRL · 1/2 » → « Accueil & IRL ».
+      name: season.name.split(" · ")[0] ?? season.name,
+      seasonIds: [season.id],
+    });
+  }
+  return [...byId.values()];
+})();
+
+export const FAMILY_BY_ID = new Map(FAMILIES.map((family) => [family.id, family]));
 
 /**
  * Teinte stable d'une famille, partagée par les emblèmes et les thèmes.
@@ -97,12 +128,15 @@ const STARTER: CollectionTheme = {
 };
 
 /** Un thème par famille, dans l'ordre du catalogue. */
-const SEASON_THEMES: CollectionTheme[] = SEASONS.map((season) => ({
-  id: `theme-${season.id}`,
-  name: season.name,
-  description: `Débloqué par l'emblème de la saison ${season.id}.`,
-  unlock: { kind: "season", seasonId: season.id },
-  tokens: tokensFor(seasonHue(season.id)),
+const FAMILY_THEMES: CollectionTheme[] = FAMILIES.map((family) => ({
+  id: `theme-${family.id}`,
+  name: family.name,
+  description:
+    family.seasonIds.length > 1
+      ? `Débloqué en complétant les ${family.seasonIds.length} saisons de la famille.`
+      : `Débloqué par l'emblème de la famille ${family.id}.`,
+  unlock: { kind: "family", familyId: family.id },
+  tokens: tokensFor(seasonHue(family.id)),
 }));
 
 /** Récompense d'achèvement total : toutes les familles complétées. */
@@ -110,7 +144,7 @@ const GRAND_SLAM: CollectionTheme = {
   id: GRAND_SLAM_THEME_ID,
   name: "Grand chelem",
   description: "Toutes les familles complétées : le classeur passe à l'arc-en-ciel.",
-  unlock: { kind: "all-seasons" },
+  unlock: { kind: "all-families" },
   tokens: {
     purple: "hsl(280 90% 68%)",
     purpleLight: "hsl(315 95% 86%)",
@@ -119,7 +153,7 @@ const GRAND_SLAM: CollectionTheme = {
   },
 };
 
-export const THEMES: CollectionTheme[] = [STARTER, ...SEASON_THEMES, GRAND_SLAM];
+export const THEMES: CollectionTheme[] = [STARTER, ...FAMILY_THEMES, GRAND_SLAM];
 
 export const THEME_BY_ID = new Map(THEMES.map((theme) => [theme.id, theme]));
 
@@ -132,6 +166,9 @@ export function themeById(id: string | undefined): CollectionTheme | undefined {
 /** Description lisible de ce qui reste à faire pour obtenir le thème. */
 export function unlockHint(theme: CollectionTheme): string {
   if (theme.unlock.kind === "starter") return "Disponible d'emblée";
-  if (theme.unlock.kind === "all-seasons") return "Complète toutes les familles";
-  return `Complète la saison ${theme.unlock.seasonId}`;
+  if (theme.unlock.kind === "all-families") return "Complète toutes les familles";
+  const family = FAMILY_BY_ID.get(theme.unlock.familyId);
+  return family && family.seasonIds.length > 1
+    ? `Complète la famille ${theme.unlock.familyId} (${family.seasonIds.length} saisons)`
+    : `Complète la famille ${theme.unlock.familyId}`;
 }

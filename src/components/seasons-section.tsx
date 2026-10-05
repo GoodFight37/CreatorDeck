@@ -2,8 +2,7 @@
 
 import { Award, Check, Coins, Hourglass, Lock, Unlock } from "lucide-react";
 import type { SeasonView } from "@/lib/game-engine";
-import { SEASON_BY_ID } from "@/lib/seasons";
-import { seasonHue } from "@/lib/cosmetics";
+import { FAMILY_BY_ID, seasonHue } from "@/lib/cosmetics";
 
 /**
  * Emblème d'une saison : un monogramme coloré, gagné en complétant la famille.
@@ -13,13 +12,13 @@ import { seasonHue } from "@/lib/cosmetics";
  * saisons différentes ne peuvent donc pas avoir le même emblème, et une
  * régénération du catalogue ne les casse pas.
  */
-export function seasonEmblem(seasonId: string) {
-  const season = SEASON_BY_ID.get(seasonId);
-  const base = seasonId.replace(/-\d+$/, "");
+export function seasonEmblem(familyId: string) {
+  const family = FAMILY_BY_ID.get(familyId);
   // Même source de vérité que les thèmes de collection : un emblème et son
-  // thème partagent la teinte de la famille.
-  const hue = seasonHue(seasonId);
-  const name = season?.name ?? seasonId;
+  // thème partagent la teinte de la famille. L'emblème est unique par famille :
+  // une famille découpée en morceaux n'en produit pas plusieurs.
+  const hue = seasonHue(familyId);
+  const name = family?.name ?? familyId;
   const monogram = name
     .replace(/[^\p{L}\p{N} ]/gu, " ")
     .split(/\s+/)
@@ -27,7 +26,7 @@ export function seasonEmblem(seasonId: string) {
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase() ?? "")
     .join("");
-  return { hue, monogram: monogram || base.slice(0, 2).toUpperCase(), name };
+  return { hue, monogram: monogram || familyId.slice(0, 2).toUpperCase(), name };
 }
 
 function Emblem({ seasonId, size = 26 }: { seasonId: string; size?: number }) {
@@ -69,7 +68,9 @@ export function SeasonsSection({
       season.claimable > 0 ? 0 : season.claimed ? 2 : 1;
     return rank(a) - rank(b) || a.total - b.total;
   });
-  const emblems = ordered.filter((season) => season.emblem);
+  // Une famille = un emblème, même si elle est découpée en plusieurs morceaux.
+  const emblemFamilies = [...new Set(ordered.filter((s) => s.familyComplete).map((s) => s.familyId))];
+  const familyCount = new Set(seasons.map((season) => season.familyId)).size;
   const pending = ordered.reduce((sum, season) => sum + season.claimablePoints, 0);
 
   return (
@@ -87,13 +88,13 @@ export function SeasonsSection({
         </div>
       </div>
 
-      {emblems.length > 0 ? (
+      {emblemFamilies.length > 0 ? (
         <div className="emblem-strip">
           <span className="emblem-strip-label">
-            <Award size={12} /> Emblèmes {emblems.length}/{seasons.length}
+            <Award size={12} /> Emblèmes {emblemFamilies.length}/{familyCount}
           </span>
-          {emblems.map((season) => (
-            <Emblem key={season.id} seasonId={season.id} />
+          {emblemFamilies.map((familyId) => (
+            <Emblem key={familyId} seasonId={familyId} />
           ))}
         </div>
       ) : null}
@@ -109,7 +110,7 @@ export function SeasonsSection({
             >
               <div className="season-head">
                 <div className="season-title">
-                  {season.emblem ? <Emblem seasonId={season.id} size={22} /> : null}
+                  {season.familyComplete ? <Emblem seasonId={season.familyId} size={22} /> : null}
                   <div>
                     <strong>
                       {season.id} · {season.name}
@@ -160,9 +161,14 @@ export function SeasonsSection({
                     <Unlock size={14} /> Réclamer
                     {season.claimable > 1 ? ` ${season.claimable} paliers` : ""}
                   </button>
-                ) : season.claimed ? (
+                ) : season.familyComplete ? (
                   <span className="season-state done">
                     <Award size={13} /> Emblème obtenu
+                  </span>
+                ) : season.claimed ? (
+                  <span className="season-state done">
+                    <Check size={13} />
+                    {season.pieces > 1 ? `Morceau ${season.piece}/${season.pieces} terminé` : "Terminée"}
                   </span>
                 ) : (
                   <span className="season-state">

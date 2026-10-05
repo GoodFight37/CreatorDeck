@@ -134,6 +134,31 @@ d'images). `src/data/catalog.config.json` passera tout seul à
 `"expectedSize": 1000` et `"label": "Top 1000 Twitch"` : aucun composant à
 toucher.
 
+### Après la génération : lire la sortie de `catalog:check`
+
+Le rapport affiche les familles **telles que l'application les découpe** :
+
+```text
+S01 Accueil & IRL — 170 créateurs (7 catégories) → découpée en 2 morceaux (150 + 20)
+S07 Découverte — 376 créateurs (catégories non listées) → découpée en 7 saisons de ≤ 60
+```
+
+Deux avertissements sont normaux après une génération mondiale :
+
+- **« Catégories listées mais absentes du catalogue »** : la liste de
+  `src/data/seasons.config.json` vise large (jeux prévus, sortis récemment). Un
+  jeu absent n'est qu'une ligne de config inutilisée ; l'application l'ignore.
+  Pour faire taire l'avertissement, retirez la catégorie de la config — ou
+  déplacez-la, si elle doit compter dans une famille dès qu'elle apparaîtra.
+- **« portrait manquant »** : à corriger avec `npm run assets:regen` (le script
+  est reprenable, il ne retélécharge pas ce qui est déjà bon).
+
+En périmètre mondial, le fourre-tout « Découverte » grossit vite : le catalogue
+contient des dizaines de catégories que la config ne liste pas. C'est le
+comportement attendu — le découpage les rend jouables par paquets de 60 —, mais
+si une catégorie récurrente mérite sa famille, ajoutez-la dans la config plutôt
+que de la laisser au fourre-tout.
+
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
 `--force`).

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CREATORS } from "@/lib/catalog";
 import {
   DEFAULT_THEME_ID,
+  FAMILIES,
   GRAND_SLAM_THEME_ID,
   THEMES,
   seasonHue,
@@ -40,7 +41,10 @@ describe("cosmétiques", () => {
   it("déclare un thème par famille, plus le départ et le grand chelem", () => {
     const ids = THEMES.map((theme) => theme.id);
     expect(new Set(ids).size).toBe(ids.length);
-    expect(THEMES.length).toBe(SEASONS.length + 2);
+    // Un thème par famille — pas par saison : une famille découpée en morceaux
+    // ne doit pas produire deux thèmes identiques.
+    expect(THEMES.length).toBe(FAMILIES.length + 2);
+    expect(FAMILIES.length).toBeLessThanOrEqual(SEASONS.length);
     expect(THEMES[0]?.id).toBe(DEFAULT_THEME_ID);
     expect(THEMES.at(-1)?.id).toBe(GRAND_SLAM_THEME_ID);
     for (const theme of THEMES) {
@@ -53,7 +57,7 @@ describe("cosmétiques", () => {
   });
 
   it("teinte les familles de façon distincte et stable", () => {
-    const hues = SEASONS.map((season) => seasonHue(season.id));
+    const hues = FAMILIES.map((family) => seasonHue(family.id));
     expect(new Set(hues).size).toBe(hues.length);
 
     // Deux familles voisines doivent rester visuellement séparables.
@@ -64,12 +68,10 @@ describe("cosmétiques", () => {
       expect(Math.min(gap, wrapped)).toBeGreaterThanOrEqual(15);
     }
 
-    // Un morceau découpé garde la teinte de sa famille.
+    // Un morceau découpé garde la teinte de sa famille (c'est voulu : mêmes
+    // gènes, un seul emblème).
     for (const season of SEASONS) {
-      if (season.id.includes("-")) {
-        const base = season.id.replace(/-\d+$/, "");
-        expect(seasonHue(season.id)).toBe(seasonHue(base));
-      }
+      expect(seasonHue(season.id)).toBe(seasonHue(season.familyId));
     }
     // Un identifiant inconnu reste colorable (pas de plantage).
     expect(seasonHue("Z99")).toBeGreaterThanOrEqual(0);
@@ -86,33 +88,42 @@ describe("cosmétiques", () => {
 
     // Chaque thème de famille annonce ce qu'il reste à faire.
     const locked = themes.find((theme) => !theme.unlocked && theme.id !== GRAND_SLAM_THEME_ID);
-    expect(locked?.unlockHint).toMatch(/Complète la saison/);
+    expect(locked?.unlockHint).toMatch(/Complète la famille/);
   });
 
-  it("débloque la teinte d'une famille avec son emblème", () => {
-    const season = SEASONS[0];
-    const state = makeState({ cards: cardsOfSeason(0) });
-    const themeId = `theme-${season.id}`;
+  it("débloque la teinte d'une famille quand tous ses morceaux sont refermés", () => {
+    const family = FAMILIES[0];
+    const themeId = `theme-${family.id}`;
+    const pieces = family.seasonIds.map((id) => SEASONS.find((season) => season.id === id)!);
 
-    // Saison complète mais paliers non réclamés : pas encore d'emblème.
+    // Tous les morceaux remplis, mais paliers non réclamés : rien de débloqué.
+    let state = makeState({
+      cards: pieces.flatMap((piece) => cardsOfSeason(SEASONS.indexOf(piece))),
+    });
     expect(themeViews(state).find((theme) => theme.id === themeId)?.unlocked).toBe(false);
     expect(() => equipTheme(state, themeId, T0)).toThrowError(/verrouillé/i);
 
-    const claimed = claimSeason(state, season.id, T0);
-    expect(seasonViews(claimed).find((view) => view.id === season.id)?.emblem).toBe(true);
-    expect(themeViews(claimed).find((theme) => theme.id === themeId)?.unlocked).toBe(true);
+    // On réclame les morceaux un par un : la famille ne s'ouvre qu'au dernier.
+    for (const [index, piece] of pieces.entries()) {
+      state = claimSeason(state, piece.id, T0);
+      const view = seasonViews(state).find((entry) => entry.id === piece.id);
+      const last = index === pieces.length - 1;
+      expect(view?.claimed).toBe(true);
+      expect(view?.familyComplete).toBe(last);
+      expect(themeViews(state).find((theme) => theme.id === themeId)?.unlocked).toBe(last);
+    }
 
-    const equipped = equipTheme(claimed, themeId, T0);
+    const equipped = equipTheme(state, themeId, T0);
     expect(equipped.themeId).toBe(themeId);
     expect(activeTheme(equipped).id).toBe(themeId);
     expect(themeViews(equipped).find((theme) => theme.id === themeId)?.equipped).toBe(true);
 
-    expect(() => equipTheme(claimed, "inconnu", T0)).toThrowError(/inconnu/i);
+    expect(() => equipTheme(state, "inconnu", T0)).toThrowError(/inconnu/i);
   });
 
   it("retombe sur le thème d'origine si le thème équipé est verrouillé", () => {
     // Sauvegarde trafiquée : le thème est connu mais pas débloqué.
-    const themeId = `theme-${SEASONS[0].id}`;
+    const themeId = `theme-${FAMILIES[0].id}`;
     const hacked = makeState({ themeId });
     expect(activeTheme(hacked).id).toBe(DEFAULT_THEME_ID);
     expect(themeViews(hacked).find((theme) => theme.id === themeId)?.equipped).toBe(false);

@@ -416,8 +416,12 @@ describe("saisons", () => {
     expect(next.claimedTiers[season.id]).toBe(season.tiers.length);
     const view = seasonViews(next).find((entry) => entry.id === season.id);
     expect(view?.claimed).toBe(true);
-    expect(view?.emblem).toBe(true);
     expect(view?.claimable).toBe(0);
+    // Une famille peut être découpée : elle n'est complète (emblème) que
+    // lorsque tous ses morceaux sont refermés. Ici un seul morceau est rempli,
+    // donc la famille n'est complète que si elle n'en compte qu'un.
+    const piecesInFamily = SEASONS.filter((entry) => entry.familyId === season.familyId).length;
+    expect(view?.familyComplete).toBe(piecesInFamily === 1);
 
     expect(() => claimSeason(next, season.id, T0)).toThrowError(/déjà/i);
     expect(() => claimSeason(makeState(), season.id, T0)).toThrowError(/incomplète/i);

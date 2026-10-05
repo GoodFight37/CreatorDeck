@@ -11,6 +11,7 @@
  */
 import seasonConfig from "@/data/seasons.config.json";
 import { CREATORS } from "@/lib/catalog";
+import { familyIdOf, pieceOf, splitSeason as splitSeasonBase } from "../../scripts/lib/seasons-split.mjs";
 
 export type SeasonReward = { points: number; hourglasses: number };
 
@@ -39,6 +40,19 @@ export type Season = {
   categories: string[];
   slugs: string[];
   tiers: SeasonTier[];
+  /**
+   * Identifiant de la famille (`S01-2` → `S01`).
+   *
+   * Une famille trop grande est découpée en morceaux pour rester un objectif
+   * jouable ; ces morceaux appartiennent toujours à la même famille, ce qui
+   * sert aux cosmétiques : une teinte, un emblème et un thème par famille, pas
+   * par morceau.
+   */
+  familyId: string;
+  /** Numéro du morceau dans sa famille (1 pour une famille entière). */
+  piece: number;
+  /** Vrai si c'est le dernier morceau : c'est lui qui referme la famille. */
+  finalPiece: boolean;
 };
 
 type SeasonDefinition = { id: string; name: string; tagline: string; categories: string[] };
@@ -115,22 +129,6 @@ function tiersFor(size: number): SeasonTier[] {
 /** Entrée d'une saison : le slug et la catégorie Twitch, pour décrire chaque morceau. */
 export type SeasonEntry = { slug: string; category: string };
 
-function toSeason(
-  entries: SeasonEntry[],
-  meta: { id: string; name: string; tagline: string },
-): Season {
-  return {
-    id: meta.id,
-    name: meta.name,
-    tagline: meta.tagline,
-    // Chaque morceau déclare les catégories qu'il contient réellement : la vue
-    // d'une saison reste exacte, même découpée.
-    categories: [...new Set(entries.map((entry) => entry.category))].sort(),
-    slugs: entries.map((entry) => entry.slug),
-    tiers: tiersFor(entries.length),
-  };
-}
-
 /**
  * Découpe une saison en morceaux de taille raisonnable.
  *
@@ -143,52 +141,26 @@ function toSeason(
  *
  * Pure et exportée pour être testable indépendamment du catalogue réel.
  */
+/**
+ * Découpe une saison en morceaux jouables, puis complète chaque morceau avec
+ * ses paliers et son appartenance de famille.
+ *
+ * Le découpage lui-même vit dans `scripts/lib/seasons-split.mjs`, partagé avec
+ * `npm run catalog:check` : les deux ne peuvent pas diverger.
+ */
 export function splitSeason(
   entries: SeasonEntry[],
-  { id, name, tagline }: { id: string; name: string; tagline: string },
+  meta: { id: string; name: string; tagline: string },
   maxSize = DEFAULT_CATCH_ALL_MAX,
 ): Season[] {
-  if (!entries.length) return [];
-  if (maxSize < 1) return [toSeason(entries, { id, name, tagline })];
-
-  // 1. Regroupement par catégorie : un morceau ne mélange pas la moitié d'un
-  //    jeu avec la moitié d'un autre.
-  const byCategory = new Map<string, SeasonEntry[]>();
-  for (const entry of entries) {
-    const bucket = byCategory.get(entry.category);
-    if (bucket) bucket.push(entry);
-    else byCategory.set(entry.category, [entry]);
-  }
-
-  // 2. Remplissage glouton des morceaux, sans jamais dépasser maxSize.
-  const packed: SeasonEntry[][] = [];
-  let current: SeasonEntry[] = [];
-  for (const bucket of byCategory.values()) {
-    if (current.length && current.length + bucket.length > maxSize) {
-      packed.push(current);
-      current = [];
-    }
-    if (bucket.length > maxSize) {
-      // 3. Catégorie à elle seule plus grosse que maxSize (un jeu très
-      //    représenté chez les petits streamers) : on la découpe en tranches.
-      for (let index = 0; index < bucket.length; index += maxSize) {
-        packed.push(bucket.slice(index, index + maxSize));
-      }
-      continue;
-    }
-    current.push(...bucket);
-  }
-  if (current.length) packed.push(current);
-
-  if (packed.length === 1) return [toSeason(packed[0], { id, name, tagline })];
-
-  return packed.map((chunk, index) =>
-    toSeason(chunk, {
-      id: `${id}-${index + 1}`,
-      name: `${name} · ${index + 1}/${packed.length}`,
-      tagline,
-    }),
-  );
+  const pieces = splitSeasonBase(entries, meta, maxSize);
+  return pieces.map((piece, index) => ({
+    ...piece,
+    tiers: tiersFor(piece.slugs.length),
+    familyId: familyIdOf(piece.id),
+    piece: pieceOf(piece.id),
+    finalPiece: index === pieces.length - 1,
+  }));
 }
 
 type BuiltSeasons = {

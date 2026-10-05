@@ -105,12 +105,17 @@ Principes :
   est jalonnée de **quatre paliers** (Bronze → Arc-en-ciel, à 25/50/75/100 %)
   qui créditent leurs points en cours de route ; le dernier palier donne les
   sabliers et l'**emblème** de la famille (un monogramme coloré dérivé de la
-  saison, affiché dans le bandeau « Emblèmes »). La répartition est vérifiée par
-  les tests : la somme des paliers vaut exactement l'ancienne récompense unique,
-  donc l'économie du jeu ne bouge pas. Le découpage aussi est vérifié : chaque
-  créateur appartient à exactement une saison, et toute saison qui grossit
-  (famille mondiale ou fourre-tout « Découverte ») est découpée automatiquement
-  en morceaux (`seasonMaxSize`, `catchAll.maxSize`).
+  famille, affiché dans le bandeau « Emblèmes »).
+- **Une famille trop grande est découpée**, jamais supprimée : en périmètre
+  mondial, « Accueil & IRL » réunit plus de 150 créateurs et devient
+  `S01-1`/`S01-2`, le fourre-tout « Découverte » se découpe par paquets de 60.
+  Les morceaux gardent l'identité de leur famille : **une seule teinte, un seul
+  emblème, un seul thème** — l'emblème s'obtient quand tous les morceaux de la
+  famille sont refermés. Le découpage vit dans `scripts/lib/seasons-split.mjs`,
+  partagé par l'application et par `npm run catalog:check`, donc le rapport ne
+  peut pas afficher autre chose que ce que l'application fait.
+- La répartition des paliers est vérifiée par les tests : leur somme vaut
+  exactement l'ancienne récompense unique, donc l'économie du jeu ne bouge pas.
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing.

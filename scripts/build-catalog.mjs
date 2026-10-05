@@ -15,6 +15,7 @@ import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { splitSeason } from "./lib/seasons-split.mjs";
 
 const ROOT = process.cwd();
 const CHECK_ONLY = process.argv.includes("--check");
@@ -135,14 +136,42 @@ function validateSeasons(creators, config) {
       name: config.catchAll.name,
       creators: creators.length - covered,
       maxSize: config.catchAll.maxSize,
+      // Tailles réelles des morceaux du fourre-tout (même découpage que l'app).
+      sizes: splitSeason(
+        creators
+          .filter((creator) => !seen.has(creator.category))
+          .map((creator) => ({ slug: creator.slug, category: creator.category })),
+        {
+          id: config.catchAll.id,
+          name: config.catchAll.name,
+          tagline: config.catchAll.tagline ?? "",
+        },
+        config.catchAll.maxSize ?? 60,
+      ).map((piece) => piece.slugs.length),
     },
-    seasons: config.seasons.map((season) => ({
-      id: season.id,
-      name: season.name,
-      categories: season.categories.length,
-      creators: creators.filter((creator) => season.categories.includes(creator.category)).length,
-    })),
+    // Morceaux réels : on applique le **même** découpage que l'application
+    // (module partagé), sinon le rapport annonce 170 créateurs là où l'app en
+    // affiche deux morceaux de 150 et 20.
+    seasons: config.seasons.map((season) => {
+      const members = creators
+        .filter((creator) => season.categories.includes(creator.category))
+        .map((creator) => ({ slug: creator.slug, category: creator.category }));
+      const pieces = splitSeason(members, season, seasonMaxSize(config));
+      return {
+        id: season.id,
+        name: season.name,
+        categories: season.categories.length,
+        creators: members.length,
+        pieces: pieces.map((piece) => ({ id: piece.id, size: piece.slugs.length })),
+      };
+    }),
   };
+}
+
+/** Taille maximale d'une saison avant découpage (défaut de l'application : 150). */
+function seasonMaxSize(config) {
+  const value = config.seasonMaxSize;
+  return Number.isFinite(value) && value > 0 ? value : 150;
 }
 
 /** Vérifie les tables de tirage : chaque slot doit être jouable et borné. */
@@ -248,11 +277,20 @@ async function main() {
     );
   }
   for (const season of seasonReport.seasons) {
-    console.log(`   ${season.id} ${season.name} — ${season.creators} créateurs (${season.categories} catégories)`);
+    const split =
+      season.pieces.length > 1
+        ? ` → découpée en ${season.pieces.length} morceaux (${season.pieces
+            .map((piece) => piece.size)
+            .join(" + ")})`
+        : "";
+    console.log(
+      `   ${season.id} ${season.name} — ${season.creators} créateurs (${season.categories} catégories)${split}`,
+    );
   }
   if (seasonReport.catchAll.creators) {
     const maxSize = seasonReport.catchAll.maxSize ?? 60;
-    const chunks = Math.max(1, Math.ceil(seasonReport.catchAll.creators / maxSize));
+    const sizes = seasonReport.catchAll.sizes ?? [];
+    const chunks = sizes.length || Math.max(1, Math.ceil(seasonReport.catchAll.creators / maxSize));
     console.log(
       `   ${seasonReport.catchAll.id} ${seasonReport.catchAll.name} — ${seasonReport.catchAll.creators} créateurs (catégories non listées)` +
         (chunks > 1 ? ` → découpée en ${chunks} saisons de ≤ ${maxSize}` : ""),

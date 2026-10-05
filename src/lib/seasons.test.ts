@@ -10,6 +10,11 @@ describe("seasons", () => {
     for (const season of SEASONS) {
       expect(season.slugs.length).toBeGreaterThan(0);
       expect(season.tiers.length).toBeGreaterThan(0);
+      // Chaque saison appartient à une famille, et les morceaux d'une famille
+      // découpée partagent cette famille (identité visuelle unique).
+      expect(season.familyId.length).toBeGreaterThan(0);
+      expect(season.id === season.familyId || season.id.startsWith(`${season.familyId}-`)).toBe(true);
+      expect(season.piece).toBeGreaterThanOrEqual(1);
       // Seuils croissants, jamais au-delà de la taille de la saison.
       const required = season.tiers.map((tier) => tier.required);
       expect([...required].sort((a, b) => a - b)).toEqual(required);
@@ -38,6 +43,21 @@ describe("seasons", () => {
       const hourglasses = season.tiers.reduce((sum, tier) => sum + tier.reward.hourglasses, 0);
       expect(points).toBe(season.slugs.length * 4);
       expect(hourglasses).toBe(3);
+    }
+  });
+
+  it("marque un seul morceau final par famille", () => {
+    const families = new Map<string, typeof SEASONS>();
+    for (const season of SEASONS) {
+      families.set(season.familyId, [...(families.get(season.familyId) ?? []), season]);
+    }
+    for (const [familyId, pieces] of families) {
+      expect(new Set(pieces.map((piece) => piece.piece)).size).toBe(pieces.length);
+      expect(pieces.map((piece) => piece.piece).sort((a, b) => a - b)).toEqual(
+        pieces.map((_, index) => index + 1),
+      );
+      expect(pieces.filter((piece) => piece.finalPiece).length).toBe(1);
+      expect(pieces.at(-1)?.finalPiece, `famille ${familyId}`).toBe(true);
     }
   });
 

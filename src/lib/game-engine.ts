@@ -126,7 +126,7 @@ export type SeasonView = {
   owned: number;
   total: number;
   complete: boolean;
-  /** Tous les paliers sont réclamés. */
+  /** Tous les paliers **de ce morceau** sont réclamés. */
   claimed: boolean;
   /** Nombre de paliers débloqués mais pas encore réclamés. */
   claimable: number;
@@ -135,8 +135,19 @@ export type SeasonView = {
   /** Sabliers encore à récupérer (0 sauf si le dernier palier est débloqué). */
   claimableHourglasses: number;
   tiers: SeasonTierView[];
-  /** Emblème gagné : le dernier palier est réclamé. */
-  emblem: boolean;
+  /** Famille d'appartenance (`S01-2` → `S01`) : identité visuelle et thème. */
+  familyId: string;
+  /** Numéro du morceau dans sa famille. */
+  piece: number;
+  /** Nombre de morceaux de la famille. */
+  pieces: number;
+  /**
+   * Emblème de la famille gagné : **tous** ses morceaux sont réclamés.
+   *
+   * Une famille découpée pour rester jouable reste une seule identité : elle ne
+   * donne qu'un emblème, à la fin, et non un par morceau.
+   */
+  familyComplete: boolean;
 };
 
 /** Vue dérivée consommée par l'interface. */
@@ -513,12 +524,28 @@ export function craftCreator(
 /** Progression des saisons : complétion, paliers débloqués et à réclamer. */
 export function seasonViews(state: PlayerState): SeasonView[] {
   const owned = ownedSlugs(state);
+  // Nombre de morceaux par famille, pour l'affichage (« morceau 2/2 »).
+  const piecesByFamily = new Map<string, number>();
+  for (const season of SEASONS) {
+    piecesByFamily.set(season.familyId, (piecesByFamily.get(season.familyId) ?? 0) + 1);
+  }
+  // Familles refermées : tous les morceaux entièrement réclamés.
+  const familyClosure = new Map<string, { total: number; closed: number }>();
+  for (const season of SEASONS) {
+    const entry = familyClosure.get(season.familyId) ?? { total: 0, closed: 0 };
+    entry.total += 1;
+    if ((state.claimedTiers[season.id] ?? 0) >= season.tiers.length) entry.closed += 1;
+    familyClosure.set(season.familyId, entry);
+  }
+
   return SEASONS.map((season) => {
     const count = season.slugs.filter((slug) => owned.has(slug)).length;
     const claimedCount = Math.min(
       state.claimedTiers[season.id] ?? 0,
       season.tiers.length,
     );
+    const closure = familyClosure.get(season.familyId);
+    const familyComplete = Boolean(closure && closure.total > 0 && closure.closed === closure.total);
     const tiers: SeasonTierView[] = season.tiers.map((tier, index) => ({
       ...tier,
       unlocked: count >= tier.required,
@@ -538,7 +565,10 @@ export function seasonViews(state: PlayerState): SeasonView[] {
       claimablePoints: pending.reduce((sum, tier) => sum + tier.reward.points, 0),
       claimableHourglasses: pending.reduce((sum, tier) => sum + tier.reward.hourglasses, 0),
       tiers,
-      emblem: claimedCount >= season.tiers.length && season.tiers.length > 0,
+      familyId: season.familyId,
+      piece: season.piece,
+      pieces: piecesByFamily.get(season.familyId) ?? 1,
+      familyComplete,
     };
   });
 }
@@ -549,15 +579,23 @@ export function seasonViews(state: PlayerState): SeasonView[] {
  */
 export function themeViews(state: PlayerState): ThemeView[] {
   const seasons = seasonViews(state);
-  const emblems = new Set(seasons.filter((season) => season.emblem).map((season) => season.id));
-  const allEmblems = seasons.length > 0 && seasons.every((season) => season.emblem);
+  // Complétion par famille : tous les morceaux refermés.
+  const completeFamilies = new Set<string>();
+  const byFamily = new Map<string, boolean>();
+  for (const season of seasons) {
+    byFamily.set(season.familyId, (byFamily.get(season.familyId) ?? true) && season.familyComplete);
+  }
+  for (const [familyId, complete] of byFamily) {
+    if (complete) completeFamilies.add(familyId);
+  }
+  const allFamilies = byFamily.size > 0 && completeFamilies.size === byFamily.size;
   const equippedId = themeById(state.themeId)?.id ?? DEFAULT_THEME_ID;
 
   const unlockedIds = new Set(
     THEMES.filter((theme) => {
       if (theme.unlock.kind === "starter") return true;
-      if (theme.unlock.kind === "season") return emblems.has(theme.unlock.seasonId);
-      return allEmblems;
+      if (theme.unlock.kind === "family") return completeFamilies.has(theme.unlock.familyId);
+      return allFamilies;
     }).map((theme) => theme.id),
   );
 
