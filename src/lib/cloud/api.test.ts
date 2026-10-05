@@ -96,6 +96,47 @@ describe("authentification par code", () => {
   });
 });
 
+describe("compte invité et profil", () => {
+  it("crée un compte sans e-mail et mémorise la session", async () => {
+    const { api, calls, storage } = client(() => ({
+      body: { ...SESSION_BODY, user: { id: SESSION_BODY.user.id } },
+    }));
+    const session = await api.signInAnonymously();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/auth/v1/signup");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ data: {}, gotrue_meta_security: {} });
+    expect(session.userId).toBe(SESSION_BODY.user.id);
+    expect(session.email).toBeNull();
+    expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(true);
+  });
+
+  it("explique comment activer les comptes invités", async () => {
+    const { api } = client(() => ({ status: 422, body: { error_code: "anonymous_provider_disabled" } }));
+    await expect(api.signInAnonymously()).rejects.toThrowError(/Authentication → Sign In \/ Providers → Anonymous/);
+  });
+
+  it("lit et modifie le nom affiché", async () => {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    const { api, calls } = client((url) =>
+      url.startsWith("https://projet.supabase.co/rest/v1/profiles?user_id=eq.")
+        ? { body: [{ display_name: "Kaicenat", showcase_slugs: ["kaicenat"] }] }
+        : { body: null },
+      storage,
+    );
+    const profile = await api.profile(SESSION_BODY.user.id);
+    expect(profile).toEqual({ displayName: "Kaicenat", showcaseSlugs: ["kaicenat"] });
+
+    const { api: patching, calls: patchCalls } = client(() => ({ body: null }), storage);
+    await patching.updateDisplayName(SESSION_BODY.user.id, "  Mon pseudo  ");
+    expect(patchCalls[0]?.init?.method).toBe("PATCH");
+    expect(patchCalls[0]?.url).toContain("profiles?user_id=eq.");
+    expect(JSON.parse(String(patchCalls[0]?.init?.body))).toMatchObject({ display_name: "Mon pseudo" });
+  });
+});
+
 describe("jetons", () => {
   it("rafraîchit un jeton expiré avant d'appeler le serveur", async () => {
     const storage = memoryStorage();

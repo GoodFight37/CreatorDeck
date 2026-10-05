@@ -28,7 +28,54 @@ Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
 Aucun mot de passe n'est stocké, aucune donnée n'est envoyée tant que tu n'as
 pas validé un code, et « Déconnexion » efface la session de l'appareil.
 
-## 2. Créer le projet (5 minutes)
+## 2. Deux façons d'avoir un compte
+
+**Tu n'as pas besoin du Magic Link.** L'e-mail est une méthode parmi d'autres :
+ce qui compte pour le cloud, c'est un identifiant `user_id`. Il y en a deux :
+
+| | Compte invité | Adresse e-mail + code |
+| --- | --- | --- |
+| Ce qu'il faut activer | **Anonymous sign-ins** (une case à cocher) | un **SMTP** configuré |
+| Ce qu'il faut posséder | rien | un domaine ou un compte d'envoi gratuit |
+| Mise en route | immédiate | 10 minutes de configuration |
+| Limite | lié à la session de l'appareil | récupérable sur n'importe quel appareil |
+
+Pourquoi Supabase réclame un SMTP : son service d'e-mail intégré est **réservé
+aux tests** (quelques envois par heure, et il n'écrit qu'aux adresses de l'équipe
+du projet). Dès qu'on veut envoyer un code à quelqu'un d'autre, il faut brancher
+son propre serveur d'envoi.
+
+### Compte invité (recommandé pour commencer)
+
+1. Dashboard → **Authentication → Sign In / Providers** → active
+   **Anonymous sign-ins** → Save.
+2. Dans l'app : Profil → **Sauvegarde cloud** → **Créer un compte invité**.
+3. Donne-toi un nom (il apparaît au classement), puis **Envoyer ma collection**.
+
+Rien à installer, rien à payer, aucun e-mail. À savoir : le compte vit avec la
+session enregistrée sur l'appareil. Réinstaller l'app ou vider ses données perd
+l'accès au compte (la collection locale, elle, est sauvegardée par le mécanisme
+habituel d'export/import). Attacher une adresse e-mail à un compte invité se
+fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user`).
+
+### Adresse e-mail + code (optionnel)
+
+1. **Authentication → Emails → SMTP Settings** : branche un service d'envoi.
+   Deux options gratuites qui ne demandent aucun domaine :
+   * **Brevo** — vérifie une simple adresse d'expéditeur, 300 e-mails/jour ;
+   * **Resend** — en mode test, envoie depuis `onboarding@resend.dev` vers
+     l'adresse du propriétaire du compte (parfait pour tester).
+2. **Authentication → Email Templates → Magic Link** : le modèle doit contenir
+   le jeton, sinon le code reçu est un lien inutilisable :
+
+   ```html
+   <p>Ton code CreatorDeck : <strong>{{ .Token }}</strong></p>
+   ```
+
+3. Vérifie **Email OTP Length = 6** et **Email OTP Expiration** (1 heure par
+   défaut convient).
+
+## 3. Créer le projet (5 minutes)
 
 1. Compte sur [supabase.com](https://supabase.com) → **New project**.
    Choisis une région européenne (`eu-west-3` / Paris ou `eu-central-1` /
@@ -59,7 +106,7 @@ pas validé un code, et « Déconnexion » efface la session de l'appareil.
 > doit **jamais** apparaître dans l'app ni dans ce dépôt — elle contourne
 > toutes les règles.
 
-## 3. Compiler avec le cloud (sur ta machine, PowerShell)
+## 4. Compiler avec le cloud (sur ta machine, PowerShell)
 
 ```powershell
 Copy-Item .env.example .env.local
@@ -80,7 +127,7 @@ npx serve out
 faut relancer `npm run build` (et refaire l'APK), pas seulement recharger la
 page.
 
-## 4. Compiler l'APK avec le cloud (GitHub Actions)
+## 5. Compiler l'APK avec le cloud (GitHub Actions)
 
 Le workflow lit deux **variables de dépôt** (pas des secrets : la clé anon est
 publique par conception) :
@@ -96,18 +143,19 @@ Sans ces variables, l'APK se construit quand même : il est simplement 100 %
 hors ligne, avec l'écran de compte qui explique que le cloud n'est pas
 configuré.
 
-## 5. Vérifier que tout fonctionne
+## 6. Vérifier que tout fonctionne
 
 1. Ouvre l'app → **Profil → Sauvegarde cloud** ;
-2. saisis ton adresse → **Recevoir un code** ;
-3. recopie le code reçu → **Valider le code** ;
-4. **Envoyer ma collection**, puis ouvre **Classement mondial** : tu dois y
-   apparaître (les statistiques sont recalculées par le serveur).
+2. **Créer un compte invité** (ou, si tu as configuré un SMTP : adresse →
+   **Recevoir un code** → recopie le code → **Valider le code**) ;
+3. donne-toi un **nom** (2 à 24 caractères), puis **Envoyer ma collection** ;
+4. ouvre **Classement mondial** : tu dois y apparaître — les statistiques sont
+   recalculées par le serveur, jamais envoyées par le téléphone.
 
 Ensuite, l'envoi est automatique une vingtaine de secondes après ta dernière
 action, et la ligne du profil indique l'état (« à envoyer », coche verte).
 
-## 6. Comment les conflits sont traités
+## 7. Comment les conflits sont traités
 
 Deux appareils peuvent jouer la même collection. La règle est volontairement
 prudente :
@@ -121,7 +169,7 @@ prudente :
 Aucune fusion automatique : mélanger deux progressions produirait une
 collection impossible à défendre côté serveur.
 
-## 7. Ce que le serveur vérifie (et ce qu'il ne vérifie pas)
+## 8. Ce que le serveur vérifie (et ce qu'il ne vérifie pas)
 
 `push_save()` recalcule lui-même les statistiques à partir de la sauvegarde et
 **refuse** ce qu'aucune partie réelle ne peut produire : carte sans créateur,
@@ -135,16 +183,17 @@ collection. La suite logique est de déplacer le tirage côté serveur
 (`pg_cron` + fonction Postgres, ou Edge Function) — c'est le prérequis avant
 d'ouvrir les **échanges**.
 
-## 8. Après : échanges, profils publics, notifications
+## 9. Après : échanges, profils publics, notifications
 
 * `supabase/migrations/0002_echanges.sql` — offres de troc avec transaction
   atomique (les deux collections changent ou aucune) ;
+* attacher une adresse e-mail à un compte invité (récupération multi-appareil) ;
 * profils publics : la table `profiles` est déjà lisible par tous, il reste à
   exposer la vitrine des 4 cartes épinglées ;
 * notifications push : `@capacitor/push-notifications` + FCM, à brancher sur
   les éditions limitées.
 
-## 9. Dépannage
+## 10. Dépannage
 
 | Symptôme | Cause probable |
 | --- | --- |
@@ -153,4 +202,7 @@ d'ouvrir les **échanges**.
 | « Trop de tentatives » | limite d'envoi d'e-mails de Supabase (1 par minute) : attends |
 | « Session expirée : reconnecte-toi » | jeton révoqué ou projet migré : redemande un code |
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
-| « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir § 7) |
+| « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
+| « Les comptes invités sont désactivés » | Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** |
+| « Le service d'e-mail par défaut n'écrit qu'aux adresses de l'équipe » | normal : branche un SMTP, ou passe par un compte invité |
+| Supabase réclame un « custom SMTP » | son service intégré est réservé aux tests : ce n'est pas un bug de l'app |

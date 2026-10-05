@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createInitialState, type PlayerState } from "@/lib/game-engine";
-import type { CloudApi, CloudSession, LeaderboardRow, PushSaveResult, RemoteSaveRow } from "@/lib/cloud/api";
+import { CloudError, type CloudApi, type CloudSession, type LeaderboardRow, type PushSaveResult, type RemoteSaveRow } from "@/lib/cloud/api";
 import { AUTO_PUSH_DEBOUNCE_MS, EMPTY_CLOUD_STATE, createCloudStore } from "@/lib/cloud/cloud-store";
 import { gameStore } from "@/lib/game-store";
 import type { KeyValueStorage } from "@/lib/save-store";
@@ -46,6 +46,9 @@ function remoteRow(state: PlayerState, updatedAt: string, deviceUpdatedAt = stat
 
 type FakeApi = {
   session: () => CloudSession | null;
+  signInAnonymously: ReturnType<typeof vi.fn>;
+  profile: ReturnType<typeof vi.fn>;
+  updateDisplayName: ReturnType<typeof vi.fn>;
   requestOtp: ReturnType<typeof vi.fn>;
   verifyOtp: ReturnType<typeof vi.fn>;
   signOut: ReturnType<typeof vi.fn>;
@@ -68,6 +71,9 @@ function harness(options: {
 
   const api: FakeApi = {
     session: () => session,
+    signInAnonymously: vi.fn(async () => ({ ...SESSION, email: null })),
+    profile: vi.fn(async () => ({ displayName: "Kaicenat", showcaseSlugs: [] })),
+    updateDisplayName: vi.fn(async () => {}),
     requestOtp: vi.fn(async () => {}),
     verifyOtp: vi.fn(async () => SESSION),
     signOut: vi.fn(async () => {}),
@@ -225,6 +231,41 @@ describe("store cloud", () => {
     await store.sync("push");
     expect(api.pushSave).not.toHaveBeenCalled();
     expect(store.getSnapshot().message).toMatch(/Connecte-toi/);
+  });
+
+  it("crée un compte invité quand on le demande", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    await expect(store.signInAsGuest()).resolves.toBe(true);
+    expect(api.signInAnonymously).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().userId).toBe(SESSION.userId);
+    expect(store.getSnapshot().email).toBeNull();
+    expect(store.getSnapshot().message).toMatch(/Compte invité créé/);
+  });
+
+  it("prévient quand les comptes invités sont désactivés", async () => {
+    const { store, api } = harness({ signedIn: false });
+    api.signInAnonymously.mockRejectedValueOnce(new CloudError("Comptes invités désactivés.", "anonymous_disabled", 422));
+    store.subscribe(() => {});
+    await expect(store.signInAsGuest()).resolves.toBe(false);
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/invités désactivés/);
+  });
+
+  it("charge et change le nom du classement", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    await store.loadProfile();
+    expect(store.getSnapshot().displayName).toBe("Kaicenat");
+
+    await expect(store.rename("  Mon pseudo  ")).resolves.toBe(true);
+    expect(api.updateDisplayName).toHaveBeenCalledWith(SESSION.userId, "Mon pseudo");
+    expect(store.getSnapshot().displayName).toBe("Mon pseudo");
+
+    // Trop court : refusé sans appeler le serveur.
+    api.updateDisplayName.mockClear();
+    await expect(store.rename("a")).resolves.toBe(false);
+    expect(api.updateDisplayName).not.toHaveBeenCalled();
   });
 
   it("charge le classement", async () => {

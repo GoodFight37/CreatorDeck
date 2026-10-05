@@ -241,6 +241,11 @@ un compte (e-mail + code à 6 chiffres, sans mot de passe), la sauvegarde de la
 partie pour la retrouver sur un autre appareil, et un classement mondial
 recalculé par le serveur. Marche à suivre : **`docs/cloud-supabase.md`**.
 
+- Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
+  aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
+  6 chiffres** (récupérable ailleurs, mais il faut brancher un SMTP : le service
+  d'e-mail intégré de Supabase est réservé aux tests). Voir la section
+  « Deux façons d'avoir un compte » de `docs/cloud-supabase.md`.
 - Côté application : `src/lib/cloud/`
   - `config.ts` lit les deux variables publiques et désactive tout si elles
     manquent ;

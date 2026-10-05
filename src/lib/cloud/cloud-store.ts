@@ -27,8 +27,10 @@ export type LeaderboardMetric = "unique_creators" | "total_cards" | "legendary_c
 export type CloudState = {
   /** Un projet Supabase est-il configuré dans ce build ? */
   configured: boolean;
-  /** Adresse e-mail du compte connecté, sinon `null`. */
+  /** Adresse e-mail du compte connecté, sinon `null` (compte invité). */
   email: string | null;
+  /** Nom affiché au classement, tel qu'enregistré côté serveur. */
+  displayName: string | null;
   userId: string | null;
   /** Nom court du projet Supabase (affiché pour rassurer). */
   project: string | null;
@@ -61,6 +63,7 @@ export type CloudDeps = {
 export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   configured: false,
   email: null,
+  displayName: null,
   userId: null,
   project: null,
   busy: false,
@@ -288,6 +291,54 @@ export function createCloudStore(deps: CloudDeps) {
       }
     },
 
+    /** Crée un compte invité (sans e-mail) et s'y connecte immédiatement. */
+    async signInAsGuest(): Promise<boolean> {
+      const api = resolve();
+      if (!api) {
+        publish({ message: CLOUD_DISABLED_HINT, isError: true });
+        return false;
+      }
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const session = await api.signInAnonymously();
+        publish({
+          busy: false,
+          email: session.email,
+          displayName: null,
+          userId: session.userId,
+          message: "Compte invité créé. Donne-toi un nom, puis envoie ta collection.",
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        fail(error, "Création du compte invité impossible.");
+        return false;
+      }
+    },
+
+    /** Renomme le joueur dans le classement (2 à 24 caractères). */
+    async rename(displayName: string): Promise<boolean> {
+      const api = resolve();
+      if (!networkReady(api)) return false;
+      const local = deps.readState();
+      const userId = api.session()?.userId;
+      if (!local || !userId) return false;
+      const name = displayName.trim();
+      if (name.length < 2 || name.length > 24) {
+        publish({ busy: false, message: "Le nom doit faire entre 2 et 24 caractères.", isError: true });
+        return false;
+      }
+      publish({ busy: true });
+      try {
+        await api.updateDisplayName(userId, name);
+        publish({ busy: false, displayName: name, message: `Nom du classement mis à jour : ${name}.`, isError: false });
+        return true;
+      } catch (error) {
+        fail(error, "Changement de nom impossible.");
+        return false;
+      }
+    },
+
     async signOut(): Promise<void> {
       const api = resolve();
       publish({ busy: true });
@@ -299,6 +350,7 @@ export function createCloudStore(deps: CloudDeps) {
       publish({
         busy: false,
         email: null,
+        displayName: null,
         userId: null,
         pending: false,
         decision: null,
@@ -344,6 +396,19 @@ export function createCloudStore(deps: CloudDeps) {
         publish({ decision: "conflict", pending: true, message: decision.reason, isError: false });
       } catch (error) {
         fail(error, "Synchronisation impossible.");
+      }
+    },
+
+    /** Récupère le nom affiché (et la vitrine) pour préremplir l'écran. */
+    async loadProfile(): Promise<void> {
+      const api = resolve();
+      const userId = api?.session()?.userId;
+      if (!api || !userId) return;
+      try {
+        const profile = await api.profile(userId);
+        if (profile) publish({ displayName: profile.displayName });
+      } catch {
+        // Sans réseau, on garde le dernier nom connu.
       }
     },
 

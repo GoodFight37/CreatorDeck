@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Trophy,
   Upload,
+  UserPlus,
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
@@ -27,10 +28,18 @@ const METRICS: { id: LeaderboardMetric; label: string }[] = [
 ];
 
 /**
- * Écran « Compte & cloud » : identification par code, synchronisation de la
- * partie et classement mondial.
+ * Écran « Compte & cloud » : identification, synchronisation de la partie et
+ * classement mondial.
  *
- * Rien n'est envoyé tant que le joueur n'a pas validé son code, et charger le
+ * Deux façons d'avoir un compte, dans cet ordre :
+ *  1. **compte invité** — un identifiant créé en un appui, sans e-mail, sans
+ *     SMTP, donc utilisable tout de suite. En contrepartie il vit avec la
+ *     session de l'appareil ;
+ *  2. **adresse e-mail + code** — pour retrouver sa collection ailleurs, mais
+ *     il faut un SMTP configuré côté Supabase (le service d'e-mail intégré est
+ *     réservé aux tests).
+ *
+ * Rien n'est envoyé tant que le joueur n'a pas fait ce choix, et charger le
  * cloud demande deux appuis (le bouton se transforme en confirmation) : c'est
  * la seule action qui peut remplacer une partie locale.
  */
@@ -39,15 +48,22 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
   const [email, setEmail] = useState(cloud.email ?? "");
   const [code, setCode] = useState("");
   const [confirmPull, setConfirmPull] = useState(false);
+  // Brouillon du nom : `null` tant que le joueur n'a rien tapé, pour suivre la
+  // valeur du serveur sans synchroniser un état par un effet.
+  const [nameDraft, setNameDraft] = useState<string | null>(null);
 
-  // Le classement n'est chargé qu'à l'ouverture, et seulement si on est
-  // connecté : aucun appel réseau pour un joueur hors ligne.
+  // Le classement et le nom ne sont chargés qu'à l'ouverture, et seulement si
+  // on est connecté : aucun appel réseau pour un joueur hors ligne.
   useEffect(() => {
-    if (cloud.configured && cloud.userId) void cloudStore.loadLeaderboard();
+    if (cloud.configured && cloud.userId) {
+      void cloudStore.loadLeaderboard();
+      void cloudStore.loadProfile();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const message = cloud.configured ? cloud.message : null;
+  const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Compte et cloud">
@@ -79,12 +95,42 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                     <Mail size={16} />
                   </span>
                   <div>
-                    <strong>{cloud.email}</strong>
+                    <strong>{cloud.email ?? "Compte invité (sans e-mail)"}</strong>
                     <span>
-                      Projet {cloud.project} · {describeSync({ action: cloud.decision ?? "noop", reason: "" }, cloud.remoteUpdatedAt)}
+                      Projet {cloud.project} ·{" "}
+                      {describeSync({ action: cloud.decision ?? "noop", reason: "" }, cloud.remoteUpdatedAt)}
                     </span>
                   </div>
-                  {cloud.pending ? <span className="account-badge">à envoyer</span> : <Check size={17} className="success-icon" />}
+                  {cloud.pending ? (
+                    <span className="account-badge">à envoyer</span>
+                  ) : (
+                    <Check size={17} className="success-icon" />
+                  )}
+                </div>
+
+                <label className="account-field">
+                  <span>Nom au classement</span>
+                  <input
+                    type="text"
+                    maxLength={24}
+                    placeholder="Ton pseudo"
+                    value={nameDraft ?? cloud.displayName ?? ""}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                  />
+                </label>
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className="account-button"
+                    disabled={cloud.busy || pendingName.length < 2 || pendingName === (cloud.displayName ?? "")}
+                    onClick={() => {
+                      void cloudStore.rename(pendingName).then((ok) => {
+                        if (ok) setNameDraft(null);
+                      });
+                    }}
+                  >
+                    <Check size={14} /> Enregistrer le nom
+                  </button>
                 </div>
 
                 <div className="account-actions">
@@ -117,6 +163,9 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                 <p className="account-hint">
                   L&apos;envoi est automatique ~20 s après ta dernière action. « Charger le cloud » remplace la partie de
                   cet appareil : à ne faire que si tu veux reprendre celle d&apos;un autre téléphone.
+                  {cloud.email
+                    ? ""
+                    : " Ce compte est invité : il est lié à la session de cet appareil tant qu'aucune adresse e-mail n'y est attachée."}
                 </p>
               </section>
             ) : (
@@ -125,50 +174,61 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                   Un compte sert à sauvegarder ta collection et à figurer au classement. La partie reste jouable sans
                   compte : tout est local, comme aujourd&apos;hui.
                 </p>
-                <label className="account-field">
-                  <span>Adresse e-mail</span>
-                  <input
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="toi@exemple.fr"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="account-button wide"
-                  disabled={cloud.busy || !email.includes("@")}
-                  onClick={() => void cloudStore.requestCode(email.trim())}
-                >
-                  <Mail size={14} /> Recevoir un code
-                </button>
-
-                <label className="account-field">
-                  <span>Code à 6 chiffres</span>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="123456"
-                    maxLength={6}
-                    value={code}
-                    onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="account-button wide"
-                  disabled={cloud.busy || code.length < 6}
-                  onClick={() => void cloudStore.verifyCode(email.trim(), code)}
-                >
-                  <Check size={14} /> Valider le code
+                <button type="button" className="account-button wide" disabled={cloud.busy} onClick={() => void cloudStore.signInAsGuest()}>
+                  <UserPlus size={14} /> Créer un compte invité (sans e-mail)
                 </button>
                 <p className="account-hint">
-                  Aucun mot de passe : un code à usage unique part par e-mail (modèle Supabase « Magic Link » avec{" "}
-                  <code>{"{{ .Token }}"}</code>).
+                  Le plus rapide : aucun e-mail, aucun SMTP, aucun domaine. Le compte vit avec la session de cet
+                  appareil — l&apos;attacher à une adresse e-mail viendra ensuite, quand un envoi d&apos;e-mails sera
+                  configuré.
                 </p>
+
+                <details className="account-details">
+                  <summary>Ou se connecter par e-mail (nécessite un SMTP)</summary>
+                  <p className="account-hint">
+                    Supabase n&apos;envoie des e-mails qu&apos;à l&apos;équipe du projet par défaut : configure
+                    Authentication → Emails (Brevo, Resend… sont gratuits) pour utiliser cette voie.
+                  </p>
+                  <label className="account-field">
+                    <span>Adresse e-mail</span>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="toi@exemple.fr"
+                      value={email}
+                      onChange={(event) => setEmail(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="account-button wide"
+                    disabled={cloud.busy || !email.includes("@")}
+                    onClick={() => void cloudStore.requestCode(email.trim())}
+                  >
+                    <Mail size={14} /> Recevoir un code
+                  </button>
+                  <label className="account-field">
+                    <span>Code à 6 chiffres</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="123456"
+                      maxLength={6}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="account-button wide"
+                    disabled={cloud.busy || code.length < 6}
+                    onClick={() => void cloudStore.verifyCode(email.trim(), code)}
+                  >
+                    <Check size={14} /> Valider le code
+                  </button>
+                </details>
               </section>
             )}
 
@@ -241,7 +301,6 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
 /** Pastille d'état affichée dans le profil, sans ouvrir la feuille. */
 export function CloudBadge() {
   const cloud = useCloud();
-  if (!cloud.configured) return <CloudOff size={15} className="muted-icon" />;
-  if (!cloud.userId) return <CloudOff size={15} className="muted-icon" />;
+  if (!cloud.configured || !cloud.userId) return <CloudOff size={15} className="muted-icon" />;
   return cloud.pending ? <Upload size={15} className="pending-icon" /> : <Check size={15} className="success-icon" />;
 }

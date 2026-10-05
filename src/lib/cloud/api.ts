@@ -75,6 +75,15 @@ function messageFor(status: number, code: string, raw: string): string {
   if (code === "invalid_credentials" || code === "otp_expired") return "Code incorrect ou expiré.";
   if (code === "email_address_invalid" || code === "validation_failed") return "Adresse e-mail refusée.";
   if (code === "signup_disabled") return "Les inscriptions sont désactivées sur ce projet.";
+  if (code === "anonymous_provider_disabled" || code === "anonymous_sign_ins_disabled") {
+    return "Les comptes invités sont désactivés sur ce projet : active-les dans Authentication → Sign In / Providers → Anonymous.";
+  }
+  if (code === "email_provider_disabled") {
+    return "L'envoi d'e-mails est désactivé sur ce projet : active Email, ou utilise un compte invité.";
+  }
+  if (code === "email_address_not_authorized") {
+    return "Le service d'e-mail par défaut de Supabase n'écrit qu'aux adresses de l'équipe du projet : configure un SMTP (Authentication → Emails) ou utilise un compte invité.";
+  }
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
     return "Trop de tentatives : patiente une minute avant de redemander un code.";
   }
@@ -233,6 +242,60 @@ export class CloudApi {
     } catch {
       // Déconnexion locale déjà faite : l'appel serveur est un bonus.
     }
+  }
+
+  /**
+   * Compte invité : Supabase crée un utilisateur sans adresse e-mail.
+   *
+   * C'est la voie la plus rapide pour avoir un identifiant cloud — aucun SMTP,
+   * aucun domaine, aucun envoi d'e-mail. En contrepartie, le compte vit avec la
+   * session enregistrée sur l'appareil : perdre la session (réinstallation,
+   * données effacées) perd l'accès au compte. On pourra y attacher une adresse
+   * e-mail plus tard, quand un SMTP existera.
+   */
+  async signInAnonymously(): Promise<CloudSession> {
+    const response = await this.send(`${this.config.url}/auth/v1/signup`, {
+      method: "POST",
+      body: JSON.stringify({ data: {}, gotrue_meta_security: {} }),
+      raw: true,
+    });
+    const session = parseSession(response.body);
+    if (!session) {
+      throw new CloudError(
+        "Compte invité refusé (les comptes invités sont-ils activés ?).",
+        "anonymous_disabled",
+        0,
+      );
+    }
+    this.setSession(session);
+    return session;
+  }
+
+  /** Profil public du joueur (nom affiché, vitrine), ou `null` s'il n'existe pas. */
+  async profile(userId: string): Promise<{ displayName: string; showcaseSlugs: string[] } | null> {
+    const token = (await this.accessToken()) ?? undefined;
+    const { body } = await this.send(
+      `${this.config.url}/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}&select=display_name,showcase_slugs`,
+      { method: "GET", token, raw: true },
+    );
+    const rows = Array.isArray(body) ? body : [];
+    const record = asRecord(rows[0]);
+    if (!record) return null;
+    return {
+      displayName: typeof record.display_name === "string" ? record.display_name : "Collectionneur",
+      showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
+    };
+  }
+
+  /** Change le nom affiché au classement (ligne `profiles` du joueur). */
+  async updateDisplayName(userId: string, displayName: string): Promise<void> {
+    const name = displayName.trim();
+    await this.send(`${this.config.url}/rest/v1/profiles?user_id=eq.${encodeURIComponent(userId)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ display_name: name, updated_at: new Date().toISOString() }),
+      token: (await this.accessToken()) ?? undefined,
+      raw: true,
+    });
   }
 
   // ------------------------------------------------------------------ saves
