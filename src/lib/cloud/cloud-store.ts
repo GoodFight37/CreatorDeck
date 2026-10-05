@@ -49,6 +49,12 @@ export type CloudState = {
   configured: boolean;
   /** Adresse e-mail du compte connecté, sinon `null` (compte invité). */
   email: string | null;
+  /**
+   * Adresse en attente de confirmation par code : Supabase l'a acceptée mais
+   * ne l'a pas encore appliquée (le code attend dans la boîte mail). `null`
+   * quand rien n'est en attente.
+   */
+  pendingEmail: string | null;
   /** Nom affiché au classement, tel qu'enregistré côté serveur. */
   displayName: string | null;
   /** Cartes épinglées sur le profil public (0 à 4 slugs, dans l'ordre choisi). */
@@ -110,6 +116,12 @@ export type PackOpenOutcome =
  */
 export type CloudActionOutcome =
   | { status: "done"; message: string }
+  /**
+   * Une étape reste à faire, mais tout va bien : c'est le cas d'un changement
+   * d'adresse qui attend son code par e-mail. Rien n'est perdu, rien n'est en
+   * erreur — l'écran doit juste demander le code.
+   */
+  | { status: "pending"; message: string }
   | {
       status: "unavailable";
       reason: "offline" | "no-session" | "not-configured" | "error";
@@ -161,6 +173,7 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   busy: false,
   message: null,
   isError: false,
+  pendingEmail: null,
   decision: null,
   remoteUpdatedAt: null,
   lastSyncAt: null,
@@ -615,17 +628,24 @@ export function createCloudStore(deps: CloudDeps) {
     },
 
     /**
-     * Attache une adresse e-mail et un mot de passe au compte connecté.
+     * Garde le compte : attache une adresse, un mot de passe, ou les deux.
      *
-     * Pour un compte invité, c'est ce qui le rend récupérable : le mot de passe
-     * ne déclenche aucun e-mail, donc **aucun SMTP n'est nécessaire**. Le
-     * joueur peut ensuite se connecter ailleurs par adresse + mot de passe.
-     * Sans adresse (compte déjà e-mail), la fonction ne change que le mot de
-     * passe.
+     * Deux chemins, selon ce que le joueur choisit :
+     *
+     *  * **adresse + mot de passe** — le mot de passe n'envoie aucun e-mail,
+     *    donc **aucun SMTP n'est nécessaire** : l'adresse est appliquée tout de
+     *    suite et le compte est récupérable ailleurs par adresse + mot de passe ;
+     *  * **adresse seule** — Supabase envoie un code à 6 chiffres (SMTP requis)
+     *    et l'adresse reste *en attente* jusqu'à ce que le code soit saisi ici
+     *    (`confirmEmailCode`).
+     *
+     * Un compte invité ne peut pas recevoir un mot de passe **sans** adresse :
+     * GoTrue le refuse, et l'écran demande donc l'adresse en premier.
      */
-    async keepAccount(password: string, email?: string): Promise<AccountOutcome> {
+    async keepAccount(update: { email?: string; password?: string }): Promise<AccountOutcome> {
       const api = resolve();
-      const wanted = email?.trim() ?? "";
+      const wanted = update.email?.trim() ?? "";
+      const password = update.password ?? "";
       if (!api) {
         publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
         return { status: "unavailable", reason: "not-configured", message: CLOUD_DISABLED_HINT };
@@ -635,7 +655,17 @@ export function createCloudStore(deps: CloudDeps) {
         publish({ busy: false, message, isError: true });
         return { status: "unavailable", reason: "no-session", message };
       }
-      const problem = (wanted ? emailProblem(wanted) : null) ?? passwordProblem(password);
+      if (!wanted && !password) {
+        const message = "Indique au moins une adresse : un compte invité ne peut pas recevoir un mot de passe sans adresse.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      if (!wanted && !state.email) {
+        const message = "Un compte invité a besoin d'une adresse : c'est elle qui permet de te reconnecter ailleurs.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      const problem = (wanted ? emailProblem(wanted) : null) ?? (password ? passwordProblem(password) : null);
       if (problem) {
         publish({ busy: false, message: problem, isError: true });
         return { status: "unavailable", reason: "error", message: problem };
@@ -643,20 +673,91 @@ export function createCloudStore(deps: CloudDeps) {
 
       publish({ busy: true, message: null, isError: false });
       try {
-        const result = await api.updateAccount(wanted ? { email: wanted, password } : { password });
+        const result = await api.updateAccount({ ...(wanted ? { email: wanted } : {}), ...(password ? { password } : {}) });
         if (!result.applied) {
-          const message = `Un e-mail de confirmation a été envoyé à ${result.pendingEmail} : ouvre-le pour valider l'adresse. Si tu ne le reçois pas, c'est que le projet n'a pas de SMTP — désactive « Confirm email » (Authentication → Sign In / Providers → Email) puis réessaie, l'adresse sera enregistrée tout de suite.`;
-          publish({ busy: false, message, isError: false });
-          return { status: "unavailable", reason: "error", message };
+          const pending = result.pendingEmail ?? wanted;
+          const message = `Un code à 6 chiffres part vers ${pending}. Saisis-le ici pour valider l'adresse. Si rien n'arrive, c'est que le projet n'a pas de SMTP : ajoute un mot de passe (il ne demande aucun envoi), ou désactive « Confirm email » (Authentication → Sign In / Providers → Email) pour que l'adresse soit enregistrée tout de suite.`;
+          publish({ busy: false, pendingEmail: pending, message, isError: false });
+          return { status: "pending", message };
         }
         const address = result.email ?? wanted;
-        const message = wanted
+        const message = password && wanted
           ? `Adresse ${address} attachée, avec un mot de passe. Sur un autre appareil : « Se connecter avec un e-mail et un mot de passe », puis « Charger le cloud ».`
-          : "Mot de passe enregistré. Sur un autre appareil, connecte-toi avec ton adresse et ce mot de passe.";
-        publish({ busy: false, email: address ?? state.email, message, isError: false });
+          : password
+            ? "Mot de passe enregistré. Sur un autre appareil, connecte-toi avec ton adresse et ce mot de passe."
+            : `Adresse ${address} attachée. Sur un autre appareil : « Recevoir un code par e-mail », puis « Charger le cloud ».`;
+        publish({ busy: false, email: address ?? state.email, pendingEmail: null, message, isError: false });
         return { status: "done", message };
       } catch (error) {
         const refusal = cloudRefusal(error, "Enregistrement impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Termine un changement d'adresse avec le code à 6 chiffres reçu par
+     * e-mail. C'est la seule fin possible depuis l'app : un lien de
+     * confirmation renvoie vers une page web, et il n'y a pas de serveur pour
+     * la recevoir.
+     */
+    async confirmEmailCode(code: string): Promise<AccountOutcome> {
+      const api = resolve();
+      const pending = state.pendingEmail;
+      if (!api) {
+        publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
+        return { status: "unavailable", reason: "not-configured", message: CLOUD_DISABLED_HINT };
+      }
+      if (!api.session()) {
+        const message = "Session perdue : reconnecte-toi pour valider l'adresse.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "no-session", message };
+      }
+      if (!pending) {
+        const message = "Aucune adresse n'attend de confirmation.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      const token = code.replace(/\s/g, "");
+      if (!/^\d{6}$/.test(token)) {
+        const message = "Le code fait 6 chiffres.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const session = await api.verifyEmailChange(pending, token);
+        const message = `Adresse ${session.email ?? pending} confirmée. Sur un autre appareil : « Recevoir un code par e-mail », puis « Charger le cloud ».`;
+        publish({ busy: false, email: session.email ?? pending, pendingEmail: null, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Code refusé.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /** Redemande un code pour l'adresse en attente (le précédent a expiré). */
+    async resendEmailCode(): Promise<AccountOutcome> {
+      const api = resolve();
+      const pending = state.pendingEmail;
+      if (!networkReady(api)) {
+        return { status: "unavailable", reason: "offline", message: "Réseau injoignable." };
+      }
+      if (!pending) {
+        const message = "Aucune adresse n'attend de confirmation.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true, message: null, isError: false });
+      try {
+        await api.resendEmailChange(pending);
+        const message = `Nouveau code envoyé à ${pending}.`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Renvoi impossible.");
         publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }
@@ -1055,6 +1156,7 @@ export function createCloudStore(deps: CloudDeps) {
         displayName: null,
         showcase: [],
         userId: null,
+        pendingEmail: null,
         pending: false,
         decision: null,
         remoteUpdatedAt: null,

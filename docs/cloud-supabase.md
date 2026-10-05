@@ -111,6 +111,35 @@ Deux limites, à dire au joueur :
 > réglage à désactiver, au lieu d'afficher « adresse refusée ». Pour un compte
 > qui a déjà une adresse, l'ajout d'un mot de passe marche dans les deux réglages.
 
+### Garder un compte invité : adresse seule + code (SMTP requis)
+
+Variante du chemin précédent, quand un SMTP est configuré (§ *Adresse e-mail +
+code*) : le joueur n'a aucun mot de passe à choisir, et retrouve sa collection
+par un code reçu par e-mail.
+
+1. Branche le SMTP **et** les deux modèles qui portent un jeton : *Magic Link*
+   (connexion) **et** *Change email address* (changement d'adresse). Les deux
+   doivent contenir `{{ .Token }}`.
+2. Dans l'app (compte invité connecté) : Profil → **Garder ce compte** →
+   adresse e-mail → **Attacher l'adresse**. Le mot de passe est **facultatif**
+   sur ce chemin.
+3. L'app affiche **« Code reçu »** : saisis les 6 chiffres arrivés par e-mail →
+   **Confirmer l'adresse**. Rien reçu ? **Renvoyer le code** (un envoi par
+   minute), puis regarde les indésirables.
+4. Sur l'autre appareil : **Recevoir un code par e-mail** → **Charger le cloud**.
+
+Ce qui se passe côté serveur : `PUT /auth/v1/user` avec la seule adresse ne
+l'applique **pas** tout de suite — Supabase la renvoie dans `new_email` et
+envoie un code à cette nouvelle adresse. L'app garde l'adresse « en attente »
+(rappelée dans l'écran Compte) et la valide par `POST /auth/v1/verify` avec
+`type` = `email_change` : la session porte alors la nouvelle adresse, sans
+déconnexion et sans perdre la collection. C'est la raison d'être du champ
+**Code reçu** : il n'y a pas de page web pour recevoir un lien de confirmation.
+
+Sans SMTP, ce chemin s'arrête à l'adresse en attente : l'app affiche alors la
+marche à suivre (ajouter un mot de passe, qui n'envoie rien, ou désactiver
+« Confirm email » pour enregistrer l'adresse tout de suite).
+
 **Nouveau téléphone, partie locale vierge** : à la connexion (mot de passe ou
 code), si cette partie n'a **ni carte ni ouverture**, l'app charge d'elle-même
 la collection du cloud — il n'y a rien à perdre, et cela évite qu'un premier
@@ -480,7 +509,9 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | Le classement affiche « 0 % » ou pas de rang | le joueur n'a jamais envoyé sa collection, ou sa sauvegarde a été jugée invraisemblable (« collection en cours de vérification ») |
 | Une carte présente dans la sauvegarde n'apparaît pas dans la complétion | son créateur n'existe pas au catalogue, ou sa rareté ne correspond pas : le serveur ne compte que ce qui existe vraiment |
 | « Supabase refuse d'attacher une adresse à un compte invité tant que Confirm email… » | bug GoTrue connu : désactive **Confirm email** (Authentication → Sign In / Providers → Email) puis réessaie |
-| « Un e-mail de confirmation a été envoyé à … » | le projet a « Confirm email » activé : ouvre le lien reçu (SMTP requis) ou désactive le réglage pour que l'adresse soit enregistrée tout de suite |
+| L'app demande un « Code reçu » après avoir attaché l'adresse | normal avec « Confirm email » + SMTP : saisis les 6 chiffres, ou désactive le réglage pour enregistrer l'adresse sans confirmation |
+| Attachement refusé : « Supabase n'a pas pu envoyer l'e-mail » | pas de SMTP configuré : ajoute un mot de passe (aucun envoi) ou branche un SMTP, § 2 |
+| Le code reçu est un lien, pas 6 chiffres | modèle *Magic Link* ou *Change email address* sans `{{ .Token }}` : corrige le modèle, puis **Renvoyer le code** |
 | « E-mail ou mot de passe incorrect » | mot de passe saisi différemment, ou compte créé par code (sans mot de passe) : attache-en un depuis l'appareil d'origine |
 | « Cette adresse est déjà utilisée par un autre compte » | cette adresse appartient à un autre compte : connecte-toi avec elle, ou change d'adresse |
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |

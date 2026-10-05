@@ -162,6 +162,17 @@ function messageFor(status: number, code: string, raw: string): string {
   if (code === "email_address_invalid" && /Email address "" is invalid/i.test(raw)) {
     return "Supabase refuse d'attacher une adresse à un compte invité tant que « Confirm email » est activé : désactive-le (Authentication → Sign In / Providers → Email) puis réessaie.";
   }
+  // Un compte invité ne peut pas recevoir un mot de passe **sans** adresse :
+  // c'est une règle de GoTrue, autant la dire en français (l'app empêche le cas
+  // côté écran, mais la règle serveur reste la vérité).
+  if (code === "validation_failed" && /anonymous user without an email/i.test(raw)) {
+    return "Supabase demande une adresse e-mail avec le mot de passe pour un compte invité.";
+  }
+  // Le projet n'a pas de SMTP : GoTrue ne peut pas envoyer le code (l'envoi fait
+  // partie de la transaction, donc rien n'est enregistré). Deux issues possibles.
+  if (/error sending|could not send|smtp|dial tcp|connection refused/i.test(raw) && /mail|email/i.test(raw)) {
+    return "Supabase n'a pas pu envoyer l'e-mail : ce projet n'a pas de SMTP configuré (Authentication → Emails → SMTP Settings). Sans SMTP, attache plutôt un mot de passe — ça ne demande aucun envoi — ou désactive « Confirm email » pour que l'adresse soit enregistrée tout de suite.";
+  }
   if (code === "email_address_invalid" || code === "validation_failed") return "Adresse e-mail refusée.";
   if (code === "signup_disabled") return "Les inscriptions sont désactivées sur ce projet.";
   if (code === "anonymous_provider_disabled" || code === "anonymous_sign_ins_disabled") {
@@ -447,6 +458,39 @@ export class CloudApi {
     }
     this.setSession(session);
     return session;
+  }
+
+  /**
+   * Valide le changement d'adresse par le code à 6 chiffres reçu par e-mail.
+   *
+   * C'est la seule façon de terminer un changement d'adresse depuis l'app : un
+   * lien de confirmation renverrait vers une page web, et il n'y a pas de
+   * serveur pour la recevoir. Le modèle « Change email address » doit contenir
+   * `{{ .Token }}` (docs/cloud-supabase.md, § 2).
+   */
+  async verifyEmailChange(email: string, token: string): Promise<CloudSession> {
+    const address = email.trim();
+    const response = await this.send(`${this.config.url}/auth/v1/verify`, {
+      method: "POST",
+      body: JSON.stringify({ email: address, token: token.trim(), type: "email_change" }),
+      raw: true,
+    });
+    const session = parseSession(response.body) ?? this.session();
+    if (!session) throw new CloudError("Réponse d'authentification illisible.", "invalid_response", 0);
+    // GoTrue renvoie la session de l'utilisateur, avec la nouvelle adresse.
+    this.setSession({ ...session, email: session.email ?? address });
+    return this.session() ?? session;
+  }
+
+  /** Redemande un code de changement d'adresse (le précédent a expiré). */
+  async resendEmailChange(email: string): Promise<void> {
+    const token = await this.accessToken();
+    await this.send(`${this.config.url}/auth/v1/resend`, {
+      method: "POST",
+      body: JSON.stringify({ type: "email_change", email: email.trim() }),
+      token: token ?? undefined,
+      raw: true,
+    });
   }
 
   async signOut(): Promise<void> {

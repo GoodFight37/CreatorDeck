@@ -76,6 +76,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
   // Compte : adresse à attacher (compte invité) et mot de passe.
   const [keepEmail, setKeepEmail] = useState("");
   const [keepPassword, setKeepPassword] = useState("");
+  const [keepCode, setKeepCode] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
   const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
@@ -231,9 +232,10 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                   </div>
                   <p className="account-intro">
                     Ce compte est <b>invité</b> : il vit avec la session de cet appareil. Si tu la perds
-                    (réinstallation, données effacées), la collection est perdue. Attache une adresse et un mot de
-                    passe pour la retrouver sur un autre appareil — <b>aucun e-mail n&apos;est envoyé</b>, donc aucun
-                    SMTP n&apos;est nécessaire.
+                    (réinstallation, données effacées), la collection est perdue. Attache une adresse pour la
+                    retrouver ailleurs. <b>Deux chemins</b> : avec un mot de passe, tout est immédiat et aucun
+                    e-mail n&apos;est envoyé ; sans mot de passe, Supabase envoie un code à 6 chiffres (SMTP
+                    nécessaire), à saisir juste après.
                   </p>
                   <label className="account-field">
                     <span>Adresse e-mail</span>
@@ -247,11 +249,11 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                     />
                   </label>
                   <label className="account-field">
-                    <span>Mot de passe ({PASSWORD_MIN} caractères minimum)</span>
+                    <span>Mot de passe ({PASSWORD_MIN} caractères minimum, facultatif)</span>
                     <input
                       type="password"
                       autoComplete="new-password"
-                      placeholder="Choisis un mot de passe"
+                      placeholder="Conseillé : sans envoi d'e-mail"
                       value={keepPassword}
                       onChange={(event) => setKeepPassword(event.target.value)}
                     />
@@ -267,23 +269,78 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                       type="button"
                       className="account-button"
                       disabled={
-                        cloud.busy || Boolean(emailProblem(keepEmail)) || Boolean(passwordProblem(keepPassword))
+                        cloud.busy ||
+                        !keepEmail.trim() ||
+                        Boolean(emailProblem(keepEmail)) ||
+                        Boolean(keepPassword && passwordProblem(keepPassword))
                       }
                       onClick={() =>
-                        void cloudStore.keepAccount(keepPassword, keepEmail).then((outcome) => {
-                          if (outcome.status === "done") {
-                            setKeepPassword("");
-                            setKeepEmail("");
-                          }
-                        })
+                        void cloudStore
+                          .keepAccount({ email: keepEmail, password: keepPassword || undefined })
+                          .then((outcome) => {
+                            if (outcome.status === "done") {
+                              setKeepPassword("");
+                              setKeepEmail("");
+                            }
+                          })
                       }
                     >
                       <ShieldCheck size={14} /> Attacher l&apos;adresse
                     </button>
                   </div>
-                  <p className="account-hint">
-                    {PASSWORD_WARNING} Le mot de passe n&apos;est envoyé nulle part : il reste dans Supabase, haché.
-                  </p>
+                  {keepPassword ? (
+                    <p className="account-hint">
+                      {PASSWORD_WARNING} Le mot de passe n&apos;est envoyé nulle part : il reste dans Supabase, haché.
+                    </p>
+                  ) : (
+                    <p className="account-hint">
+                      Sans mot de passe, l&apos;adresse devra être confirmée par un code reçu par e-mail — donc un
+                      SMTP configuré côté Supabase.
+                    </p>
+                  )}
+                  {cloud.pendingEmail ? (
+                    <div className="account-pending">
+                      <label className="account-field">
+                        <span>Code reçu à {cloud.pendingEmail}</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={keepCode}
+                          onChange={(event) => setKeepCode(event.target.value)}
+                        />
+                      </label>
+                      <div className="account-actions">
+                        <button
+                          type="button"
+                          className="account-button"
+                          disabled={cloud.busy || !/^\d{6}$/.test(keepCode.replace(/\D/g, ""))}
+                          onClick={() =>
+                            void cloudStore.confirmEmailCode(keepCode).then((outcome) => {
+                              if (outcome.status === "done") setKeepCode("");
+                            })
+                          }
+                        >
+                          <Check size={14} /> Confirmer l&apos;adresse
+                        </button>
+                        <button
+                          type="button"
+                          className="account-button ghost"
+                          disabled={cloud.busy}
+                          onClick={() => void cloudStore.resendEmailCode()}
+                        >
+                          <RefreshCw size={13} /> Renvoyer le code
+                        </button>
+                      </div>
+                      <p className="account-hint">
+                        Le code n&apos;arrive pas ? Le projet n&apos;a probablement pas de SMTP : ajoute un mot de
+                        passe (il ne demande aucun envoi), ou désactive « Confirm email » pour que l&apos;adresse soit
+                        enregistrée tout de suite.
+                      </p>
+                    </div>
+                  ) : null}
                 </section>
               ) : (
                 <section className="account-card">
@@ -313,7 +370,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                         className="account-button"
                         disabled={cloud.busy || Boolean(passwordProblem(keepPassword))}
                         onClick={() =>
-                          void cloudStore.keepAccount(keepPassword).then((outcome) => {
+                          void cloudStore.keepAccount({ password: keepPassword }).then((outcome) => {
                             if (outcome.status === "done") setKeepPassword("");
                           })
                         }
