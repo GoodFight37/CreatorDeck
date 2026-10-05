@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CLOUD_SESSION_KEY, CloudApi, CloudError } from "@/lib/cloud/api";
+import type { CloudFetch } from "@/lib/cloud/transport";
 import type { KeyValueStorage } from "@/lib/save-store";
 
 const CONFIG = { url: "https://projet.supabase.co", anonKey: "anon-key-de-test-suffisamment-longue" };
@@ -20,14 +21,14 @@ function fakeFetch(
   handler: (url: string, init: RequestInit | undefined, index: number) => { status?: number; body?: unknown } | Promise<{ status?: number; body?: unknown }>,
 ) {
   const calls: Call[] = [];
-  const impl = (async (url: string | URL, init?: RequestInit) => {
+  const impl = (async (url: string, init: { method: string; headers: Record<string, string>; body?: string }) => {
     const target = String(url);
-    const result = await handler(target, init, calls.length);
-    calls.push({ url: target, init });
+    const result = await handler(target, init as unknown as RequestInit, calls.length);
+    calls.push({ url: target, init: init as unknown as RequestInit });
     const status = result.status ?? 200;
     const text = result.body === undefined ? "" : JSON.stringify(result.body);
     return new Response(text, { status, headers: { "Content-Type": "application/json" } });
-  }) as unknown as typeof fetch;
+  }) as unknown as CloudFetch;
   return { impl, calls };
 }
 

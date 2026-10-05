@@ -14,6 +14,7 @@
  */
 import type { KeyValueStorage } from "@/lib/save-store";
 import type { CloudConfig } from "@/lib/cloud/config";
+import { cloudRequest, type CloudFetch } from "@/lib/cloud/transport";
 
 /** Clé de stockage local de la session (jetons d'accès et de rafraîchissement). */
 export const CLOUD_SESSION_KEY = "creatordeck.cloud.session";
@@ -154,7 +155,9 @@ export class CloudApi {
   constructor(
     private readonly config: CloudConfig,
     private readonly storage: KeyValueStorage | null,
-    private readonly fetchImpl: typeof fetch = fetch,
+    // Transport par défaut : client HTTP natif dans l'APK, `fetch` ailleurs
+    // (voir src/lib/cloud/transport.ts). Les tests injectent un faux transport.
+    private readonly request: CloudFetch = cloudRequest,
   ) {}
 
   // ---------------------------------------------------------------- session
@@ -202,7 +205,7 @@ export class CloudApi {
 
   private async refresh(refreshToken: string): Promise<CloudSession | null> {
     try {
-      const response = await this.fetchImpl(`${this.config.url}/auth/v1/token?grant_type=refresh_token`, {
+      const response = await this.request(`${this.config.url}/auth/v1/token?grant_type=refresh_token`, {
         method: "POST",
         headers: this.headers(),
         body: JSON.stringify({ refresh_token: refreshToken }),
@@ -252,7 +255,7 @@ export class CloudApi {
     this.setSession(null);
     if (!session) return;
     try {
-      await this.fetchImpl(`${this.config.url}/auth/v1/logout`, {
+      await this.request(`${this.config.url}/auth/v1/logout`, {
         method: "POST",
         headers: { ...this.headers(), Authorization: `Bearer ${session.accessToken}` },
       });
@@ -473,16 +476,17 @@ export class CloudApi {
     url: string,
     init: { method: string; body?: string; raw?: boolean; token?: string },
   ): Promise<{ body: unknown; status: number }> {
-    let response: Response;
+    let response: { status: number; ok: boolean; text(): Promise<string> };
     try {
-      response = await this.fetchImpl(url, {
+      response = await this.request(url, {
         method: init.method,
         headers: this.headers(init.token),
         body: init.body,
       });
-    } catch {
-      // Message auto-diagnostic : sans le nom d'hôte ni le chemin, un échec
-      // réseau est indiscernable d'une adresse de projet mal recopiée.
+    } catch (error) {
+      // Message auto-diagnostic : sans le nom d'hôte, le chemin ni la cause
+      // technique, un échec réseau est indiscernable d'une adresse de projet
+      // mal recopiée ou d'un refus du WebView.
       let where = "";
       try {
         const parsed = new URL(url);
@@ -490,9 +494,11 @@ export class CloudApi {
       } catch {
         where = "";
       }
+      const cause = error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 120) : "";
+      const detail = [where, cause].filter(Boolean).join(" — ");
       throw new CloudError(
-        where
-          ? `Réseau injoignable : impossible de joindre ${where}. Vérifie ta connexion — ta partie locale est intacte.`
+        detail
+          ? `Réseau injoignable : impossible de joindre ${detail}. Vérifie ta connexion — ta partie locale est intacte.`
           : messageFor(0, "", ""),
         "network_error",
         0,
