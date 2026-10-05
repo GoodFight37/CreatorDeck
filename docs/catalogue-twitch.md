@@ -53,12 +53,12 @@ erreur — la liste peut vieillir sans casser le build.
 |---|---|
 | Libellés de l'application (« Top 500 », « Classeur (500) », jalons d'objectifs) | dérivés de `CATALOG_SIZE` (`src/lib/catalog.ts`) |
 | Raretés | échelle en part du classement (`scripts/lib/rarity-ladder.mjs`), pas en rangs fixes |
-| Saisons | calculées depuis `seasons.config.json` ; le fourre-tout « Découverte » est découpé automatiquement en morceaux de ≤ 60 |
+| Saisons | calculées depuis `seasons.config.json` ; toute saison est découpée automatiquement au-delà de `seasonMaxSize` (150), le fourre-tout au-delà de 60 |
 | Validation | `npm run catalog:check` compare la taille réelle à `src/data/catalog.config.json` (`--expect N` pour forcer) |
 | Générateur | `scripts/build-twitch-catalog.mjs --count N`, avec pagination Twitch et reprise sur incident |
 | Taux de tirage | exprimés en raretés, donc indépendants de la taille du catalogue |
 
-## Marche à suivre (à lancer **sur ta machine**)
+## Marche à suivre — catalogue mondial 2000 (à lancer **sur ta machine**)
 
 ```bash
 # 1. Découverte seule : combien de chaînes sont réellement atteignables ?
@@ -66,18 +66,20 @@ npm run catalog:source -- --count 2000 --dry-run
 #    -> reports/candidates-2000.json (aucune écriture dans src/ ni public/)
 #    Si le total est insuffisant : --pages 3, ou complète la liste curée.
 
-# 2. Génération du catalogue + des portraits (reprenable)
+# 2. Génération du catalogue + des portraits (reprenable, 600 px par défaut)
 npm run catalog:source -- --count 2000
-#    AVATAR_PX=300 pour rester léger (voir budget ci-dessous)
 
-# 3. Compléter les portraits dans la résolution choisie
+# 3. Compléter les portraits manquants (même résolution)
 npm run assets:regen
 
 # 4. Valider et vérifier
 npm run catalog:check      # 2000 attendus, rangs contigus, saisons couvertes
-npm test                   # 58 tests, agnostiques à la taille du catalogue
+npm test                   # 65 tests, agnostiques à la taille du catalogue
 npm run build              # export statique
 ```
+
+Compter ~1 à 3 h pour l'étape 2 (découverte + ~2000 téléchargements d'images),
+et une bonne centaine de mégaoctets d'images temporaires pendant l'encodage.
 
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
@@ -110,12 +112,16 @@ Conséquences :
 - Un affichage mixte (600 px pour le top, 300 px pour le reste) est possible
   mais complique le pipeline pour un gain modeste.
 
-Choix par défaut recommandé pour 2000 : **`AVATAR_PX=300`**. Le code reste
-identique, seule la variable d'environnement change :
+**Décision retenue pour le catalogue mondial : 600 px**, pour la netteté sur
+écran Retina — en assumant ~68 Mo dans l'APK, la PWA et Git (≈ 135 Mo après
+l'encodage temporaire pendant la génération), et donc un clone et un
+`assets:regen` plus lents.
+
+Changer d'avis plus tard est une simple variable d'environnement :
 
 ```bash
-AVATAR_PX=300 npm run catalog:source -- --count 2000
-AVATAR_PX=300 npm run assets:regen
+AVATAR_PX=300 npm run catalog:source -- --count 2000   # tout regénérer en 300 px
+AVATAR_PX=300 npm run assets:regen                     # ou convertir l'existant
 ```
 
 ## Réglages de jeu à revoir après la bascule
@@ -124,10 +130,15 @@ Le catalogue quadruple, le temps de complétion aussi : ce sont les seuls
 réglages à ajuster, tous dans des fichiers de données.
 
 1. **Saisons** (`src/data/seasons.config.json`)
-   - Regarde la sortie de `npm run catalog:check` : si une saison dépasse ~150
-     créateurs (typiquement « Découverte », qui grandit vite en périmètre
-     mondial), déplace des catégories dans un groupe dédié, ou baisse
-     `catchAll.maxSize` (défaut 60).
+   - Le découpage est **automatique** : `seasonMaxSize` (défaut 150) borne chaque
+     famille de jeux, `catchAll.maxSize` (défaut 60) borne le fourre-tout. Une
+     famille trop large devient `S01-1/3`, `S01-2/3`… sans perdre son étiquette,
+     et sans jamais couper une catégorie en deux.
+   - Exemple mesuré sur un catalogue mondial simulé de 1962 créateurs : 21
+     saisons, la plus grosse à 150, couverture 1962/1962.
+   - Si tu veux des objectifs plus courts, baisse `seasonMaxSize` ; si tu
+     préfères des saisons plus thématiques, déplace des catégories dans un
+     groupe dédié plutôt que de monter la limite.
    - `pointsPerCreator` × taille de saison donne la récompense : à 2000, les
      saisons rapportent mécaniquement plus de points.
 2. **Boosters** (`src/lib/catalog.ts` → `PACKS`)
@@ -161,9 +172,9 @@ réglages à ajuster, tous dans des fichiers de données.
 - **Sauvegardes des joueurs** : une sauvegarde v2 (ou v1 migrée) reste valide
   quelle que soit la taille du catalogue. Les cartes dont le créateur a
   disparu du catalogue sont ignorées au chargement sans casser la partie.
-- **Saisons déjà réclamées** : si l'identifiant d'une saison change (un
-  fourre-tout `S07` découpé en `S07-1`…`S07-8`), l'ancien identifiant est
-  filtré et la nouvelle saison redevient réclamable — sans conséquence sur la
-  progression puisque les cartes restent.
+- **Saisons déjà réclamées** : si un identifiant disparaît (un `S01` découpé en
+  `S01-1`…, un `S07` en `S07-1`…), l'ancien identifiant est filtré au chargement
+  et les nouveaux morceaux redeviennent réclamables — sans conséquence sur la
+  progression, puisque les cartes restent acquises.
 - **Version de sauvegarde** : inutile de l'incrémenter pour un changement de
   catalogue ; seules les nouveautés de format la font monter.

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CREATORS } from "@/lib/catalog";
-import { SEASONS, emptySeasonIds, seasonOf, seasonsCoverage, splitCatchAll } from "@/lib/seasons";
+import { SEASONS, emptySeasonIds, seasonOf, seasonsCoverage, splitSeason } from "@/lib/seasons";
 
 describe("seasons", () => {
   it("a des identifiants uniques et des récompenses cohérentes", () => {
@@ -44,13 +44,13 @@ describe("seasons", () => {
   });
 });
 
-describe("splitCatchAll", () => {
+describe("splitSeason", () => {
   const meta = { id: "S07", name: "Découverte", tagline: "Le reste du catalogue." };
   const entries = (count: number, category = "Jeu Niche") =>
     Array.from({ length: count }, (_, index) => ({ slug: `chaine-${index}`, category }));
 
   it("garde une seule saison quand le fourre-tout est petit", () => {
-    const seasons = splitCatchAll(entries(3), meta, 60);
+    const seasons = splitSeason(entries(3), meta, 60);
     expect(seasons).toHaveLength(1);
     expect(seasons[0].id).toBe("S07");
     expect(seasons[0].name).toBe("Découverte");
@@ -59,7 +59,7 @@ describe("splitCatchAll", () => {
   });
 
   it("découpe un gros fourre-tout en morceaux de taille bornée", () => {
-    const seasons = splitCatchAll(entries(130), meta, 60);
+    const seasons = splitSeason(entries(130), meta, 60);
     expect(seasons).toHaveLength(3);
     expect(seasons.map((season) => season.id)).toEqual(["S07-1", "S07-2", "S07-3"]);
     expect(seasons.map((season) => season.name)).toEqual([
@@ -80,7 +80,7 @@ describe("splitCatchAll", () => {
       ...entries(30, "Jeu Niche B"),
       ...entries(40, "Jeu Niche C"),
     ].map((entry, index) => ({ ...entry, slug: `chaine-${index}` }));
-    const seasons = splitCatchAll(mixed, meta, 60);
+    const seasons = splitSeason(mixed, meta, 60);
     // Aucun couple ne tient sous 60 (40+30, 30+40) : les trois catégories font
     // donc trois morceaux, sans jamais couper une catégorie en deux.
     expect(seasons.map((season) => season.categories)).toEqual([
@@ -96,6 +96,31 @@ describe("splitCatchAll", () => {
   });
 
   it("ne produit rien sans créateur à classer", () => {
-    expect(splitCatchAll([], meta, 60)).toEqual([]);
+    expect(splitSeason([], meta, 60)).toEqual([]);
+  });
+});
+
+describe("splitSeason sur une saison thématique", () => {
+  const meta = { id: "S01", name: "Accueil & IRL", tagline: "Talk et events." };
+  const entries = (count: number, category = "Just Chatting") =>
+    Array.from({ length: count }, (_, index) => ({ slug: `chaine-${index}`, category }));
+
+  it("laisse intacte une saison de taille raisonnable", () => {
+    const seasons = splitSeason(entries(80), meta, 150);
+    expect(seasons).toHaveLength(1);
+    expect(seasons[0].id).toBe("S01");
+    expect(seasons[0].slugs).toHaveLength(80);
+  });
+
+  it("découpe une famille devenue énorme en périmètre mondial", () => {
+    // Cas réel : « Just Chatting » au niveau mondial dépasse largement 150.
+    const seasons = splitSeason(entries(520), meta, 150);
+    expect(seasons).toHaveLength(4);
+    expect(seasons.map((season) => season.id)).toEqual(["S01-1", "S01-2", "S01-3", "S01-4"]);
+    expect(seasons.map((season) => season.slugs.length)).toEqual([150, 150, 150, 70]);
+    expect(seasons[0].name).toBe("Accueil & IRL · 1/4");
+    // La famille reste identifiable et aucun créateur n'est perdu.
+    expect(new Set(seasons.flatMap((season) => season.slugs)).size).toBe(520);
+    expect(seasons.every((season) => season.categories.includes("Just Chatting"))).toBe(true);
   });
 });

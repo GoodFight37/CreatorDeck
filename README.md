@@ -40,7 +40,7 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
-| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch (`--count 2000`, `--languages FR`, voir `docs/catalogue-twitch.md`) |
+| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — monde entier par défaut (`--count 2000`, `--languages FR` pour restreindre, voir `docs/catalogue-twitch.md`) |
 
 ## Architecture
 
@@ -103,8 +103,9 @@ Principes :
 - **Saisons** (écran Objectifs) : les créateurs sont répartis en familles de
   jeux (`src/data/seasons.config.json`, 7 groupes aujourd'hui) ; compléter une
   famille débloque une récompense à réclamer. Le découpage est vérifié par les
-  tests : chaque créateur appartient à exactement une saison, et le fourre-tout
-  « Découverte » se découpe automatiquement quand le catalogue grandit.
+  tests : chaque créateur appartient à exactement une saison, et toute saison
+  qui grossit (famille mondiale ou fourre-tout « Découverte ») est découpée
+  automatiquement en morceaux (`seasonMaxSize`, `catchAll.maxSize`).
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing.

@@ -1,8 +1,7 @@
 {
-  "version": 1,
-  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du catalogue. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit.",
   "pointsPerCreator": 4,
   "hourglassesPerSeason": 3,
+  "seasonMaxSize": 150,
   "seasons": [
     {
       "id": "S01",
@@ -119,5 +118,6 @@
     "name": "Découverte",
     "tagline": "Le reste du classement : les pépites à dénicher.",
     "maxSize": 60
-  }
+  },
+  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du catalogue. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison. La saison fourre-tout est découpée en morceaux de maxSize lorsque le catalogue grandit."
 }

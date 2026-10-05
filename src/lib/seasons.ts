@@ -27,12 +27,22 @@ type SeasonDefinition = { id: string; name: string; tagline: string; categories:
 type SeasonConfig = {
   pointsPerCreator: number;
   hourglassesPerSeason: number;
+  /** Taille maximale d'une saison thématique avant découpage (défaut : 150). */
+  seasonMaxSize?: number;
   seasons: SeasonDefinition[];
   catchAll: { id: string; name: string; tagline: string; maxSize?: number };
 };
 
 /** Taille maximale d'une saison fourre-tout avant découpage (défaut : 60). */
 const DEFAULT_CATCH_ALL_MAX = 60;
+/**
+ * Taille maximale d'une saison thématique avant découpage (défaut : 150).
+ *
+ * En périmètre mondial, une famille comme « Just Chatting » réunit plusieurs
+ * centaines de créateurs : une saison infinissable n'est pas un objectif. On la
+ * découpe en morceaux qui gardent l'étiquette de la famille (« S01-1/3 »).
+ */
+const DEFAULT_SEASON_MAX = 150;
 
 const CONFIG = seasonConfig as SeasonConfig;
 
@@ -43,11 +53,11 @@ function rewardFor(size: number): SeasonReward {
   };
 }
 
-/** Entrée du fourre-tout : le slug et la catégorie Twitch, pour décrire chaque morceau. */
-export type CatchAllEntry = { slug: string; category: string };
+/** Entrée d'une saison : le slug et la catégorie Twitch, pour décrire chaque morceau. */
+export type SeasonEntry = { slug: string; category: string };
 
 function toSeason(
-  entries: CatchAllEntry[],
+  entries: SeasonEntry[],
   meta: { id: string; name: string; tagline: string },
 ): Season {
   return {
@@ -63,14 +73,19 @@ function toSeason(
 }
 
 /**
- * Découpe le fourre-tout en saisons de taille raisonnable : à 500 créateurs il
- * tient en une saison, mais un Top 2000 ramasse beaucoup de petites catégories
- * (jeux obscurs, événements) — une saison de 400 créateurs serait infinissable.
+ * Découpe une saison en morceaux de taille raisonnable.
+ *
+ * Deux usages : le fourre-tout « Découverte » (des dizaines de petites
+ * catégories, maxSize 60) et les saisons thématiques devenues trop grosses en
+ * périmètre mondial (maxSize 150). Les créateurs d'une même catégorie restent
+ * ensemble — un morceau ne mélange pas la moitié d'un jeu avec la moitié d'un
+ * autre — sauf si la catégorie dépasse à elle seule `maxSize`, auquel cas elle
+ * est découpée en tranches.
  *
  * Pure et exportée pour être testable indépendamment du catalogue réel.
  */
-export function splitCatchAll(
-  entries: CatchAllEntry[],
+export function splitSeason(
+  entries: SeasonEntry[],
   { id, name, tagline }: { id: string; name: string; tagline: string },
   maxSize = DEFAULT_CATCH_ALL_MAX,
 ): Season[] {
@@ -79,7 +94,7 @@ export function splitCatchAll(
 
   // 1. Regroupement par catégorie : un morceau ne mélange pas la moitié d'un
   //    jeu avec la moitié d'un autre.
-  const byCategory = new Map<string, CatchAllEntry[]>();
+  const byCategory = new Map<string, SeasonEntry[]>();
   for (const entry of entries) {
     const bucket = byCategory.get(entry.category);
     if (bucket) bucket.push(entry);
@@ -87,8 +102,8 @@ export function splitCatchAll(
   }
 
   // 2. Remplissage glouton des morceaux, sans jamais dépasser maxSize.
-  const packed: CatchAllEntry[][] = [];
-  let current: CatchAllEntry[] = [];
+  const packed: SeasonEntry[][] = [];
+  let current: SeasonEntry[] = [];
   for (const bucket of byCategory.values()) {
     if (current.length && current.length + bucket.length > maxSize) {
       packed.push(current);
@@ -117,26 +132,35 @@ export function splitCatchAll(
   );
 }
 
-function buildSeasons(): Season[] {
-  const explicitCategories = new Set(CONFIG.seasons.flatMap((season) => season.categories));
+type BuiltSeasons = {
+  seasons: Season[];
+  /** Identifiants de configuration ayant donné au moins une saison. */
+  populated: Set<string>;
+};
 
-  const seasons: Season[] = CONFIG.seasons
-    .map((definition) => {
-      const slugs = CREATORS.filter((creator) =>
-        definition.categories.includes(creator.category),
-      ).map((creator) => creator.slug);
-      return { ...definition, slugs, reward: rewardFor(slugs.length) };
-    })
+function buildSeasons(): BuiltSeasons {
+  const explicitCategories = new Set(CONFIG.seasons.flatMap((season) => season.categories));
+  const seasons: Season[] = [];
+  const populated = new Set<string>();
+  const seasonMax = CONFIG.seasonMaxSize ?? DEFAULT_SEASON_MAX;
+
+  for (const definition of CONFIG.seasons) {
+    const members: SeasonEntry[] = CREATORS.filter((creator) =>
+      definition.categories.includes(creator.category),
+    ).map((creator) => ({ slug: creator.slug, category: creator.category }));
     // Une catégorie peut disparaître du catalogue au fil des régénérations
-    // (jeu plus streamé, saison terminée) : une saison vide ne s'affiche pas.
-    .filter((season) => season.slugs.length > 0);
+    // (jeu plus streamé) : une saison vide ne s'affiche pas.
+    if (!members.length) continue;
+    populated.add(definition.id);
+    seasons.push(...splitSeason(members, definition, seasonMax));
+  }
 
   // Les catégories non listées (petits jeux, événements ponctuels) atterrissent
   // dans une saison « Découverte » : aucun créateur n'est laissé de côté.
   const leftovers = CREATORS.filter((creator) => !explicitCategories.has(creator.category));
   if (leftovers.length) {
     seasons.push(
-      ...splitCatchAll(
+      ...splitSeason(
         leftovers.map((creator) => ({ slug: creator.slug, category: creator.category })),
         {
           id: CONFIG.catchAll.id,
@@ -148,10 +172,11 @@ function buildSeasons(): Season[] {
     );
   }
 
-  return seasons;
+  return { seasons, populated };
 }
 
-export const SEASONS: Season[] = buildSeasons();
+const BUILT = buildSeasons();
+export const SEASONS: Season[] = BUILT.seasons;
 
 export const SEASON_BY_ID = new Map(SEASONS.map((season) => [season.id, season]));
 
@@ -170,10 +195,9 @@ export function seasonOf(slug: string): Season | undefined {
  * signale en avertissement ; l'application les ignore.
  */
 export function emptySeasonIds(): string[] {
-  const defined = new Set(SEASONS.map((season) => season.id));
   return (seasonConfig as SeasonConfig).seasons
     .map((season) => season.id)
-    .filter((id) => !defined.has(id));
+    .filter((id) => !BUILT.populated.has(id));
 }
 
 /** Nombre total de créateurs couverts par les saisons (vaut la taille du catalogue). */
