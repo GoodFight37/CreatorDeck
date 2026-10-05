@@ -9,6 +9,7 @@ import {
   SAVE_VERSION,
   XP_PER_LEVEL,
   applyPackResult,
+  applyPackStatus,
   claimSeason,
   craftCreator,
   createInitialState,
@@ -263,6 +264,60 @@ describe("applyPackResult", () => {
     expect(state.packs).toBe(2);
     expect(state.cards).toHaveLength(0);
     expect(state.openings).toBe(0);
+  });
+
+  it("applique exactement le même résultat que openPack sur les mêmes cartes", () => {
+    // Le tirage local et le tirage serveur partagent la même application :
+    // seules les cartes changent (ici celles du serveur, rejouées à la main).
+    const state = makeState({ packs: 2 });
+    const refreshed = refreshBalances(state, T0);
+    const local = openPack(state, T0);
+    const { state: shared } = applyPackResult(
+      refreshed,
+      local.cards,
+      refreshed.packs - 1,
+      refreshed.lastPackRegen,
+      refreshed.openings + 1,
+      T0,
+    );
+    expect(shared).toMatchObject({
+      packs: local.state.packs,
+      points: local.state.points,
+      xp: local.state.xp,
+      level: local.state.level,
+      hourglasses: local.state.hourglasses,
+      openings: local.state.openings,
+      lastPackRegen: local.state.lastPackRegen,
+    });
+    expect(shared.cards.map((card) => card.creatorSlug)).toEqual(
+      local.state.cards.map((card) => card.creatorSlug),
+    );
+  });
+});
+
+describe("applyPackStatus", () => {
+  it("adopte la réserve du serveur sans toucher au reste de la partie", () => {
+    const state = makeState({ packs: 1, points: 120, xp: 40, hourglasses: 5 });
+    const next = applyPackStatus(state, 3, new Date(T0).toISOString(), T0 + 1_000);
+    expect(next.packs).toBe(3);
+    expect(next.lastPackRegen).toBe(T0);
+    expect(next.points).toBe(120);
+    expect(next.xp).toBe(40);
+    expect(next.hourglasses).toBe(5);
+    expect(next.updatedAt).toBe(T0 + 1_000);
+    // Pureté : l'état d'origine n'est pas modifié.
+    expect(state.packs).toBe(1);
+  });
+
+  it("borne la réserve à 0..4 et retombe sur maintenant si la date est illisible", () => {
+    expect(applyPackStatus(makeState({ packs: 2 }), 9, T0, T0).packs).toBe(PACKS.live.max);
+    expect(applyPackStatus(makeState({ packs: 2 }), -3, T0, T0).packs).toBe(0);
+    expect(applyPackStatus(makeState({ packs: 2 }), 1, "pas une date", T0).lastPackRegen).toBe(T0);
+  });
+
+  it("renvoie l'état inchangé quand la réserve est déjà la bonne", () => {
+    const state = makeState({ packs: 2, lastPackRegen: T0 });
+    expect(applyPackStatus(state, 2, new Date(T0).toISOString(), T0 + 5_000)).toBe(state);
   });
 });
 

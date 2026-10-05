@@ -688,36 +688,36 @@ export function openPack(
   }
 
   const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed));
-  const pack = PACKS[ACTIVE_PACK];
-  const nextXp = refreshed.xp + pack.xp;
-  const nextLevel = Math.floor(nextXp / XP_PER_LEVEL) + 1;
-  const gainedLevels = Math.max(0, nextLevel - refreshed.level);
 
-  // Un booster consommé depuis une réserve pleine démarre une nouvelle
-  // recharge maintenant (refreshBalances garde l'ancre à `now` quand c'est plein).
-  const next: PlayerState = {
-    ...refreshed,
-    updatedAt: now,
-    packs: refreshed.packs - 1,
-    points: refreshed.points + pack.points,
-    xp: nextXp,
-    level: nextLevel,
-    hourglasses: refreshed.hourglasses + gainedLevels * HOURGLASSES_PER_LEVEL,
-    openings: refreshed.openings + 1,
-    cards: [
-      ...refreshed.cards,
-      ...cards.map<OwnedCard>((card) => ({
-        id: card.id,
-        creatorSlug: card.creatorSlug,
-        rarity: card.rarity,
-        variant: card.variant,
-        obtainedAt: now,
-        rareDrop: card.rareDrop,
-      })),
-    ],
-  };
+  // Même application qu'un tirage serveur : un seul endroit calcule les
+  // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`
+  // laisse l'ancre à `now` quand la réserve était pleine, donc la nouvelle
+  // recharge repart bien de maintenant.
+  return applyPackResult(
+    refreshed,
+    cards,
+    refreshed.packs - 1,
+    refreshed.lastPackRegen,
+    refreshed.openings + 1,
+    now,
+  );
+}
 
-  return { state: next, cards };
+/** Borne une réserve venue du serveur (la table la contraint déjà à 0..4). */
+function clampPacks(value: number): number {
+  const max = PACKS[ACTIVE_PACK].max;
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(max, Math.floor(value)));
+}
+
+/** Horodatage serveur (`timestamptz` ISO ou epoch ms) → millisecondes. */
+function serverTimeMs(value: string | number, fallback: number): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Date.parse(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
 }
 
 /**
@@ -751,15 +751,7 @@ export function applyPackResult(
   const gainedLevels = Math.max(0, nextLevel - state.level);
 
   // lastPackRegen : le serveur renvoie un timestamptz ISO (ou un epoch ms).
-  let lastRegenMs: number;
-  if (typeof serverLastRegenAt === "number") {
-    lastRegenMs = serverLastRegenAt;
-  } else {
-    lastRegenMs = Date.parse(serverLastRegenAt);
-    if (!Number.isFinite(lastRegenMs)) {
-      lastRegenMs = now;
-    }
-  }
+  const lastRegenMs = serverTimeMs(serverLastRegenAt, now);
 
   const cards: DrawnCard[] = serverCards.map((card) => ({
     id: randomUUID(),
@@ -773,7 +765,7 @@ export function applyPackResult(
   const next: PlayerState = {
     ...state,
     updatedAt: now,
-    packs: serverPacks,
+    packs: clampPacks(serverPacks),
     lastPackRegen: lastRegenMs,
     points: state.points + pack.points,
     xp: nextXp,
@@ -794,6 +786,26 @@ export function applyPackResult(
   };
 
   return { state: next, cards };
+}
+
+/**
+ * Adopte la réserve de boosters décidée par le serveur (`pack_status()`).
+ *
+ * Sert à afficher le bon compteur et le bon compte à rebours dès la connexion,
+ * avant toute ouverture. La recharge passive se recale ensuite sur la même
+ * ancre que le serveur : l'affichage et le tirage restent d'accord. Les points,
+ * l'XP, le niveau, les sabliers et la collection ne bougent pas.
+ */
+export function applyPackStatus(
+  state: PlayerState,
+  serverPacks: number,
+  serverLastRegenAt: string | number,
+  now = Date.now(),
+): PlayerState {
+  const packs = clampPacks(serverPacks);
+  const lastPackRegen = serverTimeMs(serverLastRegenAt, now);
+  if (packs === state.packs && lastPackRegen === state.lastPackRegen) return state;
+  return { ...state, updatedAt: now, packs, lastPackRegen };
 }
 
 /** Dépense un sablier pour avancer la recharge du booster choisi. */
