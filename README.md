@@ -40,7 +40,7 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
-| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — monde entier par défaut (`--count 2000`, `--languages FR` pour restreindre, voir `docs/catalogue-twitch.md`) |
+| `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre, voir `docs/catalogue-twitch.md`) |
 
 ## Architecture
 

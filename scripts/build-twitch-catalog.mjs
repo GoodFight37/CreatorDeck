@@ -5,16 +5,20 @@
  * Périmètre : par défaut **le monde entier** (classement mondial Twitch), avec
  * la possibilité de restreindre à une ou plusieurs langues de diffusion.
  *
+ * Cible retenue pour le projet : **Top 1000 mondial, portraits 600 px** — c'est
+ * le défaut ci-dessous. Le choix est argumenté (temps de complétion, poids des
+ * images, reconnaissance des cartes) dans docs/catalogue-twitch.md.
+ *
  * Usage :
- *   node scripts/build-twitch-catalog.mjs                       # Top 500 mondial
- *   node scripts/build-twitch-catalog.mjs --count 2000          # Top 2000 mondial
+ *   node scripts/build-twitch-catalog.mjs                       # Top 1000 mondial
+ *   node scripts/build-twitch-catalog.mjs --count 500           # autre taille
  *   node scripts/build-twitch-catalog.mjs --languages FR        # Top FR (historique)
  *   node scripts/build-twitch-catalog.mjs --languages FR,EN     # plusieurs langues
- *   node scripts/build-twitch-catalog.mjs --count 2000 --dry-run
- *   AVATAR_PX=300 node scripts/build-twitch-catalog.mjs --count 2000
+ *   node scripts/build-twitch-catalog.mjs --dry-run             # mesurer sans écrire
+ *   AVATAR_PX=300 node scripts/build-twitch-catalog.mjs         # portraits plus légers
  *
  * Options :
- *   --count N        taille du catalogue à produire (défaut 500, env TOP_N)
+ *   --count N        taille du catalogue à produire (défaut 1000, env TOP_N)
  *   --languages L    langues de diffusion à retenir, séparées par des virgules
  *                    (FR, EN, ES, PT, DE…). Vide = toutes (défaut).
  *   --pages N        profondeur de pagination Twitch par jeu (défaut 2)
@@ -62,7 +66,7 @@ function option(name, fallback) {
   return index >= 0 && argv[index + 1] ? argv[index + 1] : fallback;
 }
 
-const COUNT = Math.max(1, Math.floor(Number(option("count", process.env.TOP_N ?? 500))));
+const COUNT = Math.max(1, Math.floor(Number(option("count", process.env.TOP_N ?? 1000))));
 /** Profondeur de pagination : 1 = top 30 par jeu, 2 = jusqu'à 60, etc. */
 const PAGES = Math.max(1, Math.floor(Number(option("pages", 2))));
 const CONCURRENCY = Math.max(1, Math.floor(Number(option("concurrency", 24))));

@@ -5,6 +5,10 @@ au monde entier, à 1000 ou à 2000 créateurs est un **changement de données**
 pas de code. Ce document est le mode d'emploi, avec les chiffres mesurés sur ce
 dépôt.
 
+> **Cible retenue : Top 1000 mondial, portraits 600 px.** Autrement dit le
+> défaut du générateur, sans aucune option à passer. Les raisons sont détaillées
+> dans « Choisir la taille » ci-dessous.
+
 ## Périmètre : monde entier, ou langues restreintes
 
 `scripts/build-twitch-catalog.mjs` interroge Twitch **sans filtre de langue par
@@ -58,28 +62,30 @@ erreur — la liste peut vieillir sans casser le build.
 | Générateur | `scripts/build-twitch-catalog.mjs --count N`, avec pagination Twitch et reprise sur incident |
 | Taux de tirage | exprimés en raretés, donc indépendants de la taille du catalogue |
 
-## Marche à suivre — catalogue mondial 2000 (à lancer **sur ta machine**)
+## Marche à suivre — catalogue mondial 1000 (à lancer **sur ta machine**)
 
 ```bash
 # 1. Découverte seule : combien de chaînes sont réellement atteignables ?
-npm run catalog:source -- --count 2000 --dry-run
-#    -> reports/candidates-2000.json (aucune écriture dans src/ ni public/)
+npm run catalog:source -- --dry-run
+#    -> reports/candidates-1000.json (aucune écriture dans src/ ni public/)
 #    Si le total est insuffisant : --pages 3, ou complète la liste curée.
 
 # 2. Génération du catalogue + des portraits (reprenable, 600 px par défaut)
-npm run catalog:source -- --count 2000
+npm run catalog:source
 
 # 3. Compléter les portraits manquants (même résolution)
 npm run assets:regen
 
 # 4. Valider et vérifier
-npm run catalog:check      # 2000 attendus, rangs contigus, saisons couvertes
+npm run catalog:check      # 1000 attendus, rangs contigus, saisons couvertes
 npm test                   # 65 tests, agnostiques à la taille du catalogue
 npm run build              # export statique
 ```
 
-Compter ~1 à 3 h pour l'étape 2 (découverte + ~2000 téléchargements d'images),
-et une bonne centaine de mégaoctets d'images temporaires pendant l'encodage.
+Compter ~30 à 90 min pour l'étape 2 (découverte + ~1000 téléchargements
+d'images). `src/data/catalog.config.json` passera tout seul à
+`"expectedSize": 1000` et `"label": "Top 1000 Twitch"` : aucun composant à
+toucher.
 
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
@@ -135,16 +141,15 @@ Conséquences :
 - Un affichage mixte (600 px pour le top, 300 px pour le reste) est possible
   mais complique le pipeline pour un gain modeste.
 
-**Décision retenue pour le catalogue mondial : 600 px**, pour la netteté sur
-écran Retina — en assumant ~68 Mo dans l'APK, la PWA et Git (≈ 135 Mo après
-l'encodage temporaire pendant la génération), et donc un clone et un
-`assets:regen` plus lents.
+**Décision retenue : 600 px**, pour la netteté sur écran Retina — en assumant
+~34 Mo dans l'APK, la PWA et Git pour 1000 portraits, et donc un clone et un
+`assets:regen` un peu plus lents qu'en 300 px (~17 Mo).
 
 Changer d'avis plus tard est une simple variable d'environnement :
 
 ```bash
-AVATAR_PX=300 npm run catalog:source -- --count 2000   # tout regénérer en 300 px
-AVATAR_PX=300 npm run assets:regen                     # ou convertir l'existant
+AVATAR_PX=300 npm run catalog:source   # tout regénérer en 300 px
+AVATAR_PX=300 npm run assets:regen     # ou convertir l'existant
 ```
 
 ## Réglages de jeu à revoir après la bascule
@@ -165,9 +170,9 @@ réglages à ajuster, tous dans des fichiers de données.
    - `pointsPerCreator` × taille de saison donne la récompense : à 2000, les
      saisons rapportent mécaniquement plus de points.
 2. **Boosters** (`src/lib/catalog.ts` → `PACKS`)
-   - `max` et `regenMs` : à 2000 cartes, ouvrir 4 boosters/h ne suffit plus pour
-     sentir une progression. Passer le Live à `max: 5-6` et/ou `regenMs` à
-     45 min est le levier le plus direct.
+   - **Rien à changer à 1000.** La simulation donne 30 jours pour la moitié du
+     catalogue et 110 jours pour 90 % à 6 boosters/jour, ce qui est le rythme
+     visé. Le levier (`max`, `regenMs`) ne sert qu'au-delà de ~1500 cartes.
 3. **Atelier** (`RARITY_META` : `craftCost`, `recycleValue`)
    - Les raretés sont proportionnelles (5 % de légendaires, soit 100 à 2000) :
      les coûts restent cohérents. Comme il y a 4× plus de communes, le recyclage
@@ -176,8 +181,12 @@ réglages à ajuster, tous dans des fichiers de données.
 4. **Taux de drop** (`src/data/pull-rates.json`)
    - Indépendants de la taille du catalogue : à ne toucher que si tu veux
      accélérer le rythme, pas par obligation.
-   - `rareDrop.chancePermille` (Perfect) reste le même à 2000 : le pic de
-     dopamine n'a pas besoin d'être plus fréquent.
+   - `rareDrop.chancePermille` (Perfect) reste le même quelle que soit la taille :
+     le pic de dopamine n'a pas besoin d'être plus fréquent.
+   - Rappel : ces simulations ignorent l'Atelier. À 1000, l'artisanat (45 à 600
+     points) raccourcit surtout la **fin** de collection — la « traîne » des
+     dernières cartes, frustrante dans un TCG sans échange — au lieu d'accélérer
+     le début.
 
 ## Ce qu'il faut vérifier après génération
 
