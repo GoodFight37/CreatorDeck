@@ -148,6 +148,28 @@ Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 | `a && b` | une commande par ligne (`&&` arrive avec PowerShell 7) |
 | `./gradlew` | `npm run android:debug` (le script choisit `gradlew.bat`) |
 
+### Si une source revient vide
+
+L'API GQL de Twitch n'est pas documentée et répond parfois par une **erreur
+GraphQL** au lieu de données — que le code lisait autrefois comme « 0 résultat ».
+Un diagnostic est intégré :
+
+```bash
+node scripts/build-twitch-catalog.mjs --probe     # ou : $env:PROBE = "1"
+```
+
+La sonde teste trois formes de la requête de direct (mondiale sans filtre,
+langues principales, FR) et affiche, pour chacune, le nombre de chaînes **et les
+erreurs GraphQL éventuelles**. Aucune écriture.
+
+Constat de la première génération mondiale : la requête mondiale **sans filtre de
+langue** revient vide (0 chaîne), alors que la pagination **par jeux** — non
+filtrée elle aussi — a ramené 2 154 chaînes. Le script bascule donc
+automatiquement, et seulement dans ce cas, sur les langues principales de
+diffusion (`WORLD_LIVE_LANGUAGES`, 12 langues). Le classement final, lui, ne
+dépend pas de ce repli : ce n'est qu'un bonus pour rattraper les grosses chaînes
+en direct.
+
 > ⚠️ Le script interroge l'API GQL **non officielle** de Twitch avec le
 > Client-ID public du site web. Elle ne répond pas depuis un CI ou un sandbox
 > (les domaines Twitch y sont filtrés) : lance-le depuis une machine connectée.

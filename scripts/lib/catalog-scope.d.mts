@@ -17,3 +17,9 @@ export declare function scopeConfig(input: {
   size: number;
   languages?: string[];
 }): CatalogScopeConfig;
+
+/** Langues de repli pour la requête de direct globale (voir le .mjs). */
+export declare const WORLD_LIVE_LANGUAGES: readonly string[];
+
+/** Libellé de journal (« monde », « FR », « FR/EN », « 12 langues »). */
+export declare function scopeLogLabel(languages?: readonly string[]): string;

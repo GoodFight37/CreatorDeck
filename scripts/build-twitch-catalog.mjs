@@ -25,7 +25,12 @@
  *   $env:DRY_RUN = "1"; npm run catalog:source          # variable d'environnement
  *
  * Les mêmes variables existent pour les autres réglages : TOP_N, PAGES,
- * TOP_LANGUAGES, AVATAR_PX, FORCE.
+ * TOP_LANGUAGES, AVATAR_PX, FORCE, PROBE.
+ *
+ * Diagnostic : `node scripts/build-twitch-catalog.mjs --probe` interroge l'API
+ * et affiche, requête par requête, combien de chaînes elle renvoie et les
+ * éventuelles erreurs GraphQL. Utile quand une source revient vide alors que
+ * d'autres fonctionnent (l'API GQL n'est pas documentée et peut changer).
  *
  * Options :
  *   --count N        taille du catalogue à produire (défaut 1000, env TOP_N)
@@ -58,7 +63,11 @@ import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { AVATAR_SIZE, downloadLargestAvatar, encodeAvatar, readAvatarSize } from "./lib/avatars.mjs";
-import { scopeConfig } from "./lib/catalog-scope.mjs";
+import {
+  WORLD_LIVE_LANGUAGES,
+  scopeConfig,
+  scopeLogLabel,
+} from "./lib/catalog-scope.mjs";
 import { rarityCounts, rarityForRank } from "./lib/rarity-ladder.mjs";
 
 const ROOT = process.cwd();
@@ -87,6 +96,8 @@ const COUNT = Math.max(1, Math.floor(Number(option("count", process.env.TOP_N ??
 const PAGES = Math.max(1, Math.floor(Number(option("pages", process.env.PAGES ?? 2))));
 const CONCURRENCY = Math.max(1, Math.floor(Number(option("concurrency", 24))));
 const DRY_RUN = argv.includes("--dry-run") || truthy(process.env.DRY_RUN);
+/** Diagnostic réseau : interroge l'API et affiche ce qu'elle répond, sans rien écrire. */
+const PROBE = argv.includes("--probe") || truthy(process.env.PROBE);
 const FORCE = argv.includes("--force") || truthy(process.env.FORCE);
 const SEED_FILE = option("seed", null);
 /**
@@ -219,7 +230,16 @@ function isValidAvatar(url) {
   );
 }
 
-async function gqlRequest(query, variables = {}) {
+/**
+ * Transport brut : renvoie le corps JSON **et** les erreurs GraphQL.
+ *
+ * Séparé de `gqlRequest` à dessein. L'API GQL de Twitch n'est pas documentée :
+ * une requête peut répondre avec `errors` et aucun `data`. Comme le code appelant
+ * lit `body?.data?.streams?.edges`, une erreur serait sinon indiscernable d'un
+ * résultat vide — c'est précisément ce qui rendait un « 0 chaîne » opaque.
+ */
+async function gqlFetch(query, variables = {}) {
+  let status = 0;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
       const res = await fetch(GQL_URL, {
@@ -231,13 +251,20 @@ async function gqlRequest(query, variables = {}) {
         body: JSON.stringify({ query, variables }),
         signal: AbortSignal.timeout(20_000),
       });
-      if (res.ok) return res.json();
+      status = res.status;
+      if (res.ok) return { body: await res.json(), status };
     } catch {
       // Réseau instable : on retente avec un backoff croissant.
     }
     await new Promise((r) => setTimeout(r, 700 * (attempt + 1)));
   }
-  throw new Error("Twitch GQL request failed");
+  return { body: null, status };
+}
+
+async function gqlRequest(query, variables = {}) {
+  const { body, status } = await gqlFetch(query, variables);
+  if (!body) throw new Error(`Twitch GQL request failed (HTTP ${status || "réseau"})`);
+  return body;
 }
 
 /**
@@ -264,17 +291,28 @@ const STREAM_NODE_FIELDS = `
  * Connexion paginée de chaînes FR, globale ou pour un jeu donné.
  * `after` est le curseur renvoyé par la page précédente (null pour la première).
  */
-async function fetchStreamConnection({ gameName = null, after = null, first = 30 }) {
-  const args = [`first: ${first}${languageOptions()}`];
+/** Construit la requête de direct, indépendamment de son exécution (sonde). */
+function buildStreamQuery({ gameName = null, after = null, first = 30, languages = null }) {
+  // `languages` permet de viser un jeu de langues précis (repli du direct
+  // global) sans toucher au périmètre retenu pour le catalogue.
+  const options = languages
+    ? languages.length
+      ? `, options: { broadcasterLanguages: [${languages.join(", ")}] }`
+      : ""
+    : languageOptions();
+  const args = [`first: ${first}${options}`];
   if (after) args.push(`after: ${JSON.stringify(after)}`);
-  const query = gameName
+  return gameName
     ? `query { game(name: ${JSON.stringify(gameName)}) {
          displayName
          streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${STREAM_NODE_FIELDS} } } }
        } }`
     : `query { streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${STREAM_NODE_FIELDS} } } } }`;
-  const body = await gqlRequest(query);
-  return gameName ? body?.data?.game : body?.data?.streams;
+}
+
+async function fetchStreamConnection(options) {
+  const body = await gqlRequest(buildStreamQuery(options));
+  return options.gameName ? body?.data?.game : body?.data?.streams;
 }
 
 /** État partagé de la découverte : dédoublonnage par login. */
@@ -343,25 +381,51 @@ async function fetchCuratedUsers(logins) {
 }
 
 /**
- * Découvre les chaînes francophones : direct FR global (paginé) puis les
- * chaînes des jeux les plus joués (paginées aussi). La profondeur `PAGES`
- * détermine combien de pages on descend par jeu — c'est ce qui permet de
- * viser un Top 2000 là où une seule page plafonnait à ~600 chaînes.
+ * Découvre les chaînes actives du périmètre demandé : direct global (paginé)
+ * puis chaînes des jeux les plus joués (paginées aussi). La profondeur `PAGES`
+ * détermine combien de pages on descend par jeu — c'est ce qui permet de viser
+ * un Top 2000 là où une seule page plafonnait à ~600 chaînes.
+ *
+ * Particularité mesurée : la requête de direct **mondiale** sans filtre de
+ * langue revient vide (0 chaîne) côté API anonyme, alors que la même requête
+ * filtrée sur des langues renvoie des résultats. On bascule donc, uniquement
+ * dans ce cas, sur les langues principales de diffusion (WORLD_LIVE_LANGUAGES).
+ * La pagination par jeux, elle, n'est jamais filtrée : le classement final ne
+ * dépend pas de ce repli.
  */
 async function fetchLiveStreams(target) {
-  // 1. Direct FR global, page par page.
-  let cursor = null;
-  for (let page = 0; page < PAGES; page += 1) {
-    const connection = await fetchStreamConnection({ after: cursor, first: 100 });
-    if (!connection?.edges?.length) break;
-    ingestEdges(connection.edges);
-    if (!connection.pageInfo?.hasNextPage) break;
-    cursor = connection.pageInfo.endCursor;
-    if (discovery.collected.length >= target) break;
+  // 1. Direct global, page par page. Sans filtre de langue, l'API anonyme
+  //    renvoie une connexion vide : on retente alors sur les langues
+  //    principales, sans jamais filtrer la pagination par jeux.
+  async function pageGlobalLive(languages) {
+    let found = 0;
+    let cursor = null;
+    for (let page = 0; page < PAGES; page += 1) {
+      const connection = await fetchStreamConnection({ after: cursor, first: 100, languages });
+      if (!connection?.edges?.length) break;
+      found += connection.edges.length;
+      ingestEdges(connection.edges);
+      if (!connection.pageInfo?.hasNextPage) break;
+      cursor = connection.pageInfo.endCursor;
+      if (discovery.collected.length >= target) break;
+    }
+    return found;
   }
-  console.log(
-    `   -> direct ${LANGUAGES.length ? LANGUAGES.join("/") : "mondial"} : ${discovery.collected.length} chaînes`,
-  );
+
+  let liveFound = await pageGlobalLive(LANGUAGES);
+  let liveScope = scopeLogLabel(LANGUAGES);
+  if (liveFound === 0 && !LANGUAGES.length && !PROBE) {
+    // Rien n'a été ingéré (found === 0), donc aucun état à remettre en place.
+    liveFound = await pageGlobalLive(WORLD_LIVE_LANGUAGES);
+    if (liveFound > 0) liveScope = `repli sur ${WORLD_LIVE_LANGUAGES.length} langues`;
+  }
+  if (liveFound === 0) {
+    console.log(
+      `   -> direct ${liveScope} : aucune chaîne (API anonyme) — la pagination par jeux prend le relais.`,
+    );
+  } else {
+    console.log(`   -> direct ${liveScope} : ${liveFound} chaînes lues`);
+  }
 
   // 2. Liste des jeux : top Twitch + jeux complémentaires.
   const gamesBody = await gqlRequest(`query { games(first: 100) { edges { node { name } } } }`);
@@ -542,7 +606,51 @@ async function buildCatalog(candidates) {
   };
 }
 
+/**
+ * Sonde réseau : ne touche à rien, affiche ce que chaque requête renvoie.
+ *
+ * Trois formes de la requête de direct sont testées, ce qui permet de savoir
+ * laquelle fonctionne encore (l'API GQL de Twitch n'est pas documentée et pas
+ * stable) :
+ *   1. mondiale, sans filtre de langue   — la plus large
+ *   2. filtrée sur les langues principales — le repli utilisé par le script
+ *   3. filtrée sur FR                     — l'ancien périmètre, comme témoin
+ */
+async function probe() {
+  console.log("Sonde de l'API Twitch (aucune écriture, aucun appel au catalogue).\n");
+  const cases = [
+    { label: "direct mondial (sans filtre)", languages: [] },
+    { label: `direct ${WORLD_LIVE_LANGUAGES.length} langues principales`, languages: WORLD_LIVE_LANGUAGES },
+    { label: "direct FR (témoin)", languages: ["FR"] },
+  ];
+  for (const { label, languages } of cases) {
+    const { body, status } = await gqlFetch(buildStreamQuery({ first: 5, languages }));
+    if (!body) {
+      console.log(`   ${label} : ÉCHEC RÉSEAU (HTTP ${status || "aucune réponse"})`);
+      continue;
+    }
+    const edges = body?.data?.streams?.edges || [];
+    console.log(`   ${label} : ${edges.length} chaîne(s)`);
+    for (const edge of edges.slice(0, 3)) {
+      console.log(`      · ${edge?.node?.broadcaster?.login ?? "?"} (${edge?.node?.viewersCount ?? 0} spectateurs)`);
+    }
+    if (body.errors?.length) {
+      console.log(`      ⚠ erreurs GraphQL : ${body.errors.map((e) => e.message).join(" | ")}`);
+    } else if (!edges.length) {
+      console.log("      connexion vide sans erreur : la requête est acceptée mais ne renvoie rien");
+    }
+  }
+  console.log(
+    "\nInterprétation : si « mondial » est vide mais que les langues renvoient des chaînes, " +
+      "le repli du script est bien celui qu'il faut. Colle cette sortie si tu veux qu'on aille plus loin.",
+  );
+}
+
 async function main() {
+  if (PROBE) {
+    await probe();
+    return;
+  }
   await mkdir(OUT_DIR, { recursive: true });
   await mkdir(REPORTS_DIR, { recursive: true });
   console.log(
@@ -569,7 +677,9 @@ async function main() {
       `2/4 Pagination des chaînes actives ${LANGUAGES.length ? `(${LANGUAGES.join(", ")})` : "dans le monde"}…`,
     );
     const liveStreams = await fetchLiveStreams(CANDIDATE_TARGET);
-    console.log(`   -> ${liveStreams.length} chaînes FR actives récupérées.`);
+    console.log(
+      `   -> ${liveStreams.length} chaînes actives récupérées (${scopeLogLabel(LANGUAGES)}).`,
+    );
 
     const byLogin = new Map();
     for (const item of [...curated, ...liveStreams]) {
