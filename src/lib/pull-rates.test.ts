@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { PACKS } from "@/lib/catalog";
 import { PULL_RATES, RARITIES, packOdds } from "@/lib/pull-rates";
 
-const PACK_TYPES = ["live", "archive"] as const;
+const PACK_TYPES = Object.keys(PACKS) as (keyof typeof PACKS)[];
 
 describe("pull-rates", () => {
   it("décrit exactement les boosters du catalogue", () => {
+    expect(PACK_TYPES.length).toBeGreaterThan(0);
     for (const pack of PACK_TYPES) {
       const table = PULL_RATES[pack];
       expect(table.slots).toHaveLength(PACKS[pack].size - 1);

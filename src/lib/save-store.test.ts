@@ -30,7 +30,7 @@ function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
 describe("save/load", () => {
   it("fait un aller-retour sans perte", () => {
     const storage = memoryStorage();
-    const { state } = openPack(createInitialState(T0), "live", T0 + 1);
+    const { state } = openPack(createInitialState(T0), T0 + 1);
     saveState(storage, state);
     expect(storage.data.has(SAVE_KEY)).toBe(true);
     expect(loadState(storage, T0 + 2)).toEqual(state);
@@ -70,12 +70,11 @@ describe("sanitizeState", () => {
   it("ramène les valeurs aberrantes dans les bornes et ignore les cartes inconnues", () => {
     const raw = {
       ...createInitialState(T0),
-      livePacks: 99,
-      archivePacks: -4,
+      packs: 99,
       points: 12.7,
       level: 0,
       hourglasses: Number.NaN,
-      lastLiveRegen: "2026-01-01T10:00:00Z",
+      lastPackRegen: "2026-01-01T10:00:00Z",
       cards: [
         { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0 },
         { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0 },
@@ -86,12 +85,11 @@ describe("sanitizeState", () => {
     };
     const state = sanitizeState(raw, T0);
     expect(state).not.toBeNull();
-    expect(state?.livePacks).toBe(PACKS.live.max);
-    expect(state?.archivePacks).toBe(0);
+    expect(state?.packs).toBe(PACKS.live.max);
     expect(state?.points).toBe(12);
     expect(state?.level).toBe(1);
     expect(state?.hourglasses).toBe(0);
-    expect(state?.lastLiveRegen).toBe(Date.parse("2026-01-01T10:00:00Z"));
+    expect(state?.lastPackRegen).toBe(Date.parse("2026-01-01T10:00:00Z"));
     expect(state?.cards.map((card) => card.id)).toEqual(["a"]);
   });
 });
@@ -170,7 +168,7 @@ describe("migration", () => {
 
 describe("export/import", () => {
   it("réimporte exactement ce qui a été exporté", () => {
-    const { state } = openPack(createInitialState(T0), "archive", T0);
+    const { state } = openPack(createInitialState(T0), T0);
     expect(importSave(exportSave(state), T0)).toEqual(state);
   });
 

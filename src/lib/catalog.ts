@@ -3,7 +3,11 @@ import creatorData from "@/data/creators.json";
 
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 export type CardVariant = "standard" | "live" | "holo" | "gold";
-export type PackType = "live" | "archive";
+/**
+ * Identifiant de booster. Dérivé de `PACKS` : ajouter un paquet à `PACKS` (et sa
+ * table dans `pull-rates.json`) suffit, le type suit.
+ */
+export type PackType = keyof typeof PACKS;
 
 export type Creator = {
   slug: string;
@@ -163,6 +167,21 @@ export const VARIANT_META: Record<
   gold: { label: "Gold", className: "variant-gold" },
 };
 
+/**
+ * Le booster du jeu — un seul, volontairement.
+ *
+ * Le modèle est celui qui marche le mieux sur ce genre de jeu : un paquet
+ * gratuit qui se recharge tout seul, qu'on ouvre dès qu'il est prêt. Deux
+ * paquets (un gratuit, un payant en points) obligeaient à choisir avant même
+ * de savoir ce qu'on voulait, pour un gain de jeu nul.
+ *
+ * Rythme : un booster toutes les **30 minutes** (WikiMasters, la référence du
+ * genre, en donne un toutes les 10 minutes), cumulables jusqu'à 4 — soit deux
+ * heures d'absence avant de saturer. `max` et `regenMs` sont les seuls leviers.
+ *
+ * Le booster contient 5 cartes dont la dernière est garantie Rare ou mieux, en
+ * variante Live : la promesse du « live » de Twitch, à chaque ouverture.
+ */
 export const PACKS = {
   live: {
     label: "Live Drop",
@@ -172,17 +191,7 @@ export const PACKS = {
     points: 12,
     xp: 18,
     max: 4,
-    regenMs: 60 * 60 * 1000,
-  },
-  archive: {
-    label: "Archives",
-    eyebrow: `COLLECTION TOP ${CATALOG_SIZE}`,
-    description: "3 cartes · une Rare ou mieux garantie",
-    size: 3,
-    points: 25,
-    xp: 26,
-    max: 3,
-    regenMs: 4 * 60 * 60 * 1000,
+    regenMs: 30 * 60 * 1000,
   },
 } as const;
 

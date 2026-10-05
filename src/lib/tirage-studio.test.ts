@@ -57,7 +57,7 @@ describe("studio de tirages", () => {
 
   it("publie les taux attendus depuis pull-rates.json", () => {
     stubRandom();
-    for (const packType of ["live", "archive"] as PackType[]) {
+    for (const packType of Object.keys(PACKS) as PackType[]) {
       const result = runStudio(packType, 5);
       const odds = packOdds(packType);
       for (const rarity of RARITIES) {
@@ -83,9 +83,9 @@ describe("studio de tirages", () => {
     // La simulation ne lit ni n'écrit la partie : à graine égale, le résultat
     // est identique — c'est ce qui permet de la relancer sans arrière-pensée.
     stubRandom(7);
-    const first = runStudio("archive", 20);
+    const first = runStudio("live", 20);
     stubRandom(7);
-    const second = runStudio("archive", 20);
+    const second = runStudio("live", 20);
     expect(second).toEqual(first);
   });
 });

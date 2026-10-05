@@ -5,8 +5,8 @@
  * en production (navigateur, PWA, WebView Capacitor), une Map en test.
  *
  * Une sauvegarde d'une version antérieure est migrée à la lecture : passer en
- * v2 (Atelier + saisons), v3 (paliers de saison) ou v4 (thème de collection) ne
- * fait perdre aucune collection.
+ * v2 (Atelier + saisons), v3 (paliers de saison), v4 (thème de collection) ou v5
+ * (un seul booster au lieu de deux) ne fait perdre aucune collection.
  */
 import { CREATOR_BY_SLUG, PACKS, type CardVariant, type Rarity } from "@/lib/catalog";
 import {
@@ -21,12 +21,13 @@ import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
 /** Clés des versions précédentes, migrées puis supprimées à la lecture. */
 export const LEGACY_SAVE_KEYS = [
+  "creatordeck.save.v4",
   "creatordeck.save.v3",
   "creatordeck.save.v2",
   "creatordeck.save.v1",
 ] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -148,10 +149,19 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     xp: nonNegativeInt(raw.xp, 0),
     points: nonNegativeInt(raw.points, 0),
     hourglasses: nonNegativeInt(raw.hourglasses, 0),
-    livePacks: Math.min(PACKS.live.max, nonNegativeInt(raw.livePacks, 0)),
-    archivePacks: Math.min(PACKS.archive.max, nonNegativeInt(raw.archivePacks, 0)),
-    lastLiveRegen: epochMs(raw.lastLiveRegen, now),
-    lastArchiveRegen: epochMs(raw.lastArchiveRegen, now),
+    // v5 : un seul booster. Les sauvegardes v4 avaient deux réserves (Live et
+    // Archives) : on additionne, borné à la nouvelle réserve — aucune partie ne
+    // perd de boosters en passant.
+    packs: Math.min(
+      PACKS.live.max,
+      nonNegativeInt(raw.packs, nonNegativeInt(raw.livePacks, 0) + nonNegativeInt(raw.archivePacks, 0)),
+    ),
+    // Ancre de recharge : la plus ancienne des deux (la plus favorable), en
+    // gardant la valeur par défaut si aucune n'est lisible.
+    lastPackRegen: epochMs(
+      raw.lastPackRegen,
+      Math.min(epochMs(raw.lastLiveRegen, now), epochMs(raw.lastArchiveRegen, now)),
+    ),
     openings: nonNegativeInt(raw.openings, 0),
     cards: uniqueCards,
     claimedTiers: sanitizeClaimedTiers(raw.claimedTiers, raw.claimedSeasons),

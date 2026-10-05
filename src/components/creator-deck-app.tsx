@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
-  Archive,
   BadgeInfo,
   BookOpen,
   Check,
@@ -54,7 +53,6 @@ import {
   RARITY_META,
   creatorImage,
   type CardVariant,
-  type PackType,
   type Rarity,
 } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
@@ -145,13 +143,10 @@ function TopBar({ game }: { game: GameState }) {
   );
 }
 
-function PackArtwork({ packType }: { packType: PackType }) {
-  const people =
-    packType === "live"
-      ? [CREATORS[0], CREATORS[1], CREATORS[2]]
-      : [CREATORS[5], CREATORS[6], CREATORS[7]];
+function PackArtwork() {
+  const people = [CREATORS[0], CREATORS[1], CREATORS[2]];
   return (
-    <div className={`pack-artwork pack-${packType}`}>
+    <div className="pack-artwork pack-live">
       <div className="pack-noise" />
       <div className="pack-orbit one" />
       <div className="pack-orbit two" />
@@ -172,18 +167,16 @@ function PackArtwork({ packType }: { packType: PackType }) {
         <strong>DECK</strong>
       </div>
       <div className="pack-edition">
-        {packType === "live" ? <Radio size={13} /> : <Archive size={13} />}
-        {packType === "live" ? `TOP ${CATALOG_SIZE} LIVE` : `ARCHIVES ${CATALOG_SIZE}`}
+        <Radio size={13} />
+        {`TOP ${CATALOG_SIZE} LIVE`}
       </div>
-      <small>{PACKS[packType].size} CARTES</small>
+      <small>{PACKS.live.size} CARTES</small>
     </div>
   );
 }
 
 function HomeView({
   game,
-  selectedPack,
-  setSelectedPack,
   onOpen,
   onUseHourglass,
   onShowOdds,
@@ -192,8 +185,6 @@ function HomeView({
   now,
 }: {
   game: GameState;
-  selectedPack: PackType;
-  setSelectedPack: (pack: PackType) => void;
   onOpen: () => void;
   onUseHourglass: () => void;
   onShowOdds: () => void;
@@ -201,11 +192,9 @@ function HomeView({
   usingHourglass: boolean;
   now: number;
 }) {
-  const pack = PACKS[selectedPack];
-  const stock =
-    selectedPack === "live" ? game.player.livePacks : game.player.archivePacks;
-  const nextAt =
-    selectedPack === "live" ? game.player.nextLiveAt : game.player.nextArchiveAt;
+  const pack = PACKS.live;
+  const stock = game.player.packs;
+  const nextAt = game.player.nextPackAt;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
 
   return (
@@ -221,29 +210,10 @@ function HomeView({
         </div>
       </section>
 
-      <div className="pack-tabs" role="tablist" aria-label="Choix du booster">
-        {(["live", "archive"] as PackType[]).map((type) => {
-          const amount = type === "live" ? game.player.livePacks : game.player.archivePacks;
-          return (
-            <button
-              key={type}
-              className={selectedPack === type ? "active" : ""}
-              onClick={() => setSelectedPack(type)}
-              role="tab"
-              aria-selected={selectedPack === type}
-            >
-              {type === "live" ? <Radio size={15} /> : <Archive size={15} />}
-              <span>{PACKS[type].label}</span>
-              <b>{amount}</b>
-            </button>
-          );
-        })}
-      </div>
-
-      <section className={`pack-stage stage-${selectedPack}`}>
+      <section className="pack-stage stage-live">
         <div className="stage-glow" />
         <div className="pack-shadow" />
-        <PackArtwork packType={selectedPack} />
+        <PackArtwork />
         <div className="pack-copy">
           <p>{pack.eyebrow}</p>
           <h2>{pack.label}</h2>
@@ -280,17 +250,12 @@ function HomeView({
         >
           <Hourglass size={15} />
           <span>
-            Utiliser 1 sablier ({game.player.hourglasses} disp.) · retire{" "}
-            {selectedPack === "live" ? "15 min" : "1 h"}
+            Utiliser 1 sablier ({game.player.hourglasses} disp.) · retire 15 min
           </span>
         </button>
         <div className="guarantee-row">
           <ShieldCheck size={14} />
-          <span>
-            {selectedPack === "live"
-              ? "1 variante Live garantie · aucun doublon interne"
-              : "1 Rare ou mieux garantie · chance de Gold"}
-          </span>
+          <span>1 variante Live garantie · 1 Rare ou mieux · aucun doublon interne</span>
         </div>
         <button type="button" className="odds-link" onClick={onShowOdds}>
           <BadgeInfo size={15} />
@@ -908,7 +873,6 @@ export function CreatorDeckApp() {
   const state = useGame();
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
-  const [selectedPack, setSelectedPack] = useState<PackType>("live");
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
@@ -940,7 +904,7 @@ export function CreatorDeckApp() {
     // révélation mérite son moment de suspense.
     window.setTimeout(() => {
       try {
-        const cards = gameStore.openPack(selectedPack);
+        const cards = gameStore.openPack();
         // Le son accompagne le geste, jamais l'attente : c'est l'instant du
         // « wouip » qui compte, et il faut un geste utilisateur pour que le
         // navigateur autorise l'audio.
@@ -960,7 +924,7 @@ export function CreatorDeckApp() {
     setUsingHourglass(true);
     setError(null);
     try {
-      gameStore.useHourglass(selectedPack);
+      gameStore.useHourglass();
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");
     } finally {
@@ -1039,8 +1003,6 @@ export function CreatorDeckApp() {
         {tab === "home" ? (
           <HomeView
             game={game}
-            selectedPack={selectedPack}
-            setSelectedPack={setSelectedPack}
             onOpen={handleOpenPack}
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
@@ -1098,7 +1060,7 @@ export function CreatorDeckApp() {
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
           <strong>Scellement du tirage {CATALOG_LABEL}…</strong>
-          <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
+          <span>{PACKS.live.size} cartes uniques en préparation.</span>
         </div>
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}

@@ -36,17 +36,27 @@ import {
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 4 as const;
+export const SAVE_VERSION = 5 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
 /** Sabliers offerts à chaque niveau gagné. */
 export const HOURGLASSES_PER_LEVEL = 3;
-/** Temps de recharge retiré par un sablier, selon le booster. */
+/**
+ * Temps de recharge retiré par un sablier.
+ *
+ * Un seul booster, donc une seule valeur : la moitié d'un cycle de recharge.
+ */
 export const HOURGLASS_REDUCTION_MS: Record<PackType, number> = {
   live: 15 * 60 * 1000,
-  archive: 60 * 60 * 1000,
 };
+
+/**
+ * Le booster du jeu. Il n'y en a qu'un (un paquet de 5 cartes gratuit qui se
+ * recharge) : garder une clé rend les tables de tirage indexables, et laisse la
+ * porte ouverte à un second paquet sans casser la sauvegarde.
+ */
+export const ACTIVE_PACK: PackType = "live";
 /** Variante créée par l'Atelier : les variantes Live/Holo/Gold se tirent. */
 export const CRAFTED_VARIANT: CardVariant = "standard";
 
@@ -83,11 +93,10 @@ export type PlayerState = {
   xp: number;
   points: number;
   hourglasses: number;
-  livePacks: number;
-  archivePacks: number;
+  /** Boosters en réserve (un seul type de booster). */
+  packs: number;
   /** Epoch ms : ancre de la recharge en cours (voir refreshBalances). */
-  lastLiveRegen: number;
-  lastArchiveRegen: number;
+  lastPackRegen: number;
   openings: number;
   cards: OwnedCard[];
   /**
@@ -159,11 +168,10 @@ export type GameView = {
     xpNext: number;
     points: number;
     hourglasses: number;
-    livePacks: number;
-    archivePacks: number;
+    /** Boosters en réserve. */
+    packs: number;
     /** Epoch ms du prochain booster, ou null si la réserve est pleine. */
-    nextLiveAt: number | null;
-    nextArchiveAt: number | null;
+    nextPackAt: number | null;
   };
   cards: OwnedCard[];
   stats: {
@@ -201,10 +209,10 @@ export function createInitialState(now = Date.now()): PlayerState {
     xp: 0,
     points: 120,
     hourglasses: 12,
-    livePacks: 2,
-    archivePacks: 1,
-    lastLiveRegen: now,
-    lastArchiveRegen: now,
+    // Trois boosters d'accueil (15 cartes) : de quoi comprendre la boucle,
+    // puis la recharge prend le relais.
+    packs: 3,
+    lastPackRegen: now,
     openings: 0,
     cards: [],
     claimedTiers: {},
@@ -229,29 +237,16 @@ export function refreshBalances(state: PlayerState, now = Date.now()): PlayerSta
     return { stock: nextStock, last: nextLast };
   };
 
-  const live = refreshOne(state.livePacks, PACKS.live.max, state.lastLiveRegen, PACKS.live.regenMs);
-  const archive = refreshOne(
-    state.archivePacks,
-    PACKS.archive.max,
-    state.lastArchiveRegen,
-    PACKS.archive.regenMs,
-  );
+  const pack = refreshOne(state.packs, PACKS.live.max, state.lastPackRegen, PACKS.live.regenMs);
 
-  if (
-    live.stock === state.livePacks &&
-    live.last === state.lastLiveRegen &&
-    archive.stock === state.archivePacks &&
-    archive.last === state.lastArchiveRegen
-  ) {
+  if (pack.stock === state.packs && pack.last === state.lastPackRegen) {
     return state;
   }
 
   return {
     ...state,
-    livePacks: live.stock,
-    archivePacks: archive.stock,
-    lastLiveRegen: live.last,
-    lastArchiveRegen: archive.last,
+    packs: pack.stock,
+    lastPackRegen: pack.last,
   };
 }
 
@@ -323,8 +318,8 @@ function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean):
 
 /**
  * Tire le contenu d'un booster depuis `pull-rates.json` : un slot par carte
- * (les taux montent au fil du booster), puis le slot garanti — variante Live
- * imposée pour le booster Live, « Rare ou mieux » pour les Archives.
+ * (les taux montent au fil du booster), puis le slot garanti — Rare ou mieux,
+ * variante Live imposée.
  *
  * `options.rareDrop` force (ou désactive) le tirage « Perfect » : réservé aux
  * tests et aux futurs événements à taux boosté.
@@ -685,17 +680,15 @@ export function claimSeason(
  */
 export function openPack(
   state: PlayerState,
-  packType: PackType,
   now = Date.now(),
 ): { state: PlayerState; cards: DrawnCard[] } {
   const refreshed = refreshBalances(state, now);
-  const available = packType === "live" ? refreshed.livePacks : refreshed.archivePacks;
-  if (available <= 0) {
+  if (refreshed.packs <= 0) {
     throw new GameError("Aucun booster disponible pour le moment.", "PACK_NOT_READY");
   }
 
-  const cards = drawPack(packType, ownedSlugs(refreshed));
-  const pack = PACKS[packType];
+  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed));
+  const pack = PACKS[ACTIVE_PACK];
   const nextXp = refreshed.xp + pack.xp;
   const nextLevel = Math.floor(nextXp / XP_PER_LEVEL) + 1;
   const gainedLevels = Math.max(0, nextLevel - refreshed.level);
@@ -705,8 +698,7 @@ export function openPack(
   const next: PlayerState = {
     ...refreshed,
     updatedAt: now,
-    livePacks: packType === "live" ? refreshed.livePacks - 1 : refreshed.livePacks,
-    archivePacks: packType === "archive" ? refreshed.archivePacks - 1 : refreshed.archivePacks,
+    packs: refreshed.packs - 1,
     points: refreshed.points + pack.points,
     xp: nextXp,
     level: nextLevel,
@@ -729,31 +721,19 @@ export function openPack(
 }
 
 /** Dépense un sablier pour avancer la recharge du booster choisi. */
-export function spendHourglass(
-  state: PlayerState,
-  packType: PackType,
-  now = Date.now(),
-): PlayerState {
+export function spendHourglass(state: PlayerState, now = Date.now()): PlayerState {
   const refreshed = refreshBalances(state, now);
   if (refreshed.hourglasses <= 0) {
     throw new GameError("Aucun sablier disponible.", "NO_HOURGLASS");
   }
-
-  const isLive = packType === "live";
-  const max = isLive ? PACKS.live.max : PACKS.archive.max;
-  const currentStock = isLive ? refreshed.livePacks : refreshed.archivePacks;
-  if (currentStock >= max) {
-    throw new GameError("La réserve de ce booster est déjà pleine.", "PACK_FULL");
+  if (refreshed.packs >= PACKS.live.max) {
+    throw new GameError("La réserve de boosters est déjà pleine.", "PACK_FULL");
   }
 
-  const reduction = HOURGLASS_REDUCTION_MS[packType];
   const shifted: PlayerState = {
     ...refreshed,
     hourglasses: refreshed.hourglasses - 1,
-    lastLiveRegen: isLive ? refreshed.lastLiveRegen - reduction : refreshed.lastLiveRegen,
-    lastArchiveRegen: isLive
-      ? refreshed.lastArchiveRegen
-      : refreshed.lastArchiveRegen - reduction,
+    lastPackRegen: refreshed.lastPackRegen - HOURGLASS_REDUCTION_MS[ACTIVE_PACK],
   };
   return { ...refreshBalances(shifted, now), updatedAt: now };
 }
@@ -770,16 +750,9 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       xpNext: refreshed.level * XP_PER_LEVEL,
       points: refreshed.points,
       hourglasses: refreshed.hourglasses,
-      livePacks: refreshed.livePacks,
-      archivePacks: refreshed.archivePacks,
-      nextLiveAt:
-        refreshed.livePacks >= PACKS.live.max
-          ? null
-          : refreshed.lastLiveRegen + PACKS.live.regenMs,
-      nextArchiveAt:
-        refreshed.archivePacks >= PACKS.archive.max
-          ? null
-          : refreshed.lastArchiveRegen + PACKS.archive.regenMs,
+      packs: refreshed.packs,
+      nextPackAt:
+        refreshed.packs >= PACKS.live.max ? null : refreshed.lastPackRegen + PACKS.live.regenMs,
     },
     cards: refreshed.cards,
     stats: {

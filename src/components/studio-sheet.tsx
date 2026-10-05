@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FlaskConical, Sparkles, X } from "lucide-react";
-import { PACKS, RARITY_META, type PackType } from "@/lib/catalog";
+import { RARITY_META } from "@/lib/catalog";
 import { RARITIES } from "@/lib/pull-rates";
 import { runStudio } from "@/lib/tirage-studio";
 import type { StudioResult } from "@/lib/tirage-studio";
@@ -23,14 +23,12 @@ const COUNTS = [25, 100, 500] as const;
  * répartition obtenue aux taux publiés. Aucun effet sur la partie.
  */
 export function StudioSheet({ onClose }: { onClose: () => void }) {
-  const [packType, setPackType] = useState<PackType>("live");
   const [count, setCount] = useState<number>(100);
   const [result, setResult] = useState<StudioResult | null>(null);
 
-  function run(nextType: PackType = packType, nextCount: number = count) {
-    setPackType(nextType);
+  function run(nextCount: number = count) {
     setCount(nextCount);
-    setResult(runStudio(nextType, nextCount));
+    setResult(runStudio("live", nextCount));
   }
 
   return (
@@ -53,27 +51,13 @@ export function StudioSheet({ onClose }: { onClose: () => void }) {
         </p>
 
         <div className="studio-controls">
-          <div className="studio-group" role="group" aria-label="Type de booster">
-            {(["live", "archive"] as PackType[]).map((type) => (
-              <button
-                key={type}
-                type="button"
-                className={`studio-chip ${packType === type ? "active" : ""}`}
-                onClick={() => run(type, count)}
-              >
-                {type === "live" ? "Live" : "Archives"}
-                <span>{PACKS[type].size} cartes</span>
-              </button>
-            ))}
-          </div>
-
           <div className="studio-group" role="group" aria-label="Nombre de boosters">
             {COUNTS.map((value) => (
               <button
                 key={value}
                 type="button"
                 className={`studio-chip ${count === value ? "active" : ""}`}
-                onClick={() => run(packType, value)}
+                onClick={() => run(value)}
               >
                 {value}
                 <span>boosters</span>
@@ -90,7 +74,7 @@ export function StudioSheet({ onClose }: { onClose: () => void }) {
           <section className="odds-block">
             <div className="odds-block-head">
               <h3>
-                {result.packs} boosters {result.packType === "live" ? "Live" : "Archives"}
+                {result.packs} boosters Live Drop
               </h3>
               <span>
                 {result.cards} cartes · {result.unique} créateurs distincts
@@ -138,7 +122,7 @@ export function StudioSheet({ onClose }: { onClose: () => void }) {
           </section>
         ) : (
           <p className="odds-footnote">
-            Choisis un booster et un nombre d&apos;ouvertures, puis lance la simulation.
+            Choisis un nombre d&apos;ouvertures, puis lance la simulation.
           </p>
         )}
       </div>

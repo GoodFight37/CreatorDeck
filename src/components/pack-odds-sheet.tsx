@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { PACKS, RARITY_META, type PackType } from "@/lib/catalog";
+import { PACKS, RARITY_META } from "@/lib/catalog";
 import { RARITIES, packOdds } from "@/lib/pull-rates";
 
 const percent = new Intl.NumberFormat("fr-FR", {
@@ -39,22 +39,20 @@ export function PackOddsSheet({ onClose }: { onClose: () => void }) {
           fichier que le moteur de tirage. Aucun booster n&apos;est truqué à l&apos;ouverture.
         </p>
 
-        {(["live", "archive"] as PackType[]).map((pack) => (
-          <PackOddsBlock key={pack} pack={pack} />
-        ))}
+        <PackOddsBlock />
       </div>
     </div>
   );
 }
 
-function PackOddsBlock({ pack }: { pack: PackType }) {
-  const odds = packOdds(pack);
+function PackOddsBlock() {
+  const odds = packOdds("live");
   return (
     <section className="odds-block">
       <div className="odds-block-head">
         <h3>{odds.label}</h3>
         <span>
-          {odds.cardCount} cartes · {PACKS[pack].description}
+          {odds.cardCount} cartes · {PACKS.live.description}
         </span>
       </div>
 
@@ -108,10 +106,7 @@ function PackOddsBlock({ pack }: { pack: PackType }) {
 
       <p className="odds-footnote">
         « Au moins 1 » = probabilité qu&apos;un booster contienne au moins une carte de cette
-        rareté.
-        {pack === "live"
-          ? " Le 5ᵉ slot est garanti Rare ou mieux, en variante Live."
-          : " Le 3ᵉ slot est garanti Rare ou mieux."}
+        rareté. Le 5ᵉ slot est garanti Rare ou mieux, en variante Live.
       </p>
     </section>
   );

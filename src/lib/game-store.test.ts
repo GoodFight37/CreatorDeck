@@ -50,7 +50,7 @@ describe("gameStore", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     const state = store.getSnapshot();
     expect(state).not.toBeNull();
-    expect(state?.livePacks).toBe(2);
+    expect(state?.packs).toBe(3);
     expect(data.has(SAVE_KEY)).toBe(true);
     unsubscribe();
   });
@@ -58,7 +58,7 @@ describe("gameStore", () => {
   it("recharge une sauvegarde existante", async () => {
     const first = await freshStore();
     first.subscribe(() => {});
-    const cards = first.openPack("live", Date.now());
+    const cards = first.openPack(Date.now());
     expect(cards).toHaveLength(PACKS.live.size);
     const persisted = first.getSnapshot();
 
@@ -74,11 +74,11 @@ describe("gameStore", () => {
     store.subscribe(listener);
     listener.mockClear();
 
-    store.openPack("archive");
+    store.openPack();
     expect(listener).toHaveBeenCalledTimes(1);
     expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").openings).toBe(1);
 
-    store.useHourglass("archive");
+    store.useHourglass();
     expect(listener).toHaveBeenCalledTimes(2);
     expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").hourglasses).toBe(11);
   });
@@ -86,16 +86,17 @@ describe("gameStore", () => {
   it("propage les erreurs du moteur sans corrompre l'état", async () => {
     const store = await freshStore();
     store.subscribe(() => {});
-    store.openPack("archive");
+    // Épuise les 3 boosters d'accueil.
+    for (let i = 0; i < 3; i += 1) store.openPack();
     const before = store.getSnapshot();
-    expect(() => store.openPack("archive")).toThrowError(/booster/i);
+    expect(() => store.openPack()).toThrowError(/booster/i);
     expect(store.getSnapshot()).toBe(before);
   });
 
   it("réinitialise et importe une sauvegarde", async () => {
     const store = await freshStore();
     store.subscribe(() => {});
-    store.openPack("live");
+    store.openPack();
     const exported = store.exportSave();
     const playerId = store.getSnapshot()?.playerId;
 

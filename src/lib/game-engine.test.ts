@@ -25,14 +25,14 @@ import {
 } from "@/lib/game-engine";
 
 const HOUR = 60 * 60 * 1000;
+const HALF_HOUR = 30 * 60 * 1000;
 const T0 = Date.parse("2026-01-01T12:00:00Z");
 
 function makeState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
     ...createInitialState(T0),
     playerId: "00000000-0000-4000-8000-000000000000",
-    livePacks: 0,
-    archivePacks: 0,
+    packs: 0,
     ...overrides,
   };
 }
@@ -46,8 +46,7 @@ describe("createInitialState", () => {
       xp: 0,
       points: 120,
       hourglasses: 12,
-      livePacks: 2,
-      archivePacks: 1,
+      packs: 3,
       openings: 0,
       cards: [],
       claimedTiers: {},
@@ -58,36 +57,36 @@ describe("createInitialState", () => {
 });
 
 describe("refreshBalances", () => {
-  it("régénère les boosters Live avec le temps", () => {
-    // 2 h 30 avant `now` -> 2 packs Live regagnés (1/h), ancre avancée de 2 h.
-    const state = makeState({ lastLiveRegen: T0 - 2.5 * HOUR });
+  it("régénère un booster par demi-heure", () => {
+    // 1 h 30 avant `now` -> 3 boosters regagnés (1 toutes les 30 min).
+    const state = makeState({ lastPackRegen: T0 - 1.5 * HOUR });
     const refreshed = refreshBalances(state, T0);
-    expect(refreshed.livePacks).toBe(2);
-    expect(refreshed.lastLiveRegen).toBe(T0 - 0.5 * HOUR);
+    expect(refreshed.packs).toBe(3);
+    expect(refreshed.lastPackRegen).toBe(T0);
   });
 
-  it("plafonne au maximum du pack et ré-ancre sur now", () => {
-    const state = makeState({ lastLiveRegen: T0 - 100 * HOUR });
+  it("plafonne au maximum du booster et ré-ancre sur now", () => {
+    const state = makeState({ lastPackRegen: T0 - 100 * HOUR });
     const refreshed = refreshBalances(state, T0);
-    expect(refreshed.livePacks).toBe(PACKS.live.max);
-    expect(refreshed.lastLiveRegen).toBe(T0);
+    expect(refreshed.packs).toBe(PACKS.live.max);
+    expect(refreshed.lastPackRegen).toBe(T0);
   });
 
   it("ne régénère rien si le stock est déjà plein", () => {
-    const state = makeState({ livePacks: PACKS.live.max });
-    expect(refreshBalances(state, T0).livePacks).toBe(PACKS.live.max);
+    const state = makeState({ packs: PACKS.live.max });
+    expect(refreshBalances(state, T0).packs).toBe(PACKS.live.max);
   });
 
   it("retourne la même référence quand rien ne change", () => {
-    const state = makeState({ lastLiveRegen: T0 - 1000, lastArchiveRegen: T0 - 1000 });
+    const state = makeState({ lastPackRegen: T0 - 1000 });
     expect(refreshBalances(state, T0)).toBe(state);
   });
 
   it("n'offre rien si l'horloge de l'appareil recule", () => {
-    const state = makeState({ lastLiveRegen: T0 + 5 * HOUR });
+    const state = makeState({ lastPackRegen: T0 + 5 * HOUR });
     const refreshed = refreshBalances(state, T0);
-    expect(refreshed.livePacks).toBe(0);
-    expect(refreshed.lastLiveRegen).toBe(T0);
+    expect(refreshed.packs).toBe(0);
+    expect(refreshed.lastPackRegen).toBe(T0);
   });
 });
 
@@ -114,14 +113,6 @@ describe("drawPack", () => {
     }
   });
 
-  it("un booster Archives contient 3 cartes dont une rare ou mieux", () => {
-    for (let i = 0; i < 25; i += 1) {
-      const pack = drawPack("archive", new Set());
-      expectValidPack(pack, PACKS.archive.size);
-      expect(pack.every((card) => card.variant !== "live")).toBe(true);
-    }
-  });
-
   it("marque isNew selon la collection possédée", () => {
     expect(drawPack("live", new Set()).every((card) => card.isNew)).toBe(true);
     const owned = new Set(CREATORS.slice(0, 4).map((creator) => creator.slug));
@@ -135,11 +126,10 @@ describe("drawPack", () => {
 
 describe("openPack", () => {
   it("consomme un booster, crédite points et XP, ajoute les cartes", () => {
-    const state = makeState({ livePacks: 2 });
-    const { state: next, cards } = openPack(state, "live", T0);
+    const state = makeState({ packs: 2 });
+    const { state: next, cards } = openPack(state, T0);
     expect(cards).toHaveLength(PACKS.live.size);
-    expect(next.livePacks).toBe(1);
-    expect(next.archivePacks).toBe(0);
+    expect(next.packs).toBe(1);
     expect(next.points).toBe(state.points + PACKS.live.points);
     expect(next.xp).toBe(PACKS.live.xp);
     expect(next.openings).toBe(1);
@@ -147,38 +137,38 @@ describe("openPack", () => {
     expect(next.cards.every((card) => card.obtainedAt === T0)).toBe(true);
     expect(next.updatedAt).toBe(T0);
     // Pureté : l'état d'origine n'est pas modifié.
-    expect(state.livePacks).toBe(2);
+    expect(state.packs).toBe(2);
     expect(state.cards).toHaveLength(0);
   });
 
   it("refuse d'ouvrir sans booster disponible", () => {
-    expect(() => openPack(makeState(), "archive", T0)).toThrowError(GameError);
+    expect(() => openPack(makeState(), T0)).toThrowError(GameError);
     try {
-      openPack(makeState(), "archive", T0);
+      openPack(makeState(), T0);
     } catch (error) {
       expect((error as GameError).code).toBe("PACK_NOT_READY");
     }
   });
 
   it("utilise un booster régénéré par le temps", () => {
-    const state = makeState({ lastArchiveRegen: T0 - PACKS.archive.regenMs });
-    const { state: next } = openPack(state, "archive", T0);
-    expect(next.archivePacks).toBe(0);
+    const state = makeState({ lastPackRegen: T0 - PACKS.live.regenMs });
+    const { state: next } = openPack(state, T0);
+    expect(next.packs).toBe(0);
     expect(next.openings).toBe(1);
   });
 
   it("monte de niveau et offre des sabliers", () => {
-    const state = makeState({ livePacks: 1, xp: XP_PER_LEVEL - 1, level: 1 });
-    const { state: next } = openPack(state, "live", T0);
+    const state = makeState({ packs: 1, xp: XP_PER_LEVEL - 1, level: 1 });
+    const { state: next } = openPack(state, T0);
     expect(next.level).toBe(2);
     expect(next.hourglasses).toBe(state.hourglasses + HOURGLASSES_PER_LEVEL);
   });
 
   it("marque isNew=false pour un créateur déjà possédé", () => {
-    let state = makeState({ livePacks: PACKS.live.max, archivePacks: PACKS.archive.max });
+    let state = makeState({ packs: PACKS.live.max });
     const owned = new Set<string>();
     for (let i = 0; i < PACKS.live.max; i += 1) {
-      const result = openPack(state, "live", T0 + i);
+      const result = openPack(state, T0 + i);
       for (const card of result.cards) {
         expect(card.isNew).toBe(!owned.has(card.creatorSlug));
         owned.add(card.creatorSlug);
@@ -190,33 +180,31 @@ describe("openPack", () => {
 });
 
 describe("spendHourglass", () => {
-  it("avance la recharge de 15 min pour le Live", () => {
-    const state = makeState({ hourglasses: 3, lastLiveRegen: T0 });
-    const next = spendHourglass(state, "live", T0);
+  it("avance la recharge de 15 min", () => {
+    const state = makeState({ hourglasses: 3, lastPackRegen: T0 });
+    const next = spendHourglass(state, T0);
     expect(next.hourglasses).toBe(2);
-    expect(next.lastLiveRegen).toBe(T0 - HOURGLASS_REDUCTION_MS.live);
-    expect(getGameView(next, T0).player.nextLiveAt).toBe(
+    expect(next.lastPackRegen).toBe(T0 - HOURGLASS_REDUCTION_MS.live);
+    expect(getGameView(next, T0).player.nextPackAt).toBe(
       T0 + PACKS.live.regenMs - HOURGLASS_REDUCTION_MS.live,
     );
   });
 
   it("peut débloquer un booster immédiatement", () => {
-    // Il reste 10 min de recharge Archives : un sablier (-1 h) suffit.
+    // Il reste 5 min de recharge : un sablier (-15 min) suffit.
     const state = makeState({
       hourglasses: 1,
-      lastArchiveRegen: T0 - (PACKS.archive.regenMs - 10 * 60 * 1000),
+      lastPackRegen: T0 - (PACKS.live.regenMs - 5 * 60 * 1000),
     });
-    const next = spendHourglass(state, "archive", T0);
-    expect(next.archivePacks).toBe(1);
+    const next = spendHourglass(state, T0);
+    expect(next.packs).toBe(1);
     expect(next.hourglasses).toBe(0);
   });
 
   it("refuse sans sablier ou si la réserve est pleine", () => {
-    expect(() => spendHourglass(makeState({ hourglasses: 0 }), "live", T0)).toThrowError(
-      /sablier/i,
-    );
+    expect(() => spendHourglass(makeState({ hourglasses: 0 }), T0)).toThrowError(/sablier/i);
     expect(() =>
-      spendHourglass(makeState({ hourglasses: 5, livePacks: PACKS.live.max }), "live", T0),
+      spendHourglass(makeState({ hourglasses: 5, packs: PACKS.live.max }), T0),
     ).toThrowError(/pleine/i);
   });
 });
@@ -224,13 +212,11 @@ describe("spendHourglass", () => {
 describe("getGameView", () => {
   it("calcule les prochaines recharges et les statistiques", () => {
     const state = makeState({
-      livePacks: 1,
-      archivePacks: PACKS.archive.max,
-      lastLiveRegen: T0 - 10 * 60 * 1000,
+      packs: 1,
+      lastPackRegen: T0 - 10 * 60 * 1000,
     });
     const view = getGameView(state, T0);
-    expect(view.player.nextLiveAt).toBe(T0 - 10 * 60 * 1000 + PACKS.live.regenMs);
-    expect(view.player.nextArchiveAt).toBeNull();
+    expect(view.player.nextPackAt).toBe(T0 - 10 * 60 * 1000 + PACKS.live.regenMs);
     expect(view.player.xpNext).toBe(XP_PER_LEVEL);
     expect(view.stats).toEqual({
       uniqueCreators: 0,
@@ -292,7 +278,7 @@ describe("Perfect (Rare Drop)", () => {
   });
 
   it("n'altère pas les boosters normaux", () => {
-    const pack = drawPack("archive", new Set(), { rareDrop: false });
+    const pack = drawPack("live", new Set(), { rareDrop: false });
     expect(pack.every((card) => !card.rareDrop)).toBe(true);
     expect(pack.some((card) => RARITY_META[card.rarity].order >= RARITY_META.rare.order)).toBe(
       true,

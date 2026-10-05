@@ -6,7 +6,6 @@
  * Module sans effet à l'import : rien n'est lu tant qu'un composant ne
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
-import type { PackType } from "@/lib/catalog";
 import {
   claimSeason as engineClaimSeason,
   craftCreator as engineCraftCreator,
@@ -125,14 +124,14 @@ export const gameStore = {
   getSnapshot,
   getServerSnapshot,
 
-  openPack(packType: PackType, now = Date.now()): DrawnCard[] {
-    const result = engineOpenPack(current(), packType, now);
+  openPack(now = Date.now()): DrawnCard[] {
+    const result = engineOpenPack(current(), now);
     persist(result.state);
     return result.cards;
   },
 
-  useHourglass(packType: PackType, now = Date.now()): void {
-    persist(engineSpendHourglass(current(), packType, now));
+  useHourglass(now = Date.now()): void {
+    persist(engineSpendHourglass(current(), now));
   },
 
   /** Recycle un doublon : +points, la carte est retirée du classeur. */
