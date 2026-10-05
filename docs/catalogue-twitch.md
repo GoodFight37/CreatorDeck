@@ -90,6 +90,29 @@ Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 > (les domaines Twitch y sont filtrés) : lance-le depuis une machine connectée.
 > Elle peut casser sans préavis — c'est un risque assumé du projet.
 
+## Choisir la taille : ce que dit la simulation
+
+`scripts/study-top-size.mjs` rejoue l'ouverture de boosters avec les taux réels
+contre une population de N créateurs, pour estimer le temps de complétion
+(30 simulations par ligne, rythme de 6 boosters/jour) :
+
+```bash
+node scripts/study-top-size.mjs                # 500 / 800 / 1000 / 2000
+node scripts/study-top-size.mjs --counts 1200
+```
+
+| Top | Images 600 px | 50 % du catalogue | 90 % | Une saison (150) |
+|---|---|---|---|---|
+| 500 | 17 Mo | 15 jours | 55 jours | ~36 jours |
+| 800 | 27 Mo | 24 jours | 88 jours | ~33 jours |
+| **1000** | **34 Mo** | **30 jours** | **110 jours** | **~35 jours** |
+| 2000 | 68 Mo | 60 jours | 221 jours | ~34 jours |
+
+Deux enseignements : la **taille d'une saison** (150) fixe le rythme des
+objectifs — elle ne bouge presque pas avec la taille du catalogue — tandis que
+la **taille du catalogue** fixe la durée de vie de la collection complète, avec
+un coût disque proportionnel.
+
 ## Budget images : la décision à prendre
 
 Mesures réelles de ce dépôt (JPEG mozjpeg, `scripts/lib/avatars.mjs`) :
