@@ -16,6 +16,15 @@ create table if not exists public.creators (
   rank         integer not null
 );
 
+-- RLS : lecture seule pour les joueurs connectés, aucune écriture cliente.
+alter table public.creators enable row level security;
+
+drop policy if exists "lecture du catalogue" on public.creators;
+create policy "lecture du catalogue"
+  on public.creators for select
+  to authenticated
+  using (true);
+
 -- 1000 créateurs, générés depuis src/data/creators.json.
 insert into public.creators (slug, display_name, rarity, rank) values
   ('kaicenat', 'KaiCenat', 'legendary', 1),

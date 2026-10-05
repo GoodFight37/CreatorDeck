@@ -100,6 +100,20 @@ function generateSql(creators) {
   lines.push(");");
   lines.push("");
 
+  // La table est la source de vérité du tirage serveur : elle ne s'écrit que
+  // depuis le SQL Editor (ou une migration), jamais depuis l'API. RLS activée
+  // avec une seule politique de lecture : aucun client ne peut changer une
+  // rareté pour se fabriquer de meilleures cartes.
+  lines.push("-- RLS : lecture seule pour les joueurs connectés, aucune écriture cliente.");
+  lines.push("alter table public.creators enable row level security;");
+  lines.push("");
+  lines.push('drop policy if exists "lecture du catalogue" on public.creators;');
+  lines.push('create policy "lecture du catalogue"');
+  lines.push("  on public.creators for select");
+  lines.push("  to authenticated");
+  lines.push("  using (true);");
+  lines.push("");
+
   // Un seul INSERT massif : plus rapide à coller et à exécuter.
   // Les valeurs sont échappées (slug et display_name sont du texte simple).
   lines.push(`-- ${creators.length} créateurs, générés depuis src/data/creators.json.`);

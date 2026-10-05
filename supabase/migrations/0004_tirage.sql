@@ -292,7 +292,7 @@ $$;
 -- Le tirage reproduit exactement le moteur local :
 --   * 4 slots pondérés (les poids montent au fil du booster),
 --   * 1 slot garanti (Rare ou mieux, variante « live » imposée),
---   * 5 % de chance de « Perfect » (Épique ou mieux partout),
+--   * 5 ‰ de chance de « Perfect » (0,5 % : Épique ou mieux partout),
 --   * aucun créateur en double dans un même booster,
 --   * mélange des 5 cartes (Fisher-Yates).
 --
