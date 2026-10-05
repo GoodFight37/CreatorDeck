@@ -396,6 +396,21 @@ describe("tirage serveur", () => {
     expect(status.nextPackAt).toBe("2026-01-01T12:30:00Z");
   });
 
+  it("teste la joignabilité du projet en lecture seule", async () => {
+    const { api, calls } = client(() => ({ body: { version: "1.0" } }));
+    const result = await api.ping();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/auth/v1/health");
+    expect((calls[0]?.init?.headers as Record<string, string>).apikey).toBe(CONFIG.anonKey);
+    expect(result.host).toBe("projet.supabase.co");
+  });
+
+  it("nomme l'hôte injoignable plutôt que d'accuser le réseau à tort", async () => {
+    const { api } = client(() => {
+      throw new TypeError("fetch failed");
+    });
+    await expect(api.ping()).rejects.toThrowError(/projet\.supabase\.co\/auth\/v1\/health/);
+  });
+
   it("explique quoi coller dans Supabase quand les migrations manquent", async () => {
     const { api } = client(
       () => ({

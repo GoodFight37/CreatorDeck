@@ -418,6 +418,34 @@ export function createCloudStore(deps: CloudDeps) {
     },
 
     /**
+     * Teste la joignabilité du projet Supabase (lecture pure) et l'annonce.
+     *
+     * Sur un appareil, « Réseau injoignable » peut venir du réseau, de
+     * l'adresse configurée ou d'un refus du WebView : ce bouton dit lequel,
+     * avec le nom d'hôte — sans avoir à brancher un ordinateur.
+     */
+    async ping(): Promise<boolean> {
+      const api = resolve();
+      if (!api) {
+        publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
+        return false;
+      }
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const { host } = await api.ping();
+        publish({
+          busy: false,
+          message: `Projet ${host} joignable : le réseau et la clé répondent.`,
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        fail(error, "Projet injoignable.");
+        return false;
+      }
+    },
+
+    /**
      * Ouvre un booster côté serveur : les cartes sont tirées par la fonction
      * `open_pack()` de Supabase, puis appliquées à la partie locale.
      *

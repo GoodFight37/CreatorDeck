@@ -58,6 +58,7 @@ type FakeApi = {
   leaderboard: ReturnType<typeof vi.fn>;
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
+  ping: ReturnType<typeof vi.fn>;
 };
 
 function harness(options: {
@@ -114,6 +115,7 @@ function harness(options: {
       openings: 3,
       nextPackAt: "2026-03-01T10:30:00Z",
     })),
+    ping: vi.fn(async () => ({ host: "projet.supabase.co" })),
   };
 
   const store = createCloudStore({
@@ -422,6 +424,31 @@ describe("store cloud", () => {
     expect(applied.at(-1)?.packs).toBe(3);
     expect(applied.at(-1)?.lastPackRegen).toBe(T0);
     expect(applied.at(-1)?.points).toBe(400);
+  });
+
+  it("teste la connexion et annonce l'hôte joint", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    await expect(store.ping()).resolves.toBe(true);
+    expect(api.ping).toHaveBeenCalled();
+    const snapshot = store.getSnapshot();
+    expect(snapshot.message).toContain("projet.supabase.co");
+    expect(snapshot.isError).toBe(false);
+  });
+
+  it("dit que le projet est injoignable avec le nom d'hôte", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    api.ping.mockRejectedValueOnce(
+      new CloudError(
+        "Réseau injoignable : impossible de joindre projet.supabase.co/auth/v1/health. Vérifie ta connexion — ta partie locale est intacte.",
+        "network_error",
+        0,
+      ),
+    );
+    await expect(store.ping()).resolves.toBe(false);
+    expect(store.getSnapshot().message).toContain("projet.supabase.co/auth/v1/health");
+    expect(store.getSnapshot().isError).toBe(true);
   });
 
   it("renvoie null si le statut est indisponible", async () => {

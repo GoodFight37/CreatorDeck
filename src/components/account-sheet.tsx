@@ -294,6 +294,20 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
               </section>
             )}
 
+            {/* Diagnostic : sur un téléphone, « Réseau injoignable » ne dit pas
+                si le réseau, l'adresse ou le WebView est en cause. Ce bouton
+                teste le projet en lecture seule et affiche l'hôte joint. */}
+            <div className="account-actions">
+              <button
+                type="button"
+                className="account-button ghost"
+                disabled={cloud.busy}
+                onClick={() => void cloudStore.ping()}
+              >
+                <RefreshCw size={14} /> Tester la connexion au cloud
+              </button>
+            </div>
+
             {message ? (
               <div className={`account-note ${cloud.isError ? "error" : "ok"}`}>
                 {cloud.isError ? <AlertTriangle size={15} /> : <Info size={15} />}

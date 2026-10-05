@@ -374,6 +374,16 @@ export class CloudApi {
   }
 
   /**
+   * Teste la joignabilité du projet : `GET /auth/v1/health`, lecture pure,
+   * aucune donnée modifiée. Sert au bouton « Tester la connexion » de l'écran
+   * Compte — et à distinguer une panne réseau d'une configuration erronée.
+   */
+  async ping(): Promise<{ host: string }> {
+    await this.send(`${this.config.url}/auth/v1/health`, { method: "GET", raw: true });
+    return { host: new URL(this.config.url).host };
+  }
+
+  /**
    * Statut de la réserve de boosters (sans rien consommer).
    *
    * Le client appelle cette fonction à la connexion pour afficher le bon
