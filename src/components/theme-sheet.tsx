@@ -33,8 +33,8 @@ export function ThemeSheet({
 
         <p className="odds-intro">
           Chaque famille de jeux complétée (son emblème récupéré) débloque sa teinte, et toutes
-          les compléter débloque le <strong>Grand chelem</strong>. Le thème habille l&apos;application
-          entière : aucun téléchargement, tout est calculé.
+          les compléter débloque le <strong>Grand chelem</strong>. Le thème re-teinte les accents
+          et le fond de l&apos;application : aucun téléchargement, tout est calculé.
         </p>
 
         <div className="theme-grid">
