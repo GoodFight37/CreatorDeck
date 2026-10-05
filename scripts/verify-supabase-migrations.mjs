@@ -23,7 +23,9 @@
  *   * la recharge (30 min par booster, plafond 4, reprise de l'état local) ;
  *   * la distribution du slot garanti (82 / 15 / 3 de `pull-rates.json`) ;
  *   * les échanges : offres, acceptation atomique des deux côtés, refus,
- *     annulation, verrous, droits, et lecture par un tiers.
+ *     annulation, verrous, droits, et lecture par un tiers ;
+ *   * le profil public : projection `user_cards`, complétion, rangs, répartition
+ *     par rareté, nouveaux tris du classement, et ce qui reste invisible.
  */
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -93,6 +95,7 @@ try {
     ["0003_catalogue.sql", catalogue],
     ["0004_tirage.sql", tirage],
     ["0005_echanges.sql", await readFile(path.join(MIGRATIONS, "0005_echanges.sql"), "utf8")],
+    ["0006_profil_public.sql", await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8")],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -560,6 +563,131 @@ try {
   const tradesStill = (await client.query("select count(*)::int as n from public.trades")).rows[0].n;
   check("migration échanges rejouable : table conservée", tradesStill >= 4, String(tradesStill));
 
+  // --- Profil public --------------------------------------------------------
+  // Diane a une collection variée, Ethan une toute petite, Fabien une
+  // sauvegarde impossible : les trois servent à vérifier la projection, la
+  // complétion, les rangs et ce qui reste invisible.
+  const D = "dddddddd-4444-4444-8444-dddddddddddd";
+  const E = "eeeeeeee-5555-4555-8555-eeeeeeeeeeee";
+  const F = "ffffffff-6666-4666-8666-ffffffffffff";
+
+  // Un créateur par rareté, pris dans le catalogue : les vérifications ne
+  // dépendent pas de la rareté réelle d'un créateur précis.
+  const oneOf = async (rarity) =>
+    (await client.query("select slug, rarity from public.creators where rarity = $1 order by rank limit 1", [rarity])).rows[0];
+  const [legendaryOne, uncommonOne, rareOne] = [await oneOf("legendary"), await oneOf("uncommon"), await oneOf("rare")];
+
+  await player(D, "Diane", [
+    card("diane-gold", legendaryOne.slug, legendaryOne.rarity, "gold", 5),
+    card("diane-holo", uncommonOne.slug, uncommonOne.rarity, "holo", 6),
+    // Deux fois le même créateur : une seule ligne dans la projection, un seul
+    // créateur unique — mais bien deux cartes.
+    card("diane-doublon", legendaryOne.slug, legendaryOne.rarity, "standard", 7),
+    card("diane-epic", rareOne.slug, rareOne.rarity, "standard", 8),
+    // Créateur qui n'existe pas au catalogue : compté nulle part.
+    card("diane-faux", "streameur-qui-nexiste-pas", "legendary", "standard", 9),
+  ]);
+  await player(E, "Ethan", [card("ethan-1", "chowh1", "common", "standard", 30)]);
+  await player(F, "Fabien", [card("fabien-faux", "kaicenat", "mythique", "standard", 12)]);
+
+  const dianeRows = (
+    await client.query("select count(*)::int as n, count(distinct creator_slug)::int as u from public.user_cards where user_id = $1", [D])
+  ).rows[0];
+  check(
+    "projection : une ligne par carte de la sauvegarde, doublon de créateur compris",
+    dianeRows.n === 4,
+    JSON.stringify(dianeRows),
+  );
+  check("projection : le créateur inventé n'entre pas dans la table", dianeRows.u === 3, String(dianeRows.u));
+
+  const dianeStats = (
+    await client.query("select unique_creators, total_cards, gold_cards, holo_cards, verified from public.stats where user_id = $1", [D])
+  ).rows[0];
+  check(
+    "statistiques : le créateur inventé ne compte pas dans la complétion",
+    dianeStats.unique_creators === 3,
+    JSON.stringify(dianeStats),
+  );
+  check(
+    "statistiques : les nouvelles colonnes Gold et Holo suivent la sauvegarde",
+    dianeStats.gold_cards === 1 && dianeStats.holo_cards === 1,
+    JSON.stringify(dianeStats),
+  );
+
+  const profileD = (await asPlayer(E, "select public.player_profile($1) as p", [D])).rows[0].p;
+  check("profil : la fiche d'un autre joueur est lisible", profileD?.display_name === "Diane", JSON.stringify(profileD?.display_name));
+  check(
+    "profil : complétion calculée sur le catalogue du serveur",
+    profileD.catalog_size === 1000 && profileD.completion === 0.003,
+    `${profileD.unique_creators}/${profileD.catalog_size} = ${profileD.completion}`,
+  );
+  check(
+    "profil : la répartition par rareté donne possédé / total",
+    profileD.by_rarity.legendary.total === 50
+      && profileD.by_rarity.common.total === 300
+      && profileD.by_rarity.rarity_inexistante === undefined
+      && profileD.by_rarity.legendary.owned === 1
+      && profileD.by_rarity.uncommon.owned === 1
+      && profileD.by_rarity.rare.owned === 1
+      && profileD.by_rarity.common.owned === 0,
+    JSON.stringify(profileD.by_rarity),
+  );
+
+  const verifiedRows = (
+    await client.query("select user_id, unique_creators from public.stats where verified order by unique_creators desc")
+  ).rows;
+  const expectedRank = verifiedRows.filter((row) => row.unique_creators > dianeStats.unique_creators).length + 1;
+  check(
+    "profil : le rang correspond au nombre de joueurs devant",
+    profileD.rank_completion === expectedRank,
+    `${profileD.rank_completion} attendu ${expectedRank}`,
+  );
+  check(
+    "profil : une sauvegarde impossible n'a pas de rang",
+    (await asPlayer(E, "select public.player_profile($1) as p", [F])).rows[0].p.rank_completion === null,
+  );
+  check(
+    "profil : un identifiant inconnu ne renvoie rien",
+    (await asPlayer(E, "select public.player_profile($1) as p", ["99999999-9999-4999-8999-999999999999"])).rows[0].p === null,
+  );
+
+  // `user_cards` n'a aucune politique : même le propriétaire des cartes ne voit
+  // rien. La table n'est lue que par les fonctions du serveur.
+  check(
+    "projection : les cartes restent invisibles au client",
+    (await asPlayer(D, "select count(*)::int as n from public.user_cards")).rows[0].n === 0,
+  );
+
+  const goldRows = (await asPlayer(D, "select * from public.leaderboard(20, $1)", ["gold_cards"])).rows;
+  check(
+    "classement : le tri Gold met les plus dorés devant",
+    goldRows.length > 0 && goldRows.every((row, index) => index === 0 || goldRows[index - 1].gold_cards >= row.gold_cards),
+    JSON.stringify(goldRows.map((row) => row.gold_cards)),
+  );
+  check(
+    "classement : chaque ligne porte la complétion et les variantes",
+    typeof goldRows[0].completion === "string" || typeof goldRows[0].completion === "number",
+    JSON.stringify(goldRows[0]),
+  );
+  check(
+    "classement : un joueur non vérifié reste dehors",
+    goldRows.every((row) => row.user_id !== F),
+  );
+
+  // Ce que le serveur montre d'un joueur suit ses écritures : Ethan envoie une
+  // deuxième carte, sa projection et sa complétion doivent suivre.
+  const ethan = (
+    await client.query("select state from public.saves where user_id = $1", [E])
+  ).rows[0].state;
+  await client.query("update public.saves set state = $2 where user_id = $1", [
+    E,
+    JSON.stringify({ ...ethan, cards: [...ethan.cards, card("ethan-2", uncommonOne.slug, uncommonOne.rarity, "standard", 29)] }),
+  ]);
+  check(
+    "projection : elle suit chaque écriture de sauvegarde",
+    (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [E])).rows[0].n === 2,
+  );
+
   // --- Vitrine nettoyée par un troc -----------------------------------------
   await asPlayer(B, "select public.set_showcase($1)", [["ibai", "auronplay"]]);
   const beforeShowcase = (
@@ -598,6 +726,15 @@ try {
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
+  await client.query(await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8"));
+  check(
+    "profil public rejouable : la projection est intacte",
+    (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
+  );
+  check(
+    "profil public rejouable : le profil répond encore",
+    (await asPlayer(E, "select public.player_profile($1) as p", [D])).rows[0].p.unique_creators === 3,
+  );
   await client.query("select set_config('test.uid', $1, false)", [USER]);
   const replay = (await client.query("select public.open_pack() as r")).rows[0].r;
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
