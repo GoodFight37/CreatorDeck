@@ -715,12 +715,21 @@ function ProfileView({
       </div>
       <section className="settings-list" aria-label="Gestion de la sauvegarde">
         <div className="settings-row">
-          <span className="settings-icon green"><WifiOff size={17} /></span>
+          <span className={`settings-icon ${cloud.configured ? "green" : "blue"}`}>
+            {cloud.configured ? <CloudBadge /> : <WifiOff size={17} />}
+          </span>
           <div>
-            <strong>Jeu 100 % hors ligne</strong>
-            <span>Aucun compte, aucune connexion : tout est stocké localement.</span>
+            {/* Ce libellé s'adapte au build : « 100 % hors ligne » affiché
+                quand le cloud est actif faisait croire qu'aucune option en
+                ligne n'existait. */}
+            <strong>{cloud.configured ? "Cloud disponible" : "Jeu 100 % hors ligne"}</strong>
+            <span>
+              {cloud.configured
+                ? "Compte facultatif : la collection, l'Atelier et les saisons restent jouables sans connexion."
+                : "Aucun compte, aucune connexion : tout est stocké localement."}
+            </span>
           </div>
-          <Check size={18} className="success-icon" />
+          {cloud.configured ? null : <Check size={18} className="success-icon" />}
         </div>
         <button type="button" className="settings-row settings-action" onClick={onShowAccount}>
           <span className={`settings-icon ${cloud.userId ? "green" : "blue"}`}>
