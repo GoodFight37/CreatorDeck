@@ -1094,6 +1094,9 @@ input:focus-visible {
   font-size: 10px;
 }
 .toast-error button { display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: rgba(255,255,255,.08); cursor: pointer; }
+.toast-actions { display: flex; flex: none; align-items: center; gap: 6px; }
+/* Raccourci dans le bandeau (« Mon compte ») : plus large qu'un bouton icône. */
+.toast-error .toast-action { display: inline-flex; width: auto; height: 26px; align-items: center; padding: 0 10px; font-size: 11px; font-weight: 700; }
 .toast-notice { color: #d6ffe9; border-color: rgba(80,217,160,.28); background: rgba(16,52,40,.95); }
 
 .opening-loader,

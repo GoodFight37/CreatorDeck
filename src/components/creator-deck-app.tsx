@@ -62,6 +62,7 @@ import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/li
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
 import { THEME_VARS, THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
+import { cloudStore } from "@/lib/cloud/cloud-store";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
@@ -186,6 +187,8 @@ function HomeView({
   opening,
   usingHourglass,
   now,
+  serverReserve,
+  needsAccount,
 }: {
   game: GameState;
   onOpen: () => void;
@@ -194,6 +197,10 @@ function HomeView({
   opening: boolean;
   usingHourglass: boolean;
   now: number;
+  /** La réserve vient du serveur : le sablier local ne peut pas l'avancer. */
+  serverReserve: boolean;
+  /** Build avec cloud sans compte connecté : l'ouverture demande une connexion. */
+  needsAccount: boolean;
 }) {
   const pack = PACKS.live;
   const stock = game.player.packs;
@@ -240,20 +247,30 @@ function HomeView({
         <button
           className="primary-action"
           onClick={onOpen}
-          disabled={stock <= 0 || opening}
+          disabled={opening || (!needsAccount && stock <= 0)}
         >
-          {opening ? <LoaderCircle className="spin" size={19} /> : <Zap size={19} />}
-          <span>{stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}</span>
-          {stock > 0 ? <ChevronRight size={19} /> : null}
+          {opening ? (
+            <LoaderCircle className="spin" size={19} />
+          ) : needsAccount ? (
+            <CircleUserRound size={19} />
+          ) : (
+            <Zap size={19} />
+          )}
+          <span>
+            {needsAccount ? "Se connecter pour ouvrir" : stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}
+          </span>
+          {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
         <button
           className="secondary-action"
           onClick={onUseHourglass}
-          disabled={stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
+          disabled={serverReserve || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
         >
           <Hourglass size={15} />
           <span>
-            Utiliser 1 sablier ({game.player.hourglasses} disp.) · retire 15 min
+            {serverReserve
+              ? "Sablier indisponible : la réserve vient du serveur"
+              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · retire 15 min`}
           </span>
         </button>
         <div className="guarantee-row">
@@ -893,6 +910,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 export function CreatorDeckApp() {
   const state = useGame();
+  const cloud = useCloud();
   const now = useNow(1_000);
   const [tab, setTab] = useState<Tab>("home");
   const [opening, setOpening] = useState(false);
@@ -900,6 +918,8 @@ export function CreatorDeckApp() {
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
+  const [errorHint, setErrorHint] = useState<"account" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [oddsOpen, setOddsOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
@@ -914,36 +934,73 @@ export function CreatorDeckApp() {
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
 
-  const showError = useCallback((message: string) => {
+  const showError = useCallback((message: string, hint: "account" | null = null) => {
     setNotice(null);
     setError(message);
+    setErrorHint(hint);
   }, []);
   const showNotice = useCallback((message: string) => {
     setError(null);
+    setErrorHint(null);
     setNotice(message);
   }, []);
 
-  function handleOpenPack() {
+  // Un compte est connecté : la réserve de boosters affichée est celle du
+  // serveur (`pack_status()` ne consomme rien, elle recale aussi l'ancre de
+  // recharge). Silencieux si le réseau ne répond pas.
+  useEffect(() => {
+    if (!cloud.configured || !cloud.userId) return;
+    void cloudStore.packStatus();
+  }, [cloud.configured, cloud.userId]);
+
+  async function handleOpenPack() {
     if (!game || opening) return;
     setOpening(true);
     setError(null);
-    // Petit délai volontaire : le tirage est instantané en local, mais la
-    // révélation mérite son moment de suspense.
-    window.setTimeout(() => {
-      try {
+    setErrorHint(null);
+    try {
+      // Build sans cloud (dev, tests) : le tirage local reste le comportement,
+      // exactement comme avant.
+      if (!cloud.configured) {
+        // Petit délai volontaire : le tirage est instantané en local, mais la
+        // révélation mérite son moment de suspense.
+        await new Promise((resolve) => window.setTimeout(resolve, OPENING_DELAY_MS));
         const cards = gameStore.openPack();
         // Le son accompagne le geste, jamais l'attente : c'est l'instant du
-        // « wouip » qui compte, et il faut un geste utilisateur pour que le
-        // navigateur autorise l'audio.
+        // « wouip » qui compte.
         playPackOpening();
         setDrawnCards(cards);
         setRevealIndex(0);
-      } catch (caught) {
-        showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
-      } finally {
-        setOpening(false);
+        return;
       }
-    }, OPENING_DELAY_MS);
+
+      // Cloud configuré : les cartes viennent du serveur, jamais du moteur
+      // local — c'est ce qui les rend infalsifiables (prérequis des échanges).
+      // Pas de repli silencieux : sans compte ou sans réseau, on n'ouvre pas.
+      if (!cloud.userId) {
+        showError("Connecte-toi pour ouvrir un booster.", "account");
+        return;
+      }
+
+      const outcome = await cloudStore.openPack();
+      if (outcome.status === "drawn") {
+        // Le son accompagne le geste : il faut un geste utilisateur pour que
+        // le navigateur autorise l'audio.
+        playPackOpening();
+        setDrawnCards(outcome.cards);
+        setRevealIndex(0);
+        return;
+      }
+      if (outcome.reason === "offline" || outcome.reason === "no-session") {
+        showError(outcome.message, "account");
+        return;
+      }
+      showError(outcome.message);
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
+    } finally {
+      setOpening(false);
+    }
   }
 
   function handleUseHourglass() {
@@ -1026,12 +1083,14 @@ export function CreatorDeckApp() {
         {tab === "home" ? (
           <HomeView
             game={game}
-            onOpen={handleOpenPack}
+            onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
             opening={opening}
             usingHourglass={usingHourglass}
             now={now}
+            serverReserve={cloud.configured}
+            needsAccount={cloud.configured && !cloud.userId}
           />
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
@@ -1071,7 +1130,30 @@ export function CreatorDeckApp() {
       {error ? (
         <div className="toast-error" role="alert">
           <span>{error}</span>
-          <button onClick={() => setError(null)} aria-label="Fermer"><X size={15} /></button>
+          <div className="toast-actions">
+            {errorHint === "account" ? (
+              <button
+                type="button"
+                className="toast-action"
+                onClick={() => {
+                  setError(null);
+                  setErrorHint(null);
+                  setAccountOpen(true);
+                }}
+              >
+                Mon compte
+              </button>
+            ) : null}
+            <button
+              onClick={() => {
+                setError(null);
+                setErrorHint(null);
+              }}
+              aria-label="Fermer"
+            >
+              <X size={15} />
+            </button>
+          </div>
         </div>
       ) : null}
       {notice ? (
