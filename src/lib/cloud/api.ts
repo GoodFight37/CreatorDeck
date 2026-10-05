@@ -115,10 +115,31 @@ function messageFor(status: number, code: string, raw: string): string {
   // Les codes précis d'abord : un code à usage unique refusé arrive en 401,
   // comme une session expirée, et les deux messages n'ont rien à voir.
   if (code === "invalid_credentials" || code === "otp_expired") return "Code incorrect ou expiré.";
+  // Attacher une adresse à un compte invité est cassé côté Supabase quand
+  // « Confirm email » est actif : GoTrue valide une adresse vide (bug connu,
+  // supabase/auth#2847). On explique la manœuvre au lieu de traduire l'erreur.
+  if (code === "email_address_invalid" && /Email address "" is invalid/i.test(raw)) {
+    return "Supabase refuse d'attacher une adresse à un compte invité tant que « Confirm email » est activé : désactive-le (Authentication → Sign In / Providers → Email) puis réessaie.";
+  }
   if (code === "email_address_invalid" || code === "validation_failed") return "Adresse e-mail refusée.";
   if (code === "signup_disabled") return "Les inscriptions sont désactivées sur ce projet.";
   if (code === "anonymous_provider_disabled" || code === "anonymous_sign_ins_disabled") {
     return "Les comptes invités sont désactivés sur ce projet : active-les dans Authentication → Sign In / Providers → Anonymous.";
+  }
+  // Mot de passe : connexion refusée, adresse non confirmée, mot de passe
+  // refusé, ou changement de mot de passe qui exige une reconnexion.
+  if (code === "invalid_grant" || /invalid login credentials/i.test(raw)) {
+    return "E-mail ou mot de passe incorrect.";
+  }
+  if (code === "email_not_confirmed") {
+    return "Cette adresse n'est pas confirmée. Désactive « Confirm email » dans Supabase (Authentication → Sign In / Providers → Email) ou confirme-la, puis réessaie.";
+  }
+  if (code === "weak_password") return "Mot de passe refusé par Supabase : choisis-en un plus long.";
+  if (code === "reauthentication_needed") {
+    return "Supabase demande une reconnexion avant de changer le mot de passe : déconnecte-toi, reconnecte-toi, puis recommence.";
+  }
+  if (code === "email_exists" || /already been registered|already registered/i.test(raw)) {
+    return "Cette adresse est déjà utilisée par un autre compte : connecte-toi avec elle, ou choisis-en une autre.";
   }
   if (code === "email_provider_disabled") {
     return "L'envoi d'e-mails est désactivé sur ce projet : active Email, ou utilise un compte invité.";
@@ -281,6 +302,13 @@ export class CloudApi {
     else this.storage.removeItem(CLOUD_SESSION_KEY);
   }
 
+  /** Met à jour l'e-mail retenu par la session enregistrée (après un ajout). */
+  private setSessionEmail(email: string | null) {
+    const session = this.session();
+    if (!session) return;
+    this.setSession({ ...session, email });
+  }
+
   /** Connecté et jeton utilisable (rafraîchit si nécessaire). */
   async accessToken(): Promise<string | null> {
     const session = this.session();
@@ -373,6 +401,84 @@ export class CloudApi {
         "anonymous_disabled",
         0,
       );
+    }
+    this.setSession(session);
+    return session;
+  }
+
+  /**
+   * Attache une adresse e-mail et/ou un mot de passe au compte connecté.
+   *
+   * C'est la voie de secours d'un **compte invité** : le mot de passe ne
+   * déclenche aucun envoi d'e-mail, donc il fonctionne sans SMTP (contrairement
+   * au code à 6 chiffres). Deux réponses possibles :
+   *
+   *   * appliqué — l'adresse est enregistrée tout de suite (projet réglé avec
+   *     « Confirm email » désactivé, le seul réglage qui marche pour un invité) ;
+   *   * en attente — Supabase a envoyé un lien de confirmation à la nouvelle
+   *     adresse : il faut le cliquer, donc un SMTP configuré.
+   *
+   * Le jeton d'accès reste valable : on met simplement à jour l'adresse de la
+   * session enregistrée pour que l'écran Compte affiche la bonne.
+   */
+  async updateAccount(update: { email?: string; password?: string }): Promise<{
+    /** La demande a pris effet tout de suite. */
+    applied: boolean;
+    /** Adresse en attente de confirmation, le cas échéant. */
+    pendingEmail: string | null;
+    /** Adresse retenue par le compte après l'appel. */
+    email: string | null;
+  }> {
+    const token = await this.accessToken();
+    if (!token) throw new CloudError("Connecte-toi pour utiliser le cloud.", "no_session", 401);
+
+    const wanted = update.email?.trim();
+    const payload: Record<string, string> = {};
+    if (wanted) payload.email = wanted;
+    if (update.password) payload.password = update.password;
+    if (!Object.keys(payload).length) {
+      throw new CloudError("Rien à enregistrer.", "invalid_response", 0);
+    }
+
+    const { body } = await this.send(`${this.config.url}/auth/v1/user`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+      token,
+      raw: true,
+    });
+
+    const record = asRecord(body);
+    const email = typeof record?.email === "string" && record.email ? record.email : null;
+    const pendingEmail =
+      typeof record?.new_email === "string" && record.new_email && record.new_email !== email
+        ? record.new_email
+        : null;
+
+    if (wanted && !pendingEmail && !email) {
+      throw new CloudError("Réponse d'authentification illisible.", "invalid_response", 0);
+    }
+    if (pendingEmail) return { applied: false, pendingEmail, email };
+    // Adresse appliquée : la session enregistrée doit la connaître.
+    if (wanted) this.setSessionEmail(email);
+    return { applied: true, pendingEmail: null, email: email ?? this.session()?.email ?? null };
+  }
+
+  /**
+   * Connexion par adresse e-mail et mot de passe.
+   *
+   * Ne demande aucun envoi d'e-mail : c'est le chemin de récupération d'un
+   * compte invité auquel on a attaché un mot de passe, sur un autre appareil.
+   */
+  async signInWithPassword(email: string, password: string): Promise<CloudSession> {
+    const response = await this.send(`${this.config.url}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      body: JSON.stringify({ email: email.trim(), password }),
+      // Un mot de passe erroné est une réponse attendue : on lit le corps.
+      raw: true,
+    });
+    const session = parseSession(response.body);
+    if (!session) {
+      throw new CloudError("Réponse d'authentification illisible.", "invalid_response", 0);
     }
     this.setSession(session);
     return session;

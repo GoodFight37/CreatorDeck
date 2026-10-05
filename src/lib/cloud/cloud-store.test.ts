@@ -82,6 +82,8 @@ type FakeApi = {
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
   ping: ReturnType<typeof vi.fn>;
+  updateAccount: ReturnType<typeof vi.fn>;
+  signInWithPassword: ReturnType<typeof vi.fn>;
   searchPlayers: ReturnType<typeof vi.fn>;
   playerVariants: ReturnType<typeof vi.fn>;
   createTrade: ReturnType<typeof vi.fn>;
@@ -145,6 +147,12 @@ function harness(options: {
       nextPackAt: "2026-03-01T10:30:00Z",
     })),
     ping: vi.fn(async () => ({ host: "projet.supabase.co" })),
+    updateAccount: vi.fn(async (update: { email?: string; password?: string }) => ({
+      applied: true,
+      pendingEmail: null,
+      email: update.email ?? SESSION.email,
+    })),
+    signInWithPassword: vi.fn(async () => SESSION),
     searchPlayers: vi.fn(async () => [
       { userId: "22222222-2222-4222-8222-222222222222", displayName: "Bruno", level: 4, uniqueCreators: 120 },
     ]),
@@ -712,5 +720,125 @@ describe("échanges côté store", () => {
     expect(outcome.status).toBe("unavailable");
     expect(outcome.status === "unavailable" && outcome.message).toMatch(/tu ne possèdes plus/);
     expect(store.getSnapshot().isError).toBe(true);
+  });
+});
+
+describe("compte gardable (adresse + mot de passe)", () => {
+  it("attache l'adresse et le mot de passe du compte invité", async () => {
+    const { store, api } = harness();
+    const outcome = await store.keepAccount("azerty1234", "joueur@exemple.fr");
+
+    expect(api.updateAccount).toHaveBeenCalledWith({ email: "joueur@exemple.fr", password: "azerty1234" });
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().email).toBe("joueur@exemple.fr");
+    // Le message dit où se reconnecter, sans promettre d'e-mail.
+    expect(store.getSnapshot().message).toMatch(/autre appareil/);
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("n'appelle pas le serveur si la saisie est mauvaise", async () => {
+    const { store, api } = harness();
+    const court = await store.keepAccount("court", "joueur@exemple.fr");
+    expect(court.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/trop court/);
+    expect(api.updateAccount).not.toHaveBeenCalled();
+
+    const adresse = await store.keepAccount("azerty1234", "pas-une-adresse");
+    expect(adresse.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/incomplète/);
+    expect(api.updateAccount).not.toHaveBeenCalled();
+  });
+
+  it("explique quoi faire quand Supabase attend une confirmation par e-mail", async () => {
+    const { store, api } = harness();
+    api.updateAccount.mockResolvedValue({ applied: false, pendingEmail: "joueur@exemple.fr", email: null });
+
+    const outcome = await store.keepAccount("azerty1234", "joueur@exemple.fr");
+
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/confirmation/);
+    // Le réglage à changer est nommé : sans lui, la voie invitée ne marche pas.
+    expect(store.getSnapshot().message).toMatch(/Confirm email/);
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("change le mot de passe seul quand l'adresse est déjà connue", async () => {
+    const { store, api } = harness();
+    api.updateAccount.mockResolvedValue({ applied: true, pendingEmail: null, email: SESSION.email });
+    const outcome = await store.keepAccount("azerty1234");
+
+    expect(api.updateAccount).toHaveBeenCalledWith({ password: "azerty1234" });
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().message).toMatch(/Mot de passe enregistré/);
+  });
+
+  it("refuse sans compte ou sans cloud", async () => {
+    const sansCompte = harness({ signedIn: false });
+    const first = await sansCompte.store.keepAccount("azerty1234", "joueur@exemple.fr");
+    expect(first.status === "unavailable" && first.reason).toBe("no-session");
+    expect(sansCompte.api.updateAccount).not.toHaveBeenCalled();
+
+    const sansCloud = harness({ configured: false });
+    const second = await sansCloud.store.keepAccount("azerty1234", "joueur@exemple.fr");
+    expect(second.status === "unavailable" && second.reason).toBe("not-configured");
+    expect(sansCloud.store.getSnapshot().message).toMatch(/jouable hors ligne/);
+  });
+
+  it("se connecte par mot de passe sur un autre appareil", async () => {
+    const { store, api } = harness({ local: saveWith({ cards: [], openings: 0 }) });
+    const ok = await store.signInWithPassword(" Joueur@exemple.fr ", "azerty1234");
+
+    expect(ok).toBe(true);
+    // L'adresse est nettoyée avant l'appel (espaces compris).
+    expect(api.signInWithPassword).toHaveBeenCalledWith("Joueur@exemple.fr", "azerty1234");
+    expect(store.getSnapshot().userId).toBe(SESSION.userId);
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("refuse une saisie incomplète sans appeler le serveur", async () => {
+    const { store, api } = harness();
+    expect(await store.signInWithPassword("", "azerty1234")).toBe(false);
+    expect(store.getSnapshot().message).toMatch(/manquante/);
+    expect(await store.signInWithPassword("joueur@exemple.fr", "")).toBe(false);
+    expect(store.getSnapshot().message).toMatch(/manquant/);
+    expect(api.signInWithPassword).not.toHaveBeenCalled();
+  });
+
+  it("rapporte un mot de passe refusé", async () => {
+    const { store, api } = harness();
+    api.signInWithPassword.mockRejectedValue(new CloudError("E-mail ou mot de passe incorrect.", "invalid_grant", 400));
+    expect(await store.signInWithPassword("joueur@exemple.fr", "oublie1234")).toBe(false);
+    expect(store.getSnapshot().message).toMatch(/incorrect/);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("récupère la collection du cloud sur un téléphone vierge", async () => {
+    // Partie locale toute neuve : aucune carte, aucune ouverture. Le compte a
+    // déjà une collection : la reprendre ne peut rien casser.
+    const cloudState = saveWith({ cards: [card("c1", "kaicenat"), card("c2", "ibai")] });
+    const { store, api, state } = harness({
+      local: saveWith({ cards: [], openings: 0 }),
+      remote: remoteRow(cloudState, "2026-03-01T10:30:00Z"),
+    });
+
+    const ok = await store.signInWithPassword("joueur@exemple.fr", "azerty1234");
+
+    expect(ok).toBe(true);
+    expect(api.pullSave).toHaveBeenCalled();
+    expect(state.current.cards).toHaveLength(2);
+    expect(store.getSnapshot().message).toMatch(/2 cartes récupérées/);
+    expect(store.getSnapshot().decision).toBe("pull");
+  });
+
+  it("ne remplace jamais une partie qui a déjà servi", async () => {
+    const cloudState = saveWith({ cards: [card("c1", "kaicenat")] });
+    const local = saveWith({ cards: [card("mine", "ibai")], openings: 4 });
+    const { store, api, state } = harness({ local, remote: remoteRow(cloudState, "2026-03-01T10:30:00Z") });
+
+    await store.signInWithPassword("joueur@exemple.fr", "azerty1234");
+
+    expect(api.pullSave).not.toHaveBeenCalled();
+    expect(state.current).toBe(local);
+    expect(store.getSnapshot().message).toMatch(/envoie-la quand tu veux/);
   });
 });

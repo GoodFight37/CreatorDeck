@@ -29,6 +29,7 @@ import {
   type TradeListItem,
 } from "@/lib/cloud/api";
 import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
+import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
@@ -90,6 +91,21 @@ export type PackOpenOutcome =
     };
 
 /**
+ * Résultat d'une action cloud : soit faite, soit refusée avec une explication.
+ *
+ * `reason` dit quoi corriger — `no-session`/`offline` → se connecter,
+ * `not-configured` → build sans cloud, `error` → refus du serveur (message
+ * déjà en français).
+ */
+export type CloudActionOutcome =
+  | { status: "done"; message: string }
+  | {
+      status: "unavailable";
+      reason: "offline" | "no-session" | "not-configured" | "error";
+      message: string;
+    };
+
+/**
  * Résultat d'une action d'échange.
  *
  * `done` : le serveur a tranché et l'appareil s'est aligné. `unavailable` :
@@ -97,13 +113,10 @@ export type PackOpenOutcome =
  * connecter, `not-configured` → build sans cloud, `error` → refus du serveur
  * (message déjà en français).
  */
-export type TradeOutcome =
-  | { status: "done"; message: string }
-  | {
-      status: "unavailable";
-      reason: "offline" | "no-session" | "not-configured" | "error";
-      message: string;
-    };
+export type TradeOutcome = CloudActionOutcome;
+
+/** Résultat d'une action sur le compte (adresse, mot de passe). */
+export type AccountOutcome = CloudActionOutcome;
 
 /** Réponse de la recherche de partenaires (message déjà prêt à afficher). */
 export type PlayerSearchOutcome = {
@@ -315,10 +328,10 @@ export function createCloudStore(deps: CloudDeps) {
    * Reconnaît le refus à corriger : pas de compte, réseau injoignable, cloud
    * absent. Les autres erreurs remontent telles quelles (déjà en français).
    */
-  function tradeRefusal(
+  function cloudRefusal(
     error: unknown,
     fallback: string,
-  ): Extract<TradeOutcome, { status: "unavailable" }> {
+  ): Extract<CloudActionOutcome, { status: "unavailable" }> {
     if (error instanceof CloudError) {
       if (error.status === 401 || error.status === 403 || error.code === "no_session") {
         return { status: "unavailable", reason: "no-session", message: error.message };
@@ -331,7 +344,9 @@ export function createCloudStore(deps: CloudDeps) {
   }
 
   /** Refus immédiat quand le cloud n'est pas configuré ou qu'aucun compte n'est connecté. */
-  function tradeApi(): { api: CloudApi } | { refusal: Extract<TradeOutcome, { status: "unavailable" }> } {
+  function tradeApi():
+    | { api: CloudApi }
+    | { refusal: Extract<CloudActionOutcome, { status: "unavailable" }> } {
     const api = resolve();
     if (!api) {
       publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
@@ -379,6 +394,53 @@ export function createCloudStore(deps: CloudDeps) {
       publish({ message: `${prefix}${applied} échange${applied > 1 ? "s" : ""} accepté${applied > 1 ? "s" : ""} appliqué${applied > 1 ? "s" : ""} à ta collection.`, isError: false });
     }
     return { list, applied, blocked };
+  }
+
+  /**
+   * À la connexion (mot de passe ou code à 6 chiffres uniquement — jamais au
+   * simple retour dans l'app) : adopter la collection du cloud si cette partie
+   * n'a jamais servi.
+   *
+   * C'est le cas d'un nouveau téléphone : la partie locale est vierge (aucune
+   * carte, aucune ouverture — les points et sabliers d'accueil ne sont pas une
+   * progression) et le compte a déjà une collection. Rien ne peut être perdu —
+   * une partie vierge ne contient rien — donc on la remplace sans demander,
+   * sinon le premier envoi écraserait la collection du joueur. Dès que la
+   * partie locale a la moindre carte ou la moindre ouverture, on ne touche à
+   * rien : le joueur choisit (règle « jamais de perte silencieuse »).
+   *
+   * Renvoie le nombre de cartes adoptées (0 si rien n'a été fait).
+   */
+  async function adoptCloudIfEmpty(): Promise<number> {
+    const api = resolve();
+    const local = deps.readState();
+    if (!api?.session() || !local) return 0;
+    if (local.cards.length > 0 || local.openings > 0) return 0;
+    try {
+      const remote = await api.pullSave();
+      if (!remote) return 0;
+      const parsed = sanitizeState(remote.state, deps.now());
+      if (!parsed || parsed.cards.length === 0) return 0;
+      deps.applyState(parsed);
+      publish({
+        decision: "pull",
+        pending: false,
+        remoteUpdatedAt: Date.parse(remote.updatedAt) || null,
+        lastSyncAt: deps.now(),
+      });
+      return parsed.cards.length;
+    } catch {
+      // Hors ligne : la connexion vient de réussir, inutile d'alarmer.
+      return 0;
+    }
+  }
+
+  /** Phrase commune : ce qui a été récupéré du cloud, ou la consigne d'envoi. */
+  function connectedMessage(adopted: number): string {
+    if (adopted > 0) {
+      return `Compte connecté : ${adopted} carte${adopted > 1 ? "s" : ""} récupérée${adopted > 1 ? "s" : ""} depuis le cloud.`;
+    }
+    return "Compte connecté. Ta collection locale reste la référence : envoie-la quand tu veux.";
   }
 
   /**
@@ -457,11 +519,14 @@ export function createCloudStore(deps: CloudDeps) {
       publish({ busy: true, message: null, isError: false });
       try {
         const session = await api.verifyOtp(email, token.trim());
+        const adopted = await adoptCloudIfEmpty();
         publish({
           busy: false,
           email: session.email,
+          displayName: null,
+          showcase: [],
           userId: session.userId,
-          message: "Compte connecté. Ta collection locale reste la référence : envoie-la quand tu veux.",
+          message: connectedMessage(adopted),
           isError: false,
         });
         return true;
@@ -494,6 +559,93 @@ export function createCloudStore(deps: CloudDeps) {
       } catch (error) {
         fail(error, "Création du compte invité impossible.");
         return false;
+      }
+    },
+
+    /**
+     * Connexion par adresse e-mail et mot de passe.
+     *
+     * Le chemin qui ne dépend d'aucun envoi d'e-mail : c'est ce qui permet de
+     * retrouver une collection sur un autre appareil sans SMTP, pour peu qu'un
+     * mot de passe ait été attaché au compte (voir `keepAccount`).
+     */
+    async signInWithPassword(email: string, password: string): Promise<boolean> {
+      const api = resolve();
+      if (!api) {
+        publish({ message: CLOUD_DISABLED_HINT, isError: true });
+        return false;
+      }
+      const address = email.trim();
+      const problem = emailProblem(address) ?? passwordProblem(password);
+      if (problem) {
+        publish({ busy: false, message: problem, isError: true });
+        return false;
+      }
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const session = await api.signInWithPassword(address, password);
+        const adopted = await adoptCloudIfEmpty();
+        publish({
+          busy: false,
+          email: session.email,
+          displayName: null,
+          showcase: [],
+          userId: session.userId,
+          message: connectedMessage(adopted),
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        fail(error, "Connexion impossible.");
+        return false;
+      }
+    },
+
+    /**
+     * Attache une adresse e-mail et un mot de passe au compte connecté.
+     *
+     * Pour un compte invité, c'est ce qui le rend récupérable : le mot de passe
+     * ne déclenche aucun e-mail, donc **aucun SMTP n'est nécessaire**. Le
+     * joueur peut ensuite se connecter ailleurs par adresse + mot de passe.
+     * Sans adresse (compte déjà e-mail), la fonction ne change que le mot de
+     * passe.
+     */
+    async keepAccount(password: string, email?: string): Promise<AccountOutcome> {
+      const api = resolve();
+      const wanted = email?.trim() ?? "";
+      if (!api) {
+        publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
+        return { status: "unavailable", reason: "not-configured", message: CLOUD_DISABLED_HINT };
+      }
+      if (!api.session()) {
+        const message = "Connecte-toi d'abord (compte invité) pour garder ce compte.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "no-session", message };
+      }
+      const problem = (wanted ? emailProblem(wanted) : null) ?? passwordProblem(password);
+      if (problem) {
+        publish({ busy: false, message: problem, isError: true });
+        return { status: "unavailable", reason: "error", message: problem };
+      }
+
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const result = await api.updateAccount(wanted ? { email: wanted, password } : { password });
+        if (!result.applied) {
+          const message = `Un e-mail de confirmation a été envoyé à ${result.pendingEmail} : ouvre-le pour valider l'adresse. Si tu ne le reçois pas, c'est que le projet n'a pas de SMTP — désactive « Confirm email » (Authentication → Sign In / Providers → Email) puis réessaie, l'adresse sera enregistrée tout de suite.`;
+          publish({ busy: false, message, isError: false });
+          return { status: "unavailable", reason: "error", message };
+        }
+        const address = result.email ?? wanted;
+        const message = wanted
+          ? `Adresse ${address} attachée, avec un mot de passe. Sur un autre appareil : « Se connecter avec un e-mail et un mot de passe », puis « Charger le cloud ».`
+          : "Mot de passe enregistré. Sur un autre appareil, connecte-toi avec ton adresse et ce mot de passe.";
+        publish({ busy: false, email: address ?? state.email, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Enregistrement impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
       }
     },
 
@@ -687,7 +839,7 @@ export function createCloudStore(deps: CloudDeps) {
           asked: true,
         };
       } catch (error) {
-        const refusal = tradeRefusal(error, "Recherche impossible.");
+        const refusal = cloudRefusal(error, "Recherche impossible.");
         publish({ busy: false, message: refusal.message, isError: true });
         return { players: [], message: refusal.message, isError: true, asked: true };
       }
@@ -705,7 +857,7 @@ export function createCloudStore(deps: CloudDeps) {
       try {
         return { variants: await ready.api.playerVariants(userId, slug), message: null };
       } catch (error) {
-        return { variants: [], message: tradeRefusal(error, "Lecture des variantes impossible.").message };
+        return { variants: [], message: cloudRefusal(error, "Lecture des variantes impossible.").message };
       }
     },
 
@@ -780,7 +932,7 @@ export function createCloudStore(deps: CloudDeps) {
         publish({ busy: false, message, isError: false });
         return { status: "done", message };
       } catch (error) {
-        const refusal = tradeRefusal(error, "Proposition impossible.");
+        const refusal = cloudRefusal(error, "Proposition impossible.");
         publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }
@@ -850,7 +1002,7 @@ export function createCloudStore(deps: CloudDeps) {
         publish({ busy: false, message, isError: false });
         return { status: "done", message };
       } catch (error) {
-        const refusal = tradeRefusal(error, "Réponse impossible.");
+        const refusal = cloudRefusal(error, "Réponse impossible.");
         publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }
@@ -868,7 +1020,7 @@ export function createCloudStore(deps: CloudDeps) {
         publish({ busy: false, message, isError: false });
         return { status: "done", message };
       } catch (error) {
-        const refusal = tradeRefusal(error, "Annulation impossible.");
+        const refusal = cloudRefusal(error, "Annulation impossible.");
         publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }

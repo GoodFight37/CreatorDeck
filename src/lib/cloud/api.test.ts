@@ -634,3 +634,99 @@ describe("échanges", () => {
     await expect(api.listTrades()).rejects.toThrow(/Connecte-toi/);
   });
 });
+
+describe("compte : adresse et mot de passe", () => {
+  function signedIn(email: string | null = null) {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, email, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("attache une adresse et un mot de passe au compte invité", async () => {
+    const storage = signedIn(null);
+    const { api, calls } = client(() => ({ body: { id: SESSION_BODY.user.id, email: "joueur@exemple.fr" } }), storage);
+
+    const result = await api.updateAccount({ email: " joueur@exemple.fr ", password: "azerty1234" });
+
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/auth/v1/user");
+    expect(calls[0]?.init?.method).toBe("PUT");
+    // Le mot de passe part avec l'adresse : un seul appel, aucune confirmation.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ email: "joueur@exemple.fr", password: "azerty1234" });
+    expect(result).toEqual({ applied: true, pendingEmail: null, email: "joueur@exemple.fr" });
+    // La session enregistrée connaît la nouvelle adresse (l'écran Compte l'affiche).
+    expect(api.session()?.email).toBe("joueur@exemple.fr");
+  });
+
+  it("comprend qu'une confirmation par e-mail est en attente", async () => {
+    const storage = signedIn(null);
+    const { api } = client(() => ({ body: { id: SESSION_BODY.user.id, new_email: "joueur@exemple.fr" } }), storage);
+
+    const result = await api.updateAccount({ email: "joueur@exemple.fr", password: "azerty1234" });
+
+    expect(result.applied).toBe(false);
+    expect(result.pendingEmail).toBe("joueur@exemple.fr");
+    // Rien n'est appliqué : la session reste sans adresse.
+    expect(api.session()?.email).toBeNull();
+  });
+
+  it("change le mot de passe seul quand l'adresse est déjà là", async () => {
+    const { api, calls } = client(() => ({ body: { id: SESSION_BODY.user.id, email: "joueur@exemple.fr" } }), signedIn("joueur@exemple.fr"));
+    const result = await api.updateAccount({ password: "azerty1234" });
+
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ password: "azerty1234" });
+    expect(result.applied).toBe(true);
+    expect(result.email).toBe("joueur@exemple.fr");
+  });
+
+  it("refuse d'écrire sans session et sans rien à changer", async () => {
+    const { api } = client(() => ({ body: {} }));
+    await expect(api.updateAccount({ password: "azerty1234" })).rejects.toThrow(/Connecte-toi/);
+
+    const idem = client(() => ({ body: {} }), signedIn(null));
+    await expect(idem.api.updateAccount({})).rejects.toThrow(/Rien à enregistrer/);
+  });
+
+  it("se connecte par adresse et mot de passe", async () => {
+    const { api, calls, storage } = client(() => ({ body: SESSION_BODY }));
+    const session = await api.signInWithPassword(" joueur@exemple.fr ", "azerty1234");
+
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/auth/v1/token?grant_type=password");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ email: "joueur@exemple.fr", password: "azerty1234" });
+    expect(session.userId).toBe(SESSION_BODY.user.id);
+    expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(true);
+  });
+
+  it("traduit les refus de connexion en français", async () => {
+    const wrong = client(() => ({ status: 400, body: { error_code: "invalid_grant", msg: "Invalid login credentials" } }));
+    await expect(wrong.api.signInWithPassword("joueur@exemple.fr", "oublie")).rejects.toThrow(
+      /E-mail ou mot de passe incorrect/,
+    );
+
+    const unconfirmed = client(() => ({ status: 400, body: { error_code: "email_not_confirmed" } }));
+    await expect(unconfirmed.api.signInWithPassword("joueur@exemple.fr", "azerty1234")).rejects.toThrow(/Confirm email/);
+  });
+
+  it("explique le bug Supabase quand une adresse ne peut pas être attachée à un invité", async () => {
+    // GoTrue valide une adresse vide pour un compte anonyme quand « Confirm
+    // email » est actif (supabase/auth#2847) : le message doit dire le réglage
+    // à changer, pas « Adresse e-mail refusée ».
+    const { api } = client(
+      () => ({ status: 400, body: { error_code: "email_address_invalid", msg: 'Email address "" is invalid' } }),
+      signedIn(null),
+    );
+    await expect(api.updateAccount({ email: "joueur@exemple.fr", password: "azerty1234" })).rejects.toThrow(
+      /Confirm email/,
+    );
+  });
+
+  it("dit qu'une adresse appartient déjà à un autre compte", async () => {
+    const { api } = client(
+      () => ({ status: 422, body: { error_code: "email_exists", msg: "A user with this email address has already been registered" } }),
+      signedIn(null),
+    );
+    await expect(api.updateAccount({ email: "pris@exemple.fr", password: "azerty1234" })).rejects.toThrow(/déjà utilisée/);
+  });
+});

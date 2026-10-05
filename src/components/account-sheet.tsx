@@ -14,8 +14,10 @@ import {
   LogOut,
   Mail,
   Plus,
+  KeyRound,
   RefreshCw,
   Search,
+  ShieldCheck,
   Star,
   Trophy,
   Upload,
@@ -28,6 +30,7 @@ import { useGame } from "@/hooks/use-game";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
 import type { PlayerSearchResult, TradeCard, TradeStatus } from "@/lib/cloud/api";
 import { describeCards } from "@/lib/cloud/trades";
+import { PASSWORD_MIN, PASSWORD_WARNING, emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "@/lib/cloud/showcase";
 import { describeSync } from "@/lib/cloud/sync";
@@ -91,6 +94,11 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [showcaseDraft, setShowcaseDraft] = useState<string[] | null>(null);
   const [query, setQuery] = useState("");
+  // Compte : adresse à attacher (compte invité) et mot de passe.
+  const [keepEmail, setKeepEmail] = useState("");
+  const [keepPassword, setKeepPassword] = useState("");
+  const [signInEmail, setSignInEmail] = useState("");
+  const [signInPassword, setSignInPassword] = useState("");
   const [openProfile, setOpenProfile] = useState<string | null>(null);
   const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
   const pinned = knownShowcase(cloud.showcase);
@@ -147,6 +155,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
         ) : (
           <>
             {cloud.userId ? (
+              <>
               <section className="account-card">
                 <div className="account-who">
                   <span className="settings-icon purple">
@@ -235,6 +244,110 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                     : " Ce compte est invité : il est lié à la session de cet appareil tant qu'aucune adresse e-mail n'y est attachée."}
                 </p>
               </section>
+
+              {cloud.email === null ? (
+                <section className="account-card">
+                  <div className="account-head">
+                    <ShieldCheck size={15} />
+                    <strong>Garder ce compte</strong>
+                  </div>
+                  <p className="account-intro">
+                    Ce compte est <b>invité</b> : il vit avec la session de cet appareil. Si tu la perds
+                    (réinstallation, données effacées), la collection est perdue. Attache une adresse et un mot de
+                    passe pour la retrouver sur un autre appareil — <b>aucun e-mail n&apos;est envoyé</b>, donc aucun
+                    SMTP n&apos;est nécessaire.
+                  </p>
+                  <label className="account-field">
+                    <span>Adresse e-mail</span>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="toi@exemple.fr"
+                      value={keepEmail}
+                      onChange={(event) => setKeepEmail(event.target.value)}
+                    />
+                  </label>
+                  <label className="account-field">
+                    <span>Mot de passe ({PASSWORD_MIN} caractères minimum)</span>
+                    <input
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Choisis un mot de passe"
+                      value={keepPassword}
+                      onChange={(event) => setKeepPassword(event.target.value)}
+                    />
+                  </label>
+                  {emailProblem(keepEmail) && keepEmail ? (
+                    <p className="account-hint">{emailProblem(keepEmail)}</p>
+                  ) : null}
+                  {passwordProblem(keepPassword) && keepPassword ? (
+                    <p className="account-hint">{passwordProblem(keepPassword)}</p>
+                  ) : null}
+                  <div className="account-actions">
+                    <button
+                      type="button"
+                      className="account-button"
+                      disabled={
+                        cloud.busy || Boolean(emailProblem(keepEmail)) || Boolean(passwordProblem(keepPassword))
+                      }
+                      onClick={() =>
+                        void cloudStore.keepAccount(keepPassword, keepEmail).then((outcome) => {
+                          if (outcome.status === "done") {
+                            setKeepPassword("");
+                            setKeepEmail("");
+                          }
+                        })
+                      }
+                    >
+                      <ShieldCheck size={14} /> Attacher l&apos;adresse
+                    </button>
+                  </div>
+                  <p className="account-hint">
+                    {PASSWORD_WARNING} Le mot de passe n&apos;est envoyé nulle part : il reste dans Supabase, haché.
+                  </p>
+                </section>
+              ) : (
+                <section className="account-card">
+                  <details className="account-details">
+                    <summary>
+                      <KeyRound size={12} /> Définir ou changer mon mot de passe
+                    </summary>
+                    <p className="account-hint">
+                      Utile pour te connecter ailleurs sans attendre un code par e-mail (qui, lui, exige un SMTP).
+                    </p>
+                    <label className="account-field">
+                      <span>Nouveau mot de passe ({PASSWORD_MIN} caractères minimum)</span>
+                      <input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="Mot de passe"
+                        value={keepPassword}
+                        onChange={(event) => setKeepPassword(event.target.value)}
+                      />
+                    </label>
+                    {passwordProblem(keepPassword) && keepPassword ? (
+                      <p className="account-hint">{passwordProblem(keepPassword)}</p>
+                    ) : null}
+                    <div className="account-actions">
+                      <button
+                        type="button"
+                        className="account-button"
+                        disabled={cloud.busy || Boolean(passwordProblem(keepPassword))}
+                        onClick={() =>
+                          void cloudStore.keepAccount(keepPassword).then((outcome) => {
+                            if (outcome.status === "done") setKeepPassword("");
+                          })
+                        }
+                      >
+                        <KeyRound size={14} /> Enregistrer le mot de passe
+                      </button>
+                    </div>
+                    <p className="account-hint">{PASSWORD_WARNING}</p>
+                  </details>
+                </section>
+              )}
+              </>
             ) : (
               <section className="account-card">
                 <p className="account-intro">
@@ -246,9 +359,58 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                 </button>
                 <p className="account-hint">
                   Le plus rapide : aucun e-mail, aucun SMTP, aucun domaine. Le compte vit avec la session de cet
-                  appareil — l&apos;attacher à une adresse e-mail viendra ensuite, quand un envoi d&apos;e-mails sera
-                  configuré.
+                  appareil — une fois créé, attache-lui une adresse et un mot de passe (« Garder ce compte ») pour
+                  pouvoir le retrouver ailleurs, sans SMTP.
                 </p>
+
+                <details className="account-details">
+                  <summary>
+                    <KeyRound size={12} /> Se connecter avec un e-mail et un mot de passe
+                  </summary>
+                  <p className="account-hint">
+                    Le chemin pour retrouver une collection sur un autre appareil : <b>aucun e-mail n&apos;est
+                    envoyé</b>, donc aucun SMTP n&apos;est nécessaire. Il faut que le mot de passe ait été attaché au
+                    compte depuis l&apos;appareil d&apos;origine (Compte → « Garder ce compte »).
+                  </p>
+                  <label className="account-field">
+                    <span>Adresse e-mail</span>
+                    <input
+                      type="email"
+                      inputMode="email"
+                      autoComplete="email"
+                      placeholder="toi@exemple.fr"
+                      value={signInEmail}
+                      onChange={(event) => setSignInEmail(event.target.value)}
+                    />
+                  </label>
+                  <label className="account-field">
+                    <span>Mot de passe</span>
+                    <input
+                      type="password"
+                      autoComplete="current-password"
+                      placeholder="Ton mot de passe"
+                      value={signInPassword}
+                      onChange={(event) => setSignInPassword(event.target.value)}
+                    />
+                  </label>
+                  <div className="account-actions">
+                    <button
+                      type="button"
+                      className="account-button wide"
+                      disabled={cloud.busy || Boolean(emailProblem(signInEmail)) || !signInPassword}
+                      onClick={() =>
+                        void cloudStore.signInWithPassword(signInEmail, signInPassword).then((ok) => {
+                          if (ok) {
+                            setSignInPassword("");
+                            setSignInEmail("");
+                          }
+                        })
+                      }
+                    >
+                      <KeyRound size={14} /> Se connecter
+                    </button>
+                  </div>
+                </details>
 
                 <details className="account-details">
                   <summary>Ou se connecter par e-mail (nécessite un SMTP)</summary>
