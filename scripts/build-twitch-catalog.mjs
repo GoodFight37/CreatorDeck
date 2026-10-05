@@ -43,6 +43,15 @@
  *   --seed FILE      réutilise une découverte existante au lieu d'interroger Twitch
  *   --force          re-télécharge les portraits déjà présents
  *
+ * Étiquettes : pour une chaîne **hors direct**, Twitch n'expose que le dernier
+ * jeu programmé (`broadcastSettings`), souvent périmé — d'où des têtes
+ * d'affiche légendaires étiquetées « Among Us » ou « Magic: The Gathering »
+ * alors qu'elles font du talk. Le générateur ne garde ce jeu que s'il
+ * correspond à une catégorie modélisée par `src/data/seasons.config.json` ;
+ * sinon l'entrée prend « Variété & Live », que la première catégorie réellement
+ * observée remplacera. Règle isolée et testée :
+ * `scripts/lib/curated-category.mjs`, `src/lib/curated-category.test.ts`.
+ *
  * Le périmètre retenu est écrit dans `src/data/catalog.config.json` (scope,
  * label, accroches) : l'application n'a aucun libellé « FR » en dur, elle lit
  * ces valeurs.
@@ -68,6 +77,7 @@ import {
   scopeConfig,
   scopeLogLabel,
 } from "./lib/catalog-scope.mjs";
+import { FALLBACK_CATEGORY, curatedCategory } from "./lib/curated-category.mjs";
 import { rarityCounts, rarityForRank } from "./lib/rarity-ladder.mjs";
 
 const ROOT = process.cwd();
@@ -77,6 +87,7 @@ const OUT_DIR = path.join(ROOT, "public/creators");
 const REPORTS_DIR = path.join(ROOT, "reports");
 const DATA_FILE = path.join(ROOT, "src/data/creators.json");
 const CONFIG_FILE = path.join(ROOT, "src/data/catalog.config.json");
+const SEASONS_FILE = path.join(ROOT, "src/data/seasons.config.json");
 const GQL_URL = "https://gql.twitch.tv/gql";
 const CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 
@@ -334,14 +345,52 @@ function ingestEdges(edges, fallbackCategory = "Just Chatting") {
       followers: broadcaster.followers?.totalCount || 0,
       viewers: node.viewersCount || 0,
       category,
+      // Catégorie relevée en direct : un fait, pas une déduction.
+      live: true,
       avatarUrl: broadcaster.profileImageURL,
       curatedBoost: 0,
     });
   }
 }
 
-/** Créateurs FR incontournables, résolus par login (indépendamment du direct). */
-async function fetchCuratedUsers(logins) {
+/**
+ * Catégories réellement modélisées par les familles de saisons
+ * (`src/data/seasons.config.json`). Sert à décider si le dernier jeu programmé
+ * d'une chaîne hors direct peut lui servir d'étiquette (voir plus bas).
+ */
+async function loadKnownCategories() {
+  let raw;
+  try {
+    raw = await readFile(SEASONS_FILE, "utf8");
+  } catch {
+    throw new Error(
+      `seasons.config.json introuvable (${SEASONS_FILE}) : impossible d'étiqueter les têtes d'affiche hors direct.`,
+    );
+  }
+  let config;
+  try {
+    config = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`seasons.config.json illisible : ${err.message}`);
+  }
+  const known = new Set();
+  for (const season of config.seasons ?? []) {
+    for (const category of season.categories ?? []) known.add(category);
+  }
+  return known;
+}
+
+/**
+ * Créateurs FR incontournables, résolus par login (indépendamment du direct).
+ *
+ * Hors direct, Twitch ne dit pas ce que la chaîne streame : `broadcastSettings`
+ * expose seulement le dernier jeu **programmé**, qui peut être périmé (« ibai →
+ * Among Us », « coscu → Magic: The Gathering »). On ne garde donc ce jeu que
+ * s'il correspond à une catégorie modélisée par les familles ; sinon l'entrée
+ * part dans « Variété & Live », et la première catégorie réelle observée la
+ * remplacera. Règle testée : `src/lib/curated-category.test.ts`.
+ */
+async function fetchCuratedUsers(logins, knownCategories) {
   const uniqueLogins = [...new Set(logins.map((l) => l.toLowerCase()))];
   const results = [];
   const chunkSize = 25;
@@ -359,10 +408,12 @@ async function fetchCuratedUsers(logins) {
     for (let idx = 0; idx < chunk.length; idx += 1) {
       const u = data[`u${idx}`];
       if (!u || !u.login || !isValidAvatar(u.profileImageURL)) continue;
-      const category =
-        u.stream?.game?.displayName ||
-        u.broadcastSettings?.game?.displayName ||
-        "Variété & Live";
+      const category = curatedCategory({
+        liveGame: u.stream?.game?.displayName,
+        lastGame: u.broadcastSettings?.game?.displayName,
+        knownCategories,
+        fallback: FALLBACK_CATEGORY,
+      });
       if (BLOCKED_CATEGORIES.has(category)) continue;
       results.push({
         login: u.login.toLowerCase(),
@@ -370,6 +421,9 @@ async function fetchCuratedUsers(logins) {
         followers: u.followers?.totalCount || 0,
         viewers: u.stream?.viewersCount || 0,
         category,
+        // Vrai seulement si la chaîne était en direct : une étiquette déduite
+        // du dernier jeu programmé ne doit jamais battre un fait observé.
+        live: Boolean(u.stream?.game?.displayName),
         avatarUrl: u.profileImageURL,
         // Garde-fou historique : les noms de la liste gardent la main sur les
         // chaînes découvertes uniquement par le direct.
@@ -670,8 +724,12 @@ async function main() {
     console.log(
       `1/4 Résolution des têtes d'affiche ${SCOPE_IS_FR ? "FR" : "mondiales"} (${curatedLogins.length} logins curés)…`,
     );
-    const curated = await fetchCuratedUsers(curatedLogins);
-    console.log(`   -> ${curated.length} créateurs incontournables résolus.`);
+    const curated = await fetchCuratedUsers(curatedLogins, await loadKnownCategories());
+    const offline = curated.filter((creator) => !creator.viewers).length;
+    console.log(
+      `   -> ${curated.length} créateurs incontournables résolus` +
+        `${offline ? ` (${offline} hors direct, étiquetés par leur catégorie modélisée)` : ""}.`,
+    );
 
     console.log(
       `2/4 Pagination des chaînes actives ${LANGUAGES.length ? `(${LANGUAGES.join(", ")})` : "dans le monde"}…`,
@@ -690,7 +748,11 @@ async function main() {
         existing.followers = Math.max(existing.followers, item.followers);
         existing.viewers = Math.max(existing.viewers, item.viewers);
         existing.curatedBoost = Math.max(existing.curatedBoost, item.curatedBoost);
-        if (!existing.category || existing.category === "Variété & Live") {
+        if (item.live && !existing.live) {
+          // Le direct a été observé : il corrige une étiquette déduite.
+          existing.category = item.category;
+          existing.live = true;
+        } else if (!existing.category || existing.category === FALLBACK_CATEGORY) {
           existing.category = item.category;
         }
       }

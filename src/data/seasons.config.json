@@ -6,7 +6,7 @@
     {
       "id": "S01",
       "name": "Accueil & IRL",
-      "tagline": "Le canapé du Twitch : talk, events, sport et musique.",
+      "tagline": "Le canapé du Twitch : talk, events, sport, musique et streams d'ambiance.",
       "categories": [
         "Just Chatting",
         "IRL",
@@ -14,7 +14,12 @@
         "Variété & Live",
         "Sports",
         "Music",
-        "Art"
+        "Art",
+        "Talk Shows & Podcasts",
+        "ASMR",
+        "Always On",
+        "I'm Only Sleeping",
+        "Animals, Aquariums, and Zoos"
       ]
     },
     {
@@ -33,7 +38,13 @@
         "Battlefield 6",
         "ARC Raiders",
         "REMATCH",
-        "Z1: Battle Royale"
+        "Z1: Battle Royale",
+        "WARDOGS",
+        "Deadlock",
+        "Marvel Rivals",
+        "World of Tanks",
+        "Escape from Tarkov",
+        "PUBG: BATTLEGROUNDS"
       ]
     },
     {
@@ -56,7 +67,10 @@
         "Graveyard Keeper II",
         "Shakes and Fidget",
         "SILENT HILL: townfall",
-        "How to Fish"
+        "How to Fish",
+        "The Witcher 3: Wild Hunt Remastered",
+        "AION 2",
+        "Tibia"
       ]
     },
     {
@@ -79,7 +93,9 @@
         "Keep it Up",
         "Furyball: Rogue Revenge",
         "nanos world",
-        "GeoGuessr"
+        "GeoGuessr",
+        "Conan Exiles",
+        "DayZ"
       ]
     },
     {
@@ -97,19 +113,21 @@
         "Trackmania",
         "Chess",
         "Hearthstone",
-        "Mario Kart World"
+        "Mario Kart World",
+        "Dota 2"
       ]
     },
     {
       "id": "S06",
       "name": "Open World & Horreur",
-      "tagline": "Les grands espaces et les nuits blanches.",
+      "tagline": "Les grands espaces, les vieux classiques et les nuits blanches.",
       "categories": [
         "Grand Theft Auto V",
         "Dead by Daylight",
         "CONTROL Resonant",
         "Total War: WARHAMMER III",
-        "SHINOBI: Art of Vengeance"
+        "SHINOBI: Art of Vengeance",
+        "Retro"
       ]
     }
   ],

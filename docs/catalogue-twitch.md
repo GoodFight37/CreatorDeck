@@ -47,6 +47,27 @@ quand elles ne sont pas en direct** au moment de la génération : le classement
 final reste dominé par les followers réels. Un login inexistant est ignoré sans
 erreur — la liste peut vieillir sans casser le build.
 
+**Étiquette d'une tête d'affiche hors direct.** Pour une chaîne qui n'est pas en
+direct, Twitch n'expose pas ce qu'elle streame : `broadcastSettings` donne
+seulement le **dernier jeu programmé**, qui peut être périmé ou anecdotique. La
+génération appliquait ce jeu tel quel, ce qui donnait des cartes légendaires
+étiquetées « Among Us » (`ibai`), « Call of Duty: Black Ops 7 » (`thegrefg`) ou
+« Magic: The Gathering » (`coscu`) alors que ces chaînes font du talk. Depuis, la
+règle est :
+
+1. chaîne **en direct** → sa catégorie observée (un fait, jamais écrasé) ;
+2. hors direct, dernier jeu **modélisé par une famille** de
+   `src/data/seasons.config.json` → conservé (c'est un vrai jeu du catalogue) ;
+3. sinon → **« Variété & Live »**, le placeholder de l'application : la première
+   catégorie réellement observée le remplacera au fil des générations.
+
+Aucun jeu n'est donc inventé, et une étiquette juste n'est jamais remplacée par
+du vide. La règle vit dans `scripts/lib/curated-category.mjs` et ses cas limites
+sont figés par `src/lib/curated-category.test.ts`. Effet mesuré sur le Top 1000
+mondial : **21 étiquettes** corrigées, dont 4 cartes légendaires ; « Variété &
+Live » appartenant à S01, la famille Accueil & IRL passe de 255 à 276 créateurs
+et le fourre-tout Découverte de 93 à 72.
+
 > ⚠️ Le classement est échantillonné au moment de la génération (directs du
 > moment + listes curées). C'est une photo, pas un classement officiel : relance
 > la génération pour la rafraîchir.
@@ -139,8 +160,8 @@ toucher.
 Le rapport affiche les familles **telles que l'application les découpe** :
 
 ```text
-S01 Accueil & IRL — 170 créateurs (7 catégories) → découpée en 2 morceaux (150 + 20)
-S07 Découverte — 376 créateurs (catégories non listées) → découpée en 7 saisons de ≤ 60
+S01 Accueil & IRL — 276 créateurs (12 catégories) → découpée en 2 morceaux (145 + 131)
+S07 Découverte — 72 créateurs (catégories non listées) → découpée en 2 saisons de ≤ 60
 ```
 
 Deux avertissements sont normaux après une génération mondiale :
@@ -153,11 +174,15 @@ Deux avertissements sont normaux après une génération mondiale :
 - **« portrait manquant »** : à corriger avec `npm run assets:regen` (le script
   est reprenable, il ne retélécharge pas ce qui est déjà bon).
 
-En périmètre mondial, le fourre-tout « Découverte » grossit vite : le catalogue
-contient des dizaines de catégories que la config ne liste pas. C'est le
-comportement attendu — le découpage les rend jouables par paquets de 60 —, mais
-si une catégorie récurrente mérite sa famille, ajoutez-la dans la config plutôt
-que de la laisser au fourre-tout.
+En périmètre mondial, le fourre-tout « Découverte » peut grossir vite : le
+catalogue contient des dizaines de catégories que la config ne liste pas. C'est
+le comportement attendu — le découpage les rend jouables par paquets de 60 —,
+mais si une catégorie récurrente mérite sa famille, ajoutez-la dans la config
+plutôt que de la laisser au fourre-tout. C'est ce qui a été fait sur le Top 1000
+mondial : les 18 catégories les plus peuplées (≥ 8 créateurs chacune, 283
+créateurs à elles seules) ont rejoint une famille, ce qui fait passer Découverte
+de 376 à 72 créateurs — soit 7 % du catalogue au lieu de 38 %. Une famille trop
+grosse se découpe automatiquement en morceaux, donc promouvoir ne casse rien.
 
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,

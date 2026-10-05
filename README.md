@@ -58,7 +58,7 @@ src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet)
 src/app/                 layout, page, styles globaux
-src/data/creators.json   les créateurs du catalogue (500 aujourd'hui)
+src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
@@ -245,3 +245,7 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
   sans préavis ; `--dry-run` pour mesurer avant d'écrire, `--count N` pour la
   cible, `--languages FR` pour restreindre le périmètre) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
   officielle si `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` sont renseignés.
+  Une chaîne hors direct n'a pas de catégorie observable : son dernier jeu
+  programmé n'est gardé que s'il correspond à une famille de
+  `seasons.config.json`, sinon l'entrée prend « Variété & Live »
+  (`scripts/lib/curated-category.mjs`, testé).
