@@ -118,11 +118,28 @@ Principes :
   les tables, et pourquoi les publier (Google Play et l'App Store imposent la
   divulgation des probabilités des objets aléatoires). Les chiffres affichés
   sont calculés à la volée par `src/lib/pull-rates.ts`.
+- **Studio de tirages** (Profil → Studio) : ouvre 25, 100 ou 500 boosters **en
+  mémoire** avec le moteur du jeu et compare la répartition obtenue aux taux
+  publiés (observé / attendu / écart, dont les boosters « Perfect »). Rien n'est
+  écrit dans la partie — même collection virtuelle, ni cartes, ni points, ni
+  statistiques. Les tests vérifient que la simulation suit bien
+  `pull-rates.json` à 3 points près sur 400 boosters.
+- **Thèmes de collection** (Profil → Thème) : chaque famille complétée débloque
+  la teinte de son emblème, et toutes les compléter débloque « Grand chelem ».
+  Un thème n'est qu'un jeu de variables CSS appliqué à l'application (fond
+  compris) : aucune image, aucun téléchargement, et un thème verrouillé retombe
+  sur le thème d'origine même dans une sauvegarde trafiquée.
 
 Les tables de tirage s'inspirent du format `pullRates.json` de
 [pokemon-tcg-pocket-database](https://github.com/flibustier/pokemon-tcg-pocket-database)
 (licence MIT) : même vocabulaire (slot, rareté garantie, Rare Pack) appliqué au
-catalogue CreatorDeck. Aucune donnée ni illustration Pokémon n'est embarquée.
+catalogue CreatorDeck. Les paliers de saison, les cosmétiques de collection et
+le studio de tirages reprennent de la même façon les **structures** observées
+dans [PTCGP-Private-Server](https://github.com/Layen-lang/PTCGP-Private-Server)
+(licence MIT : jalons à quatre niveaux, cosmétiques, banc d'essai d'ouvertures).
+Aucune donnée, image, animation ni illustration Pokémon n'est embarquée : tout
+le contenu visuel de CreatorDeck est calculé (teintes dérivées des familles,
+monogrammes) ou provient des portraits Twitch.
 
 ## Application Android (Capacitor)
 

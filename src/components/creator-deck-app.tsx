@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Archive,
@@ -27,6 +27,8 @@ import {
   Sparkles,
   Target,
   Trophy,
+  FlaskConical,
+  Paintbrush,
   WifiOff,
   X,
   Zap,
@@ -34,6 +36,8 @@ import {
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
+import { StudioSheet } from "@/components/studio-sheet";
+import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
@@ -620,11 +624,15 @@ function ProfileView({
   onNotice,
   onError,
   onShowOdds,
+  onShowThemes,
+  onShowStudio,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
   onShowOdds: () => void;
+  onShowThemes: () => void;
+  onShowStudio: () => void;
 }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -715,6 +723,25 @@ function ProfileView({
           <div>
             <strong>Taux de drop publiés</strong>
             <span>Les probabilités de chaque booster, calculées depuis les tables de tirage.</span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
+        <button type="button" className="settings-row settings-action" onClick={onShowStudio}>
+          <span className="settings-icon green"><FlaskConical size={17} /></span>
+          <div>
+            <strong>Studio de tirages</strong>
+            <span>Ouvre 25, 100 ou 500 boosters en mémoire et compare aux taux publiés.</span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
+        <button type="button" className="settings-row settings-action" onClick={onShowThemes}>
+          <span className="settings-icon purple"><Paintbrush size={17} /></span>
+          <div>
+            <strong>Thème du classeur</strong>
+            <span>
+              {game.themes.filter((theme) => theme.unlocked).length}/{game.themes.length} thèmes
+              débloqués par les emblèmes de saison.
+            </span>
           </div>
           <ChevronRight size={16} />
         </button>
@@ -855,6 +882,8 @@ export function CreatorDeckApp() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [oddsOpen, setOddsOpen] = useState(false);
+  const [themeOpen, setThemeOpen] = useState(false);
+  const [studioOpen, setStudioOpen] = useState(false);
 
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
@@ -922,6 +951,33 @@ export function CreatorDeckApp() {
     }
   }
 
+  // Le thème est un jeu de variables CSS : aucun asset, changement instantané.
+  const activeThemeId = game?.themes.find((theme) => theme.equipped)?.id ?? null;
+  useEffect(() => {
+    const root = document.documentElement;
+    const theme = game?.themes.find((entry) => entry.id === activeThemeId);
+    if (!theme) {
+      root.style.removeProperty("--purple");
+      root.style.removeProperty("--purple-light");
+      root.style.removeProperty("--gold");
+      root.style.removeProperty("--glow");
+      return;
+    }
+    root.style.setProperty("--purple", theme.tokens.purple);
+    root.style.setProperty("--purple-light", theme.tokens.purpleLight);
+    root.style.setProperty("--gold", theme.tokens.gold);
+    root.style.setProperty("--glow", theme.tokens.glow);
+  }, [game?.themes, activeThemeId]);
+
+  function handleEquipTheme(themeId: string) {
+    try {
+      gameStore.equipTheme(themeId);
+      showNotice("Thème appliqué au classeur.");
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Thème indisponible.");
+    }
+  }
+
   function closeReveal() {
     setDrawnCards([]);
     setRevealIndex(0);
@@ -959,6 +1015,8 @@ export function CreatorDeckApp() {
             onNotice={showNotice}
             onError={showError}
             onShowOdds={() => setOddsOpen(true)}
+            onShowThemes={() => setThemeOpen(true)}
+            onShowStudio={() => setStudioOpen(true)}
           />
         ) : null}
       </div>
@@ -997,6 +1055,14 @@ export function CreatorDeckApp() {
         </div>
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
+      {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
+      {themeOpen && game ? (
+        <ThemeSheet
+          themes={game.themes}
+          onEquip={handleEquipTheme}
+          onClose={() => setThemeOpen(false)}
+        />
+      ) : null}
       {drawnCards.length ? (
         <RevealOverlay
           cards={drawnCards}

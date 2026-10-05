@@ -113,7 +113,7 @@ describe("migration", () => {
 
     const state = loadState(storage, T0 + 5);
     expect(state).not.toBeNull();
-    expect(state?.version).toBe(3);
+    expect(state?.version).toBe(SAVE_VERSION);
     expect(state?.points).toBe(310);
     expect(state?.cards).toEqual([
       { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0, rareDrop: false },
@@ -121,7 +121,7 @@ describe("migration", () => {
     // La sauvegarde migrée est réécrite sous la clé courante, l'ancienne disparaît.
     expect(state?.claimedTiers).toEqual({});
     expect(storage.data.has(legacy)).toBe(false);
-    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(3);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
     expect(loadState(storage, T0 + 6)).toEqual(state);
   });
 
@@ -141,7 +141,7 @@ describe("migration", () => {
     storage.setItem("creatordeck.save.v2", JSON.stringify(v2));
     const state = loadState(storage, T0 + 5);
 
-    expect(state?.version).toBe(3);
+    expect(state?.version).toBe(SAVE_VERSION);
     expect(state?.claimedTiers[first.id]).toBe(first.tiers.length);
     expect(state?.claimedTiers[second.id]).toBe(second.tiers.length);
     // Une saison inconnue ne crée pas de palier fantôme.

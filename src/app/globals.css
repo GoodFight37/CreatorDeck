@@ -32,8 +32,9 @@ body {
   margin: 0;
   color: var(--text);
   background:
-    radial-gradient(circle at 50% -8%, rgba(111, 65, 221, 0.18), transparent 34rem),
+    radial-gradient(circle at 50% -8%, var(--glow, rgba(111, 65, 221, 0.18)), transparent 34rem),
     #06050a;
+  transition: background 360ms ease;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -61,8 +62,9 @@ input:focus-visible {
   margin: 0 auto;
   overflow: hidden;
   background:
-    radial-gradient(circle at 45% 11%, rgba(112, 72, 219, 0.12), transparent 25rem),
+    radial-gradient(circle at 45% 11%, var(--glow, rgba(112, 72, 219, 0.12)), transparent 25rem),
     var(--bg);
+  transition: background 360ms ease, border-color 360ms ease;
   border-inline: 1px solid rgba(255, 255, 255, 0.035);
   box-shadow: 0 0 70px rgba(0, 0, 0, 0.55);
 }
@@ -1215,6 +1217,27 @@ input:focus-visible {
 .emblem-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 10px; }
 .emblem-strip-label { display: flex; align-items: center; gap: 4px; margin-right: 3px; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 @keyframes emblem-in { from { transform: scale(.55) rotate(-14deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- Studio de tirages ---------- */
+.studio-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0 16px; }
+.studio-group { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); }
+.studio-chip { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 10px; color: var(--muted); border: 0; border-radius: 9px; background: transparent; font-size: 9px; font-weight: 800; cursor: pointer; }
+.studio-chip span { color: var(--muted-2); font-size: 7px; font-weight: 600; }
+.studio-chip.active { color: #fff; background: rgba(143,100,255,.24); }
+.studio-chip.active span { color: rgba(255,255,255,.7); }
+.studio-run { display: flex; align-items: center; gap: 7px; margin-left: auto; padding: 10px 14px; color: #fff; border: 0; border-radius: 12px; background: linear-gradient(145deg, var(--purple), var(--purple-light)); font-size: 10px; font-weight: 900; cursor: pointer; }
+.studio-table td.delta { color: var(--muted); font-variant-numeric: tabular-nums; }
+.studio-table td.delta.close { color: var(--green); }
+
+/* ---------- Thèmes de collection ---------- */
+.theme-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.theme-card { display: flex; flex-direction: column; gap: 6px; padding: 10px; text-align: left; color: var(--text); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); cursor: pointer; }
+.theme-card.equipped { border-color: var(--purple-light); box-shadow: 0 0 0 1px rgba(193,168,255,.2); }
+.theme-card.locked { opacity: .55; cursor: not-allowed; }
+.theme-swatch { display: grid; height: 34px; place-items: center; color: #fff; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18); }
+.theme-card strong { font-size: 10px; }
+.theme-hint { display: flex; align-items: flex-start; gap: 4px; color: var(--muted); font-size: 8px; line-height: 1.45; }
+.theme-hint svg { flex: 0 0 auto; margin-top: 1px; }
 
 /* ---------- Taux de drop ---------- */
 .odds-link { display: flex; width: 100%; align-items: center; gap: 7px; margin-top: 10px; padding: 10px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.02); font-size: 9px; font-weight: 700; cursor: pointer; }

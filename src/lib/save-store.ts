@@ -5,8 +5,8 @@
  * en production (navigateur, PWA, WebView Capacitor), une Map en test.
  *
  * Une sauvegarde d'une version antérieure est migrée à la lecture : passer en
- * v2 (Atelier + saisons) ou en v3 (paliers de saison) ne fait perdre aucune
- * collection.
+ * v2 (Atelier + saisons), v3 (paliers de saison) ou v4 (thème de collection) ne
+ * fait perdre aucune collection.
  */
 import { CREATOR_BY_SLUG, PACKS, type CardVariant, type Rarity } from "@/lib/catalog";
 import {
@@ -15,13 +15,18 @@ import {
   type PlayerState,
 } from "@/lib/game-engine";
 import { SEASON_BY_ID } from "@/lib/seasons";
+import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
 
 /** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
 /** Clés des versions précédentes, migrées puis supprimées à la lecture. */
-export const LEGACY_SAVE_KEYS = ["creatordeck.save.v2", "creatordeck.save.v1"] as const;
+export const LEGACY_SAVE_KEYS = [
+  "creatordeck.save.v3",
+  "creatordeck.save.v2",
+  "creatordeck.save.v1",
+] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -150,6 +155,9 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     openings: nonNegativeInt(raw.openings, 0),
     cards: uniqueCards,
     claimedTiers: sanitizeClaimedTiers(raw.claimedTiers, raw.claimedSeasons),
+    // Thème inconnu (sauvegarde d'une version où la famille existait, édition
+    // à la main…) : on retombe sur le thème d'origine plutôt que de planter.
+    themeId: themeById(typeof raw.themeId === "string" ? raw.themeId : undefined)?.id ?? DEFAULT_THEME_ID,
   };
 }
 

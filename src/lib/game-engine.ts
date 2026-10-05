@@ -26,9 +26,17 @@ import {
 } from "@/lib/catalog";
 import { PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
 import { SEASONS, SEASON_BY_ID, type SeasonReward, type SeasonTier } from "@/lib/seasons";
+import {
+  DEFAULT_THEME,
+  DEFAULT_THEME_ID,
+  THEMES,
+  themeById,
+  unlockHint,
+  type CollectionTheme,
+} from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 3 as const;
+export const SAVE_VERSION = 4 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -90,12 +98,26 @@ export type PlayerState = {
    * bloc) se migre en créditant tous ses paliers.
    */
   claimedTiers: Record<string, number>;
+  /** Identifiant du thème de collection équipé (voir `@/lib/cosmetics`). */
+  themeId: string;
 };
 
 /** Palier prêt à afficher : débloqué et/ou déjà réclamé. */
 export type SeasonTierView = SeasonTier & { unlocked: boolean; claimed: boolean };
 
 /** Vue dérivée d'une saison, prête à afficher. */
+/** Thème prêt à afficher : débloqué ou non, avec ce qu'il reste à faire. */
+export type ThemeView = {
+  id: string;
+  name: string;
+  description: string;
+  unlockHint: string;
+  unlocked: boolean;
+  /** Thème actuellement équipé. */
+  equipped: boolean;
+  tokens: CollectionTheme["tokens"];
+};
+
 export type SeasonView = {
   id: string;
   name: string;
@@ -143,6 +165,8 @@ export type GameView = {
     rareDrops: number;
   };
   seasons: SeasonView[];
+  /** Cosmétiques : thèmes de classeur, débloqués par les emblèmes. */
+  themes: ThemeView[];
 };
 
 export class GameError extends Error {
@@ -172,6 +196,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     openings: 0,
     cards: [],
     claimedTiers: {},
+    themeId: DEFAULT_THEME_ID,
   };
 }
 
@@ -519,6 +544,58 @@ export function seasonViews(state: PlayerState): SeasonView[] {
 }
 
 /**
+ * Thèmes de collection : un par famille (débloqué par son emblème) et le
+ * « Grand chelem » une fois toutes les familles complétées.
+ */
+export function themeViews(state: PlayerState): ThemeView[] {
+  const seasons = seasonViews(state);
+  const emblems = new Set(seasons.filter((season) => season.emblem).map((season) => season.id));
+  const allEmblems = seasons.length > 0 && seasons.every((season) => season.emblem);
+  const equippedId = themeById(state.themeId)?.id ?? DEFAULT_THEME_ID;
+
+  const unlockedIds = new Set(
+    THEMES.filter((theme) => {
+      if (theme.unlock.kind === "starter") return true;
+      if (theme.unlock.kind === "season") return emblems.has(theme.unlock.seasonId);
+      return allEmblems;
+    }).map((theme) => theme.id),
+  );
+
+  return THEMES.map((theme) => ({
+    id: theme.id,
+    name: theme.name,
+    description: theme.description,
+    unlockHint: unlockHint(theme),
+    unlocked: unlockedIds.has(theme.id),
+    // Un thème verrouillé ne peut pas être équipé, même dans une sauvegarde
+    // trafiquée : l'affichage retombe sur le thème d'origine.
+    equipped: theme.id === equippedId && unlockedIds.has(theme.id),
+    tokens: theme.tokens,
+  }));
+}
+
+/** Thème réellement appliqué (le thème d'origine si l'équipé est verrouillé). */
+export function activeTheme(state: PlayerState): CollectionTheme {
+  const equipped = themeById(state.themeId);
+  if (!equipped) return DEFAULT_THEME;
+  return themeViews(state).find((theme) => theme.id === equipped.id)?.unlocked
+    ? equipped
+    : DEFAULT_THEME;
+}
+
+/** Équipe un thème débloqué. */
+export function equipTheme(state: PlayerState, themeId: string, now = Date.now()): PlayerState {
+  const theme = themeById(themeId);
+  if (!theme) {
+    throw new GameError("Thème inconnu.", "UNKNOWN_THEME");
+  }
+  if (!themeViews(state).find((view) => view.id === theme.id)?.unlocked) {
+    throw new GameError("Thème verrouillé : complète d'abord sa famille.", "THEME_LOCKED");
+  }
+  return { ...state, updatedAt: now, themeId: theme.id };
+}
+
+/**
  * Réclame les paliers débloqués d'une saison (points de chaque palier, plus les
  * sabliers et l'emblème sur le dernier).
  *
@@ -678,5 +755,6 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       rareDrops: refreshed.cards.filter((card) => card.rareDrop).length,
     },
     seasons: seasonViews(refreshed),
+    themes: themeViews(refreshed),
   };
 }

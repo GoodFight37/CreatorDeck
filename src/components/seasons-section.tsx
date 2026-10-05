@@ -3,6 +3,7 @@
 import { Award, Check, Coins, Hourglass, Lock, Unlock } from "lucide-react";
 import type { SeasonView } from "@/lib/game-engine";
 import { SEASON_BY_ID } from "@/lib/seasons";
+import { seasonHue } from "@/lib/cosmetics";
 
 /**
  * Emblème d'une saison : un monogramme coloré, gagné en complétant la famille.
@@ -15,7 +16,9 @@ import { SEASON_BY_ID } from "@/lib/seasons";
 export function seasonEmblem(seasonId: string) {
   const season = SEASON_BY_ID.get(seasonId);
   const base = seasonId.replace(/-\d+$/, "");
-  const hue = [...base].reduce((sum, char) => sum + char.charCodeAt(0) * 7, 0) % 360;
+  // Même source de vérité que les thèmes de collection : un emblème et son
+  // thème partagent la teinte de la famille.
+  const hue = seasonHue(seasonId);
   const name = season?.name ?? seasonId;
   const monogram = name
     .replace(/[^\p{L}\p{N} ]/gu, " ")

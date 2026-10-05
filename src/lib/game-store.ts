@@ -10,6 +10,7 @@ import type { PackType } from "@/lib/catalog";
 import {
   claimSeason as engineClaimSeason,
   craftCreator as engineCraftCreator,
+  equipTheme as engineEquipTheme,
   createInitialState,
   openPack as engineOpenPack,
   recycleCard as engineRecycleCard,
@@ -144,9 +145,14 @@ export const gameStore = {
     persist(engineCraftCreator(current(), creatorSlug, now));
   },
 
-  /** Réclame la récompense d'une saison complète. */
+  /** Réclame les paliers débloqués d'une saison. */
   claimSeason(seasonId: string, now = Date.now()): void {
     persist(engineClaimSeason(current(), seasonId, now));
+  },
+
+  /** Équipe un thème de collection débloqué (cosmétique). */
+  equipTheme(themeId: string, now = Date.now()): void {
+    persist(engineEquipTheme(current(), themeId, now));
   },
 
   reset(now = Date.now()): void {
