@@ -121,6 +121,29 @@ catalogue CreatorDeck. Aucune donnée ni illustration Pokémon n'est embarquée.
 
 ## Application Android (Capacitor)
 
+### Installer l'APK de test
+
+La CI publie une **pré-release roulante**, écrasée à chaque build : un lien de
+téléchargement public, sans connexion GitHub.
+
+```url
+https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
+```
+
+- signature **debug** : parfait pour tester sur un téléphone (activer
+  « installer des applications inconnues »), **pas** publiable sur le Play Store ;
+- reconstruit à chaque push sur `main` (`.github/workflows/android-apk.yml`) et
+  à chaque déclenchement manuel ;
+- l'artefact du run (`creatordeck-debug-apk`) reste disponible dans l'onglet
+  Actions, mais son téléchargement exige d'être connecté à GitHub.
+
+```bash
+# déclencher un build à la demande (jeton GitHub avec la permission Actions: write)
+gh workflow run "APK Android (debug)" --ref main
+```
+
+### Construire soi-même
+
 ```bash
 npm run android:sync     # 1. build web + copie dans android/app/src/main/assets/public
 npm run android:debug    # 2a. APK de test : android/app/build/outputs/apk/debug/app-debug.apk
