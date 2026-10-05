@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "note": "Tables de tirage par slot, sur le modèle de pullRates.json de pokemon-tcg-pocket-database (MIT). Source de vérité unique : le moteur (src/lib/game-engine.ts) tire depuis ce fichier et l'écran « Taux de drop » affiche exactement les mêmes probabilités. Modifier un poids ici suffit à rééquilibrer le jeu, sans toucher au code.",
+  "packs": {
+    "live": {
+      "label": "Live Drop",
+      "slotCount": 4,
+      "guaranteed": {
+        "weights": { "rare": 82, "epic": 15, "legendary": 3 },
+        "variant": "live"
+      },
+      "slots": [
+        { "weights": { "common": 42, "uncommon": 30, "rare": 18, "epic": 8, "legendary": 2 } },
+        { "weights": { "common": 42, "uncommon": 30, "rare": 18, "epic": 8, "legendary": 2 } },
+        { "weights": { "common": 34, "uncommon": 32, "rare": 22, "epic": 10, "legendary": 2 } },
+        { "weights": { "common": 20, "uncommon": 34, "rare": 28, "epic": 15, "legendary": 3 } }
+      ],
+      "variants": { "holoPermille": 75, "holoFromRarity": "uncommon" },
+      "rareDrop": {
+        "label": "Perfect Live",
+        "tagline": "Les 5 cartes en Épique ou mieux.",
+        "chancePermille": 5,
+        "weights": { "epic": 82, "legendary": 18 },
+        "variantUpgradePermille": 900
+      }
+    },
+    "archive": {
+      "label": "Archives",
+      "slotCount": 2,
+      "guaranteed": {
+        "weights": { "rare": 74, "epic": 21, "legendary": 5 }
+      },
+      "slots": [
+        { "weights": { "common": 27, "uncommon": 31, "rare": 25, "epic": 13, "legendary": 4 } },
+        { "weights": { "common": 24, "uncommon": 32, "rare": 26, "epic": 14, "legendary": 4 } }
+      ],
+      "variants": { "goldPermille": 35, "goldRarity": "legendary", "holoPermille": 165, "holoFromRarity": "rare" },
+      "rareDrop": {
+        "label": "Archive Parfaite",
+        "tagline": "Les 3 cartes en Rare ou mieux, avec une Épique garantie.",
+        "chancePermille": 8,
+        "weights": { "rare": 30, "epic": 55, "legendary": 15 },
+        "variantUpgradePermille": 900
+      }
+    }
+  }
+}

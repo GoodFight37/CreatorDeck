@@ -1,8 +1,12 @@
 /**
- * Sérialisation, validation et persistance locale d'une partie.
+ * Sérialisation, validation, migration et persistance locale d'une partie.
  *
  * Le stockage est injecté (interface `KeyValueStorage`) : `window.localStorage`
  * en production (navigateur, PWA, WebView Capacitor), une Map en test.
+ *
+ * Une sauvegarde d'une version antérieure est migrée à la lecture (voir
+ * `migrateState`) : passer en v2 (Atelier + saisons) ne fait perdre aucune
+ * collection.
  */
 import { CREATOR_BY_SLUG, PACKS, type CardVariant, type Rarity } from "@/lib/catalog";
 import {
@@ -10,8 +14,14 @@ import {
   type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
+import { SEASON_BY_ID } from "@/lib/seasons";
 
+/** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
+/** Clés des versions précédentes, migrées puis supprimées à la lecture. */
+export const LEGACY_SAVE_KEYS = ["creatordeck.save.v1"] as const;
+/** Versions de sauvegarde que ce build sait lire. */
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -60,17 +70,31 @@ function sanitizeCard(value: unknown): OwnedCard | null {
     rarity: rarity as Rarity,
     variant: variant as CardVariant,
     obtainedAt: epochMs(value.obtainedAt, 0),
+    // Champ apparu en v2 : les sauvegardes v1 valent « carte normale ».
+    rareDrop: value.rareDrop === true,
   };
 }
 
+function sanitizeSeasons(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  for (const entry of value) {
+    if (typeof entry === "string" && SEASON_BY_ID.has(entry)) seen.add(entry);
+  }
+  return [...seen];
+}
+
 /**
- * Valide et normalise une sauvegarde brute (JSON déjà parsé). Retourne `null`
- * si la structure n'est pas exploitable ; les champs manquants ou aberrants
- * sont ramenés à des valeurs sûres, les cartes inconnues sont ignorées.
+ * Valide et normalise une sauvegarde brute (JSON déjà parsé), en migrant au
+ * passage les versions antérieures. Retourne `null` si la structure n'est pas
+ * exploitable ; les champs manquants ou aberrants sont ramenés à des valeurs
+ * sûres, les cartes inconnues sont ignorées.
  */
 export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | null {
   if (!isRecord(raw)) return null;
-  if (raw.version !== SAVE_VERSION) return null;
+  if (typeof raw.version !== "number" || !SUPPORTED_SAVE_VERSIONS.includes(raw.version)) {
+    return null;
+  }
   if (typeof raw.playerId !== "string" || !raw.playerId) return null;
   if (!Array.isArray(raw.cards)) return null;
 
@@ -100,13 +124,14 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     lastArchiveRegen: epochMs(raw.lastArchiveRegen, now),
     openings: nonNegativeInt(raw.openings, 0),
     cards: uniqueCards,
+    claimedSeasons: sanitizeSeasons(raw.claimedSeasons),
   };
 }
 
-export function loadState(storage: KeyValueStorage, now = Date.now()): PlayerState | null {
+function readKey(storage: KeyValueStorage, key: string, now: number): PlayerState | null {
   let raw: string | null;
   try {
-    raw = storage.getItem(SAVE_KEY);
+    raw = storage.getItem(key);
   } catch {
     return null;
   }
@@ -118,12 +143,36 @@ export function loadState(storage: KeyValueStorage, now = Date.now()): PlayerSta
   }
 }
 
+/**
+ * Lit la sauvegarde : clé courante d'abord, puis les clés des versions
+ * précédentes. Une sauvegarde héritée est migrée, réécrite sous la clé
+ * courante et l'ancienne clé est supprimée.
+ */
+export function loadState(storage: KeyValueStorage, now = Date.now()): PlayerState | null {
+  for (const key of [SAVE_KEY, ...LEGACY_SAVE_KEYS]) {
+    const state = readKey(storage, key, now);
+    if (!state) continue;
+    if (key !== SAVE_KEY) {
+      try {
+        saveState(storage, state);
+        storage.removeItem(key);
+      } catch {
+        // Stockage indisponible : la partie reste jouable en mémoire.
+      }
+    }
+    return state;
+  }
+  return null;
+}
+
 export function saveState(storage: KeyValueStorage, state: PlayerState): void {
   storage.setItem(SAVE_KEY, JSON.stringify(state));
 }
 
 export function clearState(storage: KeyValueStorage): void {
-  storage.removeItem(SAVE_KEY);
+  for (const key of [SAVE_KEY, ...LEGACY_SAVE_KEYS]) {
+    storage.removeItem(key);
+  }
 }
 
 /** Sauvegarde exportable (JSON lisible), à coller dans « Importer ». */

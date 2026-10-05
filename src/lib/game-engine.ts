@@ -7,10 +7,16 @@
  * Capacitor / PWA) et, si un mode en ligne arrive un jour, d'exécuter
  * exactement le même code côté serveur.
  *
+ * Les probabilités de tirage ne sont pas écrites ici : elles vivent dans
+ * `src/data/pull-rates.json` (modèle `pullRates.json` de
+ * pokemon-tcg-pocket-database) et l'écran « Taux de drop » les recalcule à
+ * partir du même fichier. Équilibrer le jeu = éditer le JSON.
+ *
  * La persistance est gérée à part (src/lib/save-store.ts).
  */
 import {
   CREATORS,
+  CREATOR_BY_SLUG,
   PACKS,
   RARITY_META,
   type CardVariant,
@@ -18,9 +24,11 @@ import {
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
+import { PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
+import { SEASONS, SEASON_BY_ID, type SeasonReward } from "@/lib/seasons";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 1 as const;
+export const SAVE_VERSION = 2 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -31,22 +39,8 @@ export const HOURGLASS_REDUCTION_MS: Record<PackType, number> = {
   live: 15 * 60 * 1000,
   archive: 60 * 60 * 1000,
 };
-
-const LIVE_WEIGHTS: Record<Rarity, number> = {
-  common: 42,
-  uncommon: 30,
-  rare: 18,
-  epic: 8,
-  legendary: 2,
-};
-const ARCHIVE_WEIGHTS: Record<Rarity, number> = {
-  common: 27,
-  uncommon: 31,
-  rare: 25,
-  epic: 13,
-  legendary: 4,
-};
-const GUARANTEED_RARITIES: Rarity[] = ["rare", "epic", "legendary"];
+/** Variante créée par l'Atelier : les variantes Live/Holo/Gold se tirent. */
+export const CRAFTED_VARIANT: CardVariant = "standard";
 
 export type OwnedCard = {
   id: string;
@@ -55,6 +49,8 @@ export type OwnedCard = {
   variant: CardVariant;
   /** Epoch ms. */
   obtainedAt: number;
+  /** Carte issue d'un booster « Perfect » (Épique ou mieux de partout). */
+  rareDrop: boolean;
 };
 
 export type DrawnCard = {
@@ -63,6 +59,8 @@ export type DrawnCard = {
   rarity: Rarity;
   variant: CardVariant;
   isNew: boolean;
+  /** Toutes les cartes d'un même booster partagent ce drapeau. */
+  rareDrop: boolean;
 };
 
 /** État complet d'une partie — c'est exactement ce qui est sauvegardé. */
@@ -84,6 +82,21 @@ export type PlayerState = {
   lastArchiveRegen: number;
   openings: number;
   cards: OwnedCard[];
+  /** Identifiants des saisons dont la récompense a déjà été réclamée. */
+  claimedSeasons: string[];
+};
+
+/** Vue dérivée d'une saison, prête à afficher. */
+export type SeasonView = {
+  id: string;
+  name: string;
+  tagline: string;
+  categories: string[];
+  owned: number;
+  total: number;
+  complete: boolean;
+  claimed: boolean;
+  reward: SeasonReward;
 };
 
 /** Vue dérivée consommée par l'interface. */
@@ -105,7 +118,13 @@ export type GameView = {
     uniqueCreators: number;
     totalCards: number;
     openings: number;
+    /** Doublons recyclables (copies au-delà de la première, par variante). */
+    duplicates: number;
+    /** Points récupérables en recyclant tous ces doublons. */
+    recycleValue: number;
+    rareDrops: number;
   };
+  seasons: SeasonView[];
 };
 
 export class GameError extends Error {
@@ -134,6 +153,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     lastArchiveRegen: now,
     openings: 0,
     cards: [],
+    claimedSeasons: [],
   };
 }
 
@@ -180,24 +200,28 @@ export function refreshBalances(state: PlayerState, now = Date.now()): PlayerSta
   };
 }
 
-function chooseCreator(packType: PackType, used: Set<string>, allowedRarities?: Rarity[]) {
-  const weights = packType === "live" ? LIVE_WEIGHTS : ARCHIVE_WEIGHTS;
+/**
+ * Tire une rareté selon `weights` (parmi celles encore disponibles), puis un
+ * créateur uniformément dans la rareté choisie. Les poids déclarés décrivent
+ * donc exactement la probabilité affichée : c'est le contrat de l'écran
+ * « Taux de drop ».
+ */
+function chooseCreator(weights: RarityWeights, used: ReadonlySet<string>): Creator {
   const available = CREATORS.filter(
-    (creator) =>
-      !used.has(creator.slug) &&
-      (!allowedRarities || allowedRarities.includes(creator.rarity)),
+    (creator) => !used.has(creator.slug) && (weights[creator.rarity] ?? 0) > 0,
   );
   if (!available.length) {
     throw new GameError("Le catalogue disponible est vide.", "EMPTY_CATALOG");
   }
 
-  const rarities = Object.keys(weights) as Rarity[];
-  const weightedRarities = rarities
+  const weightedRarities = (Object.keys(weights) as Rarity[])
     .map((rarity) => ({
       rarity,
-      weight: available.some((creator) => creator.rarity === rarity) ? weights[rarity] : 0,
+      weight: available.some((creator) => creator.rarity === rarity) ? (weights[rarity] ?? 0) : 0,
     }))
-    .filter((entry) => entry.weight > 0);
+    .filter((entry) => entry.weight > 0)
+    .sort((a, b) => RARITY_META[a.rarity].order - RARITY_META[b.rarity].order);
+
   const totalWeight = weightedRarities.reduce((sum, entry) => sum + entry.weight, 0);
   let roll = randomInt(totalWeight);
   let chosenRarity = weightedRarities[0].rarity;
@@ -213,49 +237,82 @@ function chooseCreator(packType: PackType, used: Set<string>, allowedRarities?: 
   return bucket[randomInt(bucket.length)];
 }
 
-function chooseVariant(packType: PackType, creator: Creator): CardVariant {
+/**
+ * Variante cosmétique d'une carte, selon la table du booster. Un « Perfect »
+ * améliore presque toujours la variante (Holo, ou Gold sur une Légendaire).
+ */
+function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean): CardVariant {
+  const chances = PULL_RATES[packType].variants;
   const roll = randomInt(10_000);
-  if (packType === "archive") {
-    if (creator.rarity === "legendary" && roll < 350) return "gold";
-    if (RARITY_META[creator.rarity].order >= RARITY_META.rare.order && roll < 1_650) {
-      return "holo";
-    }
+
+  if (rareDrop && roll < PULL_RATES[packType].rareDrop.variantUpgradePermille) {
+    return creator.rarity === "legendary" ? "gold" : "holo";
   }
-  if (packType === "live" && creator.rarity !== "common" && roll < 750) {
+
+  const goldRarity = chances.goldRarity ?? "legendary";
+  if (chances.goldPermille && creator.rarity === goldRarity && roll < chances.goldPermille) {
+    return "gold";
+  }
+
+  const holoFrom = chances.holoFromRarity ?? "rare";
+  if (
+    chances.holoPermille &&
+    RARITY_META[creator.rarity].order >= RARITY_META[holoFrom].order &&
+    roll < chances.holoPermille
+  ) {
     return "holo";
   }
+
   return "standard";
 }
 
 /**
- * Tire le contenu d'un booster : `size - 1` cartes pondérées par rareté puis
- * une carte « Rare ou mieux » garantie (variante Live pour le booster Live),
- * sans doublon interne, le tout mélangé.
+ * Tire le contenu d'un booster depuis `pull-rates.json` : un slot par carte
+ * (les taux montent au fil du booster), puis le slot garanti — variante Live
+ * imposée pour le booster Live, « Rare ou mieux » pour les Archives.
+ *
+ * `options.rareDrop` force (ou désactive) le tirage « Perfect » : réservé aux
+ * tests et aux futurs événements à taux boosté.
  */
-export function drawPack(packType: PackType, alreadyOwned: ReadonlySet<string>): DrawnCard[] {
+export function drawPack(
+  packType: PackType,
+  alreadyOwned: ReadonlySet<string>,
+  options: { rareDrop?: boolean } = {},
+): DrawnCard[] {
+  const table = PULL_RATES[packType];
   const size = PACKS[packType].size;
+  const rareDrop =
+    options.rareDrop ?? randomInt(1000) < table.rareDrop.chancePermille;
+  const weightsFor = (index: number): RarityWeights =>
+    rareDrop ? table.rareDrop.weights : table.slots[index].weights;
+
   const used = new Set<string>();
   const drawn: DrawnCard[] = [];
 
   for (let index = 0; index < size - 1; index += 1) {
-    const creator = chooseCreator(packType, used);
+    const creator = chooseCreator(weightsFor(index), used);
     used.add(creator.slug);
     drawn.push({
       id: randomUUID(),
       creatorSlug: creator.slug,
       rarity: creator.rarity,
-      variant: chooseVariant(packType, creator),
+      variant: chooseVariant(packType, creator, rareDrop),
       isNew: !alreadyOwned.has(creator.slug),
+      rareDrop,
     });
   }
 
-  const guaranteed = chooseCreator(packType, used, GUARANTEED_RARITIES);
+  const guaranteed = chooseCreator(
+    rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
+    used,
+  );
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,
     rarity: guaranteed.rarity,
-    variant: packType === "live" ? "live" : chooseVariant(packType, guaranteed),
+    variant: table.guaranteed.variant ?? chooseVariant(packType, guaranteed, rareDrop),
     isNew: !alreadyOwned.has(guaranteed.slug),
+    rareDrop,
   });
 
   for (let index = drawn.length - 1; index > 0; index -= 1) {
@@ -267,6 +324,197 @@ export function drawPack(packType: PackType, alreadyOwned: ReadonlySet<string>):
 
 export function ownedSlugs(state: PlayerState): Set<string> {
   return new Set(state.cards.map((card) => card.creatorSlug));
+}
+
+function cardKey(card: Pick<OwnedCard, "creatorSlug" | "variant">): string {
+  return `${card.creatorSlug}|${card.variant}`;
+}
+
+export type DuplicateGroup = {
+  creatorSlug: string;
+  variant: CardVariant;
+  rarity: Rarity;
+  /** Nombre de copies possédées pour ce créateur + cette variante. */
+  count: number;
+  /** Copies recyclables (toutes sauf la plus ancienne), de la plus ancienne à la plus récente. */
+  recyclableIds: string[];
+  /** Points gagnés par recyclage d'une copie. */
+  unitValue: number;
+};
+
+/** Regroupe les doublons recyclables : au moins 2 copies d'un même couple créateur + variante. */
+export function duplicateGroups(state: Pick<PlayerState, "cards">): DuplicateGroup[] {
+  const groups = new Map<string, OwnedCard[]>();
+  for (const card of state.cards) {
+    const key = cardKey(card);
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(card);
+    else groups.set(key, [card]);
+  }
+
+  const result: DuplicateGroup[] = [];
+  for (const cards of groups.values()) {
+    if (cards.length < 2) continue;
+    const sorted = [...cards].sort((a, b) => a.obtainedAt - b.obtainedAt || a.id.localeCompare(b.id));
+    const [keep, ...extras] = sorted;
+    const creator = CREATOR_BY_SLUG.get(keep.creatorSlug);
+    if (!creator) continue;
+    result.push({
+      creatorSlug: keep.creatorSlug,
+      variant: keep.variant,
+      rarity: creator.rarity,
+      count: sorted.length,
+      recyclableIds: extras.map((card) => card.id),
+      unitValue: RARITY_META[creator.rarity].recycleValue,
+    });
+  }
+  return result.sort(
+    (a, b) =>
+      RARITY_META[b.rarity].order - RARITY_META[a.rarity].order ||
+      b.count - a.count ||
+      a.creatorSlug.localeCompare(b.creatorSlug),
+  );
+}
+
+/**
+ * Recycle un doublon : la carte est retirée et sa valeur en points est
+ * créditée. Refusé si la carte est la dernière copie de ce créateur + variante
+ * (on ne recycle jamais sa seule carte).
+ */
+export function recycleCard(
+  state: PlayerState,
+  cardId: string,
+  now = Date.now(),
+): PlayerState {
+  const card = state.cards.find((entry) => entry.id === cardId);
+  if (!card) {
+    throw new GameError("Cette carte n'est pas dans la collection.", "CARD_NOT_FOUND");
+  }
+  const sameKey = state.cards.filter((entry) => cardKey(entry) === cardKey(card));
+  if (sameKey.length < 2) {
+    throw new GameError(
+      "Impossible de recycler ta seule copie de cette carte.",
+      "NOT_A_DUPLICATE",
+    );
+  }
+
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + RARITY_META[card.rarity].recycleValue,
+    cards: state.cards.filter((entry) => entry.id !== cardId),
+  };
+}
+
+/** Peut-on rejoindre ce créateur depuis l'Atelier, et à quel prix ? */
+export function craftQuote(
+  state: PlayerState,
+  creatorSlug: string,
+): { creator: Creator | undefined; cost: number | null; craftable: boolean; owned: boolean } {
+  const creator = CREATOR_BY_SLUG.get(creatorSlug);
+  const meta = creator ? RARITY_META[creator.rarity] : undefined;
+  return {
+    creator,
+    cost: meta?.craftCost ?? null,
+    craftable: meta?.craftable ?? false,
+    owned: state.cards.some((card) => card.creatorSlug === creatorSlug),
+  };
+}
+
+/**
+ * Rejoint un créateur manquant contre des points. La carte créée est toujours
+ * Standard : les variantes Live/Holo/Gold restent la récompense des boosters.
+ */
+export function craftCreator(
+  state: PlayerState,
+  creatorSlug: string,
+  now = Date.now(),
+): PlayerState {
+  const { creator, cost, craftable, owned } = craftQuote(state, creatorSlug);
+  if (!creator) {
+    throw new GameError("Créateur inconnu du catalogue.", "UNKNOWN_CREATOR");
+  }
+  if (owned) {
+    throw new GameError("Tu possèdes déjà ce créateur.", "ALREADY_OWNED");
+  }
+  if (!craftable || cost === null) {
+    throw new GameError(
+      `Les cartes ${RARITY_META[creator.rarity].label} ne sont pas artisanales : elles se tirent en booster.`,
+      "NOT_CRAFTABLE",
+    );
+  }
+  if (state.points < cost) {
+    throw new GameError(
+      `Il te manque ${cost - state.points} points pour rejoindre ce créateur.`,
+      "NOT_ENOUGH_POINTS",
+    );
+  }
+
+  const card: OwnedCard = {
+    id: randomUUID(),
+    creatorSlug,
+    rarity: creator.rarity,
+    variant: CRAFTED_VARIANT,
+    obtainedAt: now,
+    rareDrop: false,
+  };
+
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points - cost,
+    cards: [...state.cards, card],
+  };
+}
+
+/** Progression des saisons : complétion et récompense à réclamer. */
+export function seasonViews(state: PlayerState): SeasonView[] {
+  const owned = ownedSlugs(state);
+  const claimed = new Set(state.claimedSeasons);
+  return SEASONS.map((season) => {
+    const count = season.slugs.filter((slug) => owned.has(slug)).length;
+    return {
+      id: season.id,
+      name: season.name,
+      tagline: season.tagline,
+      categories: season.categories,
+      owned: count,
+      total: season.slugs.length,
+      complete: count >= season.slugs.length,
+      claimed: claimed.has(season.id),
+      reward: season.reward,
+    };
+  });
+}
+
+/** Réclame la récompense d'une saison complète (points + sabliers). */
+export function claimSeason(
+  state: PlayerState,
+  seasonId: string,
+  now = Date.now(),
+): PlayerState {
+  const season = SEASON_BY_ID.get(seasonId);
+  if (!season) {
+    throw new GameError("Saison inconnue.", "UNKNOWN_SEASON");
+  }
+  if (state.claimedSeasons.includes(seasonId)) {
+    throw new GameError("Récompense déjà réclamée.", "SEASON_CLAIMED");
+  }
+  const owned = ownedSlugs(state);
+  if (!season.slugs.every((slug) => owned.has(slug))) {
+    throw new GameError(
+      "Saison incomplète : découvre tous ses créateurs d'abord.",
+      "SEASON_INCOMPLETE",
+    );
+  }
+
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + season.reward.points,
+    hourglasses: state.hourglasses + season.reward.hourglasses,
+    claimedSeasons: [...state.claimedSeasons, seasonId],
+  };
 }
 
 /**
@@ -310,6 +558,7 @@ export function openPack(
         rarity: card.rarity,
         variant: card.variant,
         obtainedAt: now,
+        rareDrop: card.rareDrop,
       })),
     ],
   };
@@ -351,6 +600,7 @@ export function spendHourglass(
 export function getGameView(state: PlayerState, now = Date.now()): GameView {
   const refreshed = refreshBalances(state, now);
   const uniqueCreators = ownedSlugs(refreshed).size;
+  const duplicates = duplicateGroups(refreshed);
   return {
     player: {
       level: refreshed.level,
@@ -374,6 +624,13 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       uniqueCreators,
       totalCards: refreshed.cards.length,
       openings: refreshed.openings,
+      duplicates: duplicates.reduce((sum, group) => sum + group.recyclableIds.length, 0),
+      recycleValue: duplicates.reduce(
+        (sum, group) => sum + group.recyclableIds.length * group.unitValue,
+        0,
+      ),
+      rareDrops: refreshed.cards.filter((card) => card.rareDrop).length,
     },
+    seasons: seasonViews(refreshed),
   };
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PACKS } from "@/lib/catalog";
 import { createInitialState, openPack } from "@/lib/game-engine";
 import {
+  LEGACY_SAVE_KEYS,
   SAVE_KEY,
   SaveError,
   clearState,
@@ -61,7 +62,7 @@ describe("sanitizeState", () => {
     expect(sanitizeState(null)).toBeNull();
     expect(sanitizeState("x")).toBeNull();
     expect(sanitizeState({})).toBeNull();
-    expect(sanitizeState({ ...createInitialState(T0), version: 2 })).toBeNull();
+    expect(sanitizeState({ ...createInitialState(T0), version: 3 })).toBeNull();
     expect(sanitizeState({ ...createInitialState(T0), cards: "nope" })).toBeNull();
   });
 
@@ -91,6 +92,42 @@ describe("sanitizeState", () => {
     expect(state?.hourglasses).toBe(0);
     expect(state?.lastLiveRegen).toBe(Date.parse("2026-01-01T10:00:00Z"));
     expect(state?.cards.map((card) => card.id)).toEqual(["a"]);
+  });
+});
+
+describe("migration", () => {
+  it("met à niveau une sauvegarde v1 sans perdre la collection", () => {
+    const legacy = LEGACY_SAVE_KEYS[0];
+    const v1 = {
+      ...createInitialState(T0),
+      version: 1,
+      points: 310,
+      cards: [
+        { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0 },
+      ],
+    };
+    delete (v1 as Record<string, unknown>).claimedSeasons;
+    const storage = memoryStorage();
+    storage.setItem(legacy, JSON.stringify(v1));
+
+    const state = loadState(storage, T0 + 5);
+    expect(state).not.toBeNull();
+    expect(state?.version).toBe(2);
+    expect(state?.points).toBe(310);
+    expect(state?.cards).toEqual([
+      { id: "a", creatorSlug: "squeezie", rarity: "legendary", variant: "gold", obtainedAt: T0, rareDrop: false },
+    ]);
+    // La sauvegarde migrée est réécrite sous la clé courante, l'ancienne disparaît.
+    expect(state?.claimedSeasons).toEqual([]);
+    expect(storage.data.has(legacy)).toBe(false);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(2);
+    expect(loadState(storage, T0 + 6)).toEqual(state);
+  });
+
+  it("filtre les saisons réclamées inconnues", () => {
+    const raw = { ...createInitialState(T0), claimedSeasons: ["S01", "inconnue", 42, "S01"] };
+    expect(sanitizeState(raw, T0)?.claimedSeasons).toEqual(["S01"]);
+    expect(sanitizeState({ ...createInitialState(T0), claimedSeasons: "S01" }, T0)?.claimedSeasons).toEqual([]);
   });
 });
 

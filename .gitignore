@@ -11,6 +11,7 @@ build/
 
 # Artefacts de génération (non servis, non versionnés)
 reports/
+dist/
 .tmp-creatordeck-bundle/
 
 # Livrables binaires : à publier via GitHub Releases, pas dans Git

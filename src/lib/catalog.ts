@@ -20,9 +20,30 @@ export const CREATOR_BY_SLUG = new Map(
   CREATORS.map((creator) => [creator.slug, creator]),
 );
 
+/**
+ * Métadonnées d'affichage **et économie** de chaque rareté.
+ *
+ * `craftCost` / `recycleValue` / `craftable` reprennent le modèle de
+ * `rarities.json` de pokemon-tcg-pocket-database (licence MIT) : chaque rareté
+ * a un coût d'artisanat en points et une valeur de recyclage. Un doublon vaut
+ * toujours moins que son coût d'artisanat (pas d'arbitrage infini) et la
+ * rareté Légendaire n'est pas artisanable — comme les raretés hautes qui ne
+ * s'échangent pas dans TCG Pocket : elle se mérite en booster.
+ */
 export const RARITY_META: Record<
   Rarity,
-  { label: string; short: string; color: string; glow: string; order: number }
+  {
+    label: string;
+    short: string;
+    color: string;
+    glow: string;
+    order: number;
+    /** Coût en points pour rejoindre ce créateur depuis l'Atelier. */
+    craftCost: number | null;
+    /** Points crédités en recyclant un doublon de cette rareté. */
+    recycleValue: number;
+    craftable: boolean;
+  }
 > = {
   common: {
     label: "Commune",
@@ -30,6 +51,9 @@ export const RARITY_META: Record<
     color: "#8d95a7",
     glow: "rgba(141,149,167,.34)",
     order: 1,
+    craftCost: 45,
+    recycleValue: 12,
+    craftable: true,
   },
   uncommon: {
     label: "Peu commune",
@@ -37,6 +61,9 @@ export const RARITY_META: Record<
     color: "#43d69c",
     glow: "rgba(67,214,156,.38)",
     order: 2,
+    craftCost: 90,
+    recycleValue: 22,
+    craftable: true,
   },
   rare: {
     label: "Rare",
@@ -44,6 +71,9 @@ export const RARITY_META: Record<
     color: "#40a9ff",
     glow: "rgba(64,169,255,.45)",
     order: 3,
+    craftCost: 220,
+    recycleValue: 55,
+    craftable: true,
   },
   epic: {
     label: "Épique",
@@ -51,6 +81,9 @@ export const RARITY_META: Record<
     color: "#a46cff",
     glow: "rgba(164,108,255,.5)",
     order: 4,
+    craftCost: 600,
+    recycleValue: 150,
+    craftable: true,
   },
   legendary: {
     label: "Légendaire",
@@ -58,6 +91,9 @@ export const RARITY_META: Record<
     color: "#ffbd45",
     glow: "rgba(255,189,69,.58)",
     order: 5,
+    craftCost: null,
+    recycleValue: 250,
+    craftable: false,
   },
 };
 

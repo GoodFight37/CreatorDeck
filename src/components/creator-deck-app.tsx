@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Archive,
+  BadgeInfo,
   BookOpen,
   Check,
   ChevronLeft,
@@ -14,6 +15,7 @@ import {
   Clock3,
   Coins,
   Gem,
+  Hammer,
   Home,
   Hourglass,
   Layers3,
@@ -29,7 +31,10 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
+import { PackOddsSheet } from "@/components/pack-odds-sheet";
+import { SeasonsSection } from "@/components/seasons-section";
 import { useGame, useNow } from "@/hooks/use-game";
 import {
   CREATORS,
@@ -45,7 +50,7 @@ import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 
 type GameState = GameView;
-type Tab = "home" | "collection" | "missions" | "profile";
+type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
 type CollectionFilter = "all" | "owned" | Rarity;
 
 /** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
@@ -164,6 +169,7 @@ function HomeView({
   setSelectedPack,
   onOpen,
   onUseHourglass,
+  onShowOdds,
   opening,
   usingHourglass,
   now,
@@ -173,6 +179,7 @@ function HomeView({
   setSelectedPack: (pack: PackType) => void;
   onOpen: () => void;
   onUseHourglass: () => void;
+  onShowOdds: () => void;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -268,6 +275,11 @@ function HomeView({
               : "1 Rare ou mieux garantie · chance de Gold"}
           </span>
         </div>
+        <button type="button" className="odds-link" onClick={onShowOdds}>
+          <BadgeInfo size={15} />
+          <span>Taux de drop publiés</span>
+          <ChevronRight size={15} />
+        </button>
       </section>
 
       <section className="section-block">
@@ -508,7 +520,13 @@ function MissionRow({
   );
 }
 
-function MissionsView({ game }: { game: GameState }) {
+function MissionsView({
+  game,
+  onClaimSeason,
+}: {
+  game: GameState;
+  onClaimSeason: (seasonId: string) => void;
+}) {
   return (
     <div className="view missions-view">
       <section className="page-title-row">
@@ -536,6 +554,13 @@ function MissionsView({ game }: { game: GameState }) {
               }}
             />
           </div>
+          {game.stats.rareDrops > 0 ? (
+            <span className="perfect-count">
+              <Sparkles size={11} />
+              {game.stats.rareDrops} carte{game.stats.rareDrops > 1 ? "s" : ""} obtenue
+              {game.stats.rareDrops > 1 ? "s" : ""} en booster Perfect
+            </span>
+          ) : null}
         </div>
       </section>
 
@@ -575,6 +600,8 @@ function MissionsView({ game }: { game: GameState }) {
           target={500}
         />
       </div>
+
+      <SeasonsSection seasons={game.seasons} onClaim={onClaimSeason} />
     </div>
   );
 }
@@ -583,10 +610,12 @@ function ProfileView({
   game,
   onNotice,
   onError,
+  onShowOdds,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
+  onShowOdds: () => void;
 }) {
   const [importOpen, setImportOpen] = useState(false);
   const [importText, setImportText] = useState("");
@@ -672,6 +701,14 @@ function ProfileView({
           </div>
           <Check size={18} className="success-icon" />
         </div>
+        <button type="button" className="settings-row settings-action" onClick={onShowOdds}>
+          <span className="settings-icon purple"><BadgeInfo size={17} /></span>
+          <div>
+            <strong>Taux de drop publiés</strong>
+            <span>Les probabilités de chaque booster, calculées depuis les tables de tirage.</span>
+          </div>
+          <ChevronRight size={16} />
+        </button>
         <button type="button" className="settings-row settings-action" onClick={() => void handleExport()}>
           <span className="settings-icon blue"><ClipboardCopy size={17} /></span>
           <div>
@@ -748,9 +785,16 @@ function RevealOverlay({
   const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
   if (!card || !creator) return null;
   const isLast = index === cards.length - 1;
+  const perfect = cards[0]?.rareDrop;
   return (
     <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
       <div className={`reveal-ambient rarity-${card.rarity}`} />
+      {perfect ? (
+        <div className="perfect-banner" role="status">
+          <Sparkles size={13} />
+          <span>Booster Perfect : toutes les cartes sont Épique ou mieux !</span>
+        </div>
+      ) : null}
       <div className="reveal-header">
         <span>{index + 1} / {cards.length}</span>
         <div className="reveal-dots">
@@ -786,6 +830,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Accueil", icon: <Home size={21} /> },
   { id: "collection", label: "Classeur (500)", icon: <BookOpen size={21} /> },
   { id: "missions", label: "Objectifs", icon: <Target size={21} /> },
+  { id: "atelier", label: "Atelier", icon: <Hammer size={21} /> },
   { id: "profile", label: "Profil", icon: <CircleUserRound size={21} /> },
 ];
 
@@ -800,6 +845,7 @@ export function CreatorDeckApp() {
   const [revealIndex, setRevealIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [oddsOpen, setOddsOpen] = useState(false);
 
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
@@ -846,6 +892,20 @@ export function CreatorDeckApp() {
     }
   }
 
+  function handleClaimSeason(seasonId: string) {
+    try {
+      gameStore.claimSeason(seasonId);
+      const season = game?.seasons.find((entry) => entry.id === seasonId);
+      showNotice(
+        season
+          ? `Saison ${season.id} complétée : +${season.reward.points} points et +${season.reward.hourglasses} sabliers.`
+          : "Récompense de saison réclamée.",
+      );
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+    }
+  }
+
   function closeReveal() {
     setDrawnCards([]);
     setRevealIndex(0);
@@ -864,15 +924,26 @@ export function CreatorDeckApp() {
             setSelectedPack={setSelectedPack}
             onOpen={handleOpenPack}
             onUseHourglass={handleUseHourglass}
+            onShowOdds={() => setOddsOpen(true)}
             opening={opening}
             usingHourglass={usingHourglass}
             now={now}
           />
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
-        {tab === "missions" ? <MissionsView game={game} /> : null}
+        {tab === "missions" ? (
+          <MissionsView game={game} onClaimSeason={handleClaimSeason} />
+        ) : null}
+        {tab === "atelier" ? (
+          <AtelierView game={game} onNotice={showNotice} onError={showError} />
+        ) : null}
         {tab === "profile" ? (
-          <ProfileView game={game} onNotice={showNotice} onError={showError} />
+          <ProfileView
+            game={game}
+            onNotice={showNotice}
+            onError={showError}
+            onShowOdds={() => setOddsOpen(true)}
+          />
         ) : null}
       </div>
 
@@ -909,6 +980,7 @@ export function CreatorDeckApp() {
           <span>{PACKS[selectedPack].size} cartes uniques en préparation.</span>
         </div>
       ) : null}
+      {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {drawnCards.length ? (
         <RevealOverlay
           cards={drawnCards}

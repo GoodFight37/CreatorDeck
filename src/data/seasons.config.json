@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "note": "Saisons CreatorDeck : regroupement des catégories Twitch du Top 500. Les saisons sont calculées au build (scripts/build-catalog.mjs) et validées par les tests — tout créateur appartient à exactement une saison.",
+  "pointsPerCreator": 4,
+  "hourglassesPerSeason": 3,
+  "seasons": [
+    {
+      "id": "S01",
+      "name": "Accueil & IRL",
+      "tagline": "Le canapé du Twitch FR : talk, events, sport et musique.",
+      "categories": [
+        "Just Chatting",
+        "IRL",
+        "Special Events",
+        "Variété & Live",
+        "Sports",
+        "Music",
+        "Art"
+      ]
+    },
+    {
+      "id": "S02",
+      "name": "FPS & Battle Royale",
+      "tagline": "Ça vise vite et ça parle fort.",
+      "categories": [
+        "VALORANT",
+        "Call of Duty: Warzone",
+        "Fortnite",
+        "Apex Legends",
+        "Overwatch",
+        "Counter-Strike",
+        "Rainbow Six Siege",
+        "Delta Force",
+        "Battlefield 6",
+        "ARC Raiders",
+        "REMATCH",
+        "Z1: Battle Royale"
+      ]
+    },
+    {
+      "id": "S03",
+      "name": "MMO & RPG",
+      "tagline": "Des heures de farm, des niveaux par milliers.",
+      "categories": [
+        "World of Warcraft",
+        "Dofus",
+        "DOFUS Touch",
+        "ELDEN RING",
+        "Monster Hunter Wilds",
+        "Hades II",
+        "The Blood of Dawnwalker",
+        "Kingdom Hearts HD 1.5 + 2.5 ReMIX",
+        "Dragon Ball: Xenoverse",
+        "Dune: Awakening",
+        "Valheim",
+        "Oxygen Not Included",
+        "Graveyard Keeper II",
+        "Shakes and Fidget",
+        "SILENT HILL: townfall",
+        "How to Fish"
+      ]
+    },
+    {
+      "id": "S04",
+      "name": "Sandbox & Créatif",
+      "tagline": "Construire, casser, recommencer.",
+      "categories": [
+        "Minecraft",
+        "Rust",
+        "Sea of Thieves",
+        "Planet Coaster 2",
+        "TCG Card Shop Simulator",
+        "Hello Neighbor",
+        "Happy Wheels",
+        "Waterpark Simulator",
+        "Police Chief Simulator",
+        "Find The Needle",
+        "Rivage",
+        "Keep It Up!",
+        "Keep it Up",
+        "Furyball: Rogue Revenge",
+        "nanos world",
+        "GeoGuessr"
+      ]
+    },
+    {
+      "id": "S05",
+      "name": "Versus & Sport",
+      "tagline": "La win ou rien.",
+      "categories": [
+        "League of Legends",
+        "Teamfight Tactics",
+        "Rocket League",
+        "EA Sports FC 27",
+        "TEKKEN 8",
+        "Street Fighter 6",
+        "Super Smash Bros. Ultimate",
+        "Trackmania",
+        "Chess",
+        "Hearthstone",
+        "Mario Kart World"
+      ]
+    },
+    {
+      "id": "S06",
+      "name": "Open World & Horreur",
+      "tagline": "Les grands espaces et les nuits blanches.",
+      "categories": [
+        "Grand Theft Auto V",
+        "Dead by Daylight",
+        "CONTROL Resonant",
+        "Total War: WARHAMMER III",
+        "SHINOBI: Art of Vengeance"
+      ]
+    }
+  ],
+  "catchAll": {
+    "id": "S07",
+    "name": "Découverte",
+    "tagline": "Le reste du Top 500 : les pépites à dénicher."
+  }
+}

@@ -1,17 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { CREATORS, PACKS } from "@/lib/catalog";
+import { CREATORS, PACKS, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import { PULL_RATES, packOdds } from "@/lib/pull-rates";
+import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
 import {
   GameError,
   HOURGLASSES_PER_LEVEL,
   HOURGLASS_REDUCTION_MS,
   XP_PER_LEVEL,
+  claimSeason,
+  craftCreator,
   createInitialState,
   drawPack,
+  duplicateGroups,
   getGameView,
   openPack,
+  recycleCard,
   refreshBalances,
+  seasonViews,
   spendHourglass,
   type DrawnCard,
+  type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
 
@@ -32,7 +40,7 @@ describe("createInitialState", () => {
   it("donne les ressources de départ", () => {
     const state = createInitialState(T0);
     expect(state).toMatchObject({
-      version: 1,
+      version: 2,
       level: 1,
       xp: 0,
       points: 120,
@@ -41,6 +49,7 @@ describe("createInitialState", () => {
       archivePacks: 1,
       openings: 0,
       cards: [],
+      claimedSeasons: [],
       createdAt: T0,
     });
     expect(state.playerId).toMatch(/^[0-9a-f-]{36}$/);
@@ -222,6 +231,171 @@ describe("getGameView", () => {
     expect(view.player.nextLiveAt).toBe(T0 - 10 * 60 * 1000 + PACKS.live.regenMs);
     expect(view.player.nextArchiveAt).toBeNull();
     expect(view.player.xpNext).toBe(XP_PER_LEVEL);
-    expect(view.stats).toEqual({ uniqueCreators: 0, totalCards: 0, openings: 0 });
+    expect(view.stats).toEqual({
+      uniqueCreators: 0,
+      totalCards: 0,
+      openings: 0,
+      duplicates: 0,
+      recycleValue: 0,
+      rareDrops: 0,
+    });
+    expect(view.seasons).toHaveLength(SEASONS.length);
+  });
+});
+
+function ownedCard(
+  id: string,
+  creatorSlug: string,
+  rarity: Rarity,
+  variant: CardVariant = "standard",
+  obtainedAt = T0,
+): OwnedCard {
+  return { id, creatorSlug, rarity, variant, obtainedAt, rareDrop: false };
+}
+
+describe("Perfect (Rare Drop)", () => {
+  it("bascule tout le booster en Épique ou mieux", () => {
+    for (let i = 0; i < 10; i += 1) {
+      const pack = drawPack("live", new Set(), { rareDrop: true });
+      expect(pack).toHaveLength(PACKS.live.size);
+      expect(pack.every((card) => card.rareDrop)).toBe(true);
+      expect(
+        pack.every((card) => RARITY_META[card.rarity].order >= RARITY_META.epic.order),
+      ).toBe(true);
+      // La garantie du booster Live tient même en Perfect : une seule Live.
+      expect(pack.filter((card) => card.variant === "live")).toHaveLength(1);
+    }
+  });
+
+  it("reste fidèle aux taux annoncés dans pull-rates.json", () => {
+    const expected = PULL_RATES.live.rareDrop.chancePermille / 1000;
+    let perfects = 0;
+    const runs = 3_000;
+    for (let i = 0; i < runs; i += 1) {
+      if (drawPack("live", new Set())[0].rareDrop) perfects += 1;
+    }
+    expect(perfects).toBeGreaterThan(0);
+    // Marge généreuse (×3) : on teste un ordre de grandeur, pas un RNG exact.
+    expect(perfects / runs).toBeLessThan(expected * 3);
+  });
+
+  it("n'altère pas les boosters normaux", () => {
+    const pack = drawPack("archive", new Set(), { rareDrop: false });
+    expect(pack.every((card) => !card.rareDrop)).toBe(true);
+    expect(pack.some((card) => RARITY_META[card.rarity].order >= RARITY_META.rare.order)).toBe(
+      true,
+    );
+  });
+});
+
+describe("Atelier · recyclage", () => {
+  it("ne voit un doublon que dans une même variante", () => {
+    const state = makeState({
+      cards: [
+        ownedCard("a", "gotaga", "legendary"),
+        ownedCard("b", "gotaga", "legendary"),
+        ownedCard("c", "gotaga", "legendary", "holo"),
+      ],
+    });
+    const groups = duplicateGroups(state);
+    expect(groups).toHaveLength(1);
+    expect(groups[0]).toMatchObject({
+      creatorSlug: "gotaga",
+      variant: "standard",
+      count: 2,
+      unitValue: RARITY_META.legendary.recycleValue,
+    });
+    expect(groups[0].recyclableIds).toEqual(["b"]);
+    expect(getGameView(state, T0).stats).toMatchObject({
+      duplicates: 1,
+      recycleValue: RARITY_META.legendary.recycleValue,
+    });
+  });
+
+  it("crédite la valeur de la rareté et retire la carte", () => {
+    const state = makeState({
+      points: 0,
+      cards: [
+        ownedCard("a", "gobgg", "rare"),
+        ownedCard("b", "gobgg", "rare"),
+      ],
+    });
+    const next = recycleCard(state, "b", T0);
+    expect(next.points).toBe(RARITY_META.rare.recycleValue);
+    expect(next.cards.map((card) => card.id)).toEqual(["a"]);
+    expect(state.cards).toHaveLength(2); // pureté
+  });
+
+  it("refuse une carte absente ou unique", () => {
+    const state = makeState({ cards: [ownedCard("a", "gobgg", "rare")] });
+    expect(() => recycleCard(state, "zzz", T0)).toThrowError(/collection/i);
+    expect(() => recycleCard(state, "a", T0)).toThrowError(/seule copie/i);
+  });
+});
+
+describe("Atelier · artisanat", () => {
+  it("débite les points et ajoute une carte Standard", () => {
+    const cost = RARITY_META.uncommon.craftCost as number;
+    const state = makeState({ points: cost + 5 });
+    const next = craftCreator(state, "frenchwargame", T0);
+    expect(next.points).toBe(5);
+    expect(next.cards).toHaveLength(1);
+    expect(next.cards[0]).toMatchObject({
+      creatorSlug: "frenchwargame",
+      rarity: "uncommon",
+      variant: "standard",
+      obtainedAt: T0,
+      rareDrop: false,
+    });
+    expect(getGameView(next, T0).stats.uniqueCreators).toBe(1);
+  });
+
+  it("refuse les créateurs inconnus, déjà possédés, non artisanables ou trop chers", () => {
+    const rich = makeState({ points: 10_000 });
+    expect(() => craftCreator(rich, "inconnu-xyz", T0)).toThrowError(/inconnu/i);
+    expect(() =>
+      craftCreator(
+        makeState({ points: 10_000, cards: [ownedCard("a", "gobgg", "rare")] }),
+        "gobgg",
+        T0,
+      ),
+    ).toThrowError(/déjà/i);
+
+    // Les Légendaires ne s'artisanent pas : elles se tirent en booster.
+    expect(() => craftCreator(rich, "squeezie", T0)).toThrowError(/booster/i);
+    expect(RARITY_META.legendary.craftable).toBe(false);
+
+    expect(() => craftCreator(makeState({ points: 10 }), "gobgg", T0)).toThrowError(/points/i);
+  });
+});
+
+describe("saisons", () => {
+  it("couvre les 500 créateurs, sans doublon ni oubli", () => {
+    expect(seasonsCoverage()).toBe(CREATORS.length);
+    const slugs = SEASONS.flatMap((season) => season.slugs);
+    expect(new Set(slugs).size).toBe(CREATORS.length);
+    for (const creator of CREATORS) {
+      expect(seasonOf(creator.slug)).toBeDefined();
+    }
+  });
+
+  it("réclame la récompense d'une saison complète, une seule fois", () => {
+    const season = [...SEASONS].sort((a, b) => a.slugs.length - b.slugs.length)[0];
+    const cards = season.slugs.map((slug) => {
+      const creator = CREATORS.find((entry) => entry.slug === slug) as (typeof CREATORS)[number];
+      return ownedCard(`card-${slug}`, slug, creator.rarity);
+    });
+    const state = makeState({ cards, points: 0, hourglasses: 0 });
+
+    expect(seasonViews(state).find((view) => view.id === season.id)?.complete).toBe(true);
+    const next = claimSeason(state, season.id, T0);
+    expect(next.points).toBe(season.reward.points);
+    expect(next.hourglasses).toBe(season.reward.hourglasses);
+    expect(next.claimedSeasons).toEqual([season.id]);
+    expect(seasonViews(next).find((view) => view.id === season.id)?.claimed).toBe(true);
+
+    expect(() => claimSeason(next, season.id, T0)).toThrowError(/déjà/i);
+    expect(() => claimSeason(makeState(), season.id, T0)).toThrowError(/incomplète/i);
+    expect(() => claimSeason(next, "S99", T0)).toThrowError(/inconnue/i);
   });
 });

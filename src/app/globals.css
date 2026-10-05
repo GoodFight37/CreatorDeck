@@ -1018,7 +1018,7 @@ input:focus-visible {
   bottom: 0;
   left: max(0px, calc((100vw - 560px) / 2));
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   min-height: calc(67px + env(safe-area-inset-bottom));
   padding: 7px 7px env(safe-area-inset-bottom);
   border-top: 1px solid var(--line);
@@ -1142,6 +1142,78 @@ input:focus-visible {
 .loading-screen p { max-width: 280px; margin: 0; color: var(--muted); font-size: 11px; }
 .spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Atelier ---------- */
+.atelier-wallet { display: flex; align-items: center; gap: 5px; padding: 8px 11px; color: #ffd79a; border: 1px solid rgba(255,190,85,.22); border-radius: 11px; background: rgba(255,190,85,.08); }
+.atelier-wallet strong { color: white; font-size: 14px; }
+.atelier-wallet span { color: var(--muted); font-size: 8px; }
+.atelier-tabs { margin-top: 4px; }
+.atelier-intro { margin: 14px 0 0; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.atelier-intro strong { color: #cfbcff; }
+.atelier-list { display: flex; flex-direction: column; gap: 7px; margin-top: 14px; }
+.atelier-row { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.025); }
+.atelier-thumb { width: 44px; height: 44px; flex: 0 0 auto; object-fit: cover; border: 1px solid var(--line); border-radius: 10px; }
+.atelier-copy { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.atelier-copy strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.atelier-copy span { overflow: hidden; color: var(--muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.atelier-rarity { display: grid; width: 22px; height: 22px; flex: 0 0 auto; place-items: center; border: 1px solid currentColor; border-radius: 7px; font-size: 9px; font-weight: 900; }
+.craft-button { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; padding: 7px 10px; color: #e7dcff; border: 1px solid rgba(156,113,255,.3); border-radius: 9px; background: rgba(130,82,236,.15); font-size: 10px; font-weight: 800; cursor: pointer; }
+.craft-button:disabled { opacity: .42; cursor: not-allowed; }
+.craft-button.recycle { color: #d6ffe9; border-color: rgba(80,217,160,.28); background: rgba(80,217,160,.12); }
+.craft-locked { flex: 0 0 auto; padding: 6px 8px; color: var(--muted-2); border: 1px dashed var(--line-strong); border-radius: 9px; font-size: 8px; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ---------- Saisons ---------- */
+.season-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.season-row { display: flex; flex-direction: column; gap: 9px; padding: 13px; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.025); }
+.season-row.complete { border-color: rgba(255,190,85,.24); background: rgba(255,190,85,.05); }
+.season-row.claimed { opacity: .68; }
+.season-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.season-head strong { display: block; font-size: 11px; }
+.season-head span { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+.season-head b { color: #d8c8ff; font-size: 10px; }
+.season-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.season-reward { display: flex; gap: 7px; color: var(--muted); font-size: 9px; }
+.season-reward span { display: flex; align-items: center; gap: 3px; }
+.season-state { display: flex; align-items: center; gap: 4px; color: var(--muted-2); font-size: 9px; }
+.season-state.done { color: var(--green); }
+.season-claim { display: flex; align-items: center; gap: 5px; padding: 7px 11px; color: #2a1b06; border: 0; border-radius: 9px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 9px; font-weight: 900; cursor: pointer; }
+
+/* ---------- Taux de drop ---------- */
+.odds-link { display: flex; width: 100%; align-items: center; gap: 7px; margin-top: 10px; padding: 10px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.02); font-size: 9px; font-weight: 700; cursor: pointer; }
+.odds-link svg:last-child { margin-left: auto; }
+.odds-overlay { position: fixed; z-index: 110; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgba(4,3,8,.72); backdrop-filter: blur(6px); }
+.odds-panel { width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto; padding: 18px 18px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-strong); border-radius: 20px 20px 0 0; background: var(--bg-soft); animation: sheet-in 260ms cubic-bezier(.2,.8,.2,1) both; }
+@keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.odds-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.odds-head h2 { margin: 2px 0 0; font-size: 19px; letter-spacing: -.02em; }
+.odds-head button { display: grid; width: 32px; height: 32px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); cursor: pointer; }
+.odds-intro { margin: 12px 0 16px; color: var(--muted); font-size: 10px; line-height: 1.55; }
+.odds-intro code { padding: 1px 4px; color: #cfbcff; border-radius: 5px; background: rgba(143,100,255,.14); font-size: 9px; }
+.odds-block { padding: 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }
+.odds-block-head h3 { margin: 0; font-size: 13px; }
+.odds-block-head span { color: var(--muted); font-size: 9px; }
+.odds-rare { display: flex; flex-direction: column; gap: 2px; margin: 11px 0; padding: 9px 11px; border: 1px solid rgba(255,190,85,.2); border-radius: 10px; background: rgba(255,190,85,.06); }
+.odds-rare strong { color: var(--gold); font-size: 10px; letter-spacing: .04em; }
+.odds-rare span { color: var(--muted); font-size: 9px; }
+.odds-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.odds-table th, .odds-table td { padding: 6px 4px; text-align: right; }
+.odds-table thead th { color: var(--muted-2); font-size: 8px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.odds-table tbody th { display: flex; align-items: center; gap: 6px; color: #e6e1f4; font-weight: 600; text-align: left; }
+.odds-table tbody th i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 99px; }
+.odds-table tbody tr + tr th, .odds-table tbody tr + tr td { border-top: 1px solid rgba(255,255,255,.05); }
+.odds-table td { color: var(--muted); font-variant-numeric: tabular-nums; }
+.odds-details { margin-top: 10px; }
+.odds-details summary { color: var(--purple-light); font-size: 9px; font-weight: 700; cursor: pointer; }
+.odds-details ul { display: flex; flex-direction: column; gap: 6px; margin: 9px 0 0; padding: 0; list-style: none; }
+.odds-details li { display: flex; flex-direction: column; gap: 2px; }
+.odds-details strong { font-size: 9px; }
+.odds-details span { color: var(--muted); font-size: 9px; }
+.odds-footnote { margin: 11px 0 0; color: var(--muted-2); font-size: 8px; line-height: 1.5; }
+
+.mission-hero .perfect-count { display: flex; align-items: center; gap: 4px; margin-top: 7px; color: var(--gold); font-size: 9px; }
+
+/* ---------- Booster Perfect ---------- */
+.perfect-banner { position: absolute; z-index: 4; top: calc(58px + env(safe-area-inset-top)); right: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; color: #2a1b06; border-radius: 10px; background: linear-gradient(120deg,#ffe6a8,#ffbe55 45%,#ff9f45); font-size: 9px; font-weight: 900; letter-spacing: .03em; box-shadow: 0 10px 30px rgba(255,160,60,.28); }
 
 @media (max-width: 390px) {
   .view { padding-inline: 14px; }

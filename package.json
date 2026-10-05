@@ -11,7 +11,9 @@
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
     "android:apk": "npm run android:sync && cd android && ./gradlew assembleRelease",
-    "assets:regen": "node scripts/regen-avatars-300.mjs"
+    "assets:regen": "node scripts/regen-avatars-300.mjs",
+    "catalog:build": "node scripts/build-catalog.mjs",
+    "catalog:check": "node scripts/build-catalog.mjs --check"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

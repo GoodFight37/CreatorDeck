@@ -8,8 +8,11 @@
  */
 import type { PackType } from "@/lib/catalog";
 import {
+  claimSeason as engineClaimSeason,
+  craftCreator as engineCraftCreator,
   createInitialState,
   openPack as engineOpenPack,
+  recycleCard as engineRecycleCard,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
   type PlayerState,
@@ -129,6 +132,21 @@ export const gameStore = {
 
   useHourglass(packType: PackType, now = Date.now()): void {
     persist(engineSpendHourglass(current(), packType, now));
+  },
+
+  /** Recycle un doublon : +points, la carte est retirée du classeur. */
+  recycleCard(cardId: string, now = Date.now()): void {
+    persist(engineRecycleCard(current(), cardId, now));
+  },
+
+  /** Rejoint un créateur manquant contre des points (Atelier). */
+  craftCreator(creatorSlug: string, now = Date.now()): void {
+    persist(engineCraftCreator(current(), creatorSlug, now));
+  },
+
+  /** Réclame la récompense d'une saison complète. */
+  claimSeason(seasonId: string, now = Date.now()): void {
+    persist(engineClaimSeason(current(), seasonId, now));
   },
 
   reset(now = Date.now()): void {
