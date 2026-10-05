@@ -1,13 +1,15 @@
-# Compte, sauvegarde cloud et classement (Supabase)
+# Compte, sauvegarde cloud, vitrine et classement (Supabase)
 
 CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
 `localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
-ajoute trois choses, et rien de plus :
+ajoute quatre choses, et rien de plus :
 
-1. **un compte** (adresse e-mail + code à 6 chiffres, pas de mot de passe) ;
+1. **un compte** (invité par défaut, ou adresse e-mail + code à 6 chiffres en
+   option — pas de mot de passe) ;
 2. **une sauvegarde cloud** de la partie, pour retrouver sa collection sur un
    autre appareil ;
-3. **un classement mondial** calculé par le serveur.
+3. **une vitrine publique** de quatre cartes épinglées sur le profil ;
+4. **un classement mondial** calculé par le serveur.
 
 Tout le reste continue de fonctionner hors ligne, y compris si le projet
 Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
@@ -23,10 +25,11 @@ Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
 | Partie (cartes, points, paliers, thème) | **Local d'abord** | copie envoyée au cloud seulement si tu te connectes |
 | Adresse e-mail | Cloud | sert uniquement à te renvoyer ton code |
 | Statistiques (cartes uniques, légendaires…) | Cloud | recalculées **par le serveur** depuis ta sauvegarde, visibles dans le classement |
-| Vitrine (4 cartes épinglées) | Cloud | publiable plus tard sur un profil public |
+| Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
 
-Aucun mot de passe n'est stocké, aucune donnée n'est envoyée tant que tu n'as
-pas validé un code, et « Déconnexion » efface la session de l'appareil.
+Aucun mot de passe n'est stocké. Les données restent locales tant que tu ne
+crées pas de compte invité ou ne valides pas ton code ; « Déconnexion » efface
+la session de l'appareil.
 
 ## 2. Deux façons d'avoir un compte
 
@@ -85,10 +88,14 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
 2. **SQL Editor** → *New query* → colle tout le contenu de
    [`supabase/migrations/0001_comptes_cloud.sql`](../supabase/migrations/0001_comptes_cloud.sql)
    → **Run**. La requête crée les tables, les politiques RLS, les déclencheurs
-   et les fonctions d'envoi / lecture / classement.
-3. **Authentication → Sign In / Providers** : garde **Email** activé, et
-   laisse « Confirm email » au choix (le code à 6 chiffres confirme l'adresse
-   à lui seul).
+   et les fonctions d'envoi / lecture / classement. Exécute-la en premier ;
+   ouvre ensuite une nouvelle requête et colle
+   [`supabase/migrations/0002_vitrine.sql`](../supabase/migrations/0002_vitrine.sql)
+   → **Run** pour activer la vitrine et le contrôle de possession.
+3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
+   pour la voie invitée. Garde **Email** activé si tu veux aussi proposer
+   l'adresse + code ; « Confirm email » reste au choix (le code à 6 chiffres
+   confirme l'adresse à lui seul).
 4. **Authentication → Email Templates → Magic Link** : le modèle doit contenir
    le jeton, sinon le code reçu est un lien et l'application ne peut rien en
    faire. Ajoute par exemple :
@@ -136,8 +143,8 @@ publique par conception) :
    → *New repository variable* ;
 2. `NEXT_PUBLIC_SUPABASE_URL` = `https://xxxxxxxx.supabase.co` ;
 3. `NEXT_PUBLIC_SUPABASE_ANON_KEY` = la clé anon ;
-4. relance le workflow **APK Android (debug)** en choisissant bien
-   `arena/01a10b32-test` dans « Use workflow from ».
+4. relance le workflow **APK Android (debug)** en choisissant `main` dans
+   « Use workflow from » (ou la branche de la PR si tu testes avant sa fusion).
 
 Sans ces variables, l'APK se construit quand même : il est simplement 100 %
 hors ligne, avec l'écran de compte qui explique que le cloud n'est pas
@@ -150,7 +157,10 @@ configuré.
    **Recevoir un code** → recopie le code → **Valider le code**) ;
 3. donne-toi un **nom** (2 à 24 caractères), puis **Envoyer ma collection** ;
 4. ouvre **Classement mondial** : tu dois y apparaître — les statistiques sont
-   recalculées par le serveur, jamais envoyées par le téléphone.
+   recalculées par le serveur, jamais envoyées par le téléphone ;
+5. dans **Ma vitrine**, épingle jusqu'à quatre créateurs possédés et enregistre ;
+   touche une ligne du classement pour ouvrir le profil public, avec sa vitrine
+   et ses chiffres.
 
 Ensuite, l'envoi est automatique une vingtaine de secondes après ta dernière
 action, et la ligne du profil indique l'état (« à envoyer », coche verte).
@@ -176,6 +186,14 @@ collection impossible à défendre côté serveur.
 rareté ou variante inconnue, plus de créateurs que le catalogue, compteurs
 négatifs. Seules les collections cohérentes sont classées.
 
+La migration `0002_vitrine.sql` ajoute `set_showcase(p_slugs)`. Le serveur
+normalise les slugs, refuse plus de quatre cartes et les noms de créateur au
+format invalide, puis vérifie que chaque créateur figure dans `cards` de la
+sauvegarde cloud de l'utilisateur connecté. Une carte encore uniquement sur
+l'appareil doit d'abord être envoyée. L'écriture directe de `showcase_slugs`
+est révoquée par privilège de colonne : le client ne peut modifier directement
+que `display_name` (et son horodatage), la vitrine passe par cette fonction.
+
 En revanche, le serveur ne rejoue pas le moteur : il ne peut pas prouver qu'une
 carte a bien été tirée par un booster. Tant que le tirage se fait sur
 l'appareil, une sauvegarde fabriquée à la main peut donc gonfler une
@@ -183,15 +201,21 @@ collection. La suite logique est de déplacer le tirage côté serveur
 (`pg_cron` + fonction Postgres, ou Edge Function) — c'est le prérequis avant
 d'ouvrir les **échanges**.
 
-## 9. Après : échanges, profils publics, notifications
+## 9. Suite : tirage serveur, échanges, notifications
 
-* `supabase/migrations/0002_echanges.sql` — offres de troc avec transaction
-  atomique (les deux collections changent ou aucune) ;
-* attacher une adresse e-mail à un compte invité (récupération multi-appareil) ;
-* profils publics : la table `profiles` est déjà lisible par tous, il reste à
-  exposer la vitrine des 4 cartes épinglées ;
-* notifications push : `@capacitor/push-notifications` + FCM, à brancher sur
-  les éditions limitées.
+**Fait :** vitrine de quatre cartes et profil public consultable depuis le
+classement.
+
+**Reste à faire, dans cet ordre :**
+
+* déplacer le tirage côté serveur (RNG) : c'est le prérequis avant d'ouvrir les
+  échanges, pour qu'une collection ne puisse pas être fabriquée sur l'appareil ;
+* `supabase/migrations/0003_echanges.sql` — troc avec transaction atomique :
+  les deux collections changent ou aucune ;
+* permettre d'attacher une adresse e-mail à un compte invité (récupération
+  multi-appareil), sans rendre le SMTP obligatoire pour les comptes invités ;
+* notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
+  brancher quand elles auront un usage produit.
 
 ## 10. Dépannage
 
@@ -205,4 +229,7 @@ d'ouvrir les **échanges**.
 | « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
 | « Les comptes invités sont désactivés » | Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** |
 | « Le service d'e-mail par défaut n'écrit qu'aux adresses de l'équipe » | normal : branche un SMTP, ou passe par un compte invité |
+| « vitrine : carte non possédée (…) » | envoie d'abord ta collection ; seule la dernière sauvegarde cloud sert à vérifier la possession |
+| « 4 cartes maximum » | une vitrine contient au plus quatre cartes ; retire-en une avant d'en ajouter une autre |
+| « nom de créateur invalide » | la vitrine n'accepte que les slugs de créateur au format attendu |
 | Supabase réclame un « custom SMTP » | son service intégré est réservé aux tests : ce n'est pas un bug de l'app |

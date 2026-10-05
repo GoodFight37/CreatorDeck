@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { CSSProperties } from "react";
+import Image from "next/image";
 import {
   AlertTriangle,
   Check,
@@ -10,22 +12,53 @@ import {
   Info,
   LogOut,
   Mail,
+  Plus,
   RefreshCw,
+  Search,
+  Star,
   Trophy,
   Upload,
   UserPlus,
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useGame } from "@/hooks/use-game";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
+import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "@/lib/cloud/showcase";
 import { describeSync } from "@/lib/cloud/sync";
+import { CREATOR_BY_SLUG, creatorImage, RARITY_META } from "@/lib/catalog";
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: "unique_creators", label: "Cartes uniques" },
   { id: "total_cards", label: "Cartes" },
   { id: "legendary_cards", label: "Légendaires" },
 ];
+
+const PICKER_LIMIT = 60;
+
+function ShowcaseCard({ slug, small = false }: { slug: string; small?: boolean }) {
+  const creator = CREATOR_BY_SLUG.get(slug);
+  if (!creator) return null;
+
+  const rarity = RARITY_META[creator.rarity];
+  const style = {
+    "--rarity": rarity.color,
+    "--rarity-glow": rarity.glow,
+  } as CSSProperties;
+
+  return (
+    <figure className={`showcase-card${small ? " is-small" : ""}`} style={style}>
+      <span className="showcase-photo">
+        <Image src={creatorImage(creator)} width={96} height={96} alt={creator.displayName} unoptimized />
+      </span>
+      <figcaption>
+        <b>{creator.displayName}</b>
+        <span>{rarity.label}</span>
+      </figcaption>
+    </figure>
+  );
+}
 
 /**
  * Écran « Compte & cloud » : identification, synchronisation de la partie et
@@ -45,12 +78,32 @@ const METRICS: { id: LeaderboardMetric; label: string }[] = [
  */
 export function AccountSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
+  const state = useGame();
   const [email, setEmail] = useState(cloud.email ?? "");
   const [code, setCode] = useState("");
   const [confirmPull, setConfirmPull] = useState(false);
   // Brouillon du nom : `null` tant que le joueur n'a rien tapé, pour suivre la
   // valeur du serveur sans synchroniser un état par un effet.
   const [nameDraft, setNameDraft] = useState<string | null>(null);
+  const [showcaseDraft, setShowcaseDraft] = useState<string[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [openProfile, setOpenProfile] = useState<string | null>(null);
+  const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
+  const pinned = knownShowcase(cloud.showcase);
+  const selection = showcaseDraft ?? pinned;
+  const results = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase("fr");
+    return owned
+      .filter((slug) => {
+        const creator = CREATOR_BY_SLUG.get(slug);
+        if (!creator) return false;
+        if (!needle) return true;
+        return `${slug} ${creator.displayName} ${creator.login}`.toLocaleLowerCase("fr").includes(needle);
+      })
+      .slice(0, PICKER_LIMIT);
+  }, [owned, query]);
+  const showcaseChanged =
+    selection.length !== pinned.length || selection.some((slug, index) => slug !== pinned[index]);
 
   // Le classement et le nom ne sont chargés qu'à l'ouverture, et seulement si
   // on est connecté : aucun appel réseau pour un joueur hors ligne.
@@ -156,7 +209,16 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                     <Download size={14} />
                     {confirmPull ? "Confirmer : remplacer ma partie" : "Charger le cloud"}
                   </button>
-                  <button type="button" className="account-button ghost" disabled={cloud.busy} onClick={() => void cloudStore.signOut()}>
+                  <button
+                    type="button"
+                    className="account-button ghost"
+                    disabled={cloud.busy}
+                    onClick={() => {
+                      setNameDraft(null);
+                      setShowcaseDraft(null);
+                      void cloudStore.signOut();
+                    }}
+                  >
                     <LogOut size={14} /> Déconnexion
                   </button>
                 </div>
@@ -242,6 +304,126 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
             {cloud.userId ? (
               <section className="account-card">
                 <div className="account-head">
+                  <Star size={15} />
+                  <strong>Ma vitrine</strong>
+                  <span className="account-count">{pinned.length}/{MAX_SHOWCASE}</span>
+                </div>
+                {pinned.length ? (
+                  <div className="showcase-grid">
+                    {pinned.map((slug) => <ShowcaseCard key={slug} slug={slug} />)}
+                  </div>
+                ) : (
+                  <p className="account-hint">Aucune carte épinglée. Choisis-en jusqu&apos;à {MAX_SHOWCASE} parmi les créateurs que tu possèdes.</p>
+                )}
+
+                <details className="account-details">
+                  <summary>{pinned.length ? "Changer ma vitrine" : "Choisir mes cartes"}</summary>
+                  <p className="account-hint">
+                    Tu possèdes {owned.length} créateur{owned.length === 1 ? "" : "s"} distinct{owned.length === 1 ? "" : "s"}. Épingle jusqu&apos;à {MAX_SHOWCASE} cartes sur ton profil public.
+                  </p>
+                  <div className="showcase-picked" role="group" aria-label="Emplacements de la vitrine">
+                    {Array.from({ length: MAX_SHOWCASE }, (_, index) => {
+                      const slug = selection[index];
+                      if (slug) {
+                        const creator = CREATOR_BY_SLUG.get(slug);
+                        return (
+                          <div className="showcase-slot filled" key={`filled-${slug}`}>
+                            <ShowcaseCard slug={slug} small />
+                            <button
+                              type="button"
+                              className="showcase-remove"
+                              aria-label={`Retirer ${creator?.displayName ?? slug} de la vitrine`}
+                              title="Retirer cette carte"
+                              disabled={cloud.busy}
+                              onClick={() => setShowcaseDraft(selection.filter((_, selectedIndex) => selectedIndex !== index))}
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        );
+                      }
+                      return (
+                        <span className="showcase-slot vide" key={`empty-${index}`} aria-label={`Emplacement libre ${index + 1}`}>
+                          <Plus size={14} />
+                        </span>
+                      );
+                    })}
+                  </div>
+
+                  <label className="account-field">
+                    <span><Search size={10} /> Rechercher un créateur possédé</span>
+                    <input
+                      type="search"
+                      placeholder="Nom, identifiant…"
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value)}
+                    />
+                  </label>
+                  <div className="showcase-picker" role="group" aria-label="Créateurs possédés">
+                    {results.map((slug) => {
+                      const creator = CREATOR_BY_SLUG.get(slug);
+                      if (!creator) return null;
+                      const selectedIndex = selection.indexOf(slug);
+                      const selected = selectedIndex >= 0;
+                      return (
+                        <button
+                          type="button"
+                          key={slug}
+                          className={`showcase-choice${selected ? " on" : ""}`}
+                          aria-pressed={selected}
+                          disabled={cloud.busy || (!selected && selection.length >= MAX_SHOWCASE)}
+                          onClick={() => setShowcaseDraft(toggleShowcase(selection, slug))}
+                        >
+                          <Image src={creatorImage(creator)} width={36} height={36} alt="" unoptimized />
+                          <span>{creator.displayName}</span>
+                          {selected ? <b aria-label={`Position ${selectedIndex + 1}`}>{selectedIndex + 1}</b> : null}
+                        </button>
+                      );
+                    })}
+                    {!results.length ? (
+                      <p className="account-hint">
+                        {owned.length ? "Aucun créateur ne correspond à cette recherche." : "Tu ne possèdes encore aucun créateur à épingler."}
+                      </p>
+                    ) : null}
+                    {results.length === PICKER_LIMIT && owned.length > PICKER_LIMIT ? (
+                      <p className="account-hint">Affichage limité aux {PICKER_LIMIT} premiers résultats. Affine ta recherche pour trouver une autre carte.</p>
+                    ) : null}
+                  </div>
+                  <div className="account-actions">
+                    <button
+                      type="button"
+                      className="account-button"
+                      disabled={cloud.busy || !showcaseChanged}
+                      onClick={() => {
+                        void cloudStore.setShowcase(selection).then((ok) => {
+                          if (ok) {
+                            setShowcaseDraft(null);
+                            setQuery("");
+                          }
+                        });
+                      }}
+                    >
+                      <Check size={14} /> Enregistrer la vitrine
+                    </button>
+                    <button
+                      type="button"
+                      className="account-button ghost"
+                      disabled={cloud.busy}
+                      onClick={() => {
+                        setShowcaseDraft(null);
+                        setQuery("");
+                      }}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </details>
+              </section>
+            ) : null}
+
+            {cloud.userId ? (
+              <section className="account-card">
+                <div className="account-head">
                   <Trophy size={15} />
                   <strong>Classement mondial</strong>
                   <button type="button" className="account-refresh" disabled={cloud.busy} onClick={() => void cloudStore.loadLeaderboard()}>
@@ -262,23 +444,54 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                 </div>
                 {cloud.leaderboard.length ? (
                   <ol className="leaderboard">
-                    {cloud.leaderboard.map((row) => (
-                      <li key={`${row.rank}-${row.userId}`} className={row.userId === cloud.userId ? "me" : ""}>
-                        <b>{row.rank}</b>
-                        <span className="leaderboard-name">
-                          {row.displayName}
-                          {row.userId === cloud.userId ? " (toi)" : ""}
-                        </span>
-                        <span className="leaderboard-value">
-                          {cloud.leaderboardMetric === "total_cards"
-                            ? `${row.totalCards} cartes`
-                            : cloud.leaderboardMetric === "legendary_cards"
-                              ? `${row.legendaryCards} légendaires`
-                              : `${row.uniqueCreators} uniques`}
-                        </span>
-                        {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
-                      </li>
-                    ))}
+                    {cloud.leaderboard.map((row) => {
+                      const expanded = openProfile === row.userId;
+                      const profileShowcase = knownShowcase(row.showcaseSlugs);
+                      const profileId = `leaderboard-profile-${row.userId}`;
+                      return (
+                        <li key={`${row.rank}-${row.userId}`} className={row.userId === cloud.userId ? "me" : ""}>
+                          <button
+                            type="button"
+                            className="leaderboard-row"
+                            aria-expanded={expanded}
+                            aria-controls={profileId}
+                            onClick={() => setOpenProfile(expanded ? null : row.userId)}
+                          >
+                            <b>{row.rank}</b>
+                            <span className="leaderboard-name">
+                              {row.displayName}
+                              {row.userId === cloud.userId ? " (toi)" : ""}
+                            </span>
+                            <span className="leaderboard-value">
+                              {cloud.leaderboardMetric === "total_cards"
+                                ? `${row.totalCards} cartes`
+                                : cloud.leaderboardMetric === "legendary_cards"
+                                  ? `${row.legendaryCards} légendaires`
+                                  : `${row.uniqueCreators} uniques`}
+                            </span>
+                            {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
+                          </button>
+                          {expanded ? (
+                            <div id={profileId} className="leaderboard-profile">
+                              {profileShowcase.length ? (
+                                <div className="showcase-grid">
+                                  {profileShowcase.map((slug) => <ShowcaseCard key={slug} slug={slug} />)}
+                                </div>
+                              ) : (
+                                <p className="account-hint">Pas de vitrine pour l&apos;instant.</p>
+                              )}
+                              <ul className="leaderboard-stats">
+                                <li><b>{row.uniqueCreators.toLocaleString("fr-FR")}</b><span>Créateurs uniques</span></li>
+                                <li><b>{row.totalCards.toLocaleString("fr-FR")}</b><span>Cartes</span></li>
+                                <li><b>{row.legendaryCards.toLocaleString("fr-FR")}</b><span>Légendaires</span></li>
+                                <li><b>{row.level.toLocaleString("fr-FR")}</b><span>Niveau</span></li>
+                                <li><b>{row.points.toLocaleString("fr-FR")}</b><span>Points</span></li>
+                              </ul>
+                            </div>
+                          ) : null}
+                        </li>
+                      );
+                    })}
                   </ol>
                 ) : (
                   <p className="account-hint">
@@ -286,8 +499,8 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                   </p>
                 )}
                 <p className="account-hint">
-                  Seules les collections cohérentes sont classées : le serveur recalcule tes statistiques depuis ta
-                  sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
+                  Touche une ligne du classement pour voir la vitrine et les chiffres publics du joueur. Le serveur
+                  recalcule les statistiques depuis chaque sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
                 </p>
               </section>
             ) : null}

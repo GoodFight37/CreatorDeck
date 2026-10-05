@@ -287,6 +287,18 @@ export class CloudApi {
     };
   }
 
+  /**
+   * Épingle jusqu'à 4 cartes de sa collection sur son profil public.
+   *
+   * Le contrôle est côté serveur : une carte que le joueur ne possède pas fait
+   * échouer l'appel (message en français remonté tel quel). Le serveur renvoie
+   * la vitrine enregistrée, dans l'ordre où il l'a rangée.
+   */
+  async setShowcase(slugs: string[]): Promise<string[]> {
+    const result = await this.rpc("set_showcase", { p_slugs: slugs });
+    return Array.isArray(result) ? result.map(String) : [];
+  }
+
   /** Change le nom affiché au classement (ligne `profiles` du joueur). */
   async updateDisplayName(userId: string, displayName: string): Promise<void> {
     const name = displayName.trim();

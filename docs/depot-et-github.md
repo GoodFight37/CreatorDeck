@@ -1,73 +1,85 @@
 # Le dépôt, en clair
 
-But : **un dépôt, une branche vivante, un historique léger.**
+But : **un dépôt, une branche de référence, un historique léger.**
 
-## Où en est le rangement (5 octobre 2026)
+## État au 5 octobre 2026
 
-- L'ancien dépôt `GoodFight37/CreatorDeck` (prototype en JavaScript du 24-25 septembre, remplacé par
-  l'application Next.js) a été **supprimé**. GitHub permet de le restaurer pendant 90 jours
-  (Settings → Deleted repositories) si un document manque.
-- Toutes les branches mortes ont été supprimées : `creatordeck-local-first`, `arena/01a0de81-test`,
-  `arena/01a0e506-test`.
-- La PR #3 (kit Unity + 11 Mo de fichiers Pokémon importés) a été **fermée sans être fusionnée** :
-  elle allait contre la règle « aucun contenu Pokémon dans l'app », et l'ouverture 3D a été
-  remplacée depuis par des animations CSS/canvas, bien plus légères.
-- Il ne reste donc que `main` (la source de vérité) et `arena/01a10b32-test` (la branche de travail
-  de la session en cours).
+- Le dépôt GitHub s'appelle encore `GoodFight37/test`. Le renommage vers
+  `GoodFight37/CreatorDeck` reste à faire par le propriétaire, après la fusion
+  de la vitrine.
+- La PR #4 est fusionnée dans `main` (`ac67f35`) : régions et saisons, booster
+  unique, thèmes, sons, sauvegarde cloud et compte invité.
+- La branche de cette session est `arena/01a10c2b-creatordeck`. Elle porte la
+  vitrine et les profils publics ; ne pas réécrire l'historique, renommer le
+  dépôt ni supprimer de branche avant que sa PR soit fusionnée.
+- L'application Next.js en export statique est la source de vérité. Le kit
+  Unity de la PR #3 est hors périmètre : cette PR doit être fermée sans fusion,
+  car elle apporte environ 11 Mo de ressources qui n'appartiennent pas au jeu.
 
-## À faire une fois, à la main (2 clics)
+## Vérifications avant le rangement
 
-Renommer le dépôt `test` → **`CreatorDeck`** : *Settings → Repository name*. GitHub conserve des
-redirections, donc les anciens liens (page du dépôt, release de l'APK, `git remote`) continuent de
-fonctionner.
+À faire **après la fusion de la PR de vitrine**, pas pendant son développement :
 
-## Mise à plat de l'historique (facultatif, ~30 Mo au lieu de ~92 Mo)
+- [ ] Vérifier qu'il ne reste aucune PR ouverte : `gh pr list --state open`.
+- [ ] Vérifier que la PR #3 « kit Unity » est bien **fermée sans fusion** ; si
+      elle est encore ouverte, la fermer sans la fusionner.
+- [ ] Lister les branches distantes (`git branch -a`) et ne supprimer que les
+      branches réellement mortes, après avoir vérifié qu'aucune PR ni session
+      active n'en dépend. Garder `main` comme seule branche de référence.
+- [ ] Vérifier que le prototype Unity et ses ressources ne sont pas importés
+      dans la branche produit. Ne pas recopier d'assets tiers dans le jeu.
+- [ ] Confirmer que la PR de vitrine est fusionnée et que personne d'autre
+      n'écrit dans le dépôt avant la mise à plat de l'historique.
 
-L'historique a gardé chaque version du catalogue : ~30 Mo par régénération d'avatars. Résultat, le
-dépôt pèse ~92 Mo dont ~62 Mo d'images que plus personne n'utilise. Les commandes ci-dessous
-réécrivent `main` **et** la branche de travail sur un seul commit contenant exactement les fichiers
-actuels — rien n'est perdu, seul l'historique est remplacé.
+## Renommer le dépôt (à faire par le propriétaire)
 
-**À lancer dans PowerShell, une commande par ligne**, depuis un dossier de travail (par exemple
-`C:\dev`), et de préférence **après la fusion de la PR en cours** :
+Sur GitHub : **Settings → General → Repository name**, remplacer `test` par
+`CreatorDeck`. GitHub conserve les redirections de l'ancienne adresse. Faire
+ce renommage une fois les PR terminées ; les commandes de mise à plat ci-dessous
+fonctionnent avec les deux URL.
+
+## Mise à plat de l'historique (facultatif, environ 92 Mo → 30 Mo)
+
+Les anciennes versions du catalogue gardent des portraits inutilisés dans
+l'historique. La mise à plat remplace l'historique de `main` par un commit
+racine qui contient exactement les fichiers actuels. Les autres branches
+peuvent conserver les anciens objets : ne les supprimer qu'après les
+vérifications ci-dessus.
+
+**À ne lancer qu'après la fusion de toutes les PR utiles et la vérification des
+branches.** Pendant l'opération, il faut **un seul écrivain à la fois** : pas
+d'autre push, merge ou réécriture jusqu'à la fin. Dans PowerShell, une commande
+par ligne, depuis le dossier où tu veux créer le clone temporaire :
 
 ```powershell
-git clone --depth 1 --single-branch --branch arena/01a10b32-test https://github.com/GoodFight37/test.git creatordeck-propre
-cd creatordeck-propre
+git clone --depth 1 --single-branch --branch main https://github.com/GoodFight37/test.git creatordeck-plat
+Set-Location creatordeck-plat
 git checkout --orphan propre
 git add -A
 git commit -m "CreatorDeck : application, catalogue et documentation"
 git branch -M propre main
 git push origin main --force
-git push origin main:arena/01a10b32-test --force
-cd ..
-Remove-Item -Recurse -Force creatordeck-propre
+Set-Location ..
+Remove-Item -Recurse -Force creatordeck-plat
 ```
 
-Ce que ça fait, ligne par ligne : on récupère seulement l'état actuel de la branche de travail
-(`--depth 1`, ~30 Mo), on fabrique un commit racine qui contient cet état
-(`checkout --orphan` + `git add -A`), puis on réécrit les deux branches distantes sur ce commit.
-
-**Si tu as déjà renommé le dépôt**, remplace l'adresse par
-`https://github.com/GoodFight37/CreatorDeck.git` — l'ancienne adresse fonctionne encore, mais autant
-utiliser la nouvelle.
+Si le dépôt a déjà été renommé, tu peux utiliser dès la première ligne
+`https://github.com/GoodFight37/CreatorDeck.git`. Le `--depth 1` ne récupère que
+l'état courant de `main` ; `checkout --orphan` crée un historique neuf et le
+push forcé remplace ensuite `main`. **Ne lance pas ces commandes avant la
+fusion de la vitrine.**
 
 ### Après la mise à plat
 
-Dis-le simplement à l'agent : il réaligne sa copie de travail sur la nouvelle branche
-(`git fetch` puis `git reset --hard`, sans rien réécrire côté serveur), et le travail reprend
-normalement.
+Vérifier sur GitHub que `main` pointe sur le commit racine attendu. Toute copie
+locale ou branche de travail doit ensuite être réalignée par son propriétaire
+sur le nouveau `main` ; ne pas pousser une ancienne branche par-dessus.
 
 ### Ce qui n'est pas touché
 
-- La **release `debug-apk`** et l'APK publié restent en place : une release n'appartient pas à une
-  branche.
-- Les **variables de dépôt** (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) et le
-  workflow Android non plus.
-- Les PR #1 à #3 restent consultables : elles gardent une copie des anciens commits.
-
-### À propos du rythme
-
-Chaque régénération du catalogue (`npm run catalog:source` puis commit des portraits) ajoute ~30 Mo
-définitifs à l'historique. Deux habitudes suffisent : ne régénérer que si c'est vraiment nécessaire,
-et refaire la mise à plat quand le dépôt repasse au-dessus de ~60 Mo.
+- La release `debug-apk` et l'APK publié restent en place : une release ne
+  dépend pas de l'historique d'une branche.
+- Les variables de dépôt (`NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`) et le workflow Android restent configurés.
+- La mise à plat de `main` ne supprime pas automatiquement les branches
+  distantes : leur nettoyage est une opération distincte, après vérification.
