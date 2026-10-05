@@ -419,11 +419,13 @@ describe("tirage serveur", () => {
     await expect(api.openPack()).rejects.toThrowError(/Table manquante/);
   });
 
-  it("traduit une coupure réseau en phrase française, sans repli local", async () => {
+  it("traduit une coupure réseau en phrase française, avec le nom d'hôte", async () => {
     const { api } = client(() => {
       throw new TypeError("fetch failed");
     }, signedIn());
     await expect(api.openPack()).rejects.toThrowError(/Réseau injoignable/);
+    // L'hôte est nommé : un échec réseau se distingue d'une adresse erronée.
+    await expect(api.openPack()).rejects.toThrowError(/projet\.supabase\.co/);
     await expect(api.packStatus()).rejects.toThrowError(/Réseau injoignable/);
   });
 

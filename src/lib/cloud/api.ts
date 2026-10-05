@@ -471,7 +471,21 @@ export class CloudApi {
         body: init.body,
       });
     } catch {
-      throw new CloudError(messageFor(0, "", ""), "network_error", 0);
+      // Message auto-diagnostic : sans le nom d'hôte, un échec réseau est
+      // indiscernable d'une adresse de projet mal recopiée.
+      let host = "";
+      try {
+        host = new URL(url).host;
+      } catch {
+        host = "";
+      }
+      throw new CloudError(
+        host
+          ? `Réseau injoignable : impossible de joindre ${host}. Vérifie ta connexion — ta partie locale est intacte.`
+          : messageFor(0, "", ""),
+        "network_error",
+        0,
+      );
     }
 
     const text = await response.text().catch(() => "");
