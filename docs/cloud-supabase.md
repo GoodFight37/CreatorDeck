@@ -42,22 +42,26 @@ Aucun mot de passe n'est stocké. Les données restent locales tant que tu ne
 crées pas de compte invité ou ne valides pas ton code ; « Déconnexion » efface
 la session de l'appareil.
 
-## 2. Deux façons d'avoir un compte
+## 2. Trois façons d'avoir un compte
 
 **Tu n'as pas besoin du Magic Link.** L'e-mail est une méthode parmi d'autres :
-ce qui compte pour le cloud, c'est un identifiant `user_id`. Il y en a deux :
+ce qui compte pour le cloud, c'est un identifiant `user_id`. Il y en a trois, et
+la deuxième est celle qu'il faut connaître — elle **ne demande aucun e-mail** :
 
-| | Compte invité | Adresse e-mail + code |
-| --- | --- | --- |
-| Ce qu'il faut activer | **Anonymous sign-ins** (une case à cocher) | un **SMTP** configuré |
-| Ce qu'il faut posséder | rien | un domaine ou un compte d'envoi gratuit |
-| Mise en route | immédiate | 10 minutes de configuration |
-| Limite | lié à la session de l'appareil | récupérable sur n'importe quel appareil |
+| | Compte invité | Invité **+ adresse et mot de passe** | Adresse e-mail + code |
+| --- | --- | --- | --- |
+| Ce qu'il faut activer | **Anonymous sign-ins** | Anonymous sign-ins + **Confirm email désactivé** | un **SMTP** configuré |
+| Ce qu'il faut posséder | rien | rien | un domaine ou un compte d'envoi gratuit |
+| Mise en route | immédiate | immédiate | 10 minutes de configuration |
+| Récupérable sur un autre appareil | non | **oui, par mot de passe** | oui, par code reçu par e-mail |
+| Si le mot de passe est perdu | — | compte perdu (pas de « mot de passe oublié » sans SMTP) | — |
 
-Pourquoi Supabase réclame un SMTP : son service d'e-mail intégré est **réservé
-aux tests** (quelques envois par heure, et il n'écrit qu'aux adresses de l'équipe
-du projet). Dès qu'on veut envoyer un code à quelqu'un d'autre, il faut brancher
-son propre serveur d'envoi.
+Pourquoi Supabase réclame un SMTP pour le code à 6 chiffres : son service
+d'e-mail intégré est **réservé aux tests** (quelques envois par heure, et il
+n'écrit qu'aux adresses de l'équipe du projet). Dès qu'on veut envoyer un code à
+quelqu'un d'autre, il faut brancher son propre serveur d'envoi. **Le mot de
+passe, lui, n'envoie aucun e-mail** : c'est la voie de secours sans
+configuration.
 
 ### Compte invité (recommandé pour commencer)
 
@@ -69,8 +73,47 @@ son propre serveur d'envoi.
 Rien à installer, rien à payer, aucun e-mail. À savoir : le compte vit avec la
 session enregistrée sur l'appareil. Réinstaller l'app ou vider ses données perd
 l'accès au compte (la collection locale, elle, est sauvegardée par le mécanisme
-habituel d'export/import). Attacher une adresse e-mail à un compte invité se
-fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user`).
+habituel d'export/import).
+
+### Garder un compte invité : adresse + mot de passe (sans SMTP)
+
+C'est ce qu'il faut faire dès qu'un joueur tient à sa collection, et **avant**
+de mettre l'app sur un second appareil.
+
+1. Dashboard → **Authentication → Sign In / Providers → Email** : laisse le
+   fournisseur **Email activé**, mais **désactive « Confirm email »** → Save.
+   C'est ce réglage qui rend l'opération possible sans envoyer un seul e-mail.
+2. Dans l'app (compte invité connecté) : Profil → **Garder ce compte** →
+   adresse e-mail + mot de passe (8 caractères minimum) → **Attacher l'adresse**.
+3. Sur l'autre appareil : Profil → **Se connecter avec un e-mail et un mot de
+   passe** → puis **Charger le cloud** (ou rien à faire : une partie locale
+   vierge est reprise automatiquement, voir plus bas).
+
+Ce que fait l'app : un seul appel, `PUT /auth/v1/user` avec l'adresse **et** le
+mot de passe, avec le jeton du joueur. Aucun mot de passe ne transite en clair
+ailleurs qu'ici, et il est haché par Supabase. La reconnexion se fait par
+`POST /auth/v1/token?grant_type=password` — donc **aucun e-mail n'est jamais
+envoyé**, ni à l'attachement ni à la connexion.
+
+Deux limites, à dire au joueur :
+
+* **Il n'y a pas de « mot de passe oublié ».** Sans SMTP, un mot de passe perdu
+  ne se récupère pas : l'écran le rappelle au moment du choix.
+* **L'adresse n'est pas vérifiée** (c'est le prix de « pas d'e-mail envoyé »).
+  C'est le mot de passe qui protège le compte, pas l'adresse.
+
+> **Bug Supabase à connaître** (`supabase/auth#2847`) : attacher une adresse à un
+> compte **invité** échoue (erreur `Email address "" is invalid`) tant que
+> **« Confirm email » est activé** — GoTrue valide une adresse vide faute de
+> savoir laquelle confirmer. L'app traduit ce cas en clair : elle nomme le
+> réglage à désactiver, au lieu d'afficher « adresse refusée ». Pour un compte
+> qui a déjà une adresse, l'ajout d'un mot de passe marche dans les deux réglages.
+
+**Nouveau téléphone, partie locale vierge** : à la connexion (mot de passe ou
+code), si cette partie n'a **ni carte ni ouverture**, l'app charge d'elle-même
+la collection du cloud — il n'y a rien à perdre, et cela évite qu'un premier
+envoi écrase la collection. Dès que la partie locale a servi, rien n'est
+remplacé sans que le joueur le demande (« Charger le cloud »).
 
 ### Adresse e-mail + code (optionnel)
 
@@ -208,7 +251,10 @@ configuré.
    touche une ligne du classement pour ouvrir le profil public, avec sa vitrine
    et ses chiffres.
 
-6. dans **Échanges**, cherche un autre joueur par son pseudo (le classement en
+6. dans **Garder ce compte** (si tu es en invité), attache une adresse et un mot
+   de passe, puis déconnecte-toi et reconnecte-toi par **« Se connecter avec un
+   e-mail et un mot de passe »** : ta collection doit être reprise ;
+7. dans **Échanges**, cherche un autre joueur par son pseudo (le classement en
    fournit), choisis une de tes cartes puis une carte qu'il possède, et
    **Proposer l'échange** ; avec un second compte, accepte l'offre : les deux
    collections bougent, et le message confirme le troc.
@@ -348,12 +394,11 @@ compteur et le compte à rebours se réalignent sur le serveur immédiatement.
 **Fait :** vitrine de quatre cartes et profil public consultable depuis le
 classement ; tirage des boosters côté serveur (`0004_tirage.sql`, les cartes
 sont infalsifiables) ; échanges de cartes arbitrés par le serveur
-(`0005_echanges.sql`, une carte contre une carte jusqu'à trois de chaque côté).
+(`0005_echanges.sql`, une carte contre une carte jusqu'à trois de chaque côté) ;
+compte gardable par adresse + mot de passe, **sans SMTP**.
 
 **Reste à faire, dans cet ordre :**
 
-* permettre d'attacher une adresse e-mail à un compte invité (récupération
-  multi-appareil), sans rendre le SMTP obligatoire pour les comptes invités ;
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
   brancher quand elles auront un usage produit — c'est ce qui rendra les offres
   d'échange visibles sans ouvrir l'écran Compte ;
@@ -372,6 +417,11 @@ sont infalsifiables) ; échanges de cartes arbitrés par le serveur
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
 | « Réseau injoignable » **dans l'APK** alors que le même appel marche dans Chrome | le WebView sert l'app depuis `https://localhost`, origine que Supabase peut refuser en CORS. Les appels passent par le client HTTP natif (`src/lib/cloud/transport.ts`, `CapacitorHttp`) depuis la PR #7 : si le message persiste, il nomme désormais l'hôte, le chemin et la cause — colle-les dans le ticket |
 | « Les échanges ne sont pas installés sur ce projet » | `0005_echanges.sql` n'a pas été collé : § 3 |
+| « Supabase refuse d'attacher une adresse à un compte invité tant que Confirm email… » | bug GoTrue connu : désactive **Confirm email** (Authentication → Sign In / Providers → Email) puis réessaie |
+| « Un e-mail de confirmation a été envoyé à … » | le projet a « Confirm email » activé : ouvre le lien reçu (SMTP requis) ou désactive le réglage pour que l'adresse soit enregistrée tout de suite |
+| « E-mail ou mot de passe incorrect » | mot de passe saisi différemment, ou compte créé par code (sans mot de passe) : attache-en un depuis l'appareil d'origine |
+| « Cette adresse est déjà utilisée par un autre compte » | cette adresse appartient à un autre compte : connecte-toi avec elle, ou change d'adresse |
+| « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
 | Un échange accepté n'apparaît pas tout de suite | l'appareil du proposeur s'aligne sur `list_trades()` : **Actualiser mes offres**, ou rouvre l'écran Compte |

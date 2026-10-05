@@ -284,16 +284,28 @@ d'échange qui empêche de l'appliquer deux fois. Une carte épinglée qui part 
 reste privée : le serveur ne dit que les variantes possédées d'un créateur
 donné, jamais la collection entière.
 
-- Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
-  aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
-  6 chiffres** (récupérable ailleurs, mais il faut brancher un SMTP : le service
-  d'e-mail intégré de Supabase est réservé aux tests). Voir la section
-  « Deux façons d'avoir un compte » de `docs/cloud-supabase.md`.
+- Trois façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
+  aucun SMTP — le compte vit avec la session de l'appareil) ; **invité + adresse
+  et mot de passe** (« Garder ce compte », récupérable sur un autre appareil
+  **sans SMTP** : le mot de passe n'envoie aucun e-mail, à condition de
+  désactiver « Confirm email » côté Supabase) ; **e-mail + code à 6 chiffres**
+  (récupérable aussi, mais il faut brancher un SMTP : le service d'e-mail
+  intégré de Supabase est réservé aux tests). Voir « Trois façons d'avoir un
+  compte » dans `docs/cloud-supabase.md`.
+- **Nouveau téléphone, partie vierge** : à la connexion par mot de passe ou par
+  code, si la partie locale n'a ni carte ni ouverture, la collection du cloud
+  est reprise automatiquement (rien à perdre, et cela évite qu'un premier envoi
+  écrase le cloud). Dès que la partie locale a servi, rien n'est remplacé sans
+  un « Charger le cloud » explicite.
 - Côté application : `src/lib/cloud/`
   - `config.ts` lit les deux variables publiques et désactive tout si elles
     manquent ;
-  - `api.ts` est un client Supabase minimal (code à 6 chiffres, envoi/lecture de
-    la sauvegarde, classement) — pas de SDK embarqué dans l'APK ;
+  - `api.ts` est un client Supabase minimal (compte, code à 6 chiffres,
+    envoi/lecture de la sauvegarde, classement) — pas de SDK embarqué dans
+    l'APK ;
+  - `credentials.ts` valide l'adresse et le mot de passe côté écran (les mêmes
+    règles qu'à l'inscription) et porte l'avertissement « mot de passe non
+    récupérable sans SMTP » ;
   - `sync.ts` contient les décisions (envoyer, charger, ne rien faire, demander
     au joueur) sous forme de fonctions pures, testées ;
   - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
@@ -317,6 +329,9 @@ donné, jamais la collection entière.
   seule pour les clients. `supabase/migrations/0004_tirage.sql`
   ajoute `open_pack()` et `pack_status()` : le tirage des boosters est décidé
   par le serveur, les cartes sont infalsifiables.
+  Côté comptes, l'appel `PUT /auth/v1/user` (adresse + mot de passe) et
+  `POST /auth/v1/token?grant_type=password` complètent le code à 6 chiffres :
+  c'est le chemin de récupération qui ne dépend d'aucun envoi d'e-mail.
   `supabase/migrations/0005_echanges.sql` ajoute la table `trades` (lecture
   réservée aux deux joueurs concernés, **aucune** écriture directe possible) et
   les fonctions d'échange : `search_players()`, `player_variants()`,
