@@ -55,6 +55,16 @@ jobs:
         run: |
           set -euo pipefail
           echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
+          # L'app attend l'URL du projet. Un suffixe copié depuis l'écran API
+          # (/rest/v1, /auth/v1…) est retiré par elle-même : on le signale, et
+          # on prévient si la forme reste inattendue (l'APK serait hors ligne).
+          PROJET=$(printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | sed -E 's#/+$##; s#/(rest|auth|storage|realtime)/v1$##')
+          if [ "$NEXT_PUBLIC_SUPABASE_URL" != "$PROJET" ]; then
+            echo "ℹ️ URL d'endpoint détectée : l'app utilisera ${PROJET} (préfère l'« URL du projet » nue)."
+          fi
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && ! printf '%s' "$PROJET" | grep -Eq '^https://[a-z0-9-]+\.supabase\.(co|in)$'; then
+            echo "::warning::L'adresse Supabase ne ressemble pas à une URL de projet (attendu : https://<ref>.supabase.co) — l'app restera hors ligne."
+          fi
           if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
             echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
           else

@@ -122,7 +122,11 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
 
    Pense aussi à **Email OTP Expiration** (1 heure par défaut, très bien) et à
    **Email OTP Length** = 6.
-5. **Settings → API** : note l'**URL du projet** et la clé **anon public**.
+5. **Settings → API** : note l'**URL du projet** et la clé **anon public**
+   (ou la clé **publishable** `sb_publishable_…`, qui la remplace dans les
+   nouveaux projets). Prends bien l'« URL du projet » — `https://<référence>.supabase.co` —
+   et non l'URL REST : un suffixe `/rest/v1/` est toléré (l'app le retire), mais
+   l'adresse nue évite toute confusion.
 
 > La clé `anon` est prévue pour être embarquée dans une application : ce sont
 > les politiques RLS qui protègent les données. La clé `service_role`, elle, ne

@@ -26,13 +26,26 @@ const URL_VAR = "NEXT_PUBLIC_SUPABASE_URL";
 const KEY_VAR = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
 
 /**
+ * Chemin d'API que l'on retire si l'URL d'un endpoint a été recopiée.
+ *
+ * Erreur classique (et invisible) : coller « …/rest/v1/ » depuis l'écran API
+ * de Supabase au lieu de l'URL du projet. Sans ce nettoyage, la configuration
+ * était jugée invalide et l'app restait hors ligne sans autre explication.
+ */
+const API_PATH = /\/(?:rest|auth|storage|realtime)\/v1\/?$/i;
+
+/**
  * Lit la configuration depuis un environnement donné. Renvoie `null` si elle
  * est incomplète ou manifestement invalide : une adresse d'exemple recopiée
  * depuis la documentation vaut mieux traitée comme « non configuré » qu'un
  * écran de compte qui échoue à chaque appel.
  */
 export function readCloudConfig(env: Record<string, string | undefined> = process.env): CloudConfig | null {
-  const url = env[URL_VAR]?.trim().replace(/\/+$/, "");
+  const url = env[URL_VAR]
+    ?.trim()
+    .replace(/\/+$/, "")
+    .replace(API_PATH, "")
+    .replace(/\/+$/, "");
   const anonKey = env[KEY_VAR]?.trim();
   if (!url || !anonKey) return null;
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(url)) return null;

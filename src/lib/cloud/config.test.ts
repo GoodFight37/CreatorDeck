@@ -20,6 +20,25 @@ describe("configuration du cloud", () => {
     expect(cloudProjectName(config!)).toBe("abcd");
   });
 
+  it("accepte une URL d'endpoint recopiée depuis l'écran API", () => {
+    // `https://xxx.supabase.co/rest/v1/` (et variantes) doit revenir à l'URL
+    // du projet : sinon l'app restait hors ligne sans explication.
+    for (const pasted of [
+      "https://yzxchpybqrfegvecihxf.supabase.co/rest/v1/",
+      "https://yzxchpybqrfegvecihxf.supabase.co/rest/v1",
+      "https://yzxchpybqrfegvecihxf.supabase.co/auth/v1/",
+      "https://yzxchpybqrfegvecihxf.supabase.co/storage/v1",
+    ]) {
+      const config = readCloudConfig({ [URL_VAR]: pasted, [KEY_VAR]: KEY });
+      expect(config?.url).toBe("https://yzxchpybqrfegvecihxf.supabase.co");
+      // Une clé « publishable » (nouveau format Supabase) est acceptée.
+      expect(config?.anonKey).toBe(KEY);
+    }
+    expect(
+      readCloudConfig({ [URL_VAR]: "https://abcd.supabase.co/rest/v1/", [KEY_VAR]: "sb_publishable_cbbKecrvKbPcifWUsolQ4w_bmmslot1" }),
+    ).toEqual({ url: "https://abcd.supabase.co", anonKey: "sb_publishable_cbbKecrvKbPcifWUsolQ4w_bmmslot1" });
+  });
+
   it("tolère une barre oblique finale et les espaces", () => {
     const config = readCloudConfig({
       [URL_VAR]: "  https://mon-projet.supabase.co/  ",
