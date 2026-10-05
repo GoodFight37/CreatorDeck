@@ -87,6 +87,14 @@ function messageFor(status: number, code: string, raw: string): string {
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
     return "Trop de tentatives : patiente une minute avant de redemander un code.";
   }
+  // Erreurs des fonctions de tirage serveur : on renvoie le message serveur
+  // tel quel (en français, déjà lisible), sauf pour les erreurs génériques.
+  if (code === "P0001" && raw.includes("aucun booster")) {
+    return "Aucun booster disponible pour le moment : rouvre quand le compte à rebours est fini.";
+  }
+  if (code === "P0001" && raw.includes("connecte-toi")) {
+    return "Connecte-toi pour ouvrir un booster.";
+  }
   if (status === 429) return "Trop de tentatives : patiente une minute avant de redemander un code.";
   if (status === 401 || status === 403) return "Session expirée : reconnecte-toi avec un nouveau code.";
   if (status === 0) return "Réseau injoignable : vérifie ta connexion, ta partie locale est intacte.";
@@ -308,6 +316,77 @@ export class CloudApi {
       token: (await this.accessToken()) ?? undefined,
       raw: true,
     });
+  }
+
+  // ---------------------------------------------------------------- boosters
+
+  /**
+   * Résultat d'un tirage serveur : cartes tirées + compteurs mis à jour.
+   *
+   * Les cartes sont infalsifiables : le serveur les a tirées avec le même
+   * algorithme que le moteur local, et le client ne peut pas les modifier.
+   */
+  async openPack(): Promise<{
+    packs: number;
+    lastRegenAt: string;
+    openings: number;
+    cards: Array<{
+      creatorSlug: string;
+      rarity: string;
+      variant: string;
+      rareDrop: boolean;
+    }>;
+  }> {
+    const result = await this.rpc("open_pack", {});
+    const record = asRecord(result);
+    if (!record) {
+      throw new CloudError("Réponse de tirage illisible.", "invalid_response", 0);
+    }
+    const cards = Array.isArray(record.cards)
+      ? record.cards.map((card) => {
+          const c = asRecord(card);
+          if (!c) {
+            throw new CloudError("Carte de tirage illisible.", "invalid_response", 0);
+          }
+          return {
+            creatorSlug: String(c.creatorSlug ?? ""),
+            rarity: String(c.rarity ?? ""),
+            variant: String(c.variant ?? ""),
+            rareDrop: Boolean(c.rareDrop),
+          };
+        })
+      : [];
+    return {
+      packs: Number(record.packs ?? 0),
+      lastRegenAt: String(record.last_regen_at ?? ""),
+      openings: Number(record.openings ?? 0),
+      cards,
+    };
+  }
+
+  /**
+   * Statut de la réserve de boosters (sans rien consommer).
+   *
+   * Le client appelle cette fonction à la connexion pour afficher le bon
+   * compteur de boosters et la date du prochain, même avant d'ouvrir.
+   */
+  async packStatus(): Promise<{
+    packs: number;
+    lastRegenAt: string;
+    openings: number;
+    nextPackAt: string | null;
+  }> {
+    const result = await this.rpc("pack_status", {});
+    const record = asRecord(result);
+    if (!record) {
+      throw new CloudError("Réponse de statut illisible.", "invalid_response", 0);
+    }
+    return {
+      packs: Number(record.packs ?? 0),
+      lastRegenAt: String(record.last_regen_at ?? ""),
+      openings: Number(record.openings ?? 0),
+      nextPackAt: record.next_pack_at ? String(record.next_pack_at) : null,
+    };
   }
 
   // ------------------------------------------------------------------ saves

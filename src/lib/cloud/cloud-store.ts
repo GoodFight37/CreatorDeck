@@ -377,6 +377,70 @@ export function createCloudStore(deps: CloudDeps) {
       }
     },
 
+    /**
+     * Ouvre un booster côté serveur : les cartes sont tirées par la fonction
+     * `open_pack()` de Supabase, puis appliquées à la partie locale.
+     *
+     * Après le tirage, la sauvegarde est poussée immédiatement (pas d'attente
+     * des ~20 s du debounce) : les cartes sont infalsifiables, il faut les
+     * inscrire dans le cloud sans délai.
+     *
+     * Renvoie le nombre de cartes tirées, ou 0 si le tirage a échoué.
+     */
+    async openPack(): Promise<number> {
+      const api = resolve();
+      if (!networkReady(api)) return 0;
+      publish({ busy: true });
+      try {
+        const result = await api.openPack();
+        const cards = result.cards.map((card) => ({
+          creatorSlug: card.creatorSlug,
+          rarity: card.rarity as "common" | "uncommon" | "rare" | "epic" | "legendary",
+          variant: card.variant as "standard" | "live" | "holo" | "gold",
+          rareDrop: card.rareDrop,
+        }));
+        const drawn = gameStore.applyServerPack(
+          cards,
+          result.packs,
+          result.lastRegenAt,
+          result.openings,
+        );
+        // Pousser immédiatement la partie : les cartes du serveur doivent
+        // être inscrites dans le cloud sans attendre le debounce.
+        const local = deps.readState();
+        if (local) {
+          await push(local.version, local.updatedAt, true);
+        }
+        publish({
+          busy: false,
+          message: `Booster ouvert : ${drawn.length} carte${drawn.length > 1 ? "s" : ""} reçue${drawn.length > 1 ? "s" : ""}.`,
+          isError: false,
+        });
+        return drawn.length;
+      } catch (error) {
+        fail(error, "Ouverture du booster impossible.");
+        return 0;
+      }
+    },
+
+    /**
+     * Statut de la réserve de boosters, calculé par le serveur.
+     *
+     * Le client l'appelle à la connexion pour afficher le bon compteur sans
+     * dépendre de l'horloge locale.
+     */
+    async packStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
+      const api = resolve();
+      if (!api?.session()) return null;
+      try {
+        const status = await api.packStatus();
+        return { packs: status.packs, nextPackAt: status.nextPackAt };
+      } catch {
+        // Sans réseau ou erreur : le client retombe sur le calcul local.
+        return null;
+      }
+    },
+
     async signOut(): Promise<void> {
       const api = resolve();
       publish({ busy: true });
