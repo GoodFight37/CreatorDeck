@@ -296,3 +296,35 @@ describe("classement", () => {
     expect(await api.leaderboard()).toEqual([]);
   });
 });
+
+describe("vitrine", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("épingle les cartes par la fonction dédiée", async () => {
+    const { api, calls } = client(() => ({ body: ["kaicenat", "ibai"] }), signedIn());
+    const saved = await api.setShowcase(["kaicenat", "ibai"]);
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/set_showcase");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_slugs: ["kaicenat", "ibai"] });
+    expect(saved).toEqual(["kaicenat", "ibai"]);
+  });
+
+  it("remonte le refus du serveur en clair", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "vitrine : carte non possédée (kaicenat)" } }),
+      signedIn(),
+    );
+    await expect(api.setShowcase(["kaicenat"])).rejects.toThrowError(/carte non possédée/);
+  });
+
+  it("tolère une réponse inattendue sans casser la vitrine", async () => {
+    const { api } = client(() => ({ body: null }), signedIn());
+    expect(await api.setShowcase(["kaicenat"])).toEqual([]);
+  });
+});

@@ -49,6 +49,7 @@ type FakeApi = {
   signInAnonymously: ReturnType<typeof vi.fn>;
   profile: ReturnType<typeof vi.fn>;
   updateDisplayName: ReturnType<typeof vi.fn>;
+  setShowcase: ReturnType<typeof vi.fn>;
   requestOtp: ReturnType<typeof vi.fn>;
   verifyOtp: ReturnType<typeof vi.fn>;
   signOut: ReturnType<typeof vi.fn>;
@@ -74,6 +75,7 @@ function harness(options: {
     signInAnonymously: vi.fn(async () => ({ ...SESSION, email: null })),
     profile: vi.fn(async () => ({ displayName: "Kaicenat", showcaseSlugs: [] })),
     updateDisplayName: vi.fn(async () => {}),
+    setShowcase: vi.fn(async (slugs: string[]) => slugs),
     requestOtp: vi.fn(async () => {}),
     verifyOtp: vi.fn(async () => SESSION),
     signOut: vi.fn(async () => {}),
@@ -266,6 +268,45 @@ describe("store cloud", () => {
     api.updateDisplayName.mockClear();
     await expect(store.rename("a")).resolves.toBe(false);
     expect(api.updateDisplayName).not.toHaveBeenCalled();
+  });
+
+  it("charge la vitrine du profil avec le nom", async () => {
+    const { store, api } = harness();
+    api.profile.mockResolvedValueOnce({ displayName: "Kaicenat", showcaseSlugs: ["KaiCenat", "kaicenat", "ibai"] });
+    store.subscribe(() => {});
+    await store.loadProfile();
+    expect(store.getSnapshot().displayName).toBe("Kaicenat");
+    expect(store.getSnapshot().showcase).toEqual(["kaicenat", "ibai"]);
+  });
+
+  it("enregistre la vitrine et l'oublie à la déconnexion", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    await expect(store.setShowcase(["kaicenat", "IBai"])).resolves.toBe(true);
+    expect(api.setShowcase).toHaveBeenCalledWith(["kaicenat", "ibai"]);
+    expect(store.getSnapshot().showcase).toEqual(["kaicenat", "ibai"]);
+    expect(store.getSnapshot().message).toMatch(/Vitrine mise à jour/);
+
+    await store.signOut();
+    expect(store.getSnapshot().showcase).toEqual([]);
+  });
+
+  it("refuse une cinquième carte sans appeler le serveur", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    await expect(store.setShowcase(["a", "b", "c", "d", "e"])).resolves.toBe(false);
+    expect(api.setShowcase).not.toHaveBeenCalled();
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/4 cartes au maximum/);
+  });
+
+  it("affiche le refus du serveur quand une carte n'est pas possédée", async () => {
+    const { store, api } = harness();
+    api.setShowcase.mockRejectedValueOnce(new CloudError("vitrine : carte non possédée (kaicenat)", "P0001", 400));
+    store.subscribe(() => {});
+    await expect(store.setShowcase(["kaicenat"])).resolves.toBe(false);
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/carte non possédée/);
   });
 
   it("charge le classement", async () => {

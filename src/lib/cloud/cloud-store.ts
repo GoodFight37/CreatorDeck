@@ -16,6 +16,7 @@ import { sanitizeState } from "@/lib/save-store";
 import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/config";
 import { CloudApi, CloudError, type LeaderboardRow } from "@/lib/cloud/api";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
+import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
 import { deviceStorage } from "@/lib/storage";
 import { gameStore, onPersist } from "@/lib/game-store";
 
@@ -31,6 +32,8 @@ export type CloudState = {
   email: string | null;
   /** Nom affiché au classement, tel qu'enregistré côté serveur. */
   displayName: string | null;
+  /** Cartes épinglées sur le profil public (0 à 4 slugs, dans l'ordre choisi). */
+  showcase: string[];
   userId: string | null;
   /** Nom court du projet Supabase (affiché pour rassurer). */
   project: string | null;
@@ -64,6 +67,7 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   configured: false,
   email: null,
   displayName: null,
+  showcase: [],
   userId: null,
   project: null,
   busy: false,
@@ -305,6 +309,7 @@ export function createCloudStore(deps: CloudDeps) {
           busy: false,
           email: session.email,
           displayName: null,
+          showcase: [],
           userId: session.userId,
           message: "Compte invité créé. Donne-toi un nom, puis envoie ta collection.",
           isError: false,
@@ -339,6 +344,39 @@ export function createCloudStore(deps: CloudDeps) {
       }
     },
 
+    /**
+     * Épingle jusqu'à 4 cartes de sa collection sur son profil public.
+     *
+     * Le serveur vérifie la possession : si une carte n'est pas dans la
+     * sauvegarde poussée, il refuse et on affiche son message tel quel. En
+     * local, on nettoie la liste et on borne à `MAX_SHOWCASE` avant d'appeler.
+     */
+    async setShowcase(slugs: readonly string[]): Promise<boolean> {
+      const api = resolve();
+      if (!networkReady(api)) return false;
+      const clean = normalizeShowcase(slugs);
+      if (slugs.length > MAX_SHOWCASE) {
+        publish({ busy: false, message: `Une vitrine affiche ${MAX_SHOWCASE} cartes au maximum.`, isError: true });
+        return false;
+      }
+      publish({ busy: true });
+      try {
+        const saved = await api.setShowcase(clean);
+        publish({
+          busy: false,
+          showcase: normalizeShowcase(saved.length ? saved : clean),
+          message: clean.length
+            ? `Vitrine mise à jour (${clean.length} carte${clean.length > 1 ? "s" : ""}).`
+            : "Vitrine vidée.",
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        fail(error, "Mise à jour de la vitrine impossible.");
+        return false;
+      }
+    },
+
     async signOut(): Promise<void> {
       const api = resolve();
       publish({ busy: true });
@@ -351,6 +389,7 @@ export function createCloudStore(deps: CloudDeps) {
         busy: false,
         email: null,
         displayName: null,
+        showcase: [],
         userId: null,
         pending: false,
         decision: null,
@@ -406,7 +445,12 @@ export function createCloudStore(deps: CloudDeps) {
       if (!api || !userId) return;
       try {
         const profile = await api.profile(userId);
-        if (profile) publish({ displayName: profile.displayName });
+        if (profile) {
+          publish({
+            displayName: profile.displayName,
+            showcase: normalizeShowcase(profile.showcaseSlugs),
+          });
+        }
       } catch {
         // Sans réseau, on garde le dernier nom connu.
       }

@@ -236,10 +236,11 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 ## Compte, cloud et classement (facultatif)
 
 L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute trois choses —
-un compte (e-mail + code à 6 chiffres, sans mot de passe), la sauvegarde de la
-partie pour la retrouver sur un autre appareil, et un classement mondial
-recalculé par le serveur. Marche à suivre : **`docs/cloud-supabase.md`**.
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute quatre choses :
+un compte (invité par défaut, e-mail + code à 6 chiffres en option), la
+sauvegarde pour retrouver sa partie sur un autre appareil, une vitrine de quatre
+cartes sur le profil public et un classement mondial recalculé par le serveur.
+Marche à suivre : **`docs/cloud-supabase.md`**.
 
 - Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
   aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
@@ -259,6 +260,8 @@ recalculé par le serveur. Marche à suivre : **`docs/cloud-supabase.md`**.
   `saves`, `stats`, politiques RLS, statistiques **recalculées par le serveur**
   (on ne peut pas mentir sur les chiffres sans publier des cartes) et fonction
   `leaderboard()`. `push_save()` arbitre les conflits entre appareils.
+  `supabase/migrations/0002_vitrine.sql` ajoute `set_showcase()` : la fonction
+  contrôle les 4 slugs et leur possession avant de les publier sur le profil.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

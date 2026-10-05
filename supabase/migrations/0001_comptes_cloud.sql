@@ -12,8 +12,9 @@
 --                chiffres sans publier des cartes ;
 --   * `profiles`: vitrine lisible publiquement, modifiable par son propriétaire.
 --
--- À exécuter une seule fois, dans l'ordre : ce fichier, puis `0002_echanges.sql`
--- (échanges entre joueurs) quand le palier suivant sera fait.
+-- À exécuter une seule fois, dans l'ordre : ce fichier, puis
+-- `0002_vitrine.sql` (cartes épinglées sur le profil public), et
+-- `0003_echanges.sql` (échanges entre joueurs) quand ce palier sera fait.
 
 -- --------------------------------------------------------------------------
 -- Profils publics
