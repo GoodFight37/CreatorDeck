@@ -471,17 +471,18 @@ export class CloudApi {
         body: init.body,
       });
     } catch {
-      // Message auto-diagnostic : sans le nom d'hôte, un échec réseau est
-      // indiscernable d'une adresse de projet mal recopiée.
-      let host = "";
+      // Message auto-diagnostic : sans le nom d'hôte ni le chemin, un échec
+      // réseau est indiscernable d'une adresse de projet mal recopiée.
+      let where = "";
       try {
-        host = new URL(url).host;
+        const parsed = new URL(url);
+        where = `${parsed.host}${parsed.pathname}`;
       } catch {
-        host = "";
+        where = "";
       }
       throw new CloudError(
-        host
-          ? `Réseau injoignable : impossible de joindre ${host}. Vérifie ta connexion — ta partie locale est intacte.`
+        where
+          ? `Réseau injoignable : impossible de joindre ${where}. Vérifie ta connexion — ta partie locale est intacte.`
           : messageFor(0, "", ""),
         "network_error",
         0,

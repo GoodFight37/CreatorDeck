@@ -424,8 +424,9 @@ describe("tirage serveur", () => {
       throw new TypeError("fetch failed");
     }, signedIn());
     await expect(api.openPack()).rejects.toThrowError(/Réseau injoignable/);
-    // L'hôte est nommé : un échec réseau se distingue d'une adresse erronée.
-    await expect(api.openPack()).rejects.toThrowError(/projet\.supabase\.co/);
+    // L'hôte et le chemin sont nommés : un échec réseau se distingue d'une
+    // adresse erronée, et on sait quel appel a échoué.
+    await expect(api.openPack()).rejects.toThrowError(/projet\.supabase\.co\/rest\/v1\/rpc\/open_pack/);
     await expect(api.packStatus()).rejects.toThrowError(/Réseau injoignable/);
   });
 
