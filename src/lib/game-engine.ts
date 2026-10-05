@@ -69,6 +69,12 @@ export type OwnedCard = {
   obtainedAt: number;
   /** Carte issue d'un booster « Perfect » (Épique ou mieux de partout). */
   rareDrop: boolean;
+  /**
+   * Numéro de l'échange qui a apporté la carte (absent si elle vient d'un
+   * booster ou de l'Atelier). Sert au classeur (« reçue en échange ») et de
+   * garde-fou : voir `applyTradeResult`.
+   */
+  fromTrade?: number;
 };
 
 export type DrawnCard = {
@@ -806,6 +812,83 @@ export function applyPackStatus(
   const lastPackRegen = serverTimeMs(serverLastRegenAt, now);
   if (packs === state.packs && lastPackRegen === state.lastPackRegen) return state;
   return { ...state, updatedAt: now, packs, lastPackRegen };
+}
+
+/** Une carte échangée : le minimum que le serveur transmet pour la déplacer. */
+export type TradeCard = {
+  creatorSlug: string;
+  rarity: Rarity;
+  variant: CardVariant;
+};
+
+/** Ce qu'un échange déplace, du point de vue du joueur qui l'applique. */
+export type TradeMove = {
+  /** Numéro de l'échange côté serveur (marque les cartes reçues). */
+  tradeId: number;
+  /** Cartes que le joueur donne (retirées de sa collection). */
+  given: readonly TradeCard[];
+  /** Cartes que le joueur reçoit (ajoutées à sa collection). */
+  received: readonly TradeCard[];
+};
+
+/**
+ * Applique un échange accepté à la partie locale.
+ *
+ * Mêmes règles que la fonction SQL `respond_trade()` : une copie retirée par
+ * carte donnée, en commençant par la **plus ancienne** ; une carte reçue par
+ * carte obtenue, avec un identifiant neuf et `fromTrade`.
+ *
+ * Idempotent : si une carte de la collection porte déjà `fromTrade = tradeId`,
+ * l'échange a déjà été appliqué (le serveur l'a écrit, puis la partie a été
+ * rechargée) et l'état est renvoyé tel quel. Sans ce garde-fou, appliquer deux
+ * fois le même échange dupliquerait les cartes reçues.
+ *
+ * Les points, l'XP, le niveau et les boosters ne bougent pas : un troc ne fait
+ * que déplacer des cartes.
+ */
+export function applyTradeResult(state: PlayerState, move: TradeMove, now = Date.now()): PlayerState {
+  if (state.cards.some((card) => card.fromTrade === move.tradeId)) return state;
+
+  let cards = [...state.cards];
+  for (const given of move.given) {
+    // La plus ancienne d'abord, puis l'identifiant : deux copies reçues au
+    // même instant partent dans un ordre stable, identique côté serveur.
+    let index = -1;
+    for (let i = 0; i < cards.length; i += 1) {
+      const card = cards[i];
+      if (card.creatorSlug !== given.creatorSlug || card.variant !== given.variant) continue;
+      if (index === -1) {
+        index = i;
+        continue;
+      }
+      const current = cards[index];
+      const earlier =
+        card.obtainedAt < current.obtainedAt ||
+        (card.obtainedAt === current.obtainedAt && card.id < current.id);
+      if (earlier) index = i;
+    }
+    if (index === -1) {
+      throw new GameError(
+        `Échange impossible : ${given.creatorSlug} (${given.variant}) n'est plus dans ta collection.`,
+        "TRADE_CARD_MISSING",
+      );
+    }
+    cards = [...cards.slice(0, index), ...cards.slice(index + 1)];
+  }
+
+  const received: OwnedCard[] = move.received.map((card) => ({
+    id: randomUUID(),
+    creatorSlug: card.creatorSlug,
+    rarity: card.rarity,
+    variant: card.variant,
+    obtainedAt: now,
+    // Une carte d'échange n'est pas un « Perfect » : elle ne doit pas gonfler
+    // les statistiques de chance du joueur.
+    rareDrop: false,
+    fromTrade: move.tradeId,
+  }));
+
+  return { ...state, updatedAt: now, cards: [...cards, ...received] };
 }
 
 /** Dépense un sablier pour avancer la recharge du booster choisi. */

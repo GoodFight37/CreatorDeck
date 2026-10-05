@@ -57,6 +57,47 @@ export type PushSaveResult =
   | { status: "conflict"; save: RemoteSaveRow }
   | { status: "rejected"; problems: string[] };
 
+export type TradeStatus = "open" | "accepted" | "declined" | "cancelled";
+
+/** Carte déplacée par un échange : jamais de variante inventée, le serveur relit le catalogue. */
+export type TradeCard = {
+  creatorSlug: string;
+  rarity: string;
+  variant: string;
+};
+
+export type Trade = {
+  id: number;
+  status: TradeStatus;
+  proposerId: string;
+  recipientId: string;
+  proposerCards: TradeCard[];
+  recipientCards: TradeCard[];
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
+/** Une offre vue depuis l'appareil : `given`/`received` sont du point de vue du joueur. */
+export type TradeListItem = {
+  id: number;
+  direction: "in" | "out";
+  status: TradeStatus;
+  partnerId: string;
+  partnerName: string;
+  given: TradeCard[];
+  received: TradeCard[];
+  createdAt: string;
+  resolvedAt: string | null;
+};
+
+/** Joueur trouvé par son pseudo, pour proposer un échange. */
+export type PlayerSearchResult = {
+  userId: string;
+  displayName: string;
+  level: number;
+  uniqueCreators: number;
+};
+
 export type LeaderboardRow = {
   rank: number;
   userId: string;
@@ -94,7 +135,16 @@ function messageFor(status: number, code: string, raw: string): string {
     return "Aucun booster disponible pour le moment : rouvre quand le compte à rebours est fini.";
   }
   if (code === "P0001" && raw.includes("connecte-toi")) {
-    return "Connecte-toi pour ouvrir un booster.";
+    // Le message du serveur dit quoi faire (« ouvre un booster », « propose un
+    // échange ») : on le garde, il est déjà en français.
+    return raw;
+  }
+  // Échanges : la migration 0005 doit être collée dans le projet Supabase.
+  if (
+    (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
+    /trade|echange/i.test(raw)
+  ) {
+    return "Les échanges ne sont pas installés sur ce projet : colle supabase/migrations/0005_echanges.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
   // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
@@ -148,6 +198,43 @@ function parseSaveRow(raw: unknown): RemoteSaveRow | null {
     stateChecksum: typeof record.state_checksum === "string" ? record.state_checksum : "",
     updatedAt: typeof record.updated_at === "string" ? record.updated_at : "",
     verified: record.verified !== false,
+  };
+}
+
+function parseTradeCard(raw: unknown): TradeCard | null {
+  const record = asRecord(raw);
+  const slug = record?.creatorSlug;
+  const variant = record?.variant;
+  if (typeof slug !== "string" || !slug) return null;
+  if (typeof variant !== "string" || !variant) return null;
+  return {
+    creatorSlug: slug,
+    rarity: typeof record?.rarity === "string" ? record.rarity : "",
+    variant,
+  };
+}
+
+function parseTradeCards(raw: unknown): TradeCard[] {
+  return Array.isArray(raw) ? raw.flatMap((card) => parseTradeCard(card) ?? []) : [];
+}
+
+function parseTrade(raw: unknown): Trade | null {
+  const record = asRecord(raw);
+  if (!record) return null;
+  const id = Number(record.id);
+  if (!Number.isFinite(id)) return null;
+  const status = record.status;
+  return {
+    id,
+    status: (status === "accepted" || status === "declined" || status === "cancelled"
+      ? status
+      : "open") as TradeStatus,
+    proposerId: String(record.proposerId ?? ""),
+    recipientId: String(record.recipientId ?? ""),
+    proposerCards: parseTradeCards(record.proposerCards),
+    recipientCards: parseTradeCards(record.recipientCards),
+    createdAt: String(record.createdAt ?? ""),
+    resolvedAt: record.resolvedAt ? String(record.resolvedAt) : null,
   };
 }
 
@@ -409,6 +496,135 @@ export class CloudApi {
       openings: Number(record.openings ?? 0),
       nextPackAt: record.next_pack_at ? String(record.next_pack_at) : null,
     };
+  }
+
+  // ---------------------------------------------------------------- échanges
+
+  /**
+   * Cherche un joueur par son pseudo (2 caractères minimum, hors soi-même).
+   *
+   * Réservé au serveur : la fonction ne renvoie que pseudo, niveau et nombre de
+   * créateurs uniques — jamais les collections, qui restent privées.
+   */
+  async searchPlayers(query: string): Promise<PlayerSearchResult[]> {
+    const result = await this.rpc("search_players", { p_query: query });
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const record = asRecord(raw);
+      const userId = record?.userId;
+      if (typeof userId !== "string" || !userId) return [];
+      return [
+        {
+          userId,
+          displayName: typeof record?.displayName === "string" ? record.displayName : "Collectionneur",
+          level: Number(record?.level ?? 1),
+          uniqueCreators: Number(record?.uniqueCreators ?? 0),
+        },
+      ];
+    });
+  }
+
+  /**
+   * Variantes qu'un joueur possède pour un créateur donné.
+   *
+   * La collection des autres reste privée : la réponse ne concerne qu'un seul
+   * créateur, et ne dit que les variantes (jamais les comptes). Sert à formuler
+   * une offre qui a une chance d'aboutir.
+   */
+  async playerVariants(userId: string, slug: string): Promise<string[]> {
+    const result = await this.rpc("player_variants", { p_user: userId, p_slug: slug });
+    return Array.isArray(result) ? result.map(String) : [];
+  }
+
+  /**
+   * Propose un échange : `given` (ce que j'offre) contre `wanted` (ce que je
+   * demande). Le serveur recopie la rareté depuis le catalogue et vérifie que je
+   * possède bien ce que j'offre, sur ma **sauvegarde cloud**.
+   *
+   * `recipientMissing` renseigne une carte que le destinataire ne possède pas
+   * (d'après sa dernière sauvegarde) : l'offre part quand même, l'appareil
+   * prévient le joueur qu'elle restera sans doute sans réponse.
+   */
+  async createTrade(
+    recipientId: string,
+    given: Array<{ creatorSlug: string; variant: string }>,
+    wanted: Array<{ creatorSlug: string; variant: string }>,
+  ): Promise<{ trade: Trade; recipientMissing: TradeCard | null }> {
+    const result = await this.rpc("create_trade", {
+      p_recipient: recipientId,
+      p_given: given,
+      p_wanted: wanted,
+    });
+    const record = asRecord(result);
+    const trade = parseTrade(record?.trade);
+    if (!trade) throw new CloudError("Réponse d'échange illisible.", "invalid_response", 0);
+    return { trade, recipientMissing: parseTradeCard(record?.recipientMissing) };
+  }
+
+  /**
+   * Répond à une offre reçue. Accepter déplace les cartes des **deux** côtés
+   * dans la même transaction : le serveur ne croit ni l'un ni l'autre sur
+   * parole, il relit les deux collections avant de bouger quoi que ce soit.
+   *
+   * `given` / `received` sont renvoyés du point de vue de l'appelant, pour que
+   * l'appareil applique exactement le même changement à sa partie locale.
+   */
+  async respondTrade(
+    tradeId: number,
+    accept: boolean,
+  ): Promise<{ status: TradeStatus; trade: Trade; given: TradeCard[]; received: TradeCard[] }> {
+    const result = await this.rpc("respond_trade", { p_trade: tradeId, p_accept: accept });
+    const record = asRecord(result);
+    const trade = parseTrade(record?.trade);
+    if (!trade) throw new CloudError("Réponse d'échange illisible.", "invalid_response", 0);
+    return {
+      status: trade.status,
+      trade,
+      given: parseTradeCards(record?.given),
+      received: parseTradeCards(record?.received),
+    };
+  }
+
+  /** Retire une offre encore en attente (seul le proposeur peut l'annuler). */
+  async cancelTrade(tradeId: number): Promise<Trade> {
+    const result = await this.rpc("cancel_trade", { p_trade: tradeId });
+    const trade = parseTrade(result);
+    if (!trade) throw new CloudError("Réponse d'échange illisible.", "invalid_response", 0);
+    return trade;
+  }
+
+  /**
+   * Offres du joueur : reçues et envoyées, en attente d'abord.
+   *
+   * L'appareil s'en sert aussi pour appliquer une offre acceptée pendant qu'il
+   * était ailleurs : les cartes sont déjà écrites côté serveur, la partie locale
+   * se réaligne dessus (`applyTradeResult`).
+   */
+  async listTrades(): Promise<TradeListItem[]> {
+    const result = await this.rpc("list_trades", {});
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const record = asRecord(raw);
+      const id = Number(record?.id);
+      const partnerId = record?.partnerId;
+      if (!Number.isFinite(id) || typeof partnerId !== "string") return [];
+      const status = record?.status;
+      return [
+        {
+          id,
+          direction: record?.direction === "out" ? "out" : "in",
+          status: (status === "accepted" || status === "declined" || status === "cancelled"
+            ? status
+            : "open") as TradeStatus,
+          partnerId,
+          partnerName: typeof record?.partnerName === "string" ? record.partnerName : "Collectionneur",
+          given: parseTradeCards(record?.given),
+          received: parseTradeCards(record?.received),
+          createdAt: String(record?.createdAt ?? ""),
+          resolvedAt: record?.resolvedAt ? String(record.resolvedAt) : null,
+        },
+      ];
+    });
   }
 
   // ------------------------------------------------------------------ saves

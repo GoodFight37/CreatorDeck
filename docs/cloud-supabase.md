@@ -1,4 +1,4 @@
-# Compte, sauvegarde cloud, vitrine et classement (Supabase)
+# Compte, sauvegarde cloud, vitrine, classement et échanges (Supabase)
 
 CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
 `localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
@@ -11,7 +11,9 @@ ajoute cinq choses, et rien de plus :
 3. **une vitrine publique** de quatre cartes épinglées sur le profil ;
 4. **un classement mondial** calculé par le serveur ;
 5. **le tirage des boosters** décidé par le serveur (les cartes sont
-   infalsifiables, prérequis des échanges).
+   infalsifiables, prérequis des échanges) ;
+6. **les échanges de cartes** entre joueurs, tranchés par le serveur (les deux
+   collections changent ensemble, ou aucune des deux).
 
 Tout le reste continue de fonctionner hors ligne, y compris si le projet
 Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
@@ -33,6 +35,8 @@ les saisons restent jouables hors ligne.
 | Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
 | Contenu des boosters | **Serveur** | le tirage est décidé par la fonction `open_pack()` ; le client ne peut pas choisir ni inventer les cartes |
 | Réserve de boosters | **Serveur** | `pack_status()` à la connexion ; le client adopte le compteur et l'ancre de recharge, sans rien consommer |
+| Échanges (offres en attente, historique) | Cloud | table `trades` : lecture réservée aux deux joueurs concernés, écriture par les fonctions du serveur uniquement |
+| Cartes données et reçues | **Serveur** | déplacées par `respond_trade()` dans la même transaction ; l'appareil applique ensuite le même mouvement pour rester d'accord |
 
 Aucun mot de passe n'est stocké. Les données restent locales tant que tu ne
 crées pas de compte invité ou ne valides pas ton code ; « Déconnexion » efface
@@ -108,6 +112,10 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
    - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
      → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
      et `pack_status()`).
+   - [`supabase/migrations/0005_echanges.sql`](../supabase/migrations/0005_echanges.sql)
+     → **Run** pour activer les échanges de cartes (`create_trade()`,
+     `respond_trade()`, `cancel_trade()`, `list_trades()`, `search_players()`,
+     `player_variants()`).
 
 > **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
 > un Postgres jetable, en local, sans toucher au projet Supabase :
@@ -117,12 +125,15 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
 > npm run supabase:verify
 > ```
 >
-> Le script exécute `0003` puis `0004` pour de vrai, ouvre 240 boosters et
-> contrôle les cartes (aucun doublon, une variante « live » garantie), la
-> recharge, la reprise de l'état local et la distribution du slot garanti
-> (82 / 15 / 3 de `pull-rates.json`). Les deux dépendances ne sont **pas**
-> enregistrées dans `package.json` : elles ne servent qu'à cette vérification et
-> n'entrent ni dans l'APK ni dans la CI.
+> Le script exécute **les cinq migrations** (`0001` à `0005`) pour de vrai, dans
+> un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
+> cartes (aucun doublon, une variante « live » garantie), la recharge, la
+> reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
+> `pull-rates.json` — 400 boosters) et **les échanges joués de bout en bout**
+> avec trois joueurs : recherche, offre, refus, annulation, acceptation
+> atomique, carte disparue entre-temps, droits et lecture par un tiers. Les
+> deux dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
+> servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
    pour la voie invitée. Garde **Email** activé si tu veux aussi proposer
    l'adresse + code ; « Confirm email » reste au choix (le code à 6 chiffres
@@ -197,6 +208,11 @@ configuré.
    touche une ligne du classement pour ouvrir le profil public, avec sa vitrine
    et ses chiffres.
 
+6. dans **Échanges**, cherche un autre joueur par son pseudo (le classement en
+   fournit), choisis une de tes cartes puis une carte qu'il possède, et
+   **Proposer l'échange** ; avec un second compte, accepte l'offre : les deux
+   collections bougent, et le message confirme le troc.
+
 Ensuite, l'envoi est automatique une vingtaine de secondes après ta dernière
 action, et la ligne du profil indique l'état (« à envoyer », coche verte).
 
@@ -244,6 +260,48 @@ contenu des boosters (et donc les cartes) est décidé par le serveur. Hors
 périmètre actuel : une sauvegarde trafiquée peut encore gonfler les compteurs
 de ressources, mais pas la collection.
 
+### Les échanges sont tranchés par le serveur
+
+Un échange déplace des cartes entre **deux** collections : c'est le seul
+endroit où une erreur serait irréparable (une carte volée ou dupliquée). La
+logique vit donc entièrement dans `0005_echanges.sql` :
+
+* `public.trades` est en **lecture seule** pour les joueurs : une politique de
+  `select` limite chaque offre à ses deux participants, et il n'existe **aucune**
+  politique d'insertion, de mise à jour ou de suppression. Tous les changements
+  passent par les fonctions `security definer`, qui revérifient tout ;
+* **un client ne peut pas écrire dans la sauvegarde d'un autre joueur** : la
+  politique de `saves` ne l'autorise que sur la sienne, et `respond_trade()`
+  écrit les deux collections dans la même transaction, sous verrou
+  (`for update`, dans l'ordre des identifiants pour éviter les interblocages) ;
+* le serveur **ne croit pas le client sur la valeur des cartes** : la rareté est
+  recopiée depuis `public.creators`, et la variante doit exister au catalogue ;
+* l'acceptation vérifie que **chacun possède encore ce qu'il donne**, sur sa
+  sauvegarde cloud (jamais sur une liste envoyée par le client). Si une carte a
+  disparu entre-temps, l'exception annule tout : personne ne perd rien ;
+* les deux sauvegardes réécrites doivent rester valides (`save_problems`) :
+  sans ce contrôle, un troc pourrait faire passer un joueur en « collection non
+  vérifiée » au classement. Les statistiques sont recalculées par le trigger
+  habituel (`refresh_stats`) ;
+* un troc **ne touche ni aux points, ni à l'XP, ni au niveau, ni aux
+  boosters** : il ne fait que déplacer des cartes. Les cartes reçues portent
+  `fromTrade` (numéro de l'échange), ce qui permet au client d'appliquer le
+  mouvement **une seule fois** — même si l'appareil recharge sa partie après
+  coup ;
+* la collection des autres joueurs reste privée. Deux réponses seulement sont
+  ouvertes : la **recherche par pseudo** (nom, niveau, nombre de créateurs
+  uniques — pas les cartes) et `player_variants()`, qui dit quelles variantes
+  un joueur possède **pour un créateur donné**, afin qu'une offre puisse
+  aboutir. Jamais la collection entière, jamais les quantités.
+
+Côté app, un échange se joue en deux temps :
+
+| Moment | Ce que fait l'appareil |
+| --- | --- |
+| Proposer | envoie d'abord la partie locale au cloud (le serveur vérifie cette collection-là) ; si le cloud est plus récent, l'offre est abandonnée avec un message |
+| Accepter | envoie aussi la partie locale d'abord, puis applique le mouvement renvoyé par le serveur et pousse le résultat |
+| Consulter | `list_trades()` renvoie les offres ; un échange accepté pendant que l'appareil était ailleurs est appliqué automatiquement à la collection locale |
+
 ### Le tirage est décidé par le serveur
 
 Depuis la migration `0004_tirage.sql`, ouvrir un booster demande une
@@ -283,21 +341,23 @@ En cas de refus « aucun booster », le client relit aussitôt `pack_status()` :
 si un sablier ou une horloge locale avait gonflé la réserve affichée, le
 compteur et le compte à rebours se réalignent sur le serveur immédiatement.
 
-## 9. Suite : échanges, notifications
+## 9. Suite : notifications
 
 **Fait :** vitrine de quatre cartes et profil public consultable depuis le
 classement ; tirage des boosters côté serveur (`0004_tirage.sql`, les cartes
-sont infalsifiables).
+sont infalsifiables) ; échanges de cartes arbitrés par le serveur
+(`0005_echanges.sql`, une carte contre une carte jusqu'à trois de chaque côté).
 
 **Reste à faire, dans cet ordre :**
 
-* `supabase/migrations/0003_echanges.sql` — troc avec transaction atomique :
-  les deux collections changent ou aucune (le journal `pack_draws` permet de
-  vérifier qu'une carte échangée provient d'un tirage réel) ;
 * permettre d'attacher une adresse e-mail à un compte invité (récupération
   multi-appareil), sans rendre le SMTP obligatoire pour les comptes invités ;
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
-  brancher quand elles auront un usage produit.
+  brancher quand elles auront un usage produit — c'est ce qui rendra les offres
+  d'échange visibles sans ouvrir l'écran Compte ;
+* idées non engagées : échanges avec plusieurs partenaires à la fois (l'API SQL
+  accepte jusqu'à cinq cartes par côté, l'interface en propose trois),
+  historique complet des échanges, recherche de joueur par slug de créateur.
 
 ## 10. Dépannage
 
@@ -309,6 +369,10 @@ sont infalsifiables).
 | « Session expirée : reconnecte-toi » | jeton révoqué ou projet migré : redemande un code |
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
 | « Réseau injoignable » **dans l'APK** alors que le même appel marche dans Chrome | le WebView sert l'app depuis `https://localhost`, origine que Supabase peut refuser en CORS. Les appels passent par le client HTTP natif (`src/lib/cloud/transport.ts`, `CapacitorHttp`) depuis la PR #7 : si le message persiste, il nomme désormais l'hôte, le chemin et la cause — colle-les dans le ticket |
+| « Les échanges ne sont pas installés sur ce projet » | `0005_echanges.sql` n'a pas été collé : § 3 |
+| « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
+| « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
+| Un échange accepté n'apparaît pas tout de suite | l'appareil du proposeur s'aligne sur `list_trades()` : **Actualiser mes offres**, ou rouvre l'écran Compte |
 | « Le tirage serveur n'est pas installé sur ce projet » | `0003_catalogue.sql` et `0004_tirage.sql` ne sont pas (ou pas à jour) : § 3 |
 | « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |
 | « set-returning functions are not allowed in CASE », « BY value of FOR loop must be greater than zero » ou un `cards` NULL | `0004_tirage.sql` collé est une version antérieure : recolle le fichier (il est rejouable, `create or replace`) |

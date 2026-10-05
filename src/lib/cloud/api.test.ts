@@ -471,3 +471,166 @@ describe("tirage serveur", () => {
     expect(status.nextPackAt).toBeNull();
   });
 });
+
+describe("échanges", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  const TRADE = {
+    id: 7,
+    status: "open",
+    proposerId: SESSION_BODY.user.id,
+    recipientId: "22222222-2222-4222-8222-222222222222",
+    proposerCards: [{ creatorSlug: "ibai", rarity: "legendary", variant: "holo" }],
+    recipientCards: [{ creatorSlug: "kaicenat", rarity: "legendary", variant: "gold" }],
+    createdAt: "2026-03-01T10:00:00Z",
+    resolvedAt: null,
+  };
+
+  it("propose un échange en envoyant les cartes sans rareté inventée", async () => {
+    const { api, calls } = client(
+      () => ({ body: { trade: TRADE, recipientMissing: null } }),
+      signedIn(),
+    );
+    const result = await api.createTrade(
+      TRADE.recipientId,
+      [{ creatorSlug: "ibai", variant: "holo" }],
+      [{ creatorSlug: "kaicenat", variant: "gold" }],
+    );
+
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/create_trade");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
+      p_recipient: TRADE.recipientId,
+      p_given: [{ creatorSlug: "ibai", variant: "holo" }],
+      p_wanted: [{ creatorSlug: "kaicenat", variant: "gold" }],
+    });
+    expect(result.trade.proposerCards[0]).toEqual({ creatorSlug: "ibai", rarity: "legendary", variant: "holo" });
+    expect(result.trade.status).toBe("open");
+    expect(result.recipientMissing).toBeNull();
+  });
+
+  it("signale la carte que le destinataire ne possède pas", async () => {
+    const { api } = client(
+      () => ({ body: { trade: TRADE, recipientMissing: { creatorSlug: "kaicenat", rarity: "legendary", variant: "gold" } } }),
+      signedIn(),
+    );
+    const result = await api.createTrade(TRADE.recipientId, [{ creatorSlug: "ibai", variant: "holo" }], [{ creatorSlug: "kaicenat", variant: "gold" }]);
+    expect(result.recipientMissing?.creatorSlug).toBe("kaicenat");
+  });
+
+  it("accepte un échange et lit ce qui est donné et reçu", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          status: "accepted",
+          trade: { ...TRADE, status: "accepted", resolvedAt: "2026-03-01T10:06:00Z" },
+          given: TRADE.recipientCards,
+          received: TRADE.proposerCards,
+        },
+      }),
+      signedIn(),
+    );
+    const result = await api.respondTrade(7, true);
+
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_trade: 7, p_accept: true });
+    expect(result.status).toBe("accepted");
+    expect(result.given[0]?.creatorSlug).toBe("kaicenat");
+    expect(result.received[0]?.creatorSlug).toBe("ibai");
+  });
+
+  it("refuse une offre sans toucher aux cartes", async () => {
+    const { api, calls } = client(
+      () => ({ body: { status: "declined", trade: { ...TRADE, status: "declined" }, given: [], received: [] } }),
+      signedIn(),
+    );
+    const result = await api.respondTrade(7, false);
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_trade: 7, p_accept: false });
+    expect(result.status).toBe("declined");
+    expect(result.given).toEqual([]);
+  });
+
+  it("annule une offre en attente", async () => {
+    const { api, calls } = client(
+      () => ({ body: { ...TRADE, status: "cancelled", resolvedAt: "2026-03-01T10:07:00Z" } }),
+      signedIn(),
+    );
+    const trade = await api.cancelTrade(7);
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/cancel_trade");
+    expect(trade.status).toBe("cancelled");
+  });
+
+  it("lit la liste des offres, sens compris", async () => {
+    const { api } = client(
+      () => ({
+        body: [
+          {
+            id: 9,
+            direction: "in",
+            status: "open",
+            partnerId: TRADE.recipientId,
+            partnerName: "Bruno",
+            given: TRADE.recipientCards,
+            received: TRADE.proposerCards,
+            createdAt: "2026-03-01T10:00:00Z",
+            resolvedAt: null,
+          },
+          { id: "bizarre" },
+        ],
+      }),
+      signedIn(),
+    );
+    const list = await api.listTrades();
+    expect(list).toHaveLength(1);
+    expect(list[0]?.direction).toBe("in");
+    expect(list[0]?.partnerName).toBe("Bruno");
+    expect(list[0]?.given[0]?.variant).toBe("gold");
+  });
+
+  it("cherche un partenaire et lit les variantes qu'il possède", async () => {
+    const search = client(
+      () => ({ body: [{ userId: TRADE.recipientId, displayName: "Bruno", level: 4, uniqueCreators: 120 }] }),
+      signedIn(),
+    );
+    const players = await search.api.searchPlayers("Brun");
+    expect(search.calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/search_players");
+    expect(JSON.parse(String(search.calls[0]?.init?.body))).toEqual({ p_query: "Brun" });
+    expect(players[0]).toEqual({ userId: TRADE.recipientId, displayName: "Bruno", level: 4, uniqueCreators: 120 });
+
+    const variants = client(() => ({ body: ["standard", "holo"] }), signedIn());
+    expect(await variants.api.playerVariants(TRADE.recipientId, "ibai")).toEqual(["standard", "holo"]);
+    expect(JSON.parse(String(variants.calls[0]?.init?.body))).toEqual({
+      p_user: TRADE.recipientId,
+      p_slug: "ibai",
+    });
+  });
+
+  it("explique quoi coller quand la migration des échanges manque", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: { code: "PGRST202", message: "Could not find the function public.create_trade" },
+      }),
+      signedIn(),
+    );
+    await expect(api.createTrade(TRADE.recipientId, [], [])).rejects.toThrow(/0005_echanges\.sql/);
+  });
+
+  it("garde le message du serveur quand il dit déjà quoi faire", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "echange : connecte-toi pour proposer un échange" } }),
+      signedIn(),
+    );
+    await expect(api.createTrade(TRADE.recipientId, [], [])).rejects.toThrow(/connecte-toi pour proposer un échange/);
+  });
+
+  it("refuse d'échanger sans session", async () => {
+    const { api } = client(() => ({ body: {} }));
+    await expect(api.listTrades()).rejects.toThrow(/Connecte-toi/);
+  });
+});

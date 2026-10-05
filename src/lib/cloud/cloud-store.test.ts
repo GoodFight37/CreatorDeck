@@ -1,6 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import { createInitialState, type PlayerState } from "@/lib/game-engine";
-import { CloudError, type CloudApi, type CloudSession, type LeaderboardRow, type PushSaveResult, type RemoteSaveRow } from "@/lib/cloud/api";
+import {
+  CloudError,
+  type CloudApi,
+  type CloudSession,
+  type LeaderboardRow,
+  type PushSaveResult,
+  type RemoteSaveRow,
+  type TradeListItem,
+} from "@/lib/cloud/api";
 import { AUTO_PUSH_DEBOUNCE_MS, EMPTY_CLOUD_STATE, createCloudStore } from "@/lib/cloud/cloud-store";
 import { gameStore } from "@/lib/game-store";
 import type { KeyValueStorage } from "@/lib/save-store";
@@ -27,6 +35,21 @@ function memoryStorage(): KeyValueStorage {
 
 function card(id: string, slug: string) {
   return { id, creatorSlug: slug, rarity: "common" as const, variant: "standard" as const, obtainedAt: T0, rareDrop: false };
+}
+
+function tradeItem(overrides: Partial<TradeListItem> = {}): TradeListItem {
+  return {
+    id: 3,
+    direction: "out",
+    status: "accepted",
+    partnerId: "22222222-2222-4222-8222-222222222222",
+    partnerName: "Bruno",
+    given: [{ creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" }],
+    received: [{ creatorSlug: "ibai", rarity: "legendary", variant: "gold" }],
+    createdAt: "2026-03-01T10:00:00Z",
+    resolvedAt: "2026-03-01T10:05:00Z",
+    ...overrides,
+  };
 }
 
 function saveWith(overrides: Partial<PlayerState> = {}): PlayerState {
@@ -59,6 +82,12 @@ type FakeApi = {
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
   ping: ReturnType<typeof vi.fn>;
+  searchPlayers: ReturnType<typeof vi.fn>;
+  playerVariants: ReturnType<typeof vi.fn>;
+  createTrade: ReturnType<typeof vi.fn>;
+  respondTrade: ReturnType<typeof vi.fn>;
+  cancelTrade: ReturnType<typeof vi.fn>;
+  listTrades: ReturnType<typeof vi.fn>;
 };
 
 function harness(options: {
@@ -116,6 +145,55 @@ function harness(options: {
       nextPackAt: "2026-03-01T10:30:00Z",
     })),
     ping: vi.fn(async () => ({ host: "projet.supabase.co" })),
+    searchPlayers: vi.fn(async () => [
+      { userId: "22222222-2222-4222-8222-222222222222", displayName: "Bruno", level: 4, uniqueCreators: 120 },
+    ]),
+    playerVariants: vi.fn(async () => ["standard", "gold"]),
+    createTrade: vi.fn(
+      async (
+        recipientId: string,
+        given: Array<{ creatorSlug: string; variant: string }>,
+        wanted: Array<{ creatorSlug: string; variant: string }>,
+      ) => ({
+        trade: {
+          id: 5,
+          status: "open" as const,
+          proposerId: SESSION.userId,
+          recipientId,
+          proposerCards: given.map((entry) => ({ ...entry, rarity: "legendary" })),
+          recipientCards: wanted.map((entry) => ({ ...entry, rarity: "epic" })),
+          createdAt: "2026-03-01T10:00:00Z",
+          resolvedAt: null,
+        },
+        recipientMissing: null,
+      }),
+    ),
+    respondTrade: vi.fn(async () => ({
+      status: "accepted" as const,
+      trade: {
+        id: 5,
+        status: "accepted" as const,
+        proposerId: SESSION.userId,
+        recipientId: SESSION.userId,
+        proposerCards: [{ creatorSlug: "kaicenat", rarity: "legendary", variant: "gold" }],
+        recipientCards: [{ creatorSlug: "ibai", rarity: "legendary", variant: "standard" }],
+        createdAt: "2026-03-01T10:00:00Z",
+        resolvedAt: "2026-03-01T10:05:00Z",
+      },
+      given: [{ creatorSlug: "ibai", rarity: "legendary", variant: "standard" }],
+      received: [{ creatorSlug: "kaicenat", rarity: "legendary", variant: "gold" }],
+    })),
+    cancelTrade: vi.fn(async (tradeId: number) => ({
+      id: tradeId,
+      status: "cancelled" as const,
+      proposerId: SESSION.userId,
+      recipientId: "22222222-2222-4222-8222-222222222222",
+      proposerCards: [],
+      recipientCards: [],
+      createdAt: "2026-03-01T10:00:00Z",
+      resolvedAt: "2026-03-01T10:05:00Z",
+    })),
+    listTrades: vi.fn(async () => [] as TradeListItem[]),
   };
 
   const store = createCloudStore({
@@ -469,3 +547,170 @@ describe("store cloud", () => {
 function emitPersist(state: PlayerState) {
   gameStore.replaceState(state);
 }
+
+describe("échanges côté store", () => {
+  const partnerId = "22222222-2222-4222-8222-222222222222";
+
+  it("envoie la collection avant de proposer, puis annonce l'offre", async () => {
+    const local = saveWith({ cards: [card("mine", "kaicenat")], updatedAt: T0 });
+    const { store, api } = harness({ local });
+    const outcome = await store.proposeTrade(
+      partnerId,
+      [{ creatorSlug: "kaicenat", variant: "standard" }],
+      [{ creatorSlug: "ibai", variant: "gold" }],
+    );
+
+    expect(api.pushSave).toHaveBeenCalledTimes(1);
+    // La sauvegarde part en mode « automatique » : si le cloud est plus récent,
+    // l'offre est abandonnée plutôt que d'écraser la partie d'un autre appareil.
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
+    expect(api.createTrade).toHaveBeenCalledWith(
+      partnerId,
+      [{ creatorSlug: "kaicenat", variant: "standard" }],
+      [{ creatorSlug: "ibai", variant: "gold" }],
+    );
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().message).toMatch(/Offre envoyée : KaiCenat/);
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("n'envoie pas l'offre quand la collection n'a pas pu être poussée", async () => {
+    const local = saveWith({ cards: [card("mine", "kaicenat")], updatedAt: T0 });
+    const { store, api } = harness({
+      local,
+      push: { status: "conflict", save: remoteRow(local, "2026-03-01T10:30:00Z") },
+    });
+    const outcome = await store.proposeTrade(partnerId, [{ creatorSlug: "kaicenat", variant: "standard" }], []);
+
+    expect(api.createTrade).not.toHaveBeenCalled();
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+  });
+
+  it("accepte un échange : applique les cartes localement puis pousse", async () => {
+    const local = saveWith({ cards: [card("mine", "ibai")], updatedAt: T0 });
+    const { store, api, applied, state } = harness({ local });
+    const outcome = await store.respondTrade(5, true);
+
+    expect(api.respondTrade).toHaveBeenCalledWith(5, true);
+    expect(outcome.status).toBe("done");
+    expect(applied.length).toBeGreaterThan(0);
+    // La carte donnée est partie, celle reçue est entrée avec sa marque.
+    expect(state.current.cards.map((owned) => owned.creatorSlug)).toEqual(["kaicenat"]);
+    expect(state.current.cards[0]?.fromTrade).toBe(5);
+    // Deux envois : la collection avant (pour que le serveur retire bien une
+    // carte de cette partie), l'état post-échange après.
+    expect(api.pushSave).toHaveBeenCalledTimes(2);
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
+    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/Échange accepté/);
+  });
+
+  it("n'accepte pas tant que la collection n'est pas à jour dans le cloud", async () => {
+    const local = saveWith({ cards: [card("mine", "ibai")], updatedAt: T0 });
+    const { store, api } = harness({
+      local,
+      push: { status: "conflict", save: remoteRow(local, "2026-03-01T10:30:00Z") },
+    });
+    const outcome = await store.respondTrade(5, true);
+
+    expect(api.respondTrade).not.toHaveBeenCalled();
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("refuse une offre sans toucher à la partie locale", async () => {
+    const { store, api, applied } = harness();
+    const outcome = await store.respondTrade(5, false);
+
+    expect(api.respondTrade).toHaveBeenCalledWith(5, false);
+    expect(applied).toEqual([]);
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().message).toMatch(/refusée/);
+  });
+
+  it("applique un échange accepté pendant l'absence de l'appareil", async () => {
+    const local = saveWith({ cards: [card("mine", "ibai")], updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    api.listTrades.mockResolvedValue([
+      tradeItem({ id: 8, direction: "in", given: [{ creatorSlug: "ibai", rarity: "legendary", variant: "standard" }], received: [{ creatorSlug: "kaicenat", rarity: "legendary", variant: "gold" }] }),
+      tradeItem({ id: 9, status: "open", resolvedAt: null }),
+    ]);
+
+    await store.loadTrades();
+
+    expect(store.getSnapshot().trades).toHaveLength(2);
+    expect(state.current.cards.map((owned) => owned.creatorSlug)).toEqual(["kaicenat"]);
+    expect(state.current.cards[0]?.fromTrade).toBe(8);
+    expect(api.pushSave).toHaveBeenCalled();
+    expect(store.getSnapshot().message).toMatch(/1 échange accepté/);
+  });
+
+  it("signale (sans la bricoler) une partie qui ne peut pas suivre un échange", async () => {
+    const { store, api, state } = harness({ local: saveWith({ cards: [], updatedAt: T0 }) });
+    api.listTrades.mockResolvedValue([tradeItem({ id: 8 })]);
+
+    await store.loadTrades();
+
+    expect(state.current.cards).toEqual([]);
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/Charger le cloud/);
+  });
+
+  it("annule une offre en attente", async () => {
+    const { store, api } = harness();
+    const outcome = await store.cancelTrade(5);
+
+    expect(api.cancelTrade).toHaveBeenCalledWith(5);
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().message).toMatch(/annulée/);
+  });
+
+  it("cherche un partenaire et ses variantes", async () => {
+    const { store, api } = harness();
+    const search = await store.searchPlayers("Brun");
+    expect(search.asked).toBe(true);
+    expect(search.players[0]?.displayName).toBe("Bruno");
+    expect(search.message).toBeNull();
+
+    const variants = await store.playerVariants(partnerId, "ibai");
+    expect(api.playerVariants).toHaveBeenCalledWith(partnerId, "ibai");
+    expect(variants).toEqual({ variants: ["standard", "gold"], message: null });
+  });
+
+  it("dit quand la recherche ne trouve personne", async () => {
+    const { store, api } = harness();
+    api.searchPlayers.mockResolvedValue([]);
+    const search = await store.searchPlayers("zzz");
+    expect(search.message).toMatch(/Aucun joueur/);
+    expect(search.isError).toBe(false);
+  });
+
+  it("refuse d'échanger sans compte, en expliquant quoi faire", async () => {
+    const { store, api } = harness({ signedIn: false });
+    const outcome = await store.proposeTrade(partnerId, [{ creatorSlug: "ibai", variant: "standard" }], []);
+
+    expect(outcome.status).toBe("unavailable");
+    expect(outcome.status === "unavailable" && outcome.reason).toBe("no-session");
+    expect(api.createTrade).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toMatch(/Connecte-toi pour échanger/);
+  });
+
+  it("refuse d'échanger quand le build n'a pas de cloud", async () => {
+    const { store } = harness({ configured: false });
+    const outcome = await store.cancelTrade(5);
+    expect(outcome.status === "unavailable" && outcome.reason).toBe("not-configured");
+    expect(store.getSnapshot().message).toMatch(/jouable hors ligne/);
+  });
+
+  it("remonte un refus du serveur tel quel", async () => {
+    const { store, api } = harness();
+    api.respondTrade.mockRejectedValue(new CloudError("tu ne possèdes plus ibai en gold", "P0001", 400));
+    const outcome = await store.respondTrade(5, true);
+
+    expect(outcome.status).toBe("unavailable");
+    expect(outcome.status === "unavailable" && outcome.message).toMatch(/tu ne possèdes plus/);
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+});

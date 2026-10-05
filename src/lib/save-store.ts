@@ -70,6 +70,7 @@ function sanitizeCard(value: unknown): OwnedCard | null {
   if (typeof creatorSlug !== "string" || !CREATOR_BY_SLUG.has(creatorSlug)) return null;
   if (typeof rarity !== "string" || !RARITIES.has(rarity as Rarity)) return null;
   if (typeof variant !== "string" || !VARIANTS.has(variant as CardVariant)) return null;
+  const fromTrade = value.fromTrade;
   return {
     id,
     creatorSlug,
@@ -78,6 +79,12 @@ function sanitizeCard(value: unknown): OwnedCard | null {
     obtainedAt: epochMs(value.obtainedAt, 0),
     // Champ apparu en v2 : les sauvegardes v1 valent « carte normale ».
     rareDrop: value.rareDrop === true,
+    // Champ apparu avec les échanges : numéro de l'échange qui a apporté la
+    // carte. **À conserver** : c'est la marque qui empêche d'appliquer deux
+    // fois le même échange (voir `applyTradeResult`).
+    ...(typeof fromTrade === "number" && Number.isFinite(fromTrade) && fromTrade > 0
+      ? { fromTrade: Math.floor(fromTrade) }
+      : {}),
   };
 }
 

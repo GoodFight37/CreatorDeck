@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PACKS } from "@/lib/catalog";
+import { CREATORS, PACKS } from "@/lib/catalog";
 import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
 import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
 import {
@@ -175,5 +175,32 @@ describe("export/import", () => {
   it("explique clairement les erreurs", () => {
     expect(() => importSave("pas du json")).toThrowError(SaveError);
     expect(() => importSave('{"version":42}')).toThrowError(/incompatible/);
+  });
+});
+
+describe("marque d'échange", () => {
+  it("conserve `fromTrade` : sans elle, un échange serait appliqué deux fois", () => {
+    const state = {
+      ...createInitialState(T0),
+      cards: [
+        {
+          id: "carte-echangee",
+          creatorSlug: CREATORS[0].slug,
+          rarity: CREATORS[0].rarity,
+          variant: "holo" as const,
+          obtainedAt: T0,
+          rareDrop: false,
+          fromTrade: 42,
+        },
+      ],
+    };
+    const storage = memoryStorage();
+    saveState(storage, state);
+    const restored = loadState(storage, T0 + 1_000);
+
+    expect(restored?.cards[0]?.fromTrade).toBe(42);
+    // Une valeur bricolée à la main ne passe pas.
+    const broken = exportSave({ ...state, cards: [{ ...state.cards[0], fromTrade: -3 }] } as typeof state);
+    expect(importSave(broken, T0).cards[0]?.fromTrade).toBeUndefined();
   });
 });

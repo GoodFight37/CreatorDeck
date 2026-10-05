@@ -10,11 +10,26 @@
  * récent, on ne remplace pas la partie locale tout seul — on le dit, et le
  * joueur décide.
  */
-import { applyPackResult, applyPackStatus, type DrawnCard, type PlayerState } from "@/lib/game-engine";
+import {
+  applyPackResult,
+  applyPackStatus,
+  applyTradeResult,
+  type DrawnCard,
+  type PlayerState,
+  type TradeCard as EngineTradeCard,
+} from "@/lib/game-engine";
 import type { KeyValueStorage } from "@/lib/save-store";
 import { sanitizeState } from "@/lib/save-store";
 import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/config";
-import { CloudApi, CloudError, type LeaderboardRow } from "@/lib/cloud/api";
+import {
+  CloudApi,
+  CloudError,
+  type LeaderboardRow,
+  type PlayerSearchResult,
+  type TradeListItem,
+} from "@/lib/cloud/api";
+import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
+import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
 import { deviceStorage } from "@/lib/storage";
@@ -51,6 +66,10 @@ export type CloudState = {
   pending: boolean;
   leaderboard: LeaderboardRow[];
   leaderboardMetric: LeaderboardMetric;
+  /** Offres d'échange du joueur, en attente d'abord (serveur = source de vérité). */
+  trades: TradeListItem[];
+  /** Horodatage local du dernier chargement des offres. */
+  tradesAt: number | null;
 };
 
 /**
@@ -69,6 +88,34 @@ export type PackOpenOutcome =
       reason: "offline" | "no-session" | "no-packs" | "not-configured" | "error";
       message: string;
     };
+
+/**
+ * Résultat d'une action d'échange.
+ *
+ * `done` : le serveur a tranché et l'appareil s'est aligné. `unavailable` :
+ * rien n'a bougé ; `reason` dit quoi corriger — `no-session`/`offline` → se
+ * connecter, `not-configured` → build sans cloud, `error` → refus du serveur
+ * (message déjà en français).
+ */
+export type TradeOutcome =
+  | { status: "done"; message: string }
+  | {
+      status: "unavailable";
+      reason: "offline" | "no-session" | "not-configured" | "error";
+      message: string;
+    };
+
+/** Réponse de la recherche de partenaires (message déjà prêt à afficher). */
+export type PlayerSearchOutcome = {
+  players: PlayerSearchResult[];
+  message: string | null;
+  isError: boolean;
+  /** Vrai si la recherche a bien été posée (et non refusée faute de compte). */
+  asked: boolean;
+};
+
+/** Carte proposée au serveur : la rareté est relue au catalogue, jamais envoyée. */
+export type TradeOfferCard = { creatorSlug: string; variant: string };
 
 export type CloudDeps = {
   config: () => CloudConfig | null;
@@ -96,6 +143,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   pending: false,
   leaderboard: [],
   leaderboardMetric: "unique_creators",
+  trades: [],
+  tradesAt: null,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -243,6 +292,93 @@ export function createCloudStore(deps: CloudDeps) {
     } catch (error) {
       fail(error, "Chargement impossible.");
     }
+  }
+
+  // ------------------------------------------------------------- échanges
+
+  /** Nom affiché du catalogue, pour écrire des messages lisibles. */
+  function creatorNames(): Map<string, string> {
+    const map = new Map<string, string>();
+    for (const [slug, creator] of CREATOR_BY_SLUG) map.set(slug, creator.displayName);
+    return map;
+  }
+
+  function asEngineCards(cards: readonly { creatorSlug: string; variant: string; rarity: string }[]): EngineTradeCard[] {
+    return cards.map((card) => ({
+      creatorSlug: card.creatorSlug,
+      variant: card.variant as CardVariant,
+      rarity: card.rarity as Rarity,
+    }));
+  }
+
+  /**
+   * Reconnaît le refus à corriger : pas de compte, réseau injoignable, cloud
+   * absent. Les autres erreurs remontent telles quelles (déjà en français).
+   */
+  function tradeRefusal(
+    error: unknown,
+    fallback: string,
+  ): Extract<TradeOutcome, { status: "unavailable" }> {
+    if (error instanceof CloudError) {
+      if (error.status === 401 || error.status === 403 || error.code === "no_session") {
+        return { status: "unavailable", reason: "no-session", message: error.message };
+      }
+      if (error.status === 0) return { status: "unavailable", reason: "offline", message: error.message };
+      return { status: "unavailable", reason: "error", message: error.message };
+    }
+    const message = error instanceof Error ? error.message : fallback;
+    return { status: "unavailable", reason: "error", message };
+  }
+
+  /** Refus immédiat quand le cloud n'est pas configuré ou qu'aucun compte n'est connecté. */
+  function tradeApi(): { api: CloudApi } | { refusal: Extract<TradeOutcome, { status: "unavailable" }> } {
+    const api = resolve();
+    if (!api) {
+      publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
+      return { refusal: { status: "unavailable", reason: "not-configured", message: CLOUD_DISABLED_HINT } };
+    }
+    if (!api.session()) {
+      const message = "Connecte-toi pour échanger des cartes.";
+      publish({ busy: false, message, isError: true });
+      return { refusal: { status: "unavailable", reason: "no-session", message } };
+    }
+    return { api };
+  }
+
+  /**
+   * Relit les offres et applique ce que le serveur a déjà tranché.
+   *
+   * Sert après chaque action, et à l'ouverture de l'écran. Les échanges
+   * acceptés pendant que cet appareil était ailleurs entrent dans la partie
+   * locale sans passer par un « Charger le cloud » manuel.
+   */
+  async function refreshTrades(
+    api: CloudApi,
+    prefix = "",
+  ): Promise<{ list: TradeListItem[]; applied: number; blocked: number }> {
+    const list = await api.listTrades();
+    const local = deps.readState();
+    let applied = 0;
+    let blocked = 0;
+    if (local) {
+      const result = applyAcceptedTrades(local, list, deps.now());
+      applied = result.applied;
+      blocked = result.blocked.length;
+      if (applied > 0) {
+        deps.applyState(result.state);
+        await push(result.state.version, result.state.updatedAt, true);
+      }
+    }
+    publish({ trades: list, tradesAt: deps.now(), busy: false });
+    if (blocked > 0) {
+      publish({
+        message: `${prefix}Un échange accepté doit être chargé depuis le cloud : une carte de cette partie a changé d'appareil (Compte → « Charger le cloud »).`,
+        isError: true,
+      });
+    } else if (applied > 0) {
+      publish({ message: `${prefix}${applied} échange${applied > 1 ? "s" : ""} accepté${applied > 1 ? "s" : ""} appliqué${applied > 1 ? "s" : ""} à ta collection.`, isError: false });
+    }
+    return { list, applied, blocked };
   }
 
   /**
@@ -530,6 +666,214 @@ export function createCloudStore(deps: CloudDeps) {
      * partie locale (`applyPackStatus`) : la recharge passive repart de la
      * même ancre que le serveur.
      */
+    /**
+     * Cherche un partenaire par son pseudo (2 caractères minimum).
+     *
+     * Ne renvoie que pseudo, niveau et nombre de créateurs uniques : les
+     * collections des autres joueurs restent privées. Le message est déjà prêt
+     * à afficher, y compris quand il n'y a aucun résultat.
+     */
+    async searchPlayers(query: string): Promise<PlayerSearchOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) {
+        return { players: [], message: ready.refusal.message, isError: true, asked: false };
+      }
+      try {
+        const players = await ready.api.searchPlayers(query);
+        return {
+          players,
+          message: players.length ? null : "Aucun joueur ne correspond à ce pseudo.",
+          isError: false,
+          asked: true,
+        };
+      } catch (error) {
+        const refusal = tradeRefusal(error, "Recherche impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { players: [], message: refusal.message, isError: true, asked: true };
+      }
+    },
+
+    /**
+     * Variantes que le partenaire possède pour un créateur.
+     *
+     * Appel ciblé, silencieux à l'échelle du store : l'interface s'en sert pour
+     * n'afficher que des cartes réellement disponibles.
+     */
+    async playerVariants(userId: string, slug: string): Promise<{ variants: string[]; message: string | null }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { variants: [], message: ready.refusal.message };
+      try {
+        return { variants: await ready.api.playerVariants(userId, slug), message: null };
+      } catch (error) {
+        return { variants: [], message: tradeRefusal(error, "Lecture des variantes impossible.").message };
+      }
+    },
+
+    /**
+     * Relit les offres d'échange.
+     *
+     * C'est aussi le moment où les échanges acceptés pendant que cet appareil
+     * était ailleurs entrent dans la partie locale : le serveur les a déjà
+     * écrits, l'appareil s'aligne (voir `applyAcceptedTrades`).
+     */
+    async loadTrades(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ busy: true });
+      try {
+        const { applied, blocked } = await refreshTrades(ready.api);
+        const open = state.trades.filter((trade) => trade.status === "open");
+        // Un échange appliqué (ou bloqué) a déjà son message : on ne l'écrase
+        // pas avec le simple compte des offres en attente.
+        if (applied === 0 && blocked === 0) {
+          publish({
+            message: open.length
+              ? `${open.length} offre${open.length > 1 ? "s" : ""} en attente dans l'onglet Échanges.`
+              : "Aucune offre en attente.",
+            isError: false,
+          });
+        }
+      } catch (error) {
+        fail(error, "Chargement des échanges impossible.");
+      }
+    },
+
+    /**
+     * Propose un échange : `given` contre `wanted`.
+     *
+     * Deux précautions avant d'envoyer l'offre :
+     *   1. la partie locale est poussée d'abord — le serveur vérifie les cartes
+     *      offertes sur la **sauvegarde cloud**, jamais sur une liste envoyée
+     *      par le client ;
+     *   2. si le cloud est plus récent (autre appareil, échange accepté), on
+     *      n'écrase rien : le joueur synchronise et recommence.
+     */
+    async proposeTrade(
+      recipientId: string,
+      given: readonly TradeOfferCard[],
+      wanted: readonly TradeOfferCard[],
+    ): Promise<TradeOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      const local = deps.readState();
+      if (!local) {
+        const message = "Partie locale illisible : rien n'a été proposé.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true });
+      try {
+        await push(local.version, local.updatedAt, false);
+        if (state.pending) {
+          const message =
+            "Ta collection doit d'abord être envoyée au cloud (Compte → Synchroniser) : sans elle, le serveur ne peut pas vérifier tes cartes.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "error", message };
+        }
+        const result = await ready.api.createTrade(recipientId, [...given], [...wanted]);
+        const names = creatorNames();
+        await refreshTrades(ready.api);
+        const warning = result.recipientMissing
+          ? ` Attention : ce joueur ne possède plus ${describeCards([result.recipientMissing], names)} — l'offre restera probablement sans réponse.`
+          : "";
+        const message = `Offre envoyée : ${describeCards(result.trade.proposerCards, names)} contre ${describeCards(result.trade.recipientCards, names)}.${warning}`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = tradeRefusal(error, "Proposition impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Répond à une offre reçue.
+     *
+     * Accepter fait déplacer les cartes des **deux** côtés par le serveur, puis
+     * l'appareil applique le même mouvement à sa partie locale et la pousse :
+     * le classeur et le cloud restent d'accord.
+     */
+    async respondTrade(tradeId: number, accept: boolean): Promise<TradeOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      const local = deps.readState();
+      publish({ busy: true });
+      try {
+        if (accept && local) {
+          // Le serveur retire les cartes de la collection **du cloud** : on
+          // envoie d'abord la partie locale, sinon il retirerait une carte que
+          // cet appareil n'a pas (ou l'inverse) et le troc ne pourrait pas
+          // s'appliquer ici. Refus explicite plutôt qu'application bancale.
+          await push(local.version, local.updatedAt, false);
+          if (state.pending) {
+            const message =
+              "Synchronise d'abord ta collection (Compte → Synchroniser) : l'échange a besoin de la collection du cloud à jour.";
+            publish({ busy: false, message, isError: true });
+            return { status: "unavailable", reason: "error", message };
+          }
+        }
+        const result = await ready.api.respondTrade(tradeId, accept);
+        const names = creatorNames();
+        if (!accept) {
+          await refreshTrades(ready.api);
+          const message = "Offre refusée : aucune carte n'a bougé.";
+          publish({ busy: false, message, isError: false });
+          return { status: "done", message };
+        }
+
+        if (local) {
+          let next: PlayerState;
+          try {
+            next = applyTradeResult(
+              local,
+              {
+                tradeId,
+                given: asEngineCards(result.given),
+                received: asEngineCards(result.received),
+              },
+              deps.now(),
+            );
+          } catch {
+            await refreshTrades(ready.api).catch(() => undefined);
+            const message =
+              "Échange accepté côté serveur, mais cette partie ne contient plus la carte donnée : « Charger le cloud » (Compte) reprend la collection à jour.";
+            publish({ busy: false, message, isError: true });
+            return { status: "unavailable", reason: "error", message };
+          }
+          if (next !== local) {
+            deps.applyState(next);
+            await push(next.version, next.updatedAt, true);
+          }
+        }
+        await refreshTrades(ready.api);
+        const message = `Échange accepté : ${describeCards(result.received, names)} reçu${result.received.length > 1 ? "s" : ""}, ${describeCards(result.given, names)} donné${result.given.length > 1 ? "s" : ""}.`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = tradeRefusal(error, "Réponse impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /** Retire une offre encore en attente (seul le proposeur peut l'annuler). */
+    async cancelTrade(tradeId: number): Promise<TradeOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      publish({ busy: true });
+      try {
+        await ready.api.cancelTrade(tradeId);
+        await refreshTrades(ready.api);
+        const message = "Offre annulée : tes cartes restent dans ta collection.";
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = tradeRefusal(error, "Annulation impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
     packStatus: fetchPackStatus,
 
     async signOut(): Promise<void> {

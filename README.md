@@ -63,7 +63,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0004)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0005)
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
@@ -239,12 +239,13 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 ## Compte, cloud et classement (facultatif)
 
 L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute cinq choses :
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute six choses :
 un compte (invité par défaut, e-mail + code à 6 chiffres en option), la
 sauvegarde pour retrouver sa partie sur un autre appareil, une vitrine de quatre
 cartes sur le profil public, un classement mondial recalculé par le serveur,
-et le **tirage des boosters décidé par le serveur** (les cartes sont
-infalsifiables, prérequis des échanges).
+le **tirage des boosters décidé par le serveur** (les cartes sont
+infalsifiables, prérequis des échanges) et les **échanges de cartes** entre
+joueurs.
 Marche à suivre : **`docs/cloud-supabase.md`**.
 
 ### Le tirage est décidé par le serveur
@@ -265,6 +266,23 @@ Hors périmètre (volontaire) : les points, l'XP et le niveau restent calculés
 sur l'appareil ; seul le contenu des boosters (et donc les cartes) devient
 serveur.
 
+### Les échanges sont tranchés par le serveur
+
+Profil → **Échanges** : cherche un joueur par son pseudo, choisis une de tes
+cartes et une carte qu'il possède (l'app demande au serveur les variantes qu'il
+a pour ce créateur), puis propose. Une carte contre une carte, jusqu'à trois de
+chaque côté.
+
+Rien de tout cela n'est décidé par les téléphones : `respond_trade()`
+(`supabase/migrations/0005_echanges.sql`) relit les deux collections, retire les
+cartes données et ajoute les cartes reçues **dans la même transaction**, sous
+verrou. Si une carte a disparu entre-temps, l'exception annule tout : personne
+ne perd rien. Les points, l'XP, le niveau et les boosters ne bougent pas — un
+troc ne fait que déplacer des cartes, et les cartes reçues portent un numéro
+d'échange qui empêche de l'appliquer deux fois. La collection des autres joueurs
+reste privée : le serveur ne dit que les variantes possédées d'un créateur
+donné, jamais la collection entière.
+
 - Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
   aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
   6 chiffres** (récupérable ailleurs, mais il faut brancher un SMTP : le service
@@ -279,6 +297,9 @@ serveur.
     au joueur) sous forme de fonctions pures, testées ;
   - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
     ~20 s après la dernière action quand un compte est connecté ;
+  - `trades.ts` applique aux parties locales les échanges acceptés (fonctions
+    pures, testées) — un troc accepté pendant que l'appareil était ailleurs
+    entre dans la collection au chargement suivant ;
   - `transport.ts` envoie les appels par le client HTTP natif dans l'APK
     (le WebView sert l'app depuis `https://localhost`, origine que Supabase peut
     refuser en CORS) et par `fetch` dans le navigateur.
@@ -295,6 +316,10 @@ serveur.
   seule pour les clients. `supabase/migrations/0004_tirage.sql`
   ajoute `open_pack()` et `pack_status()` : le tirage des boosters est décidé
   par le serveur, les cartes sont infalsifiables.
+  `supabase/migrations/0005_echanges.sql` ajoute la table `trades` (lecture
+  réservée aux deux joueurs concernés, **aucune** écriture directe possible) et
+  les fonctions d'échange : `search_players()`, `player_variants()`,
+  `create_trade()`, `respond_trade()`, `cancel_trade()`, `list_trades()`.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

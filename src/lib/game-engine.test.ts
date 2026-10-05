@@ -10,6 +10,7 @@ import {
   XP_PER_LEVEL,
   applyPackResult,
   applyPackStatus,
+  applyTradeResult,
   claimSeason,
   craftCreator,
   createInitialState,
@@ -594,5 +595,127 @@ describe("saisons", () => {
     const claimedTwice = claimSeason(further, season.id, T0);
     expect(claimedTwice.points).toBe(first.reward.points + second.reward.points);
     expect(claimedTwice.claimedTiers[season.id]).toBe(2);
+  });
+});
+
+describe("échanges", () => {
+  const legendary = CREATORS.find((creator) => creator.rarity === "legendary") as (typeof CREATORS)[number];
+  const epic = CREATORS.find((creator) => creator.rarity === "epic") as (typeof CREATORS)[number];
+
+  it("retire la copie la plus ancienne et ajoute la carte reçue", () => {
+    const state = makeState({
+      cards: [
+        ownedCard("recent", legendary.slug, "legendary", "holo", T0 + 5_000),
+        ownedCard("vieux", legendary.slug, "legendary", "holo", T0),
+        ownedCard("autre", epic.slug, "epic", "standard", T0),
+      ],
+      points: 120,
+      xp: 40,
+    });
+
+    const moved = applyTradeResult(
+      state,
+      {
+        tradeId: 7,
+        given: [{ creatorSlug: legendary.slug, rarity: "legendary", variant: "holo" }],
+        received: [{ creatorSlug: epic.slug, rarity: "epic", variant: "gold" }],
+      },
+      T0 + 60_000,
+    );
+
+    expect(moved.cards.map((card) => card.id)).toEqual(["recent", "autre", expect.any(String)]);
+    const received = moved.cards.find((card) => card.variant === "gold");
+    expect(received?.creatorSlug).toBe(epic.slug);
+    expect(received?.obtainedAt).toBe(T0 + 60_000);
+    expect(received?.fromTrade).toBe(7);
+    // Même `rareDrop` que le serveur : une carte d'échange n'est pas un « Perfect ».
+    expect(received?.rareDrop).toBe(false);
+    expect(moved.updatedAt).toBe(T0 + 60_000);
+    // Un troc ne fait que déplacer des cartes.
+    expect(moved.points).toBe(state.points);
+    expect(moved.xp).toBe(state.xp);
+    expect(moved.level).toBe(state.level);
+    expect(moved.packs).toBe(state.packs);
+  });
+
+  it("est idempotent : un échange déjà appliqué ne recommence pas", () => {
+    const state = makeState({
+      cards: [ownedCard("mine", epic.slug, "epic", "standard", T0)],
+    });
+    const move = {
+      tradeId: 11,
+      given: [{ creatorSlug: epic.slug, rarity: "epic" as const, variant: "standard" as const }],
+      received: [{ creatorSlug: legendary.slug, rarity: "legendary" as const, variant: "live" as const }],
+    };
+
+    const once = applyTradeResult(state, move, T0 + 1_000);
+    expect(once.cards).toHaveLength(1);
+    expect(applyTradeResult(once, move, T0 + 2_000)).toBe(once);
+
+    // La carte reçue est une carte comme une autre : elle peut repartir dans un
+    // autre échange (et ce nouvel échange, lui, s'applique bien).
+    const again = applyTradeResult(
+      once,
+      {
+        tradeId: 12,
+        given: [{ creatorSlug: legendary.slug, rarity: "legendary", variant: "live" }],
+        received: [{ creatorSlug: epic.slug, rarity: "epic", variant: "holo" }],
+      },
+      T0 + 3_000,
+    );
+    expect(again.cards.map((card) => card.fromTrade)).toEqual([12]);
+  });
+
+  it("refuse si la carte donnée n'est plus dans la collection", () => {
+    const state = makeState({ cards: [ownedCard("mine", epic.slug, "epic", "standard", T0)] });
+    expect(() =>
+      applyTradeResult(
+        state,
+        {
+          tradeId: 3,
+          given: [{ creatorSlug: legendary.slug, rarity: "legendary", variant: "gold" }],
+          received: [],
+        },
+        T0,
+      ),
+    ).toThrowError(/n'est plus dans ta collection/);
+    // Et une variante différente ne compte pas comme la bonne carte.
+    expect(() =>
+      applyTradeResult(
+        state,
+        {
+          tradeId: 4,
+          given: [{ creatorSlug: epic.slug, rarity: "epic", variant: "holo" }],
+          received: [],
+        },
+        T0,
+      ),
+    ).toThrowError(GameError);
+  });
+
+  it("accepte un échange où l'on donne et reçoit plusieurs cartes", () => {
+    const state = makeState({
+      cards: [
+        ownedCard("a", legendary.slug, "legendary", "standard", T0),
+        ownedCard("b", epic.slug, "epic", "holo", T0),
+      ],
+    });
+    const moved = applyTradeResult(
+      state,
+      {
+        tradeId: 21,
+        given: [
+          { creatorSlug: legendary.slug, rarity: "legendary", variant: "standard" },
+          { creatorSlug: epic.slug, rarity: "epic", variant: "holo" },
+        ],
+        received: [
+          { creatorSlug: epic.slug, rarity: "epic", variant: "gold" },
+          { creatorSlug: legendary.slug, rarity: "legendary", variant: "holo" },
+        ],
+      },
+      T0 + 5_000,
+    );
+    expect(moved.cards).toHaveLength(2);
+    expect(moved.cards.every((card) => card.fromTrade === 21)).toBe(true);
   });
 });
