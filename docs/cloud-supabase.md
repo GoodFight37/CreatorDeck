@@ -108,6 +108,21 @@ fera quand un SMTP existera — c'est prévu côté Supabase (`PUT /auth/v1/user
    - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
      → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
      et `pack_status()`).
+
+> **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
+> un Postgres jetable, en local, sans toucher au projet Supabase :
+>
+> ```powershell
+> npm install --no-save embedded-postgres pg
+> npm run supabase:verify
+> ```
+>
+> Le script exécute `0003` puis `0004` pour de vrai, ouvre 240 boosters et
+> contrôle les cartes (aucun doublon, une variante « live » garantie), la
+> recharge, la reprise de l'état local et la distribution du slot garanti
+> (82 / 15 / 3 de `pull-rates.json`). Les deux dépendances ne sont **pas**
+> enregistrées dans `package.json` : elles ne servent qu'à cette vérification et
+> n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
    pour la voie invitée. Garde **Email** activé si tu veux aussi proposer
    l'adresse + code ; « Confirm email » reste au choix (le code à 6 chiffres
@@ -294,6 +309,7 @@ sont infalsifiables).
 | « Session expirée : reconnecte-toi » | jeton révoqué ou projet migré : redemande un code |
 | « Réseau injoignable » | hors ligne : la partie locale continue, l'envoi reprendra |
 | « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |
+| « set-returning functions are not allowed in CASE », « BY value of FOR loop must be greater than zero » ou un `cards` NULL | `0004_tirage.sql` collé est une version antérieure : recolle le fichier (il est rejouable, `create or replace`) |
 | « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
 | « Les comptes invités sont désactivés » | Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** |
 | « Le service d'e-mail par défaut n'écrit qu'aux adresses de l'équipe » | normal : branche un SMTP, ou passe par un compte invité |

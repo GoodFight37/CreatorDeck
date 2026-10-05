@@ -142,16 +142,13 @@ begin
   end if;
 
   -- Tri par ordre de rareté (du plus commun au plus rare) : même parcours
-  -- que le moteur local (RARITY_META.order).
+  -- que le moteur local (RARITY_META.order). `array_position` plutôt qu'un
+  -- CASE : Postgres interdit une fonction d'ensemble (`unnest`) dans un CASE
+  -- (« set-returning functions are not allowed in CASE »).
   for v_rarity in
-    select unnest(v_available_rarities)
-    order by case unnest(v_available_rarities)
-      when 'common' then 1
-      when 'uncommon' then 2
-      when 'rare' then 3
-      when 'epic' then 4
-      when 'legendary' then 5
-    end
+    select r
+      from unnest(v_available_rarities) as r
+     order by array_position(array['common','uncommon','rare','epic','legendary'], r)
   loop
     v_weight := coalesce((p_weights ->> v_rarity)::integer, 0);
     v_total := v_total + v_weight;
@@ -160,14 +157,9 @@ begin
   v_roll := public._pack_random_int(v_total);
 
   for v_rarity in
-    select unnest(v_available_rarities)
-    order by case unnest(v_available_rarities)
-      when 'common' then 1
-      when 'uncommon' then 2
-      when 'rare' then 3
-      when 'epic' then 4
-      when 'legendary' then 5
-    end
+    select r
+      from unnest(v_available_rarities) as r
+     order by array_position(array['common','uncommon','rare','epic','legendary'], r)
   loop
     v_weight := coalesce((p_weights ->> v_rarity)::integer, 0);
     if v_roll < v_weight then
@@ -325,7 +317,7 @@ declare
   v_slug text;
   v_rarity text;
   v_variant text;
-  v_drawn jsonb[];
+  v_drawn jsonb[] := '{}';
   v_i integer;
   v_swap integer;
   v_tmp jsonb;
@@ -463,8 +455,15 @@ begin
   -- ------------------------------------------------------------------
   -- Mélange Fisher-Yates des 5 cartes (identique au moteur local).
   -- ------------------------------------------------------------------
-  for v_i in array_length(v_drawn, 1) .. 2 by -1 loop
-    v_swap := public._pack_random_int(v_i + 1);
+  -- `reverse` et non `by -1` : en PL/pgSQL, le pas d'une boucle entière doit
+  -- être positif, le sens vient du mot-clé REVERSE.
+  --
+  -- Indice tiré dans [0, v_i-1] puis décalé de 1 : la position visée reste
+  -- toujours ≤ v_i. Tirer directement dans [0, v_i] pouvait viser une case
+  -- au-delà du tableau — Postgres l'étend alors avec un NULL, qui remonte
+  -- jusqu'au journal (`cards` NULL) et fait échouer l'ouverture.
+  for v_i in reverse array_length(v_drawn, 1) .. 2 loop
+    v_swap := public._pack_random_int(v_i);
     v_tmp := v_drawn[v_i];
     v_drawn[v_i] := v_drawn[v_swap + 1];
     v_drawn[v_swap + 1] := v_tmp;
