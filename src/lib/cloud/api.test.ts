@@ -396,6 +396,22 @@ describe("tirage serveur", () => {
     expect(status.nextPackAt).toBe("2026-01-01T12:30:00Z");
   });
 
+  it("traduit une coupure réseau en phrase française, sans repli local", async () => {
+    const { api } = client(() => {
+      throw new TypeError("fetch failed");
+    }, signedIn());
+    await expect(api.openPack()).rejects.toThrowError(/Réseau injoignable/);
+    await expect(api.packStatus()).rejects.toThrowError(/Réseau injoignable/);
+  });
+
+  it("refuse un serveur qui répond autre chose que le tirage attendu", async () => {
+    const { api } = client(() => ({ body: { packs: 2, cards: "pas un tableau" } }), signedIn());
+    const result = await api.openPack();
+    // Un `cards` illisible ne fabrique pas de cartes : liste vide, compteurs lus.
+    expect(result.cards).toEqual([]);
+    expect(result.packs).toBe(2);
+  });
+
   it("renvoie next_pack_at=null quand la réserve est pleine", async () => {
     const { api } = client(
       () => ({

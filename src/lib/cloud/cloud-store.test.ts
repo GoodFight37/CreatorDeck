@@ -338,11 +338,17 @@ describe("store cloud", () => {
   });
 
   it("ouvre un booster côté serveur et pousse immédiatement la partie", async () => {
-    const { store, api } = harness({ signedIn: true });
+    const { store, api, applied } = harness({ signedIn: true });
     store.subscribe(() => {});
-    const count = await store.openPack();
-    expect(count).toBe(5);
+    const outcome = await store.openPack();
+    expect(outcome.status).toBe("drawn");
+    if (outcome.status !== "drawn") throw new Error("tirage attendu");
+    expect(outcome.cards).toHaveLength(5);
     expect(api.openPack).toHaveBeenCalled();
+    // Les cartes et les compteurs du serveur entrent dans la partie locale.
+    expect(applied.at(-1)?.cards).toHaveLength(5);
+    expect(applied.at(-1)?.packs).toBe(2);
+    expect(applied.at(-1)?.openings).toBe(4);
     // Après le tirage, la sauvegarde est poussée immédiatement (pas de debounce).
     expect(api.pushSave).toHaveBeenCalled();
     const snapshot = store.getSnapshot();
@@ -350,29 +356,72 @@ describe("store cloud", () => {
     expect(snapshot.isError).toBe(false);
   });
 
-  it("échoue proprement quand le serveur refuse le tirage", async () => {
+  it("explique qu'il faut le serveur quand le réseau est coupé (pas de repli local)", async () => {
     const { store, api } = harness({ signedIn: true });
     store.subscribe(() => {});
-    api.openPack.mockRejectedValueOnce(new CloudError("Aucun booster disponible.", "no_packs", 400));
-    const count = await store.openPack();
-    expect(count).toBe(0);
+    api.openPack.mockRejectedValueOnce(
+      new CloudError("Réseau injoignable : vérifie ta connexion, ta partie locale est intacte.", "network_error", 0),
+    );
+    const outcome = await store.openPack();
+    expect(outcome).toMatchObject({
+      status: "unavailable",
+      reason: "offline",
+      message: "Connecte-toi pour ouvrir un booster.",
+    });
     expect(store.getSnapshot().isError).toBe(true);
+    // Rien n'a été poussé : aucun tirage n'a eu lieu.
+    expect(api.pushSave).not.toHaveBeenCalled();
+  });
+
+  it("réaligne la réserve quand le serveur refuse faute de booster", async () => {
+    // Réserve locale désynchronisée (sablier, horloge) : le refus du serveur
+    // doit corriger l'affichage tout de suite.
+    const { store, api, applied } = harness({ signedIn: true, local: saveWith({ packs: 1 }) });
+    store.subscribe(() => {});
+    api.openPack.mockRejectedValueOnce(
+      new CloudError("Aucun booster disponible pour le moment : rouvre quand le compte à rebours est fini.", "P0001", 400),
+    );
+    const outcome = await store.openPack();
+    expect(outcome).toMatchObject({ status: "unavailable", reason: "no-packs" });
+    expect(store.getSnapshot().isError).toBe(true);
+    // La réserve est relue (sans rien consommer) pour corriger l'affichage.
+    expect(api.packStatus).toHaveBeenCalled();
+    expect(applied.at(-1)?.packs).toBe(3);
   });
 
   it("refuse sans session connectée", async () => {
-    const { store } = harness({ signedIn: false });
+    const { store, api } = harness({ signedIn: false });
     store.subscribe(() => {});
-    const count = await store.openPack();
-    expect(count).toBe(0);
+    const outcome = await store.openPack();
+    expect(outcome).toMatchObject({ status: "unavailable", reason: "no-session" });
+    expect(store.getSnapshot().message).toMatch(/Connecte-toi/);
+    expect(api.openPack).not.toHaveBeenCalled();
   });
 
-  it("lit le statut de la réserve", async () => {
-    const { store, api } = harness({ signedIn: true });
+  it("renvoie une raison dédiée quand le build n'a pas de cloud", async () => {
+    const { store, api } = harness({ configured: false, signedIn: false });
+    store.subscribe(() => {});
+    const outcome = await store.openPack();
+    expect(outcome).toMatchObject({ status: "unavailable", reason: "not-configured" });
+    expect(api.openPack).not.toHaveBeenCalled();
+  });
+
+  it("lit le statut de la réserve et l'adopte dans la partie locale", async () => {
+    const { store, api, applied } = harness({
+      signedIn: true,
+      local: saveWith({ packs: 1, lastPackRegen: T0 - 3_600_000, points: 400 }),
+    });
     store.subscribe(() => {});
     const status = await store.packStatus();
     expect(status).not.toBeNull();
     expect(status?.packs).toBe(3);
+    expect(status?.nextPackAt).toBe("2026-03-01T10:30:00Z");
     expect(api.packStatus).toHaveBeenCalled();
+    // La réserve et l'ancre du serveur remplacent les valeurs locales ;
+    // points, XP et collection ne bougent pas.
+    expect(applied.at(-1)?.packs).toBe(3);
+    expect(applied.at(-1)?.lastPackRegen).toBe(T0);
+    expect(applied.at(-1)?.points).toBe(400);
   });
 
   it("renvoie null si le statut est indisponible", async () => {

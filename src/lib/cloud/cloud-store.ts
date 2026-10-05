@@ -10,7 +10,7 @@
  * récent, on ne remplace pas la partie locale tout seul — on le dit, et le
  * joueur décide.
  */
-import type { PlayerState } from "@/lib/game-engine";
+import { applyPackResult, applyPackStatus, type DrawnCard, type PlayerState } from "@/lib/game-engine";
 import type { KeyValueStorage } from "@/lib/save-store";
 import { sanitizeState } from "@/lib/save-store";
 import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/config";
@@ -52,6 +52,23 @@ export type CloudState = {
   leaderboard: LeaderboardRow[];
   leaderboardMetric: LeaderboardMetric;
 };
+
+/**
+ * Résultat d'une demande d'ouverture côté serveur.
+ *
+ * `drawn` : le serveur a tiré les cartes, elles sont déjà dans la partie
+ * locale. `unavailable` : rien n'a été tiré ; `reason` dit quoi corriger —
+ * `offline`/`no-session` → se connecter (`offline` = cloud configuré mais
+ * réseau injoignable), `no-packs` → attendre la recharge, `not-configured` →
+ * build sans cloud, `error` → autre refus du serveur.
+ */
+export type PackOpenOutcome =
+  | { status: "drawn"; cards: DrawnCard[] }
+  | {
+      status: "unavailable";
+      reason: "offline" | "no-session" | "no-packs" | "not-configured" | "error";
+      message: string;
+    };
 
 export type CloudDeps = {
   config: () => CloudConfig | null;
@@ -228,6 +245,29 @@ export function createCloudStore(deps: CloudDeps) {
     }
   }
 
+  /**
+   * Lit la réserve côté serveur (`pack_status()`) et l'adopte dans la partie
+   * locale : compteur et compte à rebours affichés sont ceux du serveur, sans
+   * rien consommer. Silencieux en cas d'échec (hors ligne, pas de compte) :
+   * l'appelant garde alors son calcul local.
+   */
+  async function fetchPackStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
+    const api = resolve();
+    if (!api?.session()) return null;
+    try {
+      const status = await api.packStatus();
+      const local = deps.readState();
+      if (local) {
+        const adopted = applyPackStatus(local, status.packs, status.lastRegenAt, deps.now());
+        if (adopted !== local) deps.applyState(adopted);
+      }
+      return { packs: status.packs, nextPackAt: status.nextPackAt };
+    } catch {
+      // Sans réseau ou erreur : le client retombe sur le calcul local.
+      return null;
+    }
+  }
+
   return {
     subscribe(listener: () => void) {
       listeners.add(listener);
@@ -385,11 +425,22 @@ export function createCloudStore(deps: CloudDeps) {
      * des ~20 s du debounce) : les cartes sont infalsifiables, il faut les
      * inscrire dans le cloud sans délai.
      *
-     * Renvoie le nombre de cartes tirées, ou 0 si le tirage a échoué.
+     * Pas de repli silencieux : si le cloud est configuré mais injoignable (ou
+     * sans compte), on ne tire rien en local — l'écran explique qu'il faut se
+     * connecter.
      */
-    async openPack(): Promise<number> {
+    async openPack(): Promise<PackOpenOutcome> {
       const api = resolve();
-      if (!networkReady(api)) return 0;
+      if (!api) {
+        const message = CLOUD_DISABLED_HINT;
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "not-configured", message };
+      }
+      if (!api.session()) {
+        const message = "Connecte-toi pour ouvrir un booster.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "no-session", message };
+      }
       publish({ busy: true });
       try {
         const result = await api.openPack();
@@ -399,27 +450,47 @@ export function createCloudStore(deps: CloudDeps) {
           variant: card.variant as "standard" | "live" | "holo" | "gold",
           rareDrop: card.rareDrop,
         }));
-        const drawn = gameStore.applyServerPack(
+        const local = deps.readState();
+        if (!local) {
+          throw new CloudError("Partie locale illisible : rien n'a été tiré.", "invalid_response", 0);
+        }
+        const applied = applyPackResult(
+          local,
           cards,
           result.packs,
           result.lastRegenAt,
           result.openings,
+          deps.now(),
         );
-        // Pousser immédiatement la partie : les cartes du serveur doivent
-        // être inscrites dans le cloud sans attendre le debounce.
-        const local = deps.readState();
-        if (local) {
-          await push(local.version, local.updatedAt, true);
-        }
+        // Les cartes du serveur entrent dans la partie locale, puis la
+        // sauvegarde est poussée immédiatement : pas d'attente des ~20 s du
+        // debounce, les cartes infalsifiables doivent être inscrites sans délai.
+        deps.applyState(applied.state);
+        await push(applied.state.version, applied.state.updatedAt, true);
         publish({
           busy: false,
-          message: `Booster ouvert : ${drawn.length} carte${drawn.length > 1 ? "s" : ""} reçue${drawn.length > 1 ? "s" : ""}.`,
+          message: `Booster ouvert : ${applied.cards.length} carte${applied.cards.length > 1 ? "s" : ""} reçue${applied.cards.length > 1 ? "s" : ""}.`,
           isError: false,
         });
-        return drawn.length;
+        return { status: "drawn", cards: applied.cards };
       } catch (error) {
-        fail(error, "Ouverture du booster impossible.");
-        return 0;
+        // Réseau coupé : même consigne que sans compte — se connecter.
+        if (error instanceof CloudError && error.status === 0) {
+          const message = "Connecte-toi pour ouvrir un booster.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "offline", message };
+        }
+        // Le serveur a refusé faute de booster : on relit la réserve pour
+        // réaligner le compteur et le compte à rebours affichés (sans rien
+        // consommer) avant d'expliquer.
+        if (error instanceof CloudError && /aucun booster/i.test(error.message)) {
+          await fetchPackStatus();
+          publish({ busy: false, message: error.message, isError: true });
+          return { status: "unavailable", reason: "no-packs", message: error.message };
+        }
+        const message = error instanceof CloudError ? error.message : "Ouverture du booster impossible.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
       }
     },
 
@@ -427,19 +498,11 @@ export function createCloudStore(deps: CloudDeps) {
      * Statut de la réserve de boosters, calculé par le serveur.
      *
      * Le client l'appelle à la connexion pour afficher le bon compteur sans
-     * dépendre de l'horloge locale.
+     * dépendre de l'horloge locale. La réserve renvoyée est adoptée par la
+     * partie locale (`applyPackStatus`) : la recharge passive repart de la
+     * même ancre que le serveur.
      */
-    async packStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
-      const api = resolve();
-      if (!api?.session()) return null;
-      try {
-        const status = await api.packStatus();
-        return { packs: status.packs, nextPackAt: status.nextPackAt };
-      } catch {
-        // Sans réseau ou erreur : le client retombe sur le calcul local.
-        return null;
-      }
-    },
+    packStatus: fetchPackStatus,
 
     async signOut(): Promise<void> {
       const api = resolve();
