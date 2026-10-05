@@ -47,26 +47,40 @@ quand elles ne sont pas en direct** au moment de la génération : le classement
 final reste dominé par les followers réels. Un login inexistant est ignoré sans
 erreur — la liste peut vieillir sans casser le build.
 
-**Étiquette d'une tête d'affiche hors direct.** Pour une chaîne qui n'est pas en
-direct, Twitch n'expose pas ce qu'elle streame : `broadcastSettings` donne
-seulement le **dernier jeu programmé**, qui peut être périmé ou anecdotique. La
-génération appliquait ce jeu tel quel, ce qui donnait des cartes légendaires
-étiquetées « Among Us » (`ibai`), « Call of Duty: Black Ops 7 » (`thegrefg`) ou
-« Magic: The Gathering » (`coscu`) alors que ces chaînes font du talk. Depuis, la
-règle est :
+**Familles : la langue, pas le jeu.** Les chaînes sont classées par **langue de
+diffusion** (champ `region` écrit par le générateur). C'est le seul axe qui ne
+mente pas : un streameur change de jeu toutes les semaines, pas de langue, et
+Twitch ne publie de toute façon **aucune** information de jeu pour une chaîne
+hors direct. La configuration (`src/data/seasons.config.json`) déclare neuf
+familles et leurs langues :
 
-1. chaîne **en direct** → sa catégorie observée (un fait, jamais écrasé) ;
-2. hors direct, dernier jeu **modélisé par une famille** de
-   `src/data/seasons.config.json` → conservé (c'est un vrai jeu du catalogue) ;
-3. sinon → **« Variété & Live »**, le placeholder de l'application : la première
-   catégorie réellement observée le remplacera au fil des générations.
+| Famille | Langues |
+|---|---|
+| S01 France & francophonie | `fr` |
+| S02 Espagne & Amérique latine | `es` |
+| S03 Brésil & Portugal | `pt` |
+| S04 Anglophonie | `en` |
+| S05 Europe du Nord & germanique | `de`, `nl`, `sv`, `da`, `no`, `fi`, `is` |
+| S06 Europe de l'Est | `ru`, `uk`, `pl`, `cs`, etc. |
+| S07 Europe du Sud | `it`, `el`, `ca`, etc. |
+| S08 Asie | `ko`, `ja`, `zh`, `th`, `vi`, etc. |
+| S09 Moyen-Orient & Afrique | `ar`, `tr`, `fa`, etc. |
+| S10 Sans frontière | langue absente ou non listée |
 
-Aucun jeu n'est donc inventé, et une étiquette juste n'est jamais remplacée par
-du vide. La règle vit dans `scripts/lib/curated-category.mjs` et ses cas limites
-sont figés par `src/lib/curated-category.test.ts`. Effet mesuré sur le Top 1000
-mondial : **21 étiquettes** corrigées, dont 4 cartes légendaires ; « Variété &
-Live » appartenant à S01, la famille Accueil & IRL passe de 255 à 276 créateurs
-et le fourre-tout Découverte de 93 à 72.
+Comment la famille est décidée, dans l'ordre : **langue observée** en direct
+(`Stream.language`) puis, hors direct, le groupe de la tête d'affiche dans
+`CURATED_REGIONS` (les 206 logins curés sont répartis par famille), et sinon
+« Sans frontière ». La traduction langue → famille vit dans
+`scripts/lib/regions.mjs`, ses cas limites (langue absente, variante régionale,
+langue inconnue) sont figés par `src/lib/regions.test.ts`.
+
+**Étiquettes de jeu.** Elles ne sont plus déduites : la carte affiche la famille
+(stable), et le jeu n'apparaît que s'il a été **observé en direct**. Hors direct,
+l'étiquette vaut « Variété & Live » — c'est ce qui évite les cartes légendaires
+en « Among Us » (`ibai`) ou « Magic: The Gathering » (`coscu`). Si l'API Twitch
+refuse un jour le champ `language`, le générateur rejoue la requête sans lui et
+le signale : les familles retombent alors sur la liste curée, la génération
+aboutit quand même.
 
 > ⚠️ Le classement est échantillonné au moment de la génération (directs du
 > moment + listes curées). C'est une photo, pas un classement officiel : relance
@@ -76,7 +90,7 @@ et le fourre-tout Découverte de 93 à 72.
 
 | Élément | État |
 |---|---|
-| Libellés de l'application (« Top 500 », « Classeur (500) », jalons d'objectifs) | dérivés de `CATALOG_SIZE` (`src/lib/catalog.ts`) |
+| Libellés de l'application (« Top 1000 », « Classeur (1000) », jalons d'objectifs) | dérivés de `CATALOG_SIZE` (`src/lib/catalog.ts`) |
 | Raretés | échelle en part du classement (`scripts/lib/rarity-ladder.mjs`), pas en rangs fixes |
 | Saisons | calculées depuis `seasons.config.json` ; toute saison est découpée automatiquement au-delà de `seasonMaxSize` (150), le fourre-tout au-delà de 60 |
 | Validation | `npm run catalog:check` compare la taille réelle à `src/data/catalog.config.json` (`--expect N` pour forcer) |
@@ -160,29 +174,24 @@ toucher.
 Le rapport affiche les familles **telles que l'application les découpe** :
 
 ```text
-S01 Accueil & IRL — 276 créateurs (12 catégories) → découpée en 2 morceaux (145 + 131)
-S07 Découverte — 72 créateurs (catégories non listées) → découpée en 2 saisons de ≤ 60
+S01 France & francophonie — 138 créateurs (1 langue(s))
+S04 Anglophonie — 402 créateurs (1 langue(s)) → découpée en 3 vagues (150 + 150 + 102)
+S10 Sans frontière — 34 créateurs (langues non listées ou inconnues)
 ```
 
 Deux avertissements sont normaux après une génération mondiale :
 
-- **« Catégories listées mais absentes du catalogue »** : la liste de
-  `src/data/seasons.config.json` vise large (jeux prévus, sortis récemment). Un
-  jeu absent n'est qu'une ligne de config inutilisée ; l'application l'ignore.
-  Pour faire taire l'avertissement, retirez la catégorie de la config — ou
-  déplacez-la, si elle doit compter dans une famille dès qu'elle apparaîtra.
+- **« créateurs sans famille connue »** : leur langue n'a pas été reconnue (ou le
+  catalogue date d'avant les régions). Ils sont rangés dans « Sans frontière » —
+  jamais perdus. Pour en récupérer une partie, ajoute la langue manquante à une
+  famille dans `seasons.config.json`.
 - **« portrait manquant »** : à corriger avec `npm run assets:regen` (le script
   est reprenable, il ne retélécharge pas ce qui est déjà bon).
 
-En périmètre mondial, le fourre-tout « Découverte » peut grossir vite : le
-catalogue contient des dizaines de catégories que la config ne liste pas. C'est
-le comportement attendu — le découpage les rend jouables par paquets de 60 —,
-mais si une catégorie récurrente mérite sa famille, ajoutez-la dans la config
-plutôt que de la laisser au fourre-tout. C'est ce qui a été fait sur le Top 1000
-mondial : les 18 catégories les plus peuplées (≥ 8 créateurs chacune, 283
-créateurs à elles seules) ont rejoint une famille, ce qui fait passer Découverte
-de 376 à 72 créateurs — soit 7 % du catalogue au lieu de 38 %. Une famille trop
-grosse se découpe automatiquement en morceaux, donc promouvoir ne casse rien.
+Si une famille devient trop grosse (l'anglophonie, typiquement), elle se découpe
+toute seule en vagues de `waveSize` (défaut 150), par ordre de classement : la
+première vague d'une famille, ce sont ses têtes d'affiche. Pour des objectifs
+plus courts encore, baisse `waveSize` — c'est le seul réglage à toucher.
 
 Les options sont listées en tête de `scripts/build-twitch-catalog.mjs`
 (`--count`, `--languages`, `--pages`, `--concurrency`, `--dry-run`, `--seed`,
@@ -346,15 +355,12 @@ Le catalogue quadruple, le temps de complétion aussi : ce sont les seuls
 réglages à ajuster, tous dans des fichiers de données.
 
 1. **Saisons** (`src/data/seasons.config.json`)
-   - Le découpage est **automatique** : `seasonMaxSize` (défaut 150) borne chaque
-     famille de jeux, `catchAll.maxSize` (défaut 60) borne le fourre-tout. Une
-     famille trop large devient `S01-1/3`, `S01-2/3`… sans perdre son étiquette,
-     et sans jamais couper une catégorie en deux.
-   - Exemple mesuré sur un catalogue mondial simulé de 1962 créateurs : 21
-     saisons, la plus grosse à 150, couverture 1962/1962.
-   - Si tu veux des objectifs plus courts, baisse `seasonMaxSize` ; si tu
-     préfères des saisons plus thématiques, déplace des catégories dans un
-     groupe dédié plutôt que de monter la limite.
+   - Le découpage est **automatique** : `waveSize` (défaut 150) borne chaque
+     famille, `catchAll.maxSize` borne le fourre-tout. Une famille trop large
+     devient `S04-1/3`, `S04-2/3`… sans perdre son étiquette.
+   - Si tu veux des objectifs plus courts, baisse `waveSize` ; si les familles
+     ne te plaisent pas, déplace une langue d'une famille à une autre plutôt que
+     de monter la limite.
    - `pointsPerCreator` × taille de saison donne le total des points distribués
      par les paliers (aucun réglage à faire : le total est le même qu'avant les
      paliers, il est simplement versé en quatre fois). À 2000, les
@@ -381,7 +387,7 @@ réglages à ajuster, tous dans des fichiers de données.
 ## Ce qu'il faut vérifier après génération
 
 - `npm run catalog:check` : « 2000 créateurs (attendu : 2000) », aucun rang
-  manquant, aucune catégorie dupliquée entre deux saisons.
+  manquant, aucune langue déclarée deux fois, aucune famille inconnue.
 - Le nombre de portraits manquants doit être **0** ; sinon
   `npm run assets:regen` (il reprend où il s'est arrêté).
 - `reports/top2000.json` : téléchargés / réutilisés / échecs, répartition des

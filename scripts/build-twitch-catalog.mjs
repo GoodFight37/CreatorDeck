@@ -329,9 +329,38 @@ function languageOptions() {
 }
 
 /** Champs communs à toutes les récupérations de chaînes. */
-const STREAM_NODE_FIELDS = `
-  viewersCount
-  language
+/**
+ * Champs d'un direct. `language` n'est pas documenté par Twitch : si l'API le
+ * refuse, `languageSupported` passe à faux et on rejoue la requête sans lui —
+ * les familles retombent alors sur la liste curée au lieu de perdre la
+ * génération entière.
+ */
+let languageSupported = true;
+
+/** Erreurs GraphQL lisibles (le champ refusé s'y trouve nommé). */
+function gqlErrors(body) {
+  return (body?.errors ?? [])
+    .map((error) => String(error?.message ?? ""))
+    .join(" | ");
+}
+
+/** Vrai si l'API refuse précisément le champ `language`. */
+function languageRefused(body) {
+  const messages = gqlErrors(body);
+  return /language/i.test(messages) && /(cannot query field|unknown argument|invalid)/i.test(messages);
+}
+
+/** Prévient une seule fois : la suite de la génération s'adapte en silence. */
+function disableLanguageField() {
+  if (!languageSupported) return;
+  languageSupported = false;
+  console.warn(
+    "⚠️  Champ `language` refusé par l'API Twitch : les familles seront déduites de la liste curée (les chaînes découvertes en direct tomberont dans « Sans frontière »).",
+  );
+}
+
+const streamNodeFields = () => `
+  viewersCount${languageSupported ? "\n  language" : ""}
   game { displayName }
   broadcaster {
     login
@@ -359,13 +388,17 @@ function buildStreamQuery({ gameName = null, after = null, first = 30, languages
   return gameName
     ? `query { game(name: ${JSON.stringify(gameName)}) {
          displayName
-         streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${STREAM_NODE_FIELDS} } } }
+         streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${streamNodeFields()} } } }
        } }`
-    : `query { streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${STREAM_NODE_FIELDS} } } } }`;
+    : `query { streams(${args.join(", ")}) { pageInfo { hasNextPage endCursor } edges { node { ${streamNodeFields()} } } } }`;
 }
 
 async function fetchStreamConnection(options) {
-  const body = await gqlRequest(buildStreamQuery(options));
+  let body = await gqlRequest(buildStreamQuery(options));
+  if (languageRefused(body)) {
+    disableLanguageField();
+    body = await gqlRequest(buildStreamQuery(options));
+  }
   return options.gameName ? body?.data?.game : body?.data?.streams;
 }
 
@@ -459,10 +492,14 @@ async function fetchCuratedUsers(logins) {
     const fields = chunk
       .map(
         (login, idx) =>
-          `u${idx}: user(login: "${login.replace(/[^a-z0-9_]/g, "")}") { id login displayName followers { totalCount } profileImageURL(width: 300) stream { viewersCount language game { displayName } } broadcastSettings { game { displayName } } }`,
+          `u${idx}: user(login: "${login.replace(/[^a-z0-9_]/g, "")}") { id login displayName followers { totalCount } profileImageURL(width: 300) stream { viewersCount${languageSupported ? " language" : ""} game { displayName } } broadcastSettings { game { displayName } } }`,
       )
       .join("\n");
-    const body = await gqlRequest(`query { ${fields} }`);
+    let body = await gqlRequest(`query { ${fields} }`);
+    if (languageRefused(body)) {
+      disableLanguageField();
+      body = await gqlRequest(`query { ${fields.replaceAll(" language", "")} }`);
+    }
     const data = body?.data || {};
     for (let idx = 0; idx < chunk.length; idx += 1) {
       const u = data[`u${idx}`];
@@ -562,14 +599,18 @@ async function fetchLiveStreams(target) {
             displayName
             streams(first: 30${languageOptions()}) {
               pageInfo { hasNextPage endCursor }
-              edges { node { ${STREAM_NODE_FIELDS} } }
+              edges { node { ${streamNodeFields()} } }
             }
           }
         `,
       )
       .join("\n");
 
-    const body = await gqlRequest(`query { ${fields} }`);
+    let body = await gqlRequest(`query { ${fields} }`);
+    if (languageRefused(body)) {
+      disableLanguageField();
+      body = await gqlRequest(`query { ${fields.replaceAll(" language", "")} }`);
+    }
     const data = body?.data || {};
     for (let idx = 0; idx < chunk.length; idx += 1) {
       const game = data[`g${idx}`];
@@ -594,13 +635,17 @@ async function fetchLiveStreams(target) {
               displayName
               streams(first: 50, after: ${JSON.stringify(after)}${languageOptions()}) {
                 pageInfo { hasNextPage endCursor }
-                edges { node { ${STREAM_NODE_FIELDS} } }
+                edges { node { ${streamNodeFields()} } }
               }
             }
           `,
         )
         .join("\n");
-      const body = await gqlRequest(`query { ${fields} }`);
+      let body = await gqlRequest(`query { ${fields} }`);
+      if (languageRefused(body)) {
+        disableLanguageField();
+        body = await gqlRequest(`query { ${fields.replaceAll(" language", "")} }`);
+      }
       const data = body?.data || {};
       chunk.forEach(([gameName], idx) => {
         const game = data[`g${idx}`];

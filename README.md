@@ -49,7 +49,7 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 ```
 src/lib/catalog.ts       catalogue (créateurs, raretés, boosters, économie) + constantes d'UI
 src/lib/pull-rates.ts    lecture des tables de tirage + calcul des probabilités publiées
-src/lib/seasons.ts       saisons de collection (complétion par famille de jeux)
+src/lib/seasons.ts       saisons de collection (complétion par famille de langue)
 src/lib/random.ts        aléa cryptographique portable (Web Crypto)
 src/lib/game-engine.ts   moteur de jeu PUR : tirage, recharge, XP, sabliers
 src/lib/save-store.ts    (dé)sérialisation + validation de la sauvegarde
@@ -102,18 +102,21 @@ Principes :
   d'artisanat de sa rareté, et les **Légendaires ne s'artisanent pas** — elles
   se méritent en booster, comme les raretés hautes non échangeables de TCG
   Pocket.
-- **Saisons** (écran Objectifs) : les créateurs sont répartis en familles de
-  jeux (`src/data/seasons.config.json`, 7 groupes aujourd'hui). Chaque famille
-  est jalonnée de **quatre paliers** (Bronze → Arc-en-ciel, à 25/50/75/100 %)
-  qui créditent leurs points en cours de route ; le dernier palier donne les
-  sabliers et l'**emblème** de la famille (un monogramme coloré dérivé de la
-  famille, affiché dans le bandeau « Emblèmes »).
-- **Une famille trop grande est découpée**, jamais supprimée : en périmètre
-  mondial, « Accueil & IRL » réunit plus de 150 créateurs et devient
-  `S01-1`/`S01-2`, le fourre-tout « Découverte » se découpe par paquets de 60.
-  Les morceaux gardent l'identité de leur famille : **une seule teinte, un seul
-  emblème, un seul thème** — l'emblème s'obtient quand tous les morceaux de la
-  famille sont refermés. Le découpage vit dans `scripts/lib/seasons-split.mjs`,
+- **Saisons** (écran Objectifs) : les créateurs sont répartis en familles **par
+  langue de diffusion** (`src/data/seasons.config.json`, 9 familles + « Sans
+  frontière »). Pourquoi la langue : un streameur change de jeu toutes les
+  semaines, pas de langue, et Twitch ne publie aucun jeu pour une chaîne hors
+  direct — c'est le seul axe qui reste juste pour les 1000 chaînes. Chaque
+  famille est jalonnée de **quatre paliers** (Bronze → Arc-en-ciel, à
+  25/50/75/100 %) qui créditent leurs points en cours de route ; le dernier
+  palier donne les sabliers et l'**emblème** de la famille (un monogramme coloré
+  dérivé de la famille, affiché dans le bandeau « Emblèmes »).
+- **Une famille trop grande est découpée**, jamais supprimée : l'anglophonie
+  réunit plusieurs centaines de chaînes et devient `S04-1`, `S04-2`…, par ordre
+  de classement — la première vague d'une famille, ce sont ses têtes d'affiche.
+  Les vagues gardent l'identité de leur famille : **une seule teinte, un seul
+  emblème, un seul thème** — l'emblème s'obtient quand toutes les vagues de la
+  famille sont refermées. Le découpage vit dans `scripts/lib/seasons-split.mjs`,
   partagé par l'application et par `npm run catalog:check`, donc le rapport ne
   peut pas afficher autre chose que ce que l'application fait.
 - La répartition des paliers est vérifiée par les tests : leur somme vaut
@@ -131,6 +134,9 @@ Principes :
   écrit dans la partie — même collection virtuelle, ni cartes, ni points, ni
   statistiques. Les tests vérifient que la simulation suit bien
   `pull-rates.json` à 3 points près sur 400 boosters.
+- **Sons** : synthétisés en Web Audio (`src/lib/sfx.ts`) — ouverture de booster,
+  accord qui monte avec la rareté, carillon de palier. Aucun fichier, aucun
+  octet ajouté à l'APK, aucune licence ; bouton on/off dans le profil.
 - **Thèmes de collection** (Profil → Thème) : chaque famille complétée débloque
   la teinte de son emblème, et toutes les compléter débloque « Grand chelem ».
   Un thème n'est qu'un jeu de variables CSS appliqué à l'application (fond
@@ -245,7 +251,8 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
   sans préavis ; `--dry-run` pour mesurer avant d'écrire, `--count N` pour la
   cible, `--languages FR` pour restreindre le périmètre) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix
   officielle si `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` sont renseignés.
-  Une chaîne hors direct n'a pas de catégorie observable : son dernier jeu
-  programmé n'est gardé que s'il correspond à une famille de
-  `seasons.config.json`, sinon l'entrée prend « Variété & Live »
-  (`scripts/lib/curated-category.mjs`, testé).
+  Chaque chaîne est classée par **langue de diffusion** (`Stream.language`),
+  avec repli sur le groupe de la liste curée hors direct : les familles de
+  saisons sont des langues, jamais des genres de jeu. Le jeu joué n'est affiché
+  que s'il a été observé en direct — hors direct, l'étiquette vaut « Variété &
+  Live » (`scripts/lib/regions.mjs`, testé).
