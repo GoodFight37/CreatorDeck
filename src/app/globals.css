@@ -726,23 +726,42 @@ input:focus-visible {
 .creator-card.variant-gold { border-color: #ffce6c; box-shadow: 0 0 24px -7px rgba(255,190,72,.7), 0 12px 26px -13px #000; }
 .creator-card.variant-live { border-color: #ff67b0; box-shadow: 0 0 24px -8px rgba(255,75,158,.75), 0 12px 26px -13px #000; }
 
-.card-photo-wrap,
-.card-photo,
-.card-photo-shade {
+/*
+ * Fenêtre photo carrée, calée sur la LARGEUR de la carte (format 0.71).
+ * Les photos de profil Twitch sont carrées : les étirer en « cover » sur toute
+ * la hauteur de la carte les agrandissait de 40 % de plus que nécessaire (puis
+ * les rognait), d'où un rendu pixelisé sur écran haute densité. Ici l'image est
+ * affichée à sa taille minimale utile ; le bas de la carte devient une zone de
+ * texte façon TCG.
+ */
+.card-photo-wrap {
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  left: 0;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: #171426;
 }
 
 .card-photo {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: saturate(.92) contrast(1.03);
+  filter: saturate(.94) contrast(1.02);
 }
 
+/* Dans la fenêtre photo : léger voile en haut (lisibilité des badges) et
+   fondu du bas de la photo vers le fond de la carte (zone de texte). */
 .card-photo-shade {
-  background: linear-gradient(180deg, rgba(5,4,10,.12) 0%, transparent 38%, rgba(8,7,13,.18) 54%, rgba(8,7,13,.98) 91%);
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5,4,10,.14) 0%, transparent 30%),
+    linear-gradient(180deg, transparent 74%, rgba(17,16,26,.5) 88%, #11101a 100%);
 }
 
 .card-topline {
@@ -798,9 +817,14 @@ input:focus-visible {
 .card-copy {
   position: absolute;
   z-index: 5;
-  right: 9px;
-  bottom: 9px;
-  left: 9px;
+  top: 71.02%; /* = 1 / 1.408 : juste sous la fenêtre photo carrée */
+  right: 10px;
+  bottom: 0;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-bottom: 3px;
 }
 
 .card-copy p {
@@ -819,7 +843,7 @@ input:focus-visible {
   margin: 0;
   overflow: hidden;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(11px, 3.2vw, 17px);
+  font-size: clamp(12px, 4.4vw, 21px);
   line-height: 1.05;
   letter-spacing: -.035em;
   text-overflow: ellipsis;
@@ -840,7 +864,7 @@ input:focus-visible {
 .card-footerline strong { color: white; font-size: 8px; }
 
 .creator-card.is-compact { border-radius: 10px; }
-.creator-card.is-compact .card-copy { right: 7px; bottom: 7px; left: 7px; }
+.creator-card.is-compact .card-copy { top: auto; right: 7px; bottom: 7px; left: 7px; display: block; padding-bottom: 0; }
 .creator-card.is-compact .card-copy h3 { font-size: clamp(9px, 2.8vw, 13px); }
 .creator-card.is-compact .card-topline { top: 6px; right: 6px; left: 6px; }
 .creator-card.is-compact .card-series { display: none; }
@@ -857,7 +881,7 @@ input:focus-visible {
 .card-lock {
   position: absolute;
   z-index: 6;
-  top: 42%;
+  top: 35.5%;
   left: 50%;
   display: grid;
   width: 35px;

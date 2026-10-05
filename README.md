@@ -34,8 +34,9 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
-| `npm run android:apk` | `android:sync` puis `./gradlew assembleRelease` |
-| `npm run assets:regen` | régénère les 500 portraits 300×300 (`scripts/regen-avatars-300.mjs`) |
+| `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
+| `npm run android:apk` | `android:sync` puis Gradle `assembleRelease` (non signé sans `signingConfigs`) |
+| `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 
@@ -56,8 +57,8 @@ src/app/                 layout, page, styles globaux
 src/data/creators.json   les 500 créateurs
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
-public/creators/         500 portraits 300×300
-scripts/                 génération des données et des avatars, build du catalogue
+public/creators/         portraits (600×600 via `npm run assets:regen`)
+scripts/                 génération des données et des avatars (scripts/lib/avatars.mjs = pipeline image), build du catalogue
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 android/                 projet Capacitor Android
 ```
@@ -109,14 +110,41 @@ catalogue CreatorDeck. Aucune donnée ni illustration Pokémon n'est embarquée.
 ## Application Android (Capacitor)
 
 ```bash
-npm run android:sync     # build web + copie dans android/app/src/main/assets/public
-npm run android:open     # puis Build > Generate Signed App Bundle / APK dans Android Studio
-# ou, en ligne de commande :
-npm run android:apk      # android/app/build/outputs/apk/release/
+npm run android:sync     # 1. build web + copie dans android/app/src/main/assets/public
+npm run android:debug    # 2a. APK de test : android/app/build/outputs/apk/debug/app-debug.apk
+npm run android:apk      # 2b. APK release : android/app/build/outputs/apk/release/
+npm run android:open     # ou Android Studio : Build > Generate Signed App Bundle / APK
 ```
 
+**Toujours lancer `npm run android:sync` avant Gradle** (ou avant d'ouvrir
+Android Studio après un `git clone`) : `cap sync` génère des fichiers dont
+Gradle a besoin et qui ne sont pas versionnés — le module
+`android/capacitor-cordova-android-plugins/`, `android/app/capacitor.build.gradle`
+et le contenu web `android/app/src/main/assets/public/`. Sans eux, la
+configuration Gradle échoue (« Project with path ':capacitor-cordova-android-plugins'
+could not be found », `index.html` absent…). Les scripts `android:debug` /
+`android:apk` refusent d'ailleurs de démarrer tant que ces fichiers manquent.
+
+Chaîne d'outils (celle livrée par Capacitor 8.5) :
+
+- **JDK 21** : sélectionné automatiquement par Gradle
+  (`android/gradle/gradle-daemon-jvm.properties`, téléchargement via foojay si
+  aucun JDK 21 n'est installé). Ne mets pas de `org.gradle.java.home` dans
+  `android/gradle.properties` (chemin propre à ta machine) ; si tu y tiens,
+  place-le dans `~/.gradle/gradle.properties`, hors du dépôt.
+- **AGP 8.13 / Gradle 8.14.3** (`android/build.gradle`,
+  `gradle-wrapper.properties`). Si Android Studio propose l'*AGP Upgrade
+  Assistant* vers AGP 9, **décline** : Capacitor 8 n'est pas compatible (AGP 9
+  est la cible de Capacitor 9, passage prévu via `npx cap migrate`).
+- Le SDK Android (`compileSdk 36`) s'installe depuis Android Studio ; en ligne
+  de commande, `android/local.properties` (ignoré par Git) ou `ANDROID_HOME`
+  doit pointer dessus.
+
+Publication :
+
 - `android/` est un projet Capacitor standard (Gradle). Les fichiers générés
-  par `cap sync` (`assets/public`, `capacitor.config.json`) ne sont pas versionnés.
+  par `cap sync` (`assets/public`, `capacitor.config.json`,
+  `capacitor-cordova-android-plugins/`) ne sont pas versionnés.
 - Pour publier, crée une **clé de signature de release** et configure-la dans
   `android/app/build.gradle` (`signingConfigs`) ; ne commite jamais le keystore.
 - Les APK/AAB produits sont à distribuer via **GitHub Releases**, pas dans Git
@@ -131,12 +159,20 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 
 ## Images des créateurs
 
-- Le CDN Twitch ne sert **jamais plus de 300×300** (`profileImageURL(width: 300)`).
-  C'est la résolution native conservée partout ; au-delà de ~150 px CSS sur écran
-  Retina, aucune image Twitch ne peut être parfaitement nette.
-- `scripts/regen-avatars-300.mjs` télécharge/encode les 500 portraits en 300×300
-  (reprenable ; génère un portrait de secours pour une chaîne disparue).
-  Les rapports vont dans `reports/` (non versionné).
+- Le CDN Twitch sert chaque photo de profil en tailles fixes (28 → **600 px**) :
+  l'URL renvoyée par les API se termine par `-300x300.png`, et la variante
+  `-600x600.png` existe pour la quasi-totalité des chaînes. **Les portraits sont
+  donc encodés en 600×600** (`scripts/lib/avatars.mjs`, pipeline commun aux
+  trois scripts) — jamais agrandis artificiellement : une source qui n'existe
+  qu'en 300 px reste en 300 px.
+- Côté affichage, la photo est une **fenêtre carrée calée sur la largeur de la
+  carte** (et non étirée sur toute sa hauteur) : c'est la taille minimale utile.
+  Sur un écran 3x, la carte de révélation (~265 px CSS) affiche ~800 px
+  physiques ; une source 600 px y est agrandie de 1,3× seulement, contre 3,7×
+  avec l'ancien montage 300 px plein cadre.
+- `npm run assets:regen` met à jour `public/creators/` (reprenable : un portrait
+  déjà en 600 px est ignoré, `--force` pour tout ré-encoder). Le rapport va dans
+  `reports/` (non versionné). Compter ~20 Mo pour les 500 fichiers.
 - `scripts/build-top500-fr.mjs` reconstruit `src/data/creators.json` depuis
   l'API GQL de Twitch (Client-ID public du site web : non officiel, peut casser
   sans préavis) ; `scripts/sync-creator-avatars.mjs` peut utiliser l'API Helix

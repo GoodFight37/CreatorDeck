@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import { downloadLargestAvatar, encodeAvatar } from "./lib/avatars.mjs";
 
 const ROOT = process.cwd();
 const OUT_DIR = path.join(ROOT, "public/creators");
@@ -240,28 +240,10 @@ async function downloadAndProcessOne(creator) {
   const targetPath = path.join(OUT_DIR, `${creator.slug}.jpg`);
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const response = await fetch(creator.avatarUrl, {
-        redirect: "follow",
-        signal: AbortSignal.timeout(15_000),
-      });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const buffer = Buffer.from(await response.arrayBuffer());
-      if (buffer.length < 500) throw new Error("Image trop petite");
-
-      // Le GQL Twitch plafonne à 300x300 (profileImageURL(width: 300)) : on garde
-      // donc la taille native. L'ancien resize vers 240x240 supprimait 36 % des
-      // pixels avant même l'affichage, puis le navigateur ré-agrandissait
-      // l'image pour remplir la carte -> flou visible, surtout en Retina.
-      await sharp(buffer)
-        .resize(300, 300, {
-          fit: "cover",
-          position: "centre",
-          withoutEnlargement: true,
-          kernel: "lanczos3",
-        })
-        .sharpen({ sigma: 0.6 })
-        .jpeg({ quality: 88, mozjpeg: true })
-        .toFile(targetPath);
+      // Pipeline partagé (scripts/lib/avatars.mjs) : variante 600x600 du CDN
+      // si elle existe, repli 300x300 sinon, jamais d'agrandissement artificiel.
+      const { bytes } = await downloadLargestAvatar(creator.avatarUrl, { timeoutMs: 15_000 });
+      await encodeAvatar(bytes, targetPath);
       return true;
     } catch (err) {
       if (attempt === 2) throw err;

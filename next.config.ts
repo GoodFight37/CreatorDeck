@@ -9,7 +9,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   // Pas de serveur d'optimisation d'images en export statique : les portraits
-  // sont déjà encodés en 300×300 (plafond du CDN Twitch) par les scripts.
+  // sont pré-encodés à la taille utile (600×600, voir scripts/lib/avatars.mjs).
   images: { unoptimized: true },
 };
 

@@ -44,13 +44,14 @@ export function CreatorCard({
     >
       <div className="card-foil" aria-hidden="true" />
       <div className="card-photo-wrap">
+        {/* Export statique (images.unoptimized) : le fichier 600×600 est servi
+            tel quel, dans une fenêtre carrée calée sur la largeur de la carte. */}
         <Image
           className="card-photo"
           src={creatorImage(creator)}
           alt={`Portrait officiel de ${creator.displayName}`}
           fill
-          quality={88}
-          sizes={compact ? "(max-width: 560px) 31vw, 170px" : "(max-width: 560px) 68vw, 300px"}
+          draggable={false}
         />
         <div className="card-photo-shade" />
       </div>

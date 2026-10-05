@@ -10,8 +10,9 @@
     "test": "vitest run",
     "android:sync": "npm run build && cap sync android",
     "android:open": "cap open android",
-    "android:apk": "npm run android:sync && cd android && ./gradlew assembleRelease",
-    "assets:regen": "node scripts/regen-avatars-300.mjs",
+    "android:debug": "npm run android:sync && node scripts/android-gradle.mjs assembleDebug",
+    "android:apk": "npm run android:sync && node scripts/android-gradle.mjs assembleRelease",
+    "assets:regen": "node scripts/regen-avatars.mjs",
     "catalog:build": "node scripts/build-catalog.mjs",
     "catalog:check": "node scripts/build-catalog.mjs --check"
   },

@@ -2,7 +2,7 @@
 import "dotenv/config";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
+import { downloadLargestAvatar, encodeAvatar } from "./lib/avatars.mjs";
 
 const root = process.cwd();
 const catalog = JSON.parse(
@@ -106,27 +106,24 @@ for (const creator of catalog) {
     } catch {}
 
     const resolved = await resolveAvatar(creator.login);
-    const { bytes, contentType } = await downloadImage(resolved.url);
-    // Même pipeline que build-top500-fr.mjs : on garde la résolution native
-    // (300x300 max chez Twitch) au lieu de la rétrécir.
-    await sharp(bytes)
-      .resize(300, 300, {
-        fit: "cover",
-        position: "centre",
-        withoutEnlargement: true,
-        kernel: "lanczos3",
-      })
-      .sharpen({ sigma: 0.6 })
-      .jpeg({ quality: 88, mozjpeg: true })
-      .toFile(target);
+    // Pipeline partagé (scripts/lib/avatars.mjs) : variante 600x600 du CDN si
+    // elle existe (URL Helix/decapi réécrite), sinon l'URL telle quelle.
+    let downloaded;
+    try {
+      downloaded = await downloadLargestAvatar(resolved.url, { timeoutMs: 20_000 });
+    } catch {
+      const { bytes } = await downloadImage(resolved.url);
+      downloaded = { bytes, size: null, url: resolved.url };
+    }
+    const size = await encodeAvatar(downloaded.bytes, target);
     await sleep(1_200);
     report.push({
       slug: creator.slug,
       login: creator.login,
       ok: true,
       source: resolved.source,
-      contentType,
-      bytes: bytes.length,
+      size,
+      bytes: downloaded.bytes.length,
     });
     process.stdout.write(`✓ ${creator.displayName}\n`);
   } catch (error) {
