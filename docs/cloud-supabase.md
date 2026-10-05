@@ -66,6 +66,9 @@ Copy-Item .env.example .env.local
 notepad .env.local
 ```
 
+(`.env` fonctionne aussi — Next lit les deux, `.env.local` l'emporte. Ce fichier
+est ignoré par Git : il ne part jamais dans le dépôt.)
+
 Renseigne les deux lignes, puis :
 
 ```powershell
