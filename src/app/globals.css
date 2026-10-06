@@ -1516,12 +1516,42 @@ input:focus-visible {
 }
 .home-links .text-link:last-child { border-bottom: 0; }
 .text-link svg { margin-left: auto; flex: 0 0 auto; color: var(--muted-2); }
-.odds-overlay { position: fixed; z-index: 110; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgb(var(--bg-rgb) / .72); backdrop-filter: blur(6px); }
-.odds-panel { width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto; padding: 18px 18px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-strong); border-radius: 20px 20px 0 0; background: var(--bg-soft); animation: sheet-in 260ms cubic-bezier(.2,.8,.2,1) both; }
+/*
+ * ═══ LES FEUILLES ══════════════════════════════════════════════════════════
+ *
+ * Une vraie feuille du bas : on voit le jeu derrière (voile léger, pas de flou
+ * qui efface tout), une poignée dit qu'on peut la faire glisser, et le panneau
+ * garde son titre en display condensée.
+ */
+.odds-overlay {
+  position: fixed;
+  z-index: 110;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgb(var(--bg-rgb) / .58);
+  backdrop-filter: blur(3px);
+}
+/*
+ * La poignée : dessinée par le panneau lui-même, rien à ajouter dans le JSX.
+ */
+.odds-panel { position: relative; width: 100%; max-width: 560px; max-height: 88dvh; overflow-y: auto; padding: 26px 18px calc(24px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line-strong); border-radius: 12px 12px 0 0; background: var(--bg-soft); animation: sheet-in 260ms cubic-bezier(.2,.8,.2,1) both; }
+.odds-panel::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  width: 38px;
+  height: 3px;
+  border-radius: 99px;
+  background: var(--line-strong);
+  transform: translateX(-50%);
+}
 @keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .odds-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.odds-head h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: 26px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
-.odds-head button { display: grid; width: 32px; height: 32px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); cursor: pointer; }
+.odds-head h2 { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
+.odds-head button { display: grid; width: 32px; height: 32px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; background: none; cursor: pointer; }
 .odds-intro { margin: 12px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .odds-intro code { padding: 1px 4px; color: var(--accent-light); border-radius: 5px; background: rgb(var(--accent-rgb) / .14); font-size: 13px; }
 .odds-block { padding: 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }

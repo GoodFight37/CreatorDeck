@@ -292,8 +292,8 @@ function HomeView({
           <Hourglass size={15} />
           <span>
             {serverReserve
-              ? "Sablier indisponible : la réserve vient du serveur"
-              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · retire 15 min`}
+              ? "Sablier indisponible en ligne"
+              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
           </span>
         </button>
         <div className="guarantee-row">
@@ -1177,8 +1177,8 @@ export function CreatorDeckApp() {
       {opening ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
-          <strong>Scellement du tirage {CATALOG_LABEL}…</strong>
-          <span>{PACKS.live.size} cartes uniques en préparation.</span>
+          <strong>Ouverture du booster…</strong>
+          <span>{PACKS.live.size} cartes, aucune en double.</span>
         </div>
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
