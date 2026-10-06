@@ -1020,6 +1020,7 @@ input:focus-visible {
 .settings-icon.green { color: #68e4b2; background: rgba(80,217,160,.1); }
 .settings-icon.blue { color: #6ebaff; background: rgba(64,169,255,.1); }
 .settings-icon.purple { color: var(--purple-soft); background: rgb(var(--purple-rgb) / .12); }
+.settings-icon.gold { color: var(--gold); background: rgba(255,190,85,.12); }
 .settings-row > div { display: flex; flex: 1; flex-direction: column; gap: 3px; }
 .settings-row strong { font-size: 10px; }
 .settings-row span { color: var(--muted); font-size: 8px; }

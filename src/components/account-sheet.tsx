@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import Image from "next/image";
 import {
@@ -62,7 +62,14 @@ const PICKER_LIMIT = 60;
  * cloud demande deux appuis (le bouton se transforme en confirmation) : c'est
  * la seule action qui peut remplacer une partie locale.
  */
-export function AccountSheet({ onClose }: { onClose: () => void }) {
+export function AccountSheet({
+  onClose,
+  focus,
+}: {
+  onClose: () => void;
+  /** Section à amener sous les yeux à l'ouverture (« Classement » du profil). */
+  focus?: "leaderboard" | null;
+}) {
   const cloud = useCloud();
   const state = useGame();
   const [email, setEmail] = useState(cloud.email ?? "");
@@ -106,6 +113,13 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Raccourci « Classement mondial » de l'onglet Profil : la feuille s'ouvre
+  // déjà défilée sur le classement, au lieu de laisser le joueur chercher.
+  const leaderboardRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (focus === "leaderboard") leaderboardRef.current?.scrollIntoView({ block: "start" });
+  }, [focus]);
 
   const message = cloud.configured ? cloud.message : null;
   const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
@@ -644,7 +658,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
             ) : null}
 
             {cloud.userId ? (
-              <section className="account-card">
+              <section className="account-card" id="classement" ref={leaderboardRef}>
                 <div className="account-head">
                   <Trophy size={15} />
                   <strong>Classement mondial</strong>

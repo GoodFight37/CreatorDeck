@@ -617,6 +617,7 @@ function ProfileView({
   onShowThemes,
   onShowStudio,
   onShowAccount,
+  onShowLeaderboard,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -625,6 +626,7 @@ function ProfileView({
   onShowThemes: () => void;
   onShowStudio: () => void;
   onShowAccount: () => void;
+  onShowLeaderboard: () => void;
 }) {
   const cloud = useCloud();
   const [importOpen, setImportOpen] = useState(false);
@@ -748,6 +750,22 @@ function ProfileView({
           </div>
           <ChevronRight size={16} />
         </button>
+        {/* Le classement vit dans l'écran Compte : cette ligne y amène
+            directement, plutôt que de laisser le joueur le chercher. */}
+        {cloud.configured ? (
+          <button type="button" className="settings-row settings-action" onClick={onShowLeaderboard}>
+            <span className="settings-icon gold"><Trophy size={17} /></span>
+            <div>
+              <strong>Classement mondial</strong>
+              <span>
+                {cloud.userId
+                  ? "Cartes uniques, cartes, légendaires et Gold : les quatre tris, avec la fiche de chaque joueur."
+                  : "Crée un compte invité pour voir le classement et les fiches des joueurs."}
+              </span>
+            </div>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
         <button
           type="button"
           className="settings-row settings-action"
@@ -935,6 +953,7 @@ export function CreatorDeckApp() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
   // Envoi automatique (débounce) quand un compte est connecté : aucun appel
   // réseau sinon, la partie reste strictement locale.
@@ -1127,7 +1146,14 @@ export function CreatorDeckApp() {
             onShowOdds={() => setOddsOpen(true)}
             onShowThemes={() => setThemeOpen(true)}
             onShowStudio={() => setStudioOpen(true)}
-            onShowAccount={() => setAccountOpen(true)}
+            onShowAccount={() => {
+              setAccountFocus(null);
+              setAccountOpen(true);
+            }}
+            onShowLeaderboard={() => {
+              setAccountFocus("leaderboard");
+              setAccountOpen(true);
+            }}
           />
         ) : null}
       </div>
@@ -1190,7 +1216,15 @@ export function CreatorDeckApp() {
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
-      {accountOpen ? <AccountSheet onClose={() => setAccountOpen(false)} /> : null}
+      {accountOpen ? (
+        <AccountSheet
+          focus={accountFocus}
+          onClose={() => {
+            setAccountOpen(false);
+            setAccountFocus(null);
+          }}
+        />
+      ) : null}
       {cloud.profile || cloud.profileBusy ? <PublicProfileSheet /> : null}
       {themeOpen && game ? (
         <ThemeSheet
