@@ -1095,6 +1095,18 @@ describe("hôtel des ventes", () => {
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user: null });
   });
 
+  it("lit les ventes récentes du carnet", async () => {
+    const { api, calls } = client(() => ({ body: [
+      { id: 7, creatorSlug: "ibai", price: 600, soldAt: "2026-10-06T18:00:00Z", buyerName: "Diane" },
+      { id: "pas un identifiant" },
+    ] }), signedIn());
+    const sales = await api.marketSales(20);
+    expect(calls[0]?.url).toContain("/rest/v1/rpc/market_sales");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20 });
+    expect(sales).toHaveLength(1);
+    expect(sales[0]).toMatchObject({ id: 7, creatorSlug: "ibai", price: 600, buyerName: "Diane" });
+  });
+
   it("rend une liste vide si le serveur répond autre chose qu'une liste", async () => {
     const { api } = client(() => ({ body: { message: "non" } }), signedIn());
     expect(await api.marketShelf()).toEqual([]);

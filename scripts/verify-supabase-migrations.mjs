@@ -33,6 +33,8 @@
  *   * les amis : demande, acceptation, refus, annulation, retrait, doublons et
  *     demandes croisées, invisibilité pour un tiers, et l'impossibilité pour un
  *     visiteur sans compte de lire ou d'écrire quoi que ce soit ;
+ *   * le carnet des ventes : une vente conclue apparaît avec son acheteur, une
+ *     annonce encore au comptoir n'en est pas une, la fonction reste fermée ;
  *   * l'hôtel des ventes : grille des prix, dépôt payé comptant, la dernière
  *     copie refusée, comptoir filtré par joueur, achat atomique et unique,
  *     points insuffisants, annonce périmée, et table fermée aux clients ;
@@ -106,6 +108,7 @@ try {
   const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
   const friends = await readFile(path.join(MIGRATIONS, "0008_friends.sql"), "utf8");
   const marche = await readFile(path.join(MIGRATIONS, "0009_marche.sql"), "utf8");
+  const ventes = await readFile(path.join(MIGRATIONS, "0010_ventes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -116,6 +119,7 @@ try {
     ["0007_direct.sql", direct],
     ["0008_friends.sql", friends],
     ["0009_marche.sql", marche],
+    ["0010_ventes.sql", ventes],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -1370,6 +1374,41 @@ try {
     (await asPlayer(H, "select public.market_listings_of() as r")).rows[0].r.length === 1,
   );
 
+  // --- Le carnet : les ventes -------------------------------------------------
+  // Hélène a vendu sa Gold épique à Gaston dans la section précédente : la
+  // vitrine de ses ventes doit la montrer, avec l'acheteur, et **pas** ce qui
+  // est encore au comptoir.
+  // Le vendeur, c'est Gaston : c'est lui qui a déposé la légendaire qu'Hélène a
+  // achetée. Hélène, elle, n'a rien vendu — mais elle a une annonce **ouverte**
+  // au comptoir, qui ne doit surtout pas passer pour une vente.
+  const ventesG = (await asPlayer(G, "select public.market_sales(20) as r")).rows[0].r;
+  check(
+    "ventes : une vente conclue apparaît dans le carnet, avec son acheteur",
+    ventesG.length === 1 &&
+      ventesG[0].buyerName === "Hélène" &&
+      ventesG[0].price === 600 &&
+      Boolean(ventesG[0].soldAt),
+    JSON.stringify(ventesG),
+  );
+  check(
+    "ventes : ce qui est encore au comptoir n'est pas une vente",
+    (await asPlayer(H, "select public.market_sales(20) as r")).rows[0].r.length === 0,
+  );
+  check(
+    "ventes : sans compte, la fonction ne répond pas",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("select public.market_sales(20)");
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -1377,6 +1416,7 @@ try {
   await client.query(direct);
   await client.query(friends);
   await client.query(marche);
+  await client.query(ventes);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -1390,6 +1430,10 @@ try {
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
+  check(
+    "migrations rejouables : le carnet des ventes répond encore",
+    (await asPlayer(G, "select public.market_sales(20) as r")).rows[0].r.length === 1,
+  );
   check(
     "migrations rejouables : l'hôtel des ventes répond encore",
     (await asPlayer(G, "select public.market_shelf(30) as r")).rows[0].r.length >= 0 &&

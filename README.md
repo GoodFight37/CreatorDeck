@@ -444,6 +444,14 @@ version web hébergée.
   `market_listings_of()`. L'écran vit dans « Profil → Hôtel des ventes » ; la
   fiche publique montre « En vente à l'hôtel ». Mise en place :
   `docs/cloud-supabase.md` §8, « L'hôtel des ventes ».
+  Un **carnet de notifications** (« Toi → Notifications », avec sa pastille)
+  rassemble ce qui est arrivé au joueur : offres d'échange reçues, réponses à ses
+  offres, demandes d'ami, amitiés acceptées, cartes vendues à l'hôtel. Aucune
+  table dédiée côté serveur : chaque ligne vient d'un fait déjà enregistré
+  (échanges, amis, annonces), relu et mis en français par
+  `src/lib/social/inbox.ts`. La « dernière visite » vit sur l'appareil, par
+  joueur, et le carnet ne raconte jamais au joueur ce qu'il vient de faire.
+  Mise en place : `docs/cloud-supabase.md` §8, « Le carnet de notifications ».
   La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase
   (`provider=twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
   le navigateur, et le retour installe une session ordinaire — le secret du

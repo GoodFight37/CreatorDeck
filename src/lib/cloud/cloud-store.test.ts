@@ -6,12 +6,14 @@ import {
   type CloudSession,
   type LeaderboardRow,
   type MarketListing,
+  type MarketSale,
   type PushSaveResult,
   type RemoteSaveRow,
   type TradeListItem,
 } from "@/lib/cloud/api";
 import { AUTO_PUSH_DEBOUNCE_MS, EMPTY_CLOUD_STATE, createCloudStore } from "@/lib/cloud/cloud-store";
 import { gameStore } from "@/lib/game-store";
+import type { Friendship, IncomingRequest } from "@/lib/social/friends";
 import type { KeyValueStorage } from "@/lib/save-store";
 
 const T0 = Date.parse("2026-03-01T10:00:00Z");
@@ -109,6 +111,9 @@ type FakeApi = {
   marketShelf: ReturnType<typeof vi.fn>;
   marketSell: ReturnType<typeof vi.fn>;
   marketBuy: ReturnType<typeof vi.fn>;
+  marketSales: ReturnType<typeof vi.fn>;
+  listFriends: ReturnType<typeof vi.fn>;
+  listIncomingFriendRequests: ReturnType<typeof vi.fn>;
   marketListingsOf: ReturnType<typeof vi.fn>;
   twitchAuthorizeUrl: ReturnType<typeof vi.fn>;
   adoptSession: ReturnType<typeof vi.fn>;
@@ -125,6 +130,10 @@ function harness(options: {
   const state = { current: local };
   const applied: PlayerState[] = [];
   const session = options.signedIn === false ? null : SESSION;
+  // Un **seul** stockage pour toute la vie du store, comme `localStorage` dans
+  // l'app : sinon la « dernière visite » du carnet se perdrait entre deux
+  // appels, et les tests ne testeraient plus le vrai comportement.
+  const device = memoryStorage();
 
   const api: FakeApi = {
     session: () => session,
@@ -260,6 +269,9 @@ function harness(options: {
       cardId,
     })),
     marketListingsOf: vi.fn(async () => [LISTING]),
+    marketSales: vi.fn(async () => [] as MarketSale[]),
+    listFriends: vi.fn(async () => [] as Friendship[]),
+    listIncomingFriendRequests: vi.fn(async () => [] as IncomingRequest[]),
     twitchAuthorizeUrl: vi.fn((redirectTo: string) => `https://projet.supabase.co/auth/v1/authorize?provider=twitch&redirect_to=${encodeURIComponent(redirectTo)}`),
     adoptSession: vi.fn(async () => ({ ...SESSION, email: "joueur@exemple.fr" })),
     marketBuy: vi.fn(async () => ({
@@ -279,7 +291,7 @@ function harness(options: {
 
   const store = createCloudStore({
     config: () => (options.configured === false ? null : CONFIG),
-    storage: memoryStorage,
+    storage: () => device,
     api: () => api as unknown as CloudApi,
     readState: () => state.current,
     applyState: (next) => {
@@ -289,7 +301,7 @@ function harness(options: {
     now: () => T0 + 60_000,
   });
 
-  return { store, api, applied, state };
+  return { store, api, applied, state, device };
 }
 
 describe("store cloud", () => {
@@ -1255,5 +1267,80 @@ describe("connexion Twitch", () => {
     expect(outcome.status).toBe("unavailable");
     expect(store.getSnapshot().isError).toBe(true);
     expect(store.getSnapshot().message).toMatch(/compte n'a pas pu être ouvert/);
+  });
+});
+
+describe("le carnet de notifications", () => {
+  it("reprend les faits du serveur, en français", async () => {
+    const { store, api } = harness();
+    (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      tradeItem({ direction: "out", status: "accepted", resolvedAt: "2026-03-01T10:30:00Z" }),
+    ]);
+    await store.loadInbox();
+    expect(store.getSnapshot().inbox).toHaveLength(1);
+    expect(store.getSnapshot().inbox[0]?.title).toBe("Bruno a accepté ton offre");
+  });
+
+  it("compte les nouveautés, puis les oublie quand on ouvre le carnet", async () => {
+    const { store, api } = harness();
+    (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([tradeItem()]);
+    await store.loadInbox();
+    // Jamais ouvert : tout est nouveau.
+    expect(store.getSnapshot().inboxUnread).toBe(1);
+
+    store.markInboxSeen();
+    expect(store.getSnapshot().inboxUnread).toBe(0);
+
+    // Un fait plus récent que la visite rallume la pastille.
+    (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      tradeItem({ id: 9, createdAt: "2026-03-01T11:00:00Z" }),
+    ]);
+    await store.loadInbox();
+    expect(store.getSnapshot().inboxUnread).toBe(1);
+  });
+
+  it("garde une visite par joueur", async () => {
+    const { store, device } = harness();
+    store.markInboxSeen();
+    expect(device.getItem("creatordeck.inbox.seen." + SESSION.userId)).not.toBeNull();
+  });
+
+  it("ajoute les ventes quand le serveur les connaît", async () => {
+    const { store, api } = harness();
+    (api.marketSales as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 7, creatorSlug: "ibai", price: 600, soldAt: "2026-03-01T10:00:00Z", buyerName: "Diane" },
+    ]);
+    await store.loadInbox();
+    expect(store.getSnapshot().inbox[0]?.kind).toBe("sale");
+    expect(store.getSnapshot().inbox[0]?.body).toBe("Diane l'a achetée pour 600 points.");
+  });
+
+  it("vit très bien sans la fonction des ventes", async () => {
+    const { store, api } = harness();
+    (api.marketSales as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("function public.market_sales(integer) does not exist", "PGRST202", 404),
+    );
+    (api.listIncomingFriendRequests as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 4, senderId: "u3", senderName: "Chloé", createdAt: "2026-03-01T10:00:00Z" },
+    ]);
+    await store.loadInbox();
+    expect(store.getSnapshot().inbox).toHaveLength(1);
+    expect(store.getSnapshot().inbox[0]?.kind).toBe("friend_request");
+  });
+
+  it("vide le carnet à la déconnexion", async () => {
+    const { store, api } = harness();
+    (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([tradeItem()]);
+    await store.loadInbox();
+    expect(store.getSnapshot().inbox).toHaveLength(1);
+    await store.signOut();
+    expect(store.getSnapshot().inbox).toEqual([]);
+    expect(store.getSnapshot().inboxUnread).toBe(0);
+  });
+
+  it("ne charge rien sans compte", async () => {
+    const { store, api } = harness({ signedIn: false });
+    await store.loadInbox();
+    expect(api.listTrades).not.toHaveBeenCalled();
   });
 });

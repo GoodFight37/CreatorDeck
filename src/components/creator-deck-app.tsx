@@ -38,6 +38,7 @@ import {
 import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { FriendsSheet } from "@/components/friends-sheet";
 import { MarketSheet } from "@/components/market-sheet";
+import { NotificationsSheet } from "@/components/notifications-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
@@ -708,6 +709,7 @@ function ProfileView({
   onShowLeaderboard,
   onShowFriends,
   onShowMarket,
+  onShowNotifications,
   onShowOwnProfile,
 }: {
   game: GameState;
@@ -720,6 +722,7 @@ function ProfileView({
   onShowLeaderboard: () => void;
   onShowFriends: () => void;
   onShowMarket: () => void;
+  onShowNotifications: () => void;
   onShowOwnProfile: () => void;
 }) {
   const cloud = useCloud();
@@ -828,6 +831,13 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowMarket}>
             <span>Hôtel des ventes</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowNotifications}>
+            <span>Notifications</span>
+            {cloud.inboxUnread > 0 ? <b className="menu-count">{cloud.inboxUnread}</b> : null}
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -962,6 +972,17 @@ export function CreatorDeckApp() {
   useTwitchReturn();
   const state = useGame();
   const cloud = useCloud();
+  // Le carnet de notifications se remplit à l'ouverture, puis toutes les cinq
+  // minutes : c'est lui qui porte la pastille du menu « Toi ». Les dépendances
+  // sont les deux valeurs qui comptent (et non l'objet cloud, qui change à
+  // chaque publication) : sinon le minuteur repartirait sans arrêt.
+  const inboxReady = cloud.configured && Boolean(cloud.userId);
+  useEffect(() => {
+    if (!inboxReady) return;
+    void cloudStore.loadInbox();
+    const timer = setInterval(() => void cloudStore.loadInbox(), 5 * 60_000);
+    return () => clearInterval(timer);
+  }, [inboxReady]);
   const now = useNow(1_000);
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
@@ -980,6 +1001,7 @@ export function CreatorDeckApp() {
   const [studioOpen, setStudioOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [marketOpen, setMarketOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
@@ -1210,6 +1232,7 @@ export function CreatorDeckApp() {
             }}
             onShowFriends={() => setFriendsOpen(true)}
             onShowMarket={() => setMarketOpen(true)}
+            onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
             }}
@@ -1277,6 +1300,7 @@ export function CreatorDeckApp() {
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
+      {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet
           focus={accountFocus}

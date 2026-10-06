@@ -233,6 +233,10 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0010_ventes.sql`](../supabase/migrations/0010_ventes.sql)
+     → **Run** pour que le **carnet** sache dire « ta carte a été vendue » : une
+     seule fonction (`market_sales()`), trois lignes de SQL. Le carnet marche
+     sans — il n'annonce alors que les échanges et les amis.
    - [`supabase/migrations/0009_marche.sql`](../supabase/migrations/0009_marche.sql)
      → **Run** pour activer l'**hôtel des ventes** : déposer un doublon (payé
      comptant en points) et acheter au comptoir. Crée la table
@@ -618,6 +622,36 @@ qu'un écran lent.
 `PGRST202` (« fonction introuvable ») et la feuille affiche un message ; rien ne
 casse dans le reste du jeu.
 
+### Le carnet de notifications
+
+« Qu'est-ce qui est arrivé pendant que je n'étais pas là ? » — les offres
+d'échange reçues, les réponses à tes offres, les demandes d'ami, les amitiés
+acceptées et tes ventes à l'hôtel. L'écran s'ouvre depuis **Toi →
+Notifications**, avec une pastille quand il y a du nouveau.
+
+**Aucune table `notifications` côté serveur**, et c'est volontaire : chaque ligne
+du carnet correspond à un fait que le serveur garde déjà — une ligne de
+`trades` (`0005`), une demande ou une amitié (`0008`), une annonce vendue
+(`0009`). Le carnet les **relit** (`src/lib/social/inbox.ts`) et les met en
+français. Une table dédiée aurait créé un deuxième endroit où la même vérité
+pourrait diverger — le genre d'écart qu'on ne découvre qu'un mois plus tard.
+
+| Élément | Rôle |
+| --- | --- |
+| `src/lib/social/inbox.ts` | construit les lignes depuis les faits déjà connus, compte les nouveautés — pur, testé |
+| `src/lib/cloud/cloud-store.ts` | `loadInbox()` (les quatre sources en parallèle, chacune tolérante à l'échec), `markInboxSeen()`, `clearInbox()` |
+| `src/components/notifications-sheet.tsx` | l'écran ; l'ouvrir **marque le carnet comme lu** |
+| `0010_ventes.sql` | `market_sales()` : tes ventes conclues, avec l'acheteur (le comptoir ne montre que ce qui reste à vendre) |
+
+Deux détails d'usage :
+
+* la « dernière visite » vit **sur l'appareil**, par joueur
+  (`creatordeck.inbox.seen.<userId>`) : changer de compte ne mélange pas les
+  nouveautés des deux ;
+* un carnet qui raconte au joueur ce qu'il vient de faire ne sert à rien : tes
+  propres offres, celles que tu as acceptées, les annonces que tu viens de
+  déposer et les amis que tu viens d'accepter n'y figurent pas.
+
 ### Se connecter avec Twitch
 
 Twitch sert d'**identité** : un appui sur « Continuer avec Twitch » (écran
@@ -765,7 +799,9 @@ classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
 ## 9. Suite : notifications
 
-**Fait :** **connexion Twitch** (identité OAuth par le fournisseur Twitch
+**Fait :** **carnet de notifications** (offres, réponses, amis, ventes —
+reconstruit depuis les faits déjà enregistrés, pastille dans le menu « Toi ») ;
+**connexion Twitch** (identité OAuth par le fournisseur Twitch
 intégré à Supabase, le secret restant côté serveur) ;
 **hôtel des ventes** (`0009_marche.sql` : dépôt payé comptant,
 comptoir asynchrone, vitrine « En vente » sur la fiche publique) ;
@@ -783,9 +819,19 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 
 **Reste à faire, dans cet ordre :**
 
-* notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
-  brancher quand elles auront un usage produit — c'est ce qui rendra les offres
-  d'échange visibles sans ouvrir l'écran Compte ;
+* **réveil du téléphone** (notifications push Capacitor + FCM) : le carnet sait
+  déjà *quoi* dire, il reste à le faire *sonner* quand l'app est fermée. Trois
+  pièces, dans cet ordre :
+  1. un projet Firebase (gratuit) et son fichier `google-services.json` dans
+     `android/app/` — **obligatoire avant d'ajouter le greffon**, sinon l'APK ne
+     se construit plus ;
+  2. `@capacitor/push-notifications` côté app, qui enregistre le jeton du
+     téléphone dans une table `push_devices` (RLS : chacun ne voit que le sien) ;
+  3. une fonction serveur `send-push` (clé de service FCM dans un secret
+     Supabase), appelée quand un fait nouveau est écrit — c'est là qu'un
+     déclencheur SQL et `pg_net` entrent en jeu.
+  Le carnet reste la source des lignes : le push ne fait que prévenir qu'il y a
+  du nouveau ;
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
   temps réel sur les offres (aujourd'hui : rafraîchissement manuel), marché

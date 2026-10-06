@@ -41,6 +41,7 @@ import {
   type SendFriendRequestOutcome,
 } from "@/lib/social/friends";
 import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
+import { buildInbox, seenKey, unreadCount, type InboxItem } from "@/lib/social/inbox";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { parseOAuthReturn } from "@/lib/cloud/twitch";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
@@ -131,6 +132,18 @@ export type CloudState = {
   marketAt: number | null;
   /** Un chargement du comptoir est en cours. */
   marketBusy: boolean;
+  /**
+   * Le carnet : ce qui est arrivé au joueur (offres, réponses, amis, ventes),
+   * reconstruit à partir des mêmes faits que le serveur garde déjà. Aucune
+   * table « notifications » côté serveur : voir `src/lib/social/inbox.ts`.
+   */
+  inbox: InboxItem[];
+  /** Horodatage local du dernier chargement du carnet. */
+  inboxAt: number | null;
+  /** Nombre de lignes arrivées depuis la dernière visite du carnet. */
+  inboxUnread: number;
+  /** Un chargement du carnet est en cours. */
+  inboxBusy: boolean;
 };
 
 /**
@@ -241,6 +254,10 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   market: [],
   marketAt: null,
   marketBusy: false,
+  inbox: [],
+  inboxAt: null,
+  inboxUnread: 0,
+  inboxBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -287,6 +304,25 @@ export function createCloudStore(deps: CloudDeps) {
       userId: session?.userId ?? null,
     });
     return api;
+  }
+
+  /**
+   * Le joueur connecté, d'après la session. On ne se fie pas au seul état
+   * publié : la « dernière visite » du carnet doit être juste même si l'écran
+   * n'a pas encore lu le store.
+   */
+  function currentUserId(): string | null {
+    return resolve()?.session()?.userId ?? state.userId;
+  }
+
+  /** La date de la dernière visite du carnet, gardée sur l'appareil. */
+  function readSeen(userId: string | null): string | null {
+    if (!userId) return null;
+    try {
+      return deps.storage()?.getItem(seenKey(userId)) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   function fail(error: unknown, fallback: string) {
@@ -1229,6 +1265,10 @@ export function createCloudStore(deps: CloudDeps) {
         market: [],
         marketAt: null,
         marketBusy: false,
+        inbox: [],
+        inboxAt: null,
+        inboxUnread: 0,
+        inboxBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1345,6 +1385,64 @@ export function createCloudStore(deps: CloudDeps) {
         fail(error, "Classement indisponible.");
       }
     },
+    // ------------------------------------------------------------ Notifications
+    //
+    // Le carnet ne lit rien de nouveau côté serveur : il relit ce que le joueur
+    // a déjà le droit de voir (ses offres, ses amis, ses ventes) et le met en
+    // français. La « dernière visite » vit sur l'appareil, par joueur.
+
+    /**
+     * Recharge le carnet et recompte les nouveautés.
+     *
+     * Les quatre sources partent ensemble ; une source en échec (la fonction
+     * des ventes pas encore collée, par exemple) ne vide pas le reste : le
+     * carnet est fait pour être utile, pas pour tomber entier.
+     */
+    async loadInbox(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      const userId = currentUserId();
+      publish({ inboxBusy: true });
+      try {
+        const [trades, incoming, friends, sales] = await Promise.all([
+          ready.api.listTrades().catch(() => []),
+          ready.api.listIncomingFriendRequests().catch(() => []),
+          ready.api.listFriends().catch(() => []),
+          ready.api.marketSales().catch(() => []),
+        ]);
+        const items = buildInbox({
+          trades,
+          friends: { friends, incoming, outgoing: [] },
+          sales,
+        });
+        publish({ inbox: items, inboxUnread: unreadCount(items, readSeen(userId)), inboxAt: deps.now(), inboxBusy: false });
+      } catch (error) {
+        publish({ inboxBusy: false });
+        fail(error, "Carnet indisponible.");
+      }
+    },
+
+    /**
+     * Marque le carnet comme lu **à l'instant où le joueur l'ouvre** : la
+     * pastille disparaît, les lignes restent (on ne perd pas l'historique).
+     */
+    markInboxSeen(): void {
+      const userId = currentUserId();
+      if (!userId) return;
+      const at = new Date(deps.now()).toISOString();
+      try {
+        deps.storage()?.setItem(seenKey(userId), at);
+      } catch {
+        // Stockage refusé : la pastille reviendra, rien de grave.
+      }
+      publish({ inboxUnread: 0 });
+    },
+
+    /** Le carnet, remis à zéro (déconnexion ou changement de compte). */
+    clearInbox(): void {
+      publish({ inbox: [], inboxAt: null, inboxUnread: 0, inboxBusy: false });
+    },
+
     // ---------------------------------------------------------------- Twitch
     //
     // La connexion Twitch est un aller-retour par le navigateur : le store ne

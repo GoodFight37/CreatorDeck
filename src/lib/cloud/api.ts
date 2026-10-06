@@ -99,6 +99,15 @@ export type MarketListing = {
   sellerName: string;
 };
 
+/** Une vente conclue : ta carte est partie de l'hôtel, les points sont arrivés. */
+export type MarketSale = {
+  id: number;
+  creatorSlug: string;
+  price: number;
+  soldAt: string;
+  buyerName: string;
+};
+
 /** Carte achetée : ce que l'appareil doit ajouter à la collection locale. */
 export type MarketPurchase = {
   id: string;
@@ -483,6 +492,20 @@ function parseTradeCard(raw: unknown): TradeCard | null {
 
 function parseTradeCards(raw: unknown): TradeCard[] {
   return Array.isArray(raw) ? raw.flatMap((card) => parseTradeCard(card) ?? []) : [];
+}
+
+function parseSale(raw: unknown): MarketSale | null {
+  const record = asRecord(raw);
+  const id = Number(record?.id);
+  const slug = record?.creatorSlug;
+  if (!Number.isFinite(id) || typeof slug !== "string" || !slug) return null;
+  return {
+    id,
+    creatorSlug: slug,
+    price: Number.isFinite(Number(record?.price)) ? Number(record?.price) : 0,
+    soldAt: String(record?.soldAt ?? ""),
+    buyerName: typeof record?.buyerName === "string" ? record.buyerName : "Un joueur",
+  };
 }
 
 function parseListing(raw: unknown): MarketListing | null {
@@ -1159,6 +1182,23 @@ export class CloudApi {
     return result.flatMap((raw) => {
       const listing = parseListing(raw);
       return listing ? [listing] : [];
+    });
+  }
+
+  /**
+   * Tes ventes récentes à l'hôtel (`market_sales()`), de quoi remplir le carnet
+   * de notifications — le comptoir, lui, ne montre que ce qui est encore à
+   * vendre.
+   *
+   * Vide si la fonction n'est pas encore collée sur le projet : le carnet vit
+   * sans les ventes, et l'appelant n'a rien à faire de spécial.
+   */
+  async marketSales(limit = 20): Promise<MarketSale[]> {
+    const result = await this.rpc("market_sales", { p_limit: limit });
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const sale = parseSale(raw);
+      return sale ? [sale] : [];
     });
   }
 
