@@ -103,12 +103,14 @@ try {
     create role authenticated;
   `);
 
+  const rates = JSON.parse(await readFile(path.join(ROOT, "src", "data", "pull-rates.json"), "utf8"));
   const catalogue = await readFile(path.join(MIGRATIONS, "0003_catalogue.sql"), "utf8");
   const tirage = await readFile(path.join(MIGRATIONS, "0004_tirage.sql"), "utf8");
   const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
   const friends = await readFile(path.join(MIGRATIONS, "0008_friends.sql"), "utf8");
   const marche = await readFile(path.join(MIGRATIONS, "0009_marche.sql"), "utf8");
   const ventes = await readFile(path.join(MIGRATIONS, "0010_ventes.sql"), "utf8");
+  const directBonus = await readFile(path.join(MIGRATIONS, "0011_direct.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -120,6 +122,7 @@ try {
     ["0008_friends.sql", friends],
     ["0009_marche.sql", marche],
     ["0010_ventes.sql", ventes],
+    ["0011_direct.sql", directBonus],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -157,14 +160,17 @@ try {
     new Set(first.cards.map((card) => card.creatorSlug)).size === 5,
   );
   check("premier tirage : réserve décrémentée", first.packs === 2 && first.openings === 1, `packs=${first.packs} openings=${first.openings}`);
-  const live = first.cards.filter((card) => card.variant === "live");
-  check("premier tirage : une seule variante « live », sur Rare ou mieux",
-    live.length === 1 && ["rare", "epic", "legendary"].includes(live[0].rarity),
-    live.map((card) => `${card.creatorSlug}/${card.rarity}`).join(", "));
+  const last = first.cards[first.cards.length - 1];
   check(
     "premier tirage : la carte garantie est la dernière (aucun mélange)",
-    first.cards[first.cards.length - 1].variant === "live",
-    `dernière = ${first.cards[first.cards.length - 1].creatorSlug}/${first.cards[first.cards.length - 1].variant}`,
+    first.cards.filter((card) => card.variant === "live").length === 0 &&
+      ["rare", "epic", "legendary"].includes(last.rarity),
+    `dernière = ${last.creatorSlug}/${last.rarity}`,
+  );
+  check(
+    "premier tirage : aucune variante « live » sans information sur le direct",
+    first.cards.every((card) => card.variant !== "live"),
+    first.cards.map((card) => card.variant).join(", "),
   );
 
   const journal = await client.query("select count(*)::int as n, bool_and(cards is not null) as ok from public.pack_draws where user_id = $1", [USER]);
@@ -185,10 +191,14 @@ try {
     const pack = (await client.query("select public.open_pack() as r")).rows[0].r;
     if (pack.cards.length !== 5) shapeOk = false;
     if (new Set(pack.cards.map((card) => card.creatorSlug)).size !== 5) noDuplicate = false;
-    if (pack.cards.filter((card) => card.variant === "live").length !== 1) guaranteedOk = false;
+    // Sans information fraîche sur le direct (aucune diffusion publiée ici),
+    // aucune carte ne peut sortir en variante Live.
+    if (pack.cards.some((card) => card.variant === "live")) guaranteedOk = false;
     // L'ordre du tirage est l'ordre de la révélation : le slot garanti ferme
-    // toujours le paquet.
-    if (pack.cards[pack.cards.length - 1].variant !== "live") orderOk = false;
+    // toujours le paquet, et il est Rare ou mieux.
+    if (!["rare", "epic", "legendary"].includes(pack.cards[pack.cards.length - 1].rarity)) {
+      orderOk = false;
+    }
     for (const card of pack.cards) {
       if (!knownRarities.has(card.rarity) || !knownVariants.has(card.variant)) shapeOk = false;
       if (!slugSet.has(card.creatorSlug)) catalogueOk = false;
@@ -196,7 +206,7 @@ try {
   }
   check("40 tirages : 5 cartes, raretés et variantes connues", shapeOk);
   check("40 tirages : jamais deux fois le même créateur", noDuplicate);
-  check("40 tirages : toujours une variante « live » (slot garanti)", guaranteedOk);
+  check("40 tirages : variante « live » seulement pendant un direct (ici aucun)", guaranteedOk);
   check("40 tirages : la carte garantie reste la dernière", orderOk);
   check("40 tirages : tous les créateurs viennent du catalogue", catalogueOk);
 
@@ -208,7 +218,7 @@ try {
   for (let i = 0; i < N; i += 1) {
     await client.query("update public.pack_state set packs = 4, last_regen_at = now() where user_id = $1", [USER]);
     const pack = (await client.query("select public.open_pack() as r")).rows[0].r;
-    counts[pack.cards.find((card) => card.variant === "live").rarity] += 1;
+    counts[pack.cards[pack.cards.length - 1].rarity] += 1;
   }
   const rarePart = (counts.rare / N) * 100;
   const epicPart = (counts.epic / N) * 100;
@@ -986,6 +996,114 @@ try {
       await client.query("select count(*)::int as n from public.creators where slug <> login")
     ).rows[0].n > 0,
   );
+
+  // --- Bonus Direct ---------------------------------------------------------
+  // Le Direct ne doit pas être un badge décoratif : un créateur qui streame
+  // tombe plus souvent, et la variante Live lui est réservée. Le cache contient
+  // `kamet0` (publié juste au-dessus, donc frais).
+  //
+  // Les contrôles précédents ont joué en tant que joueur A : on reprend
+  // l'identité du premier joueur, dont la réserve est connue.
+  await client.query("select set_config('test.uid', $1, false)", [USER]);
+  const directLogins = (await client.query("select public._direct_live_logins() as l")).rows[0].l;
+  check(
+    "bonus direct : la liste vient du cache frais",
+    Array.isArray(directLogins) && directLogins.includes("kamet0") && !directLogins.includes("ibai"),
+    JSON.stringify(directLogins),
+  );
+
+  const creature = (
+    await client.query(
+      "select public._pack_creator_weight($1, $2::text[]) as direct, public._pack_creator_weight($3, $2::text[]) as autre",
+      ["kamet0", directLogins, "ibai"],
+    )
+  ).rows[0];
+  check(
+    "bonus direct : un créateur en direct pèse ×1,5 (le contrat du fichier de taux)",
+    creature.direct === Math.round(rates.direct.creatorBias * 1000) && creature.autre === 1000,
+    JSON.stringify(creature),
+  );
+
+  // 30 boosters pendant un direct large (la moitié du catalogue) : il doit
+  // sortir des cartes Live, aucune ne doit appartenir à un créateur hors
+  // direct, et la garantie doit être Live quand son créateur streame.
+  const liveCatalogue = (
+    await client.query("select login from public.creators order by slug limit 500")
+  ).rows.map((row) => row.login);
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify(liveCatalogue.map((login) => ({ login }))),
+    "la moitié du catalogue (vérification)",
+  ]);
+  const liveSet = new Set(liveCatalogue);
+  let liveOnlyOk = true;
+  let guaranteedLiveOk = true;
+  let liveSeen = 0;
+  for (let i = 0; i < 30; i += 1) {
+    await client.query("update public.pack_state set packs = 4, last_regen_at = now() where user_id = $1", [USER]);
+    const pack = (await client.query("select public.open_pack() as r")).rows[0].r;
+    for (const card of pack.cards) {
+      if (card.variant !== "live") continue;
+      liveSeen += 1;
+      if (!liveSet.has(card.creatorSlug)) liveOnlyOk = false;
+    }
+    const garantie = pack.cards[pack.cards.length - 1];
+    if (liveSet.has(garantie.creatorSlug) && garantie.variant !== "live") guaranteedLiveOk = false;
+  }
+  check("bonus direct : la variante Live est réservée à ceux qui streament", liveOnlyOk);
+  check(
+    "bonus direct : la carte garantie est Live quand son créateur streame",
+    guaranteedLiveOk && liveSeen > 0,
+    `${liveSeen} carte(s) Live en 30 boosters`,
+  );
+
+  // Le poids doit servir *au tirage*, pas seulement à être calculé : sur une
+  // rareté (les légendaires), la moitié en direct doit sortir plus souvent que
+  // l'autre. Seuil à mi-chemin entre « aucun bonus » et « bonus appliqué ».
+  const legendary = (
+    await client.query("select slug, login from public.creators where rarity = 'legendary' order by slug")
+  ).rows;
+  const half = Math.floor(legendary.length / 2);
+  const halfSlugs = new Set(legendary.slice(0, half).map((row) => row.slug));
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify(legendary.slice(0, half).map((row) => ({ login: row.login }))),
+    "moitié des légendaires (vérification)",
+  ]);
+  const nullShare = half / legendary.length;
+  const biasedShare = (half * rates.direct.creatorBias) / (half * rates.direct.creatorBias + (legendary.length - half));
+  const threshold = (nullShare + biasedShare) / 2;
+  let legendaryHits = 0;
+  const DRAW_COUNT = 4000;
+  for (let i = 0; i < DRAW_COUNT; i += 1) {
+    const chosen = (
+      await client.query("select public._pack_choose_creator($1::jsonb, $2::text[]) as s", ['{"legendary": 100}', []])
+    ).rows[0].s;
+    if (halfSlugs.has(chosen)) legendaryHits += 1;
+  }
+  const share = legendaryHits / DRAW_COUNT;
+  check(
+    "bonus direct : les créateurs en direct tombent plus souvent (40 % attendus au-dessus du hasard)",
+    share > threshold,
+    `${(share * 100).toFixed(1)} % contre un seuil de ${(threshold * 100).toFixed(1)} % (sans bonus : ${(nullShare * 100).toFixed(1)} %)`,
+  );
+
+  // Un cache périmé (plus de dix minutes) vaut « on ne sait pas » : plus de
+  // bonus, et surtout plus aucune carte Live.
+  await client.query("update public.live_state set refreshed_at = now() - interval '20 minutes' where id");
+  const staleLogins = (await client.query("select public._direct_live_logins() as l")).rows[0].l;
+  check("bonus direct : au-delà de dix minutes, on ne sait plus", staleLogins === null, JSON.stringify(staleLogins));
+  await client.query("update public.pack_state set packs = 4, last_regen_at = now() where user_id = $1", [USER]);
+  const stalePack = (await client.query("select public.open_pack() as r")).rows[0].r;
+  check(
+    "bonus direct : cache périmé → aucune carte Live (le badge ne ment pas)",
+    stalePack.cards.every((card) => card.variant !== "live"),
+    stalePack.cards.map((card) => card.variant).join(", "),
+  );
+
+  // Remise en état pour la suite de la vérification.
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify([{ login: "kamet0", display_name: "Kameto", viewers: 10 }]),
+    "état rendu à la suite",
+  ]);
 
   // --- Amis -----------------------------------------------------------------
   // Les amitiés sont symétriques et **décidées par le serveur** : un client ne

@@ -57,7 +57,7 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0010` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, échanges, amis, hôtel, carnet). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0011` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -66,7 +66,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**444 tests**, 30 fichiers aujourd'hui).
+  (**456 tests**, 31 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -75,8 +75,10 @@ Trois étages, trois vitesses :
   distingue un bug du jeu d'un réseau coupé.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
-  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes et carnet
-  (**156 contrôles** aujourd'hui).
+  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet et
+  **bonus Direct** — poids ×1,5 vérifié sur des boosters réellement ouverts,
+  variante Live impossible quand le cache est périmé (**163 contrôles**
+  aujourd'hui).
 
 ```powershell
 npm test          # rapide, à chaque changement
@@ -105,6 +107,8 @@ src/lib/social/          échanges et amis côté règles pures + carnet de
 src/lib/market.ts        grille des prix de l'hôtel (miroir de market_payout() SQL)
 src/lib/regions.ts       familles de collection (langues) et leurs teintes
 src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
+src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
+                         doivent être ceux de 0011_direct.sql
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet, market-sheet,
@@ -115,7 +119,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0010)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0011)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -189,10 +193,18 @@ Principes :
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing : il est à **1 ‰** depuis
   le 6 oct. 2026 (un booster sur mille ; c'était un sur deux-cents).
-- **L'ordre de révélation compte** : le slot garanti — Rare ou mieux, variante
-  Live — ferme toujours le booster, dans le moteur local comme dans
-  `open_pack()`. Aucun mélange après tirage : la dernière carte est le moment
-  fort de l'ouverture, et l'écran la nomme.
+- **L'ordre de révélation compte** : le slot garanti — Rare ou mieux — ferme
+  toujours le booster, dans le moteur local comme dans `open_pack()`. Aucun
+  mélange après tirage : la dernière carte est le moment fort de l'ouverture,
+  et l'écran la nomme.
+- **Le Direct fait tomber plus** : quand l'app sait qui streame (cache du
+  serveur, moins de dix minutes), les créateurs en direct **pèsent ×1,5** dans
+  leur rareté, leur carte a **20 %** de chance d'être en variante Live, et la
+  carte garantie est Live quand son créateur streame. Sans information fraîche,
+  le bonus est neutre et **aucune** variante Live ne sort : un « Live » qui
+  désignerait quelqu'un qui ne streame pas ne vaudrait rien. C'est déclaré dans
+  `pull-rates.json` (section `direct`), publié dans l'écran « Taux de drop »,
+  et appliqué des deux côtés (`0011_direct.sql`).
 - **Jalons du collectionneur** (écran Objectifs) : quatre jalons — premier
   booster, 5 % puis 20 % du catalogue, catalogue complet — chacun payé **une
   fois** (+40 points et 1 sablier, +150 et 1, +500 et 2, +3 000 et 10). Les

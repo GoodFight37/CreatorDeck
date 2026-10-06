@@ -233,6 +233,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0011_direct.sql`](../supabase/migrations/0011_direct.sql)
+     → **Run** pour que le **Direct fasse tomber plus**, côté serveur comme dans
+     le moteur : les créateurs qui streament pèsent ×1,5 dans leur rareté, la
+     variante Live leur est réservée (20 %, et systématiquement sur la carte
+     garantie), et rien de tout cela ne s'applique si le cache du direct a plus
+     de dix minutes. Détail : §8, « Le bonus Direct ».
    - [`supabase/migrations/0010_ventes.sql`](../supabase/migrations/0010_ventes.sql)
      → **Run** pour que le **carnet** sache dire « ta carte a été vendue » : une
      seule fonction (`market_sales()`), trois lignes de SQL. Le carnet marche
@@ -252,9 +258,9 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les huit migrations** (`0001` à `0008`) pour de vrai, dans
+> Le script exécute **les onze migrations** (`0001` à `0011`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
-> cartes (aucun doublon, une variante « live » garantie), la recharge, la
+> cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
 > `pull-rates.json` — 400 boosters) et **les échanges joués de bout en bout**
 > avec trois joueurs : recherche, offre, refus, annulation, acceptation
@@ -262,8 +268,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > le profil public (projection, complétion, rangs, tri Gold) sur trois autres
 > joueurs, dont un dont la sauvegarde est invraisemblable, le direct, et **les
 > amis joués de bout en bout** — demande, demande croisée, acceptation, refus,
-> annulation, retrait, et ce qu'un joueur étranger ne voit pas. Les
-> deux dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
+> annulation, retrait, et ce qu'un joueur étranger ne voit pas. S'y ajoutent
+> l'**hôtel des ventes** (dépôt payé comptant, comptoir, achat par un autre
+> joueur, refus motivés), le **carnet des ventes** (`market_sales()`) et le
+> **bonus Direct** (poids ×1,5, variante Live réservée aux créateurs en direct,
+> cache périmé → aucune carte Live). **163 contrôles** au total. Les deux
+> dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
    pour la voie invitée. Garde **Email** activé si tu veux aussi proposer
@@ -529,9 +539,39 @@ ligne rouge au moment de la révélation, et un filtre « En direct » dans le
 classeur. Rien de tout ça n'apparaît si la donnée est vieille de plus de dix
 minutes : un badge « en direct » périmé serait un mensonge.
 
-Ce n'est **pas** la variante Live d'une carte. La variante est une matière qu'on
-tire au sort ; le direct est un fait qu'on constate. Les deux peuvent cohabiter
-sur la même carte.
+Le badge n'est pas la variante : le badge est un fait qu'on constate (il
+s'allume sur n'importe quelle carte d'un créateur en direct, le temps du
+direct), la variante Live est une **matière** qu'on tire au sort — mais depuis
+`0011_direct.sql`, cette matière ne se tire **que pour un créateur qui
+streame** (voir ci-dessous). Une carte Live dit donc toujours quelque chose de
+vrai : elle est née pendant un direct.
+
+### Le bonus Direct
+
+Le badge seul ne changeait rien au tirage : il fallait que le direct **paie**.
+
+- quand l'app sait qui streame (cache du serveur, **moins de dix minutes**),
+  les créateurs en direct **pèsent ×1,5** dans leur rareté : ils tombent plus
+  souvent ;
+- leur carte a **20 %** de chance d'être en variante Live ; la carte garantie
+  (le 5ᵉ slot) l'est **systématiquement** quand son créateur streame — c'est le
+  moment fort du paquet ;
+- sans information fraîche (cache périmé, table absente, aucun streamer), le
+  bonus est neutre et **aucune carte Live ne sort**. Un « Live » qui
+  désignerait quelqu'un qui ne streame pas ne vaudrait rien.
+
+Les raretés publiées ne changent pas : le bonus ne touche ni les poids des
+slots, ni le « Perfect ». Il décide seulement **qui** tombe, et sous quelle
+matière. Les valeurs (×1,5 · 200‰ · dix minutes) vivent dans
+`src/data/pull-rates.json` (section `direct`), sont affichées dans l'écran
+« Taux de drop », et sont appliquées des deux côtés : le moteur local
+(`src/lib/game-engine.ts`) et la migration `0011_direct.sql`. Deux garde-fous
+empêchent les deux de diverger : `src/lib/supabase-direct.test.ts` (les valeurs
+du fichier doivent être dans le SQL) et `npm run supabase:verify` (le tirage
+serveur, joué pour de vrai, y compris avec un cache périmé).
+
+Mise en place : `0011_direct.sql` → **Run** (§3), puis
+`npm run supabase:verify` si tu veux le voir toi-même.
 
 Pourquoi ça ne peut pas vivre dans l'APK : l'API Helix demande un **client
 secret**, et un APK se dézippe. L'appel vit donc dans une **Edge Function**

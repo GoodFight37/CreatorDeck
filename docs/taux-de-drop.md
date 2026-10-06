@@ -13,9 +13,10 @@ diverger du moteur.
 | Clé | Rôle |
 |---|---|
 | `slotCount` / `slots[]` | une table de poids par carte ordinaire ; les taux montent au fil du booster |
-| `guaranteed` | le dernier slot, garanti (et sa variante imposée pour le Live) |
+| `guaranteed` | le dernier slot, garanti Rare ou mieux |
 | `variants` | chances de variante cosmétique (Holo / Gold) |
 | `rareDrop` | l'événement « Perfect » : chance, poids et amélioration de variante |
+| `direct` | le **bonus Direct** : poids des créateurs en direct et chance de variante Live |
 
 Exemple (extrait réel) :
 
@@ -24,12 +25,34 @@ Exemple (extrait réel) :
   { "weights": { "common": 42, "uncommon": 30, "rare": 18, "epic": 8, "legendary": 2 } },
   { "weights": { "common": 20, "uncommon": 34, "rare": 28, "epic": 15, "legendary": 3 } }
 ],
-"guaranteed": { "weights": { "rare": 82, "epic": 15, "legendary": 3 }, "variant": "live" }
+"guaranteed": { "weights": { "rare": 82, "epic": 15, "legendary": 3 } },
+"direct": { "creatorBias": 1.5, "livePermille": 200, "variant": "live" }
 ```
 
 Le moteur (`src/lib/game-engine.ts`, fonction `chooseCreator`) tire d'abord une
-rareté selon ces poids, puis un créateur uniformément dans cette rareté : les
-poids **sont** les probabilités affichées.
+rareté selon ces poids, puis un créateur **dans** cette rareté : les poids
+**sont** les probabilités affichées.
+
+## Le bonus Direct
+
+`direct` ne change **aucune** des probabilités ci-dessus : les raretés tombent
+exactement comme la table les annonce. Ce qui change, c'est *qui* tombe et
+*sous quelle matière* :
+
+- un créateur qui streame au moment du tirage **pèse ×1,5** dans sa rareté
+  (`creatorBias`) : il tombe plus souvent ;
+- sa carte a **20 %** de chance d'être en variante Live (`livePermille`), et la
+  carte garantie est Live quand son créateur streame — c'est le moment fort du
+  paquet.
+
+Sans information **fraîche** sur le direct (cache de plus de dix minutes, table
+absente, aucun streamer), le bonus est neutre et **aucune** carte Live ne sort :
+une variante « Live » qui désignerait quelqu'un qui ne streame pas ne vaudrait
+rien.
+
+Le serveur applique la même règle (`supabase/migrations/0011_direct.sql`), et
+deux tests verrouillent la correspondance : `src/lib/supabase-direct.test.ts`
+(les valeurs) et `scripts/verify-supabase-migrations.mjs` (l'exécution).
 
 ## Calcul des chiffres publiés
 
@@ -45,7 +68,10 @@ poids **sont** les probabilités affichées.
 2. `npm test` — les tests vérifient que les tables couvrent exactement la taille
    des boosters, que chaque rareté reste atteignable et que les probabilités
    somment à 100 % ;
-3. `npm run catalog:check` — validation globale des données du jeu.
+3. si le changement touche `direct` (ou un seuil de variante), répercuter la
+   valeur dans `supabase/migrations/0011_direct.sql` : `npm test` échoue tant
+   que le serveur n'a pas suivi ;
+4. `npm run catalog:check` — validation globale des données du jeu.
 
 ## Pourquoi publier ces taux
 

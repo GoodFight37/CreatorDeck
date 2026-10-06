@@ -339,7 +339,7 @@ function HomeView({
         </button>
         <div className="guarantee-row">
           <ShieldCheck size={14} />
-          <span>1 variante Live garantie · 1 Rare ou mieux · aucun doublon interne</span>
+          <span>1 Rare ou mieux garantie · Live si son créateur streame · aucun doublon</span>
         </div>
         <div className="home-links">
           <button type="button" className="text-link" onClick={onShowMissions}>

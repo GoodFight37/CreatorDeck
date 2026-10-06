@@ -5,6 +5,12 @@
  * Le tirage passe par le **même moteur** que le jeu (`drawPack`), donc la
  * simulation ne peut pas diverger des taux affichés à l'écran « Taux de drop ».
  * Rien n'est écrit dans la partie : ni cartes, ni points, ni statistiques.
+ *
+ * Le **bonus Direct** n'y est pas branché, exprès : il ne change aucune
+ * probabilité de rareté (il décide seulement *qui* tombe dans la rareté, et
+ * sous quelle matière). Le studio mesure des raretés et le « Perfect » : il
+ * n'aurait rien à en dire, et simuler un direct permanent ferait croire à des
+ * cartes Live qui n'existent que pendant un vrai direct.
  */
 import type { PackType, Rarity } from "@/lib/catalog";
 import { drawPack } from "@/lib/game-engine";
