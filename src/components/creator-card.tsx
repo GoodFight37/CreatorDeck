@@ -94,7 +94,7 @@ export function CreatorCard({
     <article
       className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className}`}
       style={style}
-      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${liveStream ? ", en direct" : ""}`}
+      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", variante Live" : ""}${liveStream ? ", en direct sur Twitch" : ""}`}
       onPointerMove={trackPointer}
       onPointerLeave={() => {
         const foil = foilRef.current;
@@ -132,7 +132,7 @@ export function CreatorCard({
         {variant === "live" ? (
           <span className="card-live">
             <i aria-hidden="true" />
-            On air
+            Live
           </span>
         ) : null}
       </div>

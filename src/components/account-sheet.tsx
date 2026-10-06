@@ -17,6 +17,7 @@ import {
   Mail,
   Plus,
   KeyRound,
+  Radio,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -28,6 +29,8 @@ import {
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useLive } from "@/hooks/use-live";
+import { liveStore } from "@/lib/live-store";
 import { useGame } from "@/hooks/use-game";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
 import type { PlayerSearchResult, TradeCard, TradeStatus } from "@/lib/cloud/api";
@@ -48,6 +51,31 @@ const METRICS: { id: LeaderboardMetric; label: string }[] = [
 ];
 
 const PICKER_LIMIT = 60;
+
+/**
+ * Ce que l'app sait du direct, en une phrase. Trois cas, et le troisième est
+ * celui qui explique un badge absent alors que tout a l'air branché : la liste
+ * est là, mais elle a plus de dix minutes — donc on ne montre rien.
+ */
+function describeLive(live: {
+  count: number;
+  refreshedAt: number | null;
+  stale: boolean;
+  loading: boolean;
+}): string {
+  if (live.loading) return "Lecture de la liste…";
+  if (!live.refreshedAt) {
+    return "Aucune donnée pour l'instant. La liste se remplit au premier rafraîchissement : si rien n'arrive, la fonction serveur n'est pas déployée ou ses secrets manquent.";
+  }
+  const minutes = Math.max(0, Math.round((Date.now() - live.refreshedAt) / 60_000));
+  const age = minutes < 1 ? "à l'instant" : minutes < 60 ? `il y a ${minutes} min` : `il y a ${Math.round(minutes / 60)} h`;
+  if (live.stale) {
+    return `Liste vieille de plus de dix minutes (${age}) : elle n'est plus affichée sur les cartes. Dernier relevé : ${live.count} en direct.`;
+  }
+  return live.count
+    ? `${live.count} créateur${live.count > 1 ? "s" : ""} en direct, relevé ${age}.`
+    : `Personne du catalogue n'est en direct, relevé ${age}.`;
+}
 
 /**
  * Écran « Compte & cloud » : identification, synchronisation de la partie et
@@ -74,6 +102,7 @@ export function AccountSheet({
   focus?: "leaderboard" | null;
 }) {
   const cloud = useCloud();
+  const live = useLive();
   const state = useGame();
   const [email, setEmail] = useState(cloud.email ?? "");
   const [code, setCode] = useState("");
@@ -617,6 +646,33 @@ export function AccountSheet({
                 <RefreshCw size={14} /> Tester la connexion au cloud
               </button>
             </div>
+
+            {/*
+              * L'état du direct, sur la même ligne que le diagnostic : c'est la
+              * seule question qu'on se pose quand le badge n'apparaît pas —
+              * « est-ce que l'app sait qui streame, ou est-ce que personne ne
+              * streame ? ». La réponse est dans le nombre et dans son âge.
+              */}
+            {cloud.configured ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <Radio size={15} />
+                  <strong>Direct</strong>
+                </div>
+                <p className="account-hint">{describeLive(live)}</p>
+                {live.error ? <p className="account-hint">{live.error}</p> : null}
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className="account-button ghost"
+                    disabled={live.loading}
+                    onClick={() => void liveStore.refresh({ force: true })}
+                  >
+                    <RefreshCw size={14} /> {live.loading ? "Lecture…" : "Rafraîchir la liste"}
+                  </button>
+                </div>
+              </section>
+            ) : null}
 
             {message ? (
               <div className={`account-note ${cloud.isError ? "error" : "ok"}`}>
