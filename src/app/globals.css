@@ -995,6 +995,11 @@ input:focus-visible {
 .mission-content span { color: var(--muted); font-size: 9px; }
 .mission-progress-copy { color: var(--muted); font-size: 9px; }
 .mission-progress-copy b { color: white; font-size: 11px; }
+/* Récompense du jalon : elle doit se lire avant de cliquer, pas après. */
+.mission-reward { color: #ffd48e !important; font-size: 8px !important; font-weight: 800; letter-spacing: .02em; }
+.mission-state { color: var(--muted); font-size: 8px; }
+.mission-state.done { color: var(--green); }
+.mission-claim { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 11px; color: #2a1b06; border: 0; border-radius: 9px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 9px; font-weight: 900; cursor: pointer; }
 .mission-content .progress-track { grid-column: 1 / -1; }
 
 .info-note { align-items: flex-start; gap: 10px; margin-top: 20px; padding: 13px; color: var(--purple-soft); border-radius: 12px; background: rgb(var(--purple-rgb) / .07); }

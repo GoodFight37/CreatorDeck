@@ -15,6 +15,7 @@
  * La persistance est gérée à part (src/lib/save-store.ts).
  */
 import {
+  CATALOG_SIZE,
   CREATORS,
   CREATOR_BY_SLUG,
   PACKS,
@@ -36,7 +37,7 @@ import {
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 5 as const;
+export const SAVE_VERSION = 6 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -113,9 +114,117 @@ export type PlayerState = {
    * bloc) se migre en créditant tous ses paliers.
    */
   claimedTiers: Record<string, number>;
+  /**
+   * Jalons du parcours déjà réclamés (voir `MILESTONES`).
+   *
+   * Un tableau d'identifiants plutôt qu'un booléen : ajouter un jalon plus tard
+   * ne casse aucune sauvegarde, et un jalon n'est crédité qu'une fois.
+   */
+  claimedMilestones: string[];
   /** Identifiant du thème de collection équipé (voir `@/lib/cosmetics`). */
   themeId: string;
 };
+
+/**
+ * Jalons du parcours de collectionneur (écran Objectifs).
+ *
+ * Ils étaient affichés sans aucune récompense — des jauges mortes — et deux
+ * cibles restaient écrites en dur (25 puis 100) alors que le texte annonçait
+ * 5 % et 20 % du catalogue (50 et 200). Seuils et gains vivent maintenant ici,
+ * à un seul endroit, et chaque jalon se réclame **une fois**.
+ */
+export type MilestoneMetric = "openings" | "uniqueCreators";
+
+export type Milestone = {
+  id: string;
+  /** Ce que le jalon compte dans la partie. */
+  metric: MilestoneMetric;
+  /** Seuil à atteindre pour que la récompense soit disponible. */
+  target: number;
+  reward: SeasonReward;
+};
+
+export const MILESTONES: readonly Milestone[] = [
+  { id: "first", metric: "openings", target: 1, reward: { points: 40, hourglasses: 1 } },
+  {
+    id: "binder",
+    metric: "uniqueCreators",
+    target: Math.round(CATALOG_SIZE * 0.05),
+    reward: { points: 150, hourglasses: 1 },
+  },
+  {
+    id: "hunter",
+    metric: "uniqueCreators",
+    target: Math.round(CATALOG_SIZE * 0.2),
+    reward: { points: 500, hourglasses: 2 },
+  },
+  {
+    id: "master",
+    metric: "uniqueCreators",
+    target: CATALOG_SIZE,
+    reward: { points: 3000, hourglasses: 10 },
+  },
+];
+
+export const MILESTONE_BY_ID = new Map(MILESTONES.map((milestone) => [milestone.id, milestone]));
+
+/** Jalon prêt à afficher : avancement, seuil atteint, déjà réclamé. */
+export type MilestoneView = Milestone & {
+  progress: number;
+  /** Seuil atteint : la récompense attend d'être réclamée. */
+  reached: boolean;
+  claimed: boolean;
+};
+
+/** Avancement d'un jalon dans une partie donnée (pur). */
+export function milestoneProgress(state: PlayerState, milestone: Milestone): number {
+  return milestone.metric === "openings" ? state.openings : ownedSlugs(state).size;
+}
+
+export function milestoneViews(state: PlayerState): MilestoneView[] {
+  // `ownedSlugs` construit un ensemble : une fois suffit pour les quatre jalons.
+  const owned = ownedSlugs(state).size;
+  return MILESTONES.map((milestone) => {
+    const progress = milestone.metric === "openings" ? state.openings : owned;
+    return {
+      ...milestone,
+      progress,
+      reached: progress >= milestone.target,
+      claimed: state.claimedMilestones.includes(milestone.id),
+    };
+  });
+}
+
+/**
+ * Réclame un jalon atteint : points et sabliers tombent une seule fois.
+ * Un jalon non atteint, inconnu ou déjà réclamé lève une `GameError`.
+ */
+export function claimMilestone(
+  state: PlayerState,
+  milestoneId: string,
+  now = Date.now(),
+): PlayerState {
+  const milestone = MILESTONE_BY_ID.get(milestoneId);
+  if (!milestone) throw new GameError("Jalon inconnu.", "UNKNOWN_MILESTONE");
+  if (state.claimedMilestones.includes(milestoneId)) {
+    throw new GameError("Récompense déjà réclamée.", "MILESTONE_CLAIMED");
+  }
+  const progress = milestoneProgress(state, milestone);
+  if (progress < milestone.target) {
+    const missing = milestone.target - progress;
+    throw new GameError(
+      `Objectif incomplet : encore ${missing} avant « ${milestone.target} ».`,
+      "MILESTONE_INCOMPLETE",
+    );
+  }
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + milestone.reward.points,
+    hourglasses: state.hourglasses + milestone.reward.hourglasses,
+    claimedMilestones: [...state.claimedMilestones, milestoneId],
+  };
+}
 
 /** Palier prêt à afficher : débloqué et/ou déjà réclamé. */
 export type SeasonTierView = SeasonTier & { unlocked: boolean; claimed: boolean };
@@ -191,6 +300,8 @@ export type GameView = {
     rareDrops: number;
   };
   seasons: SeasonView[];
+  /** Jalons du parcours de collectionneur (écran Objectifs). */
+  milestones: MilestoneView[];
   /** Cosmétiques : thèmes de classeur, débloqués par les emblèmes. */
   themes: ThemeView[];
 };
@@ -222,6 +333,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     openings: 0,
     cards: [],
     claimedTiers: {},
+    claimedMilestones: [],
     themeId: DEFAULT_THEME_ID,
   };
 }
@@ -938,6 +1050,7 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       rareDrops: refreshed.cards.filter((card) => card.rareDrop).length,
     },
     seasons: seasonViews(refreshed),
+    milestones: milestoneViews(refreshed),
     themes: themeViews(refreshed),
   };
 }

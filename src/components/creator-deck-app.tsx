@@ -26,6 +26,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  Unlock,
   Volume2,
   VolumeX,
   FlaskConical,
@@ -73,9 +74,32 @@ type CollectionFilter = "all" | "owned" | Rarity;
 const OPENING_DELAY_MS = 650;
 
 /** Jalons de collection, exprimés en part du catalogue (25 puis 100 sur 500). */
-const MILESTONES = {
-  first: Math.round(CATALOG_SIZE * 0.05),
-  half: Math.round(CATALOG_SIZE * 0.2),
+/**
+ * Habillage des jalons du moteur (`MILESTONES` dans `game-engine.ts`) : icône,
+ * titre et phrase. Les seuils, eux, ne sont plus écrits ici — c'est ce qui
+ * faisait dire « Découvrir 50 » au-dessus d'un compteur qui visait 25.
+ */
+const MILESTONE_LOOK: Record<string, { icon: React.ReactNode; label: string; detail: (target: number) => string }> = {
+  first: {
+    icon: <Layers3 size={19} />,
+    label: "Premier drop",
+    detail: () => "Ouvrir un booster",
+  },
+  binder: {
+    icon: <BookOpen size={19} />,
+    label: "Début du classeur",
+    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+  },
+  hunter: {
+    icon: <Gem size={19} />,
+    label: "Chasseur de cartes",
+    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+  },
+  master: {
+    icon: <Sparkles size={19} />,
+    label: "Maître du Twitch Game",
+    detail: () => `Compléter les ${CATALOG_SIZE} ${CATALOG_AUDIENCE}`,
+  },
 };
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
@@ -495,15 +519,29 @@ function MissionRow({
   detail,
   progress,
   target,
+  reward,
+  claimed,
+  onClaim,
 }: {
   icon: React.ReactNode;
   label: string;
   detail: string;
   progress: number;
   target: number;
+  reward: { points: number; hourglasses: number };
+  claimed: boolean;
+  onClaim: () => void;
 }) {
   const done = progress >= target;
   const percent = Math.min(100, Math.round((progress / target) * 100));
+  const gains = [
+    reward.points > 0 ? `+${reward.points} pts` : "",
+    reward.hourglasses > 0
+      ? `+${reward.hourglasses} sablier${reward.hourglasses > 1 ? "s" : ""}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <article className={`mission-row ${done ? "done" : ""}`}>
       <div className="mission-icon">{done ? <Check size={19} /> : icon}</div>
@@ -511,6 +549,9 @@ function MissionRow({
         <div>
           <strong>{label}</strong>
           <span>{detail}</span>
+          {/* La récompense est écrite noir sur blanc : sans elle, ces quatre
+              lignes étaient des jauges qui ne payaient rien. */}
+          <span className="mission-reward">{claimed ? "Récompense reçue" : gains}</span>
         </div>
         <div className="mission-progress-copy">
           <b>{Math.min(progress, target)}</b>/{target}
@@ -518,6 +559,15 @@ function MissionRow({
         <div className="progress-track">
           <i style={{ width: `${percent}%` }} />
         </div>
+        {done && !claimed ? (
+          <button type="button" className="mission-claim" onClick={onClaim}>
+            <Unlock size={13} /> Réclamer
+          </button>
+        ) : (
+          <span className={`mission-state ${claimed ? "done" : ""}`}>
+            {claimed ? "Réclamé" : "En cours"}
+          </span>
+        )}
       </div>
     </article>
   );
@@ -526,9 +576,11 @@ function MissionRow({
 function MissionsView({
   game,
   onClaimSeason,
+  onClaimMilestone,
 }: {
   game: GameState;
   onClaimSeason: (seasonId: string) => void;
+  onClaimMilestone: (milestoneId: string) => void;
 }) {
   return (
     <div className="view missions-view">
@@ -574,34 +626,22 @@ function MissionsView({
         </div>
       </div>
       <div className="mission-list">
-        <MissionRow
-          icon={<Layers3 size={19} />}
-          label="Premier drop"
-          detail="Ouvrir un booster"
-          progress={game.stats.openings}
-          target={1}
-        />
-        <MissionRow
-          icon={<BookOpen size={19} />}
-          label="Début du classeur"
-          detail={`Découvrir ${MILESTONES.first} streameurs du ${CATALOG_LABEL}`}
-          progress={game.stats.uniqueCreators}
-          target={25}
-        />
-        <MissionRow
-          icon={<Gem size={19} />}
-          label="Chasseur de cartes"
-          detail={`Découvrir ${MILESTONES.half} streameurs du ${CATALOG_LABEL}`}
-          progress={game.stats.uniqueCreators}
-          target={100}
-        />
-        <MissionRow
-          icon={<Sparkles size={19} />}
-          label="Maître du Twitch Game"
-          detail={`Compléter les ${CATALOG_SIZE} ${CATALOG_AUDIENCE}`}
-          progress={game.stats.uniqueCreators}
-          target={CATALOG_SIZE}
-        />
+        {game.milestones.map((milestone) => {
+          const look = MILESTONE_LOOK[milestone.id];
+          return (
+            <MissionRow
+              key={milestone.id}
+              icon={look?.icon ?? <Sparkles size={19} />}
+              label={look?.label ?? milestone.id}
+              detail={look ? look.detail(milestone.target) : ""}
+              progress={milestone.progress}
+              target={milestone.target}
+              reward={milestone.reward}
+              claimed={milestone.claimed}
+              onClaim={() => onClaimMilestone(milestone.id)}
+            />
+          );
+        })}
       </div>
 
       <SeasonsSection seasons={game.seasons} onClaim={onClaimSeason} />
@@ -1084,6 +1124,28 @@ export function CreatorDeckApp() {
     }
   }
 
+  function handleClaimMilestone(milestoneId: string) {
+    // La vue d'avant le clic décrit exactement ce qui va tomber.
+    const before = game?.milestones.find((entry) => entry.id === milestoneId);
+    try {
+      gameStore.claimMilestone(milestoneId);
+      playReward();
+      const gains = before
+        ? [
+            before.reward.points > 0 ? `+${before.reward.points} points` : "",
+            before.reward.hourglasses > 0
+              ? `+${before.reward.hourglasses} sablier${before.reward.hourglasses > 1 ? "s" : ""}`
+              : "",
+          ]
+            .filter(Boolean)
+            .join(", ")
+        : "";
+      showNotice(gains ? `Objectif atteint : ${gains} !` : "Récompense d'objectif réclamée.");
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+    }
+  }
+
   // Le thème est un jeu de variables CSS : aucun asset, changement instantané.
   const activeThemeId = game?.themes.find((theme) => theme.equipped)?.id ?? null;
   useEffect(() => {
@@ -1133,7 +1195,11 @@ export function CreatorDeckApp() {
         ) : null}
         {tab === "collection" ? <CollectionView game={game} /> : null}
         {tab === "missions" ? (
-          <MissionsView game={game} onClaimSeason={handleClaimSeason} />
+          <MissionsView
+            game={game}
+            onClaimSeason={handleClaimSeason}
+            onClaimMilestone={handleClaimMilestone}
+          />
         ) : null}
         {tab === "atelier" ? (
           <AtelierView game={game} onNotice={showNotice} onError={showError} />

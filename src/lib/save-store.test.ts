@@ -149,6 +149,34 @@ describe("migration", () => {
     expect(view.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(first.slugs.length * 4);
   });
 
+  it("met à niveau une sauvegarde v5 : les jalons redeviennent réclamables", () => {
+    // La récompense des jalons n'existait pas en v5 : aucune partie ne perd
+    // quoi que ce soit, elle peut simplement réclamer ce qu'elle a déjà atteint.
+    const v5 = {
+      ...createInitialState(T0),
+      version: 5,
+      openings: 3,
+    };
+    delete (v5 as Record<string, unknown>).claimedMilestones;
+
+    const storage = memoryStorage();
+    storage.setItem("creatordeck.save.v5", JSON.stringify(v5));
+    const state = loadState(storage, T0 + 5);
+
+    expect(state?.version).toBe(SAVE_VERSION);
+    expect(state?.openings).toBe(3);
+    expect(state?.claimedMilestones).toEqual([]);
+    // L'ancienne clé disparaît : la sauvegarde vit désormais sous la clé v6.
+    expect(storage.data.has("creatordeck.save.v5")).toBe(false);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
+  });
+
+  it("filtre les jalons réclamés inconnus et les doublons", () => {
+    const raw = { ...createInitialState(T0), claimedMilestones: ["first", "first", "fantome", 7] };
+    expect(sanitizeState(raw, T0)?.claimedMilestones).toEqual(["first"]);
+    expect(sanitizeState({ ...createInitialState(T0), claimedMilestones: "first" }, T0)?.claimedMilestones).toEqual([]);
+  });
+
   it("filtre les paliers réclamés inconnus et borne les compteurs", () => {
     const season = SEASONS[0];
     const raw = {

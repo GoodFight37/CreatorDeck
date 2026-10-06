@@ -7,6 +7,7 @@
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
 import {
+  claimMilestone as engineClaimMilestone,
   claimSeason as engineClaimSeason,
   craftCreator as engineCraftCreator,
   equipTheme as engineEquipTheme,
@@ -158,6 +159,11 @@ export const gameStore = {
   /** Réclame les paliers débloqués d'une saison. */
   claimSeason(seasonId: string, now = Date.now()): void {
     persist(engineClaimSeason(current(), seasonId, now));
+  },
+
+  /** Réclame la récompense d'un jalon atteint (écran Objectifs). */
+  claimMilestone(milestoneId: string, now = Date.now()): void {
+    persist(engineClaimMilestone(current(), milestoneId, now));
   },
 
   /** Équipe un thème de collection débloqué (cosmétique). */

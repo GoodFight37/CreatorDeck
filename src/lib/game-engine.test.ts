@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CREATORS, PACKS, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, PACKS, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { PULL_RATES, packOdds } from "@/lib/pull-rates";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
 import {
@@ -11,12 +11,15 @@ import {
   applyPackResult,
   applyPackStatus,
   applyTradeResult,
+  claimMilestone,
   claimSeason,
   craftCreator,
   createInitialState,
   drawPack,
   duplicateGroups,
   getGameView,
+  MILESTONES,
+  milestoneViews,
   openPack,
   recycleCard,
   refreshBalances,
@@ -717,5 +720,51 @@ describe("échanges", () => {
     );
     expect(moved.cards).toHaveLength(2);
     expect(moved.cards.every((card) => card.fromTrade === 21)).toBe(true);
+  });
+});
+
+describe("jalons du parcours (écran Objectifs)", () => {
+  it("annonce la même cible que celle qui est comptée", () => {
+    // Le bug d'origine : le texte affichait 5 % et 20 % du catalogue (50 et
+    // 200) alors que les compteurs visaient 25 et 100.
+    const state = makeState({ cards: [], openings: 0 });
+    const milestones = milestoneViews(state);
+    const binder = milestones.find((entry) => entry.id === "binder");
+    const hunter = milestones.find((entry) => entry.id === "hunter");
+
+    expect(binder?.target).toBe(Math.round(CATALOG_SIZE * 0.05));
+    expect(hunter?.target).toBe(Math.round(CATALOG_SIZE * 0.2));
+    // Une seule source : la cible vient du moteur, plus de l'écran.
+    expect(MILESTONES.every((entry) => entry.target >= 1)).toBe(true);
+  });
+
+  it("paie une seule fois, et seulement quand le seuil est atteint", () => {
+    const empty = makeState({ cards: [], openings: 0 });
+    expect(() => claimMilestone(empty, "first")).toThrowError(/incompl/i);
+
+    const opened = makeState({ openings: 1 });
+    const paid = claimMilestone(opened, "first", T0 + 1_000);
+    expect(paid.hourglasses).toBe(opened.hourglasses + 1);
+    expect(paid.points).toBe(opened.points + 40);
+    expect(paid.claimedMilestones).toEqual(["first"]);
+
+    // Deuxième clic : refusé, aucune récompense en double.
+    expect(() => claimMilestone(paid, "first")).toThrowError(/déjà/i);
+    expect(paid.hourglasses).toBe(opened.hourglasses + 1);
+  });
+
+  it("refuse un jalon inconnu et expose l'avancement réel", () => {
+    const state = makeState({ openings: 3 });
+    expect(() => claimMilestone(state, "fantome")).toThrowError(GameError);
+
+    const first = milestoneViews(state).find((entry) => entry.id === "first");
+    expect(first?.progress).toBe(3);
+    expect(first?.reached).toBe(true);
+    expect(first?.claimed).toBe(false);
+  });
+
+  it("la vue publiée contient les jalons", () => {
+    const view = getGameView(makeState({ openings: 2 }));
+    expect(view.milestones.map((entry) => entry.id)).toEqual(MILESTONES.map((entry) => entry.id));
   });
 });

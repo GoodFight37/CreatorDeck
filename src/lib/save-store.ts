@@ -5,11 +5,13 @@
  * en production (navigateur, PWA, WebView Capacitor), une Map en test.
  *
  * Une sauvegarde d'une version antérieure est migrée à la lecture : passer en
- * v2 (Atelier + saisons), v3 (paliers de saison), v4 (thème de collection) ou v5
- * (un seul booster au lieu de deux) ne fait perdre aucune collection.
+ * v2 (Atelier + saisons), v3 (paliers de saison), v4 (thème de collection), v5
+ * (un seul booster au lieu de deux) ou v6 (récompenses des jalons) ne fait
+ * perdre aucune collection.
  */
 import { CREATOR_BY_SLUG, PACKS, type CardVariant, type Rarity } from "@/lib/catalog";
 import {
+  MILESTONE_BY_ID,
   SAVE_VERSION,
   type OwnedCard,
   type PlayerState,
@@ -21,13 +23,14 @@ import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
 /** Clés des versions précédentes, migrées puis supprimées à la lecture. */
 export const LEGACY_SAVE_KEYS = [
+  "creatordeck.save.v5",
   "creatordeck.save.v4",
   "creatordeck.save.v3",
   "creatordeck.save.v2",
   "creatordeck.save.v1",
 ] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -113,6 +116,21 @@ function sanitizeClaimedTiers(value: unknown, legacySeasons: unknown): Record<st
   return claimed;
 }
 
+/**
+ * Jalons réclamés : identifiants connus, sans doublon. Une sauvegarde v5 (ou
+ * antérieure) n'a pas ce champ : la partie repart avec aucun jalon réclamé,
+ * donc les jalons déjà atteints redeviennent réclamables — c'est volontaire, la
+ * récompense n'existait pas avant cette version.
+ */
+function sanitizeMilestones(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  for (const entry of value) {
+    if (typeof entry === "string" && MILESTONE_BY_ID.has(entry)) seen.add(entry);
+  }
+  return [...seen];
+}
+
 function sanitizeSeasons(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const seen = new Set<string>();
@@ -172,6 +190,9 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     openings: nonNegativeInt(raw.openings, 0),
     cards: uniqueCards,
     claimedTiers: sanitizeClaimedTiers(raw.claimedTiers, raw.claimedSeasons),
+    // v6 : jalons réclamés. Un jalon inconnu (retiré du jeu) est simplement
+    // oublié ; un doublon est réduit à une seule entrée.
+    claimedMilestones: sanitizeMilestones(raw.claimedMilestones),
     // Thème inconnu (sauvegarde d'une version où la famille existait, édition
     // à la main…) : on retombe sur le thème d'origine plutôt que de planter.
     themeId: themeById(typeof raw.themeId === "string" ? raw.themeId : undefined)?.id ?? DEFAULT_THEME_ID,
