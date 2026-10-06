@@ -91,7 +91,6 @@ export function AtelierView({
     <div className="view atelier-view">
       <section className="page-title-row">
         <div>
-          <p className="eyebrow">ATELIER</p>
           <h1>Façonne ta collection</h1>
         </div>
         <div className="atelier-wallet">

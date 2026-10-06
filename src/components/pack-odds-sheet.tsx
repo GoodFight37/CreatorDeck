@@ -26,7 +26,6 @@ export function PackOddsSheet({ onClose }: { onClose: () => void }) {
       <div className="odds-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">TRANSPARENCE</p>
             <h2>Taux de drop</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">

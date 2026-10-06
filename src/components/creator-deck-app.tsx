@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import {
   BadgeInfo,
@@ -62,7 +62,7 @@ import {
 import { regionLabel } from "@/lib/regions";
 import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
-import { THEME_VARS, THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
+import { THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
@@ -128,9 +128,7 @@ function formatCountdown(date: number | null, now: number) {
 function LoadingScreen() {
   return (
     <main className="app-shell loading-screen">
-      <div className="brand-mark large" aria-hidden="true">
-        <span>CD</span>
-      </div>
+      <strong className="wordmark">CreatorDeck</strong>
       <LoaderCircle className="spin" size={26} />
       <p>Préparation du {CATALOG_LABEL}…</p>
     </main>
@@ -150,9 +148,6 @@ function TopBar({ game }: { game: GameState }) {
   return (
     <header className="top-bar">
       <div className="brand-lockup">
-        <div className="brand-mark" aria-hidden="true">
-          <span>CD</span>
-        </div>
         <div>
           <strong>CreatorDeck</strong>
           <small title={season ? season.name : CATALOG_LABEL}>
@@ -183,8 +178,6 @@ function PackArtwork() {
   return (
     <div className="pack-artwork pack-live">
       <div className="pack-noise" />
-      <div className="pack-orbit one" />
-      <div className="pack-orbit two" />
       <div className="pack-people">
         {people.map((creator, index) => (
           <Image
@@ -242,7 +235,6 @@ function HomeView({
     <div className="view home-view">
       <section className="welcome-row">
         <div>
-          <p className="eyebrow">{CATALOG_EDITION}</p>
           <h1>Prêt pour un nouveau drop&nbsp;?</h1>
         </div>
         <div className="season-badge">
@@ -252,11 +244,9 @@ function HomeView({
       </section>
 
       <section className="pack-stage stage-live">
-        <div className="stage-glow" />
         <div className="pack-shadow" />
         <PackArtwork />
         <div className="pack-copy">
-          <p>{pack.eyebrow}</p>
           <h2>{pack.label}</h2>
           <span>{pack.description}</span>
         </div>
@@ -318,7 +308,6 @@ function HomeView({
       <section className="section-block">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">TON CLASSEUR</p>
             <h2>Dernières trouvailles</h2>
           </div>
           <span className="completion-pill">
@@ -353,7 +342,7 @@ function HomeView({
   );
 }
 
-function CollectionView({ game }: { game: GameState }) {
+function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CSSProperties }) {
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
@@ -408,10 +397,9 @@ function CollectionView({ game }: { game: GameState }) {
   const progress = Math.round((game.stats.uniqueCreators / CREATORS.length) * 100);
 
   return (
-    <div className="view collection-view">
+    <div className="view collection-view" style={themeStyle}>
       <section className="page-title-row">
         <div>
-          <p className="eyebrow">{CATALOG_EYEBROW}</p>
           <h1>Mon classeur</h1>
         </div>
         <div className="collection-score">
@@ -592,7 +580,6 @@ function MissionsView({
     <div className="view missions-view">
       <section className="page-title-row">
         <div>
-          <p className="eyebrow">OBJECTIFS TOP {CATALOG_SIZE}</p>
           <h1>Progression</h1>
         </div>
         <div className="streak-pill">
@@ -627,7 +614,6 @@ function MissionsView({
 
       <div className="section-heading compact-heading">
         <div>
-          <p className="eyebrow">PARCOURS</p>
           <h2>Objectifs du collectionneur</h2>
         </div>
       </div>
@@ -732,7 +718,6 @@ function ProfileView({
           <span>{game.player.level}</span>
         </div>
         <div>
-          <p className="eyebrow">COLLECTIONNEUR</p>
           <h1>Mon profil</h1>
           <span>{CATALOG_EDITION}</span>
         </div>
@@ -758,7 +743,6 @@ function ProfileView({
 
       <div className="section-heading compact-heading">
         <div>
-          <p className="eyebrow">SAUVEGARDE</p>
           <h2>Ta progression reste sur cet appareil</h2>
         </div>
       </div>
@@ -818,7 +802,7 @@ function ProfileView({
           onClick={toggleSound}
           aria-pressed={soundOn}
         >
-          <span className={`settings-icon ${soundOn ? "purple" : "blue"}`}>
+          <span className={`settings-icon ${soundOn ? "accent" : "blue"}`}>
             {soundOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
           </span>
           <div>
@@ -831,7 +815,7 @@ function ProfileView({
           <Check size={18} className={soundOn ? "success-icon" : "muted-icon"} />
         </button>
         <button type="button" className="settings-row settings-action" onClick={onShowOdds}>
-          <span className="settings-icon purple"><BadgeInfo size={17} /></span>
+          <span className="settings-icon accent"><BadgeInfo size={17} /></span>
           <div>
             <strong>Taux de drop publiés</strong>
             <span>Les probabilités de chaque booster, calculées depuis les tables de tirage.</span>
@@ -847,7 +831,7 @@ function ProfileView({
           <ChevronRight size={16} />
         </button>
         <button type="button" className="settings-row settings-action" onClick={onShowThemes}>
-          <span className="settings-icon purple"><Paintbrush size={17} /></span>
+          <span className="settings-icon accent"><Paintbrush size={17} /></span>
           <div>
             <strong>Thème du classeur</strong>
             <span>
@@ -871,7 +855,7 @@ function ProfileView({
           onClick={() => setImportOpen((open) => !open)}
           aria-expanded={importOpen}
         >
-          <span className="settings-icon purple"><ClipboardPaste size={17} /></span>
+          <span className="settings-icon accent"><ClipboardPaste size={17} /></span>
           <div>
             <strong>Importer une sauvegarde</strong>
             <span>Colle le texte copié depuis l’autre appareil.</span>
@@ -1155,19 +1139,18 @@ export function CreatorDeckApp() {
     }
   }
 
-  // Le thème est un jeu de variables CSS : aucun asset, changement instantané.
-  const activeThemeId = game?.themes.find((theme) => theme.equipped)?.id ?? null;
-  useEffect(() => {
-    const root = document.documentElement;
-    const theme = game?.themes.find((entry) => entry.id === activeThemeId);
-    // Toute la palette est écrite (fond, panneaux, textes, accents) : retirer un
-    // jeton suffit à revenir au thème d'origine défini dans `globals.css`.
-    for (const name of THEME_VARS) root.style.removeProperty(name);
-    if (!theme) return;
+  // Le thème est un jeu de variables CSS posé **sur le classeur**, pas sur
+  // `<html>` : le chrome de l'application (noir studio, blanc chaud, rouge live)
+  // ne change jamais, et un thème reste un objet qu'on équipe pour son binder.
+  const themeStyle = useMemo(() => {
+    const equipped = game?.themes.find((theme) => theme.equipped);
+    if (!equipped) return undefined;
+    const style: Record<string, string> = {};
     for (const [token, name] of Object.entries(THEME_VAR_NAMES)) {
-      root.style.setProperty(name, theme.tokens[token as keyof typeof THEME_VAR_NAMES]);
+      style[name] = equipped.tokens[token as keyof typeof THEME_VAR_NAMES];
     }
-  }, [game?.themes, activeThemeId]);
+    return style as CSSProperties;
+  }, [game?.themes]);
 
   function handleEquipTheme(themeId: string) {
     try {
@@ -1202,7 +1185,7 @@ export function CreatorDeckApp() {
             needsAccount={cloud.configured && !cloud.userId}
           />
         ) : null}
-        {tab === "collection" ? <CollectionView game={game} /> : null}
+        {tab === "collection" ? <CollectionView game={game} themeStyle={themeStyle} /> : null}
         {tab === "missions" ? (
           <MissionsView
             game={game}

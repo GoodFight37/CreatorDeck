@@ -129,7 +129,6 @@ export function AccountSheet({
       <div className="odds-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">COMPTE</p>
             <h2>Cloud &amp; classement</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">
@@ -151,7 +150,7 @@ export function AccountSheet({
               <>
               <section className="account-card">
                 <div className="account-who">
-                  <span className="settings-icon purple">
+                  <span className="settings-icon accent">
                     <Mail size={16} />
                   </span>
                   <div>

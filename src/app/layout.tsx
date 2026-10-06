@@ -1,6 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { CATALOG_AUDIENCE, CATALOG_LABEL } from "@/lib/catalog";
+// Polices embarquées (fichiers npm, aucun CDN) : l'APK les porte, donc elles
+// s'affichent hors ligne, et l'export statique reste autonome.
+//
+//   * Barlow Condensed — la display : noms de cartes, titres, compteurs. C'est
+//     la condensation des tickers sport, pas le grotesque de SaaS.
+//   * IBM Plex Sans — le texte : menus, corps, libellés. Neutre, un peu
+//     mécanique, avec de vraies graisses moyennes (400/500/600).
+import "@fontsource-variable/ibm-plex-sans/wght.css";
+import "@fontsource/barlow-condensed/500.css";
+import "@fontsource/barlow-condensed/600.css";
+import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 
 // Titre et description suivent le périmètre du catalogue (FR ou monde) : en
