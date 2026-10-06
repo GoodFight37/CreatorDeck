@@ -138,6 +138,10 @@ function LoadingScreen() {
 }
 
 function TopBar({ game }: { game: GameState }) {
+  // La saison affichée est celle que le joueur remplit, calculée depuis sa
+  // collection : « S01 » était écrit en dur, même pour une partie sans une
+  // seule carte française.
+  const season = game.currentSeason;
   const levelBase = Math.max(0, (game.player.level - 1) * 100);
   const levelProgress = Math.min(
     100,
@@ -151,7 +155,9 @@ function TopBar({ game }: { game: GameState }) {
         </div>
         <div>
           <strong>CreatorDeck</strong>
-          <small>{CATALOG_LABEL} · S01</small>
+          <small title={season ? season.name : CATALOG_LABEL}>
+            {season ? `${season.familyId} · ${season.name}` : CATALOG_LABEL}
+          </small>
         </div>
       </div>
       <div className="top-actions">

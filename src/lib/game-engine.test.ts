@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CATALOG_SIZE, CREATORS, PACKS, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import {
+  CATALOG_SIZE,
+  CREATORS,
+  CREATOR_BY_SLUG,
+  PACKS,
+  RARITY_META,
+  type CardVariant,
+  type Rarity,
+} from "@/lib/catalog";
 import { PULL_RATES, packOdds } from "@/lib/pull-rates";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
 import {
@@ -15,6 +23,7 @@ import {
   claimSeason,
   craftCreator,
   createInitialState,
+  currentSeason,
   drawPack,
   duplicateGroups,
   getGameView,
@@ -811,5 +820,45 @@ describe("jalons du parcours (écran Objectifs)", () => {
   it("la vue publiée contient les jalons", () => {
     const view = getGameView(makeState({ openings: 2 }));
     expect(view.milestones.map((entry) => entry.id)).toEqual(MILESTONES.map((entry) => entry.id));
+  });
+});
+
+describe("saison en cours (titre de l'accueil)", () => {
+  it("suit la collection, au lieu d'afficher S01 en dur", () => {
+    // Une partie sans la moindre carte française ne doit pas annoncer
+    // « France & francophonie » : le titre venait d'une constante.
+    const overseas = makeState({
+      cards: [ownedCard("x", CREATORS.find((c) => c.region !== "S01")!.slug, "common", "standard", T0)],
+    });
+    const season = currentSeason(overseas);
+    expect(season).not.toBeNull();
+    expect(season?.familyId).not.toBe("S01");
+    expect(season?.name.length).toBeGreaterThan(0);
+    // La famille visée n'est jamais terminée : il reste des cartes à trouver.
+    expect(season!.owned).toBeLessThan(season!.total);
+  });
+
+  it("choisit la famille la plus avancée parmi celles qui restent à finir", () => {
+    const season = SEASONS[0];
+    // Toute la première vague de la première famille, sauf une carte.
+    const cards = season.slugs.slice(0, season.slugs.length - 1).map((slug, index) =>
+      ownedCard(`c${index}`, slug, CREATOR_BY_SLUG.get(slug)!.rarity, "standard", T0),
+    );
+    const view = currentSeason(makeState({ cards }));
+    expect(view?.familyId).toBe(season.familyId);
+    expect(view?.owned).toBe(season.slugs.length - 1);
+    expect(view?.total).toBe(season.slugs.length);
+
+    // La vue publiée la porte aussi.
+    expect(getGameView(makeState({ cards })).currentSeason?.familyId).toBe(season.familyId);
+  });
+
+  it("retombe sur la dernière famille quand tout est complet", () => {
+    const cards = CREATORS.map((creator, index) =>
+      ownedCard(`k${index}`, creator.slug, creator.rarity, "standard", T0),
+    );
+    const view = currentSeason(makeState({ cards }));
+    expect(view).not.toBeNull();
+    expect(view!.owned).toBe(view!.total);
   });
 });

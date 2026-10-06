@@ -126,6 +126,82 @@ export type PlayerState = {
 };
 
 /**
+ * La saison que le joueur remplit en ce moment : la famille (par langue) où il
+ * lui reste le plus de créateurs à découvrir, en proportion.
+ *
+ * L'écran d'accueil affichait « S01 » en dur, quelle que soit la partie : un
+ * joueur qui n'avait pas un seul streameur français voyait quand même
+ * « France & francophonie ». Ce calcul remplace la constante.
+ *
+ * Toutes les familles complètes → la dernière (la plus récente) : le titre reste
+ * juste, et il n'y a plus rien à viser.
+ */
+export type CurrentSeason = {
+  familyId: string;
+  /** Nom lisible de la famille (« France & francophonie »). */
+  name: string;
+  /** Nom du morceau en cours, quand la famille est découpée en vagues. */
+  pieceName: string;
+  owned: number;
+  total: number;
+};
+
+type FamilyTotals = {
+  familyId: string;
+  name: string;
+  owned: number;
+  total: number;
+  views: SeasonView[];
+};
+
+export function currentSeason(state: PlayerState): CurrentSeason | null {
+  const views = seasonViews(state);
+  if (!views.length) return null;
+
+  // Une famille peut être découpée en vagues (`S04-1`, `S04-2`…) : le total qui
+  // compte est celui de la famille entière.
+  const families = new Map<string, FamilyTotals>();
+  for (const view of views) {
+    const entry = families.get(view.familyId) ?? {
+      familyId: view.familyId,
+      name: view.name.replace(/ · \d+\/\d+$/, ""),
+      owned: 0,
+      total: 0,
+      views: [],
+    };
+    entry.owned += view.owned;
+    entry.total += view.total;
+    entry.views.push(view);
+    families.set(view.familyId, entry);
+  }
+
+  let best: FamilyTotals | null = null;
+  let last: FamilyTotals | null = null;
+  let bestRatio = -1;
+  for (const entry of families.values()) {
+    last = entry;
+    if (entry.total <= 0 || entry.owned >= entry.total) continue;
+    const ratio = entry.owned / entry.total;
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      best = entry;
+    }
+  }
+  const chosen = best ?? last;
+  if (!chosen) return null;
+
+  // Morceau à viser : le premier dont il manque encore des créateurs.
+  const pending = chosen.views.find((view) => view.owned < view.total) ?? chosen.views[0];
+  return {
+    familyId: chosen.familyId,
+    name: chosen.name,
+    pieceName: pending.name,
+    owned: pending.owned,
+    total: pending.total,
+  };
+}
+
+/**
  * Jalons du parcours de collectionneur (écran Objectifs).
  *
  * Ils étaient affichés sans aucune récompense — des jauges mortes — et deux
@@ -300,6 +376,8 @@ export type GameView = {
     rareDrops: number;
   };
   seasons: SeasonView[];
+  /** Saison que le joueur remplit en ce moment (titre de l'accueil). */
+  currentSeason: CurrentSeason | null;
   /** Jalons du parcours de collectionneur (écran Objectifs). */
   milestones: MilestoneView[];
   /** Cosmétiques : thèmes de classeur, débloqués par les emblèmes. */
@@ -1051,6 +1129,7 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       rareDrops: refreshed.cards.filter((card) => card.rareDrop).length,
     },
     seasons: seasonViews(refreshed),
+    currentSeason: currentSeason(refreshed),
     milestones: milestoneViews(refreshed),
     themes: themeViews(refreshed),
   };
