@@ -226,6 +226,7 @@ export function PublicProfileSheet() {
               </>
             ) : null}
 
+            <h3 className="profile-subtitle">Par rareté</h3>
             <ul className="profile-rarity">
               {profile.byRarity.map((row) => (
                 <li key={row.rarity}>
