@@ -104,8 +104,25 @@ describe("0006_profil_public.sql", () => {
     expect(drop).toBeLessThan(CODE.indexOf("create or replace function public.leaderboard("));
   });
 
+  it("classe aussi par famille de collection", () => {
+    const leaderboard = bodyOf("leaderboard");
+    // Le tri par famille lit `user_cards`, fermé aux clients : la fonction doit
+    // donc être `security definer`, et ne rendre qu'un compteur par famille.
+    expect(leaderboard).toMatch(/p_region text default null/);
+    expect(leaderboard).toMatch(/when p_metric = 'family' then coalesce\(o\.owned, 0\)/);
+    expect(leaderboard).toMatch(/family_owned/);
+    expect(leaderboard).toMatch(/family_total/);
+    expect(leaderboard).toMatch(/coalesce\(c\.region, 'S10'\)/);
+    expect(leaderboard).toMatch(/security definer/);
+    expect(leaderboard).not.toMatch(/creator_slug as|uc\.card_id/);
+    // L'ancienne signature à deux arguments est supprimée aussi : sans cela,
+    // deux fonctions coexisteraient et un client pourrait appeler celle qui
+    // ignore les familles.
+    expect(CODE).toMatch(/drop function if exists public\.leaderboard\(integer, text, text\)/);
+  });
+
   it("n'ouvre rien aux visiteurs non connectés", () => {
-    for (const fn of ["player_profile(uuid)", "leaderboard(integer, text)"]) {
+    for (const fn of ["player_profile(uuid)", "leaderboard(integer, text, text)"]) {
       expect(CODE).toMatch(new RegExp(`revoke all on function public\\.${fn.replace(/[()]/g, "\\$&")} from public, anon`));
       expect(CODE).toMatch(new RegExp(`grant execute on function public\\.${fn.replace(/[()]/g, "\\$&")} to authenticated`));
     }
@@ -117,5 +134,6 @@ describe("0006_profil_public.sql", () => {
     expect(CODE.match(/add column if not exists/g)).toHaveLength(2);
     expect(CODE).toMatch(/drop trigger if exists saves_project_cards/);
     expect(CODE).toMatch(/drop function if exists public\.leaderboard\(integer, text\)/);
+    expect(CODE).toMatch(/drop function if exists public\.leaderboard\(integer, text, text\)/);
   });
 });

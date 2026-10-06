@@ -41,6 +41,7 @@ import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "
 import { describeSync } from "@/lib/cloud/sync";
 import { CREATORS, CREATOR_BY_SLUG, VARIANT_META, creatorImage, RARITY_META, type CardVariant } from "@/lib/catalog";
 import { ShowcaseCard } from "@/components/showcase-card";
+import { CATCH_ALL_REGION, REGION_FAMILIES } from "@/lib/regions";
 import { gameStore } from "@/lib/game-store";
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
@@ -48,7 +49,17 @@ const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: "total_cards", label: "Cartes" },
   { id: "legendary_cards", label: "Légendaires" },
   { id: "gold_cards", label: "Gold" },
+  { id: "family", label: "Par famille" },
 ];
+
+/** Familles proposées au classement, dans l'ordre de la configuration. */
+const FAMILY_CHOICES: { id: string; label: string }[] = [
+  ...REGION_FAMILIES.map((family) => ({ id: family.id, label: family.name })),
+  { id: CATCH_ALL_REGION.id, label: CATCH_ALL_REGION.name },
+];
+
+/** Famille affichée par défaut : la première de la liste, jamais vide. */
+const DEFAULT_FAMILY = FAMILY_CHOICES[0]?.id ?? "S10";
 
 const PICKER_LIMIT = 60;
 
@@ -822,12 +833,34 @@ export function AccountSheet({
                       key={metric.id}
                       type="button"
                       className={`studio-chip ${cloud.leaderboardMetric === metric.id ? "active" : ""}`}
-                      onClick={() => void cloudStore.loadLeaderboard(metric.id)}
+                      // Passer au tri par famille demande **aussi** une famille :
+                      // on en propose une tout de suite, sinon le classement
+                      // s'afficherait sans que l'on sache de quoi il parle.
+                      onClick={() =>
+                        void cloudStore.loadLeaderboard(
+                          metric.id,
+                          metric.id === "family" ? cloud.leaderboardRegion ?? DEFAULT_FAMILY : null,
+                        )
+                      }
                     >
                       {metric.label}
                     </button>
                   ))}
                 </div>
+                {cloud.leaderboardMetric === "family" ? (
+                  <div className="studio-group" role="group" aria-label="Famille du classement">
+                    {FAMILY_CHOICES.map((family) => (
+                      <button
+                        key={family.id}
+                        type="button"
+                        className={`studio-chip ${(cloud.leaderboardRegion ?? DEFAULT_FAMILY) === family.id ? "active" : ""}`}
+                        onClick={() => void cloudStore.loadLeaderboard("family", family.id)}
+                      >
+                        {family.label}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
                 {cloud.leaderboard.length ? (
                   <ol className="leaderboard">
                     {cloud.leaderboard.map((row) => (
@@ -849,7 +882,9 @@ export function AccountSheet({
                                 ? `${row.legendaryCards} légendaires`
                                 : cloud.leaderboardMetric === "gold_cards"
                                   ? `${row.goldCards} Gold`
-                                  : `${Math.round(row.completion * 1000) / 10} % du catalogue`}
+                                  : cloud.leaderboardMetric === "family"
+                                    ? `${row.familyOwned} / ${row.familyTotal}`
+                                    : `${Math.round(row.completion * 1000) / 10} % du catalogue`}
                           </span>
                           {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
                         </button>

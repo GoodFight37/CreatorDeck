@@ -195,10 +195,10 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
    - [`supabase/migrations/0006_profil_public.sql`](../supabase/migrations/0006_profil_public.sql)
      → **Run** pour activer le profil public et les classements enrichis
      (`player_profile()`, projection `user_cards`, complétion, compteurs Gold et
-     Holo, tri Gold, **complétion par famille**). Il recalcule les statistiques
-     de tous les joueurs déjà en ligne : c'est normal qu'il travaille quelques
-     secondes. Comme il grandit au fil des versions, recolle-le : il est
-     rejouable (`create or replace`).
+     Holo, tri Gold, **complétion par famille** et **classement par famille**).
+     Il recalcule les statistiques de tous les joueurs déjà en ligne : c'est
+     normal qu'il travaille quelques secondes. Comme il grandit au fil des
+     versions, recolle-le : il est rejouable (`create or replace`).
    - [`supabase/migrations/0007_direct.sql`](../supabase/migrations/0007_direct.sql)
      → **Run** pour activer le **statut EN LIVE** (cache `live_streams` et
      `live_state`), puis **re-coller `0003_catalogue.sql`** : il apporte la
@@ -621,6 +621,24 @@ L'écran **Objectifs** du jeu, lui, garde ses paliers et ses récompenses
 (points, sabliers, emblème) : ils sont calculés localement, avec la famille
 comme unité. Ce que le serveur ajoute, c'est la comparaison entre joueurs.
 
+#### Le classement par famille
+
+Dans **Compte → Classement**, la puce « Par famille » classe les joueurs sur une
+famille précise : « qui complète le mieux l'Anglophonie ? ». Les puces de famille
+n'apparaissent qu'à ce moment-là, et chaque ligne affiche « 23 / 402 ».
+
+Ce tri est le seul qui lit `user_cards` — la projection des cartes possédées, à
+laquelle **aucun client n'a accès** (RLS active, aucune politique, et les droits
+de table révoqués). La fonction de classement est donc `security definer`, comme
+`player_profile()` : elle peut compter, et ne renvoie qu'un couple de nombres
+par joueur, sur des joueurs déjà `verified`.
+
+| Point d'attention | Pourquoi |
+| --- | --- |
+| L'ancienne signature à deux arguments est supprimée | sinon deux fonctions coexisteraient, et un client pourrait appeler celle qui ignore les familles |
+| La famille a une valeur par défaut (`null` → fourre-tout `S10`) | l'APK déjà installé appelle avec deux arguments : il continue de fonctionner au lieu de casser |
+| Une famille inconnue ne fait pas échouer la requête | elle rend zéro partout, plutôt qu'une erreur PostgREST en plein écran |
+
 **Où le voir** : `?profil=<identifiant>` (le lien de partage), la ligne du
 classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
@@ -679,6 +697,8 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
+| La puce « Par famille » n'apparaît pas dans le classement | `0006_profil_public.sql` n'a pas été recollé : il apporte la signature à trois arguments |
+| « Par famille » affiche 0 / 0 pour tout le monde | la famille choisie n'est pas la bonne, ou le catalogue n'a pas été recollé (`0003_catalogue.sql`, colonne `region`) |
 | La liste « Familles de collection » n'apparaît pas sur une fiche | `0006_profil_public.sql` n'a pas été recollé (il apporte `by_region`) |
 | Les familles sont toutes « Sans frontière » ou vides | `0003_catalogue.sql` n'a pas été recollé : la colonne `region` manque |
 | « Les amis ne sont pas installés sur ce projet » | `0008_friends.sql` n'a pas été collé : § 3 |

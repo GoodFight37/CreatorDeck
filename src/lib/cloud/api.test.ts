@@ -261,12 +261,18 @@ describe("sauvegardes", () => {
 });
 
 describe("classement", () => {
-  it("lit les lignes renvoyées par le serveur", async () => {
+  /** Session en mémoire, comme le ferait un joueur connecté. */
+  function signedIn() {
     const storage = memoryStorage();
     storage.setItem(
       CLOUD_SESSION_KEY,
       JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
     );
+    return storage;
+  }
+
+  it("lit les lignes renvoyées par le serveur", async () => {
+    const storage = signedIn();
     const { api, calls } = client(() => ({
       body: [
         {
@@ -283,7 +289,7 @@ describe("classement", () => {
       ],
     }), storage);
     const rows = await api.leaderboard(20, "legendary_cards");
-    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "legendary_cards" });
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "legendary_cards", p_region: null });
     expect(rows[0]).toMatchObject({
       rank: 1,
       displayName: "Kaicenat",
@@ -296,6 +302,42 @@ describe("classement", () => {
       holoCards: 0,
       completion: 0,
     });
+  });
+
+  it("transmet la famille demandée et lit son compteur", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: [
+          {
+            rank: 1,
+            user_id: "u2",
+            display_name: "Diane",
+            unique_creators: 137,
+            total_cards: 402,
+            legendary_cards: 9,
+            epic_cards: 31,
+            gold_cards: 3,
+            holo_cards: 12,
+            level: 12,
+            points: 640,
+            completion: 0.137,
+            showcase_slugs: [],
+            family_owned: 97,
+            family_total: 402,
+          },
+        ],
+      }),
+      signedIn(),
+    );
+    const rows = await api.leaderboard(20, "family", "S04");
+
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
+      p_limit: 20,
+      p_metric: "family",
+      p_region: "S04",
+    });
+    expect(rows[0]?.familyOwned).toBe(97);
+    expect(rows[0]?.familyTotal).toBe(402);
   });
 
   it("transmet le tri Gold et lit la complétion", async () => {
@@ -326,7 +368,7 @@ describe("classement", () => {
       ],
     }), storage);
     const rows = await api.leaderboard(20, "gold_cards");
-    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "gold_cards" });
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20, p_metric: "gold_cards", p_region: null });
     expect(rows[0]).toMatchObject({ goldCards: 3, holoCards: 12, epicCards: 31, completion: 0.137 });
   });
 

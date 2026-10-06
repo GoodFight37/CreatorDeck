@@ -395,7 +395,10 @@ version web hébergée.
   (`region` dans `0003_catalogue.sql`) et `player_profile()` renvoie
   `by_region` : la fiche publique d'un joueur montre donc sa complétion famille
   par famille (« 97 / 402 en Anglophonie »), ce qu'aucun appareil ne peut
-  calculer pour quelqu'un d'autre. Mise en place : `docs/cloud-supabase.md` §8.
+  calculer pour quelqu'un d'autre. `leaderboard()` accepte en plus un tri
+  `family` : « qui complète le mieux l'Anglophonie ? », calculé sur `user_cards`,
+  que les clients n'ont pas le droit de lire.
+  Mise en place : `docs/cloud-supabase.md` §8.
   `supabase/migrations/0008_friends.sql` ajoute les **amis** : tables
   `friend_requests` et `friends` (lecture réservée aux joueurs concernés,
   aucune écriture directe), et les RPC `send`/`accept`/`reject`/`cancel`/

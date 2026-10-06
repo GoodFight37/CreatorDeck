@@ -119,6 +119,14 @@ export type LeaderboardRow = {
   /** Part du catalogue possédée, entre 0 et 1 (calculée par le serveur). */
   completion: number;
   showcaseSlugs: string[];
+  /**
+   * Créateurs possédés **dans la famille demandée**, et sa taille au catalogue.
+   * Renseignés par le serveur même quand le classement n'est pas trié par
+   * famille (c'est alors la famille fourre-tout) : l'écran s'en sert pour
+   * écrire « 23 / 402 » sans aucun calcul de son côté.
+   */
+  familyOwned: number;
+  familyTotal: number;
 };
 
 /** Ce qu'un joueur possède d'une rareté, sur ce que le catalogue contient. */
@@ -174,7 +182,13 @@ export type PlayerProfile = {
 };
 
 /** Tri du classement, tel que l'accepte `leaderboard()` côté serveur. */
-export type LeaderboardMetric = "unique_creators" | "total_cards" | "legendary_cards" | "gold_cards";
+export type LeaderboardMetric =
+  | "unique_creators"
+  | "total_cards"
+  | "legendary_cards"
+  | "gold_cards"
+  /** Tri par famille de collection : « qui complète le mieux l'Anglophonie ? ». */
+  | "family";
 
 /** Traduit les erreurs de l'API en phrases utilisables dans l'interface. */
 function messageFor(status: number, code: string, raw: string): string {
@@ -1008,8 +1022,12 @@ export class CloudApi {
     return parseSaveRow(result);
   }
 
-  async leaderboard(limit = 20, metric: LeaderboardMetric = "unique_creators"): Promise<LeaderboardRow[]> {
-    const result = await this.rpc("leaderboard", { p_limit: limit, p_metric: metric });
+  async leaderboard(
+    limit = 20,
+    metric: LeaderboardMetric = "unique_creators",
+    region: string | null = null,
+  ): Promise<LeaderboardRow[]> {
+    const result = await this.rpc("leaderboard", { p_limit: limit, p_metric: metric, p_region: region });
     if (!Array.isArray(result)) return [];
     return result.flatMap((row) => {
       const record = asRecord(row);
@@ -1029,6 +1047,8 @@ export class CloudApi {
           points: Number(record.points ?? 0),
           completion: Number(record.completion ?? 0),
           showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
+          familyOwned: Number(record.family_owned ?? 0),
+          familyTotal: Number(record.family_total ?? 0),
         },
       ];
     });

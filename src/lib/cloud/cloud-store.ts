@@ -83,6 +83,12 @@ export type CloudState = {
   leaderboard: LeaderboardRow[];
   leaderboardMetric: LeaderboardMetric;
   /**
+   * Famille affichée dans le classement, quand le tri est `family`. Gardée dans
+   * l'état (et non dans la feuille) pour la même raison que les amis : l'écran
+   * lit, le store écrit.
+   */
+  leaderboardRegion: string | null;
+  /**
    * Profil public ouvert (`player_profile`) : celui d'un autre joueur ou le
    * sien. `null` tant qu'aucune fiche n'est affichée — c'est aussi ce qui ferme
    * la fiche.
@@ -198,6 +204,7 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   pending: false,
   leaderboard: [],
   leaderboardMetric: "unique_creators",
+  leaderboardRegion: null,
   profile: null,
   profileBusy: false,
   trades: [],
@@ -1182,6 +1189,8 @@ export function createCloudStore(deps: CloudDeps) {
         decision: null,
         remoteUpdatedAt: null,
         leaderboard: [],
+        leaderboardMetric: "unique_creators",
+        leaderboardRegion: null,
         profile: null,
         profileBusy: false,
         friends: EMPTY_FRIEND_LISTS,
@@ -1284,12 +1293,15 @@ export function createCloudStore(deps: CloudDeps) {
       publish({ profile: null, profileBusy: false });
     },
 
-    async loadLeaderboard(metric: LeaderboardMetric = state.leaderboardMetric): Promise<void> {
+    async loadLeaderboard(
+      metric: LeaderboardMetric = state.leaderboardMetric,
+      region: string | null = state.leaderboardRegion,
+    ): Promise<void> {
       const api = resolve();
       if (!networkReady(api)) return;
-      publish({ busy: true, leaderboardMetric: metric });
+      publish({ busy: true, leaderboardMetric: metric, leaderboardRegion: region });
       try {
-        const rows = await api.leaderboard(20, metric);
+        const rows = await api.leaderboard(20, metric, region);
         publish({ busy: false, leaderboard: rows, message: null, isError: false });
       } catch (error) {
         fail(error, "Classement indisponible.");

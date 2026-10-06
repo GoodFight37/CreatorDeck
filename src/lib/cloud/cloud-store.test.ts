@@ -133,6 +133,8 @@ function harness(options: {
         level: 50,
         points: 9000,
         showcaseSlugs: [],
+        familyOwned: 12,
+        familyTotal: 155,
       } satisfies LeaderboardRow,
     ]),
     playerProfile: vi.fn(async (userId?: string) => ({
@@ -148,6 +150,7 @@ function harness(options: {
       goldCards: 3,
       holoCards: 12,
       catalogSize: 1000,
+      byRegion: [{ regionId: "S01", owned: 12, total: 155 }],
       completion: 0.137,
       rankCompletion: 42,
       rankCards: 118,

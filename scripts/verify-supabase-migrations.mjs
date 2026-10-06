@@ -34,8 +34,9 @@
  *     demandes croisées, invisibilité pour un tiers, et l'impossibilité pour un
  *     visiteur sans compte de lire ou d'écrire quoi que ce soit ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
- *     exactement le catalogue, et la complétion par famille suit les cartes
- *     réellement possédées (le créateur inventé ne compte nulle part).
+ *     exactement le catalogue, la complétion par famille suit les cartes
+ *     réellement possédées (le créateur inventé ne compte nulle part), et le
+ *     classement par famille lit `user_cards` sans jamais l'exposer.
  */
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -747,6 +748,84 @@ try {
   check(
     "classement : un joueur non vérifié reste dehors",
     goldRows.every((row) => row.user_id !== F),
+  );
+
+  // --- Classement par famille ------------------------------------------------
+  // « Qui complète le mieux l'Anglophonie ? » : le tri lit `user_cards` (fermé
+  // aux clients) et doit pourtant ne rendre qu'un compteur par famille.
+  const familyRows = (
+    await asPlayer(D, "select * from public.leaderboard(20, $1, $2)", ["family", "S04"])
+  ).rows;
+  const s04Total = Number(families.S04.total);
+  check(
+    "famille : le total annoncé est celui du catalogue",
+    familyRows.length > 0 && familyRows.every((row) => row.family_total === s04Total),
+    `${familyRows[0]?.family_total} attendu ${s04Total}`,
+  );
+  check(
+    "famille : le tri suit la famille demandée, pas le catalogue entier",
+    familyRows.every((row, index) => index === 0 || familyRows[index - 1].family_owned >= row.family_owned),
+    JSON.stringify(familyRows.map((row) => row.family_owned)),
+  );
+  check(
+    "famille : chaque joueur est compté dans la famille, créateurs uniques seulement",
+    await (async () => {
+      for (const row of familyRows) {
+        const expected = (
+          await client.query(
+            `select count(distinct uc.creator_slug)::int as n
+               from public.user_cards uc join public.creators c on c.slug = uc.creator_slug
+              where uc.user_id = $1 and coalesce(c.region, 'S10') = 'S04'`,
+            [row.user_id],
+          )
+        ).rows[0].n;
+        if (row.family_owned !== expected) return false;
+      }
+      return true;
+    })(),
+  );
+  check(
+    "famille : un joueur sans carte de la famille est classé à zéro, pas exclu",
+    familyRows.length === (await client.query("select count(*)::int as n from public.stats where verified")).rows[0].n
+      && familyRows.some((row) => row.family_owned === 0),
+  );
+  check(
+    "famille : une famille inconnue ne fait pas tomber la requête",
+    await (async () => {
+      try {
+        const rows = (await asPlayer(D, "select * from public.leaderboard(5, $1, $2)", ["family", "S99"])).rows;
+        return rows.length === 5 && rows.every((row) => row.family_owned === 0);
+      } catch {
+        return false;
+      }
+    })(),
+  );
+  check(
+    "famille : un client qui ne connaît pas les familles appelle encore avec deux arguments",
+    // C'est le cas de l'APK déjà installé : la famille a une valeur par défaut,
+    // donc l'ancien appel aboutit au lieu de casser. Il tombe alors sur la
+    // famille fourre-tout, la seule dont il pouvait parler sans la nommer.
+    await (async () => {
+      const rows = (await asPlayer(D, "select * from public.leaderboard(5, $1)", ["unique_creators"])).rows;
+      const s10 = (
+        await client.query("select count(*)::int as n from public.creators where coalesce(region, 'S10') = 'S10'")
+      ).rows[0].n;
+      return rows.length === 5 && rows.every((row) => row.family_total === s10);
+    })(),
+  );
+  check(
+    "famille : un visiteur sans compte ne lit pas le classement",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("select * from public.leaderboard(5, $1, $2)", ["family", "S04"]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
   );
 
   // Ce que le serveur montre d'un joueur suit ses écritures : Ethan envoie une

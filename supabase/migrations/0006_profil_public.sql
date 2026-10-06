@@ -290,16 +290,25 @@ as $$
 $$;
 
 -- --------------------------------------------------------------------------
--- 6. Classement : variantes et complétion
+-- 6. Classement : variantes, complétion et famille
 -- --------------------------------------------------------------------------
 -- La fonction change de signature de retour (impossible avec `create or
 -- replace`) : on la supprime puis on la recrée, et on redonne les droits.
--- Quatre tris : cartes uniques, cartes, légendaires, Gold.
+-- Cinq tris : cartes uniques, cartes, légendaires, Gold, et **une famille de
+-- collection** (`p_region` : « qui complète le mieux l'Anglophonie ? »).
+--
+-- Elle est `security definer` depuis l'arrivée du tri par famille : elle lit
+-- `user_cards`, la projection que **aucun client** ne peut lire (aucune
+-- politique RLS). Elle ne renvoie pourtant rien de plus qu'un compteur par
+-- famille, calculé sur des statistiques déjà publiques — et seulement pour les
+-- joueurs `verified`.
 drop function if exists public.leaderboard(integer, text);
+drop function if exists public.leaderboard(integer, text, text);
 
 create or replace function public.leaderboard(
   p_limit  integer default 20,
-  p_metric text default 'unique_creators'
+  p_metric text default 'unique_creators',
+  p_region text default null
 )
 returns table (
   rank            integer,
@@ -314,18 +323,35 @@ returns table (
   level           integer,
   points          integer,
   completion      numeric,
-  showcase_slugs  text[]
+  showcase_slugs  text[],
+  family_owned    integer,
+  family_total    integer
 )
 language sql
-security invoker
+security definer
 stable
 set search_path = public
 as $$
+  with family as (
+    -- La famille demandée : son identifiant est normalisé comme partout
+    -- (`S10` pour un créateur sans région), et son total vient du catalogue.
+    select count(*)::int as total
+    from public.creators c
+    where coalesce(c.region, 'S10') = coalesce(p_region, 'S10')
+  ),
+  owned as (
+    select uc.user_id, count(distinct uc.creator_slug)::int as owned
+    from public.user_cards uc
+    join public.creators c on c.slug = uc.creator_slug
+    where coalesce(c.region, 'S10') = coalesce(p_region, 'S10')
+    group by uc.user_id
+  )
   select
     (row_number() over (order by
       case when p_metric = 'total_cards' then s.total_cards
            when p_metric = 'legendary_cards' then s.legendary_cards
            when p_metric = 'gold_cards' then s.gold_cards
+           when p_metric = 'family' then coalesce(o.owned, 0)
            else s.unique_creators end desc,
       s.total_cards desc,
       s.updated_at asc))::int as rank,
@@ -340,9 +366,12 @@ as $$
     s.level,
     s.points,
     round(s.unique_creators::numeric / greatest((select count(*) from public.creators), 1), 4) as completion,
-    coalesce(p.showcase_slugs, '{}') as showcase_slugs
+    coalesce(p.showcase_slugs, '{}') as showcase_slugs,
+    coalesce(o.owned, 0) as family_owned,
+    (select f.total from family f) as family_total
   from public.stats s
   left join public.profiles p on p.user_id = s.user_id
+  left join owned o on o.user_id = s.user_id
   where s.verified
   order by rank
   limit least(greatest(coalesce(p_limit, 20), 1), 100);
@@ -354,12 +383,14 @@ $$;
 -- Le classement est lisible par les joueurs connectés ; le profil public d'un
 -- autre joueur aussi (c'est le principe). Rien n'est ouvert aux visiteurs non
 -- connectés : ce jeu se joue connecté, et `anon` n'a aucune raison de lire les
--- statistiques des joueurs.
+-- statistiques des joueurs. La signature à trois arguments est la seule à
+-- donner : une tentative sur l'ancienne (deux arguments) échoue, et c'est tant
+-- mieux — elle ne connaissait pas les familles.
 revoke all on function public.player_profile(uuid) from public, anon;
 grant execute on function public.player_profile(uuid) to authenticated;
 
-revoke all on function public.leaderboard(integer, text) from public, anon;
-grant execute on function public.leaderboard(integer, text) to authenticated;
+revoke all on function public.leaderboard(integer, text, text) from public, anon;
+grant execute on function public.leaderboard(integer, text, text) to authenticated;
 
 -- Fonction interne : uniquement appelée par le trigger, jamais depuis un client.
 revoke all on function public.project_cards() from public, anon, authenticated;
