@@ -33,7 +33,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
+  // Pas de `maximumScale: 1` : bloquer le pincement, c'est casser l'agrandissement
+  // pour qui en a besoin — et le Play Store le reproche. Le jeu n'y perd rien :
+  // le défilement et les gestes de carte restent les mêmes.
   viewportFit: "cover",
   themeColor: "#090812",
   colorScheme: "dark",
