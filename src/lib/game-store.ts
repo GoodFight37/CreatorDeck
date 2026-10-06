@@ -16,6 +16,7 @@ import {
   recycleCard as engineRecycleCard,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
+  type LiveLogins,
   type PlayerState,
 } from "@/lib/game-engine";
 import { deviceStorage } from "@/lib/storage";
@@ -136,8 +137,13 @@ export const gameStore = {
   getSnapshot,
   getServerSnapshot,
 
-  openPack(now = Date.now()): DrawnCard[] {
-    const result = engineOpenPack(current(), now);
+  /**
+   * Ouvre un booster côté appareil (build sans cloud). `options.liveLogins`
+   * apporte le bonus Direct : les `login` des créateurs qui streament, lus
+   * dans le cache du direct au moment du geste.
+   */
+  openPack(now = Date.now(), options: { liveLogins?: LiveLogins } = {}): DrawnCard[] {
+    const result = engineOpenPack(current(), now, options);
     persist(result.state);
     return result.cards;
   },

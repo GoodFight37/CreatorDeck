@@ -6,18 +6,29 @@ import { runStudio } from "@/lib/tirage-studio";
 /**
  * Aléa déterministe : le moteur tire via `crypto.getRandomValues` (voir
  * `@/lib/random`), on remplace donc la source d'entropie par un générateur
- * congruentiel. Les assertions statistiques deviennent reproductibles — un
- * test qui dépend du hasard du jour finit toujours par échouer à 3 h du matin.
+ * **de qualité** (mulberry32). Les assertions statistiques deviennent
+ * reproductibles — un test qui dépend du hasard du jour finit toujours par
+ * échouer à 3 h du matin.
+ *
+ * Un simple générateur congruentiel ne suffisait pas : ses bits de poids faible
+ * sont corrélés, si bien qu'un événement à 1 ‰ (« Perfect ») finissait par
+ * dépendre du **nombre exact** de tirages internes du moteur — un détail
+ * d'implémentation. Le taux mesuré était alors de 0 ‰ ou de 7 ‰ selon la
+ * graine, pour la même table publiée.
  */
 function stubRandom(seed = 20260101): void {
   let state = seed >>> 0;
+  const next = (): number => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), 1 | t);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return (t ^ (t >>> 14)) >>> 0;
+  };
   vi.stubGlobal("crypto", {
     getRandomValues<T extends ArrayBufferView>(buffer: T): T {
       const view = buffer as unknown as { length: number; [index: number]: number };
-      for (let index = 0; index < view.length; index += 1) {
-        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
-        view[index] = state;
-      }
+      for (let index = 0; index < view.length; index += 1) view[index] = next();
       return buffer;
     },
   });
@@ -74,10 +85,11 @@ describe("studio de tirages", () => {
       // tirage qui ne correspond plus à ce qui est affiché.
       expect(Math.abs(result.observed[rarity] - result.expected[rarity])).toBeLessThan(0.03);
     }
-    // Le « Perfect » sort bien à son taux annoncé (1 ‰ chez Live) : sur 4 000
-    // boosters il doit apparaître, sans jamais dépasser quelques pour mille —
-    // en dessous, l'échantillon est trop petit pour dire quoi que ce soit.
-    const wide = runStudio("live", 4000);
+    // Le « Perfect » sort bien à son taux annoncé (1 ‰ chez Live). On simule
+    // 20 000 boosters : à 1 ‰, l'absence de Perfect n'a alors plus rien d'un
+    // hasard malheureux (une chance sur cinq cents millions), et le plafond
+    // attrape une table qui dériverait vers un événement banal.
+    const wide = runStudio("live", 20000);
     expect(wide.perfect).toBeGreaterThan(0);
     expect(wide.perfect).toBeLessThan(wide.packs * 0.01);
   });

@@ -53,6 +53,17 @@ export type LiveSnapshot = {
   error: string | null;
 };
 
+/**
+ * Les `login` des créateurs en direct, pour le tirage — ou un ensemble vide
+ * quand l'app ne sait pas qui streame (cloud absent, données périmées, aucune
+ * diffusion). C'est la seule porte d'entrée du bonus Direct : le moteur ne
+ * décide jamais lui-même d'être généreux.
+ */
+export function liveLogins(snapshot: LiveSnapshot): ReadonlySet<string> {
+  if (!snapshot.configured || snapshot.stale || snapshot.count === 0) return new Set<string>();
+  return new Set(snapshot.byLogin.keys());
+}
+
 /** Au-delà, on n'affiche plus rien : le direct est trop vieux pour être vrai. */
 export const LIVE_TTL_MS = 10 * 60 * 1000;
 /** Fréquence de rafraîchissement tant que l'app est ouverte. */

@@ -17,8 +17,6 @@ export type SlotTable = { weights: RarityWeights };
 
 export type GuaranteedSlot = {
   weights: RarityWeights;
-  /** Variante forcée sur la carte garantie (le booster Live impose « live »). */
-  variant?: CardVariant;
 };
 
 export type VariantChances = {
@@ -28,6 +26,32 @@ export type VariantChances = {
   /** Chance de Holo à partir de la rareté `holoFromRarity` (pour mille). */
   holoPermille?: number;
   holoFromRarity?: Rarity;
+};
+
+/**
+ * Le bonus Direct : ce que « être en direct » change dans un tirage.
+ *
+ * Deux effets, tous les deux conditionnés à une information **fraîche** sur le
+ * direct (le cache du serveur, moins de dix minutes) :
+ *
+ *   * les créateurs en direct pèsent `creatorBias` (× 1,5) dans chaque rareté,
+ *     donc ils tombent plus souvent ;
+ *   * la variante Live n'existe **que** pour eux : `livePermille` sur les slots
+ *     ordinaires, et systématiquement sur la carte garantie.
+ *
+ * Sans information fraîche, rien de tout cela ne s'applique et aucune carte
+ * Live ne sort : une variante « Live » qui désignerait quelqu'un qui ne
+ * streame pas ne vaudrait rien.
+ */
+export type DirectBonus = {
+  label: string;
+  /** Poids relatif des créateurs en direct (1 = neutre). */
+  creatorBias: number;
+  /** Chance (pour mille) qu'une carte d'un créateur en direct soit Live. */
+  livePermille: number;
+  /** La variante réservée au direct. */
+  variant: CardVariant;
+  note: string;
 };
 
 export type RareDropTable = {
@@ -60,6 +84,9 @@ export const RARITIES: readonly Rarity[] = [
 
 /** Tables déclarées, indexées par booster. */
 export const PULL_RATES = pullRateData.packs as Record<PackType, PackRateTable>;
+
+/** Le bonus Direct, déclaré une fois pour tous les boosters. */
+export const DIRECT_BONUS = pullRateData.direct as DirectBonus;
 
 function total(weights: RarityWeights): number {
   return RARITIES.reduce((sum, rarity) => sum + (weights[rarity] ?? 0), 0);

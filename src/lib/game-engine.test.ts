@@ -8,7 +8,7 @@ import {
   type CardVariant,
   type Rarity,
 } from "@/lib/catalog";
-import { PULL_RATES, packOdds } from "@/lib/pull-rates";
+import { DIRECT_BONUS, PULL_RATES, packOdds } from "@/lib/pull-rates";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
 import {
   GameError,
@@ -25,6 +25,7 @@ import {
   claimSeason,
   craftCreator,
   createInitialState,
+  creatorWeight,
   currentSeason,
   drawPack,
   duplicateGroups,
@@ -59,6 +60,11 @@ function stubRandom(values: number[]): void {
     },
   });
 }
+
+/** Le catalogue entier en direct : le cas où la variante Live est possible. */
+const ALL_LIVE = new Set(CREATORS.map((creator) => creator.login));
+/** Personne en direct — ou, ce qui revient au même, aucune information. */
+const NONE_LIVE = new Set<string>();
 
 const HOUR = 60 * 60 * 1000;
 const HALF_HOUR = 30 * 60 * 1000;
@@ -147,9 +153,12 @@ describe("drawPack", () => {
 
   it("un booster Live contient 5 cartes dont une Rare+ en variante Live", () => {
     for (let i = 0; i < 25; i += 1) {
-      const pack = drawPack("live", new Set());
+      const pack = drawPack("live", new Set(), { liveLogins: ALL_LIVE });
       expectValidPack(pack, PACKS.live.size);
-      expect(pack.filter((card) => card.variant === "live")).toHaveLength(1);
+      // La carte garantie est Live (son créateur streame) ; les slots
+      // ordinaires peuvent l'être aussi (20 % pour un créateur en direct).
+      expect(pack.filter((card) => card.variant === "live").length).toBeGreaterThanOrEqual(1);
+      expect(pack[pack.length - 1].variant).toBe("live");
     }
   });
 
@@ -157,14 +166,74 @@ describe("drawPack", () => {
     // L'ordre du tirage est l'ordre de la révélation : la cinquième carte du
     // tableau est le slot garanti (Rare ou mieux, variante Live imposée).
     for (let attempt = 0; attempt < 40; attempt += 1) {
-      const pack = drawPack("live", new Set());
+      const pack = drawPack("live", new Set(), { liveLogins: ALL_LIVE });
       const last = pack[pack.length - 1];
       expect(last.variant).toBe("live");
       expect(GUARANTEED).toContain(last.rarity);
     }
     // Même en Perfect (les 5 cartes en Épique ou mieux), la garantie ferme.
-    const perfect = drawPack("live", new Set(), { rareDrop: true });
+    const perfect = drawPack("live", new Set(), { rareDrop: true, liveLogins: ALL_LIVE });
     expect(perfect[perfect.length - 1].variant).toBe("live");
+  });
+
+  it("sans information sur le direct, aucune carte n'est en variante Live", () => {
+    // C'est la règle qui donne sa valeur à la variante : un « Live » qui
+    // désignerait quelqu'un qui ne streame pas ne vaudrait rien.
+    for (let i = 0; i < 60; i += 1) {
+      for (const options of [{}, { liveLogins: NONE_LIVE }]) {
+        const pack = drawPack("live", new Set(), options);
+        expect(pack.every((card) => card.variant !== "live")).toBe(true);
+      }
+    }
+  });
+
+  it("le créateur en direct pèse ×1,5, les autres 1", () => {
+    const creator = CREATORS[0];
+    expect(creatorWeight(creator, ALL_LIVE)).toBe(DIRECT_BONUS.creatorBias);
+    expect(creatorWeight(creator, NONE_LIVE)).toBe(1);
+    expect(creatorWeight(creator)).toBe(1);
+    // Un créateur absent de la liste des directs ne pèse pas plus lourd.
+    const other = CREATORS.find((c) => c.login !== creator.login) as (typeof CREATORS)[number];
+    expect(creatorWeight(other, new Set([creator.login]))).toBe(1);
+  });
+
+  it("fait tomber plus souvent les créateurs qui streament", () => {
+    // Le poids doit servir *au tirage*, pas seulement à être calculé. Le bonus
+    // s'applique dans une rareté : on mesure donc sur **une seule rareté**, la
+    // moitié des légendaires étant en direct. Les tirages « Perfect » (18 % de
+    // légendaires par carte) donnent assez de matière pour un seuil placé à
+    // mi-chemin entre « aucun bonus » et « bonus appliqué » — un test qui
+    // échoue si la règle disparaît, pas si la chance du jour est moyenne.
+    const legendary = CREATORS.filter((creator) => creator.rarity === "legendary");
+    const half = Math.floor(legendary.length / 2);
+    const liveLogins = new Set(legendary.slice(0, half).map((creator) => creator.login));
+    const liveSlugs = new Set(legendary.slice(0, half).map((creator) => creator.slug));
+    const others = legendary.length - half;
+    const nullShare = half / legendary.length;
+    const biasedShare = (half * DIRECT_BONUS.creatorBias) / (half * DIRECT_BONUS.creatorBias + others);
+    const threshold = (nullShare + biasedShare) / 2;
+
+    let legendaries = 0;
+    let hits = 0;
+    for (let i = 0; i < 1500; i += 1) {
+      for (const card of drawPack("live", new Set(), { rareDrop: true, liveLogins })) {
+        if (card.rarity !== "legendary") continue;
+        legendaries += 1;
+        if (liveSlugs.has(card.creatorSlug)) hits += 1;
+      }
+    }
+
+    expect(biasedShare).toBeGreaterThan(nullShare);
+    expect(legendaries).toBeGreaterThan(400);
+    expect(hits / legendaries).toBeGreaterThan(threshold);
+  });
+
+  it("la carte garantie est en variante Live quand son créateur streame", () => {
+    for (let i = 0; i < 25; i += 1) {
+      const pack = drawPack("live", new Set(), { liveLogins: ALL_LIVE });
+      expect(pack[pack.length - 1].variant).toBe("live");
+      expect(GUARANTEED).toContain(pack[pack.length - 1].rarity);
+    }
   });
 
   it("marque isNew selon la collection possédée", () => {
@@ -448,14 +517,14 @@ function ownedCard(
 describe("Perfect (Rare Drop)", () => {
   it("bascule tout le booster en Épique ou mieux", () => {
     for (let i = 0; i < 10; i += 1) {
-      const pack = drawPack("live", new Set(), { rareDrop: true });
+      const pack = drawPack("live", new Set(), { rareDrop: true, liveLogins: ALL_LIVE });
       expect(pack).toHaveLength(PACKS.live.size);
       expect(pack.every((card) => card.rareDrop)).toBe(true);
       expect(
         pack.every((card) => RARITY_META[card.rarity].order >= RARITY_META.epic.order),
       ).toBe(true);
-      // La garantie du booster Live tient même en Perfect : une seule Live.
-      expect(pack.filter((card) => card.variant === "live")).toHaveLength(1);
+      // La garantie du booster Live tient même en Perfect : la dernière est Live.
+      expect(pack[pack.length - 1].variant).toBe("live");
     }
   });
 

@@ -2,13 +2,18 @@
 
 import { X } from "lucide-react";
 import { PACKS, RARITY_META } from "@/lib/catalog";
-import { RARITIES, packOdds } from "@/lib/pull-rates";
+import { DIRECT_BONUS, RARITIES, packOdds } from "@/lib/pull-rates";
 
 const percent = new Intl.NumberFormat("fr-FR", {
   style: "percent",
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
 });
+
+/** « ×1,5 » — la virgule décimale, écrite à la main (pas de locale au rendu). */
+function formatMultiplier(value: number): string {
+  return `×${String(value).replace(".", ",")}`;
+}
 
 /**
  * Écran « Taux de drop » : les probabilités publiées, calculées à l'affichage
@@ -103,9 +108,20 @@ function PackOddsBlock() {
         </ul>
       </details>
 
+      <div className="odds-rare odds-direct">
+        <strong>{DIRECT_BONUS.label}</strong>
+        <span>
+          Un créateur en direct pèse {formatMultiplier(DIRECT_BONUS.creatorBias)} dans sa rareté,
+          et sa carte a {percent.format(DIRECT_BONUS.livePermille / 1000)} de chance d&apos;être en
+          variante Live. La carte garantie est Live quand son créateur streame.
+        </span>
+        <small>{DIRECT_BONUS.note}</small>
+      </div>
+
       <p className="odds-footnote">
         « Au moins 1 » = probabilité qu&apos;un booster contienne au moins une carte de cette
-        rareté. Le 5ᵉ slot est garanti Rare ou mieux, en variante Live.
+        rareté. Le 5ᵉ slot est garanti Rare ou mieux. La variante Live, elle, ne s&apos;obtient
+        que pendant un direct — sans information fraîche sur qui streame, elle ne sort pas.
       </p>
     </section>
   );

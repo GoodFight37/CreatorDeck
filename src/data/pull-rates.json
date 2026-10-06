@@ -1,6 +1,13 @@
 {
-  "version": 1,
-  "note": "Tables de tirage par slot, sur le modèle de pullRates.json de pokemon-tcg-pocket-database (MIT). Source de vérité unique : le moteur (src/lib/game-engine.ts) tire depuis ce fichier et l'écran « Taux de drop » affiche exactement les mêmes probabilités. Modifier un poids ici suffit à rééquilibrer le jeu, sans toucher au code.",
+  "version": 2,
+  "note": "Tables de tirage par slot, sur le modèle de pullRates.json de pokemon-tcg-pocket-database (MIT). Source de vérité unique : le moteur (src/lib/game-engine.ts) et le serveur (supabase/migrations/0011_direct.sql) tirent depuis ce fichier, et l'écran « Taux de drop » affiche exactement les mêmes probabilités. Modifier un poids ici suffit à rééquilibrer le jeu, sans toucher au code.",
+  "direct": {
+    "label": "Bonus Direct",
+    "creatorBias": 1.5,
+    "livePermille": 200,
+    "variant": "live",
+    "note": "Les créateurs qui streament au moment du tirage pèsent ×1,5 dans chaque rareté, et leur carte a 200‰ (20 %) de chance d'être en variante Live. La carte garantie est en variante Live quand son créateur est en direct. Sans information fraîche sur le direct (au-delà de dix minutes), le bonus est neutre et aucune variante Live n'est tirée : un badge faux serait pire que pas de badge."
+  },
   "packs": {
     "live": {
       "label": "Live Drop",
@@ -10,8 +17,7 @@
           "rare": 82,
           "epic": 15,
           "legendary": 3
-        },
-        "variant": "live"
+        }
       },
       "slots": [
         {

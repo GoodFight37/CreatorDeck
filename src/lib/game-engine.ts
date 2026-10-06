@@ -25,7 +25,7 @@ import {
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
-import { PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
+import { DIRECT_BONUS, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
 import { SEASONS, SEASON_BY_ID, type SeasonReward, type SeasonTier } from "@/lib/seasons";
 import {
   DEFAULT_THEME,
@@ -453,12 +453,39 @@ export function refreshBalances(state: PlayerState, now = Date.now()): PlayerSta
 }
 
 /**
- * Tire une rareté selon `weights` (parmi celles encore disponibles), puis un
- * créateur uniformément dans la rareté choisie. Les poids déclarés décrivent
- * donc exactement la probabilité affichée : c'est le contrat de l'écran
- * « Taux de drop ».
+ * Le contexte « direct » d'un tirage : les `login` Twitch des créateurs qui
+ * streament **au moment du tirage**, tels que le serveur les a publiés (moins
+ * de dix minutes). Un ensemble vide (ou absent) veut dire « on ne sait pas » —
+ * et dans ce cas le tirage reste neutre : pas de bonus, pas de variante Live.
  */
-function chooseCreator(weights: RarityWeights, used: ReadonlySet<string>): Creator {
+export type LiveLogins = ReadonlySet<string>;
+
+/** Ce créateur streame-t-il, d'après les données du moment ? */
+export function isCreatorLive(creator: Creator, liveLogins?: LiveLogins): boolean {
+  return Boolean(liveLogins?.size && liveLogins.has(creator.login));
+}
+
+/**
+ * Le poids d'un créateur dans sa rareté : `creatorBias` s'il streame, 1 sinon.
+ * Exposé pour que les tests vérifient la règle sans dépendre du hasard.
+ */
+export function creatorWeight(creator: Creator, liveLogins?: LiveLogins): number {
+  if (!isCreatorLive(creator, liveLogins)) return 1;
+  return DIRECT_BONUS.creatorBias > 0 ? DIRECT_BONUS.creatorBias : 1;
+}
+
+/**
+ * Tire une rareté selon `weights` (parmi celles encore disponibles), puis un
+ * créateur dans la rareté choisie — uniformément, sauf bonus Direct : les
+ * créateurs en direct pèsent × 1,5 (`pull-rates.json`). Les poids déclarés
+ * décrivent donc exactement la probabilité affichée : c'est le contrat de
+ * l'écran « Taux de drop ».
+ */
+function chooseCreator(
+  weights: RarityWeights,
+  used: ReadonlySet<string>,
+  liveLogins?: LiveLogins,
+): Creator {
   const available = CREATORS.filter(
     (creator) => !used.has(creator.slug) && (weights[creator.rarity] ?? 0) > 0,
   );
@@ -486,19 +513,46 @@ function chooseCreator(weights: RarityWeights, used: ReadonlySet<string>): Creat
   }
 
   const bucket = available.filter((creator) => creator.rarity === chosenRarity);
-  return bucket[randomInt(bucket.length)];
+  // Le bonus Direct : un créateur qui streame pèse plus lourd dans sa rareté.
+  // Sans information fraîche, tous les poids valent 1 et le tirage est
+  // exactement celui d'avant.
+  const bucketWeight = bucket.reduce(
+    (sum, creator) => sum + creatorWeight(creator, liveLogins),
+    0,
+  );
+  let pick = randomInt(Math.max(1, Math.round(bucketWeight * 1000)));
+  for (const creator of bucket) {
+    const weight = Math.round(creatorWeight(creator, liveLogins) * 1000);
+    if (pick < weight) return creator;
+    pick -= weight;
+  }
+  return bucket[bucket.length - 1];
 }
 
 /**
  * Variante cosmétique d'une carte, selon la table du booster. Un « Perfect »
  * améliore presque toujours la variante (Holo, ou Gold sur une Légendaire).
+ *
+ * Depuis le bonus Direct, la variante Live n'existe **que** pour un créateur
+ * qui streame au moment du tirage : `livePermille` (20 %), prioritaire sur la
+ * table des variantes. Sans information fraîche sur le direct, aucune carte
+ * Live ne peut sortir.
  */
-function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean): CardVariant {
+function chooseVariant(
+  packType: PackType,
+  creator: Creator,
+  rareDrop: boolean,
+  liveLogins?: LiveLogins,
+): CardVariant {
   const chances = PULL_RATES[packType].variants;
   const roll = randomInt(10_000);
 
   if (rareDrop && roll < PULL_RATES[packType].rareDrop.variantUpgradePermille) {
     return creator.rarity === "legendary" ? "gold" : "holo";
+  }
+
+  if (isCreatorLive(creator, liveLogins) && randomInt(10_000) < DIRECT_BONUS.livePermille) {
+    return DIRECT_BONUS.variant;
   }
 
   const goldRarity = chances.goldRarity ?? "legendary";
@@ -520,8 +574,7 @@ function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean):
 
 /**
  * Tire le contenu d'un booster depuis `pull-rates.json` : un slot par carte
- * (les taux montent au fil du booster), puis le slot garanti — Rare ou mieux,
- * variante Live imposée.
+ * (les taux montent au fil du booster), puis le slot garanti — Rare ou mieux.
  *
  * **L'ordre des cartes est celui du tirage** : le slot garanti reste en
  * dernière position. Un booster se révèle donc comme un vrai paquet, la
@@ -530,14 +583,18 @@ function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean):
  *
  * `options.rareDrop` force (ou désactive) le tirage « Perfect » : réservé aux
  * tests et aux futurs événements à taux boosté.
+ *
+ * `options.liveLogins` apporte le bonus Direct (créateurs qui streament, × 1,5
+ * et variante Live). Omis ou vide : tirage neutre, aucune variante Live.
  */
 export function drawPack(
   packType: PackType,
   alreadyOwned: ReadonlySet<string>,
-  options: { rareDrop?: boolean } = {},
+  options: { rareDrop?: boolean; liveLogins?: LiveLogins } = {},
 ): DrawnCard[] {
   const table = PULL_RATES[packType];
   const size = PACKS[packType].size;
+  const liveLogins = options.liveLogins;
   const rareDrop =
     options.rareDrop ?? randomInt(1000) < table.rareDrop.chancePermille;
   const weightsFor = (index: number): RarityWeights =>
@@ -547,27 +604,32 @@ export function drawPack(
   const drawn: DrawnCard[] = [];
 
   for (let index = 0; index < size - 1; index += 1) {
-    const creator = chooseCreator(weightsFor(index), used);
+    const creator = chooseCreator(weightsFor(index), used, liveLogins);
     used.add(creator.slug);
     drawn.push({
       id: randomUUID(),
       creatorSlug: creator.slug,
       rarity: creator.rarity,
-      variant: chooseVariant(packType, creator, rareDrop),
+      variant: chooseVariant(packType, creator, rareDrop, liveLogins),
       isNew: !alreadyOwned.has(creator.slug),
       rareDrop,
     });
   }
 
+  // La carte garantie est en variante Live quand son créateur streame — c'est
+  // le moment fort du paquet, et il porte la preuve de présence.
   const guaranteed = chooseCreator(
     rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
     used,
+    liveLogins,
   );
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,
     rarity: guaranteed.rarity,
-    variant: table.guaranteed.variant ?? chooseVariant(packType, guaranteed, rareDrop),
+    variant: isCreatorLive(guaranteed, liveLogins)
+      ? DIRECT_BONUS.variant
+      : chooseVariant(packType, guaranteed, rareDrop, liveLogins),
     isNew: !alreadyOwned.has(guaranteed.slug),
     rareDrop,
   });
@@ -884,13 +946,14 @@ export function claimSeason(
 export function openPack(
   state: PlayerState,
   now = Date.now(),
+  options: { liveLogins?: LiveLogins } = {},
 ): { state: PlayerState; cards: DrawnCard[] } {
   const refreshed = refreshBalances(state, now);
   if (refreshed.packs <= 0) {
     throw new GameError("Aucun booster disponible pour le moment.", "PACK_NOT_READY");
   }
 
-  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed));
+  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed), options);
 
   // Même application qu'un tirage serveur : un seul endroit calcule les
   // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`

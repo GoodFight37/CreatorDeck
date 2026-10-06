@@ -64,7 +64,8 @@ import {
   type CardVariant,
   type Rarity,
 } from "@/lib/catalog";
-import { formatViewers, liveFor, viewersLabel } from "@/lib/live";
+import { formatViewers, liveFor, liveLogins, viewersLabel } from "@/lib/live";
+import { liveStore } from "@/lib/live-store";
 import { regionLabel } from "@/lib/regions";
 import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
@@ -263,9 +264,17 @@ function HomeView({
       </section>
 
       {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
-          streame (données fraîches) : sinon il n'y a rien à dire. */}
+          streame (données fraîches) : sinon il n'y a rien à dire. Il est
+          cliquable parce qu'il annonce quelque chose sur le tirage — les
+          créateurs en direct pèsent plus lourd et eux seuls peuvent sortir en
+          variante Live. Un appui ouvre les taux publiés, qui le disent. */}
       {featured ? (
-        <div className="live-bar" role="status">
+        <button
+          type="button"
+          className="live-bar"
+          onClick={onShowOdds}
+          aria-label={`${live.count} créateurs en direct. Bonus Direct actif : voir les taux publiés.`}
+        >
           <i aria-hidden="true" />
           <span className="live-bar-tag">En direct</span>
           <span className="live-bar-who">
@@ -273,7 +282,8 @@ function HomeView({
             {` · @${featured.login}`}
             {featured.viewers > 0 ? ` ${formatViewers(featured.viewers)}` : ""}
           </span>
-        </div>
+          <span className="live-bar-boost">Bonus Direct</span>
+        </button>
       ) : null}
 
       <section className="pack-stage stage-live">
@@ -1053,7 +1063,11 @@ export function CreatorDeckApp() {
         // Petit délai volontaire : le tirage est instantané en local, mais la
         // révélation mérite son moment de suspense.
         await new Promise((resolve) => window.setTimeout(resolve, OPENING_DELAY_MS));
-        const cards = gameStore.openPack();
+        // Le bonus Direct : on lit l'état du direct au moment du geste (et non
+        // au rendu), pour que « qui streame » soit celui d'il y a dix secondes.
+        const cards = gameStore.openPack(Date.now(), {
+          liveLogins: liveLogins(liveStore.getSnapshot()),
+        });
         // Le son accompagne le geste, jamais l'attente : c'est l'instant du
         // « wouip » qui compte.
         playPackOpening();
