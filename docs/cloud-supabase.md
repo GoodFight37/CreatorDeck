@@ -516,14 +516,24 @@ coûte rien — c'est ce qui permet de la laisser sans jeton.
    elle-même ; un jeton n'apporterait rien.)
 4. SQL Editor : coller `0007_direct.sql`, puis **re-coller `0003_catalogue.sql`**
    (il apporte la colonne `login`, la clé qui relie une diffusion à sa carte).
-5. Ouvrir l'app : le premier affichage déclenche le rafraîchissement. Pour
-   forcer un rafraîchissement tout de suite, ouvrir l'URL de la fonction avec
-   `?force=1` (l'app, elle, ne le fait jamais).
+5. Ouvrir l'app : le premier affichage déclenche le rafraîchissement.
 
-En cas de doute, `POST /functions/v1/refresh-live` répond en JSON :
-`{"skipped":true,"age_ms":…}` (trop récent), `{"ok":true,"checked":1000,
-"live":12,…}` (publié), ou `{"error":…}` (secret manquant, catalogue vide,
-refus de Twitch).
+**Diagnostiquer depuis un navigateur** — la fonction répond en JSON, sans outil :
+
+| URL à ouvrir | Ce qu'elle dit |
+| --- | --- |
+| `…/functions/v1/refresh-live?check=1` | secrets présents ou non, catalogue lisible, âge du cache. **Aucune requête Twitch** |
+| `…/functions/v1/refresh-live` | déclenche le rafraîchissement et renvoie ce qui a été publié |
+
+Réponses possibles de l'appel normal : `{"skipped":true,"age_ms":…}` (le cache a
+moins de 90 secondes — recharge la page plus tard), `{"ok":true,"checked":1000,
+"live":12,…}` (publié), ou `{"error":…}` (secret manquant, catalogue vide, refus
+de Twitch — le message dit lequel).
+
+Si l'app ne déclenche rien alors que la fonction répond à la main, regarder
+**Edge Functions → refresh-live → Logs** : une invocation refusée par
+« Verify JWT » y apparaît comme un 401, une absence d'invocation veut dire que
+l'app n'a pas appelé (cloud non configuré dans son `.env.local`).
 
 ## 9. Suite : notifications
 

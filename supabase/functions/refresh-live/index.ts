@@ -16,6 +16,12 @@
  * Pourquoi ici et pas dans l'app : un APK se dézippe. Une clé secrète embarquée
  * serait publique, et n'importe qui pourrait se faire passer pour le jeu.
  *
+ * Diagnostic, depuis un navigateur (aucun outil nécessaire) :
+ *   * `…/functions/v1/refresh-live?check=1` — secrets présents, catalogue
+ *     lisible, âge du cache. Ne consomme pas de quota Twitch ;
+ *   * `…/functions/v1/refresh-live` — déclenche un rafraîchissement (une seule
+ *     requête Twitch toutes les 90 secondes) et renvoie ce qui a été publié.
+ *
  * Déploiement (voir `docs/cloud-supabase.md` § Direct) :
  *   * secrets de la fonction : `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` ;
  *   * « Verify JWT » peut rester **désactivé** : la fonction ne publie que des
@@ -26,7 +32,29 @@
 const CLIENT_ID = Deno.env.get("TWITCH_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("TWITCH_CLIENT_SECRET") ?? "";
 const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/+$/, "");
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+/**
+ * La clé qui écrit (rôle de service). Deux nomenclatures coexistent : l'ancienne
+ * variable `SUPABASE_SERVICE_ROLE_KEY` (un JWT) et la nouvelle
+ * `SUPABASE_SECRET_KEYS` (un objet JSON de clés `sb_secret_…`). On accepte les
+ * deux : sinon la fonction échoue sur un projet récent avec un message qui
+ * n'explique rien.
+ */
+function serviceKey(): string {
+  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  if (legacy) return legacy;
+  const raw = Deno.env.get("SUPABASE_SECRET_KEYS") ?? "";
+  try {
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    const first = parsed.default ?? Object.values(parsed)[0];
+    if (typeof first === "string" && first) return first;
+  } catch {
+    // Variable absente ou d'un autre format : on retombe sur « pas de clé ».
+  }
+  return "";
+}
+
+const SERVICE_ROLE = serviceKey();
 
 /** Une requête Helix toutes les 90 secondes au plus, pour tout le monde. */
 const MIN_INTERVAL_MS = 90_000;
@@ -153,7 +181,41 @@ async function helixStreams(logins: string[], token: string): Promise<StreamRow[
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
-  if (req.method !== "POST") return json({ error: "Méthode attendue : POST." }, 405);
+  // GET comme POST : ouvrir l'URL dans un navigateur doit répondre. C'est la
+  // seule façon simple de diagnostiquer sans outil — et la fonction ne publie
+  // que des données publiques, en s'auto-limitant à une requête Twitch toutes
+  // les 90 secondes.
+  if (req.method !== "POST" && req.method !== "GET") {
+    return json({ error: "Méthode attendue : GET ou POST." }, 405);
+  }
+
+  const params = new URL(req.url).searchParams;
+
+  // Mode diagnostic : ne parle **pas** à Twitch, ne consomme pas de quota.
+  // Répond à « pourquoi je ne vois rien ? » : secrets présents, catalogue
+  // lisible, âge du cache.
+  if (params.get("check") === "1") {
+    const secrets = {
+      twitch_client_id: Boolean(CLIENT_ID),
+      twitch_client_secret: Boolean(CLIENT_SECRET),
+      supabase_url: Boolean(SUPABASE_URL),
+      service_key: Boolean(SERVICE_ROLE),
+    };
+    let catalogue: number | string = "non lu";
+    let cache: unknown = "non lu";
+    try {
+      catalogue = (await catalogueLogins()).length;
+    } catch (error) {
+      catalogue = error instanceof Error ? error.message : String(error);
+    }
+    try {
+      cache = (await rest("live_state?id=eq.true&select=refreshed_at,streams,note")) as unknown;
+    } catch (error) {
+      cache = error instanceof Error ? error.message : String(error);
+    }
+    return json({ ok: true, check: true, secrets, catalogue_logins: catalogue, cache });
+  }
+
   if (!CLIENT_ID || !CLIENT_SECRET) {
     return json(
       {
@@ -167,8 +229,6 @@ Deno.serve(async (req) => {
     return json({ error: "SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY absent de l'environnement." }, 500);
   }
 
-  const force = new URL(req.url).searchParams.get("force") === "1";
-
   try {
     const state = (await rest("live_state?id=eq.true&select=refreshed_at,streams")) as {
       refreshed_at: string;
@@ -176,7 +236,7 @@ Deno.serve(async (req) => {
     }[];
     const refreshedAt = state[0]?.refreshed_at ? Date.parse(state[0].refreshed_at) : 0;
     const age = Date.now() - refreshedAt;
-    if (!force && Number.isFinite(age) && age < MIN_INTERVAL_MS) {
+    if (Number.isFinite(age) && age < MIN_INTERVAL_MS) {
       return json({ skipped: true, age_ms: age, streams: state[0]?.streams ?? 0 });
     }
 
