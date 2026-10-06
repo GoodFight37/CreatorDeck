@@ -52,6 +52,19 @@ async function loadCapacitor(): Promise<CapacitorModule | null> {
   return capacitorModule;
 }
 
+/**
+ * Le jeu tourne-t-il dans l'application Android ? Sert à choisir l'adresse de
+ * retour d'une connexion (schéma de l'app) plutôt que la page du site.
+ */
+export async function isNativeApp(): Promise<boolean> {
+  const mod = await loadCapacitor();
+  try {
+    return mod?.Capacitor.isNativePlatform() === true;
+  } catch {
+    return false;
+  }
+}
+
 function webFetch(url: string, init: CloudRequestInit): Promise<CloudResponseLike> {
   return fetch(url, { method: init.method, headers: init.headers, body: init.body });
 }

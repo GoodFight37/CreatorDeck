@@ -1100,3 +1100,43 @@ describe("hôtel des ventes", () => {
     expect(await api.marketShelf()).toEqual([]);
   });
 });
+
+describe("connexion Twitch", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("construit l'adresse Supabase du dialogue Twitch", () => {
+    const { api } = client(() => ({ body: {} }));
+    const url = new URL(api.twitchAuthorizeUrl("com.creatordeck.app://auth"));
+    expect(url.pathname).toBe("/auth/v1/authorize");
+    expect(url.searchParams.get("provider")).toBe("custom:twitch");
+    expect(url.searchParams.get("redirect_to")).toBe("com.creatordeck.app://auth");
+  });
+
+  it("installe la session à partir des jetons, en demandant d'abord qui est l'utilisateur", async () => {
+    const storage = memoryStorage();
+    const { api, calls } = client(() => ({ body: { id: "u-twitch", email: "joueur@exemple.fr" } }), storage);
+    const session = await api.adoptSession({ accessToken: "jeton", refreshToken: "renouvellement", expiresIn: 3600 });
+
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/auth/v1/user");
+    expect((calls[0]?.init?.headers as Record<string, string>).Authorization).toBe("Bearer jeton");
+    expect(session.userId).toBe("u-twitch");
+    expect(session.email).toBe("joueur@exemple.fr");
+    // La session est enregistrée : l'appareil est connecté, comme après un code.
+    expect(api.session()?.userId).toBe("u-twitch");
+    expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(true);
+  });
+
+  it("n'enregistre rien si le serveur ne rend pas d'utilisateur", async () => {
+    const storage = memoryStorage();
+    const { api } = client(() => ({ status: 401, body: { message: "invalid token" } }), storage);
+    await expect(api.adoptSession({ accessToken: "jeton", refreshToken: "r", expiresIn: 60 })).rejects.toThrow("Twitch");
+    expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(false);
+  });
+});

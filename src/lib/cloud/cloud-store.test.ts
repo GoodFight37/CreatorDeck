@@ -110,6 +110,8 @@ type FakeApi = {
   marketSell: ReturnType<typeof vi.fn>;
   marketBuy: ReturnType<typeof vi.fn>;
   marketListingsOf: ReturnType<typeof vi.fn>;
+  twitchAuthorizeUrl: ReturnType<typeof vi.fn>;
+  adoptSession: ReturnType<typeof vi.fn>;
 };
 
 function harness(options: {
@@ -258,6 +260,8 @@ function harness(options: {
       cardId,
     })),
     marketListingsOf: vi.fn(async () => [LISTING]),
+    twitchAuthorizeUrl: vi.fn((redirectTo: string) => `https://projet.supabase.co/auth/v1/authorize?provider=custom:twitch&redirect_to=${encodeURIComponent(redirectTo)}`),
+    adoptSession: vi.fn(async () => ({ ...SESSION, email: "joueur@exemple.fr" })),
     marketBuy: vi.fn(async () => ({
       card: {
         id: "neuve",
@@ -1194,5 +1198,62 @@ describe("hôtel des ventes", () => {
     await store.signOut();
     expect(store.getSnapshot().market).toEqual([]);
     expect(store.getSnapshot().marketAt).toBeNull();
+  });
+});
+
+describe("connexion Twitch", () => {
+  it("donne l'adresse à ouvrir, sans naviguer lui-même", () => {
+    const { store, api } = harness();
+    const url = store.twitchSignInUrl("com.creatordeck.app://auth");
+    expect(api.twitchAuthorizeUrl).toHaveBeenCalledWith("com.creatordeck.app://auth");
+    expect(url).toContain("provider=custom:twitch");
+  });
+
+  it("ne propose rien quand le cloud n'est pas configuré", () => {
+    const { store, api } = harness({ configured: false });
+    expect(store.twitchSignInUrl("https://exemple.fr/")).toBeNull();
+    expect(api.twitchAuthorizeUrl).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toMatch(/hors ligne/);
+  });
+
+  it("installe la session au retour et relit l'identité", async () => {
+    const { store, api } = harness();
+    const outcome = await store.completeTwitchSignIn(
+      "com.creatordeck.app://auth#access_token=aaa&refresh_token=rrr&expires_in=3600&token_type=bearer",
+    );
+    expect(api.adoptSession).toHaveBeenCalledWith({ accessToken: "aaa", refreshToken: "rrr", expiresIn: 3600 });
+    expect(outcome.status).toBe("done");
+    expect(store.getSnapshot().userId).toBe(SESSION.userId);
+    expect(store.getSnapshot().displayName).toBe("Kaicenat");
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("transmet le refus de Twitch, en clair", async () => {
+    const { store, api } = harness();
+    const outcome = await store.completeTwitchSignIn(
+      "https://creatordeck.example/#error=access_denied&error_description=The%20user%20denied%20you%20access",
+    );
+    expect(outcome.status).toBe("unavailable");
+    expect(api.adoptSession).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toMatch(/n'a pas donné son accord : The user denied you access/);
+  });
+
+  it("ne fait rien d'une adresse qui n'est pas un retour de connexion", async () => {
+    const { store, api } = harness();
+    // Le lien de partage d'une fiche : rien à installer, rien à afficher.
+    expect(await store.completeTwitchSignIn("https://creatordeck.example/?profil=abc")).toEqual({ status: "none" });
+    expect(api.adoptSession).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toBeNull();
+  });
+
+  it("dit clairement quand le compte n'a pas pu être ouvert", async () => {
+    const { store, api } = harness();
+    (api.adoptSession as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("Connexion Twitch acceptée, mais le compte n'a pas pu être ouvert. Réessaie depuis l'écran Compte.", "oauth_user_failed", 401),
+    );
+    const outcome = await store.completeTwitchSignIn("https://a.example/#access_token=aaa&refresh_token=rrr&expires_in=60");
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/compte n'a pas pu être ouvert/);
   });
 });

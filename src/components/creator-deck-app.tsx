@@ -47,6 +47,7 @@ import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useTwitchReturn } from "@/hooks/use-twitch-return";
 import { useLive, useLivePolling } from "@/hooks/use-live";
 import {
   CATALOG_AUDIENCE,
@@ -957,6 +958,8 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 export function CreatorDeckApp() {
+  // Termine une connexion Twitch si l'on revient d'un aller-retour navigateur.
+  useTwitchReturn();
   const state = useGame();
   const cloud = useCloud();
   const now = useNow(1_000);

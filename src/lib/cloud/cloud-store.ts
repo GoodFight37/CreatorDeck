@@ -42,6 +42,7 @@ import {
 } from "@/lib/social/friends";
 import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
+import { parseOAuthReturn } from "@/lib/cloud/twitch";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
@@ -179,6 +180,12 @@ export type CloudActionOutcome =
  * (message déjà en français).
  */
 export type TradeOutcome = CloudActionOutcome;
+
+/**
+ * Résultat d'un retour de connexion (Twitch). `none` : l'adresse examinée
+ * n'était pas un retour de connexion, il n'y a rien à dire.
+ */
+export type OAuthOutcome = CloudActionOutcome | { status: "none" };
 
 /** Résultat d'une action sur le compte (adresse, mot de passe). */
 export type AccountOutcome = CloudActionOutcome;
@@ -1338,6 +1345,73 @@ export function createCloudStore(deps: CloudDeps) {
         fail(error, "Classement indisponible.");
       }
     },
+    // ---------------------------------------------------------------- Twitch
+    //
+    // La connexion Twitch est un aller-retour par le navigateur : le store ne
+    // navigue pas (il ne connaît ni `window` ni le DOM, c'est ce qui le rend
+    // testable) — il **donne l'adresse à ouvrir** et **termine** au retour.
+    // L'écran, lui, ouvre la porte.
+
+    /**
+     * L'adresse à ouvrir pour se connecter avec Twitch, ou `null` si ce build
+     * n'a pas de cloud configuré.
+     */
+    twitchSignInUrl(redirectTo: string): string | null {
+      const api = resolve();
+      if (!api) {
+        publish({ message: CLOUD_DISABLED_HINT, isError: true });
+        return null;
+      }
+      return api.twitchAuthorizeUrl(redirectTo);
+    },
+
+    /**
+     * Termine une connexion Twitch à partir de l'adresse de retour.
+     *
+     * Le fragment contient les jetons : on les échange contre l'identité du
+     * compte, on enregistre la session, on relit le nom affiché — la connexion
+     * devient indiscernable d'un compte invité, avec sa collection déjà en
+     * place si le compte Twitch en avait une.
+     */
+    async completeTwitchSignIn(url: string): Promise<OAuthOutcome> {
+      const returned = parseOAuthReturn(url);
+      if (returned.status === "none") return { status: "none" };
+      const api = resolve();
+      if (!api) {
+        const refusal: CloudActionOutcome = {
+          status: "unavailable",
+          reason: "not-configured",
+          message: CLOUD_DISABLED_HINT,
+        };
+        publish({ message: refusal.message, isError: true });
+        return refusal;
+      }
+      if (returned.status === "error") {
+        const message = `Twitch n'a pas donné son accord : ${returned.message}`;
+        publish({ message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true, message: null, isError: false });
+      try {
+        const session = await api.adoptSession({
+          accessToken: returned.accessToken,
+          refreshToken: returned.refreshToken,
+          expiresIn: returned.expiresIn,
+        });
+        refreshIdentity();
+        await this.loadProfile();
+        const message = session.email
+          ? `Connecté avec Twitch (${session.email}). Ta collection locale reste celle de cet appareil.`
+          : "Connecté avec Twitch. Ta collection locale reste celle de cet appareil.";
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Connexion Twitch impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
     // --------------------------------------------------- Hôtel des ventes
     //
     // Même règle que le reste : le serveur décide et écrit, l'appareil rejoue

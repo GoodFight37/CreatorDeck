@@ -422,6 +422,14 @@ version web hébergée.
   `market_listings_of()`. L'écran vit dans « Profil → Hôtel des ventes » ; la
   fiche publique montre « En vente à l'hôtel ». Mise en place :
   `docs/cloud-supabase.md` §8, « L'hôtel des ventes ».
+  La **connexion Twitch** passe par un fournisseur personnalisé Supabase
+  (`custom:twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
+  le navigateur, et le retour installe une session ordinaire — le secret du
+  client Twitch ne quitte jamais Supabase, l'appareil ne connaît que l'adresse
+  du dialogue. Sur le site, le jeton arrive dans le fragment de l'adresse et
+  l'adresse est nettoyée aussitôt ; dans l'APK, le retour passe par
+  `com.creatordeck.app://auth` (`AndroidManifest.xml` + plugin `@capacitor/app`).
+  Mise en place (trois déclarations) : `docs/cloud-supabase.md` §3.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

@@ -15,6 +15,7 @@
 import type { KeyValueStorage } from "@/lib/save-store";
 import type { CloudConfig } from "@/lib/cloud/config";
 import { cloudRequest, type CloudFetch } from "@/lib/cloud/transport";
+import { twitchAuthorizeUrl } from "@/lib/cloud/twitch";
 import type {
   Friendship,
   IncomingRequest,
@@ -1062,6 +1063,58 @@ export class CloudApi {
         },
       ];
     });
+  }
+
+  // --------------------------------------------------------------- Twitch
+
+  /**
+   * L'adresse à ouvrir pour se connecter avec Twitch. Supabase (et non
+   * l'appareil) détient le secret du client Twitch ; l'appareil ne fait
+   * qu'ouvrir la porte et attendre le retour.
+   */
+  twitchAuthorizeUrl(redirectTo: string): string {
+    return twitchAuthorizeUrl(this.config, redirectTo);
+  }
+
+  /**
+   * Installe une session obtenue par OAuth (Twitch).
+   *
+   * Le fragment d'une redirection Supabase ne contient que les jetons, pas
+   * l'utilisateur : on demande donc `/auth/v1/user` avec le jeton frais, puis on
+   * enregistre la session comme les autres. C'est ce qui rend la connexion
+   * Twitch indiscernable du reste de l'app une fois installée.
+   */
+  async adoptSession(tokens: { accessToken: string; refreshToken: string; expiresIn: number }): Promise<CloudSession> {
+    // `send` traduit un 401 en « session expirée », message qui parle des codes
+    // par e-mail : ici on veut dire ce qui s'est vraiment passé.
+    const failure = new CloudError(
+      "Connexion Twitch acceptée, mais le compte n'a pas pu être ouvert. Réessaie depuis l'écran Compte.",
+      "oauth_user_failed",
+      0,
+    );
+    let body: unknown;
+    let status = 0;
+    try {
+      ({ body, status } = await this.send(`${this.config.url}/auth/v1/user`, {
+        method: "GET",
+        token: tokens.accessToken,
+        raw: true,
+      }));
+    } catch {
+      throw failure;
+    }
+    const record = asRecord(body);
+    const userId = record?.id;
+    if (status >= 400 || typeof userId !== "string" || !userId) throw failure;
+    const session: CloudSession = {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: Date.now() + tokens.expiresIn * 1000,
+      userId,
+      email: typeof record?.email === "string" ? record.email : null,
+    };
+    this.setSession(session);
+    return session;
   }
 
   // ------------------------------------------------------------------ hôtel

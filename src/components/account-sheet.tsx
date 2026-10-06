@@ -33,6 +33,8 @@ import { useLive } from "@/hooks/use-live";
 import { liveStore } from "@/lib/live-store";
 import { useGame } from "@/hooks/use-game";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
+import { oauthRedirectUrl } from "@/lib/cloud/twitch";
+import { isNativeApp } from "@/lib/cloud/transport";
 import type { PlayerSearchResult, TradeCard, TradeStatus } from "@/lib/cloud/api";
 import { describeCards } from "@/lib/cloud/trades";
 import { PASSWORD_MIN, PASSWORD_WARNING, emailProblem, passwordProblem } from "@/lib/cloud/credentials";
@@ -196,6 +198,21 @@ export function AccountSheet({
 
   const message = cloud.configured ? cloud.message : null;
   const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
+
+  /**
+   * Ouvre le dialogue Twitch.
+   *
+   * L'adresse de retour dépend de l'endroit où tourne le jeu (page du site, ou
+   * schéma de l'application Android) : c'est Supabase qui la reçoit, puis qui
+   * renvoie le joueur dessus. La navigation se fait ici et non dans le store —
+   * le store n'a pas le droit de connaître le navigateur, c'est ce qui le rend
+   * testable sans DOM.
+   */
+  async function signInWithTwitch(): Promise<void> {
+    const native = await isNativeApp();
+    const url = cloudStore.twitchSignInUrl(oauthRedirectUrl(window.location, native));
+    if (url) window.location.assign(url);
+  }
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Compte et cloud">
@@ -475,7 +492,14 @@ export function AccountSheet({
                   Un compte sert à sauvegarder ta collection et à figurer au classement. La partie reste jouable sans
                   compte : tout est local, comme aujourd&apos;hui.
                 </p>
-                <button type="button" className="account-button wide" disabled={cloud.busy} onClick={() => void cloudStore.signInAsGuest()}>
+                <button type="button" className="account-button wide" disabled={cloud.busy} onClick={() => void signInWithTwitch()}>
+                  <Radio size={14} /> Continuer avec Twitch
+                </button>
+                <p className="account-hint">
+                  Un appui, aucun mot de passe : le navigateur te demande d&apos;autoriser CreatorDeck, puis tu
+                  reviens ici, connecté. Twitch ne reçoit que ton identité et ton adresse — rien de ta collection.
+                </p>
+                <button type="button" className="account-button wide ghost" disabled={cloud.busy} onClick={() => void cloudStore.signInAsGuest()}>
                   <UserPlus size={14} /> Créer un compte invité (sans e-mail)
                 </button>
                 <p className="account-hint">

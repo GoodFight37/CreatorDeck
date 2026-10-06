@@ -208,6 +208,28 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      → **Run** pour activer les **amis** (`friend_requests`, `friends`,
      `send_friend_request()`, `list_friends()`, `has_friendship()`…). Détail :
      §8, « Les amis ».
+   - **Se connecter avec Twitch** (facultatif, mais recommandé : c'est le
+     compte le plus simple à retenir). Trois choses à déclarer, une fois :
+     1. **Console Twitch** ([dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps))
+        → ton application → **OAuth Redirect URLs** → ajoute exactement
+        `https://<ton-projet>.supabase.co/auth/v1/callback`.
+     2. **Supabase** → *Authentication → Auth Providers → New Provider* →
+        **Manual configuration** :
+        * identifiant : `custom:twitch` (le préfixe `custom:` est obligatoire) ;
+        * Client ID / Client Secret : ceux de ton application Twitch ;
+        * Authorization URL : `https://id.twitch.tv/oauth2/authorize` ;
+        * Token URL : `https://id.twitch.tv/oauth2/token` ;
+        * UserInfo URL : `https://id.twitch.tv/oauth2/userinfo` (c'est le
+          endpoint OIDC : celui de Helix exigerait un en-tête `Client-ID` que
+          Supabase n'envoie pas).
+     3. **Supabase** → *Authentication → URL Configuration → Redirect URLs* →
+        ajoute les deux retours possibles : l'adresse du site
+        (`https://<ton-site>/`) et celle de l'application Android
+        (`com.creatordeck.app://auth`).
+     Les portées demandées sont `openid` et `user:read:email` : Twitch ne
+     renvoie l'adresse e-mail que si elle est **vérifiée** sur le compte, ce qui
+     est le cas de la plupart des comptes. Si le nom d'utilisateur manque, ce
+     n'est pas bloquant : le compte existe quand même.
    - [`supabase/migrations/0009_marche.sql`](../supabase/migrations/0009_marche.sql)
      → **Run** pour activer l'**hôtel des ventes** : déposer un doublon (payé
      comptant en points) et acheter au comptoir. Crée la table
@@ -593,6 +615,42 @@ qu'un écran lent.
 `PGRST202` (« fonction introuvable ») et la feuille affiche un message ; rien ne
 casse dans le reste du jeu.
 
+### Se connecter avec Twitch
+
+Twitch sert d'**identité** : un appui sur « Continuer avec Twitch » (écran
+Compte), le navigateur demande l'autorisation, et le joueur revient connecté —
+sans mot de passe, sans code par e-mail.
+
+Ce que l'appareil fait, et ce qu'il ne fait pas :
+
+* il ouvre `…/auth/v1/authorize?provider=custom:twitch&redirect_to=…`
+  (`twitchAuthorizeUrl()`) : **le client Twitch secret ne quitte jamais
+  Supabase**, l'appareil ne connaît même pas l'identifiant du client ;
+* au retour, il lit les jetons **dans le fragment** de l'adresse
+  (`parseOAuthReturn()`), demande à Supabase à qui ils appartiennent
+  (`/auth/v1/user`), puis enregistre la session (`adoptSession()`) — à partir de
+  là, une connexion Twitch est indiscernable d'un compte invité, avec sa
+  collection déjà en place si le compte en avait une ;
+* sur le site, l'adresse est **nettoyée après lecture**
+  (`history.replaceState`) : un jeton laissé dans la barre d'adresse finirait
+  dans l'historique du navigateur ;
+* dans l'application Android, la page servie est `https://localhost` : aucune
+  redirection ne peut y arriver. Le retour passe donc par un schéma d'application
+  (`com.creatordeck.app://auth`, déclaré dans `AndroidManifest.xml`) et par
+  l'événement `appUrlOpen` du plugin `@capacitor/app`.
+
+Ce qu'il faut déclarer une fois : la console Twitch, le fournisseur Supabase et
+les deux adresses de retour — voir §3.
+
+| Élément | Rôle |
+| --- | --- |
+| `src/lib/cloud/twitch.ts` | adresse du dialogue, lecture du retour, adresse de retour, nettoyage — testés sans navigateur |
+| `src/lib/cloud/api.ts` | `twitchAuthorizeUrl()`, `adoptSession()` (jetons → session enregistrée) |
+| `src/lib/cloud/cloud-store.ts` | `twitchSignInUrl()` (donne l'adresse, ne navigue pas), `completeTwitchSignIn()` (installe, relit l'identité) |
+| `src/hooks/use-twitch-return.ts` | le retour : fragment de l'adresse sur le site, `appUrlOpen` dans l'APK |
+| `src/components/account-sheet.tsx` | le bouton « Continuer avec Twitch » |
+| `android/app/src/main/AndroidManifest.xml` | le filtre `com.creatordeck.app://auth` |
+
 ### L'hôtel des ventes
 
 L'hôtel est **asynchrone** : on n'attend personne. Un joueur dépose un doublon,
@@ -700,7 +758,9 @@ classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
 ## 9. Suite : notifications
 
-**Fait :** **hôtel des ventes** (`0009_marche.sql` : dépôt payé comptant,
+**Fait :** **connexion Twitch** (identité OAuth via un fournisseur
+personnalisé Supabase, le secret restant côté serveur) ;
+**hôtel des ventes** (`0009_marche.sql` : dépôt payé comptant,
 comptoir asynchrone, vitrine « En vente » sur la fiche publique) ;
 **complétion par famille de collection** (colonne `region` du
 catalogue et `by_region` de `player_profile()`) ; **amis côté serveur**
@@ -719,9 +779,6 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
   brancher quand elles auront un usage produit — c'est ce qui rendra les offres
   d'échange visibles sans ouvrir l'écran Compte ;
-* **connexion Twitch (OAuth)** : le même client Twitch qui alimente le direct
-  peut servir d'identité de joueur (plus rien à retenir, plus de mot de passe à
-  perdre) — à faire quand le parc de comptes le justifiera ;
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
   temps réel sur les offres (aujourd'hui : rafraîchissement manuel), marché
