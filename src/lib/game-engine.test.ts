@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { CATALOG_SIZE, CREATORS, PACKS, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { PULL_RATES, packOdds } from "@/lib/pull-rates";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
@@ -30,9 +30,32 @@ import {
   type PlayerState,
 } from "@/lib/game-engine";
 
+/**
+ * Gèle l'aléa sur une suite de valeurs. `randomInt(n)` échantillonne par rejet
+ * sur 32 bits, donc une petite valeur passe toujours et arrive telle quelle :
+ * `stubRandom([0])` garantit un tirage à 0, `stubRandom([999])` un tirage à 999.
+ */
+function stubRandom(values: number[]): void {
+  let cursor = 0;
+  vi.stubGlobal("crypto", {
+    getRandomValues<T extends ArrayBufferView>(buffer: T): T {
+      const view = buffer as unknown as { length: number; [index: number]: number };
+      for (let index = 0; index < view.length; index += 1) {
+        view[index] = values[Math.min(cursor, values.length - 1)] ?? 0;
+        cursor += 1;
+      }
+      return buffer;
+    },
+  });
+}
+
 const HOUR = 60 * 60 * 1000;
 const HALF_HOUR = 30 * 60 * 1000;
 const T0 = Date.parse("2026-01-01T12:00:00Z");
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function makeState(overrides: Partial<PlayerState> = {}): PlayerState {
   return {
@@ -425,16 +448,24 @@ describe("Perfect (Rare Drop)", () => {
     }
   });
 
-  it("reste fidèle aux taux annoncés dans pull-rates.json", () => {
-    const expected = PULL_RATES.live.rareDrop.chancePermille / 1000;
-    let perfects = 0;
-    const runs = 3_000;
-    for (let i = 0; i < runs; i += 1) {
-      if (drawPack("live", new Set())[0].rareDrop) perfects += 1;
-    }
-    expect(perfects).toBeGreaterThan(0);
-    // Marge généreuse (×3) : on teste un ordre de grandeur, pas un RNG exact.
-    expect(perfects / runs).toBeLessThan(expected * 3);
+  it("compare le sort au taux publié, pas à une constante recopiée", () => {
+    // Le Perfect est décidé par le premier tirage du booster, comparé à
+    // `chancePermille` de `pull-rates.json`. Deux tirages forcés suffisent à
+    // verrouiller la règle — et c'est déterministe, contrairement à une
+    // fréquence mesurée sur un échantillon (à 1 ‰, « au moins un Perfect sur
+    // 3 000 boosters » échouait une fois sur vingt).
+    const permille = PULL_RATES.live.rareDrop.chancePermille;
+
+    // Juste en dessous du seuil : Perfect.
+    stubRandom([permille - 1]);
+    expect(drawPack("live", new Set())[0].rareDrop).toBe(true);
+
+    // Exactement sur le seuil : pas de Perfect (comparaison stricte).
+    stubRandom([permille]);
+    expect(drawPack("live", new Set())[0].rareDrop).toBe(false);
+
+    // Et l'écran « Taux de drop » publie bien ce même nombre.
+    expect(packOdds("live").rareDrop.chance).toBeCloseTo(permille / 1000, 6);
   });
 
   it("n'altère pas les boosters normaux", () => {
