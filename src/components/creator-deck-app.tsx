@@ -208,6 +208,7 @@ function HomeView({
   onOpen,
   onUseHourglass,
   onShowOdds,
+  onShowMissions,
   opening,
   usingHourglass,
   now,
@@ -218,6 +219,7 @@ function HomeView({
   onOpen: () => void;
   onUseHourglass: () => void;
   onShowOdds: () => void;
+  onShowMissions: () => void;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -298,11 +300,16 @@ function HomeView({
           <ShieldCheck size={14} />
           <span>1 variante Live garantie · 1 Rare ou mieux · aucun doublon interne</span>
         </div>
-        <button type="button" className="odds-link" onClick={onShowOdds}>
-          <BadgeInfo size={15} />
-          <span>Taux de drop publiés</span>
-          <ChevronRight size={15} />
-        </button>
+        <div className="home-links">
+          <button type="button" className="text-link" onClick={onShowMissions}>
+            <span>Objectifs et saisons</span>
+            <ChevronRight size={15} />
+          </button>
+          <button type="button" className="text-link" onClick={onShowOdds}>
+            <span>Taux de drop publiés</span>
+            <ChevronRight size={15} />
+          </button>
+        </div>
       </section>
 
       <section className="section-block">
@@ -651,8 +658,8 @@ function MissionsView({
 function ProfileView({
   game,
   onNotice,
-  onError,
   onShowOdds,
+  onShowMissions,
   onShowThemes,
   onShowStudio,
   onShowAccount,
@@ -660,20 +667,33 @@ function ProfileView({
 }: {
   game: GameState;
   onNotice: (message: string) => void;
-  onError: (message: string) => void;
   onShowOdds: () => void;
+  onShowMissions: () => void;
   onShowThemes: () => void;
   onShowStudio: () => void;
   onShowAccount: () => void;
   onShowLeaderboard: () => void;
 }) {
   const cloud = useCloud();
-  const [importOpen, setImportOpen] = useState(false);
-  const [importText, setImportText] = useState("");
-  const [exportText, setExportText] = useState<string | null>(null);
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
-  // afficher le bon libellé et à redessiner le bouton.
+  // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
+  // Le studio de tirages est un outil de mise au point, pas une option de jeu :
+  // il s'ouvre en appuyant cinq fois sur la pastille de niveau.
+  const [tools, setTools] = useState(0);
+  const [lastTap, setLastTap] = useState(0);
+
+  function tapLevel() {
+    const now = Date.now();
+    const count = now - lastTap > 3_000 ? 1 : tools + 1;
+    setLastTap(now);
+    if (count >= 5) {
+      setTools(0);
+      onShowStudio();
+    } else {
+      setTools(count);
+    }
+  }
 
   function toggleSound() {
     const next = !soundOn;
@@ -684,46 +704,25 @@ function ProfileView({
     if (next) playReward();
   }
 
-  async function handleExport() {
-    const json = gameStore.exportSave();
-    try {
-      await navigator.clipboard.writeText(json);
-      setExportText(null);
-      onNotice("Sauvegarde copiée dans le presse-papiers.");
-    } catch {
-      // Presse-papiers indisponible (permission, WebView ancienne) : on affiche
-      // le texte pour une copie manuelle.
-      setExportText(json);
-    }
-  }
-
-  function handleImport() {
-    try {
-      gameStore.importSave(importText);
-      setImportText("");
-      setImportOpen(false);
-      onNotice("Sauvegarde importée. Bon retour dans ton classeur !");
-    } catch (caught) {
-      onError(caught instanceof Error ? caught.message : "Import impossible.");
-    }
-  }
-
   function handleReset() {
     if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.")) {
       return;
     }
     gameStore.reset();
-    setExportText(null);
-    setImportOpen(false);
     onNotice("Nouvelle partie lancée.");
   }
 
   return (
     <div className="view profile-view">
       <section className="profile-card">
-        <div className="profile-avatar">
+        <button
+          type="button"
+          className="profile-avatar"
+          onClick={tapLevel}
+          aria-label={`Niveau ${game.player.level}`}
+        >
           <span>{game.player.level}</span>
-        </div>
+        </button>
         <div>
           <h1>Mon profil</h1>
           <span>{CATALOG_EDITION}</span>
@@ -748,163 +747,59 @@ function ProfileView({
         </article>
       </div>
 
-      <div className="section-heading compact-heading">
-        <div>
-          <h2>Ta progression reste sur cet appareil</h2>
-        </div>
-      </div>
-      <section className="settings-list" aria-label="Gestion de la sauvegarde">
-        <div className="settings-row">
-          <span className={`settings-icon ${cloud.configured ? "green" : "blue"}`}>
-            {cloud.configured ? <CloudBadge /> : <WifiOff size={17} />}
-          </span>
-          <div>
-            {/* Ce libellé s'adapte au build : « 100 % hors ligne » affiché
-                quand le cloud est actif faisait croire qu'aucune option en
-                ligne n'existait. */}
-            <strong>{cloud.configured ? "Cloud disponible" : "Jeu 100 % hors ligne"}</strong>
-            <span>
-              {cloud.configured
-                ? "Compte facultatif : la collection, l'Atelier et les saisons restent jouables sans connexion."
-                : "Aucun compte, aucune connexion : tout est stocké localement."}
-            </span>
-          </div>
-          {cloud.configured ? null : <Check size={18} className="success-icon" />}
-        </div>
-        <button type="button" className="settings-row settings-action" onClick={onShowAccount}>
-          <span className={`settings-icon ${cloud.userId ? "green" : "blue"}`}>
-            <CloudBadge />
-          </span>
-          <div>
-            <strong>Sauvegarde cloud{cloud.email ? ` · ${cloud.email}` : ""}</strong>
-            <span>
-              {!cloud.configured
-                ? "Non configuré dans cette version : la partie reste sur cet appareil."
-                : cloud.userId
-                  ? "Compte connecté — envoi automatique et classement mondial."
-                  : "Connecte-toi pour retrouver ta collection sur un autre appareil."}
-            </span>
-          </div>
+      {/*
+       * Le menu : deux groupes, des libellés seuls. Pas de sous-texte pour
+       * expliquer chaque ligne — un menu de jeu se lit d'un coup d'œil. Ce qui
+       * a besoin d'explications les donne là où on s'en sert : l'écran Compte,
+       * la feuille des taux, le thème.
+       */}
+      <section className="menu-group" aria-label="Compte">
+        <h2>Compte</h2>
+        <button type="button" className="menu-row" onClick={onShowAccount}>
+          <span>{cloud.userId ? "Mon compte" : "Compte et cloud"}</span>
           <ChevronRight size={16} />
         </button>
-        {/* Le classement vit dans l'écran Compte : cette ligne y amène
-            directement, plutôt que de laisser le joueur le chercher. */}
         {cloud.configured ? (
-          <button type="button" className="settings-row settings-action" onClick={onShowLeaderboard}>
-            <span className="settings-icon gold"><Trophy size={17} /></span>
-            <div>
-              <strong>Classement mondial</strong>
-              <span>
-                {cloud.userId
-                  ? "Cartes uniques, cartes, légendaires et Gold : les quatre tris, avec la fiche de chaque joueur."
-                  : "Crée un compte invité pour voir le classement et les fiches des joueurs."}
-              </span>
-            </div>
+          <button type="button" className="menu-row" onClick={onShowLeaderboard}>
+            <span>Classement mondial</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
+      </section>
+
+      <section className="menu-group" aria-label="Partie">
+        <h2>Partie</h2>
+        <button type="button" className="menu-row" onClick={onShowMissions}>
+          <span>Objectifs et saisons</span>
+          <ChevronRight size={16} />
+        </button>
+        <button type="button" className="menu-row" onClick={onShowThemes}>
+          <span>Thème du classeur</span>
+          <ChevronRight size={16} />
+        </button>
+        <button type="button" className="menu-row" onClick={onShowOdds}>
+          <span>Taux de drop</span>
+          <ChevronRight size={16} />
+        </button>
         <button
           type="button"
-          className="settings-row settings-action"
+          className="menu-row"
+          role="switch"
+          aria-checked={soundOn}
           onClick={toggleSound}
-          aria-pressed={soundOn}
         >
-          <span className={`settings-icon ${soundOn ? "accent" : "blue"}`}>
-            {soundOn ? <Volume2 size={17} /> : <VolumeX size={17} />}
+          <span>Son</span>
+          <span className="switch" data-on={soundOn ? "on" : "off"} aria-hidden="true">
+            <i />
           </span>
-          <div>
-            <strong>Son {soundOn ? "activé" : "coupé"}</strong>
-            <span>
-              Ouverture de booster, swipe de carte, palier réclamé — sons synthétisés, rien à
-              télécharger.
-            </span>
-          </div>
-          <Check size={18} className={soundOn ? "success-icon" : "muted-icon"} />
-        </button>
-        <button type="button" className="settings-row settings-action" onClick={onShowOdds}>
-          <span className="settings-icon accent"><BadgeInfo size={17} /></span>
-          <div>
-            <strong>Taux de drop publiés</strong>
-            <span>Les probabilités de chaque booster, calculées depuis les tables de tirage.</span>
-          </div>
-          <ChevronRight size={16} />
-        </button>
-        <button type="button" className="settings-row settings-action" onClick={onShowStudio}>
-          <span className="settings-icon green"><FlaskConical size={17} /></span>
-          <div>
-            <strong>Studio de tirages</strong>
-            <span>Ouvre 25, 100 ou 500 boosters en mémoire et compare aux taux publiés.</span>
-          </div>
-          <ChevronRight size={16} />
-        </button>
-        <button type="button" className="settings-row settings-action" onClick={onShowThemes}>
-          <span className="settings-icon accent"><Paintbrush size={17} /></span>
-          <div>
-            <strong>Thème du classeur</strong>
-            <span>
-              {game.themes.filter((theme) => theme.unlocked).length}/{game.themes.length} thèmes
-              débloqués par les emblèmes de saison.
-            </span>
-          </div>
-          <ChevronRight size={16} />
-        </button>
-        <button type="button" className="settings-row settings-action" onClick={() => void handleExport()}>
-          <span className="settings-icon blue"><ClipboardCopy size={17} /></span>
-          <div>
-            <strong>Copier ma sauvegarde</strong>
-            <span>Pour la transférer sur un autre téléphone ou la garder au chaud.</span>
-          </div>
-          <ChevronRight size={16} />
-        </button>
-        <button
-          type="button"
-          className="settings-row settings-action"
-          onClick={() => setImportOpen((open) => !open)}
-          aria-expanded={importOpen}
-        >
-          <span className="settings-icon accent"><ClipboardPaste size={17} /></span>
-          <div>
-            <strong>Importer une sauvegarde</strong>
-            <span>Colle le texte copié depuis l’autre appareil.</span>
-          </div>
-          <ChevronRight size={16} style={{ transform: importOpen ? "rotate(90deg)" : undefined }} />
-        </button>
-        {importOpen ? (
-          <div className="save-editor">
-            <textarea
-              value={importText}
-              onChange={(event) => setImportText(event.target.value)}
-              placeholder='{ "version": 1, "playerId": "…" }'
-              aria-label="Sauvegarde à importer"
-              rows={5}
-              spellCheck={false}
-            />
-            <button
-              type="button"
-              className="secondary-action"
-              onClick={handleImport}
-              disabled={!importText.trim()}
-            >
-              <ClipboardPaste size={15} />
-              <span>Remplacer ma progression par cette sauvegarde</span>
-            </button>
-          </div>
-        ) : null}
-        {exportText ? (
-          <div className="save-editor">
-            <p>Copie manuelle : sélectionne tout le texte ci-dessous.</p>
-            <textarea value={exportText} readOnly rows={5} aria-label="Sauvegarde exportée" onFocus={(event) => event.currentTarget.select()} />
-          </div>
-        ) : null}
-        <button type="button" className="settings-row settings-action danger" onClick={handleReset}>
-          <span className="settings-icon red"><RotateCcw size={17} /></span>
-          <div>
-            <strong>Réinitialiser la progression</strong>
-            <span>Repart de zéro avec les boosters de départ.</span>
-          </div>
-          <ChevronRight size={16} />
         </button>
       </section>
+
+      {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
+          accident. */}
+      <button type="button" className="menu-reset" onClick={handleReset}>
+        Réinitialiser la progression
+      </button>
     </div>
   );
 }
@@ -970,12 +865,16 @@ function RevealOverlay({
   );
 }
 
+/*
+ * Quatre lieux, un mot chacun. Les objectifs quittent la barre : c'est un
+ * rendez-vous quotidien, pas un endroit où l'on vit — ils s'ouvrent depuis le
+ * drop et depuis le menu.
+ */
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "home", label: "Accueil", icon: <Home size={21} /> },
-  { id: "collection", label: `Classeur (${CATALOG_SIZE})`, icon: <BookOpen size={21} /> },
-  { id: "missions", label: "Objectifs", icon: <Target size={21} /> },
-  { id: "atelier", label: "Atelier", icon: <Hammer size={21} /> },
-  { id: "profile", label: "Profil", icon: <CircleUserRound size={21} /> },
+  { id: "home", label: "Drop", icon: <Zap size={22} /> },
+  { id: "collection", label: "Binder", icon: <BookOpen size={22} /> },
+  { id: "atelier", label: "Craft", icon: <Hammer size={22} /> },
+  { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
 ];
 
 export function CreatorDeckApp() {
@@ -1187,6 +1086,7 @@ export function CreatorDeckApp() {
             onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
+            onShowMissions={() => setTab("missions")}
             opening={opening}
             usingHourglass={usingHourglass}
             now={now}
@@ -1209,8 +1109,8 @@ export function CreatorDeckApp() {
           <ProfileView
             game={game}
             onNotice={showNotice}
-            onError={showError}
             onShowOdds={() => setOddsOpen(true)}
+            onShowMissions={() => setTab("missions")}
             onShowThemes={() => setThemeOpen(true)}
             onShowStudio={() => setStudioOpen(true)}
             onShowAccount={() => {

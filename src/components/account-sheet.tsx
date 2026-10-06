@@ -7,6 +7,8 @@ import {
   AlertTriangle,
   ArrowLeftRight,
   Check,
+  ClipboardCopy,
+  ClipboardPaste,
   CloudOff,
   Crown,
   Download,
@@ -36,6 +38,7 @@ import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "
 import { describeSync } from "@/lib/cloud/sync";
 import { CREATORS, CREATOR_BY_SLUG, VARIANT_META, creatorImage, RARITY_META, type CardVariant } from "@/lib/catalog";
 import { ShowcaseCard } from "@/components/showcase-card";
+import { gameStore } from "@/lib/game-store";
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: "unique_creators", label: "Cartes uniques" },
@@ -86,6 +89,11 @@ export function AccountSheet({
   const [keepCode, setKeepCode] = useState("");
   const [signInEmail, setSignInEmail] = useState("");
   const [signInPassword, setSignInPassword] = useState("");
+  // Sauvegarde locale : copie, import, et le retour à afficher.
+  const [saveOpen, setSaveOpen] = useState(false);
+  const [saveText, setSaveText] = useState("");
+  const [saveNote, setSaveNote] = useState<string | null>(null);
+  const [manualCopy, setManualCopy] = useState<string | null>(null);
   const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
   const pinned = knownShowcase(cloud.showcase);
   const selection = showcaseDraft ?? pinned;
@@ -120,6 +128,31 @@ export function AccountSheet({
   useEffect(() => {
     if (focus === "leaderboard") leaderboardRef.current?.scrollIntoView({ block: "start" });
   }, [focus]);
+
+  async function copySave() {
+    const json = gameStore.exportSave();
+    try {
+      await navigator.clipboard.writeText(json);
+      setManualCopy(null);
+      setSaveNote("Sauvegarde copiée dans le presse-papiers.");
+    } catch {
+      // Presse-papiers indisponible (permission, WebView ancienne) : le texte
+      // s'affiche pour une copie à la main.
+      setManualCopy(json);
+      setSaveNote(null);
+    }
+  }
+
+  function importSave() {
+    try {
+      gameStore.importSave(saveText);
+      setSaveText("");
+      setSaveOpen(false);
+      setSaveNote("Sauvegarde importée. Bon retour dans ton classeur !");
+    } catch (caught) {
+      setSaveNote(caught instanceof Error ? caught.message : "Import impossible.");
+    }
+  }
 
   const message = cloud.configured ? cloud.message : null;
   const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
@@ -508,6 +541,68 @@ export function AccountSheet({
                 </details>
               </section>
             )}
+
+            {/*
+              * La sauvegarde locale vit dans Compte : c'est là qu'on vient
+              * chercher « où est ma partie », et les deux gestes qui la
+              * déplacent (copier, coller).
+              */}
+            <section className="account-card">
+              <div className="account-head">
+                <ClipboardCopy size={15} />
+                <strong>Sauvegarde de cet appareil</strong>
+              </div>
+              <p className="account-intro">
+                La partie vit sur ce téléphone. Copie-la pour la garder au chaud ou la passer sur un autre
+                appareil — un compte la transporte tout seul, une copie te laisse la main.
+              </p>
+              <div className="account-actions">
+                <button type="button" className="account-button" onClick={() => void copySave()}>
+                  <ClipboardCopy size={14} /> Copier ma sauvegarde
+                </button>
+                <button
+                  type="button"
+                  className="account-button ghost"
+                  aria-expanded={saveOpen}
+                  onClick={() => setSaveOpen((open) => !open)}
+                >
+                  <ClipboardPaste size={14} /> Importer une sauvegarde
+                </button>
+              </div>
+              {saveOpen ? (
+                <div className="save-editor">
+                  <textarea
+                    value={saveText}
+                    onChange={(event) => setSaveText(event.target.value)}
+                    placeholder='{ "version": 1, "playerId": "…" }'
+                    aria-label="Sauvegarde à importer"
+                    rows={5}
+                    spellCheck={false}
+                  />
+                  <button
+                    type="button"
+                    className="account-button wide"
+                    onClick={importSave}
+                    disabled={!saveText.trim()}
+                  >
+                    <ClipboardPaste size={14} /> Remplacer ma progression par cette sauvegarde
+                  </button>
+                </div>
+              ) : null}
+              {manualCopy ? (
+                <div className="save-editor">
+                  <p className="account-hint">Copie manuelle : sélectionne tout le texte ci-dessous.</p>
+                  <textarea
+                    value={manualCopy}
+                    readOnly
+                    rows={5}
+                    aria-label="Sauvegarde exportée"
+                    onFocus={(event) => event.currentTarget.select()}
+                  />
+                </div>
+              ) : null}
+              {saveNote ? <p className="account-hint">{saveNote}</p> : null}
+            </section>
 
             {/* Diagnostic : sur un téléphone, « Réseau injoignable » ne dit pas
                 si le réseau, l'adresse ou le WebView est en cause. Ce bouton
