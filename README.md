@@ -1,14 +1,23 @@
 # CreatorDeck — collectionne les créateurs Twitch
 
 Jeu mobile de cartes à collectionner façon TCG basé sur le classement Twitch
-(périmètre configurable : monde entier par défaut, ou une langue précise).
-**100 % hors ligne** : la logique de jeu tourne sur l'appareil et la
-progression est sauvegardée localement — aucun compte, aucun serveur.
-Boosters aux **taux de drop publiés**, événement « Perfect », atelier de
-recyclage/artisanat et saisons de collection.
+(1000 chaînes, périmètre configurable : monde entier par défaut, ou une langue
+précise). Il se joue **seul, sur l'appareil, sans compte** : boosters aux
+**taux de drop publiés**, événement « Perfect », atelier de recyclage et
+d'artisanat, saisons de collection par famille de langue. La progression est
+sauvegardée localement.
+
+Un **cloud facultatif** (Supabase) ajoute le jeu à plusieurs, et rien
+d'obligatoire : compte (invité, e-mail ou Twitch), sauvegarde pour retrouver sa
+collection sur un autre appareil, **tirage des boosters décidé par le serveur**
+(cartes infalsifiables), échanges entre joueurs, amis, hôtel des ventes, carnet
+de notifications, classement mondial — global ou par famille de collection —,
+profils publics avec vitrine, et badge **EN LIVE** sur les cartes des chaînes en
+direct. Sans les deux variables publiques du cloud, tout se compile et se joue
+hors ligne.
 
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
-Capacitor 8 (Android) · Vitest.
+Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 
 ## Prérequis
 
@@ -22,8 +31,11 @@ npm install
 npm run dev        # http://localhost:3000 (rechargement à chaud)
 ```
 
-Aucune variable d'environnement n'est nécessaire pour l'application.
-`.env.example` ne concerne que le script optionnel de synchronisation des avatars.
+Aucune variable d'environnement n'est nécessaire pour jouer : sans elles, la
+partie vit sur l'appareil et l'écran de compte affiche « cloud non configuré ».
+Copier `.env.example` vers `.env.local` et y coller l'**URL du projet Supabase**
+et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
+échanges, hôtel, classement…) — marche à suivre : `docs/cloud-supabase.md`.
 
 ## Scripts
 
@@ -45,19 +57,26 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
+| `npm run supabase:verify` | joue les migrations `0001` → `0010` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, échanges, amis, hôtel, carnet). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
-Deux étages, deux vitesses :
+Trois étages, trois vitesses :
 
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
-  prix, les retours de connexion — tout ce qui se calcule sans navigateur. C'est
-  là que vit l'essentiel des règles.
+  prix, les retours de connexion, le carnet de notifications — tout ce qui se
+  calcule sans navigateur. C'est là que vit l'essentiel des règles
+  (**444 tests**, 30 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
   depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
-  sur un tour complet. Un test qui échoue affiche l'erreur exacte.
+  sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
+  distingue un bug du jeu d'un réseau coupé.
+* **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
+  de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
+  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes et carnet
+  (**156 contrôles** aujourd'hui).
 
 ```powershell
 npm test          # rapide, à chaque changement
@@ -78,21 +97,37 @@ src/lib/game-engine.ts   moteur de jeu PUR : tirage, recharge, XP, sabliers
 src/lib/save-store.ts    (dé)sérialisation + validation de la sauvegarde
 src/lib/game-store.ts    store client : charge, applique le moteur, persiste (localStorage)
 src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
+src/lib/cloud/           cloud : config, client Supabase (api.ts), décisions de
+                         synchronisation (sync.ts), store React (cloud-store.ts),
+                         échanges, amis, marché, Twitch, transport HTTP
+src/lib/social/          échanges et amis côté règles pures + carnet de
+                         notifications (inbox.ts : les phrases, testées)
+src/lib/market.ts        grille des prix de l'hôtel (miroir de market_payout() SQL)
+src/lib/regions.ts       familles de collection (langues) et leurs teintes
+src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
+src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
-                         seasons-section, pack-odds-sheet)
+                         seasons-section, pack-odds-sheet, market-sheet,
+                         notifications-sheet, friends-sheet, public-profile-sheet,
+                         account-sheet, leaderboard…)
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0008)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0010)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
-                         seed Supabase (build-supabase-catalogue.mjs)
+                         seed Supabase (build-supabase-catalogue.mjs),
+                         vérificateur des migrations (verify-supabase-migrations.mjs)
+e2e/ + playwright.config.ts les cinq gestes rejoués sur bureau et téléphone
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
+docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
+                         direct, amis, hôtel, carnet, notifications (§9), dépannage
+docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
 android/                 projet Capacitor Android
 ```
 
@@ -100,14 +135,17 @@ Principes :
 
 - **Le moteur est pur et isomorphe** (`game-engine.ts`) : chaque fonction
   prend un état + un instant `now` et renvoie un nouvel état. Il ne dépend ni
-  de Node, ni du DOM, ni du stockage, ce qui le rend testable unitairement et
-  réutilisable côté serveur si un mode en ligne (sauvegarde cloud, classement)
-  voit le jour.
-- **La sauvegarde est locale et versionnée** (`creatordeck.save.v2`), validée
+  de Node, ni du DOM, ni du stockage, ce qui le rend testable unitairement —
+  et vérifiable face aux **mêmes règles écrites en SQL** côté serveur
+  (`0004_tirage.sql`, `0005_echanges.sql`, `0009_marche.sql`), rejouées sur un
+  Postgres jetable par `npm run supabase:verify`. Un écart entre les deux se
+  voit en local, pas en production.
+- **La sauvegarde est locale et versionnée** (`creatordeck.save.v6`), validée
   au chargement (valeurs bornées, cartes inconnues ignorées). Les sauvegardes
-  v1 sont **migrées automatiquement** (aucune collection perdue) puis relues
-  sous la nouvelle clé. L'onglet Profil permet de la copier / importer
-  (transfert entre téléphones) et de la réinitialiser.
+  v1 → v5 sont **migrées automatiquement** (aucune collection perdue) puis
+  relues sous la nouvelle clé. L'onglet Profil permet de la copier / importer
+  (transfert entre téléphones) et de la réinitialiser ; une copie Cloud la
+  double dès qu'un compte est connecté.
 - **Ni taille ni périmètre codés en dur** : libellés, métadonnées, audience,
   jalons d'objectifs et raretés dérivent du catalogue et de
   `src/data/catalog.config.json` (`CATALOG_SIZE`, `CATALOG_SCOPE`,
@@ -278,13 +316,27 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 ## Compte, cloud et classement (facultatif)
 
 L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute six choses :
-un compte (invité par défaut, e-mail + code à 6 chiffres en option), la
-sauvegarde pour retrouver sa partie sur un autre appareil, une vitrine de quatre
-cartes sur le profil public, un classement mondial recalculé par le serveur,
-le **tirage des boosters décidé par le serveur** (les cartes sont
-infalsifiables, prérequis des échanges) et les **échanges de cartes** entre
-joueurs.
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute dix choses, et
+rien d'obligatoire — les six premières sont décrites juste après, les dernières
+au §8 de la marche à suivre :
+
+1. un **compte** : invité (un appui, aucun e-mail), adresse e-mail + mot de
+   passe, ou « Continuer avec Twitch » ;
+2. la **sauvegarde cloud** de la partie, pour retrouver sa collection sur un
+   autre appareil ;
+3. le **tirage des boosters décidé par le serveur** (les cartes sont
+   infalsifiables — prérequis des échanges) ;
+4. les **échanges de cartes** entre joueurs, tranchés par le serveur ;
+5. la **vitrine de quatre cartes** et le **profil public** de chacun ;
+6. le **classement mondial**, recalculé par le serveur — tri global, tri Gold
+   ou tri **par famille de collection** ;
+7. les **amis**, avec demandes à accepter ;
+8. l'**hôtel des ventes** : on y dépose un doublon contre des points, d'autres
+   joueurs l'achètent plus tard ;
+9. le **carnet de notifications** (« Toi → Notifications », avec sa pastille) :
+   ce qui est arrivé pendant l'absence ;
+10. le badge **EN LIVE**, allumé sur les cartes des chaînes en direct.
+
 Marche à suivre : **`docs/cloud-supabase.md`**.
 
 ### Le tirage est décidé par le serveur

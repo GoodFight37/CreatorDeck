@@ -16,6 +16,21 @@ But : **un dépôt, une branche de référence, un historique léger.**
   Unity de la PR #3 est hors périmètre : cette PR doit être fermée sans fusion,
   car elle apporte environ 11 Mo de ressources qui n'appartiennent pas au jeu.
 
+## État au 6 octobre 2026
+
+- `main` reste la **branche de référence** ; le chantier en cours (cloud, jeu à
+  plusieurs, refonte visuelle) vit sur `arena/01a10c75-creatordeck`, poussée à
+  chaque étape terminée. C'est cette branche qu'on teste : le workflow
+  **APK Android (debug)** accepte n'importe quelle branche, et les migrations
+  Supabase (`0001` → `0010`) se collent dans le SQL Editor.
+- La **PR #7** suit cette branche et sert de journal : elle reste ouverte
+  jusqu'à la fin du chantier — on ne la fusionne pas au milieu.
+- Une branche `arena/…` par session : `arena/01a10c2b`, `arena/01a10c54`,
+  `arena/01a10c75`. Pendant qu'une session écrit, pas d'autre push, merge ni
+  réécriture en parallèle (même règle que « Un seul écrivain à la fois »).
+- Les branches d'essai (`claude/…`) ne sont **jamais fusionnées** : elles se
+  relisent avant toute conclusion.
+
 ## Un seul écrivain à la fois
 
 Pendant qu'une session Arena travaille sur le dépôt, pas d'autre push, merge

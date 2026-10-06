@@ -1,4 +1,4 @@
-# Compte, sauvegarde cloud, profil public, classements et échanges (Supabase)
+# Compte, cloud et jeu à plusieurs : sauvegarde, profils, échanges, amis, hôtel (Supabase)
 
 CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
 `localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
@@ -323,8 +323,8 @@ publique par conception) :
 4. relance le workflow **APK Android (debug)** en choisissant `main` dans
    « Use workflow from » (ou la branche de la PR si tu testes avant sa fusion).
 
-Sans ces variables, l'APK se construit quand même : il est simplement 100 %
-hors ligne, avec l'écran de compte qui explique que le cloud n'est pas
+Sans ces variables, l'APK se construit quand même : il se joue alors
+uniquement sur l'appareil, et l'écran de compte explique que le cloud n'est pas
 configuré.
 
 ## 6. Vérifier que tout fonctionne
@@ -834,8 +834,9 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
   du nouveau ;
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
-  temps réel sur les offres (aujourd'hui : rafraîchissement manuel), marché
-  entre joueurs (la projection `user_cards` est prête).
+  temps réel sur les offres et le carnet (aujourd'hui : rafraîchissement
+  manuel ou à l'ouverture de l'écran), revente entre joueurs (l'hôtel, lui,
+  est en place — §8).
 
 ## 10. Dépannage
 
@@ -893,6 +894,17 @@ Deux outils, dans l'ordre :
    blocage réseau d'un refus CORS, et affiche la session enregistrée par le jeu.
 
 ### Pourquoi les appels passent par le client HTTP natif dans l'APK
+
+Le WebView sert l'application depuis `https://localhost` : ce n'est pas une
+adresse publique, et un `fetch` y est soumis au CORS. Sur certains projets
+Supabase, ce preflight est refusé — l'échec apparaît alors comme une panne
+réseau (« Réseau injoignable ») alors que le même appel fonctionne dans Chrome.
+`src/lib/cloud/transport.ts` fait donc passer les appels par `CapacitorHttp`
+(module du cœur de Capacitor, aucune dépendance en plus) sur un appareil, et par
+`fetch` partout ailleurs. Appel **explicite** au plugin, et non son patch
+automatique de `fetch` : l'interception Android des requêtes du WebView ne voit
+pas le corps des POST, ce qui laissait échouer la création de compte invité.
+assent par le client HTTP natif dans l'APK
 
 Le WebView sert l'application depuis `https://localhost` : ce n'est pas une
 adresse publique, et un `fetch` y est soumis au CORS. Sur certains projets
