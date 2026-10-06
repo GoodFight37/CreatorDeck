@@ -126,7 +126,21 @@ Principes :
   exactement l'ancienne récompense unique, donc l'économie du jeu ne bouge pas.
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
-  devient un moment rare, pas une promesse marketing.
+  devient un moment rare, pas une promesse marketing : il est à **1 ‰** depuis
+  le 6 oct. 2026 (un booster sur mille ; c'était un sur deux-cents).
+- **L'ordre de révélation compte** : le slot garanti — Rare ou mieux, variante
+  Live — ferme toujours le booster, dans le moteur local comme dans
+  `open_pack()`. Aucun mélange après tirage : la dernière carte est le moment
+  fort de l'ouverture, et l'écran la nomme.
+- **Jalons du collectionneur** (écran Objectifs) : quatre jalons — premier
+  booster, 5 % puis 20 % du catalogue, catalogue complet — chacun payé **une
+  fois** (+40 points et 1 sablier, +150 et 1, +500 et 2, +3 000 et 10). Les
+  seuils vivent dans `MILESTONES` (`src/lib/game-engine.ts`) : l'écran ne peut
+  plus annoncer un chiffre et en compter un autre.
+- **Saison affichée** : la barre du haut montre la famille **que le joueur
+  remplit en ce moment** (la plus avancée non terminée), pas un « S01 » écrit en
+  dur — le catalogue est mondial, une partie sans carte française ne doit pas
+  s'annoncer française.
 - **Taux publiés** : `docs/taux-de-drop.md` explique comment lire et modifier
   les tables, et pourquoi les publier (Google Play et l'App Store imposent la
   divulgation des probabilités des objets aléatoires). Les chiffres affichés
