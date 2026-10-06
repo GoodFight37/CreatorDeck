@@ -33,6 +33,7 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run build` | export statique dans `out/` (PWA + source de l'APK) |
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
+| `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -44,6 +45,27 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
+
+## Tests
+
+Deux étages, deux vitesses :
+
+* **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
+  prix, les retours de connexion — tout ce qui se calcule sans navigateur. C'est
+  là que vit l'essentiel des règles.
+* **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
+  un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
+  écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
+  depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
+  sur un tour complet. Un test qui échoue affiche l'erreur exacte.
+
+```powershell
+npm test          # rapide, à chaque changement
+npm run e2e       # avant de livrer (installe d'abord : npx playwright install chromium)
+```
+
+L'aperçu du jeu est servi sur `http://localhost:3000` : si `npm run dev` tourne
+déjà, la suite le réutilise au lieu d'en lancer un second.
 
 ## Architecture
 
