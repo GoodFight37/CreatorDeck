@@ -1777,6 +1777,10 @@ input:focus-visible {
 .account-note.neutral { color: var(--muted); border: 1px solid var(--line); background: var(--panel); }
 .account-note.ok { color: var(--green); border: 1px solid rgba(80, 217, 160, 0.28); background: rgba(80, 217, 160, 0.08); }
 .account-note.error { color: var(--danger); border: 1px solid rgba(255, 109, 130, 0.3); background: rgba(255, 109, 130, 0.08); }
+/* Les notes à deux lignes (« titre » + « explication ») : le titre au-dessus,
+   l'explication en dessous — sans quoi les deux se collent dans la même
+   phrase (« …tes échangesLes offres reçues… »). */
+.account-note > div, .account-note > span + div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .account-head { display: flex; align-items: center; gap: 7px; }
 .account-head strong { font-size: 14px; }
 .account-refresh { margin-left: auto; padding: 5px; color: var(--muted); border: 0; border-radius: 8px; background: none; cursor: pointer; }

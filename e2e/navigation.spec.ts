@@ -98,6 +98,14 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
   page.on("console", (message) => {
     if (message.type() === "error") problems.push(`console : ${message.text()}`);
   });
+  // Une requête ratée dit **laquelle** : sans cette ligne, un échec afficherait
+  // « Failed to load resource » sans dire si c'est le jeu, le cloud ou le
+  // réseau de la machine. (La favicon est ignorée : on ne la compte pas.)
+  page.on("requestfailed", (request) => {
+    if (request.url().includes("favicon")) return;
+    const failure = request.failure()?.errorText ?? "échec";
+    problems.push(`réseau : ${request.url()} — ${failure}`);
+  });
 
   await openDeck(page);
   for (const label of ["Binder", "Craft", "Toi", "Drop"] as const) {
