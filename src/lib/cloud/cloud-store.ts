@@ -11,6 +11,7 @@
  * joueur décide.
  */
 import {
+  applyLastPackSteal,
   applyMarketPurchase,
   applyMarketSale,
   applyPackResult,
@@ -29,6 +30,7 @@ import {
   CloudError,
   type LeaderboardMetric,
   type LeaderboardRow,
+  type LastPackShelf,
   type MarketListing,
   type PlayerProfile,
   type PlayerSearchResult,
@@ -133,9 +135,10 @@ export type CloudState = {
   /** Un chargement du comptoir est en cours. */
   marketBusy: boolean;
   /**
-   * Le carnet : ce qui est arrivé au joueur (offres, réponses, amis, ventes),
-   * reconstruit à partir des mêmes faits que le serveur garde déjà. Aucune
-   * table « notifications » côté serveur : voir `src/lib/social/inbox.ts`.
+   * Le carnet : ce qui est arrivé au joueur (offres, réponses, amis, ventes,
+   * vols de Last Pack), reconstruit à partir des mêmes faits que le serveur
+   * garde déjà. Aucune table « notifications » côté serveur : voir
+   * `src/lib/social/inbox.ts`.
    */
   inbox: InboxItem[];
   /** Horodatage local du dernier chargement du carnet. */
@@ -144,6 +147,16 @@ export type CloudState = {
   inboxUnread: number;
   /** Un chargement du carnet est en cours. */
   inboxBusy: boolean;
+  /**
+   * L'étagère des Last Packs : les paquets encore exposés (les miens et ceux
+   * de mes amis), tels que le serveur les donne. `null` = pas encore chargée
+   * (ou `0012_last_pack.sql` pas collée).
+   */
+  lastPacks: LastPackShelf | null;
+  /** Horodatage local du dernier chargement de l'étagère. */
+  lastPacksAt: number | null;
+  /** Un chargement de l'étagère est en cours. */
+  lastPacksBusy: boolean;
 };
 
 /**
@@ -258,6 +271,9 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   inboxAt: null,
   inboxUnread: 0,
   inboxBusy: false,
+  lastPacks: null,
+  lastPacksAt: null,
+  lastPacksBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -1269,6 +1285,9 @@ export function createCloudStore(deps: CloudDeps) {
         inboxAt: null,
         inboxUnread: 0,
         inboxBusy: false,
+        lastPacks: null,
+        lastPacksAt: null,
+        lastPacksBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1404,16 +1423,18 @@ export function createCloudStore(deps: CloudDeps) {
       const userId = currentUserId();
       publish({ inboxBusy: true });
       try {
-        const [trades, incoming, friends, sales] = await Promise.all([
+        const [trades, incoming, friends, sales, losses] = await Promise.all([
           ready.api.listTrades().catch(() => []),
           ready.api.listIncomingFriendRequests().catch(() => []),
           ready.api.listFriends().catch(() => []),
           ready.api.marketSales().catch(() => []),
+          ready.api.lastPackLosses().catch(() => []),
         ]);
         const items = buildInbox({
           trades,
           friends: { friends, incoming, outgoing: [] },
           sales,
+          lastPackLosses: losses,
         });
         publish({ inbox: items, inboxUnread: unreadCount(items, readSeen(userId)), inboxAt: deps.now(), inboxBusy: false });
       } catch (error) {
@@ -1626,6 +1647,88 @@ export function createCloudStore(deps: CloudDeps) {
     /** L'écran de l'hôtel, réinitialisé (déconnexion ou changement de compte). */
     clearMarket(): void {
       publish({ market: [], marketAt: null, marketBusy: false });
+    },
+
+    // ------------------------------------------------------------ Last Pack
+    //
+    // Le paquet qu'on vient d'ouvrir reste exposé dix minutes : le serveur le
+    // publie tout seul (déclencheur sur les tirages), la feuille ne fait que
+    // lire. Un vol, lui, se joue en trois temps — pousser sa collection, laisser
+    // le serveur trancher, rejouer le résultat ici — comme un achat d'hôtel.
+
+    /** Charge l'étagère des paquets exposés et la publie dans l'état cloud. */
+    async loadLastPacks(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ lastPacksBusy: true });
+      try {
+        const lastPacks = await ready.api.lastPackShelf();
+        publish({ lastPacks, lastPacksAt: deps.now(), lastPacksBusy: false });
+      } catch (error) {
+        // `0012_last_pack.sql` pas encore collée : l'étagère reste vide, la
+        // feuille le dit, et rien d'autre ne casse.
+        const refusal = cloudRefusal(error, "Last Pack indisponible.");
+        publish({ lastPacksBusy: false, message: refusal.message, isError: true });
+      }
+    },
+
+    /**
+     * Vole une carte dans le paquet d'un ami. Le serveur vérifie tout (amitié,
+     * dix minutes, une carte par jour, carte encore là) et réécrit **les deux**
+     * collections ; l'appareil ajoute la carte ici, puis pousse.
+     *
+     * La collection locale part **avant** : le serveur doit la voir à jour,
+     * puisqu'il retire la carte de la collection du propriétaire et vérifie la
+     * sienne.
+     */
+    async stealLastPack(packId: number, index: number): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      const local = deps.readState();
+      if (!local) {
+        const message = "Aucune partie à compléter pour l'instant : ouvre un booster d'abord.";
+        publish({ message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true });
+      try {
+        await push(local.version, local.updatedAt, false);
+        if (state.pending) {
+          const message =
+            "Synchronise d'abord ta collection (Compte → Synchroniser) : le vol a besoin de la collection du cloud à jour.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "error", message };
+        }
+        const result = await ready.api.lastPackSteal(packId, index);
+        const card: OwnedCard = {
+          id: result.card.id,
+          creatorSlug: result.card.creatorSlug,
+          rarity: result.card.rarity as OwnedCard["rarity"],
+          variant: result.card.variant as OwnedCard["variant"],
+          obtainedAt: result.card.obtainedAt,
+          rareDrop: result.card.rareDrop,
+          fromLastPack: result.card.fromLastPack,
+        };
+        const next = applyLastPackSteal(local, { card }, deps.now());
+        if (next !== local) {
+          deps.applyState(next);
+          await push(next.version, next.updatedAt, true);
+        }
+        await this.loadLastPacks();
+        const name = CREATOR_BY_SLUG.get(result.card.creatorSlug)?.displayName ?? "Une carte";
+        const message = `${name} te revient de chez ${result.ownerName} : elle est dans ton classeur. Une carte par jour, c'était la tienne.`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Vol impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /** L'étagère, réinitialisée (déconnexion ou changement de compte). */
+    clearLastPacks(): void {
+      publish({ lastPacks: null, lastPacksAt: null, lastPacksBusy: false });
     },
 
     // ---------------------------------------------------------------- Amis

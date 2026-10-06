@@ -75,6 +75,7 @@ function sanitizeCard(value: unknown): OwnedCard | null {
   if (typeof variant !== "string" || !VARIANTS.has(variant as CardVariant)) return null;
   const fromTrade = value.fromTrade;
   const fromMarket = value.fromMarket;
+  const fromLastPack = value.fromLastPack;
   return {
     id,
     creatorSlug,
@@ -94,6 +95,12 @@ function sanitizeCard(value: unknown): OwnedCard | null {
     // carte au chargement suivant.
     ...(typeof fromMarket === "number" && Number.isFinite(fromMarket) && fromMarket > 0
       ? { fromMarket: Math.floor(fromMarket) }
+      : {}),
+    // Champ apparu avec le Last Pack : même rôle. Deux cartes d'un même paquet
+    // pouvant être prises deux jours différents, c'est l'identifiant de la
+    // carte qui sert d'idempotence — cette marque dit d'où elle vient.
+    ...(typeof fromLastPack === "number" && Number.isFinite(fromLastPack) && fromLastPack > 0
+      ? { fromLastPack: Math.floor(fromLastPack) }
       : {}),
   };
 }

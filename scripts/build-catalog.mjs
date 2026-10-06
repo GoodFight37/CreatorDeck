@@ -50,6 +50,7 @@ const PACKAGE_FILE = path.join(ROOT, "package.json");
 const OUT_DIR = path.join(ROOT, "dist/catalog");
 
 const RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
+const VARIANTS = ["standard", "live", "holo", "gold"];
 
 const errors = [];
 const warnings = [];
@@ -201,9 +202,17 @@ function seasonMaxSize(config) {
   return Number.isFinite(value) && value > 0 ? value : 150;
 }
 
-/** Vérifie les tables de tirage : chaque slot doit être jouable et borné. */
+/**
+ * Vérifie les tables de tirage : chaque slot doit être jouable et borné.
+ *
+ * Versions : 1 = tables de base, 2 = tables + bloc `direct` (le bonus de ceux
+ * qui streament). Le contrôle se resserre avec la version — il ne se contente
+ * pas de l'accepter.
+ */
 function validateRates(rates) {
-  if (rates?.version !== 1) fail("pull-rates.json : version 1 attendue.");
+  if (rates?.version !== 1 && rates?.version !== 2) {
+    fail("pull-rates.json : version 1 ou 2 attendue.");
+  }
   for (const pack of Object.values(rates?.packs ?? {})) {
     const slots = [...(pack.slots ?? []), pack.guaranteed];
     if (!pack.slots?.length || !pack.guaranteed) {
@@ -227,6 +236,24 @@ function validateRates(rates) {
     }
     if (!(drop.variantUpgradePermille >= 0 && drop.variantUpgradePermille <= 10_000)) {
       fail(`pull-rates.json : variantUpgradePermille hors bornes (${pack.label}).`);
+    }
+  }
+
+  // Bonus Direct (v2) : un poids supérieur à 1 (sinon ce n'est pas un bonus),
+  // une chance de variante dans [0, 1000] pour mille, et une variante connue.
+  if (rates?.version === 2) {
+    const direct = rates.direct;
+    if (!direct || typeof direct !== "object") {
+      fail("pull-rates.json : le bloc « direct » manque pour la version 2.");
+    }
+    if (!(direct.creatorBias > 1)) {
+      fail(`pull-rates.json : creatorBias doit dépasser 1 (reçu ${direct.creatorBias}).`);
+    }
+    if (!(direct.livePermille >= 0 && direct.livePermille <= 1000)) {
+      fail(`pull-rates.json : livePermille hors bornes (${direct.livePermille}).`);
+    }
+    if (!VARIANTS.includes(direct.variant)) {
+      fail(`pull-rates.json : variante du direct inconnue « ${direct.variant} ».`);
     }
   }
 }

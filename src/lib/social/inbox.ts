@@ -15,7 +15,9 @@
  * l'app est fermée demande un service de push (voir `docs/cloud-supabase.md`
  * §9) — ici, on s'occupe de ce qui attend le joueur quand il revient.
  */
-import type { MarketSale, TradeListItem } from "@/lib/cloud/api";
+import { CREATOR_BY_SLUG } from "@/lib/catalog";
+import type { LastPackLoss, MarketSale, TradeListItem } from "@/lib/cloud/api";
+import { describeCard } from "@/lib/market";
 import type { FriendLists } from "@/lib/social/friends";
 
 /** D'où vient une ligne. Sert à choisir l'icône et à compter par famille. */
@@ -25,7 +27,8 @@ export type InboxKind =
   | "trade_declined"
   | "friend_request"
   | "friend_new"
-  | "sale";
+  | "sale"
+  | "last_pack";
 
 export type InboxItem = {
   /** Identifiant stable : deux chargements ne créent pas deux fois la ligne. */
@@ -50,6 +53,11 @@ export type InboxSources = {
    * `0010_ventes.sql` n'est pas collé — le carnet vit très bien sans.
    */
   sales?: MarketSale[];
+  /**
+   * Cartes qu'on t'a prises à l'ouverture d'un booster (`last_pack_losses()`).
+   * Vide tant que `0012_last_pack.sql` n'est pas collée.
+   */
+  lastPackLosses?: LastPackLoss[];
 };
 
 /**
@@ -78,7 +86,9 @@ export function describeTrade(given: number, received: number): string {
  *     peut-être depuis un autre appareil) ;
  *   * une demande d'ami reçue : « X veut être ton ami » ;
  *   * une amitié acceptée : « X est maintenant ton ami » ;
- *   * une vente : « Ta carte de X est partie à l'hôtel ».
+ *   * une vente : « Ta carte de X est partie à l'hôtel » ;
+ *   * un vol de Last Pack : « X t'a piqué ton légendaire » — la ligne la plus
+ *     dure du carnet, et celle qui doit se voir.
  *
  * Ce qui est **volontairement ignoré** : tes propres actions là où tu les as
  * déjà vues (une offre que tu viens de proposer, un ami que tu viens
@@ -86,7 +96,7 @@ export function describeTrade(given: number, received: number): string {
  * joueur ce qu'il vient de faire ne sert à rien.
  */
 export function buildInbox(sources: InboxSources): InboxItem[] {
-  const { trades, friends, sales = [] } = sources;
+  const { trades, friends, sales = [], lastPackLosses = [] } = sources;
   const items: InboxItem[] = [];
 
   for (const trade of trades) {
@@ -163,6 +173,27 @@ export function buildInbox(sources: InboxSources): InboxItem[] {
       body: `${sale.buyerName || "Un joueur"} l'a achetée pour ${sale.price} points.`,
       at: sale.soldAt,
       who: sale.buyerName || null,
+    });
+  }
+
+  for (const loss of lastPackLosses) {
+    const who = loss.thiefName || "Un collectionneur";
+    const creator = CREATOR_BY_SLUG.get(loss.card.creatorSlug)?.displayName ?? "une carte";
+    // La phrase dit la rareté quand elle est rare : « ton légendaire » n'est
+    // pas la même nouvelle que « une carte ».
+    const title =
+      loss.card.rarity === "legendary"
+        ? `${who} t'a piqué ton légendaire`
+        : loss.card.rarity === "epic"
+          ? `${who} t'a piqué ton épique`
+          : `${who} t'a piqué une carte`;
+    items.push({
+      id: `last-pack:${loss.id}`,
+      kind: "last_pack",
+      title,
+      body: `${creator} · ${describeCard(loss.card.rarity, loss.card.variant)}`,
+      at: loss.stolenAt,
+      who,
     });
   }
 

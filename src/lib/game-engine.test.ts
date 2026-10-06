@@ -16,6 +16,7 @@ import {
   HOURGLASS_REDUCTION_MS,
   SAVE_VERSION,
   XP_PER_LEVEL,
+  applyLastPackSteal,
   applyMarketPurchase,
   applyMarketSale,
   applyPackResult,
@@ -988,5 +989,40 @@ describe("l'hôtel des ventes", () => {
     } catch (error) {
       expect((error as GameError).code).toBe("MARKET_POINTS_MISSING");
     }
+  });
+});
+
+describe("le Last Pack", () => {
+  it("fait entrer la carte volée, marquée de son paquet", () => {
+    const state = makeState({ cards: [] });
+    const prise = ownedCard("prise", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0 + 3_000);
+    const after = applyLastPackSteal(state, { card: { ...prise, fromLastPack: 475 } }, T0 + 3_000);
+    expect(after.cards.map((card) => card.id)).toEqual(["prise"]);
+    expect(after.cards[0].fromLastPack).toBe(475);
+    expect(after.updatedAt).toBe(T0 + 3_000);
+    // Rien d'autre ne bouge : un vol ne paie pas de points, ne donne pas d'XP.
+    expect(after.points).toBe(state.points);
+    expect(after.level).toBe(state.level);
+  });
+
+  it("est idempotent : une réponse rejouée n'ajoute pas la carte deux fois", () => {
+    const state = makeState({ cards: [] });
+    const steal = {
+      card: { ...ownedCard("prise", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0), fromLastPack: 475 },
+    };
+    const once = applyLastPackSteal(state, steal, T0 + 1_000);
+    expect(applyLastPackSteal(once, steal, T0 + 2_000)).toBe(once);
+  });
+
+  it("distingue deux cartes prises dans le même paquet, deux jours différents", () => {
+    // Le piège : `fromLastPack` porte le numéro du paquet, donc deux vols dans
+    // le même paquet le partageraient. L'idempotence se fait sur l'identifiant
+    // de la carte — sinon le deuxième vol passerait pour un doublon.
+    const state = makeState({ cards: [] });
+    const premier = ownedCard("un", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0);
+    const second = ownedCard("deux", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0 + 1);
+    const avec = applyLastPackSteal(state, { card: { ...premier, fromLastPack: 475 } }, T0);
+    const apres = applyLastPackSteal(avec, { card: { ...second, fromLastPack: 475 } }, T0 + 1_000);
+    expect(apres.cards.map((card) => card.id)).toEqual(["un", "deux"]);
   });
 });

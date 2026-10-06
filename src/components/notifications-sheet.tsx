@@ -6,14 +6,15 @@
  *
  * Elle ne décide de rien et ne calcule rien : le carnet est construit par
  * `src/lib/social/inbox.ts` à partir des faits que le serveur garde déjà (offres
- * d'échange, réponses, amis, ventes), et le store le publie. Ici, on l'affiche
+ * d'échange, réponses, amis, ventes, cartes prises d'un Last Pack), et le store
+ * le publie. Ici, on l'affiche
  * et on marque la visite — c'est tout.
  *
  * Ouvrir la feuille **marque le carnet comme lu** : la pastille disparaît, les
  * lignes restent. Un carnet qu'il faudrait vider à la main serait une corvée.
  */
 import { useEffect } from "react";
-import { ArrowLeftRight, Check, Info, Store, UserCheck, UserPlus, X } from "lucide-react";
+import { ArrowLeftRight, Check, Info, ShieldAlert, Store, UserCheck, UserPlus, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -28,6 +29,7 @@ const ICONS: Record<InboxKind, React.ReactNode> = {
   friend_request: <UserPlus size={15} />,
   friend_new: <UserCheck size={15} />,
   sale: <Store size={15} />,
+  last_pack: <ShieldAlert size={15} />,
 };
 
 export function NotificationsSheet({ onClose }: { onClose: () => void }) {
@@ -95,8 +97,8 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
             <div>
               <strong>Rien de neuf</strong>
               <span>
-                Les offres d&apos;échange, les réponses à tes offres, tes amis et tes ventes à
-                l&apos;hôtel apparaîtront ici.
+                Les offres d&apos;échange, les réponses à tes offres, tes amis, tes ventes à
+                l&apos;hôtel et les cartes prises dans ton Last Pack apparaîtront ici.
               </span>
             </div>
           </div>

@@ -4,6 +4,7 @@ import {
   CloudError,
   type CloudApi,
   type CloudSession,
+  type LastPackLoss,
   type LeaderboardRow,
   type MarketListing,
   type MarketSale,
@@ -70,6 +71,27 @@ function remoteRow(state: PlayerState, updatedAt: string, deviceUpdatedAt = stat
   };
 }
 
+/** L'heure du serveur dans les tests : la fenêtre se mesure par rapport à elle. */
+const SERVER_NOW = "2026-03-01T10:00:00Z";
+
+/** Le paquet d'une amie, exposé depuis trente secondes. */
+const LAST_PACK = {
+  id: 475,
+  ownerId: "22222222-2222-4222-8222-222222222222",
+  ownerName: "Lou",
+  mine: false,
+  drawnAt: SERVER_NOW,
+  expiresAt: "2026-03-01T10:10:00Z",
+  stealable: true,
+  cards: [
+    { index: 1, creatorSlug: "ibai", rarity: "rare", variant: "standard", taken: false },
+    { index: 2, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false },
+    { index: 3, creatorSlug: "kaicenat", rarity: "legendary", variant: "live", taken: false },
+    { index: 4, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false },
+    { index: 5, creatorSlug: "sardoche", rarity: "rare", variant: "standard", taken: false },
+  ],
+};
+
 /** Une annonce du comptoir, telle que le serveur la renvoie. */
 const LISTING = {
   id: 12,
@@ -112,6 +134,9 @@ type FakeApi = {
   marketSell: ReturnType<typeof vi.fn>;
   marketBuy: ReturnType<typeof vi.fn>;
   marketSales: ReturnType<typeof vi.fn>;
+  lastPackShelf: ReturnType<typeof vi.fn>;
+  lastPackSteal: ReturnType<typeof vi.fn>;
+  lastPackLosses: ReturnType<typeof vi.fn>;
   listFriends: ReturnType<typeof vi.fn>;
   listIncomingFriendRequests: ReturnType<typeof vi.fn>;
   marketListingsOf: ReturnType<typeof vi.fn>;
@@ -287,6 +312,29 @@ function harness(options: {
       price: LISTING.price,
       points: 400,
     })),
+    lastPackShelf: vi.fn(async () => ({
+      now: SERVER_NOW,
+      windowMinutes: 10,
+      stealPerDay: 1,
+      stoleToday: false,
+      packs: [LAST_PACK],
+    })),
+    lastPackSteal: vi.fn(async () => ({
+      packId: LAST_PACK.id,
+      index: 3,
+      ownerId: LAST_PACK.ownerId,
+      ownerName: LAST_PACK.ownerName,
+      card: {
+        id: "prise",
+        creatorSlug: "kaicenat",
+        rarity: "legendary",
+        variant: "live",
+        obtainedAt: T0 + 120_000,
+        rareDrop: false,
+        fromLastPack: LAST_PACK.id,
+      },
+    })),
+    lastPackLosses: vi.fn(async () => [] as LastPackLoss[]),
   };
 
   const store = createCloudStore({
@@ -1342,5 +1390,70 @@ describe("le carnet de notifications", () => {
     const { store, api } = harness({ signedIn: false });
     await store.loadInbox();
     expect(api.listTrades).not.toHaveBeenCalled();
+  });
+});
+
+describe("le Last Pack", () => {
+  it("charge l'étagère telle que le serveur la donne", async () => {
+    const { store, api } = harness();
+    await store.loadLastPacks();
+    expect(api.lastPackShelf).toHaveBeenCalled();
+    expect(store.getSnapshot().lastPacks?.packs).toHaveLength(1);
+    expect(store.getSnapshot().lastPacks?.packs[0]?.ownerName).toBe("Lou");
+    expect(store.getSnapshot().lastPacksAt).not.toBeNull();
+  });
+
+  it("vole une carte : elle entre dans la partie locale avec sa marque", async () => {
+    const local = saveWith({ cards: [], updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    const outcome = await store.stealLastPack(LAST_PACK.id, 3);
+
+    expect(api.lastPackSteal).toHaveBeenCalledWith(LAST_PACK.id, 3);
+    expect(outcome.status).toBe("done");
+    expect(state.current.cards).toHaveLength(1);
+    expect(state.current.cards[0]).toMatchObject({
+      id: "prise",
+      creatorSlug: "kaicenat",
+      fromLastPack: LAST_PACK.id,
+    });
+    expect(store.getSnapshot().message).toMatch(/te revient de chez Lou/);
+  });
+
+  it("n'ajoute pas deux fois la même carte volée", async () => {
+    const local = saveWith({ cards: [], updatedAt: T0 });
+    const { store, state } = harness({ local });
+    await store.stealLastPack(LAST_PACK.id, 3);
+    // Le serveur refuserait un deuxième vol le même jour ; si sa réponse
+    // arrivait quand même, la marque de la carte empêche le doublon.
+    await store.stealLastPack(LAST_PACK.id, 3);
+    expect(state.current.cards).toHaveLength(1);
+  });
+
+  it("garde le refus du serveur (déjà volé aujourd'hui) sans toucher à la partie", async () => {
+    const local = saveWith({ cards: [], updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    (api.lastPackSteal as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("vol : une carte par jour — la tienne est déjà prise", "P0001", 400),
+    );
+    const outcome = await store.stealLastPack(LAST_PACK.id, 1);
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/une carte par jour/);
+    expect(state.current.cards).toHaveLength(0);
+  });
+
+  it("met les vols subis dans le carnet", async () => {
+    const { store, api } = harness();
+    (api.lastPackLosses as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: 9,
+        thiefName: "Lou",
+        packId: LAST_PACK.id,
+        card: { creatorSlug: "kaicenat", rarity: "legendary", variant: "live" },
+        stolenAt: "2026-03-01T10:05:00Z",
+      },
+    ] satisfies LastPackLoss[]);
+    await store.loadInbox();
+    const ligne = store.getSnapshot().inbox.find((item) => item.kind === "last_pack");
+    expect(ligne?.title).toBe("Lou t'a piqué ton légendaire");
   });
 });

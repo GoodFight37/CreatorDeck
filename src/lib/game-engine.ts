@@ -82,6 +82,14 @@ export type OwnedCard = {
    * le même achat (voir `applyMarketPurchase`).
    */
   fromMarket?: number;
+  /**
+   * Numéro du Last Pack dont la carte a été prise. Même rôle que `fromTrade`
+   * et `fromMarket`, et c'est aussi ce qui permet au classeur de dire d'où
+   * vient la carte. Deux cartes d'un même paquet peuvent être prises deux
+   * jours différents : l'idempotence de `applyLastPackSteal` se fait donc sur
+   * l'**identifiant de la carte**, pas sur ce numéro.
+   */
+  fromLastPack?: number;
 };
 
 export type DrawnCard = {
@@ -1227,6 +1235,29 @@ export function applyMarketPurchase(
     points: state.points - purchase.price,
     cards: [...state.cards, purchase.card],
   };
+}
+
+/**
+ * Last Pack : la carte volée entre dans ta collection.
+ *
+ * Le vol est décidé par le serveur (voir `0012_last_pack.sql`) : le serveur a
+ * déjà retiré la carte au propriétaire et écrit la tienne. L'appareil ne fait
+ * que rejouer ce qu'il a reçu, puis pousse sa sauvegarde.
+ *
+ * Idempotent sur l'identifiant de la carte : une réponse rejouée (ou un
+ * chargement qui repasse sur le même vol) ne crée pas de deuxième exemplaire.
+ */
+export type LastPackSteal = {
+  card: OwnedCard;
+};
+
+export function applyLastPackSteal(
+  state: PlayerState,
+  steal: LastPackSteal,
+  now = Date.now(),
+): PlayerState {
+  if (state.cards.some((card) => card.id === steal.card.id)) return state;
+  return { ...state, updatedAt: now, cards: [...state.cards, steal.card] };
 }
 
 /** Dépense un sablier pour avancer la recharge du booster choisi. */

@@ -11,7 +11,8 @@ Un **cloud facultatif** (Supabase) ajoute le jeu à plusieurs, et rien
 d'obligatoire : compte (invité, e-mail ou Twitch), sauvegarde pour retrouver sa
 collection sur un autre appareil, **tirage des boosters décidé par le serveur**
 (cartes infalsifiables), échanges entre joueurs, amis, hôtel des ventes, carnet
-de notifications, classement mondial — global ou par famille de collection —,
+de notifications, **Last Pack** (le paquet qu'un ami vient d'ouvrir reste exposé
+dix minutes), classement mondial — global ou par famille de collection —,
 profils publics avec vitrine, et badge **EN LIVE** sur les cartes des chaînes en
 direct. Sans les deux variables publiques du cloud, tout se compile et se joue
 hors ligne.
@@ -57,7 +58,7 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0011` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0012` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -66,7 +67,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**456 tests**, 31 fichiers aujourd'hui).
+  (**481 tests**, 33 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -75,10 +76,11 @@ Trois étages, trois vitesses :
   distingue un bug du jeu d'un réseau coupé.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
-  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet et
+  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
   **bonus Direct** — poids ×1,5 vérifié sur des boosters réellement ouverts,
-  variante Live impossible quand le cache est périmé (**163 contrôles**
-  aujourd'hui).
+  variante Live impossible quand le cache est périmé — et **Last Pack** — vol
+  réel des deux côtés, refus d'un inconnu, fenêtre de dix minutes, garde-fou
+  contre la résurrection d'une carte volée (**191 contrôles** aujourd'hui).
 
 ```powershell
 npm test          # rapide, à chaque changement
@@ -109,6 +111,9 @@ src/lib/regions.ts       familles de collection (langues) et leurs teintes
 src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
 src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
                          doivent être ceux de 0011_direct.sql
+src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, compte
+                         à rebours, ce qui reste à prendre (testé)
+src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet, market-sheet,
@@ -119,7 +124,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0011)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0012)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -347,7 +352,10 @@ au §8 de la marche à suivre :
    joueurs l'achètent plus tard ;
 9. le **carnet de notifications** (« Toi → Notifications », avec sa pastille) :
    ce qui est arrivé pendant l'absence ;
-10. le badge **EN LIVE**, allumé sur les cartes des chaînes en direct.
+10. le **Last Pack** (« Toi → Last Pack ») : le paquet qu'un joueur vient
+    d'ouvrir reste exposé dix minutes, un ami peut y prendre une carte, une par
+    jour — et le carnet le dit au propriétaire ;
+11. le badge **EN LIVE**, allumé sur les cartes des chaînes en direct.
 
 Marche à suivre : **`docs/cloud-supabase.md`**.
 
@@ -516,6 +524,16 @@ version web hébergée.
   `src/lib/social/inbox.ts`. La « dernière visite » vit sur l'appareil, par
   joueur, et le carnet ne raconte jamais au joueur ce qu'il vient de faire.
   Mise en place : `docs/cloud-supabase.md` §8, « Le carnet de notifications ».
+  Le **Last Pack** : les cinq cartes du booster qu'un joueur vient d'ouvrir
+  restent **exposées dix minutes**, et un ami peut y prendre une carte — **une
+  par jour**. La carte quitte vraiment la collection du propriétaire (le serveur
+  réécrit sa sauvegarde) et entre dans celle du voleur ; une vieille sauvegarde
+  ne peut pas la faire revenir (`push_save()` la refuse avec son message).
+  Le paquet d'un inconnu n'est jamais exposé, et la fenêtre est celle du
+  serveur : reculer l'horloge de son téléphone ne la rallonge pas. L'écran vit
+  dans « Toi → Last Pack », avec la pastille sur l'onglet et le compte à
+  rebours ; le carnet annonce « X t'a piqué ton légendaire ». Mise en place :
+  `docs/cloud-supabase.md` §8, « Le Last Pack ».
   La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase
   (`provider=twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
   le navigateur, et le retour installe une session ordinaire — le secret du

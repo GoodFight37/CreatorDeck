@@ -99,6 +99,71 @@ export type MarketListing = {
   sellerName: string;
 };
 
+/**
+ * Une carte exposée dans un Last Pack — la place qu'elle occupe (1 à 5), ce
+ * qu'elle est, et si quelqu'un l'a déjà prise.
+ */
+export type LastPackCard = {
+  index: number;
+  creatorSlug: string;
+  rarity: string;
+  variant: string;
+  taken: boolean;
+};
+
+/**
+ * Un paquet exposé : les cinq cartes d'un booster ouvert il y a moins de dix
+ * minutes. `mine` distingue mon paquet de celui d'un ami, `stealable` dit si
+ * **je** peux y prendre une carte maintenant (ami, fenêtre ouverte, et pas
+ * encore de vol aujourd'hui).
+ */
+export type LastPack = {
+  id: number;
+  ownerId: string;
+  ownerName: string;
+  mine: boolean;
+  drawnAt: string;
+  expiresAt: string;
+  stealable: boolean;
+  cards: LastPackCard[];
+};
+
+/** Ce que le serveur expose à l'instant, et ce qu'il me reste comme vol. */
+export type LastPackShelf = {
+  /** Heure du serveur — la seule qui compte pour la fenêtre de dix minutes. */
+  now: string;
+  windowMinutes: number;
+  stealPerDay: number;
+  stoleToday: boolean;
+  packs: LastPack[];
+};
+
+/** Carte volée : exactement ce que l'appareil doit ajouter à sa collection. */
+export type LastPackSteal = {
+  packId: number;
+  index: number;
+  ownerId: string;
+  ownerName: string;
+  card: {
+    id: string;
+    creatorSlug: string;
+    rarity: string;
+    variant: string;
+    obtainedAt: number;
+    rareDrop: boolean;
+    fromLastPack: number;
+  };
+};
+
+/** Un vol subi : ce que le carnet annonce au propriétaire. */
+export type LastPackLoss = {
+  id: number;
+  thiefName: string;
+  packId: number | null;
+  card: { creatorSlug: string; rarity: string; variant: string };
+  stolenAt: string;
+};
+
 /** Une vente conclue : ta carte est partie de l'hôtel, les points sont arrivés. */
 export type MarketSale = {
   id: number;
@@ -505,6 +570,64 @@ function parseSale(raw: unknown): MarketSale | null {
     price: Number.isFinite(Number(record?.price)) ? Number(record?.price) : 0,
     soldAt: String(record?.soldAt ?? ""),
     buyerName: typeof record?.buyerName === "string" ? record.buyerName : "Un joueur",
+  };
+}
+
+function parseLastPackCard(raw: unknown): LastPackCard | null {
+  const record = asRecord(raw);
+  const index = Number(record?.index);
+  const slug = record?.creatorSlug;
+  if (!Number.isFinite(index) || index < 1 || typeof slug !== "string" || !slug) return null;
+  return {
+    index,
+    creatorSlug: slug,
+    rarity: typeof record?.rarity === "string" ? record.rarity : "",
+    variant: typeof record?.variant === "string" ? record.variant : "standard",
+    taken: record?.taken === true,
+  };
+}
+
+function parseLastPack(raw: unknown): LastPack | null {
+  const record = asRecord(raw);
+  const id = Number(record?.id);
+  const ownerId = record?.ownerId;
+  if (!Number.isFinite(id) || typeof ownerId !== "string" || !ownerId) return null;
+  const cards = Array.isArray(record?.cards)
+    ? record.cards.flatMap((card) => {
+        const parsed = parseLastPackCard(card);
+        return parsed ? [parsed] : [];
+      })
+    : [];
+  return {
+    id,
+    ownerId,
+    ownerName: typeof record?.ownerName === "string" ? record.ownerName : "Un collectionneur",
+    mine: record?.mine === true,
+    drawnAt: String(record?.drawnAt ?? ""),
+    expiresAt: String(record?.expiresAt ?? ""),
+    stealable: record?.stealable === true,
+    cards,
+  };
+}
+
+/** Vol subi : sans identifiant ni créateur, la ligne ne veut rien dire. */
+function parseLoss(raw: unknown): LastPackLoss | null {
+  const record = asRecord(raw);
+  const id = Number(record?.id);
+  const card = asRecord(record?.card);
+  const slug = card?.creatorSlug;
+  if (!Number.isFinite(id) || typeof slug !== "string" || !slug) return null;
+  const packId = Number(record?.packId);
+  return {
+    id,
+    thiefName: typeof record?.thiefName === "string" ? record.thiefName : "Un collectionneur",
+    packId: Number.isFinite(packId) ? packId : null,
+    card: {
+      creatorSlug: slug,
+      rarity: typeof card?.rarity === "string" ? card.rarity : "",
+      variant: typeof card?.variant === "string" ? card.variant : "standard",
+    },
+    stolenAt: String(record?.stolenAt ?? ""),
   };
 }
 
@@ -1199,6 +1322,80 @@ export class CloudApi {
     return result.flatMap((raw) => {
       const sale = parseSale(raw);
       return sale ? [sale] : [];
+    });
+  }
+
+  /**
+   * L'étagère des Last Packs : mes paquets et ceux de mes amis, tant qu'ils
+   * sont frais (dix minutes), avec les cartes déjà prises.
+   *
+   * Renvoie `null` quand `0012_last_pack.sql` n'est pas encore collée : la
+   * feuille dit alors qu'il n'y a rien d'exposé plutôt que d'afficher une
+   * erreur réseau. Rien n'est deviné côté client : c'est le serveur qui sait
+   * qui est exposé, et pour combien de temps.
+   */
+  async lastPackShelf(): Promise<LastPackShelf | null> {
+    const result = await this.rpc("last_pack_shelf", {});
+    const record = asRecord(result);
+    if (!record) return null;
+    const packs = Array.isArray(record.packs)
+      ? record.packs.flatMap((raw) => {
+          const parsed = parseLastPack(raw);
+          return parsed ? [parsed] : [];
+        })
+      : [];
+    const windowMinutes = Number(record.windowMinutes);
+    const stealPerDay = Number(record.stealPerDay);
+    return {
+      now: String(record.now ?? ""),
+      windowMinutes: Number.isFinite(windowMinutes) ? windowMinutes : 10,
+      stealPerDay: Number.isFinite(stealPerDay) ? stealPerDay : 1,
+      stoleToday: record.stoleToday === true,
+      packs,
+    };
+  }
+
+  /**
+   * Vole une carte dans le paquet d'un ami. Le serveur vérifie tout (amitié,
+   * fenêtre, une carte par jour, carte encore là) et réécrit **les deux**
+   * collections ; `card` est ce que l'appareil doit ajouter à la sienne.
+   */
+  async lastPackSteal(packId: number, index: number): Promise<LastPackSteal> {
+    const result = await this.rpc("last_pack_steal", { p_pack: packId, p_index: index });
+    const record = asRecord(result);
+    const card = asRecord(record?.card);
+    const marker = Number(card?.fromLastPack);
+    const id = card?.id;
+    if (!record || typeof id !== "string" || !id || !Number.isFinite(marker)) {
+      throw new CloudError("Réponse de vol illisible.", "invalid_response", 0);
+    }
+    return {
+      packId: Number(record.packId),
+      index: Number(record.index),
+      ownerId: String(record.ownerId ?? ""),
+      ownerName: typeof record.ownerName === "string" ? record.ownerName : "Un collectionneur",
+      card: {
+        id,
+        creatorSlug: String(card?.creatorSlug ?? ""),
+        rarity: String(card?.rarity ?? ""),
+        variant: String(card?.variant ?? "standard"),
+        obtainedAt: Number(card?.obtainedAt ?? 0),
+        rareDrop: card?.rareDrop === true,
+        fromLastPack: marker,
+      },
+    };
+  }
+
+  /**
+   * Ce qu'on t'a pris (`last_pack_losses()`) : de quoi remplir le carnet de
+   * notifications. Vide si la migration n'est pas collée.
+   */
+  async lastPackLosses(limit = 20): Promise<LastPackLoss[]> {
+    const result = await this.rpc("last_pack_losses", { p_limit: limit });
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const loss = parseLoss(raw);
+      return loss ? [loss] : [];
     });
   }
 

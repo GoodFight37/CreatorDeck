@@ -233,6 +233,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0012_last_pack.sql`](../supabase/migrations/0012_last_pack.sql)
+     → **Run** pour que **le paquet reste exposé dix minutes** : les cinq cartes
+     du dernier booster d'un joueur sont visibles par ses amis, qui peuvent y
+     prendre une carte (une par jour). La carte quitte vraiment la collection du
+     propriétaire, et une vieille sauvegarde ne peut pas la faire revenir.
+     Détail : §8, « Le Last Pack ».
    - [`supabase/migrations/0011_direct.sql`](../supabase/migrations/0011_direct.sql)
      → **Run** pour que le **Direct fasse tomber plus**, côté serveur comme dans
      le moteur : les créateurs qui streament pèsent ×1,5 dans leur rareté, la
@@ -258,7 +264,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les onze migrations** (`0001` à `0011`) pour de vrai, dans
+> Le script exécute **les douze migrations** (`0001` à `0012`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -270,9 +276,11 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > amis joués de bout en bout** — demande, demande croisée, acceptation, refus,
 > annulation, retrait, et ce qu'un joueur étranger ne voit pas. S'y ajoutent
 > l'**hôtel des ventes** (dépôt payé comptant, comptoir, achat par un autre
-> joueur, refus motivés), le **carnet des ventes** (`market_sales()`) et le
+> joueur, refus motivés), le **carnet des ventes** (`market_sales()`), le
 > **bonus Direct** (poids ×1,5, variante Live réservée aux créateurs en direct,
-> cache périmé → aucune carte Live). **163 contrôles** au total. Les deux
+> cache périmé → aucune carte Live) et le **Last Pack** (paquet exposé dix
+> minutes, vol des deux côtés, refus d'un inconnu, garde-fou de `push_save`).
+> **191 contrôles** au total. Les deux
 > dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
@@ -572,6 +580,45 @@ serveur, joué pour de vrai, y compris avec un cache périmé).
 
 Mise en place : `0011_direct.sql` → **Run** (§3), puis
 `npm run supabase:verify` si tu veux le voir toi-même.
+
+### Le Last Pack
+
+Un booster ouvert n'est plus un moment privé. Ses cinq cartes restent
+**exposées dix minutes** (`last_packs`), et **un ami** peut venir y prendre une
+carte — **une par jour et par joueur** (`last_pack_steals`, index unique sur le
+jour UTC).
+
+Ce que le serveur vérifie avant de laisser faire, dans l'ordre :
+authentification, paquet existant, fenêtre de dix minutes **ouverte**, paquet
+qui n'est pas le tien, amitié (`has_friendship()`), carte encore disponible,
+vol du jour non utilisé, **et la carte encore présente dans la collection du
+propriétaire**. Ce dernier point est le plus important : sans lui, un vol
+créerait une carte que personne n'a tirée. Le vol réécrit alors **les deux
+sauvegardes** (la carte part chez l'un, arrive chez l'autre, marquée
+`fromLastPack`) dans une seule transaction, verrous pris dans un ordre stable —
+comme un échange accepté.
+
+Deux garde-fous qui font la différence entre une mécanique et une décoration :
+
+- **rien n'est exposé à un inconnu** : `last_pack_shelf()` ne rend que tes
+  paquets et ceux de tes amis, jamais celui d'un joueur que tu ne connais pas ;
+- **un vol ne se défait pas** : `push_save()` est réécrite dans cette migration
+  pour refuser une sauvegarde d'appareil qui contiendrait encore une carte
+  volée (le contrôle vise l'identifiant exact de la carte prise, pas son couple
+  créateur + variante : elle a le droit de retomber d'un booster). Le message
+  renvoie vers « Charger le cloud », où le vol est déjà écrit.
+
+Le carnet annonce au propriétaire « X t'a piqué ton légendaire » (ou « ton
+épique », ou « une carte ») — le voleur, lui, ne voit pas ses propres vols : on
+ne raconte pas au joueur ce qu'il vient de faire. L'écran est « Toi → Last
+Pack », avec le compte à rebours, la pastille sur l'onglet, et le vol en **deux
+temps** (on choisit la carte, puis on la prend) parce qu'il n'y en a qu'un par
+jour.
+
+Le paquet est publié par un **déclencheur sur `pack_draws`** : `open_pack()`
+n'est pas touchée, le tirage reste celui de `0004`/`0011` au caractère près.
+L'expiration (`expires_at`) est écrite par le serveur : reculer l'horloge de son
+téléphone ne rallonge pas la fenêtre.
 
 Pourquoi ça ne peut pas vivre dans l'APK : l'API Helix demande un **client
 secret**, et un APK se dézippe. L'appel vit donc dans une **Edge Function**

@@ -38,6 +38,7 @@ import {
 import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { FriendsSheet } from "@/components/friends-sheet";
 import { MarketSheet } from "@/components/market-sheet";
+import { LastPackSheet } from "@/components/last-pack-sheet";
 import { NotificationsSheet } from "@/components/notifications-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
@@ -64,6 +65,7 @@ import {
   type CardVariant,
   type Rarity,
 } from "@/lib/catalog";
+import { readySteals } from "@/lib/last-pack";
 import { formatViewers, liveFor, liveLogins, viewersLabel } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
 import { regionLabel } from "@/lib/regions";
@@ -719,6 +721,7 @@ function ProfileView({
   onShowLeaderboard,
   onShowFriends,
   onShowMarket,
+  onShowLastPack,
   onShowNotifications,
   onShowOwnProfile,
 }: {
@@ -732,10 +735,15 @@ function ProfileView({
   onShowLeaderboard: () => void;
   onShowFriends: () => void;
   onShowMarket: () => void;
+  onShowLastPack: () => void;
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
 }) {
   const cloud = useCloud();
+  // Ce qui est prenable maintenant : la pastille du menu, calculée à partir de
+  // l'étagère du serveur et de son horloge (voir `readySteals`).
+  const lastPackNow = useNow(15_000);
+  const lastPackReady = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? lastPackNow, lastPackNow);
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
@@ -841,6 +849,13 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowMarket}>
             <span>Hôtel des ventes</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowLastPack}>
+            <span>Last Pack</span>
+            {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -993,6 +1008,15 @@ export function CreatorDeckApp() {
     const timer = setInterval(() => void cloudStore.loadInbox(), 5 * 60_000);
     return () => clearInterval(timer);
   }, [inboxReady]);
+  // L'étagère des Last Packs suit la même règle que le carnet — à l'ouverture,
+  // puis régulièrement — mais plus souvent : un paquet n'est exposé que dix
+  // minutes, et c'est la pastille qui doit faire sortir le joueur de son siège.
+  useEffect(() => {
+    if (!inboxReady) return;
+    void cloudStore.loadLastPacks();
+    const timer = setInterval(() => void cloudStore.loadLastPacks(), 3 * 60_000);
+    return () => clearInterval(timer);
+  }, [inboxReady]);
   const now = useNow(1_000);
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
@@ -1012,6 +1036,12 @@ export function CreatorDeckApp() {
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [marketOpen, setMarketOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [lastPackOpen, setLastPackOpen] = useState(false);
+  // La pastille de la barre : combien de paquets d'amis sont prenables là,
+  // maintenant. Même calcul que la ligne du menu, même horloge (celle du
+  // serveur) — une pastille qui resterait allumée après la fenêtre serait un
+  // mensonge.
+  const navLastPack = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? now, now);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
@@ -1091,6 +1121,9 @@ export function CreatorDeckApp() {
         playPackOpening();
         setDrawnCards(outcome.cards);
         setRevealIndex(0);
+        // Le paquet vient d'être exposé dix minutes : l'étagère doit le savoir
+        // tout de suite, sinon « ton paquet est exposé » arriverait en retard.
+        void cloudStore.loadLastPacks();
         return;
       }
       if (outcome.reason === "offline" || outcome.reason === "no-session") {
@@ -1246,6 +1279,7 @@ export function CreatorDeckApp() {
             }}
             onShowFriends={() => setFriendsOpen(true)}
             onShowMarket={() => setMarketOpen(true)}
+            onShowLastPack={() => setLastPackOpen(true)}
             onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
@@ -1264,6 +1298,14 @@ export function CreatorDeckApp() {
           >
             {item.icon}
             <span>{item.label}</span>
+            {/* La pastille du Last Pack : « il y a un paquet à prendre, là,
+                maintenant ». Elle vit sur l'onglet qui mène au menu, comme
+                celle du carnet — pas de cinquième onglet. */}
+            {item.id === "profile" && navLastPack > 0 ? (
+              <b className="nav-badge" aria-label={`${navLastPack} paquet(s) à prendre`}>
+                {navLastPack}
+              </b>
+            ) : null}
           </button>
         ))}
       </nav>
@@ -1314,6 +1356,7 @@ export function CreatorDeckApp() {
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
+      {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet

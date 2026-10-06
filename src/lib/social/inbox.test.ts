@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { MarketSale, TradeListItem } from "@/lib/cloud/api";
+import type { LastPackLoss, MarketSale, TradeListItem } from "@/lib/cloud/api";
 import { EMPTY_FRIEND_LISTS } from "@/lib/social/friends";
 import type { FriendLists } from "@/lib/social/friends";
 import { buildInbox, describeTrade, INBOX_LIMIT, seenKey, unreadCount } from "@/lib/social/inbox";
@@ -124,6 +124,47 @@ describe("le carnet de notifications", () => {
       sales: [sale({ soldAt: "2026-10-03T09:00:00Z" })],
     });
     expect(items.map((item) => item.id)).toEqual(["friend-request:4", "sale:7", "trade:1"]);
+  });
+
+  it("annonce le légendaire qu'on t'a piqué, et pas un autre mot", () => {
+    const loss: LastPackLoss = {
+      id: 12,
+      thiefName: "Lou",
+      packId: 475,
+      card: { creatorSlug: "ibai", rarity: "legendary", variant: "live" },
+      stolenAt: "2026-10-06T20:05:00Z",
+    };
+    const items = buildInbox({ trades: [], friends: friends(), lastPackLosses: [loss] });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({ id: "last-pack:12", kind: "last_pack", who: "Lou" });
+    expect(items[0]?.title).toBe("Lou t'a piqué ton légendaire");
+    expect(items[0]?.body).toBe("ibai · Légendaire Live");
+  });
+
+  it("n'annonce pas un légendaire là où il n'y en a pas", () => {
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackLosses: [
+        {
+          id: 13,
+          thiefName: "Sam",
+          packId: 476,
+          card: { creatorSlug: "ibai", rarity: "epic", variant: "standard" },
+          stolenAt: "2026-10-06T20:06:00Z",
+        },
+        {
+          id: 14,
+          thiefName: "",
+          packId: null,
+          card: { creatorSlug: "ibai", rarity: "common", variant: "standard" },
+          stolenAt: "2026-10-06T20:07:00Z",
+        },
+      ],
+    });
+    const parId = new Map(items.map((item) => [item.id, item]));
+    expect(parId.get("last-pack:13")?.title).toBe("Sam t'a piqué ton épique");
+    expect(parId.get("last-pack:14")?.title).toBe("Un collectionneur t'a piqué une carte");
   });
 
   it("compte les nouveautés depuis la dernière visite", () => {
