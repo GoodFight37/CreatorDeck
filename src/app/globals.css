@@ -616,13 +616,24 @@ input:focus-visible {
   justify-content: space-between;
   gap: 8px;
   margin-top: 12px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: rgba(255, 255, 255, 0.025);
-  font-size: 13px;
   color: var(--muted);
+  font-size: 13px;
 }
+.binder-pager button {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 2px;
+  color: var(--text);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+}
+.binder-pager button:disabled { color: var(--muted-2); cursor: not-allowed; }
+.binder-pager strong { color: var(--text); font-family: var(--font-display); font-size: 17px; font-weight: 600; }
 .binder-pager strong {
   color: white;
 }
@@ -1005,48 +1016,107 @@ input:focus-visible {
 
 .search-field {
   display: flex;
-  height: 45px;
+  height: 44px;
   align-items: center;
   gap: 9px;
-  margin-top: 20px;
-  padding: 0 13px;
+  margin-top: 18px;
+  padding: 0 12px;
   color: var(--muted);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  background: rgba(255,255,255,.035);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .02);
 }
 .search-field input { flex: 1; min-width: 0; color: white; border: 0; outline: 0; background: transparent; font-size: 14px; }
 .search-field input::placeholder { color: var(--muted-2); }
 .search-field button { display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: rgba(255,255,255,.06); cursor: pointer; }
 
+/*
+ * Les filtres (classeur, atelier) : une rangée de mots, comme les onglets d'un
+ * registre. Pas de pastilles, pas de fond, pas de coins arrondis — le mot actif
+ * est blanc et souligné, les autres sont gris.
+ */
 .filter-chips {
   display: flex;
-  gap: 7px;
-  margin: 12px -18px 0;
-  padding: 0 18px 4px;
+  gap: 16px;
+  margin: 18px -18px 0;
+  padding: 0 18px 2px;
   overflow-x: auto;
   scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 .filter-chips::-webkit-scrollbar { display: none; }
 .filter-chips button {
   flex: 0 0 auto;
-  min-height: 31px;
-  padding: 0 11px;
-  color: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: transparent;
+  padding: 3px 0;
+  color: var(--muted-2);
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
 }
-.filter-chips button.active { color: white; border-color: rgb(var(--accent-rgb) / .34); background: rgb(var(--accent-rgb) / .15); }
+.filter-chips button.active { color: var(--text); border-bottom-color: var(--text); }
+
+/*
+ * ═══ LA PAGE DE CLASSEUR ═══════════════════════════════════════════════════
+ *
+ * Le classeur n'était qu'une grille de vignettes posée sur le fond. Ici, c'est
+ * une feuille : un carton sombre, des pochettes alignées, le plastique qui
+ * accroche la lumière en haut de chaque pochette. C'est ce qui donne la
+ * sensation de l'objet — même en noir et blanc.
+ */
+.binder-page {
+  margin-top: 14px;
+  padding: 11px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .04), transparent 26%),
+    var(--panel);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, .55),
+    0 20px 34px -26px #000;
+}
 
 .collection-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px 8px;
-  margin-top: 15px;
+  gap: 11px 9px;
+}
+
+.binder-pocket {
+  position: relative;
+  padding: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .075), rgba(255, 255, 255, .012) 34%, rgba(255, 255, 255, 0));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+
+/* Le reflet du plastique, en diagonale sur la pochette. */
+.binder-pocket::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(118deg, rgba(255, 255, 255, .1) 0%, transparent 34%, transparent 100%);
+}
+
+.pocket-count {
+  position: absolute;
+  right: 7px;
+  bottom: 6px;
+  padding: 1px 5px;
+  color: var(--ink);
+  border-radius: 2px;
+  background: var(--paper);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .02em;
 }
 .no-results { padding: 50px 10px; color: var(--muted); font-size: 14px; text-align: center; }
 

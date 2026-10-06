@@ -346,7 +346,9 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
-  const perPage = 30;
+  // Une page de classeur, ce sont 9 pochettes (3 × 3) : ce qu'un écran de
+  // téléphone montre d'un coup, exactement comme on ouvre un classeur.
+  const perPage = 9;
 
   const owned = useMemo(() => {
     const map = new Map<
@@ -474,7 +476,7 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
           <span>Précédent</span>
         </button>
         <span>
-          Page <strong>{safePage + 1}</strong> / {totalPages} · {filtered.length} cartes
+          Page <strong>{safePage + 1}</strong> sur {totalPages} · {filtered.length} cartes
         </span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
@@ -485,24 +487,29 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
         </button>
       </div>
 
-      <div className="collection-grid">
-        {visibleCreators.map((creator) => {
-          const item = owned.get(creator.slug);
-          return (
-            <CreatorCard
-              key={creator.slug}
-              creator={creator}
-              variant={item?.bestVariant}
-              count={item?.count}
-              locked={!item}
-              compact
-            />
-          );
-        })}
+      <div className="binder-page">
+        <div className="collection-grid">
+          {visibleCreators.map((creator) => {
+            const item = owned.get(creator.slug);
+            return (
+              <div className="binder-pocket" key={creator.slug}>
+                <CreatorCard
+                  creator={creator}
+                  variant={item?.bestVariant}
+                  locked={!item}
+                  compact
+                />
+                {item && item.count > 1 ? (
+                  <span className="pocket-count">×{item.count}</span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+        {!filtered.length ? (
+          <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
+        ) : null}
       </div>
-      {!filtered.length ? (
-        <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
-      ) : null}
     </div>
   );
 }
