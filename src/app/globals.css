@@ -724,9 +724,31 @@ input:focus-visible {
   mix-blend-mode: screen;
 }
 
-.creator-card.variant-holo .card-foil,
-.creator-card.variant-gold .card-foil,
-.creator-card.variant-live .card-foil { opacity: .65; }
+/*
+ * Foil : un aplat à 0,65 pour les trois variantes ne les distinguait pas à un
+ * mètre. Chacune a désormais sa lumière — prismatique (Holo), chromée (Gold),
+ * rose néon (Live) — et seul l'écran de révélation les fait bouger : animer
+ * 1 000 cartes de classeur coûterait cher pour rien.
+ */
+.creator-card.variant-holo .card-foil {
+  opacity: .8;
+  background: linear-gradient(115deg, transparent 12%, rgba(120,255,240,.42) 30%, rgba(255,140,240,.36) 46%, rgba(255,240,150,.36) 60%, transparent 78%);
+}
+.creator-card.variant-gold .card-foil {
+  opacity: .85;
+  background: linear-gradient(115deg, transparent 10%, rgba(255,225,150,.55) 30%, rgba(255,255,255,.5) 44%, rgba(255,180,60,.46) 58%, transparent 76%);
+}
+.creator-card.variant-live .card-foil {
+  opacity: .9;
+  background: linear-gradient(115deg, transparent 12%, rgba(255,110,190,.5) 34%, rgba(255,255,255,.34) 46%, rgba(255,60,150,.46) 62%, transparent 80%);
+}
+.reveal-card .card-foil { background-size: 220% 220%; animation: foil-sweep 5.5s ease-in-out infinite alternate; }
+.reveal-card.variant-live .card-foil { animation: live-pulse 2.4s ease-in-out infinite; }
+@keyframes foil-sweep { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+@keyframes live-pulse { 0%, 100% { opacity: .5; } 50% { opacity: .95; } }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-card .card-foil { animation: none; }
+}
 .creator-card.variant-gold { border-color: #ffce6c; box-shadow: 0 0 24px -7px rgba(255,190,72,.7), 0 12px 26px -13px #000; }
 .creator-card.variant-live { border-color: #ff67b0; box-shadow: 0 0 24px -8px rgba(255,75,158,.75), 0 12px 26px -13px #000; }
 
