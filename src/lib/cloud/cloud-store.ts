@@ -30,6 +30,7 @@ import {
   type PlayerSearchResult,
   type TradeListItem,
 } from "@/lib/cloud/api";
+import type { FriendRequest, Friendship } from "@/lib/social/friends";
 import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
@@ -1270,6 +1271,34 @@ export function createCloudStore(deps: CloudDeps) {
       } catch (error) {
         fail(error, "Classement indisponible.");
       }
+    },
+    // Friend RPC methods
+    async listFriends(): Promise<Friendship[]> {
+      return await resolve().listFriends();
+    },
+    async listIncomingFriendRequests(): Promise<FriendRequest[]> {
+      return await resolve().listIncomingFriendRequests();
+    },
+    async listOutgoingFriendRequests(): Promise<FriendRequest[]> {
+      return await resolve().listOutgoingFriendRequests();
+    },
+    async sendFriendRequest(p_recipient: string): Promise<{ request: FriendRequest | null; alreadyFriends: boolean; existingRequest: FriendRequest | null }> {
+      return await resolve().sendFriendRequest(p_recipient);
+    },
+    async acceptFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null; friendship: Friendship | null }> {
+      return await resolve().acceptFriendRequest(p_request_id);
+    },
+    async rejectFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
+      return await resolve().rejectFriendRequest(p_request_id);
+    },
+    async cancelFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
+      return await resolve().cancelFriendRequest(p_request_id);
+    },
+    async removeFriend(p_friend: string): Promise<{ friendship: Friendship | null }> {
+      return await resolve().removeFriend(p_friend);
+    },
+    async hasFriendship(p_user: string): Promise<boolean> {
+      return await resolve().hasFriendship(p_user);
     },
 
     /** Empreinte locale, utile pour diagnostiquer un conflit. */

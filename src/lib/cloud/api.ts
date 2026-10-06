@@ -15,6 +15,7 @@
 import type { KeyValueStorage } from "@/lib/save-store";
 import type { CloudConfig } from "@/lib/cloud/config";
 import { cloudRequest, type CloudFetch } from "@/lib/cloud/transport";
+import type { FriendRequest, Friendship } from "@/lib/social/friends";
 
 /** Clé de stockage local de la session (jetons d'accès et de rafraîchissement). */
 export const CLOUD_SESSION_KEY = "creatordeck.cloud.session";
@@ -922,6 +923,191 @@ export class CloudApi {
         },
       ];
     });
+  }
+
+  // Friend RPC methods
+  async listFriends(): Promise<Friendship[]> {
+    const result = await this.rpc("list_friends", {});
+    if (!Array.isArray(result)) return [];
+    return result.map((raw) => {
+      const record = asRecord(raw);
+      if (!record) return null as any;
+      return {
+        id: String(record.id ?? ""),
+        friendId: String(record.friendId ?? ""),
+        friendName: String(record.friendName ?? ""),
+        createdAt: String(record.createdAt ?? ""),
+      };
+    }).filter((f): f is Friendship => f !== null);
+  }
+
+  async listIncomingFriendRequests(): Promise<FriendRequest[]> {
+    const result = await this.rpc("list_incoming_friend_requests", {});
+    if (!Array.isArray(result)) return [];
+    return result.map((raw) => {
+      const record = asRecord(raw);
+      if (!record) return null as any;
+      return {
+        id: Number(record.id ?? 0),
+        senderId: String(record.senderId ?? ""),
+        senderName: String(record.senderName ?? ""),
+        createdAt: String(record.createdAt ?? ""),
+      };
+    }).filter((f): f is FriendRequest => f !== null);
+  }
+
+  async listOutgoingFriendRequests(): Promise<FriendRequest[]> {
+    const result = await this.rpc("list_outgoing_friend_requests", {});
+    if (!Array.isArray(result)) return [];
+    return result.map((raw) => {
+      const record = asRecord(raw);
+      if (!record) return null as any;
+      return {
+        id: Number(record.id ?? 0),
+        recipientId: String(record.recipientId ?? ""),
+        recipientName: String(record.recipientName ?? ""),
+        createdAt: String(record.createdAt ?? ""),
+      };
+    }).filter((f): f is FriendRequest => f !== null);
+  }
+
+  async sendFriendRequest(p_recipient: string): Promise<{ request: FriendRequest | null; alreadyFriends: boolean; existingRequest: FriendRequest | null }> {
+    const result = await this.rpc("send_friend_request", { p_recipient });
+    const record = asRecord(result);
+    if (!record) {
+      return { request: null, alreadyFriends: false, existingRequest: null };
+    }
+    const requestRecord = asRecord(record.request);
+    const existingRequestRecord = asRecord(record.existingRequest);
+    return {
+      request: requestRecord
+        ? {
+            id: String(requestRecord.id ?? ""),
+            senderId: String(requestRecord.senderId ?? ""),
+            recipientId: String(requestRecord.recipientId ?? ""),
+            senderName: String(requestRecord.senderName ?? ""),
+            recipientName: String(requestRecord.recipientName ?? ""),
+            status: String(requestRecord.status ?? ""),
+            createdAt: String(record.createdAt ?? ""),
+            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
+          }
+        : null,
+      alreadyFriends: Boolean(record.alreadyFriends),
+      existingRequest: existingRequestRecord
+        ? {
+            id: Number(existingRequestRecord.id ?? 0),
+            senderId: String(existingRequestRecord.senderId ?? ""),
+            recipientId: String(existingRequestRecord.recipientId ?? ""),
+            senderName: String(existingRequestRecord.senderName ?? ""),
+            recipientName: String(existingRequestRecord.recipientName ?? ""),
+            status: String(existingRequestRecord.status ?? ""),
+            createdAt: String(existingRequestRecord.createdAt ?? ""),
+            updatedAt: existingRequestRecord.updatedAt ? String(existingRequestRecord.updatedAt) : null,
+          }
+        : null,
+    };
+  }
+
+  async acceptFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null; friendship: Friendship | null }> {
+    const result = await this.rpc("accept_friend_request", { p_request_id });
+    const record = asRecord(result);
+    if (!record) {
+      return { request: null, friendship: null };
+    }
+    const requestRecord = asRecord(record.request);
+    const friendshipRecord = asRecord(record.friendship);
+    return {
+      request: requestRecord
+        ? {
+            id: String(requestRecord.id ?? ""),
+            senderId: String(requestRecord.senderId ?? ""),
+            recipientId: String(requestRecord.recipientId ?? ""),
+            senderName: String(requestRecord.senderName ?? ""),
+            recipientName: String(requestRecord.recipientName ?? ""),
+            status: String(requestRecord.status ?? ""),
+            createdAt: String(requestRecord.createdAt ?? ""),
+            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
+          }
+        : null,
+      friendship: friendshipRecord
+        ? {
+            id: String(friendshipRecord.id ?? ""),
+            friendId: String(friendshipRecord.friendId ?? ""),
+            friendName: String(friendshipRecord.friendName ?? ""),
+            createdAt: String(friendshipRecord.createdAt ?? ""),
+          }
+        : null,
+    };
+  }
+
+  async rejectFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
+    const result = await this.rpc("reject_friend_request", { p_request_id });
+    const record = asRecord(result);
+    if (!record) {
+      return { request: null };
+    }
+    const requestRecord = asRecord(record.request);
+    return {
+      request: requestRecord
+        ? {
+            id: String(requestRecord.id ?? ""),
+            senderId: String(requestRecord.senderId ?? ""),
+            recipientId: String(requestRecord.recipientId ?? ""),
+            senderName: String(requestRecord.senderName ?? ""),
+            recipientName: String(requestRecord.recipientName ?? ""),
+            status: String(requestRecord.status ?? ""),
+            createdAt: String(record.createdAt ?? ""),
+            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
+          }
+        : null,
+    };
+  }
+
+  async cancelFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
+    const result = await this.rpc("cancel_friend_request", { p_request_id });
+    const record = asRecord(result);
+    if (!record) {
+      return { request: null };
+    }
+    const requestRecord = asRecord(record.request);
+    return {
+      request: requestRecord
+        ? {
+            id: String(requestRecord.id ?? ""),
+            senderId: String(requestRecord.senderId ?? ""),
+            recipientId: String(requestRecord.recipientId ?? ""),
+            senderName: String(requestRecord.senderName ?? ""),
+            recipientName: String(requestRecord.recipientName ?? ""),
+            status: String(requestRecord.status ?? ""),
+            createdAt: String(record.createdAt ?? ""),
+            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
+          }
+        : null,
+    };
+  }
+
+  async removeFriend(p_friend: string): Promise<{ friendship: Friendship | null }> {
+    const result = await this.rpc("remove_friend", { p_friend });
+    const record = asRecord(result);
+    if (!record) {
+      return { friendship: null };
+    }
+    const friendshipRecord = asRecord(record.friendship);
+    return {
+      friendship: friendshipRecord
+        ? {
+            id: String(friendshipRecord.id ?? ""),
+            friendId: String(friendshipRecord.friendId ?? ""),
+            friendName: String(friendshipRecord.friendName ?? ""),
+            createdAt: String(friendshipRecord.createdAt ?? ""),
+          }
+        : null,
+    };
+  }
+
+  async hasFriendship(p_user: string): Promise<boolean> {
+    const result = await this.rpc("has_friendship", { p_user });
+    return typeof result === "boolean" ? result : false;
   }
 
   // ------------------------------------------------------------------ HTTP
