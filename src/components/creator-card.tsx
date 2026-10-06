@@ -10,6 +10,7 @@ import {
   type Creator,
 } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
+import { viewersLabel, type LiveStream } from "@/lib/live";
 import { Radio } from "lucide-react";
 
 type CreatorCardProps = {
@@ -19,6 +20,12 @@ type CreatorCardProps = {
   locked?: boolean;
   compact?: boolean;
   className?: string;
+  /**
+   * La diffusion en cours du créateur, quand l'app la connaît et qu'elle est
+   * fraîche (`liveFor`). Rien n'est affiché si `null` : un badge « en direct »
+   * périmé serait un mensonge, et un badge faux vaut moins que pas de badge.
+   */
+  liveStream?: LiveStream | null;
 };
 
 /**
@@ -46,6 +53,7 @@ export function CreatorCard({
   locked = false,
   compact = false,
   className = "",
+  liveStream = null,
 }: CreatorCardProps) {
   const rarity = RARITY_META[creator.rarity];
   // Le foil ne « suit le doigt » que sur une carte assez grande pour qu'on le
@@ -86,7 +94,7 @@ export function CreatorCard({
     <article
       className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className}`}
       style={style}
-      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}`}
+      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${liveStream ? ", en direct" : ""}`}
       onPointerMove={trackPointer}
       onPointerLeave={() => {
         const foil = foilRef.current;
@@ -108,13 +116,32 @@ export function CreatorCard({
 
       <div className="card-foil" ref={foilRef} aria-hidden="true" />
 
-      <span className="card-rank">#{String(creator.rank).padStart(3, "0")}</span>
+      <div className="card-topline">
+        <div className="card-topleft">
+          <span className="card-rank">#{String(creator.rank).padStart(3, "0")}</span>
+          {/* Le direct **réel** (la personne streame maintenant), à ne pas
+              confondre avec la variante Live : la variante est une matière de
+              carte, le direct est un fait. Deux endroits, deux formes. */}
+          {liveStream ? (
+            <span className={`card-on-air${compact ? " is-dot" : ""}`}>
+              <i aria-hidden="true" />
+              {compact ? null : "Direct"}
+            </span>
+          ) : null}
+        </div>
+        {variant === "live" ? (
+          <span className="card-live">
+            <i aria-hidden="true" />
+            On air
+          </span>
+        ) : null}
+      </div>
 
-      {variant === "live" ? (
-        <span className="card-live">
+      {liveStream && !compact ? (
+        <p className="card-broadcast">
           <i aria-hidden="true" />
-          On air
-        </span>
+          {`En direct · ${liveStream.viewers > 0 ? viewersLabel(liveStream.viewers) : "à l'antenne"}`}
+        </p>
       ) : null}
 
       <div className="card-nameplate">

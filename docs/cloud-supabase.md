@@ -471,9 +471,64 @@ En cas de refus « aucun booster », le client relit aussitôt `pack_status()` :
 si un sablier ou une horloge locale avait gonflé la réserve affichée, le
 compteur et le compte à rebours se réalignent sur le serveur immédiatement.
 
+### Le direct (statut EN LIVE)
+
+Une carte dont le créateur **streame à cet instant** le dit : pastille « Direct »
+sur la carte, bandeau sous le titre de l'accueil (« 12 sur 1000 · @kamet0 4 120 »),
+ligne rouge au moment de la révélation, et un filtre « En direct » dans le
+classeur. Rien de tout ça n'apparaît si la donnée est vieille de plus de dix
+minutes : un badge « en direct » périmé serait un mensonge.
+
+Ce n'est **pas** la variante Live d'une carte. La variante est une matière qu'on
+tire au sort ; le direct est un fait qu'on constate. Les deux peuvent cohabiter
+sur la même carte.
+
+Pourquoi ça ne peut pas vivre dans l'APK : l'API Helix demande un **client
+secret**, et un APK se dézippe. L'appel vit donc dans une **Edge Function**
+(`supabase/functions/refresh-live/index.ts`), qui interroge Twitch et publie le
+résultat dans une table que tout le monde peut lire. Dix requêtes Helix pour
+1 000 créateurs, une fois pour tous les joueurs.
+
+| Élément | Rôle |
+| --- | --- |
+| `0007_direct.sql` | tables `live_streams` (le cache) et `live_state` (son horodatage) + `live_publish()`, réservée au serveur |
+| `supabase/functions/refresh-live` | seul endroit qui connaît le secret Twitch : jeton d'application, `GET /helix/streams` par lots de 100, publication |
+| `src/lib/live.ts`, `src/lib/live-store.ts` | lecture de la table (sans compte), cache local daté, règle des dix minutes |
+| `src/components/creator-deck-app.tsx` | bandeau d'accueil, filtre du classeur, ligne de révélation |
+
+**Il n'y a pas de tâche planifiée** : c'est l'app qui demande le
+rafraîchissement quand elle s'ouvre et que son cache a plus de trois minutes. La
+fonction se limite elle-même à **une requête Twitch toutes les 90 secondes**
+(c'est `live_state.refreshed_at` qui le dit), donc l'appeler plus souvent ne
+coûte rien — c'est ce qui permet de la laisser sans jeton.
+
+**Mise en place (une fois).**
+
+1. Créer une application sur <https://dev.twitch.tv/console/apps> (nom libre,
+   *OAuth Redirect URL* : `http://localhost`, catégorie *Application
+   integration*). Noter le **Client ID**, générer un **secret**.
+2. Supabase → **Edge Functions** → **Secrets** : ajouter
+   `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET`.
+3. Supabase → **Edge Functions** → *Deploy a new function* → **Via Editor** :
+   nom `refresh-live`, coller le contenu de
+   `supabase/functions/refresh-live/index.ts`, **désactiver « Verify JWT »**,
+   déployer. (La fonction ne publie que des données publiques et se limite
+   elle-même ; un jeton n'apporterait rien.)
+4. SQL Editor : coller `0007_direct.sql`, puis **re-coller `0003_catalogue.sql`**
+   (il apporte la colonne `login`, la clé qui relie une diffusion à sa carte).
+5. Ouvrir l'app : le premier affichage déclenche le rafraîchissement. Pour
+   forcer un rafraîchissement tout de suite, ouvrir l'URL de la fonction avec
+   `?force=1` (l'app, elle, ne le fait jamais).
+
+En cas de doute, `POST /functions/v1/refresh-live` répond en JSON :
+`{"skipped":true,"age_ms":…}` (trop récent), `{"ok":true,"checked":1000,
+"live":12,…}` (publié), ou `{"error":…}` (secret manquant, catalogue vide,
+refus de Twitch).
+
 ## 9. Suite : notifications
 
-**Fait :** vitrine de quatre cartes ; **profil public complet** et classements
+**Fait :** **statut EN LIVE** (le direct réel, alimenté par Helix côté serveur —
+voir §8) ; vitrine de quatre cartes ; **profil public complet** et classements
 enrichis (`0006_profil_public.sql` : projection `user_cards`, complétion, rangs,
 Gold et Holo, affiche de partage) ; tirage des boosters côté serveur
 (`0004_tirage.sql`, les cartes sont infalsifiables) ; échanges de cartes
@@ -491,9 +546,13 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
   — il faudra l'ajouter à la migration générée `0003_catalogue.sql` ;
 * **marché entre joueurs** : la projection `user_cards` est prête, les règles
   (prix en points, anti-duplication, expiration) restent à écrire ;
+* **connexion Twitch (OAuth)** : le même client Twitch qui alimente le direct
+  peut servir d'identité de joueur (plus rien à retenir, plus de mot de passe à
+  perdre) — à faire quand le parc de comptes le justifiera ;
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
-  temps réel sur les offres (aujourd'hui : rafraîchissement manuel).
+  temps réel sur les offres (aujourd'hui : rafraîchissement manuel), marché
+  entre joueurs (la projection `user_cards` est prête).
 
 ## 10. Dépannage
 
@@ -518,6 +577,7 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
+| Aucun badge « Direct » n'apparaît | table `0007` non collée, `0003` non recollée (colonne `login`), secrets Twitch absents, ou fonction `refresh-live` non déployée — l'appel à la fonction répond alors le détail |
 | Un échange accepté n'apparaît pas tout de suite | l'appareil du proposeur s'aligne sur `list_trades()` : **Actualiser mes offres**, ou rouvre l'écran Compte |
 | « Le tirage serveur n'est pas installé sur ce projet » | `0003_catalogue.sql` et `0004_tirage.sql` ne sont pas (ou pas à jour) : § 3 |
 | « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |

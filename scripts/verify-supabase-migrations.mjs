@@ -26,7 +26,10 @@
  *   * les échanges : offres, acceptation atomique des deux côtés, refus,
  *     annulation, verrous, droits, et lecture par un tiers ;
  *   * le profil public : projection `user_cards`, complétion, rangs, répartition
- *     par rareté, nouveaux tris du classement, et ce qui reste invisible.
+ *     par rareté, nouveaux tris du classement, et ce qui reste invisible ;
+ *   * le direct : publication d'une liste, disparition des diffusions
+ *     terminées, et interdiction d'écrire depuis un client — y compris via
+ *     `live_publish`, qui doit rester hors de portée d'un joueur.
  */
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -97,6 +100,7 @@ try {
     ["0004_tirage.sql", tirage],
     ["0005_echanges.sql", await readFile(path.join(MIGRATIONS, "0005_echanges.sql"), "utf8")],
     ["0006_profil_public.sql", await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8")],
+    ["0007_direct.sql", await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8")],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -734,10 +738,113 @@ try {
     (await client.query("select showcase_slugs as s from public.profiles where user_id = $1", [A])).rows[0].s.length === 0,
   );
 
+  // --- Direct ---------------------------------------------------------------
+  // Le cache du direct : publié par le serveur, lu par tout le monde.
+  const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
+  const publish = await client.query(
+    "select public.live_publish($1::jsonb, $2) as r",
+    [
+      JSON.stringify([
+        {
+          login: "kamet0",
+          twitch_id: "123",
+          display_name: "Kameto",
+          game_name: "Just Chatting",
+          title: "Sixième journée",
+          viewers: 4120,
+          started_at: "2026-10-06T18:12:00Z",
+          thumbnail: "https://static-cdn.jtvnw.net/x-320x180.jpg",
+        },
+        {
+          login: "ibai",
+          twitch_id: "456",
+          display_name: "ibai",
+          game_name: "League of Legends",
+          title: "LVP",
+          viewers: "12000",
+          // Date volontairement invalide : elle doit être ignorée, pas faire
+          // échouer tout le rafraîchissement.
+          started_at: "hier soir",
+          thumbnail: "",
+        },
+      ]),
+      "vérification",
+    ],
+  );
+  check("direct : la publication renvoie le compte", publish.rows[0].r.streams === 2, JSON.stringify(publish.rows[0].r));
+  check(
+    "direct : les deux diffusions sont rangées, compteurs convertis",
+    (await client.query("select count(*)::int as n, sum(viewers)::int as v from public.live_streams")).rows[0].n === 2 &&
+      (await client.query("select count(*)::int as n, sum(viewers)::int as v from public.live_streams")).rows[0].v === 16120,
+  );
+  check(
+    "direct : une date de début invalide devient NULL sans rien casser",
+    (await client.query("select started_at as s from public.live_streams where login = 'ibai'")).rows[0].s === null,
+  );
+  check(
+    "direct : l'état du cache est daté",
+    (await client.query("select streams, refreshed_at from public.live_state where id")).rows[0].streams === 2,
+  );
+  // Un second appel remplace la liste : la diffusion terminée disparaît.
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify([{ login: "kamet0", display_name: "Kameto", viewers: 10 }]),
+    "après déconnexion d'ibai",
+  ]);
+  check(
+    "direct : une diffusion terminée disparaît de la table",
+    (await client.query("select count(*)::int as n from public.live_streams")).rows[0].n === 1,
+  );
+  check(
+    "direct : le compteur de l'état suit",
+    (await client.query("select streams from public.live_state where id")).rows[0].streams === 1,
+  );
+  check(
+    "direct : la table est lisible par un joueur, même sans compte",
+    (await client.query("set role anon")).command === "SET" &&
+      (await client.query("select count(*)::int as n from public.live_streams")).rows[0].n === 1 &&
+      (await client.query("reset role")).command === "RESET",
+  );
+  check(
+    "direct : un joueur ne peut pas inventer un direct (publication refusée)",
+    await (async () => {
+      try {
+        await asPlayer(A, "select public.live_publish($1::jsonb)", [JSON.stringify([{ login: "faux" }])]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      }
+    })(),
+  );
+  check(
+    "direct : un client ne peut pas écrire dans le cache à la main",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("insert into public.live_streams (login) values ('pirate')");
+        return false;
+      } catch {
+        return true;
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+  check(
+    "direct : le catalogue porte le login Twitch (clé du rapprochement)",
+    (await client.query("select count(*)::int as n from public.creators where login is not null")).rows[0].n === 1000,
+  );
+  check(
+    "direct : le slug n'est pas le login (les deux sont conservés)",
+    (
+      await client.query("select count(*)::int as n from public.creators where slug <> login")
+    ).rows[0].n > 0,
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
   await client.query(await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8"));
+  await client.query(direct);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -751,6 +858,10 @@ try {
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
+  check(
+    "migrations rejouables : le direct répond encore",
+    (await client.query("select streams from public.live_state where id")).rows[0].streams === 1,
+  );
 
   console.log("");
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);

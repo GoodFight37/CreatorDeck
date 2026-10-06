@@ -349,6 +349,48 @@ input:focus-visible {
   color: var(--accent-soft);
 }
 
+/*
+ * Le bandeau du direct, sous le titre d'accueil : le « lower third » d'une
+ * régie — un point rouge, un mot, des chiffres. Pas de pastille, pas de fond
+ * arrondi : deux filets et de l'air, comme une incrustation de télé.
+ */
+.live-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.live-bar i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 9px rgb(var(--accent-rgb) / .85);
+  animation: live-pulse 1.9s ease-in-out infinite;
+}
+.live-bar-tag {
+  color: var(--accent-light);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.live-bar-who {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+@media (prefers-reduced-motion: reduce) { .live-bar i { animation: none; } }
+
 .pack-stage {
   position: relative;
   display: flex;
@@ -770,11 +812,27 @@ input:focus-visible {
     linear-gradient(180deg, transparent 52%, rgb(var(--bg-rgb) / .72) 76%, rgb(var(--bg-rgb) / .95) 100%);
 }
 
-.card-rank {
+/* La ligne du haut : le rang à gauche, la variante à droite. */
+.card-topline {
   position: absolute;
   z-index: 5;
-  top: 3.6%;
-  left: 5%;
+  top: 3.4%;
+  right: 4.6%;
+  left: 4.6%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.card-topleft {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-rank {
   color: rgba(255, 255, 255, .92);
   font-family: var(--font-display);
   font-size: clamp(11px, 3vw, 15px);
@@ -783,12 +841,72 @@ input:focus-visible {
   text-shadow: 0 1px 6px rgba(0, 0, 0, .95);
 }
 
-.card-live {
+/*
+ * Le direct **réel** : un point rouge et un mot, comme une pastille de plateau.
+ * À ne pas confondre avec « ON AIR », qui est la variante Live de la carte —
+ * celle-là se paie au tirage, celui-ci se constate.
+ */
+.card-on-air {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 5px;
+  color: #fff;
+  border-radius: 2px;
+  background: rgb(var(--bg-rgb) / .74);
+  box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / .55);
+  font-family: var(--font-display);
+  font-size: clamp(9px, 2.4vw, 11px);
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* Sur une carte du classeur (une centaine de pixels de large), la pastille se
+   réduit à son point : le mot « Direct » n'y tiendrait pas à côté du rang, et la
+   variante Live occupe déjà la droite de la ligne. */
+.card-on-air.is-dot { padding: 3px 5px; }
+
+.card-on-air i,
+.card-broadcast i {
+  width: 5px;
+  height: 5px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent-light);
+  box-shadow: 0 0 6px rgb(var(--accent-rgb) / .9);
+  animation: live-pulse 1.9s ease-in-out infinite;
+}
+
+/* Le bandeau du bas, sur les grandes cartes : « En direct · 4 120 spectateurs ». */
+.card-broadcast {
   position: absolute;
   z-index: 5;
-  top: 3.4%;
-  right: 4.6%;
+  right: 0;
+  bottom: 27%;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 6% 4px 6%;
+  color: #fff;
+  background: linear-gradient(90deg, rgb(var(--accent-rgb) / .94), rgb(var(--accent-rgb) / .55) 78%, transparent);
+  font-family: var(--font-display);
+  font-size: clamp(11px, 3.4vw, 16px);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-on-air i,
+  .card-broadcast i { animation: none; }
+}
+
+.card-live {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 5px;
   padding: 3px 7px 3px 6px;
@@ -1405,6 +1523,31 @@ input:focus-visible {
 .reveal-name h2 { margin: 0; font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: .95; letter-spacing: .005em; text-transform: uppercase; }
 /* Le nom est déjà sur la nameplate de la carte : ici, une seule ligne d'état. */
 .reveal-name span { color: var(--muted); font-size: 13px; }
+/* La personne est en train de streamer : c'est le meilleur moment possible
+   pour tomber sur sa carte. Une seule ligne, rouge du direct. */
+.reveal-name .reveal-live {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 6px 0 0;
+  color: var(--accent-light);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .02em;
+  text-transform: none;
+}
+.reveal-name .reveal-live i {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px rgb(var(--accent-rgb) / .9);
+  animation: live-pulse 1.9s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .reveal-name .reveal-live i { animation: none; } }
 /* La dernière carte du tirage est la garantie : elle se nomme. */
 /* L'or est au légendaire : ici, un simple contour. */
 .reveal-guaranteed { display: inline-block; margin-top: 8px; padding: 3px 9px; color: var(--muted) !important; border: 1px solid var(--line-strong); border-radius: 2px; background: transparent; font-size: 12px !important; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }

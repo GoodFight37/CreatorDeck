@@ -53,6 +53,7 @@ describe("seed Supabase du catalogue", () => {
   it("reprend chaque créateur dans le fichier généré", () => {
     const creators = JSON.parse(readFileSync(path.join(ROOT, "src", "data", "creators.json"), "utf8")) as Array<{
       slug: string;
+      login: string;
       displayName: string;
       rarity: string;
       rank: number;
@@ -62,11 +63,19 @@ describe("seed Supabase du catalogue", () => {
     // Premier et dernier du catalogue : de quoi détecter une troncature.
     for (const creator of [creators[0], creators[creators.length - 1]]) {
       const name = creator.displayName.replace(/'/g, "''");
-      expect(sql).toContain(`('${creator.slug}', '${name}', '${creator.rarity}', ${creator.rank})`);
+      expect(sql).toContain(
+        `('${creator.slug}', '${creator.login}', '${name}', '${creator.rarity}', ${creator.rank})`,
+      );
     }
     // Pas de contenu hors catalogue : une seule table, un seul insert massif.
     expect(sql).toContain("create table if not exists public.creators");
     expect(sql).toContain("on conflict (slug) do update set");
+    // Le `login` Twitch est la clé du statut « en direct » : il doit être dans le
+    // fichier généré, et la colonne doit pouvoir arriver sur une base existante
+    // (`create table if not exists` ne l'ajouterait pas).
+    expect(sql).toContain("login        text,");
+    expect(sql).toContain("alter table public.creators add column if not exists login text;");
+    expect(sql).toContain("  login        = excluded.login;".replace(";", ","));
   });
 
   it("échoue quand le fichier a dérivé", () => {

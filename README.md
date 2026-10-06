@@ -63,7 +63,8 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0005)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0007)
+supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
@@ -382,6 +383,14 @@ version web hébergée.
   réservée aux deux joueurs concernés, **aucune** écriture directe possible) et
   les fonctions d'échange : `search_players()`, `player_variants()`,
   `create_trade()`, `respond_trade()`, `cancel_trade()`, `list_trades()`.
+  `supabase/migrations/0007_direct.sql` ajoute le **statut EN LIVE** : table
+  `live_streams` (cache lisible par tous, écriture impossible depuis un client)
+  et `live_publish()`, réservée au rôle de service. C'est l'Edge Function
+  `refresh-live` qui interroge Twitch (jeton d'application, `GET /helix/streams`
+  par lots de 100) — la clé secrète Twitch ne quitte jamais le serveur, et un
+  APK se dézippe. L'app lit la table sans compte, garde un cache local daté et
+  **ne montre rien au-delà de dix minutes** : un badge « en direct » périmé
+  mentirait. Mise en place : `docs/cloud-supabase.md` §8, « Le direct ».
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

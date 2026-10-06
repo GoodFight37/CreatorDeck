@@ -45,6 +45,7 @@ import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useLive, useLivePolling } from "@/hooks/use-live";
 import {
   CATALOG_AUDIENCE,
   CATALOG_EDITION,
@@ -59,6 +60,7 @@ import {
   type CardVariant,
   type Rarity,
 } from "@/lib/catalog";
+import { formatViewers, liveFor, viewersLabel } from "@/lib/live";
 import { regionLabel } from "@/lib/regions";
 import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
@@ -68,7 +70,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
-type CollectionFilter = "all" | "owned" | Rarity;
+type CollectionFilter = "all" | "owned" | "live" | Rarity;
 
 /** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
 const OPENING_DELAY_MS = 650;
@@ -232,6 +234,17 @@ function HomeView({
   const stock = game.player.packs;
   const nextAt = game.player.nextPackAt;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
+  const live = useLive();
+  // Le direct le plus regardé parmi les créateurs du Top 1000, pour le bandeau :
+  // c'est le « lower third » d'une régie — une ligne, un chiffre, un nom.
+  const featured = useMemo(() => {
+    if (live.stale || !live.count) return null;
+    let top: { login: string; viewers: number } | null = null;
+    for (const stream of live.byLogin.values()) {
+      if (!top || stream.viewers > top.viewers) top = { login: stream.login, viewers: stream.viewers };
+    }
+    return top;
+  }, [live]);
 
   return (
     <div className="view home-view">
@@ -244,6 +257,20 @@ function HomeView({
           <span>{CATALOG_SIZE} Cartes</span>
         </div>
       </section>
+
+      {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
+          streame (données fraîches) : sinon il n'y a rien à dire. */}
+      {featured ? (
+        <div className="live-bar" role="status">
+          <i aria-hidden="true" />
+          <span className="live-bar-tag">En direct</span>
+          <span className="live-bar-who">
+            {live.count} sur {CATALOG_SIZE}
+            {` · @${featured.login}`}
+            {featured.viewers > 0 ? ` ${formatViewers(featured.viewers)}` : ""}
+          </span>
+        </div>
+      ) : null}
 
       <section className="pack-stage stage-live">
         <div className="pack-shadow" />
@@ -331,6 +358,7 @@ function HomeView({
                   creator={creator}
                   variant={card.variant}
                   compact
+                  liveStream={liveFor(live, creator.login, now)}
                 />
               ) : null;
             })}
@@ -353,6 +381,10 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
+  const live = useLive();
+  // L'heure ne sert qu'à juger la fraîcheur du direct : une minute de précision
+  // suffit (au-delà de dix minutes, tout disparaît de toute façon).
+  const now = useNow(60_000);
   // Une page de classeur, ce sont 9 pochettes (3 × 3) : ce qu'un écran de
   // téléphone montre d'un coup, exactement comme on ouvre un classeur.
   const perPage = 9;
@@ -392,10 +424,11 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
         if (!hay.includes(q)) return false;
       }
       if (filter === "owned") return owned.has(creator.slug);
+      if (filter === "live") return liveFor(live, creator.login, now) !== null;
       if (filter !== "all") return creator.rarity === filter;
       return true;
     });
-  }, [filter, owned, query]);
+  }, [filter, live, now, owned, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const safePage = Math.min(page, totalPages - 1);
@@ -454,6 +487,11 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
           [
             ["all", `Toutes (${CREATORS.length})`],
             ["owned", `Obtenues (${game.stats.uniqueCreators})`],
+            // Le direct n'apparaît que si l'app sait vraiment qui streame : un
+            // filtre qui ne peut rien donner n'a rien à faire là.
+            ...(live.configured && live.count && !live.stale
+              ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
+              : []),
             ["legendary", `Légendaires (${RARITY_COUNTS.legendary})`],
             ["epic", `Épiques (${RARITY_COUNTS.epic})`],
             ["rare", `Rares (${RARITY_COUNTS.rare})`],
@@ -505,6 +543,7 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
                   variant={item?.bestVariant}
                   locked={!item}
                   compact
+                  liveStream={liveFor(live, creator.login, now)}
                 />
                 {item && item.count > 1 ? (
                   <span className="pocket-count">×{item.count}</span>
@@ -817,9 +856,12 @@ function RevealOverlay({
 }) {
   const card = cards[index];
   const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
+  const live = useLive();
+  const now = useNow(60_000);
   if (!card || !creator) return null;
   const isLast = index === cards.length - 1;
   const perfect = cards[0]?.rareDrop;
+  const onAir = liveFor(live, creator.login, now);
   return (
     <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
       <div className="reveal-ambient" />
@@ -845,6 +887,7 @@ function RevealOverlay({
           creator={creator}
           variant={card.variant}
           className="reveal-card"
+          liveStream={onAir}
         />
         {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
             nameplate). Ici : l'état, et rien d'autre. */}
@@ -852,6 +895,16 @@ function RevealOverlay({
           <p>
             {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
           </p>
+          {/* Le meilleur moment de l'ouverture : la carte tombe pendant que la
+              personne est en train de streamer. */}
+          {onAir ? (
+            <p className="reveal-live">
+              <i aria-hidden="true" />
+              {onAir.gameName
+                ? `En direct maintenant · ${onAir.gameName} · ${viewersLabel(onAir.viewers)}`
+                : `En direct maintenant · ${viewersLabel(onAir.viewers)}`}
+            </p>
+          ) : null}
           {/* Le tirage réserve toujours la dernière carte : le dire évite de
               croire à un hasard, et annonce le moment fort du paquet. */}
           {isLast ? <span className="reveal-guaranteed">Carte garantie du booster</span> : null}
@@ -881,6 +934,9 @@ export function CreatorDeckApp() {
   const state = useGame();
   const cloud = useCloud();
   const now = useNow(1_000);
+  // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
+  // démarrage, toutes les trois minutes, et au retour dans l'app).
+  useLivePolling();
   const [tab, setTab] = useState<Tab>("home");
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
