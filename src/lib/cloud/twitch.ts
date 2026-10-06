@@ -17,12 +17,19 @@
 import type { CloudConfig } from "@/lib/cloud/config";
 
 /**
- * Identifiant du fournisseur côté Supabase : un **fournisseur personnalisé**
- * (`custom:`), parce que Twitch n'est pas dans la liste des fournisseurs
- * intégrés. Il se configure dans le tableau de bord Supabase — voir
- * `docs/cloud-supabase.md` §3.
+ * Identifiant du fournisseur côté Supabase : `twitch`, le fournisseur
+ * **intégré** (Authentication → Sign In / Providers → Twitch). Supabase
+ * s'occupe des détails qui fâchent — il ajoute l'en-tête `Client-ID` que
+ * l'API Twitch exige, demande la portée `user:read:email` et marque l'adresse
+ * comme vérifiée.
+ *
+ * Ne pas passer par un fournisseur personnalisé (`custom:…`) : ça obligerait à
+ * redonner à la main des adresses que Supabase connaît déjà, et le secret du
+ * client Twitch devrait transiter par un formulaire de plus.
+ *
+ * Configuration : `docs/cloud-supabase.md` §3.
  */
-export const TWITCH_PROVIDER = "custom:twitch";
+export const TWITCH_PROVIDER = "twitch";
 
 /**
  * Ce qu'on demande à Twitch : `openid` (l'identité) et `user:read:email`

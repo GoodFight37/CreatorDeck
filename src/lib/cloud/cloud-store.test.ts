@@ -260,7 +260,7 @@ function harness(options: {
       cardId,
     })),
     marketListingsOf: vi.fn(async () => [LISTING]),
-    twitchAuthorizeUrl: vi.fn((redirectTo: string) => `https://projet.supabase.co/auth/v1/authorize?provider=custom:twitch&redirect_to=${encodeURIComponent(redirectTo)}`),
+    twitchAuthorizeUrl: vi.fn((redirectTo: string) => `https://projet.supabase.co/auth/v1/authorize?provider=twitch&redirect_to=${encodeURIComponent(redirectTo)}`),
     adoptSession: vi.fn(async () => ({ ...SESSION, email: "joueur@exemple.fr" })),
     marketBuy: vi.fn(async () => ({
       card: {
@@ -1206,7 +1206,7 @@ describe("connexion Twitch", () => {
     const { store, api } = harness();
     const url = store.twitchSignInUrl("com.creatordeck.app://auth");
     expect(api.twitchAuthorizeUrl).toHaveBeenCalledWith("com.creatordeck.app://auth");
-    expect(url).toContain("provider=custom:twitch");
+    expect(url).toContain("provider=twitch");
   });
 
   it("ne propose rien quand le cloud n'est pas configuré", () => {

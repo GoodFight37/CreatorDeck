@@ -1115,7 +1115,7 @@ describe("connexion Twitch", () => {
     const { api } = client(() => ({ body: {} }));
     const url = new URL(api.twitchAuthorizeUrl("com.creatordeck.app://auth"));
     expect(url.pathname).toBe("/auth/v1/authorize");
-    expect(url.searchParams.get("provider")).toBe("custom:twitch");
+    expect(url.searchParams.get("provider")).toBe("twitch");
     expect(url.searchParams.get("redirect_to")).toBe("com.creatordeck.app://auth");
   });
 

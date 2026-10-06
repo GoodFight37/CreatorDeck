@@ -209,27 +209,30 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      `send_friend_request()`, `list_friends()`, `has_friendship()`…). Détail :
      §8, « Les amis ».
    - **Se connecter avec Twitch** (facultatif, mais recommandé : c'est le
-     compte le plus simple à retenir). Trois choses à déclarer, une fois :
+     compte le plus simple à retenir). Twitch est un fournisseur **intégré** de
+     Supabase : pas de fournisseur personnalisé à créer, juste deux réglages et
+     l'adresse de retour.
      1. **Console Twitch** ([dev.twitch.tv/console/apps](https://dev.twitch.tv/console/apps))
         → ton application → **OAuth Redirect URLs** → ajoute exactement
-        `https://<ton-projet>.supabase.co/auth/v1/callback`.
-     2. **Supabase** → *Authentication → Auth Providers → New Provider* →
-        **Manual configuration** :
-        * identifiant : `custom:twitch` (le préfixe `custom:` est obligatoire) ;
-        * Client ID / Client Secret : ceux de ton application Twitch ;
-        * Authorization URL : `https://id.twitch.tv/oauth2/authorize` ;
-        * Token URL : `https://id.twitch.tv/oauth2/token` ;
-        * UserInfo URL : `https://id.twitch.tv/oauth2/userinfo` (c'est le
-          endpoint OIDC : celui de Helix exigerait un en-tête `Client-ID` que
-          Supabase n'envoie pas).
+        `https://<ton-projet>.supabase.co/auth/v1/callback`, puis **Add** et
+        **Save**. (Si une ancienne adresse `http://localhost:3000` traîne dans
+        la liste, elle ne gêne pas : elle peut rester.)
+     2. **Supabase** → *Authentication → **Sign In / Providers*** → dans la
+        liste, **Twitch** → active-le et colle le **Client ID** et le
+        **Client Secret** de ton application Twitch → **Save**.
+        *(Le Client ID est une longue suite de lettres et de chiffres affichée
+        en haut de la page « Manage » ; ce n'est pas le nom de l'application.)*
      3. **Supabase** → *Authentication → URL Configuration → Redirect URLs* →
-        ajoute les deux retours possibles : l'adresse du site
-        (`https://<ton-site>/`) et celle de l'application Android
-        (`com.creatordeck.app://auth`).
-     Les portées demandées sont `openid` et `user:read:email` : Twitch ne
-     renvoie l'adresse e-mail que si elle est **vérifiée** sur le compte, ce qui
-     est le cas de la plupart des comptes. Si le nom d'utilisateur manque, ce
-     n'est pas bloquant : le compte existe quand même.
+        ajoute les retours possibles : l'adresse du site (`https://<ton-site>/`),
+        `http://localhost:3000` (le jeu en local) et
+        `com.creatordeck.app://auth` (l'application Android).
+     Supabase demande à Twitch la portée `user:read:email` : l'adresse n'est
+     renvoyée que si elle est **vérifiée** sur le compte Twitch (c'est le cas de
+     la plupart). Un compte Twitch sans adresse vérifiée ne peut pas servir de
+     compte de jeu — l'écran Compte le dit alors clairement.
+     ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
+     endroits : ici, et dans les secrets de la fonction `refresh-live`
+     (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
    - [`supabase/migrations/0009_marche.sql`](../supabase/migrations/0009_marche.sql)
      → **Run** pour activer l'**hôtel des ventes** : déposer un doublon (payé
      comptant en points) et acheter au comptoir. Crée la table
@@ -619,11 +622,14 @@ casse dans le reste du jeu.
 
 Twitch sert d'**identité** : un appui sur « Continuer avec Twitch » (écran
 Compte), le navigateur demande l'autorisation, et le joueur revient connecté —
-sans mot de passe, sans code par e-mail.
+sans mot de passe, sans code par e-mail. C'est le fournisseur **intégré** de
+Supabase (`provider=twitch`, *Authentication → Sign In / Providers → Twitch*) :
+Supabase connaît déjà les adresses de Twitch et ajoute lui-même l'en-tête
+`Client-ID` que l'API Twitch exige.
 
 Ce que l'appareil fait, et ce qu'il ne fait pas :
 
-* il ouvre `…/auth/v1/authorize?provider=custom:twitch&redirect_to=…`
+* il ouvre `…/auth/v1/authorize?provider=twitch&redirect_to=…`
   (`twitchAuthorizeUrl()`) : **le client Twitch secret ne quitte jamais
   Supabase**, l'appareil ne connaît même pas l'identifiant du client ;
 * au retour, il lit les jetons **dans le fragment** de l'adresse
@@ -639,8 +645,9 @@ Ce que l'appareil fait, et ce qu'il ne fait pas :
   (`com.creatordeck.app://auth`, déclaré dans `AndroidManifest.xml`) et par
   l'événement `appUrlOpen` du plugin `@capacitor/app`.
 
-Ce qu'il faut déclarer une fois : la console Twitch, le fournisseur Supabase et
-les deux adresses de retour — voir §3.
+Ce qu'il faut déclarer une fois : l'adresse de retour dans la console Twitch, le
+Client ID et le secret dans Supabase, et les adresses de retour dans *URL
+Configuration* — voir §3.
 
 | Élément | Rôle |
 | --- | --- |
@@ -758,8 +765,8 @@ classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
 ## 9. Suite : notifications
 
-**Fait :** **connexion Twitch** (identité OAuth via un fournisseur
-personnalisé Supabase, le secret restant côté serveur) ;
+**Fait :** **connexion Twitch** (identité OAuth par le fournisseur Twitch
+intégré à Supabase, le secret restant côté serveur) ;
 **hôtel des ventes** (`0009_marche.sql` : dépôt payé comptant,
 comptoir asynchrone, vitrine « En vente » sur la fiche publique) ;
 **complétion par famille de collection** (colonne `region` du

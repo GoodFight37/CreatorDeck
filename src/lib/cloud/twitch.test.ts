@@ -11,7 +11,7 @@ describe("adresse de connexion Twitch", () => {
     const url = new URL(twitchAuthorizeUrl(CONFIG, "https://creatordeck.example/"));
     expect(url.origin).toBe("https://projet.supabase.co");
     expect(url.pathname).toBe("/auth/v1/authorize");
-    expect(url.searchParams.get("provider")).toBe("custom:twitch");
+    expect(url.searchParams.get("provider")).toBe("twitch");
     expect(url.searchParams.get("redirect_to")).toBe("https://creatordeck.example/");
     expect(url.searchParams.get("scopes")).toBe("openid user:read:email");
   });

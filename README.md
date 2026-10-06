@@ -422,8 +422,8 @@ version web hébergée.
   `market_listings_of()`. L'écran vit dans « Profil → Hôtel des ventes » ; la
   fiche publique montre « En vente à l'hôtel ». Mise en place :
   `docs/cloud-supabase.md` §8, « L'hôtel des ventes ».
-  La **connexion Twitch** passe par un fournisseur personnalisé Supabase
-  (`custom:twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
+  La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase
+  (`provider=twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
   le navigateur, et le retour installe une session ordinaire — le secret du
   client Twitch ne quitte jamais Supabase, l'appareil ne connaît que l'adresse
   du dialogue. Sur le site, le jeton arrive dans le fragment de l'adresse et
