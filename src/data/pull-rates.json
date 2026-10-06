@@ -58,7 +58,7 @@
       "rareDrop": {
         "label": "Perfect Live",
         "tagline": "Les 5 cartes en Épique ou mieux.",
-        "chancePermille": 5,
+        "chancePermille": 1,
         "weights": {
           "epic": 82,
           "legendary": 18

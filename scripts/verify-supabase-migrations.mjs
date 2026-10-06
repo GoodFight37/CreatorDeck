@@ -18,7 +18,8 @@
  *   * les cinq migrations s'exécutent et sont rejouables ;
  *   * le catalogue (1000 créateurs) ;
  *   * l'obligation d'être connecté pour ouvrir un booster ;
- *   * 5 cartes, aucun doublon, une variante « live » sur Rare ou mieux ;
+ *   * 5 cartes, aucun doublon, une variante « live » sur Rare ou mieux, en
+ *     dernière position (le hit se révèle à la fin) ;
  *   * le journal `pack_draws` et la réserve mise à jour ;
  *   * la recharge (30 min par booster, plafond 4, reprise de l'état local) ;
  *   * la distribution du slot garanti (82 / 15 / 3 de `pull-rates.json`) ;
@@ -137,6 +138,11 @@ try {
   check("premier tirage : une seule variante « live », sur Rare ou mieux",
     live.length === 1 && ["rare", "epic", "legendary"].includes(live[0].rarity),
     live.map((card) => `${card.creatorSlug}/${card.rarity}`).join(", "));
+  check(
+    "premier tirage : la carte garantie est la dernière (aucun mélange)",
+    first.cards[first.cards.length - 1].variant === "live",
+    `dernière = ${first.cards[first.cards.length - 1].creatorSlug}/${first.cards[first.cards.length - 1].variant}`,
+  );
 
   const journal = await client.query("select count(*)::int as n, bool_and(cards is not null) as ok from public.pack_draws where user_id = $1", [USER]);
   check("journal d'audit : une ligne non vide par ouverture", journal.rows[0].n === 1 && journal.rows[0].ok === true);
@@ -148,6 +154,7 @@ try {
   let shapeOk = true;
   let noDuplicate = true;
   let guaranteedOk = true;
+  let orderOk = true;
   let catalogueOk = true;
 
   for (let i = 0; i < 40; i += 1) {
@@ -156,6 +163,9 @@ try {
     if (pack.cards.length !== 5) shapeOk = false;
     if (new Set(pack.cards.map((card) => card.creatorSlug)).size !== 5) noDuplicate = false;
     if (pack.cards.filter((card) => card.variant === "live").length !== 1) guaranteedOk = false;
+    // L'ordre du tirage est l'ordre de la révélation : le slot garanti ferme
+    // toujours le paquet.
+    if (pack.cards[pack.cards.length - 1].variant !== "live") orderOk = false;
     for (const card of pack.cards) {
       if (!knownRarities.has(card.rarity) || !knownVariants.has(card.variant)) shapeOk = false;
       if (!slugSet.has(card.creatorSlug)) catalogueOk = false;
@@ -164,6 +174,7 @@ try {
   check("40 tirages : 5 cartes, raretés et variantes connues", shapeOk);
   check("40 tirages : jamais deux fois le même créateur", noDuplicate);
   check("40 tirages : toujours une variante « live » (slot garanti)", guaranteedOk);
+  check("40 tirages : la carte garantie reste la dernière", orderOk);
   check("40 tirages : tous les créateurs viennent du catalogue", catalogueOk);
 
   // --- Distribution du slot garanti (82 / 15 / 3) --------------------------

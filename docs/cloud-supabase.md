@@ -437,8 +437,9 @@ Depuis la migration `0004_tirage.sql`, ouvrir un booster demande une
 connexion. La fonction `open_pack()` tire les 5 cartes avec exactement le même
 algorithme que le moteur local (`src/lib/game-engine.ts`) : mêmes poids par
 slot (recopiés depuis `src/data/pull-rates.json` avec un commentaire qui pointe
-le fichier), même événement « Perfect » (5 ‰), même Fisher-Yates, aucun
-créateur en double dans un même booster.
+le fichier), même événement « Perfect » (1 ‰), même ordre de révélation — la
+carte garantie en **dernier** (aucun mélange, c'est le moment fort de
+l'ouverture) —, aucun créateur en double dans un même booster.
 
 Trois situations possibles côté client :
 

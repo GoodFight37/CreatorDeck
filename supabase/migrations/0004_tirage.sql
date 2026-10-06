@@ -286,7 +286,7 @@ $$;
 --   * 1 slot garanti (Rare ou mieux, variante « live » imposée),
 --   * 5 ‰ de chance de « Perfect » (0,5 % : Épique ou mieux partout),
 --   * aucun créateur en double dans un même booster,
---   * mélange des 5 cartes (Fisher-Yates).
+--   * carte garantie en dernier (aucun mélange : le hit se révèle à la fin).
 --
 -- Poids des slots (src/data/pull-rates.json, booster « live ») :
 --   slot 1 : C 42, PC 30, R 18, E 8, L 2
@@ -319,8 +319,6 @@ declare
   v_variant text;
   v_drawn jsonb[] := '{}';
   v_i integer;
-  v_swap integer;
-  v_tmp jsonb;
   v_local_state jsonb;
   v_local_packs integer;
   v_local_regen_epoch bigint;
@@ -397,7 +395,7 @@ begin
   -- Tirage des 5 cartes.
   -- ------------------------------------------------------------------
   -- Perfect : 5‰ de chance (identique au moteur local).
-  v_rare_drop := public._pack_random_int(1000) < 5;
+  v_rare_drop := public._pack_random_int(1000) < 1;
 
   v_drawn := '{}';
 
@@ -453,23 +451,12 @@ begin
   v_drawn := v_drawn || v_card;
 
   -- ------------------------------------------------------------------
-  -- Mélange Fisher-Yates des 5 cartes (identique au moteur local).
+  -- Construction du tableau JSON, dans l'ordre du tirage.
   -- ------------------------------------------------------------------
-  -- `reverse` et non `by -1` : en PL/pgSQL, le pas d'une boucle entière doit
-  -- être positif, le sens vient du mot-clé REVERSE.
-  --
-  -- Indice tiré dans [0, v_i-1] puis décalé de 1 : la position visée reste
-  -- toujours ≤ v_i. Tirer directement dans [0, v_i] pouvait viser une case
-  -- au-delà du tableau — Postgres l'étend alors avec un NULL, qui remonte
-  -- jusqu'au journal (`cards` NULL) et fait échouer l'ouverture.
-  for v_i in reverse array_length(v_drawn, 1) .. 2 loop
-    v_swap := public._pack_random_int(v_i);
-    v_tmp := v_drawn[v_i];
-    v_drawn[v_i] := v_drawn[v_swap + 1];
-    v_drawn[v_swap + 1] := v_tmp;
-  end loop;
-
-  -- Construction du tableau JSON.
+  -- Pas de mélange : la carte garantie (dernier slot) doit rester la dernière
+  -- révélée, comme dans un vrai booster. L'app révèle les cartes dans cet
+  -- ordre, et c'est ce qui fait le moment fort de l'ouverture.
+  -- (Le mélange Fisher-Yates d'origine a été retiré ; il gâchait cet ordre.)
   for v_i in 1..array_length(v_drawn, 1) loop
     v_cards := v_cards || v_drawn[v_i];
   end loop;

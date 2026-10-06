@@ -83,15 +83,19 @@ describe("0004_tirage.sql", () => {
   });
 
   it("n'utilise pas de pas négatif dans une boucle entière", () => {
-    // Le sens vient du mot-clé REVERSE, le pas doit être positif.
+    // Le sens viendrait du mot-clé REVERSE, jamais d'un pas négatif : c'est ce
+    // qui a cassé la première version de la migration en production.
     expect(CODE).not.toMatch(/by\s+-/i);
-    expect(CODE).toMatch(/for v_i in reverse array_length\(v_drawn, 1\) \.\. 2 loop/);
   });
 
-  it("borne le mélange pour ne jamais écrire hors du tableau", () => {
-    // `_pack_random_int(v_i)` puis +1 : la position reste ≤ v_i ≤ taille.
-    expect(CODE).not.toMatch(/_pack_random_int\(v_i \+ 1\)/);
-    expect(CODE).toMatch(/v_swap := public\._pack_random_int\(v_i\);/);
+  it("garde la carte garantie en dernier (aucun mélange)", () => {
+    // L'ordre du tirage est l'ordre de la révélation : le slot garanti (Rare ou
+    // mieux, variante Live) doit rester la dernière carte. Un Fisher-Yates
+    // après coup pouvait le sortir en premier.
+    expect(CODE).not.toMatch(/v_swap/);
+    expect(CODE).not.toMatch(/for v_i in reverse/i);
+    // Le journal est construit dans l'ordre, du premier au dernier tirage.
+    expect(CODE).toMatch(/for v_i in 1\.\.array_length\(v_drawn, 1\) loop/);
   });
 
   it("réserve les fonctions aux joueurs connectés", () => {

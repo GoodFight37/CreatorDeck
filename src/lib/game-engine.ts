@@ -439,6 +439,11 @@ function chooseVariant(packType: PackType, creator: Creator, rareDrop: boolean):
  * (les taux montent au fil du booster), puis le slot garanti — Rare ou mieux,
  * variante Live imposée.
  *
+ * **L'ordre des cartes est celui du tirage** : le slot garanti reste en
+ * dernière position. Un booster se révèle donc comme un vrai paquet, la
+ * dernière carte étant le moment fort ; un mélange après coup pouvait sortir
+ * le Live en premier et gâcher la seule chose que le joueur attend.
+ *
  * `options.rareDrop` force (ou désactive) le tirage « Perfect » : réservé aux
  * tests et aux futurs événements à taux boosté.
  */
@@ -483,10 +488,6 @@ export function drawPack(
     rareDrop,
   });
 
-  for (let index = drawn.length - 1; index > 0; index -= 1) {
-    const swapIndex = randomInt(index + 1);
-    [drawn[index], drawn[swapIndex]] = [drawn[swapIndex], drawn[index]];
-  }
   return drawn;
 }
 

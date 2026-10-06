@@ -958,6 +958,9 @@ function RevealOverlay({
           <p>#{creator.rank} · {RARITY_META[card.rarity].label}</p>
           <h2>{creator.displayName}</h2>
           <span>{regionLabel(creator.region)}</span>
+          {/* Le tirage réserve toujours la dernière carte : le dire évite de
+              croire à un hasard, et annonce le moment fort du paquet. */}
+          {isLast ? <span className="reveal-guaranteed">Carte garantie du booster</span> : null}
         </div>
       </div>
       <button className="reveal-next" onClick={isLast ? onClose : onNext}>

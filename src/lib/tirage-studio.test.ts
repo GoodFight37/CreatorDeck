@@ -74,9 +74,12 @@ describe("studio de tirages", () => {
       // tirage qui ne correspond plus à ce qui est affiché.
       expect(Math.abs(result.observed[rarity] - result.expected[rarity])).toBeLessThan(0.03);
     }
-    // Le « Perfect » sort bien à son taux annoncé (0,5 % chez Live).
-    expect(result.perfect).toBeGreaterThan(0);
-    expect(result.perfect).toBeLessThan(result.packs * 0.05);
+    // Le « Perfect » sort bien à son taux annoncé (1 ‰ chez Live) : sur 4 000
+    // boosters il doit apparaître, sans jamais dépasser quelques pour mille —
+    // en dessous, l'échantillon est trop petit pour dire quoi que ce soit.
+    const wide = runStudio("live", 4000);
+    expect(wide.perfect).toBeGreaterThan(0);
+    expect(wide.perfect).toBeLessThan(wide.packs * 0.01);
   });
 
   it("rejoue exactement la même chose à graine égale", () => {

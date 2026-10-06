@@ -119,6 +119,20 @@ describe("drawPack", () => {
     }
   });
 
+  it("révèle la carte garantie en dernier, jamais en premier", () => {
+    // L'ordre du tirage est l'ordre de la révélation : la cinquième carte du
+    // tableau est le slot garanti (Rare ou mieux, variante Live imposée).
+    for (let attempt = 0; attempt < 40; attempt += 1) {
+      const pack = drawPack("live", new Set());
+      const last = pack[pack.length - 1];
+      expect(last.variant).toBe("live");
+      expect(GUARANTEED).toContain(last.rarity);
+    }
+    // Même en Perfect (les 5 cartes en Épique ou mieux), la garantie ferme.
+    const perfect = drawPack("live", new Set(), { rareDrop: true });
+    expect(perfect[perfect.length - 1].variant).toBe("live");
+  });
+
   it("marque isNew selon la collection possédée", () => {
     expect(drawPack("live", new Set()).every((card) => card.isNew)).toBe(true);
     const owned = new Set(CREATORS.slice(0, 4).map((creator) => creator.slug));

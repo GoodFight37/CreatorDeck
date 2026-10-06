@@ -1168,6 +1168,8 @@ input:focus-visible {
 .reveal-name p { margin: 0 0 3px; color: var(--purple-light); font-size: 8px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
 .reveal-name h2 { margin: 0; font-family: Georgia, serif; font-size: 25px; letter-spacing: -.04em; }
 .reveal-name span { color: var(--muted); font-size: 9px; }
+/* La dernière carte du tirage est la garantie : elle se nomme. */
+.reveal-guaranteed { display: inline-block; margin-top: 7px; padding: 3px 9px; color: #ffd48e !important; border: 1px solid rgba(255,190,85,.3); border-radius: 999px; background: rgba(255,190,85,.1); font-size: 8px !important; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .reveal-next { position: absolute; z-index: 3; right: 18px; bottom: calc(17px + env(safe-area-inset-bottom)); left: 18px; width: auto; }
 
 .loading-screen {
@@ -1288,6 +1290,10 @@ input:focus-visible {
 
 /* ---------- Booster Perfect ---------- */
 .perfect-banner { position: absolute; z-index: 4; top: calc(58px + env(safe-area-inset-top)); right: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; color: #2a1b06; border-radius: 10px; background: linear-gradient(120deg,#ffe6a8,#ffbe55 45%,#ff9f45); font-size: 9px; font-weight: 900; letter-spacing: .03em; box-shadow: 0 10px 30px rgba(255,160,60,.28); }
+/* Le Perfect est passé à 1 ‰ : quand il tombe, il doit se voir. */
+.perfect-banner { animation: perfect-pop 420ms cubic-bezier(.2,.8,.2,1) both, perfect-glow 1.6s ease-in-out 420ms infinite; }
+@keyframes perfect-pop { from { transform: translateY(-14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes perfect-glow { 0%, 100% { box-shadow: 0 10px 30px rgba(255,160,60,.28); } 50% { box-shadow: 0 10px 42px rgba(255,190,85,.6); } }
 
 @media (max-width: 390px) {
   .view { padding-inline: 14px; }
