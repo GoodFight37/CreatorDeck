@@ -29,7 +29,10 @@
  *     par rareté, nouveaux tris du classement, et ce qui reste invisible ;
  *   * le direct : publication d'une liste, disparition des diffusions
  *     terminées, et interdiction d'écrire depuis un client — y compris via
- *     `live_publish`, qui doit rester hors de portée d'un joueur.
+ *     `live_publish`, qui doit rester hors de portée d'un joueur ;
+ *   * les amis : demande, acceptation, refus, annulation, retrait, doublons et
+ *     demandes croisées, invisibilité pour un tiers, et l'impossibilité pour un
+ *     visiteur sans compte de lire ou d'écrire quoi que ce soit.
  */
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -93,6 +96,8 @@ try {
 
   const catalogue = await readFile(path.join(MIGRATIONS, "0003_catalogue.sql"), "utf8");
   const tirage = await readFile(path.join(MIGRATIONS, "0004_tirage.sql"), "utf8");
+  const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
+  const friends = await readFile(path.join(MIGRATIONS, "0008_friends.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -100,7 +105,8 @@ try {
     ["0004_tirage.sql", tirage],
     ["0005_echanges.sql", await readFile(path.join(MIGRATIONS, "0005_echanges.sql"), "utf8")],
     ["0006_profil_public.sql", await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8")],
-    ["0007_direct.sql", await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8")],
+    ["0007_direct.sql", direct],
+    ["0008_friends.sql", friends],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -740,7 +746,6 @@ try {
 
   // --- Direct ---------------------------------------------------------------
   // Le cache du direct : publié par le serveur, lu par tout le monde.
-  const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
   const publish = await client.query(
     "select public.live_publish($1::jsonb, $2) as r",
     [
@@ -840,11 +845,172 @@ try {
     ).rows[0].n > 0,
   );
 
+  // --- Amis -----------------------------------------------------------------
+  // Les amitiés sont symétriques et **décidées par le serveur** : un client ne
+  // peut ni se déclarer ami, ni accepter à la place de quelqu'un d'autre. Ce
+  // qu'on vérifie ici, c'est justement que tout cela se décide bien en base.
+  // Sans compte : rien à lire, rien à envoyer.
+  check(
+    "amis : sans compte, on ne peut même pas envoyer une demande",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("select public.send_friend_request($1)", [B]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+  check(
+    "amis : la fonction interne reste hors de portée d'un joueur",
+    await (async () => {
+      try {
+        await asPlayer(A, "select public._friend_user_id($1)", [B]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      }
+    })(),
+  );
+
+  // Envoyer, puis accepter.
+  const sent = (await asPlayer(A, "select public.send_friend_request($1) as r", [B])).rows[0].r;
+  check(
+    "amis : la demande part et n'est pas encore une amitié",
+    sent.request?.id != null && sent.alreadyFriends === false && sent.existingRequest === null,
+    JSON.stringify(sent.alreadyFriends),
+  );
+  check(
+    "amis : l'expéditeur voit sa demande envoyée, le destinataire la reçoit",
+    (await asPlayer(A, "select public.list_outgoing_friend_requests() as r")).rows[0].r[0].recipientId === B &&
+      (await asPlayer(B, "select public.list_incoming_friend_requests() as r")).rows[0].r[0].senderId === A,
+  );
+  check(
+    "amis : ni l'un ni l'autre ne se voit déjà ami",
+    (await asPlayer(A, "select public.list_friends() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(A, "select public.has_friendship($1) as r", [B])).rows[0].r === false,
+  );
+  check(
+    "amis : envoyer deux fois la même demande ne crée pas de doublon",
+    (await asPlayer(A, "select public.send_friend_request($1) as r", [B])).rows[0].r.request?.id === sent.request.id &&
+      (await client.query("select count(*)::int as n from public.friend_requests where sender_id = $1", [A])).rows[0].n === 1,
+  );
+  check(
+    "amis : la demande croisée est signalée, pas doublée",
+    (await asPlayer(B, "select public.send_friend_request($1) as r", [A])).rows[0].r.existingRequest?.id === sent.request.id &&
+      (await client.query("select count(*)::int as n from public.friend_requests where sender_id = $1", [B])).rows[0].n === 0,
+  );
+  check(
+    "amis : seul le destinataire peut accepter",
+    await (async () => {
+      try {
+        await asPlayer(A, "select public.accept_friend_request($1)", [sent.request.id]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("introuvable");
+      }
+    })(),
+  );
+  const amitie = (await asPlayer(B, "select public.accept_friend_request($1) as r", [sent.request.id])).rows[0].r;
+  check(
+    "amis : l'acceptation crée une amitié unique",
+    amitie.request?.status === "accepted" && amitie.friendship !== null &&
+      (await client.query("select count(*)::int as n from public.friends")).rows[0].n === 1,
+  );
+  check(
+    "amis : l'amitié se voit des deux côtés, dans les deux sens",
+    (await asPlayer(A, "select public.list_friends() as r")).rows[0].r[0].friendId === B &&
+      (await asPlayer(B, "select public.list_friends() as r")).rows[0].r[0].friendId === A &&
+      (await asPlayer(B, "select public.has_friendship($1) as r", [A])).rows[0].r === true,
+  );
+  check(
+    "amis : une demande acceptée quitte les listes d'attente",
+    (await asPlayer(A, "select public.list_outgoing_friend_requests() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(B, "select public.list_incoming_friend_requests() as r")).rows[0].r.length === 0,
+  );
+  check(
+    "amis : on ne renvoie pas de demande à quelqu'un dont on est déjà l'ami",
+    (await asPlayer(A, "select public.send_friend_request($1) as r", [B])).rows[0].r.alreadyFriends === true,
+  );
+  check(
+    "amis : un joueur ne peut pas s'ajouter lui-même",
+    await (async () => {
+      try {
+        await asPlayer(A, "select public.send_friend_request($1)", [A]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("toi-même");
+      }
+    })(),
+  );
+  check(
+    "amis : un identifiant inconnu est refusé",
+    await (async () => {
+      try {
+        await asPlayer(A, "select public.send_friend_request($1)", ["99999999-9999-4999-8999-999999999999"]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("n''existe pas") || String(error.message).includes("n'existe pas");
+      }
+    })(),
+  );
+
+  // Refuser, annuler, retirer.
+  const rejected = (await asPlayer(C, "select public.send_friend_request($1) as r", [D])).rows[0].r.request.id;
+  await asPlayer(D, "select public.reject_friend_request($1)", [rejected]);
+  check(
+    "amis : un refus n'crée pas d'amitié et sort des listes",
+    (await asPlayer(C, "select public.list_outgoing_friend_requests() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(D, "select public.has_friendship($1) as r", [C])).rows[0].r === false,
+  );
+  const cancelled = (await asPlayer(C, "select public.send_friend_request($1) as r", [E])).rows[0].r.request.id;
+  await asPlayer(C, "select public.cancel_friend_request($1)", [cancelled]);
+  check(
+    "amis : une demande annulée sort des deux listes",
+    (await asPlayer(C, "select public.list_outgoing_friend_requests() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(E, "select public.list_incoming_friend_requests() as r")).rows[0].r.length === 0,
+  );
+  await asPlayer(A, "select public.remove_friend($1)", [B]);
+  check(
+    "amis : retirer un ami efface le lien, des deux côtés",
+    (await asPlayer(A, "select public.list_friends() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(B, "select public.list_friends() as r")).rows[0].r.length === 0 &&
+      (await client.query("select count(*)::int as n from public.friends")).rows[0].n === 0,
+  );
+
+  // Un tiers ne voit rien : ni les demandes, ni les amitiés des autres.
+  await asPlayer(A, "select public.send_friend_request($1)", [B]);
+  check(
+    "amis : un joueur étranger ne voit ni les demandes ni les amitiés des autres",
+    // Ses propres lignes restent visibles (une demande annulée le concerne) :
+    // ce qui doit disparaître, c'est tout ce qui ne le regarde pas.
+    (await asPlayer(E, "select public.list_incoming_friend_requests() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(E, "select public.list_outgoing_friend_requests() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(E, "select count(*)::int as n from public.friend_requests where sender_id = $1 or recipient_id = $1", [A])).rows[0].n === 0 &&
+      (await asPlayer(E, "select count(*)::int as n from public.friend_requests")).rows[0].n === 1 &&
+      (await asPlayer(E, "select count(*)::int as n from public.friends")).rows[0].n === 0,
+  );
+  check(
+    "amis : on ne peut pas écrire une amitié à la main",
+    await (async () => {
+      try {
+        await asPlayer(A, `insert into public.friends (user1_id, user2_id) values (least($1::uuid, $2::uuid), greatest($1::uuid, $2::uuid))`, [A, B]);
+        return false;
+      } catch {
+        return true;
+      }
+    })(),
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
   await client.query(await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8"));
   await client.query(direct);
+  await client.query(friends);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -858,6 +1024,11 @@ try {
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
+  check(
+    "migrations rejouables : les amis répondent encore",
+    (await asPlayer(A, "select public.list_friends() as r")).rows[0].r.length === 0 &&
+      (await asPlayer(A, "select public.list_outgoing_friend_requests() as r")).rows[0].r[0]?.recipientId === B,
+  );
   check(
     "migrations rejouables : le direct répond encore",
     (await client.query("select streams from public.live_state where id")).rows[0].streams === 1,

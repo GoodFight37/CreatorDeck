@@ -122,11 +122,6 @@ declare
   v_sender_name text;
   v_recipient_name text;
 begin
-  select coalesce(p.display_name, 'Collectionneur inconnu') into v_sender_name
-  from public.profiles p where p.user_id = v_sender_id;
-  select coalesce(p.display_name, 'Collectionneur inconnu') into v_recipient_name
-  from public.profiles p where p.user_id = v_recipient_id;
-begin
   if v_sender_id is null then
     raise exception 'ami : connecte-toi pour envoyer une demande' using errcode = 'P0001';
   end if;
@@ -136,6 +131,13 @@ begin
   if v_sender_id = v_recipient_id then
     raise exception 'ami : tu ne peux pas t''ajouter toi-même' using errcode = 'P0001';
   end if;
+
+  -- Les deux noms sont lus après les contrôles : on ne cherche pas à nommer
+  -- quelqu'un dont on vient de refuser la demande.
+  select coalesce(p.display_name, 'Collectionneur inconnu') into v_sender_name
+  from public.profiles p where p.user_id = v_sender_id;
+  select coalesce(p.display_name, 'Collectionneur inconnu') into v_recipient_name
+  from public.profiles p where p.user_id = v_recipient_id;
 
   -- Vérifie s'ils sont déjà amis
   select * into v_friendship
@@ -174,13 +176,25 @@ begin
     );
   end if;
 
-  -- Vérifie s'il y a déjà une demande dans ce sens (évite les doublons)
+  -- Puis une demande déjà écrite dans ce sens. On les cherche **sans filtrer
+  -- sur le statut** : la contrainte d'unicité porte sur le couple (expéditeur,
+  -- destinataire), donc une ancienne demande refusée, annulée, ou l'historique
+  -- d'une amitié retirée occupe la place. On la réutilise au lieu d'en créer
+  -- une deuxième — sinon, après un retrait d'ami, la nouvelle demande
+  -- échouerait sur une violation de contrainte.
   select * into v_existing_request
   from public.friend_requests
-  where sender_id = v_sender_id and recipient_id = v_recipient_id and status = 'pending'
+  where sender_id = v_sender_id and recipient_id = v_recipient_id
   limit 1;
 
   if v_existing_request.id is not null then
+    if v_existing_request.status <> 'pending' then
+      update public.friend_requests
+      set status = 'pending', updated_at = now()
+      where id = v_existing_request.id
+      returning * into v_existing_request;
+    end if;
+
     return jsonb_build_object(
       'request', jsonb_build_object(
         'id', v_existing_request.id,
@@ -449,7 +463,7 @@ begin
   return jsonb_build_object(
     'friendship', jsonb_build_object(
       'id', v_friendship.id,
-      'friendId', v_friendship.user1_id = v_friend_id ? v_friendship.user2_id : v_friendship.user1_id,
+      'friendId', v_friend_id,
       'friendName', v_friend_name,
       'createdAt', v_friendship.created_at
     )

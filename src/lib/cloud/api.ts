@@ -15,7 +15,12 @@
 import type { KeyValueStorage } from "@/lib/save-store";
 import type { CloudConfig } from "@/lib/cloud/config";
 import { cloudRequest, type CloudFetch } from "@/lib/cloud/transport";
-import type { FriendRequest, Friendship } from "@/lib/social/friends";
+import type {
+  Friendship,
+  IncomingRequest,
+  OutgoingRequest,
+  SendFriendRequestOutcome,
+} from "@/lib/social/friends";
 
 /** Clé de stockage local de la session (jetons d'accès et de rafraîchissement). */
 export const CLOUD_SESSION_KEY = "creatordeck.cloud.session";
@@ -220,6 +225,13 @@ function messageFor(status: number, code: string, raw: string): string {
   ) {
     return "Les échanges ne sont pas installés sur ce projet : colle supabase/migrations/0005_echanges.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
+  // Amis : la migration 0008 doit être collée dans le projet Supabase.
+  if (
+    (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
+    /friend|ami/i.test(raw)
+  ) {
+    return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+  }
   // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
   // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
   // PostgREST (« Could not find the function public.open_pack »).
@@ -239,6 +251,61 @@ function asRecord(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : null;
+}
+
+/**
+ * Lit un tableau de lignes JSON : ce que le serveur n'a pas pu produire est
+ * ignoré, ligne par ligne. Un `null` dans la réponse ne doit pas faire tomber
+ * toute la liste.
+ */
+function readRows<T>(payload: unknown, read: (raw: unknown) => T | null): T[] {
+  if (!Array.isArray(payload)) return [];
+  const rows: T[] = [];
+  for (const raw of payload) {
+    const row = read(raw);
+    if (row) rows.push(row);
+  }
+  return rows;
+}
+
+/** Une ligne de `list_friends()`. */
+function readFriendship(raw: unknown): Friendship | null {
+  const record = asRecord(raw);
+  const friendId = typeof record?.friendId === "string" ? record.friendId : "";
+  if (!friendId) return null;
+  return {
+    id: Number(record?.id ?? 0),
+    friendId,
+    friendName: typeof record?.friendName === "string" && record.friendName ? record.friendName : "Collectionneur",
+    createdAt: typeof record?.createdAt === "string" ? record.createdAt : "",
+  };
+}
+
+/** Une ligne de `list_incoming_friend_requests()`. */
+function readIncomingRequest(raw: unknown): IncomingRequest | null {
+  const record = asRecord(raw);
+  const senderId = typeof record?.senderId === "string" ? record.senderId : "";
+  if (!senderId) return null;
+  return {
+    id: Number(record?.id ?? 0),
+    senderId,
+    senderName: typeof record?.senderName === "string" && record.senderName ? record.senderName : "Collectionneur",
+    createdAt: typeof record?.createdAt === "string" ? record.createdAt : "",
+  };
+}
+
+/** Une ligne de `list_outgoing_friend_requests()`. */
+function readOutgoingRequest(raw: unknown): OutgoingRequest | null {
+  const record = asRecord(raw);
+  const recipientId = typeof record?.recipientId === "string" ? record.recipientId : "";
+  if (!recipientId) return null;
+  return {
+    id: Number(record?.id ?? 0),
+    recipientId,
+    recipientName:
+      typeof record?.recipientName === "string" && record.recipientName ? record.recipientName : "Collectionneur",
+    createdAt: typeof record?.createdAt === "string" ? record.createdAt : "",
+  };
 }
 
 function parseSession(raw: unknown): CloudSession | null {
@@ -925,190 +992,68 @@ export class CloudApi {
     });
   }
 
-  // Friend RPC methods
+  // -------------------------------------------------------------- Amis
+  //
+  // Le serveur décide tout (voir `0008_friends.sql`) : ces méthodes ne font que
+  // lire ses réponses et les mettre en forme. Chacune est **tolérante** — une
+  // ligne illisible est ignorée plutôt que de faire échouer toute la liste —
+  // parce qu'un écran d'amis qui ne s'ouvre pas est pire qu'un ami manquant.
+
   async listFriends(): Promise<Friendship[]> {
-    const result = await this.rpc("list_friends", {});
-    if (!Array.isArray(result)) return [];
-    return result.map((raw) => {
-      const record = asRecord(raw);
-      if (!record) return null as any;
-      return {
-        id: String(record.id ?? ""),
-        friendId: String(record.friendId ?? ""),
-        friendName: String(record.friendName ?? ""),
-        createdAt: String(record.createdAt ?? ""),
-      };
-    }).filter((f): f is Friendship => f !== null);
+    return readRows(await this.rpc("list_friends", {}), readFriendship);
   }
 
-  async listIncomingFriendRequests(): Promise<FriendRequest[]> {
-    const result = await this.rpc("list_incoming_friend_requests", {});
-    if (!Array.isArray(result)) return [];
-    return result.map((raw) => {
-      const record = asRecord(raw);
-      if (!record) return null as any;
-      return {
-        id: Number(record.id ?? 0),
-        senderId: String(record.senderId ?? ""),
-        senderName: String(record.senderName ?? ""),
-        createdAt: String(record.createdAt ?? ""),
-      };
-    }).filter((f): f is FriendRequest => f !== null);
+  async listIncomingFriendRequests(): Promise<IncomingRequest[]> {
+    return readRows(await this.rpc("list_incoming_friend_requests", {}), readIncomingRequest);
   }
 
-  async listOutgoingFriendRequests(): Promise<FriendRequest[]> {
-    const result = await this.rpc("list_outgoing_friend_requests", {});
-    if (!Array.isArray(result)) return [];
-    return result.map((raw) => {
-      const record = asRecord(raw);
-      if (!record) return null as any;
-      return {
-        id: Number(record.id ?? 0),
-        recipientId: String(record.recipientId ?? ""),
-        recipientName: String(record.recipientName ?? ""),
-        createdAt: String(record.createdAt ?? ""),
-      };
-    }).filter((f): f is FriendRequest => f !== null);
+  async listOutgoingFriendRequests(): Promise<OutgoingRequest[]> {
+    return readRows(await this.rpc("list_outgoing_friend_requests", {}), readOutgoingRequest);
   }
 
-  async sendFriendRequest(p_recipient: string): Promise<{ request: FriendRequest | null; alreadyFriends: boolean; existingRequest: FriendRequest | null }> {
-    const result = await this.rpc("send_friend_request", { p_recipient });
-    const record = asRecord(result);
-    if (!record) {
-      return { request: null, alreadyFriends: false, existingRequest: null };
-    }
-    const requestRecord = asRecord(record.request);
-    const existingRequestRecord = asRecord(record.existingRequest);
+  /**
+   * Envoie une demande d'ami. `recipientId` est l'identifiant du **joueur**
+   * (`profiles.user_id`) — on le trouve par `searchPlayers()`, jamais en le
+   * devinant : un identifiant inventé ne peut pas aboutir côté serveur.
+   */
+  async sendFriendRequest(recipientId: string): Promise<SendFriendRequestOutcome> {
+    const record = asRecord(await this.rpc("send_friend_request", { p_recipient: recipientId }));
     return {
-      request: requestRecord
-        ? {
-            id: String(requestRecord.id ?? ""),
-            senderId: String(requestRecord.senderId ?? ""),
-            recipientId: String(requestRecord.recipientId ?? ""),
-            senderName: String(requestRecord.senderName ?? ""),
-            recipientName: String(requestRecord.recipientName ?? ""),
-            status: String(requestRecord.status ?? ""),
-            createdAt: String(record.createdAt ?? ""),
-            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
-          }
-        : null,
-      alreadyFriends: Boolean(record.alreadyFriends),
-      existingRequest: existingRequestRecord
-        ? {
-            id: Number(existingRequestRecord.id ?? 0),
-            senderId: String(existingRequestRecord.senderId ?? ""),
-            recipientId: String(existingRequestRecord.recipientId ?? ""),
-            senderName: String(existingRequestRecord.senderName ?? ""),
-            recipientName: String(existingRequestRecord.recipientName ?? ""),
-            status: String(existingRequestRecord.status ?? ""),
-            createdAt: String(existingRequestRecord.createdAt ?? ""),
-            updatedAt: existingRequestRecord.updatedAt ? String(existingRequestRecord.updatedAt) : null,
-          }
-        : null,
+      alreadyFriends: record?.alreadyFriends === true,
+      existing: asRecord(record?.existingRequest) !== null,
+      sent: asRecord(record?.request) !== null,
     };
   }
 
-  async acceptFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null; friendship: Friendship | null }> {
-    const result = await this.rpc("accept_friend_request", { p_request_id });
-    const record = asRecord(result);
-    if (!record) {
-      return { request: null, friendship: null };
-    }
-    const requestRecord = asRecord(record.request);
-    const friendshipRecord = asRecord(record.friendship);
-    return {
-      request: requestRecord
-        ? {
-            id: String(requestRecord.id ?? ""),
-            senderId: String(requestRecord.senderId ?? ""),
-            recipientId: String(requestRecord.recipientId ?? ""),
-            senderName: String(requestRecord.senderName ?? ""),
-            recipientName: String(requestRecord.recipientName ?? ""),
-            status: String(requestRecord.status ?? ""),
-            createdAt: String(requestRecord.createdAt ?? ""),
-            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
-          }
-        : null,
-      friendship: friendshipRecord
-        ? {
-            id: String(friendshipRecord.id ?? ""),
-            friendId: String(friendshipRecord.friendId ?? ""),
-            friendName: String(friendshipRecord.friendName ?? ""),
-            createdAt: String(friendshipRecord.createdAt ?? ""),
-          }
-        : null,
-    };
+  /**
+   * Accepte une demande reçue. Vrai si le serveur a bien basculé la demande.
+   *
+   * On lit `request.status` et non `friendship` : si la relation existait déjà,
+   * le serveur ne renvoie pas de ligne `friends` (insertion sans conflit) alors
+   * que la demande, elle, a bien été acceptée.
+   */
+  async acceptFriendRequest(requestId: number): Promise<boolean> {
+    const record = asRecord(await this.rpc("accept_friend_request", { p_request_id: requestId }));
+    return asRecord(record?.request)?.status === "accepted";
   }
 
-  async rejectFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
-    const result = await this.rpc("reject_friend_request", { p_request_id });
-    const record = asRecord(result);
-    if (!record) {
-      return { request: null };
-    }
-    const requestRecord = asRecord(record.request);
-    return {
-      request: requestRecord
-        ? {
-            id: String(requestRecord.id ?? ""),
-            senderId: String(requestRecord.senderId ?? ""),
-            recipientId: String(requestRecord.recipientId ?? ""),
-            senderName: String(requestRecord.senderName ?? ""),
-            recipientName: String(requestRecord.recipientName ?? ""),
-            status: String(requestRecord.status ?? ""),
-            createdAt: String(record.createdAt ?? ""),
-            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
-          }
-        : null,
-    };
+  async rejectFriendRequest(requestId: number): Promise<void> {
+    await this.rpc("reject_friend_request", { p_request_id: requestId });
   }
 
-  async cancelFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
-    const result = await this.rpc("cancel_friend_request", { p_request_id });
-    const record = asRecord(result);
-    if (!record) {
-      return { request: null };
-    }
-    const requestRecord = asRecord(record.request);
-    return {
-      request: requestRecord
-        ? {
-            id: String(requestRecord.id ?? ""),
-            senderId: String(requestRecord.senderId ?? ""),
-            recipientId: String(requestRecord.recipientId ?? ""),
-            senderName: String(requestRecord.senderName ?? ""),
-            recipientName: String(requestRecord.recipientName ?? ""),
-            status: String(requestRecord.status ?? ""),
-            createdAt: String(record.createdAt ?? ""),
-            updatedAt: requestRecord.updatedAt ? String(requestRecord.updatedAt) : null,
-          }
-        : null,
-    };
+  async cancelFriendRequest(requestId: number): Promise<void> {
+    await this.rpc("cancel_friend_request", { p_request_id: requestId });
   }
 
-  async removeFriend(p_friend: string): Promise<{ friendship: Friendship | null }> {
-    const result = await this.rpc("remove_friend", { p_friend });
-    const record = asRecord(result);
-    if (!record) {
-      return { friendship: null };
-    }
-    const friendshipRecord = asRecord(record.friendship);
-    return {
-      friendship: friendshipRecord
-        ? {
-            id: String(friendshipRecord.id ?? ""),
-            friendId: String(friendshipRecord.friendId ?? ""),
-            friendName: String(friendshipRecord.friendName ?? ""),
-            createdAt: String(friendshipRecord.createdAt ?? ""),
-          }
-        : null,
-    };
+  async removeFriend(friendId: string): Promise<void> {
+    await this.rpc("remove_friend", { p_friend: friendId });
   }
 
-  async hasFriendship(p_user: string): Promise<boolean> {
-    const result = await this.rpc("has_friendship", { p_user });
-    return typeof result === "boolean" ? result : false;
+  /** Deux joueurs sont-ils amis ? Sert au profil public (« Ajouter en ami »). */
+  async hasFriendship(userId: string): Promise<boolean> {
+    return (await this.rpc("has_friendship", { p_user: userId })) === true;
   }
+
 
   // ------------------------------------------------------------------ HTTP
 

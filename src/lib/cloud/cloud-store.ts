@@ -30,7 +30,12 @@ import {
   type PlayerSearchResult,
   type TradeListItem,
 } from "@/lib/cloud/api";
-import type { FriendRequest, Friendship } from "@/lib/social/friends";
+import {
+  EMPTY_FRIEND_LISTS,
+  type FriendLists,
+  type Friendship,
+  type SendFriendRequestOutcome,
+} from "@/lib/social/friends";
 import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
@@ -89,6 +94,18 @@ export type CloudState = {
   trades: TradeListItem[];
   /** Horodatage local du dernier chargement des offres. */
   tradesAt: number | null;
+  /**
+   * Les amis et les demandes en attente, tels que le serveur les a donnés au
+   * dernier chargement. Ils vivent ici — et non dans la feuille — pour que
+   * l'écran se contente de lire : un chargement déclenché à l'ouverture ne fait
+   * alors aucun rendu en cascade (voir la règle `set-state-in-effect`), et
+   * l'actualisation manuelle passe par le même chemin que l'ouverture.
+   */
+  friends: FriendLists;
+  /** Horodatage local du dernier chargement des amis. */
+  friendsAt: number | null;
+  /** Un chargement des amis est en cours. */
+  friendsBusy: boolean;
 };
 
 /**
@@ -185,6 +202,9 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   profileBusy: false,
   trades: [],
   tradesAt: null,
+  friends: EMPTY_FRIEND_LISTS,
+  friendsAt: null,
+  friendsBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -1164,6 +1184,9 @@ export function createCloudStore(deps: CloudDeps) {
         leaderboard: [],
         profile: null,
         profileBusy: false,
+        friends: EMPTY_FRIEND_LISTS,
+        friendsAt: null,
+        friendsBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1272,33 +1295,119 @@ export function createCloudStore(deps: CloudDeps) {
         fail(error, "Classement indisponible.");
       }
     },
-    // Friend RPC methods
-    async listFriends(): Promise<Friendship[]> {
-      return await resolve().listFriends();
+    // ---------------------------------------------------------------- Amis
+    //
+    // Même refus que les échanges : pas de cloud configuré ou pas de compte →
+    // on le dit, on ne tente pas un appel voué à échouer. Les méthodes qui
+    // renvoient une liste rendent une liste vide dans ce cas, pour que l'écran
+    // s'affiche avec son message au lieu d'une erreur réseau.
+
+    /**
+     * Charge les trois listes d'un coup et les publie dans l'état cloud.
+     *
+     * Un seul aller-retour pour l'écran : les trois RPC partent ensemble, et
+     * une erreur réseau laisse l'état précédent en place plutôt que de vider la
+     * liste sous les yeux du joueur.
+     */
+    async loadFriends(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ friendsBusy: true });
+      try {
+        const [friends, incoming, outgoing] = await Promise.all([
+          ready.api.listFriends(),
+          ready.api.listIncomingFriendRequests(),
+          ready.api.listOutgoingFriendRequests(),
+        ]);
+        publish({ friends: { friends, incoming, outgoing }, friendsAt: deps.now(), friendsBusy: false });
+      } catch (error) {
+        publish({ friendsBusy: false });
+        fail(error, "Liste d'amis indisponible.");
+      }
     },
-    async listIncomingFriendRequests(): Promise<FriendRequest[]> {
-      return await resolve().listIncomingFriendRequests();
+
+    /** L'écran des amis, réinitialisé : utilisé à la déconnexion. */
+    clearFriends(): void {
+      publish({ friends: EMPTY_FRIEND_LISTS, friendsAt: null, friendsBusy: false });
     },
-    async listOutgoingFriendRequests(): Promise<FriendRequest[]> {
-      return await resolve().listOutgoingFriendRequests();
+
+    async sendFriendRequest(recipientId: string): Promise<{
+      outcome: SendFriendRequestOutcome | null;
+      message: string | null;
+      isError: boolean;
+    }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { outcome: null, message: ready.refusal.message, isError: true };
+      try {
+        const outcome = await ready.api.sendFriendRequest(recipientId);
+        const message = outcome.alreadyFriends
+          ? "Vous êtes déjà amis."
+          : outcome.existing
+            ? "Cette personne t'a déjà envoyé une demande : réponds-y dans « Reçues »."
+            : outcome.sent
+              ? "Demande envoyée."
+              : "Demande impossible.";
+        return { outcome, message, isError: false };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Demande d'ami impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { outcome: null, message: refusal.message, isError: true };
+      }
     },
-    async sendFriendRequest(p_recipient: string): Promise<{ request: FriendRequest | null; alreadyFriends: boolean; existingRequest: FriendRequest | null }> {
-      return await resolve().sendFriendRequest(p_recipient);
+
+    async acceptFriendRequest(requestId: number): Promise<{ message: string | null; isError: boolean }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { message: ready.refusal.message, isError: true };
+      try {
+        const accepted = await ready.api.acceptFriendRequest(requestId);
+        return {
+          message: accepted ? "Demande acceptée." : "Demande introuvable.",
+          isError: !accepted,
+        };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Acceptation impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { message: refusal.message, isError: true };
+      }
     },
-    async acceptFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null; friendship: Friendship | null }> {
-      return await resolve().acceptFriendRequest(p_request_id);
+
+    async rejectFriendRequest(requestId: number): Promise<{ message: string | null; isError: boolean }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { message: ready.refusal.message, isError: true };
+      try {
+        await ready.api.rejectFriendRequest(requestId);
+        return { message: "Demande refusée.", isError: false };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Refus impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { message: refusal.message, isError: true };
+      }
     },
-    async rejectFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
-      return await resolve().rejectFriendRequest(p_request_id);
+
+    async cancelFriendRequest(requestId: number): Promise<{ message: string | null; isError: boolean }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { message: ready.refusal.message, isError: true };
+      try {
+        await ready.api.cancelFriendRequest(requestId);
+        return { message: "Demande annulée.", isError: false };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Annulation impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { message: refusal.message, isError: true };
+      }
     },
-    async cancelFriendRequest(p_request_id: number): Promise<{ request: FriendRequest | null }> {
-      return await resolve().cancelFriendRequest(p_request_id);
-    },
-    async removeFriend(p_friend: string): Promise<{ friendship: Friendship | null }> {
-      return await resolve().removeFriend(p_friend);
-    },
-    async hasFriendship(p_user: string): Promise<boolean> {
-      return await resolve().hasFriendship(p_user);
+
+    async removeFriend(friendId: string): Promise<{ message: string | null; isError: boolean }> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return { message: ready.refusal.message, isError: true };
+      try {
+        await ready.api.removeFriend(friendId);
+        return { message: "Ami retiré.", isError: false };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Retrait impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return { message: refusal.message, isError: true };
+      }
     },
 
     /** Empreinte locale, utile pour diagnostiquer un conflit. */

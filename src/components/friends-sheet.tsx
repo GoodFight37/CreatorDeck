@@ -1,408 +1,302 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
-import Image from "next/image";
+/**
+ * Feuille « Amis » : ses amis, les demandes reçues, les demandes envoyées.
+ *
+ * Elle ne décide de rien : le serveur tient les relations (`0008_friends.sql`),
+ * et cette feuille se contente de les montrer et de demander les gestes. Deux
+ * choses en découlent, visibles dans le code :
+ *
+ *   * **on n'ajoute pas un ami par un code**, mais en cherchant un joueur par son
+ *     pseudo (`search_players()`, le même RPC que les échanges) : le serveur
+ *     attend un identifiant de joueur, pas un code inventé ;
+ *   * **rien n'est optimiste** : après un geste, on recharge les listes au lieu
+ *     de les bricoler localement. Un écran d'amis qui affiche une amitié que le
+ *     serveur n'a pas enregistrée serait pire qu'un écran lent.
+ */
+import { useCallback, useEffect, useState } from "react";
 import {
   AlertTriangle,
-  ArrowLeftRight,
   Check,
-  ChevronRight,
   Info,
-  LogOut,
-  Mail,
-  Plus,
-  Radio,
   RefreshCw,
   Search,
-  ShieldCheck,
+  UserMinus,
   UserPlus,
-  UserSearch,
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import type { FriendRequest, Friendship } from "@/lib/social/friends";
+import type { PlayerSearchResult } from "@/lib/cloud/api";
+import {
+  byNewestFirst,
+  friendCountLabel,
+  relativeDay,
+  type FriendLists,
+} from "@/lib/social/friends";
 
-const AVATAR_SIZE = 36;
+/** En dessous, la recherche de joueur ne renvoie rien d'utile. */
+const QUERY_MIN = 3;
 
-/**
- * Feuille « Amis » : gérer ses demandes d'ami et sa liste d'amis.
- *
- * Trois onglets :
- *   - Amis : liste des amis acceptés
- *   - Reçues : demandes d'ami reçues (à accepter ou rejeter)
- *   - Envoyées : demandes d'ami envoyées (à annuler)
- */
-export function FriendsSheet({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+type Tab = "friends" | "incoming" | "outgoing";
+
+export function FriendsSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
-  const [activeTab, setActiveTab] = useState<"friends" | "received" | "sent">(
-    "friends"
-  );
-  const [friends, setFriends] = useState<Friendship[]>([]);
-  const [incoming, setIncoming] = useState<FriendRequest[]>([]);
-  const [outgoing, setOutgoing] = useState<FriendRequest[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [inviteCode, setInviteCode] = useState<string>("");
+  const now = useNow(60_000);
+  const [tab, setTab] = useState<Tab>("friends");
+  const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<PlayerSearchResult[]>([]);
+  const [busy, setBusy] = useState(false);
 
-  // Charger les données au démarrage et quand l'onglet change
+  // Chargé à l'ouverture, et seulement connecté : aucun appel pour un joueur
+  // hors ligne. Le résultat vit dans l'état cloud, d'où `lists` ci-dessous.
   useEffect(() => {
-    if (!cloud.configured || !cloud.userId) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLoading(false);
-      return;
-    }
+    if (cloud.configured && cloud.userId) void cloudStore.loadFriends();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    setLoading(true);
-    setError(null);
+  const lists: FriendLists = cloud.friends;
+  const ready = cloud.friendsAt !== null;
+  const load = useCallback(async () => {
+    await cloudStore.loadFriends();
+  }, []);
 
-    // Charger en parallèle les trois listes
-    Promise.all([
-      cloudStore.listFriends(),
-      cloudStore.listIncomingFriendRequests(),
-      cloudStore.listOutgoingFriendRequests(),
-    ])
-      .then(([friendsResult, incomingResult, outgoingResult]) => {
-        setFriends(friendsResult);
-        setIncoming(incomingResult);
-        setOutgoing(outgoingResult);
-      })
-      .catch((err) => {
-        console.error("Failed to load friends data:", err);
-        setError(
-          "Impossible de charger les données d'amis. Vérifiez votre connexion."
-        );
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [cloud.configured, cloud.userId, activeTab]);
-
-  // Fonction pour envoyer une demande d'ami
-  const handleSendRequest = async () => {
-    if (!inviteCode.trim()) {
-      setError("Veuillez entrer un code d'ami");
-      return;
-    }
-
-    setError(null);
-    try {
-      const result = await cloudStore.sendFriendRequest(inviteCode);
-      if (result.alreadyFriends) {
-        setError("Vous êtes déjà amis avec cet utilisateur");
-      } else if (result.existingRequest) {
-        setError(
-          "Une demande d'ami existe déjà dans l'autre sens. Allez dans l'onglet « Reçues » pour y répondre."
-        );
-      } else {
-        // Rafraîchir les listes
-        setOutgoing((prev) => [...prev, result.request].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-        setInviteCode("");
-        setError("Demande d'ami envoyée !");
-      }
-    } catch (err: any) {
-      setError(err.message ?? "Erreur lors de l'envoi de la demande");
-    }
-  };
-
-  // Fonction pour accepter une demande d'ami
-  const handleAcceptRequest = async (requestId: string) => {
-    try {
-      const result = await cloudStore.acceptFriendRequest(Number(requestId));
-      // Mettre à jour les listes
-      setIncoming((prev) => prev.filter((req) => req.id !== requestId));
-      if (result.friendship !== null) {
-        const friendship = result.friendship;
-        setFriends((prev) => [...prev, friendship]);
-      }
-    } catch (err: any) {
-      setError(err.message ?? "Erreur lors de l'acceptation de la demande");
-    }
-  };
-
-  // Fonction pour rejeter une demande d'ami
-  const handleRejectRequest = async (requestId: string) => {
-    try {
-      await cloudStore.rejectFriendRequest(Number(requestId));
-      setIncoming((prev) => prev.filter((req) => req.id !== requestId));
-    } catch (err: any) {
-      setError(err.message ?? "Erreur lors du rejet de la demande");
-    }
-  };
-
-  // Fonction pour annuler une demande d'ami envoyée
-  const handleCancelRequest = async (requestId: string) => {
-    try {
-      await cloudStore.cancelFriendRequest(Number(requestId));
-      setOutgoing((prev) => prev.filter((req) => req.id !== requestId));
-    } catch (err: any) {
-      setError(err.message ?? "Erreur lors de l'annulation de la demande");
-    }
-  };
-
-  // Fonction pour supprimer un ami
-  const handleRemoveFriend = async (friendId: string) => {
-    try {
-      await cloudStore.removeFriend(friendId);
-      setFriends((prev) => prev.filter((friend) => friend.friendId !== friendId));
-    } catch (err: any) {
-      setError(err.message ?? "Erreur lors de la suppression de l'ami");
-    }
-  };
-
-  if (!cloud.configured) {
-    return (
-      <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Amis">
-        <div className="odds-panel">
-          <header className="odds-head">
-            <h2>Amis</h2>
-            <button type="button" onClick={onClose} aria-label="Fermer">
-              <X size={18} />
-            </button>
-          </header>
-          <div className="account-note neutral">
-            <Info size={15} />
-            <div>
-              <strong>Fonction d&apos;amis non disponible</strong>
-              <span>Le système d&apos;amis nécessite une connexion au cloud.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  /** Enveloppe un geste : on bloque l'écran, on l'exécute, on recharge. */
+  async function act(run: () => Promise<{ message: string | null; isError: boolean }>): Promise<void> {
+    setBusy(true);
+    const result = await run();
+    if (result.message) setNotice({ message: result.message, isError: result.isError });
+    await load();
+    setBusy(false);
   }
 
-  if (!cloud.userId) {
-    return (
-      <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Amis">
-        <div className="odds-panel">
-          <header className="odds-head">
-            <h2>Amis</h2>
-            <button type="button" onClick={onClose} aria-label="Fermer">
-              <X size={18} />
-            </button>
-          </header>
-          <div className="account-card">
-            <p className="account-intro">
-              Pour utiliser le système d&apos;amis, vous devez d&apos;après créer un compte.
-              Un compte vous permet de sauvegarder votre collection et de
-              figurer au classement.
-            </p>
-            <button type="button" className="account-button wide" onClick={() => void cloudStore.signInAsGuest()}>
-              <UserPlus size={14} /> Créer un compte invité (sans e-mail)
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+  async function search(): Promise<void> {
+    const needle = query.trim();
+    if (needle.length < QUERY_MIN) return;
+    setBusy(true);
+    const found = await cloudStore.searchPlayers(needle);
+    setResults(found.players);
+    setNotice(found.message ? { message: found.message, isError: found.isError } : null);
+    setBusy(false);
   }
 
-  const filteredFriends = friends.filter(
-    (friend) =>
-      friend.friendName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      friend.friendId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const friends = byNewestFirst(lists.friends);
+  const incoming = byNewestFirst(lists.incoming);
+  const outgoing = byNewestFirst(lists.outgoing);
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Amis">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>Amis</h2>
-          <div className="tabs">
-            <button
-              type="button"
-              className={activeTab === "friends" ? "tab-active" : "tab-inactive"}
-              onClick={() => setActiveTab("friends")}
-            >
-              Amis ({friends.length})
-            </button>
-            <button
-              type="button"
-              className={activeTab === "received" ? "tab-active" : "tab-inactive"}
-              onClick={() => setActiveTab("received")}
-            >
-              Reçues ({incoming.length})
-            </button>
-            <button
-              type="button"
-              className={activeTab === "sent" ? "tab-active" : "tab-inactive"}
-              onClick={() => setActiveTab("sent")}
-            >
-              Envoyées ({outgoing.length})
-            </button>
-          </div>
           <button type="button" onClick={onClose} aria-label="Fermer">
             <X size={18} />
           </button>
         </header>
 
-        {error && (
-          <div className="account-note error">
-            <AlertTriangle size={15} />
-            <div>{error}</div>
+        {!cloud.configured ? (
+          <div className="account-note neutral">
+            <Info size={15} />
+            <div>
+              <strong>Les amis demandent le cloud</strong>
+              <span>Cette version est hors ligne : il n&apos;y a personne à ajouter.</span>
+            </div>
           </div>
-        )}
-
-        {loading ? (
-          <div className="account-hint">Chargement…</div>
-        ) : activeTab === "friends" ? (
-          <>
-            {filteredFriends.length === 0 ? (
-              <p className="account-hint">
-                Vous n&apos;avez encore aucun ami. Allez dans l&apos;onglet « Envoyées »
-                pour envoyer des demandes d&apos;ami, ou dans « Reçues » pour répondre
-                aux demandes reçues.
-              </p>
-            ) : (
-              <div className="friends-list">
-                {filteredFriends.map((friend) => (
-                  <div key={friend.id} className="friend-item">
-                    <div className="friend-info">
-                      <Image
-                        src={`https://static-cdn.jtvnw.net/jtv_user_pictures/${friend.friendId}-profile_image-300x300.png`}
-                        alt={friend.friendName}
-                        width={AVATAR_SIZE}
-                        height={AVATAR_SIZE}
-                        priority
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/default-avatar.png";
-                        }}
-                      />
-                      <div>
-                        <strong>{friend.friendName}</strong>
-                        <span className="friend-id">{friend.friendId}</span>
-                      </div>
-                    </div>
-                    <div className="friend-actions">
-                      <button
-                        type="button"
-                        className="account-button ghost"
-                        onClick={() => handleRemoveFriend(friend.friendId)}
-                      >
-                        <AlertTriangle size={14} /> Retirer
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        ) : activeTab === "received" ? (
-          <>
-            {incoming.length === 0 ? (
-              <p className="account-hint">
-                Aucune demande d&apos;ami reçue. Lorsque quelqu&apos;un vous envoie une
-                demande d&apos;ami, elle apparaîtra ici.
-              </p>
-            ) : (
-              <div className="requests-list">
-                {incoming.map((request) => (
-                  <div key={request.id} className="request-item">
-                    <div className="request-info">
-                      <Image
-                        src={`https://static-cdn.jtvnw.net/jtv_user_pictures/${request.senderId}-profile_image-300x300.png`}
-                        alt={request.senderName}
-                        width={AVATAR_SIZE}
-                        height={AVATAR_SIZE}
-                        priority
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/default-avatar.png";
-                        }}
-                      />
-                      <div>
-                        <strong>{request.senderName}</strong>
-                        <span className="request-id">{request.senderId}</span>
-                      </div>
-                    </div>
-                    <div className="request-actions">
-                      <button
-                        type="button"
-                        className="account-button"
-                        onClick={() => handleAcceptRequest(request.id)}
-                      >
-                        <Check size={14} /> Accepter
-                      </button>
-                      <button
-                        type="button"
-                        className="account-button ghost"
-                        onClick={() => handleRejectRequest(request.id)}
-                      >
-                        <X size={14} /> Rejeter
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
+        ) : !cloud.userId ? (
+          <section className="account-card">
+            <p className="account-intro">
+              Un compte suffit pour avoir des amis — pas besoin d&apos;e-mail. C&apos;est aussi ce qui
+              sauvegarde ta collection et te fait figurer au classement.
+            </p>
+            <button
+              type="button"
+              className="account-button wide"
+              disabled={cloud.busy}
+              onClick={() => void cloudStore.signInAsGuest()}
+            >
+              <UserPlus size={14} /> Créer un compte invité
+            </button>
+          </section>
         ) : (
           <>
-            {outgoing.length === 0 ? (
-              <p className="account-hint">
-                Aucune demande d&apos;ami envoyée. Utilisez le champ ci-dessous pour
-                envoyer une demande d&apos;ami à un autre utilisateur.
-              </p>
-            ) : (
-              <div className="requests-list">
-                {outgoing.map((request) => (
-                  <div key={request.id} className="request-item">
-                    <div className="request-info">
-                      <Image
-                        src={`https://static-cdn.jtvnw.net/jtv_user_pictures/${request.recipientId}-profile_image-300x300.png`}
-                        alt={request.recipientName}
-                        width={AVATAR_SIZE}
-                        height={AVATAR_SIZE}
-                        priority
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/default-avatar.png";
-                        }}
-                      />
-                      <div>
-                        <strong>{request.recipientName}</strong>
-                        <span className="request-id">{request.recipientId}</span>
-                      </div>
-                    </div>
-                    <div className="request-actions">
+            <div className="filter-chips" aria-label="Sections">
+              <button type="button" className={tab === "friends" ? "active" : ""} onClick={() => setTab("friends")}>
+                {friendCountLabel(friends.length)}
+              </button>
+              <button type="button" className={tab === "incoming" ? "active" : ""} onClick={() => setTab("incoming")}>
+                Reçues ({incoming.length})
+              </button>
+              <button type="button" className={tab === "outgoing" ? "active" : ""} onClick={() => setTab("outgoing")}>
+                Envoyées ({outgoing.length})
+              </button>
+            </div>
+
+            {tab === "friends" ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <Search size={15} />
+                  <strong>Ajouter un ami</strong>
+                </div>
+                <p className="account-intro">
+                  Cherche un joueur par son pseudo de classement, puis envoie-lui une demande. Elle
+                  n&apos;existe qu&apos;une fois qu&apos;il l&apos;a acceptée.
+                </p>
+                <label className="account-field">
+                  <span>Pseudo du joueur</span>
+                  <input
+                    type="text"
+                    maxLength={24}
+                    placeholder={`Au moins ${QUERY_MIN} caractères`}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                </label>
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className="account-button"
+                    disabled={busy || query.trim().length < QUERY_MIN}
+                    onClick={() => void search()}
+                  >
+                    <Search size={14} /> Chercher
+                  </button>
+                </div>
+                {results.length ? (
+                  <div className="trade-players">
+                    {results.map((player) => (
                       <button
                         type="button"
-                        className="account-button ghost"
-                        onClick={() => handleCancelRequest(request.id)}
+                        key={player.userId}
+                        className="trade-player"
+                        disabled={busy}
+                        onClick={() =>
+                          void act(() => cloudStore.sendFriendRequest(player.userId))
+                        }
                       >
-                        <AlertTriangle size={14} /> Annuler
+                        <b>{player.displayName}</b>
+                        <span>niveau {player.level} · {player.uniqueCreators} créateurs</span>
                       </button>
-                    </div>
+                    ))}
                   </div>
-                ))}
+                ) : null}
+              </section>
+            ) : null}
+
+            {notice ? (
+              <div className={`account-note ${notice.isError ? "error" : "ok"}`} role="status">
+                {notice.isError ? <AlertTriangle size={15} /> : <Check size={15} />}
+                <span>{notice.message}</span>
               </div>
-            )}
-            <div className="invite-section">
-              <label className="account-field">
-                <span>
-                  <UserSearch size={10} /> Entrez un code d&apos;ami
-                </span>
-                <input
-                  type="text"
-                  placeholder="Code d'ami de l'utilisateur"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value)}
-                />
-              </label>
-              <button
-                type="button"
-                className={inviteCode.trim() ? "account-button" : "account-button disabled"}
-                onClick={handleSendRequest}
-                disabled={loading}
-              >
-                <ArrowLeftRight size={14} /> Envoyer la demande
+            ) : null}
+
+            {!ready ? <p className="account-hint">Chargement…</p> : null}
+
+            {ready && tab === "friends" ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <Check size={15} />
+                  <strong>{friendCountLabel(friends.length)}</strong>
+                </div>
+                {friends.length ? (
+                  <div className="friend-rows">
+                    {friends.map((friend) => (
+                      <div className="friend-row" key={friend.id}>
+                        <b>{friend.friendName}</b>
+                        <span>amis depuis {relativeDay(friend.createdAt, now) || "peu"}</span>
+                        <button
+                          type="button"
+                          className="account-refresh"
+                          aria-label={`Retirer ${friend.friendName}`}
+                          disabled={busy}
+                          onClick={() => void act(() => cloudStore.removeFriend(friend.friendId))}
+                        >
+                          <UserMinus size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="account-hint">
+                    Aucun ami pour l&apos;instant. Cherche un pseudo ci-dessus : la demande part
+                    tout de suite.
+                  </p>
+                )}
+              </section>
+            ) : null}
+
+            {ready && tab === "incoming" ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <UserPlus size={15} />
+                  <strong>Demandes reçues</strong>
+                </div>
+                {incoming.length ? (
+                  <div className="friend-rows">
+                    {incoming.map((request) => (
+                      <div className="friend-row" key={request.id}>
+                        <b>{request.senderName}</b>
+                        <span>{relativeDay(request.createdAt, now)}</span>
+                        <button
+                          type="button"
+                          className="account-button"
+                          disabled={busy}
+                          onClick={() => void act(() => cloudStore.acceptFriendRequest(request.id))}
+                        >
+                          <Check size={14} /> Accepter
+                        </button>
+                        <button
+                          type="button"
+                          className="account-refresh"
+                          aria-label={`Refuser la demande de ${request.senderName}`}
+                          disabled={busy}
+                          onClick={() => void act(() => cloudStore.rejectFriendRequest(request.id))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="account-hint">Aucune demande en attente.</p>
+                )}
+              </section>
+            ) : null}
+
+            {ready && tab === "outgoing" ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <RefreshCw size={15} />
+                  <strong>Demandes envoyées</strong>
+                </div>
+                {outgoing.length ? (
+                  <div className="friend-rows">
+                    {outgoing.map((request) => (
+                      <div className="friend-row" key={request.id}>
+                        <b>{request.recipientName}</b>
+                        <span>envoyée {relativeDay(request.createdAt, now)}</span>
+                        <button
+                          type="button"
+                          className="account-refresh"
+                          aria-label={`Annuler la demande pour ${request.recipientName}`}
+                          disabled={busy}
+                          onClick={() => void act(() => cloudStore.cancelFriendRequest(request.id))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="account-hint">Aucune demande en attente de réponse.</p>
+                )}
+              </section>
+            ) : null}
+
+            <div className="account-actions">
+              <button type="button" className="account-button ghost" disabled={busy} onClick={() => void load()}>
+                <RefreshCw size={14} /> Actualiser
               </button>
             </div>
           </>

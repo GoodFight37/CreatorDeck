@@ -1797,6 +1797,24 @@ input:focus-visible {
 /* ---- vitrine : les cartes épinglées sur le profil public ---- */
 .account-count { margin-left: auto; color: var(--muted); font-size: 13px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .showcase-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+/*
+ * ─── Les amis ───────────────────────────────────────────────────────────────
+ * Une ligne par personne : le nom, quand, et le geste. C'est une liste de
+ * contacts, pas une grille de cartes — la densité et le filet suffisent.
+ */
+.friend-rows { display: flex; flex-direction: column; }
+.friend-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.friend-row:first-child { border-top: 0; }
+.friend-row > b { font-size: 14px; font-weight: 600; }
+.friend-row > span { flex: 1; min-width: 0; color: var(--muted); font-size: 13px; }
+.friend-row .account-button { flex: 0 0 auto; }
+
 .showcase-card { display: flex; align-items: center; gap: 7px; flex: 1 1 42%; min-width: 0; margin: 0; padding: 6px; border: 1px solid color-mix(in srgb, var(--rarity) 45%, var(--line)); border-radius: 11px; background: linear-gradient(180deg, color-mix(in srgb, var(--rarity) 12%, transparent), transparent), var(--panel-3); box-shadow: 0 0 12px color-mix(in srgb, var(--rarity-glow) 34%, transparent); }
 .showcase-card figcaption { display: flex; flex-direction: column; min-width: 0; }
 .showcase-card figcaption b { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }

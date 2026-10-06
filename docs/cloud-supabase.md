@@ -195,6 +195,15 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      (`player_profile()`, projection `user_cards`, complétion, compteurs Gold et
      Holo, tri Gold). Il recalcule les statistiques de tous les joueurs déjà en
      ligne : c'est normal qu'il travaille quelques secondes.
+   - [`supabase/migrations/0007_direct.sql`](../supabase/migrations/0007_direct.sql)
+     → **Run** pour activer le **statut EN LIVE** (cache `live_streams` et
+     `live_state`), puis **re-coller `0003_catalogue.sql`** : il apporte la
+     colonne `login`, la clé qui relie une diffusion Twitch à sa carte. Détail :
+     §8, « Le direct ».
+   - [`supabase/migrations/0008_friends.sql`](../supabase/migrations/0008_friends.sql)
+     → **Run** pour activer les **amis** (`friend_requests`, `friends`,
+     `send_friend_request()`, `list_friends()`, `has_friendship()`…). Détail :
+     §8, « Les amis ».
 
 > **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
 > un Postgres jetable, en local, sans toucher au projet Supabase :
@@ -204,7 +213,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les six migrations** (`0001` à `0006`) pour de vrai, dans
+> Le script exécute **les huit migrations** (`0001` à `0008`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une variante « live » garantie), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -212,7 +221,9 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > avec trois joueurs : recherche, offre, refus, annulation, acceptation
 > atomique, carte disparue entre-temps, droits et lecture par un tiers — plus
 > le profil public (projection, complétion, rangs, tri Gold) sur trois autres
-> joueurs, dont un dont la sauvegarde est invraisemblable. Les
+> joueurs, dont un dont la sauvegarde est invraisemblable, le direct, et **les
+> amis joués de bout en bout** — demande, demande croisée, acceptation, refus,
+> annulation, retrait, et ce qu'un joueur étranger ne voit pas. Les
 > deux dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
@@ -535,10 +546,48 @@ Si l'app ne déclenche rien alors que la fonction répond à la main, regarder
 « Verify JWT » y apparaît comme un 401, une absence d'invocation veut dire que
 l'app n'a pas appelé (cloud non configuré dans son `.env.local`).
 
+### Les amis
+
+Un joueur cherche un pseudo, envoie une demande, l'autre accepte : la relation
+existe alors **des deux côtés à la fois**, et rien n'est décidé par l'appareil.
+Trois listes dans l'écran (Amis, Reçues, Envoyées), accessible depuis
+**Profil → Amis**.
+
+Ce que le serveur garantit, et pourquoi c'est lui qui s'en occupe :
+
+* une amitié ne se crée **que** par l'acceptation du destinataire — un client ne
+  peut pas écrire une ligne dans `friends` (RLS active, aucune politique
+  d'écriture, tout passe par des fonctions `security definer`) ;
+* une demande est unique dans chaque sens : renvoyer une demande déjà en attente
+  la renvoie telle quelle, et une demande **croisée** est signalée au joueur
+  (« réponds dans Reçues ») au lieu de créer un doublon ;
+* une ancienne demande (refusée, annulée, ou l'historique d'une amitié retirée)
+  est **réutilisée** : on peut donc redevenir ami avec quelqu'un qu'on a retiré ;
+* personne ne voit les demandes ni les amitiés des autres : un tiers qui lit
+  `friend_requests` ne voit que les lignes qui le concernent.
+
+| Élément | Rôle |
+| --- | --- |
+| `0008_friends.sql` | tables `friend_requests` et `friends`, RPC `send`/`accept`/`reject`/`cancel`/`remove`, listes, `has_friendship()` |
+| `src/lib/social/friends.ts` | types et règles pures (tri, recherche, « il y a 3 jours »), testés sans navigateur |
+| `src/lib/cloud/api.ts`, `cloud-store.ts` | appels RPC et états (`friends`, `friendsAt`) : la feuille lit, le store écrit |
+| `src/components/friends-sheet.tsx` | l'écran : chercher un joueur, envoyer, accepter, refuser, annuler, retirer |
+
+L'ajout se fait par **recherche de pseudo** (`search_players()`, le RPC des
+échanges) : le serveur attend un identifiant de joueur, pas un code inventé.
+Après chaque geste, l'écran recharge les trois listes au lieu de les bricoler
+localement — une amitié affichée que le serveur n'a pas enregistrée serait pire
+qu'un écran lent.
+
+**Ce qui se passe si la migration n'est pas collée** : les appels répondent
+`PGRST202` (« fonction introuvable ») et la feuille affiche un message ; rien ne
+casse dans le reste du jeu.
+
 ## 9. Suite : notifications
 
-**Fait :** **statut EN LIVE** (le direct réel, alimenté par Helix côté serveur —
-voir §8) ; vitrine de quatre cartes ; **profil public complet** et classements
+**Fait :** **amis côté serveur** (`0008_friends.sql` : demandes, acceptation,
+retrait, invisibilité pour les tiers) ; **statut EN LIVE** (le direct réel,
+alimenté par Helix côté serveur — voir §8) ; vitrine de quatre cartes ; **profil public complet** et classements
 enrichis (`0006_profil_public.sql` : projection `user_cards`, complétion, rangs,
 Gold et Holo, affiche de partage) ; tirage des boosters côté serveur
 (`0004_tirage.sql`, les cartes sont infalsifiables) ; échanges de cartes
@@ -587,6 +636,8 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
+| « Les amis ne sont pas installés sur ce projet » | `0008_friends.sql` n'a pas été collé : § 3 |
+| L'entrée « Amis » n'apparaît pas dans le profil | le cloud n'est pas configuré dans ce build : sans serveur, il n'y a personne à ajouter |
 | Aucun badge « Direct » n'apparaît | table `0007` non collée, `0003` non recollée (colonne `login`), secrets Twitch absents, ou fonction `refresh-live` non déployée — l'appel à la fonction répond alors le détail |
 | Un échange accepté n'apparaît pas tout de suite | l'appareil du proposeur s'aligne sur `list_trades()` : **Actualiser mes offres**, ou rouvre l'écran Compte |
 | « Le tirage serveur n'est pas installé sur ce projet » | `0003_catalogue.sql` et `0004_tirage.sql` ne sont pas (ou pas à jour) : § 3 |

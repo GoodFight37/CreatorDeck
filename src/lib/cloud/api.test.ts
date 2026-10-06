@@ -751,6 +751,90 @@ describe("échanges", () => {
   });
 });
 
+describe("amis", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  const JOUEUR = "22222222-2222-4222-8222-222222222222";
+
+  it("lit la liste d'amis telle que le serveur la renvoie", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: [
+          { id: 11, friendId: JOUEUR, friendName: "Kameto", createdAt: "2026-10-01T10:00:00Z" },
+          { id: 12, friendId: "33333333-3333-4333-8333-333333333333", friendName: "Ibai", createdAt: "2026-10-02T10:00:00Z" },
+        ],
+      }),
+      signedIn(),
+    );
+    const friends = await api.listFriends();
+    expect(friends).toEqual([
+      { id: 11, friendId: JOUEUR, friendName: "Kameto", createdAt: "2026-10-01T10:00:00Z" },
+      { id: 12, friendId: "33333333-3333-4333-8333-333333333333", friendName: "Ibai", createdAt: "2026-10-02T10:00:00Z" },
+    ]);
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/list_friends");
+  });
+
+  it("ignore une ligne illisible au lieu de perdre toute la liste", async () => {
+    const { api } = client(
+      () => ({ body: [{ id: 11, friendId: JOUEUR, friendName: "Kameto", createdAt: "" }, { id: 12, friendName: "Sans identifiant" }] }),
+      signedIn(),
+    );
+    const friends = await api.listFriends();
+    expect(friends.map((friend) => friend.friendName)).toEqual(["Kameto"]);
+  });
+
+  it("distingue une demande envoyée d'une demande croisée", async () => {
+    const { api } = client(
+      () => ({ body: { request: { id: 5, status: "pending" }, alreadyFriends: false, existingRequest: null } }),
+      signedIn(),
+    );
+    expect(await api.sendFriendRequest(JOUEUR)).toEqual({ sent: true, existing: false, alreadyFriends: false });
+
+    const croise = client(
+      () => ({ body: { request: null, alreadyFriends: false, existingRequest: { id: 4, senderId: JOUEUR } } }),
+      signedIn(),
+    );
+    expect(await croise.api.sendFriendRequest(JOUEUR)).toEqual({ sent: false, existing: true, alreadyFriends: false });
+
+    const dejaAmis = client(
+      () => ({ body: { request: null, alreadyFriends: true, existingRequest: null } }),
+      signedIn(),
+    );
+    expect(await dejaAmis.api.sendFriendRequest(JOUEUR)).toEqual({ sent: false, existing: false, alreadyFriends: true });
+  });
+
+  it("accepte une demande sur le statut que le serveur a écrit, pas sur un objet absent", async () => {
+    // Le serveur ne renvoie pas toujours la ligne `friends` (insertion sans
+    // conflit) : ce qui compte, c'est que la demande soit passée à « accepted ».
+    const { api } = client(
+      () => ({ body: { request: { id: 5, status: "accepted" }, friendship: null } }),
+      signedIn(),
+    );
+    expect(await api.acceptFriendRequest(5)).toBe(true);
+
+    const rate = client(() => ({ body: { request: null, friendship: null } }), signedIn());
+    expect(await rate.api.acceptFriendRequest(5)).toBe(false);
+  });
+
+  it("explique quoi coller quand la migration des amis manque", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: { code: "PGRST202", message: "Could not find the function public.send_friend_request" },
+      }),
+      signedIn(),
+    );
+    await expect(api.sendFriendRequest(JOUEUR)).rejects.toThrow(/0008_friends\.sql/);
+  });
+});
+
 describe("compte : adresse et mot de passe", () => {
   function signedIn(email: string | null = null) {
     const storage = memoryStorage();

@@ -1,7 +1,0 @@
-
-C:\Users\Administrator\Desktop\CreatorDeck\src\components\friends-sheet.tsx
-  83:9  warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/set-state-in-effect')
-
-✖ 1 problem (0 errors, 1 warning)
-  0 errors and 1 warning potentially fixable with the `--fix` option.
-

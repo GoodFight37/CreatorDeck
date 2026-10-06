@@ -63,7 +63,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0007)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0008)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -391,6 +391,15 @@ version web hébergée.
   APK se dézippe. L'app lit la table sans compte, garde un cache local daté et
   **ne montre rien au-delà de dix minutes** : un badge « en direct » périmé
   mentirait. Mise en place : `docs/cloud-supabase.md` §8, « Le direct ».
+  `supabase/migrations/0008_friends.sql` ajoute les **amis** : tables
+  `friend_requests` et `friends` (lecture réservée aux joueurs concernés,
+  aucune écriture directe), et les RPC `send`/`accept`/`reject`/`cancel`/
+  `remove_friend`, `list_friends()`, `has_friendship()`. Une amitié n'existe
+  qu'après **acceptation du destinataire** : un appareil ne peut pas décider
+  qu'il est l'ami de quelqu'un. L'écran vit dans « Profil → Amis » ; on ajoute
+  par recherche de pseudo, et l'écran recharge les listes après chaque geste
+  plutôt que de les bricoler localement. Mise en place :
+  `docs/cloud-supabase.md` §8, « Les amis ».
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

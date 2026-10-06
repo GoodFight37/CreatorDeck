@@ -36,6 +36,7 @@ import {
   Zap,
 } from "lucide-react";
 import { AccountSheet, CloudBadge } from "@/components/account-sheet";
+import { FriendsSheet } from "@/components/friends-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
@@ -703,6 +704,7 @@ function ProfileView({
   onShowStudio,
   onShowAccount,
   onShowLeaderboard,
+  onShowFriends,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -712,6 +714,7 @@ function ProfileView({
   onShowStudio: () => void;
   onShowAccount: () => void;
   onShowLeaderboard: () => void;
+  onShowFriends: () => void;
 }) {
   const cloud = useCloud();
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
@@ -801,6 +804,12 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowLeaderboard}>
             <span>Classement mondial</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowFriends}>
+            <span>Amis</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -949,6 +958,7 @@ export function CreatorDeckApp() {
   const [oddsOpen, setOddsOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
+  const [friendsOpen, setFriendsOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
@@ -1177,6 +1187,7 @@ export function CreatorDeckApp() {
               setAccountFocus("leaderboard");
               setAccountOpen(true);
             }}
+            onShowFriends={() => setFriendsOpen(true)}
           />
         ) : null}
       </div>
@@ -1239,6 +1250,7 @@ export function CreatorDeckApp() {
       ) : null}
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
+      {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet
           focus={accountFocus}
