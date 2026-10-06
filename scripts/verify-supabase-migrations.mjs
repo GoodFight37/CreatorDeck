@@ -35,6 +35,10 @@
  *     visiteur sans compte de lire ou d'écrire quoi que ce soit ;
  *   * le carnet des ventes : une vente conclue apparaît avec son acheteur, une
  *     annonce encore au comptoir n'en est pas une, la fonction reste fermée ;
+ *   * le Last Pack : un tirage expose ses cinq cartes dix minutes, un ami peut
+ *     en voler une (et une seule par jour), la carte quitte vraiment la
+ *     collection du propriétaire, un inconnu n'y a pas accès et la fenêtre se
+ *     referme à l'heure dite ;
  *   * l'hôtel des ventes : grille des prix, dépôt payé comptant, la dernière
  *     copie refusée, comptoir filtré par joueur, achat atomique et unique,
  *     points insuffisants, annonce périmée, et table fermée aux clients ;
@@ -101,6 +105,12 @@ try {
     $$;
     create role anon;
     create role authenticated;
+
+    -- Comme sur Supabase : les rôles clients peuvent lire l'identité du
+    -- porteur du jeton (auth.uid()), ce dont une fonction security invoker a
+    -- besoin — push_save() est de celles-là.
+    grant usage on schema auth to anon, authenticated;
+    grant execute on function auth.uid() to anon, authenticated;
   `);
 
   const rates = JSON.parse(await readFile(path.join(ROOT, "src", "data", "pull-rates.json"), "utf8"));
@@ -111,6 +121,7 @@ try {
   const marche = await readFile(path.join(MIGRATIONS, "0009_marche.sql"), "utf8");
   const ventes = await readFile(path.join(MIGRATIONS, "0010_ventes.sql"), "utf8");
   const directBonus = await readFile(path.join(MIGRATIONS, "0011_direct.sql"), "utf8");
+  const lastPack = await readFile(path.join(MIGRATIONS, "0012_last_pack.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -123,6 +134,7 @@ try {
     ["0009_marche.sql", marche],
     ["0010_ventes.sql", ventes],
     ["0011_direct.sql", directBonus],
+    ["0012_last_pack.sql", lastPack],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -1527,6 +1539,300 @@ try {
     })(),
   );
 
+  // --- Last Pack ------------------------------------------------------------
+  // Trois joueurs frais : Léa ouvre un booster, Lou est son amie, Tiers passe
+  // par là. Le paquet est publié par le déclencheur du tirage — pas par le
+  // client — et le vol réécrit **les deux** collections.
+  const L1 = "11111111-2222-4333-8444-555555555555";
+  const L2 = "66666666-7777-4888-8999-000000000000";
+  const L3 = "aaaa1111-bbbb-4ccc-8ddd-eeee22223333";
+
+  await player(L1, "Léa", []);
+  await player(L2, "Lou", []);
+  await player(L3, "Tiers", []);
+
+  await client.query(
+    `insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now())
+     on conflict (user_id) do update set packs = 4, last_regen_at = now()`,
+    [L1],
+  );
+  const lea = (await asPlayer(L1, "select public.open_pack() as r")).rows[0].r;
+  const packId = Number(
+    (await client.query("select max(id)::int as id from public.last_packs where user_id = $1", [L1])).rows[0].id,
+  );
+  check("last pack : ouvrir un booster expose le paquet", Number.isFinite(packId) && packId > 0, String(packId));
+
+  const published = await client.query(
+    `select cards,
+            expires_at > now() as fresh,
+            extract(epoch from (expires_at - drawn_at))::int as window_seconds
+       from public.last_packs where id = $1`,
+    [packId],
+  );
+  check(
+    "last pack : les cinq cartes du tirage, et dix minutes de fenêtre",
+    published.rows[0].cards.length === 5 &&
+      published.rows[0].fresh === true &&
+      published.rows[0].window_seconds === 600,
+    `${published.rows[0].window_seconds} s`,
+  );
+
+  // Amitié Léa ↔ Lou, refusée par le serveur pour Tiers.
+  const leaRequest = (await asPlayer(L1, "select public.send_friend_request($1) as r", [L2])).rows[0].r.request.id;
+  await asPlayer(L2, "select public.accept_friend_request($1)", [leaRequest]);
+
+  const shelfLou = (await asPlayer(L2, "select public.last_pack_shelf() as r")).rows[0].r;
+  check(
+    "last pack : l'amie voit le paquet, pas comme le sien",
+    shelfLou.packs.length === 1 &&
+      shelfLou.packs[0].id === packId &&
+      shelfLou.packs[0].ownerName === "Léa" &&
+      shelfLou.packs[0].mine === false &&
+      shelfLou.packs[0].cards.length === 5 &&
+      shelfLou.packs[0].stealable === true &&
+      shelfLou.stoleToday === false &&
+      shelfLou.windowMinutes === 10,
+    JSON.stringify(shelfLou.packs[0]),
+  );
+  check(
+    "last pack : le propriétaire voit son paquet, mais ne peut pas se voler",
+    (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].stealable === false,
+  );
+  check(
+    "last pack : le paquet d'un inconnu n'est pas exposé",
+    (await asPlayer(L3, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0,
+  );
+
+  // Tant que Léa n'a pas envoyé sa collection, il n'y a rien à voler : un vol
+  // ne doit jamais créer une carte que le propriétaire ne possède pas.
+  await refuses(
+    "last pack : voler une carte que le propriétaire ne possède pas → refus",
+    L2,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 1],
+    "ne possède plus",
+  );
+
+  // Léa envoie sa collection (c'est ce que fait son appareil après le tirage).
+  await player(
+    L1,
+    "Léa",
+    lea.cards.map((drawn, index) =>
+      card(`lea-${index}`, drawn.creatorSlug, drawn.rarity, drawn.variant, 5 - index),
+    ),
+  );
+
+  const vol = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, 3])).rows[0].r;
+  check(
+    "last pack : le vol donne la carte choisie, marquée du paquet",
+    vol.status === "stolen" &&
+      vol.index === 3 &&
+      vol.ownerName === "Léa" &&
+      vol.card.creatorSlug === lea.cards[2].creatorSlug &&
+      vol.card.rarity === lea.cards[2].rarity &&
+      vol.card.fromLastPack === packId,
+    JSON.stringify(vol.card),
+  );
+
+  const leaCards = (
+    await client.query("select jsonb_array_length(state -> 'cards')::int as n from public.saves where user_id = $1", [L1])
+  ).rows[0].n;
+  const louCards = (
+    await client.query("select state -> 'cards' as cards from public.saves where user_id = $1", [L2])
+  ).rows[0].cards;
+  const leaSave = (
+    await client.query("select state -> 'cards' as cards from public.saves where user_id = $1", [L1])
+  ).rows[0].cards;
+  check(
+    "last pack : la carte quitte vraiment la collection du propriétaire",
+    leaCards === 4 &&
+      !leaSave.some((held) => held.creatorSlug === lea.cards[2].creatorSlug && held.variant === lea.cards[2].variant),
+    `${leaCards} carte(s) restantes chez Léa`,
+  );
+  check(
+    "last pack : la carte entre chez le voleur, et une seule fois",
+    louCards.length === 1 &&
+      louCards[0].creatorSlug === lea.cards[2].creatorSlug &&
+      louCards[0].fromLastPack === packId,
+    JSON.stringify(louCards),
+  );
+  check(
+    "last pack : la carte prise est marquée comme telle sur le paquet",
+    (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards[2].taken === true &&
+      (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards[0].taken === false,
+  );
+
+  // Une carte par jour, et pas deux.
+  await refuses(
+    "last pack : deux vols le même jour → refus",
+    L2,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 1],
+    "une carte par jour",
+  );
+  // Le lendemain (jour UTC reculé d'un cran), le même joueur peut revenir…
+  await client.query("update public.last_pack_steals set day = day - 1 where thief_id = $1", [L2]);
+  await refuses(
+    "last pack : une carte déjà prise reste prise",
+    L2,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 3],
+    "déjà été prise",
+  );
+  const vol2 = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, 1])).rows[0].r;
+  check(
+    "last pack : le lendemain, une autre carte du même paquet",
+    vol2.card.creatorSlug === lea.cards[0].creatorSlug && vol2.index === 1,
+    JSON.stringify(vol2.card),
+  );
+
+  // Un inconnu, un paquet à soi, un paquet périmé : trois refus.
+  await refuses(
+    "last pack : un inconnu ne vole pas",
+    L3,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 2],
+    "il faut être ami",
+  );
+  await refuses(
+    "last pack : on ne vole pas son propre paquet",
+    L1,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 2],
+    "ton propre paquet",
+  );
+  await client.query("update public.last_packs set expires_at = now() - interval '1 minute' where id = $1", [packId]);
+  await refuses(
+    "last pack : après dix minutes, la fenêtre est fermée",
+    L3,
+    "select public.last_pack_steal($1, $2)",
+    [packId, 2],
+    "dix minutes sont écoulées",
+  );
+  check(
+    "last pack : un paquet périmé sort de l'étagère",
+    (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0,
+  );
+
+  // Le carnet de la victime : qui, quoi, quand. Et rien pour le voleur.
+  const pertes = (await asPlayer(L1, "select public.last_pack_losses(20) as r")).rows[0].r;
+  check(
+    "last pack : la victime retrouve ses vols, du plus récent au plus ancien",
+    pertes.length === 2 &&
+      pertes[0].thiefName === "Lou" &&
+      pertes[1].thiefName === "Lou" &&
+      Boolean(pertes[0].stolenAt) &&
+      pertes.some((perte) => perte.card.creatorSlug === lea.cards[2].creatorSlug),
+    JSON.stringify(pertes.map((perte) => perte.card.creatorSlug)),
+  );
+  check(
+    "last pack : le voleur ne voit pas ses propres vols",
+    (await asPlayer(L2, "select public.last_pack_losses(20) as r")).rows[0].r.length === 0,
+  );
+
+  // Le vol retient l'identifiant exact de la carte prise chez la victime :
+  // c'est ce qui permet au garde-fou de `push_save()` de ne pas confondre la
+  // carte volée avec une nouvelle carte du même créateur.
+  const vols = (
+    await client.query("select card_id, card ->> 'creatorSlug' as slug from public.last_pack_steals order by id")
+  ).rows;
+  check(
+    "last pack : chaque vol retient l'identifiant de la carte prise",
+    vols.length === 2 &&
+      vols.every((ligne) => typeof ligne.card_id === "string" && ligne.card_id.length > 0) &&
+      new Set(vols.map((ligne) => ligne.card_id)).size === 2,
+    JSON.stringify(vols),
+  );
+
+  // Un vol ne se défait pas avec une vieille sauvegarde d'appareil : sans ce
+  // garde-fou, la victime qui rejoue avant de se resynchroniser ferait
+  // revenir sa carte **et** le voleur la garderait.
+  const leaState = (await client.query("select state from public.saves where user_id = $1", [L1])).rows[0].state;
+  const beforeVol = {
+    ...leaState,
+    cards: lea.cards.map((drawn, index) => ({
+      id: `lea-${index}`,
+      creatorSlug: drawn.creatorSlug,
+      rarity: drawn.rarity,
+      variant: drawn.variant,
+      obtainedAt: leaState.cards[index]?.obtainedAt ?? Date.now(),
+      rareDrop: false,
+    })),
+  };
+  const rejectedPush = (
+    await asPlayer(L1, "select public.push_save($1::jsonb, 1, $2, true) as r", [
+      JSON.stringify(beforeVol),
+      Date.now(),
+    ])
+  ).rows[0].r;
+  check(
+    "last pack : une vieille sauvegarde ne fait pas revenir la carte volée",
+    rejectedPush.status === "rejected" &&
+      JSON.stringify(rejectedPush.problems).includes("carte volée"),
+    JSON.stringify(rejectedPush.status),
+  );
+
+  const pris = new Set(vols.map((ligne) => ligne.card_id));
+  const healed = { ...beforeVol, cards: beforeVol.cards.filter((held) => !pris.has(held.id)) };
+  const healedPush = (
+    await asPlayer(L1, "select public.push_save($1::jsonb, 1, $2, true) as r", [
+      JSON.stringify(healed),
+      Date.now() + 1000,
+    ])
+  ).rows[0].r;
+  check(
+    "last pack : la collection sans la carte volée repasse sans problème",
+    healedPush.status === "pushed",
+    JSON.stringify(healedPush.status),
+  );
+
+  const thiefState = (await client.query("select state from public.saves where user_id = $1", [L2])).rows[0].state;
+  const thiefPush = (
+    await asPlayer(L2, "select public.push_save($1::jsonb, 1, $2, true) as r", [
+      JSON.stringify(thiefState),
+      Date.now() + 2000,
+    ])
+  ).rows[0].r;
+  check(
+    "last pack : le garde-fou ne bloque pas le voleur (sa collection est valide)",
+    thiefPush.status === "pushed" || thiefPush.status === "unchanged",
+    JSON.stringify(thiefPush.status),
+  );
+
+  // Les tables restent fermées : rien à lire directement, rien pour un
+  // visiteur sans compte.
+  check(
+    "last pack : les paquets exposés ne sont pas lisibles en direct",
+    (await asPlayer(L3, "select count(*)::int as n from public.last_packs")).rows[0].n === 0,
+  );
+  check(
+    "last pack : un tiers ne lit pas les vols des autres",
+    (await asPlayer(L3, "select count(*)::int as n from public.last_pack_steals")).rows[0].n === 0 &&
+      (await asPlayer(L1, "select count(*)::int as n from public.last_pack_steals")).rows[0].n === 2 &&
+      (await asPlayer(L2, "select count(*)::int as n from public.last_pack_steals")).rows[0].n === 2,
+  );
+  await refuses(
+    "last pack : sans compte, l'étagère ne répond pas",
+    "",
+    "select public.last_pack_shelf()",
+    [],
+    "connecte-toi",
+  );
+  check(
+    "last pack : sans compte, la fonction est inaccessible",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("select public.last_pack_shelf()");
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -1535,6 +1841,7 @@ try {
   await client.query(friends);
   await client.query(marche);
   await client.query(ventes);
+  await client.query(lastPack);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -1570,6 +1877,12 @@ try {
   check(
     "migrations rejouables : le direct répond encore",
     (await client.query("select streams from public.live_state where id")).rows[0].streams === 1,
+  );
+  check(
+    "migrations rejouables : le Last Pack répond encore, sans double publication",
+    (await asPlayer(L2, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0 &&
+      (await client.query("select count(*)::int as n from public.last_packs")).rows[0].n ===
+        (await client.query("select count(*)::int as n from public.pack_draws")).rows[0].n,
   );
 
   console.log("");
