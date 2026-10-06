@@ -28,7 +28,12 @@
 --     déjà publics — jamais la liste des cartes d'un joueur ;
 --   * `leaderboard()` ne montre toujours que les joueurs `verified`, et
 --     `player_profile()` renvoie le profil même non vérifié (le joueur doit
---     pouvoir voir sa propre fiche), avec un rang `null` dans ce cas.
+--     pouvoir voir sa propre fiche), avec un rang `null` dans ce cas ;
+--   * `player_profile()` renvoie la complétion **par famille de collection**
+--     (`by_region`) : les mêmes règles que `by_rarity`, mais groupées par la
+--     famille du catalogue (`creators.region`). C'est ce qui permet de dire
+--     « 12 / 155 en France & francophonie » à un joueur qui regarde la fiche
+--     d'un autre — l'information n'existe que côté serveur.
 --
 -- Rejouable : `add column if not exists`, `create ... if not exists`,
 -- `create or replace`, `drop function if exists` avant les changements de
@@ -219,6 +224,21 @@ as $$
     join public.creators c on c.slug = uc.creator_slug
     where uc.user_id = coalesce(p_user_id, auth.uid())
     group by c.rarity
+  ),
+  family_totals as (
+    -- Une famille = une région du catalogue. Un créateur sans région (catalogue
+    -- pas encore régénéré) tombe dans la fourre-tout `S10`, comme à l'écran :
+    -- jamais de ligne sans nom, jamais de total qui ne s'additionne pas.
+    select coalesce(c.region, 'S10') as region_id, count(*)::int as total
+    from public.creators c
+    group by 1
+  ),
+  family_owned as (
+    select coalesce(c.region, 'S10') as region_id, count(distinct uc.creator_slug)::int as owned
+    from public.user_cards uc
+    join public.creators c on c.slug = uc.creator_slug
+    where uc.user_id = coalesce(p_user_id, auth.uid())
+    group by 1
   )
   select jsonb_build_object(
     'user_id', t.user_id,
@@ -253,6 +273,17 @@ as $$
       ))
       from rarity_totals rt
       left join owned o on o.rarity = rt.rarity
+    ), '{}'::jsonb),
+    -- « 12 / 155 en France & francophonie » : la même mécanique que `by_rarity`,
+    -- groupée par famille. Les familles sans aucune carte possédée sont
+    -- présentes à zéro — c'est justement ce qu'un joueur veut voir.
+    'by_region', coalesce((
+      select jsonb_object_agg(ft.region_id, jsonb_build_object(
+        'owned', coalesce(fo.owned, 0),
+        'total', ft.total
+      ))
+      from family_totals ft
+      left join family_owned fo on fo.region_id = ft.region_id
     ), '{}'::jsonb)
   )
   from target t;

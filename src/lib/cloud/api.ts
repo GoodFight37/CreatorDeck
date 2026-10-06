@@ -129,6 +129,18 @@ export type ProfileRarity = {
 };
 
 /**
+ * Complétion d'une **famille** de collection (« France & francophonie »,
+ * « Anglophonie »…). Même forme que `ProfileRarity`, avec l'identifiant de
+ * famille (`S01`…) à la place de la rareté : les libellés vivent dans
+ * `src/lib/regions.ts`, la teinte dans `src/lib/cosmetics.ts`.
+ */
+export type ProfileFamily = {
+  regionId: string;
+  owned: number;
+  total: number;
+};
+
+/**
  * Le profil public d'un joueur (`player_profile`). Le serveur envoie des
  * compteurs et les quatre cartes que le joueur a épinglées — jamais sa
  * collection.
@@ -152,6 +164,13 @@ export type PlayerProfile = {
   rankCards: number | null;
   showcaseSlugs: string[];
   byRarity: ProfileRarity[];
+  /**
+   * Complétion par famille de collection. Le serveur la calcule à partir du
+   * catalogue (`creators.region`) : c'est la seule façon de savoir combien un
+   * **autre** joueur possède dans chaque famille, son catalogue à lui n'existant
+   * pas dans cette app.
+   */
+  byRegion: ProfileFamily[];
 };
 
 /** Tri du classement, tel que l'accepte `leaderboard()` côté serveur. */
@@ -368,6 +387,7 @@ function parseProfile(raw: unknown): PlayerProfile | null {
     rankCards: rank(record.rank_cards),
     showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
     byRarity: parseRarityBreakdown(record.by_rarity),
+    byRegion: parseFamilyBreakdown(record.by_region),
   };
 }
 
@@ -383,6 +403,28 @@ function parseRarityBreakdown(raw: unknown): ProfileRarity[] {
       return [{ rarity, owned: Number(row.owned ?? 0), total: Number(row.total ?? 0) }];
     })
     .sort((left, right) => order.indexOf(left.rarity) - order.indexOf(right.rarity));
+}
+
+/**
+ * `{ S01: { owned, total }, … }` → liste triée du plus complet au plus vide,
+ * puis par identifiant : deux joueurs voient donc leurs familles dans le même
+ * ordre, et l'ordre ne bouge pas d'un chargement à l'autre.
+ */
+function parseFamilyBreakdown(raw: unknown): ProfileFamily[] {
+  const record = asRecord(raw);
+  if (!record) return [];
+  return Object.entries(record)
+    .flatMap(([regionId, value]) => {
+      const row = asRecord(value);
+      if (!row) return [];
+      return [{ regionId, owned: Number(row.owned ?? 0), total: Number(row.total ?? 0) }];
+    })
+    .sort((left, right) => familyRatio(right) - familyRatio(left) || left.regionId.localeCompare(right.regionId));
+}
+
+/** Part d'une famille complétée. Un total nul ne compte pas comme complet. */
+export function familyRatio(family: Pick<ProfileFamily, "owned" | "total">): number {
+  return family.total > 0 ? family.owned / family.total : 0;
 }
 
 function parseTradeCard(raw: unknown): TradeCard | null {

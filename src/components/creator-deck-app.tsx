@@ -705,6 +705,7 @@ function ProfileView({
   onShowAccount,
   onShowLeaderboard,
   onShowFriends,
+  onShowOwnProfile,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -715,6 +716,7 @@ function ProfileView({
   onShowAccount: () => void;
   onShowLeaderboard: () => void;
   onShowFriends: () => void;
+  onShowOwnProfile: () => void;
 }) {
   const cloud = useCloud();
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
@@ -804,6 +806,12 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowLeaderboard}>
             <span>Classement mondial</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured && cloud.userId ? (
+          <button type="button" className="menu-row" onClick={onShowOwnProfile}>
+            <span>Ma fiche publique</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -1188,6 +1196,9 @@ export function CreatorDeckApp() {
               setAccountOpen(true);
             }}
             onShowFriends={() => setFriendsOpen(true)}
+            onShowOwnProfile={() => {
+              if (cloud.userId) void cloudStore.openProfile(cloud.userId);
+            }}
           />
         ) : null}
       </div>

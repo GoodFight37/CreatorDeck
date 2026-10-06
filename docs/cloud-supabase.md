@@ -182,7 +182,9 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      → **Run** pour peupler la table des créateurs (utilisée par le tirage
      serveur) et la passer en lecture seule pour les clients (RLS activée).
      **Fichier généré** par `scripts/build-supabase-catalogue.mjs` depuis
-     `src/data/creators.json` : ne pas modifier à la main.
+     `src/data/creators.json` : ne pas modifier à la main. Il porte aussi la
+     **famille** de chaque créateur (`region`), qui sert à la complétion par
+     saison : si tu avais déjà collé une version antérieure, recolle-le.
    - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
      → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
      et `pack_status()`).
@@ -193,8 +195,10 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
    - [`supabase/migrations/0006_profil_public.sql`](../supabase/migrations/0006_profil_public.sql)
      → **Run** pour activer le profil public et les classements enrichis
      (`player_profile()`, projection `user_cards`, complétion, compteurs Gold et
-     Holo, tri Gold). Il recalcule les statistiques de tous les joueurs déjà en
-     ligne : c'est normal qu'il travaille quelques secondes.
+     Holo, tri Gold, **complétion par famille**). Il recalcule les statistiques
+     de tous les joueurs déjà en ligne : c'est normal qu'il travaille quelques
+     secondes. Comme il grandit au fil des versions, recolle-le : il est
+     rejouable (`create or replace`).
    - [`supabase/migrations/0007_direct.sql`](../supabase/migrations/0007_direct.sql)
      → **Run** pour activer le **statut EN LIVE** (cache `live_streams` et
      `live_state`), puis **re-coller `0003_catalogue.sql`** : il apporte la
@@ -583,10 +587,49 @@ qu'un écran lent.
 `PGRST202` (« fonction introuvable ») et la feuille affiche un message ; rien ne
 casse dans le reste du jeu.
 
+### La complétion par famille de collection
+
+Le catalogue est découpé en **familles** par langue de diffusion — France &
+francophonie, Espagne & Amérique latine, Anglophonie… —, comme les séries d'un
+jeu de cartes. Chaque créateur appartient à une famille (`creators.region`), et
+le serveur sait donc répondre à « combien ce joueur possède-t-il en
+Anglophonie ? » **sans connaître sa collection** : c'est `player_profile()` qui
+renvoie `by_region`, la même mécanique que la répartition par rareté.
+
+Pourquoi côté serveur : la complétion par famille est la seule information
+qu'on ne peut pas recalculer sur l'appareil quand on regarde **la fiche d'un
+autre joueur**. Son catalogue n'existe pas dans cette app ; le nôtre ne dit rien
+de ses cartes.
+
+| Élément | Rôle |
+| --- | --- |
+| `0003_catalogue.sql` | la colonne `region` de chaque créateur (`S01`…`S09`, `S10` pour la fourre-tout) |
+| `0006_profil_public.sql` | `by_region` dans `player_profile()` : `{ "S01": { "owned": 12, "total": 155 }, … }` |
+| `src/lib/cloud/api.ts` | `byRegion` (type `ProfileFamily`), trié du plus complet au plus vide |
+| `src/lib/regions.ts`, `src/lib/cosmetics.ts` | libellé de famille et teinte — les mêmes que l'écran des saisons et les emblèmes |
+| `src/components/public-profile-sheet.tsx` | la liste « Familles de collection » sur la fiche publique |
+
+Deux choses à savoir sur les chiffres :
+
+* les familles sans aucune carte possédée sont **présentes à zéro**, pas
+  absentes : c'est justement ce qu'il reste à collectionner ;
+* un créateur possédé en deux exemplaires ne compte **qu'une fois** (comme la
+  complétion du catalogue), et un créateur absent du catalogue ne compte nulle
+  part.
+
+L'écran **Objectifs** du jeu, lui, garde ses paliers et ses récompenses
+(points, sabliers, emblème) : ils sont calculés localement, avec la famille
+comme unité. Ce que le serveur ajoute, c'est la comparaison entre joueurs.
+
+**Où le voir** : `?profil=<identifiant>` (le lien de partage), la ligne du
+classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
+
 ## 9. Suite : notifications
 
-**Fait :** **amis côté serveur** (`0008_friends.sql` : demandes, acceptation,
-retrait, invisibilité pour les tiers) ; **statut EN LIVE** (le direct réel,
+**Fait :** **complétion par famille de collection** (colonne `region` du
+catalogue et `by_region` de `player_profile()`) ; **amis côté serveur**
+(`0008_friends.sql` : demandes, acceptation, retrait, invisibilité pour les
+tiers) ; **statut EN LIVE** (le direct réel,
 alimenté par Helix côté serveur — voir §8) ; vitrine de quatre cartes ; **profil public complet** et classements
 enrichis (`0006_profil_public.sql` : projection `user_cards`, complétion, rangs,
 Gold et Holo, affiche de partage) ; tirage des boosters côté serveur
@@ -636,6 +679,8 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
+| La liste « Familles de collection » n'apparaît pas sur une fiche | `0006_profil_public.sql` n'a pas été recollé (il apporte `by_region`) |
+| Les familles sont toutes « Sans frontière » ou vides | `0003_catalogue.sql` n'a pas été recollé : la colonne `region` manque |
 | « Les amis ne sont pas installés sur ce projet » | `0008_friends.sql` n'a pas été collé : § 3 |
 | L'entrée « Amis » n'apparaît pas dans le profil | le cloud n'est pas configuré dans ce build : sans serveur, il n'y a personne à ajouter |
 | Aucun badge « Direct » n'apparaît | table `0007` non collée, `0003` non recollée (colonne `login`), secrets Twitch absents, ou fonction `refresh-live` non déployée — l'appel à la fonction répond alors le détail |

@@ -54,6 +54,14 @@ async function main() {
       console.error(`Rang invalide pour ${creator.slug} : ${creator.rank}`);
       process.exit(1);
     }
+    // La région est la famille de collection (voir `src/lib/regions.ts`) : elle
+    // sert à la complétion par famille côté serveur. Un créateur sans région
+    // tomberait dans « Sans frontière » — acceptable à l'écran, mais un
+    // catalogue entier sans région serait un bug silencieux.
+    if (typeof creator.region !== "string" || !creator.region) {
+      console.error(`Créateur sans région : ${creator.slug}`);
+      process.exit(1);
+    }
   }
 
   const sql = generateSql(creators);
@@ -105,13 +113,19 @@ function generateSql(creators) {
   lines.push("  login        text,");
   lines.push("  display_name text not null,");
   lines.push("  rarity       text not null check (rarity in ('common','uncommon','rare','epic','legendary')),");
-  lines.push("  rank         integer not null");
+  lines.push("  rank         integer not null,");
+  // La famille de collection (`S01`…`S09`, `S10` pour la fourre-tout). Elle est
+  // déjà dans `creators.json` ; la recopier ici permet au serveur de compter la
+  // complétion **par famille** sans connaître le catalogue du client.
+  lines.push("  region       text");
   lines.push(");");
   lines.push("");
   // Les bases créées avant l'arrivée du direct n'ont pas la colonne :
   // `create table if not exists` ne l'aurait pas ajoutée.
-  lines.push("-- Colonne ajoutée après coup : les bases existantes la reçoivent ici.");
+  lines.push("-- Colonnes ajoutées après coup : les bases existantes les reçoivent ici.");
   lines.push("alter table public.creators add column if not exists login text;");
+  lines.push("alter table public.creators add column if not exists region text;");
+  lines.push("create index if not exists creators_region_idx on public.creators (region);");
   lines.push("");
 
   // La table est la source de vérité du tirage serveur : elle ne s'écrit que
@@ -131,12 +145,12 @@ function generateSql(creators) {
   // Un seul INSERT massif : plus rapide à coller et à exécuter.
   // Les valeurs sont échappées (slug et display_name sont du texte simple).
   lines.push(`-- ${creators.length} créateurs, générés depuis src/data/creators.json.`);
-  lines.push("insert into public.creators (slug, login, display_name, rarity, rank) values");
+  lines.push("insert into public.creators (slug, login, display_name, rarity, rank, region) values");
 
   const valueLines = creators.map((creator, index) => {
     const escaped = escapeSql(creator.displayName);
     const comma = index < creators.length - 1 ? "," : "";
-    return `  ('${escapeSql(creator.slug)}', '${escapeSql(creator.login)}', '${escaped}', '${creator.rarity}', ${creator.rank})${comma}`;
+    return `  ('${escapeSql(creator.slug)}', '${escapeSql(creator.login)}', '${escaped}', '${creator.rarity}', ${creator.rank}, '${escapeSql(creator.region)}')${comma}`;
   });
 
   lines.push(valueLines.join("\n"));
@@ -144,7 +158,8 @@ function generateSql(creators) {
   lines.push("  login        = excluded.login,");
   lines.push("  display_name = excluded.display_name,");
   lines.push("  rarity       = excluded.rarity,");
-  lines.push("  rank         = excluded.rank;");
+  lines.push("  rank         = excluded.rank,");
+  lines.push("  region       = excluded.region;");
   lines.push("");
 
   return lines.join("\n") + "\n";

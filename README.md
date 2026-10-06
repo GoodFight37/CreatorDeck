@@ -391,6 +391,11 @@ version web hébergée.
   APK se dézippe. L'app lit la table sans compte, garde un cache local daté et
   **ne montre rien au-delà de dix minutes** : un badge « en direct » périmé
   mentirait. Mise en place : `docs/cloud-supabase.md` §8, « Le direct ».
+  Le catalogue porte aussi la **famille de collection** de chaque créateur
+  (`region` dans `0003_catalogue.sql`) et `player_profile()` renvoie
+  `by_region` : la fiche publique d'un joueur montre donc sa complétion famille
+  par famille (« 97 / 402 en Anglophonie »), ce qu'aucun appareil ne peut
+  calculer pour quelqu'un d'autre. Mise en place : `docs/cloud-supabase.md` §8.
   `supabase/migrations/0008_friends.sql` ajoute les **amis** : tables
   `friend_requests` et `friends` (lecture réservée aux joueurs concernés,
   aucune écriture directe), et les RPC `send`/`accept`/`reject`/`cancel`/

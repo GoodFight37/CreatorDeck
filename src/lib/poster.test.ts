@@ -29,6 +29,10 @@ const PROFILE: PlayerProfile = {
     { rarity: "rare", owned: 40, total: 230 },
     { rarity: "common", owned: 93, total: 300 },
   ],
+  byRegion: [
+    { regionId: "S01", owned: 40, total: 155 },
+    { regionId: "S04", owned: 97, total: 402 },
+  ],
 };
 
 describe("affiche de partage", () => {

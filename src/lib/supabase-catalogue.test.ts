@@ -35,7 +35,7 @@ function fakeRepo(sql: string | null): string {
   mkdirSync(path.join(root, "supabase", "migrations"), { recursive: true });
   writeFileSync(
     path.join(root, "src", "data", "creators.json"),
-    JSON.stringify([{ slug: "kaicenat", displayName: "KaiCenat", rarity: "legendary", rank: 1 }]),
+    JSON.stringify([{ slug: "kaicenat", displayName: "KaiCenat", rarity: "legendary", rank: 1, login: "kaicenat", region: "S04" }]),
   );
   if (sql !== null) {
     writeFileSync(path.join(root, "supabase", "migrations", "0003_catalogue.sql"), sql);
@@ -57,6 +57,7 @@ describe("seed Supabase du catalogue", () => {
       displayName: string;
       rarity: string;
       rank: number;
+      region: string;
     }>;
     const sql = readFileSync(path.join(ROOT, "supabase", "migrations", "0003_catalogue.sql"), "utf8");
     expect(sql).toContain(`-- ${creators.length} créateurs`);
@@ -64,7 +65,7 @@ describe("seed Supabase du catalogue", () => {
     for (const creator of [creators[0], creators[creators.length - 1]]) {
       const name = creator.displayName.replace(/'/g, "''");
       expect(sql).toContain(
-        `('${creator.slug}', '${creator.login}', '${name}', '${creator.rarity}', ${creator.rank})`,
+        `('${creator.slug}', '${creator.login}', '${name}', '${creator.rarity}', ${creator.rank}, '${creator.region}')`,
       );
     }
     // Pas de contenu hors catalogue : une seule table, un seul insert massif.
@@ -76,6 +77,13 @@ describe("seed Supabase du catalogue", () => {
     expect(sql).toContain("login        text,");
     expect(sql).toContain("alter table public.creators add column if not exists login text;");
     expect(sql).toContain("  login        = excluded.login;".replace(";", ","));
+    // La famille de collection (`region`) est la clé de la complétion par
+    // saison côté serveur : elle doit voyager avec le catalogue et pouvoir
+    // arriver sur une base existante.
+    expect(sql).toContain("  region       text");
+    expect(sql).toContain("alter table public.creators add column if not exists region text;");
+    expect(sql).toContain("  region       = excluded.region;");
+    expect(sql).toContain("create index if not exists creators_region_idx on public.creators (region);");
   });
 
   it("échoue quand le fichier a dérivé", () => {

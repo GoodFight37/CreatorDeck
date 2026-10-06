@@ -16,6 +16,8 @@ import { ShowcaseCard } from "@/components/showcase-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { drawPoster, posterFileName, posterModel } from "@/lib/poster";
+import { seasonHue } from "@/lib/cosmetics";
+import { regionLabel } from "@/lib/regions";
 
 /**
  * Le lien à partager, ou `null` quand il n'aiderait personne : dans l'APK l'app
@@ -190,6 +192,39 @@ export function PublicProfileSheet() {
               <li><b>{count(profile.goldCards)}</b><span>Gold</span></li>
               <li><b>{count(profile.points)}</b><span>Points</span></li>
             </ul>
+
+            {profile.byRegion.length ? (
+              <>
+                <h3 className="profile-subtitle">Familles de collection</h3>
+                <ul className="profile-rarity profile-families">
+                  {profile.byRegion.map((family) => {
+                    // Une famille = une teinte, la même que son emblème et son
+                    // thème de collection : la progression se lit d'un coup
+                    // d'œil, sans légende.
+                    const hue = seasonHue(family.regionId);
+                    const ratio = family.total ? family.owned / family.total : 0;
+                    return (
+                      <li key={family.regionId}>
+                        <span className="profile-rarity-label" title={regionLabel(family.regionId)}>
+                          {regionLabel(family.regionId)}
+                        </span>
+                        <span className="profile-rarity-bar">
+                          <i
+                            style={{
+                              width: `${family.owned ? Math.max(1, Math.round(ratio * 100)) : 0}%`,
+                              background: `hsl(${hue} 80% 58%)`,
+                            }}
+                          />
+                        </span>
+                        <b>
+                          {count(family.owned)} / {count(family.total)}
+                        </b>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </>
+            ) : null}
 
             <ul className="profile-rarity">
               {profile.byRarity.map((row) => (

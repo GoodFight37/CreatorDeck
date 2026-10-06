@@ -373,6 +373,11 @@ describe("profil public", () => {
       legendary: { owned: 4, total: 50 },
       rare: { owned: 40, total: 230 },
     },
+    by_region: {
+      S01: { owned: 10, total: 155 },
+      S04: { owned: 100, total: 402 },
+      S02: { owned: 0, total: 62 },
+    },
   };
 
   it("lit un profil complet, du plus rare au plus commun", async () => {
@@ -393,6 +398,23 @@ describe("profil public", () => {
     // Les raretés absentes de la réponse ne sont pas inventées, et l'ordre est
     // celui de l'affichage (legendary → common), pas celui du hasard de JSON.
     expect(profile?.byRarity.map((row) => row.rarity)).toEqual(["legendary", "rare", "common"]);
+  });
+
+  it("lit la complétion par famille, la plus avancée d'abord", async () => {
+    const { api } = client(() => ({ body: PROFILE }), signedIn());
+    const profile = await api.playerProfile("u2");
+
+    // L'ordre suit la progression, pas l'ordre des clés JSON ; une famille à
+    // zéro est gardée (c'est justement ce qui reste à collectionner).
+    expect(profile?.byRegion.map((family) => family.regionId)).toEqual(["S04", "S01", "S02"]);
+    expect(profile?.byRegion[0]).toEqual({ regionId: "S04", owned: 100, total: 402 });
+  });
+
+  it("se passe d'un serveur qui ne calcule pas encore les familles", async () => {
+    // Une migration pas encore recollée : le champ manque, la fiche s'affiche
+    // sans la section — elle ne casse pas.
+    const { api } = client(() => ({ body: { ...PROFILE, by_region: undefined } }), signedIn());
+    expect((await api.playerProfile("u2"))?.byRegion).toEqual([]);
   });
 
   it("ne demande aucun identifiant pour son propre profil", async () => {

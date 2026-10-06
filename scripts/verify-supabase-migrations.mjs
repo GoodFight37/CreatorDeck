@@ -32,7 +32,10 @@
  *     `live_publish`, qui doit rester hors de portée d'un joueur ;
  *   * les amis : demande, acceptation, refus, annulation, retrait, doublons et
  *     demandes croisées, invisibilité pour un tiers, et l'impossibilité pour un
- *     visiteur sans compte de lire ou d'écrire quoi que ce soit.
+ *     visiteur sans compte de lire ou d'écrire quoi que ce soit ;
+ *   * les saisons : chaque créateur porte sa famille, les familles se partagent
+ *     exactement le catalogue, et la complétion par famille suit les cartes
+ *     réellement possédées (le créateur inventé ne compte nulle part).
  */
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -654,6 +657,57 @@ try {
     JSON.stringify(profileD.by_rarity),
   );
 
+  check(
+    "saisons : chaque créateur du catalogue porte sa famille",
+    (
+      await client.query(
+        "select count(*)::int as n from public.creators where region is null or region !~ '^S[0-9]{2}$'",
+      )
+    ).rows[0].n === 0,
+  );
+  const families = profileD.by_region;
+  const familyTotals = Object.values(families).reduce((sum, family) => sum + family.total, 0);
+  const familyOwned = Object.values(families).reduce((sum, family) => sum + family.owned, 0);
+  check(
+    "saisons : les familles se partagent exactement le catalogue",
+    familyTotals === profileD.catalog_size && Object.keys(families).length >= 9,
+    `${familyTotals} sur ${profileD.catalog_size}, ${Object.keys(families).length} familles`,
+  );
+  check(
+    "saisons : la complétion par famille ne compte que les créateurs possédés une fois",
+    // Diane a trois créateurs uniques : le total des familles doit tomber
+    // dessus, même si deux de ses cartes partagent un créateur.
+    familyOwned === dianeStats.unique_creators,
+    `${familyOwned} sur ${dianeStats.unique_creators}`,
+  );
+  check(
+    "saisons : chaque créateur possédé tombe dans la famille que lui donne le catalogue",
+    await (async () => {
+      const rows = (
+        await client.query(
+          `select c.region, count(distinct uc.creator_slug)::int as n
+             from public.user_cards uc join public.creators c on c.slug = uc.creator_slug
+            where uc.user_id = $1
+            group by c.region order by c.region`,
+          [D],
+        )
+      ).rows;
+      // Une seule bonne réponse : la famille de Diane ne compte que ses
+      // créateurs à elle, et aucune autre famille ne compte quoi que ce soit.
+      return rows.length > 0 && rows.every((row) => families[row.region]?.owned === row.n);
+    })(),
+  );
+  check(
+    "saisons : une famille sans aucune carte est à zéro, pas absente",
+    Object.values(families).some((family) => family.owned === 0) &&
+      Object.values(families).every((family) => typeof family.owned === "number"),
+  );
+  check(
+    "saisons : le profil de n'importe qui donne les mêmes totaux par famille",
+    (await asPlayer(E, "select public.player_profile($1) as p", [F])).rows[0].p.by_region.S01.total ===
+      families.S01.total,
+  );
+
   const verifiedRows = (
     await client.query("select user_id, unique_creators from public.stats where verified order by unique_creators desc")
   ).rows;
@@ -1024,6 +1078,11 @@ try {
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
+  check(
+    "migrations rejouables : la complétion par famille répond encore",
+    (await asPlayer(E, "select public.player_profile($1) as p", [D])).rows[0].p.by_region.S01.total ===
+      families.S01.total,
+  );
   check(
     "migrations rejouables : les amis répondent encore",
     (await asPlayer(A, "select public.list_friends() as r")).rows[0].r.length === 0 &&
