@@ -228,9 +228,11 @@ Publication :
   `android/app/build.gradle` (`signingConfigs`) ; ne commite jamais le keystore.
 - Les APK/AAB produits sont à distribuer via **GitHub Releases**, pas dans Git
   (`*.apk`, `*.aab` et `public/downloads/` sont ignorés).
-- L'identifiant `com.monnom.monapp` (`capacitor.config.ts`, `build.gradle`,
-  `strings.xml`, package Java) est un nom provisoire : à fixer **avant** la
-  première publication, il ne pourra plus changer ensuite.
+- L'identifiant **`com.creatordeck.app`** (`capacitor.config.ts`, `build.gradle`,
+  `strings.xml`, package Java) est fixé depuis le 6 oct. 2026 : il ne changera
+  plus. En changer obligerait Android à voir une **autre application** — la
+  partie locale de l'appareil serait perdue (la collection du cloud, elle,
+  reste accessible en se reconnectant).
 
 Le même export `out/` est aussi une PWA installable (manifeste inclus) ; pour
 un usage hors ligne dans le navigateur, il faudra ajouter un service worker

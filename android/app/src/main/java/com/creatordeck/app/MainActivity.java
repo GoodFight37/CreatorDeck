@@ -1,4 +1,4 @@
-package com.monnom.monapp;
+package com.creatordeck.app;
 
 import com.getcapacitor.BridgeActivity;
 

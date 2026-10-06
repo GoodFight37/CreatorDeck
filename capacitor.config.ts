@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.monnom.monapp",
+  appId: "com.creatordeck.app",
   appName: "CreatorDeck",
   // Sortie de `next build` (output: "export"). Lancer `npm run android:sync`
   // pour régénérer `out/` puis le copier dans android/app/src/main/assets/public.
