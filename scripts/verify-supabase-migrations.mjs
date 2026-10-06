@@ -33,6 +33,9 @@
  *   * les amis : demande, acceptation, refus, annulation, retrait, doublons et
  *     demandes croisées, invisibilité pour un tiers, et l'impossibilité pour un
  *     visiteur sans compte de lire ou d'écrire quoi que ce soit ;
+ *   * l'hôtel des ventes : grille des prix, dépôt payé comptant, la dernière
+ *     copie refusée, comptoir filtré par joueur, achat atomique et unique,
+ *     points insuffisants, annonce périmée, et table fermée aux clients ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -102,6 +105,7 @@ try {
   const tirage = await readFile(path.join(MIGRATIONS, "0004_tirage.sql"), "utf8");
   const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
   const friends = await readFile(path.join(MIGRATIONS, "0008_friends.sql"), "utf8");
+  const marche = await readFile(path.join(MIGRATIONS, "0009_marche.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -111,6 +115,7 @@ try {
     ["0006_profil_public.sql", await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8")],
     ["0007_direct.sql", direct],
     ["0008_friends.sql", friends],
+    ["0009_marche.sql", marche],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -1138,12 +1143,240 @@ try {
     })(),
   );
 
+  // --- Hôtel des ventes ------------------------------------------------------
+  // Deux joueurs neufs : Gaston dépose ses doublons (l'hôtel le paie comptant)
+  // et Hélène se sert au comptoir. Les deux ont une collection dans le cloud,
+  // sinon rien ne fonctionne — c'est une des premières choses vérifiées.
+  const G = "9a9a9a9a-7777-4777-8777-9a9a9a9a9a9a";
+  const H = "8b8b8b8b-8888-4888-8888-8b8b8b8b8b8b";
+  const I = "7c7c7c7c-9999-4999-8999-7c7c7c7c7c7c";
+  const epicOne = await oneOf("epic");
+
+  await player(G, "Gaston", [
+    card("gaston-doublon-1", legendaryOne.slug, legendaryOne.rarity, "standard", 40),
+    card("gaston-doublon-2", legendaryOne.slug, legendaryOne.rarity, "standard", 20),
+    card("gaston-unique", rareOne.slug, rareOne.rarity, "standard", 10),
+  ]);
+  await player(H, "Hélène", [
+    card("helene-doublon-1", epicOne.slug, epicOne.rarity, "gold", 30),
+    card("helene-doublon-2", epicOne.slug, epicOne.rarity, "gold", 15),
+    card("helene-simple-1", uncommonOne.slug, uncommonOne.rarity, "standard", 12),
+    card("helene-simple-2", uncommonOne.slug, uncommonOne.rarity, "standard", 8),
+  ]);
+  // Les points de départ : Gaston a de quoi vivre, Hélène de quoi acheter.
+  await client.query("update public.saves set state = jsonb_set(state, '{points}', '100') where user_id = $1", [G]);
+  await client.query("update public.saves set state = jsonb_set(state, '{points}', '5000') where user_id = $1", [H]);
+  await client.query("insert into auth.users (id) values ($1) on conflict do nothing", [I]);
+
+  check(
+    "hôtel : la grille des prix suit la rareté et la variante",
+    (await client.query("select public.market_payout('common', 'standard') as a, public.market_payout('legendary', 'gold') as b, public.market_payout('rare', 'holo') as c")).rows[0].a === 20 &&
+      (await client.query("select public.market_payout('common', 'standard') as a, public.market_payout('legendary', 'gold') as b, public.market_payout('rare', 'holo') as c")).rows[0].b === 2000 &&
+      (await client.query("select public.market_payout('common', 'standard') as a, public.market_payout('legendary', 'gold') as b, public.market_payout('rare', 'holo') as c")).rows[0].c === 300,
+  );
+  check(
+    "hôtel : l'étiquette est le payout majoré d'une fois et demie",
+    (await client.query("select public.market_price(20) as a, public.market_price(2000) as b")).rows[0].a === 30 &&
+      (await client.query("select public.market_price(20) as a, public.market_price(2000) as b")).rows[0].b === 3000,
+  );
+  check(
+    "hôtel : vendre paie plus que recycler, pour chaque rareté",
+    await (async () => {
+      const grid = await client.query(
+        `select c.rarity, min(public.market_payout(c.rarity, 'standard')) as payout
+           from public.creators c group by c.rarity`,
+      );
+      const recycle = { common: 12, uncommon: 22, rare: 55, epic: 150, legendary: 250 };
+      return grid.rows.every((row) => row.payout > recycle[row.rarity]);
+    })(),
+  );
+
+  // Sans compte, rien n'est ouvert.
+  for (const [label, sql, params] of [
+    ["déposer", "select public.market_sell($1)", ["x"]],
+    ["acheter", "select public.market_buy(1)", []],
+    ["regarder le comptoir", "select public.market_shelf(10)", []],
+  ]) {
+    check(
+      `hôtel : sans compte, impossible de ${label}`,
+      await (async () => {
+        try {
+          await client.query("set role anon");
+          await client.query(sql, params);
+          return false;
+        } catch (error) {
+          return String(error.message).includes("permission denied");
+        } finally {
+          await client.query("reset role");
+        }
+      })(),
+    );
+  }
+  // La table n'a aucune politique : un joueur qui la lit directement ne voit
+  // rien, et il ne peut rien y écrire — comme `user_cards`. (Le `revoke all`
+  // de la migration vaut, lui, pour un vrai projet Supabase, où les droits de
+  // table sont accordés par défaut ; ici le harnais les accorde après coup.)
+  check(
+    "hôtel : un joueur ne voit rien en lisant la table en direct",
+    (await asPlayer(G, "select count(*)::int as n from public.market_listings")).rows[0].n === 0,
+  );
+  check(
+    "hôtel : un joueur ne peut pas écrire une annonce à la main",
+    await (async () => {
+      try {
+        await asPlayer(G, "insert into public.market_listings (seller_id, card_id, creator_slug, rarity, variant, payout, price) values ($1, 'x', 'ibai', 'rare', 'standard', 1, 1)", [G]);
+        return false;
+      } catch {
+        return true;
+      }
+    })(),
+  );
+
+  // Le dépôt.
+  const deposit = (await asPlayer(G, "select public.market_sell($1) as r", ["gaston-doublon-1"])).rows[0].r;
+  const gaston = await stateOf(G);
+  check(
+    "hôtel : le dépôt paie le vendeur tout de suite",
+    deposit.payout === 400 && deposit.points === 500,
+    JSON.stringify({ payout: deposit.payout, points: deposit.points }),
+  );
+  check(
+    "hôtel : la carte quitte la collection au dépôt",
+    gaston.cards.length === 2 && !gaston.cards.some((entry) => entry.id === "gaston-doublon-1"),
+    `${gaston.cards.length} cartes`,
+  );
+  check(
+    "hôtel : le solde de la sauvegarde suit",
+    gaston.points === 500,
+    String(gaston.points),
+  );
+  await refuses(
+    "hôtel : la dernière copie ne se vend pas",
+    G,
+    "select public.market_sell($1)",
+    ["gaston-doublon-2"],
+    "seule copie",
+  );
+  await refuses(
+    "hôtel : une carte qui n'est pas dans la collection ne se vend pas",
+    G,
+    "select public.market_sell($1)",
+    ["carte-inventee"],
+    "plus dans ta collection",
+  );
+  await refuses(
+    "hôtel : sans collection dans le cloud, on ne dépose rien",
+    I,
+    "select public.market_sell($1)",
+    ["peu-importe"],
+    "envoie d'abord ta collection",
+  );
+
+  // Le comptoir.
+  const shelfForSeller = (await asPlayer(G, "select public.market_shelf(30) as r")).rows[0].r;
+  const shelfForBuyer = (await asPlayer(H, "select public.market_shelf(30) as r")).rows[0].r;
+  check(
+    "hôtel : on ne voit pas sa propre annonce au comptoir",
+    shelfForSeller.length === 0 && shelfForBuyer.length === 1 && shelfForBuyer[0].id === deposit.listing.id,
+    JSON.stringify({ vendeur: shelfForSeller.length, acheteur: shelfForBuyer.length }),
+  );
+  check(
+    "hôtel : le comptoir montre le vendeur, la rareté et l'étiquette",
+    shelfForBuyer[0].sellerName === "Gaston" &&
+      shelfForBuyer[0].rarity === legendaryOne.rarity &&
+      shelfForBuyer[0].variant === "standard" &&
+      shelfForBuyer[0].price === 600,
+    JSON.stringify(shelfForBuyer[0]),
+  );
+  await refuses(
+    "hôtel : on n'achète pas sa propre annonce",
+    G,
+    "select public.market_buy($1)",
+    [deposit.listing.id],
+    "ta propre annonce",
+  );
+
+  // L'achat.
+  const heleneAvant = await stateOf(H);
+  const purchase = (await asPlayer(H, "select public.market_buy($1) as r", [deposit.listing.id])).rows[0].r;
+  const helene = await stateOf(H);
+  check(
+    "hôtel : l'acheteur paie l'étiquette",
+    purchase.price === 600 && helene.points === 4400,
+    JSON.stringify({ price: purchase.price, points: helene.points }),
+  );
+  check(
+    "hôtel : la carte achetée entre dans la collection, avec sa provenance",
+    helene.cards.length === heleneAvant.cards.length + 1 &&
+      helene.cards.some((entry) => entry.fromMarket === deposit.listing.id && entry.creatorSlug === legendaryOne.slug),
+  );
+  check(
+    "hôtel : la carte achetée n'est pas comptée comme un « Perfect »",
+    helene.cards.find((entry) => entry.fromMarket === deposit.listing.id)?.rareDrop === false,
+  );
+  check(
+    "hôtel : un achat ne revalorise pas la carte (rareté lue au catalogue)",
+    helene.cards.find((entry) => entry.fromMarket === deposit.listing.id)?.rarity === legendaryOne.rarity,
+  );
+  await refuses(
+    "hôtel : une annonce déjà vendue ne s'achète pas deux fois",
+    H,
+    "select public.market_buy($1)",
+    [deposit.listing.id],
+    "déjà été achetée",
+  );
+  check(
+    "hôtel : la carte vendue quitte le comptoir",
+    (await asPlayer(H, "select public.market_shelf(30) as r")).rows[0].r.length === 0,
+  );
+
+  // Les points, et le comptoir qui ne rend pas ce qu'on n'a pas.
+  await asPlayer(H, "select public.market_sell($1)", ["helene-doublon-1"]);
+  await refuses(
+    "hôtel : sans assez de points, on n'achète pas",
+    G,
+    "select public.market_buy($1)",
+    [(await client.query("select id from public.market_listings where seller_id = $1 and status = 'open'", [H])).rows[0].id],
+    "il te manque",
+  );
+  // Une annonce oubliée trente jours quitte le comptoir (le vendeur, lui, a
+  // déjà été payé : personne ne perd rien).
+  await asPlayer(H, "select public.market_sell($1)", ["helene-simple-1"]);
+  const perimee = (await client.query("select id from public.market_listings where seller_id = $1 and card_id = 'helene-simple-1'", [H])).rows[0].id;
+  await client.query("update public.market_listings set created_at = now() - interval '31 days' where id = $1", [perimee]);
+  await refuses(
+    "hôtel : une annonce de plus de trente jours est périmée",
+    G,
+    "select public.market_buy($1)",
+    [perimee],
+    "quitté le comptoir",
+  );
+  check(
+    "hôtel : le comptoir ne montre pas les annonces périmées",
+    (await asPlayer(G, "select public.market_shelf(30) as r")).rows[0].r.every((row) => row.id !== perimee),
+  );
+
+  // La vitrine : « qu'a déposé ce joueur ? ». Gaston et Hélène ont chacun une
+  // annonce ouverte ; celle de Gaston, vendue, n'y figure plus.
+  const vitrineG = (await asPlayer(H, "select public.market_listings_of($1) as r", [G])).rows[0].r;
+  const vitrineH = (await asPlayer(G, "select public.market_listings_of($1) as r", [H])).rows[0].r;
+  check(
+    "hôtel : la vitrine d'un joueur ne montre que ses annonces ouvertes",
+    vitrineG.length === 0 && vitrineH.length === 1 && vitrineH[0].price === 1875,
+    JSON.stringify({ gaston: vitrineG.length, helene: vitrineH.length }),
+  );
+  check(
+    "hôtel : sans argument, la vitrine est la sienne",
+    (await asPlayer(H, "select public.market_listings_of() as r")).rows[0].r.length === 1,
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
   await client.query(await readFile(path.join(MIGRATIONS, "0006_profil_public.sql"), "utf8"));
   await client.query(direct);
   await client.query(friends);
+  await client.query(marche);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -1157,6 +1390,11 @@ try {
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
+  check(
+    "migrations rejouables : l'hôtel des ventes répond encore",
+    (await asPlayer(G, "select public.market_shelf(30) as r")).rows[0].r.length >= 0 &&
+      (await client.query("select count(*)::int as n from public.market_listings")).rows[0].n >= 3,
+  );
   check(
     "migrations rejouables : la complétion par famille répond encore",
     (await asPlayer(E, "select public.player_profile($1) as p", [D])).rows[0].p.by_region.S01.total ===

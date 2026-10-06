@@ -208,6 +208,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      → **Run** pour activer les **amis** (`friend_requests`, `friends`,
      `send_friend_request()`, `list_friends()`, `has_friendship()`…). Détail :
      §8, « Les amis ».
+   - [`supabase/migrations/0009_marche.sql`](../supabase/migrations/0009_marche.sql)
+     → **Run** pour activer l'**hôtel des ventes** : déposer un doublon (payé
+     comptant en points) et acheter au comptoir. Crée la table
+     `market_listings` et les RPC `market_sell()`, `market_buy()`,
+     `market_shelf()`, `market_listings_of()`. Détail : §8, « L'hôtel des
+     ventes ».
 
 > **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
 > un Postgres jetable, en local, sans toucher au projet Supabase :
@@ -587,6 +593,56 @@ qu'un écran lent.
 `PGRST202` (« fonction introuvable ») et la feuille affiche un message ; rien ne
 casse dans le reste du jeu.
 
+### L'hôtel des ventes
+
+L'hôtel est **asynchrone** : on n'attend personne. Un joueur dépose un doublon,
+**l'hôtel le paie tout de suite** en points, et la carte va au comptoir. Un autre
+joueur l'achète plus tard, au prix de l'étiquette. Deux joueurs n'ont jamais
+besoin d'être connectés en même temps.
+
+| Prix | Valeur | Où c'est écrit |
+| --- | --- | --- |
+| `payout` (payé au vendeur) | 20 / 40 / 100 / 250 / 400 points selon la rareté, ×1 (Standard), ×2 (Live), ×3 (Holo), ×5 (Gold) | `market_payout()` en base, `PAYOUTS` dans `src/lib/market.ts` |
+| `price` (payé par l'acheteur) | une fois et demie le `payout`, arrondi au supérieur | `market_price()` en base, `shelfPrice()` dans `src/lib/market.ts` |
+
+L'écart entre les deux est la marge de l'hôtel : sans elle, on vendrait et on
+rachèterait la même carte en boucle sans rien perdre. Les deux grilles sont
+écrites deux fois — en SQL (le serveur paie) et en TypeScript (l'écran affiche
+« Vendre · 400 pts » sans un aller-retour par carte). Elles sont vérifiées des
+deux côtés : `scripts/verify-supabase-migrations.mjs` et `src/lib/market.test.ts`.
+
+Ce que le serveur vérifie, dans `market_sell()` et `market_buy()` :
+
+* la carte déposée est bien **dans la collection envoyée** (et la rareté vient du
+  **catalogue**, jamais de la carte : une sauvegarde bricolée ne se vend pas au
+  prix d'une légendaire) ;
+* ce n'est pas la **dernière copie** d'un couple créateur + variante — même règle
+  que le recyclage, elle protège la complétion ;
+* on n'achète pas sa propre annonce, ni deux fois la même (le verrou
+  `for update` sur l'annonce tranche entre deux acheteurs simultanés) ;
+* l'acheteur a les points, et la partie locale est **à jour dans le cloud** avant
+  l'opération (comme un échange accepté) ;
+* passé **trente jours**, une annonce quitte le comptoir : le vendeur a déjà été
+  payé, personne ne perd rien.
+
+La table `market_listings` n'a **aucune politique** et ses droits sont révoqués :
+un client ne la lit ni ne l'écrit jamais directement, tout passe par les RPC
+`security definer`. Les cartes achetées portent la marque `fromMarket` (le numéro
+de l'annonce), exactement comme les cartes d'échange portent `fromTrade` : si la
+même réponse est appliquée deux fois, la carte n'entre qu'une seule fois dans le
+classeur.
+
+**Où le voir** : **Profil → Hôtel des ventes** (déposer un doublon, acheter au
+comptoir), et la section « En vente à l'hôtel » d'une fiche publique.
+
+| Élément | Rôle |
+| --- | --- |
+| `0009_marche.sql` | table `market_listings`, grilles de prix, RPC `market_sell`/`market_buy`/`market_shelf`/`market_listings_of` |
+| `src/lib/market.ts` | grille de prix (miroir du serveur), liste des doublons déposables, libellés — testés sans navigateur |
+| `src/lib/game-engine.ts` | `applyMarketSale()` / `applyMarketPurchase()` : l'appareil rejoue ce que le serveur a écrit |
+| `src/lib/cloud/api.ts`, `cloud-store.ts` | appels RPC et états (`market`, `marketAt`, `profileMarket`) |
+| `src/components/market-sheet.tsx` | l'écran : le portefeuille, « Déposer un doublon », « Le comptoir » |
+
 ### La complétion par famille de collection
 
 Le catalogue est découpé en **familles** par langue de diffusion — France &
@@ -644,7 +700,9 @@ classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
 ## 9. Suite : notifications
 
-**Fait :** **complétion par famille de collection** (colonne `region` du
+**Fait :** **hôtel des ventes** (`0009_marche.sql` : dépôt payé comptant,
+comptoir asynchrone, vitrine « En vente » sur la fiche publique) ;
+**complétion par famille de collection** (colonne `region` du
 catalogue et `by_region` de `player_profile()`) ; **amis côté serveur**
 (`0008_friends.sql` : demandes, acceptation, retrait, invisibilité pour les
 tiers) ; **statut EN LIVE** (le direct réel,
@@ -661,11 +719,6 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 * notifications push Capacitor (`@capacitor/push-notifications` + FCM), à
   brancher quand elles auront un usage produit — c'est ce qui rendra les offres
   d'échange visibles sans ouvrir l'écran Compte ;
-* **complétion par famille de langue ou par saison** : la table `creators` ne
-  stocke pas encore la famille de langue (elle est dans `src/data/creators.json`)
-  — il faudra l'ajouter à la migration générée `0003_catalogue.sql` ;
-* **marché entre joueurs** : la projection `user_cards` est prête, les règles
-  (prix en points, anti-duplication, expiration) restent à écrire ;
 * **connexion Twitch (OAuth)** : le même client Twitch qui alimente le direct
   peut servir d'identité de joueur (plus rien à retenir, plus de mot de passe à
   perdre) — à faire quand le parc de comptes le justifiera ;

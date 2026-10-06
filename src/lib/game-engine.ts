@@ -76,6 +76,12 @@ export type OwnedCard = {
    * garde-fou : voir `applyTradeResult`.
    */
   fromTrade?: number;
+  /**
+   * Numéro de l'annonce de l'hôtel des ventes qui a apporté la carte. Même
+   * rôle que `fromTrade` : c'est la marque qui empêche d'appliquer deux fois
+   * le même achat (voir `applyMarketPurchase`).
+   */
+  fromMarket?: number;
 };
 
 export type DrawnCard = {
@@ -1080,6 +1086,84 @@ export function applyTradeResult(state: PlayerState, move: TradeMove, now = Date
   }));
 
   return { ...state, updatedAt: now, cards: [...cards, ...received] };
+}
+
+/**
+ * L'hôtel des ventes : dépôt (payé comptant) et achat.
+ *
+ * Les deux opérations sont **décidées par le serveur** (voir
+ * `supabase/migrations/0009_marche.sql`) et rejouées ici, comme un échange
+ * accepté : l'appareil applique exactement ce que le serveur a écrit, puis
+ * pousse sa sauvegarde. Si les deux divergent un jour, c'est la sauvegarde du
+ * serveur qui a raison — l'appareil la reprend.
+ *
+ * Ce module est testé à part (`game-engine.test.ts`) parce qu'une erreur ici
+ * coûte une carte ou des points.
+ */
+
+/** Dépôt d'une carte à l'hôtel : la carte part, les points arrivent. */
+export type MarketSale = {
+  cardId: string;
+  /** Ce que l'hôtel a payé, tel que le serveur l'a calculé. */
+  payout: number;
+};
+
+/** Achat d'une carte au comptoir : la carte arrive, les points partent. */
+export type MarketPurchase = {
+  card: OwnedCard;
+  price: number;
+};
+
+/**
+ * Applique un dépôt : la carte quitte la collection, les points sont crédités.
+ *
+ * Refusé si la carte n'est plus là (autre appareil, partie plus vieille) : le
+ * serveur, lui, l'a déjà retirée — c'est le signal qu'il faut reprendre la
+ * sauvegarde du cloud plutôt que de pousser une collection fausse.
+ */
+export function applyMarketSale(state: PlayerState, sale: MarketSale, now = Date.now()): PlayerState {
+  if (!state.cards.some((card) => card.id === sale.cardId)) {
+    throw new GameError(
+      "Cette carte n'est plus dans ta collection : recharge la sauvegarde du cloud.",
+      "MARKET_CARD_MISSING",
+    );
+  }
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + sale.payout,
+    cards: state.cards.filter((card) => card.id !== sale.cardId),
+  };
+}
+
+/**
+ * Applique un achat : la carte entre dans la collection, les points partent.
+ *
+ * Idempotent : la carte reçue porte `fromMarket`, la marque de l'annonce. Une
+ * réponse rejouée (ou un chargement qui repasse sur le même achat) ne peut donc
+ * pas créer un deuxième exemplaire.
+ */
+export function applyMarketPurchase(
+  state: PlayerState,
+  purchase: MarketPurchase,
+  now = Date.now(),
+): PlayerState {
+  const marker = purchase.card.fromMarket;
+  if (marker !== undefined && state.cards.some((card) => card.fromMarket === marker)) {
+    return state;
+  }
+  if (state.points < purchase.price) {
+    throw new GameError(
+      "Tu n'as plus assez de points pour cet achat : recharge la sauvegarde du cloud.",
+      "MARKET_POINTS_MISSING",
+    );
+  }
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points - purchase.price,
+    cards: [...state.cards, purchase.card],
+  };
 }
 
 /** Dépense un sablier pour avancer la recharge du booster choisi. */

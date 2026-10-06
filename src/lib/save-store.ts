@@ -74,6 +74,7 @@ function sanitizeCard(value: unknown): OwnedCard | null {
   if (typeof rarity !== "string" || !RARITIES.has(rarity as Rarity)) return null;
   if (typeof variant !== "string" || !VARIANTS.has(variant as CardVariant)) return null;
   const fromTrade = value.fromTrade;
+  const fromMarket = value.fromMarket;
   return {
     id,
     creatorSlug,
@@ -87,6 +88,12 @@ function sanitizeCard(value: unknown): OwnedCard | null {
     // fois le même échange (voir `applyTradeResult`).
     ...(typeof fromTrade === "number" && Number.isFinite(fromTrade) && fromTrade > 0
       ? { fromTrade: Math.floor(fromTrade) }
+      : {}),
+    // Champ apparu avec l'hôtel des ventes : même rôle, même précaution. Une
+    // sauvegarde relue sans cette marque pourrait recevoir deux fois la même
+    // carte au chargement suivant.
+    ...(typeof fromMarket === "number" && Number.isFinite(fromMarket) && fromMarket > 0
+      ? { fromMarket: Math.floor(fromMarket) }
       : {}),
   };
 }

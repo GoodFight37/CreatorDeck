@@ -16,6 +16,8 @@ import {
   HOURGLASS_REDUCTION_MS,
   SAVE_VERSION,
   XP_PER_LEVEL,
+  applyMarketPurchase,
+  applyMarketSale,
   applyPackResult,
   applyPackStatus,
   applyTradeResult,
@@ -860,5 +862,62 @@ describe("saison en cours (titre de l'accueil)", () => {
     const view = currentSeason(makeState({ cards }));
     expect(view).not.toBeNull();
     expect(view!.owned).toBe(view!.total);
+  });
+});
+
+describe("l'hôtel des ventes", () => {
+  it("encaisse un dépôt : la carte part, les points arrivent", () => {
+    const state = makeState({
+      cards: [ownedCard("a1", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0)],
+      points: 120,
+    });
+    const sold = applyMarketSale(state, { cardId: "a1", payout: 400 }, T0 + 1_000);
+    expect(sold.cards).toHaveLength(0);
+    expect(sold.points).toBe(520);
+    expect(sold.updatedAt).toBe(T0 + 1_000);
+  });
+
+  it("refuse de vendre une carte absente (sauvegarde en retard)", () => {
+    const state = makeState({ cards: [] });
+    expect(() => applyMarketSale(state, { cardId: "a1", payout: 400 })).toThrow(GameError);
+    try {
+      applyMarketSale(state, { cardId: "a1", payout: 400 });
+    } catch (error) {
+      expect((error as GameError).code).toBe("MARKET_CARD_MISSING");
+    }
+  });
+
+  it("paie un achat : la carte entre, les points partent", () => {
+    const state = makeState({ cards: [], points: 1_000 });
+    const bought = ownedCard("neuve", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0 + 5_000);
+    const after = applyMarketPurchase(state, { card: { ...bought, fromMarket: 42 }, price: 600 }, T0 + 5_000);
+    expect(after.cards.map((card) => card.id)).toEqual(["neuve"]);
+    expect(after.cards[0].fromMarket).toBe(42);
+    expect(after.points).toBe(400);
+    expect(after.updatedAt).toBe(T0 + 5_000);
+  });
+
+  it("est idempotent : une réponse rejouée n'ajoute pas la carte deux fois", () => {
+    const state = makeState({ cards: [], points: 1_000 });
+    const purchase = {
+      card: { ...ownedCard("neuve", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0), fromMarket: 42 },
+      price: 600,
+    };
+    const once = applyMarketPurchase(state, purchase, T0 + 1_000);
+    expect(applyMarketPurchase(once, purchase, T0 + 2_000)).toBe(once);
+  });
+
+  it("refuse l'achat quand les points manquent (sauvegarde en retard)", () => {
+    const state = makeState({ cards: [], points: 100 });
+    const purchase = {
+      card: { ...ownedCard("neuve", CREATORS[0].slug, CREATORS[0].rarity, "standard", T0), fromMarket: 43 },
+      price: 600,
+    };
+    expect(() => applyMarketPurchase(state, purchase)).toThrow(GameError);
+    try {
+      applyMarketPurchase(state, purchase);
+    } catch (error) {
+      expect((error as GameError).code).toBe("MARKET_POINTS_MISSING");
+    }
   });
 });

@@ -5,6 +5,7 @@ import {
   type CloudApi,
   type CloudSession,
   type LeaderboardRow,
+  type MarketListing,
   type PushSaveResult,
   type RemoteSaveRow,
   type TradeListItem,
@@ -67,6 +68,18 @@ function remoteRow(state: PlayerState, updatedAt: string, deviceUpdatedAt = stat
   };
 }
 
+/** Une annonce du comptoir, telle que le serveur la renvoie. */
+const LISTING = {
+  id: 12,
+  creatorSlug: "ibai",
+  rarity: "legendary",
+  variant: "gold",
+  payout: 2_000,
+  price: 3_000,
+  createdAt: "2026-03-01T10:00:00Z",
+  sellerName: "Diane",
+};
+
 type FakeApi = {
   session: () => CloudSession | null;
   signInAnonymously: ReturnType<typeof vi.fn>;
@@ -93,6 +106,10 @@ type FakeApi = {
   respondTrade: ReturnType<typeof vi.fn>;
   cancelTrade: ReturnType<typeof vi.fn>;
   listTrades: ReturnType<typeof vi.fn>;
+  marketShelf: ReturnType<typeof vi.fn>;
+  marketSell: ReturnType<typeof vi.fn>;
+  marketBuy: ReturnType<typeof vi.fn>;
+  marketListingsOf: ReturnType<typeof vi.fn>;
 };
 
 function harness(options: {
@@ -233,6 +250,27 @@ function harness(options: {
       resolvedAt: "2026-03-01T10:05:00Z",
     })),
     listTrades: vi.fn(async () => [] as TradeListItem[]),
+    marketShelf: vi.fn(async () => [LISTING]),
+    marketSell: vi.fn(async (cardId: string) => ({
+      listing: LISTING,
+      payout: LISTING.payout,
+      points: 1_000,
+      cardId,
+    })),
+    marketListingsOf: vi.fn(async () => [LISTING]),
+    marketBuy: vi.fn(async () => ({
+      card: {
+        id: "neuve",
+        creatorSlug: "kaicenat",
+        rarity: "legendary",
+        variant: "gold",
+        obtainedAt: T0 + 60_000,
+        rareDrop: false,
+        fromMarket: LISTING.id,
+      },
+      price: LISTING.price,
+      points: 400,
+    })),
   };
 
   const store = createCloudStore({
@@ -1011,5 +1049,150 @@ describe("fiche publique d'un joueur", () => {
     await store.signOut();
 
     expect(store.getSnapshot().profile).toBeNull();
+  });
+});
+
+describe("hôtel des ventes", () => {
+  it("charge le comptoir dans l'état cloud", async () => {
+    const { store, api } = harness();
+    await store.loadMarket();
+    expect(api.marketShelf).toHaveBeenCalled();
+    expect(store.getSnapshot().market).toHaveLength(1);
+    expect(store.getSnapshot().market[0]?.sellerName).toBe("Diane");
+    expect(store.getSnapshot().marketAt).toBe(T0 + 60_000);
+  });
+
+  it("ne charge rien sans compte", async () => {
+    const { store, api } = harness({ signedIn: false });
+    await store.loadMarket();
+    expect(api.marketShelf).not.toHaveBeenCalled();
+  });
+
+  it("garde une liste lisible si le serveur répond n'importe quoi", async () => {
+    const { store, api } = harness();
+    (api.marketShelf as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([] as MarketListing[]);
+    await store.loadMarket();
+    expect(store.getSnapshot().market).toEqual([]);
+  });
+
+  it("dépose un doublon : la carte part de la partie locale, les points entrent", async () => {
+    const local = saveWith({
+      cards: [card("a1", "ibai"), card("a2", "ibai")],
+      points: 100,
+      updatedAt: T0,
+    });
+    const { store, api, state } = harness({ local });
+    const outcome = await store.sellCard("a1");
+
+    expect(api.marketSell).toHaveBeenCalledWith("a1");
+    expect(outcome.status).toBe("done");
+    expect(state.current.cards.map((owned) => owned.id)).toEqual(["a2"]);
+    expect(state.current.points).toBe(2_100);
+    // La collection est envoyée avant (le serveur retire la carte de *cette*
+    // partie), puis l'état d'après.
+    expect(api.pushSave).toHaveBeenCalledTimes(2);
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
+    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/\+2000 points/);
+  });
+
+  it("n'envoie rien au serveur tant que la collection du cloud n'est pas à jour", async () => {
+    const local = saveWith({ cards: [card("a1", "ibai"), card("a2", "ibai")], updatedAt: T0 });
+    const { store, api } = harness({
+      local,
+      push: { status: "conflict", save: remoteRow(local, "2026-03-01T10:30:00Z") },
+    });
+    const outcome = await store.sellCard("a1");
+    expect(api.marketSell).not.toHaveBeenCalled();
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+  });
+
+  it("ne retire pas une carte que la partie locale n'a plus", async () => {
+    const local = saveWith({ cards: [], updatedAt: T0 });
+    const { store, api } = harness({ local });
+    const outcome = await store.sellCard("a1");
+    // Le serveur a répondu, mais l'application locale est impossible : on le dit
+    // plutôt que de pousser une collection fausse.
+    expect(api.marketSell).toHaveBeenCalled();
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/plus dans ta collection/i);
+  });
+
+  it("déplace un refus du serveur sans toucher à la partie", async () => {
+    const local = saveWith({ cards: [card("a1", "ibai"), card("a2", "ibai")], updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    (api.marketSell as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("c'est ta seule copie de cette carte", "P0001", 400),
+    );
+    const outcome = await store.sellCard("a1");
+    expect(outcome).toEqual({ status: "unavailable", message: "c'est ta seule copie de cette carte", reason: "error" });
+    expect(state.current.cards).toHaveLength(2);
+  });
+
+  it("achète une carte : elle entre dans la partie locale avec sa marque", async () => {
+    const local = saveWith({ cards: [], points: 5_000, updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    const outcome = await store.buyCard(LISTING.id);
+
+    expect(api.marketBuy).toHaveBeenCalledWith(LISTING.id);
+    expect(outcome.status).toBe("done");
+    expect(state.current.points).toBe(2_000);
+    expect(state.current.cards[0]).toMatchObject({ id: "neuve", fromMarket: LISTING.id, rareDrop: false });
+    expect(store.getSnapshot().message).toMatch(/rejoint ton classeur/);
+  });
+
+  it("n'applique pas deux fois la même réponse d'achat", async () => {
+    const local = saveWith({ cards: [], points: 5_000, updatedAt: T0 });
+    const { store, state } = harness({ local });
+    await store.buyCard(LISTING.id);
+    const cout = state.current.points;
+    // Deuxième tentative : le serveur refuserait (annonce déjà vendue) ; si sa
+    // réponse arrivait malgré tout, `fromMarket` empêche le doublon — la carte
+    // n'est pas ajoutée et les points ne sont pas débités une deuxième fois.
+    await store.buyCard(LISTING.id);
+    expect(state.current.cards).toHaveLength(1);
+    expect(state.current.points).toBe(cout);
+  });
+
+  it("garde le message de l'hôtel quand les points manquent", async () => {
+    const local = saveWith({ cards: [], points: 10, updatedAt: T0 });
+    const { store, api, state } = harness({ local });
+    (api.marketBuy as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("hotel : il te manque 2990 points", "P0001", 400),
+    );
+    const outcome = await store.buyCard(LISTING.id);
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toBe("hotel : il te manque 2990 points");
+    expect(state.current.points).toBe(10);
+  });
+
+  it("charge la vitrine avec la fiche publique", async () => {
+    const { store, api } = harness();
+    await store.openProfile("u2");
+    expect(api.marketListingsOf).toHaveBeenCalledWith("u2");
+    expect(store.getSnapshot().profile?.displayName).toBe("Diane");
+    expect(store.getSnapshot().profileMarket).toHaveLength(1);
+    store.closeProfile();
+    expect(store.getSnapshot().profileMarket).toEqual([]);
+  });
+
+  it("affiche la fiche même si la vitrine refuse", async () => {
+    const { store, api } = harness();
+    (api.marketListingsOf as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("la fonction n'existe pas encore", "PGRST202", 404),
+    );
+    await store.openProfile("u2");
+    expect(store.getSnapshot().profile?.displayName).toBe("Diane");
+    expect(store.getSnapshot().profileMarket).toEqual([]);
+  });
+
+  it("vide l'écran de l'hôtel à la déconnexion", async () => {
+    const { store } = harness();
+    await store.loadMarket();
+    expect(store.getSnapshot().market).toHaveLength(1);
+    await store.signOut();
+    expect(store.getSnapshot().market).toEqual([]);
+    expect(store.getSnapshot().marketAt).toBeNull();
   });
 });

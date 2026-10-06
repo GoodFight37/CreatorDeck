@@ -994,3 +994,109 @@ describe("compte : adresse et mot de passe", () => {
     await expect(api.updateAccount({ email: "pris@exemple.fr", password: "azerty1234" })).rejects.toThrow(/déjà utilisée/);
   });
 });
+
+describe("hôtel des ventes", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  const LISTING = {
+    id: 12,
+    creatorSlug: "ibai",
+    rarity: "legendary",
+    variant: "gold",
+    price: 3000,
+    payout: 2000,
+    createdAt: "2026-10-06T18:00:00Z",
+    sellerName: "Diane",
+  };
+
+  it("lit le comptoir, sans les annonces illisibles", async () => {
+    const { api, calls } = client(() => ({ body: [LISTING, { rarity: "rare" }] }), signedIn());
+    const shelf = await api.marketShelf(20);
+    expect(calls[0]?.url).toContain("/rest/v1/rpc/market_shelf");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_limit: 20 });
+    expect(shelf).toHaveLength(1);
+    expect(shelf[0]).toMatchObject({
+      id: 12,
+      creatorSlug: "ibai",
+      rarity: "legendary",
+      variant: "gold",
+      price: 3000,
+      payout: 2000,
+      sellerName: "Diane",
+    });
+  });
+
+  it("dépose une carte et lit le payout payé par le serveur", async () => {
+    const { api, calls } = client(() => ({ body: { listing: LISTING, payout: 2000, price: 3000, points: 2450 } }), signedIn());
+    const result = await api.marketSell("carte-1");
+    expect(calls[0]?.url).toContain("/rest/v1/rpc/market_sell");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_card_id: "carte-1" });
+    expect(result.payout).toBe(2000);
+    expect(result.points).toBe(2450);
+    expect(result.listing.id).toBe(12);
+  });
+
+  it("refuse une réponse de dépôt sans annonce", async () => {
+    const { api } = client(() => ({ body: { payout: 2000 } }), signedIn());
+    await expect(api.marketSell("carte-1")).rejects.toThrow("illisible");
+  });
+
+  it("achète une carte et garde la marque de l'annonce", async () => {
+    const { api, calls } = client(() => ({
+      body: {
+        card: {
+          id: "neuve",
+          creatorSlug: "ibai",
+          rarity: "legendary",
+          variant: "gold",
+          obtainedAt: 1_760_000_000_000,
+          rareDrop: false,
+          fromMarket: 12,
+        },
+        price: 3000,
+        points: 2000,
+      },
+    }), signedIn());
+    const result = await api.marketBuy(12);
+    expect(calls[0]?.url).toContain("/rest/v1/rpc/market_buy");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_listing: 12 });
+    expect(result.card.fromMarket).toBe(12);
+    expect(result.price).toBe(3000);
+    expect(result.points).toBe(2000);
+  });
+
+  it("refuse une carte achetée sans marque d'annonce", async () => {
+    // Sans `fromMarket`, l'appareil ne peut pas reconnaître la carte s'il
+    // rejoue l'achat : mieux vaut refuser que risquer un doublon.
+    const { api } = client(() => ({
+      body: { card: { id: "neuve", creatorSlug: "ibai", rarity: "rare", variant: "standard" }, price: 30, points: 0 },
+    }), signedIn());
+    await expect(api.marketBuy(12)).rejects.toThrow("illisible");
+  });
+
+  it("lit la vitrine d'un joueur", async () => {
+    const { api, calls } = client(() => ({ body: [LISTING] }), signedIn());
+    const listings = await api.marketListingsOf("u2");
+    expect(calls[0]?.url).toContain("/rest/v1/rpc/market_listings_of");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user: "u2" });
+    expect(listings[0]?.price).toBe(3000);
+  });
+
+  it("sans identifiant, la vitrine demande la sienne", async () => {
+    const { api, calls } = client(() => ({ body: [] }), signedIn());
+    await api.marketListingsOf();
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user: null });
+  });
+
+  it("rend une liste vide si le serveur répond autre chose qu'une liste", async () => {
+    const { api } = client(() => ({ body: { message: "non" } }), signedIn());
+    expect(await api.marketShelf()).toEqual([]);
+  });
+});

@@ -16,6 +16,8 @@ import { ShowcaseCard } from "@/components/showcase-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { drawPoster, posterFileName, posterModel } from "@/lib/poster";
+import { CREATOR_BY_SLUG } from "@/lib/catalog";
+import { describeCard, formatPoints } from "@/lib/market";
 import { seasonHue } from "@/lib/cosmetics";
 import { regionLabel } from "@/lib/regions";
 
@@ -222,6 +224,24 @@ export function PublicProfileSheet() {
                       </li>
                     );
                   })}
+                </ul>
+              </>
+            ) : null}
+
+            {cloud.profileMarket.length ? (
+              <>
+                <h3 className="profile-subtitle">En vente à l&apos;hôtel</h3>
+                {/* Ce que ce joueur a déposé, au prix de l'étiquette : la
+                    vitrine donne un sens au mot « hôtel » sur une fiche, sans
+                    jamais montrer sa collection. */}
+                <ul className="market-shelf">
+                  {cloud.profileMarket.map((listing) => (
+                    <li key={listing.id}>
+                      <b>{CREATOR_BY_SLUG.get(listing.creatorSlug)?.displayName ?? listing.creatorSlug}</b>
+                      <span>{describeCard(listing.rarity, listing.variant)}</span>
+                      <em>{formatPoints(listing.price)}</em>
+                    </li>
+                  ))}
                 </ul>
               </>
             ) : null}

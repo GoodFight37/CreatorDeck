@@ -11,10 +11,13 @@
  * joueur décide.
  */
 import {
+  applyMarketPurchase,
+  applyMarketSale,
   applyPackResult,
   applyPackStatus,
   applyTradeResult,
   type DrawnCard,
+  type OwnedCard,
   type PlayerState,
   type TradeCard as EngineTradeCard,
 } from "@/lib/game-engine";
@@ -26,6 +29,7 @@ import {
   CloudError,
   type LeaderboardMetric,
   type LeaderboardRow,
+  type MarketListing,
   type PlayerProfile,
   type PlayerSearchResult,
   type TradeListItem,
@@ -96,6 +100,11 @@ export type CloudState = {
   profile: PlayerProfile | null;
   /** La fiche affichée est en cours de chargement. */
   profileBusy: boolean;
+  /**
+   * Ce que le joueur de la fiche affichée a déposé à l'hôtel (« En vente »).
+   * Chargé avec la fiche : la section arrive déjà remplie, sans deuxième rendu.
+   */
+  profileMarket: MarketListing[];
   /** Offres d'échange du joueur, en attente d'abord (serveur = source de vérité). */
   trades: TradeListItem[];
   /** Horodatage local du dernier chargement des offres. */
@@ -112,6 +121,15 @@ export type CloudState = {
   friendsAt: number | null;
   /** Un chargement des amis est en cours. */
   friendsBusy: boolean;
+  /**
+   * Le comptoir de l'hôtel des ventes (`market_shelf`) : les doublons des
+   * autres joueurs, sans les siens ni les annonces périmées.
+   */
+  market: MarketListing[];
+  /** Horodatage local du dernier chargement du comptoir. */
+  marketAt: number | null;
+  /** Un chargement du comptoir est en cours. */
+  marketBusy: boolean;
 };
 
 /**
@@ -207,11 +225,15 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   leaderboardRegion: null,
   profile: null,
   profileBusy: false,
+  profileMarket: [],
   trades: [],
   tradesAt: null,
   friends: EMPTY_FRIEND_LISTS,
   friendsAt: null,
   friendsBusy: false,
+  market: [],
+  marketAt: null,
+  marketBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -1193,9 +1215,13 @@ export function createCloudStore(deps: CloudDeps) {
         leaderboardRegion: null,
         profile: null,
         profileBusy: false,
+        profileMarket: [],
         friends: EMPTY_FRIEND_LISTS,
         friendsAt: null,
         friendsBusy: false,
+        market: [],
+        marketAt: null,
+        marketBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1269,9 +1295,14 @@ export function createCloudStore(deps: CloudDeps) {
         return;
       }
       if (!networkReady(api)) return;
-      publish({ profileBusy: true, profile: null, message: null, isError: false });
+      publish({ profileBusy: true, profile: null, profileMarket: [], message: null, isError: false });
       try {
-        const profile = await api.playerProfile(userId);
+        // La fiche et sa vitrine partent ensemble : la section « En vente »
+        // s'affiche en même temps que le reste, jamais après coup.
+        const [profile, profileMarket] = await Promise.all([
+          api.playerProfile(userId),
+          api.marketListingsOf(userId).catch(() => [] as MarketListing[]),
+        ]);
         if (!profile) {
           publish({
             profileBusy: false,
@@ -1281,7 +1312,7 @@ export function createCloudStore(deps: CloudDeps) {
           });
           return;
         }
-        publish({ profileBusy: false, profile, message: null, isError: false });
+        publish({ profileBusy: false, profile, profileMarket, message: null, isError: false });
       } catch (error) {
         const refusal = cloudRefusal(error, "Profil indisponible.");
         publish({ profileBusy: false, profile: null, message: refusal.message, isError: true });
@@ -1290,7 +1321,7 @@ export function createCloudStore(deps: CloudDeps) {
 
     /** Ferme la fiche publique. */
     closeProfile(): void {
-      publish({ profile: null, profileBusy: false });
+      publish({ profile: null, profileBusy: false, profileMarket: [] });
     },
 
     async loadLeaderboard(
@@ -1307,6 +1338,124 @@ export function createCloudStore(deps: CloudDeps) {
         fail(error, "Classement indisponible.");
       }
     },
+    // --------------------------------------------------- Hôtel des ventes
+    //
+    // Même règle que le reste : le serveur décide et écrit, l'appareil rejoue
+    // le même changement sur la partie locale puis la pousse. Un dépôt, comme
+    // un achat, est donc **déjà fait** quand l'écran affiche « c'est vendu » :
+    // si la poussée échoue, la sauvegarde du cloud reste la bonne.
+
+    /** Charge le comptoir et le publie dans l'état cloud. */
+    async loadMarket(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ marketBusy: true });
+      try {
+        const market = await ready.api.marketShelf();
+        publish({ market, marketAt: deps.now(), marketBusy: false });
+      } catch (error) {
+        publish({ marketBusy: false });
+        fail(error, "Hôtel des ventes indisponible.");
+      }
+    },
+
+    /**
+     * Dépose un doublon à l'hôtel. Le serveur vérifie, retire la carte de la
+     * collection du cloud et paie les points ; l'appareil applique le même
+     * changement ici, puis pousse.
+     *
+     * La partie locale est envoyée **avant**, comme pour un échange accepté :
+     * le serveur doit voir la carte dans la collection qu'il retire.
+     */
+    async sellCard(cardId: string): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      const local = deps.readState();
+      if (!local) {
+        const message = "Aucune partie à vendre pour l'instant : ouvre un booster d'abord.";
+        publish({ message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true });
+      try {
+        await push(local.version, local.updatedAt, false);
+        if (state.pending) {
+          const message =
+            "Synchronise d'abord ta collection (Compte → Synchroniser) : l'hôtel a besoin de la collection du cloud à jour.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "error", message };
+        }
+        const result = await ready.api.marketSell(cardId);
+        const next = applyMarketSale(local, { cardId, payout: result.payout }, deps.now());
+        deps.applyState(next);
+        await push(next.version, next.updatedAt, true);
+        await this.loadMarket();
+        const name = CREATOR_BY_SLUG.get(result.listing.creatorSlug)?.displayName ?? "Ta carte";
+        const message = `${name} déposé à l'hôtel : +${result.payout} points, il est au comptoir.`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Dépôt impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Achète une carte au comptoir. Le serveur débite les points, écrit la
+     * carte dans la sauvegarde du cloud et referme l'annonce ; l'appareil
+     * ajoute la même carte ici (avec sa marque `fromMarket`) puis pousse.
+     */
+    async buyCard(listingId: number): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      const local = deps.readState();
+      if (!local) {
+        const message = "Aucune partie à créditer pour l'instant.";
+        publish({ message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      publish({ busy: true });
+      try {
+        await push(local.version, local.updatedAt, false);
+        if (state.pending) {
+          const message =
+            "Synchronise d'abord ta collection (Compte → Synchroniser) : l'hôtel a besoin de la collection du cloud à jour.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "error", message };
+        }
+        const result = await ready.api.marketBuy(listingId);
+        const card: OwnedCard = {
+          id: result.card.id,
+          creatorSlug: result.card.creatorSlug,
+          rarity: result.card.rarity as OwnedCard["rarity"],
+          variant: result.card.variant as OwnedCard["variant"],
+          obtainedAt: result.card.obtainedAt,
+          rareDrop: result.card.rareDrop,
+          fromMarket: result.card.fromMarket,
+        };
+        const next = applyMarketPurchase(local, { card, price: result.price }, deps.now());
+        if (next !== local) {
+          deps.applyState(next);
+          await push(next.version, next.updatedAt, true);
+        }
+        await this.loadMarket();
+        const name = CREATOR_BY_SLUG.get(result.card.creatorSlug)?.displayName ?? "Carte";
+        const message = `${name} rejoint ton classeur pour ${result.price} points.`;
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Achat impossible.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /** L'écran de l'hôtel, réinitialisé (déconnexion ou changement de compte). */
+    clearMarket(): void {
+      publish({ market: [], marketAt: null, marketBusy: false });
+    },
+
     // ---------------------------------------------------------------- Amis
     //
     // Même refus que les échanges : pas de cloud configuré ou pas de compte →

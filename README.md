@@ -408,6 +408,20 @@ version web hébergée.
   par recherche de pseudo, et l'écran recharge les listes après chaque geste
   plutôt que de les bricoler localement. Mise en place :
   `docs/cloud-supabase.md` §8, « Les amis ».
+  `supabase/migrations/0009_marche.sql` ajoute l'**hôtel des ventes** : on dépose
+  un doublon, l'hôtel le paie **tout de suite** en points (la carte quitte la
+  collection, donc elle ne peut pas être vendue deux fois) et la met au comptoir ;
+  un autre joueur l'achète plus tard, au prix de l'étiquette. Deux joueurs n'ont
+  jamais besoin d'être connectés en même temps. Les prix sont ceux de l'hôtel
+  (`market_payout()` : rareté × variante, miroir testé dans `src/lib/market.ts`),
+  l'étiquette vaut une fois et demie le payout — sans cette marge, on vendrait et
+  rachèterait la même carte en boucle. Jamais la dernière copie, jamais sa propre
+  annonce, jamais deux fois la même (verrou sur l'annonce), et une annonce
+  oubliée quitte le comptoir après trente jours. La table est fermée aux clients :
+  tout passe par les RPC `market_sell()` / `market_buy()` / `market_shelf()` /
+  `market_listings_of()`. L'écran vit dans « Profil → Hôtel des ventes » ; la
+  fiche publique montre « En vente à l'hôtel ». Mise en place :
+  `docs/cloud-supabase.md` §8, « L'hôtel des ventes ».
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
   `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
   affiche « cloud non configuré ». Ces deux valeurs sont publiques par

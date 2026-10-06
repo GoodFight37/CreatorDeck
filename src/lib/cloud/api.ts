@@ -83,6 +83,32 @@ export type Trade = {
   resolvedAt: string | null;
 };
 
+/** Une carte au comptoir de l'hôtel des ventes. */
+export type MarketListing = {
+  id: number;
+  creatorSlug: string;
+  rarity: string;
+  variant: string;
+  /** Ce que le vendeur a touché au dépôt. */
+  payout: number;
+  /** Ce que l'acheteur paie. */
+  price: number;
+  createdAt: string;
+  /** Pseudo du vendeur, « Collectionneur » s'il n'a pas de profil public. */
+  sellerName: string;
+};
+
+/** Carte achetée : ce que l'appareil doit ajouter à la collection locale. */
+export type MarketPurchase = {
+  id: string;
+  creatorSlug: string;
+  rarity: string;
+  variant: string;
+  obtainedAt: number;
+  rareDrop: boolean;
+  fromMarket: number;
+};
+
 /** Une offre vue depuis l'appareil : `given`/`received` sont du point de vue du joueur. */
 export type TradeListItem = {
   id: number;
@@ -456,6 +482,49 @@ function parseTradeCard(raw: unknown): TradeCard | null {
 
 function parseTradeCards(raw: unknown): TradeCard[] {
   return Array.isArray(raw) ? raw.flatMap((card) => parseTradeCard(card) ?? []) : [];
+}
+
+function parseListing(raw: unknown): MarketListing | null {
+  const record = asRecord(raw);
+  const id = Number(record?.id);
+  const slug = record?.creatorSlug;
+  if (!Number.isFinite(id) || typeof slug !== "string" || !slug) return null;
+  const price = Number(record?.price);
+  return {
+    id,
+    creatorSlug: slug,
+    rarity: typeof record?.rarity === "string" ? record.rarity : "",
+    variant: typeof record?.variant === "string" ? record.variant : "standard",
+    payout: Number.isFinite(Number(record?.payout)) ? Number(record?.payout) : 0,
+    price: Number.isFinite(price) ? price : 0,
+    createdAt: String(record?.createdAt ?? ""),
+    sellerName: typeof record?.sellerName === "string" ? record.sellerName : "Collectionneur",
+  };
+}
+
+/**
+ * Carte achetée, telle que le serveur l'a écrite dans la sauvegarde.
+ *
+ * `fromMarket` est obligatoire : sans lui, l'appareil ne saurait pas reconnaître
+ * cette carte s'il rejouait l'achat, et pourrait la compter deux fois.
+ */
+function parsePurchase(raw: unknown): MarketPurchase | null {
+  const record = asRecord(raw);
+  const id = record?.id;
+  const slug = record?.creatorSlug;
+  const fromMarket = Number(record?.fromMarket);
+  if (typeof id !== "string" || !id) return null;
+  if (typeof slug !== "string" || !slug) return null;
+  if (!Number.isFinite(fromMarket) || fromMarket <= 0) return null;
+  return {
+    id,
+    creatorSlug: slug,
+    rarity: typeof record?.rarity === "string" ? record.rarity : "",
+    variant: typeof record?.variant === "string" ? record.variant : "standard",
+    obtainedAt: Number.isFinite(Number(record?.obtainedAt)) ? Number(record?.obtainedAt) : 0,
+    rareDrop: record?.rareDrop === true,
+    fromMarket,
+  };
 }
 
 function parseTrade(raw: unknown): Trade | null {
@@ -993,6 +1062,68 @@ export class CloudApi {
         },
       ];
     });
+  }
+
+  // ------------------------------------------------------------------ hôtel
+
+  /**
+   * Le comptoir : les cartes des autres joueurs, les plus récentes d'abord.
+   * Les siennes sont exclues, comme les annonces de plus de trente jours.
+   */
+  async marketShelf(limit = 30): Promise<MarketListing[]> {
+    const result = await this.rpc("market_shelf", { p_limit: limit });
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const listing = parseListing(raw);
+      return listing ? [listing] : [];
+    });
+  }
+
+  /**
+   * Dépose un doublon à l'hôtel. Le serveur vérifie que la carte est bien dans
+   * la collection envoyée, que ce n'est pas la dernière copie, et **paie tout
+   * de suite** : `points` est le nouveau solde, à appliquer côté appareil.
+   */
+  async marketSell(cardId: string): Promise<{ listing: MarketListing; payout: number; points: number }> {
+    const result = await this.rpc("market_sell", { p_card_id: cardId });
+    const record = asRecord(result);
+    const listing = parseListing(record?.listing);
+    const payout = Number(record?.payout);
+    if (!listing || !Number.isFinite(payout)) {
+      throw new CloudError("Réponse de l'hôtel illisible.", "invalid_response", 0);
+    }
+    const points = Number(record?.points);
+    return { listing, payout, points: Number.isFinite(points) ? points : 0 };
+  }
+
+  /**
+   * Les annonces ouvertes d'un joueur (« qu'a-t-il déposé à l'hôtel ? »).
+   * Sans identifiant, les siennes. Sert à la vitrine de la fiche publique.
+   */
+  async marketListingsOf(userId?: string): Promise<MarketListing[]> {
+    const result = await this.rpc("market_listings_of", { p_user: userId ?? null });
+    if (!Array.isArray(result)) return [];
+    return result.flatMap((raw) => {
+      const listing = parseListing(raw);
+      return listing ? [listing] : [];
+    });
+  }
+
+  /**
+   * Achète une carte au comptoir. Le serveur débite les points, écrit la carte
+   * dans la sauvegarde et referme l'annonce ; `card` est exactement ce que
+   * l'appareil doit ajouter à sa collection.
+   */
+  async marketBuy(listingId: number): Promise<{ card: MarketPurchase; price: number; points: number }> {
+    const result = await this.rpc("market_buy", { p_listing: listingId });
+    const record = asRecord(result);
+    const card = parsePurchase(record?.card);
+    const price = Number(record?.price);
+    if (!card || !Number.isFinite(price)) {
+      throw new CloudError("Réponse de l'hôtel illisible.", "invalid_response", 0);
+    }
+    const points = Number(record?.points);
+    return { card, price, points: Number.isFinite(points) ? points : 0 };
   }
 
   // ------------------------------------------------------------------ saves

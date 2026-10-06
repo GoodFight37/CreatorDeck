@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { FriendsSheet } from "@/components/friends-sheet";
+import { MarketSheet } from "@/components/market-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
@@ -705,6 +706,7 @@ function ProfileView({
   onShowAccount,
   onShowLeaderboard,
   onShowFriends,
+  onShowMarket,
   onShowOwnProfile,
 }: {
   game: GameState;
@@ -716,6 +718,7 @@ function ProfileView({
   onShowAccount: () => void;
   onShowLeaderboard: () => void;
   onShowFriends: () => void;
+  onShowMarket: () => void;
   onShowOwnProfile: () => void;
 }) {
   const cloud = useCloud();
@@ -818,6 +821,12 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowFriends}>
             <span>Amis</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowMarket}>
+            <span>Hôtel des ventes</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -967,6 +976,7 @@ export function CreatorDeckApp() {
   const [themeOpen, setThemeOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
@@ -1196,6 +1206,7 @@ export function CreatorDeckApp() {
               setAccountOpen(true);
             }}
             onShowFriends={() => setFriendsOpen(true)}
+            onShowMarket={() => setMarketOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
             }}
@@ -1262,6 +1273,7 @@ export function CreatorDeckApp() {
       {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
+      {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet
           focus={accountFocus}
