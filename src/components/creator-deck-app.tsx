@@ -920,7 +920,7 @@ function RevealOverlay({
   const perfect = cards[0]?.rareDrop;
   return (
     <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
-      <div className={`reveal-ambient rarity-${card.rarity}`} />
+      <div className="reveal-ambient" />
       {perfect ? (
         <div className="perfect-banner" role="status">
           <Sparkles size={13} />
@@ -944,10 +944,12 @@ function RevealOverlay({
           variant={card.variant}
           className="reveal-card"
         />
+        {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
+            nameplate). Ici : l'état, et rien d'autre. */}
         <div className="reveal-name">
-          <p>#{creator.rank} · {RARITY_META[card.rarity].label}</p>
-          <h2>{creator.displayName}</h2>
-          <span>{regionLabel(creator.region)}</span>
+          <p>
+            {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
+          </p>
           {/* Le tirage réserve toujours la dernière carte : le dire évite de
               croire à un hasard, et annonce le moment fort du paquet. */}
           {isLast ? <span className="reveal-guaranteed">Carte garantie du booster</span> : null}

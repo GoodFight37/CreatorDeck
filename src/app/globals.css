@@ -160,8 +160,7 @@ input:focus-visible {
 .season-badge,
 .streak-pill,
 .completion-pill,
-.new-badge,
-.variant-pill {
+.new-badge {
   display: flex;
   align-items: center;
 }
@@ -689,229 +688,298 @@ input:focus-visible {
 .empty-collection strong { color: white; font-size: 12px; }
 .empty-collection span { color: var(--muted); font-size: 13px; }
 
+/*
+ * ═══ LA CARTE ══════════════════════════════════════════════════════════════
+ *
+ * Une planche TCG, pas une vignette. Quatre choses, dans cet ordre :
+ *
+ *   1. le portrait **plein cadre** (0.715 = format carte, comme à l'impression) ;
+ *   2. la **rareté est le cadre** : filet, épaisseur, reflet métallique ;
+ *   3. la **nameplate opaque** en bas — barre pleine, nom en display condensée,
+ *      c'est ce qui rend la carte lisible d'un coup d'œil ;
+ *   4. la **variante est une matière** : foil qui suit le doigt, led qui pulse,
+ *      chrome. Le savoir s'obtient en regardant la carte, pas en lisant une
+ *      pastille.
+ *
+ * La carte ne porte aucune couleur d'interface : ni accent, ni violet. Elle a
+ * sa propre palette (rareté + matière), ce qui la fait ressortir sur le noir.
+ */
 .creator-card {
   --rarity: #8d95a7;
-  --rarity-glow: rgba(141,149,167,.34);
+  --rarity-glow: rgba(141, 149, 167, .34);
   position: relative;
   isolation: isolate;
   width: 100%;
-  aspect-ratio: 0.71;
+  aspect-ratio: 0.715;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--rarity) 72%, white 6%);
-  border-radius: 13px;
-  background: var(--bg);
+  border: 0;
+  border-radius: 4.5% / 3.2%;
+  background: var(--bg-deep);
   box-shadow:
-    0 10px 20px -12px rgba(0,0,0,.9),
-    0 0 18px -7px var(--rarity-glow),
-    inset 0 0 0 2px rgba(255,255,255,.035);
+    0 1px 0 rgba(255, 255, 255, .07) inset,
+    0 0 0 1px rgba(0, 0, 0, .85),
+    0 14px 26px -16px rgba(0, 0, 0, .95);
   transform: translateZ(0);
 }
 
+/* Filet intérieur : teinté par la rareté. C'est le seul endroit où la rareté
+   colore — et il fait tout le travail. */
+.creator-card::after {
+  content: "";
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid color-mix(in srgb, var(--rarity) 62%, #000 26%);
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--rarity) 16%, transparent);
+}
+
+/* Les couleurs de rareté ne sont pas redéclarées ici : elles viennent de
+   `RARITY_META` (une seule source), posées en `--rarity` par le composant. */
+
+.card-photo-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.card-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(.97) contrast(1.05) brightness(.98);
+}
+
+/* Assombrissement du portrait : assez pour que la nameplate, le rang et la
+   pastille Live tiennent dessus, pas assez pour effacer le créateur. */
+.card-photo-shade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgb(var(--bg-rgb) / .55) 0%, transparent 26%),
+    linear-gradient(180deg, transparent 52%, rgb(var(--bg-rgb) / .72) 76%, rgb(var(--bg-rgb) / .95) 100%);
+}
+
+.card-rank {
+  position: absolute;
+  z-index: 5;
+  top: 3.6%;
+  left: 5%;
+  color: rgba(255, 255, 255, .92);
+  font-family: var(--font-display);
+  font-size: clamp(11px, 3vw, 15px);
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .95);
+}
+
+.card-live {
+  position: absolute;
+  z-index: 5;
+  top: 3.4%;
+  right: 4.6%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px 3px 6px;
+  color: #fff;
+  border-radius: 2px;
+  background: var(--accent);
+  font-family: var(--font-display);
+  font-size: clamp(10px, 2.6vw, 12px);
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.card-live i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 7px rgba(255, 255, 255, .95);
+  animation: live-pulse 1.9s ease-in-out infinite;
+}
+
+@keyframes live-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .card-live i { animation: none; } }
+
+/* La nameplate : opaque, pleine largeur, collée au bas de la planche. */
+.card-nameplate {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 10% 6% 4.6%;
+  background: linear-gradient(180deg, rgb(var(--bg-rgb) / 0) 0%, rgb(var(--bg-rgb) / .72) 42%, rgb(var(--bg-rgb) / .96) 100%);
+}
+
+.card-region {
+  display: block;
+  color: var(--rarity);
+  font-size: clamp(9px, 2.6vw, 12px);
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.card-nameplate h3 {
+  margin: 1px 0 0;
+  overflow: hidden;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(15px, 6.6vw, 32px);
+  font-weight: 700;
+  line-height: .98;
+  letter-spacing: -.005em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.card-footerline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 3px;
+  padding-top: 3px;
+  color: rgba(255, 255, 255, .62);
+  border-top: 1px solid color-mix(in srgb, var(--rarity) 45%, transparent);
+  font-size: clamp(9px, 2.5vw, 12px);
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.card-footerline strong { color: #fff; font-size: clamp(11px, 3vw, 14px); }
+
+/*
+ * Le foil. Positionné par le doigt (`--px`/`--py` posés en direct par le
+ * composant, donc sans re-rendu) ; au repos, il reste un reflet diagonal fixe.
+ * `mix-blend-mode: overlay` fait luire ce qu'il y a sous lui (le portrait) au
+ * lieu de poser un voile gris dessus.
+ */
 .card-foil {
   position: absolute;
   z-index: 4;
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  background: linear-gradient(115deg, transparent 15%, rgba(255,255,255,.3) 35%, rgb(var(--accent-rgb) / .18) 48%, transparent 68%);
-  mix-blend-mode: screen;
+  mix-blend-mode: overlay;
 }
 
-/*
- * Foil : un aplat à 0,65 pour les trois variantes ne les distinguait pas à un
- * mètre. Chacune a désormais sa lumière — prismatique (Holo), chromée (Gold),
- * rose néon (Live) — et seul l'écran de révélation les fait bouger : animer
- * 1 000 cartes de classeur coûterait cher pour rien.
- */
+.creator-card.is-shiny .card-foil { opacity: .8; }
+.creator-card.is-shiny::after { border-color: color-mix(in srgb, var(--rarity) 78%, #fff 10%); }
+
 .creator-card.variant-holo .card-foil {
-  opacity: .8;
-  background: linear-gradient(115deg, transparent 12%, rgba(120,255,240,.42) 30%, rgba(255,140,240,.36) 46%, rgba(255,240,150,.36) 60%, transparent 78%);
+  background: radial-gradient(
+    circle at var(--px, 32%) var(--py, 18%),
+    rgba(255, 255, 255, .95) 0%,
+    rgba(120, 255, 240, .6) 16%,
+    rgba(255, 140, 240, .5) 30%,
+    rgba(255, 240, 150, .45) 43%,
+    rgba(255, 255, 255, 0) 66%);
 }
+
 .creator-card.variant-gold .card-foil {
-  opacity: .85;
-  background: linear-gradient(115deg, transparent 10%, rgba(255,225,150,.55) 30%, rgba(255,255,255,.5) 44%, rgba(255,180,60,.46) 58%, transparent 76%);
+  background: radial-gradient(
+    circle at var(--px, 32%) var(--py, 18%),
+    rgba(255, 255, 255, .9) 0%,
+    rgba(255, 226, 150, .62) 20%,
+    rgba(255, 176, 60, .5) 38%,
+    rgba(255, 255, 255, 0) 70%);
 }
+
+/* La Live est une diffusion, pas une dorure : bandes horizontales type
+   interférence d'écran, qui balaient lentement. */
 .creator-card.variant-live .card-foil {
-  opacity: .9;
-  background: linear-gradient(115deg, transparent 12%, rgba(255,110,190,.5) 34%, rgba(255,255,255,.34) 46%, rgba(255,60,150,.46) 62%, transparent 80%);
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, .5) 0 1px,
+    rgba(255, 60, 150, 0) 1px 4px,
+    rgba(255, 110, 190, .42) 4px 5px,
+    rgba(255, 60, 150, 0) 5px 9px);
+  background-size: 100% 220%;
+  animation: foil-sweep 6s linear infinite;
 }
-.reveal-card .card-foil { background-size: 220% 220%; animation: foil-sweep 5.5s ease-in-out infinite alternate; }
-.reveal-card.variant-live .card-foil { animation: live-pulse 2.4s ease-in-out infinite; }
-@keyframes foil-sweep { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
-@keyframes live-pulse { 0%, 100% { opacity: .5; } 50% { opacity: .95; } }
-@media (prefers-reduced-motion: reduce) {
-  .reveal-card .card-foil { animation: none; }
+
+.creator-card.variant-live { box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 0 26px -8px rgba(255, 75, 158, .55), 0 14px 26px -16px rgba(0, 0, 0, .95); }
+@keyframes foil-sweep { from { background-position: 0 0; } to { background-position: 0 100%; } }
+@media (prefers-reduced-motion: reduce) { .creator-card.variant-live .card-foil { animation: none; } }
+
+/* L'écran de révélation : la carte arrive, puis flotte une seule fois. Aucune
+   animation perpétuelle — c'est une carte posée sur un comptoir. */
+.reveal-card { animation: card-reveal 550ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes card-reveal {
+  from { opacity: 0; transform: translateY(26px) rotateY(64deg) scale(.9); }
+  to { opacity: 1; transform: none; }
 }
-.creator-card.variant-gold { border-color: #ffce6c; box-shadow: 0 0 24px -7px rgba(255,190,72,.7), 0 12px 26px -13px #000; }
-.creator-card.variant-live { border-color: #ff67b0; box-shadow: 0 0 24px -8px rgba(255,75,158,.75), 0 12px 26px -13px #000; }
+@media (prefers-reduced-motion: reduce) { .reveal-card { animation: none; } }
 
 /*
- * Fenêtre photo carrée, calée sur la LARGEUR de la carte (format 0.71).
- * Les photos de profil Twitch sont carrées : les étirer en « cover » sur toute
- * la hauteur de la carte les agrandissait de 40 % de plus que nécessaire (puis
- * les rognait), d'où un rendu pixelisé sur écran haute densité. Ici l'image est
- * affichée à sa taille minimale utile ; le bas de la carte devient une zone de
- * texte façon TCG.
+ * ─── Le dos ─────────────────────────────────────────────────────────────────
+ * Pour toute carte manquante : le dos CreatorDeck. Un motif de lignes
+ * diagonales, la marque, et la rareté — noir et rouge du direct, comme au verso
+ * d'un paquet.
  */
-.card-photo-wrap {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  aspect-ratio: 1 / 1;
-  overflow: hidden;
-  background: var(--bg-soft);
+.creator-card.is-locked {
+  background: var(--bg-deep);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .045), 0 10px 20px -16px #000;
 }
 
-.card-photo {
+.card-back {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  filter: saturate(.94) contrast(1.02);
-}
-
-/* Dans la fenêtre photo : léger voile en haut (lisibilité des badges) et
-   fondu du bas de la photo vers le fond de la carte (zone de texte). */
-.card-photo-shade {
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgb(var(--bg-rgb) / .14) 0%, transparent 30%),
-    linear-gradient(180deg, transparent 74%, rgb(var(--bg-rgb) / .5) 88%, var(--bg) 100%);
-}
-
-.card-topline {
-  position: absolute;
-  z-index: 5;
-  top: 8px;
-  left: 8px;
-  right: 8px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.card-series,
-.card-rarity {
-  padding: 3px 5px;
-  border: 1px solid rgba(255,255,255,.17);
-  border-radius: 5px;
-  color: rgba(255,255,255,.84);
-  background: rgb(var(--bg-rgb) / .66);
-  backdrop-filter: blur(8px);
-  font-size: 6px;
-  font-weight: 800;
-  letter-spacing: .09em;
-}
-
-.card-rarity {
-  min-width: 21px;
-  color: var(--rarity);
-  text-align: center;
-}
-
-.variant-pill {
-  position: absolute;
-  z-index: 5;
-  top: 31px;
-  right: 8px;
-  gap: 3px;
-  padding: 3px 5px;
-  border: 1px solid rgba(255,255,255,.2);
-  border-radius: 5px;
-  color: white;
-  background: rgb(var(--accent-dark-rgb) / .8);
-  font-size: 6px;
-  font-weight: 900;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-}
-
-.variant-pill.variant-live { background: rgba(207, 42, 123, .83); }
-.variant-pill.variant-gold { color: #382100; background: rgba(255, 196, 75, .92); }
-
-.card-copy {
-  position: absolute;
-  z-index: 5;
-  top: 71.02%; /* = 1 / 1.408 : juste sous la fenêtre photo carrée */
-  right: 10px;
-  bottom: 0;
-  left: 10px;
-  display: flex;
-  flex-direction: column;
   justify-content: center;
-  padding-bottom: 3px;
+  flex-direction: column;
+  gap: 4%;
+  padding: 8%;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, .022) 0 5px, transparent 5px 10px),
+    repeating-linear-gradient(-45deg, transparent 0 9px, rgb(var(--accent-rgb) / .07) 9px 11px),
+    var(--bg);
 }
 
-.card-copy p {
-  margin: 0 0 2px;
-  overflow: hidden;
-  color: var(--rarity);
-  font-size: 6px;
-  font-weight: 750;
-  letter-spacing: .04em;
-  text-overflow: ellipsis;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.card-copy h3 {
-  margin: 0;
-  overflow: hidden;
+.card-back-word {
+  color: rgba(255, 255, 255, .5);
   font-family: var(--font-display);
-  font-size: clamp(12px, 4.4vw, 21px);
-  line-height: 1.05;
-  letter-spacing: -.035em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-footerline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 5px;
-  padding-top: 4px;
-  border-top: 1px solid rgba(255,255,255,.13);
-  color: rgba(255,255,255,.58);
-  font-size: 6px;
+  font-size: clamp(11px, 4.6vw, 20px);
+  font-weight: 600;
+  letter-spacing: .1em;
   text-transform: uppercase;
 }
-.card-footerline strong { color: white; font-size: 8px; }
 
-.creator-card.is-compact { border-radius: 10px; }
-.creator-card.is-compact .card-copy { top: auto; right: 7px; bottom: 7px; left: 7px; display: block; padding-bottom: 0; }
-.creator-card.is-compact .card-copy h3 { font-size: clamp(9px, 2.8vw, 13px); }
-.creator-card.is-compact .card-topline { top: 6px; right: 6px; left: 6px; }
-.creator-card.is-compact .card-series { display: none; }
-.creator-card.is-compact .card-rarity { margin-left: auto; }
-.creator-card.is-compact .variant-pill { top: 25px; right: 6px; }
-
-.creator-card.is-locked .card-photo { filter: grayscale(1) brightness(.23) contrast(1.15); }
-.creator-card.is-locked .card-photo-shade { background: rgb(var(--bg-rgb) / .35); }
-.creator-card.is-locked { border-color: rgba(255,255,255,.075); box-shadow: none; }
-.creator-card.is-locked .card-copy p,
-.creator-card.is-locked .card-footerline { color: rgba(255,255,255,.22); }
-.creator-card.is-locked .card-copy h3 { color: rgba(255,255,255,.32); letter-spacing: .1em; }
-
-.card-lock {
-  position: absolute;
-  z-index: 6;
-  top: 35.5%;
-  left: 50%;
-  display: grid;
-  width: 35px;
-  height: 35px;
-  place-items: center;
-  color: rgba(255,255,255,.42);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 50%;
-  background: rgb(var(--bg-rgb) / .62);
-  transform: translate(-50%, -50%);
+.card-back-rarity {
+  padding-top: 4%;
+  color: rgba(255, 255, 255, .34);
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  font-size: clamp(8px, 2.4vw, 11px);
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
 }
+
+/*
+ * ─── Format compact (grille du classeur, rangée d'accueil) ──────────────────
+ * Même planche, plus petite : photo plein cadre, nameplate réduite à
+ * « région / nom ». Les accolades restent lisibles parce que le nom reste en
+ * display condensée et en capitales.
+ */
+.creator-card.is-compact { border-radius: 5% / 3.5%; }
+.creator-card.is-compact .card-nameplate { padding: 22% 7% 6%; }
+.creator-card.is-compact .card-region { letter-spacing: .12em; }
+.creator-card.is-compact .card-nameplate h3 { font-size: clamp(12px, 4.4vw, 17px); }
+.creator-card.is-compact .card-footerline { display: none; }
+.creator-card.is-compact .card-rank { font-size: clamp(10px, 3.2vw, 13px); }
+.creator-card.is-compact .card-live { padding: 2px 5px; letter-spacing: .06em; }
+.creator-card.is-compact .card-live i { width: 4px; height: 4px; }
+
 
 .collection-view,
 .missions-view,
@@ -1148,15 +1216,14 @@ input:focus-visible {
 .opening-loader strong { margin-top: 13px; font-size: 14px; }
 .opening-loader > span { color: var(--muted); font-size: 13px; }
 .mini-pack { display: grid; width: 105px; height: 154px; place-items: center; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--panel-2); }
-.mini-pack span { font-size: 19px; font-weight: 900; }
+.mini-pack span { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
 
 .reveal-overlay { overflow: hidden; }
-.reveal-ambient { position: absolute; inset: 0; background: radial-gradient(circle at 50% 45%, var(--accent-glow, rgb(var(--accent-rgb) / .34)), transparent 48%); }
-.reveal-ambient.rarity-legendary { --accent-glow: rgba(255,183,64,.38); }
-.reveal-ambient.rarity-epic { --accent-glow: rgb(var(--accent-rgb) / .4); }
-.reveal-ambient.rarity-rare { --accent-glow: rgba(64,169,255,.34); }
-.reveal-ambient.rarity-uncommon { --accent-glow: rgba(67,214,156,.28); }
-.reveal-ambient.rarity-common { --accent-glow: rgba(140,149,167,.22); }
+/*
+ * L'ambiance de l'écran de révélation : un seul halo, rouge du direct, très
+ * bas. La rareté ne teinte plus la pièce — elle est sur la carte (son cadre).
+ */
+.reveal-ambient { position: absolute; inset: 0; background: radial-gradient(ellipse 90% 55% at 50% 38%, rgb(var(--accent-rgb) / .16), transparent 70%); }
 
 .reveal-header {
   position: relative;
@@ -1183,13 +1250,15 @@ input:focus-visible {
 }
 .reveal-card { width: min(68vw, 300px); max-height: 63vh; animation: card-reveal 550ms cubic-bezier(.2,.8,.2,1) both; }
 @keyframes card-reveal { from { opacity: 0; transform: translateY(25px) rotateY(70deg) scale(.88); } to { opacity: 1; transform: none; } }
-.new-badge { position: relative; z-index: 5; justify-content: center; gap: 4px; margin-bottom: 9px; padding: 5px 9px; color: var(--panel-2); border-radius: 7px; background: var(--accent-light); font-size: 12px; font-weight: 900; letter-spacing: .08em; }
+.new-badge { position: relative; z-index: 5; justify-content: center; gap: 5px; margin-bottom: 10px; padding: 4px 10px; color: var(--ink); border-radius: 2px; background: var(--paper); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: .12em; }
 .reveal-name { margin-top: 16px; text-align: center; }
-.reveal-name p { margin: 0 0 3px; color: var(--accent-light); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+.reveal-name p { margin: 0; color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
 .reveal-name h2 { margin: 0; font-family: var(--font-display); font-size: 40px; font-weight: 700; line-height: .95; letter-spacing: .005em; text-transform: uppercase; }
+/* Le nom est déjà sur la nameplate de la carte : ici, une seule ligne d'état. */
 .reveal-name span { color: var(--muted); font-size: 13px; }
 /* La dernière carte du tirage est la garantie : elle se nomme. */
-.reveal-guaranteed { display: inline-block; margin-top: 7px; padding: 3px 9px; color: #ffd48e !important; border: 1px solid rgba(255,190,85,.3); border-radius: 999px; background: rgba(255,190,85,.1); font-size: 12px !important; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+/* L'or est au légendaire : ici, un simple contour. */
+.reveal-guaranteed { display: inline-block; margin-top: 8px; padding: 3px 9px; color: var(--muted) !important; border: 1px solid var(--line-strong); border-radius: 2px; background: transparent; font-size: 12px !important; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
 .reveal-next { position: absolute; z-index: 3; right: 18px; bottom: calc(17px + env(safe-area-inset-bottom)); left: 18px; width: auto; }
 
 .loading-screen {
@@ -1309,11 +1378,11 @@ input:focus-visible {
 .mission-hero .perfect-count { display: flex; align-items: center; gap: 4px; margin-top: 7px; color: var(--gold); font-size: 13px; }
 
 /* ---------- Booster Perfect ---------- */
-.perfect-banner { position: absolute; z-index: 4; top: calc(58px + env(safe-area-inset-top)); right: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; color: #2a1b06; border-radius: 10px; background: linear-gradient(120deg,#ffe6a8,#ffbe55 45%,#ff9f45); font-size: 13px; font-weight: 900; letter-spacing: .03em; box-shadow: 0 10px 30px rgba(255,160,60,.28); }
+/* Un Perfect, c'est une nouvelle qui tombe en direct : la barre rouge. */
+.perfect-banner { position: absolute; z-index: 4; top: calc(58px + env(safe-area-inset-top)); right: 16px; left: 16px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 12px; color: #fff; border-radius: 2px; background: var(--accent); font-family: var(--font-display); font-size: 16px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
 /* Le Perfect est passé à 1 ‰ : quand il tombe, il doit se voir. */
-.perfect-banner { animation: perfect-pop 420ms cubic-bezier(.2,.8,.2,1) both, perfect-glow 1.6s ease-in-out 420ms infinite; }
+.perfect-banner { animation: perfect-pop 420ms cubic-bezier(.2,.8,.2,1) both; }
 @keyframes perfect-pop { from { transform: translateY(-14px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes perfect-glow { 0%, 100% { box-shadow: 0 10px 30px rgba(255,160,60,.28); } 50% { box-shadow: 0 10px 42px rgba(255,190,85,.6); } }
 
 @media (max-width: 390px) {
   .view { padding-inline: 14px; }
