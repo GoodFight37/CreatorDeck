@@ -10,8 +10,8 @@
   },
   "pity": {
     "label": "Légendaire garanti",
-    "threshold": 80,
-    "note": "Après 80 boosters du Live Drop sans Légendaire, le 5ᵉ slot en garantit un — et le compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot. Le Paquet Scène ne donne jamais de Légendaire : il ne compte donc ni ne casse cette série, qui ne parle que du Live Drop. Le compteur est affiché : « encore N boosters » sur l'accueil, et dans cet écran. Sans ce plancher, une série malchanceuse peut durer des mois ; avec lui, elle a un plancher, et il est écrit noir sur blanc."
+    "threshold": 12,
+    "note": "Après 12 boosters du Live Drop sans Légendaire, le 5ᵉ slot en garantit un — et le compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot. Le Paquet Scène ne donne jamais de Légendaire : il ne compte donc ni ne casse cette série, qui ne parle que du Live Drop. Le compteur est affiché : « encore N boosters » sur l'accueil, et dans cet écran. Sans ce plancher, une série malchanceuse peut durer des mois ; avec lui, elle a un plancher, et il est écrit noir sur blanc."
   },
   "packs": {
     "live": {

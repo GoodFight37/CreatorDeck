@@ -28,7 +28,7 @@ Exemple (extrait réel) :
 ],
 "guaranteed": { "weights": { "rare": 82, "epic": 15, "legendary": 3 } },
 "direct": { "creatorBias": 1.5, "livePermille": 200, "variant": "live" },
-"pity": { "label": "Légendaire garanti", "threshold": 80 }
+"pity": { "label": "Légendaire garanti", "threshold": 12 }
 ```
 
 Le moteur (`src/lib/game-engine.ts`, fonction `chooseCreator`) tire d'abord une
@@ -54,9 +54,11 @@ Légendaire, donc jamais de Gold, et le fichier le dit en l'omettant.
 ne peut pas lire n'est pas une garantie, c'est une rumeur. Trois choses sont
 dites :
 
-* le **seuil** (80 boosters) : après 80 boosters d'affilée sans Légendaire, le
-  5ᵉ slot en garantit une — c'est-à-dire que le joueur n'attend jamais plus de
-  80 boosters, quelle que soit sa chance ;
+* le **seuil** (12 boosters depuis le 7 octobre 2026 ; 80 auparavant) : après
+  12 boosters d'affilée sans Légendaire, le 5ᵉ slot en garantit une — c'est-à-dire
+  que le joueur n'attend jamais plus de 12 boosters, quelle que soit sa chance.
+  Le seuil vit dans `pull-rates.json` et dans `0031_pity_douze.sql`, et un test
+  miroir compare les deux ;
 * la **probabilité de l'atteindre** (`packOdds().pity.active`), calculée à
   l'affichage comme la chance de n'avoir aucune Légendaire sur les boosters qui
   précèdent — le joueur sait si c'est un secours rare ou une mécanique qu'il

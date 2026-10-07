@@ -154,6 +154,7 @@ try {
   const saisons = await readFile(path.join(MIGRATIONS, "0028_wallet_saisons.sql"), "utf8");
   const surcharge = await readFile(path.join(MIGRATIONS, "0029_wallet_surcharge.sql"), "utf8");
   const gold = await readFile(path.join(MIGRATIONS, "0030_gold.sql"), "utf8");
+  const douze = await readFile(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -185,6 +186,7 @@ try {
     ["0028_wallet_saisons.sql", saisons],
     ["0029_wallet_surcharge.sql", surcharge],
     ["0030_gold.sql", gold],
+    ["0031_pity_douze.sql", douze],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1162,6 +1164,10 @@ try {
   // et le blanchiment se rouvre en silence. C'est la règle de la pile : on
   // recolle dans l'ordre, et ce qui est plus récent repasse en dernier.
   await client.query(packDansSaves);
+  // …et `0031` par-dessus : elle est plus récente que `0022`, et sans elle le
+  // recollage ramènerait le seuil du plancher de malchance à 80 dans la base du
+  // contrôle. Le pity se mesure plus bas : c'est là que ça se voyait.
+  await client.query(douze);
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -2907,17 +2913,34 @@ try {
     (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 0,
   );
 
-  await seedDraws(PITY, 79, 0, sansLegendaire);
+  // Le seuil vient du **fichier des taux**, pas d'une constante parallèle : le
+  // 7 octobre 2026 le joueur l'a ramené de 80 à 12 (« 12 packs jusqu'au pity »),
+  // et c'est `0031_pity_douze.sql` qui le porte. Un contrôle écrit avec « 80 »
+  // en dur aurait continué à passer sur l'ancienne règle.
+  const seuilPity = rates.pity.threshold;
+  await seedDraws(PITY, seuilPity - 1, 0, sansLegendaire);
   check(
-    "pity : 79 tirages sans Légendaire → compteur à 79 (le prochain est le 80e)",
-    (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 79,
+    `pity : ${seuilPity - 1} tirages sans Légendaire → compteur à ${seuilPity - 1} (le prochain est le ${seuilPity}ᵉ)`,
+    (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === seuilPity - 1,
     String((await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n),
+  );
+
+  // La fonction **installée** doit porter ce seuil, et lui seul : trois
+  // occurrences (la décision, la conversion en Perfect, la réponse `pity_hit`).
+  const defPity = (
+    await client.query("select pg_get_functiondef('public.open_pack(text)'::regprocedure) as d")
+  ).rows[0].d;
+  const seuilsBase = defPity.match(/v_pity \+ 1 >= \d+/g) ?? [];
+  check(
+    "pity : la fonction installée porte le seuil du fichier des taux, et lui seul",
+    seuilsBase.length === 3 && seuilsBase.every((x) => x === `v_pity + 1 >= ${seuilPity}`),
+    seuilsBase.join(" | "),
   );
 
   const pityStatus = (await asPlayer(PITY, "select public.pack_status() as r")).rows[0].r;
   check(
-    "pity : le statut publié affiche le même compteur que celui qui décidera du tirage (79 + 1 = 80)",
-    pityStatus.pity === 79 && pityStatus.streak === 1,
+    `pity : le statut publié affiche le même compteur que celui qui décidera le tirage (${seuilPity - 1} + 1 = ${seuilPity})`,
+    pityStatus.pity === seuilPity - 1 && pityStatus.streak === 1,
     JSON.stringify({ pity: pityStatus.pity, streak: pityStatus.streak }),
   );
 
@@ -2925,15 +2948,15 @@ try {
     "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
     [PITY],
   );
-  const eightieth = (await asPlayer(PITY, "select public.open_pack() as r")).rows[0].r;
+  const payeur = (await asPlayer(PITY, "select public.open_pack() as r")).rows[0].r;
   check(
-    "pity : le 80e booster garantit une Légendaire, et le dit",
-    eightieth.cards.some((c) => c.rarity === "legendary") && eightieth.pity_hit === true,
-    JSON.stringify(eightieth.cards.map((c) => c.rarity)),
+    `pity : le ${seuilPity}ᵉ booster garantit une Légendaire, et le dit`,
+    payeur.cards.some((c) => c.rarity === "legendary") && payeur.pity_hit === true,
+    JSON.stringify(payeur.cards.map((c) => c.rarity)),
   );
   check(
     "pity : la garantie remet le compteur à zéro",
-    eightieth.pity === 0 && (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 0,
+    payeur.pity === 0 && (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 0,
   );
   // Un Légendaire de **chance** — pas celui de la garantie — remet lui aussi le
   // compteur à zéro : le joueur a eu sa carte, le plancher n'a plus rien à
@@ -4650,6 +4673,9 @@ try {
   await client.query(saisons);
   await client.query(surcharge);
   await client.query(gold);
+  // `0031` ferme la pile : elle est la dernière à écrire `open_pack()`, donc la
+  // dernière recollée. Sans elle, le recollage réinstallerait le seuil de 80.
+  await client.query(douze);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

@@ -251,6 +251,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0031_pity_douze.sql`](../supabase/migrations/0031_pity_douze.sql)
+     → **Run** pour que le **plancher de malchance** passe de 80 à **12** boosters
+     (décision du 7 octobre 2026, sur le brief « 12 packs jusqu'au pity »). Le
+     corps est la copie exacte de la version en vigueur (`0022`), seul le seuil
+     change : même signature, `create or replace` **remplace** la fonction — pas
+     de surcharge possible. Sans elle, l'écran annoncerait « garanti dans 12 » et
+     le serveur en exigerait 80 : le jeu mentirait.
    - [`supabase/migrations/0030_gold.sql`](../supabase/migrations/0030_gold.sql)
      → **Run** pour que la variante **Gold** existe aussi hors « Perfect » : une
      Légendaire tirée ordinairement a **1 %** de chance d'être Gold (100 sur les
@@ -355,7 +362,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      §8, « Le Paquet Scène ».
    - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
      → **Run** pour que le **plancher de malchance** et la **série de jours**
-     existent aussi côté serveur : après 80 boosters d'affilée sans Légendaire,
+     existent aussi côté serveur : après 12 boosters d'affilée sans Légendaire,
      le tirage en garantit une, et le 7ᵉ jour d'affilée offre un Perfect (ou
      3 sabliers). Les deux compteurs sont relus depuis le journal des tirages,
      pas depuis la sauvegarde du téléphone — un compteur client se trafiquerait.
@@ -398,7 +405,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente migrations** (`0001` à `0030`) pour de vrai, dans
+> Le script exécute **les trente et une migrations** (`0001` à `0031`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -414,8 +421,8 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > **bonus Direct** (poids ×1,5, variante Live réservée aux créateurs en direct,
 > cache périmé → aucune carte Live) et le **Last Pack** (paquet exposé dix
 > minutes, vol des deux côtés, refus d'un inconnu, garde-fou de `push_save`) et
-> le **plancher de malchance** (journal amorcé à 79 boosters sans Légendaire, le
-> 80ᵉ qui en sort une, compteur remis à zéro par un Légendaire de chance, série
+> le **plancher de malchance** (journal amorcé à 11 boosters sans Légendaire, le
+> 12ᵉ qui en sort une, compteur remis à zéro par un Légendaire de chance, série
 > de jours cassée par un trou puis raccommodée, récompense du 7ᵉ jour dépensée
 > une seule fois, fonctions internes fermées aux joueurs), le **Paquet
 > Scène** (cinq listes de choix, tirage conforme accepté et normalisé, mauvaise
@@ -829,7 +836,7 @@ compteur et le compte à rebours se réalignent sur le serveur immédiatement.
 ### Le plancher de malchance, les jetons, les missions du jour
 
 `0013_progression.sql` ajoute au serveur ce que le moteur local applique déjà :
-**après 80 boosters d'affilée sans Légendaire, le 5ᵉ slot en garantit une**. Le
+**après 12 boosters d'affilée sans Légendaire, le 5ᵉ slot en garantit une**. Le
 seuil est celui de `src/data/pull-rates.json` (bloc `pity`), donc publié dans
 l'écran « Taux de drop » avec sa probabilité réelle de s'activer, et
 `src/lib/supabase-progression.test.ts` tombe si les deux divergent.
@@ -1199,7 +1206,7 @@ Trois règles qui viennent du reste du jeu :
   Le journal `pack_draws` distingue ses lignes (`kind = 'scene'`) et les trois
   compteurs du Live Drop ne lisent plus que `kind = 'live'`. Sans ça, un paquet
   gratuit chaque jour ferait monter le compteur et offrirait la Légendaire du
-  80ᵉ sans un seul booster ouvert ;
+  seuil sans un seul booster ouvert ;
 * **le Direct ne l'influence pas** : la variante Live reste au Live Drop.
 
 ### Les points vivent au serveur (`0027`)

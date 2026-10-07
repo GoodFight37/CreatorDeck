@@ -17,7 +17,7 @@ classement mondial —
 global ou par famille de collection —, profils publics avec vitrine, badge
 **EN LIVE** sur les cartes des chaînes en direct, et **Arène** hebdomadaire.
 Trois mécaniques de progression complètent le tirage : un **plancher de
-malchance publié** (80 boosters sans Légendaire et le 5ᵉ slot en garantit une),
+malchance publié** (12 boosters sans Légendaire et le 5ᵉ slot en garantit une),
 des **jetons** (5 par booster, 400 = la carte au choix — jamais une Légendaire),
 et des **missions du jour** avec une **série de sept jours**.
 
@@ -119,6 +119,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
 | 11.8 | La surcharge de `_wallet_apply` retirée : deux versions de la même fonction laissaient l'appel ambigu et **le booster ne s'ouvrait plus** | **livrée** | `0029_wallet_surcharge.sql`, `scripts/verify-supabase-migrations.mjs` (l'accident est rejoué, puis réparé) |
 | 11.9 | L'aiguille de preuve sociale : « N amis ont ouvert un booster il y a moins d'une heure » sur l'accueil (lue dans le carnet, **aucun appel serveur en plus**), qui ouvre le carnet au clic | **livrée** | `src/lib/social/inbox.ts` (`friendsOpenedRecently`), `src/components/creator-deck-app.tsx` |
+| 11.11 | Le plancher de malchance passe de **80 à 12 boosters** (`0031_pity_douze.sql`, même signature : `create or replace`), le moteur et l'écran suivant le seuil publié dans `pull-rates.json` | **livrée** | `0031_pity_douze.sql`, `src/data/pull-rates.json`, `scripts/verify-supabase-migrations.mjs` |
 | 11.10 | La variante **Gold** existe hors « Perfect » : **1 %** sur une Légendaire, dans le moteur **et** le serveur (`0030_gold.sql`), avec un test miroir entre `pull-rates.json` et le SQL | **livrée** | `src/data/pull-rates.json`, `0030_gold.sql`, `scripts/verify-supabase-migrations.mjs` |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
@@ -155,8 +156,8 @@ Deux règles qui tiennent tout le reste :
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0030` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
-1 % hors Perfect). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0031` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+1 % hors Perfect, seuil du plancher de malchance dans la fonction installée). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -165,7 +166,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**788 tests**, 52 fichiers aujourd'hui).
+  (**790 tests**, 52 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -182,7 +183,7 @@ Trois étages, trois vitesses :
   variante Live impossible quand le cache est périmé — et **Last Pack** — vol
   réel des deux côtés, refus d'un inconnu, fenêtre de dix minutes, garde-fou
   contre la résurrection d'une carte volée — et le **plancher de malchance** :
-  un journal amorcé à 79 boosters sans Légendaire, le 80ᵉ qui en sort une, la
+  un journal amorcé à 11 boosters sans Légendaire, le 12ᵉ qui en sort une, la
   série de jours cassée puis raccommodée, la récompense du 7ᵉ jour — puis le
   **Paquet Scène** — un tirage conforme accepté, le même annoncé en Holo ou en
   Légendaire refusé, le journal qui ne fait pas monter le plancher de
@@ -195,7 +196,7 @@ Trois étages, trois vitesses :
   la carte est relue dans la sauvegarde (et dont le droit de provenance est
   consommé), un palier de collection recalculé côté serveur, un palier de famille
   payé au montant du jeu
-  (**401 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  (**402 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -268,7 +269,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0030)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0031)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -279,7 +280,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0030` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0031` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
@@ -603,7 +604,7 @@ mois, et que la partie ait un geste à faire **aujourd'hui**.
 
 * **Le plancher de malchance** (« pity ») est écrit dans
   `src/data/pull-rates.json` et publié dans « Taux de drop » : après
-  **80 boosters d'affilée sans Légendaire**, le 5ᵉ slot en garantit une. Le
+  **12 boosters d'affilée sans Légendaire**, le 5ᵉ slot en garantit une. Le
   compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot, et
   l'accueil affiche « Légendaire garanti dans N boosters ». Moteur local et
   `open_pack()` appliquent la même règle (`0013_progression.sql`).
@@ -787,7 +788,9 @@ version web hébergée.
   rebours ; le carnet annonce « X t'a piqué ton légendaire ». Mise en place :
   `docs/cloud-supabase.md` §8, « Le Last Pack ».
   `supabase/migrations/0013_progression.sql` porte le **plancher de
-  malchance** et la **série de jours** côté serveur : le seuil de 80 boosters,
+  malchance** et la **série de jours** côté serveur ; le seuil, lui, a été ramené
+  de 80 à **12** le 7 octobre 2026 par `0031_pity_douze.sql` (le brief disait
+  « 12 packs jusqu'au pity ») : le seuil de 12 boosters,
   le slot garanti qui devient Légendaire, la récompense du 7ᵉ jour, et les deux
   compteurs publiés par `pack_status()`. Elle remplace `open_pack()` (l'ancienne
   signature sans argument est supprimée : sinon un appel sans argument aurait

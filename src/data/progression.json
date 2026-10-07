@@ -6,7 +6,7 @@
     "perPack": 5,
     "primeTimeBonus": 2,
     "targetCost": 400,
-    "note": "5 jetons par booster ouvert (7 pendant le Prime Time). 400 jetons = la carte que tu vises, au choix — jamais une Légendaire : elles se tirent. 400 jetons, c'est exactement 80 boosters, le même effort que la garantie Légendaire."
+    "note": "5 jetons par booster ouvert (7 pendant le Prime Time). 400 jetons = la carte que tu vises, au choix — jamais une Légendaire : elles se tirent. 400 jetons, c'est 80 boosters : le prix de la carte choisie se paie en boosters, pas en chance."
   },
   "primeTime": {
     "label": "Prime Time",

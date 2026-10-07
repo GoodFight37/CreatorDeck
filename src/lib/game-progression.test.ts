@@ -115,9 +115,9 @@ describe("plancher de malchance", () => {
     expect(after.pityCounter).toBe(6);
   });
 
-  it("garantit une Légendaire au 80ᵉ booster, puis remet le compteur à zéro", () => {
-    // Le compteur dit « 79 boosters déjà sortis sans Légendaire » : le tirage
-    // qu'on déclenche est le 80ᵉ, donc c'est lui qui paie.
+  it(`garantit une Légendaire au ${PITY.threshold}ᵉ booster, puis remet le compteur à zéro`, () => {
+    // Le compteur est à « seuil - 1 » tirages déjà sortis sans Légendaire : le
+    // tirage qu'on déclenche est celui du seuil, donc c'est lui qui paie.
     stubRandom([0]);
     const state = makeState({ pityCounter: PITY.threshold - 1 });
     const { state: after, cards } = openPack(state, MIDI);
@@ -143,10 +143,18 @@ describe("plancher de malchance", () => {
   });
 
   it("publie le compteur qui reste à courir, et le seuil", () => {
-    const view = getGameView(makeState({ pityCounter: 68 }), MIDI);
+    const view = getGameView(makeState({ pityCounter: 5 }), MIDI);
     expect(view.pity.threshold).toBe(PITY.threshold);
-    expect(view.pity.counter).toBe(68);
-    expect(view.pity.remaining).toBe(PITY.threshold - 68);
+    expect(view.pity.counter).toBe(5);
+    expect(view.pity.remaining).toBe(PITY.threshold - 5);
+  });
+
+  it("un compteur déjà au-delà du seuil ne passe pas sous zéro", () => {
+    // Les joueurs d'avant le 7 octobre ont pu enchaîner bien plus que 12
+    // boosters sans Légendaire : leur compteur dépasse le nouveau seuil. Le
+    // prochain booster paie, et l'écran ne doit pas annoncer « dans -56 ».
+    const view = getGameView(makeState({ pityCounter: PITY.threshold + 56 }), MIDI);
+    expect(view.pity.remaining).toBe(0);
   });
 });
 

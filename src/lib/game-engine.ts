@@ -159,7 +159,7 @@ export type PlayerState = {
   tokens: number;
   /**
    * Boosters ouverts depuis le dernier Légendaire. Sert au plancher de
-   * malchance (`PITY`) : à 80, le 5ᵉ slot en garantit un.
+   * malchance (`PITY`) : à 12, le 5ᵉ slot en garantit un.
    */
   pityCounter: number;
   /**

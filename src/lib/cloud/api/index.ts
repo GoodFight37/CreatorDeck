@@ -460,7 +460,7 @@ export class CloudApi {
     pity: number;
     /** Jours de jeu d'affilée, ce tirage compris. */
     streak: number;
-    /** Ce booster a payé la garantie des 80 boosters. */
+    /** Ce booster a payé la garantie des 12 boosters (`pity_hit`). */
     pityHit: boolean;
     /** Ce booster a payé le Perfect du 7ᵉ jour. */
     jackpot: boolean;

@@ -73,7 +73,7 @@ describe("le Prime Time", () => {
 });
 
 describe("les jetons et les missions", () => {
-  it("400 jetons font exactement 80 boosters — l'effort de la garantie Légendaire", () => {
+  it("400 jetons font exactement 80 boosters", () => {
     expect(TOKEN_TARGET_COST).toBe(400);
     expect(TOKEN_TARGET_COST / PROGRESSION.tokens.perPack).toBe(80);
   });
