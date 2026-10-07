@@ -116,6 +116,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
 | 11.6 | Les points vivent au serveur : l'hôtel et l'Atelier ne dépensent que ce que le serveur a encaissé | **livrée** | `0027_wallet.sql`, `0028_wallet_saisons.sql`, `src/lib/cloud/api/wallet.ts`, `src/lib/cloud/store/wallet.ts`, `src/hooks/use-points.ts`, `docs/cloud-supabase.md` § « Les points vivent au serveur » |
 | 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
+| 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -160,7 +161,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**767 tests**, 50 fichiers aujourd'hui).
+  (**784 tests**, 52 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -314,8 +315,11 @@ Principes :
 
 ## Économie, saisons et taux de drop
 
-- **Atelier** (onglet dédié) : les doublons se recyclent en points, les points
-  rejoignent un créateur manquant. Un doublon vaut toujours moins que le coût
+- **Atelier** (onglet dédié) : les doublons se recyclent en points — **un par un**
+  ou d'un seul geste (« Tout recycler », qui laisse les doublons **Live** en
+  place : eux se recyclent un par un, exprès) — et les points rejoignent un
+  créateur manquant. Avec un compte connecté, chaque carte est vérifiée et payée
+  par le serveur, exactement comme le geste unitaire. Un doublon vaut toujours moins que le coût
   d'artisanat de sa rareté, et les **Légendaires ne s'artisanent pas** — elles
   se méritent en booster, comme les raretés hautes non échangeables de TCG
   Pocket.

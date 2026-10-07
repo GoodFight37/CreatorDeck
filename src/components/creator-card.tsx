@@ -22,6 +22,7 @@ type CreatorCardProps = {
   locked?: boolean;
   compact?: boolean;
   className?: string;
+  onClick?: () => void;
   /**
    * La diffusion en cours du créateur, quand l'app la connaît et qu'elle est
    * fraîche (`liveFor`). Rien n'est affiché si `null` : un badge « en direct »
@@ -55,6 +56,7 @@ export function CreatorCard({
   locked = false,
   compact = false,
   className = "",
+  onClick,
   liveStream = null,
 }: CreatorCardProps) {
   const rarity = RARITY_META[creator.rarity];
@@ -107,12 +109,27 @@ export function CreatorCard({
     "--rarity-glow": rarity.glow,
   } as CSSProperties;
 
+  const cardProps = onClick
+    ? {
+        onClick,
+        onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        },
+        role: "button",
+        tabIndex: 0,
+      }
+    : {};
+
   if (locked) {
     return (
       <article
-        className={`creator-card rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className}`}
+        className={`creator-card rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
         style={style}
         aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}, non obtenue`}
+        {...cardProps}
       >
         <div className="card-back" aria-hidden="true">
           <span className="card-back-word">CreatorDeck</span>
@@ -124,7 +141,7 @@ export function CreatorCard({
 
   return (
     <article
-      className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className}`}
+      className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
       style={style}
       aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", variante Live" : ""}${liveStream ? ", en direct sur Twitch" : ""}`}
       onPointerMove={trackPointer}
@@ -139,6 +156,7 @@ export function CreatorCard({
           foil.style.removeProperty("--py");
         }
       }}
+      {...cardProps}
     >
       <div className="card-photo-wrap">
         <Image

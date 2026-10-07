@@ -1286,6 +1286,94 @@ input:focus-visible {
 .no-results { padding: 50px 10px; color: var(--muted); font-size: 14px; text-align: center; }
 
 .streak-pill { color: #ffd48e; border-color: rgba(255,190,85,.18); background: rgba(255,190,85,.08); }
+.reward-summary-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,190,85,.24);
+  border-radius: 14px;
+  background: rgba(255,190,85,.08);
+}
+.reward-summary-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.reward-summary-copy strong {
+  color: #ffe5b0;
+  font-size: 14px;
+  font-weight: 800;
+}
+.reward-summary-copy span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.reward-summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.reward-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 0 8px;
+  color: #ffd48e;
+  border: 1px solid rgba(255,190,85,.22);
+  border-radius: 999px;
+  background: rgba(255,190,85,.08);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+/* « Tout recycler » : le bouton des doublons, et la note des Live épargnés. */
+.atelier-bulk-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.atelier-bulk-actions .craft-button:disabled {
+  opacity: .5;
+  cursor: default;
+}
+.atelier-bulk-note {
+  color: var(--muted);
+  font-size: 12px;
+}
+/* Une carte est cliquable (fiche créateur) : le curseur et le cadre de focus le disent. */
+.creator-card.is-clickable { cursor: pointer; }
+.creator-card.is-clickable:focus-visible {
+  outline: 2px solid rgb(var(--accent-rgb) / .55);
+  outline-offset: 3px;
+}
+.ghost-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 11px;
+  color: var(--text);
+  border: 1px solid rgb(var(--accent-rgb) / .26);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 .mission-hero {
   display: flex;
   align-items: center;

@@ -25,9 +25,8 @@ import {
 } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
 import { craftableRetired, isRetired } from "@/lib/retired";
-import { duplicateGroups, type GameView } from "@/lib/game-engine";
+import { bulkRecyclableIds, duplicateGroups, type GameView } from "@/lib/game-engine";
 import { usePoints } from "@/hooks/use-points";
-import { gameStore } from "@/lib/game-store";
 
 type Mode = "craft" | "recycle";
 type CraftFilter = "all" | Rarity;
@@ -60,8 +59,19 @@ export function AtelierView({
   // Qui paie les points — l'appareil ou le serveur — et le refus quand il n'y a
   // pas de compte (voir `usePoints`).
   const points = usePoints();
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
+  // « Tout recycler » emporte les doublons **sauf les Live** : un doublon Live
+  // se recycle un par un, jamais dans un clic qui emporte tout. La sélection
+  // vient du moteur (`bulkRecyclableIds`), la même règle que le jeu sans cloud.
+  const bulkIds = useMemo(() => bulkRecyclableIds({ cards: game.cards }), [game.cards]);
+  const bulkValue = duplicates
+    .filter((group) => group.variant !== "live")
+    .reduce((sum, group) => sum + group.recyclableIds.length * group.unitValue, 0);
+  const liveKept = duplicates
+    .filter((group) => group.variant === "live")
+    .reduce((sum, group) => sum + group.recyclableIds.length, 0);
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
   // Les Sortants encore artisanables : ils ne sont plus dans le catalogue (donc
   // plus tirables, et hors complétion), mais leur fenêtre est ouverte pendant
@@ -128,6 +138,37 @@ export function AtelierView({
       );
     } catch (caught) {
       onError(caught instanceof Error ? caught.message : "Recyclage impossible.");
+    }
+  }
+
+  /**
+   * « Tout recycler » : la liste part **carte par carte** par `usePoints`, donc
+   * c'est le serveur qui vérifie et paie quand un compte est connecté — sans
+   * compte, le geste est refusé au lieu de fabriquer des points sur l'appareil.
+   */
+  async function handleBulkRecycle() {
+    if (bulkBusy || !bulkIds.length) return;
+    setBulkBusy(true);
+    try {
+      const outcome = await points.recycleAll(bulkIds);
+      if (outcome.status === "refused") {
+        onError(outcome.message ?? "Recyclage impossible.");
+        return;
+      }
+      const parts = [
+        outcome.count > 0
+          ? `${outcome.count} doublon${outcome.count > 1 ? "s" : ""} transformé${outcome.count > 1 ? "s" : ""} en +${outcome.delta} points`
+          : "Aucun doublon à recycler",
+        liveKept > 0
+          ? `${liveKept} doublon${liveKept > 1 ? "s" : ""} Live à recycler un par un`
+          : "",
+      ].filter(Boolean);
+      if (outcome.message) onError(outcome.message);
+      onNotice(`Tout recyclé : ${parts.join(" · ")}.`);
+    } catch (caught) {
+      onError(caught instanceof Error ? caught.message : "Recyclage impossible.");
+    } finally {
+      setBulkBusy(false);
     }
   }
 
@@ -350,42 +391,62 @@ export function AtelierView({
           </p>
 
           {duplicates.length ? (
-            <div className="atelier-list">
-              {duplicates.map((group) => {
-                const creator = CREATOR_BY_SLUG.get(group.creatorSlug);
-                if (!creator) return null;
-                return (
-                  <article key={`${group.creatorSlug}-${group.variant}`} className="atelier-row">
-                    <Image
-                      className="atelier-thumb"
-                      src={creatorImage(creator)}
-                      alt=""
-                      width={44}
-                      height={44}
-                      quality={80}
-                      sizes="44px"
-                    />
-                    <div className="atelier-copy">
-                      <strong>{creator.displayName}</strong>
-                      <span>
-                        {VARIANT_META[group.variant].label} · {RARITY_META[group.rarity].label} ·
-                        ×{group.count}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className="craft-button recycle"
-                      onClick={() =>
-                        handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)
-                      }
-                      title={`Recycler un doublon de ${creator.displayName}`}
-                    >
-                      <Recycle size={13} />+{group.unitValue}
-                    </button>
-                  </article>
-                );
-              })}
-            </div>
+            <>
+              <div className="atelier-bulk-actions">
+                <button
+                  type="button"
+                  className="craft-button recycle"
+                  onClick={handleBulkRecycle}
+                  disabled={bulkBusy || !bulkIds.length}
+                  title={`Recycler tous les doublons (${bulkIds.length}) pour ${bulkValue} points — les Live restent en place`}
+                >
+                  <Recycle size={13} />
+                  {bulkBusy ? "Recyclage…" : `Tout recycler · +${bulkValue}`}
+                </button>
+                {liveKept > 0 ? (
+                  <span className="atelier-bulk-note">
+                    {liveKept} doublon{liveKept > 1 ? "s" : ""} Live à recycler un par un
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="atelier-list">
+                {duplicates.map((group) => {
+                  const creator = CREATOR_BY_SLUG.get(group.creatorSlug);
+                  if (!creator) return null;
+                  return (
+                    <article key={`${group.creatorSlug}-${group.variant}`} className="atelier-row">
+                      <Image
+                        className="atelier-thumb"
+                        src={creatorImage(creator)}
+                        alt=""
+                        width={44}
+                        height={44}
+                        quality={80}
+                        sizes="44px"
+                      />
+                      <div className="atelier-copy">
+                        <strong>{creator.displayName}</strong>
+                        <span>
+                          {VARIANT_META[group.variant].label} · {RARITY_META[group.rarity].label} ·
+                          ×{group.count}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="craft-button recycle"
+                        onClick={() =>
+                          handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)
+                        }
+                        title={`Recycler un doublon de ${creator.displayName}`}
+                      >
+                        <Recycle size={13} />+{group.unitValue}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            </>
           ) : (
             <div className="empty-collection">
               <Sparkles size={25} />

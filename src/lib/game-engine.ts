@@ -1177,6 +1177,58 @@ export function duplicateGroups(state: Pick<PlayerState, "cards">): DuplicateGro
 }
 
 /**
+ * Les doublons que « Tout recycler » peut emporter : tous **sauf les variantes
+ * Live**. Un doublon Live reste un geste à part — le joueur choisit, carte par
+ * carte ; on ne le recycle jamais dans un clic global qui emporte tout.
+ */
+export function bulkRecyclableIds(state: Pick<PlayerState, "cards">): string[] {
+  return duplicateGroups(state)
+    .filter((group) => group.variant !== "live")
+    .flatMap((group) => group.recyclableIds);
+}
+
+/**
+ * Recycle tous les doublons en une seule fois : on garde la dernière copie de
+ * chaque couple créateur + variante, puis on retire les doublons et on crédite
+ * les points correspondants. Les variantes **Live** restent en place
+ * (`bulkRecyclableIds` dit lesquelles partent).
+ *
+ * L'écran qui joue avec un compte connecté ne s'en sert pas : là, c'est le
+ * serveur qui paie, carte par carte. Cette fonction, elle, est le chemin du jeu
+ * sans cloud et le miroir local de ce que le serveur vient d'accorder.
+ */
+export function bulkRecycleCards(state: PlayerState, now = Date.now()): PlayerState {
+  const groups = duplicateGroups(state).filter((group) => group.variant !== "live");
+  const idsToRemove = new Set<string>();
+  let gained = 0;
+
+  for (const group of groups) {
+    for (const cardId of group.recyclableIds) {
+      idsToRemove.add(cardId);
+      gained += group.unitValue;
+    }
+  }
+
+  if (idsToRemove.size === 0) return state;
+
+  const day = gameDay(now);
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + gained,
+    cards: state.cards.filter((card) => !idsToRemove.has(card.id)),
+    missionDay: day,
+    missions: {
+      ...(state.missionDay === day ? state.missions : {}),
+      recycle: Math.min(
+        MISSION_BY_ID.get("recycle")?.target ?? 1,
+        ((state.missionDay === day ? state.missions.recycle : 0) ?? 0) + idsToRemove.size,
+      ),
+    },
+  };
+}
+
+/**
  * Recycle un doublon : la carte est retirée et sa valeur en points est
  * créditée. Refusé si la carte est la dernière copie de ce créateur + variante
  * (on ne recycle jamais sa seule carte).

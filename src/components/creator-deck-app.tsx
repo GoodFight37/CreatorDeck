@@ -53,6 +53,7 @@ import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
+import { CardInspectModal } from "@/components/card-inspect-modal";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
@@ -665,6 +666,12 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
+  const [inspect, setInspect] = useState<{
+    creator: Creator;
+    count: number;
+    variant: CardVariant;
+    liveStream: ReturnType<typeof liveFor>;
+  } | null>(null);
   const live = useLive();
   // L'heure ne sert qu'à juger la fraîcheur du direct : une minute de précision
   // suffit (au-delà de dix minutes, tout disparaît de toute façon).
@@ -842,14 +849,21 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
             const item = owned.get(creator.slug);
+            const currentLive = liveFor(live, creator.login, now);
             return (
               <div className="binder-pocket" key={creator.slug}>
                 <CreatorCard
                   creator={creator}
-                  variant={item?.bestVariant}
+                  variant={item?.bestVariant ?? "standard"}
                   locked={!item}
                   compact
-                  liveStream={liveFor(live, creator.login, now)}
+                  liveStream={currentLive}
+                  onClick={() => setInspect({
+                    creator,
+                    count: item?.count ?? 0,
+                    variant: item?.bestVariant ?? "standard",
+                    liveStream: currentLive,
+                  })}
                 />
                 {item && item.count > 1 ? (
                   <span className="pocket-count">×{item.count}</span>
@@ -862,6 +876,16 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
           <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
         ) : null}
       </div>
+
+      {inspect ? (
+        <CardInspectModal
+          creator={inspect.creator}
+          ownedCount={inspect.count}
+          variant={inspect.variant}
+          liveStream={inspect.liveStream}
+          onClose={() => setInspect(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -934,7 +958,7 @@ function MissionsView({
   onError,
 }: {
   game: GameState;
-  onClaimSeason: (seasonId: string) => void;
+  onClaimSeason: (seasonId: string) => void | Promise<void>;
   onClaimMilestone: (milestoneId: string) => void;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
@@ -945,6 +969,48 @@ function MissionsView({
       : `${game.missions.filter((mission) => mission.done).length}/${game.missions.length} mission${
           game.missions.length > 1 ? "s" : ""
         } du jour faite${game.missions.filter((mission) => mission.done).length > 1 ? "s" : ""}`;
+  const pendingMissionCount = game.missions.filter((mission) => mission.done && !mission.claimed).length;
+  const pendingSeasonCount = game.seasons.filter((season) => season.claimable > 0).length;
+  const pendingSeasonPoints = game.seasons.reduce((sum, season) => sum + season.claimablePoints, 0);
+  const pendingSeasonHourglasses = game.seasons.reduce(
+    (sum, season) => sum + season.claimableHourglasses,
+    0,
+  );
+  const hasPendingRewards = pendingMissionCount > 0 || pendingSeasonCount > 0;
+  const [claimingAll, setClaimingAll] = useState(false);
+
+  /**
+   * « Tout réclamer » : les sabliers des missions d'abord (ils sont locaux), puis
+   * les familles **l'une après l'autre**.
+   *
+   * Une famille se réclame palier par palier chez le serveur, et deux familles
+   * demandées en même temps mélangeraient deux sauvegardes : la seconde écraserait
+   * la première. On attend donc chaque famille avant de passer à la suivante.
+   */
+  async function handleClaimAll() {
+    if (claimingAll) return;
+    setClaimingAll(true);
+    try {
+      const gained = pendingMissionCount > 0 ? gameStore.claimMissions() : 0;
+      const readySeasons = game.seasons.filter((season) => season.claimable > 0);
+      for (const season of readySeasons) await onClaimSeason(season.id);
+      const summary = [
+        gained > 0 ? `+${gained} sablier${gained > 1 ? "s" : ""}` : "",
+        readySeasons.length > 0
+          ? `${readySeasons.length} famille${readySeasons.length > 1 ? "s" : ""}`
+          : "",
+      ].filter(Boolean);
+      onNotice(
+        summary.length > 0
+          ? `${summary.join(" · ")} réclamé${summary.length > 1 ? "s" : ""}.`
+          : "Aucune récompense n'était prête.",
+      );
+    } catch (caught) {
+      onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+    } finally {
+      setClaimingAll(false);
+    }
+  }
 
   return (
     <div className="view missions-view">
@@ -962,6 +1028,28 @@ function MissionsView({
           avance tant qu'on ouvre un booster chaque jour. C'est la partie de
           l'écran qui se remet à zéro à 6 h UTC — pas à minuit, pour ne pas
           couper une soirée de streaming en deux. */}
+      {hasPendingRewards ? (
+        <div className="reward-summary-banner">
+          <div className="reward-summary-copy">
+            <strong>{pendingMissionCount + pendingSeasonCount} récompense{pendingMissionCount + pendingSeasonCount > 1 ? "s" : ""} prête{pendingMissionCount + pendingSeasonCount > 1 ? "s" : ""}</strong>
+            <span>
+              {pendingMissionCount > 0 ? `${pendingMissionCount} mission${pendingMissionCount > 1 ? "s" : ""} du jour` : ""}
+              {pendingMissionCount > 0 && pendingSeasonCount > 0 ? " · " : ""}
+              {pendingSeasonCount > 0 ? `${pendingSeasonCount} saison${pendingSeasonCount > 1 ? "s" : ""}` : ""}
+              {pendingSeasonPoints > 0 || pendingSeasonHourglasses > 0 ? ` · ${pendingSeasonPoints} pts` : ""}
+              {pendingSeasonHourglasses > 0 ? ` · ${pendingSeasonHourglasses} sablier${pendingSeasonHourglasses > 1 ? "s" : ""}` : ""}
+            </span>
+          </div>
+          <div className="reward-summary-actions">
+            <span className="reward-summary-pill">{pendingMissionCount > 0 ? `${pendingMissionCount} mission${pendingMissionCount > 1 ? "s" : ""}` : ""}</span>
+            <span className="reward-summary-pill">{pendingSeasonCount > 0 ? `${pendingSeasonCount} famille${pendingSeasonCount > 1 ? "s" : ""}` : ""}</span>
+            <button type="button" className="ghost-button" onClick={handleClaimAll} disabled={claimingAll}>
+              {claimingAll ? "Réclamation…" : "Tout réclamer"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <section className="day-block">
         <div className="day-head">
           <div>

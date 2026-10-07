@@ -31,6 +31,8 @@ import {
   applyPackResult,
   applyPackStatus,
   applyTradeResult,
+  bulkRecyclableIds,
+  bulkRecycleCards,
   claimMilestone,
   claimSeason,
   craftCreator,
@@ -609,6 +611,62 @@ describe("Atelier · recyclage", () => {
     expect(next.points).toBe(RARITY_META.rare.recycleValue);
     expect(next.cards.map((card) => card.id)).toEqual(["a"]);
     expect(state.cards).toHaveLength(2); // pureté
+  });
+
+  it("recycle en masse les doublons sans toucher à la dernière copie", () => {
+    const rare = creatorOfRarity("rare");
+    const common = creatorOfRarity("common");
+    const state = makeState({
+      points: 0,
+      cards: [
+        ownedCard("a", rare.slug, "rare"),
+        ownedCard("b", rare.slug, "rare"),
+        ownedCard("c", rare.slug, "rare"),
+        ownedCard("d", common.slug, "common"),
+        ownedCard("e", common.slug, "common"),
+      ],
+    });
+
+    const next = bulkRecycleCards(state, T0);
+
+    expect(next.points).toBe(
+      RARITY_META.rare.recycleValue * 2 + RARITY_META.common.recycleValue,
+    );
+    expect(next.cards.map((card) => card.id)).toEqual(["a", "d"]);
+    expect(next.missions.recycle).toBe(Math.min(
+      1,
+      ((state.missionDay === gameDay(T0) ? state.missions.recycle : 0) ?? 0) + 3,
+    ));
+  });
+
+  it("laisse les doublons Live en place quand on recycle tout", () => {
+    // Un doublon Live se recycle **un par un**, jamais dans le clic qui emporte
+    // tout : c'est la règle du carnet, et elle est ici pour de vrai.
+    const rare = creatorOfRarity("rare");
+    const common = creatorOfRarity("common");
+    const state = makeState({
+      points: 0,
+      cards: [
+        ownedCard("a", rare.slug, "rare"),
+        ownedCard("b", rare.slug, "rare"),
+        ownedCard("c", rare.slug, "rare", "live"),
+        ownedCard("d", rare.slug, "rare", "live"),
+        ownedCard("e", common.slug, "common"),
+        ownedCard("f", common.slug, "common"),
+      ],
+    });
+
+    // La sélection le dit avant le geste : deux cartes seulement (les Standard,
+    // et jamais la copie la plus ancienne, qui reste au classeur).
+    expect(bulkRecyclableIds(state).sort()).toEqual(["b", "f"]);
+
+    const next = bulkRecycleCards(state, T0);
+    // Les deux Live sont toujours là, intactes.
+    expect(next.cards.filter((card) => card.variant === "live").map((card) => card.id)).toEqual([
+      "c",
+      "d",
+    ]);
+    expect(next.points).toBe(RARITY_META.rare.recycleValue + RARITY_META.common.recycleValue);
   });
 
   it("refuse une carte absente ou unique", () => {

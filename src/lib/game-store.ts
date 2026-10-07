@@ -7,6 +7,7 @@
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
 import {
+  bulkRecycleCards as engineBulkRecycleCards,
   buyWithTokens as engineBuyWithTokens,
   claimMilestone as engineClaimMilestone,
   claimMissions as engineClaimMissions,
@@ -170,6 +171,11 @@ export const gameStore = {
   /** Recycle un doublon : +points, la carte est retirée du classeur. */
   recycleCard(cardId: string, now = Date.now()): void {
     persist(engineRecycleCard(current(), cardId, now));
+  },
+
+  /** Recycle d'un seul coup tous les doublons du classeur. */
+  bulkRecycleCards(now = Date.now()): void {
+    persist(engineBulkRecycleCards(current(), now));
   },
 
   /** Rejoint un créateur manquant contre des points (Atelier). */

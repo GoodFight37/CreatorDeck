@@ -30,12 +30,24 @@ export type PointsOutcome =
   | { status: "done"; message?: string; delta?: number }
   | { status: "refused"; message: string };
 
+/** Ce que « Tout recycler » a réellement obtenu : des points, et combien de cartes. */
+export type BulkPointsOutcome = {
+  status: "done" | "refused";
+  message?: string;
+  /** Points réellement versés (le serveur peut en avoir déjà payé certains). */
+  delta: number;
+  /** Cartes réellement parties pendant ce geste. */
+  count: number;
+};
+
 const DONE: PointsOutcome = { status: "done" };
 
 export function usePoints(): {
   /** Le solde du joueur est-il tenu par le serveur ? (affichage seulement) */
   serverSide: boolean;
   recycle: (cardId: string) => Promise<PointsOutcome>;
+  /** « Tout recycler » : une liste de doublons, traités un par un. */
+  recycleAll: (cardIds: string[]) => Promise<BulkPointsOutcome>;
   craft: (slug: string, withTokens: boolean) => Promise<PointsOutcome>;
   claimMilestone: (id: string) => Promise<PointsOutcome>;
   claimSeason: (id: string) => Promise<PointsOutcome>;
@@ -70,6 +82,54 @@ export function usePoints(): {
         : { status: "refused", message: outcome.message };
     },
     [noAccount, serverSide, signedOut],
+  );
+
+  /**
+   * « Tout recycler » : la liste des doublons part **carte par carte**, en
+   * série, même quand il y en a vingt.
+   *
+   * Le serveur a le dernier mot sur chaque carte (il relit la sauvegarde et le
+   * catalogue), et deux demandes en même temps se mélangeraient : une seule
+   * sauvegarde voyage à la fois. Ce qui est payé reste payé — si une carte est
+   * refusée en route, on s'arrête et on dit ce qui est déjà passé.
+   */
+  const recycleAll = useCallback(
+    async (cardIds: string[]): Promise<BulkPointsOutcome> => {
+      if (!cardIds.length) return { status: "done", delta: 0, count: 0 };
+      if (signedOut) {
+        return { status: "refused", message: noAccount("recycler tes doublons").message, delta: 0, count: 0 };
+      }
+      if (!serverSide) {
+        const before = gameStore.getSnapshot();
+        gameStore.bulkRecycleCards();
+        const after = gameStore.getSnapshot();
+        return {
+          status: "done",
+          delta: before && after ? after.points - before.points : 0,
+          count: before && after ? before.cards.length - after.cards.length : 0,
+        };
+      }
+
+      let delta = 0;
+      let count = 0;
+      for (const cardId of cardIds) {
+        const outcome = await recycle(cardId);
+        if (outcome.status === "refused") {
+          return {
+            status: count > 0 ? "done" : "refused",
+            message: outcome.message,
+            delta,
+            count,
+          };
+        }
+        if ((outcome.delta ?? 0) > 0) {
+          delta += outcome.delta ?? 0;
+          count += 1;
+        }
+      }
+      return { status: "done", delta, count };
+    },
+    [noAccount, recycle, serverSide, signedOut],
   );
 
   const craft = useCallback(
@@ -124,7 +184,7 @@ export function usePoints(): {
   );
 
   return useMemo(
-    () => ({ serverSide, recycle, craft, claimMilestone, claimSeason }),
-    [serverSide, recycle, craft, claimMilestone, claimSeason],
+    () => ({ serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason }),
+    [serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason],
   );
 }
