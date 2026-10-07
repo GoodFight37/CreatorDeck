@@ -179,7 +179,7 @@ pareil ne bloquent plus la sauvegarde ».
    client qui demandait `master` recevait 3000 points au premier appel. *Les
    paliers de famille* étaient payés à un autre montant que celui de l'écran, et
    pour un identifiant de famille qui ne correspondait pas toujours à la vague
-   affichée. Les trois sont corrigés et contrôlés (`395` vérifications), et la
+   affichée. Les trois sont corrigés et contrôlés (`399` vérifications), et la
    consommation du **droit de provenance** au recyclage comme au dépôt à l'hôtel
    ferme la porte que `0022` avait laissée ouverte en toutes lettres.
 
@@ -188,7 +188,7 @@ pareil ne bloquent plus la sauvegarde ».
 ```powershell
 npm ci
 npm test                                    # 784 tests, 52 fichiers
-npm run supabase:verify                     # 395 contrôles sur un Postgres jetable
+npm run supabase:verify                     # 399 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 

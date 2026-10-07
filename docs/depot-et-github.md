@@ -42,7 +42,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
   comme « hors ligne » ou « sans compte » sans cette nuance — c'était vrai avant
   le chantier online, ça ne l'est plus.
 - Migrations Supabase collées par le joueur, dans l'ordre : `0003`, `0011` →
-  `0028` (les points sont passés au serveur : `0027` pour la caisse, `0028` pour
+  `0029` (les points sont passés au serveur : `0027` pour la caisse, `0028` pour
   la grille des familles et leurs paliers, générée depuis le jeu). Les dernières ferment des trous d'intégrité : `0019` (la sauvegarde, la
   réserve de boosters et les raretés déclarées ne s'écrivent plus depuis le
   client), `0020` (un pseudo = un joueur), `0021` (registre de provenance : une
@@ -50,8 +50,8 @@ But : **un dépôt, une branche de référence, un historique léger.**
   notifications de direct), `0024` (l'état de l'interrupteur se relit). La
   bascule de `0021` a inscrit 40 lignes pour toutes les collections existantes —
   personne ne perd son rang.
-- Le vérifieur `npm run supabase:verify` joue `0001` → `0028` sur un Postgres
-  jetable : 395 contrôles. Il pose les droits de table comme Supabase
+- Le vérifieur `npm run supabase:verify` joue `0001` → `0029` sur un Postgres
+  jetable : 399 contrôles. Il pose les droits de table comme Supabase
   (`alter default privileges` **avant** les migrations), sinon il redonnerait à
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.

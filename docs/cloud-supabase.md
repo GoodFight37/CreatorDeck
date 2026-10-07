@@ -251,6 +251,18 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0029_wallet_surcharge.sql`](../supabase/migrations/0029_wallet_surcharge.sql)
+     → **Run après `0027`** : range la **surcharge** laissée par la première
+     version de `0027`. Celle-ci créait `_wallet_apply` avec un cinquième
+     paramètre (`p_once boolean default false`) ; la version corrigée n'en a plus
+     que quatre, et `create or replace` — qui ne remplace que si la signature est
+     **identique** — avait donc laissé **deux** fonctions. Un appel à quatre
+     arguments, comme celui du tirage, devenait ambigu :
+     « function public.\_wallet_apply(uuid, integer, text, text) is not unique » —
+     vu en vrai le 7 octobre, et **le booster ne s'ouvrait plus**. La migration
+     retire toute signature autre que `(uuid, integer, text, text)`, et refuse de
+     retirer quoi que ce soit si la fonction canonique manque (il faut alors
+     recoller `0027` d'abord). Rejouable, sans effet sur une base neuve.
    - [`supabase/migrations/0028_wallet_saisons.sql`](../supabase/migrations/0028_wallet_saisons.sql)
      → **Run après `0027`** : la grille des familles (les créateurs de chaque
      vague, le seuil et les points de chaque palier), **générée depuis le jeu**
@@ -378,7 +390,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les vingt-huit migrations** (`0001` à `0028`) pour de vrai, dans
+> Le script exécute **les vingt-neuf migrations** (`0001` à `0029`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de

@@ -117,6 +117,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.6 | Les points vivent au serveur : l'hôtel et l'Atelier ne dépensent que ce que le serveur a encaissé | **livrée** | `0027_wallet.sql`, `0028_wallet_saisons.sql`, `src/lib/cloud/api/wallet.ts`, `src/lib/cloud/store/wallet.ts`, `src/hooks/use-points.ts`, `docs/cloud-supabase.md` § « Les points vivent au serveur » |
 | 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
 | 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
+| 11.8 | La surcharge de `_wallet_apply` retirée : deux versions de la même fonction laissaient l'appel ambigu et **le booster ne s'ouvrait plus** | **livrée** | `0029_wallet_surcharge.sql`, `scripts/verify-supabase-migrations.mjs` (l'accident est rejoué, puis réparé) |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -152,7 +153,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0028` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers et grille des familles). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0029` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles et surcharge de `_wallet_apply`). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -191,7 +192,7 @@ Trois étages, trois vitesses :
   la carte est relue dans la sauvegarde (et dont le droit de provenance est
   consommé), un palier de collection recalculé côté serveur, un palier de famille
   payé au montant du jeu
-  (**395 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  (**399 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -264,7 +265,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0028)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0029)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -275,7 +276,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0028` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0029` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
@@ -568,7 +569,9 @@ ventes de l'hôtel et les paliers, il encaisse l'artisanat, et l'appareil affich
 ce qu'il reçoit. Une sauvegarde gonflée à la main n'achète donc plus rien, et le
 serveur ne croit pas non plus un client qui annonce un palier atteint : il
 recompte (collection projetée, compteur de boosters, grille des familles générée
-depuis le jeu — `0028_wallet_saisons.sql`).
+depuis le jeu — `0028_wallet_saisons.sql`), et `0029` range la surcharge laissée
+par la première version de `0027` (`_wallet_apply` à cinq paramètres : deux
+fonctions identiques à l'appel, et le booster ne s'ouvrait plus).
 
 Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau**,
 les **sabliers** et les **jetons**. Ils ne valent rien pour un autre joueur ; le

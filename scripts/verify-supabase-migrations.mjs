@@ -152,6 +152,7 @@ try {
   const promos = await readFile(path.join(MIGRATIONS, "0026_promo_codes.sql"), "utf8");
   const wallet = await readFile(path.join(MIGRATIONS, "0027_wallet.sql"), "utf8");
   const saisons = await readFile(path.join(MIGRATIONS, "0028_wallet_saisons.sql"), "utf8");
+  const surcharge = await readFile(path.join(MIGRATIONS, "0029_wallet_surcharge.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -181,6 +182,7 @@ try {
     ["0026_promo_codes.sql", promos],
     ["0027_wallet.sql", wallet],
     ["0028_wallet_saisons.sql", saisons],
+    ["0029_wallet_surcharge.sql", surcharge],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -2470,6 +2472,21 @@ try {
     "connecte-toi",
   );
 
+  // --- La surcharge (0029) ---------------------------------------------------
+  // Le 7 octobre, le jeu a bloqué en production : la première version de `0027`
+  // créait `_wallet_apply` avec **cinq** paramètres (dont `p_once boolean default
+  // false`), la version corrigée n'en a plus que quatre, et `create or replace`
+  // — qui ne remplace que si la signature est identique — avait laissé les deux.
+  // Un appel à quatre arguments, comme celui du tirage, devenait ambigu.
+  const signaturesApply = (await client.query(
+    "select oidvectortypes(p.proargtypes) as args from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = '_wallet_apply' order by 1",
+  )).rows.map((ligne) => ligne.args);
+  check(
+    "surcharge : `_wallet_apply` n'a qu'une signature — celle du code",
+    signaturesApply.length === 1 && signaturesApply[0] === "uuid, integer, text, text",
+    JSON.stringify(signaturesApply),
+  );
+
 
   // --- Le carnet : les ventes -------------------------------------------------
   // Hélène a vendu sa Gold épique à Gaston dans la section précédente : la
@@ -4601,6 +4618,72 @@ try {
   const membresAvant = (await client.query("select count(*)::int as n from public.wallet_season_members")).rows[0].n;
   await client.query(wallet);
   await client.query(saisons);
+  await client.query(surcharge);
+
+  // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
+  // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,
+  // comme ceux de `wallet_credit` — devient bien ambigu (« is not unique »), puis
+  // on repasse `0029` et on vérifie qu'il redevient net. Un rejeu ne prouve rien
+  // s'il ne reproduit pas d'abord la panne.
+  await client.query(`
+    create or replace function public._wallet_apply(
+      p_user uuid, p_delta integer, p_kind text, p_ref text default '', p_once boolean default false
+    ) returns integer language sql as $$ select 0 $$;
+  `);
+  let ambigu = "";
+  try {
+    await client.query("select public._wallet_apply($1::uuid, 0::integer, 'controle'::text, 'surcharge'::text) as r", [
+      MIL,
+    ]);
+  } catch (error) {
+    ambigu = String(error.message);
+  }
+  check("surcharge : la vieille signature à cinq paramètres rend l'appel ambigu", /is not unique/.test(ambigu), ambigu);
+
+  await client.query(surcharge);
+  let apresReparation = "";
+  try {
+    await client.query("select public._wallet_apply($1::uuid, 0::integer, 'controle'::text, 'surcharge2'::text) as r", [
+      MIL,
+    ]);
+  } catch (error) {
+    apresReparation = String(error.message);
+  }
+  const signaturesReparees = (await client.query(
+    "select oidvectortypes(p.proargtypes) as args from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = '_wallet_apply' order by 1",
+  )).rows.map((ligne) => ligne.args);
+  check(
+    "surcharge : après `0029`, l'appel redevient net et la signature est unique",
+    apresReparation === "" && signaturesReparees.length === 1 && signaturesReparees[0] === "uuid, integer, text, text",
+    apresReparation || JSON.stringify(signaturesReparees),
+  );
+
+  // Le garde-fou : sans la fonction canonique, `0029` refuse de retirer quoi que
+  // ce soit (une base sans aucune `_wallet_apply` serait encore plus cassée).
+  await client.query("drop function public._wallet_apply(uuid, integer, text, text)");
+  await client.query(`
+    create or replace function public._wallet_apply(
+      p_user uuid, p_delta integer, p_kind text, p_ref text default '', p_once boolean default false
+    ) returns integer language sql as $$ select 0 $$;
+  `);
+  let refusGarde = "";
+  try {
+    await client.query(surcharge);
+  } catch (error) {
+    refusGarde = String(error.message);
+  }
+  const restantesGarde = (await client.query(
+    "select count(*)::int as n from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname = '_wallet_apply'",
+  )).rows[0].n;
+  check(
+    "surcharge : sans la fonction canonique, la migration refuse et ne retire rien",
+    /absente/.test(refusGarde) && restantesGarde === 1,
+    JSON.stringify({ refusGarde, restantesGarde }),
+  );
+  // On remet la pile dans son état normal avant la suite des rejeux.
+  await client.query("drop function public._wallet_apply(uuid, integer, text, text, boolean)");
+  await client.query(wallet);
+
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
