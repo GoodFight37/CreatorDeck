@@ -131,21 +131,28 @@ pareil ne bloquent plus la sauvegarde ».
    Firebase n'a rien à faire dans la base. Détail et mise en route :
    `docs/cloud-supabase.md` § 9.1.
 3. **Wallet serveur**, si l'hôtel devient central (voir § 3).
-4. Les codes promo, le gyroscope holographique et le badge automatique
-   (`pg_cron`) — le reste du backlog hors brief, inchangé.
+4. ~~**Le badge automatique (`pg_cron`)**~~ **fait le 7 octobre** :
+   `0025_direct_auto.sql` branche l'horloge de la base sur `refresh-live`
+   (`pg_net`, toutes les deux minutes). Avant, c'est l'application qui
+   interrogeait Twitch — donc seulement quand quelqu'un jouait : un direct qui
+   démarrait dans le vide ne réveillait personne, et la notification du brief
+   ne partait pas. Aucune clé de service n'entre dans la base : la porte
+   n'accepte que la clé publique, et elle est fermée aux joueurs.
+5. Les codes promo et le gyroscope holographique — le reste du backlog hors
+   brief, inchangé.
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 697 tests, 46 fichiers
-npm run supabase:verify                     # 347 contrôles sur un Postgres jetable
+npm test                                    # 703 tests, 46 fichiers
+npm run supabase:verify                     # 352 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0024` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0025` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`

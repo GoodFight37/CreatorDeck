@@ -822,7 +822,41 @@ que pour un tirage décidé par le serveur.
 **Qui peut réveiller la fonction.** `refresh-live` demande un en-tête
 `Authorization` (l'app envoie sa clé anon : rien de secret n'est embarqué) ; le
 diagnostic `?check=1`, qui décrit l'infrastructure, est réservé au **rôle de
-service**. Le créneau des 90 secondes est **réservé** par une écriture
+service**.
+
+**L'horloge de la base (`0025_direct_auto.sql`, 7 octobre 2026).** Jusqu'ici,
+c'est l'application qui réveillait la fonction — donc **seulement quand
+quelqu'un jouait**. Un créateur qui passait en direct dans le vide n'existait
+pour personne : badge périmé, et aucune notification. `pg_cron` appelle
+maintenant `refresh-live` toutes les deux minutes, `pg_net` s'occupant de la
+requête HTTP. Trois choix à connaître :
+
+* **aucune clé de service n'entre dans la base** : `refresh-live` accepte
+  n'importe quel porteur non vide, donc l'horloge envoie la clé **publique** du
+  projet — celle qui est déjà dans l'APK. Le mot de passe de service reste dans
+  les secrets des Edge Functions ;
+* la porte est un **appelant**, pas un calculateur : la base ne connaît ni
+  Twitch, ni les règles du direct. Un seul endroit décide (la fonction) ;
+* la fonction `cron_refresh_live()` est **fermée aux joueurs** : sans ça,
+  n'importe quel compte pourrait faire taper Twitch à volonté.
+
+Deux minutes, parce que `refresh-live` se limite lui-même à une requête Twitch
+toutes les 90 secondes : appeler plus vite ne rafraîchirait rien. Vérifier que
+l'horloge tourne (SQL Editor) :
+
+```sql
+select jobname, schedule, active from cron.job where jobname = 'creatordeck-refresh-live';
+select status_code, created from net._http_response order by created desc limit 5;
+```
+
+La seconde ligne montre les derniers appels réellement partis : `200` = la
+fonction a répondu. Si `cron.job` est vide, c'est que les extensions ne sont pas
+activées : **Database → Extensions**, activer `pg_cron` et `pg_net`, puis
+recoller la migration (elle est rejouable).
+
+Si la clé publique du projet change un jour, c'est la ligne `Authorization` de
+`public.cron_refresh_live()` qu'il faut suivre — la migration se recolle sans
+risque, elle remplace l'horloge au lieu d'en ajouter une. Le créneau des 90 secondes est **réservé** par une écriture
 conditionnelle sur `live_state.refreshed_at` : deux appels simultanés ne
 consomment qu'une requête Twitch, l'autre répond `skipped` — avant, les deux
 lisaient la même date et partaient tous les deux chez Twitch. Côté tableau de
@@ -1419,6 +1453,7 @@ vient de lancer son live ?* Le push répond à ça, et à rien d'autre.
 | --- | --- |
 | `0023_notifications.sql` | la **décision** : quels appareils réveiller (`push_targets()`), le journal anti-doublon (`push_log`), les jetons (`push_tokens`) |
 | `0024_push_state.sql` | la **relecture** : `push_state()` dit si le compte reçoit les notifications et sur combien d'appareils — l'interrupteur du carnet ne peut plus afficher un état inventé au lancement |
+| `0025_direct_auto.sql` | l'**horloge** : `pg_cron` appelle `refresh-live` toutes les deux minutes (par `pg_net`), pour que le direct se réveille même quand personne ne joue |
 | `supabase/functions/notify-live` | l'**envoi** : parle à Firebase (FCM HTTP v1), retire les jetons morts |
 
 `refresh-live` appelle `notify-live` **après** avoir publié le direct (best-effort :

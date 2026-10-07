@@ -15,7 +15,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { LIVE_TTL_MS } from "@/lib/live";
+import { LIVE_REFRESH_MS, LIVE_TTL_MS } from "@/lib/live";
 import { DIRECT_BONUS, PULL_RATES } from "@/lib/pull-rates";
 
 const ROOT = process.cwd();
@@ -25,6 +25,84 @@ const SQL = readFileSync(path.join(ROOT, "supabase", "migrations", "0011_direct.
 const CODE = SQL.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n");
+
+/**
+ * La veille automatique (`0025_direct_auto.sql`).
+ *
+ * Avant elle, le direct n'était interrogé que depuis l'application : un live
+ * qui démarre quand personne ne joue n'était vu par personne, donc aucune
+ * notification ne partait — le brief « je rouvre parce qu'un type vient de
+ * lancer son live » ne tenait qu'à moitié. Ces contrôles vérifient le contrat de
+ * l'horloge : où elle appelle, avec quelle clé, à quelle fréquence, et qui a le
+ * droit de s'en servir.
+ */
+const AUTO_SQL = readFileSync(
+  path.join(ROOT, "supabase", "migrations", "0025_direct_auto.sql"),
+  "utf8",
+);
+const AUTO = AUTO_SQL.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n");
+
+describe("0025_direct_auto.sql (le direct se réveille tout seul)", () => {
+  it("appelle la fonction serveur, et rien d'autre : Twitch n'est pas dans la base", () => {
+    // La base ne connaît ni Twitch ni ses secrets : elle sonne, la fonction
+    // travaille. Sinon il faudrait deux copies des règles du direct — et elles
+    // divergeraient.
+    expect(AUTO).toContain("net.http_post");
+    expect(AUTO).toContain("/functions/v1/refresh-live");
+    expect(AUTO).not.toMatch(/api\.twitch\.tv|id\.twitch\.tv/);
+    expect(AUTO).not.toContain("TWITCH_CLIENT_SECRET");
+  });
+
+  it("n'embarque que la clé publique, jamais une clé de service", () => {
+    // La porte accepte n'importe quel porteur : la clé publique suffit. Une
+    // clé de service dans une migration serait un secret écrit dans un dépôt
+    // public — et la migration est lue par tout le monde.
+    expect(AUTO).toContain("sb_publishable_");
+    expect(AUTO).not.toContain("sb_secret_");
+    expect(AUTO).not.toContain("service_role");
+    expect(AUTO).not.toContain("SUPABASE_SERVICE_ROLE_KEY");
+  });
+
+  it("planifie une horloge, pas deux, et la remplace quand on rejoue la migration", () => {
+    expect(AUTO).toMatch(/cron\.schedule\(\s*'creatordeck-refresh-live',\s*'\*\/2 \* \* \* \*'/);
+    // Rejouer la migration ne doit pas empiler deux horloges identiques.
+    expect(AUTO).toContain("cron.unschedule");
+    expect(AUTO).toContain("jobname = 'creatordeck-refresh-live'");
+  });
+
+  it("reste silencieuse quand le Postgres n'a pas pg_cron (vérifieur, préproduction)", () => {
+    // Sans ce garde-fou, la migration échouerait sur un Postgres ordinaire et
+    // toute la pile deviendrait irrejouable ailleurs.
+    expect(AUTO).toContain("to_regnamespace('cron') is null");
+    expect(AUTO).toContain("exception when others");
+    expect(AUTO).toContain("create extension if not exists pg_cron");
+    expect(AUTO).toContain("create extension if not exists pg_net");
+  });
+
+  it("garde la porte fermée aux joueurs", () => {
+    // Ouverte, elle laisserait n'importe quel compte faire taper Twitch à
+    // volonté — une porte invisible jusqu'au jour du quota.
+    expect(AUTO).toContain(
+      "revoke all on function public.cron_refresh_live() from public, anon, authenticated",
+    );
+    expect(AUTO).toContain("security definer");
+    // Cinq secondes : le temps qu'une fonction Edge à froid réponde.
+    expect(AUTO).toMatch(/timeout_milliseconds := 5000/);
+  });
+
+  it("demande un rafraîchissement plus souvent que l'application", () => {
+    // L'app redemande toutes les trois minutes (`LIVE_REFRESH_MS`) ; l'horloge
+    // doit passer plus souvent, sinon elle n'apporterait rien.
+    expect(AUTO).toContain("'*/2 * * * *'");
+    expect(LIVE_REFRESH_MS).toBeGreaterThan(2 * 60 * 1000);
+    // Et pas toutes les secondes non plus : `refresh-live` se limite lui-même à
+    // une requête Twitch toutes les 90 secondes, appeler plus vite ne
+    // rafraîchirait rien.
+    expect(AUTO).toContain("'*/2 * * * *'");
+  });
+});
 
 describe("0011_direct.sql (le Direct côté serveur)", () => {
   it("reprend le poids des créateurs en direct, au millième comme le moteur", () => {

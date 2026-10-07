@@ -47,6 +47,10 @@
  *     (épinglé ou carte possédée) — une fois, pour un direct frais, jamais
  *     réveillés deux fois d'affilée ; l'état de l'interrupteur se relit
  *     (`push_state()`) sans rien changer et sans rien dire d'un visiteur ;
+ *   * la veille automatique du direct : une porte fermée aux joueurs, qui
+ *     demande à la fonction serveur d'interroger Twitch, planifiée toutes les
+ *     deux minutes quand `pg_cron` est là (et silencieusement ignorée sinon,
+ *     pour que la pile se rejoue sur n'importe quel Postgres) ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -139,6 +143,7 @@ try {
   const packDansSaves = await readFile(path.join(MIGRATIONS, "0022_pack_dans_saves.sql"), "utf8");
   const notifications = await readFile(path.join(MIGRATIONS, "0023_notifications.sql"), "utf8");
   const etatPush = await readFile(path.join(MIGRATIONS, "0024_push_state.sql"), "utf8");
+  const directAuto = await readFile(path.join(MIGRATIONS, "0025_direct_auto.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -164,6 +169,7 @@ try {
     ["0022_pack_dans_saves.sql", packDansSaves],
     ["0023_notifications.sql", notifications],
     ["0024_push_state.sql", etatPush],
+    ["0025_direct_auto.sql", directAuto],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -942,6 +948,46 @@ try {
     (await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n === 2 &&
       (await client.query("select count(*)::int as n from pg_proc where proname = 'push_targets'")).rows[0].n === 1,
     String((await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n),
+  );
+
+  // --- La veille automatique du direct (0025) ------------------------------
+  //
+  // Ici, ni `pg_cron` ni `pg_net` : l'horloge ne peut pas être planifiée, et
+  // c'est **voulu** — la pile doit se rejouer sur un Postgres ordinaire. Ce
+  // qu'on contrôle, c'est ce qui reste vrai partout : la porte existe, elle
+  // demande bien le rafraîchissement, et un joueur ne peut pas s'en servir.
+  const directAutoCode = directAuto
+    .split("\n")
+    .map((line) => line.replace(/--.*$/, ""))
+    .join("\n");
+  check(
+    "direct auto : la base demande le rafraîchissement à la fonction serveur",
+    directAutoCode.includes("net.http_post") &&
+      directAutoCode.includes("/functions/v1/refresh-live") &&
+      /create or replace function public\.cron_refresh_live\(\)/.test(directAutoCode),
+  );
+  check(
+    "direct auto : la clé employée est la clé publique, jamais celle de service",
+    directAutoCode.includes("sb_publishable_") &&
+      !directAutoCode.includes("sb_secret_") &&
+      !directAutoCode.includes("service_role"),
+  );
+  check(
+    "direct auto : l'horloge est planifiée toutes les deux minutes, sans doublon",
+    /cron\.schedule\(\s*'creatordeck-refresh-live',\s*'\*\/2 \* \* \* \*'/.test(directAutoCode) &&
+      directAutoCode.includes("cron.unschedule") &&
+      directAutoCode.includes("to_regnamespace('cron') is null"),
+  );
+  await refuses(
+    "direct auto : un joueur ne peut pas déclencher la requête",
+    PAUL,
+    "select public.cron_refresh_live()",
+    [],
+    "permission denied",
+  );
+  check(
+    "direct auto : la fonction n'est là qu'une fois (migration rejouable)",
+    (await client.query("select count(*)::int as n from pg_proc where proname = 'cron_refresh_live'")).rows[0].n === 1,
   );
 
   // --- Rejouabilité de la migration ----------------------------------------
