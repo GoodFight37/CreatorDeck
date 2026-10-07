@@ -70,7 +70,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**588 tests**, 38 fichiers aujourd'hui).
+  (**596 tests**, 39 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -121,6 +121,8 @@ src/lib/regions.ts       familles de collection (langues) et leurs teintes
 src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
 src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
                          doivent être ceux de 0011_direct.sql
+src/lib/reveal.ts        la mise en scène d'une révélation : silence, refus de
+                         la dernière carte, verrou du Perfect (testé)
 src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, compte
                          à rebours, ce qui reste à prendre (testé)
 src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
@@ -275,6 +277,31 @@ dans [PTCGP-Private-Server](https://github.com/Layen-lang/PTCGP-Private-Server)
 Aucune donnée, image, animation ni illustration Pokémon n'est embarquée : tout
 le contenu visuel de CreatorDeck est calculé (teintes dérivées des familles,
 monogrammes) ou provient des portraits Twitch.
+
+## Ouvrir ses boosters en direct (overlay 16:9)
+
+Une page faite pour être collée en **source navigateur** dans OBS (ou équivalent) :
+`/overlay`. Elle n'affiche qu'une chose — la scène de révélation, plein cadre 16:9 —
+et elle ouvre de vrais boosters, avec les mêmes règles que le jeu (tirage serveur
+quand un compte est connecté, moteur local sinon).
+
+```url
+http://localhost:3000/overlay
+```
+
+- **Espace** ouvre un Live Drop, **Entrée** révèle la carte suivante (ou range) ;
+  aucun bouton ne traîne à l'écran pendant la révélation ;
+- **aucun raccourci** : le « ×5 » qui existe dans le jeu (hors overlay) n'est pas là.
+  Devant un public, les cinq cartes se montrent une par une ;
+- la mise en scène est la même partout, et elle est décidée par un module pur
+  (`src/lib/reveal.ts`, testé) : le **dernier emplacement refuse de se retourner**
+  (une fois, deux si la carte est Épique ou mieux) ; une Épique ou une Légendaire
+  arrive après **400 ms de silence** puis un bang ; un **Perfect** montre les cinq
+  cartes d'un coup et verrouille l'écran deux secondes, avec la vibration la plus
+  longue du jeu. Un Légendaire ou un Perfect passe en plein écran, avec le titre du
+  direct, le nombre de spectateurs et un bouton vers l'affiche ;
+- le son se coupe (`creatordeck.muted`) et **coupe aussi les vibrations** — c'est le
+  même interrupteur, dans « Toi → Son ».
 
 ## Application Android (Capacitor)
 

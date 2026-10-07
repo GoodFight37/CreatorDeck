@@ -95,6 +95,34 @@ export function packOpeningPlan(): Note[] {
   ];
 }
 
+/**
+ * Le « bang » qui suit le silence d'une carte Épique ou mieux.
+ *
+ * Le plan de la rareté est précédé d'un coup grave : c'est lui qu'on entend
+ * après les 400 ms de blanc (voir `silenceBefore` dans `src/lib/reveal.ts`),
+ * et c'est lui qui donne l'impression que le son a « claqué » au lieu de
+ * simplement commencer.
+ */
+export function bangPlan(rarity: Rarity, variant: CardVariant = "standard"): Note[] {
+  const hit = rarity === "legendary" ? 0.12 : 0.09;
+  return [
+    { freq: 87, at: 0, duration: 0.46, type: "sawtooth", gain: hit },
+    { freq: 174, at: 0.012, duration: 0.3, type: "triangle", gain: 0.05 },
+    ...revealPlan(rarity, variant),
+  ];
+}
+
+/**
+ * Le refus d'une carte : deux notes graves qui descendent. Volontairement
+ * courtes et sans éclat — un refus ne doit pas ressembler à une récompense.
+ */
+export function refusePlan(): Note[] {
+  return [
+    { freq: 116, at: 0, duration: 0.16, type: "sawtooth", gain: 0.045 },
+    { freq: 104, at: 0.13, duration: 0.2, type: "sawtooth", gain: 0.04 },
+  ];
+}
+
 /** Carillon de récompense (palier réclamé, saison complétée). */
 export function rewardPlan(): Note[] {
   return [
@@ -201,4 +229,14 @@ export function playReveal(rarity: Rarity, variant: CardVariant = "standard"): v
 
 export function playReward(): void {
   play(rewardPlan());
+}
+
+/** Le bang d'une carte Épique ou mieux (à jouer après le silence). */
+export function playBang(rarity: Rarity, variant: CardVariant = "standard"): void {
+  play(bangPlan(rarity, variant));
+}
+
+/** Le son d'une carte qui refuse de se retourner. */
+export function playRefuse(): void {
+  play(refusePlan());
 }

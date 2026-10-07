@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   BadgeInfo,
   BookOpen,
+  Share2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -43,6 +44,7 @@ import { NotificationsSheet } from "@/components/notifications-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
+import { RevealOverlay } from "@/components/reveal-overlay";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
@@ -71,7 +73,28 @@ import { readySteals } from "@/lib/last-pack";
 import { formatViewers, liveFor, liveLogins, viewersLabel } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
 import { regionLabel } from "@/lib/regions";
-import { isMuted, playPackOpening, playReveal, playReward, setMuted } from "@/lib/sfx";
+import { bestCardOf } from "@/lib/social/inbox";
+import { buzz } from "@/lib/haptics";
+import {
+  isPerfect,
+  PERFECT_HAPTIC,
+  PERFECT_LOCK_MS,
+  resistCount,
+  RESIST_SHAKE_MS,
+  resistHaptic,
+  revealHaptic,
+  silenceBefore,
+  deservesSpotlight,
+} from "@/lib/reveal";
+import {
+  isMuted,
+  playBang,
+  playPackOpening,
+  playRefuse,
+  playReveal,
+  playReward,
+  setMuted,
+} from "@/lib/sfx";
 import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
 import { THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
@@ -1213,88 +1236,6 @@ function ProfileView({
   );
 }
 
-function RevealOverlay({
-  cards,
-  index,
-  kind = "live",
-  onNext,
-  onClose,
-}: {
-  cards: DrawnCard[];
-  index: number;
-  /** Quel paquet a été ouvert : le tirage rare ne se raconte pas pareil. */
-  kind?: "live" | "scene";
-  onNext: () => void;
-  onClose: () => void;
-}) {
-  const card = cards[index];
-  const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
-  const live = useLive();
-  const now = useNow(60_000);
-  if (!card || !creator) return null;
-  const isLast = index === cards.length - 1;
-  const perfect = cards[0]?.rareDrop;
-  const onAir = liveFor(live, creator.login, now);
-  return (
-    <div className="reveal-overlay" role="dialog" aria-modal="true" aria-label="Résultat du booster">
-      <div className="reveal-ambient" />
-      {perfect ? (
-        <div className="perfect-banner" role="status">
-          <Sparkles size={13} />
-          <span>
-            {kind === "scene"
-              ? "Scène pleine : cinq Épiques de ta famille !"
-              : "Booster Perfect : toutes les cartes sont Épique ou mieux !"}
-          </span>
-        </div>
-      ) : null}
-      <div className="reveal-header">
-        <span>{index + 1} / {cards.length}</span>
-        <div className="reveal-dots">
-          {cards.map((item, dotIndex) => (
-            <i key={item.id} className={dotIndex <= index ? "active" : ""} />
-          ))}
-        </div>
-        <button onClick={onClose} aria-label="Fermer"><X size={20} /></button>
-      </div>
-      <div className="reveal-stage">
-        {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-        <CreatorCard
-          key={card.id}
-          creator={creator}
-          variant={card.variant}
-          className="reveal-card"
-          liveStream={onAir}
-        />
-        {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
-            nameplate). Ici : l'état, et rien d'autre. */}
-        <div className="reveal-name">
-          <p>
-            {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
-          </p>
-          {/* Le meilleur moment de l'ouverture : la carte tombe pendant que la
-              personne est en train de streamer. */}
-          {onAir ? (
-            <p className="reveal-live">
-              <i aria-hidden="true" />
-              {onAir.gameName
-                ? `En direct maintenant · ${onAir.gameName} · ${viewersLabel(onAir.viewers)}`
-                : `En direct maintenant · ${viewersLabel(onAir.viewers)}`}
-            </p>
-          ) : null}
-          {/* Le tirage réserve toujours la dernière carte : le dire évite de
-              croire à un hasard, et annonce le moment fort du paquet. */}
-          {isLast ? <span className="reveal-guaranteed">Carte garantie du booster</span> : null}
-        </div>
-      </div>
-      <button className="reveal-next" onClick={isLast ? onClose : onNext}>
-        <span>{isLast ? "Ranger dans le classeur" : "Révéler la suivante"}</span>
-        {isLast ? <BookOpen size={18} /> : <ChevronRight size={18} />}
-      </button>
-    </div>
-  );
-}
-
 /*
  * Quatre lieux, un mot chacun. Les objectifs quittent la barre : c'est un
  * rendez-vous quotidien, pas un endroit où l'on vit — ils s'ouvrent depuis le
@@ -1528,14 +1469,6 @@ export function CreatorDeckApp() {
     }
   }
 
-  // Une carte se révèle → son propre son. La première carte est accompagnée du
-  // son du paquet (index 0) : pas de doublon, pas d'accord qui se superpose.
-  useEffect(() => {
-    if (!drawnCards.length || revealIndex === 0) return;
-    const card = drawnCards[revealIndex];
-    if (card) playReveal(card.rarity, card.variant);
-  }, [drawnCards, revealIndex]);
-
   function handleClaimSeason(seasonId: string) {
     // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
     const before = game?.seasons.find((entry) => entry.id === seasonId);
@@ -1762,9 +1695,13 @@ export function CreatorDeckApp() {
       ) : null}
       {drawnCards.length ? (
         <RevealOverlay
+          // Une clé par paquet : les compteurs de refus et le verrou du Perfect
+          // repartent de zéro à chaque ouverture, sans effet de réinitialisation.
+          key={drawnCards[0]?.id ?? "reveal"}
           cards={drawnCards}
           index={revealIndex}
           kind={revealKind}
+          onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
           onClose={closeReveal}
         />

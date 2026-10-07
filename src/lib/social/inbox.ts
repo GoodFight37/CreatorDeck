@@ -126,7 +126,7 @@ export function bestCardOf(cards: readonly LastPackCardLike[]): LastPackCardLike
 }
 
 /** Le peu qu'un paquet expose et dont `bestCardOf` a besoin. */
-type LastPackCardLike = { creatorSlug: string; rarity: string };
+export type LastPackCardLike = { creatorSlug: string; rarity: string; variant?: string };
 
 /**
  * Construit le carnet, du plus récent au plus ancien.

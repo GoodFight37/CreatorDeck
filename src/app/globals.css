@@ -2077,6 +2077,134 @@ input:focus-visible {
 .scene-action svg { color: var(--accent-light); }
 .scene-action:disabled { opacity: .55; cursor: default; }
 .odds-packs { margin-bottom: 4px; }
+/* --- La scène 16:9 (source navigateur d'un direct) ------------------------ */
+/*
+ * Le noir autour, la scène au milieu : dans OBS, le cadre remplit la source ;
+ * sur un écran de bureau, on voit une fenêtre 16:9 centrée, comme un jeu de
+ * cartes posé sur un bureau noir.
+ */
+.overlay-root { display: grid; min-height: 100dvh; place-items: center; background: #050506; }
+.overlay-frame {
+  position: relative;
+  overflow: hidden;
+  width: min(100vw, 177.78dvh);
+  height: min(56.25vw, 100dvh);
+  border: 1px solid rgba(255, 255, 255, .06);
+  background: rgb(var(--bg-rgb) / .99);
+}
+/* Le carnet de révélation, ramené **dans** le cadre : dans l'application il
+   occupe tout l'écran du téléphone, ici il obéit à la scène. */
+.overlay-frame .reveal-overlay { position: absolute; inset: 0; max-width: none; min-height: 0; }
+
+.overlay-idle { display: flex; height: 100%; align-items: center; justify-content: center; flex-direction: column; padding: 4vmin; text-align: center; }
+.overlay-kicker { margin: 0; color: var(--accent-light); font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+.overlay-idle h1 { margin: 10px 0 0; font-family: var(--font-display); font-size: clamp(28px, 5.4vmin, 64px); font-weight: 700; letter-spacing: .01em; text-transform: uppercase; }
+.overlay-actions { display: flex; gap: 10px; margin-top: 4vmin; }
+.overlay-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  color: var(--ink);
+  border: 0;
+  border-radius: 11px;
+  background: var(--accent);
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  cursor: pointer;
+}
+.overlay-actions button.ghost { color: var(--text); border: 1px solid var(--line-strong); background: rgba(255, 255, 255, .04); }
+.overlay-actions button:disabled { opacity: .5; cursor: default; }
+.overlay-hint { margin: 3vmin 0 0; color: var(--muted); font-size: 13px; }
+.overlay-problem { margin: 12px 0 0; max-width: 60ch; color: var(--accent-light); font-size: 13.5px; }
+.overlay-meta { margin: 1.6vmin 0 0; color: var(--muted-2); font-size: 12px; }
+
+/* --- La révélation : le refus, le Perfect, le plein écran ------------------ */
+.reveal-shake { animation: reveal-refuse 520ms cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes reveal-refuse {
+  0%, 100% { transform: none; }
+  14% { transform: translateX(-9px) rotate(-1.2deg); }
+  34% { transform: translateX(8px) rotate(1deg); }
+  55% { transform: translateX(-5px); }
+  76% { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) { .reveal-shake { animation: none; } }
+.reveal-skip { padding: 7px 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: .04em; cursor: pointer; }
+.reveal-dots i { transition: background 200ms ease; }
+.reveal-dots i.active { background: var(--dot-color, var(--accent-soft)); }
+
+/* Le plein écran : réservé au Légendaire et au Perfect. La pièce s'assombrit,
+   la carte grandit, et tout le reste passe derrière. */
+.reveal-spotlight .reveal-ambient { background: radial-gradient(ellipse 78% 52% at 50% 40%, rgb(var(--accent-rgb) / .3), transparent 72%); }
+.reveal-spotlight .reveal-stage { padding: 0 18px 4px; }
+.reveal-spotlight .reveal-card { width: min(78vw, 350px); max-height: 66vh; }
+.reveal-spotlight .reveal-name p { letter-spacing: .16em; }
+
+/* Le titre du direct, en plein écran : c'est le moment où la carte tombe
+   pendant que la personne streame — le dire en entier, pas en abrégé. */
+.reveal-name .reveal-live-show {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 3px;
+  margin: 9px 0 0;
+  color: var(--accent-light);
+  font-family: var(--font-body);
+  letter-spacing: .01em;
+  text-transform: none;
+}
+.reveal-live-show i { width: 7px; height: 7px; margin-bottom: 2px; border-radius: 99px; background: var(--accent); box-shadow: 0 0 0 3px rgb(var(--accent-rgb) / .18); }
+.reveal-live-show b { font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; }
+.reveal-live-show span { color: var(--muted); font-size: 12.5px; }
+
+.reveal-poster {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 14px;
+  padding: 9px 14px;
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: 11px;
+  background: rgb(var(--accent-rgb) / .12);
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Le Perfect : les cinq cartes ensemble, et l'écran ne se presse pas. */
+.perfect-banner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0 17px 6px;
+  padding: 9px 12px;
+  color: var(--text);
+  border: 1px solid rgb(var(--accent-rgb) / .5);
+  border-radius: 11px;
+  background: rgb(var(--accent-rgb) / .16);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+.reveal-perfect-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 8px;
+  padding: 0 17px 8px;
+}
+.reveal-perfect-grid .reveal-card { width: 100%; max-height: none; animation-duration: 700ms; }
+
 .wishlist-block { margin: 0 0 16px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--accent-rgb) / .05); }
 .wishlist-title { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
 .wishlist-title svg { color: var(--accent-light); }
