@@ -193,15 +193,28 @@ input:focus-visible {
   text-transform: uppercase;
 }
 
+/* La saison en cours, sous la marque.
+ *
+ * Elle était plafonnée à 130 px, donc coupée en plein nom (« S06 · Europe de
+ * l'… ») : deux des neuf familles ne tenaient pas. Elle prend maintenant la
+ * place laissée par les compteurs, et passe sur **deux lignes** si besoin —
+ * « Europe du Nord & germanique » se lit en entier, et le bandeau grandit de
+ * quelques pixels au lieu de mentir sur le nom. Le `title` reste là pour la
+ * version longue au survol. */
 .brand-lockup small {
-  max-width: 130px;
+  /* 190 px : la place que les compteurs laissent sur un écran de téléphone,
+   * quelle que soit la longueur du nom de famille. */
+  max-width: 190px;
   margin-top: 4px;
+  display: -webkit-box;
   overflow: hidden;
   color: var(--muted);
   font-size: 13px;
+  line-height: 1.15;
   letter-spacing: 0.04em;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .top-actions {
