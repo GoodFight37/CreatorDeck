@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { X } from "lucide-react";
 import { PACKS, RARITY_META } from "@/lib/catalog";
 import { DIRECT_BONUS, PITY, RARITIES, packOdds } from "@/lib/pull-rates";
+import type { PackType } from "@/lib/catalog";
 
 const percent = new Intl.NumberFormat("fr-FR", {
   style: "percent",
@@ -23,6 +25,7 @@ function formatMultiplier(value: number): string {
 export function PackOddsSheet({
   onClose,
   current,
+  initialPack = "live",
 }: {
   onClose: () => void;
   /**
@@ -30,7 +33,10 @@ export function PackOddsSheet({
    * celui qui décidera du tirage, pas une illustration.
    */
   current?: { pity: { counter: number; remaining: number } } | null;
+  /** Paquet montré à l'ouverture (le joueur vient d'en ouvrir un, par exemple). */
+  initialPack?: PackType;
 }) {
+  const [shown, setShown] = useState<PackType>(initialPack);
   return (
     <div
       className="odds-overlay"
@@ -53,24 +59,43 @@ export function PackOddsSheet({
           fichier que le moteur de tirage. Aucun booster n&apos;est truqué à l&apos;ouverture.
         </p>
 
-        <PackOddsBlock current={current} />
+        {/* Deux paquets, deux blocs : le joueur doit pouvoir lire les taux de
+            chacun sans qu'on les mélange. Le sélecteur ne s'affiche que s'il y
+            a vraiment deux paquets à montrer. */}
+        <div className="filter-chips odds-packs" aria-label="Paquet">
+          {(["live", "scene"] as PackType[]).map((pack) => (
+            <button
+              key={pack}
+              className={shown === pack ? "active" : ""}
+              onClick={() => setShown(pack)}
+              aria-pressed={shown === pack}
+            >
+              {PACKS[pack].label}
+            </button>
+          ))}
+        </div>
+
+        <PackOddsBlock pack={shown} current={current} />
       </div>
     </div>
   );
 }
 
 function PackOddsBlock({
+  pack,
   current,
 }: {
+  pack: PackType;
   current?: { pity: { counter: number; remaining: number } } | null;
 }) {
-  const odds = packOdds("live");
+  const odds = packOdds(pack);
+  const isLive = pack === "live";
   return (
     <section className="odds-block">
       <div className="odds-block-head">
         <h3>{odds.label}</h3>
         <span>
-          {odds.cardCount} cartes · {PACKS.live.description}
+          {odds.cardCount} cartes · {PACKS[pack].description}
         </span>
       </div>
 
@@ -122,6 +147,10 @@ function PackOddsBlock({
         </ul>
       </details>
 
+      {/* Le bonus Direct ne concerne que le Live Drop : le Paquet Scène tire
+          dans une seule famille, un bonus « qui streame » n'y aurait pas de sens
+          (et sa table ne l'applique pas). */}
+      {isLive ? (
       <div className="odds-rare odds-direct">
         <strong>{DIRECT_BONUS.label}</strong>
         <span>
@@ -131,11 +160,13 @@ function PackOddsBlock({
         </span>
         <small>{DIRECT_BONUS.note}</small>
       </div>
+      ) : null}
 
       {/* Le plancher de malchance, publié comme le reste : le seuil, la
           probabilité réelle de l'atteindre, et l'état du compteur du joueur.
           C'est la règle qui empêche une série malchanceuse de durer des mois —
           elle doit être lisible, pas devinée. */}
+      {isLive ? (
       <div className="odds-rare odds-pity">
         <strong>{PITY.label}</strong>
         <span>
@@ -155,6 +186,16 @@ function PackOddsBlock({
         ) : null}
         <small>{PITY.note}</small>
       </div>
+      ) : (
+        <div className="odds-rare odds-pity">
+          <strong>Aucune Légendaire dans ce paquet</strong>
+          <span>
+            Le Paquet Scène remplit une famille : ses cinq cartes sont Communes à Épiques, et
+            jamais deux fois le même créateur. La chasse aux Légendaires reste le Live Drop — et
+            son plancher de malchance, qui ne compte que lui.
+          </span>
+        </div>
+      )}
 
       <p className="odds-footnote">
         « Au moins 1 » = probabilité qu&apos;un booster contienne au moins une carte de cette

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PACKS } from "@/lib/catalog";
-import { PULL_RATES, RARITIES, packOdds } from "@/lib/pull-rates";
+import { PITY_PACK, PULL_RATES, RARITIES, packOdds } from "@/lib/pull-rates";
 
 const PACK_TYPES = Object.keys(PACKS) as (keyof typeof PACKS)[];
 
@@ -13,17 +13,36 @@ describe("pull-rates", () => {
       expect(table.slotCount).toBe(PACKS[pack].size - 1);
       expect(table.slots.length + 1).toBe(PACKS[pack].size);
 
-      // Chaque rareté doit être atteignable, sinon elle serait un mensonge
-      // dans l'écran « Taux de drop ».
+      // Chaque rareté annoncée doit être atteignable, sinon elle serait un
+      // mensonge dans l'écran « Taux de drop ». Le Paquet Scène en exclut une
+      // volontairement — la Légendaire — et le dit à l'écran ; c'est le seul
+      // cas autorisé, et il est vérifié comme tel.
       for (const rarity of RARITIES) {
         const declared = [
           ...table.slots.map((slot) => slot.weights),
           table.guaranteed.weights,
           table.rareDrop.weights,
         ].some((weights) => (weights[rarity] ?? 0) > 0);
+        if (pack === "scene" && rarity === "legendary") {
+          expect(declared, `${pack} · ${rarity}`).toBe(false);
+          continue;
+        }
         expect(declared, `${pack} · ${rarity}`).toBe(true);
       }
     }
+  });
+
+  it("le Paquet Scène ne publie aucune chance de Légendaire", () => {
+    // La promesse est dans les taux **et** dans le validateur du catalogue :
+    // une Légendaire qui apparaîtrait un jour dans le paquet de famille ferait
+    // échouer `catalog:ci` et ce test. Le plancher de malchance, lui, ne parle
+    // que du Live Drop.
+    const odds = packOdds("scene");
+    for (const slot of odds.slots) {
+      expect(slot.probabilities.legendary).toBe(0);
+    }
+    expect(odds.perPack.legendary).toBe(0);
+    expect(PITY_PACK).toBe("live");
   });
 
   it("publie des probabilités qui somment à 100 %", () => {

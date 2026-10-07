@@ -182,6 +182,16 @@ export const VARIANT_META: Record<
  * Le booster contient 5 cartes dont la dernière est garantie Rare ou mieux, en
  * variante Live : la promesse du « live » de Twitch, à chaque ouverture.
  */
+/**
+ * Les deux paquets du jeu — il n'y en a pas d'autres.
+ *
+ * `live` est le paquet à réserve : quatre boosters, un toutes les demi-heures.
+ * `scene` n'est pas une réserve : c'est un rendez-vous, **un par jour de jeu**,
+ * qui tire cinq cartes de la famille que le joueur complète et ne contient
+ * aucune Légendaire (`pull-rates.json`). Il n'a donc ni `max` ni `regenMs` —
+ * la disponibilité se lit dans la journée (`sceneDay`, côté appareil ;
+ * `pack_draws`, côté serveur).
+ */
 export const PACKS = {
   live: {
     label: "Live Drop",
@@ -192,6 +202,14 @@ export const PACKS = {
     xp: 18,
     max: 4,
     regenMs: 30 * 60 * 1000,
+  },
+  scene: {
+    label: "Paquet Scène",
+    eyebrow: "Ta famille",
+    description: "5 cartes de ta famille · jamais de Légendaire",
+    size: 5,
+    points: 10,
+    xp: 14,
   },
 } as const;
 

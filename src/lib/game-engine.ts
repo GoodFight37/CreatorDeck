@@ -47,18 +47,19 @@ import {
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 7 as const;
+export const SAVE_VERSION = 8 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
 /** Sabliers offerts à chaque niveau gagné. */
 export const HOURGLASSES_PER_LEVEL = 3;
 /**
- * Temps de recharge retiré par un sablier.
+ * Temps de recharge retiré par un sablier, **par paquet à réserve**.
  *
- * Un seul booster, donc une seule valeur : la moitié d'un cycle de recharge.
+ * Le Paquet Scène n'y figure pas : ce n'est pas une réserve qui se recharge,
+ * c'est un rendez-vous quotidien — un sablier n'avance pas un jour.
  */
-export const HOURGLASS_REDUCTION_MS: Record<PackType, number> = {
+export const HOURGLASS_REDUCTION_MS: Partial<Record<PackType, number>> = {
   live: 15 * 60 * 1000,
 };
 
@@ -177,6 +178,15 @@ export type PlayerState = {
    * attend : un booster Perfect garanti **ou** 3 sabliers.
    */
   streakJackpot: boolean;
+  /**
+   * La journée de jeu du dernier **Paquet Scène** ouvert (chaîne vide si aucun).
+   *
+   * Le Paquet Scène n'est pas une réserve qui se recharge : c'est un
+   * rendez-vous quotidien, un par jour de jeu (6 h UTC, la même journée que les
+   * missions). Une seule date suffit donc à savoir s'il est encore disponible —
+   * et en ligne, c'est le journal des tirages du serveur qui fait foi.
+   */
+  sceneDay: string;
 };
 
 /**
@@ -200,6 +210,11 @@ export type CurrentSeason = {
   total: number;
 };
 
+/**
+ * Une famille de collection, vagues comprises : `S04-1` + `S04-2` + `S04-3`
+ * forment `S04`, et c'est ce total-là qui compte pour dire « il te reste 12
+ * créateurs à découvrir dans l'anglophonie ».
+ */
 type FamilyTotals = {
   familyId: string;
   name: string;
@@ -208,14 +223,10 @@ type FamilyTotals = {
   views: SeasonView[];
 };
 
-export function currentSeason(state: PlayerState): CurrentSeason | null {
-  const views = seasonViews(state);
-  if (!views.length) return null;
-
-  // Une famille peut être découpée en vagues (`S04-1`, `S04-2`…) : le total qui
-  // compte est celui de la famille entière.
+/** Regroupe les saisons par famille (une famille peut être découpée en vagues). */
+function familyTotals(state: PlayerState): FamilyTotals[] {
   const families = new Map<string, FamilyTotals>();
-  for (const view of views) {
+  for (const view of seasonViews(state)) {
     const entry = families.get(view.familyId) ?? {
       familyId: view.familyId,
       name: view.name.replace(/ · \d+\/\d+$/, ""),
@@ -228,11 +239,25 @@ export function currentSeason(state: PlayerState): CurrentSeason | null {
     entry.views.push(view);
     families.set(view.familyId, entry);
   }
+  return [...families.values()];
+}
+
+/** Une famille telle que la voit le Paquet Scène. */
+export type SceneFamily = Pick<FamilyTotals, "familyId" | "name" | "owned" | "total">;
+
+export function currentSeason(state: PlayerState): CurrentSeason | null {
+  const views = seasonViews(state);
+  if (!views.length) return null;
+
+  // Le regroupement par famille est partagé avec le Paquet Scène : les deux
+  // doivent parler des mêmes totaux, sinon l'écran annoncerait « 12/155 » et le
+  // paquet viserait une autre famille.
+  const families = familyTotals(state);
 
   let best: FamilyTotals | null = null;
   let last: FamilyTotals | null = null;
   let bestRatio = -1;
-  for (const entry of families.values()) {
+  for (const entry of families) {
     last = entry;
     if (entry.total <= 0 || entry.owned >= entry.total) continue;
     const ratio = entry.owned / entry.total;
@@ -253,6 +278,43 @@ export function currentSeason(state: PlayerState): CurrentSeason | null {
     owned: pending.owned,
     total: pending.total,
   };
+}
+
+/**
+ * Combien de créateurs une famille doit compter pour qu'un Paquet Scène puisse
+ * la viser : cinq cartes, aucune en double dans la même ouverture. Une famille
+ * plus petite (deux créateurs, aujourd'hui) se termine très bien au Live Drop —
+ * lui coller un paquet dédié serait une promesse impossible à tenir.
+ */
+export const SCENE_MIN_FAMILY = PACKS.scene.size;
+
+/**
+ * La famille que vise le **Paquet Scène** : celle que le joueur complète le
+ * plus (le même choix que `currentSeason`), à condition qu'elle puisse remplir
+ * un paquet — et si toutes sont terminées, la plus grande, pour que le paquet
+ * serve encore à quelque chose (des doublons, du recyclage).
+ *
+ * La règle est la même des deux côtés : le client l'affiche, et le serveur
+ * vérifie que la famille qu'on lui demande existe et tient bien cinq cartes.
+ */
+export function sceneFamily(state: PlayerState): SceneFamily | null {
+  const families = familyTotals(state).filter((entry) => entry.total >= SCENE_MIN_FAMILY);
+  if (!families.length) return null;
+
+  let best: SceneFamily | null = null;
+  let bestRatio = -1;
+  for (const entry of families) {
+    if (entry.owned >= entry.total) continue;
+    const ratio = entry.owned / entry.total;
+    if (ratio > bestRatio) {
+      bestRatio = ratio;
+      best = entry;
+    }
+  }
+  if (best) return best;
+
+  // Toutes les familles sont complètes : la plus grande sert de terrain de jeu.
+  return families.reduce((largest, entry) => (entry.total > largest.total ? entry : largest));
 }
 
 /**
@@ -479,6 +541,21 @@ export type GameView = {
     /** Combien il en reste avant la garantie. */
     remaining: number;
   };
+  /**
+   * Le Paquet Scène : la famille visée, si le paquet du jour est encore là, et
+   * ce qu'il ne contient pas (une Légendaire). Publié comme le reste — la
+   * promesse « jamais de Légendaire » est vérifiable dans les taux.
+   */
+  scene: {
+    /** Libellé du paquet (« Paquet Scène »). */
+    label: string;
+    /** La famille que le paquet vise, ou `null` si aucune n'est assez grande. */
+    family: SceneFamily | null;
+    /** Le joueur a-t-il déjà ouvert son paquet de la journée ? */
+    opened: boolean;
+    /** La journée de jeu (6 h UTC) qui décide — affichée en clair si besoin. */
+    day: string;
+  };
   /** Les trois missions du jour. */
   missions: MissionView[];
   /** Série de jours, et la récompense qui attend si le 7ᵉ jour est atteint. */
@@ -529,7 +606,76 @@ export function createInitialState(now = Date.now()): PlayerState {
     streakDay: "",
     streak: 0,
     streakJackpot: false,
+    sceneDay: "",
   };
+}
+
+/**
+ * Tire un **Paquet Scène** : cinq cartes de la famille visée, jamais deux fois
+ * le même créateur, et **aucune Légendaire** — la table du paquet n'en contient
+ * aucun poids, et le validateur du catalogue le vérifie (`catalog:ci`).
+ *
+ * Le paquet ne touche ni au compteur de malchance ni à la série : ces deux-là
+ * parlent du Live Drop, et c'est écrit dans `pull-rates.json`. Il ne consomme
+ * pas non plus la récompense de série — sinon un joueur pressé perdrait son
+ * Perfect en ouvrant le paquet du jour.
+ */
+export function openScenePack(
+  state: PlayerState,
+  now = Date.now(),
+  options: { liveLogins?: LiveLogins; rareDrop?: boolean; familyId?: string } = {},
+): { state: PlayerState; cards: DrawnCard[]; family: SceneFamily } {
+  const family = sceneFamily(state);
+  if (!family) {
+    throw new GameError(
+      "Aucune famille assez grande pour un Paquet Scène.",
+      "NO_SCENE_FAMILY",
+    );
+  }
+  if (options.familyId && options.familyId !== family.familyId) {
+    throw new GameError(
+      "Ce n'est pas la famille que tu complètes en ce moment.",
+      "SCENE_WRONG_FAMILY",
+    );
+  }
+  // En ligne, le journal du serveur fait foi : une date locale reculée ne
+  // redonne pas un paquet. Ici (moteur local), c'est `sceneDay` qui décide.
+  const day = gameDay(now);
+  if (state.sceneDay === day) {
+    throw new GameError("Ton Paquet Scène du jour est déjà ouvert.", "SCENE_ALREADY_OPENED");
+  }
+
+  const cards = drawPack("scene", ownedSlugs(state), {
+    liveLogins: options.liveLogins,
+    rareDrop: options.rareDrop,
+    family: family.familyId,
+  });
+
+  const next: PlayerState = {
+    ...state,
+    updatedAt: now,
+    sceneDay: day,
+    // Points, XP, niveau : mêmes règles que le Live Drop, avec les valeurs du
+    // paquet (un peu plus basses : il ne coûte rien et ne se rate pas).
+    points: state.points + PACKS.scene.points,
+    xp: state.xp + PACKS.scene.xp,
+    cards: [
+      ...state.cards,
+      ...cards.map<OwnedCard>((card) => ({
+        id: card.id,
+        creatorSlug: card.creatorSlug,
+        rarity: card.rarity,
+        variant: card.variant,
+        obtainedAt: now,
+        rareDrop: card.rareDrop,
+      })),
+    ],
+  };
+
+  // La mission « ouvre un booster » ne compte **pas** le Paquet Scène : elle
+  // parle du Live Drop, et un paquet gratuit offert chaque jour ne doit pas
+  // être le moyen le moins cher de valider ses missions.
+  return { state: next, cards, family };
 }
 
 /**
@@ -595,12 +741,29 @@ function chooseCreator(
   weights: RarityWeights,
   used: ReadonlySet<string>,
   liveLogins?: LiveLogins,
+  /**
+   * Famille d'où tirer le créateur (Paquet Scène). `null` = catalogue entier.
+   *
+   * Le filtre est posé **avant** le tirage de rareté : une rareté absente de la
+   * famille est simplement retirée de la roue, au lieu de tirer une rareté puis
+   * de chercher un créateur qui n'existe pas. Les probabilités affichées pour
+   * le Paquet Scène sont donc bien celles du tirage.
+   */
+  familyId?: string | null,
 ): Creator {
   const available = CREATORS.filter(
-    (creator) => !used.has(creator.slug) && (weights[creator.rarity] ?? 0) > 0,
+    (creator) =>
+      !used.has(creator.slug) &&
+      (weights[creator.rarity] ?? 0) > 0 &&
+      (!familyId || creator.region === familyId),
   );
   if (!available.length) {
-    throw new GameError("Le catalogue disponible est vide.", "EMPTY_CATALOG");
+    throw new GameError(
+      familyId
+        ? "Il ne reste personne à découvrir dans cette famille."
+        : "Le catalogue disponible est vide.",
+      "EMPTY_CATALOG",
+    );
   }
 
   const weightedRarities = (Object.keys(weights) as Rarity[])
@@ -696,6 +859,10 @@ function chooseVariant(
  *
  * `options.liveLogins` apporte le bonus Direct (créateurs qui streament, × 1,5
  * et variante Live). Omis ou vide : tirage neutre, aucune variante Live.
+ *
+ * `options.family` restreint le tirage à une famille (Paquet Scène) : aucun
+ * créateur hors de cette famille ne peut sortir. La rareté Légendaire n'est pas
+ * filtrée ici — c'est la table du paquet qui ne la contient pas.
  */
 export function drawPack(
   packType: PackType,
@@ -712,12 +879,15 @@ export function drawPack(
      * règle sans rien connaître de la partie locale.
      */
     pity?: boolean;
+    /** Famille d'où tirer exclusivement les cartes (Paquet Scène). */
+    family?: string | null;
   } = {},
 ): DrawnCard[] {
   const table = PULL_RATES[packType];
   const size = PACKS[packType].size;
   const liveLogins = options.liveLogins;
   const pity = options.pity === true;
+  const family = options.family ?? null;
   const rareDrop =
     options.rareDrop ?? randomInt(1000) < table.rareDrop.chancePermille;
   const weightsFor = (index: number): RarityWeights =>
@@ -727,7 +897,7 @@ export function drawPack(
   const drawn: DrawnCard[] = [];
 
   for (let index = 0; index < size - 1; index += 1) {
-    const creator = chooseCreator(weightsFor(index), used, liveLogins);
+    const creator = chooseCreator(weightsFor(index), used, liveLogins, family);
     used.add(creator.slug);
     drawn.push({
       id: randomUUID(),
@@ -743,11 +913,12 @@ export function drawPack(
   // le moment fort du paquet, et il porte la preuve de présence. Sous le
   // plancher de malchance, elle est **Légendaire**, quoi qu'en dise le tirage.
   const guaranteed = pity
-    ? chooseCreator({ legendary: 1 }, used, liveLogins)
+    ? chooseCreator({ legendary: 1 }, used, liveLogins, family)
     : chooseCreator(
         rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
         used,
         liveLogins,
+        family,
       );
   drawn.push({
     id: randomUUID(),
@@ -1314,9 +1485,16 @@ export function openPack(
   );
 }
 
-/** Borne une réserve venue du serveur (la table la contraint déjà à 0..4). */
+/**
+ * Borne une réserve venue du serveur.
+ *
+ * Toujours celle du Live Drop : le Paquet Scène n'a pas de réserve à borner,
+ * il a une journée (`sceneDay`).
+ */
 function clampPacks(value: number): number {
-  const max = PACKS[ACTIVE_PACK].max;
+  // `4` en dur serait faux le jour où la réserve change ; on élargit le type
+  // parce que `PACKS` est un `as const` dont un membre n'a pas de `max`.
+  const max = (PACKS[ACTIVE_PACK] as { max?: number }).max ?? 0;
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(max, Math.floor(value)));
 }
@@ -1694,7 +1872,7 @@ export function spendHourglass(state: PlayerState, now = Date.now()): PlayerStat
   const shifted: PlayerState = {
     ...refreshed,
     hourglasses: refreshed.hourglasses - 1,
-    lastPackRegen: refreshed.lastPackRegen - HOURGLASS_REDUCTION_MS[ACTIVE_PACK],
+    lastPackRegen: refreshed.lastPackRegen - (HOURGLASS_REDUCTION_MS[ACTIVE_PACK] ?? 0),
   };
   return { ...refreshBalances(shifted, now), updatedAt: now };
 }
@@ -1742,6 +1920,12 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       threshold: PITY.threshold,
       counter: refreshed.pityCounter,
       remaining: Math.max(0, PITY.threshold - refreshed.pityCounter),
+    },
+    scene: {
+      label: PACKS.scene.label,
+      family: sceneFamily(refreshed),
+      opened: refreshed.sceneDay === gameDay(now),
+      day: gameDay(now),
     },
     missions: missionViews(refreshed, now),
     streak: {

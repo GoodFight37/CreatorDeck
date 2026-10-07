@@ -10,11 +10,13 @@ import {
 } from "@/lib/catalog";
 import { DIRECT_BONUS, PULL_RATES, packOdds } from "@/lib/pull-rates";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
+import { gameDay } from "@/lib/progression";
 import {
   GameError,
   HOURGLASSES_PER_LEVEL,
   HOURGLASS_REDUCTION_MS,
   SAVE_VERSION,
+  SCENE_MIN_FAMILY,
   XP_PER_LEVEL,
   applyLastPackSteal,
   applyMarketPurchase,
@@ -34,7 +36,9 @@ import {
   MILESTONES,
   milestoneViews,
   openPack,
+  openScenePack,
   recycleCard,
+  sceneFamily,
   refreshBalances,
   seasonViews,
   spendHourglass,
@@ -448,10 +452,11 @@ describe("spendHourglass", () => {
     const state = makeState({ hourglasses: 3, lastPackRegen: T0 });
     const next = spendHourglass(state, T0);
     expect(next.hourglasses).toBe(2);
-    expect(next.lastPackRegen).toBe(T0 - HOURGLASS_REDUCTION_MS.live);
-    expect(getGameView(next, T0).player.nextPackAt).toBe(
-      T0 + PACKS.live.regenMs - HOURGLASS_REDUCTION_MS.live,
-    );
+    // `?? 0` : la table est partielle à dessein (le Paquet Scène n'est pas une
+    // réserve qu'un sablier peut avancer).
+    const shift = HOURGLASS_REDUCTION_MS.live ?? 0;
+    expect(next.lastPackRegen).toBe(T0 - shift);
+    expect(getGameView(next, T0).player.nextPackAt).toBe(T0 + PACKS.live.regenMs - shift);
   });
 
   it("peut débloquer un booster immédiatement", () => {
@@ -1041,5 +1046,86 @@ describe("le Last Pack", () => {
     const avec = applyLastPackSteal(state, { card: { ...premier, fromLastPack: 475 } }, T0);
     const apres = applyLastPackSteal(avec, { card: { ...second, fromLastPack: 475 } }, T0 + 1_000);
     expect(apres.cards.map((card) => card.id)).toEqual(["un", "deux"]);
+  });
+});
+
+describe("Paquet Scène", () => {
+  it("tire cinq cartes de la famille visée, jamais de Légendaire", () => {
+    stubRandom([0]);
+    const state = makeState({ cards: [], packs: 2 });
+    const { cards, family } = openScenePack(state, T0);
+
+    expect(cards).toHaveLength(5);
+    const slugs = cards.map((card) => card.creatorSlug);
+    expect(new Set(slugs).size).toBe(5);
+    for (const card of cards) {
+      expect(CREATOR_BY_SLUG.get(card.creatorSlug)?.region).toBe(family.familyId);
+      // La promesse publique du paquet : aucune Légendaire.
+      expect(card.rarity).not.toBe("legendary");
+    }
+  });
+
+  it("ne consomme pas de booster et ne touche pas au compteur de malchance", () => {
+    stubRandom([0]);
+    const state = makeState({ cards: [], packs: 2, pityCounter: 37, streak: 3, streakDay: "2025-12-31" });
+    const { state: after } = openScenePack(state, T0);
+    expect(after.packs).toBe(2);
+    expect(after.pityCounter).toBe(37);
+    // La série ne bouge pas non plus : elle parle du Live Drop, et c'est lui
+    // qui offre le Perfect du 7ᵉ jour. Un paquet de famille ne l'avance donc
+    // pas — et ne la casse pas non plus.
+    expect(after.streak).toBe(3);
+    expect(after.streakDay).toBe(state.streakDay);
+    // Le paquet du jour ne consomme pas la récompense de série : elle reste
+    // pour le prochain Live Drop.
+    expect(after.streakJackpot).toBe(state.streakJackpot);
+  });
+
+  it("un seul par jour de jeu, et le lendemain il revient", () => {
+    stubRandom([0]);
+    const state = makeState({ cards: [] });
+    const first = openScenePack(state, T0).state;
+    expect(first.sceneDay).toBe(gameDay(T0));
+    expect(() => openScenePack(first, T0 + 60_000)).toThrowError(/déjà ouvert/);
+    // La journée de jeu change à 6 h UTC : deux heures plus tard, c'est la même.
+    expect(() => openScenePack(first, T0 + 2 * HOUR)).toThrowError(/déjà ouvert/);
+    const tomorrow = openScenePack(first, T0 + 24 * HOUR).state;
+    expect(tomorrow.sceneDay).not.toBe(first.sceneDay);
+    expect(tomorrow.cards.length).toBe(first.cards.length + 5);
+  });
+
+  it("ne valide pas la mission « ouvre un booster »", () => {
+    // Sinon le paquet offert chaque jour deviendrait le moyen le moins cher de
+    // valider ses missions — et la mission ne parlerait plus du Live Drop.
+    stubRandom([0]);
+    const state = makeState({ cards: [], missions: {} });
+    const { state: after } = openScenePack(state, T0);
+    expect(after.missions.pack).toBeUndefined();
+  });
+
+  it("refuse une famille que le joueur ne complète pas", () => {
+    stubRandom([0]);
+    const state = makeState({ cards: [] });
+    const other = sceneFamily(state)?.familyId === "S01" ? "S02" : "S01";
+    expect(() => openScenePack(state, T0, { familyId: other })).toThrowError(/famille/);
+  });
+
+  it("publie la famille visée et l'état du jour", () => {
+    const state = makeState({ cards: [] });
+    const view = getGameView(state, T0);
+    expect(view.scene.label).toBe(PACKS.scene.label);
+    expect(view.scene.opened).toBe(false);
+    expect(view.scene.day).toBe(gameDay(T0));
+    expect(view.scene.family).not.toBeNull();
+  });
+
+  it("écarte les familles trop petites pour remplir un paquet", () => {
+    // S09 compte deux créateurs : cinq cartes sans doublon y sont impossibles.
+    // Le paquet ne doit donc jamais la viser.
+    const state = makeState({ cards: [] });
+    const family = sceneFamily(state);
+    expect(family).not.toBeNull();
+    expect(family!.total).toBeGreaterThanOrEqual(SCENE_MIN_FAMILY);
+    expect(family!.familyId).not.toBe("S09");
   });
 });

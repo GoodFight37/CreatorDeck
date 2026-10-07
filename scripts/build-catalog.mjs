@@ -257,6 +257,25 @@ function validateRates(rates) {
     }
   }
 
+  // Le Paquet Scène tient une promesse publique : **aucune Légendaire**. Si un
+  // jour un poids légendaire apparaît dans une de ses tables (slot, garantie ou
+  // tirage plein), ce n'est plus le paquet annoncé — et le plancher de
+  // malchance, qui ne compte que le Live Drop, deviendrait faux.
+  const scene = rates?.packs?.scene;
+  if (scene) {
+    const tables = [
+      ...(scene.slots ?? []),
+      scene.guaranteed,
+      scene.rareDrop,
+    ].filter(Boolean);
+    if (tables.some((table) => (table.weights?.legendary ?? 0) > 0)) {
+      fail("pull-rates.json : le Paquet Scène ne doit contenir aucun poids légendaire.");
+    }
+    if (!Array.isArray(scene.slots) || scene.slots.length < 4) {
+      fail("pull-rates.json : le Paquet Scène doit garder ses slots ordinaires.");
+    }
+  }
+
   // Plancher de malchance : un bloc publié, un seuil entier strictement
   // positif, et une explication — c'est une promesse faite au joueur, elle
   // doit être lisible dans le fichier de taux qui la porte.

@@ -103,6 +103,15 @@ export const DIRECT_BONUS = pullRateData.direct as DirectBonus;
 /** Le plancher de malchance (voir `PityRule`). */
 export const PITY = pullRateData.pity as PityRule;
 
+/**
+ * Le paquet qui porte le plancher de malchance.
+ *
+ * Le compteur de `PITY` ne parle que de celui-là (le Live Drop) : le Paquet
+ * Scène ne contient aucune Légendaire, donc il ne peut ni gagner ni casser une
+ * série. C'est écrit dans `pull-rates.json` et répété à l'écran.
+ */
+export const PITY_PACK: PackType = "live";
+
 function total(weights: RarityWeights): number {
   return RARITIES.reduce((sum, rarity) => sum + (weights[rarity] ?? 0), 0);
 }

@@ -31,7 +31,7 @@ export const LEGACY_SAVE_KEYS = [
   "creatordeck.save.v1",
 ] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, 6, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -241,6 +241,8 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     streakDay: typeof raw.streakDay === "string" ? raw.streakDay : "",
     streak: nonNegativeInt(raw.streak, 0),
     streakJackpot: raw.streakJackpot === true,
+    // v8 : journée du dernier Paquet Scène (chaîne vide = jamais ouvert).
+    sceneDay: typeof raw.sceneDay === "string" ? raw.sceneDay : "",
   };
 }
 
