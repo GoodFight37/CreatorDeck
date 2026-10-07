@@ -60,30 +60,3 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-
-      # Diagnostic cloud : un APK construit sans les deux variables est
-      # 100 % hors ligne (aucun écran de compte). C'est la cause n°1 d'un
-      # « cloud non configuré » alors qu'on l'attend — on le dit tout de suite,
-      # dans le journal du run, sans jamais afficher les valeurs.
-      - name: Vérifier que le cloud est embarqué
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-        run: |
-          set -euo pipefail
-          echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
-          PROJET="${NEXT_PUBLIC_SUPABASE_URL%/}"
-          if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
-            echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
-          else
-            echo "::warning::Cloud absent du bundle : l'APK sera hors ligne (aucun compte). Vérifie Settings → Secrets and variables → Actions, portée du dépôt, noms exacts NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY (Variables ou Secrets, les deux marchent), puis relance ce workflow."
-          fi
-
-      # 1. Artefact du run : pratique pour un test ponctuel, mais son
-      #    téléchargement exige d'être connecté à GitHub.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: creatordeck-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
-
-      # 2. Pré-release « roulante » :
