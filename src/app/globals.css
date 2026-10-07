@@ -1196,6 +1196,42 @@ input:focus-visible {
 .search-field button { display: grid; width: 24px; height: 24px; place-items: center; border: 0; border-radius: 6px; background: rgba(255,255,255,.06); cursor: pointer; }
 
 /*
+ * Le tri du classeur : un choix parmi cinq, dans la même forme que la
+ * recherche. Le libellé reste visible — un sélecteur sans mot devant ne dit pas
+ * ce qu'il règle.
+ */
+.sort-field {
+  display: flex;
+  height: 44px;
+  align-items: center;
+  gap: 9px;
+  margin-top: 10px;
+  padding: 0 12px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .02);
+}
+.sort-field .sort-label { color: var(--muted-2); font-size: 13px; }
+.sort-field select { flex: 1; min-width: 0; color: var(--text); border: 0; outline: 0; background: transparent; font-size: 14px; }
+.sort-field select option { color: #111; }
+
+/*
+ * Réserve pleine : un **état**, pas une animation. Le jeu n'a aucune animation
+ * perpétuelle — l'écran le dit par la couleur et une lueur fixe.
+ */
+.timer-copy.full { color: var(--accent-tint); text-shadow: 0 0 14px rgba(var(--accent-rgb), .35); }
+
+/*
+ * La fiche d'une carte manquante : le chemin pour l'obtenir, avec son prix, et
+ * le geste qui le paie. C'est la réponse à « je clique et il ne se passe rien ».
+ */
+.inspect-earn { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: rgba(255, 255, 255, .02); font-size: 13px; color: var(--muted); }
+.inspect-earn strong { color: var(--text); }
+.inspect-craft { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+.inspect-craft:disabled { opacity: .5; cursor: not-allowed; }
+
+/*
  * Les filtres (classeur, atelier) : une rangée de mots, comme les onglets d'un
  * registre. Pas de pastilles, pas de fond, pas de coins arrondis — le mot actif
  * est blanc et souligné, les autres sont gris.

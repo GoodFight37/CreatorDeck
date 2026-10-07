@@ -94,6 +94,23 @@ export function AtelierView({
   );
   const balance = wallet === "tokens" ? game.tokens.count : game.player.points;
 
+  // Combien de créateurs manquants la monnaie choisie peut déjà payer. Les
+  // Légendaires ne comptent jamais : elles ne s'artisinent pas, quelle que soit
+  // la bourse.
+  const affordableCount = useMemo(() => {
+    const missing = [...retiredCraftable, ...CREATORS].filter(
+      (creator) => !game.cards.some((card) => card.creatorSlug === creator.slug),
+    );
+    if (wallet === "tokens") {
+      if (game.tokens.count < game.tokens.targetCost) return 0;
+      return missing.filter((creator) => RARITY_META[creator.rarity].craftable).length;
+    }
+    return missing.filter((creator) => {
+      const meta = RARITY_META[creator.rarity];
+      return meta.craftable && meta.craftCost !== null && meta.craftCost <= game.player.points;
+    }).length;
+  }, [game.cards, game.player.points, game.tokens.count, game.tokens.targetCost, retiredCraftable, wallet]);
+
   const craftable = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
     // Les Sortants d'abord : leur fenêtre ferme à la fin de l'édition, alors que
@@ -256,6 +273,16 @@ export function AtelierView({
               Jetons ({game.tokens.count}/{game.tokens.targetCost})
             </button>
           </div>
+          {/* Ce que la bourse ouvre, tout de suite : le joueur voit combien de
+              créateurs manquants il peut déjà rejoindre, sans essayer carte par
+              carte. Le compte suit la monnaie choisie. */}
+          <p className="wallet-note">
+            {affordableCount > 0
+              ? `${affordableCount} créateur${affordableCount > 1 ? "s" : ""} manquant${affordableCount > 1 ? "s" : ""} à ta portée avec ${wallet === "tokens" ? "tes jetons" : "tes points"}.`
+              : wallet === "tokens"
+                ? `Encore ${Math.max(0, game.tokens.targetCost - game.tokens.count)} jetons avant la première carte.`
+                : "Aucun créateur à ta portée pour l'instant — recycle des doublons."}
+          </p>
           {wallet === "tokens" ? (
             <p className="wallet-note">
               {game.tokens.missing > 0

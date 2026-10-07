@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Sparkles } from "lucide-react";
+import { X, Sparkles, Hammer, LoaderCircle } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
 import { RARITY_META, type CardVariant, type Creator } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
@@ -11,6 +11,13 @@ type CardInspectModalProps = {
   ownedCount: number;
   variant: CardVariant;
   liveStream: LiveStream | null;
+  /** Le verdict de l'atelier sur ce créateur : artisanable, et à quel prix. */
+  quote?: { cost: number | null; craftable: boolean } | null;
+  /** Les points du joueur, pour dire s'il peut payer **maintenant**. */
+  balance?: number;
+  /** En cours de paiement : le bouton se verrouille, une seule fois. */
+  crafting?: boolean;
+  onCraft?: (slug: string) => void;
   onClose: () => void;
 };
 
@@ -19,6 +26,10 @@ export function CardInspectModal({
   ownedCount,
   variant,
   liveStream,
+  quote = null,
+  balance = 0,
+  crafting = false,
+  onCraft,
   onClose,
 }: CardInspectModalProps) {
   const rarity = RARITY_META[creator.rarity];
@@ -71,8 +82,49 @@ export function CardInspectModal({
             <div className="odds-intro" style={{ margin: 0 }}>
               {isOwned
                 ? `${creator.displayName} est déjà dans ton classeur. Tu as ${ownedCount} copie${ownedCount > 1 ? "s" : ""} dans cette variante.`
-                : `${creator.displayName} n'est pas encore dans ton classeur. Il reste à l'obtenir via un booster ou l'atelier.`}
+                : `${creator.displayName} n'est pas encore dans ton classeur.`}
             </div>
+
+            {/* Comment l'obtenir, avec les vrais chiffres du jeu : une carte
+                manquante qui dit seulement « à obtenir » n'apprend rien. Le
+                prix et la règle viennent de `craftQuote` (moteur), pas d'une
+                copie d'écran qui pourrait mentir. */}
+            {!isOwned ? (
+              quote?.craftable && quote.cost !== null ? (
+                <div className="inspect-earn">
+                  <span>
+                    Artisanable à l&apos;Atelier (« Rejoindre ») pour{" "}
+                    <strong>{quote.cost} points</strong>
+                    {balance >= quote.cost
+                      ? " — tu as de quoi."
+                      : ` — il te manque ${quote.cost - balance} points.`}
+                  </span>
+                  {onCraft ? (
+                    <button
+                      type="button"
+                      className="primary-button inspect-craft"
+                      onClick={() => onCraft(creator.slug)}
+                      disabled={crafting || balance < quote.cost}
+                    >
+                      {crafting ? (
+                        <LoaderCircle className="spin" size={16} />
+                      ) : (
+                        <Hammer size={16} />
+                      )}
+                      <span>{crafting ? "Paiement…" : `Rejoindre pour ${quote.cost} points`}</span>
+                    </button>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="inspect-earn">
+                  <span>
+                    {creator.rarity === "legendary"
+                      ? "Une Légendaire ne s'artisine pas : elle se tire en booster — et le plancher de malchance en garantit une au plus tard au 12ᵉ."
+                      : "Elle se tire en booster, ou se rejoint à l'Atelier si sa rareté le permet."}
+                  </span>
+                </div>
+              )
+            ) : null}
 
             {liveStream ? (
               <div className="odds-stat">

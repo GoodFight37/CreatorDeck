@@ -1292,7 +1292,7 @@ export function recycleCard(
  *     du jeu, et elle vaut d'autant plus pour une carte qui disparaît.
  */
 export function craftQuote(
-  state: PlayerState,
+  state: Pick<PlayerState, "cards">,
   creatorSlug: string,
 ): { creator: Creator | undefined; cost: number | null; craftable: boolean; owned: boolean } {
   const creator = CREATOR_BY_SLUG.get(creatorSlug);

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import {
+  ArrowDownWideNarrow,
   BadgeInfo,
   BookOpen,
   Check,
@@ -56,6 +57,7 @@ import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 import { CardInspectModal } from "@/components/card-inspect-modal";
+import { BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
@@ -111,7 +113,7 @@ import {
   playReward,
   setMuted,
 } from "@/lib/sfx";
-import { getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { craftQuote, getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
 import { THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -461,7 +463,9 @@ function HomeView({
               {stock}<small>/{pack.max}</small>
             </strong>
           </div>
-          <div className="timer-copy">
+          {/* Réserve pleine : l'état change de couleur, il ne clignote pas — le
+              jeu n'a aucune animation perpétuelle. */}
+          <div className={`timer-copy${nextAt === null ? " full" : ""}`}>
             <Clock3 size={14} />
             <span>{formatCountdown(nextAt, tick)}</span>
           </div>
@@ -688,10 +692,21 @@ function HomeView({
   );
 }
 
-function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CSSProperties }) {
+function CollectionView({
+  game,
+  themeStyle,
+  onCraft,
+}: {
+  game: GameState;
+  themeStyle?: CSSProperties;
+  /** Rejoindre un créateur manquant : dit `true` quand c'est payé. */
+  onCraft: (slug: string) => Promise<boolean>;
+}) {
   const [filter, setFilter] = useState<CollectionFilter>("all");
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<BinderSort>("catalog");
   const [page, setPage] = useState(0);
+  const [crafting, setCrafting] = useState<string | null>(null);
   const [inspect, setInspect] = useState<{
     creator: Creator;
     count: number;
@@ -709,7 +724,13 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
   const owned = useMemo(() => {
     const map = new Map<
       string,
-      { count: number; bestVariant: CardVariant; variants: Set<CardVariant> }
+      {
+        count: number;
+        bestVariant: CardVariant;
+        variants: Set<CardVariant>;
+        /* La copie la plus récente : l'ordre « Dernières obtenues » la lit. */
+        latestAt: number;
+      }
     >();
     const variantScore: Record<CardVariant, number> = {
       standard: 1,
@@ -722,8 +743,10 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
         count: 0,
         bestVariant: "standard" as CardVariant,
         variants: new Set<CardVariant>(),
+        latestAt: 0,
       };
       value.count += 1;
+      value.latestAt = Math.max(value.latestAt, card.obtainedAt);
       value.variants.add(card.variant);
       if (variantScore[card.variant] > variantScore[value.bestVariant]) {
         value.bestVariant = card.variant;
@@ -755,8 +778,18 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
       if (filter !== "all") return creator.rarity === filter;
       return true;
     });
-    return filter === "all" ? [...current, ...retiredCards] : current;
-  }, [filter, live, now, owned, query]);
+    // Le tri s'applique à ce qui reste, puis la pagination coupe : chercher,
+    // filtrer et trier donne la même première page, quel que soit l'ordre des
+    // gestes. Les Sortants gardent leur place à la fin du classeur : leur rang
+    // n'est plus comparable aux autres, et ils ne sont plus tirables.
+    const sorted = sortBinder(
+      current,
+      sort,
+      (slug) => owned.get(slug)?.count ?? 0,
+      (slug) => owned.get(slug)?.latestAt ?? 0,
+    );
+    return filter === "all" ? [...sorted, ...retiredCards] : sorted;
+  }, [filter, live, now, owned, query, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const safePage = Math.min(page, totalPages - 1);
@@ -814,6 +847,25 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
             <X size={15} />
           </button>
         ) : null}
+      </label>
+
+      <label className="sort-field">
+        <ArrowDownWideNarrow size={17} />
+        <span className="sort-label">Trier</span>
+        <select
+          value={sort}
+          onChange={(event) => {
+            setSort(event.target.value as BinderSort);
+            setPage(0);
+          }}
+          aria-label="Trier le classeur"
+        >
+          {BINDER_SORTS.map((entry) => (
+            <option key={entry.id} value={entry.id}>
+              {entry.label}
+            </option>
+          ))}
+        </select>
       </label>
 
       <div className="filter-chips" aria-label="Filtres de collection">
@@ -909,6 +961,19 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
           ownedCount={inspect.count}
           variant={inspect.variant}
           liveStream={inspect.liveStream}
+          quote={craftQuote({ cards: game.cards }, inspect.creator.slug)}
+          balance={game.player.points}
+          crafting={crafting === inspect.creator.slug}
+          onCraft={async (slug) => {
+            setCrafting(slug);
+            try {
+              // Le prix et la règle viennent du moteur (`craftQuote`) : la modale
+              // ne décide rien, elle demande.
+              if (await onCraft(slug)) setInspect(null);
+            } finally {
+              setCrafting(null);
+            }
+          }}
           onClose={() => setInspect(null)}
         />
       ) : null}
@@ -1771,6 +1836,28 @@ export function CreatorDeckApp() {
     }
   }
 
+  /**
+   * Rejoindre un créateur **depuis le classeur** : la fiche d'une carte
+   * manquante propose le prix, ce geste le paie. Il passe par `usePoints`,
+   * exactement comme l'Atelier — une seule caisse, donc le serveur décide quand
+   * il y a un compte, et l'appareil sinon.
+   */
+  async function handleCraftFromBinder(slug: string): Promise<boolean> {
+    try {
+      const paid = await points.craft(slug, false);
+      if (paid.status === "refused") {
+        showError(paid.message);
+        return false;
+      }
+      playReward();
+      showNotice(paid.message ?? "Créateur rejoint.");
+      return true;
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Créateur indisponible.");
+      return false;
+    }
+  }
+
   async function handleClaimSeason(seasonId: string) {
     // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
     const before = game?.seasons.find((entry) => entry.id === seasonId);
@@ -1877,7 +1964,9 @@ export function CreatorDeckApp() {
             needsAccount={cloud.configured && !cloud.userId}
           />
         ) : null}
-        {tab === "collection" ? <CollectionView game={game} themeStyle={themeStyle} /> : null}
+        {tab === "collection" ? (
+          <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} />
+        ) : null}
         {tab === "missions" ? (
           <MissionsView
             game={game}
