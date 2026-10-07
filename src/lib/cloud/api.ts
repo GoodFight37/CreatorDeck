@@ -999,7 +999,15 @@ export class CloudApi {
    * Les cartes sont infalsifiables : le serveur les a tirées avec le même
    * algorithme que le moteur local, et le client ne peut pas les modifier.
    */
-  async openPack(): Promise<{
+  async openPack(
+    /**
+     * Récompense de série : `perfect` (défaut) force le tirage si le 7ᵉ jour
+     * est atteint, `hourglasses` prévient le serveur que le joueur préfère les
+     * trois sabliers — le serveur ne les crédite pas, ils vivent sur
+     * l'appareil, il se contente de ne pas forcer le tirage.
+     */
+    jackpot: "perfect" | "hourglasses" = "perfect",
+  ): Promise<{
     packs: number;
     lastRegenAt: string;
     openings: number;
@@ -1009,8 +1017,16 @@ export class CloudApi {
       variant: string;
       rareDrop: boolean;
     }>;
+    /** Boosters ouverts depuis le dernier Légendaire, après ce tirage. */
+    pity: number;
+    /** Jours de jeu d'affilée, ce tirage compris. */
+    streak: number;
+    /** Ce booster a payé la garantie des 80 boosters. */
+    pityHit: boolean;
+    /** Ce booster a payé le Perfect du 7ᵉ jour. */
+    jackpot: boolean;
   }> {
-    const result = await this.rpc("open_pack", {});
+    const result = await this.rpc("open_pack", { p_jackpot: jackpot });
     const record = asRecord(result);
     if (!record) {
       throw new CloudError("Réponse de tirage illisible.", "invalid_response", 0);
@@ -1034,6 +1050,13 @@ export class CloudApi {
       lastRegenAt: String(record.last_regen_at ?? ""),
       openings: Number(record.openings ?? 0),
       cards,
+      // Un serveur plus ancien (migration 0013 pas encore collée) ne renvoie
+      // pas ces champs : on retombe sur les compteurs locaux plutôt que de
+      // refuser un tirage déjà effectué.
+      pity: Number(record.pity ?? 0),
+      streak: Number(record.streak ?? 0),
+      pityHit: record.pity_hit === true,
+      jackpot: record.jackpot === true,
     };
   }
 
@@ -1058,6 +1081,12 @@ export class CloudApi {
     lastRegenAt: string;
     openings: number;
     nextPackAt: string | null;
+    /** Boosters ouverts depuis le dernier Légendaire (compteur du serveur). */
+    pity: number;
+    /** Jours de jeu d'affilée. */
+    streak: number;
+    /** Le Perfect du 7ᵉ jour attend d'être dépensé. */
+    jackpotReady: boolean;
   }> {
     const result = await this.rpc("pack_status", {});
     const record = asRecord(result);
@@ -1069,6 +1098,9 @@ export class CloudApi {
       lastRegenAt: String(record.last_regen_at ?? ""),
       openings: Number(record.openings ?? 0),
       nextPackAt: record.next_pack_at ? String(record.next_pack_at) : null,
+      pity: Number(record.pity ?? 0),
+      streak: Number(record.streak ?? 0),
+      jackpotReady: record.jackpot_ready === true,
     };
   }
 

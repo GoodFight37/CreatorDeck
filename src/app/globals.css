@@ -2015,3 +2015,44 @@ input:focus-visible {
 /* La pastille de la barre : un paquet à prendre, maintenant. Elle vit sur
    l'onglet qui mène au menu — pas de cinquième onglet. */
 .bottom-nav .nav-badge { position: absolute; top: 2px; right: calc(50% - 22px); min-width: 17px; padding: 0 4px; color: var(--bg); border-radius: 999px; background: var(--accent); font-size: 11px; font-weight: 800; line-height: 17px; font-variant-numeric: tabular-nums; }
+
+/* Le plancher de malchance sur l'accueil : un chiffre, pas une promesse. Il
+   est cliquable — un appui ouvre les taux publiés, qui portent la même règle. */
+.pity-row { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; margin-top: 9px; padding: 8px 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: none; font-size: 12.5px; cursor: pointer; }
+.pity-row svg { color: var(--accent-light); }
+.pity-row.now { color: var(--text); border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .1); }
+.pity-row.now svg { color: var(--accent-light); }
+
+/* Les jetons : ce qu'on gagne à chaque booster, et ce qu'il reste à réunir. */
+.token-row { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 8px; color: var(--muted-2); font-size: 12.5px; }
+.token-row svg { color: #ffd48e; }
+.token-row strong { color: var(--text); font-variant-numeric: tabular-nums; }
+.token-goal { padding-left: 8px; border-left: 1px solid var(--line); }
+
+/* Le jour : missions quotidiennes et série, en tête de l'écran Progression. */
+.day-block { margin-top: 18px; }
+.day-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.day-head h2 { margin: 0; font-size: 17px; }
+.day-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
+.streak-chip { display: flex; align-items: center; gap: 5px; padding: 5px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; white-space: nowrap; }
+.streak-chip.hot { color: #ffd48e; border-color: rgba(255,190,85,.35); background: rgba(255,190,85,.1); }
+.streak-track { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+.streak-track i { height: 5px; border-radius: 999px; background: var(--line); }
+.streak-track i.on { background: var(--accent); }
+.streak-jackpot { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid rgba(255,190,85,.3); border-radius: 12px; background: rgba(255,190,85,.08); }
+.streak-jackpot svg { flex: 0 0 auto; margin-top: 1px; color: #ffd48e; }
+.streak-jackpot > div:nth-child(2) { flex: 1; }
+.streak-jackpot strong { display: block; font-size: 13.5px; }
+.streak-jackpot span { display: block; margin-top: 3px; color: var(--muted); font-size: 12px; }
+.jackpot-actions { display: flex; flex-direction: column; gap: 6px; }
+.jackpot-actions button { padding: 7px 11px; color: var(--bg); border: 0; border-radius: 9px; background: var(--accent-light); font-family: var(--font-display); font-size: 12px; font-weight: 600; cursor: pointer; }
+.jackpot-actions button.ghost { color: var(--muted); border: 1px solid var(--line); background: none; }
+.day-missions { margin-top: 12px; }
+
+/* L'atelier, deux monnaies : les points du recyclage ou les jetons du booster. */
+.wallet-chips { margin-top: 4px; }
+.wallet-note { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
+
+/* Le pity dans la feuille des taux, à côté du bonus Direct. */
+.odds-pity { border-color: rgb(var(--accent-rgb) / .35); background: rgb(var(--accent-rgb) / .08); }
+.odds-pity strong { color: var(--accent-light); }

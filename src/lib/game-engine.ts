@@ -25,7 +25,17 @@ import {
   type PackType,
   type Rarity,
 } from "@/lib/catalog";
-import { DIRECT_BONUS, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
+import { DIRECT_BONUS, PITY, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
+import {
+  MISSIONS,
+  PROGRESSION,
+  TOKEN_TARGET_COST,
+  follows,
+  gameDay,
+  isPrimeTime,
+  tokensForPack,
+  type MissionId,
+} from "@/lib/progression";
 import { SEASONS, SEASON_BY_ID, type SeasonReward, type SeasonTier } from "@/lib/seasons";
 import {
   DEFAULT_THEME,
@@ -37,7 +47,7 @@ import {
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 
-export const SAVE_VERSION = 6 as const;
+export const SAVE_VERSION = 7 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -137,6 +147,36 @@ export type PlayerState = {
   claimedMilestones: string[];
   /** Identifiant du thème de collection équipé (voir `@/lib/cosmetics`). */
   themeId: string;
+  /**
+   * Jetons : la monnaie lente (5 par booster, 400 pour la carte visée).
+   *
+   * Elle double le recyclage — qui, lui, paie des points tout de suite. Un
+   * jeton ne s'achète pas et ne se troque pas : il ne s'obtient qu'en jouant.
+   */
+  tokens: number;
+  /**
+   * Boosters ouverts depuis le dernier Légendaire. Sert au plancher de
+   * malchance (`PITY`) : à 80, le 5ᵉ slot en garantit un.
+   */
+  pityCounter: number;
+  /**
+   * Missions du jour : pour quelle journée de jeu (`gameDay`) et ce qui a été
+   * fait (`missionId` → progression). Deux champs séparés parce qu'un jour qui
+   * change doit **remettre les compteurs à zéro** sans qu'on ait à réfléchir.
+   */
+  missionDay: string;
+  missions: Partial<Record<MissionId, number>>;
+  /**
+   * Série de jours : la journée du dernier booster ouvert, et le nombre de
+   * jours d'affilée jusqu'à cette journée-là.
+   */
+  streakDay: string;
+  streak: number;
+  /**
+   * Vrai quand le 7ᵉ jour de la série a été atteint et que la récompense
+   * attend : un booster Perfect garanti **ou** 3 sabliers.
+   */
+  streakJackpot: boolean;
 };
 
 /**
@@ -396,6 +436,43 @@ export type GameView = {
   milestones: MilestoneView[];
   /** Cosmétiques : thèmes de classeur, débloqués par les emblèmes. */
   themes: ThemeView[];
+  /** Jetons, et ce qu'il reste à en gagner pour la carte visée. */
+  tokens: {
+    /** Solde actuel. */
+    count: number;
+    /** Ce qu'un booster en donne à cet instant (Prime Time compris). */
+    perPack: number;
+    /** Coût d'une carte au choix (400). */
+    targetCost: number;
+    /** Jetons manquants pour l'atteindre (0 = tu peux la prendre). */
+    missing: number;
+    /** Sommes-nous dans la fenêtre 20 h – 23 h ? */
+    primeTime: boolean;
+  };
+  /**
+   * Le plancher de malchance, prêt à afficher : combien de boosters avant la
+   * garantie. Publié comme les taux — le joueur n'a pas à deviner.
+   */
+  pity: {
+    /** Numéro du booster qui garantit un Légendaire (80). */
+    threshold: number;
+    /** Boosters ouverts depuis le dernier Légendaire. */
+    counter: number;
+    /** Combien il en reste avant la garantie. */
+    remaining: number;
+  };
+  /** Les trois missions du jour. */
+  missions: MissionView[];
+  /** Série de jours, et la récompense qui attend si le 7ᵉ jour est atteint. */
+  streak: {
+    /** Jours d'affilée (0 après un jackpot : le cycle repart). */
+    days: number;
+    /** Jours visés (7). */
+    target: number;
+    /** Un jackpot attend d'être dépensé (Perfect garanti ou 3 sabliers). */
+    jackpot: boolean;
+    jackpotHourglasses: number;
+  };
 };
 
 export class GameError extends Error {
@@ -427,6 +504,13 @@ export function createInitialState(now = Date.now()): PlayerState {
     claimedTiers: {},
     claimedMilestones: [],
     themeId: DEFAULT_THEME_ID,
+    tokens: 0,
+    pityCounter: 0,
+    missionDay: gameDay(now),
+    missions: {},
+    streakDay: "",
+    streak: 0,
+    streakJackpot: false,
   };
 }
 
@@ -598,11 +682,24 @@ function chooseVariant(
 export function drawPack(
   packType: PackType,
   alreadyOwned: ReadonlySet<string>,
-  options: { rareDrop?: boolean; liveLogins?: LiveLogins } = {},
+  options: {
+    rareDrop?: boolean;
+    liveLogins?: LiveLogins;
+    /**
+     * Le plancher de malchance : `true` quand le joueur a enchaîné `PITY.threshold`
+     * boosters sans Légendaire. Le 5ᵉ slot en garantit alors un.
+     *
+     * Un paramètre explicite plutôt qu'une lecture de l'état : le tirage reste
+     * une fonction pure de ses arguments, et le serveur peut appliquer la même
+     * règle sans rien connaître de la partie locale.
+     */
+    pity?: boolean;
+  } = {},
 ): DrawnCard[] {
   const table = PULL_RATES[packType];
   const size = PACKS[packType].size;
   const liveLogins = options.liveLogins;
+  const pity = options.pity === true;
   const rareDrop =
     options.rareDrop ?? randomInt(1000) < table.rareDrop.chancePermille;
   const weightsFor = (index: number): RarityWeights =>
@@ -625,12 +722,15 @@ export function drawPack(
   }
 
   // La carte garantie est en variante Live quand son créateur streame — c'est
-  // le moment fort du paquet, et il porte la preuve de présence.
-  const guaranteed = chooseCreator(
-    rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
-    used,
-    liveLogins,
-  );
+  // le moment fort du paquet, et il porte la preuve de présence. Sous le
+  // plancher de malchance, elle est **Légendaire**, quoi qu'en dise le tirage.
+  const guaranteed = pity
+    ? chooseCreator({ legendary: 1 }, used, liveLogins)
+    : chooseCreator(
+        rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
+        used,
+        liveLogins,
+      );
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,
@@ -647,6 +747,122 @@ export function drawPack(
 
 export function ownedSlugs(state: PlayerState): Set<string> {
   return new Set(state.cards.map((card) => card.creatorSlug));
+}
+
+// --------------------------------------------------------------------------
+// Progression du jour : missions, série de jours, plancher de malchance
+// --------------------------------------------------------------------------
+//
+// Ces règles sont regroupées ici parce qu'elles partagent le même piège : elles
+// dépendent du **temps**. Un compteur qui se remet à zéro au milieu de la
+// soirée d'un streameur, une série qui casse alors qu'on a joué hier soir,
+// c'est un jeu qui accuse le joueur à tort. `gameDay()` ramène tout le monde à
+// la même journée (6 h UTC), et ces fonctions ne font que comparer des journées.
+
+/**
+ * Ce qu'un booster fait avancer dans les missions du jour.
+ *
+ * `family` compte les cartes de la famille que le joueur est en train de
+ * compléter (`currentSeason()`), **ou** d'une carte en variante Live : la
+ * mission s'appelle « ta famille ou un Direct », et elle doit valoir pour les
+ * deux.
+ */
+const MISSION_BY_ID = new Map(MISSIONS.map((mission) => [mission.id, mission]));
+
+export function missionsAfterPack(
+  state: Pick<PlayerState, "missionDay" | "missions">,
+  now: number,
+): PlayerState["missions"] {
+  const day = gameDay(now);
+  // Journée neuve : les compteurs repartent de zéro. Un joueur qui a dormi
+  // n'a pas à voir « 1/1 » d'hier.
+  const current = state.missionDay === day ? { ...state.missions } : {};
+  current.pack = Math.min(MISSION_BY_ID.get("pack")?.target ?? 1, (current.pack ?? 0) + 1);
+  return current;
+}
+
+/** Une carte « touche la famille » si elle appartient à la famille visée. */
+export function cardTouchesFamily(card: { creatorSlug: string; variant?: string }, familyId: string | null): boolean {
+  if (card.variant === DIRECT_BONUS.variant) return true;
+  if (!familyId) return false;
+  const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
+  return Boolean(creator && creator.region === familyId);
+}
+
+/**
+ * État des trois missions du jour, prêt à afficher.
+ *
+ * Une mission réclamée garde sa progression : l'écran montre « 1/1 · 1 sablier
+ * reçu » plutôt qu'une ligne qui disparaît.
+ */
+export type MissionView = {
+  id: MissionId;
+  label: string;
+  detail: string;
+  target: number;
+  progress: number;
+  done: boolean;
+  claimed: boolean;
+};
+
+export function missionViews(state: PlayerState, now = Date.now()): MissionView[] {
+  const fresh = state.missionDay === gameDay(now) ? state.missions : {};
+  return MISSIONS.map((mission) => {
+    const raw = fresh[mission.id] ?? 0;
+    // Convention d'écriture : `target + 1` veut dire « réclamée » (voir
+    // `claimMissions`). La progression affichée reste bornée au seuil, donc
+    // jamais « 2/1 ».
+    const progress = Math.min(mission.target, raw);
+    return {
+      ...mission,
+      progress,
+      done: raw >= mission.target,
+      claimed: raw > mission.target,
+    };
+  });
+}
+
+/**
+ * Réclame les sabliers des missions terminées. Idempotent par construction :
+ * un jour neuf remet la progression à zéro, donc une même journée ne peut pas
+ * payer deux fois.
+ */
+export function claimMissions(state: PlayerState, now = Date.now()): PlayerState {
+  const day = gameDay(now);
+  const current = state.missionDay === day ? { ...state.missions } : {};
+  // Exactement au seuil : une mission déjà réclamée est à `target + 1`, donc
+  // elle ne repaie pas si le joueur appuie deux fois.
+  const done = MISSIONS.filter((mission) => (current[mission.id] ?? 0) === mission.target);
+  if (!done.length) {
+    throw new GameError("Aucune mission terminée pour l'instant.", "NO_MISSION_READY");
+  }
+  // On note la réclamation en poussant la progression au-delà du seuil : la
+  // mission reste « faite », mais `claimMissions` ne repaiera pas.
+  for (const mission of done) current[mission.id] = mission.target + 1;
+  return {
+    ...state,
+    updatedAt: now,
+    missionDay: day,
+    missions: current,
+    hourglasses: state.hourglasses + done.length * MISSION_REWARD_HOURGLASSES,
+  };
+}
+
+/** Ce que paie une mission : un sablier (voir `progression.json`). */
+export const MISSION_REWARD_HOURGLASSES = PROGRESSION.missions.reward.hourglasses;
+
+/**
+ * Compteur du plancher de malchance, mis à jour par un tirage.
+ *
+ * Il **repart de zéro dès qu'un Légendaire tombe, quel que soit le slot** — y
+ * compris un Légendaire de chance, pas seulement celui de la garantie : le
+ * joueur a eu sa carte, il ne doit rien de plus.
+ */
+export function pityAfter(counterBefore: number, drawn: ReadonlyArray<{ rarity: Rarity }>): number {
+  // Un Légendaire, n'importe où dans le paquet, remet le compteur à zéro : la
+  // garantie n'a plus rien à rattraper.
+  if (drawn.some((card) => card.rarity === "legendary")) return 0;
+  return counterBefore + 1;
 }
 
 function cardKey(card: Pick<OwnedCard, "creatorSlug" | "variant">): string {
@@ -721,11 +937,22 @@ export function recycleCard(
     );
   }
 
+  const day = gameDay(now);
   return {
     ...state,
     updatedAt: now,
     points: state.points + RARITY_META[card.rarity].recycleValue,
     cards: state.cards.filter((entry) => entry.id !== cardId),
+    // La mission « recycle un doublon » du jour. Elle est comptée ici et pas
+    // dans l'écran : c'est le moteur qui sait qu'un recyclage a eu lieu.
+    missionDay: day,
+    missions: {
+      ...(state.missionDay === day ? state.missions : {}),
+      recycle: Math.min(
+        MISSION_BY_ID.get("recycle")?.target ?? 1,
+        ((state.missionDay === day ? state.missions.recycle : 0) ?? 0) + 1,
+      ),
+    },
   };
 }
 
@@ -786,6 +1013,82 @@ export function craftCreator(
     ...state,
     updatedAt: now,
     points: state.points - cost,
+    cards: [...state.cards, card],
+  };
+}
+
+/**
+ * Dépense le jackpot de série : un booster Perfect garanti, ou 3 sabliers.
+ *
+ * Le choix est définitif — c'est pour ça qu'il est explicite dans l'appel et
+ * pas deviné. Le booster Perfect se consomme au **prochain** tirage (le moteur
+ * local le force, et le serveur l'applique pour les parties en ligne), donc la
+ * récompense n'est jamais perdue si le joueur ferme l'app entre-temps : elle
+ * reste marquée dans la sauvegarde.
+ */
+export function claimStreakJackpot(
+  state: PlayerState,
+  choice: "perfect" | "hourglasses",
+  now = Date.now(),
+): PlayerState {
+  if (!state.streakJackpot) {
+    throw new GameError("Aucune récompense de série en attente.", "NO_JACKPOT");
+  }
+  if (choice === "hourglasses") {
+    return {
+      ...state,
+      updatedAt: now,
+      streakJackpot: false,
+      hourglasses: state.hourglasses + PROGRESSION.streak.jackpotHourglasses,
+    };
+  }
+  // « perfect » : la récompense reste allumée, elle sera consommée par le
+  // prochain booster. On ne touche à rien — le geste sert à dire « je garde »,
+  // et l'écran peut l'annoncer sans mentir.
+  return { ...state, updatedAt: now, streakJackpot: true };
+}
+
+/**
+ * Achète la carte visée avec des jetons.
+ *
+ * Ce que ça ne fait **pas** : une Légendaire. Les jetons paient le manque de
+ * chance dans une rareté qu'on peut déjà tirer ; la Légendaire, elle, a deux
+ * chemins — le booster et le plancher de malchance — et n'est pas à vendre.
+ */
+export function buyWithTokens(state: PlayerState, creatorSlug: string, now = Date.now()): PlayerState {
+  const creator = CREATOR_BY_SLUG.get(creatorSlug);
+  if (!creator) {
+    throw new GameError("Créateur inconnu du catalogue.", "UNKNOWN_CREATOR");
+  }
+  if (creator.rarity === "legendary") {
+    throw new GameError(
+      "Une Légendaire ne s'achète pas : elle se tire en booster (ou tombe au plancher de malchance).",
+      "TOKENS_NO_LEGENDARY",
+    );
+  }
+  if (state.cards.some((card) => card.creatorSlug === creatorSlug)) {
+    throw new GameError("Tu possèdes déjà ce créateur.", "ALREADY_OWNED");
+  }
+  if (state.tokens < TOKEN_TARGET_COST) {
+    throw new GameError(
+      `Il te manque ${TOKEN_TARGET_COST - state.tokens} jetons pour cette carte.`,
+      "NOT_ENOUGH_TOKENS",
+    );
+  }
+  const card: OwnedCard = {
+    id: randomUUID(),
+    creatorSlug,
+    rarity: creator.rarity,
+    // La carte achetée est toujours Standard : les variantes restent la
+    // récompense des boosters (même règle que l'Atelier).
+    variant: CRAFTED_VARIANT,
+    obtainedAt: now,
+    rareDrop: false,
+  };
+  return {
+    ...state,
+    updatedAt: now,
+    tokens: state.tokens - TOKEN_TARGET_COST,
     cards: [...state.cards, card],
   };
 }
@@ -954,14 +1257,27 @@ export function claimSeason(
 export function openPack(
   state: PlayerState,
   now = Date.now(),
-  options: { liveLogins?: LiveLogins } = {},
+  options: { liveLogins?: LiveLogins; rareDrop?: boolean } = {},
 ): { state: PlayerState; cards: DrawnCard[] } {
   const refreshed = refreshBalances(state, now);
   if (refreshed.packs <= 0) {
     throw new GameError("Aucun booster disponible pour le moment.", "PACK_NOT_READY");
   }
 
-  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed), options);
+  // Plancher de malchance : le compteur de la partie décide, le tirage
+  // l'applique. Le compteur dit combien de boosters sont déjà sortis sans
+  // Légendaire ; le **prochain** est le (compteur + 1)ᵉ, et c'est celui qui
+  // paie quand il atteint le seuil publié (80). À 79, la garantie tombe donc
+  // sur ce tirage-ci.
+  const pity = refreshed.pityCounter + 1 >= PITY.threshold;
+  // Le booster Perfect de la série (`streakJackpot`) force aussi le tirage
+  // rare — c'est la promesse du 7ᵉ jour.
+  
+  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed), {
+    ...options,
+    rareDrop: options.rareDrop ?? (refreshed.streakJackpot ? true : undefined),
+    pity,
+  });
 
   // Même application qu'un tirage serveur : un seul endroit calcule les
   // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`
@@ -974,6 +1290,9 @@ export function openPack(
     refreshed.lastPackRegen,
     refreshed.openings + 1,
     now,
+    // Le jackpot de série est consommé par ce tirage : le Perfect est garanti
+    // une fois, pas à chaque booster de la journée.
+    { pity, consumeJackpot: true, jackpotUsed: refreshed.streakJackpot },
   );
 }
 
@@ -1017,6 +1336,15 @@ export function applyPackResult(
   serverLastRegenAt: string | number,
   serverOpenings: number,
   now = Date.now(),
+  /**
+   * Ce que le tirage fait en plus des cartes : le plancher de malchance (qui
+   * repart de zéro dès qu'un Légendaire tombe) et la récompense de série, si
+   * elle est consommée par ce booster.
+   *
+   * Les jetons ne sont pas ici : ils ne dépendent que de l'heure du tirage
+   * (Prime Time ou non), donc `tokensForPack(now)` suffit.
+   */
+  options: { pity?: boolean; consumeJackpot?: boolean; jackpotUsed?: boolean } = {},
 ): { state: PlayerState; cards: DrawnCard[] } {
   const owned = ownedSlugs(state);
   const pack = PACKS[ACTIVE_PACK];
@@ -1035,6 +1363,20 @@ export function applyPackResult(
     isNew: !owned.has(card.creatorSlug),
     rareDrop: card.rareDrop,
   }));
+
+  // Série de jours : une journée de jeu « suit » la précédente (+1), sinon
+  // elle repart de 1. Le jackpot tombe au 7ᵉ jour et attend d'être réclamé.
+  const day = gameDay(now);
+  const continued = Boolean(state.streakDay) && follows(state.streakDay, day);
+  let streak = continued ? state.streak + 1 : 1;
+  // Le cycle repart après un jackpot : le 8ᵉ jour n'en est pas un deuxième.
+  const reached = streak >= PROGRESSION.streak.days;
+  if (reached) streak = 0;
+  // Une récompense en attente reste allumée jusqu'à ce qu'un tirage la
+  // consomme (`consumeJackpot`, posé par `openPack`) ou que le joueur la
+  // troque contre des sabliers. Le 7ᵉ jour, lui, n'allume qu'une fois : le
+  // cycle repart de zéro, donc `reached` ne peut pas repasser avant sept jours.
+  const streakJackpot = reached || (state.streakJackpot && options.consumeJackpot !== true);
 
   const next: PlayerState = {
     ...state,
@@ -1057,7 +1399,37 @@ export function applyPackResult(
         rareDrop: card.rareDrop,
       })),
     ],
-  };
+    // Jetons : 5 par booster ouvert (7 pendant le Prime Time). Le tirage est
+    // le seul moyen d'en gagner — c'est ce qui en fait une monnaie, et pas un
+    // lot de consolation.
+    tokens: state.tokens + tokensForPack(now),
+    // Plancher de malchance : zéro dès qu'un Légendaire est sorti (la
+    // garantie le fait forcément tombler), sinon +1. Le compteur ne dépasse
+    // donc jamais le seuil.
+    pityCounter: pityAfter(state.pityCounter, cards),
+    // Missions du jour : « ouvrir un booster », et plus bas ce que les cartes
+    // tirées touchent.
+    missionDay: day,
+    missions: missionsAfterPack(state, now),
+    streakDay: day,
+    streak,
+    streakJackpot,
+  } as PlayerState;
+
+  // Mission « toucher ta famille ou un Direct » : comptée sur la famille
+  // d'**avant** et d'**après** le paquet. Sans les deux, la carte qui termine
+  // justement la famille ne compterait pas — le pire moment pour l'oublier.
+  const families = new Set(
+    [currentSeason(state)?.familyId, currentSeason(next)?.familyId].filter(
+      (id): id is string => Boolean(id),
+    ),
+  );
+  if (cards.some((card) => [...families].some((family) => cardTouchesFamily(card, family)))) {
+    next.missions = {
+      ...next.missions,
+      family: Math.min(MISSION_BY_ID.get("family")?.target ?? 1, (next.missions.family ?? 0) + 1),
+    };
+  }
 
   return { state: next, cards };
 }
@@ -1080,6 +1452,37 @@ export function applyPackStatus(
   const lastPackRegen = serverTimeMs(serverLastRegenAt, now);
   if (packs === state.packs && lastPackRegen === state.lastPackRegen) return state;
   return { ...state, updatedAt: now, packs, lastPackRegen };
+}
+
+/**
+ * Aligne les compteurs de progression sur ceux du serveur.
+ *
+ * Quand le joueur a un compte, c'est le serveur qui décide du plancher de
+ * malchance et de la série — pour la bonne raison qu'il les calcule depuis le
+ * journal des tirages, que personne ne peut modifier. L'écran doit donc
+ * afficher **ce chiffre-là**, sinon la promesse « encore 3 boosters » ne
+ * correspondrait pas au booster que le serveur va tirer.
+ *
+ * Les jetons, eux, ne bougent pas : ils ne vivent que sur l'appareil.
+ */
+export function applyServerProgression(
+  state: PlayerState,
+  server: { pity: number; streak: number; jackpotReady?: boolean },
+  now = Date.now(),
+): PlayerState {
+  const pityCounter = Math.max(0, Math.floor(server.pity));
+  const streak = Math.max(0, Math.floor(server.streak));
+  // `jackpotReady` n'arrive que du statut ; après un tirage, c'est le serveur
+  // qui a dit si le Perfect du jour est tombé (`jackpot`).
+  const streakJackpot = server.jackpotReady ?? state.streakJackpot;
+  if (
+    pityCounter === state.pityCounter &&
+    streak === state.streak &&
+    streakJackpot === state.streakJackpot
+  ) {
+    return state;
+  }
+  return { ...state, updatedAt: now, pityCounter, streak, streakJackpot };
 }
 
 /** Une carte échangée : le minimum que le serveur transmet pour la déplacer. */
@@ -1310,5 +1713,24 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
     currentSeason: currentSeason(refreshed),
     milestones: milestoneViews(refreshed),
     themes: themeViews(refreshed),
+    tokens: {
+      count: refreshed.tokens,
+      perPack: tokensForPack(now),
+      targetCost: TOKEN_TARGET_COST,
+      missing: Math.max(0, TOKEN_TARGET_COST - refreshed.tokens),
+      primeTime: isPrimeTime(now),
+    },
+    pity: {
+      threshold: PITY.threshold,
+      counter: refreshed.pityCounter,
+      remaining: Math.max(0, PITY.threshold - refreshed.pityCounter),
+    },
+    missions: missionViews(refreshed, now),
+    streak: {
+      days: refreshed.streak,
+      target: PROGRESSION.streak.days,
+      jackpot: refreshed.streakJackpot,
+      jackpotHourglasses: PROGRESSION.streak.jackpotHourglasses,
+    },
   };
 }

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CREATORS, PACKS } from "@/lib/catalog";
 import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
 import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
+import { gameDay } from "@/lib/progression";
 import {
   LEGACY_SAVE_KEYS,
   SAVE_KEY,
@@ -169,6 +170,55 @@ describe("migration", () => {
     // L'ancienne clé disparaît : la sauvegarde vit désormais sous la clé v6.
     expect(storage.data.has("creatordeck.save.v5")).toBe(false);
     expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
+  });
+
+  it("met à niveau une sauvegarde v6 : jetons, pity et missions repartent de zéro", () => {
+    // Ces mécaniques n'existaient pas en v6 : une partie qui arrive de là-bas
+    // n'a rien gagné, donc ses compteurs sont à zéro — et sa journée de jeu est
+    // celle du chargement, pas une date vide qui ferait « mission neuve » à
+    // chaque ouverture.
+    const v6 = {
+      ...createInitialState(T0),
+      version: 6,
+      level: 4,
+      cards: [],
+    };
+    for (const key of ["tokens", "pityCounter", "missionDay", "missions", "streakDay", "streak", "streakJackpot"]) {
+      delete (v6 as Record<string, unknown>)[key];
+    }
+
+    const state = sanitizeState(v6, T0);
+    expect(state?.version).toBe(SAVE_VERSION);
+    expect(state?.level).toBe(4);
+    expect(state).toMatchObject({
+      tokens: 0,
+      pityCounter: 0,
+      missions: {},
+      streakDay: "",
+      streak: 0,
+      streakJackpot: false,
+    });
+    expect(state?.missionDay).toBe(gameDay(T0));
+  });
+
+  it("ramène un compteur de pity trafiqué à une valeur sensée", () => {
+    // Le compteur local ne décide de rien en ligne (le serveur relit son
+    // journal), mais un écran qui afficherait « -3 boosters » serait faux.
+    const raw = { ...createInitialState(T0), pityCounter: -3, tokens: -80 };
+    expect(sanitizeState(raw, T0)).toMatchObject({ pityCounter: 0, tokens: 0 });
+  });
+
+  it("borne la progression des missions et oublie les identifiants inconnus", () => {
+    const raw = {
+      ...createInitialState(T0),
+      missionDay: gameDay(T0),
+      missions: { pack: 40, recycle: 1, family: -2, fantome: 3 },
+    };
+    const missions = sanitizeState(raw, T0)?.missions ?? {};
+    expect(missions.pack).toBe(2);
+    expect(missions.recycle).toBe(1);
+    expect(missions.family).toBeUndefined();
+    expect(Object.keys(missions)).toEqual(["pack", "recycle"]);
   });
 
   it("filtre les jalons réclamés inconnus et les doublons", () => {

@@ -27,6 +27,8 @@ import { gameStore } from "@/lib/game-store";
 
 type Mode = "craft" | "recycle";
 type CraftFilter = "all" | Rarity;
+/** Monnaie de l'atelier : les points du recyclage, ou les jetons des boosters. */
+type Wallet = "points" | "tokens";
 const PER_PAGE = 20;
 
 /**
@@ -48,9 +50,13 @@ export function AtelierView({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CraftFilter>("all");
   const [page, setPage] = useState(0);
+  // Les jetons sont la monnaie lente : 400, le prix unique de la carte visée,
+  // contre 45 à 600 points selon la rareté. Deux monnaies, un seul atelier.
+  const [wallet, setWallet] = useState<Wallet>("points");
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
+  const balance = wallet === "tokens" ? game.tokens.count : game.player.points;
 
   const craftable = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
@@ -71,8 +77,13 @@ export function AtelierView({
 
   function handleCraft(slug: string, displayName: string) {
     try {
-      gameStore.craftCreator(slug);
-      onNotice(`${displayName} rejoint ton classeur !`);
+      if (wallet === "tokens") {
+        gameStore.buyWithTokens(slug);
+        onNotice(`${displayName} rejoint ton classeur pour ${game.tokens.targetCost} jetons !`);
+      } else {
+        gameStore.craftCreator(slug);
+        onNotice(`${displayName} rejoint ton classeur !`);
+      }
     } catch (caught) {
       onError(caught instanceof Error ? caught.message : "Artisanat impossible.");
     }
@@ -94,9 +105,9 @@ export function AtelierView({
           <h1>Façonne ta collection</h1>
         </div>
         <div className="atelier-wallet">
-          <Coins size={14} />
-          <strong>{game.player.points}</strong>
-          <span>points</span>
+          {wallet === "tokens" ? <Sparkles size={14} /> : <Coins size={14} />}
+          <strong>{balance}</strong>
+          <span>{wallet === "tokens" ? "jetons" : "points"}</span>
         </div>
       </section>
 
@@ -124,6 +135,36 @@ export function AtelierView({
             <strong> Standard</strong> : les variantes Live, Holo et Gold restent la récompense des
             boosters.
           </p>
+
+          {/* Deux monnaies : les points du recyclage (45 à 600 selon la
+              rareté), ou les jetons gagnés en ouvrant des boosters — 400, quel
+              que soit le créateur visé. Les deux butent sur la même limite :
+              une Légendaire ne s'achète pas, elle se tire. */}
+          <div className="filter-chips wallet-chips" aria-label="Monnaie">
+            <button
+              className={wallet === "points" ? "active" : ""}
+              onClick={() => setWallet("points")}
+              aria-pressed={wallet === "points"}
+            >
+              Points ({game.player.points})
+            </button>
+            <button
+              className={wallet === "tokens" ? "active" : ""}
+              onClick={() => setWallet("tokens")}
+              aria-pressed={wallet === "tokens"}
+            >
+              Jetons ({game.tokens.count}/{game.tokens.targetCost})
+            </button>
+          </div>
+          {wallet === "tokens" ? (
+            <p className="wallet-note">
+              {game.tokens.missing > 0
+                ? `Encore ${game.tokens.missing} jetons — ${game.tokens.perPack} par booster${
+                    game.tokens.primeTime ? " (Prime Time en cours)" : ""
+                  }.`
+                : "De quoi rejoindre la carte que tu veux, sauf une Légendaire."}
+            </p>
+          ) : null}
 
           <label className="search-field">
             <Search size={17} />
@@ -193,8 +234,10 @@ export function AtelierView({
           <div className="atelier-list">
             {visible.map((creator) => {
               const meta = RARITY_META[creator.rarity];
-              const cost = meta.craftCost;
-              const affordable = cost !== null && game.player.points >= cost;
+              // En jetons, le prix est le même pour tous : la carte visée.
+              const cost = wallet === "tokens" ? game.tokens.targetCost : meta.craftCost;
+              const affordable = cost !== null && balance >= cost;
+              const buyable = wallet === "tokens" ? meta.craftable : meta.craftable && cost !== null;
               return (
                 <article key={creator.slug} className="atelier-row">
                   <Image
@@ -219,7 +262,7 @@ export function AtelierView({
                   >
                     {meta.short}
                   </span>
-                  {meta.craftable && cost !== null ? (
+                  {buyable && cost !== null ? (
                     <button
                       type="button"
                       className="craft-button"
@@ -228,7 +271,7 @@ export function AtelierView({
                       title={
                         affordable
                           ? `Rejoindre ${creator.displayName}`
-                          : `Il te manque ${cost - game.player.points} points`
+                          : `Il te manque ${cost - balance} ${wallet === "tokens" ? "jetons" : "points"}`
                       }
                     >
                       <Hammer size={13} />

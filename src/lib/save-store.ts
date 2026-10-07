@@ -17,6 +17,7 @@ import {
   type PlayerState,
 } from "@/lib/game-engine";
 import { SEASON_BY_ID } from "@/lib/seasons";
+import { MISSIONS, gameDay } from "@/lib/progression";
 import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
 
 /** Clé courante de la sauvegarde. */
@@ -30,7 +31,7 @@ export const LEGACY_SAVE_KEYS = [
   "creatordeck.save.v1",
 ] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, 6, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;
@@ -155,6 +156,26 @@ function sanitizeSeasons(value: unknown): string[] {
 }
 
 /**
+ * Progression des missions du jour.
+ *
+ * On ne garde que les identifiants connus, et une valeur bornée : une
+ * sauvegarde trafiquée ne peut pas faire apparaître « 99/1 ». La valeur
+ * `target + 1` est celle qu'écrit `claimMissions()` pour dire « réclamée » —
+ * elle est donc valide, et c'est la borne haute.
+ */
+function sanitizeMissions(value: unknown): PlayerState["missions"] {
+  if (!isRecord(value)) return {};
+  const result: PlayerState["missions"] = {};
+  for (const mission of MISSIONS) {
+    const raw = value[mission.id];
+    if (typeof raw !== "number" || !Number.isFinite(raw)) continue;
+    const bounded = Math.max(0, Math.min(mission.target + 1, Math.floor(raw)));
+    if (bounded > 0) result[mission.id] = bounded;
+  }
+  return result;
+}
+
+/**
  * Valide et normalise une sauvegarde brute (JSON déjà parsé), en migrant au
  * passage les versions antérieures. Retourne `null` si la structure n'est pas
  * exploitable ; les champs manquants ou aberrants sont ramenés à des valeurs
@@ -210,6 +231,16 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     // Thème inconnu (sauvegarde d'une version où la famille existait, édition
     // à la main…) : on retombe sur le thème d'origine plutôt que de planter.
     themeId: themeById(typeof raw.themeId === "string" ? raw.themeId : undefined)?.id ?? DEFAULT_THEME_ID,
+    // v7 : jetons, plancher de malchance, missions du jour et série de jours.
+    // Une sauvegarde v6 démarre à zéro partout, ce qui est exact : elle n'a
+    // jamais rien gagné de ces mécaniques.
+    tokens: nonNegativeInt(raw.tokens, 0),
+    pityCounter: nonNegativeInt(raw.pityCounter, 0),
+    missionDay: typeof raw.missionDay === "string" ? raw.missionDay : gameDay(now),
+    missions: sanitizeMissions(raw.missions),
+    streakDay: typeof raw.streakDay === "string" ? raw.streakDay : "",
+    streak: nonNegativeInt(raw.streak, 0),
+    streakJackpot: raw.streakJackpot === true,
   };
 }
 

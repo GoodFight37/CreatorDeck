@@ -17,6 +17,7 @@ diverger du moteur.
 | `variants` | chances de variante cosmétique (Holo / Gold) |
 | `rareDrop` | l'événement « Perfect » : chance, poids et amélioration de variante |
 | `direct` | le **bonus Direct** : poids des créateurs en direct et chance de variante Live |
+| `pity` | le **plancher de malchance** : au bout de `threshold` boosters sans Légendaire, le dernier slot en garantit une |
 
 Exemple (extrait réel) :
 
@@ -26,12 +27,36 @@ Exemple (extrait réel) :
   { "weights": { "common": 20, "uncommon": 34, "rare": 28, "epic": 15, "legendary": 3 } }
 ],
 "guaranteed": { "weights": { "rare": 82, "epic": 15, "legendary": 3 } },
-"direct": { "creatorBias": 1.5, "livePermille": 200, "variant": "live" }
+"direct": { "creatorBias": 1.5, "livePermille": 200, "variant": "live" },
+"pity": { "label": "Légendaire garanti", "threshold": 80 }
 ```
 
 Le moteur (`src/lib/game-engine.ts`, fonction `chooseCreator`) tire d'abord une
 rareté selon ces poids, puis un créateur **dans** cette rareté : les poids
 **sont** les probabilités affichées.
+
+## Le plancher de malchance
+
+`pity` est publié comme le reste, et pour la même raison : une garantie qu'on
+ne peut pas lire n'est pas une garantie, c'est une rumeur. Trois choses sont
+dites :
+
+* le **seuil** (80 boosters) : après 80 boosters d'affilée sans Légendaire, le
+  5ᵉ slot en garantit une — c'est-à-dire que le joueur n'attend jamais plus de
+  80 boosters, quelle que soit sa chance ;
+* la **probabilité de l'atteindre** (`packOdds().pity.active`), calculée à
+  l'affichage comme la chance de n'avoir aucune Légendaire sur les boosters qui
+  précèdent — le joueur sait si c'est un secours rare ou une mécanique qu'il
+  verra souvent ;
+* le **compteur en cours** (« 68 boosters depuis ton dernier Légendaire, encore
+  12 »), lu dans la partie — ou, quand un compte est connecté, dans le chiffre
+  du serveur, qui est celui qui décidera du tirage.
+
+Le compteur repart de zéro dès qu'un Légendaire tombe, **quel que soit le
+slot** : la garantie n'a plus rien à rattraper. Moteur local et
+`open_pack()` appliquent la même règle ; `src/lib/supabase-progression.test.ts`
+et les contrôles du Postgres jetable (213 aujourd'hui) vérifient que le serveur
+suit bien le fichier de taux.
 
 ## Le bonus Direct
 

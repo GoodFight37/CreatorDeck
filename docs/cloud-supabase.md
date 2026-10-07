@@ -233,6 +233,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
+     → **Run** pour que le **plancher de malchance** et la **série de jours**
+     existent aussi côté serveur : après 80 boosters d'affilée sans Légendaire,
+     le tirage en garantit une, et le 7ᵉ jour d'affilée offre un Perfect (ou
+     3 sabliers). Les deux compteurs sont relus depuis le journal des tirages,
+     pas depuis la sauvegarde du téléphone — un compteur client se trafiquerait.
+     Détail : §8, « Le plancher de malchance ».
    - [`supabase/migrations/0012_last_pack.sql`](../supabase/migrations/0012_last_pack.sql)
      → **Run** pour que **le paquet reste exposé dix minutes** : les cinq cartes
      du dernier booster d'un joueur sont visibles par ses amis, qui peuvent y
@@ -264,7 +271,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les douze migrations** (`0001` à `0012`) pour de vrai, dans
+> Le script exécute **les treize migrations** (`0001` à `0013`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -279,8 +286,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > joueur, refus motivés), le **carnet des ventes** (`market_sales()`), le
 > **bonus Direct** (poids ×1,5, variante Live réservée aux créateurs en direct,
 > cache périmé → aucune carte Live) et le **Last Pack** (paquet exposé dix
-> minutes, vol des deux côtés, refus d'un inconnu, garde-fou de `push_save`).
-> **191 contrôles** au total. Les deux
+> minutes, vol des deux côtés, refus d'un inconnu, garde-fou de `push_save`) et
+> le **plancher de malchance** (journal amorcé à 79 boosters sans Légendaire, le
+> 80ᵉ qui en sort une, compteur remis à zéro par un Légendaire de chance, série
+> de jours cassée par un trou puis raccommodée, récompense du 7ᵉ jour dépensée
+> une seule fois, fonctions internes fermées aux joueurs).
+> **213 contrôles** au total. Les deux
 > dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
@@ -538,6 +549,50 @@ garantit que le tirage serveur lit toujours le catalogue publié.
 En cas de refus « aucun booster », le client relit aussitôt `pack_status()` :
 si un sablier ou une horloge locale avait gonflé la réserve affichée, le
 compteur et le compte à rebours se réalignent sur le serveur immédiatement.
+
+### Le plancher de malchance, les jetons, les missions du jour
+
+`0013_progression.sql` ajoute au serveur ce que le moteur local applique déjà :
+**après 80 boosters d'affilée sans Légendaire, le 5ᵉ slot en garantit une**. Le
+seuil est celui de `src/data/pull-rates.json` (bloc `pity`), donc publié dans
+l'écran « Taux de drop » avec sa probabilité réelle de s'activer, et
+`src/lib/supabase-progression.test.ts` tombe si les deux divergent.
+
+Ce que la migration change, et pourquoi :
+
+* `_pack_pity(user)` relit le **journal des tirages** (`pack_draws`) à l'envers
+  et s'arrête au premier tirage contenant une Légendaire : ce qu'elle a compté
+  avant, c'est le compteur. Un Légendaire de **chance** remet donc le compteur à
+  zéro au même titre que celui de la garantie.
+* `_pack_streak(user, now)` compte les jours de jeu d'affilée avec un booster,
+  la journée commençant à **6 h UTC** — exactement la conversion de
+  `gameDay()` côté moteur, sinon les deux ne tomberaient plus le même jour.
+  `_pack_perfect_today()` dit si le Perfect du jour est déjà sorti.
+* `open_pack(p_jackpot text)` force le tirage quand le compteur atteint le seuil
+  ou quand c'est le 7ᵉ jour de série. Le joueur peut préférer **3 sabliers** :
+  il le dit (`p_jackpot = 'hourglasses'`), et le serveur se contente de ne pas
+  forcer le tirage — cette monnaie ne vit que sur l'appareil, il n'y a donc rien
+  à créditer côté serveur, et rien à y gagner en trichant. La récompense attend
+  **toute la journée** : un booster normal le matin ne la consomme pas, c'est le
+  premier Perfect du jour qui la dépense.
+* `pack_status()` renvoie `pity`, `streak` et `jackpot_ready` : le chiffre
+  affiché (« Légendaire garanti dans N boosters ») est **celui qui décidera du
+  tirage**, pas une illustration.
+* La migration **supprime l'ancienne `open_pack()` sans argument** avant de la
+  recréer : sans ce `drop`, Postgres garderait les deux signatures et un appel
+  sans argument continuerait d'ignorer la garantie.
+
+**Pourquoi le compteur ne vient pas de la sauvegarde.** `open_pack()` reçoit une
+sauvegarde d'appareil que le joueur peut éditer : un compteur rangé là-dedans
+suffirait à obtenir une Légendaire à chaque booster. Les deux compteurs sont
+donc **déduits** du journal, que seule `open_pack()` écrit — et comme rien n'est
+stocké, il n'y a rien à resynchroniser. Les fonctions internes sont fermées aux
+joueurs (`revoke … from public, anon, authenticated`).
+
+**Les jetons restent locaux.** Comme les points et l'XP : 5 par booster (7 en
+Prime Time), 400 pour la carte au choix à l'Atelier — jamais une Légendaire.
+Ils sont crédités par `applyPackResult()`, donc aussi bien pour un tirage local
+que pour un tirage décidé par le serveur.
 
 ### Le direct (statut EN LIVE)
 
@@ -981,17 +1036,6 @@ Deux outils, dans l'ordre :
    blocage réseau d'un refus CORS, et affiche la session enregistrée par le jeu.
 
 ### Pourquoi les appels passent par le client HTTP natif dans l'APK
-
-Le WebView sert l'application depuis `https://localhost` : ce n'est pas une
-adresse publique, et un `fetch` y est soumis au CORS. Sur certains projets
-Supabase, ce preflight est refusé — l'échec apparaît alors comme une panne
-réseau (« Réseau injoignable ») alors que le même appel fonctionne dans Chrome.
-`src/lib/cloud/transport.ts` fait donc passer les appels par `CapacitorHttp`
-(module du cœur de Capacitor, aucune dépendance en plus) sur un appareil, et par
-`fetch` partout ailleurs. Appel **explicite** au plugin, et non son patch
-automatique de `fetch` : l'interception Android des requêtes du WebView ne voit
-pas le corps des POST, ce qui laissait échouer la création de compte invité.
-assent par le client HTTP natif dans l'APK
 
 Le WebView sert l'application depuis `https://localhost` : ce n'est pas une
 adresse publique, et un `fetch` y est soumis au CORS. Sur certains projets

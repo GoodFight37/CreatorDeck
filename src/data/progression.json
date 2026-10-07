@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "note": "Ce que le jeu rend au joueur en plus des cartes : jetons, missions du jour, série de jours et Prime Time. Les taux de tirage vivent dans pull-rates.json ; ici, ce sont les règles de progression. Elles sont affichées dans l'app (Atelier, Objectifs) et vérifiées par les tests — un chiffre écrit ici ne peut pas exister seulement dans la tête du développeur.",
+  "tokens": {
+    "label": "Jetons",
+    "perPack": 5,
+    "primeTimeBonus": 2,
+    "targetCost": 400,
+    "note": "5 jetons par booster ouvert (7 pendant le Prime Time). 400 jetons = la carte que tu vises, au choix — jamais une Légendaire : elles se tirent. 400 jetons, c'est exactement 80 boosters, le même effort que la garantie Légendaire."
+  },
+  "primeTime": {
+    "label": "Prime Time",
+    "fromHour": 20,
+    "toHour": 23,
+    "note": "Entre 20 h et 23 h (heure de l'appareil), chaque booster donne 2 jetons de plus. C'est l'heure où les gens streament : le jeu paie le moment où il se passe quelque chose."
+  },
+  "missions": {
+    "resetHourUtc": 6,
+    "reward": { "hourglasses": 1 },
+    "note": "Trois missions par jour, remises à zéro à 6 h UTC (l'heure où Twitch recommence) : ouvrir un booster, recycler un doublon, et toucher la famille que tu complètes — ou un Direct. Chacune paie 1 sablier.",
+    "list": [
+      {
+        "id": "pack",
+        "label": "Ouvre un booster",
+        "detail": "Un booster, aujourd'hui",
+        "target": 1
+      },
+      {
+        "id": "recycle",
+        "label": "Recycle un doublon",
+        "detail": "Une copie en trop, à l'Atelier",
+        "target": 1
+      },
+      {
+        "id": "family",
+        "label": "Touche ta famille ou un Direct",
+        "detail": "Une carte de la famille que tu complètes, ou une carte Live",
+        "target": 1
+      }
+    ]
+  },
+  "streak": {
+    "days": 7,
+    "jackpotHourglasses": 3,
+    "note": "Sept jours d'affilée avec au moins un booster ouvert : le 7ᵉ jour donne un booster Perfect garanti — ou 3 sabliers, au choix. Un jour manqué remet la série à zéro (le jour commence à 6 h UTC, comme les missions)."
+  }
+}

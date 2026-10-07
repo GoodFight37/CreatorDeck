@@ -14,7 +14,10 @@ collection sur un autre appareil, **tirage des boosters décidé par le serveur*
 de notifications, **Last Pack** (le paquet qu'un ami vient d'ouvrir reste exposé
 dix minutes), classement mondial — global ou par famille de collection —,
 profils publics avec vitrine, et badge **EN LIVE** sur les cartes des chaînes en
-direct. Sans les deux variables publiques du cloud, tout se compile et se joue
+direct. Trois mécaniques de progression complètent le tirage : un **plancher de
+malchance publié** (80 boosters sans Légendaire et le 5ᵉ slot en garantit une),
+des **jetons** (5 par booster, 400 = la carte au choix — jamais une Légendaire),
+et des **missions du jour** avec une **série de sept jours**. Sans les deux variables publiques du cloud, tout se compile et se joue
 hors ligne.
 
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
@@ -58,7 +61,7 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0012` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0013` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -67,7 +70,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**481 tests**, 33 fichiers aujourd'hui).
+  (**536 tests**, 36 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -80,7 +83,10 @@ Trois étages, trois vitesses :
   **bonus Direct** — poids ×1,5 vérifié sur des boosters réellement ouverts,
   variante Live impossible quand le cache est périmé — et **Last Pack** — vol
   réel des deux côtés, refus d'un inconnu, fenêtre de dix minutes, garde-fou
-  contre la résurrection d'une carte volée (**191 contrôles** aujourd'hui).
+  contre la résurrection d'une carte volée — et le **plancher de malchance** :
+  un journal amorcé à 79 boosters sans Légendaire, le 80ᵉ qui en sort une, la
+  série de jours cassée puis raccommodée, la récompense du 7ᵉ jour
+  (**213 contrôles** aujourd'hui).
 
 ```powershell
 npm test          # rapide, à chaque changement
@@ -114,6 +120,10 @@ src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.
 src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, compte
                          à rebours, ce qui reste à prendre (testé)
 src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
+src/lib/progression.ts   jetons, missions du jour, série de sept jours, Prime
+                         Time (source unique : src/data/progression.json)
+src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
+                         seuil publié dans pull-rates.json
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet, market-sheet,
@@ -124,7 +134,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0012)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0013)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -333,7 +343,7 @@ un usage hors ligne dans le navigateur, il faudra ajouter un service worker
 ## Compte, cloud et classement (facultatif)
 
 L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute dix choses, et
+`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute onze choses, et
 rien d'obligatoire — les six premières sont décrites juste après, les dernières
 au §8 de la marche à suivre :
 
@@ -373,9 +383,43 @@ booster ne dépendent plus de l'horloge de l'appareil). Le sablier, qui ne sait
 avancer qu'une réserve locale, est donc désactivé quand le cloud est configuré ;
 il reste utilisable dans les builds sans cloud (dev, tests).
 
-Hors périmètre (volontaire) : les points, l'XP et le niveau restent calculés
-sur l'appareil ; seul le contenu des boosters (et donc les cartes) devient
-serveur.
+Hors périmètre (volontaire) : les points, l'XP, le niveau **et les jetons**
+restent calculés sur l'appareil ; seul le contenu des boosters (et donc les
+cartes) devient serveur.
+
+Le **plancher de malchance** et la **série de jours**, eux, sont calculés des
+deux côtés — et le serveur ne croit personne sur parole : il les relit depuis
+son propre journal des tirages (`pack_draws`), que seule `open_pack()` écrit.
+Un compteur rangé dans la sauvegarde de l'appareil serait à la portée du premier
+joueur qui sait l'éditer ; là, il n'y a rien à trafiquer. `pack_status()` publie
+les deux chiffres pour que l'écran affiche exactement celui qui décidera du
+tirage.
+
+### Le plancher de malchance, les jetons, les missions
+
+Trois mécaniques, une intention : qu'une série malchanceuse ne dure pas des
+mois, et que la partie ait un geste à faire **aujourd'hui**.
+
+* **Le plancher de malchance** (« pity ») est écrit dans
+  `src/data/pull-rates.json` et publié dans « Taux de drop » : après
+  **80 boosters d'affilée sans Légendaire**, le 5ᵉ slot en garantit une. Le
+  compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot, et
+  l'accueil affiche « Légendaire garanti dans N boosters ». Moteur local et
+  `open_pack()` appliquent la même règle (`0013_progression.sql`).
+* **Les jetons** : 5 par booster ouvert, 7 pendant le **Prime Time** (20 h –
+  23 h, heure locale), et **400** pour rejoindre la carte de son choix à
+  l'Atelier (« Atelier → Jetons »). Jamais une Légendaire — elle se tire en
+  booster, ou tombe au plancher. Les jetons doublent le recyclage : les points
+  paient vite, les jetons paient sûr.
+* **Les missions du jour** (écran Progression) : ouvrir un booster, recycler un
+  doublon, toucher sa famille ou un Direct — une par jour, **un sablier**
+  chacune. La journée de jeu commence à **6 h UTC** (pas à minuit : une soirée
+  de streaming ne doit pas être coupée en deux), et la **série** paie au
+  **7ᵉ jour d'affilée** un **Perfect garanti** — ou 3 sabliers, au choix.
+
+Les règles vivent dans un seul fichier, `src/data/progression.json`, et leur
+logique pure dans `src/lib/progression.ts` ; l'écran et le moteur lisent le
+même seuil, donc aucun chiffre n'est recopié à la main.
 
 ### Les échanges sont tranchés par le serveur
 
@@ -534,6 +578,12 @@ version web hébergée.
   dans « Toi → Last Pack », avec la pastille sur l'onglet et le compte à
   rebours ; le carnet annonce « X t'a piqué ton légendaire ». Mise en place :
   `docs/cloud-supabase.md` §8, « Le Last Pack ».
+  `supabase/migrations/0013_progression.sql` porte le **plancher de
+  malchance** et la **série de jours** côté serveur : le seuil de 80 boosters,
+  le slot garanti qui devient Légendaire, la récompense du 7ᵉ jour, et les deux
+  compteurs publiés par `pack_status()`. Elle remplace `open_pack()` (l'ancienne
+  signature sans argument est supprimée : sinon un appel sans argument aurait
+  continué d'ignorer la garantie).
   La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase
   (`provider=twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
   le navigateur, et le retour installe une session ordinaire — le secret du

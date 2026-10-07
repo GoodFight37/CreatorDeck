@@ -111,6 +111,26 @@ const MILESTONE_LOOK: Record<string, { icon: React.ReactNode; label: string; det
   },
 };
 
+/**
+ * Habillage des trois missions du jour (règles dans `src/data/progression.json`).
+ *
+ * Les seuils ne sont pas écrits ici : `MISSIONS` les porte, et un chiffre
+ * recopié finit toujours par mentir à l'écran.
+ */
+const MISSION_LOOK: Record<string, { icon: React.ReactNode; label: string; detail: string }> = {
+  pack: { icon: <Layers3 size={19} />, label: "Ouvre un booster", detail: "Le geste du jour" },
+  recycle: {
+    icon: <RotateCcw size={19} />,
+    label: "Recycle un doublon",
+    detail: "Un doublon en points, et un sablier",
+  },
+  family: {
+    icon: <Radio size={19} />,
+    label: "Touche ta famille ou un Direct",
+    detail: "Une carte de la famille visée, ou une variante Live",
+  },
+};
+
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
     acc[creator.rarity] += 1;
@@ -240,6 +260,15 @@ function HomeView({
   const pack = PACKS.live;
   const stock = game.player.packs;
   const nextAt = game.player.nextPackAt;
+  // Le compteur de malchance en une phrase. À 1 restant, c'est **ce** booster
+  // qui est garanti : le dire autrement ferait croire à un booster de plus.
+  const pityCopy =
+    game.pity.remaining <= 1
+      ? "Ce booster contient un Légendaire garanti"
+      : `Légendaire garanti dans ${game.pity.remaining} booster${game.pity.remaining > 1 ? "s" : ""}`;
+  // La série se dit sur la même ligne : les deux récompenses attendent au même
+  // endroit, le prochain booster.
+  const packCopy = game.streak.jackpot ? `${pityCopy} · Perfect du 7ᵉ jour garanti` : pityCopy;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
   const live = useLive();
   // Le direct le plus regardé parmi les créateurs du Top 1000, pour le bandeau :
@@ -342,6 +371,33 @@ function HomeView({
         <div className="guarantee-row">
           <ShieldCheck size={14} />
           <span>1 Rare ou mieux garantie · Live si son créateur streame · aucun doublon</span>
+        </div>
+
+        {/* Le plancher de malchance, écrit sur l'écran d'accueil : c'est un
+            chiffre, pas une promesse en l'air — et il vient du même compteur
+            que celui qui décidera du tirage. Un appui ouvre les taux publiés,
+            qui portent la même règle. */}
+        <button
+          type="button"
+          className={`pity-row${game.pity.remaining <= 1 ? " now" : ""}`}
+          onClick={onShowOdds}
+          aria-label={`Plancher de malchance : ${packCopy}`}
+        >
+          <Gem size={14} />
+          <span>{packCopy}</span>
+          <ChevronRight size={14} />
+        </button>
+
+        {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
+        <div className="token-row">
+          <Coins size={14} />
+          <span>
+            <strong>{game.tokens.count}</strong> jetons · +{game.tokens.perPack} par booster
+            {game.tokens.primeTime ? " (Prime Time)" : ""}
+          </span>
+          <span className="token-goal">
+            {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
+          </span>
         </div>
         <div className="home-links">
           <button type="button" className="text-link" onClick={onShowMissions}>
@@ -640,11 +696,22 @@ function MissionsView({
   game,
   onClaimSeason,
   onClaimMilestone,
+  onNotice,
+  onError,
 }: {
   game: GameState;
   onClaimSeason: (seasonId: string) => void;
   onClaimMilestone: (milestoneId: string) => void;
+  onNotice: (message: string) => void;
+  onError: (message: string) => void;
 }) {
+  const dayCopy =
+    game.missions.filter((mission) => mission.done).length === game.missions.length
+      ? "Les trois missions du jour sont faites"
+      : `${game.missions.filter((mission) => mission.done).length}/${game.missions.length} mission${
+          game.missions.length > 1 ? "s" : ""
+        } du jour faite${game.missions.filter((mission) => mission.done).length > 1 ? "s" : ""}`;
+
   return (
     <div className="view missions-view">
       <section className="page-title-row">
@@ -654,6 +721,99 @@ function MissionsView({
         <div className="streak-pill">
           <Zap size={14} />
           <span>Niveau {game.player.level}</span>
+        </div>
+      </section>
+
+      {/* Le jour : trois gestes à faire, un sablier chacun, et la série qui
+          avance tant qu'on ouvre un booster chaque jour. C'est la partie de
+          l'écran qui se remet à zéro à 6 h UTC — pas à minuit, pour ne pas
+          couper une soirée de streaming en deux. */}
+      <section className="day-block">
+        <div className="day-head">
+          <div>
+            <h2>Le jour</h2>
+            <span>{dayCopy}</span>
+          </div>
+          <div className={`streak-chip${game.streak.jackpot ? " hot" : ""}`}>
+            <Zap size={14} />
+            <span>
+              Série {game.streak.days}/{game.streak.target}
+            </span>
+          </div>
+        </div>
+
+        <div className="streak-track" aria-hidden="true">
+          {Array.from({ length: game.streak.target }, (_, index) => (
+            <i key={index} className={index < game.streak.days ? "on" : ""} />
+          ))}
+        </div>
+
+        {game.streak.jackpot ? (
+          <div className="streak-jackpot">
+            <Sparkles size={15} />
+            <div>
+              <strong>Sept jours d&apos;affilée : le Perfect du jour t&apos;attend</strong>
+              <span>
+                Ton prochain booster part avec le tirage Perfect garanti — ou prends les{" "}
+                {game.streak.jackpotHourglasses} sabliers.
+              </span>
+            </div>
+            <div className="jackpot-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  gameStore.claimStreakJackpot("perfect");
+                  onNotice("Perfect garanti gardé pour ton prochain booster.");
+                }}
+              >
+                Perfect
+              </button>
+              <button
+                type="button"
+                className="ghost"
+                onClick={() => {
+                  try {
+                    const gained = gameStore.claimStreakJackpot("hourglasses");
+                    onNotice(`+${gained} sablier${gained > 1 ? "s" : ""} : la série repart.`);
+                  } catch (caught) {
+                    onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+                  }
+                }}
+              >
+                {game.streak.jackpotHourglasses} sabliers
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="mission-list day-missions">
+          {game.missions.map((mission) => {
+            const look = MISSION_LOOK[mission.id];
+            return (
+              <MissionRow
+                key={mission.id}
+                icon={look?.icon ?? <Target size={19} />}
+                label={look?.label ?? mission.id}
+                detail={look?.detail ?? ""}
+                progress={mission.progress}
+                target={mission.target}
+                reward={{ points: 0, hourglasses: 1 }}
+                claimed={mission.claimed}
+                onClaim={() => {
+                  try {
+                    const gained = gameStore.claimMissions();
+                    onNotice(
+                      gained > 0
+                        ? `+${gained} sablier${gained > 1 ? "s" : ""} pour tes missions du jour.`
+                        : "Mission déjà réglée pour aujourd'hui.",
+                    );
+                  } catch (caught) {
+                    onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+                  }
+                }}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -1114,7 +1274,10 @@ export function CreatorDeckApp() {
         return;
       }
 
-      const outcome = await cloudStore.openPack();
+      // La récompense de série : le joueur a déjà tranché s'il est passé par
+      // l'écran Objectifs (les sabliers éteignent `streakJackpot`). Sinon, le
+      // défaut est le plus favorable : le Perfect garanti.
+      const outcome = await cloudStore.openPack(game.streak.jackpot ? "perfect" : "hourglasses");
       if (outcome.status === "drawn") {
         // Le son accompagne le geste : il faut un geste utilisateur pour que
         // le navigateur autorise l'audio.
@@ -1256,6 +1419,8 @@ export function CreatorDeckApp() {
             game={game}
             onClaimSeason={handleClaimSeason}
             onClaimMilestone={handleClaimMilestone}
+            onNotice={showNotice}
+            onError={showError}
           />
         ) : null}
         {tab === "atelier" ? (
@@ -1352,7 +1517,9 @@ export function CreatorDeckApp() {
           <span>{PACKS.live.size} cartes, aucune en double.</span>
         </div>
       ) : null}
-      {oddsOpen ? <PackOddsSheet onClose={() => setOddsOpen(false)} /> : null}
+      {oddsOpen ? (
+        <PackOddsSheet onClose={() => setOddsOpen(false)} current={game} />
+      ) : null}
       {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}

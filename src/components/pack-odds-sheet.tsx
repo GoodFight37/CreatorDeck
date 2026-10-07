@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import { PACKS, RARITY_META } from "@/lib/catalog";
-import { DIRECT_BONUS, RARITIES, packOdds } from "@/lib/pull-rates";
+import { DIRECT_BONUS, PITY, RARITIES, packOdds } from "@/lib/pull-rates";
 
 const percent = new Intl.NumberFormat("fr-FR", {
   style: "percent",
@@ -20,7 +20,17 @@ function formatMultiplier(value: number): string {
  * depuis `src/data/pull-rates.json` — le fichier qui sert réellement au tirage.
  * Aucune valeur n'est recopiée à la main, donc l'affichage ne peut pas mentir.
  */
-export function PackOddsSheet({ onClose }: { onClose: () => void }) {
+export function PackOddsSheet({
+  onClose,
+  current,
+}: {
+  onClose: () => void;
+  /**
+   * L'état du joueur, s'il est chargé : le compteur de malchance affiché est
+   * celui qui décidera du tirage, pas une illustration.
+   */
+  current?: { pity: { counter: number; remaining: number } } | null;
+}) {
   return (
     <div
       className="odds-overlay"
@@ -43,13 +53,17 @@ export function PackOddsSheet({ onClose }: { onClose: () => void }) {
           fichier que le moteur de tirage. Aucun booster n&apos;est truqué à l&apos;ouverture.
         </p>
 
-        <PackOddsBlock />
+        <PackOddsBlock current={current} />
       </div>
     </div>
   );
 }
 
-function PackOddsBlock() {
+function PackOddsBlock({
+  current,
+}: {
+  current?: { pity: { counter: number; remaining: number } } | null;
+}) {
   const odds = packOdds("live");
   return (
     <section className="odds-block">
@@ -116,6 +130,30 @@ function PackOddsBlock() {
           variante Live. La carte garantie est Live quand son créateur streame.
         </span>
         <small>{DIRECT_BONUS.note}</small>
+      </div>
+
+      {/* Le plancher de malchance, publié comme le reste : le seuil, la
+          probabilité réelle de l'atteindre, et l'état du compteur du joueur.
+          C'est la règle qui empêche une série malchanceuse de durer des mois —
+          elle doit être lisible, pas devinée. */}
+      <div className="odds-rare odds-pity">
+        <strong>{PITY.label}</strong>
+        <span>
+          {PITY.threshold} boosters d&apos;affilée sans Légendaire, et le 5ᵉ slot en garantit une.
+          Le compteur repart de zéro dès qu&apos;un Légendaire tombe, quel que soit le slot. La
+          garantie s&apos;active dans {percent.format(odds.pity.active)} des séries de{" "}
+          {PITY.threshold} boosters.
+        </span>
+        {current ? (
+          <small>
+            {current.pity.counter} booster{current.pity.counter > 1 ? "s" : ""} depuis ton dernier
+            Légendaire :{" "}
+            {current.pity.remaining <= 1
+              ? "le prochain est garanti."
+              : `encore ${current.pity.remaining} avant la garantie.`}
+          </small>
+        ) : null}
+        <small>{PITY.note}</small>
       </div>
 
       <p className="odds-footnote">

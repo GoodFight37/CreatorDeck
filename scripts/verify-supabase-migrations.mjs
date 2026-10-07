@@ -122,6 +122,7 @@ try {
   const ventes = await readFile(path.join(MIGRATIONS, "0010_ventes.sql"), "utf8");
   const directBonus = await readFile(path.join(MIGRATIONS, "0011_direct.sql"), "utf8");
   const lastPack = await readFile(path.join(MIGRATIONS, "0012_last_pack.sql"), "utf8");
+  const progression = await readFile(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -135,6 +136,7 @@ try {
     ["0010_ventes.sql", ventes],
     ["0011_direct.sql", directBonus],
     ["0012_last_pack.sql", lastPack],
+    ["0013_progression.sql", progression],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -1833,6 +1835,180 @@ try {
     })(),
   );
 
+  // --- 0013 : plancher de malchance et série de jours ----------------------
+  // Les deux compteurs ne vivent pas dans la sauvegarde : ils sont déduits du
+  // journal des tirages (`pack_draws`), que seule `open_pack()` écrit. Un
+  // joueur qui trafique son appareil ne peut donc pas s'offrir une Légendaire.
+  //
+  // On amorce le journal directement. Le déclencheur du Last Pack est mis en
+  // pause le temps du bloc : ces lignes ne sont pas de vrais paquets, et on
+  // les retire à la fin pour laisser le journal tel qu'on l'a trouvé.
+  const PITY = "77777777-7777-4777-8777-777777777777";
+  const STREAK = "88888888-8888-4888-8888-888888888888";
+  await player(PITY, "Pia", []);
+  await player(STREAK, "Sam", []);
+  await client.query("alter table public.pack_draws disable trigger pack_draws_last_pack");
+
+  /** Ajoute `count` tirages au journal de `userId`, à `daysAgo` jours de jeu. */
+  async function seedDraws(userId, count, daysAgo, cards) {
+    await client.query(
+      `insert into public.pack_draws (user_id, drawn_at, cards)
+       select $1,
+              ((((now() at time zone 'utc') - interval '6 hours')::date - $2::int
+                + interval '18 hours') at time zone 'utc'),
+              $3::jsonb
+         from generate_series(1, $4::int)`,
+      [userId, daysAgo, JSON.stringify(cards), count],
+    );
+  }
+
+  const sansLegendaire = [
+    { creatorSlug: "ibai", rarity: "uncommon", variant: "standard", rareDrop: false },
+    { creatorSlug: "chowh1", rarity: "common", variant: "standard", rareDrop: false },
+  ];
+
+  check(
+    "pity : un joueur sans tirage a un compteur à zéro",
+    (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 0,
+  );
+
+  await seedDraws(PITY, 79, 0, sansLegendaire);
+  check(
+    "pity : 79 tirages sans Légendaire → compteur à 79 (le prochain est le 80e)",
+    (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 79,
+    String((await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n),
+  );
+
+  const pityStatus = (await asPlayer(PITY, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "pity : le statut publié affiche le même compteur que celui qui décidera du tirage (79 + 1 = 80)",
+    pityStatus.pity === 79 && pityStatus.streak === 1,
+    JSON.stringify({ pity: pityStatus.pity, streak: pityStatus.streak }),
+  );
+
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+    [PITY],
+  );
+  const eightieth = (await asPlayer(PITY, "select public.open_pack() as r")).rows[0].r;
+  check(
+    "pity : le 80e booster garantit une Légendaire, et le dit",
+    eightieth.cards.some((c) => c.rarity === "legendary") && eightieth.pity_hit === true,
+    JSON.stringify(eightieth.cards.map((c) => c.rarity)),
+  );
+  check(
+    "pity : la garantie remet le compteur à zéro",
+    eightieth.pity === 0 && (await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n === 0,
+  );
+  // Un Légendaire de **chance** — pas celui de la garantie — remet lui aussi le
+  // compteur à zéro : le joueur a eu sa carte, le plancher n'a plus rien à
+  // rattraper. Joueur dédié, pour ne pas dépendre de l'ordre des tirages du
+  // précédent.
+  const LUCK = "12121212-3434-4565-8787-909090909090";
+  await player(LUCK, "Luc", []);
+  await seedDraws(LUCK, 5, 0, sansLegendaire);
+  check(
+    "pity : cinq tirages sans Légendaire → compteur à 5",
+    (await client.query("select public._pack_pity($1) as n", [LUCK])).rows[0].n === 5,
+  );
+  await seedDraws(LUCK, 1, 0, [
+    { creatorSlug: "auronplay", rarity: "legendary", variant: "standard", rareDrop: false },
+    ...sansLegendaire,
+  ]);
+  check(
+    "pity : une Légendaire de chance remet le compteur à zéro",
+    (await client.query("select public._pack_pity($1) as n", [LUCK])).rows[0].n === 0,
+  );
+
+  // Série : un joueur neuf ouvre son premier booster (jour 1), puis rien le
+  // lendemain casse la série.
+  check(
+    "série : personne n'a de série avant son premier booster",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 1,
+  );
+  await seedDraws(STREAK, 1, 0, sansLegendaire);
+  check(
+    "série : un tirage aujourd'hui → jour 1",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 1,
+  );
+  await client.query("delete from public.pack_draws where user_id = $1", [STREAK]);
+  await seedDraws(STREAK, 1, 1, sansLegendaire);
+  check(
+    "série : hier + le booster du jour → jour 2",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 2,
+  );
+  await seedDraws(STREAK, 1, 2, sansLegendaire);
+  await seedDraws(STREAK, 1, 3, sansLegendaire);
+  check(
+    "série : quatre jours d'affilée → jour 4",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 4,
+  );
+  // Un trou : le jour 4 (relatif) manque, les jours 5 et 9 ne comptent donc pas.
+  await seedDraws(STREAK, 1, 5, sansLegendaire);
+  await seedDraws(STREAK, 1, 9, sansLegendaire);
+  check(
+    "série : un jour manqué coupe la série (elle s'arrête au trou)",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 4,
+  );
+  // Et si le jour manquant est comblé, la série reprend jusqu'à lui.
+  await seedDraws(STREAK, 1, 4, sansLegendaire);
+  check(
+    "série : combler le trou rallonge la série (jour 6)",
+    (await client.query("select public._pack_streak($1, now()) as n", [STREAK])).rows[0].n === 6,
+  );
+
+  // Sept jours d'affilée, rien encore aujourd'hui : le prochain booster est un
+  // « Perfect » garanti, sauf si le joueur préfère les 3 sabliers.
+  const JACKPOT = "99999999-9999-4999-8999-999999999999";
+  await player(JACKPOT, "Jo", []);
+  for (const daysAgo of [1, 2, 3, 4, 5, 6]) await seedDraws(JACKPOT, 1, daysAgo, sansLegendaire);
+  const jackpotStatus = (await asPlayer(JACKPOT, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "série : au 7e jour, le statut annonce la récompense qui attend",
+    jackpotStatus.streak === 7 && jackpotStatus.jackpot_ready === true,
+    JSON.stringify({ streak: jackpotStatus.streak, ready: jackpotStatus.jackpot_ready }),
+  );
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+    [JACKPOT],
+  );
+  const sabliers = (await asPlayer(JACKPOT, "select public.open_pack('hourglasses') as r")).rows[0].r;
+  check(
+    "série : 3 sabliers choisis → le tirage n'est pas forcé (le client crédite les sabliers)",
+    sabliers.jackpot === false && sabliers.streak === 7,
+    JSON.stringify({ jackpot: sabliers.jackpot, streak: sabliers.streak }),
+  );
+  const perfect = (await asPlayer(JACKPOT, "select public.open_pack('perfect') as r")).rows[0].r;
+  check(
+    "série : le Perfect du 7e jour reste disponible toute la journée (un autre tirage ne le consomme pas)",
+    perfect.jackpot === true,
+    JSON.stringify({ jackpot: perfect.jackpot, streak: perfect.streak }),
+  );
+  const secondOfDay = (await asPlayer(JACKPOT, "select public.open_pack('perfect') as r")).rows[0].r;
+  check(
+    "série : une fois le Perfect du jour sorti, le booster suivant n'est plus garanti",
+    secondOfDay.jackpot === false,
+  );
+  const afterJackpot = (await asPlayer(JACKPOT, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "série : le statut ne promet plus de récompense une fois qu'elle est tombée",
+    afterJackpot.jackpot_ready === false && afterJackpot.streak === 7,
+    JSON.stringify({ ready: afterJackpot.jackpot_ready, streak: afterJackpot.streak }),
+  );
+
+  // Les joueurs n'appellent pas les fonctions internes.
+  await refuses("pity : un joueur ne lit pas le journal d'un autre", A, "select public._pack_pity($1)", [PITY], "permission denied");
+  await refuses("série : un joueur n'appelle pas la fonction interne", A, "select public._pack_streak($1, now())", [PITY], "permission denied");
+  await refuses("série : un joueur ne lit pas l'historique du Perfect", A, "select public._pack_perfect_today($1, now())", [PITY], "permission denied");
+
+  await client.query("alter table public.pack_draws enable trigger pack_draws_last_pack");
+  await client.query("delete from public.pack_draws where user_id in ($1, $2, $3, $4)", [
+    PITY,
+    STREAK,
+    JACKPOT,
+    LUCK,
+  ]);
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -1842,6 +2018,7 @@ try {
   await client.query(marche);
   await client.query(ventes);
   await client.query(lastPack);
+  await client.query(progression);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -1877,6 +2054,10 @@ try {
   check(
     "migrations rejouables : le direct répond encore",
     (await client.query("select streams from public.live_state where id")).rows[0].streams === 1,
+  );
+  check(
+    "migrations rejouables : le plancher de malchance répond encore, à zéro",
+    (await asPlayer(A, "select public.pack_status() as r")).rows[0].r.pity === 0,
   );
   check(
     "migrations rejouables : le Last Pack répond encore, sans double publication",

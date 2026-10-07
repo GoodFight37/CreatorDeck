@@ -16,6 +16,7 @@ import {
   applyMarketSale,
   applyPackResult,
   applyPackStatus,
+  applyServerProgression,
   applyTradeResult,
   type DrawnCard,
   type OwnedCard,
@@ -591,7 +592,11 @@ export function createCloudStore(deps: CloudDeps) {
       const status = await api.packStatus();
       const local = deps.readState();
       if (local) {
-        const adopted = applyPackStatus(local, status.packs, status.lastRegenAt, deps.now());
+        const adopted = applyServerProgression(
+          applyPackStatus(local, status.packs, status.lastRegenAt, deps.now()),
+          status,
+          deps.now(),
+        );
         if (adopted !== local) deps.applyState(adopted);
       }
       return { packs: status.packs, nextPackAt: status.nextPackAt };
@@ -968,7 +973,7 @@ export function createCloudStore(deps: CloudDeps) {
      * sans compte), on ne tire rien en local — l'écran explique qu'il faut se
      * connecter.
      */
-    async openPack(): Promise<PackOpenOutcome> {
+    async openPack(jackpot: "perfect" | "hourglasses" = "perfect"): Promise<PackOpenOutcome> {
       const api = resolve();
       if (!api) {
         const message = CLOUD_DISABLED_HINT;
@@ -982,7 +987,7 @@ export function createCloudStore(deps: CloudDeps) {
       }
       publish({ busy: true });
       try {
-        const result = await api.openPack();
+        const result = await api.openPack(jackpot);
         const cards = result.cards.map((card) => ({
           creatorSlug: card.creatorSlug,
           rarity: card.rarity as "common" | "uncommon" | "rare" | "epic" | "legendary",
@@ -993,7 +998,7 @@ export function createCloudStore(deps: CloudDeps) {
         if (!local) {
           throw new CloudError("Partie locale illisible : rien n'a été tiré.", "invalid_response", 0);
         }
-        const applied = applyPackResult(
+        let applied = applyPackResult(
           local,
           cards,
           result.packs,
@@ -1001,6 +1006,23 @@ export function createCloudStore(deps: CloudDeps) {
           result.openings,
           deps.now(),
         );
+        // Les compteurs du serveur font foi pour le plancher de malchance et
+        // la série : c'est lui qui tire, c'est donc son compte qui est juste.
+        // C'est ce qui garantit que « encore N boosters » à l'écran correspond
+        // au booster que le serveur va réellement tirer.
+        applied = {
+          ...applied,
+          state: applyServerProgression(
+            applied.state,
+            {
+              pity: result.pity,
+              streak: Number.isFinite(result.streak) && result.streak > 0
+                ? result.streak
+                : applied.state.streak,
+            },
+            deps.now(),
+          ),
+        };
         // Les cartes du serveur entrent dans la partie locale, puis la
         // sauvegarde est poussée immédiatement : pas d'attente des ~20 s du
         // debounce, les cartes infalsifiables doivent être inscrites sans délai.

@@ -7,8 +7,11 @@
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
 import {
+  buyWithTokens as engineBuyWithTokens,
   claimMilestone as engineClaimMilestone,
+  claimMissions as engineClaimMissions,
   claimSeason as engineClaimSeason,
+  claimStreakJackpot as engineClaimStreakJackpot,
   craftCreator as engineCraftCreator,
   equipTheme as engineEquipTheme,
   createInitialState,
@@ -170,6 +173,30 @@ export const gameStore = {
   /** Réclame la récompense d'un jalon atteint (écran Objectifs). */
   claimMilestone(milestoneId: string, now = Date.now()): void {
     persist(engineClaimMilestone(current(), milestoneId, now));
+  },
+
+  /** Réclame les sabliers des missions du jour terminées. */
+  claimMissions(now = Date.now()): number {
+    const before = current().hourglasses;
+    const next = engineClaimMissions(current(), now);
+    persist(next);
+    return next.hourglasses - before;
+  },
+
+  /**
+   * Dépense la récompense de série : le Perfect garanti, ou 3 sabliers.
+   * Renvoie ce que ça a donné (sabliers crédités, ou 0 pour le Perfect).
+   */
+  claimStreakJackpot(choice: "perfect" | "hourglasses", now = Date.now()): number {
+    const before = current().hourglasses;
+    const next = engineClaimStreakJackpot(current(), choice, now);
+    persist(next);
+    return next.hourglasses - before;
+  },
+
+  /** Achète un créateur manquant avec 400 jetons (jamais une Légendaire). */
+  buyWithTokens(creatorSlug: string, now = Date.now()): void {
+    persist(engineBuyWithTokens(current(), creatorSlug, now));
   },
 
   /** Équipe un thème de collection débloqué (cosmétique). */

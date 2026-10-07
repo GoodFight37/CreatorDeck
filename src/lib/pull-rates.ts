@@ -54,6 +54,18 @@ export type DirectBonus = {
   note: string;
 };
 
+/**
+ * Le plancher de malchance : au bout de `threshold` boosters sans Légendaire,
+ * le dernier slot en garantit un. Écrit ici **et** publié (`packOdds`), il est
+ * aussi appliqué des deux côtés — moteur local et `open_pack()` du serveur.
+ */
+export type PityRule = {
+  label: string;
+  /** Nombre de boosters sans Légendaire avant la garantie. */
+  threshold: number;
+  note: string;
+};
+
 export type RareDropTable = {
   label: string;
   tagline: string;
@@ -87,6 +99,9 @@ export const PULL_RATES = pullRateData.packs as Record<PackType, PackRateTable>;
 
 /** Le bonus Direct, déclaré une fois pour tous les boosters. */
 export const DIRECT_BONUS = pullRateData.direct as DirectBonus;
+
+/** Le plancher de malchance (voir `PityRule`). */
+export const PITY = pullRateData.pity as PityRule;
 
 function total(weights: RarityWeights): number {
   return RARITIES.reduce((sum, rarity) => sum + (weights[rarity] ?? 0), 0);
@@ -134,6 +149,13 @@ export type PackOdds = {
   label: string;
   cardCount: number;
   rareDrop: { label: string; tagline: string; chance: number };
+  /**
+   * Le plancher de malchance, publié lui aussi : sa probabilité réelle de
+   * s'activer (`pity.active`), calculée comme la chance de n'avoir aucun
+   * Légendaire sur `threshold` boosters d'affilée. C'est ce chiffre qui dit au
+   * joueur si la garantie est un secours rare ou une mécanique fréquente.
+   */
+  pity: PityRule & { active: number };
   slots: SlotOdds[];
   /** Probabilité marginale qu'une carte du booster soit de cette rareté. */
   perCard: Record<Rarity, number>;
@@ -184,6 +206,14 @@ export function packOdds(pack: PackType): PackOdds {
       label: table.rareDrop.label,
       tagline: table.rareDrop.tagline,
       chance: table.rareDrop.chancePermille / 1000,
+    },
+    pity: {
+      ...PITY,
+      // Probabilité d'atteindre le plancher sans Légendaire : (1 - p)^n, où p
+      // est la probabilité qu'un booster contienne au moins un Légendaire et
+      // n le nombre de boosters qui précèdent celui de la garantie — c'est le
+      // (threshold)ᵉ booster depuis le dernier Légendaire qui la déclenche.
+      active: Math.pow(1 - perPack.legendary, PITY.threshold - 1),
     },
     slots,
     perCard,

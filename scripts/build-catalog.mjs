@@ -256,6 +256,23 @@ function validateRates(rates) {
       fail(`pull-rates.json : variante du direct inconnue « ${direct.variant} ».`);
     }
   }
+
+  // Plancher de malchance : un bloc publié, un seuil entier strictement
+  // positif, et une explication — c'est une promesse faite au joueur, elle
+  // doit être lisible dans le fichier de taux qui la porte.
+  const pity = rates?.pity;
+  if (!pity || typeof pity !== "object") {
+    fail("pull-rates.json : le bloc « pity » (plancher de malchance) manque.");
+  }
+  if (!Number.isInteger(pity.threshold) || pity.threshold <= 0) {
+    fail(`pull-rates.json : seuil de pity invalide (${pity.threshold}).`);
+  }
+  if (typeof pity.label !== "string" || !pity.label.trim()) {
+    fail("pull-rates.json : le pity doit porter un libellé.");
+  }
+  if (typeof pity.note !== "string" || !pity.note.trim()) {
+    fail("pull-rates.json : le pity doit être expliqué (note).");
+  }
 }
 
 function sha256(text) {

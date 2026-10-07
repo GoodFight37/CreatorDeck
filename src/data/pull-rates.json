@@ -8,6 +8,11 @@
     "variant": "live",
     "note": "Les créateurs qui streament au moment du tirage pèsent ×1,5 dans chaque rareté, et leur carte a 200‰ (20 %) de chance d'être en variante Live. La carte garantie est en variante Live quand son créateur est en direct. Sans information fraîche sur le direct (au-delà de dix minutes), le bonus est neutre et aucune variante Live n'est tirée : un badge faux serait pire que pas de badge."
   },
+  "pity": {
+    "label": "Légendaire garanti",
+    "threshold": 80,
+    "note": "Après 80 boosters sans Légendaire, le 5ᵉ slot en garantit un — et le compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot. Le compteur est affiché : « encore N boosters » sur l'accueil, et dans cet écran. Sans ce plancher, une série malchanceuse peut durer des mois ; avec lui, elle a un plancher, et il est écrit noir sur blanc."
+  },
   "packs": {
     "live": {
       "label": "Live Drop",
