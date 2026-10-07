@@ -250,6 +250,15 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0027_wallet.sql`](../supabase/migrations/0027_wallet.sql)
+     → **Run** pour que les **points vivent au serveur** : le solde quitte la
+     sauvegarde pour la table `wallets`, l'hôtel et l'Atelier ne dépensent plus
+     que ce que le serveur a encaissé, et une sauvegarde trafiquée n'achète plus
+     rien. ⚠️ **Après le collage**, lance une fois
+     `select public.wallet_backfill();` (SQL Editor) : chaque joueur connu ouvre
+     son compte avec le solde de sa sauvegarde, sans attendre. Les joueurs qui
+     arrivent ensuite s'ouvrent tout seuls. Détail : §8, « Les points vivent au
+     serveur ».
    - [`supabase/migrations/0026_promo_codes.sql`](../supabase/migrations/0026_promo_codes.sql)
      → **Run** pour les **codes promo** : un code donné en stream (« BOOSTER-2026 »)
      se tape dans les réglages (Toi → menu → « J'ai un code ») et rend **un
@@ -1156,6 +1165,55 @@ Trois règles qui viennent du reste du jeu :
   gratuit chaque jour ferait monter le compteur et offrirait la Légendaire du
   80ᵉ sans un seul booster ouvert ;
 * **le Direct ne l'influence pas** : la variante Live reste au Live Drop.
+
+### Les points vivent au serveur (`0027`)
+
+Dernier trou d'économie, et il était connu : les points vivaient dans la
+sauvegarde, le serveur les lisait et les croyait. Quelqu'un qui gonflait son
+solde achetait à l'hôtel — et l'hôtel, justement, est ce qui relie les
+collections les unes aux autres. Depuis le 7 octobre 2026, la caisse est au
+serveur.
+
+**Ce qui change pour le joueur : rien.** Le compteur de points s'affiche
+toujours au même endroit, et l'Atelier comme l'hôtel se paient comme avant. Ce
+qui change, c'est ce que le serveur accepte : il ne croit plus un solde écrit
+par l'appareil.
+
+* **Le compte** : `wallets` (un solde par joueur, jamais négatif) et
+  `wallet_ledger` (chaque mouvement, avec sa raison). Les deux tables sont
+  fermées au client — le joueur passe par les fonctions, jamais par les tables.
+* **Les crédits** — `wallet_credit(kind, ref)` : le serveur **fixe le prix** et,
+  quand il le peut, **vérifie l'événement**. Un tirage (`pack`, `scene`) doit
+  exister dans `pack_draws`, à ce joueur-là ; une vente (`sell`) doit être une
+  annonce à lui, vendue ; un `recycle` paie la valeur de la rareté ; un
+  `milestone` paie le palier du jeu ; une `season` compte les créateurs possédés
+  de la famille et ne paie que les nouveaux.
+* **Une seule fois, et c'est la base qui le garantit** : l'index unique
+  `wallet_ledger_once (user_id, kind, ref)` fait qu'un tirage, une vente ou un
+  palier ne peuvent pas être encaissés deux fois, même si le client redemande
+  après une coupure réseau. `gained` vaut alors `0` — le client ne peut pas
+  annoncer un gain qui n'a pas eu lieu.
+* **Les dépenses** — l'hôtel débite **par trigger**, dans la transaction de la
+  vente : une annonce déposée paie son vendeur immédiatement, un achat refuse si
+  le solde serveur ne suit pas (« il te manque N points », calculé sur le solde
+  du serveur). L'artisanat passe par `wallet_spend('craft', slug)`, dont le coût
+  est recalculé depuis le catalogue : le client propose un créateur, jamais un
+  prix.
+* **Le solde de la sauvegarde devient un miroir.** Il est réécrit par le serveur
+  (`wallet_get()` le recale, les crédits aussi). Une sauvegarde gonflée à la main
+  est donc recollée à la vérité à la première lecture — et n'a rien pu acheter
+  entre-temps.
+* **La bascule** : les joueurs avaient déjà des points. `wallet_backfill()` (à
+  lancer une fois après le collage) et `_wallet_ensure()` (au premier appel de
+  chaque joueur) ouvrent les comptes en reprenant le solde de la sauvegarde, une
+  seule fois — borné à un million, parce qu'au-delà c'est une partie bricolée.
+* **Ce qui reste local, volontairement** : les sabliers (ils ne s'achètent ni ne
+  s'échangent), l'XP et le niveau. Ils ne valent rien pour un autre joueur.
+
+**Le prix à payer, dit franchement** : sans réseau, les points ne bougent plus.
+Un build **sans cloud** garde tout en local (le wallet n'existe pas), mais un
+build avec cloud demande la connexion pour dépenser — et pour encaisser un
+tirage. C'est le prix du choix, et il est assumé.
 
 ### Les codes promo
 

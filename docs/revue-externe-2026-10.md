@@ -101,7 +101,7 @@ pareil ne bloquent plus la sauvegarde ».
 
 | Point | Pourquoi non |
 | --- | --- |
-| **Wallet serveur** (points, sabliers, jetons en SQL, mutés par RPC) | décision de jeu : la monnaie vit sur l'appareil, le jeu hors ligne reste complet. La conséquence est assumée et connue : un solde trafiqué peut acheter à l'hôtel. Le jour où l'hôtel devient le cœur du jeu, ce point revient en premier |
+| **Wallet serveur** (points, sabliers, jetons en SQL, mutés par RPC) | ~~refusé le 6 octobre~~ — **rouvert et fait le 7 octobre** sur décision du joueur : `0027_wallet.sql` place le solde au serveur, l'hôtel et l'Atelier ne dépensent plus que ce que le serveur a encaissé, et une sauvegarde trafiquée n'achète plus rien. Les sabliers, l'XP et le niveau restent locaux (ils ne valent rien pour un autre joueur). Le prix, assumé : sans réseau, les points ne bougent plus — un build **sans cloud** garde tout en local |
 | **Désactiver le tirage local quand le cloud est configuré** | même raison : un build sans cloud doit rester jouable. Ce qui a été fait, c'est **un seul chemin** pour décider (le hook partagé), pas une suppression du mode local |
 | **`total_cards ≤ openings × 5 + échanges + artisanat`** | refusé comme contrôle d'intégrité : un joueur hors ligne qui rattache sa collection à un compte serait marqué suspect à cause d'une **migration de plateforme**, pas d'une triche. La provenance de `0021` couvre la même classe de triche, sans faux positif de cette forme |
 | **Provenance par identifiant de carte** (n'insérer que si l'`id` est dans `pack_draws`/les échanges) | impossible tel quel : `pack_draws` ne stocke pas les identifiants des cartes de la sauvegarde, et le client **renumérote** les cartes reçues (`applyPackResult` leur donne un nouvel `id`). Faire circuler les identifiants casserait des cartes existantes. D'où la comptabilité par (créateur, rareté, variante) + bascule, qui attrape exactement les cartes de valeur |
@@ -130,7 +130,12 @@ pareil ne bloquent plus la sauvegarde ».
    `revoke` pour fermer les jetons) et l'envoi vit dans une fonction — le secret
    Firebase n'a rien à faire dans la base. Détail et mise en route :
    `docs/cloud-supabase.md` § 9.1.
-3. **Wallet serveur**, si l'hôtel devient central (voir § 3).
+3. ~~**Wallet serveur**~~ **fait le 7 octobre** : `0027_wallet.sql`. La caisse
+   est au serveur (le solde quitte la sauvegarde), les crédits sont vérifiés ou
+   tarifés par le serveur, et l'index `wallet_ledger_once` garantit qu'un tirage,
+   une vente ou un palier ne se paient pas deux fois. Reste à faire : le
+   **branchement du client** (adopter le solde du serveur, refuser proprement
+   hors ligne) — voir § 4, point suivant.
 4. ~~**Le badge automatique (`pg_cron`)**~~ **fait le 7 octobre** :
    `0025_direct_auto.sql` branche l'horloge de la base sur `refresh-live`
    (`pg_net`, toutes les deux minutes). Avant, c'est l'application qui
@@ -152,18 +157,25 @@ pareil ne bloquent plus la sauvegarde ».
    **sans être consommé**. Détail : `docs/cloud-supabase.md` §8, « Les codes
    promo ».
 
+7. **Le branchement du wallet** (suite de `0027`) : le client adopte le solde du
+   serveur au démarrage et après chaque mouvement, envoie les crédits
+   (`pack`, `scene`, `recycle`, `milestone`, `season`) et les dépenses
+   d'artisanat, et dit franchement « connecte-toi » là où une dépense attend le
+   réseau. Tant que ce branchement n'est pas fait, **la migration `0027` ne doit
+   pas être collée** : les crédits ne partiraient pas au compte.
+
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 731 tests, 48 fichiers
-npm run supabase:verify                     # 365 contrôles sur un Postgres jetable
+npm test                                    # 742 tests, 49 fichiers
+npm run supabase:verify                     # 381 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0026` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0027` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`

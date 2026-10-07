@@ -54,6 +54,8 @@
  *   * les codes promo : un code donne un booster une seule fois par joueur, un
  *     code expiré ou épuisé est refusé, et une réserve pleine refuse **sans
  *     consommer** le code ;
+ *   * le wallet : le solde vit au serveur, une sauvegarde trafiquée n'achète
+ *     rien, un tirage et un palier ne se paient qu'une fois ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -148,6 +150,7 @@ try {
   const etatPush = await readFile(path.join(MIGRATIONS, "0024_push_state.sql"), "utf8");
   const directAuto = await readFile(path.join(MIGRATIONS, "0025_direct_auto.sql"), "utf8");
   const promos = await readFile(path.join(MIGRATIONS, "0026_promo_codes.sql"), "utf8");
+  const wallet = await readFile(path.join(MIGRATIONS, "0027_wallet.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -175,6 +178,7 @@ try {
     ["0024_push_state.sql", etatPush],
     ["0025_direct_auto.sql", directAuto],
     ["0026_promo_codes.sql", promos],
+    ["0027_wallet.sql", wallet],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -2045,6 +2049,211 @@ try {
     "hôtel : sans argument, la vitrine est la sienne",
     (await asPlayer(H, "select public.market_listings_of() as r")).rows[0].r.length === 1,
   );
+
+  // --- Le wallet (0027) ----------------------------------------------------
+  // Les points vivent au serveur. Les soldes ont déjà bougé (les contrôles de
+  // l'hôtel ci-dessus, dont les ventes), donc tout se mesure **relativement** :
+  // une constante attendue ici serait fausse demain, à cause d'un contrôle
+  // ajouté plus haut.
+  const ligneBascule = (await client.query(
+    "select count(*)::int as n from public.wallet_ledger where user_id = $1 and kind = 'bascule'",
+    [G],
+  )).rows[0].n;
+  const miroirG = Number((await client.query("select state -> 'points' as p from public.saves where user_id = $1", [G])).rows[0].p);
+  const vuG = (await asPlayer(G, "select public.wallet_get() as r")).rows[0].r;
+  check(
+    "wallet : le compte s'ouvre une fois, en reprenant le solde de la sauvegarde",
+    ligneBascule === 1 && vuG.points === miroirG,
+    JSON.stringify({ ligneBascule, vuG, miroirG }),
+  );
+
+  // La vente crédite le vendeur : on dépose une carte neuve et on regarde le
+  // compte bouger du **payout**, exactement.
+  //
+  // La carte est ajoutée à la sauvegarde d'Hélène avec un identifiant neuf sur
+  // un couple qu'elle possède déjà (la provenance se compte par couple :
+  // créateur + rareté + variante). Un doublon existant ferait échouer les
+  // contrôles suivants, qui vendent ces cartes-là.
+  await client.query(
+    `update public.saves s
+        set state = jsonb_set(
+              s.state, '{cards}',
+              (s.state -> 'cards')
+                || jsonb_build_array((s.state -> 'cards' -> 0) || jsonb_build_object('id', 'helene-wallet-1'))
+                || jsonb_build_array((s.state -> 'cards' -> 0) || jsonb_build_object('id', 'helene-wallet-2'))
+            ),
+            updated_at = now()
+      where s.user_id = $1`,
+    [H],
+  );
+  const avantVente = (await asPlayer(H, "select public.wallet_get() as r")).rows[0].r.points;
+  const vente = (await asPlayer(H, "select public.market_sell($1) as r", ["helene-wallet-1"])).rows[0].r;
+  const apresVente = (await asPlayer(H, "select public.wallet_get() as r")).rows[0].r.points;
+  // Et une seconde annonce, gardée **ouverte** : c'est celle de l'achat refusé,
+  // juste en dessous.
+  await asPlayer(H, "select public.market_sell($1)", ["helene-wallet-2"]);
+  check(
+    "wallet : une vente crédite le compte du vendeur, du montant exact",
+    apresVente === avantVente + vente.payout,
+    JSON.stringify({ avantVente, payout: vente.payout, apresVente }),
+  );
+
+  // Le contrôle central : une sauvegarde gonflée à la main n'achète plus rien.
+  const soldeG = (await asPlayer(G, "select public.wallet_get() as r")).rows[0].r.points;
+  await client.query(
+    "update public.saves set state = jsonb_set(state, '{points}', '999999') where user_id = $1",
+    [G],
+  );
+  // L'annonce que Gaston ne pourra pas s'offrir : c'est celle du doublon
+  // fabriqué pour ce contrôle, pas une annonce laissée par les tests d'avant.
+  const annonceH = (await client.query(
+    "select id from public.market_listings where seller_id = $1 and card_id = 'helene-wallet-2'",
+    [H],
+  )).rows[0].id;
+  let trafique = "";
+  try {
+    await asPlayer(G, "select public.market_buy($1)", [annonceH]);
+  } catch (error) {
+    trafique = String(error.message || "");
+  }
+  check(
+    "wallet : un solde trafiqué dans la sauvegarde n'achète rien",
+    trafique.includes("il te manque") &&
+      (await client.query("select status from public.market_listings where id = $1", [annonceH])).rows[0].status === "open" &&
+      (await client.query("select points from public.wallets where user_id = $1", [G])).rows[0].points === soldeG,
+    trafique || "aucune erreur levée",
+  );
+
+  // Et le miroir se recale : le million disparaît à la première lecture.
+  const relu = (await asPlayer(G, "select public.wallet_get() as r")).rows[0].r;
+  check(
+    "wallet : lire son solde recale le miroir de la sauvegarde",
+    relu.points === soldeG &&
+      Number((await client.query("select state -> 'points' as p from public.saves where user_id = $1", [G])).rows[0].p) === soldeG,
+    JSON.stringify({ relu, soldeG }),
+  );
+
+  // Les crédits : un tirage encaisse une fois, pas deux.
+  //
+  // Le tirage est pris chez **son propriétaire** (les tirages des premières
+  // fixtures ne sont pas forcément ceux d'Alix) : c'est lui qui peut
+  // l'encaisser, et le refus se teste avec un autre joueur.
+  const ligneTirage = (await client.query(
+    "select id, user_id from public.pack_draws where kind = 'live' order by id limit 1",
+  )).rows[0];
+  const tirageWallet = ligneTirage.id;
+  const proprietaire = ligneTirage.user_id;
+  const autreJoueur = proprietaire === A ? B : A;
+  const avantTirageWallet = (await asPlayer(proprietaire, "select public.wallet_get() as r")).rows[0].r.points;
+  const encaisseWallet = (await asPlayer(proprietaire, "select public.wallet_credit('pack', $1::text) as r", [String(tirageWallet)])).rows[0].r;
+  const encoreTirage = (await asPlayer(proprietaire, "select public.wallet_credit('pack', $1::text) as r", [String(tirageWallet)])).rows[0].r;
+  check(
+    "wallet : un tirage paie 12 points, une seule fois",
+    encaisseWallet.gained === 12 && encaisseWallet.points === avantTirageWallet + 12 && encoreTirage.points === encaisseWallet.points,
+    JSON.stringify({ encaisse: encaisseWallet, encore: encoreTirage }),
+  );
+  await refuses(
+    "wallet : un tirage qui n'est pas le sien ne paie rien",
+    autreJoueur,
+    "select public.wallet_credit('pack', $1::text) as r",
+    [String(tirageWallet)],
+    "n'existe pas",
+  );
+
+  // Un palier ne se paie qu'une fois, au prix du jeu.
+  const palier = (await asPlayer(B, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
+  const palier2 = (await asPlayer(B, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
+  check(
+    "wallet : un palier de collection ne se paie qu'une fois",
+    palier.gained === 120 && palier2.points === palier.points,
+    JSON.stringify({ palier, palier2 }),
+  );
+
+  // Le recyclage paie le prix de la rareté, jamais un montant proposé.
+  const recy = (await asPlayer(B, "select public.wallet_credit('recycle', 'rare') as r")).rows[0].r;
+  check(
+    "wallet : le recyclage paie le prix de la rareté, fixé par le serveur",
+    recy.gained === 55,
+    JSON.stringify(recy),
+  );
+  await refuses(
+    "wallet : on n'encaisse pas un recyclage d'une rareté inventée",
+    B,
+    "select public.wallet_credit('recycle', 'mythique') as r",
+    [],
+    "rareté inconnue",
+  );
+
+  // L'artisanat débite au prix du catalogue, une fois par créateur. On met
+  // juste ce qu'il faut sur le compte (600, le prix d'une Épique) : le refus
+  // pour solde insuffisant juste après est alors franc, sans arithmétique.
+  // Un créateur **artisanable** : les Légendaires ne le sont pas, elles se
+  // tirent (le catalogue décide, pas le client).
+  const artisanables = (await client.query(
+    "select slug from public.creators where rarity = 'epic' and retired = false order by slug limit 2",
+  )).rows.map((row) => row.slug);
+  await client.query(
+    "select public._wallet_apply($1, greatest(0, 600 - public._wallet_ensure($1)), 'controle', 'artisanat', false)",
+    [B],
+  );
+  const avantCraftWallet = (await asPlayer(B, "select public.wallet_get() as r")).rows[0].r.points;
+  const artisanWallet = (await asPlayer(B, "select public.wallet_spend('craft', $1) as r", [artisanables[0]])).rows[0].r;
+  const artisan2 = (await asPlayer(B, "select public.wallet_spend('craft', $1) as r", [artisanables[0]])).rows[0].r;
+  check(
+    "wallet : l'artisanat débite le prix de la carte, une fois par créateur",
+    avantCraftWallet === 600 &&
+      artisanWallet.spent === 600 &&
+      artisanWallet.points === 0 &&
+      // Déjà payé : rien ne bouge, et le serveur le dit.
+      artisan2.spent === 0 &&
+      artisan2.points === artisanWallet.points,
+    JSON.stringify({ avantCraftWallet, artisan: artisanWallet, artisan2 }),
+  );
+  await refuses(
+    "wallet : on ne peut pas dépenser plus que son solde",
+    B,
+    "select public.wallet_spend('craft', $1) as r",
+    [artisanables[1]],
+    "il te manque",
+  );
+  await refuses(
+    "wallet : une Légendaire ne s'artisanat pas, même avec les points",
+    B,
+    "select public.wallet_spend('craft', $1) as r",
+    [(await client.query("select slug from public.creators where rarity = 'legendary' order by slug limit 1")).rows[0].slug],
+    "ne sont pas artisanales",
+  );
+
+  // Les portes et les tables : fermées au joueur.
+  await refuses(
+    "wallet : les tables sont fermées au joueur",
+    G,
+    "select count(*) from public.wallets",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "wallet : la mécanique interne n'est pas appelable",
+    G,
+    "select public._wallet_apply($1, 9999, 'triche', 'x', false) as r",
+    [G],
+    "permission denied",
+  );
+  await refuses(
+    "wallet : la bascule générale est réservée au serveur",
+    G,
+    "select public.wallet_backfill() as r",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "wallet : sans compte, pas de solde",
+    null,
+    "select public.wallet_get() as r",
+    [],
+    "connecte-toi",
+  );
+
 
   // --- Le carnet : les ventes -------------------------------------------------
   // Hélène a vendu sa Gold épique à Gaston dans la section précédente : la
