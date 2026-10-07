@@ -44,27 +44,51 @@
 const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/+$/, "");
 
 /**
- * La clé qui écrit (rôle de service). Deux nomenclatures coexistent : l'ancienne
- * variable `SUPABASE_SERVICE_ROLE_KEY` (un JWT) et la nouvelle
- * `SUPABASE_SECRET_KEYS` (un objet JSON de clés `sb_secret_…`). On accepte les
- * deux : sinon la fonction échoue sur un projet récent avec un message qui
- * n'explique rien.
+ * Les clés de service du projet, telles que Supabase les donne à la fonction.
+ *
+ * Deux nomenclatures coexistent, et **on accepte les deux** : l'ancienne
+ * variable `SUPABASE_SERVICE_ROLE_KEY` (un JWT `eyJ…`, `role: service_role`) et
+ * la nouvelle `SUPABASE_SECRET_KEYS` (un objet JSON de clés `sb_secret_…`). Un
+ * projet récent peut n'avoir que la seconde — c'est le cas ici, et une fonction
+ * qui n'en acceptait qu'une refusait la mauvaise clé avec un message qui
+ * n'expliquait rien (vécu le 7 octobre : la clé legacy `service_role` était
+ * refusée alors que la fonction marchait très bien).
  */
-function serviceKey(): string {
-  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (legacy) return legacy;
-  const raw = Deno.env.get("SUPABASE_SECRET_KEYS") ?? "";
-  try {
-    const parsed = JSON.parse(raw) as Record<string, string>;
-    const first = parsed.default ?? Object.values(parsed)[0];
-    if (typeof first === "string" && first) return first;
-  } catch {
-    // Variable absente ou d'un autre format : on retombe sur « pas de clé ».
+type ServerKey = { value: string; source: string };
+
+function serverKeys(): ServerKey[] {
+  const keys: ServerKey[] = [];
+  const legacy = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "").trim();
+  if (legacy) keys.push({ value: legacy, source: "SUPABASE_SERVICE_ROLE_KEY (legacy)" });
+
+  for (const name of ["SUPABASE_SECRET_KEYS", "SUPABASE_SECRET_KEY"]) {
+    const raw = (Deno.env.get(name) ?? "").trim();
+    if (!raw) continue;
+    if (name === "SUPABASE_SECRET_KEY") {
+      keys.push({ value: raw, source: name });
+      continue;
+    }
+    try {
+      const parsed = JSON.parse(raw) as Record<string, unknown> | string;
+      const values =
+        typeof parsed === "string"
+          ? [parsed]
+          : Object.values(parsed ?? {}).filter((value): value is string => typeof value === "string" && Boolean(value));
+      for (const value of values) keys.push({ value, source: name });
+    } catch {
+      // Variable d'un autre format : on l'ignore plutôt que de tout casser.
+    }
   }
-  return "";
+  return keys;
 }
 
-const SERVICE_ROLE = serviceKey();
+const SERVER_KEYS = serverKeys();
+/** La clé qui sort (appels PostgREST) : la première que Supabase donne. */
+const SERVICE_ROLE = SERVER_KEYS[0]?.value ?? "";
+/** Un premier aperçu, jamais la clé : sert au diagnostic. */
+function keyPrefix(value: string): string {
+  return value.startsWith("sb_secret_") ? "sb_secret_…" : value.startsWith("eyJ") ? "eyJ… (JWT legacy)" : "clé inconnue";
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -281,8 +305,16 @@ Deno.serve(async (req) => {
   // Une notification part au nom du jeu : personne d'autre ne déclenche cette
   // porte. C'est plus strict que `refresh-live` (qui accepte la clé anon) et
   // volontairement : ici, il n'y a rien à lire pour un joueur.
-  if (!SERVICE_ROLE || bearer !== SERVICE_ROLE) {
-    return json({ error: "Réservé au rôle de service." }, 401);
+  //
+  // On accepte **toutes** les clés de service que Supabase donne à la fonction
+  // (legacy ou `sb_secret_…`) : le refus ne doit pas dépendre d'une
+  // nomenclature, et le message dit laquelle utiliser quand aucune ne colle.
+  const accepted = SERVER_KEYS.some((key) => key.value === bearer);
+  if (!accepted) {
+    const hint = SERVER_KEYS.length
+      ? `Clés acceptées ici : ${SERVER_KEYS.map((key) => keyPrefix(key.value)).join(", ")}.`
+      : "Aucune clé de service dans l'environnement de la fonction : prends celle du projet (Paramètres → API Keys) — l'onglet « Legacy API keys » (`service_role`) ou la clé secrète `sb_secret_…`.";
+    return json({ error: `Réservé au rôle de service. ${hint}` }, 401);
   }
 
   const account = serviceAccount();
@@ -300,6 +332,11 @@ Deno.serve(async (req) => {
     return json({
       ok: true,
       check: true,
+      jeton_serveur: {
+        // Jamais la clé : de quoi savoir **quoi copier** dans PowerShell.
+        acceptees: SERVER_KEYS.map((key) => `${key.source} · ${keyPrefix(key.value)}`),
+        sortante: SERVICE_ROLE ? keyPrefix(SERVICE_ROLE) : null,
+      },
       compte_de_service: account
         ? { projet: account.project_id ?? null, courriel: account.client_email ?? null }
         : "absent — colle FCM_SERVICE_ACCOUNT (voir docs/cloud-supabase.md § Notifications)",

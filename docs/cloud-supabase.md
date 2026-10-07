@@ -1474,7 +1474,12 @@ notification, et sans message d'erreur.
 
 #### Vérifier que ça marche (sans attendre un direct)
 
-Dans un terminal **PowerShell**, avec la clé de service sous la main :
+Dans un terminal **PowerShell**, avec la clé de service sous la main — sur ce
+projet, c'est la **clé secrète** (`sb_secret_…`) : Paramètres → **API Keys** →
+section des nouvelles clés → *secret key*. Le JWT « legacy » `service_role`
+n'est **pas** accepté par les fonctions : Supabase ne le leur donne pas dans
+leur environnement (la fonction répond alors « Réservé au rôle de service » et
+précise, entre parenthèses, les clés qu'elle accepte).
 
 ```powershell
 # 1. Diagnostic : secrets, appareils inscrits, dernières notifications.

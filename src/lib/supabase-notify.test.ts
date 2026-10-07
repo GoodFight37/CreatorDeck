@@ -81,9 +81,23 @@ describe("0023_notifications.sql (les notifications de direct)", () => {
 });
 
 describe("notify-live (la fonction qui envoie)", () => {
-  it("n'accepte que le rôle de service", () => {
-    expect(FUNCTION).toContain("bearer !== SERVICE_ROLE");
-    expect(FUNCTION).toContain('json({ error: "Réservé au rôle de service." }, 401)');
+  it("n'accepte que le rôle de service — les deux nomenclatures de clé", () => {
+    // `SUPABASE_SERVICE_ROLE_KEY` (JWT legacy) **et** `SUPABASE_SECRET_KEYS`
+    // (`sb_secret_…`) : un projet récent ne donne que la seconde, et refuser
+    // la mauvaise clé avec un message muet a coûté une soirée (7 octobre).
+    expect(FUNCTION).toContain('Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")');
+    expect(FUNCTION).toContain('"SUPABASE_SECRET_KEYS"');
+    expect(FUNCTION).toContain("SERVER_KEYS.some((key) => key.value === bearer)");
+    expect(FUNCTION).toMatch(/Réservé au rôle de service\./);
+    expect(FUNCTION).toContain("}, 401)");
+  });
+
+  it("dit quelle clé utiliser, sans jamais publier la clé", () => {
+    // Le diagnostic nomme la **source** et un aperçu (`sb_secret_…`), jamais la
+    // valeur : un journal de bord ne doit pas devenir un coffre ouvert.
+    expect(FUNCTION).toContain("jeton_serveur");
+    expect(FUNCTION).toMatch(/SERVER_KEYS\.map\(\(key\) => keyPrefix\(key\.value\)\)/);
+    expect(FUNCTION).toContain("function keyPrefix(");
   });
 
   it("ne confirme rien en dur : le compte de service vient d'un secret", () => {
