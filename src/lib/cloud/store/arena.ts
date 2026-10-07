@@ -9,6 +9,15 @@ import { arenaRankLabel, arenaWeekLabel, applyArenaReward } from "@/lib/arena";
  */
 export function arenaActions(ctx: CloudStoreContext) {
   return {
+    // --------------------------------------------------------------- Arène
+    //
+    // L'arène est la seule chose du jeu que le serveur calcule et que le client
+    // n'a pas le droit d'inventer : le score est la somme des viewers **réels**
+    // des créateurs alignés. Le client choisit cinq cartes, envoie cinq slugs,
+    // et attend le verdict. C'est aussi ce qui rend l'arène inutilisable hors
+    // ligne : sans serveur, personne ne sait qui est en direct — et un score
+    // calculé sur un direct périmé serait un score faux.
+
     /**
      * Charge mon arène et le classement en un seul aller-retour.
      *

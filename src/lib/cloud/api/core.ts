@@ -332,7 +332,6 @@ export function parseFamilyBreakdown(raw: unknown): ProfileFamily[] {
 }
 
 /** Part d'une famille complétée. Un total nul ne compte pas comme complet. */
-
 export function parseTradeCard(raw: unknown): TradeCard | null {
   const record = asRecord(raw);
   const slug = record?.creatorSlug;

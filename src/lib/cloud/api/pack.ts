@@ -10,7 +10,7 @@ import { repairMojibake } from "@/lib/cloud/mojibake";
  * algorithme que le moteur local, et le client ne peut pas les modifier.
  */
 export async function openPack(
-core: CloudCore,
+  core: CloudCore,
   /**
    * Récompense de série : `perfect` (défaut) force le tirage si le 7ᵉ jour
    * est atteint, `hourglasses` prévient le serveur que le joueur préfère les
@@ -128,7 +128,7 @@ export async function scenePackChoices(core: CloudCore, family: string): Promise
  * réponse qu'on range, jamais ce qu'on a envoyé.
  */
 export async function openScenePack(
-core: CloudCore,
+  core: CloudCore,
   family: string,
   cards: Array<{ creatorSlug: string; rarity: string; variant: string }>,
 ): Promise<{
@@ -217,7 +217,7 @@ export async function packStatus(core: CloudCore): Promise<{
  * c'est ce qui remplace l'arbitrage par l'horloge de l'appareil.
  */
 export async function pushSave(
-core: CloudCore,
+  core: CloudCore,
   state: unknown,
   deviceUpdatedAt: number,
   saveVersion: number,

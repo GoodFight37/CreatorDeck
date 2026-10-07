@@ -66,6 +66,8 @@ export function socialActions(ctx: CloudStoreContext) {
       }
     },
 
+    // ------------------------------------------------------------- échanges
+
     /**
      * Relit les offres d'échange.
      *
@@ -230,6 +232,13 @@ export function socialActions(ctx: CloudStoreContext) {
         return refusal;
       }
     },
+
+    // ---------------------------------------------------------------- Amis
+    //
+    // Même refus que les échanges : pas de cloud configuré ou pas de compte →
+    // on le dit, on ne tente pas un appel voué à échouer. Les méthodes qui
+    // renvoient une liste rendent une liste vide dans ce cas, pour que l'écran
+    // s'affiche avec son message au lieu d'une erreur réseau.
 
     /**
      * Charge les trois listes d'un coup et les publie dans l'état cloud.

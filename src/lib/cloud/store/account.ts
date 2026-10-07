@@ -516,6 +516,12 @@ export function accountActions(ctx: CloudStoreContext) {
       }
     },
 
+    // ------------------------------------------------------------ Notifications
+    //
+    // Le carnet ne lit rien de nouveau côté serveur : il relit ce que le joueur
+    // a déjà le droit de voir (ses offres, ses amis, ses ventes) et le met en
+    // français. La « dernière visite » vit sur l'appareil, par joueur.
+
     /**
      * Recharge le carnet et recompte les nouveautés.
      *
@@ -587,6 +593,13 @@ export function accountActions(ctx: CloudStoreContext) {
     clearInbox(): void {
       ctx.publish({ inbox: [], inboxAt: null, inboxUnread: 0, inboxBusy: false });
     },
+
+    // ---------------------------------------------------------------- Twitch
+    //
+    // La connexion Twitch est un aller-retour par le navigateur : le store ne
+    // navigue pas (il ne connaît ni `window` ni le DOM, c'est ce qui le rend
+    // testable) — il **donne l'adresse à ouvrir** et **termine** au retour.
+    // L'écran, lui, ouvre la porte.
 
     /**
      * L'adresse à ouvrir pour se connecter avec Twitch, ou `null` si ce build

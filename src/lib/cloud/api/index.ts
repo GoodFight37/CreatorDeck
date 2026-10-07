@@ -64,6 +64,8 @@ export class CloudApi {
     };
   }
 
+  // ---------------------------------------------------------------- session
+
   /** Session enregistrée sur l'appareil, si elle est encore lisible. */
   session(): CloudSession | null {
     const raw = this.storage?.getItem(CLOUD_SESSION_KEY);
@@ -131,6 +133,8 @@ export class CloudApi {
       return null;
     }
   }
+
+  // ------------------------------------------------------------------ HTTP
 
   private headers(token?: string): Record<string, string> {
     const headers: Record<string, string> = {
@@ -231,9 +235,7 @@ export class CloudApi {
     }
   }
 
-  // ----------------------------------------------------------------------
-  // account — voir ./account.ts
-  // ----------------------------------------------------------------------
+  // ------------------------------------------------------------------- auth
 
   /** Envoie un code à 6 chiffres (création de compte incluse). */
   async requestOtp(email: string): Promise<void> {
@@ -367,6 +369,8 @@ export class CloudApi {
     return account.ping(this.core);
   }
 
+  // --------------------------------------------------------------- Twitch
+
   /**
    * L'adresse à ouvrir pour se connecter avec Twitch. Supabase (et non
    * l'appareil) détient le secret du client Twitch ; l'appareil ne fait
@@ -405,9 +409,7 @@ export class CloudApi {
     return account.playerProfile(this.core, userId);
   }
 
-  // ----------------------------------------------------------------------
-  // pack — voir ./pack.ts
-  // ----------------------------------------------------------------------
+  // ---------------------------------------------------------------- boosters
 
   /**
    * Résultat d'un tirage serveur : cartes tirées + compteurs mis à jour.
@@ -515,6 +517,8 @@ export class CloudApi {
     return pack.packStatus(this.core);
   }
 
+  // ------------------------------------------------------------------ saves
+
   /**
    * Envoie la partie au serveur.
    *
@@ -550,9 +554,7 @@ export class CloudApi {
     return pack.resetProgress(this.core);
   }
 
-  // ----------------------------------------------------------------------
-  // social — voir ./social.ts
-  // ----------------------------------------------------------------------
+  // ---------------------------------------------------------------- échanges
 
   /**
    * Cherche un joueur par son pseudo (2 caractères minimum, hors soi-même).
@@ -623,6 +625,13 @@ export class CloudApi {
     return social.listTrades(this.core);
   }
 
+  // -------------------------------------------------------------- Amis
+  //
+  // Le serveur décide tout (voir `0008_friends.sql`) : ces méthodes ne font que
+  // lire ses réponses et les mettre en forme. Chacune est **tolérante** — une
+  // ligne illisible est ignorée plutôt que de faire échouer toute la liste —
+  // parce qu'un écran d'amis qui ne s'ouvre pas est pire qu'un ami manquant.
+
   async listFriends(): Promise<Friendship[]> {
     return social.listFriends(this.core);
   }
@@ -672,9 +681,7 @@ export class CloudApi {
     return social.hasFriendship(this.core, userId);
   }
 
-  // ----------------------------------------------------------------------
-  // market — voir ./market.ts
-  // ----------------------------------------------------------------------
+  // ------------------------------------------------------------------ hôtel
 
   /**
    * Le comptoir : les cartes des autres joueurs, les plus récentes d'abord.
@@ -752,9 +759,7 @@ export class CloudApi {
     return market.lastPackLosses(this.core, limit);
   }
 
-  // ----------------------------------------------------------------------
-  // arena — voir ./arena.ts
-  // ----------------------------------------------------------------------
+  // ------------------------------------------------------------------- arène
 
   /**
    * Dépose une arène (cinq slugs alignés).

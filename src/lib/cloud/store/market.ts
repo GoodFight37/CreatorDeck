@@ -10,6 +10,13 @@ import { applyMarketSale, applyMarketPurchase, applyLastPackSteal, type OwnedCar
  */
 export function marketActions(ctx: CloudStoreContext) {
   return {
+    // --------------------------------------------------- Hôtel des ventes
+    //
+    // Même règle que le reste : le serveur décide et écrit, l'appareil rejoue
+    // le même changement sur la partie locale puis la pousse. Un dépôt, comme
+    // un achat, est donc **déjà fait** quand l'écran affiche « c'est vendu » :
+    // si la poussée échoue, la sauvegarde du cloud reste la bonne.
+
     /** Charge le comptoir et le publie dans l'état cloud. */
     async loadMarket(): Promise<void> {
       const ready = ctx.tradeApi();
@@ -120,6 +127,13 @@ export function marketActions(ctx: CloudStoreContext) {
     clearMarket(): void {
       ctx.publish({ market: [], marketAt: null, marketBusy: false });
     },
+
+    // ------------------------------------------------------------ Last Pack
+    //
+    // Le paquet qu'on vient d'ouvrir reste exposé dix minutes : le serveur le
+    // publie tout seul (déclencheur sur les tirages), la feuille ne fait que
+    // lire. Un vol, lui, se joue en trois temps — pousser sa collection, laisser
+    // le serveur trancher, rejouer le résultat ici — comme un achat d'hôtel.
 
     async loadLastPacks(): Promise<void> {
       const ready = ctx.tradeApi();

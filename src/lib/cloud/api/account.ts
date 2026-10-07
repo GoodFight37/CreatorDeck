@@ -304,7 +304,7 @@ export async function adoptSession(core: CloudCore, tokens: { accessToken: strin
 }
 
 export async function leaderboard(
-core: CloudCore,
+  core: CloudCore,
   limit = 20,
   metric: LeaderboardMetric = "unique_creators",
   region: string | null = null,

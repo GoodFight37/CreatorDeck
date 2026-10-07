@@ -49,7 +49,7 @@ export async function playerVariants(core: CloudCore, userId: string, slug: stri
  * prévient le joueur qu'elle restera sans doute sans réponse.
  */
 export async function createTrade(
-core: CloudCore,
+  core: CloudCore,
   recipientId: string,
   given: Array<{ creatorSlug: string; variant: string }>,
   wanted: Array<{ creatorSlug: string; variant: string }>,
@@ -74,7 +74,7 @@ core: CloudCore,
  * l'appareil applique exactement le même changement à sa partie locale.
  */
 export async function respondTrade(
-core: CloudCore,
+  core: CloudCore,
   tradeId: number,
   accept: boolean,
 ): Promise<{ status: TradeStatus; trade: Trade; given: TradeCard[]; received: TradeCard[] }> {
