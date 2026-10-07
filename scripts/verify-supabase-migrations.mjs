@@ -153,6 +153,7 @@ try {
   const wallet = await readFile(path.join(MIGRATIONS, "0027_wallet.sql"), "utf8");
   const saisons = await readFile(path.join(MIGRATIONS, "0028_wallet_saisons.sql"), "utf8");
   const surcharge = await readFile(path.join(MIGRATIONS, "0029_wallet_surcharge.sql"), "utf8");
+  const gold = await readFile(path.join(MIGRATIONS, "0030_gold.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -183,6 +184,7 @@ try {
     ["0027_wallet.sql", wallet],
     ["0028_wallet_saisons.sql", saisons],
     ["0029_wallet_surcharge.sql", surcharge],
+    ["0030_gold.sql", gold],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -300,6 +302,34 @@ try {
   const epicPart = (counts.epic / N) * 100;
   console.log(`   slot garanti sur ${N} boosters : rare ${rarePart.toFixed(1)} %, épique ${epicPart.toFixed(1)} % (attendu 82 / 15)`);
   check("slot garanti : rare ≈ 82 %", Math.abs(rarePart - 82) <= 6, `${rarePart.toFixed(1)} %`);
+
+  // --- La Légendaire Gold (0030) --------------------------------------------
+  // Avant `0030`, une carte Gold n'existait **que** dans un Perfect : une
+  // Légendaire tirée ordinairement ne pouvait jamais l'être. Le taux est de
+  // 1 % (100 sur les 10 000 du tirage de variante) ; le contrôle est
+  // statistique — 6 000 tirages, fourchette large (l'attendu est ~60, on exige
+  // entre 15 et 150). C'est un contrôle de **règle**, pas une mesure au
+  // pour mille près.
+  //
+  // Attention à la forme de la requête : une sous-requête `lateral` **sans
+  // corrélation** n'est évaluée qu'une fois par Postgres — le contrôle lisait
+  // alors un seul tirage et passait pour un zéro franc. La fonction est dans la
+  // liste du `select`, donc une fois par ligne de la série.
+  const goldLeg = (
+    await client.query(
+      "select count(*)::int as n from (select public._pack_choose_variant('legendary', false, false) as v from generate_series(1, 6000)) t where t.v = 'gold'",
+    )
+  ).rows[0].n;
+  const goldRare = (
+    await client.query(
+      "select count(*)::int as n from (select public._pack_choose_variant('rare', false, false) as v from generate_series(1, 6000)) t where t.v = 'gold'",
+    )
+  ).rows[0].n;
+  check(
+    "gold : une Légendaire peut être Gold hors Perfect, et seulement elle",
+    goldLeg >= 15 && goldLeg <= 150 && goldRare === 0,
+    JSON.stringify({ legendaires: goldLeg, autresRaretes: goldRare }),
+  );
   check("slot garanti : épique ≈ 15 %", Math.abs(epicPart - 15) <= 5, `${epicPart.toFixed(1)} %`);
 
   // --- Recharge (30 min, plafond 4) ---------------------------------------
@@ -4619,6 +4649,7 @@ try {
   await client.query(wallet);
   await client.query(saisons);
   await client.query(surcharge);
+  await client.query(gold);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,
@@ -4705,6 +4736,12 @@ try {
       grilleRejouee.p === grilleAvant.p &&
       membresRejoues === membresAvant,
     JSON.stringify({ avant: grilleAvant, apres: grilleRejouee, membresAvant, membresRejoues }),
+  );
+  check(
+    "migrations rejouables : la Légendaire Gold tient après le recollage",
+    (await client.query(
+      "select count(*)::int as n from (select public._pack_choose_variant('legendary', false, false) as v from generate_series(1, 6000)) t where t.v = 'gold'",
+    )).rows[0].n >= 15,
   );
   check(
     "migrations rejouables : les points du wallet répondent encore",

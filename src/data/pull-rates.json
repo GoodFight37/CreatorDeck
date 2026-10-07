@@ -64,7 +64,10 @@
       ],
       "variants": {
         "holoPermille": 75,
-        "holoFromRarity": "uncommon"
+        "holoFromRarity": "uncommon",
+        "goldPermille": 100,
+        "goldRarity": "legendary",
+        "note": "Gold : 1 % sur une Légendaire (100 sur 10 000, la même échelle que le tirage de variante : le Holo, à 75, tombe 0,75 % du temps). Le Paquet Scène ne donne jamais de Légendaire : il n'a pas de goldPermille."
       },
       "rareDrop": {
         "label": "Perfect Live",

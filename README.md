@@ -119,6 +119,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
 | 11.8 | La surcharge de `_wallet_apply` retirée : deux versions de la même fonction laissaient l'appel ambigu et **le booster ne s'ouvrait plus** | **livrée** | `0029_wallet_surcharge.sql`, `scripts/verify-supabase-migrations.mjs` (l'accident est rejoué, puis réparé) |
 | 11.9 | L'aiguille de preuve sociale : « N amis ont ouvert un booster il y a moins d'une heure » sur l'accueil (lue dans le carnet, **aucun appel serveur en plus**), qui ouvre le carnet au clic | **livrée** | `src/lib/social/inbox.ts` (`friendsOpenedRecently`), `src/components/creator-deck-app.tsx` |
+| 11.10 | La variante **Gold** existe hors « Perfect » : **1 %** sur une Légendaire, dans le moteur **et** le serveur (`0030_gold.sql`), avec un test miroir entre `pull-rates.json` et le SQL | **livrée** | `src/data/pull-rates.json`, `0030_gold.sql`, `scripts/verify-supabase-migrations.mjs` |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -154,7 +155,8 @@ Deux règles qui tiennent tout le reste :
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0029` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles et surcharge de `_wallet_apply`). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0030` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+1 % hors Perfect). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -163,7 +165,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**787 tests**, 52 fichiers aujourd'hui).
+  (**788 tests**, 52 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -193,7 +195,7 @@ Trois étages, trois vitesses :
   la carte est relue dans la sauvegarde (et dont le droit de provenance est
   consommé), un palier de collection recalculé côté serveur, un palier de famille
   payé au montant du jeu
-  (**399 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  (**401 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -266,7 +268,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0029)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0030)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -277,7 +279,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0029` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0030` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
@@ -358,6 +360,10 @@ Principes :
   peut pas afficher autre chose que ce que l'application fait.
 - La répartition des paliers est vérifiée par les tests : leur somme vaut
   exactement l'ancienne récompense unique, donc l'économie du jeu ne bouge pas.
+- **La Gold** : une Légendaire a **1 %** de chance d'être Gold, en plus du
+  « Perfect » qui la donne presque toujours (`variants.goldPermille = 100` dans
+  `src/data/pull-rates.json` ; le serveur lit le même taux dans
+  `0030_gold.sql`, et un test miroir compare les deux).
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
   devient un moment rare, pas une promesse marketing : il est à **1 ‰** depuis
@@ -575,7 +581,8 @@ serveur ne croit pas non plus un client qui annonce un palier atteint : il
 recompte (collection projetée, compteur de boosters, grille des familles générée
 depuis le jeu — `0028_wallet_saisons.sql`), et `0029` range la surcharge laissée
 par la première version de `0027` (`_wallet_apply` à cinq paramètres : deux
-fonctions identiques à l'appel, et le booster ne s'ouvrait plus).
+fonctions identiques à l'appel, et le booster ne s'ouvrait plus). `0030` ajoute
+la **Gold à 1 %** sur une Légendaire, hors « Perfect ».
 
 Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau**,
 les **sabliers** et les **jetons**. Ils ne valent rien pour un autre joueur ; le

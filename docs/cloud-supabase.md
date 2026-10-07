@@ -251,6 +251,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0030_gold.sql`](../supabase/migrations/0030_gold.sql)
+     → **Run** pour que la variante **Gold** existe aussi hors « Perfect » : une
+     Légendaire tirée ordinairement a **1 %** de chance d'être Gold (100 sur les
+     10 000 du tirage de variante, comme le Holo à 75 — même échelle). Sans
+     elle, le serveur ne produit **jamais** de Gold hors Perfect, alors que le
+     moteur et l'écran des taux l'annoncent depuis le même jour : le jeu
+     mentirait. Même signature que `0011` (`text, boolean, boolean`), donc
+     `create or replace` **remplace** la fonction — pas de surcharge possible.
    - [`supabase/migrations/0029_wallet_surcharge.sql`](../supabase/migrations/0029_wallet_surcharge.sql)
      → **Run après `0027`** : range la **surcharge** laissée par la première
      version de `0027`. Celle-ci créait `_wallet_apply` avec un cinquième
@@ -390,7 +398,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les vingt-neuf migrations** (`0001` à `0029`) pour de vrai, dans
+> Le script exécute **les trente migrations** (`0001` à `0030`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de

@@ -14,7 +14,7 @@ diverger du moteur.
 |---|---|
 | `slotCount` / `slots[]` | une table de poids par carte ordinaire ; les taux montent au fil du booster |
 | `guaranteed` | le dernier slot, garanti Rare ou mieux |
-| `variants` | chances de variante cosmétique (Holo / Gold) |
+| `variants` | chances de variante cosmétique (Holo, et **Gold sur une Légendaire**) |
 | `rareDrop` | l'événement « Perfect » : chance, poids et amélioration de variante |
 | `direct` | le **bonus Direct** : poids des créateurs en direct et chance de variante Live |
 | `pity` | le **plancher de malchance** : au bout de `threshold` boosters sans Légendaire, le dernier slot en garantit une |
@@ -34,6 +34,19 @@ Exemple (extrait réel) :
 Le moteur (`src/lib/game-engine.ts`, fonction `chooseCreator`) tire d'abord une
 rareté selon ces poids, puis un créateur **dans** cette rareté : les poids
 **sont** les probabilités affichées.
+
+## La variante Gold
+
+Une Légendaire tirée ordinairement a **1 %** de chance d'être Gold
+(`variants.goldPermille = 100`, sur les 10 000 du tirage de variante). Le
+« Perfect » en donne aussi, presque systématiquement (`variantUpgradePermille`),
+mais avant le 7 octobre 2026 la Gold **n'existait pas** en dehors de lui : une
+Légendaire ordinaire ne pouvait jamais être dorée. Le taux vit dans le fichier,
+le moteur comme le serveur le lisent, et un test miroir compare
+`pull-rates.json` à `0030_gold.sql` : un taux changé d'un seul côté casse le test.
+
+Le **Paquet Scène** n'a pas de `goldPermille` — il ne donne jamais de
+Légendaire, donc jamais de Gold, et le fichier le dit en l'omettant.
 
 ## Le plancher de malchance
 
