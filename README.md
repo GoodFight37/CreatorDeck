@@ -128,6 +128,10 @@ src/lib/progression.ts   jetons, missions du jour, série de sept jours, Prime
                          Time (source unique : src/data/progression.json)
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
                          seuil publié dans pull-rates.json
+src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans
+                         pull-rates.json doivent être ceux de 0014
+src/lib/supabase-wishlist.test.ts  garde-fou : la wishlist de 0015 (écriture par
+                         fonctions, une ligne par joueur, épinglé dans le profil)
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI (creator-deck-app, creator-card, atelier-view,
                          seasons-section, pack-odds-sheet, market-sheet,
@@ -138,7 +142,7 @@ src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'h
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0013)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0015)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline

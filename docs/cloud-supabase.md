@@ -285,7 +285,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les treize migrations** (`0001` à `0013`) pour de vrai, dans
+> Le script exécute **les quinze migrations** (`0001` à `0015`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
