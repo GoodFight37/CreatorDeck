@@ -1,11 +1,14 @@
 /**
- * `npm run essai:push` — la commande qui range les modifications d'un autre
- * outil (ou d'une autre personne) sur une branche à part.
+ * `npm run essai:start` / `npm run essai:push` — les deux commandes qui
+ * permettent à un autre outil (Cline, Gemini, un ami) de travailler dans le
+ * dossier **sans chambouler** la branche de travail.
  *
- * Le script est testé **pour de vrai** : un dépôt git jetable, un « origin »
- * nu (un dépôt local à qui on peut pousser sans réseau), et les quatre cas qui
- * comptent — rien à envoyer, un essai complet, un message choisi, et une clé
- * secrète qui doit **bloquer** l'envoi.
+ * Le script est testé **pour de vrai** : un dépôt git jetable, un « origin » nu
+ * (un dépôt local à qui on peut pousser sans réseau), et tous les cas qui
+ * comptent — rien à envoyer, un essai complet, un message choisi, une clé
+ * secrète qui doit **bloquer** l'envoi, la branche ouverte **avant** le travail,
+ * et l'outil qui a commité lui-même (ses commits partent sur l'essai, la branche
+ * de travail revient sur le dépôt).
  *
  * C'est le genre d'outil qui ne pardonne pas l'approximation : s'il range mal,
  * il mélange du travail non relu avec la branche que le joueur installe.
@@ -142,5 +145,86 @@ describe("essai:push — ranger le travail d'un autre outil sur une branche à p
     const { sortie, status } = lancer(racine);
     expect(status).toBe(0);
     expect(sortie).toContain("branche  essai/");
+  });
+
+  it("ouvre la branche d'essai AVANT le travail, et y laisse tout atterrir", () => {
+    const { racine, origin } = depot();
+    const { sortie, status } = lancer(racine, ["--start"]);
+    expect(status).toBe(0);
+    expect(sortie).toContain("Branche d'essai ouverte");
+
+    // Le dossier est sur la branche d'essai : tout ce que l'outil écrit tombe là.
+    const nom = git(racine, ["rev-parse", "--abbrev-ref", "HEAD"]);
+    expect(nom).toMatch(/^essai\//);
+    writeFileSync(path.join(racine, "jeu.ts"), "export const version = 7;\n");
+    git(racine, ["add", "-A"]);
+    git(racine, ["commit", "-qm", "travail de l'outil"]);
+
+    // Fin de l'essai : envoi, puis retour sur la branche de travail.
+    const fin = lancer(racine);
+    expect(fin.status).toBe(0);
+    expect(fin.sortie).toContain("dossier revenu sur");
+    expect(git(racine, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("arena/01a10c75-creatordeck");
+    expect(git(racine, ["status", "--porcelain"])).toBe("");
+    expect(readFileSync(path.join(racine, "jeu.ts"), "utf8")).toContain("version = 1");
+    expect(git(origin, ["show", `${nom}:jeu.ts`])).toContain("version = 7");
+    // La branche de travail n'a pas bougé d'un commit sur le dépôt distant.
+    expect(git(origin, ["log", "--pretty=%s", "arena/01a10c75-creatordeck"])).toBe("départ");
+  });
+
+  it("ne rouvre pas une deuxième branche d'essai par-dessus la première", () => {
+    const { racine } = depot();
+    lancer(racine, ["--start"]);
+    const deuxieme = lancer(racine, ["--start"]);
+    expect(deuxieme.status).toBe(0);
+    expect(deuxieme.sortie).toContain("déjà sur une branche d'essai");
+    expect(git(racine, ["branch", "--list", "essai/*"]).split("\n").filter(Boolean)).toHaveLength(1);
+  });
+
+  it("déplace les commits que l'outil a faits lui-même, et remet la branche de travail à jour", () => {
+    // Le cas vicieux : l'outil a commité dans le dossier, sur la branche de
+    // travail. Sans cette manœuvre, ces commits seraient poussés un jour ou
+    // l'autre sur la branche que le joueur installe.
+    const { racine, origin } = depot();
+    writeFileSync(path.join(racine, "jeu.ts"), "export const version = 9;\n");
+    writeFileSync(path.join(racine, "neuf.ts"), "// nouveau fichier\n");
+    git(racine, ["add", "-A"]);
+    git(racine, ["commit", "-qm", "l'outil a commite"]);
+
+    const { sortie, status } = lancer(racine);
+    expect(status).toBe(0);
+    expect(sortie).toContain("je les déplace");
+
+    // La branche d'essai porte le travail, sur GitHub.
+    const essai = branches(origin).filter((nom) => nom.startsWith("essai/"));
+    expect(essai).toHaveLength(1);
+    expect(git(origin, ["show", `${essai[0]}:jeu.ts`])).toContain("version = 9");
+    expect(git(origin, ["show", `${essai[0]}:neuf.ts`])).toContain("nouveau fichier");
+
+    // La branche de travail est revenue exactement sur le dépôt, et le dossier
+    // aussi : plus de fichier en trop, plus de modification en attente.
+    expect(git(origin, ["log", "--pretty=%s", "arena/01a10c75-creatordeck"])).toBe("départ");
+    expect(git(racine, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("arena/01a10c75-creatordeck");
+    expect(git(racine, ["status", "--porcelain"])).toBe("");
+    expect(readFileSync(path.join(racine, "jeu.ts"), "utf8")).toContain("version = 1");
+    expect(() => readFileSync(path.join(racine, "neuf.ts"), "utf8")).toThrow();
+  });
+
+  it("refuse d'envoyer un commit de l'outil qui contient une clé secrète", () => {
+    const { racine, origin } = depot();
+    writeFileSync(
+      path.join(racine, "cle.ts"),
+      'export const CLE = "sb_secret_abcdefghijklmnopqrstuvwxyz012345";\n',
+    );
+    git(racine, ["add", "-A"]);
+    git(racine, ["commit", "-qm", "oups"]);
+
+    const { sortie, status } = lancer(racine);
+    expect(status).toBe(1);
+    expect(sortie).toContain("clé secrète Supabase");
+    // Rien n'est parti, et rien n'a bougé localement non plus.
+    expect(branches(origin)).toEqual(["arena/01a10c75-creatordeck"]);
+    expect(git(racine, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("arena/01a10c75-creatordeck");
+    expect(readFileSync(path.join(racine, "cle.ts"), "utf8")).toContain("sb_secret_");
   });
 });

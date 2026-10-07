@@ -50,18 +50,23 @@ deux paquets de la vérification SQL qui manquent — ils ne sont pas dans le
 npm run dev:setup   # fait `npm ci` s'il faut, puis installe ce qui manque
 ```
 
-Pour envoyer les modifications faites par **un autre outil** (Gemini, un ami, une
-autre IA) sur une **branche à part**, sans toucher à la branche courante :
+Pour laisser **un autre outil** (Cline, Gemini, un ami, une autre IA) travailler
+dans le dossier sans chambouler la branche de travail — deux commandes :
 
 ```bash
-npm run essai:push                  # branche essai/<date>-<heure>
-npm run essai:push -- "ton message" # avec ton propre message
+npm run essai:start   # AVANT : le dossier passe sur une branche essai/<date>-<heure>
+#   … l'outil modifie le dossier (et commite, s'il le fait) …
+npm run essai:push    # APRÈS : tout est rangé, poussé, et le dossier revient
+npm run essai:push -- "ton message"   # pour choisir le message du commit
 ```
 
-Le dossier revient tout seul sur la branche de départ, le travail part sur sa
-branche (local **et** GitHub), rien n'est fusionné, et une clé secrète fait
-échouer l'envoi. Les branches `essai/*` ne déclenchent **pas** de compilation
-d'APK : ton lien d'installation reste celui de la branche de travail.
+`essai:push` marche aussi tout seul, sans `essai:start` : il range ce qui traîne
+(et jusqu'aux commits que l'outil aurait faits lui-même, qu'il **déplace** sur la
+branche d'essai avant de remettre la branche de travail exactement sur le dépôt).
+Jamais de `--force`, jamais de fusion, jamais de branche supprimée ; une clé
+secrète (`sb_secret_…` avec sa valeur, jeton complet, clé privée) fait échouer
+l'envoi **sans rien modifier**. Les branches `essai/*` ne déclenchent **pas** de
+compilation d'APK : ton lien d'installation reste celui de la branche de travail.
 
 Aucune variable d'environnement n'est nécessaire pour jouer : sans elles, la
 partie vit sur l'appareil et l'écran de compte affiche « cloud non configuré ».
@@ -138,7 +143,8 @@ Deux règles qui tiennent tout le reste :
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
-| `npm run essai:push` | range les modifications en cours sur une branche `essai/<date>-<heure>` et la pousse, puis revient sur la branche de départ (`-- "message"` pour choisir le message) |
+| `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
+| `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
 | `npm run supabase:verify` | joue les migrations `0001` → `0028` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers et grille des familles). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests

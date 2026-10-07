@@ -98,14 +98,24 @@ de force-push et les pertes de travail.
 Un autre outil peut modifier le dossier sans connaître cette règle : il écrit
 dans les fichiers, sans branche à lui, et ces modifications se retrouveraient
 mêlées à la branche de travail — le `git pull` suivant se cognerait à elles. D'où
-une commande, **`npm run essai:push`** :
+**deux commandes** :
 
-1. elle range tout (fichiers neufs compris) et **refuse** de committer une vraie
-   clé secrète (`sb_secret_…` avec sa valeur, jeton complet, clé privée) — les
-   docs qui *citent* ces motifs en toutes lettres ne la déclenchent pas ;
-2. elle crée `essai/<date>-<heure>`, commite, pousse sur `origin` ;
-3. elle **revient** sur la branche de départ, donc le dossier redevient celui
-   qu'on connaît et la branche de travail continue de recevoir les `git pull`.
+1. **`npm run essai:start`**, avant de lancer l'outil : le dossier passe sur une
+   branche `essai/<date>-<heure>`, et la branche de travail est notée pour le
+   retour. Tout ce que l'outil écrit (et commite, s'il le fait) atterrit là ;
+2. **`npm run essai:push`**, quand il a fini :
+   * il range tout (fichiers neufs compris) et **refuse** de committer une vraie
+     clé secrète (`sb_secret_…` avec sa valeur, jeton complet, clé privée) — les
+     docs qui *citent* ces motifs en toutes lettres ne le déclenchent pas ;
+   * si l'outil a commité **lui-même** sur la branche de travail, il **déplace**
+     ces commits sur la branche d'essai (créée au même endroit, poussée), puis
+     remet la branche de travail exactement sur le dépôt distant : le dossier
+     redevient celui de tout le monde ;
+   * il **revient** sur la branche de travail, donc les `git pull` continuent
+     d'arriver.
+
+`essai:push` fonctionne aussi sans `essai:start` (il crée la branche d'essai au
+moment du rangement).
 
 Ce qui n'est pas touché : jamais de `--force`, jamais de suppression de branche,
 jamais de fusion. Une branche d'essai **se relit** — c'est le seul moyen de
