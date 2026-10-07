@@ -53,7 +53,7 @@ jobs:
       - run: npm run lint && npm run typecheck && npm test
       # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
       - run: npm run catalog:check
-      # Contrôle reinforced : dans un APK, un portrait manquant laisse un trou et
+      # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
       # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
       - run: npm run catalog:ci
       - run: npm run android:debug
@@ -72,13 +72,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
-          PROJET=$(printf '\%s' "$NEXT_PUBLIC_SUPABASE_URL" | sed -E 's#/+$##; s#/(rest\vert{}auth\vert{}storage\vert{}realtime)/v1$##')
-          if [ "$NEXT_PUBLIC_SUPABASE_URL" != "$PROJET" ]; then
-            echo "ℹ️ URL d'endpoint détectée : l'app utilisera ${PROJET} (préfère l'« URL du projet » nue)."
-          fi
-          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && ! printf '%s' "$PROJET" \vert{} grep -Eq '^https://[a-z0-9-]+\.supabase\.(co\vert{}in)$'; then
-            echo "::warning::L'adresse Supabase ne ressemble pas à une URL de projet (attendu : https://<ref>.supabase.co) — l'app restera hors ligne."
-          fi
+          PROJET="${NEXT_PUBLIC_SUPABASE_URL%/}"
           if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
             echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
           else
@@ -92,39 +86,4 @@ jobs:
           name: creatordeck-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
 
-      # 2. Pré-release « roulante » : un lien de téléchargement public et
-      #    stable, sans connexion, écrasé à chaque build.
-      #    https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk
-      - name: Publier l'APK en pré-release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          cp android/app/build/outputs/apk/debug/app-debug.apk creatordeck-debug.apk
-          NOTES="APK de test (signature debug, non publiable sur le Play Store).
-          Reconstruit automatiquement à chaque build depuis \`${{ github.ref_name }}\` (\`${{ github.sha }}\`)."
-          if ! gh release view debug-apk >/dev/null 2>&1; then
-            gh release create debug-apk \
-              --prerelease \
-              --title "CreatorDeck — APK de test (roulant)" \
-              --notes "$NOTES"
-          fi
-          gh release edit debug-apk --notes "$NOTES"
-          gh release upload debug-apk creatordeck-debug.apk --clobber
-
-      # 3. Le mail : Firebase App Distribution envoie aux testeurs du groupe
-      #    un courriel avec le lien d'installation.
-      - name: Préparer les notes de version
-        run: git log -1 --pretty='%h — %s' > release-notes.txt
-
-      - name: Envoyer l'APK aux testeurs (le mail)
-        uses: w9jds/firebase-action@35d0fd9b92b2c66dcd13f1b72dacc588e89e7567 # master / firebase-tools v15.32.1
-        with:
-          args: >-
-            appdistribution:distribute
-            android/app/build/outputs/apk/debug/app-debug.apk
-            --app 1:450483794682:android:d393fe779b340d6140cf43
-            --groups "testers"
-            --release-notes-file release-notes.txt
-        env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      # 2. Pré-release « roulante » :
