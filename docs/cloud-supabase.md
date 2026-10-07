@@ -250,6 +250,15 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0021_provenance.sql`](../supabase/migrations/0021_provenance.sql)
+     → **Run** pour que le serveur sache **d'où vient chaque carte** : le
+     registre `card_claims` retient ce qui a été réellement donné (tirage,
+     Paquet Scène, échange, hôtel, vol), et une sauvegarde contenant une
+     **Légendaire** ou une variante **Live / Holo / Gold** sans provenance
+     n'est plus classée (les cartes restent acquises). ⚠️ **Au moment du
+     collage, toutes les cartes déjà présentes dans les sauvegardes entrent au
+     registre** : aucune collection existante n'est touchée. Détail : §8,
+     « L'intégrité côté serveur ».
    - [`supabase/migrations/0020_identite.sql`](../supabase/migrations/0020_identite.sql)
      → **Run** pour que deux joueurs ne puissent plus porter le même nom à une
      majuscule près (`profile_name_unique`). Un trigger plutôt qu'un index
@@ -322,7 +331,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les vingt migrations** (`0001` à `0020`) pour de vrai, dans
+> Le script exécute **les vingt et une migrations** (`0001` à `0021`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -500,6 +509,26 @@ pointés, tous vérifiés dans le code avant d'être corrigés :
   (`pg_advisory_xact_lock`) pour que deux appels simultanés ne sortent pas deux
   Paquets Scène du même jour. Un trigger `pack_state_guard` garde la réserve
   dans ses bornes (0 à 4) et refuse une ancre dans le futur.
+- **Chaque carte a une provenance.** `0021_provenance.sql` ouvre un registre
+  (`card_claims`) : pour chaque joueur, combien de cartes de chaque (créateur,
+  rareté, variante) le serveur a réellement données, et par quel chemin —
+  `tirage`, `scene`, `echange`, `hotel`, `vol`, ou `heritage` pour la bascule.
+  Une sauvegarde qui contient une carte **non couverte** par ce registre est
+  suspecte (elle passe, le joueur n'est plus classé) — sauf ce que l'atelier
+  peut fabriquer : l'artisanat local ne produit que du **Standard** de rareté
+  commune à épique, donc une Légendaire ou une variante Live / Holo / Gold doit
+  avoir une provenance serveur. C'est la classe de cartes qui a de la valeur, et
+  c'est exactement celle qu'on ne peut plus inventer.
+  **La bascule** : à la seconde où la migration est collée, toutes les cartes
+  déjà présentes dans les sauvegardes entrent au registre comme `heritage` —
+  personne ne devient suspect rétroactivement, et rien n'est retiré à personne.
+  Ce qui reste hors couverture, volontairement : une collection créée dans un
+  **build sans cloud** puis rattachée à un compte connecté (voir « Ce que le
+  serveur ne vérifie pas »).
+  Les échanges, l'hôtel et le vol inscrivent le droit **avant** d'écrire les
+  sauvegardes : l'ordre compte, sinon le contrôle de provenance verrait arriver
+  une carte avant son droit et le joueur perdrait son rang pour un échange
+  honnête.
 - **Un nom, un joueur.** `0020_identite.sql` refuse qu'un second profil prenne
   un pseudo déjà pris, à la casse et aux espaces près (`profile_name_unique`) :
   « Fabien » et « fabien » dans le même classement, c'est l'usurpation la plus
@@ -544,11 +573,14 @@ Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
 contenu des boosters (et donc les cartes) est décidé par le serveur. Les
 **ressources** (points, sabliers, jetons) restent locales, et c'est assumé :
 elles n'ouvrent que du contenu solo. Depuis `0019`, une sauvegarde qui invente
-des **créateurs** ou des **raretés** est détectée et sort du classement ; ce qui
-reste ouvert, c'est une sauvegarde qui déclare des cartes **réelles et
-cohérentes** qu'elle n'a jamais tirées — elle gonflera sa complétion sans être
-démasquée. Ce qui n'est pas falsifiable, c'est ce qui passe par le serveur : le
-tirage, les échanges, la réserve de boosters et le classement.
+des **créateurs** ou des **raretés** sort du classement, et depuis `0021` les
+cartes de valeur sans provenance serveur aussi. Ce qui reste ouvert, en toute
+connaissance de cause : une sauvegarde qui déclare des cartes **artisanales**
+(Standard, commune à épique) non obtenues — c'est la contrepartie de l'atelier
+hors ligne, et ça ne vaut pas une Légendaire — et une collection créée dans un
+build sans cloud puis rattachée à un compte connecté. Ce qui n'est pas
+falsifiable, c'est ce qui passe par le serveur : le tirage, les échanges,
+l'hôtel, la réserve de boosters et le classement.
 
 ### Le profil public, calculé par le serveur
 

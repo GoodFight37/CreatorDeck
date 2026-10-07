@@ -130,6 +130,7 @@ try {
   const arena = await readFile(path.join(MIGRATIONS, "0018_arena.sql"), "utf8");
   const integrite = await readFile(path.join(MIGRATIONS, "0019_integrite.sql"), "utf8");
   const identite = await readFile(path.join(MIGRATIONS, "0020_identite.sql"), "utf8");
+  const provenance = await readFile(path.join(MIGRATIONS, "0021_provenance.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -151,6 +152,7 @@ try {
     ["0018_arena.sql", arena],
     ["0019_integrite.sql", integrite],
     ["0020_identite.sql", identite],
+    ["0021_provenance.sql", provenance],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -402,6 +404,15 @@ try {
              state_checksum = excluded.state_checksum`,
       [userId, json, Date.now(), json],
     );
+    // Les cartes d'une fixture entrent au registre des droits, comme celles
+    // qu'un joueur possédait au moment de la bascule de `0021`. Sans ça, toutes
+    // les fixtures seraient « suspectes » — y compris les joueurs honnêtes.
+    await client.query("select public.card_claim_add($1, $2::jsonb, 'heritage')", [userId, JSON.stringify(cards)]);
+    await client.query("select public.card_claims_backfill()");
+    // Les droits sont posés **après** la sauvegarde : on force un recalcul des
+    // statistiques pour qu'elles les voient (`set state = state` rejoue le
+    // trigger, comme un vrai envoi de sauvegarde).
+    await client.query("update public.saves set state = state where user_id = $1", [userId]);
     await client.query(
       `insert into public.profiles (user_id, display_name) values ($1, $2)
        on conflict (user_id) do update set display_name = excluded.display_name`,
@@ -613,6 +624,17 @@ try {
   const after = { a: await stateOf(A), b: await stateOf(B) };
 
   check("acceptation : l'offre est close", accepted.status === "accepted");
+  // Un échange n'est pas une fabrication : les deux joueurs gardent leur rang.
+  // (Le droit est inscrit **avant** la réécriture des sauvegardes, c'est tout
+  // l'enjeu de l'ordre dans `0021`.)
+  const afterTrade = (
+    await client.query("select user_id, verified from public.stats where user_id in ($1, $2) order by user_id", [A, B])
+  ).rows;
+  check(
+    "provenance : un échange accepté ne rend personne suspect",
+    afterTrade.length === 2 && afterTrade.every((row) => row.verified === true),
+    JSON.stringify(afterTrade),
+  );
   check(
     "acceptation : Alix a donné son ibai Holo et reçu le summit1g Gold",
     ownedBy(after.a, "ibai", "holo").length === 1
@@ -749,10 +771,12 @@ try {
   check(
     "intégrité : une rareté qui ne correspond pas au catalogue aussi",
     (
-      await client.query("select 1 from public.save_suspicions($1::jsonb) as p", [
+      await client.query("select 1 from public.save_suspicions($1::jsonb, $2) as p", [
         JSON.stringify({
           cards: [{ id: "x", creatorSlug: "kaicenat", rarity: "common", variant: "standard" }],
         }),
+        // Un joueur qui n'a rien reçu : c'est le point de ce contrôle.
+        "44445555-6666-4777-8888-999900001111",
       ])
     ).rows.length === 1,
   );
@@ -3240,6 +3264,9 @@ try {
     claimedTiers: [],
     themeId: "default",
   };
+  // …et ce droit vient du serveur : le registre de `0021` ne se contente pas
+  // d'une déclaration, il faut que la carte ait été donnée.
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [INTEGRE, JSON.stringify(honest.cards)]);
   const pushed = (
     await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [honest, 1, Date.now()])
   ).rows[0].r;
@@ -3277,11 +3304,112 @@ try {
     JSON.stringify({ status: cheated.status, stats: cheaterStats, classé: cheaterRanked }),
   );
 
+  // La provenance, maintenant. Trois cas, trois verdicts, sur le **même**
+  // joueur honnête : ce qui distingue une sauvegarde suspecte d'une sauvegarde
+  // légitime n'est pas son contenu, c'est ce que le serveur a réellement donné.
+
+  // 1. Une Légendaire cohérente (bon créateur, bonne rareté, identifiant
+  //    unique) que le registre ne couvre pas : c'est le cas que `0019` laissait
+  //    passer. Elle reste dans le classeur, le joueur sort du classement.
+  const fakeLegendary = {
+    ...honest,
+    cards: [
+      ...honest.cards,
+      { id: "inventee-1", creatorSlug: "ibai", rarity: "legendary", variant: "standard", obtainedAt: Date.now(), rareDrop: false },
+    ],
+  };
+  const faked = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [fakeLegendary, 1, Date.now()])
+  ).rows[0].r;
+  const fakedStats = (
+    await client.query("select verified, legendary_cards from public.stats where user_id = $1", [INTEGRE])
+  ).rows[0];
+  const fakedProblems = (
+    await client.query("select public.save_suspicions($1::jsonb, $2) as p", [JSON.stringify(fakeLegendary), INTEGRE])
+  ).rows[0].p;
+  check(
+    "provenance : une Légendaire jamais donnée rend la sauvegarde suspecte",
+    faked.status === "pushed" &&
+      fakedStats.verified === false &&
+      fakedStats.legendary_cards === 2 &&
+      fakedProblems.some((p) => /provenance/.test(p)),
+    JSON.stringify({ status: faked.status, stats: fakedStats, problems: fakedProblems }),
+  );
+
+  // 2. Une carte artisanale (Standard, épique) sans droit : c'est le jeu hors
+  //    ligne, elle passe. La même carte en Gold ne passerait pas.
+  const crafted = {
+    ...honest,
+    cards: [
+      ...honest.cards,
+      { id: "artisanale-1", creatorSlug: "chowh1", rarity: "epic", variant: "standard", obtainedAt: Date.now(), rareDrop: false },
+    ],
+  };
+  const craftProblems = (
+    await client.query("select public.save_suspicions($1::jsonb, $2) as p", [JSON.stringify(crafted), INTEGRE])
+  ).rows[0].p;
+  const goldSame = {
+    ...crafted,
+    cards: crafted.cards.map((c) => (c.id === "artisanale-1" ? { ...c, variant: "gold" } : c)),
+  };
+  const goldProblems = (
+    await client.query("select public.save_suspicions($1::jsonb, $2) as p", [JSON.stringify(goldSame), INTEGRE])
+  ).rows[0].p;
+  check(
+    "provenance : l'artisanat local passe, la même carte en Gold non",
+    craftProblems.length === 0 && goldProblems.some((p) => /provenance/.test(p)),
+    JSON.stringify({ artisanat: craftProblems, gold: goldProblems }),
+  );
+
+  // 3. Le chemin légitime : une carte réellement tirée par `open_pack` entre au
+  //    registre, et la sauvegarde qui la contient reste vérifiée.
+  const tirageSrv = (
+    await asPlayer(INTEGRE, "select public.open_pack('perfect') as r")
+  ).rows[0].r;
+  const claims = (
+    await client.query(
+      "select coalesce(sum(qty), 0)::int as n, count(*)::int as lignes from public.card_claims where user_id = $1 and source = 'tirage'",
+      [INTEGRE],
+    )
+  ).rows[0];
+  check(
+    "provenance : un tirage serveur entre au registre",
+    claims.n >= 5 && claims.lignes >= 1 && Array.isArray(tirageSrv.cards) && tirageSrv.cards.length === 5,
+    JSON.stringify(claims),
+  );
+
+  const drawn = {
+    ...honest,
+    cards: [
+      ...honest.cards,
+      ...tirageSrv.cards.map((c, index) => ({
+        id: `tiree-${index}`,
+        creatorSlug: c.creatorSlug,
+        rarity: c.rarity,
+        variant: c.variant,
+        obtainedAt: Date.now(),
+        rareDrop: Boolean(c.rareDrop),
+      })),
+    ],
+  };
+  // Le tirage serveur peut contenir une Légendaire : ses droits existent.
+  const drawnStats = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [drawn, 1, Date.now()])
+  ).rows[0].r;
+  const drawnRank = (
+    await client.query("select verified from public.stats where user_id = $1", [INTEGRE])
+  ).rows[0].verified;
+  check(
+    "provenance : une sauvegarde qui contient un tirage serveur reste vérifiée",
+    drawnStats.status === "pushed" && drawnRank === true,
+    JSON.stringify({ status: drawnStats.status, verified: drawnRank }),
+  );
+
   // Les identifiants en double aussi : deux cartes avec le même `id`.
   check(
     "intégrité : deux cartes au même identifiant sont suspectes",
     (
-      await client.query("select public.save_suspicions($1::jsonb) as p", [JSON.stringify(cheater)])
+      await client.query("select public.save_suspicions($1::jsonb, $2) as p", [JSON.stringify(cheater), INTEGRE])
     ).rows[0].p.length >= 1,
   );
 

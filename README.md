@@ -70,6 +70,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.1 | Deux joueurs ne portent pas le même pseudo (à une majuscule près) | **livrée** | `0020_identite.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur » |
 | 11.2 | L'ouverture d'un paquet décidée à un seul endroit (jeu **et** overlay 16:9) | **livrée** | `src/hooks/use-pack-opening.ts`, `src/components/overlay-stage.tsx` |
 | 11.3 | Réveil du direct anti-course ; `?check=1` réservé au rôle de service | **livrée** | `supabase/functions/refresh-live/index.ts`, `docs/cloud-supabase.md` § « Le direct » |
+| 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
 
 Deux règles qui tiennent tout le reste :
 
@@ -101,7 +102,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0020` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0021` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -191,7 +192,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0020)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0021)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
