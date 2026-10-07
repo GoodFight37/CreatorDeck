@@ -111,6 +111,46 @@ export async function encodePlaceholder({ displayName, login }, target, { size =
   await sharp(Buffer.from(svg)).jpeg({ quality: 88, mozjpeg: true }).toFile(target);
 }
 
+/**
+ * En deçà de cet écart-type (sur 0-255), un portrait est considéré comme **uni**.
+ *
+ * Twitch ne renvoie pas d'erreur quand une chaîne n'a pas de photo de profil :
+ * il sert un avatar par défaut, une image parfaitement plate (un carré gris
+ * `39,38,44`, ou noir). Le téléchargement réussit, l'encodage réussit, et le
+ * joueur voit un rectangle sombre à la place d'un visage — c'est arrivé avec
+ * `j0niq` et `toaststix`. La valeur est volontairement très basse : une vraie
+ * photo, même un logo sombre sur fond noir, dépasse un écart-type de 6.
+ */
+export const FLAT_PORTRAIT_STDEV = 6;
+
+/**
+ * Décide à partir des statistiques d'une image (pur : testable sans fichier).
+ *
+ * `sharp.stats()` rend `{ channels: [{ mean, stdev, min, max }, …] }`. On prend
+ * l'écart-type **le plus élevé** des canaux : dès qu'une composante varie, il y
+ * a une image.
+ */
+export function isFlatStats(stats) {
+  const channels = Array.isArray(stats?.channels) ? stats.channels : [];
+  if (!channels.length) return false;
+  const widest = Math.max(...channels.map((channel) => Number(channel?.stdev ?? 0)));
+  return widest <= FLAT_PORTRAIT_STDEV;
+}
+
+/**
+ * Vrai si ce portrait (chemin de fichier ou octets) est une image unie.
+ *
+ * Une image illisible renvoie `false` : l'absence de fichier est un autre
+ * problème, traité ailleurs (`readAvatarSize`, `selectMissing`).
+ */
+export async function isFlatPortrait(source) {
+  try {
+    return isFlatStats(await sharp(source, { failOn: "none" }).stats());
+  } catch {
+    return false;
+  }
+}
+
 /** Dimensions d'un fichier existant, ou null s'il est absent / illisible. */
 export async function readAvatarSize(file) {
   try {

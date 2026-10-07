@@ -32,6 +32,7 @@ import {
   downloadLargestAvatar,
   encodeAvatar,
   encodePlaceholder,
+  isFlatPortrait,
   readAvatarSize,
 } from "./lib/avatars.mjs";
 import { formatBytes, pruneOrphans, selectMissing, sumFileSizes } from "./lib/portraits.mjs";
@@ -129,10 +130,16 @@ const report = [];
 for (const creator of creators) {
   const target = path.join(OUT_DIR, `${creator.slug}.jpg`);
   const current = await readAvatarSize(target);
-  if (!FORCE && current === TARGET_SIZE) {
+  // Un portrait **uni** est à refaire, même s'il fait la bonne taille : Twitch
+  // sert son avatar par défaut (un carré plat) quand une chaîne n'a pas de
+  // photo de profil, et le téléchargement réussit quand même. Sans ce contrôle,
+  // le fichier resterait en place indéfiniment — c'est ce qui est arrivé à
+  // `j0niq` et `toaststix`.
+  const flat = current === TARGET_SIZE ? await isFlatPortrait(target) : false;
+  if (!FORCE && current === TARGET_SIZE && !flat) {
     report.push({ slug: creator.slug, ok: true, source: `deja-${TARGET_SIZE}`, size: current });
   } else {
-    pending.push({ creator, target, current });
+    pending.push({ creator, target, current, flat });
   }
 }
 console.log(
@@ -191,6 +198,14 @@ await Promise.all(
           }
         }
 
+        // Avatar par défaut de Twitch (image plate) : la source n'apporte rien,
+        // on préfère le portrait de secours — un visage dessiné plutôt qu'un
+        // rectangle sombre.
+        if (await isFlatPortrait(bytes)) {
+          reasons.push(`${source} : image unie (avatar par défaut Twitch)`);
+          throw new Error("avatar par défaut Twitch");
+        }
+
         const size = await encodeAvatar(bytes, target, { size: TARGET_SIZE });
         report.push({ slug: creator.slug, ok: true, source, size });
         if (size < TARGET_SIZE) {
@@ -202,7 +217,8 @@ await Promise.all(
         try {
           await encodePlaceholder(creator, target);
           report.push({ slug: creator.slug, ok: true, source: "placeholder", size: TARGET_SIZE, cause });
-          process.stderr.write(`⚠ ${creator.slug}: portrait de secours (${cause})\n`);
+          const flatCause = /avatar par défaut Twitch/.test(cause) ? "avatar par défaut" : cause;
+          process.stderr.write(`⚠ ${creator.slug}: portrait de secours (${flatCause})\n`);
         } catch {
           report.push({ slug: creator.slug, ok: false, error: cause });
           process.stderr.write(`✗ ${creator.slug}: ${cause}\n`);

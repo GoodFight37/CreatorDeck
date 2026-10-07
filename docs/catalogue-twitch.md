@@ -187,6 +187,13 @@ Deux avertissements sont normaux après une génération mondiale :
   famille dans `seasons.config.json`.
 - **« portrait manquant »** : à corriger avec `npm run assets:regen` (le script
   est reprenable, il ne retélécharge pas ce qui est déjà bon).
+- **« portrait uni (avatar par défaut Twitch) »** : la chaîne n'a pas de photo
+  de profil, et Twitch sert son avatar par défaut — un carré parfaitement plat.
+  Le fichier existe, fait la bonne taille, et donne un rectangle sombre à la
+  place d'un visage (`j0niq`, `toaststix`). `assets:regen` les détecte (écart
+  de type nul) et écrit à la place le **portrait de secours** : dégradé,"
+  silhouette et initiale. Il ne faut pas le confondre avec un vrai logo sombre :
+  le seuil est très bas — une image qui varie un tant soit peu passe.
 
 Si une famille devient trop grosse (l'anglophonie, typiquement), elle se découpe
 toute seule en vagues de `waveSize` (défaut 150), par ordre de classement : la
@@ -439,6 +446,10 @@ il n'appartient plus qu'à ceux qui l'ont. L'accueil annonce la fenêtre :
   manquant, aucune langue déclarée deux fois, aucune famille inconnue.
 - Le nombre de portraits manquants doit être **0** ; sinon
   `npm run assets:regen` (il reprend où il s'est arrêté).
+- Aucun « portrait uni » : `catalog:check` décode les fichiers suspects
+  (moins de 8 Ko) et signale ceux dont l'écart-type est nul — un avatar par
+  défaut de Twitch n'est pas une photo. En mode strict (`catalog:ci`, celui de
+  la CI Android), c'est un **échec**, pas un avertissement.
 - `reports/top2000.json` : téléchargés / réutilisés / échecs, répartition des
   raretés.
 - `reports/candidates-2000.json` : la liste des chaînes retenues, pour vérifier

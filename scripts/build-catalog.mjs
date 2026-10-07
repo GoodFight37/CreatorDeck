@@ -12,11 +12,12 @@
  */
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { splitSeason } from "./lib/seasons-split.mjs";
+import { isFlatPortrait } from "./lib/avatars.mjs";
 import {
   formatBytes,
   selectMissing,
@@ -50,6 +51,14 @@ const PACKAGE_FILE = path.join(ROOT, "package.json");
 const OUT_DIR = path.join(ROOT, "dist/catalog");
 
 const RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
+/**
+ * En deçà de ce poids, un portrait 600×600 est **suspect** et sera vraiment
+ * décodé pour savoir s'il est uni. Un vrai portrait fait ~28 Ko (médiane du
+ * catalogue) ; le plus léger des portraits légitimes fait 3,3 Ko — une image
+ * sombre mais détaillée. Le seuil est donc haut volontairement : il ne sert
+ * qu'à éviter de décoder 1 000 JPEG à chaque `catalog:check`.
+ */
+const FLAT_CANDIDATE_BYTES = 8 * 1024;
 const VARIANTS = ["standard", "live", "holo", "gold"];
 
 const errors = [];
@@ -112,6 +121,39 @@ function validateCreators(creators, expectedSize) {
   }
 
   return creators;
+}
+
+/**
+ * Un portrait **uni** n'est pas un portrait.
+ *
+ * Twitch sert son avatar par défaut (un carré plat) pour une chaîne sans photo
+ * de profil : le fichier existe, fait la bonne taille, et le joueur voit un
+ * rectangle sombre à la place d'un visage (`j0niq`, `toaststix`). Le contrôle
+ * est en deux temps pour rester rapide : un filtre sur la taille du fichier
+ * (un JPEG 600×600 plat pèse ~1,5 Ko, un vrai portrait ~34 Ko), puis un
+ * décodage réel — un écart-type de zéro — sur les seuls candidats.
+ */
+async function validatePortraits(creators) {
+  const candidates = [];
+  for (const creator of creators) {
+    const file = path.join(PORTRAITS_DIR, `${creator.slug}.jpg`);
+    if (!existsSync(file)) continue;
+    if (statSync(file).size < FLAT_CANDIDATE_BYTES) candidates.push({ creator, file });
+  }
+  const flat = [];
+  for (const candidate of candidates) {
+    if (await isFlatPortrait(candidate.file)) flat.push(candidate);
+  }
+  for (const { creator, file } of flat) {
+    const message = `portrait uni (avatar par défaut Twitch) : ${path.relative(ROOT, file)} — régénère-le avec npm run assets:regen`;
+    if (STRICT_AVATARS) fail(message);
+    else warn(message);
+  }
+  if (candidates.length) {
+    console.log(
+      `   Portraits : ${candidates.length} fichier(s) suspects décodés, ${flat.length} uni(s).`,
+    );
+  }
 }
 
 /**
@@ -333,6 +375,7 @@ async function main() {
   }
 
   validateCreators(creators, expectedSize);
+  await validatePortraits(creators);
   validateRates(rates);
   const seasonReport = validateRegions(creators, seasonsConfig);
 

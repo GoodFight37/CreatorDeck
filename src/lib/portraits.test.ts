@@ -9,6 +9,7 @@ import {
   selectOrphans,
   sumFileSizes,
 } from "../../scripts/lib/portraits.mjs";
+import { isFlatStats } from "../../scripts/lib/avatars.mjs";
 
 /**
  * Entretien de public/creators : un portrait orphelin part dans l'APK sans
@@ -30,6 +31,37 @@ describe("portraits · sélection", () => {
     expect(selectOrphans(["squeezie.jpg", "squeezie-2.jpg"], ["squeezie"])).toEqual([
       "squeezie-2.jpg",
     ]);
+  });
+});
+
+describe("portraits · image unie", () => {
+  /** Ce que `sharp.stats()` rend pour une image vraiment plate. */
+  const flat = { channels: [{ mean: 39, stdev: 0, min: 39, max: 39 }] };
+  const photo = { channels: [{ mean: 149, stdev: 86, min: 12, max: 255 }] };
+  // Un logo sombre sur fond noir : peu de contraste, mais du contraste.
+  const sombre = { channels: [{ mean: 18, stdev: 24, min: 0, max: 90 }] };
+
+  it("reconnaît l'avatar par défaut de Twitch et laisse passer les vraies images", () => {
+    // C'est le cas `j0niq` / `toaststix` : le téléchargement réussit, l'image est
+    // un carré plat, et le joueur voit un rectangle sombre à la place d'un
+    // visage. Le seuil est bas exprès : une photo, même très sombre, varie.
+    expect(isFlatStats(flat)).toBe(true);
+    expect(isFlatStats(photo)).toBe(false);
+    expect(isFlatStats(sombre)).toBe(false);
+  });
+
+  it("prend l'écart-type le plus large des canaux", () => {
+    // Une image peut être plate en rouge et variée en bleu : elle est valable.
+    expect(isFlatStats({ channels: [{ stdev: 0 }, { stdev: 0.2 }, { stdev: 41 }] })).toBe(false);
+    expect(isFlatStats({ channels: [{ stdev: 2 }, { stdev: 3 }] })).toBe(true);
+  });
+
+  it("ne conclut rien sans statistiques exploitables", () => {
+    // Pas de canaux = pas d'avis : c'est `readAvatarSize` / `selectMissing` qui
+    // traitent le fichier absent ou illisible, pas ce contrôle.
+    expect(isFlatStats(null)).toBe(false);
+    expect(isFlatStats({})).toBe(false);
+    expect(isFlatStats({ channels: [] })).toBe(false);
   });
 });
 
