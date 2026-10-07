@@ -71,6 +71,22 @@ donc avec une version « plus ancienne » que celle du serveur, et **tout le mon
 aurait vu un conflit permanent**. La comparaison tolère désormais une
 milliseconde, et c'est le test qui l'exige.
 
+**Vérifié en production le 7 octobre** (clé publishable du projet, celle de
+l'APK — donc sans aucun privilège) : `0022` est **collée**. Les quatre portes du
+blanchiment (`create_trade`, `respond_trade`, `market_sell`, `market_buy`)
+contiennent `card_claim_covers` ; `open_pack` et `open_scene_pack` renvoient le
+champ `save` ; `push_save` accepte `p_base_updated_at` (un paramètre inconnu
+répond « Could not find the function », la signature à cinq arguments existe
+donc bien) ; `card_claim_covers` et `open_pack` répondent `permission denied for
+function` — elles existent, et aucun client ne peut les appeler. Côté joueur :
+booster ouvert, page rechargée, les cinq cartes sont toujours dans le classeur.
+
+**`refresh-live` redéployée** (l'ancienne version tournait encore) : vérifié de
+l'extérieur — un appel sans en-tête reçoit désormais `401 « Authorization
+requis »` (l'ancienne répondait `skipped`) et `?check=1` ne rend plus le
+diagnostic à un appelant quelconque. « Verify JWT » reste **décoché**, comme le
+veut la fonction (elle vérifie elle-même son en-tête).
+
 **Un bug de production, trouvé par le vérifieur** : `ensure_profile()` (depuis
 `0001`) fabriquait `Collectionneur #xxxx` avec **quatre** caractères de
 l'identifiant (65 536 possibilités). Deux joueurs qui commencent pareil
