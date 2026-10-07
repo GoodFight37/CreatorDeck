@@ -1,49 +1,153 @@
-name: Build & Distribute Android APK
+name: APK Android (debug)
 
+# Un APK à chaque poussée de code, et **un mail** avec le lien d'installation
+# (Firebase App Distribution) — pour l'installer depuis le téléphone sans passer
+# par un transfert de fichier.
+#
+# Trois façons de récupérer le même APK, de la plus pratique à la plus sûre :
+#
+#   1. le mail de Firebase → lien « télécharger », sur le téléphone (rien à
+#      copier, rien à se renvoyer) ;
+#   2. le lien public et **stable** de la pré-release roulante, qui marche même
+#      sans être connecté à GitHub :
+#      https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk
+#   3. l'artefact du run, depuis l'onglet Actions (demande d'être connecté).
+#
+# Les poussées qui ne touchent que la documentation ne construisent rien : elles
+# ne changent pas l'application, et l'APK de la poussée précédente reste valable.
 on:
   push:
-    branches:
-      - arena/01a10c75-creatordeck
+    branches: [main, arena/01a10c75-creatordeck]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   workflow_dispatch:
 
+# Une poussée qui en suit une autre annule le build en cours : seul le dernier
+# APK compte, et c'est aussi ce qui évite deux builds qui écraseraient en même
+# temps l'APK de la pré-release roulante.
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+# Nécessaire pour publier l'APK en pré-release (lien de téléchargement public).
+permissions:
+  contents: write
+
 jobs:
-  build-and-distribute:
-    runs-on: ubuntu-latest
-
+  apk:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build Web Assets
-        run: npm run build
-
-      - name: Sync Capacitor
-        run: npx cap sync android
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@v4
+          cache: npm
+      - uses: actions/setup-java@v5
         with:
-          distribution: 'zulu'
-          java-version: '17'
+          distribution: temurin
+          java-version: 21
+      # Le SDK Android est préinstallé sur les machines GitHub (ANDROID_HOME défini) ;
+      # le plugin Android Gradle télécharge lui-même les composants manquants.
+      - run: npm ci
+      - run: npm run lint && npm run typecheck && npm test
+      # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
+      - run: npm run catalog:check
+      # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
+      # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
+      - run: npm run catalog:ci
+      - run: npm run android:debug
+        env:
+          # Facultatif : variables de dépôt (Settings → Secrets and variables →
+          # Actions → onglet « Variables »). Vides, l'APK se construit sans cloud
+          # et reste 100 % hors ligne. Voir docs/cloud-supabase.md.
+          #
+          # Le repli sur les « Secrets » évite le piège classique : une valeur
+          # rangée dans Secrets au lieu de Variables était ignorée en silence.
+          # La clé anon est publique par conception — Variables reste l'endroit
+          # recommandé, Secrets est accepté et fonctionne tout autant.
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-      - name: Build Android APK (Debug)
+      # Diagnostic cloud : un APK construit sans les deux variables est
+      # 100 % hors ligne (aucun écran de compte). C'est la cause n°1 d'un
+      # « cloud non configuré » alors qu'on l'attend — on le dit tout de suite,
+      # dans le journal du run, sans jamais afficher les valeurs.
+      - name: Vérifier que le cloud est embarqué
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          set -euo pipefail
+          echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
+          # L'app attend l'URL du projet. Un suffixe copié depuis l'écran API
+          # (/rest/v1, /auth/v1…) est retiré par elle-même : on le signale, et
+          # on prévient si la forme reste inattendue (l'APK serait hors ligne).
+          PROJET=$(printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | sed -E 's#/+$##; s#/(rest|auth|storage|realtime)/v1$##')
+          if [ "$NEXT_PUBLIC_SUPABASE_URL" != "$PROJET" ]; then
+            echo "ℹ️ URL d'endpoint détectée : l'app utilisera ${PROJET} (préfère l'« URL du projet » nue)."
+          fi
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && ! printf '%s' "$PROJET" | grep -Eq '^https://[a-z0-9-]+\.supabase\.(co|in)$'; then
+            echo "::warning::L'adresse Supabase ne ressemble pas à une URL de projet (attendu : https://<ref>.supabase.co) — l'app restera hors ligne."
+          fi
+          if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
+            echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
+          else
+            echo "::warning::Cloud absent du bundle : l'APK sera hors ligne (aucun compte). Vérifie Settings → Secrets and variables → Actions, portée du dépôt, noms exacts NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY (Variables ou Secrets, les deux marchent), puis relance ce workflow."
+          fi
 
-      - name: Upload APK to Firebase App Distribution
-        uses: w9jds/firebase-action@master
+      # 1. Artefact du run : pratique pour un test ponctuel, mais son
+      #    téléchargement exige d'être connecté à GitHub.
+      - uses: actions/upload-artifact@v4
         with:
-          args: appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:450483794682:android:d393fe779b340d6140cf43 --groups "testers"
+          name: creatordeck-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # 2. Pré-release « roulante » : un lien de téléchargement public et
+      #    stable, sans connexion, écrasé à chaque build.
+      #    https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk
+      - name: Publier l'APK en pré-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp android/app/build/outputs/apk/debug/app-debug.apk creatordeck-debug.apk
+          NOTES="APK de test (signature debug, non publiable sur le Play Store).
+          Reconstruit automatiquement à chaque build depuis \`${{ github.ref_name }}\` (\`${{ github.sha }}\`)."
+          if ! gh release view debug-apk >/dev/null 2>&1; then
+            gh release create debug-apk \
+              --prerelease \
+              --title "CreatorDeck — APK de test (roulant)" \
+              --notes "$NOTES"
+          fi
+          gh release edit debug-apk --notes "$NOTES"
+          gh release upload debug-apk creatordeck-debug.apk --clobber
+
+      # 3. Le mail, enfin : Firebase App Distribution envoie aux testeurs du
+      #    groupe un courriel avec un bouton d'installation, et garde l'APK dans
+      #    une page qui s'ouvre très bien depuis un téléphone.
+      #
+      #    Deux réglages, une seule fois, dans la console Firebase
+      #    (console.firebase.google.com → projet creatordeck-6a9ce) :
+      #      * App Distribution → Testers & Groups → créer le groupe « testers »
+      #        (exactement ce nom) et y mettre ton adresse ;
+      #      * le compte de service doit pouvoir distribuer — c'est le même JSON
+      #        que le secret FCM de Supabase, rangé ici sous le nom
+      #        FIREBASE_SERVICE_ACCOUNT (Settings → Secrets and variables →
+      #        Actions → New repository secret).
+      #    Sans le secret, cette étape échoue et le journal le dit ; l'APK, lui,
+      #    est déjà disponible par les deux voies ci-dessus.
+      - name: Préparer les notes de version
+        run: git log -1 --pretty='%h — %s' > release-notes.txt
+
+      - name: Envoyer l'APK aux testeurs (le mail)
+        uses: w9jds/firebase-action@35d0fd9b92b2c66dcd13f1b72dacc588e89e7567 # master / firebase-tools v15.32.1
+        with:
+          args: >-
+            appdistribution:distribute
+            android/app/build/outputs/apk/debug/app-debug.apk
+            --app 1:450483794682:android:d393fe779b340d6140cf43
+            --groups "testers"
+            --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

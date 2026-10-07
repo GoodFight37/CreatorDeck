@@ -42,17 +42,49 @@ But : **un dépôt, une branche de référence, un historique léger.**
   comme « hors ligne » ou « sans compte » sans cette nuance — c'était vrai avant
   le chantier online, ça ne l'est plus.
 - Migrations Supabase collées par le joueur, dans l'ordre : `0003`, `0011` →
-  `0021`. Les cinq dernières ferment des trous d'intégrité : `0019` (la
-  sauvegarde, la réserve de boosters et les raretés déclarées ne s'écrivent plus
-  depuis le client), `0020` (un pseudo = un joueur), `0021` (registre de
-  provenance : une Légendaire ou une variante Live/Holo/Gold doit venir du
-  serveur). La bascule de `0021` a inscrit 40 lignes pour toutes les collections
-  existantes — personne ne perd son rang.
-- Le vérifieur `npm run supabase:verify` joue `0001` → `0021` sur un Postgres
-  jetable : 312 contrôles. Il pose les droits de table comme Supabase
+  `0024`. Les dernières ferment des trous d'intégrité : `0019` (la sauvegarde, la
+  réserve de boosters et les raretés déclarées ne s'écrivent plus depuis le
+  client), `0020` (un pseudo = un joueur), `0021` (registre de provenance : une
+  Légendaire ou une variante Live/Holo/Gold doit venir du serveur), `0023` (les
+  notifications de direct), `0024` (l'état de l'interrupteur se relit). La
+  bascule de `0021` a inscrit 40 lignes pour toutes les collections existantes —
+  personne ne perd son rang.
+- Le vérifieur `npm run supabase:verify` joue `0001` → `0024` sur un Postgres
+  jetable : 347 contrôles. Il pose les droits de table comme Supabase
   (`alter default privileges` **avant** les migrations), sinon il redonnerait à
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.
+
+## Comment l'APK arrive sur le téléphone
+
+Le workflow **APK Android (debug)** construit à chaque poussée de **code** (les
+poussées qui ne touchent que la documentation ne construisent rien : l'APK
+précédent reste valable). Il fait les contrôles d'abord (`lint`, `typecheck`,
+`test`, catalogue), puis :
+
+1. **il envoie un mail** avec le lien d'installation — Firebase App Distribution,
+   groupe `testers` — c'est la voie du téléphone : on ouvre le mail, on touche le
+   lien, l'APK s'installe par-dessus l'ancien ;
+2. il met à jour la **pré-release roulante**, dont le lien public est stable et
+   ne demande aucune connexion :
+   `https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk` ;
+3. il dépose l'**artefact** du run (`creatordeck-debug-apk`), pour un
+   téléchargement depuis GitHub — mais il faut y être connecté.
+
+Deux réglages, une seule fois, pour la voie n° 1 (console Firebase du projet
+`creatordeck-6a9ce`) :
+
+* **App Distribution → Testers & groups** : créer le groupe `testers` (ce nom
+  exact, le workflow l'écrit) et y ajouter l'adresse du joueur. C'est ce groupe
+  qui reçoit le mail — sans lui, l'étape échoue en `404` ;
+* **le secret de dépôt `FIREBASE_SERVICE_ACCOUNT`** (Settings → Secrets and
+  variables → Actions → New repository secret) : le JSON du compte de service
+  Firebase, celui-là même qui sert de `FCM_SERVICE_ACCOUNT` à Supabase. Il doit
+  porter le rôle *Firebase App Distribution Admin*.
+
+Le workflow annule le build précédent si une nouvelle poussée arrive
+(`concurrency`) : seul le dernier APK compte, et deux builds ne peuvent pas
+écraser la pré-release en même temps.
 
 ## Un seul écrivain à la fois
 

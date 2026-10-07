@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CLOUD_DISABLED_HINT, cloudProjectName, readCloudConfig } from "@/lib/cloud/config";
 
@@ -46,6 +48,40 @@ describe("configuration du cloud", () => {
     });
     expect(config?.url).toBe("https://mon-projet.supabase.co");
     expect(config?.anonKey).toBe(KEY);
+  });
+
+  it("le workflow qui construit l'APK transmet bien la configuration", () => {
+    // Le 7 octobre, une réécriture du workflow a laissé tomber les deux
+    // variables : l'APK se construisait **sans cloud** — même écran, mêmes
+    // boutons, mais aucun compte, aucun ami, aucun classement. La panne la plus
+    // coûteuse est celle qui ne se voit pas, donc elle a son garde-fou.
+    const workflow = readFileSync(
+      path.join(process.cwd(), ".github", "workflows", "android-apk.yml"),
+      "utf8",
+    );
+    for (const variable of [URL_VAR, KEY_VAR]) {
+      // Concaténation : `${{` dans un gabarit (`\`…\``) ouvrirait une
+      // interpolation, et le contrôle ne compilerait même pas.
+      const attendu = variable + ": ${{ vars." + variable + " || secrets." + variable + " }}";
+      expect(workflow).toContain(attendu);
+    }
+    // Et le diagnostic qui dit, dans le journal du run, si le cloud est dedans.
+    expect(workflow).toContain("Cloud absent du bundle");
+  });
+
+  it("un seul workflow construit l'APK, et il sait envoyer le mail", () => {
+    // Deux fichiers identiques = deux builds et deux mails par poussée.
+    const workflow = readFileSync(
+      path.join(process.cwd(), ".github", "workflows", "android-apk.yml"),
+      "utf8",
+    );
+    expect(workflow).toContain("workflow_dispatch");
+    // Le mail : Firebase App Distribution, avec les notes de version.
+    expect(workflow).toContain("appdistribution:distribute");
+    expect(workflow).toContain("--groups");
+    expect(workflow).toContain("--release-notes-file");
+    // Le lien public stable, utilisable depuis un téléphone sans connexion.
+    expect(workflow).toContain("gh release upload debug-apk");
   });
 
   it("refuse une adresse ou une clé recopiées de travers", () => {
