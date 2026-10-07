@@ -1621,6 +1621,11 @@ canal « Directs » à la main (Paramètres → Applications → CreatorDeck →
 Notifications → canal → Son) pour l'ancien, ou **réinstaller l'APK** pour que le
 canal v2 naisse avec le son du jeu.
 
+**Vérifié sur le téléphone du joueur le 7 octobre 2026** : l'APK réinstallée, un
+envoi de test (`notify-live?test=1`) — la notification arrive **et sonne**. Le
+diagnostic est donc clos par la seule preuve qui compte : l'appareil, pas un
+raisonnement sur le code.
+
 **L'interrupteur qui revenait éteint** (même journée, deuxième défaut signalé par
 le joueur : « à chaque fois que je ferme et que j'ouvre l'appli, la notification
 est désactivée »). Il n'était pas éteint : il était **inconnu**. `pushLive` vit
