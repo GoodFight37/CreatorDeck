@@ -8,14 +8,17 @@
 -- portes :
 --
 --   * `wallet_credit(kind, ref)` — le joueur demande un crédit, le serveur
---     **fixe le prix** (jamais le client) et, quand c'est possible, **vérifie
---     l'événement** : un tirage existe-t-il vraiment (`pack_draws`), l'annonce
---     vendue est-elle bien la sienne (`market_listings`), le palier a-t-il déjà
---     été payé (journal) ? Un palier ou une saison ne se paient qu'une fois ;
---   * `wallet_spend(kind, ref)` — l'artisanat, dont le coût est recalculé depuis
---     le catalogue. L'hôtel ne passe pas par là : il a son propre débit (le
---     trigger de `market_listings`), pour rester dans la même transaction que la
---     vente elle-même.
+--     **fixe le prix** (jamais le client) et **vérifie l'événement** : un tirage
+--     existe-t-il vraiment (`pack_draws`), l'annonce vendue est-elle bien la
+--     sienne (`market_listings`), la carte recyclée est-elle dans sa collection
+--     (double copie, provenance), le palier est-il réellement atteint (barème
+--     `wallet_milestones`, compté dans `user_cards` et `pack_state`), la famille
+--     a-t-elle assez de créateurs possédés (`wallet_season_tiers`, générée
+--     depuis le jeu par `0028_wallet_saisons.sql`) ? Rien ne se paie deux fois ;
+--   * `wallet_spend(kind, ref)` — l'artisanat, débité au prix du catalogue (le
+--     client propose un créateur, jamais un prix). L'hôtel ne passe pas par là :
+--     il a son propre débit (le trigger de `market_listings`), pour rester dans
+--     la même transaction que la vente elle-même.
 --
 -- **Le solde de la sauvegarde devient un miroir.** L'écran n'a rien à
 -- apprendre : `state.points` existe toujours, c'est lui qui s'affiche. Mais il
@@ -120,10 +123,10 @@ $$;
 /**
  * Applique un mouvement et renvoie le nouveau solde.
  *
- * `p_once` : quand le journal porte déjà (joueur, raison, événement), rien ne
- * bouge et la fonction renvoie le solde **actuel** — c'est ce qui rend un palier
- * ou une caisse de tirage impossible à encaisser deux fois, même si le client
- * redemande.
+ * Quand le journal porte déjà (joueur, raison, événement), rien ne bouge et la
+ * fonction renvoie le solde **actuel** : c'est ce qui rend un palier, une caisse
+ * de tirage, une carte recyclée ou un dépôt à l'hôtel impossibles à encaisser
+ * deux fois, même si le client redemande après une coupure réseau.
  *
  * Un débit qui passe sous zéro lève une exception : la mise à jour ne s'applique
  * pas (`where` sur l'`on conflict`), donc rien n'est écrit.
@@ -132,8 +135,7 @@ create or replace function public._wallet_apply(
   p_user  uuid,
   p_delta integer,
   p_kind  text,
-  p_ref   text default '',
-  p_once  boolean default false
+  p_ref   text default ''
 )
 returns integer
 language plpgsql
@@ -152,7 +154,12 @@ begin
 
   perform public._wallet_ensure(p_user);
 
-  -- Le journal d'abord : c'est lui qui décide si le mouvement a lieu.
+  -- Le journal d'abord : **c'est la seule porte**. L'index unique
+  -- `wallet_ledger_once (user_id, kind, ref)` décide si le mouvement a lieu —
+  -- un événement déjà payé (le même tirage, la même carte, le même palier, la
+  -- même vente) ne repasse pas, même si le client redemande après une coupure
+  -- réseau. Il n'y a donc pas de « mode » à choisir : chaque mouvement est à
+  -- usage unique, et c'est la référence (`ref`) qui dit ce qui est unique.
   insert into public.wallet_ledger (user_id, delta, kind, ref)
   values (p_user, p_delta, coalesce(p_kind, ''), coalesce(p_ref, ''))
   on conflict (user_id, kind, ref) do nothing;
@@ -249,9 +256,7 @@ as $$
     'milestone', jsonb_build_object(
       'first', 40, 'ten', 120, 'twentyfive', 260, 'fifty', 500,
       'hundred', 1200, 'legendary', 400, 'master', 3000
-    ),
-    -- Une saison paie chaque créateur **nouvellement** possédé de la famille.
-    'seasonPerCreator', 4
+    )
   );
 $$;
 
@@ -266,6 +271,44 @@ grant execute on function public.wallet_prices() to authenticated;
  * appeler `wallet_get()` suffit à faire disparaître un million de points
  * inventés dans la sauvegarde.
  */
+-- ---------------------------------------------------------------------------
+-- La grille des paliers de collection
+-- ---------------------------------------------------------------------------
+-- Le serveur ne croit pas un client qui annonce « j'ai complété le catalogue » :
+-- il **recalcule** l'avancement dans la collection projetée (`user_cards`) et le
+-- compare au seuil. Cette table est le miroir de `MILESTONES`
+-- (`src/lib/game-engine.ts`) — `src/lib/supabase-wallet.test.ts` compare les
+-- deux, donc un palier retouché dans le jeu sans l'être ici fait échouer la
+-- suite de tests.
+--
+-- `metric` : ce que le jalon compte — `openings` (les boosters ouverts, comptés
+-- par le serveur dans `pack_state`), `uniqueCreators` (les créateurs distincts
+-- possédés), `legendary` (un Légendaire au moins) ou `catalogue` (tout le
+-- catalogue vivant : ce seuil-là est recalculé à chaque réclamation, parce qu'un
+-- but qui grandit avec le catalogue ne peut pas être figé ici).
+create table if not exists public.wallet_milestones (
+  id     text primary key,
+  metric text not null check (metric in ('openings', 'uniqueCreators', 'legendary', 'catalogue')),
+  target integer not null check (target >= 0),
+  points integer not null check (points >= 0)
+);
+
+insert into public.wallet_milestones (id, metric, target, points) values
+  ('first',      'openings',       1,    40),
+  ('ten',        'uniqueCreators', 10,   120),
+  ('twentyfive', 'uniqueCreators', 25,   260),
+  ('fifty',      'uniqueCreators', 50,   500),
+  ('hundred',    'uniqueCreators', 100,  1200),
+  ('legendary',  'legendary',      1,    400),
+  ('master',     'catalogue',      0,    3000)
+on conflict (id) do update
+  set metric = excluded.metric,
+      target = excluded.target,
+      points = excluded.points;
+
+alter table public.wallet_milestones enable row level security;
+revoke all on table public.wallet_milestones from public, anon, authenticated;
+
 create or replace function public.wallet_get()
 returns jsonb
 language plpgsql
@@ -316,17 +359,26 @@ security definer
 set search_path = public
 as $$
 declare
-  v_user   uuid := auth.uid();
-  v_kind   text := lower(btrim(coalesce(p_kind, '')));
-  v_ref    text := btrim(coalesce(p_ref, ''));
-  v_prices jsonb := public.wallet_prices();
-  v_delta  integer;
-  v_points integer;
-  v_avant  integer;
-  v_once   boolean := false;
-  v_row    record;
-  v_paid   integer;
-  v_owned  integer;
+  v_user       uuid := auth.uid();
+  v_kind       text := lower(btrim(coalesce(p_kind, '')));
+  v_ref        text := btrim(coalesce(p_ref, ''));
+  v_prices     jsonb := public.wallet_prices();
+  v_save       public.saves;
+  v_cards      jsonb;
+  v_card       jsonb;
+  v_rarity     text;
+  v_variant    text;
+  v_claim_slug text;
+  v_consume    boolean := false;
+  v_delta      integer;
+  v_points     integer;
+  v_avant      integer;
+  v_owned      integer;
+  v_metric     text;
+  v_target     integer;
+  v_season     text;
+  v_tier       integer;
+  v_row        record;
 begin
   if v_user is null then
     raise exception 'solde : connecte-toi pour encaisser des points' using errcode = 'P0001';
@@ -335,7 +387,9 @@ begin
   case v_kind
     when 'pack', 'scene' then
       -- Le tirage doit exister, être au joueur, et être du bon genre : c'est ce
-      -- qui empêche d'encaisser un booster qu'on n'a jamais ouvert.
+      -- qui empêche d'encaisser un booster qu'on n'a jamais ouvert. Depuis le
+      -- trigger `wallet_on_draw`, cette branche ne sert plus qu'au rattrapage
+      -- d'un tirage arrivé avant la bascule.
       select d.id into v_row
         from public.pack_draws d
        where d.id::text = v_ref
@@ -345,7 +399,6 @@ begin
         raise exception 'solde : ce tirage n''existe pas (ou n''est pas le tien)' using errcode = 'P0001';
       end if;
       v_delta := (v_prices ->> v_kind)::integer;
-      v_once := true;
 
     when 'sell' then
       select l.payout into v_row
@@ -357,50 +410,150 @@ begin
         raise exception 'solde : cette vente n''existe pas (ou n''est pas la tienne)' using errcode = 'P0001';
       end if;
       v_delta := v_row.payout;
-      v_once := true;
 
     when 'recycle' then
-      v_delta := (v_prices -> 'recycle' ->> lower(v_ref))::integer;
-      if v_delta is null then
-        raise exception 'solde : rareté inconnue pour un recyclage' using errcode = 'P0001';
+      -- La carte, **par son identifiant**, dans la sauvegarde du joueur : ce
+      -- qu'il possède est écrit là et nulle part ailleurs. La rareté, elle, vient
+      -- du **catalogue** — une sauvegarde bricolée ne se recycle donc pas au prix
+      -- d'une Légendaire.
+      select * into v_save from public.saves s where s.user_id = v_user;
+      if v_save.user_id is null then
+        raise exception 'solde : envoie d''abord ta collection au cloud' using errcode = 'P0001';
       end if;
+      v_cards := coalesce(v_save.state -> 'cards', '[]'::jsonb);
+      select value into v_card
+        from jsonb_array_elements(v_cards)
+       where value ->> 'id' = v_ref
+       limit 1;
+      if v_card is null then
+        raise exception 'solde : cette carte n''est pas dans ta collection' using errcode = 'P0001';
+      end if;
+
+      v_claim_slug := lower(v_card ->> 'creatorSlug');
+      v_variant := coalesce(nullif(v_card ->> 'variant', ''), 'standard');
+      select c.rarity into v_rarity from public.creators c where c.slug = v_claim_slug;
+      if v_rarity is null then
+        raise exception 'solde : ce créateur n''est pas au catalogue' using errcode = 'P0001';
+      end if;
+      if not (v_variant = any (array['standard', 'live', 'holo', 'gold'])) then
+        raise exception 'solde : variante inconnue pour un recyclage' using errcode = 'P0001';
+      end if;
+
+      -- Jamais la dernière copie d'un couple créateur + variante : la règle du
+      -- moteur et de l'hôtel, qui protège la complétion.
+      if (
+        select count(*) from jsonb_array_elements(v_cards)
+         where lower(coalesce(value ->> 'creatorSlug', '')) = v_claim_slug
+           and coalesce(nullif(value ->> 'variant', ''), 'standard') = v_variant
+      ) < 2 then
+        raise exception 'solde : c''est ta seule copie de cette carte' using errcode = 'P0001';
+      end if;
+
+      -- Provenance : on ne recycle pas une carte que le serveur n'a jamais
+      -- donnée — le recyclage est une porte de sortie, comme l'hôtel. L'atelier
+      -- reste couvert : ses cartes sont des Standard, commune à épique.
+      if jsonb_array_length(public.card_claim_covers(v_user, jsonb_build_array(
+           jsonb_build_object('creatorSlug', v_claim_slug, 'rarity', v_rarity, 'variant', v_variant)
+         ))) > 0 then
+        raise exception 'solde : cette carte n''a pas de provenance vérifiable (ni tirage, ni échange, ni hôtel, ni vol)'
+          using errcode = 'P0001';
+      end if;
+
+      v_delta := (v_prices -> 'recycle' ->> v_rarity)::integer;
+      -- Le **droit sera consommé** si le mouvement a lieu : la carte quitte la
+      -- collection, elle ne peut donc pas être refabriquée pour être recyclée
+      -- encore. C'est la promesse de `0022` (« ça se fermera le jour où le
+      -- recyclage passera par le serveur »), tenue ici.
+      v_consume := true;
 
     when 'milestone' then
-      v_delta := (v_prices -> 'milestone' ->> v_ref)::integer;
-      if v_delta is null then
+      -- Le serveur **recalcule** le palier : il ne croit pas un client qui
+      -- annonce « j'ai complété le catalogue ». Le barème vit dans
+      -- `wallet_milestones` (miroir de `MILESTONES`, gardé par un test),
+      -- l'avancement se compte dans la collection projetée — ou dans le
+      -- compteur de boosters du serveur, qui ne se bricole pas.
+      select m.metric, m.target, m.points into v_metric, v_target, v_delta
+        from public.wallet_milestones m
+       where m.id = v_ref;
+      if v_metric is null then
         raise exception 'solde : palier inconnu' using errcode = 'P0001';
       end if;
-      v_once := true;
+
+      if v_metric = 'openings' then
+        select coalesce(ps.openings, 0) into v_owned
+          from public.pack_state ps where ps.user_id = v_user;
+        v_owned := coalesce(v_owned, 0);
+      elsif v_metric = 'legendary' then
+        select count(distinct uc.creator_slug) into v_owned
+          from public.user_cards uc
+         where uc.user_id = v_user and uc.rarity = 'legendary';
+      else
+        select count(distinct uc.creator_slug) into v_owned
+          from public.user_cards uc
+          join public.creators c on c.slug = uc.creator_slug and c.retired = false
+         where uc.user_id = v_user;
+        if v_metric = 'catalogue' then
+          -- Le but grandit avec le catalogue : le seuil est relu maintenant.
+          select count(*) into v_target from public.creators c where c.retired = false;
+        end if;
+      end if;
+
+      if v_owned < v_target then
+        raise exception 'solde : il te manque % sur ce palier', (v_target - v_owned) using errcode = 'P0001';
+      end if;
 
     when 'season' then
-      -- Ce qui a déjà été payé pour cette famille = les points du journal
-      -- divisés par le prix d'un créateur. On paie la différence, jamais deux
-      -- fois le même créateur.
-      select coalesce(sum(l.delta), 0) into v_paid
-        from public.wallet_ledger l
-       where l.user_id = v_user and l.kind = 'season' and l.ref = v_ref;
-      select count(distinct c.slug) into v_owned
-        from public.user_cards uc
-        join public.creators c on c.slug = uc.creator_slug
-       where uc.user_id = v_user
-         and c.retired = false
-         and c.region = v_ref;
-      v_delta := greatest(0, v_owned - (v_paid / greatest(1, (v_prices ->> 'seasonPerCreator')::integer)))
-                 * (v_prices ->> 'seasonPerCreator')::integer;
-      if v_delta = 0 then
-        raise exception 'solde : rien de nouveau à encaisser dans cette famille' using errcode = 'P0001';
+      -- **Un palier à la fois** : `S09#2` = le 2ᵉ palier de la famille S09. Le
+      -- seuil et le montant viennent de `wallet_season_tiers`, générée depuis le
+      -- jeu par `0028_wallet_saisons.sql` : le client propose un repère, jamais
+      -- un montant, et le serveur compte lui-même les créateurs possédés.
+      if position('#' in v_ref) = 0 then
+        raise exception 'solde : précise le palier (famille#palier)' using errcode = 'P0001';
       end if;
-      -- La ligne de journal porte le montant cumulé : elle sert de compteur, pas
-      -- d'unicité (on encaisse une famille plusieurs fois, au fil des cartes).
-      v_ref := v_ref || ':' || (v_paid + v_delta)::text;
-      v_once := false;
+      if to_regclass('public.wallet_season_tiers') is null then
+        raise exception 'solde : colle d''abord 0028_wallet_saisons.sql' using errcode = 'P0001';
+      end if;
+      v_season := split_part(v_ref, '#', 1);
+      begin
+        v_tier := split_part(v_ref, '#', 2)::integer;
+      exception when others then
+        raise exception 'solde : ce palier n''existe pas' using errcode = 'P0001';
+      end;
+      select t.required, t.points into v_target, v_delta
+        from public.wallet_season_tiers t
+       where t.season_id = v_season and t.tier = v_tier;
+      if v_delta is null then
+        raise exception 'solde : ce palier n''existe pas' using errcode = 'P0001';
+      end if;
+      select count(distinct uc.creator_slug) into v_owned
+        from public.wallet_season_members m
+        join public.user_cards uc
+          on uc.user_id = v_user and uc.creator_slug = m.creator_slug
+       where m.season_id = v_season;
+      if v_owned < v_target then
+        raise exception 'solde : il te manque % créateur(s) pour ce palier', (v_target - v_owned)
+          using errcode = 'P0001';
+      end if;
 
     else
       raise exception 'solde : raison de crédit inconnue (%)', v_kind using errcode = 'P0001';
   end case;
 
   v_avant := public._wallet_ensure(v_user);
-  v_points := public._wallet_apply(v_user, v_delta, v_kind, v_ref, v_once);
+  v_points := public._wallet_apply(v_user, v_delta, v_kind, v_ref);
+
+  -- Le droit n'est consommé que si le mouvement a **réellement** eu lieu : un
+  -- rejeu (le journal porte déjà cette carte) ne retire pas un second droit.
+  if v_consume and (v_points - v_avant) > 0 then
+    update public.card_claims
+       set qty = greatest(0, qty - 1), last_at = now()
+     where user_id = v_user
+       and creator_slug = v_claim_slug
+       and rarity = v_rarity
+       and variant = v_variant
+       and qty > 0;
+  end if;
+
   perform public._wallet_mirror(v_user, v_points);
 
   -- `gained` est ce qui a **réellement** bougé : si le crédit était déjà passé,
@@ -460,7 +613,7 @@ begin
     raise exception 'solde : les cartes % ne sont pas artisanales', v_creator.rarity using errcode = 'P0001';
   end if;
 
-  v_points := public._wallet_apply(v_user, -v_cost, v_kind, v_ref, true);
+  v_points := public._wallet_apply(v_user, -v_cost, v_kind, v_ref);
   perform public._wallet_mirror(v_user, v_points);
 
   -- Même règle que pour un crédit : `spent` dit ce qui a bougé (0 si ce
@@ -496,8 +649,7 @@ begin
     new.user_id,
     case when new.kind = 'scene' then 10 else 12 end,
     case when new.kind = 'scene' then 'scene' else 'pack' end,
-    new.id::text,
-    true
+    new.id::text
   );
   return new;
 end;
@@ -525,8 +677,27 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_avant  integer;
+  v_points integer;
 begin
-  perform public._wallet_apply(new.seller_id, new.payout, 'sell', new.id::text, true);
+  v_avant := public._wallet_ensure(new.seller_id);
+  v_points := public._wallet_apply(new.seller_id, new.payout, 'sell', new.id::text);
+
+  -- Déposer, c'est faire sortir la carte de sa collection : le droit est
+  -- consommé (une seule fois, et seulement si le paiement a bien eu lieu). Sans
+  -- ça, la même carte pourrait être refabriquée puis redéposée sans fin — le
+  -- même blanchiment que le recyclage, par la porte de l'hôtel.
+  if v_points > v_avant then
+    update public.card_claims
+       set qty = greatest(0, qty - 1), last_at = now()
+     where user_id = new.seller_id
+       and creator_slug = new.creator_slug
+       and rarity = new.rarity
+       and variant = new.variant
+       and qty > 0;
+  end if;
+
   return new;
 end;
 $$;
@@ -572,7 +743,7 @@ begin
   -- `market_buy()`, et le solde s'y recale à la prochaine lecture
   -- (`wallet_get()`). Un trigger qui réécrit la sauvegarde au milieu d'une
   -- fonction qui vient de la modifier, c'est deux écrivains pour un seul champ.
-  perform public._wallet_apply(new.buyer_id, -new.price, 'hotel', new.id::text, true);
+  perform public._wallet_apply(new.buyer_id, -new.price, 'hotel', new.id::text);
   return new;
 end;
 $$;
@@ -623,7 +794,7 @@ $$;
 -- ne doivent s'exécuter que dans le fil d'une fonction autorisée.
 revoke all on function public._wallet_ensure(uuid) from public, anon, authenticated;
 revoke all on function public.wallet_backfill() from public, anon, authenticated;
-revoke all on function public._wallet_apply(uuid, integer, text, text, boolean) from public, anon, authenticated;
+revoke all on function public._wallet_apply(uuid, integer, text, text) from public, anon, authenticated;
 revoke all on function public._wallet_mirror(uuid, integer) from public, anon, authenticated;
 revoke all on function public._wallet_on_draw() from public, anon, authenticated;
 revoke all on function public._wallet_on_listing() from public, anon, authenticated;
@@ -633,7 +804,7 @@ do $$
 begin
   grant execute on function public._wallet_ensure(uuid) to service_role;
   grant execute on function public.wallet_backfill() to service_role;
-  grant execute on function public._wallet_apply(uuid, integer, text, text, boolean) to service_role;
+  grant execute on function public._wallet_apply(uuid, integer, text, text) to service_role;
   grant execute on function public._wallet_mirror(uuid, integer) to service_role;
 exception when others then
   raise notice 'rôle service_role absent : les triggers suffisent';

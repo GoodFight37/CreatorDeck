@@ -6,6 +6,7 @@ import {
   claimMilestone as engineClaimMilestone,
   claimSeason as engineClaimSeason,
   craftCreator as engineCraftCreator,
+  getGameView,
   recycleCard as engineRecycleCard,
   type PlayerState,
 } from "@/lib/game-engine";
@@ -18,6 +19,13 @@ import {
  * d'un montant : il **demande** un gain (le serveur le tarife et vérifie
  * l'événement) ou une dépense (le serveur recalcule le coût depuis le
  * catalogue).
+ *
+ * Ce que le serveur vérifie, il le lit **chez lui** : la carte recyclée dans la
+ * sauvegarde du joueur et le catalogue, le palier atteint dans la collection
+ * projetée et son propre compteur de boosters, la famille dans la grille générée
+ * depuis le jeu. L'appareil propose donc un **repère** (« cette carte », « ce
+ * palier », « ce palier de famille »), jamais un montant — et la collection part
+ * au cloud **avant** la demande, pour que le serveur regarde la bonne version.
  *
  * Deux gains ne passent pas par ici, et c'est volontaire : **un tirage et une
  * vente** sont versés par le serveur lui-même, au moment où il enregistre le
@@ -67,11 +75,18 @@ export function walletActions(ctx: CloudStoreContext) {
     ref: string,
     claim: (state: PlayerState, now: number) => PlayerState,
     describe: (delta: number) => string,
+    options: { pushFirst?: boolean } = {},
   ): Promise<CloudActionOutcome> {
     const ready = gate(kind === "craft" ? "rejoindre un créateur" : "encaisser tes points");
     if ("refusal" in ready) return ready.refusal;
     ctx.publish({ busy: true, message: null, isError: false });
     try {
+      if (options.pushFirst) {
+        // Le serveur relit la carte dans la sauvegarde du cloud : elle doit y
+        // être avant qu'on la lui demande. Un envoi qui échoue ne bloque pas :
+        // le refus du serveur, lui, sera clair.
+        await ctx.pushAfterServer().catch(() => undefined);
+      }
       const movement =
         kind === "craft"
           ? await ready.api.walletSpend(kind, ref)
@@ -80,6 +95,10 @@ export function walletActions(ctx: CloudStoreContext) {
       if (local) {
         ctx.deps.applyState(applyWallet(claim(local, ctx.deps.now()), movement.points, ctx.deps.now()));
       }
+      // La collection a bougé (une carte en moins, un créateur en plus, un
+      // palier coché) : le cloud doit le savoir tout de suite, sinon la
+      // prochaine vérification du serveur regarderait une version périmée.
+      await ctx.pushAfterServer().catch(() => undefined);
       const message = describe(movement.delta);
       ctx.publish({ busy: false, message, isError: false });
       // `delta` remonte à l'écran : le serveur peut n'avoir rien versé (un
@@ -109,10 +128,19 @@ export function walletActions(ctx: CloudStoreContext) {
       }
     },
 
-    /** Recycle un doublon : le serveur paie la valeur de la rareté. */
-    async recycleDoublon(cardId: string, rarity: string): Promise<CloudActionOutcome> {
-      return move("recycle", rarity, (state, now) => engineRecycleCard(state, cardId, now), (delta) =>
+    /**
+     * Recycle un doublon.
+     *
+     * On envoie **l'identifiant de la carte**, pas sa rareté : le serveur relit
+     * la carte dans la sauvegarde et prend la rareté au catalogue. Un client ne
+     * peut donc ni recycler une carte qu'il n'a pas, ni annoncer une rareté qui
+     * n'est pas la sienne — et deux doublons de la même rareté paient bien deux
+     * fois (c'est la carte qui est unique, pas la rareté).
+     */
+    async recycleDoublon(cardId: string): Promise<CloudActionOutcome> {
+      return move("recycle", cardId, (state, now) => engineRecycleCard(state, cardId, now), (delta) =>
         delta > 0 ? `Doublon recyclé : +${delta} points.` : "Ce doublon était déjà recyclé.",
+        { pushFirst: true },
       );
     },
 
@@ -130,11 +158,58 @@ export function walletActions(ctx: CloudStoreContext) {
       );
     },
 
-    /** Réclame les paliers d'une famille : le serveur compte les nouveaux. */
+    /**
+     * Réclame les paliers d'une famille.
+     *
+     * Un palier à la fois (`S04-2#3`) : le serveur relit le seuil et le montant
+     * dans la grille générée depuis le jeu, compte lui-même les créateurs
+     * possédés de la vague, et le journal des mouvements garantit qu'un palier
+     * ne se paie qu'une fois. Les paliers sont ceux que **l'écran affiche** :
+     * la famille se réclame donc exactement comme le joueur la voit.
+     */
     async claimSeason(id: string): Promise<CloudActionOutcome> {
-      return move("season", id, (state, now) => engineClaimSeason(state, id, now), (delta) =>
-        delta > 0 ? `Saison ${id} : +${delta} points.` : "Cette famille était déjà payée.",
-      );
+      const ready = gate("encaisser tes points");
+      if ("refusal" in ready) return ready.refusal;
+      const local = ctx.deps.readState();
+      if (!local) {
+        const refusal = ctx.cloudRefusal(new Error("partie locale absente"), "Récompense indisponible.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+      const now = ctx.deps.now();
+      const season = getGameView(local, now).seasons.find((entry) => entry.id === id);
+      const pending = (season?.tiers ?? [])
+        .map((tier, index) => ({ tier, index }))
+        .filter(({ tier }) => tier.unlocked && !tier.claimed);
+      if (!pending.length) {
+        const message = season ? `${season.name} : rien à réclamer pour l'instant.` : "Famille inconnue.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        // Les créateurs possédés se comptent chez le serveur, dans la
+        // collection projetée : elle part avant la demande.
+        await ctx.pushAfterServer().catch(() => undefined);
+        let delta = 0;
+        let points = local.points;
+        for (const { index } of pending) {
+          const movement = await ready.api.walletCredit("season", `${id}#${index + 1}`);
+          delta += movement.delta;
+          points = movement.points;
+        }
+        const next = ctx.deps.readState() ?? local;
+        ctx.deps.applyState(applyWallet(engineClaimSeason(next, id, ctx.deps.now()), points, ctx.deps.now()));
+        await ctx.pushAfterServer().catch(() => undefined);
+        const message = delta > 0 ? `Saison ${id} : +${delta} points.` : "Cette famille était déjà payée.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Récompense indisponible.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
     },
   };
 }

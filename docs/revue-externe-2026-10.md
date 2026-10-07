@@ -166,16 +166,29 @@ pareil ne bloquent plus la sauvegarde ».
    et après un achat d'hôtel ; il envoie les crédits (`recycle`, `milestone`,
    `season`) et les dépenses d'artisanat, et les **tirages** comme les **ventes**
    se paient tout seuls, par trigger. Là où un geste attend le réseau sans qu'un
-   compte soit connecté, le refus est explicite. La migration `0027` peut être
-   collée (il reste la commande `select public.wallet_backfill();` à lancer une
-   fois).
+   compte soit connecté, le refus est explicite. Deux migrations à coller :
+   `0027_wallet.sql` et `0028_wallet_saisons.sql`, puis la commande
+   `select public.wallet_backfill();` une fois.
+
+   **Ce que cette relecture a rattrapé** (le wallet vient d'être écrit, il a été
+   relu avant d'être annoncé) : *le recyclage* ne payait qu'**une fois par
+   rareté** — la référence du journal était la rareté, pas la carte, donc le
+   deuxième doublon d'une même rareté était payé zéro alors que le moteur local,
+   lui, le retirait de la collection : le joueur perdait une carte pour rien.
+   *Les paliers de collection* étaient payés **sans aucune vérification** : un
+   client qui demandait `master` recevait 3000 points au premier appel. *Les
+   paliers de famille* étaient payés à un autre montant que celui de l'écran, et
+   pour un identifiant de famille qui ne correspondait pas toujours à la vague
+   affichée. Les trois sont corrigés et contrôlés (`395` vérifications), et la
+   consommation du **droit de provenance** au recyclage comme au dépôt à l'hôtel
+   ferme la porte que `0022` avait laissée ouverte en toutes lettres.
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 757 tests, 49 fichiers
-npm run supabase:verify                     # 381 contrôles sur un Postgres jetable
+npm test                                    # 767 tests, 50 fichiers
+npm run supabase:verify                     # 395 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 

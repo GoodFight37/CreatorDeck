@@ -8,6 +8,11 @@
  * en affiche déjà deux vagues — un rapport qui ment est pire qu'une absence de
  * rapport.
  *
+ * Il porte aussi les **paliers** d'une saison (`tiersFor`) : l'application les
+ * affiche, et le générateur du wallet (`scripts/build-supabase-seasons.mjs`) les
+ * écrit en SQL. Une seule implémentation, donc le serveur ne peut pas payer un
+ * autre montant que celui que le joueur voit.
+ *
  * Règles :
  *   1. **ordre du classement** — la première vague d'une famille, ce sont ses
  *      têtes d'affiche : c'est l'objectif naturel du début de collection ;
@@ -65,4 +70,61 @@ export function familyIdOf(seasonId) {
 export function pieceOf(seasonId) {
   const match = /-(\d+)$/.exec(String(seasonId));
   return match ? Number(match[1]) : 1;
+}
+
+/** Libellés des paliers, dans l'ordre (le dernier referme la saison). */
+export const TIER_LABELS = ["Bronze", "Argent", "Or", "Arc-en-ciel"];
+
+/**
+ * Parts du total de points, cumulées, attribuées aux paliers.
+ *
+ * La **dernière est toujours forcée à 1** : la somme des paliers retombe
+ * exactement sur le total historique (`pointsPerCreator × taille`), donc
+ * l'économie ne bouge pas — elle est seulement versée en cours de route.
+ */
+export const TIER_SHARES = [0.15, 0.4, 0.7, 1];
+
+/**
+ * Seuils d'une saison de `size` créateurs : 25 %, 50 %, 75 % et 100 %, toujours
+ * croissants, jamais deux fois le même, et jamais au-delà de la taille.
+ *
+ * @param {number} size
+ * @returns {number[]}
+ */
+export function tierThresholds(size) {
+  const thresholds = [];
+  for (const share of [0.25, 0.5, 0.75, 1]) {
+    const wanted = Math.max(Math.ceil(share * size), (thresholds.at(-1) ?? 0) + 1);
+    const bounded = Math.min(size, wanted);
+    if (bounded !== thresholds.at(-1)) thresholds.push(bounded);
+  }
+  return thresholds;
+}
+
+/**
+ * Paliers d'une saison de `size` créateurs.
+ *
+ * @param {number} size
+ * @param {{ pointsPerCreator: number, hourglassesPerSeason: number }} config
+ * @returns {{ label: string, required: number, reward: { points: number, hourglasses: number }, emblem: boolean }[]}
+ */
+export function tiersFor(size, config) {
+  const thresholds = tierThresholds(size);
+  const totalPoints = config.pointsPerCreator * size;
+  const shares = TIER_SHARES.slice(0, thresholds.length);
+  shares[shares.length - 1] = 1;
+
+  let previous = 0;
+  return thresholds.map((required, index) => {
+    const cumulative = Math.round(totalPoints * shares[index]);
+    const points = Math.max(1, cumulative - previous);
+    previous = cumulative;
+    const last = index === thresholds.length - 1;
+    return {
+      label: TIER_LABELS[index] ?? TIER_LABELS[TIER_LABELS.length - 1],
+      required,
+      reward: { points, hourglasses: last ? config.hourglassesPerSeason : 0 },
+      emblem: last,
+    };
+  });
 }

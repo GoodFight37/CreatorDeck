@@ -17,8 +17,9 @@
     "catalog:build": "node scripts/build-catalog.mjs",
     "catalog:check": "node scripts/build-catalog.mjs --check",
     "catalog:source": "node scripts/build-twitch-catalog.mjs",
-    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars && node scripts/build-supabase-catalogue.mjs --check",
+    "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars && node scripts/build-supabase-catalogue.mjs --check && node scripts/build-supabase-seasons.mjs --check",
     "supabase:catalogue": "node scripts/build-supabase-catalogue.mjs",
+    "supabase:saisons": "node scripts/build-supabase-seasons.mjs",
     "supabase:verify": "node scripts/verify-supabase-migrations.mjs"
   },
   "dependencies": {

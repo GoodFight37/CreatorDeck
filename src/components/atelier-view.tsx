@@ -62,10 +62,6 @@ export function AtelierView({
   const points = usePoints();
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
-  /** La rareté d'une carte, par son identifiant : le serveur paie selon elle. */
-  function groupRarity(cardId: string): string {
-    return game.cards.find((card) => card.id === cardId)?.rarity ?? "common";
-  }
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
   // Les Sortants encore artisanables : ils ne sont plus dans le catalogue (donc
   // plus tirables, et hors complétion), mais leur fenêtre est ouverte pendant
@@ -120,7 +116,7 @@ export function AtelierView({
 
   async function handleRecycle(cardId: string, displayName: string, value: number) {
     try {
-      const done = await points.recycle(cardId, groupRarity(cardId));
+      const done = await points.recycle(cardId);
       if (done.status === "refused") return onError(done.message);
       // Le chiffre du serveur prime : il peut avoir déjà payé ce doublon-là
       // (mouvement rejoué après une coupure), et il a versé 0.

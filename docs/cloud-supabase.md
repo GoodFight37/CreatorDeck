@@ -251,6 +251,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0028_wallet_saisons.sql`](../supabase/migrations/0028_wallet_saisons.sql)
+     → **Run après `0027`** : la grille des familles (les créateurs de chaque
+     vague, le seuil et les points de chaque palier), **générée depuis le jeu**
+     par `npm run supabase:saisons`. Sans elle, réclamer un palier de famille est
+     refusé avec un message qui le dit. Rejouable : recoller le fichier remplace
+     la grille au lieu de s'y ajouter.
    - [`supabase/migrations/0027_wallet.sql`](../supabase/migrations/0027_wallet.sql)
      → **Run** pour que les **points vivent au serveur** : le solde quitte la
      sauvegarde pour la table `wallets`, l'hôtel et l'Atelier ne dépensent plus
@@ -1185,15 +1191,29 @@ par l'appareil.
 * **Le compte** : `wallets` (un solde par joueur, jamais négatif) et
   `wallet_ledger` (chaque mouvement, avec sa raison). Les deux tables sont
   fermées au client — le joueur passe par les fonctions, jamais par les tables.
-* **Les crédits** — `wallet_credit(kind, ref)` : le serveur **fixe le prix** et,
-  quand il le peut, **vérifie l'événement**. Un tirage (`pack`, `scene`) est payé
-  **tout seul**, par le trigger `_wallet_on_draw` (à l'insertion dans
-  `pack_draws`) : le client n'annonce jamais un gain, et `wallet_credit` ne sert
-  que de rattrapage pour un tirage arrivé avant la bascule. Un tirage doit
-  exister dans `pack_draws`, à ce joueur-là ; une vente (`sell`) doit être une
-  annonce à lui, vendue ; un `recycle` paie la valeur de la rareté ; un
-  `milestone` paie le palier du jeu ; une `season` compte les créateurs possédés
-  de la famille et ne paie que les nouveaux.
+* **Les crédits** — `wallet_credit(kind, ref)` : le serveur **fixe le prix** et
+  **vérifie l'événement**, à chaque fois :
+  * un tirage (`pack`, `scene`) est payé **tout seul**, par le trigger
+    `_wallet_on_draw` (à l'insertion dans `pack_draws`) : le client n'annonce
+    jamais un gain, et `wallet_credit` ne sert plus que de rattrapage pour un
+    tirage arrivé avant la bascule ;
+  * une vente (`sell`) doit être une annonce à lui, vendue — payée, elle aussi,
+    par un trigger, au moment du dépôt ;
+  * un `recycle` envoie **l'identifiant de la carte**, pas sa rareté : le serveur
+    relit la carte dans la sauvegarde, prend la rareté **au catalogue**, refuse
+    la dernière copie d'un couple et exige une provenance vérifiable
+    (`card_claim_covers`). Le droit est ensuite **consommé** — la promesse de
+    `0022` (« ça se fermera le jour où le recyclage passera par le serveur ») est
+    tenue ici : refabriquer la carte ne la repaie pas ;
+  * un `milestone` est **recalculé** : le barème (`wallet_milestones`, miroir de
+    `MILESTONES` gardé par un test) dit ce que le jalon compte et son seuil, et le
+    serveur compte dans sa propre collection projetée (`user_cards`) — ou dans son
+    compteur de boosters (`pack_state`). Demander « maître » avec onze créateurs
+    ne paie rien ;
+  * une `season` se réclame **un palier à la fois** (`S06#2`) : le seuil et le
+    montant viennent de `wallet_season_tiers`, **générée depuis le jeu** par
+    `0028_wallet_saisons.sql` (même module de saisons que l'écran), et les
+    créateurs possédés de la vague sont comptés par le serveur.
 * **Une seule fois, et c'est la base qui le garantit** : l'index unique
   `wallet_ledger_once (user_id, kind, ref)` fait qu'un tirage, une vente ou un
   palier ne peuvent pas être encaissés deux fois, même si le client redemande
@@ -1215,6 +1235,15 @@ par l'appareil.
   seule fois — borné à un million, parce qu'au-delà c'est une partie bricolée.
 * **Ce qui reste local, volontairement** : les sabliers (ils ne s'achètent ni ne
   s'échangent), l'XP et le niveau. Ils ne valent rien pour un autre joueur.
+* **Ce qu'un client trafiqué ne peut plus faire** : annoncer une rareté de
+  recyclage (elle vient du catalogue), réclamer un palier de collection non
+  atteint (le serveur compte), demander 3000 points pour un catalogue complet
+  inexistant, réclamer deux fois un palier de famille, ou refabriquer une carte
+  recyclée ou déposée à l'hôtel pour l'encaisser de nouveau (le **droit de
+  provenance** est consommé dans les deux cas). Ce qui reste ouvert, assumé : une
+  sauvegarde peut encore déclarer des cartes **artisanales** (Standard, commune à
+  épique) non obtenues — c'est la contrepartie de l'atelier, et ça ne vaut pas une
+  Légendaire.
 * **Le client** : `src/lib/cloud/api/wallet.ts` (trois portes : lire, créditer,
   dépenser — le corps envoyé ne porte qu'une **raison** et une **référence**,
   jamais un montant), `src/lib/cloud/store/wallet.ts` (la mécanique : adopter le

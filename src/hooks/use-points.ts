@@ -35,7 +35,7 @@ const DONE: PointsOutcome = { status: "done" };
 export function usePoints(): {
   /** Le solde du joueur est-il tenu par le serveur ? (affichage seulement) */
   serverSide: boolean;
-  recycle: (cardId: string, rarity: string) => Promise<PointsOutcome>;
+  recycle: (cardId: string) => Promise<PointsOutcome>;
   craft: (slug: string, withTokens: boolean) => Promise<PointsOutcome>;
   claimMilestone: (id: string) => Promise<PointsOutcome>;
   claimSeason: (id: string) => Promise<PointsOutcome>;
@@ -56,13 +56,15 @@ export function usePoints(): {
   );
 
   const recycle = useCallback(
-    async (cardId: string, rarity: string): Promise<PointsOutcome> => {
+    async (cardId: string): Promise<PointsOutcome> => {
       if (signedOut) return noAccount("recycler un doublon");
       if (!serverSide) {
         gameStore.recycleCard(cardId);
         return DONE;
       }
-      const outcome = await cloudStore.recycleDoublon(cardId, rarity);
+      // Pas de rareté dans l'appel : le serveur relit la carte (et le
+      // catalogue) lui-même. L'écran, lui, garde la sienne pour l'affichage.
+      const outcome = await cloudStore.recycleDoublon(cardId);
       return outcome.status === "done"
         ? { status: "done", message: outcome.message, delta: outcome.delta }
         : { status: "refused", message: outcome.message };

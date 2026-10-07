@@ -82,7 +82,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.2 | L'ouverture d'un paquet décidée à un seul endroit (jeu **et** overlay 16:9) | **livrée** | `src/hooks/use-pack-opening.ts`, `src/components/overlay-stage.tsx` |
 | 11.3 | Réveil du direct anti-course ; `?check=1` réservé au rôle de service | **livrée** | `supabase/functions/refresh-live/index.ts`, `docs/cloud-supabase.md` § « Le direct » |
 | 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
-| 11.6 | Les points vivent au serveur : l'hôtel et l'Atelier ne dépensent que ce que le serveur a encaissé | **livrée** | `0027_wallet.sql`, `src/lib/cloud/api/wallet.ts`, `src/lib/cloud/store/wallet.ts`, `src/hooks/use-points.ts`, `docs/cloud-supabase.md` § « Les points vivent au serveur » |
+| 11.6 | Les points vivent au serveur : l'hôtel et l'Atelier ne dépensent que ce que le serveur a encaissé | **livrée** | `0027_wallet.sql`, `0028_wallet_saisons.sql`, `src/lib/cloud/api/wallet.ts`, `src/lib/cloud/store/wallet.ts`, `src/hooks/use-points.ts`, `docs/cloud-supabase.md` § « Les points vivent au serveur » |
 | 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
@@ -116,7 +116,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0027` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0028` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers et grille des familles). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -125,7 +125,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**757 tests**, 49 fichiers aujourd'hui).
+  (**767 tests**, 50 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -151,8 +151,11 @@ Trois étages, trois vitesses :
   promo** : un code qui rend un booster une fois par joueur, un code inconnu,
   expiré ou épuisé refusé, et une réserve pleine qui refuse **sans consommer**
   le code — et le **wallet** : le solde de reprise, une sauvegarde trafiquée qui
-  n'achète rien, un tirage et un palier payés une seule fois
-  (**381 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  n'achète rien, un tirage et un palier payés une seule fois, un recyclage dont
+  la carte est relue dans la sauvegarde (et dont le droit de provenance est
+  consommé), un palier de collection recalculé côté serveur, un palier de famille
+  payé au montant du jeu
+  (**395 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -225,7 +228,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0027)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0028)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -236,7 +239,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0027` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0028` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
@@ -523,7 +526,10 @@ il reste utilisable dans les builds sans cloud (dev, tests).
 Le **solde de points** a suivi le même chemin que la réserve (`0027`) : quand le
 cloud est configuré, c'est le serveur qui l'écrit — il paie les tirages, les
 ventes de l'hôtel et les paliers, il encaisse l'artisanat, et l'appareil affiche
-ce qu'il reçoit. Une sauvegarde gonflée à la main n'achète donc plus rien.
+ce qu'il reçoit. Une sauvegarde gonflée à la main n'achète donc plus rien, et le
+serveur ne croit pas non plus un client qui annonce un palier atteint : il
+recompte (collection projetée, compteur de boosters, grille des familles générée
+depuis le jeu — `0028_wallet_saisons.sql`).
 
 Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau**,
 les **sabliers** et les **jetons**. Ils ne valent rien pour un autre joueur ; le

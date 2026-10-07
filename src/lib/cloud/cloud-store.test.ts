@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { SEASONS } from "@/lib/seasons";
 import { createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
 import {
   CloudError,
@@ -1855,8 +1856,10 @@ describe("les points au serveur (wallet)", () => {
     });
     store.subscribe(() => {});
     api.walletCredit.mockResolvedValueOnce({ delta: 55, points: 55 });
-    const outcome = await store.recycleDoublon("doublon-1", "rare");
-    expect(api.walletCredit).toHaveBeenCalledWith("recycle", "rare");
+    const outcome = await store.recycleDoublon("doublon-1");
+    // On envoie **la carte**, jamais sa rareté : le serveur relit la sienne dans
+    // la sauvegarde du cloud et prend le prix au catalogue.
+    expect(api.walletCredit).toHaveBeenCalledWith("recycle", "doublon-1");
     expect(outcome).toEqual({ status: "done", message: "Doublon recyclé : +55 points.", delta: 55 });
     // La carte est partie **et** le solde affiché est celui du serveur : le
     // traitement local (+55) puis l'adoption ne se cumulent pas.
@@ -1888,6 +1891,88 @@ describe("les points au serveur (wallet)", () => {
     // Le moteur local a bien marqué le palier, mais le solde ne bouge pas :
     // c'est le serveur qui décide, et il n'a rien versé.
     expect(state.current.points).toBe(45);
+  });
+
+  it("paie deux doublons de la même rareté, parce que ce sont deux cartes", async () => {
+    // Trois copies : après le premier recyclage il en reste deux, donc le second
+    // est encore un doublon (c'est la règle du moteur : jamais la dernière).
+    const carte = { id: "rare-1", creatorSlug: "kaicenat", rarity: "rare" as const, variant: "standard" as const, obtainedAt: T0, rareDrop: false };
+    const { store, api } = harness({
+      local: saveWith({ updatedAt: T0, points: 0, cards: [carte, { ...carte, id: "rare-2" }, { ...carte, id: "rare-3" }] }),
+    });
+    store.subscribe(() => {});
+    api.walletCredit
+      .mockResolvedValueOnce({ delta: 55, points: 55 })
+      .mockResolvedValueOnce({ delta: 55, points: 110 });
+    const premier = await store.recycleDoublon("rare-1");
+    const second = await store.recycleDoublon("rare-2");
+    expect(premier).toMatchObject({ status: "done", delta: 55 });
+    // Deux appels, deux cartes : c'est la carte qui est unique, pas la rareté.
+    // (La version d'avant envoyait « rare » et la seconde était payée zéro :
+    // le joueur perdait un doublon pour rien.)
+    expect(api.walletCredit.mock.calls.map((call) => call[1])).toEqual(["rare-1", "rare-2"]);
+    expect(second).toMatchObject({ status: "done", delta: 55 });
+  });
+
+  it("ne retire pas la carte quand le serveur refuse le recyclage", async () => {
+    const carte = { id: "rare-1", creatorSlug: "kaicenat", rarity: "rare" as const, variant: "standard" as const, obtainedAt: T0, rareDrop: false };
+    const { store, api, state } = harness({
+      local: saveWith({ updatedAt: T0, points: 45, cards: [carte, { ...carte, id: "rare-2" }] }),
+    });
+    store.subscribe(() => {});
+    api.walletCredit.mockRejectedValueOnce(
+      new CloudError("solde : cette carte n'est pas dans ta collection", "P0001", 400),
+    );
+    const outcome = await store.recycleDoublon("rare-1");
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/n'est pas dans ta collection/);
+    // La carte est toujours là : un refus ne fait rien perdre.
+    expect(state.current.cards).toHaveLength(2);
+  });
+
+  it("réclame une famille un palier à la fois, et dit ce que le serveur a payé", async () => {
+    // La plus petite famille du catalogue (deux créateurs, deux paliers) : le
+    // premier palier est atteint avec un seul créateur.
+    const saison = SEASONS.reduce((smallest, entry) =>
+      entry.slugs.length < smallest.slugs.length ? entry : smallest,
+    );
+    const { store, api } = harness({
+      local: saveWith({
+        updatedAt: T0,
+        points: 45,
+        cards: [
+          {
+            id: "c1",
+            creatorSlug: saison.slugs[0],
+            rarity: "common" as const,
+            variant: "standard" as const,
+            obtainedAt: T0,
+            rareDrop: false,
+          },
+        ],
+      }),
+    });
+    store.subscribe(() => {});
+    api.walletCredit.mockResolvedValue({ delta: 1, points: 46 });
+
+    const outcome = await store.claimSeason(saison.id);
+    // Un appel par palier débloqué, avec un **repère** : le serveur relit le
+    // seuil et le montant dans sa grille, il ne reçoit jamais un prix.
+    expect(api.walletCredit.mock.calls).toEqual([["season", `${saison.id}#1`]]);
+    expect(outcome).toMatchObject({ status: "done", delta: 1 });
+  });
+
+  it("ne demande rien pour une famille dont aucun palier n'est débloqué", async () => {
+    const saison = SEASONS.reduce((smallest, entry) =>
+      entry.slugs.length < smallest.slugs.length ? entry : smallest,
+    );
+    // Le plus petit palier exige au moins un créateur : une collection vide ne
+    // peut rien réclamer, et l'appareil ne doit pas appeler le serveur pour ça.
+    const { store, api } = harness({ local: saveWith({ updatedAt: T0, cards: [] }) });
+    store.subscribe(() => {});
+    const outcome = await store.claimSeason(saison.id);
+    expect(outcome.status).toBe("unavailable");
+    expect(api.walletCredit).not.toHaveBeenCalled();
   });
 
   it("refuse sans compte, sans rien demander au serveur", async () => {

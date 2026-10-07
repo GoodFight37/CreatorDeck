@@ -151,6 +151,7 @@ try {
   const directAuto = await readFile(path.join(MIGRATIONS, "0025_direct_auto.sql"), "utf8");
   const promos = await readFile(path.join(MIGRATIONS, "0026_promo_codes.sql"), "utf8");
   const wallet = await readFile(path.join(MIGRATIONS, "0027_wallet.sql"), "utf8");
+  const saisons = await readFile(path.join(MIGRATIONS, "0028_wallet_saisons.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -179,6 +180,7 @@ try {
     ["0025_direct_auto.sql", directAuto],
     ["0026_promo_codes.sql", promos],
     ["0027_wallet.sql", wallet],
+    ["0028_wallet_saisons.sql", saisons],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -2166,28 +2168,236 @@ try {
     "n'existe pas",
   );
 
-  // Un palier ne se paie qu'une fois, au prix du jeu.
-  const palier = (await asPlayer(B, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
-  const palier2 = (await asPlayer(B, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
-  check(
-    "wallet : un palier de collection ne se paie qu'une fois",
-    palier.gained === 120 && palier2.points === palier.points,
-    JSON.stringify({ palier, palier2 }),
+  // --- Les paliers de collection : le serveur recalcule -----------------------
+  //
+  // Le client n'a jamais dit « j'ai complété le catalogue » : il demande, le
+  // serveur compte. Un joueur neuf, dont la collection est **contrôlée par ce
+  // test**, est donc le bon cobaye : 11 créateurs du catalogue suffisent pour le
+  // palier « dix », et surtout pas pour « maître ».
+  const MIL = "d1d1d1d1-1111-4111-8111-d1d1d1d1d1d1";
+  const SAI = "d2d2d2d2-2222-4222-8222-d2d2d2d2d2d2";
+
+  /** Crée un joueur avec une sauvegarde écrite à la main (la projection suit). */
+  async function saveFor(userId, cards, extra = {}) {
+    await client.query("insert into auth.users (id) values ($1) on conflict do nothing", [userId]);
+    const state = JSON.stringify({
+      cards,
+      level: 1,
+      points: 0,
+      packs: 3,
+      openings: 0,
+      updatedAt: Date.now(),
+      ...extra,
+    });
+    await client.query(
+      `insert into public.saves (user_id, state, save_version, device_updated_at, state_checksum)
+       values ($1, $2::jsonb, 1, $3, md5($4))
+       on conflict (user_id) do update
+         set state = excluded.state,
+             save_version = excluded.save_version,
+             device_updated_at = excluded.device_updated_at,
+             state_checksum = excluded.state_checksum`,
+      [userId, state, Date.now(), state],
+    );
+  }
+
+  const onze = (await client.query(
+    "select slug from public.creators where retired = false order by rank limit 11",
+  )).rows.map((row) => row.slug);
+  await saveFor(
+    MIL,
+    onze.map((slug, index) => card(`mil-${index}`, slug, "common", "standard", 30 + index)),
   );
 
-  // Le recyclage paie le prix de la rareté, jamais un montant proposé.
-  const recy = (await asPlayer(B, "select public.wallet_credit('recycle', 'rare') as r")).rows[0].r;
+  const palierDix = (await asPlayer(MIL, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
+  const palierDix2 = (await asPlayer(MIL, "select public.wallet_credit('milestone', 'ten') as r")).rows[0].r;
   check(
-    "wallet : le recyclage paie le prix de la rareté, fixé par le serveur",
-    recy.gained === 55,
-    JSON.stringify(recy),
+    "wallet : un palier de collection ne se paie qu'une fois",
+    palierDix.gained === 120 && palierDix2.gained === 0 && palierDix2.points === palierDix.points,
+    JSON.stringify({ palierDix, palierDix2 }),
+  );
+  // Le contrôle qui compte : 11 créateurs ne font pas un catalogue complet. Un
+  // client qui demanderait « maître » pour 3000 points se fait refuser — avant
+  // `0027`, ces 3000 points étaient offerts au premier appel.
+  await refuses(
+    "wallet : un palier non atteint ne se paie pas (maître à 3000 points)",
+    MIL,
+    "select public.wallet_credit('milestone', 'master') as r",
+    [],
+    "il te manque",
   );
   await refuses(
-    "wallet : on n'encaisse pas un recyclage d'une rareté inventée",
-    B,
-    "select public.wallet_credit('recycle', 'mythique') as r",
+    "wallet : un palier de boosters se compte chez le serveur, pas dans la sauvegarde",
+    MIL,
+    "select public.wallet_credit('milestone', 'first') as r",
     [],
-    "rareté inconnue",
+    "il te manque",
+  );
+  await refuses(
+    "wallet : un palier inventé n'existe pas",
+    MIL,
+    "select public.wallet_credit('milestone', 'milliardaire') as r",
+    [],
+    "palier inconnu",
+  );
+
+  // --- Les familles : le serveur compte les créateurs de la vague ------------
+  //
+  // La plus petite vague du catalogue sert de cobaye : une poignée de créateurs,
+  // donc un palier atteignable en une ligne de fixture.
+  const petite = (await client.query(
+    `select season_id
+       from public.wallet_season_members
+      group by season_id
+     having count(*) = 2
+      order by season_id
+      limit 1`,
+  )).rows[0].season_id;
+  const membresPetite = (await client.query(
+    "select creator_slug from public.wallet_season_members where season_id = $1 order by creator_slug",
+    [petite],
+  )).rows.map((row) => row.creator_slug);
+  const paliersPetite = (await client.query(
+    "select tier, required, points from public.wallet_season_tiers where season_id = $1 order by tier",
+    [petite],
+  )).rows;
+
+  await saveFor(SAI, [card("sai-1", membresPetite[0], "common", "standard", 20)]);
+  const famille1 = (await asPlayer(SAI, "select public.wallet_credit('season', $1) as r", [`${petite}#1`])).rows[0].r;
+  const famille1bis = (await asPlayer(SAI, "select public.wallet_credit('season', $1) as r", [`${petite}#1`])).rows[0].r;
+  check(
+    "wallet : une famille paie le palier débloqué, au montant du jeu, une fois",
+    famille1.gained === paliersPetite[0].points &&
+      famille1.gained === 1 &&
+      famille1bis.gained === 0 &&
+      famille1bis.points === famille1.points,
+    JSON.stringify({ petite, paliersPetite, famille1, famille1bis }),
+  );
+  await refuses(
+    "wallet : un palier de famille non débloqué ne se paie pas",
+    SAI,
+    "select public.wallet_credit('season', $1) as r",
+    [`${petite}#2`],
+    "il te manque",
+  );
+  await refuses(
+    "wallet : un palier de famille n'existe pas s'il n'est pas dans la grille",
+    SAI,
+    "select public.wallet_credit('season', $1) as r",
+    [`${petite}#9`],
+    "n'existe pas",
+  );
+  await refuses(
+    "wallet : une famille sans palier précisé est refusée",
+    SAI,
+    "select public.wallet_credit('season', $1) as r",
+    [petite],
+    "précise le palier",
+  );
+  // Le second créateur débloque le dernier palier : la somme des paliers d'une
+  // vague est exactement ce que le jeu annonce (`pointsPerCreator × taille`).
+  await saveFor(
+    SAI,
+    membresPetite.map((slug, index) => card(`sai-stade-${index}`, slug, "common", "standard", 10 + index)),
+  );
+  const famille2 = (await asPlayer(SAI, "select public.wallet_credit('season', $1) as r", [`${petite}#2`])).rows[0].r;
+  check(
+    "wallet : le dernier palier d'une famille paie le reste, et le total est celui du jeu",
+    famille2.gained === paliersPetite.at(-1).points &&
+      paliersPetite.reduce((sum, row) => sum + row.points, 0) === 4 * membresPetite.length,
+    JSON.stringify({ famille2, paliersPetite, membres: membresPetite.length }),
+  );
+
+  // --- Le recyclage : la carte, par son identifiant --------------------------
+  //
+  // Le serveur relit la carte dans la sauvegarde et prend la rareté **au
+  // catalogue**. Deux doublons de la même rareté doivent donc payer deux fois :
+  // c'est la carte qui est unique, pas la rareté (avant, la seconde était
+  // silencieusement payée zéro).
+  const rareDuo = (await client.query(
+    "select slug from public.creators where rarity = 'rare' and retired = false order by rank limit 1",
+  )).rows[0].slug;
+  const epicSeule = (await client.query(
+    "select slug from public.creators where rarity = 'epic' and retired = false order by rank limit 1",
+  )).rows[0].slug;
+  const legendaireLibre = (await client.query(
+    `select slug from public.creators
+      where rarity = 'legendary' and retired = false
+        and slug not in (select creator_slug from public.user_cards where user_id = $1)
+      order by rank limit 1`,
+    [MIL],
+  )).rows[0].slug;
+
+  await saveFor(MIL, [
+    card("mil-rare-1", rareDuo, "rare", "standard", 40),
+    card("mil-rare-2", rareDuo, "rare", "standard", 35),
+    card("mil-epic-seule", epicSeule, "epic", "standard", 30),
+    // Le Légendaire a **un seul droit** : après le premier recyclage, la porte
+    // doit se refermer, même en refabriquant la carte.
+    card("mil-legend-1", legendaireLibre, "legendary", "standard", 25),
+    card("mil-legend-2", legendaireLibre, "legendary", "standard", 20),
+  ]);
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [
+    MIL,
+    JSON.stringify([{ creatorSlug: legendaireLibre, rarity: "legendary", variant: "standard" }]),
+  ]);
+
+  const recy1 = (await asPlayer(MIL, "select public.wallet_credit('recycle', 'mil-rare-1') as r")).rows[0].r;
+  const recy1bis = (await asPlayer(MIL, "select public.wallet_credit('recycle', 'mil-rare-1') as r")).rows[0].r;
+  const recy2 = (await asPlayer(MIL, "select public.wallet_credit('recycle', 'mil-rare-2') as r")).rows[0].r;
+  check(
+    "wallet : le recyclage paie le prix de la rareté, et chaque doublon paie",
+    recy1.gained === 55 &&
+      recy1bis.gained === 0 &&
+      recy2.gained === 55 &&
+      recy1bis.points === recy1.points,
+    JSON.stringify({ recy1, recy1bis, recy2 }),
+  );
+  await refuses(
+    "wallet : on ne recycle pas une carte qu'on n'a pas",
+    MIL,
+    "select public.wallet_credit('recycle', 'mil-rare-inexistante') as r",
+    [],
+    "n'est pas dans ta collection",
+  );
+  await refuses(
+    "wallet : la dernière copie ne se recycle pas",
+    MIL,
+    "select public.wallet_credit('recycle', 'mil-epic-seule') as r",
+    [],
+    "seule copie",
+  );
+
+  // Le Légendaire : un droit, un recyclage — puis la porte se ferme, même en
+  // refabriquant la carte dans la sauvegarde (les droits sont finis).
+  const recyLegend = (await asPlayer(MIL, "select public.wallet_credit('recycle', 'mil-legend-1') as r")).rows[0].r;
+  const droitsRestants = (await client.query(
+    "select qty from public.card_claims where user_id = $1 and creator_slug = $2 and rarity = 'legendary' and variant = 'standard'",
+    [MIL, legendaireLibre],
+  )).rows[0].qty;
+  await saveFor(MIL, [
+    card("mil-legend-3", legendaireLibre, "legendary", "standard", 15),
+    card("mil-legend-4", legendaireLibre, "legendary", "standard", 12),
+    card("mil-rare-3", rareDuo, "rare", "standard", 10),
+  ]);
+  await refuses(
+    "wallet : un droit consommé ferme la porte (refabriquer la carte ne repaie pas)",
+    MIL,
+    "select public.wallet_credit('recycle', 'mil-legend-3') as r",
+    [],
+    "provenance",
+  );
+  check(
+    "wallet : le recyclage consomme le droit de provenance",
+    recyLegend.gained === 250 && droitsRestants === 0,
+    JSON.stringify({ recyLegend, droitsRestants }),
+  );
+  await refuses(
+    "wallet : les tables de la grille sont fermées au joueur",
+    MIL,
+    "select count(*) from public.wallet_season_tiers",
+    [],
+    "permission denied",
   );
 
   // L'artisanat débite au prix du catalogue, une fois par créateur. On met
@@ -2199,7 +2409,7 @@ try {
     "select slug from public.creators where rarity = 'epic' and retired = false order by slug limit 2",
   )).rows.map((row) => row.slug);
   await client.query(
-    "select public._wallet_apply($1, greatest(0, 600 - public._wallet_ensure($1)), 'controle', 'artisanat', false)",
+    "select public._wallet_apply($1, greatest(0, 600 - public._wallet_ensure($1)), 'controle', 'artisanat')",
     [B],
   );
   const avantCraftWallet = (await asPlayer(B, "select public.wallet_get() as r")).rows[0].r.points;
@@ -2241,7 +2451,7 @@ try {
   await refuses(
     "wallet : la mécanique interne n'est pas appelable",
     G,
-    "select public._wallet_apply($1, 9999, 'triche', 'x', false) as r",
+    "select public._wallet_apply($1, 9999, 'triche', 'x') as r",
     [G],
     "permission denied",
   );
@@ -4379,6 +4589,18 @@ try {
   // `market_sell`, `0012` recrée le Last Pack. On termine par la plus récente,
   // exactement comme la pile de production.
   await client.query(packDansSaves);
+  // Le wallet et sa grille ferment la pile : ce sont les migrations les plus
+  // récentes, donc celles qu'on recolle en dernier.
+  //
+  // La grille est **relevée avant** : un rejeu qui perdrait des paliers (une
+  // famille écrasée par un `delete` suivi d'un `insert` incomplet) doit se voir
+  // en comparant ce qu'on avait avec ce qu'on a.
+  const grilleAvant = (await client.query(
+    "select count(*)::int as n, coalesce(sum(points), 0)::int as p from public.wallet_season_tiers",
+  )).rows[0];
+  const membresAvant = (await client.query("select count(*)::int as n from public.wallet_season_members")).rows[0].n;
+  await client.query(wallet);
+  await client.query(saisons);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -4390,6 +4612,21 @@ try {
   await client.query("select set_config('test.uid', $1, false)", [USER]);
   const replay = (await client.query("select public.open_pack() as r")).rows[0].r;
   check("migrations rejouables : open_pack répond encore 5 cartes", replay.cards.length === 5);
+  const grilleRejouee = (await client.query(
+    "select count(*)::int as n, coalesce(sum(points), 0)::int as p from public.wallet_season_tiers",
+  )).rows[0];
+  const membresRejoues = (await client.query("select count(*)::int as n from public.wallet_season_members")).rows[0].n;
+  check(
+    "migrations rejouables : la grille des familles est intacte",
+    grilleRejouee.n === grilleAvant.n &&
+      grilleRejouee.p === grilleAvant.p &&
+      membresRejoues === membresAvant,
+    JSON.stringify({ avant: grilleAvant, apres: grilleRejouee, membresAvant, membresRejoues }),
+  );
+  check(
+    "migrations rejouables : les points du wallet répondent encore",
+    typeof (await asPlayer(MIL, "select public.wallet_get() as r")).rows[0].r.points === "number",
+  );
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
   check(
