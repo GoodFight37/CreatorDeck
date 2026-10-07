@@ -16,6 +16,7 @@ import {
   equipTheme as engineEquipTheme,
   createInitialState,
   openPack as engineOpenPack,
+  openScenePack as engineOpenScenePack,
   recycleCard as engineRecycleCard,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
@@ -147,6 +148,17 @@ export const gameStore = {
    */
   openPack(now = Date.now(), options: { liveLogins?: LiveLogins } = {}): DrawnCard[] {
     const result = engineOpenPack(current(), now, options);
+    persist(result.state);
+    return result.cards;
+  },
+
+  /**
+   * Ouvre le **Paquet Scène** du jour (build sans cloud). Le paquet choisit sa
+   * famille tout seul — celle que le joueur complète — et refuse un second
+   * paquet le même jour de jeu.
+   */
+  openScenePack(now = Date.now()): DrawnCard[] {
+    const result = engineOpenScenePack(current(), now);
     persist(result.state);
     return result.cards;
   },

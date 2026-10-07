@@ -2056,3 +2056,24 @@ input:focus-visible {
 /* Le pity dans la feuille des taux, à côté du bonus Direct. */
 .odds-pity { border-color: rgb(var(--accent-rgb) / .35); background: rgb(var(--accent-rgb) / .08); }
 .odds-pity strong { color: var(--accent-light); }
+
+/* Le Paquet Scène : le second paquet, celui de la famille. Il ne se recharge
+   pas — il revient une fois par jour de jeu — donc pas de compteur de réserve
+   ici, une famille, une jauge, un bouton. */
+.scene-block { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.scene-block.done { opacity: .72; }
+.scene-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.scene-head h2 { margin: 0; font-size: 16px; }
+.scene-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
+.scene-state { flex: 0 0 auto; padding: 4px 9px; color: var(--muted-2); border: 1px solid var(--line); border-radius: 999px; font-size: 11.5px; white-space: nowrap; }
+.scene-block:not(.done) .scene-state { color: var(--green); border-color: rgba(80,217,160,.4); }
+.scene-family { margin-top: 12px; }
+.scene-family-copy { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.scene-family-copy strong { font-size: 14px; }
+.scene-family-copy span { color: var(--muted); font-size: 12px; }
+.scene-family .progress-track { margin-top: 7px; }
+.scene-empty { display: block; margin-top: 12px; color: var(--muted); font-size: 12.5px; }
+.scene-action { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 13px; padding: 11px; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .45); border-radius: 11px; background: rgb(var(--accent-rgb) / .12); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
+.scene-action svg { color: var(--accent-light); }
+.scene-action:disabled { opacity: .55; cursor: default; }
+.odds-packs { margin-bottom: 4px; }

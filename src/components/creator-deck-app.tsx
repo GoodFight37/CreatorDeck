@@ -253,14 +253,18 @@ function HomeView({
   onUseHourglass,
   onShowOdds,
   onShowMissions,
+  onOpenScene,
   opening,
   usingHourglass,
+  sceneBusy,
   now,
   serverReserve,
   needsAccount,
 }: {
   game: GameState;
   onOpen: () => void;
+  onOpenScene: () => void;
+  sceneBusy: boolean;
   onUseHourglass: () => void;
   onShowOdds: () => void;
   onShowMissions: () => void;
@@ -424,6 +428,69 @@ function HomeView({
             <ChevronRight size={15} />
           </button>
         </div>
+      </section>
+
+      {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
+          par jour de jeu. Il ne se recharge pas (le sablier n'y peut rien), il
+          ne contient aucune Légendaire, et il ne touche ni au compteur de
+          malchance ni à la série — c'est un paquet de complétion. */}
+      <section className={`scene-block${game.scene.opened ? " done" : ""}`}>
+        <div className="scene-head">
+          <div>
+            <h2>{game.scene.label}</h2>
+            <span>{PACKS.scene.description}</span>
+          </div>
+          <span className="scene-state">
+            {game.scene.opened ? "Ouvert aujourd'hui" : "Disponible"}
+          </span>
+        </div>
+
+        {game.scene.family ? (
+          <div className="scene-family">
+            <div className="scene-family-copy">
+              <strong>{game.scene.family.name}</strong>
+              <span>
+                {game.scene.family.owned}/{game.scene.family.total} découverts · il t&apos;en
+                manque {game.scene.family.total - game.scene.family.owned}
+              </span>
+            </div>
+            <div className="progress-track">
+              <i
+                style={{
+                  width: `${Math.round(
+                    (game.scene.family.owned / game.scene.family.total) * 100,
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <span className="scene-empty">
+            Aucune famille n&apos;est assez grande pour un paquet — le Live Drop reste là.
+          </span>
+        )}
+
+        <button
+          type="button"
+          className="scene-action"
+          onClick={onOpenScene}
+          disabled={sceneBusy || game.scene.opened || !game.scene.family}
+        >
+          {sceneBusy ? (
+            <LoaderCircle className="spin" size={17} />
+          ) : game.scene.opened ? (
+            <Clock3 size={17} />
+          ) : (
+            <Layers3 size={17} />
+          )}
+          <span>
+            {sceneBusy
+              ? "Ouverture…"
+              : game.scene.opened
+                ? "Reviens demain (nouvelle journée à 6 h UTC)"
+                : `Ouvrir le ${game.scene.label}`}
+          </span>
+        </button>
       </section>
 
       <section className="section-block">
@@ -1083,11 +1150,14 @@ function ProfileView({
 function RevealOverlay({
   cards,
   index,
+  kind = "live",
   onNext,
   onClose,
 }: {
   cards: DrawnCard[];
   index: number;
+  /** Quel paquet a été ouvert : le tirage rare ne se raconte pas pareil. */
+  kind?: "live" | "scene";
   onNext: () => void;
   onClose: () => void;
 }) {
@@ -1105,7 +1175,11 @@ function RevealOverlay({
       {perfect ? (
         <div className="perfect-banner" role="status">
           <Sparkles size={13} />
-          <span>Booster Perfect : toutes les cartes sont Épique ou mieux !</span>
+          <span>
+            {kind === "scene"
+              ? "Scène pleine : cinq Épiques de ta famille !"
+              : "Booster Perfect : toutes les cartes sont Épique ou mieux !"}
+          </span>
         </div>
       ) : null}
       <div className="reveal-header">
@@ -1201,6 +1275,9 @@ export function CreatorDeckApp() {
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
   const [revealIndex, setRevealIndex] = useState(0);
+  // Quel paquet la révélation montre (le tirage rare ne se raconte pas pareil).
+  const [revealKind, setRevealKind] = useState<"live" | "scene">("live");
+  const [sceneOpening, setSceneOpening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
   const [errorHint, setErrorHint] = useState<"account" | null>(null);
@@ -1276,6 +1353,7 @@ export function CreatorDeckApp() {
         // Le son accompagne le geste, jamais l'attente : c'est l'instant du
         // « wouip » qui compte.
         playPackOpening();
+        setRevealKind("live");
         setDrawnCards(cards);
         setRevealIndex(0);
         return;
@@ -1297,6 +1375,7 @@ export function CreatorDeckApp() {
         // Le son accompagne le geste : il faut un geste utilisateur pour que
         // le navigateur autorise l'audio.
         playPackOpening();
+        setRevealKind("live");
         setDrawnCards(outcome.cards);
         setRevealIndex(0);
         // Le paquet vient d'être exposé dix minutes : l'étagère doit le savoir
@@ -1313,6 +1392,59 @@ export function CreatorDeckApp() {
       showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
     } finally {
       setOpening(false);
+    }
+  }
+
+  /**
+   * Ouvre le **Paquet Scène** du jour.
+   *
+   * Le même principe que le Live Drop : avec un compte, c'est le serveur qui
+   * décide — il donne les choix, le client tire dedans, le serveur vérifie (voir
+   * `0014_scene_pack.sql`). Sans compte configuré, le moteur local applique
+   * exactement les mêmes règles.
+   */
+  async function handleOpenScenePack() {
+    if (!game || sceneOpening || game.scene.opened) return;
+    const family = game.scene.family;
+    if (!family) {
+      showError("Aucune famille n'est assez grande pour un Paquet Scène.");
+      return;
+    }
+    setSceneOpening(true);
+    setError(null);
+    setErrorHint(null);
+    try {
+      if (!cloud.configured) {
+        await new Promise((resolve) => window.setTimeout(resolve, OPENING_DELAY_MS));
+        const cards = gameStore.openScenePack(Date.now());
+        playPackOpening();
+        setRevealKind("scene");
+        setDrawnCards(cards);
+        setRevealIndex(0);
+        return;
+      }
+      if (!cloud.userId) {
+        showError("Connecte-toi pour ouvrir ton Paquet Scène.", "account");
+        return;
+      }
+      const outcome = await cloudStore.openScenePack(family.familyId);
+      if (outcome.status === "drawn") {
+        playPackOpening();
+        setRevealKind("scene");
+        setDrawnCards(outcome.cards);
+        setRevealIndex(0);
+        void cloudStore.loadLastPacks();
+        return;
+      }
+      if (outcome.reason === "offline" || outcome.reason === "no-session") {
+        showError(outcome.message, "account");
+        return;
+      }
+      showError(outcome.message);
+    } catch (caught) {
+      showError(caught instanceof Error ? caught.message : "Paquet Scène impossible.");
+    } finally {
+      setSceneOpening(false);
     }
   }
 
@@ -1421,8 +1553,10 @@ export function CreatorDeckApp() {
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
             onShowMissions={() => setTab("missions")}
+            onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}
+            sceneBusy={sceneOpening}
             now={now}
             serverReserve={cloud.configured}
             needsAccount={cloud.configured && !cloud.userId}
@@ -1561,6 +1695,7 @@ export function CreatorDeckApp() {
         <RevealOverlay
           cards={drawnCards}
           index={revealIndex}
+          kind={revealKind}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
           onClose={closeReveal}
         />

@@ -623,7 +623,7 @@ export function createInitialState(now = Date.now()): PlayerState {
 export function openScenePack(
   state: PlayerState,
   now = Date.now(),
-  options: { liveLogins?: LiveLogins; rareDrop?: boolean; familyId?: string } = {},
+  options: { rareDrop?: boolean; familyId?: string } = {},
 ): { state: PlayerState; cards: DrawnCard[]; family: SceneFamily } {
   const family = sceneFamily(state);
   if (!family) {
@@ -645,8 +645,11 @@ export function openScenePack(
     throw new GameError("Ton Paquet Scène du jour est déjà ouvert.", "SCENE_ALREADY_OPENED");
   }
 
+  // Aucun `liveLogins` : le Paquet Scène ignore le bonus Direct (pas de poids
+  // ×1,5, pas de variante Live). Le Direct parle du Live Drop ; un paquet de
+  // complétion n'a pas à dépendre de qui streame à cet instant. Le serveur
+  // applique la même règle (`0014_scene_pack.sql`).
   const cards = drawPack("scene", ownedSlugs(state), {
-    liveLogins: options.liveLogins,
     rareDrop: options.rareDrop,
     family: family.familyId,
   });
@@ -676,6 +679,62 @@ export function openScenePack(
   // parle du Live Drop, et un paquet gratuit offert chaque jour ne doit pas
   // être le moyen le moins cher de valider ses missions.
   return { state: next, cards, family };
+}
+
+/**
+ * Range les cartes d'un Paquet Scène **décidé en ligne**.
+ *
+ * En ligne, les cartes ne viennent pas de `openScenePack()` : le serveur donne
+ * les choix, le client tire dans chaque liste, le serveur vérifie puis renvoie
+ * les cartes normalisées (rareté et variante comprises). C'est cette réponse
+ * qu'on range ici — avec les mêmes règles que le tirage local : points, XP,
+ * niveau, sabliers de niveau, et la journée du paquet.
+ *
+ * Ce qui ne bouge pas, et c'est le contrat : les boosters, le compteur de
+ * malchance, la série, et les missions du jour.
+ */
+export function applyScenePackResult(
+  state: PlayerState,
+  cards: ReadonlyArray<{ creatorSlug: string; rarity: Rarity; variant: CardVariant; rareDrop: boolean }>,
+  serverDay: string | null,
+  now = Date.now(),
+): { state: PlayerState; cards: DrawnCard[] } {
+  const pack = PACKS.scene;
+  const nextXp = state.xp + pack.xp;
+  const nextLevel = Math.floor(nextXp / XP_PER_LEVEL) + 1;
+  const gainedLevels = Math.max(0, nextLevel - state.level);
+
+  const drawn = cards.map<OwnedCard>((card) => ({
+    id: randomUUID(),
+    creatorSlug: card.creatorSlug,
+    rarity: card.rarity,
+    variant: card.variant,
+    obtainedAt: now,
+    rareDrop: card.rareDrop,
+  }));
+
+  return {
+    cards: drawn.map<DrawnCard>((card) => ({
+      id: card.id,
+      creatorSlug: card.creatorSlug,
+      rarity: card.rarity,
+      variant: card.variant,
+      isNew: !state.cards.some((owned) => owned.creatorSlug === card.creatorSlug),
+      rareDrop: card.rareDrop,
+    })),
+    state: {
+      ...state,
+      updatedAt: now,
+      points: state.points + pack.points,
+      xp: nextXp,
+      level: nextLevel,
+      hourglasses: state.hourglasses + gainedLevels * HOURGLASSES_PER_LEVEL,
+      cards: [...state.cards, ...drawn],
+      // La journée du serveur fait foi quand elle est lisible : c'est elle qui
+      // a décidé, et l'horloge du téléphone ne la contredit pas.
+      sceneDay: serverDay && /^\d{4}-\d{2}-\d{2}$/.test(serverDay) ? serverDay : gameDay(now),
+    },
+  };
 }
 
 /**

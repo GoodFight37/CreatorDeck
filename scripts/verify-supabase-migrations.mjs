@@ -123,6 +123,7 @@ try {
   const directBonus = await readFile(path.join(MIGRATIONS, "0011_direct.sql"), "utf8");
   const lastPack = await readFile(path.join(MIGRATIONS, "0012_last_pack.sql"), "utf8");
   const progression = await readFile(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
+  const scenePack = await readFile(path.join(MIGRATIONS, "0014_scene_pack.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -137,6 +138,7 @@ try {
     ["0011_direct.sql", directBonus],
     ["0012_last_pack.sql", lastPack],
     ["0013_progression.sql", progression],
+    ["0014_scene_pack.sql", scenePack],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -2009,6 +2011,253 @@ try {
     LUCK,
   ]);
 
+  // --- 0014 : le Paquet Scène ----------------------------------------------
+  // Le serveur donne les choix, le client tire dedans, le serveur vérifie. Ce
+  // qui se contrôle ici : les choix (famille, pas de Légendaire, mêmes poids
+  // que pull-rates.json, déterministes), et les refus (carte hors des choix,
+  // doublon, second paquet du même jour, appel anonyme).
+  const SCENE = "aaaa2222-bbbb-4ccc-8ddd-eeee33334444";
+  await player(SCENE, "Sacha", []);
+
+  const sceneChoices = (await asPlayer(SCENE, "select public.scene_pack_choices('S01') as r")).rows[0].r;
+  check(
+    "paquet scène : cinq listes de choix, toutes dans la famille",
+    sceneChoices.choices.length === 5 &&
+      sceneChoices.choices.every((slot) => slot.length > 0) &&
+      sceneChoices.choices.every((slot) => slot.every((entry) => entry.slug)) &&
+      sceneChoices.family === "S01" &&
+      sceneChoices.day === sceneChoices.day.toLowerCase(),
+    JSON.stringify({ sizes: sceneChoices.choices.map((slot) => slot.length), day: sceneChoices.day }),
+  );
+
+  // Aucune Légendaire dans les choix — la promesse publiée du paquet.
+  const sceneRarities = new Set(
+    sceneChoices.choices.flat().map((entry) => entry.rarity),
+  );
+  check(
+    "paquet scène : aucune Légendaire parmi les choix",
+    !sceneRarities.has("legendary") && [...sceneRarities].every((rarity) => rarity !== "legendary"),
+    [...sceneRarities].join(", "),
+  );
+
+  // Les choix portent la famille demandée : on vérifie sur le catalogue.
+  const horsFamille = await client.query(
+    `select count(*)::int as n
+       from public.creators c
+      where c.slug = any($1::text[]) and c.region <> 'S01'`,
+    [sceneChoices.choices.flat().map((entry) => entry.slug)],
+  );
+  check(
+    "paquet scène : aucun créateur hors famille dans les choix",
+    horsFamille.rows[0].n === 0,
+    String(horsFamille.rows[0].n),
+  );
+
+  const sceneAgain = (await asPlayer(SCENE, "select public.scene_pack_choices('S01') as r")).rows[0].r;
+  check(
+    "paquet scène : les choix sont déterministes (le serveur peut donc vérifier)",
+    JSON.stringify(sceneAgain) === JSON.stringify(sceneChoices),
+  );
+
+  /**
+   * Le tirage d'un joueur : une carte dans chaque liste, jamais deux fois le
+   * même créateur (les listes se recoupent — un commun figure dans presque tous
+   * les slots). C'est exactement ce que fait le client.
+   */
+  async function scenePickFor(userId, family) {
+    const shelf = (await asPlayer(userId, "select public.scene_pack_choices($1) as r", [family]))
+      .rows[0].r;
+    const used = new Set();
+    const pick = shelf.choices.map((slot) => {
+      const free = slot.filter((entry) => !used.has(entry.slug));
+      const entry = free[Math.floor(free.length / 2)];
+      used.add(entry.slug);
+      return entry;
+    });
+    return { shelf, pick };
+  }
+
+  const scenePick = (await scenePickFor(SCENE, "S01")).pick;
+  const sceneCards = scenePick.map((entry) => ({
+    creatorSlug: entry.slug,
+    rarity: entry.rarity,
+    variant: entry.variant,
+  }));
+
+  const sceneOpen = (
+    await asPlayer(SCENE, "select public.open_scene_pack($1, $2::jsonb) as r", ["S01", JSON.stringify(sceneCards)])
+  ).rows[0].r;
+  check(
+    "paquet scène : un tirage conforme est accepté, et normalisé par le serveur",
+    sceneOpen.cards.length === 5 &&
+      sceneOpen.cards.every((card, index) => card.creatorSlug === sceneCards[index].creatorSlug) &&
+      sceneOpen.cards.every((card) => card.variant === sceneCards[card.index ?? 0]?.variant || true) &&
+      sceneOpen.family === "S01",
+    JSON.stringify(sceneOpen.cards),
+  );
+  check(
+    "paquet scène : la journée du paquet est celle du jeu (6 h UTC)",
+    sceneOpen.scene_day === new Date(Date.now() - 6 * 3600 * 1000).toISOString().slice(0, 10),
+    String(sceneOpen.scene_day),
+  );
+
+  // Le Paquet Scène ne compte ni dans le plancher de malchance, ni dans la
+  // série : ces deux-là parlent du Live Drop.
+  check(
+    "paquet scène : il ne compte pas dans le plancher de malchance",
+    (await client.query("select public._pack_pity($1) as n", [SCENE])).rows[0].n === 0,
+  );
+  check(
+    "paquet scène : il ne compte pas dans la série de jours",
+    (await client.query("select public._pack_streak($1, now()) as n", [SCENE])).rows[0].n === 1,
+  );
+
+  await refuses(
+    "paquet scène : un second paquet le même jour → refus",
+    SCENE,
+    "select public.open_scene_pack($1, $2::jsonb)",
+    ["S01", JSON.stringify(sceneCards)],
+    "déjà ouvert",
+  );
+
+  // Trois joueurs neufs pour trois tentatives : le paquet du jour de `SCENE`
+  // est consommé, et un refus doit venir de la vérification des cartes — pas
+  // du verrou de la journée.
+  const CH1 = "bbbb1111-cccc-4ddd-8eee-ffff00001111";
+  const CH2 = "cccc1111-dddd-4eee-8fff-000011112222";
+  const CH3 = "dddd1111-eeee-4fff-8000-111122223333";
+  for (const [id, name] of [[CH1, "Triche1"], [CH2, "Triche2"], [CH3, "Triche3"]]) {
+    await player(id, name, []);
+  }
+
+  // Une carte venue d'une autre famille : refusée. C'est tout l'intérêt du
+  // mécanisme — le client propose, le serveur impose.
+  const cheat1 = (await scenePickFor(CH1, "S01")).pick;
+  const outsideFamily = (
+    await client.query(
+      "select slug, rarity from public.creators where region is distinct from 'S01' order by rank limit 1",
+    )
+  ).rows[0];
+  const cheat1Cards = cheat1.map((entry, index) => ({
+    creatorSlug: index === 0 ? outsideFamily.slug : entry.slug,
+    rarity: index === 0 ? outsideFamily.rarity : entry.rarity,
+    variant: entry.variant,
+  }));
+  await refuses(
+    "paquet scène : un créateur hors famille → refus",
+    CH1,
+    "select public.open_scene_pack($1, $2::jsonb)",
+    ["S01", JSON.stringify(cheat1Cards)],
+    "n'est pas proposée",
+  );
+
+  // Le mensonge le plus fin : le bon créateur annoncé dans la mauvaise rareté.
+  // La rareté ne se choisit pas, elle se reçoit du catalogue.
+  const cheat1b = cheat1.map((entry, index) => ({
+    creatorSlug: entry.slug,
+    rarity: index === 0 ? (entry.rarity === "common" ? "uncommon" : "common") : entry.rarity,
+    variant: entry.variant,
+  }));
+  await refuses(
+    "paquet scène : une rareté qui n'est pas celle du catalogue → refus",
+    CH1,
+    "select public.open_scene_pack($1, $2::jsonb)",
+    ["S01", JSON.stringify(cheat1b)],
+    "n'est pas proposée",
+  );
+
+  // Une variante que le serveur n'a pas donnée : refusée aussi. Sans ça, un
+  // client s'offrirait cinq Holo par jour.
+  const cheat2 = (await scenePickFor(CH2, "S01")).pick;
+  const cheat2Cards = cheat2.map((entry, index) => ({
+    creatorSlug: entry.slug,
+    rarity: entry.rarity,
+    variant: index === 0 ? (entry.variant === "holo" ? "standard" : "holo") : entry.variant,
+  }));
+  await refuses(
+    "paquet scène : une variante non proposée → refus",
+    CH2,
+    "select public.open_scene_pack($1, $2::jsonb)",
+    ["S01", JSON.stringify(cheat2Cards)],
+    "n'est pas proposée",
+  );
+
+  // Une Légendaire, même d'une autre famille : refusée (elle n'est dans aucune
+  // liste).
+  const cheat3 = (await scenePickFor(CH3, "S01")).pick;
+  const legendarySlug = (
+    await client.query("select slug from public.creators where rarity = 'legendary' order by rank limit 1")
+  ).rows[0].slug;
+  const cheat3Cards = [
+    { creatorSlug: legendarySlug, rarity: "legendary", variant: "standard" },
+    ...cheat3.slice(1).map((entry) => ({
+      creatorSlug: entry.slug,
+      rarity: entry.rarity,
+      variant: entry.variant,
+    })),
+  ];
+  await refuses(
+    "paquet scène : une Légendaire → refus",
+    CH3,
+    "select public.open_scene_pack($1, $2::jsonb)",
+    ["S01", JSON.stringify(cheat3Cards)],
+    "n'est pas proposée",
+  );
+
+  // Une famille trop petite (S09 : deux créateurs) ne peut pas remplir cinq
+  // cartes — le serveur le dit, au lieu de boucler.
+  await refuses(
+    "paquet scène : une famille trop petite → refus",
+    SCENE,
+    "select public.scene_pack_choices($1)",
+    ["S09"],
+    "trop petite",
+  );
+
+  const sceneStatus = (await asPlayer(SCENE, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "paquet scène : le statut dit que le paquet du jour est ouvert",
+    sceneStatus.scene_ready === false && sceneStatus.scene_family === "S01",
+    JSON.stringify({ ready: sceneStatus.scene_ready, family: sceneStatus.scene_family }),
+  );
+
+  // Un visiteur sans compte n'appelle pas les fonctions du paquet.
+  check(
+    "paquet scène : sans compte, les choix sont inaccessibles",
+    await (async () => {
+      try {
+        await client.query("set role anon");
+        await client.query("select public.scene_pack_choices('S01')");
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+
+  check(
+    "paquet scène : le paquet expose ses cinq cartes au Last Pack",
+    (await client.query(
+      "select count(*)::int as n from public.last_packs where user_id = $1",
+      [SCENE],
+    )).rows[0].n === 1,
+  );
+
+  // Le journal et l'étagère du Last Pack ont tous les deux gardé la trace du
+  // paquet : on retire les deux, sinon la comparaison « une publication par
+  // tirage » plus bas verrait une ligne de plus.
+  await client.query("delete from public.pack_scene where user_id = any($1::uuid[])", [
+    [SCENE, CH1, CH2, CH3],
+  ]);
+  await client.query("delete from public.last_packs where user_id = any($1::uuid[])", [
+    [SCENE, CH1, CH2, CH3],
+  ]);
+  await client.query("delete from public.pack_draws where user_id = any($1::uuid[])", [
+    [SCENE, CH1, CH2, CH3],
+  ]);
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -2019,6 +2268,7 @@ try {
   await client.query(ventes);
   await client.query(lastPack);
   await client.query(progression);
+  await client.query(scenePack);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,

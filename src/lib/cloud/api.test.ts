@@ -624,6 +624,20 @@ describe("tirage serveur", () => {
     await expect(api.openPack()).rejects.toThrowError(/0013_progression\.sql/);
   });
 
+  it("dit quelle migration coller quand le Paquet Scène manque", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: {
+          code: "PGRST202",
+          message: "Could not find the function public.scene_pack_choices(p_family) in the schema cache",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.scenePackChoices("S01")).rejects.toThrowError(/0014_scene_pack\.sql/);
+  });
+
   it("explique quoi faire quand une table manque", async () => {
     const { api } = client(
       () => ({ status: 404, body: { code: "42P01", message: 'relation "public.pack_state" does not exist' } }),

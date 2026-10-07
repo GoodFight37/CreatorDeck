@@ -360,11 +360,25 @@ function messageFor(status: number, code: string, raw: string): string {
     return "Les échanges ne sont pas installés sur ce projet : colle supabase/migrations/0005_echanges.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Amis : la migration 0008 doit être collée dans le projet Supabase.
+  //
+  // Le motif nomme les fonctions (`send_friend_request`, `list_friends`…) au
+  // lieu de chercher « ami » : ce mot se retrouve dans « fa**mi**ly », donc
+  // dans le nom d'argument du Paquet Scène — et l'erreur du Paquet Scène était
+  // annoncée comme une erreur d'amis.
   if (
     (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
-    /friend|ami/i.test(raw)
+    /friend_request|list_friends|list_outgoing_friend_requests|has_friendship|search_players|player_profile|remove_friend/i.test(
+      raw,
+    )
   ) {
     return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+  }
+  // Le Paquet Scène : la migration 0014 doit être collée dans le projet.
+  if (
+    code === "PGRST202" &&
+    /scene_pack_choices|open_scene_pack/.test(raw)
+  ) {
+    return "Le Paquet Scène n'est pas installé sur ce projet : colle supabase/migrations/0014_scene_pack.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // `open_pack` existe mais pas dans sa version à argument : c'est le signe que
   // la migration 0013 (plancher de malchance) n'est pas encore collée. Le
@@ -1071,6 +1085,84 @@ export class CloudApi {
   }
 
   /**
+   * Les choix du **Paquet Scène** : cinq listes de cartes éligibles, décidées
+   * par le serveur (rareté et variante comprises), plus le tirage rare du jour.
+   *
+   * Le même joueur, le même jour et la même famille rendent exactement la même
+   * réponse : c'est ce qui permet à `openScenePack()` de la vérifier ensuite.
+   */
+  async scenePackChoices(family: string): Promise<{
+    day: string;
+    family: string;
+    rareDrop: boolean;
+    choices: Array<Array<{ slug: string; rarity: string; variant: string }>>;
+  }> {
+    const result = await this.rpc("scene_pack_choices", { p_family: family });
+    const record = asRecord(result);
+    if (!record) {
+      throw new CloudError("Choix du Paquet Scène illisibles.", "invalid_response", 0);
+    }
+    const choices = Array.isArray(record.choices)
+      ? record.choices.map((slot) =>
+          Array.isArray(slot)
+            ? slot.map((entry) => {
+                const item = asRecord(entry);
+                return {
+                  slug: String(item?.slug ?? ""),
+                  rarity: String(item?.rarity ?? ""),
+                  variant: String(item?.variant ?? "standard"),
+                };
+              })
+            : [],
+        )
+      : [];
+    return {
+      day: String(record.day ?? ""),
+      family: String(record.family ?? family),
+      rareDrop: record.rare_drop === true,
+      choices,
+    };
+  }
+
+  /**
+   * Valide un Paquet Scène : le serveur recalcule ses choix et refuse toute
+   * carte qui n'y figure pas. Renvoie les cartes normalisées — c'est cette
+   * réponse qu'on range, jamais ce qu'on a envoyé.
+   */
+  async openScenePack(
+    family: string,
+    cards: Array<{ creatorSlug: string; rarity: string; variant: string }>,
+  ): Promise<{
+    family: string;
+    sceneDay: string;
+    rareDrop: boolean;
+    cards: Array<{ creatorSlug: string; rarity: string; variant: string; rareDrop: boolean }>;
+  }> {
+    const result = await this.rpc("open_scene_pack", { p_family: family, p_cards: cards });
+    const record = asRecord(result);
+    if (!record) {
+      throw new CloudError("Réponse du Paquet Scène illisible.", "invalid_response", 0);
+    }
+    const returned = Array.isArray(record.cards)
+      ? record.cards.map((card) => {
+          const c = asRecord(card);
+          return {
+            creatorSlug: String(c?.creatorSlug ?? ""),
+            rarity: String(c?.rarity ?? ""),
+            variant: String(c?.variant ?? "standard"),
+            rareDrop: c?.rareDrop === true,
+          };
+        })
+      : [];
+    return {
+      family: String(record.family ?? family),
+      sceneDay: String(record.scene_day ?? ""),
+      rareDrop: record.rare_drop === true,
+      cards: returned,
+    };
+  }
+
+  /**
    * Teste la joignabilité du projet : `GET /auth/v1/health`, lecture pure,
    * aucune donnée modifiée. Sert au bouton « Tester la connexion » de l'écran
    * Compte — et à distinguer une panne réseau d'une configuration erronée.
@@ -1097,6 +1189,10 @@ export class CloudApi {
     streak: number;
     /** Le Perfect du 7ᵉ jour attend d'être dépensé. */
     jackpotReady: boolean;
+    /** Journée de jeu du dernier Paquet Scène ouvert (`null` si aucun). */
+    sceneDay: string | null;
+    /** Le Paquet Scène du jour est-il encore là ? */
+    sceneReady: boolean;
   }> {
     const result = await this.rpc("pack_status", {});
     const record = asRecord(result);
@@ -1111,6 +1207,11 @@ export class CloudApi {
       pity: Number(record.pity ?? 0),
       streak: Number(record.streak ?? 0),
       jackpotReady: record.jackpot_ready === true,
+      sceneDay: record.scene_day ? String(record.scene_day) : null,
+      // Un projet qui n'a pas encore collé `0014` ne renvoie pas le champ :
+      // sans information, on laisse le paquet disponible (le serveur refusera
+      // le second, avec sa propre phrase).
+      sceneReady: record.scene_day === undefined ? true : record.scene_ready === true,
     };
   }
 

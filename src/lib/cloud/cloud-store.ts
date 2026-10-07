@@ -12,6 +12,7 @@
  */
 import {
   applyLastPackSteal,
+  applyScenePackResult,
   applyMarketPurchase,
   applyMarketSale,
   applyPackResult,
@@ -1272,6 +1273,103 @@ export function createCloudStore(deps: CloudDeps) {
     },
 
     packStatus: fetchPackStatus,
+
+    /**
+     * Ouvre le **Paquet Scène** du jour.
+     *
+     * Le tirage appartient au serveur, mais pas à sa main : il donne les choix
+     * (cinq listes, raretés et variantes comprises), le client tire une carte
+     * dans chaque liste — c'est là que passe l'aléa du joueur —, puis le serveur
+     * vérifie et normalise. La collection locale n'est donc jamais crue sur
+     * parole : tout ce qui est rangé vient de la réponse du serveur.
+     */
+    async openScenePack(family: string): Promise<PackOpenOutcome> {
+      const api = resolve();
+      if (!api) {
+        const message = CLOUD_DISABLED_HINT;
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "not-configured", message };
+      }
+      if (!api.session()) {
+        const message = "Connecte-toi pour ouvrir ton Paquet Scène.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "no-session", message };
+      }
+      publish({ busy: true });
+      try {
+        const shelf = await api.scenePackChoices(family);
+        if (shelf.choices.length !== 5 || shelf.choices.some((slot) => slot.length === 0)) {
+          throw new CloudError(
+            "Le serveur n'a proposé aucune carte pour ce paquet.",
+            "invalid_response",
+            0,
+          );
+        }
+
+        // Le tirage du joueur : une carte au hasard dans chaque liste, jamais
+        // deux fois le même créateur — les listes se recoupent (un créateur
+        // commun figure dans presque tous les slots), donc on écarte ceux déjà
+        // pris avant de tirer. Le hasard est ici, la permission est là-bas.
+        const used = new Set<string>();
+        const picked = shelf.choices.map((slot) => {
+          const free = slot.filter((entry) => entry.slug && !used.has(entry.slug));
+          if (!free.length) {
+            throw new CloudError(
+              "Le serveur n'a pas proposé assez de créateurs pour ce paquet.",
+              "invalid_response",
+              0,
+            );
+          }
+          const choice = free[Math.floor(Math.random() * free.length)];
+          used.add(choice.slug);
+          return choice;
+        });
+
+        const result = await api.openScenePack(
+          family,
+          picked.map((card) => ({
+            creatorSlug: card.slug,
+            rarity: card.rarity,
+            variant: card.variant,
+          })),
+        );
+
+        const local = deps.readState();
+        if (!local) {
+          throw new CloudError("Partie locale illisible : rien n'a été rangé.", "invalid_response", 0);
+        }
+        const applied = applyScenePackResult(
+          local,
+          result.cards.map((card) => ({
+            creatorSlug: card.creatorSlug,
+            rarity: card.rarity as "common" | "uncommon" | "rare" | "epic" | "legendary",
+            variant: card.variant as "standard" | "live" | "holo" | "gold",
+            rareDrop: card.rareDrop,
+          })),
+          result.sceneDay || null,
+          deps.now(),
+        );
+        deps.applyState(applied.state);
+        await push(applied.state.version, applied.state.updatedAt, true);
+        publish({
+          busy: false,
+          message: `Paquet Scène : ${applied.cards.length} cartes de ta famille.`,
+          isError: false,
+        });
+        return { status: "drawn", cards: applied.cards };
+      } catch (error) {
+        // Réseau coupé : même consigne que sans compte — se connecter.
+        if (error instanceof CloudError && error.status === 0) {
+          const message = "Connexion perdue : ton Paquet Scène n'a pas été ouvert.";
+          publish({ busy: false, message, isError: true });
+          return { status: "unavailable", reason: "offline", message };
+        }
+        const message =
+          error instanceof CloudError ? error.message : "Ouverture du Paquet Scène impossible.";
+        publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+    },
 
     async signOut(): Promise<void> {
       const api = resolve();
