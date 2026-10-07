@@ -160,6 +160,7 @@ try {
   const douze = await readFile(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
   const serie = await readFile(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
   const depart = await readFile(path.join(MIGRATIONS, "0033_depart_maigre.sql"), "utf8");
+  const protege = await readFile(path.join(MIGRATIONS, "0034_last_pack_protege.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -194,6 +195,7 @@ try {
     ["0031_pity_douze.sql", douze],
     ["0032_serie_quotidienne.sql", serie],
     ["0033_depart_maigre.sql", depart],
+    ["0034_last_pack_protege.sql", protege],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1205,6 +1207,7 @@ try {
   await client.query(douze);
   await client.query(serie);
   await client.query(depart);
+  await client.query(protege);
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -2701,14 +2704,22 @@ try {
     await client.query("select state from public.saves where user_id = $1", [L1])
   ).rows[0].state;
 
-  const vol = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, 3])).rows[0].r;
+  // La carte visée est la première **volable** : depuis `0034`, une Légendaire
+  // ou une carte Live ne se prennent pas, et le tirage de ce contrôle est
+  // aléatoire — viser « la 3ᵉ » ferait échouer un test sur huit.
+  const indexVolable = lea.cards.findIndex(
+    (held) => held.rarity !== "legendary" && held.variant !== "live",
+  );
+  check("last pack : le tirage laisse au moins une carte volable", indexVolable >= 0);
+  const vol = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, indexVolable + 1]))
+    .rows[0].r;
   check(
     "last pack : le vol donne la carte choisie, marquée du paquet",
     vol.status === "stolen" &&
-      vol.index === 3 &&
+      vol.index === indexVolable + 1 &&
       vol.ownerName === "Léa" &&
-      vol.card.creatorSlug === lea.cards[2].creatorSlug &&
-      vol.card.rarity === lea.cards[2].rarity &&
+      vol.card.creatorSlug === lea.cards[indexVolable].creatorSlug &&
+      vol.card.rarity === lea.cards[indexVolable].rarity &&
       vol.card.fromLastPack === packId,
     JSON.stringify(vol.card),
   );
@@ -2725,28 +2736,114 @@ try {
   check(
     "last pack : la carte quitte vraiment la collection du propriétaire",
     leaCards === 4 &&
-      !leaSave.some((held) => held.creatorSlug === lea.cards[2].creatorSlug && held.variant === lea.cards[2].variant),
+      !leaSave.some(
+        (held) =>
+          held.creatorSlug === lea.cards[indexVolable].creatorSlug &&
+          held.variant === lea.cards[indexVolable].variant,
+      ),
     `${leaCards} carte(s) restantes chez Léa`,
   );
   check(
     "last pack : la carte entre chez le voleur, et une seule fois",
     louCards.length === 1 &&
-      louCards[0].creatorSlug === lea.cards[2].creatorSlug &&
+      louCards[0].creatorSlug === lea.cards[indexVolable].creatorSlug &&
       louCards[0].fromLastPack === packId,
     JSON.stringify(louCards),
   );
   check(
     "last pack : la carte prise est marquée comme telle sur le paquet",
-    (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards[2].taken === true &&
-      (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards[0].taken === false,
+    (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards[indexVolable]
+      .taken === true &&
+      (await asPlayer(L1, "select public.last_pack_shelf() as r")).rows[0].r.packs[0].cards.find(
+        (entry) => entry.index !== indexVolable + 1,
+      ).taken === false,
   );
+
+  // --- Ce qui ne se vole pas (0034) ----------------------------------------
+  // Un paquet **fabriqué à la main** : le tirage de contrôle ci-dessus est
+  // aléatoire, et une Légendaire n'y tombe qu'une fois sur huit. Ici, on sait
+  // exactement ce que contient le paquet.
+  const O1 = "44444444-5555-4666-8777-888888888888";
+  const O2 = "55555555-6666-4777-8888-999999999999";
+  const legendaire = card("proto-legendaire", "squeezie", "!legendary", "standard", 1);
+  const live = card("proto-live", "gotaga", "!rare", "live", 1);
+  const ordinaires = [
+    card("proto-commun-1", "ibai", "!common", "standard", 1),
+    card("proto-commun-2", "summit1g", "!common", "standard", 1),
+    card("proto-commun-3", "chowh1", "!common", "standard", 1),
+  ];
+  const paquetProtégé = [legendaire, live, ...ordinaires];
+  await player(O1, "Protégée", paquetProtégé);
+  await player(O2, "Curieuse", []);
+  const o1Request = (await asPlayer(O1, "select public.send_friend_request($1) as r", [O2])).rows[0].r
+    .request.id;
+  await asPlayer(O2, "select public.accept_friend_request($1)", [o1Request]);
+  const protegePackId = Number(
+    (
+      await client.query(
+        `insert into public.last_packs (user_id, drawn_at, expires_at, cards)
+         values ($1, now(), now() + interval '10 minutes', $2::jsonb)
+         returning id`,
+        [O1, JSON.stringify(paquetProtégé)],
+      )
+    ).rows[0].id,
+  );
+
+  const shelfProtege = (await asPlayer(O2, "select public.last_pack_shelf() as r")).rows[0].r;
+  const paquetVu = shelfProtege.packs.find((entry) => entry.id === protegePackId);
+  check(
+    "last pack protégé : l'écran sait quelle carte ne se prend pas",
+    paquetVu?.cards[0].stealable === false &&
+      paquetVu?.cards[1].stealable === false &&
+      paquetVu?.cards[2].stealable === true,
+    JSON.stringify(paquetVu?.cards.map((entry) => entry.stealable)),
+  );
+  await refuses(
+    "last pack protégé : une Légendaire ne se vole pas",
+    O2,
+    "select public.last_pack_steal($1, $2)",
+    [protegePackId, 1],
+    "Légendaire ne se vole pas",
+  );
+  await refuses(
+    "last pack protégé : une carte Live ne se vole pas",
+    O2,
+    "select public.last_pack_steal($1, $2)",
+    [protegePackId, 2],
+    "Live ne se vole pas",
+  );
+  const priseOrdinaire = (
+    await asPlayer(O2, "select public.last_pack_steal($1, $2) as r", [protegePackId, 3])
+  ).rows[0].r;
+  check(
+    "last pack protégé : une carte ordinaire se prend toujours",
+    priseOrdinaire.status === "stolen" && priseOrdinaire.card.creatorSlug === ordinaires[0].creatorSlug,
+    JSON.stringify(priseOrdinaire.card),
+  );
+  // Et après le refus, **rien** n'a bougé : ni la collection, ni le compteur
+  // du jour — un refus n'est pas un vol à moitié fait.
+  check(
+    "last pack protégé : le refus laisse la collection et le vol du jour intacts",
+    (
+      await client.query("select jsonb_array_length(state -> 'cards')::int as n from public.saves where user_id = $1", [O1])
+    ).rows[0].n === 4 &&
+      (
+        await client.query("select count(*)::int as n from public.last_pack_steals where pack_id = $1", [protegePackId])
+      ).rows[0].n === 1,
+    "",
+  );
+  // Le paquet fabriqué quitte la scène : la dernière vérification du fichier
+  // compare le nombre de paquets exposés au nombre de tirages, et un paquet
+  // posé à la main n'a pas de tirage derrière lui.
+  await client.query("delete from public.last_pack_steals where pack_id = $1", [protegePackId]);
+  await client.query("delete from public.last_packs where id = $1", [protegePackId]);
 
   // Une carte par jour, et pas deux.
   await refuses(
     "last pack : deux vols le même jour → refus",
     L2,
     "select public.last_pack_steal($1, $2)",
-    [packId, 1],
+    [packId, indexVolable === 0 ? 2 : 1],
     "une carte par jour",
   );
   // Le lendemain (jour UTC reculé d'un cran), le même joueur peut revenir…
@@ -2755,13 +2852,21 @@ try {
     "last pack : une carte déjà prise reste prise",
     L2,
     "select public.last_pack_steal($1, $2)",
-    [packId, 3],
+    [packId, indexVolable + 1],
     "déjà été prise",
   );
-  const vol2 = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, 1])).rows[0].r;
+  // Une **autre** carte volable que celle d'hier : la première peut tomber sur
+  // n'importe quelle place du tirage.
+  const indexVolable2 = lea.cards.findIndex(
+    (held, place) => place !== indexVolable && held.rarity !== "legendary" && held.variant !== "live",
+  );
+  check("last pack : le tirage laisse une deuxième carte volable", indexVolable2 >= 0);
+  const vol2 = (
+    await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, indexVolable2 + 1])
+  ).rows[0].r;
   check(
     "last pack : le lendemain, une autre carte du même paquet",
-    vol2.card.creatorSlug === lea.cards[0].creatorSlug && vol2.index === 1,
+    vol2.card.creatorSlug === lea.cards[indexVolable2].creatorSlug && vol2.index === indexVolable2 + 1,
     JSON.stringify(vol2.card),
   );
 
@@ -2798,10 +2903,11 @@ try {
   check(
     "last pack : la victime retrouve ses vols, du plus récent au plus ancien",
     pertes.length === 2 &&
-      pertes[0].thiefName === "Lou" &&
-      pertes[1].thiefName === "Lou" &&
-      Boolean(pertes[0].stolenAt) &&
-      pertes.some((perte) => perte.card.creatorSlug === lea.cards[2].creatorSlug),
+      pertes.every((perte) => perte.thiefName === "Lou" && Boolean(perte.stolenAt)) &&
+      // Le tirage est aléatoire : on compare aux **deux** places réellement
+      // volées, jamais à une place fixe du paquet.
+      pertes[0].card.creatorSlug === lea.cards[indexVolable2].creatorSlug &&
+      pertes[1].card.creatorSlug === lea.cards[indexVolable].creatorSlug,
     JSON.stringify(pertes.map((perte) => perte.card.creatorSlug)),
   );
   check(
@@ -4854,6 +4960,7 @@ try {
   await client.query(douze);
   await client.query(serie);
   await client.query(depart);
+  await client.query(protege);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

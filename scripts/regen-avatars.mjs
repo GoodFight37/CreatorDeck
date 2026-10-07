@@ -35,7 +35,13 @@ import {
   isFlatPortrait,
   readAvatarSize,
 } from "./lib/avatars.mjs";
-import { formatBytes, pruneOrphans, selectMissing, sumFileSizes } from "./lib/portraits.mjs";
+import {
+  PORTRAIT_EXT,
+  formatBytes,
+  pruneOrphans,
+  selectMissing,
+  sumFileSizes,
+} from "./lib/portraits.mjs";
 
 const ROOT = process.cwd();
 const CATALOG = path.join(ROOT, "src/data/creators.json");
@@ -128,7 +134,7 @@ async function downloadUnavatar(login) {
 const pending = [];
 const report = [];
 for (const creator of creators) {
-  const target = path.join(OUT_DIR, `${creator.slug}.jpg`);
+  const target = path.join(OUT_DIR, `${creator.slug}${PORTRAIT_EXT}`);
   const current = await readAvatarSize(target);
   // Un portrait **uni** est à refaire, même s'il fait la bonne taille : Twitch
   // sert son avatar par défaut (un carré plat) quand une chaîne n'a pas de

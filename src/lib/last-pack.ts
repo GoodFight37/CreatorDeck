@@ -10,7 +10,7 @@
  * serait pas celle du serveur ferait croire à un vol possible qui ne l'est
  * plus.
  */
-import type { LastPackShelf } from "@/lib/cloud/api";
+import type { LastPack, LastPackCard, LastPackShelf } from "@/lib/cloud/api";
 
 /** La fenêtre d'exposition. Doit rester celle écrite dans `0012_last_pack.sql`. */
 export const LAST_PACK_WINDOW_MS = 10 * 60_000;
@@ -35,6 +35,37 @@ export function remainingMs(
   if (!Number.isFinite(expires) || !Number.isFinite(start)) return 0;
   const window = expires - start;
   return Math.max(0, window - Math.max(0, now - loadedAt));
+}
+
+/**
+ * Ce qui ne se prend pas : une Légendaire, et une carte Live (`0034`).
+ *
+ * La règle est écrite **deux fois** — dans
+ * `supabase/migrations/0034_last_pack_protege.sql` pour le refus, ici pour
+ * griser — parce que l'écran doit pouvoir le dire sans attendre un aller-retour.
+ * Le serveur tranche ; `supabase-last-pack-protege.test.ts` tient les deux
+ * copies ensemble : elles ne peuvent pas diverger en silence.
+ */
+export function cardIsProtected(
+  card: Pick<LastPackCard, "rarity" | "variant" | "stealable">,
+): boolean {
+  return card.stealable === false || card.rarity === "legendary" || card.variant === "live";
+}
+
+/**
+ * Est-ce que **cette** carte peut être choisie maintenant ? Les cinq conditions
+ * sont celles du serveur : la carte n'est pas déjà prise, elle ne fait pas
+ * partie des protégées, le paquet m'autorise un vol, ce n'est pas le mien, et
+ * la fenêtre est encore ouverte.
+ */
+export function canPickCard(pack: LastPack, card: LastPackCard, restant: number): boolean {
+  return (
+    !card.taken &&
+    !cardIsProtected(card) &&
+    pack.stealable &&
+    !pack.mine &&
+    restant > 0
+  );
 }
 
 /** « 8 min », « 42 s », « terminé » : jamais un compte à rebours à la seconde. */

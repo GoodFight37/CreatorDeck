@@ -26,6 +26,7 @@ import type { DrawnCard, GameView, StreakRewardGrant } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 import { liveLogins } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
+import { preloadPortraits } from "@/lib/preload";
 
 /**
  * Le suspense du tirage **local** : le serveur a déjà sa latence réseau, mais
@@ -62,6 +63,15 @@ function suspense(): Promise<void> {
 }
 
 /**
+ * Les cinq visages partent en téléchargement **maintenant**, pas au moment où
+ * la révélation les affiche : le temps de l'animation sert d'avance au réseau.
+ * Sans effet hors navigateur (`src/lib/preload.ts`).
+ */
+function preload(cards: ReadonlyArray<{ creatorSlug: string }>): void {
+  preloadPortraits(cards.map((card) => card.creatorSlug));
+}
+
+/**
  * Qui tire **maintenant** — pour l'affichage seulement (l'overlay écrit
  * « Tirage décidé par le serveur » sous ses boutons). Jamais une décision :
  * `openLivePack()` et `openScenePack()` restent seuls juges.
@@ -91,6 +101,7 @@ export function usePackOpening(game: GameView | null): {
       const { cards, streakReward } = gameStore.openPack(Date.now(), {
         liveLogins: liveLogins(liveStore.getSnapshot()),
       });
+      preload(cards);
       return { status: "drawn", kind: "live", cards, streakReward };
     }
     if (!cloud.userId) {
@@ -110,6 +121,7 @@ export function usePackOpening(game: GameView | null): {
       // Le tirage a payé ses 12 points **côté serveur** (trigger
       // `wallet_on_draw`) : on adopte son solde plutôt que d'accumuler le nôtre.
       void cloudStore.syncWallet();
+      preload(outcome.cards);
       return {
         status: "drawn",
         kind: "live",
@@ -136,7 +148,9 @@ export function usePackOpening(game: GameView | null): {
     const familyId = game?.scene.family?.familyId ?? null;
     if (!cloud.configured) {
       await suspense();
-      return { status: "drawn", kind: "scene", cards: gameStore.openScenePack(Date.now()) };
+      const cards = gameStore.openScenePack(Date.now());
+      preload(cards);
+      return { status: "drawn", kind: "scene", cards };
     }
     if (!cloud.userId) {
       return {
@@ -158,6 +172,7 @@ export function usePackOpening(game: GameView | null): {
     if (outcome.status === "drawn") {
       void cloudStore.loadLastPacks();
       void cloudStore.syncWallet();
+      preload(outcome.cards);
       return { status: "drawn", kind: "scene", cards: outcome.cards };
     }
     return {

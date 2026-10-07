@@ -10,12 +10,14 @@
 import { describe, expect, it } from "vitest";
 import {
   LAST_PACK_WINDOW_MS,
+  canPickCard,
+  cardIsProtected,
   countdownLabel,
   emptyShelfHint,
   readySteals,
   remainingMs,
 } from "@/lib/last-pack";
-import type { LastPack, LastPackShelf } from "@/lib/cloud/api";
+import type { LastPack, LastPackCard, LastPackShelf } from "@/lib/cloud/api";
 
 const SERVER_NOW = "2026-10-06T20:00:00.000Z";
 
@@ -29,6 +31,18 @@ function pack(overrides: Partial<LastPack> = {}): LastPack {
     expiresAt: new Date(Date.parse(SERVER_NOW) + LAST_PACK_WINDOW_MS).toISOString(),
     stealable: true,
     cards: [],
+    ...overrides,
+  };
+}
+
+function card(overrides: Partial<LastPackCard> = {}): LastPackCard {
+  return {
+    index: 1,
+    creatorSlug: "ibai",
+    rarity: "rare",
+    variant: "standard",
+    taken: false,
+    stealable: true,
     ...overrides,
   };
 }
@@ -82,6 +96,40 @@ describe("last-pack.ts", () => {
     // Vol du jour déjà fait : plus rien, même avec des paquets frais.
     expect(readySteals(shelf({ stoleToday: true }), loaded, loaded)).toBe(0);
     expect(readySteals(null, loaded, loaded)).toBe(0);
+  });
+
+  it("grise une Légendaire et une Live, et rien d'autre", () => {
+    // La règle du serveur (`0034_last_pack_protege.sql`) : ce qui compte est la
+    // rareté **et** la variante, et le drapeau du serveur passe avant tout.
+    expect(cardIsProtected(card({ rarity: "legendary" }))).toBe(true);
+    expect(cardIsProtected(card({ variant: "live" }))).toBe(true);
+    expect(cardIsProtected(card({ rarity: "legendary", variant: "live" }))).toBe(true);
+    expect(cardIsProtected(card({ stealable: false }))).toBe(true);
+    expect(cardIsProtected(card())).toBe(false);
+    expect(cardIsProtected(card({ rarity: "epic", variant: "gold" }))).toBe(false);
+  });
+
+  it("n'autorise le choix que sur une carte vraiment prenable", () => {
+    const loaded = Date.parse(SERVER_NOW);
+    const frais = 600_000;
+    const prenable = pack({ cards: [card()] });
+    expect(canPickCard(prenable, card(), frais)).toBe(true);
+    // Déjà prise par quelqu'un : la place est perdue.
+    expect(canPickCard(pack({ cards: [card({ taken: true })] }), card({ taken: true }), frais)).toBe(
+      false,
+    );
+    // Protégée : Légendaire, Live, ou refus annoncé par le serveur.
+    expect(canPickCard(pack({ cards: [card()] }), card({ rarity: "legendary" }), frais)).toBe(false);
+    expect(canPickCard(pack({ cards: [card()] }), card({ variant: "live" }), frais)).toBe(false);
+    expect(canPickCard(pack({ cards: [card()] }), card({ stealable: false }), frais)).toBe(false);
+    // Le paquet lui-même : plus de vol du jour, fenêtre fermée, mon paquet.
+    expect(canPickCard(pack({ stealable: false, cards: [card()] }), card(), frais)).toBe(false);
+    expect(canPickCard(pack({ mine: true, cards: [card()] }), card(), frais)).toBe(false);
+    expect(canPickCard(prenable, card(), 0)).toBe(false);
+    expect(canPickCard(prenable, card(), -1)).toBe(false);
+    // Une carte déjà prise reste affichée telle quelle, même protégée.
+    expect(canPickCard(pack({ cards: [card()] }), card({ taken: true }), frais)).toBe(false);
+    expect(readySteals(shelf({ packs: [prenable] }), loaded, loaded)).toBe(1);
   });
 
   it("dit pourquoi il n'y a rien à prendre", () => {

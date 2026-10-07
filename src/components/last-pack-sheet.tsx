@@ -20,7 +20,7 @@ import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
 import type { LastPack, LastPackCard } from "@/lib/cloud/api";
-import { countdownLabel, emptyShelfHint, remainingMs } from "@/lib/last-pack";
+import { canPickCard, cardIsProtected, countdownLabel, emptyShelfHint, remainingMs } from "@/lib/last-pack";
 import { describeCard } from "@/lib/market";
 
 function creatorName(slug: string): string {
@@ -48,7 +48,10 @@ function PackCards({
       <div className="last-pack-cards">
         {pack.cards.map((card: LastPackCard) => {
           const prise = card.taken;
-          const selectable = !prise && pack.stealable && restant > 0;
+          // Grisée pour deux raisons, et l'écran dit laquelle : déjà prise, ou
+          // protégée (une Légendaire, une Live).
+          const protegee = !prise && cardIsProtected(card);
+          const selectable = canPickCard(pack, card, restant);
           return (
             <button
               key={card.index}
@@ -60,7 +63,7 @@ function PackCards({
             >
               <b>{creatorName(card.creatorSlug)}</b>
               <span>{describeCard(card.rarity, card.variant)}</span>
-              {prise ? <em>prise</em> : null}
+              {prise ? <em>prise</em> : protegee ? <em>protégée</em> : null}
             </button>
           );
         })}
@@ -149,7 +152,9 @@ export function LastPackSheet({ onClose }: { onClose: () => void }) {
           <>
             <p className="odds-intro">
               Un booster ouvert reste exposé <b>dix minutes</b>. Chez un ami, tu peux y prendre une
-              carte : <b>une par jour</b>, et elle quitte vraiment sa collection.
+              carte : <b>une par jour</b>, et elle quitte vraiment sa collection. Une{" "}
+              <b>Légendaire</b> ou une carte <b>Live</b> ne se prend pas : ces deux-là restent à
+              leur propriétaire.
             </p>
 
             {mine.length > 0 ? (
@@ -163,7 +168,10 @@ export function LastPackSheet({ onClose }: { onClose: () => void }) {
                     <div key={pack.id} className="last-pack-row">
                       <div className="last-pack-meta">
                         <b>Encore {countdownLabel(restant)}</b>
-                        <span>Le premier ami qui passe peut t&apos;y prendre une carte.</span>
+                        <span>
+                          Le premier ami qui passe peut t&apos;y prendre une carte — sauf une
+                          Légendaire ou une Live.
+                        </span>
                       </div>
                       <PackCards
                         pack={pack}

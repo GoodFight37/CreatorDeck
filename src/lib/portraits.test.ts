@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
+  PORTRAIT_EXT,
   formatBytes,
   pruneOrphans,
   selectMissing,
@@ -18,18 +19,25 @@ import { isFlatStats } from "../../scripts/lib/avatars.mjs";
  */
 describe("portraits · sélection", () => {
   it("trouve les fichiers sans créateur, et rien d'autre", () => {
-    const files = ["squeezie.jpg", "gotaga.jpg", "ancien-streamer.jpg", "README.md", ".gitkeep"];
-    expect(selectOrphans(files, ["squeezie", "gotaga"])).toEqual(["ancien-streamer.jpg"]);
+    // Le dossier a porté des JPEG jusqu'au 7 octobre 2026 : un portrait resté
+    // en `.jpg` doit pouvoir être élagé, comme un `.webp` orphelin.
+    expect(PORTRAIT_EXT).toBe(".webp");
+    const files = ["squeezie.webp", "gotaga.webp", "ancien-streamer.webp", "README.md", ".gitkeep"];
+    expect(selectOrphans(files, ["squeezie", "gotaga"])).toEqual(["ancien-streamer.webp"]);
+    expect(selectOrphans(["vieux.jpg", "encore.jpeg"], ["autre"])).toEqual([
+      "encore.jpeg",
+      "vieux.jpg",
+    ]);
     // Un dossier propre ne remonte rien, et la casse de l'extension est tolérée.
-    expect(selectOrphans(["a.jpg", "b.JPG"], ["a", "b"])).toEqual([]);
-    expect(selectMissing(["a.jpg"], ["a", "b", "c"])).toEqual(["b", "c"]);
+    expect(selectOrphans(["a.webp", "b.WEBP"], ["a", "b"])).toEqual([]);
+    expect(selectMissing(["a.webp"], ["a", "b", "c"])).toEqual(["b", "c"]);
   });
 
   it("ne confond pas une variante de slug avec un orphelin", () => {
-    // `squeezie-2.jpg` n'est pas le portrait de `squeezie` : sans entrée
+    // `squeezie-2.webp` n'est pas le portrait de `squeezie` : sans entrée
     // correspondante dans le catalogue, c'est bien un orphelin.
-    expect(selectOrphans(["squeezie.jpg", "squeezie-2.jpg"], ["squeezie"])).toEqual([
-      "squeezie-2.jpg",
+    expect(selectOrphans(["squeezie.webp", "squeezie-2.webp"], ["squeezie"])).toEqual([
+      "squeezie-2.webp",
     ]);
   });
 });
@@ -69,23 +77,23 @@ describe("portraits · élagage", () => {
   it("liste sans supprimer par défaut, puis supprime sur demande", async () => {
     const dir = await mkdtemp(path.join(tmpdir(), "creatordeck-portraits-"));
     await mkdir(path.join(dir, "nested"), { recursive: true });
-    await writeFile(path.join(dir, "garde.jpg"), "x".repeat(100));
-    await writeFile(path.join(dir, "orphelin.jpg"), "y".repeat(250));
+    await writeFile(path.join(dir, "garde.webp"), "x".repeat(100));
+    await writeFile(path.join(dir, "orphelin.webp"), "y".repeat(250));
     await writeFile(path.join(dir, "note.txt"), "à ne pas toucher");
 
     try {
       const listing = await pruneOrphans({ dir, slugs: ["garde"] });
-      expect(listing.orphans).toEqual(["orphelin.jpg"]);
+      expect(listing.orphans).toEqual(["orphelin.webp"]);
       expect(listing.bytes).toBe(250);
       expect(listing.removed).toBe(0);
-      expect(await readdir(dir)).toContain("orphelin.jpg");
+      expect(await readdir(dir)).toContain("orphelin.webp");
 
       const applied = await pruneOrphans({ dir, slugs: ["garde"], apply: true });
       expect(applied.removed).toBe(1);
       const left = await readdir(dir);
-      expect(left).toContain("garde.jpg");
-      expect(left).not.toContain("orphelin.jpg");
-      // Le fichier non-JPEG et le sous-dossier sont intacts.
+      expect(left).toContain("garde.webp");
+      expect(left).not.toContain("orphelin.webp");
+      // Le fichier qui n'est pas un portrait et le sous-dossier sont intacts.
       expect(left).toContain("note.txt");
       expect(left).toContain("nested");
     } finally {

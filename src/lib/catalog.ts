@@ -264,8 +264,18 @@ export const PACKS = {
   },
 } as const;
 
+/**
+ * L'adresse d'un portrait. **WebP**, en 600 px : les 1000 visages pèsent
+ * 16,6 Mo au lieu de 29 — et ils font 86 % du poids de l'APK, donc c'est le
+ * seul chiffre que voit un joueur qui installe le jeu.
+ *
+ * L'extension est écrite ici **et** dans `scripts/lib/portraits.mjs`
+ * (`PORTRAIT_EXT`), qui la partagent le générateur, le contrôle du catalogue et
+ * l'élagage. `npm run catalog:check` tombe si un portrait manque : si les deux
+ * endroits divergent, c'est la CI qui le dit, pas le joueur.
+ */
 export function creatorImage(creator: Pick<Creator, "slug">) {
-  return `/creators/${creator.slug}.jpg`;
+  return `/creators/${creator.slug}.webp`;
 }
 
 export function formatFollowersCount(followers?: number) {

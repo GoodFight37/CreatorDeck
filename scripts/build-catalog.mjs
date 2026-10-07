@@ -19,6 +19,7 @@ import path from "node:path";
 import { splitSeason } from "./lib/seasons-split.mjs";
 import { isFlatPortrait } from "./lib/avatars.mjs";
 import {
+  PORTRAIT_EXT,
   formatBytes,
   selectMissing,
   selectOrphans,
@@ -109,8 +110,8 @@ function validateCreators(creators, expectedSize) {
     if (!RARITIES.includes(creator.rarity)) {
       fail(`creators.json : rareté inconnue « ${creator.rarity} » (${creator.slug}).`);
     }
-    if (!existsSync(path.join(PORTRAITS_DIR, `${creator.slug}.jpg`))) {
-      const message = `portrait manquant : public/creators/${creator.slug}.jpg`;
+    if (!existsSync(path.join(PORTRAITS_DIR, `${creator.slug}${PORTRAIT_EXT}`))) {
+      const message = `portrait manquant : public/creators/${creator.slug}${PORTRAIT_EXT}`;
       if (STRICT_AVATARS) fail(message);
       else warn(message);
     }
@@ -136,7 +137,7 @@ function validateCreators(creators, expectedSize) {
 async function validatePortraits(creators) {
   const candidates = [];
   for (const creator of creators) {
-    const file = path.join(PORTRAITS_DIR, `${creator.slug}.jpg`);
+    const file = path.join(PORTRAITS_DIR, `${creator.slug}${PORTRAIT_EXT}`);
     if (!existsSync(file)) continue;
     if (statSync(file).size < FLAT_CANDIDATE_BYTES) candidates.push({ creator, file });
   }

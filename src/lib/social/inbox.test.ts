@@ -52,8 +52,8 @@ const pack = (
   expiresAt: "2026-10-03T12:08:00Z",
   stealable: true,
   cards: [
-    { index: 0, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false },
-    { index: 1, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false },
+    { index: 0, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false, stealable: true },
+    { index: 1, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false, stealable: true },
   ],
   ...overrides,
 });

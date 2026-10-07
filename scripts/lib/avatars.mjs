@@ -83,7 +83,9 @@ export async function encodeAvatar(bytes, target, { size = AVATAR_SIZE } = {}) {
     kernel: "lanczos3",
   });
   if (shortest > size) pipeline = pipeline.sharpen({ sigma: 0.6 });
-  await pipeline.jpeg({ quality: AVATAR_QUALITY, mozjpeg: true }).toFile(target);
+  // WebP plutôt que JPEG : mêmes visages, ~40 % de moins sur le disque, et
+  // c'est 86 % du poids de l'APK. `quality` reste la constante du module.
+  await pipeline.webp({ quality: AVATAR_QUALITY, effort: 5 }).toFile(target);
   return Math.min(shortest, size);
 }
 
@@ -108,7 +110,7 @@ export async function encodePlaceholder({ displayName, login }, target, { size =
   <text x="50%" y="${size * 0.9}" font-family="Arial, sans-serif" font-size="${size * 0.11}"
         font-weight="700" fill="rgba(255,255,255,.55)" text-anchor="middle">${label}</text>
 </svg>`;
-  await sharp(Buffer.from(svg)).jpeg({ quality: 88, mozjpeg: true }).toFile(target);
+  await sharp(Buffer.from(svg)).webp({ quality: 88, effort: 5 }).toFile(target);
 }
 
 /**

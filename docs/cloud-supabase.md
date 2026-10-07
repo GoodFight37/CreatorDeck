@@ -251,6 +251,19 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0034_last_pack_protege.sql`](../supabase/migrations/0034_last_pack_protege.sql)
+     → **Run** pour que le **Last Pack protège les Légendaires et les Lives** :
+     ces deux cartes-là restent exposées dix minutes mais **ne se volent pas**.
+     `_last_pack_cards()` renvoie `stealable` pour chaque carte, donc l'écran les
+     grise et écrit « protégée » sur la place, et `last_pack_steal()` refuse de
+     son côté — **avant tout verrouillage** : un refus ne laisse ni carte
+     déplacée ni vol du jour entamé. Mêmes signatures qu'`0012` : `create or
+     replace`, rien à re-coller d'autre. Détail : §8, « Le Last Pack ».
+   - [`supabase/migrations/0033_depart_maigre.sql`](../supabase/migrations/0033_depart_maigre.sql)
+     → **Run** pour que le **départ soit maigre** : une partie neuve commence
+     avec **2 boosters**, comme le jeu local (`src/data/progression.json`, bloc
+     `start`), au lieu de trois. `_pack_initial_packs()` est réécrite seule
+     (même signature) ; un test miroir compare la réserve du serveur au fichier.
    - [`supabase/migrations/0032_serie_quotidienne.sql`](../supabase/migrations/0032_serie_quotidienne.sql)
      → **Run** pour que **la série quotidienne paie ses jours** (décision du
      7 octobre 2026) : le booster qui fait avancer la série verse les points du
@@ -419,7 +432,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-trois migrations** (`0001` à `0033`) pour de vrai, dans
+> Le script exécute **les trente-quatre migrations** (`0001` à `0034`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -1027,6 +1040,17 @@ créerait une carte que personne n'a tirée. Le vol réécrit alors **les deux
 sauvegardes** (la carte part chez l'un, arrive chez l'autre, marquée
 `fromLastPack`) dans une seule transaction, verrous pris dans un ordre stable —
 comme un échange accepté.
+
+Depuis `0034_last_pack_protege.sql`, deux cartes restent exposées mais **ne se
+volent pas** : une **Légendaire** et une carte **Live**. La première est la plus
+belle pièce du paquet — un cercle de cinq amis ne doit pas se la prendre —, et
+la seconde n'existe que parce que le créateur streamait à cet instant : elle ne
+se refait pas. L'écran les grise et écrit « protégée » (`stealable` carte par
+carte), le serveur refuse de son côté, et le refus tombe **avant tout
+verrouillage** : rien n'a bougé, le vol du jour est intact. La règle est écrite
+deux fois — SQL pour le refus, `src/lib/last-pack.ts` pour griser — et un test
+miroir (`src/lib/supabase-last-pack-protege.test.ts`) tient les deux copies
+ensemble.
 
 Deux garde-fous qui font la différence entre une mécanique et une décoration :
 

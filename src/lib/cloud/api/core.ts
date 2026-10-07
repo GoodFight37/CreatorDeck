@@ -379,6 +379,9 @@ export function parseLastPackCard(raw: unknown): LastPackCard | null {
     rarity: typeof record?.rarity === "string" ? record.rarity : "",
     variant: typeof record?.variant === "string" ? record.variant : "standard",
     taken: record?.taken === true,
+    // Absent = prenable : un serveur d'avant `0034` ne dit rien, et c'est lui
+    // qui refuse de toute façon. Ne jamais griser une carte sur un silence.
+    stealable: record?.stealable !== false,
   };
 }
 

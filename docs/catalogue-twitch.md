@@ -286,8 +286,16 @@ manque un portrait.
 `catalog:ci` affiche le poids réel des portraits embarqués :
 
 ```text
-   Portraits : 34.2 Mo utilisés dans l'APK
+   Portraits : 16.6 Mo utilisés dans l'APK
 ```
+
+Les portraits embarqués sont en **WebP** depuis le 7 octobre 2026 (qualité 78,
+600 px — `encodeAvatar()` dans `scripts/lib/avatars.mjs`) : les **1000
+portraits** du dépôt pèsent **16,6 Mo** au lieu de **29,0 Mo** en JPEG, et
+`PORTRAIT_EXT` (`scripts/lib/portraits.mjs`) est la seule source de l'extension
+— le catalogue, l'écran, l'affiche de partage et les scripts la lisent. Les
+tableaux ci-dessous datent du JPEG : ils restent vrais pour comparer les
+résolutions (600 px contre 300 px), pas pour annoncer le poids du dépôt.
 
 Chaque commit de catalogue ajoute ce poids à l'historique Git, définitivement.
 Deux habitudes pour que ça reste supportable : régénérer rarement et en une
@@ -341,7 +349,9 @@ Conséquences :
 
 **Décision retenue : 600 px**, pour la netteté sur écran Retina — en assumant
 ~34 Mo dans l'APK, la PWA et Git pour 1000 portraits, et donc un clone et un
-`assets:regen` un peu plus lents qu'en 300 px (~17 Mo).
+`assets:regen` un peu plus lents qu'en 300 px (~17 Mo). La décision tient
+toujours, et le **WebP** l'a rendue moins chère : **16,6 Mo** mesurés pour les
+1000 portraits du dépôt, contre 29,0 Mo en JPEG.
 
 Changer d'avis plus tard est une simple variable d'environnement :
 

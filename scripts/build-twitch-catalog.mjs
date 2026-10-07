@@ -81,6 +81,7 @@ import {
   scopeLogLabel,
 } from "./lib/catalog-scope.mjs";
 import { regionIdForLanguage } from "./lib/regions.mjs";
+import { PORTRAIT_EXT } from "./lib/portraits.mjs";
 import { rarityCounts, rarityForRank } from "./lib/rarity-ladder.mjs";
 
 const ROOT = process.cwd();
@@ -680,7 +681,7 @@ function score(item) {
  * retélécharge pas les 2000 images.
  */
 async function ensurePortrait(creator) {
-  const targetPath = path.join(OUT_DIR, `${creator.slug}.jpg`);
+  const targetPath = path.join(OUT_DIR, `${creator.slug}${PORTRAIT_EXT}`);
   if (!FORCE && existsSync(targetPath)) {
     const size = await readAvatarSize(targetPath);
     if (size && size >= AVATAR_PX) return "reused";

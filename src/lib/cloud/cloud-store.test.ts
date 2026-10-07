@@ -92,6 +92,8 @@ function remoteRow(state: PlayerState, updatedAt: string, deviceUpdatedAt = stat
 const SERVER_NOW = "2026-03-01T10:00:00Z";
 
 /** Le paquet d'une amie, exposé depuis trente secondes. */
+// Le paquet de Lou : une Légendaire **Live** au milieu, donc protégée — les
+// quatre autres sont prenables.
 const LAST_PACK = {
   id: 475,
   ownerId: "22222222-2222-4222-8222-222222222222",
@@ -101,11 +103,11 @@ const LAST_PACK = {
   expiresAt: "2026-03-01T10:10:00Z",
   stealable: true,
   cards: [
-    { index: 1, creatorSlug: "ibai", rarity: "rare", variant: "standard", taken: false },
-    { index: 2, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false },
-    { index: 3, creatorSlug: "kaicenat", rarity: "legendary", variant: "live", taken: false },
-    { index: 4, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false },
-    { index: 5, creatorSlug: "sardoche", rarity: "rare", variant: "standard", taken: false },
+    { index: 1, creatorSlug: "ibai", rarity: "rare", variant: "standard", taken: false, stealable: true },
+    { index: 2, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false, stealable: true },
+    { index: 3, creatorSlug: "kaicenat", rarity: "legendary", variant: "live", taken: false, stealable: false },
+    { index: 4, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false, stealable: true },
+    { index: 5, creatorSlug: "sardoche", rarity: "rare", variant: "standard", taken: false, stealable: true },
   ],
 };
 

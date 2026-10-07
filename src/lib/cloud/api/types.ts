@@ -135,6 +135,10 @@ export type MarketListing = {
 /**
  * Une carte exposée dans un Last Pack — la place qu'elle occupe (1 à 5), ce
  * qu'elle est, et si quelqu'un l'a déjà prise.
+ *
+ * `stealable` dit si **cette** carte se prend : depuis `0034`, une Légendaire
+ * et une carte Live restent exposées mais ne se volent pas. Le serveur le dit,
+ * l'écran grise — et le refus tient même si l'écran se trompait.
  */
 export type LastPackCard = {
   index: number;
@@ -142,6 +146,7 @@ export type LastPackCard = {
   rarity: string;
   variant: string;
   taken: boolean;
+  stealable: boolean;
 };
 
 /**
