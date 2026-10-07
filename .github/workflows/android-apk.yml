@@ -1,67 +1,48 @@
-name: APK Android (debug)
+name: Build & Distribute Android APK
 
 on:
   push:
-    branches: [main]
-  workflow_dispatch:
-
-# Nécessaire pour publier l'APK en pré-release (lien de téléchargement public).
-permissions:
-  contents: write
+    branches:
+      - arena/01a10c75-creatordeck
 
 jobs:
-  apk:
-    runs-on: ubuntu-24.04
+  build-and-distribute:
+    runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: 21
-      # Le SDK Android est préinstallé sur les machines GitHub (ANDROID_HOME défini) ;
-      # le plugin Android Gradle télécharge lui-même les composants manquants.
-      - run: npm ci
-      - run: npm run lint && npm run typecheck && npm test
-      # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
-      - run: npm run catalog:check
-      # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
-      # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
-      - run: npm run catalog:ci
-      - run: npm run android:debug
-        env:
-          # Facultatif : variables de dépôt (Settings → Secrets and variables →
-          # Actions → Variables). Vides, l'APK se construit sans cloud et reste
-          # 100 % hors ligne. Voir docs/cloud-supabase.md.
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          cache: 'npm'
 
-      # 1. Artefact du run : pratique pour un test ponctuel, mais son
-      #    téléchargement exige d'être connecté à GitHub.
-      - uses: actions/upload-artifact@v4
-        with:
-          name: creatordeck-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Install dependencies
+        run: npm ci
 
-      # 2. Pré-release « roulante » : un lien de téléchargement public et
-      #    stable, sans connexion, écrasé à chaque build.
-      #    https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
-      - name: Publier l'APK en pré-release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Build Web Assets
+        run: npm run build
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Build Android APK (Debug)
         run: |
-          set -euo pipefail
-          cp android/app/build/outputs/apk/debug/app-debug.apk creatordeck-debug.apk
-          NOTES="APK de test (signature debug, non publiable sur le Play Store).
-          Reconstruit automatiquement à chaque build depuis \`${{ github.ref_name }}\` (\`${{ github.sha }}\`)."
-          if ! gh release view debug-apk >/dev/null 2>&1; then
-            gh release create debug-apk \
-              --prerelease \
-              --title "CreatorDeck — APK de test (roulant)" \
-              --notes "$NOTES"
-          fi
-          gh release edit debug-apk --notes "$NOTES"
-          gh release upload debug-apk creatordeck-debug.apk --clobber
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK to Firebase App Distribution
+        uses: w9jds/firebase-action@master
+        with:
+          args: appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:450483794682:android:d393fe779b340d6140cf43 --groups "testers"
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
