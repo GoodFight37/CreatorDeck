@@ -25,9 +25,26 @@ const CODE = SQL.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n");
 const FUNCTION = read("supabase", "functions", "notify-live", "index.ts");
-// Le code sans ses commentaires : une explication qui cite « -----BEGIN » n'est
-// pas une clé privée.
-const FUNCTION_CODE = FUNCTION.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+/**
+ * Le code sans ses commentaires : une explication qui cite une règle n'est pas
+ * la règle. Attention au `//` des URL (une chaîne ouverte avant : on garde la
+ * ligne entière) — sinon on coupe `content://settings/…` et le test ment.
+ */
+function stripComments(text: string): string {
+  return text
+    .split("\n")
+    .map((line) => {
+      const at = line.indexOf("//");
+      if (at < 0) return line;
+      const before = line.slice(0, at);
+      const quotes = (before.match(/"/g) ?? []).length;
+      return quotes % 2 === 0 ? before : line;
+    })
+    .join("\n")
+    .replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
+const FUNCTION_CODE = stripComments(FUNCTION);
 const REFRESH = read("supabase", "functions", "refresh-live", "index.ts");
 const ANDROID_GRADLE = read("android", "app", "build.gradle");
 const MANIFEST = read("android", "app", "src", "main", "AndroidManifest.xml");
@@ -125,6 +142,18 @@ describe("notify-live (la fonction qui envoie)", () => {
       FUNCTION.indexOf('params.get("test")'),
     );
     expect(checkBlock).not.toContain("push_targets");
+  });
+
+  it("fait sonner : son par URI réservée, jamais le mot « default »", () => {
+    // Deux pièges jumeaux, vécus le 7 octobre (notification silencieuse) :
+    // le canal Capacitor transforme `sound: "default"` en un fichier `/raw`
+    // inexistant, et FCM ne comprend pas davantage le mot. Android, lui, a une
+    // URI réservée pour le son de notification du téléphone.
+    expect(FUNCTION_CODE).toContain("content://settings/system/notification_sound");
+    expect(FUNCTION_CODE).not.toMatch(/sound:\s*"default"/);
+    const push = stripComments(read("src", "lib", "push.ts"));
+    expect(push).toContain("createChannel");
+    expect(push).not.toMatch(/sound:\s*"default"/);
   });
 
   it("dit pourquoi la notification arrive (le texte du brief)", () => {

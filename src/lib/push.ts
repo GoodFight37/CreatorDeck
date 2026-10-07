@@ -132,7 +132,12 @@ export async function ensureLiveChannel(): Promise<void> {
       description: "Un créateur de ta collection vient de passer en direct.",
       importance: 4,
       visibility: 1,
-      sound: "default",
+      // **Pas de `sound`** : le greffon Capacitor traduit `sound: "default"` en
+      // `android.resource://…/raw/default`, un fichier qui n'existe pas — le
+      // canal devient muet (vécu le 7 octobre, notification affichée mais
+      // silencieuse). Sans son explicite, Android applique le son de
+      // notification du téléphone, et le joueur peut le changer dans les
+      // réglages du canal.
       vibration: true,
     });
   } catch {

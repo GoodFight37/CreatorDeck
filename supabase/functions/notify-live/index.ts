@@ -275,7 +275,13 @@ async function send(
           },
           android: {
             priority: "high",
-            notification: { channel_id: "creatordeck-live", sound: "default" },
+            notification: {
+              channel_id: "creatordeck-live",
+              // L'**URI réservée** d'Android (« son de notification du
+              // téléphone ») : c'est elle qui fait sonner. Le mot `default`
+              // n'est pas interprété par FCM — même piège que côté canal.
+              sound: "content://settings/system/notification_sound",
+            },
           },
         },
       }),

@@ -1495,6 +1495,22 @@ Firebase sans attendre qu'un créateur passe en direct. `refresh-live?push=1`
 déclenche un vrai passage (la règle des 30 minutes s'applique) sans rappeler
 Twitch.
 
+**Le son** (vécu le 7 octobre : notification affichée mais muette) — deux pièges
+jumeaux, à ne pas confondre :
+
+* le greffon Capacitor traduit `sound: "default"` en
+  `android.resource://<paquet>/raw/default`, un fichier qui n'existe pas : le
+  canal naît **muet**, et un canal Android ne se modifie plus une fois créé. Le
+  canal est donc créé **sans son explicite** — Android applique alors le son de
+  notification du téléphone ;
+* FCM n'interprète pas davantage le mot : l'URI réservée d'Android
+  (`content://settings/system/notification_sound`) est envoyée en clair dans le
+  message.
+
+Un canal déjà muet sur un téléphone se répare à la main (Paramètres →
+Applications → CreatorDeck → Notifications → canal « Directs » → Son) **ou** en
+réinstallant l'application, et un test interdit le retour du mot `default`.
+
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
   temps réel sur les offres et le carnet (aujourd'hui : rafraîchissement
