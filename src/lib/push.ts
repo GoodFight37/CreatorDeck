@@ -32,8 +32,15 @@ import { PushNotifications } from "@capacitor/push-notifications";
  * première version, née avec `sound: "default"` sans fichier `res/raw/default`,
  * était muette ; aucun correctif ne pouvait la réparer sur un téléphone déjà
  * installé. On change donc d'identifiant : le nouveau canal naît avec le son
- * du jeu (`android/app/src/main/res/raw/default.wav`), l'ancien reste dans les
- * réglages du téléphone, muet et sans effet.
+ * du jeu (`android/app/src/main/res/raw/creatordeck.wav`), l'ancien reste dans
+ * les réglages du téléphone, muet et sans effet.
+ *
+ * Pourquoi pas un fichier nommé `default` ? Parce qu'Android refuse ce nom :
+ * tout nom de ressource devient un champ de la classe `R`, et `default` est un
+ * mot réservé Java — `FileResourceNameValidator` (AOSP) répond « not a valid
+ * resource name (reserved Java keyword) » et la compilation s'arrête. Le
+ * greffon n'a pas besoin de ce nom : il construit l'adresse à partir de la
+ * chaîne qu'on lui donne, extension comprise.
  */
 export const LIVE_CHANNEL_ID = "creatordeck-live-v2";
 
@@ -60,12 +67,14 @@ export function pushSupported(): boolean {
  * un refus est une réponse.
  *
  * `silent` : **ne pas ouvrir** la boîte de dialogue de permission Android.
- * C'est le mode du lancement de l'application — une demande de permission ne
- * doit pas surgir à l'ouverture, et surtout pas un geste que le joueur n'a pas
- * demandé (Android la refuse souvent d'office, puis ne la repose plus jamais :
- * la notification reste coupée à vie). En mode silencieux, si la permission
- * n'est pas déjà accordée, on rend `demande` et on s'arrête là ; c'est
- * l'interrupteur du carnet qui la demandera.
+ * C'est le mode du lancement de l'application : une demande de permission ne
+ * doit pas surgir à l'ouverture, sans que le joueur ait rien demandé. Le
+ * système punit les demandes en rafale — depuis Android 11, deux refus et la
+ * question n'est plus jamais reposée (`USER_FIXED`) : les notifications
+ * resteraient coupées jusqu'à ce que le joueur passe par les réglages du
+ * téléphone. En mode silencieux, si la permission n'est pas déjà accordée, on
+ * rend `demande` et on s'arrête là ; c'est l'interrupteur du carnet qui la
+ * demandera.
  */
 export async function requestPushToken(silent = false): Promise<PushTokenResult> {
   if (!pushSupported()) {
@@ -157,10 +166,10 @@ export async function ensureLiveChannel(): Promise<void> {
       importance: 4,
       visibility: 1,
       // Le greffon traduit `sound` en `android.resource://<paquet>/raw/<nom>`
-      // (il ne connaît pas le mot magique « default ») : le dépôt fournit donc
-      // le vrai fichier `res/raw/default.wav`. Le son est celui du jeu, et le
+      // sans connaître le mot magique d'Android : le dépôt fournit donc le vrai
+      // fichier `res/raw/creatordeck.wav`. Le son est celui du jeu, et le
       // joueur peut le changer dans les réglages du canal.
-      sound: "default",
+      sound: "creatordeck",
       vibration: true,
     });
   } catch {

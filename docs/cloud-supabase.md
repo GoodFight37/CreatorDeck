@@ -1516,10 +1516,18 @@ Deux conséquences, et une seule façon de s'en sortir :
   `notify-live`. Un test vérifie que les trois disent la même chose : si l'un
   d'eux prend du retard, Android range la notification dans « Divers » (que
   personne ne regarde) ;
-* **le fichier son vit dans le dépôt** : `android/app/src/main/res/raw/default.wav`,
+* **le fichier son vit dans le dépôt** : `android/app/src/main/res/raw/creatordeck.wav`,
   un son de deux notes fabriqué pour le jeu (aucun contenu tiers), vérifié par
   un test (en-tête RIFF, taille plausible). Le greffon le trouvera désormais, et
   le joueur peut toujours changer le son dans les réglages du canal.
+
+  **Le nom du fichier n'est pas libre** : tout nom de ressource devient un champ
+  de la classe `R`, et Android refuse les mots réservés Java
+  (`FileResourceNameValidator` : « not a valid resource name (reserved Java
+  keyword) »). Un fichier nommé `default.wav` ferait donc **échouer la
+  compilation de l'APK** — le piège se refermait une deuxième fois, à la
+  construction. D'où `creatordeck.wav`, que le greffon retrouve parce qu'il
+  construit l'adresse à partir de la chaîne qu'on lui donne (`sound: "creatordeck"`).
 
 Sur un téléphone où l'ancien canal existe déjà, deux voies : régler le son du
 canal « Directs » à la main (Paramètres → Applications → CreatorDeck →
@@ -1541,9 +1549,11 @@ choses ont changé :
   rien changer si l'état est identique » (c'est ce qui empêche de mentir sur
   « modifié »), donc écrire sans relire pouvait viser un état périmé ;
 * **plus aucune demande de permission au lancement.** Une boîte de dialogue qui
-  surgit à l'ouverture se fait refuser — et un refus Android est définitif. Le
-  lancement est silencieux (`requestPushToken(silent)`), c'est l'interrupteur du
-  carnet qui demande. L'écran distingue donc trois états : allumé, coupé,
+  surgit à l'ouverture se fait refuser — et **après deux refus, Android ne la
+  pose plus jamais** (Android 11 : la permission est marquée `USER_FIXED`, la
+  demande échoue en silence). Le lancement est donc silencieux
+  (`requestPushToken(silent)`) : c'est l'interrupteur du carnet qui demande,
+  quand le joueur a décidé d'activer les notifications. L'écran distingue donc trois états : allumé, coupé,
   *pas encore autorisé* (et il le dit).
 
 * idées non engagées : échanges avec plusieurs partenaires à la fois,

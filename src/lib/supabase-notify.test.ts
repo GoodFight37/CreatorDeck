@@ -163,15 +163,21 @@ describe("notify-live (la fonction qui envoie)", () => {
     expect(MANIFEST).toContain('android:value="creatordeck-live-v2"');
     expect(FUNCTION_CODE).toContain('channel_id: "creatordeck-live-v2"');
     expect(FUNCTION_CODE).toContain('sound: "default"');
+    // Le canal, lui, nomme le fichier son du dépôt — dont le nom doit rester un
+    // identifiant Java valide (« default » est un mot réservé : Android refuse
+    // la ressource et la compilation s'arrête).
+    expect(PUSH).toMatch(/sound: "creatordeck"/);
   });
 
-  it("le son du jeu existe vraiment, et c'est un WAV lisible", () => {
+  it("le son du jeu existe vraiment, avec un nom de ressource accepté", () => {
     // `sound: "default"` n'est pas un mot magique pour le greffon Capacitor :
-    // il fabrique `android.resource://<paquet>/raw/default`. Sans ce fichier,
-    // le canal naît muet. Ici, on vérifie qu'il est là — et qu'il est du son,
-    // pas un fichier vide (en-tête RIFF, taille de données non nulle).
+    // il fabrique `android.resource://<paquet>/raw/<la chaîne reçue>`. Deux
+    // conditions, donc : que le fichier existe, et que son nom soit **un nom de
+    // ressource valide**. « default » n'en est pas un (mot réservé Java :
+    // Android refuse la ressource et la compilation de l'APK s'arrête), d'où
+    // `creatordeck.wav`.
     const son = readFileSync(
-      path.join(ROOT, "android", "app", "src", "main", "res", "raw", "default.wav"),
+      path.join(ROOT, "android", "app", "src", "main", "res", "raw", "creatordeck.wav"),
     );
     expect(son.subarray(0, 4).toString("ascii")).toBe("RIFF");
     expect(son.subarray(8, 12).toString("ascii")).toBe("WAVE");

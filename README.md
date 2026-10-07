@@ -233,7 +233,7 @@ docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (�
                          direct, amis, hôtel, carnet, notifications (§9 et 9.1), dépannage
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
 android/                 projet Capacitor Android (canal de notification et
-                         son du jeu, app/src/main/res/raw/default.wav)
+                         son du jeu, app/src/main/res/raw/creatordeck.wav)
 ```
 
 Principes :
