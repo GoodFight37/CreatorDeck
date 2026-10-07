@@ -76,6 +76,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.2 | L'ouverture d'un paquet décidée à un seul endroit (jeu **et** overlay 16:9) | **livrée** | `src/hooks/use-pack-opening.ts`, `src/components/overlay-stage.tsx` |
 | 11.3 | Réveil du direct anti-course ; `?check=1` réservé au rôle de service | **livrée** | `supabase/functions/refresh-live/index.ts`, `docs/cloud-supabase.md` § « Le direct » |
 | 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
+| 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
 
