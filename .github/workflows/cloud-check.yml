@@ -29,6 +29,11 @@ jobs:
               -H "Content-Type: application/json" -d "$2" | court
           }
 
+          # L'URL rangée dans les secrets peut porter le suffixe REST
+          # (`…/rest/v1/`) : on garde l'origine nue, sinon PostgREST répond
+          # PGRST125 « Invalid path specified in request URL ».
+          BASE=$(printf '%s' "$URL" | sed -E 's#^(https?://[^/]+).*#\1#')
+          URL="$BASE"
           echo "URL : ${#URL} caractère(s) — clé : ${#KEY} caractère(s)"
 
           dire "r1_streak_points" "$(appel _streak_reward_points '{"p_day":3}')"
