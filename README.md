@@ -63,6 +63,12 @@ npm run essai:push -- "ton message"   # pour choisir le message du commit
 `essai:push` marche aussi tout seul, sans `essai:start` : il range ce qui traîne
 (et jusqu'aux commits que l'outil aurait faits lui-même, qu'il **déplace** sur la
 branche d'essai avant de remettre la branche de travail exactement sur le dépôt).
+Si GitHub refuse l'envoi — cela arrive, une erreur de son côté —, **relance la
+même commande** : le commit déjà rangé part enfin, et le dossier revient sur la
+branche de travail. Et si le dossier a été laissé sur une branche `essai/…` sans
+note de retour, elle est retrouvée sur GitHub (celle dont le sommet est le commit
+d'où l'essai est parti) ; s'il y a le moindre doute, rien n'est deviné et la
+marche à suivre est écrite à l'écran.
 Jamais de `--force`, jamais de fusion, jamais de branche supprimée ; une clé
 secrète (`sb_secret_…` avec sa valeur, jeton complet, clé privée) fait échouer
 l'envoi **sans rien modifier**. Les branches `essai/*` ne déclenchent **pas** de

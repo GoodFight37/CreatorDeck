@@ -210,6 +210,45 @@ describe("essai:push — ranger le travail d'un autre outil sur une branche à p
     expect(() => readFileSync(path.join(racine, "neuf.ts"), "utf8")).toThrow();
   });
 
+  it("reprend un envoi refusé : le commit rangé part enfin, et le dossier revient", () => {
+    // L'état exact laissé par un envoi que GitHub a refusé (« Internal Server
+    // Error ») : on est sur la branche d'essai, le commit est fait, et la
+    // branche n'existe pas encore sur GitHub — donc aucune référence distante
+    // où se comparer. Le dossier doit s'en sortir tout seul.
+    const { racine, origin } = depot();
+    git(racine, ["checkout", "-qb", "essai/20261007-1857"]);
+    writeFileSync(path.join(racine, "jeu.ts"), "export const version = 4;\n");
+    git(racine, ["add", "-A"]);
+    git(racine, ["commit", "-qm", "travail de l'outil"]);
+
+    const { sortie, status } = lancer(racine);
+    expect(status).toBe(0);
+    expect(sortie).toContain("essai/20261007-1857");
+    // Le commit est enfin sur GitHub, sous sa branche.
+    expect(branches(origin)).toContain("essai/20261007-1857");
+    expect(git(origin, ["log", "-1", "--pretty=%s", "essai/20261007-1857"])).toBe("travail de l'outil");
+    // Et la branche de travail est retrouvée sans marqueur : c'est la branche
+    // distante dont le sommet est le commit d'où l'essai est parti.
+    expect(git(racine, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("arena/01a10c75-creatordeck");
+    expect(readFileSync(path.join(racine, "jeu.ts"), "utf8")).toContain("version = 1");
+    expect(git(origin, ["log", "-1", "--pretty=%s", "arena/01a10c75-creatordeck"])).toBe("départ");
+  });
+
+  it("ramène le dossier sur la branche de travail quand il n'y a plus rien à pousser", () => {
+    // Deuxième passage après un essai déjà envoyé : le dossier ne doit pas
+    // rester sur la branche d'essai, sinon le `git pull` suivant s'y cogne.
+    const { racine } = depot();
+    lancer(racine, ["--start"]);
+    const { sortie, status } = lancer(racine);
+    expect(status).toBe(0);
+    expect(sortie).toContain("Rien à pousser");
+    expect(sortie).toContain("Dossier revenu sur");
+    expect(git(racine, ["rev-parse", "--abbrev-ref", "HEAD"])).toBe("arena/01a10c75-creatordeck");
+    // Le marqueur est effacé : un nouvel essai peut s'ouvrir.
+    const suivant = lancer(racine, ["--start"]);
+    expect(suivant.sortie).toContain("Branche d'essai ouverte");
+  });
+
   it("refuse d'envoyer un commit de l'outil qui contient une clé secrète", () => {
     const { racine, origin } = depot();
     writeFileSync(

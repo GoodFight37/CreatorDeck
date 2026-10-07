@@ -120,6 +120,37 @@ function brancheDeRetour() {
   return readFileSync(fichier, "utf8").trim() || null;
 }
 
+/**
+ * Le commit d'où part l'essai : le parent du plus ancien commit que **aucun**
+ * dépôt distant ne connaît. C'est le point où la branche d'essai a été coupée.
+ */
+function baseDeLEssai() {
+  const locaux = git(["rev-list", "HEAD", "--not", "--remotes"]).split("\n").filter(Boolean);
+  if (!locaux.length) return null;
+  const parent = gitOk(["rev-parse", `${locaux[locaux.length - 1]}^`]);
+  return parent.ok ? parent.sortie : null;
+}
+
+/**
+ * Sans marqueur — branche ouverte par une version précédente de l'outil, ou
+ * `essai:start` oublié — on retrouve la branche de travail **sur GitHub** :
+ * c'est celle dont le sommet est exactement le commit d'où l'essai est parti.
+ * On ne devine que si c'est net : une seule candidate. Sinon on ne touche à
+ * rien, et la marche à suivre est écrite à l'écran.
+ */
+function infererRetour() {
+  const base = baseDeLEssai();
+  if (!base) return null;
+  const candidates = git(["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"])
+    .split("\n")
+    .filter((nom) => nom && nom !== "origin/HEAD" && !nom.startsWith("origin/essai/"));
+  const exactes = candidates.filter((nom) => {
+    const sommet = gitOk(["rev-parse", `${nom}^{commit}`]);
+    return sommet.ok && sommet.sortie === base;
+  });
+  return exactes.length === 1 ? exactes[0].replace(/^origin\//, "") : null;
+}
+
 function marquerRetour(nom) {
   writeFileSync(path.join(racineGit(), MARQUE), `${nom}\n`, "utf8");
 }
@@ -251,13 +282,26 @@ gitOk(["fetch", "origin", "--quiet"]);
 
 let courante = depart;
 let surEssai = courante.startsWith("essai/");
-let retour = brancheDeRetour();
+let retour = brancheDeRetour() ?? infererRetour();
 let fichiers = 0;
 
 const modifications = git(["status", "--porcelain"]).split("\n").filter(Boolean);
 
 // --- Rien à faire ---------------------------------------------------------
 if (!modifications.length && commitsAPousser() === 0) {
+  if (surEssai && retour && retour !== courante) {
+    // Un essai ouvert (ou déjà envoyé) ne doit pas laisser le dossier dessus :
+    // on revient sur la branche de travail, exactement comme à la fin d'un envoi.
+    const revenu = gitOk(["checkout", retour]).ok;
+    if (revenu) oublierRetour();
+    dire(
+      "Rien à pousser : le dossier est exactement comme la dernière version rangée.",
+      revenu
+        ? `Dossier revenu sur « ${retour} ».`
+        : `Tu es resté sur ${courante} — pour revenir : git checkout ${retour}`,
+    );
+    process.exit(0);
+  }
   dire(
     "Rien à pousser : le dossier est exactement comme la dernière version rangée.",
     `(branche ${courante})`,
@@ -391,18 +435,26 @@ if (!envoi.ok) {
 }
 
 // --- Retour sur la branche de travail -------------------------------------
+let revenu = false;
 if (surEssai && retour && retour !== courante) {
-  git(["checkout", retour]);
-  oublierRetour();
+  revenu = gitOk(["checkout", retour]).ok;
+  if (revenu) oublierRetour();
 }
 
 dire(
   "✅ Envoyé :",
   `   branche  ${courante}`,
   `   fichiers ${fichiers}${MESSAGE ? ` · message « ${MESSAGE} »` : ""}`,
-  ...(surEssai && retour && retour !== courante
+  ...(revenu
     ? [`   dossier revenu sur « ${retour} » — comme avant`]
-    : []),
+    : surEssai
+      ? [
+          `   le dossier est resté sur la branche d'essai ${courante}`,
+          retour
+            ? `   pour revenir : git checkout ${retour}`
+            : "   pour revenir : git checkout <ta branche de travail>",
+        ]
+      : []),
   "",
   `Comparer : ${lienComparaison(retour ?? "main", courante)}`,
   "",

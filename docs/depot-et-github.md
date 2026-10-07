@@ -115,7 +115,15 @@ mêlées à la branche de travail — le `git pull` suivant se cognerait à elle
      d'arriver.
 
 `essai:push` fonctionne aussi sans `essai:start` (il crée la branche d'essai au
-moment du rangement).
+moment du rangement). Deux rattrapages lui ont été appris après un vrai incident :
+
+* **GitHub refuse l'envoi** (« Internal Server Error ») : le commit reste rangé
+  dans la branche locale, et **relancer la même commande** finit le travail —
+  c'est le seul cas où « rien à pousser » serait faux, il est testé ;
+* **la note de retour manque** (essai ouvert par une version précédente de
+  l'outil) : la branche de travail est retrouvée sur GitHub — la branche distante
+  dont le sommet est exactement le commit d'où l'essai est parti. Une seule
+  candidate, sinon rien n'est deviné et la commande à taper est affichée.
 
 Ce qui n'est pas touché : jamais de `--force`, jamais de suppression de branche,
 jamais de fusion. Une branche d'essai **se relit** — c'est le seul moyen de
