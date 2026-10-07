@@ -30,6 +30,7 @@ import * as pack from "./pack";
 import * as social from "./social";
 import * as market from "./market";
 import * as arena from "./arena";
+import * as wallet from "./wallet";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
@@ -545,6 +546,28 @@ export class CloudApi {
    */
   async redeemPromoCode(code: string): Promise<{ granted: number; reserve: number; note: string }> {
     return pack.redeemPromoCode(this.core, code);
+  }
+
+  // ----------------------------------------------------------------- wallet
+
+  /**
+   * Le solde du joueur, côté serveur (`0027_wallet.sql`).
+   *
+   * C'est **lui** qui fait foi : la partie locale en garde un miroir, pour
+   * l'affichage, et le serveur le recale à chaque lecture.
+   */
+  async walletGet(): Promise<number> {
+    return wallet.walletGet(this.core);
+  }
+
+  /** Demande un gain. Le montant vient du serveur, jamais de l'appelant. */
+  async walletCredit(kind: string, ref = ""): Promise<{ delta: number; points: number }> {
+    return wallet.walletCredit(this.core, kind, ref);
+  }
+
+  /** Paie une dépense (l'artisanat). Le coût est recalculé par le serveur. */
+  async walletSpend(kind: string, ref = ""): Promise<{ delta: number; points: number }> {
+    return wallet.walletSpend(this.core, kind, ref);
   }
 
   // ------------------------------------------------------------------ saves

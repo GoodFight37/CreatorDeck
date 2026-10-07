@@ -3,6 +3,7 @@ import { packActions } from "./pack";
 import { socialActions } from "./social";
 import { marketActions } from "./market";
 import { arenaActions } from "./arena";
+import { walletActions } from "./wallet";
 import type { CloudApi, TradeListItem } from "@/lib/cloud/api";
 import type { PlayerState, TradeCard as EngineTradeCard } from "@/lib/game-engine";
 import type {
@@ -75,6 +76,11 @@ export type CloudStoreActions = {
   openPack: ReturnType<typeof packActions>["openPack"];
   openScenePack: ReturnType<typeof packActions>["openScenePack"];
   packStatus: ReturnType<typeof packActions>["packStatus"];
+  syncWallet: ReturnType<typeof walletActions>["syncWallet"];
+  recycleDoublon: ReturnType<typeof walletActions>["recycleDoublon"];
+  craftWithPoints: ReturnType<typeof walletActions>["craftWithPoints"];
+  claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];
+  claimSeason: ReturnType<typeof walletActions>["claimSeason"];
   redeemPromoCode: ReturnType<typeof packActions>["redeemPromoCode"];
   resetProgress: ReturnType<typeof packActions>["resetProgress"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];

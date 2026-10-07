@@ -133,9 +133,12 @@ pareil ne bloquent plus la sauvegarde ».
 3. ~~**Wallet serveur**~~ **fait le 7 octobre** : `0027_wallet.sql`. La caisse
    est au serveur (le solde quitte la sauvegarde), les crédits sont vérifiés ou
    tarifés par le serveur, et l'index `wallet_ledger_once` garantit qu'un tirage,
-   une vente ou un palier ne se paient pas deux fois. Reste à faire : le
-   **branchement du client** (adopter le solde du serveur, refuser proprement
-   hors ligne) — voir § 4, point suivant.
+   une vente ou un palier ne se paient pas deux fois. Le **branchement du
+   client** suit le même jour : `src/hooks/use-points.ts` dit la règle une fois
+   (build sans cloud → moteur local ; compte connecté → serveur ; cloud sans
+   compte → refus franc), le solde affiché est adopté du serveur au démarrage et
+   après chaque mouvement, et un tirage se paie **par trigger** — le client n'a
+   plus rien à annoncer.
 4. ~~**Le badge automatique (`pg_cron`)**~~ **fait le 7 octobre** :
    `0025_direct_auto.sql` branche l'horloge de la base sur `refresh-live`
    (`pg_net`, toutes les deux minutes). Avant, c'est l'application qui
@@ -157,18 +160,21 @@ pareil ne bloquent plus la sauvegarde ».
    **sans être consommé**. Détail : `docs/cloud-supabase.md` §8, « Les codes
    promo ».
 
-7. **Le branchement du wallet** (suite de `0027`) : le client adopte le solde du
-   serveur au démarrage et après chaque mouvement, envoie les crédits
-   (`pack`, `scene`, `recycle`, `milestone`, `season`) et les dépenses
-   d'artisanat, et dit franchement « connecte-toi » là où une dépense attend le
-   réseau. Tant que ce branchement n'est pas fait, **la migration `0027` ne doit
-   pas être collée** : les crédits ne partiraient pas au compte.
+7. ~~**Le branchement du wallet** (suite de `0027`)~~ **fait le 7 octobre** :
+   `src/lib/cloud/store/wallet.ts` et `src/hooks/use-points.ts`. Le client
+   **adopte** le solde du serveur au démarrage, après un tirage, après une vente
+   et après un achat d'hôtel ; il envoie les crédits (`recycle`, `milestone`,
+   `season`) et les dépenses d'artisanat, et les **tirages** comme les **ventes**
+   se paient tout seuls, par trigger. Là où un geste attend le réseau sans qu'un
+   compte soit connecté, le refus est explicite. La migration `0027` peut être
+   collée (il reste la commande `select public.wallet_backfill();` à lancer une
+   fois).
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 742 tests, 49 fichiers
+npm test                                    # 757 tests, 49 fichiers
 npm run supabase:verify                     # 381 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```

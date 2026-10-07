@@ -296,8 +296,10 @@ grant execute on function public.wallet_get() to authenticated;
  * Chaque raison a sa vérification :
  *
  *   * `pack` / `scene` : `ref` est l'identifiant d'un tirage du joueur
- *     (`pack_draws`). Le serveur ne paie que pour un tirage qu'il a réellement
- *     enregistré, et une seule fois ;
+ *     (`pack_draws`). Normalement inutile — le trigger `wallet_on_draw` paie
+ *     chaque tirage au moment où le serveur l'enregistre. La porte existe pour
+ *     rattraper un tirage fait avant le collage, et elle refusera tout ce qui
+ *     n'est pas un vrai tirage du joueur ;
  *   * `sell` : `ref` est l'identifiant d'une annonce **du joueur** (`market_listings`).
  *     Normalement inutile : la vente crédite par trigger. La porte existe pour
  *     rattraper une annonce vendue avant cette migration ;
@@ -471,6 +473,42 @@ revoke all on function public.wallet_spend(text, text) from public, anon;
 grant execute on function public.wallet_spend(text, text) to authenticated;
 
 -- ---------------------------------------------------------------------------
+-- Le tirage paie tout seul
+-- ---------------------------------------------------------------------------
+/**
+ * Chaque tirage enregistré par le serveur crédite son joueur, **sans que le
+ * client ait à le demander**.
+ *
+ * C'est le même raisonnement que pour l'hôtel : le fait et son paiement ne
+ * doivent pas pouvoir se séparer. `open_pack()` écrit le tirage dans
+ * `pack_draws` — c'est là, et pas dans une requête du client, que les 12 points
+ * naissent. Le client n'a donc rien à prouver, et un client qui ment n'a rien
+ * à gagner.
+ */
+create or replace function public._wallet_on_draw()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public._wallet_apply(
+    new.user_id,
+    case when new.kind = 'scene' then 10 else 12 end,
+    case when new.kind = 'scene' then 'scene' else 'pack' end,
+    new.id::text,
+    true
+  );
+  return new;
+end;
+$$;
+
+drop trigger if exists wallet_on_draw on public.pack_draws;
+create trigger wallet_on_draw
+  after insert on public.pack_draws
+  for each row execute function public._wallet_on_draw();
+
+-- ---------------------------------------------------------------------------
 -- L'hôtel : la vente crédite, l'achat débite — dans la même transaction
 -- ---------------------------------------------------------------------------
 /**
@@ -587,6 +625,7 @@ revoke all on function public._wallet_ensure(uuid) from public, anon, authentica
 revoke all on function public.wallet_backfill() from public, anon, authenticated;
 revoke all on function public._wallet_apply(uuid, integer, text, text, boolean) from public, anon, authenticated;
 revoke all on function public._wallet_mirror(uuid, integer) from public, anon, authenticated;
+revoke all on function public._wallet_on_draw() from public, anon, authenticated;
 revoke all on function public._wallet_on_listing() from public, anon, authenticated;
 revoke all on function public._wallet_on_sale() from public, anon, authenticated;
 

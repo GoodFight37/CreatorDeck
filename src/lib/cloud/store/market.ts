@@ -61,6 +61,9 @@ export function marketActions(ctx: CloudStoreContext) {
         const next = applyMarketSale(local, { cardId, payout: result.payout }, ctx.deps.now());
         ctx.deps.applyState(next);
         await ctx.pushAfterServer();
+        // Le vendeur est payé par le serveur (trigger `wallet_on_listing`) : on
+        // adopte son solde plutôt que d'additionner le nôtre.
+        await ctx.actions.syncWallet();
         await ctx.actions.loadMarket();
         const name = CREATOR_BY_SLUG.get(result.listing.creatorSlug)?.displayName ?? "Ta carte";
         const message = `${name} déposé à l'hôtel : +${result.payout} points, il est au comptoir.`;
@@ -111,6 +114,8 @@ export function marketActions(ctx: CloudStoreContext) {
           ctx.deps.applyState(next);
           await ctx.pushAfterServer();
         }
+        // L'achat est débité par le serveur : son solde fait foi.
+        await ctx.actions.syncWallet();
         await ctx.actions.loadMarket();
         const name = CREATOR_BY_SLUG.get(result.card.creatorSlug)?.displayName ?? "Carte";
         const message = `${name} rejoint ton classeur pour ${result.price} points.`;

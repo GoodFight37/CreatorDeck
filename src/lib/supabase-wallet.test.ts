@@ -133,8 +133,9 @@ describe("0027_wallet.sql (les points au serveur)", () => {
     expect(CODE).toContain("create table if not exists public.wallet_ledger");
     expect(CODE).toContain("drop trigger if exists wallet_on_listing");
     expect(CODE).toContain("drop trigger if exists wallet_on_sale");
-    // Neuf fonctions : le compte, la mécanique, les prix, les trois portes du
-    // joueur, les deux triggers et la bascule générale.
-    expect(CODE.split("create or replace function").length - 1).toBe(10);
+    // Onze fonctions : le compte (2), les prix, les trois portes du joueur, les
+    // trois triggers (tirage, dépôt, vente) et la bascule générale.
+    expect(CODE.split("create or replace function").length - 1).toBe(11);
+    expect(CODE).toContain("drop trigger if exists wallet_on_draw");
   });
 });

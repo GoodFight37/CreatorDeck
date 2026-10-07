@@ -34,6 +34,7 @@ import {
   claimMilestone,
   claimSeason,
   craftCreator,
+  applyWallet,
   createInitialState,
   creatorWeight,
   currentSeason,
@@ -1185,5 +1186,27 @@ describe("Paquet Scène", () => {
     expect(family).not.toBeNull();
     expect(family!.total).toBeGreaterThanOrEqual(SCENE_MIN_FAMILY);
     expect(family!.familyId).not.toBe("S09");
+  });
+});
+
+describe("applyWallet : le solde du serveur fait foi", () => {
+  it("adopte le solde du serveur, même plus petit que celui de l'appareil", () => {
+    // Le cas qui compte : une sauvegarde gonflée à la main. Le serveur dit 45,
+    // l'appareil affichera 45 — sinon le joueur croirait à un magot qui
+    // n'achète rien.
+    const state = { ...createInitialState(T0), points: 999_999 };
+    expect(applyWallet(state, 45, T0).points).toBe(45);
+  });
+
+  it("ne touche à rien quand le solde est déjà le bon", () => {
+    const state = { ...createInitialState(T0), points: 45 };
+    // Le même objet : un solde identique ne doit pas provoquer d'écriture.
+    expect(applyWallet(state, 45, T0)).toBe(state);
+  });
+
+  it("ne descend pas sous zéro et ignore un non-nombre", () => {
+    const state = { ...createInitialState(T0), points: 45 };
+    expect(applyWallet(state, -10, T0).points).toBe(0);
+    expect(applyWallet(state, Number.NaN, T0).points).toBe(45);
   });
 });

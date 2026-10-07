@@ -136,6 +136,9 @@ type FakeApi = {
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
   redeemPromoCode: ReturnType<typeof vi.fn>;
+  walletGet: ReturnType<typeof vi.fn>;
+  walletCredit: ReturnType<typeof vi.fn>;
+  walletSpend: ReturnType<typeof vi.fn>;
   ping: ReturnType<typeof vi.fn>;
   updateAccount: ReturnType<typeof vi.fn>;
   signInWithPassword: ReturnType<typeof vi.fn>;
@@ -300,6 +303,15 @@ function harness(options: {
     // Un code accepté : le serveur a écrit le booster dans sa réserve et le
     // dit. C'est `pack_status()` appelé juste après qui le fait remonter au jeu.
     redeemPromoCode: vi.fn(async () => ({ granted: 1, reserve: 4, note: "stream du 7 octobre" })),
+    // Le wallet du serveur : le solde de référence des tests est 45 (celui de
+    // la partie locale de `saveWith`), sauf quand le test en décide autrement.
+    // Par défaut, le serveur est **d'accord** avec la partie locale : c'est le
+    // cas normal, une fois les triggers passés (un tirage, une vente et un
+    // achat créditent et débitent des deux côtés). Un test qui a besoin d'un
+    // désaccord — une sauvegarde bricolée — le dit explicitement.
+    walletGet: vi.fn(async () => state.current.points),
+    walletCredit: vi.fn(async () => ({ delta: 0, points: state.current.points })),
+    walletSpend: vi.fn(async () => ({ delta: 0, points: state.current.points })),
     ping: vi.fn(async () => ({ host: "projet.supabase.co" })),
     updateAccount: vi.fn(async (update: { email?: string; password?: string }) => ({
       applied: true,
@@ -1821,5 +1833,83 @@ describe("les codes promo", () => {
     expect(vide).toMatchObject({ status: "unavailable", reason: "error" });
     expect(autreApi.redeemPromoCode).not.toHaveBeenCalled();
     expect(autre.getSnapshot().message).toBe("Tape un code, puis valide.");
+  });
+});
+
+describe("les points au serveur (wallet)", () => {
+  it("adopte le solde du serveur, même quand la sauvegarde dit autre chose", async () => {
+    // Le cas réel : une sauvegarde bricolée à 999 999 points. Le serveur, lui,
+    // dit 45 — et c'est lui qui fait foi.
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 999_999 }) });
+    store.subscribe(() => {});
+    api.walletGet.mockResolvedValueOnce(45); // le serveur, lui, dit 45
+    await store.syncWallet();
+    expect(api.walletGet).toHaveBeenCalledTimes(1);
+    expect(state.current.points).toBe(45);
+  });
+
+  it("recycle un doublon : le serveur paie, le moteur range, le solde du serveur reste", async () => {
+    const card = { id: "doublon-1", creatorSlug: "kaicenat", rarity: "rare" as const, variant: "standard" as const, obtainedAt: T0, rareDrop: false };
+    const { store, api, state } = harness({
+      local: saveWith({ updatedAt: T0, points: 0, cards: [card, { ...card, id: "doublon-2" }] }),
+    });
+    store.subscribe(() => {});
+    api.walletCredit.mockResolvedValueOnce({ delta: 55, points: 55 });
+    const outcome = await store.recycleDoublon("doublon-1", "rare");
+    expect(api.walletCredit).toHaveBeenCalledWith("recycle", "rare");
+    expect(outcome).toEqual({ status: "done", message: "Doublon recyclé : +55 points.", delta: 55 });
+    // La carte est partie **et** le solde affiché est celui du serveur : le
+    // traitement local (+55) puis l'adoption ne se cumulent pas.
+    expect(state.current.cards).toHaveLength(1);
+    expect(state.current.points).toBe(55);
+  });
+
+  it("ne débite rien quand le serveur refuse de payer un artisanat", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 600 }) });
+    store.subscribe(() => {});
+    api.walletSpend.mockRejectedValueOnce(new CloudError("solde : il te manque des points pour ce mouvement", "P0001", 400));
+    const outcome = await store.craftWithPoints("kaicenat");
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/il te manque des points/);
+    // Rien n'a été rangé, rien n'a été débité : le créateur n'est pas arrivé.
+    expect(state.current.cards).toHaveLength(0);
+    expect(state.current.points).toBe(600);
+  });
+
+  it("reste d'accord avec le serveur quand un palier était déjà payé", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 45, openings: 3 }) });
+    store.subscribe(() => {});
+    api.walletCredit.mockResolvedValueOnce({ delta: 0, points: 45 });
+    const outcome = await store.claimMilestone("first");
+    expect(api.walletCredit).toHaveBeenCalledWith("milestone", "first");
+    // `delta: 0` remonte jusqu'à l'écran : c'est ce qui l'empêche d'annoncer
+    // des points que le serveur n'a pas versés.
+    expect(outcome).toEqual({ status: "done", message: "Ce palier était déjà payé.", delta: 0 });
+    // Le moteur local a bien marqué le palier, mais le solde ne bouge pas :
+    // c'est le serveur qui décide, et il n'a rien versé.
+    expect(state.current.points).toBe(45);
+  });
+
+  it("refuse sans compte, sans rien demander au serveur", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    const outcome = await store.claimSeason("S01");
+    expect(outcome).toMatchObject({ status: "unavailable", reason: "no-session" });
+    expect(store.getSnapshot().message).toMatch(/Connecte-toi/);
+    expect(api.walletCredit).not.toHaveBeenCalled();
+    expect(api.walletSpend).not.toHaveBeenCalled();
+  });
+
+  it("reste silencieux quand le solde n'est pas joignable", async () => {
+    const { store, api, state } = harness();
+    store.subscribe(() => {});
+    const avant = state.current.points;
+    api.walletGet.mockRejectedValueOnce(new Error("réseau"));
+    const points = await store.syncWallet();
+    expect(points).toBeNull();
+    // On garde ce qu'on affiche : pas de message d'erreur pour une lecture de
+    // confort, la partie locale reste jouable.
+    expect(state.current.points).toBe(avant);
+    expect(store.getSnapshot().message).toBeNull();
   });
 });

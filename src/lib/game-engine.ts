@@ -1737,6 +1737,22 @@ export function applyPackStatus(
 }
 
 /**
+ * Adopte le solde **du serveur** (`0027_wallet.sql`).
+ *
+ * Depuis que la caisse est au serveur, `state.points` n'est plus une décision :
+ * c'est un miroir. Le jeu continue de l'afficher, mais c'est cette fonction qui
+ * l'écrit quand le serveur a parlé — un solde bricolé à la main disparaît donc
+ * à la première lecture, et les gains annoncés sont ceux que le serveur a
+ * réellement versés.
+ */
+export function applyWallet(state: PlayerState, serverPoints: number, now = Date.now()): PlayerState {
+  // Un solde négatif n'existe pas ; un non-nombre non plus (réponse illisible).
+  const points = Number.isFinite(serverPoints) ? Math.max(0, Math.floor(serverPoints)) : state.points;
+  if (points === state.points) return state;
+  return { ...state, updatedAt: now, points };
+}
+
+/**
  * Aligne les compteurs de progression sur ceux du serveur.
  *
  * Quand le joueur a un compte, c'est le serveur qui décide du plancher de

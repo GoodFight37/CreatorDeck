@@ -56,6 +56,7 @@ import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
+import { usePoints } from "@/hooks/use-points";
 import { usePush } from "@/hooks/use-push";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
@@ -1444,6 +1445,9 @@ export function CreatorDeckApp() {
   useTwitchReturn();
   const state = useGame();
   const cloud = useCloud();
+  // Qui paie les points : le serveur quand le joueur est connecté (voir
+  // `usePoints`), l'appareil sinon.
+  const points = usePoints();
   // Le carnet de notifications se remplit à l'ouverture, puis toutes les cinq
   // minutes : c'est lui qui porte la pastille du menu « Toi ». Les dépendances
   // sont les deux valeurs qui comptent (et non l'objet cloud, qui change à
@@ -1562,6 +1566,9 @@ export function CreatorDeckApp() {
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
     void cloudStore.packStatus();
+    // Le solde aussi : depuis `0027_wallet.sql`, c'est le serveur qui tient la
+    // caisse, et une sauvegarde bricolée est recollée à la vérité ici.
+    void cloudStore.syncWallet();
   }, [cloud.configured, cloud.userId]);
 
   async function handleOpenPack() {
@@ -1638,11 +1645,18 @@ export function CreatorDeckApp() {
     }
   }
 
-  function handleClaimSeason(seasonId: string) {
+  async function handleClaimSeason(seasonId: string) {
     // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
     const before = game?.seasons.find((entry) => entry.id === seasonId);
     try {
-      gameStore.claimSeason(seasonId);
+      // Le serveur paie (il compte les créateurs de la famille) : hors ligne ou
+      // sans compte, `usePoints` dit quoi faire plutôt que de payer en local.
+      const credited = await points.claimSeason(seasonId);
+      if (credited.status === "refused") return showError(credited.message);
+      // Le serveur peut répondre « déjà payé » (réclamation faite sur un autre
+      // appareil) : on le dit, au lieu d'annoncer des points qui ne sont pas
+      // arrivés.
+      if (credited.delta === 0) return showNotice(credited.message ?? "Cette famille était déjà payée.");
       const parts = [
         before && before.claimablePoints > 0 ? `+${before.claimablePoints} points` : "",
         before && before.claimableHourglasses > 0 ? `+${before.claimableHourglasses} sabliers` : "",
@@ -1660,11 +1674,13 @@ export function CreatorDeckApp() {
     }
   }
 
-  function handleClaimMilestone(milestoneId: string) {
+  async function handleClaimMilestone(milestoneId: string) {
     // La vue d'avant le clic décrit exactement ce qui va tomber.
     const before = game?.milestones.find((entry) => entry.id === milestoneId);
     try {
-      gameStore.claimMilestone(milestoneId);
+      const credited = await points.claimMilestone(milestoneId);
+      if (credited.status === "refused") return showError(credited.message);
+      if (credited.delta === 0) return showNotice(credited.message ?? "Ce palier était déjà payé.");
       playReward();
       const gains = before
         ? [

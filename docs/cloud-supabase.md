@@ -29,7 +29,8 @@ les saisons restent jouables hors ligne.
 | Donnée | Où elle vit | Détail |
 | --- | --- | --- |
 | Catalogue (créateurs, raretés, taux) | **Dans l'APK** | fichiers JSON générés à la compilation, jamais envoyés |
-| Partie (cartes, points, paliers, thème) | **Local d'abord** | copie envoyée au cloud seulement si tu te connectes |
+| Partie (cartes, paliers, thème) | **Local d'abord** | copie envoyée au cloud seulement si tu te connectes |
+| Points | **Serveur** | `wallets` : le solde quitte la sauvegarde (`0027`), l'appareil **adopte** ce que le serveur répond |
 | Adresse e-mail | Cloud | sert uniquement à te renvoyer ton code |
 | Statistiques (cartes uniques, légendaires…) | Cloud | recalculées **par le serveur** depuis ta sauvegarde, visibles dans le classement |
 | Vitrine (4 cartes épinglées) | Cloud | 4 slugs au maximum, contrôlés par le serveur ; affichés sur le profil public |
@@ -510,9 +511,9 @@ Depuis la migration `0004_tirage.sql`, le **contenu des boosters est décidé
 par le serveur** : la fonction `open_pack()` tire les 5 cartes avec le même
 algorithme que le moteur local (mêmes poids, mêmes variantes, même événement
 « Perfect »), et le client ne peut ni les choisir ni les inventer. Une
-sauvegarde fabriquée à la main peut encore mentir sur les points, l'XP ou le
-niveau (calculés localement), mais plus sur les cartes — c'est le prérequis
-des échanges.
+sauvegarde fabriquée à la main peut encore mentir sur l'XP ou le niveau
+(calculés localement), mais plus sur les cartes — c'est le prérequis des
+échanges — ni, depuis `0027`, sur le solde de points, qui vit au serveur.
 
 Depuis la migration `0006_profil_public.sql`, les compteurs qui servent au
 **profil public** ne retiennent que les créateurs qui existent au catalogue :
@@ -645,10 +646,12 @@ vérifiées par un test qui échoue si on les retire :
 
 ### Ce que le serveur ne vérifie pas (volontairement)
 
-Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
-contenu des boosters (et donc les cartes) est décidé par le serveur. Les
-**ressources** (points, sabliers, jetons) restent locales, et c'est assumé :
-elles n'ouvrent que du contenu solo. Depuis `0019`, une sauvegarde qui invente
+L'XP et le niveau restent calculés sur l'appareil, comme les **sabliers** et
+les **jetons** : ces ressources-là n'ouvrent que du contenu solo et ne valent
+rien pour un autre joueur. Le **contenu des boosters** (donc les cartes) et,
+depuis `0027`, le **solde de points** sont décidés et écrits par le serveur — un
+solde trafiqué dans la sauvegarde est recollé à la vérité à la première lecture
+et n'a rien pu acheter entre-temps. Depuis `0019`, une sauvegarde qui invente
 des **créateurs** ou des **raretés** sort du classement, et depuis `0021` les
 cartes de valeur sans provenance serveur aussi. Ce qui reste ouvert, en toute
 connaissance de cause : une sauvegarde qui déclare des cartes **artisanales**
@@ -829,7 +832,7 @@ donc **déduits** du journal, que seule `open_pack()` écrit — et comme rien n
 stocké, il n'y a rien à resynchroniser. Les fonctions internes sont fermées aux
 joueurs (`revoke … from public, anon, authenticated`).
 
-**Les jetons restent locaux.** Comme les points et l'XP : 5 par booster (7 en
+**Les jetons restent locaux.** Comme l'XP : 5 par booster (7 en
 Prime Time), 400 pour la carte au choix à l'Atelier — jamais une Légendaire.
 Ils sont crédités par `applyPackResult()`, donc aussi bien pour un tirage local
 que pour un tirage décidé par le serveur.
@@ -1183,7 +1186,10 @@ par l'appareil.
   `wallet_ledger` (chaque mouvement, avec sa raison). Les deux tables sont
   fermées au client — le joueur passe par les fonctions, jamais par les tables.
 * **Les crédits** — `wallet_credit(kind, ref)` : le serveur **fixe le prix** et,
-  quand il le peut, **vérifie l'événement**. Un tirage (`pack`, `scene`) doit
+  quand il le peut, **vérifie l'événement**. Un tirage (`pack`, `scene`) est payé
+  **tout seul**, par le trigger `_wallet_on_draw` (à l'insertion dans
+  `pack_draws`) : le client n'annonce jamais un gain, et `wallet_credit` ne sert
+  que de rattrapage pour un tirage arrivé avant la bascule. Un tirage doit
   exister dans `pack_draws`, à ce joueur-là ; une vente (`sell`) doit être une
   annonce à lui, vendue ; un `recycle` paie la valeur de la rareté ; un
   `milestone` paie le palier du jeu ; une `season` compte les créateurs possédés
@@ -1209,6 +1215,19 @@ par l'appareil.
   seule fois — borné à un million, parce qu'au-delà c'est une partie bricolée.
 * **Ce qui reste local, volontairement** : les sabliers (ils ne s'achètent ni ne
   s'échangent), l'XP et le niveau. Ils ne valent rien pour un autre joueur.
+* **Le client** : `src/lib/cloud/api/wallet.ts` (trois portes : lire, créditer,
+  dépenser — le corps envoyé ne porte qu'une **raison** et une **référence**,
+  jamais un montant), `src/lib/cloud/store/wallet.ts` (la mécanique : adopter le
+  solde, recycler, rejoindre un créateur, réclamer un palier ou une famille) et
+  `src/hooks/use-points.ts` (la règle unique, écrite une fois). Le solde affiché
+  est **celui du serveur** : `wallet_get()` au démarrage, après un tirage, après
+  une vente ou un achat d'hôtel, et l'appareil **adopte** ce qu'il reçoit au lieu
+  d'additionner le sien. Sans compte sur un build avec cloud, les gestes qui
+  touchent aux points sont **refusés** avec la phrase qui dit quoi faire
+  (« Connecte-toi pour recycler un doublon : tes points vivent sur ton compte. ») :
+  pas de repli silencieux vers un calcul local, qui donnerait un gain repris à la
+  synchronisation suivante. Les achats aux **jetons** restent locaux — un jeton
+  n'est pas un point, et le pity ne se paie pas avec de la monnaie de carte.
 
 **Le prix à payer, dit franchement** : sans réseau, les points ne bougent plus.
 Un build **sans cloud** garde tout en local (le wallet n'existe pas), mais un
@@ -1332,7 +1351,8 @@ Ce que le serveur vérifie, dans `market_sell()` et `market_buy()` :
   que le recyclage, elle protège la complétion ;
 * on n'achète pas sa propre annonce, ni deux fois la même (le verrou
   `for update` sur l'annonce tranche entre deux acheteurs simultanés) ;
-* l'acheteur a les points, et la partie locale est **à jour dans le cloud** avant
+* l'acheteur a les points **sur son compte serveur** (le prix est débité par le
+  trigger de la vente, jamais par l'appareil), et la partie locale est **à jour dans le cloud** avant
   l'opération (comme un échange accepté) ;
 * passé **trente jours**, une annonce quitte le comptoir : le vendeur a déjà été
   payé, personne ne perd rien.
@@ -1386,8 +1406,9 @@ Deux choses à savoir sur les chiffres :
   part.
 
 L'écran **Objectifs** du jeu, lui, garde ses paliers et ses récompenses
-(points, sabliers, emblème) : ils sont calculés localement, avec la famille
-comme unité. Ce que le serveur ajoute, c'est la comparaison entre joueurs.
+(sabliers, emblème) : les **points** d'un palier sont versés par le serveur
+(`wallet_credit('milestone', …)`), qui refuse de payer deux fois ; les autres
+récompenses restent locales, avec la famille comme unité. Ce que le serveur ajoute, c'est la comparaison entre joueurs.
 
 ### Les Sortants
 
@@ -1440,7 +1461,7 @@ vérificateur les joue pour de vrai sur une base jetable
 | Il paie une fois | `arena_claim(week)` : semaine terminée seulement, 5/3/2 sabliers au podium, 1 pour les dix premiers, emblème pour un top 10. Un second appel rend `hourglasses: 0` |
 | Il annonce ce qui attend | `arena_me()` rend `pending` : les semaines terminées où le joueur a déposé sans encaisser sa récompense |
 
-Deux choses vivent **côté appareil**, comme les points et l'XP : les sabliers
+Deux choses vivent **côté appareil**, comme l'XP : les sabliers
 eux-mêmes (crédités au moment de l'encaissement) et l'affichage. Le serveur, lui,
 enregistre qu'une semaine a été payée — deux appareils ne touchent pas deux fois
 la même.

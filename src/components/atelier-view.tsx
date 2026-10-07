@@ -26,6 +26,7 @@ import {
 import { regionLabel } from "@/lib/regions";
 import { craftableRetired, isRetired } from "@/lib/retired";
 import { duplicateGroups, type GameView } from "@/lib/game-engine";
+import { usePoints } from "@/hooks/use-points";
 import { gameStore } from "@/lib/game-store";
 
 type Mode = "craft" | "recycle";
@@ -56,8 +57,15 @@ export function AtelierView({
   // Les jetons sont la monnaie lente : 400, le prix unique de la carte visée,
   // contre 45 à 600 points selon la rareté. Deux monnaies, un seul atelier.
   const [wallet, setWallet] = useState<Wallet>("points");
+  // Qui paie les points — l'appareil ou le serveur — et le refus quand il n'y a
+  // pas de compte (voir `usePoints`).
+  const points = usePoints();
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
+  /** La rareté d'une carte, par son identifiant : le serveur paie selon elle. */
+  function groupRarity(cardId: string): string {
+    return game.cards.find((card) => card.id === cardId)?.rarity ?? "common";
+  }
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
   // Les Sortants encore artisanables : ils ne sont plus dans le catalogue (donc
   // plus tirables, et hors complétion), mais leur fenêtre est ouverte pendant
@@ -87,24 +95,41 @@ export function AtelierView({
   const safePage = Math.min(page, totalPages - 1);
   const visible = craftable.slice(safePage * PER_PAGE, (safePage + 1) * PER_PAGE);
 
-  function handleCraft(slug: string, displayName: string) {
+  async function handleCraft(slug: string, displayName: string) {
     try {
+      // Qui paie — le serveur ou l'appareil — se décide dans `usePoints` : ici
+      // on appelle, puis on affiche.
       if (wallet === "tokens") {
-        gameStore.buyWithTokens(slug);
+        const done = await points.craft(slug, true);
+        if (done.status === "refused") return onError(done.message);
         onNotice(`${displayName} rejoint ton classeur pour ${game.tokens.targetCost} jetons !`);
       } else {
-        gameStore.craftCreator(slug);
-        onNotice(`${displayName} rejoint ton classeur !`);
+        const done = await points.craft(slug, false);
+        if (done.status === "refused") return onError(done.message);
+        // Le prix du serveur prime (il le recalcule depuis le catalogue) ; à
+        // défaut, celui que la fiche affiche.
+        const listed = CREATOR_BY_SLUG.get(slug)?.rarity;
+        const price = listed ? RARITY_META[listed].craftCost : null;
+        const paid = done.delta !== undefined && done.delta < 0 ? -done.delta : (price ?? 0);
+        onNotice(`${displayName} rejoint ton classeur pour ${paid} points !`);
       }
     } catch (caught) {
       onError(caught instanceof Error ? caught.message : "Artisanat impossible.");
     }
   }
 
-  function handleRecycle(cardId: string, displayName: string, value: number) {
+  async function handleRecycle(cardId: string, displayName: string, value: number) {
     try {
-      gameStore.recycleCard(cardId);
-      onNotice(`Doublon de ${displayName} recyclé : +${value} points.`);
+      const done = await points.recycle(cardId, groupRarity(cardId));
+      if (done.status === "refused") return onError(done.message);
+      // Le chiffre du serveur prime : il peut avoir déjà payé ce doublon-là
+      // (mouvement rejoué après une coupure), et il a versé 0.
+      const gained = done.delta ?? value;
+      onNotice(
+        gained > 0
+          ? `Doublon de ${displayName} recyclé : +${gained} points.`
+          : `Doublon de ${displayName} déjà recyclé — rien à encaisser.`,
+      );
     } catch (caught) {
       onError(caught instanceof Error ? caught.message : "Recyclage impossible.");
     }

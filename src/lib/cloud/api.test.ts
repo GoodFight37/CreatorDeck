@@ -772,6 +772,58 @@ describe("tirage serveur", () => {
   });
 });
 
+describe("les points au serveur (wallet)", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("lit le solde du serveur", async () => {
+    const { api, calls } = client(() => ({ body: { ok: true, points: 1234 } }), signedIn());
+    expect(await api.walletGet()).toBe(1234);
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/wallet_get");
+  });
+
+  it("envoie la raison du gain, jamais un montant", async () => {
+    const { api, calls } = client(() => ({ body: { ok: true, kind: "recycle", gained: 55, points: 1289 } }), signedIn());
+    const gain = await api.walletCredit("recycle", "rare");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/wallet_credit");
+    // Le corps ne porte qu'une raison et une référence : si le client pouvait
+    // annoncer « +9999 », le serveur le croirait.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_kind: "recycle", p_ref: "rare" });
+    expect(gain).toEqual({ delta: 55, points: 1289 });
+  });
+
+  it("rapporte un gain de zéro quand l'événement était déjà payé", async () => {
+    const { api } = client(() => ({ body: { ok: true, kind: "milestone", gained: 0, points: 1289 } }), signedIn());
+    expect((await api.walletCredit("milestone", "ten")).delta).toBe(0);
+  });
+
+  it("paie une dépense et lit ce qui a bougé", async () => {
+    const { api, calls } = client(() => ({ body: { ok: true, kind: "craft", spent: 600, points: 689 } }), signedIn());
+    const spend = await api.walletSpend("craft", "kaicenat");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_kind: "craft", p_ref: "kaicenat" });
+    expect(spend).toEqual({ delta: -600, points: 689 });
+  });
+
+  it("relaie tel quel le refus du serveur", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "solde : il te manque des points pour ce mouvement" } }),
+      signedIn(),
+    );
+    await expect(api.walletSpend("craft", "kaicenat")).rejects.toThrowError(/il te manque des points/);
+  });
+
+  it("n'invente pas un solde quand la réponse est illisible", async () => {
+    const { api } = client(() => ({ body: {} }), signedIn());
+    await expect(api.walletGet()).rejects.toThrowError(/illisible/);
+  });
+});
+
 describe("codes promo", () => {
   function signedIn() {
     const storage = memoryStorage();

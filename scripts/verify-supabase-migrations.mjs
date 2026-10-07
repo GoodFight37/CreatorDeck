@@ -2133,24 +2133,30 @@ try {
     JSON.stringify({ relu, soldeG }),
   );
 
-  // Les crédits : un tirage encaisse une fois, pas deux.
+  // Les crédits : **le tirage paie tout seul** (trigger `wallet_on_draw`). Le
+  // contrôle ne demande donc pas un crédit — il vérifie que le serveur l'a déjà
+  // versé, et qu'un second appel ne paie pas deux fois.
   //
-  // Le tirage est pris chez **son propriétaire** (les tirages des premières
-  // fixtures ne sont pas forcément ceux d'Alix) : c'est lui qui peut
-  // l'encaisser, et le refus se teste avec un autre joueur.
+  // Le tirage est pris chez **son propriétaire** : c'est lui qui touche, et le
+  // refus se teste avec un autre joueur.
   const ligneTirage = (await client.query(
     "select id, user_id from public.pack_draws where kind = 'live' order by id limit 1",
   )).rows[0];
   const tirageWallet = ligneTirage.id;
   const proprietaire = ligneTirage.user_id;
   const autreJoueur = proprietaire === A ? B : A;
+  const journalTirage = (await client.query(
+    "select delta, kind, ref from public.wallet_ledger where user_id = $1 and kind = 'pack' and ref = $2",
+    [proprietaire, String(tirageWallet)],
+  )).rows[0];
   const avantTirageWallet = (await asPlayer(proprietaire, "select public.wallet_get() as r")).rows[0].r.points;
-  const encaisseWallet = (await asPlayer(proprietaire, "select public.wallet_credit('pack', $1::text) as r", [String(tirageWallet)])).rows[0].r;
   const encoreTirage = (await asPlayer(proprietaire, "select public.wallet_credit('pack', $1::text) as r", [String(tirageWallet)])).rows[0].r;
   check(
-    "wallet : un tirage paie 12 points, une seule fois",
-    encaisseWallet.gained === 12 && encaisseWallet.points === avantTirageWallet + 12 && encoreTirage.points === encaisseWallet.points,
-    JSON.stringify({ encaisse: encaisseWallet, encore: encoreTirage }),
+    "wallet : un tirage est payé par le serveur au moment du tirage, une seule fois",
+    journalTirage?.delta === 12 &&
+      encoreTirage.gained === 0 &&
+      encoreTirage.points === avantTirageWallet,
+    JSON.stringify({ journal: journalTirage, encore: encoreTirage }),
   );
   await refuses(
     "wallet : un tirage qui n'est pas le sien ne paie rien",

@@ -243,7 +243,12 @@ export type PackOpenOutcome =
  * déjà en français).
  */
 export type CloudActionOutcome =
-  | { status: "done"; message: string }
+  /**
+   * `delta` : ce que le serveur a réellement versé ou prélevé, quand l'action
+   * en déplace (un mouvement de points à rejouer vaut `0`). Les écrans s'en
+   * servent pour annoncer le bon chiffre — jamais celui qu'ils espéraient.
+   */
+  | { status: "done"; message: string; delta?: number }
   /**
    * Une étape reste à faire, mais tout va bien : c'est le cas d'un changement
    * d'adresse qui attend son code par e-mail. Rien n'est perdu, rien n'est en
