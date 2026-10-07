@@ -84,6 +84,7 @@ import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 import { bestCardOf } from "@/lib/social/inbox";
 import { buzz } from "@/lib/haptics";
+import { setTiltEnabled, tiltAvailable, tiltEnabled } from "@/lib/tilt";
 import {
   isPerfect,
   PERFECT_HAPTIC,
@@ -1157,6 +1158,11 @@ function ProfileView({
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
+  // L'inclinaison des cartes (Holo, Gold). Le réglage n'apparaît que sur un
+  // appareil qui a vraiment un capteur : proposer un interrupteur inerte serait
+  // une promesse en l'air.
+  const [tiltOn, setTiltOn] = useState(() => tiltEnabled());
+  const [canTilt] = useState(() => tiltAvailable());
   // Le studio de tirages est un outil de mise au point, pas une option de jeu :
   // il s'ouvre en appuyant cinq fois sur la pastille de niveau.
   const [tools, setTools] = useState(0);
@@ -1172,6 +1178,12 @@ function ProfileView({
     } else {
       setTools(count);
     }
+  }
+
+  function toggleTilt() {
+    const next = !tiltOn;
+    setTiltOn(next);
+    setTiltEnabled(next);
   }
 
   function toggleSound() {
@@ -1375,6 +1387,20 @@ function ProfileView({
             <i />
           </span>
         </button>
+        {canTilt ? (
+          <button
+            type="button"
+            className="menu-row"
+            role="switch"
+            aria-checked={tiltOn}
+            onClick={toggleTilt}
+          >
+            <span>Cartes qui s&apos;inclinent</span>
+            <span className="switch" data-on={tiltOn ? "on" : "off"} aria-hidden="true">
+              <i />
+            </span>
+          </button>
+        ) : null}
       </section>
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par

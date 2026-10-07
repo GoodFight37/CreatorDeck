@@ -72,6 +72,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 10.4 | Paquet Scène + wishlist publique épinglée | **livré** | `0014_scene_pack.sql`, `0015_wishlist.sql` |
 | 10.8 | Notifications de direct (push FCM) | **livré** | `0023_notifications.sql`, `0024_push_state.sql`, `supabase/functions/notify-live`, `src/lib/push.ts` |
 | 10.9 | Le direct se réveille tout seul : l'horloge de la base interroge Twitch même quand personne ne joue (`pg_cron` + `pg_net`) | **livré** | `0025_direct_auto.sql`, `docs/cloud-supabase.md` § « Le direct » |
+| 10.10 | Les cartes Holo et Gold s'inclinent avec le téléphone (gyroscope), avec un réglage pour couper | **livré** | `src/lib/tilt.ts`, `src/components/creator-card.tsx` |
 | 10.5 | Overlay 16:9 + révélation sadique | **livré** | `src/lib/reveal.ts`, `src/components/reveal-overlay.tsx`, `/overlay` |
 | 10.6 | Catalogue désirable : Top 1000 + les Sortants | **livré** | `src/lib/retired.ts`, `0016_sortants.sql`, `docs/catalogue-twitch.md` § « Les Sortants » |
 | 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
@@ -122,7 +123,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**703 tests**, 46 fichiers aujourd'hui).
+  (**716 tests**, 47 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -182,6 +183,8 @@ src/lib/regions.ts       familles de collection (langues) et leurs teintes
 src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
 src/lib/push.ts          notifications côté appareil : permission, jeton FCM,
                          canal Android, appui sur une notification (testé)
+src/lib/tilt.test.ts     le reflet des cartes suit l'inclinaison du téléphone :
+                         calcul borné, un seul capteur partagé, réglage du joueur
 src/lib/supabase-notify.test.ts  garde-fou : jetons fermés, fenêtres de 0023,
                          son et canal du direct, état relu en 0024,
                          Edge Function réservée au service, réglages Android

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
 import {
   creatorImage,
@@ -12,6 +12,7 @@ import {
 import { isRetired } from "@/lib/retired";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
+import { subscribeTilt, tiltEnabled, tiltSilent } from "@/lib/tilt";
 import { Radio } from "lucide-react";
 
 type CreatorCardProps = {
@@ -65,6 +66,34 @@ export function CreatorCard({
   const shiny = !locked && !compact && variant !== "standard";
   const foilRef = useRef<HTMLDivElement | null>(null);
 
+  /**
+   * Le reflet suit l'inclinaison du téléphone (Holo, Gold).
+   *
+   * Le calcul vit dans `@/lib/tilt` (pur, testé) et l'abonnement est partagé :
+   * mille cartes ne posent pas mille écouteurs. Les variables sont écrites en
+   * direct sur le foil — comme le doigt, sans re-rendu React (une mise à jour
+   * d'état soixante fois par seconde ferait ramer le classeur entier).
+   *
+   * Le doigt reste prioritaire sur un écran tactile ; l'inclinaison reprend la
+   * main quand on penche. Rien ne se passe si le joueur a coupé l'effet dans
+   * les réglages, ni si l'appareil n'a pas de capteur.
+   */
+  useEffect(() => {
+    if (!shiny || !tiltEnabled()) return;
+    const off = subscribeTilt((position) => {
+      const foil = foilRef.current;
+      if (!foil) return;
+      if (!position) {
+        foil.style.removeProperty("--px");
+        foil.style.removeProperty("--py");
+        return;
+      }
+      foil.style.setProperty("--px", `${position.px}%`);
+      foil.style.setProperty("--py", `${position.py}%`);
+    });
+    return off;
+  }, [shiny]);
+
   function trackPointer(event: PointerEvent<HTMLElement>) {
     const foil = foilRef.current;
     if (!foil || !shiny) return;
@@ -102,8 +131,13 @@ export function CreatorCard({
       onPointerLeave={() => {
         const foil = foilRef.current;
         if (!foil) return;
-        foil.style.removeProperty("--px");
-        foil.style.removeProperty("--py");
+        // Si le téléphone est incliné, le reflet vient du capteur : on ne
+        // l'efface pas en retirant le doigt, sinon la carte s'éteindrait d'un
+        // coup au milieu d'un mouvement.
+        if (tiltSilent()) {
+          foil.style.removeProperty("--px");
+          foil.style.removeProperty("--py");
+        }
       }}
     >
       <div className="card-photo-wrap">

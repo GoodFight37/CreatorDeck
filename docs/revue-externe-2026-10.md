@@ -138,14 +138,20 @@ pareil ne bloquent plus la sauvegarde ».
    démarrait dans le vide ne réveillait personne, et la notification du brief
    ne partait pas. Aucune clé de service n'entre dans la base : la porte
    n'accepte que la clé publique, et elle est fermée aux joueurs.
-5. Les codes promo et le gyroscope holographique — le reste du backlog hors
-   brief, inchangé.
+5. ~~**Le gyroscope holographique**~~ **fait le 7 octobre** : `src/lib/tilt.ts`.
+   Le reflet d'une Holo (ou d'une Gold) suivait le doigt ; sur un téléphone posé
+   dans la main, aucun doigt ne touche la carte — le foil restait donc figé. Il
+   suit maintenant l'inclinaison, dans les limites de la planche, avec **un seul
+   écouteur pour tout le classeur** (mille cartes n'ouvrent pas mille
+   abonnements), un réglage pour couper, et le respect de « animations
+   réduites ».
+6. Les codes promo — le reste du backlog hors brief.
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 703 tests, 46 fichiers
+npm test                                    # 716 tests, 47 fichiers
 npm run supabase:verify                     # 352 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
