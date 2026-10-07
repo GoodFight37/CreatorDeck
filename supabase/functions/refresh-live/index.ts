@@ -16,17 +16,25 @@
  * Pourquoi ici et pas dans l'app : un APK se dézippe. Une clé secrète embarquée
  * serait publique, et n'importe qui pourrait se faire passer pour le jeu.
  *
- * Diagnostic, depuis un navigateur (aucun outil nécessaire) :
- *   * `…/functions/v1/refresh-live?check=1` — secrets présents, catalogue
- *     lisible, âge du cache. Ne consomme pas de quota Twitch ;
- *   * `…/functions/v1/refresh-live` — déclenche un rafraîchissement (une seule
- *     requête Twitch toutes les 90 secondes) et renvoie ce qui a été publié.
+ * Qui peut l'appeler :
+ *   * **le jeu**, avec la clé anon du projet (`Authorization: Bearer …`) —
+ *     c'est la clé déjà embarquée dans l'APK, rien de secret n'est ajouté ;
+ *   * **le diagnostic** `?check=1` (secrets présents, catalogue lisible, âge du
+ *     cache ; ne parle pas à Twitch) est réservé au **rôle de service** : il
+ *     décrit l'état de l'infrastructure, ce n'est pas une page publique.
+ *     `curl -s -H "Authorization: Bearer <clé_service>" \
+ *        "https://<projet>.supabase.co/functions/v1/refresh-live?check=1"`.
  *
  * Déploiement (voir `docs/cloud-supabase.md` § Direct) :
  *   * secrets de la fonction : `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` ;
- *   * « Verify JWT » peut rester **désactivé** : la fonction ne publie que des
- *     données publiques et se limite elle-même à un rafraîchissement par
- *     90 secondes. La protéger par un jeton n'apporterait rien.
+ *   * **activer « Verify JWT »** : la fonction refuse alors tout appel sans
+ *     jeton, et l'app en envoie un (sa clé anon). Sans ça, n'importe quel
+ *     robot peut déclencher la fonction — la garde des 90 secondes limite les
+ *     dégâts, mais elle ne devrait pas être la seule barrière.
+ *
+ * Anti-course : le créneau des 90 secondes est **réservé** par une écriture
+ * conditionnelle (`live_state.refreshed_at`). Deux appels simultanés ne
+ * consomment donc qu'une requête Twitch ; le perdant répond `skipped`.
  */
 
 const CLIENT_ID = Deno.env.get("TWITCH_CLIENT_ID") ?? "";
@@ -190,11 +198,25 @@ Deno.serve(async (req) => {
   }
 
   const params = new URL(req.url).searchParams;
+  const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
+  const isService = Boolean(SERVICE_ROLE) && bearer === SERVICE_ROLE;
+
+  // Sans jeton, rien du tout. L'app en envoie un (sa clé anon) ; un navigateur
+  // sans en-tête ne peut plus déclencher la fonction. À doubler côté tableau de
+  // bord en activant « Verify JWT ».
+  if (!bearer) {
+    return json({ error: "Authorization requis (clé anon du projet)." }, 401);
+  }
 
   // Mode diagnostic : ne parle **pas** à Twitch, ne consomme pas de quota.
   // Répond à « pourquoi je ne vois rien ? » : secrets présents, catalogue
-  // lisible, âge du cache.
+  // lisible, âge du cache. Réservé au rôle de service : ça décrit
+  // l'infrastructure, et une page publique qui dit « secrets absents » est un
+  // indice offert.
   if (params.get("check") === "1") {
+    if (!isService) {
+      return json({ error: "Le diagnostic ?check=1 est réservé au rôle de service." }, 403);
+    }
     const secrets = {
       twitch_client_id: Boolean(CLIENT_ID),
       twitch_client_secret: Boolean(CLIENT_SECRET),
@@ -230,13 +252,30 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const state = (await rest("live_state?id=eq.true&select=refreshed_at,streams")) as {
-      refreshed_at: string;
-      streams: number;
-    }[];
-    const refreshedAt = state[0]?.refreshed_at ? Date.parse(state[0].refreshed_at) : 0;
-    const age = Date.now() - refreshedAt;
-    if (Number.isFinite(age) && age < MIN_INTERVAL_MS) {
+    // Le créneau se **réserve** : on écrit `refreshed_at` seulement s'il est
+    // plus vieux que la fenêtre, et PostgREST ne renvoie la ligne que si le
+    // `where` a matché. Deux appels simultanés ne peuvent donc pas partir tous
+    // les deux chez Twitch (avant, ils lisaient la même date et passaient tous
+    // les deux). Le perdant répond `skipped`, et `live_publish` réécrira la
+    // date à la fin — c'est elle qui compte pour les abonnés.
+    const seuil = new Date(Date.now() - MIN_INTERVAL_MS).toISOString();
+    const pris = (await rest(
+      `live_state?id=eq.true&refreshed_at=lt.${encodeURIComponent(seuil)}&select=streams`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ refreshed_at: new Date().toISOString() }),
+        // PostgREST ne dit « j'ai bien touché cette ligne » que sur demande :
+        // sans ce `Prefer`, un `PATCH` vide ressemble à un `PATCH` réussi.
+        headers: { Prefer: "return=representation" },
+      },
+    )) as { streams: number }[];
+    if (!pris.length) {
+      const state = (await rest("live_state?id=eq.true&select=refreshed_at,streams")) as {
+        refreshed_at: string;
+        streams: number;
+      }[];
+      const refreshedAt = state[0]?.refreshed_at ? Date.parse(state[0].refreshed_at) : 0;
+      const age = Date.now() - refreshedAt;
       return json({ skipped: true, age_ms: age, streams: state[0]?.streams ?? 0 });
     }
 

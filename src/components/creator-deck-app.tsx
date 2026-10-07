@@ -53,6 +53,7 @@ import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
+import { usePackOpening } from "@/hooks/use-pack-opening";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
@@ -112,7 +113,6 @@ type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
 type CollectionFilter = "all" | "owned" | "live" | "retired" | Rarity;
 
 /** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
-const OPENING_DELAY_MS = 650;
 
 /** Jalons de collection, exprimés en part du catalogue (25 puis 100 sur 500). */
 /**
@@ -317,6 +317,9 @@ function HomeView({
   const pack = PACKS.live;
   const stock = game.player.packs;
   const nextAt = game.player.nextPackAt;
+  // Le seul compteur au format mm:ss du jeu : il bat à la seconde, et il ne
+  // re-rend que ce panneau (le minuteur est local à l'écran Drop).
+  const tick = useNow(1_000);
   // Le compteur de malchance en une phrase. À 1 restant, c'est **ce** booster
   // qui est garanti : le dire autrement ferait croire à un booster de plus.
   const pityCopy =
@@ -446,7 +449,7 @@ function HomeView({
           </div>
           <div className="timer-copy">
             <Clock3 size={14} />
-            <span>{formatCountdown(nextAt, now)}</span>
+            <span>{formatCountdown(nextAt, tick)}</span>
           </div>
         </div>
         <button
@@ -1415,9 +1418,21 @@ export function CreatorDeckApp() {
   // minutes, et c'est la pastille qui doit faire sortir le joueur de son siège.
   useEffect(() => {
     if (!inboxReady) return;
-    void cloudStore.loadLastPacks();
-    const timer = setInterval(() => void cloudStore.loadLastPacks(), 3 * 60_000);
-    return () => clearInterval(timer);
+    // L'étagère des Last Packs se recharge à deux vitesses : toutes les 30 s
+    // tant qu'un paquet est exposé (sa fenêtre de vol dure dix minutes — la
+    // manquer pour un poll de trois minutes, c'est rater *le* moment du jeu),
+    // et toutes les trois minutes le reste du temps. Le minuteur se reprogramme
+    // à chaque tour : il lit l'état frais du magasin, jamais une capture.
+    let timer: number | undefined;
+    const schedule = () => {
+      void cloudStore.loadLastPacks();
+      const snapshot = cloudStore.getSnapshot();
+      const at = Date.now();
+      const exposed = readySteals(snapshot.lastPacks, snapshot.lastPacksAt ?? at, at) > 0;
+      timer = window.setTimeout(schedule, exposed ? 30_000 : 3 * 60_000);
+    };
+    schedule();
+    return () => window.clearTimeout(timer);
   }, [inboxReady]);
   // L'arène se lit au démarrage et toutes les dix minutes : c'est ce qui allume
   // la pastille « récompense à encaisser » du menu, et ce qui rafraîchit le
@@ -1428,7 +1443,11 @@ export function CreatorDeckApp() {
     const timer = setInterval(() => void cloudStore.loadArena(), 10 * 60_000);
     return () => clearInterval(timer);
   }, [inboxReady]);
-  const now = useNow(1_000);
+  // Trente secondes suffisent à l'écran entier : le seul endroit qui vit à la
+  // seconde est le compte à rebours de la réserve, et il a son propre
+  // minuteur **local** (`HomeView`). Un `useNow(1_000)` ici re-rendait les
+  // mille cartes de la collection une fois par seconde, pour rien.
+  const now = useNow(30_000);
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
   useLivePolling();
@@ -1478,6 +1497,10 @@ export function CreatorDeckApp() {
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
 
+  // Un seul endroit décide qui tire (le serveur ou l'appareil) : l'écran ne
+  // fait qu'afficher ce qui revient — l'overlay 16:9 passe par le même module.
+  const { openLivePack, openScenePack } = usePackOpening(game);
+
   const showError = useCallback((message: string, hint: "account" | null = null) => {
     setNotice(null);
     setError(message);
@@ -1503,55 +1526,19 @@ export function CreatorDeckApp() {
     setError(null);
     setErrorHint(null);
     try {
-      // Build sans cloud (dev, tests) : le tirage local reste le comportement,
-      // exactement comme avant.
-      if (!cloud.configured) {
-        // Petit délai volontaire : le tirage est instantané en local, mais la
-        // révélation mérite son moment de suspense.
-        await new Promise((resolve) => window.setTimeout(resolve, OPENING_DELAY_MS));
-        // Le bonus Direct : on lit l'état du direct au moment du geste (et non
-        // au rendu), pour que « qui streame » soit celui d'il y a dix secondes.
-        const cards = gameStore.openPack(Date.now(), {
-          liveLogins: liveLogins(liveStore.getSnapshot()),
-        });
+      // Qui tire — le serveur ou l'appareil — se décide dans `usePackOpening`,
+      // le même module que l'overlay 16:9.
+      const result = await openLivePack();
+      if (result.status === "drawn") {
         // Le son accompagne le geste, jamais l'attente : c'est l'instant du
         // « wouip » qui compte.
         playPackOpening();
         setRevealKind("live");
-        setDrawnCards(cards);
+        setDrawnCards(result.cards);
         setRevealIndex(0);
         return;
       }
-
-      // Cloud configuré : les cartes viennent du serveur, jamais du moteur
-      // local — c'est ce qui les rend infalsifiables (prérequis des échanges).
-      // Pas de repli silencieux : sans compte ou sans réseau, on n'ouvre pas.
-      if (!cloud.userId) {
-        showError("Connecte-toi pour ouvrir un booster.", "account");
-        return;
-      }
-
-      // La récompense de série : le joueur a déjà tranché s'il est passé par
-      // l'écran Objectifs (les sabliers éteignent `streakJackpot`). Sinon, le
-      // défaut est le plus favorable : le Perfect garanti.
-      const outcome = await cloudStore.openPack(game.streak.jackpot ? "perfect" : "hourglasses");
-      if (outcome.status === "drawn") {
-        // Le son accompagne le geste : il faut un geste utilisateur pour que
-        // le navigateur autorise l'audio.
-        playPackOpening();
-        setRevealKind("live");
-        setDrawnCards(outcome.cards);
-        setRevealIndex(0);
-        // Le paquet vient d'être exposé dix minutes : l'étagère doit le savoir
-        // tout de suite, sinon « ton paquet est exposé » arriverait en retard.
-        void cloudStore.loadLastPacks();
-        return;
-      }
-      if (outcome.reason === "offline" || outcome.reason === "no-session") {
-        showError(outcome.message, "account");
-        return;
-      }
-      showError(outcome.message);
+      showError(result.message, result.needAccount ? "account" : null);
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
     } finally {
@@ -1578,35 +1565,17 @@ export function CreatorDeckApp() {
     setError(null);
     setErrorHint(null);
     try {
-      if (!cloud.configured) {
-        await new Promise((resolve) => window.setTimeout(resolve, OPENING_DELAY_MS));
-        const cards = gameStore.openScenePack(Date.now());
+      const result = await openScenePack();
+      if (result.status === "drawn") {
         playPackOpening();
         setRevealKind("scene");
-        setDrawnCards(cards);
+        setDrawnCards(result.cards);
         setRevealIndex(0);
         return;
       }
-      if (!cloud.userId) {
-        showError("Connecte-toi pour ouvrir ton Paquet Scène.", "account");
-        return;
-      }
-      const outcome = await cloudStore.openScenePack(family.familyId);
-      if (outcome.status === "drawn") {
-        playPackOpening();
-        setRevealKind("scene");
-        setDrawnCards(outcome.cards);
-        setRevealIndex(0);
-        void cloudStore.loadLastPacks();
-        return;
-      }
-      if (outcome.reason === "offline" || outcome.reason === "no-session") {
-        showError(outcome.message, "account");
-        return;
-      }
-      showError(outcome.message);
+      showError(result.message, result.needAccount ? "account" : null);
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : "Paquet Scène impossible.");
+      showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
     } finally {
       setSceneOpening(false);
     }

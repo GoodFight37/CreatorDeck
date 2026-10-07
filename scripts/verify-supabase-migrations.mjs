@@ -129,6 +129,7 @@ try {
   const reinitialiser = await readFile(path.join(MIGRATIONS, "0017_reinitialiser.sql"), "utf8");
   const arena = await readFile(path.join(MIGRATIONS, "0018_arena.sql"), "utf8");
   const integrite = await readFile(path.join(MIGRATIONS, "0019_integrite.sql"), "utf8");
+  const identite = await readFile(path.join(MIGRATIONS, "0020_identite.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -149,6 +150,7 @@ try {
     ["0017_reinitialiser.sql", reinitialiser],
     ["0018_arena.sql", arena],
     ["0019_integrite.sql", integrite],
+    ["0020_identite.sql", identite],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -3298,6 +3300,23 @@ try {
     await asPlayer(INTEGRE, "update public.profiles set display_name = $1 where user_id = $2", ["Collectionneur-1", INTEGRE])
       .then(() => true)
       .catch(() => false),
+  );
+  check(
+    "pseudos : deux joueurs ne portent pas le même nom (majuscules comprises)",
+    await (async () => {
+      // Gaspard (créé plus haut pour la sauvegarde suspecte) tente de prendre
+      // le nom qu'INTEGRE vient de se donner — seul le changement de casse
+      // diffère.
+      const pris = await asPlayer(GASPARD, "update public.profiles set display_name = 'collectionneur-1' where user_id = $1", [GASPARD])
+        .then(() => "accepté")
+        .catch((error) => (/déjà pris/.test(String(error.message)) ? "refusé" : String(error.message)));
+      // Son propre nom reste modifiable : la comparaison ignore sa ligne.
+      const sien = await asPlayer(GASPARD, "update public.profiles set display_name = 'Gaspard' where user_id = $1", [GASPARD])
+        .then(() => "accepté")
+        .catch(() => "refusé");
+      return `${pris}/${sien}`;
+    })() === "refusé/accepté",
+    "attendu refusé/accepté",
   );
   check(
     "pseudos : changer sa vitrine ne redemande pas son pseudo",

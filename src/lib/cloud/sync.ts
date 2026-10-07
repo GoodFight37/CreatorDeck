@@ -55,6 +55,14 @@ export function stateFingerprint(state: PlayerState): string {
   const claimed = Object.entries(state.claimedTiers)
     .map(([season, tier]) => `${season}:${tier}`)
     .sort();
+  // Tout ce qui compose une partie entre dans l'empreinte, y compris
+  // l'économie « secondaire » (sabliers, jetons, plancher de malchance,
+  // missions, série, Paquet Scène). Sans elle, deux appareils dont seule
+  // l'économie a divergé étaient vus comme identiques : le `noop` sautait
+  // l'envoi et la divergence restait.
+  const missions = Object.entries(state.missions)
+    .map(([id, value]) => `${id}:${value}`)
+    .sort();
   const material = [
     state.version,
     state.themeId,
@@ -62,8 +70,16 @@ export function stateFingerprint(state: PlayerState): string {
     state.xp,
     state.points,
     state.hourglasses,
+    state.tokens,
     state.packs,
     state.openings,
+    state.pityCounter,
+    state.missionDay,
+    ...missions,
+    state.streakDay,
+    state.streak,
+    state.streakJackpot ? 1 : 0,
+    state.sceneDay,
     state.cards.length,
     ...cards,
     ...claimed,

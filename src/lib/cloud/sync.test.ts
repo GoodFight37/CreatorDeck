@@ -83,6 +83,28 @@ describe("empreinte d'une partie", () => {
     expect(stateFingerprint(stateWith({ claimedTiers: { S01: 2 } }))).not.toBe(stateFingerprint(base));
     expect(stateFingerprint(stateWith({ points: base.points + 1 }))).not.toBe(stateFingerprint(base));
   });
+
+  // L'économie « secondaire » compte aussi : sans elle, deux appareils dont
+  // seuls les jetons, la série ou le plancher de malchance avaient divergé
+  // étaient déclarés identiques, et le `noop` laissait la divergence en place.
+  it("change dès que l'économie secondaire change", () => {
+    const base = stateWith({ cards: [card("a", "kaicenat")] });
+    const fingerprint = stateFingerprint(base);
+    const variants: Partial<PlayerState>[] = [
+      { tokens: base.tokens + 5 },
+      { hourglasses: base.hourglasses + 1 },
+      { pityCounter: base.pityCounter + 1 },
+      { missionDay: "2026-03-02", missions: { pack: 1 } },
+      { streakDay: "2026-03-02", streak: base.streak + 1 },
+      { streakJackpot: true },
+      { sceneDay: "2026-03-02" },
+    ];
+    for (const variant of variants) {
+      expect(stateFingerprint(stateWith({ ...variant, cards: base.cards })), JSON.stringify(variant)).not.toBe(
+        fingerprint,
+      );
+    }
+  });
 });
 
 describe("statistiques locales", () => {

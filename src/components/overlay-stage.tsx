@@ -27,19 +27,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Hourglass, Layers3, LoaderCircle, Zap } from "lucide-react";
 import { RevealOverlay } from "@/components/reveal-overlay";
-import { useCloud } from "@/hooks/use-cloud";
+import { usePackOpening, type DrawSource } from "@/hooks/use-pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
-import { useLive } from "@/hooks/use-live";
-import { cloudStore } from "@/lib/cloud/cloud-store";
 import { getGameView, type DrawnCard } from "@/lib/game-engine";
-import { gameStore } from "@/lib/game-store";
-import { liveLogins } from "@/lib/live";
 import { playPackOpening } from "@/lib/sfx";
+
+/** Le petit texte sous les boutons : il dit qui décide, sans le décider. */
+const DRAW_SOURCE_LABEL: Record<DrawSource, string> = {
+  server: "Tirage décidé par le serveur",
+  account: "Non connecté — ouvre l'écran Compte dans le jeu",
+  local: "Hors ligne : tirage local",
+};
 
 export function OverlayStage() {
   const state = useGame();
-  const cloud = useCloud();
-  const live = useLive();
   const now = useNow(15_000);
   const [cards, setCards] = useState<DrawnCard[]>([]);
   const [index, setIndex] = useState(0);
@@ -50,6 +51,8 @@ export function OverlayStage() {
   // La vue dérivée (réserve de boosters, Paquet Scène du jour) : la recharge
   // passive se recalcule à chaque tick, comme dans le jeu.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
+  // Le même module que le jeu : une seule règle « serveur ou appareil ».
+  const { openLivePack, openScenePack, drawSource } = usePackOpening(game);
   const sceneOpened = game?.scene.opened ?? false;
   const packs = game?.player.packs ?? 0;
 
@@ -58,36 +61,23 @@ export function OverlayStage() {
     setBusy(true);
     setProblem(null);
     try {
-      // Cloud configuré sans compte : on ne descend pas en local en douce — la
-      // règle du jeu est la même ici. Sans cloud du tout, le moteur local reste
-      // le comportement (développement, tests).
-      if (cloud.configured) {
-        if (!cloud.userId) {
-          setProblem("Connecte-toi (écran Compte) pour ouvrir un booster en direct.");
-          return;
-        }
-        const outcome = await cloudStore.openPack(game.streak.jackpot ? "perfect" : "hourglasses");
-        if (outcome.status !== "drawn") {
-          setProblem(outcome.message);
-          return;
-        }
-        playPackOpening();
-        setKind("live");
-        setCards(outcome.cards);
-        setIndex(0);
+      // Qui tire — le serveur ou l'appareil — se décide dans `usePackOpening`,
+      // le même module que le jeu : l'overlay n'a plus sa propre règle.
+      const result = await openLivePack();
+      if (result.status === "refused") {
+        setProblem(result.message);
         return;
       }
-      const drawn = gameStore.openPack(Date.now(), { liveLogins: liveLogins(live) });
       playPackOpening();
       setKind("live");
-      setCards(drawn);
+      setCards(result.cards);
       setIndex(0);
     } catch (error) {
       setProblem(error instanceof Error ? error.message : "Ouverture impossible.");
     } finally {
       setBusy(false);
     }
-  }, [busy, cards.length, cloud.configured, cloud.userId, game, live]);
+  }, [busy, cards.length, game, openLivePack]);
 
   const openScene = useCallback(async () => {
     const family = game?.scene.family;
@@ -95,33 +85,21 @@ export function OverlayStage() {
     setBusy(true);
     setProblem(null);
     try {
-      if (cloud.configured) {
-        if (!cloud.userId) {
-          setProblem("Connecte-toi (écran Compte) pour ouvrir ton Paquet Scène.");
-          return;
-        }
-        const outcome = await cloudStore.openScenePack(family.familyId);
-        if (outcome.status !== "drawn") {
-          setProblem(outcome.message);
-          return;
-        }
-        playPackOpening();
-        setKind("scene");
-        setCards(outcome.cards);
-        setIndex(0);
+      const result = await openScenePack();
+      if (result.status === "refused") {
+        setProblem(result.message);
         return;
       }
-      const drawn = gameStore.openScenePack(Date.now());
       playPackOpening();
       setKind("scene");
-      setCards(drawn);
+      setCards(result.cards);
       setIndex(0);
     } catch (error) {
       setProblem(error instanceof Error ? error.message : "Ouverture impossible.");
     } finally {
       setBusy(false);
     }
-  }, [busy, cards.length, cloud.configured, cloud.userId, game]);
+  }, [busy, cards.length, game, openScenePack]);
 
   const close = useCallback(() => {
     setCards([]);
@@ -191,13 +169,7 @@ export function OverlayStage() {
               Espace ouvre · Entrée révèle. Aucun raccourci ici : les cinq cartes se montrent.
             </p>
             {problem ? <p className="overlay-problem">{problem}</p> : null}
-            <p className="overlay-meta">
-              {cloud.configured
-                ? cloud.userId
-                  ? "Tirage décidé par le serveur"
-                  : "Non connecté — ouvre l'écran Compte dans le jeu"
-                : "Hors ligne : tirage local"}
-            </p>
+            <p className="overlay-meta">{DRAW_SOURCE_LABEL[drawSource]}</p>
           </div>
         )}
       </div>

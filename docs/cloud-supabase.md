@@ -250,6 +250,11 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0020_identite.sql`](../supabase/migrations/0020_identite.sql)
+     → **Run** pour que deux joueurs ne puissent plus porter le même nom à une
+     majuscule près (`profile_name_unique`). Un trigger plutôt qu'un index
+     unique : la migration passe même si la base contient déjà des doublons, et
+     le message est lisible par le joueur. Aucun compte existant n'est renommé.
    - [`supabase/migrations/0017_reinitialiser.sql`](../supabase/migrations/0017_reinitialiser.sql)
      → **Run** pour que « **Réinitialiser la progression** » (écran Toi → menu)
      rejoue vraiment la partie à zéro **en ligne aussi** : sans cette migration,
@@ -317,7 +322,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les dix-neuf migrations** (`0001` à `0019`) pour de vrai, dans
+> Le script exécute **les vingt migrations** (`0001` à `0020`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -495,6 +500,14 @@ pointés, tous vérifiés dans le code avant d'être corrigés :
   (`pg_advisory_xact_lock`) pour que deux appels simultanés ne sortent pas deux
   Paquets Scène du même jour. Un trigger `pack_state_guard` garde la réserve
   dans ses bornes (0 à 4) et refuse une ancre dans le futur.
+- **Un nom, un joueur.** `0020_identite.sql` refuse qu'un second profil prenne
+  un pseudo déjà pris, à la casse et aux espaces près (`profile_name_unique`) :
+  « Fabien » et « fabien » dans le même classement, c'est l'usurpation la plus
+  simple. C'est un **trigger** et non un index unique, pour deux raisons : une
+  contrainte ferait échouer la migration entière sur une base qui contient déjà
+  des doublons (aucun compte n'est renommé ni supprimé), et le message peut être
+  écrit en français. `0019` réserve déjà les noms **des créateurs** (nom
+  affiché et login Twitch du catalogue).
 - **Une rareté déclarée ne suffit plus à se classer.** `refresh_stats()`
   appelait `save_problems()` : refus net, la sauvegarde entière était rejetée.
   Il appelle désormais aussi `save_suspicions()`, qui **garde** la sauvegarde
@@ -700,6 +713,16 @@ Ils sont crédités par `applyPackResult()`, donc aussi bien pour un tirage loca
 que pour un tirage décidé par le serveur.
 
 ### Le direct (statut EN LIVE)
+
+**Qui peut réveiller la fonction.** `refresh-live` demande un en-tête
+`Authorization` (l'app envoie sa clé anon : rien de secret n'est embarqué) ; le
+diagnostic `?check=1`, qui décrit l'infrastructure, est réservé au **rôle de
+service**. Le créneau des 90 secondes est **réservé** par une écriture
+conditionnelle sur `live_state.refreshed_at` : deux appels simultanés ne
+consomment qu'une requête Twitch, l'autre répond `skipped` — avant, les deux
+lisaient la même date et partaient tous les deux chez Twitch. Côté tableau de
+bord, **active « Verify JWT »** sur cette fonction : sans ça, un robot peut
+toujours l'appeler.
 
 Une carte dont le créateur **streame à cet instant** le dit : pastille « Direct »
 sur la carte, bandeau sous le titre de l'accueil (« 12 sur 1000 · @kamet0 4 120 »),
