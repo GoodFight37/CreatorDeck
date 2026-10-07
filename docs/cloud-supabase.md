@@ -1201,6 +1201,12 @@ service — ou le SQL Editor, qui tourne avec les droits complets — peut crée
 code. Le vérificateur contrôle tout cela sur un Postgres jetable, refus du
 joueur compris.
 
+**Vérifié en production le 7 octobre 2026** : un code créé au SQL Editor
+(`BOOSTER-2026`), tapé par le joueur dans les réglages (Toi → « J'ai un code »),
+répond « Code accepté : un booster t'attend. » — et le booster entre dans la
+réserve sans être ouvert. La chaîne complète est donc vérifiée de bout en bout :
+le SQL Editor crée, l'app réclame, le serveur crédite.
+
 ### Se connecter avec Twitch
 
 Twitch sert d'**identité** : un appui sur « Continuer avec Twitch » (écran
