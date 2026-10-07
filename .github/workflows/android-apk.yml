@@ -58,5 +58,86 @@ jobs:
       - run: npm run catalog:ci
       - run: npm run android:debug
         env:
+          # Facultatif : variables de dépôt (Settings → Secrets and variables →
+          # Actions → onglet « Variables »). Vides, l'APK se construit sans cloud
+          # et reste 100 % hors ligne. Voir docs/cloud-supabase.md.
+          #
+          # Le repli sur les « Secrets » évite le piège classique : une valeur
+          # rangée dans Secrets au lieu de Variables était ignorée en silence.
+          # La clé anon est publique par conception — Variables reste l'endroit
+          # recommandé, Secrets est accepté et fonctionne tout autant.
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      # Diagnostic cloud : un APK construit sans les deux variables est
+      # 100 % hors ligne (aucun écran de compte). C'est la cause n°1 d'un
+      # « cloud non configuré » alors qu'on l'attend — on le dit tout de suite,
+      # dans le journal du run, sans jamais afficher les valeurs.
+      #
+      # Volontairement **sans `sed` ni `set -e`** : ce contrôle ne doit jamais
+      # faire échouer le build, seulement prévenir. (Une version à base de `sed`
+      # a déjà cassé un run entier pour une barre oblique de trop.)
+      - name: Vérifier que le cloud est embarqué
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::warning::Aucune variable cloud : cet APK sera hors ligne (aucun compte, aucun ami). Vérifie Settings → Secrets and variables → Actions (Variables ou Secrets, les deux marchent), puis relance ce workflow."
+          elif grep -rq "supabase.co" out/; then
+            echo "✅ Cloud embarqué : le bundle contient une adresse Supabase."
+          else
+            echo "::warning::Cloud absent du bundle alors que les variables existent — vérifie les noms exacts (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY)."
+          fi
+
+      # 1. Artefact du run : pratique pour un test ponctuel, mais son
+      #    téléchargement exige d'être connecté à GitHub.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      # 2. Pré-release « roulante » : un lien de téléchargement public et
+      #    stable, sans connexion, écrasé à chaque build.
+      #    https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk
+      - name: Publier l'APK en pré-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp android/app/build/outputs/apk/debug/app-debug.apk creatordeck-debug.apk
+          NOTES="APK de test (signature debug, non publiable sur le Play Store).
+          Reconstruit automatiquement à chaque build depuis \`${{ github.ref_name }}\` (\`${{ github.sha }}\`)."
+          if ! gh release view debug-apk >/dev/null 2>&1; then
+            gh release create debug-apk \
+              --prerelease \
+              --title "CreatorDeck — APK de test (roulant)" \
+              --notes "$NOTES"
+          fi
+          gh release edit debug-apk --notes "$NOTES"
+          gh release upload debug-apk creatordeck-debug.apk --clobber
+
+      # 3. Le mail, enfin : Firebase App Distribution envoie aux testeurs du
+      #    groupe un courriel avec un bouton d'installation, et garde l'APK dans
+      #    une page qui s'ouvre très bien depuis un téléphone.
+      #
+      #    Côté console Firebase (projet creatordeck-6a9ce), une fois :
+      #      * App Distribution → Testers & groups : le groupe `testers`, avec
+      #        l'adresse du testeur dedans (sans lui : erreur 404) ;
+      #      * le secret de dépôt `FIREBASE_SERVICE_ACCOUNT` : le JSON du compte
+      #        de service, avec le rôle Firebase App Distribution Admin.
+      - name: Préparer les notes de version
+        run: git log -1 --pretty='%h — %s' > release-notes.txt
+
+      - name: Envoyer l'APK aux testeurs (le mail)
+        uses: w9jds/firebase-action@35d0fd9b92b2c66dcd13f1b72dacc588e89e7567 # master / firebase-tools v15.32.1
+        with:
+          args: >-
+            appdistribution:distribute
+            android/app/build/outputs/apk/debug/app-debug.apk
+            --app 1:450483794682:android:d393fe779b340d6140cf43
+            --groups "testers"
+            --release-notes-file release-notes.txt
+        env:
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
