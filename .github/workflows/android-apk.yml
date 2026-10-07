@@ -58,14 +58,6 @@ jobs:
       - run: npm run catalog:ci
       - run: npm run android:debug
         env:
-          # Facultatif : variables de dépôt (Settings → Secrets and variables →
-          # Actions → onglet « Variables »). Vides, l'APK se construit sans cloud
-          # et reste 100 % hors ligne. Voir docs/cloud-supabase.md.
-          #
-          # Le repli sur les « Secrets » évite le piège classique : une valeur
-          # rangée dans Secrets au lieu de Variables était ignorée en silence.
-          # La clé anon est publique par conception — Variables reste l'endroit
-          # recommandé, Secrets est accepté et fonctionne tout autant.
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
@@ -80,14 +72,11 @@ jobs:
         run: |
           set -euo pipefail
           echo "Config cloud — URL : ${#NEXT_PUBLIC_SUPABASE_URL} caractère(s), clé : ${#NEXT_PUBLIC_SUPABASE_ANON_KEY} caractère(s)"
-          # L'app attend l'URL du projet. Un suffixe copié depuis l'écran API
-          # (/rest/v1, /auth/v1…) est retiré par elle-même : on le signale, et
-          # on prévient si la forme reste inattendue (l'APK serait hors ligne).
-          PROJET=$(printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | sed -E 's#/+$##; s#/(rest|auth|storage|realtime)/v1$##')
+          PROJET=$(printf '\%s' "$NEXT_PUBLIC_SUPABASE_URL" | sed -E 's#/+$##; s#/(rest\vert{}auth\vert{}storage\vert{}realtime)/v1$##')
           if [ "$NEXT_PUBLIC_SUPABASE_URL" != "$PROJET" ]; then
             echo "ℹ️ URL d'endpoint détectée : l'app utilisera ${PROJET} (préfère l'« URL du projet » nue)."
           fi
-          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && ! printf '%s' "$PROJET" | grep -Eq '^https://[a-z0-9-]+\.supabase\.(co|in)$'; then
+          if [ -n "$NEXT_PUBLIC_SUPABASE_URL" ] && ! printf '%s' "$PROJET" \vert{} grep -Eq '^https://[a-z0-9-]+\.supabase\.(co\vert{}in)$'; then
             echo "::warning::L'adresse Supabase ne ressemble pas à une URL de projet (attendu : https://<ref>.supabase.co) — l'app restera hors ligne."
           fi
           if grep -rq "supabase.co" out/ || grep -rq "supabase.in" out/; then
@@ -123,20 +112,8 @@ jobs:
           gh release edit debug-apk --notes "$NOTES"
           gh release upload debug-apk creatordeck-debug.apk --clobber
 
-      # 3. Le mail, enfin : Firebase App Distribution envoie aux testeurs du
-      #    groupe un courriel avec un bouton d'installation, et garde l'APK dans
-      #    une page qui s'ouvre très bien depuis un téléphone.
-      #
-      #    Deux réglages, une seule fois, dans la console Firebase
-      #    (console.firebase.google.com → projet creatordeck-6a9ce) :
-      #      * App Distribution → Testers & Groups → créer le groupe « testers »
-      #        (exactement ce nom) et y mettre ton adresse ;
-      #      * le compte de service doit pouvoir distribuer — c'est le même JSON
-      #        que le secret FCM de Supabase, rangé ici sous le nom
-      #        FIREBASE_SERVICE_ACCOUNT (Settings → Secrets and variables →
-      #        Actions → New repository secret).
-      #    Sans le secret, cette étape échoue et le journal le dit ; l'APK, lui,
-      #    est déjà disponible par les deux voies ci-dessus.
+      # 3. Firebase App Distribution : envoie une nouvelle release directement
+      #    disponible dans l'application App Tester sur ton téléphone.
       - name: Préparer les notes de version
         run: git log -1 --pretty='%h — %s' > release-notes.txt
 
@@ -147,7 +124,6 @@ jobs:
             appdistribution:distribute
             android/app/build/outputs/apk/debug/app-debug.apk
             --app 1:450483794682:android:d393fe779b340d6140cf43
-            --groups "testers"
             --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
