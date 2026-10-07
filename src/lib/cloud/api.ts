@@ -272,6 +272,11 @@ export type PlayerProfile = {
   rankCompletion: number | null;
   rankCards: number | null;
   showcaseSlugs: string[];
+  /**
+   * Le créateur que ce joueur cherche — sa wishlist. Un seul slug, ou `null`.
+   * Lisible par tous : c'est une demande, pas un secret.
+   */
+  wishlistSlug: string | null;
   byRarity: ProfileRarity[];
   /**
    * Complétion par famille de collection. Le serveur la calcule à partir du
@@ -372,6 +377,10 @@ function messageFor(status: number, code: string, raw: string): string {
     )
   ) {
     return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+  }
+  // La wishlist : la migration 0015 doit être collée dans le projet.
+  if (code === "PGRST202" && /wishlist_slug|set_wishlist|clear_wishlist|_wishlist/.test(raw)) {
+    return "La wishlist n'est pas installée sur ce projet : colle supabase/migrations/0015_wishlist.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Le Paquet Scène : la migration 0014 doit être collée dans le projet.
   if (
@@ -525,6 +534,9 @@ function parseProfile(raw: unknown): PlayerProfile | null {
     rankCompletion: rank(record.rank_completion),
     rankCards: rank(record.rank_cards),
     showcaseSlugs: Array.isArray(record.showcase_slugs) ? record.showcase_slugs.map(String) : [],
+    wishlistSlug: typeof record.wishlist_slug === "string" && record.wishlist_slug
+      ? record.wishlist_slug
+      : null,
     byRarity: parseRarityBreakdown(record.by_rarity),
     byRegion: parseFamilyBreakdown(record.by_region),
   };
@@ -1002,6 +1014,30 @@ export class CloudApi {
   async setShowcase(slugs: string[]): Promise<string[]> {
     const result = await this.rpc("set_showcase", { p_slugs: slugs });
     return Array.isArray(result) ? result.map(String) : [];
+  }
+
+  /**
+   * Le créateur épinglé (wishlist) — le sien par défaut, ou celui d'un autre
+   * joueur. `null` quand il n'y en a pas.
+   */
+  async wishlistSlug(userId?: string): Promise<string | null> {
+    const result = await this.rpc("wishlist_slug", { p_user_id: userId ?? null });
+    return typeof result === "string" && result ? result : null;
+  }
+
+  /**
+   * Épingle un créateur. Aucune possession n'est exigée : c'est justement le
+   * but — réclamer celui qu'on n'a pas. Le serveur vérifie seulement qu'il
+   * existe au catalogue, et renvoie le slug retenu.
+   */
+  async setWishlist(slug: string): Promise<string> {
+    const result = await this.rpc("set_wishlist", { p_slug: slug });
+    return typeof result === "string" ? result : slug;
+  }
+
+  /** Retire l'épinglé. Sans épinglé, l'appel ne fait rien (et ne casse rien). */
+  async clearWishlist(): Promise<void> {
+    await this.rpc("clear_wishlist", {});
   }
 
   /** Change le nom affiché au classement (ligne `profiles` du joueur). */

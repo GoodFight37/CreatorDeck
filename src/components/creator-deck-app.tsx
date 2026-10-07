@@ -43,11 +43,13 @@ import { NotificationsSheet } from "@/components/notifications-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
+import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
+import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
 import { useLive, useLivePolling } from "@/hooks/use-live";
@@ -966,6 +968,7 @@ function ProfileView({
   onShowLastPack,
   onShowNotifications,
   onShowOwnProfile,
+  onShowWishlist,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -980,12 +983,24 @@ function ProfileView({
   onShowLastPack: () => void;
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
+  onShowWishlist: () => void;
 }) {
   const cloud = useCloud();
+  // Le compte du carnet passe par le hook, et non par le store : lui seul
+  // ajoute la ligne du direct du créateur épinglé, que le serveur ne fabrique
+  // pas. La pastille et la feuille comptent ainsi exactement la même liste.
+  const { unread: inboxUnread } = useInbox();
   // Ce qui est prenable maintenant : la pastille du menu, calculée à partir de
   // l'étagère du serveur et de son horloge (voir `readySteals`).
   const lastPackNow = useNow(15_000);
   const lastPackReady = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? lastPackNow, lastPackNow);
+  // L'épinglé se relit au montage de l'onglet, et à chaque changement de
+  // compte : ce n'est pas l'épinglé d'un autre joueur qui doit s'afficher.
+  useEffect(() => {
+    if (!cloud.configured || !cloud.userId) return;
+    void cloudStore.loadWishlist();
+  }, [cloud.configured, cloud.userId]);
+  const wishlistCreator = cloud.wishlistSlug ? CREATOR_BY_SLUG.get(cloud.wishlistSlug) ?? null : null;
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
@@ -1059,6 +1074,57 @@ function ProfileView({
       </div>
 
       {/*
+       * La wishlist. Elle ne s'affiche que sur un build avec cloud : un épinglé
+       * que personne ne peut voir n'a pas de sens, et un bloc grisé de plus
+       * encombrerait l'onglet pour rien.
+       */}
+      {cloud.configured ? (
+        <section className="wishlist-block" aria-label="Wishlist">
+          <div className="wishlist-title">
+            <Target size={16} />
+            <h2>Wishlist</h2>
+          </div>
+          {!cloud.userId ? (
+            <div className="wishlist-body">
+              <p>
+                Connecte-toi pour épingler le créateur que tu cherches : les autres le verront sur
+                ta fiche.
+              </p>
+            </div>
+          ) : wishlistCreator ? (
+            <div className="wishlist-body">
+              <div className="wishlist-name">
+                <b>{wishlistCreator.displayName}</b>
+                <span>
+                  {RARITY_META[wishlistCreator.rarity].label} · {regionLabel(wishlistCreator.region)}
+                </span>
+              </div>
+              <div className="wishlist-actions">
+                <button type="button" className="account-button ghost" onClick={onShowWishlist}>
+                  Changer
+                </button>
+                <button
+                  type="button"
+                  className="account-button ghost"
+                  disabled={cloud.wishlistBusy}
+                  onClick={() => void cloudStore.clearWishlist()}
+                >
+                  Retirer
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="wishlist-body">
+              <p>Le créateur qui te manque le plus. Un seul, et il s&apos;affiche chez toi.</p>
+              <button type="button" className="account-button ghost" onClick={onShowWishlist}>
+                Épingler un créateur
+              </button>
+            </div>
+          )}
+        </section>
+      ) : null}
+
+      {/*
        * Le menu : deux groupes, des libellés seuls. Pas de sous-texte pour
        * expliquer chaque ligne — un menu de jeu se lit d'un coup d'œil. Ce qui
        * a besoin d'explications les donne là où on s'en sert : l'écran Compte,
@@ -1104,7 +1170,7 @@ function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowNotifications}>
             <span>Notifications</span>
-            {cloud.inboxUnread > 0 ? <b className="menu-count">{cloud.inboxUnread}</b> : null}
+            {inboxUnread > 0 ? <b className="menu-count">{inboxUnread}</b> : null}
             <ChevronRight size={16} />
           </button>
         ) : null}
@@ -1289,6 +1355,7 @@ export function CreatorDeckApp() {
   const [marketOpen, setMarketOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [lastPackOpen, setLastPackOpen] = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -1594,6 +1661,7 @@ export function CreatorDeckApp() {
             onShowFriends={() => setFriendsOpen(true)}
             onShowMarket={() => setMarketOpen(true)}
             onShowLastPack={() => setLastPackOpen(true)}
+            onShowWishlist={() => setWishlistOpen(true)}
             onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
@@ -1673,6 +1741,7 @@ export function CreatorDeckApp() {
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
+      {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet

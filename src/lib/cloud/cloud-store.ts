@@ -75,6 +75,14 @@ export type CloudState = {
   displayName: string | null;
   /** Cartes épinglées sur le profil public (0 à 4 slugs, dans l'ordre choisi). */
   showcase: string[];
+  /**
+   * Le créateur que le joueur cherche — sa wishlist (`0015_wishlist.sql`). Un
+   * seul slug, ou `null`. Publié ici parce que trois écrans le lisent : le
+   * bloc du classeur, le carnet (direct de l'épinglé) et la fiche publique.
+   */
+  wishlistSlug: string | null;
+  /** Un enregistrement de wishlist est en cours (le bouton attend). */
+  wishlistBusy: boolean;
   userId: string | null;
   /** Nom court du projet Supabase (affiché pour rassurer). */
   project: string | null;
@@ -245,6 +253,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   email: null,
   displayName: null,
   showcase: [],
+  wishlistSlug: null,
+  wishlistBusy: false,
   userId: null,
   project: null,
   busy: false,
@@ -666,6 +676,7 @@ export function createCloudStore(deps: CloudDeps) {
           email: session.email,
           displayName: null,
           showcase: [],
+          wishlistSlug: null,
           userId: session.userId,
           message: connectedMessage(adopted),
           isError: false,
@@ -692,6 +703,7 @@ export function createCloudStore(deps: CloudDeps) {
           email: session.email,
           displayName: null,
           showcase: [],
+          wishlistSlug: null,
           userId: session.userId,
           message: "Compte invité créé. Donne-toi un nom, puis envoie ta collection.",
           isError: false,
@@ -731,6 +743,7 @@ export function createCloudStore(deps: CloudDeps) {
           email: session.email,
           displayName: null,
           showcase: [],
+          wishlistSlug: null,
           userId: session.userId,
           message: connectedMessage(adopted),
           isError: false,
@@ -1384,6 +1397,7 @@ export function createCloudStore(deps: CloudDeps) {
         email: null,
         displayName: null,
         showcase: [],
+        wishlistSlug: null,
         userId: null,
         pendingEmail: null,
         pending: false,
@@ -1533,9 +1547,11 @@ export function createCloudStore(deps: CloudDeps) {
     /**
      * Recharge le carnet et recompte les nouveautés.
      *
-     * Les quatre sources partent ensemble ; une source en échec (la fonction
-     * des ventes pas encore collée, par exemple) ne vide pas le reste : le
-     * carnet est fait pour être utile, pas pour tomber entier.
+     * Les sources partent ensemble ; une source en échec (la fonction des
+     * ventes pas encore collée, par exemple) ne vide pas le reste : le carnet
+     * est fait pour être utile, pas pour tomber entier. La ligne du direct du
+     * créateur épinglé, elle, n'est pas ici : elle naît de l'écran, qui seul
+     * lit le direct (`src/hooks/use-inbox.ts`).
      */
     async loadInbox(): Promise<void> {
       const ready = tradeApi();
@@ -1543,20 +1559,36 @@ export function createCloudStore(deps: CloudDeps) {
       const userId = currentUserId();
       publish({ inboxBusy: true });
       try {
-        const [trades, incoming, friends, sales, losses] = await Promise.all([
+        const [trades, incoming, friends, sales, losses, shelf, wishlistSlug] = await Promise.all([
           ready.api.listTrades().catch(() => []),
           ready.api.listIncomingFriendRequests().catch(() => []),
           ready.api.listFriends().catch(() => []),
           ready.api.marketSales().catch(() => []),
           ready.api.lastPackLosses().catch(() => []),
+          // L'étagère sert deux fois : la feuille du Last Pack l'affiche, et le
+          // carnet en tire « X a ouvert Kameto, Last Pack encore 8 min ».
+          ready.api.lastPackShelf().catch(() => null),
+          ready.api.wishlistSlug().catch(() => null),
         ]);
         const items = buildInbox({
           trades,
           friends: { friends, incoming, outgoing: [] },
           sales,
           lastPackLosses: losses,
+          lastPackShelf: shelf,
+          now: deps.now(),
         });
-        publish({ inbox: items, inboxUnread: unreadCount(items, readSeen(userId)), inboxAt: deps.now(), inboxBusy: false });
+        publish({
+          inbox: items,
+          inboxUnread: unreadCount(items, readSeen(userId)),
+          inboxAt: deps.now(),
+          inboxBusy: false,
+          // L'étagère repart avec le carnet : deux appels réseau pour la même
+          // donnée seraient deux occasions de se contredire.
+          lastPacks: shelf ?? undefined,
+          lastPacksAt: shelf ? deps.now() : undefined,
+          wishlistSlug,
+        });
       } catch (error) {
         publish({ inboxBusy: false });
         fail(error, "Carnet indisponible.");
@@ -1777,6 +1809,71 @@ export function createCloudStore(deps: CloudDeps) {
     // le serveur trancher, rejouer le résultat ici — comme un achat d'hôtel.
 
     /** Charge l'étagère des paquets exposés et la publie dans l'état cloud. */
+    /**
+     * Le créateur épinglé, relu du serveur.
+     *
+     * Appelé au chargement du carnet (pour la ligne « ton épinglé est en
+     * direct ») et par l'écran du classeur. Un échec ne casse rien : sans
+     * `0015_wishlist.sql`, la wishlist reste vide et l'app est comme avant.
+     */
+    async loadWishlist(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      try {
+        const slug = await ready.api.wishlistSlug();
+        publish({ wishlistSlug: slug });
+      } catch {
+        // Silencieux : la wishlist est un confort, pas un préalable.
+      }
+    },
+
+    /**
+     * Épingle un créateur (ou le remplace). Le serveur vérifie qu'il existe au
+     * catalogue et renvoie le slug retenu ; l'écran n'invente rien.
+     */
+    async setWishlist(slug: string): Promise<boolean> {
+      const ready = tradeApi();
+      if ("refusal" in ready) {
+        publish({ wishlistBusy: false, message: ready.refusal.message, isError: true });
+        return false;
+      }
+      publish({ wishlistBusy: true, message: null, isError: false });
+      try {
+        const saved = await ready.api.setWishlist(slug);
+        const name = CREATOR_BY_SLUG.get(saved)?.displayName ?? "Ce créateur";
+        publish({
+          wishlistBusy: false,
+          wishlistSlug: saved,
+          message: `${name} est épinglé : les autres joueurs le verront sur ta fiche.`,
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Épinglage impossible.");
+        publish({ wishlistBusy: false, message: refusal.message, isError: true });
+        return false;
+      }
+    },
+
+    /** Retire l'épinglé. */
+    async clearWishlist(): Promise<boolean> {
+      const ready = tradeApi();
+      if ("refusal" in ready) {
+        publish({ wishlistBusy: false, message: ready.refusal.message, isError: true });
+        return false;
+      }
+      publish({ wishlistBusy: true, message: null, isError: false });
+      try {
+        await ready.api.clearWishlist();
+        publish({ wishlistBusy: false, wishlistSlug: null, message: "Ton épinglé est retiré.", isError: false });
+        return true;
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Retrait impossible.");
+        publish({ wishlistBusy: false, message: refusal.message, isError: true });
+        return false;
+      }
+    },
+
     async loadLastPacks(): Promise<void> {
       const ready = tradeApi();
       if ("refusal" in ready) return;

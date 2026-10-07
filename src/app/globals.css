@@ -2077,3 +2077,19 @@ input:focus-visible {
 .scene-action svg { color: var(--accent-light); }
 .scene-action:disabled { opacity: .55; cursor: default; }
 .odds-packs { margin-bottom: 4px; }
+.wishlist-block { margin: 0 0 16px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--accent-rgb) / .05); }
+.wishlist-title { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
+.wishlist-title svg { color: var(--accent-light); }
+.wishlist-title h2 { margin: 0; font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.wishlist-body { display: flex; flex-direction: column; gap: 11px; }
+.wishlist-body p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.wishlist-name { display: flex; flex-direction: column; gap: 2px; }
+.wishlist-name b { font-size: 15px; font-weight: 600; }
+.wishlist-name span { color: var(--muted); font-size: 12.5px; }
+.wishlist-actions { display: flex; gap: 8px; }
+.wishlist-check { display: inline-flex; align-items: center; color: var(--accent-light); }
+.wishlist-share { display: flex; align-items: center; gap: 10px; margin: 0 0 14px; padding: 11px 13px; border: 1px dashed rgb(var(--accent-rgb) / .4); border-radius: 14px; background: rgb(var(--accent-rgb) / .06); }
+.wishlist-share svg { flex: 0 0 auto; color: var(--accent-light); }
+.wishlist-share div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.wishlist-share span { color: var(--muted); font-size: 12px; }
+.wishlist-share b { font-size: 14.5px; font-weight: 600; }

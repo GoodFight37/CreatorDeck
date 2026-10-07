@@ -24,6 +24,7 @@ const PROFILE: PlayerProfile = {
   rankCompletion: 42,
   rankCards: 118,
   showcaseSlugs: ["kaicenat", "ibai", "createur-inconnu"],
+  wishlistSlug: null,
   byRarity: [
     { rarity: "legendary", owned: 4, total: 50 },
     { rarity: "rare", owned: 40, total: 230 },

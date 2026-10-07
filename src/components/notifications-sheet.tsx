@@ -14,8 +14,20 @@
  * lignes restent. Un carnet qu'il faudrait vider à la main serait une corvée.
  */
 import { useEffect } from "react";
-import { ArrowLeftRight, Check, Info, ShieldAlert, Store, UserCheck, UserPlus, X } from "lucide-react";
+import {
+  ArrowLeftRight,
+  Check,
+  Info,
+  Package,
+  Radio,
+  ShieldAlert,
+  Store,
+  UserCheck,
+  UserPlus,
+  X,
+} from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { InboxKind } from "@/lib/social/inbox";
@@ -30,11 +42,14 @@ const ICONS: Record<InboxKind, React.ReactNode> = {
   friend_new: <UserCheck size={15} />,
   sale: <Store size={15} />,
   last_pack: <ShieldAlert size={15} />,
+  friend_pack: <Package size={15} />,
+  wishlist_live: <Radio size={15} />,
 };
 
 export function NotificationsSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
   const now = useNow(30_000);
+  const { items } = useInbox();
 
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
@@ -43,8 +58,6 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
     void cloudStore.loadInbox().then(() => cloudStore.markInboxSeen());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const items = cloud.inbox;
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Notifications">
@@ -98,7 +111,8 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
               <strong>Rien de neuf</strong>
               <span>
                 Les offres d&apos;échange, les réponses à tes offres, tes amis, tes ventes à
-                l&apos;hôtel et les cartes prises dans ton Last Pack apparaîtront ici.
+                l&apos;hôtel, les cartes prises dans ton Last Pack, les boosters de tes amis
+                encore ouverts et le direct de ton créateur épinglé apparaîtront ici.
               </span>
             </div>
           </div>

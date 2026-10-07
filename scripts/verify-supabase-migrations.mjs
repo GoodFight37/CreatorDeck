@@ -124,6 +124,7 @@ try {
   const lastPack = await readFile(path.join(MIGRATIONS, "0012_last_pack.sql"), "utf8");
   const progression = await readFile(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
   const scenePack = await readFile(path.join(MIGRATIONS, "0014_scene_pack.sql"), "utf8");
+  const wishlist = await readFile(path.join(MIGRATIONS, "0015_wishlist.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -139,6 +140,7 @@ try {
     ["0012_last_pack.sql", lastPack],
     ["0013_progression.sql", progression],
     ["0014_scene_pack.sql", scenePack],
+    ["0015_wishlist.sql", wishlist],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -2258,6 +2260,92 @@ try {
     [SCENE, CH1, CH2, CH3],
   ]);
 
+  // --- 0015 : la wishlist épinglée -----------------------------------------
+  // Deux créateurs de la même famille, pour vérifier que le second remplace le
+  // premier : la wishlist est un nom, pas une liste.
+  const wishOne = (
+    await client.query("select slug from public.creators where region = 'S01' order by rank limit 1")
+  ).rows[0].slug;
+  const wishTwo = (
+    await client.query("select slug from public.creators where region = 'S01' order by rank limit 1 offset 1")
+  ).rows[0].slug;
+
+  check(
+    "wishlist : sans épinglé, il n'y a rien à montrer",
+    (await asPlayer(A, "select public.wishlist_slug() as r")).rows[0].r === null,
+  );
+
+  const shown = (await asPlayer(A, "select public.set_wishlist($1) as r", [wishOne])).rows[0].r;
+  check("wishlist : épingler un créateur du catalogue le renvoie tel quel", shown === wishOne, String(shown));
+
+  // Le point de la fonctionnalité : un **autre** joueur voit ce que tu cherches.
+  const otherView = (await asPlayer(B, "select public.player_profile($1) as p", [A])).rows[0].p;
+  check(
+    "wishlist : le profil public d'un autre joueur montre l'épinglé",
+    otherView.wishlist_slug === wishOne,
+    String(otherView.wishlist_slug),
+  );
+  // …et l'épinglé ne touche pas à la vitrine : deux listes différentes.
+  check(
+    "wishlist : l'épinglé ne touche pas aux cartes de la vitrine",
+    JSON.stringify(
+      (await client.query("select showcase_slugs as s from public.profiles where user_id = $1", [B])).rows[0].s,
+    ) === JSON.stringify(["ibai"]),
+  );
+
+  await asPlayer(A, "select public.set_wishlist($1)", [wishTwo]);
+  check(
+    "wishlist : un second épinglé remplace le premier (une seule ligne)",
+    (await asPlayer(A, "select public.wishlist_slug() as r")).rows[0].r === wishTwo &&
+      (await client.query("select count(*)::int as n from public.wishlist where user_id = $1", [A])).rows[0].n === 1,
+  );
+
+  await asPlayer(A, "select public.clear_wishlist()");
+  check(
+    "wishlist : retirer l'épinglé vide la ligne",
+    (await asPlayer(A, "select public.wishlist_slug() as r")).rows[0].r === null &&
+      (await client.query("select count(*)::int as n from public.wishlist where user_id = $1", [A])).rows[0].n === 0,
+  );
+
+  await refuses(
+    "wishlist : un créateur absent du catalogue → refus",
+    A,
+    "select public.set_wishlist($1)",
+    ["inconnu-au-bataillon"],
+    "n'est pas au catalogue",
+  );
+
+  // L'épinglé n'exige pas la possession : c'est justement le but — on réclame ce
+  // qu'on n'a pas. A possède chowh1 sans le posséder en… peu importe : on épingle
+  // un créateur que A n'a pas, et le serveur accepte.
+  const wishUnpossessed = (
+    await client.query(
+      "select c.slug from public.creators c where not exists (select 1 from public.user_cards u where u.user_id = $1 and u.creator_slug = c.slug) order by c.rank limit 1",
+      [A],
+    )
+  ).rows[0].slug;
+  check(
+    "wishlist : on peut épingler un créateur qu'on ne possède pas",
+    (await asPlayer(A, "select public.set_wishlist($1) as r", [wishUnpossessed])).rows[0].r === wishUnpossessed,
+  );
+
+  check(
+    "wishlist : sans compte, on ne peut pas épingler",
+    (await (async () => {
+      await client.query("set role anon");
+      try {
+        await client.query("select public.set_wishlist($1)", [wishOne]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })()),
+  );
+
+  await client.query("delete from public.wishlist where user_id = $1", [A]);
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -2269,6 +2357,7 @@ try {
   await client.query(lastPack);
   await client.query(progression);
   await client.query(scenePack);
+  await client.query(wishlist);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -2308,6 +2397,30 @@ try {
   check(
     "migrations rejouables : le plancher de malchance répond encore, à zéro",
     (await asPlayer(A, "select public.pack_status() as r")).rows[0].r.pity === 0,
+  );
+  check(
+    "migrations rejouables : la wishlist répond encore, avec son épinglé",
+    (await asPlayer(D, "select public.set_wishlist($1) as r", [wishOne])).rows[0].r === wishOne &&
+      (await asPlayer(D, "select public.player_profile() as p")).rows[0].p.wishlist_slug === wishOne,
+  );
+  await asPlayer(D, "select public.clear_wishlist()");
+  check(
+    "migrations rejouables : la wishlist referme l'écriture directe",
+    (await (async () => {
+      await client.query("set role authenticated");
+      await client.query("select set_config('test.uid', $1, false)", [D]);
+      try {
+        await client.query("insert into public.wishlist (user_id, slug) values ($1, $2)", [
+          D,
+          wishOne,
+        ]);
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })()),
   );
   check(
     "migrations rejouables : le Last Pack répond encore, sans double publication",

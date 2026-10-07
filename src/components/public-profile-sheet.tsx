@@ -11,7 +11,7 @@
  * besoin d'un serveur pour fabriquer une « Open Graph image ».
  */
 import { useCallback, useEffect, useState } from "react";
-import { Bookmark, Check, Copy, Download, RefreshCw, Share2, Trophy, X } from "lucide-react";
+import { Bookmark, Check, Copy, Download, RefreshCw, Share2, Target, Trophy, X } from "lucide-react";
 import { ShowcaseCard } from "@/components/showcase-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -130,6 +130,11 @@ export function PublicProfileSheet() {
   };
 
   const mine = cloud.userId === profile?.userId;
+  // Le créateur épinglé de la fiche. Le catalogue est local : pas de requête de
+  // plus pour afficher un nom.
+  const wishlistCreator = profile?.wishlistSlug
+    ? CREATOR_BY_SLUG.get(profile.wishlistSlug) ?? null
+    : null;
 
   return (
     <div className="profile-sheet" role="dialog" aria-modal="true" aria-label="Profil public">
@@ -175,6 +180,16 @@ export function PublicProfileSheet() {
                 <span style={{ width: `${Math.max(1, Math.round(profile.completion * 1000) / 10)}%` }} />
               </div>
             </div>
+
+            {wishlistCreator ? (
+              <div className="wishlist-share">
+                <Target size={16} />
+                <div>
+                  <span>{mine ? "Tu cherches" : `${profile.displayName} cherche`}</span>
+                  <b>{wishlistCreator.displayName}</b>
+                </div>
+              </div>
+            ) : null}
 
             {profile.showcaseSlugs.length ? (
               <div className="showcase-grid">

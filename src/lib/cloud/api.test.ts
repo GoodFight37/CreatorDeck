@@ -410,6 +410,7 @@ describe("profil public", () => {
     rank_completion: 42,
     rank_cards: 118,
     showcase_slugs: ["kaicenat", "ibai"],
+    wishlist_slug: "kamet0",
     by_rarity: {
       common: { owned: 60, total: 300 },
       legendary: { owned: 4, total: 50 },
@@ -436,6 +437,7 @@ describe("profil public", () => {
       goldCards: 3,
       catalogSize: 1000,
       showcaseSlugs: ["kaicenat", "ibai"],
+      wishlistSlug: "kamet0",
     });
     // Les raretés absentes de la réponse ne sont pas inventées, et l'ordre est
     // celui de l'affichage (legendary → common), pas celui du hasard de JSON.
@@ -457,6 +459,70 @@ describe("profil public", () => {
     // sans la section — elle ne casse pas.
     const { api } = client(() => ({ body: { ...PROFILE, by_region: undefined } }), signedIn());
     expect((await api.playerProfile("u2"))?.byRegion).toEqual([]);
+  });
+
+  it("se passe d'un profil qui ne connaît pas encore la wishlist", async () => {
+    // `0015_wishlist.sql` pas encore collée : le champ manque, la fiche
+    // s'affiche sans la ligne — elle ne casse pas.
+    const { api } = client(() => ({ body: { ...PROFILE, wishlist_slug: undefined } }), signedIn());
+    expect((await api.playerProfile("u2"))?.wishlistSlug).toBeNull();
+  });
+
+  it("lit l'épinglé d'un joueur, et le sien sans identifiant", async () => {
+    const { api, calls } = client((url) => ({ body: url.includes("wishlist_slug") ? "kamet0" : null }), signedIn());
+    expect(await api.wishlistSlug("u2")).toBe("kamet0");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/wishlist_slug");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_user_id: "u2" });
+    await api.wishlistSlug();
+    expect(JSON.parse(String(calls[1]?.init?.body))).toEqual({ p_user_id: null });
+  });
+
+  it("renvoie null quand personne n'est épinglé", async () => {
+    const { api } = client(() => ({ body: null }), signedIn());
+    expect(await api.wishlistSlug()).toBeNull();
+    const { api: empty } = client(() => ({ body: "" }), signedIn());
+    expect(await empty.wishlistSlug()).toBeNull();
+  });
+
+  it("épingle un créateur et retient le slug que le serveur a gardé", async () => {
+    const { api, calls } = client(() => ({ body: "kamet0" }), signedIn());
+    expect(await api.setWishlist("kamet0")).toBe("kamet0");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/set_wishlist");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_slug: "kamet0" });
+    // Un serveur qui répond autre chose (slug normalisé) fait foi.
+    const { api: other } = client(() => ({ body: "ibai" }), signedIn());
+    expect(await other.setWishlist("IBai")).toBe("ibai");
+  });
+
+  it("remonte le refus du serveur quand le créateur n'est pas au catalogue", async () => {
+    const { api } = client(
+      () => ({
+        status: 400,
+        body: { code: "P0001", message: "wishlist : ce créateur n'est pas au catalogue" },
+      }),
+      signedIn(),
+    );
+    await expect(api.setWishlist("inconnu")).rejects.toThrowError(/pas au catalogue/);
+  });
+
+  it("retire l'épinglé", async () => {
+    const { api, calls } = client(() => ({ body: null }), signedIn());
+    await api.clearWishlist();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/clear_wishlist");
+  });
+
+  it("dit quelle migration coller quand la wishlist manque", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: {
+          code: "PGRST202",
+          message: "Could not find the function public.wishlist_slug(p_user_id) in the schema cache",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.wishlistSlug()).rejects.toThrowError(/0015_wishlist\.sql/);
   });
 
   it("ne demande aucun identifiant pour son propre profil", async () => {

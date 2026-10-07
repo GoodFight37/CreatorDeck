@@ -137,6 +137,9 @@ type FakeApi = {
   lastPackShelf: ReturnType<typeof vi.fn>;
   lastPackSteal: ReturnType<typeof vi.fn>;
   lastPackLosses: ReturnType<typeof vi.fn>;
+  wishlistSlug: ReturnType<typeof vi.fn>;
+  setWishlist: ReturnType<typeof vi.fn>;
+  clearWishlist: ReturnType<typeof vi.fn>;
   listFriends: ReturnType<typeof vi.fn>;
   listIncomingFriendRequests: ReturnType<typeof vi.fn>;
   marketListingsOf: ReturnType<typeof vi.fn>;
@@ -208,6 +211,7 @@ function harness(options: {
       rankCompletion: 42,
       rankCards: 118,
       showcaseSlugs: ["kaicenat"],
+      wishlistSlug: null,
       byRarity: [{ rarity: "legendary", owned: 4, total: 50 }],
     })),
     openPack: vi.fn(async () => ({
@@ -335,6 +339,9 @@ function harness(options: {
       },
     })),
     lastPackLosses: vi.fn(async () => [] as LastPackLoss[]),
+    wishlistSlug: vi.fn(async () => null as string | null),
+    setWishlist: vi.fn(async (slug: string) => slug),
+    clearWishlist: vi.fn(async () => {}),
   };
 
   const store = createCloudStore({
@@ -1318,9 +1325,26 @@ describe("connexion Twitch", () => {
   });
 });
 
+/**
+ * Vide l'étagère du faux API. Le carnet lit maintenant les paquets des amis
+ * (« X a ouvert Kameto ») : les tests qui comptent des lignes précises doivent
+ * donc dire s'ils parlent d'un paquet d'ami ou non, au lieu de dépendre du
+ * contenu de `LAST_PACK`.
+ */
+function emptyShelf(api: FakeApi): void {
+  (api.lastPackShelf as ReturnType<typeof vi.fn>).mockResolvedValue({
+    now: SERVER_NOW,
+    windowMinutes: 10,
+    stealPerDay: 1,
+    stoleToday: false,
+    packs: [],
+  });
+}
+
 describe("le carnet de notifications", () => {
   it("reprend les faits du serveur, en français", async () => {
     const { store, api } = harness();
+    emptyShelf(api);
     (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
       tradeItem({ direction: "out", status: "accepted", resolvedAt: "2026-03-01T10:30:00Z" }),
     ]);
@@ -1331,6 +1355,7 @@ describe("le carnet de notifications", () => {
 
   it("compte les nouveautés, puis les oublie quand on ouvre le carnet", async () => {
     const { store, api } = harness();
+    emptyShelf(api);
     (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([tradeItem()]);
     await store.loadInbox();
     // Jamais ouvert : tout est nouveau.
@@ -1345,6 +1370,14 @@ describe("le carnet de notifications", () => {
     ]);
     await store.loadInbox();
     expect(store.getSnapshot().inboxUnread).toBe(1);
+  });
+
+  it("tire « X a ouvert … » de l'étagère du serveur", async () => {
+    const { store } = harness();
+    await store.loadInbox();
+    const friend = store.getSnapshot().inbox.find((item) => item.kind === "friend_pack");
+    expect(friend?.title).toMatch(/a ouvert/);
+    expect(friend?.body).toMatch(/Last Pack encore \d+ min/);
   });
 
   it("garde une visite par joueur", async () => {
@@ -1365,6 +1398,7 @@ describe("le carnet de notifications", () => {
 
   it("vit très bien sans la fonction des ventes", async () => {
     const { store, api } = harness();
+    emptyShelf(api);
     (api.marketSales as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       new CloudError("function public.market_sales(integer) does not exist", "PGRST202", 404),
     );
@@ -1378,6 +1412,7 @@ describe("le carnet de notifications", () => {
 
   it("vide le carnet à la déconnexion", async () => {
     const { store, api } = harness();
+    emptyShelf(api);
     (api.listTrades as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([tradeItem()]);
     await store.loadInbox();
     expect(store.getSnapshot().inbox).toHaveLength(1);
@@ -1455,5 +1490,64 @@ describe("le Last Pack", () => {
     await store.loadInbox();
     const ligne = store.getSnapshot().inbox.find((item) => item.kind === "last_pack");
     expect(ligne?.title).toBe("Lou t'a piqué ton légendaire");
+  });
+});
+
+describe("la wishlist", () => {
+  it("charge l'épinglé du compte connecté", async () => {
+    const { store, api } = harness();
+    (api.wishlistSlug as ReturnType<typeof vi.fn>).mockResolvedValue("kamet0");
+    await store.loadWishlist();
+    expect(store.getSnapshot().wishlistSlug).toBe("kamet0");
+  });
+
+  it("reste silencieuse quand la migration n'est pas collée", async () => {
+    const { store, api } = harness();
+    (api.wishlistSlug as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("La wishlist n'est pas installée sur ce projet.", "PGRST202", 404),
+    );
+    await store.loadWishlist();
+    // Pas de message d'erreur : la wishlist est un confort, pas un préalable.
+    expect(store.getSnapshot().wishlistSlug).toBeNull();
+    expect(store.getSnapshot().message).toBeNull();
+  });
+
+  it("épingle, et retient le slug que le serveur a gardé", async () => {
+    const { store, api } = harness();
+    (api.setWishlist as ReturnType<typeof vi.fn>).mockResolvedValue("kamet0");
+    const saved = await store.setWishlist("Kamet0");
+    expect(saved).toBe(true);
+    expect(api.setWishlist).toHaveBeenCalledWith("Kamet0");
+    expect(store.getSnapshot().wishlistSlug).toBe("kamet0");
+    expect(store.getSnapshot().wishlistBusy).toBe(false);
+    expect(store.getSnapshot().message).toMatch(/épinglé/);
+    expect(store.getSnapshot().isError).toBe(false);
+  });
+
+  it("affiche le refus du serveur tel quel", async () => {
+    const { store, api } = harness();
+    (api.setWishlist as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new CloudError("wishlist : ce créateur n'est pas au catalogue", "P0001", 400),
+    );
+    expect(await store.setWishlist("inconnu")).toBe(false);
+    expect(store.getSnapshot().wishlistSlug).toBeNull();
+    expect(store.getSnapshot().isError).toBe(true);
+    expect(store.getSnapshot().message).toMatch(/pas au catalogue/);
+  });
+
+  it("retire l'épinglé", async () => {
+    const { store, api } = harness();
+    (api.wishlistSlug as ReturnType<typeof vi.fn>).mockResolvedValue("kamet0");
+    await store.loadWishlist();
+    expect(await store.clearWishlist()).toBe(true);
+    expect(store.getSnapshot().wishlistSlug).toBeNull();
+    expect(store.getSnapshot().message).toMatch(/retiré/);
+  });
+
+  it("ne tente rien sans compte, et le dit", async () => {
+    const { store, api } = harness({ signedIn: false });
+    expect(await store.setWishlist("kamet0")).toBe(false);
+    expect(api.setWishlist).not.toHaveBeenCalled();
+    expect(store.getSnapshot().isError).toBe(true);
   });
 });

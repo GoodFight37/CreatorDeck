@@ -15,8 +15,8 @@
  * l'app est fermée demande un service de push (voir `docs/cloud-supabase.md`
  * §9) — ici, on s'occupe de ce qui attend le joueur quand il revient.
  */
-import { CREATOR_BY_SLUG } from "@/lib/catalog";
-import type { LastPackLoss, MarketSale, TradeListItem } from "@/lib/cloud/api";
+import { CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
+import type { LastPackLoss, LastPackShelf, MarketSale, TradeListItem } from "@/lib/cloud/api";
 import { describeCard } from "@/lib/market";
 import type { FriendLists } from "@/lib/social/friends";
 
@@ -28,7 +28,11 @@ export type InboxKind =
   | "friend_request"
   | "friend_new"
   | "sale"
-  | "last_pack";
+  | "last_pack"
+  /** Un ami vient d'ouvrir un booster : ses cartes sont encore prenables. */
+  | "friend_pack"
+  /** Le créateur que tu as épinglé est en direct. */
+  | "wishlist_live";
 
 export type InboxItem = {
   /** Identifiant stable : deux chargements ne créent pas deux fois la ligne. */
@@ -58,6 +62,35 @@ export type InboxSources = {
    * Vide tant que `0012_last_pack.sql` n'est pas collée.
    */
   lastPackLosses?: LastPackLoss[];
+  /**
+   * L'étagère du Last Pack (`last_pack_shelf()`) : les boosters de tes amis
+   * encore ouverts. Le serveur les filtre déjà (`expires_at > now`) — ce que le
+   * carnet en fait, c'est la phrase « X a ouvert Kameto, Last Pack encore
+   * 8 min », c'est-à-dire l'invitation à aller voir.
+   */
+  lastPackShelf?: LastPackShelf | null;
+  /**
+   * Le créateur épinglé (`wishlist`), et son direct s'il est en ligne.
+   *
+   * Le module ne va **pas** chercher le direct lui-même : c'est l'écran qui
+   * sait l'heure et lit le direct publié, et qui décide si le créateur épinglé
+   * streame à cet instant. Ici, on ne fait que mettre la nouvelle en français.
+   * `liveAt` est la date de début du direct (celle que Twitch donne) : c'est
+   * elle qui sert d'horodatage, donc un nouveau direct crée une nouvelle ligne
+   * au lieu de rafraîchir l'ancienne.
+   */
+  wishlist?: WishlistLive | null;
+  /** L'heure (ms), pour dire « encore 8 min ». Défaut : l'horloge locale. */
+  now?: number;
+};
+
+/** Ce qu'il faut savoir du créateur épinglé pour écrire une ligne. */
+export type WishlistLive = {
+  slug: string;
+  /** Date de début du direct, ou `null` si le créateur n'est pas en ligne. */
+  liveAt: string | null;
+  /** Le titre du direct, quand il y en a un. */
+  title?: string | null;
 };
 
 /**
@@ -72,6 +105,28 @@ export function describeTrade(given: number, received: number): string {
   const side = (count: number) => `${count} carte${count > 1 ? "s" : ""}`;
   return `${side(given)} contre ${side(received)}`;
 }
+
+/**
+ * La carte d'un paquet qui mérite d'être nommée : la plus rare (l'ordre vient
+ * de `RARITY_META`), et à rareté égale la première. C'est elle qui donne son
+ * titre à la ligne « X a ouvert … » — « Kameto » fait plus envie que « un
+ * commun ».
+ */
+export function bestCardOf(cards: readonly LastPackCardLike[]): LastPackCardLike | null {
+  let best: LastPackCardLike | null = null;
+  let rank = -1;
+  for (const card of cards) {
+    const order = RARITY_META[card.rarity as Rarity]?.order ?? 0;
+    if (order > rank) {
+      rank = order;
+      best = card;
+    }
+  }
+  return best;
+}
+
+/** Le peu qu'un paquet expose et dont `bestCardOf` a besoin. */
+type LastPackCardLike = { creatorSlug: string; rarity: string };
 
 /**
  * Construit le carnet, du plus récent au plus ancien.
@@ -96,7 +151,7 @@ export function describeTrade(given: number, received: number): string {
  * joueur ce qu'il vient de faire ne sert à rien.
  */
 export function buildInbox(sources: InboxSources): InboxItem[] {
-  const { trades, friends, sales = [], lastPackLosses = [] } = sources;
+  const { trades, friends, sales = [], lastPackLosses = [], lastPackShelf = null, wishlist = null } = sources;
   const items: InboxItem[] = [];
 
   for (const trade of trades) {
@@ -197,8 +252,72 @@ export function buildInbox(sources: InboxSources): InboxItem[] {
     });
   }
 
+  // Les boosters des amis encore ouverts : « X a ouvert Kameto, Last Pack
+  // encore 8 min ». Le tien est ignoré — tu viens de le faire, un carnet qui
+  // raconte au joueur ce qu'il vient de faire ne sert à rien (même règle que
+  // pour les offres que tu as proposées).
+  const now = sources.now ?? Date.now();
+  for (const pack of lastPackShelf?.packs ?? []) {
+    if (pack.mine) continue;
+    const best = bestCardOf(pack.cards);
+    const creator = best ? CREATOR_BY_SLUG.get(best.creatorSlug) : undefined;
+    if (!creator) continue;
+    const left = minutesLeft(pack.expiresAt, now, lastPackShelf?.windowMinutes ?? 10);
+    items.push({
+      id: `friend-pack:${pack.id}`,
+      kind: "friend_pack",
+      title: `${pack.ownerName || "Un ami"} a ouvert ${creator.displayName}`,
+      // La fenêtre est la seule chose périssable de cette ligne : elle se dit.
+      body: left > 0 ? `Last Pack encore ${left} min` : "Last Pack terminé",
+      at: pack.drawnAt,
+      who: pack.ownerName || null,
+    });
+  }
+
+  // Le créateur épinglé qui passe en direct. La date de début vient de Twitch :
+  // si le direct a commencé il y a vingt minutes, la ligne est déjà ancienne —
+  // et donc déjà lue. C'est voulu : le carnet sert à rater le moins de choses
+  // possible, pas à faire vibrer pour un direct qui dure depuis une heure.
+  if (wishlist?.liveAt) {
+    const creator = CREATOR_BY_SLUG.get(wishlist.slug);
+    if (creator) {
+      const title = (wishlist.title ?? "").trim();
+      items.push({
+        id: `wishlist-live:${wishlist.slug}:${wishlist.liveAt}`,
+        kind: "wishlist_live",
+        title: `${creator.displayName} est en direct`,
+        body: title || null,
+        at: wishlist.liveAt,
+        who: null,
+      });
+    }
+  }
+
   return items
     .filter((item) => Number.isFinite(Date.parse(item.at)))
+    .sort((left, right) => right.at.localeCompare(left.at))
+    .slice(0, INBOX_LIMIT);
+}
+
+/** Minutes restantes avant la fermeture d'un Last Pack, plafonnées à la fenêtre. */
+function minutesLeft(expiresAt: string, now: number, windowMinutes: number): number {
+  const left = Date.parse(expiresAt) - now;
+  if (!Number.isFinite(left) || left <= 0) return 0;
+  return Math.min(windowMinutes, Math.ceil(left / 60_000));
+}
+
+/**
+ * Le carnet, plus la ligne du direct du créateur épinglé.
+ *
+ * La ligne du direct ne vient pas du serveur : elle naît d'un fait qu'il publie
+ * déjà (le direct en cours) croisé avec un choix du joueur (son épinglé). La
+ * fusion vit ici, pure, pour que la pastille de la navigation et la feuille du
+ * carnet comptent **exactement** la même chose.
+ */
+export function mergeInbox(base: readonly InboxItem[], wishlist?: WishlistLive | null): InboxItem[] {
+  const extra = wishlist ? buildInbox({ trades: [], friends: { friends: [], incoming: [], outgoing: [] }, wishlist }) : [];
+  if (!extra.length) return [...base];
+  return [...base, ...extra]
     .sort((left, right) => right.at.localeCompare(left.at))
     .slice(0, INBOX_LIMIT);
 }

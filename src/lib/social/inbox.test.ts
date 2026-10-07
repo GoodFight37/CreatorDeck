@@ -1,9 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import type { LastPackLoss, MarketSale, TradeListItem } from "@/lib/cloud/api";
+import type { LastPackLoss, LastPackShelf, MarketSale, TradeListItem } from "@/lib/cloud/api";
 import { EMPTY_FRIEND_LISTS } from "@/lib/social/friends";
 import type { FriendLists } from "@/lib/social/friends";
-import { buildInbox, describeTrade, INBOX_LIMIT, seenKey, unreadCount } from "@/lib/social/inbox";
+import {
+  bestCardOf,
+  buildInbox,
+  describeTrade,
+  INBOX_LIMIT,
+  mergeInbox,
+  seenKey,
+  unreadCount,
+} from "@/lib/social/inbox";
 
 const trade = (overrides: Partial<TradeListItem> = {}): TradeListItem => ({
   id: 1,
@@ -20,6 +28,32 @@ const trade = (overrides: Partial<TradeListItem> = {}): TradeListItem => ({
 
 const friends = (overrides: Partial<FriendLists> = {}): FriendLists => ({
   ...EMPTY_FRIEND_LISTS,
+  ...overrides,
+});
+
+const shelf = (overrides: Partial<LastPackShelf> = {}): LastPackShelf => ({
+  now: "2026-10-03T12:00:00Z",
+  windowMinutes: 10,
+  stealPerDay: 1,
+  stoleToday: false,
+  packs: [],
+  ...overrides,
+});
+
+const pack = (
+  overrides: Partial<LastPackShelf["packs"][number]> = {},
+): LastPackShelf["packs"][number] => ({
+  id: 3,
+  ownerId: "u2",
+  ownerName: "Diane",
+  mine: false,
+  drawnAt: "2026-10-03T11:58:00Z",
+  expiresAt: "2026-10-03T12:08:00Z",
+  stealable: true,
+  cards: [
+    { index: 0, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false },
+    { index: 1, creatorSlug: "kamet0", rarity: "epic", variant: "holo", taken: false },
+  ],
   ...overrides,
 });
 
@@ -189,5 +223,115 @@ describe("le carnet de notifications", () => {
   it("écrit un échange en français", () => {
     expect(describeTrade(1, 1)).toBe("1 carte contre 1 carte");
     expect(describeTrade(2, 3)).toBe("2 cartes contre 3 cartes");
+  });
+
+  it("nomme la plus rare du paquet d'un ami, et dit combien de temps il reste", () => {
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack()] }),
+      now: Date.parse("2026-10-03T12:00:00Z"),
+    });
+    expect(items).toHaveLength(1);
+    // Kamet0 (épique) plutôt que KaiCenat (commun) : c'est la meilleure carte du
+    // paquet qui fait le titre.
+    expect(items[0]).toMatchObject({ id: "friend-pack:3", kind: "friend_pack", who: "Diane" });
+    expect(items[0]?.title).toBe("Diane a ouvert Kamet0");
+    expect(items[0]?.body).toBe("Last Pack encore 8 min");
+  });
+
+  it("arrondit vers le haut et ne dépasse pas la fenêtre", () => {
+    const at = Date.parse("2026-10-03T12:00:00Z");
+    const late = buildInbox({
+      trades: [],
+      friends: friends(),
+      // 7 min 40 s restantes : « 8 min » — on ne promet jamais moins qu'il n'y a.
+      lastPackShelf: shelf({ packs: [pack({ expiresAt: "2026-10-03T12:07:40Z" })] }),
+      now: at,
+    });
+    expect(late[0]?.body).toBe("Last Pack encore 8 min");
+    const fresh = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack({ expiresAt: "2026-10-03T12:09:50Z" })] }),
+      now: at,
+    });
+    // Jamais « 10 min » sur une fenêtre de dix minutes entamée.
+    expect(fresh[0]?.body).toBe("Last Pack encore 10 min");
+  });
+
+  it("dit qu'un Last Pack est fini plutôt que d'inventer des minutes", () => {
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack({ expiresAt: "2026-10-03T11:59:00Z" })] }),
+      now: Date.parse("2026-10-03T12:00:00Z"),
+    });
+    expect(items[0]?.body).toBe("Last Pack terminé");
+  });
+
+  it("ignore son propre paquet : le carnet ne raconte pas ce que tu viens de faire", () => {
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack({ mine: true, ownerName: "Toi" })] }),
+    });
+    expect(items).toHaveLength(0);
+  });
+
+  it("annonce le direct du créateur épinglé, daté du début du direct", () => {
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      wishlist: { slug: "kamet0", liveAt: "2026-10-03T11:30:00Z", title: "Ranked toute la nuit" },
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      id: "wishlist-live:kamet0:2026-10-03T11:30:00Z",
+      kind: "wishlist_live",
+      at: "2026-10-03T11:30:00Z",
+    });
+    expect(items[0]?.title).toBe("Kamet0 est en direct");
+    expect(items[0]?.body).toBe("Ranked toute la nuit");
+  });
+
+  it("n'annonce rien quand l'épinglé ne streame pas, ou n'existe plus au catalogue", () => {
+    const offline = buildInbox({
+      trades: [],
+      friends: friends(),
+      wishlist: { slug: "kamet0", liveAt: null },
+    });
+    expect(offline).toHaveLength(0);
+    const gone = buildInbox({
+      trades: [],
+      friends: friends(),
+      wishlist: { slug: "ce-slug-nexiste-pas", liveAt: "2026-10-03T11:30:00Z" },
+    });
+    expect(gone).toHaveLength(0);
+  });
+
+  it("fusionne la ligne du direct avec celles du serveur, sans doublon", () => {
+    const base = buildInbox({
+      trades: [trade()],
+      friends: friends(),
+      sales: [sale()],
+    });
+    const merged = mergeInbox(base, {
+      slug: "kamet0",
+      liveAt: "2026-10-03T11:55:00Z",
+      title: null,
+    });
+    expect(merged).toHaveLength(3);
+    // Trié du plus récent au plus ancien : la vente (10-02) d'abord… non, le
+    // direct est du 10-03.
+    expect(merged[0]?.kind).toBe("wishlist_live");
+    // Sans épinglé en direct, rien ne change — et l'ordre d'origine est gardé.
+    expect(mergeInbox(base, null).map((item) => item.id)).toEqual(base.map((item) => item.id));
+  });
+
+  it("choisit la carte la plus rare, et sait s'arrêter", () => {
+    expect(bestCardOf([{ creatorSlug: "a", rarity: "common" }, { creatorSlug: "b", rarity: "rare" }])?.creatorSlug).toBe("b");
+    expect(bestCardOf([{ creatorSlug: "a", rarity: "gold-inconnu" }])?.creatorSlug).toBe("a");
+    expect(bestCardOf([])).toBeNull();
   });
 });
