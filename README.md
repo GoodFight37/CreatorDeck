@@ -316,7 +316,8 @@ Principes :
 
 ## Économie, saisons et taux de drop
 
-- **Atelier** (onglet dédié) : les doublons se recyclent en points — **un par un**
+- **Atelier** (l'onglet s'appelle **Craft** à l'écran — « Atelier » est le nom du
+  code, `tab === "atelier"`) : les doublons se recyclent en points — **un par un**
   ou d'un seul geste (« Tout recycler », qui laisse les doublons **Live** en
   place : eux se recyclent un par un, exprès) — et les points rejoignent un
   créateur manquant. Un doublon **Live** demande **confirmation** avant de
@@ -600,10 +601,11 @@ mois, et que la partie ait un geste à faire **aujourd'hui**.
   `open_pack()` appliquent la même règle (`0013_progression.sql`).
 * **Les jetons** : 5 par booster ouvert, 7 pendant le **Prime Time** (20 h –
   23 h, heure locale), et **400** pour rejoindre la carte de son choix à
-  l'Atelier (« Atelier → Jetons »). Jamais une Légendaire — elle se tire en
+  l'Atelier (« Craft → Jetons »). Jamais une Légendaire — elle se tire en
   booster, ou tombe au plancher. Les jetons doublent le recyclage : les points
   paient vite, les jetons paient sûr.
-* **Les missions du jour** (écran Progression) : ouvrir un booster, recycler un
+* **Les missions du jour** (écran qui s'ouvre par « Objectifs et saisons », sur
+  l'accueil ; son titre à l'écran est « Progression ») : ouvrir un booster, recycler un
   doublon, toucher sa famille ou un Direct — une par jour, **un sablier**
   chacune. La journée de jeu commence à **6 h UTC** (pas à minuit : une soirée
   de streaming ne doit pas être coupée en deux), et la **série** paie au
