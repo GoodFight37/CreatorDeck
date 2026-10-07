@@ -33,10 +33,84 @@ type ProgressionData = {
     note: string;
     list: MissionDef[];
   };
-  streak: { days: number; jackpotHourglasses: number; note: string };
+  streak: {
+    days: number;
+    jackpotHourglasses: number;
+    /**
+     * Ce que la série paie **avant** le 7ᵉ jour : une petite récompense par
+     * jour coché. Le 7ᵉ jour n'est pas ici — il paie le jackpot (Perfect garanti
+     * ou les sabliers du choix), qui ne se cumule pas avec une micro-récompense.
+     */
+    rewards: StreakReward[];
+    note: string;
+  };
 };
 
 export const PROGRESSION = progression as ProgressionData;
+
+/** Une journée de série, et ce qu'elle rapporte. */
+export type StreakReward = {
+  /** 1 → 6. Le 7ᵉ jour, c'est le jackpot (`streak.jackpotHourglasses`). */
+  day: number;
+  points?: number;
+  hourglasses?: number;
+  tokens?: number;
+};
+
+/** Les six micro-récompenses, dans l'ordre des jours. */
+export const STREAK_REWARDS: readonly StreakReward[] = PROGRESSION.streak.rewards;
+
+const STREAK_REWARD_BY_DAY = new Map(STREAK_REWARDS.map((reward) => [reward.day, reward]));
+
+/**
+ * Ce que le jour `day` de la série rapporte, ou `null` s'il ne paie rien.
+ *
+ * Le 7ᵉ jour renvoie `null` : son paiement est le jackpot, décidé ailleurs
+ * (`claimStreakJackpot`). Un jour hors bornes aussi — un compteur venu d'une
+ * sauvegarde bricolée ne doit pas inventer de récompense.
+ */
+export function streakRewardFor(day: number): Required<Omit<StreakReward, "day">> & { day: number } | null {
+  const reward = STREAK_REWARD_BY_DAY.get(day);
+  if (!reward) return null;
+  return {
+    day,
+    points: reward.points ?? 0,
+    hourglasses: reward.hourglasses ?? 0,
+    tokens: reward.tokens ?? 0,
+  };
+}
+
+/**
+ * La récompense en une phrase, pour l'écran : « +80 points · 10 jetons ».
+ *
+ * Écrite ici et pas dans un composant : c'est la même phrase qui s'affiche
+ * pendant la révélation, dans la notification, et dans les tests.
+ */
+export function streakRewardLabel(reward: {
+  points?: number;
+  hourglasses?: number;
+  tokens?: number;
+}): string {
+  return streakRewardParts(reward, "points").join(" · ");
+}
+
+/**
+ * Le même barème en morceaux courts, un par ligne d'écran : « +80 pts »,
+ * « +10 jetons ». Les cases du planning n'ont pas la place d'une phrase.
+ */
+export function streakRewardParts(
+  reward: { points?: number; hourglasses?: number; tokens?: number },
+  pointsWord = "pts",
+): string[] {
+  const points = reward.points ?? 0;
+  const hourglasses = reward.hourglasses ?? 0;
+  const tokens = reward.tokens ?? 0;
+  return [
+    points > 0 ? `+${points} ${pointsWord}` : "",
+    hourglasses > 0 ? `+${hourglasses} sablier${hourglasses > 1 ? "s" : ""}` : "",
+    tokens > 0 ? `+${tokens} jetons` : "",
+  ].filter(Boolean);
+}
 
 /** Ce que chaque mission paie : un sablier, pour l'instant. */
 export const MISSION_REWARD = PROGRESSION.missions.reward;

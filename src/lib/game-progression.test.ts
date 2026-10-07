@@ -10,8 +10,17 @@
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CREATORS, CREATOR_BY_SLUG, type Rarity } from "@/lib/catalog";
+import { PACKS } from "@/lib/catalog";
 import { PITY } from "@/lib/pull-rates";
-import { PROGRESSION, TOKEN_TARGET_COST, gameDay } from "@/lib/progression";
+import {
+  PROGRESSION,
+  STREAK_REWARDS,
+  TOKEN_TARGET_COST,
+  gameDay,
+  streakRewardFor,
+  streakRewardLabel,
+  streakRewardParts,
+} from "@/lib/progression";
 import {
   GameError,
   applyPackResult,
@@ -302,12 +311,156 @@ describe("série de jours", () => {
     }
     state = openPack(state, MIDI + (PROGRESSION.streak.days - 1) * DAY).state;
     expect(state.streakJackpot).toBe(true);
-    expect(state.streak).toBe(0);
+    // Le compteur **affiche le jour gagné** (7/7) et s'y tient jusqu'à la
+    // journée suivante : c'est le chiffre que montre le planning, et c'est
+    // aussi celui du serveur (`_pack_streak` renvoie 7 ce jour-là). Le cycle
+    // repart à 1 demain, pas maintenant — sinon l'écran annoncerait « Série
+    // 0/7 » pendant que la septième case vient d'être cochée.
+    expect(state.streak).toBe(PROGRESSION.streak.days);
     // Le lendemain : le booster consomme la récompense, et le cycle est au
     // jour 1 — pas de deuxième Perfect pour la même série.
     const after = openPack(state, MIDI + PROGRESSION.streak.days * DAY).state;
     expect(after.streakJackpot).toBe(false);
     expect(after.streak).toBe(1);
+  });
+
+  it("paie les jours 1 à 6, un par jour coché, et rien au 7ᵉ", () => {
+    // La table publiée (`progression.json`) : six jours qui paient, le 7ᵉ qui
+    // paie le jackpot — jamais les deux. Et rien hors bornes : un compteur
+    // bricolé ne doit pas inventer une récompense.
+    expect(STREAK_REWARDS.map((reward) => reward.day)).toEqual([1, 2, 3, 4, 5, 6]);
+    for (const reward of STREAK_REWARDS) {
+      const granted = streakRewardFor(reward.day)!;
+      expect(granted.day).toBe(reward.day);
+      // Chaque jour paie quelque chose : une case cochée sans rien recevoir
+      // serait une frustration, pas une récompense.
+      expect(granted.points + granted.hourglasses + granted.tokens).toBeGreaterThan(0);
+    }
+    expect(streakRewardFor(PROGRESSION.streak.days)).toBeNull();
+    expect(streakRewardFor(0)).toBeNull();
+    expect(streakRewardFor(8)).toBeNull();
+  });
+
+  it("la récompense en une phrase liste ce qu'elle donne", () => {
+    expect(streakRewardLabel({ points: 40, hourglasses: 0, tokens: 0 })).toBe("+40 points");
+    expect(streakRewardLabel({ points: 80, hourglasses: 0, tokens: 10 })).toBe("+80 points · +10 jetons");
+    expect(streakRewardLabel({ points: 0, hourglasses: 2, tokens: 0 })).toBe("+2 sabliers");
+    expect(streakRewardLabel({ points: 0, hourglasses: 0, tokens: 0 })).toBe("");
+  });
+
+  it("les cases du planning disent le barème, en morceaux courts", () => {
+    // Le planning n'a que quelques pixels par case : les morceaux s'écrivent
+    // en abrégé, un par ligne, mais ils viennent **du même barème** que le
+    // badge de révélation — l'écran ne peut pas annoncer autre chose que ce que
+    // le moteur verse.
+    expect(streakRewardParts({ points: 40 })).toEqual(["+40 pts"]);
+    expect(streakRewardParts({ hourglasses: 1 })).toEqual(["+1 sablier"]);
+    expect(streakRewardParts({ hourglasses: 3 })).toEqual(["+3 sabliers"]);
+    expect(streakRewardParts({ points: 120, hourglasses: 1 })).toEqual(["+120 pts", "+1 sablier"]);
+    expect(streakRewardParts({ points: 80, tokens: 10 })).toEqual(["+80 pts", "+10 jetons"]);
+    expect(streakRewardParts({})).toEqual([]);
+    // Chaque jour du fichier sait s'écrire, et le 7ᵉ n'y est pas : il paie le
+    // jackpot, qui a sa propre phrase (« Perfect ou N sabliers »).
+    for (const reward of STREAK_REWARDS) {
+      const parts = streakRewardParts(reward);
+      expect(parts.length, `jour ${reward.day}`).toBeGreaterThan(0);
+      expect(parts.join(" ")).not.toContain("undefined");
+    }
+  });
+
+  it("deux boosters le même jour : la série ne bouge pas et le jour ne paie qu'une fois", () => {
+    stubRandom([999]);
+    const premier = openPack(makeState({ packs: 4 }), MIDI);
+    expect(premier.streakReward?.day).toBe(1);
+    const second = openPack({ ...premier.state, packs: 4 }, MIDI + 60_000);
+    // Même journée : rien de neuf à cocher, donc rien de neuf à payer. Sans
+    // cette garde, ouvrir dix boosters d'affilée aurait versé dix fois le
+    // jour 1 — et remis la série à 1 à chaque fois.
+    expect(second.streakReward).toBeNull();
+    expect(second.state.streak).toBe(premier.state.streak);
+    expect(second.state.points).toBe(premier.state.points + PACKS.live.points);
+  });
+
+  it("en ligne, un jour déjà payé par le serveur n'est pas repayé localement", () => {
+    // Le serveur dit le jour **et** les points qu'il a versés (`0032`). Quand il
+    // annonce 0 point pour un jour qui en vaut, c'est que la journée de jeu
+    // était déjà payée : le moteur ne doit alors rien créditer du tout — ni
+    // sabliers, ni jetons — sinon l'écran verserait une deuxième fois ce que le
+    // serveur a déjà donné. Et quand un jour ne paie pas de points **par
+    // nature** (J2, un sablier), il est annoncé 0 lui aussi : là, le sablier
+    // doit bien tomber.
+    const base = makeState({ streakDay: "", streak: 0, hourglasses: 0 });
+    const carte = {
+      creatorSlug: commonSlug(),
+      rarity: "common" as const,
+      variant: "standard" as const,
+      rareDrop: false,
+    };
+    /** Ouvre un booster cloud, avec ce que le serveur annonce. */
+    function ouvrir(depuis: PlayerState, day: number | null, points: number | null) {
+      stubRandom([0]);
+      return applyPackResult(depuis, [carte], 2, MIDI, 1, MIDI + 2 * DAY, {
+        pointsFromServer: true,
+        rewardDay: day,
+        rewardPoints: points,
+      });
+    }
+
+    // La référence : un jour 1 frais, qui ne donne ni sablier ni jeton.
+    const temoin = ouvrir(base, 1, 40);
+    const jetonsDuBooster = temoin.state.tokens - base.tokens;
+    const sabliersDuBooster = temoin.state.hourglasses - base.hourglasses;
+    const pointsDuBooster = temoin.state.points - base.points;
+    expect(temoin.streakReward?.day).toBe(1);
+    expect(jetonsDuBooster).toBeGreaterThan(0);
+
+    // Jour 4 frais : les 10 jetons du barème tombent, les points restent au
+    // serveur (le moteur ne les compte pas deux fois).
+    const jour4 = ouvrir(base, 4, 80);
+    expect(jour4.streakReward?.day).toBe(4);
+    expect(jour4.state.tokens).toBe(base.tokens + jetonsDuBooster + 10);
+    expect(jour4.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster);
+    expect(jour4.state.points).toBe(base.points + pointsDuBooster);
+
+    // Le deuxième booster du même jour de jeu : le serveur annonce le jour et
+    // 0 point → rien n'est crédité, et rien n'est annoncé à l'écran.
+    const repete = ouvrir(base, 4, 0);
+    expect(repete.streakReward).toBeNull();
+    expect(repete.state.tokens).toBe(base.tokens + jetonsDuBooster);
+    expect(repete.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster);
+
+    // Jour 2 : le serveur verse 0 point (c'est un sablier, il vit ici), et le
+    // sablier tombe bien.
+    const jour2 = ouvrir(base, 2, 0);
+    expect(jour2.streakReward?.day).toBe(2);
+    expect(jour2.streakReward?.hourglasses).toBe(1);
+    expect(jour2.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster + 1);
+    expect(jour2.state.tokens).toBe(base.tokens + jetonsDuBooster);
+  });
+
+  it("le 8ᵉ jour d'affilée est un jour 1, pas un deuxième jackpot", () => {
+    stubRandom([999]);
+    let state = makeState({ streakDay: "", streak: 0, streakJackpot: false });
+    const rewards: Array<number | null> = [];
+    for (let day = 0; day < PROGRESSION.streak.days + 1; day += 1) {
+      const drawn = openPack(state, MIDI + day * DAY);
+      state = drawn.state;
+      rewards.push(drawn.streakReward?.day ?? null);
+    }
+    // Sept jours : six récompenses (1 → 6), puis le jackpot (aucune
+    // micro-récompense), puis un nouveau cycle qui repaie le jour 1.
+    expect(rewards).toEqual([1, 2, 3, 4, 5, 6, null, 1]);
+    expect(state.streak).toBe(1);
+    expect(state.streakJackpot).toBe(false);
+  });
+
+  it("un compteur de série venu du serveur s'affiche dans le cycle 1 → 7", () => {
+    // Le serveur compte les jours d'affilée sans fin de cycle : 9 le 9ᵉ jour.
+    // L'écran, lui, montre toujours un jour du planning.
+    stubRandom([999]);
+    const neuvieme = () => applyServerProgression(makeState(), { pity: 0, streak: 9 }, MIDI).streak;
+    expect(neuvieme()).toBe(2);
+    expect(applyServerProgression(makeState(), { pity: 0, streak: 7 }, MIDI).streak).toBe(7);
   });
 
   it("échange la récompense contre 3 sabliers, une fois", () => {

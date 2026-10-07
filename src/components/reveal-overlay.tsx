@@ -10,7 +10,7 @@
  * n'offre **aucun raccourci**.
  */
 import { useEffect, useState, type CSSProperties } from "react";
-import { BookOpen, ChevronRight, Share2, Sparkles, X } from "lucide-react";
+import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
@@ -33,19 +33,27 @@ import {
 } from "@/lib/reveal";
 import { playBang, playRefuse, playReveal } from "@/lib/sfx";
 import { bestCardOf } from "@/lib/social/inbox";
-import type { DrawnCard } from "@/lib/game-engine";
+import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
+import { streakRewardLabel } from "@/lib/progression";
 
 export function RevealOverlay({
   cards,
   index,
   kind = "live",
   overlay = false,
+  streakReward = null,
   onSkipAll,
   onNext,
   onClose,
 }: {
   cards: DrawnCard[];
   index: number;
+  /**
+   * Ce que la série a payé pour ce booster (jour 1 → 6) : la récompense
+   * s'annonce **pendant** la révélation, pas après — c'est le moment où elle
+   * est gagnée, et c'est ce qui donne envie de revenir demain.
+   */
+  streakReward?: StreakRewardGrant | null;
   /** Quel paquet a été ouvert : le tirage rare ne se raconte pas pareil. */
   kind?: "live" | "scene";
   /**
@@ -142,6 +150,14 @@ export function RevealOverlay({
             {kind === "scene"
               ? "Scène pleine : cinq Épiques de ta famille !"
               : "Booster Perfect : toutes les cartes sont Épique ou mieux !"}
+          </span>
+        </div>
+      ) : null}
+      {streakReward ? (
+        <div className="streak-gain" role="status">
+          <Zap size={13} />
+          <span>
+            Série <strong>J{streakReward.day}</strong> — {streakRewardLabel(streakReward)}
           </span>
         </div>
       ) : null}

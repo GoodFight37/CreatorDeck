@@ -464,6 +464,8 @@ export class CloudApi {
     pityHit: boolean;
     /** Ce booster a payé le Perfect du 7ᵉ jour. */
     jackpot: boolean;
+    /** Ce que la série a payé (`0032`) : le jour coché et ses points. */
+    streakReward: { day: number; points: number } | null;
     /**
      * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
      * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le

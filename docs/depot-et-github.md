@@ -51,7 +51,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
   bascule de `0021` a inscrit 40 lignes pour toutes les collections existantes —
   personne ne perd son rang.
 - Le vérifieur `npm run supabase:verify` joue `0001` → `0029` sur un Postgres
-  jetable : 402 contrôles. Il pose les droits de table comme Supabase
+  jetable : 409 contrôles. Il pose les droits de table comme Supabase
   (`alter default privileges` **avant** les migrations), sinon il redonnerait à
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.

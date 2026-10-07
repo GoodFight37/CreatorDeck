@@ -116,6 +116,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
 | 11.6 | Les points vivent au serveur : l'hôtel et l'Atelier ne dépensent que ce que le serveur a encaissé | **livrée** | `0027_wallet.sql`, `0028_wallet_saisons.sql`, `src/lib/cloud/api/wallet.ts`, `src/lib/cloud/store/wallet.ts`, `src/hooks/use-points.ts`, `docs/cloud-supabase.md` § « Les points vivent au serveur » |
 | 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
+| 11.14 | La **série quotidienne paie ses jours** : J1 → J6 versent chacun une petite récompense (mix léger de points, jetons et sabliers), le **7ᵉ jour garde le gros lot** (Perfect garanti ou 3 sabliers). Les **points sont versés par le serveur** (`0032_serie_quotidienne.sql`, `create or replace` de la même signature) avec une référence par **journée de jeu** — le même jour ne paie qu'une fois — et les **jetons et sabliers restent sur l'appareil**, le moteur les ajoute au booster qui fait avancer la série. Un badge « Série Jn — … » apparaît pendant la révélation, et le planning de « Progression » dit ce que chaque case paie | **livrée** | `0032_serie_quotidienne.sql`, `src/data/progression.json`, `src/lib/game-engine.ts`, `src/components/reveal-overlay.tsx`, `scripts/verify-supabase-migrations.mjs` |
 | 11.13 | **Le Planning du Streamer** : sept cases dans « Progression » (le jour dit « à faire », J7 = Le Grand Direct), et **le booster s'ouvre en le tirant vers le haut** — couture qui s'ouvre, vibration et son de déchirure, seuil permissif, et le bouton « Ouvrir » qui reste pour la souris, le clavier et les doigts qui n'aiment pas tirer | **livrée** | `src/lib/pull.ts` (pur, testé), `src/lib/reveal.ts` (`TEAR_HAPTIC`), `src/lib/sfx.ts` (`tearPlan`), `src/components/creator-deck-app.tsx`, `src/app/globals.css` |
 | 11.12 | Le **classeur se trie** (rang Twitch, dernières obtenues, doublons d'abord, audience, A → Z — `src/lib/binder-sort.ts`, testé), la **fiche d'une carte manquante dit son prix** et permet de la rejoindre sur place, l'**Atelier annonce ce que la bourse ouvre**, et la réserve pleine se voit sans clignoter | **livrée** | `src/lib/binder-sort.ts`, `src/components/card-inspect-modal.tsx`, `src/components/atelier-view.tsx`, `src/components/creator-deck-app.tsx`, `src/app/globals.css` |
 | 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
@@ -158,8 +159,9 @@ Deux règles qui tiennent tout le reste :
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0031` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
-1 % hors Perfect, seuil du plancher de malchance dans la fonction installée). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0032` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
+barème de la série et versement des points du jour). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -168,7 +170,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**806 tests**, 54 fichiers aujourd'hui).
+  (**814 tests**, 54 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -198,7 +200,7 @@ Trois étages, trois vitesses :
   la carte est relue dans la sauvegarde (et dont le droit de provenance est
   consommé), un palier de collection recalculé côté serveur, un palier de famille
   payé au montant du jeu
-  (**402 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  (**409 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -271,7 +273,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0031)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0032)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -282,7 +284,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0031` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0032` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
@@ -802,7 +804,21 @@ version web hébergée.
   de 80 à **12** le 7 octobre 2026 par `0031_pity_douze.sql` (le brief disait
   « 12 packs jusqu'au pity ») : le seuil de 12 boosters,
   le slot garanti qui devient Légendaire, la récompense du 7ᵉ jour, et les deux
-  compteurs publiés par `pack_status()`. Elle remplace `open_pack()` (l'ancienne
+  compteurs publiés par `pack_status()`.
+  La **série paie chacun des sept jours** : le jour coché verse sa petite
+  récompense au booster qui fait avancer la série — **J1** +40 points, **J2** un
+  sablier, **J3** +60 points, **J4** +80 points et 10 jetons, **J5** +120 points
+  et un sablier, **J6** +150 points et 15 jetons, et **J7** le gros lot (Perfect
+  garanti ou 3 sabliers), jamais une micro-récompense en plus. Une semaine pleine
+  vaut donc 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes
+  communes à l'Atelier, jamais une Légendaire. Les **points** sont versés par le
+  serveur (`0032_serie_quotidienne.sql`) avec une référence par journée de jeu :
+  dix boosters le même jour ne paient qu'une fois. Les **jetons** et les
+  **sabliers** vivent sur l'appareil, comme les missions — le serveur ne les
+  connaît pas et ne les crée pas. Le barème est écrit une seule fois,
+  `src/lib/progression.json` (`streak.rewards`), et les tests miroirs
+  (`src/lib/game-progression.test.ts`, `scripts/verify-supabase-migrations.mjs`)
+  refusent qu'un côté parte sans l'autre. Elle remplace `open_pack()` (l'ancienne
   signature sans argument est supprimée : sinon un appel sans argument aurait
   continué d'ignorer la garantie).
   La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase

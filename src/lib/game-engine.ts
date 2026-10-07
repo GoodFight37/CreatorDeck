@@ -34,6 +34,7 @@ import {
   follows,
   gameDay,
   isPrimeTime,
+  streakRewardFor,
   tokensForPack,
   type MissionId,
 } from "@/lib/progression";
@@ -576,6 +577,9 @@ export type GameView = {
     todayDone: boolean;
   };
 };
+
+/** Ce qu'une journée de série rapporte : le jour, les points, et le reste. */
+export type StreakRewardGrant = NonNullable<ReturnType<typeof streakRewardFor>>;
 
 export class GameError extends Error {
   constructor(
@@ -1602,7 +1606,7 @@ export function openPack(
   state: PlayerState,
   now = Date.now(),
   options: { liveLogins?: LiveLogins; rareDrop?: boolean } = {},
-): { state: PlayerState; cards: DrawnCard[] } {
+): { state: PlayerState; cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
   const refreshed = refreshBalances(state, now);
   if (refreshed.packs <= 0) {
     throw new GameError("Aucun booster disponible pour le moment.", "PACK_NOT_READY");
@@ -1695,8 +1699,34 @@ export function applyPackResult(
    * Les jetons ne sont pas ici : ils ne dépendent que de l'heure du tirage
    * (Prime Time ou non), donc `tokensForPack(now)` suffit.
    */
-  options: { pity?: boolean; consumeJackpot?: boolean; jackpotUsed?: boolean } = {},
-): { state: PlayerState; cards: DrawnCard[] } {
+  options: {
+    pity?: boolean;
+    consumeJackpot?: boolean;
+    jackpotUsed?: boolean;
+    /**
+     * Les points de la récompense de série sont versés par le **serveur**
+     * (`0032_serie_quotidienne.sql`) : on les annonce, on ne les crédite pas.
+     * C'est le cas quand le tirage vient du cloud — deux caisses pour le même
+     * gain feraient un doublon invisible.
+     */
+    pointsFromServer?: boolean;
+    /**
+     * Le jour de série que **le serveur** a payé, quand il l'a dit (`0032`).
+     * Il fait foi : l'horloge de l'appareil peut avoir dérivé, et la journée
+     * de jeu change à 6 h UTC — une minute d'écart suffit à annoncer le
+     * mauvais jour. Absent (hors ligne, ou `0032` pas encore collée), le
+     * moteur calcule le jour lui-même.
+     */
+    rewardDay?: number | null;
+    /**
+     * Les points que le serveur dit avoir versés pour ce jour, quand il l'a dit
+     * (`0032`). Un jour **déjà payé** est annoncé à `0` : dans ce cas, on ne
+     * crédite rien localement non plus (ni sabliers, ni jetons), sinon l'écran
+     * aurait annoncé des points que le serveur n'a pas donnés.
+     */
+    rewardPoints?: number | null;
+  } = {},
+): { state: PlayerState; cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
   const owned = ownedSlugs(state);
   const pack = PACKS[ACTIVE_PACK];
   const nextXp = state.xp + pack.xp;
@@ -1718,11 +1748,33 @@ export function applyPackResult(
   // Série de jours : une journée de jeu « suit » la précédente (+1), sinon
   // elle repart de 1. Le jackpot tombe au 7ᵉ jour et attend d'être réclamé.
   const day = gameDay(now);
+  // Deux boosters le même jour, c'est **la même journée** de série : le
+  // compteur ne bouge pas, et le jour ne paie qu'une fois. Sans cette garde, le
+  // second booster du jour repartait à « Série 1/7 » — et aurait reversé la
+  // récompense du jour 1 autant de fois qu'on ouvre de boosters.
+  const sameDay = state.streakDay === day;
   const continued = Boolean(state.streakDay) && follows(state.streakDay, day);
-  let streak = continued ? state.streak + 1 : 1;
-  // Le cycle repart après un jackpot : le 8ᵉ jour n'en est pas un deuxième.
-  const reached = streak >= PROGRESSION.streak.days;
-  if (reached) streak = 0;
+  // Le cycle fait 1 → 7 puis recommence : le 8ᵉ jour d'affilée est un nouveau
+  // jour 1, pas un deuxième jackpot. Le compteur affiché reste donc dans 1..7,
+  // comme celui du serveur (`((v_streak - 1) % 7) + 1`, `0032`).
+  let streak = sameDay
+    ? state.streak
+    : continued
+      ? (state.streak % PROGRESSION.streak.days) + 1
+      : 1;
+  const reached = !sameDay && streak === PROGRESSION.streak.days;
+
+  // Ce que le jour coché paie. Le 7ᵉ jour paie le jackpot, jamais une
+  // micro-récompense en plus : `streakRewardFor` renvoie `null` pour lui.
+  const jourSerie =
+    typeof options.rewardDay === "number" && options.rewardDay > 0 ? options.rewardDay : streak;
+  const jourPaye = streakRewardFor(jourSerie);
+  // Le serveur a annoncé 0 point pour un jour qui en vaut : la journée de jeu
+  // était déjà payée (un autre booster l'a fait avancer). Le jour qui paie 0
+  // point **par nature** (J2, un sablier) n'est pas concerné : lui aussi annonce
+  // 0, et il doit bien créditer son sablier.
+  const dejaPaye = options.rewardPoints === 0 && (jourPaye?.points ?? 0) > 0;
+  const granted = sameDay || dejaPaye ? null : jourPaye;
   // Une récompense en attente reste allumée jusqu'à ce qu'un tirage la
   // consomme (`consumeJackpot`, posé par `openPack`) ou que le joueur la
   // troque contre des sabliers. Le 7ᵉ jour, lui, n'allume qu'une fois : le
@@ -1734,10 +1786,17 @@ export function applyPackResult(
     updatedAt: now,
     packs: clampPacks(serverPacks),
     lastPackRegen: lastRegenMs,
-    points: state.points + pack.points,
+    // Le paquet paie ses points (`pack.points`) ; la récompense de série s'y
+    // ajoute, **sauf en ligne** : là, c'est le serveur qui les a versés
+    // (`0032`), et les compter ici aussi gonflerait le solde à chaque booster.
+    points:
+      state.points +
+      pack.points +
+      (options.pointsFromServer === true ? 0 : (granted?.points ?? 0)),
     xp: nextXp,
     level: nextLevel,
-    hourglasses: state.hourglasses + gainedLevels * HOURGLASSES_PER_LEVEL,
+    hourglasses:
+      state.hourglasses + gainedLevels * HOURGLASSES_PER_LEVEL + (granted?.hourglasses ?? 0),
     openings: serverOpenings,
     cards: [
       ...state.cards,
@@ -1753,7 +1812,7 @@ export function applyPackResult(
     // Jetons : 5 par booster ouvert (7 pendant le Prime Time). Le tirage est
     // le seul moyen d'en gagner — c'est ce qui en fait une monnaie, et pas un
     // lot de consolation.
-    tokens: state.tokens + tokensForPack(now),
+    tokens: state.tokens + tokensForPack(now) + (granted?.tokens ?? 0),
     // Plancher de malchance : zéro dès qu'un Légendaire est sorti (la
     // garantie le fait forcément tombler), sinon +1. Le compteur ne dépasse
     // donc jamais le seuil.
@@ -1782,7 +1841,7 @@ export function applyPackResult(
     };
   }
 
-  return { state: next, cards };
+  return { state: next, cards, streakReward: granted };
 }
 
 /**
@@ -1838,7 +1897,12 @@ export function applyServerProgression(
   now = Date.now(),
 ): PlayerState {
   const pityCounter = Math.max(0, Math.floor(server.pity));
-  const streak = Math.max(0, Math.floor(server.streak));
+  // Le serveur compte les jours d'affilée sans fin de cycle (le 8ᵉ jour
+  // d'affilée vaut `8`) ; l'écran, lui, montre toujours un jour du cycle 1 → 7.
+  // Même conversion que le SQL (`0032`) : deux affichages d'un même compteur
+  // ne doivent pas se contredire.
+  const jours = Math.max(0, Math.floor(server.streak));
+  const streak = jours > 0 ? ((jours - 1) % PROGRESSION.streak.days) + 1 : 0;
   // `jackpotReady` n'arrive que du statut ; après un tirage, c'est le serveur
   // qui a dit si le Perfect du jour est tombé (`jackpot`).
   const streakJackpot = server.jackpotReady ?? state.streakJackpot;

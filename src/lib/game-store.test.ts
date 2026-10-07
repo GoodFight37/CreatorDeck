@@ -58,8 +58,11 @@ describe("gameStore", () => {
   it("recharge une sauvegarde existante", async () => {
     const first = await freshStore();
     first.subscribe(() => {});
-    const cards = first.openPack(Date.now());
+    const { cards, streakReward } = first.openPack(Date.now());
     expect(cards).toHaveLength(PACKS.live.size);
+    // Le magasin remonte aussi ce que la série a payé : l'écran de révélation
+    // l'annonce, donc il ne doit pas se perdre en chemin.
+    expect(streakReward?.day).toBe(1);
     const persisted = first.getSnapshot();
 
     const second = await freshStore();

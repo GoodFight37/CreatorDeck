@@ -266,10 +266,13 @@ describe("drawPack", () => {
 describe("openPack", () => {
   it("consomme un booster, crédite points et XP, ajoute les cartes", () => {
     const state = makeState({ packs: 2 });
-    const { state: next, cards } = openPack(state, T0);
+    const { state: next, cards, streakReward } = openPack(state, T0);
     expect(cards).toHaveLength(PACKS.live.size);
     expect(next.packs).toBe(1);
-    expect(next.points).toBe(state.points + PACKS.live.points);
+    // Le booster paie ses points, **et** le jour 1 de la série (40 points) :
+    // c'est ce booster qui coche la première case du planning.
+    expect(streakReward).toEqual({ day: 1, points: 40, hourglasses: 0, tokens: 0 });
+    expect(next.points).toBe(state.points + PACKS.live.points + 40);
     expect(next.xp).toBe(PACKS.live.xp);
     expect(next.openings).toBe(1);
     expect(next.cards.map((card) => card.id)).toEqual(cards.map((card) => card.id));
@@ -330,12 +333,13 @@ describe("applyPackResult", () => {
   it("applique les cartes du serveur, crédite points et XP, met à jour les compteurs", () => {
     const state = makeState({ packs: 2, openings: 5 });
     const lastRegen = new Date(T0).toISOString();
-    const { state: next, cards } = applyPackResult(state, SERVER_CARDS, 1, lastRegen, 6, T0);
+    const { state: next, cards, streakReward } = applyPackResult(state, SERVER_CARDS, 1, lastRegen, 6, T0);
 
     expect(cards).toHaveLength(5);
     expect(next.packs).toBe(1);
     expect(next.openings).toBe(6);
-    expect(next.points).toBe(state.points + PACKS.live.points);
+    expect(streakReward?.day).toBe(1);
+    expect(next.points).toBe(state.points + PACKS.live.points + 40);
     expect(next.xp).toBe(PACKS.live.xp);
     expect(next.cards).toHaveLength(5);
     expect(next.lastPackRegen).toBe(T0);

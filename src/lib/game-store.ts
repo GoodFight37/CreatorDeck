@@ -22,6 +22,7 @@ import {
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
   type LiveLogins,
+  type StreakRewardGrant,
   type PlayerState,
 } from "@/lib/game-engine";
 import { deviceStorage } from "@/lib/storage";
@@ -147,10 +148,15 @@ export const gameStore = {
    * apporte le bonus Direct : les `login` des créateurs qui streament, lus
    * dans le cache du direct au moment du geste.
    */
-  openPack(now = Date.now(), options: { liveLogins?: LiveLogins } = {}): DrawnCard[] {
+  openPack(
+    now = Date.now(),
+    options: { liveLogins?: LiveLogins } = {},
+  ): { cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
     const result = engineOpenPack(current(), now, options);
     persist(result.state);
-    return result.cards;
+    // La récompense de série remonte avec les cartes : c'est l'écran de
+    // révélation qui l'annonce, au moment où elle est gagnée.
+    return { cards: result.cards, streakReward: result.streakReward };
   },
 
   /**

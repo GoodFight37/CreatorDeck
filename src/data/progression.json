@@ -16,7 +16,9 @@
   },
   "missions": {
     "resetHourUtc": 6,
-    "reward": { "hourglasses": 1 },
+    "reward": {
+      "hourglasses": 1
+    },
     "note": "Trois missions par jour, remises à zéro à 6 h UTC (l'heure où Twitch recommence) : ouvrir un booster, recycler un doublon, et toucher la famille que tu complètes — ou un Direct. Chacune paie 1 sablier.",
     "list": [
       {
@@ -42,6 +44,35 @@
   "streak": {
     "days": 7,
     "jackpotHourglasses": 3,
-    "note": "Sept jours d'affilée avec au moins un booster ouvert : le 7ᵉ jour donne un booster Perfect garanti — ou 3 sabliers, au choix. Un jour manqué remet la série à zéro (le jour commence à 6 h UTC, comme les missions)."
+    "note": "Sept jours d'affilée avec au moins un booster ouvert. Le 7ᵉ jour donne un booster Perfect garanti — ou 3 sabliers, au choix. Les six premiers jours paient chacun une petite récompense, versée au booster qui fait avancer la série : un jour coché sans rien recevoir serait une frustration, pas une récompense. Le total d'une semaine pleine : 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes communes à l'Atelier (45 points l'unité), jamais une Légendaire. Un jour manqué remet la série à zéro (le jour commence à 6 h UTC, comme les missions), et le même jour ne paie qu'une fois : c'est la journée de jeu qui sert de référence, pas le nombre de boosters.",
+    "rewards": [
+      {
+        "day": 1,
+        "points": 40
+      },
+      {
+        "day": 2,
+        "hourglasses": 1
+      },
+      {
+        "day": 3,
+        "points": 60
+      },
+      {
+        "day": 4,
+        "points": 80,
+        "tokens": 10
+      },
+      {
+        "day": 5,
+        "points": 120,
+        "hourglasses": 1
+      },
+      {
+        "day": 6,
+        "points": 150,
+        "tokens": 15
+      }
+    ]
   }
 }

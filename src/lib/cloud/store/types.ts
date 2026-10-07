@@ -27,6 +27,7 @@ import {
   applyServerProgression,
   applyTradeResult,
   type DrawnCard,
+  type StreakRewardGrant,
   type OwnedCard,
   type PlayerState,
   type TradeCard as EngineTradeCard,
@@ -228,7 +229,15 @@ export type CloudState = {
  * build sans cloud, `error` → autre refus du serveur.
  */
 export type PackOpenOutcome =
-  | { status: "drawn"; cards: DrawnCard[] }
+  | {
+      status: "drawn";
+      cards: DrawnCard[];
+      /**
+       * Ce que la série a payé pour ce booster : le jour coché et ce qu'il
+       * rapporte. `null` quand le jour ne paie rien (le 7ᵉ, c'est le jackpot).
+       */
+      streakReward?: StreakRewardGrant | null;
+    }
   | {
       status: "unavailable";
       reason: "offline" | "no-session" | "no-packs" | "not-configured" | "error";

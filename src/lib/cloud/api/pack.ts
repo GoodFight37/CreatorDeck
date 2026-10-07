@@ -37,6 +37,13 @@ export async function openPack(
   /** Ce booster a payé le Perfect du 7ᵉ jour. */
   jackpot: boolean;
   /**
+   * Ce que la série a payé pour ce booster (`0032_serie_quotidienne.sql`) :
+   * le jour coché et les points versés. `null` quand le jour ne paie rien
+   * (le 7ᵉ jour, c'est le jackpot) ou sur un projet qui n'a pas encore collé
+   * `0032` — le client retombe alors sur la table locale.
+   */
+  streakReward: { day: number; points: number } | null;
+  /**
    * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
    * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le
    * client l'adopte au lieu de pousser la sienne — c'est ce qui empêche un
@@ -78,6 +85,13 @@ export async function openPack(
     streak: Number(record.streak ?? 0),
     pityHit: record.pity_hit === true,
     jackpot: record.jackpot === true,
+    streakReward: (() => {
+      const reward = asRecord(record.streak_reward);
+      if (!reward) return null;
+      const day = Number(reward.day ?? 0);
+      if (!Number.isFinite(day) || day <= 0) return null;
+      return { day, points: Number(reward.points ?? 0) };
+    })(),
     save: parseSaveRow(record.save),
   };
 }

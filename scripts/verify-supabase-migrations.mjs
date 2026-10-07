@@ -128,6 +128,9 @@ try {
   `);
 
   const rates = JSON.parse(await readFile(path.join(ROOT, "src", "data", "pull-rates.json"), "utf8"));
+  const progressionData = JSON.parse(
+    await readFile(path.join(ROOT, "src", "data", "progression.json"), "utf8"),
+  );
   const catalogue = await readFile(path.join(MIGRATIONS, "0003_catalogue.sql"), "utf8");
   const tirage = await readFile(path.join(MIGRATIONS, "0004_tirage.sql"), "utf8");
   const direct = await readFile(path.join(MIGRATIONS, "0007_direct.sql"), "utf8");
@@ -155,6 +158,7 @@ try {
   const surcharge = await readFile(path.join(MIGRATIONS, "0029_wallet_surcharge.sql"), "utf8");
   const gold = await readFile(path.join(MIGRATIONS, "0030_gold.sql"), "utf8");
   const douze = await readFile(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
+  const serie = await readFile(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -187,6 +191,7 @@ try {
     ["0029_wallet_surcharge.sql", surcharge],
     ["0030_gold.sql", gold],
     ["0031_pity_douze.sql", douze],
+    ["0032_serie_quotidienne.sql", serie],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1168,6 +1173,7 @@ try {
   // recollage ramènerait le seuil du plancher de malchance à 80 dans la base du
   // contrôle. Le pity se mesure plus bas : c'est là que ça se voyait.
   await client.query(douze);
+  await client.query(serie);
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -2978,6 +2984,7 @@ try {
     (await client.query("select public._pack_pity($1) as n", [LUCK])).rows[0].n === 0,
   );
 
+
   // Série : un joueur neuf ouvre son premier booster (jour 1), puis rien le
   // lendemain casse la série.
   check(
@@ -3059,6 +3066,141 @@ try {
   await refuses("série : un joueur n'appelle pas la fonction interne", A, "select public._pack_streak($1, now())", [PITY], "permission denied");
   await refuses("série : un joueur ne lit pas l'historique du Perfect", A, "select public._pack_perfect_today($1, now())", [PITY], "permission denied");
 
+  // ---------------------------------------------------------------------------
+  // La série paie ses jours (0032)
+  // ---------------------------------------------------------------------------
+  // La règle : le booster qui fait avancer la série paie le jour coché, **une
+  // fois par journée de jeu**, et le 7ᵉ jour paie le jackpot — jamais les deux.
+  // Les contrôles lisent le barème dans `progression.json` : un chiffre changé
+  // d'un seul côté (fichier ou SQL) doit se voir ici.
+  const solde = async (userId) =>
+    Number((await client.query("select public._wallet_ensure($1) as p", [userId])).rows[0].p);
+  const bareme = new Map(
+    (progressionData.streak.rewards ?? []).map((reward) => [reward.day, reward.points ?? 0]),
+  );
+  const pointsAnnonces = [];
+  for (const day of [1, 2, 3, 4, 5, 6, 7, 9]) {
+    pointsAnnonces.push(
+      Number(
+        (await client.query("select public._streak_reward_points($1) as p", [day])).rows[0].p,
+      ),
+    );
+  }
+  check(
+    "série : la table des points est celle du fichier (J1 → J6, 0 au 7ᵉ et hors bornes)",
+    pointsAnnonces.every((points, index) => {
+      const day = [1, 2, 3, 4, 5, 6, 7, 9][index];
+      if (day === 7 || day === 9) return points === 0;
+      return points === (bareme.get(day) ?? 0);
+    }),
+    JSON.stringify(pointsAnnonces),
+  );
+
+  // Jour 3 : deux jours déjà joués (hier et avant-hier), donc aujourd'hui serait
+  // le troisième. Le booster paie 60 points, en plus des 12 du tirage.
+  const SERIE = "31313131-4141-4545-8787-919191919191";
+  await player(SERIE, "Sériane", []);
+  await seedDraws(SERIE, 1, 2, sansLegendaire);
+  await seedDraws(SERIE, 1, 1, sansLegendaire);
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+    [SERIE],
+  );
+  const soldeAvant = await solde(SERIE);
+  const jour3 = (await asPlayer(SERIE, "select public.open_pack() as r")).rows[0].r;
+  const soldeApres = await solde(SERIE);
+  check(
+    "série : le 3ᵉ jour paie ses points, une fois, en plus des 12 du tirage",
+    jour3.streak_reward?.day === 3 &&
+      jour3.streak_reward?.points === (bareme.get(3) ?? 0) &&
+      soldeApres - soldeAvant === 12 + (bareme.get(3) ?? 0),
+    JSON.stringify({ annonce: jour3.streak_reward, gain: soldeApres - soldeAvant }),
+  );
+
+  // Le deuxième booster du **même jour** : la journée est déjà payée. Le
+  // serveur ne repaie pas, et il ne l'annonce pas — sinon l'écran promettrait
+  // des points qui n'arrivent pas.
+  await client.query(
+    "update public.pack_state set packs = 4, last_regen_at = now() where user_id = $1",
+    [SERIE],
+  );
+  const soldeAvantBis = await solde(SERIE);
+  const memeJour = (await asPlayer(SERIE, "select public.open_pack() as r")).rows[0].r;
+  const soldeApresBis = await solde(SERIE);
+  check(
+    "série : le deuxième booster du même jour ne repaie pas, et ne l'annonce pas",
+    memeJour.streak_reward?.points === 0 && soldeApresBis - soldeAvantBis === 12,
+    JSON.stringify({ annonce: memeJour.streak_reward, gain: soldeApresBis - soldeAvantBis }),
+  );
+
+  // Jour 7 : six jours d'affilée avant aujourd'hui → le booster du jour paie le
+  // jackpot (un Perfect garanti), pas une micro-récompense.
+  const SEPT = "32323232-4242-4545-8787-929292929292";
+  await player(SEPT, "Septime", []);
+  for (let jour = 6; jour >= 1; jour -= 1) await seedDraws(SEPT, 1, jour, sansLegendaire);
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+    [SEPT],
+  );
+  const soldeSeptAvant = await solde(SEPT);
+  const septieme = (await asPlayer(SEPT, "select public.open_pack() as r")).rows[0].r;
+  const soldeSeptApres = await solde(SEPT);
+  check(
+    "série : le 7ᵉ jour paie le jackpot, pas une micro-récompense",
+    septieme.streak_reward?.day === 7 &&
+      septieme.streak_reward?.points === 0 &&
+      septieme.jackpot === true &&
+      soldeSeptApres - soldeSeptAvant === 12,
+    JSON.stringify({
+      annonce: septieme.streak_reward,
+      jackpot: septieme.jackpot,
+      gain: soldeSeptApres - soldeSeptAvant,
+    }),
+  );
+
+  // Un jour manqué remet la série à zéro : le prochain booster est un jour 1, et
+  // il repaie les points du jour 1 — la référence contient la journée de jeu.
+  const TROU = "33333333-4343-4545-8787-939393939393";
+  await player(TROU, "Trouée", []);
+  await seedDraws(TROU, 1, 9, sansLegendaire);
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+    [TROU],
+  );
+  const soldeTrouAvant = await solde(TROU);
+  const reprise = (await asPlayer(TROU, "select public.open_pack() as r")).rows[0].r;
+  const soldeTrouApres = await solde(TROU);
+  check(
+    "série : après un jour manqué, la série repart à J1 et repaie ses points",
+    reprise.streak_reward?.day === 1 &&
+      reprise.streak_reward?.points === (bareme.get(1) ?? 0) &&
+      soldeTrouApres - soldeTrouAvant === 12 + (bareme.get(1) ?? 0),
+    JSON.stringify({ annonce: reprise.streak_reward, gain: soldeTrouApres - soldeTrouAvant }),
+  );
+
+  // La table du barème est interne : un joueur ne peut pas la lire, et il ne
+  // peut pas non plus se verser des points de série à la main.
+  const refusSerie = await asPlayer(TROU, "select public._streak_reward_points(4) as p").then(
+    () => "",
+    (error) => String(error.message),
+  );
+  check("série : la table des points est fermée aux joueurs", /permission denied/.test(refusSerie), refusSerie);
+  const refusSerieCredit = await asPlayer(
+    TROU,
+    "select public._wallet_apply($1::uuid, 999, 'streak', 'triche') as p",
+    [TROU],
+  ).then(() => "", (error) => String(error.message));
+  check(
+    "série : un joueur ne peut pas se verser des points de série",
+    /permission denied/.test(refusSerieCredit),
+    refusSerieCredit,
+  );
+
+  // On laisse le journal comme on l'a trouvé : ces boosters de contrôle ne sont
+  // pas de vrais paquets, et `pack_draws` ne doit pas en garder la trace — le
+  // contrôle de rejouabilité, plus bas, compare les deux journaux.
+  await client.query("delete from public.pack_draws where user_id in ($1, $2, $3)", [SERIE, SEPT, TROU]);
+
   await client.query("alter table public.pack_draws enable trigger pack_draws_last_pack");
   await client.query("delete from public.pack_draws where user_id in ($1, $2, $3, $4)", [
     PITY,
@@ -3066,6 +3208,7 @@ try {
     JACKPOT,
     LUCK,
   ]);
+
 
   // --- 0014 : le Paquet Scène ----------------------------------------------
   // Le serveur donne les choix, le client tire dedans, le serveur vérifie. Ce
@@ -4676,6 +4819,7 @@ try {
   // `0031` ferme la pile : elle est la dernière à écrire `open_pack()`, donc la
   // dernière recollée. Sans elle, le recollage réinstallerait le seuil de 80.
   await client.query(douze);
+  await client.query(serie);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

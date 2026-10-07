@@ -251,6 +251,20 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0032_serie_quotidienne.sql`](../supabase/migrations/0032_serie_quotidienne.sql)
+     → **Run** pour que **la série quotidienne paie ses jours** (décision du
+     7 octobre 2026) : le booster qui fait avancer la série verse les points du
+     jour coché — J1 40, J3 60, J4 80, J5 120, J6 150 — et le 7ᵉ jour reste le
+     gros lot (Perfect garanti ou 3 sabliers), sans micro-récompense en plus. Le
+     versement passe par `_wallet_apply()` avec une référence par **journée de
+     jeu** (`serie-jN-<jour>`) : dix boosters le même jour ne paient qu'une fois,
+     et la réponse annonce `0 point` dans ce cas — le serveur ne promet jamais ce
+     qu'il n'a pas versé. Les **jetons** et les **sabliers** ne passent pas par
+     le serveur : ils vivent sur l'appareil, qui les ajoute à partir du même
+     barème (`src/data/progression.json`). Même signature que `0031` :
+     `create or replace` **remplace** la fonction — pas de surcharge possible.
+     Détail : §8, « Le plancher de malchance, les jetons, les missions du
+     jour ».
    - [`supabase/migrations/0031_pity_douze.sql`](../supabase/migrations/0031_pity_douze.sql)
      → **Run** pour que le **plancher de malchance** passe de 80 à **12** boosters
      (décision du 7 octobre 2026, sur le brief « 12 packs jusqu'au pity »). Le
@@ -405,7 +419,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente et une migrations** (`0001` à `0031`) pour de vrai, dans
+> Le script exécute **les trente-deux migrations** (`0001` à `0032`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -861,6 +875,11 @@ Ce que la migration change, et pourquoi :
 * `pack_status()` renvoie `pity`, `streak` et `jackpot_ready` : le chiffre
   affiché (« Légendaire garanti dans N boosters ») est **celui qui décidera du
   tirage**, pas une illustration.
+* Depuis `0032`, `open_pack()` paie aussi **le jour de la série** : le jour du
+  cycle est `((streak - 1) % 7) + 1` — le 8ᵉ jour redevient un J1 — et les points
+  du jour sont versés dans le wallet, avec la journée de jeu dans la référence
+  pour qu'un même jour ne paie qu'une fois. Les jetons et les sabliers restent
+  sur l'appareil, et le 7ᵉ jour ne paie que le jackpot.
 * La migration **supprime l'ancienne `open_pack()` sans argument** avant de la
   recréer : sans ce `drop`, Postgres garderait les deux signatures et un appel
   sans argument continuerait d'ignorer la garantie.
@@ -876,6 +895,34 @@ joueurs (`revoke … from public, anon, authenticated`).
 Prime Time), 400 pour la carte au choix à l'Atelier — jamais une Légendaire.
 Ils sont crédités par `applyPackResult()`, donc aussi bien pour un tirage local
 que pour un tirage décidé par le serveur.
+
+**La série paie ses jours (`0032`).** Les six premiers jours ne donnaient rien :
+une case cochée sans lot, c'est une frustration. Depuis le 7 octobre 2026, le
+**booster qui fait avancer la série** verse la récompense du jour :
+
+| Jour | Récompense | Où elle est versée |
+| --- | --- | --- |
+| J1 | 40 points | serveur (`_wallet_apply`, `kind = 'streak'`) |
+| J2 | 1 sablier | appareil |
+| J3 | 60 points | serveur |
+| J4 | 80 points **+ 10 jetons** | points au serveur, jetons à l'appareil |
+| J5 | 120 points **+ 1 sablier** | idem |
+| J6 | 150 points **+ 15 jetons** | idem |
+| J7 | Perfect garanti **ou** 3 sabliers | le jackpot — aucune micro-récompense en plus |
+
+Une semaine pleine vaut **450 points, 2 sabliers et 25 jetons** : de quoi
+fabriquer dix cartes communes à l'Atelier (45 points l'unité), jamais une
+Légendaire. Le barème est écrit **une seule fois**, dans
+`src/data/progression.json` (bloc `streak.rewards`) ; le SQL le reprend ligne
+pour ligne et deux tests miroirs refusent qu'un côté parte sans l'autre
+(`src/lib/game-progression.test.ts`, `scripts/verify-supabase-migrations.mjs`).
+
+Deux détails qui comptent : le jour du cycle est `((streak - 1) % 7) + 1`, donc
+le 8ᵉ jour redevient un J1 ; et la référence du versement contient la **journée
+de jeu** (`serie-jN-<jour>`), donc un deuxième booster le même jour ne paie rien
+de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
+jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
+le prochain booster est un J1, et il paie à nouveau.
 
 ### Le direct (statut EN LIVE)
 

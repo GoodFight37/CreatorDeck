@@ -22,7 +22,7 @@
 import { useCallback } from "react";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import type { DrawnCard, GameView } from "@/lib/game-engine";
+import type { DrawnCard, GameView, StreakRewardGrant } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 import { liveLogins } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
@@ -37,7 +37,18 @@ export const OPENING_DELAY_MS = 650;
 export type PackOpeningKind = "live" | "scene";
 
 export type PackOpeningResult =
-  | { status: "drawn"; kind: PackOpeningKind; cards: DrawnCard[] }
+  | {
+      status: "drawn";
+      kind: PackOpeningKind;
+      cards: DrawnCard[];
+      /**
+       * Ce que la série a payé pour ce booster (jour 1 → 6), ou `null` : c'est
+       * l'écran de révélation qui l'annonce. En ligne, les **points** sont
+       * versés par le serveur ; hors ligne, le moteur les a déjà portés au
+       * solde — dans les deux cas, l'annonce est la même.
+       */
+      streakReward?: StreakRewardGrant | null;
+    }
   /**
    * Rien n'a été tiré et rien n'est cassé : `needAccount` dit si le refus se
    * règle par une connexion (l'écran peut alors pointer vers Compte).
@@ -77,10 +88,10 @@ export function usePackOpening(game: GameView | null): {
       await suspense();
       // Le bonus Direct se lit au moment du geste (et non au rendu) : « qui
       // streame » est celui d'il y a dix secondes.
-      const cards = gameStore.openPack(Date.now(), {
+      const { cards, streakReward } = gameStore.openPack(Date.now(), {
         liveLogins: liveLogins(liveStore.getSnapshot()),
       });
-      return { status: "drawn", kind: "live", cards };
+      return { status: "drawn", kind: "live", cards, streakReward };
     }
     if (!cloud.userId) {
       return {
@@ -99,7 +110,12 @@ export function usePackOpening(game: GameView | null): {
       // Le tirage a payé ses 12 points **côté serveur** (trigger
       // `wallet_on_draw`) : on adopte son solde plutôt que d'accumuler le nôtre.
       void cloudStore.syncWallet();
-      return { status: "drawn", kind: "live", cards: outcome.cards };
+      return {
+        status: "drawn",
+        kind: "live",
+        cards: outcome.cards,
+        streakReward: outcome.streakReward ?? null,
+      };
     }
     return {
       status: "refused",

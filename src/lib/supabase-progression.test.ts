@@ -19,6 +19,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { PROGRESSION, gameDay } from "@/lib/progression";
 import { PITY } from "@/lib/pull-rates";
+import { STREAK_REWARDS } from "@/lib/progression";
 
 const ROOT = process.cwd();
 const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
@@ -28,6 +29,9 @@ const SQL = readFileSync(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
 // 2026). 0013 garde le contrat de structure — `_pack_pity()`, le journal des
 // tirages, la journée de jeu.
 const SQL_PITY = readFileSync(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
+// `0032` paie les jours de la série : c'est elle qui porte la dernière
+// définition d'`open_pack()`, et la table des points.
+const SQL_SERIE = readFileSync(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
 // Les contrôles de motifs portent sur le code seul : un commentaire qui
 // explique une règle cite forcément la règle, et un test qui lit les
 // commentaires ne teste rien.
@@ -38,6 +42,7 @@ const sansCommentaires = (sql: string) =>
     .join("\n");
 const CODE = sansCommentaires(SQL);
 const CODE_PITY = sansCommentaires(SQL_PITY);
+const CODE_SERIE = sansCommentaires(SQL_SERIE);
 
 describe("0013_progression.sql (plancher de malchance et série)", () => {
   it("reprend le seuil publié dans pull-rates.json", () => {
@@ -47,13 +52,38 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     expect(PITY.threshold).toBeGreaterThan(0);
     expect(PITY.label).toBeTruthy();
     expect(PITY.note).toBeTruthy();
-    expect(CODE_PITY).toContain(`v_pity + 1 >= ${PITY.threshold}`);
+    // Le seuil vit dans la **dernière** définition d'`open_pack` : `0032`, qui
+    // reprend le corps de `0031` à l'identique — avec la récompense de série.
+    expect(CODE_SERIE).toContain(`v_pity + 1 >= ${PITY.threshold}`);
     // Trois endroits : la décision du tirage, la conversion en Perfect, et ce
     // que la réponse annonce.
-    expect(CODE_PITY.match(new RegExp(`v_pity \\+ 1 >= ${PITY.threshold}`, "g"))).toHaveLength(3);
+    expect(CODE_SERIE.match(new RegExp(`v_pity \\+ 1 >= ${PITY.threshold}`, "g"))).toHaveLength(3);
   });
 
-  it("0031 est la dernière définition d'open_pack — le seuil ne peut pas être écrasé plus loin", () => {
+  it("0032 paie le jour de la série, et la table est celle du fichier des taux", () => {
+    // Le barème en points vit dans `progression.json` **et** dans le SQL : les
+    // deux doivent dire la même chose, sinon le serveur verserait un montant et
+    // l'écran en annoncerait un autre.
+    for (const reward of STREAK_REWARDS) {
+      const attendu = reward.points ?? 0;
+      const ligne = CODE_SERIE.match(new RegExp(`when ${reward.day} then (\\d+)`));
+      expect(ligne?.[1], `jour ${reward.day}`).toBe(String(attendu));
+    }
+    // Le 7ᵉ jour ne paie rien : c'est le jackpot, décidé ailleurs.
+    expect(STREAK_REWARDS.some((reward) => reward.day === 7)).toBe(false);
+    expect(CODE_SERIE).toMatch(/else 0/);
+    // Les points sont versés par `_wallet_apply` — jamais une écriture directe
+    // du solde, qui contournerait le journal à usage unique.
+    expect(CODE_SERIE).toContain("public._wallet_apply(");
+    expect(CODE_SERIE).toContain("'streak'");
+    expect(CODE_SERIE).toContain("public._pack_game_day(v_now)");
+    expect(CODE_SERIE).not.toMatch(/update public\.wallets/i);
+    // Même signature, pas de `drop` : un recollage remplace, il n'empile pas.
+    expect(SQL_SERIE).not.toMatch(/drop\s+function/i);
+    expect(CODE_SERIE).toContain("create or replace function public.open_pack(p_jackpot text default 'perfect')");
+  });
+
+  it("0032 est la dernière définition d'open_pack — le seuil ne peut pas être écrasé plus loin", () => {
     // Si une migration suivante redéfinit `open_pack()`, ce test tombe : le
     // seuil publié et celui qui décide du tirage se sépareraient en silence.
     const fichiers = readdirSync(MIGRATIONS)
@@ -64,7 +94,7 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
         "create or replace function public.open_pack(",
       ),
     );
-    expect(derniers[derniers.length - 1]).toBe("0031_pity_douze.sql");
+    expect(derniers[derniers.length - 1]).toBe("0032_serie_quotidienne.sql");
   });
 
   it("le slot garanti est Légendaire sous le plancher, et lui seul", () => {
@@ -73,9 +103,9 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     // décision), sinon un `v_weights` lointain ferait passer le test.
     const decision = `v_pity + 1 >= ${PITY.threshold} or v_jackpot then`;
     const garantie = `v_weights := '{"legendary": 1}'::jsonb;`;
-    const debutPoids = CODE_PITY.indexOf(decision);
+    const debutPoids = CODE_SERIE.indexOf(decision);
     expect(debutPoids).toBeGreaterThan(-1);
-    expect(CODE_PITY.slice(debutPoids, debutPoids + 240)).toContain(garantie);
+    expect(CODE_SERIE.slice(debutPoids, debutPoids + 240)).toContain(garantie);
   });
 
   it("déduit le compteur du journal des tirages, jamais de la sauvegarde", () => {

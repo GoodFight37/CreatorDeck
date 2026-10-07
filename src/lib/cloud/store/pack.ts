@@ -56,6 +56,14 @@ export function packActions(ctx: CloudStoreContext) {
           result.lastRegenAt,
           result.openings,
           ctx.deps.now(),
+          {
+            // Les points de la récompense de série sont versés par le serveur
+            // (`0032`) : le moteur annonce, il ne crédite pas. Et c'est **son**
+            // jour qui fait foi — celui de l'appareil peut avoir dérivé.
+            pointsFromServer: true,
+            rewardDay: result.streakReward?.day ?? null,
+            rewardPoints: result.streakReward?.points ?? null,
+          },
         );
         // Les compteurs du serveur font foi pour le plancher de malchance et
         // la série : c'est lui qui tire, c'est donc son compte qui est juste.
@@ -93,7 +101,7 @@ export function packActions(ctx: CloudStoreContext) {
             message,
             isError: false,
           });
-          return { status: "drawn", cards: applied.cards };
+          return { status: "drawn", cards: applied.cards, streakReward: applied.streakReward };
         }
         // Projet sans `0022` : l'ancien chemin reste le seul possible — le
         // client envoie sa collection (sans forcer, donc jamais par-dessus une
@@ -101,7 +109,7 @@ export function packActions(ctx: CloudStoreContext) {
         ctx.deps.applyState(applied.state);
         await ctx.push(applied.state.version, applied.state.updatedAt, false);
         ctx.publish({ busy: false, message, isError: false });
-        return { status: "drawn", cards: applied.cards };
+        return { status: "drawn", cards: applied.cards, streakReward: applied.streakReward };
       } catch (error) {
         // Réseau coupé : même consigne que sans compte — se connecter.
         if (error instanceof CloudError && error.status === 0) {

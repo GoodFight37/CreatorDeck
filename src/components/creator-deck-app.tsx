@@ -116,8 +116,15 @@ import {
   playReward,
   setMuted,
 } from "@/lib/sfx";
-import { craftQuote, getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import {
+  craftQuote,
+  getGameView,
+  type DrawnCard,
+  type GameView,
+  type StreakRewardGrant,
+} from "@/lib/game-engine";
 import { pullVerdict, type PullVerdict } from "@/lib/pull";
+import { STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
 import { THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -1236,10 +1243,25 @@ function MissionsView({
                 <span className="plan-mark">
                   {done ? <Check size={13} /> : today ? "à faire" : final ? "Direct" : "—"}
                 </span>
+                {/* Ce que la case paie, écrit noir sur blanc : le barème du
+                    jour vient du même fichier que celui qui verse les points,
+                    donc l'écran ne peut pas promettre autre chose que le
+                    moteur. Le 7ᵉ jour, c'est le gros lot. */}
                 <span className="plan-gift">
-                  {final
-                    ? `Perfect ou ${game.streak.jackpotHourglasses} sabliers`
-                    : "série +1"}
+                  {final ? (
+                    <>
+                      <span>Perfect</span>
+                      <span>ou {game.streak.jackpotHourglasses} sabliers</span>
+                    </>
+                  ) : (
+                    (() => {
+                      const reward = STREAK_REWARDS.find((item) => item.day === day);
+                      const parts = reward ? streakRewardParts(reward) : [];
+                      return (parts.length > 0 ? parts : ["série +1"]).map((part) => (
+                        <span key={part}>{part}</span>
+                      ));
+                    })()
+                  )}
                 </span>
               </div>
             );
@@ -1781,6 +1803,9 @@ export function CreatorDeckApp() {
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
+  // Ce que la série a payé pour le booster qu'on est en train de révéler : le
+  // badge de l'écran de révélation, effacé avec les cartes.
+  const [streakGain, setStreakGain] = useState<StreakRewardGrant | null>(null);
   const [revealIndex, setRevealIndex] = useState(0);
   // Quel paquet la révélation montre (le tirage rare ne se raconte pas pareil).
   const [revealKind, setRevealKind] = useState<"live" | "scene">("live");
@@ -1866,6 +1891,9 @@ export function CreatorDeckApp() {
         playPackOpening();
         setRevealKind("live");
         setDrawnCards(result.cards);
+        // Le jour coché et sa récompense : annoncés pendant la révélation, pas
+        // cachés dans une notification qui attend la fin.
+        setStreakGain(result.streakReward ?? null);
         setRevealIndex(0);
         return;
       }
@@ -2025,6 +2053,9 @@ export function CreatorDeckApp() {
   function closeReveal() {
     setDrawnCards([]);
     setRevealIndex(0);
+    // La récompense de série s'efface avec les cartes : elle appartient à ce
+    // booster-là, pas au suivant.
+    setStreakGain(null);
   }
 
   if (!game) return <LoadingScreen />;
@@ -2199,6 +2230,7 @@ export function CreatorDeckApp() {
           cards={drawnCards}
           index={revealIndex}
           kind={revealKind}
+          streakReward={streakGain}
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
           onClose={closeReveal}
