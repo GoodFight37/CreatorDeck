@@ -366,6 +366,16 @@ function messageFor(status: number, code: string, raw: string): string {
   ) {
     return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
+  // `open_pack` existe mais pas dans sa version à argument : c'est le signe que
+  // la migration 0013 (plancher de malchance) n'est pas encore collée. Le
+  // message générique parlerait de 0003/0004, qui sont déjà là.
+  if (
+    (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
+    /open_pack\s*\(/.test(raw) &&
+    !/open_pack\s*\(\s*\)/.test(raw)
+  ) {
+    return "Le tirage a changé côté serveur : colle supabase/migrations/0013_progression.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+  }
   // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
   // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
   // PostgREST (« Could not find the function public.open_pack »).

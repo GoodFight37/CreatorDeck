@@ -598,13 +598,30 @@ describe("tirage serveur", () => {
         status: 404,
         body: {
           code: "PGRST202",
-          message: "Could not find the function public.open_pack(p_user_id) in the schema cache",
+          message: "Could not find the function public.open_pack() in the schema cache",
         },
       }),
       signedIn(),
     );
     await expect(api.openPack()).rejects.toThrowError(/0003_catalogue\.sql puis 0004_tirage\.sql/);
     await expect(api.packStatus()).rejects.toThrowError(/SQL Editor/);
+  });
+
+  it("distingue la migration du plancher de malchance de celles du tirage", async () => {
+    // `open_pack` existe, mais pas dans sa version à argument : c'est 0013 qui
+    // manque, pas 0003/0004 — le message doit dire la bonne migration.
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: {
+          code: "PGRST202",
+          message:
+            "Could not find the function public.open_pack(p_jackpot) in the schema cache",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.openPack()).rejects.toThrowError(/0013_progression\.sql/);
   });
 
   it("explique quoi faire quand une table manque", async () => {
