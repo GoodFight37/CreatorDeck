@@ -409,6 +409,21 @@ export class CloudApi {
     return account.playerProfile(this.core, userId);
   }
 
+  /** Inscrit le jeton de notification de cet appareil (`0023`). */
+  async registerPushToken(token: string, platform = "android"): Promise<void> {
+    return account.registerPushToken(this.core, token, platform);
+  }
+
+  /** Retire le jeton de cet appareil : plus rien n'arrive ici. */
+  async forgetPushToken(token: string): Promise<void> {
+    return account.forgetPushToken(this.core, token);
+  }
+
+  /** L'interrupteur des notifications de direct, sur tous les appareils. */
+  async setPushLive(enabled: boolean): Promise<number> {
+    return account.setPushLive(this.core, enabled);
+  }
+
   // ---------------------------------------------------------------- boosters
 
   /**

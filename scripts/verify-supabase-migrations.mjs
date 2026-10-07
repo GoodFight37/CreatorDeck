@@ -42,6 +42,10 @@
  *   * l'hôtel des ventes : grille des prix, dépôt payé comptant, la dernière
  *     copie refusée, comptoir filtré par joueur, achat atomique et unique,
  *     points insuffisants, annonce périmée, et table fermée aux clients ;
+ *   * les notifications : un jeton s'inscrit et se retire, la table reste
+ *     fermée au client, et `push_targets()` ne réveille que les intéressés
+ *     (épinglé ou carte possédée) — une fois, pour un direct frais, jamais
+ *     réveillés deux fois d'affilée ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -132,6 +136,7 @@ try {
   const identite = await readFile(path.join(MIGRATIONS, "0020_identite.sql"), "utf8");
   const provenance = await readFile(path.join(MIGRATIONS, "0021_provenance.sql"), "utf8");
   const packDansSaves = await readFile(path.join(MIGRATIONS, "0022_pack_dans_saves.sql"), "utf8");
+  const notifications = await readFile(path.join(MIGRATIONS, "0023_notifications.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -155,6 +160,7 @@ try {
     ["0020_identite.sql", identite],
     ["0021_provenance.sql", provenance],
     ["0022_pack_dans_saves.sql", packDansSaves],
+    ["0023_notifications.sql", notifications],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -710,6 +716,181 @@ try {
     `cartes=${alixAfterFailure.cards.length} statut=${fragileRow.status}`,
   );
   await client.query("update public.saves set state = $2 where user_id = $1", [B, JSON.stringify(brunoBefore)]);
+
+  // --- Notifications --------------------------------------------------------
+  // Deux joueurs neufs, deux appareils. Paul épingle un créateur et possède une
+  // carte d'un autre ; Bruno ne s'intéresse à rien. Les notifications ne
+  // doivent réveiller que Paul, une fois.
+  const PAUL = "aaaaaaaa-0001-4000-8000-00000000a001";
+  const BRUNO = "bbbbbbbb-0002-4000-8000-00000000b002";
+
+  // Deux créateurs du catalogue, pris au hasard de leur rang : les contrôles ne
+  // dépendent pas de leur nom.
+  const vedette = (
+    await client.query("select slug, login, display_name from public.creators where retired = false and login is not null order by rank limit 1")
+  ).rows[0];
+  const second = (
+    await client.query(
+      "select slug, login, display_name from public.creators where retired = false and login is not null and slug <> $1 order by rank limit 1",
+      [vedette.slug],
+    )
+  ).rows[0];
+
+  await player(PAUL, "Ulysse", [card("paul-1", second.slug, "common", "standard", 40)]);
+  await player(BRUNO, "Vera", []);
+  await asPlayer(PAUL, "select public.set_wishlist($1)", [vedette.slug]);
+
+  const TOKEN_PAUL = "fcm-paul-0000000000000000000000000000000000000000000000000000";
+  const TOKEN_PAUL_BIS = "fcm-paul-tablette-000000000000000000000000000000000000000000000";
+  const TOKEN_BRUNO = "fcm-bruno-000000000000000000000000000000000000000000000000000";
+
+  check(
+    "notifications : l'inscription enregistre le jeton du compte connecté",
+    (await asPlayer(PAUL, "select public.register_push_token($1, 'android') as r", [TOKEN_PAUL])).rows[0].r.ok === true &&
+      (await client.query("select user_id, live from public.push_tokens where token = $1", [TOKEN_PAUL])).rows[0].user_id === PAUL,
+  );
+  await asPlayer(BRUNO, "select public.register_push_token($1, 'android') as r", [TOKEN_BRUNO]);
+  await asPlayer(PAUL, "select public.register_push_token($1, 'android') as r", [TOKEN_PAUL_BIS]);
+
+  await refuses(
+    "notifications : la table des jetons reste fermée au client",
+    PAUL,
+    "select count(*) from public.push_tokens",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "notifications : `push_targets()` n'est pas appelable par un joueur",
+    PAUL,
+    "select * from public.push_targets()",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "notifications : un jeton vide est refusé",
+    PAUL,
+    "select public.register_push_token($1) as r",
+    ["court"],
+    "invalide",
+  );
+  await refuses(
+    "notifications : sans compte, pas d'inscription",
+    null,
+    "select public.register_push_token($1) as r",
+    [TOKEN_PAUL],
+    "Connecte-toi",
+  );
+
+  // Le direct du créateur épinglé : 1 234 spectateurs, commencé il y a 5 min.
+  const enDirect = async (rows) =>
+    client.query("select public.live_publish($1::jsonb, $2)", [
+      JSON.stringify(rows),
+      "notifications",
+    ]);
+  const cinqMinutes = new Date(Date.now() - 5 * 60_000).toISOString();
+  await enDirect([
+    { login: vedette.login, display_name: vedette.display_name, viewers: 1234, started_at: cinqMinutes },
+  ]);
+
+  const premier = (await client.query("select * from public.push_targets()")).rows;
+  check(
+    "notifications : l'épinglé qui passe en direct réveille ses deux appareils",
+    premier.length === 2 &&
+      premier.every((row) => row.user_id === PAUL && row.login === vedette.login && row.reason === "epingle") &&
+      new Set(premier.map((row) => row.token)).size === 2,
+    JSON.stringify(premier),
+  );
+
+  const journalNotif = await client.query("select count(*)::int as n from public.push_log where user_id = $1", [PAUL]);
+  check("notifications : le journal garde une trace par (joueur, créateur)", journalNotif.rows[0].n === 1, String(journalNotif.rows[0].n));
+
+  check(
+    "notifications : deux passages d'affilée n'envoient pas deux fois",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0,
+  );
+
+  // Le créateur d'une carte possédée, mais pas épinglé : il passe après, et le
+  // plafond d'une heure par joueur doit le retenir tant que le premier est
+  // frais dans le journal.
+  await enDirect([
+    { login: vedette.login, display_name: vedette.display_name, viewers: 1234, started_at: cinqMinutes },
+    { login: second.login, display_name: second.display_name, viewers: 500, started_at: cinqMinutes },
+  ]);
+  check(
+    "notifications : le plafond d'une heure par joueur tient (un direct dans la collection attend)",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0,
+  );
+
+  // Trois heures plus tard, la même scène : cette fois la carte possédée passe.
+  await client.query("update public.push_log set sent_at = now() - interval '3 hours' where user_id = $1", [PAUL]);
+  const ensuite = (await client.query("select * from public.push_targets()")).rows;
+  check(
+    "notifications : la carte possédée réveille aussi, avec sa raison",
+    ensuite.length === 2 && ensuite.every((row) => row.login === second.login && row.reason === "collection"),
+    JSON.stringify(ensuite),
+  );
+
+  // L'interrupteur du joueur coupe tout.
+  await client.query("update public.push_log set sent_at = now() - interval '8 hours' where user_id = $1", [PAUL]);
+  check(
+    "notifications : l'interrupteur coupé n'envoie plus rien (et touche les deux appareils)",
+    (await asPlayer(PAUL, "select public.set_push_live(false) as r")).rows[0].r.devices === 2 &&
+      (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0,
+  );
+  await asPlayer(PAUL, "select public.set_push_live(true) as r");
+  check(
+    "notifications : l'interrupteur rallumé les réveille",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 2,
+  );
+
+  // Un direct vieux de 45 minutes n'est plus « frais », un direct à zéro
+  // spectateur n'est pas un direct.
+  await client.query("update public.push_log set sent_at = now() - interval '8 hours' where user_id = $1", [PAUL]);
+  const quaranteCinqMinutes = new Date(Date.now() - 45 * 60_000).toISOString();
+  await enDirect([{ login: vedette.login, display_name: vedette.display_name, viewers: 900, started_at: quaranteCinqMinutes }]);
+  check(
+    "notifications : un direct commencé il y a 45 minutes ne réveille personne",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0,
+  );
+  await enDirect([{ login: vedette.login, display_name: vedette.display_name, viewers: 0, started_at: cinqMinutes }]);
+  check(
+    "notifications : un direct à zéro spectateur ne réveille personne",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0,
+  );
+
+  // Bruno ne s'intéresse à rien : il n'a jamais été réveillé.
+  check(
+    "notifications : un joueur sans épinglé ni carte n'est jamais réveillé",
+    (await client.query("select count(*)::int as n from public.push_targets() where user_id = $1", [BRUNO])).rows[0].n === 0,
+  );
+
+  // Le retrait : le jeton quitte le serveur, et le compte n'est plus joignable.
+  await enDirect([{ login: vedette.login, display_name: vedette.display_name, viewers: 1200, started_at: cinqMinutes }]);
+  await asPlayer(PAUL, "select public.forget_push_token($1) as r", [TOKEN_PAUL]);
+  await asPlayer(PAUL, "select public.forget_push_token($1) as r", [TOKEN_PAUL_BIS]);
+  check(
+    "notifications : un jeton retiré (et lui seul) ne reçoit plus rien",
+    (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 0 &&
+      (await client.query("select count(*)::int as n from public.push_tokens where user_id = $1", [PAUL])).rows[0].n === 0 &&
+      (await client.query("select count(*)::int as n from public.push_tokens where token = $1", [TOKEN_BRUNO])).rows[0].n === 1,
+  );
+
+  // Le même appareil change de compte : le jeton suit le nouveau propriétaire.
+  await asPlayer(PAUL, "select public.register_push_token($1, 'android') as r", [TOKEN_PAUL]);
+  await asPlayer(BRUNO, "select public.register_push_token($1, 'android') as r", [TOKEN_PAUL]);
+  check(
+    "notifications : le même appareil qui change de compte déplace son jeton",
+    (await client.query("select user_id from public.push_tokens where token = $1", [TOKEN_PAUL])).rows[0].user_id === BRUNO,
+  );
+
+  // Rejouer la migration ne casse rien : jetons conservés, fonctions en place.
+  await client.query(notifications);
+  check(
+    "notifications : la migration est rejouable, jetons compris",
+    (await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n === 2 &&
+      (await client.query("select count(*)::int as n from pg_proc where proname = 'push_targets'")).rows[0].n === 1,
+    String((await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n),
+  );
 
   // --- Rejouabilité de la migration ----------------------------------------
   await client.query(

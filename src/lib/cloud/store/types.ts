@@ -202,6 +202,14 @@ export type CloudState = {
   arenaAt: number | null;
   /** Un appel d'arène est en cours (dépôt, draft ou encaissement). */
   arenaBusy: boolean;
+  /**
+   * Les notifications de direct : `true` quand cet appareil est inscrit et que
+   * le joueur les veut, `false` quand il les a coupées, `null` tant qu'on ne
+   * sait rien (pas de greffon, pas de compte, pas encore inscrit).
+   */
+  pushLive: boolean | null;
+  /** Une inscription ou un changement d'interrupteur est en cours. */
+  pushBusy: boolean;
 };
 
 /**
@@ -327,6 +335,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   arenaDraftBusy: false,
   arenaAt: null,
   arenaBusy: false,
+  pushLive: null,
+  pushBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;

@@ -54,6 +54,7 @@ import { ThemeSheet } from "@/components/theme-sheet";
 import { SeasonsSection } from "@/components/seasons-section";
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
+import { usePush } from "@/hooks/use-push";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
@@ -1483,6 +1484,7 @@ export function CreatorDeckApp() {
   // Envoi automatique (débounce) quand un compte est connecté : aucun appel
   // réseau sinon, la partie reste strictement locale.
   useCloudAutoSync();
+  usePush();
 
   // Lien de partage : `?profil=<identifiant>` ouvre la fiche publique au
   // démarrage. C'est la seule forme de « route publique » possible sans

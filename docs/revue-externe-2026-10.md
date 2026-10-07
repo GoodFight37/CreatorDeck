@@ -121,10 +121,17 @@ pareil ne bloquent plus la sauvegarde ».
 1. ~~**Découpes** : `cloud-store.ts` et `api.ts`~~ **faites le 7 octobre** (voir
    § 2, prompt 6) : `api/` et `store/`, un module par domaine, façade mince,
    aucun changement de comportement (666 tests inchangés).
-2. **Wallet serveur**, si l'hôtel devient central (voir § 3).
-3. **Les campagnes de notifications (FCM)** puis les codes promo, le gyroscope
-   holographique et le badge automatique (`pg_cron`) — le backlog hors brief,
-   inchangé.
+2. ~~**Les campagnes de notifications (FCM)**~~ **faites le 7 octobre** :
+   `0023_notifications.sql`, l'Edge Function `notify-live`, `src/lib/push.ts` et
+   le câblage Android. La décision est en SQL (`push_targets()` : épinglé ou
+   carte possédée, direct de moins de 30 minutes, une notification par heure et
+   par joueur, six heures avant de relancer le même créateur, trois
+   `revoke` pour fermer les jetons) et l'envoi vit dans une fonction — le secret
+   Firebase n'a rien à faire dans la base. Détail et mise en route :
+   `docs/cloud-supabase.md` § 9.1.
+3. **Wallet serveur**, si l'hôtel devient central (voir § 3).
+4. Les codes promo, le gyroscope holographique et le badge automatique
+   (`pg_cron`) — le reste du backlog hors brief, inchangé.
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 

@@ -345,3 +345,31 @@ export async function playerProfile(core: CloudCore, userId?: string): Promise<P
   const result = await core.rpc("player_profile", { p_user_id: userId ?? null });
   return parseProfile(result);
 }
+
+/**
+ * Inscrit le jeton de notification de cet appareil pour le compte connecté
+ * (`0023_notifications.sql`). Le serveur décide du rattachement : l'identité
+ * vient de la session, pas d'un paramètre.
+ */
+export async function registerPushToken(
+  core: CloudCore,
+  token: string,
+  platform = "android",
+): Promise<void> {
+  await core.rpc("register_push_token", { p_token: token, p_platform: platform });
+}
+
+/** Retire le jeton de cet appareil (déconnexion explicite). */
+export async function forgetPushToken(core: CloudCore, token: string): Promise<void> {
+  await core.rpc("forget_push_token", { p_token: token });
+}
+
+/**
+ * Allume ou coupe « préviens-moi quand un créateur que je collectionne passe en
+ * direct », sur tous les appareils du compte. Rend leur nombre.
+ */
+export async function setPushLive(core: CloudCore, enabled: boolean): Promise<number> {
+  const result = await core.rpc("set_push_live", { p_enabled: enabled });
+  const record = asRecord(result);
+  return Number(record?.devices ?? 0);
+}

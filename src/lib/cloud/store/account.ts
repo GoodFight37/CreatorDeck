@@ -1,5 +1,6 @@
 import type { AccountOutcome, OAuthOutcome, CloudActionOutcome } from "./types";
 import type { CloudStoreContext } from "./context";
+import { pushSupported, readPushToken, requestPushToken, writePushToken } from "@/lib/push";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { buildInbox, seenKey, unreadCount } from "@/lib/social/inbox";
@@ -349,9 +350,124 @@ export function accountActions(ctx: CloudStoreContext) {
       }
     },
 
+    /**
+     * Inscrit cet appareil aux notifications de direct.
+     *
+     * Trois conditions, et aucune n'est contournable : le greffon existe (APK,
+     * pas navigateur), un compte est connecté (le serveur rattache le jeton à
+     * `auth.uid()`), et le joueur accepte la permission Android. Un refus n'est
+     * pas une erreur : on le dit simplement, sans le répéter en boucle.
+     */
+    async registerPush(options: { silent?: boolean } = {}): Promise<void> {
+      // `silent` : l'inscription automatique du lancement ne doit pas coller un
+      // message d'échec sous les yeux du joueur à chaque ouverture (Firebase
+      // pas encore branché, par exemple). L'interrupteur du carnet, lui, parle.
+      const quiet = options.silent === true;
+      if (!pushSupported()) {
+        // Pas de greffon : l'écran n'affiche même pas l'interrupteur.
+        ctx.publish({ pushLive: null, pushBusy: false });
+        return;
+      }
+      const api = ctx.resolve();
+      if (!api || !api.session()) return;
+
+      ctx.publish({ pushBusy: true });
+      const permission = await requestPushToken();
+      if (permission.status === "refusal") {
+        ctx.publish({
+          pushBusy: false,
+          // « Refusé » est un état que le joueur peut changer dans les réglages
+          // du téléphone — l'interrupteur doit le montrer éteint, pas inconnu.
+          pushLive: permission.reason === "refuse" ? false : null,
+          ...(quiet ? {} : { message: permission.message, isError: permission.reason !== "refuse" }),
+        });
+        return;
+      }
+
+      try {
+        await api.registerPushToken(permission.token, "android");
+        writePushToken(ctx.deps.storage(), permission.token);
+        ctx.publish({
+          pushBusy: false,
+          pushLive: true,
+          ...(quiet
+            ? {}
+            : {
+                message:
+                  "Notifications activées : je te préviens quand un créateur de ta collection passe en direct.",
+                isError: false,
+              }),
+        });
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Notifications indisponibles.");
+        ctx.publish(
+          quiet
+            ? { pushBusy: false }
+            : { pushBusy: false, message: refusal.message, isError: true },
+        );
+      }
+    },
+
+    /**
+     * L'interrupteur du carnet. Allumer passe par l'inscription (il faut un
+     * jeton) ; éteindre ne retire pas le jeton — le joueur peut rallumer d'un
+     * geste, et la prochaine connexion le réinscrirait de toute façon.
+     */
+    async setPushLive(enabled: boolean): Promise<boolean> {
+      const api = ctx.resolve();
+      if (!api || !api.session()) {
+        ctx.publish({ pushLive: null });
+        return false;
+      }
+
+      // Allumer sans jeton : c'est une inscription, pas un réglage.
+      if (enabled && !readPushToken(ctx.deps.storage())) {
+        await ctx.actions.registerPush();
+        if (ctx.state().pushLive !== true) return false;
+      }
+
+      ctx.publish({ pushBusy: true });
+      try {
+        // Réinscrire le jeton connu : il a pu être déplacé par une connexion
+        // sur un autre appareil, et `set_push_live` ne touche que les lignes du
+        // compte connecté.
+        const stored = readPushToken(ctx.deps.storage());
+        if (stored) await api.registerPushToken(stored, "android");
+        const devices = await api.setPushLive(enabled);
+        ctx.publish({
+          pushBusy: false,
+          pushLive: enabled,
+          message: enabled
+            ? "Notifications de direct activées."
+            : devices > 0
+              ? "Notifications coupées : plus rien ne sonne."
+              : "Notifications coupées.",
+          isError: false,
+        });
+        return true;
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Réglage impossible.");
+        ctx.publish({ pushBusy: false, message: refusal.message, isError: true });
+        return false;
+      }
+    },
+
     async signOut(): Promise<void> {
       const api = ctx.resolve();
       ctx.publish({ busy: true });
+      // Le jeton de cet appareil part avec la session : sans ça, la prochaine
+      // notification atterrirait sur l'écran de compte d'un autre joueur (le
+      // téléphone, lui, est le même).
+      const storedToken = readPushToken(ctx.deps.storage());
+      if (storedToken && api?.session()) {
+        try {
+          await api.forgetPushToken(storedToken);
+        } catch {
+          // Sans réseau, le jeton reste : il sera déplacé à la prochaine
+          // inscription sur cet appareil, ou retiré par Google s'il meurt.
+        }
+      }
+      writePushToken(ctx.deps.storage(), null);
       try {
         await api?.signOut();
       } catch {
@@ -393,6 +509,8 @@ export function accountActions(ctx: CloudStoreContext) {
         arenaDraftBusy: false,
         arenaAt: null,
         arenaBusy: false,
+        pushLive: null,
+        pushBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });

@@ -19,6 +19,7 @@ import {
   Check,
   Info,
   Package,
+  Bell,
   Radio,
   ShieldAlert,
   Store,
@@ -30,6 +31,7 @@ import { useCloud } from "@/hooks/use-cloud";
 import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { pushSupported } from "@/lib/push";
 import type { InboxKind } from "@/lib/social/inbox";
 import { relativeDay } from "@/lib/social/friends";
 
@@ -117,6 +119,37 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
             </div>
           </div>
         )}
+
+        {/* L'interrupteur des notifications. Il n'apparaît que si l'appareil
+            peut vraiment les recevoir (l'APK, pas le navigateur) et si un
+            compte est connecté — promettre un réglage qui ne fait rien serait
+            pire que pas de réglage. Le texte dit la règle, parce qu'une
+            notification surprise se paie par un refus définitif. */}
+        {pushSupported() && cloud.userId ? (
+          <section className="notify-switch">
+            <button
+              type="button"
+              className="menu-row"
+              role="switch"
+              aria-checked={cloud.pushLive === true}
+              disabled={cloud.pushBusy}
+              onClick={() => void cloudStore.setPushLive(cloud.pushLive !== true)}
+            >
+              <Bell size={15} />
+              <span>Directs de ma collection</span>
+              <span className="switch" data-on={cloud.pushLive === true ? "on" : "off"} aria-hidden="true">
+                <i />
+              </span>
+            </button>
+            <p className="account-hint">
+              {cloud.pushBusy
+                ? "Un instant…"
+                : cloud.pushLive === true
+                  ? "Tu reçois une notification quand un créateur que tu épingles ou dont tu as une carte passe en direct. Une par heure au maximum."
+                  : "Quand un créateur que tu épingles ou dont tu as une carte passe en direct, ton téléphone sonne. Une fois par heure au maximum."}
+            </p>
+          </section>
+        ) : null}
       </div>
     </div>
   );

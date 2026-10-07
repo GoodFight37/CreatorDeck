@@ -3,6 +3,11 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Notifications : Android 13 et plus ne les affiche qu'après un accord
+         explicite. La demande est faite par l'application (src/lib/push.ts) au
+         premier lancement connecté ; sans cette ligne, la demande n'a rien à
+         demander et le système refuse. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -40,6 +45,14 @@
             </intent-filter>
 
         </activity>
+
+        <!-- Le canal des directs. L'application le crée au démarrage
+             (src/lib/push.ts) ; cette ligne sert de valeur par défaut pour une
+             notification envoyée sans `channel_id`. Sans elle, Android range
+             le message dans le canal « Divers », celui que personne ne voit. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="creatordeck-live" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

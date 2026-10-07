@@ -19,6 +19,10 @@
  * Qui peut l'appeler :
  *   * **le jeu**, avec la clé anon du projet (`Authorization: Bearer …`) —
  *     c'est la clé déjà embarquée dans l'APK, rien de secret n'est ajouté ;
+ *   * **le déclenchement des notifications** `?push=1` (rôle de service) : appelle
+ *     `notify-live` sans rappeler Twitch — la porte de test des notifications ;
+ *   * après chaque publication, `notify-live` est appelée en **best-effort** :
+ *     un échec de notification ne fait pas échouer le rafraîchissement ;
  *   * **le diagnostic** `?check=1` (secrets présents, catalogue lisible, âge du
  *     cache ; ne parle pas à Twitch) est réservé au **rôle de service** : il
  *     décrit l'état de l'infrastructure, ce n'est pas une page publique.
@@ -100,6 +104,28 @@ async function rest(path: string, init: RequestInit = {}): Promise<unknown> {
     throw new Error(`PostgREST ${path} → ${response.status} ${(await response.text()).slice(0, 200)}`);
   }
   return response.json();
+}
+
+/**
+ * Appelle `notify-live`, qui envoie les notifications de direct.
+ *
+ * Best-effort : sans secret Firebase (ou si la fonction n'est pas déployée), la
+ * réponse contient l'explication — le rafraîchissement du direct, lui, continue.
+ * Le verrou est le même que le reste : le rôle de service, rien d'autre.
+ */
+async function notifyLive(): Promise<unknown> {
+  if (!SUPABASE_URL || !SERVICE_ROLE) return { skipped: true, raison: "service" };
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/notify-live`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${SERVICE_ROLE}` },
+    });
+    const body = (await response.json()) as unknown;
+    if (!response.ok) return { erreur: `notify-live → ${response.status}`, corps: body };
+    return body;
+  } catch (error) {
+    return { erreur: error instanceof Error ? error.message : String(error) };
+  }
 }
 
 // Le jeton d'application vit une soixantaine de jours : on le garde en mémoire
@@ -239,6 +265,16 @@ Deno.serve(async (req) => {
     return json({ ok: true, check: true, secrets, catalogue_logins: catalogue, cache });
   }
 
+  // `?push=1` : déclenche **seulement** les notifications, sans rappeler Twitch.
+  // C'est la porte de test : on vient de publier un direct à la main, ou on veut
+  // voir si un appareil sonne, sans consommer de quota Twitch.
+  if (params.get("push") === "1") {
+    if (!isService) {
+      return json({ error: "Le déclenchement ?push=1 est réservé au rôle de service." }, 403);
+    }
+    return json({ ok: true, push: true, notify: await notifyLive() });
+  }
+
   if (!CLIENT_ID || !CLIENT_SECRET) {
     return json(
       {
@@ -295,9 +331,15 @@ Deno.serve(async (req) => {
       }),
     })) as Record<string, unknown>;
 
+    // Les notifications partent **après** la publication : elles lisent ce que
+    // le serveur vient d'écrire. Un échec de notification ne doit pas faire
+    // échouer le rafraîchissement — le direct est déjà publié, c'est le
+    // principal.
+    const notify = await notifyLive();
+
     // Le compte ne s'affiche nulle part : c'est un journal pour l'onglet Logs.
     console.log(`refresh-live : ${streams.length} en direct sur ${logins.length} vérifiés`);
-    return json({ ok: true, checked: logins.length, live: streams.length, published });
+    return json({ ok: true, checked: logins.length, live: streams.length, published, notify });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`refresh-live : ${message}`);

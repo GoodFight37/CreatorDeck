@@ -1380,9 +1380,11 @@ par joueur, sur des joueurs déjà `verified`.
 **Où le voir** : `?profil=<identifiant>` (le lien de partage), la ligne du
 classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
-## 9. Suite : notifications
+## 9. Notifications
 
-**Fait :** **carnet de notifications** (offres, réponses, amis, ventes —
+**Fait :** **réveil du téléphone** (les notifications de direct : § 9.1 — un
+créateur épinglé ou dont le joueur a une carte passe en direct, le téléphone
+sonne) ; **carnet de notifications** (offres, réponses, amis, ventes —
 reconstruit depuis les faits déjà enregistrés, pastille dans le menu « Toi ») ;
 **connexion Twitch** (identité OAuth par le fournisseur Twitch
 intégré à Supabase, le secret restant côté serveur) ;
@@ -1400,21 +1402,91 @@ arbitrés par le serveur (`0005_echanges.sql`, une carte contre une carte
 jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 **sans SMTP**.
 
-**Reste à faire, dans cet ordre :**
+**Idées non engagées** (aucune n'est promise) : échanges avec plusieurs
+partenaires à la fois, historique complet des échanges, recherche de joueur par
+slug de créateur, temps réel sur les offres et le carnet (aujourd'hui :
+rafraîchissement manuel ou à l'ouverture de l'écran), revente entre joueurs
+(l'hôtel, lui, est en place — §8).
 
-* **réveil du téléphone** (notifications push Capacitor + FCM) : le carnet sait
-  déjà *quoi* dire, il reste à le faire *sonner* quand l'app est fermée. Trois
-  pièces, dans cet ordre :
-  1. un projet Firebase (gratuit) et son fichier `google-services.json` dans
-     `android/app/` — **obligatoire avant d'ajouter le greffon**, sinon l'APK ne
-     se construit plus ;
-  2. `@capacitor/push-notifications` côté app, qui enregistre le jeton du
-     téléphone dans une table `push_devices` (RLS : chacun ne voit que le sien) ;
-  3. une fonction serveur `send-push` (clé de service FCM dans un secret
-     Supabase), appelée quand un fait nouveau est écrit — c'est là qu'un
-     déclencheur SQL et `pg_net` entrent en jeu.
-  Le carnet reste la source des lignes : le push ne fait que prévenir qu'il y a
-  du nouveau ;
+### 9.1 Les notifications de direct (livré le 7 octobre 2026)
+
+La question du brief est simple : *est-ce qu'on ouvre le jeu parce qu'un type
+vient de lancer son live ?* Le push répond à ça, et à rien d'autre.
+
+**Qui décide, qui envoie.** Deux pièces, séparées exprès :
+
+| Pièce | Rôle |
+| --- | --- |
+| `0023_notifications.sql` | la **décision** : quels appareils réveiller (`push_targets()`), le journal anti-doublon (`push_log`), les jetons (`push_tokens`) |
+| `supabase/functions/notify-live` | l'**envoi** : parle à Firebase (FCM HTTP v1), retire les jetons morts |
+
+`refresh-live` appelle `notify-live` **après** avoir publié le direct (best-effort :
+un échec de notification ne fait pas échouer le rafraîchissement des directs).
+
+**Les règles, toutes côté serveur** (un client trafiqué n'y change rien) :
+
+* un direct **frais** : commencé il y a moins de 30 minutes, au moins un
+  spectateur — une chaîne qui s'allume avec 0 spectateur, c'est un écran noir ;
+* seule compte la **collection du joueur** : le créateur qu'il a **épinglé**
+  (wishlist) ou dont il possède **au moins une carte** ;
+* **une notification par heure et par joueur** au maximum, et le même créateur
+  ne revient pas avant **6 heures** ;
+* un seul créateur par appareil et par passage : l'épinglé d'abord, puis le
+  plus gros direct ;
+* l'interrupteur du joueur (carnet → « Directs de ma collection ») coupe tout.
+
+**Les jetons sont fermés** : `push_tokens` et `push_log` n'ont ni politique RLS
+ni droit — un jeton volé, c'est le droit d'envoyer des notifications à
+quelqu'un. Trois fonctions *security definer* suffisent au joueur
+(`register_push_token`, `forget_push_token`, `set_push_live`), et
+`push_targets()` est réservée au rôle de service (elle lit les jetons de tout le
+monde). Le retrait est automatique à la déconnexion ; Google retire les jetons
+morts au premier envoi perdu.
+
+#### Mettre les notifications en route (une fois, ~10 minutes)
+
+C'est **hors du dépôt** : un projet Firebase (gratuit) et deux secrets. Tant que
+ce n'est pas fait, l'application fonctionne exactement comme avant — sans
+notification, et sans message d'erreur.
+
+1. **Créer le projet Firebase** : <https://console.firebase.google.com> →
+   *Ajouter un projet* → n'importe quel nom → refuser Google Analytics.
+2. **Ajouter l'application Android** : dans le projet, l'icône Android →
+   *Nom du package* : `com.creatordeck.app` (exactement) → *Enregistrer*.
+3. **Télécharger `google-services.json`** (bouton de l'étape 2) et le coller
+   ici : il va dans `android/app/google-services.json`. Ce fichier **n'est pas un
+   secret** (identifiant de projet + clé d'API restreinte au paquet) : il peut
+   vivre dans le dépôt, et c'est même nécessaire pour que l'APK de la CI le
+   contienne. Sans lui, le greffon Google n'est pas appliqué et l'APK se
+   construit quand même — simplement sans notifications.
+4. **Créer la clé du compte de service** : ⚙️ *Paramètres du projet* →
+   *Comptes de service* → *Générer une nouvelle clé privée* → JSON. C'est un
+   **vrai secret** (clé privée) : il ne va **pas** dans le dépôt, mais dans les
+   secrets Supabase : *Edge Functions* → *Secrets* (ou *Manage secrets*) →
+   `FCM_SERVICE_ACCOUNT` = le contenu du JSON, collé tel quel.
+5. **Déployer la fonction** : *Edge Functions* → *Deploy a new function* →
+   *Via editor* → nom `notify-live` → coller
+   `supabase/functions/notify-live/index.ts`. **Laisser « Verify JWT »
+   désactivé** (la fonction vérifie elle-même l'en-tête `Authorization`).
+
+#### Vérifier que ça marche (sans attendre un direct)
+
+Dans un terminal **PowerShell**, avec la clé de service sous la main :
+
+```powershell
+# 1. Diagnostic : secrets, appareils inscrits, dernières notifications.
+curl.exe -s -H "Authorization: Bearer $env:SUPABASE_SERVICE_KEY" "https://yzxchpybqrfegvecihxf.supabase.co/functions/v1/notify-live?check=1"
+
+# 2. Envoi de test : tous les appareils inscrits sonnent tout de suite.
+curl.exe -s -H "Authorization: Bearer $env:SUPABASE_SERVICE_KEY" "https://yzxchpybqrfegvecihxf.supabase.co/functions/v1/notify-live?test=1"
+```
+
+Le diagnostic ne consomme rien (il n'appelle pas `push_targets()`, qui marque le
+journal). Le test, lui, envoie pour de vrai : c'est la seule façon de vérifier
+Firebase sans attendre qu'un créateur passe en direct. `refresh-live?push=1`
+déclenche un vrai passage (la règle des 30 minutes s'applique) sans rappeler
+Twitch.
+
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,
   temps réel sur les offres et le carnet (aujourd'hui : rafraîchissement

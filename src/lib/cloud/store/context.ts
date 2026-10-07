@@ -69,6 +69,8 @@ export type CloudStoreActions = {
   setWishlist: ReturnType<typeof accountActions>["setWishlist"];
   clearWishlist: ReturnType<typeof accountActions>["clearWishlist"];
   fingerprint: ReturnType<typeof accountActions>["fingerprint"];
+  registerPush: ReturnType<typeof accountActions>["registerPush"];
+  setPushLive: ReturnType<typeof accountActions>["setPushLive"];
   openPack: ReturnType<typeof packActions>["openPack"];
   openScenePack: ReturnType<typeof packActions>["openScenePack"];
   packStatus: ReturnType<typeof packActions>["packStatus"];

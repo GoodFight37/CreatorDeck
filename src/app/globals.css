@@ -2373,3 +2373,12 @@ input:focus-visible {
 .arena-draft-confirm > div { display: flex; gap: 8px; }
 .arena-draft-confirm .arena-submit { flex: 1; }
 .arena-draft-confirm .arena-compose-open.ghost { flex: 0 0 auto; width: auto; padding: 0 16px; }
+
+/* L'interrupteur des notifications, au bas du carnet. Une ligne de la même
+   famille que les réglages du menu (`.menu-row`), avec sa phrase d'explication
+   dessous : le joueur doit pouvoir lire *avant* de basculer. */
+.notify-switch { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+.notify-switch .menu-row { padding: 0 2px; }
+.notify-switch .menu-row > svg { margin-left: 0; }
+.notify-switch .menu-row > span:first-of-type { flex: 1; }
+.notify-switch .account-hint { margin: 6px 2px 0; }
