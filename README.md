@@ -61,7 +61,7 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0013` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0015` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -70,7 +70,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**538 tests**, 36 fichiers aujourd'hui).
+  (**588 tests**, 38 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -85,8 +85,12 @@ Trois étages, trois vitesses :
   réel des deux côtés, refus d'un inconnu, fenêtre de dix minutes, garde-fou
   contre la résurrection d'une carte volée — et le **plancher de malchance** :
   un journal amorcé à 79 boosters sans Légendaire, le 80ᵉ qui en sort une, la
-  série de jours cassée puis raccommodée, la récompense du 7ᵉ jour
-  (**213 contrôles** aujourd'hui).
+  série de jours cassée puis raccommodée, la récompense du 7ᵉ jour — puis le
+  **Paquet Scène** — un tirage conforme accepté, le même annoncé en Holo ou en
+  Légendaire refusé, le journal qui ne fait pas monter le plancher de
+  malchance — et la **wishlist** — un second épinglé qui remplace le premier,
+  la lecture par un autre joueur, l'écriture directe fermée
+  (**241 contrôles** aujourd'hui).
 
 ```powershell
 npm test          # rapide, à chaque changement

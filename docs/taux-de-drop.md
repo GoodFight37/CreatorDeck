@@ -55,7 +55,7 @@ dites :
 Le compteur repart de zéro dès qu'un Légendaire tombe, **quel que soit le
 slot** : la garantie n'a plus rien à rattraper. Moteur local et
 `open_pack()` appliquent la même règle ; `src/lib/supabase-progression.test.ts`
-et les contrôles du Postgres jetable (213 aujourd'hui) vérifient que le serveur
+et les contrôles du Postgres jetable (241 aujourd'hui) vérifient que le serveur
 suit bien le fichier de taux.
 
 ## Le bonus Direct
@@ -78,6 +78,28 @@ rien.
 Le serveur applique la même règle (`supabase/migrations/0011_direct.sql`), et
 deux tests verrouillent la correspondance : `src/lib/supabase-direct.test.ts`
 (les valeurs) et `scripts/verify-supabase-migrations.mjs` (l'exécution).
+
+## Le Paquet Scène
+
+Le second paquet du jeu a sa propre table (`packs.scene`), publiée elle aussi —
+le même écran « Taux de drop » l'affiche, avec un sélecteur entre les deux
+paquets. Trois différences avec le Live Drop, et elles sont **écrites** :
+
+- **aucun poids légendaire** : les quatre raretés proposées sont commune,
+  peu commune, rare et épique. Le Paquet Scène complète une famille, il ne
+  remplace pas le plancher de malchance ;
+- **une garantie** (`guaranteed`) porte sur le dernier emplacement : au moins
+  une rare (70 %) ou une épique (30 %), et le tirage rare (`rareDrop`, 3 ‰)
+  peut ajouter un épique — c'est le même mécanisme que le « Rare Pack » du
+  Live Drop, avec ses propres poids ;
+- **la chance tombe une fois par jour de jeu** (6 h UTC), pas par réserve de
+  boosters : il n'y a pas de sablier à attendre, seulement une journée à
+  tourner.
+
+`src/lib/supabase-scene.test.ts` compare la table publiée aux littéraux de
+`supabase/migrations/0014_scene_pack.sql` : si l'un bouge sans l'autre, `npm
+test` échoue. Le serveur, lui, ne fait pas que lire ces poids — il vérifie que
+les cartes rendues correspondent à une liste qu'il a lui-même tirée.
 
 ## Calcul des chiffres publiés
 

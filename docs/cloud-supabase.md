@@ -233,6 +233,20 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0015_wishlist.sql`](../supabase/migrations/0015_wishlist.sql)
+     → **Run** pour que le **créateur épinglé** existe côté serveur : un joueur
+     épingle **un** créateur (celui qui lui manque), et son nom s'affiche sur sa
+     fiche publique (`wishlist_slug`). Aucune possession exigée — on réclame
+     justement ce qu'on n'a pas — et l'écriture passe par les fonctions, jamais
+     par un `PATCH` de la table. Détail : §8, « La wishlist ».
+   - [`supabase/migrations/0014_scene_pack.sql`](../supabase/migrations/0014_scene_pack.sql)
+     → **Run** pour que le **Paquet Scène** existe côté serveur : une fois par
+     **jour de jeu** (6 h UTC), cinq cartes de la famille visée, sans jamais de
+     Légendaire. Le joueur **choisit** ses cartes parmi cinq listes de
+     propositions, et le serveur recalcule ces listes avant d'accepter — un
+     client ne peut pas répondre cinq Holo. Ce paquet ne fait pas monter le
+     plancher de malchance (le journal distingue `kind = 'live'`). Détail :
+     §8, « Le Paquet Scène ».
    - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
      → **Run** pour que le **plancher de malchance** et la **série de jours**
      existent aussi côté serveur : après 80 boosters d'affilée sans Légendaire,
@@ -290,8 +304,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > le **plancher de malchance** (journal amorcé à 79 boosters sans Légendaire, le
 > 80ᵉ qui en sort une, compteur remis à zéro par un Légendaire de chance, série
 > de jours cassée par un trou puis raccommodée, récompense du 7ᵉ jour dépensée
-> une seule fois, fonctions internes fermées aux joueurs).
-> **213 contrôles** au total. Les deux
+> une seule fois, fonctions internes fermées aux joueurs), le **Paquet
+> Scène** (cinq listes de choix, tirage conforme accepté et normalisé, mauvaise
+> famille, mauvaise rareté, variante non proposée, Légendaire, second paquet du
+> jour → refus, plancher de malchance intact) et la **wishlist** (épingler,
+> remplacer, retirer, créateur hors catalogue → refus, lecture par un autre
+> joueur, écriture directe fermée).
+> **241 contrôles** au total. Les deux
 > dépendances ne sont **pas** enregistrées dans `package.json` : elles ne
 > servent qu'à cette vérification et n'entrent ni dans l'APK ni dans la CI.
 3. **Authentication → Sign In / Providers** : active **Anonymous sign-ins**
@@ -781,9 +800,11 @@ pourrait diverger — le genre d'écart qu'on ne découvre qu'un mois plus tard.
 | Élément | Rôle |
 | --- | --- |
 | `src/lib/social/inbox.ts` | construit les lignes depuis les faits déjà connus, compte les nouveautés — pur, testé |
-| `src/lib/cloud/cloud-store.ts` | `loadInbox()` (les quatre sources en parallèle, chacune tolérante à l'échec), `markInboxSeen()`, `clearInbox()` |
+| `src/lib/cloud/cloud-store.ts` | `loadInbox()` (les sources en parallèle, chacune tolérante à l'échec), `markInboxSeen()`, `clearInbox()` |
+| `src/hooks/use-inbox.ts` | ajoute la seule ligne qui ne vient pas du serveur : **ton créateur épinglé est en direct** (croisement de l'épinglé et du cache du direct) |
 | `src/components/notifications-sheet.tsx` | l'écran ; l'ouvrir **marque le carnet comme lu** |
 | `0010_ventes.sql` | `market_sales()` : tes ventes conclues, avec l'acheteur (le comptoir ne montre que ce qui reste à vendre) |
+| `0012_last_pack.sql` | `last_pack_shelf()` : les boosters de tes amis encore ouverts → « X a ouvert Kamet0, Last Pack encore 8 min » |
 
 Deux détails d'usage :
 
@@ -792,7 +813,84 @@ Deux détails d'usage :
   nouveautés des deux ;
 * un carnet qui raconte au joueur ce qu'il vient de faire ne sert à rien : tes
   propres offres, celles que tu as acceptées, les annonces que tu viens de
-  déposer et les amis que tu viens d'accepter n'y figurent pas.
+  déposer, les amis que tu viens d'accepter et **ton propre Last Pack** n'y
+  figurent pas.
+
+Deux lignes plus récentes, qui n'obéissent pas à la même règle :
+
+* **« X a ouvert Kamet0, Last Pack encore 8 min »** vient de
+  `last_pack_shelf()`, que le joueur a déjà le droit de lire pour aller voler
+  une carte. Le titre nomme la **meilleure carte du paquet** (la plus rare selon
+  `RARITY_META`) : « a ouvert un commun » ne fait aller voir personne. Les
+  minutes sont arrondies vers le haut, plafonnées à la fenêtre, et après la
+  fenêtre la ligne dit simplement « Last Pack terminé ».
+* **« Kamet0 est en direct »** ne vient d'aucune table : c'est le croisement du
+  créateur épinglé et du cache du direct, fait dans `use-inbox.ts`. La raison
+  est pratique : la **pastille** de la navigation et la **feuille** doivent
+  compter exactement la même liste, sinon la pastille annonce une ligne que
+  l'écran ne montre pas. La date de la ligne est celle du **début du direct**
+  telle que Twitch la donne — un direct commencé il y a vingt minutes arrive
+  donc déjà lu, et un nouveau direct crée une nouvelle ligne.
+
+### La wishlist
+
+Un joueur épingle **un** créateur — celui qui lui manque le plus — et son nom
+s'affiche sur sa fiche publique. C'est une demande, pas un secret : elle est
+lisible par tout le monde, y compris par un visiteur.
+
+`0015_wishlist.sql` apporte trois fonctions et une table d'une ligne par joueur
+(`user_id` en clé primaire, donc **épingler remplace**) :
+
+| Fonction | Ce qu'elle fait |
+| --- | --- |
+| `wishlist_slug(p_user_id uuid default null)` | lit l'épinglé — le sien par défaut, celui d'un autre joueur si on le nomme |
+| `set_wishlist(p_slug text)` | épingle (ou remplace) ; **refuse** un slug absent du catalogue |
+| `clear_wishlist()` | retire l'épinglé |
+
+Deux choix qui méritent d'être écrits :
+
+* **aucune possession exigée.** C'est l'inverse de `set_showcase()`, qui relit
+  la sauvegarde du joueur pour vérifier qu'il possède la carte. Ici, on réclame
+  justement ce qu'on n'a pas : le serveur vérifie seulement que le créateur
+  existe au catalogue.
+* **l'écriture directe dans la table est retirée aux clients**
+  (`revoke insert, update, delete`). Sans ça, un client pourrait `PATCH`er sa
+  ligne avec un slug périmé, ou celle d'un autre joueur si une politique était
+  mal écrite ; les trois fonctions sont le seul chemin, et elles vérifient
+  `auth.uid()`.
+
+`player_profile()` est **redéfinie** dans cette migration (la version de `0006`
+ne connaissait pas la wishlist) et renvoie `wishlist_slug`. Un client qui n'a pas
+encore collé `0015` ne reçoit simplement pas le champ : la fiche s'affiche sans
+la ligne, et l'écran « Toi » propose l'épinglage sans erreur bloquante.
+
+### Le Paquet Scène
+
+Le second paquet du jeu, et le seul où **le joueur choisit**. Une fois par
+**jour de jeu** (la journée commence à 6 h UTC, comme les missions et la
+série), `scene_pack_choices(p_family)` fabrique cinq listes de propositions —
+une par emplacement — dans la famille visée, et `open_scene_pack(p_family,
+p_cards)` accepte la réponse après l'avoir **recalculée**.
+
+Pourquoi tant de précautions : un paquet où le client choisit ses cartes est un
+paquet où le client peut mentir. Le serveur refuse donc toute carte qui ne
+figure pas, **au triplet exact** (créateur, rareté, variante), dans la liste de
+son emplacement. Un commun annoncé en Légendaire est refusé ; une Holo que le
+serveur n'avait pas offerte aussi. Les listes elles-mêmes sont tirées avec
+`hashtext(user | jour | emplacement)` — reproductibles, donc vérifiables, mais
+impossibles à deviner pour les composer d'avance.
+
+Trois règles qui viennent du reste du jeu :
+
+* **jamais de Légendaire** dans les listes (et `catalog:ci` le vérifie côté
+  catalogue) : ce paquet sert à compléter une famille, pas à casser le plancher
+  de malchance ;
+* **il ne compte pas dans le plancher de malchance, la série ni la Prime Time.**
+  Le journal `pack_draws` distingue ses lignes (`kind = 'scene'`) et les trois
+  compteurs du Live Drop ne lisent plus que `kind = 'live'`. Sans ça, un paquet
+  gratuit chaque jour ferait monter le compteur et offrirait la Légendaire du
+  80ᵉ sans un seul booster ouvert ;
+* **le Direct ne l'influence pas** : la variante Live reste au Live Drop.
 
 ### Se connecter avec Twitch
 
