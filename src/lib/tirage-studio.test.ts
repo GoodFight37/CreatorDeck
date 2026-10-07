@@ -77,7 +77,12 @@ describe("studio de tirages", () => {
     }
   });
 
-  it("se resserre autour des taux annoncés quand on simule beaucoup", () => {
+  // Ce test tire 100 000 cartes : quatre secondes sur une machine au repos, et
+  // davantage sur une machine chargée. La limite par défaut de Vitest (5 s) le
+  // faisait tomber au hasard — un test qui échoue sans raison ne dit rien de
+  // vrai. On lui donne une marge franche : ce qui compte ici, c'est la
+  // distribution, pas le temps de calcul.
+  it("se resserre autour des taux annoncés quand on simule beaucoup", { timeout: 60_000 }, () => {
     stubRandom(4242);
     const result = runStudio("live", 400);
     for (const rarity of RARITIES) {
