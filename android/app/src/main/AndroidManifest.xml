@@ -52,7 +52,7 @@
              le message dans le canal « Divers », celui que personne ne voit. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="creatordeck-live" />
+            android:value="creatordeck-live-v2" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

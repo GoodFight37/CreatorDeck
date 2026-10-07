@@ -24,7 +24,18 @@ import { Capacitor } from "@capacitor/core";
 import { PushNotifications } from "@capacitor/push-notifications";
 
 /** Le canal Android : un seul, et son nom est celui que la notification porte. */
-export const LIVE_CHANNEL_ID = "creatordeck-live";
+/**
+ * Le canal Android des directs.
+ *
+ * **Le suffixe `-v2` n'est pas décoratif** : un canal Android est *immuable*
+ * après sa création — son, importance, vibration sont figés pour de bon. La
+ * première version, née avec `sound: "default"` sans fichier `res/raw/default`,
+ * était muette ; aucun correctif ne pouvait la réparer sur un téléphone déjà
+ * installé. On change donc d'identifiant : le nouveau canal naît avec le son
+ * du jeu (`android/app/src/main/res/raw/default.wav`), l'ancien reste dans les
+ * réglages du téléphone, muet et sans effet.
+ */
+export const LIVE_CHANNEL_ID = "creatordeck-live-v2";
 
 /** Combien de temps on attend le jeton du greffon avant d'abandonner. */
 const TOKEN_TIMEOUT_MS = 10_000;
@@ -132,12 +143,11 @@ export async function ensureLiveChannel(): Promise<void> {
       description: "Un créateur de ta collection vient de passer en direct.",
       importance: 4,
       visibility: 1,
-      // **Pas de `sound`** : le greffon Capacitor traduit `sound: "default"` en
-      // `android.resource://…/raw/default`, un fichier qui n'existe pas — le
-      // canal devient muet (vécu le 7 octobre, notification affichée mais
-      // silencieuse). Sans son explicite, Android applique le son de
-      // notification du téléphone, et le joueur peut le changer dans les
-      // réglages du canal.
+      // Le greffon traduit `sound` en `android.resource://<paquet>/raw/<nom>`
+      // (il ne connaît pas le mot magique « default ») : le dépôt fournit donc
+      // le vrai fichier `res/raw/default.wav`. Le son est celui du jeu, et le
+      // joueur peut le changer dans les réglages du canal.
+      sound: "default",
       vibration: true,
     });
   } catch {

@@ -27,8 +27,8 @@ const CODE = SQL.split("\n")
 const FUNCTION = read("supabase", "functions", "notify-live", "index.ts");
 /**
  * Le code sans ses commentaires : une explication qui cite une règle n'est pas
- * la règle. Attention au `//` des URL (une chaîne ouverte avant : on garde la
- * ligne entière) — sinon on coupe `content://settings/…` et le test ment.
+ * la règle. Attention au `//` des URL : on ne coupe jamais à l'intérieur d'une
+ * chaîne, sinon on tronque le code et le contrôle devient menteur.
  */
 function stripComments(text: string): string {
   return text
@@ -45,6 +45,7 @@ function stripComments(text: string): string {
 }
 
 const FUNCTION_CODE = stripComments(FUNCTION);
+const PUSH = stripComments(read("src", "lib", "push.ts"));
 const REFRESH = read("supabase", "functions", "refresh-live", "index.ts");
 const ANDROID_GRADLE = read("android", "app", "build.gradle");
 const MANIFEST = read("android", "app", "src", "main", "AndroidManifest.xml");
@@ -144,16 +145,31 @@ describe("notify-live (la fonction qui envoie)", () => {
     expect(checkBlock).not.toContain("push_targets");
   });
 
-  it("fait sonner : son par URI réservée, jamais le mot « default »", () => {
-    // Deux pièges jumeaux, vécus le 7 octobre (notification silencieuse) :
-    // le canal Capacitor transforme `sound: "default"` en un fichier `/raw`
-    // inexistant, et FCM ne comprend pas davantage le mot. Android, lui, a une
-    // URI réservée pour le son de notification du téléphone.
-    expect(FUNCTION_CODE).toContain("content://settings/system/notification_sound");
-    expect(FUNCTION_CODE).not.toMatch(/sound:\s*"default"/);
-    const push = stripComments(read("src", "lib", "push.ts"));
-    expect(push).toContain("createChannel");
-    expect(push).not.toMatch(/sound:\s*"default"/);
+  it("fait sonner : le canal, le manifeste et la fonction disent le même id", () => {
+    // Une notification muette, vécue le 7 octobre : le canal Capacitor était
+    // né avec `sound: "default"` sans que le fichier `res/raw/default` existe.
+    // Un canal Android ne se répare pas après coup — il change d'identifiant,
+    // et **les trois endroits** doivent suivre, sinon la notification part
+    // sans canal (Android la range alors dans « Divers ») ou vers l'ancien.
+    expect(PUSH).toContain('export const LIVE_CHANNEL_ID = "creatordeck-live-v2"');
+    expect(MANIFEST).toContain('android:value="creatordeck-live-v2"');
+    expect(FUNCTION_CODE).toContain('channel_id: "creatordeck-live-v2"');
+    expect(FUNCTION_CODE).toContain('sound: "default"');
+  });
+
+  it("le son du jeu existe vraiment, et c'est un WAV lisible", () => {
+    // `sound: "default"` n'est pas un mot magique pour le greffon Capacitor :
+    // il fabrique `android.resource://<paquet>/raw/default`. Sans ce fichier,
+    // le canal naît muet. Ici, on vérifie qu'il est là — et qu'il est du son,
+    // pas un fichier vide (en-tête RIFF, taille de données non nulle).
+    const son = readFileSync(
+      path.join(ROOT, "android", "app", "src", "main", "res", "raw", "default.wav"),
+    );
+    expect(son.subarray(0, 4).toString("ascii")).toBe("RIFF");
+    expect(son.subarray(8, 12).toString("ascii")).toBe("WAVE");
+    const octets = son.readUInt32LE(40); // taille du bloc « data »
+    expect(octets).toBeGreaterThan(8_000); // au moins ~0,2 s à 22 050 Hz
+    expect(octets).toBeLessThan(200_000);
   });
 
   it("dit pourquoi la notification arrive (le texte du brief)", () => {
@@ -215,6 +231,6 @@ describe("Android (sans quoi rien ne sonnerait)", () => {
   it("le manifeste demande la permission et nomme le canal", () => {
     expect(MANIFEST).toContain('android:name="android.permission.POST_NOTIFICATIONS"');
     expect(MANIFEST).toContain("com.google.firebase.messaging.default_notification_channel_id");
-    expect(MANIFEST).toContain('android:value="creatordeck-live"');
+    expect(MANIFEST).toContain('android:value="creatordeck-live-v2"');
   });
 });

@@ -1495,21 +1495,35 @@ Firebase sans attendre qu'un créateur passe en direct. `refresh-live?push=1`
 déclenche un vrai passage (la règle des 30 minutes s'applique) sans rappeler
 Twitch.
 
-**Le son** (vécu le 7 octobre : notification affichée mais muette) — deux pièges
-jumeaux, à ne pas confondre :
+**Le son** (vécu le 7 octobre : notification affichée, mais muette).
 
-* le greffon Capacitor traduit `sound: "default"` en
-  `android.resource://<paquet>/raw/default`, un fichier qui n'existe pas : le
-  canal naît **muet**, et un canal Android ne se modifie plus une fois créé. Le
-  canal est donc créé **sans son explicite** — Android applique alors le son de
-  notification du téléphone ;
-* FCM n'interprète pas davantage le mot : l'URI réservée d'Android
-  (`content://settings/system/notification_sound`) est envoyée en clair dans le
-  message.
+La cause est dans le greffon Capacitor, pas dans Firebase : quand on lui donne
+`sound: "default"`, il ne comprend pas le mot magique d'Android — il fabrique
+l'adresse `android.resource://<paquet>/raw/default`, c'est-à-dire *un fichier
+sonore nommé « default » dans l'application*. Ce fichier n'existait pas : le
+canal est né sans son jouable. (Firebase, lui, comprend très bien `"default"` :
+il retombe sur le son de notification du téléphone — inutile de chercher là.)
 
-Un canal déjà muet sur un téléphone se répare à la main (Paramètres →
-Applications → CreatorDeck → Notifications → canal « Directs » → Son) **ou** en
-réinstallant l'application, et un test interdit le retour du mot `default`.
+Deux conséquences, et une seule façon de s'en sortir :
+
+* **un canal Android ne se modifie plus après sa création.** Son, importance,
+  vibration sont figés. Le canal `creatordeck-live` restera muet à vie sur tout
+  téléphone qui l'a vu naître : il faut **un nouvel identifiant**. D'où
+  `creatordeck-live-v2`, qui doit être écrit aux **trois** endroits — le canal
+  créé par `src/lib/push.ts`, le nom par défaut du manifeste
+  (`default_notification_channel_id`), et le `channel_id` du message envoyé par
+  `notify-live`. Un test vérifie que les trois disent la même chose : si l'un
+  d'eux prend du retard, Android range la notification dans « Divers » (que
+  personne ne regarde) ;
+* **le fichier son vit dans le dépôt** : `android/app/src/main/res/raw/default.wav`,
+  un son de deux notes fabriqué pour le jeu (aucun contenu tiers), vérifié par
+  un test (en-tête RIFF, taille plausible). Le greffon le trouvera désormais, et
+  le joueur peut toujours changer le son dans les réglages du canal.
+
+Sur un téléphone où l'ancien canal existe déjà, deux voies : régler le son du
+canal « Directs » à la main (Paramètres → Applications → CreatorDeck →
+Notifications → canal → Son) pour l'ancien, ou **réinstaller l'APK** pour que le
+canal v2 naisse avec le son du jeu.
 
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,

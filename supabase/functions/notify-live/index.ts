@@ -276,11 +276,17 @@ async function send(
           android: {
             priority: "high",
             notification: {
-              channel_id: "creatordeck-live",
-              // L'**URI réservée** d'Android (« son de notification du
-              // téléphone ») : c'est elle qui fait sonner. Le mot `default`
-              // n'est pas interprété par FCM — même piège que côté canal.
-              sound: "content://settings/system/notification_sound",
+              // Le canal du jeu (`src/lib/push.ts`). Le suffixe `-v2` est
+              // nécessaire : un canal Android est immuable, et le premier
+              // était né muet — voir la note « le son » de
+              // docs/cloud-supabase.md § 9.1.
+              channel_id: "creatordeck-live-v2",
+              // Utile pour Android 7 et moins, qui n'ont pas de canaux. FCM
+              // comprend `default` et le traduit en son de notification du
+              // téléphone (CommonNotificationBuilder.getSound). À partir
+              // d'Android 8, c'est le canal qui décide — d'où le fichier son
+              // fourni par l'application.
+              sound: "default",
             },
           },
         },
