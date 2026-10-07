@@ -1,0 +1,70 @@
+name: Contrôle cloud (temporaire)
+
+# Fichier de contrôle **temporaire** : il pose les questions à la vraie base
+# (PostgREST), avec la clé anon déjà rangée dans les secrets du dépôt. Il est
+# supprimé dès que les réponses sont lues — le bac à sable de développement
+# n'a pas accès à supabase.co, GitHub Actions si.
+on:
+  push:
+    branches: [arena/01a10c75-creatordeck]
+
+jobs:
+  controle:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Interroger la base (PostgREST)
+        env:
+          URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          echo "URL présente : ${#URL} caractère(s) — clé : ${#KEY} caractère(s)"
+
+          echo "--- 1. _streak_reward_points (0032) : existe et est fermée ? ---"
+          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/_streak_reward_points" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+            -d '{"p_day":3}'
+
+          echo "--- 2. open_pack sans être connecté : la fonction répond ? ---"
+          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/open_pack" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+            -d '{}'
+
+          echo "--- 3. _wallet_apply : une seule signature, fermée ? ---"
+          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/_wallet_apply" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+            -d '{"p_user":"00000000-0000-4000-8000-000000000000","p_delta":1,"p_kind":"controle"}'
+
+          echo "--- 4. compte invité, puis deux boosters d'affilée ---"
+          SIGNUP=$(curl -s -X POST "$URL/auth/v1/signup" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" \
+            -d '{"data":{},"gotrue_meta_security":{}}')
+          TOKEN=$(echo "$SIGNUP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
+          echo "jeton invité : ${#TOKEN} caractère(s)"
+
+          if [ -n "$TOKEN" ]; then
+            echo "-- solde avant --"
+            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+            echo ""
+            echo "-- booster 1 --"
+            curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}' \
+              | python3 -c "import sys,json; r=json.load(sys.stdin); print(json.dumps({'streak':r.get('streak'),'streak_reward':r.get('streak_reward'),'packs':r.get('packs'),'pity':r.get('pity')}, ensure_ascii=False))"
+            echo "-- solde après booster 1 --"
+            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+            echo ""
+            echo "-- booster 2 (même journée) --"
+            curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}' \
+              | python3 -c "import sys,json; r=json.load(sys.stdin); print(json.dumps({'streak':r.get('streak'),'streak_reward':r.get('streak_reward'),'packs':r.get('packs')}, ensure_ascii=False))"
+            echo "-- solde après booster 2 --"
+            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
+            echo ""
+          fi
+
+          echo "--- 5. les deux fonctions publiques de la série ---"
+          curl -s -X POST "$URL/rest/v1/rpc/pack_status" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}'
+          echo ""
