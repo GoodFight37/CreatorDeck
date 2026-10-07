@@ -17,29 +17,61 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { PROGRESSION, gameDay } from "@/lib/progression";
+import { PROGRESSION, START, gameDay } from "@/lib/progression";
 import { PITY } from "@/lib/pull-rates";
 import { STREAK_REWARDS } from "@/lib/progression";
 
 const ROOT = process.cwd();
 const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
 const SQL = readFileSync(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
-// Le **seuil** ne vit plus dans l'historique : `0031_pity_douze.sql` porte la
-// définition en vigueur d'`open_pack()` (12 boosters, décidés le 7 octobre
-// 2026). 0013 garde le contrat de structure — `_pack_pity()`, le journal des
-// tirages, la journée de jeu.
-const SQL_PITY = readFileSync(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
-// `0032` paie les jours de la série : c'est elle qui porte la dernière
-// définition d'`open_pack()`, et la table des points.
-const SQL_SERIE = readFileSync(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
+// Le **seuil** et la série ne vivent plus dans l'historique : plusieurs
+// migrations reprennent `open_pack()` en entier (c'est la seule façon de
+// remplacer une fonction PL/pgSQL), et seule la **dernière** compte. Plutôt que
+// de citer un numéro de fichier — qui périme à chaque livraison —, on lit la
+// dernière définition de chaque fonction. `0013` garde le contrat de structure :
+// `_pack_pity()`, le journal des tirages, la journée de jeu.
+const migrations = readdirSync(MIGRATIONS)
+  .filter((f) => /^\d{4}_.*\.sql$/.test(f))
+  .sort();
+
+/** Le contenu de la **dernière** migration qui définit `nom`. */
+function derniereDefinition(nom: string): { fichier: string; sql: string } {
+  let trouve: { fichier: string; sql: string } | null = null;
+  for (const fichier of migrations) {
+    const sql = readFileSync(path.join(MIGRATIONS, fichier), "utf8");
+    if (sql.includes(`create or replace function public.${nom}(`)) trouve = { fichier, sql };
+  }
+  if (!trouve) throw new Error(`aucune migration ne définit ${nom}`);
+  return trouve;
+}
+
+const OPEN_PACK = derniereDefinition("open_pack");
+const SQL_PITY = OPEN_PACK.sql;
+const SQL_SERIE = OPEN_PACK.sql;
 // Les contrôles de motifs portent sur le code seul : un commentaire qui
 // explique une règle cite forcément la règle, et un test qui lit les
 // commentaires ne teste rien.
+/**
+ * Le corps d'**une** fonction, pas le fichier entier : une migration qui reprend
+ * `open_pack()` contient aussi tout le reste, et une règle cherchée « quelque
+ * part dans le fichier » finirait par être trouvée dans le mauvais corps.
+ */
+function corpsFonction(sql: string, nom: string): string {
+  const debut = sql.indexOf(`create or replace function public.${nom}(`);
+  if (debut < 0) throw new Error(`${nom} absente du fichier`);
+  const fin = sql.indexOf("$$;", debut);
+  return sql.slice(debut, fin < 0 ? undefined : fin);
+}
+
 const sansCommentaires = (sql: string) =>
   sql
     .split("\n")
     .map((line) => line.replace(/--.*$/, ""))
     .join("\n");
+const SQL_BAREME = derniereDefinition("_streak_reward_points").sql;
+const SQL_DEPART = derniereDefinition("_pack_initial_packs").sql;
+const CODE_BAREME = sansCommentaires(corpsFonction(SQL_BAREME, "_streak_reward_points"));
+const CODE_DEPART = sansCommentaires(corpsFonction(SQL_DEPART, "_pack_initial_packs"));
 const CODE = sansCommentaires(SQL);
 const CODE_PITY = sansCommentaires(SQL_PITY);
 const CODE_SERIE = sansCommentaires(SQL_SERIE);
@@ -60,18 +92,18 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     expect(CODE_SERIE.match(new RegExp(`v_pity \\+ 1 >= ${PITY.threshold}`, "g"))).toHaveLength(3);
   });
 
-  it("0032 paie le jour de la série, et la table est celle du fichier des taux", () => {
+  it("la série est payée, et la table est celle du fichier des règles", () => {
     // Le barème en points vit dans `progression.json` **et** dans le SQL : les
     // deux doivent dire la même chose, sinon le serveur verserait un montant et
     // l'écran en annoncerait un autre.
     for (const reward of STREAK_REWARDS) {
       const attendu = reward.points ?? 0;
-      const ligne = CODE_SERIE.match(new RegExp(`when ${reward.day} then (\\d+)`));
+      const ligne = CODE_BAREME.match(new RegExp(`when ${reward.day} then (\\d+)`));
       expect(ligne?.[1], `jour ${reward.day}`).toBe(String(attendu));
     }
     // Le 7ᵉ jour ne paie rien : c'est le jackpot, décidé ailleurs.
     expect(STREAK_REWARDS.some((reward) => reward.day === 7)).toBe(false);
-    expect(CODE_SERIE).toMatch(/else 0/);
+    expect(CODE_BAREME).toMatch(/else 0/);
     // Les points sont versés par `_wallet_apply` — jamais une écriture directe
     // du solde, qui contournerait le journal à usage unique.
     expect(CODE_SERIE).toContain("public._wallet_apply(");
@@ -83,18 +115,40 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     expect(CODE_SERIE).toContain("create or replace function public.open_pack(p_jackpot text default 'perfect')");
   });
 
-  it("0032 est la dernière définition d'open_pack — le seuil ne peut pas être écrasé plus loin", () => {
-    // Si une migration suivante redéfinit `open_pack()`, ce test tombe : le
-    // seuil publié et celui qui décide du tirage se sépareraient en silence.
-    const fichiers = readdirSync(MIGRATIONS)
-      .filter((f) => /^\d{4}_.*\.sql$/.test(f))
-      .sort();
-    const derniers = fichiers.filter((f) =>
+  it("la dernière définition d'open_pack porte toutes les règles en vigueur", () => {
+    // Une migration suivante **peut** reprendre `open_pack()` — c'est même la
+    // seule façon de le modifier. Ce qui ne doit jamais arriver, c'est qu'elle
+    // en oublie une au passage : le seuil publié, la récompense de série ou la
+    // réserve d'accueil se sépareraient alors de l'écran en silence.
+    expect(OPEN_PACK.fichier).toMatch(/^00\d\d_/);
+    expect(CODE_SERIE).toContain(`v_pity + 1 >= ${PITY.threshold}`);
+    expect(CODE_SERIE).toContain("public._streak_reward_points(");
+    expect(CODE_SERIE).toContain("public._pack_initial_packs()");
+    // Et la suite de l'historique ne le redéfinit plus après.
+    const apres = migrations.filter((f) => f > OPEN_PACK.fichier).some((f) =>
       readFileSync(path.join(MIGRATIONS, f), "utf8").includes(
         "create or replace function public.open_pack(",
       ),
     );
-    expect(derniers[derniers.length - 1]).toBe("0032_serie_quotidienne.sql");
+    expect(apres).toBe(false);
+  });
+
+  it("la réserve d'accueil du serveur est celle du fichier des règles", () => {
+    // Deux endroits, un seul chiffre : `progression.json` (`start.packs`) et
+    // `_pack_initial_packs()` (`0033`). Un écart ici, et l'écran annoncerait
+    // deux boosters quand le serveur en donne trois.
+    const code = CODE_DEPART;
+    expect(code).toMatch(/create or replace function public\._pack_initial_packs\(\)/);
+    expect(code).toContain(`select ${START.packs}`);
+    // Le reste du départ (sabliers, points) vit sur l'appareil : le serveur ne
+    // doit pas le connaître.
+    expect(code).not.toContain("hourglass");
+    expect(code).not.toContain("points");
+    // Même signature, pas de `drop` : un recollage remplace, il n'empile pas.
+    expect(SQL_DEPART).not.toMatch(/drop\s+function/i);
+    expect(SQL_DEPART).toContain(
+      "revoke all on function public._pack_initial_packs() from public, anon, authenticated;",
+    );
   });
 
   it("le slot garanti est Légendaire sous le plancher, et lui seul", () => {

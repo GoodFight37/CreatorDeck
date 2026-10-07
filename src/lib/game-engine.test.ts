@@ -17,7 +17,7 @@ import {
   type RetiredCreator,
 } from "@/lib/catalog";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
-import { gameDay } from "@/lib/progression";
+import { START, gameDay } from "@/lib/progression";
 import {
   GameError,
   HOURGLASSES_PER_LEVEL,
@@ -101,19 +101,25 @@ function makeState(overrides: Partial<PlayerState> = {}): PlayerState {
 
 describe("createInitialState", () => {
   it("donne les ressources de départ", () => {
+    // Le départ est une **règle de données** (`progression.json`, bloc `start`) :
+    // ce test la lit au lieu de la recopier, donc un chiffre changé d'un seul
+    // côté ne peut pas passer inaperçu.
     const state = createInitialState(T0);
     expect(state).toMatchObject({
       version: SAVE_VERSION,
       level: 1,
       xp: 0,
-      points: 120,
-      hourglasses: 12,
-      packs: 3,
+      points: START.points,
+      hourglasses: START.hourglasses,
+      packs: START.packs,
       openings: 0,
       cards: [],
       claimedTiers: {},
       createdAt: T0,
     });
+    // Le départ reste **maigre** : ce n'est pas un réglage qu'on pousse à 100.
+    expect(START.packs).toBeLessThanOrEqual(3);
+    expect(START.hourglasses).toBeLessThanOrEqual(3);
     expect(state.playerId).toMatch(/^[0-9a-f-]{36}$/);
   });
 });

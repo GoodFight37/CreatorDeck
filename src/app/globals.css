@@ -1226,6 +1226,25 @@ input:focus-visible {
 .progress-track.large { height: 6px; margin-top: 20px; }
 .collection-meta { justify-content: space-between; margin-top: 7px; color: var(--muted); font-size: 13px; }
 
+/*
+ * La barre du classeur (recherche, tri, filtres) reste **collée sous la barre du
+ * haut** pendant qu'on feuillette : on cherche un créateur après avoir descendu
+ * trois pages, pas avant. `--top-bar-h` est la hauteur réelle de la barre,
+ * publiée par la barre elle-même — elle change avec l'encoche du téléphone, et
+ * aucune valeur écrite ici ne pourrait le deviner. Le repli à 68 px couvre le
+ * premier rendu, avant que la variable existe.
+ */
+.binder-tools {
+  position: sticky;
+  z-index: 30;
+  top: var(--top-bar-h, 68px);
+  margin: 0 -18px;
+  padding: 12px 18px 6px;
+  background: rgb(var(--bg-rgb) / .94);
+  backdrop-filter: blur(18px);
+}
+.binder-tools .search-field { margin-top: 0; }
+
 .search-field {
   display: flex;
   height: 44px;

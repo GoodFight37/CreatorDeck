@@ -419,7 +419,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-deux migrations** (`0001` à `0032`) pour de vrai, dans
+> Le script exécute **les trente-trois migrations** (`0001` à `0033`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -591,7 +591,8 @@ pointés, tous vérifiés dans le code avant d'être corrigés :
 - **La réserve de boosters naît au serveur.** `open_pack()` recopiait `packs`
   et `lastPackRegen` de `saves.state` à la création de la réserve : un client
   pouvait s'offrir quatre boosters et une ancre vieille de deux heures avant son
-  premier tirage. La réserve naît maintenant à **trois boosters, maintenant**,
+  premier tirage. La réserve naît maintenant **au départ du jeu** — trois
+  boosters à l'origine, **deux** depuis `0033_depart_maigre.sql` —
   la ligne est verrouillée (`for update`) et le tirage ne lit plus la sauvegarde
   du tout. `open_scene_pack()` prend en plus un verrou d'avis
   (`pg_advisory_xact_lock`) pour que deux appels simultanés ne sortent pas deux
@@ -1900,7 +1901,8 @@ Deux outils, dans l'ordre :
 1. **Dans l'app** — Profil → Sauvegarde cloud → **« Tester la connexion au
    cloud »** : joint `/auth/v1/health` en lecture seule et affiche le nom d'hôte.
    Un échec nomme l'hôte, le chemin **et** la cause technique.
-2. **Dans un navigateur** — la page `public/diagnostic.html` (servie avec
+2. **Dans un navigateur** — la page `docs/diagnostic.html` (dans le dépôt, à
+   ouvrir depuis le dossier — elle n'est plus servie avec
    l'application) rejoue les appels un par un : lecture simple, lecture sans
    CORS, écriture simple, écriture avec les en-têtes de l'app, puis la séquence
    complète (compte invité → `pack_status` → `leaderboard`). Elle distingue un

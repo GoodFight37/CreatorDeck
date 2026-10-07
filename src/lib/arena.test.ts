@@ -198,7 +198,7 @@ describe("la récompense arrive dans la partie", () => {
     expect(applyArenaReward(state, 0)).toBe(state);
     expect(applyArenaReward(state, -3)).toBe(state);
     // La partie d'origine n'est jamais modifiée.
-    expect(state.hourglasses).toBe(12);
+    expect(state.hourglasses).toBe(2);
   });
 
   it("écrit le rang en français, jamais « 1ᵉ »", () => {

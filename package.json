@@ -21,6 +21,7 @@
     "supabase:catalogue": "node scripts/build-supabase-catalogue.mjs",
     "supabase:saisons": "node scripts/build-supabase-seasons.mjs",
     "dev:setup": "node scripts/dev-setup.mjs",
+    "essai:start": "node scripts/push-essai.mjs --start",
     "essai:push": "node scripts/push-essai.mjs",
     "supabase:verify": "node scripts/verify-supabase-migrations.mjs"
   },

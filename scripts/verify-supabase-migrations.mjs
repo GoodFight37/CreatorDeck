@@ -159,6 +159,7 @@ try {
   const gold = await readFile(path.join(MIGRATIONS, "0030_gold.sql"), "utf8");
   const douze = await readFile(path.join(MIGRATIONS, "0031_pity_douze.sql"), "utf8");
   const serie = await readFile(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
+  const depart = await readFile(path.join(MIGRATIONS, "0033_depart_maigre.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -192,6 +193,7 @@ try {
     ["0030_gold.sql", gold],
     ["0031_pity_douze.sql", douze],
     ["0032_serie_quotidienne.sql", serie],
+    ["0033_depart_maigre.sql", depart],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -235,7 +237,11 @@ try {
     "premier tirage : aucun créateur en double",
     new Set(first.cards.map((card) => card.creatorSlug)).size === 5,
   );
-  check("premier tirage : réserve décrémentée", first.packs === 2 && first.openings === 1, `packs=${first.packs} openings=${first.openings}`);
+  check(
+    "premier tirage : réserve décrémentée (départ - 1)",
+    first.packs === progressionData.start.packs - 1 && first.openings === 1,
+    `packs=${first.packs} openings=${first.openings} départ=${progressionData.start.packs}`,
+  );
   const last = first.cards[first.cards.length - 1];
   check(
     "premier tirage : la carte garantie est la dernière (aucun mélange)",
@@ -367,7 +373,10 @@ try {
              device_updated_at = excluded.device_updated_at,
              state_checksum = excluded.state_checksum`,
       (() => {
-        const json = JSON.stringify({ cards: [], level: 1, points: 0, packs: 3, openings: 0, ...state });
+        // La sauvegarde ment **gros** : sept boosters annoncés. Si le serveur
+        // la lisait, le compte serait 6 ; il rend le départ du jeu, moins le
+        // booster ouvert.
+        const json = JSON.stringify({ cards: [], level: 1, points: 0, packs: 7, openings: 0, ...state });
         return [userId, json, Date.now(), json];
       })(),
     );
@@ -381,8 +390,8 @@ try {
     lastPackRegen: Date.now() - 60_000,
   });
   check(
-    "réserve héritée : elle naît à trois, quoi qu'en dise la sauvegarde",
-    recent.packs === 2,
+    "réserve héritée : elle naît au départ du jeu, quoi qu'en dise la sauvegarde",
+    recent.packs === progressionData.start.packs - 1,
     String(recent.packs),
   );
 
@@ -393,9 +402,30 @@ try {
   });
   check(
     "réserve héritée : aucune recharge gratuite, l'ancre est celle du serveur",
-    stale.packs === 2 &&
+    stale.packs === progressionData.start.packs - 1 &&
       Date.parse(stale.last_regen_at) > Date.now() - 60_000,
     `${stale.packs} boosters, ancre ${stale.last_regen_at}`,
+  );
+
+  // --- Le départ maigre (0033) ---------------------------------------------
+  // La réserve d'accueil est une règle du jeu, écrite une seule fois côté
+  // serveur (`_pack_initial_packs()`) et une seule fois côté fichier
+  // (`progression.json`, `start.packs`). Ce contrôle les compare.
+  check(
+    "départ : la réserve d'accueil est celle du fichier des règles",
+    Number((await client.query("select public._pack_initial_packs() as n")).rows[0].n) ===
+      progressionData.start.packs,
+    JSON.stringify({
+      sql: (await client.query("select public._pack_initial_packs() as n")).rows[0].n,
+      fichier: progressionData.start.packs,
+    }),
+  );
+  await refuses(
+    "départ : un joueur ne lit pas la réserve d'accueil",
+    USER,
+    "select public._pack_initial_packs()",
+    [],
+    "permission denied",
   );
 
   // Le tirage ne lit plus `saves` du tout : c'est ce qui rend l'ancre et la
@@ -1174,6 +1204,7 @@ try {
   // contrôle. Le pity se mesure plus bas : c'est là que ça se voyait.
   await client.query(douze);
   await client.query(serie);
+  await client.query(depart);
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -3718,7 +3749,9 @@ try {
   const reopened = (await asPlayer(RESET, "select public.open_pack() as r")).rows[0].r;
   check(
     "réinitialisation : on peut rouvrir un booster tout de suite",
-    Array.isArray(reopened.cards) && reopened.cards.length === 5 && reopened.packs === 2,
+    Array.isArray(reopened.cards) &&
+      reopened.cards.length === 5 &&
+      reopened.packs === progressionData.start.packs - 1,
     JSON.stringify({ cards: reopened.cards?.length, packs: reopened.packs }),
   );
 
@@ -4820,6 +4853,7 @@ try {
   // dernière recollée. Sans elle, le recollage réinstallerait le seuil de 80.
   await client.query(douze);
   await client.query(serie);
+  await client.query(depart);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

@@ -1,6 +1,12 @@
 {
   "version": 1,
   "note": "Ce que le jeu rend au joueur en plus des cartes : jetons, missions du jour, série de jours et Prime Time. Les taux de tirage vivent dans pull-rates.json ; ici, ce sont les règles de progression. Elles sont affichées dans l'app (Atelier, Objectifs) et vérifiées par les tests — un chiffre écrit ici ne peut pas exister seulement dans la tête du développeur.",
+  "start": {
+    "points": 40,
+    "hourglasses": 2,
+    "packs": 2,
+    "note": "Ce avec quoi une partie neuve commence : deux boosters, deux sabliers et quarante points. Le départ était plus généreux (trois boosters, douze sabliers, cent vingt points) : douze sabliers, c'est trois heures de recharge offertes avant d'avoir compris la jauge — le joueur sautait la mécanique au lieu de la découvrir. Le serveur sert exactement la même réserve au premier booster (`_pack_initial_packs()`, 0033), et un test miroir compare les deux."
+  },
   "tokens": {
     "label": "Jetons",
     "perPack": 5,

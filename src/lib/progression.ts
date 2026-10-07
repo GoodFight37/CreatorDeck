@@ -25,6 +25,13 @@ export type MissionDef = {
 type ProgressionData = {
   version: number;
   note: string;
+  /**
+   * Le départ d'une partie neuve. C'est une **règle**, pas un réglage : le
+   * serveur sert la même réserve (`_pack_initial_packs()`, `0033`), et un test
+   * miroir refuse que les deux divergent — un écran qui annonce deux boosters
+   * quand le serveur en donne trois, c'est un mensonge à chaque ouverture.
+   */
+  start: { points: number; hourglasses: number; packs: number; note: string };
   tokens: { label: string; perPack: number; primeTimeBonus: number; targetCost: number; note: string };
   primeTime: { label: string; fromHour: number; toHour: number; note: string };
   missions: {
@@ -111,6 +118,9 @@ export function streakRewardParts(
     tokens > 0 ? `+${tokens} jetons` : "",
   ].filter(Boolean);
 }
+
+/** Ce avec quoi une partie neuve commence (points, sabliers, boosters). */
+export const START = PROGRESSION.start;
 
 /** Ce que chaque mission paie : un sablier, pour l'instant. */
 export const MISSION_REWARD = PROGRESSION.missions.reward;

@@ -50,7 +50,7 @@ describe("gameStore", () => {
     expect(listener).toHaveBeenCalledTimes(1);
     const state = store.getSnapshot();
     expect(state).not.toBeNull();
-    expect(state?.packs).toBe(3);
+    expect(state?.packs).toBe(2);
     expect(data.has(SAVE_KEY)).toBe(true);
     unsubscribe();
   });
@@ -83,14 +83,15 @@ describe("gameStore", () => {
 
     store.useHourglass();
     expect(listener).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").hourglasses).toBe(11);
+    // Deux sabliers au départ, un dépensé : il en reste un.
+    expect(JSON.parse(data.get(SAVE_KEY) ?? "{}").hourglasses).toBe(1);
   });
 
   it("propage les erreurs du moteur sans corrompre l'état", async () => {
     const store = await freshStore();
     store.subscribe(() => {});
-    // Épuise les 3 boosters d'accueil.
-    for (let i = 0; i < 3; i += 1) store.openPack();
+    // Épuise les boosters d'accueil (deux depuis le 7 octobre 2026).
+    for (let i = 0; i < 2; i += 1) store.openPack();
     const before = store.getSnapshot();
     expect(() => store.openPack()).toThrowError(/booster/i);
     expect(store.getSnapshot()).toBe(before);

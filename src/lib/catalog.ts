@@ -244,7 +244,10 @@ export const PACKS = {
   live: {
     label: "Live Drop",
     eyebrow: CATALOG_EYEBROW,
-    description: "5 cartes · une variante Live garantie",
+    // « une variante Live garantie » était **faux** : la carte garantie est
+    // Live seulement si son créateur streame à cet instant (`_pack_choose_variant`).
+    // Une promesse qu'on lit cinquante fois par soirée doit dire vrai.
+    description: "5 cartes · 1 Rare ou mieux garantie",
     size: 5,
     points: 12,
     xp: 18,

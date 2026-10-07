@@ -52,7 +52,6 @@ import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { RevealOverlay } from "@/components/reveal-overlay";
-import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
@@ -67,6 +66,8 @@ import { usePush } from "@/hooks/use-push";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
+import { minimizeApp, useAndroidBack } from "@/hooks/use-android-back";
+import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive, useLivePolling } from "@/hooks/use-live";
 import {
   CATALOG_AUDIENCE,
@@ -242,8 +243,23 @@ function TopBar({ game }: { game: GameState }) {
     100,
     ((game.player.xp - levelBase) / Math.max(100, game.player.xpNext - levelBase)) * 100,
   );
+  // La hauteur **réelle** de la barre part dans `--top-bar-h` : la barre du
+  // classeur s'y colle, et cette hauteur change avec l'encoche du téléphone
+  // (elle n'est pas devinable en CSS).
+  const bar = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const element = bar.current;
+    if (!element) return;
+    const publish = () =>
+      document.documentElement.style.setProperty("--top-bar-h", `${element.offsetHeight}px`);
+    publish();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(publish);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
   return (
-    <header className="top-bar">
+    <header className="top-bar" ref={bar}>
       <div className="brand-lockup">
         <div>
           <strong>CreatorDeck</strong>
@@ -770,7 +786,13 @@ function CollectionView({
   /** Rejoindre un créateur manquant : dit `true` quand c'est payé. */
   onCraft: (slug: string) => Promise<boolean>;
 }) {
-  const [filter, setFilter] = useState<CollectionFilter>("all");
+  // Le classeur s'ouvre sur **ce qu'on possède** : mille créateurs font cent
+  // douze pages, et personne ne feuillette ça au pouce. Un joueur qui n'a encore
+  // rien ouvre sur le catalogue entier — sinon il verrait un classeur vide, ce
+  // qui est exact mais décourageant.
+  const [filter, setFilter] = useState<CollectionFilter>(() =>
+    game.cards.length > 0 ? "owned" : "all",
+  );
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<BinderSort>("catalog");
   const [page, setPage] = useState(0);
@@ -781,6 +803,9 @@ function CollectionView({
     variant: CardVariant;
     liveStream: ReturnType<typeof liveFor>;
   } | null>(null);
+  // Le bouton retour d'Android ferme la fiche ouverte avant tout le reste :
+  // c'est l'écran du dessus, et c'est ce que le doigt attend.
+  useBackHandler(inspect !== null, () => setInspect(null));
   const live = useLive();
   // L'heure ne sert qu'à juger la fraîcheur du direct : une minute de précision
   // suffit (au-delà de dix minutes, tout disparaît de toute façon).
@@ -893,83 +918,89 @@ function CollectionView({
         <span>{game.stats.totalCards} cartes obtenues</span>
       </div>
 
-      <label className="search-field">
-        <Search size={17} />
-        <input
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setPage(0);
-          }}
-          placeholder={`Rechercher un streameur, rang (#1 à #${CATALOG_SIZE}) ou jeu…`}
-          aria-label="Rechercher un créateur"
-        />
-        {query ? (
-          <button
-            onClick={() => {
-              setQuery("");
+      {/* La recherche, le tri et les filtres restent **collés sous la barre**
+          pendant qu'on feuillette : chercher un créateur après avoir descendu
+          trois pages ne devrait pas demander de remonter trois pages. */}
+      <div className="binder-tools">
+          <label className="search-field">
+            <Search size={17} />
+          <input
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
               setPage(0);
             }}
-            aria-label="Effacer la recherche"
-          >
-            <X size={15} />
-          </button>
-        ) : null}
-      </label>
+            placeholder={`Rechercher un streameur, rang (#1 à #${CATALOG_SIZE}) ou jeu…`}
+            aria-label="Rechercher un créateur"
+          />
+          {query ? (
+            <button
+              onClick={() => {
+                setQuery("");
+                setPage(0);
+              }}
+              aria-label="Effacer la recherche"
+            >
+              <X size={15} />
+            </button>
+          ) : null}
+        </label>
 
-      <label className="sort-field">
-        <ArrowDownWideNarrow size={17} />
-        <span className="sort-label">Trier</span>
-        <select
-          value={sort}
-          onChange={(event) => {
-            setSort(event.target.value as BinderSort);
-            setPage(0);
-          }}
-          aria-label="Trier le classeur"
-        >
-          {BINDER_SORTS.map((entry) => (
-            <option key={entry.id} value={entry.id}>
-              {entry.label}
-            </option>
+        <label className="sort-field">
+          <ArrowDownWideNarrow size={17} />
+          <span className="sort-label">Trier</span>
+          <select
+            value={sort}
+            onChange={(event) => {
+              setSort(event.target.value as BinderSort);
+              setPage(0);
+            }}
+            aria-label="Trier le classeur"
+          >
+            {BINDER_SORTS.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.label}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="filter-chips" aria-label="Filtres de collection">
+          {(
+            [
+              ["all", `Toutes (${CREATORS.length})`],
+              ["owned", `Obtenues (${game.stats.uniqueCreators})`],
+              // Les Sortants n'apparaissent que s'il y en a : un filtre vide n'a
+              // rien à faire dans la barre.
+              ...(retiredOwned
+                ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])
+                : []),
+              // Le direct n'apparaît que si l'app sait vraiment qui streame : un
+              // filtre qui ne peut rien donner n'a rien à faire là.
+              ...(live.configured && live.count && !live.stale
+                ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
+                : []),
+              ["legendary", `Légendaires (${RARITY_COUNTS.legendary})`],
+              ["epic", `Épiques (${RARITY_COUNTS.epic})`],
+              ["rare", `Rares (${RARITY_COUNTS.rare})`],
+              ["uncommon", `Peu communes (${RARITY_COUNTS.uncommon})`],
+              ["common", `Communes (${RARITY_COUNTS.common})`],
+            ] as [CollectionFilter, string][]
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              className={filter === value ? "active" : ""}
+              onClick={() => {
+                setFilter(value);
+                setPage(0);
+              }}
+            >
+              {label}
+            </button>
           ))}
-        </select>
-      </label>
-
-      <div className="filter-chips" aria-label="Filtres de collection">
-        {(
-          [
-            ["all", `Toutes (${CREATORS.length})`],
-            ["owned", `Obtenues (${game.stats.uniqueCreators})`],
-            // Les Sortants n'apparaissent que s'il y en a : un filtre vide n'a
-            // rien à faire dans la barre.
-            ...(retiredOwned
-              ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])
-              : []),
-            // Le direct n'apparaît que si l'app sait vraiment qui streame : un
-            // filtre qui ne peut rien donner n'a rien à faire là.
-            ...(live.configured && live.count && !live.stale
-              ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
-              : []),
-            ["legendary", `Légendaires (${RARITY_COUNTS.legendary})`],
-            ["epic", `Épiques (${RARITY_COUNTS.epic})`],
-            ["rare", `Rares (${RARITY_COUNTS.rare})`],
-            ["uncommon", `Peu communes (${RARITY_COUNTS.uncommon})`],
-            ["common", `Communes (${RARITY_COUNTS.common})`],
-          ] as [CollectionFilter, string][]
-        ).map(([value, label]) => (
-          <button
-            key={value}
-            className={filter === value ? "active" : ""}
-            onClick={() => {
-              setFilter(value);
-              setPage(0);
-            }}
-          >
-            {label}
-          </button>
-        ))}
+        </div>
       </div>
+
 
       <div className="binder-pager">
         <button
@@ -1411,7 +1442,6 @@ function ProfileView({
   onShowNotifications,
   onShowOwnProfile,
   onShowWishlist,
-  onShowPromoCode,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -1429,7 +1459,6 @@ function ProfileView({
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
-  onShowPromoCode: () => void;
 }) {
   const cloud = useCloud();
   // Le compte du carnet passe par le hook, et non par le store : lui seul
@@ -1703,16 +1732,11 @@ function ProfileView({
           </button>
         ) : null}
         {/*
-         * Le code promo du stream. La ligne vit dans les réglages — pas dans
-         * une pastille de plus sur la barre, et pas sur l'accueil : on ne tape
-         * un code que quand on en a un, sous les yeux.
+         * Le code promo n'est plus dans le menu : il ne sert que le jour où un
+         * code existe, et « Toi » a déjà trop de portes pour un écran de
+         * téléphone. L'écran (`promo-code-sheet.tsx`) et la fonction serveur
+         * restent en place — remettre la ligne suffit à le rallumer.
          */}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowPromoCode}>
-            <span>J&apos;ai un code</span>
-            <Ticket size={16} />
-          </button>
-        ) : null}
       </section>
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
@@ -1823,7 +1847,6 @@ export function CreatorDeckApp() {
   const [lastPackOpen, setLastPackOpen] = useState(false);
   const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
-  const [promoOpen, setPromoOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -1831,6 +1854,38 @@ export function CreatorDeckApp() {
   const navLastPack = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? now, now);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
+
+  // ------------------------------------------------------------------
+  // Le bouton retour d'Android
+  // ------------------------------------------------------------------
+  // L'écran du dessus se ferme, sinon on revient à l'accueil, sinon l'app se
+  // met de côté. L'ordre d'inscription est l'ordre du dessus vers le dessous :
+  // le dernier inscrit est le premier servi (`src/lib/back-stack.ts`).
+  useBackHandler(drawnCards.length > 0, closeReveal);
+  useBackHandler(themeOpen, () => setThemeOpen(false));
+  useBackHandler(Boolean(cloud.profile || cloud.profileBusy), () => cloudStore.closeProfile());
+  useBackHandler(accountOpen, () => {
+    setAccountOpen(false);
+    setAccountFocus(null);
+  });
+  useBackHandler(notificationsOpen, () => setNotificationsOpen(false));
+  useBackHandler(wishlistOpen, () => setWishlistOpen(false));
+  useBackHandler(arenaOpen, () => setArenaOpen(false));
+  useBackHandler(lastPackOpen, () => setLastPackOpen(false));
+  useBackHandler(marketOpen, () => setMarketOpen(false));
+  useBackHandler(friendsOpen, () => setFriendsOpen(false));
+  useBackHandler(studioOpen, () => setStudioOpen(false));
+  useBackHandler(oddsOpen, () => setOddsOpen(false));
+
+  useAndroidBack(() => {
+    // Plus rien à fermer : on revient à l'accueil, et si on y est déjà, l'app
+    // se met de côté. Quitter l'APK est un geste volontaire, pas un retour raté.
+    if (tab !== "home") {
+      setTab("home");
+      return;
+    }
+    void minimizeApp().catch(() => {});
+  });
 
   // Envoi automatique (débounce) quand un compte est connecté : aucun appel
   // réseau sinon, la partie reste strictement locale.
@@ -2121,7 +2176,6 @@ export function CreatorDeckApp() {
             onShowLastPack={() => setLastPackOpen(true)}
             onShowArena={() => setArenaOpen(true)}
             onShowWishlist={() => setWishlistOpen(true)}
-            onShowPromoCode={() => setPromoOpen(true)}
             onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
@@ -2203,7 +2257,6 @@ export function CreatorDeckApp() {
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
       {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
-      {promoOpen ? <PromoCodeSheet onClose={() => setPromoOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet
