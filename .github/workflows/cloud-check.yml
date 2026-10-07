@@ -2,8 +2,11 @@ name: Contrôle cloud (temporaire)
 
 # Fichier de contrôle **temporaire** : il pose les questions à la vraie base
 # (PostgREST), avec la clé anon déjà rangée dans les secrets du dépôt. Il est
-# supprimé dès que les réponses sont lues — le bac à sable de développement
-# n'a pas accès à supabase.co, GitHub Actions si.
+# supprimé dès que les réponses sont lues — le bac à sable de développement n'a
+# pas accès à supabase.co, GitHub Actions si.
+#
+# Les réponses partent en **annotations** : les journaux complets passent par un
+# hôte que le bac à sable ne joint pas, les annotations se lisent avec `gh`.
 on:
   push:
     branches: [arena/01a10c75-creatordeck]
@@ -17,54 +20,44 @@ jobs:
           URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
         run: |
-          echo "URL présente : ${#URL} caractère(s) — clé : ${#KEY} caractère(s)"
+          set -u
+          dire() { echo "::notice title=$1::$2"; echo "$1 = $2"; }
+          court() { tr '\n' ' ' | cut -c1-380; }
+          appel() {
+            curl -s -w " |HTTP %{http_code}" -X POST "$URL/rest/v1/rpc/$1" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+              -H "Content-Type: application/json" -d "$2" | court
+          }
 
-          echo "--- 1. _streak_reward_points (0032) : existe et est fermée ? ---"
-          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/_streak_reward_points" \
-            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-            -d '{"p_day":3}'
+          echo "URL : ${#URL} caractère(s) — clé : ${#KEY} caractère(s)"
 
-          echo "--- 2. open_pack sans être connecté : la fonction répond ? ---"
-          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/open_pack" \
-            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-            -d '{}'
+          dire "r1_streak_points" "$(appel _streak_reward_points '{"p_day":3}')"
+          dire "r2_open_pack_anonyme" "$(appel open_pack '{}')"
+          dire "r2b_open_pack_argument" "$(appel open_pack '{"p_jackpot":"perfect"}')"
+          dire "r3_wallet_apply" "$(appel _wallet_apply '{"p_user":"00000000-0000-4000-8000-000000000000","p_delta":1,"p_kind":"controle"}')"
+          dire "r5_pack_status" "$(appel pack_status '{}')"
 
-          echo "--- 3. _wallet_apply : une seule signature, fermée ? ---"
-          curl -s -w "\nHTTP %{http_code}\n" -X POST "$URL/rest/v1/rpc/_wallet_apply" \
-            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
-            -d '{"p_user":"00000000-0000-4000-8000-000000000000","p_delta":1,"p_kind":"controle"}'
-
-          echo "--- 4. compte invité, puis deux boosters d'affilée ---"
+          echo "--- compte invité, puis deux boosters d'affilée ---"
           SIGNUP=$(curl -s -X POST "$URL/auth/v1/signup" \
             -H "apikey: $KEY" -H "Content-Type: application/json" \
             -d '{"data":{},"gotrue_meta_security":{}}')
           TOKEN=$(echo "$SIGNUP" | python3 -c "import sys,json; print(json.load(sys.stdin).get('access_token',''))")
-          echo "jeton invité : ${#TOKEN} caractère(s)"
+          dire "r0_jeton_invite" "${#TOKEN} caractère(s)"
 
           if [ -n "$TOKEN" ]; then
-            echo "-- solde avant --"
-            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
-              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
-            echo ""
-            echo "-- booster 1 --"
-            curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
-              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}' \
-              | python3 -c "import sys,json; r=json.load(sys.stdin); print(json.dumps({'streak':r.get('streak'),'streak_reward':r.get('streak_reward'),'packs':r.get('packs'),'pity':r.get('pity')}, ensure_ascii=False))"
-            echo "-- solde après booster 1 --"
-            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
-              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
-            echo ""
-            echo "-- booster 2 (même journée) --"
-            curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
-              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}' \
-              | python3 -c "import sys,json; r=json.load(sys.stdin); print(json.dumps({'streak':r.get('streak'),'streak_reward':r.get('streak_reward'),'packs':r.get('packs')}, ensure_ascii=False))"
-            echo "-- solde après booster 2 --"
-            curl -s -X POST "$URL/rest/v1/rpc/wallet_get" \
-              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{}'
-            echo ""
+            FORME='import sys,json; r=json.load(sys.stdin); print(json.dumps({"streak":r.get("streak"),"streak_reward":r.get("streak_reward"),"packs":r.get("packs"),"pity":r.get("pity"),"jackpot":r.get("jackpot")}, ensure_ascii=False))'
+            joueur() {
+              curl -s -w " |HTTP %{http_code}" -X POST "$URL/rest/v1/rpc/$1" \
+                -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" \
+                -H "Content-Type: application/json" -d "$2" | court
+            }
+            dire "r4_solde_avant" "$(joueur wallet_get '{}')"
+            dire "r4_booster1" "$(curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" -d '{}' | python3 -c "$FORME" | court)"
+            dire "r4_solde1" "$(joueur wallet_get '{}')"
+            dire "r4_booster2" "$(curl -s -X POST "$URL/rest/v1/rpc/open_pack" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" -d '{}' | python3 -c "$FORME" | court)"
+            dire "r4_solde2" "$(joueur wallet_get '{}')"
           fi
-
-          echo "--- 5. les deux fonctions publiques de la série ---"
-          curl -s -X POST "$URL/rest/v1/rpc/pack_status" \
-            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" -d '{}'
-          echo ""
