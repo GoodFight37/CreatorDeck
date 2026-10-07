@@ -145,20 +145,25 @@ pareil ne bloquent plus la sauvegarde ».
    écouteur pour tout le classeur** (mille cartes n'ouvrent pas mille
    abonnements), un réglage pour couper, et le respect de « animations
    réduites ».
-6. Les codes promo — le reste du backlog hors brief.
+6. ~~**Les codes promo**~~ **faits le 7 octobre** : `0026_promo_codes.sql`, le
+   client (`redeemPromoCode`) et la feuille « J'ai un code » des réglages. Un
+   code rend un booster à ouvrir, une fois par joueur ; inconnu, expiré, épuisé
+   ou réservé à une réserve pleine, il est refusé — et dans ce dernier cas
+   **sans être consommé**. Détail : `docs/cloud-supabase.md` §8, « Les codes
+   promo ».
 
 ## 5. Ce qu'un relecteur peut vérifier lui-même
 
 ```powershell
 npm ci
-npm test                                    # 716 tests, 47 fichiers
-npm run supabase:verify                     # 352 contrôles sur un Postgres jetable
+npm test                                    # 731 tests, 48 fichiers
+npm run supabase:verify                     # 365 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0025` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0026` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`

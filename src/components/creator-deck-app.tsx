@@ -27,6 +27,7 @@ import {
   Sparkles,
   Swords,
   Target,
+  Ticket,
   Trophy,
   Unlock,
   Volume2,
@@ -47,6 +48,7 @@ import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { RevealOverlay } from "@/components/reveal-overlay";
+import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
@@ -1118,6 +1120,7 @@ function ProfileView({
   onShowNotifications,
   onShowOwnProfile,
   onShowWishlist,
+  onShowPromoCode,
 }: {
   game: GameState;
   onNotice: (message: string) => void;
@@ -1135,6 +1138,7 @@ function ProfileView({
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
+  onShowPromoCode: () => void;
 }) {
   const cloud = useCloud();
   // Le compte du carnet passe par le hook, et non par le store : lui seul
@@ -1401,6 +1405,17 @@ function ProfileView({
             </span>
           </button>
         ) : null}
+        {/*
+         * Le code promo du stream. La ligne vit dans les réglages — pas dans
+         * une pastille de plus sur la barre, et pas sur l'accueil : on ne tape
+         * un code que quand on en a un, sous les yeux.
+         */}
+        {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowPromoCode}>
+            <span>J&apos;ai un code</span>
+            <Ticket size={16} />
+          </button>
+        ) : null}
       </section>
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
@@ -1499,6 +1514,7 @@ export function CreatorDeckApp() {
   const [lastPackOpen, setLastPackOpen] = useState(false);
   const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [promoOpen, setPromoOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -1752,6 +1768,7 @@ export function CreatorDeckApp() {
             onShowLastPack={() => setLastPackOpen(true)}
             onShowArena={() => setArenaOpen(true)}
             onShowWishlist={() => setWishlistOpen(true)}
+            onShowPromoCode={() => setPromoOpen(true)}
             onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
@@ -1833,6 +1850,7 @@ export function CreatorDeckApp() {
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
       {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
+      {promoOpen ? <PromoCodeSheet onClose={() => setPromoOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (
         <AccountSheet

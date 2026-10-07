@@ -135,6 +135,7 @@ type FakeApi = {
   playerProfile: ReturnType<typeof vi.fn>;
   openPack: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
+  redeemPromoCode: ReturnType<typeof vi.fn>;
   ping: ReturnType<typeof vi.fn>;
   updateAccount: ReturnType<typeof vi.fn>;
   signInWithPassword: ReturnType<typeof vi.fn>;
@@ -296,6 +297,9 @@ function harness(options: {
       openings: 3,
       nextPackAt: "2026-03-01T10:30:00Z",
     })),
+    // Un code accepté : le serveur a écrit le booster dans sa réserve et le
+    // dit. C'est `pack_status()` appelé juste après qui le fait remonter au jeu.
+    redeemPromoCode: vi.fn(async () => ({ granted: 1, reserve: 4, note: "stream du 7 octobre" })),
     ping: vi.fn(async () => ({ host: "projet.supabase.co" })),
     updateAccount: vi.fn(async (update: { email?: string; password?: string }) => ({
       applied: true,
@@ -1754,4 +1758,68 @@ describe("l'arène", () => {
     expect(store.getSnapshot().arenaDraftSlots).toBeNull();
   });
 
+});
+
+describe("les codes promo", () => {
+  it("un code accepté remonte tout de suite dans la partie locale", async () => {
+    const { store, api, state } = harness();
+    store.subscribe(() => {});
+    // Le serveur a écrit le booster : sa réserve est passée de 3 à 4, et c'est
+    // ce que `pack_status()` répond juste après.
+    api.packStatus.mockResolvedValueOnce({
+      packs: 4,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 3,
+      nextPackAt: null,
+      pity: 0,
+      streak: 0,
+      jackpotReady: false,
+      sceneDay: null,
+      sceneReady: false,
+    });
+    const outcome = await store.redeemPromoCode("booster-2026");
+    expect(api.redeemPromoCode).toHaveBeenCalledWith("booster-2026");
+    // Le magasin relit la réserve au lieu de l'additionner : c'est le serveur
+    // qui fait foi, et le compteur de l'accueil affiche le bon total même si
+    // une autre rédemption est passée entre-temps sur un autre appareil.
+    expect(api.packStatus).toHaveBeenCalledTimes(1);
+    expect(outcome).toEqual({ status: "done", message: "Code accepté : un booster t'attend." });
+    expect(store.getSnapshot().isError).toBe(false);
+    expect(state.current.packs).toBe(4);
+  });
+
+  it("affiche le refus du serveur tel quel, sans rien relire", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    api.redeemPromoCode.mockRejectedValueOnce(
+      new CloudError(
+        "code promo : ta réserve est pleine (4 boosters sur 4) : ouvre un booster, puis retape ce code",
+        "P0001",
+        400,
+      ),
+    );
+    const outcome = await store.redeemPromoCode("BOOSTER-2026");
+    expect(outcome.status).toBe("unavailable");
+    // La phrase du serveur dit quoi faire : on la reprend sans la réécrire.
+    expect(store.getSnapshot().message).toMatch(/ouvre un booster, puis retape ce code/);
+    expect(store.getSnapshot().isError).toBe(true);
+    // Rien n'a bougé côté serveur : inutile de relire la réserve.
+    expect(api.packStatus).not.toHaveBeenCalled();
+  });
+
+  it("n'appelle personne sans compte, et refuse le champ vide sans réseau", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    const outcome = await store.redeemPromoCode("BOOSTER-2026");
+    expect(outcome).toMatchObject({ status: "unavailable", reason: "no-session" });
+    expect(store.getSnapshot().message).toBe("Connecte-toi pour utiliser un code.");
+    expect(api.redeemPromoCode).not.toHaveBeenCalled();
+
+    const { store: autre, api: autreApi } = harness();
+    autre.subscribe(() => {});
+    const vide = await autre.redeemPromoCode("   ");
+    expect(vide).toMatchObject({ status: "unavailable", reason: "error" });
+    expect(autreApi.redeemPromoCode).not.toHaveBeenCalled();
+    expect(autre.getSnapshot().message).toBe("Tape un code, puis valide.");
+  });
 });

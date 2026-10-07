@@ -208,6 +208,42 @@ export async function packStatus(core: CloudCore): Promise<{
 }
 
 /**
+ * Rédème un **code promo** (`0026_promo_codes.sql`).
+ *
+ * Le code donne un booster **à ouvrir** : le serveur l'écrit dans sa réserve
+ * (`pack_state`) et renvoie la réserve telle qu'elle est **après**. Le code
+ * lui-même n'est jamais jugé ici — ni la casse, ni la date, ni les usages : le
+ * serveur seul sait ce qui existe.
+ *
+ * Le refus du serveur est déjà une phrase française qui dit quoi faire (« code
+ * promo : ce code n'existe pas », « code promo : ta réserve est pleine… ouvre un
+ * booster, puis retape ce code ») : elle remonte telle quelle.
+ */
+export async function redeemPromoCode(
+  core: CloudCore,
+  code: string,
+): Promise<{
+  /** Combien de boosters ce code a donnés. */
+  granted: number;
+  /** La réserve totale du serveur après la rédemption. */
+  reserve: number;
+  /** La note que l'organisateur avait mise sur le code (souvent vide). */
+  note: string;
+}> {
+  const result = await core.rpc("redeem_promo_code", { p_code: code });
+  const record = asRecord(result);
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse de code promo illisible.", "invalid_response", 0);
+  }
+  return {
+    granted: Number(record.packs ?? 1),
+    reserve: Number(record.reserve ?? 0),
+    note: String(record.note ?? ""),
+  };
+}
+
+/**
+/**
  * Envoie la partie au serveur.
  *
  * `force` est le bouton « Envoyer / écraser » de l'écran de conflit : jamais

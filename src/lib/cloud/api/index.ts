@@ -537,6 +537,16 @@ export class CloudApi {
     return pack.packStatus(this.core);
   }
 
+  /**
+   * Rédème un code promo (réglages → « J'ai un code »).
+   *
+   * Le code donne un booster à ouvrir ; c'est le magasin qui relit ensuite
+   * `pack_status()` pour le faire remonter à la partie locale.
+   */
+  async redeemPromoCode(code: string): Promise<{ granted: number; reserve: number; note: string }> {
+    return pack.redeemPromoCode(this.core, code);
+  }
+
   // ------------------------------------------------------------------ saves
 
   /**

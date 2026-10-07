@@ -250,6 +250,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0026_promo_codes.sql`](../supabase/migrations/0026_promo_codes.sql)
+     → **Run** pour les **codes promo** : un code donné en stream (« BOOSTER-2026 »)
+     se tape dans les réglages (Toi → menu → « J'ai un code ») et rend **un
+     booster à ouvrir**, une fois par joueur. Un code inconnu, expiré ou épuisé
+     est refusé ; une réserve pleine refuse **sans consommer** le code. Les deux
+     tables sont fermées au client — la rédemption passe par
+     `redeem_promo_code()`. Aucune création de code depuis l'application.
+     Détail : §8, « Les codes promo ».
    - [`supabase/migrations/0022_pack_dans_saves.sql`](../supabase/migrations/0022_pack_dans_saves.sql)
      → **Run** pour que le **tirage écrive la collection lui-même**, dans la
      même transaction : plus de perte de cartes si l'appareil plante juste après
@@ -1148,6 +1156,50 @@ Trois règles qui viennent du reste du jeu :
   gratuit chaque jour ferait monter le compteur et offrirait la Légendaire du
   80ᵉ sans un seul booster ouvert ;
 * **le Direct ne l'influence pas** : la variante Live reste au Live Drop.
+
+### Les codes promo
+
+Trois cents personnes regardent un direct, le streameur annonce un code : il faut
+que ce code **existe** côté serveur, et qu'il ne puisse pas être réclamé deux
+fois. C'est `0026_promo_codes.sql` (7 octobre 2026).
+
+**Ce qu'un code donne : un booster à ouvrir.** Pas des points (l'hôtel s'achète
+avec eux, un code deviendrait une monnaie parallèle), pas un jeton (ça
+rapprocherait du pity sans que le joueur ait rien fait), pas une carte offerte
+(ça toucherait la valeur d'une collection). Un code, c'est une raison de rouvrir
+le jeu — et l'ouverture, elle, reste un tirage.
+
+* **Le joueur** : réglages (onglet « Toi » → menu → **« J'ai un code »**), le
+  code se tape, le serveur répond. La casse et les espaces n'ont pas
+  d'importance : `booster-2026` et `BOOSTER 2026` désignent le même code.
+* **Les tables**, fermées au client (`revoke` + RLS, comme les jetons de
+  notification) : `promo_codes` (le code, combien de boosters, une limite
+  d'usages, une date de fin, une note) et `promo_redemptions` (une ligne par
+  joueur et par code — **la clé primaire** `(code, user_id)` est ce qui garantit
+  qu'un code ne sert qu'une fois par joueur, pas un contrôle applicatif).
+* **Les refus**, tous côté serveur : code **inconnu**, **expiré** (`expires_at`),
+  **épuisé** (`max_uses`), **déjà réclamé par ce joueur** — et **réserve
+  pleine**. Ce dernier cas mérite une phrase : la réserve est plafonnée à
+  **quatre** boosters (`pack_state`, garde de `0019`), donc un cinquième serait
+  perdu en silence. Le code est alors refusé **sans être consommé**, et le
+  message dit quoi faire : « ouvre un booster, puis retape ce code ».
+* **Créer un code**, depuis le SQL Editor (ou avec la clé de service) — jamais
+  depuis l'application, où n'importe qui pourrait s'en attribuer :
+
+```sql
+-- Un code à usages illimités, sans date de fin (le code d'un stream).
+select public.create_promo_code('BOOSTER-2026', 1, null, null, 'stream du 7 octobre');
+
+-- Un code limité à 50 réclamations et valable jusqu'au 14 octobre.
+select public.create_promo_code('ANNIV-50', 1, 50, now() + interval '7 days', 'semaine d''anniversaire');
+```
+
+Rejouer le même code **le met à jour** (note, date de fin, limite) sans perdre
+les rédemptions déjà faites. `create_promo_code()` est `security definer` et son
+exécution est révoquée à `public`, `anon` et `authenticated` : seul le rôle de
+service — ou le SQL Editor, qui tourne avec les droits complets — peut créer un
+code. Le vérificateur contrôle tout cela sur un Postgres jetable, refus du
+joueur compris.
 
 ### Se connecter avec Twitch
 

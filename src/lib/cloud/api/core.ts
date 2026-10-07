@@ -110,6 +110,11 @@ export function messageFor(status: number, code: string, raw: string): string {
   if (code === "P0001" && raw.includes("aucun booster")) {
     return "Aucun booster disponible pour le moment : rouvre quand le compte à rebours est fini.";
   }
+  // Codes promo : le serveur dit tout (« ce code n'existe pas », « ta réserve est
+  // pleine… ouvre un booster, puis retape ce code ») et c'est en français.
+  if (code === "P0001" && raw.includes("code promo")) {
+    return raw;
+  }
   if (code === "P0001" && raw.includes("connecte-toi")) {
     // Le message du serveur dit quoi faire (« ouvre un booster », « propose un
     // échange ») : on le garde, il est déjà en français.

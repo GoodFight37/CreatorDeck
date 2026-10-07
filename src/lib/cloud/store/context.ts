@@ -75,6 +75,7 @@ export type CloudStoreActions = {
   openPack: ReturnType<typeof packActions>["openPack"];
   openScenePack: ReturnType<typeof packActions>["openScenePack"];
   packStatus: ReturnType<typeof packActions>["packStatus"];
+  redeemPromoCode: ReturnType<typeof packActions>["redeemPromoCode"];
   resetProgress: ReturnType<typeof packActions>["resetProgress"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];
   playerVariants: ReturnType<typeof socialActions>["playerVariants"];

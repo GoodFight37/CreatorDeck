@@ -772,6 +772,54 @@ describe("tirage serveur", () => {
   });
 });
 
+describe("codes promo", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("envoie le code au serveur et lit la réserve qu'il a écrite", async () => {
+    const { api, calls } = client(
+      () => ({ body: { ok: true, packs: 1, reserve: 4, note: "stream du 7 octobre" } }),
+      signedIn(),
+    );
+    const result = await api.redeemPromoCode("booster-2026");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/redeem_promo_code");
+    // Le code part tel quel : c'est le serveur qui normalise (majuscules, sans
+    // espaces) — un contrôle dans l'application serait un contrôle qu'on peut
+    // s'accorder.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_code: "booster-2026" });
+    expect(result).toEqual({ granted: 1, reserve: 4, note: "stream du 7 octobre" });
+  });
+
+  it("affiche le refus du serveur tel quel", async () => {
+    const { api } = client(
+      () => ({
+        status: 400,
+        body: {
+          code: "P0001",
+          message: "code promo : ta réserve est pleine (4 boosters sur 4) : ouvre un booster, puis retape ce code",
+        },
+      }),
+      signedIn(),
+    );
+    // La phrase du serveur dit déjà quoi faire : elle ne doit pas être
+    // remplacée par un « une erreur est survenue ».
+    await expect(api.redeemPromoCode("BOOSTER-2026")).rejects.toThrowError(
+      "code promo : ta réserve est pleine (4 boosters sur 4) : ouvre un booster, puis retape ce code",
+    );
+  });
+
+  it("n'invente pas de booster quand la réponse est illisible", async () => {
+    const { api } = client(() => ({ body: {} }), signedIn());
+    await expect(api.redeemPromoCode("BOOSTER-2026")).rejects.toThrowError(/illisible/);
+  });
+});
+
 describe("échanges", () => {
   function signedIn() {
     const storage = memoryStorage();

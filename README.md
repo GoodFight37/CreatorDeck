@@ -73,6 +73,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 10.8 | Notifications de direct (push FCM) | **livré** | `0023_notifications.sql`, `0024_push_state.sql`, `supabase/functions/notify-live`, `src/lib/push.ts` |
 | 10.9 | Le direct se réveille tout seul : l'horloge de la base interroge Twitch même quand personne ne joue (`pg_cron` + `pg_net`) | **livré** | `0025_direct_auto.sql`, `docs/cloud-supabase.md` § « Le direct » |
 | 10.10 | Les cartes Holo et Gold s'inclinent avec le téléphone (gyroscope), avec un réglage pour couper | **livré** | `src/lib/tilt.ts`, `src/components/creator-card.tsx` |
+| 10.11 | Les codes promo : un code donné en stream se tape dans les réglages et rend **un booster à ouvrir**, une fois par joueur | **livré** | `0026_promo_codes.sql`, `src/components/promo-code-sheet.tsx`, `docs/cloud-supabase.md` § « Les codes promo » |
 | 10.5 | Overlay 16:9 + révélation sadique | **livré** | `src/lib/reveal.ts`, `src/components/reveal-overlay.tsx`, `/overlay` |
 | 10.6 | Catalogue désirable : Top 1000 + les Sortants | **livré** | `src/lib/retired.ts`, `0016_sortants.sql`, `docs/catalogue-twitch.md` § « Les Sortants » |
 | 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
@@ -123,7 +124,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**716 tests**, 47 fichiers aujourd'hui).
+  (**731 tests**, 48 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -145,8 +146,10 @@ Trois étages, trois vitesses :
   **Paquet Scène** — un tirage conforme accepté, le même annoncé en Holo ou en
   Légendaire refusé, le journal qui ne fait pas monter le plancher de
   malchance — et la **wishlist** — un second épinglé qui remplace le premier,
-  la lecture par un autre joueur, l'écriture directe fermée
-  (**352 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  la lecture par un autre joueur, l'écriture directe fermée — et les **codes
+  promo** : un code qui rend un booster une fois par joueur, un code inconnu,
+  expiré ou épuisé refusé, et une réserve pleine qui refuse **sans consommer**
+  le code (**365 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -219,7 +222,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0022)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0026)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
@@ -230,7 +233,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0025` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0026` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),

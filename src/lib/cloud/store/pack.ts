@@ -237,6 +237,60 @@ export function packActions(ctx: CloudStoreContext) {
     packStatus: ctx.fetchPackStatus,
 
     /**
+     * Rédème un **code promo** (réglages → « J'ai un code »).
+     *
+     * Le code n'est jamais jugé ici : ni la casse, ni l'expiration, ni les
+     * usages — le serveur seul sait ce qui existe, et un contrôle local serait
+     * un contrôle qu'on peut s'accorder. En cas de succès, on relit
+     * `pack_status()` : c'est ce qui fait apparaître le booster dans la partie
+     * locale (compteur, compte à rebours), sans rien ouvrir.
+     *
+     * Un refus remonte **tel quel** : les phrases du serveur disent déjà quoi
+     * faire (« ouvre un booster, puis retape ce code »), et c'est exactement le
+     * message que le joueur a besoin de lire.
+     */
+    async redeemPromoCode(code: string): Promise<CloudActionOutcome> {
+      // Le refus est écrit ici plutôt que repris de `tradeApi()` : le sien parle
+      // d'échanges, et le joueur lirait « Connecte-toi pour échanger des
+      // cartes » en tapant un code.
+      const api = ctx.resolve();
+      if (!api) {
+        const message = CLOUD_DISABLED_HINT;
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "not-configured", message };
+      }
+      if (!api.session()) {
+        const message = "Connecte-toi pour utiliser un code.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "no-session", message };
+      }
+      const trimmed = code.trim();
+      if (!trimmed) {
+        const message = "Tape un code, puis valide.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const result = await api.redeemPromoCode(trimmed);
+        // On relit la réserve au lieu de l'additionner nous-mêmes : le serveur
+        // fait foi, et une rédemption faite sur un autre appareil s'affiche
+        // alors correctement.
+        await ctx.fetchPackStatus();
+        const message =
+          result.granted > 1
+            ? `Code accepté : ${result.granted} boosters t'attendent.`
+            : "Code accepté : un booster t'attend.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Code refusé.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
      * Rejoue la partie à zéro : côté appareil (l'appelant s'en charge) **et**
      * côté serveur.
      *

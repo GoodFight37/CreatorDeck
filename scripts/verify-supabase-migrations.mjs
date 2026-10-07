@@ -51,6 +51,9 @@
  *     demande à la fonction serveur d'interroger Twitch, planifiée toutes les
  *     deux minutes quand `pg_cron` est là (et silencieusement ignorée sinon,
  *     pour que la pile se rejoue sur n'importe quel Postgres) ;
+ *   * les codes promo : un code donne un booster une seule fois par joueur, un
+ *     code expiré ou épuisé est refusé, et une réserve pleine refuse **sans
+ *     consommer** le code ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -144,6 +147,7 @@ try {
   const notifications = await readFile(path.join(MIGRATIONS, "0023_notifications.sql"), "utf8");
   const etatPush = await readFile(path.join(MIGRATIONS, "0024_push_state.sql"), "utf8");
   const directAuto = await readFile(path.join(MIGRATIONS, "0025_direct_auto.sql"), "utf8");
+  const promos = await readFile(path.join(MIGRATIONS, "0026_promo_codes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -170,6 +174,7 @@ try {
     ["0023_notifications.sql", notifications],
     ["0024_push_state.sql", etatPush],
     ["0025_direct_auto.sql", directAuto],
+    ["0026_promo_codes.sql", promos],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -988,6 +993,123 @@ try {
   check(
     "direct auto : la fonction n'est là qu'une fois (migration rejouable)",
     (await client.query("select count(*)::int as n from pg_proc where proname = 'cron_refresh_live'")).rows[0].n === 1,
+  );
+
+  // --- Les codes promo (0026) ----------------------------------------------
+  // Un code donne **un booster**, une fois par joueur, et seulement si la
+  // réserve a de la place (elle est plafonnée à quatre). `last_regen_at` est
+  // reposé à chaque fois : sans ça, une réserve d'ancienne fixture se
+  // régénérerait toute seule et les contrôles dépendraient de l'heure.
+  async function setReserve(userId, packs) {
+    await client.query(
+      `insert into public.pack_state (user_id, packs, last_regen_at, openings) values ($1, $2, now(), 0)
+       on conflict (user_id) do update set packs = excluded.packs, last_regen_at = now()`,
+      [userId, packs],
+    );
+  }
+
+  await client.query("select public.create_promo_code('BOOSTER-TEST', 1, null, null, 'contrôle')");
+  await client.query("select public.create_promo_code('DEJA-PRIS', 1, null, null, '')");
+  await client.query("select public.create_promo_code('EXPIRE', 1, null, now() - interval '1 day', '')");
+  await client.query("select public.create_promo_code('UN-SEUL', 2, 1, null, '')");
+
+  await setReserve(C, 0);
+  const redeemi = (await asPlayer(C, "select public.redeem_promo_code('booster-test') as r")).rows[0].r;
+  check(
+    "codes promo : un code donne un booster, quelle que soit la casse tapée",
+    redeemi.ok === true && redeemi.packs === 1 && redeemi.reserve === 1,
+    JSON.stringify(redeemi),
+  );
+  check(
+    "codes promo : le booster arrive vraiment dans la réserve du serveur",
+    (await asPlayer(C, "select public.pack_status() as r")).rows[0].r.packs === 1,
+  );
+  await refuses(
+    "codes promo : le même code ne sert qu'une fois par joueur",
+    C,
+    "select public.redeem_promo_code('BOOSTER-TEST') as r",
+    [],
+    "déjà utilisé",
+  );
+  await refuses(
+    "codes promo : un code inconnu est refusé",
+    C,
+    "select public.redeem_promo_code('JAMAIS-VU') as r",
+    [],
+    "n'existe pas",
+  );
+  await refuses(
+    "codes promo : un code expiré est refusé",
+    C,
+    "select public.redeem_promo_code('EXPIRE') as r",
+    [],
+    "expiré",
+  );
+
+  // Réserve pleine : refus **sans consommer** le code. On le prouve en le
+  // donnant juste après à un autre joueur, et en comptant les rédemptions.
+  await setReserve(C, 4);
+  let reservePleine = "";
+  try {
+    await asPlayer(C, "select public.redeem_promo_code('DEJA-PRIS') as r");
+  } catch (error) {
+    reservePleine = String(error.message || "");
+  }
+  await setReserve(B, 0);
+  check(
+    "codes promo : une réserve pleine refuse le code sans le consommer",
+    reservePleine.includes("réserve est pleine") &&
+      (await asPlayer(B, "select public.redeem_promo_code('DEJA-PRIS') as r")).rows[0].r.reserve === 1 &&
+      (await client.query("select count(*)::int as n from public.promo_redemptions where code = 'DEJA-PRIS'")).rows[0].n === 1,
+    reservePleine || "aucune erreur levée",
+  );
+
+  // Épuisé : le code à un seul usage part une fois, puis refuse tout le monde.
+  await setReserve(B, 0);
+  check(
+    "codes promo : un code à un seul usage part une fois",
+    (await asPlayer(B, "select public.redeem_promo_code('UN-SEUL') as r")).rows[0].r.reserve === 2,
+  );
+  await setReserve(A, 0);
+  await refuses(
+    "codes promo : un code épuisé est refusé",
+    A,
+    "select public.redeem_promo_code('UN-SEUL') as r",
+    [],
+    "déjà été utilisé le nombre de fois prévu",
+  );
+  check(
+    "codes promo : un joueur ne remplit qu'une fois la table des rédemptions",
+    (await client.query("select count(*)::int as n from public.promo_redemptions where code = 'UN-SEUL'")).rows[0].n === 1,
+  );
+  await refuses(
+    "codes promo : les tables restent fermées au joueur",
+    PAUL,
+    "select count(*) from public.promo_codes",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "codes promo : un joueur ne peut pas créer de code",
+    PAUL,
+    "select public.create_promo_code('PIRATE', 4, null, null, '') as r",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "codes promo : sans compte, pas de code",
+    null,
+    "select public.redeem_promo_code('BOOSTER-TEST') as r",
+    [],
+    "connecte-toi",
+  );
+  check(
+    "codes promo : la migration est rejouable, rédemptions comprises",
+    (await client.query("select count(*)::int as n from pg_proc where proname = 'redeem_promo_code'")).rows[0].n === 1 &&
+      (await client.query("select count(*)::int as n from public.promo_codes where code = 'BOOSTER-TEST'")).rows[0].n === 1 &&
+      // Chloé l'a rédempté, le refus d'Alix ci-dessus (code épuisé) n'a rien
+      // consommé, et la migration rejouée n'a pas doublé les lignes.
+      (await client.query("select used from public.promo_codes where code = 'BOOSTER-TEST'")).rows[0].used === 1,
   );
 
   // --- Rejouabilité de la migration ----------------------------------------
