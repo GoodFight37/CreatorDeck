@@ -50,6 +50,19 @@ deux paquets de la vérification SQL qui manquent — ils ne sont pas dans le
 npm run dev:setup   # fait `npm ci` s'il faut, puis installe ce qui manque
 ```
 
+Pour envoyer les modifications faites par **un autre outil** (Gemini, un ami, une
+autre IA) sur une **branche à part**, sans toucher à la branche courante :
+
+```bash
+npm run essai:push                  # branche essai/<date>-<heure>
+npm run essai:push -- "ton message" # avec ton propre message
+```
+
+Le dossier revient tout seul sur la branche de départ, le travail part sur sa
+branche (local **et** GitHub), rien n'est fusionné, et une clé secrète fait
+échouer l'envoi. Les branches `essai/*` ne déclenchent **pas** de compilation
+d'APK : ton lien d'installation reste celui de la branche de travail.
+
 Aucune variable d'environnement n'est nécessaire pour jouer : sans elles, la
 partie vit sur l'appareil et l'écran de compte affiche « cloud non configuré ».
 Copier `.env.example` vers `.env.local` et y coller l'**URL du projet Supabase**
@@ -125,6 +138,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
+| `npm run essai:push` | range les modifications en cours sur une branche `essai/<date>-<heure>` et la pousse, puis revient sur la branche de départ (`-- "message"` pour choisir le message) |
 | `npm run supabase:verify` | joue les migrations `0001` → `0028` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers et grille des familles). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
