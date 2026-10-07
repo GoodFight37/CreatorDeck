@@ -53,7 +53,7 @@ jobs:
       - run: npm run lint && npm run typecheck && npm test
       # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
       - run: npm run catalog:check
-      # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
+      # Contrôle reinforced : dans un APK, un portrait manquant laisse un trou et
       # un portrait orphelin pèse sans être affiché. Échec plutôt qu'avertissement.
       - run: npm run catalog:ci
       - run: npm run android:debug
@@ -112,8 +112,8 @@ jobs:
           gh release edit debug-apk --notes "$NOTES"
           gh release upload debug-apk creatordeck-debug.apk --clobber
 
-      # 3. Firebase App Distribution : envoie une nouvelle release directement
-      #    disponible dans l'application App Tester sur ton téléphone.
+      # 3. Le mail : Firebase App Distribution envoie aux testeurs du groupe
+      #    un courriel avec le lien d'installation.
       - name: Préparer les notes de version
         run: git log -1 --pretty='%h — %s' > release-notes.txt
 
@@ -124,6 +124,7 @@ jobs:
             appdistribution:distribute
             android/app/build/outputs/apk/debug/app-debug.apk
             --app 1:450483794682:android:d393fe779b340d6140cf43
+            --groups "testers"
             --release-notes-file release-notes.txt
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
