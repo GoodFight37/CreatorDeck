@@ -22,7 +22,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
   plusieurs, refonte visuelle) vit sur `arena/01a10c75-creatordeck`, poussée à
   chaque étape terminée. C'est cette branche qu'on teste : le workflow
   **APK Android (debug)** accepte n'importe quelle branche, et les migrations
-  Supabase (`0001` → `0017`) se collent dans le SQL Editor.
+  Supabase (`0001` → `0021`, dans l'ordre) se collent dans le SQL Editor.
 - La **PR #7** suit cette branche et sert de journal : elle reste ouverte
   jusqu'à la fin du chantier — on ne la fusionne pas au milieu.
 - Une branche `arena/…` par session : `arena/01a10c2b`, `arena/01a10c54`,
@@ -30,6 +30,29 @@ But : **un dépôt, une branche de référence, un historique léger.**
   réécriture en parallèle (même règle que « Un seul écrivain à la fois »).
 - Les branches d'essai (`claude/…`) ne sont **jamais fusionnées** : elles se
   relisent avant toute conclusion.
+
+## État au 7 octobre 2026
+
+- **Le jeu est en ligne.** L'APK distribué (workflow *APK Android (debug)*) est
+  compilé **avec** le cloud : les boosters sont tirés par le serveur
+  (`open_pack()`), les comptes, les échanges, l'hôtel, les classements et
+  l'Arène passent par Supabase. Le mode **sans cloud** (build sans les deux
+  variables publiques) n'existe que pour le développement et les tests : c'est
+  le seul cas où le moteur de l'appareil tire les cartes. Ne pas décrire le jeu
+  comme « hors ligne » ou « sans compte » sans cette nuance — c'était vrai avant
+  le chantier online, ça ne l'est plus.
+- Migrations Supabase collées par le joueur, dans l'ordre : `0003`, `0011` →
+  `0021`. Les cinq dernières ferment des trous d'intégrité : `0019` (la
+  sauvegarde, la réserve de boosters et les raretés déclarées ne s'écrivent plus
+  depuis le client), `0020` (un pseudo = un joueur), `0021` (registre de
+  provenance : une Légendaire ou une variante Live/Holo/Gold doit venir du
+  serveur). La bascule de `0021` a inscrit 40 lignes pour toutes les collections
+  existantes — personne ne perd son rang.
+- Le vérifieur `npm run supabase:verify` joue `0001` → `0021` sur un Postgres
+  jetable : 312 contrôles. Il pose les droits de table comme Supabase
+  (`alter default privileges` **avant** les migrations), sinon il redonnerait à
+  `authenticated` ce que les migrations retirent et trois contrôles passeraient
+  pour de mauvaises raisons.
 
 ## Un seul écrivain à la fois
 

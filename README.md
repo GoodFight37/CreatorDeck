@@ -2,23 +2,28 @@
 
 Jeu mobile de cartes à collectionner façon TCG basé sur le classement Twitch
 (1000 chaînes, périmètre configurable : monde entier par défaut, ou une langue
-précise). Il se joue **seul, sur l'appareil, sans compte** : boosters aux
-**taux de drop publiés**, événement « Perfect », atelier de recyclage et
-d'artisanat, saisons de collection par famille de langue. La progression est
-sauvegardée localement.
+précise). **Le jeu se joue en ligne**, avec un compte : c'est le serveur qui
+**tire les boosters** (`open_pack()`), donc les cartes ne sont pas falsifiables —
+c'est le prérequis des échanges, de l'hôtel et des classements. Taux de drop
+**publiés**, événement « Perfect », atelier de recyclage et d'artisanat,
+saisons de collection par famille de langue.
 
-Un **cloud facultatif** (Supabase) ajoute le jeu à plusieurs, et rien
-d'obligatoire : compte (invité, e-mail ou Twitch), sauvegarde pour retrouver sa
-collection sur un autre appareil, **tirage des boosters décidé par le serveur**
-(cartes infalsifiables), échanges entre joueurs, amis, hôtel des ventes, carnet
-de notifications, **Last Pack** (le paquet qu'un ami vient d'ouvrir reste exposé
-dix minutes), classement mondial — global ou par famille de collection —,
-profils publics avec vitrine, et badge **EN LIVE** sur les cartes des chaînes en
-direct. Trois mécaniques de progression complètent le tirage : un **plancher de
+Le cloud (Supabase) porte le jeu à plusieurs : compte (invité, e-mail ou Twitch),
+sauvegarde pour retrouver sa collection sur un autre appareil, échanges entre
+joueurs, amis, hôtel des ventes, carnet de notifications, **Last Pack** (le
+paquet qu'un ami vient d'ouvrir reste exposé dix minutes), classement mondial —
+global ou par famille de collection —, profils publics avec vitrine, badge
+**EN LIVE** sur les cartes des chaînes en direct, et **Arène** hebdomadaire.
+Trois mécaniques de progression complètent le tirage : un **plancher de
 malchance publié** (80 boosters sans Légendaire et le 5ᵉ slot en garantit une),
 des **jetons** (5 par booster, 400 = la carte au choix — jamais une Légendaire),
-et des **missions du jour** avec une **série de sept jours**. Sans les deux variables publiques du cloud, tout se compile et se joue
-hors ligne.
+et des **missions du jour** avec une **série de sept jours**.
+
+**Le cloud reste facultatif à la compilation** : un build sans les deux
+variables publiques (`docs/cloud-supabase.md`) se compile et se joue **seul, sur
+l'appareil, sans compte** — c'est le mode de développement et des tests, où le
+moteur local tire les cartes. L'APK et le site distribués, eux, sont compilés
+**avec** le cloud : boosters serveur, comptes, échanges et classements.
 
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
 Capacitor 8 (Android) · Supabase · Vitest · Playwright.
@@ -111,7 +116,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**596 tests**, 39 fichiers aujourd'hui).
+  (**665 tests**, 44 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -692,9 +697,12 @@ version web hébergée.
   `com.creatordeck.app://auth` (`AndroidManifest.xml` + plugin `@capacitor/app`).
   Mise en place (trois déclarations) : `docs/cloud-supabase.md` §3.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
-  `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
-  affiche « cloud non configuré ». Ces deux valeurs sont publiques par
-  conception ; la clé **`service_role`** ne doit jamais entrer dans l'app.
+  `.env.example`), le build est **le mode local** : rien de réseau, le moteur de
+  l'appareil tire les cartes, et l'écran de compte affiche « cloud non
+  configuré ». C'est ce mode qui sert au développement et aux tests — la version
+  distribuée (APK, site) est compilée **avec** le cloud. Ces deux valeurs sont
+  publiques par conception ; la clé **`service_role`** ne doit jamais entrer
+  dans l'app.
 - Deux appareils qui ont joué en même temps : l'app ne fusionne **jamais**
   toute seule, elle propose d'envoyer la partie locale ou de charger celle du
   cloud (« Charger le cloud » demande deux appuis).
