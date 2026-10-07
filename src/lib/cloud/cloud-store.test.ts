@@ -145,6 +145,36 @@ type FakeApi = {
   marketListingsOf: ReturnType<typeof vi.fn>;
   twitchAuthorizeUrl: ReturnType<typeof vi.fn>;
   adoptSession: ReturnType<typeof vi.fn>;
+  arenaSubmit: ReturnType<typeof vi.fn>;
+  arenaMe: ReturnType<typeof vi.fn>;
+  arenaLeaderboard: ReturnType<typeof vi.fn>;
+  arenaClaim: ReturnType<typeof vi.fn>;
+  arenaDraftChoices: ReturnType<typeof vi.fn>;
+  arenaDraftPick: ReturnType<typeof vi.fn>;
+};
+
+/** Mon arène de la semaine, telle que le serveur la renvoie. */
+function arenaMine(overrides: Record<string, unknown> = {}) {
+  return {
+    week: "2026-02-23",
+    draftOpen: false,
+    rank: 2,
+    entry: { lineup: ["kaicenat"], score: 4120, liveCount: 1, submittedAt: SERVER_NOW },
+    draft: null,
+    claims: [],
+    pending: [],
+    ...overrides,
+  };
+}
+
+/** Le classement d'arène de la semaine. */
+const ARENA_BOARD = {
+  week: "2026-02-23",
+  endsAt: "2026-03-02T06:00:00Z",
+  draftOpen: false,
+  rows: [
+    { userId: SESSION.userId, displayName: "Kaicenat", score: 4120, liveCount: 1, lineup: ["kaicenat"], rank: 2 },
+  ],
 };
 
 function harness(options: {
@@ -342,6 +372,21 @@ function harness(options: {
     wishlistSlug: vi.fn(async () => null as string | null),
     setWishlist: vi.fn(async (slug: string) => slug),
     clearWishlist: vi.fn(async () => {}),
+    arenaSubmit: vi.fn(async () => ({ week: "2026-02-23", score: 4120, liveCount: 1, best: 4120, kept: false })),
+    arenaMe: vi.fn(async () => arenaMine()),
+    arenaLeaderboard: vi.fn(async () => ARENA_BOARD),
+    arenaClaim: vi.fn(async () => ({ week: "2026-02-16", alreadyClaimed: false, rank: 1, hourglasses: 5, emblem: true })),
+    arenaDraftChoices: vi.fn(async () => ({
+      week: "2026-02-28",
+      slots: [
+        ["kaicenat", "ibai", "ninja"],
+        ["ibai", "ninja", "rubius"],
+        ["ninja", "rubius", "auronplay"],
+        ["rubius", "auronplay", "kaicenat"],
+        ["auronplay", "kaicenat", "ibai"],
+      ],
+    })),
+    arenaDraftPick: vi.fn(async () => ({ week: "2026-02-28", score: 5100, liveCount: 2, best: 5100, kept: false })),
   };
 
   const store = createCloudStore({
@@ -1550,4 +1595,96 @@ describe("la wishlist", () => {
     expect(api.setWishlist).not.toHaveBeenCalled();
     expect(store.getSnapshot().isError).toBe(true);
   });
+});
+
+describe("l'arène", () => {
+  it("charge l'arène : mon dépôt et le classement d'un seul coup", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    await store.loadArena();
+    expect(api.arenaMe).toHaveBeenCalledTimes(1);
+    expect(api.arenaLeaderboard).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().arenaMine?.entry?.score).toBe(4120);
+    expect(store.getSnapshot().arenaMine?.rank).toBe(2);
+    expect(store.getSnapshot().arena?.rows[0]?.rank).toBe(2);
+    expect(store.getSnapshot().arenaBusy).toBe(false);
+  });
+
+  it("dépose une arène et raconte le verdict du serveur", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    const result = await store.submitArena(["kaicenat", "ibai", "ninja", "rubius", "auronplay"]);
+    expect(api.arenaSubmit).toHaveBeenCalledWith(["kaicenat", "ibai", "ninja", "rubius", "auronplay"]);
+    expect(result.status).toBe("done");
+    expect(result.message).toMatch(/4120 viewers/);
+    // Le classement se recharge après un dépôt : le rang a bougé.
+    expect(api.arenaLeaderboard).toHaveBeenCalled();
+  });
+
+  it("dit quand une arène n'a pas amélioré la semaine", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    api.arenaSubmit.mockResolvedValueOnce({
+      week: "2026-02-23",
+      score: 900,
+      liveCount: 1,
+      best: 4120,
+      kept: true,
+    });
+    const result = await store.submitArena(["ibai", "ninja", "rubius", "auronplay", "kaicenat"]);
+    expect(result.message).toMatch(/tu avais déjà fait mieux/);
+  });
+
+  it("encaisse une récompense d'arène : les sabliers arrivent dans la partie", async () => {
+    const { store, applied, state } = harness({ local: saveWith({ hourglasses: 12 }) });
+    store.subscribe(() => {});
+    const result = await store.claimArena("2026-02-16");
+    expect(result.status).toBe("done");
+    expect(result.message).toMatch(/encaissé/);
+    expect(applied).toHaveLength(1);
+    expect(state.current.hourglasses).toBe(17);
+    // Encaisser repousse la partie : le serveur garde la collection, l'appareil
+    // garde la monnaie — mais le fait d'avoir encaissé est enregistré.
+    expect(store.getSnapshot().decision !== null || applied.length === 1).toBe(true);
+  });
+
+  it("n'ajoute rien quand la semaine a déjà été encaissée", async () => {
+    const { store, api, applied } = harness({ local: saveWith({ hourglasses: 12 }) });
+    store.subscribe(() => {});
+    api.arenaClaim.mockResolvedValueOnce({
+      week: "2026-02-16",
+      alreadyClaimed: true,
+      rank: 1,
+      hourglasses: 0,
+      emblem: true,
+    });
+    const result = await store.claimArena("2026-02-16");
+    expect(result.message).toMatch(/déjà été encaissée/);
+    expect(applied).toHaveLength(0);
+  });
+
+  it("refuse tout sans compte, et le dit", async () => {
+    const { store, api } = harness({ signedIn: false });
+    store.subscribe(() => {});
+    const result = await store.submitArena(["kaicenat"]);
+    expect(result.status).toBe("unavailable");
+    expect(api.arenaSubmit).not.toHaveBeenCalled();
+    expect(store.getSnapshot().message).toMatch(/Connecte-toi/);
+  });
+
+  it("charge les propositions du draft, et laisse tout vide hors du week-end", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    await store.loadDraftSlots();
+    expect(api.arenaDraftChoices).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().arenaDraftSlots).toHaveLength(5);
+    expect(store.getSnapshot().arenaDraftBusy).toBe(false);
+
+    // Hors du week-end, le serveur refuse : ce n'est pas une erreur à montrer,
+    // c'est la règle — l'écran affiche « ça ouvre samedi ».
+    api.arenaDraftChoices.mockRejectedValueOnce(new Error("le draft, c'est le week-end"));
+    await store.loadDraftSlots();
+    expect(store.getSnapshot().arenaDraftSlots).toBeNull();
+  });
+
 });

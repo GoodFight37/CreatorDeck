@@ -127,6 +127,7 @@ try {
   const wishlist = await readFile(path.join(MIGRATIONS, "0015_wishlist.sql"), "utf8");
   const sortants = await readFile(path.join(MIGRATIONS, "0016_sortants.sql"), "utf8");
   const reinitialiser = await readFile(path.join(MIGRATIONS, "0017_reinitialiser.sql"), "utf8");
+  const arena = await readFile(path.join(MIGRATIONS, "0018_arena.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -145,6 +146,7 @@ try {
     ["0015_wishlist.sql", wishlist],
     ["0016_sortants.sql", sortants],
     ["0017_reinitialiser.sql", reinitialiser],
+    ["0018_arena.sql", arena],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -2574,6 +2576,336 @@ try {
   await client.query("delete from public.pack_state where user_id = $1", [RESET]);
   await client.query("delete from public.saves where user_id = $1", [RESET]);
   await client.query("delete from public.profiles where user_id = $1", [RESET]);
+
+  // --- 0018 : l'arène --------------------------------------------------------
+  // Une semaine d'arène jouée pour de vrai : un direct frais, cinq cartes
+  // possédées (au plus une Légendaire, au moins un créateur en direct), et un
+  // score qui doit être la **somme des viewers réels** — pas une estimation,
+  // pas un chiffre envoyé par le client.
+  const ARENA_A = "a1a1a1a1-1111-4111-8111-111111111111";
+  const ARENA_B = "b2b2b2b2-2222-4222-8222-222222222222";
+  const ARENA_C = "c3c3c3c3-3333-4333-8333-333333333333";
+  const ARENA_D = "d4d4d4d4-4444-4444-8444-444444444444";
+  const ARENA_E = "e5e5e5e5-5555-4555-8555-555555555555";
+  await player(ARENA_A, "Arène Une", []);
+  await player(ARENA_B, "Arène Deux", []);
+  await player(ARENA_C, "Arène Trois", []);
+  await player(ARENA_D, "Arène Quatre", []);
+  await player(ARENA_E, "Arène Cinq", []);
+
+  // Ce qu'ils possèdent : deux Légendaires du haut du classement et six autres
+  // créateurs, tous pris dans le catalogue réel.
+  const arenaLegendaries = (
+    await client.query(
+      "select slug, login, display_name from public.creators where rarity = 'legendary' order by rank limit 2",
+    )
+  ).rows;
+  const arenaOthers = (
+    await client.query(
+      "select slug, login, display_name from public.creators where rarity <> 'legendary' order by rank limit 6",
+    )
+  ).rows;
+  const [legOne, legTwo] = arenaLegendaries;
+  const [otherOne, otherTwo, otherThree, otherFour, otherFive, otherSix] = arenaOthers;
+  const arenaOwned = [legOne, legTwo, otherOne, otherTwo, otherThree, otherFour, otherFive, otherSix].map(
+    (creator) => creator.slug,
+  );
+  // Une carte que personne n'a, pour le refus « tu n'as pas cette carte ».
+  const notOwned = (
+    await client.query(
+      "select slug, display_name from public.creators where not (slug = any($1::text[])) order by rank limit 1",
+      [arenaOwned],
+    )
+  ).rows[0];
+
+  // Un direct frais : la première Légendaire et le premier « autre » streament.
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify([
+      { login: legOne.login, display_name: legOne.display_name, viewers: 4120 },
+      { login: otherOne.login, display_name: otherOne.display_name, viewers: 900 },
+    ]),
+    "arène : direct de test",
+  ]);
+
+  const arenaCards = (slugs) =>
+    slugs.map((slug, index) => card(`arena-${index}-${slug}`, slug, "rare", "standard", 30 + index));
+  for (const userId of [ARENA_A, ARENA_B, ARENA_C, ARENA_D, ARENA_E]) {
+    await client.query("update public.saves set state = jsonb_set(state, '{cards}', $2::jsonb) where user_id = $1", [
+      userId,
+      JSON.stringify(arenaCards(arenaOwned)),
+    ]);
+  }
+
+  check(
+    "arène : le classement de la semaine est vide tant que personne n'a déposé",
+    (await asPlayer(ARENA_A, "select public.arena_leaderboard() as r")).rows[0].r.rows.length === 0,
+  );
+
+  // Refus : tout ce qui n'est pas une arène recevable, avec la phrase de l'écran.
+  const arenaRefuse = async (lineup) => {
+    try {
+      await asPlayer(ARENA_A, "select public.arena_submit($1::text[]) as r", [lineup]);
+      return "(accepté)";
+    } catch (error) {
+      return String(error.message);
+    }
+  };
+  check(
+    "arène : quatre cartes sont refusées",
+    (await arenaRefuse([legOne.slug, otherOne.slug, otherTwo.slug, otherThree.slug])).includes("cinq cartes"),
+  );
+  check(
+    "arène : deux fois la même carte est refusée",
+    (await arenaRefuse([legOne.slug, legOne.slug, otherTwo.slug, otherThree.slug, otherFour.slug])).includes(
+      "Deux fois la même",
+    ),
+  );
+  check(
+    "arène : deux Légendaires sont refusées (c'est le choix qui fait l'arène)",
+    (await arenaRefuse([legOne.slug, legTwo.slug, otherTwo.slug, otherThree.slug, otherFour.slug])).includes(
+      "Une seule Légendaire",
+    ),
+  );
+  check(
+    "arène : une carte qu'on ne possède pas est refusée, avec le nom du créateur",
+    (await arenaRefuse([otherTwo.slug, otherThree.slug, otherFour.slug, otherFive.slug, notOwned.slug])).includes(
+      `Tu n'as pas la carte de ${notOwned.display_name}`,
+    ),
+  );
+  check(
+    "arène : sans aucun créateur en direct, c'est refusé",
+    (await arenaRefuse([otherTwo.slug, otherThree.slug, otherFour.slug, otherFive.slug, otherSix.slug])).includes(
+      "au moins un créateur en direct",
+    ),
+  );
+
+  // Dépôt valable : le score est la somme des viewers des créateurs alignés.
+  const arenaLineup = [legOne.slug, otherOne.slug, otherTwo.slug, otherThree.slug, otherFour.slug];
+  const arenaDeposit = (await asPlayer(ARENA_A, "select public.arena_submit($1::text[]) as r", [arenaLineup]))
+    .rows[0].r;
+  check(
+    "arène : le score est la somme des viewers réels (4120 + 900)",
+    arenaDeposit.score === 5020 && arenaDeposit.live_count === 2,
+    JSON.stringify(arenaDeposit),
+  );
+
+  // Un second dépôt moins bon ne remplace pas le premier.
+  const weaker = [otherOne.slug, otherTwo.slug, otherThree.slug, otherFour.slug, otherFive.slug];
+  const arenaWeaker = (await asPlayer(ARENA_A, "select public.arena_submit($1::text[]) as r", [weaker])).rows[0].r;
+  const arenaMine = (await asPlayer(ARENA_A, "select public.arena_me() as r")).rows[0].r;
+  check(
+    "arène : une arène ne se dégrade pas (le meilleur score de la semaine reste)",
+    arenaWeaker.kept === true && arenaMine.entry.score === 5020 && arenaMine.rank === 1,
+    JSON.stringify({ kept: arenaWeaker.kept, score: arenaMine.entry.score, rank: arenaMine.rank }),
+  );
+
+  // Un second joueur, plus faible : le classement doit l'ordonner derrière.
+  const arenaSecond = (
+    await asPlayer(ARENA_B, "select public.arena_submit($1::text[]) as r", [weaker])
+  ).rows[0].r;
+  const board = (await asPlayer(ARENA_B, "select public.arena_leaderboard() as r")).rows[0].r;
+  check(
+    "arène : le classement classe par score, et publie le rang de chacun",
+    board.rows.length === 2 &&
+      board.rows[0].rank === 1 &&
+      board.rows[0].score === 5020 &&
+      board.rows[1].rank === 2 &&
+      board.rows[1].score === arenaSecond.score,
+    JSON.stringify(board.rows.map((row) => [row.rank, row.score])),
+  );
+  check(
+    "arène : la fin de semaine publiée est le lundi suivant à 6 h UTC",
+    new Date(board.endsAt).getUTCHours() === 6 &&
+      new Date(board.endsAt).getUTCDay() === 1 &&
+      board.week === "2026-10-05",
+    `${board.week} -> ${board.endsAt}`,
+  );
+
+  // Les semaines : la clé est la date du lundi, le draft s'ouvre le week-end.
+  check(
+    "arène : la semaine se lit en date de lundi (6 h UTC)",
+    (await client.query("select public._arena_week_key($1::timestamptz) as k", ["2026-10-07T12:00:00Z"])).rows[0].k ===
+      "2026-10-05" &&
+      (await client.query("select public._arena_week_key($1::timestamptz) as k", ["2026-10-05T05:59:00Z"])).rows[0].k ===
+        "2026-09-28",
+  );
+  check(
+    "arène : le draft est ouvert samedi et dimanche, fermé le reste",
+    (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-10T12:00:00Z"])).rows[0].o ===
+      true &&
+      (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-11T21:00:00Z"])).rows[0].o ===
+        true &&
+      (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-07T12:00:00Z"])).rows[0].o ===
+        false &&
+      (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-12T06:00:00Z"])).rows[0].o ===
+        false,
+  );
+
+  // Le draft : quinze propositions, trois par emplacement, toutes possédées et
+  // distinctes — et les mêmes à chaque appel (le tirage est reproductible).
+  const draftSlots = (
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[]) as s", [
+      ARENA_A,
+      "2026-10-10",
+      [...arenaOwned].sort(),
+    ])
+  ).rows[0].s;
+  const draftFlat = draftSlots.flat();
+  check(
+    "arène · draft : cinq emplacements de trois propositions, toutes possédées",
+    draftSlots.length === 5 &&
+      draftSlots.every((slot) => slot.length === 3 && new Set(slot).size === 3) &&
+      draftFlat.every((slug) => arenaOwned.includes(slug)),
+    JSON.stringify(draftSlots),
+  );
+  const draftAgain = (
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[]) as s", [
+      ARENA_A,
+      "2026-10-10",
+      [...arenaOwned].sort(),
+    ])
+  ).rows[0].s;
+  check("arène · draft : le tirage est reproductible", JSON.stringify(draftAgain) === JSON.stringify(draftSlots));
+
+  // Le draft n'est jouable que le week-end : la phrase le dit.
+  check(
+    "arène · draft : hors du week-end, c'est refusé",
+    await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")
+      .then(() => false)
+      .catch((error) => /week-end/.test(String(error.message))),
+  );
+
+  // Les récompenses : une semaine en cours ne paie pas encore.
+  check(
+    "arène : la semaine en cours ne paie pas encore",
+    await asPlayer(ARENA_A, "select public.arena_claim($1) as r", [board.week])
+      .then(() => false)
+      .catch((error) => /pas terminée/.test(String(error.message))),
+  );
+
+  // Une semaine finie, avec un classement figé : quatre arènes déposées à des
+  // scores décroissants — les rangs 1, 2, 3 et 4 paient 5, 3, 2 puis 1 sablier.
+  const pastWeek = "2026-09-28";
+  const pastScores = [
+    [ARENA_A, 4800],
+    [ARENA_C, 4000],
+    [ARENA_D, 3000],
+    [ARENA_E, 200],
+  ];
+  for (const [userId, score] of pastScores) {
+    await client.query(
+      "insert into public.arena_entries (user_id, week_key, lineup, score, live_count) values ($1, $2, $3::jsonb, $4, 1) on conflict (user_id, week_key) do update set score = excluded.score",
+      [userId, pastWeek, JSON.stringify(arenaLineup), score],
+    );
+  }
+
+  // La récompense oubliée se voit : « tu as joué cette semaine-là, tu n'as pas
+  // encaissé ». C'est ce que l'écran affiche avant que le joueur pense à venir.
+  const pendingBefore = (await asPlayer(ARENA_A, "select public.arena_me() as r")).rows[0].r.pending;
+  check(
+    "arène : une semaine terminée non encaissée est annoncée (avec le rang)",
+    pendingBefore.length === 1 && pendingBefore[0].week === pastWeek && pendingBefore[0].rank === 1,
+    JSON.stringify(pendingBefore),
+  );
+
+  const claimFirst = (await asPlayer(ARENA_A, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r;
+  const claimAgain = (await asPlayer(ARENA_A, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r;
+  check(
+    "arène : une semaine finie paie selon le rang, et une seule fois",
+    claimFirst.rank === 1 &&
+      claimFirst.hourglasses === 5 &&
+      claimFirst.emblem === true &&
+      claimAgain.hourglasses === 0 &&
+      claimAgain.claimed === true,
+    JSON.stringify({ first: claimFirst, again: claimAgain }),
+  );
+  const pendingAfter = (await asPlayer(ARENA_A, "select public.arena_me() as r")).rows[0].r.pending;
+  check(
+    "arène : une fois encaissée, elle ne réclame plus rien",
+    pendingAfter.length === 0,
+    JSON.stringify(pendingAfter),
+  );
+
+  const claimSecond = (await asPlayer(ARENA_C, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r;
+  const claimThird = (await asPlayer(ARENA_D, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r;
+  const claimFourth = (await asPlayer(ARENA_E, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r;
+  check(
+    "arène : 2e, 3e et 4e paient 3, 2 puis 1 sablier — et l'emblème reste au top 10",
+    claimSecond.hourglasses === 3 &&
+      claimThird.hourglasses === 2 &&
+      claimFourth.hourglasses === 1 &&
+      [claimSecond, claimThird, claimFourth].every((claim) => claim.emblem === true),
+    JSON.stringify([claimSecond, claimThird, claimFourth].map((claim) => [claim.rank, claim.hourglasses])),
+  );
+  check(
+    "arène : sans arène déposée, rien à réclamer — et on ne le redemande plus",
+    (await asPlayer(ARENA_B, "select public.arena_claim($1) as r", [pastWeek])).rows[0].r.rank === null &&
+      (await client.query("select count(*)::int as n from public.arena_claims where user_id = $1", [ARENA_B])).rows[0]
+        .n === 1,
+  );
+  check(
+    "arène : les semaines passées ne se réclament jamais deux fois",
+    (
+      await client.query("select count(*)::int as n from public.arena_claims where week_key = $1", [pastWeek])
+    ).rows[0].n === 5,
+    String(
+      (await client.query("select count(*)::int as n from public.arena_claims where week_key = $1", [pastWeek])).rows[0]
+        .n,
+    ),
+  );
+
+  // Les droits : rien sans compte, sauf le classement (un tableau d'affichage).
+  check(
+    "arène : sans compte, on ne dépose pas",
+    await (async () => {
+      await client.query("set role anon");
+      try {
+        await client.query("select public.arena_me()");
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+  check(
+    "arène : le classement, lui, se lit sans compte",
+    await (async () => {
+      await client.query("set role anon");
+      try {
+        return Array.isArray((await client.query("select public.arena_leaderboard() as r")).rows[0].r.rows);
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+  check(
+    "arène : l'écriture directe dans les tables est fermée aux clients",
+    await (async () => {
+      await client.query("set role authenticated");
+      await client.query("select set_config('test.uid', $1, false)", [ARENA_A]);
+      try {
+        await client.query(
+          "insert into public.arena_entries (user_id, week_key, lineup, score) values ($1, $2, '[]'::jsonb, 9999)",
+          [ARENA_A, board.week],
+        );
+        return false;
+      } catch (error) {
+        // RLS avec aucune politique ferme l'écriture aussi sûrement qu'un
+        // `revoke` : c'est le même refus, dit autrement par Postgres.
+        return /permission denied|row-level security/.test(String(error.message));
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+
+  // Remise en état : une seule diffusion, comme avant ce bloc.
+  await client.query("select public.live_publish($1::jsonb, $2)", [
+    JSON.stringify([{ login: "kamet0", display_name: "Kameto", viewers: 10 }]),
+    "état rendu à la suite",
+  ]);
 
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);

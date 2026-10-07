@@ -2248,3 +2248,103 @@ input:focus-visible {
 .wishlist-share div { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .wishlist-share span { color: var(--muted); font-size: 12px; }
 .wishlist-share b { font-size: 14.5px; font-weight: 600; }
+
+/*
+ * L'Arène : cinq cartes contre la réalité.
+ *
+ * L'écran a trois étages — ma semaine, le composeur (ou le draft), le
+ * classement — et une seule couleur vive : le rouge du direct, réservé à ce
+ * qui streame **maintenant**. La règle de l'écran tient dans cette couleur :
+ * une carte qui ne streame pas ne vaut rien, et elle ne doit pas en avoir
+ * l'air.
+ */
+.arena-week { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.arena-week-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.arena-week-key { color: var(--muted); font-family: var(--font-display); font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.arena-week-left { display: flex; align-items: center; gap: 5px; color: var(--muted-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.arena-entry { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel-2); }
+.arena-entry-score { display: flex; flex-direction: column; align-items: center; min-width: 84px; }
+.arena-entry-score strong { font-family: var(--font-display); font-size: 22px; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.arena-entry-score span { color: var(--muted-2); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.arena-entry-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.arena-rank { display: flex; align-items: center; gap: 5px; color: var(--accent-light); font-size: 12.5px; font-weight: 600; }
+.arena-entry-lineup { color: var(--text); font-size: 13px; line-height: 1.35; }
+.arena-entry-live { color: var(--muted-2); font-size: 11.5px; }
+.arena-empty { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.arena-pending { display: flex; flex-direction: column; gap: 8px; }
+.arena-pending-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 11px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 12px; background: rgb(var(--accent-rgb) / .07); }
+.arena-pending-row div { display: flex; flex-direction: column; gap: 1px; }
+.arena-pending-row strong { font-size: 13.5px; }
+.arena-pending-row span { color: var(--muted); font-size: 12px; }
+.arena-pending-row button { flex: 0 0 auto; padding: 7px 12px; color: white; border: 0; border-radius: 9px; background: var(--accent); font-family: var(--font-display); font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.arena-compose-open { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 11px; color: white; border: 0; border-radius: 11px; background: var(--accent); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
+.arena-compose-open.ghost { color: var(--muted); border: 1px solid var(--line); background: none; }
+
+.arena-composer { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.arena-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.arena-slot { display: flex; flex-direction: column; gap: 2px; min-height: 58px; padding: 7px 5px; color: var(--text); border: 1px dashed var(--line); border-radius: 10px; background: none; text-align: left; cursor: pointer; }
+.arena-slot.filled { border-style: solid; background: var(--panel-2); }
+.arena-slot.live { border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .08); }
+.arena-slot b { font-size: 11px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.arena-slot span { color: var(--muted-2); font-size: 10px; }
+.arena-slot.live span { color: var(--accent-light); }
+.arena-slot-empty { display: flex; align-items: center; justify-content: center; min-height: 42px; color: var(--muted-2); font-family: var(--font-display); font-size: 16px; }
+.arena-slot:disabled { cursor: default; }
+.arena-composer-score { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); font-size: 12.5px; }
+.arena-composer-score svg { color: var(--accent-light); }
+.arena-composer-rule { margin-left: auto; color: var(--muted-2); font-size: 11.5px; }
+.arena-problems { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 9px 11px 9px 26px; color: var(--accent-tint); border: 1px solid rgb(var(--accent-rgb) / .3); border-radius: 10px; background: rgb(var(--accent-rgb) / .07); font-size: 12.5px; line-height: 1.45; }
+.arena-ready { margin: 0; color: var(--green); font-size: 12.5px; }
+.arena-search { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 11px; background: var(--panel); }
+.arena-search svg { flex: 0 0 auto; color: var(--muted-2); }
+.arena-search input { flex: 1; min-width: 0; color: var(--text); border: 0; background: none; font-size: 13px; outline: none; }
+.arena-search button { display: flex; padding: 2px; color: var(--muted); border: 0; background: none; cursor: pointer; }
+.arena-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; max-height: 260px; overflow-y: auto; padding-right: 2px; }
+.arena-pick { display: flex; align-items: center; gap: 6px; padding: 8px 9px; color: var(--text); border: 1px solid var(--line); border-radius: 9px; background: var(--panel); text-align: left; cursor: pointer; }
+.arena-pick b { flex: 1; min-width: 0; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arena-pick span { color: var(--muted-2); font-size: 10.5px; }
+.arena-pick em { color: var(--accent-light); font-size: 10.5px; font-style: normal; font-variant-numeric: tabular-nums; }
+.arena-pick.live { border-color: rgb(var(--accent-rgb) / .4); }
+.arena-pick.chosen { border-color: rgb(var(--accent-rgb) / .75); background: rgb(var(--accent-rgb) / .12); box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / .3); }
+.arena-submit { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; color: white; border: 0; border-radius: 11px; background: var(--accent); font-family: var(--font-display); font-size: 14px; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
+.arena-submit:disabled { opacity: .45; cursor: default; }
+
+.arena-draft { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); }
+.arena-draft.open { border-color: rgb(var(--accent-rgb) / .4); background: rgb(var(--accent-rgb) / .05); }
+.arena-draft-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.arena-draft-head h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 13.5px; font-weight: 600; }
+.arena-draft-head span { color: var(--muted-2); font-size: 11.5px; }
+.arena-draft-slots { display: flex; flex-direction: column; gap: 8px; }
+.arena-draft-slot { display: grid; grid-template-columns: 20px repeat(3, 1fr); gap: 5px; align-items: stretch; }
+.arena-draft-number { display: flex; align-items: center; justify-content: center; color: var(--muted-2); font-family: var(--font-display); font-size: 12px; }
+.arena-draft-choice { display: flex; flex-direction: column; gap: 2px; padding: 7px 6px; color: var(--text); border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); text-align: left; cursor: pointer; }
+.arena-draft-choice b { font-size: 11px; line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.arena-draft-choice span { color: var(--muted-2); font-size: 10px; }
+.arena-draft-choice em { color: var(--accent-light); font-size: 10px; font-style: normal; }
+.arena-draft-choice.live { border-color: rgb(var(--accent-rgb) / .35); }
+.arena-draft-choice.chosen { border-color: rgb(var(--accent-rgb) / .75); background: rgb(var(--accent-rgb) / .14); box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / .3); }
+.arena-draft-note { margin: 0; color: var(--muted-2); font-size: 11.5px; line-height: 1.45; }
+.arena-draft-done { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.arena-draft-done span { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12.5px; }
+.arena-draft-done b { font-family: var(--font-display); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+.arena-board { display: flex; flex-direction: column; gap: 9px; }
+.arena-board-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.arena-board-head h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 13.5px; font-weight: 600; }
+.arena-board-head button { display: flex; padding: 6px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: none; cursor: pointer; }
+.arena-rows { display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.arena-rows li { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.arena-rows li.me { border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .08); }
+.arena-row-rank { min-width: 20px; color: var(--muted-2); font-family: var(--font-display); font-size: 13px; font-variant-numeric: tabular-nums; }
+.arena-row-name { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; font-size: 13px; }
+.arena-row-name em { color: var(--muted-2); font-size: 11px; font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arena-row-score { color: var(--accent-light); font-family: var(--font-display); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.arena-rules { margin: 0; padding-top: 9px; color: var(--muted-2); border-top: 1px solid var(--line); font-size: 11.5px; line-height: 1.5; }
+
+/* La ligne d'arène de l'accueil : même rangée que le plancher de malchance,
+   quatre états — une récompense qui attend (l'accent), un draft ouvert (le
+   direct, rouge), une arène déposée (calme), rien du tout (discret). */
+.pity-row.arena-row.reward { color: var(--text); border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .1); }
+.pity-row.arena-row.hot { color: var(--text); border-color: rgb(var(--accent-rgb) / .38); background: rgb(var(--accent-rgb) / .06); }
+.pity-row.arena-row.done { color: var(--text); border-color: var(--line); background: var(--panel); }
+.pity-row.arena-row.idle { color: var(--muted); }

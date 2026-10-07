@@ -41,6 +41,42 @@ Copier `.env.example` vers `.env.local` et y coller l'**URL du projet Supabase**
 et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 échanges, hôtel, classement…) — marche à suivre : `docs/cloud-supabase.md`.
 
+## Suivi des livraisons
+
+**Cette section est mise à jour à chaque livraison.** C'est le suivi écrit du
+projet : ce qui est livré, où c'est écrit dans le code, et ce qui reste. Si tu
+reprends ce dépôt, tu sais ici ce qui est en place et à quoi t'attendre — le
+détail est dans les docs citées, jamais seulement dans ce tableau.
+
+| # | Chantier | État | Où c'est écrit |
+|---|---|---|---|
+| 1 | Boosters tirés côté serveur (jamais de repli silencieux hors ligne) | **livré** | `src/lib/cloud/cloud-store.ts`, § « Le tirage est décidé par le serveur » |
+| 2 | Refonte & migration en ligne (échanges, classements, profils, hôtel, Twitch, carnet) | **livré** | `docs/cloud-supabase.md` § 8 et 9 |
+| 3 | Audit externe | **fait** | ce README, section « Tests » |
+| 4 | Refonte visuelle | **livrée** | `src/app/globals.css`, `src/lib/cosmetics.ts` |
+| 5 | Twitch : statut « en direct » | **livré** | `supabase/functions/refresh-live`, `docs/cloud-supabase.md` § « Le direct » |
+| 6 | Amis | **livré** | `0008_friends.sql`, `src/lib/social/` |
+| 7 | Complétion par famille | **livré** | `docs/cloud-supabase.md` § « La complétion par famille » |
+| 8 | Classement par famille | **livré** | `docs/cloud-supabase.md` § « Le classement par famille » |
+| 9 | Carnet de notifications | **livré** | `src/lib/social/inbox.ts`, `src/components/notifications-sheet.tsx` |
+| 10.1 | Direct → taux + variante Live | **livré** | `0011_direct.sql`, `src/lib/live.ts` |
+| 10.2 | Last Pack (5 cartes, 10 min, un ami en vole une) | **livré** | `0012_last_pack.sql`, `src/lib/last-pack.ts` |
+| 10.3 | Pity, jetons, missions, série, Prime Time | **livré** | `0013_progression.sql`, `src/lib/progression.ts` |
+| 10.4 | Paquet Scène + wishlist publique épinglée | **livré** | `0014_scene_pack.sql`, `0015_wishlist.sql` |
+| 10.5 | Overlay 16:9 + révélation sadique | **livré** | `src/lib/reveal.ts`, `src/components/reveal-overlay.tsx`, `/overlay` |
+| 10.6 | Catalogue désirable : Top 1000 + les Sortants | **livré** | `src/lib/retired.ts`, `0016_sortants.sql`, `docs/catalogue-twitch.md` § « Les Sortants » |
+| 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** (migration `0018` à coller) | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
+
+Deux règles qui tiennent tout le reste :
+
+- **une livraison met à jour ce tableau, la doc concernée et — s'il y a du
+  SQL — la ligne de `docs/cloud-supabase.md` § 3.** Un changement qui n'est
+  écrit qu'ici n'existe pas pour la personne d'après ;
+- **aucun chiffre du jeu n'existe seulement dans le code** : les taux sont dans
+  `src/data/pull-rates.json`, la progression dans `src/data/progression.json`,
+  l'arène dans `src/data/arena.json`, et les tests vérifient que le code dit la
+  même chose que ces fichiers.
+
 ## Scripts
 
 | Commande | Rôle |

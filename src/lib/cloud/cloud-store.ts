@@ -30,6 +30,8 @@ import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/
 import {
   CloudApi,
   CloudError,
+  type ArenaBoard,
+  type ArenaMine,
   type LeaderboardMetric,
   type LeaderboardRow,
   type LastPackShelf,
@@ -48,6 +50,7 @@ import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
 import { buildInbox, seenKey, unreadCount, type InboxItem } from "@/lib/social/inbox";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { parseOAuthReturn } from "@/lib/cloud/twitch";
+import { applyArenaReward, arenaRankLabel, arenaWeekLabel } from "@/lib/arena";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
@@ -167,6 +170,30 @@ export type CloudState = {
   lastPacksAt: number | null;
   /** Un chargement de l'étagère est en cours. */
   lastPacksBusy: boolean;
+  /**
+   * L'arène : le classement de la semaine et le dépôt du joueur, tels que le
+   * serveur les a donnés au dernier chargement.
+   *
+   * Rien de l'arène ne vit ici en propre : le score est recalculé côté serveur
+   * à partir du direct réel, les arènes déposées y sont, et le draft aussi.
+   * L'écran lit, le store écrit — la partie locale ne sert qu'à choisir ses
+   * cinq cartes dans le classeur.
+   */
+  arena: ArenaBoard | null;
+  /** Mon arène de la semaine : dépôt, rang, draft, récompenses en attente. */
+  arenaMine: ArenaMine | null;
+  /**
+   * Les quinze propositions du draft du week-end : cinq emplacements de trois
+   * cartes. Tirées par le serveur, dans la collection réelle — l'écran les
+   * affiche, il ne les invente pas.
+   */
+  arenaDraftSlots: string[][] | null;
+  /** Le tirage du draft est en cours. */
+  arenaDraftBusy: boolean;
+  /** Horodatage local du dernier chargement de l'arène. */
+  arenaAt: number | null;
+  /** Un appel d'arène est en cours (dépôt, draft ou encaissement). */
+  arenaBusy: boolean;
 };
 
 /**
@@ -286,6 +313,12 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   lastPacks: null,
   lastPacksAt: null,
   lastPacksBusy: false,
+  arena: null,
+  arenaMine: null,
+  arenaDraftSlots: null,
+  arenaDraftBusy: false,
+  arenaAt: null,
+  arenaBusy: false,
 });
 
 const EMPTY = EMPTY_CLOUD_STATE;
@@ -1422,6 +1455,12 @@ export function createCloudStore(deps: CloudDeps) {
         lastPacks: null,
         lastPacksAt: null,
         lastPacksBusy: false,
+        arena: null,
+        arenaMine: null,
+        arenaDraftSlots: null,
+        arenaDraftBusy: false,
+        arenaAt: null,
+        arenaBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
       });
@@ -1979,6 +2018,162 @@ export function createCloudStore(deps: CloudDeps) {
     /** L'étagère, réinitialisée (déconnexion ou changement de compte). */
     clearLastPacks(): void {
       publish({ lastPacks: null, lastPacksAt: null, lastPacksBusy: false });
+    },
+
+    // --------------------------------------------------------------- Arène
+    //
+    // L'arène est la seule chose du jeu que le serveur calcule et que le client
+    // n'a pas le droit d'inventer : le score est la somme des viewers **réels**
+    // des créateurs alignés. Le client choisit cinq cartes, envoie cinq slugs,
+    // et attend le verdict. C'est aussi ce qui rend l'arène inutilisable hors
+    // ligne : sans serveur, personne ne sait qui est en direct — et un score
+    // calculé sur un direct périmé serait un score faux.
+
+    /**
+     * Charge mon arène et le classement en un seul aller-retour.
+     *
+     * Les deux appels partent ensemble ; si le classement échoue, mon arène
+     * s'affiche quand même (et l'inverse est vrai aussi). L'écran n'a donc
+     * qu'un état à lire, et une seule fois.
+     */
+    async loadArena(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ arenaBusy: true });
+      try {
+        const [mine, board] = await Promise.all([
+          ready.api.arenaMe(),
+          ready.api.arenaLeaderboard().catch(() => null),
+        ]);
+        publish({
+          arenaMine: mine,
+          arena: board ?? state.arena,
+          arenaAt: deps.now(),
+          arenaBusy: false,
+        });
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Arène indisponible.");
+        publish({ arenaBusy: false, message: refusal.message, isError: true });
+      }
+    },
+
+    /**
+     * Dépose une arène : cinq slugs, choisis dans le classeur.
+     *
+     * Les refus du serveur arrivent en français et sont affichés tels quels
+     * (« Une seule Légendaire par arène… ») : le client peut aussi les calculer
+     * à l'avance pour griser le bouton, mais c'est le serveur qui tranche.
+     */
+    async submitArena(lineup: string[]): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      publish({ arenaBusy: true, message: null, isError: false });
+      try {
+        const result = await ready.api.arenaSubmit(lineup);
+        await this.loadArena();
+        const message = result.kept
+          ? `Arène déposée (${result.score} viewers) — mais tu avais déjà fait mieux cette semaine : c'est ton meilleur score qui compte.`
+          : `Arène déposée : ${result.score} viewers.`;
+        publish({ arenaBusy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Dépôt impossible.");
+        publish({ arenaBusy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /** Enregistre les cinq choix du draft du week-end. */
+    async pickDraft(lineup: string[]): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      publish({ arenaBusy: true, message: null, isError: false });
+      try {
+        const result = await ready.api.arenaDraftPick(lineup);
+        await this.loadArena();
+        const message = `Draft enregistré : ${result.score} viewers. C'est ton arène de la semaine.`;
+        publish({ arenaBusy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Draft impossible.");
+        publish({ arenaBusy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Encaisse la récompense d'une semaine terminée.
+     *
+     * Le serveur répond `hourglasses` **une seule fois** : le deuxième appel
+     * rend zéro. Les sabliers sont crédités ici, sur la partie locale (comme
+     * les points et l'XP), mais le fait d'avoir encaissé est enregistré côté
+     * serveur — deux appareils ne touchent pas deux fois la même semaine.
+     */
+    async claimArena(week: string): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      publish({ arenaBusy: true, message: null, isError: false });
+      try {
+        const result = await ready.api.arenaClaim(week);
+        if (result.hourglasses > 0) {
+          const local = deps.readState();
+          if (local) {
+            const next = applyArenaReward(local, result.hourglasses, deps.now());
+            if (next !== local) {
+              deps.applyState(next);
+              await push(next.version, next.updatedAt, true);
+            }
+          }
+        }
+        await this.loadArena();
+        const parts = [arenaWeekLabel(week)];
+        if (result.rank) parts.push(arenaRankLabel(result.rank));
+        if (result.hourglasses > 0) parts.push(`+${result.hourglasses} sablier${result.hourglasses > 1 ? "s" : ""}`);
+        if (result.emblem) parts.push("emblème d'arène");
+        const message =
+          result.hourglasses > 0
+            ? `${parts.join(" · ")} — encaissé.`
+            : result.alreadyClaimed
+              ? "Cette semaine-là a déjà été encaissée."
+              : `${parts.join(" · ")} — rien à encaisser cette fois.`;
+        publish({ arenaBusy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Encaissement impossible.");
+        publish({ arenaBusy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Charge les propositions du draft du week-end.
+     *
+     * Hors du week-end le serveur refuse (« le draft, c'est le week-end ») :
+     * ce refus n'est pas une erreur à afficher, c'est la règle — la feuille
+     * laisse simplement les propositions vides et montre quand ça ouvre.
+     */
+    async loadDraftSlots(): Promise<void> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return;
+      publish({ arenaDraftBusy: true });
+      try {
+        const result = await ready.api.arenaDraftChoices();
+        publish({ arenaDraftSlots: result.slots, arenaDraftBusy: false });
+      } catch {
+        publish({ arenaDraftSlots: null, arenaDraftBusy: false });
+      }
+    },
+
+    /** L'arène, remise à zéro (déconnexion ou changement de compte). */
+    clearArena(): void {
+      publish({
+        arena: null,
+        arenaMine: null,
+        arenaDraftSlots: null,
+        arenaDraftBusy: false,
+        arenaAt: null,
+        arenaBusy: false,
+      });
     },
 
     // ---------------------------------------------------------------- Amis

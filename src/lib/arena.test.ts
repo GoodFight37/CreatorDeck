@@ -1,15 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { createInitialState } from "@/lib/game-engine";
 import {
   ARENA_DRAFT_CHOICES,
   ARENA_LINEUP_SIZE,
   ARENA_MAX_LEGENDARY,
+  applyArenaReward,
   arenaDraftWindow,
   arenaEmblemEarned,
   arenaHourglasses,
   arenaLineupProblems,
+  arenaRankLabel,
   arenaScore,
   arenaWeekEndsAt,
   arenaWeekKey,
+  arenaWeekLabel,
   arenaWeekStartAt,
 } from "@/lib/arena";
 import { CREATORS } from "@/lib/catalog";
@@ -179,5 +183,32 @@ describe("cohérence avec le catalogue", () => {
     expect(CREATORS.filter((creator) => creator.rarity === "legendary").length).toBeGreaterThanOrEqual(
       ARENA_MAX_LEGENDARY,
     );
+  });
+});
+
+describe("la récompense arrive dans la partie", () => {
+  it("crédite les sabliers du rang, et rien pour zéro", () => {
+    const state = createInitialState(Date.parse("2026-10-07T12:00:00Z"));
+    const rich = applyArenaReward(state, 5, Date.parse("2026-10-12T06:00:00Z"));
+    expect(rich.hourglasses).toBe(state.hourglasses + 5);
+    expect(rich.updatedAt).toBe(Date.parse("2026-10-12T06:00:00Z"));
+    // Zéro sablier : la partie revient telle quelle, sans copie inutile.
+    expect(applyArenaReward(state, 0)).toBe(state);
+    expect(applyArenaReward(state, -3)).toBe(state);
+    // La partie d'origine n'est jamais modifiée.
+    expect(state.hourglasses).toBe(12);
+  });
+
+  it("écrit le rang en français, jamais « 1ᵉ »", () => {
+    expect(arenaRankLabel(1)).toBe("1er");
+    expect(arenaRankLabel(2)).toBe("2e");
+    expect(arenaRankLabel(10)).toBe("10e");
+  });
+
+  it("nomme la semaine par sa date de lundi", () => {
+    expect(arenaWeekLabel("2026-09-28")).toBe("la semaine du 28 septembre");
+    expect(arenaWeekLabel("2026-10-05")).toBe("la semaine du 5 octobre");
+    // Une clé illisible ne casse rien : elle s'affiche telle quelle.
+    expect(arenaWeekLabel("n'importe quoi")).toBe("n'importe quoi");
   });
 });

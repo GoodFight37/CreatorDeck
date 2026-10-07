@@ -25,6 +25,7 @@ import {
   Search,
   ShieldCheck,
   Sparkles,
+  Swords,
   Target,
   Trophy,
   Unlock,
@@ -40,6 +41,7 @@ import { AccountSheet, CloudBadge } from "@/components/account-sheet";
 import { FriendsSheet } from "@/components/friends-sheet";
 import { MarketSheet } from "@/components/market-sheet";
 import { LastPackSheet } from "@/components/last-pack-sheet";
+import { ArenaSheet } from "@/components/arena-sheet";
 import { NotificationsSheet } from "@/components/notifications-sheet";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
@@ -76,6 +78,7 @@ import { readySteals } from "@/lib/last-pack";
 import { formatViewers, liveFor, liveLogins, viewersLabel } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
 import { regionLabel } from "@/lib/regions";
+import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 import { bestCardOf } from "@/lib/social/inbox";
 import { buzz } from "@/lib/haptics";
@@ -283,6 +286,7 @@ function HomeView({
   onShowOdds,
   onShowMissions,
   onShowAtelier,
+  onShowArena,
   onOpenScene,
   opening,
   usingHourglass,
@@ -300,6 +304,8 @@ function HomeView({
   onShowMissions: () => void;
   /** Les Sortants : la ligne d'accueil mène à l'Atelier. */
   onShowAtelier: () => void;
+  /** La ligne d'arène mène à l'écran Arène (dépôt, draft, classement). */
+  onShowArena: () => void;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -334,6 +340,47 @@ function HomeView({
     [game.cards],
   );
   const live = useLive();
+  const cloud = useCloud();
+  // La ligne d'arène de l'accueil : ce qui compte pour le joueur, dans l'ordre
+  // — une récompense qui attend, un draft ouvert (une décision à prendre), ce
+  // qu'il a déjà déposé, ou rien du tout. Aucune ligne n'apparaît sans compte :
+  // l'arène n'existe qu'en ligne, et un bouton qui refuse est un piège.
+  const arenaNow = useNow(30_000);
+  const arenaLine = useMemo(() => {
+    if (!cloud.configured || !cloud.userId) return null;
+    const pending = cloud.arenaMine?.pending.length ?? 0;
+    if (pending > 0) {
+      return {
+        tone: "reward" as const,
+        label:
+          pending === 1
+            ? "Une récompense d'arène t'attend"
+            : `${pending} récompenses d'arène t'attendent`,
+      };
+    }
+    const window = arenaDraftWindow(arenaNow);
+    if (cloud.arenaMine?.draftOpen ?? window.open) {
+      const left = Math.max(0, window.closesAt - arenaNow);
+      const hours = Math.floor(left / 3_600_000);
+      const minutes = Math.floor((left % 3_600_000) / 60_000);
+      return {
+        tone: "hot" as const,
+        label: `Draft du week-end ouvert · ${hours} h ${String(minutes).padStart(2, "0")} min pour le boucler`,
+      };
+    }
+    const entry = cloud.arenaMine?.entry;
+    if (entry) {
+      const rank = cloud.arenaMine?.rank;
+      return {
+        tone: "done" as const,
+        label: `Ton arène : ${entry.score.toLocaleString("fr-FR")} viewers${rank ? ` · ${rank === 1 ? "1er" : `${rank}e`}` : ""}`,
+      };
+    }
+    return {
+      tone: "idle" as const,
+      label: "Arène : aucune équipe cette semaine",
+    };
+  }, [cloud.configured, cloud.userId, cloud.arenaMine, arenaNow]);
   // Le direct le plus regardé parmi les créateurs du Top 1000, pour le bandeau :
   // c'est le « lower third » d'une régie — une ligne, un chiffre, un nom.
   const featured = useMemo(() => {
@@ -476,6 +523,19 @@ function HomeView({
               {retiredLeft} Sortant{retiredLeft > 1 ? "s" : ""} encore artisanable
               {retiredLeft > 1 ? "s" : ""} · dernière édition
             </span>
+            <ChevronRight size={14} />
+          </button>
+        ) : null}
+
+        {arenaLine ? (
+          <button
+            type="button"
+            className={`pity-row arena-row ${arenaLine.tone}`}
+            onClick={onShowArena}
+            aria-label={`Ouvrir l'arène : ${arenaLine.label}`}
+          >
+            <Swords size={14} />
+            <span>{arenaLine.label}</span>
             <ChevronRight size={14} />
           </button>
         ) : null}
@@ -1049,6 +1109,7 @@ function ProfileView({
   onShowFriends,
   onShowMarket,
   onShowLastPack,
+  onShowArena,
   onShowNotifications,
   onShowOwnProfile,
   onShowWishlist,
@@ -1065,6 +1126,7 @@ function ProfileView({
   onShowFriends: () => void;
   onShowMarket: () => void;
   onShowLastPack: () => void;
+  onShowArena: () => void;
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
@@ -1078,6 +1140,9 @@ function ProfileView({
   // l'étagère du serveur et de son horloge (voir `readySteals`).
   const lastPackNow = useNow(15_000);
   const lastPackReady = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? lastPackNow, lastPackNow);
+  // Les récompenses d'arène non encaissées : même principe que le Last Pack —
+  // une pastille qui compte ce qui attend le joueur, pas ce qui l'attend lui.
+  const arenaRewards = cloud.arenaMine?.pending.length ?? 0;
   // L'épinglé se relit au montage de l'onglet, et à chaque changement de
   // compte : ce n'est pas l'épinglé d'un autre joueur qui doit s'afficher.
   useEffect(() => {
@@ -1258,6 +1323,13 @@ function ProfileView({
           </button>
         ) : null}
         {cloud.configured ? (
+          <button type="button" className="menu-row" onClick={onShowArena}>
+            <span>Arène</span>
+            {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
+        {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowLastPack}>
             <span>Last Pack</span>
             {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
@@ -1347,6 +1419,15 @@ export function CreatorDeckApp() {
     const timer = setInterval(() => void cloudStore.loadLastPacks(), 3 * 60_000);
     return () => clearInterval(timer);
   }, [inboxReady]);
+  // L'arène se lit au démarrage et toutes les dix minutes : c'est ce qui allume
+  // la pastille « récompense à encaisser » du menu, et ce qui rafraîchit le
+  // classement sans que le joueur ait à ouvrir l'écran.
+  useEffect(() => {
+    if (!inboxReady) return;
+    void cloudStore.loadArena();
+    const timer = setInterval(() => void cloudStore.loadArena(), 10 * 60_000);
+    return () => clearInterval(timer);
+  }, [inboxReady]);
   const now = useNow(1_000);
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
@@ -1370,6 +1451,7 @@ export function CreatorDeckApp() {
   const [marketOpen, setMarketOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [lastPackOpen, setLastPackOpen] = useState(false);
+  const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
@@ -1628,6 +1710,7 @@ export function CreatorDeckApp() {
             onShowOdds={() => setOddsOpen(true)}
             onShowMissions={() => setTab("missions")}
             onShowAtelier={() => setTab("atelier")}
+            onShowArena={() => setArenaOpen(true)}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}
@@ -1670,6 +1753,7 @@ export function CreatorDeckApp() {
             onShowFriends={() => setFriendsOpen(true)}
             onShowMarket={() => setMarketOpen(true)}
             onShowLastPack={() => setLastPackOpen(true)}
+            onShowArena={() => setArenaOpen(true)}
             onShowWishlist={() => setWishlistOpen(true)}
             onShowNotifications={() => setNotificationsOpen(true)}
             onShowOwnProfile={() => {
@@ -1750,6 +1834,7 @@ export function CreatorDeckApp() {
       {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
+      {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (

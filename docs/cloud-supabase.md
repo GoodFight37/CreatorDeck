@@ -233,6 +233,15 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0018_arena.sql`](../supabase/migrations/0018_arena.sql)
+     → **Run** pour activer **l'Arène** : cinq cartes alignées, au plus une
+     Légendaire, au moins un créateur **en direct**, et un score qui est la
+     **somme des viewers réels** — recalculée par le serveur à chaque dépôt.
+     Semaine du lundi 6 h UTC au lundi 6 h UTC, classement hebdomadaire,
+     récompenses au podium (5/3/2 sabliers) et pour les dix premiers, plus le
+     **draft du week-end** (samedi 6 h → lundi 6 h UTC). Sans cette migration,
+     l'écran Arène répond « fonction inconnue » ; le reste du jeu ne bouge pas.
+     Détail : §8, « L'Arène ».
    - [`supabase/migrations/0017_reinitialiser.sql`](../supabase/migrations/0017_reinitialiser.sql)
      → **Run** pour que « **Réinitialiser la progression** » (écran Toi → menu)
      rejoue vraiment la partie à zéro **en ligne aussi** : sans cette migration,
@@ -1057,6 +1066,51 @@ l'artisanat que **pendant cette édition-là** — jamais une Légendaire. Le
 vérificateur (`npm run supabase:verify`) joue la rotation sur une base jetable :
 deux créateurs marqués, 40 boosters ouverts, zéro Sortant tiré, complétion
 inchangée pour la carte possédée, ligne toujours là.
+
+### L'Arène
+
+L'Arène est la seule épreuve du jeu qui se joue **contre l'instant** : on aligne
+cinq cartes de son classeur, il en faut au moins une dont le créateur streame
+**maintenant**, et le score est la somme des viewers réels. Une carte hors direct
+vaut zéro, une seule Légendaire est acceptée par arène, et la semaine va du
+**lundi 6 h UTC** au lundi suivant à la même heure.
+
+Les règles publiées vivent dans `src/data/arena.json` (lues par `src/lib/arena.ts`
+et affichées telles quelles sur l'écran) ; `0018_arena.sql` les **recopie** — les
+mêmes phrases de refus, mot pour mot, pour que l'écran et le serveur disent la
+même chose. Un garde-fou les compare (`src/lib/supabase-arena.test.ts`), et le
+vérificateur les joue pour de vrai sur une base jetable
+(`scripts/verify-supabase-migrations.mjs`).
+
+| Ce que le serveur fait | Comment |
+| --- | --- |
+| Il recalcule le score, jamais le client | `arena_submit(array)` relit le direct frais (`live_streams`, < 10 min) et additionne les viewers des cartes alignées ; le client n'envoie que cinq slugs |
+| Il vérifie la composition | cinq cartes, pas de doublon, possession réelle, `≤ 1` Légendaire, au moins un direct — refus en français, identiques à ceux de l'écran |
+| Il garde le meilleur de la semaine | une arène **ne se dégrade pas** : `score = greatest(ancien, nouveau)` ; un essai raté n'efface pas un bon dépôt |
+| Il classe la semaine | `arena_leaderboard(week)` : score décroissant, puis le dépôt le plus ancien, top 100 |
+| Il paie une fois | `arena_claim(week)` : semaine terminée seulement, 5/3/2 sabliers au podium, 1 pour les dix premiers, emblème pour un top 10. Un second appel rend `hourglasses: 0` |
+| Il annonce ce qui attend | `arena_me()` rend `pending` : les semaines terminées où le joueur a déposé sans encaisser sa récompense |
+
+Deux choses vivent **côté appareil**, comme les points et l'XP : les sabliers
+eux-mêmes (crédités au moment de l'encaissement) et l'affichage. Le serveur, lui,
+enregistre qu'une semaine a été payée — deux appareils ne touchent pas deux fois
+la même.
+
+**Le draft du week-end** (`arena_draft_choices()`, `arena_draft_pick(array)`),
+ouvert du **samedi 6 h** au **lundi 6 h UTC** — quarante-huit heures. Le serveur
+tire cinq emplacements de trois propositions **dans la collection du joueur**,
+de façon reproductible (joueur + semaine + emplacement, tri des slugs) : deux
+appels rendent les mêmes quinze cartes, et un choix hors des propositions est
+refusé. Accepter un draft, c'est déposer l'arène de la semaine d'un coup.
+
+| Point d'attention | Pourquoi |
+| --- | --- |
+| Les tables (`arena_entries`, `arena_drafts`, `arena_claims`) sont fermées | RLS activée, aucune politique : personne ne lit ni n'écrit dedans directement, tout passe par les fonctions |
+| `arena_leaderboard` est la **seule** fonction ouverte à `anon` | un tableau d'affichage se lit sans compte, comme le classement mondial |
+| Le vérificateur rejoue une semaine entière | deux joueurs, des refus, un classement, une récompense payée deux fois, un draft reproductible, une écriture directe refusée |
+
+**Où le voir** : accueil (la ligne d'arène, sous les jetons) → écran Arène : ma
+semaine, le composeur (ou le draft), le classement.
 
 ### Recommencer sa partie
 

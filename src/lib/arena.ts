@@ -27,6 +27,7 @@
  *      collection.
  */
 import arenaData from "@/data/arena.json";
+import type { PlayerState } from "@/lib/game-engine";
 import { CREATOR_BY_SLUG, type Rarity } from "@/lib/catalog";
 
 type ArenaConfig = {
@@ -235,3 +236,42 @@ export function arenaEmblemEarned(rank: number | null | undefined): boolean {
 export const ARENA_EMBLEM_TOP = CONFIG.rewards.emblemTop;
 /** Combien de propositions par emplacement, en draft. */
 export const ARENA_DRAFT_CHOICES = CONFIG.draft.choicesPerSlot;
+
+/**
+ * Crédite une récompense d'arène sur la partie locale.
+ *
+ * Les points, l'XP et les sabliers vivent sur l'appareil (c'est le choix du
+ * jeu : le cloud garde la collection, pas la monnaie). Ce que le serveur
+ * enregistre, c'est **le fait d'avoir encaissé** — une semaine ne se paie
+ * qu'une fois, même en changeant de téléphone.
+ *
+ * La fonction est pure : elle ne touche pas `state`, elle en rend un nouveau.
+ * Un rang hors du top 10 ne rapporte rien, et zéro sablier rend la partie telle
+ * quelle (le composant qui appelle n'a pas à tester le cas).
+ */
+export function applyArenaReward(
+  state: PlayerState,
+  hourglasses: number,
+  now = Date.now(),
+): PlayerState {
+  const gained = Math.max(0, Math.floor(hourglasses));
+  if (gained === 0) return state;
+  return {
+    ...state,
+    updatedAt: now,
+    hourglasses: state.hourglasses + gained,
+  };
+}
+
+/** « 2026-09-28 » → « la semaine du 28 septembre ». Pour les phrases de l'écran. */
+export function arenaWeekLabel(week: string): string {
+  const date = new Date(`${week}T06:00:00Z`);
+  if (Number.isNaN(date.getTime())) return week;
+  const label = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" }).format(date);
+  return `la semaine du ${label}`;
+}
+
+/** « 1er », « 2e » : le rang écrit pour être lu, jamais « 1ᵉ ». */
+export function arenaRankLabel(rank: number): string {
+  return rank === 1 ? "1er" : `${rank}e`;
+}
