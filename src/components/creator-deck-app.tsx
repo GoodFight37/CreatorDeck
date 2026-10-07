@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
 import {
   ArrowDownWideNarrow,
+  ArrowUp,
   BadgeInfo,
   BookOpen,
   Check,
@@ -102,18 +103,21 @@ import {
   resistHaptic,
   revealHaptic,
   silenceBefore,
+  TEAR_HAPTIC,
   deservesSpotlight,
 } from "@/lib/reveal";
 import {
   isMuted,
   playBang,
   playPackOpening,
+  playTear,
   playRefuse,
   playReveal,
   playReward,
   setMuted,
 } from "@/lib/sfx";
 import { craftQuote, getGameView, type DrawnCard, type GameView } from "@/lib/game-engine";
+import { pullVerdict, type PullVerdict } from "@/lib/pull";
 import { THEME_VAR_NAMES, type ThemeTokens } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -338,6 +342,46 @@ function HomeView({
   const tick = useNow(1_000);
   // Le compteur de malchance en une phrase. À 1 restant, c'est **ce** booster
   // qui est garanti : le dire autrement ferait croire à un booster de plus.
+  /*
+   * Le geste d'ouverture : le doigt (ou la souris) part du booster, tire vers le
+   * haut, et relâche. La règle vit dans `src/lib/pull.ts` (pure, testée) ; ici
+   * il n'y a que le doigt, le son et le geste.
+   *
+   * Deux garde-fous : on ne tire que si le booster est vraiment ouvrable (pas
+   * de geste qui ne mène nulle part), et le **bouton « Ouvrir » reste** — c'est
+   * le repli pour la souris, le clavier, et les doigts qui n'aiment pas tirer.
+   */
+  const pullRef = useRef<{ y: number; t: number } | null>(null);
+  const [pull, setPull] = useState<PullVerdict>({ progress: 0, armed: false, active: false });
+  const canPull = !opening && !needsAccount && stock > 0;
+
+  function pullStart(event: PointerEvent<HTMLElement>) {
+    if (!canPull) return;
+    pullRef.current = { y: event.clientY, t: performance.now() };
+    // Le doigt continue de piloter le geste même s'il sort de la zone du pack.
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function pullMove(event: PointerEvent<HTMLElement>) {
+    const start = pullRef.current;
+    if (!start) return;
+    const verdict = pullVerdict(start.y - event.clientY, performance.now() - start.t);
+    // Le seuil est franchi : une vibration courte et le bruit de l'objet qu'on
+    // ouvre, **une seule fois** — pas à chaque pixel.
+    if (verdict.armed && !pull.armed) {
+      buzz(TEAR_HAPTIC);
+      playTear();
+    }
+    setPull(verdict);
+  }
+
+  function pullEnd() {
+    const armed = pull.armed;
+    pullRef.current = null;
+    setPull({ progress: 0, armed: false, active: false });
+    if (armed) onOpen();
+  }
+
   const pityCopy =
     game.pity.remaining <= 1
       ? "Ce booster contient un Légendaire garanti"
@@ -446,13 +490,30 @@ function HomeView({
         </button>
       ) : null}
 
-      <section className="pack-stage stage-live">
+      <section
+        className={`pack-stage stage-live${pull.active ? " pulling" : ""}`}
+        style={{ "--pull": pull.progress } as CSSProperties}
+        onPointerDown={pullStart}
+        onPointerMove={pullMove}
+        onPointerUp={pullEnd}
+        onPointerCancel={pullEnd}
+        aria-label={`${pack.label} : tire le booster vers le haut pour ouvrir, ou utilise le bouton Ouvrir`}
+      >
         <div className="pack-shadow" />
         <PackArtwork />
+        {/* La couture : elle s'ouvre avec le geste, avant que ça arme. Le joueur
+            voit où il en est, le seuil n'est pas une surprise. */}
+        <div className="pull-seam" aria-hidden="true" />
         <div className="pack-copy">
           <h2>{pack.label}</h2>
           <span>{pack.description}</span>
         </div>
+        {/* Le mode d'emploi, toujours écrit — et il s'efface à mesure que le
+            geste avance : au bout de deux boosters, on ne le lit plus. */}
+        <p className="pull-hint">
+          <ArrowUp size={14} />
+          Tire le booster vers le haut — ou appuie sur « Ouvrir ».
+        </p>
       </section>
 
       <section className="open-panel">
@@ -1155,11 +1216,39 @@ function MissionsView({
           </div>
         </div>
 
-        <div className="streak-track" aria-hidden="true">
-          {Array.from({ length: game.streak.target }, (_, index) => (
-            <i key={index} className={index < game.streak.days ? "on" : ""} />
-          ))}
+        {/* Le planning de régie : sept cases, comme une semaine de diffusion.
+            Chaque jour ouvert coche sa case ; la case du jour dit « à faire » ;
+            la septième, c'est Le Grand Direct. Un jour manqué remet la série à
+            J1 — c'est la règle du moteur, l'écran ne fait que la montrer. */}
+        <div className="streak-plan" role="list" aria-label="Planning du Streamer, sept jours">
+          {Array.from({ length: game.streak.target }, (_, index) => {
+            const day = index + 1;
+            const final = day === game.streak.target;
+            const done = index < game.streak.days;
+            const today = index === game.streak.days && !game.streak.todayDone;
+            return (
+              <div
+                key={day}
+                role="listitem"
+                className={`plan-cell${done ? " done" : ""}${today ? " today" : ""}${final ? " final" : ""}${final && game.streak.jackpot ? " won" : ""}`}
+              >
+                <span className="plan-day">{final ? "J7" : `J${day}`}</span>
+                <span className="plan-mark">
+                  {done ? <Check size={13} /> : today ? "à faire" : final ? "Direct" : "—"}
+                </span>
+                <span className="plan-gift">
+                  {final
+                    ? `Perfect ou ${game.streak.jackpotHourglasses} sabliers`
+                    : "série +1"}
+                </span>
+              </div>
+            );
+          })}
         </div>
+        <p className="streak-rule">
+          Un booster ouvert par jour fait avancer la série. Un jour manqué la remet à J1 ;
+          la septième case, c&apos;est <strong>Le Grand Direct</strong>.
+        </p>
 
         {game.streak.jackpot ? (
           <div className="streak-jackpot">

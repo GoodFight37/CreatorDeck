@@ -90,6 +90,14 @@ export function resistHaptic(): number[] {
  * Le motif du Perfect : le plus long de l'application, et il ne s'excuse pas.
  * Il couvre les deux secondes de verrouillage, avec un pic à la fin.
  */
+/**
+ * Le geste d'ouverture qui arme : **une** vibration courte, au moment où le
+ * seuil est franchi. Pas un motif : le doigt est encore sur l'écran, et une
+ * rafale de vibrations sous le doigt donne l'impression d'un bug. Le vrai
+ * retour haptique du déballage vient après, avec la révélation des cartes.
+ */
+export const TEAR_HAPTIC: readonly number[] = [16];
+
 export const PERFECT_HAPTIC: readonly number[] = [30, 40, 30, 40, 30, 40, 30, 40, 30, 40, 240];
 
 /**

@@ -569,6 +569,11 @@ export type GameView = {
     /** Un jackpot attend d'être dépensé (Perfect garanti ou 3 sabliers). */
     jackpot: boolean;
     jackpotHourglasses: number;
+    /**
+     * Le booster du jour est déjà ouvert : la case du planning est cochée, et
+     * « aujourd'hui » n'est plus à faire. Le jour repart à 6 h UTC.
+     */
+    todayDone: boolean;
   };
 };
 
@@ -2105,6 +2110,10 @@ export function getGameView(state: PlayerState, now = Date.now()): GameView {
       target: PROGRESSION.streak.days,
       jackpot: refreshed.streakJackpot,
       jackpotHourglasses: PROGRESSION.streak.jackpotHourglasses,
+      /* Le booster du jour est-il déjà ouvert ? C'est ce qui coche la case du
+         planning, et ce qui distingue « aujourd'hui, à faire » de « c'est fait ».
+         Le jour repart à 6 h UTC, comme les missions. */
+      todayDone: refreshed.streakDay === gameDay(now),
     },
   };
 }

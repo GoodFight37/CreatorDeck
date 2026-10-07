@@ -96,6 +96,21 @@ export function packOpeningPlan(): Note[] {
 }
 
 /**
+ * La **déchirure** : le son du papier qu'on ouvre, au moment précis où le geste
+ * arme. Deux traits courts et aigus qui descendent — pas un « wouip » de
+ * victoire (celui-là arrive après, avec `packOpeningPlan`), juste le bruit de
+ * l'objet qu'on ouvre. Discret par construction : il tombe pendant que le doigt
+ * bouge encore.
+ */
+export function tearPlan(): Note[] {
+  return [
+    { freq: 1_320, at: 0, duration: 0.07, type: "sawtooth", gain: 0.032 },
+    { freq: 990, at: 0.045, duration: 0.09, type: "triangle", gain: 0.028 },
+    { freq: 660, at: 0.1, duration: 0.1, type: "sine", gain: 0.022 },
+  ];
+}
+
+/**
  * Le « bang » qui suit le silence d'une carte Épique ou mieux.
  *
  * Le plan de la rareté est précédé d'un coup grave : c'est lui qu'on entend
@@ -217,6 +232,10 @@ export function play(plan: Note[]): void {
     oscillator.start(start + note.at);
     oscillator.stop(start + note.at + note.duration + 0.02);
   }
+}
+
+export function playTear(): void {
+  play(tearPlan());
 }
 
 export function playPackOpening(): void {

@@ -432,7 +432,12 @@ input:focus-visible {
   justify-content: center;
   margin: 8px -18px 0;
   overflow: hidden;
+  /* Le geste est vertical : sans ça, le navigateur fait défiler la page sous le
+     doigt au lieu de laisser tirer le booster. */
+  touch-action: none;
+  cursor: grab;
 }
+.pack-stage.pulling { cursor: grabbing; }
 
 /* Plus de halo radial derrière le booster : l'objet se tient tout seul. */
 
@@ -460,7 +465,49 @@ input:focus-visible {
     0 30px 45px -20px rgba(0, 0, 0, 0.9),
     0 0 45px rgb(var(--accent-rgb) / 0.25),
     inset 0 0 0 2px rgba(255, 255, 255, 0.06);
-  transform: perspective(900px) rotateY(-3deg) rotateZ(1deg);
+  /* `--pull` (0 → 1) vient du geste : le paquet monte et se redresse pendant
+     qu'on tire. La transition ne s'applique **que** au relâchement : pendant le
+     geste, la classe `pulling` la coupe pour que le paquet colle au doigt. */
+  transform:
+    perspective(900px)
+    rotateY(calc(-3deg + var(--pull, 0) * 3deg))
+    rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))
+    translateY(calc(var(--pull, 0) * -44px))
+    scale(calc(1 + var(--pull, 0) * 0.02));
+  transition: transform .26s cubic-bezier(.22, 1, .36, 1);
+}
+.pack-stage.pulling .pack-artwork { transition: none; }
+
+/*
+ * La couture : la ligne claire qui s'ouvre en haut du paquet. Elle suit le
+ * geste, donc le joueur voit le seuil arriver au lieu de le découvrir.
+ */
+.pull-seam {
+  position: absolute;
+  z-index: 8;
+  top: 46px;
+  left: 50%;
+  width: calc(120px + var(--pull, 0) * 90px);
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .82), transparent);
+  opacity: calc(var(--pull, 0) * .95);
+  transform: translate(-50%, calc(var(--pull, 0) * -44px));
+  pointer-events: none;
+}
+
+/* Le mode d'emploi du geste : écrit, puis effacé à mesure qu'on tire. */
+.pull-hint {
+  position: absolute;
+  bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--muted-2);
+  font-size: 12px;
+  opacity: calc(1 - var(--pull, 0) * 1.6);
+  pointer-events: none;
 }
 
 .pack-noise {
@@ -2223,9 +2270,26 @@ input:focus-visible {
 .day-head span { display: block; margin-top: 3px; color: var(--muted); font-size: 12.5px; }
 .streak-chip { display: flex; align-items: center; gap: 5px; padding: 5px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; font-size: 12px; white-space: nowrap; }
 .streak-chip.hot { color: #ffd48e; border-color: rgba(255,190,85,.35); background: rgba(255,190,85,.1); }
-.streak-track { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
-.streak-track i { height: 5px; border-radius: 999px; background: var(--line); }
-.streak-track i.on { background: var(--accent); }
+/*
+ * Le planning du Streamer : sept cases, comme une grille de diffusion. Une case
+ * validée est cochée, la case du jour dit « à faire », la septième porte le
+ * Grand Direct (bordure dorée quand il est gagné, comme le jackpot plus bas).
+ * Rien ne clignote : un planning de régie ne clignote pas.
+ */
+.streak-plan { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 12px; }
+.plan-cell { display: grid; gap: 3px; min-height: 62px; padding: 6px 4px; align-content: start; justify-items: center; text-align: center; border: 1px solid var(--line); border-radius: 8px; background: rgba(255, 255, 255, .02); }
+.plan-cell .plan-day { font-family: var(--font-display); font-size: 11px; font-weight: 600; color: var(--muted-2); }
+.plan-cell .plan-mark { display: grid; place-items: center; min-height: 16px; color: var(--muted-2); font-size: 10px; letter-spacing: .02em; }
+.plan-cell .plan-gift { color: var(--muted-2); font-size: 9.5px; line-height: 1.25; }
+.plan-cell.done { border-color: rgb(var(--accent-rgb) / .38); background: rgb(var(--accent-rgb) / .08); }
+.plan-cell.done .plan-day, .plan-cell.done .plan-mark { color: var(--accent-tint); }
+.plan-cell.today { border-color: var(--line-strong); background: rgba(255, 255, 255, .05); }
+.plan-cell.today .plan-mark { color: var(--text); }
+.plan-cell.final { border-color: rgba(255, 190, 85, .3); }
+.plan-cell.final .plan-day { color: #ffd48e; }
+.plan-cell.final.won { border-color: rgba(255, 190, 85, .6); background: rgba(255, 190, 85, .12); }
+.streak-rule { margin-top: 9px; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
+.streak-rule strong { color: var(--muted); font-weight: 600; }
 .streak-jackpot { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px; border: 1px solid rgba(255,190,85,.3); border-radius: 12px; background: rgba(255,190,85,.08); }
 .streak-jackpot svg { flex: 0 0 auto; margin-top: 1px; color: #ffd48e; }
 .streak-jackpot > div:nth-child(2) { flex: 1; }
