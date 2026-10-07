@@ -625,6 +625,26 @@ describe("tirage serveur", () => {
     await expect(api.openPack()).rejects.toThrowError(/Aucun booster/);
   });
 
+  it("répare un message du serveur collé depuis la console Windows", async () => {
+    // Le cas réel : « paquet scène : ton paquet du jour est déjà ouvert » arrive
+    // avec ses accents doublement encodés parce que la migration a été collée
+    // par le presse-papiers de PowerShell. L'écran doit afficher du français.
+    const { api } = client(
+      () => ({
+        status: 400,
+        body: {
+          code: "P0001",
+          message:
+            "paquet sc\u251c\u00bfne : ton paquet du jour est d\u251c\u00aej\u251c\u00e1 ouvert",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.scenePackChoices("S04")).rejects.toThrowError(
+      "paquet scène : ton paquet du jour est déjà ouvert",
+    );
+  });
+
   it("lit le statut de la réserve sans rien consommer", async () => {
     const { api, calls } = client(
       () => ({

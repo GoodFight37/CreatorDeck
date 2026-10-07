@@ -1039,6 +1039,7 @@ function MissionsView({
 function ProfileView({
   game,
   onNotice,
+  onError,
   onShowOdds,
   onShowMissions,
   onShowThemes,
@@ -1054,6 +1055,7 @@ function ProfileView({
 }: {
   game: GameState;
   onNotice: (message: string) => void;
+  onError: (message: string) => void;
   onShowOdds: () => void;
   onShowMissions: () => void;
   onShowThemes: () => void;
@@ -1112,12 +1114,25 @@ function ProfileView({
     if (next) playReward();
   }
 
-  function handleReset() {
-    if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.")) {
+  async function handleReset() {
+    if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.\n\nSi tu joues connecté, ce qui est enregistré en ligne est effacé aussi.")) {
       return;
     }
+    // L'appareil d'abord, le serveur ensuite : la partie neuve qu'il faut
+    // remonter est celle que `gameStore.reset()` vient d'écrire.
     gameStore.reset();
+    if (!cloud.configured || !cloud.userId) {
+      onNotice("Nouvelle partie lancée.");
+      return;
+    }
     onNotice("Nouvelle partie lancée.");
+    const outcome = await cloudStore.resetProgress();
+    if (outcome.status === "done") onNotice(outcome.message);
+    else if (outcome.status === "unavailable") {
+      // L'appareil a bien redémarré : le serveur, lui, garde sa réserve. On le
+      // dit, plutôt que de laisser croire à une remise à zéro complète.
+      onError(`Partie locale remise à zéro. En ligne : ${outcome.message}`);
+    }
   }
 
   return (
@@ -1288,7 +1303,7 @@ function ProfileView({
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
           accident. */}
-      <button type="button" className="menu-reset" onClick={handleReset}>
+      <button type="button" className="menu-reset" onClick={() => void handleReset()}>
         Réinitialiser la progression
       </button>
     </div>
@@ -1639,6 +1654,7 @@ export function CreatorDeckApp() {
           <ProfileView
             game={game}
             onNotice={showNotice}
+            onError={showError}
             onShowOdds={() => setOddsOpen(true)}
             onShowMissions={() => setTab("missions")}
             onShowThemes={() => setThemeOpen(true)}

@@ -233,6 +233,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0017_reinitialiser.sql`](../supabase/migrations/0017_reinitialiser.sql)
+     → **Run** pour que « **Réinitialiser la progression** » (écran Toi → menu)
+     rejoue vraiment la partie à zéro **en ligne aussi** : sans cette migration,
+     le serveur gardait sa réserve de boosters, son journal de tirages et le
+     Paquet Scène du jour, et un joueur qui repartait de zéro attendait quand
+     même la recharge de la partie qu'il venait d'effacer. Détail : §8,
+     « Recommencer sa partie ».
    - [`supabase/migrations/0016_sortants.sql`](../supabase/migrations/0016_sortants.sql)
      → **Run** pour que **les Sortants** (les créateurs qui ont quitté le
      classement lors d'une régénération du catalogue) le soient aussi côté
@@ -293,7 +300,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les seize migrations** (`0001` à `0016`) pour de vrai, dans
+> Le script exécute **les dix-sept migrations** (`0001` à `0017`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -1051,6 +1058,36 @@ vérificateur (`npm run supabase:verify`) joue la rotation sur une base jetable 
 deux créateurs marqués, 40 boosters ouverts, zéro Sortant tiré, complétion
 inchangée pour la carte possédée, ligne toujours là.
 
+### Recommencer sa partie
+
+« Réinitialiser la progression » (écran **Toi** → menu, tout en bas) remet la
+partie à zéro **partout** : l'appareil et le serveur. C'est `reset_progress()`
+(`0017`) qui s'occupe de la moitié serveur, et elle efface exactement quatre
+choses :
+
+| Ce qui s'efface | Pourquoi |
+| --- | --- |
+| `pack_state` (la réserve de boosters) | **supprimée**, pas remise à zéro : la lecture suivante la reconstruit depuis la sauvegarde neuve, donc le joueur retrouve ses 3 boosters tout de suite |
+| `pack_draws` (le journal des tirages) | il porte le plancher de malchance, la série de jours et le Perfect du 7e — une partie neuve repart de zéro sur les trois |
+| `pack_scene` (le Paquet Scène du jour) | de nouveau disponible, comme dans une partie neuve |
+| `last_packs` (les Last Pack exposés) | ils montrent cinq cartes d'un booster qui n'existe plus |
+
+Ce qui **survit**, volontairement : le pseudo et la vitrine (ce n'est pas de la
+progression), la wishlist (une envie, pas un acquis), les amitiés, les échanges
+conclus, les annonces en cours à l'hôtel, et la sauvegarde — c'est elle que la
+partie neuve remplace, juste après, par un `push_save()`.
+
+Trois garde-fous, parce que c'est la seule fonction du jeu qui **supprime** des
+lignes à la demande du client :
+
+* elle n'efface que **la partie de l'appelant** (`auth.uid()`, jamais un
+  paramètre) ;
+* elle est fermée à `anon` (`revoke all … from public, anon`), comme la
+  wishlist : sans compte, on n'efface rien ;
+* le vérificateur la joue pour de vrai : réserve vidée, Paquet Scène du jour
+  ouvert, douze tirages au journal → la fonction rend les boosters, rouvre le
+  Paquet Scène, ramène le plancher à zéro, et laisse le profil intact.
+
 #### Le classement par famille
 
 Dans **Compte → Classement**, la puce « Par famille » classe les joueurs sur une
@@ -1134,6 +1171,8 @@ jusqu'à cinq de chaque côté) ; compte gardable par adresse + mot de passe,
 | « E-mail ou mot de passe incorrect » | mot de passe saisi différemment, ou compte créé par code (sans mot de passe) : attache-en un depuis l'appareil d'origine |
 | « Cette adresse est déjà utilisée par un autre compte » | cette adresse appartient à un autre compte : connecte-toi avec elle, ou change d'adresse |
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
+| Un message du serveur s'affiche avec des caractères bizarres (« paquet sc├¿ne ») | la migration a été collée depuis la console Windows, qui a relu ses octets UTF-8 en CP850. L'application **répare** ces phrases (`src/lib/cloud/mojibake.ts`), donc l'écran reste lisible ; pour nettoyer aussi la base, recolle la migration concernée depuis le navigateur (Ctrl+A, Ctrl+C) |
+| « Réinitialiser la progression » ne rend pas les boosters | le serveur n'avait pas encore `0017` : sa réserve vivait à part de la sauvegarde. Colle `0017_reinitialiser.sql` (§ 3) |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
 | La puce « Par famille » n'apparaît pas dans le classement | `0006_profil_public.sql` n'a pas été recollé : il apporte la signature à trois arguments |

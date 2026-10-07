@@ -13,6 +13,7 @@
  * code : l'appel réseau est toujours déclenché par un geste explicite.
  */
 import type { KeyValueStorage } from "@/lib/save-store";
+import { repairMojibake } from "@/lib/cloud/mojibake";
 import type { CloudConfig } from "@/lib/cloud/config";
 import { cloudRequest, type CloudFetch } from "@/lib/cloud/transport";
 import { twitchAuthorizeUrl } from "@/lib/cloud/twitch";
@@ -1607,7 +1608,9 @@ export class CloudApi {
     const record = asRecord(result);
     const status = record?.status;
     if (status === "rejected") {
-      const problems = Array.isArray(record?.problems) ? record.problems.map(String) : ["sauvegarde refusée"];
+      const problems = Array.isArray(record?.problems)
+        ? record.problems.map((problem) => repairMojibake(String(problem)))
+        : ["sauvegarde refusée"];
       return { status: "rejected", problems };
     }
     const save = parseSaveRow(record?.save);
@@ -1615,6 +1618,18 @@ export class CloudApi {
     if (status === "conflict") return { status: "conflict", save };
     if (status === "unchanged") return { status: "unchanged", save };
     return { status: "pushed", save };
+  }
+
+  /**
+   * Rejoue la partie à zéro **côté serveur** (`0017_reinitialiser.sql`).
+   *
+   * Sans ça, « Réinitialiser la progression » ne remettait à zéro que
+   * l'appareil : le serveur gardait sa réserve de boosters, son journal de
+   * tirages et le Paquet Scène du jour, si bien qu'un joueur qui repartait de
+   * zéro attendait quand même la recharge de la partie qu'il venait d'effacer.
+   */
+  async resetProgress(): Promise<void> {
+    await this.rpc("reset_progress", {});
   }
 
   async pullSave(): Promise<RemoteSaveRow | null> {
@@ -1775,7 +1790,16 @@ export class CloudApi {
     if (!response.ok) {
       const record = asRecord(body);
       const code = typeof record?.error_code === "string" ? record.error_code : typeof record?.code === "string" ? record.code : "";
-      const raw = typeof record?.msg === "string" ? record.msg : typeof record?.message === "string" ? record.message : text.slice(0, 200);
+      // Le message brut vient de la base : si la migration a été collée depuis
+      // la console Windows, ses accents y sont doublement encodés (« sc├¿ne »).
+      // On le répare ici, une fois pour toutes les phrases du serveur.
+      const raw = repairMojibake(
+        typeof record?.msg === "string"
+          ? record.msg
+          : typeof record?.message === "string"
+            ? record.message
+            : text.slice(0, 200),
+      );
       throw new CloudError(messageFor(response.status, code, raw), code || `http_${response.status}`, response.status);
     }
     if (init.raw) return { body, status: response.status };

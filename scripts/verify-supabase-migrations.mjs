@@ -126,6 +126,7 @@ try {
   const scenePack = await readFile(path.join(MIGRATIONS, "0014_scene_pack.sql"), "utf8");
   const wishlist = await readFile(path.join(MIGRATIONS, "0015_wishlist.sql"), "utf8");
   const sortants = await readFile(path.join(MIGRATIONS, "0016_sortants.sql"), "utf8");
+  const reinitialiser = await readFile(path.join(MIGRATIONS, "0017_reinitialiser.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -143,6 +144,7 @@ try {
     ["0014_scene_pack.sql", scenePack],
     ["0015_wishlist.sql", wishlist],
     ["0016_sortants.sql", sortants],
+    ["0017_reinitialiser.sql", reinitialiser],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -2472,6 +2474,107 @@ try {
     [SORTANT_USER, SORTANT_OWNER],
   ]);
 
+  // --- 0017 : rejouer la partie à zéro ------------------------------------
+  // Le scénario du joueur : une partie bien entamée, la réserve vide, le Paquet
+  // Scène du jour déjà ouvert. « Réinitialiser la progression » doit rendre les
+  // deux — sinon le bouton ment (c'est exactement ce qui est arrivé).
+  const RESET = "abcd1234-5678-4abc-9def-1234567890ab";
+  await player(RESET, "Repart", [card("repart-1", "ibai", "rare", "standard", 5)]);
+  // Le déclencheur du Last Pack exige cinq cartes : ces douze lignes sont un
+  // journal de test, pas des boosters. Même pause que pour les autres compteurs.
+  await client.query("alter table public.pack_draws disable trigger pack_draws_last_pack");
+  await seedDraws(RESET, 12, 0, sansLegendaire);
+  await client.query("alter table public.pack_draws enable trigger pack_draws_last_pack");
+  // La réserve vidée à la main, comme après une session de jeu.
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 0, now()) on conflict (user_id) do update set packs = 0, last_regen_at = now()",
+    [RESET],
+  );
+  // Le Paquet Scène du jour déjà ouvert (une famille au hasard : on ne teste
+  // pas la famille ici, seulement la remise à zéro).
+  await client.query(
+    "insert into public.pack_scene (user_id, scene_day, family_id) values ($1, public._pack_game_day(now()), 'S04') on conflict (user_id) do update set scene_day = excluded.scene_day, family_id = excluded.family_id",
+    [RESET],
+  );
+
+  const beforeReset = (await asPlayer(RESET, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "réinitialisation : le point de départ du test est bien « plus rien à ouvrir »",
+    beforeReset.packs === 0 && beforeReset.scene_ready === false && beforeReset.pity === 12,
+    JSON.stringify({ packs: beforeReset.packs, scene: beforeReset.scene_ready, pity: beforeReset.pity }),
+  );
+  check(
+    "réinitialisation : sans la fonction, le tirage refuse bien faute de booster",
+    await asPlayer(RESET, "select public.open_pack() as r")
+      .then(() => false)
+      .catch((error) => /aucun booster/.test(String(error.message))),
+  );
+
+  const resetResult = (await asPlayer(RESET, "select public.reset_progress() as r")).rows[0].r;
+  check(
+    "réinitialisation : la fonction dit ce qu'elle a effacé",
+    resetResult.status === "reset" && resetResult.draws === 12 && resetResult.scene === 1,
+    JSON.stringify(resetResult),
+  );
+
+  const afterReset = (await asPlayer(RESET, "select public.pack_status() as r")).rows[0].r;
+  check(
+    "réinitialisation : la réserve repart de la sauvegarde (3 boosters) et le Paquet Scène est de nouveau là",
+    afterReset.packs === 3 && afterReset.scene_ready === true,
+    JSON.stringify({ packs: afterReset.packs, scene: afterReset.scene_ready }),
+  );
+  // Le plancher repart de zéro ; la série, elle, vaut 1 : c'est la règle
+  // publiée pour un journal vide (« Premier booster de sa vie : c'est le jour
+  // 1 »), et une partie neuve est exactement ce cas-là.
+  check(
+    "réinitialisation : le plancher de malchance repart de zéro, la série repart au jour 1",
+    afterReset.pity === 0 && afterReset.streak === 1,
+    JSON.stringify({ pity: afterReset.pity, streak: afterReset.streak }),
+  );
+
+  const reopened = (await asPlayer(RESET, "select public.open_pack() as r")).rows[0].r;
+  check(
+    "réinitialisation : on peut rouvrir un booster tout de suite",
+    Array.isArray(reopened.cards) && reopened.cards.length === 5 && reopened.packs === 2,
+    JSON.stringify({ cards: reopened.cards?.length, packs: reopened.packs }),
+  );
+
+  // Deuxième passage : ni erreur, ni effet de bord (le dernier Last Pack est
+  // reparti avec le reste).
+  await asPlayer(RESET, "select public.reset_progress()");
+  check(
+    "réinitialisation : rejouable, et elle referme les Last Pack exposés",
+    (await client.query("select count(*)::int as n from public.last_packs where user_id = $1", [RESET])).rows[0].n === 0 &&
+      (await client.query("select count(*)::int as n from public.pack_draws where user_id = $1", [RESET])).rows[0].n === 0 &&
+      (await client.query("select count(*)::int as n from public.pack_scene where user_id = $1", [RESET])).rows[0].n === 0,
+  );
+
+  check(
+    "réinitialisation : sans compte, on ne peut pas effacer (même pas sa partie)",
+    await (async () => {
+      await client.query("set role anon");
+      try {
+        await client.query("select public.reset_progress()");
+        return false;
+      } catch (error) {
+        return String(error.message).includes("permission denied");
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
+
+  // Ce qui ne doit PAS disparaître : le pseudo, la vitrine, les amitiés.
+  check(
+    "réinitialisation : le profil et les relations survivent",
+    (await client.query("select display_name from public.profiles where user_id = $1", [RESET])).rows[0]
+      ?.display_name === "Repart",
+  );
+
+  await client.query("delete from public.pack_state where user_id = $1", [RESET]);
+  await client.query("delete from public.saves where user_id = $1", [RESET]);
+  await client.query("delete from public.profiles where user_id = $1", [RESET]);
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -2552,6 +2655,11 @@ try {
         await client.query("reset role");
       }
     })()),
+  );
+  check(
+    "migrations rejouables : la réinitialisation répond encore, sans rien effacer d'autre",
+    (await asPlayer(A, "select public.reset_progress() as r")).rows[0].r.status === "reset" &&
+      (await client.query("select count(*)::int as n from public.profiles where user_id = $1", [A])).rows[0].n === 1,
   );
   check(
     "migrations rejouables : le Last Pack répond encore, sans double publication",

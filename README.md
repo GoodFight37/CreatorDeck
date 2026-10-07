@@ -61,7 +61,7 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0016` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0017` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -113,7 +113,8 @@ src/lib/game-store.ts    store client : charge, applique le moteur, persiste (lo
 src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
 src/lib/cloud/           cloud : config, client Supabase (api.ts), décisions de
                          synchronisation (sync.ts), store React (cloud-store.ts),
-                         échanges, amis, marché, Twitch, transport HTTP
+                         échanges, amis, marché, Twitch, transport HTTP, et
+                         mojibake.ts (répare un message du serveur mal collé)
 src/lib/social/          échanges et amis côté règles pures + carnet de
                          notifications (inbox.ts : les phrases, testées)
 src/lib/market.ts        grille des prix de l'hôtel (miroir de market_payout() SQL)
@@ -134,6 +135,8 @@ src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans
                          pull-rates.json doivent être ceux de 0014
 src/lib/supabase-wishlist.test.ts  garde-fou : la wishlist de 0015 (écriture par
                          fonctions, une ligne par joueur, épinglé dans le profil)
+src/lib/supabase-reset.test.ts  garde-fou : « recommencer sa partie » (0017) —
+                         ce qui s'efface, ce qui survit, qui a le droit
 src/lib/retired.test.ts  les Sortants : hors complétion, artisanables le temps
                          d'une édition, jamais une Légendaire
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
@@ -148,7 +151,7 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0016)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0017)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline

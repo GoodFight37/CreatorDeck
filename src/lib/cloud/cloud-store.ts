@@ -1856,6 +1856,39 @@ export function createCloudStore(deps: CloudDeps) {
     },
 
     /** Retire l'épinglé. */
+    /**
+     * Rejoue la partie à zéro : côté appareil (l'appelant s'en charge) **et**
+     * côté serveur.
+     *
+     * Sans cette moitié serveur, « Réinitialiser la progression » ne remettait à
+     * zéro que l'appareil : le serveur gardait sa réserve de boosters (elle vit
+     * dans `pack_state`, pas dans la sauvegarde), son journal de tirages — donc
+     * le plancher de malchance et la série — et le Paquet Scène du jour. Un
+     * joueur qui repartait de zéro attendait quand même la recharge de la partie
+     * qu'il venait d'effacer.
+     *
+     * La partie neuve remonte juste après : c'est elle qui redonne 3 boosters au
+     * prochain tirage (le serveur reconstruit sa réserve depuis la sauvegarde).
+     */
+    async resetProgress(): Promise<CloudActionOutcome> {
+      const ready = tradeApi();
+      if ("refusal" in ready) return ready.refusal;
+      publish({ busy: true, message: null, isError: false });
+      try {
+        await ready.api.resetProgress();
+        const local = deps.readState();
+        if (local) await push(local.version, local.updatedAt, true);
+        await fetchPackStatus();
+        const message = "Nouvelle partie : la réserve et le Paquet Scène repartent de zéro, en ligne comprise.";
+        publish({ busy: false, message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        const refusal = cloudRefusal(error, "Réinitialisation impossible en ligne.");
+        publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
     async clearWishlist(): Promise<boolean> {
       const ready = tradeApi();
       if ("refusal" in ready) {
