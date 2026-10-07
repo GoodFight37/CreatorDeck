@@ -39,6 +39,26 @@ export type FoilPosition = { px: number; py: number };
 const STORAGE_KEY = "creatordeck.tilt";
 
 /**
+ * Le même choix, écrit sur `<html>` (`data-card-fx="off"`).
+ *
+ * Le CSS s'en sert pour **éteindre le reflet** des cartes : le réglage
+ * « Reflets des cartes » coupe tout, pas seulement le gyroscope. C'est ce que
+ * demande un joueur chez qui l'effet fatigue l'œil — et le défaut est doux
+ * depuis le 7 octobre 2026 (plus de bandes animées, une simple lueur).
+ */
+const ATTRIBUT = "cardFx";
+
+function poserAttribut(value: boolean): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.dataset[ATTRIBUT] = value ? "on" : "off";
+}
+
+/** Applique le choix mémorisé au document (au démarrage de l'application). */
+export function applyTiltChoice(): void {
+  poserAttribut(tiltEnabled());
+}
+
+/**
  * Traduit une inclinaison en position de reflet.
  *
  * La zone « utile » est volontairement étroite (un quart de tour de chaque
@@ -100,6 +120,7 @@ function prefersReducedMotion(): boolean {
 /** Mémorise le choix du joueur (`localStorage`), sans jamais lever. */
 export function setTiltEnabled(value: boolean): void {
   if (typeof window === "undefined") return;
+  poserAttribut(value);
   try {
     window.localStorage.setItem(STORAGE_KEY, value ? "on" : "off");
   } catch {

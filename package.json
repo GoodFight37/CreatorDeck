@@ -20,6 +20,7 @@
     "catalog:ci": "node scripts/build-catalog.mjs --check --strict-avatars && node scripts/build-supabase-catalogue.mjs --check && node scripts/build-supabase-seasons.mjs --check",
     "supabase:catalogue": "node scripts/build-supabase-catalogue.mjs",
     "supabase:saisons": "node scripts/build-supabase-seasons.mjs",
+    "dev:setup": "node scripts/dev-setup.mjs",
     "supabase:verify": "node scripts/verify-supabase-migrations.mjs"
   },
   "dependencies": {

@@ -42,6 +42,14 @@ npm install
 npm run dev        # http://localhost:3000 (rechargement à chaud)
 ```
 
+Pour tout remettre d'aplomb d'un coup (dossier `node_modules` régénéré, ou les
+deux paquets de la vérification SQL qui manquent — ils ne sont pas dans le
+`package-lock.json`) :
+
+```bash
+npm run dev:setup   # fait `npm ci` s'il faut, puis installe ce qui manque
+```
+
 Aucune variable d'environnement n'est nécessaire pour jouer : sans elles, la
 partie vit sur l'appareil et l'écran de compte affiche « cloud non configuré ».
 Copier `.env.example` vers `.env.local` et y coller l'**URL du projet Supabase**
@@ -116,6 +124,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
+| `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run supabase:verify` | joue les migrations `0001` → `0028` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers et grille des familles). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests

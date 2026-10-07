@@ -367,11 +367,18 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > un Postgres jetable, en local, sans toucher au projet Supabase :
 >
 > ```powershell
-> npm install --no-save embedded-postgres pg
+> npm run dev:setup          # une commande : installe ce qui manque, y compris les deux paquets ci-dessous
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les vingt et une migrations** (`0001` à `0021`) pour de vrai, dans
+> Ces deux paquets (`embedded-postgres`, `pg`) ne sont **pas** dans
+> `package-lock.json` : ils ne servent qu'à la vérification, jamais à
+> l'application ni à l'APK. `npm run dev:setup` les pose en `--no-save` ;
+> l'équivalent à la main est `npm install --no-save embedded-postgres pg`. Sans
+> eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
+> dédiée.
+>
+> Le script exécute **les vingt-huit migrations** (`0001` à `0028`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de

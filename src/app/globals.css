@@ -404,7 +404,7 @@ input:focus-visible {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 9px rgb(var(--accent-rgb) / .85);
-  animation: live-pulse 1.9s ease-in-out infinite;
+  animation: live-pulse 3.2s ease-in-out infinite;
 }
 .live-bar-tag {
   color: var(--accent-light);
@@ -908,7 +908,7 @@ input:focus-visible {
   border-radius: 50%;
   background: var(--accent-light);
   box-shadow: 0 0 6px rgb(var(--accent-rgb) / .9);
-  animation: live-pulse 1.9s ease-in-out infinite;
+  animation: live-pulse 3.2s ease-in-out infinite;
 }
 
 /* Le bandeau du bas, sur les grandes cartes : « En direct · 4 120 spectateurs ». */
@@ -959,11 +959,19 @@ input:focus-visible {
   border-radius: 50%;
   background: #fff;
   box-shadow: 0 0 7px rgba(255, 255, 255, .95);
-  animation: live-pulse 1.9s ease-in-out infinite;
+  /* Sur une carte, le point **marque** : il ne pulse pas. Des dizaines de
+     cartes Live à l'écran, toutes en phase, feraient clignoter la page. */
+  animation: none;
 }
 
-@keyframes live-pulse { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .card-live i { animation: none; } }
+/*
+ * La pastille « en direct ». Elle vit sur plusieurs dizaines d'éléments à la
+ * fois (chaque carte Live, chaque bandeau) et **toutes en phase** : une
+ * pulsation franche devient un clignotement à l'échelle de l'écran. D'où un
+ * rythme lent et une amplitude courte — on voit qu'elle respire, on ne la subit
+ * pas.
+ */
+@keyframes live-pulse { 0%, 100% { opacity: .7; } 50% { opacity: 1; } }
 
 /* La nameplate : opaque, pleine largeur, collée au bas de la planche. */
 .card-nameplate {
@@ -1020,6 +1028,12 @@ input:focus-visible {
  * composant, donc sans re-rendu) ; au repos, il reste un reflet diagonal fixe.
  * `mix-blend-mode: overlay` fait luire ce qu'il y a sous lui (le portrait) au
  * lieu de poser un voile gris dessus.
+ *
+ * Règle de tenue : **un reflet, pas une enseigne**. Les lueurs restent larges,
+ * peu contrastées, et **rien ne défile tout seul** — une animation perpétuelle
+ * sur une carte qu'on regarde longtemps fatigue l'œil (retour du 7 octobre
+ * 2026 : des bandes de couleurs qui balaient l'écran, « comme une vieille
+ * télé »). Le brillant vient du geste : on incline, on glisse le doigt.
  */
 .card-foil {
   position: absolute;
@@ -1030,44 +1044,46 @@ input:focus-visible {
   mix-blend-mode: overlay;
 }
 
-.creator-card.is-shiny .card-foil { opacity: .8; }
+.creator-card.is-shiny .card-foil { opacity: .55; }
 .creator-card.is-shiny::after { border-color: color-mix(in srgb, var(--rarity) 78%, #fff 10%); }
 
 .creator-card.variant-holo .card-foil {
   background: radial-gradient(
     circle at var(--px, 32%) var(--py, 18%),
-    rgba(255, 255, 255, .95) 0%,
-    rgba(120, 255, 240, .6) 16%,
-    rgba(255, 140, 240, .5) 30%,
-    rgba(255, 240, 150, .45) 43%,
-    rgba(255, 255, 255, 0) 66%);
+    rgba(255, 255, 255, .6) 0%,
+    rgba(120, 255, 240, .3) 20%,
+    rgba(255, 140, 240, .24) 36%,
+    rgba(255, 240, 150, .18) 50%,
+    rgba(255, 255, 255, 0) 72%);
 }
 
 .creator-card.variant-gold .card-foil {
   background: radial-gradient(
     circle at var(--px, 32%) var(--py, 18%),
-    rgba(255, 255, 255, .9) 0%,
-    rgba(255, 226, 150, .62) 20%,
-    rgba(255, 176, 60, .5) 38%,
-    rgba(255, 255, 255, 0) 70%);
+    rgba(255, 255, 255, .62) 0%,
+    rgba(255, 226, 150, .38) 22%,
+    rgba(255, 176, 60, .28) 42%,
+    rgba(255, 255, 255, 0) 74%);
 }
 
-/* La Live est une diffusion, pas une dorure : bandes horizontales type
-   interférence d'écran, qui balaient lentement. */
+/* La Live est une diffusion, pas une dorure : une lueur magenta, large et
+   douce, qui suit le geste comme les autres variantes. Pas de bandes, pas de
+   défilement : c'est ce qui donnait l'impression d'un vieil écran à tube. */
 .creator-card.variant-live .card-foil {
-  background: repeating-linear-gradient(
-    180deg,
-    rgba(255, 255, 255, .5) 0 1px,
-    rgba(255, 60, 150, 0) 1px 4px,
-    rgba(255, 110, 190, .42) 4px 5px,
-    rgba(255, 60, 150, 0) 5px 9px);
-  background-size: 100% 220%;
-  animation: foil-sweep 6s linear infinite;
+  background: radial-gradient(
+    circle at var(--px, 32%) var(--py, 18%),
+    rgba(255, 255, 255, .55) 0%,
+    rgba(255, 105, 180, .34) 22%,
+    rgba(190, 90, 255, .22) 40%,
+    rgba(255, 255, 255, 0) 72%);
 }
 
-.creator-card.variant-live { box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 0 26px -8px rgba(255, 75, 158, .55), 0 14px 26px -16px rgba(0, 0, 0, .95); }
-@keyframes foil-sweep { from { background-position: 0 0; } to { background-position: 0 100%; } }
-@media (prefers-reduced-motion: reduce) { .creator-card.variant-live .card-foil { animation: none; } }
+.creator-card.variant-live { box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 0 22px -10px rgba(255, 75, 158, .45), 0 14px 26px -16px rgba(0, 0, 0, .95); }
+
+/* Le réglage « Reflets des cartes » (onglet Toi → menu) coupe **tout** le
+   reflet, pas seulement le gyroscope : si le joueur dit stop, la carte
+   redevient une image fixe. */
+[data-card-fx="off"] .card-foil { display: none; }
 
 /* L'écran de révélation : la carte arrive, puis flotte une seule fois. Aucune
    animation perpétuelle — c'est une carte posée sur un comptoir. */
@@ -1578,7 +1594,7 @@ input:focus-visible {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 8px rgb(var(--accent-rgb) / .9);
-  animation: live-pulse 1.9s ease-in-out infinite;
+  animation: live-pulse 3.2s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) { .reveal-name .reveal-live i { animation: none; } }
 /* La dernière carte du tirage est la garantie : elle se nomme. */
