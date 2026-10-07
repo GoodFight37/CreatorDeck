@@ -50,6 +50,14 @@ const REFRESH = read("supabase", "functions", "refresh-live", "index.ts");
 const ANDROID_GRADLE = read("android", "app", "build.gradle");
 const MANIFEST = read("android", "app", "src", "main", "AndroidManifest.xml");
 const VERIFIER = read("scripts", "verify-supabase-migrations.mjs");
+const ETAT_SQL = read("supabase", "migrations", "0024_push_state.sql");
+// Le SQL sans ses commentaires : une explication qui cite une règle n'est pas
+// la règle (même piège que plus haut, avec `--`).
+const ETAT_CODE = ETAT_SQL.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n");
+const MAGASIN = stripComments(read("src", "lib", "cloud", "store", "account.ts"));
+const CARNET = read("src", "components", "notifications-sheet.tsx");
 const PACKAGE = JSON.parse(read("package.json")) as {
   dependencies: Record<string, string>;
 };
@@ -179,6 +187,70 @@ describe("notify-live (la fonction qui envoie)", () => {
   });
 });
 
+describe("0024_push_state.sql (l'interrupteur dit la vérité)", () => {
+  it("ne fait que lire : aucune écriture, aucun droit sur les tables", () => {
+    // La fonction existe pour **relire** l'état ; si elle écrivait, le
+    // lancement de l'application modifierait des données — ce qu'aucun écran
+    // d'affichage ne doit faire.
+    expect(ETAT_CODE).not.toMatch(/\b(insert|update|delete)\b/i);
+    expect(ETAT_CODE).toContain("create or replace function public.push_state()");
+    expect(ETAT_CODE).toContain("security definer");
+  });
+
+  it("reste fermée au visiteur et ouverte au compte connecté", () => {
+    expect(ETAT_CODE).toContain("revoke all on function public.push_state() from public, anon");
+    expect(ETAT_CODE).toMatch(/grant execute on function public\.push_state\(\) to authenticated/);
+  });
+
+  it("répond « rien à prévenir » plutôt que de lever, sans identité", () => {
+    // Un visiteur n'a pas d'erreur à voir : il n'a simplement aucune
+    // notification à recevoir.
+    expect(ETAT_CODE).toMatch(/if v_user is null then[\s\S]*?'live', false/);
+  });
+});
+
+describe("l'interrupteur des notifications ne ment plus", () => {
+  it("est relu au lancement, depuis le serveur", () => {
+    // Défaut du 7 octobre : l'état vivait en mémoire seulement, donc chaque
+    // ouverture affichait « éteint » alors que le serveur notifiait toujours.
+    expect(MAGASIN).toContain("async syncPushState()");
+    expect(MAGASIN).toContain("api.pushState()");
+    expect(CARNET).toContain("cloudStore.syncPushState()");
+    // Le lancement aussi : c'est exactement le cas du défaut — l'appareil était
+    // déjà inscrit, donc rien n'était réinscrit, donc rien n'était relu.
+    expect(read("src", "hooks", "use-push.ts")).toContain("cloudStore.syncPushState()");
+  });
+
+  it("n'invente pas l'état quand la lecture échoue (hors ligne)", () => {
+    // `syncPushState` laisse `pushLive` inconnu : afficher « éteint » serait
+    // exactement le mensonge qu'on répare.
+    const corps = MAGASIN.slice(MAGASIN.indexOf("async syncPushState()"));
+    expect(corps.slice(0, 700)).not.toContain("pushLive: false");
+  });
+
+  it("ne parle au serveur que si l'interrupteur change vraiment", () => {
+    // L'état est relu avant, sinon l'interrupteur pourrait être allumé côté
+    // écran et éteint côté serveur : le clic parlerait dans le vide.
+    const corps = MAGASIN.slice(MAGASIN.indexOf("async setPushLive(enabled"));
+    expect(corps.slice(0, 900).indexOf("syncPushState()")).toBeLessThan(
+      corps.indexOf("setPushLive(enabled)"),
+    );
+  });
+
+  it("ne demande pas la permission à l'ouverture de l'application", () => {
+    // Une demande de permission qui surgit au lancement se fait refuser — et
+    // un refus est définitif : Android ne la repose plus jamais. C'est
+    // l'interrupteur du carnet qui demande.
+    expect(PUSH).toMatch(/export async function requestPushToken\(silent = false\)/);
+    expect(PUSH).toMatch(/if \(aDemander && silent\)/);
+    const corps = PUSH.slice(PUSH.indexOf("const aDemander"));
+    expect(corps.indexOf("aDemander && silent")).toBeLessThan(
+      corps.indexOf("requestPermissions()"),
+    );
+    expect(MAGASIN).toContain("requestPushToken(quiet)");
+  });
+});
+
 describe("branchement du direct", () => {
   it("`refresh-live` déclenche les notifications sans en dépendre", () => {
     expect(REFRESH).toContain("async function notifyLive()");
@@ -187,9 +259,11 @@ describe("branchement du direct", () => {
     expect(REFRESH).toContain('params.get("push") === "1"');
   });
 
-  it("le vérificateur SQL éprouve `0023`", () => {
+  it("le vérificateur SQL éprouve `0023` et `0024`", () => {
     expect(VERIFIER).toContain("0023_notifications.sql");
     expect(VERIFIER).toContain("push_targets()");
+    expect(VERIFIER).toContain("0024_push_state.sql");
+    expect(VERIFIER).toContain("push_state()");
   });
 });
 

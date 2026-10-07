@@ -208,6 +208,12 @@ export type CloudState = {
    * sait rien (pas de greffon, pas de compte, pas encore inscrit).
    */
   pushLive: boolean | null;
+  /**
+   * Sur combien d'appareils le compte reçoit les notifications. `null` tant
+   * qu'on ne le sait pas : c'est ce que le serveur répond au lancement
+   * (`0024_push_state.sql`), sans quoi l'interrupteur affiche un état inventé.
+   */
+  pushDevices: number | null;
   /** Une inscription ou un changement d'interrupteur est en cours. */
   pushBusy: boolean;
 };
@@ -336,6 +342,7 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   arenaAt: null,
   arenaBusy: false,
   pushLive: null,
+  pushDevices: null,
   pushBusy: false,
 });
 

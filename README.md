@@ -70,7 +70,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 10.2 | Last Pack (5 cartes, 10 min, un ami en vole une) | **livré** | `0012_last_pack.sql`, `src/lib/last-pack.ts` |
 | 10.3 | Pity, jetons, missions, série, Prime Time | **livré** | `0013_progression.sql`, `src/lib/progression.ts` |
 | 10.4 | Paquet Scène + wishlist publique épinglée | **livré** | `0014_scene_pack.sql`, `0015_wishlist.sql` |
-| 10.8 | Notifications de direct (push FCM) | **livré** | `0023_notifications.sql`, `supabase/functions/notify-live`, `src/lib/push.ts` |
+| 10.8 | Notifications de direct (push FCM) | **livré** | `0023_notifications.sql`, `0024_push_state.sql`, `supabase/functions/notify-live`, `src/lib/push.ts` |
 | 10.5 | Overlay 16:9 + révélation sadique | **livré** | `src/lib/reveal.ts`, `src/components/reveal-overlay.tsx`, `/overlay` |
 | 10.6 | Catalogue désirable : Top 1000 + les Sortants | **livré** | `src/lib/retired.ts`, `0016_sortants.sql`, `docs/catalogue-twitch.md` § « Les Sortants » |
 | 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
@@ -112,7 +112,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0023` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0024` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -121,7 +121,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**688 tests**, 46 fichiers aujourd'hui).
+  (**695 tests**, 46 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -144,7 +144,7 @@ Trois étages, trois vitesses :
   Légendaire refusé, le journal qui ne fait pas monter le plancher de
   malchance — et la **wishlist** — un second épinglé qui remplace le premier,
   la lecture par un autre joueur, l'écriture directe fermée
-  (**343 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  (**347 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
   le tirage rangé dans la collection et les notifications — jetons fermés,
   intéressés seuls, une par heure).
 
@@ -182,6 +182,7 @@ src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellé
 src/lib/push.ts          notifications côté appareil : permission, jeton FCM,
                          canal Android, appui sur une notification (testé)
 src/lib/supabase-notify.test.ts  garde-fou : jetons fermés, fenêtres de 0023,
+                         son et canal du direct, état relu en 0024,
                          Edge Function réservée au service, réglages Android
 src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
                          doivent être ceux de 0011_direct.sql
@@ -225,7 +226,7 @@ e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont 
                          qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0023` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0024` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),

@@ -45,7 +45,8 @@
  *   * les notifications : un jeton s'inscrit et se retire, la table reste
  *     fermée au client, et `push_targets()` ne réveille que les intéressés
  *     (épinglé ou carte possédée) — une fois, pour un direct frais, jamais
- *     réveillés deux fois d'affilée ;
+ *     réveillés deux fois d'affilée ; l'état de l'interrupteur se relit
+ *     (`push_state()`) sans rien changer et sans rien dire d'un visiteur ;
  *   * les saisons : chaque créateur porte sa famille, les familles se partagent
  *     exactement le catalogue, la complétion par famille suit les cartes
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
@@ -137,6 +138,7 @@ try {
   const provenance = await readFile(path.join(MIGRATIONS, "0021_provenance.sql"), "utf8");
   const packDansSaves = await readFile(path.join(MIGRATIONS, "0022_pack_dans_saves.sql"), "utf8");
   const notifications = await readFile(path.join(MIGRATIONS, "0023_notifications.sql"), "utf8");
+  const etatPush = await readFile(path.join(MIGRATIONS, "0024_push_state.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -161,6 +163,7 @@ try {
     ["0021_provenance.sql", provenance],
     ["0022_pack_dans_saves.sql", packDansSaves],
     ["0023_notifications.sql", notifications],
+    ["0024_push_state.sql", etatPush],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -841,6 +844,55 @@ try {
   check(
     "notifications : l'interrupteur rallumé les réveille",
     (await client.query("select count(*)::int as n from public.push_targets()")).rows[0].n === 2,
+  );
+
+  // L'état se **relit** : c'est ce qui manquait le 7 octobre — au lancement,
+  // l'application ne savait rien et affichait un interrupteur éteint, alors que
+  // le serveur notifiait toujours. La lecture ne change rien (le décompte de
+  // `push_log` ne bouge pas) et reste fermée au visiteur.
+  const etatPaul = async () =>
+    (await asPlayer(PAUL, "select public.push_state() as r")).rows[0].r;
+  const journalAvantLecture = (
+    await client.query("select count(*)::int as n from public.push_log where user_id = $1", [PAUL])
+  ).rows[0].n;
+  const lectureUn = await etatPaul();
+  const lectureDeux = await etatPaul();
+  check(
+    "notifications : l'état se relit au lancement (`push_state`), sans rien changer",
+    lectureUn.live === true &&
+      lectureDeux.devices === 2 &&
+      // Relire ne consomme **rien** : le journal reste exactement le même.
+      (await client.query("select count(*)::int as n from public.push_log where user_id = $1", [PAUL]))
+        .rows[0].n === journalAvantLecture,
+  );
+  check(
+    "notifications : l'état relu suit l'interrupteur, compte par compte",
+    (await asPlayer(BRUNO, "select public.push_state() as r")).rows[0].r.devices === 1 &&
+      (await asPlayer(PAUL, "select public.set_push_live(false) as r")).rows[0].r.ok === true &&
+      (await etatPaul()).live === false &&
+      (await asPlayer(PAUL, "select public.set_push_live(true) as r")).rows[0].r.ok === true &&
+      (await etatPaul()).live === true,
+  );
+  check(
+    "notifications : sans compte, l'état ne dit rien de personne",
+    (await asPlayer(null, "select public.push_state() as r")).rows[0].r.live === false &&
+      (await asPlayer(null, "select public.push_state() as r")).rows[0].r.devices === 0,
+  );
+  const etatVisiteur = await (async () => {
+    await client.query("set role anon");
+    try {
+      await client.query("select public.push_state()");
+      return "appelable";
+    } catch (error) {
+      return String(error.message || "");
+    } finally {
+      await client.query("reset role");
+    }
+  })();
+  check(
+    "notifications : `push_state()` reste hors de portée d'un visiteur",
+    etatVisiteur.includes("permission denied"),
+    etatVisiteur,
   );
 
   // Un direct vieux de 45 minutes n'est plus « frais », un direct à zéro

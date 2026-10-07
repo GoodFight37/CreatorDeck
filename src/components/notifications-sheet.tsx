@@ -58,6 +58,10 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
     // Recharger d'abord, marquer comme lu ensuite : la dernière visite porte
     // ainsi sur ce qui vient d'être lu à l'écran.
     void cloudStore.loadInbox().then(() => cloudStore.markInboxSeen());
+    // L'interrupteur des notifications se relit au serveur : l'état ne vit pas
+    // dans la sauvegarde, et deviner « éteint » serait mentir (défaut du
+    // 7 octobre : il affichait éteint alors que les notifications marchaient).
+    void cloudStore.syncPushState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -145,8 +149,12 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
               {cloud.pushBusy
                 ? "Un instant…"
                 : cloud.pushLive === true
-                  ? "Tu reçois une notification quand un créateur que tu épingles ou dont tu as une carte passe en direct. Une par heure au maximum."
-                  : "Quand un créateur que tu épingles ou dont tu as une carte passe en direct, ton téléphone sonne. Une fois par heure au maximum."}
+                  ? `Tu reçois une notification quand un créateur que tu épingles ou dont tu as une carte passe en direct. Une par heure au maximum.${
+                      cloud.pushDevices && cloud.pushDevices > 1 ? ` Sur ${cloud.pushDevices} appareils.` : ""
+                    }`
+                  : cloud.pushLive === null
+                    ? "Touche l'interrupteur : Android te demandera l'autorisation, et c'est elle qui fait sonner le téléphone."
+                    : "Quand un créateur que tu épingles ou dont tu as une carte passe en direct, ton téléphone sonne. Une fois par heure au maximum."}
             </p>
           </section>
         ) : null}

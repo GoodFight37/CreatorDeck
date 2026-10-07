@@ -359,6 +359,22 @@ export async function registerPushToken(
   await core.rpc("register_push_token", { p_token: token, p_platform: platform });
 }
 
+/**
+ * L'état des notifications du compte : l'interrupteur est-il allumé, et sur
+ * combien d'appareils (`0024_push_state.sql`). Une **lecture**, rien d'autre —
+ * c'est ce qui manquait pour que l'écran ne mente plus au lancement (le 7
+ * octobre, l'interrupteur revenait éteint à chaque ouverture alors que le
+ * serveur, lui, notifiait toujours).
+ */
+export async function pushState(core: CloudCore): Promise<{ live: boolean; devices: number }> {
+  const result = await core.rpc("push_state", {});
+  const record = asRecord(result);
+  return {
+    live: record?.live === true,
+    devices: Number(record?.devices ?? 0),
+  };
+}
+
 /** Retire le jeton de cet appareil (déconnexion explicite). */
 export async function forgetPushToken(core: CloudCore, token: string): Promise<void> {
   await core.rpc("forget_push_token", { p_token: token });

@@ -40,7 +40,7 @@ export const LIVE_CHANNEL_ID = "creatordeck-live-v2";
 /** Combien de temps on attend le jeton du greffon avant d'abandonner. */
 const TOKEN_TIMEOUT_MS = 10_000;
 
-export type PushRefusal = "absent" | "refuse" | "erreur";
+export type PushRefusal = "absent" | "refuse" | "erreur" | "demande";
 
 export type PushTokenResult =
   | { status: "ok"; token: string }
@@ -56,10 +56,18 @@ export function pushSupported(): boolean {
 }
 
 /**
- * Demande la permission (si nécessaire), enregistre l'appareil auprès de
- * Firebase et rend le jeton. Ne lève jamais : un refus est une réponse.
+ * Enregistre l'appareil auprès de Firebase et rend son jeton. Ne lève jamais :
+ * un refus est une réponse.
+ *
+ * `silent` : **ne pas ouvrir** la boîte de dialogue de permission Android.
+ * C'est le mode du lancement de l'application — une demande de permission ne
+ * doit pas surgir à l'ouverture, et surtout pas un geste que le joueur n'a pas
+ * demandé (Android la refuse souvent d'office, puis ne la repose plus jamais :
+ * la notification reste coupée à vie). En mode silencieux, si la permission
+ * n'est pas déjà accordée, on rend `demande` et on s'arrête là ; c'est
+ * l'interrupteur du carnet qui la demandera.
  */
-export async function requestPushToken(): Promise<PushTokenResult> {
+export async function requestPushToken(silent = false): Promise<PushTokenResult> {
   if (!pushSupported()) {
     return {
       status: "refusal",
@@ -70,10 +78,15 @@ export async function requestPushToken(): Promise<PushTokenResult> {
 
   try {
     const existing = await PushNotifications.checkPermissions();
-    const permission =
-      existing.receive === "prompt" || existing.receive === "prompt-with-rationale"
-        ? await PushNotifications.requestPermissions()
-        : existing;
+    const aDemander = existing.receive === "prompt" || existing.receive === "prompt-with-rationale";
+    if (aDemander && silent) {
+      return {
+        status: "refusal",
+        reason: "demande",
+        message: "Touche l'interrupteur des notifications pour les autoriser.",
+      };
+    }
+    const permission = aDemander ? await PushNotifications.requestPermissions() : existing;
     if (permission.receive !== "granted") {
       return {
         status: "refusal",

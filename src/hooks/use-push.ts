@@ -35,7 +35,14 @@ export function usePush(): void {
     // installation, nettoyage) repasse par l'inscription au lancement suivant.
     // Silencieux : un échec ici (Firebase pas encore branché) ne mérite pas un
     // message à chaque ouverture — l'interrupteur du carnet, lui, explique.
-    if (readPushToken(deviceStorage())) return;
+    if (readPushToken(deviceStorage())) {
+      // Déjà inscrit : rien à faire côté appareil, mais l'état de l'interrupteur
+      // n'est **pas** dans la sauvegarde — il vit sur le serveur. Sans cette
+      // relecture, rouvrir l'application affichait « éteint » alors que les
+      // notifications marchaient (défaut du 7 octobre, `0024_push_state.sql`).
+      void cloudStore.syncPushState();
+      return;
+    }
     void cloudStore.registerPush({ silent: true });
   }, [userId]);
 

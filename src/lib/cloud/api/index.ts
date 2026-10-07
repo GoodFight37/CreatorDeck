@@ -414,6 +414,11 @@ export class CloudApi {
     return account.registerPushToken(this.core, token, platform);
   }
 
+  /** L'état des notifications du compte : lecture seule (`0024`). */
+  async pushState(): Promise<{ live: boolean; devices: number }> {
+    return account.pushState(this.core);
+  }
+
   /** Retire le jeton de cet appareil : plus rien n'arrive ici. */
   async forgetPushToken(token: string): Promise<void> {
     return account.forgetPushToken(this.core, token);

@@ -1418,6 +1418,7 @@ vient de lancer son live ?* Le push répond à ça, et à rien d'autre.
 | Pièce | Rôle |
 | --- | --- |
 | `0023_notifications.sql` | la **décision** : quels appareils réveiller (`push_targets()`), le journal anti-doublon (`push_log`), les jetons (`push_tokens`) |
+| `0024_push_state.sql` | la **relecture** : `push_state()` dit si le compte reçoit les notifications et sur combien d'appareils — l'interrupteur du carnet ne peut plus afficher un état inventé au lancement |
 | `supabase/functions/notify-live` | l'**envoi** : parle à Firebase (FCM HTTP v1), retire les jetons morts |
 
 `refresh-live` appelle `notify-live` **après** avoir publié le direct (best-effort :
@@ -1524,6 +1525,26 @@ Sur un téléphone où l'ancien canal existe déjà, deux voies : régler le son
 canal « Directs » à la main (Paramètres → Applications → CreatorDeck →
 Notifications → canal → Son) pour l'ancien, ou **réinstaller l'APK** pour que le
 canal v2 naisse avec le son du jeu.
+
+**L'interrupteur qui revenait éteint** (même journée, deuxième défaut signalé par
+le joueur : « à chaque fois que je ferme et que j'ouvre l'appli, la notification
+est désactivée »). Il n'était pas éteint : il était **inconnu**. `pushLive` vit
+en mémoire, pas dans la sauvegarde ; au lancement il vaut `null`, et l'écran
+affichait un interrupteur éteint. Le serveur, lui, notifiait toujours. Trois
+choses ont changé :
+
+* `0024_push_state.sql` ajoute `push_state()` : une **lecture** pure (aucune
+  écriture, aucun droit sur `push_tokens`, refusée au visiteur) qui dit si le
+  compte reçoit les notifications et sur combien d'appareils. Le carnet la lit
+  à l'ouverture, et l'inscription silencieuse du lancement la relit aussi ;
+* l'interrupteur **relit avant d'écrire** : `set_push_live` a la garantie « ne
+  rien changer si l'état est identique » (c'est ce qui empêche de mentir sur
+  « modifié »), donc écrire sans relire pouvait viser un état périmé ;
+* **plus aucune demande de permission au lancement.** Une boîte de dialogue qui
+  surgit à l'ouverture se fait refuser — et un refus Android est définitif. Le
+  lancement est silencieux (`requestPushToken(silent)`), c'est l'interrupteur du
+  carnet qui demande. L'écran distingue donc trois états : allumé, coupé,
+  *pas encore autorisé* (et il le dit).
 
 * idées non engagées : échanges avec plusieurs partenaires à la fois,
   historique complet des échanges, recherche de joueur par slug de créateur,

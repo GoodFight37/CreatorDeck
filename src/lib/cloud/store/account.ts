@@ -372,7 +372,7 @@ export function accountActions(ctx: CloudStoreContext) {
       if (!api || !api.session()) return;
 
       ctx.publish({ pushBusy: true });
-      const permission = await requestPushToken();
+      const permission = await requestPushToken(quiet);
       if (permission.status === "refusal") {
         ctx.publish({
           pushBusy: false,
@@ -387,6 +387,10 @@ export function accountActions(ctx: CloudStoreContext) {
       try {
         await api.registerPushToken(permission.token, "android");
         writePushToken(ctx.deps.storage(), permission.token);
+        // L'inscription a réussi : on redit l'état depuis le serveur, plutôt
+        // que de le supposer. C'est la même lecture qu'au lancement, donc le
+        // nombre d'appareils ne peut pas dériver.
+        await ctx.actions.syncPushState();
         ctx.publish({
           pushBusy: false,
           pushLive: true,
@@ -405,6 +409,30 @@ export function accountActions(ctx: CloudStoreContext) {
             ? { pushBusy: false }
             : { pushBusy: false, message: refusal.message, isError: true },
         );
+      }
+    },
+
+    /**
+     * Relit l'état des notifications **tel que le serveur le connaît**.
+     *
+     * L'écran ne peut pas le deviner : `pushLive` vit en mémoire, pas dans la
+     * sauvegarde. Sans cette lecture, chaque ouverture de l'application
+     * affichait un interrupteur éteint — alors que le serveur notifiait
+     * toujours (défaut signalé le 7 octobre).
+     *
+     * Silencieuse par principe : c'est une lecture d'arrière-plan à chaque
+     * lancement. Un échec (hors ligne) laisse `pushLive` inconnu plutôt que de
+     * coller un message, et le joueur qui veut savoir touche l'interrupteur.
+     */
+    async syncPushState(): Promise<boolean> {
+      const api = ctx.resolve();
+      if (!api || !api.session()) return false;
+      try {
+        const { live, devices } = await api.pushState();
+        ctx.publish({ pushLive: live, pushDevices: devices });
+        return true;
+      } catch {
+        return false;
       }
     },
 
@@ -428,6 +456,11 @@ export function accountActions(ctx: CloudStoreContext) {
 
       ctx.publish({ pushBusy: true });
       try {
+        // Relire d'abord : `set_push_live` n'écrit que si l'état **change**
+        // (sinon il ne touche pas à `updated_at`, et l'application dirait
+        // faussement « modifié »). Publier l'état du serveur avant de toucher
+        // l'interrupteur garantit que la comparaison porte sur du vrai.
+        await ctx.actions.syncPushState();
         // Réinscrire le jeton connu : il a pu être déplacé par une connexion
         // sur un autre appareil, et `set_push_live` ne touche que les lignes du
         // compte connecté.
@@ -437,6 +470,7 @@ export function accountActions(ctx: CloudStoreContext) {
         ctx.publish({
           pushBusy: false,
           pushLive: enabled,
+          pushDevices: devices,
           message: enabled
             ? "Notifications de direct activées."
             : devices > 0
@@ -510,6 +544,7 @@ export function accountActions(ctx: CloudStoreContext) {
         arenaAt: null,
         arenaBusy: false,
         pushLive: null,
+        pushDevices: null,
         pushBusy: false,
         message: "Déconnecté. La partie continue en local, exactement comme avant.",
         isError: false,
