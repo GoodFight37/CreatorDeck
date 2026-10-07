@@ -6,6 +6,7 @@ import type { FriendLists } from "@/lib/social/friends";
 import {
   bestCardOf,
   buildInbox,
+  friendsOpenedRecently,
   describeTrade,
   INBOX_LIMIT,
   mergeInbox,
@@ -218,6 +219,32 @@ describe("le carnet de notifications", () => {
   it("garde une visite par joueur", () => {
     expect(seenKey("u1")).not.toBe(seenKey("u2"));
     expect(seenKey("u1")).toContain("u1");
+  });
+
+  it("compte les amis qui ont ouvert un booster il y a moins d'une heure", () => {
+    // L'aiguille de l'accueil : des **personnes**, pas des paquets — Diane qui
+    // ouvre deux boosters reste une amie.
+    const now = Date.parse("2026-10-03T12:00:00Z");
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack(), pack({ id: 4, ownerName: "Diane", drawnAt: "2026-10-03T11:50:00Z" }), pack({ id: 5, ownerName: "Marc", drawnAt: "2026-10-03T11:10:00Z" })] }),
+      now,
+    });
+    const vu = friendsOpenedRecently(items, now);
+    expect(vu.count).toBe(2); // Diane (×2) et Marc
+    expect(vu.latestAt).toBe("2026-10-03T11:58:00Z");
+  });
+
+  it("oublie un ami dont l'ouverture a plus d'une heure", () => {
+    const now = Date.parse("2026-10-03T12:00:00Z");
+    const items = buildInbox({
+      trades: [],
+      friends: friends(),
+      lastPackShelf: shelf({ packs: [pack({ id: 6, ownerName: "Marc", drawnAt: "2026-10-03T10:00:00Z" })] }),
+      now,
+    });
+    expect(friendsOpenedRecently(items, now)).toEqual({ count: 0, latestAt: null });
   });
 
   it("écrit un échange en français", () => {

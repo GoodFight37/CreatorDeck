@@ -336,6 +336,36 @@ export function unreadCount(items: InboxItem[], seenAt: string | null): number {
   return items.filter((item) => Date.parse(item.at) > since).length;
 }
 
+/**
+ * « N amis ont ouvert un booster il y a moins d'une heure » — l'aiguille de
+ * preuve sociale de l'accueil.
+ *
+ * Elle se lit dans le carnet, sans rien demander de plus au serveur : les lignes
+ * `friend_pack` portent déjà **qui** a ouvert, **quand**, et la source
+ * (`last_pack_shelf`) ne contient que des ouvertures encore fraîches. Un ami
+ * compté deux fois (deux boosters ouverts) ne compte qu'une fois : la phrase
+ * parle de **personnes**, pas de paquets.
+ *
+ * Le tri par date et la fenêtre vivent ici, purs, pour que l'accueil et les
+ * tests regardent la même règle.
+ */
+export function friendsOpenedRecently(
+  items: readonly InboxItem[],
+  now: number,
+  windowMs = 3_600_000,
+): { count: number; latestAt: string | null } {
+  const noms = new Set<string>();
+  let latestAt: string | null = null;
+  for (const item of items) {
+    if (item.kind !== "friend_pack") continue;
+    const at = Date.parse(item.at);
+    if (!Number.isFinite(at) || now - at > windowMs) continue;
+    noms.add(item.who ?? item.id);
+    if (!latestAt || item.at > latestAt) latestAt = item.at;
+  }
+  return { count: noms.size, latestAt };
+}
+
 /** Où l'on garde la dernière visite du carnet, pour un joueur donné. */
 export function seenKey(userId: string): string {
   return `creatordeck.inbox.seen.${userId}`;

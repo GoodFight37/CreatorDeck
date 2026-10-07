@@ -118,6 +118,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
 | 11.7 | Trois gestes qui en font trois de moins : **Tout recycler** dans l'Atelier (le serveur paie, carte par carte, et les doublons **Live** restent en place), la **fiche créateur** au clic sur une carte du classeur, et **Tout réclamer** (missions puis familles, l'une après l'autre) | **livrée** | `src/lib/game-engine.ts` (`bulkRecyclableIds`), `src/hooks/use-points.ts` (`recycleAll`), `src/components/atelier-view.tsx`, `src/components/card-inspect-modal.tsx`, `src/components/creator-card.tsx` |
 | 11.8 | La surcharge de `_wallet_apply` retirée : deux versions de la même fonction laissaient l'appel ambigu et **le booster ne s'ouvrait plus** | **livrée** | `0029_wallet_surcharge.sql`, `scripts/verify-supabase-migrations.mjs` (l'accident est rejoué, puis réparé) |
+| 11.9 | L'aiguille de preuve sociale : « N amis ont ouvert un booster il y a moins d'une heure » sur l'accueil (lue dans le carnet, **aucun appel serveur en plus**), qui ouvre le carnet au clic | **livrée** | `src/lib/social/inbox.ts` (`friendsOpenedRecently`), `src/components/creator-deck-app.tsx` |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -162,7 +163,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**784 tests**, 52 fichiers aujourd'hui).
+  (**787 tests**, 52 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte

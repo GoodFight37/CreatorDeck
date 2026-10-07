@@ -1348,6 +1348,9 @@ input:focus-visible {
   opacity: .5;
   cursor: default;
 }
+/* La ligne des amis sur l'accueil : une information, pas une alerte. */
+.friends-row { color: #cfe3ff; }
+.friends-row svg:first-child { color: #8fb8ff; }
 /* La question posée avant de recycler un doublon Live : dans la ligne, pas de fenêtre. */
 .atelier-confirm {
   display: flex;

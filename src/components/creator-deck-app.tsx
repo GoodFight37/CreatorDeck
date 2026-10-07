@@ -5,7 +5,6 @@ import Image from "next/image";
 import {
   BadgeInfo,
   BookOpen,
-  Share2,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -14,15 +13,18 @@ import {
   ClipboardPaste,
   Clock3,
   Coins,
+  FlaskConical,
   Gem,
   Hammer,
   Home,
   Hourglass,
   Layers3,
   LoaderCircle,
+  Paintbrush,
   Radio,
   RotateCcw,
   Search,
+  Share2,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -30,10 +32,9 @@ import {
   Ticket,
   Trophy,
   Unlock,
+  Users,
   Volume2,
   VolumeX,
-  FlaskConical,
-  Paintbrush,
   WifiOff,
   X,
   Zap,
@@ -44,6 +45,7 @@ import { MarketSheet } from "@/components/market-sheet";
 import { LastPackSheet } from "@/components/last-pack-sheet";
 import { ArenaSheet } from "@/components/arena-sheet";
 import { NotificationsSheet } from "@/components/notifications-sheet";
+import { friendsOpenedRecently } from "@/lib/social/inbox";
 import { AtelierView } from "@/components/atelier-view";
 import { CreatorCard } from "@/components/creator-card";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
@@ -287,6 +289,8 @@ function PackArtwork() {
 
 function HomeView({
   game,
+  friendsOpening,
+  onShowInbox,
   onOpen,
   onUseHourglass,
   onShowOdds,
@@ -302,6 +306,10 @@ function HomeView({
   needsAccount,
 }: {
   game: GameState;
+  /** Combien d'amis ont ouvert un booster dans l'heure (0 = rien à dire). */
+  friendsOpening: number;
+  /** La ligne des amis ouvre le carnet, qui porte les ouvertures en détail. */
+  onShowInbox: () => void;
   onOpen: () => void;
   onOpenScene: () => void;
   sceneBusy: boolean;
@@ -518,6 +526,24 @@ function HomeView({
             {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
           </span>
         </div>
+        {friendsOpening > 0 ? (
+          <button
+            type="button"
+            className="pity-row friends-row"
+            onClick={onShowInbox}
+            aria-label={`Ouvrir le carnet : ${friendsOpening} ami${
+              friendsOpening > 1 ? "s ont" : " a"
+            } ouvert un booster il y a moins d'une heure`}
+          >
+            <Users size={14} />
+            <span>
+              {friendsOpening} ami{friendsOpening > 1 ? "s ont" : " a"} ouvert un booster · moins
+              d&apos;une heure
+            </span>
+            <ChevronRight size={14} />
+          </button>
+        ) : null}
+
         {retiredLeft > 0 ? (
           <button
             type="button"
@@ -1535,6 +1561,12 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 ];
 
 export function CreatorDeckApp() {
+  // L'aiguille de preuve sociale : « N amis ont ouvert un booster il y a moins
+  // d'une heure ». Elle se lit dans le carnet (aucun appel serveur en plus) et
+  // se recalcule à la minute, pour qu'elle disparaisse toute seule.
+  const { items: inboxItems } = useInbox();
+  const friendsNow = useNow(60_000);
+  const friendsOpening = friendsOpenedRecently(inboxItems, friendsNow).count;
   // Termine une connexion Twitch si l'on revient d'un aller-retour navigateur.
   useTwitchReturn();
   const state = useGame();
@@ -1828,6 +1860,8 @@ export function CreatorDeckApp() {
         {tab === "home" ? (
           <HomeView
             game={game}
+            friendsOpening={friendsOpening}
+            onShowInbox={() => setNotificationsOpen(true)}
             onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
