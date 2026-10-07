@@ -242,6 +242,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      **draft du week-end** (samedi 6 h → lundi 6 h UTC). Sans cette migration,
      l'écran Arène répond « fonction inconnue » ; le reste du jeu ne bouge pas.
      Détail : §8, « L'Arène ».
+   - [`supabase/migrations/0019_integrite.sql`](../supabase/migrations/0019_integrite.sql)
+     → **Run** pour fermer trois trous d'intégrité : l'écriture directe des
+     tables `saves`, `stats` et `pack_state` est **révoquée** aux rôles clients
+     (seul le serveur écrit, via `push_save()`), la **réserve de boosters** naît
+     côté serveur à trois et ne lit plus la sauvegarde du client, et une
+     sauvegarde qui déclare une **rareté inventée**, un **créateur hors
+     catalogue** ou des **identifiants en double** n'est plus classée (les
+     cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
    - [`supabase/migrations/0017_reinitialiser.sql`](../supabase/migrations/0017_reinitialiser.sql)
      → **Run** pour que « **Réinitialiser la progression** » (écran Toi → menu)
      rejoue vraiment la partie à zéro **en ligne aussi** : sans cette migration,
@@ -309,7 +317,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les dix-sept migrations** (`0001` à `0017`) pour de vrai, dans
+> Le script exécute **les dix-neuf migrations** (`0001` à `0019`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -466,14 +474,68 @@ la sauvegarde avec `public.creators`. Sans ce garde-fou, une sauvegarde
 inventant 900 slugs fabriquait une complétion de 90 % sans posséder une seule
 carte réelle. `total_cards`, lui, reste le compte brut de la sauvegarde.
 
+### L'intégrité côté serveur
+
+`0019_integrite.sql` ferme trois trous que la revue externe d'octobre 2026 a
+pointés, tous vérifiés dans le code avant d'être corrigés :
+
+- **La sauvegarde ne s'écrit plus en direct.** Jusqu'ici, un client pouvait
+  `insert`/`update`/`delete` sur `public.saves`, `public.stats` et
+  `public.pack_state` : les politiques RLS filtraient en silence, mais le droit
+  d'écrire existait. Il est **révoqué** à `anon` et `authenticated` ; seul le
+  serveur écrit, par `push_save()` (passée en `security definer`, elle prend
+  l'identité dans `auth.uid()`, jamais dans le corps envoyé). Le jeu ne change
+  pas : le client n'appelait déjà que des fonctions (`open_pack`, `push_save`).
+- **La réserve de boosters naît au serveur.** `open_pack()` recopiait `packs`
+  et `lastPackRegen` de `saves.state` à la création de la réserve : un client
+  pouvait s'offrir quatre boosters et une ancre vieille de deux heures avant son
+  premier tirage. La réserve naît maintenant à **trois boosters, maintenant**,
+  la ligne est verrouillée (`for update`) et le tirage ne lit plus la sauvegarde
+  du tout. `open_scene_pack()` prend en plus un verrou d'avis
+  (`pg_advisory_xact_lock`) pour que deux appels simultanés ne sortent pas deux
+  Paquets Scène du même jour. Un trigger `pack_state_guard` garde la réserve
+  dans ses bornes (0 à 4) et refuse une ancre dans le futur.
+- **Une rareté déclarée ne suffit plus à se classer.** `refresh_stats()`
+  appelait `save_problems()` : refus net, la sauvegarde entière était rejetée.
+  Il appelle désormais aussi `save_suspicions()`, qui **garde** la sauvegarde
+  mais la marque `verified = false` quand une carte annonce un créateur hors
+  catalogue, une rareté qui ne correspond pas au catalogue, ou des
+  identifiants en double. Le joueur conserve ses cartes ; il sort simplement du
+  classement. Bonus : `profile_name_reserve` interdit de prendre le pseudo d'un
+  créateur du catalogue, et `public.profiles` n'est plus lisible par le rôle
+  anonyme (énumération d'identifiants).
+
+> **À retenir si tu écris une migration.** Un `create or replace function`
+> réécrit la fonction **entière** : recopier la définition d'une migration
+> ancienne annule en silence toutes les migrations suivantes qui l'avaient
+> modifiée. `0019` reprend donc les **dernières** définitions — celle de
+> `0012` pour la garde du Last Pack, celle de `0016` pour l'exclusion des
+> Sortants du classement. En cas de doute :
+> `grep -n "create or replace function public.<nom>" supabase/migrations/*.sql`
+> et prendre la dernière.
+
+Le vérificateur `npm run supabase:verify` a été aligné sur la vraie manière dont
+Supabase accorde les droits : les privilèges de table sont posés **par défaut, à
+la naissance de la table** (`alter default privileges`), et non re-accordés
+après coup — sinon le harnais redonnait à `authenticated` ce qu'une migration
+venait de lui retirer, et le contrôle « la sauvegarde ne s'écrit plus en
+direct » passait au vert sans rien prouver. Ce détail a mis au jour trois
+contrôles qui passaient pour de mauvaises raisons (`user_cards` et
+`market_listings`, révoquées depuis `0006` et `0009`, étaient lues avec succès
+parce que le harnais les avait rendues lisibles) : ils attendent maintenant le
+refus, comme en production.
+
 ### Ce que le serveur ne vérifie pas (volontairement)
 
 Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
-contenu des boosters (et donc les cartes) est décidé par le serveur. Hors
-périmètre actuel : une sauvegarde trafiquée peut encore gonfler les compteurs
-de ressources — et, en trichant sur des créateurs **réels**, gonfler sa
-complétion. Ce qui n'est pas falsifiable, c'est ce qui passe par le serveur :
-le tirage et les échanges.
+contenu des boosters (et donc les cartes) est décidé par le serveur. Les
+**ressources** (points, sabliers, jetons) restent locales, et c'est assumé :
+elles n'ouvrent que du contenu solo. Depuis `0019`, une sauvegarde qui invente
+des **créateurs** ou des **raretés** est détectée et sort du classement ; ce qui
+reste ouvert, c'est une sauvegarde qui déclare des cartes **réelles et
+cohérentes** qu'elle n'a jamais tirées — elle gonflera sa complétion sans être
+démasquée. Ce qui n'est pas falsifiable, c'est ce qui passe par le serveur : le
+tirage, les échanges, la réserve de boosters et le classement.
 
 ### Le profil public, calculé par le serveur
 

@@ -128,6 +128,7 @@ try {
   const sortants = await readFile(path.join(MIGRATIONS, "0016_sortants.sql"), "utf8");
   const reinitialiser = await readFile(path.join(MIGRATIONS, "0017_reinitialiser.sql"), "utf8");
   const arena = await readFile(path.join(MIGRATIONS, "0018_arena.sql"), "utf8");
+  const integrite = await readFile(path.join(MIGRATIONS, "0019_integrite.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -147,18 +148,26 @@ try {
     ["0016_sortants.sql", sortants],
     ["0017_reinitialiser.sql", reinitialiser],
     ["0018_arena.sql", arena],
+    ["0019_integrite.sql", integrite],
   ];
+  // Droits de table façon Supabase, posés **avant** les migrations.
+  //
+  // Supabase n'accorde pas les droits après coup : `alter default privileges`
+  // les donne à la table au moment où elle naît. Poser le `grant` après coup
+  // redonnerait à `authenticated` ce qu'une migration vient de lui retirer
+  // (`0019`) et le contrôle « la sauvegarde ne s'écrit plus en direct »
+  // passerait au vert sans rien prouver.
+  await client.query(`
+    grant usage on schema public to anon, authenticated;
+    alter default privileges in schema public
+      grant select, insert, update, delete on tables to authenticated;
+    alter default privileges in schema public grant select on tables to anon;
+  `);
+
   for (const [name, sql] of migrations) {
     await client.query(sql);
   }
   console.log(`→ migrations ${migrations.map(([name]) => name.slice(0, 4)).join(", ")} exécutées\n`);
-
-  // Droits de table façon Supabase : les politiques RLS font le tri ensuite.
-  await client.query(`
-    grant usage on schema public to anon, authenticated;
-    grant select, insert, update, delete on all tables in schema public to authenticated;
-    grant select on all tables in schema public to anon;
-  `);
 
   const USER = "11111111-1111-4111-8111-111111111111";
   await client.query("insert into auth.users (id) values ($1)", [USER]);
@@ -269,7 +278,13 @@ try {
   check("réserve pleine : plafond respecté", full.packs === 4, String(full.packs));
   check("réserve pleine : pas de prochain booster", full.next_pack_at === null);
 
-  // --- Reprise de l'état local (saves.state) ------------------------------
+  // --- La réserve naît au serveur, pas dans la sauvegarde du client --------
+  //
+  // Avant `0019`, `open_pack()` recopiait `packs` et `lastPackRegen` de
+  // `saves.state` à la création de la réserve : un client pouvait donc se
+  // servir 4 boosters et une ancre vieille de deux heures avant son premier
+  // tirage. La réserve naît maintenant à trois boosters, maintenant — et la
+  // sauvegarde n'est plus lue du tout par le tirage.
   async function inheritedPacks(userId, state) {
     await client.query("insert into auth.users (id) values ($1) on conflict do nothing", [userId]);
     await client.query(
@@ -294,13 +309,33 @@ try {
     packs: 2,
     lastPackRegen: Date.now() - 60_000,
   });
-  check("reprise locale : 2 boosters locaux → 1 après ouverture", recent.packs === 1, String(recent.packs));
+  check(
+    "réserve héritée : elle naît à trois, quoi qu'en dise la sauvegarde",
+    recent.packs === 2,
+    String(recent.packs),
+  );
 
   const stale = await inheritedPacks("33333333-3333-4333-8333-333333333333", {
-    packs: 1,
-    lastPackRegen: Date.now() - 95 * 60_000,
+    packs: 4,
+    // Une ancre vieille de deux heures : avant, elle offrait la réserve pleine.
+    lastPackRegen: Date.now() - 120 * 60_000,
   });
-  check("reprise locale : ancre ancienne → recharge appliquée", stale.packs === 3, String(stale.packs));
+  check(
+    "réserve héritée : aucune recharge gratuite, l'ancre est celle du serveur",
+    stale.packs === 2 &&
+      Date.parse(stale.last_regen_at) > Date.now() - 60_000,
+    `${stale.packs} boosters, ancre ${stale.last_regen_at}`,
+  );
+
+  // Le tirage ne lit plus `saves` du tout : c'est ce qui rend l'ancre et la
+  // réserve insensibles à ce que le client raconte.
+  const openPackDef = (
+    await client.query("select pg_get_functiondef('public.open_pack(text)'::regprocedure) as def")
+  ).rows[0].def;
+  check(
+    "réserve héritée : open_pack ne lit plus la sauvegarde du client",
+    !/from public\.saves/.test(openPackDef) && /for update/.test(openPackDef),
+  );
 
   // --- Échanges -------------------------------------------------------------
   // Trois joueurs : Alix propose, Bruno reçoit, Chloé regarde de loin.
@@ -308,11 +343,22 @@ try {
   const B = "bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb";
   const C = "cccccccc-3333-4333-8333-cccccccccccc";
 
+  // La rareté réelle de chaque créateur, lue dans le catalogue **importé** :
+  // depuis `0019`, une carte dont la rareté déclarée ne correspond pas à celle
+  // du catalogue rend la sauvegarde suspecte (le joueur garde ses cartes, mais
+  // il n'est plus classé). Les fixtures sont donc honnêtes par construction —
+  // sauf quand un test veut **justement** mentir : `"!legendary"` force la
+  // valeur, comme le ferait un client trafiqué.
+  const CATALOG_RARITY = new Map(
+    (await client.query("select slug, rarity from public.creators")).rows.map((row) => [row.slug, row.rarity]),
+  );
+
   function card(id, slug, rarity, variant, minutesAgo) {
+    const forced = typeof rarity === "string" && rarity.startsWith("!");
     return {
       id,
       creatorSlug: slug,
-      rarity,
+      rarity: forced ? rarity.slice(1) : (CATALOG_RARITY.get(slug) ?? rarity),
       variant,
       obtainedAt: Date.now() - minutesAgo * 60_000,
       rareDrop: false,
@@ -518,9 +564,15 @@ try {
       }
     })(),
   );
+  // Avant `0019`, la tentative était filtrée en silence par RLS (0 ligne
+  // touchée). Depuis, le droit d'écrire la table n'existe plus du tout :
+  // le refus est net, et c'est le serveur qui écrit (`push_save`).
   check(
     "droits : je ne peux pas réécrire la collection d'un autre",
-    (await asPlayer(C, "update public.saves set state = $2 where user_id = $1", [A, JSON.stringify({ cards: [] })])).rowCount === 0,
+    await asPlayer(C, "update public.saves set state = $2 where user_id = $1", [A, JSON.stringify({ cards: [] })])
+      .then(() => false)
+      .catch((error) => /permission denied/i.test(String(error.message))),
+    "attendu : privilège retiré à authenticated",
   );
 
   // --- Refuser --------------------------------------------------------------
@@ -647,6 +699,7 @@ try {
   const D = "dddddddd-4444-4444-8444-dddddddddddd";
   const E = "eeeeeeee-5555-4555-8555-eeeeeeeeeeee";
   const F = "ffffffff-6666-4666-8666-ffffffffffff";
+  const GASPARD = "99999999-7777-4777-8777-999999999999";
 
   // Un créateur par rareté, pris dans le catalogue : les vérifications ne
   // dépendent pas de la rareté réelle d'un créateur précis.
@@ -661,11 +714,14 @@ try {
     // créateur unique — mais bien deux cartes.
     card("diane-doublon", legendaryOne.slug, legendaryOne.rarity, "standard", 7),
     card("diane-epic", rareOne.slug, rareOne.rarity, "standard", 8),
-    // Créateur qui n'existe pas au catalogue : compté nulle part.
-    card("diane-faux", "streameur-qui-nexiste-pas", "legendary", "standard", 9),
   ]);
   await player(E, "Ethan", [card("ethan-1", "chowh1", "common", "standard", 30)]);
-  await player(F, "Fabien", [card("fabien-faux", "kaicenat", "mythique", "standard", 12)]);
+  // Fabien : rareté qui n'existe pas — `save_problems()` la refuse (le « ! »
+  // force la valeur, comme un client trafiqué).
+  await player(F, "Fabien", [card("fabien-faux", "kaicenat", "!mythique", "standard", 12)]);
+  // Gaspard : un créateur qui n'existe pas au catalogue. La sauvegarde **passe**
+  // (il garde ses cartes), mais elle est suspecte : il n'est plus classé.
+  await player(GASPARD, "Gaspard", [card("gaspard-faux", "streameur-qui-nexiste-pas", "!legendary", "standard", 9)]);
 
   const dianeRows = (
     await client.query("select count(*)::int as n, count(distinct creator_slug)::int as u from public.user_cards where user_id = $1", [D])
@@ -676,6 +732,28 @@ try {
     JSON.stringify(dianeRows),
   );
   check("projection : le créateur inventé n'entre pas dans la table", dianeRows.u === 3, String(dianeRows.u));
+
+  // …et il ne fait pas qu'être ignoré : une carte hors catalogue rend la
+  // sauvegarde **suspecte**. Le joueur garde tout, il n'est simplement plus
+  // classé — c'est la différence entre refuser (perdre ses cartes) et classer.
+  const gaspard = (
+    await client.query("select verified from public.stats where user_id = $1", [GASPARD])
+  ).rows[0];
+  check(
+    "intégrité : un créateur hors catalogue rend la sauvegarde suspecte",
+    gaspard?.verified === false,
+    JSON.stringify(gaspard),
+  );
+  check(
+    "intégrité : une rareté qui ne correspond pas au catalogue aussi",
+    (
+      await client.query("select 1 from public.save_suspicions($1::jsonb) as p", [
+        JSON.stringify({
+          cards: [{ id: "x", creatorSlug: "kaicenat", rarity: "common", variant: "standard" }],
+        }),
+      ])
+    ).rows.length === 1,
+  );
 
   const dianeStats = (
     await client.query("select unique_creators, total_cards, gold_cards, holo_cards, verified from public.stats where user_id = $1", [D])
@@ -779,11 +857,15 @@ try {
     (await asPlayer(E, "select public.player_profile($1) as p", ["99999999-9999-4999-8999-999999999999"])).rows[0].p === null,
   );
 
-  // `user_cards` n'a aucune politique : même le propriétaire des cartes ne voit
-  // rien. La table n'est lue que par les fonctions du serveur.
+  // `user_cards` est **retirée** aux clients par `0006` (`revoke all`) : le
+  // propriétaire des cartes lui-même ne peut pas la lire. La table n'est lue
+  // que par les fonctions du serveur.
   check(
     "projection : les cartes restent invisibles au client",
-    (await asPlayer(D, "select count(*)::int as n from public.user_cards")).rows[0].n === 0,
+    await asPlayer(D, "select count(*)::int as n from public.user_cards")
+      .then(() => false)
+      .catch((error) => /permission denied/i.test(String(error.message))),
+    "aucune exception : la table est lisible",
   );
 
   const goldRows = (await asPlayer(D, "select * from public.leaderboard(20, $1)", ["gold_cards"])).rows;
@@ -1367,24 +1449,20 @@ try {
       })(),
     );
   }
-  // La table n'a aucune politique : un joueur qui la lit directement ne voit
-  // rien, et il ne peut rien y écrire — comme `user_cards`. (Le `revoke all`
-  // de la migration vaut, lui, pour un vrai projet Supabase, où les droits de
-  // table sont accordés par défaut ; ici le harnais les accorde après coup.)
+  // La table est retirée aux clients (`revoke all` dans `0009`) : pas de
+  // lecture, pas d'écriture. Tout passe par les fonctions du serveur.
   check(
-    "hôtel : un joueur ne voit rien en lisant la table en direct",
-    (await asPlayer(G, "select count(*)::int as n from public.market_listings")).rows[0].n === 0,
+    "hôtel : un joueur ne lit pas la table en direct",
+    await asPlayer(G, "select count(*)::int as n from public.market_listings")
+      .then(() => false)
+      .catch((error) => /permission denied/i.test(String(error.message))),
+    "aucune exception : la table est lisible",
   );
   check(
     "hôtel : un joueur ne peut pas écrire une annonce à la main",
-    await (async () => {
-      try {
-        await asPlayer(G, "insert into public.market_listings (seller_id, card_id, creator_slug, rarity, variant, payout, price) values ($1, 'x', 'ibai', 'rare', 'standard', 1, 1)", [G]);
-        return false;
-      } catch {
-        return true;
-      }
-    })(),
+    await asPlayer(G, "insert into public.market_listings (seller_id, card_id, creator_slug, rarity, variant, payout, price) values ($1, 'x', 'ibai', 'rare', 'standard', 1, 1)", [G])
+      .then(() => false)
+      .catch((error) => /permission denied/i.test(String(error.message))),
   );
 
   // Le dépôt.
@@ -3092,6 +3170,154 @@ try {
     JSON.stringify([{ login: "kamet0", display_name: "Kameto", viewers: 10 }]),
     "état rendu à la suite",
   ]);
+
+  // --- 0019 : l'intégrité -----------------------------------------------------
+  // Trois portes fermées : la sauvegarde ne s'écrit que par le serveur, la
+  // réserve de boosters ne naît plus de la parole du client, et une rareté
+  // déclarée ne suffit plus à se classer.
+  const INTEGRE = "11112222-3333-4444-8555-666677778888";
+  await player(INTEGRE, "Integre", []);
+
+  const closed = async (sql, params = []) => {
+    const refus = await asPlayer(INTEGRE, sql, params)
+      .then(() => "autorisé")
+      .catch((error) => String(error.message));
+    return /permission denied/.test(refus) ? "refusé" : refus;
+  };
+
+  const writes = {
+    update: await closed("update public.saves set state = '{}'::jsonb where user_id = $1", [INTEGRE]),
+    delete: await closed("delete from public.saves where user_id = $1", [INTEGRE]),
+    insert: await closed(
+      "insert into public.saves (user_id, state, save_version, device_updated_at, state_checksum) values (gen_random_uuid(), '{}'::jsonb, 1, 0, 'x')",
+    ),
+  };
+  check(
+    "intégrité : un client ne peut plus écrire sa sauvegarde en direct",
+    Object.values(writes).every((r) => r === "refusé"),
+    JSON.stringify(writes),
+  );
+  const statsWrites = {
+    update: await closed("update public.stats set verified = false where user_id = $1", [INTEGRE]),
+    delete: await closed("delete from public.stats where user_id = $1", [INTEGRE]),
+    insert: await closed(
+      "insert into public.stats (user_id, verified) values (gen_random_uuid(), true)",
+    ),
+  };
+  check(
+    "intégrité : ni son rang ni son compteur non plus",
+    Object.values(statsWrites).every((r) => r === "refusé"),
+    JSON.stringify(statsWrites),
+  );
+  const packWrites = {
+    update: await closed("update public.pack_state set packs = 4 where user_id = $1", [INTEGRE]),
+    insert: await closed(
+      "insert into public.pack_state (user_id, packs, last_regen_at) values (gen_random_uuid(), 4, now())",
+    ),
+  };
+  check(
+    "intégrité : la réserve de boosters non plus",
+    Object.values(packWrites).every((r) => r === "refusé"),
+    JSON.stringify(packWrites),
+  );
+
+  // La porte légitime, elle, reste ouverte : c'est `push_save()` qui écrit.
+  const honest = {
+    version: 1,
+    playerId: INTEGRE,
+    createdAt: Date.now() - 10_000,
+    updatedAt: Date.now(),
+    level: 2,
+    xp: 40,
+    points: 10,
+    hourglasses: 3,
+    packs: 2,
+    lastPackRegen: Date.now(),
+    openings: 1,
+    cards: [{ id: "honnete-1", creatorSlug: "kaicenat", rarity: CATALOG_RARITY.get("kaicenat"), variant: "standard", obtainedAt: Date.now(), rareDrop: false }],
+    claimedTiers: [],
+    themeId: "default",
+  };
+  const pushed = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [honest, 1, Date.now()])
+  ).rows[0].r;
+  const honestStats = (
+    await client.query("select verified, unique_creators from public.stats where user_id = $1", [INTEGRE])
+  ).rows[0];
+  check(
+    "intégrité : push_save écrit toujours, et une sauvegarde honnête reste vérifiée",
+    pushed.status === "pushed" && honestStats.verified === true && honestStats.unique_creators === 1,
+    JSON.stringify({ status: pushed.status, stats: honestStats }),
+  );
+
+  // Le tricheur, lui, est accepté — il garde ses cartes — mais **suspect** :
+  // une carte commune déclarée légendaire gonflait le classement Gold.
+  const cheater = {
+    ...honest,
+    cards: [
+      { id: "triche-1", creatorSlug: "chowh1", rarity: "!legendary", variant: "gold", obtainedAt: Date.now(), rareDrop: false },
+      { id: "triche-1", creatorSlug: "chowh1", rarity: "common", variant: "gold", obtainedAt: Date.now(), rareDrop: false },
+    ],
+  };
+  cheater.cards[0].rarity = "legendary";
+  const cheated = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [cheater, 1, Date.now()])
+  ).rows[0].r;
+  const cheaterStats = (
+    await client.query("select verified, legendary_cards from public.stats where user_id = $1", [INTEGRE])
+  ).rows[0];
+  const cheaterRanked = (
+    await asPlayer(INTEGRE, "select count(*)::int as n from public.leaderboard(100, $1) as l where l.user_id = $2", ["gold_cards", INTEGRE])
+  ).rows[0].n;
+  check(
+    "intégrité : une rareté déclarée ne suffit plus (suspect, pas classé)",
+    cheated.status === "pushed" && cheaterStats.verified === false && cheaterRanked === 0,
+    JSON.stringify({ status: cheated.status, stats: cheaterStats, classé: cheaterRanked }),
+  );
+
+  // Les identifiants en double aussi : deux cartes avec le même `id`.
+  check(
+    "intégrité : deux cartes au même identifiant sont suspectes",
+    (
+      await client.query("select public.save_suspicions($1::jsonb) as p", [JSON.stringify(cheater)])
+    ).rows[0].p.length >= 1,
+  );
+
+  // Les pseudos : le catalogue est la réserve de noms.
+  const streamerName = (
+    await client.query("select display_name from public.creators where rarity = 'legendary' order by rank limit 1")
+  ).rows[0].display_name;
+  check(
+    "pseudos : impossible de se faire passer pour un créateur",
+    await asPlayer(INTEGRE, "update public.profiles set display_name = $1 where user_id = $2", [streamerName, INTEGRE])
+      .then(() => false)
+      .catch((error) => /créateur du catalogue/.test(String(error.message))),
+  );
+  check(
+    "pseudos : un pseudo libre passe, et la vitrine se met à jour sans y toucher",
+    await asPlayer(INTEGRE, "update public.profiles set display_name = $1 where user_id = $2", ["Collectionneur-1", INTEGRE])
+      .then(() => true)
+      .catch(() => false),
+  );
+  check(
+    "pseudos : changer sa vitrine ne redemande pas son pseudo",
+    await asPlayer(INTEGRE, "update public.profiles set showcase_slugs = $1 where user_id = $2", [["kaicenat"], INTEGRE])
+      .then(() => true)
+      .catch((error) => String(error.message)),
+  );
+
+  // Sans compte, le tableau des profils ne dit plus rien (énumération d'UUID).
+  check(
+    "profils : plus lisibles sans compte",
+    await (async () => {
+      await client.query("set role anon");
+      try {
+        return (await client.query("select count(*)::int as n from public.profiles")).rows[0].n === 0;
+      } finally {
+        await client.query("reset role");
+      }
+    })(),
+  );
 
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
