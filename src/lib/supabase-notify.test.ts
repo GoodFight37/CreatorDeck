@@ -146,6 +146,29 @@ describe("Android (sans quoi rien ne sonnerait)", () => {
     expect(ANDROID_GRADLE).toContain("apply plugin: 'com.google.gms.google-services'");
   });
 
+  it("le fichier Firebase vise bien l'application (sinon rien n'arrive)", () => {
+    // `google-services.json` est **versionné** : il n'y a pas de secret dedans
+    // (identifiant de projet + clé d'API restreinte au paquet, présente dans
+    // chaque APK), et sans lui la CI ne peut pas construire un APK qui reçoit
+    // des notifications. Le contrôle porte sur ce qui casse en silence : un
+    // fichier qui vise un autre paquet enregistre l'appareil… chez personne.
+    const firebase = JSON.parse(read("android", "app", "google-services.json")) as {
+      project_info: { project_id?: string; project_number?: string };
+      client: {
+        client_info: { mobilesdk_app_id?: string; android_client_info: { package_name?: string } };
+        api_key: { current_key?: string }[];
+      }[];
+    };
+    const app = firebase.client[0];
+    expect(app.client_info.android_client_info.package_name).toBe("com.creatordeck.app");
+    expect(firebase.project_info.project_id).toBeTruthy();
+    expect(firebase.project_info.project_number).toBeTruthy();
+    expect(app.client_info.mobilesdk_app_id).toMatch(/^1:\d+:android:/);
+    expect(app.api_key[0].current_key).toBeTruthy();
+    // Le paquet du fichier et celui du build Android doivent être le même.
+    expect(ANDROID_GRADLE).toContain('applicationId "com.creatordeck.app"');
+  });
+
   it("le manifeste demande la permission et nomme le canal", () => {
     expect(MANIFEST).toContain('android:name="android.permission.POST_NOTIFICATIONS"');
     expect(MANIFEST).toContain("com.google.firebase.messaging.default_notification_channel_id");

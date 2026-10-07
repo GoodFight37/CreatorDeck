@@ -1453,12 +1453,15 @@ notification, et sans message d'erreur.
    *Ajouter un projet* → n'importe quel nom → refuser Google Analytics.
 2. **Ajouter l'application Android** : dans le projet, l'icône Android →
    *Nom du package* : `com.creatordeck.app` (exactement) → *Enregistrer*.
-3. **Télécharger `google-services.json`** (bouton de l'étape 2) et le coller
-   ici : il va dans `android/app/google-services.json`. Ce fichier **n'est pas un
-   secret** (identifiant de projet + clé d'API restreinte au paquet) : il peut
-   vivre dans le dépôt, et c'est même nécessaire pour que l'APK de la CI le
-   contienne. Sans lui, le greffon Google n'est pas appliqué et l'APK se
-   construit quand même — simplement sans notifications.
+3. **Télécharger `google-services.json`** (bouton de l'étape 2) et le poser ici :
+   `android/app/google-services.json` — il est **versionné** (projet
+   `creatordeck-6a9ce`, paquet `com.creatordeck.app`). Ce fichier **n'est pas un
+   secret** (identifiant de projet + clé d'API restreinte au paquet, présente
+   dans chaque APK) : il doit vivre dans le dépôt, pour que l'APK de la CI
+   contienne les notifications. Sans lui, le greffon Google n'est pas appliqué
+   et l'APK se construit quand même — simplement sans notifications. Un test
+   relit ce fichier pour vérifier que le paquet visé est le bon (un fichier qui
+   vise un autre paquet enregistre l'appareil chez personne).
 4. **Créer la clé du compte de service** : ⚙️ *Paramètres du projet* →
    *Comptes de service* → *Générer une nouvelle clé privée* → JSON. C'est un
    **vrai secret** (clé privée) : il ne va **pas** dans le dépôt, mais dans les
