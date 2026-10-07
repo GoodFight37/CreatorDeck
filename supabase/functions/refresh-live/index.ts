@@ -27,10 +27,11 @@
  *
  * Déploiement (voir `docs/cloud-supabase.md` § Direct) :
  *   * secrets de la fonction : `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` ;
- *   * **activer « Verify JWT »** : la fonction refuse alors tout appel sans
- *     jeton, et l'app en envoie un (sa clé anon). Sans ça, n'importe quel
- *     robot peut déclencher la fonction — la garde des 90 secondes limite les
- *     dégâts, mais elle ne devrait pas être la seule barrière.
+ *   * **laisser « Verify JWT » désactivé** : la fonction vérifie elle-même
+ *     l'en-tête `Authorization` ci-dessous, et l'activer au portail peut
+ *     refuser l'app quand la clé est `sb_publishable_…` (ce n'est pas un JWT).
+ *     Si tu l'actives un jour, vérifie le badge Direct dans l'app ; s'il
+ *     disparaît, éteins-le.
  *
  * Anti-course : le créneau des 90 secondes est **réservé** par une écriture
  * conditionnelle (`live_state.refreshed_at`). Deux appels simultanés ne

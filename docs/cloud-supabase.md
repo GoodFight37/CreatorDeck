@@ -863,19 +863,28 @@ coûte rien — c'est ce qui permet de la laisser sans jeton.
    `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET`.
 3. Supabase → **Edge Functions** → *Deploy a new function* → **Via Editor** :
    nom `refresh-live`, coller le contenu de
-   `supabase/functions/refresh-live/index.ts`, **désactiver « Verify JWT »**,
-   déployer. (La fonction ne publie que des données publiques et se limite
-   elle-même ; un jeton n'apporterait rien.)
+   `supabase/functions/refresh-live/index.ts`, déployer. **Laisse « Verify
+   JWT » désactivé** : l'app envoie déjà un en-tête `Authorization` avec sa clé,
+   et la fonction le vérifie elle-même. L'activer n'apporterait rien de plus —
+   et avec une clé `sb_publishable_…` (et non un JWT) le portail peut refuser
+   l'appel, donc l'éteindre si un jour tu l'allumes et que le badge Direct
+   disparaît.
 4. SQL Editor : coller `0007_direct.sql`, puis **re-coller `0003_catalogue.sql`**
    (il apporte la colonne `login`, la clé qui relie une diffusion à sa carte).
 5. Ouvrir l'app : le premier affichage déclenche le rafraîchissement.
 
 **Diagnostiquer depuis un navigateur** — la fonction répond en JSON, sans outil :
 
-| URL à ouvrir | Ce qu'elle dit |
+| Appel | Ce qu'il dit |
 | --- | --- |
-| `…/functions/v1/refresh-live?check=1` | secrets présents ou non, catalogue lisible, âge du cache. **Aucune requête Twitch** |
-| `…/functions/v1/refresh-live` | déclenche le rafraîchissement et renvoie ce qui a été publié |
+| `…/functions/v1/refresh-live` (avec `Authorization: Bearer <ta clé>`) | déclenche le rafraîchissement et renvoie ce qui a été publié |
+| le même avec `?check=1` et la clé **service** | secrets présents ou non, catalogue lisible, âge du cache. **Aucune requête Twitch** |
+| n'importe quel appel **sans** en-tête | `401` : c'est voulu, la fonction ne répond plus aux navigateurs anonymes |
+
+Le diagnostic `?check=1` demande le **rôle de service** (clé secrète) : en
+ligne de commande, `curl -s -H "Authorization: Bearer <clé_service>"
+"https://<projet>.supabase.co/functions/v1/refresh-live?check=1"`. L'app, elle,
+n'utilise jamais `?check=1`.
 
 Réponses possibles de l'appel normal : `{"skipped":true,"age_ms":…}` (le cache a
 moins de 90 secondes — recharge la page plus tard), `{"ok":true,"checked":1000,
