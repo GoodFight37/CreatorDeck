@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - arena/01a10c75-creatordeck
+  workflow_dispatch:
 
 jobs:
   build-and-distribute:
@@ -16,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -43,6 +44,6 @@ jobs:
       - name: Upload APK to Firebase App Distribution
         uses: w9jds/firebase-action@master
         with:
-          args: appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:450483794682:android:d393fe779b340d6140cf43 --groups "testers"
+          args: appdistribution:distribute android/app/build/outputs/apk/debug/app-debug.apk --app 1:450483794682:android:d393fe779b340d6140cf43
         env:
           GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
