@@ -120,7 +120,7 @@ pareil ne bloquent plus la sauvegarde ».
 
 1. ~~**Découpes** : `cloud-store.ts` et `api.ts`~~ **faites le 7 octobre** (voir
    § 2, prompt 6) : `api/` et `store/`, un module par domaine, façade mince,
-   aucun changement de comportement (666 tests inchangés).
+   aucun changement de comportement (666 tests inchangés à l'époque ; 684 aujourd'hui avec les notifications).
 2. ~~**Les campagnes de notifications (FCM)**~~ **faites le 7 octobre** :
    `0023_notifications.sql`, l'Edge Function `notify-live`, `src/lib/push.ts` et
    le câblage Android. La décision est en SQL (`push_targets()` : épinglé ou
@@ -137,14 +137,14 @@ pareil ne bloquent plus la sauvegarde ».
 
 ```powershell
 npm ci
-npm test                                    # 666 tests, 44 fichiers
-npm run supabase:verify                     # 325 contrôles sur un Postgres jetable
+npm test                                    # 684 tests, 46 fichiers
+npm run supabase:verify                     # 343 contrôles sur un Postgres jetable
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0022` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0023` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`
