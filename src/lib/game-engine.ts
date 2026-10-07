@@ -18,6 +18,7 @@ import {
   CATALOG_SIZE,
   CREATORS,
   CREATOR_BY_SLUG,
+  RETIRED_BY_SLUG,
   PACKS,
   RARITY_META,
   type CardVariant,
@@ -46,6 +47,7 @@ import {
   type CollectionTheme,
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
+import { canCraftRetired } from "@/lib/retired";
 
 export const SAVE_VERSION = 8 as const;
 
@@ -810,7 +812,17 @@ function chooseCreator(
    */
   familyId?: string | null,
 ): Creator {
-  const available = CREATORS.filter(
+  // Ceinture-bretelles : `CREATORS` est déjà le catalogue courant (les Sortants
+  // vivent dans `retired.json`), mais si une rotation se trompait et laissait un
+  // Sortant au classement, il ne doit pas pour autant retomber dans un booster.
+  // `RETIRED_BY_SLUG` ne contient jamais un slug revenu au classement (voir
+  // `RETIRED_CREATORS`) : cette garde ne peut donc pas écarter un créateur en
+  // activité. Calculée une fois par tirage — quand il n'y a aucun Sortant, le
+  // vivier est le catalogue tel quel, sans coût.
+  const pool = RETIRED_BY_SLUG.size
+    ? CREATORS.filter((creator) => !RETIRED_BY_SLUG.has(creator.slug))
+    : CREATORS;
+  const available = pool.filter(
     (creator) =>
       !used.has(creator.slug) &&
       (weights[creator.rarity] ?? 0) > 0 &&
@@ -993,6 +1005,7 @@ export function drawPack(
   return drawn;
 }
 
+/** Les slugs possédés : un par créateur, quel que soit le nombre de doublons. */
 export function ownedSlugs(state: PlayerState): Set<string> {
   return new Set(state.cards.map((card) => card.creatorSlug));
 }
@@ -1204,17 +1217,28 @@ export function recycleCard(
   };
 }
 
-/** Peut-on rejoindre ce créateur depuis l'Atelier, et à quel prix ? */
+/**
+ * Peut-on rejoindre ce créateur depuis l'Atelier, et à quel prix ?
+ *
+ * Deux cas, deux règles :
+ *
+ *   * un créateur du catalogue courant : artisanable selon sa rareté ;
+ *   * un **Sortant** : artisanable seulement pendant l'édition qui l'a vu
+ *     partir (`canCraftRetired`), et jamais s'il est Légendaire — c'est la règle
+ *     du jeu, et elle vaut d'autant plus pour une carte qui disparaît.
+ */
 export function craftQuote(
   state: PlayerState,
   creatorSlug: string,
 ): { creator: Creator | undefined; cost: number | null; craftable: boolean; owned: boolean } {
   const creator = CREATOR_BY_SLUG.get(creatorSlug);
   const meta = creator ? RARITY_META[creator.rarity] : undefined;
+  const retired = RETIRED_BY_SLUG.get(creatorSlug);
+  const craftable = retired ? canCraftRetired(retired) : (meta?.craftable ?? false);
   return {
     creator,
     cost: meta?.craftCost ?? null,
-    craftable: meta?.craftable ?? false,
+    craftable,
     owned: state.cards.some((card) => card.creatorSlug === creatorSlug),
   };
 }
@@ -1236,8 +1260,11 @@ export function craftCreator(
     throw new GameError("Tu possèdes déjà ce créateur.", "ALREADY_OWNED");
   }
   if (!craftable || cost === null) {
+    const retired = RETIRED_BY_SLUG.get(creatorSlug);
     throw new GameError(
-      `Les cartes ${RARITY_META[creator.rarity].label} ne sont pas artisanales : elles se tirent en booster.`,
+      retired
+        ? `${creator.displayName} a quitté le classement : il n'est plus artisanable. Sa carte reste dans ton classeur.`
+        : `Les cartes ${RARITY_META[creator.rarity].label} ne sont pas artisanales : elles se tirent en booster.`,
       "NOT_CRAFTABLE",
     );
   }
@@ -1939,7 +1966,13 @@ export function spendHourglass(state: PlayerState, now = Date.now()): PlayerStat
 /** Projette l'état en vue prête à afficher (compteurs, prochaines recharges). */
 export function getGameView(state: PlayerState, now = Date.now()): GameView {
   const refreshed = refreshBalances(state, now);
-  const uniqueCreators = ownedSlugs(refreshed).size;
+  // La complétion se mesure sur le catalogue courant : un Sortant garde sa
+  // carte (elle s'affiche, s'échange, se vend), mais il ne compte plus dans
+  // « X / 1000 » — sinon 100 % redeviendrait inatteignable à la première
+  // rotation du catalogue.
+  const uniqueCreators = [...ownedSlugs(refreshed)].filter(
+    (slug) => !RETIRED_BY_SLUG.has(slug),
+  ).length;
   const duplicates = duplicateGroups(refreshed);
   return {
     player: {

@@ -5,6 +5,7 @@ import Image from "next/image";
 import {
   ChevronLeft,
   ChevronRight,
+  Clock,
   Coins,
   Hammer,
   Recycle,
@@ -15,6 +16,7 @@ import {
 import {
   CATALOG_SIZE,
   CREATORS,
+  RETIRED_CREATORS,
   CREATOR_BY_SLUG,
   RARITY_META,
   VARIANT_META,
@@ -22,6 +24,7 @@ import {
   type Rarity,
 } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
+import { craftableRetired, isRetired } from "@/lib/retired";
 import { duplicateGroups, type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 
@@ -56,11 +59,20 @@ export function AtelierView({
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
+  // Les Sortants encore artisanables : ils ne sont plus dans le catalogue (donc
+  // plus tirables, et hors complétion), mais leur fenêtre est ouverte pendant
+  // l'édition de leur départ. Ce sont les dernières cartes à rejoindre.
+  const retiredCraftable = useMemo(
+    () => craftableRetired().filter((creator) => !game.cards.some((card) => card.creatorSlug === creator.slug)),
+    [game.cards],
+  );
   const balance = wallet === "tokens" ? game.tokens.count : game.player.points;
 
   const craftable = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
-    return CREATORS.filter((creator) => {
+    // Les Sortants d'abord : leur fenêtre ferme à la fin de l'édition, alors que
+    // le reste du catalogue attendra. Sans ça, ils seraient à la dernière page.
+    return [...retiredCraftable, ...CREATORS].filter((creator) => {
       if (game.cards.some((card) => card.creatorSlug === creator.slug)) return false;
       if (q) {
         const hay = `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr");
@@ -69,7 +81,7 @@ export function AtelierView({
       if (filter !== "all") return creator.rarity === filter;
       return true;
     });
-  }, [filter, game.cards, query]);
+  }, [filter, game.cards, query, retiredCraftable]);
 
   const totalPages = Math.max(1, Math.ceil(craftable.length / PER_PAGE));
   const safePage = Math.min(page, totalPages - 1);
@@ -135,6 +147,20 @@ export function AtelierView({
             <strong> Standard</strong> : les variantes Live, Holo et Gold restent la récompense des
             boosters.
           </p>
+
+          {/* Les Sortants : ils ne sont plus dans les boosters, et leur fenêtre
+              d'artisanat ferme avec l'édition en cours. C'est la seule chose de
+              l'écran qui a une date limite — donc la seule qu'on annonce. */}
+          {retiredCraftable.length > 0 ? (
+            <p className="atelier-retired-note">
+              <Clock size={14} />
+              <span>
+                {retiredCraftable.length} Sortant{retiredCraftable.length > 1 ? "s" : ""} encore
+                artisanable{retiredCraftable.length > 1 ? "s" : ""} : ils ne sortent plus en
+                booster, et leur fenêtre ferme à la fin de l&apos;édition.
+              </span>
+            </p>
+          ) : null}
 
           {/* Deux monnaies : les points du recyclage (45 à 600 selon la
               rareté), ou les jetons gagnés en ouvrant des boosters — 400, quel
@@ -255,6 +281,7 @@ export function AtelierView({
                       #{creator.rank} · {regionLabel(creator.region)}
                     </span>
                   </div>
+                  {isRetired(creator.slug) ? <span className="card-retired">Sortant</span> : null}
                   <span
                     className="atelier-rarity"
                     style={{ color: meta.color }}

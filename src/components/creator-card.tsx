@@ -9,6 +9,7 @@ import {
   type CardVariant,
   type Creator,
 } from "@/lib/catalog";
+import { isRetired } from "@/lib/retired";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
 import { Radio } from "lucide-react";
@@ -56,6 +57,8 @@ export function CreatorCard({
   liveStream = null,
 }: CreatorCardProps) {
   const rarity = RARITY_META[creator.rarity];
+  // Sortant : plus tirable, mais bien réel — sa carte est dans des classeurs.
+  const retired = isRetired(creator.slug);
   // Le foil ne « suit le doigt » que sur une carte assez grande pour qu'on le
   // voie : dans la grille du classeur (2 ou 3 cm de large), c'est du calcul pour
   // rien — et 1 000 cartes n'ont pas besoin de 1 000 écouteurs.
@@ -119,6 +122,14 @@ export function CreatorCard({
       <div className="card-topline">
         <div className="card-topleft">
           <span className="card-rank">#{String(creator.rank).padStart(3, "0")}</span>
+          {/* Sortant : la carte reste valable, mais elle ne tombera plus en
+              booster. Le dire sur la planche évite la question « pourquoi je ne
+              le vois jamais passer ? ». */}
+          {retired ? (
+            <span className="card-retired" title="Sortant : plus tirable en booster">
+              {compact ? "S" : "Sortant"}
+            </span>
+          ) : null}
           {/* Le direct **réel** (la personne streame maintenant), à ne pas
               confondre avec la variante Live : la variante est une matière de
               carte, le direct est un fait. Deux endroits, deux formes. */}

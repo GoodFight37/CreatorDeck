@@ -65,14 +65,18 @@ import {
   CREATOR_BY_SLUG,
   PACKS,
   RARITY_META,
+  RETIRED_BY_SLUG,
+  RETIRED_CREATORS,
   creatorImage,
   type CardVariant,
+  type Creator,
   type Rarity,
 } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 import { formatViewers, liveFor, liveLogins, viewersLabel } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
 import { regionLabel } from "@/lib/regions";
+import { craftableRetired } from "@/lib/retired";
 import { bestCardOf } from "@/lib/social/inbox";
 import { buzz } from "@/lib/haptics";
 import {
@@ -102,7 +106,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 
 type GameState = GameView;
 type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
-type CollectionFilter = "all" | "owned" | "live" | Rarity;
+type CollectionFilter = "all" | "owned" | "live" | "retired" | Rarity;
 
 /** Délai avant la révélation : donne un temps « d'ouverture » au booster. */
 const OPENING_DELAY_MS = 650;
@@ -278,6 +282,7 @@ function HomeView({
   onUseHourglass,
   onShowOdds,
   onShowMissions,
+  onShowAtelier,
   onOpenScene,
   opening,
   usingHourglass,
@@ -293,6 +298,8 @@ function HomeView({
   onUseHourglass: () => void;
   onShowOdds: () => void;
   onShowMissions: () => void;
+  /** Les Sortants : la ligne d'accueil mène à l'Atelier. */
+  onShowAtelier: () => void;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -314,6 +321,18 @@ function HomeView({
   // endroit, le prochain booster.
   const packCopy = game.streak.jackpot ? `${pityCopy} · Perfect du 7ᵉ jour garanti` : pityCopy;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
+  // Les Sortants encore artisanables : ils ont quitté le classement (plus
+  // tirables, hors complétion) mais leur fenêtre d'artisanat reste ouverte
+  // pendant l'édition de leur départ. Ce sont les dernières cartes à rejoindre
+  // — et elles se fabriquent, elles ne se tirent plus. On compte celles qu'il
+  // reste à obtenir : à zéro, la ligne disparaît.
+  const retiredLeft = useMemo(
+    () =>
+      craftableRetired().filter(
+        (creator) => !game.cards.some((card) => card.creatorSlug === creator.slug),
+      ).length,
+    [game.cards],
+  );
   const live = useLive();
   // Le direct le plus regardé parmi les créateurs du Top 1000, pour le bandeau :
   // c'est le « lower third » d'une régie — une ligne, un chiffre, un nom.
@@ -443,6 +462,24 @@ function HomeView({
             {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
           </span>
         </div>
+        {retiredLeft > 0 ? (
+          <button
+            type="button"
+            className="pity-row retired-row"
+            onClick={onShowAtelier}
+            aria-label={`Ouvrir l'Atelier : ${retiredLeft} Sortant${
+              retiredLeft > 1 ? "s" : ""
+            } encore artisanable${retiredLeft > 1 ? "s" : ""} cette édition`}
+          >
+            <Clock3 size={14} />
+            <span>
+              {retiredLeft} Sortant{retiredLeft > 1 ? "s" : ""} encore artisanable
+              {retiredLeft > 1 ? "s" : ""} · dernière édition
+            </span>
+            <ChevronRight size={14} />
+          </button>
+        ) : null}
+
         <div className="home-links">
           <button type="button" className="text-link" onClick={onShowMissions}>
             <span>Objectifs et saisons</span>
@@ -597,16 +634,27 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
 
   const filtered = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
-    return CREATORS.filter((creator) => {
+    // Les Sortants que le joueur possède : ils s'affichent à la fin du classeur
+    // (leur rang n'est plus comparable aux autres, et ils ne sont plus
+    // tirables). Sans filtre « Sortants », ils restent visibles — une carte
+    // possédée qui disparaîtrait de son propre classeur serait un bug.
+    const retiredCards = RETIRED_CREATORS.filter((creator) => owned.has(creator.slug));
+    const matches = (creator: Creator) => {
       if (q) {
         const hay = `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr");
         if (!hay.includes(q)) return false;
       }
+      return true;
+    };
+    if (filter === "retired") return retiredCards.filter(matches);
+    const current = CREATORS.filter((creator) => {
+      if (!matches(creator)) return false;
       if (filter === "owned") return owned.has(creator.slug);
       if (filter === "live") return liveFor(live, creator.login, now) !== null;
       if (filter !== "all") return creator.rarity === filter;
       return true;
     });
+    return filter === "all" ? [...current, ...retiredCards] : current;
   }, [filter, live, now, owned, query]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
@@ -616,6 +664,12 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
     (safePage + 1) * perPage,
   );
   const progress = Math.round((game.stats.uniqueCreators / CREATORS.length) * 100);
+  // Combien de cartes du classeur ne sont plus tirables : ce sont les Sortants
+  // du joueur, et c'est ce que le filtre compte.
+  const retiredOwned = useMemo(
+    () => [...owned.keys()].filter((slug) => RETIRED_BY_SLUG.has(slug)).length,
+    [owned],
+  );
 
   return (
     <div className="view collection-view" style={themeStyle}>
@@ -666,6 +720,11 @@ function CollectionView({ game, themeStyle }: { game: GameState; themeStyle?: CS
           [
             ["all", `Toutes (${CREATORS.length})`],
             ["owned", `Obtenues (${game.stats.uniqueCreators})`],
+            // Les Sortants n'apparaissent que s'il y en a : un filtre vide n'a
+            // rien à faire dans la barre.
+            ...(retiredOwned
+              ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])
+              : []),
             // Le direct n'apparaît que si l'app sait vraiment qui streame : un
             // filtre qui ne peut rien donner n'a rien à faire là.
             ...(live.configured && live.count && !live.stale
@@ -1553,6 +1612,7 @@ export function CreatorDeckApp() {
             onUseHourglass={handleUseHourglass}
             onShowOdds={() => setOddsOpen(true)}
             onShowMissions={() => setTab("missions")}
+            onShowAtelier={() => setTab("atelier")}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}

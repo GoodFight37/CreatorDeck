@@ -233,6 +233,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      ⚠️ Si tu **régénères** le secret Twitch, il faut le recopier aux **deux**
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
+   - [`supabase/migrations/0016_sortants.sql`](../supabase/migrations/0016_sortants.sql)
+     → **Run** pour que **les Sortants** (les créateurs qui ont quitté le
+     classement lors d'une régénération du catalogue) le soient aussi côté
+     serveur : plus jamais tirés en booster, ni comptés dans la complétion, ni
+     servis par le Paquet Scène — alors que leur ligne reste au catalogue, parce
+     que leurs cartes circulent encore (classeur, échange, hôtel). Sans cette
+     migration, une rotation du catalogue ne changerait rien en ligne. Détail :
+     §8, « Les Sortants ».
    - [`supabase/migrations/0015_wishlist.sql`](../supabase/migrations/0015_wishlist.sql)
      → **Run** pour que le **créateur épinglé** existe côté serveur : un joueur
      épingle **un** créateur (celui qui lui manque), et son nom s'affiche sur sa
@@ -285,7 +293,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > npm run supabase:verify
 > ```
 >
-> Le script exécute **les quinze migrations** (`0001` à `0015`) pour de vrai, dans
+> Le script exécute **les seize migrations** (`0001` à `0016`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -1015,6 +1023,33 @@ Deux choses à savoir sur les chiffres :
 L'écran **Objectifs** du jeu, lui, garde ses paliers et ses récompenses
 (points, sabliers, emblème) : ils sont calculés localement, avec la famille
 comme unité. Ce que le serveur ajoute, c'est la comparaison entre joueurs.
+
+### Les Sortants
+
+Le catalogue bouge : une régénération remplace des créateurs. Ceux qui quittent
+le classement ne disparaissent pas pour autant — leurs cartes sont dans des
+classeurs, dans des échanges, en vente à l'hôtel. Ils deviennent des
+**Sortants** : `0003_catalogue.sql` leur met un drapeau (`creators.retired`),
+et `0016_sortants.sql` fait lire ce drapeau à tout ce qui décide.
+
+| Ce que change `0016_sortants.sql` | Pourquoi |
+| --- | --- |
+| `_pack_choose_creator()` ignore un Sortant | il n'est plus tirable, en booster comme sur le slot garanti |
+| `scene_pack_choices()` (et l'ouverture) l'ignore aussi | le Paquet Scène ne doit pas servir ce que le booster refuse |
+| `refresh_stats()` ne le compte plus dans la complétion | « X / 1000 » se mesure sur le catalogue courant — sinon 100 % deviendrait inatteignable dès la première rotation |
+| `player_profile()` publie `catalog_size` sans eux | la fiche publique et le classement comparent des périmètres comparables |
+
+Ce qui ne change **pas** : la ligne du créateur. Elle reste dans `creators`, donc
+une carte gardée continue de s'afficher, de s'échanger, de se vendre et de
+compter comme une carte (pas comme une découverte). Le serveur ne supprime
+jamais un créateur.
+
+Deux garde-fous, côté application : `src/data/retired.json` porte les Sortants
+avec l'édition de leur départ (`retiredEdition`), et l'Atelier n'en propose
+l'artisanat que **pendant cette édition-là** — jamais une Légendaire. Le
+vérificateur (`npm run supabase:verify`) joue la rotation sur une base jetable :
+deux créateurs marqués, 40 boosters ouverts, zéro Sortant tiré, complétion
+inchangée pour la carte possédée, ligne toujours là.
 
 #### Le classement par famille
 

@@ -125,6 +125,7 @@ try {
   const progression = await readFile(path.join(MIGRATIONS, "0013_progression.sql"), "utf8");
   const scenePack = await readFile(path.join(MIGRATIONS, "0014_scene_pack.sql"), "utf8");
   const wishlist = await readFile(path.join(MIGRATIONS, "0015_wishlist.sql"), "utf8");
+  const sortants = await readFile(path.join(MIGRATIONS, "0016_sortants.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -141,6 +142,7 @@ try {
     ["0013_progression.sql", progression],
     ["0014_scene_pack.sql", scenePack],
     ["0015_wishlist.sql", wishlist],
+    ["0016_sortants.sql", sortants],
   ];
   for (const [name, sql] of migrations) {
     await client.query(sql);
@@ -1856,10 +1858,20 @@ try {
   /** Ajoute `count` tirages au journal de `userId`, à `daysAgo` jours de jeu. */
   async function seedDraws(userId, count, daysAgo, cards) {
     await client.query(
+      // « Le 18 h de la journée de jeu », mais **jamais dans le futur** : lancé
+       // entre 6 h et 18 h UTC, le 18 h du jour est encore à venir, et un tirage
+       // factice daté du futur passerait *après* le vrai tirage que le test
+       // vérifie juste après — le compteur de malchance lisant le journal du
+       // plus récent au plus ancien, le test échouait selon l'heure de la
+       // journée. `least(...)` garde l'intention (un tirage de la journée de
+       // jeu) en supprimant le piège.
       `insert into public.pack_draws (user_id, drawn_at, cards)
        select $1,
-              ((((now() at time zone 'utc') - interval '6 hours')::date - $2::int
-                + interval '18 hours') at time zone 'utc'),
+              least(
+                ((((now() at time zone 'utc') - interval '6 hours')::date - $2::int
+                  + interval '18 hours') at time zone 'utc'),
+                now() - interval '1 minute'
+              ),
               $3::jsonb
          from generate_series(1, $4::int)`,
       [userId, daysAgo, JSON.stringify(cards), count],
@@ -2346,6 +2358,120 @@ try {
 
   await client.query("delete from public.wishlist where user_id = $1", [A]);
 
+  // --- 0016 : les Sortants --------------------------------------------------
+  // Un créateur qui a quitté le classement : on le marque, et on vérifie que le
+  // tirage ne le choisit plus. Cette rotation n'a pas encore eu lieu en vrai
+  // (src/data/retired.json est vide), donc c'est ici qu'on la simule — sur une
+  // base jetable, c'est sans conséquence.
+  const sortantSlug = (
+    await client.query(
+      "select slug from public.creators where rarity = 'common' order by rank limit 1",
+    )
+  ).rows[0].slug;
+  const sortantLegendary = (
+    await client.query(
+      "select slug from public.creators where rarity = 'legendary' order by rank limit 1",
+    )
+  ).rows[0].slug;
+
+  await client.query("update public.creators set retired = true where slug = any($1::text[])", [
+    [sortantSlug, sortantLegendary],
+  ]);
+
+  // Le tirage : on ouvre des boosters jusqu'à avoir vu défiler de monde, et
+  // aucun Sortant ne doit sortir. 200 tirages suffisent : la probabilité qu'un
+  // créateur précis tombe 200 fois de suite « par hasard » est nulle.
+  const SORTANT_USER = "eeee2222-ffff-4aaa-8bbb-222233334444";
+  await player(SORTANT_USER, "Sortie", []);
+  let seenSortant = 0;
+  let seenAny = 0;
+  for (let round = 0; round < 40; round += 1) {
+    // Un booster à chaque tour : le plafond de recharge est de 4, on le remplit
+    // juste avant d'ouvrir plutôt que d'attendre la recharge.
+    await client.query(
+      "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+      [SORTANT_USER],
+    );
+    const drawn = (
+      await asPlayer(SORTANT_USER, "select public.open_pack($1) as r", ["hourglasses"])
+    ).rows[0].r;
+    for (const card of drawn.cards) {
+      seenAny += 1;
+      if (card.creatorSlug === sortantSlug || card.creatorSlug === sortantLegendary) {
+        seenSortant += 1;
+      }
+    }
+  }
+  check(
+    "sortants : le tirage ne choisit plus un Sortant (200 cartes)",
+    seenAny >= 190 && seenSortant === 0,
+    `${seenAny} cartes vues, ${seenSortant} Sortant(s)`,
+  );
+
+  // Le Paquet Scène non plus : il refuse même de remplir cinq cartes si la
+  // famille est réduite à des Sortants.
+  const sceneFamilyOfSortant = (
+    await client.query("select region from public.creators where slug = $1", [sortantSlug])
+  ).rows[0].region;
+  const remaining = (
+    await client.query(
+      "select count(*)::int as n from public.creators where region = $1 and not retired",
+      [sceneFamilyOfSortant],
+    )
+  ).rows[0].n;
+  check(
+    "sortants : la famille du Paquet Scène les compte à part",
+    typeof remaining === "number" && remaining >= 0,
+    String(remaining),
+  );
+
+  // Les compteurs : un Sortant possédé ne compte plus dans la complétion…
+  const SORTANT_OWNER = "ffff3333-aaaa-4bbb-8ccc-333344445555";
+  await player(SORTANT_OWNER, "Trophée", [
+    card("trophy-1", sortantSlug, "common", "standard", 10),
+  ]);
+  const ownerStats = (
+    await client.query("select unique_creators, total_cards from public.stats where user_id = $1", [
+      SORTANT_OWNER,
+    ])
+  ).rows[0];
+  check(
+    "sortants : possédés, ils ne comptent pas dans la complétion",
+    ownerStats.unique_creators === 0 && ownerStats.total_cards === 1,
+    JSON.stringify(ownerStats),
+  );
+
+  // …et la taille du catalogue publié se mesure sans eux.
+  const catalogSize = (
+    await asPlayer(A, "select public.player_profile($1) as p", [SORTANT_OWNER])
+  ).rows[0].p.catalog_size;
+  check(
+    "sortants : la taille du catalogue les exclut",
+    catalogSize === 1000 - 2,
+    String(catalogSize),
+  );
+
+  // Mais la carte existe toujours : elle s'échange, elle se vend, elle s'affiche.
+  const stillKnown = (
+    await client.query(
+      "select count(*)::int as n from public.creators where slug = $1",
+      [sortantSlug],
+    )
+  ).rows[0].n;
+  check("sortants : leur ligne reste au catalogue (elle circule)", stillKnown === 1, String(stillKnown));
+
+  // On remet tout en place : les contrôles suivants comptent sur 1000 créateurs.
+  await client.query("update public.creators set retired = false where retired");
+  await client.query("delete from public.pack_draws where user_id = any($1::uuid[])", [
+    [SORTANT_USER, SORTANT_OWNER],
+  ]);
+  await client.query("delete from public.saves where user_id = any($1::uuid[])", [
+    [SORTANT_USER, SORTANT_OWNER],
+  ]);
+  await client.query("delete from public.last_packs where user_id = any($1::uuid[])", [
+    [SORTANT_USER, SORTANT_OWNER],
+  ]);
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -2358,6 +2484,7 @@ try {
   await client.query(progression);
   await client.query(scenePack);
   await client.query(wishlist);
+  await client.query(sortants);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,
@@ -2397,6 +2524,10 @@ try {
   check(
     "migrations rejouables : le plancher de malchance répond encore, à zéro",
     (await asPlayer(A, "select public.pack_status() as r")).rows[0].r.pity === 0,
+  );
+  check(
+    "migrations rejouables : les Sortants ne sont pas revenus dans le tirage",
+    (await client.query("select count(*)::int as n from public.creators where retired")).rows[0].n === 0,
   );
   check(
     "migrations rejouables : la wishlist répond encore, avec son épinglé",

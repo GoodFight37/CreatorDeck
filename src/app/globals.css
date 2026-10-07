@@ -2023,6 +2023,18 @@ input:focus-visible {
 .pity-row.now { color: var(--text); border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .1); }
 .pity-row.now svg { color: var(--accent-light); }
 
+/* La ligne des Sortants : la seule chose de l'accueil qui périme. Même rangée,
+   même poids visuel que le plancher de malchance — c'est la couleur qui dit
+   « dernière édition », pas une forme nouvelle. */
+.retired-row { color: var(--text); border-color: rgba(255, 190, 85, .28); background: rgba(255, 190, 85, .06); }
+.retired-row svg { color: #ffd48e; }
+
+/* L'Atelier : la même phrase, en tête de liste — c'est par elle qu'on
+   commence, parce que c'est la seule offre de l'écran qui expire. */
+.atelier-retired-note { display: flex; align-items: flex-start; gap: 8px; margin: 10px 0 0; padding: 10px 12px; color: var(--text); border: 1px solid rgba(255, 190, 85, .28); border-radius: 12px; background: rgba(255, 190, 85, .06); font-size: 12.5px; }
+.atelier-retired-note svg { flex: 0 0 auto; margin-top: 1px; color: #ffd48e; }
+.atelier-row .card-retired { margin-right: 8px; }
+
 /* Les jetons : ce qu'on gagne à chaque booster, et ce qu'il reste à réunir. */
 .token-row { display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 8px; color: var(--muted-2); font-size: 12.5px; }
 .token-row svg { color: #ffd48e; }
@@ -2077,6 +2089,21 @@ input:focus-visible {
 .scene-action svg { color: var(--accent-light); }
 .scene-action:disabled { opacity: .55; cursor: default; }
 .odds-packs { margin-bottom: 4px; }
+/* Le Sortant : un créateur qui a quitté le classement. Sa carte reste valable —
+   le tag est là pour expliquer pourquoi on ne le voit plus tomber. */
+.card-retired {
+  padding: 2px 5px;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .05);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
 /* --- La scène 16:9 (source navigateur d'un direct) ------------------------ */
 /*
  * Le noir autour, la scène au milieu : dans OBS, le cadre remplit la source ;

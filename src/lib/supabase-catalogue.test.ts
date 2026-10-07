@@ -60,12 +60,14 @@ describe("seed Supabase du catalogue", () => {
       region: string;
     }>;
     const sql = readFileSync(path.join(ROOT, "supabase", "migrations", "0003_catalogue.sql"), "utf8");
-    expect(sql).toContain(`-- ${creators.length} créateurs`);
+    expect(sql).toContain(`-- ${creators.length} créateurs au classement`);
     // Premier et dernier du catalogue : de quoi détecter une troncature.
     for (const creator of [creators[0], creators[creators.length - 1]]) {
       const name = creator.displayName.replace(/'/g, "''");
+      // La 7e colonne est le drapeau « Sortant » : les créateurs du classement
+      // courant partent toujours à `false`.
       expect(sql).toContain(
-        `('${creator.slug}', '${creator.login}', '${name}', '${creator.rarity}', ${creator.rank}, '${creator.region}')`,
+        `('${creator.slug}', '${creator.login}', '${name}', '${creator.rarity}', ${creator.rank}, '${creator.region}', false)`,
       );
     }
     // Pas de contenu hors catalogue : une seule table, un seul insert massif.
@@ -82,8 +84,16 @@ describe("seed Supabase du catalogue", () => {
     // arriver sur une base existante.
     expect(sql).toContain("  region       text");
     expect(sql).toContain("alter table public.creators add column if not exists region text;");
-    expect(sql).toContain("  region       = excluded.region;");
+    // `region` n'est plus la dernière colonne : c'est `retired` qui ferme la liste.
+    expect(sql).toContain("  region       = excluded.region,\n  retired      = excluded.retired;");
     expect(sql).toContain("create index if not exists creators_region_idx on public.creators (region);");
+    // Le drapeau « Sortant » voyage lui aussi, et arrive sur une base existante.
+    expect(sql).toContain("  retired      boolean not null default false");
+    expect(sql).toContain(
+      "alter table public.creators add column if not exists retired boolean not null default false;",
+    );
+    expect(sql).toContain("  retired      = excluded.retired;");
+    expect(sql).toContain("create index if not exists creators_retired_idx on public.creators (retired);");
   });
 
   it("échoue quand le fichier a dérivé", () => {

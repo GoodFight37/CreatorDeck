@@ -22,7 +22,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
   plusieurs, refonte visuelle) vit sur `arena/01a10c75-creatordeck`, poussée à
   chaque étape terminée. C'est cette branche qu'on teste : le workflow
   **APK Android (debug)** accepte n'importe quelle branche, et les migrations
-  Supabase (`0001` → `0015`) se collent dans le SQL Editor.
+  Supabase (`0001` → `0016`) se collent dans le SQL Editor.
 - La **PR #7** suit cette branche et sert de journal : elle reste ouverte
   jusqu'à la fin du chantier — on ne la fusionne pas au milieu.
 - Une branche `arena/…` par session : `arena/01a10c2b`, `arena/01a10c54`,

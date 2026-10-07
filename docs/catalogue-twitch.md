@@ -384,6 +384,55 @@ réglages à ajuster, tous dans des fichiers de données.
      dernières cartes, frustrante dans un TCG sans échange — au lieu d'accélérer
      le début.
 
+## Les Sortants : ce que fait une rotation
+
+Une régénération ne remplace pas le catalogue, elle le **déplace**. Un créateur
+qui tombe au-delà du rang N n'a pas disparu du jeu : ses cartes sont dans des
+classeurs, dans des échanges, en vente à l'hôtel. La génération l'écrit donc
+dans `src/data/retired.json` au lieu de le jeter, avec deux champs :
+
+- `retiredEdition` : l'édition du catalogue pendant laquelle il est parti. C'est
+  aussi le numéro d'édition de **son départ** — `editionNumber` de
+  `src/data/catalog.config.json`, incrémenté à chaque régénération.
+- `retiredAt` : la date du constat.
+
+Ce qu'un Sortant devient, côté jeu :
+
+| | Sortant |
+|---|---|
+| Booster | **jamais tiré** (côté serveur comme dans le moteur local) |
+| Complétion (« X / 1000 ») | **hors périmètre** — la complétion se mesure sur le catalogue courant, sinon 100 % deviendrait inatteignable |
+| Classeur, échange, hôtel, Last Pack, vitrine, affiche | carte **valide comme les autres** |
+| Atelier | artisanable **pendant l'édition de son départ** seulement, et **jamais** une Légendaire |
+| Sa ligne en base | **jamais supprimée** (sa carte circule encore) |
+
+Deux règles écrites dans le code, à ne pas perdre de vue :
+
+- **un slug revenu au classement gagne** : `RETIRED_CREATORS` ignore un Sortant
+  dont le slug est dans `creators.json`, et `writeRetired` retire les revenants
+  du fichier à la génération suivante. Un retour est donc un non-événement ;
+- **`writeRetired` n'écrase jamais un Sortant existant** : sa fenêtre
+  d'artisanat court depuis son départ, pas depuis la dernière génération.
+
+Ce qu'une rotation demande côté Supabase : régénérer `0003_catalogue.sql`
+(`npm run supabase:catalogue`, la colonne `retired` suit) puis coller
+`supabase/migrations/0016_sortants.sql`, qui fait lire ce drapeau au tirage, à
+la complétion et au Paquet Scène. Le détail des migrations est dans le README.
+
+Un exemple complet, à blanc : `sf6` quitte le classement à l'édition 2.
+
+```text
+src/data/creators.json      1000 → 999 créateurs (sf6 retiré)
+src/data/retired.json       { creators: [{ slug: "sf6", …,
+                              retiredEdition: 2, retiredAt: "…" }] }
+src/data/catalog.config.json editionNumber : 1 → 2
+```
+
+Résultat en jeu : `sf6` sort des boosters et de la complétion, sa carte reste
+dans les classeurs, et l'Atelier le propose encore jusqu'à l'édition 3 — ensuite
+il n'appartient plus qu'à ceux qui l'ont. L'accueil annonce la fenêtre :
+« 1 Sortant encore artisanable · dernière édition ».
+
 ## Ce qu'il faut vérifier après génération
 
 - `npm run catalog:check` : « 2000 créateurs (attendu : 2000) », aucun rang
@@ -394,6 +443,9 @@ réglages à ajuster, tous dans des fichiers de données.
   raretés.
 - `reports/candidates-2000.json` : la liste des chaînes retenues, pour vérifier
   qu'il n'y a pas de doublons de nom ou de comptes de bots.
+- `src/data/retired.json` : les Sortants de la rotation, avec leur numéro
+  d'édition (voir « Les Sortants » ci-dessus). Fichier vide = catalogue inchangé,
+  et c'est le cas normal à chaque lancement.
 
 ## Journal de compatibilité
 

@@ -96,6 +96,7 @@ const OUT_DIR = path.join(ROOT, "public/creators");
 const REPORTS_DIR = path.join(ROOT, "reports");
 const DATA_FILE = path.join(ROOT, "src/data/creators.json");
 const CONFIG_FILE = path.join(ROOT, "src/data/catalog.config.json");
+const RETIRED_FILE = path.join(ROOT, "src/data/retired.json");
 const SEASONS_FILE = path.join(ROOT, "src/data/seasons.config.json");
 const GQL_URL = "https://gql.twitch.tv/gql";
 const CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
@@ -703,6 +704,65 @@ async function writeReport(name, payload) {
 }
 
 /** Construit la liste finale : tri par score, portraits validés, rangs contigus. */
+
+/**
+ * Écrit les Sortants : les créateurs du catalogue précédent qui ne sont plus
+ * dans le nouveau classement.
+ *
+ * Trois règles, et elles comptent :
+ *
+ *   1. **on n'écrase jamais un Sortant existant** : sa `retiredEdition` est la
+ *      date de son départ, et c'est elle qui dit si sa fenêtre d'artisanat est
+ *      encore ouverte. Le réécrire repousserait la fenêtre à chaque
+ *      régénération, et on pourrait rejoindre une carte sortie il y a trois
+ *      éditions ;
+ *   2. **s'il revient au classement, il redevient normal** : on le retire du
+ *      fichier (sa carte redevient tirable), et sa ligne ne traîne pas ;
+ *   3. **l'édition en cours s'incrémente** au moment où les listes sont écrites,
+ *      pas avant : c'est l'édition *des nouveaux* Sortants.
+ */
+async function writeRetired({ previous, next, edition }) {
+  const nextSlugs = new Set(next.map((creator) => creator.slug));
+  const previousBySlug = new Map(previous.map((creator) => [creator.slug, creator]));
+
+  let existing = { creators: [] };
+  try {
+    existing = JSON.parse(await readFile(RETIRED_FILE, "utf8"));
+  } catch {
+    // Premier passage : le fichier n'existe pas encore.
+  }
+  const kept = new Map(
+    (existing.creators ?? [])
+      .filter((creator) => creator && creator.slug)
+      .map((creator) => [creator.slug, creator]),
+  );
+
+  // Ceux qui quittent le classement maintenant.
+  const leaving = [];
+  for (const [slug, creator] of previousBySlug) {
+    if (nextSlugs.has(slug)) continue;
+    if (kept.has(slug)) continue; // déjà Sortant : sa date de départ ne bouge pas
+    leaving.push({ ...creator, retiredEdition: edition, retiredAt: new Date().toISOString() });
+    kept.set(slug, leaving[leaving.length - 1]);
+  }
+
+  // Ceux qui reviennent : ils ressortent de la liste des Sortants.
+  let returning = 0;
+  for (const slug of [...kept.keys()]) {
+    if (nextSlugs.has(slug)) {
+      kept.delete(slug);
+      returning += 1;
+    }
+  }
+
+  const creators = [...kept.values()].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
+  await writeFile(
+    RETIRED_FILE,
+    `${JSON.stringify({ ...existing, creators }, null, 2)}\n`,
+  );
+  return { leaving: leaving.length, returning, total: creators.length };
+}
+
 async function buildCatalog(candidates) {
   const usedSlugs = new Set();
   const finalCatalog = [];
@@ -901,12 +961,31 @@ async function main() {
   console.log(`3/4 Téléchargement et normalisation des ${COUNT} portraits (sur ${allCandidates.length} candidats)…`);
   const { catalog, stats } = await buildCatalog(allCandidates);
 
+  // Les Sortants se calculent **avant** d'écrire le nouveau catalogue : ils
+  // comparent l'ancien au nouveau, et l'édition qui les date est celle qui
+  // commence.
+  let previous = [];
+  try {
+    previous = JSON.parse(await readFile(DATA_FILE, "utf8"));
+  } catch {
+    previous = [];
+  }
+  const previousConfig = await readFile(CONFIG_FILE, "utf8")
+    .then((raw) => JSON.parse(raw))
+    .catch(() => ({}));
+  const edition = Math.max(1, Number(previousConfig.editionNumber ?? 1)) + (previous.length ? 1 : 0);
+  const retired = await writeRetired({ previous, next: catalog, edition });
+
   await writeFile(DATA_FILE, `${JSON.stringify(catalog, null, 2)}\n`);
   // La taille et le périmètre sont écrits ici : `npm run catalog:check` détecte
   // une troncature, et l'application en déduit tous ses libellés (aucun « FR »
   // ni « 500 » n'est écrit dans le code).
   const scope = scopeConfig({ size: catalog.length, languages: LANGUAGES });
-  await writeFile(CONFIG_FILE, `${JSON.stringify(scope, null, 2)}\n`);
+  await writeFile(CONFIG_FILE, `${JSON.stringify({ ...scope, editionNumber: edition }, null, 2)}\n`);
+  console.log(
+    `   Sortants : ${retired.leaving} nouveau(x) cette édition, ${retired.returning} revenu(s), ` +
+      `${retired.total} au total (édition ${edition}).`,
+  );
 
   const counts = rarityCounts(catalog.length);
   await writeReport(`top${COUNT}.json`, {

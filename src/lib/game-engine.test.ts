@@ -9,6 +9,13 @@ import {
   type Rarity,
 } from "@/lib/catalog";
 import { DIRECT_BONUS, PULL_RATES, packOdds } from "@/lib/pull-rates";
+import {
+  CATALOG_EDITION_NUMBER,
+  RETIRED_BY_SLUG,
+  RETIRED_CREATORS,
+  type Creator,
+  type RetiredCreator,
+} from "@/lib/catalog";
 import { SEASONS, seasonOf, seasonsCoverage } from "@/lib/seasons";
 import { gameDay } from "@/lib/progression";
 import {
@@ -611,6 +618,34 @@ describe("Atelier · recyclage", () => {
   });
 });
 
+
+/**
+ * Rejoue une fonction **avec** un Sortant déclaré.
+ *
+ * Le fichier de données étant vide en livraison, la règle se vérifie en
+ * fabriquant le cas : on ajoute une ligne à `RETIRED_CREATORS`, on appelle, on
+ * retire. C'est le seul moyen de tester une règle qui ne s'activera qu'à la
+ * prochaine rotation du catalogue.
+ */
+function withRetired<T>(slugs: string[], run: () => T): () => T {
+  return () => {
+    const store = RETIRED_CREATORS as RetiredCreator[];
+    const slugsBefore = RETIRED_BY_SLUG.size;
+    for (const slug of slugs) {
+      const creator = CREATOR_BY_SLUG.get(slug) as Creator;
+      store.push({ ...creator, retiredEdition: CATALOG_EDITION_NUMBER, retiredAt: "2026-10-07T00:00:00Z" });
+      RETIRED_BY_SLUG.set(slug, creator as RetiredCreator);
+    }
+    try {
+      return run();
+    } finally {
+      store.splice(0, store.length);
+      for (const slug of slugs) RETIRED_BY_SLUG.delete(slug);
+      expect(RETIRED_BY_SLUG.size).toBe(slugsBefore);
+    }
+  };
+}
+
 describe("Atelier · artisanat", () => {
   it("débite les points et ajoute une carte Standard", () => {
     const cost = RARITY_META.uncommon.craftCost as number;
@@ -647,6 +682,29 @@ describe("Atelier · artisanat", () => {
     expect(RARITY_META.legendary.craftable).toBe(false);
 
     expect(() => craftCreator(makeState({ points: 10 }), rare.slug, T0)).toThrowError(/points/i);
+  });
+
+  it("ne compte pas un Sortant dans la complétion, mais garde sa carte", () => {
+    // Un créateur qui a quitté le classement : sa carte reste dans le classeur,
+    // mais elle ne compte plus dans « X / 1000 » — sinon 100 % deviendrait
+    // inatteignable à la première rotation du catalogue.
+    const sortant = creatorOfRarity("rare");
+    const state = makeState({ cards: [ownedCard("a", sortant.slug, "rare")] });
+    const view = withRetired([sortant.slug], () => getGameView(state, T0))();
+    expect(view.stats.totalCards).toBe(1);
+    // Sans la règle, le compte serait de 1.
+    expect(getGameView(state, T0).stats.uniqueCreators).toBe(1);
+    expect(view.stats.uniqueCreators).toBe(0);
+  });
+
+  it("ne retombe pas dans un booster, même si le catalogue le gardait par erreur", () => {
+    // Pire cas d'une rotation ratée : les créateurs sont encore dans
+    // `creators.json` alors que `retired.json` les a déjà marqués. Le tirage ne
+    // doit pas se rabattre sur eux — ici, plus personne à tirer du tout, donc
+    // il refuse au lieu de servir un Sortant.
+    const slugs = CREATORS.map((creator) => creator.slug);
+    const state = makeState({ packs: PACKS.live.max });
+    expect(() => withRetired(slugs, () => openPack(state, T0))()).toThrowError(/vide/i);
   });
 });
 
