@@ -25,7 +25,12 @@ import {
 } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
 import { craftableRetired, isRetired } from "@/lib/retired";
-import { bulkRecyclableIds, duplicateGroups, type GameView } from "@/lib/game-engine";
+import {
+  bulkRecyclableIds,
+  duplicateGroups,
+  recycleNeedsConfirm,
+  type GameView,
+} from "@/lib/game-engine";
 import { usePoints } from "@/hooks/use-points";
 
 type Mode = "craft" | "recycle";
@@ -60,6 +65,13 @@ export function AtelierView({
   // pas de compte (voir `usePoints`).
   const points = usePoints();
   const [bulkBusy, setBulkBusy] = useState(false);
+  // Un doublon Live ne part pas sur un clic perdu : on garde la carte en attente
+  // et l'écran affiche la question. La variante Live ne se rachète pas.
+  const [pendingLive, setPendingLive] = useState<{
+    cardId: string;
+    name: string;
+    value: number;
+  } | null>(null);
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
   // « Tout recycler » emporte les doublons **sauf les Live** : un doublon Live
@@ -387,7 +399,8 @@ export function AtelierView({
         <>
           <p className="atelier-intro">
             Recycle tes doublons en points. Une carte n&apos;est recyclable que si tu en possèdes au
-            moins deux de la même variante — on ne touche jamais à ta dernière copie.
+            moins deux de la même variante — on ne touche jamais à ta dernière copie. Un doublon{" "}
+            <strong>Live</strong> demande confirmation : cette variante-là ne se rachète pas.
           </p>
 
           {duplicates.length ? (
@@ -432,16 +445,57 @@ export function AtelierView({
                           ×{group.count}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        className="craft-button recycle"
-                        onClick={() =>
-                          handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)
-                        }
-                        title={`Recycler un doublon de ${creator.displayName}`}
-                      >
-                        <Recycle size={13} />+{group.unitValue}
-                      </button>
+                      {recycleNeedsConfirm(group.variant) ? (
+                        pendingLive?.cardId === group.recyclableIds[0] ? (
+                          <div className="atelier-confirm">
+                            <span>Recycler ce doublon Live ?</span>
+                            <button
+                              type="button"
+                              className="craft-button recycle"
+                              onClick={() => {
+                                const pending = pendingLive;
+                                setPendingLive(null);
+                                if (pending) handleRecycle(pending.cardId, pending.name, pending.value);
+                              }}
+                            >
+                              Oui, +{group.unitValue}
+                            </button>
+                            <button
+                              type="button"
+                              className="craft-button"
+                              onClick={() => setPendingLive(null)}
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="craft-button recycle"
+                            onClick={() =>
+                              setPendingLive({
+                                cardId: group.recyclableIds[0],
+                                name: creator.displayName,
+                                value: group.unitValue,
+                              })
+                            }
+                            title={`Recycler un doublon Live de ${creator.displayName} — confirmation demandée`}
+                          >
+                            <Recycle size={13} />+{group.unitValue}
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="craft-button recycle"
+                          onClick={() =>
+                            handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)
+                          }
+                          title={`Recycler un doublon de ${creator.displayName}`}
+                        >
+                          <Recycle size={13} />+{group.unitValue}
+                        </button>
+                      )}
                     </article>
                   );
                 })}

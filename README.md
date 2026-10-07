@@ -319,7 +319,9 @@ Principes :
 - **Atelier** (onglet dédié) : les doublons se recyclent en points — **un par un**
   ou d'un seul geste (« Tout recycler », qui laisse les doublons **Live** en
   place : eux se recyclent un par un, exprès) — et les points rejoignent un
-  créateur manquant. Avec un compte connecté, chaque carte est vérifiée et payée
+  créateur manquant. Un doublon **Live** demande **confirmation** avant de
+  partir (`recycleNeedsConfirm`) : cette variante-là ne se rachète pas, elle
+  tient au direct du créateur au moment du tirage. Avec un compte connecté, chaque carte est vérifiée et payée
   par le serveur, exactement comme le geste unitaire. Un doublon vaut toujours moins que le coût
   d'artisanat de sa rareté, et les **Légendaires ne s'artisanent pas** — elles
   se méritent en booster, comme les raretés hautes non échangeables de TCG

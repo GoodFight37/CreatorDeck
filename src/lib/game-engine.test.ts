@@ -33,6 +33,7 @@ import {
   applyTradeResult,
   bulkRecyclableIds,
   bulkRecycleCards,
+  recycleNeedsConfirm,
   claimMilestone,
   claimSeason,
   craftCreator,
@@ -667,6 +668,15 @@ describe("Atelier · recyclage", () => {
       "d",
     ]);
     expect(next.points).toBe(RARITY_META.rare.recycleValue + RARITY_META.common.recycleValue);
+  });
+
+  it("ne recycle un doublon Live qu'après avoir demandé", () => {
+    // La règle du carnet : un doublon Live se recycle, mais jamais d'un clic
+    // perdu — la variante ne se rachète pas, elle tient au direct du moment.
+    expect(recycleNeedsConfirm("live")).toBe(true);
+    expect(recycleNeedsConfirm("standard")).toBe(false);
+    expect(recycleNeedsConfirm("holo")).toBe(false);
+    expect(recycleNeedsConfirm("gold")).toBe(false);
   });
 
   it("refuse une carte absente ou unique", () => {

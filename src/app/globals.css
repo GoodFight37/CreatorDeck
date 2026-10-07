@@ -1348,6 +1348,25 @@ input:focus-visible {
   opacity: .5;
   cursor: default;
 }
+/* La question posée avant de recycler un doublon Live : dans la ligne, pas de fenêtre. */
+.atelier-confirm {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.atelier-confirm span {
+  color: #ffd48e;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.atelier-confirm .craft-button {
+  min-height: 30px;
+  padding: 0 9px;
+  font-size: 12px;
+}
 .atelier-bulk-note {
   color: var(--muted);
   font-size: 12px;

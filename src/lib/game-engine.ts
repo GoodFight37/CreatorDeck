@@ -1177,6 +1177,18 @@ export function duplicateGroups(state: Pick<PlayerState, "cards">): DuplicateGro
 }
 
 /**
+ * Un doublon **Live** ne part jamais sur un seul clic : l'écran doit demander
+ * avant de le recycler.
+ *
+ * Une variante Live ne se rachète pas (elle tient au direct du créateur au
+ * moment du tirage) : la perdre par erreur est une perte définitive. Les autres
+ * variantes se recyclent au clic, comme avant.
+ */
+export function recycleNeedsConfirm(variant: CardVariant): boolean {
+  return variant === "live";
+}
+
+/**
  * Les doublons que « Tout recycler » peut emporter : tous **sauf les variantes
  * Live**. Un doublon Live reste un geste à part — le joueur choisit, carte par
  * carte ; on ne le recycle jamais dans un clic global qui emporte tout.
