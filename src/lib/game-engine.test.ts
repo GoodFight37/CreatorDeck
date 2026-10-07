@@ -852,16 +852,33 @@ describe("échanges", () => {
 describe("jalons du parcours (écran Objectifs)", () => {
   it("annonce la même cible que celle qui est comptée", () => {
     // Le bug d'origine : le texte affichait 5 % et 20 % du catalogue (50 et
-    // 200) alors que les compteurs visaient 25 et 100.
+    // 200) alors que les compteurs visaient 25 et 100. Les paliers sont
+    // désormais des nombres fixes, et une seule source les porte : le moteur.
     const state = makeState({ cards: [], openings: 0 });
     const milestones = milestoneViews(state);
-    const binder = milestones.find((entry) => entry.id === "binder");
-    const hunter = milestones.find((entry) => entry.id === "hunter");
+    const targets = milestones.filter((entry) => entry.metric === "uniqueCreators");
 
-    expect(binder?.target).toBe(Math.round(CATALOG_SIZE * 0.05));
-    expect(hunter?.target).toBe(Math.round(CATALOG_SIZE * 0.2));
-    // Une seule source : la cible vient du moteur, plus de l'écran.
+    expect(targets.map((entry) => entry.target)).toEqual([10, 25, 50, 100, CATALOG_SIZE]);
     expect(MILESTONES.every((entry) => entry.target >= 1)).toBe(true);
+  });
+
+  it("compte le premier Légendaire sur les créateurs distincts", () => {
+    const star = CREATORS.find((creator) => creator.rarity === "legendary")!.slug;
+    const state = makeState({
+      cards: [
+        ownedCard("l1", star, "legendary", "standard", T0),
+        ownedCard("l2", star, "legendary", "gold", T0),
+      ],
+    });
+    const legendary = milestoneViews(state).find((entry) => entry.id === "legendary");
+    // Deux exemplaires du même Légendaire, c'est **un** Légendaire : le jalon
+    // ne se contourne pas en ouvrant des doublons.
+    expect(legendary?.progress).toBe(1);
+    expect(legendary?.reached).toBe(true);
+
+    const paid = claimMilestone(state, "legendary", T0 + 1_000);
+    expect(paid.points).toBe(state.points + 400);
+    expect(paid.hourglasses).toBe(state.hourglasses + 2);
   });
 
   it("paie une seule fois, et seulement quand le seuil est atteint", () => {

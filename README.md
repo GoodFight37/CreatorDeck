@@ -70,7 +70,7 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**536 tests**, 36 fichiers aujourd'hui).
+  (**537 tests**, 36 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -220,11 +220,16 @@ Principes :
   désignerait quelqu'un qui ne streame pas ne vaudrait rien. C'est déclaré dans
   `pull-rates.json` (section `direct`), publié dans l'écran « Taux de drop »,
   et appliqué des deux côtés (`0011_direct.sql`).
-- **Jalons du collectionneur** (écran Objectifs) : quatre jalons — premier
-  booster, 5 % puis 20 % du catalogue, catalogue complet — chacun payé **une
-  fois** (+40 points et 1 sablier, +150 et 1, +500 et 2, +3 000 et 10). Les
+- **Jalons du collectionneur** (écran Objectifs) : sept jalons — premier
+  booster, **10, 25, 50 puis 100** créateurs découverts, **premier
+  Légendaire**, catalogue complet — chacun payé **une fois** (+40 points et
+  1 sablier, puis 120/1, 260/2, 500/3, 1 200/5, 400/2 pour le Légendaire, et
+  3 000/10 pour le catalogue). Les paliers sont des nombres fixes : une
+  fraction du catalogue se déplacerait le jour où le catalogue grandit. Les
   seuils vivent dans `MILESTONES` (`src/lib/game-engine.ts`) : l'écran ne peut
-  plus annoncer un chiffre et en compter un autre.
+  plus annoncer un chiffre et en compter un autre. Le jalon « premier
+  Légendaire » compte les créateurs **distincts** — deux exemplaires du même
+  n'en font pas deux.
 - **Saison affichée** : la barre du haut montre la famille **que le joueur
   remplit en ce moment** (la plus avancée non terminée), pas un « S01 » écrit en
   dur — le catalogue est mondial, une partie sans carte française ne doit pas

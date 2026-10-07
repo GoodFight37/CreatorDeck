@@ -262,8 +262,14 @@ export function currentSeason(state: PlayerState): CurrentSeason | null {
  * cibles restaient écrites en dur (25 puis 100) alors que le texte annonçait
  * 5 % et 20 % du catalogue (50 et 200). Seuils et gains vivent maintenant ici,
  * à un seul endroit, et chaque jalon se réclame **une fois**.
+ *
+ * Les paliers de collection sont **fixes** (10, 25, 50, 100) et non plus une
+ * fraction du catalogue : un pourcentage change de valeur le jour où le
+ * catalogue grandit, et le joueur voit alors un objectif se déplacer sans avoir
+ * rien fait. Le seul jalon qui suit le catalogue est le dernier — le compléter
+ * entièrement, c'est la définition même du but.
  */
-export type MilestoneMetric = "openings" | "uniqueCreators";
+export type MilestoneMetric = "openings" | "uniqueCreators" | "legendary";
 
 export type Milestone = {
   id: string;
@@ -276,18 +282,13 @@ export type Milestone = {
 
 export const MILESTONES: readonly Milestone[] = [
   { id: "first", metric: "openings", target: 1, reward: { points: 40, hourglasses: 1 } },
-  {
-    id: "binder",
-    metric: "uniqueCreators",
-    target: Math.round(CATALOG_SIZE * 0.05),
-    reward: { points: 150, hourglasses: 1 },
-  },
-  {
-    id: "hunter",
-    metric: "uniqueCreators",
-    target: Math.round(CATALOG_SIZE * 0.2),
-    reward: { points: 500, hourglasses: 2 },
-  },
+  { id: "ten", metric: "uniqueCreators", target: 10, reward: { points: 120, hourglasses: 1 } },
+  { id: "twentyfive", metric: "uniqueCreators", target: 25, reward: { points: 260, hourglasses: 2 } },
+  { id: "fifty", metric: "uniqueCreators", target: 50, reward: { points: 500, hourglasses: 3 } },
+  { id: "hundred", metric: "uniqueCreators", target: 100, reward: { points: 1200, hourglasses: 5 } },
+  // Le premier Légendaire : le jalon que le joueur attend le plus, et qui ne
+  // dépend ni de son volume de jeu ni des jetons — seulement du tirage.
+  { id: "legendary", metric: "legendary", target: 1, reward: { points: 400, hourglasses: 2 } },
   {
     id: "master",
     metric: "uniqueCreators",
@@ -308,14 +309,31 @@ export type MilestoneView = Milestone & {
 
 /** Avancement d'un jalon dans une partie donnée (pur). */
 export function milestoneProgress(state: PlayerState, milestone: Milestone): number {
-  return milestone.metric === "openings" ? state.openings : ownedSlugs(state).size;
+  if (milestone.metric === "openings") return state.openings;
+  if (milestone.metric === "legendary") return legendaryCount(state);
+  return ownedSlugs(state).size;
+}
+
+/** Créateurs Légendaires **distincts** possédés (deux exemplaires = un). */
+export function legendaryCount(state: Pick<PlayerState, "cards">): number {
+  const slugs = new Set<string>();
+  for (const card of state.cards) {
+    if (card.rarity === "legendary") slugs.add(card.creatorSlug);
+  }
+  return slugs.size;
 }
 
 export function milestoneViews(state: PlayerState): MilestoneView[] {
-  // `ownedSlugs` construit un ensemble : une fois suffit pour les quatre jalons.
+  // Une fois suffit pour tous les jalons : deux ensembles, pas un par ligne.
   const owned = ownedSlugs(state).size;
+  const legendary = legendaryCount(state);
   return MILESTONES.map((milestone) => {
-    const progress = milestone.metric === "openings" ? state.openings : owned;
+    const progress =
+      milestone.metric === "openings"
+        ? state.openings
+        : milestone.metric === "legendary"
+          ? legendary
+          : owned;
     return {
       ...milestone,
       progress,
