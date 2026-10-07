@@ -1099,9 +1099,27 @@ la même.
 **Le draft du week-end** (`arena_draft_choices()`, `arena_draft_pick(array)`),
 ouvert du **samedi 6 h** au **lundi 6 h UTC** — quarante-huit heures. Le serveur
 tire cinq emplacements de trois propositions **dans la collection du joueur**,
-de façon reproductible (joueur + semaine + emplacement, tri des slugs) : deux
-appels rendent les mêmes quinze cartes, et un choix hors des propositions est
-refusé. Accepter un draft, c'est déposer l'arène de la semaine d'un coup.
+de façon reproductible (joueur + semaine, collection triée) : deux appels rendent
+les mêmes quinze cartes — **distinctes** quand la collection compte au moins
+quinze cartes, parce qu'une carte proposée deux fois ferait tomber la sélection
+« une par emplacement » sur un doublon, refusé par les règles. Un choix hors des
+propositions est refusé.
+
+Le tirage est corrigé pour qu'un draft soit **toujours jouable**, puisque la
+semaine n'en offre qu'un :
+
+| Garantie | Pourquoi |
+| --- | --- |
+| au moins une des quinze cartes est un créateur **en direct**, si le joueur en possède un | sans elle, l'arène du week-end serait refusée pour une raison que le joueur n'a pas choisie — et il ne peut pas recommencer |
+| au plus un emplacement **entièrement légendaire** | avec un plafond d'une Légendaire, deux triples tous légendaires rendraient toute sélection refusée |
+
+Au moment du choix, le serveur accepte une carte des propositions **affichées**
+ou du tirage **de base** (sans garanties) : entre l'écran et l'envoi, un créateur
+peut passer hors ligne et déplacer la carte garantie. Le juge du direct reste
+`_arena_problems`, rejoué à l'instant du choix. Accepter un draft, c'est déposer l'arène de la semaine d'un coup — et c'est
+**définitif** : un seul draft par semaine, le serveur refuse le deuxième. L'écran
+demande donc confirmation avant de valider, parce qu'un geste sans retour mérite
+deux appuis.
 
 | Point d'attention | Pourquoi |
 | --- | --- |

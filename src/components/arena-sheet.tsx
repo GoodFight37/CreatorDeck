@@ -45,6 +45,8 @@ import {
   ARENA_DRAFT_CHOICES,
   ARENA_LINEUP_SIZE,
   ARENA_MAX_LEGENDARY,
+  arenaDraftChoose,
+  arenaDraftLineup,
   arenaDraftWindow,
   arenaEmblemEarned,
   arenaHourglasses,
@@ -95,6 +97,10 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
   const [composing, setComposing] = useState(false);
   const [lineup, setLineup] = useState<string[]>([]);
   const [draft, setDraft] = useState<Record<number, string>>({});
+  // Le draft est **définitif** : un par semaine, tranché par le serveur. Le
+  // bouton qui valide demande donc confirmation — cinq choix d'un coup, sans
+  // retour, méritent un deuxième geste.
+  const [confirming, setConfirming] = useState(false);
   const [query, setQuery] = useState("");
 
   const ready = cloud.configured && Boolean(cloud.userId);
@@ -104,7 +110,10 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
   }, [ready]);
 
   const draftWindow = arenaDraftWindow(now);
-  const draftOpen = Boolean(cloud.arenaMine?.draftOpen) || draftWindow.open;
+  // Quand le serveur a parlé, c'est lui qui tranche : la fenêtre locale ne sert
+  // qu'à afficher le compte à rebours et à dire quand ça ouvre (avant le premier
+  // chargement, et pour un joueur sans compte).
+  const draftOpen = cloud.arenaMine ? cloud.arenaMine.draftOpen : draftWindow.open;
 
   // Les propositions du draft ne se demandent que quand la fenêtre est ouverte
   // et qu'aucun choix n'est encore enregistré.
@@ -190,8 +199,8 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
   }, [creators, query]);
 
   const draftSlots = cloud.arenaDraftSlots ?? [];
-  const picks = draftSlots.map((_, slot) => draft[slot]).filter((slug): slug is string => Boolean(slug));
-  const draftReady = draftSlots.length > 0 && picks.length === draftSlots.length;
+  const draftLineup = arenaDraftLineup(draftSlots.length, draft);
+  const draftReady = draftSlots.length > 0 && draftLineup.length === draftSlots.length;
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Arène">
@@ -459,13 +468,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                     <b>Draft enregistré</b>
                     {lineupLabel(mine.draft.picks)}
                   </span>
-                  <button
-                    type="button"
-                    className="arena-compose-open ghost"
-                    onClick={() => setDraft({})}
-                  >
-                    Refaire mes choix
-                  </button>
+                  <span className="arena-draft-once">Un draft par semaine, définitif.</span>
                 </div>
               ) : cloud.arenaDraftSlots ? (
                 <>
@@ -485,7 +488,9 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                                 viewers > 0 ? " live" : ""
                               }`}
                               aria-pressed={chosen}
-                              onClick={() => setDraft((current) => ({ ...current, [index]: slug }))}
+                              onClick={() =>
+                                setDraft((current) => arenaDraftChoose(current, index, slug))
+                              }
                             >
                               <b>{creator?.displayName ?? slug}</b>
                               {creator ? <span>{RARITY_META[creator.rarity].label}</span> : null}
@@ -501,29 +506,72 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                     emplacement). Une seule carte par emplacement — l&apos;arène du week-end est
                     celle-là, et elle sera déposée d&apos;un coup.
                   </p>
-                  <button
-                    type="button"
-                    className="arena-submit"
-                    disabled={busy || !draftReady}
-                    onClick={() =>
-                      void act(async () => {
-                        const ordered = draftSlots.map((_, slot) => draft[slot]);
-                        const result = await cloudStore.pickDraft(ordered);
-                        if (result.status === "done") setDraft({});
-                        return result;
-                      })
-                    }
-                  >
-                    <Shuffle size={15} />
-                    {busy ? "Enregistrement…" : `Valider mes ${draftSlots.length} choix`}
-                  </button>
+                  {confirming ? (
+                    <div className="arena-draft-confirm">
+                      <span>
+                        Un draft par semaine : ces {draftSlots.length} cartes deviennent ton arène,
+                        et on n&apos;y revient pas cette semaine.
+                      </span>
+                      <div>
+                        <button
+                          type="button"
+                          className="arena-submit"
+                          disabled={busy}
+                          onClick={() =>
+                            void act(async () => {
+                              const result = await cloudStore.pickDraft(
+                                arenaDraftLineup(draftSlots.length, draft),
+                              );
+                              if (result.status === "done") {
+                                setDraft({});
+                                setConfirming(false);
+                              }
+                              return result;
+                            })
+                          }
+                        >
+                          <Shuffle size={15} />
+                          {busy ? "Enregistrement…" : "Confirmer"}
+                        </button>
+                        <button
+                          type="button"
+                          className="arena-compose-open ghost"
+                          disabled={busy}
+                          onClick={() => setConfirming(false)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="arena-submit"
+                      disabled={busy || !draftReady}
+                      onClick={() => setConfirming(true)}
+                    >
+                      <Shuffle size={15} />
+                      {`Valider mes ${draftSlots.length} choix`}
+                    </button>
+                  )}
                 </>
               ) : (
-                <p className="arena-empty">
-                  {cloud.arenaDraftBusy
-                    ? "Tirage des propositions…"
-                    : "Le tirage n'est pas passé. Réessaie dans un instant."}
-                </p>
+                <div className="arena-draft-retry">
+                  <p className="arena-empty">
+                    {cloud.arenaDraftBusy
+                      ? "Tirage des propositions…"
+                      : "Le tirage n'est pas passé. Réessaie dans un instant."}
+                  </p>
+                  {!cloud.arenaDraftBusy ? (
+                    <button
+                      type="button"
+                      onClick={() => void cloudStore.loadDraftSlots()}
+                      disabled={busy}
+                    >
+                      <RefreshCw size={14} /> Réessayer
+                    </button>
+                  ) : null}
+                </div>
               )}
             </section>
 
@@ -576,4 +624,3 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
   );
 }
 
-export default ArenaSheet;

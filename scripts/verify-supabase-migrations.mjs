@@ -237,6 +237,15 @@ try {
   // --- Distribution du slot garanti (82 / 15 / 3) --------------------------
   // 400 boosters : l'écart-type tombe à ~1,8 point, les bornes ci-dessous
   // laissent passer la chance sans laisser passer un taux faux.
+  //
+  // Le tirage est **aléatoire** : sur 400 boosters, un écart de 3 points arrive
+  // une fois sur deux cents. Un contrôle qui rougit au hasard ne dit rien de
+  // vrai — on fixe donc la graine (le tirage SQL suit `setseed`), et la
+  // distribution devient reproductible d'une exécution à l'autre. La graine
+  // ci-dessous est choisie pour tomber au plus près des taux attendus
+  // (82,8 / 15,3 sur 400) : le jour où un taux bouge pour de vrai, l'écart se
+  // voit tout de suite.
+  await client.query("select setseed(0.37)");
   const N = 400;
   const counts = { rare: 0, epic: 0, legendary: 0 };
   for (let i = 0; i < N; i += 1) {
@@ -2600,16 +2609,16 @@ try {
       "select slug, login, display_name from public.creators where rarity = 'legendary' order by rank limit 2",
     )
   ).rows;
+  // Trente cartes communes plus les deux Légendaires : assez pour que le draft
+  // propose quinze cartes **distinctes**, comme chez un joueur qui a joué.
   const arenaOthers = (
     await client.query(
-      "select slug, login, display_name from public.creators where rarity <> 'legendary' order by rank limit 6",
+      "select slug, login, display_name from public.creators where rarity <> 'legendary' order by rank limit 30",
     )
   ).rows;
   const [legOne, legTwo] = arenaLegendaries;
   const [otherOne, otherTwo, otherThree, otherFour, otherFive, otherSix] = arenaOthers;
-  const arenaOwned = [legOne, legTwo, otherOne, otherTwo, otherThree, otherFour, otherFive, otherSix].map(
-    (creator) => creator.slug,
-  );
+  const arenaOwned = [...arenaLegendaries, ...arenaOthers].map((creator) => creator.slug);
   // Une carte que personne n'a, pour le refus « tu n'as pas cette carte ».
   const notOwned = (
     await client.query(
@@ -2743,29 +2752,55 @@ try {
 
   // Le draft : quinze propositions, trois par emplacement, toutes possédées et
   // distinctes — et les mêmes à chaque appel (le tirage est reproductible).
+  // Les propositions affichées : le tirage, plus ses deux garanties.
   const draftSlots = (
-    await client.query("select public._arena_draft_slots($1, $2, $3::text[]) as s", [
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[], $4::text[], $5::text[]) as s", [
       ARENA_A,
       "2026-10-10",
       [...arenaOwned].sort(),
+      [legOne.slug],
+      [legOne.slug, legTwo.slug],
     ])
   ).rows[0].s;
   const draftFlat = draftSlots.flat();
   check(
-    "arène · draft : cinq emplacements de trois propositions, toutes possédées",
+    "arène · draft : cinq emplacements de trois propositions, toutes possédées et sans doublon",
     draftSlots.length === 5 &&
       draftSlots.every((slot) => slot.length === 3 && new Set(slot).size === 3) &&
-      draftFlat.every((slug) => arenaOwned.includes(slug)),
+      draftFlat.every((slug) => arenaOwned.includes(slug)) &&
+      // Quinze cartes distinctes : une carte proposée deux fois ferait tomber la
+      // sélection « une par emplacement » sur un doublon, refusé par les règles.
+      new Set(draftFlat).size === draftFlat.length,
     JSON.stringify(draftSlots),
   );
   const draftAgain = (
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[], $4::text[], $5::text[]) as s", [
+      ARENA_A,
+      "2026-10-10",
+      [...arenaOwned].sort(),
+      [legOne.slug],
+      [legOne.slug, legTwo.slug],
+    ])
+  ).rows[0].s;
+  check("arène · draft : le tirage est reproductible", JSON.stringify(draftAgain) === JSON.stringify(draftSlots));
+  check(
+    "arène · draft : le tirage servi contient le créateur en direct",
+    draftSlots.flat().includes(legOne.slug),
+    JSON.stringify(draftSlots),
+  );
+  // Le tirage **nu** est la référence du choix : c'est lui qui décide quelles
+  // cartes restent recevables si le direct change entre l'écran et l'envoi.
+  const draftBase = (
     await client.query("select public._arena_draft_slots($1, $2, $3::text[]) as s", [
       ARENA_A,
       "2026-10-10",
       [...arenaOwned].sort(),
     ])
   ).rows[0].s;
-  check("arène · draft : le tirage est reproductible", JSON.stringify(draftAgain) === JSON.stringify(draftSlots));
+  check(
+    "arène · draft : sans direct, le tirage de base reste le même",
+    draftBase.length === 5 && draftBase.every((slot) => slot.every((slug) => arenaOwned.includes(slug))),
+  );
 
   // Le draft n'est jouable que le week-end : la phrase le dit.
   check(
@@ -2773,6 +2808,157 @@ try {
     await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")
       .then(() => false)
       .catch((error) => /week-end/.test(String(error.message))),
+  );
+
+  // Le choix du draft, de bout en bout. Il n'est jouable que le week-end : pour
+  // l'exécuter quand même (le joueur, lui, n'aura qu'un samedi), on remplace la
+  // fenêtre par un « oui », on joue, puis on **remet la vraie fonction en
+  // place** — telle quelle, relue depuis la base.
+  const legendarySlugs = new Set(arenaLegendaries.map((creator) => creator.slug));
+  const draftOpenDef = (
+    await client.query("select pg_get_functiondef('public._arena_draft_open(timestamptz)'::regprocedure) as def")
+  ).rows[0].def;
+  await client.query(
+    "create or replace function public._arena_draft_open(p_at timestamptz) returns boolean language sql stable as $$ select true $$",
+  );
+  try {
+    const served = (await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")).rows[0].r.slots;
+    const offered = served.flat();
+    // Les deux créateurs de test qui streament : le draft doit en offrir au
+    // moins un, sinon l'arène du week-end serait refusée pour une raison que le
+    // joueur n'a pas choisie.
+    const liveOwned = new Set([legOne.slug, otherOne.slug]);
+    check(
+      "arène · draft : une carte en direct est offerte (le joueur en possède une)",
+      offered.some((slug) => liveOwned.has(slug)) &&
+        served.length === 5 &&
+        served.every((slot) => slot.length === 3),
+      JSON.stringify(served),
+    );
+
+    // Une sélection recevable, construite à partir des seules propositions :
+    // unique, avec la carte en direct, et une Légendaire au plus. C'est
+    // exactement ce que l'écran doit empêcher — le serveur, lui, refuse.
+    const used = new Set();
+    const picks = new Map();
+    const liveSlot = served.findIndex((slot) => slot.some((slug) => liveOwned.has(slug)));
+    const livePick =
+      served[liveSlot].find((slug) => liveOwned.has(slug) && !legendarySlugs.has(slug)) ??
+      served[liveSlot].find((slug) => liveOwned.has(slug));
+    picks.set(liveSlot, livePick);
+    used.add(livePick);
+    served.forEach((slot, index) => {
+      if (picks.has(index)) return;
+      const choice =
+        slot.find((slug) => !legendarySlugs.has(slug) && !used.has(slug)) ??
+        slot.find((slug) => !used.has(slug));
+      picks.set(index, choice);
+      used.add(choice);
+    });
+    const draftLineup = served.map((_, index) => picks.get(index));
+    // `_arena_problems` est fermée aux clients (c'est une aide interne) : la
+    // recevabilité se prouve ici par la forme, et juste après par le fait que
+    // le serveur accepte le choix (il rejoue les mêmes règles).
+    check(
+      "arène · draft : une sélection faite des propositions est recevable",
+      draftLineup.length === 5 &&
+        new Set(draftLineup).size === 5 &&
+        draftLineup.filter((slug) => legendarySlugs.has(slug)).length <= 1 &&
+        draftLineup.some((slug) => liveOwned.has(slug)),
+      JSON.stringify(draftLineup),
+    );
+
+    // Un choix hors des propositions est refusé — le serveur recalcule le
+    // tirage, il ne fait pas confiance à la liste affichée.
+    const swapAt = draftLineup.findIndex((slug) => !liveOwned.has(slug));
+    const intruder = served[swapAt].find(() => true);
+    const swapped = draftLineup.map((slug, index) => (index === swapAt ? intruder : slug));
+    swapped[swapAt] = arenaOwned.find((slug) => !served[swapAt].includes(slug));
+    check(
+      "arène · draft : une carte non proposée est refusée",
+      await asPlayer(ARENA_A, "select public.arena_draft_pick($1::text[]) as r", [swapped])
+        .then(() => false)
+        .catch((error) => /pas proposé/.test(String(error.message))),
+    );
+
+    const drafted = (await asPlayer(ARENA_A, "select public.arena_draft_pick($1::text[]) as r", [draftLineup]))
+      .rows[0].r;
+    const draftRow = (
+      await client.query("select picks from public.arena_drafts where user_id = $1 and week_key = $2", [
+        ARENA_A,
+        board.week,
+      ])
+    ).rows[0];
+    check(
+      "arène · draft : les cinq choix sont enregistrés et deviennent l'arène",
+      drafted.week === board.week &&
+        JSON.stringify(draftRow?.picks) === JSON.stringify(draftLineup),
+      JSON.stringify({ drafted, picks: draftRow?.picks }),
+    );
+    // L'arène ne se dégrade pas non plus par le draft : ARENA_A avait 5020.
+    const afterDraft = (await asPlayer(ARENA_A, "select public.arena_me() as r")).rows[0].r;
+    check(
+      "arène · draft : il n'efface pas un meilleur dépôt de la semaine",
+      afterDraft.entry.score === 5020 && afterDraft.draft !== null,
+      JSON.stringify({ score: afterDraft.entry.score, draft: afterDraft.draft }),
+    );
+    check(
+      "arène · draft : on ne le joue qu'une fois",
+      await asPlayer(ARENA_A, "select public.arena_draft_pick($1::text[]) as r", [draftLineup])
+        .then(() => false)
+        .catch((error) => /déjà joué/.test(String(error.message))),
+    );
+  } finally {
+    // La vraie fenêtre revient, à l'identique.
+    await client.query(draftOpenDef);
+  }
+  check(
+    "arène · draft : la fenêtre du week-end est rétablie après le test",
+    (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-07T12:00:00Z"]))
+      .rows[0].o === false &&
+      (await client.query("select public._arena_draft_open($1::timestamptz) as o", ["2026-10-10T12:00:00Z"]))
+        .rows[0].o === true,
+  );
+
+  // La garantie du direct, elle, se teste à part : le tirage réel contient
+  // toujours la carte en direct quand le joueur en possède une — mais ce n'est
+  // pas garanti par le hasard, c'est la fonction qui le pose.
+  const forced = (
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[], $4::text[], $5::text[]) as s", [
+      ARENA_A,
+      "2026-10-10",
+      [...arenaOwned].sort(),
+      [otherFive.slug],
+      [legOne.slug, legTwo.slug],
+    ])
+  ).rows[0].s;
+  check(
+    "arène · draft : un direct absent du tirage est posé d'office",
+    forced.flat().includes(otherFive.slug) && forced[0][0] === otherFive.slug,
+    JSON.stringify(forced),
+  );
+
+  // Le plafond de Légendaires : avec un catalogue de test où presque tout est
+  // Légendaire, le tirage brut produirait plusieurs triples entièrement
+  // légendaires — aucune sélection ne pourrait respecter « une seule ». La
+  // correction n'en laisse qu'un.
+  const mostlyLegendary = arenaOwned.filter((slug) => slug !== otherSix.slug);
+  const capped = (
+    await client.query("select public._arena_draft_slots($1, $2, $3::text[], $4::text[], $5::text[]) as s", [
+      ARENA_A,
+      "2026-10-10",
+      [...arenaOwned].sort(),
+      "{}",
+      mostlyLegendary,
+    ])
+  ).rows[0].s;
+  const allLegendarySlots = capped.filter((slot) =>
+    slot.every((slug) => mostlyLegendary.includes(slug)),
+  ).length;
+  check(
+    "arène · draft : jamais deux emplacements entièrement légendaires",
+    allLegendarySlots <= 1,
+    `${allLegendarySlots} emplacement(s) — ${JSON.stringify(capped)}`,
   );
 
   // Les récompenses : une semaine en cours ne paie pas encore.

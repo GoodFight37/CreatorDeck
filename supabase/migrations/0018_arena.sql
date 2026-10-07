@@ -634,29 +634,127 @@ $$;
 -- emplacement)`, exactement comme les choix du Paquet Scène (`0014`). Le
 -- serveur peut donc recalculer les propositions au moment d'accepter le choix
 -- du joueur — un client ne peut pas s'inventer trois Légendaires.
-create or replace function public._arena_draft_slots(p_user uuid, p_week text, p_owned text[])
+-- La première version de cette aide prenait trois arguments. Sa signature a
+-- grandi (les garanties du draft lisent le direct et les Légendaires) : on
+-- supprime l'ancienne, sinon elle resterait installée **sans les garanties** —
+-- un joueur pourrait tirer des propositions injouables par cette porte-là.
+drop function if exists public._arena_draft_slots(uuid, text, text[]);
+
+-- Aide au draft : les quinze propositions.
+--
+-- Le tirage est **reproductible** : même joueur, même semaine, même emplacement
+-- → les mêmes trois cartes. C'est ce qui permet au serveur de recalculer les
+-- propositions au moment du choix, et de refuser une carte qui n'en faisait pas
+-- partie — sans rien stocker.
+--
+-- Deux correctifs, et ils comptent : **un draft injouable est un draft perdu,
+-- il n'y en a qu'un par semaine**.
+--
+--   1. si le joueur possède un créateur en direct, au moins une des quinze
+--      cartes est en direct. Sans ça, l'arène du week-end serait refusée pour
+--      une raison que le joueur n'a pas choisie ;
+--   2. au plus un emplacement entièrement légendaire (`p_legendary`). Avec un
+--      plafond d'une Légendaire, deux triples tous légendaires rendraient
+--      toute sélection refusée.
+--
+-- `p_live` et `p_legendary` sont des sous-ensembles de `p_owned` : ils ne
+-- changent jamais le tirage de base, seulement ces deux garanties.
+create or replace function public._arena_draft_slots(
+  p_user uuid,
+  p_week text,
+  p_owned text[],
+  p_live text[] default '{}',
+  p_legendary text[] default '{}'
+)
 returns jsonb
 language plpgsql
 immutable
 as $$
 declare
   v_count integer := coalesce(array_length(p_owned, 1), 0);
+  v_cards text[] := '{}';
+  v_plain text[];
+  v_plain_count integer;
   v_slots jsonb := '[]'::jsonb;
   v_slot integer;
   v_start integer;
+  v_index integer;
+  v_all_legendary boolean;
+  v_has_live boolean;
+  v_forced integer := 0;
+  v_candidate text;
 begin
   if v_count < 5 then
     return '[]'::jsonb;
   end if;
 
+  -- Le tirage : quinze cartes **distinctes** quand la collection le permet (au
+  -- moins quinze cartes), prises à la suite dans la collection triée à partir
+  -- d'un point de départ tiré du joueur et de la semaine. Chaque emplacement est
+  -- un triple consécutif, donc trois cartes différentes.
+  --
+  -- Pourquoi pas cinq tirage indépendants : la même carte apparaissait alors
+  -- dans deux emplacements, et une sélection naturelle (« une par emplacement »)
+  -- pouvait contenir un doublon — refusé par les règles de l'arène. Le draft se
+  -- joue une fois par semaine : il ne doit pas piéger.
+  v_start := 1 + (abs(hashtext(p_user::text || '|' || p_week || '|grille')) % v_count);
+  for v_index in 0..14 loop
+    v_cards := v_cards || p_owned[1 + ((v_start - 1 + v_index) % v_count)];
+  end loop;
+
+  -- Correctif 2 : au plus un emplacement entièrement légendaire. Le premier est
+  -- laissé tel quel (c'est un vrai choix : « la Légendaire, tu la prends ici »),
+  -- les suivants troquent leur troisième carte contre une non-légendaire du
+  -- joueur, choisie de façon reproductible.
+  v_plain := array(
+    select s from unnest(p_owned) as s where not (s = any (p_legendary))
+  );
+  v_plain_count := coalesce(array_length(v_plain, 1), 0);
+
   for v_slot in 0..4 loop
-    v_start := 1 + (
-      abs(hashtext(p_user::text || '|' || p_week || '|' || v_slot::text)) % v_count
-    );
+    v_all_legendary := true;
+    for v_index in 0..2 loop
+      if not (v_cards[v_slot * 3 + v_index + 1] = any (p_legendary)) then
+        v_all_legendary := false;
+        exit;
+      end if;
+    end loop;
+    if v_all_legendary then
+      v_forced := v_forced + 1;
+      if v_forced > 1 and v_plain_count > 0 then
+        v_candidate := v_plain[
+          1 + (abs(hashtext(p_user::text || p_week || v_slot::text)) % v_plain_count)
+        ];
+        v_cards[v_slot * 3 + 3] := v_candidate;
+      end if;
+    end if;
+  end loop;
+
+  -- Correctif 1 : au moins une carte en direct parmi les quinze, quand le
+  -- joueur en possède une. La remplaçante prend la première place du premier
+  -- emplacement — c'est la carte qu'on voit en ouvrant le draft.
+  if coalesce(array_length(p_live, 1), 0) > 0 then
+    v_has_live := false;
+    for v_index in 1..15 loop
+      if v_cards[v_index] = any (p_live) then
+        v_has_live := true;
+        exit;
+      end if;
+    end loop;
+    if not v_has_live then
+      select l into v_candidate
+        from unnest(p_live) as l
+       order by l
+       limit 1;
+      v_cards[1] := v_candidate;
+    end if;
+  end if;
+
+  for v_slot in 0..4 loop
     v_slots := v_slots || jsonb_build_array(to_jsonb(array[
-      p_owned[1 + ((v_start - 1) % v_count)],
-      p_owned[1 + ((v_start) % v_count)],
-      p_owned[1 + ((v_start + 1) % v_count)]
+      v_cards[v_slot * 3 + 1],
+      v_cards[v_slot * 3 + 2],
+      v_cards[v_slot * 3 + 3]
     ]));
   end loop;
 
@@ -664,10 +762,63 @@ begin
 end;
 $$;
 
--- Les propositions, pour de vrai : la collection du joueur, la semaine en
--- cours, et le tirage reproductible ci-dessus. C'est **cette** fonction que le
--- client appelle, et c'est elle que `arena_draft_pick` recalcule pour vérifier
--- les choix reçus.
+-- Les cartes du joueur, triées par slug, **filtrées sur le catalogue actuel**.
+--
+-- Le tri n'est pas cosmétique : le tirage du draft doit être le même d'un appel
+-- à l'autre, et l'ordre d'une sauvegarde change à chaque carte obtenue. Le
+-- filtre non plus : une carte d'un catalogue passé (le créateur a quitté le
+-- catalogue depuis) ne doit pas se retrouver dans un tirage, sinon l'arène
+-- serait refusée pour une carte inexistante.
+--
+-- `owned.slug` est qualifié exprès : écrire `c.slug = slug` dans la sous-requête
+-- laissait le nom se résoudre sur la **table interne** (`c.slug = c.slug`, donc
+-- toujours vrai) et ne filtrait rien.
+create or replace function public._arena_owned_catalog_slugs(p_user uuid)
+returns text[]
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(array_agg(owned.slug order by owned.slug), '{}')
+    from unnest(public._arena_owned_slugs(p_user)) as owned(slug)
+   where exists (select 1 from public.creators c where c.slug = owned.slug);
+$$;
+
+-- Les cartes possédées dont le créateur streame **maintenant** (sous-ensemble de
+-- `p_owned`). Sert aux garanties du draft.
+create or replace function public._arena_live_slugs(p_user uuid, p_owned text[])
+returns text[]
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(array_agg(owned.slug order by owned.slug), '{}')
+    from unnest(p_owned) as owned(slug)
+   where exists (
+     select 1
+       from public.creators c
+      where c.slug = owned.slug
+        and coalesce((public._arena_live_viewers() ->> c.login)::integer, 0) > 0
+   );
+$$;
+
+-- Les cartes possédées qui sont des Légendaires (sous-ensemble de `p_owned`).
+create or replace function public._arena_legendary_slugs(p_owned text[])
+returns text[]
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(array_agg(owned.slug order by owned.slug), '{}')
+    from unnest(p_owned) as owned(slug)
+   where exists (
+     select 1 from public.creators c where c.slug = owned.slug and c.rarity = 'legendary'
+   );
+$$;
+
 create or replace function public.arena_draft_choices()
 returns jsonb
 language plpgsql
@@ -690,11 +841,7 @@ begin
     raise exception 'arène : le draft n''est ouvert que le week-end' using errcode = 'P0001';
   end if;
 
-  -- Trié pour que le tirage soit stable d'un appel à l'autre (l'ordre de la
-  -- sauvegarde, lui, change à chaque nouvelle carte).
-  select array_agg(slug order by slug) into v_owned
-    from unnest(public._arena_owned_slugs(v_user)) as slug
-   where exists (select 1 from public.creators c where c.slug = slug);
+  v_owned := public._arena_owned_catalog_slugs(v_user);
 
   v_count := coalesce(array_length(v_owned, 1), 0);
   if v_count < 5 then
@@ -702,7 +849,13 @@ begin
       using errcode = 'P0001';
   end if;
 
-  v_slots := public._arena_draft_slots(v_user, v_week, v_owned);
+  v_slots := public._arena_draft_slots(
+    v_user,
+    v_week,
+    v_owned,
+    public._arena_live_slugs(v_user, v_owned),
+    public._arena_legendary_slugs(v_owned)
+  );
 
   return jsonb_build_object('week', v_week, 'slots', v_slots);
 end;
@@ -727,6 +880,8 @@ declare
   v_slot integer;
   v_slug text;
   v_allowed text[];
+  v_owned text[];
+  v_base jsonb;
   v_best integer;
 begin
   if v_user is null then
@@ -746,13 +901,27 @@ begin
     raise exception 'arène : %', v_problems[1] using errcode = 'P0001';
   end if;
 
+  -- Les propositions affichées, et le tirage **de base** sans les garanties.
+  -- Le direct bouge : entre l'écran et l'envoi, un créateur peut passer hors
+  -- ligne, et la garantie « une carte en direct » change alors de carte. Une
+  -- carte du tirage de base reste donc recevable — le vrai juge du direct, de
+  -- toute façon, c'est `_arena_problems` juste au-dessus, à l'instant du choix.
   v_choices := public.arena_draft_choices();
+
+  v_owned := public._arena_owned_catalog_slugs(v_user);
+  v_base := public._arena_draft_slots(v_user, v_week, v_owned);
 
   for v_slot in 0..4 loop
     v_slug := p_lineup[v_slot + 1];
-    select coalesce(array_agg(value::text), '{}')
+    select coalesce(array_agg(allowed.value::text), '{}')
       into v_allowed
-      from jsonb_array_elements_text(v_choices -> 'slots' -> v_slot) as value;
+      from (
+        select value
+          from jsonb_array_elements_text(coalesce(v_choices -> 'slots' -> v_slot, '[]'::jsonb)) as value
+        union
+        select value
+          from jsonb_array_elements_text(coalesce(v_base -> v_slot, '[]'::jsonb)) as value
+      ) as allowed;
     if not (v_slug = any (v_allowed)) then
       raise exception 'arène : % n''était pas proposé à l''emplacement %', v_slug, v_slot + 1
         using errcode = 'P0001';
@@ -801,7 +970,10 @@ revoke all on function public._arena_owned_slugs(uuid) from public, anon;
 revoke all on function public._arena_live_viewers() from public, anon;
 revoke all on function public._arena_score(text[]) from public, anon;
 revoke all on function public._arena_problems(uuid, text[]) from public, anon;
-revoke all on function public._arena_draft_slots(uuid, text, text[]) from public, anon;
+revoke all on function public._arena_draft_slots(uuid, text, text[], text[], text[]) from public, anon;
+revoke all on function public._arena_owned_catalog_slugs(uuid) from public, anon;
+revoke all on function public._arena_live_slugs(uuid, text[]) from public, anon;
+revoke all on function public._arena_legendary_slugs(text[]) from public, anon;
 
 revoke all on function public.arena_submit(text[]) from public, anon;
 revoke all on function public.arena_me() from public, anon;

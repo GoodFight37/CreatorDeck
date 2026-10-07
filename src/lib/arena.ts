@@ -275,3 +275,40 @@ export function arenaWeekLabel(week: string): string {
 export function arenaRankLabel(rank: number): string {
   return rank === 1 ? "1er" : `${rank}e`;
 }
+
+/**
+ * Choisit une carte dans un emplacement du draft.
+ *
+ * Une carte ne peut pas occuper deux emplacements : la choisir ailleurs la
+ * **déplace**. Sans cette règle, une sélection naturelle (« une par
+ * emplacement ») contiendrait un doublon — et le serveur refuserait l'arène, au
+ * pire moment possible : le draft ne se joue qu'une fois par semaine.
+ */
+export function arenaDraftChoose(
+  picks: Readonly<Record<number, string>>,
+  slot: number,
+  slug: string,
+): Record<number, string> {
+  const next: Record<number, string> = {};
+  for (const [key, value] of Object.entries(picks)) {
+    if (value !== slug) next[Number(key)] = value;
+  }
+  next[slot] = slug;
+  return next;
+}
+
+/**
+ * La sélection, dans l'ordre des emplacements. Les trous sont ignorés (ils sont
+ * comptés à part par l'écran, qui n'active le bouton qu'à cinq choix).
+ */
+export function arenaDraftLineup(
+  slotCount: number,
+  picks: Readonly<Record<number, string>>,
+): string[] {
+  const lineup: string[] = [];
+  for (let slot = 0; slot < slotCount; slot += 1) {
+    const slug = picks[slot];
+    if (slug) lineup.push(slug);
+  }
+  return lineup;
+}

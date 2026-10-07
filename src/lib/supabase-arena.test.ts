@@ -83,13 +83,15 @@ describe("0018_arena.sql (l'arène)", () => {
   it("le draft propose trois cartes par emplacement, sur cinq emplacements", () => {
     expect(ARENA_DRAFT_CHOICES).toBe(3);
     expect(CODE).toContain("for v_slot in 0..4 loop");
-    // Trois indices par emplacement, dans la collection du joueur.
-    expect(CODE).toContain("p_owned[1 + ((v_start - 1) % v_count)]");
-    expect(CODE).toContain("p_owned[1 + ((v_start) % v_count)]");
-    expect(CODE).toContain("p_owned[1 + ((v_start + 1) % v_count)]");
-    // Le tirage dépend du joueur, de la semaine et de l'emplacement — donc il
-    // est reproductible, comme les choix du Paquet Scène.
-    expect(CODE).toContain("hashtext(p_user::text || '|' || p_week || '|' || v_slot::text)");
+    // Quinze cartes prises à la suite dans la collection triée, à partir d'un
+    // point de départ tiré du joueur et de la semaine — donc reproductible, et
+    // sans doublon quand la collection compte au moins quinze cartes.
+    expect(CODE).toContain("for v_index in 0..14 loop");
+    expect(CODE).toContain("v_cards := v_cards || p_owned[1 + ((v_start - 1 + v_index) % v_count)]");
+    expect(CODE).toContain("hashtext(p_user::text || '|' || p_week || '|grille')");
+    // Trois cartes par emplacement, dans l'ordre du tirage.
+    expect(CODE).toContain("v_cards[v_slot * 3 + 1]");
+    expect(CODE).toContain("v_cards[v_slot * 3 + 3]");
   });
 
   it("les récompenses sont celles des données, pas celles du SQL", () => {
@@ -157,18 +159,42 @@ describe("0018_arena.sql (l'arène)", () => {
     for (const fn of [
       "_arena_week_key(timestamptz)",
       "_arena_owned_slugs(uuid)",
+      "_arena_owned_catalog_slugs(uuid)",
       "_arena_live_viewers()",
+      "_arena_live_slugs(uuid, text[])",
+      "_arena_legendary_slugs(text[])",
       "_arena_score(text[])",
       "_arena_problems(uuid, text[])",
-      "_arena_draft_slots(uuid, text, text[])",
+      "_arena_draft_slots(uuid, text, text[], text[], text[])",
     ]) {
       expect(CODE).toContain(`revoke all on function public.${fn} from public, anon;`);
     }
   });
 
+  it("garantit un draft jouable : une carte en direct, jamais deux triples légendaires", () => {
+    // Un draft injouable est un draft perdu : il n'y en a qu'un par semaine.
+    // Deux garanties, écrites dans le SQL et vérifiées aussi sur une vraie base
+    // (`scripts/verify-supabase-migrations.mjs`).
+    expect(CODE).toContain("public._arena_live_slugs(v_user, v_owned)");
+    expect(CODE).toContain("public._arena_owned_catalog_slugs(v_user)");
+    expect(CODE).toContain("public._arena_legendary_slugs(v_owned)");
+    expect(CODE).toContain("if not v_has_live then");
+    expect(CODE).toContain("if v_forced > 1 and v_plain_count > 0 then");
+    // Le choix accepte une carte du tirage **de base** : entre l'écran et
+    // l'envoi, le direct peut bouger, et l'arène reste jugée à l'instant du
+    // choix par `_arena_problems`.
+    expect(CODE).toContain("v_base := public._arena_draft_slots(v_user, v_week, v_owned);");
+    expect(CODE).toContain("v_problems := public._arena_problems(v_user, p_lineup);");
+  });
+
   it("est rejouable : rien à supprimer, rien à recréer de zéro", () => {
     expect(CODE).not.toMatch(/drop table/);
-    expect(CODE).not.toMatch(/drop function/);
+    // Une seule suppression, et elle est motivée : l'ancienne signature de
+    // l'aide au draft (trois arguments), qui resterait sinon appelable **sans**
+    // les garanties du draft.
+    const drops = CODE.match(/drop function[^;]*;/g) ?? [];
+    expect(drops).toHaveLength(1);
+    expect(drops[0]).toContain("drop function if exists public._arena_draft_slots(uuid, text, text[])");
     expect(CODE).toContain("create table if not exists public.arena_entries");
     expect(CODE).toContain("create table if not exists public.arena_drafts");
     expect(CODE).toContain("create table if not exists public.arena_claims");

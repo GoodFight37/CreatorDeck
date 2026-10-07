@@ -5,6 +5,8 @@ import {
   ARENA_LINEUP_SIZE,
   ARENA_MAX_LEGENDARY,
   applyArenaReward,
+  arenaDraftChoose,
+  arenaDraftLineup,
   arenaDraftWindow,
   arenaEmblemEarned,
   arenaHourglasses,
@@ -210,5 +212,22 @@ describe("la récompense arrive dans la partie", () => {
     expect(arenaWeekLabel("2026-10-05")).toBe("la semaine du 5 octobre");
     // Une clé illisible ne casse rien : elle s'affiche telle quelle.
     expect(arenaWeekLabel("n'importe quoi")).toBe("n'importe quoi");
+  });
+});
+
+describe("le choix du draft", () => {
+  it("déplace une carte déjà choisie ailleurs, plutôt que de la dupliquer", () => {
+    let picks = arenaDraftChoose({}, 0, "kaicenat");
+    picks = arenaDraftChoose(picks, 1, "ibai");
+    picks = arenaDraftChoose(picks, 2, "kaicenat");
+    // La carte a quitté l'emplacement 1 pour le 3 : aucun doublon.
+    expect(picks).toEqual({ 1: "ibai", 2: "kaicenat" });
+    expect(new Set(arenaDraftLineup(5, picks)).size).toBe(2);
+  });
+
+  it("garde l'ordre des emplacements et ignore les trous", () => {
+    const picks = arenaDraftChoose(arenaDraftChoose({}, 3, "michou"), 0, "ibai");
+    expect(arenaDraftLineup(5, picks)).toEqual(["ibai", "michou"]);
+    expect(arenaDraftLineup(5, {})).toEqual([]);
   });
 });

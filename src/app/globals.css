@@ -2348,3 +2348,15 @@ input:focus-visible {
 .pity-row.arena-row.hot { color: var(--text); border-color: rgb(var(--accent-rgb) / .38); background: rgb(var(--accent-rgb) / .06); }
 .pity-row.arena-row.done { color: var(--text); border-color: var(--line); background: var(--panel); }
 .pity-row.arena-row.idle { color: var(--muted); }
+
+/* Le draft est définitif : l'écran le dit, et le refus vient du serveur. Le
+   tirage raté a un bouton pour réessayer — un écran qui ne propose rien est un
+   écran mort. */
+.arena-draft-once { color: var(--muted-2); font-size: 11.5px; }
+.arena-draft-retry { display: flex; flex-direction: column; gap: 8px; }
+.arena-draft-retry button { display: flex; align-items: center; align-self: flex-start; gap: 6px; padding: 7px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: none; font-size: 12.5px; cursor: pointer; }
+.arena-draft-confirm { display: flex; flex-direction: column; gap: 9px; padding: 10px 11px; border: 1px solid rgb(var(--accent-rgb) / .4); border-radius: 11px; background: rgb(var(--accent-rgb) / .07); }
+.arena-draft-confirm > span { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+.arena-draft-confirm > div { display: flex; gap: 8px; }
+.arena-draft-confirm .arena-submit { flex: 1; }
+.arena-draft-confirm .arena-compose-open.ghost { flex: 0 0 auto; width: auto; padding: 0 16px; }

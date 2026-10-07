@@ -65,7 +65,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 10.4 | Paquet Scène + wishlist publique épinglée | **livré** | `0014_scene_pack.sql`, `0015_wishlist.sql` |
 | 10.5 | Overlay 16:9 + révélation sadique | **livré** | `src/lib/reveal.ts`, `src/components/reveal-overlay.tsx`, `/overlay` |
 | 10.6 | Catalogue désirable : Top 1000 + les Sortants | **livré** | `src/lib/retired.ts`, `0016_sortants.sql`, `docs/catalogue-twitch.md` § « Les Sortants » |
-| 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** (migration `0018` à coller) | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
+| 10.7 | Arena : 5 cartes, 1 L maximum, 1 Direct, score aux viewers réels, classement hebdo, draft du week-end | **livrée** | `src/data/arena.json`, `src/lib/arena.ts`, `0018_arena.sql`, `src/components/arena-sheet.tsx`, `docs/cloud-supabase.md` § « L'Arène » |
 
 Deux règles qui tiennent tout le reste :
 
