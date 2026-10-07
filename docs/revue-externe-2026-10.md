@@ -11,7 +11,9 @@ pourquoi — pas seulement ce qui a été changé.
 `60b1c63` (0021 provenance), `1b9f7a3` (affichage saison), `934868b` (note
 Verify JWT), `fa7694d` (le README dit que le jeu est en ligne), `56ce1dd` (ce
 bilan), puis la **deuxième passe** (`0022_pack_dans_saves.sql`, le client qui
-adopte la sauvegarde du serveur, `e2e/pack-crash.spec.ts`) — § 2.
+adopte la sauvegarde du serveur, `e2e/pack-crash.spec.ts`) et sa suite
+(`fa8785e` : le tirage écrit la collection, le blanchiment se ferme ; `f56ca8d` :
+0022 et `refresh-live` vérifiées en production ; cette découpe enfin) — § 2.
 
 ---
 
@@ -50,7 +52,7 @@ traités dans l'ordre, chacun avec son contrôle dans le vérifieur.
 | 3. Refus **par exception** aux quatre portes du blanchiment | `0022` | `create_trade()`, `respond_trade()` (les deux côtés), `market_sell()` et `market_buy()` refusent une carte que `card_claim_covers()` ne couvre pas chez le **donneur** — même règle que `save_suspicions()`, mais une exception lisible au lieu d'un déclassement. L'hôtel garde une ceinture-bretelles pour les annonces d'avant `0022`. **Contrôles** : quatre refus (proposer, accepter, vendre, acheter) + le pendant honnête (« une fois donnée par le serveur, la même carte se vend ») |
 | 4. `push_save()` n'arbitre plus avec l'horloge de l'appareil | `0022`, `cloud-store.ts` | nouvelle signature `(jsonb, integer, bigint, boolean, timestamptz)` — l'ancienne est **supprimée** ; conflit si `p_base_updated_at` manque ou si la ligne serveur a bougé. `p_device_updated_at` reste écrit comme métadonnée. `p_force` ne sert plus qu'aux **gestes explicites** : « Envoyer ma collection » et l'écrasement de l'écran de conflit. Après une action décidée par le serveur (échange accepté, hôtel, Last Pack, arène, réinitialisation), le client relit la version serveur (`pushAfterServer()`) puis envoie la sienne **sans forcer** — sept envois silencieusement forcés ont été retirés. **Contrôles** : « un envoi sans version serveur de départ est un conflit », « « écraser » écrit malgré tout », et les tests du store (« jamais forcé » après un échange et après une vente) |
 | 5. Test e2e « booster + crash + rechargement » | `e2e/pack-crash.spec.ts` | deux tests : le tirage **local** qui survit à un rechargement (tourne partout), et le tirage **serveur** (faux serveur intercepté) où les cinq identifiants sont ceux du serveur et où **aucun** `push_save` ne part après le tirage. Se saute proprement sans `.env.local` ; à lancer avec `npm run e2e` sur un poste avec Chromium |
-| 6. Découpe `api.ts` / `cloud-store.ts` | — | **pas faite** : les règles du prompt l'encadrent (aucune nouvelle RPC, aucun nouveau champ d'état, aucun nouveau `force: true`), et deux des trois corrections ci-dessus touchent justement ces fichiers. Reste ouvert, § 4 |
+| 6. Découpe `api.ts` / `cloud-store.ts` | `src/lib/cloud/api/`, `src/lib/cloud/store/`, `cloud-store.ts` | **faite, sans changement de comportement** : aucune RPC ajoutée, aucun champ d'état ajouté, aucun `force: true` ajouté. `api.ts` (2 056 l.) devient `api/` — `types.ts`, `core.ts` (transport, rafraîchissement du jeton, session, `CloudCore`) et un module par domaine (`account`, `pack`, `social`, `market`, `arena`), `index.ts` n'étant plus que la façade qui délègue. `cloud-store.ts` (2 382 l. → 537 l.) garde l'état, la synchronisation et les helpers, et assemble `store/` (`types.ts`, `context.ts` + un module par domaine). Les corps de méthodes ont déménagé tels quels. **Contrôles** : `tsc` 0, `eslint` 0, `npm run build` OK, **666 tests / 44 fichiers** inchangés (dont les 108 du magasin), vérifieur SQL 325 contrôles |
 
 **Deux trous réels trouvés en écrivant ces contrôles** (ils passaient pour de
 mauvaises raisons, aucun n'était visible en relecture) :
@@ -116,11 +118,9 @@ pareil ne bloquent plus la sauvegarde ».
 
 ## 4. Reste ouvert (dans l'ordre où on le ferait)
 
-1. **Découpes** : `cloud-store.ts` et `api.ts` (environ 2 000 lignes chacun) par
-   domaine (auth, pack, social, arène) — le prompt 6 les encadrait (aucune
-   nouvelle RPC, aucun nouveau champ d'état, aucun nouveau `force: true`) et
-   n'est **pas** fait : les corrections du prompt 1 à 4 touchent justement ces
-   deux fichiers. Dette de revue, aucun effet joueur.
+1. ~~**Découpes** : `cloud-store.ts` et `api.ts`~~ **faites le 7 octobre** (voir
+   § 2, prompt 6) : `api/` et `store/`, un module par domaine, façade mince,
+   aucun changement de comportement (666 tests inchangés).
 2. **Wallet serveur**, si l'hôtel devient central (voir § 3).
 3. **Les campagnes de notifications (FCM)** puis les codes promo, le gyroscope
    holographique et le badge automatique (`pg_cron`) — le backlog hors brief,

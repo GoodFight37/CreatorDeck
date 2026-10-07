@@ -993,7 +993,7 @@ Ce que le serveur garantit, et pourquoi c'est lui qui s'en occupe :
 | --- | --- |
 | `0008_friends.sql` | tables `friend_requests` et `friends`, RPC `send`/`accept`/`reject`/`cancel`/`remove`, listes, `has_friendship()` |
 | `src/lib/social/friends.ts` | types et règles pures (tri, recherche, « il y a 3 jours »), testés sans navigateur |
-| `src/lib/cloud/api.ts`, `cloud-store.ts` | appels RPC et états (`friends`, `friendsAt`) : la feuille lit, le store écrit |
+| `src/lib/cloud/api/social.ts`, `cloud-store.ts` | appels RPC et états (`friends`, `friendsAt`) : la feuille lit, le store écrit |
 | `src/components/friends-sheet.tsx` | l'écran : chercher un joueur, envoyer, accepter, refuser, annuler, retirer |
 
 L'ajout se fait par **recherche de pseudo** (`search_players()`, le RPC des
@@ -1149,7 +1149,7 @@ Configuration* — voir §3.
 | Élément | Rôle |
 | --- | --- |
 | `src/lib/cloud/twitch.ts` | adresse du dialogue, lecture du retour, adresse de retour, nettoyage — testés sans navigateur |
-| `src/lib/cloud/api.ts` | `twitchAuthorizeUrl()`, `adoptSession()` (jetons → session enregistrée) |
+| `src/lib/cloud/api/account.ts` | `twitchAuthorizeUrl()`, `adoptSession()` (jetons → session enregistrée) |
 | `src/lib/cloud/cloud-store.ts` | `twitchSignInUrl()` (donne l'adresse, ne navigue pas), `completeTwitchSignIn()` (installe, relit l'identité) |
 | `src/hooks/use-twitch-return.ts` | le retour : fragment de l'adresse sur le site, `appUrlOpen` dans l'APK |
 | `src/components/account-sheet.tsx` | le bouton « Continuer avec Twitch » |
@@ -1202,7 +1202,7 @@ comptoir), et la section « En vente à l'hôtel » d'une fiche publique.
 | `0009_marche.sql` | table `market_listings`, grilles de prix, RPC `market_sell`/`market_buy`/`market_shelf`/`market_listings_of` |
 | `src/lib/market.ts` | grille de prix (miroir du serveur), liste des doublons déposables, libellés — testés sans navigateur |
 | `src/lib/game-engine.ts` | `applyMarketSale()` / `applyMarketPurchase()` : l'appareil rejoue ce que le serveur a écrit |
-| `src/lib/cloud/api.ts`, `cloud-store.ts` | appels RPC et états (`market`, `marketAt`, `profileMarket`) |
+| `src/lib/cloud/api/market.ts`, `cloud-store.ts` | appels RPC et états (`market`, `marketAt`, `profileMarket`) |
 | `src/components/market-sheet.tsx` | l'écran : le portefeuille, « Déposer un doublon », « Le comptoir » |
 
 ### La complétion par famille de collection
@@ -1223,7 +1223,7 @@ de ses cartes.
 | --- | --- |
 | `0003_catalogue.sql` | la colonne `region` de chaque créateur (`S01`…`S09`, `S10` pour la fourre-tout) |
 | `0006_profil_public.sql` | `by_region` dans `player_profile()` : `{ "S01": { "owned": 12, "total": 155 }, … }` |
-| `src/lib/cloud/api.ts` | `byRegion` (type `ProfileFamily`), trié du plus complet au plus vide |
+| `src/lib/cloud/api/account.ts` | `byRegion` (type `ProfileFamily`), trié du plus complet au plus vide |
 | `src/lib/regions.ts`, `src/lib/cosmetics.ts` | libellé de famille et teinte — les mêmes que l'écran des saisons et les emblèmes |
 | `src/components/public-profile-sheet.tsx` | la liste « Familles de collection » sur la fiche publique |
 

@@ -163,8 +163,11 @@ src/lib/game-engine.ts   moteur de jeu PUR : tirage, recharge, XP, sabliers
 src/lib/save-store.ts    (dé)sérialisation + validation de la sauvegarde
 src/lib/game-store.ts    store client : charge, applique le moteur, persiste (localStorage)
 src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
-src/lib/cloud/           cloud : config, client Supabase (api.ts), décisions de
-                         synchronisation (sync.ts), store React (cloud-store.ts),
+src/lib/cloud/           cloud : config, client Supabase (api/, un module par
+                         domaine : compte, boosters, échanges, hôtel, arène),
+                         décisions de synchronisation (sync.ts), store React
+                         (cloud-store.ts) qui assemble store/ (état et
+                         synchronisation dans la façade, actions par domaine),
                          échanges, amis, marché, Twitch, transport HTTP, et
                          mojibake.ts (répare un message du serveur mal collé)
 src/lib/social/          échanges et amis côté règles pures + carnet de
@@ -593,16 +596,21 @@ version web hébergée.
 - Côté application : `src/lib/cloud/`
   - `config.ts` lit les deux variables publiques et désactive tout si elles
     manquent ;
-  - `api.ts` est un client Supabase minimal (compte, code à 6 chiffres,
+  - `api/` est un client Supabase minimal (compte, code à 6 chiffres,
     envoi/lecture de la sauvegarde, classement) — pas de SDK embarqué dans
-    l'APK ;
+    l'APK. Le dossier suit les domaines : `core.ts` (transport, rafraîchissement
+    du jeton, session) et un module par domaine (`account`, `pack`, `social`,
+    `market`, `arena`), `index.ts` étant la façade ;
   - `credentials.ts` valide l'adresse et le mot de passe côté écran (les mêmes
     règles qu'à l'inscription) et porte l'avertissement « mot de passe non
     récupérable sans SMTP » ;
   - `sync.ts` contient les décisions (envoyer, charger, ne rien faire, demander
     au joueur) sous forme de fonctions pures, testées ;
   - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
-    ~20 s après la dernière action quand un compte est connecté ;
+    ~20 s après la dernière action quand un compte est connecté. Il garde
+    **l'état, la synchronisation et les helpers** et assemble les actions de
+    `store/` (`account.ts`, `pack.ts`, `social.ts`, `market.ts`, `arena.ts`) ;
+    la signature publique est inchangée ;
   - `trades.ts` applique aux parties locales les échanges acceptés (fonctions
     pures, testées) — un troc accepté pendant que l'appareil était ailleurs
     entre dans la collection au chargement suivant ;

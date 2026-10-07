@@ -66,22 +66,28 @@ describe("0017_reinitialiser.sql (recommencer sa partie)", () => {
   });
 
   it("le client connaît la fonction et l'appelle au bon moment", () => {
-    const api = readFileSync(path.join(process.cwd(), "src", "lib", "cloud", "api.ts"), "utf8");
+    // Le client est découpé par domaine : `reset_progress` vit dans `pack.ts`
+    // (boosters et sauvegarde), la classe ne fait que déléguer.
+    const api = readFileSync(
+      path.join(process.cwd(), "src", "lib", "cloud", "api", "pack.ts"),
+      "utf8",
+    );
+    // `resetProgress` vit dans `store/pack.ts` depuis la découpe du magasin.
     const store = readFileSync(
-      path.join(process.cwd(), "src", "lib", "cloud", "cloud-store.ts"),
+      path.join(process.cwd(), "src", "lib", "cloud", "store", "pack.ts"),
       "utf8",
     );
     const app = readFileSync(
       path.join(process.cwd(), "src", "components", "creator-deck-app.tsx"),
       "utf8",
     );
-    expect(api).toContain('this.rpc("reset_progress"');
+    expect(api).toContain('core.rpc("reset_progress"');
     // L'appareil d'abord : c'est la partie neuve qui remonte au serveur.
     const resetAt = app.indexOf("gameStore.reset()");
     const cloudAt = app.indexOf("cloudStore.resetProgress()");
     expect(resetAt).toBeGreaterThan(-1);
     expect(cloudAt).toBeGreaterThan(resetAt);
     expect(store).toContain("await ready.api.resetProgress()");
-    expect(store).toContain("await fetchPackStatus()");
+    expect(store).toContain("await ctx.fetchPackStatus()");
   });
 });

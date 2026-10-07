@@ -20,7 +20,7 @@
  * navigateur sans Capacitor retombe simplement sur `fetch`.
  */
 
-/** Requête minimale : mêmes champs que ceux utilisés par `src/lib/cloud/api.ts`. */
+/** Requête minimale : mêmes champs que ceux utilisés par `src/lib/cloud/api/`. */
 export type CloudRequestInit = {
   method: string;
   headers: Record<string, string>;
