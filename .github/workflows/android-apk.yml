@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - arena/01a10c75-creatordeck
+  workflow_dispatch:
 
 jobs:
   build-and-distribute:
