@@ -76,6 +76,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 11.2 | L'ouverture d'un paquet décidée à un seul endroit (jeu **et** overlay 16:9) | **livrée** | `src/hooks/use-pack-opening.ts`, `src/components/overlay-stage.tsx` |
 | 11.3 | Réveil du direct anti-course ; `?check=1` réservé au rôle de service | **livrée** | `supabase/functions/refresh-live/index.ts`, `docs/cloud-supabase.md` § « Le direct » |
 | 11.4 | Provenance des cartes : le serveur sait d'où vient chaque carte (tirage, échange, hôtel, vol) | **livrée** | `0021_provenance.sql`, `docs/cloud-supabase.md` § « L'intégrité côté serveur », `scripts/verify-supabase-migrations.mjs` |
+| 11.5 | Le tirage écrit la collection dans la même transaction ; le blanchiment est fermé aux quatre portes ; l'envoi de sauvegarde n'arbitre plus avec l'horloge de l'appareil | **livrée** | `0022_pack_dans_saves.sql`, `e2e/pack-crash.spec.ts`, `docs/cloud-supabase.md` § « La sauvegarde ne se perd plus (`0022`) » |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -108,7 +109,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0021` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+| `npm run supabase:verify` | joue les migrations `0001` → `0022` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack, pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
 
 ## Tests
 
@@ -117,13 +118,16 @@ Trois étages, trois vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**665 tests**, 44 fichiers aujourd'hui).
+  (**666 tests**, 44 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
   depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
   sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
-  distingue un bug du jeu d'un réseau coupé.
+  distingue un bug du jeu d'un réseau coupé. S'y ajoute `e2e/pack-crash.spec.ts` :
+  un booster ouvert, la page rechargée, **les cinq mêmes cartes** — et, quand un
+  cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
+  collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
   échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
@@ -137,7 +141,8 @@ Trois étages, trois vitesses :
   Légendaire refusé, le journal qui ne fait pas monter le plancher de
   malchance — et la **wishlist** — un second épinglé qui remplace le premier,
   la lecture par un autre joueur, l'écriture directe fermée
-  (**241 contrôles** aujourd'hui).
+  (**325 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes
+  et le tirage rangé dans la collection).
 
 ```powershell
 npm test          # rapide, à chaque changement
@@ -198,14 +203,15 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0021)
+supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0022)
 supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),
                          vérificateur des migrations (verify-supabase-migrations.mjs)
-e2e/ + playwright.config.ts les cinq gestes rejoués sur bureau et téléphone
+e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont le tirage
+                         qui survit à un rechargement de page)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),

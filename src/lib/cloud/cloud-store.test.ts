@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createInitialState, type PlayerState } from "@/lib/game-engine";
+import { createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
 import {
   CloudError,
   type CloudApi,
@@ -59,6 +59,22 @@ function tradeItem(overrides: Partial<TradeListItem> = {}): TradeListItem {
 function saveWith(overrides: Partial<PlayerState> = {}): PlayerState {
   return { ...createInitialState(T0), ...overrides };
 }
+
+/** La version serveur renvoyée par le tirage simulé. */
+const SERVER_SAVE_AT = "2026-03-01T10:00:05Z";
+
+/** Une carte telle que `open_pack()` la fabrique : identifiant né du serveur. */
+function serverCard(creatorSlug: string, rarity: string, variant: string, index = serverCard.next++): OwnedCard {
+  return {
+    id: `5e2f0000-0000-4000-8000-0000000000${String(index).padStart(2, "0")}`,
+    creatorSlug,
+    rarity: rarity as OwnedCard["rarity"],
+    variant: variant as OwnedCard["variant"],
+    obtainedAt: T0,
+    rareDrop: false,
+  };
+}
+serverCard.next = 1;
 
 function remoteRow(state: PlayerState, updatedAt: string, deviceUpdatedAt = state.updatedAt): RemoteSaveRow {
   return {
@@ -255,6 +271,24 @@ function harness(options: {
         { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
         { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
       ],
+      // Depuis `0022`, le serveur range lui-même les cinq cartes dans la
+      // collection (identifiants nés côté serveur) et renvoie la ligne : le
+      // client l'adopte au lieu de pousser la sienne.
+      save: remoteRow(
+        {
+          ...local,
+          packs: 2,
+          openings: 4,
+          cards: [
+            serverCard("kaicenat", "legendary", "live"),
+            serverCard("ibai", "epic", "holo"),
+            serverCard("ninja", "rare", "standard"),
+            serverCard("auronplay", "uncommon", "standard"),
+            serverCard("rubius", "common", "standard"),
+          ],
+        },
+        SERVER_SAVE_AT,
+      ),
     })),
     packStatus: vi.fn(async () => ({
       packs: 3,
@@ -610,7 +644,7 @@ describe("store cloud", () => {
     expect(store.getSnapshot().leaderboard[0]?.displayName).toBe("Kaicenat");
   });
 
-  it("ouvre un booster côté serveur et pousse immédiatement la partie", async () => {
+  it("ouvre un booster côté serveur et adopte la sauvegarde écrite par le serveur", async () => {
     const { store, api, applied } = harness({ signedIn: true });
     store.subscribe(() => {});
     const outcome = await store.openPack();
@@ -618,15 +652,44 @@ describe("store cloud", () => {
     if (outcome.status !== "drawn") throw new Error("tirage attendu");
     expect(outcome.cards).toHaveLength(5);
     expect(api.openPack).toHaveBeenCalled();
-    // Les cartes et les compteurs du serveur entrent dans la partie locale.
+    // Les cartes et les compteurs du serveur entrent dans la partie locale,
+    // avec les identifiants nés sur le serveur — pas ceux du moteur local.
     expect(applied.at(-1)?.cards).toHaveLength(5);
+    expect(applied.at(-1)?.cards.every((card) => card.id.startsWith("5e2f0000-"))).toBe(true);
     expect(applied.at(-1)?.packs).toBe(2);
     expect(applied.at(-1)?.openings).toBe(4);
-    // Après le tirage, la sauvegarde est poussée immédiatement (pas de debounce).
-    expect(api.pushSave).toHaveBeenCalled();
+    // Le tirage n'est **plus** poussé : le serveur l'a déjà écrit. Un envoi
+    // forcé ici écraserait la collection d'un autre appareil avec une version
+    // d'avant le tirage.
+    expect(api.pushSave).not.toHaveBeenCalled();
     const snapshot = store.getSnapshot();
+    expect(snapshot.remoteUpdatedAt).toBe(Date.parse(SERVER_SAVE_AT));
     expect(snapshot.message).toContain("5 cartes");
     expect(snapshot.isError).toBe(false);
+  });
+
+  it("projet d'avant `0022` : le tirage est envoyé, mais jamais forcé", async () => {
+    const { store, api } = harness({ signedIn: true });
+    store.subscribe(() => {});
+    api.openPack.mockResolvedValueOnce({
+      packs: 2,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 4,
+      cards: [
+        { creatorSlug: "kaicenat", rarity: "legendary", variant: "live", rareDrop: false },
+        { creatorSlug: "ibai", rarity: "epic", variant: "holo", rareDrop: false },
+        { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+        { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
+      ],
+      save: null,
+    });
+    const outcome = await store.openPack();
+    expect(outcome.status).toBe("drawn");
+    expect(api.pushSave).toHaveBeenCalledTimes(1);
+    // Le quatrième argument est `p_force` : `true` n'est réservé qu'au bouton
+    // « Envoyer / écraser » de l'écran de conflit.
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
   });
 
   it("explique qu'il faut le serveur quand le réseau est coupé (pas de repli local)", async () => {
@@ -792,10 +855,12 @@ describe("échanges côté store", () => {
     expect(state.current.cards.map((owned) => owned.creatorSlug)).toEqual(["kaicenat"]);
     expect(state.current.cards[0]?.fromTrade).toBe(5);
     // Deux envois : la collection avant (pour que le serveur retire bien une
-    // carte de cette partie), l'état post-échange après.
+    // carte de cette partie), l'état post-échange après — et **jamais forcé** :
+    // le serveur vient d'écrire, on relit sa version avant d'envoyer la nôtre.
     expect(api.pushSave).toHaveBeenCalledTimes(2);
     expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
-    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(true);
+    expect(api.pullSave).toHaveBeenCalled();
+    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(false);
     expect(store.getSnapshot().message).toMatch(/Échange accepté/);
   });
 
@@ -1205,10 +1270,12 @@ describe("hôtel des ventes", () => {
     expect(state.current.cards.map((owned) => owned.id)).toEqual(["a2"]);
     expect(state.current.points).toBe(2_100);
     // La collection est envoyée avant (le serveur retire la carte de *cette*
-    // partie), puis l'état d'après.
+    // partie), puis l'état d'après — sans forçage : le serveur a déjà écrit sa
+    // ligne, on relit sa version d'abord.
     expect(api.pushSave).toHaveBeenCalledTimes(2);
     expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
-    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(true);
+    expect(api.pullSave).toHaveBeenCalled();
+    expect(api.pushSave.mock.calls.at(-1)?.[3]).toBe(false);
     expect(store.getSnapshot().message).toMatch(/\+2000 points/);
   });
 

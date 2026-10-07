@@ -131,6 +131,7 @@ try {
   const integrite = await readFile(path.join(MIGRATIONS, "0019_integrite.sql"), "utf8");
   const identite = await readFile(path.join(MIGRATIONS, "0020_identite.sql"), "utf8");
   const provenance = await readFile(path.join(MIGRATIONS, "0021_provenance.sql"), "utf8");
+  const packDansSaves = await readFile(path.join(MIGRATIONS, "0022_pack_dans_saves.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -153,6 +154,7 @@ try {
     ["0019_integrite.sql", integrite],
     ["0020_identite.sql", identite],
     ["0021_provenance.sql", provenance],
+    ["0022_pack_dans_saves.sql", packDansSaves],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -715,6 +717,20 @@ try {
   );
   const tradesStill = (await client.query("select count(*)::int as n from public.trades")).rows[0].n;
   check("migration échanges rejouable : table conservée", tradesStill >= 4, String(tradesStill));
+
+  // Rejouer une migration **ancienne** ramène ses définitions : `0005` recrée
+  // `respond_trade`, donc sans ce recollage la version d'avant `0022` revient —
+  // et le blanchiment se rouvre en silence. C'est la règle de la pile : on
+  // recolle dans l'ordre, et ce qui est plus récent repasse en dernier.
+  await client.query(packDansSaves);
+  check(
+    "migration échanges rejouable : les refus de `0022` survivent au recollage",
+    (
+      await client.query(
+        "select count(*)::int as n from pg_proc where proname in ('respond_trade', 'create_trade', 'market_sell', 'market_buy') and position('card_claim_covers' in prosrc) > 0",
+      )
+    ).rows[0].n === 4,
+  );
 
   // --- Profil public --------------------------------------------------------
   // Diane a une collection variée, Ethan une toute petite, Fabien une
@@ -1728,8 +1744,29 @@ try {
     (await asPlayer(L3, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0,
   );
 
-  // Tant que Léa n'a pas envoyé sa collection, il n'y a rien à voler : un vol
-  // ne doit jamais créer une carte que le propriétaire ne possède pas.
+  // Le tirage a rangé les cartes **côté serveur** (`0022`) : Léa n'a rien
+  // envoyé, et pourtant sa collection les contient — des identifiants neufs,
+  // nés sur le serveur, pas dans l'appareil. C'est tout l'objet de la migration.
+  const leaServer = (
+    await client.query("select state from public.saves where user_id = $1", [L1])
+  ).rows[0].state;
+  check(
+    "last pack : le tirage a rangé les cinq cartes, sans envoi du client",
+    leaServer.cards.length === 5 &&
+      leaServer.cards.every((held) => typeof held.id === "string" && held.id.length === 36) &&
+      leaServer.cards.every((held) => held.creatorSlug === lea.cards.find(
+        (drawn) => drawn.creatorSlug === held.creatorSlug && drawn.variant === held.variant,
+      )?.creatorSlug),
+    JSON.stringify(leaServer.cards.map((held) => held.id)),
+  );
+
+  // Un vol ne **crée** jamais une carte : si le propriétaire ne l'a plus — elle
+  // est partie dans un échange, au recyclage, ou sa collection date d'avant
+  // `0022` —, le serveur refuse au lieu d'inventer la copie.
+  await client.query(
+    "update public.saves set state = jsonb_set(state, '{cards}', '[]'::jsonb) where user_id = $1",
+    [L1],
+  );
   await refuses(
     "last pack : voler une carte que le propriétaire ne possède pas → refus",
     L2,
@@ -1737,15 +1774,16 @@ try {
     [packId, 1],
     "ne possède plus",
   );
-
-  // Léa envoie sa collection (c'est ce que fait son appareil après le tirage).
-  await player(
-    L1,
-    "Léa",
-    lea.cards.map((drawn, index) =>
-      card(`lea-${index}`, drawn.creatorSlug, drawn.rarity, drawn.variant, 5 - index),
-    ),
+  await client.query(
+    "update public.saves set state = jsonb_set(state, '{cards}', $2::jsonb) where user_id = $1",
+    [L1, JSON.stringify(leaServer.cards)],
   );
+
+  // L'état de Léa **avant** le vol : c'est lui, et ses identifiants nés sur le
+  // serveur, qu'un appareil resté hors ligne renverrait.
+  const leaBeforeVol = (
+    await client.query("select state from public.saves where user_id = $1", [L1])
+  ).rows[0].state;
 
   const vol = (await asPlayer(L2, "select public.last_pack_steal($1, $2) as r", [packId, 3])).rows[0].r;
   check(
@@ -1872,18 +1910,7 @@ try {
   // Un vol ne se défait pas avec une vieille sauvegarde d'appareil : sans ce
   // garde-fou, la victime qui rejoue avant de se resynchroniser ferait
   // revenir sa carte **et** le voleur la garderait.
-  const leaState = (await client.query("select state from public.saves where user_id = $1", [L1])).rows[0].state;
-  const beforeVol = {
-    ...leaState,
-    cards: lea.cards.map((drawn, index) => ({
-      id: `lea-${index}`,
-      creatorSlug: drawn.creatorSlug,
-      rarity: drawn.rarity,
-      variant: drawn.variant,
-      obtainedAt: leaState.cards[index]?.obtainedAt ?? Date.now(),
-      rareDrop: false,
-    })),
-  };
+  const beforeVol = leaBeforeVol;
   const rejectedPush = (
     await asPlayer(L1, "select public.push_save($1::jsonb, 1, $2, true) as r", [
       JSON.stringify(beforeVol),
@@ -1907,7 +1934,9 @@ try {
   ).rows[0].r;
   check(
     "last pack : la collection sans la carte volée repasse sans problème",
-    healedPush.status === "pushed",
+    // `unchanged` compte comme un succès : le serveur a déjà exactement cet
+    // état (c'est lui qui l'a écrit, plus l'appareil).
+    healedPush.status === "pushed" || healedPush.status === "unchanged",
     JSON.stringify(healedPush.status),
   );
 
@@ -3267,8 +3296,19 @@ try {
   // …et ce droit vient du serveur : le registre de `0021` ne se contente pas
   // d'une déclaration, il faut que la carte ait été donnée.
   await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [INTEGRE, JSON.stringify(honest.cards)]);
+  // Nouveau contrat de `0022` : le client dit de quelle version serveur il
+  // part. Sans base et avec une ligne existante, c'est un conflit — c'est
+  // exactement ce qu'on veut d'un client qui arrive sans avoir rien lu.
+  const baseIntegre = (
+    await client.query("select updated_at from public.saves where user_id = $1", [INTEGRE])
+  ).rows[0].updated_at;
   const pushed = (
-    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [honest, 1, Date.now()])
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3, false, $4::timestamptz) as r", [
+      honest,
+      1,
+      Date.now(),
+      baseIntegre,
+    ])
   ).rows[0].r;
   const honestStats = (
     await client.query("select verified, unique_creators from public.stats where user_id = $1", [INTEGRE])
@@ -3277,6 +3317,29 @@ try {
     "intégrité : push_save écrit toujours, et une sauvegarde honnête reste vérifiée",
     pushed.status === "pushed" && honestStats.verified === true && honestStats.unique_creators === 1,
     JSON.stringify({ status: pushed.status, stats: honestStats }),
+  );
+
+  // Le nouveau contrat d'arbitrage (`0022`) tient en deux phrases : un envoi qui
+  // ne dit pas de quelle version serveur il part est un conflit (le client n'a
+  // rien lu), et « écraser » reste le seul geste qui passe outre — c'est le
+  // bouton de l'écran de conflit, jamais un envoi automatique.
+  const retouche = { ...honest, xp: honest.xp + 7 };
+  const sansBase = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [retouche, 1, Date.now()])
+  ).rows[0].r;
+  check(
+    "intégrité : un envoi sans version serveur de départ est un conflit",
+    sansBase.status === "conflict" && JSON.stringify(sansBase.save?.state) === JSON.stringify(pushed.save.state),
+    JSON.stringify(sansBase.status),
+  );
+
+  const ecrase = (
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3, true) as r", [retouche, 1, Date.now() + 1])
+  ).rows[0].r;
+  check(
+    "intégrité : « écraser » écrit malgré tout (bouton explicite)",
+    ecrase.status === "pushed" && Number.isFinite(new Date(ecrase.save.updated_at).getTime()),
+    JSON.stringify(ecrase.status),
   );
 
   // Le tricheur, lui, est accepté — il garde ses cartes — mais **suspect** :
@@ -3290,7 +3353,12 @@ try {
   };
   cheater.cards[0].rarity = "legendary";
   const cheated = (
-    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [cheater, 1, Date.now()])
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3, false, $4::timestamptz) as r", [
+      cheater,
+      1,
+      Date.now(),
+      ecrase.save.updated_at,
+    ])
   ).rows[0].r;
   const cheaterStats = (
     await client.query("select verified, legendary_cards from public.stats where user_id = $1", [INTEGRE])
@@ -3319,7 +3387,12 @@ try {
     ],
   };
   const faked = (
-    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [fakeLegendary, 1, Date.now()])
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3, false, $4::timestamptz) as r", [
+      fakeLegendary,
+      1,
+      Date.now(),
+      cheated.save.updated_at,
+    ])
   ).rows[0].r;
   const fakedStats = (
     await client.query("select verified, legendary_cards from public.stats where user_id = $1", [INTEGRE])
@@ -3363,6 +3436,9 @@ try {
 
   // 3. Le chemin légitime : une carte réellement tirée par `open_pack` entre au
   //    registre, et la sauvegarde qui la contient reste vérifiée.
+  const avantTirage = (
+    await client.query("select jsonb_array_length(state -> 'cards')::int as n from public.saves where user_id = $1", [INTEGRE])
+  ).rows[0].n;
   const tirageSrv = (
     await asPlayer(INTEGRE, "select public.open_pack('perfect') as r")
   ).rows[0].r;
@@ -3393,8 +3469,23 @@ try {
     ],
   };
   // Le tirage serveur peut contenir une Légendaire : ses droits existent.
+  // Le tirage écrit la collection **côté serveur** (`0022`) : la version à
+  // partir de laquelle le client travaille est donc celle que `open_pack` vient
+  // de renvoyer, pas celle d'avant le tirage.
+  check(
+    "provenance : le tirage serveur renvoie la sauvegarde qu'il vient d'écrire",
+    Array.isArray(tirageSrv.save?.state?.cards) &&
+      tirageSrv.save.state.cards.length === avantTirage + 5 &&
+      Number.isFinite(new Date(tirageSrv.save.updated_at).getTime()),
+    JSON.stringify(tirageSrv.save?.state?.cards?.length ?? null),
+  );
   const drawnStats = (
-    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3) as r", [drawn, 1, Date.now()])
+    await asPlayer(INTEGRE, "select public.push_save($1::jsonb, $2, $3, false, $4::timestamptz) as r", [
+      drawn,
+      1,
+      Date.now(),
+      tirageSrv.save.updated_at,
+    ])
   ).rows[0].r;
   const drawnRank = (
     await client.query("select verified from public.stats where user_id = $1", [INTEGRE])
@@ -3466,6 +3557,195 @@ try {
     })(),
   );
 
+  // --- Blanchiment ---------------------------------------------------------
+  // Le registre de provenance (`0021`) ne vaut que si on ne peut pas le
+  // **nourrir** avec une copie fabriquée. Sans les refus de `0022`, une
+  // Légendaire inventée dans la sauvegarde s'échangeait ou se vendait, et
+  // `card_claim_add()` lui donnait un droit tout neuf chez l'autre joueur :
+  // le blanchiment était parfait. Les quatre portes se ferment ici.
+  const WASH = "b1a2b3c4-1111-4111-8111-111111111111";
+  const RECEL = "c3d4e5f6-2222-4222-8222-222222222222";
+  // Une carte **standard** dont la rareté au catalogue exempte de provenance
+  // (c'est l'artisanat local) : le Receleur, lui, est honnête, il ne sert qu'à
+  // demander la carte fabriquée.
+  const communOne = await oneOf("common");
+
+  /** Une sauvegarde écrite **sans** passer par le registre (le blanchisseur). */
+  async function playerWithoutClaims(userId, cards, name = null) {
+    await client.query("insert into auth.users (id) values ($1) on conflict do nothing", [userId]);
+    const state = {
+      version: 8,
+      playerId: userId,
+      createdAt: Date.now() - 60_000,
+      updatedAt: Date.now(),
+      level: 4,
+      xp: 0,
+      points: 5000,
+      hourglasses: 1,
+      packs: 1,
+      lastPackRegen: Date.now(),
+      openings: 1,
+      cards,
+      claimedTiers: [],
+      themeId: "default",
+    };
+    const json = JSON.stringify(state);
+    await client.query(
+      `insert into public.saves (user_id, state, save_version, device_updated_at, state_checksum)
+       values ($1, $2, 8, $3, md5($4))
+       on conflict (user_id) do update
+         set state = excluded.state,
+             save_version = excluded.save_version,
+             device_updated_at = excluded.device_updated_at,
+             state_checksum = excluded.state_checksum`,
+      [userId, json, Date.now(), json],
+    );
+    if (name !== null) {
+      await client.query(
+        `insert into public.profiles (user_id, display_name) values ($1, $2)
+         on conflict (user_id) do update set display_name = excluded.display_name`,
+        [userId, name],
+      );
+    }
+  }
+
+  await playerWithoutClaims(
+    WASH,
+    [
+      card("wash-legend-1", "auronplay", "legendary", "standard", 900),
+      card("wash-legend-2", "auronplay", "legendary", "standard", 800),
+      // Une troisième copie : l'échange testé plus bas en retire une, et la
+      // vente honnête a besoin de deux exemplaires (la dernière copie ne part
+      // pas).
+      card("wash-legend-3", "auronplay", "legendary", "standard", 700),
+      card("wash-holo-1", communOne.slug, communOne.rarity, "holo", 700),
+      card("wash-holo-2", communOne.slug, communOne.rarity, "holo", 690),
+    ],
+    "Blanchisseur",
+  );
+  await playerWithoutClaims(
+    RECEL,
+    [card("recel-1", communOne.slug, communOne.rarity, "standard", 10)],
+    "Receleur",
+  );
+
+  check(
+    "blanchiment : le registre ne couvre aucune de ces cartes",
+    (
+      await client.query(
+        "select count(*)::int as n from public.card_claims where user_id = $1",
+        [WASH],
+      )
+    ).rows[0].n === 0,
+  );
+
+  // 1. Proposer un échange avec la carte fabriquée.
+  await refuses(
+    "blanchiment : on ne propose pas une carte sans provenance",
+    WASH,
+    "select public.create_trade($1, $2, $3)",
+    [
+      RECEL,
+      JSON.stringify([{ creatorSlug: "auronplay", rarity: "legendary", variant: "standard" }]),
+      // Une offre demande au moins une carte de chaque côté : ce que le
+      // Receleur a vraiment (il possède `recel-1`).
+      JSON.stringify([{ creatorSlug: communOne.slug, rarity: communOne.rarity, variant: "standard" }]),
+    ],
+    "provenance",
+  );
+
+  // 2. Accepter un échange où l'on **donne** cette carte : le contrôle doit
+  //    tomber à l'acceptation aussi, pas seulement à la création de l'offre
+  //    (une carte peut avoir bougé entre-temps).
+  const receleur = (
+    await asPlayer(RECEL, "select public.create_trade($1, $2, $3) as r", [
+      WASH,
+      JSON.stringify([card("recel-1", communOne.slug, communOne.rarity, "standard", 10)]),
+      JSON.stringify([{ creatorSlug: "auronplay", rarity: "legendary", variant: "standard" }]),
+    ])
+  ).rows[0].r;
+  await refuses(
+    "blanchiment : on n'accepte pas un échange qui donne une carte sans provenance",
+    WASH,
+    "select public.respond_trade($1, true)",
+    [receleur.trade.id],
+    "provenance",
+  );
+
+  // 3. La vendre à l'hôtel — et la variante qui n'a aucune excuse (Holo).
+  await refuses(
+    "blanchiment : l'hôtel refuse une Légendaire sans provenance",
+    WASH,
+    "select public.market_sell($1)",
+    ["wash-legend-1"],
+    "provenance",
+  );
+  await refuses(
+    "blanchiment : l'hôtel refuse aussi une variante Holo sans provenance",
+    WASH,
+    "select public.market_sell($1)",
+    ["wash-holo-1"],
+    "provenance",
+  );
+
+  // 4. L'acheter : une annonce qui date d'avant `0022` (insérée à la main, comme
+  //    le ferait l'ancienne version) ne donne aucun droit à l'acheteur.
+  const annonceSansDroit = (
+    await client.query(
+      `insert into public.market_listings (seller_id, card_id, creator_slug, rarity, variant, payout, price)
+       values ($1, 'wash-legend-1', 'auronplay', 'legendary', 'standard', 100, 120)
+       returning id`,
+      [WASH],
+    )
+  ).rows[0].id;
+  await refuses(
+    "blanchiment : l'hôtel refuse d'acheter une annonce sans provenance",
+    RECEL,
+    "select public.market_buy($1)",
+    [annonceSansDroit],
+    "provenance",
+  );
+
+  // Le pendant honnête, pour être sûr que le refus vise la provenance et rien
+  // d'autre : la même carte, **donnée** par le serveur, se vend sans histoire.
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [
+    WASH,
+    JSON.stringify([{ creatorSlug: "auronplay", rarity: "legendary", variant: "standard" }]),
+  ]);
+  const ventePropre = (
+    await asPlayer(WASH, "select public.market_sell($1) as r", ["wash-legend-2"])
+  ).rows[0].r;
+  check(
+    "blanchiment : la même carte, une fois donnée par le serveur, se vend",
+    ventePropre.payout > 0 &&
+      ventePropre.listing?.creatorSlug === "auronplay" &&
+      ventePropre.listing?.id > 0,
+    JSON.stringify({ payout: ventePropre.payout, id: ventePropre.listing?.id ?? null }),
+  );
+
+  // --- Le pseudo d'attente ------------------------------------------------
+  // `ensure_profile()` fabrique « Collectionneur # » suivi des quatre premiers
+  // caractères de l'identifiant. Deux joueurs qui commencent pareil tombaient
+  // sur le même nom — et `_display_name_unique()` (`0020`) refusait le second,
+  // donc **toute sa sauvegarde**. `0022` allonge le suffixe au lieu d'échouer.
+  const TWIN_A = "1f2e3d4c-0000-4000-8000-00000000000a";
+  const TWIN_B = "1f2e3d4c-0000-4000-8000-00000000000b";
+  await playerWithoutClaims(TWIN_A, []);
+  await playerWithoutClaims(TWIN_B, []);
+  const twins = (
+    await client.query(
+      "select display_name from public.profiles where user_id in ($1, $2) order by display_name",
+      [TWIN_A, TWIN_B],
+    )
+  ).rows;
+  check(
+    "profils : deux identifiants qui commencent pareil ne bloquent plus la sauvegarde",
+    twins.length === 2 &&
+      twins[0].display_name !== twins[1].display_name &&
+      twins.every((row) => /^Collectionneur #[0-9a-f]{4,9}$/.test(row.display_name)),
+    JSON.stringify(twins.map((row) => row.display_name)),
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -3479,6 +3759,10 @@ try {
   await client.query(scenePack);
   await client.query(wishlist);
   await client.query(sortants);
+  // Les rejeux ci-dessus sont des migrations **anciennes** : `0009` recrée
+  // `market_sell`, `0012` recrée le Last Pack. On termine par la plus récente,
+  // exactement comme la pile de production.
+  await client.query(packDansSaves);
   check(
     "profil public rejouable : la projection est intacte",
     (await client.query("select count(*)::int as n from public.user_cards where user_id = $1", [D])).rows[0].n === 4,

@@ -199,12 +199,15 @@ describe("sauvegardes", () => {
       CLOUD_SESSION_KEY,
       JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
     );
-    const result = await api.pushSave({ cards: [] }, 42, 5, true);
+    // `p_base_updated_at` est la version serveur que le client a reçue : sans
+    // elle, le serveur refuse d'écrire par-dessus une partie qu'il n'a pas vue.
+    const result = await api.pushSave({ cards: [] }, 42, 5, true, "2026-03-01T09:00:00.000Z");
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
       p_state: { cards: [] },
       p_save_version: 5,
       p_device_updated_at: 42,
       p_force: true,
+      p_base_updated_at: "2026-03-01T09:00:00.000Z",
     });
     expect(result).toMatchObject({ status: "pushed" });
     if (result.status === "pushed") expect(result.save.deviceUpdatedAt).toBe(42);

@@ -250,6 +250,22 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0022_pack_dans_saves.sql`](../supabase/migrations/0022_pack_dans_saves.sql)
+     → **Run** pour que le **tirage écrive la collection lui-même**, dans la
+     même transaction : plus de perte de cartes si l'appareil plante juste après
+     un booster, plus d'écrasement par un second appareil, et le **blanchiment**
+     fermé — une Légendaire ou une variante Live / Holo / Gold fabriquée dans la
+     sauvegarde ne s'échange plus et ne se vend plus. La même migration fait
+     arbitrer l'envoi de sauvegarde par la **version serveur** reçue
+     (`p_base_updated_at`) et non plus par l'horloge de l'appareil. Détail : §8,
+     « La sauvegarde ne se perd plus (`0022`) ».
+     ⚠️ **Ordre de collage** : c'est la dernière migration, elle repasse après
+     les autres. Si tu recolles une migration **ancienne** (par exemple `0005`
+     pour les échanges, ou `0021` pour le registre), recolle `0022` **derrière** :
+     ces fichiers redéfinissent `create_trade()`, `respond_trade()`,
+     `market_sell()`… et sans ce recollage, les refus de provenance disparaissent
+     en silence (le vérificateur le contrôle : « les refus de `0022` survivent au
+     recollage »).
    - [`supabase/migrations/0021_provenance.sql`](../supabase/migrations/0021_provenance.sql)
      → **Run** pour que le serveur sache **d'où vient chaque carte** : le
      registre `card_claims` retient ce qui a été réellement donné (tirage,
@@ -567,6 +583,49 @@ contrôles qui passaient pour de mauvaises raisons (`user_cards` et
 parce que le harnais les avait rendues lisibles) : ils attendent maintenant le
 refus, comme en production.
 
+### La sauvegarde ne se perd plus (`0022`)
+
+Quatre corrections, toutes nées de la revue externe d'octobre 2026, et toutes
+vérifiées par un test qui échoue si on les retire :
+
+1. **Le tirage écrit la collection.** `open_pack()` et `open_scene_pack()`
+   rangeaient les cartes dans `pack_draws` mais pas dans `saves` : c'est le
+   client qui renvoyait sa collection aussitôt, avec `p_force = true`. Un
+   plantage entre les deux, ou un second appareil qui poussait sa version,
+   perdait le tirage. Les deux fonctions écrivent maintenant `saves.state` dans
+   la **même transaction** — identifiants UUID nés du serveur, `obtainedAt` à
+   l'heure serveur, compteurs et `state_checksum` recalculés — et renvoient la
+   ligne dans `save`. Le client l'adopte (`sanitizeState` puis `applyState`) et
+   ne pousse plus rien : le seul envoi automatique qui reste est celui des 20
+   secondes (craft, recyclage, thème), jamais forcé.
+2. **Le blanchiment est fermé.** Le registre de provenance de `0021` ne sert à
+   rien si on peut le **nourrir** avec une copie fabriquée : une carte inventée
+   dans la sauvegarde s'échangeait, et `card_claim_add()` lui donnait un droit
+   tout neuf chez l'autre joueur. Quatre portes refusent désormais ce qui n'est
+   pas couvert par le registre du **donneur** : proposer un échange, l'accepter,
+   vendre à l'hôtel, et acheter une annonce (une annonce peut dater d'avant
+   `0022`). Le refus est une **exception** lisible, pas un déclassement.
+   Rappel de la règle : le **Standard commune → épique** reste libre (c'est
+   l'artisanat local) ; une **Légendaire** et toute variante **Live / Holo /
+   Gold** exigent une provenance serveur.
+3. **L'arbitrage n'écoute plus l'horloge du téléphone.** `push_save()` décidait
+   du conflit avec `device_updated_at` du client : un appareil dont l'horloge
+   avance gagnait tous les conflits en silence. Il compare maintenant la version
+   serveur reçue (`p_base_updated_at`) à celle de la ligne ; sans version de
+   départ, c'est un **conflit** — l'écran propose de charger ou d'écraser. La
+   comparaison tolère **une milliseconde** : un client JavaScript ne connaît que
+   les millisecondes, Postgres garde les microsecondes, et sans cette marge
+   chaque envoi honnête serait vu comme un conflit. `p_force` reste réservé aux
+   gestes explicites du joueur (« Envoyer ma collection », et l'écrasement
+   proposé par l'écran de conflit) : après une action décidée par le serveur
+   (échange accepté, hôtel, Last Pack, arène, réinitialisation), le client
+   **relit la version serveur** puis envoie la sienne dessus, sans forcer.
+4. **Le pseudo d'attente ne bloque plus une sauvegarde.** `ensure_profile()`
+   fabriquait « Collectionneur # » avec les **quatre** premiers caractères de
+   l'identifiant : deux joueurs qui commencent pareil tombaient sur le même nom,
+   et `_display_name_unique()` (`0020`) refusait le second — donc **toute sa
+   sauvegarde**. Le suffixe s'allonge maintenant jusqu'à trouver un nom libre.
+
 ### Ce que le serveur ne vérifie pas (volontairement)
 
 Les points, l'XP et le niveau restent calculés sur l'appareil : seul le
@@ -674,9 +733,23 @@ Trois situations possibles côté client :
 
 | Situation | Comportement |
 | --- | --- |
-| Cloud configuré + connecté | ouverture via `open_pack()` ; les cartes sont poussées immédiatement (`sync("push")`) |
+| Cloud configuré + connecté | ouverture via `open_pack()` ; le serveur **range lui-même** les cartes dans `saves` et renvoie la ligne, que le client adopte (`0022`) |
 | Cloud configuré + hors ligne ou sans compte | message « Connecte-toi pour ouvrir un booster » + raccourci vers l'écran Compte ; **pas de repli silencieux** |
 | Cloud non configuré (dev, tests) | tirage local inchangé : le moteur local reste le comportement par défaut |
+
+**Le tirage écrit la collection dans la même transaction** (`0022`, 7 octobre).
+Avant, le serveur tirait les cartes mais ne les rangeait nulle part : c'est le
+client qui renvoyait sa collection juste après, avec un drapeau `p_force` pour
+passer devant tout le monde. Trois conséquences, toutes mauvaises : un plantage
+entre le tirage et l'envoi perdait les cartes ; un second appareil qui poussait
+sa version les écrasait ; et un client bricolé pouvait envoyer n'importe quoi.
+`open_pack()` et `open_scene_pack()` écrivent désormais `saves.state -> 'cards'`
+eux-mêmes (identifiants UUID nés côté serveur, `obtainedAt` = heure serveur,
+compteurs de la même transaction) et renvoient la ligne écrite dans `save`. Le
+client l'adopte au lieu de pousser : plus de `push(…, true)` après un tirage, la
+seule poussée restante est l'envoi automatique des 20 secondes (craft, recyclage,
+thème), sans forçage. Le test `e2e/pack-crash.spec.ts` rejoue le contrat côté
+navigateur : tirage, rechargement, mêmes cinq cartes.
 
 **Pas de repli silencieux** : si le cloud est configuré et que la connexion
 est coupée, on n'ouvre pas « en attendant » côté local. L'écran explique

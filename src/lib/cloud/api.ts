@@ -1143,6 +1143,16 @@ export class CloudApi {
     pityHit: boolean;
     /** Ce booster a payé le Perfect du 7ᵉ jour. */
     jackpot: boolean;
+    /**
+     * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
+     * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le
+     * client l'adopte au lieu de pousser la sienne — c'est ce qui empêche un
+     * plantage ou un second appareil de perdre le tirage.
+     *
+     * `null` sur un projet qui n'a pas encore collé `0022` : l'ancien
+     * comportement (le client envoie sa collection) reste alors le seul.
+     */
+    save: RemoteSaveRow | null;
   }> {
     const result = await this.rpc("open_pack", { p_jackpot: jackpot });
     const record = asRecord(result);
@@ -1175,6 +1185,7 @@ export class CloudApi {
       streak: Number(record.streak ?? 0),
       pityHit: record.pity_hit === true,
       jackpot: record.jackpot === true,
+      save: parseSaveRow(record.save),
     };
   }
 
@@ -1231,6 +1242,8 @@ export class CloudApi {
     sceneDay: string;
     rareDrop: boolean;
     cards: Array<{ creatorSlug: string; rarity: string; variant: string; rareDrop: boolean }>;
+    /** La sauvegarde écrite par le serveur (`0022`), comme pour `openPack`. */
+    save: RemoteSaveRow | null;
   }> {
     const result = await this.rpc("open_scene_pack", { p_family: family, p_cards: cards });
     const record = asRecord(result);
@@ -1253,6 +1266,7 @@ export class CloudApi {
       sceneDay: String(record.scene_day ?? ""),
       rareDrop: record.rare_drop === true,
       cards: returned,
+      save: parseSaveRow(record.save),
     };
   }
 
@@ -1789,12 +1803,28 @@ export class CloudApi {
 
   // ------------------------------------------------------------------ saves
 
-  async pushSave(state: unknown, deviceUpdatedAt: number, saveVersion: number, force = false): Promise<PushSaveResult> {
+  /**
+   * Envoie la partie au serveur.
+   *
+   * `force` est le bouton « Envoyer / écraser » de l'écran de conflit : jamais
+   * un envoi automatique. `baseUpdatedAt` est la version serveur que le client
+   * a reçue au dernier échange (pull, envoi, tirage) : sans elle, le serveur
+   * répond `conflict` plutôt que d'écraser une partie qu'il n'a pas vue —
+   * c'est ce qui remplace l'arbitrage par l'horloge de l'appareil.
+   */
+  async pushSave(
+    state: unknown,
+    deviceUpdatedAt: number,
+    saveVersion: number,
+    force = false,
+    baseUpdatedAt: string | null = null,
+  ): Promise<PushSaveResult> {
     const result = await this.rpc("push_save", {
       p_state: state,
       p_save_version: saveVersion,
       p_device_updated_at: deviceUpdatedAt,
       p_force: force,
+      p_base_updated_at: baseUpdatedAt,
     });
     const record = asRecord(result);
     const status = record?.status;

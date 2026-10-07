@@ -410,7 +410,12 @@ export function createCloudStore(deps: CloudDeps) {
     if (!local) return;
     publish({ busy: true });
     try {
-      const result = await api.pushSave(local, deviceUpdatedAt, saveVersion, force);
+      // La version serveur que le client connaît (`null` s'il n'a jamais rien
+      // lu) : c'est elle qui décide du conflit, à la place de l'horloge de
+      // l'appareil. Postgres garde les microsecondes, JavaScript les
+      // millisecondes — le serveur tolère cette milliseconde de marge.
+      const base = state.remoteUpdatedAt ? new Date(state.remoteUpdatedAt).toISOString() : null;
+      const result = await api.pushSave(local, deviceUpdatedAt, saveVersion, force, base);
       if (result.status === "pushed") {
         publish({
           busy: false,
@@ -442,7 +447,7 @@ export function createCloudStore(deps: CloudDeps) {
           decision: "conflict",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || null,
           message:
-            "Le cloud contient une partie plus récente (autre appareil). « Charger le cloud » l'adopte, « Envoyer » l'écrase.",
+            "Le cloud contient une partie plus récente (autre appareil). « Charger le cloud » l'adopte, « Envoyer ma collection » l'écrase.",
           isError: false,
         });
         return;
@@ -455,6 +460,35 @@ export function createCloudStore(deps: CloudDeps) {
     } catch (error) {
       fail(error, "Envoi impossible.");
     }
+  }
+
+  /**
+   * Envoie la partie **après une action décidée par le serveur** (échange, hôtel,
+   * Last Pack, arène, réinitialisation).
+   *
+   * Le serveur vient d'écrire sa version : pousser en forçant écraserait en
+   * silence la ligne qu'il vient de produire. On relit donc sa version, puis on
+   * envoie la nôtre **par-dessus** — sans jamais forcer. `p_force` reste réservé
+   * au bouton « Envoyer / écraser » de l'écran de conflit (et à
+   * « Envoyer ma collection », geste explicite du joueur).
+   *
+   * La lecture peut échouer (réseau) : on envoie quand même, sans forcer. Le
+   * serveur répondra « conflit » plutôt que d'écraser une partie qu'il n'a pas
+   * vue — c'est exactement ce qu'on veut.
+   */
+  async function pushAfterServer(): Promise<void> {
+    const api = resolve();
+    if (!networkReady(api)) return;
+    try {
+      const remote = await api.pullSave();
+      if (remote) {
+        publish({ remoteUpdatedAt: Date.parse(remote.updatedAt) || state.remoteUpdatedAt });
+      }
+    } catch {
+      // Sans lecture, on n'insiste pas : l'envoi qui suit reste sans forçage.
+    }
+    const local = deps.readState();
+    if (local) await push(local.version, local.updatedAt, false);
   }
 
   async function pull(): Promise<void> {
@@ -561,7 +595,7 @@ export function createCloudStore(deps: CloudDeps) {
       blocked = result.blocked.length;
       if (applied > 0) {
         deps.applyState(result.state);
-        await push(result.state.version, result.state.updatedAt, true);
+        await pushAfterServer();
       }
     }
     publish({ trades: list, tradesAt: deps.now(), busy: false });
@@ -1070,16 +1104,33 @@ export function createCloudStore(deps: CloudDeps) {
             deps.now(),
           ),
         };
-        // Les cartes du serveur entrent dans la partie locale, puis la
-        // sauvegarde est poussée immédiatement : pas d'attente des ~20 s du
-        // debounce, les cartes infalsifiables doivent être inscrites sans délai.
+        const message = `Booster ouvert : ${applied.cards.length} carte${applied.cards.length > 1 ? "s" : ""} reçue${applied.cards.length > 1 ? "s" : ""}.`;
+        // Depuis `0022`, le serveur a **déjà** rangé les cinq cartes dans la
+        // collection : il renvoie la ligne écrite, le client l'adopte. Pousser
+        // par-dessus était le défaut d'avant — un plantage juste après le
+        // tirage, ou un second appareil, repartait d'une collection sans les
+        // cartes et les faisait disparaître.
+        const remoteSave = result.save;
+        const remote = remoteSave ? sanitizeState(remoteSave.state, deps.now()) : null;
+        if (remote && remoteSave) {
+          deps.applyState(remote);
+          publish({
+            busy: false,
+            pending: false,
+            decision: "noop",
+            remoteUpdatedAt: Date.parse(remoteSave.updatedAt) || deps.now(),
+            lastSyncAt: deps.now(),
+            message,
+            isError: false,
+          });
+          return { status: "drawn", cards: applied.cards };
+        }
+        // Projet sans `0022` : l'ancien chemin reste le seul possible — le
+        // client envoie sa collection (sans forcer, donc jamais par-dessus une
+        // partie plus récente qu'il n'a pas vue).
         deps.applyState(applied.state);
-        await push(applied.state.version, applied.state.updatedAt, true);
-        publish({
-          busy: false,
-          message: `Booster ouvert : ${applied.cards.length} carte${applied.cards.length > 1 ? "s" : ""} reçue${applied.cards.length > 1 ? "s" : ""}.`,
-          isError: false,
-        });
+        await push(applied.state.version, applied.state.updatedAt, false);
+        publish({ busy: false, message, isError: false });
         return { status: "drawn", cards: applied.cards };
       } catch (error) {
         // Réseau coupé : même consigne que sans compte — se connecter.
@@ -1286,7 +1337,7 @@ export function createCloudStore(deps: CloudDeps) {
           }
           if (next !== local) {
             deps.applyState(next);
-            await push(next.version, next.updatedAt, true);
+            await pushAfterServer();
           }
         }
         await refreshTrades(ready.api);
@@ -1395,13 +1446,27 @@ export function createCloudStore(deps: CloudDeps) {
           result.sceneDay || null,
           deps.now(),
         );
+        const message = `Paquet Scène : ${applied.cards.length} cartes de ta famille.`;
+        // Même contrat que `openPack` : le serveur a écrit la collection, le
+        // client l'adopte au lieu de pousser la sienne.
+        const remoteSave = result.save;
+        const remote = remoteSave ? sanitizeState(remoteSave.state, deps.now()) : null;
+        if (remote && remoteSave) {
+          deps.applyState(remote);
+          publish({
+            busy: false,
+            pending: false,
+            decision: "noop",
+            remoteUpdatedAt: Date.parse(remoteSave.updatedAt) || deps.now(),
+            lastSyncAt: deps.now(),
+            message,
+            isError: false,
+          });
+          return { status: "drawn", cards: applied.cards };
+        }
         deps.applyState(applied.state);
-        await push(applied.state.version, applied.state.updatedAt, true);
-        publish({
-          busy: false,
-          message: `Paquet Scène : ${applied.cards.length} cartes de ta famille.`,
-          isError: false,
-        });
+        await push(applied.state.version, applied.state.updatedAt, false);
+        publish({ busy: false, message, isError: false });
         return { status: "drawn", cards: applied.cards };
       } catch (error) {
         // Réseau coupé : même consigne que sans compte — se connecter.
@@ -1466,7 +1531,13 @@ export function createCloudStore(deps: CloudDeps) {
       });
     },
 
-    /** Synchronisation : `auto` respecte le plus récent, `push`/`pull` forcent. */
+    /**
+     * Synchronisation : `auto` respecte le plus récent, `push`/`pull` forcent.
+     *
+     * `push` est le bouton « Envoyer ma collection » de l'écran Compte — un
+     * geste explicite du joueur, le seul endroit avec l'écran de conflit où
+     * `p_force` est légitime.
+     */
     async sync(mode: "auto" | "push" | "pull" = "auto"): Promise<void> {
       const local = deps.readState();
       if (!local) return;
@@ -1772,7 +1843,7 @@ export function createCloudStore(deps: CloudDeps) {
         const result = await ready.api.marketSell(cardId);
         const next = applyMarketSale(local, { cardId, payout: result.payout }, deps.now());
         deps.applyState(next);
-        await push(next.version, next.updatedAt, true);
+        await pushAfterServer();
         await this.loadMarket();
         const name = CREATOR_BY_SLUG.get(result.listing.creatorSlug)?.displayName ?? "Ta carte";
         const message = `${name} déposé à l'hôtel : +${result.payout} points, il est au comptoir.`;
@@ -1821,7 +1892,7 @@ export function createCloudStore(deps: CloudDeps) {
         const next = applyMarketPurchase(local, { card, price: result.price }, deps.now());
         if (next !== local) {
           deps.applyState(next);
-          await push(next.version, next.updatedAt, true);
+          await pushAfterServer();
         }
         await this.loadMarket();
         const name = CREATOR_BY_SLUG.get(result.card.creatorSlug)?.displayName ?? "Carte";
@@ -1915,8 +1986,7 @@ export function createCloudStore(deps: CloudDeps) {
       publish({ busy: true, message: null, isError: false });
       try {
         await ready.api.resetProgress();
-        const local = deps.readState();
-        if (local) await push(local.version, local.updatedAt, true);
+        await pushAfterServer();
         await fetchPackStatus();
         const message = "Nouvelle partie : la réserve et le Paquet Scène repartent de zéro, en ligne comprise.";
         publish({ busy: false, message, isError: false });
@@ -2001,7 +2071,7 @@ export function createCloudStore(deps: CloudDeps) {
         const next = applyLastPackSteal(local, { card }, deps.now());
         if (next !== local) {
           deps.applyState(next);
-          await push(next.version, next.updatedAt, true);
+          await pushAfterServer();
         }
         await this.loadLastPacks();
         const name = CREATOR_BY_SLUG.get(result.card.creatorSlug)?.displayName ?? "Une carte";
@@ -2121,7 +2191,7 @@ export function createCloudStore(deps: CloudDeps) {
             const next = applyArenaReward(local, result.hourglasses, deps.now());
             if (next !== local) {
               deps.applyState(next);
-              await push(next.version, next.updatedAt, true);
+              await pushAfterServer();
             }
           }
         }
