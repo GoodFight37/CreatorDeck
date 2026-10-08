@@ -31,6 +31,7 @@ import { CreatorCard } from "@/components/creator-card";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { CREATOR_BY_SLUG, type Creator } from "@/lib/catalog";
 import { liveFor, type LiveSnapshot } from "@/lib/live";
+import { gameDay } from "@/lib/progression";
 import { playCoins, playGavel, playGrace } from "@/lib/sfx";
 import {
   badgesAffiches,
@@ -85,7 +86,18 @@ export function TribunalView({
   // Le retour Android ferme l'écran : c'est le dernier de la pile.
   useBackHandler(true, onClose);
 
-  const dossiers = useMemo(() => dossiersDuJour(seance.day, playerId), [seance.day, playerId]);
+  /**
+   * La journée de jeu **en cours**, et non celle de la sauvegarde.
+   *
+   * C'est le détail qui a cassé le premier jugement : une sauvegarde neuve
+   * porte `day: ""`, et le moteur, lui, rangeait le verdict dans la journée
+   * d'aujourd'hui (`gameDay(now)`). Les deux tirages étaient différents, le
+   * verdict était refusé, et **l'appui ne faisait rien** — pour toujours, puisque
+   * rien n'était jamais enregistré. L'écran tire donc ses dossiers avec la
+   * journée que le moteur va utiliser ; les deux ne peuvent plus se tromper.
+   */
+  const jour = gameDay(now);
+  const dossiers = useMemo(() => dossiersDuJour(jour, playerId), [jour, playerId]);
 
   /** Les verdicts **déjà rendus**, dans l'ordre du tirage. */
   const rendus = useMemo(
@@ -106,6 +118,7 @@ export function TribunalView({
   const [recherche, setRecherche] = useState("");
   const [reaction, setReaction] = useState<{ dossier: Dossier; verdict: Verdict } | null>(null);
   const [paiement, setPaiement] = useState<TribunalPayout | null>(null);
+  const [alerte, setAlerte] = useState<string | null>(null);
   const [occupe, setOccupe] = useState(false);
 
   /** Sans classeur, on siège quand même : le Tribunal est ouvert à tous. */
@@ -150,7 +163,10 @@ export function TribunalView({
     // Le serveur recalcule le karma et les points ; l'écran ne fait que
     // demander, avec ce qu'il a affiché.
     const resultat = await onClaim({
-      day: seance.day,
+      // La journée du jour : c'est elle qui garde le paiement « une fois par
+      // jour » côté serveur. Envoyer celle de la sauvegarde (vide au premier
+      // jugement) ferait refuser la récompense.
+      day: jour,
       verdicts,
       login: createurPresident?.login ?? null,
       karma: karmaPct,
@@ -167,7 +183,16 @@ export function TribunalView({
     // Le son dit le geste : le tampon pour la grâce, le marteau pour le ban.
     if (verdict === "deban") playGrace();
     else playGavel();
-    onVerdict(enCours.id, verdict);
+    try {
+      onVerdict(enCours.id, verdict);
+    } catch {
+      // Un verdict qu'on n'arrive pas à enregistrer **se dit** : un bouton qui
+      // ne fait rien, c'est le pire bug qui soit — le joueur croit avoir mal
+      // appuyé, et il réessaie sans fin.
+      setAlerte("Ce verdict n'a pas pu être enregistré. Reviens demain : la séance du jour est close.");
+      return;
+    }
+    setAlerte(null);
     setReaction({ dossier: enCours, verdict });
     // Cinquième verdict : la séance est finie, elle est encaissée tout de
     // suite — le bilan n'a pas de bouton « encaisser » à oublier.
@@ -287,6 +312,12 @@ export function TribunalView({
           <p>Ton classeur est vide : le Tribunal siège quand même, sans bonus de direct.</p>
         </div>
       )}
+
+      {alerte ? (
+        <p className="tribunal-alerte" role="alert">
+          {alerte}
+        </p>
+      ) : null}
 
       {enCours && !reaction ? (
         <Ticket dossier={enCours} onJudge={juger} />

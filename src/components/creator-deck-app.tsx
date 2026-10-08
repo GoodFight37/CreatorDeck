@@ -701,7 +701,7 @@ export function CreatorDeckApp() {
           cards={state.cards}
           live={live}
           now={now}
-          onVerdict={(dossierId, verdict) => gameStore.recordVerdict(dossierId, verdict)}
+          onVerdict={(dossierId, verdict) => gameStore.recordVerdict(dossierId, verdict, now)}
           onClaim={async (request): Promise<TribunalPayout> => {
             // Le versement passe par `use-points` : le serveur paie quand un
             // compte est connecté, l'appareil sinon — jamais les deux.

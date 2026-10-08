@@ -2855,6 +2855,8 @@ input:focus-visible {
 .tribunal-appeal { padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg-soft); }
 .tribunal-appeal p { margin: 0; color: var(--text); font-size: 14px; line-height: 1.5; }
 
+.tribunal-alerte { margin: 0; padding: 10px 12px; border: 1px solid rgb(255 109 130 / .45); border-radius: 11px; background: rgb(255 109 130 / .1); color: #ffd0d7; font-size: 13.5px; line-height: 1.45; }
+
 .tribunal-actions { display: flex; flex-direction: column; gap: 9px; }
 .tribunal-grace, .tribunal-ban { min-height: 54px; padding: 14px 16px; border: 0; border-radius: 14px; font-family: var(--font-display); font-size: 18px; letter-spacing: .02em; cursor: pointer; }
 .tribunal-grace { background: linear-gradient(180deg, #63e8ad, #2fb984); color: #05281c; }

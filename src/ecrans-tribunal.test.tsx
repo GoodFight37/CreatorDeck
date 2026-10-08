@@ -270,6 +270,29 @@ describe("le Tribunal des Bannis", () => {
     banc.ecran("52-tribunal-direct");
   });
 
+  it("garde la journée du jour, même quand la sauvegarde n'en a aucune", async () => {
+    // Le bug qui a rendu les boutons morts (8 octobre 2026, au soir) : une
+    // sauvegarde neuve porte `day: ""`. L'écran tirait les dossiers de cette
+    // journée vide, le moteur rangeait le verdict dans celle du jour — les deux
+    // tiroirs étaient différents, le verdict était refusé, et **l'appui ne
+    // faisait rien**, pour toujours puisque rien n'était jamais enregistré.
+    const { presider, etat } = await ouvrir();
+    presider();
+
+    // Une sauvegarde neuve : pas de journée, pas de verdict. On juge « à la
+    // main » (sans enchaîner sur « Dossier suivant ») pour regarder l'écran au
+    // moment exact où l'appui aurait dû mourir.
+    etat.seance = { day: "", verdicts: {}, claimed: false };
+    banc.appuyer("Accorder la grâce");
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(Object.keys(etat.seance.verdicts), "le verdict n'a pas été enregistré").toHaveLength(1);
+    expect(document.querySelector(".tribunal-reaction")).toBeTruthy();
+    expect(document.querySelector(".tribunal-alerte")).toBeNull();
+  });
+
   it("s'ouvre depuis l'accueil, avec le compte des dossiers du jour", async () => {
     // Le branchement : l'accueil annonce la séance, et le bandeau ouvre bien
     // l'écran. C'est le seul test qui monte l'application entière.
@@ -288,6 +311,18 @@ describe("le Tribunal des Bannis", () => {
     // Le classeur est vide sur une partie neuve : le Tribunal siège quand même.
     expect(document.querySelector(".tribunal-overlay")).toBeTruthy();
     expect(document.querySelector(".tribunal-ticket")).toBeTruthy();
+
+    // Et le **premier** verdict passe, avec une sauvegarde qui n'a jamais siégé.
+    // C'est ici que le bug des boutons morts se voyait : l'écran tirait les
+    // dossiers de la journée vide de la sauvegarde, le moteur rangeait le verdict
+    // dans celle du jour, et l'appui mourait sans rien dire. Ce test monte
+    // l'application entière (donc le vrai moteur), lui seul a des dents.
+    banc.appuyer("Accorder la grâce");
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(document.querySelector(".tribunal-reaction"), "le premier verdict n'a rien fait").toBeTruthy();
+    expect(document.querySelector(".tribunal-alerte")).toBeNull();
     banc.ecran("53-tribunal-ouvert");
   });
 
