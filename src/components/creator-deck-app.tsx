@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { BookOpen, CircleUserRound, Hammer, X, Zap } from "lucide-react";
+import { BookOpen, Clapperboard, CircleUserRound, Hammer, X, Zap } from "lucide-react";
 import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
 import { CollectionView } from "@/components/binder-view";
@@ -23,7 +23,7 @@ import { RevealOverlay } from "@/components/reveal-overlay";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
-import { StreamerSheet } from "@/components/streamer-sheet";
+import { StudioView } from "@/components/studio-view";
 import { ThemeSheet } from "@/components/theme-sheet";
 
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
@@ -49,17 +49,20 @@ import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
 
-type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
+type Tab = "home" | "collection" | "missions" | "atelier" | "studio" | "profile";
 
 /*
- * Quatre lieux, un mot chacun. Les objectifs quittent la barre : c'est un
- * rendez-vous quotidien, pas un endroit où l'on vit — ils s'ouvrent depuis le
- * drop et depuis le menu.
+ * Cinq lieux, un mot chacun. Le Studio quitte la feuille : « Ta chaîne » est un
+ * onglet plein écran depuis le 8 octobre 2026 — sa pièce a besoin de la hauteur
+ * de l'écran, et un jeu qui s'ouvre par-dessus la barre n'est pas un jeu. Les
+ * objectifs, eux, restent hors de la barre : c'est un rendez-vous quotidien, pas
+ * un endroit où l'on vit — ils s'ouvrent depuis le drop et depuis le menu.
  */
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Drop", icon: <Zap size={22} /> },
   { id: "collection", label: "Binder", icon: <BookOpen size={22} /> },
   { id: "atelier", label: "Craft", icon: <Hammer size={22} /> },
+  { id: "studio", label: "Studio", icon: <Clapperboard size={22} /> },
   { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
 ];
 
@@ -150,7 +153,6 @@ export function CreatorDeckApp() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [lastPackOpen, setLastPackOpen] = useState(false);
   const [arenaOpen, setArenaOpen] = useState(false);
-  const [streamerOpen, setStreamerOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
@@ -176,7 +178,6 @@ export function CreatorDeckApp() {
   useBackHandler(notificationsOpen, () => setNotificationsOpen(false));
   useBackHandler(wishlistOpen, () => setWishlistOpen(false));
   useBackHandler(arenaOpen, () => setArenaOpen(false));
-  useBackHandler(streamerOpen, () => setStreamerOpen(false));
   useBackHandler(lastPackOpen, () => setLastPackOpen(false));
   useBackHandler(marketOpen, () => setMarketOpen(false));
   useBackHandler(friendsOpen, () => setFriendsOpen(false));
@@ -448,7 +449,7 @@ export function CreatorDeckApp() {
             onShowAtelier={() => setTab("atelier")}
             onShowArena={() => setArenaOpen(true)}
             streamerLine={streamerLine}
-            onShowStreamer={() => setStreamerOpen(true)}
+            onShowStreamer={() => setTab("studio")}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}
@@ -461,6 +462,7 @@ export function CreatorDeckApp() {
         {tab === "collection" ? (
           <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} />
         ) : null}
+        {tab === "studio" ? <StudioView /> : null}
         {tab === "missions" ? (
           <MissionsView
             game={game}
@@ -575,7 +577,6 @@ export function CreatorDeckApp() {
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
       {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
-      {streamerOpen ? <StreamerSheet onClose={() => setStreamerOpen(false)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (

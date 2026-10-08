@@ -31,7 +31,8 @@
   journée**, versés par `_tokens_apply()` (`0035`).
 
 - [x] **Étape 3 : Écran d'accueil et feuille de chaîne basique** — la porte
-  « Ta chaîne » sur l'accueil ouvre `src/components/streamer-sheet.tsx` :
+  « Ta chaîne » sur l'accueil ouvre l'écran de la chaîne (aujourd'hui
+  `src/components/studio-view.tsx`, et c'est un **onglet** depuis l'étape 10) :
   abonnés, palier et ce qu'il reste à trouver, calendrier des formats avec
   leurs chances publiées, résumé du retour, jetons du jour (x / 40). Hors
   ligne, `src/lib/cloud/store/streamer.ts` renvoie au moteur local, qui
@@ -86,7 +87,7 @@
   paie rien n'écrit rien, ce qui laisse la journée ouverte si le direct n'était
   pas encore frais. **Gratuit** : ni jeton, ni point, ni monnaie nouvelle — le
   raid ne rapporte que des abonnés. Un invité **hors ligne** ne rapporte rien, et
-  l'écran le dit. L'écran (`src/components/streamer-sheet.tsx`, section
+  l'écran le dit. L'écran (`src/components/studio-view.tsx`, section
   « Le bureau ») montre les deux places, l'état du direct (allumé seulement si le
   créateur streame maintenant) et la liste des créateurs **en direct** de ta
   collection pour choisir ; hors ligne, le moteur local
@@ -116,7 +117,8 @@
   partir, la sélection comptée, et une **confirmation** avant le départ.
 
 - [x] **Étape 8 : la scène du bureau, et le plateau sur la vidéo** —
-  `supabase/migrations/0041_collab_plateau.sql`, `src/components/streamer-desk-stage.tsx`.
+  `supabase/migrations/0041_collab_plateau.sql` (`StreamerDeskStage`, remplacé
+  depuis par `src/components/streamer-studio-stage.tsx` — étape 10).
   Deux moitiés dans le même geste. **La scène d'abord** : le bureau n'est plus
   une liste de texte, c'est le **studio** — mur sombre, néon violet, sol, et
   **huit objets** qui s'allument un par un avec les paliers achetés (Caméra,
@@ -162,9 +164,10 @@
   arrête le mode tableau de bord en texte ». Ce qui a changé :
 
   * **le studio** est une **scène** dessinée en SVG (mur, panneaux acoustiques,
-    bandeau néon, sol, bureau) où **huit objets s'allument un par un avec les
-    paliers achetés** — et restent des **silhouettes éteintes** tant que le
-    palier n'est pas payé : on voit ce qui viendra ;
+    bandeau néon, sol, bureau) — **remplacée par l'étape 10** : la pièce est
+    aujourd'hui composée de **vraies images**, et un palier non acheté n'est
+    plus une silhouette éteinte mais une **place vide** — où **huit objets
+    s'allument un par un avec les paliers achetés** ;
   * **le HUD arcade** remplace les trois chiffres en texte : badge de rang
     (trophée + palier), **jauge** d'abonnés qui se remplit vers le palier suivant
     (« 0 / 2 500 »), pilule du rythme (« ⚡ +240 / jour »), compteur de jetons ;
@@ -187,6 +190,57 @@
   multiplicateurs (`src/data/streamer.json`) et le serveur (`0041`) sont
   **inchangés** — `src/lib`, `src/data` et `supabase/` ne sont pas touchés par
   ce commit. L'écran affiche toujours les chiffres que le serveur paiera.
+
+- [x] **Étape 10 : le Studio devient un onglet, et la pièce passe aux vraies
+  images** — `src/components/studio-view.tsx` + `src/lib/studio-room.ts` +
+  `src/data/studio-room.json`. La consigne : « Ta chaîne » n'est plus une
+  feuille posée par-dessus la barre, c'est **un lieu** — et il se dessine avec
+  les vraies images de `public/streamer/`. Ce qui a changé :
+
+  * **un cinquième onglet** (`Studio`, icône clapper) dans la barre du bas :
+    `Tab` s'étend, `NAV_ITEMS` gagne sa ligne, `.bottom-nav` passe à cinq
+    colonnes, la **modale disparaît** (`{streamerOpen ? <StreamerSheet … /> :
+    null}`, `useBackHandler`, l'état et le bouton « X » sont supprimés) — et la
+    porte de l'accueil (`onShowStreamer`) fait maintenant `setTab("studio")` ;
+    la vue se rend **dans le flux** (`app-content`), exactement comme le drop et
+    le classeur ;
+  * **une vraie pièce isométrique**, composée d'**images** du kit Kenney
+    « Isometric Miniature » (CC0) : neuf tuiles de sol, six segments de mur
+    (assombris et bleutés en CSS — c'est un studio, pas un salon), le bureau
+    d'angle, l'écran, le clavier, la souris, le siège, l'étagère, la plante.
+    Plus rien n'est dessiné à la main : les rares formes CSS sont deux
+    équipements que le kit ne fournit pas (une **webcam** à voyant REC, un
+    **micro sur bras**) et les **néons** du mur ;
+  * **les paliers entrent dans la pièce** : la table de la webcam, l'enceinte et
+    l'enceinte de bureau, la lampe de sol et son halo chaud, le tapis et les
+    **quatre panneaux acoustiques** (le kit les fournit), le canapé et les deux
+    **tubes néon** violet et cyan, le portable, la console de régie, le meuble
+    télé et le grand écran. Un palier non acheté **n'est pas là** : plus de
+    silhouette éteinte, plus rien à cocher — et un test vérifie que **chacun des
+    huit paliers** fait bien entrer quelque chose (un palier payé pour rien
+    serait un mensonge du décor) ;
+  * **les deux socles d'invités** sont posés **sur le devant du bureau** : une
+    place libre est un **piédestal translucide** et son halo (jamais une boîte
+    pointillée, jamais un « + », jamais « Place 1 libre ») ; une place occupée
+    porte une **vraie `CreatorCard`** en miniature, inclinée en perspective, avec
+    sa pastille de rareté et sa part de vidéo, et une croix pour la retirer ;
+  * **l'invité en direct** garde son aura rouge qui pulse, son badge
+    **EN DIRECT** (avec ses spectateurs) et le bandeau « RAID ! » — et le voyant
+    REC de la webcam bat avec lui : c'est la pièce qui dit « on est en direct » ;
+  * **le HUD arcade** est conservé tel quel (badge de rang, jauge d'abonnés vers
+    le palier suivant, pilule du rythme, jetons du jour) : c'est un HUD, pas un
+    tableau de bord — et **aucun pavé de texte** n'est venu s'y ajouter ;
+  * **un fichier pour la pièce** : `src/data/studio-room.json` dit quoi poser et
+    où (sol, murs, meubles, panneaux, néons, accessoires, socles),
+    `src/lib/studio-room.ts` fait le calcul (pur), et
+    `src/lib/studio-room.test.ts` **ouvre les vrais PNG** pour vérifier la taille
+    annoncée, le point de contact de chaque sprite et la couverture des paliers.
+    Une image remplacée par une autre casse le test, pas la pièce.
+
+  **Ce qui n'a pas bougé : la logique.** `src/lib/streamer.ts`,
+  `src/data/streamer.json`, `src/data/live-game.json` et `supabase/` sont
+  **inchangés** : mêmes paliers, mêmes multiplicateurs, même serveur (`0041`).
+  La pièce ne décide de rien — elle montre.
 
 ## 2. En cours
 
@@ -212,8 +266,9 @@
 ## 3. Ce qu'il reste à faire
 
 > Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
-> (étape 7), la **scène du bureau avec le plateau** (étape 8) et la **refonte
-> visuelle** (étape 9) sont livrés.
+> (étape 7), la **scène du bureau avec le plateau** (étape 8), la **refonte
+> visuelle** (étape 9) et **l'onglet Studio en vraies images** (étape 10) sont
+> livrés.
 > **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
 > (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
 > en jouant.

@@ -106,7 +106,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **37 instantanés** : quatre onglets, feuilles ouvertes, un booster tiré, le live du jour, et **le studio de « Ta chaîne »** (HUD, décor, socles, aura du direct) — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **39 instantanés** : cinq onglets, feuilles ouvertes, un booster tiré, le live du jour, et **le Studio** (la pièce en images, le HUD, les socles, l'aura du direct) — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -142,7 +142,7 @@ Quatre étages, quatre vitesses :
   (**993 tests**, 62 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
-  écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
+  écran : les cinq onglets, le marquage de l'onglet actif, l'accès au compte
   depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
   sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
   distingue un bug du jeu d'un réseau coupé. S'y ajoute `e2e/pack-crash.spec.ts` :
@@ -150,7 +150,7 @@ Quatre étages, quatre vitesses :
   cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
   collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
 * **`npm run ecrans`** (jsdom) : l'application **montée dans un DOM**, les
-  quatre onglets parcourus, les feuilles ouvertes, **un booster tiré** et sa
+  cinq onglets parcourus, les feuilles ouvertes, **un booster tiré** et sa
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
@@ -231,6 +231,12 @@ src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, comp
 src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
 src/lib/progression.ts   jetons, missions du jour, série de sept jours, Prime
                          Time (source unique : src/data/progression.json)
+src/lib/streamer.ts      « Ta chaîne » : formats, notoriété, imprévus, paliers,
+                         invités, plateau (source unique : src/data/streamer.json)
+src/lib/live-game.ts     le live de 20 s : plan déterministe, chat, bulles
+                         (source unique : src/data/live-game.json)
+src/lib/studio-room.ts   la pièce du Studio : grille isométrique, sprites,
+                         murs, néons, socles (source : src/data/studio-room.json)
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
                          seuil publié dans pull-rates.json
 src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans
@@ -244,16 +250,18 @@ src/lib/retired.test.ts  les Sortants : hors complétion, artisanables le temps
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI : la coque (creator-deck-app.tsx — navigation,
                          feuilles, toasts) et une vue par onglet (drop-view,
-                         binder-view, missions-view, profile-view), le chrome
+                         binder-view, missions-view, studio-view, profile-view),
+                         le Studio (streamer-studio-stage.tsx et son live de
+                         20 s, streamer-live-game.tsx), le chrome
                          partagé (app-chrome.tsx), les cartes et leurs fiches,
                          les feuilles (pack-odds-sheet, market-sheet,
                          account-sheet + account/*, notifications-sheet, amis,
                          arène, Last Pack…), le filet de sécurité
                          (error-boundary.tsx), l'overlay 16:9
-src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre onglets, feuilles,
+src/ecrans.test.tsx      le banc des écrans (jsdom) : cinq onglets, feuilles,
 src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
 src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, le
-                         studio de « Ta chaîne » (HUD, socles, cartes, aura du
+                         Studio (pièce en images, HUD, socles, cartes, aura du
                          direct, gestes du doigt)
 src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
@@ -286,6 +294,7 @@ docs/diagnostic.html     la page de diagnostic de la connexion cloud (hors
                          `public/`, donc hors de l'APK)
 docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refusé, vérifié
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
+docs/assets-graphiques.md  les assets de public/streamer : lequel sert, lequel est 3D
 android/                 projet Capacitor Android (canal de notification et
                          son du jeu, app/src/main/res/raw/creatordeck.wav)
 ```

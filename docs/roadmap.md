@@ -26,7 +26,8 @@
 - [x] Mini-jeu interactif de 20 s (Live, chat qui défile, bulles d'alerte)
 - [x] Invités sur le bureau (2 cartes du classeur, bonus Raid si le créateur est EN LIVE)
 - [x] Bureau **visuel** : la scène du studio (objets qui s'allument avec le setup, vraies cartes sur socle, aura rouge du direct, bandeau « RAID ! ») et le **plateau** qui booste la vidéo du jour (`0041`, étape 8 de `docs/ta-chaine.md`)
-- [x] **Refonte « jeu mobile » de l'écran « Ta chaîne »** : HUD arcade (rang, jauge d'abonnés, rythme, jetons), décor SVG, socles d'acrylique, boutons bombés, notices remplacées par des badges
+- [x] **Refonte « jeu mobile » de l'écran « Ta chaîne »** : HUD arcade (rang, jauge d'abonnés, rythme, jetons), socles, boutons bombés, notices remplacées par des badges
+- [x] **Le Studio devient un onglet plein écran, et la pièce passe aux vraies images** (étape 10 de `docs/ta-chaine.md`) : cinq onglets dans la barre du bas, plus de modale, et une **pièce isométrique du kit Kenney** (CC0) où chaque palier fait entrer son objet (`src/data/studio-room.json`, `src/lib/studio-room.ts`)
 - [x] Arbitrage du live de 20 s (scène d'immersion gratuite, tirage vidéo 100 % serveur)
 
 ### Prochaines étapes

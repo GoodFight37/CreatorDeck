@@ -1,0 +1,572 @@
+{
+  "note": "La pièce du studio, en **coordonnées de scène** (pixels d'un canevas 760 x 800, comme le kit Kenney « Isometric Miniature », CC0). Rien n'est dessiné à la main : le composant pose ces images dans l'ordre du peintre. `src/lib/studio-room.ts` fait le calcul (pur, testé), `src/lib/studio-room.test.ts` vérifie chaque case de ce fichier contre les **vrais PNG** (taille de l'image, point d'appui opaque, fichier présent) — une image remplacée par une autre ne passe pas en silence.",
+  "grid": {
+    "note": "Grille du kit : une cellule fait `step` de pas ; une tuile de sol pleine couvre 2 x 2 cellules et se pose par son **centre**. `iso(cell)` = centre de la cellule.",
+    "canvas": [
+      760,
+      800
+    ],
+    "tiles": 3,
+    "step": [
+      104,
+      76
+    ],
+    "origin": [
+      360,
+      320
+    ]
+  },
+  "floor": {
+    "note": "Une tuile pleine par cellule (`at` = centre de la tuile, `appui` = centre de l'image).",
+    "asset": "floorFull_SE",
+    "w": 208,
+    "h": 152,
+    "appui": [
+      104,
+      76
+    ]
+  },
+  "walls": {
+    "note": "Les murs se posent sur l'arête haute de la cellule : `at` = haut de la cellule, atteint par `appui` (le point bas du sprite). `cote` dit de quel bord il s'agit (« gauche » = bord haut-gauche de la pièce, sprite `wall_SE` éclairé ; « droite » = bord haut-droit, `wall_SW` à l'ombre). `cell` = la cellule dont l'arête porte le mur.",
+    "segments": [
+      {
+        "id": "mur-gauche-court",
+        "asset": "wall_SE",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          5,
+          212
+        ],
+        "cote": "gauche",
+        "cell": [
+          0,
+          3
+        ]
+      },
+      {
+        "id": "mur-gauche-milieu",
+        "asset": "wall_SE",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          5,
+          212
+        ],
+        "cote": "gauche",
+        "cell": [
+          0,
+          2
+        ]
+      },
+      {
+        "id": "mur-gauche-coin",
+        "asset": "wall_SE",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          5,
+          212
+        ],
+        "cote": "gauche",
+        "cell": [
+          0,
+          1
+        ]
+      },
+      {
+        "id": "mur-droit-coin",
+        "asset": "wall_SW",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          104,
+          212
+        ],
+        "cote": "droite",
+        "cell": [
+          1,
+          0
+        ]
+      },
+      {
+        "id": "mur-droit-milieu",
+        "asset": "wall_SW",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          104,
+          212
+        ],
+        "cote": "droite",
+        "cell": [
+          2,
+          0
+        ]
+      },
+      {
+        "id": "mur-droit-court",
+        "asset": "wall_SW",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          104,
+          212
+        ],
+        "cote": "droite",
+        "cell": [
+          3,
+          0
+        ]
+      }
+    ],
+    "decalage": [
+      52,
+      -38
+    ]
+  },
+  "items": {
+    "note": "Le mobilier, posé par son **point d'appui** (le bas du sprite, `appui`) sur un point de la scène (`at`). `setup` = le palier de setup qui le fait entrer dans la pièce ; sans `setup`, il est toujours là. `layer` négatif = dessiné sous le reste (le tapis).",
+    "list": [
+      {
+        "id": "bureau",
+        "asset": "deskCorner_SE",
+        "w": 202,
+        "h": 139,
+        "appui": [
+          101,
+          139
+        ],
+        "at": [
+          360,
+          575
+        ],
+        "layer": 1
+      },
+      {
+        "id": "ecran",
+        "asset": "computerScreen_SE",
+        "w": 47,
+        "h": 59,
+        "appui": [
+          12,
+          59
+        ],
+        "at": [
+          352,
+          468
+        ],
+        "layer": 4
+      },
+      {
+        "id": "clavier",
+        "asset": "computerKeyboard_SE",
+        "w": 41,
+        "h": 33,
+        "appui": [
+          12,
+          33
+        ],
+        "at": [
+          370,
+          498
+        ],
+        "layer": 4
+      },
+      {
+        "id": "souris",
+        "asset": "computerMouse_SE",
+        "w": 11,
+        "h": 11,
+        "appui": [
+          7,
+          11
+        ],
+        "at": [
+          416,
+          504
+        ],
+        "layer": 4
+      },
+      {
+        "id": "chaise",
+        "asset": "chairDesk_SE",
+        "w": 60,
+        "h": 97,
+        "appui": [
+          23,
+          97
+        ],
+        "at": [
+          378,
+          645
+        ],
+        "layer": 6
+      },
+      {
+        "id": "etagere",
+        "asset": "bookcaseClosed_SE",
+        "w": 67,
+        "h": 137,
+        "appui": [
+          26,
+          137
+        ],
+        "at": [
+          178,
+          505
+        ],
+        "layer": 2
+      },
+      {
+        "id": "plante",
+        "asset": "pottedPlant_SE",
+        "w": 28,
+        "h": 85,
+        "appui": [
+          13,
+          85
+        ],
+        "at": [
+          520,
+          470
+        ],
+        "layer": 2
+      },
+      {
+        "id": "tapis",
+        "asset": "rugRectangle_SE",
+        "w": 257,
+        "h": 184,
+        "appui": [
+          95,
+          184
+        ],
+        "at": [
+          327,
+          690
+        ],
+        "layer": -1,
+        "setup": "deco"
+      },
+      {
+        "id": "table-webcam",
+        "asset": "sideTable_SE",
+        "w": 78,
+        "h": 95,
+        "appui": [
+          23,
+          95
+        ],
+        "at": [
+          250,
+          530
+        ],
+        "layer": 5,
+        "setup": "webcam"
+      },
+      {
+        "id": "enceinte",
+        "asset": "speaker_SE",
+        "w": 30,
+        "h": 89,
+        "appui": [
+          15,
+          89
+        ],
+        "at": [
+          478,
+          540
+        ],
+        "layer": 5,
+        "setup": "micro"
+      },
+      {
+        "id": "enceinte-petite",
+        "asset": "speakerSmall_SE",
+        "w": 29,
+        "h": 52,
+        "appui": [
+          14,
+          52
+        ],
+        "at": [
+          404,
+          470
+        ],
+        "layer": 4,
+        "setup": "micro"
+      },
+      {
+        "id": "lampe",
+        "asset": "lampSquareFloor_SE",
+        "w": 24,
+        "h": 108,
+        "appui": [
+          12,
+          108
+        ],
+        "at": [
+          150,
+          610
+        ],
+        "layer": 3,
+        "setup": "lumiere"
+      },
+      {
+        "id": "plante-1",
+        "asset": "plantSmall1_SE",
+        "w": 14,
+        "h": 18,
+        "appui": [
+          7,
+          18
+        ],
+        "at": [
+          306,
+          452
+        ],
+        "layer": 4,
+        "setup": "deco"
+      },
+      {
+        "id": "plante-2",
+        "asset": "plantSmall1_SE",
+        "w": 14,
+        "h": 18,
+        "appui": [
+          7,
+          18
+        ],
+        "at": [
+          442,
+          462
+        ],
+        "layer": 4,
+        "setup": "deco"
+      },
+      {
+        "id": "canape",
+        "asset": "loungeDesignSofa_SE",
+        "w": 156,
+        "h": 142,
+        "appui": [
+          40,
+          142
+        ],
+        "at": [
+          200,
+          700
+        ],
+        "layer": 3,
+        "setup": "studio"
+      },
+      {
+        "id": "portable",
+        "asset": "laptop_SE",
+        "w": 50,
+        "h": 52,
+        "appui": [
+          24,
+          52
+        ],
+        "at": [
+          436,
+          494
+        ],
+        "layer": 4,
+        "setup": "webcam2"
+      },
+      {
+        "id": "console",
+        "asset": "radio_SE",
+        "w": 41,
+        "h": 50,
+        "appui": [
+          10,
+          50
+        ],
+        "at": [
+          510,
+          560
+        ],
+        "layer": 5,
+        "setup": "regie"
+      },
+      {
+        "id": "meuble-tele",
+        "asset": "cabinetTelevision_SE",
+        "w": 109,
+        "h": 110,
+        "appui": [
+          26,
+          110
+        ],
+        "at": [
+          572,
+          706
+        ],
+        "layer": 5,
+        "setup": "plateau"
+      },
+      {
+        "id": "television",
+        "asset": "televisionModern_SE",
+        "w": 74,
+        "h": 93,
+        "appui": [
+          3,
+          93
+        ],
+        "at": [
+          574,
+          662
+        ],
+        "layer": 6,
+        "setup": "plateau"
+      }
+    ]
+  },
+  "wallDecor": {
+    "note": "Ce qui se **pose sur le mur** : les panneaux acoustiques (fournis par le kit) et les néons (dessinés en CSS, ils n'ont pas de sprite). `at` = point de la base du mur, `appui` = point bas du sprite ; pour un néon, `at` = son **centre**, `longueur` = sa longueur en pixels de scène, `angle` = son inclinaison (la pente du mur).",
+    "list": [
+      {
+        "id": "panneau-1",
+        "asset": "paneling_SE",
+        "w": 55,
+        "h": 100,
+        "appui": [
+          2,
+          100
+        ],
+        "at": [
+          209,
+          418
+        ],
+        "setup": "deco"
+      },
+      {
+        "id": "panneau-2",
+        "asset": "paneling_SE",
+        "w": 55,
+        "h": 100,
+        "appui": [
+          2,
+          100
+        ],
+        "at": [
+          325,
+          334
+        ],
+        "setup": "deco"
+      },
+      {
+        "id": "panneau-3",
+        "asset": "paneling_SW",
+        "w": 55,
+        "h": 101,
+        "appui": [
+          52,
+          101
+        ],
+        "at": [
+          499,
+          334
+        ],
+        "setup": "deco"
+      },
+      {
+        "id": "panneau-4",
+        "asset": "paneling_SW",
+        "w": 55,
+        "h": 101,
+        "appui": [
+          52,
+          101
+        ],
+        "at": [
+          624,
+          425
+        ],
+        "setup": "deco"
+      },
+      {
+        "id": "neon-gauche",
+        "kind": "neon",
+        "couleur": "violet",
+        "at": [
+          256,
+          282
+        ],
+        "longueur": 372,
+        "angle": -36.2,
+        "setup": "studio"
+      },
+      {
+        "id": "neon-droit",
+        "kind": "neon",
+        "couleur": "cyan",
+        "at": [
+          568,
+          282
+        ],
+        "longueur": 372,
+        "angle": 36.2,
+        "setup": "studio"
+      },
+      {
+        "id": "halo-lampe",
+        "kind": "halo",
+        "couleur": "ambre",
+        "at": [
+          150,
+          506
+        ],
+        "rayon": 120,
+        "setup": "lumiere"
+      }
+    ]
+  },
+  "accessoires": {
+    "note": "Deux petits équipements **dessinés en CSS** (le kit n'a ni webcam ni micro) : ils complètent les paliers sans tableau de bord. `at` = le point de pose (le pied).",
+    "list": [
+      {
+        "id": "webcam",
+        "kind": "webcam",
+        "at": [
+          258,
+          470
+        ],
+        "setup": "webcam"
+      },
+      {
+        "id": "micro",
+        "kind": "micro",
+        "at": [
+          400,
+          496
+        ],
+        "setup": "micro"
+      }
+    ]
+  },
+  "stands": {
+    "note": "Les deux socles d'invités, **sur le devant du bureau** : coordonnées de scène (comme `items`). Un socle se rend en HTML par-dessus les sprites (une vraie CreatorCard ne se dessine pas en PNG).",
+    "list": [
+      {
+        "id": "place-1",
+        "at": [
+          268,
+          588
+        ]
+      },
+      {
+        "id": "place-2",
+        "at": [
+          452,
+          588
+        ]
+      }
+    ]
+  }
+}

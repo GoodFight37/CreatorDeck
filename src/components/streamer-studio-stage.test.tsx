@@ -1,15 +1,18 @@
 /**
  * **Le studio**, monté dans un DOM — le banc d'écran de la scène de « Ta chaîne ».
  *
- * Le module pur (`src/lib/streamer.test.ts`, dans `npm test`) dit ce que le
- * plateau **vaut** ; ici on vérifie ce que la scène **montre**, et rien de plus :
+ * Le module pur (`src/lib/studio-room.test.ts`, dans `npm test`) dit **où** tombe
+ * chaque sprite et vérifie les images ; ici on vérifie ce que la scène
+ * **montre**, et rien de plus :
  *
- *   * le **HUD** (rang, jauge d'abonnés, rythme, jetons) remplace les chiffres
- *     en texte de l'ancien tableau de bord ;
- *   * le **décor** : un objet par palier acheté, et huit silhouettes éteintes
- *     tant que rien n'est acheté — un palier se voit, il ne se coche pas ;
- *   * les **deux socles** : une vraie carte du classeur posée dessus, un socle
- *     translucide (jamais une boîte pointillée) quand la place est libre ;
+ *   * le **HUD arcade** (le badge de rang, la jauge d'abonnés, le rythme, les
+ *     jetons) remplace les chiffres en colonne de l'ancien tableau de bord ;
+ *   * la **pièce** : ce sont les images du kit (une balise `img` par sprite),
+ *     et un palier acheté fait **entrer son objet** — ce qui n'est pas acheté
+ *     n'est pas là, et rien ne se coche ;
+ *   * les **deux socles** : une vraie carte du classeur posée dessus en
+ *     miniature, un piédestal translucide (jamais une boîte pointillée) quand la
+ *     place est libre ;
  *   * l'**aura du direct** : elle ne s'allume que pour un créateur qui streame
  *     maintenant, et l'écran dit « EN DIRECT » sans mentir sur les spectateurs ;
  *   * les **gestes** : chaque socle, chaque carte a sa porte (ouvrir, changer,
@@ -26,6 +29,7 @@ import {
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import type { LiveStream } from "@/lib/live";
 import type { StreamerGuest } from "@/lib/streamer";
+import { SETUP_LEVELS } from "@/lib/streamer";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 
@@ -94,7 +98,14 @@ describe("le studio (la scène)", () => {
     return complet;
   }
 
-  it("ouvre sur un HUD et une pièce : la jauge, le rythme, huit silhouettes éteintes", async () => {
+  /** Toutes les images posées dans la pièce, par leur `src`. */
+  function images() {
+    return [...document.querySelectorAll<HTMLImageElement>(".chaine-room img")].map((img) =>
+      img.getAttribute("src"),
+    );
+  }
+
+  it("ouvre sur un HUD et une pièce : la jauge, le rythme, le décor du kit", async () => {
     await scene();
     const html = banc.ecran("30-studio-vide");
     // Le rang et la jauge : « 0 / 2 500 » à trouver, pas une phrase d'explication.
@@ -105,37 +116,74 @@ describe("le studio (la scène)", () => {
     );
     expect(html).toContain("+240 / jour");
     expect(html).toContain("0/40");
-    // La pièce est là, et **tout est éteint** : huit objets, aucun allumé.
+    // La pièce est là : un sol de neuf tuiles, deux murs, et le mobilier de base
+    // — des **images**, jamais un dessin de la scène.
+    const posees = images();
     expect(document.querySelector(".chaine-room")).not.toBeNull();
-    expect(document.querySelectorAll(".chaine-object")).toHaveLength(8);
-    expect(document.querySelectorAll(".chaine-object.on")).toHaveLength(0);
-    // Deux socles libres : un socle translucide, jamais une boîte pointillée.
+    expect(posees.filter((src) => src?.includes("floorFull_SE")).length).toBe(9);
+    expect(posees.filter((src) => src?.includes("wall_")).length).toBe(6);
+    expect(posees).toContain("/streamer/4/Isometric/deskCorner_SE.png");
+    expect(posees).toContain("/streamer/4/Isometric/chairDesk_SE.png");
+    // Aucun palier acheté : aucun équipement du setup n'est entré dans la pièce.
+    expect(posees).not.toContain("/streamer/4/Isometric/speaker_SE.png");
+    expect(posees).not.toContain("/streamer/4/Isometric/lampSquareFloor_SE.png");
+    expect(document.querySelectorAll(".chaine-neon")).toHaveLength(0);
+    expect(document.querySelectorAll(".chaine-gadget")).toHaveLength(0);
+    // Deux socles libres : un piédestal translucide, jamais une boîte pointillée.
     expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
-    expect(document.querySelectorAll(".chaine-stand-empty")).toHaveLength(2);
-    expect(document.querySelectorAll(".chaine-stand.plate")).toHaveLength(0);
-    expect(html).toContain("Place 1");
+    expect(document.querySelectorAll(".chaine-stand-ghost")).toHaveLength(2);
+    expect(document.querySelectorAll(".chaine-stand-socle")).toHaveLength(2);
     expect(html).toContain("Plateau");
     // Aucune aura, aucun bandeau de raid : personne ne streame.
     expect(document.querySelector(".chaine-stand-aura")).toBeNull();
     expect(document.querySelector(".chaine-chip.live")).toBeNull();
   });
 
-  it("allume un objet par palier : le studio se voit avant de se lire", async () => {
+  it("fait entrer un objet par palier : le studio se voit avant de se lire", async () => {
     await scene({ setup: ["webcam", "lumiere", "plateau"] });
     const html = banc.ecran("30-studio-setup");
-    const allumes = [...document.querySelectorAll(".chaine-object.on")].map((g) =>
-      g.getAttribute("class"),
-    );
-    expect(allumes).toHaveLength(3);
-    expect(allumes.join(" ")).toContain("obj-webcam");
-    expect(allumes.join(" ")).toContain("obj-lumiere");
-    expect(allumes.join(" ")).toContain("obj-plateau");
-    // La pièce change de classe : la lumière et le plateau transforment la scène.
-    const racine = document.querySelector("section.chaine-stage")!;
-    expect(racine.className).toContain("eclaire");
-    expect(racine.className).toContain("plateau");
-    expect(html).toContain("obj-regie");
-    expect(document.querySelectorAll(".chaine-object")).toHaveLength(8);
+    const posees = images();
+    expect(posees).toContain("/streamer/4/Isometric/sideTable_SE.png");
+    expect(posees).toContain("/streamer/4/Isometric/lampSquareFloor_SE.png");
+    expect(posees).toContain("/streamer/4/Isometric/televisionModern_SE.png");
+    // Ce qui n'est pas acheté n'est pas là — et les paliers voisins non plus.
+    expect(posees).not.toContain("/streamer/4/Isometric/speaker_SE.png");
+    expect(posees).not.toContain("/streamer/4/Isometric/radio_SE.png");
+    // Les formes CSS suivent le même chemin : la webcam, le halo de la lampe.
+    expect(document.querySelectorAll(".chaine-gadget.webcam")).toHaveLength(1);
+    expect(document.querySelectorAll(".chaine-gadget.micro")).toHaveLength(0);
+    expect(document.querySelectorAll(".chaine-halo")).toHaveLength(1);
+    // La lumière change l'ambiance : la pièce porte la classe.
+    expect(document.querySelector(".chaine-room")?.className).toContain("eclaire");
+    expect(html).toContain("Plateau");
+  });
+
+  it("couvre les huit paliers : chacun fait entrer quelque chose", async () => {
+    // Tous les paliers d'un coup : la pièce est complète, et c'est la même
+    // scène qui doit le dire — si un palier n'avait rien à montrer, le joueur
+    // paierait un objet invisible.
+    await scene({ setup: SETUP_LEVELS.map((niveau) => niveau.id) });
+    banc.ecran("30-studio-complet");
+    const posees = images();
+    for (const asset of [
+      "sideTable_SE",
+      "speaker_SE",
+      "speakerSmall_SE",
+      "lampSquareFloor_SE",
+      "rugRectangle_SE",
+      "paneling_SE",
+      "paneling_SW",
+      "loungeDesignSofa_SE",
+      "laptop_SE",
+      "radio_SE",
+      "cabinetTelevision_SE",
+      "televisionModern_SE",
+    ]) {
+      expect(posees, `objet manquant : ${asset}`).toContain(`/streamer/4/Isometric/${asset}.png`);
+    }
+    expect(document.querySelectorAll(".chaine-neon")).toHaveLength(2);
+    expect(document.querySelectorAll(".chaine-gadget")).toHaveLength(2);
+    expect(document.querySelector(".chaine-room")?.className).toContain("neon");
   });
 
   it("pose une vraie carte du classeur sur son socle, et dit sa part", async () => {
@@ -151,10 +199,9 @@ describe("le studio (la scène)", () => {
     expect(document.querySelectorAll(".card-nameplate").length).toBeGreaterThanOrEqual(2);
     expect(html).toContain(IBAI.displayName);
     expect(html).toContain(KAMET0.displayName);
-    // Chaque socle dit ce qu'il apporte : la rareté, la part de vidéo, la part
-    // de raid — les chiffres du fichier, pas des chiffres de la scène.
+    // Chaque socle dit sa rareté et sa part de vidéo — les chiffres du fichier.
+    expect(html).toContain("Légendaire");
     expect(html).toContain("+12 %");
-    expect(html).toContain("+9.0 % raid");
     // Personne ne streame : aucune aura, aucun badge.
     expect(document.querySelector(".chaine-stand-aura")).toBeNull();
     expect(html).not.toContain("EN DIRECT");
@@ -184,6 +231,9 @@ describe("le studio (la scène)", () => {
     expect(html).toContain("Plateau +30.0 %");
     expect(html).toContain("direct compris");
     expect(document.querySelector("section.chaine-stage")?.className).toContain("raid");
+    // Le voyant REC bat avec le direct : c'est la pièce qui dit « on est en
+    // direct », pas une phrase.
+    expect(document.querySelector(".chaine-room")?.className).toContain("en-direct");
   });
 
   it("paie le relevé une fois : la ligne du raid, ou l'aperçu, jamais les deux", async () => {
@@ -224,13 +274,13 @@ describe("le studio (la scène)", () => {
       });
     };
 
-    // Le socle libre de la place 2 ouvre le classeur pour la place 2.
+    // Le piédestal libre de la place 2 ouvre le classeur pour la place 2.
     appuyer('button[aria-label="Choisir un invité pour la place 2"]');
     expect(props.onOpenSlot).toHaveBeenCalledWith(2);
-    // « Changer » sur la carte posée rouvre la place 1.
+    // La carte posée rouvre la place 1 (le tap la change).
     appuyer('button[aria-label="Changer l\'invité de la place 1"]');
     expect(props.onOpenSlot).toHaveBeenCalledWith(1);
-    // La croix retire l'invité : c'est la porte du moteur (`poserInvite`).
+    // La croix du socle retire l'invité : c'est la porte du moteur.
     appuyer('button[aria-label="Retirer l\'invité de la place 1"]');
     expect(props.onRemove).toHaveBeenCalledWith(1);
   });

@@ -3,19 +3,19 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Ce que ces tests vérifient, et rien d'autre :
  *
- *   * la barre du bas montre **quatre** onglets, dans l'ordre ;
+ *   * la barre du bas montre **cinq** onglets, dans l'ordre ;
  *   * chaque onglet s'ouvre et se marque comme actif (`aria-current="page"`) ;
  *   * « Toi » propose bien d'ouvrir son compte ;
  *   * rien ne casse côté navigateur : **aucune erreur console**, aucune
- *     exception, sur un tour complet des quatre onglets.
+ *     exception, sur un tour complet des cinq onglets.
  *
  * Ce qui n'est pas testé ici : tout ce qui demande un compte connecté. Les
  * tests tournent sans `.env.local`, donc sans cloud — c'est voulu, ils doivent
  * marcher sur n'importe quelle machine qui clone le dépôt.
  */
 
-/** Les quatre onglets, dans l'ordre de la barre. */
-const TABS = ["Drop", "Binder", "Craft", "Toi"] as const;
+/** Les cinq onglets, dans l'ordre de la barre. */
+const TABS = ["Drop", "Binder", "Craft", "Studio", "Toi"] as const;
 
 /** La barre du bas (`aria-label="Navigation principale"`). */
 function bar(page: Page) {
@@ -39,7 +39,7 @@ async function openDeck(page: Page): Promise<void> {
   await expect(tab(page, "Drop")).toBeVisible({ timeout: 30_000 });
 }
 
-test("la barre du bas montre les quatre onglets, dans l'ordre", async ({ page }) => {
+test("la barre du bas montre les cinq onglets, dans l'ordre", async ({ page }) => {
   await openDeck(page);
   await expect(bar(page).getByRole("button")).toHaveCount(TABS.length);
   for (const label of TABS) {
@@ -108,7 +108,7 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
   });
 
   await openDeck(page);
-  for (const label of ["Binder", "Craft", "Toi", "Drop"] as const) {
+  for (const label of ["Binder", "Craft", "Studio", "Toi", "Drop"] as const) {
     await tab(page, label).click();
     await expect(tab(page, label)).toHaveAttribute("aria-current", "page");
   }

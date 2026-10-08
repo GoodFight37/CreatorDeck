@@ -1689,7 +1689,9 @@ input:focus-visible {
   bottom: 0;
   left: max(0px, calc((100vw - 560px) / 2));
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  /* Cinq lieux depuis que « Ta chaîne » a son onglet : Drop, Binder, Craft,
+     Studio, Toi. La barre ne change pas de hauteur, les libellés se serrent. */
+  grid-template-columns: repeat(5, 1fr);
   min-height: calc(63px + env(safe-area-inset-bottom));
   padding: 7px 7px env(safe-area-inset-bottom);
   border-top: 1px solid var(--line);
@@ -2803,55 +2805,77 @@ input:focus-visible {
 .chaine-hud-pill.jetons { color: var(--accent-light); border-color: rgb(var(--accent-rgb) / .45); background: rgb(var(--accent-rgb) / .12); }
 .chaine-stage.raid .chaine-hud { border-color: rgb(255 77 94 / .5); }
 
-/* La pièce : le décor garde ses proportions, la scène ne se déforme pas. */
-.chaine-room { position: relative; width: 100%; max-width: 460px; margin-inline: auto; aspect-ratio: 320 / 280; overflow: hidden; border: 1px solid rgb(255 255 255 / .09); border-radius: 18px; background: #07060c; box-shadow: 0 18px 40px -28px rgb(0 0 0 / 1), inset 0 0 0 1px rgb(255 255 255 / .03); }
-.chaine-room svg { display: block; width: 100%; height: 100%; }
-.chaine-room.en-direct { border-color: rgb(255 77 94 / .45); }
-/* Un objet non acheté reste une **silhouette** : on voit la place qu'il prendra. */
-.chaine-object { opacity: .13; filter: grayscale(1); transition: opacity .4s ease, filter .4s ease; }
-.chaine-object.on { opacity: 1; filter: none; }
+/* La pièce : une vraie scène isométrique, composée d'**images** (kit Kenney
+   « Isometric Miniature », CC0). Les coordonnées viennent de
+   `src/data/studio-room.json`, le calcul de `src/lib/studio-room.ts` : ici on
+   ne fait que poser — chaque sprite est en pourcentage du canevas, donc la pièce
+   suit la largeur du téléphone sans jamais se déformer. Le fond du canevas est
+   le noir du studio : les sprites de meubles flottent dessus, il ne se voit
+   qu'entre les murs et le sol. */
+.chaine-room { position: relative; width: 100%; max-width: 520px; margin-inline: auto; overflow: hidden; border: 1px solid rgb(255 255 255 / .08); border-radius: 18px; background: radial-gradient(120% 90% at 50% 8%, #191330, #0a0812 62%, #06050c); box-shadow: 0 22px 46px -30px rgb(0 0 0 / 1), inset 0 0 70px -24px rgb(0 0 0 / .9); }
+.chaine-sprite { position: absolute; display: block; user-select: none; pointer-events: none; }
+/* Les murs du kit sont **clairs** (c'est un salon) : un studio est sombre. Le
+   filtre les met à l'ombre et les tire vers le bleu — `sepia` d'abord, sinon un
+   gris reste gris (une rotation de teinte ne fait rien sur du blanc). */
+.chaine-sprite.mur { filter: brightness(.5) sepia(.6) hue-rotate(178deg) saturate(2.1); }
+/* L'éclairage acheté éclaircit la pièce : le studio se transforme en s'équipant. */
+.chaine-room.eclaire .chaine-sprite.mur { filter: brightness(.66) sepia(.55) hue-rotate(180deg) saturate(1.9); }
+/* Le néon : deux tubes posés sur les murs, et l'ambiance qu'ils jettent. */
+.chaine-neon { position: absolute; height: 1.1%; min-height: 4px; border-radius: 999px; pointer-events: none; }
+.chaine-neon.violet { background: linear-gradient(90deg, #f0abfc, #a855f7 45%, #7c3aed); box-shadow: 0 0 9px rgb(168 85 247 / .95), 0 0 24px rgb(168 85 247 / .55), 0 0 42px rgb(124 58 237 / .3); }
+.chaine-neon.cyan { background: linear-gradient(90deg, #0e7490, #22d3ee 45%, #a5f3fc); box-shadow: 0 0 9px rgb(34 211 238 / .95), 0 0 24px rgb(34 211 238 / .5), 0 0 42px rgb(14 116 144 / .3); }
+.chaine-room.neon::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(58% 34% at 22% 30%, rgb(168 85 247 / .22), transparent 70%), radial-gradient(58% 34% at 78% 30%, rgb(34 211 238 / .18), transparent 70%); mix-blend-mode: screen; }
+/* Le halo de la lampe : la seule lumière chaude du studio. */
+.chaine-halo { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 50%, rgb(255 205 130 / .3), rgb(255 176 84 / .1) 46%, transparent 74%); mix-blend-mode: screen; }
+/* Les deux équipements que le kit ne fournit pas : une webcam, un micro sur
+   bras. Deux formes CSS minuscules, jamais un tableau de bord. */
+.chaine-gadget { position: absolute; transform: translate(-50%, -100%); pointer-events: none; }
+.chaine-gadget.webcam { width: 3.6%; aspect-ratio: 26 / 18; border-radius: 3px; background: linear-gradient(180deg, #2b2e3c, #14151d); box-shadow: 0 2px 5px rgb(0 0 0 / .7), inset 0 1px 0 rgb(255 255 255 / .18); }
+.chaine-gadget.webcam::before { content: ""; position: absolute; left: 18%; top: 22%; width: 27%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 32%, #cdf3ff, #1c4a63 72%); }
+.chaine-gadget.webcam::after { content: ""; position: absolute; right: 14%; top: 26%; width: 15%; aspect-ratio: 1; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 6px rgb(255 77 94 / .95); }
+.chaine-gadget.micro { width: 4.6%; aspect-ratio: 46 / 80; }
+.chaine-gadget.micro::before { content: ""; position: absolute; left: 47%; bottom: 4%; width: 3px; height: 62%; border-radius: 2px; background: linear-gradient(180deg, #7b8290, #3a3e49); transform: rotate(10deg); transform-origin: 50% 100%; }
+.chaine-gadget.micro::after { content: ""; position: absolute; left: 26%; top: 2%; width: 44%; aspect-ratio: .62; border-radius: 999px; background: linear-gradient(180deg, #e3e7ef, #878e9c 60%, #5a606c); box-shadow: 0 0 7px rgb(0 0 0 / .6), inset 0 1px 0 rgb(255 255 255 / .7); }
+/* Le voyant REC ne bat qu'en direct : une animation perpétuelle dit toujours
+   quelque chose, ici « quelqu'un streame en ce moment ». */
+.chaine-room.en-direct .chaine-gadget.webcam::after { animation: chaine-rec 1.2s steps(2, end) infinite; }
+@keyframes chaine-rec { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 
-/* Les socles : deux supports d'acrylique posés sur le bureau, pas deux boîtes. */
-.chaine-stands { position: absolute; inset: auto 5% 1.5%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; list-style: none; }
-.chaine-stand { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
-.chaine-stand-base { display: block; width: 82%; height: 11px; border-radius: 3px 3px 8px 8px; background: linear-gradient(180deg, rgb(255 255 255 / .3), rgb(120 110 160 / .08)); box-shadow: 0 5px 12px -6px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .5); }
-.chaine-stand-glow { position: absolute; bottom: -4px; width: 84%; height: 20px; border-radius: 50%; background: radial-gradient(50% 50% at 50% 50%, rgb(168 85 247 / .6), transparent 72%); filter: blur(3px); }
-.chaine-stand-empty { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; padding: 0; color: var(--muted); background: none; border: 0; cursor: pointer; }
-.chaine-stand-empty:disabled { opacity: .55; cursor: default; }
-.chaine-stand-plate { display: grid; place-items: center; width: min(58px, 21vw); aspect-ratio: .78; color: #f1e6ff; border: 1px solid rgb(168 85 247 / .5); border-radius: 10px; background: linear-gradient(180deg, rgb(168 85 247 / .22), rgb(255 255 255 / .03)); box-shadow: 0 0 24px -6px rgb(168 85 247 / .95), inset 0 0 20px -6px rgb(168 85 247 / .8); }
-.chaine-stand-plaque { color: var(--muted-2); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.chaine-stand-card { position: relative; z-index: 1; width: min(68px, 25vw); transform: perspective(720px) rotateX(7deg); transform-origin: 50% 100%; }
-.chaine-stand-card .creator-card { border-radius: 9px; box-shadow: 0 12px 22px -12px rgb(0 0 0 / .95), 0 0 0 1px rgb(255 255 255 / .08); }
-.chaine-stand-unknown { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 9px; font-size: 11px; }
-.chaine-stand.pose .chaine-stand-base { background: linear-gradient(180deg, rgb(255 255 255 / .45), rgb(120 110 160 / .12)); }
-.chaine-stand-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; line-height: 1.2; }
+/* Les socles : deux piédestaux translucides posés **sur le devant du bureau**.
+   Un socle libre est une plaque de verre teintée (jamais une boîte pointillée,
+   jamais un « + ») ; un socle occupé porte une vraie carte du classeur en
+   miniature, inclinée en perspective comme une carte posée debout. */
+.chaine-stands { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.chaine-stand { position: absolute; display: flex; flex-direction: column; align-items: center; width: 21%; transform: translate(-50%, -100%); }
+.chaine-stand-empty { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
+.chaine-stand-empty:disabled { cursor: default; }
+.chaine-stand-ghost { display: block; width: 100%; aspect-ratio: .715; border-radius: 8px; background: linear-gradient(180deg, rgb(168 85 247 / .22), rgb(255 255 255 / .03) 70%); box-shadow: inset 0 0 22px -6px rgb(168 85 247 / .9), 0 0 0 1px rgb(168 85 247 / .34); }
+.chaine-stand-socle { display: block; width: 46%; height: 6px; margin-top: -2px; border-radius: 2px 2px 5px 5px; background: linear-gradient(180deg, rgb(255 255 255 / .42), rgb(120 110 160 / .12)); box-shadow: 0 5px 10px -6px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .5); }
+.chaine-stand-glow { position: absolute; bottom: -3px; width: 62%; height: 14px; border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 50%, rgb(168 85 247 / .65), transparent 72%); filter: blur(3px); }
+.chaine-stand-card { display: block; position: relative; z-index: 1; width: 100%; transform: perspective(760px) rotateX(9deg); transform-origin: 50% 100%; }
+.chaine-stand-card .creator-card { border-radius: 7px; box-shadow: 0 12px 22px -12px rgb(0 0 0 / .98), 0 0 0 1px rgb(255 255 255 / .08); }
+.chaine-stand-unknown { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 8px; font-size: 10px; }
+.chaine-stand.pose .chaine-stand-socle { background: linear-gradient(180deg, rgb(255 255 255 / .58), rgb(120 110 160 / .16)); }
+/* Les deux chiffres de l'invité : sa rareté, et sa part de la vidéo du jour. */
+.chaine-stand-meta { position: absolute; top: calc(100% + 1px); display: flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 999px; background: rgb(6 5 12 / .72); font-size: 9.5px; line-height: 1.5; white-space: nowrap; }
 .chaine-stand-meta i { font-style: normal; font-weight: 800; }
-.chaine-stand-meta em { padding: 1px 5px; color: #ded4ff; border-radius: 999px; background: rgb(168 85 247 / .18); font-style: normal; font-weight: 700; }
-.chaine-stand-meta em.raid { color: #ffe9b0; background: rgb(255 209 122 / .16); }
-.chaine-stand-actions { display: flex; gap: 5px; margin-top: 1px; }
-.chaine-stand-actions button { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; color: var(--muted); border: 1px solid rgb(255 255 255 / .14); border-radius: 999px; background: rgb(0 0 0 / .35); font-size: 10.5px; font-weight: 700; cursor: pointer; }
-.chaine-stand-actions button:disabled { opacity: .5; cursor: default; }
+.chaine-stand-meta em { color: #ded4ff; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chaine-stand-remove { position: absolute; top: calc(100% - 9px); right: 2%; display: grid; place-items: center; width: 17px; height: 17px; color: #ffe3e6; border: 1px solid rgb(255 255 255 / .22); border-radius: 50%; background: rgb(10 6 14 / .82); cursor: pointer; }
+.chaine-stand-remove:disabled { opacity: .5; cursor: default; }
 /* La carte d'un invité **en direct** vire au rouge, et respire. */
-.chaine-stand-aura { position: absolute; z-index: 0; left: 50%; bottom: 6px; width: 128%; height: 118%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(50% 50% at 50% 60%, rgb(255 77 94 / .5), transparent 70%); filter: blur(4px); animation: chaine-live-aura 2.6s ease-in-out infinite; }
+.chaine-stand-aura { position: absolute; z-index: 0; left: 50%; bottom: 0; width: 132%; height: 116%; transform: translateX(-50%); border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 62%, rgb(255 77 94 / .55), transparent 70%); filter: blur(4px); animation: chaine-live-aura 2.6s ease-in-out infinite; }
 .chaine-stand.en-direct .chaine-stand-card { animation: chaine-live-card 2.6s ease-in-out infinite; }
-.chaine-stand.en-direct .chaine-stand-glow { background: radial-gradient(50% 50% at 50% 50%, rgb(255 77 94 / .7), transparent 72%); }
-.chaine-stand-live { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 10px; font-weight: 900; letter-spacing: .08em; box-shadow: 0 0 14px -3px rgb(255 77 94 / .95); }
+.chaine-stand.en-direct .chaine-stand-glow { background: radial-gradient(50% 50% at 50% 50%, rgb(255 77 94 / .75), transparent 72%); }
+.chaine-stand-live { position: absolute; z-index: 3; top: -9px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 9.5px; font-weight: 900; letter-spacing: .07em; white-space: nowrap; box-shadow: 0 0 14px -3px rgb(255 77 94 / .95); }
 @keyframes chaine-live-aura { 0%, 100% { opacity: .5; transform: translateX(-50%) scale(.96); } 50% { opacity: 1; transform: translateX(-50%) scale(1.05); } }
 @keyframes chaine-live-card { 0%, 100% { filter: drop-shadow(0 0 0 rgb(255 77 94 / 0)); } 50% { filter: drop-shadow(0 0 7px rgb(255 77 94 / .85)); } }
 
-/* Les états du soir : des pastilles, pas des paragraphes. */
-.chaine-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chaine-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; color: var(--muted); border: 1px solid rgb(255 255 255 / .12); border-radius: 999px; background: rgb(0 0 0 / .3); font-size: 11.5px; font-weight: 700; }
-.chaine-chip.violet { color: #f0e7ff; border-color: rgb(168 85 247 / .5); background: rgb(168 85 247 / .16); }
-.chaine-chip.gold { color: #ffefc9; border-color: rgb(255 209 122 / .45); background: rgb(255 209 122 / .13); }
-.chaine-chip.live { color: #ffe3e6; border-color: rgb(255 77 94 / .6); background: rgb(255 77 94 / .16); }
-
 @media (prefers-reduced-motion: reduce) {
-  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card { animation: none; }
+  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card, .chaine-room.en-direct .chaine-gadget.webcam::after { animation: none; }
 }
 /* Le réglage « Reflets des cartes » demande le calme : l'aura reste, elle ne
    pulse plus. */
-[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card { animation: none; }
+[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card, [data-card-fx="off"] .chaine-room.en-direct .chaine-gadget.webcam::after { animation: none; }
 
 /* Le classeur d'invités : il ne s'ouvre que sur un socle de la scène
    (`.chaine-stage`), et il ne propose que les créateurs **en direct** — un

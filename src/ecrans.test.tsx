@@ -43,7 +43,7 @@ describe("les écrans", () => {
     await banc.monter(<CreatorDeckApp />);
   }
 
-  it("ouvre les quatre onglets, chacun avec son écran", async () => {
+  it("ouvre les cinq onglets, chacun avec son écran", async () => {
     await application();
     expect(banc.ecran("01-accueil")).toContain("Ouvrir le booster");
 
@@ -54,6 +54,16 @@ describe("les écrans", () => {
 
     banc.appuyer("Craft");
     expect(banc.ecran("03-craft")).toContain("Façonne ta collection");
+
+    // Le Studio est un **onglet**, pas une feuille : il se rend dans le flux,
+    // comme les autres, avec sa pièce en images.
+    banc.appuyer("Studio");
+    const studio = banc.ecran("03b-studio");
+    expect(studio).toContain("chaine-stage");
+    expect(document.querySelector(".app-content .studio-view")).not.toBeNull();
+    expect(document.querySelectorAll(".chaine-room img").length).toBeGreaterThan(15);
+    expect(document.querySelector(".odds-overlay")).toBeNull();
+    expect(document.querySelector(".bottom-nav button.active span")?.textContent).toBe("Studio");
 
     banc.appuyer("Toi");
     expect(banc.ecran("04-toi")).toContain("Compte et cloud");
@@ -91,25 +101,39 @@ describe("les écrans", () => {
     expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
   });
 
-  it("ouvre « Ta chaîne » : le studio, le HUD, l'événement et la vidéo du jour", async () => {
+  it("ouvre le Studio : la pièce en images, le HUD, l'événement et la vidéo du jour", async () => {
     await application();
-    banc.appuyer(/Ta chaîne/);
-    const chaine = banc.ecran("10-chaine");
-    // jsdom garde l'apostrophe nue dans un nœud de texte (les entités ne
-    // s'appliquent qu'aux attributs).
-    expect(chaine).toContain("Ta chaîne");
+    // La porte de l'accueil (« Ta chaîne · N abonnés · … ») mène maintenant à
+    // **l'onglet** : le compte est fait par le nom accessible, comme au doigt.
+    banc.appuyerNom(/Ouvrir ta chaîne/);
+    const chaine = banc.ecran("10-studio");
     expect(chaine).toContain("Let's Play");
-    // **Le studio** : la scène (et non une liste), son HUD de jeu, la pièce avec
-    // ses huit objets éteints, et les deux socles d'invités libres.
+    // Le Studio n'est pas une feuille : rien en surimpression, pas de « X ».
+    expect(document.querySelector(".app-content .studio-view")).not.toBeNull();
+    expect(document.querySelector(".odds-overlay")).toBeNull();
+    expect(document.querySelector(".odds-panel")).toBeNull();
+    expect(document.querySelector('button[aria-label="Fermer"]')).toBeNull();
+    // **La pièce** : des images du kit (le sol en neuf tuiles, deux murs), le
+    // mobilier de base, et un HUD de jeu.
     expect(chaine).toContain("chaine-stage");
     expect(document.querySelector(".chaine-hud-rank")).not.toBeNull();
     expect(chaine).toContain("Petit canal");
     expect(chaine).toContain("0 / 2\u202f500");
     expect(chaine).toContain("+240 / jour");
-    expect(document.querySelectorAll(".chaine-object")).toHaveLength(8);
-    expect(document.querySelectorAll(".chaine-object.on")).toHaveLength(0);
+    const images = [...document.querySelectorAll(".chaine-room img")].map((img) =>
+      img.getAttribute("src"),
+    );
+    expect(images.filter((src) => src?.includes("floorFull_SE")).length).toBe(9);
+    expect(images.filter((src) => src?.includes("wall_")).length).toBe(6);
+    expect(images).toContain("/streamer/4/Isometric/deskCorner_SE.png");
+    // Aucun palier acheté : aucun équipement n'est entré dans la pièce.
+    expect(images).not.toContain("/streamer/4/Isometric/speaker_SE.png");
+    // Deux socles libres : le piédestal translucide, jamais une boîte pointillée
+    // ni un « Place 1 ».
     expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
-    expect(chaine).toContain("Place 1");
+    expect(document.querySelectorAll(".chaine-stand-ghost")).toHaveLength(2);
+    expect(chaine).not.toContain("Place 1");
+    expect(chaine).not.toContain("Place 1 libre");
     // Les badges remplacent les titres et les notices : l'événement du jour, la
     // vidéo du jour, le setup, et les deux grosses actions arcade.
     expect(chaine).toContain("Événement du jour");
@@ -122,17 +146,15 @@ describe("les écrans", () => {
     expect(chaine).not.toContain("Prochain palier");
     expect(chaine).not.toContain("jetons versés aujourd");
     expect(chaine).not.toContain("Le tirage de la vidéo");
-    expect(chaine).not.toContain("Place 1 libre");
-    banc.fermer();
   });
 
   it("le socle du bureau ouvre le classeur, qui ne propose que des créateurs en direct", async () => {
     await application();
-    banc.appuyer(/Ta chaîne/);
+    banc.appuyer("Studio");
     // Le socle de la place 1 est un bouton sans texte (le « + » est un dessin) :
     // on l'ouvre par son nom accessible, comme le ferait un lecteur d'écran.
     banc.appuyerNom("Choisir un invité pour la place 1");
-    const choix = banc.ecran("10-chaine-bureau-choix");
+    const choix = banc.ecran("10-studio-bureau-choix");
     // Ce que l'écran promet, et ce qu'il refuse de faire : une liste inventée.
     expect(choix).toContain("En direct maintenant");
     expect(choix).toContain("Chercher un créateur en direct");
@@ -141,16 +163,16 @@ describe("les écrans", () => {
     // proposé, et l'écran le dit au lieu de laisser une liste vide muette.
     expect(choix).toContain("Aucun créateur de ta collection n'est en direct");
     banc.appuyer("Fermer");
-    // Fermer le classeur rend la scène telle quelle : le socle est toujours là.
-    const ferme = banc.ecran("10-chaine-bureau-ferme");
-    expect(ferme).toContain("Place 1");
+    // Fermer le classeur rend la scène telle quelle : les socles sont là, et on
+    // est toujours dans l'onglet (aucune feuille, donc rien à fermer en plus).
+    banc.ecran("10-studio-bureau-ferme");
     expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
-    banc.fermer();
+    expect(document.querySelector(".app-content .studio-view")).not.toBeNull();
   });
 
   it("glisse la carte de l'imprévu : un effleurement ne joue rien, un geste franc si", async () => {
     await application();
-    banc.appuyer(/Ta chaîne/);
+    banc.appuyer("Studio");
     const carte = document.querySelector<HTMLElement>(".chaine-card");
     expect(carte).not.toBeNull();
 
@@ -169,7 +191,7 @@ describe("les écrans", () => {
     doigt("pointermove", 118);
     doigt("pointerup", 118);
     await act(async () => {});
-    banc.ecran("10-chaine-effleurement");
+    banc.ecran("10-studio-effleurement");
     // L'effleurement n'a rien joué : la carte est toujours là, entière.
     expect(document.querySelector(".chaine-card")).not.toBeNull();
     expect(document.querySelector(".chaine-outcome")).toBeNull();
@@ -180,7 +202,7 @@ describe("les écrans", () => {
     doigt("pointermove", 90);
     doigt("pointercancel", 90);
     await act(async () => {});
-    banc.ecran("10-chaine-geste-retire");
+    banc.ecran("10-studio-geste-retire");
     // Le geste retiré repose la carte : rien n'est armé, rien n'est joué.
     expect(document.querySelector(".chaine-card-sides span.arme")).toBeNull();
     expect(document.querySelector(".chaine-outcome")).toBeNull();
@@ -192,12 +214,11 @@ describe("les écrans", () => {
     // …et le doigt levé joue la carte, une seule fois.
     doigt("pointerup", 90);
     await act(async () => {});
-    const joue = banc.ecran("10-chaine-imprevu-joue");
+    const joue = banc.ecran("10-studio-imprevu-joue");
     // L'imprévu est joué : la carte laisse place au verdict du serveur.
     expect(document.querySelector(".chaine-outcome")).not.toBeNull();
     expect(document.querySelector(".chaine-card")).toBeNull();
     expect(joue).toContain("Événement du jour");
-    banc.fermer();
   });
 
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {

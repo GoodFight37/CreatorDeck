@@ -1,12 +1,14 @@
 "use client";
 
 /**
- * L'écran **Ta chaîne** : le simulateur de streameur (`0036_streamer.sql`).
+ * L'écran **Studio** : le simulateur de streameur (`0036_streamer.sql`).
  *
- * Ce que le joueur y trouve, dans l'ordre où il se pose la question : où en est
- * sa chaîne (abonnés, palier, croissance par jour), ce qui s'est passé pendant
- * son absence, la vidéo du jour (un format, un appui), et les jetons que la
- * chaîne a versés aujourd'hui.
+ * C'est un **onglet** de la barre du bas, pas une feuille : il occupe la hauteur
+ * de l'écran et son propre univers. La pièce (décor, équipements qui arrivent
+ * avec les paliers, socles d'invités) est en haut — c'est
+ * `src/components/streamer-studio-stage.tsx` — puis viennent, dans l'ordre où le
+ * joueur se pose la question : l'imprévu du jour, la vidéo du jour (un format,
+ * un appui), le setup en paliers (points ou doublons) et le classeur d'invités.
  *
  * Ce que l'écran **ne fait pas** : tirer. Le tirage de la vidéo, le gain et le
  * versement des jetons sont au serveur — et celui qui n'a pas de serveur a le
@@ -91,7 +93,7 @@ const ICONES_IMPREVU: Record<string, typeof Sparkles> = {
   nuit: MoonStar,
 };
 
-export function StreamerSheet({ onClose }: { onClose: () => void }) {
+export function StudioView() {
   const state = useGame();
   const cloud = useCloud();
   const now = useNow(30_000);
@@ -425,18 +427,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Ta chaîne">
-      <div className="odds-panel">
-        <header className="odds-head">
-          <h2>
-            <Radio size={18} /> Ta chaîne
-          </h2>
-          <button type="button" onClick={onClose} aria-label="Fermer">
-            <X size={18} />
-          </button>
-        </header>
-
-        {liveOuvert && choisi ? (
+    <div className="view studio-view" aria-label="Studio">
+      {liveOuvert && choisi ? (
           <StreamerLiveGame
             day={jour}
             subscribers={abonnes}
@@ -448,8 +440,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
             }}
             onLeave={() => setLiveOuvert(false)}
           />
-        ) : (
-          <>
+      ) : (
+        <>
         {notice ? (
           <div className={`account-note ${notice.isError ? "error" : "ok"}`}>
             {notice.isError ? <AlertTriangle size={15} /> : <Check size={15} />}
@@ -862,9 +854,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           <span className="chaine-chip">Journées de jeu · 6 h UTC</span>
           <span className="chaine-chip">Absence comptée {STREAMER.growth.capDays} jours au plus</span>
         </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }

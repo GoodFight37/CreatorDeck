@@ -66,8 +66,14 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 
 ## Où est le reste
 
-- `README.md` — le **journal daté** des livraisons (du plus récent au plus
-  ancien), l'architecture, les scripts, les tests.
+- `README.md` — la **porte d'entrée** : l'architecture, les scripts, les tests,
+  les principes. Le **journal daté** des livraisons (du plus récent au plus
+  ancien) vit dans `docs/historique-livraisons.md` ; le présent et la suite,
+  dans `docs/roadmap.md`.
+- `docs/ta-chaine.md` — le chantier « Ta chaîne » : étapes livrées, ce qui
+  reste, et le détail de chaque règle.
+- `docs/assets-graphiques.md` — les images de `public/streamer/` : ce qui sert
+  (le kit isométrique de la pièce du Studio), ce qui est en 3D, et pourquoi.
 - `docs/cloud-supabase.md` — tout le serveur, §8 : chaque règle, migration par
   migration, et la marche à suivre pour poser le SQL (`npx supabase db push`).
 - `docs/revue-externe-2026-10.md` — les refus **techniques**, avec leur raison.
@@ -83,7 +89,8 @@ Aucune affirmation sur le serveur ne se croit sur parole, la mienne comprise :
 
 - **ce qui est collé** : `schema_versions()`, lisible **sans compte**
   (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — les `true` attendus
-  pour `0030` → `0039` ;
+  pour `0030` → `0039`, puis `0040` et `0041` dès que le joueur les a posées
+  (`npx supabase db push`) ;
 - **une fonction existe** : `401`/`42501` = présente mais réservée au rôle de
   service ; `404`/`PGRST202` = absente.
 
