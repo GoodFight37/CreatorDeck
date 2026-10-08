@@ -19,7 +19,15 @@ import {
 import { SEASON_BY_ID } from "@/lib/seasons";
 import { MISSIONS, gameDay } from "@/lib/progression";
 import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
-import { STREAMER_TOKEN_CAP, formatById, newStreamerState, type StreamerVideoState } from "@/lib/streamer";
+import {
+  EVENTS,
+  SETUP_LEVELS,
+  STREAMER_TOKEN_CAP,
+  formatById,
+  newStreamerState,
+  type StreamerEventState,
+  type StreamerVideoState,
+} from "@/lib/streamer";
 
 /** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
@@ -189,6 +197,44 @@ function sanitizeStreamerVideo(value: unknown): StreamerVideoState | null {
   };
 }
 
+/**
+ * La réponse à un **imprévu** (`0038`) : gardée seulement si la carte et le côté
+ * existent encore dans le fichier de règles. Une carte retirée du jeu ne doit
+ * pas rester dans une sauvegarde pour être réaffichée comme si de rien n'était.
+ */
+function sanitizeStreamerEvent(value: unknown): StreamerEventState | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.day !== "string" || typeof value.event !== "string") return null;
+  const carte = EVENTS.find((event) => event.id === value.event);
+  if (!carte) return null;
+  const cote = carte.choices.find((choice) => choice.id === value.choice);
+  if (!cote) return null;
+  const gained = typeof value.gained === "number" && Number.isFinite(value.gained) ? Math.trunc(value.gained) : 0;
+  return {
+    day: value.day,
+    event: carte.id,
+    choice: cote.id,
+    success: value.success === true,
+    buzz: value.buzz === true,
+    badBuzz: value.badBuzz === true,
+    gained,
+  };
+}
+
+/**
+ * Les paliers de **setup** achetés : on ne garde que des identifiants connus, et
+ * **dans l'ordre du fichier** — c'est l'ordre qui fait le bonus, et une
+ * sauvegarde bricolée ne doit pas s'offrir le studio sans le micro.
+ */
+function sanitizeSetup(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const achetes: string[] = [];
+  for (const level of SETUP_LEVELS) {
+    if (value.includes(level.id)) achetes.push(level.id);
+  }
+  return achetes;
+}
+
 function sanitizeStreamer(value: unknown, now: number): PlayerState["streamer"] {
   if (!isRecord(value)) return newStreamerState(now);
   return {
@@ -197,6 +243,8 @@ function sanitizeStreamer(value: unknown, now: number): PlayerState["streamer"] 
     tokensDay: typeof value.tokensDay === "string" ? value.tokensDay : "",
     tokensToday: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokensToday, 0)),
     video: sanitizeStreamerVideo(value.video),
+    event: sanitizeStreamerEvent(value.event),
+    setup: sanitizeSetup(value.setup),
   };
 }
 

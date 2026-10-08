@@ -28,14 +28,28 @@ import * as pack from "./pack";
 import * as social from "./social";
 import * as market from "./market";
 import * as arena from "./arena";
-import type { StreamerReturn, StreamerStatus, StreamerVideo } from "./streamer";
+import type {
+  StreamerEventResult,
+  StreamerEventToday,
+  StreamerReturn,
+  StreamerSetupPurchase,
+  StreamerStatus,
+  StreamerVideo,
+} from "./streamer";
 import * as wallet from "./wallet";
 import * as streamer from "./streamer";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
 export * from "./types";
-export type { StreamerReturn, StreamerStatus, StreamerVideo } from "./streamer";
+export type {
+  StreamerEventResult,
+  StreamerEventToday,
+  StreamerReturn,
+  StreamerSetupPurchase,
+  StreamerStatus,
+  StreamerVideo,
+} from "./streamer";
 export { CLOUD_SESSION_KEY, CloudError, familyRatio } from "./core";
 
 export class CloudApi {
@@ -613,6 +627,36 @@ export class CloudApi {
    */
   async streamerPublish(format: string): Promise<StreamerVideo> {
     return streamer.streamerPublish(this.core, format);
+  }
+
+  /**
+   * La carte d'imprévu du jour (`0038_imprevus_setup.sql`).
+   *
+   * Le serveur ne renvoie qu'un identifiant de carte : le texte vit dans
+   * `src/data/streamer.json`. Un imprévu déjà joué ressort avec sa réponse.
+   */
+  async streamerEventToday(): Promise<StreamerEventToday> {
+    return streamer.streamerEventToday(this.core);
+  }
+
+  /**
+   * Répond à l'imprévu du jour : on envoie la carte **et** le côté choisi.
+   *
+   * Le serveur refuse une carte qui n'est pas celle du jour et relit la
+   * première réponse si on appelle deux fois — comme la vidéo, l'imprévu ne se
+   * rejoue pas.
+   */
+  async streamerChoose(event: string, choice: string): Promise<StreamerEventResult> {
+    return streamer.streamerChoose(this.core, event, choice);
+  }
+
+  /**
+   * Achète un palier de **setup** (`0038_imprevus_setup.sql`) : le prix est
+   * celui du serveur, la dépense passe par le wallet, et le palier ne
+   * s'installe qu'une fois, dans l'ordre.
+   */
+  async streamerSetupBuy(level: string): Promise<StreamerSetupPurchase> {
+    return streamer.streamerSetupBuy(this.core, level);
   }
 
   // ------------------------------------------------------------------ saves

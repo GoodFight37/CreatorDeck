@@ -2686,6 +2686,37 @@ input:focus-visible {
 .chaine-format-odds { color: var(--muted-2); font-size: 12px; }
 .chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; color: #2a1b06; border: 0; border-radius: 11px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 14px; font-weight: 900; cursor: pointer; }
 .chaine-publish:disabled { opacity: .55; cursor: default; }
+.chaine-event { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.chaine-event h3 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+/* La carte d'imprévu : elle se glisse. `touch-action: pan-y` laisse le
+   défilement vertical au navigateur et ne garde que l'horizontale pour le geste
+   — sans ça, le doigt qui glisse la carte ferait aussi défiler la feuille. */
+.chaine-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 14px; background: linear-gradient(160deg, rgb(var(--accent-rgb) / .12), rgba(255,255,255,.03)); box-shadow: 0 6px 20px rgba(0,0,0,.28); touch-action: pan-y; cursor: grab; user-select: none; will-change: transform; }
+.chaine-card.arme { border-color: rgb(var(--accent-rgb) / .7); }
+.chaine-card-kind { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-light); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; }
+.chaine-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: .01em; }
+.chaine-card-text { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.chaine-card-sides { display: flex; justify-content: space-between; gap: 10px; margin-top: 2px; color: var(--muted-2); font-size: 12.5px; }
+.chaine-card-sides span { flex: 1; }
+.chaine-card-sides span:last-child { text-align: right; }
+.chaine-card-sides span.arme { color: var(--accent-light); }
+.chaine-card-buttons { display: flex; gap: 8px; }
+.chaine-card-buttons button { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px; color: var(--text); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.03); font-size: 13px; font-weight: 600; cursor: pointer; }
+.chaine-card-buttons button em { color: var(--accent-light); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
+.chaine-card-buttons button:disabled { opacity: .5; cursor: default; }
+.chaine-card-odds { display: flex; flex-direction: column; gap: 3px; margin: 0; color: var(--muted-2); font-size: 12px; }
+.chaine-setup { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.chaine-setup h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.chaine-setup-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chaine-setup-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); opacity: .55; }
+.chaine-setup-item.suivant { opacity: 1; border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .07); }
+.chaine-setup-item.installe { opacity: .85; border-color: rgba(255,255,255,.16); }
+.chaine-setup-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.chaine-setup-head strong { font-size: 14px; }
+.chaine-setup-head > span { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chaine-setup-note { color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
+.chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
+.chaine-setup-buy:disabled { opacity: .55; cursor: default; }
 
 /* Le draft est définitif : l'écran le dit, et le refus vient du serveur. Le
    tirage raté a un bouton pour réessayer — un écran qui ne propose rien est un

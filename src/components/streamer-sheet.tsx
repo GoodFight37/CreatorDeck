@@ -12,8 +12,19 @@
  * versement des jetons sont au serveur — et celui qui n'a pas de serveur a le
  * moteur local, avec les mêmes règles, via `cloudStore`.
  */
-import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Check, ChevronRight, Coins, Info, Radio, TrendingUp, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronRight,
+  Coins,
+  Hammer,
+  Info,
+  Radio,
+  Sparkles,
+  TrendingUp,
+  X,
+} from "lucide-react";
 
 import { useCloud } from "@/hooks/use-cloud";
 import { useGame, useNow } from "@/hooks/use-game";
@@ -21,14 +32,25 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { StreamerOpening } from "@/lib/cloud/store/streamer";
 import { gameDay } from "@/lib/progression";
 import {
+  SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKEN_CAP,
   availableFormats,
+  eventById,
+  eventChoice,
+  eventForDay,
+  eventHeadline,
   formatById,
-  growthPerDay,
+  growthWithSetup,
+  nextSetupLevel,
+  setupBonusPermille,
   tierProgress,
   tokensOnDay,
 } from "@/lib/streamer";
+import { TEAR_HAPTIC } from "@/lib/reveal";
+
+import { buzz } from "@/lib/haptics";
+import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 
 const count = new Intl.NumberFormat("fr-FR");
 
@@ -40,6 +62,12 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const [formatId, setFormatId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
+  // Le geste de la carte : la course du doigt, et le côté armé (rien tant que le
+  // seuil n'est pas franchi). `armedRef` évite de vibrer à chaque pixel.
+  const [drag, setDrag] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  const [armed, setArmed] = useState<SwipeSide | null>(null);
+  const dragRef = useRef<{ x: number; y: number } | null>(null);
+  const armedRef = useRef<SwipeSide | null>(null);
 
   // Ouvre la chaîne : le retour du joueur est payé ici, une fois par absence.
   useEffect(() => {
@@ -72,6 +100,25 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const progression = tierProgress(abonnes);
   const vue = opening?.status === "done" ? opening : null;
   const refuse = opening?.status === "refused" ? opening : null;
+  // Le setup vient du serveur quand il y en a un (c'est lui qui débite), de la
+  // sauvegarde sinon. Le bonus se lit sur la même liste dans les deux cas.
+  const setup = vue?.setup ?? streamer?.setup ?? [];
+  // Le bonus affiché est celui du serveur quand il vient de répondre — c'est lui
+  // qui paiera la prochaine vidéo ; hors ligne, la même règle (le préfixe
+  // contigu) est appliquée en local, et le test miroir garantit qu'elles disent
+  // la même chose.
+  const bonus = vue ? vue.setupBonus : setupBonusPermille(setup);
+  const croissance = growthWithSetup(abonnes, setup);
+  const prochain = nextSetupLevel(setup);
+  // La carte du jour : celle que le serveur a donnée, sinon celle du moteur
+  // local (même journée de jeu des deux côtés). Le **texte** vient toujours du
+  // fichier de règles ; le serveur ne connaît que l'identifiant.
+  const etatCarte = vue?.event ?? (streamer?.event?.day === jour ? streamer?.event : null);
+  const carte = eventById(etatCarte?.event ?? "") ?? eventForDay(jour);
+  const coteGauche = eventChoice(carte, "gauche");
+  const coteDroite = eventChoice(carte, "droite");
+  const coteJoue = etatCarte ? eventChoice(carte, etatCarte.choice) : null;
+  const carteJouee = Boolean(etatCarte);
 
   async function publier() {
     if (!choisi || busy) return;
@@ -84,6 +131,84 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
       return;
     }
     setNotice({ message: issue.message ?? "Vidéo publiée.", isError: false });
+  }
+
+  /** Le doigt se pose sur la carte : le geste commence (sauf si elle est jouée). */
+  function cardStart(event: PointerEvent<HTMLElement>) {
+    if (carteJouee || busy) return;
+    dragRef.current = { x: event.clientX, y: event.clientY };
+    armedRef.current = null;
+    setArmed(null);
+    // Le doigt continue de piloter la carte même s'il sort de ses bords. Le
+    // test est là pour les environnements sans capture de pointeur (jsdom) :
+    // sans elle, le geste marche encore, il perd juste la sortie des bords.
+    const cible = event.currentTarget;
+    if (typeof cible.setPointerCapture === "function") cible.setPointerCapture(event.pointerId);
+  }
+
+  function cardMove(event: PointerEvent<HTMLElement>) {
+    const debut = dragRef.current;
+    if (!debut) return;
+    const verdict = swipeVerdict(event.clientX - debut.x, event.clientY - debut.y);
+    if (verdict.armed && armedRef.current !== verdict.armed) {
+      // Le seuil est franchi : une vibration courte, une seule fois — c'est le
+      // même geste que la déchirure du booster, et le même son serait de trop
+      // ici (la carte se choisit en silence).
+      buzz(TEAR_HAPTIC);
+    }
+    armedRef.current = verdict.armed;
+    setArmed(verdict.armed);
+    setDrag({ dx: verdict.dx, dy: event.clientY - debut.y });
+  }
+
+  /** Le doigt se lève : si un côté est armé, l'imprévu est joué. */
+  function cardEnd() {
+    const choisi = armedRef.current;
+    dragRef.current = null;
+    armedRef.current = null;
+    setArmed(null);
+    setDrag({ dx: 0, dy: 0 });
+    if (choisi) void repondre(choisi);
+  }
+
+  /**
+   * Le geste est **retiré** (défilement pris par le navigateur, appel entrant,
+   * deuxième doigt) : la carte se repose et ne répond rien. Même règle que le
+   * booster : relâcher n'est pas se faire couper.
+   */
+  function cardCancel() {
+    dragRef.current = null;
+    armedRef.current = null;
+    setArmed(null);
+    setDrag({ dx: 0, dy: 0 });
+  }
+
+  /** Répond à l'imprévu du jour : le serveur tire, l'appareil applique. */
+  async function repondre(cote: SwipeSide) {
+    if (!carte || busy) return;
+    setBusy(true);
+    setNotice(null);
+    const issue = await cloudStore.chooseStreamerEvent(carte.id, cote);
+    setBusy(false);
+    if (issue.status !== "done") {
+      setNotice({ message: issue.message, isError: true });
+      return;
+    }
+    setNotice({ message: issue.message ?? "Imprévu joué.", isError: false });
+  }
+
+  /** Installe le prochain palier de setup (le prix est celui du serveur). */
+  async function acheter(id: string) {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    const issue = await cloudStore.buyStreamerSetup(id);
+    setBusy(false);
+    if (issue.status !== "done") {
+      setNotice({ message: issue.message, isError: true });
+      return;
+    }
+    setNotice({ message: issue.message ?? "Palier installé.", isError: false });
   }
 
   return (
@@ -145,7 +270,7 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               <span>abonnés</span>
             </div>
             <div>
-              <strong>+{count.format(growthPerDay(abonnes))}</strong>
+              <strong>+{count.format(croissance)}</strong>
               <span>par jour</span>
             </div>
             <div>
@@ -161,6 +286,71 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               ? `Prochain palier : « ${progression.next.label} » à ${count.format(progression.next.at)} abonnés — ${count.format(progression.next.at - abonnes)} à trouver.`
               : "Ta chaîne est au sommet : « Légende du direct »."}
           </p>
+        </section>
+
+        {/* L'imprévu du jour : une carte, deux réponses, un tirage serveur. */}
+        <section className="chaine-event">
+          <h3>{carteJouee ? "L'imprévu du jour est joué" : "L'imprévu du jour"}</h3>
+          {carteJouee && etatCarte && coteJoue ? (
+            <p className="chaine-outcome">
+              {eventHeadline({
+                choice: coteJoue,
+                success: etatCarte.success,
+                buzz: etatCarte.buzz,
+                badBuzz: etatCarte.badBuzz,
+                gained: etatCarte.gained,
+              })}
+            </p>
+          ) : (
+            <>
+              <p className="chaine-intro">
+                Glisse la carte d&apos;un côté ou de l&apos;autre — ou appuie sur une réponse. La réussite, le buzz et le
+                bad buzz sont tirés par le serveur (ou par l&apos;appareil, sans compte) : l&apos;écran ne choisit que le
+                côté.
+              </p>
+              <div
+                className={`chaine-card${armed ? " arme" : ""}`}
+                style={{
+                  transform: `translateX(${Math.round(drag.dx * 0.6)}px) rotate(${Math.round(drag.dx / 22)}deg)`,
+                }}
+                onPointerDown={cardStart}
+                onPointerMove={cardMove}
+                onPointerUp={cardEnd}
+                onPointerCancel={cardCancel}
+              >
+                <span className="chaine-card-kind">
+                  <Sparkles size={13} /> Imprévu
+                </span>
+                <strong className="chaine-card-title">{carte.label}</strong>
+                <p className="chaine-card-text">{carte.detail}</p>
+                <div className="chaine-card-sides">
+                  <span className={armed === "gauche" ? "arme" : undefined}>{coteGauche?.label}</span>
+                  <span className={armed === "droite" ? "arme" : undefined}>{coteDroite?.label}</span>
+                </div>
+              </div>
+              <div className="chaine-card-buttons">
+                <button type="button" disabled={busy} onClick={() => void repondre("gauche")}>
+                  {coteGauche?.label}
+                  {coteGauche ? <em>{(coteGauche.successChancePermille / 10).toFixed(0)} %</em> : null}
+                </button>
+                <button type="button" disabled={busy} onClick={() => void repondre("droite")}>
+                  {coteDroite?.label}
+                  {coteDroite ? <em>{(coteDroite.successChancePermille / 10).toFixed(0)} %</em> : null}
+                </button>
+              </div>
+              <p className="chaine-card-odds">
+                {[coteGauche, coteDroite].map((cote, index) =>
+                  cote ? (
+                    <span key={cote.id}>
+                      {index === 0 ? "Gauche" : "Droite"} : ×{(cote.gainPermille / 1000).toFixed(1)} de la croissance
+                      {" · "}buzz {(cote.buzzPermille / 10).toFixed(0)} %
+                      {cote.badBuzzPermille > 0 ? ` · bad buzz ${(cote.badBuzzPermille / 10).toFixed(0)} %` : ""}
+                    </span>
+                  ) : null,
+                )}
+              </p>
+            </>
+          )}
         </section>
 
         <section className="chaine-video">
@@ -217,6 +407,66 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               <strong>{jetons}</strong> / {STREAMER_TOKEN_CAP} jetons versés aujourd&apos;hui par la chaîne
             </span>
           </div>
+        </section>
+
+        {/* Ton setup : des paliers en points, une fois chacun, dans l'ordre. */}
+        <section className="chaine-setup">
+          <h3>
+            <Hammer size={16} /> Ton setup
+          </h3>
+          <p className="chaine-intro">
+            Chaque palier s&apos;installe <strong>une fois</strong>, dans l&apos;ordre, et fait grandir la chaîne plus
+            vite — pour toujours.
+            {bonus > 0
+              ? ` Aujourd'hui : +${(bonus / 10).toFixed(0)} % de croissance (${count.format(croissance)} par jour au lieu de ${count.format(growthWithSetup(abonnes, []))}).`
+              : ""}
+          </p>
+          <ul className="chaine-setup-list">
+            {SETUP_LEVELS.map((niveau) => {
+              const installe = setup.includes(niveau.id);
+              const suivant = prochain?.id === niveau.id;
+              return (
+                <li
+                  key={niveau.id}
+                  className={`chaine-setup-item${installe ? " installe" : suivant ? " suivant" : ""}`}
+                >
+                  <span className="chaine-setup-head">
+                    <strong>{niveau.label}</strong>
+                    <span>
+                      {installe ? (
+                        <>
+                          <Check size={13} /> installé
+                        </>
+                      ) : (
+                        `${count.format(niveau.price)} points`
+                      )}
+                    </span>
+                  </span>
+                  <span className="chaine-setup-note">
+                    {niveau.note}
+                    {niveau.growthPermille
+                      ? ` (+${(niveau.growthPermille / 10).toFixed(0)} % de croissance)`
+                      : ""}
+                  </span>
+                  {suivant ? (
+                    <button
+                      type="button"
+                      className="chaine-setup-buy"
+                      disabled={busy}
+                      onClick={() => void acheter(niveau.id)}
+                    >
+                      Installer pour {count.format(niveau.price)} points
+                    </button>
+                  ) : null}
+                </li>
+              );
+            })}
+          </ul>
+          <p className="chaine-next">
+            {prochain
+              ? `Prochain palier : « ${prochain.label} » à ${count.format(prochain.price)} points.`
+              : "Ton setup est complet : la chaîne grandit une fois et demie plus vite qu'à ses débuts."}
+          </p>
         </section>
 
         <p className="odds-intro">

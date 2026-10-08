@@ -15,6 +15,8 @@ import {
 } from "@/lib/cloud/api";
 import { AUTO_PUSH_DEBOUNCE_MS, EMPTY_CLOUD_STATE, createCloudStore } from "@/lib/cloud/cloud-store";
 import { gameStore } from "@/lib/game-store";
+import { EVENTS, eventForDay } from "@/lib/streamer";
+import { gameDay } from "@/lib/progression";
 import type { Friendship, IncomingRequest } from "@/lib/social/friends";
 import type { KeyValueStorage } from "@/lib/save-store";
 
@@ -174,6 +176,10 @@ type FakeApi = {
   arenaClaim: ReturnType<typeof vi.fn>;
   arenaDraftChoices: ReturnType<typeof vi.fn>;
   arenaDraftPick: ReturnType<typeof vi.fn>;
+  streamerStatus: ReturnType<typeof vi.fn>;
+  streamerEventToday: ReturnType<typeof vi.fn>;
+  streamerChoose: ReturnType<typeof vi.fn>;
+  streamerSetupBuy: ReturnType<typeof vi.fn>;
 };
 
 /** Mon arène de la semaine, telle que le serveur la renvoie. */
@@ -440,6 +446,46 @@ function harness(options: {
       ],
     })),
     arenaDraftPick: vi.fn(async () => ({ week: "2026-02-28", score: 5100, liveCount: 2, best: 5100, kept: false })),
+    streamerStatus: vi.fn(async () => ({
+      subscribers: 0,
+      perDay: 240,
+      day: "2026-03-01",
+      publishedToday: false,
+      chosenToday: false,
+      tokensToday: 0,
+      tokensCap: 40,
+      setup: [],
+      setupBonus: 0,
+    })),
+    streamerEventToday: vi.fn(async () => ({
+      day: "2026-03-01",
+      event: "raid",
+      chosen: false,
+      choice: "",
+      success: false,
+      buzz: false,
+      badBuzz: false,
+      gained: 0,
+    })),
+    streamerChoose: vi.fn(async () => ({
+      already: false,
+      event: "raid",
+      choice: "gauche",
+      success: true,
+      buzz: false,
+      badBuzz: false,
+      gained: 1680,
+      subscribers: 1680,
+      perDay: 700,
+    })),
+    streamerSetupBuy: vi.fn(async () => ({
+      already: false,
+      level: "webcam",
+      price: 120,
+      setup: ["webcam"],
+      setupBonus: 30,
+      points: 880,
+    })),
   };
 
   const store = createCloudStore({
@@ -1998,5 +2044,98 @@ describe("les points au serveur (wallet)", () => {
     // confort, la partie locale reste jouable.
     expect(state.current.points).toBe(avant);
     expect(store.getSnapshot().message).toBeNull();
+  });
+});
+
+describe("la chaîne côté store (les imprévus et le setup)", () => {
+  it("adopte le tirage du serveur, sans toucher aux points ni aux jetons", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 1000 }) });
+    store.subscribe(() => {});
+    const outcome = await store.chooseStreamerEvent("raid", "gauche");
+    // On envoie **la carte et le côté** : jamais l'issue, jamais le gain.
+    expect(api.streamerChoose).toHaveBeenCalledWith("raid", "gauche");
+    expect(outcome.status).toBe("done");
+    // Les abonnés affichés sont ceux du serveur, et l'imprévu du jour est rangé
+    // pour que l'écran ne le repropose pas.
+    expect(state.current.streamer.subscribers).toBe(1680);
+    expect(state.current.streamer.event).toMatchObject({
+      event: "raid",
+      choice: "gauche",
+      success: true,
+      gained: 1680,
+    });
+    // Aucun jeton, aucun point : la monnaie de la chaîne reste la vidéo du jour.
+    expect(state.current.points).toBe(1000);
+    expect(state.current.streamer.tokensToday).toBe(0);
+  });
+
+  it("relaie le refus du serveur sans ranger de résultat", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 1000 }) });
+    store.subscribe(() => {});
+    api.streamerChoose.mockRejectedValueOnce(
+      new CloudError("chaîne : ce n'est pas l'imprévu du jour", "P0001", 400),
+    );
+    const outcome = await store.chooseStreamerEvent("modo", "gauche");
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/imprévu du jour/);
+    // Le refus n'a rien laissé derrière lui : ni abonnés, ni carte jouée.
+    expect(state.current.streamer.subscribers).toBe(0);
+    expect(state.current.streamer.event).toBeNull();
+  });
+
+  it("paie le setup au serveur et relit le solde chez lui", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 1000 }) });
+    store.subscribe(() => {});
+    api.walletGet.mockResolvedValueOnce(880);
+    const outcome = await store.buyStreamerSetup("webcam");
+    // Le client n'envoie **que le nom du palier** : le prix vit au serveur.
+    expect(api.streamerSetupBuy).toHaveBeenCalledWith("webcam");
+    expect(outcome.status).toBe("done");
+    expect(state.current.streamer.setup).toEqual(["webcam"]);
+    expect(api.walletGet).toHaveBeenCalledTimes(1);
+    // Le solde affiché est celui du serveur (880), pas un calcul local.
+    expect(state.current.points).toBe(880);
+  });
+
+  it("ne débite rien quand le serveur refuse un palier hors d'ordre", async () => {
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, points: 1000 }) });
+    store.subscribe(() => {});
+    api.streamerSetupBuy.mockRejectedValueOnce(
+      new CloudError("chaîne : il faut d'abord « micro »", "P0001", 400),
+    );
+    const outcome = await store.buyStreamerSetup("deco");
+    expect(outcome.status).toBe("unavailable");
+    expect(state.current.points).toBe(1000);
+    expect(state.current.streamer.setup).toEqual([]);
+    expect(api.walletGet).not.toHaveBeenCalled();
+  });
+
+  it("sans compte, l'imprévu et le setup passent par le moteur local", async () => {
+    // Hors ligne (build sans cloud), le même jour de jeu et la même règle
+    // s'appliquent : la carte du jour est jouée localement, sans jeton, et le
+    // setup se paie sur les points de la partie locale.
+    const { store, state } = harness({
+      configured: false,
+      local: saveWith({ updatedAt: T0, points: 1000 }),
+    });
+    store.subscribe(() => {});
+    const jour = gameDay(T0 + 60_000);
+    const carte = eventForDay(jour);
+    const outcome = await store.chooseStreamerEvent(carte.id, "gauche");
+    expect(outcome.status).toBe("done");
+    expect(state.current.streamer.event?.event).toBe(carte.id);
+    // Le côté choisi, lui, est bien celui demandé.
+    expect(state.current.streamer.event?.choice).toBe("gauche");
+
+    const achat = await store.buyStreamerSetup("webcam");
+    expect(achat.status).toBe("done");
+    expect(state.current.streamer.setup).toEqual(["webcam"]);
+    expect(state.current.points).toBe(1000 - 120);
+
+    // Et une carte qui n'est pas celle du jour est refusée localement aussi.
+    const autre = EVENTS.find((c) => c.id !== carte.id)!;
+    const refus = await store.chooseStreamerEvent(autre.id, "droite");
+    expect(refus.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/imprévu du jour/);
   });
 });

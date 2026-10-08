@@ -29,9 +29,15 @@ import {
 import { DIRECT_BONUS, PITY, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
 import {
   absenceSummary,
+  eventForDay,
   newStreamerState,
+  playEventLocally,
+  setupBonusPermille,
+  nextSetupLevel,
+  setupLevelById,
   playVideoLocally,
   type AbsenceSummary,
+  type StreamerEventState,
   type StreamerState,
   type StreamerVideoState,
 } from "@/lib/streamer";
@@ -1959,7 +1965,10 @@ export function applyTokens(state: PlayerState, serverTokens: number, now = Date
  */
 export function applyStreamerMirror(
   state: PlayerState,
-  mirror: Partial<StreamerState> & { video?: StreamerVideoState | null },
+  mirror: Partial<StreamerState> & {
+    video?: StreamerVideoState | null;
+    event?: StreamerEventState | null;
+  },
   now = Date.now(),
 ): PlayerState {
   const prev = state.streamer;
@@ -1969,18 +1978,29 @@ export function applyStreamerMirror(
   const tokensDay = mirror.tokensDay ?? prev.tokensDay;
   const tokensToday = mirror.tokensToday === undefined ? prev.tokensToday : Math.max(0, mirror.tokensToday);
   // La vidéo se remplace une fois par jour : celle du jour même écrase la
-  // précédente, une vidéo d'hier ne réveille pas le passé.
+  // précédente, une vidéo d'hier ne réveille pas le passé. L'imprévu suit la
+  // même règle, et le setup ne se perd jamais : une liste vide venue du serveur
+  // serait un effacement, pas une information (`undefined` ne touche à rien).
   const video = mirror.video !== undefined ? mirror.video : prev.video;
+  const event = mirror.event !== undefined ? mirror.event : prev.event;
+  const setup = mirror.setup !== undefined ? [...mirror.setup] : prev.setup;
   if (
     subscribers === prev.subscribers &&
     lastSeenAt === prev.lastSeenAt &&
     tokensDay === prev.tokensDay &&
     tokensToday === prev.tokensToday &&
-    video === prev.video
+    video === prev.video &&
+    event === prev.event &&
+    setup.length === prev.setup.length &&
+    setup.every((level, index) => level === prev.setup[index])
   ) {
     return state;
   }
-  return { ...state, updatedAt: now, streamer: { subscribers, lastSeenAt, tokensDay, tokensToday, video } };
+  return {
+    ...state,
+    updatedAt: now,
+    streamer: { subscribers, lastSeenAt, tokensDay, tokensToday, video, event, setup },
+  };
 }
 
 /**
@@ -1994,7 +2014,12 @@ export function visitStreamerLocally(
   state: PlayerState,
   now = Date.now(),
 ): { state: PlayerState; summary: AbsenceSummary } {
-  const summary = absenceSummary(state.streamer.lastSeenAt, now, state.streamer.subscribers);
+  const summary = absenceSummary(
+    state.streamer.lastSeenAt,
+    now,
+    state.streamer.subscribers,
+    setupBonusPermille(state.streamer.setup),
+  );
   const next = applyStreamerMirror(
     state,
     { subscribers: summary.subscribers, lastSeenAt: now },
@@ -2022,6 +2047,72 @@ export function publishStreamerLocally(
     state: applyStreamerMirror(state, played.state, now),
     video: played.video,
     already: played.already,
+  };
+}
+
+/**
+ * L'imprévu du jour, joué **localement** (build sans cloud).
+ *
+ * Deux refus, les mêmes qu'au serveur (`streamer_choose`, `0038`) : la carte
+ * doit être **celle du jour**, et le côté doit exister. Sans la première
+ * vérification, un écran qui se tromperait de carte jouerait celle du jour en
+ * silence — l'affichage et le tirage divergeraient sans que personne ne le voie.
+ *
+ * Un imprévu déjà joué aujourd'hui ressort `already: true` avec sa réponse :
+ * comme la vidéo, il ne se rejoue pas.
+ */
+export function chooseStreamerEventLocally(
+  state: PlayerState,
+  eventId: string,
+  choiceId: string,
+  now = Date.now(),
+  roll?: (maxExclusive: number) => number,
+): { state: PlayerState; event: StreamerEventState; headline: string; already: boolean } | { error: string } {
+  const jour = gameDay(now);
+  if (eventForDay(jour).id !== eventId) return { error: "Ce n'est pas l'imprévu du jour." };
+  const played = playEventLocally(state.streamer, choiceId, jour, roll);
+  if (!played) return { error: "Ce choix n'existe pas." };
+  return {
+    state: applyStreamerMirror(state, played.state, now),
+    event: played.event,
+    headline: played.outcome.headline,
+    already: played.already,
+  };
+}
+
+/**
+ * Achète un palier de **setup**, localement (build sans cloud).
+ *
+ * Trois refus, les mêmes qu'au serveur : le palier doit exister, être le
+ * **prochain** de la liste (on ne saute pas le micro pour prendre le studio), et
+ * les points doivent suffire. Le prix est celui du fichier, pas un prix envoyé
+ * par l'appelant.
+ */
+export function buyStreamerSetupLocally(
+  state: PlayerState,
+  levelId: string,
+  now = Date.now(),
+): { state: PlayerState; level: { id: string; label: string } } | { error: string } {
+  const level = setupLevelById(levelId);
+  if (!level) return { error: "Ce palier de setup n'existe pas." };
+  if (state.streamer.setup.includes(level.id)) {
+    return { error: `« ${level.label} » est déjà installé.` };
+  }
+  const attendu = nextSetupLevel(state.streamer.setup);
+  if (!attendu || attendu.id !== level.id) {
+    return { error: `Il faut d'abord « ${attendu ? attendu.label : "—"} ».` };
+  }
+  if (state.points < level.price) {
+    return { error: `Il te manque ${level.price - state.points} points pour « ${level.label} ».` };
+  }
+  return {
+    state: {
+      ...state,
+      points: state.points - level.price,
+      updatedAt: now,
+      streamer: { ...state.streamer, setup: [...state.streamer.setup, level.id] },
+    },
+    level: { id: level.id, label: level.label },
   };
 }
 

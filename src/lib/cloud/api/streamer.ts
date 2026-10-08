@@ -26,16 +26,67 @@ import { CloudError, asRecord } from "./core";
 export type StreamerStatus = {
   /** Les abonnés, côté serveur — c'est **lui** qui fait foi. */
   subscribers: number;
-  /** Ce que la chaîne gagne par journée de jeu, à son palier actuel. */
+  /** Ce que la chaîne gagne par journée de jeu, **setup compris** (`0038`). */
   perDay: number;
   /** La journée de jeu en cours (`AAAA-MM-JJ`), qui bascule à 6 h UTC. */
   day: string;
   /** La vidéo du jour est déjà publiée. */
   publishedToday: boolean;
+  /** L'imprévu du jour a déjà reçu sa réponse (`0038`). */
+  chosenToday: boolean;
   /** Les jetons versés par la chaîne aujourd'hui. */
   tokensToday: number;
   /** Le plafond de jetons de la chaîne, par journée de jeu. */
   tokensCap: number;
+  /** Les paliers de setup installés, dans l'ordre (`0038`). */
+  setup: string[];
+  /** Le bonus de croissance du setup, pour mille (`0038`). */
+  setupBonus: number;
+};
+
+/** La carte d'imprévu du jour, telle que le serveur la connaît (`0038`). */
+export type StreamerEventToday = {
+  /** La journée de jeu (`AAAA-MM-JJ`). */
+  day: string;
+  /** L'identifiant de la carte du jour (`modo`, `raid`, …) — le texte vit dans l'app. */
+  event: string;
+  /** Le joueur a déjà répondu aujourd'hui. */
+  chosen: boolean;
+  /** Le côté choisi (`gauche` / `droite`), si la carte a été jouée. */
+  choice: string;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  /** Les abonnés gagnés (négatifs quand ça s'est retourné contre toi). */
+  gained: number;
+};
+
+/** Le résultat d'une réponse à l'imprévu du jour (`0038`). */
+export type StreamerEventResult = {
+  /** `true` si la carte avait déjà été jouée : rien n'a été rejoué. */
+  already: boolean;
+  event: string;
+  choice: string;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  gained: number;
+  subscribers: number;
+  perDay: number;
+};
+
+/** Le résultat d'un achat de setup (`0038`). */
+export type StreamerSetupPurchase = {
+  /** `true` si le palier était déjà installé : rien n'a été débité. */
+  already: boolean;
+  level: string;
+  /** Le prix payé (0 quand le palier était déjà là). */
+  price: number;
+  /** Les paliers installés après l'achat, dans l'ordre. */
+  setup: string[];
+  setupBonus: number;
+  /** Le solde de points du serveur après l'achat. */
+  points: number;
 };
 
 /** Le résumé du retour : ce que la chaîne a gagné pendant l'absence. */
@@ -81,8 +132,89 @@ export async function streamerStatus(core: CloudCore): Promise<StreamerStatus> {
     perDay: Number(record.per_day ?? 0),
     day: String(record.day ?? ""),
     publishedToday: record.published_today === true,
+    chosenToday: record.chosen_today === true,
     tokensToday: Number(record.tokens_today ?? 0),
     tokensCap: Number(record.tokens_cap ?? 0),
+    setup: Array.isArray(record.setup) ? record.setup.map((level) => String(level)) : [],
+    setupBonus: Number(record.setup_bonus ?? 0),
+  };
+}
+
+/**
+ * La carte d'imprévu du jour (`0038`).
+ *
+ * Le serveur ne renvoie qu'un **identifiant** : le texte de la carte vit dans
+ * `src/data/streamer.json`. Un client qui ne connaît pas cette carte-là ne peut
+ * pas la jouer — et il le dit, plutôt que d'inventer une histoire.
+ */
+export async function streamerEventToday(core: CloudCore): Promise<StreamerEventToday> {
+  const record = asRecord(await core.rpc("streamer_event_today", {}));
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse d'imprévu illisible.", "invalid_response", 0);
+  }
+  return {
+    day: String(record.day ?? ""),
+    event: String(record.event ?? ""),
+    chosen: record.chosen === true,
+    choice: typeof record.choice === "string" ? record.choice : "",
+    success: record.success === true,
+    buzz: record.buzz === true,
+    badBuzz: record.bad_buzz === true,
+    gained: Number(record.gained ?? 0),
+  };
+}
+
+/**
+ * Répond à l'imprévu du jour (`0038`).
+ *
+ * Le client envoie la carte **et** le côté ; le serveur refuse une carte qui
+ * n'est pas celle du jour, un côté qui n'existe pas, et relit la première
+ * réponse si le joueur appelle deux fois.
+ */
+export async function streamerChoose(
+  core: CloudCore,
+  event: string,
+  choice: string,
+): Promise<StreamerEventResult> {
+  const record = asRecord(await core.rpc("streamer_choose", { p_event: event, p_choice: choice }));
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse d'imprévu illisible.", "invalid_response", 0);
+  }
+  return {
+    already: record.already === true,
+    event: String(record.event ?? event),
+    choice: String(record.choice ?? choice),
+    success: record.success === true,
+    buzz: record.buzz === true,
+    badBuzz: record.bad_buzz === true,
+    gained: Number(record.gained ?? 0),
+    subscribers: Number(record.subscribers ?? 0),
+    perDay: Number(record.per_day ?? 0),
+  };
+}
+
+/**
+ * Achète un palier de **setup** (`0038`).
+ *
+ * Le client n'envoie que le nom du palier : le prix vit au serveur, le débit
+ * passe par le wallet (donc une seule fois pour toujours), et le solde renvoyé
+ * est celui du serveur — l'appareil le recopie au lieu de le calculer.
+ */
+export async function streamerSetupBuy(
+  core: CloudCore,
+  level: string,
+): Promise<StreamerSetupPurchase> {
+  const record = asRecord(await core.rpc("streamer_setup_buy", { p_level: level }));
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse de setup illisible.", "invalid_response", 0);
+  }
+  return {
+    already: record.already === true,
+    level: String(record.level ?? level),
+    price: Number(record.price ?? 0),
+    setup: Array.isArray(record.setup) ? record.setup.map((item) => String(item)) : [],
+    setupBonus: Number(record.setup_bonus ?? 0),
+    points: Number(record.points ?? 0),
   };
 }
 

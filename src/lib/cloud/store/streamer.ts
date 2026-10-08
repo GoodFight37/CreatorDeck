@@ -1,7 +1,26 @@
 import type { CloudStoreContext } from "./context";
 import type { CloudActionOutcome } from "./types";
-import { applyStreamerMirror, publishStreamerLocally, visitStreamerLocally } from "@/lib/game-engine";
-import { STREAMER_TOKEN_CAP, absenceLines, formatById, videoHeadline } from "@/lib/streamer";
+import {
+  applyStreamerMirror,
+  buyStreamerSetupLocally,
+  chooseStreamerEventLocally,
+  publishStreamerLocally,
+  visitStreamerLocally,
+} from "@/lib/game-engine";
+import {
+  STREAMER_TOKEN_CAP,
+  absenceLines,
+  eventById,
+  eventChoice,
+  eventForDay,
+  eventHeadline,
+  formatById,
+  nextSetupLevel,
+  setupBonusPermille,
+  setupLevelById,
+  videoHeadline,
+  type StreamerEventState,
+} from "@/lib/streamer";
 import { gameDay } from "@/lib/progression";
 
 /**
@@ -39,8 +58,16 @@ export type StreamerOpening =
       publishedToday: boolean;
       tokensToday: number;
       tokensCap: number;
+      /** L'imprévu du jour : la carte, et ce qui y a déjà été répondu. */
+      event: StreamerEventState | null;
+      /** Les paliers de setup installés, dans l'ordre (`0038`). */
+      setup: string[];
+      /** Le bonus de croissance du setup, pour mille. */
+      setupBonus: number;
     }
   | { status: "refused"; message: string };
+
+export type StreamerEventOpening = { status: "done"; headline: string; event: StreamerEventState };
 
 /** Les quatre champs que la phrase d'une vidéo regarde (le format vient d'ailleurs). */
 function outcomeOf(video: {
@@ -91,6 +118,9 @@ export function streamerActions(ctx: CloudStoreContext) {
           publishedToday: visit.state.streamer.video?.day === day,
           tokensToday: visit.state.streamer.tokensDay === day ? visit.state.streamer.tokensToday : 0,
           tokensCap: STREAMER_TOKEN_CAP,
+          event: visit.state.streamer.event?.day === day ? visit.state.streamer.event : null,
+          setup: visit.state.streamer.setup,
+          setupBonus: setupBonusPermille(visit.state.streamer.setup),
         };
       }
       if (!api.session()) return noAccount();
@@ -99,6 +129,12 @@ export function streamerActions(ctx: CloudStoreContext) {
       try {
         const retour = await api.streamerVisit();
         const status = await api.streamerStatus();
+        // L'imprévu du jour se lit à part : une base qui n'a pas encore `0038`
+        // (elle répond alors une erreur « fonction introuvable ») ne doit pas
+        // empêcher la chaîne entière de s'ouvrir — le setup et la vidéo
+        // continuent de fonctionner, et l'écran n'affiche simplement pas de
+        // carte. Même tolérance que le carnet avec des migrations anciennes.
+        const imprevu = await api.streamerEventToday().catch(() => null);
         const courant = ctx.deps.readState() ?? local;
         // Le relevé local est daté **maintenant** : le serveur vient de le
         // faire, et sans cette écriture un second passage dans la journée
@@ -111,6 +147,18 @@ export function streamerActions(ctx: CloudStoreContext) {
               lastSeenAt: ctx.deps.now(),
               tokensDay: status.day,
               tokensToday: status.tokensToday,
+              setup: status.setup,
+              event: imprevu
+                ? {
+                    day: imprevu.day,
+                    event: imprevu.event,
+                    choice: imprevu.choice,
+                    success: imprevu.success,
+                    buzz: imprevu.buzz,
+                    badBuzz: imprevu.badBuzz,
+                    gained: imprevu.gained,
+                  }
+                : undefined,
             },
             ctx.deps.now(),
           ),
@@ -134,6 +182,21 @@ export function streamerActions(ctx: CloudStoreContext) {
           publishedToday: status.publishedToday,
           tokensToday: status.tokensToday,
           tokensCap: status.tokensCap,
+          // La carte se relit depuis le miroir : elle vient d'être adoptée, et
+          // une base sans `0038` laisse simplement `null`.
+          event: imprevu
+            ? {
+                day: imprevu.day,
+                event: imprevu.event,
+                choice: imprevu.choice,
+                success: imprevu.success,
+                buzz: imprevu.buzz,
+                badBuzz: imprevu.badBuzz,
+                gained: imprevu.gained,
+              }
+            : null,
+          setup: status.setup,
+          setupBonus: status.setupBonus,
         };
       } catch (error) {
         const refusal = ctx.cloudRefusal(error, "La chaîne n'a pas pu être ouverte.");
@@ -218,6 +281,138 @@ export function streamerActions(ctx: CloudStoreContext) {
         return { status: "done", message, delta: video.tokens };
       } catch (error) {
         const refusal = ctx.cloudRefusal(error, "La vidéo n'a pas pu être publiée.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Répond à l'imprévu du jour : un côté de la carte, tiré par le serveur.
+     *
+     * Le client envoie la carte **et** le côté ; le serveur refuse une carte qui
+     * n'est pas celle du jour, un côté inconnu, et relit la première réponse si
+     * on insiste. Aucun jeton ne bouge : la monnaie de la chaîne a une seule
+     * porte, la vidéo du jour.
+     */
+    async chooseStreamerEvent(eventId: string, choiceId: string): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      const local = ctx.deps.readState();
+      if (!local) {
+        const message = "Partie locale absente.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      if (!api) {
+        const joue = chooseStreamerEventLocally(local, eventId, choiceId, ctx.deps.now());
+        if ("error" in joue) {
+          ctx.publish({ busy: false, message: joue.error, isError: true });
+          return { status: "unavailable", reason: "error", message: joue.error };
+        }
+        ctx.deps.applyState(joue.state);
+        const message = joue.already ? "L'imprévu du jour est déjà joué." : joue.headline;
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      }
+      if (!api.session()) {
+        const refus = noAccount();
+        return { status: "unavailable", reason: "no-session", message: refus.message };
+      }
+
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const resultat = await api.streamerChoose(eventId, choiceId);
+        const jour = gameDay(ctx.deps.now());
+        const courant = ctx.deps.readState() ?? local;
+        const event: StreamerEventState = {
+          day: jour,
+          event: resultat.event,
+          choice: resultat.choice,
+          success: resultat.success,
+          buzz: resultat.buzz,
+          badBuzz: resultat.badBuzz,
+          gained: resultat.gained,
+        };
+        ctx.deps.applyState(
+          applyStreamerMirror(
+            courant,
+            { subscribers: resultat.subscribers, event },
+            ctx.deps.now(),
+          ),
+        );
+        const carte = eventById(resultat.event);
+        const cote = carte ? eventChoice(carte, resultat.choice) : null;
+        const message = resultat.already
+          ? "L'imprévu du jour est déjà joué."
+          : cote
+            ? eventHeadline({
+                choice: cote,
+                success: resultat.success,
+                buzz: resultat.buzz,
+                badBuzz: resultat.badBuzz,
+                gained: resultat.gained,
+              })
+            : "Imprévu joué.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "L'imprévu du jour n'a pas pu être joué.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Achète le **prochain** palier de setup (points, dans l'ordre).
+     *
+     * Le prix et la dépense sont au serveur (`streamer_setup_buy`, qui passe par
+     * le wallet) ; sans cloud, le moteur local fait le même calcul et débite la
+     * partie locale. Dans les deux cas, le solde affiché vient de la source qui
+     * a payé.
+     */
+    async buyStreamerSetup(levelId: string): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      const local = ctx.deps.readState();
+      if (!local) {
+        const message = "Partie locale absente.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      if (!api) {
+        const achat = buyStreamerSetupLocally(local, levelId, ctx.deps.now());
+        if ("error" in achat) {
+          ctx.publish({ busy: false, message: achat.error, isError: true });
+          return { status: "unavailable", reason: "error", message: achat.error };
+        }
+        ctx.deps.applyState(achat.state);
+        const message = `« ${achat.level.label} » est installé.`;
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      }
+      if (!api.session()) {
+        const refus = noAccount();
+        return { status: "unavailable", reason: "no-session", message: refus.message };
+      }
+
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const achat = await api.streamerSetupBuy(levelId);
+        const courant = ctx.deps.readState() ?? local;
+        ctx.deps.applyState(
+          applyStreamerMirror(courant, { setup: achat.setup }, ctx.deps.now()),
+        );
+        // Le solde a été débité côté serveur : on le relit, comme après un
+        // achat à l'hôtel — le serveur tient la caisse.
+        await ctx.actions.syncWallet().catch(() => null);
+        const niveau = setupLevelById(achat.level);
+        const message = achat.already
+          ? `« ${niveau?.label ?? achat.level} » est déjà installé.`
+          : `« ${niveau?.label ?? achat.level} » est installé — la chaîne grandit plus vite.`;
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Ce palier de setup n'a pas pu être installé.");
         ctx.publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }

@@ -57,7 +57,38 @@ export type StreamerSetupLevel = {
   /** Prix, dans la monnaie indiquée. */
   price: number;
   currency: "points" | "cards";
+  /** Ce que ce palier ajoute à la croissance, pour mille (cumulatif). */
+  growthPermille?: number;
   note?: string;
+};
+
+/** Un des deux côtés de la carte d'imprévu : on le choisit en glissant. */
+export type StreamerEventChoice = {
+  id: "gauche" | "droite";
+  label: string;
+  detail: string;
+  /** Chance de réussite, pour mille (le reste tombe à plat). */
+  successChancePermille: number;
+  /** Ce que la réussite rapporte, pour mille de la croissance journalière. */
+  gainPermille: number;
+  /** Chance que ça « buzz » : la réussite triple. */
+  buzzPermille: number;
+  /** Chance que ça se retourne contre toi. */
+  badBuzzPermille: number;
+};
+
+/**
+ * Un **imprévu** : une situation, deux réponses, et les mêmes tirages qu'une
+ * vidéo. Le texte est ici (l'application le porte), le tirage est au serveur.
+ */
+export type StreamerEvent = {
+  id: string;
+  /** Le titre de la carte, court — c'est ce que le joueur lit d'abord. */
+  label: string;
+  /** La situation, en deux ou trois lignes. */
+  detail: string;
+  /** Les deux côtés : la gauche et la droite de la carte. */
+  choices: StreamerEventChoice[];
 };
 
 type StreamerData = {
@@ -66,6 +97,8 @@ type StreamerData = {
   growth: { capDays: number; note: string };
   tiers: StreamerTier[];
   formats: StreamerFormat[];
+  eventsNote: string;
+  events: StreamerEvent[];
   tokens: { perDayCap: number; perSuccess: number; perBuzz: number; note: string };
   setup: { note: string; levels: StreamerSetupLevel[] };
 };
@@ -77,6 +110,12 @@ export const TIERS: readonly StreamerTier[] = STREAMER.tiers;
 
 /** Le plafond de cumul d'une absence. */
 export const CAP_DAYS = STREAMER.growth.capDays;
+
+/** Les imprévus, dans l'ordre du fichier. */
+export const EVENTS: readonly StreamerEvent[] = STREAMER.events;
+
+/** Les paliers de setup, dans l'ordre du fichier (on les achète dans cet ordre). */
+export const SETUP_LEVELS: readonly StreamerSetupLevel[] = STREAMER.setup.levels;
 
 /**
  * Ce que la chaîne rapporte en jetons : un montant **brut**, avant le plafond
@@ -122,9 +161,49 @@ export function tierProgress(subscribers: number): {
   return { tier, next, ratio: span > 0 ? Math.min(1, Math.max(0, done / span)) : 1 };
 }
 
-/** Ce que la chaîne gagne par journée de jeu, à ce palier. */
+/** Ce que la chaîne gagne par journée de jeu, à ce palier (avant le setup). */
 export function growthPerDay(subscribers: number): number {
   return tierFor(subscribers).perDay;
+}
+
+/** Le palier de setup portant cet identifiant, ou `null`. */
+export function setupLevelById(id: string): StreamerSetupLevel | null {
+  return SETUP_LEVELS.find((level) => level.id === id) ?? null;
+}
+
+/**
+ * Le bonus de croissance des paliers de setup **achetés**, pour mille.
+ *
+ * Les paliers ne comptent que s'ils sont dans l'ordre (`owned` vient de l'état,
+ * qui ne sait les écrire que dans l'ordre) ; un identifiant inconnu — une
+ * sauvegarde d'une autre version, par exemple — ne compte pas plutôt que de
+ * fausser le calcul.
+ */
+export function setupBonusPermille(owned: readonly string[]): number {
+  let bonus = 0;
+  for (const level of SETUP_LEVELS) {
+    if (!owned.includes(level.id)) break;
+    bonus += level.growthPermille ?? 0;
+  }
+  return bonus;
+}
+
+/**
+ * Ce que la chaîne gagne par journée de jeu, **setup compris**.
+ *
+ * Le bonus est un pour-mille appliqué au palier, arrondi vers le bas — la même
+ * opération que `_streamer_growth()` côté serveur, sinon l'écran et le serveur
+ * annonceraient deux chiffres différents pour la même journée.
+ */
+export function growthWithSetup(subscribers: number, owned: readonly string[]): number {
+  const base = growthPerDay(subscribers);
+  const bonus = setupBonusPermille(owned);
+  return bonus === 0 ? base : Math.floor((base * (1000 + bonus)) / 1000);
+}
+
+/** Le prochain palier de setup à acheter, ou `null` si tout est acheté. */
+export function nextSetupLevel(owned: readonly string[]): StreamerSetupLevel | null {
+  return SETUP_LEVELS.find((level) => !owned.includes(level.id)) ?? null;
 }
 
 /**
@@ -169,10 +248,14 @@ export function absenceSummary(
   fromMs: number,
   toMs: number,
   subscribers: number,
+  /** Le bonus de croissance du setup acheté, pour mille (0 = aucun). */
+  bonusPermille = 0,
 ): AbsenceSummary {
   const days = gameDaysBetween(fromMs, toMs);
   const countedDays = Math.min(days, CAP_DAYS);
-  const gained = countedDays * growthPerDay(subscribers);
+  const base = growthPerDay(subscribers);
+  const perDay = bonusPermille === 0 ? base : Math.floor((base * (1000 + bonusPermille)) / 1000);
+  const gained = countedDays * perDay;
   const after = subscribers + gained;
   return {
     days,
@@ -253,9 +336,12 @@ export function resolveVideo(
   format: StreamerFormat,
   subscribers: number,
   roll: (maxExclusive: number) => number = randomInt,
+  /** Le bonus de croissance du setup acheté, pour mille (0 = aucun). */
+  bonusPermille = 0,
 ): VideoOutcome {
   const base = growthPerDay(subscribers);
-  const potential = Math.round((base * format.gainPermille) / 1000);
+  const avecSetup = bonusPermille === 0 ? base : Math.floor((base * (1000 + bonusPermille)) / 1000);
+  const potential = Math.round((avecSetup * format.gainPermille) / 1000);
   const success = roll(1000) < format.successChancePermille;
   const buzz = success && roll(1000) < format.buzzPermille;
   const badBuzz = !success && roll(1000) < (format.badBuzzPermille ?? 0);
@@ -281,6 +367,99 @@ export function resolveVideo(
   };
 }
 
+/** L'imprévu portant cet identifiant, ou `null` s'il n'existe pas. */
+export function eventById(id: string): StreamerEvent | null {
+  return EVENTS.find((event) => event.id === id) ?? null;
+}
+
+/** Un des deux côtés de la carte, ou `null`. */
+export function eventChoice(event: StreamerEvent, id: string): StreamerEventChoice | null {
+  return event.choices.find((choice) => choice.id === id) ?? null;
+}
+
+/**
+ * L'imprévu **de cette journée-là**, et toujours le même : la carte ne change
+ * pas entre deux ouvertures du même jour. Le choix est un petit hachage de la
+ * journée de jeu — stable, sans aléa, donc le même pour tous ceux qui jouent
+ * sur cet appareil. Le serveur, lui, choisit aussi une carte par joueur et par
+ * journée (`md5`), et cette carte-là peut être **différente** : ce qui doit être
+ * identique des deux côtés, ce sont les règles (les chances écrites au fichier),
+ * pas la carte du jour — un build sans cloud n'a personne à qui demander.
+ */
+export function eventForDay(day: string): StreamerEvent {
+  let hash = 0;
+  for (let i = 0; i < day.length; i += 1) {
+    hash = (hash * 31 + day.charCodeAt(i)) >>> 0;
+  }
+  return EVENTS[hash % EVENTS.length];
+}
+
+export type EventOutcome = {
+  event: StreamerEvent;
+  choice: StreamerEventChoice;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  /** Abonnés gagnés (négatif quand ça se retourne contre toi). */
+  gained: number;
+  headline: string;
+};
+
+/**
+ * La réponse à un imprévu : les **mêmes trois jets** qu'une vidéo, dans le même
+ * ordre — la réussite, le buzz (seulement sur une réussite), le bad buzz
+ * (seulement sur un échec). Le gain et la perte se calculent aussi pareil, sur
+ * la croissance journalière du palier.
+ *
+ * Aucun jeton : les jetons de la chaîne viennent de la vidéo du jour, une seule
+ * porte pour la monnaie. Un imprévu fait grandir ou reculer la chaîne, rien
+ * d'autre.
+ */
+export function resolveEventChoice(
+  event: StreamerEvent,
+  choice: StreamerEventChoice,
+  subscribers: number,
+  roll: (maxExclusive: number) => number = randomInt,
+  bonusPermille = 0,
+): EventOutcome {
+  const base = growthPerDay(subscribers);
+  const avecSetup = bonusPermille === 0 ? base : Math.floor((base * (1000 + bonusPermille)) / 1000);
+  const potential = Math.round((avecSetup * choice.gainPermille) / 1000);
+  const success = roll(1000) < choice.successChancePermille;
+  const buzz = success && roll(1000) < choice.buzzPermille;
+  const badBuzz = !success && roll(1000) < choice.badBuzzPermille;
+
+  let gained = 0;
+  if (success) gained = buzz ? potential * 3 : potential;
+  else if (badBuzz) gained = -Math.round(potential / 4);
+
+  return {
+    event,
+    choice,
+    success,
+    buzz,
+    badBuzz,
+    gained,
+    headline: eventHeadline({ choice, success, buzz, badBuzz, gained }),
+  };
+}
+
+/** La phrase d'un imprévu, écrite une seule fois (écran et résumé du jour). */
+export function eventHeadline(outcome: {
+  choice: StreamerEventChoice;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  gained: number;
+}): string {
+  const nom = `« ${outcome.choice.label} »`;
+  const gain = `${outcome.gained > 0 ? "+" : "−"}${count.format(Math.abs(outcome.gained))} abonnés`;
+  if (outcome.buzz) return `${nom} : ça a buzzé — ${gain} d'un coup.`;
+  if (outcome.success) return `${nom} : ${gain}.`;
+  if (outcome.badBuzz) return `${nom} : ça s'est retourné contre toi — ${gain}.`;
+  return `${nom} : personne n'a réagi.`;
+}
+
 /** La phrase du résumé, écrite une seule fois (écran, carnet, notification). */
 // --------------------------------------------------------------- l'état local
 /**
@@ -302,6 +481,20 @@ export type StreamerState = {
   tokensToday: number;
   /** La dernière vidéo publiée : une seule par journée de jeu, jamais rejouée. */
   video: StreamerVideoState | null;
+  /** La réponse au dernier imprévu : une seule par journée de jeu, jamais rejoué. */
+  event: StreamerEventState | null;
+  /** Les paliers de setup achetés, **dans l'ordre** (le bonus se lit ainsi). */
+  setup: string[];
+};
+
+export type StreamerEventState = {
+  day: string;
+  event: string;
+  choice: string;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  gained: number;
 };
 
 export type StreamerVideoState = {
@@ -316,7 +509,15 @@ export type StreamerVideoState = {
 };
 
 export function newStreamerState(now: number): StreamerState {
-  return { subscribers: 0, lastSeenAt: now, tokensDay: "", tokensToday: 0, video: null };
+  return {
+    subscribers: 0,
+    lastSeenAt: now,
+    tokensDay: "",
+    tokensToday: 0,
+    video: null,
+    event: null,
+    setup: [],
+  };
 }
 
 /** Le format portant cet identifiant, ou `null` s'il n'existe pas. */
@@ -351,7 +552,7 @@ export function playVideoLocally(
   if (!format) return null;
   if (prev.video?.day === day) return { state: prev, video: prev.video, already: true };
 
-  const outcome = resolveVideo(format, prev.subscribers, roll);
+  const outcome = resolveVideo(format, prev.subscribers, roll, setupBonusPermille(prev.setup));
   const deja = tokensOnDay(prev, day);
   const tokens = Math.max(0, Math.min(outcome.tokens, STREAMER_TOKEN_CAP - deja));
   const video: StreamerVideoState = {
@@ -370,8 +571,74 @@ export function playVideoLocally(
       tokensDay: day,
       tokensToday: deja + tokens,
       video,
+      event: prev.event,
+      setup: prev.setup,
     },
     video,
+    already: false,
+  };
+}
+
+/**
+ * L'imprévu du jour, joué **localement** — le chemin du build sans cloud.
+ *
+ * Le dessin est celui du serveur : une carte par journée de jeu (la même toute
+ * la journée, `eventForDay()`), un seul choix, jamais rejoué. `null` signifie
+ * « cette carte-ci ou ce côté-ci n'existe pas » ; un imprévu déjà joué
+ * aujourd'hui ressort avec `already: true` et la réponse enregistrée.
+ */
+export function playEventLocally(
+  prev: StreamerState,
+  choiceId: string,
+  day: string,
+  roll: (maxExclusive: number) => number = randomInt,
+): { state: StreamerState; event: StreamerEventState; outcome: EventOutcome; already: boolean } | null {
+  const carte = eventForDay(day);
+  const choice = eventChoice(carte, choiceId);
+  if (!choice) return null;
+  if (prev.event?.day === day) {
+    const rejoue = eventById(prev.event.event);
+    const cote = rejoue ? eventChoice(rejoue, prev.event.choice) : null;
+    return {
+      state: prev,
+      event: prev.event,
+      outcome: {
+        event: rejoue ?? carte,
+        choice: cote ?? choice,
+        success: prev.event.success,
+        buzz: prev.event.buzz,
+        badBuzz: prev.event.badBuzz,
+        gained: prev.event.gained,
+        headline: eventHeadline({
+          choice: cote ?? choice,
+          success: prev.event.success,
+          buzz: prev.event.buzz,
+          badBuzz: prev.event.badBuzz,
+          gained: prev.event.gained,
+        }),
+      },
+      already: true,
+    };
+  }
+
+  const outcome = resolveEventChoice(carte, choice, prev.subscribers, roll, setupBonusPermille(prev.setup));
+  const event: StreamerEventState = {
+    day,
+    event: carte.id,
+    choice: choice.id,
+    success: outcome.success,
+    buzz: outcome.buzz,
+    badBuzz: outcome.badBuzz,
+    gained: outcome.gained,
+  };
+  return {
+    state: {
+      ...prev,
+      subscribers: Math.max(0, prev.subscribers + outcome.gained),
+      event,
+    },
+    event,
+    outcome,
     already: false,
   };
 }

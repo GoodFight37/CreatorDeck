@@ -56,8 +56,11 @@ jobs:
           sonde "last_pack_shelf" "{}" "0012, contrôle"
 
           # Les migrations à vérifier, de la plus récente à la plus ancienne.
-          # `_push_serie_due` est révoquée au client : elle répond « permission
-          # denied » quand elle est là, « Could not find the function » sinon.
+          # Ces fonctions sont révoquées au client : elles répondent « permission
+          # denied » quand elles sont là, « Could not find the function » sinon.
+          # `_streamer_setup_next` est le prochain palier de setup (le premier du
+          # préfixe manquant) et n'existe qu'à partir de `0038`.
+          sonde "_streamer_setup_next" '{"p_user":"00000000-0000-4000-8000-000000000000"}' "0038 ?"
           # C'est la garde de série, et elle n'existe qu'à partir de `0037`.
           sonde "_push_serie_due" '{"p_user":"00000000-0000-4000-8000-000000000000","p_now":"2026-07-10T18:30:00Z"}' "0037 ?"
           sonde "streamer_status" "{}" "0036 ?"
@@ -73,7 +76,7 @@ jobs:
           # de migration, la valeur dit si elle est dans la base. C'est la
           # réponse complète, y compris pour `0034` — qui ne crée aucun objet et
           # qu'aucune sonde de fonction ne peut voir.
-          sonde "schema_versions" "{}" "rapport complet (0036) ?"
+          sonde "schema_versions" "{}" "rapport complet (0038) ?"
 
       - name: Ce qui est collé, en clair
         env:
@@ -97,12 +100,12 @@ jobs:
           BODY=$(printf '%s' "$RAW" | sed '$d')
 
           if [ "$CODE" != "200" ]; then
-            echo "::warning title=Le rapport de la base ne répond pas::HTTP $CODE — `schema_versions()` est absente : colle `0036` puis `0037`. Les contrôles au-dessus disent ce qui, lui, répond."
+            echo "::warning title=Le rapport de la base ne répond pas::HTTP $CODE — `schema_versions()` est absente : colle `0036`, `0037`, puis `0038`. Les contrôles au-dessus disent ce qui, lui, répond."
             exit 0
           fi
 
           ABSENTES=""
-          for M in 0030 0031 0032 0033 0034 0035 0036 0037; do
+          for M in 0030 0031 0032 0033 0034 0035 0036 0037 0038; do
             ETAT=$(printf '%s' "$BODY" | jq -r --arg k "$M" '.[$k] // false')
             if [ "$ETAT" = "true" ]; then
               echo "::notice title=$M::collée"
@@ -115,5 +118,5 @@ jobs:
           if [ -n "$ABSENTES" ]; then
             echo "::warning title=Il reste à coller::$ABSENTES"
           else
-            echo "::notice title=La base est à jour::0030 à 0037, toutes collées"
+            echo "::notice title=La base est à jour::0030 à 0038, toutes collées"
           fi

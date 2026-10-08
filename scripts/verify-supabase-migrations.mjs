@@ -163,6 +163,7 @@ try {
   const protege = await readFile(path.join(MIGRATIONS, "0034_last_pack_protege.sql"), "utf8");
   const jetons = await readFile(path.join(MIGRATIONS, "0035_jetons.sql"), "utf8");
   const chaine = await readFile(path.join(MIGRATIONS, "0036_streamer.sql"), "utf8");
+  const imprevus = await readFile(path.join(MIGRATIONS, "0038_imprevus_setup.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -202,6 +203,7 @@ try {
     ["0035_jetons.sql", jetons],
     ["0036_streamer.sql", chaine],
     ["0037_gardes.sql", gardes],
+    ["0038_imprevus_setup.sql", imprevus],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -5554,6 +5556,341 @@ try {
     rapportAvec["0036"] === true && rapportAvec["0035"] === true,
     JSON.stringify(rapportAvec),
   );
+  // Le même piège une génération plus loin : `0037` et `0038` sont maintenant
+  // les dernières, donc ce sont elles qu'il faut recoller en dernier.
+  await client.query(gardes);
+  await client.query(imprevus);
+  const rapportComplet = (await client.query("select public.schema_versions() as r")).rows[0].r;
+  check(
+    "chaîne : la pile recollée dans l'ordre donne le rapport complet (0030 → 0038)",
+    ["0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0038"].every(
+      (cle) => rapportComplet[cle] === true,
+    ),
+    JSON.stringify(rapportComplet),
+  );
+
+  // --- Les imprévus et le setup (0038) -------------------------------------
+  //
+  // Ce qui se vérifie ici, ce n'est pas l'agrément des cartes : c'est ce que le
+  // **client** ne peut pas faire — choisir son imprévu, choisir son côté sans
+  // qu'il existe, le rejouer, se payer deux fois, ou s'offrir le studio sans le
+  // micro. Et une promesse de plus : un imprévu ne paie **aucun jeton**.
+  const SETUP = "5e5e5e5e-3333-4333-8333-5e5e5e5e5e5e";
+  await player(SETUP, "Victoire", [card("setup-1", "ibai", "rare", "standard", 200)]);
+  await client.query("select public._wallet_apply($1, 6000, 'test', 'setup-0038')", [SETUP]);
+
+  const niveaux = (
+    await client.query(
+      "select level, price, growth_permille from public._streamer_setup_levels() order by rang",
+    )
+  ).rows;
+  check(
+    "setup : cinq paliers, dans l'ordre, pour +50 % de croissance au total",
+    niveaux.length === 5 &&
+      niveaux.map((row) => row.level).join(",") === "webcam,micro,lumiere,deco,studio" &&
+      niveaux.map((row) => row.price).join(",") === "120,320,780,1800,4200" &&
+      niveaux.reduce((total, row) => total + row.growth_permille, 0) === 500,
+    JSON.stringify(niveaux),
+  );
+
+  const carteDuJour = (await asPlayer(SETUP, "select public.streamer_event_today() as r")).rows[0].r;
+  check(
+    "imprévus : le jour a une carte, et rien n'est encore répondu",
+    carteDuJour.ok === true &&
+      carteDuJour.chosen === false &&
+      [
+        "clip",
+        "coupure",
+        "modo",
+        "nuit",
+        "raid",
+        "sponsor",
+      ].includes(carteDuJour.event) &&
+      carteDuJour.day ===
+        (await client.query("select public._streamer_game_day(now()) as d")).rows[0].d,
+    JSON.stringify(carteDuJour),
+  );
+  check(
+    "imprévus : la carte du jour ne change pas entre deux ouvertures",
+    (await asPlayer(SETUP, "select public.streamer_event_today() as r")).rows[0].r.event ===
+      carteDuJour.event,
+  );
+
+  // Six cartes, et le tirage par `md5(joueur, journée)` ne colle pas tout le
+  // monde sur la même : sur trente joueurs, il doit en sortir plusieurs.
+  const cartesReparties = (
+    await client.query(
+      `select count(distinct public._streamer_event_for(u, '2026-10-08'))::int as n
+         from (select ('00000000-0000-4000-8000-' || lpad(g::text, 12, '0'))::uuid as u
+                 from generate_series(1, 30) g) as joueurs`,
+    )
+  ).rows[0].n;
+  check(
+    "imprévus : trente joueurs ne tombent pas tous sur la même carte",
+    cartesReparties >= 3,
+    String(cartesReparties),
+  );
+
+  // La carte qui n'est pas celle du jour : elle est calculée, pas écrite en
+  // dur — sinon le contrôle se tromperait le jour où l'aléa tombe dessus.
+  const autreCarte = ["modo", "sponsor", "clip", "coupure", "raid", "nuit"].find(
+    (id) => id !== carteDuJour.event,
+  );
+  await refuses(
+    "imprévus : un imprévu qui n'est pas celui du jour est refusé",
+    SETUP,
+    "select public.streamer_choose($1, 'gauche') as r",
+    [autreCarte],
+    "ce n'est pas l'imprévu du jour",
+  );
+  await refuses(
+    "imprévus : un côté qui n'existe pas est refusé",
+    SETUP,
+    "select public.streamer_choose($1, 'milieu') as r",
+    [carteDuJour.event],
+    "ce choix n'existe pas",
+  );
+
+  const jetonsAvant = (await asPlayer(SETUP, "select public.tokens_get() as r")).rows[0].r.tokens;
+  const abonnesAvant = (await asPlayer(SETUP, "select public.streamer_status() as r")).rows[0].r
+    .subscribers;
+  const joue = (
+    await asPlayer(SETUP, "select public.streamer_choose($1, 'gauche') as r", [carteDuJour.event])
+  ).rows[0].r;
+  // Le gain attendu se **calcule** depuis la carte réellement tirée et la
+  // croissance réelle du joueur : une liste écrite à la main se tromperait le
+  // jour où le tirage tombe sur une autre carte.
+  const coteGauche = (
+    await client.query("select * from public._streamer_event_choice($1, 'gauche')", [
+      carteDuJour.event,
+    ])
+  ).rows[0];
+  const croissanceAvant = (
+    await client.query("select public._streamer_growth($1, $2) as g", [SETUP, abonnesAvant])
+  ).rows[0].g;
+  const potentiel = Math.round((Number(croissanceAvant) * coteGauche.gain_permille) / 1000);
+  const gainAttendu = joue.success
+    ? joue.buzz
+      ? potentiel * 3
+      : potentiel
+    : joue.bad_buzz
+      ? -Math.round(potentiel / 4)
+      : 0;
+  check(
+    "imprévus : la réponse est cohérente avec le côté choisi",
+    joue.already === false &&
+      joue.choice === "gauche" &&
+      Number(joue.gained) === gainAttendu &&
+      (joue.success || !joue.buzz) &&
+      (joue.success || !joue.bad_buzz) &&
+      Number(joue.subscribers) === Math.max(0, Number(abonnesAvant) + Number(joue.gained)),
+    JSON.stringify({ joue, abonnesAvant, coteGauche, potentiel, gainAttendu }),
+  );
+  check(
+    "imprévus : un imprévu ne paie aucun jeton (la vidéo garde la porte de la monnaie)",
+    Number((await asPlayer(SETUP, "select public.tokens_get() as r")).rows[0].r.tokens) ===
+      Number(jetonsAvant),
+    JSON.stringify({ jetonsAvant }),
+  );
+
+  const rejoue = (
+    await asPlayer(SETUP, "select public.streamer_choose($1, 'droite') as r", [carteDuJour.event])
+  ).rows[0].r;
+  const etatJoue = (await asPlayer(SETUP, "select public.streamer_event_today() as r")).rows[0].r;
+  check(
+    "imprévus : une seule réponse par journée de jeu, et le second appel relit la première",
+    rejoue.already === true &&
+      rejoue.choice === "gauche" &&
+      Number(rejoue.gained) === Number(joue.gained) &&
+      etatJoue.chosen === true &&
+      Number(etatJoue.gained) === Number(joue.gained),
+    JSON.stringify({ rejoue, etatJoue }),
+  );
+  const lignesImprevu = (
+    await client.query("select count(*)::int as n from public.streamer_events where user_id = $1", [
+      SETUP,
+    ])
+  ).rows[0].n;
+  check("imprévus : une seule ligne au journal pour la journée", lignesImprevu === 1, String(lignesImprevu));
+
+  // Un palier qui n'est pas le prochain ne s'achète pas — et l'ordre se lit dans
+  // le message, pas seulement dans un refus.
+  await refuses(
+    "setup : on ne saute pas la webcam pour prendre un micro",
+    SETUP,
+    "select public.streamer_setup_buy('micro') as r",
+    [],
+    "il faut d'abord « webcam »",
+  );
+  await refuses(
+    "setup : on ne saute pas la file pour s'offrir le studio",
+    SETUP,
+    "select public.streamer_setup_buy('studio') as r",
+    [],
+    "il faut d'abord",
+  );
+  await refuses(
+    "setup : un palier inventé est refusé",
+    SETUP,
+    "select public.streamer_setup_buy('piscine') as r",
+    [],
+    "n'existe pas",
+  );
+
+  const pointsAvant = (await asPlayer(SETUP, "select public.wallet_get() as r")).rows[0].r.points;
+  const achatWebcam = (
+    await asPlayer(SETUP, "select public.streamer_setup_buy('webcam') as r")
+  ).rows[0].r;
+  check(
+    "setup : le premier palier se paie, et la croissance suit",
+    achatWebcam.already === false &&
+      Number(achatWebcam.price) === 120 &&
+      Number(achatWebcam.points) === Number(pointsAvant) - 120 &&
+      Number(achatWebcam.setup_bonus) === 30 &&
+      achatWebcam.setup.join(",") === "webcam",
+    JSON.stringify({ achat: achatWebcam, pointsAvant }),
+  );
+  const etatAvecWebcam = (await asPlayer(SETUP, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "setup : l'écran lit le bonus par le serveur (240 → 247 par jour)",
+    Number(etatAvecWebcam.per_day) === 247 &&
+      etatAvecWebcam.setup.join(",") === "webcam" &&
+      Number(etatAvecWebcam.setup_bonus) === 30,
+    JSON.stringify(etatAvecWebcam),
+  );
+  const memesPoints = (await asPlayer(SETUP, "select public.wallet_get() as r")).rows[0].r.points;
+  const achatRepete = (
+    await asPlayer(SETUP, "select public.streamer_setup_buy('webcam') as r")
+  ).rows[0].r;
+  check(
+    "setup : un palier déjà installé ne se repaie pas",
+    achatRepete.already === true &&
+      Number((await asPlayer(SETUP, "select public.wallet_get() as r")).rows[0].r.points) ===
+        Number(memesPoints),
+    JSON.stringify({ achatRepete, memesPoints }),
+  );
+
+  // Le bonus travaille aussi pendant l'absence : deux journées au palier de
+  // base, multipliées par le setup, exactement comme `_streamer_growth()`.
+  await client.query(
+    "update public.streamer_channels set last_seen_at = now() - interval '2 days' where user_id = $1",
+    [SETUP],
+  );
+  const visiteSetup = (await asPlayer(SETUP, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "setup : l'absence paie la croissance du setup (2 × 247, pas 2 × 240)",
+    Number(visiteSetup.gained) === 2 * 247 && Number(visiteSetup.per_day) === 247,
+    JSON.stringify(visiteSetup),
+  );
+
+  // Le piège de l'ordre, côté données : une ligne ajoutée à la main ne donne pas
+  // le bonus d'un palier dont les précédents manquent.
+  await client.query("select public._wallet_apply($1, 10000, 'test', 'setup-triche')", [SETUP]);
+  await client.query("insert into public.streamer_setup (user_id, level) values ($1, 'studio')", [
+    SETUP,
+  ]);
+  check(
+    "setup : un palier volé ne compte pas tant que les précédents manquent",
+    Number(
+      (await client.query("select public._streamer_setup_bonus($1) as b", [SETUP])).rows[0].b,
+    ) === 30,
+  );
+  // ...et il ne fait pas **sauter** une étape pour autant : le prochain palier
+  // se lit sur le préfixe contigu, donc c'est bien le micro qui suit.
+  check(
+    "setup : un palier volé ne fait pas sauter l'étape suivante",
+    (await client.query("select level from public._streamer_setup_next($1)", [SETUP])).rows[0]
+      .level === "micro",
+  );
+  // La ligne volée a fait son travail : on la retire, pour laisser le carnet
+  // dans l'état d'un vrai joueur.
+  await client.query("delete from public.streamer_setup where user_id = $1 and level = 'studio'", [
+    SETUP,
+  ]);
+  const suiteMicro = (
+    await asPlayer(SETUP, "select public.streamer_setup_buy('micro') as r")
+  ).rows[0].r;
+  check(
+    "setup : le bonus s'additionne palier après palier (30 → 80 pour mille)",
+    Number(suiteMicro.setup_bonus) === 80 && suiteMicro.setup.join(",") === "webcam,micro",
+    JSON.stringify(suiteMicro),
+  );
+
+  const ruine = "6f6f6f6f-4444-4444-8444-6f6f6f6f6f6f";
+  await player(ruine, "Sidonie", []);
+  await refuses(
+    "setup : sans les points, le palier n'est pas vendu",
+    ruine,
+    "select public.streamer_setup_buy('webcam') as r",
+    [],
+    "il te manque",
+  );
+
+  // Un visiteur n'a ni carte du jour ni palier.
+  await refuses(
+    "imprévus : sans compte, pas d'imprévu",
+    null,
+    "select public.streamer_event_today() as r",
+    [],
+    "connecte-toi",
+  );
+  await refuses(
+    "setup : sans compte, pas de carnet de paliers",
+    null,
+    "select public.streamer_setup_buy('webcam') as r",
+    [],
+    "connecte-toi",
+  );
+  await refuses(
+    "imprévus : le journal des imprévus est fermé au joueur",
+    SETUP,
+    "select count(*) as n from public.streamer_events",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "setup : le carnet des paliers est fermé au joueur",
+    SETUP,
+    "select count(*) as n from public.streamer_setup",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "imprévus : les tables des cartes ne sont pas lisibles par un joueur",
+    SETUP,
+    "select count(*) as n from public._streamer_events()",
+    [],
+    "permission denied",
+  );
+
+  // Le piège d'ordre, joué pour de vrai : recoller `0036` **seule** après
+  // `0038` rend l'ancien `streamer_status()` — l'écran perd le setup, alors que
+  // la table des paliers, elle, est intacte. C'est exactement ce qui arrive au
+  // joueur qui recolle un vieux fichier depuis son téléphone : le remède est de
+  // recoller `0038`, et le contrôle le montre au lieu de l'écrire.
+  await client.query(chaine);
+  const statusSansSetup = (await asPlayer(SETUP, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "setup : recoller `0036` seule après `0038` fait perdre le setup de l'écran",
+    statusSansSetup.setup === undefined &&
+      Number(
+        (await client.query("select count(*)::int as n from public.streamer_setup where user_id = $1", [
+          SETUP,
+        ])).rows[0].n,
+      ) === 2,
+    JSON.stringify(statusSansSetup),
+  );
+  await client.query(imprevus);
+  const statusAvecSetup = (await asPlayer(SETUP, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "setup : recoller `0038` le rend tel quel, sans rien racheter",
+    statusAvecSetup.setup.join(",") === "webcam,micro" &&
+      Number(statusAvecSetup.setup_bonus) === 80 &&
+      Number(
+        (await asPlayer(SETUP, "select public.wallet_get() as r")).rows[0].r.points,
+      ) >= 0,
+    JSON.stringify(statusAvecSetup),
+  );
 
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
@@ -5596,6 +5933,11 @@ try {
   // `0036` ferme la pile à son tour : elle réécrit `schema_versions()`, donc
   // c'est elle la dernière recollée.
   await client.query(chaine);
+  // Puis `0037`, puis `0038` : chacune réécrit quelque chose de la précédente
+  // (`push_targets()` pour l'une, `streamer_status()` et `schema_versions()`
+  // pour l'autre), donc l'ordre du collage est l'ordre des numéros.
+  await client.query(gardes);
+  await client.query(imprevus);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

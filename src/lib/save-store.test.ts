@@ -3,6 +3,7 @@ import { CREATORS, PACKS } from "@/lib/catalog";
 import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
 import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
 import { gameDay } from "@/lib/progression";
+import { setupBonusPermille } from "@/lib/streamer";
 import {
   LEGACY_SAVE_KEYS,
   SAVE_KEY,

@@ -13,15 +13,27 @@ import { describe, expect, it } from "vitest";
 
 import {
   CAP_DAYS,
+  EVENTS,
+  SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKENS,
   TIERS,
   absenceSummary,
   availableFormats,
+  eventById,
+  eventChoice,
+  eventForDay,
   gameDaysBetween,
   growthPerDay,
+  growthWithSetup,
+  newStreamerState,
+  nextSetupLevel,
   nextTier,
+  playEventLocally,
+  resolveEventChoice,
   resolveVideo,
+  setupBonusPermille,
+  setupLevelById,
   tierFor,
   tierProgress,
 } from "@/lib/streamer";
@@ -210,5 +222,136 @@ describe("la vidéo du jour", () => {
     const ok = resolveVideo(ragebait, 30_000, suiteDeJets([0, 999]));
     expect(ok.success).toBe(true);
     expect(ok.badBuzz).toBe(false);
+  });
+});
+
+describe("les imprévus", () => {
+  it("chaque carte a deux côtés, écrits, et des chances bornées", () => {
+    expect(EVENTS.length).toBeGreaterThanOrEqual(4);
+    for (const carte of EVENTS) {
+      expect(carte.label.length).toBeGreaterThan(0);
+      expect(carte.detail.length).toBeGreaterThan(10);
+      expect(carte.choices.length).toBe(2);
+      expect(carte.choices.map((c) => c.id)).toEqual(["gauche", "droite"]);
+      for (const cote of carte.choices) {
+        expect(cote.label.length).toBeGreaterThan(0);
+        expect(cote.successChancePermille).toBeGreaterThan(0);
+        expect(cote.successChancePermille).toBeLessThan(1000);
+        expect(cote.gainPermille).toBeGreaterThan(0);
+        expect(cote.buzzPermille).toBeLessThanOrEqual(1000);
+        expect(cote.badBuzzPermille).toBeLessThan(1000);
+      }
+    }
+  });
+
+  it("chaque carte a un côté sûr et un côté qui rapporte plus", () => {
+    // C'est la règle de l'imprévu : les deux réponses se défendent. Un côté qui
+    // serait à la fois plus sûr et plus payant ne serait pas un choix.
+    for (const carte of EVENTS) {
+      const [gauche, droite] = carte.choices;
+      const plusSur = gauche.successChancePermille > droite.successChancePermille ? gauche : droite;
+      const plusPayant = gauche.gainPermille > droite.gainPermille ? gauche : droite;
+      expect(plusSur.id).not.toBe(plusPayant.id);
+    }
+  });
+
+  it("la carte du jour est stable, et le lendemain peut changer", () => {
+    const meme = eventForDay("2026-10-08");
+    expect(eventForDay("2026-10-08").id).toBe(meme.id);
+    expect(EVENTS.some((carte) => carte.id === meme.id)).toBe(true);
+    // Sur trente journées, on ne reste pas sur une seule carte.
+    const vues = new Set(Array.from({ length: 30 }, (_, i) => eventForDay(`2026-10-${String(i + 1).padStart(2, "0")}`).id));
+    expect(vues.size).toBeGreaterThan(2);
+  });
+
+  it("la réponse suit les mêmes jets qu'une vidéo, et ne paie pas de jetons", () => {
+    const carte = eventForDay("2026-10-08");
+    const [gauche] = carte.choices;
+    const base = growthPerDay(1000);
+    const potentiel = Math.round((base * gauche.gainPermille) / 1000);
+
+    const reussi = resolveEventChoice(carte, gauche, 1000, suiteDeJets([0, 999]));
+    expect(reussi.success).toBe(true);
+    expect(reussi.gained).toBe(potentiel);
+    expect(reussi.headline).toContain(gauche.label);
+
+    const buzz = resolveEventChoice(carte, gauche, 1000, suiteDeJets([0, gauche.buzzPermille - 1]));
+    expect(buzz.buzz).toBe(true);
+    expect(buzz.gained).toBe(potentiel * 3);
+    expect(buzz.headline).toContain("buzzé");
+
+    // Un échec qui se retourne : la perte est un quart du gain, rien de plus.
+    const rate = resolveEventChoice(carte, gauche, 1000, suiteDeJets([999, 0]));
+    expect(rate.success).toBe(false);
+    expect(rate.gained).toBeLessThanOrEqual(0);
+    // Aucun côté ne porte de jetons : `EventOutcome` n'en a même pas le champ.
+    expect(Object.keys(rate)).not.toContain("tokens");
+  });
+
+  it("l'imprévu local ne se rejoue pas deux fois le même jour", () => {
+    const jour = "2026-10-08";
+    const carte = eventForDay(jour);
+    const choix = carte.choices[0].id;
+    const etat = newStreamerState(T0);
+    const premier = playEventLocally(etat, choix, jour, suiteDeJets([0, 999]));
+    expect(premier).not.toBeNull();
+    expect(premier!.already).toBe(false);
+    expect(premier!.state.subscribers).toBeGreaterThanOrEqual(0);
+
+    const second = playEventLocally(premier!.state, carte.choices[1].id, jour, suiteDeJets([0, 999]));
+    expect(second!.already).toBe(true);
+    expect(second!.event.choice).toBe(choix);
+    expect(second!.state.subscribers).toBe(premier!.state.subscribers);
+
+    // Un côté qui n'existe pas ne joue rien.
+    expect(playEventLocally(etat, "milieu", jour)).toBeNull();
+    // Et un identifiant de carte inconnu reste inconnu.
+    expect(eventById("piscine")).toBeNull();
+    expect(eventChoice(carte, "milieu")).toBeNull();
+  });
+});
+
+describe("le setup", () => {
+  it("les cinq paliers montent, et le bonus total fait +50 %", () => {
+    expect(SETUP_LEVELS.length).toBe(5);
+    for (let i = 1; i < SETUP_LEVELS.length; i += 1) {
+      expect(SETUP_LEVELS[i].price).toBeGreaterThan(SETUP_LEVELS[i - 1].price);
+      expect(SETUP_LEVELS[i].growthPermille ?? 0).toBeGreaterThanOrEqual(SETUP_LEVELS[i - 1].growthPermille ?? 0);
+    }
+    expect(SETUP_LEVELS.every((niveau) => niveau.currency === "points")).toBe(true);
+    expect(setupBonusPermille(SETUP_LEVELS.map((niveau) => niveau.id))).toBe(500);
+  });
+
+  it("le bonus ne compte que le préfixe : un palier sauté ne vaut rien", () => {
+    expect(setupBonusPermille([])).toBe(0);
+    expect(setupBonusPermille(["webcam"])).toBe(30);
+    expect(setupBonusPermille(["webcam", "micro"])).toBe(80);
+    // Une liste trouée (sauvegarde bricolée, ordre cassé) : on s'arrête au trou.
+    expect(setupBonusPermille(["webcam", "lumiere"])).toBe(30);
+    expect(setupBonusPermille(["studio"])).toBe(0);
+    expect(setupBonusPermille(["inconnu"])).toBe(0);
+  });
+
+  it("la croissance suit le bonus, et le prochain palier suit l'ordre", () => {
+    expect(growthWithSetup(0, [])).toBe(240);
+    expect(growthWithSetup(0, ["webcam"])).toBe(247);
+    expect(growthWithSetup(0, SETUP_LEVELS.map((n) => n.id))).toBe(360);
+    // Au palier « Gros streamer » : 3 200 × 1,03 = 3 296, arrondi vers le bas.
+    expect(growthWithSetup(30_000, ["webcam"])).toBe(3296);
+
+    expect(nextSetupLevel([])?.id).toBe("webcam");
+    expect(nextSetupLevel(["webcam"])?.id).toBe("micro");
+    expect(nextSetupLevel(SETUP_LEVELS.map((n) => n.id))).toBeNull();
+    expect(setupLevelById("studio")?.price).toBe(4200);
+    expect(setupLevelById("piscine")).toBeNull();
+  });
+
+  it("le bonus travaille aussi pendant l'absence", () => {
+    // Le studio continue de travailler pendant qu'on dort : c'est un peu son
+    // intérêt, et c'est la même formule que `_streamer_growth()`.
+    const sans = absenceSummary(T0, T0 + 2 * DAY, 0);
+    const avec = absenceSummary(T0, T0 + 2 * DAY, 0, 500);
+    expect(sans.gained).toBe(2 * 240);
+    expect(avec.gained).toBe(2 * 360);
   });
 });

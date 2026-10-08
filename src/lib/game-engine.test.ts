@@ -39,6 +39,8 @@ import {
   craftCreator,
   applyStreamerMirror,
   applyWallet,
+  buyStreamerSetupLocally,
+  chooseStreamerEventLocally,
   createInitialState,
   creatorWeight,
   currentSeason,
@@ -60,7 +62,7 @@ import {
   type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
-import { growthPerDay } from "@/lib/streamer";
+import { EVENTS, SETUP_LEVELS, eventForDay, setupLevelById, growthPerDay } from "@/lib/streamer";
 
 /**
  * Gèle l'aléa sur une suite de valeurs. `randomInt(n)` échantillonne par rejet
@@ -1378,7 +1380,68 @@ describe("la chaîne (le simulateur de streameur, 0036)", () => {
       tokensDay: "2026-01-02",
       tokensToday: 6,
       video: null,
+      // Un miroir qui ne mentionne ni l'imprévu ni le setup ne les efface pas :
+      // `undefined` veut dire « rien à dire », jamais « mets à zéro ».
+      event: null,
+      setup: [],
     });
     expect(applyStreamerMirror(state, { subscribers: -5 }, T0).streamer.subscribers).toBe(0);
+  });
+
+  it("joue l'imprévu du jour, une seule fois, et sans jeton", () => {
+    const state = { ...createInitialState(T0) };
+    const carte = eventForDay(gameDay(T0));
+    const cote = carte.choices[0];
+    // Deux jets à zéro : réussite, puis buzz. Le gain part de la croissance du
+    // moment, pas de la carte : c'est `resolveEventChoice` qui la lit.
+    const joue = chooseStreamerEventLocally(state, carte.id, cote.id, T0, () => 0);
+    expect("error" in joue).toBe(false);
+    if ("error" in joue) return;
+    expect(joue.event).toMatchObject({ event: carte.id, choice: cote.id, success: true, buzz: true });
+    expect(joue.event.gained).toBeGreaterThan(0);
+    expect(joue.state.streamer.subscribers).toBe(joue.event.gained);
+    expect(joue.state.streamer.tokensToday).toBe(0);
+
+    // La seconde réponse relit la première : rien n'est rejoué, rien n'est payé.
+    const seconde = chooseStreamerEventLocally(joue.state, carte.id, carte.choices[1].id, T0, () => 0);
+    expect("error" in seconde).toBe(false);
+    if ("error" in seconde) return;
+    expect(seconde.already).toBe(true);
+    expect(seconde.state.streamer.subscribers).toBe(joue.state.streamer.subscribers);
+    expect(seconde.event.choice).toBe(cote.id);
+  });
+
+  it("refuse une carte qui n'est pas celle du jour, et un côté inconnu", () => {
+    const state = { ...createInitialState(T0) };
+    const jour = eventForDay(gameDay(T0));
+    const autre = EVENTS.find((carte) => carte.id !== jour.id)!;
+    // En mode local aussi, la carte doit être celle du jour : sinon l'écran et
+    // le tirage pourraient diverger sans que personne ne le voie.
+    const mauvaise = chooseStreamerEventLocally(state, autre.id, "gauche", T0);
+    expect("error" in mauvaise && mauvaise.error).toMatch(/imprévu du jour/);
+    const coteFaux = chooseStreamerEventLocally(state, jour.id, "milieu", T0);
+    expect("error" in coteFaux && coteFaux.error).toMatch(/choix/);
+  });
+
+  it("achète le setup local dans l'ordre, et pas deux fois", () => {
+    const riche = { ...createInitialState(T0), points: 10_000 };
+    const premier = buyStreamerSetupLocally(riche, "webcam", T0);
+    expect("error" in premier).toBe(false);
+    if ("error" in premier) return;
+    expect(premier.state.points).toBe(10_000 - setupLevelById("webcam")!.price);
+    expect(premier.state.streamer.setup).toEqual(["webcam"]);
+
+    // Le même palier ne se repaie pas, et le suivant ne se saute pas.
+    expect(buyStreamerSetupLocally(premier.state, "webcam", T0)).toEqual({
+      error: `« ${setupLevelById("webcam")!.label} » est déjà installé.`,
+    });
+    const saute = buyStreamerSetupLocally(premier.state, "studio", T0);
+    expect("error" in saute && saute.error).toMatch(/d'abord/);
+
+    // Un palier inaccessible en prix reste hors de portée, sans dette.
+    const pauvre = { ...createInitialState(T0), points: 10 };
+    const refus = buyStreamerSetupLocally(pauvre, "webcam", T0);
+    expect("error" in refus && refus.error).toMatch(/manque/);
+    expect(SETUP_LEVELS.map((niveau) => niveau.id)).toContain("webcam");
   });
 });

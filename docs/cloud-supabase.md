@@ -20,8 +20,10 @@ packs**. Le cloud apporte :
    (FCM), le **Last Pack**, le badge **EN LIVE**, la **wishlist** ;
 8. l'**hôtel des ventes**, l'**Arène** hebdomadaire, les **codes promo**, le
    **plancher de malchance** et la **série de sept jours** relus côté serveur, les
-   **jetons**, et, depuis `0036`, **la chaîne** — le simulateur de streameur — avec,
-   depuis `0035`, `schema_versions()` pour dire ce qui est collé.
+   **jetons**, et, depuis `0036`, **la chaîne** — le simulateur de streameur —
+   avec, depuis `0038`, **les imprévus à choix** (une carte par jour, deux côtés)
+   et **le setup en cinq paliers**, et, depuis `0035`, `schema_versions()` pour
+   dire ce qui est collé.
 
 Le détail de chaque pièce est au §8 : c'est lui qui fait foi.
 
@@ -265,6 +267,30 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0038_imprevus_setup.sql`](../supabase/migrations/0038_imprevus_setup.sql)
+     → **Run** pour que la chaîne ait ses **imprévus à choix** et son **setup** :
+     une carte par journée de jeu, choisie côté serveur (`md5(joueur, journée)`,
+     donc stable), **six cartes à deux côtés**, un tirage serveur et **aucun
+     jeton**. Le client envoie la carte et le côté ; le serveur refuse une carte
+     qui n'est pas celle du jour, un côté inconnu, et relit la première réponse.
+     `streamer_setup_buy(palier)` installe les **cinq paliers dans l'ordre** —
+     120 / 320 / 780 / 1 800 / 4 200 points pour +3 / +5 / +7 / +10 / +25 % de
+     croissance **définitive** — en débitant par `_wallet_apply`, donc **une
+     seule fois pour toujours**. Le bonus s'arrête au premier palier manquant du
+     **préfixe** et `_streamer_setup_next()` rend le premier manquant : un
+     palier « volé » ne compte pas et ne fait pas sauter l'étape suivante.
+     La migration remplace `streamer_status()`, `streamer_visit()` et
+     `streamer_publish()` de `0036` : **colle-la après `0037`**. Détail : §8,
+     « Les imprévus et le setup de la chaîne (`0038`) ».
+   - [`supabase/migrations/0037_gardes.sql`](../supabase/migrations/0037_gardes.sql)
+     → **Run** pour que les **deux alertes de perte** existent : « Ta série
+     s'arrête ce soir » (la série est vivante — dernier booster hier — et la
+     journée n'est pas faite) et « Réserve pleine : un booster se perd » (les
+     quatre boosters attendent depuis qu'une recharge s'est perdue). Elle
+     **remplace `push_targets()`** (aucune table, aucune colonne de plus) : les
+     deux conditions s'ajoutent aux choix existants, et la clé `série` ne
+     consomme plus le tour du direct. Sans elle, aucune de ces deux
+     notifications ne part. Détail : §9.2.
    - [`supabase/migrations/0036_streamer.sql`](../supabase/migrations/0036_streamer.sql)
      → **Run** pour que **la chaîne** (le simulateur de streameur) vive au
      serveur : `streamer_channels` (les abonnés, le dernier relevé) et
@@ -289,7 +315,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      **une fois** avec le solde déjà gagné (borné à un million, comme
      `_wallet_ensure()` dans `0027`). La migration ajoute aussi
      **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des huit
-     dernières migrations (`0030` → `0037`) sont installées — c'est la réponse à
+     dernières migrations (`0030` → `0038`) sont installées — c'est la réponse à
      « est-ce que c'est bien le SQL que j'ai collé ? », y compris pour `0034`,
      qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
      jetons, les missions du jour ».
@@ -474,7 +500,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-six migrations** (`0001` à `0036`) pour de vrai, dans
+> Le script exécute **les trente-huit migrations** (`0001` à `0038`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -1083,6 +1109,57 @@ migration qui l'étend : le rapport lu est celui de la **dernière** recollée.
 Coller `0035` après `0036` fait disparaître la ligne `0036` du rapport — les
 fonctions de la chaîne, elles, restent en place ; recoller `0036` la remet. Le
 vérifieur joue les deux cas plutôt que de les commenter.
+
+### Les imprévus et le setup de la chaîne (`0038`)
+
+**Deux ajouts à la chaîne, et une seule règle nouvelle : le serveur tire, le
+joueur choisit un côté.**
+
+* **L'imprévu du jour** (`streamer_event_today()`, `streamer_choose(event,
+  choix)`). Une carte par journée de jeu, tirée **par le serveur** :
+  `_streamer_event_for(user, journée)` la choisit avec `md5(user, journée)`,
+  donc elle ne change pas entre deux ouvertures, et deux joueurs ne tombent pas
+  sur la même. Six cartes (`modo`, `sponsor`, `clip`, `coupure`, `raid`,
+  `nuit`), **deux côtés chacune** : un côté sûr (chance plus haute, gain plus
+  faible) et un côté qui rapporte plus. Le client envoie **la carte et le
+  côté** ; le serveur refuse une carte qui n'est pas celle du jour, un côté qui
+  n'existe pas, et **relit** la première réponse si on insiste (index unique
+  `(user_id, day)`, comme la vidéo). Les jets sont les mêmes que la vidéo ;
+  l'issue et le gain sont écrits dans `streamer_events`. **Aucun jeton ne
+  bouge** : la monnaie de la chaîne garde une seule porte, la vidéo du jour.
+  Le *texte* de la carte n'est pas dans le SQL : il vit dans
+  `src/data/streamer.json`, et un client qui ne connaît pas la carte ne peut pas
+  la jouer.
+* **Le setup** (`streamer_setup_buy(palier)`). Cinq paliers payés en **points**
+  — 120 / 320 / 780 / 1 800 / 4 200 — **dans l'ordre et une seule fois**, qui
+  font grandir la chaîne **pour toujours** : +3 %, +5 %, +7 %, +10 %, +25 %
+  (soit +50 % au bout). Le débit passe par `_wallet_apply(user, -prix, 'setup',
+  palier)` : c'est le journal unique du wallet (`(user_id, kind, ref)`) qui rend
+  le palier **définitif**, même si le client rappelle. Le **prix vit au
+  serveur** — le client n'envoie que le nom du palier — et le solde est relu
+  chez lui après l'achat (`syncWallet()`), comme à l'hôtel.
+  Le **bonus** est la somme des paliers jusqu'au **premier manquant du
+  préfixe** : une ligne ajoutée à la main (un palier « volé ») ne donne aucun
+  bonus — et `_streamer_setup_next(user)` rend le premier palier manquant, donc
+  elle **ne fait pas sauter l'étape suivante** non plus. `_streamer_growth(user,
+  abonnés)` applique ce bonus, et c'est cette fonction que lisent
+  `streamer_status()` et `streamer_visit()` : la croissance payée pendant
+  l'absence est la même que celle payée sur une vidéo.
+
+**Côté appareil**, `src/lib/cloud/api/streamer.ts` porte les trois appels
+(`streamerEventToday`, `streamerChoose`, `streamerSetupBuy`) et
+`src/lib/swipe.ts` le geste : le côté s'arme au-delà de **64 px** de course
+horizontale, un **effleurement** ne choisit rien, un geste **retiré**
+(`pointercancel`) repose la carte, et un glissement surtout vertical reste un
+défilement. Les deux boutons de repli portent les mêmes réponses, chances
+affichées. Hors ligne, le moteur local (`chooseStreamerEventLocally`,
+`buyStreamerSetupLocally`) applique **les mêmes règles** — refus compris : une
+carte qui n'est pas celle du jour est refusée en local aussi.
+
+**Coller `0038` après `0037`** (donc après `0036`). Les deux migrations
+remplacent des fonctions de `0036` : recoller `0036` seule après `0038` refait
+passer `streamer_status()` à l'ancienne version, et l'écran perd le setup
+(le vérifieur joue ce piège au lieu de le commenter).
 
 ### Le direct (statut EN LIVE)
 

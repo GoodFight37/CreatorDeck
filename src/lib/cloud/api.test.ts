@@ -869,7 +869,20 @@ describe("la chaîne (le simulateur de streameur)", () => {
     );
     const etat = await api.streamerStatus();
     expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_status");
-    expect(etat).toEqual({ subscribers: 2640, perDay: 900, day: "2026-10-08", publishedToday: false, tokensToday: 6, tokensCap: 40 });
+    // Les champs de `0038` sont optionnels côté serveur : une base qui ne les
+    // envoie pas encore (ou un serveur plus ancien) donne des valeurs neutres
+    // plutôt qu'une erreur — l'écran de la chaîne s'ouvre quand même.
+    expect(etat).toEqual({
+      subscribers: 2640,
+      perDay: 900,
+      day: "2026-10-08",
+      publishedToday: false,
+      chosenToday: false,
+      tokensToday: 6,
+      tokensCap: 40,
+      setup: [],
+      setupBonus: 0,
+    });
   });
 
   it("rend le résumé du retour, journées comptées comprises", async () => {
@@ -952,6 +965,68 @@ describe("la chaîne (le simulateur de streameur)", () => {
   it("n'invente pas un état quand la réponse est illisible", async () => {
     const { api } = client(() => ({ body: {} }), signedIn());
     await expect(api.streamerVisit()).rejects.toThrowError(/illisible/);
+  });
+
+  it("lit la carte du jour, et n'envoie que le côté choisi", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          ok: true,
+          day: "2026-10-08",
+          event: "raid",
+          chosen: false,
+          choice: "",
+          success: false,
+          buzz: false,
+          bad_buzz: false,
+          gained: 0,
+        },
+      }),
+      signedIn(),
+    );
+    const carte = await api.streamerEventToday();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_event_today");
+    expect(carte.event).toBe("raid");
+    expect(carte.chosen).toBe(false);
+
+    await api.streamerChoose("raid", "gauche");
+    expect(calls[1]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_choose");
+    // Le client dit **quel côté**, jamais l'issue : la réussite, le buzz et le
+    // bad buzz se tirent côté serveur, comme pour une vidéo.
+    expect(JSON.parse(String(calls[1]?.init?.body))).toEqual({ p_event: "raid", p_choice: "gauche" });
+  });
+
+  it("relaie la lecture d'un imprévu déjà joué", async () => {
+    const { api } = client(
+      () => ({
+        body: { ok: true, day: "2026-10-08", event: "nuit", chosen: true, choice: "droite", success: false, buzz: false, bad_buzz: true, gained: -120 },
+      }),
+      signedIn(),
+    );
+    const carte = await api.streamerEventToday();
+    expect(carte.chosen).toBe(true);
+    expect(carte.choice).toBe("droite");
+    expect(carte.badBuzz).toBe(true);
+  });
+
+  it("paie un palier de setup par son nom, jamais par son prix", async () => {
+    const { api, calls } = client(
+      () => ({ body: { ok: true, already: false, level: "micro", price: 320, setup: ["webcam", "micro"], setup_bonus: 80, points: 5025 } }),
+      signedIn(),
+    );
+    const achat = await api.streamerSetupBuy("micro");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_setup_buy");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_level: "micro" });
+    expect(achat.price).toBe(320);
+    expect(achat.setupBonus).toBe(80);
+  });
+
+  it("relaie le refus d'un palier acheté dans le désordre", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "chaîne : il faut d'abord « micro »" } }),
+      signedIn(),
+    );
+    await expect(api.streamerSetupBuy("deco")).rejects.toThrowError(/il faut d'abord/);
   });
 });
 

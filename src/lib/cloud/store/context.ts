@@ -83,6 +83,8 @@ export type CloudStoreActions = {
   syncTokens: ReturnType<typeof walletActions>["syncTokens"];
   openStreamer: ReturnType<typeof streamerActions>["openStreamer"];
   publishStreamerVideo: ReturnType<typeof streamerActions>["publishStreamerVideo"];
+  chooseStreamerEvent: ReturnType<typeof streamerActions>["chooseStreamerEvent"];
+  buyStreamerSetup: ReturnType<typeof streamerActions>["buyStreamerSetup"];
   craftWithTokens: ReturnType<typeof walletActions>["craftWithTokens"];
   claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];
   claimSeason: ReturnType<typeof walletActions>["claimSeason"];

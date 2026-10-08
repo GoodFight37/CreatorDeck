@@ -16,17 +16,24 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { PROGRESSION } from "@/lib/progression";
-import { CAP_DAYS, STREAMER, STREAMER_TOKENS, TIERS } from "@/lib/streamer";
+import { CAP_DAYS, EVENTS, SETUP_LEVELS, STREAMER, STREAMER_TOKENS, TIERS } from "@/lib/streamer";
 
 const ROOT = process.cwd();
 const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
 const FICHIER = "0036_streamer.sql";
+const FICHIER_IMPREVUS = "0038_imprevus_setup.sql";
 const SQL = readFileSync(path.join(MIGRATIONS, FICHIER), "utf8");
 /** Le fichier sans ses commentaires, puis sans ses retours à la ligne. */
 const CODE = SQL.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n");
 const FLAT = CODE.replace(/\s+/g, " ");
+// Les imprévus et le setup vivent dans `0038` : mêmes règles, autre fichier.
+const SQL_IMPREVUS = readFileSync(path.join(MIGRATIONS, FICHIER_IMPREVUS), "utf8");
+const FLAT_IMPREVUS = SQL_IMPREVUS.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n")
+  .replace(/\s+/g, " ");
 
 const migrations = readdirSync(MIGRATIONS)
   .filter((f) => /^\d{4}_.*\.sql$/.test(f))
@@ -84,15 +91,17 @@ describe("0036_streamer.sql (la chaîne)", () => {
     expect(PROGRESSION.missions.resetHourUtc).toBe(6);
   });
 
-  it("est la dernière à écrire le rapport de version", () => {
-    // `schema_versions()` est réécrit par `0035` puis par `0036` : le rapport
-    // final est celui de la **dernière** migration recollée. Le marqueur de la
-    // `0036` est une table — une table se voit, un morceau de code pourrait
-    // traîner dans un commentaire.
+  it("déclare sa ligne dans le rapport de version", () => {
+    // `schema_versions()` est réécrit par chaque migration récente : le rapport
+    // final est celui de la **dernière** recollée (`0038` aujourd'hui). Ici on
+    // vérifie que la définition qui porte `0036` la déclare bien — et que la
+    // clé existe encore dans la dernière version du rapport.
     const rapport = derniereDefinition("schema_versions");
     expect(rapport).toContain("'0036'");
     expect(rapport).toMatch(/to_regclass\('public\.streamer_channels'\)/);
     expect(rapport).toContain("'0035'");
+    const sienne = SQL.replace(/--.*$/gm, "");
+    expect(sienne).toMatch(/to_regclass\('public\.streamer_channels'\)/);
   });
 
   it("ferme ses tables et ses fonctions internes au joueur", () => {
@@ -127,5 +136,135 @@ describe("0036_streamer.sql (la chaîne)", () => {
     expect(FLAT).not.toMatch(/insert into public\.tokens/);
     // Et une seule vidéo par journée de jeu : l'index unique le garantit.
     expect(FLAT).toContain("create unique index if not exists streamer_videos_one_per_day");
+  });
+});
+
+describe("0038_imprevus_setup.sql (les imprévus et le setup)", () => {
+  it("porte les mêmes côtés de carte que le fichier, à la virgule près", () => {
+    // Le texte des cartes n'est pas ici (il vit dans le JSON) : ce sont les
+    // **nombres** qui sont en double, et un chiffre changé d'un seul côté ferait
+    // tirer au serveur autre chose que ce que l'écran annonce.
+    for (const carte of EVENTS) {
+      for (const cote of carte.choices) {
+        const ligne = `('${carte.id}', '${cote.id}', ${cote.successChancePermille}, ${cote.gainPermille}, ${cote.buzzPermille}, ${cote.badBuzzPermille})`;
+        expect(FLAT_IMPREVUS).toContain(ligne);
+      }
+    }
+    // Six cartes, deux côtés chacune — et pas une de plus d'un seul côté.
+    const lignes = FLAT_IMPREVUS.match(/\('(modo|sponsor|clip|coupure|raid|nuit)', '(gauche|droite)', \d+, \d+, \d+, \d+\)/g) ?? [];
+    expect(lignes.length).toBe(12);
+    expect(EVENTS.length).toBe(6);
+  });
+
+  it("chiffre les paliers de setup comme le fichier, dans l'ordre", () => {
+    for (const niveau of SETUP_LEVELS) {
+      const rang = SETUP_LEVELS.indexOf(niveau) + 1;
+      const ligne = `(${rang}, '${niveau.id}', ${niveau.price}, ${niveau.growthPermille})`;
+      expect(FLAT_IMPREVUS).toContain(ligne);
+    }
+    const lignes = FLAT_IMPREVUS.match(/\(\d+, '(webcam|micro|lumiere|deco|studio)', \d+, \d+\)/g) ?? [];
+    expect(lignes.length).toBe(5);
+    expect(SETUP_LEVELS.length).toBe(5);
+    // Le libellé, lui, n'est **pas** dans le SQL : il ne doit exister qu'une
+    // fois, dans le fichier que lit l'écran.
+    for (const niveau of SETUP_LEVELS) {
+      expect(FLAT_IMPREVUS).not.toContain(niveau.label);
+    }
+  });
+
+  it("n'ouvre un imprévu qu'une fois par journée, et jamais celui du client", () => {
+    // La carte du jour est choisie par le serveur (`md5(joueur, journée)`), et
+    // le côté doit exister : le client ne peut ni choisir sa carte ni inventer
+    // son côté.
+    expect(FLAT_IMPREVUS).toMatch(/create unique index if not exists streamer_events_one_per_day/);
+    expect(FLAT_IMPREVUS).toContain("public._streamer_event_for(v_user, v_day)");
+    expect(FLAT_IMPREVUS).toContain("ce n''est pas l''imprévu du jour");
+    expect(FLAT_IMPREVUS).toContain("from public._streamer_event_choice(v_event, p_choice)");
+    expect(FLAT_IMPREVUS).toContain("substr(md5(coalesce(p_user::text, '')");
+  });
+
+  it("ne paie aucun jeton avec un imprévu", () => {
+    // La monnaie de la chaîne a **une** porte : la vidéo du jour. Un imprévu qui
+    // paierait des jetons serait une seconde porte — et deux portes finissent
+    // toujours par se contourner.
+    const corps = SQL_IMPREVUS.slice(
+      SQL_IMPREVUS.indexOf("create or replace function public.streamer_choose"),
+      SQL_IMPREVUS.indexOf("revoke all on function public.streamer_choose"),
+    );
+    expect(corps).not.toContain("_tokens_apply");
+    expect(corps).not.toContain("tokens_today");
+  });
+
+  it("achète le setup par le wallet, une fois par palier, dans l'ordre", () => {
+    // Le débit passe par `_wallet_apply` : c'est son journal unique
+    // `(user_id, kind, ref)` qui rend le palier unique **pour toujours**, même
+    // si le client rappelle. Un prix envoyé par le client n'existe pas ici.
+    expect(FLAT_IMPREVUS).toContain("public._wallet_apply(v_user, -v_niveau.price, 'setup', v_niveau.level)");
+    expect(FLAT_IMPREVUS).toMatch(/create unique index if not exists streamer_setup_one_per_level/);
+    expect(FLAT_IMPREVUS).toContain("il faut d''abord « % »");
+    // Le prix vient de la table du serveur, jamais d'un paramètre.
+    expect(FLAT_IMPREVUS).toContain("create or replace function public.streamer_setup_buy(p_level text)");
+  });
+
+  it("arrête le bonus au premier palier manquant", () => {
+    // La règle de l'ordre, côté données : une ligne ajoutée à la main ne donne
+    // pas le bonus d'un palier dont les précédents manquent — et ne fait pas
+    // sauter l'étape suivante au joueur.
+    expect(FLAT_IMPREVUS).toMatch(/avant\.rang < l\.rang/);
+    expect(FLAT_IMPREVUS).toContain("create or replace function public._streamer_setup_next(p_user uuid)");
+    expect(FLAT_IMPREVUS).toMatch(/not exists \(\s*select 1 from public\.streamer_setup s where s\.user_id = p_user and s\.level = l\.level/);
+  });
+
+  it("fait grandir la chaîne du bonus, dans l'absence comme dans la vidéo", () => {
+    // Le même pour-mille des deux côtés, appliqué à la croissance du palier.
+    expect(FLAT_IMPREVUS).toMatch(/floor\(\s*public\._streamer_per_day\(p_subscribers\)\s*\* \(1000 \+ public\._streamer_setup_bonus\(p_user\)\) \/ 1000\.0\s*\)::integer/);
+    // `streamer_visit()` et `streamer_status()` passent par `_streamer_growth()` :
+    // une seule formule, donc un seul chiffre possible à l'écran.
+    const visite = derniereDefinition("streamer_visit");
+    expect(visite).toContain("public._streamer_growth(v_user, v_row.subscribers)");
+    const status = derniereDefinition("streamer_status");
+    expect(status).toContain("public._streamer_growth(v_user, v_row.subscribers)");
+    expect(status).toContain("'setup_bonus'");
+  });
+
+  it("ferme ses tables et ses fonctions internes, et ouvre ses portes au compte", () => {
+    for (const table of ["streamer_events", "streamer_setup"]) {
+      expect(FLAT_IMPREVUS).toContain("revoke all on table public." + table + " from public, anon, authenticated");
+      expect(FLAT_IMPREVUS).toContain("alter table public." + table + " enable row level security");
+    }
+    for (const fonction of [
+      "_streamer_events()",
+      "_streamer_event_choice(text, text)",
+      "_streamer_event_for(uuid, text)",
+      "_streamer_setup_levels()",
+      "_streamer_setup_bonus(uuid)",
+      "_streamer_setup_owned(uuid)",
+      "_streamer_setup_next(uuid)",
+      "_streamer_growth(uuid, bigint)",
+    ]) {
+      expect(FLAT_IMPREVUS).toContain(`revoke all on function public.${fonction} from public, anon, authenticated`);
+    }
+    for (const ouverte of [
+      "streamer_event_today()",
+      "streamer_choose(text, text)",
+      "streamer_setup_buy(text)",
+    ]) {
+      expect(FLAT_IMPREVUS).toContain(`grant execute on function public.${ouverte} to authenticated`);
+    }
+  });
+
+  it("déclare sa ligne dans le rapport de version, après la 0037", () => {
+    const rapport = derniereDefinition("schema_versions");
+    expect(rapport).toContain("'0038'");
+    expect(rapport).toMatch(/to_regclass\('public\.streamer_events'\)/);
+    expect(rapport).toContain("'0037'");
+  });
+
+  it("est jouée pour de vrai par le vérificateur, pas seulement décrite ici", () => {
+    const verifieur = readFileSync(path.join(ROOT, "scripts", "verify-supabase-migrations.mjs"), "utf8");
+    expect(verifieur).toContain("0038_imprevus_setup.sql");
+    expect(verifieur).toContain("imprévus : la carte du jour ne change pas entre deux ouvertures");
+    expect(verifieur).toContain("setup : un palier volé ne fait pas sauter l'étape suivante");
+    expect(verifieur).toContain("setup : recoller `0036` seule après `0038` fait perdre le setup de l'écran");
   });
 });

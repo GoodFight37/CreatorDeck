@@ -104,6 +104,59 @@ describe("les écrans", () => {
     // s'appliquent qu'aux attributs).
     expect(chaine).toContain("Let's Play");
     expect(chaine).toContain("jetons versés aujourd");
+    // L'imprévu du jour : la carte à glisser, ses deux réponses chiffrées et le
+    // repli au doigt. Les chances sont affichées, jamais cachées.
+    expect(chaine).toContain("imprévu du jour");
+    expect(chaine).toContain("Glisse la carte");
+    expect(chaine).toContain("%");
+    // Le setup : les cinq paliers, le prochain en clair, et son prix en points.
+    expect(chaine).toContain("Ton setup");
+    expect(chaine).toContain("Prochain palier");
+    expect(chaine).toContain("points");
+    banc.fermer();
+  });
+
+  it("glisse la carte de l'imprévu : un effleurement ne joue rien, un geste franc si", async () => {
+    await application();
+    banc.appuyer(/Ta chaîne/);
+    const carte = document.querySelector<HTMLElement>(".chaine-card");
+    expect(carte).not.toBeNull();
+
+    /** Un doigt sur la carte : on descend, on bouge, on lève. */
+    const doigt = (type: string, x: number, y = 400) => {
+      act(() => {
+        carte!.dispatchEvent(
+          new window.MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y }),
+        );
+      });
+    };
+
+    // Un effleurement : moins de la course du seuil. Rien n'est armé, et
+    // relâcher ne répond pas — c'est la règle du booster, appliquée à la carte.
+    doigt("pointerdown", 100);
+    doigt("pointermove", 118);
+    doigt("pointerup", 118);
+    await act(async () => {});
+    expect(banc.ecran("10-chaine-effleurement")).toContain("Glisse la carte d");
+
+    // Un geste **retiré** (appel entrant, défilement pris par le navigateur) :
+    // la carte s'arme, puis l'annulation la repose sans jouer.
+    doigt("pointerdown", 200);
+    doigt("pointermove", 90);
+    doigt("pointercancel", 90);
+    await act(async () => {});
+    expect(banc.ecran("10-chaine-geste-retire")).toContain("Glisse la carte d");
+
+    // Un geste franc vers la gauche : le côté s'arme pendant le glissement…
+    doigt("pointerdown", 200);
+    doigt("pointermove", 90);
+    expect(document.querySelector(".chaine-card-sides span.arme")?.textContent).toBeTruthy();
+    // …et le doigt levé joue la carte, une seule fois.
+    doigt("pointerup", 90);
+    await act(async () => {});
+    const joue = banc.ecran("10-chaine-imprevu-joue");
+    expect(joue).toContain("imprévu du jour est joué");
+    expect(joue).not.toContain("Glisse la carte d");
     banc.fermer();
   });
 
