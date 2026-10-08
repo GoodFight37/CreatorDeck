@@ -142,16 +142,13 @@ begin
   end if;
 
   -- Tri par ordre de rareté (du plus commun au plus rare) : même parcours
-  -- que le moteur local (RARITY_META.order).
+  -- que le moteur local (RARITY_META.order). `array_position` plutôt qu'un
+  -- CASE : Postgres interdit une fonction d'ensemble (`unnest`) dans un CASE
+  -- (« set-returning functions are not allowed in CASE »).
   for v_rarity in
-    select unnest(v_available_rarities)
-    order by case unnest(v_available_rarities)
-      when 'common' then 1
-      when 'uncommon' then 2
-      when 'rare' then 3
-      when 'epic' then 4
-      when 'legendary' then 5
-    end
+    select r
+      from unnest(v_available_rarities) as r
+     order by array_position(array['common','uncommon','rare','epic','legendary'], r)
   loop
     v_weight := coalesce((p_weights ->> v_rarity)::integer, 0);
     v_total := v_total + v_weight;
@@ -160,14 +157,9 @@ begin
   v_roll := public._pack_random_int(v_total);
 
   for v_rarity in
-    select unnest(v_available_rarities)
-    order by case unnest(v_available_rarities)
-      when 'common' then 1
-      when 'uncommon' then 2
-      when 'rare' then 3
-      when 'epic' then 4
-      when 'legendary' then 5
-    end
+    select r
+      from unnest(v_available_rarities) as r
+     order by array_position(array['common','uncommon','rare','epic','legendary'], r)
   loop
     v_weight := coalesce((p_weights ->> v_rarity)::integer, 0);
     if v_roll < v_weight then
@@ -292,9 +284,9 @@ $$;
 -- Le tirage reproduit exactement le moteur local :
 --   * 4 slots pondérés (les poids montent au fil du booster),
 --   * 1 slot garanti (Rare ou mieux, variante « live » imposée),
---   * 5 % de chance de « Perfect » (Épique ou mieux partout),
+--   * 5 ‰ de chance de « Perfect » (0,5 % : Épique ou mieux partout),
 --   * aucun créateur en double dans un même booster,
---   * mélange des 5 cartes (Fisher-Yates).
+--   * carte garantie en dernier (aucun mélange : le hit se révèle à la fin).
 --
 -- Poids des slots (src/data/pull-rates.json, booster « live ») :
 --   slot 1 : C 42, PC 30, R 18, E 8, L 2
@@ -325,10 +317,8 @@ declare
   v_slug text;
   v_rarity text;
   v_variant text;
-  v_drawn jsonb[];
+  v_drawn jsonb[] := '{}';
   v_i integer;
-  v_swap integer;
-  v_tmp jsonb;
   v_local_state jsonb;
   v_local_packs integer;
   v_local_regen_epoch bigint;
@@ -405,7 +395,7 @@ begin
   -- Tirage des 5 cartes.
   -- ------------------------------------------------------------------
   -- Perfect : 5‰ de chance (identique au moteur local).
-  v_rare_drop := public._pack_random_int(1000) < 5;
+  v_rare_drop := public._pack_random_int(1000) < 1;
 
   v_drawn := '{}';
 
@@ -461,16 +451,12 @@ begin
   v_drawn := v_drawn || v_card;
 
   -- ------------------------------------------------------------------
-  -- Mélange Fisher-Yates des 5 cartes (identique au moteur local).
+  -- Construction du tableau JSON, dans l'ordre du tirage.
   -- ------------------------------------------------------------------
-  for v_i in array_length(v_drawn, 1) .. 2 by -1 loop
-    v_swap := public._pack_random_int(v_i + 1);
-    v_tmp := v_drawn[v_i];
-    v_drawn[v_i] := v_drawn[v_swap + 1];
-    v_drawn[v_swap + 1] := v_tmp;
-  end loop;
-
-  -- Construction du tableau JSON.
+  -- Pas de mélange : la carte garantie (dernier slot) doit rester la dernière
+  -- révélée, comme dans un vrai booster. L'app révèle les cartes dans cet
+  -- ordre, et c'est ce qui fait le moment fort de l'ouverture.
+  -- (Le mélange Fisher-Yates d'origine a été retiré ; il gâchait cet ordre.)
   for v_i in 1..array_length(v_drawn, 1) loop
     v_cards := v_cards || v_drawn[v_i];
   end loop;

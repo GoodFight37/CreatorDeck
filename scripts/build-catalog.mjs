@@ -12,12 +12,14 @@
  */
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { splitSeason } from "./lib/seasons-split.mjs";
+import { isFlatPortrait } from "./lib/avatars.mjs";
 import {
+  PORTRAIT_EXT,
   formatBytes,
   selectMissing,
   selectOrphans,
@@ -50,6 +52,15 @@ const PACKAGE_FILE = path.join(ROOT, "package.json");
 const OUT_DIR = path.join(ROOT, "dist/catalog");
 
 const RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
+/**
+ * En deçà de ce poids, un portrait 600×600 est **suspect** et sera vraiment
+ * décodé pour savoir s'il est uni. Un vrai portrait fait ~28 Ko (médiane du
+ * catalogue) ; le plus léger des portraits légitimes fait 3,3 Ko — une image
+ * sombre mais détaillée. Le seuil est donc haut volontairement : il ne sert
+ * qu'à éviter de décoder 1 000 JPEG à chaque `catalog:check`.
+ */
+const FLAT_CANDIDATE_BYTES = 8 * 1024;
+const VARIANTS = ["standard", "live", "holo", "gold"];
 
 const errors = [];
 const warnings = [];
@@ -99,8 +110,8 @@ function validateCreators(creators, expectedSize) {
     if (!RARITIES.includes(creator.rarity)) {
       fail(`creators.json : rareté inconnue « ${creator.rarity} » (${creator.slug}).`);
     }
-    if (!existsSync(path.join(PORTRAITS_DIR, `${creator.slug}.jpg`))) {
-      const message = `portrait manquant : public/creators/${creator.slug}.jpg`;
+    if (!existsSync(path.join(PORTRAITS_DIR, `${creator.slug}${PORTRAIT_EXT}`))) {
+      const message = `portrait manquant : public/creators/${creator.slug}${PORTRAIT_EXT}`;
       if (STRICT_AVATARS) fail(message);
       else warn(message);
     }
@@ -111,6 +122,39 @@ function validateCreators(creators, expectedSize) {
   }
 
   return creators;
+}
+
+/**
+ * Un portrait **uni** n'est pas un portrait.
+ *
+ * Twitch sert son avatar par défaut (un carré plat) pour une chaîne sans photo
+ * de profil : le fichier existe, fait la bonne taille, et le joueur voit un
+ * rectangle sombre à la place d'un visage (`j0niq`, `toaststix`). Le contrôle
+ * est en deux temps pour rester rapide : un filtre sur la taille du fichier
+ * (un JPEG 600×600 plat pèse ~1,5 Ko, un vrai portrait ~34 Ko), puis un
+ * décodage réel — un écart-type de zéro — sur les seuls candidats.
+ */
+async function validatePortraits(creators) {
+  const candidates = [];
+  for (const creator of creators) {
+    const file = path.join(PORTRAITS_DIR, `${creator.slug}${PORTRAIT_EXT}`);
+    if (!existsSync(file)) continue;
+    if (statSync(file).size < FLAT_CANDIDATE_BYTES) candidates.push({ creator, file });
+  }
+  const flat = [];
+  for (const candidate of candidates) {
+    if (await isFlatPortrait(candidate.file)) flat.push(candidate);
+  }
+  for (const { creator, file } of flat) {
+    const message = `portrait uni (avatar par défaut Twitch) : ${path.relative(ROOT, file)} — régénère-le avec npm run assets:regen`;
+    if (STRICT_AVATARS) fail(message);
+    else warn(message);
+  }
+  if (candidates.length) {
+    console.log(
+      `   Portraits : ${candidates.length} fichier(s) suspects décodés, ${flat.length} uni(s).`,
+    );
+  }
 }
 
 /**
@@ -201,9 +245,17 @@ function seasonMaxSize(config) {
   return Number.isFinite(value) && value > 0 ? value : 150;
 }
 
-/** Vérifie les tables de tirage : chaque slot doit être jouable et borné. */
+/**
+ * Vérifie les tables de tirage : chaque slot doit être jouable et borné.
+ *
+ * Versions : 1 = tables de base, 2 = tables + bloc `direct` (le bonus de ceux
+ * qui streament). Le contrôle se resserre avec la version — il ne se contente
+ * pas de l'accepter.
+ */
 function validateRates(rates) {
-  if (rates?.version !== 1) fail("pull-rates.json : version 1 attendue.");
+  if (rates?.version !== 1 && rates?.version !== 2) {
+    fail("pull-rates.json : version 1 ou 2 attendue.");
+  }
   for (const pack of Object.values(rates?.packs ?? {})) {
     const slots = [...(pack.slots ?? []), pack.guaranteed];
     if (!pack.slots?.length || !pack.guaranteed) {
@@ -228,6 +280,60 @@ function validateRates(rates) {
     if (!(drop.variantUpgradePermille >= 0 && drop.variantUpgradePermille <= 10_000)) {
       fail(`pull-rates.json : variantUpgradePermille hors bornes (${pack.label}).`);
     }
+  }
+
+  // Bonus Direct (v2) : un poids supérieur à 1 (sinon ce n'est pas un bonus),
+  // une chance de variante dans [0, 1000] pour mille, et une variante connue.
+  if (rates?.version === 2) {
+    const direct = rates.direct;
+    if (!direct || typeof direct !== "object") {
+      fail("pull-rates.json : le bloc « direct » manque pour la version 2.");
+    }
+    if (!(direct.creatorBias > 1)) {
+      fail(`pull-rates.json : creatorBias doit dépasser 1 (reçu ${direct.creatorBias}).`);
+    }
+    if (!(direct.livePermille >= 0 && direct.livePermille <= 1000)) {
+      fail(`pull-rates.json : livePermille hors bornes (${direct.livePermille}).`);
+    }
+    if (!VARIANTS.includes(direct.variant)) {
+      fail(`pull-rates.json : variante du direct inconnue « ${direct.variant} ».`);
+    }
+  }
+
+  // Le Paquet Scène tient une promesse publique : **aucune Légendaire**. Si un
+  // jour un poids légendaire apparaît dans une de ses tables (slot, garantie ou
+  // tirage plein), ce n'est plus le paquet annoncé — et le plancher de
+  // malchance, qui ne compte que le Live Drop, deviendrait faux.
+  const scene = rates?.packs?.scene;
+  if (scene) {
+    const tables = [
+      ...(scene.slots ?? []),
+      scene.guaranteed,
+      scene.rareDrop,
+    ].filter(Boolean);
+    if (tables.some((table) => (table.weights?.legendary ?? 0) > 0)) {
+      fail("pull-rates.json : le Paquet Scène ne doit contenir aucun poids légendaire.");
+    }
+    if (!Array.isArray(scene.slots) || scene.slots.length < 4) {
+      fail("pull-rates.json : le Paquet Scène doit garder ses slots ordinaires.");
+    }
+  }
+
+  // Plancher de malchance : un bloc publié, un seuil entier strictement
+  // positif, et une explication — c'est une promesse faite au joueur, elle
+  // doit être lisible dans le fichier de taux qui la porte.
+  const pity = rates?.pity;
+  if (!pity || typeof pity !== "object") {
+    fail("pull-rates.json : le bloc « pity » (plancher de malchance) manque.");
+  }
+  if (!Number.isInteger(pity.threshold) || pity.threshold <= 0) {
+    fail(`pull-rates.json : seuil de pity invalide (${pity.threshold}).`);
+  }
+  if (typeof pity.label !== "string" || !pity.label.trim()) {
+    fail("pull-rates.json : le pity doit porter un libellé.");
+  }
+  if (typeof pity.note !== "string" || !pity.note.trim()) {
+    fail("pull-rates.json : le pity doit être expliqué (note).");
   }
 }
 
@@ -270,6 +376,7 @@ async function main() {
   }
 
   validateCreators(creators, expectedSize);
+  await validatePortraits(creators);
   validateRates(rates);
   const seasonReport = validateRegions(creators, seasonsConfig);
 

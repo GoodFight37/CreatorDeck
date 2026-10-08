@@ -1,17 +1,19 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
 import {
   creatorImage,
   formatFollowersCount,
   RARITY_META,
-  VARIANT_META,
   type CardVariant,
   type Creator,
 } from "@/lib/catalog";
+import { isRetired } from "@/lib/retired";
 import { regionLabel } from "@/lib/regions";
-import { LockKeyhole, Radio, Sparkles } from "lucide-react";
+import { viewersLabel, type LiveStream } from "@/lib/live";
+import { subscribeTilt, tiltEnabled, tiltSilent } from "@/lib/tilt";
+import { Radio } from "lucide-react";
 
 type CreatorCardProps = {
   creator: Creator;
@@ -20,8 +22,33 @@ type CreatorCardProps = {
   locked?: boolean;
   compact?: boolean;
   className?: string;
+  onClick?: () => void;
+  /**
+   * La diffusion en cours du créateur, quand l'app la connaît et qu'elle est
+   * fraîche (`liveFor`). Rien n'est affiché si `null` : un badge « en direct »
+   * périmé serait un mensonge, et un badge faux vaut moins que pas de badge.
+   */
+  liveStream?: LiveStream | null;
 };
 
+/**
+ * Une carte — une vraie planche, pas une vignette.
+ *
+ * Ce qui fait une carte de TCG, et qui manquait ici :
+ *
+ *   * le **portrait plein cadre**, rogné en portrait (les photos Twitch sont
+ *     carrées : on les étire sur la hauteur de la planche, pas dans une fenêtre
+ *     carrée posée en haut de la carte) ;
+ *   * la **rareté comme cadre** — épaisseur, teinte et texture du bord — au lieu
+ *     d'une lettre dans une pastille : ça se lit à deux mètres ;
+ *   * une **nameplate opaque** en bas, barre pleine, nom en display condensée ;
+ *   * le **rang tamponné** (#022), comme un numéro de série ;
+ *   * les variantes comme **matière** : le dos de la carte est un vrai dos, la
+ *     led rouge pulse sur une Live, le foil suit le doigt sur une Holo ou une
+ *     Gold (variables `--px`/`--py`, écrites sans re-rendu) ;
+ *   * une carte manquante montre le **dos CreatorDeck**, jamais un portrait
+ *     grisé sous un cadenas.
+ */
 export function CreatorCard({
   creator,
   variant = "standard",
@@ -29,24 +56,109 @@ export function CreatorCard({
   locked = false,
   compact = false,
   className = "",
+  onClick,
+  liveStream = null,
 }: CreatorCardProps) {
   const rarity = RARITY_META[creator.rarity];
-  const variantMeta = VARIANT_META[variant];
+  // Sortant : plus tirable, mais bien réel — sa carte est dans des classeurs.
+  const retired = isRetired(creator.slug);
+  // Le foil ne « suit le doigt » que sur une carte assez grande pour qu'on le
+  // voie : dans la grille du classeur (2 ou 3 cm de large), c'est du calcul pour
+  // rien — et 1 000 cartes n'ont pas besoin de 1 000 écouteurs.
+  const shiny = !locked && !compact && variant !== "standard";
+  const foilRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * Le reflet suit l'inclinaison du téléphone (Holo, Gold).
+   *
+   * Le calcul vit dans `@/lib/tilt` (pur, testé) et l'abonnement est partagé :
+   * mille cartes ne posent pas mille écouteurs. Les variables sont écrites en
+   * direct sur le foil — comme le doigt, sans re-rendu React (une mise à jour
+   * d'état soixante fois par seconde ferait ramer le classeur entier).
+   *
+   * Le doigt reste prioritaire sur un écran tactile ; l'inclinaison reprend la
+   * main quand on penche. Rien ne se passe si le joueur a coupé l'effet dans
+   * les réglages, ni si l'appareil n'a pas de capteur.
+   */
+  useEffect(() => {
+    if (!shiny || !tiltEnabled()) return;
+    const off = subscribeTilt((position) => {
+      const foil = foilRef.current;
+      if (!foil) return;
+      if (!position) {
+        foil.style.removeProperty("--px");
+        foil.style.removeProperty("--py");
+        return;
+      }
+      foil.style.setProperty("--px", `${position.px}%`);
+      foil.style.setProperty("--py", `${position.py}%`);
+    });
+    return off;
+  }, [shiny]);
+
+  function trackPointer(event: PointerEvent<HTMLElement>) {
+    const foil = foilRef.current;
+    if (!foil || !shiny) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    foil.style.setProperty("--px", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
+    foil.style.setProperty("--py", `${(((event.clientY - box.top) / box.height) * 100).toFixed(1)}%`);
+  }
+
   const style = {
     "--rarity": rarity.color,
     "--rarity-glow": rarity.glow,
   } as CSSProperties;
 
+  const cardProps = onClick
+    ? {
+        onClick,
+        onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        },
+        role: "button",
+        tabIndex: 0,
+      }
+    : {};
+
+  if (locked) {
+    return (
+      <article
+        className={`creator-card rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
+        style={style}
+        aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}, non obtenue`}
+        {...cardProps}
+      >
+        <div className="card-back" aria-hidden="true">
+          <span className="card-back-word">CreatorDeck</span>
+          <span className="card-back-rarity">{rarity.label}</span>
+        </div>
+      </article>
+    );
+  }
+
   return (
     <article
-      className={`creator-card ${variantMeta.className} ${locked ? "is-locked" : ""} ${compact ? "is-compact" : ""} ${className}`}
+      className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
       style={style}
-      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${locked ? ", non obtenue" : ""}`}
+      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", variante Live" : ""}${liveStream ? ", en direct sur Twitch" : ""}`}
+      onPointerMove={trackPointer}
+      onPointerLeave={() => {
+        const foil = foilRef.current;
+        if (!foil) return;
+        // Si le téléphone est incliné, le reflet vient du capteur : on ne
+        // l'efface pas en retirant le doigt, sinon la carte s'éteindrait d'un
+        // coup au milieu d'un mouvement.
+        if (tiltSilent()) {
+          foil.style.removeProperty("--px");
+          foil.style.removeProperty("--py");
+        }
+      }}
+      {...cardProps}
     >
-      <div className="card-foil" aria-hidden="true" />
       <div className="card-photo-wrap">
-        {/* Export statique (images.unoptimized) : le fichier 600×600 est servi
-            tel quel, dans une fenêtre carrée calée sur la largeur de la carte. */}
         <Image
           className="card-photo"
           src={creatorImage(creator)}
@@ -57,34 +169,52 @@ export function CreatorCard({
         <div className="card-photo-shade" />
       </div>
 
+      <div className="card-foil" ref={foilRef} aria-hidden="true" />
+
       <div className="card-topline">
-        <span className="card-series">#{String(creator.rank).padStart(3, "0")}</span>
-        <span className="card-rarity">{rarity.short}</span>
+        <div className="card-topleft">
+          <span className="card-rank">#{String(creator.rank).padStart(3, "0")}</span>
+          {/* Sortant : la carte reste valable, mais elle ne tombera plus en
+              booster. Le dire sur la planche évite la question « pourquoi je ne
+              le vois jamais passer ? ». */}
+          {retired ? (
+            <span className="card-retired" title="Sortant : plus tirable en booster">
+              {compact ? "S" : "Sortant"}
+            </span>
+          ) : null}
+          {/* Le direct **réel** (la personne streame maintenant), à ne pas
+              confondre avec la variante Live : la variante est une matière de
+              carte, le direct est un fait. Deux endroits, deux formes. */}
+          {liveStream ? (
+            <span className={`card-on-air${compact ? " is-dot" : ""}`}>
+              <i aria-hidden="true" />
+              {compact ? null : "Direct"}
+            </span>
+          ) : null}
+        </div>
+        {variant === "live" ? (
+          <span className="card-live">
+            <i aria-hidden="true" />
+            Live
+          </span>
+        ) : null}
       </div>
 
-      {variant !== "standard" && !locked ? (
-        <span className={`variant-pill ${variantMeta.className}`}>
-          {variant === "live" ? <Radio size={10} /> : <Sparkles size={10} />}
-          {variantMeta.label}
-        </span>
+      {liveStream && !compact ? (
+        <p className="card-broadcast">
+          <i aria-hidden="true" />
+          {`En direct · ${liveStream.viewers > 0 ? viewersLabel(liveStream.viewers) : "à l'antenne"}`}
+        </p>
       ) : null}
 
-      <div className="card-copy">
-        {/* La famille (langue de diffusion) est une étiquette stable ; le jeu
-            joué au moment de la génération ne dit rien de fiable. */}
-        <p>{regionLabel(creator.region)}</p>
-        <h3>{locked ? "???" : creator.displayName}</h3>
+      <div className="card-nameplate">
+        <span className="card-region">{regionLabel(creator.region)}</span>
+        <h3>{creator.displayName}</h3>
         <div className="card-footerline">
-          <span>{locked ? rarity.label : formatFollowersCount(creator.followers)}</span>
-          {!locked && count > 1 ? <strong>×{count}</strong> : null}
+          <span>{formatFollowersCount(creator.followers)}</span>
+          {count > 1 ? <strong>×{count}</strong> : null}
         </div>
       </div>
-
-      {locked ? (
-        <div className="card-lock" aria-hidden="true">
-          <LockKeyhole size={compact ? 18 : 24} />
-        </div>
-      ) : null}
     </article>
   );
 }

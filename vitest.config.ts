@@ -13,5 +13,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.ts"],
+    // Le détail technique part au journal quand une partie du jeu n'est pas
+    // encore ouverte : les bancs n'ont pas à le crier. Celui qui vérifie le
+    // journal (`src/lib/cloud/api.test.ts`) lève le silence lui-même.
+    env: { CREATORDECK_SILENCE_JOURNAL: "1" },
   },
 });
