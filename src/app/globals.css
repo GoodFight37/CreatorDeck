@@ -103,7 +103,15 @@ input:focus-visible {
   max-width: 560px;
   min-height: 100dvh;
   margin: 0 auto;
-  overflow: hidden;
+  /* `clip`, pas `hidden` : les deux rognent les débordements (la lueur des
+     cartes, l'inclinaison du booster), mais `hidden` fait en plus de cette
+     coque un **conteneur de défilement** — qui ne défile jamais, puisque c'est
+     la page qui défile. Résultat : la barre du haut et la recherche du
+     classeur, déclarées `position: sticky`, n'avaient aucun point d'accroche et
+     partaient avec le reste au premier coup de pouce (constaté le 8 octobre
+     2026). `clip` ne crée pas de conteneur de défilement : les deux se collent
+     sous le haut de l'écran, comme voulu. */
+  overflow: clip;
   background: var(--bg);
   border-inline: 1px solid rgba(255, 255, 255, 0.035);
   box-shadow: 0 0 70px rgba(0, 0, 0, 0.55);
