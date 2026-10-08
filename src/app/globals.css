@@ -1621,6 +1621,22 @@ input:focus-visible {
 }
 .menu-row > svg { margin-left: auto; flex: 0 0 auto; color: var(--muted-2); }
 .menu-row:active { background: rgba(255, 255, 255, .03); }
+/* La ligne du volume : elle n'ouvre rien et ne bascule pas — elle choisit entre
+   trois crans. Elle porte donc la même silhouette qu'une ligne de réglage, mais
+   c'est un `div` : ce qui est cliquable, ce sont les trois pastilles. */
+.sound-row { cursor: default; }
+.sound-choice { display: flex; gap: 6px; margin-left: auto; }
+.sound-chip {
+  padding: 6px 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font-family: var(--font-body);
+  font-size: 13px;
+  cursor: pointer;
+}
+.sound-chip.active { color: var(--text); border-color: rgb(var(--accent-rgb) / .55); background: rgb(var(--accent-rgb) / .12); font-weight: 600; }
 /* Les crédits : une ligne discrète, repliée, **avant** le bouton rouge — la
    remise à zéro reste la dernière chose de l'écran, et on ne tombe pas dessus
    en cherchant qui a fait la musique. */

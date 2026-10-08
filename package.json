@@ -7,6 +7,7 @@
     "start": "serve out",
     "lint": "eslint .",
     "e2e": "playwright test",
+    "sfx:niveaux": "node scripts/sfx-niveaux.mjs",
     "streamer:bilan": "vite-node --config vitest.config.ts scripts/streamer-bilan.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

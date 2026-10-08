@@ -41,7 +41,7 @@ import { PACKS } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 
 import {
-  SFX_TCG,
+  SFX_USUELS,
   playClick,
   playCoins,
   playMenuClose,
@@ -144,7 +144,7 @@ export function CreatorDeckApp() {
   // retournement de carte ne sera pas muet. (Le Studio a sa propre liste, il la
   // charge à l'ouverture de son onglet.)
   useEffect(() => {
-    preloadSamples(SFX_TCG);
+    preloadSamples(SFX_USUELS);
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [opening, setOpening] = useState(false);
@@ -437,7 +437,10 @@ export function CreatorDeckApp() {
         before && before.claimable > 1 ? `${before.claimable} paliers` : "",
       ].filter(Boolean);
       const emblem = before?.tiers.some((tier) => tier.emblem && !tier.claimed && tier.unlocked);
-      playReward();
+      // **Un geste, un son.** Une récompense de saison se paie en points, en
+      // sabliers, en paliers et en emblème : c'est de l'argent qui tombe, et
+      // les pièces le disent mieux qu'un carillon doublé — le joueur entendait
+      // deux sons à la fois pour un seul appui.
       playCoins();
       showNotice(
         before

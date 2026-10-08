@@ -5,7 +5,7 @@
  * les filtres — collés sous la barre pendant qu'on feuillette.
  */
 import { useMemo, useState, type CSSProperties } from "react";
-import { playCardFan, playPageTurn } from "@/lib/sfx";
+import { playPageTurn, playSelect } from "@/lib/sfx";
 
 import { ArrowDownWideNarrow, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
@@ -251,7 +251,11 @@ export function CollectionView({
               key={value}
               className={filter === value ? "active" : ""}
               onClick={() => {
-                if (filter !== value) playCardFan();
+                // Un filtre qu'on change est un filtre : le clic court, **pas**
+                // le froissement d'une poignée de cartes (le joueur l'entendait
+                // comme un son qui n'a rien à voir avec ce qu'il venait de
+                // toucher).
+                if (filter !== value) playSelect();
                 setFilter(value);
                 setPage(0);
               }}

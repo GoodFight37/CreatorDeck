@@ -18,26 +18,65 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 | Bruitage | Fichier d'origine | Où il sert |
 |---|---|---|
 | `card-draw.wav` | `Card and Board/card_draw_1` | une carte se retourne (révélation), un paquet se déchire |
-| `card-fan.wav` | `Card and Board/card_fan` | on fait glisser une poignée de cartes (filtres du Binder) |
+| `card-fan.wav` | `Card and Board/card_fan` | *en réserve* : faisait glisser une poignée de cartes |
 | `card-turn.wav` | `Card and Board/card_fan_2` | une page du Binder se tourne |
-| `chip-place.wav` | `Card and Board/chips_place_1` | une carte se pose (invité sur un socle, doublon sacrifié) |
+| `chip-place.wav` | `Card and Board/chips_place_1` | une carte qui claque (le « bang » d'une Épique ou mieux) |
 | `click.wav` | `UI/click_double_on` | le clic feutré des onglets et des boutons |
-| `select.wav` | `UI/select_1` | une sélection qui compte (un côté d'imprévu, un invité posé) |
+| `select.wav` | `UI/select_1` | une sélection qui compte (un filtre du Binder, un cran de volume) |
 | `menu-open.wav` | `UI/toggle_on` | une feuille s'ouvre (un menu, un panneau) |
 | `close.wav` | `Items/book_close` | une feuille se ferme (et le refus d'une carte) |
 | `pop.wav` | `UI/pop_1` | le booster s'ouvre |
-| `coins.wav` | `Items/coin_jingle_small` | des jetons tombent (récompense réclamée) |
-| `gather.wav` | `Items/coins_gather_quick` | un lot de jetons d'un coup |
-| `equip.wav` | `Items/item_equip` | un palier de setup est acheté : l'équipement entre |
-| `power-up.wav` | `Retro/power_up` | un palier vient d'être franchi |
-| `chime.wav` | `Musical Effects/8_bit_chime_positive` | une récompense tombe (et la vidéo du jour, quand il y en avait une) |
-| `fanfare.wav` | `Musical Effects/brass_chime_positive` | un raid arrive (un invité est en direct) |
+| `coins.wav` | `Items/coin_jingle_small` | des pièces tombent (récompense de saison encaissée) |
+| `gather.wav` | `Items/coins_gather_quick` | *en réserve* : ramassait un lot de jetons d'un coup |
+| `equip.wav` | `Items/item_equip` | *en réserve* : l'équipement d'un palier de setup |
+| `power-up.wav` | `Retro/power_up` | *en réserve* : un palier de notoriété franchi |
+| `chime.wav` | `Musical Effects/8_bit_chime_positive` | une récompense tombe (palier réclamé, créateur rejoint) |
+| `fanfare.wav` | `Musical Effects/brass_chime_positive` | *en réserve* : l'arrivée d'un raid |
 
-> Les quatre derniers bruitages ont été choisis pour l'écran de la simulation de
-> streameur, **retiré de l'application le 8 octobre 2026 au soir**. Ils restent
-> dans le dépôt, comme le reste de ses sons : ils ne coûtent rien (moins de
-> 300 Ko à eux quatre) et les retirer obligerait à refaire l'inventaire du pack
-> le jour où l'écran reviendrait. Les trois premiers servent au jeu de cartes.
+> **Cinq bruitages sont en réserve** (marqués ci-dessus) : ils ont été choisis
+> pour la simulation de streameur, **retirée de l'application le 8 octobre
+> 2026**. Ils restent dans `public/sfx/` et dans le catalogue — ils ne coûtent
+> rien (moins de 300 Ko à eux cinq), ils sont **réglés comme les autres**, et
+> les retirer obligerait à refaire l'inventaire du pack le jour où un écran les
+> redemanderait. Ce que la réserve change, c'est qu'ils ne sont **plus
+> préchargés** au démarrage (`SFX_USUELS`) : rien ne se télécharge pour un son
+> que personne n'entend.
+
+## Le volume : mesuré, pas réglé au doigt mouillé
+
+C'est la correction du 8 octobre 2026, et elle vient d'un constat du joueur :
+« les sons sont trop forts et pas forcément en rapport avec ce que je clique ».
+Les deux moitiés du problème avaient la même cause — **les fichiers**. Ils
+viennent de six dossiers d'un même pack et sont tous livrés à leur maximum
+(crête à 0 dBFS), puis étaient joués avec un gain écrit à la main :
+
+| Bruitage | RMS du fichier | Gain écrit | Ce qui sortait |
+|---|---|---|---|
+| `card-draw` | −15,6 dB | 0,50 | **−21,6 dB** — le papier d'une carte, joué à chaque révélation |
+| `pop` | −15,8 dB | 0,38 | −24,2 dB |
+| `click` | −22,8 dB | 0,30 | −33,3 dB |
+
+Neuf décibels entre le papier d'une carte et un clic d'onglet : le son le plus
+fort du jeu était celui qu'on entendait **le plus souvent**. Deux règles le
+corrigent, et elles vivent maintenant dans `src/data/sfx-niveaux.json` :
+
+1. **Chaque fichier est mesuré** (RMS et crête, en dBFS) par
+   `npm run sfx:niveaux`, et reçoit une **cible de volume perçu** : le clic, qu'on
+   entend cent fois, se tient à −32 dB ; les gestes du quotidien à −30 ; le
+   papier et le paquet à −29 ; ce qui se gagne (pièces, carillon, fanfare) à
+   −28. **Ce qu'on entend le plus est le plus discret** — l'écart de quatre
+   décibels suffit à distinguer une récompense sans monter le volume.
+2. **Le gain se calcule** (`sampleGain`) : le chemin entre la mesure et la
+   cible, **borné par la crête** — aucun bruitage ne dépasse −6 dBFS à la
+   sortie, même les plus percussifs. `src/lib/sfx.test.ts` relit les vrais .wav
+   et vérifie que chaque bruitage tombe bien sur sa cible : remplacer un fichier
+   par un autre niveau casse le test, pas l'oreille du joueur.
+
+Et par-dessus, **un seul volume pour tout** : les bruitages, la synthèse et les
+effets de la révélation passent par le même nœud de sortie (`masterBus`), donc
+trois crans — **Discret, Normal, Fort** — suffisent à baisser l'application
+entière (voir « Toi » → *Réglages* → *Volume*, sous l'interrupteur *Son*).
+L'interrupteur, lui, coupe tout ; les deux réglages se mémorisent.
 
 Le **plan de notes synthétisé** reste par-dessus pour ce qu'un bruitage ne sait
 pas dire : la **rareté** d'une carte (l'accord qui monte, la note en plus pour

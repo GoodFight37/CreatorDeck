@@ -107,11 +107,12 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **36 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **38 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
 | `npm run android:apk` | `android:sync` puis Gradle `assembleRelease` (non signé sans `signingConfigs`) |
+| `npm run sfx:niveaux` | mesure les bruitages de `public/sfx/` (RMS et crête, en dBFS) et **réécrit** `src/data/sfx-niveaux.json` : les cibles de volume et les gains de lecture en découlent — un .wav remplacé se remesure, il ne se règle pas à la main |
 | `npm run streamer:bilan` | imprime le **bilan des courbes** de « Ta chaîne » (paliers et délais, gain moyen par format et par palier, choix d'imprévus, prix du setup, trente journées simulées) — il **lit** `src/data/streamer.json` par les fonctions du jeu, il n'équilibre rien |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
@@ -141,7 +142,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
-  l'essentiel des règles (**1037 tests**, 68 fichiers aujourd'hui), et **tout
+  l'essentiel des règles (**1046 tests**, 68 fichiers aujourd'hui), et **tout
   `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
   coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
@@ -158,10 +159,10 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **huit fichiers** (36 tests, 36 captures) : le
-  carnet de notifications, l'écran Compte d'un joueur connecté, les crédits,
-  **les mille cartes** (ce que le DOM porte vraiment) et **les effets de
-  rareté**. Il tournait dans la CI de l'APK, à côté
+  écran a bougé. Il tourne dans **neuf fichiers** (39 tests, 38 captures) : le
+  carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
+  **réglage du son**, **les mille cartes** (ce que le DOM porte vraiment) et
+  **les effets de rareté**. Il tournait dans la CI de l'APK, à côté
   de `lint`, `typecheck` et `test` — depuis la suppression des workflows
   (8 octobre 2026), c'est à relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
@@ -246,8 +247,9 @@ src/lib/streamer.ts      la simulation de streameur, **hors écran depuis le
 src/lib/live-game.ts     son live de 20 s : plan déterministe, chat, bulles
                          (source unique : src/data/live-game.json) — même
                          situation : la logique est là, l'écran n'y est plus
-src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx) + plans de
-                         notes synthétisés, coupés ensemble par le bouton Son
+src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx, **mesurés**)
+                         + plans de notes synthétisés — un seul volume, un seul
+                         interrupteur, et un son par geste
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
                          seuil publié dans pull-rates.json
 src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans

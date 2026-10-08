@@ -27,7 +27,16 @@ import { regionLabel } from "@/lib/regions";
 
 import { applyTiltChoice, setTiltEnabled, tiltAvailable, tiltEnabled } from "@/lib/tilt";
 
-import { isMuted, playReward, setMuted } from "@/lib/sfx";
+import {
+  SFX_LEVEL_LABELS,
+  SFX_LEVELS,
+  getSfxLevel,
+  isMuted,
+  playSelect,
+  setMuted,
+  setSfxLevel,
+  type SfxLevel,
+} from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
 
 import { gameStore } from "@/lib/game-store";
@@ -91,6 +100,9 @@ export function ProfileView({
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
+  // Le cran de volume vit dans le module du son (comme le silence) : l'état
+  // local ne sert qu'à dessiner le cran choisi.
+  const [soundLevel, setSoundLevel] = useState<SfxLevel>(() => getSfxLevel());
   // Le réglage des reflets s'applique au document dès le démarrage : sans ça,
   // un joueur qui les a coupés les reverrait le temps d'un rendu (le CSS, lui,
   // ne connaît pas `localStorage`).
@@ -129,9 +141,19 @@ export function ProfileView({
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
-    // On joue le carillon à l'activation : l'utilisateur entend tout de suite
-    // ce qu'il vient de rallumer (et rien s'il coupe).
-    if (next) playReward();
+    // À l'activation, une **sélection courte** : l'utilisateur entend ce qu'il
+    // vient de rallumer, au volume qu'il a réglé. Pas un carillon de
+    // récompense — il n'a rien gagné, il a touché un interrupteur. (Et rien
+    // quand il coupe : c'est le principe.)
+    if (next) playSelect();
+  }
+
+  function choisirVolume(cran: SfxLevel) {
+    setSoundLevel(cran);
+    setSfxLevel(cran);
+    // Le son qui répond est **celui du réglage** : court, et joué au nouveau
+    // cran, donc le joueur entend exactement ce qu'il vient de choisir.
+    playSelect();
   }
 
   async function handleReset() {
@@ -338,6 +360,27 @@ export function ProfileView({
             <i />
           </span>
         </button>
+        {/* Le volume, sous l'interrupteur et seulement quand le son est actif :
+            trois crans, pas un curseur — c'est un réglage qu'on cherche quand un
+            son dérange, pas une balance à ajuster. */}
+        {soundOn ? (
+          <div className="menu-row sound-row">
+            <span id="volume-label">Volume</span>
+            <div className="sound-choice" role="group" aria-labelledby="volume-label">
+              {SFX_LEVELS.map((cran) => (
+                <button
+                  key={cran}
+                  type="button"
+                  className={soundLevel === cran ? "sound-chip active" : "sound-chip"}
+                  aria-pressed={soundLevel === cran}
+                  onClick={() => choisirVolume(cran)}
+                >
+                  {SFX_LEVEL_LABELS[cran]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {canTilt ? (
           <button
             type="button"
