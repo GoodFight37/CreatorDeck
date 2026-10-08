@@ -157,16 +157,16 @@ Deux règles qui tiennent tout le reste :
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les 18 écrans : quatre onglets, feuilles ouvertes, un booster tiré — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
 | `npm run android:apk` | `android:sync` puis Gradle `assembleRelease` (non signé sans `signingConfigs`) |
-| `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
 | `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
-| `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
+| `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
@@ -177,7 +177,7 @@ barème de la série et versement des points du jour, jetons au serveur et Prime
 
 ## Tests
 
-Trois étages, trois vitesses :
+Quatre étages, quatre vitesses :
 
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
@@ -192,6 +192,13 @@ Trois étages, trois vitesses :
   un booster ouvert, la page rechargée, **les cinq mêmes cartes** — et, quand un
   cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
   collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
+* **`npm run ecrans`** (jsdom) : l'application **montée dans un DOM**, les
+  quatre onglets parcourus, les feuilles ouvertes, **un booster tiré** et sa
+  révélation — horloge et hasard figés, donc deux exécutions rendent le même
+  HTML. C'est le filet des déménagements de code : on capture avant
+  (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
+  écran a bougé. Il tourne dans la CI de l'APK, à côté de `lint`, `typecheck` et
+  `test`.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
   échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
@@ -218,6 +225,7 @@ Trois étages, trois vitesses :
 
 ```powershell
 npm test          # rapide, à chaque changement
+npm run ecrans    # les écrans montés dans un DOM (déménagement de code)
 npm run e2e       # avant de livrer (installe d'abord : npx playwright install chromium)
 ```
 
@@ -274,10 +282,16 @@ src/lib/supabase-reset.test.ts  garde-fou : « recommencer sa partie » (0017) �
 src/lib/retired.test.ts  les Sortants : hors complétion, artisanables le temps
                          d'une édition, jamais une Légendaire
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
-src/components/          UI (creator-deck-app, creator-card, atelier-view,
-                         seasons-section, pack-odds-sheet, market-sheet,
-                         notifications-sheet, friends-sheet, public-profile-sheet,
-                         account-sheet, leaderboard…)
+src/components/          UI : la coque (creator-deck-app.tsx — navigation,
+                         feuilles, toasts) et une vue par onglet (drop-view,
+                         binder-view, missions-view, profile-view), le chrome
+                         partagé (app-chrome.tsx), les cartes et leurs fiches,
+                         les feuilles (pack-odds-sheet, market-sheet,
+                         account-sheet + account/*, notifications-sheet, amis,
+                         arène, Last Pack…), l'overlay 16:9
+src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre onglets, feuilles,
+src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
+src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
 src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
@@ -285,8 +299,6 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0035)
-supabase/functions/     Edge Function `refresh-live` : seul endroit qui connaît le secret Twitch
 public/creators/         portraits (600×600 WebP via `npm run assets:regen`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
@@ -301,6 +313,9 @@ supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_str
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
                          direct, amis, hôtel, carnet, notifications (§9 et 9.1), dépannage
+docs/diagnostic.html     la page de diagnostic de la connexion cloud (hors
+                         `public/`, donc hors de l'APK)
+docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refusé, vérifié
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
 android/                 projet Capacitor Android (canal de notification et
                          son du jeu, app/src/main/res/raw/creatordeck.wav)
@@ -573,16 +588,19 @@ Publication :
   partie locale de l'appareil serait perdue (la collection du cloud, elle,
   reste accessible en se reconnectant).
 
-Le même export `out/` est aussi une PWA installable (manifeste inclus) ; pour
-un usage hors ligne dans le navigateur, il faudra ajouter un service worker
-(non inclus pour l'instant — l'APK, lui, embarque tout).
+Le même export `out/` est aussi une PWA installable (manifeste inclus) : un
+raccourci qui ouvre le jeu dans le navigateur. Il n'y a **pas** de cache hors
+réseau pour autant (aucun service worker) — le jeu se joue en ligne, et c'est
+l'APK qui embarque tout.
 
-## Compte, cloud et classement (facultatif)
+## Compte, cloud et classement
 
-L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute onze choses, et
-rien d'obligatoire — les six premières sont décrites juste après, les dernières
-au §8 de la marche à suivre :
+Le cloud n'est facultatif qu'**à la compilation** : un build sans les deux
+variables publiques se joue seul, sur l'appareil (développement et tests) —
+partie dans le `localStorage`, catalogue embarqué, moteur local. L'**APK et le
+site distribués**, eux, sont compilés **avec** le cloud : le jeu se joue en
+ligne. Le cloud apporte onze choses ; les six premières sont décrites juste
+après, les dernières au §8 de la marche à suivre :
 
 1. un **compte** : invité (un appui, aucun e-mail), adresse e-mail + mot de
    passe, ou « Continuer avec Twitch » ;
@@ -653,7 +671,9 @@ mois, et que la partie ait un geste à faire **aujourd'hui**.
   **12 boosters d'affilée sans Légendaire**, le 5ᵉ slot en garantit une. Le
   compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot, et
   l'accueil affiche « Légendaire garanti dans N boosters ». Moteur local et
-  `open_pack()` appliquent la même règle (`0013_progression.sql`).
+  `open_pack()` appliquent la même règle (`0013_progression.sql`, seuil porté à
+  12 par `0031_pity_douze.sql` ; dernière version d'`open_pack()` dans
+  `0035_jetons.sql`).
 * **Les jetons** : 5 par booster ouvert, 7 pendant le **Prime Time** (20 h –
   23 h), et **400** pour rejoindre la carte de son choix à l'Atelier
   (« Craft → Jetons »). Jamais une Légendaire — elle se tire en booster, ou

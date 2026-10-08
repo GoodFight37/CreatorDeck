@@ -1,8 +1,8 @@
 # Taux de drop publiés
 
 CreatorDeck publie les probabilités de ses boosters — dans l'application
-(Accueil → « Taux de drop publiés », et Profil → même entrée) comme dans ce
-dépôt. Elles sont **calculées** depuis le fichier qui sert réellement au
+(Accueil → « Taux de drop publiés », et Toi → **Progression** → « Taux de
+drop ») comme dans ce dépôt. Elles sont **calculées** depuis le fichier qui sert réellement au
 tirage : aucun chiffre n'est recopié à la main, donc l'affichage ne peut pas
 diverger du moteur.
 
@@ -40,8 +40,8 @@ rareté selon ces poids, puis un créateur **dans** cette rareté : les poids
 Une Légendaire tirée ordinairement a **1 %** de chance d'être Gold
 (`variants.goldPermille = 100`, sur les 10 000 du tirage de variante). Le
 « Perfect » en donne aussi, presque systématiquement (`variantUpgradePermille`),
-mais avant le 7 octobre 2026 la Gold **n'existait pas** en dehors de lui : une
-Légendaire ordinaire ne pouvait jamais être dorée. Le taux vit dans le fichier,
+mais sans ce taux, la Gold **n'existait pas** en dehors de lui : une Légendaire
+ordinaire ne pouvait jamais être dorée. Le taux vit dans le fichier,
 le moteur comme le serveur le lisent, et un test miroir compare
 `pull-rates.json` à `0030_gold.sql` : un taux changé d'un seul côté casse le test.
 
@@ -54,7 +54,7 @@ Légendaire, donc jamais de Gold, et le fichier le dit en l'omettant.
 ne peut pas lire n'est pas une garantie, c'est une rumeur. Trois choses sont
 dites :
 
-* le **seuil** (12 boosters depuis le 7 octobre 2026 ; 80 auparavant) : après
+* le **seuil** (**12** boosters) : après
   12 boosters d'affilée sans Légendaire, le 5ᵉ slot en garantit une — c'est-à-dire
   que le joueur n'attend jamais plus de 12 boosters, quelle que soit sa chance.
   Le seuil vit dans `pull-rates.json` et dans `0031_pity_douze.sql`, et un test
@@ -70,8 +70,8 @@ dites :
 Le compteur repart de zéro dès qu'un Légendaire tombe, **quel que soit le
 slot** : la garantie n'a plus rien à rattraper. Moteur local et
 `open_pack()` appliquent la même règle ; `src/lib/supabase-progression.test.ts`
-et les contrôles du Postgres jetable (241 aujourd'hui) vérifient que le serveur
-suit bien le fichier de taux.
+et les contrôles du Postgres jetable vérifient que le serveur suit bien le
+fichier de taux.
 
 ## Le bonus Direct
 
@@ -123,6 +123,10 @@ les cartes rendues correspondent à une liste qu'il a lui-même tirée.
 - **par carte** : probabilité marginale qu'une carte d'un booster soit d'une rareté ;
 - **au moins 1** : probabilité qu'un booster contienne au moins une carte de cette rareté ;
 - **détail par slot**, avec la part de l'événement Perfect mélangée au prorata de sa chance.
+
+À l'écran, tout est en **tableaux** — les taux par rareté, le direct, le plancher
+de malchance — et les explications longues restent dans `pull-rates.json` :
+l'écran est en lecture seule, une ligne et un chiffre à la fois.
 
 ## Modifier les taux
 

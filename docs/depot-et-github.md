@@ -18,11 +18,11 @@ But : **un dépôt, une branche de référence, un historique léger.**
 
 ## État au 6 octobre 2026
 
-- `main` reste la **branche de référence** ; le chantier en cours (cloud, jeu à
-  plusieurs, refonte visuelle) vit sur `arena/01a10c75-creatordeck`, poussée à
-  chaque étape terminée. C'est cette branche qu'on teste : le workflow
-  **APK Android (debug)** accepte n'importe quelle branche, et les migrations
-  Supabase (`0001` → `0021`, dans l'ordre) se collent dans le SQL Editor.
+- `main` reste la **branche de référence** ; le travail courant vit sur
+  `arena/01a10c75-creatordeck`, poussée à chaque étape terminée — c'est cette
+  branche qu'on teste. Le workflow **APK Android (debug)** accepte n'importe
+  quelle branche, et les migrations Supabase se collent dans le SQL Editor
+  **dans l'ordre**, de `0001` à la dernière.
 - La **PR #7** suit cette branche et sert de journal : elle reste ouverte
   jusqu'à la fin du chantier — on ne la fusionne pas au milieu.
 - Une branche `arena/…` par session : `arena/01a10c2b`, `arena/01a10c54`,
@@ -42,16 +42,24 @@ But : **un dépôt, une branche de référence, un historique léger.**
   comme « hors ligne » ou « sans compte » sans cette nuance — c'était vrai avant
   le chantier online, ça ne l'est plus.
 - Migrations Supabase collées par le joueur, dans l'ordre : `0003`, `0011` →
-  `0029` (les points sont passés au serveur : `0027` pour la caisse, `0028` pour
-  la grille des familles et leurs paliers, générée depuis le jeu). Les dernières ferment des trous d'intégrité : `0019` (la sauvegarde, la
-  réserve de boosters et les raretés déclarées ne s'écrivent plus depuis le
-  client), `0020` (un pseudo = un joueur), `0021` (registre de provenance : une
-  Légendaire ou une variante Live/Holo/Gold doit venir du serveur), `0023` (les
-  notifications de direct), `0024` (l'état de l'interrupteur se relit). La
-  bascule de `0021` a inscrit 40 lignes pour toutes les collections existantes —
-  personne ne perd son rang.
-- Le vérifieur `npm run supabase:verify` joue `0001` → `0029` sur un Postgres
-  jetable : 411 contrôles. Il pose les droits de table comme Supabase
+  `0035`. Les dernières ferment des trous d'intégrité ou ajoutent une règle :
+  `0019` (la sauvegarde, la réserve de boosters et les raretés déclarées ne
+  s'écrivent plus depuis le client), `0020` (un pseudo = un joueur), `0021`
+  (registre de provenance : une Légendaire ou une variante Live/Holo/Gold doit
+  venir du serveur), `0022` (le tirage écrit la collection dans la même
+  transaction), `0023`/`0024` (notifications de direct, état de l'interrupteur),
+  `0025` (la base réveille le direct toute seule), `0026` (codes promo),
+  `0027` → `0029` (les points au serveur), `0030` (Gold à 1 % hors Perfect),
+  `0031` (plancher de malchance à 12), `0032` (la série paie ses jours),
+  `0033` (départ maigre : 2 boosters, 2 sabliers), `0034` (une Légendaire ou une
+  Live ne se vole pas au Last Pack), `0035` (les jetons au serveur, et le
+  rapport `schema_versions()`). La bascule de `0021` a inscrit 40 lignes pour
+  toutes les collections existantes — personne ne perd son rang.
+- **État vérifié en production (8 octobre 2026)** : `schema_versions()` répond
+  `true` pour `0030` → `0035` — la base est à jour, et elle le dit elle-même,
+  sans compte.
+- Le vérifieur `npm run supabase:verify` joue `0001` → `0035` sur un Postgres
+  jetable : **434 contrôles**. Il pose les droits de table comme Supabase
   (`alter default privileges` **avant** les migrations), sinon il redonnerait à
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.
@@ -61,7 +69,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
 Le workflow **APK Android (debug)** construit à chaque poussée de **code** (les
 poussées qui ne touchent que la documentation ne construisent rien : l'APK
 précédent reste valable). Il fait les contrôles d'abord (`lint`, `typecheck`,
-`test`, catalogue), puis :
+`test`, `ecrans`, catalogue), puis :
 
 1. **il envoie un mail** avec le lien d'installation — Firebase App Distribution,
    groupe `testers` — c'est la voie du téléphone : on ouvre le mail, on touche le
@@ -82,6 +90,11 @@ Deux réglages, une seule fois, pour la voie n° 1 (console Firebase du projet
   variables → Actions → New repository secret) : le JSON du compte de service
   Firebase, celui-là même qui sert de `FCM_SERVICE_ACCOUNT` à Supabase. Il doit
   porter le rôle *Firebase App Distribution Admin*.
+
+À côté du build, un second travail (`verif`) rejoue **toute la pile SQL**
+(`0001` → `0035`) sur un Postgres jetable et fait parler le serveur (434
+contrôles) : une migration cassée met le run au rouge sans priver le téléphone
+de son APK.
 
 Le workflow annule le build précédent si une nouvelle poussée arrive
 (`concurrency`) : seul le dernier APK compte, et deux builds ne peuvent pas

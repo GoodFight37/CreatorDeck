@@ -1,26 +1,40 @@
-# Compte, cloud et jeu à plusieurs : sauvegarde, profils, échanges, amis, hôtel (Supabase)
+# Compte, cloud et jeu à plusieurs : sauvegarde, profils, échanges, amis, hôtel, Arène (Supabase)
 
-CreatorDeck est jouable **sans aucun serveur** : la partie vit dans le
-`localStorage` de l'appareil et le catalogue est embarqué dans l'APK. Le cloud
-ajoute cinq choses, et rien de plus :
+L'**APK et le site distribués** sont compilés **avec** le cloud : le jeu se
+joue en ligne, et c'est le serveur qui tient ce qui compte — le **tirage des
+boosters** (`open_pack()`), les **points**, les **jetons** et la **réserve de
+packs**. Le cloud apporte :
 
-1. **un compte** (invité par défaut, ou adresse e-mail + code à 6 chiffres en
-   option — pas de mot de passe) ;
+1. **un compte** (invité par défaut, adresse e-mail + code à 6 chiffres, ou
+   « Continuer avec Twitch ») ;
 2. **une sauvegarde cloud** de la partie, pour retrouver sa collection sur un
    autre appareil ;
-3. **une vitrine publique** de quatre cartes épinglées sur le profil ;
-4. **un classement mondial** calculé par le serveur ;
-5. **le tirage des boosters** décidé par le serveur (les cartes sont
+3. **le tirage des boosters** décidé par le serveur (les cartes sont
    infalsifiables, prérequis des échanges) ;
-6. **les échanges de cartes** entre joueurs, tranchés par le serveur (les deux
-   collections changent ensemble, ou aucune des deux).
+4. **les échanges de cartes** entre joueurs, tranchés par le serveur (les deux
+   collections changent ensemble, ou aucune des deux) ;
+5. **une vitrine publique** de quatre cartes épinglées, et le **profil public** ;
+6. **un classement mondial** calculé par le serveur — global, Gold ou **par
+   famille de collection** ;
+7. les **amis**, le **carnet de notifications**, les **notifications de direct**
+   (FCM), le **Last Pack**, le badge **EN LIVE**, la **wishlist** ;
+8. l'**hôtel des ventes**, l'**Arène** hebdomadaire, les **codes promo**, le
+   **plancher de malchance** et la **série de sept jours** relus côté serveur, et
+   les **jetons** — avec, depuis `0035`, `schema_versions()` pour dire ce qui est
+   collé.
 
-Tout le reste continue de fonctionner hors ligne, y compris si le projet
-Supabase n'existe pas encore : dans ce cas l'écran de compte affiche simplement
-« cloud non configuré » et la réserve de boosters reste locale. Dans un build
-**avec** cloud, la seule action qui exige une connexion est l'ouverture d'un
-booster (son contenu est décidé par le serveur) : la collection, l'Atelier et
-les saisons restent jouables hors ligne.
+Le détail de chaque pièce est au §8 : c'est lui qui fait foi.
+
+**Sans réseau**, le classeur, les fiches de créateurs et tout ce qui est déjà
+dans la partie restent consultables ; tout ce qui engage le serveur — ouvrir un
+booster, l'Atelier, l'hôtel, les échanges, le classement — attend le retour de
+la connexion et le dit, sans jamais fabriquer de valeurs en local. Un build
+**sans** les deux variables publiques (développement, tests) se joue seul, sur
+l'appareil : l'écran de compte affiche alors « cloud non configuré », la
+réserve de boosters reste locale, et c'est le seul cas où le moteur de
+l'appareil tire les cartes.
+
+Le catalogue, lui, n'est jamais envoyé : il est embarqué dans l'APK.
 
 ---
 

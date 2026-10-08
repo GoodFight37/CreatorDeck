@@ -105,7 +105,7 @@ pareil ne bloquent plus la sauvegarde ».
 | **Désactiver le tirage local quand le cloud est configuré** | même raison : un build sans cloud doit rester jouable. Ce qui a été fait, c'est **un seul chemin** pour décider (le hook partagé), pas une suppression du mode local |
 | **`total_cards ≤ openings × 5 + échanges + artisanat`** | refusé comme contrôle d'intégrité : un joueur hors ligne qui rattache sa collection à un compte serait marqué suspect à cause d'une **migration de plateforme**, pas d'une triche. La provenance de `0021` couvre la même classe de triche, sans faux positif de cette forme |
 | **Provenance par identifiant de carte** (n'insérer que si l'`id` est dans `pack_draws`/les échanges) | impossible tel quel : `pack_draws` ne stocke pas les identifiants des cartes de la sauvegarde, et le client **renumérote** les cartes reçues (`applyPackResult` leur donne un nouvel `id`). Faire circuler les identifiants casserait des cartes existantes. D'où la comptabilité par (créateur, rareté, variante) + bascule, qui attrape exactement les cartes de valeur |
-| **`useNow` / extraction des vues (`HomeView`, `CollectionView`)** | la partie visible du problème (re-rendu 1 Hz) est corrigée ; sortir trois vues d'un fichier de 1 900 lignes est de la dette, pas un bug — à faire quand on touchera ces écrans |
+| **`useNow` / extraction des vues (`HomeView`, `CollectionView`)** | la partie visible du problème (re-rendu 1 Hz) était corrigée à l'époque ; **fait le 8 octobre 2026** : `creator-deck-app.tsx` passe de 2316 à 595 lignes (les quatre vues et le chrome sortent), `account-sheet.tsx` de 1362 à 453, et le banc des écrans (`npm run ecrans`) vérifie qu'un découpage ne change aucun rendu |
 | **Session en Preferences Capacitor** | la session et la sauvegarde de partie doivent vivre au même endroit (sinon deux sources de vérité) ; la sauvegarde est un blob largement trop gros pour `Preferences`. Durcissement possible : adaptateur `@capacitor/preferences` pour la **session seule**, avec migration de format — à faire si on veut durcir le web |
 
 **Points concédés par le relecteur** (vérifiés une deuxième fois, rien à faire) :
@@ -118,9 +118,13 @@ pareil ne bloquent plus la sauvegarde ».
 
 ## 4. Reste ouvert (dans l'ordre où on le ferait)
 
+> **État au 8 octobre 2026 : tout ce qui suit est livré.** La seule chose laissée
+> de côté par cette revue est l'adaptateur `@capacitor/preferences` pour la
+> session (§3), qui reste une suggestion, pas un chantier.
+
 1. ~~**Découpes** : `cloud-store.ts` et `api.ts`~~ **faites le 7 octobre** (voir
    § 2, prompt 6) : `api/` et `store/`, un module par domaine, façade mince,
-   aucun changement de comportement (666 tests inchangés à l'époque ; 684 aujourd'hui avec les notifications).
+   aucun changement de comportement (les 666 tests de l'époque, inchangés).
 2. ~~**Les campagnes de notifications (FCM)**~~ **faites le 7 octobre** :
    `0023_notifications.sql`, `0024_push_state.sql`, l'Edge Function `notify-live`,
    `src/lib/push.ts` et
@@ -179,7 +183,7 @@ pareil ne bloquent plus la sauvegarde ».
    client qui demandait `master` recevait 3000 points au premier appel. *Les
    paliers de famille* étaient payés à un autre montant que celui de l'écran, et
    pour un identifiant de famille qui ne correspondait pas toujours à la vague
-   affichée. Les trois sont corrigés et contrôlés (`411` vérifications), et la
+   affichée. Les trois sont corrigés et contrôlés par le Postgres jetable, et la
    consommation du **droit de provenance** au recyclage comme au dépôt à l'hôtel
    ferme la porte que `0022` avait laissée ouverte en toutes lettres.
 
@@ -187,14 +191,15 @@ pareil ne bloquent plus la sauvegarde ».
 
 ```powershell
 npm ci
-npm test                                    # 820 tests, 55 fichiers
-npm run supabase:verify                     # 411 contrôles sur un Postgres jetable
+npm test                                    # 843 tests, 58 fichiers
+npm run ecrans                              # les 18 écrans montés dans un DOM
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
+npm run supabase:verify                     # 434 contrôles sur un Postgres jetable
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0027` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0035` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`
