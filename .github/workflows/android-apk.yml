@@ -78,6 +78,10 @@ jobs:
       # le plugin Android Gradle télécharge lui-même les composants manquants.
       - run: npm ci
       - run: npm run lint && npm run typecheck && npm test
+      # Les écrans se montent dans un DOM (jsdom) : les quatre onglets, les
+      # feuilles, un booster ouvert. C'est le filet des découpages de composants,
+      # qu'aucun test unitaire ne voit passer.
+      - run: npm run ecrans
       # Valide les données du jeu (taille du catalogue, rangs, saisons, taux).
       - run: npm run catalog:check
       # Contrôle renforcé : dans un APK, un portrait manquant laisse un trou et
