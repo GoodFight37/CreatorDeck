@@ -237,6 +237,8 @@ src/lib/live-game.ts     le live de 20 s : plan déterministe, chat, bulles
                          (source unique : src/data/live-game.json)
 src/lib/studio-room.ts   la pièce du Studio : grille isométrique, sprites,
                          murs, néons, socles (source : src/data/studio-room.json)
+src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx) + plans de
+                         notes synthétisés, coupés ensemble par le bouton Son
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
                          seuil publié dans pull-rates.json
 src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans
@@ -272,6 +274,11 @@ src/data/pull-rates.json les tables de tirage par slot (source des taux publiés
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
 public/creators/         portraits (600×600 WebP via `npm run assets:regen`)
+public/sfx/              les bruitages embarqués du jeu (15 fichiers, ≈1 Mo,
+                         sélection de « 400 Sounds Pack » de Chequered Ink)
+public/streamer/         les assets graphiques fournis par le joueur : seul le
+                         kit isométrique de `4/` sert (voir
+                         `docs/assets-graphiques.md`)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),
@@ -326,6 +333,24 @@ Principes :
 - **La recharge des boosters est calculée à la lecture** : les boosters
   « arrivent » même si l'app était fermée. Un recul de l'horloge de l'appareil
   ne crédite rien.
+
+## Deux univers, deux mots
+
+Le jeu a deux moitiés, et elles ne se mélangent pas :
+
+- le **TCG** — le jeu de cartes : les boosters, la collection, l'artisanat, le
+  profil. C'est là que vivent les taux publiés, les raretés, le marché et les
+  échanges. Ses écrans sont **Drop**, **Binder**, **Craft** et **Toi** ;
+- le **Studio** — la simulation de streameur (l'ancien « Ta chaîne ») : la
+  chaîne qui grandit pendant l'absence, la vidéo du jour, les imprévus, les
+  paliers de setup, les invités sur le bureau. C'est **un onglet plein écran**,
+  le cinquième, et il a sa propre feuille de route
+  ([`docs/ta-chaine.md`](docs/ta-chaine.md)).
+
+Les deux se croisent **par les cartes** (un invité du Studio est une carte du
+Binder, un palier du studio se paie en doublons) — et c'est tout : aucun
+compteur du TCG ne compte les abonnés, aucun prix du Studio n'est payé en
+points de collection.
 
 ## Économie, saisons et taux de drop
 
@@ -421,9 +446,15 @@ Principes :
   écrit dans la partie — même collection virtuelle, ni cartes, ni points, ni
   statistiques. Les tests vérifient que la simulation suit bien
   `pull-rates.json` à 3 points près sur 400 boosters.
-- **Sons** : synthétisés en Web Audio (`src/lib/sfx.ts`) — ouverture de booster,
-  accord qui monte avec la rareté, carillon de palier. Aucun fichier, aucun
-  octet ajouté à l'APK, aucune licence ; bouton on/off dans le profil.
+- **Sons** : deux familles, un seul interrupteur (`src/lib/sfx.ts`) — des
+  **bruitages embarqués** (`public/sfx/`, une sélection de « 400 Sounds Pack »
+  de Chequered Ink, libre d'usage commercial) portent les gestes : on retourne
+  une carte, on feuillette le Binder, on enfonce un bouton, on ouvre un menu,
+  on achète un palier de setup, on publie une vidéo ; des **plans de notes
+  synthétisés** portent la rareté (l'accord qui monte, la note en plus pour une
+  variante spéciale, le bang après le silence d'une Épique) et les carillons de
+  palier. Le total des fichiers reste sous les 3 Mo (un test le garde), et le
+  bouton **Son** du profil coupe **tout** — bruitages comme synthèse.
 - **Thèmes de collection** (Profil → Thème) : chaque famille complétée débloque
   la teinte de son emblème, et toutes les compléter débloque « Grand chelem ».
   Un thème repeint toute l'application — fond, panneaux, bordures, textes,

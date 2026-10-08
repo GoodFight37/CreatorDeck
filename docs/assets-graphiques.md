@@ -9,7 +9,7 @@
 
 | Où | Quoi | Licence |
 |---|---|---|
-| **La pièce du Studio** (`src/data/studio-room.json`) | **Kenney — Furniture Kit, dossier `Isometric/`** : sol, murs, mobilier, panneaux acoustiques | **CC0** (`public/streamer/4/License.txt`) |
+| **La pièce du Studio** (`src/data/studio-room.json`) | **Kenney — Furniture Kit, dossier `Isometric/`** : sol, murs (**dont les deux fenêtres**), mobilier, panneaux acoustiques | **CC0** (`public/streamer/4/License.txt`) |
 
 Le kit Kenney « Isometric Miniature » est livré en PNG **indexés** (palette +
 transparence) et se compose sur une **grille isométrique** :
@@ -27,6 +27,22 @@ Tout le calcul vit dans `src/lib/studio-room.ts`, et
 taille annoncée est la taille réelle, que le point d'appui tombe sur du dessin,
 et que chaque palier de setup fait bien entrer un objet dans la pièce. Une image
 remplacée par une autre casse le test, pas la pièce.
+
+## Les deux fenêtres, et pourquoi elles ne sont pas un décor de plus
+
+Le kit fournit chaque mur en **deux versions** : pleine, et percée d'une fenêtre
+(`wall_SE` / `wallWindow_SE`). Les deux se posent **au même point, avec le même
+appui** — c'est la même face, une fois avec une ouverture. La fenêtre est donc
+posée **exactement sur** le mur de sa cellule, jamais devant : elle le recouvre
+au pixel près, et un test le vérifie (`studio-room.test.ts`, « pose les fenêtres
+exactement sur le mur qu'elles remplacent »). Ce test a d'ailleurs attrapé la
+première version, qui posait la fenêtre au centre de la cellule au lieu de
+l'arête : elle ressortait du mur d'un demi-tile.
+
+Elles ont aussi leur propre filtre CSS (`.chaine-sprite.fenetre`) : les murs du
+studio sont assombris et bleutés, les fenêtres non — et quand l'éclairage est
+acheté, ce sont elles qui s'allument le plus. C'est la seule lumière **froide**
+de la pièce, et elle dit qu'il fait jour dehors.
 
 ## Ce que contient `public/streamer/`
 

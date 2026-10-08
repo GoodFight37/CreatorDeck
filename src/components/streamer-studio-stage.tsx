@@ -122,7 +122,7 @@ function Sprite({ asset, left, top }: { asset: string; left: number; top: number
     // ici, et l'image n'a pas de taille intrinsèque à connaître d'avance.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      className={`chaine-sprite${asset.includes("wall") ? " mur" : ""}`}
+      className={`chaine-sprite${asset.includes("wall") ? (asset.includes("Window") ? " fenetre" : " mur") : ""}`}
       src={studioSpriteUrl(asset)}
       alt=""
       draggable={false}

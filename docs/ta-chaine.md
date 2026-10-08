@@ -242,6 +242,24 @@
   **inchangés** : mêmes paliers, mêmes multiplicateurs, même serveur (`0041`).
   La pièce ne décide de rien — elle montre.
 
+- [x] **Étape 10 bis : la pièce s'habille, le Studio s'entend** — deux
+  ajouts, sans une ligne de logique. **Les fenêtres** : le kit fournit chaque
+  mur en deux versions (pleine, et percée d'une fenêtre) ; les deux fenêtres
+  sont posées **exactement sur le mur de leur cellule** (même appui, même
+  point : la fenêtre recouvre la face), et elles ne subissent pas le filtre des
+  murs — c'est la seule lumière froide de la pièce. Le test de la pièce les
+  apparie par leur **point de pose**, pas par leur nom : il a attrapé la
+  première version, posée au centre de la cellule (la fenêtre ressortait du mur
+  d'un demi-tile). **Le second écran** : le palier **régie** pose un moniteur de
+  plus sur le bureau (le kit n'en a qu'un, posé deux fois — même image, autre
+  endroit). **Les bruits du Studio** : l'achat d'un palier fait entrer
+  l'équipement (puis la pièce qui monte), publier la vidéo sonne le carillon,
+  poser un invité en direct déclenche la fanfare du raid, et le classeur
+  d'invités s'ouvre et se ferme comme les autres feuilles. Tout passe par
+  `src/lib/sfx.ts` et par l'interrupteur **Son** du profil — rien ne sonne si le
+  joueur l'a coupé. Le détail de la sélection est dans
+  [`assets-sonores.md`](assets-sonores.md).
+
 ## 2. En cours
 
 - [x] **L'arbitrage du live de vingt secondes : la scène reste gratuite**
@@ -267,8 +285,8 @@
 
 > Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
 > (étape 7), la **scène du bureau avec le plateau** (étape 8), la **refonte
-> visuelle** (étape 9) et **l'onglet Studio en vraies images** (étape 10) sont
-> livrés.
+> visuelle** (étape 9), **l'onglet Studio en vraies images** (étape 10) et
+> **l'habillage + les bruitages** (étape 10 bis) sont livrés.
 > **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
 > (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
 > en jouant.

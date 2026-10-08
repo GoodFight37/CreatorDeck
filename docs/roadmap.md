@@ -27,6 +27,7 @@
 - [x] Invités sur le bureau (2 cartes du classeur, bonus Raid si le créateur est EN LIVE)
 - [x] Bureau **visuel** : la scène du studio (objets qui s'allument avec le setup, vraies cartes sur socle, aura rouge du direct, bandeau « RAID ! ») et le **plateau** qui booste la vidéo du jour (`0041`, étape 8 de `docs/ta-chaine.md`)
 - [x] **Refonte « jeu mobile » de l'écran « Ta chaîne »** : HUD arcade (rang, jauge d'abonnés, rythme, jetons), socles, boutons bombés, notices remplacées par des badges
+- [x] **Le Studio s'habille et s'entend** (8 octobre 2026) : deux fenêtres posées sur les murs du kit (lumière froide), un second écran au palier *régie*, et **15 bruitages embarqués** (cartes, pages, clics, feuilles, achats de setup, publication, raid) branchés sur les gestes — le bouton *Son* du profil les coupe tous (`docs/assets-sonores.md`)
 - [x] **Le Studio devient un onglet plein écran, et la pièce passe aux vraies images** (étape 10 de `docs/ta-chaine.md`) : cinq onglets dans la barre du bas, plus de modale, et une **pièce isométrique du kit Kenney** (CC0) où chaque palier fait entrer son objet (`src/data/studio-room.json`, `src/lib/studio-room.ts`)
 - [x] Arbitrage du live de 20 s (scène d'immersion gratuite, tirage vidéo 100 % serveur)
 

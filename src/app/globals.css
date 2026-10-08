@@ -2818,8 +2818,12 @@ input:focus-visible {
    filtre les met à l'ombre et les tire vers le bleu — `sepia` d'abord, sinon un
    gris reste gris (une rotation de teinte ne fait rien sur du blanc). */
 .chaine-sprite.mur { filter: brightness(.5) sepia(.6) hue-rotate(178deg) saturate(2.1); }
+/* Une fenêtre n'est pas un mur : elle n'est pas assombrie, et elle apporte la
+   seule lumière froide de la pièce (c'est elle qui dit « il fait jour dehors »). */
+.chaine-sprite.fenetre { filter: brightness(.82) saturate(.9); }
 /* L'éclairage acheté éclaircit la pièce : le studio se transforme en s'équipant. */
 .chaine-room.eclaire .chaine-sprite.mur { filter: brightness(.66) sepia(.55) hue-rotate(180deg) saturate(1.9); }
+.chaine-room.eclaire .chaine-sprite.fenetre { filter: brightness(.98) saturate(.95); }
 /* Le néon : deux tubes posés sur les murs, et l'ambiance qu'ils jettent. */
 .chaine-neon { position: absolute; height: 1.1%; min-height: 4px; border-radius: 999px; pointer-events: none; }
 .chaine-neon.violet { background: linear-gradient(90deg, #f0abfc, #a855f7 45%, #7c3aed); box-shadow: 0 0 9px rgb(168 85 247 / .95), 0 0 24px rgb(168 85 247 / .55), 0 0 42px rgb(124 58 237 / .3); }

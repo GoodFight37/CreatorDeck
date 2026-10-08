@@ -237,6 +237,33 @@ describe("le studio · la géométrie", () => {
     expect(iso([0, 1])).toEqual([ox - 104, oy + 76]);
   });
 
+  it("pose les fenêtres exactement sur le mur qu'elles remplacent", () => {
+    // La fenêtre n'est pas un objet posé *devant* le mur : c'est le **même**
+    // sprite, avec une ouverture. Elle doit donc se poser au même point, avec le
+    // même appui — sinon elle flotte à côté de la face qu'elle perce, et ça se
+    // voit tout de suite (le pack fournit les deux versions exprès).
+    const murs = studioWalls();
+    const fenetres = studioWallPanels().filter((pose) => pose.asset.includes("Window"));
+    expect(fenetres).toHaveLength(2);
+    for (const fenetre of fenetres) {
+      // L'appariement se fait par la **cellule** : la fenêtre de gauche perce le
+      // mur de gauche, celle de droite le mur de droite — les identifiants sont
+      // libres, la position ne l'est pas.
+      const at = fenetre.at;
+      // Le mur qui occupe **le même point de pose** : c'est celui que la
+      // fenêtre perce, quel que soit le nom qu'on leur a donné.
+      const mur = murs.find((pose) => pose.at[0] === at[0] && pose.at[1] === at[1]);
+      expect(mur, `aucun mur pour ${fenetre.id}`).toBeDefined();
+      expect([fenetre.at, fenetre.left, fenetre.top], fenetre.id).toEqual([
+        mur!.at,
+        mur!.left,
+        mur!.top,
+      ]);
+      // Et la fenêtre se dessine **après** son mur : elle recouvre la face.
+      expect(fenetre.depth, fenetre.id).toBeGreaterThan(mur!.depth);
+    }
+  });
+
   it("sert les images du kit par une seule porte", () => {
     expect(studioSpriteUrl("deskCorner_SE")).toBe("/streamer/4/Isometric/deskCorner_SE.png");
   });

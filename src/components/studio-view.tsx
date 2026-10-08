@@ -77,6 +77,18 @@ import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game"
 import { liveStore } from "@/lib/live-store";
 import { liveFor } from "@/lib/live";
 import { StreamerStudioStage } from "@/components/streamer-studio-stage";
+import {
+  SFX_STUDIO,
+  playCardPlace,
+  playChime,
+  playEquip,
+  playFanfare,
+  playMenuClose,
+  playMenuOpen,
+  playPowerUp,
+  playSelect,
+  preloadSamples,
+} from "@/lib/sfx";
 
 const count = new Intl.NumberFormat("fr-FR");
 
@@ -121,6 +133,10 @@ export function StudioView() {
 
   // Ouvre la chaîne : le retour du joueur est payé ici, une fois par absence.
   useEffect(() => {
+    // Les bruitages du Studio (acheter un palier, publier, poser un invité) sont
+    // chargés à l'ouverture de l'onglet : on peut y passer une minute avant le
+    // geste qui compte, et un premier achat muet se remarquerait.
+    preloadSamples(SFX_STUDIO);
     let vivant = true;
     // On regarde le direct en même temps : c'est lui qui décide si un invité
     // du bureau amène un raid. La lecture est muette (le direct est un bonus,
@@ -257,6 +273,10 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
+    // Publier, c'est le moment qui paie : le carillon, et la pièce qui monte
+    // d'un cran si la chaîne a franchi un palier de notoriété.
+    playChime();
+    if (issue.message && issue.message.includes("palier")) playPowerUp();
     setNotice({ message: issue.message ?? "Vidéo publiée.", isError: false });
   }
 
@@ -321,6 +341,7 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
+    playSelect();
     setNotice({ message: issue.message ?? "Imprévu joué.", isError: false });
   }
 
@@ -344,6 +365,12 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
+    // La carte se pose sur son socle. Si le créateur streame maintenant, c'est
+    // un raid qui arrive : la pièce le dit avant que le chiffre tombe.
+    playCardPlace();
+    const slug = cardId ? state?.cards.find((carte) => carte.id === cardId)?.creatorSlug : null;
+    if (slug && direct.has(slug)) playFanfare();
+    else playSelect();
     setNotice({ message: issue.message ?? "Bureau à jour.", isError: false });
   }
 
@@ -402,6 +429,10 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
+    // L'équipement entre dans la pièce : le son du matériel qu'on branche, puis
+    // la pièce qui tombe.
+    playEquip();
+    playPowerUp();
     setNotice({ message: issue.message ?? "Palier installé.", isError: false });
   }
 
@@ -423,6 +454,7 @@ export function StudioView() {
     }
     setSacrifie([]);
     setConfirmeSacrifice(false);
+    playCardPlace();
     setNotice({ message: issue.message ?? "Sacrifice fait.", isError: false });
   }
 
@@ -501,6 +533,7 @@ export function StudioView() {
           tokensCap={STREAMER_TOKEN_CAP}
           busy={busy}
           onOpenSlot={(place) => {
+            playMenuOpen();
             setPlaceOuverte(place);
             setRecherche("");
           }}
@@ -797,6 +830,7 @@ export function StudioView() {
                 <button
                   type="button"
                   onClick={() => {
+                    playMenuClose();
                     setPlaceOuverte(null);
                     setRecherche("");
                   }}

@@ -5,6 +5,7 @@
  * les filtres — collés sous la barre pendant qu'on feuillette.
  */
 import { useMemo, useState, type CSSProperties } from "react";
+import { playCardFan, playPageTurn } from "@/lib/sfx";
 
 import { ArrowDownWideNarrow, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
@@ -250,6 +251,7 @@ export function CollectionView({
               key={value}
               className={filter === value ? "active" : ""}
               onClick={() => {
+                if (filter !== value) playCardFan();
                 setFilter(value);
                 setPage(0);
               }}
@@ -263,7 +265,11 @@ export function CollectionView({
 
       <div className="binder-pager">
         <button
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
+          onClick={() => {
+            // Feuilleter, ça s'entend : un froissement de cartes par page.
+            playPageTurn();
+            setPage((p) => Math.max(0, p - 1));
+          }}
           disabled={safePage <= 0}
         >
           <ChevronLeft size={15} />
@@ -273,7 +279,10 @@ export function CollectionView({
           Page <strong>{safePage + 1}</strong> sur {totalPages} · {filtered.length} cartes
         </span>
         <button
-          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          onClick={() => {
+            playPageTurn();
+            setPage((p) => Math.min(totalPages - 1, p + 1));
+          }}
           disabled={safePage >= totalPages - 1}
         >
           <span>Suivant</span>

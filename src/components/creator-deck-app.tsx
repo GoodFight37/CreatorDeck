@@ -41,7 +41,16 @@ import { gameDay } from "@/lib/progression";
 import { tierFor } from "@/lib/streamer";
 import { readySteals } from "@/lib/last-pack";
 
-import { playPackOpening, playReward } from "@/lib/sfx";
+import {
+  SFX_TCG,
+  playClick,
+  playCoins,
+  playMenuClose,
+  playMenuOpen,
+  playPackOpening,
+  playReward,
+  preloadSamples,
+} from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 
 import { THEME_VAR_NAMES } from "@/lib/cosmetics";
@@ -130,6 +139,12 @@ export function CreatorDeckApp() {
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
   useLivePolling();
+  // Les bruitages du TCG sont chargés une fois pour toutes : le premier
+  // retournement de carte ne sera pas muet. (Le Studio a sa propre liste, il la
+  // charge à l'ouverture de son onglet.)
+  useEffect(() => {
+    preloadSamples(SFX_TCG);
+  }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
@@ -162,6 +177,26 @@ export function CreatorDeckApp() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
 
+  /**
+   * Le son des feuilles : elles s'ouvrent et se referment toutes de la même
+   * façon, donc le geste est écrit **une fois**. Le bouton retour d'Android
+   * passe par les mêmes fonctions que le bouton « Fermer » : le son ne dépend
+   * pas de la façon dont on referme.
+   */
+  function ouvrirFeuille(set: (value: boolean) => void) {
+    return () => {
+      playMenuOpen();
+      set(true);
+    };
+  }
+
+  function fermerFeuille(set: (value: boolean) => void) {
+    return () => {
+      playMenuClose();
+      set(false);
+    };
+  }
+
   // ------------------------------------------------------------------
   // Le bouton retour d'Android
   // ------------------------------------------------------------------
@@ -169,20 +204,21 @@ export function CreatorDeckApp() {
   // met de côté. L'ordre d'inscription est l'ordre du dessus vers le dessous :
   // le dernier inscrit est le premier servi (`src/lib/back-stack.ts`).
   useBackHandler(drawnCards.length > 0, closeReveal);
-  useBackHandler(themeOpen, () => setThemeOpen(false));
+  useBackHandler(themeOpen, fermerFeuille(setThemeOpen));
   useBackHandler(Boolean(cloud.profile || cloud.profileBusy), () => cloudStore.closeProfile());
   useBackHandler(accountOpen, () => {
+    playMenuClose();
     setAccountOpen(false);
     setAccountFocus(null);
   });
-  useBackHandler(notificationsOpen, () => setNotificationsOpen(false));
-  useBackHandler(wishlistOpen, () => setWishlistOpen(false));
-  useBackHandler(arenaOpen, () => setArenaOpen(false));
-  useBackHandler(lastPackOpen, () => setLastPackOpen(false));
-  useBackHandler(marketOpen, () => setMarketOpen(false));
-  useBackHandler(friendsOpen, () => setFriendsOpen(false));
-  useBackHandler(studioOpen, () => setStudioOpen(false));
-  useBackHandler(oddsOpen, () => setOddsOpen(false));
+  useBackHandler(notificationsOpen, fermerFeuille(setNotificationsOpen));
+  useBackHandler(wishlistOpen, fermerFeuille(setWishlistOpen));
+  useBackHandler(arenaOpen, fermerFeuille(setArenaOpen));
+  useBackHandler(lastPackOpen, fermerFeuille(setLastPackOpen));
+  useBackHandler(marketOpen, fermerFeuille(setMarketOpen));
+  useBackHandler(friendsOpen, fermerFeuille(setFriendsOpen));
+  useBackHandler(studioOpen, fermerFeuille(setStudioOpen));
+  useBackHandler(oddsOpen, fermerFeuille(setOddsOpen));
 
   useAndroidBack(() => {
     // Plus rien à fermer : on revient à l'accueil, et si on y est déjà, l'app
@@ -356,6 +392,7 @@ export function CreatorDeckApp() {
       ].filter(Boolean);
       const emblem = before?.tiers.some((tier) => tier.emblem && !tier.claimed && tier.unlocked);
       playReward();
+      playCoins();
       showNotice(
         before
           ? `Saison ${before.id} : ${parts.join(", ") || "récompense réclamée"}${emblem ? " — emblème obtenu !" : ""}`
@@ -444,10 +481,16 @@ export function CreatorDeckApp() {
             onShowInbox={() => setNotificationsOpen(true)}
             onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
-            onShowOdds={() => setOddsOpen(true)}
-            onShowMissions={() => setTab("missions")}
-            onShowAtelier={() => setTab("atelier")}
-            onShowArena={() => setArenaOpen(true)}
+            onShowOdds={ouvrirFeuille(setOddsOpen)}
+            onShowMissions={() => {
+              playClick();
+              setTab("missions");
+            }}
+            onShowAtelier={() => {
+              playClick();
+              setTab("atelier");
+            }}
+            onShowArena={ouvrirFeuille(setArenaOpen)}
             streamerLine={streamerLine}
             onShowStreamer={() => setTab("studio")}
             onOpenScene={() => void handleOpenScenePack()}
@@ -480,10 +523,13 @@ export function CreatorDeckApp() {
             game={game}
             onNotice={showNotice}
             onError={showError}
-            onShowOdds={() => setOddsOpen(true)}
-            onShowMissions={() => setTab("missions")}
-            onShowThemes={() => setThemeOpen(true)}
-            onShowStudio={() => setStudioOpen(true)}
+            onShowOdds={ouvrirFeuille(setOddsOpen)}
+            onShowMissions={() => {
+              playClick();
+              setTab("missions");
+            }}
+            onShowThemes={ouvrirFeuille(setThemeOpen)}
+            onShowStudio={ouvrirFeuille(setStudioOpen)}
             onShowAccount={() => {
               setAccountFocus(null);
               setAccountOpen(true);
@@ -492,12 +538,12 @@ export function CreatorDeckApp() {
               setAccountFocus("leaderboard");
               setAccountOpen(true);
             }}
-            onShowFriends={() => setFriendsOpen(true)}
-            onShowMarket={() => setMarketOpen(true)}
-            onShowLastPack={() => setLastPackOpen(true)}
-            onShowArena={() => setArenaOpen(true)}
-            onShowWishlist={() => setWishlistOpen(true)}
-            onShowNotifications={() => setNotificationsOpen(true)}
+            onShowFriends={ouvrirFeuille(setFriendsOpen)}
+            onShowMarket={ouvrirFeuille(setMarketOpen)}
+            onShowLastPack={ouvrirFeuille(setLastPackOpen)}
+            onShowArena={ouvrirFeuille(setArenaOpen)}
+            onShowWishlist={ouvrirFeuille(setWishlistOpen)}
+            onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
             }}
@@ -510,7 +556,13 @@ export function CreatorDeckApp() {
           <button
             key={item.id}
             className={tab === item.id ? "active" : ""}
-            onClick={() => setTab(item.id)}
+            onClick={() => {
+              // Le clic feutré des cinq onglets : court, discret, et le même
+              // partout — c'est le son qu'on entend le plus, il ne doit pas
+              // fatiguer. (Changer d'onglet sans aller nulle part ne sonne pas.)
+              if (item.id !== tab) playClick();
+              setTab(item.id);
+            }}
             aria-current={tab === item.id ? "page" : undefined}
           >
             {item.icon}
@@ -570,15 +622,15 @@ export function CreatorDeckApp() {
         </div>
       ) : null}
       {oddsOpen ? (
-        <PackOddsSheet onClose={() => setOddsOpen(false)} current={game} />
+        <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
-      {studioOpen ? <StudioSheet onClose={() => setStudioOpen(false)} /> : null}
-      {friendsOpen ? <FriendsSheet onClose={() => setFriendsOpen(false)} /> : null}
-      {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
-      {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
-      {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
-      {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
-      {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
+      {studioOpen ? <StudioSheet onClose={fermerFeuille(setStudioOpen)} /> : null}
+      {friendsOpen ? <FriendsSheet onClose={fermerFeuille(setFriendsOpen)} /> : null}
+      {marketOpen ? <MarketSheet onClose={fermerFeuille(setMarketOpen)} /> : null}
+      {lastPackOpen ? <LastPackSheet onClose={fermerFeuille(setLastPackOpen)} /> : null}
+      {arenaOpen ? <ArenaSheet onClose={fermerFeuille(setArenaOpen)} /> : null}
+      {wishlistOpen ? <WishlistSheet onClose={fermerFeuille(setWishlistOpen)} /> : null}
+      {notificationsOpen ? <NotificationsSheet onClose={fermerFeuille(setNotificationsOpen)} /> : null}
       {accountOpen ? (
         <AccountSheet
           focus={accountFocus}
@@ -593,7 +645,7 @@ export function CreatorDeckApp() {
         <ThemeSheet
           themes={game.themes}
           onEquip={handleEquipTheme}
-          onClose={() => setThemeOpen(false)}
+          onClose={fermerFeuille(setThemeOpen)}
         />
       ) : null}
       {drawnCards.length ? (

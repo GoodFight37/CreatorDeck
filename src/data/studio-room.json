@@ -424,12 +424,67 @@
         ],
         "layer": 6,
         "setup": "plateau"
+      },
+      {
+        "id": "ecran-regie",
+        "asset": "computerScreen_SE",
+        "w": 47,
+        "h": 59,
+        "appui": [
+          12,
+          59
+        ],
+        "at": [
+          430,
+          478
+        ],
+        "layer": 4,
+        "setup": "regie",
+        "note": "Le second écran, celui de la régie : le même moniteur que celui du bureau (le kit n'en a qu'un), posé un peu plus à droite sur le plan de travail."
       }
     ]
   },
   "wallDecor": {
-    "note": "Ce qui se **pose sur le mur** : les panneaux acoustiques (fournis par le kit) et les néons (dessinés en CSS, ils n'ont pas de sprite). `at` = point de la base du mur, `appui` = point bas du sprite ; pour un néon, `at` = son **centre**, `longueur` = sa longueur en pixels de scène, `angle` = son inclinaison (la pente du mur).",
+    "note": "Ce qui se pose **sur** le mur : les deux fenetres (toujours la, posees exactement comme le mur de leur cellule) et les panneaux acoustiques du palier « deco » (quatre, sur les segments du bout et du coin : les fenetres gardent le milieu).",
     "list": [
+      {
+        "id": "fenetre-gauche",
+        "asset": "wallWindow_SE",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          5,
+          212
+        ],
+        "note": "Toujours la : c'est la chambre. Posee **exactement au point du mur de sa cellule** (`at` = arete haute de la cellule, pas son centre) : meme appui, meme point, donc le sprite recouvre la face et la fenetre ne flotte pas. Elle n'est **pas** filtree.",
+        "cell": [
+          0,
+          2
+        ],
+        "at": [
+          204,
+          434
+        ]
+      },
+      {
+        "id": "fenetre-droite",
+        "asset": "wallWindow_SW",
+        "w": 109,
+        "h": 212,
+        "appui": [
+          104,
+          212
+        ],
+        "note": "Toujours la : c'est la chambre. Posee **exactement au point du mur de sa cellule** (`at` = arete haute de la cellule, pas son centre) : meme appui, meme point, donc le sprite recouvre la face et la fenetre ne flotte pas. Elle n'est **pas** filtree.",
+        "cell": [
+          2,
+          0
+        ],
+        "at": [
+          620,
+          434
+        ]
+      },
       {
         "id": "panneau-1",
         "asset": "paneling_SE",
@@ -440,10 +495,11 @@
           100
         ],
         "at": [
-          209,
-          418
+          117,
+          486
         ],
-        "setup": "deco"
+        "setup": "deco",
+        "note": "Sur le segment du bout du mur de gauche (la fenetre occupe le milieu)."
       },
       {
         "id": "panneau-2",
@@ -485,10 +541,11 @@
           101
         ],
         "at": [
-          624,
-          425
+          707,
+          486
         ],
-        "setup": "deco"
+        "setup": "deco",
+        "note": "Sur le segment du bout du mur de droite (la fenetre occupe le milieu)."
       },
       {
         "id": "neon-gauche",

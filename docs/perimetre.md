@@ -74,6 +74,8 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
   reste, et le détail de chaque règle.
 - `docs/assets-graphiques.md` — les images de `public/streamer/` : ce qui sert
   (le kit isométrique de la pièce du Studio), ce qui est en 3D, et pourquoi.
+- `docs/assets-sonores.md` — les sons : la sélection de bruitages embarqués, la
+  licence du pack, le budget, et ce qu'on n'a pas pris.
 - `docs/cloud-supabase.md` — tout le serveur, §8 : chaque règle, migration par
   migration, et la marche à suivre pour poser le SQL (`npx supabase db push`).
 - `docs/revue-externe-2026-10.md` — les refus **techniques**, avec leur raison.
