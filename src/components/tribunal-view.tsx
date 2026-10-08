@@ -371,6 +371,9 @@ function Ticket({ dossier, onJudge }: { dossier: Dossier; onJudge: (verdict: Ver
         <p className="tribunal-motif">
           Motif : <strong>{dossier.banReason}</strong>
         </p>
+        {/* Le décor : sur quoi le stream tournait. Sans lui, le message ne
+            veut rien dire — on ne juge pas une phrase, on juge une scène. */}
+        <p className="tribunal-contexte">{dossier.contexte}</p>
       </header>
 
       <section className="tribunal-evidence" aria-label="Pièce à conviction">

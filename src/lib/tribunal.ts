@@ -46,6 +46,15 @@ export type Dossier = {
   username: string;
   badges: string[];
   banReason: string;
+  /**
+   * La scène : sur quoi le stream tournait quand c'est arrivé.
+   *
+   * Sans lui, un dossier n'est qu'une phrase sortie de nulle part — et on ne
+   * peut rien *sentir* d'une phrase sans décor. « Partie classée · 3 400
+   * spectateurs · il reste deux joueurs » suffit à voir le moment. Ce n'est pas
+   * un indice sur le verdict à rendre : c'est le lieu du crime.
+   */
+  contexte: string;
   /** La pièce à conviction : le message qui a causé le ban. */
   chatMessage: string;
   /** Le plaidoyer écrit par l'accusé. */

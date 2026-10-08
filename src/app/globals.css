@@ -2911,3 +2911,7 @@ input:focus-visible {
 .tribunal-row { border-color: rgb(255 190 85 / .28) !important; }
 .tribunal-row svg { color: var(--gold); }
 .tribunal-row.done { opacity: .72; }
+
+/* Le décor du dossier : sur quoi le stream tournait. Une ligne, en gris —
+   ce n'est pas un indice sur le verdict, c'est le lieu du crime. */
+.tribunal-contexte { margin: -2px 0 0; color: var(--muted-2); font-size: 12px; line-height: 1.4; }

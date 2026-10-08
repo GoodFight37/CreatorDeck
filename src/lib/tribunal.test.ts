@@ -38,6 +38,7 @@ function dossier(verdictAttendu: Verdict, id = "x-01"): Dossier {
     badges: ["prime"],
     banReason: "Troll",
     chatMessage: "salut",
+    contexte: "Just Chatting · 500 spectateurs",
     appealText: "Je voulais juste dire bonjour.",
     verdictAttendu,
     chatReaction: { onDeban: "bienvenue", onBan: "dégage" },
@@ -82,6 +83,9 @@ describe("les données du Tribunal", () => {
       expect(d.username.length).toBeGreaterThan(0);
       expect(d.banReason.length).toBeGreaterThan(0);
       expect(d.chatMessage.length).toBeGreaterThan(0);
+      // Le décor du dossier : sans lui, la phrase ne veut rien dire — on ne
+      // peut rien sentir d'un message sorti de nulle part.
+      expect(d.contexte.length, `dossier sans décor : ${d.id}`).toBeGreaterThan(10);
       // Le plaidoyer est la moitié du plaisir : un dossier sans texte serait
       // un dossier qu'on juge au hasard.
       expect(d.appealText.length).toBeGreaterThan(20);

@@ -23,11 +23,12 @@
       "username": "xX_JeanKev_Xx",
       "badges": ["sub_12m", "prime"],
       "banReason": "Backseat agressif",
-      "chatMessage": "MAIS PRENDS LA PORTE DE GAUCHE ESPÈCE DE PAIN PERDU",
-      "appealText": "Douze mois d'abonnement, jamais le moindre avertissement, et hier soir j'ai tapé plus fort que mon clavier. Je présente mes excuses au streamer et à son chat, j'ai honte et je referai plus.",
+      "contexte": "Partie classée · 3 400 spectateurs · il reste deux joueurs",
+      "chatMessage": "MAIS TOURNE-TOI IL EST DERRIÈRE TOI BORDEL",
+      "appealText": "Douze mois d'abonnement, jamais un avertissement. Hier soir j'ai crié parce que le type était dans son dos et que j'ai vu venir ma mort trois secondes avant lui. J'ai eu tort de crier, je le reconnais, et je présente mes excuses au streamer et à son chat.",
       "verdictAttendu": "deban",
       "chatReaction": {
-        "onDeban": "le retour du roi 🍞",
+        "onDeban": "le retour du roi du backseat 🍿",
         "onBan": "douze mois pour finir comme ça…"
       }
     },
@@ -36,12 +37,13 @@
       "username": "DarkSasuke93",
       "badges": ["new_account"],
       "banReason": "Spoil de fin",
-      "chatMessage": "ATTENDS T'AS VU LA FIN ? IL ÉTAIT MORT DEPUIS LE DÉBUT 😂",
-      "appealText": "C'est pas moi, c'est mon petit frère. Il a neuf ans, il sait même pas lire le chat, et il confond la télé avec mon clavier.",
+      "contexte": "Première vision d'une série · 900 spectateurs · épisode 3",
+      "chatMessage": "mdrrr attends tu sais pas ? le père il était mort depuis le début 😂😂😂",
+      "appealText": "C'est mon petit frère. Il a neuf ans, il a pris mon téléphone pendant que je faisais cuire des pâtes, et il tape là où ça fait mal. Moi je regardais la casserole.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "le petit frère a encore frappé",
-        "onBan": "personne ne pleure un compte de trois heures"
+        "onBan": "neuf ans, dix ans de ban"
       }
     },
     {
@@ -49,12 +51,13 @@
       "username": "SardocheDuSel",
       "badges": ["sub_12m", "vip"],
       "banReason": "Troll",
-      "chatMessage": "ton gameplay c'est comme ta déco : ça donne envie de partir",
-      "appealText": "C'est mon personnage. Les gens viennent pour le sel, et toi tu me remercies même pas de remplir la salle ?",
+      "contexte": "Just Chatting · 1 200 spectateurs · ça fait deux heures",
+      "chatMessage": "franchement ton gameplay c'est comme ta déco : on a envie de sortir",
+      "appealText": "C'est mon personnage. Les gens viennent pour le sel, le streamer me le rend bien en direct, et le chat adore. Je ne vois toujours pas où est le mal.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "le sel a gagné, encore",
-        "onBan": "on respire enfin"
+        "onDeban": "le sel a gagné, comme d'habitude",
+        "onBan": "on respire enfin dans ce chat"
       }
     },
     {
@@ -62,12 +65,13 @@
       "username": "KikiLaTornade",
       "badges": ["prime"],
       "banReason": "Spam majuscules",
-      "chatMessage": "GGGGGGGGGGGG WESH LE HYPE TRAIN",
-      "appealText": "C'était le train de hype ! Tout le monde criait dans le chat, j'ai juste crié plus fort que les autres pendant huit secondes.",
+      "contexte": "Hype train en cours · 5 100 spectateurs · huit secondes",
+      "chatMessage": "GGGGGGGGGGGGGG WESH LE HYPE TRAIN",
+      "appealText": "C'était le train de hype. Huit secondes, tout le monde criait dans le chat, j'ai juste crié plus fort que les autres. On ne bannit pas quelqu'un pour avoir été content.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "G.",
-        "onBan": "ban pour avoir été content, belle époque"
+        "onBan": "banni pour avoir été content"
       }
     },
     {
@@ -75,12 +79,13 @@
       "username": "MaitreYodaDu321",
       "badges": ["mod"],
       "banReason": "Backseat agressif",
-      "chatMessage": "arrête de backpedal j'ai raison je suis modo depuis 2019",
-      "appealText": "Je connais la méta mieux que lui. Un modo qui laisse couler une erreur, c'est un modo qui trahit sa propre chaîne.",
+      "contexte": "Speedrun · 2 800 spectateurs · septième essai de la journée",
+      "chatMessage": "arrête de back j'ai raison je suis modo ici depuis 2019",
+      "appealText": "Je connais la route mieux que lui, c'est pour ça qu'on m'a nommé modo. Je le lui ai répété sur les sept essais de la journée, et je le répéterai : un modo qui laisse couler une erreur trahit la chaîne qu'il sert.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "la modération a encore gagné",
-        "onBan": "le marteau a frappé la bonne tête"
+        "onDeban": "la modération a encore le dernier mot",
+        "onBan": "le marteau est tombé du bon côté"
       }
     },
     {
@@ -88,8 +93,9 @@
       "username": "LoulouDesCrepes",
       "badges": ["new_account"],
       "banReason": "Lien louche",
-      "chatMessage": "skins gratos ici les gars -> crepes-officiel[.]fr",
-      "appealText": "C'est mon blog de crêpes au sarrasin. J'ai jamais eu un seul visiteur et vous me faites passer pour un voleur de comptes.",
+      "contexte": "Début de stream · 400 spectateurs · premier message du compte",
+      "chatMessage": "les gars skins gratos ici -> crepes-officiel[.]fr",
+      "appealText": "C'est mon blog de crêpes au sarrasin. J'ai zéro visiteur depuis trois ans, une recette de galette et un hébergement gratuit. Vous me prenez pour un voleur de comptes.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "même les crêpes sont suspectes maintenant",
@@ -101,11 +107,12 @@
       "username": "Nath_Le_Retour",
       "badges": ["sub_12m"],
       "banReason": "Troll",
+      "contexte": "Ouverture du live · 1 800 spectateurs · le stream vient de lancer",
       "chatMessage": "first",
-      "appealText": "Je mets « first » sur chaque live depuis quatre ans. Ce n'est pas du troll, c'est du folklore, et le streamer me reconnaît à ça.",
+      "appealText": "Je mets « first » sur chaque live depuis quatre ans. Ce n'est pas du troll, c'est le folklore de la chaîne, et le streamer me salue par mon prénom quand il me voit arriver.",
       "verdictAttendu": "deban",
       "chatReaction": {
-        "onDeban": "FIRST (au deuxième degré)",
+        "onDeban": "FIRST (mais deuxième)",
         "onBan": "quatre ans de tradition rayés d'un coup"
       }
     },
@@ -114,12 +121,13 @@
       "username": "GrosseTension42",
       "badges": [],
       "banReason": "Spam majuscules",
-      "chatMessage": "RENDS LE DON RENDS LE DON RENDS LE DON RENDS LE DON",
-      "appealText": "Il a pris cinquante balles et il a fait une manche à zéro. Moi j'appelle ça du vol avec portefeuille, et je l'ai écrit en majuscules pour qu'on me lise.",
+      "contexte": "Partie perdue · 2 100 spectateurs · onze messages à la suite",
+      "chatMessage": "RENDS LE DON ESPÈCE DE VOLEUR RENDS LE DON RENDS LE DON RENDS LE DON",
+      "appealText": "Il a pris cinquante euros, il a fait une manche à zéro, et il a coupé son micro quand j'ai demandé où ils étaient passés. Moi j'appelle ça du vol avec portefeuille, et je l'écris en majuscules pour qu'on me lise.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "les cinquante balles restent parties",
-        "onBan": "le don ne sert pas de bouclier"
+        "onDeban": "les cinquante euros restent partis",
+        "onBan": "un don ne donne pas tous les droits"
       }
     },
     {
@@ -127,12 +135,13 @@
       "username": "PrincesseChadou",
       "badges": ["vip", "prime"],
       "banReason": "Backseat agressif",
+      "contexte": "Match de rank · 900 spectateurs · dernière manche",
       "chatMessage": "PRENDS LE SNIPER",
-      "appealText": "Un seul message, quatre mots, zéro insulte. On appelle ça un conseil tactique, pas une agression.",
+      "appealText": "Quatre mots. Un seul message. Zéro insulte, zéro majuscule appuyée trois fois. Il a pris le sniper deux secondes plus tard et il a gagné la manche. On appelle ça un conseil tactique.",
       "verdictAttendu": "deban",
       "chatReaction": {
-        "onDeban": "quatre mots, aucun mort",
-        "onBan": "même un conseil coûte un ban ici"
+        "onDeban": "quatre mots, zéro mort",
+        "onBan": "même un bon conseil coûte un ban ici"
       }
     },
     {
@@ -140,8 +149,9 @@
       "username": "TontonRickRoll",
       "badges": ["sub_12m"],
       "banReason": "Spoil de fin",
+      "contexte": "Soirée cinéma · 1 100 spectateurs · le générique n'a pas encore défilé",
       "chatMessage": "alors : elle meurt à la fin. voilà. bisous",
-      "appealText": "Techniquement je n'ai rien spoilé du tout : c'est une série où tout le monde meurt, tout le monde le sait, et je l'ai dit avec des bisous.",
+      "appealText": "Techniquement je n'ai rien gâché du tout. Dans cette série tout le monde meurt, c'est même le concept, et je l'ai écrit avec des bisous pour que ça passe mieux.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "les bisous n'effacent pas la fin",
@@ -153,8 +163,9 @@
       "username": "Biscuit_Sale",
       "badges": ["new_account"],
       "banReason": "Troll",
-      "chatMessage": "ta maman elle joue mieux que toi et elle est même pas là",
-      "appealText": "Première fois que je viens et direct un ban ? Pour une blague de cour de récré ? J'ai même pas insulté le jeu.",
+      "contexte": "Jeu de cuisine · 600 spectateurs · première venue du compte",
+      "chatMessage": "ta mère elle joue mieux que toi et elle est même pas là",
+      "appealText": "C'était ma première fois sur le stream et je voulais faire le malin devant les copains qui regardaient avec moi. Je savais pas que ça partait en ban direct, promis je recommence pas.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "la cour de récré a gagné",
@@ -166,12 +177,13 @@
       "username": "Lilou_Prime",
       "badges": ["prime"],
       "banReason": "Lien louche",
-      "chatMessage": "venez farm des points ici => cl1ck-grat1s[.]top",
-      "appealText": "Je voulais seulement aider les gens à avoir des cadeaux. Je n'ai rien pris à personne, j'ai juste partagé le bon plan.",
+      "contexte": "Just Chatting · 1 500 spectateurs · trois liens en deux minutes",
+      "chatMessage": "venez farm des points gratuits => cl1ck-grat1s[.]top",
+      "appealText": "Je voulais juste aider les gens à avoir des cadeaux. Je n'ai rien pris à personne, j'ai partagé un bon plan, et je l'ai reposté trois fois pour que tout le monde le voie.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "le bon plan menait vers un formulaire",
-        "onBan": "les bons plans ne demandent jamais le mot de passe"
+        "onBan": "un bon plan ne demande jamais ton mot de passe"
       }
     },
     {
@@ -179,11 +191,12 @@
       "username": "KevDuMarteau",
       "badges": ["sub_12m", "mod"],
       "banReason": "Backseat agressif",
+      "contexte": "Donjon difficile · 3 000 spectateurs · troisième fois de la semaine",
       "chatMessage": "JE TE DIS DE RECULEEEER",
-      "appealText": "D'accord, j'ai crié. Mais c'est la troisième fois qu'on me le demande, il allait mourir, et mon job de modo c'est d'empêcher ça.",
+      "appealText": "D'accord, j'ai crié. Mais c'est la troisième fois de la semaine qu'on me le demande, il allait mourir devant tout le monde, et mon rôle de modo c'est d'empêcher ça — même en criant.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "le modo a encore le dernier mot",
+        "onDeban": "le modo garde le dernier mot",
         "onBan": "un modo qui crie n'est plus un modo"
       }
     },
@@ -192,11 +205,12 @@
       "username": "FanDePandas",
       "badges": ["sub_12m"],
       "banReason": "Spam majuscules",
+      "contexte": "Décompte de dons · 700 spectateurs · un message par minute",
       "chatMessage": "PANDAS PANDAS PANDAS PANDAS PANDAS PANDAS PANDAS",
-      "appealText": "Un message par minute pendant quarante minutes, à cause du décompte des dons. C'est de l'enthousiasme mal cadré, pas de la méchanceté.",
+      "appealText": "Un message par minute pendant quarante minutes, pour faire monter le décompte des dons. C'était de l'enthousiasme mal cadré, je le reconnais, mais il n'y avait de la méchanceté dans aucun des quarante.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "quarante minutes de pandas, pardonné",
+        "onDeban": "quarante minutes de pandas, pardonnées",
         "onBan": "les pandas ont besoin de modération eux aussi"
       }
     },
@@ -205,8 +219,9 @@
       "username": "Chaussette_Off",
       "badges": ["vip"],
       "banReason": "Troll",
+      "contexte": "Temps mort · 500 spectateurs · quatre minutes sans un message",
       "chatMessage": "on s'ennuie",
-      "appealText": "C'est vrai, non ? Personne n'a rien écrit pendant quatre minutes, je l'ai dit pour tout le monde, à voix haute, gratuitement.",
+      "appealText": "Trois mots. Personne n'avait rien écrit depuis quatre minutes, je l'ai dit à voix haute et gratuitement pour tout le monde. C'est un service public.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "il a dit tout haut ce qu'on pensait tout bas",
@@ -218,12 +233,13 @@
       "username": "MomoLeCurieux",
       "badges": ["new_account"],
       "banReason": "Spoil de fin",
-      "chatMessage": "moi je l'ai déjà vue cette série et franchement la saison 3 est nulle",
-      "appealText": "J'ai spoilé une saison qu'on ne regarde même pas en direct. Où est la victime ? Où est le corps ?",
+      "contexte": "Soirée série · 2 400 spectateurs · saison 1, épisode 2",
+      "chatMessage": "moi j'ai déjà vu la série et franchement la saison 3 est nulle",
+      "appealText": "J'ai parlé d'une saison qu'on ne regarde pas ce soir, qu'on ne regardera pas avant six semaines. Où est la victime ? Où est le corps ?",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "la saison 3 n'a toujours pas de défenseur",
-        "onBan": "le spoil n'a pas besoin de victime pour exister"
+        "onBan": "un spoileur n'a pas besoin de victime"
       }
     },
     {
@@ -231,8 +247,9 @@
       "username": "ChefGordonRage",
       "badges": [],
       "banReason": "Backseat agressif",
-      "chatMessage": "T'AS BRÛLÉ LE RIZ ENCORE UNE FOIS ESPÈCE DE",
-      "appealText": "Le riz était calciné. Quelqu'un devait le dire, je l'ai dit fort, et j'ai arrêté ma phrase avant le mot.",
+      "contexte": "Stream cuisine · 1 300 spectateurs · le riz est sur le feu",
+      "chatMessage": "T'AS BRÛLÉ LE RIZ ENCORE UNE FOIS ESPÈCE DE PAIN BRÛLÉ",
+      "appealText": "Le riz était noir, noir. Quelqu'un devait le dire, je l'ai dit fort, et je me suis arrêté avant le mot qui fâche. C'est ça, ma défense : j'ai vu le crime, j'ai crié.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "le riz était effectivement calciné",
@@ -244,11 +261,12 @@
       "username": "TataSimone63",
       "badges": ["prime"],
       "banReason": "Lien louche",
+      "contexte": "Just Chatting · 800 spectateurs · Tata Simone découvre le chat",
       "chatMessage": "regardez ce que j'ai trouvé : https://pas-un-piege.gouv.fr-connexion.xyz/login",
-      "appealText": "Le site avait un cadenas vert, madame. Un cadenas VERT. Ça veut dire que c'est sécurisé, mon petit-fils me l'a expliqué.",
+      "appealText": "Il y avait un cadenas vert, madame. Un cadenas VERT. Mon petit-fils m'a expliqué que ça veut dire que c'est sécurisé, alors je l'ai envoyé à tout le monde pour rendre service.",
       "verdictAttendu": "ban",
       "chatReaction": {
-        "onDeban": "même Tata Simone sait poster des liens",
+        "onDeban": "Tata Simone distribue des liens maintenant",
         "onBan": "le cadenas vert ne veut rien dire, Tata"
       }
     },
@@ -257,8 +275,9 @@
       "username": "LeRoiDuCanap",
       "badges": ["sub_12m"],
       "banReason": "Troll",
+      "contexte": "Fin de soirée · 1 000 spectateurs · ça fait cinq heures",
       "chatMessage": "je regarde depuis le canapé et je juge",
-      "appealText": "Ma chaîne préférée, mon canapé, et une opinion. C'est le contrat de base du live, signé en 2021.",
+      "appealText": "Ma chaîne préférée, mon canapé, une opinion. C'est le contrat de base du live, signé en 2021 et jamais renégocié depuis.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "le canapé rend son verdict",
@@ -270,8 +289,9 @@
       "username": "SebEnColere",
       "badges": [],
       "banReason": "Spam majuscules",
+      "contexte": "Session questions · 1 600 spectateurs · quinze messages en trois minutes",
       "chatMessage": "POURQUOI TU COUPES LE MIC ? POURQUOI TU COUPES LE MIC ? POURQUOI TU COUPES LE MIC ?",
-      "appealText": "J'ai cru qu'on m'avait volé ma question. Je l'ai reposée quinze fois, poliment, en criant très fort pour couvrir le bruit du jeu.",
+      "appealText": "J'ai cru qu'on m'avait volé ma question. Je l'ai reposée quinze fois en trois minutes, poliment, en criant très fort pour couvrir le bruit du jeu.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "la question a enfin été posée",
@@ -283,8 +303,9 @@
       "username": "PixelDeLune",
       "badges": ["mod", "sub_12m"],
       "banReason": "Backseat agressif",
+      "contexte": "Choix de composition · 2 200 spectateurs · le streamer hésite",
       "chatMessage": "non. non. non. non. non.",
-      "appealText": "Cinq messages de deux lettres, aucun n'est une insulte, aucun n'est en majuscules. Techniquement, c'est irréprochable.",
+      "appealText": "Cinq messages de deux lettres. Aucune insulte, aucune majuscule, aucun mot plus gros que l'autre. Techniquement, c'est irréprochable — et c'est aussi mon avis.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "le désaccord minimaliste a survécu",
@@ -296,8 +317,9 @@
       "username": "GraineDeTournesol",
       "badges": ["new_account"],
       "banReason": "Spoil de fin",
+      "contexte": "Soirée série · 3 100 spectateurs · première vision, épisode 1",
       "chatMessage": "le méchant c'est le chat depuis le début lol",
-      "appealText": "Le chat ? Vraiment ? J'ai spoilé une blague vieille de trois saisons, le deuil est fait, les gens sont passés à autre chose.",
+      "appealText": "Le chat ? Franchement ? C'est une blague vieille de trois saisons, le deuil est fait, tout le monde est passé à autre chose.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "le chat accusé à tort",
@@ -309,8 +331,9 @@
       "username": "VieuxBison",
       "badges": ["sub_12m", "vip"],
       "banReason": "Troll",
+      "contexte": "Coupure pub · 1 400 spectateurs · quatre-vingt-dix secondes d'attente",
       "chatMessage": "je suis là pour la pub et je repars",
-      "appealText": "Je regarde depuis six ans, je paie mon abonnement tous les mois, je crois que j'ai le droit de râler sur les coupures publicitaires.",
+      "appealText": "Je regarde depuis six ans, je paie mon abonnement tous les mois, j'ai bien le droit de râler quatre-vingt-dix secondes sur les coupures publicitaires.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "le bison rumine en paix",
@@ -322,12 +345,13 @@
       "username": "NiniLaFoudre",
       "badges": ["prime"],
       "banReason": "Backseat agressif",
+      "contexte": "Boss de fin · 4 000 spectateurs · il reste 3 % de vie",
       "chatMessage": "UTILISE LE SORT UTILISE LE SORT UTILISE LE SORT",
-      "appealText": "Il avait le sort. Il ne l'a pas utilisé. J'ai perdu quinze ans de vie en direct, et je n'ai insulté absolument personne.",
+      "appealText": "Il avait le sort. Il ne l'a pas utilisé. J'ai perdu quinze ans de vie en direct et je n'ai insulté absolument personne — j'ai juste crié un bouton.",
       "verdictAttendu": "deban",
       "chatReaction": {
-        "onDeban": "les quinze ans de vie ne sont pas remboursés quand même",
-        "onBan": "crier un sort, c'est encore backseat"
+        "onDeban": "les quinze ans de vie ne sont pas remboursés",
+        "onBan": "crier un sort, c'est encore du backseat"
       }
     },
     {
@@ -335,8 +359,9 @@
       "username": "ClicDroitDansLeMur",
       "badges": ["new_account"],
       "banReason": "Lien louche",
+      "contexte": "Jeu en ligne · 1 900 spectateurs · premier message du compte",
       "chatMessage": "FREE V-BUCKS ➡️➡️➡️ tinyurl[.]com/mes-cadeaux",
-      "appealText": "Je suis nouveau, je pensais que c'était un cadeau de la chaîne vu que tout le monde en parlait dans le chat.",
+      "appealText": "Je suis nouveau, j'ai cru que c'était un cadeau de la chaîne vu que tout le monde en parlait dans le chat. J'ai cliqué dessus moi-même, d'ailleurs, et ça a l'air sérieux.",
       "verdictAttendu": "ban",
       "chatReaction": {
         "onDeban": "les V-Bucks imaginaires font des dégâts réels",
@@ -348,8 +373,9 @@
       "username": "MamanOurse",
       "badges": ["sub_12m"],
       "banReason": "Spam majuscules",
+      "contexte": "Live d'anniversaire · 2 600 spectateurs · douze bougies à souffler",
       "chatMessage": "BON ANNIVERSAIRE !! 🎉 BON ANNIVERSAIRE !! 🎉 BON ANNIVERSAIRE !! 🎉",
-      "appealText": "Douze messages pour les douze ans de sa fille, dans le live d'anniversaire. Je ne regrette rien et je recommence l'année prochaine.",
+      "appealText": "Douze messages pour les douze ans de sa fille, un par bougie, dans le live d'anniversaire. Je ne regrette rien et je recommence l'année prochaine.",
       "verdictAttendu": "deban",
       "chatReaction": {
         "onDeban": "joyeux anniversaire la petite 🎂",

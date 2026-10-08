@@ -110,3 +110,42 @@ chantiers suivants ; les autres sont les gros morceaux, dans l'ordre où ils ont
   `src/data/pull-rates.json`, la progression dans `src/data/progression.json`,
   l'arène dans `src/data/arena.json`, et les tests vérifient que le code dit la
   même chose que ces fichiers.
+
+## 11.60 — Le Tribunal : les dossiers prennent enfin la parole
+
+**Demande du joueur** : les boutons répondaient (11.59), mais « les textes ne
+veulent rien dire ». Et à la question « tu veux que le dossier aide à décider ? »,
+réponse : **« Non : on doit deviner au feeling. »**
+
+**Ce qui clochait.** Les dossiers étaient écrits comme des libellés de formulaire
+: un pseudo, un motif sec, une phrase. On lisait ça comme une ligne d'historique
+de modération — une voix d'outil, pas la voix d'un live. Aucune scène, aucun
+moment : impossible d'imaginer *quand* c'est arrivé ni ce que ça faisait dans le
+chat à ce moment-là. Du coup, toutes les décisions se valaient, et juger
+revenait à pile ou face avec des mots autour.
+
+**Ce que j'ai fait** — les 26 dossiers ont été réécrits comme des scènes de live
+et non comme des fiches :
+
+- **un décor, `contexte`** : ce sur quoi le stream tournait, pour combien de
+  monde, à quel moment (« Partie classée · 3 400 spectateurs · plus que deux
+  joueurs, cinquième manche »). Nouveau champ, ajouté au type `Dossier` et
+  **affiché** dans le ticket, en gris, juste sous le motif ;
+- **un message qu'on entend** : les citations sonnent comme du chat réel — « tu
+  recules ENCORE », « merci pour le spoil mec trop cool », « j'ai un lien pour
+  les drops » — et non comme un résumé ;
+- **un plaidoyer qui se défend** : l'accusé plaide, parfois honnêtement, parfois
+  en se racontant des histoires.
+
+Ce que je n'ai **pas** fait, volontairement : aucun dossier ne porte de phrase
+d'intention (« aucune insulte, casier vide ») et les badges ne sont pas devenus
+des indices. Le joueur a tranché : **on doit deviner au feeling**. Le doute fait
+le sel du mode — un joueur trop sûr de lui cesse de lire, et le mode se vide de
+son sel. Le décor éclaire la scène ; il ne dit pas quoi répondre.
+
+**Suites vertes** : `npm test` 1070 ✅, `npm run ecrans` 62 ✅ (54 captures, dont
+`50-*` et `51-*`), `typecheck`, `eslint` et `check-jargon` muets.
+
+**Corollaire** : les identifiants et les verdicts attendus n'ont pas bougé, donc
+la vérité serveur (`0042_tribunal.sql`, à coller par le joueur) reste alignée
+avec le fichier — c'est d'ailleurs un test qui le garantit.
