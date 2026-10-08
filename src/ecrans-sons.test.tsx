@@ -7,6 +7,7 @@
  * choix soit **gardé** — c'est un réglage qu'on cherche une fois parce qu'un son
  * dérange, pas à chaque lancement.
  */
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 
@@ -67,6 +68,49 @@ describe("le réglage du son", () => {
     expect(chips().find((chip) => chip.getAttribute("aria-pressed") === "true")?.textContent).toBe(
       "Fort",
     );
+  });
+
+  it("ne joue rien quand on se déplace : onglets et réglages sont muets", async () => {
+    await ecranToi();
+    // Les bruitages sont chargés (le banc les fait jouer pour de vrai) : ce qui
+    // suit compte des sons **réellement** déclenchés, pas des intentions.
+    await act(async () => {});
+    const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
+      .__sons;
+    const avant = sons.oscillateurs + sons.bruitages;
+
+    // Un tour complet des onglets, dans les deux sens.
+    for (const onglet of ["Drop", "Binder", "Craft", "Toi", "Drop", "Toi"]) banc.appuyer(onglet);
+    // Puis les portes de l'écran Toi : le compte, les taux, les objectifs, le
+    // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
+    // d'écran, toutes muettes.
+    for (const porte of ["Mon compte", "Taux de drop", "Thème du classeur"]) {
+      banc.appuyer(porte);
+      // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.
+      banc.appuyerNom("Fermer");
+    }
+    banc.appuyer("Objectifs et saisons");
+
+    expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
+  });
+
+  it("et le compteur fonctionne : acheter un booster, ça sonne", async () => {
+    // Le contrôle qui donne sa valeur au test précédent : si le détecteur était
+    // muet, le silence passerait pour une réussite. Ouvrir un booster, lui, doit
+    // s'entendre (le pop du paquet, et la gamme de la première carte).
+    const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
+      .__sons;
+    const { CreatorDeckApp } = await import("@/components/creator-deck-app");
+    await banc.monter(<CreatorDeckApp />);
+    await act(async () => {});
+    const avant = sons.oscillateurs + sons.bruitages;
+
+    banc.appuyer("Ouvrir le booster");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_500);
+    });
+
+    expect(sons.oscillateurs + sons.bruitages, "le booster n'a rien joué").toBeGreaterThan(avant);
   });
 
   it("cache le volume quand le son est coupé", async () => {

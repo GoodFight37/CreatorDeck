@@ -32,7 +32,6 @@ import {
   SFX_LEVELS,
   getSfxLevel,
   isMuted,
-  playSelect,
   setMuted,
   setSfxLevel,
   type SfxLevel,
@@ -137,23 +136,21 @@ export function ProfileView({
     setTiltEnabled(next);
   }
 
+  /**
+   * Les réglages sont **muets** (8 octobre 2026 : « enlève le son quand on
+   * clique sur des onglets ou des paramètres »). C'est d'ailleurs le seul
+   * endroit où un son de réglage était franchement gênant : on y vient
+   * justement parce qu'un son dérange.
+   */
   function toggleSound() {
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
-    // À l'activation, une **sélection courte** : l'utilisateur entend ce qu'il
-    // vient de rallumer, au volume qu'il a réglé. Pas un carillon de
-    // récompense — il n'a rien gagné, il a touché un interrupteur. (Et rien
-    // quand il coupe : c'est le principe.)
-    if (next) playSelect();
   }
 
   function choisirVolume(cran: SfxLevel) {
     setSoundLevel(cran);
     setSfxLevel(cran);
-    // Le son qui répond est **celui du réglage** : court, et joué au nouveau
-    // cran, donc le joueur entend exactement ce qu'il vient de choisir.
-    playSelect();
   }
 
   async function handleReset() {

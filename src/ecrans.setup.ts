@@ -71,10 +71,41 @@ window.scrollTo ??= (() => {}) as typeof window.scrollTo;
 Element.prototype.scrollIntoView ??= () => {};
 navigator.vibrate ??= () => true;
 
+/**
+ * **Les sons, comptés.** Le banc ne se contente pas de survivre à l'audio : il
+ * l'instrumente. Chaque oscillateur et chaque bruitage joué incrémente un
+ * compteur, et les tests s'en servent pour **prouver** qu'un écran est muet —
+ * « la navigation ne sonne pas » est une phrase qu'on peut vérifier, pas une
+ * intention.
+ *
+ * Pour que les bruitages jouent vraiment (et pas seulement la synthèse), le
+ * `fetch` des .wav rend un petit tampon factice et `decodeAudioData` le
+ * décode : sans ça, `playSample` sortait en silence dans les tests, et le
+ * compteur n'aurait compté que la moitié du son.
+ */
+export const sonsJoues = { oscillateurs: 0, bruitages: 0 };
+
+(globalThis as unknown as { __sons?: typeof sonsJoues }).__sons = sonsJoues;
+
+const fetchDuBanc = globalThis.fetch;
+globalThis.fetch = (async (entree: RequestInfo | URL, init?: RequestInit) => {
+  const url = typeof entree === "string" ? entree : entree instanceof URL ? entree.href : entree.url;
+  if (url.includes("/sfx/")) {
+    // Un WAV minuscule : seuls `ok` et `arrayBuffer()` sont lus par le moteur.
+    return {
+      ok: true,
+      arrayBuffer: async () => new ArrayBuffer(64),
+    } as unknown as Response;
+  }
+  if (fetchDuBanc) return fetchDuBanc(entree, init);
+  throw new Error("le banc n'a pas de réseau");
+}) as typeof fetch;
+
 window.AudioContext ??= class {
   state = "running";
   currentTime = 0;
   createOscillator() {
+    sonsJoues.oscillateurs += 1;
     return {
       // `AudioNode.connect()` renvoie la destination : le moteur enchaîne
       // `.connect(gain).connect(ctx.destination)`.
@@ -89,6 +120,13 @@ window.AudioContext ??= class {
   }
   createGain() {
     return { connect: (cible: unknown) => cible, gain: { value: 0, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} } };
+  }
+  createBufferSource() {
+    sonsJoues.bruitages += 1;
+    return { buffer: null, connect: (cible: unknown) => cible, start: () => {}, stop: () => {} };
+  }
+  decodeAudioData() {
+    return Promise.resolve({ duration: 0.2, length: 4 } as unknown as AudioBuffer);
   }
   destination = {};
   resume() {

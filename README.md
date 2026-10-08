@@ -159,7 +159,7 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **neuf fichiers** (39 tests, 38 captures) : le
+  écran a bougé. Il tourne dans **neuf fichiers** (41 tests, 38 captures) : le
   carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
   **réglage du son**, **les mille cartes** (ce que le DOM porte vraiment) et
   **les effets de rareté**. Il tournait dans la CI de l'APK, à côté

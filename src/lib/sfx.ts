@@ -2,12 +2,14 @@
  * Sons de l'application : **des bruitages embarqués, doublés d'un fond
  * synthétisé**.
  *
- * **1. Un son par geste, et le son dit le geste.** Un clic d'onglet clique, une
- * page se tourne, un paquet s'ouvre, une récompense carillonne. Rien d'autre :
- * pas de fanfare sur un interrupteur, pas de froissement de cartes sur un filtre
- * (c'était le cas jusqu'au 8 octobre 2026 — le joueur l'a entendu tout de
- * suite). Les bruitages en réserve, que plus aucun écran ne joue, sont groupés
- * en fin de fichier.
+ * **1. Un son par geste, et le son dit le geste — et se déplacer ne sonne pas.**
+ * On n'entend donc **rien** en changeant d'onglet, en ouvrant une feuille, en
+ * touchant un interrupteur ou en réglant le volume (décision du joueur, 8
+ * octobre 2026 : « enlève le son quand on clique sur des onglets ou des
+ * paramètres »). Ce qui sonne, c'est ce qu'on **fait** : ouvrir un booster, une
+ * carte qui se révèle, une récompense qui tombe, une page qu'on tourne, un
+ * refus. Les bruitages en réserve, que plus aucun écran ne joue, sont groupés en
+ * fin de fichier.
  *
  * **2. Les quinze bruitages sont mesurés, pas réglés à la main.** Ils viennent
  * de six dossiers d'un même pack et sont livrés à leur maximum : joués avec un
@@ -257,23 +259,22 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
 
 /**
  * Les bruitages qu'on entend **tout le temps**, chargés à l'ouverture de
- * l'application : retourner une carte, feuilleter, cliquer, ouvrir une feuille,
- * encaisser. Au premier appui, le son est déjà en mémoire — un premier
- * retournement silencieux se remarque tout de suite.
+ * l'application : retourner une carte, feuilleter, encaisser, refuser. Au
+ * premier appui, le son est déjà en mémoire — un premier retournement silencieux
+ * se remarque tout de suite.
  *
- * Les autres (`card-fan`, `equip`, `power-up`, `gather`, `fanfare`) ne sont plus
- * préchargés : plus aucun écran ne les joue depuis le 8 octobre 2026. Ils
- * restent dans le catalogue et dans `public/sfx/`, réglés comme les autres, au
- * cas où un écran revienne les chercher.
+ * Les autres ne sont pas préchargés, parce que plus aucun écran ne les joue :
+ * `click` et `menu-open` depuis que la navigation et les réglages sont muets
+ * (8 octobre 2026), et `card-fan`, `equip`, `power-up`, `gather`, `fanfare`
+ * depuis le retrait de la simulation de streameur. Ils restent dans le
+ * catalogue, réglés comme les autres, au cas où un écran les redemande.
  */
 export const SFX_USUELS: SampleName[] = [
   "card-draw",
   "card-turn",
-  "click",
   "select",
   "pop",
   "close",
-  "menu-open",
   "chip-place",
   "coins",
   "chime",
@@ -554,29 +555,20 @@ export function playRefuse(): void {
 // être court, feutré, et **toujours le même**.
 //
 // C'est ici que se lit la règle de correspondance : **un geste, un son — celui
-// qui dit le geste**. Un filtre qu'on change est un filtre (le clic court), pas
-// un paquet de cartes qu'on étale ; l'interrupteur du son confirme qu'il a
-// basculé (une sélection), il ne fait pas sonner une récompense.
+// qui dit le geste**.
+//
+// Et une règle plus importante encore, écrite après une remarque du joueur
+// (8 octobre 2026 : « enlève le son quand on clique sur des onglets ou des
+// paramètres ») : **se déplacer ne sonne pas**. Changer d'onglet, ouvrir une
+// feuille, toucher un interrupteur, régler le volume : rien. Le son accompagne
+// ce qu'on **fait** — ouvrir un booster, encaisser, feuilleter, refuser — pas
+// où l'on va. Les trois fonctions de déplacement (`playClick`, `playMenuOpen`,
+// `playMenuClose`) sont donc descendues en réserve, avec leurs bruitages.
 // ---------------------------------------------------------------------------
 
-/** Un clic feutré : onglet, bouton, ligne de réglage. */
-export function playClick(): void {
-  playSample("click");
-}
-
-/** Une sélection qui compte (choisir une carte, valider un invité). */
+/** Une sélection qui compte (un filtre du Binder qu'on change). */
 export function playSelect(): void {
   playSample("select");
-}
-
-/** Une feuille s'ouvre. */
-export function playMenuOpen(): void {
-  playSample("menu-open");
-}
-
-/** Une feuille se referme. */
-export function playMenuClose(): void {
-  playSample("close");
 }
 
 /** On tourne une page : feuilleter le Binder (du carton, pas du papier). */
@@ -590,12 +582,33 @@ export function playCoins(): void {
 }
 
 // ---------------------------------------------------------------------------
-// En réserve. Ces bruitages ont été choisis pour la simulation de streameur,
-// retirée de l'application le 8 octobre 2026 : plus aucun écran ne les joue.
+// En réserve. Plus **aucun** écran ne joue ces bruitages :
+//
+//  * `click`, `menu-open`, `close` (via `playClick`, `playMenuOpen`,
+//    `playMenuClose`) : la navigation et les réglages sont muets depuis le
+//    8 octobre 2026 — décision du joueur, et elle vaut pour tous les écrans ;
+//  * `card-fan`, `equip`, `power-up`, `gather`, `fanfare` : ils servaient à la
+//    simulation de streameur, retirée le même jour.
+//
 // Ils restent ici, réglés comme les autres, parce que **les fichiers sont
 // restés dans `public/sfx/`** : le jour où un écran les redemande, il n'y a
 // qu'un appel à remettre, rien à rebrancher.
 // ---------------------------------------------------------------------------
+
+/** Un clic feutré — l'ancien son des onglets et des lignes de réglage. */
+export function playClick(): void {
+  playSample("click");
+}
+
+/** Une feuille s'ouvre — plus joué : se déplacer ne sonne pas. */
+export function playMenuOpen(): void {
+  playSample("menu-open");
+}
+
+/** Une feuille se referme — plus joué : se déplacer ne sonne pas. */
+export function playMenuClose(): void {
+  playSample("close");
+}
 
 /** On fait glisser une poignée de cartes. */
 export function playCardFan(): void {

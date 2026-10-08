@@ -227,9 +227,19 @@ describe("les bruitages embarqués", () => {
 
   it("précharge ce qu'on entend tout le temps, et rien de plus", () => {
     for (const nom of SFX_USUELS) expect(noms).toContain(nom);
-    // Les bruitages en réserve (la simulation de streameur) ne sont pas chargés
-    // au démarrage : plus aucun écran ne les joue. Ils restent au catalogue.
-    for (const reserve of ["equip", "power-up", "fanfare", "gather", "card-fan"] as const) {
+    // Rien n'est préchargé pour un son que personne n'entend. La liste des
+    // « en réserve » a deux origines : les déplacements (`click`, `menu-open` —
+    // la navigation et les réglages sont muets depuis le 8 octobre 2026) et la
+    // simulation de streameur, retirée le même jour.
+    for (const reserve of [
+      "click",
+      "menu-open",
+      "equip",
+      "power-up",
+      "fanfare",
+      "gather",
+      "card-fan",
+    ] as const) {
       expect(noms, `${reserve} doit rester au catalogue`).toContain(reserve);
       expect(SFX_USUELS, `${reserve} n'a rien à faire au préchargement`).not.toContain(reserve);
     }

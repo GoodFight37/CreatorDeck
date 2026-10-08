@@ -19,12 +19,12 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 |---|---|---|
 | `card-draw.wav` | `Card and Board/card_draw_1` | une carte se retourne (révélation), un paquet se déchire |
 | `card-fan.wav` | `Card and Board/card_fan` | *en réserve* : faisait glisser une poignée de cartes |
-| `card-turn.wav` | `Card and Board/card_fan_2` | une page du Binder se tourne |
+| `card-turn.wav` | `Card and Board/card_fan_2` | une page du Binder se tourne — **le seul son de déplacement qui reste**, et il est voulu : on tourne un carton |
 | `chip-place.wav` | `Card and Board/chips_place_1` | une carte qui claque (le « bang » d'une Épique ou mieux) |
-| `click.wav` | `UI/click_double_on` | le clic feutré des onglets et des boutons |
+| `click.wav` | `UI/click_double_on` | *en réserve* : le clic feutré des onglets — **plus joué** (voir « Se déplacer ne sonne pas ») |
 | `select.wav` | `UI/select_1` | une sélection qui compte (un filtre du Binder, un cran de volume) |
-| `menu-open.wav` | `UI/toggle_on` | une feuille s'ouvre (un menu, un panneau) |
-| `close.wav` | `Items/book_close` | une feuille se ferme (et le refus d'une carte) |
+| `menu-open.wav` | `UI/toggle_on` | *en réserve* : une feuille s'ouvrait — **plus joué** |
+| `close.wav` | `Items/book_close` | le refus d'une carte (et, avant, la fermeture d'une feuille) |
 | `pop.wav` | `UI/pop_1` | le booster s'ouvre |
 | `coins.wav` | `Items/coin_jingle_small` | des pièces tombent (récompense de saison encaissée) |
 | `gather.wav` | `Items/coins_gather_quick` | *en réserve* : ramassait un lot de jetons d'un coup |
@@ -33,14 +33,42 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 | `chime.wav` | `Musical Effects/8_bit_chime_positive` | une récompense tombe (palier réclamé, créateur rejoint) |
 | `fanfare.wav` | `Musical Effects/brass_chime_positive` | *en réserve* : l'arrivée d'un raid |
 
-> **Cinq bruitages sont en réserve** (marqués ci-dessus) : ils ont été choisis
-> pour la simulation de streameur, **retirée de l'application le 8 octobre
-> 2026**. Ils restent dans `public/sfx/` et dans le catalogue — ils ne coûtent
-> rien (moins de 300 Ko à eux cinq), ils sont **réglés comme les autres**, et
-> les retirer obligerait à refaire l'inventaire du pack le jour où un écran les
-> redemanderait. Ce que la réserve change, c'est qu'ils ne sont **plus
-> préchargés** au démarrage (`SFX_USUELS`) : rien ne se télécharge pour un son
-> que personne n'entend.
+> **Sept bruitages sont en réserve** (marqués ci-dessus) : cinq ont été choisis
+> pour la simulation de streameur (**retirée de l'application le 8 octobre
+> 2026**), et deux — `click`, `menu-open` — ont été mis de côté quand la
+> navigation et les réglages sont devenus muets, le même jour. Ils restent dans
+> `public/sfx/` et dans le catalogue : ils ne coûtent rien (moins de 400 Ko à eux
+> sept), ils sont **réglés comme les autres**, et les retirer obligerait à refaire
+> l'inventaire du pack le jour où un écran les redemanderait. Ce que la réserve
+> change, c'est qu'ils ne sont **plus préchargés** au démarrage (`SFX_USUELS`) :
+> rien ne se télécharge pour un son que personne n'entend.
+
+## Se déplacer ne sonne pas (8 octobre 2026)
+
+Deuxième retour du joueur, sur les sons : « enlève le son quand on clique sur des
+onglets ou des paramètres ». La règle est maintenant nette, et elle vaut pour
+toute l'application :
+
+> **Le son accompagne ce qu'on fait, pas où l'on va.**
+
+Ce qui est **muet** : les quatre onglets de la barre du bas, toutes les portes qui
+mènent à un écran ou à une feuille (Objectifs, Atelier, Mon compte, Taux de drop,
+Thème du classeur), l'ouverture et la fermeture de **toutes** les feuilles,
+l'interrupteur *Son*, les trois crans de **Volume**, l'interrupteur *Reflets des
+cartes*, la ligne *Crédits*, et le carnet qui ouvre l'écran visé.
+
+Ce qui **sonne** encore, et seulement ça : ouvrir un booster (le geste de
+déchirure, puis le pop), une carte qui se révèle (le papier **plus** la gamme de
+sa rareté), le « bang » d'une Épique ou mieux, le refus d'une carte, une
+récompense encaissée (les pièces), une page du Binder qu'on tourne, et un filtre
+qu'on change.
+
+C'est vérifié **pour de vrai**, pas par intention : le banc d'écrans instrumente
+l'audio (chaque oscillateur et chaque bruitage joué passe par un compteur), et
+`src/ecrans-sons.test.tsx` parcourt les quatre onglets, ouvre et referme les trois
+feuilles de l'écran *Toi*, puis constate que **zéro son** a été déclenché — avec,
+juste après, un test de contrôle qui ouvre un booster et vérifie que le compteur,
+lui, bouge.
 
 ## Le volume : mesuré, pas réglé au doigt mouillé
 

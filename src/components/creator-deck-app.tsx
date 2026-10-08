@@ -42,10 +42,7 @@ import { readySteals } from "@/lib/last-pack";
 
 import {
   SFX_USUELS,
-  playClick,
   playCoins,
-  playMenuClose,
-  playMenuOpen,
   playPackOpening,
   playReward,
   preloadSamples,
@@ -183,23 +180,20 @@ export function CreatorDeckApp() {
   const [friendsTab, setFriendsTab] = useState<"friends" | "incoming" | "outgoing">("friends");
 
   /**
-   * Le son des feuilles : elles s'ouvrent et se referment toutes de la même
-   * façon, donc le geste est écrit **une fois**. Le bouton retour d'Android
-   * passe par les mêmes fonctions que le bouton « Fermer » : le son ne dépend
-   * pas de la façon dont on referme.
+   * Ouvrir et fermer une feuille : **muet**, et c'est une décision (8 octobre
+   * 2026 — « enlève le son quand on clique sur des onglets ou des paramètres »).
+   * Se déplacer ne sonne pas : ce qui sonne, c'est ce qu'on **fait** une fois
+   * arrivé (ouvrir un booster, encaisser une récompense).
+   *
+   * Les deux fonctions restent écrites une seule fois, et le bouton retour
+   * d'Android passe par les mêmes : peu importe comment on referme.
    */
   function ouvrirFeuille(set: (value: boolean) => void) {
-    return () => {
-      playMenuOpen();
-      set(true);
-    };
+    return () => set(true);
   }
 
   function fermerFeuille(set: (value: boolean) => void) {
-    return () => {
-      playMenuClose();
-      set(false);
-    };
+    return () => set(false);
   }
 
   /**
@@ -210,11 +204,9 @@ export function CreatorDeckApp() {
    * l'identifiant de la carte, ni le numéro de l'échange, et il n'en a pas
    * besoin — chaque famille n'a qu'un bon endroit dans le jeu.
    *
-   * Le son est celui d'une fermeture de feuille : on referme une feuille pour
-   * en ouvrir une autre, c'est le même geste.
+   * Muet : on se déplace d'un écran à un autre (voir `ouvrirFeuille`).
    */
   function ouvrirDepuisLeCarnet(target: InboxTarget, section?: string) {
-    playMenuClose();
     setNotificationsOpen(false);
     if (target === "classeur") {
       setTab("collection");
@@ -253,7 +245,6 @@ export function CreatorDeckApp() {
   useBackHandler(themeOpen, fermerFeuille(setThemeOpen));
   useBackHandler(Boolean(cloud.profile || cloud.profileBusy), () => cloudStore.closeProfile());
   useBackHandler(accountOpen, () => {
-    playMenuClose();
     setAccountOpen(false);
     setAccountFocus(null);
   });
@@ -520,14 +511,8 @@ export function CreatorDeckApp() {
             onOpen={() => void handleOpenPack()}
             onUseHourglass={handleUseHourglass}
             onShowOdds={ouvrirFeuille(setOddsOpen)}
-            onShowMissions={() => {
-              playClick();
-              setTab("missions");
-            }}
-            onShowAtelier={() => {
-              playClick();
-              setTab("atelier");
-            }}
+            onShowMissions={() => setTab("missions")}
+            onShowAtelier={() => setTab("atelier")}
             onShowArena={ouvrirFeuille(setArenaOpen)}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
@@ -559,10 +544,7 @@ export function CreatorDeckApp() {
             onNotice={showNotice}
             onError={showError}
             onShowOdds={ouvrirFeuille(setOddsOpen)}
-            onShowMissions={() => {
-              playClick();
-              setTab("missions");
-            }}
+            onShowMissions={() => setTab("missions")}
             onShowThemes={ouvrirFeuille(setThemeOpen)}
             onShowStudio={ouvrirFeuille(setStudioOpen)}
             onShowAccount={() => {
@@ -591,13 +573,9 @@ export function CreatorDeckApp() {
           <button
             key={item.id}
             className={tab === item.id ? "active" : ""}
-            onClick={() => {
-              // Le clic feutré des onglets : court, discret, et le même
-              // partout — c'est le son qu'on entend le plus, il ne doit pas
-              // fatiguer. (Changer d'onglet sans aller nulle part ne sonne pas.)
-              if (item.id !== tab) playClick();
-              setTab(item.id);
-            }}
+            // Changer d'onglet **ne sonne pas** : on se déplace (8 octobre
+            // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
+            onClick={() => setTab(item.id)}
             aria-current={tab === item.id ? "page" : undefined}
           >
             {item.icon}
