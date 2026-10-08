@@ -286,5 +286,17 @@
         "growthPermille": 250
       }
     ]
+  },
+  "guests": {
+    "note": "Les invités sur le bureau : deux cartes de la collection tiennent le plateau, et chacune paie un **raid** quand son créateur est **réellement en direct** — le même direct que le badge de l'accueil, avec dix minutes de fraîcheur, jamais une donnée périmée. Le raid se paie **une fois par journée de jeu**, au moment du relevé de la chaîne, et il ne coûte rien : ni jeton, ni point, ni carte. Deux cartes de deux créateurs différents au maximum (pas deux copies du même) ; changer d'invité ne paie pas deux fois, et un invité dont le créateur ne streame pas ne rapporte rien ce jour-là.",
+    "slots": 2,
+    "liveWindowMinutes": 10,
+    "raidPermille": {
+      "common": 15,
+      "uncommon": 25,
+      "rare": 40,
+      "epic": 60,
+      "legendary": 90
+    }
   }
 }

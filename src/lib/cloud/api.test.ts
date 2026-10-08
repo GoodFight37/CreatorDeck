@@ -882,6 +882,11 @@ describe("la chaîne (le simulateur de streameur)", () => {
       tokensCap: 40,
       setup: [],
       setupBonus: 0,
+      // `0039` : une base qui ne l'a pas encore répond `undefined` — le bureau
+      // est alors vide, comme le carnet du setup juste au-dessus.
+      guests: [],
+      raidToday: 0,
+      raidDay: "",
     });
   });
 
@@ -929,6 +934,78 @@ describe("la chaîne (le simulateur de streameur)", () => {
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_format: "ragebait" });
     expect(video.success).toBe(true);
     expect(video.gained).toBe(1920);
+  });
+
+  it("rend le bureau et le raid, tels que le serveur les écrit", async () => {
+    // `0039` : l'état porte le bureau, et le relevé porte le raid de la
+    // journée — avec `already` pour ne pas confondre « payé à l'instant » et
+    // « payé plus tôt aujourd'hui ».
+    const { api } = client(
+      () => ({
+        body: {
+          ok: true,
+          subscribers: 3000,
+          per_day: 900,
+          day: "2026-10-08",
+          published_today: false,
+          chosen_today: false,
+          tokens_today: 0,
+          tokens_cap: 40,
+          setup: [],
+          setup_bonus: 0,
+          guests: [
+            { slot: 2, card_id: "carte-b", creator_slug: "kamet0", rarity: "legendary", variant: "gold" },
+            { slot: 1, card_id: "carte-a", creator_slug: "ibai", rarity: "uncommon", variant: "holo" },
+            { slot: 3, card_id: "", creator_slug: "", rarity: "inconnue", variant: "standard" },
+          ],
+          raid_today: 42,
+          raid_day: "2026-10-08",
+        },
+      }),
+      signedIn(),
+    );
+    const etat = await api.streamerStatus();
+    // Le bureau est **rangé** par place, et une ligne illisible est écartée
+    // plutôt que de casser l'écran (une base d'une autre époque).
+    expect(etat.guests).toEqual([
+      { slot: 1, cardId: "carte-a", slug: "ibai", rarity: "uncommon", variant: "holo" },
+      { slot: 2, cardId: "carte-b", slug: "kamet0", rarity: "legendary", variant: "gold" },
+    ]);
+    expect(etat.raidToday).toBe(42);
+    expect(etat.raidDay).toBe("2026-10-08");
+  });
+
+  it("pose un invité avec sa carte, et ne décide de rien d'autre", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          ok: true,
+          changed: true,
+          guests: [{ slot: 1, card_id: "carte-a", creator_slug: "ibai", rarity: "uncommon", variant: "standard" }],
+        },
+      }),
+      signedIn(),
+    );
+    const bureau = await api.streamerGuestSet(1, {
+      id: "carte-a",
+      creatorSlug: "ibai",
+      rarity: "uncommon",
+      variant: "standard",
+    });
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_guest_set");
+    // Le client envoie la carte **telle qu'elle est** : ni prix, ni part du
+    // raid, ni « en direct » — le serveur relit tout ça lui-même.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
+      p_slot: 1,
+      p_card: { id: "carte-a", creatorSlug: "ibai", rarity: "uncommon", variant: "standard" },
+    });
+    expect(bureau.changed).toBe(true);
+    expect(bureau.guests).toHaveLength(1);
+
+    // Retirer un invité : une carte nulle, et le serveur libère la place.
+    const { api: api2, calls: calls2 } = client(() => ({ body: { ok: true, changed: true, guests: [] } }), signedIn());
+    await api2.streamerGuestSet(2, null);
+    expect(JSON.parse(String(calls2[0]?.init?.body))).toEqual({ p_slot: 2, p_card: null });
   });
 
   it("relit la vidéo du jour sans la rejouer", async () => {

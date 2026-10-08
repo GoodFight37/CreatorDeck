@@ -180,6 +180,8 @@ type FakeApi = {
   streamerEventToday: ReturnType<typeof vi.fn>;
   streamerChoose: ReturnType<typeof vi.fn>;
   streamerSetupBuy: ReturnType<typeof vi.fn>;
+  streamerVisit: ReturnType<typeof vi.fn>;
+  streamerGuestSet: ReturnType<typeof vi.fn>;
 };
 
 /** Mon arène de la semaine, telle que le serveur la renvoie. */
@@ -456,6 +458,9 @@ function harness(options: {
       tokensCap: 40,
       setup: [],
       setupBonus: 0,
+      guests: [],
+      raidToday: 0,
+      raidDay: "",
     })),
     streamerEventToday: vi.fn(async () => ({
       day: "2026-03-01",
@@ -486,6 +491,16 @@ function harness(options: {
       setupBonus: 30,
       points: 880,
     })),
+    streamerVisit: vi.fn(async () => ({
+      days: 1,
+      countedDays: 1,
+      gained: 900,
+      before: 3000,
+      subscribers: 3900,
+      perDay: 900,
+      raid: { gained: 0, shares: [], already: false },
+    })),
+    streamerGuestSet: vi.fn(async () => ({ changed: true, guests: [] })),
   };
 
   const store = createCloudStore({
@@ -2137,5 +2152,191 @@ describe("la chaîne côté store (les imprévus et le setup)", () => {
     const refus = await store.chooseStreamerEvent(autre.id, "droite");
     expect(refus.status).toBe("unavailable");
     expect(store.getSnapshot().message).toMatch(/imprévu du jour/);
+  });
+});
+
+describe("le bureau côté store (0039)", () => {
+  /**
+   * L'invité tel que le **store** le reçoit : l'API a déjà traduit le
+   * `snake_case` du serveur (c'est elle qui est testée pour ça).
+   */
+  const ligneInvite = (slug: string, cardId: string, rarity = "uncommon") => ({
+    slot: 1,
+    cardId,
+    slug,
+    rarity,
+    variant: "standard",
+  });
+
+  it("recopie le bureau du serveur, et raconte le raid quand il est neuf", async () => {
+    const { store, api, state } = harness();
+    store.subscribe(() => {});
+    api.streamerStatus.mockResolvedValueOnce({
+      subscribers: 3000,
+      perDay: 900,
+      day: "2026-03-01",
+      publishedToday: false,
+      chosenToday: false,
+      tokensToday: 0,
+      tokensCap: 40,
+      setup: [],
+      setupBonus: 0,
+      guests: [ligneInvite("ibai", "carte-a")],
+      raidToday: 42,
+      raidDay: "2026-03-01",
+    });
+    api.streamerVisit.mockResolvedValueOnce({
+      days: 1,
+      countedDays: 1,
+      gained: 900,
+      before: 2100,
+      subscribers: 3042,
+      perDay: 900,
+      raid: {
+        gained: 42,
+        already: false,
+        shares: [{ slot: 1, slug: "ibai", rarity: "uncommon", permille: 25, gained: 42 }],
+      },
+    });
+
+    const ouverture = await store.openStreamer();
+    expect(ouverture.status).toBe("done");
+    if (ouverture.status !== "done") return;
+    // Le bureau est celui du serveur, rangé par place et prêt pour l'écran.
+    expect(ouverture.guests).toEqual([
+      { slot: 1, cardId: "carte-a", slug: "ibai", rarity: "uncommon", variant: "standard" },
+    ]);
+    expect(ouverture.raidToday).toBe(42);
+    expect(state.current.streamer.guests).toEqual(ouverture.guests);
+    // Le raid est **rangé** (c'est la sauvegarde qui garde qui est passé, même
+    // quand le badge du direct s'éteint)…
+    expect(state.current.streamer.raid).toEqual({ day: "2026-03-01", gained: 42, slugs: ["ibai"] });
+    // …et il se raconte une fois : c'est la seule ligne ajoutée au résumé.
+    expect(ouverture.lines.at(-1)).toBe("Raid : un invité est passé en direct — +42 abonnés.");
+  });
+
+  it("ne rejoue pas la phrase d'un raid déjà payé", async () => {
+    const { store, api } = harness();
+    store.subscribe(() => {});
+    api.streamerStatus.mockResolvedValueOnce({
+      subscribers: 3042,
+      perDay: 900,
+      day: "2026-03-01",
+      publishedToday: false,
+      chosenToday: false,
+      tokensToday: 0,
+      tokensCap: 40,
+      setup: [],
+      setupBonus: 0,
+      guests: [ligneInvite("ibai", "carte-a")],
+      raidToday: 42,
+      raidDay: "2026-03-01",
+    });
+    api.streamerVisit.mockResolvedValueOnce({
+      days: 0,
+      countedDays: 0,
+      gained: 0,
+      before: 3042,
+      subscribers: 3042,
+      perDay: 900,
+      raid: {
+        gained: 42,
+        already: true,
+        shares: [{ slot: 1, slug: "ibai", rarity: "uncommon", permille: 25, gained: 42 }],
+      },
+    });
+    const ouverture = await store.openStreamer();
+    if (ouverture.status !== "done") throw new Error("chaîne refusée");
+    // Le chiffre reste affiché (le joueur doit le voir), mais la phrase n'est
+    // pas rejouée : sinon il croirait toucher le raid à chaque ouverture.
+    expect(ouverture.raidToday).toBe(42);
+    expect(ouverture.lines.join(" ")).not.toContain("Raid :");
+  });
+
+  it("pose l'invité au serveur et recopie le bureau qu'il rend", async () => {
+    const carte = serverCard("ibai", "uncommon", "holo");
+    const { store, api, state } = harness({ local: saveWith({ updatedAt: T0, cards: [carte] }) });
+    store.subscribe(() => {});
+    api.streamerGuestSet.mockResolvedValueOnce({
+      changed: true,
+      guests: [ligneInvite("ibai", carte.id, "uncommon")],
+    });
+
+    const outcome = await store.setStreamerGuest(1, carte.id);
+    expect(api.streamerGuestSet).toHaveBeenCalledWith(1, {
+      id: carte.id,
+      creatorSlug: "ibai",
+      rarity: "uncommon",
+      variant: "holo",
+    });
+    expect(outcome.status).toBe("done");
+    expect(state.current.streamer.guests).toHaveLength(1);
+    expect(state.current.streamer.guests[0]?.cardId).toBe(carte.id);
+    expect(store.getSnapshot().message).toMatch(/rejoint le bureau/);
+
+    // Retirer : une carte nulle, et le serveur libère la place.
+    api.streamerGuestSet.mockResolvedValueOnce({ changed: true, guests: [] });
+    await store.setStreamerGuest(1, null);
+    expect(api.streamerGuestSet).toHaveBeenLastCalledWith(1, null);
+    expect(state.current.streamer.guests).toEqual([]);
+  });
+
+  it("refuse une carte qui n'est pas dans la collection, sans appeler le serveur", async () => {
+    const { store, api } = harness({ local: saveWith({ updatedAt: T0, cards: [] }) });
+    store.subscribe(() => {});
+    const outcome = await store.setStreamerGuest(1, "carte-inconnue");
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/pas dans ta collection/);
+    expect(api.streamerGuestSet).not.toHaveBeenCalled();
+  });
+
+  it("sans cloud, le bureau se pose localement, avec les mêmes refus", async () => {
+    const carte = serverCard("ibai", "uncommon", "holo");
+    const autre = serverCard("ibai", "rare", "standard");
+    const { store, state } = harness({
+      configured: false,
+      local: saveWith({ updatedAt: T0, cards: [carte, autre] }),
+    });
+    store.subscribe(() => {});
+    const pose = await store.setStreamerGuest(1, carte.id);
+    expect(pose.status).toBe("done");
+    expect(state.current.streamer.guests).toEqual([
+      { slot: 1, cardId: carte.id, slug: "ibai", rarity: "uncommon", variant: "holo" },
+    ]);
+    // Le même créateur ne tient pas les deux places, ici non plus.
+    const doublon = await store.setStreamerGuest(2, autre.id);
+    expect(doublon.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/autre place/);
+    // Et une carte qu'on ne possède pas ne se pose pas davantage.
+    const volee = await store.setStreamerGuest(2, "carte-inconnue");
+    expect(volee.status).toBe("unavailable");
+    expect(state.current.streamer.guests).toHaveLength(1);
+  });
+
+  it("paie le raid local sur le direct donné, une fois par journée", async () => {
+    const carte = serverCard("ibai", "uncommon", "holo");
+    const { store, state } = harness({
+      configured: false,
+      local: saveWith({ updatedAt: T0, cards: [carte] }),
+    });
+    store.subscribe(() => {});
+    await store.setStreamerGuest(1, carte.id);
+
+    // Personne en direct : rien, et la journée n'est pas consommée.
+    await store.openStreamer(new Set(["kamet0"]));
+    expect(state.current.streamer.raid).toBeNull();
+
+    // L'invité streame : sa part tombe, calculée sur la croissance du jour.
+    const ouverture = await store.openStreamer(new Set(["ibai"]));
+    if (ouverture.status !== "done") throw new Error("chaîne refusée");
+    expect(ouverture.raidToday).toBe(Math.floor((240 * 25) / 1000));
+    expect(state.current.streamer.raid?.slugs).toEqual(["ibai"]);
+
+    // Un second passage dans la journée ne repaie pas.
+    const encore = await store.openStreamer(new Set(["ibai"]));
+    expect(encore.status).toBe("done");
+    if (encore.status !== "done") return;
+    expect(encore.raidToday).toBe(Math.floor((240 * 25) / 1000));
+    expect(encore.lines.join(" ")).not.toContain("Raid :");
   });
 });

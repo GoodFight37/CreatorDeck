@@ -40,10 +40,10 @@ But : **un dépôt, une branche de référence, un historique léger.**
   seul : les contrôles se lancent à la main avant de pousser (voir « Ce que les
   workflows faisaient, et où c'est parti »). La sonde de production, elle, se
   remplace par une ligne dans le SQL Editor : `select public.schema_versions();`.
-- **Migrations collées** : `0036` et `0037` sont en production (vérifié le
-  8 octobre 2026). `0038_imprevus_setup.sql` — les imprévus à choix et le
-  setup — **reste à coller** ; c'est la seule chose qui manque pour que la
-  chaîne soit complète.
+- **Migrations collées** : `0036`, `0037` et `0038` sont en production (vérifié
+  le 8 octobre 2026). `0039_invites_bureau.sql` — les invités sur le bureau et
+  leur raid — **reste à coller** ; c'est la prochaine, et la dernière écrite à
+  ce jour.
 - **Ce que ça a coûté, et ce qui a été fait** : la suppression du dossier a
   cassé `src/lib/cloud/config.test.ts`, qui lisait les workflows sans se demander
   s'ils existaient. La garde « le cloud est-il dans le paquet ? » a été

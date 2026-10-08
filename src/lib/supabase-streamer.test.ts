@@ -16,12 +16,22 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { PROGRESSION } from "@/lib/progression";
-import { CAP_DAYS, EVENTS, SETUP_LEVELS, STREAMER, STREAMER_TOKENS, TIERS } from "@/lib/streamer";
+import {
+  CAP_DAYS,
+  EVENTS,
+  GUEST_LIVE_WINDOW_MINUTES,
+  GUEST_SLOTS,
+  SETUP_LEVELS,
+  STREAMER,
+  STREAMER_TOKENS,
+  TIERS,
+} from "@/lib/streamer";
 
 const ROOT = process.cwd();
 const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
 const FICHIER = "0036_streamer.sql";
 const FICHIER_IMPREVUS = "0038_imprevus_setup.sql";
+const FICHIER_BUREAU = "0039_invites_bureau.sql";
 const SQL = readFileSync(path.join(MIGRATIONS, FICHIER), "utf8");
 /** Le fichier sans ses commentaires, puis sans ses retours à la ligne. */
 const CODE = SQL.split("\n")
@@ -31,6 +41,13 @@ const FLAT = CODE.replace(/\s+/g, " ");
 // Les imprévus et le setup vivent dans `0038` : mêmes règles, autre fichier.
 const SQL_IMPREVUS = readFileSync(path.join(MIGRATIONS, FICHIER_IMPREVUS), "utf8");
 const FLAT_IMPREVUS = SQL_IMPREVUS.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n")
+  .replace(/\s+/g, " ");
+
+// Les invités sur le bureau : ni monnaie, ni tirage — des règles de direct.
+const SQL_BUREAU = readFileSync(path.join(MIGRATIONS, FICHIER_BUREAU), "utf8");
+const FLAT_BUREAU = SQL_BUREAU.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n")
   .replace(/\s+/g, " ");
@@ -276,5 +293,119 @@ describe("0038_imprevus_setup.sql (les imprévus et le setup)", () => {
     expect(verifieur).toContain("imprévus : la carte du jour ne change pas entre deux ouvertures");
     expect(verifieur).toContain("setup : un palier volé ne fait pas sauter l'étape suivante");
     expect(verifieur).toContain("setup : recoller `0036` seule après `0038` fait perdre le setup de l'écran");
+  });
+});
+
+describe("0039_invites_bureau.sql (les invités sur le bureau)", () => {
+  it("chiffre le raid comme le fichier, rareté par rareté", () => {
+    // Les cinq raretés du catalogue, dans la forme exacte du `case` : un chiffre
+    // changé d'un seul côté ferait payer au serveur autre chose que ce que
+    // l'écran annonce au joueur.
+    for (const [rarity, permille] of Object.entries(STREAMER.guests.raidPermille)) {
+      expect(FLAT_BUREAU).toContain(`when '${rarity}' then ${permille}`);
+    }
+    const lignes =
+      FLAT_BUREAU.match(/when '(common|uncommon|rare|epic|legendary)' then \d+/g) ?? [];
+    expect(lignes.length).toBe(Object.keys(STREAMER.guests.raidPermille).length);
+    // Et la rareté inconnue ne paie **rien** : `else 0`, jamais un défaut.
+    expect(FLAT_BUREAU).toMatch(/else 0 end/);
+  });
+
+  it("tient les mêmes places et la même fenêtre de direct que l'app", () => {
+    // Les places : la contrainte de la table **et** le refus de la porte,
+    // tous les deux écrits avec le chiffre du fichier.
+    expect(GUEST_SLOTS).toBe(2);
+    expect(FLAT_BUREAU).toContain(`check (slot between 1 and ${GUEST_SLOTS})`);
+    expect(FLAT_BUREAU).toContain(`if v_slot < 1 or v_slot > ${GUEST_SLOTS} then`);
+    expect(FLAT_BUREAU).toContain(`select interval '${GUEST_LIVE_WINDOW_MINUTES} minutes';`);
+    // La fraîcheur se lit sur `live_state`, jamais sur une horloge locale : dix
+    // minutes plus tard, le même badge est éteint des deux côtés.
+    expect(FLAT_BUREAU).toContain("from public.live_state");
+    expect(FLAT_BUREAU).toContain("public._streamer_live_window()");
+  });
+
+  it("ne pose qu'une carte possédée, et jamais deux fois le même créateur", () => {
+    // Le versement des cartes a **une** règle dans tout le jeu
+    // (`card_claim_covers`, celle des échanges et de l'hôtel) : le bureau ne
+    // s'en invente pas une deuxième.
+    expect(FLAT_BUREAU).toContain("public.card_claim_covers");
+    expect(FLAT_BUREAU).toContain("create unique index if not exists streamer_guests_un_createur");
+    expect(FLAT_BUREAU).toContain("on public.streamer_guests (user_id, creator_slug);");
+    // Les refus, mot pour mot — c'est ce que le client affiche.
+    for (const refus of [
+      "place-inconnue",
+      "carte-sans-identifiant",
+      "createur-inconnu",
+      "rarete-inconnue",
+      "variante-inconnue",
+      "meme-createur",
+      "carte-non-possedee",
+    ]) {
+      expect(FLAT_BUREAU).toContain(`'${refus}'`);
+    }
+  });
+
+  it("rend le bureau en tableau, même vide — jamais le néant", () => {
+    // Le piège qui a coûté une journée : `to_jsonb` d'une fonction
+    // **ensembliste** rend une ligne par invité, donc aucune quand le bureau
+    // est vide — et un `RETURN` sans ligne rend `NULL`, pas un état vide.
+    expect(FLAT_BUREAU).not.toContain("to_jsonb(public._streamer_guests_of");
+    expect(FLAT_BUREAU).toContain("create or replace function public._streamer_guest_list(p_user uuid)");
+    expect(FLAT_BUREAU).toContain("coalesce(");
+    expect(FLAT_BUREAU).toContain("'[]'::jsonb");
+    // Et l'écran ne peut pas appeler la liste directement : elle est fermée.
+    expect(FLAT_BUREAU).toContain(
+      "revoke all on function public._streamer_guest_list(uuid) from public, anon, authenticated",
+    );
+  });
+
+  it("paie le raid dans le relevé, une seule fois par journée de jeu", () => {
+    // Le journal des raids **est** la preuve du paiement : une ligne par
+    // (joueur, journée), et le paiement n'a lieu que si la ligne manque.
+    expect(FLAT_BUREAU).toContain("create table if not exists public.streamer_raids");
+    expect(FLAT_BUREAU).toContain("primary key (user_id, day)");
+    const visite = FLAT_BUREAU.slice(FLAT_BUREAU.indexOf("create or replace function public.streamer_visit("));
+    expect(visite).toContain("if not found then");
+    expect(visite).toMatch(/if v_raid_new > 0 then\s+insert into public\.streamer_raids/);
+    // Aucune monnaie : ni jeton, ni point, ni wallet dans ce fichier.
+    expect(FLAT_BUREAU).not.toContain("_tokens_apply");
+    expect(FLAT_BUREAU).not.toContain("_wallet_apply");
+  });
+
+  it("ferme ses tables et ses aides, et n'ouvre que sa porte au compte", () => {
+    for (const table of ["streamer_guests", "streamer_raids"]) {
+      expect(FLAT_BUREAU).toContain("revoke all on table public." + table + " from public, anon, authenticated");
+      expect(FLAT_BUREAU).toContain("alter table public." + table + " enable row level security");
+    }
+    for (const fonction of [
+      "_streamer_guest_permille(text)",
+      "_streamer_live_window()",
+      "_streamer_guests_of(uuid)",
+      "_streamer_guest_list(uuid)",
+      "_streamer_raid_of(uuid, integer)",
+    ]) {
+      expect(FLAT_BUREAU).toContain(`revoke all on function public.${fonction} from public, anon, authenticated`);
+    }
+    expect(FLAT_BUREAU).toContain(
+      "grant execute on function public.streamer_guest_set(integer, jsonb) to authenticated",
+    );
+    for (const ouverte of ["streamer_status()", "streamer_visit()"]) {
+      expect(FLAT_BUREAU).toContain(`grant execute on function public.${ouverte} to authenticated`);
+    }
+  });
+
+  it("déclare sa ligne dans le rapport de version, après la 0038", () => {
+    const rapport = derniereDefinition("schema_versions");
+    expect(rapport).toContain("'0039'");
+    expect(rapport).toMatch(/to_regclass\('public\.streamer_guests'\)/);
+    expect(rapport).toContain("'0038'");
+  });
+
+  it("est jouée pour de vrai par le vérificateur, pas seulement décrite ici", () => {
+    const verifieur = readFileSync(path.join(ROOT, "scripts", "verify-supabase-migrations.mjs"), "utf8");
+    expect(verifieur).toContain("0039_invites_bureau.sql");
+    expect(verifieur).toContain("invités : un bureau neuf est vide, sans raid payé");
+    expect(verifieur).toContain("invités : un direct périmé (vingt minutes) ne paie pas, le même frais paie");
+    expect(verifieur).toContain("invités : recoller `0038` seule après `0039` fait perdre le bureau de l'écran");
   });
 });

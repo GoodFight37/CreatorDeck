@@ -34,12 +34,12 @@
 
 - [x] Mini-jeu interactif de 20 s (Live, chat qui défile, bulles d'alerte à attraper)
 
+- [x] Invités sur le bureau : 2 cartes du classeur, raid payé si le créateur streame vraiment (une fois par journée de jeu, gratuit)
+
 ### En cours
 
 - [ ] Ce que le live du jour change à la vidéo : rien tant que le serveur ne peut pas le juger
 
 ### Prochaines étapes
-
-- [ ] Lier 2 cartes du classeur en invités sur le bureau (bonus Raid si en direct)
 
 - [ ] Amélioration du setup (Tycoon / équipement)

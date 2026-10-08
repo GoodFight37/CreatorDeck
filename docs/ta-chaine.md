@@ -7,8 +7,9 @@
 > même commit. Ce qui est décidé mais pas encore écrit se dit ici, en clair.
 >
 > Le détail des règles vit ailleurs, et c'est lui qui fait foi :
-> `docs/cloud-supabase.md` § 8 « Les imprévus et le setup de la chaîne (`0038`) »
-> et § « La chaîne vit au serveur (`0036`) », plus le journal daté du `README.md`.
+> `docs/cloud-supabase.md` § 8 « Les invités sur le bureau (`0039`) », « Les
+> imprévus et le setup de la chaîne (`0038`) » et « La chaîne vit au serveur
+> (`0036`) », plus le journal daté du `README.md`.
 
 ## 1. Ce qui est fait et fonctionnel
 
@@ -49,11 +50,8 @@
   client, et la croissance du setup est payée **partout** (statut, absence et
   vidéo du jour) par la même fonction `_streamer_growth()`.
 
-  > **À coller par le joueur : `0038_imprevus_setup.sql`.** `0036` et `0037`
-  > sont collées en production (vérifié le 8 octobre 2026). Un bouton
-  > « copier le contenu brut » et le SQL Editor suffisent ; pour **vérifier
-  > après**, la même requête répond :
-  > `select public.schema_versions() -> '0038';` doit rendre `true`.
+  > **Collée en production** (`0038`) avec `0036` et `0037`, le 8 octobre 2026.
+  > Pour vérifier : `select public.schema_versions() -> '0038';` rend `true`.
 
 - [x] **Étape 5 : le live de 20 secondes (`StreamerLiveGame`)** — le premier
   mini-jeu de la chaîne : on passe en direct, **le chat défile** en bas du cadre
@@ -71,6 +69,32 @@
   c'est le miroir des cinq paliers du serveur, et le vérificateur l'attrape si
   l'un des deux camps bouge sans l'autre. **Aucune monnaie ne tombe ici** — ni
   jeton, ni point, ni abonné — et l'écran le dit mot pour mot.
+
+- [x] **Étape 6 : les invités sur le bureau** —
+  `supabase/migrations/0039_invites_bureau.sql`. **Deux cartes de sa
+  collection** tiennent le plateau (deux créateurs **différents**, une carte par
+  créateur, et la carte doit être **vraiment au joueur** : `card_claim_covers`,
+  la règle des échanges et de l'hôtel). Quand le créateur d'un invité est
+  **réellement en direct** — fenêtre de dix minutes, la même que le badge de
+  l'accueil (`live_state.refreshed_at`) — son passage amène un **raid** :
+  `floor(croissance du jour × pour-mille / 1000)` abonnés, **15 / 25 / 40 / 60 /
+  90** pour mille selon la rareté de la carte (Commune → Légendaire). Le raid se
+  paie **dans le relevé de la chaîne**, **une seule fois par journée de jeu** :
+  la ligne de `streamer_raids` est la preuve du paiement, donc changer d'invité,
+  rouvrir l'écran ou reposer une carte **ne repaie jamais** — et un relevé qui ne
+  paie rien n'écrit rien, ce qui laisse la journée ouverte si le direct n'était
+  pas encore frais. **Gratuit** : ni jeton, ni point, ni monnaie nouvelle — le
+  raid ne rapporte que des abonnés. Un invité **hors ligne** ne rapporte rien, et
+  l'écran le dit. L'écran (`src/components/streamer-sheet.tsx`, section
+  « Le bureau ») montre les deux places, l'état du direct (allumé seulement si le
+  créateur streame maintenant) et la liste des créateurs **en direct** de ta
+  collection pour choisir ; hors ligne, le moteur local
+  (`setStreamerGuestLocally`, `payStreamerRaidLocally`) applique les mêmes règles.
+
+  > **À coller par le joueur : `0039_invites_bureau.sql`.** `0036`, `0037` et
+  > `0038` sont collées en production (vérifié le 8 octobre 2026). Un bouton
+  > « copier le contenu brut » et le SQL Editor suffisent ; pour **vérifier
+  > après** : `select public.schema_versions() -> '0039';` doit rendre `true`.
 
 ## 2. En cours
 
@@ -100,14 +124,9 @@
 
 ## 3. Ce qu'il reste à faire
 
-- [ ] **Connecter 2 cartes TCG en « Invités sur le bureau » (bonus de Raid si le
-  streamer est en direct)** — l'idée : choisir deux cartes de sa collection pour
-  tenir le plateau, et qu'elles paient un bonus quand un créateur est **réellement
-  en direct** (statut EN LIVE, § 8 du `cloud-supabase.md`). À concevoir : quelles
-  cartes sont acceptées, ce que le bonus vaut, et si les invités se changent ou
-  non. À noter : l'imprévu `raid` de l'étape 4 raconte déjà un raid, mais c'est
-  une **carte d'événement** subie, pas des invités choisis par le joueur — les
-  deux ne se remplacent pas.
+> Les **invités sur le bureau** — la dernière idée ouverte du chantier — sont
+> livrés à l'**étape 6** (§ 1). Il reste l'équilibrage, et la seconde série de
+> paliers de setup.
 
 - [x] **Système d'améliorations de setup (Tycoon : micro, caméra, PC)** — déjà
   livré à l'**étape 4** : les cinq paliers en points sont exactement ce système.

@@ -21,6 +21,8 @@
  * rapporte par jour, les formats de vidéo et leurs chances.
  */
 import streamer from "@/data/streamer.json";
+import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
+import { liveFor, type LiveSnapshot } from "@/lib/live";
 import { PROGRESSION } from "@/lib/progression";
 import { randomInt } from "@/lib/random";
 
@@ -91,6 +93,32 @@ export type StreamerEvent = {
   choices: StreamerEventChoice[];
 };
 
+/** Un **invité sur le bureau** : une carte de la collection, à une place. */
+export type StreamerGuest = {
+  /** La place (1 ou 2) : deux invités au plus tiennent le plateau. */
+  slot: number;
+  /** L'identifiant de la carte possédée (une carte précise, pas un créateur). */
+  cardId: string;
+  /** Le créateur de la carte — c'est **lui** qui doit être en direct. */
+  slug: string;
+  rarity: Rarity;
+  variant: CardVariant;
+};
+
+/**
+ * Le **raid** payé une journée donnée : qui est passé, et ce que ça a rapporté.
+ *
+ * Le raid se paie **une seule fois par journée de jeu**, au premier relevé où
+ * l'un des invités est en direct — sans lui, un joueur qui ouvre sa chaîne trois
+ * fois dans la journée serait payé trois fois.
+ */
+export type StreamerRaid = {
+  day: string;
+  gained: number;
+  /** Les créateurs qui ont payé, dans l'ordre du bureau. */
+  slugs: string[];
+};
+
 type StreamerData = {
   version: number;
   note: string;
@@ -101,6 +129,12 @@ type StreamerData = {
   events: StreamerEvent[];
   tokens: { perDayCap: number; perSuccess: number; perBuzz: number; note: string };
   setup: { note: string; levels: StreamerSetupLevel[] };
+  guests: {
+    note: string;
+    slots: number;
+    liveWindowMinutes: number;
+    raidPermille: Record<string, number>;
+  };
 };
 
 export const STREAMER = streamer as StreamerData;
@@ -485,6 +519,10 @@ export type StreamerState = {
   event: StreamerEventState | null;
   /** Les paliers de setup achetés, **dans l'ordre** (le bonus se lit ainsi). */
   setup: string[];
+  /** Les invités sur le bureau : deux cartes au plus, jamais deux fois le même créateur. */
+  guests: StreamerGuest[];
+  /** Le dernier raid payé : une seule fois par journée de jeu. */
+  raid: StreamerRaid | null;
 };
 
 export type StreamerEventState = {
@@ -517,7 +555,112 @@ export function newStreamerState(now: number): StreamerState {
     video: null,
     event: null,
     setup: [],
+    guests: [],
+    raid: null,
   };
+}
+
+// ------------------------------------------------------- les invités du bureau
+
+/** Le nombre d'invités qu'un bureau peut tenir (deux). */
+export const GUEST_SLOTS = STREAMER.guests.slots;
+
+/**
+ * La fraîcheur exigée du direct, en minutes : la **même** que celle du badge de
+ * l'accueil (`LIVE_TTL_MS`). Un invité dont le direct date d'hier ne paie pas —
+ * le serveur lit `live_state.refreshed_at`, et cette fenêtre-là est dans le
+ * fichier pour que les deux côtés ne puissent pas diverger en silence.
+ */
+export const GUEST_LIVE_WINDOW_MINUTES = STREAMER.guests.liveWindowMinutes;
+
+/** Ce qu'un invité de cette rareté paie quand il est en direct, pour mille. */
+export function guestRaidPermille(rarity: string): number {
+  return STREAMER.guests.raidPermille[rarity] ?? 0;
+}
+
+export type RaidShare = {
+  guest: StreamerGuest;
+  /** Ce que cette carte vaut, pour mille de la croissance journalière. */
+  permille: number;
+  /** Les abonnés que ce créateur a amenés. */
+  gained: number;
+};
+
+export type RaidResult = {
+  /** Le total amassé par le raid (0 : personne n'était en direct). */
+  gained: number;
+  /** Les invités qui étaient bel et bien en direct, dans l'ordre du bureau. */
+  shares: RaidShare[];
+};
+
+/**
+ * Le raid d'un bureau : chaque invité **réellement en direct** paie sa part.
+ *
+ * La part est `floor(croissance du jour × pour-mille / 1000)` — la même
+ * opération que le setup et la vidéo, donc le même arrondi que le serveur. La
+ * croissance est celle du jour, **setup compris** : un studio qui fait grandir
+ * la chaîne fait aussi grandir les raids.
+ *
+ * `liveSlugs` est la seule chose que le module ne peut pas deviner : c'est la
+ * liste des créateurs en direct **au moment du relevé**, telle que le serveur la
+ * publie. Vide = personne n'est en direct, et le raid ne paie rien.
+ */
+export function raidForGuests(
+  perDay: number,
+  guests: readonly StreamerGuest[],
+  liveSlugs: readonly string[] | ReadonlySet<string>,
+): RaidResult {
+  const enDirect =
+    liveSlugs instanceof Set ? liveSlugs : new Set(Array.from(liveSlugs).map((s) => s.toLowerCase()));
+  const vus = new Set<string>();
+  const shares: RaidShare[] = [];
+  for (const guest of [...guests].sort((a, b) => a.slot - b.slot)) {
+    if (!guest.slug || vus.has(guest.slug)) continue;
+    vus.add(guest.slug);
+    if (!enDirect.has(guest.slug.toLowerCase())) continue;
+    const permille = guestRaidPermille(guest.rarity);
+    if (permille <= 0) continue;
+    shares.push({
+      guest,
+      permille,
+      gained: Math.floor((perDay * permille) / 1000),
+    });
+  }
+  return { gained: shares.reduce((total, share) => total + share.gained, 0), shares };
+}
+
+/**
+ * Les invités dont le créateur est **en direct maintenant**, par slug.
+ *
+ * Miroir exact de ce que le serveur fait en SQL (`0039`) : il joint
+ * `creators.login` à `live_streams`, et la fraîcheur qu'il exige est celle de
+ * `live_state.refreshed_at` — la même que `liveFor()` applique ici (`LIVE_TTL_MS`
+ * et `GUEST_LIVE_WINDOW_MINUTES` valent dix minutes des deux côtés).
+ *
+ * Hors ligne, la réponse est **toujours vide** : sans table du direct, on ne
+ * sait pas qui streame, et un raid inventé serait pire que pas de raid.
+ */
+export function liveGuestSlugs(
+  guests: readonly StreamerGuest[],
+  snapshot: LiveSnapshot,
+  now: number,
+): Set<string> {
+  const enDirect = new Set<string>();
+  for (const guest of guests) {
+    const creator = CREATOR_BY_SLUG.get(guest.slug);
+    if (!creator) continue;
+    if (liveFor(snapshot, creator.login, now)) enDirect.add(guest.slug);
+  }
+  return enDirect;
+}
+
+/** La phrase du raid, écrite **une seule fois** (écran, résumé du retour). */
+export function raidLine(raid: { gained: number; slugs: readonly string[] }): string {
+  const qui =
+    raid.slugs.length > 1
+      ? `${raid.slugs.length} invités sont passés en direct`
+      : `un invité est passé en direct`;
+  return `Raid : ${qui} — +${count.format(raid.gained)} abonnés.`;
 }
 
 /** Le format portant cet identifiant, ou `null` s'il n'existe pas. */
@@ -573,6 +716,8 @@ export function playVideoLocally(
       video,
       event: prev.event,
       setup: prev.setup,
+      guests: prev.guests,
+      raid: prev.raid,
     },
     video,
     already: false,

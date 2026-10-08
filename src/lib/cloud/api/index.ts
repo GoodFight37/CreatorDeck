@@ -31,6 +31,7 @@ import * as arena from "./arena";
 import type {
   StreamerEventResult,
   StreamerEventToday,
+  StreamerGuestsResult,
   StreamerReturn,
   StreamerSetupPurchase,
   StreamerStatus,
@@ -45,6 +46,10 @@ export * from "./types";
 export type {
   StreamerEventResult,
   StreamerEventToday,
+  StreamerGuestRow,
+  StreamerGuestsResult,
+  StreamerRaidShare,
+  StreamerRaidToday,
   StreamerReturn,
   StreamerSetupPurchase,
   StreamerStatus,
@@ -657,6 +662,20 @@ export class CloudApi {
    */
   async streamerSetupBuy(level: string): Promise<StreamerSetupPurchase> {
     return streamer.streamerSetupBuy(this.core, level);
+  }
+
+  /**
+   * Pose un invité sur le **bureau**, ou libère sa place (`0039`).
+   *
+   * Le client envoie la carte telle qu'elle est dans sa collection ; le serveur
+   * vérifie qu'elle est bien au joueur (même règle que les échanges et
+   * l'hôtel), refuse deux fois le même créateur, et renvoie le bureau complet.
+   */
+  async streamerGuestSet(
+    slot: number,
+    card: { id: string; creatorSlug: string; rarity: string; variant: string } | null,
+  ): Promise<StreamerGuestsResult> {
+    return streamer.streamerGuestSet(this.core, slot, card);
   }
 
   // ------------------------------------------------------------------ saves

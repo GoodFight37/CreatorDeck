@@ -14,6 +14,8 @@ import { describe, expect, it } from "vitest";
 import {
   CAP_DAYS,
   EVENTS,
+  GUEST_LIVE_WINDOW_MINUTES,
+  GUEST_SLOTS,
   SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKENS,
@@ -26,10 +28,14 @@ import {
   gameDaysBetween,
   growthPerDay,
   growthWithSetup,
+  guestRaidPermille,
+  liveGuestSlugs,
   newStreamerState,
   nextSetupLevel,
   nextTier,
   playEventLocally,
+  raidForGuests,
+  raidLine,
   resolveEventChoice,
   resolveVideo,
   setupBonusPermille,
@@ -38,6 +44,7 @@ import {
   tierProgress,
 } from "@/lib/streamer";
 import { PROGRESSION } from "@/lib/progression";
+import { EMPTY_LIVE, indexLive, type LiveSnapshot } from "@/lib/live";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 const DAY = 24 * 3_600_000;
@@ -353,5 +360,97 @@ describe("le setup", () => {
     const avec = absenceSummary(T0, T0 + 2 * DAY, 0, 500);
     expect(sans.gained).toBe(2 * 240);
     expect(avec.gained).toBe(2 * 360);
+  });
+});
+
+describe("les invités sur le bureau (0039)", () => {
+  /** Un invité, tel qu'il est posé : la carte, et son créateur. */
+  const invite = (slot: number, slug: string, rarity: string) => ({
+    slot,
+    cardId: `carte-${slot}`,
+    slug,
+    rarity: rarity as never,
+    variant: "standard" as never,
+  });
+
+  /** Une table du direct : les logins donnés, vue à l'instant. */
+  function direct(logins: string[], now: number): LiveSnapshot {
+    return {
+      byLogin: indexLive(
+        logins.map((login) => ({
+          login,
+          displayName: login,
+          gameName: "",
+          title: "",
+          viewers: 1,
+          startedAt: null,
+        })),
+      ),
+      count: logins.length,
+      refreshedAt: now,
+      stale: false,
+      loading: false,
+      configured: true,
+      error: null,
+    };
+  }
+
+  it("le fichier tient les règles en un seul endroit", () => {
+    expect(GUEST_SLOTS).toBe(2);
+    expect(GUEST_LIVE_WINDOW_MINUTES).toBe(10);
+    // Les cinq raretés, dans l'ordre du catalogue — et rien d'autre.
+    expect(Object.keys(STREAMER.guests.raidPermille).sort()).toEqual([
+      "common",
+      "epic",
+      "legendary",
+      "rare",
+      "uncommon",
+    ]);
+    for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"]) {
+      expect(guestRaidPermille(rarity)).toBeGreaterThan(0);
+    }
+    // Une rareté inconnue (sauvegarde bricolée) ne paie rien du tout.
+    expect(guestRaidPermille("mystere")).toBe(0);
+    expect(guestRaidPermille("")).toBe(0);
+    // Plus rare = plus payant : le fichier ne doit pas s'inverser.
+    expect(guestRaidPermille("legendary")).toBeGreaterThan(guestRaidPermille("epic"));
+    expect(guestRaidPermille("epic")).toBeGreaterThan(guestRaidPermille("rare"));
+  });
+
+  it("seul un créateur vraiment en direct paie, et une fois chacun", () => {
+    const bureau = [invite(1, "ibai", "uncommon"), invite(2, "kamet0", "legendary")];
+    // Rien en direct : rien du tout.
+    expect(raidForGuests(240, bureau, []).gained).toBe(0);
+    // Un seul en direct : sa part seulement (25 pour mille de 240 = 6).
+    const un = raidForGuests(240, bureau, ["ibai"]);
+    expect(un.gained).toBe(6);
+    expect(un.shares.map((share) => share.guest.slug)).toEqual(["ibai"]);
+    // Les deux : la somme, et l'arrondi se fait par invité (floor), pas sur le total.
+    const deux = raidForGuests(240, bureau, ["ibai", "kamet0"]);
+    expect(deux.gained).toBe(Math.floor((240 * 25) / 1000) + Math.floor((240 * 90) / 1000));
+    // Deux fois le même créateur à deux places : il ne paie qu'une fois — la
+    // première place, celle que le serveur garde.
+    const doublon = [invite(1, "ibai", "uncommon"), invite(2, "ibai", "legendary")];
+    expect(raidForGuests(240, doublon, ["ibai"]).gained).toBe(6);
+  });
+
+  it("lit le direct par la table, jamais par la carte", () => {
+    const now = T0;
+    const bureau = [invite(1, "ibai", "uncommon"), invite(2, "kamet0", "legendary")];
+    // Le login du créateur, celui que la table du direct connaît.
+    const snapshot = direct(["ibai", "autre"], now);
+    const slugs = liveGuestSlugs(bureau, snapshot, now);
+    expect([...slugs]).toEqual(["ibai"]);
+    // Un invité qu'on ne sait pas mapper (slug inconnu) ne devient pas direct.
+    expect(liveGuestSlugs([invite(1, "inconnu", "rare")], snapshot, now).size).toBe(0);
+    // Sans table du direct, personne : un raid inventé serait pire que rien.
+    expect(liveGuestSlugs(bureau, EMPTY_LIVE, now).size).toBe(0);
+  });
+
+  it("la phrase du raid dit le nombre d invités et le gain, jamais un nom", () => {
+    expect(raidLine({ gained: 6, slugs: ["ibai"] })).toBe("Raid : un invité est passé en direct — +6 abonnés.");
+    expect(raidLine({ gained: 4321, slugs: ["ibai", "kamet0"] })).toBe(
+      "Raid : 2 invités sont passés en direct — +4\u202f321 abonnés.",
+    );
   });
 });

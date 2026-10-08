@@ -21,6 +21,7 @@ import { MISSIONS, gameDay } from "@/lib/progression";
 import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
 import {
   EVENTS,
+  GUEST_SLOTS,
   SETUP_LEVELS,
   STREAMER_TOKEN_CAP,
   formatById,
@@ -245,7 +246,43 @@ function sanitizeStreamer(value: unknown, now: number): PlayerState["streamer"] 
     video: sanitizeStreamerVideo(value.video),
     event: sanitizeStreamerEvent(value.event),
     setup: sanitizeSetup(value.setup),
+    guests: sanitizeGuests(value.guests),
+    raid: sanitizeRaid(value.raid),
   };
+}
+
+/** Le bureau : au plus deux invités, deux créateurs différents, des raretés connues. */
+function sanitizeGuests(value: unknown): PlayerState["streamer"]["guests"] {
+  if (!Array.isArray(value)) return [];
+  const result: PlayerState["streamer"]["guests"] = [];
+  const vus = new Set<string>();
+  for (const raw of value) {
+    if (!isRecord(raw)) continue;
+    const slot = Math.floor(Number(raw.slot));
+    const slug = typeof raw.slug === "string" ? raw.slug.toLowerCase() : "";
+    const cardId = typeof raw.cardId === "string" ? raw.cardId : "";
+    const rarity = String(raw.rarity ?? "") as Rarity;
+    const variant = String(raw.variant ?? "") as CardVariant;
+    if (slot < 1 || slot > GUEST_SLOTS) continue;
+    if (!slug || !cardId) continue;
+    if (!RARITIES.has(rarity) || !VARIANTS.has(variant)) continue;
+    if (vus.has(slug) || result.some((guest) => guest.slot === slot)) continue;
+    vus.add(slug);
+    result.push({ slot, cardId, slug, rarity, variant });
+  }
+  return result.sort((a, b) => a.slot - b.slot);
+}
+
+/** Le dernier raid : une journée connue, un gain positif, des créateurs. */
+function sanitizeRaid(value: unknown): PlayerState["streamer"]["raid"] {
+  if (!isRecord(value)) return null;
+  const day = typeof value.day === "string" ? value.day : "";
+  const gained = nonNegativeInt(value.gained, 0);
+  if (!day || gained <= 0) return null;
+  const slugs = Array.isArray(value.slugs)
+    ? value.slugs.filter((slug): slug is string => typeof slug === "string").map((slug) => slug.toLowerCase())
+    : [];
+  return { day, gained, slugs };
 }
 
 function sanitizeMissions(value: unknown): PlayerState["missions"] {

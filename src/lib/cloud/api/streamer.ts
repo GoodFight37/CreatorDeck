@@ -22,6 +22,38 @@
 import type { CloudCore } from "./core";
 import { CloudError, asRecord } from "./core";
 
+/** Un **invité sur le bureau**, tel que le serveur le garde (`0039`). */
+export type StreamerGuestRow = {
+  /** La place : 1 ou 2. */
+  slot: number;
+  /** L'identifiant de la carte possédée. */
+  cardId: string;
+  /** Le créateur de la carte — c'est lui qui doit être en direct. */
+  slug: string;
+  rarity: string;
+  variant: string;
+};
+
+/** Un invité d'un raid payé : ce qu'il a rapporté, et pourquoi. */
+export type StreamerRaidShare = {
+  slot: number;
+  slug: string;
+  rarity: string;
+  /** Ce qu'il vaut, pour mille de la croissance du jour. */
+  permille: number;
+  gained: number;
+};
+
+/** Le raid d'une journée de jeu (`0039`). */
+export type StreamerRaidToday = {
+  /** Les abonnés amenés par le raid (0 : personne n'était en direct). */
+  gained: number;
+  /** Qui est passé, avec sa part. */
+  shares: StreamerRaidShare[];
+  /** Le raid avait-il déjà été payé avant cet appel ? */
+  already: boolean;
+};
+
 /** L'état de la chaîne, tel que le serveur le connaît. */
 export type StreamerStatus = {
   /** Les abonnés, côté serveur — c'est **lui** qui fait foi. */
@@ -42,6 +74,12 @@ export type StreamerStatus = {
   setup: string[];
   /** Le bonus de croissance du setup, pour mille (`0038`). */
   setupBonus: number;
+  /** Les invités sur le bureau (`0039`). */
+  guests: StreamerGuestRow[];
+  /** Le raid du jour : ce qu'il a payé, et qui est passé (`0039`). */
+  raidToday: number;
+  /** La journée du dernier raid payé (`''` s'il n'y en a pas). */
+  raidDay: string;
 };
 
 /** La carte d'imprévu du jour, telle que le serveur la connaît (`0038`). */
@@ -102,6 +140,16 @@ export type StreamerReturn = {
   /** Les abonnés après. */
   subscribers: number;
   perDay: number;
+  /** Le raid du jour, payé pendant ce relevé (ou relu) — `0039`. */
+  raid: StreamerRaidToday;
+};
+
+/** Le résultat d'un changement d'invité (`0039`). */
+export type StreamerGuestsResult = {
+  /** `true` si le bureau a changé (pose ou retrait). */
+  changed: boolean;
+  /** Le bureau après le changement, dans l'ordre des places. */
+  guests: StreamerGuestRow[];
 };
 
 /** Le résultat de la vidéo du jour, tel que le serveur l'a tiré. */
@@ -137,7 +185,91 @@ export async function streamerStatus(core: CloudCore): Promise<StreamerStatus> {
     tokensCap: Number(record.tokens_cap ?? 0),
     setup: Array.isArray(record.setup) ? record.setup.map((level) => String(level)) : [],
     setupBonus: Number(record.setup_bonus ?? 0),
+    guests: parseGuests(record.guests),
+    raidToday: Number(record.raid_today ?? 0),
+    raidDay: typeof record.raid_day === "string" ? record.raid_day : "",
   };
+}
+
+/**
+ * Le bureau, tel que le serveur le renvoie (`snake_case`).
+ *
+ * Tolérant : une ligne incomplète est ignorée plutôt que de casser l'écran, et
+ * une base qui n'a pas encore `0039` répond `undefined` — le bureau est alors
+ * simplement vide, comme le carnet avec des migrations anciennes.
+ */
+export function parseGuests(payload: unknown): StreamerGuestRow[] {
+  if (!Array.isArray(payload)) return [];
+  const rows: StreamerGuestRow[] = [];
+  for (const item of payload) {
+    const row = asRecord(item);
+    if (!row) continue;
+    const slug = typeof row.creator_slug === "string" ? row.creator_slug : "";
+    const cardId = typeof row.card_id === "string" ? row.card_id : "";
+    if (!slug || !cardId) continue;
+    rows.push({
+      slot: Number(row.slot ?? 0),
+      cardId,
+      slug,
+      rarity: String(row.rarity ?? ""),
+      variant: String(row.variant ?? "standard"),
+    });
+  }
+  return rows.sort((a, b) => a.slot - b.slot);
+}
+
+/** Le raid d'un relevé, tel que le serveur le renvoie. */
+export function parseRaid(payload: unknown): StreamerRaidToday {
+  const record = asRecord(payload);
+  const shares: StreamerRaidShare[] = [];
+  if (record && Array.isArray(record.guests)) {
+    for (const item of record.guests) {
+      const row = asRecord(item);
+      if (!row) continue;
+      const slug = typeof row.slug === "string" ? row.slug : "";
+      if (!slug) continue;
+      shares.push({
+        slot: Number(row.slot ?? 0),
+        slug,
+        rarity: String(row.rarity ?? ""),
+        permille: Number(row.permille ?? 0),
+        gained: Number(row.gained ?? 0),
+      });
+    }
+  }
+  return {
+    gained: Number(record?.gained ?? 0),
+    shares,
+    already: record?.already === true,
+  };
+}
+
+/**
+ * Pose un invité sur le bureau, ou libère une place (`0039`).
+ *
+ * Le client envoie la carte **telle qu'elle est dans sa collection** : le
+ * serveur vérifie qu'elle est bien à lui (`card_claim_covers`, la règle des
+ * échanges et de l'hôtel), refuse deux fois le même créateur, et renvoie le
+ * bureau complet — l'écran recopie au lieu de deviner.
+ */
+export async function streamerGuestSet(
+  core: CloudCore,
+  slot: number,
+  card: { id: string; creatorSlug: string; rarity: string; variant: string } | null,
+): Promise<StreamerGuestsResult> {
+  const payload = card
+    ? {
+        id: card.id,
+        creatorSlug: card.creatorSlug,
+        rarity: card.rarity,
+        variant: card.variant,
+      }
+    : null;
+  const record = asRecord(await core.rpc("streamer_guest_set", { p_slot: slot, p_card: payload }));
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse de bureau illisible.", "invalid_response", 0);
+  }
+  return { changed: record.changed === true, guests: parseGuests(record.guests) };
 }
 
 /**
@@ -230,6 +362,7 @@ export async function streamerVisit(core: CloudCore): Promise<StreamerReturn> {
     before: Number(record.subscribers_before ?? 0),
     subscribers: Number(record.subscribers ?? 0),
     perDay: Number(record.per_day ?? 0),
+    raid: parseRaid(record.raid),
   };
 }
 

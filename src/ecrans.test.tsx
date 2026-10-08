@@ -113,6 +113,27 @@ describe("les écrans", () => {
     expect(chaine).toContain("Ton setup");
     expect(chaine).toContain("Prochain palier");
     expect(chaine).toContain("points");
+    // Le bureau : deux places, et la règle du raid écrite noir sur blanc.
+    expect(chaine).toContain("Le bureau");
+    expect(chaine).toContain("Place 1 libre");
+    expect(chaine).toContain("Place 2 libre");
+    expect(chaine).toContain("une fois par journée de jeu");
+    banc.fermer();
+  });
+
+  it("le bureau ne propose que des créateurs en direct, et le dit quand il n'y en a aucun", async () => {
+    await application();
+    banc.appuyer(/Ta chaîne/);
+    banc.appuyer("Choisir un invité");
+    const choix = banc.ecran("10-chaine-bureau-choix");
+    // Ce que l'écran promet, et ce qu'il refuse de faire : une liste inventée.
+    expect(choix).toContain("Seuls les créateurs");
+    expect(choix).toContain("Chercher un créateur en direct");
+    // Ce banc n'a pas de table du direct (aucun cloud) : personne n'est
+    // proposé, et l'écran le dit au lieu de laisser une liste vide muette.
+    expect(choix).toContain("Aucun créateur de ta collection n'est en direct");
+    banc.appuyer("Fermer");
+    expect(banc.ecran("10-chaine-bureau-ferme")).toContain("Place 1 libre");
     banc.fermer();
   });
 

@@ -23,15 +23,20 @@ import {
   Radio,
   Sparkles,
   TrendingUp,
+  Users,
   X,
 } from "lucide-react";
 
 import { useCloud } from "@/hooks/use-cloud";
 import { useGame, useNow } from "@/hooks/use-game";
+import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import type { StreamerOpening } from "@/lib/cloud/store/streamer";
 import { gameDay } from "@/lib/progression";
 import {
+  GUEST_SLOTS,
+  GUEST_LIVE_WINDOW_MINUTES,
   SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKEN_CAP,
@@ -42,7 +47,11 @@ import {
   eventHeadline,
   formatById,
   growthWithSetup,
+  guestRaidPermille,
+  liveGuestSlugs,
   nextSetupLevel,
+  raidForGuests,
+  raidLine,
   setupBonusPermille,
   tierProgress,
   tokensOnDay,
@@ -53,6 +62,7 @@ import { buzz } from "@/lib/haptics";
 import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 
 import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game";
+import { liveStore } from "@/lib/live-store";
 
 const count = new Intl.NumberFormat("fr-FR");
 
@@ -70,6 +80,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   // Le live de vingt secondes : ouvert, il prend tout l'écran — c'est une scène,
   // pas un panneau de plus.
   const [liveOuvert, setLiveOuvert] = useState(false);
+  // Le bureau : la place qu'on est en train de remplir (1 ou 2, `null` sinon).
+  const [placeOuverte, setPlaceOuverte] = useState<number | null>(null);
+  const [recherche, setRecherche] = useState("");
   const [armed, setArmed] = useState<SwipeSide | null>(null);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const armedRef = useRef<SwipeSide | null>(null);
@@ -77,6 +90,11 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   // Ouvre la chaîne : le retour du joueur est payé ici, une fois par absence.
   useEffect(() => {
     let vivant = true;
+    // On regarde le direct en même temps : c'est lui qui décide si un invité
+    // du bureau amène un raid. La lecture est muette (le direct est un bonus,
+    // jamais une condition pour jouer) et le relevé du raid se refait tout
+    // seul dès qu'elle revient — voir plus bas.
+    void liveStore.refresh();
     void cloudStore.openStreamer().then((resultat) => {
       if (vivant) setOpening(resultat);
     });
@@ -124,6 +142,50 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const coteDroite = eventChoice(carte, "droite");
   const coteJoue = etatCarte ? eventChoice(carte, etatCarte.choice) : null;
   const carteJouee = Boolean(etatCarte);
+
+  // --- Le bureau : deux invités, choisis dans la collection -----------------
+  //
+  // Le bureau vient du serveur quand il a répondu (c'est lui qui le garde),
+  // sinon de la sauvegarde. Le **direct**, lui, vient de `useBinder()` : c'est
+  // la même donnée que le badge de l'accueil, et celle que le serveur lit dans
+  // `live_state` au moment de payer — les deux fenêtres valent dix minutes.
+  const live = useLive();
+  const guests = useMemo(() => vue?.guests ?? streamer?.guests ?? [], [vue, streamer]);
+  // Le raid retenu par la sauvegarde : c'est lui qui garde **qui** est passé,
+  // même après la fin du direct (le badge, lui, s'éteint avec la fenêtre).
+  const raidDu = streamer?.raid?.day === jour ? streamer.raid : null;
+  const raidPaye = vue ? vue.raidToday : raidDu?.gained ?? 0;
+  const direct = useMemo(() => liveGuestSlugs(guests, live, now), [guests, live, now]);
+  // Ce que le bureau vaudrait **maintenant**, avant de poser le deuxième : le
+  // joueur voit ce que sa seconde carte apporterait, sans avoir à la poser.
+  const raidPossible = useMemo(
+    () => raidForGuests(croissance, guests, direct),
+    [croissance, guests, direct],
+  );
+  // Les cartes qu'on peut poser : un créateur **différent** de celui d'à côté,
+  // encore en direct, et une seule carte par créateur (le plus rare d'abord).
+  const choixInvites = useMemo(() => {
+    if (placeOuverte === null) return [];
+    const voisins = new Set(guests.filter((g) => g.slot !== placeOuverte).map((g) => g.slug));
+    const vus = new Set<string>();
+    const out: { id: string; slug: string; label: string; rarity: Rarity; permille: number }[] = [];
+    for (const carte of state?.cards ?? []) {
+      if (voisins.has(carte.creatorSlug) || vus.has(carte.creatorSlug)) continue;
+      if (!direct.has(carte.creatorSlug)) continue;
+      vus.add(carte.creatorSlug);
+      out.push({
+        id: carte.id,
+        slug: carte.creatorSlug,
+        label: CREATOR_BY_SLUG.get(carte.creatorSlug)?.displayName ?? carte.creatorSlug,
+        rarity: carte.rarity,
+        permille: guestRaidPermille(carte.rarity),
+      });
+    }
+    const mot = recherche.trim().toLowerCase();
+    return out
+      .filter((invite) => (mot ? invite.label.toLowerCase().includes(mot) : true))
+      .sort((a, b) => b.permille - a.permille || a.label.localeCompare(b.label, "fr"));
+  }, [placeOuverte, guests, state?.cards, direct, recherche]);
 
   async function publier() {
     if (!choisi || busy) return;
@@ -201,6 +263,73 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
     }
     setNotice({ message: issue.message ?? "Imprévu joué.", isError: false });
   }
+
+  /**
+   * Pose un invité sur le bureau — ou libère la place si `cardId` est nul.
+   *
+   * Le bureau lui-même ne paie rien : il décide seulement de **qui** peut
+   * amener un raid. Le raid est payé par le relevé de la chaîne (le serveur à
+   * l'ouverture avec un compte, le moteur local sinon), une fois par journée de
+   * jeu — changer d'invité après coup ne repaie donc jamais.
+   */
+  async function poserInvite(slot: number, cardId: string | null) {
+    if (busy) return;
+    setBusy(true);
+    setNotice(null);
+    const issue = await cloudStore.setStreamerGuest(slot, cardId);
+    setBusy(false);
+    setPlaceOuverte(null);
+    setRecherche("");
+    if (issue.status !== "done") {
+      setNotice({ message: issue.message, isError: true });
+      return;
+    }
+    setNotice({ message: issue.message ?? "Bureau à jour.", isError: false });
+  }
+
+  /**
+   * Le relevé du raid, refait **une fois** si le direct était périmé.
+   *
+   * Le raid se paie dans le relevé de la chaîne, et le serveur ne paie que si
+   * `live_state` a moins de dix minutes : ouvert juste avant un
+   * rafraîchissement du direct, l'écran paierait zéro. Le serveur n'écrit
+   * alors **aucune** ligne de raid — la journée reste donc ouverte, et ce
+   * second relevé la rattrape. Garde-fou : une seule tentative par journée de
+   * jeu, et seulement s'il y a vraiment un invité en direct à rattraper.
+   */
+  const raidRattrape = useRef<string | null>(null);
+  useEffect(() => {
+    if (raidRattrape.current === jour) return;
+    // On attend le premier relevé : sans lui, les invités ne sont pas encore
+    // connus et le rattrapage partirait à vide.
+    if (!opening || opening.status !== "done") return;
+    if (raidPaye > 0) {
+      raidRattrape.current = jour;
+      return;
+    }
+    if (guests.length === 0 || direct.size === 0) return;
+    raidRattrape.current = jour;
+    let vivant = true;
+    void cloudStore.openStreamer(direct).then((nouveau) => {
+      if (!vivant) return;
+      setOpening((precedent) =>
+        precedent?.status === "done" && nouveau.status === "done"
+          ? {
+              ...nouveau,
+              // L'absence ne se rejoue pas : on garde le résumé du premier
+              // relevé et on y ajoute seulement ce que le second apporte.
+              days: precedent.days,
+              countedDays: precedent.countedDays,
+              gained: precedent.gained,
+              lines: [...precedent.lines, ...nouveau.lines.slice(precedent.lines.length)],
+            }
+          : nouveau,
+      );
+    });
+    return () => {
+      vivant = false;
+    };
+  }, [opening, jour, raidPaye, guests, direct]);
 
   /** Installe le prochain palier de setup (le prix est celui du serveur). */
   async function acheter(id: string) {
@@ -500,6 +629,143 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               ? `Prochain palier : « ${prochain.label} » à ${count.format(prochain.price)} points.`
               : "Ton setup est complet : la chaîne grandit une fois et demie plus vite qu'à ses débuts."}
           </p>
+        </section>
+
+        {/* Le bureau : deux invités choisis dans la collection. Ce sont eux,
+            et eux seuls, qui amènent un raid — quand leur créateur streame
+            vraiment. */}
+        <section className="chaine-bureau">
+          <h3>
+            <Users size={16} /> Le bureau
+          </h3>
+          <p className="chaine-intro">
+            Invite <strong>{GUEST_SLOTS} cartes de ta collection</strong>, de deux créateurs différents. Quand le
+            créateur streame vraiment — la même fenêtre de {GUEST_LIVE_WINDOW_MINUTES} minutes que le badge du
+            direct — son passage fait grandir la chaîne <strong>une fois par journée de jeu</strong>. Ça ne coûte
+            rien, et changer d&apos;invité ne repaie jamais la journée.
+          </p>
+          <ul className="chaine-bureau-list">
+            {Array.from({ length: GUEST_SLOTS }, (_, index) => index + 1).map((place) => {
+              const invite = guests.find((guest) => guest.slot === place) ?? null;
+              const enDirect = invite ? direct.has(invite.slug) : false;
+              const nom = invite
+                ? CREATOR_BY_SLUG.get(invite.slug)?.displayName ?? invite.slug
+                : `Place ${place} libre`;
+              const part = invite ? guestRaidPermille(invite.rarity) : 0;
+              return (
+                <li
+                  key={place}
+                  className={`chaine-bureau-item${invite ? " pose" : ""}${enDirect ? " en-direct" : ""}`}
+                >
+                  <span className="chaine-bureau-head">
+                    <strong>{nom}</strong>
+                    <span>
+                      {invite ? (
+                        <>
+                          <i style={{ color: RARITY_META[invite.rarity].color }}>
+                            {RARITY_META[invite.rarity].label}
+                          </i>
+                          {" · +" + (part / 10).toFixed(1) + " % de croissance"}
+                        </>
+                      ) : (
+                        "aucune carte invitée"
+                      )}
+                    </span>
+                  </span>
+                  {invite ? (
+                    <span className="chaine-bureau-live">
+                      {enDirect ? (
+                        <>
+                          <Radio size={13} /> en direct — {count.format(Math.floor((croissance * part) / 1000))} abonnés
+                          au relevé
+                        </>
+                      ) : (
+                        "hors ligne : son passage ne rapporterait rien"
+                      )}
+                    </span>
+                  ) : null}
+                  <span className="chaine-bureau-actions">
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => {
+                        setPlaceOuverte(place);
+                        setRecherche("");
+                      }}
+                    >
+                      {invite ? "Changer" : "Choisir un invité"}
+                    </button>
+                    {invite ? (
+                      <button type="button" disabled={busy} onClick={() => void poserInvite(place, null)}>
+                        Retirer
+                      </button>
+                    ) : null}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+          {raidPaye > 0 ? (
+            <p className="chaine-bureau-raid">{raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] })}</p>
+          ) : raidPossible.gained > 0 ? (
+            <p className="chaine-bureau-raid">
+              Un invité est en direct : ton relevé ajoute <strong>+{count.format(raidPossible.gained)} abonnés</strong>{" "}
+              — une fois pour la journée de jeu.
+            </p>
+          ) : null}
+          {placeOuverte === null ? null : (
+            <div className="chaine-bureau-pick">
+              <div className="chaine-bureau-pick-head">
+                <strong>Place {placeOuverte}</strong>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPlaceOuverte(null);
+                    setRecherche("");
+                  }}
+                >
+                  <X size={14} /> Fermer
+                </button>
+              </div>
+              <p className="chaine-bureau-pick-hint">
+                Seuls les créateurs <strong>en direct maintenant</strong> sont proposés : un invité hors ligne
+                n&apos;amène rien, et le bureau ne sert qu&apos;à ça. Une carte par créateur.
+              </p>
+              <input
+                className="chaine-bureau-search"
+                type="search"
+                value={recherche}
+                placeholder="Chercher un créateur en direct…"
+                aria-label="Chercher un créateur en direct"
+                onChange={(event) => setRecherche(event.target.value)}
+              />
+              {choixInvites.length > 0 ? (
+                <ul className="chaine-bureau-choix">
+                  {choixInvites.map((carte) => (
+                    <li key={carte.id}>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void poserInvite(placeOuverte, carte.id)}
+                      >
+                        <strong>{carte.label}</strong>
+                        <span>
+                          {RARITY_META[carte.rarity].label} · +{(carte.permille / 10).toFixed(1)} % de croissance ·{" "}
+                          {count.format(Math.floor((croissance * carte.permille) / 1000))} abonnés au relevé
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="chaine-bureau-empty">
+                  {recherche.trim()
+                    ? `Aucun créateur en direct ne correspond à « ${recherche.trim()} ».`
+                    : "Aucun créateur de ta collection n'est en direct à cet instant — reviens quand l'un des tiens streame."}
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         <p className="odds-intro">

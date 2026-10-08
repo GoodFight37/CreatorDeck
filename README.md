@@ -120,7 +120,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0038` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+| `npm run supabase:verify` | joue les migrations `0001` → `0039` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
 1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
 barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
 interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
@@ -266,7 +266,7 @@ docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qu
                          est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0038` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0039` (réelles, rejouables, vérifiées)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),

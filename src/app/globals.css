@@ -2717,6 +2717,36 @@ input:focus-visible {
 .chaine-setup-note { color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
 .chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
 .chaine-setup-buy:disabled { opacity: .55; cursor: default; }
+/* Le bureau : deux places, et une liste de créateurs **en direct** pour les
+   remplir. La place occupée par un invité en direct est la seule à s'allumer —
+   c'est l'information qui compte : un invité hors ligne ne rapporte rien. */
+.chaine-bureau { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.chaine-bureau h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.chaine-bureau-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.chaine-bureau-item { display: flex; flex-direction: column; gap: 5px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 12px; background: rgba(255,255,255,.02); }
+.chaine-bureau-item.pose { border-style: solid; }
+.chaine-bureau-item.en-direct { border-color: rgba(255,90,90,.55); background: rgba(255,90,90,.06); }
+.chaine-bureau-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.chaine-bureau-head strong { font-size: 14px; }
+.chaine-bureau-head > span { color: var(--muted-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chaine-bureau-head i { font-style: normal; font-weight: 700; }
+.chaine-bureau-live { display: inline-flex; align-items: center; gap: 5px; color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
+.chaine-bureau-item.en-direct .chaine-bureau-live { color: #ff9d9d; font-weight: 600; }
+.chaine-bureau-actions { display: flex; gap: 8px; margin-top: 2px; }
+.chaine-bureau-actions button { padding: 8px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: none; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.chaine-bureau-actions button:disabled { opacity: .5; cursor: default; }
+.chaine-bureau-raid { margin: 0; padding: 9px 11px; color: var(--accent-light); border: 1px solid rgb(var(--accent-rgb) / .4); border-radius: 11px; background: rgb(var(--accent-rgb) / .08); font-size: 12.5px; line-height: 1.45; }
+.chaine-bureau-pick { display: flex; flex-direction: column; gap: 8px; padding: 11px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 12px; background: rgb(var(--accent-rgb) / .05); }
+.chaine-bureau-pick-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chaine-bureau-pick-head button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: none; font-size: 12px; cursor: pointer; }
+.chaine-bureau-pick-hint { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
+.chaine-bureau-search { padding: 9px 11px; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.25); font-size: 13px; }
+.chaine-bureau-choix { display: flex; flex-direction: column; gap: 6px; max-height: 260px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
+.chaine-bureau-choix button { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 9px 11px; text-align: left; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }
+.chaine-bureau-choix button:disabled { opacity: .5; cursor: default; }
+.chaine-bureau-choix strong { font-size: 13.5px; }
+.chaine-bureau-choix span { color: var(--muted-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.chaine-bureau-empty { margin: 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
 /* Le live de vingt secondes : une scène, pas un panneau. Le cadre est sombre,
    le chat respire en bas, les bulles tombent par-dessus et se touchent au doigt. */
 .chaine-live { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; margin-top: 10px; padding: 12px; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .5); border-radius: 12px; background: rgb(var(--accent-rgb) / .1); font-size: 14px; font-weight: 700; cursor: pointer; }

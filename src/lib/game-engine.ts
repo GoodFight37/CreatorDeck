@@ -28,10 +28,13 @@ import {
 } from "@/lib/catalog";
 import { DIRECT_BONUS, PITY, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
 import {
+  GUEST_SLOTS,
   absenceSummary,
   eventForDay,
+  growthWithSetup,
   newStreamerState,
   playEventLocally,
+  raidForGuests,
   setupBonusPermille,
   nextSetupLevel,
   setupLevelById,
@@ -1984,6 +1987,17 @@ export function applyStreamerMirror(
   const video = mirror.video !== undefined ? mirror.video : prev.video;
   const event = mirror.event !== undefined ? mirror.event : prev.event;
   const setup = mirror.setup !== undefined ? [...mirror.setup] : prev.setup;
+  // Les invités se recopient **tels quels** : le serveur les valide (la carte
+  // doit être au joueur), et un envoi vide serait un effacement, pas une
+  // information — même règle que le setup. Le raid, lui, suit sa journée : celui
+  // d'hier ne s'affiche pas comme celui d'aujourd'hui.
+  const guests = mirror.guests !== undefined ? [...mirror.guests] : prev.guests;
+  const raid =
+    mirror.raid === undefined
+      ? prev.raid
+      : mirror.raid === null
+        ? null
+        : { day: mirror.raid.day, gained: mirror.raid.gained, slugs: [...mirror.raid.slugs] };
   if (
     subscribers === prev.subscribers &&
     lastSeenAt === prev.lastSeenAt &&
@@ -1991,6 +2005,8 @@ export function applyStreamerMirror(
     tokensToday === prev.tokensToday &&
     video === prev.video &&
     event === prev.event &&
+    guests === prev.guests &&
+    raid === prev.raid &&
     setup.length === prev.setup.length &&
     setup.every((level, index) => level === prev.setup[index])
   ) {
@@ -1999,7 +2015,7 @@ export function applyStreamerMirror(
   return {
     ...state,
     updatedAt: now,
-    streamer: { subscribers, lastSeenAt, tokensDay, tokensToday, video, event, setup },
+    streamer: { subscribers, lastSeenAt, tokensDay, tokensToday, video, event, setup, guests, raid },
   };
 }
 
@@ -2113,6 +2129,100 @@ export function buyStreamerSetupLocally(
       streamer: { ...state.streamer, setup: [...state.streamer.setup, level.id] },
     },
     level: { id: level.id, label: level.label },
+  };
+}
+
+/**
+ * Pose (ou retire) un **invité sur le bureau**, localement (build sans cloud).
+ *
+ * Trois refus, les mêmes qu'au serveur (`streamer_guest_set`, `0039`) : la place
+ * existe, la carte est **au joueur**, et son créateur n'est pas déjà sur l'autre
+ * place. La carte vient de la collection ; l'appelant ne peut pas en inventer une
+ * — c'est le contrôle qui compte, et il est joué ici comme il l'est en SQL.
+ */
+export function setStreamerGuestLocally(
+  state: PlayerState,
+  slot: number,
+  cardId: string | null,
+  now = Date.now(),
+): { state: PlayerState; guests: PlayerState["streamer"]["guests"] } | { error: string } {
+  const place = Math.floor(slot);
+  if (!Number.isFinite(place) || place < 1 || place > GUEST_SLOTS) {
+    return { error: `Le bureau n'a que ${GUEST_SLOTS} places.` };
+  }
+  const prev = state.streamer.guests;
+
+  // Retirer un invité : la place se libère, rien d'autre ne bouge.
+  if (cardId === null || cardId === "") {
+    const guests = prev.filter((guest) => guest.slot !== place);
+    if (guests.length === prev.length) return { state, guests: prev };
+    return {
+      state: { ...state, updatedAt: now, streamer: { ...state.streamer, guests } },
+      guests,
+    };
+  }
+
+  const card = state.cards.find((owned) => owned.id === cardId);
+  if (!card) return { error: "Cette carte n'est pas dans ta collection." };
+  const slug = card.creatorSlug.toLowerCase();
+  const autre = prev.find((guest) => guest.slot !== place && guest.slug === slug);
+  if (autre) return { error: "Ce créateur tient déjà l'autre place." };
+
+  const guests = [
+    ...prev.filter((guest) => guest.slot !== place),
+    { slot: place, cardId: card.id, slug, rarity: card.rarity, variant: card.variant },
+  ].sort((a, b) => a.slot - b.slot);
+  return {
+    state: { ...state, updatedAt: now, streamer: { ...state.streamer, guests } },
+    guests,
+  };
+}
+
+/**
+ * Le **raid** du jour, payé localement (build sans cloud, ou cloud sans compte).
+ *
+ * Mêmes règles qu'au serveur : le raid se paie **une fois par journée de jeu**,
+ * et seulement pour les invités dont le créateur est **réellement en direct** au
+ * moment du relevé (`liveSlugs`, telle que la table du direct la publie). La
+ * fraîcheur, elle, est vérifiée par l'appelant : c'est lui qui sait quel
+ * `refreshedAt` il a lu, et un direct périmé ne doit pas payer.
+ */
+export function payStreamerRaidLocally(
+  state: PlayerState,
+  now = Date.now(),
+  liveSlugs: readonly string[] | ReadonlySet<string> = [],
+  /**
+   * Les abonnés qui portent la croissance du raid.
+   *
+   * Le serveur paie l'absence **et** le raid avec la croissance d'**avant** le
+   * relevé (`v_per_day`, calculé sur la ligne de `streamer_channels` telle
+   * qu'elle était) : passer les abonnés d'avant ici rejoue exactement la même
+   * règle, sinon un palier franchi pendant l'absence ferait payer au raid la
+   * croissance d'après — un chiffre que le serveur n'aurait pas donné.
+   */
+  baseSubscribers = state.streamer.subscribers,
+): { state: PlayerState; raid: PlayerState["streamer"]["raid"]; gained: number } {
+  const jour = gameDay(now);
+  const deja = state.streamer.raid;
+  if (deja?.day === jour) return { state, raid: deja, gained: 0 };
+
+  const perDay = growthWithSetup(baseSubscribers, state.streamer.setup);
+  const { gained, shares } = raidForGuests(perDay, state.streamer.guests, liveSlugs);
+  if (gained <= 0) return { state, raid: deja, gained: 0 };
+
+  const raid = { day: jour, gained, slugs: shares.map((share) => share.guest.slug) };
+  return {
+    state: {
+      ...state,
+      updatedAt: now,
+      streamer: {
+        ...state.streamer,
+        subscribers: state.streamer.subscribers + gained,
+        raid,
+      },
+    },
+    raid,
+    gained,
   };
 }
 

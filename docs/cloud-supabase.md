@@ -22,8 +22,9 @@ packs**. Le cloud apporte :
    **plancher de malchance** et la **série de sept jours** relus côté serveur, les
    **jetons**, et, depuis `0036`, **la chaîne** — le simulateur de streameur —
    avec, depuis `0038`, **les imprévus à choix** (une carte par jour, deux côtés)
-   et **le setup en cinq paliers**, et, depuis `0035`, `schema_versions()` pour
-   dire ce qui est collé.
+   et **le setup en cinq paliers**, depuis `0039`, **les invités sur le bureau**
+   (deux cartes du classeur, un raid quand leur créateur streame vraiment), et,
+   depuis `0035`, `schema_versions()` pour dire ce qui est collé.
 
 Le détail de chaque pièce est au §8 : c'est lui qui fait foi.
 
@@ -267,6 +268,17 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0039_invites_bureau.sql`](../supabase/migrations/0039_invites_bureau.sql)
+     → **Run** pour que la chaîne ait ses **invités sur le bureau** : deux cartes
+     du classeur (deux créateurs différents, une carte qui est bien à toi),
+     choisies par le joueur, qui amènent un **raid** — des abonnés, jamais des
+     jetons — quand leur créateur est **réellement en direct** (fenêtre de dix
+     minutes, la même que le badge de l'accueil). Le raid se paie **dans le
+     relevé de la chaîne**, **une seule fois par journée de jeu** : la ligne de
+     `streamer_raids` est la preuve du paiement, et changer d'invité après coup
+     ne repaie pas. La migration remplace `streamer_status()` et
+     `streamer_visit()` de `0038` : **colle-la après `0038`**. Détail : §8,
+     « Les invités sur le bureau (`0039`) ».
    - [`supabase/migrations/0038_imprevus_setup.sql`](../supabase/migrations/0038_imprevus_setup.sql)
      → **Run** pour que la chaîne ait ses **imprévus à choix** et son **setup** :
      une carte par journée de jeu, choisie côté serveur (`md5(joueur, journée)`,
@@ -314,8 +326,8 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      créateur retiré du classement ou déjà possédé. La bascule ouvre le compte
      **une fois** avec le solde déjà gagné (borné à un million, comme
      `_wallet_ensure()` dans `0027`). La migration ajoute aussi
-     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des huit
-     dernières migrations (`0030` → `0038`) sont installées — c'est la réponse à
+     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des
+     dernières migrations (`0030` → `0039`) sont installées — c'est la réponse à
      « est-ce que c'est bien le SQL que j'ai collé ? », y compris pour `0034`,
      qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
      jetons, les missions du jour ».
@@ -500,7 +512,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-huit migrations** (`0001` à `0038`) pour de vrai, dans
+> Le script exécute **les trente-neuf migrations** (`0001` à `0039`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -1038,8 +1050,9 @@ de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
 jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
 le prochain booster est un J1, et il paie à nouveau.
 
-**Savoir ce qui est collé (`0035`, complétée par `0036`, `0037` puis `0038`).** `schema_versions()` rend un objet
-`{ "0030": true, …, "0038": true }` : chaque clé est un numéro de migration, la
+**Savoir ce qui est collé (`0035`, complétée par `0036`, `0037`, `0038` puis
+`0039`).** `schema_versions()` rend un objet
+`{ "0030": true, …, "0039": true }` : chaque clé est un numéro de migration, la
 valeur dit si elle est **dans la base**. Elle ne lit que le catalogue (le texte
 des fonctions internes, via `_schema_body()`) et ne rend que des booléens — donc
 elle se lit **sans compte** :
@@ -1053,11 +1066,11 @@ C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
 existantes), donc son absence ne se voyait nulle part ailleurs. La même question
 se pose **dans le SQL Editor** de Supabase, en une ligne :
-`select public.schema_versions() -> '0038';` doit rendre `true`.
+`select public.schema_versions() -> '0039';` doit rendre `true`.
 
 Le workflow `.github/workflows/prod-check.yml` répondait à la même question
 depuis un runner et écrivait le verdict en clair dans le journal du run (une
-ligne `0030` → `0038` par migration, `collée` ou `ABSENTE`). Il a été
+ligne `0030` → `0039` par migration, `collée` ou `ABSENTE`). Il a été
 **supprimé le 8 octobre 2026** avec les autres workflows du dépôt (commits
 `ae5016f` et `8760723`) : le verdict se lit donc maintenant avec la requête
 ci-dessus, ou avec la boucle `curl` qui l'interroge en une commande.
@@ -1168,6 +1181,67 @@ carte qui n'est pas celle du jour est refusée en local aussi.
 remplacent des fonctions de `0036` : recoller `0036` seule après `0038` refait
 passer `streamer_status()` à l'ancienne version, et l'écran perd le setup
 (le vérifieur joue ce piège au lieu de le commenter).
+
+### Les invités sur le bureau (`0039`)
+
+**Deux cartes du classeur, et un raid payé quand leur créateur streame
+vraiment.** C'est la sixième étape de « Ta chaîne », et la deuxième qui paie
+quelque chose — les abonnés, jamais une monnaie.
+
+* **Le bureau** (`streamer_guest_set(place, carte)`). Deux places
+  (`streamer_guests`, clé `(user_id, slot)`, `check (slot between 1 and 2)`).
+  Le client envoie la carte **telle qu'elle est dans sa collection** —
+  identifiant, créateur, rareté, variante — et le serveur vérifie **qu'elle est
+  bien au joueur** avec `card_claim_covers()`, la règle déjà utilisée par les
+  échanges et l'hôtel : une carte prêtée ou perdue ne tient pas le plateau. Une
+  carte par créateur (index unique `streamer_guests_un_createur`), donc deux
+  invités de deux créateurs **différents**. Le bureau **ne coûte rien** : ni
+  jeton, ni point. Une carte nulle libère la place, et le refus revient en
+  clair (`place-inconnue`, `carte-sans-identifiant`, `createur-inconnu`,
+  `rarete-inconnue`, `variante-inconnue`, `meme-createur`,
+  `carte-non-possedee`) — l'écran affiche la phrase, il ne devine pas.
+* **Le raid** (`streamer_raids`, clé `(user_id, day)`). Un invité dont le
+  créateur est **en direct** rapporte `floor(croissance du jour × pour-mille /
+  1000)` abonnés : **15 / 25 / 40 / 60 / 90** pour mille selon la rareté de la
+  carte (Commune → Légendaire). La règle vit **deux fois** — dans
+  `src/data/streamer.json` (`guests.raidPermille`) et dans
+  `_streamer_guest_permille()` — et le test `src/lib/supabase-streamer.test.ts`
+  tient les deux copies ensemble, comme pour les taux de drop.
+* **Le direct est lu, jamais deviné.** La fraîcheur vient de
+  `live_state.refreshed_at`, et la fenêtre est **la même que le badge** :
+  `_streamer_live_window()` = dix minutes = `LIVE_TTL_MS` côté application. Un
+  invité dont le direct date d'hier ne paie pas, et un cache périmé ne paie pas
+  non plus — le vérifieur joue les deux cas (cache à −20 min : 0 ; cache frais :
+  le raid tombe).
+* **Une seule fois par journée de jeu.** Le raid se paie **dans
+  `streamer_visit()`** : si la ligne du jour manque et qu'un invité est en
+  direct, elle est écrite et les abonnés tombent ; sinon le relevé **relit** ce
+  qui a été payé (`already: true`). Changer d'invité, rouvrir l'écran ou
+  reposer une carte ne rouvre donc jamais la caisse — et un relevé qui ne paie
+  rien **n'écrit rien**, ce qui laisse la journée ouverte si le direct n'était
+  pas encore frais.
+* **Ce que l'écran reçoit.** `streamer_status()` rend `guests` (le bureau),
+  `raid_day` et `raid_today` ; `streamer_visit()` rend `raid: { gained, guests,
+  already }`, où `guests` porte la part de chaque invité (place, créateur,
+  rareté, pour-mille, abonnés). Le bureau est agrégé par
+  `_streamer_guest_list()` — **un tableau, `[]` s'il est vide** — parce que
+  `to_jsonb()` d'une fonction ensembliste rend **zéro ligne** quand le bureau
+  est vide : le `RETURN` n'avait alors plus rien à rendre et `streamer_status()`
+  répondait `NULL` au lieu d'un état vide. C'est exactement le genre de piège
+  que le vérifieur attrape, et il le joue.
+* **Côté appareil**, `src/lib/streamer.ts` porte les règles pures
+  (`guestRaidPermille`, `raidForGuests`, `raidLine`, `liveGuestSlugs`),
+  `src/lib/cloud/api/streamer.ts` les trois appels (`streamerGuestSet`, plus le
+  bureau dans `streamerStatus` et le raid dans `streamerVisit`), et l'écran
+  « Ta chaîne » sa section **Le bureau** : les deux places, l'état du direct
+  (allumé seulement si le créateur streame **maintenant**), et la liste des
+  créateurs en direct de ta collection pour choisir. Hors ligne, le moteur local
+  (`setStreamerGuestLocally`, `payStreamerRaidLocally`) applique les mêmes
+  règles — refus compris.
+
+**Coller `0039` après `0038`.** Elle remplace `streamer_status()` et
+`streamer_visit()` : recoller `0038` seule après `0039` refait passer l'écran à
+l'ancienne version, et il perd le bureau — le vérifieur joue ce piège-là aussi.
 
 ### Le live de vingt secondes (aucune migration)
 

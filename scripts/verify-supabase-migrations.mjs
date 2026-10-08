@@ -164,6 +164,7 @@ try {
   const jetons = await readFile(path.join(MIGRATIONS, "0035_jetons.sql"), "utf8");
   const chaine = await readFile(path.join(MIGRATIONS, "0036_streamer.sql"), "utf8");
   const imprevus = await readFile(path.join(MIGRATIONS, "0038_imprevus_setup.sql"), "utf8");
+  const invites = await readFile(path.join(MIGRATIONS, "0039_invites_bureau.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -204,6 +205,7 @@ try {
     ["0036_streamer.sql", chaine],
     ["0037_gardes.sql", gardes],
     ["0038_imprevus_setup.sql", imprevus],
+    ["0039_invites_bureau.sql", invites],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -5925,6 +5927,232 @@ try {
     "permission denied",
   );
 
+  // --- Les invités sur le bureau (0039) ------------------------------------
+  //
+  // Le bloc précédent a recollé `0036` puis `0038` pour éprouver la pile, donc
+  // `streamer_status()` est redevenu celui d'avant les invités : on recolle
+  // `0039`, exactement comme le ferait le joueur. C'est la règle du projet —
+  // on recolle dans l'ordre des numéros — et ce recollage sert aussi de
+  // contrôle : le bureau doit revenir **tel quel**.
+  //
+  // Ce qui se vérifie ici n'est pas l'agrément du bureau, c'est ce que le client
+  // ne peut pas faire : poser une carte qu'il ne possède pas, tenir la caisse
+  // ouverte en rouvrant l'écran, ou payer sur un direct périmé.
+  await client.query(invites);
+  const BUREAU = "b0b0b0b0-7777-4777-8777-b0b0b0b0b0b0";
+  const AUTRE = "a0a0a0a0-8888-4888-8888-a0a0a0a0a0a0";
+  // Les fixtures sont **honnêtes par construction** : `card()` remplace la
+  // rareté annoncée par celle du catalogue, donc la part du raid se lit sur la
+  // carte telle qu'elle est écrite, jamais sur ce qu'on a tapé.
+  const carteBureau = card("bureau-1", "ibai", "uncommon", "holo", 30);
+  const carteAutre = card("bureau-autre", "ibai", "uncommon", "standard", 30);
+  const carteInconnue = card("bureau-2", "summit1g", "legendary", "gold", 30);
+  await player(BUREAU, "Victoria", [carteBureau]);
+  await player(AUTRE, "Anouk", [carteAutre]);
+
+  // Les invités du fichier et ceux du SQL disent la même chose : c'est le
+  // miroir que le test unitaire tient à l'écriture, et que le vérificateur
+  // rejoue ici sur la **vraie** fonction, pas sur le texte de la migration.
+  const reglagesBureau = JSON.parse(
+    await readFile(path.join(ROOT, "src", "data", "streamer.json"), "utf8"),
+  ).guests;
+  const reglagesPart = (carte) => reglagesBureau.raidPermille[carte.rarity] ?? 0;
+  const partBureau = reglagesPart(carteBureau);
+  const permillesSql = (
+    await client.query(
+      `select public._streamer_guest_permille('common') as a,
+              public._streamer_guest_permille('uncommon') as b,
+              public._streamer_guest_permille('rare') as c,
+              public._streamer_guest_permille('epic') as d,
+              public._streamer_guest_permille('legendary') as e,
+              public._streamer_guest_permille('inconnue') as f`,
+    )
+  ).rows[0];
+  check(
+    "invités : les parts du raid sont celles du fichier (15/25/40/60/90, 0 sinon)",
+    permillesSql.a === reglagesBureau.raidPermille.common &&
+      permillesSql.b === reglagesBureau.raidPermille.uncommon &&
+      permillesSql.c === reglagesBureau.raidPermille.rare &&
+      permillesSql.d === reglagesBureau.raidPermille.epic &&
+      permillesSql.e === reglagesBureau.raidPermille.legendary &&
+      Number(permillesSql.f) === 0 &&
+      reglagesBureau.slots === 2,
+    JSON.stringify(permillesSql),
+  );
+
+  const bureauNeuf = (await asPlayer(BUREAU, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "invités : un bureau neuf est vide, sans raid payé",
+    Array.isArray(bureauNeuf.guests) &&
+      bureauNeuf.guests.length === 0 &&
+      Number(bureauNeuf.raid_today) === 0 &&
+      bureauNeuf.raid_day === "",
+    JSON.stringify(bureauNeuf),
+  );
+
+  const pose = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(1, $1::jsonb) as r", [
+      JSON.stringify(carteBureau),
+    ])
+  ).rows[0].r;
+  check(
+    "invités : une carte de sa collection tient la place 1",
+    pose.ok === true &&
+      pose.guests.length === 1 &&
+      pose.guests[0].slot === 1 &&
+      pose.guests[0].creator_slug === "ibai" &&
+      pose.guests[0].card_id === "bureau-1",
+    JSON.stringify(pose),
+  );
+
+  const refusCarte = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(2, $1::jsonb) as r", [
+      JSON.stringify(carteInconnue),
+    ])
+  ).rows[0].r;
+  check(
+    "invités : une carte qu'on ne possède pas est refusée",
+    refusCarte.ok === false && refusCarte.error === "carte-non-possedee",
+    JSON.stringify(refusCarte),
+  );
+
+  const refusDouble = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(2, $1::jsonb) as r", [
+      JSON.stringify({ ...carteBureau, id: "bureau-1-bis" }),
+    ])
+  ).rows[0].r;
+  check(
+    "invités : le même créateur ne tient pas les deux places",
+    refusDouble.ok === false && refusDouble.error === "meme-createur",
+    JSON.stringify(refusDouble),
+  );
+
+  const refusPlace = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(3, $1::jsonb) as r", [
+      JSON.stringify(carteBureau),
+    ])
+  ).rows[0].r;
+  const refusVariante = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(2, $1::jsonb) as r", [
+      JSON.stringify({ ...carteBureau, id: "bureau-1-ter", variant: "arc-en-ciel" }),
+    ])
+  ).rows[0].r;
+  check(
+    "invités : une place au-delà du bureau et une variante inventée sont refusées",
+    refusPlace.ok === false &&
+      refusPlace.error === "place-inconnue" &&
+      refusVariante.ok === false &&
+      refusVariante.error === "variante-inconnue",
+    JSON.stringify({ refusPlace, refusVariante }),
+  );
+
+  // Le direct : personne n'est en direct pour ce créateur, donc le relevé ne
+  // paie aucun raid — même avec un invité bien posé.
+  await asPlayer(BUREAU, "select public.streamer_visit() as r");
+  const sansDirect = (await asPlayer(BUREAU, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "invités : sans direct, le relevé ne paie aucun raid",
+    Number(sansDirect.raid.gained) === 0 && sansDirect.raid.already === false,
+    JSON.stringify(sansDirect.raid),
+  );
+
+  // On fabrique un direct **frais** pour ce créateur, comme le ferait
+  // `refresh-live` : une ligne dans `live_streams`, et `live_state` daté de
+  // maintenant (c'est cette date-là que l'application lit aussi).
+  const loginBureau = (
+    await client.query("select login from public.creators where slug = 'ibai'")
+  ).rows[0].login;
+  await client.query(
+    `insert into public.live_streams (login, display_name, viewers, refreshed_at)
+     values ($1, 'Ibai', 4120, now())
+     on conflict (login) do update set viewers = 4120, refreshed_at = now()`,
+    [loginBureau],
+  );
+  await client.query("update public.live_state set refreshed_at = now(), streams = 1");
+
+  const etatAvantRaid = (await asPlayer(BUREAU, "select public.streamer_status() as r")).rows[0].r;
+  const abonnesAvantRaid = Number(etatAvantRaid.subscribers);
+  const perDayBureau = Number(etatAvantRaid.per_day);
+  const raidPaye = (await asPlayer(BUREAU, "select public.streamer_visit() as r")).rows[0].r;
+  const attenduRaid = Math.floor((perDayBureau * partBureau) / 1000);
+  check(
+    `invités : un invité en direct paie son raid (${partBureau} pour mille de la croissance)`,
+    Number(raidPaye.raid.gained) === attenduRaid &&
+      raidPaye.raid.already === false &&
+      raidPaye.raid.guests.length === 1 &&
+      raidPaye.raid.guests[0].slug === "ibai" &&
+      Number(raidPaye.subscribers) === abonnesAvantRaid + attenduRaid,
+    JSON.stringify({ raidPaye, attenduRaid, abonnesAvantRaid, perDayBureau }),
+  );
+
+  const raidRejoue = (await asPlayer(BUREAU, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "invités : le raid ne se paie qu'une fois par journée de jeu",
+    Number(raidRejoue.raid.gained) === attenduRaid &&
+      raidRejoue.raid.already === true &&
+      Number(raidRejoue.subscribers) === Number(raidPaye.subscribers),
+    JSON.stringify(raidRejoue.raid),
+  );
+
+  // Changement d'invité après paiement : la caisse ne se rouvre pas.
+  const changement = (
+    await asPlayer(BUREAU, "select public.streamer_guest_set(1, $1::jsonb) as r", [
+      JSON.stringify({ ...carteBureau, id: "bureau-1-quatre" }),
+    ])
+  ).rows[0].r;
+  const apresChangement = (await asPlayer(BUREAU, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "invités : changer d'invité après le raid ne repaie pas",
+    changement.ok === true &&
+      Number(apresChangement.raid.gained) === attenduRaid &&
+      Number(apresChangement.subscribers) === Number(raidPaye.subscribers),
+    JSON.stringify(apresChangement.raid),
+  );
+
+  // Le direct périmé : même invité, même ligne dans `live_streams`, mais un
+  // cache vieux de vingt minutes. C'est la règle de fraîcheur du badge (dix
+  // minutes) appliquée au raid — un direct d'hier ne doit rien payer.
+  await asPlayer(AUTRE, "select public.streamer_guest_set(1, $1::jsonb) as r", [
+    JSON.stringify(carteAutre),
+  ]);
+  // L'invité est posé, et le premier relevé se fait **cache périmé** : c'est le
+  // seul ordre qui prouve quelque chose — un relevé frais aurait payé le raid,
+  // et le contrôle suivant lirait le paiement au lieu de l'absence de paiement.
+  await client.query("update public.live_state set refreshed_at = now() - interval '20 minutes'");
+  const perime = (await asPlayer(AUTRE, "select public.streamer_visit() as r")).rows[0].r;
+  await client.query("update public.live_state set refreshed_at = now(), streams = 1");
+  const frais = (await asPlayer(AUTRE, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "invités : un direct périmé (vingt minutes) ne paie pas, le même frais paie",
+    Number(perime.raid.gained) === 0 &&
+      Number(frais.raid.gained) ===
+        Math.floor((Number(frais.per_day) * reglagesPart(carteAutre)) / 1000),
+    JSON.stringify({ perime: perime.raid, frais: frais.raid, per_day: frais.per_day }),
+  );
+
+  // Un visiteur sans compte n'a pas de bureau.
+  await refuses(
+    "invités : sans compte, pas de bureau",
+    null,
+    "select public.streamer_guest_set(1, $1::jsonb) as r",
+    [JSON.stringify(carteBureau)],
+    "connecte-toi",
+  );
+  await refuses(
+    "invités : le bureau est fermé au joueur",
+    BUREAU,
+    "select count(*) as n from public.streamer_guests",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "invités : le journal des raids est fermé au joueur",
+    BUREAU,
+    "select count(*) as n from public.streamer_raids",
+    [],
+    "permission denied",
+  );
+
   // Le piège d'ordre, joué pour de vrai : recoller `0036` **seule** après
   // `0038` rend l'ancien `streamer_status()` — l'écran perd le setup, alors que
   // la table des paliers, elle, est intacte. C'est exactement ce qui arrive au
@@ -5952,6 +6180,29 @@ try {
         (await asPlayer(SETUP, "select public.wallet_get() as r")).rows[0].r.points,
       ) >= 0,
     JSON.stringify(statusAvecSetup),
+  );
+  // Le même piège dans l'autre sens : `0038` seule après `0039` rend le
+  // `streamer_status()` d'avant les invités — le bureau disparaît de l'écran,
+  // la table du bureau, elle, reste intacte.
+  check(
+    "invités : recoller `0038` seule après `0039` fait perdre le bureau de l'écran",
+    statusAvecSetup.guests === undefined &&
+      Number(
+        (await client.query(
+          "select count(*)::int as n from public.streamer_guests where user_id = $1",
+          [BUREAU],
+        )).rows[0].n,
+      ) === 1,
+    JSON.stringify({ guests: statusAvecSetup.guests ?? null }),
+  );
+  await client.query(invites);
+  const statusAvecBureau = (await asPlayer(BUREAU, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "invités : recoller `0039` le rend tel quel, sans rien reposer",
+    statusAvecBureau.guests.length === 1 &&
+      statusAvecBureau.guests[0].creator_slug === "ibai" &&
+      Number(statusAvecBureau.raid_today) > 0,
+    JSON.stringify(statusAvecBureau.guests),
   );
 
   // --- Rejouabilité --------------------------------------------------------
@@ -5995,11 +6246,13 @@ try {
   // `0036` ferme la pile à son tour : elle réécrit `schema_versions()`, donc
   // c'est elle la dernière recollée.
   await client.query(chaine);
-  // Puis `0037`, puis `0038` : chacune réécrit quelque chose de la précédente
-  // (`push_targets()` pour l'une, `streamer_status()` et `schema_versions()`
-  // pour l'autre), donc l'ordre du collage est l'ordre des numéros.
+  // Puis `0037`, puis `0038`, puis `0039` : chacune réécrit quelque chose de la
+  // précédente (`push_targets()` pour l'une, `streamer_status()`,
+  // `streamer_visit()` et `schema_versions()` pour les suivantes), donc l'ordre
+  // du collage est l'ordre des numéros.
   await client.query(gardes);
   await client.query(imprevus);
+  await client.query(invites);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

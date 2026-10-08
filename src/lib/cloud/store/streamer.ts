@@ -4,10 +4,13 @@ import {
   applyStreamerMirror,
   buyStreamerSetupLocally,
   chooseStreamerEventLocally,
+  payStreamerRaidLocally,
   publishStreamerLocally,
+  setStreamerGuestLocally,
   visitStreamerLocally,
 } from "@/lib/game-engine";
 import {
+  GUEST_LIVE_WINDOW_MINUTES,
   STREAMER_TOKEN_CAP,
   absenceLines,
   eventById,
@@ -16,12 +19,16 @@ import {
   eventHeadline,
   formatById,
   nextSetupLevel,
+  raidLine,
   setupBonusPermille,
   setupLevelById,
   videoHeadline,
   type StreamerEventState,
+  type StreamerGuest,
 } from "@/lib/streamer";
 import { gameDay } from "@/lib/progression";
+import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
+import type { StreamerGuestRow } from "@/lib/cloud/api/streamer";
 
 /**
  * La **chaîne** (le simulateur de streameur, `0036_streamer.sql`).
@@ -64,10 +71,37 @@ export type StreamerOpening =
       setup: string[];
       /** Le bonus de croissance du setup, pour mille. */
       setupBonus: number;
+      /** Les invités sur le bureau (`0039`). */
+      guests: StreamerGuest[];
+      /** Le raid payé aujourd'hui (0 : personne n'est passé). */
+      raidToday: number;
     }
   | { status: "refused"; message: string };
 
 export type StreamerEventOpening = { status: "done"; headline: string; event: StreamerEventState };
+
+/** Les raretés et variantes que l'appareil sait afficher (les mêmes qu'au serveur). */
+const RARETES = new Set<string>(["common", "uncommon", "rare", "epic", "legendary"]);
+const VARIANTES = new Set<string>(["standard", "live", "holo", "gold"]);
+
+/**
+ * Un invité venu du serveur, dans la forme que l'écran lit — `null` si la
+ * rareté ou la variante est inconnue.
+ *
+ * Le serveur les valide déjà (`streamer_guest_set`, `0039`) ; ce filtre-ci est
+ * là pour le cas où la base serait d'une autre époque : mieux vaut un bureau
+ * incomplet qu'une carte que le jeu ne saurait pas dessiner.
+ */
+function guestFromRow(row: StreamerGuestRow): StreamerGuest | null {
+  if (!RARETES.has(row.rarity) || !VARIANTES.has(row.variant)) return null;
+  return {
+    slot: row.slot,
+    cardId: row.cardId,
+    slug: row.slug,
+    rarity: row.rarity as Rarity,
+    variant: row.variant as CardVariant,
+  };
+}
 
 /** Les quatre champs que la phrase d'une vidéo regarde (le format vient d'ailleurs). */
 function outcomeOf(video: {
@@ -97,30 +131,46 @@ export function streamerActions(ctx: CloudStoreContext) {
      * `streamer_visit()` le fait côté serveur, et `streamer_status()` complète
      * — journée de jeu en cours, vidéo déjà publiée, jetons du jour.
      */
-    async openStreamer(): Promise<StreamerOpening> {
+    async openStreamer(liveSlugs: ReadonlySet<string> = new Set<string>()): Promise<StreamerOpening> {
       const api = ctx.resolve();
       const local = ctx.deps.readState();
       if (!local) return { status: "refused", message: "Partie locale absente." };
 
       if (!api) {
         const visit = visitStreamerLocally(local, ctx.deps.now());
-        ctx.deps.applyState(visit.state);
+        // Le raid passe **après** l'absence : les invités dont le créateur est
+        // en direct paient une fois par journée de jeu. Sans table du direct
+        // (build sans cloud), la liste est vide et le raid ne paie rien.
+        // La croissance du raid est celle du relevé (`local`, l'état d'avant) :
+        // le serveur la calcule sur la ligne de la chaîne, pas sur ce que
+        // l'absence vient d'ajouter.
+        const raid = payStreamerRaidLocally(
+          visit.state,
+          ctx.deps.now(),
+          liveSlugs,
+          local.streamer.subscribers,
+        );
+        ctx.deps.applyState(raid.state);
         const day = gameDay(ctx.deps.now());
+        const lines = [...visit.summary.lines];
+        if (raid.gained > 0 && raid.raid) lines.push(raidLine(raid.raid));
         return {
           status: "done",
           source: "local",
           days: visit.summary.days,
           countedDays: visit.summary.countedDays,
           gained: visit.summary.gained,
-          subscribers: visit.summary.subscribers,
-          lines: visit.summary.lines,
+          subscribers: visit.summary.subscribers + raid.gained,
+          lines,
           day,
-          publishedToday: visit.state.streamer.video?.day === day,
-          tokensToday: visit.state.streamer.tokensDay === day ? visit.state.streamer.tokensToday : 0,
+          publishedToday: raid.state.streamer.video?.day === day,
+          tokensToday: raid.state.streamer.tokensDay === day ? raid.state.streamer.tokensToday : 0,
           tokensCap: STREAMER_TOKEN_CAP,
-          event: visit.state.streamer.event?.day === day ? visit.state.streamer.event : null,
-          setup: visit.state.streamer.setup,
-          setupBonus: setupBonusPermille(visit.state.streamer.setup),
+          event: raid.state.streamer.event?.day === day ? raid.state.streamer.event : null,
+          setup: raid.state.streamer.setup,
+          setupBonus: setupBonusPermille(raid.state.streamer.setup),
+          guests: raid.state.streamer.guests,
+          raidToday: raid.raid?.day === day ? raid.raid.gained : 0,
         };
       }
       if (!api.session()) return noAccount();
@@ -136,15 +186,28 @@ export function streamerActions(ctx: CloudStoreContext) {
         // carte. Même tolérance que le carnet avec des migrations anciennes.
         const imprevu = await api.streamerEventToday().catch(() => null);
         const courant = ctx.deps.readState() ?? local;
+        const guests = status.guests.map(guestFromRow).filter((guest): guest is StreamerGuest => guest !== null);
         // Le relevé local est daté **maintenant** : le serveur vient de le
         // faire, et sans cette écriture un second passage dans la journée
-        // repaierait la même absence.
+        // repaierait la même absence. Le raid suit sa journée : celui d'hier ne
+        // s'affiche pas comme celui d'aujourd'hui.
         ctx.deps.applyState(
           applyStreamerMirror(
             courant,
             {
               subscribers: retour.subscribers,
               lastSeenAt: ctx.deps.now(),
+              guests,
+              raid:
+                retour.raid.gained > 0 && retour.raid.shares.length > 0
+                  ? {
+                      day: status.day,
+                      gained: retour.raid.gained,
+                      slugs: retour.raid.shares.map((share) => share.slug),
+                    }
+                  : courant.streamer.raid?.day === status.day
+                    ? courant.streamer.raid
+                    : null,
               tokensDay: status.day,
               tokensToday: status.tokensToday,
               setup: status.setup,
@@ -171,13 +234,21 @@ export function streamerActions(ctx: CloudStoreContext) {
           countedDays: retour.countedDays,
           gained: retour.gained,
           subscribers: retour.subscribers,
-          lines: absenceLines({
-            days: retour.days,
-            countedDays: retour.countedDays,
-            gained: retour.gained,
-            before: retour.before,
-            after: retour.subscribers,
-          }),
+          lines: [
+            ...absenceLines({
+              days: retour.days,
+              countedDays: retour.countedDays,
+              gained: retour.gained,
+              before: retour.before,
+              after: retour.subscribers,
+            }),
+            // Le raid se raconte **quand il vient d'être payé** : sans cette
+            // condition, la phrase reviendrait à chaque ouverture de l'écran,
+            // et le joueur croirait toucher plusieurs fois la même chose.
+            ...(retour.raid.gained > 0 && !retour.raid.already
+              ? [raidLine({ gained: retour.raid.gained, slugs: retour.raid.shares.map((s) => s.slug) })]
+              : []),
+          ],
           day: status.day,
           publishedToday: status.publishedToday,
           tokensToday: status.tokensToday,
@@ -197,6 +268,8 @@ export function streamerActions(ctx: CloudStoreContext) {
             : null,
           setup: status.setup,
           setupBonus: status.setupBonus,
+          guests,
+          raidToday: status.raidToday,
         };
       } catch (error) {
         const refusal = ctx.cloudRefusal(error, "La chaîne n'a pas pu être ouverte.");
@@ -417,5 +490,93 @@ export function streamerActions(ctx: CloudStoreContext) {
         return refusal;
       }
     },
+
+    /**
+     * Pose un **invité sur le bureau**, ou libère sa place (`cardId` nul).
+     *
+     * Le bureau ne coûte rien et ne paie rien par lui-même : il décide de qui
+     * peut amener un raid, et c'est le serveur qui dit qui est en direct
+     * (`streamer_guest_set`, `0039`). Le client envoie la carte **telle qu'elle
+     * est dans la collection locale** ; le serveur vérifie qu'elle est bien au
+     * joueur, refuse deux fois le même créateur, et renvoie le bureau complet —
+     * l'écran le recopie au lieu de le reconstruire.
+     */
+    async setStreamerGuest(slot: number, cardId: string | null): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      const local = ctx.deps.readState();
+      if (!local) {
+        const message = "Partie locale absente.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+      const carte = cardId ? local.cards.find((owned) => owned.id === cardId) ?? null : null;
+      if (cardId && !carte) {
+        const message = "Cette carte n'est pas dans ta collection.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      if (!api) {
+        const pose = setStreamerGuestLocally(local, slot, cardId, ctx.deps.now());
+        if ("error" in pose) {
+          ctx.publish({ busy: false, message: pose.error, isError: true });
+          return { status: "unavailable", reason: "error", message: pose.error };
+        }
+        ctx.deps.applyState(pose.state);
+        const message = cardId
+          ? `${creatorName(carte?.creatorSlug)} rejoint le bureau.`
+          : "La place est libre.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      }
+      if (!api.session()) {
+        const refus = noAccount();
+        return { status: "unavailable", reason: "no-session", message: refus.message };
+      }
+
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        // On n'envoie que les quatre champs que la porte lit : la carte
+        // garde sa date d'obtention et sa marque « rare drop » pour elle.
+        const bureau = await api.streamerGuestSet(
+          slot,
+          carte
+            ? {
+                id: carte.id,
+                creatorSlug: carte.creatorSlug,
+                rarity: carte.rarity,
+                variant: carte.variant,
+              }
+            : null,
+        );
+        const courant = ctx.deps.readState() ?? local;
+        ctx.deps.applyState(
+          applyStreamerMirror(
+            courant,
+            {
+              guests: bureau.guests
+                .map(guestFromRow)
+                .filter((guest): guest is StreamerGuest => guest !== null),
+            },
+            ctx.deps.now(),
+          ),
+        );
+        const message = carte
+          ? `${creatorName(carte.creatorSlug)} rejoint le bureau.`
+          : "La place est libre.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Le bureau n'a pas pu être changé.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
   };
+}
+
+/** Le nom du créateur d'un slug, tel que le joueur le lit sur la carte. */
+function creatorName(slug: string | undefined): string {
+  if (!slug) return "Un invité";
+  return CREATOR_BY_SLUG.get(slug)?.displayName ?? slug;
 }

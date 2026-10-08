@@ -81,8 +81,8 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 Aucune affirmation sur le serveur ne se croit sur parole, la mienne comprise :
 
 - **ce qui est collé** : `schema_versions()`, lisible **sans compte**
-  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — neuf `true` attendus
-  pour `0030` → `0038` ;
+  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — les `true` attendus
+  pour `0030` → `0039` ;
 - **une fonction existe** : `401`/`42501` = présente mais réservée au rôle de
   service ; `404`/`PGRST202` = absente.
 

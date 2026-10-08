@@ -38,6 +38,9 @@ import {
   claimSeason,
   craftCreator,
   applyStreamerMirror,
+  payStreamerRaidLocally,
+  setStreamerGuestLocally,
+  visitStreamerLocally,
   applyWallet,
   buyStreamerSetupLocally,
   chooseStreamerEventLocally,
@@ -1380,12 +1383,105 @@ describe("la chaîne (le simulateur de streameur, 0036)", () => {
       tokensDay: "2026-01-02",
       tokensToday: 6,
       video: null,
-      // Un miroir qui ne mentionne ni l'imprévu ni le setup ne les efface pas :
-      // `undefined` veut dire « rien à dire », jamais « mets à zéro ».
+      // Un miroir qui ne mentionne ni l'imprévu, ni le setup, ni le bureau ne
+      // les efface pas : `undefined` veut dire « rien à dire », jamais « mets à
+      // zéro ».
       event: null,
       setup: [],
+      guests: [],
+      raid: null,
     });
     expect(applyStreamerMirror(state, { subscribers: -5 }, T0).streamer.subscribers).toBe(0);
+  });
+
+  it("pose un invité qui est à toi, et refuse le reste", () => {
+    const carte = ownedCard("c1", "ibai", "uncommon");
+    const autre = ownedCard("c2", "ibai", "rare", "holo");
+    const state = makeState({ cards: [carte, autre] });
+
+    // Une carte de sa collection, et le créateur vient de la **carte**, pas de
+    // l'appelant : l'écran n'a rien à décider.
+    const pose = setStreamerGuestLocally(state, 1, "c1", T0);
+    expect("error" in pose).toBe(false);
+    if ("error" in pose) return;
+    expect(pose.guests).toEqual([{ slot: 1, cardId: "c1", slug: "ibai", rarity: "uncommon", variant: "standard" }]);
+
+    // Une carte qu'on ne possède pas : refus, et rien ne bouge.
+    const volee = setStreamerGuestLocally(state, 1, "c-inconnue", T0);
+    expect("error" in volee).toBe(true);
+    // Deux fois le même créateur : refus (c'est la règle du bureau, et le
+    // serveur la tient par un index unique).
+    const doublon = setStreamerGuestLocally(pose.state, 2, "c2", T0);
+    expect("error" in doublon).toBe(true);
+    // Une place qui n'existe pas : refus aussi.
+    expect("error" in setStreamerGuestLocally(state, 3, "c1", T0)).toBe(true);
+    expect("error" in setStreamerGuestLocally(state, 0, "c1", T0)).toBe(true);
+
+    // Retirer libère la place, et changer d'invité ne laisse pas de trace.
+    const retire = setStreamerGuestLocally(pose.state, 1, null, T0);
+    expect("error" in retire).toBe(false);
+    if ("error" in retire) return;
+    expect(retire.guests).toEqual([]);
+    // Retirer une place déjà libre n'écrit rien du tout (même objet).
+    expect(setStreamerGuestLocally(retire.state, 2, null, T0)).toMatchObject({ state: retire.state });
+  });
+
+  it("paie le raid une fois par journée, et seulement en direct", () => {
+    const une = ownedCard("c1", "ibai", "uncommon"); // 25 pour mille
+    const deux = ownedCard("c2", "kamet0", "legendary"); // 90 pour mille
+    let state = makeState({ cards: [une, deux] });
+    const bouge = (place: number, id: string) => {
+      const pose = setStreamerGuestLocally(state, place, id, T0);
+      if ("error" in pose) throw new Error(pose.error);
+      state = pose.state;
+    };
+    bouge(1, "c1");
+    bouge(2, "c2");
+
+    // Personne en direct : rien, et surtout **aucune** journée consommée.
+    const rien = payStreamerRaidLocally(state, T0, []);
+    expect(rien.gained).toBe(0);
+    expect(rien.state.streamer.raid).toBeNull();
+    state = rien.state;
+
+    // Un seul invité en direct : sa part, calculée sur la croissance du jour.
+    const partiel = payStreamerRaidLocally(state, T0, ["ibai"]);
+    expect(partiel.gained).toBe(Math.floor((240 * 25) / 1000));
+    state = partiel.state;
+
+    // Les deux, plus tard dans la même journée : le raid est déjà payé — le
+    // journal du moteur, c'est `state.streamer.raid`.
+    const encore = payStreamerRaidLocally(state, T0 + HOUR, ["ibai", "kamet0"]);
+    expect(encore.gained).toBe(0);
+    expect(encore.state).toBe(state);
+
+    // Le lendemain, le raid repart : deux invités, deux parts.
+    const demain = payStreamerRaidLocally(state, T0 + JOUR, ["ibai", "kamet0"]);
+    expect(demain.gained).toBe(
+      Math.floor((240 * 25) / 1000) + Math.floor((240 * 90) / 1000),
+    );
+    expect(demain.raid?.day).toBe(gameDay(T0 + JOUR));
+    expect(demain.raid?.slugs).toEqual(["ibai", "kamet0"]);
+    expect(demain.state.streamer.subscribers).toBe(state.streamer.subscribers + demain.gained);
+  });
+
+  it("paie le raid sur la croissance d'avant le relevé, comme le serveur", () => {
+    // Juste sous le palier « Chaîne qui monte » (2 500) : une absence d'un jour
+    // le franchit. Le serveur calcule `v_per_day` sur la ligne de la chaîne
+    // **avant** de compter l'absence, et c'est ce même chiffre qui paie le raid.
+    const carte = ownedCard("c1", "ibai", "legendary"); // 90 pour mille
+    let state = makeState({ cards: [carte] });
+    const pose = setStreamerGuestLocally(state, 1, "c1", T0);
+    if ("error" in pose) throw new Error(pose.error);
+    state = { ...pose.state, streamer: { ...pose.state.streamer, subscribers: 2_400, lastSeenAt: T0 } };
+
+    const visite = visitStreamerLocally(state, T0 + JOUR);
+    const raid = payStreamerRaidLocally(visite.state, T0 + JOUR, ["ibai"], state.streamer.subscribers);
+    // Un jour d'absence : 240 (le palier du moment), puis le raid : 90 pour
+    // mille de **240**, pas de 900 (le palier d'après, franchi entre-temps).
+    expect(visite.summary.gained).toBe(240);
+    expect(raid.gained).toBe(Math.floor((240 * 90) / 1000));
+    expect(raid.state.streamer.subscribers).toBe(2_400 + 240 + 21);
   });
 
   it("joue l'imprévu du jour, une seule fois, et sans jeton", () => {
