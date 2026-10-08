@@ -143,9 +143,11 @@ Ce qui n'est pas touché : jamais de `--force`, jamais de suppression de branche
 jamais de fusion. Une branche d'essai **se relit** — c'est le seul moyen de
 savoir si ce qu'un autre outil a proposé mérite d'entrer dans le jeu.
 
-Le workflow APK ne construit que `main` et la branche de travail
-(`.github/workflows/android-apk.yml`, `on.push.branches`) : pousser un essai
-**ne remplace pas** l'APK installé sur le téléphone.
+Le workflow APK ne construisait que `main` et la branche de travail
+(`.github/workflows/android-apk.yml`, `on.push.branches`) — il a été **supprimé
+le 8 octobre 2026** avec le reste de `.github/workflows`. Depuis, plus rien ne se
+construit tout seul : pousser un essai **ne remplace pas** davantage l'APK
+installé sur le téléphone, mais c'est aussi le cas d'une poussée normale.
 
 ## Le jour où l'historique regrossit
 

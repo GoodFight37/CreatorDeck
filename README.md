@@ -149,7 +149,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 10.3 | Pity, jetons, missions, série, Prime Time | **livré** | `0013_progression.sql`, `src/lib/progression.ts` |
 | 10.2 | Last Pack (5 cartes, 10 min, un ami en vole une) | **livré** | `0012_last_pack.sql`, `src/lib/last-pack.ts` |
 | 10.1 | Direct → taux + variante Live | **livré** | `0011_direct.sql`, `src/lib/live.ts` |
-| 13 | **Ta chaîne** : le simulateur de streameur — la chaîne grandit pendant l'absence (relevé serveur, plafond 7 jours), une vidéo par journée de jeu, paliers de notoriété, setup à deux monnaies | **en cours** (étapes 1-3 : la mécanique, le serveur, l'écran) | `src/data/streamer.json`, `src/lib/streamer.ts`, `supabase/migrations/0036_streamer.sql`, `src/components/streamer-sheet.tsx`, `src/lib/cloud/store/streamer.ts` |
+| 13 | **Ta chaîne** : le simulateur de streameur — la chaîne grandit pendant l'absence (relevé serveur, plafond 7 jours), une vidéo par journée de jeu, paliers de notoriété, imprévus à choix, setup en points | **en cours** (étapes 1-4 livrées : la mécanique, le serveur, l'écran, les imprévus et le setup ; le mini-jeu de clip à timing est la suite) — feuille de route : [`docs/ta-chaine.md`](docs/ta-chaine.md) | `src/data/streamer.json`, `src/lib/streamer.ts`, `src/lib/swipe.ts`, `supabase/migrations/{0036_streamer,0038_imprevus_setup}.sql`, `src/components/streamer-sheet.tsx` |
 | 12 | Revue externe d'octobre 2026 | **traitée** | `docs/revue-externe-2026-10.md` : ce qui est corrigé, ce qui est refusé et pourquoi, ce qui reste ouvert |
 
 Deux règles qui tiennent tout le reste :
@@ -179,7 +179,7 @@ Deux règles qui tiennent tout le reste :
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
-| `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
+| `npm run catalog:ci` | contrôle renforcé (utilisé par la CI Android jusqu'au 8 octobre 2026) : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
@@ -214,8 +214,9 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans la CI de l'APK, à côté de `lint`, `typecheck` et
-  `test`.
+  écran a bougé. Il tournait dans la CI de l'APK, à côté de `lint`, `typecheck`
+  et `test` — depuis la suppression des workflows (8 octobre 2026), c'est à
+  relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
   échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
@@ -522,8 +523,8 @@ http://localhost:3000/overlay
 
 ### Installer l'APK de test
 
-La CI publie une **pré-release roulante**, écrasée à chaque build : un lien de
-téléchargement public, sans connexion GitHub.
+La **pré-release roulante** garde le dernier APK publié, écrasé à chaque build :
+un lien de téléchargement public, sans connexion GitHub.
 
 ```url
 https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
@@ -533,15 +534,14 @@ https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debu
   (voir « Embarquer le catalogue dans l'APK » dans `docs/catalogue-twitch.md`) ;
 - signature **debug** : parfait pour tester sur un téléphone (activer
   « installer des applications inconnues »), **pas** publiable sur le Play Store ;
-- reconstruit à chaque push sur `main` (`.github/workflows/android-apk.yml`) et
-  à chaque déclenchement manuel ;
-- l'artefact du run (`creatordeck-debug-apk`) reste disponible dans l'onglet
-  Actions, mais son téléchargement exige d'être connecté à GitHub.
-
-```bash
-# déclencher un build à la demande (jeton GitHub avec la permission Actions: write)
-gh workflow run "APK Android (debug)" --ref main
-```
+- **construit à la main depuis le 8 octobre 2026** : les workflows GitHub ont été
+  supprimés (`.github/workflows`, commits `ae5016f` puis `8760723`). Plus rien ne
+  se construit ni ne se vérifie tout seul : la commande est `npm run android:debug`
+  (Gradle `assembleDebug`), et les contrôles se lancent à la main (`npm test`,
+  `npm run ecrans`, `npm run supabase:verify`) ;
+- le lien ci-dessus ne change que si l'APK obtenu est **publié** dans la release
+  `debug-apk` (`gh release upload debug-apk …`) : sans publication, il sert
+  toujours l'APK d'avant.
 
 ### Ce qui est pensé pour le pouce
 

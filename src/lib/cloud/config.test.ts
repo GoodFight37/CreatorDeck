@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CLOUD_DISABLED_HINT, cloudProjectName, readCloudConfig } from "@/lib/cloud/config";
@@ -56,10 +56,18 @@ describe("configuration du cloud", () => {
    * Volontairement **sans nom de fichier en dur** : un contrôle qui vise un
    * fichier précis rougit au premier renommage, et gêne plus qu'il n'aide. On
    * lit donc ce qui existe, et on juge le contenu.
+   *
+   * Et s'il n'y en a **aucun** — le dépôt a été nettoyé de ses workflows le
+   * 8 octobre 2026, l'APK se construit à la main —, il n'y a rien à juger. Le
+   * contrôle le **dit** au lieu de rougir, et redevient exigeant tout seul dès
+   * qu'un workflow revient : regarder un dossier absent n'est pas une panne.
    */
-  const workflows = readdirSync(path.join(process.cwd(), ".github", "workflows"))
-    .filter((nom) => nom.endsWith(".yml") || nom.endsWith(".yaml"))
-    .map((nom) => readFileSync(path.join(process.cwd(), ".github", "workflows", nom), "utf8"));
+  const DOSSIER = path.join(process.cwd(), ".github", "workflows");
+  const workflows = existsSync(DOSSIER)
+    ? readdirSync(DOSSIER)
+        .filter((nom) => nom.endsWith(".yml") || nom.endsWith(".yaml"))
+        .map((nom) => readFileSync(path.join(DOSSIER, nom), "utf8"))
+    : [];
   const joint = workflows.join("\n");
 
   it("un seul workflow construit l'APK, et il reçoit la configuration du cloud", () => {
@@ -74,6 +82,13 @@ describe("configuration du cloud", () => {
     const constructeurs = workflows.filter(
       (texte) => texte.includes("assembleDebug") || texte.includes("android:debug"),
     );
+    if (workflows.length === 0) {
+      // Aucun workflow : pas de build en CI du tout. Ce n'est pas une panne du
+      // dépôt, c'est un état — celui du 8 octobre 2026, où l'APK se construit à
+      // la main. Le contrôle reprend dès qu'un workflow revient.
+      expect(constructeurs).toHaveLength(0);
+      return;
+    }
     expect(constructeurs).toHaveLength(1);
     const workflow = constructeurs[0];
     for (const variable of [URL_VAR, KEY_VAR]) {

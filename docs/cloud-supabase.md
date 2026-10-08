@@ -1038,8 +1038,8 @@ de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
 jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
 le prochain booster est un J1, et il paie à nouveau.
 
-**Savoir ce qui est collé (`0035`, complétée par `0036` puis `0037`).** `schema_versions()` rend un objet
-`{ "0030": true, …, "0037": true }` : chaque clé est un numéro de migration, la
+**Savoir ce qui est collé (`0035`, complétée par `0036`, `0037` puis `0038`).** `schema_versions()` rend un objet
+`{ "0030": true, …, "0038": true }` : chaque clé est un numéro de migration, la
 valeur dit si elle est **dans la base**. Elle ne lit que le catalogue (le texte
 des fonctions internes, via `_schema_body()`) et ne rend que des booléens — donc
 elle se lit **sans compte** :
@@ -1051,12 +1051,16 @@ curl -s -X POST "https://<projet>.supabase.co/rest/v1/rpc/schema_versions" \
 
 C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
-existantes), donc son absence ne se voyait nulle part ailleurs. Le workflow
-`.github/workflows/prod-check.yml` interroge la même fonction et écrit le verdict
-en clair dans le journal du run — une ligne `0030` → `0037` par migration,
-`collée` ou `ABSENTE`, puis ce qu'il reste à coller, ou « la base est à jour ».
-Il se réveille quand ce fichier change (une poussée de code ne le déclenche pas)
-et depuis l'onglet Actions (`workflow_dispatch`).
+existantes), donc son absence ne se voyait nulle part ailleurs. La même question
+se pose **dans le SQL Editor** de Supabase, en une ligne :
+`select public.schema_versions() -> '0038';` doit rendre `true`.
+
+Le workflow `.github/workflows/prod-check.yml` répondait à la même question
+depuis un runner et écrivait le verdict en clair dans le journal du run (une
+ligne `0030` → `0038` par migration, `collée` ou `ABSENTE`). Il a été
+**supprimé le 8 octobre 2026** avec les autres workflows du dépôt (commits
+`ae5016f` et `8760723`) : le verdict se lit donc maintenant avec la requête
+ci-dessus, ou avec la boucle `curl` qui l'interroge en une commande.
 
 ### La chaîne vit au serveur (`0036`)
 
