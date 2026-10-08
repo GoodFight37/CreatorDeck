@@ -1,15 +1,32 @@
 # Les assets graphiques
 
-> **Ce que contient `public/streamer/` et ce que le jeu en utilise.** Les images
-> ne sont pas toutes exploitables sur le web (il y a des modèles 3D et des kits
-> faits pour d'autres moteurs) : ce fichier dit lesquelles servent, où, et sous
-> quelle licence. Il sert aussi de carte pour qui reprend le dépôt.
+> **L'histoire de `public/streamer/`, et ce que le jeu en a fait.** Les images
+> n'étaient pas toutes exploitables sur le web (modèles 3D, kits faits pour
+> d'autres moteurs) : ce fichier dit ce qui a servi, où, sous quelle licence —
+> puis ce qui est parti, en deux vagues, et pourquoi. Il sert de carte pour qui
+> reprend le dépôt.
 
-## Ce que le jeu utilise aujourd'hui
+## Le dossier est vide, et c'est décidé (8 octobre 2026, le soir)
+
+Le **kit Kenney** était son dernier habitant : `4/Isometric/`, 2,7 Mo et
+560 fichiers, qui composaient la pièce du Studio. La pièce visuelle a été
+retirée dans la soirée du 8 octobre 2026 — l'onglet, le décor, l'emblème
+d'Arène, l'arrivée des paliers en fumée — et le kit est parti **avec elle** :
+plus rien ne le référençait, ni le code, ni les tests, ni la feuille de style.
+`public/` est donc passé de 23 Mo à **20 Mo**, et il ne contient plus que ce qui
+se joue : les portraits (19 Mo), les bruitages (1 Mo), les deux planches
+d'effets (32 Ko) et l'icône.
+
+Pour le récupérer, il est dans l'historique Git, comme tout le reste de cette
+page : `git checkout 6050cb2 -- public/streamer`. La licence est **CC0** : elle
+n'a jamais demandé de le garder, et elle ne demande rien non plus pour l'avoir
+retiré.
+
+## Comment la pièce s'en servait (pour mémoire)
 
 | Où | Quoi | Licence |
 |---|---|---|
-| **La pièce du Studio** (`src/data/studio-room.json`) | **Kenney — Furniture Kit, dossier `Isometric/`** : sol, murs (**dont les deux fenêtres**), mobilier, panneaux acoustiques | **CC0** (`public/streamer/4/License.txt`) |
+| **La pièce du Studio** (`src/data/studio-room.json`, retiré) | **Kenney — Furniture Kit, dossier `Isometric/`** : sol, murs (**dont les deux fenêtres**), mobilier, panneaux acoustiques | **CC0** (`public/streamer/4/License.txt`) |
 
 Le kit Kenney « Isometric Miniature » est livré en PNG **indexés** (palette +
 transparence) et se compose sur une **grille isométrique** :
@@ -28,7 +45,7 @@ taille annoncée est la taille réelle, que le point d'appui tombe sur du dessin
 et que chaque palier de setup fait bien entrer un objet dans la pièce. Une image
 remplacée par une autre casse le test, pas la pièce.
 
-## Les deux fenêtres, et pourquoi elles ne sont pas un décor de plus
+## Les deux fenêtres, et pourquoi elles n'étaient pas un décor de plus
 
 Le kit fournit chaque mur en **deux versions** : pleine, et percée d'une fenêtre
 (`wall_SE` / `wallWindow_SE`). Les deux se posent **au même point, avec le même
@@ -44,16 +61,12 @@ studio sont assombris et bleutés, les fenêtres non — et quand l'éclairage e
 acheté, ce sont elles qui s'allument le plus. C'est la seule lumière **froide**
 de la pièce, et elle dit qu'il fait jour dehors.
 
-## Ce que contient `public/streamer/` aujourd'hui
+## Ce qu'il contenait : un seul dossier
 
-**Un seul dossier, et c'est celui de la pièce** : `4/Isometric/` — le
-**Kenney Furniture Kit** (140 meubles × 4 orientations, PNG indexés, CC0), plus
-son `License.txt`. La pièce en utilise **une trentaine** (`src/data/studio-room.json`),
-le reste du kit attend un meuble qui manquerait.
-
-`public/` pèse **23 Mo** en tout : les portraits du catalogue (19 Mo), le kit
-(2,7 Mo), les bruitages (1 Mo), les effets (44 Ko) et l'icône. C'est ce poids-là
-qui part dans l'APK et dans l'export Vercel.
+**`4/Isometric/`** — le **Kenney Furniture Kit** (140 meubles × 4 orientations,
+PNG indexés, CC0) et son `License.txt`. La pièce en utilisait **une trentaine**
+(`src/data/studio-room.json`), le reste attendait un meuble qui manquerait.
+Tout est parti le 8 octobre 2026 au soir, kit et licence compris.
 
 ## Pourquoi le reste a été retiré (8 octobre 2026)
 
@@ -79,8 +92,15 @@ revue.
 
 Aucun de ces dossiers n'était référencé par le code, les tests, les scripts ou la
 feuille de style (vérifié avant de retirer) : les seules mentions restantes sont
-**cette page** et la ligne de licence ci-dessous. Ils restent dans l'**historique
-Git** si un jour il faut y reprendre quelque chose.
+**cette page**. Ils restent dans l'**historique Git** si un jour il faut y
+reprendre quelque chose.
+
+**Deuxième vague, le même soir** : le kit `4/Isometric/` lui-même (2,7 Mo,
+560 fichiers) et son `License.txt` sont partis avec la pièce visuelle du Studio
+— cette fois parce que le jeu ne les référençait **plus**, la pièce ayant été
+retirée. Même règle, même endroit : l'historique. Le fichier `src/data/studio-room.json`
+(ses coordonnées) et `src/lib/studio-room.ts` (ses calculs) sont partis en même
+temps qu'ils ne décrivaient plus rien.
 
 ## Ce que la pièce n'utilise pas, et pourquoi
 
@@ -97,27 +117,33 @@ Git** si un jour il faut y reprendre quelque chose.
 ## Les effets de moment rare, et la couronne de l'Arène
 
 Le pack d'effets fournit des **suites d'images** (une animation = quinze PNG). Le
-jeu n'en embarque que ce qu'il affiche, recopié dans **`public/fx/`** : trois
+jeu n'en embarque que ce qu'il affiche, recopié dans **`public/fx/`** : deux
 **planches** (toutes les images d'une animation sur une seule ligne, découpées
-en CSS par `steps()` — une requête, zéro JavaScript par image) et une couronne.
+en CSS par `steps()` — une requête, zéro JavaScript par image).
 
 | Fichier | Contenu | D'où il vient |
 |---|---|---|
 | `public/fx/explosion.png` | 15 images de 192 px — l'explosion dorée | `PNG/Explosions/epic_explosion_002/epic_explosion_002_large_yellow` |
 | `public/fx/eclat.png` | 13 images de 128 px — l'éclat orange | `PNG/Explosions/epic_explosion_001/epic_explosion_001_large_orange` |
-| `public/fx/fumee.png` | 21 images de 64 px — la fumée blanche | `PNG/Smoke Bursts/directional_smoke_burst_001/directional_smoke_burst_001_large_white` |
-| `public/fx/couronne.png` | 1 image de 64 x 48 — l'emblème d'Arène | `PNG/Symbols/symbol_crown_001/symbol_crown_001_large_yellow` (image 19) |
 
-(Les chemins de la dernière colonne sont ceux du pack d'origine, sous
-`public/streamer/` — il a été retiré après extraction, voir plus haut.)
-Le total pèse **44 Ko**, quand le dossier d'origine en pèse des dizaines de
+Deux autres fichiers sont partis le 8 octobre 2026 au soir, avec la pièce :
+`fumee.png` (21 images de 64 px, la bouffée qui marquait l'arrivée d'un palier)
+et `couronne.png` (64 x 48, l'emblème posé sur l'étagère). Leurs lignes du
+tableau ci-dessus disaient exactement d'où elles venaient
+(`PNG/Smoke Bursts/directional_smoke_burst_001`,
+`PNG/Symbols/symbol_crown_001`) : c'est là qu'il faut retourner les chercher si
+la pièce revient.
+
+(Les chemins sont ceux du pack d'origine, sous `public/streamer/` — il a été
+retiré après extraction, voir plus haut.)
+Le total pèse **32 Ko**, quand le dossier d'origine en pèse des dizaines de
 mégaoctets : les planches sont **générées** (`montage` d'ImageMagick, puis
 recadrage et compression), et `src/lib/fx.test.ts` lit l'en-tête de chaque PNG
 pour vérifier que la largeur annoncée vaut bien `images × image` — une planche
-recoupée de travers décale toute l'animation, et ça ne se voit qu'en jouant.
-La pose de la couronne, elle, est calculée sur la pièce
-(`src/lib/studio-emblem.ts`) : elle est **posée sur la face du haut de
-l'étagère**, pas collée à des coordonnées écrites à la main.
+recoupée de travers décale toute l'animation, et ça ne se voit qu'en jouant. Le
+même test veille sur l'inventaire : `public/fx/` ne contient **que** ces deux
+planches, parce qu'un fichier oublié là ne se chargerait jamais mais pèserait
+dans l'APK.
 
 > **Crédit demandé par la licence du pack d'effets** (il n'est pas CC0, lui) :
 > « Super Pixel Effects Gigapack — Will Tice / unTied Games ». La licence autorise
@@ -125,19 +151,22 @@ l'étagère**, pas collée à des coordonnées écrites à la main.
 > fichiers bruts, et demande cette ligne quelque part dans le produit ou sa
 > documentation. **Elle est aux deux endroits** : ici, et **dans le jeu**, sous
 > « Toi » → *Crédits* (`src/lib/credits.ts`, `src/components/credits.tsx`) — le
-> même écran nomme aussi Kenney (le décor), Chequered Ink (les bruits), Twitch
-> (les portraits), Lucide (les icônes) et les deux polices d'écriture.
+> même écran nomme aussi Chequered Ink (les bruits), Twitch (les portraits),
+> Lucide (les icônes) et les deux polices d'écriture. La ligne de Kenney, elle,
+> est partie avec le kit : un crédit pour un fichier qui n'est plus dans le jeu
+> serait un mensonge poli.
 
 > **À ne pas confondre :** `public/fx/` et `public/sfx/` ne sont **pas** des
 > dossiers d'origine — ce sont les **livrables** du jeu (planches d'effets et
 > bruitages choisis). Le nettoyage du 8 octobre 2026 a retiré les packs, jamais
 > ceux-là.
 
-## Voir la pièce sans navigateur
+## Voir la pièce sans navigateur (historique)
 
-`src/lib/studio-room.ts` étant pur, un script de composition hors ligne
-(ImageMagick + un décodeur PNG minimal) reproduit exactement la même géométrie :
-c'est ainsi que les coordonnées de `studio-room.json` ont été verrouillées, et
-c'est la seule preuve visuelle disponible quand l'environnement de travail n'a
-pas de navigateur. Les tests, eux, lisent les vrais fichiers (en-tête PNG et
-canal alpha de la palette).
+`src/lib/studio-room.ts` était pur : un script de composition hors ligne
+(ImageMagick + un décodeur PNG minimal) reproduisait exactement la même
+géométrie, et c'est ainsi que les coordonnées de `studio-room.json` avaient été
+verrouillées — la seule preuve visuelle possible dans un environnement de travail
+sans navigateur. Le module et le fichier sont partis le 8 octobre 2026 au soir ;
+cette note reste parce que la méthode, elle, marchera encore si une scène
+revient.

@@ -106,7 +106,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **61 instantanés** : les cinq onglets, les feuilles ouvertes, un booster révélé, le carnet, le live de vingt secondes, **le Studio** sous tous ses angles (pièce vide, meublée, sommet, invités, raid), **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **49 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, le live de vingt secondes, **« Ta chaîne »** (HUD, bureau, imprévu joué, achat de palier), **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -139,13 +139,13 @@ Quatre étages, quatre vitesses :
 
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
-  rareté, la pose des couronnes de l'Arène, les crédits — tout ce qui se calcule
-  sans navigateur. C'est là que vit l'essentiel des règles (**1061 tests**,
-  71 fichiers aujourd'hui), et **tout `public/` pèse 23 Mo** : le poids de l'APK
-  et de l'export Vercel se lit d'un coup d'œil.
+  rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
+  l'essentiel des règles (**1037 tests**, 68 fichiers aujourd'hui), et **tout
+  `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
+  coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
-  écran : les cinq onglets, le marquage de l'onglet actif, l'accès au compte
+  écran : les quatre piliers, le marquage de l'onglet actif, l'accès au compte
   depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
   sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
   distingue un bug du jeu d'un réseau coupé. S'y ajoute `e2e/pack-crash.spec.ts` :
@@ -153,14 +153,14 @@ Quatre étages, quatre vitesses :
   cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
   collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
 * **`npm run ecrans`** (jsdom) : l'application **montée dans un DOM**, les
-  cinq onglets parcourus, les feuilles ouvertes, **un booster tiré** et sa
+  quatre piliers parcourus, les feuilles ouvertes, **un booster tiré** et sa
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **onze fichiers** (57 tests, 61 captures) : le carnet
-  de notifications, l'écran Compte d'un joueur connecté, les crédits, le Studio
-  et ses socles, le live de vingt secondes, et **les mille cartes** (ce que le
-  DOM porte vraiment). Il tournait dans la CI de l'APK, à côté
+  écran a bougé. Il tourne dans **neuf fichiers** (43 tests, 49 captures) : le
+  carnet de notifications, l'écran Compte d'un joueur connecté, les crédits,
+  « Ta chaîne » (HUD, bureau, imprévu, live de vingt secondes) et **les mille
+  cartes** (ce que le DOM porte vraiment). Il tournait dans la CI de l'APK, à côté
   de `lint`, `typecheck` et `test` — depuis la suppression des workflows
   (8 octobre 2026), c'est à relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
@@ -241,8 +241,6 @@ src/lib/streamer.ts      « Ta chaîne » : formats, notoriété, imprévus, pal
                          invités, plateau (source unique : src/data/streamer.json)
 src/lib/live-game.ts     le live de 20 s : plan déterministe, chat, bulles
                          (source unique : src/data/live-game.json)
-src/lib/studio-room.ts   la pièce du Studio : grille isométrique, sprites,
-                         murs, néons, socles (source : src/data/studio-room.json)
 src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx) + plans de
                          notes synthétisés, coupés ensemble par le bouton Son
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
@@ -259,18 +257,17 @@ src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI : la coque (creator-deck-app.tsx — navigation,
                          feuilles, toasts) et une vue par onglet (drop-view,
                          binder-view, missions-view, studio-view, profile-view),
-                         le Studio (streamer-studio-stage.tsx et son live de
-                         20 s, streamer-live-game.tsx), le chrome
+                         « Ta chaîne » (studio-view.tsx et son live de 20 s,
+                         streamer-live-game.tsx), le chrome
                          partagé (app-chrome.tsx), les cartes et leurs fiches,
                          les feuilles (pack-odds-sheet, market-sheet,
                          account-sheet + account/*, notifications-sheet, amis,
                          arène, Last Pack…), le filet de sécurité
                          (error-boundary.tsx), l'overlay 16:9
-src/ecrans.test.tsx      le banc des écrans (jsdom) : cinq onglets, feuilles,
+src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre piliers, feuilles,
 src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
-src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, le
-                         Studio (pièce en images, HUD, socles, cartes, aura du
-                         direct, gestes du doigt)
+src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, et
+                         les gestes du doigt sur l'écran de la chaîne
 src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
@@ -282,10 +279,10 @@ src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalo
 public/creators/         portraits (600×600 WebP via `npm run assets:regen`)
 public/sfx/              les bruitages embarqués du jeu (15 fichiers, ≈1 Mo,
                          sélection de « 400 Sounds Pack » de Chequered Ink)
-public/streamer/         les assets graphiques fournis par le joueur : seul le
-                         kit isométrique de `4/` sert (voir
-                         `docs/assets-graphiques.md`), le reste du dossier a été
-                         retiré le 8 octobre 2026 (186 Mo que rien n'ouvrait)
+public/streamer/         l'histoire de ce dossier est dans
+                         `docs/assets-graphiques.md` : il est **vide** depuis le
+                         8 octobre 2026 au soir, le kit Kenney (2,7 Mo) étant
+                         parti avec la pièce visuelle du Studio
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),
@@ -311,7 +308,7 @@ docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refus�
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
 src/lib/credits.ts       qui a fait le décor, les sons, les effets, les portraits
                          (affiché sous « Toi » → *Crédits*)
-docs/assets-graphiques.md  les assets de public/streamer : lequel sert, lequel est 3D
+docs/assets-graphiques.md  public/streamer : ce qui servait, ce qui est parti (deux vagues)
 android/                 projet Capacitor Android (canal de notification et
                          son du jeu, app/src/main/res/raw/creatordeck.wav)
 ```
@@ -358,8 +355,9 @@ Le jeu a deux moitiés, et elles ne se mélangent pas :
   ([`docs/ta-chaine.md`](docs/ta-chaine.md)).
 
 Les deux se croisent **par les cartes** (un invité du Studio est une carte du
-Binder, un palier du studio se paie en doublons) et par **l'emblème d'Arène**,
-posé sur l'étagère de la pièce : ce qui se gagne dans l'Arène se voit chez soi,
+Binder, un palier du studio se paie en doublons). L'emblème d'Arène se gagne et
+se lit dans l'Arène : la couronne qui le montrait sur l'étagère du Studio est
+partie avec la pièce, le 8 octobre 2026,
 et ça ne rapporte rien de plus. Pour le reste, chacun chez soi : aucun compteur
 du TCG ne compte les abonnés, aucun prix du Studio n'est payé en points de
 collection.

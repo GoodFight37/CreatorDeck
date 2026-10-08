@@ -1399,13 +1399,16 @@ pèsent sur la **vidéo du jour**.
   scène affiche — donc le chiffre annoncé est celui qui sera payé.
 * **Côté appareil**, `collabVideoPermille()`, `collabFor()` et `GUEST_COLLAB`
   (`src/lib/streamer.ts`) portent le barème, `resolveVideo()` le reçoit en
-  cinquième paramètre, et la scène (`src/components/streamer-studio-stage.tsx`)
-  le **montre** : les socles, les vraies cartes, l'aura rouge du direct, le
-  bandeau « RAID ! », et le pied qui résume le plateau. Hors ligne, le moteur
-  local applique le même barème (`playVideoLocally(state, formatId, day, roll,
-  liveSlugs)`). `src/lib/supabase-streamer.test.ts` tient les deux barèmes
-  ensemble, `src/components/streamer-studio-stage.test.tsx` monte la scène dans un
-  DOM, et `npm run supabase:verify` (**548 contrôles**) joue le reste : barème
+  cinquième paramètre, et l'écran de la chaîne (`src/components/studio-view.tsx`)
+  le **montre** : le bureau en deux places, les vraies cartes, la carte d'invité
+  qui vire au rouge avec son badge « EN DIRECT », et la puce qui résume le
+  plateau. (Le barème s'affichait sur la pièce du Studio jusqu'au 8 octobre 2026
+  au soir : la pièce est partie, le barème et son affichage sont restés.) Hors
+  ligne, le moteur local applique le même barème
+  (`playVideoLocally(state, formatId, day, roll, liveSlugs)`).
+  `src/lib/supabase-streamer.test.ts` tient les deux barèmes ensemble,
+  `src/ecrans.test.tsx` monte l'écran dans un DOM, et
+  `npm run supabase:verify` (**548 contrôles**) joue le reste : barème
   relu du fichier, Légendaire invitée **hors ligne** puis **en direct**, colonnes
   écrites, republication, direct périmé, et les deux refus de permission.
 

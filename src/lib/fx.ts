@@ -17,12 +17,14 @@
  * animation sur une seule ligne. Le CSS les fait défiler en `steps()`, ce qui
  * donne des pixels nets et zéro JavaScript par image. Elles viennent du pack
  * d'effets pixel-art déjà dans le dépôt ; le dossier livré pèse des dizaines de
- * mégaoctets, on n'en embarque que **trois planches et une couronne** (44 Ko).
+ * mégaoctets, on n'en embarque que **deux planches** (32 Ko) : la fumée de
+ * l'arrivée d'un palier et la couronne de l'emblème sont parties avec la pièce
+ * du Studio, le 8 octobre 2026 — elles n'avaient plus d'usager.
  */
 import type { Rarity } from "@/lib/catalog";
 
 /** Les effets disponibles, par nom de planche (`public/fx/<nom>.png`). */
-export type FxKind = "explosion" | "eclat" | "fumee";
+export type FxKind = "explosion" | "eclat";
 
 export type FxSheet = {
   /** Nombre d'images côte à côte dans la planche. */
@@ -46,8 +48,6 @@ export const FX_SHEETS: Record<FxKind, FxSheet> = {
   explosion: { frames: 15, frame: 192, durationMs: 450, size: 330 },
   // Le moyen : 13 images de 128 px, l'éclat orange.
   eclat: { frames: 13, frame: 128, durationMs: 390, size: 210 },
-  // La disparition/arrivée d'un objet acheté : 21 images de 64 px.
-  fumee: { frames: 21, frame: 64, durationMs: 735, size: 150 },
 };
 
 /** L'URL de la planche d'un effet. */

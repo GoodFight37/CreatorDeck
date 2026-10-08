@@ -3,12 +3,14 @@
 /**
  * L'écran **Studio** : le simulateur de streameur (`0036_streamer.sql`).
  *
- * C'est un **onglet** de la barre du bas, pas une feuille : il occupe la hauteur
- * de l'écran et son propre univers. La pièce (décor, équipements qui arrivent
- * avec les paliers, socles d'invités) est en haut — c'est
- * `src/components/streamer-studio-stage.tsx` — puis viennent, dans l'ordre où le
- * joueur se pose la question : l'imprévu du jour, la vidéo du jour (un format,
- * un appui), le setup en paliers (points ou doublons) et le classeur d'invités.
+ * Ce n'est **plus un onglet** (retiré le 8 octobre 2026 avec la pièce visuelle) :
+ * il s'ouvre par la ligne « Ta chaîne » de l'accueil, et on en sort par les
+ * quatre piliers — ou par le bouton *Retour*, du même côté que l'entrée. Il n'y
+ * a plus de scène : le HUD (rang, jauge d'abonnés, rythme, jetons) est en
+ * **texte**, le bureau des invités juste en dessous, puis viennent, dans l'ordre
+ * où le joueur se pose la question : l'imprévu du jour, la vidéo du jour (un
+ * format, un appui), le setup en paliers (points ou doublons) et le classeur
+ * d'invités.
  *
  * Ce que l'écran **ne fait pas** : tirer. Le tirage de la vidéo, le gain et le
  * versement des jetons sont au serveur — et celui qui n'a pas de serveur a le
@@ -17,10 +19,12 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import {
   AlertTriangle,
+  ArrowLeft,
   Check,
   ChevronRight,
   CirclePlay,
   Clapperboard,
+  Coins,
   Gavel,
   Hammer,
   Handshake,
@@ -29,9 +33,11 @@ import {
   Radio,
   Sparkles,
   TrendingUp,
+  Trophy,
   UsersRound,
   WifiOff,
   X,
+  Zap,
 } from "lucide-react";
 
 import { useCloud } from "@/hooks/use-cloud";
@@ -73,10 +79,10 @@ import { TEAR_HAPTIC } from "@/lib/reveal";
 import { buzz } from "@/lib/haptics";
 import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 
+import { CreatorCard } from "@/components/creator-card";
 import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game";
 import { liveStore } from "@/lib/live-store";
 import { liveFor } from "@/lib/live";
-import { StreamerStudioStage } from "@/components/streamer-studio-stage";
 import {
   SFX_STUDIO,
   playCardPlace,
@@ -105,7 +111,7 @@ const ICONES_IMPREVU: Record<string, typeof Sparkles> = {
   nuit: MoonStar,
 };
 
-export function StudioView() {
+export function StudioView({ onBack }: { onBack: () => void }) {
   const state = useGame();
   const cloud = useCloud();
   const now = useNow(30_000);
@@ -124,10 +130,6 @@ export function StudioView() {
   // Le live de vingt secondes : ouvert, il prend tout l'écran — c'est une scène,
   // pas un panneau de plus.
   const [liveOuvert, setLiveOuvert] = useState(false);
-  // Le palier **qu'on vient d'installer** : ses objets tombent dans la pièce et
-  // une bouffée de fumée marque l'endroit. On l'éteint deux secondes plus tard,
-  // sinon la pièce rejouerait la scène à chaque retour dans l'onglet.
-  const [installe, setInstalle] = useState<string | null>(null);
   // Le bureau : la place qu'on est en train de remplir (1 ou 2, `null` sinon).
   const [placeOuverte, setPlaceOuverte] = useState<number | null>(null);
   const [recherche, setRecherche] = useState("");
@@ -154,13 +156,6 @@ export function StudioView() {
       vivant = false;
     };
   }, []);
-
-  // L'arrivée d'un palier ne dure que le temps qu'on la voie.
-  useEffect(() => {
-    if (!installe) return;
-    const minuterie = window.setTimeout(() => setInstalle(null), 2_000);
-    return () => window.clearTimeout(minuterie);
-  }, [installe]);
 
   const jour = gameDay(now);
   const streamer = state?.streamer;
@@ -249,6 +244,11 @@ export function StudioView() {
   // moment de publier (`collabFor`), donc le chiffre annoncé est celui qui sera
   // payé — rareté des invités, et bonus du direct s'il y en a un.
   const collabPossible = useMemo(() => collabFor(guests, direct), [guests, direct]);
+  // Ce que le plateau vaut **à cet instant** : le relevé du serveur quand il a
+  // répondu (c'est lui qui paiera la prochaine vidéo), le calcul local sinon —
+  // les deux puces du plateau lisent ce nombre-là.
+  const collabPermille = vue ? vue.collabPermille : collabPossible.permille;
+  const collabLive = vue ? vue.collabLive : collabPossible.live;
   // Les cartes qu'on peut poser : un créateur **différent** de celui d'à côté,
   // encore en direct, et une seule carte par créateur (le plus rare d'abord).
   const choixInvites = useMemo(() => {
@@ -284,8 +284,8 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
-    // Publier, c'est le moment qui paie : le carillon, et la pièce qui monte
-    // d'un cran si la chaîne a franchi un palier de notoriété.
+    // Publier, c'est le moment qui paie : le carillon, puis la fanfare si la
+    // chaîne vient de franchir un palier de notoriété.
     playChime();
     if (issue.message && issue.message.includes("palier")) playPowerUp();
     setNotice({ message: issue.message ?? "Vidéo publiée.", isError: false });
@@ -376,8 +376,9 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
-    // La carte se pose sur son socle. Si le créateur streame maintenant, c'est
-    // un raid qui arrive : la pièce le dit avant que le chiffre tombe.
+    // La carte se pose sur sa place du bureau. Si le créateur streame
+    // maintenant, c'est un raid qui arrive : la fanfare le dit avant que le
+    // chiffre tombe.
     playCardPlace();
     const slug = cardId ? state?.cards.find((carte) => carte.id === cardId)?.creatorSlug : null;
     if (slug && direct.has(slug)) playFanfare();
@@ -420,13 +421,13 @@ export function StudioView() {
   }, [opening, jour, raidPaye, guests, direct]);
 
   /**
-   * Relit la pièce : ce que le serveur (ou le moteur local) vient d'écrire.
+   * Relit la chaîne : ce que le serveur (ou le moteur local) vient d'écrire.
    *
-   * L'ouverture de l'onglet est un **relevé**, pris une fois au montage. Tout ce
+   * L'ouverture de l'écran est un **relevé**, pris une fois au montage. Tout ce
    * qui change la chaîne après — un palier acheté, un invité posé — vit dans la
-   * sauvegarde, pas dans ce relevé : sans cette relecture, l'objet serait payé
-   * et resterait invisible jusqu'à ce qu'on quitte l'onglet. Elle garde le
-   * résumé du retour (`releveApres`), qui n'appartient qu'au premier relevé.
+   * sauvegarde, pas dans ce relevé : sans cette relecture, le palier serait payé
+   * et la liste du setup continuerait d'afficher son prix. Elle garde le résumé
+   * du retour (`releveApres`), qui n'appartient qu'au premier relevé.
    */
   async function rafraichir() {
     const nouveau = await cloudStore.openStreamer(direct);
@@ -444,18 +445,15 @@ export function StudioView() {
       setNotice({ message: issue.message, isError: true });
       return;
     }
-    // L'équipement entre dans la pièce : le son du matériel qu'on branche, puis
-    // la pièce qui tombe.
+    // Le matériel qu'on branche, puis le cran qui monte.
     playEquip();
     playPowerUp();
     setNotice({ message: issue.message ?? "Palier installé.", isError: false });
-    // **Puis la pièce se relit.** Le relevé d'ouverture est celui d'**avant**
-    // l'achat : sans cette relecture, l'objet serait payé mais n'entrerait
-    // jamais dans la pièce avant de quitter l'onglet. On joue l'arrivée juste
-    // après, pour que l'objet tombe et fume **ensemble**.
+    // **Puis la chaîne se relit.** Le relevé d'ouverture est celui d'**avant**
+    // l'achat : sans cette relecture, le palier serait payé mais la liste
+    // continuerait d'afficher son prix jusqu'à ce qu'on quitte l'écran.
     await rafraichir();
     setBusy(false);
-    setInstalle(id);
   }
 
   /**
@@ -477,14 +475,12 @@ export function StudioView() {
     setSacrifie([]);
     setConfirmeSacrifice(false);
     playCardPlace();
-    // Le palier s'installe : même arrivée que celui payé en points, relecture
-    // comprise (`rafraichir`), sinon l'objet n'entrerait pas dans la pièce.
+    // Le palier s'installe : le son du matériel, puis la relecture — le palier
+    // payé doit apparaître **installé** dans la liste tout de suite.
     playEquip();
     setNotice({ message: issue.message ?? "Sacrifice fait.", isError: false });
-    const id = prochain?.id ?? null;
     await rafraichir();
     setBusy(false);
-    setInstalle(id);
   }
 
   return (
@@ -539,41 +535,164 @@ export function StudioView() {
           </div>
         ) : null}
 
-        {/* Le studio : la scène. Le décor, les huit objets du setup qui
-            s'allument, les deux socles d'invités — et le HUD (rang, jauge
-            d'abonnés, rythme, jetons) qui remplace les trois chiffres de
-            l'ancien tableau de bord. */}
-        <StreamerStudioStage
-          guests={guests}
-          direct={direct}
-          liveStreams={liveStreams}
-          setup={setup}
-          justInstalled={installe}
-          // L'emblème d'Arène : une couronne par semaine terminée dans le
-          // top 10. C'est le serveur qui les connaît (`arena_me`, journal des
-          // semaines encaissées) ; hors ligne, l'Arène n'existe pas, donc rien
-          // sur l'étagère.
-          emblemes={(cloud.arenaMine?.claims ?? []).filter((claim) => claim.emblem).length}
-          collabPermille={vue ? vue.collabPermille : collabPossible.permille}
-          collabLive={vue ? vue.collabLive : collabPossible.live}
-          raidToday={raidPaye}
-          raidLine={raidPaye > 0 ? raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] }) : null}
-          raidPossible={raidPossible.gained}
-          subscribers={abonnes}
-          perDay={croissance}
-          tierLabel={progression.tier.label}
-          nextTierAt={progression.next ? progression.next.at : null}
-          progressRatio={progression.ratio}
-          tokens={jetons}
-          tokensCap={STREAMER_TOKEN_CAP}
-          busy={busy}
-          onOpenSlot={(place) => {
-            playMenuOpen();
-            setPlaceOuverte(place);
-            setRecherche("");
-          }}
-          onRemove={(place) => void poserInvite(place, null)}
-        />
+        {/* Le retour : « Ta chaîne » n'a plus d'onglet — elle s'ouvre par sa
+            ligne du Drop, et on en sort en touchant un des quatre piliers. Le
+            bouton est là pour le pouce qui cherche une sortie du même côté que
+            l'entrée. */}
+        <button type="button" className="chaine-retour" onClick={onBack}>
+          <ArrowLeft size={15} aria-hidden="true" />
+          Retour
+        </button>
+
+        {/* Le HUD de la chaîne, en **texte** : le rang, la jauge d'abonnés, le
+            rythme du jour et les jetons. Ce sont les mêmes chiffres et les mêmes
+            calculs que la pièce se contentait d'afficher — elle ne calculait pas,
+            elle les posait. */}
+        <section className={`chaine-hud${collabLive ? " raid" : ""}`} aria-label="Ta chaîne">
+          <span className="chaine-hud-rank" title={`Palier : ${progression.tier.label}`}>
+            <Trophy size={13} aria-hidden="true" />
+            {progression.tier.label}
+          </span>
+          <span className="chaine-hud-pill" title="Croissance de la chaîne par journée de jeu">
+            <Zap size={12} aria-hidden="true" />+{count.format(croissance)} / jour
+          </span>
+          <span className="chaine-hud-pill jetons" title="Jetons versés aujourd'hui par la chaîne">
+            <Coins size={12} aria-hidden="true" />
+            {jetons}/{STREAMER_TOKEN_CAP}
+          </span>
+          <div
+            className="chaine-hud-track"
+            role="progressbar"
+            aria-label={
+              progression.next
+                ? `Abonnés vers ${count.format(progression.next.at)}`
+                : "Palier au sommet"
+            }
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(progression.ratio * 100)}
+          >
+            <i style={{ width: `${Math.round(progression.ratio * 100)}%` }} />
+            <span>
+              {count.format(abonnes)}
+              {progression.next ? ` / ${count.format(progression.next.at)}` : " abonnés"}
+            </span>
+          </div>
+        </section>
+
+        {/* Le bureau : deux places, rien d'autre. Plus de socle dessiné — une
+            carte qui dit ce qu'elle paie. Une place libre est un bouton, une
+            place prise est la carte de l'invité avec son direct et son bonus. */}
+        <section className="chaine-plateau" aria-label="Les invités du bureau">
+          {[1, 2].map((place) => {
+            const invite = guests.find((guest) => guest.slot === place) ?? null;
+            if (!invite) {
+              return (
+                <button
+                  key={place}
+                  type="button"
+                  className="chaine-place libre"
+                  disabled={busy}
+                  aria-label={`Choisir un invité pour la place ${place}`}
+                  onClick={() => {
+                    playMenuOpen();
+                    setPlaceOuverte(place);
+                    setRecherche("");
+                  }}
+                >
+                  {/* Pas de cadre pointillé, pas de « + » : la règle de
+                      l'écran (8 octobre 2026) est qu'aucune boîte pointillée ne
+                      s'affiche. Une place libre est un bouton normal qui dit
+                      ce qu'il fait.
+                      Le numéro de la place, lui, vit dans le nom accessible du
+                      bouton et pas à l'écran : aucun « Place 1 » ne s'écrit. */}
+                  <span className="chaine-place-cta">Inviter un créateur</span>
+                  <span className="chaine-place-note">
+                    En <strong>direct</strong>, il paie un relevé et sert la vidéo du jour.
+                  </span>
+                </button>
+              );
+            }
+
+            const creator = CREATOR_BY_SLUG.get(invite.slug) ?? null;
+            const stream = liveStreams.get(invite.slug) ?? null;
+            const enDirect = direct.has(invite.slug);
+            const bonus = collabVideoPermille(invite.rarity);
+            return (
+              <article
+                key={place}
+                className={`chaine-place pose${enDirect ? " en-direct" : ""}`}
+              >
+                <button
+                  type="button"
+                  className="chaine-place-change"
+                  disabled={busy}
+                  aria-label={`Changer l'invité de la place ${place}`}
+                  onClick={() => {
+                    playMenuOpen();
+                    setPlaceOuverte(place);
+                    setRecherche("");
+                  }}
+                >
+                  {creator ? (
+                    <CreatorCard
+                      creator={creator}
+                      variant={invite.variant}
+                      compact
+                      liveStream={stream}
+                    />
+                  ) : (
+                    <span className="chaine-place-inconnu">{invite.slug}</span>
+                  )}
+                </button>
+                {enDirect ? (
+                  <span className="chaine-place-live">
+                    <Radio size={11} aria-hidden="true" />
+                    EN DIRECT{stream ? ` · ${count.format(stream.viewers)}` : ""}
+                  </span>
+                ) : null}
+                <span className="chaine-place-meta">
+                  <i style={{ color: RARITY_META[invite.rarity as Rarity]?.color ?? undefined }}>
+                    {RARITY_META[invite.rarity as Rarity]?.label ?? invite.rarity}
+                  </i>
+                  {bonus > 0 ? <em>plateau +{(bonus / 10).toFixed(0)} %</em> : null}
+                </span>
+                <button
+                  type="button"
+                  className="chaine-place-retire"
+                  disabled={busy}
+                  aria-label={`Retirer l'invité de la place ${place}`}
+                  onClick={() => void poserInvite(place, null)}
+                >
+                  <X size={13} aria-hidden="true" />
+                </button>
+              </article>
+            );
+          })}
+        </section>
+
+        {/* Les états du soir, en une ligne : le plateau, le direct, le relevé. */}
+        <div className="chaine-chips">
+          {collabLive ? (
+            <span className="chaine-chip live">
+              <Radio size={12} aria-hidden="true" />
+              RAID ! le direct entre dans la vidéo du jour
+            </span>
+          ) : null}
+          <span className={`chaine-chip${collabPermille > 0 ? " violet" : ""}`}>
+            Plateau {collabPermille > 0 ? `+${(collabPermille / 10).toFixed(1)} %` : "vide"}
+            {collabLive ? " (direct compris)" : ""}
+          </span>
+          {raidPaye > 0 ? (
+            <span className="chaine-chip gold">
+              {raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] })}
+            </span>
+          ) : raidPossible.gained > 0 ? (
+            <span className="chaine-chip gold">
+              Relevé du soir +{count.format(raidPossible.gained)} abonnés
+            </span>
+          ) : null}
+        </div>
 
         {/* L'imprévu du jour : une carte, deux réponses, un tirage serveur.
             Compacte : l'icône, le titre, deux lignes de situation, et les deux

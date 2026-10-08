@@ -1889,7 +1889,6 @@ input:focus-visible {
 }
 .fx-explosion { --fx-frames: 15; --fx-duration: 450ms; background-image: url(/fx/explosion.png); background-size: calc(15 * var(--fx-size)) var(--fx-size); }
 .fx-eclat { --fx-frames: 13; --fx-duration: 390ms; background-image: url(/fx/eclat.png); background-size: calc(13 * var(--fx-size)) var(--fx-size); }
-.fx-fumee { --fx-frames: 21; --fx-duration: 735ms; background-image: url(/fx/fumee.png); background-size: calc(21 * var(--fx-size)) var(--fx-size); }
 @keyframes fx-play { from { background-position: 0 0; } to { background-position: calc(-1 * var(--fx-frames) * var(--fx-size)) 0; } }
 
 /* L'écran blanc d'un Légendaire : court, et il repart tout seul. */
@@ -2872,19 +2871,16 @@ input:focus-visible {
 .chaine-studio-boutons .chaine-setup-buy { flex: 1; margin: 0; }
 .chaine-studio-annuler { padding: 10px 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: none; font-size: 13px; font-weight: 600; cursor: pointer; }
 .chaine-studio-annuler:disabled { opacity: .5; cursor: default; }
-/* ─── Le studio : la scène de « Ta chaîne » ──────────────────────────────────
-   La pièce du mini-jeu, dessinée en SVG : mur, panneaux acoustiques, bandeau
-   néon, bureau, et les huit objets du setup qui s'allument un par un. Ses
-   couleurs (violet néon, cyan, rouge du direct) sont celles de
-   **l'illustration**, pas du chrome : la règle du bloc racine — « aucune couleur
-   d'interface en dur » — vaut pour l'interface, pas pour une scène.
+/* ─── « Ta chaîne » : le HUD, le bureau, l'événement ─────────────────────────
+   La pièce visuelle du Studio (décor isométrique, objets de setup, socles) a
+   été retirée le 8 octobre 2026 : l'écran est revenu au **texte**, et il n'est
+   plus un onglet — il s'ouvre par la ligne « Ta chaîne » de l'accueil. Ce qui
+   reste ici est ce qui se lit : le HUD (rang, jauge, rythme, jetons), le
+   bureau des invités, la carte d'imprévu, les formats et le setup.
 
-   Une seule animation perpétuelle, et elle dit quelque chose : l'aura d'un
-   invité qui streame **maintenant**. Elle s'éteint avec le direct,
-   `prefers-reduced-motion` la coupe, et l'interrupteur « Reflets des cartes »
-   aussi. Tout le reste est immobile : un socle libre brille, mais ne clignote
-   pas. */
-.chaine-stage { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
+   Plus aucune animation perpétuelle sur cet écran : le direct se dit en
+   **badges** (une carte d'invité qui vire au rouge, une puce « RAID ! »), pas
+   en lueurs qui tournent. */
 
 /* Le HUD : le rang, la jauge d'abonnés, le rythme et les jetons. Des chiffres
    de jeu, pas des phrases : c'est ce qu'on lit d'un coup d'œil en jouant. */
@@ -2897,103 +2893,40 @@ input:focus-visible {
 .chaine-hud-pill { order: 2; display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 4px 8px; color: #ffe9b0; border: 1px solid rgb(255 209 122 / .45); border-radius: 999px; background: rgb(255 209 122 / .12); font-size: 11.5px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .chaine-hud-pill svg { color: #ffd27a; }
 .chaine-hud-pill.jetons { color: var(--accent-light); border-color: rgb(var(--accent-rgb) / .45); background: rgb(var(--accent-rgb) / .12); }
-.chaine-stage.raid .chaine-hud { border-color: rgb(255 77 94 / .5); }
+.chaine-hud.raid { border-color: rgb(255 77 94 / .5); }
 
-/* La pièce : une vraie scène isométrique, composée d'**images** (kit Kenney
-   « Isometric Miniature », CC0). Les coordonnées viennent de
-   `src/data/studio-room.json`, le calcul de `src/lib/studio-room.ts` : ici on
-   ne fait que poser — chaque sprite est en pourcentage du canevas, donc la pièce
-   suit la largeur du téléphone sans jamais se déformer. Le fond du canevas est
-   le noir du studio : les sprites de meubles flottent dessus, il ne se voit
-   qu'entre les murs et le sol. */
-.chaine-room { position: relative; width: 100%; max-width: 520px; margin-inline: auto; overflow: hidden; border: 1px solid rgb(255 255 255 / .08); border-radius: 18px; background: radial-gradient(120% 90% at 50% 8%, #191330, #0a0812 62%, #06050c); box-shadow: 0 22px 46px -30px rgb(0 0 0 / 1), inset 0 0 70px -24px rgb(0 0 0 / .9); }
-.chaine-sprite { position: absolute; display: block; user-select: none; pointer-events: none; }
-/* Les murs du kit sont **clairs** (c'est un salon) : un studio est sombre. Le
-   filtre les met à l'ombre et les tire vers le bleu — `sepia` d'abord, sinon un
-   gris reste gris (une rotation de teinte ne fait rien sur du blanc). */
-.chaine-sprite.mur { filter: brightness(.5) sepia(.6) hue-rotate(178deg) saturate(2.1); }
-/* Une fenêtre n'est pas un mur : elle n'est pas assombrie, et elle apporte la
-   seule lumière froide de la pièce (c'est elle qui dit « il fait jour dehors »). */
-.chaine-sprite.fenetre { filter: brightness(.82) saturate(.9); }
-/* L'éclairage acheté éclaircit la pièce : le studio se transforme en s'équipant. */
-.chaine-room.eclaire .chaine-sprite.mur { filter: brightness(.66) sepia(.55) hue-rotate(180deg) saturate(1.9); }
-.chaine-room.eclaire .chaine-sprite.fenetre { filter: brightness(.98) saturate(.95); }
-/* Le néon : deux tubes posés sur les murs, et l'ambiance qu'ils jettent. */
-.chaine-neon { position: absolute; height: 1.1%; min-height: 4px; border-radius: 999px; pointer-events: none; }
-.chaine-neon.violet { background: linear-gradient(90deg, #f0abfc, #a855f7 45%, #7c3aed); box-shadow: 0 0 9px rgb(168 85 247 / .95), 0 0 24px rgb(168 85 247 / .55), 0 0 42px rgb(124 58 237 / .3); }
-.chaine-neon.cyan { background: linear-gradient(90deg, #0e7490, #22d3ee 45%, #a5f3fc); box-shadow: 0 0 9px rgb(34 211 238 / .95), 0 0 24px rgb(34 211 238 / .5), 0 0 42px rgb(14 116 144 / .3); }
-.chaine-room.neon::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(58% 34% at 22% 30%, rgb(168 85 247 / .22), transparent 70%), radial-gradient(58% 34% at 78% 30%, rgb(34 211 238 / .18), transparent 70%); mix-blend-mode: screen; }
-/* Le halo de la lampe : la seule lumière chaude du studio. */
-.chaine-halo { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 50%, rgb(255 205 130 / .3), rgb(255 176 84 / .1) 46%, transparent 74%); mix-blend-mode: screen; }
-/* Les deux équipements que le kit ne fournit pas : une webcam, un micro sur
-   bras. Deux formes CSS minuscules, jamais un tableau de bord. */
-.chaine-gadget { position: absolute; transform: translate(-50%, -100%); pointer-events: none; }
-.chaine-gadget.webcam { width: 3.6%; aspect-ratio: 26 / 18; border-radius: 3px; background: linear-gradient(180deg, #2b2e3c, #14151d); box-shadow: 0 2px 5px rgb(0 0 0 / .7), inset 0 1px 0 rgb(255 255 255 / .18); }
-.chaine-gadget.webcam::before { content: ""; position: absolute; left: 18%; top: 22%; width: 27%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 32%, #cdf3ff, #1c4a63 72%); }
-.chaine-gadget.webcam::after { content: ""; position: absolute; right: 14%; top: 26%; width: 15%; aspect-ratio: 1; border-radius: 50%; background: #ff4d5e; box-shadow: 0 0 6px rgb(255 77 94 / .95); }
-.chaine-gadget.micro { width: 4.6%; aspect-ratio: 46 / 80; }
-.chaine-gadget.micro::before { content: ""; position: absolute; left: 47%; bottom: 4%; width: 3px; height: 62%; border-radius: 2px; background: linear-gradient(180deg, #7b8290, #3a3e49); transform: rotate(10deg); transform-origin: 50% 100%; }
-.chaine-gadget.micro::after { content: ""; position: absolute; left: 26%; top: 2%; width: 44%; aspect-ratio: .62; border-radius: 999px; background: linear-gradient(180deg, #e3e7ef, #878e9c 60%, #5a606c); box-shadow: 0 0 7px rgb(0 0 0 / .6), inset 0 1px 0 rgb(255 255 255 / .7); }
-/* Le voyant REC ne bat qu'en direct : une animation perpétuelle dit toujours
-   quelque chose, ici « quelqu'un streame en ce moment ». */
-.chaine-room.en-direct .chaine-gadget.webcam::after { animation: chaine-rec 1.2s steps(2, end) infinite; }
-@keyframes chaine-rec { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+/* Le retour : l'écran n'a plus d'onglet, donc plus d'onglet allumé pour dire
+   « tu es ici ». Un bouton, à gauche, discret — les quatre piliers de la barre
+   restent la sortie normale. */
+.chaine-retour { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-bottom: 9px; padding: 6px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; background: none; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.chaine-retour:hover { color: var(--text); }
 
-/* **L'arrivée d'un palier acheté.** L'objet ne se contente pas d'exister : il
-   tombe en place, dans l'ordre de la pièce (le retard est posé par la scène, à
-   partir de `src/lib/studio-install.ts`), et une bouffée de fumée marque
-   l'endroit où on vient de le brancher. Une seule fois : la classe n'est là
-   qu'au moment de l'achat, jamais après. */
-.chaine-room .vient-d-installer { animation: chaine-installe 520ms cubic-bezier(.2, .8, .25, 1.12) both; animation-delay: var(--install-delay, 0ms); }
-@keyframes chaine-installe { from { opacity: 0; transform: translateY(9px) scale(.52); } to { opacity: 1; transform: none; } }
-/* Les formes CSS (webcam, micro, néons, halos) portent déjà leur propre
-   `transform` : elles arrivent en fondu, sans bouger de leur place. */
-.chaine-room .vient-d-installer.revele { animation-name: chaine-installe-fondu; }
-@keyframes chaine-installe-fondu { from { opacity: 0; } to { opacity: 1; } }
-/* La fumée : au-dessus du mobilier, et elle s'efface d'elle-même — le calme
-   (réglage des reflets, « réduire les animations ») la coupe ailleurs, avec les
-   autres effets du jeu. */
-.chaine-room .fx-arrivee { z-index: 4; opacity: .92; }
+/* Le bureau : deux places côte à côte. Une place libre est un bouton — le
+   seul endroit de l'écran qui pose un invité ; une place prise est la carte de
+   l'invité, avec ce qu'elle paie. */
+.chaine-plateau { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
+.chaine-place { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 9px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.02); }
+.chaine-place.libre { align-items: stretch; justify-content: center; min-height: 132px; color: var(--muted); border-color: rgb(var(--accent-rgb) / .38); background: rgb(var(--accent-rgb) / .05); text-align: left; cursor: pointer; }
+.chaine-place.libre:disabled { opacity: .55; cursor: default; }
+.chaine-place-cta { align-self: center; color: var(--accent-light); font-size: 14px; font-weight: 700; }
+.chaine-place-note { color: var(--muted-2); font-size: 11.5px; line-height: 1.4; }
+.chaine-place-note strong { color: var(--text); }
+.chaine-place-change { width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
+.chaine-place-change:disabled { cursor: default; }
+.chaine-place-inconnu { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 8px; font-size: 10px; }
+.chaine-place-meta { display: flex; align-items: center; gap: 5px; font-size: 10.5px; white-space: nowrap; }
+.chaine-place-meta i { font-style: normal; font-weight: 800; }
+.chaine-place-meta em { color: #ded4ff; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chaine-place-retire { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 20px; height: 20px; color: #ffe3e6; border: 1px solid rgb(255 255 255 / .22); border-radius: 50%; background: rgb(10 6 14 / .82); cursor: pointer; }
+.chaine-place-retire:disabled { opacity: .5; cursor: default; }
+/* L'invité **en direct** : la carte vire au rouge et le badge le dit. Rien qui
+   tourne ni qui clignote — une couleur, un mot. */
+.chaine-place.en-direct { border-color: rgb(255 77 94 / .6); box-shadow: 0 0 18px -8px rgb(255 77 94 / .95); }
+.chaine-place-live { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 9.5px; font-weight: 900; letter-spacing: .07em; white-space: nowrap; }
 
-/* Les socles : deux piédestaux translucides posés **sur le devant du bureau**.
-   Un socle libre est une plaque de verre teintée (jamais une boîte pointillée,
-   jamais un « + ») ; un socle occupé porte une vraie carte du classeur en
-   miniature, inclinée en perspective comme une carte posée debout. */
-.chaine-stands { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
-.chaine-stand { position: absolute; display: flex; flex-direction: column; align-items: center; width: 21%; transform: translate(-50%, -100%); }
-.chaine-stand-empty { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
-.chaine-stand-empty:disabled { cursor: default; }
-.chaine-stand-ghost { display: block; width: 100%; aspect-ratio: .715; border-radius: 8px; background: linear-gradient(180deg, rgb(168 85 247 / .22), rgb(255 255 255 / .03) 70%); box-shadow: inset 0 0 22px -6px rgb(168 85 247 / .9), 0 0 0 1px rgb(168 85 247 / .34); }
-.chaine-stand-socle { display: block; width: 46%; height: 6px; margin-top: -2px; border-radius: 2px 2px 5px 5px; background: linear-gradient(180deg, rgb(255 255 255 / .42), rgb(120 110 160 / .12)); box-shadow: 0 5px 10px -6px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .5); }
-.chaine-stand-glow { position: absolute; bottom: -3px; width: 62%; height: 14px; border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 50%, rgb(168 85 247 / .65), transparent 72%); filter: blur(3px); }
-.chaine-stand-card { display: block; position: relative; z-index: 1; width: 100%; transform: perspective(760px) rotateX(9deg); transform-origin: 50% 100%; }
-.chaine-stand-card .creator-card { border-radius: 7px; box-shadow: 0 12px 22px -12px rgb(0 0 0 / .98), 0 0 0 1px rgb(255 255 255 / .08); }
-.chaine-stand-unknown { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 8px; font-size: 10px; }
-.chaine-stand.pose .chaine-stand-socle { background: linear-gradient(180deg, rgb(255 255 255 / .58), rgb(120 110 160 / .16)); }
-/* Les deux chiffres de l'invité : sa rareté, et sa part de la vidéo du jour. */
-.chaine-stand-meta { position: absolute; top: calc(100% + 1px); display: flex; align-items: center; gap: 3px; padding: 1px 5px; border-radius: 999px; background: rgb(6 5 12 / .72); font-size: 9.5px; line-height: 1.5; white-space: nowrap; }
-.chaine-stand-meta i { font-style: normal; font-weight: 800; }
-.chaine-stand-meta em { color: #ded4ff; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
-.chaine-stand-remove { position: absolute; top: calc(100% - 9px); right: 2%; display: grid; place-items: center; width: 17px; height: 17px; color: #ffe3e6; border: 1px solid rgb(255 255 255 / .22); border-radius: 50%; background: rgb(10 6 14 / .82); cursor: pointer; }
-.chaine-stand-remove:disabled { opacity: .5; cursor: default; }
-/* La carte d'un invité **en direct** vire au rouge, et respire. */
-.chaine-stand-aura { position: absolute; z-index: 0; left: 50%; bottom: 0; width: 132%; height: 116%; transform: translateX(-50%); border-radius: 50%; pointer-events: none; background: radial-gradient(50% 50% at 50% 62%, rgb(255 77 94 / .55), transparent 70%); filter: blur(4px); animation: chaine-live-aura 2.6s ease-in-out infinite; }
-.chaine-stand.en-direct .chaine-stand-card { animation: chaine-live-card 2.6s ease-in-out infinite; }
-.chaine-stand.en-direct .chaine-stand-glow { background: radial-gradient(50% 50% at 50% 50%, rgb(255 77 94 / .75), transparent 72%); }
-.chaine-stand-live { position: absolute; z-index: 3; top: -9px; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 9.5px; font-weight: 900; letter-spacing: .07em; white-space: nowrap; box-shadow: 0 0 14px -3px rgb(255 77 94 / .95); }
-@keyframes chaine-live-aura { 0%, 100% { opacity: .5; transform: translateX(-50%) scale(.96); } 50% { opacity: 1; transform: translateX(-50%) scale(1.05); } }
-@keyframes chaine-live-card { 0%, 100% { filter: drop-shadow(0 0 0 rgb(255 77 94 / 0)); } 50% { filter: drop-shadow(0 0 7px rgb(255 77 94 / .85)); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card, .chaine-room.en-direct .chaine-gadget.webcam::after, .chaine-room .vient-d-installer { animation: none; }
-}
-/* Le réglage « Reflets des cartes » demande le calme : l'aura reste, elle ne
-   pulse plus. */
-[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card, [data-card-fx="off"] .chaine-room.en-direct .chaine-gadget.webcam::after, [data-card-fx="off"] .chaine-room .vient-d-installer { animation: none; }
-
-/* Le classeur d'invités : il ne s'ouvre que sur un socle de la scène
-   (`.chaine-stage`), et il ne propose que les créateurs **en direct** — un
-   invité hors ligne n'amène rien. */
+/* Le classeur d'invités : il ne s'ouvre que sur une place du bureau, et il ne
+   propose que les créateurs **en direct** — un invité hors ligne n'amène
+   rien. */
 .chaine-bureau { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .chaine-bureau-pick { display: flex; flex-direction: column; gap: 8px; padding: 11px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 12px; background: rgb(var(--accent-rgb) / .05); }
 .chaine-bureau-pick-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -3060,10 +2993,3 @@ input:focus-visible {
 .notify-switch .menu-row > svg { margin-left: 0; }
 .notify-switch .menu-row > span:first-of-type { flex: 1; }
 .notify-switch .account-hint { margin: 6px 2px 0; }
-
-/* **L'emblème d'Arène** posé sur l'étagère du Studio : la couronne gagnée dans
-   l'Arène (top 10, une fois par semaine) vient se voir chez soi. C'est le seul
-   endroit où les deux univers du jeu se touchent — il ne rapporte rien, il
-   raconte. Une lueur douce, jamais un feu d'artifice : elle est là tous les
-   jours, pas au moment où on la gagne. */
-.chaine-embleme { position: absolute; z-index: 2; display: block; object-fit: contain; user-select: none; pointer-events: none; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .75)) drop-shadow(0 0 5px rgb(255 209 122 / .45)); }

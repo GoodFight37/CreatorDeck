@@ -46,9 +46,9 @@ describe("les crédits de l'écran Toi", () => {
 
     banc.appuyer("Crédits");
     const ouvert = banc.ecran("40-toi-credits-ouverts");
-    // Qui a fait quoi : les six lignes, et les noms qu'on doit nommer.
-    expect(document.querySelectorAll(".credits-list > div")).toHaveLength(6);
-    for (const nom of ["Twitch", "Kenney", "unTied Games", "Chequered Ink", "Lucide"]) {
+    // Qui a fait quoi : les cinq lignes, et les noms qu'on doit nommer.
+    expect(document.querySelectorAll(".credits-list > div")).toHaveLength(5);
+    for (const nom of ["Twitch", "unTied Games", "Chequered Ink", "Lucide"]) {
       expect(ouvert, `crédit absent : ${nom}`).toContain(nom);
     }
     // Le crédit demandé par la licence du pack d'effets, en entier.

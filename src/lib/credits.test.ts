@@ -35,20 +35,20 @@ describe("les crédits", () => {
   });
 
   it("crédite tout ce qui vient d'ailleurs", () => {
-    // Le jeu n'a dessiné ni ses portraits, ni son décor, ni ses effets, ni ses
-    // sons, ni ses icônes, ni ses polices : six lignes, et pas cinq.
+    // Le jeu n'a dessiné ni ses portraits, ni ses effets, ni ses sons, ni ses
+    // icônes, ni ses polices : cinq lignes, et pas quatre. (Le décor du Studio
+    // avait la sienne : elle est partie avec le kit Kenney.)
+    expect(CREDITS).toHaveLength(5);
     const texte = CREDITS.map((ligne) => `${ligne.quoi} ${ligne.qui}`).join(" | ");
-    for (const nom of ["Twitch", "Kenney", "unTied Games", "Chequered Ink", "Lucide", "IBM Plex"]) {
+    for (const nom of ["Twitch", "unTied Games", "Chequered Ink", "Lucide", "IBM Plex"]) {
       expect(texte, `crédit manquant : ${nom}`).toContain(nom);
     }
   });
 
   it("dit le vrai des licences", () => {
-    // Le kit de meubles est en domaine public (CC0) ; le pack de sons autorise
-    // l'usage mais pas la revente des fichiers bruts ; le pack d'effets demande
-    // le crédit. Ces trois phrases-là sont vérifiables.
+    // Deux phrases sont vérifiables : le pack de sons autorise l'usage mais pas
+    // la revente des fichiers bruts, et le pack d'effets demande le crédit.
     const parQuoi = new Map(CREDITS.map((ligne) => [ligne.quoi, ligne]));
-    expect(parQuoi.get("Le décor du Studio")?.licence).toContain("domaine public");
     expect(parQuoi.get("Les bruitages")?.licence).toContain("revente");
     expect(
       CREDITS.find((ligne) => ligne.quoi.startsWith("Les effets"))?.licence,

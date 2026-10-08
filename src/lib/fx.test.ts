@@ -1,4 +1,4 @@
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { FX_SHEETS, burstFor, flashFor, fxDurationMs, fxUrl } from "@/lib/fx";
@@ -57,7 +57,6 @@ describe("l'effet d'une carte révélée", () => {
   it("pointe des images servies depuis le dossier public", () => {
     expect(fxUrl("explosion")).toBe("/fx/explosion.png");
     expect(fxUrl("eclat")).toBe("/fx/eclat.png");
-    expect(fxUrl("fumee")).toBe("/fx/fumee.png");
   });
 });
 
@@ -89,19 +88,18 @@ describe("les planches d'effets", () => {
 
   it("tiennent dans un budget ridiculement petit", () => {
     // Le pack d'effets livré pèse des dizaines de mégaoctets ; on n'en embarque
-    // que quatre images, et c'est ce qui rend l'ajout acceptable.
+    // que **deux planches** (32 Ko), et c'est ce qui rend l'ajout acceptable.
+    // La fumée de l'arrivée d'un palier et la couronne de l'emblème d'Arène
+    // sont parties avec la pièce du Studio, le 8 octobre 2026 : plus d'usager,
+    // plus d'octets.
     let total = 0;
     for (const kind of Object.keys(FX_SHEETS)) {
       total += statSync(path.join(process.cwd(), "public", "fx", `${kind}.png`)).size;
     }
-    total += statSync(path.join(process.cwd(), "public", "fx", "couronne.png")).size;
-    expect(total).toBeLessThan(200 * 1024);
-  });
-
-  it("garde la couronne de l'emblème d'Arène", () => {
-    // Elle ne s'anime pas : c'est un objet posé sur une étagère.
-    const { largeur, hauteur } = taillePng(path.join(process.cwd(), "public", "fx", "couronne.png"));
-    expect(largeur).toBe(64);
-    expect(hauteur).toBe(48);
+    expect(total).toBeLessThan(100 * 1024);
+    // Et le dossier `public/fx/` ne garde **rien d'autre** : un fichier oublié
+    // là ne se chargerait jamais, mais il pèserait dans l'APK.
+    const restants = readdirSync(path.join(process.cwd(), "public", "fx")).sort();
+    expect(restants).toEqual(["eclat.png", "explosion.png"]);
   });
 });

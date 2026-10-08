@@ -63,7 +63,7 @@ describe("releveApres", () => {
     });
 
     const fusion = fusionDone(premier, second);
-    // Ce que le second relevé apporte : la pièce, les chiffres du jour.
+    // Ce que le second relevé apporte : les chiffres du jour, à jour.
     expect(fusion).toMatchObject({
       subscribers: 1_207,
       setup: ["webcam"],

@@ -32,7 +32,8 @@
 
 - [x] **Étape 3 : Écran d'accueil et feuille de chaîne basique** — la porte
   « Ta chaîne » sur l'accueil ouvre l'écran de la chaîne (aujourd'hui
-  `src/components/studio-view.tsx`, et c'est un **onglet** depuis l'étape 10) :
+  `src/components/studio-view.tsx` — un **écran sans onglet** depuis le retrait
+  du 8 octobre 2026, voir l'encadré du § 2) :
   abonnés, palier et ce qu'il reste à trouver, calendrier des formats avec
   leurs chances publiées, résumé du retour, jetons du jour (x / 40). Hors
   ligne, `src/lib/cloud/store/streamer.ts` renvoie au moteur local, qui
@@ -118,7 +119,9 @@
 
 - [x] **Étape 8 : la scène du bureau, et le plateau sur la vidéo** —
   `supabase/migrations/0041_collab_plateau.sql` (`StreamerDeskStage`, remplacé
-  depuis par `src/components/streamer-studio-stage.tsx` — étape 10).
+  depuis par la scène de l'étape 10 — **elle-même retirée** le 8 octobre 2026 au
+  soir ; les invités, eux, sont restés : ils vivent dans le bureau en cartes, au
+  même endroit de l'écran).
   Deux moitiés dans le même geste. **La scène d'abord** : le bureau n'est plus
   une liste de texte, c'est le **studio** — mur sombre, néon violet, sol, et
   **huit objets** qui s'allument un par un avec les paliers achetés (Caméra,
@@ -277,6 +280,28 @@
   joueur l'a coupé. Le détail de la sélection est dans
   [`assets-sonores.md`](assets-sonores.md).
 
+- [x] **Retrait de la pièce visuelle et de l'onglet** (8 octobre 2026, le soir)
+  — l'opération inverse de l'étape 10, et une décision de produit : le décor
+  isométrique ne rentre pas dans la direction que prend le jeu. Ce qui est
+  parti : le **cinquième onglet** (`NAV_ITEMS` revient à quatre piliers, Drop /
+  Binder / Craft / Toi), la **pièce** (`streamer-studio-stage.tsx`), l'**emblème
+  d'Arène sur l'étagère** (`studio-emblem.ts`), l'**arrivée des paliers** en
+  fumée (`studio-install.ts`), la pose des 25 sprites
+  (`studio-room.ts` + `studio-room.json`), les **2,7 Mo du kit Kenney** et deux
+  fichiers d'effets (`fumee.png`, `couronne.png`). Ce qui **reste, à
+  l'identique** : tout le moteur (`src/lib/streamer.ts`), les règles
+  (`src/data/streamer.json`), les paliers et leur achat, les **invités** (le
+  bureau est maintenant une grille de deux places, avec la vraie `CreatorCard`
+  et son badge « EN DIRECT »), l'**imprévu** à deux réponses, la **vidéo du
+  jour**, le **live de 20 s**, les **bruitages** (15 sons, tous sous
+  l'interrupteur *Son*) et **toutes les migrations** (`0036`, `0038`, `0040`,
+  `0041` — le serveur n'a pas bougé d'une ligne). L'écran s'ouvre par la ligne
+  « Ta chaîne » de l'accueil, et il gagne un bouton **Retour** : sans onglet
+  allumé, il fallait une sortie du même côté que l'entrée. Le HUD (rang, jauge
+  d'abonnés, rythme du jour, jetons) est désormais **en texte** — mêmes
+  chiffres, mêmes calculs, l'écran les écrit au lieu de les dessiner.
+  **Aucune migration à coller** : retirer un décor ne touche aucune table.
+
 ## 2. En cours
 
 - [x] **L'arbitrage du live de vingt secondes : la scène reste gratuite**
@@ -304,8 +329,10 @@
 > (étape 7), la **scène du bureau avec le plateau** (étape 8), la **refonte
 > visuelle** (étape 9), **l'onglet Studio en vraies images** (étape 10),
 > **l'habillage + les bruitages** (étape 10 bis) et **le jus** (les moments
-> rares qui se voient, l'arrivée d'un palier, l'emblème sur l'étagère) sont
-> livrés.
+> rares qui se voient) sont livrés. La **pièce visuelle** de ces étapes — onglet,
+> décor, emblème d'Arène, arrivée en fumée — a été **retirée** le 8 octobre 2026
+> au soir (voir le § 1) : ce qui suit décrit le jeu d'aujourd'hui, et la pièce
+> reviendra si et quand une direction visuelle est choisie.
 > **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
 > (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
 > en jouant.
@@ -315,6 +342,13 @@
   en **doublons** (étape 7, § 1). La promesse de la note du fichier — « des
   paliers payés en DOUBLONS, la rareté donnant le palier, jamais une
   Légendaire » — est tenue : Rare = 1, Épique = 2, Légendaire jamais.
+
+- [ ] **Un mode textuel ou immersif pour « Ta chaîne »** — la pièce visuelle est
+  partie sans successeur : l'écran d'aujourd'hui est **sobre et complet** (HUD
+  en texte, bureau, imprévu, vidéo, setup), et c'est un état acceptable pour
+  jouer. La suite (une direction visuelle, un décor différent, ou un mode
+  purement textuel assumé) est une décision de produit, pas une dette : rien
+  n'attend derrière.
 
 - [ ] **Bilan et équilibrage des gains** — relire les chiffres **avec les vrais
   joueurs** (l'outil pour les avoir sous les yeux est là : `npm run streamer:bilan`,

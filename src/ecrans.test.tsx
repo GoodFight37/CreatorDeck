@@ -43,7 +43,7 @@ describe("les écrans", () => {
     await banc.monter(<CreatorDeckApp />);
   }
 
-  it("ouvre les cinq onglets, chacun avec son écran", async () => {
+  it("ouvre les quatre piliers, chacun avec son écran", async () => {
     await application();
     expect(banc.ecran("01-accueil")).toContain("Ouvrir le booster");
 
@@ -55,15 +55,12 @@ describe("les écrans", () => {
     banc.appuyer("Craft");
     expect(banc.ecran("03-craft")).toContain("Façonne ta collection");
 
-    // Le Studio est un **onglet**, pas une feuille : il se rend dans le flux,
-    // comme les autres, avec sa pièce en images.
-    banc.appuyer("Studio");
-    const studio = banc.ecran("03b-studio");
-    expect(studio).toContain("chaine-stage");
-    expect(document.querySelector(".app-content .studio-view")).not.toBeNull();
-    expect(document.querySelectorAll(".chaine-room img").length).toBeGreaterThan(15);
-    expect(document.querySelector(".odds-overlay")).toBeNull();
-    expect(document.querySelector(".bottom-nav button.active span")?.textContent).toBe("Studio");
+    // **Quatre piliers, et rien d'autre** : l'onglet Studio a été retiré le
+    // 8 octobre 2026 avec la pièce visuelle. « Ta chaîne » reste un écran du
+    // jeu — il s'ouvre par sa ligne de l'accueil, et la barre ne l'allume pas.
+    expect(
+      [...document.querySelectorAll(".bottom-nav button span")].map((n) => n.textContent),
+    ).toEqual(["Drop", "Binder", "Craft", "Toi"]);
 
     banc.appuyer("Toi");
     // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
@@ -94,10 +91,11 @@ describe("les écrans", () => {
     banc.fermer();
   });
 
-  it("achète un palier du Studio : l'objet entre dans la pièce, tombe, et fume", async () => {
-    // Le moment où les points partent : c'est celui qui doit **se voir**. Hors
-    // ligne, l'achat passe par le même moteur que le serveur
-    // (`buyStreamerSetupLocally`) — c'est donc le vrai achat, pas une image.
+  it("achète un palier : le palier est installé, et les points partent", async () => {
+    // Le moment où les points partent. Hors ligne, l'achat passe par le même
+    // moteur que le serveur (`buyStreamerSetupLocally`) — c'est donc le vrai
+    // achat, pas une image. Le palier s'écrit « installé » dans la liste, et
+    // c'est tout ce que l'écran en dit depuis que la pièce est partie.
     const { gameStore } = await import("@/lib/game-store");
     await application();
     const avant = gameStore.getSnapshot();
@@ -107,31 +105,17 @@ describe("les écrans", () => {
     });
 
     try {
-      banc.appuyer("Studio");
+      banc.appuyerNom(/Ouvrir ta chaîne/);
       banc.appuyer(/^Installer/);
       await act(async () => {
         await vi.advanceTimersByTimeAsync(600);
       });
 
-      // L'objet est **entré dans la pièce** (le relevé d'ouverture est relu après
-      // l'achat : c'est ce qui le fait apparaître tout de suite, et pas au
-      // prochain passage dans l'onglet), il tombe en place, et la fumée est là.
-      expect(document.querySelectorAll(".chaine-room .chaine-gadget.webcam")).toHaveLength(1);
-      expect(document.querySelectorAll(".chaine-room .vient-d-installer").length).toBeGreaterThan(0);
-      expect(document.querySelectorAll(".chaine-room .fx-burst.fx-fumee").length).toBeGreaterThan(0);
-
       // Le palier est payé : la liste du setup le dit installé, et les points
-      // sont partis (le prix du premier palier).
+      // sont partis (le prix du premier palier). La relecture après l'achat est
+      // ce qui le fait apparaître tout de suite, sans quitter l'écran.
       expect(banc.ecran("08b-studio-achat")).toContain("chaine-setup-item installe");
       expect(gameStore.getSnapshot()!.points).toBe(380);
-
-      // Deux secondes plus tard, la pièce est au calme : la scène ne se rejoue
-      // pas à chaque retour dans l'onglet.
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(2_100);
-      });
-      expect(document.querySelectorAll(".chaine-room .vient-d-installer")).toHaveLength(0);
-      expect(document.querySelectorAll(".chaine-room .fx-burst")).toHaveLength(0);
     } finally {
       // La partie est partagée par les bancs de ce fichier : on rend l'état
       // trouvé, sinon le test suivant hérite d'un studio équipé.
@@ -155,10 +139,11 @@ describe("les écrans", () => {
     expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
   });
 
-  it("ouvre le Studio : la pièce en images, le HUD, l'événement et la vidéo du jour", async () => {
+  it("ouvre Ta chaîne par sa ligne de l'accueil : le HUD, le bureau, l'événement et la vidéo", async () => {
     await application();
-    // La porte de l'accueil (« Ta chaîne · N abonnés · … ») mène maintenant à
-    // **l'onglet** : le compte est fait par le nom accessible, comme au doigt.
+    // La porte de l'accueil (« Ta chaîne · N abonnés · … ») est le **seul**
+    // chemin depuis que l'onglet est parti : le compte est fait par le nom
+    // accessible, comme au doigt.
     banc.appuyerNom(/Ouvrir ta chaîne/);
     const chaine = banc.ecran("10-studio");
     expect(chaine).toContain("Let's Play");
@@ -167,27 +152,22 @@ describe("les écrans", () => {
     expect(document.querySelector(".odds-overlay")).toBeNull();
     expect(document.querySelector(".odds-panel")).toBeNull();
     expect(document.querySelector('button[aria-label="Fermer"]')).toBeNull();
-    // **La pièce** : des images du kit (le sol en neuf tuiles, deux murs), le
-    // mobilier de base, et un HUD de jeu.
-    expect(chaine).toContain("chaine-stage");
+    // **Le HUD**, en texte : le rang, la jauge d'abonnés, le rythme et les
+    // jetons. La pièce le dessinait, elle ne le calculait pas.
     expect(document.querySelector(".chaine-hud-rank")).not.toBeNull();
     expect(chaine).toContain("Petit canal");
     expect(chaine).toContain("0 / 2\u202f500");
     expect(chaine).toContain("+240 / jour");
-    const images = [...document.querySelectorAll(".chaine-room img")].map((img) =>
-      img.getAttribute("src"),
-    );
-    expect(images.filter((src) => src?.includes("floorFull_SE")).length).toBe(9);
-    expect(images.filter((src) => src?.includes("wall_")).length).toBe(6);
-    expect(images).toContain("/streamer/4/Isometric/deskCorner_SE.png");
-    // Aucun palier acheté : aucun équipement n'est entré dans la pièce.
-    expect(images).not.toContain("/streamer/4/Isometric/speaker_SE.png");
-    // Deux socles libres : le piédestal translucide, jamais une boîte pointillée
-    // ni un « Place 1 ».
-    expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
-    expect(document.querySelectorAll(".chaine-stand-ghost")).toHaveLength(2);
+    // Plus une seule image sur l'écran : le décor est parti, pas remplacé.
+    expect(document.querySelectorAll(".studio-view img")).toHaveLength(0);
+    // Deux places libres : un bouton qui invite, jamais une **boîte
+    // pointillée**, jamais un « + », jamais un « Place 1 » écrit à l'écran.
+    expect(document.querySelectorAll(".chaine-place.libre")).toHaveLength(2);
+    expect(document.querySelectorAll(".chaine-place-plus")).toHaveLength(0);
+    expect(chaine).toContain("Inviter un créateur");
     expect(chaine).not.toContain("Place 1");
-    expect(chaine).not.toContain("Place 1 libre");
+    // Le retour existe : l'écran n'a plus d'onglet allumé pour dire où l'on est.
+    expect(document.querySelector(".chaine-retour")).not.toBeNull();
     // Les badges remplacent les titres et les notices : l'événement du jour, la
     // vidéo du jour, le setup, et les deux grosses actions arcade.
     expect(chaine).toContain("Événement du jour");
@@ -202,11 +182,12 @@ describe("les écrans", () => {
     expect(chaine).not.toContain("Le tirage de la vidéo");
   });
 
-  it("le socle du bureau ouvre le classeur, qui ne propose que des créateurs en direct", async () => {
+  it("la place libre du bureau ouvre le classeur, qui ne propose que des créateurs en direct", async () => {
     await application();
-    banc.appuyer("Studio");
-    // Le socle de la place 1 est un bouton sans texte (le « + » est un dessin) :
-    // on l'ouvre par son nom accessible, comme le ferait un lecteur d'écran.
+    banc.appuyerNom(/Ouvrir ta chaîne/);
+    // La place 1 se nomme « Choisir un invité pour la place 1 » **et** porte son
+    // texte visible (« Inviter un créateur ») : on l'ouvre par son nom
+    // accessible, comme le ferait un lecteur d'écran.
     banc.appuyerNom("Choisir un invité pour la place 1");
     const choix = banc.ecran("10-studio-bureau-choix");
     // Ce que l'écran promet, et ce qu'il refuse de faire : une liste inventée.
@@ -217,16 +198,17 @@ describe("les écrans", () => {
     // proposé, et l'écran le dit au lieu de laisser une liste vide muette.
     expect(choix).toContain("Aucun créateur de ta collection n'est en direct");
     banc.appuyer("Fermer");
-    // Fermer le classeur rend la scène telle quelle : les socles sont là, et on
-    // est toujours dans l'onglet (aucune feuille, donc rien à fermer en plus).
+    // Fermer le classeur rend l'écran tel quel : les deux places sont là, et on
+    // est toujours sur « Ta chaîne » (aucune feuille, donc rien à fermer en
+    // plus — la sortie, c'est un pilier de la barre ou le bouton Retour).
     banc.ecran("10-studio-bureau-ferme");
-    expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
+    expect(document.querySelectorAll(".chaine-place.libre")).toHaveLength(2);
     expect(document.querySelector(".app-content .studio-view")).not.toBeNull();
   });
 
   it("glisse la carte de l'imprévu : un effleurement ne joue rien, un geste franc si", async () => {
     await application();
-    banc.appuyer("Studio");
+    banc.appuyerNom(/Ouvrir ta chaîne/);
     const carte = document.querySelector<HTMLElement>(".chaine-card");
     expect(carte).not.toBeNull();
 

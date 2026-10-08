@@ -28,19 +28,17 @@ export type Credit = {
 
 /**
  * Les crédits, dans l'ordre où un joueur les cherche : d'abord ce qu'il a sous
- * les yeux (les portraits, le décor), puis ce qu'il entend (les bruits), puis
- * les outils qu'il ne voit pas (icônes, polices).
+ * les yeux (les portraits), puis ce qu'il entend (les bruits), puis les outils
+ * qu'il ne voit pas (icônes, polices). Le décor du Studio avait sa ligne tant
+ * que le kit Kenney était dans le jeu : il est parti le 8 octobre 2026 avec la
+ * pièce, et sa ligne est partie avec lui — un crédit pour un fichier qui n'est
+ * plus là serait un mensonge poli.
  */
 export const CREDITS: readonly Credit[] = [
   {
     quoi: "Les portraits des créateurs",
     qui: "Twitch — les photos officielles des chaînes, affichées telles quelles",
     licence: "utilisées pour illustrer les cartes",
-  },
-  {
-    quoi: "Le décor du Studio",
-    qui: "Kenney — « Furniture Kit »",
-    licence: "domaine public",
   },
   {
     quoi: "Les effets : éclats, explosions, fumées",

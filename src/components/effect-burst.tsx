@@ -23,8 +23,7 @@ export function EffectBurst({
   kind,
   className = "",
   /**
-   * Le centre horizontal. La révélation laisse 50 % (le milieu de la carte) ;
-   * la pièce du Studio, elle, pose la fumée sur l'objet qui vient d'arriver.
+   * Le centre horizontal. La révélation laisse 50 % — le milieu de la carte.
    */
   left = "50%",
   /** Le centre vertical : au milieu de la carte, ou un peu au-dessus. */

@@ -72,8 +72,9 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
   dans `docs/roadmap.md`.
 - `docs/ta-chaine.md` — le chantier « Ta chaîne » : étapes livrées, ce qui
   reste, et le détail de chaque règle.
-- `docs/assets-graphiques.md` — les images de `public/streamer/` : ce qui sert
-  (le kit isométrique de la pièce du Studio), ce qui est en 3D, et pourquoi.
+- `docs/assets-graphiques.md` — l'histoire de `public/streamer/` : ce qui a
+  servi (le kit isométrique de la pièce du Studio, retirée le 8 octobre 2026),
+  ce qui est en 3D, et ce qui est parti — en deux vagues.
 - `docs/assets-sonores.md` — les sons : la sélection de bruitages embarqués, la
   licence du pack, le budget, et ce qu'on n'a pas pris.
 - `docs/cloud-supabase.md` — tout le serveur, §8 : chaque règle, migration par

@@ -503,7 +503,7 @@ export function playGather(): void {
   playSample("gather");
 }
 
-/** Un équipement entre dans la pièce : le palier de setup est acheté. */
+/** Un équipement est branché : le palier de setup est acheté. */
 export function playEquip(): void {
   playSample("equip");
 }

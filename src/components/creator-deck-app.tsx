@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 
-import { BookOpen, Clapperboard, CircleUserRound, Hammer, X, Zap } from "lucide-react";
+import { BookOpen, CircleUserRound, Hammer, X, Zap } from "lucide-react";
 import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
 import { CollectionView } from "@/components/binder-view";
@@ -69,11 +69,19 @@ type Tab = "home" | "collection" | "missions" | "atelier" | "studio" | "profile"
  * objectifs, eux, restent hors de la barre : c'est un rendez-vous quotidien, pas
  * un endroit où l'on vit — ils s'ouvrent depuis le drop et depuis le menu.
  */
+/**
+ * Les **quatre piliers** de la barre du bas : le TCG, et rien d'autre.
+ *
+ * Les autres écrans existent sans onglet et s'ouvrent par la porte qui les
+ * concerne — les Objectifs depuis « Toi », et **« Ta chaîne » depuis sa ligne du
+ * Drop**. La pièce visuelle du Studio a été retirée le 8 octobre 2026 (le jeu,
+ * lui, reste) : un écran hors barre n'allume aucun onglet, et on en sort en
+ * touchant un pilier.
+ */
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Drop", icon: <Zap size={22} /> },
   { id: "collection", label: "Binder", icon: <BookOpen size={22} /> },
   { id: "atelier", label: "Craft", icon: <Hammer size={22} /> },
-  { id: "studio", label: "Studio", icon: <Clapperboard size={22} /> },
   { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
 ];
 
@@ -552,7 +560,10 @@ export function CreatorDeckApp() {
         {tab === "collection" ? (
           <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} />
         ) : null}
-        {tab === "studio" ? <StudioView /> : null}
+        {/* « Ta chaîne » : un écran **sans onglet**, ouvert par sa ligne du
+            Drop (comme les Objectifs depuis « Toi »). La pièce visuelle est
+            partie le 8 octobre 2026, la mécanique du mini-jeu est intacte. */}
+        {tab === "studio" ? <StudioView onBack={() => setTab("home")} /> : null}
         {tab === "missions" ? (
           <MissionsView
             game={game}
@@ -604,7 +615,7 @@ export function CreatorDeckApp() {
             key={item.id}
             className={tab === item.id ? "active" : ""}
             onClick={() => {
-              // Le clic feutré des cinq onglets : court, discret, et le même
+              // Le clic feutré des onglets : court, discret, et le même
               // partout — c'est le son qu'on entend le plus, il ne doit pas
               // fatiguer. (Changer d'onglet sans aller nulle part ne sonne pas.)
               if (item.id !== tab) playClick();
