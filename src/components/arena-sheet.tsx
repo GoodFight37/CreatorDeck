@@ -43,6 +43,7 @@ import { useLive } from "@/hooks/use-live";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
 import {
   ARENA_DRAFT_CHOICES,
+  ARENA_EMBLEM_TOP,
   ARENA_LINEUP_SIZE,
   ARENA_MAX_LEGENDARY,
   arenaDraftChoose,
@@ -239,7 +240,8 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
               <strong>Connecte-toi pour entrer dans l&apos;arène</strong>
               <span>
                 Cinq cartes, au plus une Légendaire, au moins un créateur en direct. Le classement se
-                referme le lundi, et les dix premiers repartent avec un emblème.
+                referme le <b>lundi à 6 h UTC</b> ({ARENA_MAX_LEGENDARY} Légendaire maximum ; hors
+                direct, une carte vaut zéro).
               </span>
             </div>
           </div>
@@ -613,8 +615,10 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
               <p className="arena-rules">
                 {ARENA_LINEUP_SIZE} cartes · {ARENA_MAX_LEGENDARY} Légendaire maximum · au moins un
                 créateur en direct. Le score est la somme des viewers réels : hors direct, une carte
-                vaut zéro. Récompenses : 5 sabliers au 1er, 3 au 2e, 2 au 3e, 1 aux dix premiers — et
-                l&apos;emblème d&apos;arène pour une semaine finie dans le top 10.
+                vaut zéro. La semaine va du <b>lundi 6 h UTC</b> au lundi suivant, et son classement
+                est figé à la fermeture. Récompenses : 5 sabliers au 1er, 3 au 2e, 2 au 3e, 1 aux
+                dix premiers — et l&apos;emblème d&apos;arène à encaisser pour une semaine finie dans
+                le top {ARENA_EMBLEM_TOP}.
               </p>
             </section>
           </>
