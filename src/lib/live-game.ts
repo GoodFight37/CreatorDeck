@@ -218,12 +218,18 @@ export function resolveLive(plan: LivePlan, caughtIds: readonly string[]): LiveR
           ? `Ton live : 0 sur ${total} — elles sont toutes passées inaperçues.`
           : `Ton live : ${caught} sur ${total}.`;
 
+  // La phrase du chat parle du **chat**, pas des bulles : dire « le chat s'est
+  // endormi » parce qu'on a raté une bulle serait un mensonge, et ce jeu n'en
+  // raconte pas. Elle se lit sur ce qui a réellement été écrit.
+  const messages = plan.chat.length;
   const chatLine =
-    total === 0 || caught === total
-      ? "Le chat a suivi du début à la fin."
-      : ratioPermille >= 500
-        ? "Ça discutait bien."
-        : "Le chat s'est endormi.";
+    messages === 0
+      ? "Personne n'a écrit une seule ligne."
+      : messages < 5
+        ? "Le chat était calme."
+        : messages < 12
+          ? "Ça discutait tranquillement."
+          : "Le chat n'a pas arrêté.";
 
   return { caught, missed, total, ratioPermille, headline, chatLine };
 }

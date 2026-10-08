@@ -146,8 +146,14 @@ describe("le bilan du live", () => {
   });
 
   it("parle du chat sans mentir", () => {
-    expect(resolveLive(plan, plan.alerts.map((bulle) => bulle.id)).chatLine).toMatch(/suivi/);
-    expect(resolveLive(plan, []).chatLine).toMatch(/endormi/);
+    // La phrase du chat ne dépend **pas** des bulles ratées : un petit canal a
+    // un chat clairsemé même si le joueur n'a rien laissé passer.
+    const petit = livePlan(JOUR, 0);
+    const gros = livePlan(JOUR, 4);
+    expect(petit.chat.length).toBeLessThan(5);
+    expect(gros.chat.length).toBeGreaterThanOrEqual(12);
+    expect(resolveLive(petit, petit.alerts.map((bulle) => bulle.id)).chatLine).toMatch(/calme/);
+    expect(resolveLive(gros, []).chatLine).toMatch(/pas arrêté/);
     // Un palier sans bulle du tout ne fait pas honte au joueur.
     const vide = { ...plan, alerts: [] };
     expect(resolveLive(vide, []).headline).toMatch(/personne n'est passé/);

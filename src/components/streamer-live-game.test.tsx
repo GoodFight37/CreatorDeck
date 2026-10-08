@@ -17,7 +17,7 @@ import { formatById } from "@/lib/streamer";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 const JOUR = "2026-10-08";
-/** Palier « Chaîne qui monte » : assez de bulles pour que la scène ait de quoi jouer. */
+/** Palier « Gros streamer » (3 bulles, 6 lignes de chat) : de quoi jouer la scène. */
 const ABONNES = 30_000;
 const FORMAT = formatById("letsplay")!;
 
@@ -94,6 +94,11 @@ describe("le live de vingt secondes", () => {
     const bilan = banc.ecran("live-bilan");
     expect(bilan).toContain(`1 sur ${plan.alerts.length}`);
     expect(bilan).toContain("Le direct ne paie rien");
+    // La phrase du chat parle du chat (6 lignes pour ce palier), pas des
+    // bulles ratées : le bilan ne dit pas au joueur le contraire de ce qui
+    // s'est passé à l'écran.
+    expect(plan.chat).toHaveLength(6);
+    expect(bilan).toContain("Ça discutait tranquillement");
 
     // Publier depuis le bilan : c'est le seul bouton qui touche au serveur.
     banc.appuyer(/Publier ma vidéo/);

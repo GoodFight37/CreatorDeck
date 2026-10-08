@@ -160,7 +160,7 @@ export function StreamerLiveGame({
             Ton palier : {tierAt(palier).label}. {plan.alerts.length > 0
               ? `${plan.alerts.length} bulle${plan.alerts.length > 1 ? "s" : ""} tomberont pendant le direct.`
               : "Personne n'est annoncé : il n'y aura rien à attraper."}{" "}
-            Le chat tient chaque ligne {Math.round(LIVE_CHAT_HOLD_MS / 1000)} secondes.
+            Chaque ligne du chat reste {Math.round(LIVE_CHAT_HOLD_MS / 1000)} secondes à l&apos;écran.
           </p>
         </>
       )}
