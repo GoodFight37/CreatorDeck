@@ -1,0 +1,116 @@
+/**
+ * Le banc d'essai **des écrans** : l'application montée dans un DOM, parcourue
+ * comme au doigt.
+ *
+ * Pourquoi il existe : ce dépôt se travaille sans navigateur (l'environnement de
+ * développement n'en a pas, et `next build` ne pré-rend que l'accueil). Avant
+ * lui, un découpage de composant — déplacer une vue dans son fichier, sortir une
+ * feuille — ne pouvait être vérifié qu'en installant l'APK. Ici, les quatre
+ * piliers s'ouvrent, les feuilles s'ouvrent, un booster se tire, et chacun dit
+ * ce qu'il doit dire.
+ *
+ * L'horloge et le hasard sont **figés** : deux exécutions produisent le même
+ * HTML. C'est ce qui permet de garder une copie des écrans pour comparer avant
+ * et après un découpage :
+ *
+ *   ECRANS_DUMP=/tmp/avant npm run ecrans
+ *   # ... découpage ...
+ *   ECRANS_DUMP=/tmp/apres npm run ecrans && diff -r /tmp/avant /tmp/apres
+ */
+import { act } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { creerBanc, type Banc } from "@/ecrans-banc";
+
+/** Un jeudi midi : ni fin de série, ni fenêtre de Prime Time (20 h – 22 h). */
+const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
+
+describe("les écrans", () => {
+  let banc: Banc;
+
+  beforeEach(() => {
+    vi.useFakeTimers({ now: T0 });
+    banc = creerBanc();
+    banc.preparer();
+  });
+
+  afterEach(() => {
+    banc.nettoyer();
+    vi.useRealTimers();
+  });
+
+  async function application() {
+    const { CreatorDeckApp } = await import("@/components/creator-deck-app");
+    await banc.monter(<CreatorDeckApp />);
+  }
+
+  it("ouvre les quatre piliers, chacun avec son écran", async () => {
+    await application();
+    expect(banc.ecran("01-accueil")).toContain("Ouvrir le booster");
+
+    banc.appuyer("Binder");
+    const binder = banc.ecran("02-binder");
+    expect(binder).toContain("binder-tools");
+    expect(binder).toContain("streameurs découverts");
+
+    banc.appuyer("Craft");
+    expect(banc.ecran("03-craft")).toContain("Façonne ta collection");
+
+    // **Quatre piliers, et rien d'autre** : la simulation de streameur
+    // (« Ta chaîne ») a quitté l'application le 8 octobre 2026 — ni onglet, ni
+    // ligne d'accueil, ni écran. La barre porte les quatre piliers, et son
+    // ordre est celui du jeu.
+    expect(
+      [...document.querySelectorAll(".bottom-nav button span")].map((n) => n.textContent),
+    ).toEqual(["Drop", "Binder", "Craft", "Toi"]);
+
+    banc.appuyer("Toi");
+    // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
+    expect(banc.ecran("04-toi")).toContain("Mon compte");
+  });
+
+  it("ouvre les feuilles : le compte, les objectifs, les taux", async () => {
+    await application();
+    banc.appuyer("Toi");
+
+    banc.appuyer("Mon compte");
+    // Sans rien en ligne, la feuille le dit au lieu de proposer une connexion —
+    // et elle le dit en français de jeu, pas en vocabulaire d'atelier.
+    const feuille = banc.ecran("05-compte");
+    expect(feuille).toContain("Mon compte");
+    expect(feuille).toContain("Joue pour toi, sur cet appareil");
+    for (const mot of ["cloud", "Supabase", "serveur", ".json", ".sql", "token"]) {
+      expect(feuille.toLowerCase()).not.toContain(mot);
+    }
+    banc.fermer();
+
+    banc.appuyer("Objectifs et saisons");
+    expect(banc.ecran("06-objectifs")).toContain("Progression");
+
+    banc.appuyer("Toi");
+    banc.appuyer("Taux de drop");
+    expect(banc.ecran("07-taux")).toContain("Taux de drop des boosters");
+    banc.fermer();
+  });
+
+  it("tire un booster et montre la révélation", async () => {
+    await application();
+    banc.appuyer("Ouvrir le booster");
+    // Le tirage passe par des temporisations (silence, déchirure) : l'horloge
+    // figée doit avancer à la main, sinon l'écran de révélation n'arrive jamais.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+    const revelation = banc.ecran("08-revelation");
+    expect(revelation).toContain("card-nameplate");
+    // Le booster hors ligne n'est pas perdu : il sort de la réserve du jour.
+    expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
+  });
+
+  it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {
+    await application();
+    const premier = banc.ecran("09-determinisme-a");
+    banc.vider();
+    await application();
+    expect(banc.ecran("09-determinisme-b")).toBe(premier);
+  });
+});

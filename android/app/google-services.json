@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "450483794682",
+    "project_id": "creatordeck-6a9ce",
+    "storage_bucket": "creatordeck-6a9ce.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450483794682:android:d393fe779b340d6140cf43",
+        "android_client_info": {
+          "package_name": "com.creatordeck.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD7UPYQtOK--jXFajctTvOpMyYuwFdITQ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

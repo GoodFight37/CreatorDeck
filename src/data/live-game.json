@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "note": "Le live de « Ta chaîne » : vingt secondes en direct, le chat qui défile, et des bulles d'alerte — un follower, un abonné, un raid, un don — qu'on attrape en appuyant dessus avant qu'elles ne s'effacent. Le texte vit ici (comme les cartes d'imprévu) : le serveur ne connaît aucun mot, il ne tire que la vidéo du jour. Cette première version **ne paie rien et ne change aucun chiffre** : c'est le moment de jeu, l'équilibrage viendra après (voir docs/roadmap.md, « Bilan et équilibrage »).",
+  "durationMs": 20000,
+  "chat": {
+    "note": "La cadence suit le palier de notoriété : un petit canal a un chat clairsemé, un gros canal ne peut plus le lire. `holdMs` est le temps qu'une ligne reste à l'écran.",
+    "perMinute": [8, 12, 18, 26, 36],
+    "holdMs": 6000,
+    "lines": [
+      "premier !",
+      "la qualité est propre aujourd'hui",
+      "tu joues à quoi après ?",
+      "GG",
+      "le son est nickel",
+      "j'arrive juste, j'ai raté quelque chose ?",
+      "cette musique me tue",
+      "on est combien ce soir ?",
+      "salut de Bruxelles",
+      "le clip de tout à l'heure était trop bien",
+      "ta déco a changé, ou je rêve ?",
+      "on se fait une partie ensemble ?",
+      "trois heures du mat' et je suis encore là",
+      "c'est quoi ce setup de fou",
+      "la caméra est nette maintenant",
+      "faut couper là, c'était parfait",
+      "tu as vu le raid de tout à l'heure ?",
+      "mode discret activé",
+      "je mets le son à fond",
+      "on remet ça demain ?",
+      "ce passage, il faut le garder",
+      "les modos dorment",
+      "bien joué l'équipe",
+      "le chat est chaud ce soir",
+      "quelqu'un a le lien de la VOD ?",
+      "ça fait plaisir de te voir en direct"
+    ]
+  },
+  "alerts": {
+    "note": "Le nombre de bulles suit le palier : plus la chaîne grossit, plus il se passe de choses pendant vingt secondes. Chaque bulle a sa durée de vie — passé ce délai, elle s'efface d'elle-même.",
+    "count": [1, 2, 3, 4, 5],
+    "minGapMs": 2200,
+    "firstAtMs": 3200,
+    "lastAtMs": 16500,
+    "kinds": [
+      {
+        "id": "follow",
+        "label": "Nouveau follower",
+        "hint": "Quelqu'un vient de s'abonner à la chaîne.",
+        "lifeMs": 3400
+      },
+      {
+        "id": "sub",
+        "label": "Un habitué s'abonne",
+        "hint": "Il était là hier, il est là aujourd'hui, il reste.",
+        "lifeMs": 3000
+      },
+      {
+        "id": "raid",
+        "label": "Un raid arrive",
+        "hint": "Une autre chaîne t'envoie ses viewers d'un coup.",
+        "lifeMs": 2600
+      },
+      {
+        "id": "don",
+        "label": "Un message qui compte",
+        "hint": "Quelqu'un t'écrit un mot, et il est lu à voix haute.",
+        "lifeMs": 2800
+      }
+    ]
+  }
+}

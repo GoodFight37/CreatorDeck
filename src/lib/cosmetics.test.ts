@@ -53,7 +53,7 @@ describe("cosmétiques", () => {
     expect(THEMES.at(-1)?.id).toBe(GRAND_SLAM_THEME_ID);
     for (const theme of THEMES) {
       expect(theme.name.length).toBeGreaterThan(0);
-      expect(theme.tokens.purple.startsWith("#") || theme.tokens.purple.startsWith("hsl")).toBe(true);
+      expect(theme.tokens.accent.startsWith("#") || theme.tokens.accent.startsWith("hsl")).toBe(true);
       expect(theme.tokens.glow.length).toBeGreaterThan(0);
     }
     expect(themeById("inconnu")).toBeUndefined();
@@ -197,8 +197,8 @@ describe("palette des thèmes", () => {
         expect(theme.tokens[token], `${theme.id} · ${token}`).toBeTruthy();
       }
       // Les trois canaux RGB servent aux fonds translucides : ils doivent être
-      // exploitables tels quels dans `rgb(var(--purple-rgb) / .12)`.
-      for (const token of ["purpleRgb", "purpleLightRgb", "purpleDarkRgb", "bgRgb"] as const) {
+      // exploitables tels quels dans `rgb(var(--accent-rgb) / .12)`.
+      for (const token of ["accentRgb", "accentLightRgb", "accentDarkRgb", "bgRgb"] as const) {
         expect(theme.tokens[token]).toMatch(/^\d{1,3} \d{1,3} \d{1,3}$/);
       }
     }
@@ -216,29 +216,35 @@ describe("palette des thèmes", () => {
 
   it("garde les textes lisibles dans tous les thèmes", () => {
     for (const theme of THEMES) {
-      const { bg, panel, text, muted, muted2, purple } = theme.tokens;
+      const { bg, panel, text, muted, muted2, accent } = theme.tokens;
       expect(contrast(text, bg), `${theme.id} · texte/fond`).toBeGreaterThanOrEqual(12);
       expect(contrast(text, panel), `${theme.id} · texte/panneau`).toBeGreaterThanOrEqual(12);
       expect(contrast(muted, bg), `${theme.id} · texte secondaire`).toBeGreaterThanOrEqual(4.5);
       expect(contrast(muted2, bg), `${theme.id} · texte discret`).toBeGreaterThanOrEqual(3);
-      expect(contrast(purple, bg), `${theme.id} · accent`).toBeGreaterThanOrEqual(3);
+      expect(contrast(accent, bg), `${theme.id} · accent`).toBeGreaterThanOrEqual(3);
     }
   });
 
-  it("donne à chaque thème un fond qui lui est propre", () => {
-    // Sinon « équiper un thème » ne changerait rien à l'écran.
-    const backgrounds = THEMES.map((theme) => theme.tokens.bg);
-    expect(new Set(backgrounds).size).toBe(THEMES.length);
-    expect(new Set(THEMES.map((theme) => theme.tokens.purple)).size).toBe(THEMES.length);
+  it("donne à chaque thème son accent, sur un fond commun", () => {
+    // Les thèmes ne repeignent plus l'application : ils teintent le classeur.
+    // L'accent doit donc être distinct d'un thème à l'autre (sinon en équiper un
+    // ne changerait rien à l'écran) et les surfaces rester **neutres**, pour que
+    // le chrome — noir studio, papier, rouge live — ne bouge jamais.
+    expect(new Set(THEMES.map((theme) => theme.tokens.accent)).size).toBe(THEMES.length);
+    for (const theme of THEMES) {
+      expect(theme.tokens.bg).toBe(THEMES[0]?.tokens.bg);
+      expect(theme.tokens.panel).toBe(THEMES[0]?.tokens.panel);
+      expect(theme.tokens.text).toBe(THEMES[0]?.tokens.text);
+    }
   });
 
   it("fait correspondre les canaux RGB des teintes dérivées à leur accent", () => {
     // Un triplet désaccordé décalerait tous les fonds translucides.
     for (const theme of THEMES) {
-      const accent = /^hsl\((\d+) 100% 70%\)$/.exec(theme.tokens.purple);
+      const accent = /^hsl\((\d+) 88% 62%\)$/.exec(theme.tokens.accent);
       if (!accent) continue; // thème surchargé (origine, grand chelem)
-      const expected = parseColor(theme.tokens.purple);
-      const triplet = theme.tokens.purpleRgb.split(" ").map(Number);
+      const expected = parseColor(theme.tokens.accent);
+      const triplet = theme.tokens.accentRgb.split(" ").map(Number);
       for (const [index, channel] of triplet.entries()) {
         expect(Math.abs(channel - expected[index]), `${theme.id} · canal ${index}`).toBeLessThan(2);
       }

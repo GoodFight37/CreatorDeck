@@ -1,10 +1,20 @@
 apply plugin: 'com.android.application'
 
+// Les notifications demandent `google-services.json` (le fichier que Firebase
+// génère pour l'application Android, voir docs/cloud-supabase.md § Notifications).
+// Il n'est **pas** dans le dépôt : chacun branche son projet Firebase. Sans lui,
+// appliquer le greffon Google ferait échouer la compilation — donc on ne
+// l'applique que s'il est là, et l'APK continue de se construire (sans
+// notifications) pour qui n'a rien branché.
+if (file("google-services.json").exists()) {
+    apply plugin: 'com.google.gms.google-services'
+}
+
 android {
-    namespace = "com.monnom.monapp"
+    namespace = "com.creatordeck.app"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.monnom.monapp"
+        applicationId "com.creatordeck.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

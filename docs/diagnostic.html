@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CreatorDeck — diagnostic du cloud</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        padding: 18px;
+        font: 15px/1.5 system-ui, sans-serif;
+        background: #140d20;
+        color: #efe9ff;
+      }
+      h1 { font-size: 19px; margin: 0 0 4px; }
+      p.lead { margin: 0 0 16px; color: #b9a9d6; }
+      section { margin-bottom: 14px; padding: 12px 14px; border: 1px solid #322351; border-radius: 12px; background: #1c1230; }
+      h2 { font-size: 14px; margin: 0 0 6px; color: #cbb8f5; }
+      .result { font-weight: 700; }
+      .ok { color: #6ee7a8; }
+      .ko { color: #ff8fa3; }
+      .wait { color: #ffd479; }
+      details { margin-top: 8px; }
+      pre { white-space: pre-wrap; word-break: break-all; font-size: 12px; color: #b9a9d6; }
+      code { color: #ffd479; }
+    </style>
+  </head>
+  <body>
+    <h1>Diagnostic du cloud CreatorDeck</h1>
+    <p class="lead">
+      Cette page teste, depuis ton navigateur, les appels que l'application fait à Supabase.
+      Aucune donnée n'est envoyée : tout est en lecture, sauf le compte invité qui est proposé en fin de page.
+    </p>
+
+    <section id="s1">
+      <h2>1. Lecture simple (comme un lien)</h2>
+      <div class="result wait">test en cours…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s2">
+      <h2>2. Lecture sans CORS (<code>mode: no-cors</code>)</h2>
+      <p style="margin:0;color:#b9a9d6">Si le test 1 échoue mais pas celui-ci : le réseau passe, le navigateur refuse la réponse (CORS).</p>
+      <div class="result wait">test en cours…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s3">
+      <h2>3. Écriture sans en-tête personnalisé</h2>
+      <p style="margin:0;color:#b9a9d6">Requête « simple », sans preflight. Un code HTTP (même 4xx) = le serveur répond.</p>
+      <div class="result wait">test en cours…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s4">
+      <h2>4. Écriture exactement comme l'application</h2>
+      <p style="margin:0;color:#b9a9d6">Avec <code>apikey</code> et <code>Content-Type: application/json</code> → déclenche un preflight. C'est le test qui reproduit le bug.</p>
+      <div class="result wait">test en cours…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s5">
+      <h2>5. Séquence complète de l'application</h2>
+      <p style="margin:0;color:#b9a9d6">Compte invité → <code>pack_status</code> → <code>leaderboard</code>, comme le fait l'app à la connexion.</p>
+      <div class="result wait">test en cours…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s6">
+      <h2>Session enregistrée dans l'application</h2>
+      <p style="margin:0;color:#b9a9d6">Lecture de <code>localStorage["creatordeck.cloud.session"]</code> (même origine que le jeu).</p>
+      <div class="result wait">…</div>
+      <details><summary>détail</summary><pre></pre></details>
+    </section>
+
+    <section id="s7">
+      <h2>Résumé</h2>
+      <pre id="summary">…</pre>
+    </section>
+
+    <script>
+      // Adresse et clé : lues dans le bundle de l'application (variables NEXT_PUBLIC_*).
+      // On les redemande à l'utilisateur si introuvables, pour ne rien coder en dur ici.
+      const params = new URLSearchParams(location.search);
+      const url = (params.get("url") || "https://yzxchpybqrfegvecihxf.supabase.co").replace(/\/+$/, "");
+      const key = params.get("key") || "";
+
+      const results = {};
+
+      function report(id, ok, text, detail) {
+        results[id] = text;
+        const section = document.getElementById(id);
+        const line = section.querySelector(".result");
+        line.textContent = text;
+        line.className = `result ${ok === true ? "ok" : ok === false ? "ko" : "wait"}`;
+        section.querySelector("pre").textContent = detail || "";
+        refreshSummary();
+      }
+
+      function refreshSummary() {
+        const lines = [];
+        for (const id of ["s1", "s2", "s3", "s4", "s5", "s6"]) {
+          lines.push(`${id.toUpperCase()} : ${results[id] ?? "…"}`);
+        }
+        lines.push("");
+        lines.push("Lecture :");
+        lines.push("• S1 OK → le navigateur peut lire Supabase : le bug est dans les en-têtes envoyés par l'appli.");
+        lines.push("• S1 KO et S2 OK → réponse refusée par CORS (preflight ou en-tête non autorisé).");
+        lines.push("• S1 KO et S2 KO → la requête ne sort pas de la page (réseau, DNS ou blocage du WebView).");
+        lines.push("• S3 OK et S4 KO → le preflight est le coupable (en-têtes personnalisés).");
+        document.getElementById("summary").textContent = lines.join("\n");
+      }
+
+      async function test1() {
+        try {
+          const r = await fetch(`${url}/auth/v1/health`, { headers: key ? { apikey: key } : {} });
+          const body = await r.text();
+          report("s1", r.ok, `OK — HTTP ${r.status}`, body.slice(0, 300));
+        } catch (error) {
+          report("s1", false, `ÉCHEC — ${error.name}`, String(error));
+        }
+      }
+
+      async function test2() {
+        try {
+          const r = await fetch(`${url}/auth/v1/health`, { mode: "no-cors" });
+          report("s2", true, `OK — réponse opaque reçue`, `type=${r.type} status=${r.status}`);
+        } catch (error) {
+          report("s2", false, `ÉCHEC — ${error.name}`, String(error));
+        }
+      }
+
+      async function test3() {
+        try {
+          const r = await fetch(`${url}/auth/v1/settings`, {
+            method: "GET",
+            headers: { "Content-Type": "text/plain" },
+          });
+          report("s3", true, `Le serveur a répondu — HTTP ${r.status}`, (await r.text()).slice(0, 300));
+        } catch (error) {
+          report("s3", false, `ÉCHEC — ${error.name}`, String(error));
+        }
+      }
+
+      async function test4() {
+        if (!key) {
+          report("s4", null, "Clé absente : ajoute &key=<clé anon> à l'adresse de cette page.", "");
+          return;
+        }
+        try {
+          const r = await fetch(`${url}/auth/v1/signup`, {
+            method: "POST",
+            headers: { apikey: key, "Content-Type": "application/json" },
+            body: JSON.stringify({ data: {}, gotrue_meta_security: {} }),
+          });
+          const body = await r.text();
+          report("s4", true, `Le serveur a répondu — HTTP ${r.status}`, body.slice(0, 400));
+        } catch (error) {
+          report("s4", false, `ÉCHEC — ${error.name} : la requête n'a pas abouti`, String(error));
+        }
+      }
+
+      // Rejoue exactement la séquence de l'application après « Créer un compte
+      // invité » : inscription, puis les deux fonctions serveur appelées à la
+      // connexion (pack_status au montage, leaderboard dans l'écran Compte).
+      async function test5() {
+        if (!key) {
+          report("s5", null, "Clé absente : ajoute &key=<clé anon> à l'adresse de cette page.", "");
+          return;
+        }
+        const log = [];
+        try {
+          const signup = await fetch(`${url}/auth/v1/signup`, {
+            method: "POST",
+            headers: { apikey: key, "Content-Type": "application/json" },
+            body: JSON.stringify({ data: {}, gotrue_meta_security: {} }),
+          });
+          const session = await signup.json().catch(() => null);
+          const token = session?.access_token;
+          log.push(`signup : HTTP ${signup.status}${token ? " (jeton reçu)" : " (pas de jeton)"}`);
+          if (!token) {
+            report("s5", false, `ÉCHEC à l'inscription — HTTP ${signup.status}`, log.join("\n") + "\n" + JSON.stringify(session));
+            return;
+          }
+          for (const fn of ["pack_status", "leaderboard"]) {
+            try {
+              const r = await fetch(`${url}/rest/v1/rpc/${fn}`, {
+                method: "POST",
+                headers: { apikey: key, "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({}),
+              });
+              const body = (await r.text()).slice(0, 200);
+              log.push(`${fn} : HTTP ${r.status} ${body}`);
+            } catch (error) {
+              log.push(`${fn} : ${error.name} — ${error.message}`);
+            }
+          }
+          const failed = /ÉCHEC|TypeError|Failed to fetch/.test(log.join(" "));
+          report("s5", !failed, failed ? "UN APPEL A ÉCHOUÉ — voir le détail" : "Tous les appels ont abouti", log.join("\n"));
+        } catch (error) {
+          report("s5", false, `ÉCHEC — ${error.name}`, log.join("\n") + "\n" + String(error));
+        }
+      }
+
+      function test6() {
+        try {
+          const raw = localStorage.getItem("creatordeck.cloud.session");
+          if (!raw) {
+            report("s6", null, "Aucune session enregistrée par le jeu", "(c'est normal avant la première connexion)");
+            return;
+          }
+          const parsed = JSON.parse(raw);
+          report(
+            "s6",
+            true,
+            `Session présente (compte ${parsed?.userId ? parsed.userId.slice(0, 8) + "…" : "inconnu"})`,
+            `expire à ${parsed?.expiresAt ? new Date(parsed.expiresAt).toISOString() : "?"}`,
+          );
+        } catch (error) {
+          report("s6", false, `Session illisible — ${error.name}`, String(error));
+        }
+      }
+
+      test1()
+        .then(test2)
+        .then(test3)
+        .then(test4)
+        .then(test5)
+        .then(() => test6());
+    </script>
+  </body>
+</html>

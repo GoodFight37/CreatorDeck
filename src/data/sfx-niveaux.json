@@ -1,0 +1,82 @@
+{
+  "$commentaire": "Généré par scripts/sfx-niveaux.mjs : la mesure des fichiers de public/sfx/ (dBFS) et leur cible de volume. Le gain de lecture se calcule, il ne s'écrit pas à la main.",
+  "unite": "dBFS",
+  "creteMaxDb": -9,
+  "niveaux": {
+    "card-draw": {
+      "rmsDb": -15.65,
+      "creteDb": 0,
+      "cibleDb": -29
+    },
+    "card-fan": {
+      "rmsDb": -20.6,
+      "creteDb": 0,
+      "cibleDb": -30
+    },
+    "card-turn": {
+      "rmsDb": -22.64,
+      "creteDb": 0,
+      "cibleDb": -30
+    },
+    "chime": {
+      "rmsDb": -23.54,
+      "creteDb": -17.07,
+      "cibleDb": -28
+    },
+    "chip-place": {
+      "rmsDb": -21.63,
+      "creteDb": 0,
+      "cibleDb": -30
+    },
+    "click": {
+      "rmsDb": -22.79,
+      "creteDb": 0,
+      "cibleDb": -32
+    },
+    "close": {
+      "rmsDb": -16.33,
+      "creteDb": 0,
+      "cibleDb": -30
+    },
+    "coins": {
+      "rmsDb": -24.27,
+      "creteDb": 0,
+      "cibleDb": -28
+    },
+    "equip": {
+      "rmsDb": -18.91,
+      "creteDb": 0,
+      "cibleDb": -29
+    },
+    "fanfare": {
+      "rmsDb": -19.72,
+      "creteDb": -4.33,
+      "cibleDb": -28
+    },
+    "gather": {
+      "rmsDb": -16.32,
+      "creteDb": 0,
+      "cibleDb": -28
+    },
+    "menu-open": {
+      "rmsDb": -20.37,
+      "creteDb": 0,
+      "cibleDb": -30
+    },
+    "pop": {
+      "rmsDb": -15.83,
+      "creteDb": 0,
+      "cibleDb": -29
+    },
+    "power-up": {
+      "rmsDb": -13.34,
+      "creteDb": -1.58,
+      "cibleDb": -29
+    },
+    "select": {
+      "rmsDb": -29.53,
+      "creteDb": -23.15,
+      "cibleDb": -30
+    }
+  }
+}
