@@ -1,7 +1,8 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { CLOUD_DISABLED_HINT, cloudProjectName, readCloudConfig } from "@/lib/cloud/config";
+import { cloudBuildWarning, warnIfCloudMissing } from "../../../scripts/cloud-guard.mjs";
 
 const URL_VAR = "NEXT_PUBLIC_SUPABASE_URL";
 const KEY_VAR = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
@@ -51,68 +52,39 @@ describe("configuration du cloud", () => {
   });
 
   /**
-   * Les workflows du dépôt, tous ensemble.
+   * Le garde-fou de compilation (`scripts/cloud-guard.mjs`).
    *
-   * Volontairement **sans nom de fichier en dur** : un contrôle qui vise un
-   * fichier précis rougit au premier renommage, et gêne plus qu'il n'aide. On
-   * lit donc ce qui existe, et on juge le contenu.
-   *
-   * Et s'il n'y en a **aucun** — le dépôt a été nettoyé de ses workflows le
-   * 8 octobre 2026, l'APK se construit à la main —, il n'y a rien à juger. Le
-   * contrôle le **dit** au lieu de rougir, et redevient exigeant tout seul dès
-   * qu'un workflow revient : regarder un dossier absent n'est pas une panne.
+   * Avant le 8 octobre 2026, cette garde vivait dans le workflow de l'APK : elle
+   * vérifiait que les deux variables publiques arrivaient bien jusqu'au build.
+   * Les workflows ont été supprimés (le jeu se déploie chez Vercel), donc la
+   * garde a suivi la compilation : `npm run build` l'appelle avant `next build`,
+   * et Vercel comme une APK à la main passent par là.
    */
-  const DOSSIER = path.join(process.cwd(), ".github", "workflows");
-  const workflows = existsSync(DOSSIER)
-    ? readdirSync(DOSSIER)
-        .filter((nom) => nom.endsWith(".yml") || nom.endsWith(".yaml"))
-        .map((nom) => readFileSync(path.join(DOSSIER, nom), "utf8"))
-    : [];
-  const joint = workflows.join("\n");
-
-  it("un seul workflow construit l'APK, et il reçoit la configuration du cloud", () => {
-    // Deux variables oubliées et l'APK se construit **sans cloud** : même écran,
-    // mêmes boutons, mais aucun compte, aucun ami, aucun classement. La panne la
-    // plus coûteuse est celle qui ne se voit pas, donc elle a son garde-fou.
-    //
-    // Deux fichiers qui construisent l'APK = deux builds et deux mails par
-    // poussée : on veut exactement un constructeur.
-    // `assembleDebug` est le nom Gradle ; le dépôt passe par son script
-    // (`npm run android:debug`), donc les deux formes comptent.
-    const constructeurs = workflows.filter(
-      (texte) => texte.includes("assembleDebug") || texte.includes("android:debug"),
-    );
-    if (workflows.length === 0) {
-      // Aucun workflow : pas de build en CI du tout. Ce n'est pas une panne du
-      // dépôt, c'est un état — celui du 8 octobre 2026, où l'APK se construit à
-      // la main. Le contrôle reprend dès qu'un workflow revient.
-      expect(constructeurs).toHaveLength(0);
-      return;
-    }
-    expect(constructeurs).toHaveLength(1);
-    const workflow = constructeurs[0];
-    for (const variable of [URL_VAR, KEY_VAR]) {
-      // Concaténation : `${{` dans un gabarit (`\`…\``) ouvrirait une
-      // interpolation, et le contrôle ne compilerait même pas.
-      const attendu = variable + ": ${{ vars." + variable + " || secrets." + variable + " }}";
-      expect(workflow).toContain(attendu);
-    }
-    // Et le diagnostic qui dit, dans le journal du run, si le cloud est dedans.
-    expect(workflow).toContain("Cloud absent du bundle");
-    // Le contrôle ne doit **jamais** pouvoir faire échouer le build : c'est un
-    // avertissement. Un `sed` mal échappé a déjà cassé un run entier.
-    expect(workflow).not.toContain("\vert{}");
+  it("prévient, sans bloquer, quand le cloud manque à la compilation", () => {
+    // Le message dit **ce qui manque** et **ce que ça coûte** : sans les deux
+    // variables, tout compile, l'écran est le même, et il n'y a plus de comptes.
+    const rien = cloudBuildWarning({});
+    expect(rien).toMatch(/Cloud absent du bundle/);
+    expect(rien).toContain(URL_VAR);
+    expect(rien).toContain(KEY_VAR);
+    const une = cloudBuildWarning({ [URL_VAR]: "https://abcd.supabase.co" });
+    expect(une).toContain(KEY_VAR);
+    // Une variable présente mais **vide** compte comme absente : c'est ce que
+    // produit un `.env` recopié sans être rempli.
+    expect(cloudBuildWarning({ [URL_VAR]: "   ", [KEY_VAR]: KEY })).toContain(URL_VAR);
+    // Et quand tout est là, le garde-fou se tait — il ne crie pas pour rien.
+    expect(cloudBuildWarning({ [URL_VAR]: "https://abcd.supabase.co", [KEY_VAR]: KEY })).toBeNull();
   });
 
-  it("quand l'APK part aux testeurs, il part avec ses destinataires et ses notes", () => {
-    // Firebase App Distribution : sans `--groups` ni `--testers`, l'outil
-    // prévient « no testers or groups specified, skipping » et **n'envoie
-    // rien** — la poussée semble réussie, personne ne reçoit de mail.
-    if (!joint.includes("appdistribution:distribute")) return;
-    expect(joint).toContain("--groups");
-    expect(joint).toContain("--release-notes-file");
-    // Le lien public stable, utilisable depuis un téléphone sans connexion.
-    expect(joint).toContain("gh release upload debug-apk");
+  it("ne fait jamais échouer la compilation, et la précède", () => {
+    // Un avertissement qui casse le build serait pire que la panne qu'il
+    // annonce : le mode sans cloud est légitime (développement, tests).
+    const dit = warnIfCloudMissing({}, () => {});
+    expect(dit).toBe(true);
+    expect(warnIfCloudMissing({ [URL_VAR]: "https://abcd.supabase.co", [KEY_VAR]: KEY }, () => {})).toBe(false);
+    // Et il tourne **avant** la compilation, sinon le journal serait déjà écrit.
+    const pkg = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf8"));
+    expect(pkg.scripts.build).toBe("node scripts/cloud-guard.mjs && next build");
   });
 
   it("refuse une adresse ou une clé recopiées de travers", () => {

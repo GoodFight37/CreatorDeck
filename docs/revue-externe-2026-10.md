@@ -34,7 +34,7 @@ adopte la sauvegarde du serveur, `e2e/pack-crash.spec.ts`) et sa suite
 | `useNow(1_000)` à la racine (1000 cartes re-rendues chaque seconde) | `creator-deck-app.tsx` | 30 s à la racine, 1 s **local** au seul panneau qui affiche des secondes |
 | Poll des Last Packs trop lent | `creator-deck-app.tsx` | 30 s tant qu'un paquet est exposé (< 10 min), 3 min sinon |
 | `eslint-config-next` désaligné de `next` | `package.json` | 16.3.6 (lock régénéré, `npm ci` cohérent) |
-| `catalog:ci` pas obligatoire en CI | — | **déjà fait** : `.github/workflows/android-apk.yml`, ligne 33 |
+| `catalog:ci` pas obligatoire en CI | — | **déjà fait** : `npm run catalog:ci` était appelé par la CI Android — workflows supprimés le 8 octobre 2026 (Vercel), donc à lancer à la main |
 | Revoke EXECUTE massif / quota `open_pack` | 0009, 0018, 0019 | **déjà fait** ; le quota est la réserve serveur (4 max, 1 / 30 min), pas un compteur horaire |
 | Taux du JSON vs littéraux SQL | `src/lib/supabase-*.test.ts` | **déjà couvert** : les tests miroir relisent les littéraux SQL et les comparent à `pull-rates.json` — une retouche d'un seul côté casse la suite |
 | Le README s'annonçait « hors ligne, sans compte » | `README.md`, `docs/depot-et-github.md` | l'APK distribué est compilé **avec** le cloud ; le mode local est présenté comme ce qu'il est (dev/tests), plus comme le jeu |
@@ -114,7 +114,7 @@ pareil ne bloquent plus la sauvegarde ».
 | --- | --- |
 | « `?check=1` parle à Twitch sans quota » | la fonction ne parle jamais à Twitch depuis `?check=1` : le vrai défaut était la **course sur le créneau**, fermée dans `934868b` (écriture conditionnelle `refreshed_at=lt.<seuil>`) |
 | « `user_cards` est inscriptible / à recréer » | c'est une **projection** serveur depuis `0006` : RLS active sans politique, `revoke all`, recalculée par le trigger `project_cards()` |
-| « `catalog:ci` n'est pas obligatoire, les revokes EXECUTE et les tests miroir manquent » | `catalog:ci` est dans la CI Android (`.github/workflows/android-apk.yml`), les `revoke`/`grant` sont en place dans `0009`/`0018`/`0019`, et les tests miroir relisent les littéraux SQL pour les comparer à `pull-rates.json` |
+| « `catalog:ci` n'est pas obligatoire, les revokes EXECUTE et les tests miroir manquent » | `catalog:ci` tournait dans la CI Android (les workflows ont été supprimés le 8 octobre 2026 : Vercel, plus d'APK — il se lance à la main), les `revoke`/`grant` sont en place dans `0009`/`0018`/`0019`, et les tests miroir relisent les littéraux SQL pour les comparer à `pull-rates.json` |
 
 ## 4. Reste ouvert (dans l'ordre où on le ferait)
 

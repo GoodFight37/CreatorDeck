@@ -24,8 +24,10 @@ et des **missions du jour** avec une **série de sept jours**.
 **Le cloud reste facultatif à la compilation** : un build sans les deux
 variables publiques (`docs/cloud-supabase.md`) se compile et se joue **seul, sur
 l'appareil, sans compte** — c'est le mode de développement et des tests, où le
-moteur local tire les cartes. L'APK et le site distribués, eux, sont compilés
-**avec** le cloud : boosters serveur, comptes, échanges et classements.
+moteur local tire les cartes. Le site déployé (Vercel) et l'APK, eux, sont
+compilés **avec** le cloud : boosters serveur, comptes, échanges et classements.
+Le build **prévient** quand ces deux variables manquent, pour que la version
+silencieusement sans cloud ne parte pas en ligne par distraction.
 
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
 Capacitor 8 (Android) · Supabase · Vitest · Playwright.
@@ -104,6 +106,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 7 | Complétion par famille | **livré** | `docs/cloud-supabase.md` § « La complétion par famille » |
 | 8 | Classement par famille | **livré** | `docs/cloud-supabase.md` § « Le classement par famille » |
 | 9 | Carnet de notifications | **livré** | `src/lib/social/inbox.ts`, `src/components/notifications-sheet.tsx` |
+| 11.34 | **Le jeu se déploie sur Vercel — et la garde du cloud change de maison** (8 octobre 2026) : le joueur a supprimé `.github/workflows` (`ae5016f` puis `8760723`), en supposant — à raison — que **Firebase App Distribution et la distribution d'APK ne sont plus d'actualité** : il teste le jeu sur **Vercel**, dans le navigateur, et n'a plus besoin de recevoir un APK par mail. Ce que les workflows portaient est donc rangé, noir sur blanc, dans `docs/depot-et-github.md` : l'envoi aux testeurs et la pré-release roulante (supprimés : on construit à la main, `npm run android:debug`), le rejeu de la pile SQL (`npm run supabase:verify`, 501 contrôles, **à la main**), la sonde de production (une ligne : `select public.schema_versions();` dans le SQL Editor), et les contrôles avant build (`lint`, `typecheck`, `test`, `ecrans`). **Ce que le nettoyage a cassé, et qui est réparé** : `src/lib/cloud/config.test.ts` lisait les workflows sans se demander s'ils existaient — toute la suite tombait sur un dossier supprimé volontairement. Et **la garde la plus utile déménage au bon endroit** : « le cloud est-il dans le paquet ? » vivait dans le workflow de l'APK, elle vit maintenant dans `scripts/cloud-guard.mjs`, appelé par `npm run build` — donc Vercel comme un APK à la main préviennent dans leur journal quand `NEXT_PUBLIC_SUPABASE_URL` ou la clé anon manquent, sans jamais faire échouer la compilation (le mode sans cloud reste légitime, c'est celui des tests). Ce que ce choix coûte est écrit aussi : **dans le navigateur, les notifications ne sonnent pas** — FCM est une affaire d'Android (`src/lib/push.ts` ne s'enregistre que sur plateforme native) — et rien ne vérifie plus une poussée à la place du joueur. Preuve : **931 tests** (61 fichiers), `tsc`, `lint` et `build` verts, et la chaîne complète des docs mise d'accord (README, `depot-et-github.md`, `cloud-supabase.md`, `.env.example`, `revue-externe`) | **livrée** | `scripts/cloud-guard.mjs`, `scripts/cloud-guard.d.mts`, `src/lib/cloud/config.test.ts`, `package.json`, `.env.example`, `docs/depot-et-github.md`, `docs/cloud-supabase.md` |
 | 11.33 | **Ta chaîne, étape 4 : les imprévus à choix, et « Ton setup »** (8 octobre 2026) : la chaîne a maintenant ses **imprévus**, une carte par journée de jeu. Six cartes (`modo`, `sponsor`, `clip`, `coupure`, `raid`, `nuit`), **deux réponses chacune** — un côté sûr, un côté qui rapporte plus — et le geste de Reigns : la carte **se glisse à gauche ou à droite**. Le geste est **permissif et testé** (`src/lib/swipe.ts`) : au-delà de 64 px de course le côté s'arme (une vibration courte, une seule fois), un **effleurement** ne choisit rien, un geste **retiré** (`pointercancel`) repose la carte sans jouer — et un glissement surtout **vertical** reste un défilement, parce que la feuille se fait défiler au doigt. Deux boutons de repli portent les mêmes réponses avec leurs chances affichées (`82 %`, `52 %`) : personne n'est obligé de glisser. Le **serveur tire tout le reste** : la carte du jour est choisie chez lui (`md5(joueur, journée)`, donc la même carte à chaque ouverture), une carte qui n'est pas celle du jour est refusée, un côté inconnu aussi, et un imprévu ne se rejoue pas — le premier appel fait foi. Aucun jeton ne bouge : la monnaie de la chaîne garde **une seule porte**, la vidéo du jour. Même règle hors ligne, dans le moteur local (`chooseStreamerEventLocally`, qui refuse lui aussi une carte qui n'est pas celle du jour — le contrôle l'a attrapé : sans ça, un écran qui se tromperait de carte jouerait celle du jour en silence). Et **« Ton setup »** : cinq paliers payés en **points** — 120 / 320 / 780 / 1 800 / 4 200 — **dans l'ordre et une seule fois**, qui font grandir la chaîne **pour toujours** (+3 %, +5 %, +7 %, +10 %, +25 % : +50 % au bout). Le débit passe par `_wallet_apply` (donc par le journal unique du wallet : un palier rappelé n'est jamais payé deux fois), le **prix vit au serveur** — le client n'envoie que le nom du palier — et le solde affiché est **relu chez lui** après l'achat. Le piège de l'ordre est écrit noir sur blanc dans la base : le bonus s'arrête au **premier palier manquant du préfixe** (un palier ajouté à la main ne donne rien) et `_streamer_setup_next()` rend **le premier manquant** — un palier « volé » ne fait pas sauter l'étape suivante. Le bonus travaille **partout** : `_streamer_growth()` est la seule formule de croissance, et les trois fonctions qui la portent — `streamer_status()`, `streamer_visit()` et `streamer_publish()` — la lisent (`0038` réécrit la vidéo du jour **telle quelle**, à cet appel près : sinon l'écran aurait annoncé 259 par jour et la vidéo en aurait payé 240). Le contrôle qui l'attrape est écrit pour ne pas se tromper de jour : deux joueurs publient le même format avec la **même graine** (`setseed`), donc le même tirage, et seule la croissance diffère — **259 contre 240**. Preuve : **501 contrôles** (`npm run supabase:verify`, dont 19 nouveaux dans le test miroir `supabase-streamer.test.ts` et une section entière dans le vérificateur : paliers, carte du jour stable, six cartes sur trente joueurs, refus de carte/côté/ordre, paiement et points, 240 → 247 par jour, palier volé, piège d'ordre rejoué pour de vrai) et **931 tests** (61 fichiers, dont 13 sur les écrans — le geste est joué sur la carte : effleurement, geste retiré, geste franc). **Ordre du collage** : `0036` puis `0037` puis `0038` — recoller `0036` seule après `0038` fait perdre le setup de l'écran (le vérificateur joue ce piège au lieu de le commenter) | **livrée** | `supabase/migrations/0038_imprevus_setup.sql`, `src/data/streamer.json`, `src/lib/streamer.ts`, `src/lib/swipe.ts`, `src/lib/game-engine.ts`, `src/lib/save-store.ts`, `src/lib/cloud/api/streamer.ts`, `src/lib/cloud/store/streamer.ts`, `src/components/streamer-sheet.tsx`, `src/app/globals.css`, `.github/workflows/prod-check.yml`, `scripts/verify-supabase-migrations.mjs`, `docs/cloud-supabase.md` § 8 |
 | 11.32 | **Les deux alertes de perte : prévenir avant que ce soit perdu** (8 octobre 2026) : le brief du joueur — « rien ne prévient un joueur que sa réserve de boosters va plafonner (un booster qui se perd, littéralement), ni que sa série de 7 jours va se casser ce soir » — s'ajoute à la **fonction d'envoi existante** : `0037_gardes.sql` ne crée aucune table, aucune colonne, aucune porte de plus, elle **remplace `push_targets()`** avec deux conditions de plus. Deux fonctions internes décident, et elles lisent l'état réel : `_push_serie_due` rend le **jour du cycle** quand la série est **vivante** (dernier booster hier) et **pas faite aujourd'hui**, `_push_reserve_due` rend le **nombre de boosters** quand la réserve est pleine **depuis qu'une recharge s'est perdue** (deux heures : une heure pour se remplir, une heure de sursis). Le ton est la règle : on nomme **une perte qu'on peut encore éviter** — « Ta série s'arrête ce soir », « Réserve pleine : un booster se perd » — jamais une promesse, jamais un compte à rebours inventé, et le chiffre vient de la base (`viewers` porte le jour du cycle ou le nombre de boosters). **Trois pièges attrapés par les contrôles, écrits ici pour ne pas y revenir** : le plafond « une par heure » ne s'applique plus qu'aux **directs** (sinon deux alertes se repoussent l'une l'autre et aucune n'arrive), un **direct en cours ne chasse pas l'alerte** et **la ligne `série` ne consomme pas le tour du direct** (l'arbitrage se vérifie dans les deux sens), et **recoller `0023` seule après coup efface les deux alertes** — `0037` remplace `push_targets()`, donc elle se recolle derrière `0023` (le vérificateur joue le cas au lieu de le commenter). Trois pistes de la revue sont **écartées avec leur chiffre** : l'indicateur de malchance sur l'onglet Drop (la ligne existe déjà sur l'accueil — « Légendaire garanti dans N boosters », cliquable vers les taux), le rival hebdomadaire entre amis (l'écart est déjà public ; la comparaison sociale entre proches est la mécanique la plus toxique du lot), et l'affiche poussée après un gros tirage (déjà là, à la demande, sur un Légendaire ou un Perfect). Preuve : **471 contrôles** (`npm run supabase:verify`, dont 16 nouveaux sur les alertes), **895 tests** (60 fichiers, dont 13 dans `src/lib/supabase-notify.test.ts`), et la sonde de production qui compte maintenant jusqu'à `0037` | **livrée** | `supabase/migrations/0037_gardes.sql`, `supabase/functions/notify-live/index.ts`, `src/lib/supabase-notify.test.ts`, `.github/workflows/prod-check.yml`, `scripts/verify-supabase-migrations.mjs`, `docs/cloud-supabase.md` § 9.2 |
 | 11.31 | **Ta chaîne, étape 3 : la porte sur l'accueil, et le résumé du retour** (8 octobre 2026) : la chaîne se joue. Une **porte sur l'accueil** — « Ta chaîne · N abonnés · filme ta vidéo », qui passe à « vidéo du jour publiée » une fois la journée faite — ouvre l'écran : les **abonnés**, le **palier** et ce qu'il reste à trouver, le **calendrier de contenu** (les quatre formats avec leurs chances publiées : Let's Play 76 % ×1, IRL 62 % ×1,4, Rage bait 48 % ×2,1 avec son bad buzz de 18 %, Collab 70 % ×1,8 — la Collab n'apparaît qu'avec un créateur en collection), le **résumé du retour** quand la chaîne a grandi pendant l'absence (les phrases viennent d'`absenceLines()`, écrites une fois pour le serveur **et** le moteur local), et les **jetons versés aujourd'hui** (x / 40). Un appui publie la vidéo du jour : le tirage, le gain et le versement sont **au serveur** (`streamer_publish`), l'appareil ne choisit que le format — et sans cloud, c'est le moteur local qui applique **les mêmes règles**, dans la sauvegarde (`state.streamer`, relu par `sanitizeState()` : abonnés positifs, vidéo dont le format existe, jetons bornés au plafond). Le retour est payé **une fois** : ouvrir dix fois l'écran ne paie pas dix fois l'absence. | **livrée** | `src/components/streamer-sheet.tsx`, `src/components/drop-view.tsx`, `src/components/creator-deck-app.tsx`, `src/lib/cloud/store/streamer.ts`, `src/lib/game-engine.ts`, `src/lib/save-store.ts`, `src/lib/streamer.ts`, `src/app/globals.css` |
@@ -190,7 +193,7 @@ Deux règles qui tiennent tout le reste :
 barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
 interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
 change pas, les refus de carte et de côté, aucun jeton versé — et le setup : cinq paliers dans l'ordre,
-le prix au serveur, un palier volé qui ne compte pas et ne fait pas sauter l'étape suivante). Dépendances en `--no-save` : rien de plus dans l'APK ni dans la CI |
+le prix au serveur, un palier volé qui ne compte pas et ne fait pas sauter l'étape suivante). Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
 
 ## Tests
 
@@ -521,27 +524,38 @@ http://localhost:3000/overlay
 
 ## Application Android (Capacitor)
 
-### Installer l'APK de test
+### Le jeu sur ton écran : Vercel, et l'APK pour le téléphone
 
-La **pré-release roulante** garde le dernier APK publié, écrasé à chaque build :
-un lien de téléchargement public, sans connexion GitHub.
+**Le jeu se teste maintenant dans le navigateur, sur Vercel** (décision du
+8 octobre 2026) : Vercel construit `npm run build` à chaque poussée et sert
+l'export statique. Rien à installer, et c'est le même code que l'APK.
 
-```url
-https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
-```
+**Ce qui ne marche pas dans le navigateur, et il faut le savoir** : les
+**notifications** (celles des directs et les deux alertes de perte) passent par
+FCM, côté Android — `src/lib/push.ts` ne s'enregistre que sur une plateforme
+native (`Capacitor.isNativePlatform()`). Dans Vercel, l'écran du carnet reste
+visible, mais le téléphone ne sonne pas.
 
-- l'APK embarque le catalogue **committé dans la branche** : portraits compris
-  (voir « Embarquer le catalogue dans l'APK » dans `docs/catalogue-twitch.md`) ;
-- signature **debug** : parfait pour tester sur un téléphone (activer
-  « installer des applications inconnues »), **pas** publiable sur le Play Store ;
-- **construit à la main depuis le 8 octobre 2026** : les workflows GitHub ont été
-  supprimés (`.github/workflows`, commits `ae5016f` puis `8760723`). Plus rien ne
-  se construit ni ne se vérifie tout seul : la commande est `npm run android:debug`
-  (Gradle `assembleDebug`), et les contrôles se lancent à la main (`npm test`,
-  `npm run ecrans`, `npm run supabase:verify`) ;
-- le lien ci-dessus ne change que si l'APK obtenu est **publié** dans la release
-  `debug-apk` (`gh release upload debug-apk …`) : sans publication, il sert
-  toujours l'APK d'avant.
+**L'APK reste possible, à la main.** Depuis le 8 octobre 2026, les workflows
+GitHub ont été supprimés (`.github/workflows`, commits `ae5016f` puis
+`8760723`) : plus rien ne se construit ni ne se vérifie tout seul. La commande
+est `npm run android:debug` (Gradle `assembleDebug`), et **Firebase App
+Distribution n'est plus utilisé** — le lien de la pré-release roulante
+(`https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk`)
+ne changera donc que si un APK y est **publié à la main**
+(`gh release upload debug-apk …`) ; sinon il sert toujours l'APK d'avant.
+
+Deux points qui ne changent pas : l'APK embarque le catalogue **committé dans la
+branche**, portraits compris (voir « Embarquer le catalogue dans l'APK » dans
+`docs/catalogue-twitch.md`) ; et sa signature est **debug** — parfait pour un
+téléphone (activer « installer des applications inconnues »), **pas** publiable
+sur le Play Store.
+
+**Les contrôles se lancent à la main** : `npm test`, `npm run ecrans`,
+`npm run supabase:verify` (Postgres jetable), plus `npm run lint`,
+`npm run typecheck` et `npm run build`. Le build prévient désormais **lui-même**
+si les deux variables du cloud manquent (`scripts/cloud-guard.mjs`) : la panne
+la plus coûteuse est celle qui ne se voit pas.
 
 ### Ce qui est pensé pour le pouce
 

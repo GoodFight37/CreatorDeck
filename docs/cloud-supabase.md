@@ -1999,11 +1999,17 @@ notification, et sans message d'erreur.
    `android/app/google-services.json` — il est **versionné** (projet
    `creatordeck-6a9ce`, paquet `com.creatordeck.app`). Ce fichier **n'est pas un
    secret** (identifiant de projet + clé d'API restreinte au paquet, présente
-   dans chaque APK) : il doit vivre dans le dépôt, pour que l'APK de la CI
-   contienne les notifications. Sans lui, le greffon Google n'est pas appliqué
-   et l'APK se construit quand même — simplement sans notifications. Un test
-   relit ce fichier pour vérifier que le paquet visé est le bon (un fichier qui
-   vise un autre paquet enregistre l'appareil chez personne).
+   dans chaque APK) : il doit vivre dans le dépôt, pour que l'APK construite
+   **à la main** contienne les notifications. Sans lui, le greffon Google n'est
+   pas appliqué et l'APK se construit quand même — simplement sans
+   notifications. Un test relit ce fichier pour vérifier que le paquet visé est
+   le bon (un fichier qui vise un autre paquet enregistre l'appareil chez
+   personne).
+
+   **Et dans le navigateur, il n'y a pas de notifications du tout** : le jeu se
+   teste sur Vercel depuis le 8 octobre 2026, mais FCM est une affaire
+   d'Android — `src/lib/push.ts` ne s'enregistre que sur plateforme native.
+   Pour vérifier un réveil de direct ou une alerte de perte, il faut l'APK.
 4. **Créer la clé du compte de service** : ⚙️ *Paramètres du projet* →
    *Comptes de service* → *Générer une nouvelle clé privée* → JSON. C'est un
    **vrai secret** (clé privée) : il ne va **pas** dans le dépôt, mais dans les

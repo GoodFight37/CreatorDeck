@@ -31,6 +31,26 @@ But : **un dépôt, une branche de référence, un historique léger.**
 - Les branches d'essai (`claude/…`) ne sont **jamais fusionnées** : elles se
   relisent avant toute conclusion.
 
+## État au 8 octobre 2026
+
+- **Plus de workflows GitHub** : `.github/workflows` a été supprimé
+  (`ae5016f` puis `8760723`). Le jeu se **déploie sur Vercel** (c'est là qu'il se
+  teste, dans le navigateur du téléphone), **Firebase App Distribution et la
+  distribution d'APK ne sont plus d'actualité**, et rien ne se vérifie plus tout
+  seul : les contrôles se lancent à la main avant de pousser (voir « Ce que les
+  workflows faisaient, et où c'est parti »). La sonde de production, elle, se
+  remplace par une ligne dans le SQL Editor : `select public.schema_versions();`.
+- **Migrations collées** : `0036` et `0037` sont en production (vérifié le
+  8 octobre 2026). `0038_imprevus_setup.sql` — les imprévus à choix et le
+  setup — **reste à coller** ; c'est la seule chose qui manque pour que la
+  chaîne soit complète.
+- **Ce que ça a coûté, et ce qui a été fait** : la suppression du dossier a
+  cassé `src/lib/cloud/config.test.ts`, qui lisait les workflows sans se demander
+  s'ils existaient. La garde « le cloud est-il dans le paquet ? » a été
+  **déplacée dans la compilation** (`scripts/cloud-guard.mjs`, appelé par
+  `npm run build`) : Vercel comme un APK construit à la main préviennent
+  maintenant dans leur journal quand les deux variables publiques manquent.
+
 ## État au 7 octobre 2026
 
 - **Le jeu est en ligne.** L'APK distribué (workflow *APK Android (debug)*) est
@@ -65,41 +85,44 @@ But : **un dépôt, une branche de référence, un historique léger.**
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.
 
-## Comment l'APK arrive sur le téléphone
+## Comment le jeu arrive sur ton écran (8 octobre 2026)
 
-Le workflow **APK Android (debug)** construit à chaque poussée de **code** (les
-poussées qui ne touchent que la documentation ne construisent rien : l'APK
-précédent reste valable). Il fait les contrôles d'abord (`lint`, `typecheck`,
-`test`, `ecrans`, catalogue), puis :
+**Vercel, et c'est tout.** Vercel construit le dépôt (`npm run build` →
+export statique dans `out/`) à chaque poussée et sert le résultat : on ouvre
+l'adresse du projet, dans le navigateur du téléphone ou sur un écran. Rien à
+installer, rien à publier à la main, et c'est le même code que l'APK.
 
-1. **il envoie un mail** avec le lien d'installation — Firebase App Distribution,
-   groupe `testers` — c'est la voie du téléphone : on ouvre le mail, on touche le
-   lien, l'APK s'installe par-dessus l'ancien ;
-2. il met à jour la **pré-release roulante**, dont le lien public est stable et
-   ne demande aucune connexion :
-   `https://github.com/GoodFight37/CreatorDeck/releases/download/debug-apk/creatordeck-debug.apk` ;
-3. il dépose l'**artefact** du run (`creatordeck-debug-apk`), pour un
-   téléchargement depuis GitHub — mais il faut y être connecté.
+Ce qu'on **perd** avec ce choix, et il faut le savoir :
 
-Deux réglages, une seule fois, pour la voie n° 1 (console Firebase du projet
-`creatordeck-6a9ce`) :
+* **les notifications ne sonnent pas** dans le navigateur. Elles passent par
+  FCM, côté Android (`src/lib/push.ts` ne s'enregistre que sur plateforme
+  native). Le carnet se lit, mais le téléphone reste muet — donc, pour vérifier
+  une alerte de perte ou un réveil de direct, il faut l'APK ;
+* **le lien public de l'APK ne bouge plus** : la pré-release roulante
+  (`releases/download/debug-apk/creatordeck-debug.apk`) sert toujours le dernier
+  APK **publié**, et Vercel n'en publie aucun.
 
-* **App Distribution → Testers & groups** : créer le groupe `testers` (ce nom
-  exact, le workflow l'écrit) et y ajouter l'adresse du joueur. C'est ce groupe
-  qui reçoit le mail — sans lui, l'étape échoue en `404` ;
-* **le secret de dépôt `FIREBASE_SERVICE_ACCOUNT`** (Settings → Secrets and
-  variables → Actions → New repository secret) : le JSON du compte de service
-  Firebase, celui-là même qui sert de `FCM_SERVICE_ACCOUNT` à Supabase. Il doit
-  porter le rôle *Firebase App Distribution Admin*.
+### Ce que les workflows faisaient, et où c'est parti
 
-À côté du build, un second travail (`verif`) rejoue **toute la pile SQL**
-(`0001` → `0036`) sur un Postgres jetable et fait parler le serveur (450
-contrôles) : une migration cassée met le run au rouge sans priver le téléphone
-de son APK.
+Les workflows `.github/workflows` ont été **supprimés les 8 et 9 octobre 2026**
+(commits `ae5016f` puis `8760723`), parce que **Firebase App Distribution et la
+distribution d'APK ne sont plus d'actualité**. Ce qu'ils portaient :
 
-Le workflow annule le build précédent si une nouvelle poussée arrive
-(`concurrency`) : seul le dernier APK compte, et deux builds ne peuvent pas
-écraser la pré-release en même temps.
+| Ce que faisait le workflow | Où c'est maintenant |
+| --- | --- |
+| Construire l'APK et l'envoyer aux testeurs (Firebase App Distribution, groupe `testers`, secret `FIREBASE_SERVICE_ACCOUNT`) | **Supprimé** : on construit à la main (`npm run android:debug`) si besoin, et il n'y a plus de mail |
+| Publier la pré-release roulante et l'artefact du run | **Supprimé** : à publier à la main (`gh release upload debug-apk …`) |
+| `verif` : rejouer toute la pile SQL sur un Postgres jetable | `npm run supabase:verify`, **à la main** (501 contrôles) |
+| `prod-check` : demander à la production quelles migrations y sont collées | la requête `select public.schema_versions();` dans le **SQL Editor** de Supabase — c'est ce qui dit s'il reste un fichier à coller |
+| Les contrôles avant build (`lint`, `typecheck`, `test`, `ecrans`) | `npm run lint`, `npm run typecheck`, `npm test`, `npm run ecrans` — **à la main**, avant de pousser |
+| L'avertissement « Cloud absent du bundle » | `npm run build` lui-même : `scripts/cloud-guard.mjs` prévient quand les deux variables publiques manquent, sur Vercel comme en local |
+
+Conséquence de bonne hygiène : **rien ne vérifie plus une poussée** à la place
+du joueur. Ce qui est poussé sur la branche de travail est donc censé avoir été
+lancé avant (`npm test`, `npm run ecrans`, `npm run supabase:verify`, `npm run
+lint`, `npm run typecheck`, `npm run build`) — c'est ce que fait la session
+Arena avant chaque commit, et c'est écrit ici pour que personne ne croie à un
+filet qui n'existe plus.
 
 ## Un seul écrivain à la fois
 
