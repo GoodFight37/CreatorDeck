@@ -1,8 +1,14 @@
 # Les assets sonores
 
-> **Ce que contient `public/sound effects/`, ce que le jeu en utilise, et
-> comment.** Les sons voyagent dans l'APK : la sélection est donc **courte et
-> justifiée**, et `src/lib/sfx.test.ts` garde la main sur le budget.
+> **D'où viennent les bruitages du jeu, ce qu'il en utilise, et comment.** Les
+> sons voyagent dans l'APK : la sélection est donc **courte et justifiée**, et
+> `src/lib/sfx.test.ts` garde la main sur le budget.
+>
+> **Le pack d'origine n'est plus dans le dépôt** (8 octobre 2026) : après la
+> sélection, `public/sound effects/` (400 fichiers, 87 Mo) a été **retiré** —
+> c'est `public/sfx/` (15 fichiers, ≈1 Mo) qui est le livrable. Le tableau
+> ci-dessous garde les **chemins du pack**, pour retrouver un son d'origine si un
+> geste en réclame un nouveau.
 
 ## Ce que le jeu utilise
 
@@ -44,13 +50,15 @@ en 14 familles — ce sont exactement les dossiers de `public/sound effects/`).
 Autrement dit : **usage commercial libre, crédit non obligatoire, revente des
 fichiers bruts interdite**. C'est cette dernière clause qui impose la forme
 retenue : on embarque une **sélection de 15 fichiers** dans le jeu (usage
-normal), on ne redistribue pas le pack — le dossier brut `public/sound
-effects/` (400 fichiers, 87 Mo) n'est donc **pas** un livrable du jeu, et la
-sélection seule part dans l'APK (≈1 Mo).
+normal), on ne redistribue pas le pack — le dossier brut (400 fichiers, 87 Mo,
+`public/sound effects/` avant le 8 octobre 2026) n'est **pas** un livrable du
+jeu, et la sélection seule part dans l'APK (≈1 Mo). Il a donc été **retiré du
+dépôt** : le pack reste téléchargeable chez son auteur, et cette page dit
+exactement quels fichiers en viennent.
 
 ## Pourquoi une sélection, et pas les packs entiers
 
-Le dossier d'origine pèse **87 Mo** et 400 fichiers. L'APK, lui, embarque tout
+Le dossier d'origine pesait **87 Mo** et 400 fichiers. L'APK, lui, embarque tout
 `public/` : y verser le pack entier coûterait plus cher que tous les portraits
 du catalogue réunis, pour des sons de combat, de pas et de vaisselle qu'un jeu
 de cartes n'utilise jamais. D'où la règle :

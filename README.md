@@ -137,9 +137,11 @@ seule rareté — **548 contrôles** en tout. Dépendances en `--no-save` : rien
 Quatre étages, quatre vitesses :
 
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
-  prix, les retours de connexion, le carnet de notifications — tout ce qui se
-  calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**1055 tests**, 70 fichiers aujourd'hui).
+  prix, les retours de connexion, le carnet de notifications, les effets de
+  rareté, la pose des couronnes de l'Arène — tout ce qui se calcule sans
+  navigateur. C'est là que vit l'essentiel des règles (**1055 tests**, 70 fichiers
+  aujourd'hui), et **tout `public/` pèse 23 Mo** : le poids de l'APK et de
+  l'export Vercel se lit d'un coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les cinq onglets, le marquage de l'onglet actif, l'accès au compte
@@ -278,7 +280,8 @@ public/sfx/              les bruitages embarqués du jeu (15 fichiers, ≈1 Mo,
                          sélection de « 400 Sounds Pack » de Chequered Ink)
 public/streamer/         les assets graphiques fournis par le joueur : seul le
                          kit isométrique de `4/` sert (voir
-                         `docs/assets-graphiques.md`)
+                         `docs/assets-graphiques.md`), le reste du dossier a été
+                         retiré le 8 octobre 2026 (186 Mo que rien n'ouvrait)
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),

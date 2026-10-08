@@ -44,34 +44,53 @@ studio sont assombris et bleutés, les fenêtres non — et quand l'éclairage e
 acheté, ce sont elles qui s'allument le plus. C'est la seule lumière **froide**
 de la pièce, et elle dit qu'il fait jour dehors.
 
-## Ce que contient `public/streamer/`
+## Ce que contient `public/streamer/` aujourd'hui
 
-| Dossier | Contenu | Exploitable en web ? |
+**Un seul dossier, et c'est celui de la pièce** : `4/Isometric/` — le
+**Kenney Furniture Kit** (140 meubles × 4 orientations, PNG indexés, CC0), plus
+son `License.txt`. La pièce en utilise **une trentaine** (`src/data/studio-room.json`),
+le reste du kit attend un meuble qui manquerait.
+
+`public/` pèse **23 Mo** en tout : les portraits du catalogue (19 Mo), le kit
+(2,7 Mo), les bruitages (1 Mo), les effets (44 Ko) et l'icône. C'est ce poids-là
+qui part dans l'APK et dans l'export Vercel.
+
+## Pourquoi le reste a été retiré (8 octobre 2026)
+
+Le dépôt a longtemps porté **tout ce que le joueur avait fourni** — 209 Mo,
+10 800 fichiers — dont 186 Mo que **aucune ligne de code** n'ouvrait. Après les
+trois volets du « jus » (qui n'ajoutaient aucun asset), le dossier a été nettoyé :
+ce qui n'est pas utilisé n'a pas à peser dans un clone, dans un APK, ni dans une
+revue.
+
+| Dossier retiré | Poids | Ce que c'était |
 |---|---|---|
-| `1/` | Une salle en **FBX** (+ textures) | **Non** : format de moteur 3D, rien ne le charge ici |
-| `2/` | ~150 PNG **pixel-art isométrique** (palette ARCHIMEDES 64 / lumeish), planche `all_furniture.png` | Oui — utilisé nulle part pour l'instant |
-| `3/` | « Isometric Bedroom » pastel : `Individuals/` (lit, bureau, chaise, armoire × 4 directions, fenêtre, tableaux, plante) et `Bedroom_Total.png` | Oui — non utilisé |
-| `4/` | **Kenney Furniture Kit** : `Isometric/` (140 meubles × 4 orientations), `Side/` (vues de face), `Models/` (GLB/FBX), `Preview.png`, `Sample.png` | **Oui — c'est la pièce du Studio** |
-| `5/` | Modèles **GLB/FBX** (meubles) | Non (3D), lisible seulement par un moteur |
-| `DEMO_Cozy_UI_Pack_doboui` | UI « cozy » : boutons, cartes, hotbar | Possible, pas utilisé (l'interface est maison) |
-| `Pixel Crawler - Free Pack` | Personnages pixel-art | Possible, pas utilisé |
-| `Super Pixel Effects Gigapack (Free Version)` | Effets animés (éclairs, explosions, fumées, symboles) en suites de PNG | **Oui — c'est le pack des effets** (voir plus bas) |
-| `KayKit_*` | Décors et personnages (Adventurers, Furniture Bits, Skeletons) | Possible, pas utilisé |
-| `interior free` | Intérieur low-poly | À inspecter |
-| `Farm RPG FREE 16x16` | Tuiles 16×16 | Possible, pas utilisé |
+| `public/sound effects/` | 87 Mo | le « 400 Sounds Pack » brut, dont les 15 bruits du jeu sont extraits ([`assets-sonores.md`](assets-sonores.md)) |
+| `Streamer/KayKit_Adventurers_2.0_FREE` | 23 Mo | décors et personnages 3D |
+| `Super Pixel Effects Gigapack (Free Version)` | 28 Mo | le pack d'effets, dont **quatre images** sont gardées dans `public/fx/` |
+| `KayKit_Skeletons_1.1_FREE` | 17 Mo | personnages 3D |
+| `4/Models/` | 17 Mo | les versions GLB/FBX des meubles (l'écran est en DOM, jamais en WebGL) |
+| `KayKit_Furniture_Bits_1.0_FREE` | 7,1 Mo | mobilier 3D |
+| `Pixel Crawler - Free Pack` | 3,9 Mo | personnages pixel-art |
+| `1/`, `5/`, `FBX/` | 4 Mo | salles et meubles 3D |
+| `4/Side/`, `Preview.png`, `Sample.png`, les `.url` | 800 Ko | vues de face et vignettes du kit, jamais affichées |
+| `2/`, `3/`, `DEMO_Cozy_UI_Pack_doboui` | 1,3 Mo | deux autres directions artistiques (pixel-art, UI dessinée) |
+| `interior free`, `Farm RPG FREE 16x16` | 90 Ko | deux packs jamais ouverts |
 
-Les tailles sont telles que le clone est lourd (≈ 100 Mo) : c'est **le prix des
-assets**, et ils partent dans l'APK via `public/`.
+Aucun de ces dossiers n'était référencé par le code, les tests, les scripts ou la
+feuille de style (vérifié avant de retirer) : les seules mentions restantes sont
+**cette page** et la ligne de licence ci-dessous. Ils restent dans l'**historique
+Git** si un jour il faut y reprendre quelque chose.
 
-## Ce que la pièce n'utilise pas (et pourquoi)
+## Ce que la pièce n'utilise pas, et pourquoi
 
-* **Les modèles 3D** (`1/`, `5/`, `4/Models/`) : l'écran est en DOM, pas en
+* **Les modèles 3D** (les packs KayKit, `4/Models/`) : l'écran est en DOM, pas en
   WebGL. Passer à la 3D serait un autre chantier — et un budget de performance
-  qu'un téléphone d'entrée de gamme ne tiendrait pas pour un décor fixe.
-* **Le pixel-art** (`2/`, `3/`, `Pixel Crawler`) : c'est une autre direction
-  artistique que le kit isométrique lisse. S'en servir demanderait de tout
-  reprendre en pixel-art, pas d'en poser une pièce au milieu.
-* **Les packs d'interface** (`DEMO_Cozy_UI_Pack_doboui`) : l'interface du jeu a
+  qu'un téléphone d'entrée de gamme ne tiendrait pas pour un décor fixe ;
+* **le pixel-art** (le dossier `2/`, « Isometric Bedroom », Pixel Crawler) :
+  c'est une autre direction artistique que le kit isométrique lisse. S'en servir
+  demanderait de tout reprendre en pixel-art, pas d'en poser une pièce au milieu ;
+* **les packs d'interface** (`DEMO_Cozy_UI_Pack_doboui`) : l'interface du jeu a
   son propre système de tokens (`src/app/globals.css`) et ses propres badges.
   Y mêler des boutons dessinés casserait la cohérence des cinq onglets.
 
@@ -89,8 +108,8 @@ en CSS par `steps()` — une requête, zéro JavaScript par image) et une couron
 | `public/fx/fumee.png` | 21 images de 64 px — la fumée blanche | `PNG/Smoke Bursts/directional_smoke_burst_001/directional_smoke_burst_001_large_white` |
 | `public/fx/couronne.png` | 1 image de 64 x 48 — l'emblème d'Arène | `PNG/Symbols/symbol_crown_001/symbol_crown_001_large_yellow` (image 19) |
 
-(Les chemins de la dernière colonne sont ceux de
-`Super Pixel Effects Gigapack (Free Version)/`, juste sous `public/streamer/`.)
+(Les chemins de la dernière colonne sont ceux du pack d'origine, sous
+`public/streamer/` — il a été retiré après extraction, voir plus haut.)
 Le total pèse **44 Ko**, quand le dossier d'origine en pèse des dizaines de
 mégaoctets : les planches sont **générées** (`montage` d'ImageMagick, puis
 recadrage et compression), et `src/lib/fx.test.ts` lit l'en-tête de chaque PNG
@@ -100,9 +119,17 @@ La pose de la couronne, elle, est calculée sur la pièce
 (`src/lib/studio-emblem.ts`) : elle est **posée sur la face du haut de
 l'étagère**, pas collée à des coordonnées écrites à la main.
 
-> **Pour le nettoyage des assets :** `public/fx/` et `public/sfx/` ne sont **pas**
-> les dossiers d'origine — ils sont à garder tels quels, même quand
-> `public/streamer/Super Pixel Effects Gigapack (Free Version)/` sera supprimé.
+> **Crédit demandé par la licence du pack d'effets** (il n'est pas CC0, lui) :
+> « Super Pixel Effects Gigapack — Will Tice / unTied Games ». La licence autorise
+> l'usage commercial et l'embarquement dans un jeu, interdit la revente des
+> fichiers bruts, et demande cette ligne quelque part dans le produit ou sa
+> documentation : elle est ici, et le jeu n'affiche aucun générique pour
+> l'instant.
+
+> **À ne pas confondre :** `public/fx/` et `public/sfx/` ne sont **pas** des
+> dossiers d'origine — ce sont les **livrables** du jeu (planches d'effets et
+> bruitages choisis). Le nettoyage du 8 octobre 2026 a retiré les packs, jamais
+> ceux-là.
 
 ## Voir la pièce sans navigateur
 
