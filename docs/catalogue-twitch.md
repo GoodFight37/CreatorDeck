@@ -9,6 +9,46 @@ dépôt.
 > défaut du générateur, sans aucune option à passer. Les raisons sont détaillées
 > dans « Choisir la taille » ci-dessous.
 
+## La cadence : quand le catalogue bouge, et ce que ça coûte
+
+Le catalogue vit **deux fois** : embarqué dans l'APK (`src/data/creators.json`,
+portraits compris) et recopié dans le projet Supabase (`0003_catalogue.sql`)
+pour ce qui est décidé par le serveur — le tirage, le drapeau `retired`, la
+comptabilité de collection. Les deux viennent du même fichier, et **les deux
+doivent avancer ensemble**.
+
+C'est le prix de l'embarqué, et il est voulu : le catalogue dans l'APK rend le
+classeur, les filtres et les portraits instantanés **sans réseau**, et c'est lui
+que le joueur voit — un catalogue servi à la demande ferait clignoter le
+classeur au premier écran sans connexion. Ce qui en découle :
+
+* un créateur qui entre ou sort du classement Twitch **n'atteint le téléphone
+  qu'au prochain APK** (et l'ancien continue de fonctionner entre-temps : les
+  cartes déjà tirées restent valides, et un créateur absent du nouveau Top passe
+  en « Sortant » au lieu de disparaître) ;
+* **deux gestes, dans cet ordre** : régénérer (`npm run catalog:source`), puis
+  recoller `0003_catalogue.sql`. L'écart entre les deux copies se voit de deux
+  façons, et elles ne se valent pas :
+
+  1. **base en avance sur l'APK** (le cas qu'on veut) : la base peut tirer un
+     créateur que l'APK ne connaît pas encore, et l'écran affiche alors
+     « Ce créateur » — le temps que l'APK suive, rien n'est perdu ;
+  2. **APK en avance sur la base** : les cartes de ces créateurs ne sont pas
+     dans le catalogue du serveur, donc la sauvegarde devient **suspecte**
+     (`save_suspicions`, `0019`) — le joueur garde ses cartes, mais **il sort du
+     classement** jusqu'à ce que la base rattrape.
+
+  D'où la règle : **coller `0003_catalogue.sql` d'abord**, distribuer l'APK
+  ensuite. Jamais l'inverse, et jamais d'écart qui dure ;
+* la cadence retenue est celle des **saisons**, pas des mouvements quotidiens du
+  classement : le Top 1000 bouge tous les jours à sa marge, et courir après
+  chaque place coûterait un APK par jour pour rien.
+
+Ce qui n'est **pas** dans l'APK bouge tout seul : les points, les jetons, les
+tirages, les ventes, l'Arène et les classements vivent au serveur et suivent
+sans rebuild. La séparation est donc : *ce qui habille* est embarqué, *ce qui
+compte* est au serveur.
+
 ## Périmètre : monde entier, ou langues restreintes
 
 `scripts/build-twitch-catalog.mjs` interroge Twitch **sans filtre de langue par

@@ -108,8 +108,8 @@ input:focus-visible {
      coque un **conteneur de défilement** — qui ne défile jamais, puisque c'est
      la page qui défile. Résultat : la barre du haut et la recherche du
      classeur, déclarées `position: sticky`, n'avaient aucun point d'accroche et
-     partaient avec le reste au premier coup de pouce (constaté le 8 octobre
-     2026). `clip` ne crée pas de conteneur de défilement : les deux se collent
+     partaient avec le reste au premier coup de pouce. `clip` ne crée pas de
+     conteneur de défilement : les deux se collent
      sous le haut de l'écran, comme voulu. */
   overflow: clip;
   background: var(--bg);
@@ -121,6 +121,23 @@ input:focus-visible {
   min-height: calc(100dvh - 72px);
   padding-bottom: calc(92px + env(safe-area-inset-bottom));
 }
+
+/*
+ * Le filet de sécurité (`ErrorBoundary`). Il n'ajoute rien au DOM tant que
+ * tout va bien ; quand il prend la main, il prend **tout** l'écran : ni barre
+ * de navigation, ni raccourci, un seul chemin — « Relancer ».
+ */
+.panne { display: flex; flex-direction: column; gap: 12px; justify-content: center; min-height: 100dvh; max-width: 560px; margin: 0 auto; padding: 32px 20px calc(32px + env(safe-area-inset-bottom)); background: var(--bg); }
+.panne h1 { margin: 0; font-family: var(--font-display); font-size: 30px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
+.panne-rassurance { margin: 0; color: var(--accent-tint); font-size: 14px; line-height: 1.55; }
+.panne-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
+.panne-detail { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; word-break: break-word; }
+.panne-detail code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+/* L'overlay : une ligne, en bas du cadre, dans le ton de la scène. Devant un
+   public, une panne se signale, elle ne s'étale pas. */
+.panne-quiete { justify-content: flex-end; gap: 4px; padding: 0 22px 22px; background: var(--bg-deep); text-align: center; }
+.panne-quiete p { margin: 0; color: var(--muted); font-size: 13px; }
+.panne-quiete code { color: var(--muted-2); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
 
 .view {
   padding: 20px 18px 26px;

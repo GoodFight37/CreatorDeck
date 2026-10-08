@@ -1,4 +1,5 @@
 import { OverlayStage } from "@/components/overlay-stage";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 export const metadata = {
   title: "CreatorDeck — overlay 16:9",
@@ -17,5 +18,12 @@ export const metadata = {
  * L'adresse : `/overlay` (en local, `http://localhost:3000/overlay`).
  */
 export default function OverlayPage() {
-  return <OverlayStage />;
+  // Le même filet que le jeu, mais **sobre** : la page est projetée devant le
+  // public, elle ne doit pas afficher un gros message d'erreur en plein cadre.
+  // Le streamer, lui, le voit dans OBS.
+  return (
+    <ErrorBoundary discret>
+      <OverlayStage />
+    </ErrorBoundary>
+  );
 }
