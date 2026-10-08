@@ -74,7 +74,11 @@ const CODE_BAREME = sansCommentaires(corpsFonction(SQL_BAREME, "_streak_reward_p
 const CODE_DEPART = sansCommentaires(corpsFonction(SQL_DEPART, "_pack_initial_packs"));
 const CODE = sansCommentaires(SQL);
 const CODE_PITY = sansCommentaires(SQL_PITY);
-const CODE_SERIE = sansCommentaires(SQL_SERIE);
+// Le **corps** d'`open_pack`, pas le fichier entier : une migration qui reprend
+// la fonction peut en définir d'autres à côté, et un chiffre cherché « quelque
+// part dans le fichier » finirait par être trouvé au mauvais endroit (le
+// rapport de version de `0035` cite le seuil du plancher, par exemple).
+const CODE_SERIE = sansCommentaires(corpsFonction(SQL_SERIE, "open_pack"));
 
 describe("0013_progression.sql (plancher de malchance et série)", () => {
   it("reprend le seuil publié dans pull-rates.json", () => {

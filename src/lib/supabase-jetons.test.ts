@@ -100,6 +100,25 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
     expect(FLAT).toMatch(/create or replace function public\.open_pack\(p_jackpot text default 'perfect'\)/);
   });
 
+  it("sait dire ce qui est collé, sans compte", () => {
+    // « J'ai poussé le SQL d'avant, je sais pas si c'est ce dont tu me
+    // parlais » (8 octobre 2026). Le rapport répond en une lecture, et il doit
+    // rester lisible **sans compte** : un diagnostic qu'il faut se connecter
+    // pour lire ne sert à rien quand c'est la connexion qu'on vérifie.
+    const corps = corpsFonction(SQL, "schema_versions");
+    for (const migration of ["0030", "0031", "0032", "0033", "0034", "0035"]) {
+      expect(corps).toContain(`'${migration}'`);
+    }
+    expect(SQL).toMatch(/grant execute on function public\.schema_versions\(\) to anon, authenticated;/);
+    expect(SQL).toMatch(/revoke all on function public\._schema_body\(text\) from public, anon, authenticated;/);
+    // Les marqueurs sont **sans accent** : un collage passé par une console
+    // Windows peut abîmer les accents (l'app sait réparer l'affichage, pas un
+    // test de présence), et un marqueur accentué mentirait sur une base saine.
+    const marqueurs = [...corps.matchAll(/position\('([^']+)' in/g)].map((trouve) => trouve[1]);
+    expect(marqueurs.length).toBeGreaterThanOrEqual(5);
+    for (const marqueur of marqueurs) expect(marqueur).toMatch(/^[\x20-\x7E]+$/);
+  });
+
   it("garde le solde et son journal au serveur, fermés au client", () => {
     expect(CODE).toMatch(/create table if not exists public\.tokens \(/);
     expect(CODE).toMatch(/create table if not exists public\.token_ledger \(/);

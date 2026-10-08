@@ -1,12 +1,17 @@
-name: Vérification de production (temporaire)
+name: Vérification de production
 
 # Ce workflow ne construit rien et ne touche à rien : il **demande** au projet
 # Supabase de production quelles migrations y sont installées, et il l'écrit
-# dans le journal du run (`::notice`). Il existe parce que le bac à sable d'où
-# je travaille n'a accès qu'à api.github.com : la seule façon d'interroger la
-# production est de la faire depuis un runner.
+# dans le journal du run (`::notice`).
 #
-# Il se supprime dès la réponse lue.
+# Pourquoi il existe : depuis le poste où le jeu est développé, seuls
+# api.github.com et les runners répondent — interroger la production demande
+# donc de passer par ici. C'est le seul endroit qui sait répondre à « est-ce que
+# la migration est collée ? », question qui revient à chaque livraison depuis
+# qu'elles se collent depuis un téléphone.
+#
+# Il ne s'exécute que quand ce fichier change : une poussée de code ne le
+# réveille pas.
 on:
   push:
     paths:
@@ -56,3 +61,9 @@ jobs:
           sonde "_tokens_per_pack" '{"p_at":"2026-07-10T18:30:00Z"}' "0035 ?"
           sonde "token_prices" "{}" "0035 ?"
           sonde "_pack_initial_packs" "{}" "0033 ?"
+
+          # Le rapport de la base elle-même (`0035`) : chaque clé est un numéro
+          # de migration, la valeur dit si elle est dans la base. C'est la
+          # réponse complète, y compris pour `0034` — qui ne crée aucun objet et
+          # qu'aucune sonde de fonction ne peut voir.
+          sonde "schema_versions" "{}" "rapport complet (0035) ?"

@@ -261,8 +261,12 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      carte visée — 400 jetons, prix relu ici, refus d'une **Légendaire**, d'un
      créateur retiré du classement ou déjà possédé. La bascule ouvre le compte
      **une fois** avec le solde déjà gagné (borné à un million, comme
-     `_wallet_ensure()` dans `0027`). Détail : §8, « Le plancher de malchance,
-     les jetons, les missions du jour ».
+     `_wallet_ensure()` dans `0027`). La migration ajoute aussi
+     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des six
+     dernières migrations (`0030` → `0035`) sont installées — c'est la réponse à
+     « est-ce que c'est bien le SQL que j'ai collé ? », y compris pour `0034`,
+     qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
+     jetons, les missions du jour ».
    - [`supabase/migrations/0034_last_pack_protege.sql`](../supabase/migrations/0034_last_pack_protege.sql)
      → **Run** pour que le **Last Pack protège les Légendaires et les Lives** :
      ces deux cartes-là restent exposées dix minutes mais **ne se volent pas**.
@@ -968,6 +972,23 @@ de jeu** (`serie-jN-<jour>`), donc un deuxième booster le même jour ne paie ri
 de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
 jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
 le prochain booster est un J1, et il paie à nouveau.
+
+**Savoir ce qui est collé (`0035`).** `schema_versions()` rend un objet
+`{ "0030": true, …, "0035": true }` : chaque clé est un numéro de migration, la
+valeur dit si elle est **dans la base**. Elle ne lit que le catalogue (le texte
+des fonctions internes, via `_schema_body()`) et ne rend que des booléens — donc
+elle se lit **sans compte** :
+
+```bash
+curl -s -X POST "https://<projet>.supabase.co/rest/v1/rpc/schema_versions" \
+  -H "apikey: <clé publique>" -H "Authorization: Bearer <clé publique>" -d '{}'
+```
+
+C'est ce qui permet de vérifier une installation depuis un téléphone, sans
+ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
+existantes), donc son absence ne se voyait nulle part ailleurs. Le workflow
+`.github/workflows/prod-check.yml` interroge la même fonction et pose la réponse
+dans le journal du run.
 
 ### Le direct (statut EN LIVE)
 

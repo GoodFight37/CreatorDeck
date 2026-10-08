@@ -2249,6 +2249,39 @@ try {
     "n'existe pas",
   );
 
+  // --- Le rapport de version (0035) ----------------------------------------
+  // « Qu'est-ce qui est collé dans la base ? » — la question qui revient à
+  // chaque livraison, et à laquelle la sonde de production ne peut pas répondre
+  // pour les migrations qui ne créent aucun objet (`0034` reprend deux
+  // fonctions). Ce rapport se lit **sans compte** et ne rend que des booléens.
+  const rapport = (await client.query("select public.schema_versions() as r")).rows[0].r;
+  check(
+    "schéma : le rapport de version voit les six dernières migrations",
+    ['0030', '0031', '0032', '0033', '0034', '0035'].every((cle) => rapport?.[cle] === true),
+    JSON.stringify(rapport),
+  );
+  // Le rapport lu par un inconnu (rôle `anon`, aucun compte) : c'est là qu'il
+  // sert vraiment — un diagnostic qu'il faut un compte pour lire ne sert à rien
+  // quand c'est justement la connexion qu'on cherche à vérifier.
+  const rapportAnon = (await (async () => {
+    await client.query("set role anon");
+    try {
+      return (await client.query("select public.schema_versions() as r")).rows[0].r;
+    } finally {
+      await client.query("reset role");
+    }
+  })());
+  check(
+    "schéma : le rapport se lit sans compte",
+    rapportAnon?.['0035'] === true && rapportAnon?.['0034'] === true,
+    JSON.stringify(rapportAnon),
+  );
+  // Et une fonction absente ne le fait pas tomber : il dit simplement « non ».
+  check(
+    "schéma : une fonction absente ne casse pas le rapport",
+    (await client.query("select public._schema_body('public.fonction_qui_nexiste_pas()') as t")).rows[0].t === '',
+  );
+
   // --- Les jetons (0035) ---------------------------------------------------
   // Le solde vivait dans la sauvegarde : un client gonflé s'offrait des cartes
   // choisies. Il est au serveur depuis `0035`, avec le même journal que les

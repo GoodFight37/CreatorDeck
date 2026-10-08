@@ -799,6 +799,71 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
+-- Qu'est-ce qui est collé ? (la question qui revient à chaque livraison)
+-- ---------------------------------------------------------------------------
+/**
+ * Le texte d'une fonction installée, ou `''` si elle n'existe pas.
+ *
+ * Interne : elle lit le catalogue, et c'est `schema_versions()` qui en tire une
+ * réponse lisible.
+ */
+create or replace function public._schema_body(p_signature text)
+returns text
+language sql
+stable
+set search_path = public
+as $$
+  select coalesce(pg_get_functiondef(to_regprocedure(p_signature)), '');
+$$;
+
+revoke all on function public._schema_body(text) from public, anon, authenticated;
+
+/**
+ * Ce que la base **sait faire**, déduit de ce qui y est installé.
+ *
+ * Le joueur colle les migrations une par une, depuis son téléphone — et il est
+ * arrivé qu'il ne sache plus laquelle était passée (« j'ai poussé le SQL
+ * d'avant, je sais pas si c'est ce dont tu me parlais », 8 octobre 2026). Cette
+ * fonction répond en une lecture : chaque clé est un numéro de migration, la
+ * valeur dit si elle est **dans la base**.
+ *
+ * Elle ne lit que le catalogue (le texte des fonctions internes), ne rend que
+ * des booléens, et se lit **sans compte** : c'est exactement ce qu'un
+ * diagnostic doit pouvoir faire, et ça ne dit rien de personne.
+ *
+ * Les marqueurs sont choisis pour être **sans accent et sans apostrophe** (un
+ * collage passé par une console Windows peut abîmer les accents — l'app sait
+ * réparer l'affichage, pas un test de présence), et pour porter sur un bout de
+ * code que seule la migration citée a écrit.
+ */
+create or replace function public.schema_versions()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    -- 0030 : la Légendaire peut sortir Gold (1 %, hors Perfect).
+    '0030', position('v_roll < 100' in public._schema_body('public._pack_choose_variant(text, boolean, boolean)')) > 0,
+    -- 0031 : le plancher de malchance à douze.
+    '0031', position('v_pity + 1 >= 12' in public._schema_body('public.open_pack(text)')) > 0,
+    -- 0032 : la série paie ses jours.
+    '0032', position('serie-j' in public._schema_body('public.open_pack(text)')) > 0,
+    -- 0033 : le départ est maigre (deux boosters).
+    '0033', position('public._pack_initial_packs()' in public._schema_body('public.open_pack(text)')) > 0,
+    -- 0034 : une Légendaire et une Live ne se volent pas.
+    '0034', position('ne se vole pas' in public._schema_body('public.last_pack_steal(bigint, integer)')) > 0,
+    -- 0035 : les jetons vivent au serveur.
+    '0035', to_regprocedure('public.tokens_get()') is not null
+  );
+$$;
+
+-- Lisible **sans compte** : c'est un diagnostic, pas une donnée de joueur.
+revoke all on function public.schema_versions() from public;
+grant execute on function public.schema_versions() to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Fin des droits
 -- ---------------------------------------------------------------------------
 revoke all on function public._tokens_ensure(uuid) from public, anon, authenticated;
@@ -807,6 +872,7 @@ revoke all on function public._tokens_mirror(uuid, integer) from public, anon, a
 revoke all on function public._tokens_prime_time(timestamptz) from public, anon, authenticated;
 revoke all on function public._tokens_per_pack(timestamptz) from public, anon, authenticated;
 revoke all on function public._streak_reward_tokens(integer) from public, anon, authenticated;
+revoke all on function public._schema_body(text) from public, anon, authenticated;
 revoke all on function public._wallet_on_draw() from public, anon, authenticated;
 
 -- Le rôle de service peut ouvrir un compte à la main (reprise en masse), comme
