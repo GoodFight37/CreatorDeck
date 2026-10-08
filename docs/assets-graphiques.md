@@ -112,7 +112,7 @@ temps qu'ils ne décrivaient plus rien.
   demanderait de tout reprendre en pixel-art, pas d'en poser une pièce au milieu ;
 * **les packs d'interface** (`DEMO_Cozy_UI_Pack_doboui`) : l'interface du jeu a
   son propre système de tokens (`src/app/globals.css`) et ses propres badges.
-  Y mêler des boutons dessinés casserait la cohérence des cinq onglets.
+  Y mêler des boutons dessinés casserait la cohérence des onglets.
 
 ## Les effets de moment rare, et la couronne de l'Arène
 

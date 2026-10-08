@@ -3,19 +3,21 @@ import { expect, test, type Page } from "@playwright/test";
 /**
  * Ce que ces tests vérifient, et rien d'autre :
  *
- *   * la barre du bas montre **cinq** onglets, dans l'ordre ;
+ *   * la barre du bas montre **quatre piliers**, dans l'ordre ;
  *   * chaque onglet s'ouvre et se marque comme actif (`aria-current="page"`) ;
  *   * « Toi » propose bien d'ouvrir son compte ;
+ *   * « Ta chaîne », qui n'a plus d'onglet depuis le 8 octobre 2026, s'ouvre par
+ *     sa ligne de l'accueil et se referme par son bouton Retour ;
  *   * rien ne casse côté navigateur : **aucune erreur console**, aucune
- *     exception, sur un tour complet des cinq onglets.
+ *     exception, sur un tour complet des quatre piliers.
  *
  * Ce qui n'est pas testé ici : tout ce qui demande un compte connecté. Les
  * tests tournent sans `.env.local`, donc sans cloud — c'est voulu, ils doivent
  * marcher sur n'importe quelle machine qui clone le dépôt.
  */
 
-/** Les cinq onglets, dans l'ordre de la barre. */
-const TABS = ["Drop", "Binder", "Craft", "Studio", "Toi"] as const;
+/** Les quatre piliers, dans l'ordre de la barre. */
+const TABS = ["Drop", "Binder", "Craft", "Toi"] as const;
 
 /** La barre du bas (`aria-label="Navigation principale"`). */
 function bar(page: Page) {
@@ -39,12 +41,31 @@ async function openDeck(page: Page): Promise<void> {
   await expect(tab(page, "Drop")).toBeVisible({ timeout: 30_000 });
 }
 
-test("la barre du bas montre les cinq onglets, dans l'ordre", async ({ page }) => {
+test("la barre du bas montre les quatre piliers, dans l'ordre", async ({ page }) => {
   await openDeck(page);
   await expect(bar(page).getByRole("button")).toHaveCount(TABS.length);
   for (const label of TABS) {
     await expect(tab(page, label)).toBeVisible();
   }
+});
+
+test("Ta chaîne s'ouvre par sa ligne de l'accueil, et Retour ramène au Drop", async ({ page }) => {
+  await openDeck(page);
+  const ligne = page.getByRole("button", { name: /Ouvrir ta chaîne/ });
+  await expect(ligne).toBeVisible({ timeout: 30_000 });
+  await ligne.click();
+
+  // L'écran se monte dans le flux, et **aucun onglet n'est actif** : la barre ne
+  // l'allume pas, il n'est plus dedans.
+  const hud = page.getByRole("region", { name: "Ta chaîne" });
+  await expect(hud).toBeVisible();
+  for (const label of TABS) {
+    await expect(tab(page, label)).not.toHaveAttribute("aria-current", "page");
+  }
+
+  // La sortie : le bouton Retour, du même côté que l'entrée.
+  await page.getByRole("button", { name: "Retour", exact: true }).click();
+  await expect(tab(page, "Drop")).toHaveAttribute("aria-current", "page");
 });
 
 test("chaque onglet s'ouvre et se marque comme actif", async ({ page }) => {
@@ -106,7 +127,7 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
   });
 
   await openDeck(page);
-  for (const label of ["Binder", "Craft", "Studio", "Toi", "Drop"] as const) {
+  for (const label of ["Binder", "Craft", "Toi", "Drop"] as const) {
     await tab(page, label).click();
     await expect(tab(page, label)).toHaveAttribute("aria-current", "page");
   }
