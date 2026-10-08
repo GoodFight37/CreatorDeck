@@ -1994,11 +1994,6 @@ input:focus-visible {
 .odds-rare { display: flex; flex-direction: column; gap: 2px; margin: 11px 0; padding: 9px 11px; border: 1px solid rgba(255,190,85,.2); border-radius: 10px; background: rgba(255,190,85,.06); }
 .odds-rare strong { color: var(--gold); font-size: 13px; letter-spacing: .04em; }
 .odds-rare span { color: var(--muted); font-size: 13px; }
-/* Le bonus Direct : la même boîte que le « Perfect », mais à la couleur du
-   direct — c'est une règle du tirage, publiée comme les autres. */
-.odds-direct { border-color: rgb(var(--accent-rgb) / .28); background: rgb(var(--accent-rgb) / .06); }
-.odds-direct strong { color: var(--accent-light); }
-.odds-direct small { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; opacity: .85; }
 .odds-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .odds-table th, .odds-table td { padding: 6px 4px; text-align: right; }
 .odds-table thead th { color: var(--muted-2); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
@@ -2006,6 +2001,15 @@ input:focus-visible {
 .odds-table tbody th i { width: 7px; height: 7px; flex: 0 0 auto; border-radius: 99px; }
 .odds-table tbody tr + tr th, .odds-table tbody tr + tr td { border-top: 1px solid rgba(255,255,255,.05); }
 .odds-table td { color: var(--muted); font-variant-numeric: tabular-nums; }
+/*
+ * Les règles du tirage (le direct, le plancher de malchance) : le même tableau
+ * que les taux. Un écran de lecture seule n'a qu'un langage — une ligne, un
+ * chiffre — et le joueur qui vérifie lit des yeux au même endroit.
+ */
+.odds-rules { margin: 11px 0 0; }
+.odds-rules + .odds-rules { margin-top: 16px; }
+.odds-rules thead th:first-child { text-align: left; }
+.odds-rules th[scope="col"] { color: var(--accent-tint); }
 .odds-details { margin-top: 10px; }
 .odds-details summary { color: var(--accent-light); font-size: 13px; font-weight: 700; cursor: pointer; }
 .odds-details ul { display: flex; flex-direction: column; gap: 6px; margin: 9px 0 0; padding: 0; list-style: none; }
@@ -2354,8 +2358,6 @@ input:focus-visible {
 .wallet-note { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
 
 /* Le pity dans la feuille des taux, à côté du bonus Direct. */
-.odds-pity { border-color: rgb(var(--accent-rgb) / .35); background: rgb(var(--accent-rgb) / .08); }
-.odds-pity strong { color: var(--accent-light); }
 
 /* Le Paquet Scène : le second paquet, celui de la famille. Il ne se recharge
    pas — il revient une fois par jour de jeu — donc pas de compteur de réserve

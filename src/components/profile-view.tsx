@@ -1,9 +1,14 @@
 "use client";
 
 /**
- * L'écran **Toi** : les statistiques, les portes (amis, arène, classement,
- * hôtel, Last Pack, carnet), les réglages du classeur et le bouton rouge de
- * remise à zéro.
+ * L'écran **Toi** : les statistiques, la wishlist, puis **trois familles** de
+ * portes — Compte (tout ce qui vit en ligne), Progression (ce que le jeu
+ * publie : objectifs, taux) et Réglages (thème, son, reflets) — et, tout en
+ * bas, le bouton rouge de remise à zéro.
+ *
+ * Trois familles et pas une seule liste : sur un téléphone, onze lignes à la
+ * suite se lisent mal, et une ligne qu'on ne trouve pas est une ligne qui
+ * n'existe pas. Chaque titre dit ce qu'il y a dessous.
  */
 import { useEffect, useState } from "react";
 
@@ -236,7 +241,7 @@ export function ProfileView({
       ) : null}
 
       {/*
-       * Le menu : deux groupes, des libellés seuls. Pas de sous-texte pour
+       * Le menu : trois familles, des libellés seuls. Pas de sous-texte pour
        * expliquer chaque ligne — un menu de jeu se lit d'un coup d'œil. Ce qui
        * a besoin d'explications les donne là où on s'en sert : l'écran Compte,
        * la feuille des taux, le thème.
@@ -294,18 +299,30 @@ export function ProfileView({
         ) : null}
       </section>
 
-      <section className="menu-group" aria-label="Partie">
-        <h2>Partie</h2>
+      {/*
+       * Progression : ce que le jeu publie (les objectifs de la saison, les
+       * taux du tirage). Ce sont des écrans qu'on ouvre pour lire, pas pour
+       * jouer — d'où leur famille à part.
+       */}
+      <section className="menu-group" aria-label="Progression">
+        <h2>Progression</h2>
         <button type="button" className="menu-row" onClick={onShowMissions}>
           <span>Objectifs et saisons</span>
           <ChevronRight size={16} />
         </button>
-        <button type="button" className="menu-row" onClick={onShowThemes}>
-          <span>Thème du classeur</span>
-          <ChevronRight size={16} />
-        </button>
         <button type="button" className="menu-row" onClick={onShowOdds}>
           <span>Taux de drop</span>
+          <ChevronRight size={16} />
+        </button>
+      </section>
+
+      {/* Réglages : les trois choses qu'on règle une fois. Le thème est une
+          porte (il se choisit), le son et les reflets sont des interrupteurs
+          (ils se coupent sur place). */}
+      <section className="menu-group" aria-label="Réglages">
+        <h2>Réglages</h2>
+        <button type="button" className="menu-row" onClick={onShowThemes}>
+          <span>Thème du classeur</span>
           <ChevronRight size={16} />
         </button>
         <button
@@ -337,8 +354,10 @@ export function ProfileView({
         {/*
          * Le code promo n'est plus dans le menu : il ne sert que le jour où un
          * code existe, et « Toi » a déjà trop de portes pour un écran de
-         * téléphone. L'écran (`promo-code-sheet.tsx`) et la fonction serveur
-         * restent en place — remettre la ligne suffit à le rallumer.
+         * téléphone. Sa place, quand il reviendra, est **ici** : c'est un
+         * réglage, pas une activité. L'écran (`promo-code-sheet.tsx`) et la
+         * fonction serveur restent en place — remettre la ligne suffit à le
+         * rallumer.
          */}
       </section>
 

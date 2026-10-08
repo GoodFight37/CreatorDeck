@@ -21,6 +21,11 @@ function formatMultiplier(value: number): string {
  * Écran « Taux de drop » : les probabilités publiées, calculées à l'affichage
  * depuis `src/data/pull-rates.json` — le fichier qui sert réellement au tirage.
  * Aucune valeur n'est recopiée à la main, donc l'affichage ne peut pas mentir.
+ *
+ * L'écran est en **lecture seule** : des tableaux de chiffres et trois lignes
+ * de légende, rien à régler, rien à expliquer longuement. Les règles du direct
+ * et le plancher de malchance sont eux aussi des tableaux — un joueur qui veut
+ * vérifier un taux lit une ligne, il ne relit pas un paragraphe.
  */
 export function PackOddsSheet({
   onClose,
@@ -54,9 +59,11 @@ export function PackOddsSheet({
           </button>
         </header>
 
+        {/* Une seule phrase, et c'est l'essentiel : ces chiffres viennent du
+            fichier que lit le moteur. */}
         <p className="odds-intro">
-          Probabilités publiées, calculées en direct depuis <code>pull-rates.json</code> : le même
-          fichier que le moteur de tirage. Aucun booster n&apos;est truqué à l&apos;ouverture.
+          Calculés depuis <code>pull-rates.json</code>, le même fichier que le moteur : aucun
+          booster n&apos;est truqué à l&apos;ouverture.
         </p>
 
         {/* Deux paquets, deux blocs : le joueur doit pouvoir lire les taux de
@@ -149,17 +156,34 @@ function PackOddsBlock({
 
       {/* Le bonus Direct ne concerne que le Live Drop : le Paquet Scène tire
           dans une seule famille, un bonus « qui streame » n'y aurait pas de sens
-          (et sa table ne l'applique pas). */}
+          (et sa table ne l'applique pas). Quatre lignes, pas un paragraphe. */}
       {isLive ? (
-      <div className="odds-rare odds-direct">
-        <strong>{DIRECT_BONUS.label}</strong>
-        <span>
-          Un créateur en direct pèse {formatMultiplier(DIRECT_BONUS.creatorBias)} dans sa rareté,
-          et sa carte a {percent.format(DIRECT_BONUS.livePermille / 1000)} de chance d&apos;être en
-          variante Live. La carte garantie est Live quand son créateur streame.
-        </span>
-        <small>{DIRECT_BONUS.note}</small>
-      </div>
+        <table className="odds-table odds-rules" aria-label="Le direct">
+          <thead>
+            <tr>
+              <th scope="col">Le direct</th>
+              <th scope="col">Effet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Créateur qui streame</th>
+              <td>{formatMultiplier(DIRECT_BONUS.creatorBias)} dans sa rareté</td>
+            </tr>
+            <tr>
+              <th scope="row">Variante Live</th>
+              <td>{percent.format(DIRECT_BONUS.livePermille / 1000)} par carte</td>
+            </tr>
+            <tr>
+              <th scope="row">Carte garantie</th>
+              <td>Live si son créateur streame</td>
+            </tr>
+            <tr>
+              <th scope="row">Sans direct</th>
+              <td>bonus neutre, aucune Live</td>
+            </tr>
+          </tbody>
+        </table>
       ) : null}
 
       {/* Le plancher de malchance, publié comme le reste : le seuil, la
@@ -167,40 +191,69 @@ function PackOddsBlock({
           C'est la règle qui empêche une série malchanceuse de durer des mois —
           elle doit être lisible, pas devinée. */}
       {isLive ? (
-      <div className="odds-rare odds-pity">
-        <strong>{PITY.label}</strong>
-        <span>
-          {PITY.threshold} boosters d&apos;affilée sans Légendaire, et le 5ᵉ slot en garantit une.
-          Le compteur repart de zéro dès qu&apos;un Légendaire tombe, quel que soit le slot. La
-          garantie s&apos;active dans {percent.format(odds.pity.active)} des séries de{" "}
-          {PITY.threshold} boosters.
-        </span>
-        {current ? (
-          <small>
-            {current.pity.counter} booster{current.pity.counter > 1 ? "s" : ""} depuis ton dernier
-            Légendaire :{" "}
-            {current.pity.remaining <= 1
-              ? "le prochain est garanti."
-              : `encore ${current.pity.remaining} avant la garantie.`}
-          </small>
-        ) : null}
-        <small>{PITY.note}</small>
-      </div>
+        <table className="odds-table odds-rules" aria-label="Légendaire garanti">
+          <thead>
+            <tr>
+              <th scope="col">{PITY.label}</th>
+              <th scope="col">Valeur</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Boosters sans Légendaire</th>
+              <td>{PITY.threshold}</td>
+            </tr>
+            <tr>
+              <th scope="row">Garantie</th>
+              <td>5ᵉ slot</td>
+            </tr>
+            <tr>
+              <th scope="row">Séries concernées</th>
+              <td>{percent.format(odds.pity.active)}</td>
+            </tr>
+            {current ? (
+              <tr>
+                <th scope="row">Ton compteur</th>
+                <td>
+                  {current.pity.counter} ·{" "}
+                  {current.pity.remaining <= 1
+                    ? "le prochain est garanti"
+                    : `encore ${current.pity.remaining}`}
+                </td>
+              </tr>
+            ) : null}
+            <tr>
+              <th scope="row">Remise à zéro</th>
+              <td>à chaque Légendaire, quel que soit le slot</td>
+            </tr>
+            <tr>
+              <th scope="row">Paquet Scène</th>
+              <td>ne compte pas dans la série</td>
+            </tr>
+          </tbody>
+        </table>
       ) : (
-        <div className="odds-rare odds-pity">
-          <strong>Aucune Légendaire dans ce paquet</strong>
-          <span>
-            Le Paquet Scène remplit une famille : ses cinq cartes sont Communes à Épiques, et
-            jamais deux fois le même créateur. La chasse aux Légendaires reste le Live Drop — et
-            son plancher de malchance, qui ne compte que lui.
-          </span>
-        </div>
+        <table className="odds-table odds-rules" aria-label="Légendaires">
+          <tbody>
+            <tr>
+              <th scope="row">Légendaire</th>
+              <td>aucune dans ce paquet</td>
+            </tr>
+            <tr>
+              <th scope="row">Famille</th>
+              <td>une seule, jamais deux fois le même créateur</td>
+            </tr>
+            <tr>
+              <th scope="row">Plancher de malchance</th>
+              <td>compte le Live Drop seulement</td>
+            </tr>
+          </tbody>
+        </table>
       )}
 
       <p className="odds-footnote">
-        « Au moins 1 » = probabilité qu&apos;un booster contienne au moins une carte de cette
-        rareté. Le 5ᵉ slot est garanti Rare ou mieux. La variante Live, elle, ne s&apos;obtient
-        que pendant un direct — sans information fraîche sur qui streame, elle ne sort pas.
+        « Au moins 1 » = chance que le booster contienne au moins une carte de cette rareté. Le 5ᵉ
+        slot est garanti Rare ou mieux. Une variante Live ne sort que pendant un direct.
       </p>
     </section>
   );
