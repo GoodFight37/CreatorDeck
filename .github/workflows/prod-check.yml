@@ -67,3 +67,46 @@ jobs:
           # réponse complète, y compris pour `0034` — qui ne crée aucun objet et
           # qu'aucune sonde de fonction ne peut voir.
           sonde "schema_versions" "{}" "rapport complet (0035) ?"
+
+      - name: Ce qui est collé, en clair
+        env:
+          URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ANON: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -u
+          if [ -z "${URL:-}" ] || [ -z "${ANON:-}" ]; then
+            echo "::error title=Configuration::URL ou clé anon absente des variables du dépôt"
+            exit 0
+          fi
+          BASE=$(printf '%s' "$URL" | sed -E 's#/rest/v1/?$##; s#/+$##')
+
+          # Le JSON brut de l'étape précédente est tronqué à 160 caractères : ici
+          # on le range en une ligne par migration, dans l'ordre. C'est ce que le
+          # joueur lit depuis son téléphone pour savoir quoi coller ensuite.
+          RAW=$(curl -sS -m 20 -w '\n%{http_code}' -X POST "$BASE/rest/v1/rpc/schema_versions" \
+            -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+            -H "Content-Type: application/json" --data '{}' 2>&1 || true)
+          CODE=$(printf '%s' "$RAW" | tail -n1)
+          BODY=$(printf '%s' "$RAW" | sed '$d')
+
+          if [ "$CODE" != "200" ]; then
+            echo "::warning title=Le rapport de la base ne répond pas::HTTP $CODE — 0035 n'est pas collée. Les contrôles au-dessus disent ce qui, lui, répond."
+            exit 0
+          fi
+
+          ABSENTES=""
+          for M in 0030 0031 0032 0033 0034 0035; do
+            ETAT=$(printf '%s' "$BODY" | jq -r --arg k "$M" '.[$k] // false')
+            if [ "$ETAT" = "true" ]; then
+              echo "::notice title=$M::collée"
+            else
+              echo "::notice title=$M::ABSENTE"
+              ABSENTES="$ABSENTES $M"
+            fi
+          done
+
+          if [ -n "$ABSENTES" ]; then
+            echo "::warning title=Il reste à coller::$ABSENTES"
+          else
+            echo "::notice title=La base est à jour::0030 à 0035, toutes collées"
+          fi

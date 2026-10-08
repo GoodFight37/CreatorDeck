@@ -987,8 +987,11 @@ curl -s -X POST "https://<projet>.supabase.co/rest/v1/rpc/schema_versions" \
 C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
 existantes), donc son absence ne se voyait nulle part ailleurs. Le workflow
-`.github/workflows/prod-check.yml` interroge la même fonction et pose la réponse
-dans le journal du run.
+`.github/workflows/prod-check.yml` interroge la même fonction et écrit le verdict
+en clair dans le journal du run — une ligne `0030` → `0035` par migration,
+`collée` ou `ABSENTE`, puis ce qu'il reste à coller, ou « la base est à jour ».
+Il se réveille quand ce fichier change (une poussée de code ne le déclenche pas)
+et depuis l'onglet Actions (`workflow_dispatch`).
 
 ### Le direct (statut EN LIVE)
 
