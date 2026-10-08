@@ -30,6 +30,12 @@ moteur local tire les cartes. L'APK et le site distribués, eux, sont compilés
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
 Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 
+> **Tu es une IA, ou un relecteur pressé ?** Commence par
+> [`docs/perimetre.md`](docs/perimetre.md) : ce que ce dépôt attend de toi, et
+> **ce qui a déjà été refusé** — avec la raison, pour ne pas rouvrir un débat
+> tranché. Le tableau du suivi est **daté et à jour**, du plus récent au plus
+> ancien.
+
 ## Prérequis
 
 - Node.js ≥ 20
@@ -98,6 +104,7 @@ détail est dans les docs citées, jamais seulement dans ce tableau.
 | 7 | Complétion par famille | **livré** | `docs/cloud-supabase.md` § « La complétion par famille » |
 | 8 | Classement par famille | **livré** | `docs/cloud-supabase.md` § « Le classement par famille » |
 | 9 | Carnet de notifications | **livré** | `src/lib/social/inbox.ts`, `src/components/notifications-sheet.tsx` |
+| 11.28 | **Une porte d'entrée pour les IA et les relecteurs** (8 octobre 2026) : une relecture externe a reproposé cinq choses déjà tranchées (i18n, analytics, découpage du JavaScript, partage automatique, un troisième transport réseau) et affirmé que le filet de sécurité n'existait pas avant qu'on l'écrive — parce que **les décisions de périmètre n'étaient écrites nulle part**, seulement dans les échanges. `docs/perimetre.md` les rassemble : le jeu en trois phrases (l'APK est le jeu, GitHub est le bac), les règles non négociables (le téléphone d'abord, le serveur décide, quatre interdits d'architecture, les règles en double TS/SQL, on vérifie en lançant, les noms visibles, jamais « hors ligne », français, un seul écrivain), la table de **ce qui est refusé et pourquoi**, et comment vérifier une affirmation sur la base soi-même (`schema_versions()`, `401`/`42501` = présente). `AGENTS.md` et `CLAUDE.md` à la racine y renvoient : ce sont les fichiers que les outils lisent d'eux-mêmes. Corrigé au passage : le README se contredisait sur les jetons (« calculés sur l'appareil » soixante lignes sous « le solde vit au serveur »). | **livrée** | `docs/perimetre.md`, `AGENTS.md`, `CLAUDE.md`, `README.md` |
 | 11.27 | **Le filet de sécurité — et une mesure qui évite un faux chantier** (8 octobre 2026) : `ErrorBoundary` (nouveau) — sans lui, une exception dans **un** composant faisait tomber tout l'arbre React : écran blanc, sans message, sans recours. Maintenant la page dit ce qui s'est passé (« L'écran a planté »), rassure sur la partie ("ta partie n'a pas bougé"), propose **Relancer** et **Copier le détail** ; l'overlay 16:9 a le même filet en **discret** (une ligne en bas du cadre : il passe devant le public, la panne se voit dans OBS). Vérifié par le banc (3 tests). **Et le point le plus discuté de la revue suivante — le découpage du JavaScript — est mesuré puis refusé** : le démarrage analyse **1 075 Ko**, la mise en chargement différé des **11 feuilles secondaires** en retire **85 Ko (8 %)** en échange de **13 fichiers de plus** et d'un premier appui qui n'est plus instantané — l'analyse et la compilation des 1 075 Ko prennent **34 ms** ici (V8, le moteur du WebView). La même passe écrit **la cadence du catalogue** (`docs/catalogue-twitch.md`) : les deux copies — celle de l'APK et celle de la base — doivent avancer ensemble, et dans le bon ordre (**coller `0003_catalogue.sql` d'abord**, distribuer l'APK ensuite) ; l'inverse rend la sauvegarde « suspecte » et sort le joueur du classement. Le détail de la mesure est écrit ici pour ne pas rouvrir le chantier. | **livrée** | `src/components/error-boundary.tsx`, `src/app/{page,overlay/page}.tsx`, `src/app/globals.css`, `docs/catalogue-twitch.md` |
 | 11.26 | **« Toi » en trois familles, et les taux en lecture seule** (8 octobre 2026) : le menu de l'onglet Toi passe de deux listes à **trois familles** — **Compte** (tout ce qui vit en ligne : compte, classement, fiche publique, amis, hôtel, arène, Last Pack, notifications), **Progression** (objectifs et saisons, taux de drop) et **Réglages** (thème, son, reflets) — le bouton rouge de remise à zéro restant seul en bas. Onze lignes à la suite se lisaient mal sur un téléphone, et une ligne qu'on ne trouve pas est une ligne qui n'existe pas. Même mouvement dans l'écran **Taux de drop**, devenu une page de lecture seule : le bonus Direct et le plancher de malchance sont désormais des **tableaux** (créateur qui streame ×1,5 · variante Live 20 % par carte · 12 boosters sans Légendaire · garantie au 5ᵉ slot · ton compteur) au lieu de paragraphes, l'introduction tient en une phrase, et les notes longues restent dans `pull-rates.json` — plus aucun texte ne répète ce que le tableau dit. Les styles des deux boîtes supprimées partent avec elles. Aucun chiffre n'a bougé : ils sont toujours calculés depuis le fichier qui sert au tirage. | **livrée** | `src/components/profile-view.tsx`, `src/components/pack-odds-sheet.tsx`, `src/app/globals.css` |
 | 11.25 | **Les commentaires ne racontent plus l'histoire du développement** (8 octobre 2026) : les dates des décisions, des défauts et des correctifs quittent le code — « découpé le 7 octobre 2026 », « défaut du 7 octobre », « le joueur a rapporté le 7 octobre » — pour ne garder que **ce que le code doit faire et pourquoi**. Les mots du joueur restent quand ils *sont* l'exigence (« quand j'effleure le booster ça l'ouvre directement ») ; les dates qui sont des **données** restent aussi (semaine d'arène, changement d'heure, code promo). Le journal, lui, garde ses dates : c'est son métier. | **livrée** | `src/lib/**`, `src/hooks/**`, `src/components/**` |
@@ -308,6 +315,8 @@ scripts/                 génération des données et des avatars (scripts/lib/ 
                          vérificateur des migrations (verify-supabase-migrations.mjs)
 e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont le tirage
                          qui survit à un rechargement de page)
+docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qui
+                         est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
 supabase/migrations/     la pile SQL, `0001` → `0035` (réelles, rejouables, vérifiées)
@@ -651,9 +660,9 @@ par la première version de `0027` (`_wallet_apply` à cinq paramètres : deux
 fonctions identiques à l'appel, et le booster ne s'ouvrait plus). `0030` ajoute
 la **Gold à 1 %** sur une Légendaire, hors « Perfect ».
 
-Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau**,
-les **sabliers** et les **jetons**. Ils ne valent rien pour un autre joueur ; le
-contenu des boosters, les cartes et les points, eux, sont serveur.
+Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau** et
+les **sabliers**. Ils ne valent rien pour un autre joueur ; le contenu des
+boosters, les cartes, les points **et les jetons** (`0035`), eux, sont serveur.
 
 Le **plancher de malchance** et la **série de jours**, eux, sont calculés des
 deux côtés — et le serveur ne croit personne sur parole : il les relit depuis
