@@ -36,6 +36,23 @@ export type PointsOutcome =
   | { status: "refused"; message: string };
 
 /** Ce que « Tout recycler » a réellement obtenu : des points, et combien de cartes. */
+/**
+ * Ce que rend l'encaissement d'une séance du Tribunal des Bannis.
+ *
+ * Même dessin que les autres gestes, avec trois champs de plus que l'écran
+ * affiche tels quels : le **karma** recalculé, le **multiplicateur** (Direct ou
+ * non), et si la séance **payait**. En ligne, les trois viennent du serveur.
+ */
+export type TribunalPointsOutcome = {
+  status: "done" | "refused";
+  message: string;
+  /** Points réellement versés (0 si la séance ne payait pas, ou était payée). */
+  delta: number;
+  karma: number;
+  multiplicateur: number;
+  paye: boolean;
+};
+
 export type BulkPointsOutcome = {
   status: "done" | "refused";
   message?: string;
@@ -56,6 +73,18 @@ export function usePoints(): {
   craft: (slug: string, withTokens: boolean) => Promise<PointsOutcome>;
   claimMilestone: (id: string) => Promise<PointsOutcome>;
   claimSeason: (id: string) => Promise<PointsOutcome>;
+  /**
+   * Encaisse une séance du Tribunal des Bannis. `points` est ce que le moteur
+   * local a calculé (affiché au bilan) ; en ligne, le serveur recalcule tout et
+   * c'est **son** chiffre qui est versé.
+   */
+  claimTribunal: (seance: {
+    day: string;
+    verdicts: Record<string, string>;
+    login: string | null;
+    karma: number;
+    points: number;
+  }) => Promise<TribunalPointsOutcome>;
 } {
   const cloud = useCloud();
   // Un compte connecté sur un build avec cloud : c'est le serveur qui tient la
@@ -196,8 +225,80 @@ export function usePoints(): {
     [noAccount, serverSide, signedOut],
   );
 
+  /**
+   * Le Tribunal des Bannis : **une séance par journée de jeu**, payée par le
+   * serveur quand un compte est connecté.
+   *
+   * Le client n'envoie jamais un montant : la journée, les verdicts rendus et le
+   * login du créateur qui préside. Le serveur recalcule le karma depuis sa
+   * propre copie de la vérité (`0042_tribunal.sql`) et paie — ou pas. Hors
+   * ligne et sans compte, le moteur local fait la même chose avec le karma
+   * affiché, et la séance est scellée pareil : on ne la repropose pas deux fois.
+   */
+  const claimTribunal = useCallback(
+    async (seance: {
+      day: string;
+      verdicts: Record<string, string>;
+      login: string | null;
+      karma: number;
+      points: number;
+    }): Promise<TribunalPointsOutcome> => {
+      if (signedOut) {
+        return {
+          status: "refused",
+          message: noAccount("faire payer ta séance").message ?? "Connecte-toi pour faire payer ta séance.",
+          delta: 0,
+          karma: seance.karma,
+          multiplicateur: 1,
+          paye: false,
+        };
+      }
+      if (!serverSide) {
+        // Le moteur local : il verse ce que le bilan annonce, puis scelle la
+        // séance. Une séance sous le seuil ne paie pas, mais elle est jugée —
+        // elle est donc marquée, pour ne pas être reproposée toute la journée.
+        if (seance.points > 0) gameStore.claimTribunal(seance.points);
+        else gameStore.markTribunalClaimed();
+        return {
+          status: "done",
+          message:
+            seance.points > 0
+              ? `Séance payée : +${seance.points} points.`
+              : `Karma ${seance.karma} % : en dessous du seuil, la séance ne paie pas.`,
+          delta: seance.points,
+          karma: seance.karma,
+          multiplicateur: 1,
+          paye: seance.points > 0,
+        };
+      }
+      const outcome = await cloudStore.tribunalRecompense(
+        seance.day,
+        seance.verdicts,
+        seance.login,
+      );
+      return outcome.status === "done"
+        ? {
+            status: "done",
+            message: outcome.message,
+            delta: outcome.delta,
+            karma: outcome.karma,
+            multiplicateur: outcome.multiplicateur,
+            paye: outcome.paye,
+          }
+        : {
+            status: "refused",
+            message: outcome.message,
+            delta: 0,
+            karma: seance.karma,
+            multiplicateur: 1,
+            paye: false,
+          };
+    },
+    [noAccount, serverSide, signedOut],
+  );
+
   return useMemo(
-    () => ({ serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason }),
+    () => ({ serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason, claimTribunal }),
     [serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason],
   );
 }

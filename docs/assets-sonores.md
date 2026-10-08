@@ -20,7 +20,7 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 | `card-draw.wav` | `Card and Board/card_draw_1` | une carte se retourne (révélation), un paquet se déchire |
 | `card-fan.wav` | `Card and Board/card_fan` | *en réserve* : faisait glisser une poignée de cartes |
 | `card-turn.wav` | `Card and Board/card_fan_2` | une page du Binder se tourne — **le seul son de déplacement qui reste**, et il est voulu : on tourne un carton |
-| `chip-place.wav` | `Card and Board/chips_place_1` | une carte qui claque (le « bang » d'une Épique ou mieux) |
+| `chip-place.wav` | `Card and Board/chips_place_1` | une carte qui claque (le « bang » d'une Épique ou mieux), et le **tampon** qui frappe le papier quand le Tribunal accorde la grâce |
 | `click.wav` | `UI/click_double_on` | *en réserve* : le clic feutré des onglets — **plus joué** (voir « Se déplacer ne sonne pas ») |
 | `select.wav` | `UI/select_1` | une sélection qui compte (un filtre du Binder, un cran de volume) |
 | `menu-open.wav` | `UI/toggle_on` | *en réserve* : une feuille s'ouvrait — **plus joué** |
@@ -43,6 +43,20 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 > change, c'est qu'ils ne sont **plus préchargés** au démarrage (`SFX_USUELS`) :
 > rien ne se télécharge pour un son que personne n'entend.
 
+## Le Tribunal : deux sons d'objet, synthétisés (8 octobre 2026)
+
+Le Tribunal des Bannis voulait **un tampon** pour la grâce et **un marteau** pour
+le ban. Ni l'un ni l'autre n'existe dans le pack d'effets, et plutôt que d'aller
+chercher un fichier de plus — donc une licence de plus, et un inventaire à
+refaire — ils sont **synthétisés** avec le même moteur que les gammes de rareté
+(`gracePlan()` : le bois qui tape, puis le timbre ; `gavelPlan()` : un seul coup
+très grave qui descend). Conséquence utile : ils passent par le **nœud de sortie
+commun**, donc l'interrupteur *Son* et les trois crans de **Volume** les couvrent
+sans rien ajouter, et un banc d'écrans vérifie les deux — ça sonne, et ça se tait.
+
+Le seul bruitage du pack qu'on entend au Tribunal est `chip-place`, sous le
+tampon : c'est le papier qu'on frappe.
+
 ## Se déplacer ne sonne pas (8 octobre 2026)
 
 Deuxième retour du joueur, sur les sons : « enlève le son quand on clique sur des
@@ -62,8 +76,9 @@ déplacement, partis à la demande du joueur.
 
 Ce qui **sonne** encore, et seulement ça : ouvrir un booster (le geste de
 déchirure, puis le pop), une carte qui se révèle (le papier **plus** la gamme de
-sa rareté), le « bang » d'une Épique ou mieux, le refus d'une carte, et une
-récompense encaissée (les pièces). Rien d'autre : **le son ne dit que ce qu'on
+sa rareté), le « bang » d'une Épique ou mieux, le refus d'une carte, une
+récompense encaissée (les pièces), et — depuis le Tribunal des Bannis — le
+**tampon** d'une grâce accordée et le **marteau** d'un ban maintenu. Rien d'autre : **le son ne dit que ce qu'on
 vient de faire**, jamais où l'on va ni où l'on regarde.
 
 C'est vérifié **pour de vrai**, pas par intention : le banc d'écrans instrumente

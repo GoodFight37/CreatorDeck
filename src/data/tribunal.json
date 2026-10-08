@@ -1,0 +1,360 @@
+{
+  "tribunal": {
+    "titre": "Le Tribunal des Bannis",
+    "accroche": "Cinq appels par jour. Ton pouce fait jurisprudence."
+  },
+  "regles": {
+    "dossiersParSeance": 5,
+    "karmaPourRecompense": 60,
+    "pointsParSeance": 40,
+    "multiplicateurDirect": 2,
+    "note": "Le karma est le pourcentage de verdicts conformes. En dessous de 60 %, la seance ne paie pas : trois dossiers sur cinq, c'est le minimum pour pretendre a la gratification. Le multiplicateur Direct s'applique quand le createur qui preside est en live."
+  },
+  "badges": [
+    { "id": "sub_12m", "label": "Abo 12 mois", "ton": "ancien" },
+    { "id": "prime", "label": "Prime", "ton": "prime" },
+    { "id": "mod", "label": "Modo", "ton": "modo" },
+    { "id": "vip", "label": "VIP", "ton": "vip" },
+    { "id": "new_account", "label": "Nouveau compte", "ton": "neuf" }
+  ],
+  "dossiers": [
+    {
+      "id": "t-01",
+      "username": "xX_JeanKev_Xx",
+      "badges": ["sub_12m", "prime"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "MAIS PRENDS LA PORTE DE GAUCHE ESPÈCE DE PAIN PERDU",
+      "appealText": "Douze mois d'abonnement, jamais le moindre avertissement, et hier soir j'ai tapé plus fort que mon clavier. Je présente mes excuses au streamer et à son chat, j'ai honte et je referai plus.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "le retour du roi 🍞",
+        "onBan": "douze mois pour finir comme ça…"
+      }
+    },
+    {
+      "id": "t-02",
+      "username": "DarkSasuke93",
+      "badges": ["new_account"],
+      "banReason": "Spoil de fin",
+      "chatMessage": "ATTENDS T'AS VU LA FIN ? IL ÉTAIT MORT DEPUIS LE DÉBUT 😂",
+      "appealText": "C'est pas moi, c'est mon petit frère. Il a neuf ans, il sait même pas lire le chat, et il confond la télé avec mon clavier.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le petit frère a encore frappé",
+        "onBan": "personne ne pleure un compte de trois heures"
+      }
+    },
+    {
+      "id": "t-03",
+      "username": "SardocheDuSel",
+      "badges": ["sub_12m", "vip"],
+      "banReason": "Troll",
+      "chatMessage": "ton gameplay c'est comme ta déco : ça donne envie de partir",
+      "appealText": "C'est mon personnage. Les gens viennent pour le sel, et toi tu me remercies même pas de remplir la salle ?",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le sel a gagné, encore",
+        "onBan": "on respire enfin"
+      }
+    },
+    {
+      "id": "t-04",
+      "username": "KikiLaTornade",
+      "badges": ["prime"],
+      "banReason": "Spam majuscules",
+      "chatMessage": "GGGGGGGGGGGG WESH LE HYPE TRAIN",
+      "appealText": "C'était le train de hype ! Tout le monde criait dans le chat, j'ai juste crié plus fort que les autres pendant huit secondes.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "G.",
+        "onBan": "ban pour avoir été content, belle époque"
+      }
+    },
+    {
+      "id": "t-05",
+      "username": "MaitreYodaDu321",
+      "badges": ["mod"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "arrête de backpedal j'ai raison je suis modo depuis 2019",
+      "appealText": "Je connais la méta mieux que lui. Un modo qui laisse couler une erreur, c'est un modo qui trahit sa propre chaîne.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "la modération a encore gagné",
+        "onBan": "le marteau a frappé la bonne tête"
+      }
+    },
+    {
+      "id": "t-06",
+      "username": "LoulouDesCrepes",
+      "badges": ["new_account"],
+      "banReason": "Lien louche",
+      "chatMessage": "skins gratos ici les gars -> crepes-officiel[.]fr",
+      "appealText": "C'est mon blog de crêpes au sarrasin. J'ai jamais eu un seul visiteur et vous me faites passer pour un voleur de comptes.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "même les crêpes sont suspectes maintenant",
+        "onBan": "le sarrasin n'excuse pas tout"
+      }
+    },
+    {
+      "id": "t-07",
+      "username": "Nath_Le_Retour",
+      "badges": ["sub_12m"],
+      "banReason": "Troll",
+      "chatMessage": "first",
+      "appealText": "Je mets « first » sur chaque live depuis quatre ans. Ce n'est pas du troll, c'est du folklore, et le streamer me reconnaît à ça.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "FIRST (au deuxième degré)",
+        "onBan": "quatre ans de tradition rayés d'un coup"
+      }
+    },
+    {
+      "id": "t-08",
+      "username": "GrosseTension42",
+      "badges": [],
+      "banReason": "Spam majuscules",
+      "chatMessage": "RENDS LE DON RENDS LE DON RENDS LE DON RENDS LE DON",
+      "appealText": "Il a pris cinquante balles et il a fait une manche à zéro. Moi j'appelle ça du vol avec portefeuille, et je l'ai écrit en majuscules pour qu'on me lise.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "les cinquante balles restent parties",
+        "onBan": "le don ne sert pas de bouclier"
+      }
+    },
+    {
+      "id": "t-09",
+      "username": "PrincesseChadou",
+      "badges": ["vip", "prime"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "PRENDS LE SNIPER",
+      "appealText": "Un seul message, quatre mots, zéro insulte. On appelle ça un conseil tactique, pas une agression.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "quatre mots, aucun mort",
+        "onBan": "même un conseil coûte un ban ici"
+      }
+    },
+    {
+      "id": "t-10",
+      "username": "TontonRickRoll",
+      "badges": ["sub_12m"],
+      "banReason": "Spoil de fin",
+      "chatMessage": "alors : elle meurt à la fin. voilà. bisous",
+      "appealText": "Techniquement je n'ai rien spoilé du tout : c'est une série où tout le monde meurt, tout le monde le sait, et je l'ai dit avec des bisous.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "les bisous n'effacent pas la fin",
+        "onBan": "bisous quand même"
+      }
+    },
+    {
+      "id": "t-11",
+      "username": "Biscuit_Sale",
+      "badges": ["new_account"],
+      "banReason": "Troll",
+      "chatMessage": "ta maman elle joue mieux que toi et elle est même pas là",
+      "appealText": "Première fois que je viens et direct un ban ? Pour une blague de cour de récré ? J'ai même pas insulté le jeu.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "la cour de récré a gagné",
+        "onBan": "la famille reste en dehors du chat"
+      }
+    },
+    {
+      "id": "t-12",
+      "username": "Lilou_Prime",
+      "badges": ["prime"],
+      "banReason": "Lien louche",
+      "chatMessage": "venez farm des points ici => cl1ck-grat1s[.]top",
+      "appealText": "Je voulais seulement aider les gens à avoir des cadeaux. Je n'ai rien pris à personne, j'ai juste partagé le bon plan.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le bon plan menait vers un formulaire",
+        "onBan": "les bons plans ne demandent jamais le mot de passe"
+      }
+    },
+    {
+      "id": "t-13",
+      "username": "KevDuMarteau",
+      "badges": ["sub_12m", "mod"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "JE TE DIS DE RECULEEEER",
+      "appealText": "D'accord, j'ai crié. Mais c'est la troisième fois qu'on me le demande, il allait mourir, et mon job de modo c'est d'empêcher ça.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le modo a encore le dernier mot",
+        "onBan": "un modo qui crie n'est plus un modo"
+      }
+    },
+    {
+      "id": "t-14",
+      "username": "FanDePandas",
+      "badges": ["sub_12m"],
+      "banReason": "Spam majuscules",
+      "chatMessage": "PANDAS PANDAS PANDAS PANDAS PANDAS PANDAS PANDAS",
+      "appealText": "Un message par minute pendant quarante minutes, à cause du décompte des dons. C'est de l'enthousiasme mal cadré, pas de la méchanceté.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "quarante minutes de pandas, pardonné",
+        "onBan": "les pandas ont besoin de modération eux aussi"
+      }
+    },
+    {
+      "id": "t-15",
+      "username": "Chaussette_Off",
+      "badges": ["vip"],
+      "banReason": "Troll",
+      "chatMessage": "on s'ennuie",
+      "appealText": "C'est vrai, non ? Personne n'a rien écrit pendant quatre minutes, je l'ai dit pour tout le monde, à voix haute, gratuitement.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "il a dit tout haut ce qu'on pensait tout bas",
+        "onBan": "l'ennui est désormais un délit"
+      }
+    },
+    {
+      "id": "t-16",
+      "username": "MomoLeCurieux",
+      "badges": ["new_account"],
+      "banReason": "Spoil de fin",
+      "chatMessage": "moi je l'ai déjà vue cette série et franchement la saison 3 est nulle",
+      "appealText": "J'ai spoilé une saison qu'on ne regarde même pas en direct. Où est la victime ? Où est le corps ?",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "la saison 3 n'a toujours pas de défenseur",
+        "onBan": "le spoil n'a pas besoin de victime pour exister"
+      }
+    },
+    {
+      "id": "t-17",
+      "username": "ChefGordonRage",
+      "badges": [],
+      "banReason": "Backseat agressif",
+      "chatMessage": "T'AS BRÛLÉ LE RIZ ENCORE UNE FOIS ESPÈCE DE",
+      "appealText": "Le riz était calciné. Quelqu'un devait le dire, je l'ai dit fort, et j'ai arrêté ma phrase avant le mot.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le riz était effectivement calciné",
+        "onBan": "on ne crie pas dans une cuisine"
+      }
+    },
+    {
+      "id": "t-18",
+      "username": "TataSimone63",
+      "badges": ["prime"],
+      "banReason": "Lien louche",
+      "chatMessage": "regardez ce que j'ai trouvé : https://pas-un-piege.gouv.fr-connexion.xyz/login",
+      "appealText": "Le site avait un cadenas vert, madame. Un cadenas VERT. Ça veut dire que c'est sécurisé, mon petit-fils me l'a expliqué.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "même Tata Simone sait poster des liens",
+        "onBan": "le cadenas vert ne veut rien dire, Tata"
+      }
+    },
+    {
+      "id": "t-19",
+      "username": "LeRoiDuCanap",
+      "badges": ["sub_12m"],
+      "banReason": "Troll",
+      "chatMessage": "je regarde depuis le canapé et je juge",
+      "appealText": "Ma chaîne préférée, mon canapé, et une opinion. C'est le contrat de base du live, signé en 2021.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "le canapé rend son verdict",
+        "onBan": "le canapé est désormais hors la loi"
+      }
+    },
+    {
+      "id": "t-20",
+      "username": "SebEnColere",
+      "badges": [],
+      "banReason": "Spam majuscules",
+      "chatMessage": "POURQUOI TU COUPES LE MIC ? POURQUOI TU COUPES LE MIC ? POURQUOI TU COUPES LE MIC ?",
+      "appealText": "J'ai cru qu'on m'avait volé ma question. Je l'ai reposée quinze fois, poliment, en criant très fort pour couvrir le bruit du jeu.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "la question a enfin été posée",
+        "onBan": "quinze fois, ce n'est plus une question"
+      }
+    },
+    {
+      "id": "t-21",
+      "username": "PixelDeLune",
+      "badges": ["mod", "sub_12m"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "non. non. non. non. non.",
+      "appealText": "Cinq messages de deux lettres, aucun n'est une insulte, aucun n'est en majuscules. Techniquement, c'est irréprochable.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "le désaccord minimaliste a survécu",
+        "onBan": "même « non » est de trop"
+      }
+    },
+    {
+      "id": "t-22",
+      "username": "GraineDeTournesol",
+      "badges": ["new_account"],
+      "banReason": "Spoil de fin",
+      "chatMessage": "le méchant c'est le chat depuis le début lol",
+      "appealText": "Le chat ? Vraiment ? J'ai spoilé une blague vieille de trois saisons, le deuil est fait, les gens sont passés à autre chose.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "le chat accusé à tort",
+        "onBan": "un spoileur reste un spoileur"
+      }
+    },
+    {
+      "id": "t-23",
+      "username": "VieuxBison",
+      "badges": ["sub_12m", "vip"],
+      "banReason": "Troll",
+      "chatMessage": "je suis là pour la pub et je repars",
+      "appealText": "Je regarde depuis six ans, je paie mon abonnement tous les mois, je crois que j'ai le droit de râler sur les coupures publicitaires.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "le bison rumine en paix",
+        "onBan": "six ans d'abo, zéro indulgence"
+      }
+    },
+    {
+      "id": "t-24",
+      "username": "NiniLaFoudre",
+      "badges": ["prime"],
+      "banReason": "Backseat agressif",
+      "chatMessage": "UTILISE LE SORT UTILISE LE SORT UTILISE LE SORT",
+      "appealText": "Il avait le sort. Il ne l'a pas utilisé. J'ai perdu quinze ans de vie en direct, et je n'ai insulté absolument personne.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "les quinze ans de vie ne sont pas remboursés quand même",
+        "onBan": "crier un sort, c'est encore backseat"
+      }
+    },
+    {
+      "id": "t-25",
+      "username": "ClicDroitDansLeMur",
+      "badges": ["new_account"],
+      "banReason": "Lien louche",
+      "chatMessage": "FREE V-BUCKS ➡️➡️➡️ tinyurl[.]com/mes-cadeaux",
+      "appealText": "Je suis nouveau, je pensais que c'était un cadeau de la chaîne vu que tout le monde en parlait dans le chat.",
+      "verdictAttendu": "ban",
+      "chatReaction": {
+        "onDeban": "les V-Bucks imaginaires font des dégâts réels",
+        "onBan": "le seul cadeau, c'était le ban"
+      }
+    },
+    {
+      "id": "t-26",
+      "username": "MamanOurse",
+      "badges": ["sub_12m"],
+      "banReason": "Spam majuscules",
+      "chatMessage": "BON ANNIVERSAIRE !! 🎉 BON ANNIVERSAIRE !! 🎉 BON ANNIVERSAIRE !! 🎉",
+      "appealText": "Douze messages pour les douze ans de sa fille, dans le live d'anniversaire. Je ne regrette rien et je recommence l'année prochaine.",
+      "verdictAttendu": "deban",
+      "chatReaction": {
+        "onDeban": "joyeux anniversaire la petite 🎂",
+        "onBan": "même les bougies passent au marteau"
+      }
+    }
+  ]
+}

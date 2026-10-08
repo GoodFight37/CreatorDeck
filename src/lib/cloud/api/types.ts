@@ -82,6 +82,22 @@ export type ArenaBoard = {
   }>;
 };
 
+/**
+ * Ce que le serveur répond pour une séance du Tribunal des Bannis.
+ *
+ * `gained` est ce qui a **réellement** bougé : une journée déjà payée vaut 0,
+ * et l'écran n'annonce alors aucun gain. `karma` et `multiplicateur` sont
+ * recalculés côté serveur — l'écran les affiche, il ne les décide pas.
+ */
+export type TribunalRecompense = {
+  paye: boolean;
+  karma: number;
+  seuil: number;
+  multiplicateur: number;
+  gained: number;
+  points: number;
+};
+
 export type ArenaClaim = {
   week: string;
   alreadyClaimed: boolean;

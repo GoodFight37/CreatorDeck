@@ -22,6 +22,7 @@ import { AtelierView } from "@/components/atelier-view";
 
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { RevealOverlay } from "@/components/reveal-overlay";
+import { TribunalView, type TribunalPayout } from "@/components/tribunal-view";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
@@ -36,7 +37,7 @@ import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
 import { minimizeApp, useAndroidBack } from "@/hooks/use-android-back";
 import { useBackHandler } from "@/hooks/use-back-handler";
-import { useLivePolling } from "@/hooks/use-live";
+import { useLive, useLivePolling } from "@/hooks/use-live";
 import { PACKS } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 
@@ -48,6 +49,8 @@ import {
   preloadSamples,
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
+import { gameDay } from "@/lib/progression";
+import { dossiersDuJour } from "@/lib/tribunal";
 
 import { THEME_VAR_NAMES } from "@/lib/cosmetics";
 import { gameStore } from "@/lib/game-store";
@@ -137,6 +140,9 @@ export function CreatorDeckApp() {
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
   useLivePolling();
+  // Le direct, lu dans le cache : il dit si le créateur qui préside le Tribunal
+  // est à l'antenne (badge rouge, et multiplicateur de la séance).
+  const live = useLive();
   // Les bruitages du TCG sont chargés une fois pour toutes : le premier
   // retournement de carte ne sera pas muet. (Le Studio a sa propre liste, il la
   // charge à l'ouverture de son onglet.)
@@ -167,6 +173,7 @@ export function CreatorDeckApp() {
   const [lastPackOpen, setLastPackOpen] = useState(false);
   const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
+  const [tribunalOpen, setTribunalOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -251,6 +258,7 @@ export function CreatorDeckApp() {
   useBackHandler(notificationsOpen, fermerFeuille(setNotificationsOpen));
   useBackHandler(wishlistOpen, fermerFeuille(setWishlistOpen));
   useBackHandler(arenaOpen, fermerFeuille(setArenaOpen));
+  useBackHandler(tribunalOpen, fermerFeuille(setTribunalOpen));
   useBackHandler(lastPackOpen, fermerFeuille(setLastPackOpen));
   useBackHandler(marketOpen, fermerFeuille(setMarketOpen));
   useBackHandler(friendsOpen, fermerFeuille(setFriendsOpen));
@@ -284,6 +292,23 @@ export function CreatorDeckApp() {
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
+
+  /**
+   * Le Tribunal du jour, en un coup d'œil : combien de dossiers attendent, et
+   * si la séance est déjà close.
+   *
+   * Le tirage est recalculé ici **pour l'affichage seulement** : le Tribunal,
+   * lui, se retire tout seul (même fonction, même journée, même joueur), donc
+   * les deux ne peuvent pas se contredire.
+   */
+  const tribunal = useMemo(() => {
+    const jour = gameDay(now);
+    if (!state) return { restants: 5, close: false };
+    const seance = state.tribunal.day === jour ? state.tribunal : null;
+    const rendus = seance ? Object.keys(seance.verdicts).length : 0;
+    const total = dossiersDuJour(jour, state.playerId).length;
+    return { restants: Math.max(0, total - rendus), close: rendus >= total && total > 0 };
+  }, [state, now]);
 
   // Un seul endroit décide qui tire (le serveur ou l'appareil) : l'écran ne
   // fait qu'afficher ce qui revient — l'overlay 16:9 passe par le même module.
@@ -515,6 +540,9 @@ export function CreatorDeckApp() {
             onShowAtelier={() => setTab("atelier")}
             onShowArena={ouvrirFeuille(setArenaOpen)}
             onOpenScene={() => void handleOpenScenePack()}
+            onShowTribunal={ouvrirFeuille(setTribunalOpen)}
+            tribunalRestants={tribunal.restants}
+            tribunalClose={tribunal.close}
             opening={opening}
             usingHourglass={usingHourglass}
             sceneBusy={sceneOpening}
@@ -664,6 +692,24 @@ export function CreatorDeckApp() {
           themes={game.themes}
           onEquip={handleEquipTheme}
           onClose={fermerFeuille(setThemeOpen)}
+        />
+      ) : null}
+      {tribunalOpen && state ? (
+        <TribunalView
+          playerId={state.playerId}
+          seance={state.tribunal}
+          cards={state.cards}
+          live={live}
+          now={now}
+          onVerdict={(dossierId, verdict) => gameStore.recordVerdict(dossierId, verdict)}
+          onClaim={async (request): Promise<TribunalPayout> => {
+            // Le versement passe par `use-points` : le serveur paie quand un
+            // compte est connecté, l'appareil sinon — jamais les deux.
+            const outcome = await points.claimTribunal(request);
+            if (outcome.status === "refused") showError(outcome.message);
+            return { message: outcome.message, delta: outcome.delta };
+          }}
+          onClose={fermerFeuille(setTribunalOpen)}
         />
       ) : null}
       {drawnCards.length ? (

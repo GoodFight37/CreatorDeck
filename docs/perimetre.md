@@ -93,7 +93,8 @@ Aucune affirmation sur le serveur ne se croit sur parole, la mienne comprise :
 
 - **ce qui est collé** : `schema_versions()`, lisible **sans compte**
   (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — les `true` attendus
-  pour `0030` → `0039`, puis `0040` et `0041` dès que le joueur les a posées
+  pour `0030` → `0039`, puis `0040`, `0041` et `0042` dès que le joueur les a
+  posées
   (`npx supabase db push`) ;
 - **une fonction existe** : `401`/`42501` = présente mais réservée au rôle de
   service ; `404`/`PGRST202` = absente.

@@ -90,6 +90,7 @@ export type CloudStoreActions = {
   craftWithTokens: ReturnType<typeof walletActions>["craftWithTokens"];
   claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];
   claimSeason: ReturnType<typeof walletActions>["claimSeason"];
+  tribunalRecompense: ReturnType<typeof walletActions>["tribunalRecompense"];
   redeemPromoCode: ReturnType<typeof packActions>["redeemPromoCode"];
   resetProgress: ReturnType<typeof packActions>["resetProgress"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];

@@ -1,11 +1,13 @@
 import type { CloudStoreContext } from "./context";
-import type { CloudActionOutcome } from "./types";
+import type { CloudActionOutcome, TribunalOutcome } from "./types";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import {
   applyTokens,
   applyWallet,
   claimMilestone as engineClaimMilestone,
   claimSeason as engineClaimSeason,
+  claimTribunal as engineClaimTribunal,
+  markTribunalClaimed as engineMarkTribunalClaimed,
   craftCreator as engineCraftCreator,
   getGameView,
   recycleCard as engineRecycleCard,
@@ -204,6 +206,62 @@ export function walletActions(ctx: CloudStoreContext) {
         const refusal = ctx.cloudRefusal(error, "Rejoindre ce créateur est impossible.");
         ctx.publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
+      }
+    },
+
+    /**
+     * Encaisse une séance du Tribunal des Bannis (`0042_tribunal.sql`).
+     *
+     * Le client n'envoie ni les points ni le karma : la journée, les verdicts
+     * rendus, et le login du créateur qui préside. Le serveur recalcule la note
+     * depuis sa propre vérité et paie — une fois par journée de jeu, grâce à
+     * l'index unique du journal des mouvements.
+     *
+     * L'appareil ne fait que **suivre** : il marque la séance comme passée et
+     * adopte le solde du serveur. Si le serveur ne paie pas (karma trop bas,
+     * séance vide), rien n'est écrit et l'écran garde la main.
+     */
+    async tribunalRecompense(
+      day: string,
+      verdicts: Record<string, string>,
+      login: string | null,
+    ): Promise<TribunalOutcome> {
+      const ready = gate("faire payer ta séance");
+      if ("refusal" in ready) return ready.refusal;
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const result = await ready.api.tribunalRecompense(day, verdicts, login);
+        const local = ctx.deps.readState();
+        if (local) {
+          const now = ctx.deps.now();
+          // Ce que le serveur a **réellement** versé : 0 quand la journée
+          // était déjà payée — dans ce cas on ne fait que sceller la séance,
+          // sans ajouter les points une seconde fois.
+          const mirroir =
+            result.gained > 0
+              ? engineClaimTribunal(local, result.gained, now)
+              : engineMarkTribunalClaimed(local, now);
+          ctx.deps.applyState(applyWallet(mirroir, result.points, now));
+        }
+        await ctx.pushAfterServer().catch(() => undefined);
+        const message = !result.paye
+          ? `Karma ${result.karma} % : en dessous de ${result.seuil} %, la séance ne paie pas.`
+          : result.gained > 0
+            ? `Séance payée : +${result.gained} points${result.multiplicateur > 1 ? " (créateur en direct)" : ""}.`
+            : "Cette séance était déjà payée aujourd'hui.";
+        ctx.publish({ busy: false, message, isError: false });
+        return {
+          status: "done",
+          message,
+          delta: result.gained,
+          karma: result.karma,
+          multiplicateur: result.multiplicateur,
+          paye: result.paye,
+        };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "La récompense du Tribunal est indisponible.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal as Extract<TribunalOutcome, { status: "unavailable" }>;
       }
     },
 

@@ -271,6 +271,29 @@ export type CloudActionOutcome =
     };
 
 /**
+ * Résultat d'une séance du Tribunal des Bannis encaissée.
+ *
+ * Le karma et le multiplicateur viennent du **serveur** : l'écran les affiche,
+ * il ne les décide pas pour la récompense. `delta` est ce qui a réellement été
+ * versé — 0 si la journée était déjà payée, et l'écran n'annonce alors aucun
+ * gain.
+ */
+export type TribunalOutcome =
+  | {
+      status: "done";
+      message: string;
+      delta: number;
+      karma: number;
+      multiplicateur: number;
+      paye: boolean;
+    }
+  | {
+      status: "unavailable";
+      reason: "offline" | "no-session" | "not-configured" | "error";
+      message: string;
+    };
+
+/**
  * Résultat d'une action d'échange.
  *
  * `done` : le serveur a tranché et l'appareil s'est aligné. `unavailable` :

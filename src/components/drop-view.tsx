@@ -9,7 +9,7 @@
  */
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
-import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gem, Hourglass, Layers3, LoaderCircle, Radio, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
+import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, Radio, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
 
@@ -87,6 +87,9 @@ export function HomeView({
   onShowAtelier,
   onShowArena,
   onOpenScene,
+  onShowTribunal,
+  tribunalRestants,
+  tribunalClose,
   opening,
   usingHourglass,
   sceneBusy,
@@ -109,6 +112,12 @@ export function HomeView({
   onShowAtelier: () => void;
   /** La ligne d'arène mène à l'écran Arène (dépôt, draft, classement). */
   onShowArena: () => void;
+  /** Ouvre le Tribunal des Bannis (muet : on se déplace). */
+  onShowTribunal: () => void;
+  /** Dossiers encore à juger aujourd'hui (0 = séance terminée). */
+  tribunalRestants: number;
+  /** Vrai quand les cinq verdicts du jour ont été rendus. */
+  tribunalClose: boolean;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -444,6 +453,28 @@ export function HomeView({
             <ChevronRight size={14} />
           </button>
         ) : null}
+
+        {/* Le Tribunal des Bannis : l'accroche du jour. Le compte dit la
+            vérité — il reste tant d'appels à juger, et pas un de plus. */}
+        <button
+          type="button"
+          className={`pity-row tribunal-row${tribunalClose ? " done" : ""}`}
+          onClick={onShowTribunal}
+          aria-label={
+            tribunalClose
+              ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
+              : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
+          }
+        >
+          <Gavel size={14} />
+          <span>
+            Tribunal des Bannis ·{" "}
+            {tribunalRestants > 0
+              ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
+              : "séance close, bilan disponible"}
+          </span>
+          <ChevronRight size={14} />
+        </button>
 
         <div className="home-links">
           <button type="button" className="text-link" onClick={onShowMissions}>

@@ -22,7 +22,7 @@ import type {
 } from "@/lib/social/friends";
 import { CLOUD_SESSION_KEY, CloudError, REFRESH_MARGIN_MS, asRecord, messageFor, parseSession, type CloudCore } from "./core";
 import { repairMojibake } from "@/lib/cloud/mojibake";
-import type { ArenaBoard, ArenaClaim, ArenaDeposit, ArenaMine, CloudSession, LastPackLoss, LastPackShelf, LastPackSteal, LeaderboardMetric, LeaderboardRow, MarketListing, MarketPurchase, MarketSale, PlayerProfile, PlayerSearchResult, PushSaveResult, RemoteSaveRow, Trade, TradeCard, TradeListItem, TradeStatus } from "./types";
+import type { ArenaBoard, ArenaClaim, ArenaDeposit, ArenaMine, CloudSession, LastPackLoss, LastPackShelf, LastPackSteal, LeaderboardMetric, LeaderboardRow, MarketListing, MarketPurchase, MarketSale, PlayerProfile, PlayerSearchResult, PushSaveResult, RemoteSaveRow, Trade, TradeCard, TradeListItem, TradeStatus, TribunalRecompense } from "./types";
 import * as account from "./account";
 import * as pack from "./pack";
 import * as social from "./social";
@@ -40,6 +40,7 @@ import type {
 } from "./streamer";
 import * as wallet from "./wallet";
 import * as streamer from "./streamer";
+import * as tribunal from "./tribunal";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
@@ -973,5 +974,20 @@ export class CloudApi {
   /** Enregistre les cinq choix du draft : ils deviennent l'arène de la semaine. */
   async arenaDraftPick(lineup: string[]): Promise<ArenaDeposit> {
     return arena.arenaDraftPick(this.core, lineup);
+  }
+
+  /**
+   * Fait payer une séance du Tribunal par le serveur (`0042_tribunal.sql`).
+   *
+   * Le client envoie la journée, les verdicts et le login du créateur qui
+   * préside ; le serveur recalcule le karma et les points, et ne paie qu'une
+   * fois par journée de jeu.
+   */
+  async tribunalRecompense(
+    day: string,
+    verdicts: Record<string, string>,
+    login: string | null,
+  ): Promise<TribunalRecompense> {
+    return tribunal.tribunalRecompense(this.core, day, verdicts, login);
   }
 }

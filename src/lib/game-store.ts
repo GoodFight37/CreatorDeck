@@ -13,17 +13,21 @@ import {
   claimMissions as engineClaimMissions,
   claimSeason as engineClaimSeason,
   claimStreakJackpot as engineClaimStreakJackpot,
+  claimTribunal as engineClaimTribunal,
+  markTribunalClaimed as engineMarkTribunalClaimed,
   craftCreator as engineCraftCreator,
   equipTheme as engineEquipTheme,
   createInitialState,
   openPack as engineOpenPack,
   openScenePack as engineOpenScenePack,
+  recordVerdict as engineRecordVerdict,
   recycleCard as engineRecycleCard,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
   type LiveLogins,
   type StreakRewardGrant,
   type PlayerState,
+  type TribunalVerdict,
 } from "@/lib/game-engine";
 import { deviceStorage } from "@/lib/storage";
 import {
@@ -221,6 +225,37 @@ export const gameStore = {
   /** Achète un créateur manquant avec 400 jetons (jamais une Légendaire). */
   buyWithTokens(creatorSlug: string, now = Date.now()): void {
     persist(engineBuyWithTokens(current(), creatorSlug, now));
+  },
+
+  /**
+   * Rend un verdict au Tribunal des Bannis (build sans cloud).
+   *
+   * Le moteur vérifie que le dossier fait partie du tirage du jour : un
+   * verdict hors séance est refusé, et l'écran remonte l'erreur au lieu de
+   * l'avaler.
+   */
+  recordVerdict(dossierId: string, verdict: TribunalVerdict, now = Date.now()): void {
+    persist(engineRecordVerdict(current(), dossierId, verdict, now));
+  },
+
+  /**
+   * Verse la récompense de la séance **sur l'appareil** (build sans cloud).
+   *
+   * Compte connecté, les points viennent du serveur (voir `use-points.ts`) :
+   * cette porte ne s'ouvre que hors ligne, sinon le gain serait repris à la
+   * première synchronisation.
+   */
+  claimTribunal(points: number, now = Date.now()): void {
+    persist(engineClaimTribunal(current(), points, now));
+  },
+
+  /**
+   * Scelle la séance du jour sans rien verser (le serveur a déjà payé, ou la
+   * séance ne payait pas). Sans ce sceau, l'écran du Tribunal reproposerait la
+   * récompense à chaque ouverture.
+   */
+  markTribunalClaimed(now = Date.now()): void {
+    persist(engineMarkTribunalClaimed(current(), now));
   },
 
   /** Équipe un thème de collection débloqué (cosmétique). */

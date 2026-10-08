@@ -175,6 +175,39 @@ export function refusePlan(): Note[] {
   ];
 }
 
+/**
+ * Le **tampon** de la grâce : le bois qui tape le papier, puis le timbre qui
+ * résonne.
+ *
+ * Le Tribunal est le seul endroit du jeu où le joueur **signe** quelque chose :
+ * il fallait un son d'objet, pas un « wouip » de victoire. Deux temps, donc —
+ * le coup (grave, très court) et la résonance (aiguë, brève) — comme les
+ * autres sons d'objet de ce fichier (`tearPlan`, `bangPlan`).
+ */
+export function gracePlan(): Note[] {
+  return [
+    { freq: 132, at: 0, duration: 0.09, type: "sawtooth", gain: 0.055 },
+    { freq: 196, at: 0.012, duration: 0.07, type: "square", gain: 0.03 },
+    { freq: 1_046.5, at: 0.07, duration: 0.26, type: "sine", gain: 0.035 },
+  ];
+}
+
+/**
+ * Le **marteau** : un seul coup, très grave, qui descend.
+ *
+ * C'est le pendant du refus (`refusePlan`), mais il ne doit pas lui ressembler :
+ * le refus est une déception (deux notes qui tombent), le marteau est une
+ * décision (un coup qui porte). Le grave tient une demi-seconde — c'est ce qui
+ * donne le poids — et la composante médiane ajoute le bois.
+ */
+export function gavelPlan(): Note[] {
+  return [
+    { freq: 72, at: 0, duration: 0.5, type: "sawtooth", gain: 0.1 },
+    { freq: 174, at: 0.014, duration: 0.16, type: "square", gain: 0.045 },
+    { freq: 116, at: 0.09, duration: 0.34, type: "sine", gain: 0.035 },
+  ];
+}
+
 /** Carillon de récompense (palier réclamé, saison complétée). */
 export function rewardPlan(): Note[] {
   return [
@@ -539,6 +572,22 @@ export function playReward(): void {
 export function playBang(rarity: Rarity, variant: CardVariant = "standard"): void {
   play(bangPlan(rarity, variant));
   playSample("chip-place", 0.7);
+}
+
+/**
+ * La grâce est accordée : le tampon, et le bruitage du papier tamponné.
+ *
+ * Comme `playReveal`, l'objet est dans le bruitage et l'intention dans la
+ * synthèse — et les deux passent par `isMuted()`.
+ */
+export function playGrace(): void {
+  play(gracePlan());
+  playSample("chip-place", 0.7);
+}
+
+/** Le ban est maintenu : le marteau tombe. Synthèse seule, le coup suffit. */
+export function playGavel(): void {
+  play(gavelPlan());
 }
 
 /** Le son d'une carte qui refuse de se retourner. */

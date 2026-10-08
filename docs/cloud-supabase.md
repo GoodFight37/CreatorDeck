@@ -1409,7 +1409,7 @@ pèsent sur la **vidéo du jour**.
   (`playVideoLocally(state, formatId, day, roll, liveSlugs)`).
   `src/lib/supabase-streamer.test.ts` tient les deux barèmes ensemble,
   `src/ecrans.test.tsx` monte l'écran dans un DOM, et
-  `npm run supabase:verify` (**548 contrôles**) joue le reste : barème
+  `npm run supabase:verify` (**559 contrôles**) joue le reste : barème
   relu du fichier, Légendaire invitée **hors ligne** puis **en direct**, colonnes
   écrites, republication, direct périmé, et les deux refus de permission.
 
@@ -1418,6 +1418,40 @@ deux colonnes, puis remplace `streamer_publish()`, `streamer_status()` et
 `schema_versions()`. `npx supabase db push` les applique dans l'ordre des
 numéros ; pour vérifier après, `select public.schema_versions() -> '0041';` doit
 rendre `true`.
+
+### Le Tribunal paie sa séance (`0042`)
+
+**Le mode est dans l'application** (les dossiers vivent dans
+`src/data/tribunal.json`, le tirage du jour est calculé par `src/lib/tribunal.ts`)
+: il ne manquait au serveur que **la caisse**, parce que les points vivent chez
+lui depuis `0027`. `0042_tribunal.sql` pose :
+
+- `public.tribunal_dossiers(id, verdict_attendu)` — la **vérité** des dossiers,
+  fermée au client (seule la fonction la lit) ; un test tient cette copie
+  alignée avec le JSON du jeu, sinon une séance serait refusée en ligne sans
+  qu'on sache pourquoi ;
+- `public.tribunal_recompense(p_day, p_verdicts, p_login)` — encaisse une séance.
+
+Ce que le serveur **refait chez lui**, et c'est tout l'intérêt : le **karma** est
+recalculé depuis `tribunal_dossiers` (le client peut envoyer les verdicts qu'il
+veut, il ne peut pas inventer un dossier), le **multiplicateur Direct** est lu
+dans `live_streams` (le client dit *qui* préside, pas *si* ce créateur est à
+l'antenne), et les **points** suivent les réglages écrits dans la migration —
+jamais un montant venu de l'appareil. Une séance ne paie qu'**une fois par
+journée de jeu** : c'est l'index unique `wallet_ledger_once (user_id, kind, ref)`
+qui en décide, avec `kind = 'tribunal'` et `ref = journée`.
+
+Ce que le serveur **ne peut pas** vérifier, et qu'il faut savoir : que le joueur a
+réellement lu les dossiers — ils sont dans le bundle de l'application. Un joueur
+décidé peut envoyer les bons verdicts sans ouvrir l'écran. La récompense est
+calibrée pour ça (40 points par jour au plus, 80 avec le direct, là où une carte
+au choix en coûte 400) : le mode reste un plaisir de lecture, pas une économie.
+
+**Poser `0042` après `0041`.** `npx supabase db push` l'applique ; pour vérifier
+après, `select public.schema_versions() -> '0042';` doit rendre `true`. Tant
+qu'elle n'est pas posée, le bilan affiche le refus du serveur au lieu de verser
+— la séance est gardée, elle se réclamera le lendemain de la pose, ou tout de
+suite après.
 
 ### Le live de vingt secondes (aucune migration)
 

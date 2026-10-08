@@ -36,6 +36,7 @@ import {
   recycleNeedsConfirm,
   claimMilestone,
   claimSeason,
+  claimTribunal,
   craftCreator,
   applySetupSacrifice,
   applyStreamerMirror,
@@ -58,16 +59,19 @@ import {
   milestoneViews,
   openPack,
   openScenePack,
+  recordVerdict,
   recycleCard,
   sceneFamily,
   refreshBalances,
   seasonViews,
   publishStreamerLocally,
   spendHourglass,
+  tribunalSeance,
   type DrawnCard,
   type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
+import { dossiersDuJour } from "@/lib/tribunal";
 import {
   EVENTS,
   SETUP_LEVELS,
@@ -1649,5 +1653,67 @@ describe("le studio : les paliers payés en doublons (0040)", () => {
     const apres = applySetupSacrifice(state, ["ra-1"], "webcam2", T0 + 500);
     expect(apres.cards.map((card) => card.id)).toEqual(["ra-2"]);
     expect(apres.streamer.setup).toEqual([...POINTS, "webcam2"]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Le Tribunal des Bannis : ce que le moteur **garde** d'une séance.
+//
+// Le tirage, lui, est vérifié dans `src/lib/tribunal.test.ts`. Ici, on vérifie
+// ce qui touche à la sauvegarde : un verdict reste attaché à sa journée, un
+// dossier hors tirage est refusé, et la récompense ne se verse qu'une fois.
+// ---------------------------------------------------------------------------
+describe("le Tribunal dans la sauvegarde", () => {
+  const JOUR = Date.parse("2026-10-08T12:00:00.000Z");
+  const LENDEMAIN = Date.parse("2026-10-09T12:00:00.000Z");
+  const APRES_6H = Date.parse("2026-10-09T07:00:00.000Z");
+
+  it("démarre une séance vide", () => {
+    const state = createInitialState(JOUR);
+    expect(state.tribunal).toEqual({ day: "", verdicts: {}, claimed: false });
+  });
+
+  it("garde un verdict rendu sur un dossier du jour", () => {
+    const state = createInitialState(JOUR);
+    const [premier] = dossiersDuJour(gameDay(JOUR), state.playerId);
+    const apres = recordVerdict(state, premier.id, "deban", JOUR);
+    expect(apres.tribunal.verdicts[premier.id]).toBe("deban");
+    expect(apres.tribunal.day).toBe(gameDay(JOUR));
+  });
+
+  it("refuse un dossier qui n'est pas à l'ordre du jour", () => {
+    const state = createInitialState(JOUR);
+    expect(() => recordVerdict(state, "dossier-invente", "ban", JOUR)).toThrow(/ordre du jour/);
+  });
+
+  it("oublie la séance d'hier sans rien effacer d'autre", () => {
+    const state = createInitialState(JOUR);
+    const [premier] = dossiersDuJour(gameDay(JOUR), state.playerId);
+    const hier = recordVerdict(state, premier.id, "ban", JOUR);
+    const aujourdhui = recordVerdict(hier, dossiersDuJour(gameDay(LENDEMAIN), state.playerId)[0].id, "deban", LENDEMAIN);
+    // La séance est repartie : le verdict de la veille n'est plus dedans.
+    expect(Object.keys(aujourdhui.tribunal.verdicts)).toHaveLength(1);
+    expect(aujourdhui.tribunal.day).toBe(gameDay(LENDEMAIN));
+    expect(aujourdhui.cards).toEqual(hier.cards);
+  });
+
+  it("bascule à 6 h UTC : la séance du soir appartient au jour suivant", () => {
+    // 23 h UTC le 8, puis 7 h UTC le 9 : deux journées de jeu distinctes.
+    const soir = Date.parse("2026-10-08T23:00:00.000Z");
+    const matin = Date.parse("2026-10-09T07:00:00.000Z");
+    expect(gameDay(soir)).toBe(gameDay(JOUR));
+    expect(gameDay(matin)).not.toBe(gameDay(soir));
+    expect(tribunalSeance(createInitialState(soir), APRES_6H).verdicts).toEqual({});
+  });
+
+  it("paie la séance une seule fois", () => {
+    const state = createInitialState(JOUR);
+    const paye = claimTribunal(state, 40, JOUR);
+    expect(paye.points).toBe(state.points + 40);
+    expect(paye.tribunal.claimed).toBe(true);
+    // Un second appel ne repaie pas — même geste, même journée.
+    expect(claimTribunal(paye, 40, JOUR)).toBe(paye);
+    // Et une séance qui ne paie pas (0 point) ne marque rien.
+    expect(claimTribunal(state, 0, JOUR)).toBe(state);
   });
 });

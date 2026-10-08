@@ -167,6 +167,7 @@ try {
   const invites = await readFile(path.join(MIGRATIONS, "0039_invites_bureau.sql"), "utf8");
   const doublons = await readFile(path.join(MIGRATIONS, "0040_setup_doublons.sql"), "utf8");
   const collab = await readFile(path.join(MIGRATIONS, "0041_collab_plateau.sql"), "utf8");
+  const tribunal = await readFile(path.join(MIGRATIONS, "0042_tribunal.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -210,6 +211,7 @@ try {
     ["0039_invites_bureau.sql", invites],
     ["0040_setup_doublons.sql", doublons],
     ["0041_collab_plateau.sql", collab],
+    ["0042_tribunal.sql", tribunal],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -6653,6 +6655,132 @@ try {
       Number(statusAvecBureau.raid_today) > 0,
     JSON.stringify(statusAvecBureau.guests),
   );
+
+  // -------------------------------------------------------------------------
+  // Le Tribunal des Bannis (`0042`) : le serveur recalcule, et ne paie qu'une
+  // fois par journée de jeu.
+  //
+  // Le client n'envoie ni les points ni le karma : la journée, les verdicts
+  // rendus et le login du créateur qui préside. C'est ce qu'on vérifie ici —
+  // y compris qu'un joueur ne peut pas s'inventer une séance parfaite.
+  // -------------------------------------------------------------------------
+  {
+    const dossiers = (await client.query(
+      "select id, verdict_attendu from public.tribunal_dossiers order by id",
+    )).rows;
+    check("tribunal : la vérité des dossiers est posée", dossiers.length >= 25, String(dossiers.length));
+
+    const parfait = Object.fromEntries(dossiers.slice(0, 5).map((ligne) => [ligne.id, ligne.verdict_attendu]));
+    const avantTribunal = (await asPlayer(A, "select public.wallet_get() as r")).rows[0].r.points;
+
+    // Une séance parfaite : 5/5, donc 100 % de karma — 40 points.
+    const seance = (await asPlayer(
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-08", JSON.stringify(parfait)],
+    )).rows[0].r;
+    check(
+      "tribunal : une séance parfaite paie 40 points, karma recalculé côté serveur",
+      seance.paye === true && seance.karma === 100 && seance.gained === 40,
+      JSON.stringify(seance),
+    );
+
+    // Rejouer la même journée ne paie pas : l'index unique du journal décide.
+    const rejeu = (await asPlayer(
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-08", JSON.stringify(parfait)],
+    )).rows[0].r;
+    check("tribunal : la même journée ne paie pas deux fois", rejeu.gained === 0, JSON.stringify(rejeu));
+
+    // Une séance à 3/5 (60 %) paie 24 points ; à 2/5 elle ne paie rien.
+    const trois = Object.fromEntries(
+      dossiers.slice(0, 5).map((ligne, index) => [ligne.id, index < 3 ? ligne.verdict_attendu : ligne.verdict_attendu === "ban" ? "deban" : "ban"]),
+    );
+    const soixante = (await asPlayer(
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-09", JSON.stringify(trois)],
+    )).rows[0].r;
+    check(
+      "tribunal : 60 % de karma paie au prorata (24 points)",
+      soixante.karma === 60 && soixante.paye === true && soixante.gained === 24,
+      JSON.stringify(soixante),
+    );
+
+    // Un seul dossier juste sur cinq : 20 % de karma, sous le seuil.
+    const unSeul = Object.fromEntries(
+      dossiers.slice(0, 5).map((ligne, index) => [ligne.id, index === 0 ? ligne.verdict_attendu : ligne.verdict_attendu === "ban" ? "deban" : "ban"]),
+    );
+    const vingt = (await asPlayer(
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-11", JSON.stringify(unSeul)],
+    )).rows[0].r;
+    check(
+      "tribunal : sous le seuil, la séance est jugée mais ne paie pas",
+      vingt.paye === false && vingt.karma === 20 && vingt.gained === 0,
+      JSON.stringify(vingt),
+    );
+
+    // Le direct : le multiplicateur se lit côté serveur, dans `live_streams`.
+    const createurLive = (await client.query(
+      "select login from public.creators order by login limit 1",
+    )).rows[0].login;
+    await client.query(
+      "insert into public.live_streams (login, viewers, refreshed_at) values ($1, 1204, now()) on conflict (login) do update set refreshed_at = now()",
+      [createurLive],
+    );
+    await client.query("update public.live_state set refreshed_at = now() where id");
+    const enDirect = (await asPlayer(
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, $3::text) as r",
+      ["2026-10-12", JSON.stringify(parfait), createurLive],
+    )).rows[0].r;
+    check(
+      "tribunal : le créateur en direct double la séance (80 points)",
+      enDirect.multiplicateur === 2 && enDirect.gained === 80,
+      JSON.stringify(enDirect),
+    );
+    await client.query("delete from public.live_streams where login = $1", [createurLive]);
+
+    // Les refus : pas de compte, séance vide, dossiers inventés, journée illisible.
+    await refuses(
+      "tribunal : sans compte, la séance n'est pas payée",
+      null,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-13", JSON.stringify(parfait)],
+      "connecte-toi",
+    );
+    await refuses(
+      "tribunal : une séance vide ne paie pas",
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-13", "{}"],
+      "séance vide",
+    );
+    await refuses(
+      "tribunal : un dossier inventé ne compte pas",
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["2026-10-13", JSON.stringify({ "t-99": "deban" })],
+      "aucun dossier reconnu",
+    );
+    await refuses(
+      "tribunal : une journée illisible est refusée",
+      A,
+      "select public.tribunal_recompense($1::text, $2::jsonb, null) as r",
+      ["hier", JSON.stringify(parfait)],
+      "journée de jeu illisible",
+    );
+
+    const apresTribunal = (await asPlayer(A, "select public.wallet_get() as r")).rows[0].r.points;
+    check(
+      "tribunal : le solde a bougé exactement de ce qui a été versé",
+      apresTribunal - avantTribunal === 40 + 24 + 80,
+      `${avantTribunal} → ${apresTribunal}`,
+    );
+  }
 
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);

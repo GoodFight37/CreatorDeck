@@ -15,6 +15,7 @@ import {
   SAVE_VERSION,
   type OwnedCard,
   type PlayerState,
+  type TribunalVerdict,
 } from "@/lib/game-engine";
 import { SEASON_BY_ID } from "@/lib/seasons";
 import { MISSIONS, gameDay } from "@/lib/progression";
@@ -34,6 +35,14 @@ import {
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
 /** Clés des versions précédentes, migrées puis supprimées à la lecture. */
 export const LEGACY_SAVE_KEYS = [
+  // v9 : le Tribunal des Bannis. Les clés v6, v7 et v8 sont ajoutées en même
+  // temps — elles manquaient, et une sauvegarde écrite par ces versions
+  // n'était donc jamais relue : au passage à la version suivante, la partie
+  // repartait de zéro. Une clé ajoutée ici n'efface rien, elle rend une
+  // sauvegarde retrouvable.
+  "creatordeck.save.v8",
+  "creatordeck.save.v7",
+  "creatordeck.save.v6",
   "creatordeck.save.v5",
   "creatordeck.save.v4",
   "creatordeck.save.v3",
@@ -371,6 +380,32 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     streakJackpot: raw.streakJackpot === true,
     // v8 : journée du dernier Paquet Scène (chaîne vide = jamais ouvert).
     sceneDay: typeof raw.sceneDay === "string" ? raw.sceneDay : "",
+    // v9 : la séance du Tribunal des Bannis. Une sauvegarde plus ancienne
+    // démarre une séance vide, ce qui est exact : elle n'a jamais siégé.
+    tribunal: sanitizeTribunal(raw.tribunal),
+  };
+}
+
+/**
+ * La séance du Tribunal.
+ *
+ * Les verdicts sont relus **un par un** : un identifiant inconnu ou un verdict
+ * illisible est oublié (il ne fera pas partie du bilan) plutôt que de faire
+ * échouer toute la sauvegarde. La journée, elle, est gardée telle quelle : si
+ * elle ne correspond plus à aujourd'hui, le moteur repart de zéro tout seul.
+ */
+function sanitizeTribunal(raw: unknown): PlayerState["tribunal"] {
+  if (!isRecord(raw)) return { day: "", verdicts: {}, claimed: false };
+  const verdicts: Record<string, TribunalVerdict> = {};
+  if (isRecord(raw.verdicts)) {
+    for (const [id, verdict] of Object.entries(raw.verdicts)) {
+      if (verdict === "deban" || verdict === "ban") verdicts[id] = verdict;
+    }
+  }
+  return {
+    day: typeof raw.day === "string" ? raw.day : "",
+    verdicts,
+    claimed: raw.claimed === true,
   };
 }
 

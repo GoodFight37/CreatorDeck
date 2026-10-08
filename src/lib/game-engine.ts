@@ -69,8 +69,18 @@ import {
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
 import { canCraftRetired } from "@/lib/retired";
+// Le Tribunal : le tirage du jour est calculé par son propre module (pur), le
+// moteur ne fait que **garder** les verdicts et payer la séance.
+import { dossiersDuJour } from "@/lib/tribunal";
 
-export const SAVE_VERSION = 8 as const;
+/**
+ * Version de la sauvegarde.
+ *
+ * v9 (8 octobre 2026) : le **Tribunal des Bannis** — la séance du jour, ses
+ * verdicts et la récompense déjà versée. Une sauvegarde v8 démarre une séance
+ * vide, ce qui est exact : elle n'a jamais siégé.
+ */
+export const SAVE_VERSION = 9 as const;
 
 /** Points d'expérience nécessaires par niveau. */
 export const XP_PER_LEVEL = 100;
@@ -220,7 +230,40 @@ export type PlayerState = {
    * et en ligne, c'est le journal des tirages du serveur qui fait foi.
    */
   sceneDay: string;
+  /**
+   * Le **Tribunal des Bannis** (`0042_tribunal.sql`) : la séance de la journée
+   * de jeu en cours.
+   *
+   * Trois informations, et elles suffisent : la journée, les verdicts rendus
+   * (par identifiant de dossier), et si la récompense du jour a été versée.
+   * La journée sert d'ancre comme pour les missions : quand elle change, la
+   * séance repart de zéro **sans qu'on ait à y penser** (`recordVerdict`).
+   *
+   * Les dossiers eux-mêmes ne sont pas sauvegardés : ils sont **tirés** depuis
+   * `(journée, joueur)` par `@/lib/tribunal` — c'est ce qui empêche de relancer
+   * sa séance pour tomber sur des appels plus cléments.
+   */
+  tribunal: TribunalSeance;
 };
+
+/**
+ * La séance du Tribunal d'une journée de jeu.
+ *
+ * `verdicts` est un objet et non une liste, parce qu'un joueur peut quitter au
+ * troisième dossier et revenir : on veut retrouver ses verdicts **par dossier**,
+ * quel que soit l'ordre dans lequel il les rend.
+ */
+export type TribunalSeance = {
+  /** Journée de jeu de la séance (6 h UTC), chaîne vide si jamais joué. */
+  day: string;
+  /** Verdicts rendus : `id du dossier` → verdict. */
+  verdicts: Record<string, TribunalVerdict>;
+  /** Vrai quand la récompense du jour a été versée (une seule fois par jour). */
+  claimed: boolean;
+};
+
+/** Les deux issues d'un appel (miroir de `@/lib/tribunal`). */
+export type TribunalVerdict = "deban" | "ban";
 
 /**
  * La saison que le joueur remplit en ce moment : la famille (par langue) où il
@@ -651,6 +694,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     streak: 0,
     streakJackpot: false,
     sceneDay: "",
+    tribunal: { day: "", verdicts: {}, claimed: false },
   };
 }
 
@@ -1149,6 +1193,80 @@ export function claimMissions(state: PlayerState, now = Date.now()): PlayerState
     missions: current,
     hourglasses: state.hourglasses + done.length * MISSION_REWARD_HOURGLASSES,
   };
+}
+
+/**
+ * La séance du Tribunal, **remise à zéro si la journée a changé**.
+ *
+ * C'est le même mécanisme que les missions : comparer la journée suffit, et
+ * toutes les fonctions du Tribunal passent par ici — aucune ne peut écrire un
+ * verdict dans la séance d'hier.
+ */
+export function tribunalSeance(state: PlayerState, now = Date.now()): TribunalSeance {
+  const day = gameDay(now);
+  if (state.tribunal?.day === day) return state.tribunal;
+  return { day, verdicts: {}, claimed: false };
+}
+
+/**
+ * Rend un verdict sur un dossier du jour.
+ *
+ * Le dossier doit faire partie du tirage du jour : c'est le garde-fou qui
+ * empêche de juger (et de rejuger) un dossier qui n'est pas à l'ordre du jour,
+ * et c'est le moteur qui le vérifie — pas l'écran.
+ */
+export function recordVerdict(
+  state: PlayerState,
+  dossierId: string,
+  verdict: TribunalVerdict,
+  now = Date.now(),
+): PlayerState {
+  const seance = tribunalSeance(state, now);
+  const tirage = dossiersDuJour(seance.day, state.playerId);
+  if (!tirage.some((dossier) => dossier.id === dossierId)) {
+    throw new GameError("Ce dossier n'est pas à l'ordre du jour.", "TRIBUNAL_UNKNOWN_CASE");
+  }
+  return {
+    ...state,
+    updatedAt: now,
+    // Un même dossier garde son dernier verdict : rejuger ne paie pas deux
+    // fois, mais le joueur peut se raviser avant le bilan.
+    tribunal: { ...seance, verdicts: { ...seance.verdicts, [dossierId]: verdict } },
+  };
+}
+
+/**
+ * Marque la récompense du jour comme versée, et crédite les points **sur
+ * l'appareil**.
+ *
+ * Cette fonction ne sert qu'au jeu hors ligne. Compte connecté, c'est le
+ * serveur qui paie (`tribunal_recompense` dans `0042_tribunal.sql`) : des
+ * points fabriqués ici seraient repris à la première synchronisation, et le
+ * joueur aurait vu un gain qui n'existe pas (règle écrite dans
+ * `src/hooks/use-points.ts`).
+ */
+export function claimTribunal(state: PlayerState, points: number, now = Date.now()): PlayerState {
+  const seance = tribunalSeance(state, now);
+  if (seance.claimed || points <= 0) return state;
+  return {
+    ...state,
+    updatedAt: now,
+    points: state.points + points,
+    tribunal: { ...seance, claimed: true },
+  };
+}
+
+/**
+ * Scelle la séance du jour **sans rien verser**.
+ *
+ * Sert quand c'est le serveur qui a payé — ou qui a déjà payé : l'appareil ne
+ * doit pas ajouter les points une seconde fois, mais il doit retenir que la
+ * séance est passée, sinon l'écran la reproposerait à chaque ouverture.
+ */
+export function markTribunalClaimed(state: PlayerState, now = Date.now()): PlayerState {
+  const seance = tribunalSeance(state, now);
+  if (seance.claimed) return state;
+  return { ...state, updatedAt: now, tribunal: { ...seance, claimed: true } };
 }
 
 /** Ce que paie une mission : un sablier (voir `progression.json`). */

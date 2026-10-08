@@ -15,7 +15,11 @@ direct** (le téléphone sonne quand un créateur de ta collection passe en live
 **Last Pack** (le paquet qu'un ami vient d'ouvrir reste exposé dix minutes),
 classement mondial —
 global ou par famille de collection —, profils publics avec vitrine, badge
-**EN LIVE** sur les cartes des chaînes en direct, et **Arène** hebdomadaire.
+**EN LIVE** sur les cartes des chaînes en direct, **Arène** hebdomadaire, et
+**Tribunal des Bannis** : cinq appels à juger par jour, au pouce — on lit le
+dossier, la pièce à conviction et le plaidoyer, on accorde la grâce ou on
+maintient le ban, et une séance juste paie des points de craft **une fois par
+jour** (versés par le serveur, jamais par l'appareil).
 Trois mécaniques de progression complètent le tirage : un **plancher de
 malchance publié** (12 boosters sans Légendaire et le 5ᵉ slot en garantit une),
 des **jetons** (5 par booster, 400 = la carte au choix — jamais une Légendaire),
@@ -123,7 +127,7 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0041` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+| `npm run supabase:verify` | joue les migrations `0001` → `0042` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
 1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
 barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
 interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
@@ -142,7 +146,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
-  l'essentiel des règles (**1046 tests**, 68 fichiers aujourd'hui), et **tout
+  l'essentiel des règles (**1070 tests**, 69 fichiers aujourd'hui), et **tout
   `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
   coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
@@ -159,12 +163,14 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **douze fichiers** (54 tests, 47 captures) : le
+  écran a bougé. Il tourne dans **treize fichiers** (61 tests, 54 captures) : le
   carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
   **réglage du son** (et son silence), **les mille cartes** (ce que le DOM porte
   vraiment), **les effets de rareté**, **le classement feuilleté**, **les gestes
-  qui se sentent** (le foil sous le doigt, la vibration du tirage) et **les
-  échanges** (la liste « Tu donnes » et ses pages). Il tournait dans la CI de l'APK, à côté
+  qui se sentent** (le foil sous le doigt, la vibration du tirage), **les
+  échanges** (la liste « Tu donnes » et ses pages) et **le Tribunal des Bannis**
+  (le ticket, la grâce et le marteau qui s'entendent, la reprise au troisième
+  dossier après une séance quittée, le bilan). Il tournait dans la CI de l'APK, à côté
   de `lint`, `typecheck` et `test` — depuis la suppression des workflows
   (8 octobre 2026), c'est à relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
@@ -356,6 +362,37 @@ Le jeu est **un seul jeu**, et il tient en quatre écrans :
 - le jeu de cartes — les boosters, la collection, l'artisanat, le profil. C'est
   là que vivent les taux publiés, les raretés, le marché et les échanges. Ses
   quatre piliers sont **Drop**, **Binder**, **Craft** et **Toi**.
+
+### Le Tribunal des Bannis
+
+Un **mode d'interface** (pas de scène, pas de 3D) : chaque journée de jeu, cinq
+bannis font appel. L'écran montre leur dossier — le pseudo, ses badges, le motif
+du ban, la **pièce à conviction** (le message incriminé) et le **plaidoyer** — et
+deux gros boutons : **Accorder la grâce** (tampon) ou **Maintenir le ban**
+(marteau). Au cinquième verdict, le bilan annonce le **Karma de modération**
+(la part de verdicts justes) et verse la récompense du jour.
+
+Quatre règles, et elles sont testées :
+
+- **le tirage ne se relance pas** : les cinq dossiers sortent d'une graine
+  `(journée de jeu à 6 h UTC, identifiant du joueur)`. Rouvrir l'écran ne rebat
+  pas les cartes, et une séance quittée au deuxième dossier **reprend au
+  troisième** (le banc d'écrans le joue pour de vrai) ;
+- **le verdict n'est pas une opinion** : chaque dossier porte celui qu'attend le
+  Tribunal (`src/data/tribunal.json`). Se tromper dans le sens de la clémence,
+  c'est de la **complaisance** — l'autre sens est de la sévérité ;
+- **la séance paie une fois par jour**, au-dessus de 60 % de karma (trois
+  dossiers sur cinq) : 40 points au maximum, **doublés** quand le créateur qui
+  préside est en direct. Le joueur choisit cette carte dans son classeur, elle
+  trône en haut de l'écran ;
+- **l'appareil ne fabrique aucun point** : connecté, c'est le serveur qui paie
+  (`tribunal_recompense`, `0042_tribunal.sql`), et il **recalcule** le karma
+  depuis sa propre copie de la vérité. Le client envoie la journée, les verdicts
+  et le login du créateur — jamais un montant.
+
+Les sons sont les deux du geste : le **tampon** pour la grâce, le **marteau**
+pour le ban. Ils passent par `@/lib/sfx` — l'interrupteur du joueur les coupe
+comme les autres.
 
 Il a eu une **seconde moitié** : le **Studio** — une simulation de streameur
 (abonnés qui grandissent pendant l'absence, vidéo du jour, imprévus, paliers de
