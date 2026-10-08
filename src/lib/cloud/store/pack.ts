@@ -57,12 +57,15 @@ export function packActions(ctx: CloudStoreContext) {
           result.openings,
           ctx.deps.now(),
           {
-            // Les points de la récompense de série sont versés par le serveur
-            // (`0032`) : le moteur annonce, il ne crédite pas. Et c'est **son**
-            // jour qui fait foi — celui de l'appareil peut avoir dérivé.
+            // Les points **et les jetons** de la récompense de série sont
+            // versés par le serveur (`0032`, `0035`) : le moteur annonce, il ne
+            // crédite pas. Et c'est **son** jour qui fait foi — celui de
+            // l'appareil peut avoir dérivé.
             pointsFromServer: true,
+            tokensFromServer: true,
             rewardDay: result.streakReward?.day ?? null,
             rewardPoints: result.streakReward?.points ?? null,
+            rewardTokens: result.streakReward?.tokens ?? null,
           },
         );
         // Les compteurs du serveur font foi pour le plancher de malchance et

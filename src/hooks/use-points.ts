@@ -18,6 +18,11 @@
  *      fabriqués sur l'appareil seraient repris à la première synchronisation,
  *      et le joueur aurait vu un gain qui n'existe pas.
  *
+ * Ce qui a changé avec `0035_jetons.sql` : les **jetons** sont eux aussi au
+ * serveur. Le même ordre s'applique donc à l'achat aux jetons — en ligne, c'est
+ * le serveur qui débite (il relit le prix, refuse une Légendaire), et sans
+ * compte on refuse au lieu de payer en local.
+ *
  * Les écrans ne décident plus rien : ils appellent, puis ils affichent.
  */
 import { useCallback, useMemo } from "react";
@@ -134,11 +139,19 @@ export function usePoints(): {
 
   const craft = useCallback(
     async (slug: string, withTokens: boolean): Promise<PointsOutcome> => {
-      // Les jetons ne sont pas des points : ils vivent sur l'appareil, et un
-      // achat aux jetons ne change rien au wallet du serveur.
       if (withTokens) {
-        gameStore.buyWithTokens(slug);
-        return DONE;
+        // Les jetons ne sont pas des points : ils ont leur propre solde. Depuis
+        // `0035`, il vit au serveur — l'achat passe donc par la caisse des
+        // jetons, avec le même refus hors ligne qu'un achat aux points.
+        if (signedOut) return noAccount("rejoindre un créateur");
+        if (!serverSide) {
+          gameStore.buyWithTokens(slug);
+          return DONE;
+        }
+        const outcome = await cloudStore.craftWithTokens(slug);
+        return outcome.status === "done"
+          ? { status: "done", message: outcome.message, delta: outcome.delta }
+          : { status: "refused", message: outcome.message };
       }
       if (signedOut) return noAccount("rejoindre un créateur");
       if (!serverSide) {

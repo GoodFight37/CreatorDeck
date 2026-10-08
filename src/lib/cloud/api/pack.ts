@@ -37,12 +37,16 @@ export async function openPack(
   /** Ce booster a payé le Perfect du 7ᵉ jour. */
   jackpot: boolean;
   /**
-   * Ce que la série a payé pour ce booster (`0032_serie_quotidienne.sql`) :
-   * le jour coché et les points versés. `null` quand le jour ne paie rien
-   * (le 7ᵉ jour, c'est le jackpot) ou sur un projet qui n'a pas encore collé
-   * `0032` — le client retombe alors sur la table locale.
+   * Ce que la série a payé pour ce booster (`0032_serie_quotidienne.sql` et
+   * `0035_jetons.sql`) : le jour coché, les points versés, et les jetons
+   * versés. `null` quand le jour ne paie rien (le 7ᵉ jour, c'est le jackpot)
+   * ou sur un projet qui n'a pas encore collé `0032` — le client retombe alors
+   * sur la table locale.
+   *
+   * `tokens` vaut `0` quand le jour ne paie pas de jetons **ou** quand il a
+   * déjà été payé : l'écran ne doit annoncer que du vrai.
    */
-  streakReward: { day: number; points: number } | null;
+  streakReward: { day: number; points: number; tokens: number } | null;
   /**
    * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
    * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le
@@ -90,7 +94,7 @@ export async function openPack(
       if (!reward) return null;
       const day = Number(reward.day ?? 0);
       if (!Number.isFinite(day) || day <= 0) return null;
-      return { day, points: Number(reward.points ?? 0) };
+      return { day, points: Number(reward.points ?? 0), tokens: Number(reward.tokens ?? 0) };
     })(),
     save: parseSaveRow(record.save),
   };

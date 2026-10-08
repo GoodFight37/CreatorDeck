@@ -465,7 +465,7 @@ export class CloudApi {
     /** Ce booster a payé le Perfect du 7ᵉ jour. */
     jackpot: boolean;
     /** Ce que la série a payé (`0032`) : le jour coché et ses points. */
-    streakReward: { day: number; points: number } | null;
+    streakReward: { day: number; points: number; tokens: number } | null;
     /**
      * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
      * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le
@@ -570,6 +570,16 @@ export class CloudApi {
   /** Paie une dépense (l'artisanat). Le coût est recalculé par le serveur. */
   async walletSpend(kind: string, ref = ""): Promise<{ delta: number; points: number }> {
     return wallet.walletSpend(this.core, kind, ref);
+  }
+
+  /** Le solde de jetons du serveur (`0035_jetons.sql`). */
+  async tokensGet(): Promise<number> {
+    return wallet.tokensGet(this.core);
+  }
+
+  /** Rejoint un créateur contre 400 jetons — le serveur relit le prix. */
+  async tokensSpend(slug: string): Promise<{ spent: number; tokens: number }> {
+    return wallet.tokensSpend(this.core, slug);
   }
 
   // ------------------------------------------------------------------ saves

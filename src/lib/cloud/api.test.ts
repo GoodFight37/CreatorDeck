@@ -528,6 +528,24 @@ describe("profil public", () => {
     await expect(api.wishlistSlug()).rejects.toThrowError(/0015_wishlist\.sql/);
   });
 
+  it("dit quelle migration coller quand les jetons manquent", async () => {
+    // `0035` est la dernière arrivée : tant qu'elle n'est pas collée, le solde
+    // de jetons et l'achat aux jetons répondent « fonction inconnue ». Le
+    // message doit nommer le fichier, comme les autres migrations.
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: {
+          code: "PGRST202",
+          message: "Could not find the function public.tokens_get() in the schema cache",
+        },
+      }),
+      signedIn(),
+    );
+    await expect(api.tokensGet()).rejects.toThrowError(/0035_jetons\.sql/);
+    await expect(api.tokensSpend("ibai")).rejects.toThrowError(/0035_jetons\.sql/);
+  });
+
   it("ne demande aucun identifiant pour son propre profil", async () => {
     const { api, calls } = client(() => ({ body: PROFILE }), signedIn());
     await api.playerProfile();

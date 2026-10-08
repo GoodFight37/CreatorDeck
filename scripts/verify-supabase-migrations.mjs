@@ -161,6 +161,7 @@ try {
   const serie = await readFile(path.join(MIGRATIONS, "0032_serie_quotidienne.sql"), "utf8");
   const depart = await readFile(path.join(MIGRATIONS, "0033_depart_maigre.sql"), "utf8");
   const protege = await readFile(path.join(MIGRATIONS, "0034_last_pack_protege.sql"), "utf8");
+  const jetons = await readFile(path.join(MIGRATIONS, "0035_jetons.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -196,6 +197,7 @@ try {
     ["0032_serie_quotidienne.sql", serie],
     ["0033_depart_maigre.sql", depart],
     ["0034_last_pack_protege.sql", protege],
+    ["0035_jetons.sql", jetons],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1208,6 +1210,7 @@ try {
   await client.query(serie);
   await client.query(depart);
   await client.query(protege);
+  await client.query(jetons);
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -2244,6 +2247,170 @@ try {
     "select public.wallet_credit('pack', $1::text) as r",
     [String(tirageWallet)],
     "n'existe pas",
+  );
+
+  // --- Les jetons (0035) ---------------------------------------------------
+  // Le solde vivait dans la sauvegarde : un client gonflé s'offrait des cartes
+  // choisies. Il est au serveur depuis `0035`, avec le même journal que les
+  // points — ces contrôles regardent les trois portes : la bascule, les gains
+  // (le tirage, la série) et la dépense.
+  const miroirJetonsG = Number(
+    (await client.query("select state -> 'tokens' as t from public.saves where user_id = $1", [G])).rows[0].t,
+  );
+  const jetonsG = (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens;
+  // Le journal est lu **après** la première lecture du solde : c'est elle qui
+  // ouvre le compte, avec sa ligne de bascule.
+  const journalJetonsG = (await client.query(
+    "select kind, ref, delta from public.token_ledger where user_id = $1 order by id",
+    [G],
+  )).rows;
+  check(
+    "jetons : le compte s'ouvre une fois, en reprenant le solde de la sauvegarde",
+    journalJetonsG.length === 1 &&
+      journalJetonsG[0].kind === "bascule" &&
+      Number(journalJetonsG[0].delta) === miroirJetonsG &&
+      jetonsG === miroirJetonsG,
+    JSON.stringify({ jetonsG, miroirJetonsG, journalJetonsG }),
+  );
+
+  // Le tirage paie **tout seul** : la ligne de journal existe déjà, et son
+  // montant est celui du barème — 5, ou 7 pendant le Prime Time. Le montant est
+  // calculé par le serveur (l'heure du test n'est pas choisie), donc on compare
+  // à ce que la fonction du barème répond pour cet instant.
+  const ligneJetonsTirage = (await client.query(
+    `select l.delta, l.ref,
+            public._tokens_per_pack(d.drawn_at) as attendu
+       from public.pack_draws d
+       left join public.token_ledger l
+              on l.user_id = d.user_id and l.kind = 'pack' and l.ref = d.id::text
+      where d.id = $1`,
+    [tirageWallet],
+  )).rows[0];
+  check(
+    "jetons : un tirage est payé par le serveur, du montant du barème",
+    Number(ligneJetonsTirage.delta) === Number(ligneJetonsTirage.attendu) &&
+      [5, 7].includes(Number(ligneJetonsTirage.attendu)),
+    JSON.stringify(ligneJetonsTirage),
+  );
+
+  // Le Prime Time, aux bornes : 20 h – 23 h **heure de Paris** (le fuseau du
+  // jeu), la borne de fin exclue. Été comme hiver — le décalage change.
+  const primeTime = (await client.query(
+    `select public._tokens_per_pack('2026-07-10 18:30:00+00'::timestamptz) as ete_soir,
+            public._tokens_per_pack('2026-07-10 21:30:00+00'::timestamptz) as ete_tard,
+            public._tokens_per_pack('2026-01-15 19:30:00+00'::timestamptz) as hiver_soir,
+            public._tokens_per_pack('2026-01-15 22:30:00+00'::timestamptz) as hiver_tard`,
+  )).rows[0];
+  check(
+    "jetons : le Prime Time est celui du fuseau du jeu (20 h – 23 h, borne exclue)",
+    Number(primeTime.ete_soir) === 7 &&
+      Number(primeTime.ete_tard) === 5 &&
+      Number(primeTime.hiver_soir) === 7 &&
+      Number(primeTime.hiver_tard) === 5,
+    JSON.stringify(primeTime),
+  );
+
+  // La dépense. Quatre refus, puis un achat qui passe — sur un créateur que
+  // Gaston ne possède pas, et qui se prend aux jetons.
+  const unLegendaire = (await client.query(
+    "select slug from public.creators where rarity = 'legendary' and not retired limit 1",
+  )).rows[0].slug;
+  const possede = (await client.query(
+    `select c ->> 'creatorSlug' as slug
+       from public.saves s, jsonb_array_elements(s.state -> 'cards') c
+      where s.user_id = $1 and c ->> 'rarity' <> 'legendary'
+      limit 1`,
+    [G],
+  )).rows[0].slug;
+  const pasPossede = (await client.query(
+    `select c.slug
+       from public.creators c
+      where c.rarity in ('common', 'uncommon', 'rare', 'epic')
+        and not c.retired
+        and c.slug not in (
+          select card ->> 'creatorSlug'
+            from public.saves s, jsonb_array_elements(s.state -> 'cards') card
+           where s.user_id = $1
+        )
+      order by c.slug
+      limit 1`,
+    [G],
+  )).rows[0].slug;
+  check(
+    "jetons : le joueur de contrôle a de quoi tester (un possédé, un libre)",
+    Boolean(possede) && Boolean(pasPossede),
+    JSON.stringify({ possede, pasPossede }),
+  );
+  await refuses(
+    "jetons : une Légendaire ne s'achète pas",
+    G,
+    "select public.tokens_spend($1) as r",
+    [unLegendaire],
+    "une Légendaire ne s'achète pas",
+  );
+  await refuses(
+    "jetons : un créateur hors catalogue ne s'achète pas",
+    G,
+    "select public.tokens_spend($1) as r",
+    ["pas-un-createur-du-catalogue"],
+    "pas au catalogue",
+  );
+  await refuses(
+    "jetons : un créateur déjà possédé ne se rachète pas",
+    G,
+    "select public.tokens_spend($1) as r",
+    [possede],
+    "tu as déjà",
+  );
+
+  // Il faut des jetons pour la suite : on les verse **par le journal** (le seul
+  // chemin), pas en écrivant la table.
+  const manqueAvant = 400 - (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens;
+  await refuses(
+    "jetons : sans les 400, l'achat dit ce qui manque",
+    G,
+    "select public.tokens_spend($1) as r",
+    [pasPossede],
+    `il te manque ${manqueAvant} jetons`,
+  );
+  await client.query("select public._tokens_apply($1, $2, 'test', 'verif-jetons')", [G, manqueAvant + 400]);
+  const achat = (await asPlayer(G, "select public.tokens_spend($1) as r", [pasPossede])).rows[0].r;
+  check(
+    "jetons : 400 jetons paient le créateur visé, et le solde suit",
+    achat.ok === true && achat.spent === 400 && achat.tokens === 400,
+    JSON.stringify(achat),
+  );
+
+  // Le solde du serveur est la seule vérité : une sauvegarde gonflée à la main
+  // est recollée, et ne permet pas de dépenser.
+  const soldeReel = (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens;
+  await client.query(
+    "update public.saves set state = jsonb_set(state, '{tokens}', '999999') where user_id = $1",
+    [G],
+  );
+  const reluJetons = (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens;
+  check(
+    "jetons : un solde gonflé dans la sauvegarde est recollé à la vérité",
+    reluJetons === soldeReel &&
+      Number((await client.query("select state -> 'tokens' as t from public.saves where user_id = $1", [G])).rows[0].t) === soldeReel,
+    JSON.stringify({ reluJetons, soldeReel }),
+  );
+
+  // Et un mouvement déjà journalisé ne repasse pas (le journal fait foi).
+  const avantDouble = (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens;
+  await client.query("select public._tokens_apply($1, 25, 'test', 'verif-jetons')", [G]);
+  check(
+    "jetons : un mouvement déjà journalisé ne repasse pas",
+    (await asPlayer(G, "select public.tokens_get() as r")).rows[0].r.tokens === avantDouble,
+  );
+
+  // Sans compte, il n'y a pas de solde : la porte est fermée, comme partout.
+  await refuses(
+    "jetons : sans compte, la fonction est inaccessible",
+    null,
+    "select public.tokens_get() as r",
+    [],
+    "connecte-toi",
   );
 
   // --- Les paliers de collection : le serveur recalcule -----------------------
@@ -3590,6 +3757,28 @@ try {
   await client.query("delete from public.last_packs where user_id = any($1::uuid[])", [
     [SCENE, CH1, CH2, CH3],
   ]);
+  // --- Les jetons du Paquet Scène (0035) -----------------------------------
+  // Le barème parle du « booster ouvert » : le Paquet Scène ne paie pas de
+  // jetons, et le moteur local ne lui en donne pas non plus. Les tirages de
+  // scène existent maintenant (section ci-dessus), donc le contrôle peut
+  // regarder un vrai tirage plutôt qu'une ligne fabriquée.
+  const tirageScene = (await client.query(
+    "select id, user_id from public.pack_draws where kind = 'scene' order by id limit 1",
+  )).rows[0];
+  const jetonsScene = (await client.query(
+    "select count(*)::int as n from public.token_ledger where ref = $1 and user_id = $2",
+    [String(tirageScene.id), tirageScene.user_id],
+  )).rows[0].n;
+  const jetonsBooster = (await client.query(
+    `select public._tokens_per_pack(d.drawn_at) as attendu
+       from public.pack_draws d where d.kind = 'live' order by d.id limit 1`,
+  )).rows[0].attendu;
+  check(
+    "jetons : le Paquet Scène ne paie pas de jetons (le booster seul paie)",
+    jetonsScene === 0 && [5, 7].includes(Number(jetonsBooster)),
+    JSON.stringify({ jetonsScene, jetonsBooster }),
+  );
+
   await client.query("delete from public.pack_draws where user_id = any($1::uuid[])", [
     [SCENE, CH1, CH2, CH3],
   ]);
@@ -4961,6 +5150,7 @@ try {
   await client.query(serie);
   await client.query(depart);
   await client.query(protege);
+  await client.query(jetons);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

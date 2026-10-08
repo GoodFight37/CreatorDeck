@@ -251,6 +251,18 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0035_jetons.sql`](../supabase/migrations/0035_jetons.sql)
+     → **Run** pour que **les jetons passent au serveur** : le solde vit dans
+     `tokens`, chaque mouvement est journalisé (`token_ledger`, index unique
+     `(user_id, kind, ref)`), et le tirage comme la série **versent** leurs
+     jetons au moment du fait (5 par booster, 7 en Prime Time, 10 au J4, 15 au
+     J6) au lieu de laisser l'appareil les inventer. `tokens_get()` lit le
+     solde et recale le miroir (`state.tokens`) ; `tokens_spend(slug)` paie la
+     carte visée — 400 jetons, prix relu ici, refus d'une **Légendaire**, d'un
+     créateur retiré du classement ou déjà possédé. La bascule ouvre le compte
+     **une fois** avec le solde déjà gagné (borné à un million, comme
+     `_wallet_ensure()` dans `0027`). Détail : §8, « Le plancher de malchance,
+     les jetons, les missions du jour ».
    - [`supabase/migrations/0034_last_pack_protege.sql`](../supabase/migrations/0034_last_pack_protege.sql)
      → **Run** pour que le **Last Pack protège les Légendaires et les Lives** :
      ces deux cartes-là restent exposées dix minutes mais **ne se volent pas**.
@@ -432,7 +444,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-quatre migrations** (`0001` à `0034`) pour de vrai, dans
+> Le script exécute **les trente-cinq migrations** (`0001` à `0035`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -905,10 +917,29 @@ donc **déduits** du journal, que seule `open_pack()` écrit — et comme rien n
 stocké, il n'y a rien à resynchroniser. Les fonctions internes sont fermées aux
 joueurs (`revoke … from public, anon, authenticated`).
 
-**Les jetons restent locaux.** Comme l'XP : 5 par booster (7 en
-Prime Time), 400 pour la carte au choix à l'Atelier — jamais une Légendaire.
-Ils sont crédités par `applyPackResult()`, donc aussi bien pour un tirage local
-que pour un tirage décidé par le serveur.
+**Les jetons sont passés au serveur (`0035`, 7 octobre 2026).** Comme l'XP
+avant eux, ils vivaient dans la sauvegarde : un client bricolé s'offrait les
+cartes de son choix, et ces cartes comptaient dans la collection — celle sur
+laquelle le serveur paie les paliers de complétion. C'était le dernier trou
+d'économie laissé ouvert par `0027`.
+
+| Ce qui se passe | Comment |
+| --- | --- |
+| Le solde vit au serveur | table `tokens` (jamais négative) + journal `token_ledger`, fermés au client (`revoke` + RLS) |
+| Un mouvement ne repasse jamais | index unique `token_ledger_once (user_id, kind, ref)` : le journal décide, exactement comme `wallet_ledger_once` |
+| Le booster paie ses jetons | trigger `_wallet_on_draw()` (le même qui paie les 12 points) : 5, ou **7** pendant le Prime Time |
+| Le Paquet Scène ne paie rien | le barème parle du « booster ouvert », et le moteur local ne lui donne rien non plus |
+| La série paie ses jetons | dans `open_pack()`, avec la **même référence de journée** que les points (`serie-jN-<jour>`) : 10 au J4, 15 au J6 |
+| La carte visée coûte 400 | `tokens_spend(slug)` : prix relu (`token_prices()`), refus d'une Légendaire, d'un créateur retiré ou déjà possédé, et « il te manque N jetons » sinon |
+| Le solde affiché est celui du serveur | `tokens_get()` recale le miroir `state.tokens` — une sauvegarde gonflée à la main disparaît à la première lecture |
+| La bascule ne perd rien | `_tokens_ensure()` ouvre le compte **une fois** avec le solde déjà gagné, borné à un million |
+
+Le **Prime Time** est évalué côté serveur en **Europe/Paris** (le fuseau du
+jeu) : l'écran, lui, lit l'heure de l'appareil — pour un joueur en France, les
+deux réponses sont identiques à la seconde près. Le barème est écrit **une seule
+fois** dans `src/data/progression.json` et repris par le SQL :
+`src/lib/supabase-jetons.test.ts` compare les deux, donc un chiffre retouché
+d'un côté fait tomber la suite avant le jeu.
 
 **La série paie ses jours (`0032`).** Les six premiers jours ne donnaient rien :
 une case cochée sans lot, c'est une frustration. Depuis le 7 octobre 2026, le
@@ -919,9 +950,9 @@ une case cochée sans lot, c'est une frustration. Depuis le 7 octobre 2026, le
 | J1 | 40 points | serveur (`_wallet_apply`, `kind = 'streak'`) |
 | J2 | 1 sablier | appareil |
 | J3 | 60 points | serveur |
-| J4 | 80 points **+ 10 jetons** | points au serveur, jetons à l'appareil |
-| J5 | 120 points **+ 1 sablier** | idem |
-| J6 | 150 points **+ 15 jetons** | idem |
+| J4 | 80 points **+ 10 jetons** | les deux au serveur (depuis `0035`) |
+| J5 | 120 points **+ 1 sablier** | points au serveur, sablier sur l'appareil |
+| J6 | 150 points **+ 15 jetons** | les deux au serveur |
 | J7 | Perfect garanti **ou** 3 sabliers | le jackpot — aucune micro-récompense en plus |
 
 Une semaine pleine vaut **450 points, 2 sabliers et 25 jetons** : de quoi
@@ -1361,8 +1392,9 @@ par l'appareil.
   touchent aux points sont **refusés** avec la phrase qui dit quoi faire
   (« Connecte-toi pour recycler un doublon : tes points vivent sur ton compte. ») :
   pas de repli silencieux vers un calcul local, qui donnerait un gain repris à la
-  synchronisation suivante. Les achats aux **jetons** restent locaux — un jeton
-  n'est pas un point, et le pity ne se paie pas avec de la monnaie de carte.
+  synchronisation suivante. Les achats aux **jetons** suivent la même règle
+  depuis `0035` : c'est le serveur qui débite (il relit le prix, refuse une
+  Légendaire), et sans compte l'achat est refusé au lieu d'être payé en local.
 
 **Le prix à payer, dit franchement** : sans réseau, les points ne bougent plus.
 Un build **sans cloud** garde tout en local (le wallet n'existe pas), mais un

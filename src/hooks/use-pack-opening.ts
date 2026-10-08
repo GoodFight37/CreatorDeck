@@ -118,9 +118,11 @@ export function usePackOpening(game: GameView | null): {
       // doit le savoir tout de suite, sinon « ton paquet est exposé » arriverait
       // en retard. C'est une conséquence du tirage, pas de l'écran.
       void cloudStore.loadLastPacks();
-      // Le tirage a payé ses 12 points **côté serveur** (trigger
-      // `wallet_on_draw`) : on adopte son solde plutôt que d'accumuler le nôtre.
+      // Le tirage a payé ses 12 points **et ses jetons** côté serveur (trigger
+      // `wallet_on_draw`, `0035`) : on adopte ses soldes plutôt que d'accumuler
+      // les nôtres.
       void cloudStore.syncWallet();
+      void cloudStore.syncTokens();
       preload(outcome.cards);
       return {
         status: "drawn",

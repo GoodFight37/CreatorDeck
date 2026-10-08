@@ -79,6 +79,8 @@ export type CloudStoreActions = {
   syncWallet: ReturnType<typeof walletActions>["syncWallet"];
   recycleDoublon: ReturnType<typeof walletActions>["recycleDoublon"];
   craftWithPoints: ReturnType<typeof walletActions>["craftWithPoints"];
+  syncTokens: ReturnType<typeof walletActions>["syncTokens"];
+  craftWithTokens: ReturnType<typeof walletActions>["craftWithTokens"];
   claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];
   claimSeason: ReturnType<typeof walletActions>["claimSeason"];
   redeemPromoCode: ReturnType<typeof packActions>["redeemPromoCode"];

@@ -2,6 +2,7 @@ import type { CloudStoreContext } from "./context";
 import type { CloudActionOutcome } from "./types";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import {
+  applyTokens,
   applyWallet,
   claimMilestone as engineClaimMilestone,
   claimSeason as engineClaimSeason,
@@ -27,9 +28,14 @@ import {
  * palier », « ce palier de famille »), jamais un montant — et la collection part
  * au cloud **avant** la demande, pour que le serveur regarde la bonne version.
  *
- * Deux gains ne passent pas par ici, et c'est volontaire : **un tirage et une
- * vente** sont versés par le serveur lui-même, au moment où il enregistre le
- * fait — il n'y a donc rien à demander, et rien à prouver.
+ * Les **jetons** sont la deuxième caisse (`0035_jetons.sql`) : même dessin,
+ * autre monnaie — `syncTokens()` recale le miroir local, `craftWithTokens()`
+ * paie le créateur visé, et les gains (le tirage, la série) sont versés par le
+ * serveur au moment du fait.
+ *
+ * Trois gains ne passent pas par ici, et c'est volontaire : **un tirage, une
+ * vente et un jour de série** sont versés par le serveur lui-même, au moment
+ * où il enregistre le fait — il n'y a donc rien à demander, et rien à prouver.
  *
  * Chaque action suit le même ordre : le serveur d'abord, le moteur local
  * ensuite, puis le solde du serveur est réadopté. Le solde affiché est ainsi
@@ -142,6 +148,63 @@ export function walletActions(ctx: CloudStoreContext) {
         delta > 0 ? `Doublon recyclé : +${delta} points.` : "Ce doublon était déjà recyclé.",
         { pushFirst: true },
       );
+    },
+
+    /**
+     * Lit le solde de **jetons** du serveur et recale le miroir local.
+     *
+     * Silencieux en cas d'échec, comme `syncWallet` : l'écran garde alors ce
+     * qu'il affiche déjà. Un projet qui n'a pas encore collé `0035` répond
+     * « fonction inconnue » — le solde local reste donc tel quel.
+     */
+    async syncTokens(): Promise<number | null> {
+      const api = ctx.resolve();
+      if (!api?.session()) return null;
+      try {
+        const tokens = await api.tokensGet();
+        const local = ctx.deps.readState();
+        if (local) {
+          const next = applyTokens(local, tokens, ctx.deps.now());
+          if (next !== local) ctx.deps.applyState(next);
+        }
+        return tokens;
+      } catch {
+        return null;
+      }
+    },
+
+    /**
+     * Rejoint un créateur contre **400 jetons** (`0035`).
+     *
+     * Le serveur relit le prix et refuse une Légendaire, un créateur retiré du
+     * classement ou déjà possédé : l'appareil propose un slug, jamais un prix.
+     * La collection monte ensuite localement, puis part au cloud — le serveur a
+     * déjà débité, et c'est sa version qui fait foi.
+     */
+    async craftWithTokens(slug: string): Promise<CloudActionOutcome> {
+      const ready = gate("rejoindre un créateur");
+      if ("refusal" in ready) return ready.refusal;
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const movement = await ready.api.tokensSpend(slug);
+        const local = ctx.deps.readState();
+        if (local) {
+          const joined = engineCraftCreator(local, slug, ctx.deps.now());
+          const next = applyTokens(joined, movement.tokens, ctx.deps.now());
+          if (next !== local) ctx.deps.applyState(next);
+        }
+        await ctx.pushAfterServer().catch(() => undefined);
+        const message =
+          movement.spent > 0
+            ? `Créateur rejoint : ${movement.spent} jetons dépensés.`
+            : "Ce créateur était déjà payé.";
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: -movement.spent };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(error, "Rejoindre ce créateur est impossible.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
     },
 
     /** Rejoint un créateur contre des points : le serveur recalcule le prix. */

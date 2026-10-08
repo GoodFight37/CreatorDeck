@@ -141,6 +141,14 @@ export function messageFor(status: number, code: string, raw: string): string {
   ) {
     return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
+  // Les jetons : la migration 0035 doit être collée dans le projet.
+  //
+  // C'est la dernière arrivée, et la seule dont l'absence se voit à l'écran :
+  // le solde de jetons et l'achat aux jetons répondent « fonction inconnue »
+  // tant qu'elle n'est pas là. Le message dit quoi coller, comme les autres.
+  if (code === "PGRST202" && /tokens_get|tokens_spend|_tokens_|token_ledger/.test(raw)) {
+    return "Les jetons ne sont pas encore installés sur ce projet : colle supabase/migrations/0035_jetons.sql dans le SQL Editor (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
+  }
   // La wishlist : la migration 0015 doit être collée dans le projet.
   if (code === "PGRST202" && /wishlist_slug|set_wishlist|clear_wishlist|_wishlist/.test(raw)) {
     return "La wishlist n'est pas installée sur ce projet : colle supabase/migrations/0015_wishlist.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";

@@ -1714,6 +1714,20 @@ export function applyPackResult(
      */
     pointsFromServer?: boolean;
     /**
+     * Les **jetons** vivent au serveur depuis `0035_jetons.sql` : quand le
+     * tirage vient du cloud, c'est lui qui les verse (`_wallet_on_draw()`) et
+     * le moteur n'en crédite aucun. Le solde local est un miroir, recalé par
+     * `tokens_get()` juste après le tirage.
+     */
+    tokensFromServer?: boolean;
+    /**
+     * Les jetons que **le serveur** dit avoir versés pour ce jour de série,
+     * quand il l'a dit (`0035`). `0` veut dire « ce jour ne paie pas de
+     * jetons » ou « il a déjà été payé » : dans les deux cas, l'annonce ne doit
+     * pas promettre des jetons que le serveur n'a pas donnés.
+     */
+    rewardTokens?: number | null;
+    /**
      * Le jour de série que **le serveur** a payé, quand il l'a dit (`0032`).
      * Il fait foi : l'horloge de l'appareil peut avoir dérivé, et la journée
      * de jeu change à 6 h UTC — une minute d'écart suffit à annoncer le
@@ -1812,10 +1826,20 @@ export function applyPackResult(
         rareDrop: card.rareDrop,
       })),
     ],
-    // Jetons : 5 par booster ouvert (7 pendant le Prime Time). Le tirage est
-    // le seul moyen d'en gagner — c'est ce qui en fait une monnaie, et pas un
-    // lot de consolation.
-    tokens: state.tokens + tokensForPack(now) + (granted?.tokens ?? 0),
+    // Jetons : 5 par booster ouvert (7 pendant le Prime Time), plus la prime
+    // du jour de série. Le tirage est le seul moyen d'en gagner — c'est ce qui
+    // en fait une monnaie, et pas un lot de consolation.
+    //
+    // **En ligne, c'est le serveur qui les verse** (`0035`) : il les compte au
+    // moment du tirage et au jour de série, et le solde local n'est qu'un
+    // miroir. Les compter ici aussi gonflerait le solde de 5 à chaque booster —
+    // et l'écrasement par la ligne serveur perdrait le gain, dans un sens
+    // comme dans l'autre.
+    tokens:
+      state.tokens +
+      (options.tokensFromServer === true
+        ? 0
+        : tokensForPack(now) + (granted?.tokens ?? 0)),
     // Plancher de malchance : zéro dès qu'un Légendaire est sorti (la
     // garantie le fait forcément tombler), sinon +1. Le compteur ne dépasse
     // donc jamais le seuil.
@@ -1844,7 +1868,15 @@ export function applyPackResult(
     };
   }
 
-  return { state: next, cards, streakReward: granted };
+  // Ce que l'écran annonce. En ligne, la part « jetons » vient de la réponse du
+  // serveur : il peut n'avoir rien versé (le jour était déjà payé), et l'écran
+  // ne doit pas promettre un gain qui n'a pas eu lieu.
+  const annonce =
+    granted && options.tokensFromServer === true && typeof options.rewardTokens === "number"
+      ? { ...granted, tokens: options.rewardTokens }
+      : granted;
+
+  return { state: next, cards, streakReward: annonce };
 }
 
 /**
@@ -1884,6 +1916,21 @@ export function applyWallet(state: PlayerState, serverPoints: number, now = Date
 }
 
 /**
+ * Adopte le solde de **jetons du serveur** (`0035_jetons.sql`).
+ *
+ * Exactement le raisonnement d'`applyWallet` : `state.tokens` n'est plus une
+ * décision, c'est un miroir. Le jeu continue de l'afficher, et c'est cette
+ * fonction qui l'écrit quand le serveur a parlé — un solde bricolé à la main
+ * disparaît donc à la première lecture.
+ */
+export function applyTokens(state: PlayerState, serverTokens: number, now = Date.now()): PlayerState {
+  // Un solde négatif n'existe pas ; un non-nombre non plus (réponse illisible).
+  const tokens = Number.isFinite(serverTokens) ? Math.max(0, Math.floor(serverTokens)) : state.tokens;
+  if (tokens === state.tokens) return state;
+  return { ...state, updatedAt: now, tokens };
+}
+
+/**
  * Aligne les compteurs de progression sur ceux du serveur.
  *
  * Quand le joueur a un compte, c'est le serveur qui décide du plancher de
@@ -1892,7 +1939,8 @@ export function applyWallet(state: PlayerState, serverPoints: number, now = Date
  * afficher **ce chiffre-là**, sinon la promesse « encore 3 boosters » ne
  * correspondrait pas au booster que le serveur va tirer.
  *
- * Les jetons, eux, ne bougent pas : ils ne vivent que sur l'appareil.
+ * Les jetons, eux, ne passent pas par ici : ils sont au serveur depuis `0035`,
+ * et c'est `applyTokens()` qui recale leur miroir.
  */
 export function applyServerProgression(
   state: PlayerState,
