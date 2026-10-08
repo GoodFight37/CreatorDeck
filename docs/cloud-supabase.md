@@ -288,8 +288,8 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      créateur retiré du classement ou déjà possédé. La bascule ouvre le compte
      **une fois** avec le solde déjà gagné (borné à un million, comme
      `_wallet_ensure()` dans `0027`). La migration ajoute aussi
-     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des sept
-     dernières migrations (`0030` → `0036`) sont installées — c'est la réponse à
+     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des huit
+     dernières migrations (`0030` → `0037`) sont installées — c'est la réponse à
      « est-ce que c'est bien le SQL que j'ai collé ? », y compris pour `0034`,
      qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
      jetons, les missions du jour ».
@@ -1012,8 +1012,8 @@ de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
 jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
 le prochain booster est un J1, et il paie à nouveau.
 
-**Savoir ce qui est collé (`0035`, complétée par `0036`).** `schema_versions()` rend un objet
-`{ "0030": true, …, "0036": true }` : chaque clé est un numéro de migration, la
+**Savoir ce qui est collé (`0035`, complétée par `0036` puis `0037`).** `schema_versions()` rend un objet
+`{ "0030": true, …, "0037": true }` : chaque clé est un numéro de migration, la
 valeur dit si elle est **dans la base**. Elle ne lit que le catalogue (le texte
 des fonctions internes, via `_schema_body()`) et ne rend que des booléens — donc
 elle se lit **sans compte** :
@@ -1027,7 +1027,7 @@ C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
 existantes), donc son absence ne se voyait nulle part ailleurs. Le workflow
 `.github/workflows/prod-check.yml` interroge la même fonction et écrit le verdict
-en clair dans le journal du run — une ligne `0030` → `0036` par migration,
+en clair dans le journal du run — une ligne `0030` → `0037` par migration,
 `collée` ou `ABSENTE`, puis ce qu'il reste à coller, ou « la base est à jour ».
 Il se réveille quand ce fichier change (une poussée de code ne le déclenche pas)
 et depuis l'onglet Actions (`workflow_dispatch`).
@@ -1837,7 +1837,9 @@ classement d'un joueur, ou **Profil → Ma fiche publique** pour la sienne.
 
 **Fait :** **réveil du téléphone** (les notifications de direct : § 9.1 — un
 créateur épinglé ou dont le joueur a une carte passe en direct, le téléphone
-sonne) ; **carnet de notifications** (offres, réponses, amis, ventes —
+sonne) ; **les deux alertes de perte** (§ 9.2 — la série qui s'arrête ce soir,
+la réserve pleine dont la recharge se perd : elles annoncent ce qu'on peut
+encore éviter, jamais une promesse) ; **carnet de notifications** (offres, réponses, amis, ventes —
 reconstruit depuis les faits déjà enregistrés, pastille dans le menu « Toi ») ;
 **connexion Twitch** (identité OAuth par le fournisseur Twitch
 intégré à Supabase, le secret restant côté serveur) ;
@@ -2020,6 +2022,60 @@ choses ont changé :
   temps réel sur les offres et le carnet (aujourd'hui : rafraîchissement
   manuel ou à l'ouverture de l'écran), revente entre joueurs (l'hôtel, lui,
   est en place — §8).
+
+### 9.2 Les deux alertes de perte (livré le 8 octobre 2026)
+
+Le direct réveille ; ces deux-là **protègent ce qui est déjà gagné**. C'est le
+brief du joueur, mot pour mot : « rien ne prévient un joueur que sa réserve de
+boosters va plafonner (un booster qui se perd, littéralement), ni que sa série
+de 7 jours va se casser ce soir ». La différence de ton est la règle :
+
+* on **nomme une perte**, jamais une promesse : « Ta série s'arrête ce soir »
+  (`J5 sur 7 — ouvre un booster avant 6 h et elle continue.`) et « Réserve
+  pleine : un booster se perd » (`Tes 4 boosters attendent (le maximum) —
+  au-delà, la recharge est perdue.`) ;
+* le chiffre **vient de la base** (`viewers` porte le jour du cycle ou le
+  nombre de boosters), il n'est pas inventé dans la fonction d'envoi ;
+* aucune des deux ne se déclenche sur du vide : la série doit être **vivante**
+  (dernier booster hier) et **pas faite aujourd'hui**, la réserve doit être
+  **pleine depuis qu'une recharge s'est perdue** (deux heures : une heure pour
+  se remplir, une heure de sursis) ;
+* une seule alerte par soirée : deux alertes qui se repoussent l'une l'autre
+  sont deux alertes qui n'arrivent jamais — le plafond « une par heure » de
+  `0023` ne s'applique donc plus qu'aux **directs**.
+
+**Ce que `0037_gardes.sql` ajoute, et ce qu'il n'ajoute pas.** Aucune table,
+aucune colonne, aucune porte de plus côté joueur : `push_targets()` est
+**remplacée** (même signature, même liste de colonnes), avec deux conditions
+de plus. Deux fonctions internes décident (`_push_serie_due`,
+`_push_reserve_due`), révoquées au client comme le reste, et le rapport de
+version gagne sa ligne :
+
+```sql
+-- la clé qui dit si `0037` est dans la base
+'0037', to_regprocedure('public._push_serie_due(uuid, timestamptz, integer)') is not null
+```
+
+Trois choses vérifiées plutôt que commentées : **un direct en cours ne chasse
+pas l'alerte** (une ligne fraîche du journal ne bloque que les directs), **la
+ligne `série` ne consomme pas le tour du direct** (sinon prévenir d'une perte
+ferait perdre le direct du soir), et **l'interrupteur du carnet les coupe**
+comme tout le reste.
+
+**Un piège à connaître, trouvé par les contrôles.** `0023_notifications.sql`
+définit `push_targets()` ; `0037` la remplace. **Recoller `0023` seule après
+coup efface donc les deux alertes** (le vérificateur a joué exactement ce cas).
+L'ordre de collage est celui du menu de migrations : `0036` puis `0037`, et si
+un fichier est recollé pour une raison quelconque, `0037` se recolle derrière.
+
+**Écarté, avec le chiffre qui manquait** (détail dans l'en-tête de
+`0037_gardes.sql`) : un **indicateur de malchance ajouté sur l'onglet Drop**
+(la ligne existe déjà sur l'accueil — « Légendaire garanti dans N boosters »,
+cliquable vers les taux publiés) ; un **rival hebdomadaire parmi ses amis**
+(l'écart est déjà public et comparable ; la comparaison sociale entre deux
+personnes qui se connaissent est la mécanique la plus toxique du lot) ; et
+**pousser l'affiche après un gros tirage** (elle est déjà là, sur un Légendaire
+ou un Perfect, **à la demande** — `reveal-overlay.tsx`, `deservesSpotlight`).
 
 ## 10. Dépannage
 

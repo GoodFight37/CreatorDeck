@@ -58,6 +58,24 @@ const ETAT_CODE = ETAT_SQL.split("\n")
   .join("\n");
 const MAGASIN = stripComments(read("src", "lib", "cloud", "store", "account.ts"));
 const CARNET = read("src", "components", "notifications-sheet.tsx");
+const GARDES_SQL = read("supabase", "migrations", "0037_gardes.sql");
+// Le SQL sans ses commentaires : une explication qui cite une règle n'est pas la
+// règle (même piège que plus haut, avec `--`).
+const GARDES = GARDES_SQL.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n");
+/**
+ * Le corps d'une fonction du fichier, de son en-tête au `$$;` qui la referme.
+ * Le fichier porte trois fonctions qui n'ont pas le droit de se mélanger : la
+ * garde de série ne doit **pas** écrire, `push_targets()` si.
+ */
+function corpsDe(source: string, entete: string): string {
+  const debut = source.indexOf(entete);
+  expect(debut).toBeGreaterThanOrEqual(0);
+  const fin = source.indexOf("$$;", debut);
+  expect(fin).toBeGreaterThan(debut);
+  return source.slice(debut, fin);
+}
 const PACKAGE = JSON.parse(read("package.json")) as {
   dependencies: Record<string, string>;
 };
@@ -190,6 +208,112 @@ describe("notify-live (la fonction qui envoie)", () => {
     expect(FUNCTION).toContain("Ton épinglé est en direct");
     expect(FUNCTION).toMatch(/vient de lancer son live/);
     expect(FUNCTION).toContain("spectateurs");
+  });
+});
+
+describe("0037_gardes.sql (les deux alertes de perte)", () => {
+  const SERIE = corpsDe(GARDES, "create or replace function public._push_serie_due(");
+  const RESERVE = corpsDe(GARDES, "create or replace function public._push_reserve_due(");
+  const CIBLES = corpsDe(GARDES, "create or replace function public.push_targets(");
+
+  it("n'ajoute pas de système : les deux alertes sont deux conditions de plus", () => {
+    // Le brief est explicite : « pas un nouveau système, juste deux conditions
+    // de plus ». Aucune table, aucune colonne — et `push_targets()` est
+    // remplacée, pas dupliquée (une seule porte d'envoi).
+    expect(GARDES).not.toMatch(/create table/i);
+    expect(GARDES).not.toMatch(/alter table/i);
+    expect(GARDES).toContain("create or replace function public.push_targets()");
+  });
+
+  it("les deux gardes lisent, elles n'écrivent pas", () => {
+    // L'écriture vit dans `push_targets()`, au moment où l'alerte est choisie.
+    // Une garde qui écrirait modifierait l'état du joueur en le consultant.
+    expect(SERIE).not.toMatch(/\b(insert|update|delete)\b/i);
+    expect(RESERVE).not.toMatch(/\b(insert|update|delete)\b/i);
+  });
+
+  it("la garde de série ne compte que les tirages, avec la journée de jeu du serveur", () => {
+    expect(SERIE).toContain("d.kind = 'live'");
+    expect(SERIE).toContain("public._pack_game_day");
+  });
+
+  it("elle se tait si la série est faite, cassée, ou déjà annoncée ce soir", () => {
+    expect(SERIE).toMatch(/v_days\[1\] = v_today[\s\S]*?return null/);
+    expect(SERIE).toMatch(/v_days\[1\] < v_today - 1[\s\S]*?return null/);
+    expect(SERIE).toContain("public._push_last_sent(p_user, 'série')");
+    expect(SERIE).toContain("p_ignore_seconds integer default 7200");
+  });
+
+  it("elle annonce le jour du cycle, celui du jeu (le 8ᵉ jour redevient J1)", () => {
+    expect(SERIE).toContain("((v_streak - 1) % 7) + 1");
+  });
+
+  it("la garde de réserve suit l'horloge du jeu, recul d'horloge compris", () => {
+    expect(RESERVE).toMatch(/v_packs is null or v_packs < 4[\s\S]*?return null/);
+    expect(RESERVE).toContain("1800000"); // la période de `_pack_refresh` (`0004`)
+    expect(RESERVE).toContain("least(v_last, p_now)");
+    expect(RESERVE).toContain("public._push_last_sent(p_user, 'réserves')");
+    expect(RESERVE).toContain("return v_packs");
+  });
+
+  it("les alertes passent après les directs, et jamais sur le même appareil au même passage", () => {
+    expect(CIBLES).toContain("not exists (select 1 from choisis c where c.token = g.token)");
+    expect(CIBLES).toContain("order by 1, 2, 6");
+  });
+
+  it("elles échappent au plafond d'une heure, qui ne parle que des directs", () => {
+    // Sans cette exception, une alerte chasse l'autre : deux alertes qui se
+    // repoussent l'une l'autre sont deux alertes qui n'arrivent jamais.
+    expect(CIBLES).toContain("l.login not in ('série', 'réserves')");
+    expect(CIBLES).toContain("interval '1 hour'");
+    expect(CIBLES).toContain("interval '6 hours'");
+  });
+
+  it("une ligne de journal par joueur et par clé, sinon Postgres refuse l'insertion", () => {
+    // Deux appareils visent la même clé `(user_id, login)` : sans ce
+    // dédoublonnage, `on conflict` échoue sur sa propre insertion.
+    expect(CIBLES).toContain("distinct on (c.user_id, c.login)");
+    expect(CIBLES).toContain("on conflict (user_id, login) do update set sent_at = excluded.sent_at");
+    expect(CIBLES).toContain("#variable_conflict use_column");
+  });
+
+  it("reste hors de portée d'un joueur, même connecté, et rejouable", () => {
+    expect(GARDES).toContain(
+      "revoke all on function public._push_serie_due(uuid, timestamptz, integer) from public, anon, authenticated",
+    );
+    expect(GARDES).toContain(
+      "revoke all on function public._push_reserve_due(uuid, timestamptz, integer) from public, anon, authenticated",
+    );
+    expect(GARDES).toContain("revoke all on function public.push_targets() from public, anon, authenticated");
+    expect(GARDES).toMatch(/pg_roles where rolname = 'service_role'/);
+  });
+
+  it("se déclare dans `schema_versions()`, sinon le joueur ignore si elle est collée", () => {
+    expect(GARDES).toContain(
+      "'0037', to_regprocedure('public._push_serie_due(uuid, timestamptz, integer)') is not null",
+    );
+  });
+
+  it("est jouée pour de vrai par le vérificateur, pas seulement décrite ici", () => {
+    expect(VERIFIER).toContain("0037_gardes.sql");
+    expect(VERIFIER).toContain("alertes : la série vivante et pas faite aujourd'hui donne son jour du cycle");
+    expect(VERIFIER).toContain("alertes : la ligne de l'alerte ne consomme pas le tour du direct");
+    expect(VERIFIER).toContain("alertes : l'interrupteur coupé les fait taire aussi");
+  });
+});
+
+describe("notify-live (les deux phrases de perte)", () => {
+  it("dit ce qui va être perdu et comment l'éviter, sans rien promettre", () => {
+    expect(FUNCTION).toContain("Ta série s'arrête ce soir");
+    expect(FUNCTION).toMatch(/sur 7 — ouvre un booster avant 6 h/);
+    expect(FUNCTION).toContain("Réserve pleine : un booster se perd");
+    expect(FUNCTION).toMatch(/Tes \$\{packs\} boosters attendent/);
+  });
+
+  it("les range sous une famille à part, sans toucher aux directs", () => {
+    expect(FUNCTION).toContain('target.reason === "serie"');
+    expect(FUNCTION).toContain('target.reason === "reserve"');
+    expect(FUNCTION).toMatch(/reason === "serie" \|\| target\.reason === "reserve" \? "perte" : "direct"/);
   });
 });
 

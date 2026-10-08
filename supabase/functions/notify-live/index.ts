@@ -3,11 +3,16 @@
  *
  * Le partage des rôles :
  *
- *   * la **base** décide qui prévenir (`push_targets()`, `0023_notifications.sql`) :
- *     épinglé ou carte possédée, direct de moins de 30 minutes, une notification
- *     par heure et par joueur, six heures minimum avant de relancer le même
- *     créateur. Cette fonction ne rejoue aucune de ces règles : elle demande la
- *     liste et l'envoie ;
+ *   * la **base** décide qui prévenir (`push_targets()`, `0023_notifications.sql`
+ *     puis `0037_gardes.sql`) : un direct de moins de 30 minutes (épinglé ou carte
+ *     possédée, une notification par heure et par joueur, six heures minimum
+ *     avant de relancer le même créateur), **ou** une des deux alertes de perte —
+ *     « ta série s'arrête ce soir », « ta réserve est pleine » (`0037`), une par
+ *     soirée chacune. Cette fonction ne rejoue aucune de ces règles : elle
+ *     demande la liste et l'envoie ;
+ *   * **cette fonction** écrit les phrases. Elles sont au même endroit pour les
+ *     trois familles (`messageFor`) : une règle qui se lit à l'écran ne doit pas
+ *     s'écrire deux fois ;
  *   * **cette fonction** parle à Firebase (FCM HTTP v1) et nettoie les jetons
  *     que Google déclare morts (appareil désinstallé, jeton révoqué).
  *
@@ -226,7 +231,14 @@ type Target = {
   token: string;
   login: string;
   display_name: string;
+  /**
+   * Pour un direct : les spectateurs. Pour une **alerte de perte** (`0037`),
+   * c'est le chiffre que la phrase utilise — le jour du cycle pour la série, le
+   * nombre de boosters en réserve pour les réserves. `push_targets()` le
+   * documente de son côté.
+   */
   viewers: number;
+  /** `epingle`, `collection`, `serie` ou `reserve` (`0037`). */
   reason: string;
 };
 
@@ -237,12 +249,41 @@ type Target = {
  * obligation.
  */
 export function messageFor(target: Target): { title: string; body: string } {
+  // --- Les deux alertes de perte (`0037`) ----------------------------------
+  //
+  // Elles nomment **une perte qu'on peut encore éviter**, jamais une promesse :
+  // un booster au-delà de quatre est perdu, une série qui saute repart à J1. Le
+  // chiffre vient de la base (`viewers`), il n'est pas inventé ici.
+  if (target.reason === "serie") {
+    const jour = target.viewers > 0 ? `J${target.viewers}` : "ta série";
+    return {
+      title: "Ta série s'arrête ce soir",
+      body: `${jour} sur 7 — ouvre un booster avant 6 h et elle continue.`,
+    };
+  }
+  if (target.reason === "reserve") {
+    const packs = target.viewers > 0 ? target.viewers : 4;
+    return {
+      title: "Réserve pleine : un booster se perd",
+      body: `Tes ${packs} boosters attendent (le maximum) — au-delà, la recharge est perdue.`,
+    };
+  }
+
+  // --- Les directs ----------------------------------------------------------
+  // Le texte dit **pourquoi** : c'est ce qui fait ouvrir l'app (le brief le
+  // répète). L'épinglé est nommé comme tel parce que le joueur l'a choisi ; la
+  // carte possédée est une occasion, pas une obligation.
   const name = target.display_name || target.login;
   const viewers = target.viewers > 0 ? `${new Intl.NumberFormat("fr-FR").format(target.viewers)} spectateurs` : "en direct";
   if (target.reason === "epingle") {
     return { title: "Ton épinglé est en direct", body: `@${target.login} · ${viewers}` };
   }
   return { title: `${name} vient de lancer son live`, body: `${viewers} — tu as des cartes de ce créateur` };
+}
+
+/** La famille d'une notification : trois direct, deux alertes de perte. */
+function kindFor(target: Target): string {
+  return target.reason === "serie" || target.reason === "reserve" ? "perte" : "direct";
 }
 
 type SendResult = { sent: boolean; dead: boolean; error?: string };
@@ -272,6 +313,9 @@ async function send(
             login: target.login,
             viewers: String(target.viewers),
             reason: target.reason,
+            // `kind` : la famille de notification, pour un futur routage de
+            // l'appui (ouvrir l'écran de la chaîne sur une alerte de série…).
+            kind: kindFor(target),
           },
           android: {
             priority: "high",
@@ -398,24 +442,34 @@ Deno.serve(async (req) => {
     const targets = (await rest("rpc/push_targets", { method: "POST", body: "{}" })) as Target[];
 
     let sent = 0;
-    const dead: string[] = [];
+    const dead = new Set<string>();
     const errors: string[] = [];
+    // Une erreur sur **une** cible ne doit pas priver les autres de leur
+    // notification : chaque envoi est isolé, et l'échec remonte dans `erreurs`.
     for (const target of targets) {
-      const message = messageFor(target);
-      const result = await send(account, target.token, target, message);
-      if (result.sent) sent += 1;
-      if (result.dead) dead.push(target.token);
-      if (result.error) errors.push(result.error);
+      try {
+        const message = messageFor(target);
+        const result = await send(account, target.token, target, message);
+        if (result.sent) sent += 1;
+        if (result.dead) dead.add(target.token);
+        if (result.error) errors.push(result.error);
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : String(error));
+      }
     }
 
     // Un jeton mort est retiré : sans ça, chaque passage retenterait un envoi
-    // perdu et le compteur d'appareils mentirait dans le diagnostic.
-    for (const token of dead) await rest(`push_tokens?token=eq.${encodeURIComponent(token)}`, { method: "DELETE" });
+    // perdu et le compteur d'appareils mentirait dans le diagnostic. Un même
+    // jeton ne se supprime qu'une fois — deux lignes de la même liste peuvent le
+    // désigner (le direct *et* l'alerte d'un même appareil).
+    for (const token of dead) {
+      await rest(`push_tokens?token=eq.${encodeURIComponent(token)}`, { method: "DELETE" });
+    }
 
     if (targets.length > 0) {
-      console.log(`notify-live : ${sent}/${targets.length} notifications envoyées, ${dead.length} jeton(s) retiré(s)`);
+      console.log(`notify-live : ${sent}/${targets.length} notifications envoyées, ${dead.size} jeton(s) retiré(s)`);
     }
-    return json({ ok: true, choisis: targets.length, envoyees: sent, jetons_retires: dead.length, erreurs: errors });
+    return json({ ok: true, choisis: targets.length, envoyees: sent, jetons_retires: dead.size, erreurs: errors });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`notify-live : ${message}`);

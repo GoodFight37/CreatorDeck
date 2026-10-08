@@ -163,6 +163,7 @@ try {
   const protege = await readFile(path.join(MIGRATIONS, "0034_last_pack_protege.sql"), "utf8");
   const jetons = await readFile(path.join(MIGRATIONS, "0035_jetons.sql"), "utf8");
   const chaine = await readFile(path.join(MIGRATIONS, "0036_streamer.sql"), "utf8");
+  const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -200,6 +201,7 @@ try {
     ["0034_last_pack_protege.sql", protege],
     ["0035_jetons.sql", jetons],
     ["0036_streamer.sql", chaine],
+    ["0037_gardes.sql", gardes],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1029,12 +1031,258 @@ try {
 
   // Rejouer la migration ne casse rien : jetons conservés, fonctions en place.
   await client.query(notifications);
+  // Rejouer `0023` **seule** ramène `push_targets()` à sa version d'origine : les
+  // gardes de `0037` disparaissent. C'est la seule raison pour laquelle `0037`
+  // doit être collée (ou recollée) après `0023` — et pourquoi ce rejeu est suivi
+  // du sien, sinon la rejouabilité se testerait sur une base qui n'a plus la
+  // dernière migration.
+  await client.query(gardes);
   check(
     "notifications : la migration est rejouable, jetons compris",
     (await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n === 2 &&
       (await client.query("select count(*)::int as n from pg_proc where proname = 'push_targets'")).rows[0].n === 1,
     String((await client.query("select count(*)::int as n from public.push_tokens")).rows[0].n),
   );
+
+  // --- Les alertes de perte (0037) -----------------------------------------
+  //
+  // Deux notifications qui ne promettent rien : elles annoncent une **perte**
+  // qu'on peut encore éviter — la série qui repart à J1 si le booster du jour
+  // n'est pas ouvert, les boosters qui cessent de s'accumuler quand la réserve
+  // est pleine. Comme le direct, elles se décident **côté serveur**, dans
+  // `push_targets()`, et cette section les éprouve là où ça compte : le calcul
+  // de la journée de jeu, le silence quand il n'y a rien à sauver, l'anti-doublon
+  // d'une soirée, et le fait qu'une alerte ne se fasse **pas** repousser par
+  // une autre.
+  const JOUEUR_SERIE = "cccccccc-0003-4000-8000-00000000c003";
+  const JOUEUR_PLEINE = "dddddddd-0004-4000-8000-00000000d004";
+  const JOUEUR_CALME = "eeeeeeee-0005-4000-8000-00000000e005";
+  await player(JOUEUR_SERIE, "Nolwenn", []);
+  await player(JOUEUR_PLEINE, "Pénélope", []);
+  await player(JOUEUR_CALME, "Quitterie", []);
+  const TOKEN_SERIE = "fcm-serie-000000000000000000000000000000000000000000000000000";
+  const TOKEN_PLEINE = "fcm-pleine-00000000000000000000000000000000000000000000000000";
+  const TOKEN_CALME = "fcm-calme-000000000000000000000000000000000000000000000000000";
+  await asPlayer(JOUEUR_SERIE, "select public.register_push_token($1, 'android') as r", [TOKEN_SERIE]);
+  await asPlayer(JOUEUR_PLEINE, "select public.register_push_token($1, 'android') as r", [TOKEN_PLEINE]);
+  await asPlayer(JOUEUR_CALME, "select public.register_push_token($1, 'android') as r", [TOKEN_CALME]);
+
+  /**
+   * Pose un tirage `live` un jour de jeu donné (`0` = aujourd'hui, `1` = hier).
+   * L'heure est midi UTC : la journée de jeu bascule à 6 h UTC, donc midi est
+   * en plein milieu — le contrôle ne dépend pas de l'heure du run.
+   */
+  async function tirageJour(userId, joursEnArriere) {
+    // Cinq cartes, comme un vrai tirage : `pack_draws` refuse une ligne qui n'a
+    // pas exactement cinq cartes, et un tirage vide ne serait pas un tirage.
+    const cartes = Array.from({ length: 5 }, (_, index) => card(`tiroir-${index}`, second.slug, "common", "standard", 0));
+    // Le déclencheur du Last Pack (`0012`) publie un paquet qui expire dix
+    // minutes plus tard et purge aussitôt ceux qui sont périmés : antidater un
+    // tirage d'hier laisserait donc une ligne de `pack_draws` **sans** Last
+    // Pack, et le contrôle final (« pas de double publication ») verrait un
+    // écart qui n'a rien à voir avec les alertes. On le coupe le temps de
+    // l'insertion — ces tirages ne sont pas des tirages de joueur, ils posent
+    // des **dates** dans le journal.
+    await client.query("alter table public.pack_draws disable trigger pack_draws_last_pack");
+    try {
+      await client.query(
+        `insert into public.pack_draws (user_id, drawn_at, cards, kind)
+         values ($1, ((public._pack_game_day(now()) - $2::integer) + time '12:00') at time zone 'utc', $3::jsonb, 'live')`,
+        [userId, joursEnArriere, JSON.stringify(cartes)],
+      );
+    } finally {
+      await client.query("alter table public.pack_draws enable trigger pack_draws_last_pack");
+    }
+  }
+  /** Un joueur neuf côté serveur : ni tirage, ni réserve. */
+  async function viderJournal(userId) {
+    await client.query("delete from public.push_log where user_id = $1", [userId]);
+  }
+  /** Efface les tirages d'un joueur de test (et ses Last Packs, par sûreté). */
+  async function effacerTirages(userId) {
+    await client.query("delete from public.last_packs where user_id = $1", [userId]);
+    await client.query("delete from public.pack_draws where user_id = $1", [userId]);
+  }
+  const gardeSerie = async (userId) =>
+    (await client.query("select public._push_serie_due($1, now()) as j", [userId])).rows[0].j;
+  const gardeReserve = async (userId) =>
+    (await client.query("select public._push_reserve_due($1, now()) as n", [userId])).rows[0].n;
+  const cibles = async (userId) =>
+    (await client.query("select * from public.push_targets() where user_id = $1 order by reason", [userId])).rows;
+
+  // Cinq jours d'affilée jusqu'à hier, rien aujourd'hui : la série est vivante,
+  // pas faite, et c'est un J5.
+  for (let jour = 5; jour >= 1; jour -= 1) await tirageJour(JOUEUR_SERIE, jour);
+  check(
+    "alertes : la série vivante et pas faite aujourd'hui donne son jour du cycle",
+    (await gardeSerie(JOUEUR_SERIE)) === 5,
+    String(await gardeSerie(JOUEUR_SERIE)),
+  );
+  const due = await cibles(JOUEUR_SERIE);
+  check(
+    "alertes : la série due part, une fois, vers le bon appareil",
+    due.length === 1 &&
+      due[0].reason === "serie" &&
+      due[0].login === "série" &&
+      due[0].viewers === 5 &&
+      due[0].token === TOKEN_SERIE,
+    JSON.stringify(due),
+  );
+  check(
+    "alertes : la même alerte ne repart pas juste après",
+    (await cibles(JOUEUR_SERIE)).length === 0,
+  );
+
+  // Le booster du jour est ouvert : il n'y a plus rien à sauver, et un rappel
+  // ici serait le genre de notification qui fait couper l'interrupteur.
+  await tirageJour(JOUEUR_SERIE, 0);
+  await viderJournal(JOUEUR_SERIE);
+  check(
+    "alertes : un joueur qui a déjà ouvert son booster n'est pas relancé",
+    (await gardeSerie(JOUEUR_SERIE)) === null && (await cibles(JOUEUR_SERIE)).length === 0,
+  );
+
+  // Une série cassée (rien depuis avant-hier) n'est pas une série à sauver ;
+  // une série de huit jours d'affilée redevient un J1 : le cycle est celui du jeu.
+  await effacerTirages(JOUEUR_SERIE);
+  for (let jour = 8; jour >= 2; jour -= 1) await tirageJour(JOUEUR_SERIE, jour);
+  check(
+    "alertes : une série déjà cassée ne se « sauve » pas",
+    (await gardeSerie(JOUEUR_SERIE)) === null,
+  );
+  await tirageJour(JOUEUR_SERIE, 1);
+  check(
+    "alertes : huit jours d'affilée redeviennent un J1, comme dans le jeu",
+    (await gardeSerie(JOUEUR_SERIE)) === 1,
+    String(await gardeSerie(JOUEUR_SERIE)),
+  );
+
+  // La réserve pleine : elle doit être pleine **depuis assez longtemps** pour
+  // qu'une recharge soit tombée dans le vide. Deux heures, c'est une heure pour
+  // se remplir (deux recharges de 30 minutes) plus une heure de sursis.
+  await client.query(
+    "insert into public.pack_state (user_id, packs, last_regen_at, openings) values ($1, 4, now() - interval '20 minutes', 0)",
+    [JOUEUR_PLEINE],
+  );
+  check(
+    "alertes : une réserve pleine mais fraîche ne dit rien (on a le temps d'ouvrir)",
+    (await gardeReserve(JOUEUR_PLEINE)) === null,
+  );
+  await client.query("update public.pack_state set last_regen_at = now() - interval '2 hours' where user_id = $1", [JOUEUR_PLEINE]);
+  check(
+    "alertes : une réserve pleine depuis deux heures annonce la perte",
+    (await gardeReserve(JOUEUR_PLEINE)) === 4,
+    String(await gardeReserve(JOUEUR_PLEINE)),
+  );
+  const reserve = await cibles(JOUEUR_PLEINE);
+  check(
+    "alertes : l'alerte de réserve part une fois, avec son chiffre",
+    reserve.length === 1 && reserve[0].reason === "reserve" && reserve[0].viewers === 4 && reserve[0].login === "réserves",
+    JSON.stringify(reserve),
+  );
+  check("alertes : la même alerte de réserve ne repart pas juste après", (await cibles(JOUEUR_PLEINE)).length === 0);
+  check(
+    "alertes : une réserve entamée n'annonce plus rien",
+    (await client.query("update public.pack_state set packs = 3, last_regen_at = now() - interval '2 hours' where user_id = $1", [JOUEUR_PLEINE]),
+     (await gardeReserve(JOUEUR_PLEINE)) === null),
+  );
+
+  // Le piège que l'ajout crée — et qu'on éprouve dans **les deux sens**, plutôt
+  // que de le commenter. Le plafond d'une heure de `0023` ne doit pas
+  // s'appliquer aux alertes (sinon une alerte chasse l'autre), et la ligne
+  // `série` du journal ne doit pas non plus consommer le tour du direct (sinon
+  // le direct du soir est perdu pour avoir prévenu d'une perte).
+  await viderJournal(JOUEUR_SERIE);
+  await asPlayer(JOUEUR_SERIE, "select public.set_wishlist($1)", [vedette.slug]);
+  await enDirect([{ login: vedette.login, display_name: vedette.display_name, viewers: 800, started_at: cinqMinutes }]);
+  // Le direct de cet après-midi est déjà passé par là : le voilà dans le journal
+  // il y a deux heures — bloqué par son plafond d'une heure, mais **pas** par
+  // celui des six heures, pour que le contrôle porte bien sur le premier.
+  await client.query("insert into public.push_log (user_id, login, sent_at) values ($1, $2, now() - interval '2 hours')", [
+    JOUEUR_SERIE,
+    vedette.login,
+  ]);
+  const avecDirectFrais = await cibles(JOUEUR_SERIE);
+  check(
+    "alertes : un direct déjà notifié ne retient pas l'alerte de perte",
+    avecDirectFrais.length === 1 && avecDirectFrais[0].reason === "serie",
+    JSON.stringify(avecDirectFrais),
+  );
+  // Le miroir exact : la ligne `série` est maintenant dans le journal, et elle
+  // ne doit pas empêcher le direct du soir de sortir. On écarte d'abord le
+  // plafond des six heures (qui, lui, parle bien du même créateur).
+  await client.query("update public.push_log set sent_at = now() - interval '7 hours' where user_id = $1 and login = $2", [
+    JOUEUR_SERIE,
+    vedette.login,
+  ]);
+  const directApresAlerte = await cibles(JOUEUR_SERIE);
+  check(
+    "alertes : la ligne de l'alerte ne consomme pas le tour du direct",
+    directApresAlerte.length === 1 &&
+      directApresAlerte[0].reason === "epingle" &&
+      directApresAlerte[0].login === vedette.login &&
+      directApresAlerte[0].viewers === 800,
+    JSON.stringify(directApresAlerte),
+  );
+
+  // Un joueur sans rien à perdre (pas de réserve côté serveur, pas de tirage) ne
+  // reçoit aucune alerte : ces pushs ne réveillent que ceux qui ont quelque
+  // chose à garder.
+  check(
+    "alertes : un joueur sans série ni réserve n'est pas réveillé",
+    (await cibles(JOUEUR_CALME)).length === 0,
+  );
+
+  // L'interrupteur coupe les alertes comme le reste : c'est la même porte.
+  await client.query("update public.pack_state set packs = 4, last_regen_at = now() - interval '3 hours' where user_id = $1", [JOUEUR_PLEINE]);
+  await viderJournal(JOUEUR_PLEINE);
+  check(
+    "alertes : l'interrupteur coupé les fait taire aussi",
+    (await asPlayer(JOUEUR_PLEINE, "select public.set_push_live(false) as r")).rows[0].r.ok === true &&
+      (await cibles(JOUEUR_PLEINE)).length === 0,
+  );
+  await asPlayer(JOUEUR_PLEINE, "select public.set_push_live(true) as r");
+  check(
+    "alertes : l'interrupteur rallumé les fait repartir",
+    (await cibles(JOUEUR_PLEINE)).some((row) => row.reason === "reserve"),
+  );
+
+  // Les deux gardes sont des fonctions internes : un joueur ne les appelle pas,
+  // et ne peut pas non plus lire le journal pour savoir quand il a été réveillé.
+  await refuses(
+    "alertes : la garde de série n'est pas appelable par un joueur",
+    JOUEUR_SERIE,
+    "select public._push_serie_due($1, now())",
+    [JOUEUR_SERIE],
+    "permission denied",
+  );
+  await refuses(
+    "alertes : la garde de réserve n'est pas appelable par un joueur",
+    JOUEUR_PLEINE,
+    "select public._push_reserve_due($1, now())",
+    [JOUEUR_PLEINE],
+    "permission denied",
+  );
+  await refuses(
+    "alertes : un joueur ne lit pas le journal des envois",
+    JOUEUR_SERIE,
+    "select count(*) from public.push_log",
+    [],
+    "permission denied",
+  );
+  check(
+    "alertes : `push_targets()` n'existe qu'une fois (migration rejouable)",
+    (await client.query("select count(*)::int as n from pg_proc where proname = 'push_targets'")).rows[0].n === 1,
+  );
+
+  // Place nette : ces trois joueurs ont fini leur travail, et un tirage de test
+  // laissé derrière lui ferait mentir le contrôle « le Last Pack n'est pas
+  // publié deux fois » — le déclencheur de `0012` purge les Last Packs périmés
+  // d'un joueur à chaque nouveau tirage, donc les deux compteurs doivent rester
+  // strictement d'accord, joueur de test compris.
+  await viderJournal(JOUEUR_SERIE);
+  await viderJournal(JOUEUR_PLEINE);
+  await effacerTirages(JOUEUR_SERIE);
 
   // --- La veille automatique du direct (0025) ------------------------------
   //
@@ -5448,6 +5696,20 @@ try {
   const afterReplay = await client.query("select count(*)::int as n from public.creators");
   check("migrations rejouables : toujours 1000 créateurs", afterReplay.rows[0].n === 1000, String(afterReplay.rows[0].n));
   check(
+    "migrations rejouables : les alertes de perte répondent encore après recollage",
+    (await client.query("select count(*)::int as n from pg_proc where proname in ('_push_serie_due', '_push_reserve_due', '_push_last_sent')")).rows[0].n === 3 &&
+      // Le tirage d'hier est posé, **lu**, puis retiré : `last_packs` et
+      // `pack_draws` sont un compteur global que le contrôle du Last Pack
+      // compare, et ce bloc de rejeu passe deux fois. Un tirage de test laissé
+      // derrière lui ferait échouer un contrôle qui n'a rien à voir avec les
+      // alertes — c'est arrivé, d'où le nettoyage.
+      (await viderJournal(JOUEUR_SERIE),
+       await effacerTirages(JOUEUR_SERIE),
+       await tirageJour(JOUEUR_SERIE, 1),
+       (await client.query("select public._push_serie_due($1, now()) as j", [JOUEUR_SERIE])).rows[0].j === 1 &&
+         (await effacerTirages(JOUEUR_SERIE), true)),
+  );
+  check(
     "migrations rejouables : le carnet des ventes répond encore",
     (await asPlayer(G, "select public.market_sales(20) as r")).rows[0].r.length === 1,
   );
@@ -5517,6 +5779,7 @@ try {
     (await asPlayer(L2, "select public.last_pack_shelf() as r")).rows[0].r.packs.length === 0 &&
       (await client.query("select count(*)::int as n from public.last_packs")).rows[0].n ===
         (await client.query("select count(*)::int as n from public.pack_draws")).rows[0].n,
+
   );
 
   console.log("");
