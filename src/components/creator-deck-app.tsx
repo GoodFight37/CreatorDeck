@@ -41,7 +41,8 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { AccountSheet, CloudBadge } from "@/components/account-sheet";
+import { AccountSheet } from "@/components/account-sheet";
+import { CloudBadge } from "@/components/cloud-badge";
 import { FriendsSheet } from "@/components/friends-sheet";
 import { MarketSheet } from "@/components/market-sheet";
 import { LastPackSheet } from "@/components/last-pack-sheet";
