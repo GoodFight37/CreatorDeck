@@ -92,12 +92,12 @@
   collection pour choisir ; hors ligne, le moteur local
   (`setStreamerGuestLocally`, `payStreamerRaidLocally`) applique les mêmes règles.
 
-  > **À poser par le joueur : `0039_invites_bureau.sql`** — un
-  > `npx supabase db push` dans le dossier du jeu, rien à copier. `0036`, `0037`
-  > et `0038` sont posées en production (vérifié le 8 octobre 2026) ; pour
-  > **vérifier après** : `npx supabase migration list`, ou la question posée à
-  > la base elle-même (`select public.schema_versions() -> '0039';` doit rendre
-  > `true`, si on n'a pas de terminal sous la main).
+  > **Posée en production le 8 octobre 2026** — et c'est la **première
+  > migration posée par le CLI** : l'historique de la base a d'abord été mis au
+  > niveau de ce qu'elle portait déjà (`npx supabase migration repair --status
+  > applied 0001 … 0038`, qui n'exécute rien), puis `npx supabase db push` a
+  > appliqué `0039` seul. Plus rien ne se colle à la main ; pour **vérifier
+  > après** : `npx supabase migration list` (les deux colonnes se répondent).
 
 ## 2. En cours
 

@@ -49,10 +49,12 @@ But : **un dépôt, une branche de référence, un historique léger.**
   pas encore vus. La première fois, la base a été mise au niveau de ce qu'elle
   portait déjà (`npx supabase migration repair --status applied 0001 … 0038`) :
   rien n'a été rejoué, seule la table de suivi du CLI a été remplie.
-- **Migrations posées** : `0036`, `0037` et `0038` sont en production (vérifié
-  le 8 octobre 2026). `0039_invites_bureau.sql` — les invités sur le bureau et
-  leur raid — **reste à poser** ; c'est la prochaine, et la dernière écrite à
-  ce jour.
+- **Migrations posées** : `0036` → `0039` sont en production. La dernière
+  (`0039_invites_bureau.sql`, les invités sur le bureau) a été **la première
+  posée par `npx supabase db push`**, le 8 octobre 2026 : l'historique a d'abord
+  été mis au niveau de ce que la base portait déjà (`migration repair --status
+  applied 0001 … 0038`) — rien n'a été rejoué, seule la table de suivi du CLI a
+  été remplie.
 - **Ce que ça a coûté, et ce qui a été fait** : la suppression du dossier a
   cassé `src/lib/cloud/config.test.ts`, qui lisait les workflows sans se demander
   s'ils existaient. La garde « le cloud est-il dans le paquet ? » a été

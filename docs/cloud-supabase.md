@@ -216,6 +216,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
    > considérée comme posée, et `db push` ne la poserait **jamais**. C'est la
    > liste explicite des numéros, et elle seule, qui est sûre : elle ajoute les
    > lignes demandées et ne touche à rien d'autre.
+   >
+   > C'est ce qui a été fait sur le projet du jeu le 8 octobre 2026 : le
+   > `repair` a retrouvé les 38 fichiers locaux (la sortie le dit en clair,
+   > `Repaired migration history: [0001 … 0038] => applied`), puis
+   > `db push --dry-run` n'a annoncé que `0039_invites_bureau.sql` et
+   > `db push` l'a appliqué. `0039` est donc la **première migration posée par
+   > le CLI** — et la dernière à ce jour.
 
    Ce qui suit dit **ce que chaque fichier apporte** (la liste est le contenu de
    `supabase/migrations/`, dans l'ordre où `db push` les pose) :
