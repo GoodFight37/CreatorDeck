@@ -72,12 +72,27 @@ function collectionComplete(now: number): PlayerState {
   return state;
 }
 
-/** Et par-dessus, des doublons : un sur trois, soit ~330 groupes à recycler. */
+/**
+ * Et par-dessus, des doublons : un créateur sur trois, soit ~330 groupes à
+ * recycler. Les deux premiers ont en plus un doublon **Live** — la variante
+ * qu'on ne recycle qu'un par un, et qu'on va chercher par son nom.
+ */
 function avecDoublons(state: PlayerState, now: number): PlayerState {
   const doublons = state.cards
     .filter((_, index) => index % 3 === 0)
     .map((card, index) => ({ ...card, id: `doublon-${index}`, obtainedAt: now - index }));
-  return { ...state, cards: [...state.cards, ...doublons] };
+  // Deux copies Live pour les deux premiers créateurs : un doublon Live n'est
+  // recyclable qu'avec confirmation, donc il en faut deux (comme dans une
+  // vraie collection) pour que la ligne existe.
+  const lives = state.cards.slice(0, 2).flatMap((card, index) =>
+    [0, 1].map((copie) => ({
+      ...card,
+      id: `live-${index}-${copie}`,
+      variant: "live" as const,
+      obtainedAt: now - index - copie,
+    })),
+  );
+  return { ...state, cards: [...state.cards, ...doublons, ...lives] };
 }
 
 /** Combien de cartes et de portraits le document porte à cet instant. */
@@ -188,7 +203,10 @@ describe("mille créateurs dans l'Atelier", () => {
     const { AtelierView } = await import("@/components/atelier-view");
     const state = avecDoublons(collectionComplete(T0), T0);
     const game = getGameView(state, T0);
-    const groupes = state.cards.length - CATALOG_SIZE;
+    // 334 doublons Standard (un créateur sur trois) + 2 doublons Live. Les deux
+    // copies Live des mêmes créateurs comptent pour un doublon chacune, et les
+    // cartes de base, elles, ne sont pas des doublons.
+    const groupes = 334 + 2;
     expect(game.stats.duplicates).toBe(groupes);
 
     await banc.monter(
@@ -215,5 +233,42 @@ describe("mille créateurs dans l'Atelier", () => {
     // « Tout recycler » ne connaît pas la page : le bouton emporte **tous** les
     // doublons recyclables, comme avant.
     expect(document.body.textContent).toContain("Tout recycler");
+
+    // Chercher dans trois cents groupes : la tête d'affiche du catalogue a deux
+    // doublons (un Standard, un Live), et rien d'autre ne répond à son nom.
+    const champ = document.querySelector<HTMLInputElement>(
+      'input[aria-label="Rechercher un doublon"]',
+    );
+    expect(champ).not.toBeNull();
+    const tete = CATALOGUE[0].displayName;
+    banc.saisir(champ!, tete);
+    expect(pose().lignes).toBe(2);
+    expect(document.body.textContent).toContain(tete);
+    // Tout tient sur un écran : le feuilletage n'a plus rien à annoncer.
+    expect(document.body.textContent).not.toContain("Page 1 /");
+
+    // La règle du doublon Live n'a pas bougé non plus : il demande confirmation
+    // avant de partir, même quand la recherche ne montre que deux lignes.
+    const live = document.querySelector<HTMLButtonElement>(
+      'button[title*="confirmation demandée"]',
+    );
+    expect(live).not.toBeNull();
+    act(() => {
+      live!.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+    expect(document.body.textContent).toContain("Recycler ce doublon Live ?");
+    banc.appuyer("Annuler");
+    expect(document.body.textContent).not.toContain("Recycler ce doublon Live ?");
+
+    // Une recherche qui ne trouve rien le dit, au lieu de laisser une liste vide
+    // sous un onglet qui annonce trois cents doublons.
+    banc.saisir(champ!, "zzzzz");
+    expect(pose().lignes).toBe(0);
+    expect(document.body.textContent).toContain("Aucun doublon ne correspond");
+
+    // Effacer ramène tout le monde, et la première page.
+    banc.appuyerNom("Effacer la recherche");
+    expect(pose().lignes).toBe(LIGNES_PAR_PAGE);
+    expect(document.body.textContent).toContain(`Page 1 /`);
   });
 });

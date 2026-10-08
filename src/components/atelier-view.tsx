@@ -61,6 +61,9 @@ export function AtelierView({
   // Le feuilletage des doublons a son propre compteur : les deux listes n'ont
   // pas la même longueur, et changer d'onglet repart de la première page.
   const [recyclePage, setRecyclePage] = useState(0);
+  // Chercher **dans ses doublons** : avec trois cents groupes, « où est mon
+  // doublon de Kamet0 ? » se demande, il ne se feuillette pas.
+  const [recycleQuery, setRecycleQuery] = useState("");
   // Les jetons sont la monnaie lente : 400, le prix unique de la carte visée,
   // contre 45 à 600 points selon la rareté. Deux monnaies, un seul atelier.
   const [wallet, setWallet] = useState<Wallet>("points");
@@ -77,15 +80,30 @@ export function AtelierView({
   } | null>(null);
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
+  // La recherche des doublons suit la même règle que celle des créateurs
+  // manquants (nom, identifiant, région, rang), plus la **variante** : c'est le
+  // mot qu'on tape quand on cherche « le doublon Live » ou « mon Gold ».
+  const doublons = useMemo(() => {
+    const q = recycleQuery.toLocaleLowerCase("fr").trim();
+    if (!q) return duplicates;
+    return duplicates.filter((group) => {
+      const creator = CREATOR_BY_SLUG.get(group.creatorSlug);
+      if (!creator) return false;
+      const hay = `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank} ${
+        VARIANT_META[group.variant].label
+      }`;
+      return hay.toLocaleLowerCase("fr").includes(q);
+    });
+  }, [duplicates, recycleQuery]);
   // Les doublons se comptent en centaines dès qu'un joueur ouvre beaucoup : on
   // les feuillette donc comme les créateurs manquants. Trois cents lignes
   // posées d'un coup, c'est trois cents portraits à décoder et à mettre en
   // page — le prix se paie au doigt, sur le téléphone, pas à l'écran de
   // développement. Les comptes (l'onglet, « Tout recycler ») restent ceux du
   // moteur : c'est **l'affichage** qui tient sur une page, jamais la règle.
-  const recyclePages = Math.max(1, Math.ceil(duplicates.length / PER_PAGE));
+  const recyclePages = Math.max(1, Math.ceil(doublons.length / PER_PAGE));
   const recycleSafe = Math.min(recyclePage, recyclePages - 1);
-  const visibles = duplicates.slice(recycleSafe * PER_PAGE, (recycleSafe + 1) * PER_PAGE);
+  const visibles = doublons.slice(recycleSafe * PER_PAGE, (recycleSafe + 1) * PER_PAGE);
   // « Tout recycler » emporte les doublons **sauf les Live** : un doublon Live
   // se recycle un par un, jamais dans un clic qui emporte tout. La sélection
   // vient du moteur (`bulkRecyclableIds`), la même règle que le jeu sans cloud.
@@ -449,6 +467,12 @@ export function AtelierView({
 
           {duplicates.length ? (
             <>
+              {/* « Tout recycler » reste **au-dessus** de la recherche, et il
+                  ne regarde ni la page ni la recherche : il emporte tous les
+                  doublons recyclables, comme son nom et le total affiché le
+                  disent. Le mettre sous une recherche active donnerait
+                  l'impression qu'il ne vide que ce qu'on voit — or c'est
+                  justement l'inverse qu'on veut d'un geste pareil. */}
               <div className="atelier-bulk-actions">
                 <button
                   type="button"
@@ -467,6 +491,30 @@ export function AtelierView({
                 ) : null}
               </div>
 
+              <label className="search-field">
+                <Search size={17} />
+                <input
+                  value={recycleQuery}
+                  onChange={(event) => {
+                    setRecycleQuery(event.target.value);
+                    setRecyclePage(0);
+                  }}
+                  placeholder="Chercher un doublon…"
+                  aria-label="Rechercher un doublon"
+                />
+                {recycleQuery ? (
+                  <button
+                    onClick={() => {
+                      setRecycleQuery("");
+                      setRecyclePage(0);
+                    }}
+                    aria-label="Effacer la recherche"
+                  >
+                    <X size={15} />
+                  </button>
+                ) : null}
+              </label>
+
               {/* Le feuilletage n'apparaît qu'à partir de la deuxième page :
                   trois doublons ne méritent pas un « Page 1 / 1 ». */}
               {recyclePages > 1 ? (
@@ -479,7 +527,7 @@ export function AtelierView({
                     <span>Précédent</span>
                   </button>
                   <span>
-                    Page <strong>{recycleSafe + 1}</strong> / {recyclePages} · {duplicates.length}{" "}
+                    Page <strong>{recycleSafe + 1}</strong> / {recyclePages} · {doublons.length}{" "}
                     doublons
                   </span>
                   <button
@@ -568,6 +616,12 @@ export function AtelierView({
                   );
                 })}
               </div>
+              {/* Une recherche qui ne trouve rien le dit : sans ça, l'écran
+                  afficherait une liste vide sous un onglet qui annonce trois
+                  cents doublons, et le joueur croirait à un bug. */}
+              {doublons.length ? null : (
+                <div className="no-results">Aucun doublon ne correspond à cette recherche.</div>
+              )}
             </>
           ) : (
             <div className="empty-collection">
