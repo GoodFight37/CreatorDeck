@@ -46,11 +46,15 @@ export function EffectBurst({
   return (
     <span
       className={`fx-burst fx-${kind} ${className}`.trim()}
-      // `--fx-size` porte la taille affichée : la classe décide du reste
-      // (nombre d'images, durée), pour que le CSS reste lisible.
+      /*
+       * La taille **et** la durée viennent de `FX_SHEETS` : une seule vérité,
+       * testée (`src/lib/fx.test.ts`). Le CSS garde les mêmes chiffres en
+       * valeurs de repli, et un test vérifie qu'il ne dérive pas.
+       */
       style={
         {
           "--fx-size": `${sheet.size}px`,
+          "--fx-duration": `${sheet.durationMs}ms`,
           "--fx-left": left,
           "--fx-offset": offset,
           "--fx-delay": `${Math.max(0, delayMs)}ms`,

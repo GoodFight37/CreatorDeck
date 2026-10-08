@@ -1157,14 +1157,101 @@ input:focus-visible {
    redevient une image fixe. */
 [data-card-fx="off"] .card-foil { display: none; }
 
-/* L'écran de révélation : la carte arrive, puis flotte une seule fois. Aucune
-   animation perpétuelle — c'est une carte posée sur un comptoir. */
-.reveal-card { animation: card-reveal 550ms cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes card-reveal {
-  from { opacity: 0; transform: translateY(26px) rotateY(64deg) scale(.9); }
-  to { opacity: 1; transform: none; }
+/*
+ * L'écran de révélation : la carte **arrive**.
+ *
+ * Elle monte du bas, se retourne, dépasse sa taille, revient, et se pose — une
+ * seule fois. Aucune animation perpétuelle : c'est une carte qu'on pose sur un
+ * comptoir, pas un objet qui tourne en boucle.
+ *
+ * Le rebond (1.12 → 0.97 → 1) n'est pas de la décoration, c'est ce qui donne du
+ * **poids** : sans lui la carte glisse et s'arrête comme une image qui finit de
+ * charger. Pareil pour le flou de départ : une carte nette dès la première
+ * image est une carte qui était déjà là.
+ *
+ * La perspective qui fait lire le `rotateY` comme un vrai retournement est sur
+ * le parent (`.reveal-stage`, `.reveal-perfect-grid`) — c'est lui qui regarde,
+ * pas la carte.
+ */
+.reveal-card { animation: card-reveal-punch 720ms cubic-bezier(.16, 1.1, .3, 1) both; }
+@keyframes card-reveal-punch {
+  0% {
+    opacity: 0;
+    transform: translateY(80px) scale(0.55) rotateY(110deg) rotateX(12deg);
+    filter: brightness(0.4) blur(4px);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(-18px) scale(1.12) rotateY(-8deg) rotateX(-4deg);
+    filter: brightness(1.35) blur(0);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(6px) scale(0.97) rotateY(3deg);
+    filter: brightness(1.05);
+  }
+  100% { opacity: 1; transform: none; filter: none; }
 }
-@media (prefers-reduced-motion: reduce) { .reveal-card { animation: none; } }
+
+/*
+ * La rareté change l'entrée, pas seulement le cadre : une Commune se pose, une
+ * Épique **arrive**, une Légendaire explose. C'est la seule chose qui fait
+ * sentir la différence avant d'avoir lu le tampon.
+ *
+ * Le halo de fin reste à l'écran (c'est un style, pas une boucle) — et il
+ * s'éteint avec le réglage « Reflets des cartes », plus bas.
+ */
+.reveal-card.rarity-epic { animation-name: card-reveal-epic; }
+.reveal-card.rarity-legendary { animation-name: card-reveal-legendary; }
+
+@keyframes card-reveal-epic {
+  0% {
+    opacity: 0;
+    transform: translateY(90px) scale(0.5) rotateY(120deg);
+    filter: brightness(0.3) drop-shadow(0 0 0 transparent);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-28px) scale(1.18) rotateY(-12deg);
+    filter: brightness(1.5) drop-shadow(0 0 28px rgba(168, 85, 247, 0.7));
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.35));
+  }
+}
+
+@keyframes card-reveal-legendary {
+  0% {
+    opacity: 0;
+    transform: translateY(110px) scale(0.4) rotateY(140deg) rotateZ(-6deg);
+    filter: brightness(0.2) drop-shadow(0 0 0 transparent);
+  }
+  35% {
+    opacity: 1;
+    transform: translateY(-40px) scale(1.25) rotateY(-18deg) rotateZ(4deg);
+    filter: brightness(1.8) drop-shadow(0 0 48px rgba(255, 190, 85, 0.95));
+  }
+  65% {
+    transform: translateY(8px) scale(0.96);
+    filter: brightness(1.2) drop-shadow(0 0 24px rgba(255, 190, 85, 0.6));
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: drop-shadow(0 0 18px rgba(255, 190, 85, 0.45));
+  }
+}
+
+/* Le réglage de secours : couper les reflets coupe **tout**, halo compris. */
+[data-card-fx="off"] .reveal-card.rarity-epic,
+[data-card-fx="off"] .reveal-card.rarity-legendary { animation-name: card-reveal-punch; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-card { animation: none; }
+  .reveal-card.rarity-epic,
+  .reveal-card.rarity-legendary { animation: none; }
+}
 
 /*
  * ─── Le dos ─────────────────────────────────────────────────────────────────
@@ -1866,6 +1953,9 @@ input:focus-visible {
 .reveal-stage {
   position: relative;
   z-index: 2;
+  /* Le point de vue : sans lui, `rotateY` écrase la carte au lieu de la
+     retourner. C'est le parent qui regarde, pas la carte. */
+  perspective: 1100px;
   display: flex;
   height: calc(100dvh - 145px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
   align-items: center;
@@ -1873,7 +1963,7 @@ input:focus-visible {
   flex-direction: column;
   padding: 13px 27px 4px;
 }
-.reveal-card { width: min(68vw, 300px); max-height: 63vh; animation: card-reveal 550ms cubic-bezier(.2,.8,.2,1) both; }
+.reveal-card { width: min(68vw, 300px); max-height: 63vh; }
 
 /*
  * --- Les effets de moment rare : un éclat pour une Épique, une explosion pour
@@ -1905,13 +1995,16 @@ input:focus-visible {
   animation-delay: var(--fx-delay, 0ms);
   animation-name: fx-play;
 }
-.fx-explosion { --fx-frames: 15; --fx-duration: 450ms; background-image: url(/fx/explosion.png); background-size: calc(15 * var(--fx-size)) var(--fx-size); }
-.fx-eclat { --fx-frames: 13; --fx-duration: 390ms; background-image: url(/fx/eclat.png); background-size: calc(13 * var(--fx-size)) var(--fx-size); }
+/* Les durées sont les valeurs de repli : `EffectBurst` écrit les vraies en
+   ligne depuis `FX_SHEETS` (`src/lib/fx.ts`), c'est lui qui fait foi — un test
+   vérifie que les deux ne divergent pas. */
+.fx-explosion { --fx-frames: 15; --fx-duration: 620ms; background-image: url(/fx/explosion.png); background-size: calc(15 * var(--fx-size)) var(--fx-size); }
+.fx-eclat { --fx-frames: 13; --fx-duration: 520ms; background-image: url(/fx/eclat.png); background-size: calc(13 * var(--fx-size)) var(--fx-size); }
 @keyframes fx-play { from { background-position: 0 0; } to { background-position: calc(-1 * var(--fx-frames) * var(--fx-size)) 0; } }
 
 /* L'écran blanc d'un Légendaire : court, et il repart tout seul. */
-.fx-flash { position: absolute; inset: 0; z-index: 9; background: #fff; pointer-events: none; animation: fx-flash 260ms ease-out both; }
-@keyframes fx-flash { 0% { opacity: 0; } 30% { opacity: .78; } 100% { opacity: 0; } }
+.fx-flash { position: absolute; inset: 0; z-index: 9; background: #fff; pointer-events: none; animation: fx-flash 420ms ease-out both; }
+@keyframes fx-flash { 0% { opacity: 0; } 15% { opacity: .95; } 100% { opacity: 0; } }
 
 /* Couper les reflets coupe **tout** : c'est le réglage de secours de celui que
    les effets fatiguent. */
@@ -1919,7 +2012,6 @@ input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .fx-burst, .fx-flash { display: none; }
 }
-@keyframes card-reveal { from { opacity: 0; transform: translateY(25px) rotateY(70deg) scale(.88); } to { opacity: 1; transform: none; } }
 .new-badge { position: relative; z-index: 5; justify-content: center; gap: 5px; margin-bottom: 10px; padding: 4px 10px; color: var(--ink); border-radius: 2px; background: var(--paper); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: .12em; }
 .reveal-name { margin-top: 16px; text-align: center; }
 .reveal-name p { margin: 0; color: var(--muted); font-size: 13px; font-weight: 500; letter-spacing: .14em; text-transform: uppercase; }
@@ -2569,14 +2661,36 @@ input:focus-visible {
 .overlay-meta { margin: 1.6vmin 0 0; color: var(--muted-2); font-size: 12px; }
 
 /* --- La révélation : le refus, le Perfect, le plein écran ------------------ */
-.reveal-shake { animation: reveal-refuse 520ms cubic-bezier(.36, .07, .19, .97) both; }
-@keyframes reveal-refuse {
-  0%, 100% { transform: none; }
-  14% { transform: translateX(-9px) rotate(-1.2deg); }
-  34% { transform: translateX(8px) rotate(1deg); }
-  55% { transform: translateX(-5px); }
-  76% { transform: translateX(3px); }
+/*
+ * Le refus : la carte ne se retourne pas, elle **résiste**.
+ *
+ * Deux animations sur le même élément, parce qu'elles ne touchent pas la même
+ * chose : le mouvement (`transform`) et l'état (`filter`). C'est ce rouge qui
+ * manquait — sans lui, un refus ressemble à un simple tremblement d'écran, et
+ * le joueur croit à un bug plutôt qu'à une carte qui dit non.
+ */
+.reveal-shake {
+  animation:
+    reveal-refuse-hard 580ms cubic-bezier(.36, .07, .19, .97) both,
+    reveal-refuse-glow 580ms ease-out both;
 }
+@keyframes reveal-refuse-hard {
+  0%, 100% { transform: none; }
+  10% { transform: translateX(-14px) rotate(-2.8deg) scale(1.04); }
+  25% { transform: translateX(16px) rotate(3.2deg) scale(1.06); }
+  40% { transform: translateX(-11px) rotate(-2deg) scale(1.03); }
+  55% { transform: translateX(9px) rotate(1.6deg); }
+  70% { transform: translateX(-5px); }
+  85% { transform: translateX(3px); }
+}
+@keyframes reveal-refuse-glow {
+  0% { filter: none; }
+  30% { filter: brightness(1.12) drop-shadow(0 0 22px rgba(255, 82, 82, .75)); }
+  100% { filter: none; }
+}
+/* Le halo de refus est un effet : le réglage « Reflets » le retire. Le
+   tremblement reste — c'est la carte qui dit non, pas une décoration. */
+[data-card-fx="off"] .reveal-shake { animation-name: reveal-refuse-hard; }
 @media (prefers-reduced-motion: reduce) { .reveal-shake { animation: none; } }
 .reveal-skip { padding: 7px 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.04); font-family: var(--font-display); font-size: 13px; font-weight: 600; letter-spacing: .04em; cursor: pointer; }
 .reveal-dots i { transition: background 200ms ease; }
@@ -2586,7 +2700,15 @@ input:focus-visible {
    la carte grandit, et tout le reste passe derrière. */
 .reveal-spotlight .reveal-ambient { background: radial-gradient(ellipse 78% 52% at 50% 40%, rgb(var(--accent-rgb) / .3), transparent 72%); }
 .reveal-spotlight .reveal-stage { padding: 0 18px 4px; }
-.reveal-spotlight .reveal-card { width: min(78vw, 350px); max-height: 66vh; }
+/* Légendaire ou Perfect : la carte prend ses aises, et l'entrée dure plus
+   longtemps — c'est le seul moment de l'application où l'on a le droit de
+   faire attendre. */
+.reveal-spotlight .reveal-card {
+  width: min(82vw, 360px);
+  max-height: 70vh;
+  animation-duration: 920ms;
+  animation-timing-function: cubic-bezier(.12, 1.15, .25, 1);
+}
 .reveal-spotlight .reveal-name p { letter-spacing: .16em; }
 
 /* Le titre du direct, en plein écran : c'est le moment où la carte tombe
@@ -2650,7 +2772,24 @@ input:focus-visible {
   gap: 8px;
   padding: 0 17px 8px;
 }
-.reveal-perfect-grid .reveal-card { width: 100%; max-height: none; animation-duration: 700ms; }
+/*
+ * Le Perfect : les cinq cartes n'arrivent pas ensemble, elles arrivent **en
+ * cascade** — 80 ms d'écart, de quoi les compter sans attendre.
+ *
+ * `:nth-of-type` et pas `:nth-child` : le premier enfant de la grille est
+ * l'effet (un `<span>`), les cartes sont des `<article>`. Avec `:nth-child`, la
+ * cascade décalerait l'effet et collerait les cinq cartes au même retard.
+ */
+.reveal-perfect-grid { perspective: 1000px; }
+.reveal-perfect-grid .reveal-card { width: 100%; max-height: none; animation-duration: 780ms; }
+.reveal-perfect-grid .reveal-card:nth-of-type(1) { animation-delay: 0ms; }
+.reveal-perfect-grid .reveal-card:nth-of-type(2) { animation-delay: 80ms; }
+.reveal-perfect-grid .reveal-card:nth-of-type(3) { animation-delay: 160ms; }
+.reveal-perfect-grid .reveal-card:nth-of-type(4) { animation-delay: 240ms; }
+.reveal-perfect-grid .reveal-card:nth-of-type(5) { animation-delay: 320ms; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-perfect-grid .reveal-card { animation-delay: 0ms; }
+}
 
 .wishlist-block { margin: 0 0 16px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--accent-rgb) / .05); }
 .wishlist-title { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
@@ -2915,3 +3054,109 @@ input:focus-visible {
 /* Le décor du dossier : sur quoi le stream tournait. Une ligne, en gris —
    ce n'est pas un indice sur le verdict, c'est le lieu du crime. */
 .tribunal-contexte { margin: -2px 0 0; color: var(--muted-2); font-size: 12px; line-height: 1.4; }
+
+/*
+ * ─── La déchirure ───────────────────────────────────────────────────────────
+ * L'instant entre le geste et la première carte. Sans lui, on passe du bouton
+ * « Ouvrir » à une carte en plein écran sans transition : le paquet n'existe
+ * jamais, il n'y a rien à ouvrir. Sept cents millisecondes, un paquet qui
+ * s'ouvre en deux, une lumière dans la couture, des confettis — et la carte qui
+ * suit devient une conséquence au lieu d'un résultat.
+ *
+ * Trois animations, toutes bornées (`both`) : rien ne tourne en boucle. Et
+ * l'écran entier disparaît du DOM à la fin (`src/components/pack-tear.tsx`).
+ */
+.pack-tear {
+  position: fixed;
+  /* Au-dessus de tout, feuilles comprises : c'est le moment du geste, rien ne
+     doit passer devant lui. */
+  z-index: 120;
+  inset: 0;
+  display: grid;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  place-items: center;
+  overflow: hidden;
+  background: rgb(var(--bg-rgb) / .97);
+  pointer-events: none;
+}
+.pack-tear-scene { position: relative; display: grid; place-items: center; animation: pack-tear-scene 700ms cubic-bezier(.22, .9, .2, 1) both; }
+.pack-tear-pack {
+  display: grid;
+  width: 118px;
+  height: 172px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: linear-gradient(158deg, var(--paper) 0%, var(--panel-2) 52%, var(--bg-deep) 100%);
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  animation: pack-tear-pack 700ms cubic-bezier(.3, .85, .2, 1) both;
+}
+/* La couture : la lumière du jour qui entre par le milieu du paquet. */
+.pack-tear-seam {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  left: 50%;
+  width: 2px;
+  margin-left: -1px;
+  background: #fff;
+  box-shadow: 0 0 20px 7px rgb(255 255 255 / .5);
+  animation: pack-tear-seam 700ms ease-out both;
+}
+/* Les confettis : six grains, six angles, un seul keyframe. */
+.pack-tear-grain {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: rgb(var(--accent-rgb) / .9);
+  animation: pack-tear-grain 700ms cubic-bezier(.15, .8, .3, 1) both;
+}
+@keyframes pack-tear-scene {
+  0% { opacity: 0; transform: scale(.86); }
+  22% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.22); }
+}
+@keyframes pack-tear-pack {
+  0% { opacity: 1; transform: rotate(0deg) scale(1); filter: blur(0); }
+  50% { opacity: 1; transform: rotate(-3deg) scale(1.1); filter: blur(0); }
+  100% { opacity: 0; transform: rotate(-7deg) scale(1.5); filter: blur(7px); }
+}
+@keyframes pack-tear-seam {
+  0% { opacity: 0; transform: scaleY(.1); }
+  35% { opacity: 1; transform: scaleY(1); }
+  70% { opacity: .8; transform: scaleY(1.1); }
+  100% { opacity: 0; transform: scaleY(1.4); }
+}
+@keyframes pack-tear-grain {
+  0% { opacity: 0; transform: rotate(var(--angle)) translateY(0) scale(.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateY(-104px) scale(1.15); }
+}
+/* Ce qui s'ouvre, en une ligne : le geste doit savoir sur quoi il porte. */
+.pack-tear-legende {
+  position: relative;
+  z-index: 2;
+  margin: 38px 0 0;
+  color: var(--muted);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  animation: pack-tear-legende 700ms ease-out both;
+}
+@keyframes pack-tear-legende {
+  0% { opacity: 0; letter-spacing: .34em; }
+  45% { opacity: 1; letter-spacing: .2em; }
+  100% { opacity: .25; letter-spacing: .2em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pack-tear { display: none; }
+}

@@ -40,14 +40,20 @@ export type FxSheet = {
 /**
  * La table des effets.
  *
- * `durationMs` suit une règle simple : 30 ms par image pour les éclats (le
- * rythme du pixel-art), 35 ms pour la fumée, qui doit traîner un peu.
+ * `durationMs` suit une règle simple : **40 ms par image**, pour les deux. À
+ * 30 ms (l'ancien rythme) le pixel-art clignote et disparaît avant que l'œil
+ * ait compris ce qu'il regardait — sur un téléphone, un effet de 390 ms n'est
+ * pas un effet, c'est un bruit visuel.
+ *
+ * La taille suit la même logique : l'explosion et l'éclat étaient **centres sur
+ * la carte**, donc en partie cachés par elle. Ils débordent maintenant
+ * largement — c'est un effet de *moment*, il doit se voir de biais.
  */
 export const FX_SHEETS: Record<FxKind, FxSheet> = {
   // Le grand : 15 images de 192 px, l'explosion dorée du pack d'effets.
-  explosion: { frames: 15, frame: 192, durationMs: 450, size: 330 },
+  explosion: { frames: 15, frame: 192, durationMs: 620, size: 420 },
   // Le moyen : 13 images de 128 px, l'éclat orange.
-  eclat: { frames: 13, frame: 128, durationMs: 390, size: 210 },
+  eclat: { frames: 13, frame: 128, durationMs: 520, size: 280 },
 };
 
 /** L'URL de la planche d'un effet. */

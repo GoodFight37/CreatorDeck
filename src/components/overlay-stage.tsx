@@ -26,11 +26,15 @@
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Hourglass, Layers3, LoaderCircle, Zap } from "lucide-react";
+import { PackTear } from "@/components/pack-tear";
 import { RevealOverlay } from "@/components/reveal-overlay";
 import { usePackOpening, type DrawSource } from "@/hooks/use-pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
 import { getGameView, type DrawnCard } from "@/lib/game-engine";
+import { buzz } from "@/lib/haptics";
+import { PACK_TEAR_HAPTIC, PACK_TEAR_MS, tearDurationMs } from "@/lib/reveal";
 import { playPackOpening } from "@/lib/sfx";
+import { cardEffectsAllowed } from "@/lib/tilt";
 
 /** Le petit texte sous les boutons : il dit qui décide, sans le décider. */
 const DRAW_SOURCE_LABEL: Record<DrawSource, string> = {
@@ -46,6 +50,7 @@ export function OverlayStage() {
   const [index, setIndex] = useState(0);
   const [kind, setKind] = useState<"live" | "scene">("live");
   const [busy, setBusy] = useState(false);
+  const [tearing, setTearing] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
   // La vue dérivée (réserve de boosters, Paquet Scène du jour) : la recharge
@@ -55,6 +60,24 @@ export function OverlayStage() {
   const { openLivePack, openScenePack, drawSource } = usePackOpening(game);
   const sceneOpened = game?.scene.opened ?? false;
   const packs = game?.player.packs ?? 0;
+
+  /**
+   * La déchirure : le même moment que dans le jeu, devant le public. Le son
+   * part avec le geste, puis les cartes arrivent.
+   */
+  const dechirer = useCallback(async (): Promise<void> => {
+    if (tearDurationMs(cardEffectsAllowed()) <= 0) {
+      playPackOpening();
+      return;
+    }
+    setTearing(true);
+    playPackOpening();
+    buzz(PACK_TEAR_HAPTIC);
+    await new Promise<void>((resoudre) => {
+      window.setTimeout(resoudre, PACK_TEAR_MS);
+    });
+    setTearing(false);
+  }, []);
 
   const openLive = useCallback(async () => {
     if (!game || busy || cards.length) return;
@@ -68,7 +91,7 @@ export function OverlayStage() {
         setProblem(result.message);
         return;
       }
-      playPackOpening();
+      await dechirer();
       setKind("live");
       setCards(result.cards);
       setIndex(0);
@@ -77,7 +100,7 @@ export function OverlayStage() {
     } finally {
       setBusy(false);
     }
-  }, [busy, cards.length, game, openLivePack]);
+  }, [busy, cards.length, dechirer, game, openLivePack]);
 
   const openScene = useCallback(async () => {
     const family = game?.scene.family;
@@ -90,7 +113,7 @@ export function OverlayStage() {
         setProblem(result.message);
         return;
       }
-      playPackOpening();
+      await dechirer();
       setKind("scene");
       setCards(result.cards);
       setIndex(0);
@@ -99,7 +122,7 @@ export function OverlayStage() {
     } finally {
       setBusy(false);
     }
-  }, [busy, cards.length, game, openScenePack]);
+  }, [busy, cards.length, dechirer, game, openScenePack]);
 
   const close = useCallback(() => {
     setCards([]);
@@ -136,6 +159,7 @@ export function OverlayStage() {
   return (
     <div className="overlay-root">
       <div className="overlay-frame">
+        {tearing ? <PackTear kind={kind} /> : null}
         {cards.length ? (
           <RevealOverlay
             key={cards[0]?.id ?? "reveal"}

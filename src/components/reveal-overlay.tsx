@@ -219,7 +219,13 @@ export function RevealOverlay({
                 key={item.id}
                 creator={dotCard}
                 variant={item.variant}
-                className="reveal-card"
+                /*
+                 * La rareté **tirée**, écrite en plus de celle du créateur :
+                 * c'est elle qui décide du silence, du bang et de l'effet —
+                 * l'entrée doit venir du même endroit, sinon une Légendaire
+                 * pourrait arriver comme une commune.
+                 */
+                className={`reveal-card rarity-${item.rarity}`}
                 liveStream={liveFor(live, dotCard.login, now)}
               />
             ) : null;
@@ -236,7 +242,8 @@ export function RevealOverlay({
               key={card.id}
               creator={creator}
               variant={card.variant}
-              className="reveal-card"
+              // Idem : la rareté du tirage, pas seulement celle du créateur.
+              className={`reveal-card rarity-${card.rarity}`}
               liveStream={onAir}
             />
           </div>

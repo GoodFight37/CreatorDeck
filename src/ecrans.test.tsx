@@ -106,6 +106,31 @@ describe("les écrans", () => {
     expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
   });
 
+  it("déchire le paquet avant de montrer la première carte", async () => {
+    await application();
+    banc.appuyer("Ouvrir le booster");
+    // Le tirage local observe un suspense de 650 ms : à 700 ms, les cartes sont
+    // tirées et le paquet est en train de s'ouvrir à l'écran.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(700);
+    });
+    const dechirure = document.querySelector(".pack-tear");
+    expect(dechirure, "le paquet ne s'ouvre jamais à l'écran").toBeTruthy();
+    // Le carton, la couture et les grains : le moment se voit, il n'est pas
+    // seulement une attente vide.
+    expect(dechirure!.querySelector(".pack-tear-pack")).toBeTruthy();
+    expect(dechirure!.querySelector(".pack-tear-seam")).toBeTruthy();
+    expect(dechirure!.querySelectorAll(".pack-tear-grain").length).toBeGreaterThan(1);
+    banc.ecran("11-dechirure");
+
+    // Et il finit : la déchirure quitte l'écran, la carte arrive.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
+    expect(document.querySelector(".pack-tear"), "la déchirure ne s'arrête jamais").toBeNull();
+    expect(document.querySelector(".reveal-overlay")).toBeTruthy();
+  });
+
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {
     await application();
     const premier = banc.ecran("09-determinisme-a");

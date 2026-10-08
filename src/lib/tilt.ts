@@ -117,6 +117,21 @@ function prefersReducedMotion(): boolean {
   }
 }
 
+/**
+ * Les **effets de carte** sont-ils autorisés ?
+ *
+ * C'est le même interrupteur que le reflet, plus la préférence système « moins
+ * d'animations ». La déchirure du paquet et les effets de moment rare le
+ * consultent : quand le joueur a dit non, on ne se contente pas d'éteindre des
+ * pixels — on **raccourcit** aussi l'attente, sinon on ferait poireauter
+ * quelqu'un qui a dit non pour le regarder attendre.
+ */
+export function cardEffectsAllowed(): boolean {
+  if (typeof document === "undefined") return false;
+  if (document.documentElement.dataset[ATTRIBUT] === "off") return false;
+  return !prefersReducedMotion();
+}
+
 /** Mémorise le choix du joueur (`localStorage`), sans jamais lever. */
 export function setTiltEnabled(value: boolean): void {
   if (typeof window === "undefined") return;

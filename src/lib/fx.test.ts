@@ -54,6 +54,37 @@ describe("l'effet d'une carte révélée", () => {
     }
   });
 
+  it("garde le CSS et la table d'accord sur la durée", () => {
+    // La durée est écrite **deux fois** : en ligne par `EffectBurst` (depuis
+    // `FX_SHEETS`, c'est la vérité) et en valeurs de repli dans le CSS. Si les
+    // deux divergent, un effet raccourci dans la feuille de style passerait
+    // pour une régression aléatoire. Ce test est la soudure.
+    const css = readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    for (const [kind, sheet] of Object.entries(FX_SHEETS)) {
+      const ligne = css
+        .split("\n")
+        .find((candidate) => candidate.startsWith(`.fx-${kind} {`));
+      expect(ligne, `.fx-${kind} absent de globals.css`).toBeTruthy();
+      expect(ligne, `${kind} : la durée du CSS ne suit plus FX_SHEETS`).toContain(
+        `--fx-duration: ${sheet.durationMs}ms`,
+      );
+    }
+  });
+
+  it("donne aux effets le temps de se voir, même sur un petit écran", () => {
+    // 40 ms par image : en dessous, le pixel-art clignote et disparaît avant
+    // que l'œil ait compris. Et ils débordent de la carte, sinon elle les cache.
+    for (const [kind, sheet] of Object.entries(FX_SHEETS)) {
+      const parImage = sheet.durationMs / sheet.frames;
+      expect(parImage, kind).toBeGreaterThanOrEqual(35);
+      expect(parImage, kind).toBeLessThanOrEqual(60);
+      expect(sheet.size, kind).toBeGreaterThanOrEqual(1.4 * sheet.frame);
+    }
+    // L'explosion reste la plus grande et la plus longue des deux.
+    expect(FX_SHEETS.explosion.size).toBeGreaterThan(FX_SHEETS.eclat.size);
+    expect(FX_SHEETS.explosion.durationMs).toBeGreaterThan(FX_SHEETS.eclat.durationMs);
+  });
+
   it("pointe des images servies depuis le dossier public", () => {
     expect(fxUrl("explosion")).toBe("/fx/explosion.png");
     expect(fxUrl("eclat")).toBe("/fx/eclat.png");

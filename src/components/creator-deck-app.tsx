@@ -20,6 +20,7 @@ import type { InboxTarget } from "@/lib/social/inbox";
 import { friendsOpenedRecently } from "@/lib/social/inbox";
 import { AtelierView } from "@/components/atelier-view";
 
+import { PackTear } from "@/components/pack-tear";
 import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { RevealOverlay } from "@/components/reveal-overlay";
 import { TribunalView, type TribunalPayout } from "@/components/tribunal-view";
@@ -41,6 +42,7 @@ import { useLive, useLivePolling } from "@/hooks/use-live";
 import { PACKS } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 
+import { buzz } from "@/lib/haptics";
 import {
   SFX_USUELS,
   playCoins,
@@ -50,6 +52,12 @@ import {
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
+import { cardEffectsAllowed } from "@/lib/tilt";
+import {
+  PACK_TEAR_HAPTIC,
+  PACK_TEAR_MS,
+  tearDurationMs,
+} from "@/lib/reveal";
 import { dossiersDuJour } from "@/lib/tribunal";
 
 import { THEME_VAR_NAMES } from "@/lib/cosmetics";
@@ -160,6 +168,9 @@ export function CreatorDeckApp() {
   // Quel paquet la révélation montre (le tirage rare ne se raconte pas pareil).
   const [revealKind, setRevealKind] = useState<"live" | "scene">("live");
   const [sceneOpening, setSceneOpening] = useState(false);
+  /** Le paquet est en train de s'ouvrir : le moment entre le geste et la carte. */
+  const [tearing, setTearing] = useState(false);
+  const [tearKind, setTearKind] = useState<"live" | "scene">("live");
   const [error, setError] = useState<string | null>(null);
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
   const [errorHint, setErrorHint] = useState<"account" | null>(null);
@@ -336,6 +347,30 @@ export function CreatorDeckApp() {
     void cloudStore.syncWallet();
   }, [cloud.configured, cloud.userId]);
 
+  /**
+   * La déchirure : le son part avec le geste, le téléphone vibre, et le paquet
+   * s'ouvre à l'écran avant la première carte.
+   *
+   * Elle dure **zéro** si le joueur a coupé les effets de carte ou demandé moins
+   * d'animations : ce réglage est son bouton de secours, il ne doit pas
+   * seulement éteindre des pixels — le faire attendre pour rien serait le
+   * punir d'avoir dit non.
+   */
+  async function dechirer(kind: "live" | "scene"): Promise<void> {
+    if (tearDurationMs(cardEffectsAllowed()) <= 0) {
+      playPackOpening();
+      return;
+    }
+    setTearing(true);
+    setTearKind(kind);
+    playPackOpening();
+    buzz(PACK_TEAR_HAPTIC);
+    await new Promise<void>((resoudre) => {
+      window.setTimeout(resoudre, PACK_TEAR_MS);
+    });
+    setTearing(false);
+  }
+
   async function handleOpenPack() {
     if (!game || opening) return;
     setOpening(true);
@@ -346,9 +381,9 @@ export function CreatorDeckApp() {
       // le même module que l'overlay 16:9.
       const result = await openLivePack();
       if (result.status === "drawn") {
-        // Le son accompagne le geste, jamais l'attente : c'est l'instant du
-        // « wouip » qui compte.
-        playPackOpening();
+        // Le paquet se déchire **avant** la première carte : sans ce temps, on
+        // passe du bouton à la carte sans que le paquet n'ait jamais existé.
+        await dechirer("live");
         setRevealKind("live");
         setDrawnCards(result.cards);
         // Le jour coché et sa récompense : annoncés pendant la révélation, pas
@@ -386,7 +421,7 @@ export function CreatorDeckApp() {
     try {
       const result = await openScenePack();
       if (result.status === "drawn") {
-        playPackOpening();
+        await dechirer("scene");
         setRevealKind("scene");
         setDrawnCards(result.cards);
         setRevealIndex(0);
@@ -655,6 +690,7 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
+      {tearing ? <PackTear kind={tearKind} /> : null}
       {opening ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>

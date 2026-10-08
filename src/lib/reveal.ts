@@ -9,25 +9,64 @@
  * Trois idées, empruntées à ce qui marche dans les jeux de cartes :
  *
  *   1. **le silence est un son.** Un Légendaire qui arrive après un blanc de
- *      400 ms frappe plus fort que le même Légendaire enchaîné — c'est le
+ *      520 ms frappe plus fort que le même Légendaire enchaîné — c'est le
  *      silence qui fait le bruit ;
  *   2. **la résistance crée la valeur.** Le dernier emplacement, celui du
  *      tirage garanti, ne se retourne pas du premier coup : il frémit. Le
  *      joueur insiste, et c'est *lui* qui a retourné la carte ;
  *   3. **le Perfect ne se déguste pas carte par carte.** Quand les cinq sont
- *      Épiques, on les montre d'un coup et on verrouille l'écran deux secondes :
+ *      Épiques, on les montre d'un coup et on verrouille l'écran deux secondes
+ *      et demie :
  *      il n'y a rien à faire, juste à regarder.
  */
 import type { CardVariant, Rarity } from "@/lib/catalog";
 
-/** Le silence avant le retournement d'une carte Épique ou mieux, en ms. */
-export const EPIC_SILENCE_MS = 400;
+/**
+ * Le silence avant le retournement d'une carte Épique ou mieux, en ms.
+ *
+ * 520 ms et pas 400 : sur un téléphone, le blanc doit être **assez long pour
+ * qu'on le remarque**, sinon il ne fait que décaler le son. C'est le silence
+ * qui fait le bruit — à condition qu'il s'entende.
+ */
+export const EPIC_SILENCE_MS = 520;
 
 /** Le temps d'un refus : la carte frémit au lieu de se retourner, en ms. */
-export const RESIST_SHAKE_MS = 520;
+export const RESIST_SHAKE_MS = 580;
 
 /** Le temps pendant lequel l'écran du Perfect reste verrouillé, en ms. */
-export const PERFECT_LOCK_MS = 2_000;
+export const PERFECT_LOCK_MS = 2_600;
+
+/**
+ * Le temps de la **déchirure** : l'instant entre le geste et la première carte,
+ * en ms.
+ *
+ * Sans lui, on passe du bouton « Ouvrir » à une carte en plein écran sans
+ * transition : le paquet n'existe jamais, il n'y a rien à ouvrir. Sept cents
+ * millisecondes de déchirure, et la carte qui suit devient une conséquence.
+ *
+ * Il vaut **zéro** quand le joueur a coupé les effets de carte : ce réglage est
+ * son bouton de secours, il ne doit pas seulement éteindre des pixels.
+ */
+export const PACK_TEAR_MS = 700;
+
+/**
+ * Le motif de la déchirure : un coup sec, un blanc, puis le papier qui cède.
+ * Plus long que `TEAR_HAPTIC` (le geste qui arme) parce qu'ici le doigt a
+ * quitté l'écran — une rafale sous le doigt donne l'impression d'un bug, une
+ * rafale après le geste donne l'impression d'un paquet qui s'ouvre.
+ */
+export const PACK_TEAR_HAPTIC: readonly number[] = [18, 70, 34];
+
+/**
+ * Combien de temps la déchirure dure, **pour de vrai**.
+ *
+ * `false` quand le joueur a coupé les effets ou demandé moins d'animations :
+ * la carte arrive alors tout de suite. Le son de l'ouverture, lui, part quand
+ * même — il est coupé par l'interrupteur Son, pas par celui des reflets.
+ */
+export function tearDurationMs(effectsOn: boolean): number {
+  return effectsOn ? PACK_TEAR_MS : 0;
+}
 
 /** Les raretés qui méritent un silence, donc un bang. */
 const SILENT_RARITIES: ReadonlySet<Rarity> = new Set<Rarity>(["epic", "legendary"]);
@@ -54,7 +93,7 @@ export function resistCount(index: number, count: number, rarity: Rarity): numbe
  * Le silence à observer **avant** de jouer le son de la carte, en ms.
  *
  * Zéro pour presque tout : une commune qui attend fait juste perdre du temps.
- * 400 ms pour une Épique ou une Légendaire — le temps d'un doute.
+ * 520 ms pour une Épique ou une Légendaire — le temps d'un doute.
  */
 export function silenceBefore(rarity: Rarity): number {
   return SILENT_RARITIES.has(rarity) ? EPIC_SILENCE_MS : 0;
