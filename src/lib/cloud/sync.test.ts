@@ -134,11 +134,13 @@ describe("statistiques locales", () => {
 describe("texte de l'écran de compte", () => {
   it("reste lisible quel que soit l'écart", () => {
     const decision = decideSync({ state: stateWith(), updatedAt: T0 }, null);
-    expect(describeSync(decision, null)).toBe("Jamais synchronisé.");
-    expect(describeSync(decision, T0, T0 + 30_000)).toBe("Synchronisé à l'instant.");
-    expect(describeSync(decision, T0, T0 + 60_000)).toBe("Synchronisé il y a 1 min.");
-    expect(describeSync(decision, T0, T0 + 12 * 60_000)).toBe("Synchronisé il y a 12 min.");
-    expect(describeSync(decision, T0, T0 + 5 * 3_600_000)).toBe("Synchronisé il y a 5 h.");
+    expect(describeSync(decision, null)).toBe("Pas encore synchronisé.");
+    expect(describeSync(decision, T0, T0 + 30_000)).toBe("Progression à jour à l'instant.");
+    expect(describeSync(decision, T0, T0 + 60_000)).toBe("Progression à jour, il y a 1 min.");
+    expect(describeSync(decision, T0, T0 + 12 * 60_000)).toBe("Progression à jour, il y a 12 min.");
+    expect(describeSync(decision, T0, T0 + 5 * 3_600_000)).toBe("Progression à jour, il y a 5 h.");
+    // L'ancienneté ne laisse jamais filtrer le nom technique de l'action.
     expect(describeSync(decision, T0, T0 + 3 * 86_400_000)).toMatch(/3 j/);
+    expect(describeSync(decision, T0, T0 + 3 * 86_400_000).toLowerCase()).not.toContain("push");
   });
 });

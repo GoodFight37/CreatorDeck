@@ -47,4 +47,4 @@ export function passwordProblem(raw: string): string | null {
  * au moment où il en aurait besoin.
  */
 export const PASSWORD_WARNING =
-  "Note-le quelque part : sans SMTP configuré, ce mot de passe ne peut pas être récupéré.";
+  "Note-le quelque part : ce mot de passe ne pourra pas être récupéré ensuite.";

@@ -242,7 +242,7 @@ export class CloudApi {
       });
 
     let token = await this.accessToken();
-    if (!token) throw new CloudError("Connecte-toi pour utiliser le cloud.", "no_session", 401);
+    if (!token) throw new CloudError("Connecte-toi pour jouer en ligne.", "no_session", 401);
     try {
       const { body } = await call(token);
       return body;

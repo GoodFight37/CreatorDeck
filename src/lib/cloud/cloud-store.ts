@@ -191,7 +191,7 @@ export function createCloudStore(deps: CloudDeps) {
           decision: "push",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
-          message: "Collection envoyée au cloud.",
+          message: "Progression enregistrée en ligne.",
           isError: false,
         });
         return;
@@ -203,7 +203,7 @@ export function createCloudStore(deps: CloudDeps) {
           decision: "noop",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
-          message: "Cloud déjà à jour.",
+          message: "Tout est à jour.",
           isError: false,
         });
         return;
@@ -214,8 +214,7 @@ export function createCloudStore(deps: CloudDeps) {
           pending: true,
           decision: "conflict",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || null,
-          message:
-            "Le cloud contient une partie plus récente (autre appareil). « Charger le cloud » l'adopte, « Envoyer ma collection » l'écrase.",
+          message: "Deux parties existent : choisis celle que tu gardes, juste au-dessus.",
           isError: false,
         });
         return;
@@ -223,7 +222,7 @@ export function createCloudStore(deps: CloudDeps) {
       publish({
         busy: false,
         isError: true,
-        message: `Sauvegarde refusée par le serveur : ${result.problems.join(" ; ")}`,
+        message: `L'enregistrement en ligne a été refusé : ${result.problems.join(" ; ")}`,
       });
     } catch (error) {
       fail(error, "Envoi impossible.");
@@ -266,12 +265,12 @@ export function createCloudStore(deps: CloudDeps) {
     try {
       const remote = await api.pullSave();
       if (!remote) {
-        publish({ busy: false, message: "Aucune sauvegarde dans le cloud pour ce compte.", isError: false });
+        publish({ busy: false, message: "Aucune partie enregistrée en ligne pour ce compte.", isError: false });
         return;
       }
       const parsed = sanitizeState(remote.state, deps.now());
       if (!parsed) {
-        publish({ busy: false, message: "Sauvegarde cloud illisible : rien n'a été modifié.", isError: true });
+        publish({ busy: false, message: "Cette partie en ligne est illisible : rien n'a été modifié.", isError: true });
         return;
       }
       deps.applyState(parsed);
@@ -281,11 +280,11 @@ export function createCloudStore(deps: CloudDeps) {
         decision: "pull",
         remoteUpdatedAt: Date.parse(remote.updatedAt) || null,
         lastSyncAt: deps.now(),
-        message: `Partie chargée depuis le cloud (${syncStats(parsed).uniqueCreators} créateurs).`,
+        message: `Partie reprise depuis le jeu en ligne (${syncStats(parsed).uniqueCreators} créateurs).`,
         isError: false,
       });
     } catch (error) {
-      fail(error, "Chargement impossible.");
+      fail(error, "Reprise impossible pour l'instant.");
     }
   }
 
@@ -369,7 +368,7 @@ export function createCloudStore(deps: CloudDeps) {
     publish({ trades: list, tradesAt: deps.now(), busy: false });
     if (blocked > 0) {
       publish({
-        message: `${prefix}Un échange accepté doit être chargé depuis le cloud : une carte de cette partie a changé d'appareil (Compte → « Charger le cloud »).`,
+        message: `${prefix}Un échange a changé une carte d'appareil : ta progression se recalera toute seule dans un instant.`,
         isError: true,
       });
     } else if (applied > 0) {
@@ -417,12 +416,14 @@ export function createCloudStore(deps: CloudDeps) {
     }
   }
 
-  /** Phrase commune : ce qui a été récupéré du cloud, ou la consigne d'envoi. */
+  /** Phrase commune : ce qui a été récupéré en ligne, sinon rien à signaler. */
   function connectedMessage(adopted: number): string {
     if (adopted > 0) {
-      return `Compte connecté : ${adopted} carte${adopted > 1 ? "s" : ""} récupérée${adopted > 1 ? "s" : ""} depuis le cloud.`;
+      return `${adopted} carte${adopted > 1 ? "s" : ""} récupérée${adopted > 1 ? "s" : ""} depuis le jeu en ligne.`;
     }
-    return "Compte connecté. Ta collection locale reste la référence : envoie-la quand tu veux.";
+    // Rien de récupéré : la partie de l'appareil reste la référence, et la
+    // synchronisation s'en occupe toute seule. Il n'y a donc rien à demander.
+    return "Compte connecté : ta progression est gardée en ligne.";
   }
 
   /**

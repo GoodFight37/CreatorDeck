@@ -637,7 +637,7 @@ export function StudioView() {
                 })}
               </div>
               {/* Le live de vingt secondes : c'est le moment de jeu. Il ne paie
-                  rien — la vidéo reste tirée par le serveur — et le bouton
+                  rien — la vidéo continue d'être tirée en ligne — et le bouton
                   « Publier » juste en dessous reste le repli de qui ne veut
                   pas jouer la scène. */}
               <button

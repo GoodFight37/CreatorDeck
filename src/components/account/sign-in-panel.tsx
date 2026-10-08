@@ -56,9 +56,9 @@ export function SignInPanel() {
               <UserPlus size={14} /> Créer un compte invité (sans e-mail)
             </button>
             <p className="account-hint">
-              Le plus rapide : aucun e-mail, aucun SMTP, aucun domaine. Le compte vit avec la session de cet
+              Le plus rapide : aucun e-mail à confirmer, rien à recopier. Le compte vit avec la session de cet
               appareil — une fois créé, attache-lui une adresse et un mot de passe (« Garder ce compte ») pour
-              pouvoir le retrouver ailleurs, sans SMTP.
+              pouvoir le retrouver ailleurs.
             </p>
 
             <details className="account-details">
@@ -67,8 +67,8 @@ export function SignInPanel() {
               </summary>
               <p className="account-hint">
                 Le chemin pour retrouver une collection sur un autre appareil : <b>aucun e-mail n&apos;est
-                envoyé</b>, donc aucun SMTP n&apos;est nécessaire. Il faut que le mot de passe ait été attaché au
-                compte depuis l&apos;appareil d&apos;origine (Compte → « Garder ce compte »).
+                envoyé</b>. Il faut que le mot de passe ait été attaché au compte depuis l&apos;appareil
+                d&apos;origine (Compte → « Garder ce compte »).
               </p>
               <label className="account-field">
                 <span>Adresse e-mail</span>
@@ -111,10 +111,10 @@ export function SignInPanel() {
             </details>
 
             <details className="account-details">
-              <summary>Ou se connecter par e-mail (nécessite un SMTP)</summary>
+              <summary>Ou recevoir un code par e-mail</summary>
               <p className="account-hint">
-                Supabase n&apos;envoie des e-mails qu&apos;à l&apos;équipe du projet par défaut : configure
-                Authentication → Emails (Brevo, Resend… sont gratuits) pour utiliser cette voie.
+                Le code part vers l&apos;adresse que tu indiques, et il se recopie ici. S&apos;il
+                n&apos;arrive pas, choisis plutôt un mot de passe : ça marche tout de suite.
               </p>
               <label className="account-field">
                 <span>Adresse e-mail</span>

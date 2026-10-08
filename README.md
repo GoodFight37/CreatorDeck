@@ -770,10 +770,16 @@ version web hébergée.
   intégré de Supabase est réservé aux tests). Voir « Trois façons d'avoir un
   compte » dans `docs/cloud-supabase.md`.
 - **Nouveau téléphone, partie vierge** : à la connexion par mot de passe ou par
-  code, si la partie locale n'a ni carte ni ouverture, la collection du cloud
-  est reprise automatiquement (rien à perdre, et cela évite qu'un premier envoi
-  écrase le cloud). Dès que la partie locale a servi, rien n'est remplacé sans
-  un « Charger le cloud » explicite.
+  code, si la partie locale n'a ni carte ni ouverture, la collection en ligne est
+  reprise automatiquement (rien à perdre, et cela évite qu'un premier envoi
+  écrase la sauvegarde distante).
+- **Deux parties existent** (l'appareil et le jeu en ligne ont divergé) : rien
+  n'est remplacé tout seul, et l'écran **Mon compte** affiche alors **« Deux
+  parties t'attendent »** avec deux boutons — *Reprendre la partie en ligne*
+  (deux appuis : elle remplace la partie locale) et *Garder celle de cet
+  appareil* (elle part en ligne). Ces deux gestes n'apparaissent **que** dans ce
+  cas : hors de là, la synchronisation se fait en tâche de fond et l'écran ne
+  montre qu'une **pastille verte « Progression synchronisée »**.
 - Côté application : `src/lib/cloud/`
   - `config.ts` lit les deux variables publiques et désactive tout si elles
     manquent ;
@@ -917,8 +923,10 @@ version web hébergée.
   publiques par conception ; la clé **`service_role`** ne doit jamais entrer
   dans l'app.
 - Deux appareils qui ont joué en même temps : l'app ne fusionne **jamais**
-  toute seule, elle propose d'envoyer la partie locale ou de charger celle du
-  cloud (« Charger le cloud » demande deux appuis).
+  toute seule. L'écran **Mon compte** affiche alors **« Deux parties
+  t'attendent »** : *Reprendre la partie en ligne* (deux appuis) ou *Garder
+  celle de cet appareil*. Ces deux boutons n'apparaissent que dans ce cas — le
+  reste du temps, une **pastille verte** suffit.
 
 ## Images des créateurs
 

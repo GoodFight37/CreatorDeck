@@ -53,7 +53,7 @@ export function marketActions(ctx: CloudStoreContext) {
         await ctx.push(local.version, local.updatedAt, false);
         if (ctx.state().pending) {
           const message =
-            "Synchronise d'abord ta collection (Compte → Synchroniser) : l'hôtel a besoin de la collection du cloud à jour.";
+            "Ta progression n'est pas encore enregistrée en ligne : patiente un instant et réessaie — l'hôtel travaille sur la collection en ligne.";
           ctx.publish({ busy: false, message, isError: true });
           return { status: "unavailable", reason: "error", message };
         }
@@ -95,7 +95,7 @@ export function marketActions(ctx: CloudStoreContext) {
         await ctx.push(local.version, local.updatedAt, false);
         if (ctx.state().pending) {
           const message =
-            "Synchronise d'abord ta collection (Compte → Synchroniser) : l'hôtel a besoin de la collection du cloud à jour.";
+            "Ta progression n'est pas encore enregistrée en ligne : patiente un instant et réessaie — l'hôtel travaille sur la collection en ligne.";
           ctx.publish({ busy: false, message, isError: true });
           return { status: "unavailable", reason: "error", message };
         }
@@ -178,7 +178,7 @@ export function marketActions(ctx: CloudStoreContext) {
         await ctx.push(local.version, local.updatedAt, false);
         if (ctx.state().pending) {
           const message =
-            "Synchronise d'abord ta collection (Compte → Synchroniser) : le vol a besoin de la collection du cloud à jour.";
+            "Ta progression n'est pas encore enregistrée en ligne : patiente un instant et réessaie — le Last Pack lit la collection en ligne.";
           ctx.publish({ busy: false, message, isError: true });
           return { status: "unavailable", reason: "error", message };
         }

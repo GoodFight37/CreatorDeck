@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Clock3, Info, Lock, RefreshCw, ShieldAlert, X } from "lucide-react";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
 import type { LastPack, LastPackCard } from "@/lib/cloud/api";
@@ -133,7 +134,7 @@ export function LastPackSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>Le Last Pack demande le cloud</strong>
+              <strong>{connecteToi("Le Last Pack")}</strong>
               <span>Cette version est hors ligne : il n&apos;y a personne pour ouvrir un paquet.</span>
             </div>
           </div>

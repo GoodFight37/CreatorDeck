@@ -26,6 +26,7 @@ import {
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { PlayerSearchResult } from "@/lib/cloud/api";
@@ -41,10 +42,21 @@ const QUERY_MIN = 3;
 
 type Tab = "friends" | "incoming" | "outgoing";
 
-export function FriendsSheet({ onClose }: { onClose: () => void }) {
+export function FriendsSheet({
+  onClose,
+  initialTab = "friends",
+}: {
+  onClose: () => void;
+  /**
+   * L'onglet ouvert à l'arrivée. Le carnet de notifications s'en sert : une
+   * demande d'ami qui attend une réponse doit ouvrir **la liste des demandes**,
+   * pas celle des amis déjà acceptés.
+   */
+  initialTab?: Tab;
+}) {
   const cloud = useCloud();
   const now = useNow(60_000);
-  const [tab, setTab] = useState<Tab>("friends");
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlayerSearchResult[]>([]);
@@ -100,7 +112,7 @@ export function FriendsSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>Les amis demandent le cloud</strong>
+              <strong>{connecteToi("Les amis", true)}</strong>
               <span>Cette version est hors ligne : il n&apos;y a personne à ajouter.</span>
             </div>
           </div>

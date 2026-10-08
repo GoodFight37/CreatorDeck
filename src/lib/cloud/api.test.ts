@@ -15,6 +15,34 @@ function memoryStorage(): KeyValueStorage & { data: Map<string, string> } {
   };
 }
 
+/**
+ * Joue un appel qui doit échouer et rend les deux faces de la panne :
+ * ce que le **joueur** lit, et ce que le **journal** garde.
+ *
+ * C'est le contrat de rédaction de cette passe : à l'écran, une phrase de jeu
+ * (« Les échanges ne sont pas encore ouverts ») ; au journal, le détail qui
+ * permet à l'exploitant de réparer (« 0005_echanges absente du projet »).
+ */
+async function panne(run: () => Promise<unknown>): Promise<{ message: string; journal: string }> {
+  const vus: string[] = [];
+  const espion = vi.spyOn(console, "warn").mockImplementation((...args: unknown[]) => {
+    vus.push(args.map((a) => String(a)).join(" "));
+  });
+  const silence = process.env.CREATORDECK_SILENCE_JOURNAL;
+  delete process.env.CREATORDECK_SILENCE_JOURNAL;
+  let message = "";
+  try {
+    await run();
+    message = "(aucune erreur : l'appel a réussi)";
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+  if (silence === undefined) delete process.env.CREATORDECK_SILENCE_JOURNAL;
+  else process.env.CREATORDECK_SILENCE_JOURNAL = silence;
+  espion.mockRestore();
+  return { message, journal: vus.join("\n") };
+}
+
 type Call = { url: string; init: RequestInit | undefined };
 
 function fakeFetch(
@@ -110,9 +138,11 @@ describe("compte invité et profil", () => {
     expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(true);
   });
 
-  it("explique comment activer les comptes invités", async () => {
+  it("dit simplement que le compte invité n'est pas ouvert ici", async () => {
     const { api } = client(() => ({ status: 422, body: { error_code: "anonymous_provider_disabled" } }));
-    await expect(api.signInAnonymously()).rejects.toThrowError(/Authentication → Sign In \/ Providers → Anonymous/);
+    const { message, journal } = await panne(() => api.signInAnonymously());
+    expect(message).toMatch(/n'est pas ouvert ici/);
+    expect(journal).toContain("Anonymous");
   });
 
   it("lit et modifie le nom affiché", async () => {
@@ -514,7 +544,7 @@ describe("profil public", () => {
     expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/clear_wishlist");
   });
 
-  it("dit quelle migration coller quand la wishlist manque", async () => {
+  it("dit que la wishlist n'est pas encore ouverte", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -525,10 +555,12 @@ describe("profil public", () => {
       }),
       signedIn(),
     );
-    await expect(api.wishlistSlug()).rejects.toThrowError(/0015_wishlist\.sql/);
+    const { message, journal } = await panne(() => api.wishlistSlug());
+    expect(message).toMatch(/wishlist n'est pas encore ouverte/);
+    expect(journal).toContain("0015_wishlist");
   });
 
-  it("dit quelle migration coller quand les jetons manquent", async () => {
+  it("dit que les jetons ne sont pas encore ouverts", async () => {
     // `0035` est la dernière arrivée : tant qu'elle n'est pas collée, le solde
     // de jetons et l'achat aux jetons répondent « fonction inconnue ». Le
     // message doit nommer le fichier, comme les autres migrations.
@@ -542,8 +574,11 @@ describe("profil public", () => {
       }),
       signedIn(),
     );
-    await expect(api.tokensGet()).rejects.toThrowError(/0035_jetons\.sql/);
-    await expect(api.tokensSpend("ibai")).rejects.toThrowError(/0035_jetons\.sql/);
+    const lecture = await panne(() => api.tokensGet());
+    expect(lecture.message).toMatch(/jetons ne sont pas encore ouverts/);
+    expect(lecture.journal).toContain("0035_jetons");
+    const achat = await panne(() => api.tokensSpend("ibai"));
+    expect(achat.message).toMatch(/jetons ne sont pas encore ouverts/);
   });
 
   it("ne demande aucun identifiant pour son propre profil", async () => {
@@ -699,7 +734,7 @@ describe("tirage serveur", () => {
     await expect(api.ping()).rejects.toThrowError(/projet\.supabase\.co\/auth\/v1\/health/);
   });
 
-  it("explique quoi coller dans Supabase quand les migrations manquent", async () => {
+  it("dit que le tirage en ligne n'est pas encore ouvert", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -710,11 +745,14 @@ describe("tirage serveur", () => {
       }),
       signedIn(),
     );
-    await expect(api.openPack()).rejects.toThrowError(/0003_catalogue\.sql puis 0004_tirage\.sql/);
-    await expect(api.packStatus()).rejects.toThrowError(/npx supabase db push/);
+    const { message, journal } = await panne(() => api.openPack());
+    expect(message).toMatch(/tirage en ligne n'est pas encore ouvert/);
+    expect(journal).toContain("0003_catalogue");
+    const statut = await panne(() => api.packStatus());
+    expect(statut.message).toMatch(/pas encore ouvert/);
   });
 
-  it("distingue la migration du plancher de malchance de celles du tirage", async () => {
+  it("distingue le tirage en cours de mise à jour du tirage absent", async () => {
     // `open_pack` existe, mais pas dans sa version à argument : c'est 0013 qui
     // manque, pas 0003/0004 — le message doit dire la bonne migration.
     const { api } = client(
@@ -728,10 +766,12 @@ describe("tirage serveur", () => {
       }),
       signedIn(),
     );
-    await expect(api.openPack()).rejects.toThrowError(/0013_progression\.sql/);
+    const { message, journal } = await panne(() => api.openPack());
+    expect(message).toMatch(/mise à jour/);
+    expect(journal).toContain("0013_progression");
   });
 
-  it("dit quelle migration coller quand le Paquet Scène manque", async () => {
+  it("dit que le Paquet Scène n'est pas encore ouvert", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -742,15 +782,20 @@ describe("tirage serveur", () => {
       }),
       signedIn(),
     );
-    await expect(api.scenePackChoices("S01")).rejects.toThrowError(/0014_scene_pack\.sql/);
+    const { message, journal } = await panne(() => api.scenePackChoices("S01"));
+    expect(message).toMatch(/Paquet Scène n'est pas encore ouvert/);
+    expect(journal).toContain("0014_scene_pack");
   });
 
-  it("explique quoi faire quand une table manque", async () => {
+  it("dit qu'une partie du jeu n'est pas prête, sans montrer l'erreur brute", async () => {
     const { api } = client(
       () => ({ status: 404, body: { code: "42P01", message: 'relation "public.pack_state" does not exist' } }),
       signedIn(),
     );
-    await expect(api.openPack()).rejects.toThrowError(/Table manquante/);
+    const { message, journal } = await panne(() => api.openPack());
+    expect(message).toMatch(/n'est pas encore prête en ligne/);
+    expect(message).not.toContain("relation");
+    expect(journal).toContain("public.pack_state");
   });
 
   it("traduit une coupure réseau en phrase française, avec le nom d'hôte", async () => {
@@ -1060,7 +1105,7 @@ describe("la chaîne (le simulateur de streameur)", () => {
     await expect(api.streamerPublish("collab")).rejects.toThrowError(/posséder au moins un créateur/);
   });
 
-  it("dit quelle migration coller quand la chaîne manque", async () => {
+  it("dit que le Studio n'est pas encore ouvert", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -1068,7 +1113,9 @@ describe("la chaîne (le simulateur de streameur)", () => {
       }),
       signedIn(),
     );
-    await expect(api.streamerStatus()).rejects.toThrowError(/0036_streamer\.sql/);
+    const { message, journal } = await panne(() => api.streamerStatus());
+    expect(message).toMatch(/Studio n'est pas encore ouvert/);
+    expect(journal).toContain("0036_streamer");
   });
 
   it("n'invente pas un état quand la réponse est illisible", async () => {
@@ -1352,7 +1399,7 @@ describe("échanges", () => {
     });
   });
 
-  it("explique quoi coller quand la migration des échanges manque", async () => {
+  it("dit au joueur que les échanges ne sont pas encore ouverts, sans nommer de fichier", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -1360,7 +1407,11 @@ describe("échanges", () => {
       }),
       signedIn(),
     );
-    await expect(api.createTrade(TRADE.recipientId, [], [])).rejects.toThrow(/0005_echanges\.sql/);
+    // Le détail (« 0005_echanges ») part au journal : à l'écran, une phrase.
+    const { message, journal } = await panne(() => api.createTrade(TRADE.recipientId, [], []));
+    expect(message).toMatch(/pas encore ouverts/);
+    expect(message).not.toContain("0005");
+    expect(journal).toContain("0005_echanges");
   });
 
   it("garde le message du serveur quand il dit déjà quoi faire", async () => {
@@ -1449,7 +1500,7 @@ describe("amis", () => {
     expect(await rate.api.acceptFriendRequest(5)).toBe(false);
   });
 
-  it("explique quoi coller quand la migration des amis manque", async () => {
+  it("dit que les amis ne sont pas encore ouverts, sans nommer de fichier", async () => {
     const { api } = client(
       () => ({
         status: 404,
@@ -1457,7 +1508,9 @@ describe("amis", () => {
       }),
       signedIn(),
     );
-    await expect(api.sendFriendRequest(JOUEUR)).rejects.toThrow(/0008_friends\.sql/);
+    const { message, journal } = await panne(() => api.sendFriendRequest(JOUEUR));
+    expect(message).toMatch(/amis ne sont pas encore ouverts/);
+    expect(journal).toContain("0008_friends");
   });
 });
 
@@ -1532,20 +1585,26 @@ describe("compte : adresse et mot de passe", () => {
     );
 
     const unconfirmed = client(() => ({ status: 400, body: { error_code: "email_not_confirmed" } }));
-    await expect(unconfirmed.api.signInWithPassword("joueur@exemple.fr", "azerty1234")).rejects.toThrow(/Confirm email/);
+    await expect(unconfirmed.api.signInWithPassword("joueur@exemple.fr", "azerty1234")).rejects.toThrow(
+      /pas encore confirmée/,
+    );
   });
 
-  it("explique le bug Supabase quand une adresse ne peut pas être attachée à un invité", async () => {
+  it("ne laisse pas le joueur devant « adresse refusée » quand un invité veut attacher son adresse", async () => {
     // GoTrue valide une adresse vide pour un compte anonyme quand « Confirm
-    // email » est actif (supabase/auth#2847) : le message doit dire le réglage
-    // à changer, pas « Adresse e-mail refusée ».
+    // email » est actif (supabase/auth#2847) : le joueur lit une issue
+    // praticable (« choisis un mot de passe »), l'exploitant retrouve le
+    // réglage dans le journal.
     const { api } = client(
       () => ({ status: 400, body: { error_code: "email_address_invalid", msg: 'Email address "" is invalid' } }),
       signedIn(null),
     );
-    await expect(api.updateAccount({ email: "joueur@exemple.fr", password: "azerty1234" })).rejects.toThrow(
-      /Confirm email/,
+    const { message, journal } = await panne(() =>
+      api.updateAccount({ email: "joueur@exemple.fr", password: "azerty1234" }),
     );
+    expect(message).toMatch(/mot de passe/);
+    expect(message).not.toContain("Confirm email");
+    expect(journal).toContain("Confirm email");
   });
 
   it("dit qu'une adresse appartient déjà à un autre compte", async () => {

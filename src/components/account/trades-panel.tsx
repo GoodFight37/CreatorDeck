@@ -166,9 +166,9 @@ export function TradesPanel() {
         {open.length ? <span className="account-count">{open.length}</span> : null}
       </summary>
       <p className="account-hint">
-        Le serveur relit les deux collections puis déplace les cartes des deux côtés dans la même transaction : une
-        offre acceptée ne peut ni voler ni dupliquer une carte. Les points, l&apos;XP et les boosters ne bougent pas —
-        seules les cartes changent de main.
+        L&apos;échange se fait d&apos;un seul coup, des deux côtés à la fois : une offre acceptée ne peut ni voler ni
+        dupliquer une carte. Les points, l&apos;XP et les boosters ne bougent pas — seules les cartes changent de
+        main.
       </p>
 
       <div className="account-actions">

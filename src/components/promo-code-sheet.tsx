@@ -19,6 +19,7 @@
 import { useState, type FormEvent } from "react";
 import { AlertTriangle, Info, Ticket, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { RACCOURCIS_LISIBLES, connecteToi } from "@/lib/cloud/store-text";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
 export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
@@ -49,9 +50,9 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>Les codes demandent le cloud</strong>
+              <strong>{connecteToi("Les codes", true)}</strong>
               <span>
-                Cette version est hors ligne : un code se vérifie sur le serveur, il n&apos;y a
+                Cette version est hors ligne : un code se vérifie en ligne, il n&apos;y a
                 personne ici pour le faire.
               </span>
             </div>
@@ -62,7 +63,7 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
             <div>
               <strong>Connecte-toi d&apos;abord</strong>
               <span>
-                Un code se réclame sur ton compte, une fois par joueur : ouvre « Compte et cloud »,
+                Un code se réclame sur ton compte, une fois par joueur : ouvre « {RACCOURCIS_LISIBLES.compte} »,
                 connecte-toi, puis reviens ici.
               </span>
             </div>

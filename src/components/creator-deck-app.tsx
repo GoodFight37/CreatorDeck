@@ -15,6 +15,7 @@ import { MarketSheet } from "@/components/market-sheet";
 import { LastPackSheet } from "@/components/last-pack-sheet";
 import { ArenaSheet } from "@/components/arena-sheet";
 import { NotificationsSheet } from "@/components/notifications-sheet";
+import type { InboxTarget } from "@/lib/social/inbox";
 import { friendsOpenedRecently } from "@/lib/social/inbox";
 import { AtelierView } from "@/components/atelier-view";
 
@@ -176,6 +177,10 @@ export function CreatorDeckApp() {
   const navLastPack = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? now, now);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
+  // L'onglet sur lequel ouvrir la feuille des amis : le carnet sait qu'une
+  // demande d'ami attend une réponse, la feuille des amis sait où elle range
+  // les demandes. Le carnet le dit, la feuille l'applique.
+  const [friendsTab, setFriendsTab] = useState<"friends" | "incoming" | "outgoing">("friends");
 
   /**
    * Le son des feuilles : elles s'ouvrent et se referment toutes de la même
@@ -195,6 +200,44 @@ export function CreatorDeckApp() {
       playMenuClose();
       set(false);
     };
+  }
+
+  /**
+   * Un tap dans le carnet : on ferme le carnet, et on ouvre l'endroit visé.
+   *
+   * C'est **le seul endroit** qui connaît à la fois les onglets et les feuilles.
+   * Le carnet, lui, ne connaît que des familles (`InboxTarget`) : il n'a ni
+   * l'identifiant de la carte, ni le numéro de l'échange, et il n'en a pas
+   * besoin — chaque famille n'a qu'un bon endroit dans le jeu.
+   *
+   * Le son est celui d'une fermeture de feuille : on referme une feuille pour
+   * en ouvrir une autre, c'est le même geste.
+   */
+  function ouvrirDepuisLeCarnet(target: InboxTarget, section?: string) {
+    playMenuClose();
+    setNotificationsOpen(false);
+    if (target === "classeur") {
+      setTab("collection");
+      return;
+    }
+    if (target === "compte") {
+      setAccountFocus(null);
+      setAccountOpen(true);
+      return;
+    }
+    if (target === "amis") {
+      setFriendsTab(section === "incoming" ? "incoming" : section === "outgoing" ? "outgoing" : "friends");
+      setFriendsOpen(true);
+      return;
+    }
+    if (target === "last-pack") {
+      setLastPackOpen(true);
+      return;
+    }
+    if (target === "hotel") {
+      setMarketOpen(true);
+      return;
+    }
   }
 
   // ------------------------------------------------------------------
@@ -625,12 +668,17 @@ export function CreatorDeckApp() {
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
       {studioOpen ? <StudioSheet onClose={fermerFeuille(setStudioOpen)} /> : null}
-      {friendsOpen ? <FriendsSheet onClose={fermerFeuille(setFriendsOpen)} /> : null}
+      {friendsOpen ? <FriendsSheet initialTab={friendsTab} onClose={fermerFeuille(setFriendsOpen)} /> : null}
       {marketOpen ? <MarketSheet onClose={fermerFeuille(setMarketOpen)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={fermerFeuille(setLastPackOpen)} /> : null}
       {arenaOpen ? <ArenaSheet onClose={fermerFeuille(setArenaOpen)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={fermerFeuille(setWishlistOpen)} /> : null}
-      {notificationsOpen ? <NotificationsSheet onClose={fermerFeuille(setNotificationsOpen)} /> : null}
+      {notificationsOpen ? (
+        <NotificationsSheet
+          onClose={fermerFeuille(setNotificationsOpen)}
+          onGo={ouvrirDepuisLeCarnet}
+        />
+      ) : null}
       {accountOpen ? (
         <AccountSheet
           focus={accountFocus}

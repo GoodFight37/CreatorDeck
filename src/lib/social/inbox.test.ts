@@ -6,12 +6,16 @@ import type { FriendLists } from "@/lib/social/friends";
 import {
   bestCardOf,
   buildInbox,
+  cibleDe,
   friendsOpenedRecently,
   describeTrade,
   INBOX_LIMIT,
+  KIND_SECTIONS,
+  KIND_TARGETS,
   mergeInbox,
   seenKey,
   unreadCount,
+  type InboxKind,
 } from "@/lib/social/inbox";
 
 const trade = (overrides: Partial<TradeListItem> = {}): TradeListItem => ({
@@ -354,6 +358,51 @@ describe("le carnet de notifications", () => {
     expect(merged[0]?.kind).toBe("wishlist_live");
     // Sans épinglé en direct, rien ne change — et l'ordre d'origine est gardé.
     expect(mergeInbox(base, null).map((item) => item.id)).toEqual(base.map((item) => item.id));
+  });
+
+  it("donne une destination à chaque famille de nouvelles", () => {
+    // Le défaut d'origine : des lignes qu'on lisait sans pouvoir les toucher.
+    // Ici, la règle est vérifiée une fois pour toutes — aucune famille ne peut
+    // être ajoutée sans dire où elle mène.
+    const familles: InboxKind[] = [
+      "trade_in",
+      "trade_concluded",
+      "trade_declined",
+      "friend_request",
+      "friend_new",
+      "sale",
+      "last_pack",
+      "friend_pack",
+      "wishlist_live",
+    ];
+    for (const kind of familles) {
+      expect(KIND_TARGETS[kind], `famille sans destination : ${kind}`).toBeTruthy();
+      expect(cibleDe({ kind }).target).toBe(KIND_TARGETS[kind]);
+    }
+    // La table ne connaît pas de famille inventée : c'est ce qui rend la
+    // couverture ci-dessus exhaustive plutôt que déclarative.
+    expect(Object.keys(KIND_TARGETS).sort()).toEqual([...familles].sort());
+  });
+
+  it("ouvre la bonne section, et pas seulement le bon écran", () => {
+    // Une demande d'ami attend une réponse : on arrive sur les demandes, pas
+    // sur la liste des amis déjà acceptés.
+    expect(cibleDe({ kind: "friend_request" })).toEqual({ target: "amis", section: "incoming" });
+    // Un ami déjà accepté, lui, n'a pas d'onglet à ouvrir en particulier.
+    expect(cibleDe({ kind: "friend_new" })).toEqual({ target: "amis" });
+    expect(KIND_SECTIONS.friend_request).toBe("incoming");
+  });
+
+  it("fait atterrir chaque met là où il se constate", () => {
+    // Ces quatre-là sont les plus faciles à se tromper : un échange vit dans
+    // l'écran Compte, un Last Pack dans sa feuille, une vente et un direct
+    // dans le classeur (c'est là qu'on voit ses cartes).
+    expect(cibleDe({ kind: "trade_in" }).target).toBe("compte");
+    expect(cibleDe({ kind: "trade_concluded" }).target).toBe("compte");
+    expect(cibleDe({ kind: "last_pack" }).target).toBe("last-pack");
+    expect(cibleDe({ kind: "friend_pack" }).target).toBe("last-pack");
+    expect(cibleDe({ kind: "sale" }).target).toBe("classeur");
+    expect(cibleDe({ kind: "wishlist_live" }).target).toBe("classeur");
   });
 
   it("choisit la carte la plus rare, et sait s'arrêter", () => {

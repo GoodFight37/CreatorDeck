@@ -7,8 +7,13 @@
  * Elle ne décide de rien et ne calcule rien : le carnet est construit par
  * `src/lib/social/inbox.ts` à partir des faits que le serveur garde déjà (offres
  * d'échange, réponses, amis, ventes, cartes prises d'un Last Pack), et le store
- * le publie. Ici, on l'affiche
- * et on marque la visite — c'est tout.
+ * le publie. Ici, on l'affiche, on l'ouvre au doigt et on marque la visite.
+ *
+ * **Chaque ligne est un bouton.** C'était le défaut : des lignes de texte qu'on
+ * pouvait lire mais pas toucher. Un carnet qui annonce une offre reçue sans y
+ * mener oblige à retrouver l'écran soi-même — c'est-à-dire à ne pas y aller. La
+ * destination de chaque famille vient de `cibleDe()`, jamais d'un test écrit
+ * ici : la règle est testée une fois, dans `src/lib/social/inbox.ts`.
  *
  * Ouvrir la feuille **marque le carnet comme lu** : la pastille disparaît, les
  * lignes restent. Un carnet qu'il faudrait vider à la main serait une corvée.
@@ -28,11 +33,12 @@ import {
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { pushSupported } from "@/lib/push";
-import type { InboxKind } from "@/lib/social/inbox";
+import { cibleDe, type InboxItem, type InboxKind, type InboxTarget } from "@/lib/social/inbox";
 import { relativeDay } from "@/lib/social/friends";
 
 /** L'icône de chaque famille de nouvelles. */
@@ -48,10 +54,32 @@ const ICONS: Record<InboxKind, React.ReactNode> = {
   wishlist_live: <Radio size={15} />,
 };
 
-export function NotificationsSheet({ onClose }: { onClose: () => void }) {
+export function NotificationsSheet({
+  onClose,
+  onGo,
+}: {
+  onClose: () => void;
+  /**
+   * Où aller quand le joueur touche une ligne. L'écran qui monte la feuille
+   * connaît les onglets et les autres feuilles ; le carnet, lui, ne connaît que
+   * des familles.
+   */
+  onGo: (target: InboxTarget, section?: string) => void;
+}) {
   const cloud = useCloud();
   const now = useNow(30_000);
   const { items } = useInbox();
+
+  /**
+   * Le geste d'une ligne : **la visite d'abord**, la navigation ensuite.
+   * Marquer après coup laisserait la pastille se recalculer sur l'ancienne
+   * visite — l'action change l'état, donc elle passe en premier.
+   */
+  function ouvrir(item: InboxItem) {
+    cloudStore.markInboxSeen();
+    const cible = cibleDe(item);
+    onGo(cible.target, cible.section);
+  }
 
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
@@ -79,7 +107,7 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>Le carnet demande le cloud</strong>
+              <strong>{connecteToi("Le carnet")}</strong>
               <span>Cette version est hors ligne : il n&apos;y a personne pour t&apos;écrire.</span>
             </div>
           </div>
@@ -97,14 +125,27 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
           <ul className="inbox-list">
             {items.map((item) => (
               <li key={item.id}>
-                <span className="inbox-icon" aria-hidden="true">
-                  {ICONS[item.kind]}
-                </span>
-                <div className="inbox-text">
-                  <b>{item.title}</b>
-                  {item.body ? <span>{item.body}</span> : null}
-                </div>
-                <time dateTime={item.at}>{relativeDay(item.at, now)}</time>
+                {/*
+                 * La ligne entière est le bouton — pas une petite flèche à
+                 * viser au pouce. Le libellé se compose tout seul à partir du
+                 * titre et du détail : un lecteur d'écran annonce « X te
+                 * propose un échange, 2 cartes contre 1 ».
+                 */}
+                <button
+                  type="button"
+                  className="inbox-row"
+                  onClick={() => ouvrir(item)}
+                  aria-label={`${item.title}${item.body ? `. ${item.body}` : ""}`}
+                >
+                  <span className="inbox-icon" aria-hidden="true">
+                    {ICONS[item.kind]}
+                  </span>
+                  <div className="inbox-text">
+                    <b>{item.title}</b>
+                    {item.body ? <span>{item.body}</span> : null}
+                  </div>
+                  <time dateTime={item.at}>{relativeDay(item.at, now)}</time>
+                </button>
               </li>
             ))}
           </ul>

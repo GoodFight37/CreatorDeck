@@ -579,7 +579,10 @@ describe("store cloud", () => {
     store.subscribe(() => {});
     await store.sync("auto");
     expect(store.getSnapshot().decision).toBe("pull");
-    expect(store.getSnapshot().message).toMatch(/Charger le cloud/);
+    // Le message annonce l'écran (où le joueur choisit), il ne nomme plus un
+    // bouton qui n'existe plus.
+    expect(store.getSnapshot().message).toMatch(/Mon compte/);
+    expect(store.getSnapshot().message).not.toMatch(/Charger le cloud/);
     expect(applied).toHaveLength(0);
   });
 
@@ -590,7 +593,7 @@ describe("store cloud", () => {
     await store.sync("pull");
     expect(applied).toHaveLength(1);
     expect(applied[0]?.cards).toHaveLength(1);
-    expect(store.getSnapshot().message).toMatch(/Partie chargée/);
+    expect(store.getSnapshot().message).toMatch(/Partie reprise depuis le jeu en ligne/);
   });
 
   it("refuse une sauvegarde cloud illisible sans toucher à la partie", async () => {
@@ -612,7 +615,7 @@ describe("store cloud", () => {
     await store.sync("push");
     expect(api.pushSave).toHaveBeenCalledTimes(1);
     expect(store.getSnapshot().pending).toBe(true);
-    expect(store.getSnapshot().message).toMatch(/plus récente/);
+    expect(store.getSnapshot().message).toMatch(/Deux parties existent/);
   });
 
   it("remonte un refus du serveur en clair", async () => {
@@ -931,7 +934,9 @@ describe("échanges côté store", () => {
 
     expect(api.createTrade).not.toHaveBeenCalled();
     expect(outcome.status).toBe("unavailable");
-    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+    // L'offre n'est pas partie : le message dit quoi faire (attendre que la
+    // synchronisation passe), pas quel bouton d'infrastructure presser.
+    expect(store.getSnapshot().message).toMatch(/doit d'abord être enregistrée en ligne/);
   });
 
   it("accepte un échange : applique les cartes localement puis pousse", async () => {
@@ -965,7 +970,7 @@ describe("échanges côté store", () => {
 
     expect(api.respondTrade).not.toHaveBeenCalled();
     expect(outcome.status).toBe("unavailable");
-    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+    expect(store.getSnapshot().message).toMatch(/pas encore enregistrée en ligne/);
     expect(store.getSnapshot().isError).toBe(true);
   });
 
@@ -1004,7 +1009,7 @@ describe("échanges côté store", () => {
 
     expect(state.current.cards).toEqual([]);
     expect(store.getSnapshot().isError).toBe(true);
-    expect(store.getSnapshot().message).toMatch(/Charger le cloud/);
+    expect(store.getSnapshot().message).toMatch(/se recalera toute seule/);
   });
 
   it("annule une offre en attente", async () => {
@@ -1090,7 +1095,7 @@ describe("compte gardable (adresse + mot de passe)", () => {
     expect(api.updateAccount).not.toHaveBeenCalled();
   });
 
-  it("explique quoi faire quand Supabase attend une confirmation par e-mail", async () => {
+  it("explique quoi faire quand une confirmation par e-mail est demandée", async () => {
     const { store, api } = harness();
     api.updateAccount.mockResolvedValue({ applied: false, pendingEmail: "joueur@exemple.fr", email: null });
 
@@ -1101,8 +1106,10 @@ describe("compte gardable (adresse + mot de passe)", () => {
     expect(outcome.status).toBe("pending");
     expect(store.getSnapshot().pendingEmail).toBe("joueur@exemple.fr");
     expect(store.getSnapshot().message).toMatch(/code à 6 chiffres/);
-    // Le réglage à changer est nommé : sans lui, la voie invitée ne marche pas.
-    expect(store.getSnapshot().message).toMatch(/Confirm email/);
+    // L'issue praticable est nommée : un mot de passe ne demande aucun envoi.
+    // Le réglage à changer, lui, n'a rien à faire à l'écran.
+    expect(store.getSnapshot().message).toMatch(/mot de passe/);
+    expect(store.getSnapshot().message).not.toMatch(/Confirm email|SMTP/i);
     expect(store.getSnapshot().isError).toBe(false);
   });
 
@@ -1256,7 +1263,7 @@ describe("compte gardable (adresse + mot de passe)", () => {
 
     expect(api.pullSave).not.toHaveBeenCalled();
     expect(state.current).toBe(local);
-    expect(store.getSnapshot().message).toMatch(/envoie-la quand tu veux/);
+    expect(store.getSnapshot().message).toMatch(/gardée en ligne/);
   });
 });
 
@@ -1281,7 +1288,7 @@ describe("fiche publique d'un joueur", () => {
     await store.openProfile("u3");
 
     expect(store.getSnapshot().profile).toBeNull();
-    expect(store.getSnapshot().message).toMatch(/pas encore envoyé sa collection/);
+    expect(store.getSnapshot().message).toMatch(/pas encore de progression en ligne/);
     expect(store.getSnapshot().isError).toBe(true);
   });
 
@@ -1379,7 +1386,7 @@ describe("hôtel des ventes", () => {
     const outcome = await store.sellCard("a1");
     expect(api.marketSell).not.toHaveBeenCalled();
     expect(outcome.status).toBe("unavailable");
-    expect(store.getSnapshot().message).toMatch(/Synchroniser/);
+    expect(store.getSnapshot().message).toMatch(/pas encore enregistrée en ligne/);
   });
 
   it("ne retire pas une carte que la partie locale n'a plus", async () => {

@@ -48,6 +48,53 @@ export type InboxItem = {
   who: string | null;
 };
 
+/**
+ * Où mène un tap.
+ *
+ * Le carnet ne porte pas d'adresse toute faite (pas d'identifiant de créateur,
+ * pas de numéro d'échange) : ce qu'il porte, c'est une **famille**. La famille
+ * suffit, parce que chaque famille a un seul bon endroit dans le jeu. Cette
+ * table est donc la règle de navigation, écrite une fois et testée
+ * (`src/lib/social/inbox.test.ts`) — un tap qui ne mène nulle part était
+ * exactement le défaut du carnet.
+ */
+export type InboxTarget = "classeur" | "compte" | "amis" | "last-pack" | "hotel";
+
+/** La destination de chaque famille de nouvelles. */
+export const KIND_TARGETS: Record<InboxKind, InboxTarget> = {
+  // Un échange vit dans l'écran Compte, section Échanges (proposer, accepter).
+  trade_in: "compte",
+  trade_concluded: "compte",
+  trade_declined: "compte",
+  // Les amis ont leur feuille, avec son onglet « demandes ».
+  friend_request: "amis",
+  friend_new: "amis",
+  // Une vente se constate dans le classeur : la carte n'y est plus.
+  sale: "classeur",
+  // Un Last Pack se regarde là où il est exposé.
+  last_pack: "last-pack",
+  friend_pack: "last-pack",
+  // Le direct du créateur épinglé se voit sur sa carte, dans le classeur.
+  wishlist_live: "classeur",
+};
+
+/**
+ * L'onglet interne à ouvrir, quand la destination en a un. Sans entrée ici, on
+ * arrive simplement sur la première section de la destination.
+ */
+export const KIND_SECTIONS: Partial<Record<InboxKind, string>> = {
+  // Une demande d'ami attend une réponse : on ouvre directement la liste des
+  // demandes plutôt que celle des amis déjà acceptés.
+  friend_request: "incoming",
+};
+
+/** La destination d'une ligne : l'écran, et la section quand elle en a une. */
+export function cibleDe(item: Pick<InboxItem, "kind">): { target: InboxTarget; section?: string } {
+  const target = KIND_TARGETS[item.kind];
+  const section = KIND_SECTIONS[item.kind];
+  return section ? { target, section } : { target };
+}
+
 /** Les listes déjà chargées, telles que le store les tient. */
 export type InboxSources = {
   trades: TradeListItem[];

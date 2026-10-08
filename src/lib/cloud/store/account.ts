@@ -179,16 +179,16 @@ export function accountActions(ctx: CloudStoreContext) {
         const result = await api.updateAccount({ ...(wanted ? { email: wanted } : {}), ...(password ? { password } : {}) });
         if (!result.applied) {
           const pending = result.pendingEmail ?? wanted;
-          const message = `Un code à 6 chiffres part vers ${pending}. Saisis-le ici pour valider l'adresse. Si rien n'arrive, c'est que le projet n'a pas de SMTP : ajoute un mot de passe (il ne demande aucun envoi), ou désactive « Confirm email » (Authentication → Sign In / Providers → Email) pour que l'adresse soit enregistrée tout de suite.`;
+          const message = `Un code à 6 chiffres part vers ${pending}. Saisis-le ici pour valider l'adresse. S'il n'arrive pas, choisis plutôt un mot de passe : il ne demande aucun envoi.`;
           ctx.publish({ busy: false, pendingEmail: pending, message, isError: false });
           return { status: "pending", message };
         }
         const address = result.email ?? wanted;
         const message = password && wanted
-          ? `Adresse ${address} attachée, avec un mot de passe. Sur un autre appareil : « Se connecter avec un e-mail et un mot de passe », puis « Charger le cloud ».`
+          ? `Adresse ${address} attachée, avec un mot de passe. Sur un autre appareil, connecte-toi avec cette adresse et ce mot de passe : ta progression te suivra.`
           : password
             ? "Mot de passe enregistré. Sur un autre appareil, connecte-toi avec ton adresse et ce mot de passe."
-            : `Adresse ${address} attachée. Sur un autre appareil : « Recevoir un code par e-mail », puis « Charger le cloud ».`;
+            : `Adresse ${address} attachée. Sur un autre appareil : « Recevoir un code par e-mail », et ta progression te suivra.`;
         ctx.publish({ busy: false, email: address ?? ctx.state().email, pendingEmail: null, message, isError: false });
         return { status: "done", message };
       } catch (error) {
@@ -231,7 +231,7 @@ export function accountActions(ctx: CloudStoreContext) {
       ctx.publish({ busy: true, message: null, isError: false });
       try {
         const session = await api.verifyEmailChange(pending, token);
-        const message = `Adresse ${session.email ?? pending} confirmée. Sur un autre appareil : « Recevoir un code par e-mail », puis « Charger le cloud ».`;
+        const message = `Adresse ${session.email ?? pending} confirmée. Sur un autre appareil : « Recevoir un code par e-mail », et ta progression te suivra.`;
         ctx.publish({ busy: false, email: session.email ?? pending, pendingEmail: null, message, isError: false });
         return { status: "done", message };
       } catch (error) {
@@ -546,7 +546,7 @@ export function accountActions(ctx: CloudStoreContext) {
         pushLive: null,
         pushDevices: null,
         pushBusy: false,
-        message: "Déconnecté. La partie continue en local, exactement comme avant.",
+        message: "Déconnecté. Ta partie continue ici, exactement comme avant.",
         isError: false,
       });
     },
@@ -580,7 +580,12 @@ export function accountActions(ctx: CloudStoreContext) {
         if (decision.action === "pull") {
           ctx.publish({
             decision: "pull",
-            message: "Le cloud est plus récent : ouvre « Charger le cloud » pour récupérer cette partie.",
+            // La décision n'est pas appliquée toute seule (on ne remplace
+            // jamais une partie sans le dire) : l'écran Compte affiche alors
+            // **deux boutons**, l'un pour reprendre celle d'en ligne, l'autre
+            // pour garder la sienne. Le message annonce l'écran, il ne nomme
+            // plus un bouton qui n'existe pas.
+            message: "Une partie plus récente t'attend en ligne : choisis celle que tu gardes dans Mon compte.",
             isError: false,
           });
           return;
@@ -637,7 +642,7 @@ export function accountActions(ctx: CloudStoreContext) {
           ctx.publish({
             profileBusy: false,
             profile: null,
-            message: "Ce joueur n'a pas encore envoyé sa collection au cloud.",
+            message: "Ce joueur n'a pas encore de progression en ligne.",
             isError: true,
           });
           return;

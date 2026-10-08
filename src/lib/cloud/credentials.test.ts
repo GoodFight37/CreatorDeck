@@ -22,9 +22,13 @@ describe("règles de saisie d'un compte", () => {
     expect(passwordProblem(" ".repeat(PASSWORD_MIN))).toMatch(/espaces/);
   });
 
-  it("prévient que le mot de passe n'est pas récupérable sans SMTP", () => {
-    // Le joueur doit le lire AVANT de choisir, pas le découvrir trop tard.
-    expect(PASSWORD_WARNING).toMatch(/récupéré|note/i);
-    expect(PASSWORD_WARNING).toMatch(/SMTP/i);
+  it("prévient que le mot de passe n'est pas récupérable", () => {
+    // Le joueur doit le lire AVANT de choisir, pas le découvrir trop tard — et
+    // la phrase ne lui explique pas la mécanique d'envoi : elle dit la limite.
+    expect(PASSWORD_WARNING).toMatch(/récupéré/i);
+    expect(PASSWORD_WARNING).toMatch(/note/i);
+    for (const mot of ["SMTP", "Supabase", "cloud", "serveur"]) {
+      expect(PASSWORD_WARNING).not.toContain(mot);
+    }
   });
 });

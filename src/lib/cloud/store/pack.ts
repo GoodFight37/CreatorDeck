@@ -160,7 +160,7 @@ export function packActions(ctx: CloudStoreContext) {
         const shelf = await api.scenePackChoices(family);
         if (shelf.choices.length !== 5 || shelf.choices.some((slot) => slot.length === 0)) {
           throw new CloudError(
-            "Le serveur n'a proposé aucune carte pour ce paquet.",
+            "Aucune carte n'a pu être tirée pour ce paquet : réessaie.",
             "invalid_response",
             0,
           );
@@ -175,7 +175,7 @@ export function packActions(ctx: CloudStoreContext) {
           const free = slot.filter((entry) => entry.slug && !used.has(entry.slug));
           if (!free.length) {
             throw new CloudError(
-              "Le serveur n'a pas proposé assez de créateurs pour ce paquet.",
+              "Le tirage n'a pas rendu assez de créateurs pour ce paquet : réessaie.",
               "invalid_response",
               0,
             );

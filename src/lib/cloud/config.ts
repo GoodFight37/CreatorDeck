@@ -78,6 +78,11 @@ export function cloudConfig(): CloudConfig | null {
 }
 
 /** Message unique affiché partout quand le cloud n'est pas configuré. */
+/**
+ * Ce qu'on lit dans l'écran Compte quand ce build ne parle à rien : une phrase
+ * de jeu, pas une consigne de compilation. Le joueur ne voit ni variable
+ * d'environnement, ni nom de service — juste ce qu'il peut faire.
+ */
 export const CLOUD_DISABLED_HINT =
-  "Cloud non configuré : ajoute NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY " +
-  "avant de compiler (voir docs/cloud-supabase.md). La partie reste jouable hors ligne.";
+  "Ta progression est gardée sur cet appareil, à chaque action : le jeu reste jouable hors ligne. " +
+  "Connecte un compte pour la retrouver sur un autre téléphone et figurer au classement.";

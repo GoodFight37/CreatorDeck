@@ -2524,7 +2524,7 @@ export type MarketPurchase = {
 export function applyMarketSale(state: PlayerState, sale: MarketSale, now = Date.now()): PlayerState {
   if (!state.cards.some((card) => card.id === sale.cardId)) {
     throw new GameError(
-      "Cette carte n'est plus dans ta collection : recharge la sauvegarde du cloud.",
+      "Cette carte n'est plus dans ta collection : ta progression va se recaler toute seule.",
       "MARKET_CARD_MISSING",
     );
   }
@@ -2554,7 +2554,7 @@ export function applyMarketPurchase(
   }
   if (state.points < purchase.price) {
     throw new GameError(
-      "Tu n'as plus assez de points pour cet achat : recharge la sauvegarde du cloud.",
+      "Tu n'as plus assez de points pour cet achat : ta progression va se recaler toute seule.",
       "MARKET_POINTS_MISSING",
     );
   }

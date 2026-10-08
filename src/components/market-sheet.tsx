@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Info, RefreshCw, ShoppingBag, Store, UserPlus, X } from "lucide-react";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { useGame } from "@/hooks/use-game";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
 import type { MarketListing } from "@/lib/cloud/api";
@@ -85,7 +86,7 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>L&apos;hôtel demande le cloud</strong>
+              <strong>{connecteToi("L'hôtel")}</strong>
               <span>Cette version est hors ligne : personne ne peut acheter ni vendre.</span>
             </div>
           </div>

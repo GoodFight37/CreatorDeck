@@ -69,11 +69,9 @@ test("« Toi » propose d'ouvrir son compte", async ({ page }) => {
   await openDeck(page);
   await tab(page, "Toi").click();
   await expect(tab(page, "Toi")).toHaveAttribute("aria-current", "page");
-  // Selon que le cloud est configuré ou non, la ligne dit « Mon compte » ou
-  // « Compte et cloud » : les deux mènent au même écran.
-  const account = page
-    .getByRole("button", { name: "Mon compte", exact: true })
-    .or(page.getByRole("button", { name: "Compte et cloud", exact: true }));
+  // Une seule ligne, un seul nom : « Mon compte ». L'écran ne s'appelle plus
+  // par le nom de l'infrastructure qu'il range.
+  const account = page.getByRole("button", { name: "Mon compte", exact: true });
   await expect(account.first()).toBeVisible();
 });
 

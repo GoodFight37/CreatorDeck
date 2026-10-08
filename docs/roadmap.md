@@ -13,6 +13,7 @@
 - [ ] Stabilisation des perfs mobiles (scroll fluide sur les 1 000 cartes)
 - [ ] Suite de tests Playwright (`npm run e2e`) & Vitest
 - [ ] Polissage visuel & haptique (reflets cartes Holo/Gold, retour tactile au swipe)
+- [x] **Finition UX « consumer-grade » (8 octobre 2026)** : plus un mot d'infrastructure à l'écran (`scripts/check-jargon.mjs`, gardé par `src/lib/jargon.test.ts` sur les composants, les pages et **tous** les modules qui portent des phrases), un **carnet de notifications dont chaque ligne mène au bon écran** (`KIND_TARGETS`), et un écran **Mon compte** sans boutons de sauvegarde : pastille verte « Progression synchronisée », adresse masquée, et le choix entre deux parties **seulement** quand il y en a deux
 
 ---
 

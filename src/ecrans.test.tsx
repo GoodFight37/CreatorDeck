@@ -66,16 +66,23 @@ describe("les écrans", () => {
     expect(document.querySelector(".bottom-nav button.active span")?.textContent).toBe("Studio");
 
     banc.appuyer("Toi");
-    expect(banc.ecran("04-toi")).toContain("Compte et cloud");
+    // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
+    expect(banc.ecran("04-toi")).toContain("Mon compte");
   });
 
   it("ouvre les feuilles : le compte, les objectifs, les taux", async () => {
     await application();
     banc.appuyer("Toi");
 
-    banc.appuyer("Compte et cloud");
-    // Sans cloud configuré, la feuille le dit au lieu de proposer une connexion.
-    expect(banc.ecran("05-compte")).toContain("Cloud &amp; classement");
+    banc.appuyer("Mon compte");
+    // Sans rien en ligne, la feuille le dit au lieu de proposer une connexion —
+    // et elle le dit en français de jeu, pas en vocabulaire d'atelier.
+    const feuille = banc.ecran("05-compte");
+    expect(feuille).toContain("Mon compte");
+    expect(feuille).toContain("Joue pour toi, sur cet appareil");
+    for (const mot of ["cloud", "Supabase", "serveur", ".json", ".sql", "token"]) {
+      expect(feuille.toLowerCase()).not.toContain(mot);
+    }
     banc.fermer();
 
     banc.appuyer("Objectifs et saisons");

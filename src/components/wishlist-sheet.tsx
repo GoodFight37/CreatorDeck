@@ -23,6 +23,7 @@
 import { useMemo, useState } from "react";
 import { Check, Info, Search, Target, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
@@ -63,7 +64,7 @@ export function WishlistSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>La wishlist demande le cloud</strong>
+              <strong>{connecteToi("La wishlist")}</strong>
               <span>
                 Cette version est hors ligne : un épinglé n&apos;a personne à qui être montré.
               </span>

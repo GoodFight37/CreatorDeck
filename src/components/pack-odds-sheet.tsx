@@ -59,11 +59,11 @@ export function PackOddsSheet({
           </button>
         </header>
 
-        {/* Une seule phrase, et c'est l'essentiel : ces chiffres viennent du
-            fichier que lit le moteur. */}
+        {/* Une seule phrase, et c'est l'essentiel : ces chiffres sont ceux que
+            le moteur applique — les mêmes pour tout le monde. */}
         <p className="odds-intro">
-          Calculés depuis <code>pull-rates.json</code>, le même fichier que le moteur : aucun
-          booster n&apos;est truqué à l&apos;ouverture.
+          <b>Taux officiels certifiés.</b> Ce sont exactement les probabilités appliquées à chaque
+          ouverture : aucun booster n&apos;est truqué, ni pour toi ni pour personne.
         </p>
 
         {/* Deux paquets, deux blocs : le joueur doit pouvoir lire les taux de

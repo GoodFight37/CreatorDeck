@@ -249,7 +249,7 @@ export function ProfileView({
       <section className="menu-group" aria-label="Compte">
         <h2>Compte</h2>
         <button type="button" className="menu-row" onClick={onShowAccount}>
-          <span>{cloud.userId ? "Mon compte" : "Compte et cloud"}</span>
+          <span>Mon compte</span>
           <ChevronRight size={16} />
         </button>
         {cloud.configured ? (

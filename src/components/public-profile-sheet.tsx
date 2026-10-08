@@ -166,7 +166,7 @@ export function PublicProfileSheet() {
                 <p className="account-hint">
                   Collection en cours de vérification : ce joueur n&apos;apparaît pas au classement.
                   {mine
-                    ? " Si c'est ta fiche : charge la sauvegarde du cloud (Compte → Charger le cloud). Une Légendaire ou une variante Live, Holo ou Gold doit venir d'un tirage, d'un échange ou de l'hôtel pour compter au classement."
+                    ? " Si c'est ta fiche : rien à faire, ta progression se met à jour toute seule. Une Légendaire ou une variante Live, Holo ou Gold doit venir d'un tirage, d'un échange ou de l'hôtel pour compter au classement."
                     : ""}
                 </p>
               ) : null}

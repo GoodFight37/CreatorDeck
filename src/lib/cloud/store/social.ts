@@ -125,7 +125,7 @@ export function socialActions(ctx: CloudStoreContext) {
         await ctx.push(local.version, local.updatedAt, false);
         if (ctx.state().pending) {
           const message =
-            "Ta collection doit d'abord être envoyée au cloud (Compte → Synchroniser) : sans elle, le serveur ne peut pas vérifier tes cartes.";
+            "Ta progression doit d'abord être enregistrée en ligne : sans elle, personne ne peut vérifier tes cartes. Ça se fait tout seul — réessaie dans un instant.";
           ctx.publish({ busy: false, message, isError: true });
           return { status: "unavailable", reason: "error", message };
         }
@@ -166,7 +166,7 @@ export function socialActions(ctx: CloudStoreContext) {
           await ctx.push(local.version, local.updatedAt, false);
           if (ctx.state().pending) {
             const message =
-              "Synchronise d'abord ta collection (Compte → Synchroniser) : l'échange a besoin de la collection du cloud à jour.";
+              "Ta progression n'est pas encore enregistrée en ligne : patiente un instant et réessaie — l'échange lit la collection en ligne.";
             ctx.publish({ busy: false, message, isError: true });
             return { status: "unavailable", reason: "error", message };
           }
@@ -195,7 +195,7 @@ export function socialActions(ctx: CloudStoreContext) {
           } catch {
             await ctx.refreshTrades(ready.api).catch(() => undefined);
             const message =
-              "Échange accepté côté serveur, mais cette partie ne contient plus la carte donnée : « Charger le cloud » (Compte) reprend la collection à jour.";
+              "Échange accepté, mais cette carte a quitté cette partie : ta progression se recalera toute seule dans un instant.";
             ctx.publish({ busy: false, message, isError: true });
             return { status: "unavailable", reason: "error", message };
           }

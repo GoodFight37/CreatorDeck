@@ -119,8 +119,8 @@ export function LeaderboardSection({ focus }: { focus?: "leaderboard" | null }) 
             )}
             <p className="account-hint">
               Touche une ligne pour ouvrir la fiche publique du joueur : vitrine, complétion du catalogue,
-              répartition par rareté, rang — et une affiche à partager. Le serveur recalcule les statistiques
-              depuis chaque sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
+              répartition par rareté, rang — et une affiche à partager. Les statistiques sont recalculées en
+              ligne depuis chaque sauvegarde, et ce qu&apos;aucune partie ne peut produire est écarté.
             </p>
           </section>
   );

@@ -111,8 +111,8 @@ export function StreamerLiveGame({
           <h3>{bilan.headline}</h3>
           <p className="live-recap-chat">{bilan.chatLine}</p>
           <p className="live-recap-note">
-            Le direct ne paie rien : la réussite, le buzz et les jetons de la vidéo restent tirés par le serveur,
-            comme d&apos;habitude.
+            Le direct ne paie rien : la réussite, le buzz et les jetons de la vidéo continuent d&apos;être tirés en
+            ligne, comme d&apos;habitude.
           </p>
           <button type="button" className="chaine-publish" disabled={busy} onClick={() => void onPublish()}>
             {busy ? "Publication…" : `Publier ma vidéo (${format.label})`}

@@ -35,23 +35,37 @@ describe("la feuille de compte (cloud configuré)", () => {
     vi.useRealTimers();
   });
 
-  it("montre la connexion et la sauvegarde de l'appareil", async () => {
+  it("montre la connexion, sans la tuyauterie", async () => {
     const { AccountSheet } = await import("@/components/account-sheet");
     await banc.monter(<AccountSheet onClose={() => {}} />);
 
     const ecran = banc.ecran("10-compte-configure");
-    expect(ecran).toContain("Cloud &amp; classement");
+    expect(ecran).toContain("Mon compte");
     expect(ecran).toContain("Continuer avec Twitch");
     expect(ecran).toContain("Créer un compte invité");
-    expect(ecran).toContain("Sauvegarde de cet appareil");
-    expect(ecran).toContain("Tester la connexion au cloud");
     expect(ecran).toContain("Direct");
 
-    // Le formulaire de sauvegarde s'ouvre, puis se referme.
-    banc.appuyer("Importer une sauvegarde");
-    expect(banc.ecran("11-compte-import")).toContain("Remplacer ma progression");
-    banc.appuyer("Importer une sauvegarde");
-    expect(banc.ecran("12-compte-import-ferme")).not.toContain("Remplacer ma progression");
+    /*
+     * Ce qui **ne doit plus** être là : c'est le cœur de la passe de finition.
+     * Un jeu grand public ne demande pas au joueur d'envoyer sa collection,
+     * de charger une sauvegarde distante, de copier un texte de sauvegarde ni
+     * de tester la connexion : tout se fait en tâche de fond.
+     */
+    for (const disparu of [
+      "Synchroniser",
+      "Envoyer ma collection",
+      "Charger le cloud",
+      "Tester la connexion au cloud",
+      "Sauvegarde de cet appareil",
+      "Copier ma sauvegarde",
+      "Importer une sauvegarde",
+    ]) {
+      expect(ecran, `encore affiché : ${disparu}`).not.toContain(disparu);
+    }
+    // Et le vocabulaire d'atelier ne revient pas par une phrase d'aide.
+    for (const mot of ["cloud", "Supabase", "serveur", "payload", "token", ".json", ".sql"]) {
+      expect(ecran.toLowerCase(), `jargon encore affiché : ${mot}`).not.toContain(mot);
+    }
   });
 
   it("porte les deux chemins de connexion (mot de passe, code par e-mail)", async () => {
@@ -75,7 +89,7 @@ describe("la feuille de compte (cloud configuré)", () => {
     });
     // Sans session, le classement n'est pas là : la feuille reste la même, et
     // c'est justement ce qu'on veut vérifier — `focus` ne casse rien.
-    expect(banc.ecran("15-compte-focus-classement")).toContain("Cloud &amp; classement");
+    expect(banc.ecran("15-compte-focus-classement")).toContain("Mon compte");
   });
 
   it("monte les panneaux sortis de la feuille (vitrine, échanges, classement)", async () => {

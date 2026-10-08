@@ -54,6 +54,37 @@ export function familyRatio(family: Pick<ProfileFamily, "owned" | "total">): num
   return family.total > 0 ? family.owned / family.total : 0;
 }
 
+/**
+ * Le détail d'une panne, pour le **journal** — jamais pour l'écran.
+ *
+ * Les messages ci-dessous disaient au joueur quel fichier de migration coller
+ * et avec quelle commande. C'était utile à l'exploitant du jeu et illisible
+ * pour tout le monde : le jeu parle maintenant de ce qui est **ouvert ou pas**,
+ * et le nom exact de la migration part dans la console, où l'exploitant le
+ * retrouve (`npm run supabase:verify` dit la même chose, en mieux).
+ */
+function journaliser(detail: string): void {
+  // Les bancs font silence par défaut (`vitest.config.ts`) : ils ont leurs
+  // propres assertions à écrire. Le banc qui vérifie le journal enlève le
+  // silence exprès.
+  if (process.env.CREATORDECK_SILENCE_JOURNAL) return;
+  console.warn(`[CreatorDeck] ${detail}`);
+}
+
+/**
+ * Ce qu'on lit quand une partie du jeu n'est pas encore ouverte — et ce qu'on
+ * écrit au journal pour l'exploitant.
+ *
+ * Le joueur lit la phrase qu'on lui donne ; le nom de la migration manquante
+ * part dans la console. Une phrase par écran, donc : « Les échanges ne sont pas
+ * encore ouverts » et « Le Studio n'est pas encore ouvert » ne se disent pas
+ * avec le même accord.
+ */
+function pasEncoreOuvert(phrase: string, sujet: string, migration: string): string {
+  journaliser(`${sujet} : ${migration} absente du projet — npx supabase db push`);
+  return phrase;
+}
+
 /** Traduit les erreurs de l'API en phrases utilisables dans l'interface. */
 export function messageFor(status: number, code: string, raw: string): string {
   // Les codes précis d'abord : un code à usage unique refusé arrive en 401,
@@ -63,23 +94,26 @@ export function messageFor(status: number, code: string, raw: string): string {
   // « Confirm email » est actif : GoTrue valide une adresse vide (bug connu,
   // supabase/auth#2847). On explique la manœuvre au lieu de traduire l'erreur.
   if (code === "email_address_invalid" && /Email address "" is invalid/i.test(raw)) {
-    return "Supabase refuse d'attacher une adresse à un compte invité tant que « Confirm email » est activé : désactive-le (Authentication → Sign In / Providers → Email) puis réessaie.";
+    journaliser("adresse refusée sur un compte invité : « Confirm email » actif côté service");
+    return "Attacher une adresse à un compte invité est refusé par le service : choisis un mot de passe, ça marche tout de suite, ou connecte-toi avec une adresse.";
   }
   // Un compte invité ne peut pas recevoir un mot de passe **sans** adresse :
   // c'est une règle de GoTrue, autant la dire en français (l'app empêche le cas
   // côté écran, mais la règle serveur reste la vérité).
   if (code === "validation_failed" && /anonymous user without an email/i.test(raw)) {
-    return "Supabase demande une adresse e-mail avec le mot de passe pour un compte invité.";
+    return "Un compte invité a besoin d'une adresse e-mail pour recevoir un mot de passe.";
   }
   // Le projet n'a pas de SMTP : GoTrue ne peut pas envoyer le code (l'envoi fait
   // partie de la transaction, donc rien n'est enregistré). Deux issues possibles.
   if (/error sending|could not send|smtp|dial tcp|connection refused/i.test(raw) && /mail|email/i.test(raw)) {
-    return "Supabase n'a pas pu envoyer l'e-mail : ce projet n'a pas de SMTP configuré (Authentication → Emails → SMTP Settings). Sans SMTP, attache plutôt un mot de passe — ça ne demande aucun envoi — ou désactive « Confirm email » pour que l'adresse soit enregistrée tout de suite.";
+    journaliser(`envoi de code impossible : ${raw}`);
+    return "Le code n'a pas pu partir : choisis plutôt un mot de passe, il ne demande aucun envoi.";
   }
   if (code === "email_address_invalid" || code === "validation_failed") return "Adresse e-mail refusée.";
-  if (code === "signup_disabled") return "Les inscriptions sont désactivées sur ce projet.";
+  if (code === "signup_disabled") return "Les inscriptions sont fermées pour le moment : reviens plus tard, ou joue sans compte.";
   if (code === "anonymous_provider_disabled" || code === "anonymous_sign_ins_disabled") {
-    return "Les comptes invités sont désactivés sur ce projet : active-les dans Authentication → Sign In / Providers → Anonymous.";
+    journaliser("compte invité refusé : « Anonymous » désactivé côté service");
+    return "Le compte invité n'est pas ouvert ici : connecte-toi avec une adresse, ou joue sans compte.";
   }
   // Mot de passe : connexion refusée, adresse non confirmée, mot de passe
   // refusé, ou changement de mot de passe qui exige une reconnexion.
@@ -87,20 +121,21 @@ export function messageFor(status: number, code: string, raw: string): string {
     return "E-mail ou mot de passe incorrect.";
   }
   if (code === "email_not_confirmed") {
-    return "Cette adresse n'est pas confirmée. Désactive « Confirm email » dans Supabase (Authentication → Sign In / Providers → Email) ou confirme-la, puis réessaie.";
+    return "Cette adresse n'est pas encore confirmée : reçois un code, saisis-le, puis réessaie.";
   }
-  if (code === "weak_password") return "Mot de passe refusé par Supabase : choisis-en un plus long.";
+  if (code === "weak_password") return "Mot de passe trop court : choisis-en un plus long.";
   if (code === "reauthentication_needed") {
-    return "Supabase demande une reconnexion avant de changer le mot de passe : déconnecte-toi, reconnecte-toi, puis recommence.";
+    return "Reconnecte-toi (déconnecte-toi, puis reconnecte-toi) avant de changer de mot de passe.";
   }
   if (code === "email_exists" || /already been registered|already registered/i.test(raw)) {
     return "Cette adresse est déjà utilisée par un autre compte : connecte-toi avec elle, ou choisis-en une autre.";
   }
   if (code === "email_provider_disabled") {
-    return "L'envoi d'e-mails est désactivé sur ce projet : active Email, ou utilise un compte invité.";
+    return "L'envoi de code est fermé pour le moment : choisis un mot de passe, ou joue sans compte.";
   }
   if (code === "email_address_not_authorized") {
-    return "Le service d'e-mail par défaut de Supabase n'écrit qu'aux adresses de l'équipe du projet : configure un SMTP (Authentication → Emails) ou utilise un compte invité.";
+    journaliser("adresse non autorisée : le service d'e-mail n'écrit qu'aux adresses de l'équipe");
+    return "Cette adresse ne peut pas recevoir de code : choisis un mot de passe, ou une autre adresse.";
   }
   if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
     return "Trop de tentatives : patiente une minute avant de redemander un code.";
@@ -125,7 +160,11 @@ export function messageFor(status: number, code: string, raw: string): string {
     (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
     /trade|echange/i.test(raw)
   ) {
-    return "Les échanges ne sont pas installés sur ce projet : pose supabase/migrations/0005_echanges.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "Les échanges ne sont pas encore ouverts : reviens un peu plus tard.",
+      "échanges",
+      "0005_echanges",
+    );
   }
   // Amis : la migration 0008 doit être collée dans le projet Supabase.
   //
@@ -139,7 +178,11 @@ export function messageFor(status: number, code: string, raw: string): string {
       raw,
     )
   ) {
-    return "Les amis ne sont pas installés sur ce projet : pose supabase/migrations/0008_friends.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "Les amis ne sont pas encore ouverts : reviens un peu plus tard.",
+      "amis",
+      "0008_friends",
+    );
   }
   // Les jetons : la migration 0035 doit être collée dans le projet.
   //
@@ -147,7 +190,11 @@ export function messageFor(status: number, code: string, raw: string): string {
   // le solde de jetons et l'achat aux jetons répondent « fonction inconnue »
   // tant qu'elle n'est pas là. Le message dit quoi coller, comme les autres.
   if (code === "PGRST202" && /tokens_get|tokens_spend|_tokens_|token_ledger/.test(raw)) {
-    return "Les jetons ne sont pas encore installés sur ce projet : pose supabase/migrations/0035_jetons.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
+    return pasEncoreOuvert(
+      "Les jetons ne sont pas encore ouverts : reviens un peu plus tard.",
+      "jetons",
+      "0035_jetons",
+    );
   }
   // La chaîne : la migration 0036 doit être collée dans le projet.
   //
@@ -155,18 +202,30 @@ export function messageFor(status: number, code: string, raw: string): string {
   // l'accueil : la porte « Ta chaîne » répond « fonction inconnue ». Le message
   // nomme le fichier à coller, comme les autres.
   if (code === "PGRST202" && /streamer_status|streamer_visit|streamer_publish|streamer_channels|streamer_videos|_streamer_/.test(raw)) {
-    return "La chaîne n'est pas encore installée sur ce projet : pose supabase/migrations/0036_streamer.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
+    return pasEncoreOuvert(
+      "Le Studio n'est pas encore ouvert : reviens un peu plus tard.",
+      "studio",
+      "0036_streamer",
+    );
   }
   // La wishlist : la migration 0015 doit être collée dans le projet.
   if (code === "PGRST202" && /wishlist_slug|set_wishlist|clear_wishlist|_wishlist/.test(raw)) {
-    return "La wishlist n'est pas installée sur ce projet : pose supabase/migrations/0015_wishlist.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "La wishlist n'est pas encore ouverte : reviens un peu plus tard.",
+      "wishlist",
+      "0015_wishlist",
+    );
   }
   // Le Paquet Scène : la migration 0014 doit être collée dans le projet.
   if (
     code === "PGRST202" &&
     /scene_pack_choices|open_scene_pack/.test(raw)
   ) {
-    return "Le Paquet Scène n'est pas installé sur ce projet : pose supabase/migrations/0014_scene_pack.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "Le Paquet Scène n'est pas encore ouvert : reviens un peu plus tard.",
+      "paquet scène",
+      "0014_scene_pack",
+    );
   }
   // `open_pack` existe mais pas dans sa version à argument : c'est le signe que
   // la migration 0013 (plancher de malchance) n'est pas encore collée. Le
@@ -176,21 +235,30 @@ export function messageFor(status: number, code: string, raw: string): string {
     /open_pack\s*\(/.test(raw) &&
     !/open_pack\s*\(\s*\)/.test(raw)
   ) {
-    return "Le tirage a changé côté serveur : pose supabase/migrations/0013_progression.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "Le tirage est en cours de mise à jour : reviens un peu plus tard.",
+      "tirage (nouvelle signature)",
+      "0013_progression",
+    );
   }
   // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
   // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
   // PostgREST (« Could not find the function public.open_pack »).
   if (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) {
-    return "Le tirage serveur n'est pas installé sur ce projet : pose supabase/migrations/0003_catalogue.sql puis 0004_tirage.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return pasEncoreOuvert(
+      "Le tirage en ligne n'est pas encore ouvert : reviens un peu plus tard.",
+      "tirage (catalogue + tirage)",
+      "0003_catalogue + 0004_tirage",
+    );
   }
   if (code === "42P01" || /relation .* does not exist/i.test(raw)) {
-    return "Table manquante côté serveur : toutes les migrations de supabase/migrations/ n'ont pas été posées — `npx supabase db push` dans le dossier du jeu (docs/cloud-supabase.md, § 3).";
+    journaliser(`table absente côté service : ${raw}`);
+    return "Une partie du jeu n'est pas encore prête en ligne : réessaie dans un instant.";
   }
   if (status === 429) return "Trop de tentatives : patiente une minute avant de redemander un code.";
   if (status === 401 || status === 403) return "Session expirée : reconnecte-toi avec un nouveau code.";
   if (status === 0) return "Réseau injoignable : vérifie ta connexion, ta partie locale est intacte.";
-  return raw || `Erreur inattendue du cloud (${status}).`;
+  return raw || `Le service en ligne n'a pas répondu comme prévu (code ${status}). Réessaie dans un instant.`;
 }
 
 export function asRecord(value: unknown): Record<string, unknown> | null {

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { CREATOR_BY_SLUG, RARITY_META, type Creator } from "@/lib/catalog";
 import { useCloud } from "@/hooks/use-cloud";
+import { connecteToi } from "@/lib/cloud/store-text";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
@@ -226,10 +227,10 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>L&apos;Arène demande le cloud</strong>
+              <strong>{connecteToi("L'Arène")}</strong>
               <span>
-                Le score, c&apos;est la somme des viewers réels : il faut quelqu&apos;un pour savoir
-                qui streame à cet instant. Cette version-ci n&apos;a pas de serveur.
+                Le score, c&apos;est la somme des viewers réels : il faut être en ligne pour savoir
+                qui streame à cet instant.
               </span>
             </div>
           </div>

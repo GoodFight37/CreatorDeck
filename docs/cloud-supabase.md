@@ -87,8 +87,10 @@ configuration.
 
 1. Dashboard → **Authentication → Sign In / Providers** → active
    **Anonymous sign-ins** → Save.
-2. Dans l'app : Profil → **Sauvegarde cloud** → **Créer un compte invité**.
-3. Donne-toi un nom (il apparaît au classement), puis **Envoyer ma collection**.
+2. Dans l'app : Profil → **Mon compte** → **Créer un compte invité**.
+3. Donne-toi un nom (il apparaît au classement, dans **Profil public**). Il n'y a
+   **rien à envoyer** : la progression part toute seule, et l'écran le dit par une
+   pastille verte (« Progression synchronisée »).
 
 Rien à installer, rien à payer, aucun e-mail. À savoir : le compte vit avec la
 session enregistrée sur l'appareil. Réinstaller l'app ou vider ses données perd
@@ -105,9 +107,9 @@ de mettre l'app sur un second appareil.
    C'est ce réglage qui rend l'opération possible sans envoyer un seul e-mail.
 2. Dans l'app (compte invité connecté) : Profil → **Garder ce compte** →
    adresse e-mail + mot de passe (8 caractères minimum) → **Attacher l'adresse**.
-3. Sur l'autre appareil : Profil → **Se connecter avec un e-mail et un mot de
-   passe** → puis **Charger le cloud** (ou rien à faire : une partie locale
-   vierge est reprise automatiquement, voir plus bas).
+3. Sur l'autre appareil : Profil → **Mon compte** → **Se connecter avec un
+   e-mail et un mot de passe** (ou rien à faire : une partie locale vierge est
+   reprise automatiquement, voir plus bas).
 
 Ce que fait l'app : un seul appel, `PUT /auth/v1/user` avec l'adresse **et** le
 mot de passe, avec le jeton du joueur. Aucun mot de passe ne transite en clair
@@ -144,7 +146,8 @@ par un code reçu par e-mail.
 3. L'app affiche **« Code reçu »** : saisis les 6 chiffres arrivés par e-mail →
    **Confirmer l'adresse**. Rien reçu ? **Renvoyer le code** (un envoi par
    minute), puis regarde les indésirables.
-4. Sur l'autre appareil : **Recevoir un code par e-mail** → **Charger le cloud**.
+4. Sur l'autre appareil : **Recevoir un code par e-mail**, puis saisis le code —
+   la progression suit le compte, sans autre geste.
 
 Ce qui se passe côté serveur : `PUT /auth/v1/user` avec la seule adresse ne
 l'applique **pas** tout de suite — Supabase la renvoie dans `new_email` et
@@ -162,7 +165,9 @@ marche à suivre (ajouter un mot de passe, qui n'envoie rien, ou désactiver
 code), si cette partie n'a **ni carte ni ouverture**, l'app charge d'elle-même
 la collection du cloud — il n'y a rien à perdre, et cela évite qu'un premier
 envoi écrase la collection. Dès que la partie locale a servi, rien n'est
-remplacé sans que le joueur le demande (« Charger le cloud »).
+remplacé sans que le joueur le demande : l'écran **Mon compte** affiche alors
+**Deux parties t'attendent**, avec *Reprendre la partie en ligne* (deux appuis) et
+*Garder celle de cet appareil*.
 
 ### Adresse e-mail + code (optionnel)
 
@@ -657,10 +662,11 @@ le téléphone de son APK, qui reste téléchargeable.
 
 ## 6. Vérifier que tout fonctionne
 
-1. Ouvre l'app → **Profil → Sauvegarde cloud** ;
+1. Ouvre l'app → **Profil → Mon compte** ;
 2. **Créer un compte invité** (ou, si tu as configuré un SMTP : adresse →
    **Recevoir un code** → recopie le code → **Valider le code**) ;
-3. donne-toi un **nom** (2 à 24 caractères), puis **Envoyer ma collection** ;
+3. donne-toi un **nom** (2 à 24 caractères, dans **Profil public**) — la
+   progression part en ligne toute seule ;
 4. ouvre **Classement mondial** : tu dois y apparaître — les statistiques sont
    recalculées par le serveur, jamais envoyées par le téléphone ;
 5. dans **Ma vitrine**, épingle jusqu'à quatre créateurs possédés et enregistre ;
@@ -676,7 +682,8 @@ le téléphone de son APK, qui reste téléchargeable.
    collections bougent, et le message confirme le troc.
 
 Ensuite, l'envoi est automatique une vingtaine de secondes après ta dernière
-action, et la ligne du profil indique l'état (« à envoyer », coche verte).
+action, et l'écran **Mon compte** affiche une **pastille verte** (« Progression
+synchronisée »). Rien à presser.
 
 ## 7. Comment les conflits sont traités
 
@@ -686,8 +693,9 @@ prudente :
 * **le contenu identique** → rien à faire ;
 * **un côté nettement plus récent** (plus de 30 s d'écart) → l'app propose
   d'envoyer ou de charger, jamais les deux ;
-* **les deux ont bougé** → l'app ne tranche pas : « Charger le cloud » adopte
-  la version du serveur, « Envoyer ma collection » écrase celle du cloud.
+* **les deux ont bougé** → l'app ne tranche pas : l'écran **Mon compte** montre
+  **Deux parties t'attendent** — *Reprendre la partie en ligne* adopte la version
+  distante, *Garder celle de cet appareil* écrase la sauvegarde en ligne.
 
 Aucune fusion automatique : mélanger deux progressions produirait une
 collection impossible à défendre côté serveur.
@@ -835,8 +843,8 @@ vérifiées par un test qui échoue si on les retire :
    comparaison tolère **une milliseconde** : un client JavaScript ne connaît que
    les millisecondes, Postgres garde les microsecondes, et sans cette marge
    chaque envoi honnête serait vu comme un conflit. `p_force` reste réservé aux
-   gestes explicites du joueur (« Envoyer ma collection », et l'écrasement
-   proposé par l'écran de conflit) : après une action décidée par le serveur
+   gestes explicites du joueur (« Garder celle de cet appareil », et l'écrasement
+   proposé par l'écran « Deux parties t'attendent ») : après une action décidée par le serveur
    (échange accepté, hôtel, Last Pack, arène, réinitialisation), le client
    **relit la version serveur** puis envoie la sienne dessus, sans forcer.
 4. **Le pseudo d'attente ne bloque plus une sauvegarde.** `ensure_profile()`
@@ -1549,7 +1557,7 @@ Deux garde-fous qui font la différence entre une mécanique et une décoration 
   pour refuser une sauvegarde d'appareil qui contiendrait encore une carte
   volée (le contrôle vise l'identifiant exact de la carte prise, pas son couple
   créateur + variante : elle a le droit de retomber d'un booster). Le message
-  renvoie vers « Charger le cloud », où le vol est déjà écrit.
+  renvoie vers « Reprendre la partie en ligne », où le vol est déjà écrit.
 
 Le carnet annonce au propriétaire « X t'a piqué ton légendaire » (ou « ton
 épique », ou « une carte ») — le voleur, lui, ne voit pas ses propres vols : on
@@ -2486,9 +2494,10 @@ ou un Perfect, **à la demande** — `reveal-overlay.tsx`, `deservesSpotlight`).
 
 Deux outils, dans l'ordre :
 
-1. **Dans l'app** — Profil → Sauvegarde cloud → **« Tester la connexion au
-   cloud »** : joint `/auth/v1/health` en lecture seule et affiche le nom d'hôte.
-   Un échec nomme l'hôte, le chemin **et** la cause technique.
+1. **La console du navigateur** — le jeu n'affiche plus de bouton de test : le
+   détail des pannes part au journal (`console.warn`, préfixé `[CreatorDeck]`),
+   et les migrations manquantes y sont nommées. Côté écran, le joueur lit
+   seulement « ce n'est pas encore ouvert » ou « ça se recalera tout seul ».
 2. **Dans un navigateur** — la page `docs/diagnostic.html` (dans le dépôt, à
    ouvrir depuis le dossier — elle n'est plus servie avec
    l'application) rejoue les appels un par un : lecture simple, lecture sans
