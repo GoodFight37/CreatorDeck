@@ -1,14 +1,43 @@
 # CreatorDeck — collectionne les créateurs Twitch
 
 Jeu mobile de cartes à collectionner façon TCG basé sur le classement Twitch
-(périmètre configurable : monde entier par défaut, ou une langue précise).
-**100 % hors ligne** : la logique de jeu tourne sur l'appareil et la
-progression est sauvegardée localement — aucun compte, aucun serveur.
-Boosters aux **taux de drop publiés**, événement « Perfect », atelier de
-recyclage/artisanat et saisons de collection.
+(1000 chaînes, périmètre configurable : monde entier par défaut, ou une langue
+précise). **Le jeu se joue en ligne**, avec un compte : c'est le serveur qui
+**tire les boosters** (`open_pack()`), donc les cartes ne sont pas falsifiables —
+c'est le prérequis des échanges, de l'hôtel et des classements. Taux de drop
+**publiés**, événement « Perfect », atelier de recyclage et d'artisanat,
+saisons de collection par famille de langue.
+
+Le cloud (Supabase) porte le jeu à plusieurs : compte (invité, e-mail ou Twitch),
+sauvegarde pour retrouver sa collection sur un autre appareil, échanges entre
+joueurs, amis, hôtel des ventes, carnet de notifications, **notifications de
+direct** (le téléphone sonne quand un créateur de ta collection passe en live),
+**Last Pack** (le paquet qu'un ami vient d'ouvrir reste exposé dix minutes),
+classement mondial —
+global ou par famille de collection —, profils publics avec vitrine, badge
+**EN LIVE** sur les cartes des chaînes en direct, et **Arène** hebdomadaire.
+Trois mécaniques de progression complètent le tirage : un **plancher de
+malchance publié** (12 boosters sans Légendaire et le 5ᵉ slot en garantit une),
+des **jetons** (5 par booster, 400 = la carte au choix — jamais une Légendaire),
+et des **missions du jour** avec une **série de sept jours**.
+
+**Le cloud reste facultatif à la compilation** : un build sans les deux
+variables publiques (`docs/cloud-supabase.md`) se compile et se joue **seul, sur
+l'appareil, sans compte** — c'est le mode de développement et des tests, où le
+moteur local tire les cartes. Le site déployé (Vercel) et l'APK, eux, sont
+compilés **avec** le cloud : boosters serveur, comptes, échanges et classements.
+Le build **prévient** quand ces deux variables manquent, pour que la version
+silencieusement sans cloud ne parte pas en ligne par distraction.
 
 Next.js 16 (App Router, export statique) · React 19 · Tailwind CSS 4 ·
-Capacitor 8 (Android) · Vitest.
+Capacitor 8 (Android) · Supabase · Vitest · Playwright.
+
+> **Tu es une IA, ou un relecteur pressé ?** Commence par
+> [`docs/perimetre.md`](docs/perimetre.md) : ce que ce dépôt attend de toi, et
+> **ce qui a déjà été refusé** — avec la raison, pour ne pas rouvrir un débat
+> tranché. Le **journal daté** des livraisons vit dans
+> [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
+> **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
 ## Prérequis
 
@@ -22,8 +51,52 @@ npm install
 npm run dev        # http://localhost:3000 (rechargement à chaud)
 ```
 
-Aucune variable d'environnement n'est nécessaire pour l'application.
-`.env.example` ne concerne que le script optionnel de synchronisation des avatars.
+Pour tout remettre d'aplomb d'un coup (dossier `node_modules` régénéré, ou les
+deux paquets de la vérification SQL qui manquent — ils ne sont pas dans le
+`package-lock.json`) :
+
+```bash
+npm run dev:setup   # fait `npm ci` s'il faut, puis installe ce qui manque
+```
+
+Pour laisser **un autre outil** (Cline, Gemini, un ami, une autre IA) travailler
+dans le dossier sans chambouler la branche de travail — deux commandes :
+
+```bash
+npm run essai:start   # AVANT : le dossier passe sur une branche essai/<date>-<heure>
+#   … l'outil modifie le dossier (et commite, s'il le fait) …
+npm run essai:push    # APRÈS : tout est rangé, poussé, et le dossier revient
+npm run essai:push -- "ton message"   # pour choisir le message du commit
+```
+
+`essai:push` marche aussi tout seul, sans `essai:start` : il range ce qui traîne
+(et jusqu'aux commits que l'outil aurait faits lui-même, qu'il **déplace** sur la
+branche d'essai avant de remettre la branche de travail exactement sur le dépôt).
+Si GitHub refuse l'envoi — cela arrive, une erreur de son côté —, **relance la
+même commande** : le commit déjà rangé part enfin, et le dossier revient sur la
+branche de travail. Et si le dossier a été laissé sur une branche `essai/…` sans
+note de retour, elle est retrouvée sur GitHub (celle dont le sommet est le commit
+d'où l'essai est parti) ; s'il y a le moindre doute, rien n'est deviné et la
+marche à suivre est écrite à l'écran.
+Jamais de `--force`, jamais de fusion, jamais de branche supprimée ; une clé
+secrète (`sb_secret_…` avec sa valeur, jeton complet, clé privée) fait échouer
+l'envoi **sans rien modifier**. Les branches `essai/*` ne déclenchent **pas** de
+compilation d'APK : ton lien d'installation reste celui de la branche de travail.
+
+Aucune variable d'environnement n'est nécessaire pour jouer : sans elles, la
+partie vit sur l'appareil et l'écran de compte affiche « cloud non configuré ».
+Copier `.env.example` vers `.env.local` et y coller l'**URL du projet Supabase**
+et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
+échanges, hôtel, classement…) — marche à suivre : `docs/cloud-supabase.md`.
+
+## Suivi et feuille de route
+
+Le **passé** — le journal daté des livraisons, du plus récent au plus ancien —
+vit dans [`docs/historique-livraisons.md`](docs/historique-livraisons.md). Le
+**présent et la suite** se lisent dans [`docs/roadmap.md`](docs/roadmap.md), et
+la simulation de streameur (« Ta chaîne ») a son dossier
+([`docs/ta-chaine.md`](docs/ta-chaine.md)) — **elle est hors de l'application**
+depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 
 ## Scripts
 
@@ -33,17 +106,99 @@ Aucune variable d'environnement n'est nécessaire pour l'application.
 | `npm run build` | export statique dans `out/` (PWA + source de l'APK) |
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
+| `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **38 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
 | `npm run android:apk` | `android:sync` puis Gradle `assembleRelease` (non signé sans `signingConfigs`) |
-| `npm run assets:regen` | (re)télécharge les portraits en 600×600 (`scripts/regen-avatars.mjs`) |
+| `npm run sfx:niveaux` | mesure les bruitages de `public/sfx/` (RMS et crête, en dBFS) et **réécrit** `src/data/sfx-niveaux.json` : les cibles de volume et les gains de lecture en découlent — un .wav remplacé se remesure, il ne se règle pas à la main |
+| `npm run streamer:bilan` | imprime le **bilan des courbes** de « Ta chaîne » (paliers et délais, gain moyen par format et par palier, choix d'imprévus, prix du setup, trente journées simulées) — il **lit** `src/data/streamer.json` par les fonctions du jeu, il n'équilibre rien |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
-| `npm run catalog:ci` | contrôle renforcé utilisé par la CI Android : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
-| `npm run assets:regen` | complète les portraits manquants ; `--prune` supprime les orphelins avant un commit |
-| `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
+| `npm run catalog:ci` | contrôle renforcé (utilisé par la CI Android jusqu'au 8 octobre 2026) : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
+| `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) ; `--prune` supprime les orphelins avant un commit |
+| `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données appliqué par `npx supabase db push`) |
+| `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
+| `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
+| `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
+| `npm run supabase:verify` | joue les migrations `0001` → `0041` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
+barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
+interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
+change pas, les refus de carte et de côté, aucun jeton versé — et le setup : cinq paliers dans l'ordre,
+le prix au serveur, un palier volé qui ne compte pas et ne fait pas sauter l'étape suivante, puis les
+trois paliers en doublons (Rare = 1, Épique = 2, une Légendaire et la dernière copie refusées, une carte
+ne part qu'une fois — le journal des départs en porte la preuve et le vérifieur le joue), puis **le plateau sur la vidéo du jour** (`0041`) : le barème relu du fichier,
+une Légendaire invitée hors ligne puis en direct, les colonnes `collab`/`raid` écrites
+et relues, la republication qui ne rejoue rien, le direct périmé qui retombe sur la
+seule rareté — **548 contrôles** en tout. Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
+
+## Tests
+
+Quatre étages, quatre vitesses :
+
+* **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
+  prix, les retours de connexion, le carnet de notifications, les effets de
+  rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
+  l'essentiel des règles (**1046 tests**, 68 fichiers aujourd'hui), et **tout
+  `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
+  coup d'œil.
+* **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
+  un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
+  écran : les quatre piliers, le marquage de l'onglet actif, l'accès au compte
+  depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
+  sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
+  distingue un bug du jeu d'un réseau coupé. S'y ajoute `e2e/pack-crash.spec.ts` :
+  un booster ouvert, la page rechargée, **les cinq mêmes cartes** — et, quand un
+  cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
+  collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
+* **`npm run ecrans`** (jsdom) : l'application **montée dans un DOM**, les
+  quatre piliers parcourus, les feuilles ouvertes, **un booster tiré** et sa
+  révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
+  HTML. C'est le filet des déménagements de code : on capture avant
+  (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
+  écran a bougé. Il tourne dans **neuf fichiers** (39 tests, 38 captures) : le
+  carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
+  **réglage du son**, **les mille cartes** (ce que le DOM porte vraiment) et
+  **les effets de rareté**. Il tournait dans la CI de l'APK, à côté
+  de `lint`, `typecheck` et `test` — depuis la suppression des workflows
+  (8 octobre 2026), c'est à relancer à la main.
+* **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
+  de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
+  échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
+  **bonus Direct** — poids ×1,5 vérifié sur des boosters réellement ouverts,
+  variante Live impossible quand le cache est périmé — et **Last Pack** — vol
+  réel des deux côtés, refus d'un inconnu, fenêtre de dix minutes, garde-fou
+  contre la résurrection d'une carte volée — et le **plancher de malchance** :
+  un journal amorcé à 11 boosters sans Légendaire, le 12ᵉ qui en sort une, la
+  série de jours cassée puis raccommodée, la récompense du 7ᵉ jour — puis le
+  **Paquet Scène** — un tirage conforme accepté, le même annoncé en Holo ou en
+  Légendaire refusé, le journal qui ne fait pas monter le plancher de
+  malchance — et la **wishlist** — un second épinglé qui remplace le premier,
+  la lecture par un autre joueur, l'écriture directe fermée — et les **codes
+  promo** : un code qui rend un booster une fois par joueur, un code inconnu,
+  expiré ou épuisé refusé, et une réserve pleine qui refuse **sans consommer**
+  le code — et le **wallet** : le solde de reprise, une sauvegarde trafiquée qui
+  n'achète rien, un tirage et un palier payés une seule fois, un recyclage dont
+  la carte est relue dans la sauvegarde (et dont le droit de provenance est
+  consommé), un palier de collection recalculé côté serveur, un palier de famille
+  payé au montant du jeu
+  (**450 contrôles** aujourd'hui, dont le blanchiment fermé aux quatre portes,
+  le tirage rangé dans la collection et les notifications — jetons fermés,
+  intéressés seuls, une par heure —, et **la chaîne** : le retour plafonné à
+  sept journées, l'horloge reculée qui ne crédite rien, la vidéo du jour tirée
+  par le serveur, les jetons versés une seule fois).
+
+```powershell
+npm test          # rapide, à chaque changement
+npm run ecrans    # les écrans montés dans un DOM (déménagement de code)
+npm run e2e       # avant de livrer (installe d'abord : npx playwright install chromium)
+```
+
+L'aperçu du jeu est servi sur `http://localhost:3000` : si `npm run dev` tourne
+déjà, la suite le réutilise au lieu d'en lancer un second.
 
 ## Architecture
 
@@ -56,35 +211,129 @@ src/lib/game-engine.ts   moteur de jeu PUR : tirage, recharge, XP, sabliers
 src/lib/save-store.ts    (dé)sérialisation + validation de la sauvegarde
 src/lib/game-store.ts    store client : charge, applique le moteur, persiste (localStorage)
 src/hooks/use-game.ts    liaison React (useSyncExternalStore) + horloge
-src/components/          UI (creator-deck-app, creator-card, atelier-view,
-                         seasons-section, pack-odds-sheet)
+src/lib/cloud/           cloud : config, client Supabase (api/, un module par
+                         domaine : compte, boosters, échanges, hôtel, arène),
+                         décisions de synchronisation (sync.ts), store React
+                         (cloud-store.ts) qui assemble store/ (état et
+                         synchronisation dans la façade, actions par domaine),
+                         échanges, amis, marché, Twitch, transport HTTP, et
+                         mojibake.ts (répare un message du serveur mal collé)
+src/lib/social/          échanges et amis côté règles pures + carnet de
+                         notifications (inbox.ts : les phrases, testées)
+src/lib/market.ts        grille des prix de l'hôtel (miroir de market_payout() SQL)
+src/lib/regions.ts       familles de collection (langues) et leurs teintes
+src/lib/live.ts          statut EN LIVE : lecture du cache, fraîcheur, libellés
+src/lib/push.ts          notifications côté appareil : permission, jeton FCM,
+                         canal Android, appui sur une notification (testé)
+src/lib/tilt.test.ts     le reflet des cartes suit l'inclinaison du téléphone :
+                         calcul borné, un seul capteur partagé, réglage du joueur
+src/lib/supabase-notify.test.ts  garde-fou : jetons fermés, fenêtres de 0023,
+                         son et canal du direct, état relu en 0024,
+                         Edge Function réservée au service, réglages Android
+src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
+                         doivent être ceux de 0011_direct.sql
+src/lib/reveal.ts        la mise en scène d'une révélation : silence, refus de
+                         la dernière carte, verrou du Perfect (testé)
+src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, compte
+                         à rebours, ce qui reste à prendre (testé)
+src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
+src/lib/progression.ts   jetons, missions du jour, série de sept jours, Prime
+                         Time (source unique : src/data/progression.json)
+src/lib/streamer.ts      la simulation de streameur, **hors écran depuis le
+                         8 octobre 2026** : formats, notoriété, imprévus,
+                         paliers, invités, plateau (source unique :
+                         src/data/streamer.json) — le moteur reste testé et
+                         aucune migration n'est à recoller s'il revient
+src/lib/live-game.ts     son live de 20 s : plan déterministe, chat, bulles
+                         (source unique : src/data/live-game.json) — même
+                         situation : la logique est là, l'écran n'y est plus
+src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx, **mesurés**)
+                         + plans de notes synthétisés — un seul volume, un seul
+                         interrupteur, et un son par geste
+src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
+                         seuil publié dans pull-rates.json
+src/lib/supabase-scene.test.ts  garde-fou : les poids du Paquet Scène dans
+                         pull-rates.json doivent être ceux de 0014
+src/lib/supabase-wishlist.test.ts  garde-fou : la wishlist de 0015 (écriture par
+                         fonctions, une ligne par joueur, épinglé dans le profil)
+src/lib/supabase-reset.test.ts  garde-fou : « recommencer sa partie » (0017) —
+                         ce qui s'efface, ce qui survit, qui a le droit
+src/lib/retired.test.ts  les Sortants : hors complétion, artisanables le temps
+                         d'une édition, jamais une Légendaire
+src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
+src/components/          UI : la coque (creator-deck-app.tsx — navigation,
+                         feuilles, toasts), une vue par onglet (drop-view,
+                         binder-view, missions-view, profile-view) et le chrome
+                         partagé (app-chrome.tsx), les cartes et leurs fiches,
+                         les feuilles (pack-odds-sheet, market-sheet,
+                         account-sheet + account/*, notifications-sheet, amis,
+                         arène, Last Pack…), le filet de sécurité
+                         (error-boundary.tsx), l'overlay 16:9
+src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre piliers, feuilles,
+src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
+src/components/*.test.tsx  les scènes montées au doigt :
+                         les gestes du doigt sur l'écran de la chaîne
+src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
+src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
+                         leurs cartes restent valides (voir src/lib/retired.ts)
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-supabase/migrations/     SQL à coller dans le SQL Editor de Supabase (0001 à 0004)
-public/creators/         portraits (600×600 via `npm run assets:regen`)
+public/creators/         portraits (600×600 WebP via `npm run assets:regen`)
+public/sfx/              les bruitages embarqués du jeu (15 fichiers, ≈1 Mo,
+                         sélection de « 400 Sounds Pack » de Chequered Ink)
+public/streamer/         l'histoire de ce dossier est dans
+                         `docs/assets-graphiques.md` : il est **vide** depuis le
+                         8 octobre 2026 au soir, le kit Kenney (2,7 Mo) étant
+                         parti avec la pièce visuelle du Studio
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
-                         seed Supabase (build-supabase-catalogue.mjs)
+                         seed Supabase (build-supabase-catalogue.mjs),
+                         vérificateur des migrations (verify-supabase-migrations.mjs),
+                         bilan des courbes de la simulation de streameur
+                         (streamer-bilan.ts — elle tourne encore **hors écran**)
+e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont le tirage
+                         qui survit à un rechargement de page)
+docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qui
+                         est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-android/                 projet Capacitor Android
+supabase/migrations/     la pile SQL, `0001` → `0041` (réelles, rejouables, vérifiées) :
+                         posées par `npx supabase db push`, dans l'ordre des numéros
+supabase/config.toml     le projet **lié** (le CLI) : rien de secret — la version des
+                         migrations et l'état voulu des fonctions Edge (`verify_jwt`)
+supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
+                         notify-live (direct → Firebase), secrets côté serveur
+docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),
+                         direct, amis, hôtel, carnet, notifications (§9 et 9.1), dépannage
+docs/diagnostic.html     la page de diagnostic de la connexion cloud (hors
+                         `public/`, donc hors de l'APK)
+docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refusé, vérifié
+docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
+src/lib/credits.ts       qui a fait le décor, les sons, les effets, les portraits
+                         (affiché sous « Toi » → *Crédits*)
+docs/assets-graphiques.md  public/streamer : ce qui servait, ce qui est parti (deux vagues)
+android/                 projet Capacitor Android (canal de notification et
+                         son du jeu, app/src/main/res/raw/creatordeck.wav)
 ```
 
 Principes :
 
 - **Le moteur est pur et isomorphe** (`game-engine.ts`) : chaque fonction
   prend un état + un instant `now` et renvoie un nouvel état. Il ne dépend ni
-  de Node, ni du DOM, ni du stockage, ce qui le rend testable unitairement et
-  réutilisable côté serveur si un mode en ligne (sauvegarde cloud, classement)
-  voit le jour.
-- **La sauvegarde est locale et versionnée** (`creatordeck.save.v2`), validée
+  de Node, ni du DOM, ni du stockage, ce qui le rend testable unitairement —
+  et vérifiable face aux **mêmes règles écrites en SQL** côté serveur
+  (`0004_tirage.sql`, `0005_echanges.sql`, `0009_marche.sql`), rejouées sur un
+  Postgres jetable par `npm run supabase:verify`. Un écart entre les deux se
+  voit en local, pas en production.
+- **La sauvegarde est locale et versionnée** (`creatordeck.save.v6`), validée
   au chargement (valeurs bornées, cartes inconnues ignorées). Les sauvegardes
-  v1 sont **migrées automatiquement** (aucune collection perdue) puis relues
-  sous la nouvelle clé. L'onglet Profil permet de la copier / importer
-  (transfert entre téléphones) et de la réinitialiser.
+  v1 → v5 sont **migrées automatiquement** (aucune collection perdue) puis
+  relues sous la nouvelle clé. L'onglet Profil permet de la copier / importer
+  (transfert entre téléphones) et de la réinitialiser ; une copie Cloud la
+  double dès qu'un compte est connecté.
 - **Ni taille ni périmètre codés en dur** : libellés, métadonnées, audience,
   jalons d'objectifs et raretés dérivent du catalogue et de
   `src/data/catalog.config.json` (`CATALOG_SIZE`, `CATALOG_SCOPE`,
@@ -98,13 +347,55 @@ Principes :
   « arrivent » même si l'app était fermée. Un recul de l'horloge de l'appareil
   ne crédite rien.
 
+## Le jeu, et la moitié qui a été retirée
+
+Le jeu est **un seul jeu**, et il tient en quatre écrans :
+
+- le jeu de cartes — les boosters, la collection, l'artisanat, le profil. C'est
+  là que vivent les taux publiés, les raretés, le marché et les échanges. Ses
+  quatre piliers sont **Drop**, **Binder**, **Craft** et **Toi**.
+
+Il a eu une **seconde moitié** : le **Studio** — une simulation de streameur
+(abonnés qui grandissent pendant l'absence, vidéo du jour, imprévus, paliers de
+setup, invités sur le bureau). Elle a été **retirée de l'application** le
+8 octobre 2026 au soir : ni onglet, ni ligne d'accueil, ni écran. **Son moteur
+est resté dans le dépôt**, dormant mais intact — `src/lib/streamer.ts`,
+`src/data/streamer.json`, les migrations `0036` à `0041`, les tests — et son
+dossier ([`docs/ta-chaine.md`](docs/ta-chaine.md)) reste la référence de ce
+qu'elle faisait. Rien n'est affiché, rien n'est payé, mais rien n'a été perdu :
+si elle revient, **aucune migration n'est à recoller**.
+
 ## Économie, saisons et taux de drop
 
-- **Atelier** (onglet dédié) : les doublons se recyclent en points, les points
-  rejoignent un créateur manquant. Un doublon vaut toujours moins que le coût
+- **Le départ est maigre** : une partie neuve commence avec **2 boosters,
+  2 sabliers et 40 points** (`src/data/progression.json`, bloc `start`). Le
+  serveur sert la même réserve au premier tirage (`_pack_initial_packs()`,
+  `0033_depart_maigre.sql`) et un test miroir compare les deux. Le départ était
+  plus généreux — trois boosters, **douze** sabliers : trois heures de recharge
+  offertes avant d'avoir compris la jauge, donc une mécanique qu'on saute au
+  lieu de la découvrir.
+- **Atelier** (l'onglet s'appelle **Craft** à l'écran — « Atelier » est le nom du
+  code, `tab === "atelier"`) : les doublons se recyclent en points — **un par un**
+  ou d'un seul geste (« Tout recycler », qui laisse les doublons **Live** en
+  place : eux se recyclent un par un, exprès) — et les points rejoignent un
+  créateur manquant. Un doublon **Live** demande **confirmation** avant de
+  partir (`recycleNeedsConfirm`) : cette variante-là ne se rachète pas, elle
+  tient au direct du créateur au moment du tirage. Avec un compte connecté, chaque carte est vérifiée et payée
+  par le serveur, exactement comme le geste unitaire. Un doublon vaut toujours moins que le coût
   d'artisanat de sa rareté, et les **Légendaires ne s'artisanent pas** — elles
   se méritent en booster, comme les raretés hautes non échangeables de TCG
   Pocket.
+- **Les Sortants** (rotation du catalogue) : une régénération ne jette personne.
+  Un créateur qui quitte le Top passe dans `src/data/retired.json`, avec
+  l'édition de son départ. Il n'est **plus tiré** en booster et ne compte plus
+  dans la complétion (« X / 1000 » se mesure sur le catalogue courant, sinon
+  100 % deviendrait inatteignable), mais ses cartes restent valables partout —
+  classeur (tag « Sortant »), échange, hôtel, Last Pack, vitrine. Il reste
+  **artisanable pendant l'édition de son départ** (jamais une Légendaire), et
+  l'accueil annonce la fenêtre : « 2 Sortants encore artisanables · dernière
+  édition ». Un créateur qui revient au classement l'emporte sur sa ligne de
+  Sortant ; côté serveur, le drapeau `retired` de `0003_catalogue.sql` fait
+  exactement la même chose (`0016_sortants.sql`). Runbook : `docs/catalogue-twitch.md`.
 - **Saisons** (écran Objectifs) : les créateurs sont répartis en familles **par
   langue de diffusion** (`src/data/seasons.config.json`, 9 familles + « Sans
   frontière »). Pourquoi la langue : un streameur change de jeu toutes les
@@ -124,9 +415,40 @@ Principes :
   peut pas afficher autre chose que ce que l'application fait.
 - La répartition des paliers est vérifiée par les tests : leur somme vaut
   exactement l'ancienne récompense unique, donc l'économie du jeu ne bouge pas.
+- **La Gold** : une Légendaire a **1 %** de chance d'être Gold, en plus du
+  « Perfect » qui la donne presque toujours (`variants.goldPermille = 100` dans
+  `src/data/pull-rates.json` ; le serveur lit le même taux dans
+  `0030_gold.sql`, et un test miroir compare les deux).
 - **« Perfect »** : avec une probabilité faible (pour mille, déclarée dans les
   tables), un booster bascule entièrement en cartes Épique ou mieux. Le tirage
-  devient un moment rare, pas une promesse marketing.
+  devient un moment rare, pas une promesse marketing : il est à **1 ‰** depuis
+  le 6 oct. 2026 (un booster sur mille ; c'était un sur deux-cents).
+- **L'ordre de révélation compte** : le slot garanti — Rare ou mieux — ferme
+  toujours le booster, dans le moteur local comme dans `open_pack()`. Aucun
+  mélange après tirage : la dernière carte est le moment fort de l'ouverture,
+  et l'écran la nomme.
+- **Le Direct fait tomber plus** : quand l'app sait qui streame (cache du
+  serveur, moins de dix minutes), les créateurs en direct **pèsent ×1,5** dans
+  leur rareté, leur carte a **20 %** de chance d'être en variante Live, et la
+  carte garantie est Live quand son créateur streame. Sans information fraîche,
+  le bonus est neutre et **aucune** variante Live ne sort : un « Live » qui
+  désignerait quelqu'un qui ne streame pas ne vaudrait rien. C'est déclaré dans
+  `pull-rates.json` (section `direct`), publié dans l'écran « Taux de drop »,
+  et appliqué des deux côtés (`0011_direct.sql`).
+- **Jalons du collectionneur** (écran Objectifs) : sept jalons — premier
+  booster, **10, 25, 50 puis 100** créateurs découverts, **premier
+  Légendaire**, catalogue complet — chacun payé **une fois** (+40 points et
+  1 sablier, puis 120/1, 260/2, 500/3, 1 200/5, 400/2 pour le Légendaire, et
+  3 000/10 pour le catalogue). Les paliers sont des nombres fixes : une
+  fraction du catalogue se déplacerait le jour où le catalogue grandit. Les
+  seuils vivent dans `MILESTONES` (`src/lib/game-engine.ts`) : l'écran ne peut
+  plus annoncer un chiffre et en compter un autre. Le jalon « premier
+  Légendaire » compte les créateurs **distincts** — deux exemplaires du même
+  n'en font pas deux.
+- **Saison affichée** : la barre du haut montre la famille **que le joueur
+  remplit en ce moment** (la plus avancée non terminée), pas un « S01 » écrit en
+  dur — le catalogue est mondial, une partie sans carte française ne doit pas
+  s'annoncer française.
 - **Taux publiés** : `docs/taux-de-drop.md` explique comment lire et modifier
   les tables, et pourquoi les publier (Google Play et l'App Store imposent la
   divulgation des probabilités des objets aléatoires). Les chiffres affichés
@@ -137,9 +459,15 @@ Principes :
   écrit dans la partie — même collection virtuelle, ni cartes, ni points, ni
   statistiques. Les tests vérifient que la simulation suit bien
   `pull-rates.json` à 3 points près sur 400 boosters.
-- **Sons** : synthétisés en Web Audio (`src/lib/sfx.ts`) — ouverture de booster,
-  accord qui monte avec la rareté, carillon de palier. Aucun fichier, aucun
-  octet ajouté à l'APK, aucune licence ; bouton on/off dans le profil.
+- **Sons** : deux familles, un seul interrupteur (`src/lib/sfx.ts`) — des
+  **bruitages embarqués** (`public/sfx/`, une sélection de « 400 Sounds Pack »
+  de Chequered Ink, libre d'usage commercial) portent les gestes : on retourne
+  une carte, on feuillette le Binder, on enfonce un bouton, on ouvre un menu,
+  on achète un palier de setup, on publie une vidéo ; des **plans de notes
+  synthétisés** portent la rareté (l'accord qui monte, la note en plus pour une
+  variante spéciale, le bang après le silence d'une Épique) et les carillons de
+  palier. Le total des fichiers reste sous les 3 Mo (un test le garde), et le
+  bouton **Son** du profil coupe **tout** — bruitages comme synthèse.
 - **Thèmes de collection** (Profil → Thème) : chaque famille complétée débloque
   la teinte de son emblème, et toutes les compléter débloque « Grand chelem ».
   Un thème repeint toute l'application — fond, panneaux, bordures, textes,
@@ -161,30 +489,88 @@ Aucune donnée, image, animation ni illustration Pokémon n'est embarquée : tou
 le contenu visuel de CreatorDeck est calculé (teintes dérivées des familles,
 monogrammes) ou provient des portraits Twitch.
 
-## Application Android (Capacitor)
+## Ouvrir ses boosters en direct (overlay 16:9)
 
-### Installer l'APK de test
-
-La CI publie une **pré-release roulante**, écrasée à chaque build : un lien de
-téléchargement public, sans connexion GitHub.
+Une page faite pour être collée en **source navigateur** dans OBS (ou équivalent) :
+`/overlay`. Elle n'affiche qu'une chose — la scène de révélation, plein cadre 16:9 —
+et elle ouvre de vrais boosters, avec les mêmes règles que le jeu (tirage serveur
+quand un compte est connecté, moteur local sinon).
 
 ```url
-https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk
+http://localhost:3000/overlay
 ```
 
-- l'APK embarque le catalogue **committé dans la branche** : portraits compris
-  (voir « Embarquer le catalogue dans l'APK » dans `docs/catalogue-twitch.md`) ;
-- signature **debug** : parfait pour tester sur un téléphone (activer
-  « installer des applications inconnues »), **pas** publiable sur le Play Store ;
-- reconstruit à chaque push sur `main` (`.github/workflows/android-apk.yml`) et
-  à chaque déclenchement manuel ;
-- l'artefact du run (`creatordeck-debug-apk`) reste disponible dans l'onglet
-  Actions, mais son téléchargement exige d'être connecté à GitHub.
+- dans le jeu (hors overlay), le booster **s'ouvre en le tirant vers le haut** :
+  la couture s'ouvre avec le doigt, le seuil est permissif (64 px, ou une
+  chiquenaude), la déchirure se sent et s'entend, et le bouton « Ouvrir »
+  reste — c'est le repli de la souris, du clavier et des doigts pressés ;
+- **Espace** ouvre un Live Drop, **Entrée** révèle la carte suivante (ou range) ;
+  aucun bouton ne traîne à l'écran pendant la révélation ;
+- **aucun raccourci** : le « ×5 » qui existe dans le jeu (hors overlay) n'est pas là.
+  Devant un public, les cinq cartes se montrent une par une ;
+- la mise en scène est la même partout, et elle est décidée par un module pur
+  (`src/lib/reveal.ts`, testé) : le **dernier emplacement refuse de se retourner**
+  (une fois, deux si la carte est Épique ou mieux) ; une Épique ou une Légendaire
+  arrive après **400 ms de silence** puis un bang ; un **Perfect** montre les cinq
+  cartes d'un coup et verrouille l'écran deux secondes, avec la vibration la plus
+  longue du jeu. Un Légendaire ou un Perfect passe en plein écran, avec le titre du
+  direct, le nombre de spectateurs et un bouton vers l'affiche ;
+- le son se coupe (`creatordeck.muted`) et **coupe aussi les vibrations** — c'est le
+  même interrupteur, dans « Toi → Son ».
 
-```bash
-# déclencher un build à la demande (jeton GitHub avec la permission Actions: write)
-gh workflow run "APK Android (debug)" --ref main
-```
+## Application Android (Capacitor)
+
+### Le jeu sur ton écran : Vercel, et l'APK pour le téléphone
+
+**Le jeu se teste maintenant dans le navigateur, sur Vercel** (décision du
+8 octobre 2026) : Vercel construit `npm run build` à chaque poussée et sert
+l'export statique. Rien à installer, et c'est le même code que l'APK.
+
+**Ce qui ne marche pas dans le navigateur, et il faut le savoir** : les
+**notifications** (celles des directs et les deux alertes de perte) passent par
+FCM, côté Android — `src/lib/push.ts` ne s'enregistre que sur une plateforme
+native (`Capacitor.isNativePlatform()`). Dans Vercel, l'écran du carnet reste
+visible, mais le téléphone ne sonne pas.
+
+**L'APK reste possible, à la main.** Depuis le 8 octobre 2026, les workflows
+GitHub ont été supprimés (`.github/workflows`, commits `ae5016f` puis
+`8760723`) : plus rien ne se construit ni ne se vérifie tout seul. La commande
+est `npm run android:debug` (Gradle `assembleDebug`), et **Firebase App
+Distribution n'est plus utilisé** — le lien de la pré-release roulante
+(`https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk`)
+ne changera donc que si un APK y est **publié à la main**
+(`gh release upload debug-apk …`) ; sinon il sert toujours l'APK d'avant.
+
+Deux points qui ne changent pas : l'APK embarque le catalogue **committé dans la
+branche**, portraits compris (voir « Embarquer le catalogue dans l'APK » dans
+`docs/catalogue-twitch.md`) ; et sa signature est **debug** — parfait pour un
+téléphone (activer « installer des applications inconnues »), **pas** publiable
+sur le Play Store.
+
+**Les contrôles se lancent à la main** : `npm test`, `npm run ecrans`,
+`npm run supabase:verify` (Postgres jetable), plus `npm run lint`,
+`npm run typecheck` et `npm run build`. Le build prévient désormais **lui-même**
+si les deux variables du cloud manquent (`scripts/cloud-guard.mjs`) : la panne
+la plus coûteuse est celle qui ne se voit pas.
+
+### Ce qui est pensé pour le pouce
+
+- **Le bouton retour** ferme l'écran du dessus — une fiche, une feuille, la
+  révélation — au lieu de quitter l'app. Quand plus rien n'est ouvert il revient
+  à l'accueil, et là seulement il met l'app de côté : quitter l'APK reste un
+  geste volontaire. La pile vit dans `src/lib/back-stack.ts` (pur, testé), le
+  branchement Android dans `src/hooks/use-android-back.ts` — il ne s'active
+  **que** dans l'APK, le navigateur garde le retour de ses propres boutons.
+- **Le classeur s'ouvre sur ce que tu as** : mille créateurs font cent douze
+  pages, et personne ne feuillette ça au pouce. Le filtre « Toutes » reste à un
+  appui ; une partie qui n'a encore rien ouvre sur le catalogue entier, parce
+  qu'un classeur vide n'apprend rien à personne.
+- La recherche, le tri et les filtres restent **collés sous la barre** pendant
+  qu'on descend la page — chercher un créateur après trois pages ne demande plus
+  de remonter trois pages.
+- La page de diagnostic (`docs/diagnostic.html`) a quitté `public/` : elle sert
+  à mettre au point la connexion cloud, pas à jouer, et elle n'a rien à faire
+  dans l'APK.
 
 ### Construire soi-même
 
@@ -228,23 +614,46 @@ Publication :
   `android/app/build.gradle` (`signingConfigs`) ; ne commite jamais le keystore.
 - Les APK/AAB produits sont à distribuer via **GitHub Releases**, pas dans Git
   (`*.apk`, `*.aab` et `public/downloads/` sont ignorés).
-- L'identifiant `com.monnom.monapp` (`capacitor.config.ts`, `build.gradle`,
-  `strings.xml`, package Java) est un nom provisoire : à fixer **avant** la
-  première publication, il ne pourra plus changer ensuite.
+- L'identifiant **`com.creatordeck.app`** (`capacitor.config.ts`, `build.gradle`,
+  `strings.xml`, package Java) est fixé depuis le 6 oct. 2026 : il ne changera
+  plus. En changer obligerait Android à voir une **autre application** — la
+  partie locale de l'appareil serait perdue (la collection du cloud, elle,
+  reste accessible en se reconnectant).
 
-Le même export `out/` est aussi une PWA installable (manifeste inclus) ; pour
-un usage hors ligne dans le navigateur, il faudra ajouter un service worker
-(non inclus pour l'instant — l'APK, lui, embarque tout).
+Le même export `out/` est aussi une PWA installable (manifeste inclus) : un
+raccourci qui ouvre le jeu dans le navigateur. Il n'y a **pas** de cache hors
+réseau pour autant (aucun service worker) — le jeu se joue en ligne, et c'est
+l'APK qui embarque tout.
 
-## Compte, cloud et classement (facultatif)
+## Compte, cloud et classement
 
-L'application est jouable **sans aucun serveur** : partie dans le
-`localStorage`, catalogue embarqué. Le cloud (Supabase) ajoute cinq choses :
-un compte (invité par défaut, e-mail + code à 6 chiffres en option), la
-sauvegarde pour retrouver sa partie sur un autre appareil, une vitrine de quatre
-cartes sur le profil public, un classement mondial recalculé par le serveur,
-et le **tirage des boosters décidé par le serveur** (les cartes sont
-infalsifiables, prérequis des échanges).
+Le cloud n'est facultatif qu'**à la compilation** : un build sans les deux
+variables publiques se joue seul, sur l'appareil (développement et tests) —
+partie dans le `localStorage`, catalogue embarqué, moteur local. L'**APK et le
+site distribués**, eux, sont compilés **avec** le cloud : le jeu se joue en
+ligne. Le cloud apporte onze choses ; les six premières sont décrites juste
+après, les dernières au §8 de la marche à suivre :
+
+1. un **compte** : invité (un appui, aucun e-mail), adresse e-mail + mot de
+   passe, ou « Continuer avec Twitch » ;
+2. la **sauvegarde cloud** de la partie, pour retrouver sa collection sur un
+   autre appareil ;
+3. le **tirage des boosters décidé par le serveur** (les cartes sont
+   infalsifiables — prérequis des échanges) ;
+4. les **échanges de cartes** entre joueurs, tranchés par le serveur ;
+5. la **vitrine de quatre cartes** et le **profil public** de chacun ;
+6. le **classement mondial**, recalculé par le serveur — tri global, tri Gold
+   ou tri **par famille de collection** ;
+7. les **amis**, avec demandes à accepter ;
+8. l'**hôtel des ventes** : on y dépose un doublon contre des points, d'autres
+   joueurs l'achètent plus tard ;
+9. le **carnet de notifications** (« Toi → Notifications », avec sa pastille) :
+   ce qui est arrivé pendant l'absence ;
+10. le **Last Pack** (« Toi → Last Pack ») : le paquet qu'un joueur vient
+    d'ouvrir reste exposé dix minutes, un ami peut y prendre une carte, une par
+    jour — et le carnet le dit au propriétaire ;
+11. le badge **EN LIVE**, allumé sur les cartes des chaînes en direct.
+
 Marche à suivre : **`docs/cloud-supabase.md`**.
 
 ### Le tirage est décidé par le serveur
@@ -255,24 +664,162 @@ que le moteur local, et le client ne peut ni les choisir ni les inventer. Hors
 ligne, le bouton « Ouvrir un booster » explique qu'il faut se connecter (avec
 un raccourci vers l'écran Compte) — **pas de repli silencieux**.
 
-Hors périmètre (volontaire) : les points, l'XP et le niveau restent calculés
-sur l'appareil ; seul le contenu des boosters (et donc les cartes) devient
-serveur.
+Dès qu'un compte est connecté, la réserve affichée est celle du serveur :
+`pack_status()` la relit sans rien consommer (compteur et date du prochain
+booster ne dépendent plus de l'horloge de l'appareil). Le sablier, qui ne sait
+avancer qu'une réserve locale, est donc désactivé quand le cloud est configuré ;
+il reste utilisable dans les builds sans cloud (dev, tests).
 
-- Deux façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
-  aucun SMTP — le compte vit avec la session de l'appareil) ou **e-mail + code à
-  6 chiffres** (récupérable ailleurs, mais il faut brancher un SMTP : le service
-  d'e-mail intégré de Supabase est réservé aux tests). Voir la section
-  « Deux façons d'avoir un compte » de `docs/cloud-supabase.md`.
+Le **solde de points** a suivi le même chemin que la réserve (`0027`) : quand le
+cloud est configuré, c'est le serveur qui l'écrit — il paie les tirages, les
+ventes de l'hôtel et les paliers, il encaisse l'artisanat, et l'appareil affiche
+ce qu'il reçoit. Une sauvegarde gonflée à la main n'achète donc plus rien, et le
+serveur ne croit pas non plus un client qui annonce un palier atteint : il
+recompte (collection projetée, compteur de boosters, grille des familles générée
+depuis le jeu — `0028_wallet_saisons.sql`), et `0029` range la surcharge laissée
+par la première version de `0027` (`_wallet_apply` à cinq paramètres : deux
+fonctions identiques à l'appel, et le booster ne s'ouvrait plus). `0030` ajoute
+la **Gold à 1 %** sur une Légendaire, hors « Perfect ».
+
+Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau** et
+les **sabliers**. Ils ne valent rien pour un autre joueur ; le contenu des
+boosters, les cartes, les points **et les jetons** (`0035`), eux, sont serveur.
+
+Le **plancher de malchance** et la **série de jours**, eux, sont calculés des
+deux côtés — et le serveur ne croit personne sur parole : il les relit depuis
+son propre journal des tirages (`pack_draws`), que seule `open_pack()` écrit.
+Un compteur rangé dans la sauvegarde de l'appareil serait à la portée du premier
+joueur qui sait l'éditer ; là, il n'y a rien à trafiquer. `pack_status()` publie
+les deux chiffres pour que l'écran affiche exactement celui qui décidera du
+tirage.
+
+### Le plancher de malchance, les jetons, les missions
+
+Trois mécaniques, une intention : qu'une série malchanceuse ne dure pas des
+mois, et que la partie ait un geste à faire **aujourd'hui**.
+
+* **Le plancher de malchance** (« pity ») est écrit dans
+  `src/data/pull-rates.json` et publié dans « Taux de drop » : après
+  **12 boosters d'affilée sans Légendaire**, le 5ᵉ slot en garantit une. Le
+  compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot, et
+  l'accueil affiche « Légendaire garanti dans N boosters ». Moteur local et
+  `open_pack()` appliquent la même règle (`0013_progression.sql`, seuil porté à
+  12 par `0031_pity_douze.sql` ; dernière version d'`open_pack()` dans
+  `0035_jetons.sql`).
+* **Les jetons** : 5 par booster ouvert, 7 pendant le **Prime Time** (20 h –
+  23 h), et **400** pour rejoindre la carte de son choix à l'Atelier
+  (« Craft → Jetons »). Jamais une Légendaire — elle se tire en booster, ou
+  tombe au plancher. Les jetons doublent le recyclage : les points paient vite,
+  les jetons paient sûr. Le solde vit **au serveur** (`0035_jetons.sql`) depuis
+  le 7 octobre 2026 : le tirage et la série versent, l'achat débite, et le
+  chiffre à l'écran est celui du serveur.
+* **Les missions du jour** (écran qui s'ouvre par « Objectifs et saisons », sur
+  l'accueil ; son titre à l'écran est « Progression ») : ouvrir un booster, recycler un
+  doublon, toucher sa famille ou un Direct — une par jour, **un sablier**
+  chacune. La journée de jeu commence à **6 h UTC** (pas à minuit : une soirée
+  de streaming ne doit pas être coupée en deux), et la **série** paie au
+  **7ᵉ jour d'affilée** un **Perfect garanti** — ou 3 sabliers, au choix.
+  Le **Planning du Streamer** (« Progression ») montre les sept cases de la
+  série : chaque jour ouvert coche la sienne, la case du jour dit « à faire »,
+  et la septième porte Le Grand Direct. J1 à J6 font avancer la série ; c'est
+  J7 qui paie.
+
+Les règles vivent dans un seul fichier, `src/data/progression.json`, et leur
+logique pure dans `src/lib/progression.ts` ; l'écran et le moteur lisent le
+même seuil, donc aucun chiffre n'est recopié à la main.
+
+### Les échanges sont tranchés par le serveur
+
+Profil → **Échanges** : cherche un joueur par son pseudo, choisis une de tes
+cartes et une carte qu'il possède (l'app demande au serveur les variantes qu'il
+a pour ce créateur), puis propose. Une carte contre une carte, jusqu'à cinq de
+chaque côté.
+
+Rien de tout cela n'est décidé par les téléphones : `respond_trade()`
+(`supabase/migrations/0005_echanges.sql`) relit les deux collections, retire les
+cartes données et ajoute les cartes reçues **dans la même transaction**, sous
+verrou. Si une carte a disparu entre-temps, l'exception annule tout : personne
+ne perd rien. Les points, l'XP, le niveau et les boosters ne bougent pas — un
+  (il n'y a pas de frais d'échange, et le serveur ne verse ni ne débite rien)
+troc ne fait que déplacer des cartes, et les cartes reçues portent un numéro
+d'échange qui empêche de l'appliquer deux fois. Une carte épinglée qui part en
+échange quitte la vitrine publique (elle n'y serait plus défendable). La collection des autres joueurs
+reste privée : le serveur ne dit que les variantes possédées d'un créateur
+donné, jamais la collection entière.
+
+### Le profil public et le classement enrichi
+
+Touche une ligne du classement : la fiche du joueur s'ouvre en plein écran —
+vitrine, **complétion du catalogue** (« 137 / 1000 », le serveur fait la
+division), rang (complétion et total de cartes), répartition par rareté
+(« 12 / 50 légendaires »), cartes, Holo et Gold. Un bouton fabrique une
+**affiche de partage** (1080×1350) directement sur l'appareil : pas besoin d'un
+serveur pour une image dynamique, le canvas s'en charge (`src/lib/poster.ts`).
+
+Côté base, `0006_profil_public.sql` ajoute `player_profile()` et une
+**projection** : `public.user_cards` reçoit une ligne par carte possédée,
+recalculée par un trigger à chaque écriture de sauvegarde. La sauvegarde JSON
+reste la source de vérité ; la table n'est qu'un index — RLS active, **aucune
+politique**, donc aucun client ne peut la lire, seules les fonctions du serveur
+la consultent. C'est elle qui portera le marché entre joueurs.
+
+Trois garde-fous sur les chiffres publics : les compteurs ne retiennent que les
+créateurs **du catalogue** (sinon 900 slugs inventés fabriquaient 90 % de
+complétion), la rareté est relue au catalogue et non dans la sauvegarde, et un
+joueur dont la sauvegarde est jugée invraisemblable n'est pas classé.
+
+Le **lien de partage** est `…/?profil=<identifiant>` : un export statique ne
+peut pas créer une page par joueur, donc une seule adresse avec un paramètre.
+Dans l'APK, où l'app tourne sur `https://localhost`, l'écran propose l'affiche
+plutôt que le lien — pour que le lien marche pour quelqu'un d'autre, il faut la
+version web hébergée.
+
+- Trois façons d'avoir un compte : **compte invité** (un appui, aucun e-mail,
+  aucun SMTP — le compte vit avec la session de l'appareil) ; **invité + adresse
+  et mot de passe** (« Garder ce compte », récupérable sur un autre appareil
+  **sans SMTP** : le mot de passe n'envoie aucun e-mail, à condition de
+  désactiver « Confirm email » côté Supabase) ; **e-mail + code à 6 chiffres**
+  (récupérable aussi, mais il faut brancher un SMTP : le service d'e-mail
+  intégré de Supabase est réservé aux tests). Voir « Trois façons d'avoir un
+  compte » dans `docs/cloud-supabase.md`.
+- **Nouveau téléphone, partie vierge** : à la connexion par mot de passe ou par
+  code, si la partie locale n'a ni carte ni ouverture, la collection en ligne est
+  reprise automatiquement (rien à perdre, et cela évite qu'un premier envoi
+  écrase la sauvegarde distante).
+- **Deux parties existent** (l'appareil et le jeu en ligne ont divergé) : rien
+  n'est remplacé tout seul, et l'écran **Mon compte** affiche alors **« Deux
+  parties t'attendent »** avec deux boutons — *Reprendre la partie en ligne*
+  (deux appuis : elle remplace la partie locale) et *Garder celle de cet
+  appareil* (elle part en ligne). Ces deux gestes n'apparaissent **que** dans ce
+  cas : hors de là, la synchronisation se fait en tâche de fond et l'écran ne
+  montre qu'une **pastille verte « Progression synchronisée »**.
 - Côté application : `src/lib/cloud/`
   - `config.ts` lit les deux variables publiques et désactive tout si elles
     manquent ;
-  - `api.ts` est un client Supabase minimal (code à 6 chiffres, envoi/lecture de
-    la sauvegarde, classement) — pas de SDK embarqué dans l'APK ;
+  - `api/` est un client Supabase minimal (compte, code à 6 chiffres,
+    envoi/lecture de la sauvegarde, classement) — pas de SDK embarqué dans
+    l'APK. Le dossier suit les domaines : `core.ts` (transport, rafraîchissement
+    du jeton, session) et un module par domaine (`account`, `pack`, `social`,
+    `market`, `arena`), `index.ts` étant la façade ;
+  - `credentials.ts` valide l'adresse et le mot de passe côté écran (les mêmes
+    règles qu'à l'inscription) et porte l'avertissement « mot de passe non
+    récupérable sans SMTP » ;
   - `sync.ts` contient les décisions (envoyer, charger, ne rien faire, demander
     au joueur) sous forme de fonctions pures, testées ;
   - `cloud-store.ts` expose l'état à React et programme l'envoi automatique
-    ~20 s après la dernière action quand un compte est connecté.
+    ~20 s après la dernière action quand un compte est connecté. Il garde
+    **l'état, la synchronisation et les helpers** et assemble les actions de
+    `store/` (`account.ts`, `pack.ts`, `social.ts`, `market.ts`, `arena.ts`) ;
+    la signature publique est inchangée ;
+  - `trades.ts` applique aux parties locales les échanges acceptés (fonctions
+    pures, testées) — un troc accepté pendant que l'appareil était ailleurs
+    entre dans la collection au chargement suivant ;
+  - `transport.ts` envoie les appels par le client HTTP natif dans l'APK
+    (le WebView sert l'app depuis `https://localhost`, origine que Supabase peut
+    refuser en CORS) et par `fetch` dans le navigateur.
+  - `docs/diagnostic.html` rejoue les appels un par un pour situer une panne
+    (hors de l'APK : c'est un outil de mise au point, pas un écran de jeu)
+    (voir la fin de `docs/cloud-supabase.md`).
 - Côté base : `supabase/migrations/0001_comptes_cloud.sql` — tables `profiles`,
   `saves`, `stats`, politiques RLS, statistiques **recalculées par le serveur**
   (on ne peut pas mentir sur les chiffres sans publier des cartes) et fonction
@@ -280,16 +827,119 @@ serveur.
   `supabase/migrations/0002_vitrine.sql` ajoute `set_showcase()` : la fonction
   contrôle les 4 slugs et leur possession avant de les publier sur le profil.
   `supabase/migrations/0003_catalogue.sql` peuple la table `creators` (fichier
-  généré par `scripts/build-supabase-catalogue.mjs`). `supabase/migrations/0004_tirage.sql`
+  généré par `scripts/build-supabase-catalogue.mjs`) et la passe en lecture
+  seule pour les clients. `supabase/migrations/0004_tirage.sql`
   ajoute `open_pack()` et `pack_status()` : le tirage des boosters est décidé
   par le serveur, les cartes sont infalsifiables.
+  Côté comptes, l'appel `PUT /auth/v1/user` (adresse + mot de passe) et
+  `POST /auth/v1/token?grant_type=password` complètent le code à 6 chiffres :
+  c'est le chemin de récupération qui ne dépend d'aucun envoi d'e-mail.
+  `supabase/migrations/0006_profil_public.sql` ajoute `player_profile()`, la
+  projection `user_cards` (une ligne par carte, recalculée par trigger) et les
+  compteurs Gold/Holo du classement.
+  `supabase/migrations/0005_echanges.sql` ajoute la table `trades` (lecture
+  réservée aux deux joueurs concernés, **aucune** écriture directe possible) et
+  les fonctions d'échange : `search_players()`, `player_variants()`,
+  `create_trade()`, `respond_trade()`, `cancel_trade()`, `list_trades()`.
+  `supabase/migrations/0007_direct.sql` ajoute le **statut EN LIVE** : table
+  `live_streams` (cache lisible par tous, écriture impossible depuis un client)
+  et `live_publish()`, réservée au rôle de service. C'est l'Edge Function
+  `refresh-live` qui interroge Twitch (jeton d'application, `GET /helix/streams`
+  par lots de 100) — la clé secrète Twitch ne quitte jamais le serveur, et un
+  APK se dézippe. L'app lit la table sans compte, garde un cache local daté et
+  **ne montre rien au-delà de dix minutes** : un badge « en direct » périmé
+  mentirait. Mise en place : `docs/cloud-supabase.md` §8, « Le direct ».
+  Le catalogue porte aussi la **famille de collection** de chaque créateur
+  (`region` dans `0003_catalogue.sql`) et `player_profile()` renvoie
+  `by_region` : la fiche publique d'un joueur montre donc sa complétion famille
+  par famille (« 97 / 402 en Anglophonie »), ce qu'aucun appareil ne peut
+  calculer pour quelqu'un d'autre. `leaderboard()` accepte en plus un tri
+  `family` : « qui complète le mieux l'Anglophonie ? », calculé sur `user_cards`,
+  que les clients n'ont pas le droit de lire.
+  Mise en place : `docs/cloud-supabase.md` §8.
+  `supabase/migrations/0008_friends.sql` ajoute les **amis** : tables
+  `friend_requests` et `friends` (lecture réservée aux joueurs concernés,
+  aucune écriture directe), et les RPC `send`/`accept`/`reject`/`cancel`/
+  `remove_friend`, `list_friends()`, `has_friendship()`. Une amitié n'existe
+  qu'après **acceptation du destinataire** : un appareil ne peut pas décider
+  qu'il est l'ami de quelqu'un. L'écran vit dans « Profil → Amis » ; on ajoute
+  par recherche de pseudo, et l'écran recharge les listes après chaque geste
+  plutôt que de les bricoler localement. Mise en place :
+  `docs/cloud-supabase.md` §8, « Les amis ».
+  `supabase/migrations/0009_marche.sql` ajoute l'**hôtel des ventes** : on dépose
+  un doublon, l'hôtel le paie **tout de suite** en points (la carte quitte la
+  collection, donc elle ne peut pas être vendue deux fois) et la met au comptoir ;
+  un autre joueur l'achète plus tard, au prix de l'étiquette. Deux joueurs n'ont
+  jamais besoin d'être connectés en même temps. Les prix sont ceux de l'hôtel
+  (`market_payout()` : rareté × variante, miroir testé dans `src/lib/market.ts`),
+  l'étiquette vaut une fois et demie le payout — sans cette marge, on vendrait et
+  rachèterait la même carte en boucle. Jamais la dernière copie, jamais sa propre
+  annonce, jamais deux fois la même (verrou sur l'annonce), et une annonce
+  oubliée quitte le comptoir après trente jours. La table est fermée aux clients :
+  tout passe par les RPC `market_sell()` / `market_buy()` / `market_shelf()` /
+  `market_listings_of()`. L'écran vit dans « Profil → Hôtel des ventes » ; la
+  fiche publique montre « En vente à l'hôtel ». Mise en place :
+  `docs/cloud-supabase.md` §8, « L'hôtel des ventes ».
+  Un **carnet de notifications** (« Toi → Notifications », avec sa pastille)
+  rassemble ce qui est arrivé au joueur : offres d'échange reçues, réponses à ses
+  offres, demandes d'ami, amitiés acceptées, cartes vendues à l'hôtel. Aucune
+  table dédiée côté serveur : chaque ligne vient d'un fait déjà enregistré
+  (échanges, amis, annonces), relu et mis en français par
+  `src/lib/social/inbox.ts`. La « dernière visite » vit sur l'appareil, par
+  joueur, et le carnet ne raconte jamais au joueur ce qu'il vient de faire.
+  Mise en place : `docs/cloud-supabase.md` §8, « Le carnet de notifications ».
+  Le **Last Pack** : les cinq cartes du booster qu'un joueur vient d'ouvrir
+  restent **exposées dix minutes**, et un ami peut y prendre une carte — **une
+  par jour**. La carte quitte vraiment la collection du propriétaire (le serveur
+  réécrit sa sauvegarde) et entre dans celle du voleur ; une vieille sauvegarde
+  ne peut pas la faire revenir (`push_save()` la refuse avec son message).
+  Le paquet d'un inconnu n'est jamais exposé, et la fenêtre est celle du
+  serveur : reculer l'horloge de son téléphone ne la rallonge pas. L'écran vit
+  dans « Toi → Last Pack », avec la pastille sur l'onglet et le compte à
+  rebours ; le carnet annonce « X t'a piqué ton légendaire ». Mise en place :
+  `docs/cloud-supabase.md` §8, « Le Last Pack ».
+  `supabase/migrations/0013_progression.sql` porte le **plancher de
+  malchance** et la **série de jours** côté serveur ; le seuil, lui, a été ramené
+  de 80 à **12** le 7 octobre 2026 par `0031_pity_douze.sql` (le brief disait
+  « 12 packs jusqu'au pity ») : le seuil de 12 boosters,
+  le slot garanti qui devient Légendaire, la récompense du 7ᵉ jour, et les deux
+  compteurs publiés par `pack_status()`.
+  La **série paie chacun des sept jours** : le jour coché verse sa petite
+  récompense au booster qui fait avancer la série — **J1** +40 points, **J2** un
+  sablier, **J3** +60 points, **J4** +80 points et 10 jetons, **J5** +120 points
+  et un sablier, **J6** +150 points et 15 jetons, et **J7** le gros lot (Perfect
+  garanti ou 3 sabliers), jamais une micro-récompense en plus. Une semaine pleine
+  vaut donc 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes
+  communes à l'Atelier, jamais une Légendaire. Les **points** sont versés par le
+  serveur (`0032_serie_quotidienne.sql`) avec une référence par journée de jeu :
+  dix boosters le même jour ne paient qu'une fois. Les **jetons** et les
+  **sabliers** vivent sur l'appareil, comme les missions — le serveur ne les
+  connaît pas et ne les crée pas. Le barème est écrit une seule fois,
+  `src/lib/progression.json` (`streak.rewards`), et les tests miroirs
+  (`src/lib/game-progression.test.ts`, `scripts/verify-supabase-migrations.mjs`)
+  refusent qu'un côté parte sans l'autre. Elle remplace `open_pack()` (l'ancienne
+  signature sans argument est supprimée : sinon un appel sans argument aurait
+  continué d'ignorer la garantie).
+  La **connexion Twitch** passe par le fournisseur Twitch intégré de Supabase
+  (`provider=twitch`) : le bouton « Continuer avec Twitch » ouvre le dialogue dans
+  le navigateur, et le retour installe une session ordinaire — le secret du
+  client Twitch ne quitte jamais Supabase, l'appareil ne connaît que l'adresse
+  du dialogue. Sur le site, le jeton arrive dans le fragment de l'adresse et
+  l'adresse est nettoyée aussitôt ; dans l'APK, le retour passe par
+  `com.creatordeck.app://auth` (`AndroidManifest.xml` + plugin `@capacitor/app`).
+  Mise en place (trois déclarations) : `docs/cloud-supabase.md` §3.
 - Sans `NEXT_PUBLIC_SUPABASE_URL` et `NEXT_PUBLIC_SUPABASE_ANON_KEY` (voir
-  `.env.example`), tout se compile et fonctionne hors ligne : l'écran de compte
-  affiche « cloud non configuré ». Ces deux valeurs sont publiques par
-  conception ; la clé **`service_role`** ne doit jamais entrer dans l'app.
+  `.env.example`), le build est **le mode local** : rien de réseau, le moteur de
+  l'appareil tire les cartes, et l'écran de compte affiche « cloud non
+  configuré ». C'est ce mode qui sert au développement et aux tests — la version
+  distribuée (APK, site) est compilée **avec** le cloud. Ces deux valeurs sont
+  publiques par conception ; la clé **`service_role`** ne doit jamais entrer
+  dans l'app.
 - Deux appareils qui ont joué en même temps : l'app ne fusionne **jamais**
-  toute seule, elle propose d'envoyer la partie locale ou de charger celle du
-  cloud (« Charger le cloud » demande deux appuis).
+  toute seule. L'écran **Mon compte** affiche alors **« Deux parties
+  t'attendent »** : *Reprendre la partie en ligne* (deux appuis) ou *Garder
+  celle de cet appareil*. Ces deux boutons n'apparaissent que dans ce cas — le
+  reste du temps, une **pastille verte** suffit.
 
 ## Images des créateurs
 

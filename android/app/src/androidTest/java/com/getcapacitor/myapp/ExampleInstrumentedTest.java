@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("com.monnom.monapp", appContext.getPackageName());
+        assertEquals("com.creatordeck.app", appContext.getPackageName());
     }
 }

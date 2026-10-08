@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "note": "Le simulateur de streameur : la chaîne grandit même application fermée, et chaque journée de jeu se joue en publiant UNE vidéo. Tout est ici — les paliers, ce que chaque palier rapporte par jour, les formats de vidéo et leurs chances — pour qu'un réglage d'économie se fasse sans toucher au code. Le serveur (0036_streamer.sql) porte la même règle de l'autre côté : la croissance est ancrée à un relevé serveur, jamais à l'horloge du téléphone, sinon reculer l'horloge deviendrait une façon de farmer.",
+  "growth": {
+    "capDays": 7,
+    "note": "La croissance s'accumule par journées de jeu (6 h UTC, comme les missions), plafonnée à 7 jours : au-delà, on ne cumule plus. Sans plafond, une absence de trois semaines paierait plus que de jouer, et le jeu récompenserait le fait de ne pas y être. Le relevé qui sert au calcul est celui du SERVEUR (`last_seen_at`) : un recul d'horloge ne crédite rien, il ne peut que retarder le compteur."
+  },
+  "tiers": [
+    {
+      "id": "petit",
+      "label": "Petit canal",
+      "at": 0,
+      "perDay": 240,
+      "note": "Le début : une poignée de habitués, et chaque vidéo compte."
+    },
+    {
+      "id": "monte",
+      "label": "Chaîne qui monte",
+      "at": 2500,
+      "perDay": 900,
+      "note": "Le palier où le bouche-à-oreille commence à travailler pour toi."
+    },
+    {
+      "id": "gros",
+      "label": "Gros streamer",
+      "at": 25000,
+      "perDay": 3200,
+      "note": "Les marques commencent à écrire."
+    },
+    {
+      "id": "star",
+      "label": "Star du direct",
+      "at": 250000,
+      "perDay": 12000,
+      "note": "Ton nom est dans le classement, et les raids arrivent tout seuls."
+    },
+    {
+      "id": "legende",
+      "label": "Légende du direct",
+      "at": 1000000,
+      "perDay": 45000,
+      "note": "Le sommet : la chaîne grandit même quand tu dors."
+    }
+  ],
+  "formats": [
+    {
+      "id": "letsplay",
+      "label": "Let's Play",
+      "detail": "Le format sûr : on joue, on discute, personne ne s'énerve.",
+      "successChancePermille": 760,
+      "gainPermille": 1000,
+      "buzzPermille": 40,
+      "badBuzzPermille": 0,
+      "requiresCreator": false
+    },
+    {
+      "id": "irl",
+      "label": "IRL",
+      "detail": "On sort, on montre autre chose — ça marche, ou ça tombe à plat.",
+      "successChancePermille": 620,
+      "gainPermille": 1400,
+      "buzzPermille": 90,
+      "badBuzzPermille": 0,
+      "requiresCreator": false
+    },
+    {
+      "id": "ragebait",
+      "label": "Rage bait",
+      "detail": "Ça fait parler — pas toujours en bien.",
+      "successChancePermille": 480,
+      "gainPermille": 2100,
+      "buzzPermille": 160,
+      "badBuzzPermille": 180
+    },
+    {
+      "id": "collab",
+      "label": "Collab",
+      "detail": "Avec un créateur de ta collection : la carte que tu as tirée travaille pour ta chaîne.",
+      "successChancePermille": 700,
+      "gainPermille": 1800,
+      "buzzPermille": 120,
+      "badBuzzPermille": 0,
+      "requiresCreator": true
+    }
+  ],
+  "eventsNote": "Un imprévu par journée de jeu, et il ne se rejoue pas : la carte est la même toute la journée, le choix est tiré par le SERVEUR (réussite, buzz, bad buzz), et le gain s'exprime comme celui d'une vidéo — pour mille de la croissance journalière du palier. Un imprévu ne paie jamais de jetons : les jetons viennent de la vidéo du jour, une seule porte pour la monnaie. Les deux choix sont défendables : l'un est sûr, l'autre rapporte plus quand il passe — et se retourne contre toi quand il ne passe pas.",
+  "events": [
+    {
+      "id": "modo",
+      "label": "Le modo est allé trop loin",
+      "detail": "Ton plus ancien modérateur a banni la moitié du chat hier soir. Il ne s'excuse pas : il dit qu'il « nettoie ».",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu le laisses finir",
+          "detail": "Le chat est propre — et il se vide.",
+          "successChancePermille": 780,
+          "gainPermille": 900,
+          "buzzPermille": 60,
+          "badBuzzPermille": 0
+        },
+        {
+          "id": "droite",
+          "label": "Tu le recadres en direct",
+          "detail": "La scène fait parler, pas toujours en bien.",
+          "successChancePermille": 560,
+          "gainPermille": 1500,
+          "buzzPermille": 140,
+          "badBuzzPermille": 120
+        }
+      ]
+    },
+    {
+      "id": "sponsor",
+      "label": "Une marque envoie un contrat",
+      "detail": "Une marque d'énergie propose un placement à chaque soirée. Le contrat court sur trois mois.",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu signes",
+          "detail": "L'argent rentre, le chat grince des dents.",
+          "successChancePermille": 820,
+          "gainPermille": 700,
+          "buzzPermille": 40,
+          "badBuzzPermille": 0
+        },
+        {
+          "id": "droite",
+          "label": "Tu refuses",
+          "detail": "Le chat adore ceux qui disent non.",
+          "successChancePermille": 520,
+          "gainPermille": 1700,
+          "buzzPermille": 180,
+          "badBuzzPermille": 0
+        }
+      ]
+    },
+    {
+      "id": "clip",
+      "label": "Un clip tourne sans toi",
+      "detail": "Ta meilleure chute d'hier circule partout, et personne ne t'a crédité.",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu repostes le clip",
+          "detail": "Le crédit revient, l'effet retombe un peu.",
+          "successChancePermille": 760,
+          "gainPermille": 1000,
+          "buzzPermille": 80,
+          "badBuzzPermille": 0
+        },
+        {
+          "id": "droite",
+          "label": "Tu laisses tourner",
+          "detail": "Le clip vit sa vie — la tienne peut décoller.",
+          "successChancePermille": 640,
+          "gainPermille": 1400,
+          "buzzPermille": 160,
+          "badBuzzPermille": 0
+        }
+      ]
+    },
+    {
+      "id": "coupure",
+      "label": "La connexion lâche en pleine partie",
+      "detail": "Coupure totale : quarante mille personnes regardent un écran figé.",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu tiens la soirée",
+          "detail": "Tu parles dans le vide, mais tu ne lâches pas.",
+          "successChancePermille": 480,
+          "gainPermille": 1900,
+          "buzzPermille": 120,
+          "badBuzzPermille": 200
+        },
+        {
+          "id": "droite",
+          "label": "Tu coupes, tu reviens",
+          "detail": "Un quart d'heure d'absence, et tout le monde est là.",
+          "successChancePermille": 760,
+          "gainPermille": 900,
+          "buzzPermille": 60,
+          "badBuzzPermille": 0
+        }
+      ]
+    },
+    {
+      "id": "raid",
+      "label": "Un raid tombe sur ta chaîne",
+      "detail": "Un gros streamer t'envoie cinquante mille personnes d'un coup, pour trente secondes.",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu accueilles à l'écran",
+          "detail": "Les nouveaux voient ta tête tout de suite.",
+          "successChancePermille": 700,
+          "gainPermille": 1500,
+          "buzzPermille": 120,
+          "badBuzzPermille": 0
+        },
+        {
+          "id": "droite",
+          "label": "Tu continues ta partie",
+          "detail": "Ils regardent un vrai stream, pas une animation.",
+          "successChancePermille": 800,
+          "gainPermille": 900,
+          "buzzPermille": 100,
+          "badBuzzPermille": 0
+        }
+      ]
+    },
+    {
+      "id": "nuit",
+      "label": "La nuit a été courte",
+      "detail": "Trois heures de sommeil, et la soirée commence dans une heure.",
+      "choices": [
+        {
+          "id": "gauche",
+          "label": "Tu tiens la soirée",
+          "detail": "Tu es là, mais ça se voit à l'antenne.",
+          "successChancePermille": 460,
+          "gainPermille": 1800,
+          "buzzPermille": 100,
+          "badBuzzPermille": 220
+        },
+        {
+          "id": "droite",
+          "label": "Tu fais une soirée courte",
+          "detail": "Deux heures, propre, et au lit.",
+          "successChancePermille": 800,
+          "gainPermille": 700,
+          "buzzPermille": 30,
+          "badBuzzPermille": 0
+        }
+      ]
+    }
+  ],
+  "tokens": {
+    "perDayCap": 40,
+    "perSuccess": 6,
+    "perBuzz": 10,
+    "note": "Ce que la chaîne rapporte en jetons : 6 pour une vidéo réussie, 10 de plus quand elle buzz, et un plafond de 40 jetons par journée de jeu, tenu par le serveur. Quarante, c'est huit boosters de croissance dans la monnaie la plus lente du jeu — assez pour que la chaîne compte, pas assez pour qu'elle remplace le tirage. Le plafond est appliqué côté serveur : le client peut annoncer ce qu'il veut, c'est le serveur qui paie."
+  },
+  "setup": {
+    "note": "Ton setup s'achète par paliers, dans l'ordre, et chacun fait grandir la chaîne plus vite : le bonus s'additionne et vaut pour toujours. Les cinq premiers se paient en POINTS — les prix suivent la courbe de l'Atelier (`craftQuote`) et la dépense passe par le wallet du serveur (`_wallet_apply`). Les trois derniers se paient en DOUBLONS : la rareté donne le prix, la carte quitte le classeur, et ce n'est **jamais** une Légendaire ni la dernière copie d'un couple créateur + variante. Au bout des huit paliers : +1000 pour mille, soit une chaîne qui grandit deux fois plus vite qu'à ses débuts.",
+    "levels": [
+      {
+        "id": "webcam",
+        "label": "Webcam correcte",
+        "price": 120,
+        "currency": "points",
+        "note": "Le premier palier : le visage arrête de pixeliser.",
+        "growthPermille": 30
+      },
+      {
+        "id": "micro",
+        "label": "Micro qui ne crache pas",
+        "price": 320,
+        "currency": "points",
+        "note": "On entend les basses, et le chat arrête de se plaindre.",
+        "growthPermille": 50
+      },
+      {
+        "id": "lumiere",
+        "label": "Éclairage",
+        "price": 780,
+        "currency": "points",
+        "note": "La différence se voit à l'écran avant de s'entendre.",
+        "growthPermille": 70
+      },
+      {
+        "id": "deco",
+        "label": "Déco de fond",
+        "price": 1800,
+        "currency": "points",
+        "note": "Ce que les nouveaux voient en premier.",
+        "growthPermille": 100
+      },
+      {
+        "id": "studio",
+        "label": "Vrai studio",
+        "price": 4200,
+        "currency": "points",
+        "note": "Le dernier palier en points : après, il faut des cartes.",
+        "growthPermille": 250
+      },
+      {
+        "id": "webcam2",
+        "label": "Deuxième caméra",
+        "price": 2,
+        "currency": "doublons",
+        "note": "Le plan large montre enfin ce qui se passe autour — et le studio ne tient plus dans un seul cadre.",
+        "growthPermille": 100
+      },
+      {
+        "id": "regie",
+        "label": "Régie",
+        "price": 5,
+        "currency": "doublons",
+        "note": "Les scènes s'enchaînent sans couper le direct : le chat arrête de voir des coupures.",
+        "growthPermille": 150
+      },
+      {
+        "id": "plateau",
+        "label": "Plateau pro",
+        "price": 10,
+        "currency": "doublons",
+        "note": "Le dernier palier : après lui, la chaîne grandit deux fois plus vite qu'à ses débuts.",
+        "growthPermille": 250
+      }
+    ],
+    "sacrifice": {
+      "note": "Ce que vaut un doublon qui part au studio : un Rare vaut 1, un Épique vaut 2. Une Légendaire ne part jamais, et le prix d'un palier se paie au compte juste.",
+      "values": {
+        "rare": 1,
+        "epic": 2
+      }
+    }
+  },
+  "guests": {
+    "note": "Les invités sur le bureau : deux cartes de la collection tiennent le plateau, et chacune paie un **raid** quand son créateur est **réellement en direct** — le même direct que le badge de l'accueil, avec dix minutes de fraîcheur. Le raid se paie **une fois par journée de jeu**, au moment du relevé de la chaîne, et il ne coûte rien. Deux cartes de deux créateurs différents au maximum ; changer d'invité ne paie pas deux fois. Et le plateau **compte aussi sur la vidéo** : voir `collab`.",
+    "slots": 2,
+    "liveWindowMinutes": 10,
+    "raidPermille": {
+      "common": 15,
+      "uncommon": 25,
+      "rare": 40,
+      "epic": 60,
+      "legendary": 90
+    },
+    "collab": {
+      "note": "Le plateau, au moment de publier la vidéo du jour : la rareté des invités booste le gain de base (`videoPermille` — 2 % pour une Commune, 12 % pour une Légendaire), et si l'un d'eux streame **maintenant**, le direct ajoute `livePermille` au gain et `liveBuzzPermille` à la chance de buzz — c'est le moment **RAID !**. Rien de tout ça ne remplace le raid du relevé : le raid paie le passage d'un invité pendant l'absence (une fois par journée), le plateau booste la vidéo que tu publies. Les deux ne se cumulent pas sur la même ligne, et tout est tiré par le serveur.",
+      "videoPermille": {
+        "common": 20,
+        "uncommon": 30,
+        "rare": 50,
+        "epic": 80,
+        "legendary": 120
+      },
+      "livePermille": 150,
+      "liveBuzzPermille": 250
+    }
+  }
+}

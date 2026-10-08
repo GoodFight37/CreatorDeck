@@ -9,7 +9,7 @@
 function webCrypto(): Crypto {
   const c = globalThis.crypto;
   if (!c || typeof c.getRandomValues !== "function") {
-    throw new Error("Web Crypto API indisponible dans cet environnement.");
+    throw new Error("Le tirage au sort n'est pas disponible sur cet appareil.");
   }
   return c;
 }

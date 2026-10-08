@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "note": "Ce que le jeu rend au joueur en plus des cartes : jetons, missions du jour, série de jours et Prime Time. Les taux de tirage vivent dans pull-rates.json ; ici, ce sont les règles de progression. Elles sont affichées dans l'app (Atelier, Objectifs) et vérifiées par les tests — un chiffre écrit ici ne peut pas exister seulement dans la tête du développeur.",
+  "start": {
+    "points": 40,
+    "hourglasses": 2,
+    "packs": 2,
+    "note": "Ce avec quoi une partie neuve commence : deux boosters, deux sabliers et quarante points. Le départ était plus généreux (trois boosters, douze sabliers, cent vingt points) : douze sabliers, c'est trois heures de recharge offertes avant d'avoir compris la jauge — le joueur sautait la mécanique au lieu de la découvrir. Le serveur sert exactement la même réserve au premier booster (`_pack_initial_packs()`, 0033), et un test miroir compare les deux."
+  },
+  "tokens": {
+    "label": "Jetons",
+    "perPack": 5,
+    "primeTimeBonus": 2,
+    "targetCost": 400,
+    "note": "5 jetons par booster ouvert (7 pendant le Prime Time). 400 jetons = la carte que tu vises, au choix — jamais une Légendaire : elles se tirent. 400 jetons, c'est 80 boosters : le prix de la carte choisie se paie en boosters, pas en chance."
+  },
+  "primeTime": {
+    "label": "Prime Time",
+    "fromHour": 20,
+    "toHour": 23,
+    "note": "Entre 20 h et 23 h (heure de l'appareil), chaque booster donne 2 jetons de plus. C'est l'heure où les gens streament : le jeu paie le moment où il se passe quelque chose."
+  },
+  "missions": {
+    "resetHourUtc": 6,
+    "reward": {
+      "hourglasses": 1
+    },
+    "note": "Trois missions par jour, remises à zéro à 6 h UTC (l'heure où Twitch recommence) : ouvrir un booster, recycler un doublon, et toucher la famille que tu complètes — ou un Direct. Chacune paie 1 sablier.",
+    "list": [
+      {
+        "id": "pack",
+        "label": "Ouvre un booster",
+        "detail": "Un booster, aujourd'hui",
+        "target": 1
+      },
+      {
+        "id": "recycle",
+        "label": "Recycle un doublon",
+        "detail": "Une copie en trop, à l'Atelier",
+        "target": 1
+      },
+      {
+        "id": "family",
+        "label": "Touche ta famille ou un Direct",
+        "detail": "Une carte de la famille que tu complètes, ou une carte Live",
+        "target": 1
+      }
+    ]
+  },
+  "streak": {
+    "days": 7,
+    "jackpotHourglasses": 3,
+    "note": "Sept jours d'affilée avec au moins un booster ouvert. Le 7ᵉ jour donne un booster Perfect garanti — ou 3 sabliers, au choix. Les six premiers jours paient chacun une petite récompense, versée au booster qui fait avancer la série : un jour coché sans rien recevoir serait une frustration, pas une récompense. Le total d'une semaine pleine : 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes communes à l'Atelier (45 points l'unité), jamais une Légendaire. Un jour manqué remet la série à zéro (le jour commence à 6 h UTC, comme les missions), et le même jour ne paie qu'une fois : c'est la journée de jeu qui sert de référence, pas le nombre de boosters.",
+    "rewards": [
+      {
+        "day": 1,
+        "points": 40
+      },
+      {
+        "day": 2,
+        "hourglasses": 1
+      },
+      {
+        "day": 3,
+        "points": 60
+      },
+      {
+        "day": 4,
+        "points": 80,
+        "tokens": 10
+      },
+      {
+        "day": 5,
+        "points": 120,
+        "hourglasses": 1
+      },
+      {
+        "day": 6,
+        "points": 150,
+        "tokens": 15
+      }
+    ]
+  }
+}

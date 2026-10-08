@@ -1,5 +1,8 @@
 /** Types de l'entretien du dossier public/creators (voir portraits.mjs). */
 
+/** L'extension des portraits (`.webp`) — une seule, pour tout le dépôt. */
+export declare const PORTRAIT_EXT: string;
+
 export declare function expectedPortraitNames(slugs: string[]): string[];
 
 /** Fichiers du dossier qui ne correspondent à aucun créateur du catalogue. */
