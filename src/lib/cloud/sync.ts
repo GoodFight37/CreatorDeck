@@ -55,6 +55,14 @@ export function stateFingerprint(state: PlayerState): string {
   const claimed = Object.entries(state.claimedTiers)
     .map(([season, tier]) => `${season}:${tier}`)
     .sort();
+  // Tout ce qui compose une partie entre dans l'empreinte, y compris
+  // l'économie « secondaire » (sabliers, jetons, plancher de malchance,
+  // missions, série, Paquet Scène). Sans elle, deux appareils dont seule
+  // l'économie a divergé étaient vus comme identiques : le `noop` sautait
+  // l'envoi et la divergence restait.
+  const missions = Object.entries(state.missions)
+    .map(([id, value]) => `${id}:${value}`)
+    .sort();
   const material = [
     state.version,
     state.themeId,
@@ -62,8 +70,16 @@ export function stateFingerprint(state: PlayerState): string {
     state.xp,
     state.points,
     state.hourglasses,
+    state.tokens,
     state.packs,
     state.openings,
+    state.pityCounter,
+    state.missionDay,
+    ...missions,
+    state.streakDay,
+    state.streak,
+    state.streakJackpot ? 1 : 0,
+    state.sceneDay,
     state.cards.length,
     ...cards,
     ...claimed,
@@ -87,7 +103,7 @@ function fnv1a(input: string): string {
  */
 export function decideSync(local: LocalSave, cloud: RemoteSave | null): SyncDecision {
   if (!cloud) {
-    return { action: "push", reason: "Aucune sauvegarde dans le cloud : envoi de ta collection." };
+    return { action: "push", reason: "Première sauvegarde en ligne." };
   }
   if (stateFingerprint(local.state) === stateFingerprint(cloud.state)) {
     return { action: "noop", reason: "Les deux côtés sont déjà identiques." };
@@ -95,12 +111,12 @@ export function decideSync(local: LocalSave, cloud: RemoteSave | null): SyncDeci
 
   const gap = local.updatedAt - cloud.deviceUpdatedAt;
   if (gap > SYNC_GRACE_MS) {
-    return { action: "push", reason: "Ta partie locale est plus récente : envoi au cloud." };
+    return { action: "push", reason: "Ta progression locale est plus récente : elle part en ligne." };
   }
   if (-gap > SYNC_GRACE_MS) {
     return {
       action: "pull",
-      reason: "Le cloud est plus récent (autre appareil) : tu peux charger cette partie.",
+      reason: "Une partie plus récente t'attend sur un autre appareil.",
     };
   }
   return {
@@ -138,14 +154,17 @@ export function syncStats(state: PlayerState): SyncStats {
 
 /** Formule l'état de la synchronisation pour l'écran de compte. */
 export function describeSync(decision: SyncDecision, cloudUpdatedAt: number | null, now = Date.now()): string {
-  if (!cloudUpdatedAt) return "Jamais synchronisé.";
+  if (!cloudUpdatedAt) return "Pas encore synchronisé.";
   const seconds = Math.max(0, Math.round((now - cloudUpdatedAt) / 1000));
   // « à l'instant » sous la minute (l'arrondi des secondes éviterait un
   // « il y a 1 min » trompeur juste après un envoi).
-  if (seconds < 45) return "Synchronisé à l'instant.";
+  if (seconds < 45) return "Progression à jour à l'instant.";
   const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `Synchronisé il y a ${minutes} min.`;
+  if (minutes < 60) return `Progression à jour, il y a ${minutes} min.`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `Synchronisé il y a ${hours} h.`;
-  return `Synchronisé il y a ${Math.round(hours / 24)} j (${decision.action}).`;
+  if (hours < 24) return `Progression à jour, il y a ${hours} h.`;
+  // Le nom de l'action (`push`/`pull`) reste dans la mécanique : à l'écran, le
+  // joueur ne lit qu'une ancienneté.
+  void decision;
+  return `Progression à jour, il y a ${Math.round(hours / 24)} j.`;
 }

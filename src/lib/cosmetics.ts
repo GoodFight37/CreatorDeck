@@ -1,5 +1,5 @@
 /**
- * Cosmétiques de collection : des thèmes qui re-tintent le classeur.
+ * Cosmétiques de collection : des thèmes qui teintent **le classeur**.
  *
  * Unité de référence : la **famille**, pas la saison. Une grande famille est
  * découpée en plusieurs saisons pour rester un objectif jouable, mais elle reste
@@ -31,29 +31,29 @@ import { SEASONS } from "@/lib/seasons";
  */
 export type ThemeTokens = {
   /** Accent principal : boutons, jauges, navigation. */
-  purple: string;
+  accent: string;
   /** Accent clair : survols, bordures actives. */
-  purpleLight: string;
+  accentLight: string;
   /** Accent adouci : libellés secondaires. */
-  purpleSoft: string;
+  accentSoft: string;
   /** Accent très clair : pastilles et badges. */
-  purpleTint: string;
-  /** Accent en triplet `r g b`, pour les fonds translucides (`rgb(var(--purple-rgb) / .12)`). */
-  purpleRgb: string;
+  accentTint: string;
+  /** Accent en triplet `r g b`, pour les fonds translucides (`rgb(var(--accent-rgb) / .12)`). */
+  accentRgb: string;
   /** Accent clair en triplet `r g b`. */
-  purpleLightRgb: string;
+  accentLightRgb: string;
   /** Accent sombre en triplet `r g b` (halos, ombres colorées). */
-  purpleDarkRgb: string;
+  accentDarkRgb: string;
   /** Fond en triplet `r g b` (voiles, dégradés de fondu). */
   bgRgb: string;
   /** Accent profond : dégradés soutenus. */
-  purpleDeep: string;
+  accentDeep: string;
   /** Accent sombre : fonds de dégradé, ombres colorées. */
-  purpleDark: string;
+  accentDark: string;
   /** Accent le plus sombre : arrêts de dégradé profonds. */
-  purpleNight: string;
+  accentNight: string;
   /** Halo de la révélation de carte. */
-  purpleGlow: string;
+  accentGlow: string;
   /** Or : récompenses, légendaires, saisons. */
   gold: string;
   /** Halo d'ambiance derrière l'application. */
@@ -80,18 +80,18 @@ export type ThemeTokens = {
 
 /** Nom CSS `--kebab-case` de chaque jeton, dans l'ordre du type. */
 export const THEME_VAR_NAMES: Record<keyof ThemeTokens, string> = {
-  purple: "--purple",
-  purpleLight: "--purple-light",
-  purpleSoft: "--purple-soft",
-  purpleTint: "--purple-tint",
-  purpleRgb: "--purple-rgb",
-  purpleLightRgb: "--purple-light-rgb",
-  purpleDarkRgb: "--purple-dark-rgb",
+  accent: "--accent",
+  accentLight: "--accent-light",
+  accentSoft: "--accent-soft",
+  accentTint: "--accent-tint",
+  accentRgb: "--accent-rgb",
+  accentLightRgb: "--accent-light-rgb",
+  accentDarkRgb: "--accent-dark-rgb",
   bgRgb: "--bg-rgb",
-  purpleDeep: "--purple-deep",
-  purpleDark: "--purple-dark",
-  purpleNight: "--purple-night",
-  purpleGlow: "--purple-glow",
+  accentDeep: "--accent-deep",
+  accentDark: "--accent-dark",
+  accentNight: "--accent-night",
+  accentGlow: "--accent-glow",
   gold: "--gold",
   glow: "--glow",
   bgDeep: "--bg-deep",
@@ -122,7 +122,7 @@ export type CollectionTheme = {
   tokens: ThemeTokens;
 };
 
-export const DEFAULT_THEME_ID = "amethyste";
+export const DEFAULT_THEME_ID = "studio";
 export const GRAND_SLAM_THEME_ID = "grand-chelem";
 
 /**
@@ -194,7 +194,7 @@ export function seasonHue(seasonId: string): number {
  * design historique du classeur.
  */
 /**
- * HSL → triplet `r g b`. Sert aux fonds translucides : `rgb(var(--purple-rgb) / .12)`
+ * HSL → triplet `r g b`. Sert aux fonds translucides : `rgb(var(--accent-rgb) / .12)`
  * suit le thème, là où un `rgba(143, 100, 255, .12)` figé resterait violet.
  */
 function hslToRgb(hue: number, saturation: number, lightness: number): string {
@@ -207,65 +207,60 @@ function hslToRgb(hue: number, saturation: number, lightness: number): string {
   return [channel(0), channel(8), channel(4)].join(" ");
 }
 
+/**
+ * Jetons d'un thème, dérivés d'une teinte.
+ *
+ * Le fond, les panneaux et les textes restent **neutres** : un thème ne repeint
+ * plus l'application, il teinte l'accent du classeur et le papier de ses
+ * pochettes. C'est ce qui permet au chrome (noir studio, blanc chaud, rouge
+ * live) de ne plus jamais bouger, quel que soit le thème équipé.
+ */
 function tokensFor(hue: number, overrides: Partial<ThemeTokens> = {}): ThemeTokens {
   const base: ThemeTokens = {
-    purple: `hsl(${hue} 100% 70%)`,
-    purpleLight: `hsl(${hue} 100% 84%)`,
-    purpleSoft: `hsl(${hue} 100% 79%)`,
-    purpleTint: `hsl(${hue} 100% 89%)`,
-    purpleRgb: hslToRgb(hue, 100, 70),
-    purpleLightRgb: hslToRgb(hue, 100, 84),
-    purpleDarkRgb: hslToRgb(hue, 57, 32),
-    bgRgb: hslToRgb(hue, 38, 5),
-    purpleDeep: `hsl(${hue} 68% 52%)`,
-    purpleDark: `hsl(${hue} 57% 32%)`,
-    purpleNight: `hsl(${hue} 32% 19%)`,
-    purpleGlow: `hsla(${hue} 89% 65% / .34)`,
+    accent: `hsl(${hue} 88% 62%)`,
+    accentLight: `hsl(${hue} 92% 76%)`,
+    accentSoft: `hsl(${hue} 88% 70%)`,
+    accentTint: `hsl(${hue} 90% 86%)`,
+    accentRgb: hslToRgb(hue, 88, 62),
+    accentLightRgb: hslToRgb(hue, 92, 76),
+    accentDarkRgb: hslToRgb(hue, 60, 26),
+    bgRgb: "10 10 12",
+    accentDeep: `hsl(${hue} 72% 44%)`,
+    accentDark: `hsl(${hue} 60% 26%)`,
+    accentNight: `hsl(${hue} 34% 15%)`,
+    accentGlow: `hsla(${hue} 88% 60% / .32)`,
     gold: "hsl(38 100% 66%)",
-    glow: `hsla(${hue} 88% 56% / .18)`,
-    bgDeep: `hsl(${hue} 33% 3%)`,
-    bg: `hsl(${hue} 38% 5%)`,
-    bgSoft: `hsl(${hue} 35% 7%)`,
-    panel: `hsl(${hue} 29% 10%)`,
-    panel2: `hsl(${hue} 28% 12%)`,
-    panel3: `hsl(${hue} 32% 16%)`,
-    text: `hsl(${hue} 100% 98%)`,
-    muted: `hsl(${hue} 12% 63%)`,
-    muted2: `hsl(${hue} 10% 45%)`,
+    glow: `hsla(${hue} 88% 56% / .14)`,
+    bgDeep: "hsl(240 6% 3%)",
+    bg: "hsl(240 6% 5%)",
+    bgSoft: "hsl(240 5% 8%)",
+    panel: "hsl(240 5% 10%)",
+    panel2: "hsl(240 5% 13%)",
+    panel3: "hsl(240 5% 17%)",
+    text: "#f2eee6",
+    muted: "#9a958c",
+    muted2: "#6d6963",
   };
   return { ...base, ...overrides };
 }
 
 const STARTER: CollectionTheme = {
   id: DEFAULT_THEME_ID,
-  name: "Améthyste",
-  description: "Le thème d'origine du classeur : violet et or.",
+  name: "Studio",
+  description: "Le thème d'origine : noir de régie et rouge du direct.",
   unlock: { kind: "starter" },
-  // Teinte 256 : les surcharges reproduisent le design historique au pixel.
-  tokens: tokensFor(256, {
-    purple: "#8f64ff",
-    purpleLight: "#c1a8ff",
-    purpleSoft: "#b795ff",
-    purpleTint: "#d8c8ff",
-    purpleRgb: "143 100 255",
-    purpleLightRgb: "193 168 255",
-    purpleDarkRgb: "62 34 127",
-    bgRgb: "9 8 18",
-    purpleDeep: "#5430d9",
-    purpleDark: "#3e227f",
-    purpleNight: "#261947",
-    purpleGlow: "rgba(135, 83, 246, .34)",
-    gold: "#ffbe55",
-    glow: "rgba(111, 65, 221, .18)",
-    bgDeep: "#06050a",
-    bg: "#090812",
-    bgSoft: "#0e0c19",
-    panel: "#141120",
-    panel2: "#1a1629",
-    panel3: "#211a36",
-    text: "#f7f5ff",
-    muted: "#9a94ad",
-    muted2: "#6f687f",
+  tokens: tokensFor(6, {
+    accent: "#e8382c",
+    accentLight: "#ff7a6b",
+    accentSoft: "#ff9d90",
+    accentTint: "#ffd0c9",
+    accentRgb: "232 56 44",
+    accentLightRgb: "255 122 107",
+    accentDarkRgb: "109 23 16",
+    accentDeep: "#a81f16",
+    accentDark: "#6d1710",
+    accentNight: "#3d120e",
+    accentGlow: "rgba(232, 56, 44, .3)",
   }),
 };
 
@@ -288,17 +283,16 @@ const GRAND_SLAM: CollectionTheme = {
   description: "Toutes les familles complétées : le classeur passe à l'arc-en-ciel.",
   unlock: { kind: "all-families" },
   tokens: tokensFor(285, {
-    purple: "hsl(280 90% 68%)",
-    purpleLight: "hsl(315 95% 86%)",
-    purpleSoft: "hsl(300 92% 78%)",
-    purpleTint: "hsl(315 95% 90%)",
-    purpleRgb: "208 87 246",
-    purpleLightRgb: "248 165 232",
-    purpleDarkRgb: "127 36 160",
-    bgRgb: "11 9 18",
-    purpleGlow: "hsla(300 85% 62% / .36)",
+    accent: "hsl(285 88% 66%)",
+    accentLight: "hsl(315 92% 80%)",
+    accentSoft: "hsl(300 88% 74%)",
+    accentTint: "hsl(315 92% 88%)",
+    accentRgb: "200 84 240",
+    accentLightRgb: "240 150 220",
+    accentDarkRgb: "110 34 140",
+    accentGlow: "hsla(300 85% 62% / .36)",
     gold: "hsl(45 95% 66%)",
-    glow: "hsla(300 85% 62% / .22)",
+    glow: "hsla(300 85% 62% / .18)",
   }),
 };
 

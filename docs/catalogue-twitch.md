@@ -9,6 +9,46 @@ dépôt.
 > défaut du générateur, sans aucune option à passer. Les raisons sont détaillées
 > dans « Choisir la taille » ci-dessous.
 
+## La cadence : quand le catalogue bouge, et ce que ça coûte
+
+Le catalogue vit **deux fois** : embarqué dans l'APK (`src/data/creators.json`,
+portraits compris) et recopié dans le projet Supabase (`0003_catalogue.sql`)
+pour ce qui est décidé par le serveur — le tirage, le drapeau `retired`, la
+comptabilité de collection. Les deux viennent du même fichier, et **les deux
+doivent avancer ensemble**.
+
+C'est le prix de l'embarqué, et il est voulu : le catalogue dans l'APK rend le
+classeur, les filtres et les portraits instantanés **sans réseau**, et c'est lui
+que le joueur voit — un catalogue servi à la demande ferait clignoter le
+classeur au premier écran sans connexion. Ce qui en découle :
+
+* un créateur qui entre ou sort du classement Twitch **n'atteint le téléphone
+  qu'au prochain APK** (et l'ancien continue de fonctionner entre-temps : les
+  cartes déjà tirées restent valides, et un créateur absent du nouveau Top passe
+  en « Sortant » au lieu de disparaître) ;
+* **deux gestes, dans cet ordre** : régénérer (`npm run catalog:source`), puis
+  rejouer `0003_catalogue.sql` (`npx supabase db push --include-all`). L'écart
+  entre les deux copies se voit de deux façons, et elles ne se valent pas :
+
+  1. **base en avance sur l'APK** (le cas qu'on veut) : la base peut tirer un
+     créateur que l'APK ne connaît pas encore, et l'écran affiche alors
+     « Ce créateur » — le temps que l'APK suive, rien n'est perdu ;
+  2. **APK en avance sur la base** : les cartes de ces créateurs ne sont pas
+     dans le catalogue du serveur, donc la sauvegarde devient **suspecte**
+     (`save_suspicions`, `0019`) — le joueur garde ses cartes, mais **il sort du
+     classement** jusqu'à ce que la base rattrape.
+
+  D'où la règle : **poser `0003_catalogue.sql` d'abord** (`db push`), et
+  distribuer l'APK ensuite. Jamais l'inverse, et jamais d'écart qui dure ;
+* la cadence retenue est celle des **saisons**, pas des mouvements quotidiens du
+  classement : le Top 1000 bouge tous les jours à sa marge, et courir après
+  chaque place coûterait un APK par jour pour rien.
+
+Ce qui n'est **pas** dans l'APK bouge tout seul : les points, les jetons, les
+tirages, les ventes, l'Arène et les classements vivent au serveur et suivent
+sans rebuild. La séparation est donc : *ce qui habille* est embarqué, *ce qui
+compte* est au serveur.
+
 ## Périmètre : monde entier, ou langues restreintes
 
 `scripts/build-twitch-catalog.mjs` interroge Twitch **sans filtre de langue par
@@ -187,6 +227,13 @@ Deux avertissements sont normaux après une génération mondiale :
   famille dans `seasons.config.json`.
 - **« portrait manquant »** : à corriger avec `npm run assets:regen` (le script
   est reprenable, il ne retélécharge pas ce qui est déjà bon).
+- **« portrait uni (avatar par défaut Twitch) »** : la chaîne n'a pas de photo
+  de profil, et Twitch sert son avatar par défaut — un carré parfaitement plat.
+  Le fichier existe, fait la bonne taille, et donne un rectangle sombre à la
+  place d'un visage (`j0niq`, `toaststix`). `assets:regen` les détecte (écart
+  de type nul) et écrit à la place le **portrait de secours** : dégradé,"
+  silhouette et initiale. Il ne faut pas le confondre avec un vrai logo sombre :
+  le seuil est très bas — une image qui varie un tant soit peu passe.
 
 Si une famille devient trop grosse (l'anglophonie, typiquement), elle se découpe
 toute seule en vagues de `waveSize` (défaut 150), par ordre de classement : la
@@ -279,8 +326,16 @@ manque un portrait.
 `catalog:ci` affiche le poids réel des portraits embarqués :
 
 ```text
-   Portraits : 34.2 Mo utilisés dans l'APK
+   Portraits : 16.6 Mo utilisés dans l'APK
 ```
+
+Les portraits embarqués sont en **WebP** depuis le 7 octobre 2026 (qualité 78,
+600 px — `encodeAvatar()` dans `scripts/lib/avatars.mjs`) : les **1000
+portraits** du dépôt pèsent **16,6 Mo** au lieu de **29,0 Mo** en JPEG, et
+`PORTRAIT_EXT` (`scripts/lib/portraits.mjs`) est la seule source de l'extension
+— le catalogue, l'écran, l'affiche de partage et les scripts la lisent. Les
+tableaux ci-dessous datent du JPEG : ils restent vrais pour comparer les
+résolutions (600 px contre 300 px), pas pour annoncer le poids du dépôt.
 
 Chaque commit de catalogue ajoute ce poids à l'historique Git, définitivement.
 Deux habitudes pour que ça reste supportable : régénérer rarement et en une
@@ -334,7 +389,9 @@ Conséquences :
 
 **Décision retenue : 600 px**, pour la netteté sur écran Retina — en assumant
 ~34 Mo dans l'APK, la PWA et Git pour 1000 portraits, et donc un clone et un
-`assets:regen` un peu plus lents qu'en 300 px (~17 Mo).
+`assets:regen` un peu plus lents qu'en 300 px (~17 Mo). La décision tient
+toujours, et le **WebP** l'a rendue moins chère : **16,6 Mo** mesurés pour les
+1000 portraits du dépôt, contre 29,0 Mo en JPEG.
 
 Changer d'avis plus tard est une simple variable d'environnement :
 
@@ -384,16 +441,72 @@ réglages à ajuster, tous dans des fichiers de données.
      dernières cartes, frustrante dans un TCG sans échange — au lieu d'accélérer
      le début.
 
+## Les Sortants : ce que fait une rotation
+
+Une régénération ne remplace pas le catalogue, elle le **déplace**. Un créateur
+qui tombe au-delà du rang N n'a pas disparu du jeu : ses cartes sont dans des
+classeurs, dans des échanges, en vente à l'hôtel. La génération l'écrit donc
+dans `src/data/retired.json` au lieu de le jeter, avec deux champs :
+
+- `retiredEdition` : l'édition du catalogue pendant laquelle il est parti. C'est
+  aussi le numéro d'édition de **son départ** — `editionNumber` de
+  `src/data/catalog.config.json`, incrémenté à chaque régénération.
+- `retiredAt` : la date du constat.
+
+Ce qu'un Sortant devient, côté jeu :
+
+| | Sortant |
+|---|---|
+| Booster | **jamais tiré** (côté serveur comme dans le moteur local) |
+| Complétion (« X / 1000 ») | **hors périmètre** — la complétion se mesure sur le catalogue courant, sinon 100 % deviendrait inatteignable |
+| Classeur, échange, hôtel, Last Pack, vitrine, affiche | carte **valide comme les autres** |
+| Atelier | artisanable **pendant l'édition de son départ** seulement, et **jamais** une Légendaire |
+| Sa ligne en base | **jamais supprimée** (sa carte circule encore) |
+
+Deux règles écrites dans le code, à ne pas perdre de vue :
+
+- **un slug revenu au classement gagne** : `RETIRED_CREATORS` ignore un Sortant
+  dont le slug est dans `creators.json`, et `writeRetired` retire les revenants
+  du fichier à la génération suivante. Un retour est donc un non-événement ;
+- **`writeRetired` n'écrase jamais un Sortant existant** : sa fenêtre
+  d'artisanat court depuis son départ, pas depuis la dernière génération.
+
+Ce qu'une rotation demande côté Supabase : régénérer `0003_catalogue.sql`
+(`npm run supabase:catalogue`, la colonne `retired` suit) puis poser
+`supabase/migrations/0016_sortants.sql`, qui fait lire ce drapeau au tirage, à
+la complétion et au Paquet Scène. Le détail des migrations est dans le README.
+
+Un exemple complet, à blanc : `sf6` quitte le classement à l'édition 2.
+
+```text
+src/data/creators.json      1000 → 999 créateurs (sf6 retiré)
+src/data/retired.json       { creators: [{ slug: "sf6", …,
+                              retiredEdition: 2, retiredAt: "…" }] }
+src/data/catalog.config.json editionNumber : 1 → 2
+```
+
+Résultat en jeu : `sf6` sort des boosters et de la complétion, sa carte reste
+dans les classeurs, et l'Atelier le propose encore jusqu'à l'édition 3 — ensuite
+il n'appartient plus qu'à ceux qui l'ont. L'accueil annonce la fenêtre :
+« 1 Sortant encore artisanable · dernière édition ».
+
 ## Ce qu'il faut vérifier après génération
 
 - `npm run catalog:check` : « 2000 créateurs (attendu : 2000) », aucun rang
   manquant, aucune langue déclarée deux fois, aucune famille inconnue.
 - Le nombre de portraits manquants doit être **0** ; sinon
   `npm run assets:regen` (il reprend où il s'est arrêté).
+- Aucun « portrait uni » : `catalog:check` décode les fichiers suspects
+  (moins de 8 Ko) et signale ceux dont l'écart-type est nul — un avatar par
+  défaut de Twitch n'est pas une photo. En mode strict (`catalog:ci`, celui de
+  la CI Android), c'est un **échec**, pas un avertissement.
 - `reports/top2000.json` : téléchargés / réutilisés / échecs, répartition des
   raretés.
 - `reports/candidates-2000.json` : la liste des chaînes retenues, pour vérifier
   qu'il n'y a pas de doublons de nom ou de comptes de bots.
+- `src/data/retired.json` : les Sortants de la rotation, avec leur numéro
+  d'édition (voir « Les Sortants » ci-dessus). Fichier vide = catalogue inchangé,
+  et c'est le cas normal à chaque lancement.
 
 ## Journal de compatibilité
 

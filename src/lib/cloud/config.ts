@@ -26,13 +26,26 @@ const URL_VAR = "NEXT_PUBLIC_SUPABASE_URL";
 const KEY_VAR = "NEXT_PUBLIC_SUPABASE_ANON_KEY";
 
 /**
+ * Chemin d'API que l'on retire si l'URL d'un endpoint a été recopiée.
+ *
+ * Erreur classique (et invisible) : coller « …/rest/v1/ » depuis l'écran API
+ * de Supabase au lieu de l'URL du projet. Sans ce nettoyage, la configuration
+ * était jugée invalide et l'app restait hors ligne sans autre explication.
+ */
+const API_PATH = /\/(?:rest|auth|storage|realtime)\/v1\/?$/i;
+
+/**
  * Lit la configuration depuis un environnement donné. Renvoie `null` si elle
  * est incomplète ou manifestement invalide : une adresse d'exemple recopiée
  * depuis la documentation vaut mieux traitée comme « non configuré » qu'un
  * écran de compte qui échoue à chaque appel.
  */
 export function readCloudConfig(env: Record<string, string | undefined> = process.env): CloudConfig | null {
-  const url = env[URL_VAR]?.trim().replace(/\/+$/, "");
+  const url = env[URL_VAR]
+    ?.trim()
+    .replace(/\/+$/, "")
+    .replace(API_PATH, "")
+    .replace(/\/+$/, "");
   const anonKey = env[KEY_VAR]?.trim();
   if (!url || !anonKey) return null;
   if (!/^https:\/\/[a-z0-9-]+\.supabase\.(co|in)$/i.test(url)) return null;
@@ -65,6 +78,11 @@ export function cloudConfig(): CloudConfig | null {
 }
 
 /** Message unique affiché partout quand le cloud n'est pas configuré. */
+/**
+ * Ce qu'on lit dans l'écran Compte quand ce build ne parle à rien : une phrase
+ * de jeu, pas une consigne de compilation. Le joueur ne voit ni variable
+ * d'environnement, ni nom de service — juste ce qu'il peut faire.
+ */
 export const CLOUD_DISABLED_HINT =
-  "Cloud non configuré : ajoute NEXT_PUBLIC_SUPABASE_URL et NEXT_PUBLIC_SUPABASE_ANON_KEY " +
-  "avant de compiler (voir docs/cloud-supabase.md). La partie reste jouable hors ligne.";
+  "Ta progression est gardée sur cet appareil, à chaque action : le jeu reste jouable hors ligne. " +
+  "Connecte un compte pour la retrouver sur un autre téléphone et figurer au classement.";

@@ -3,6 +3,7 @@ import "dotenv/config";
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { downloadLargestAvatar, encodeAvatar } from "./lib/avatars.mjs";
+import { PORTRAIT_EXT } from "./lib/portraits.mjs";
 
 const root = process.cwd();
 const catalog = JSON.parse(
@@ -85,10 +86,11 @@ async function downloadImage(url) {
 const report = [];
 for (const creator of catalog) {
   try {
-    // IMPORTANT : l'extension doit rester .jpg. catalog.ts (creatorImage)
-    // pointe vers /creators/{slug}.jpg : écrire du .png ici faisait que les
-    // 500 fichiers téléchargés n'étaient jamais demandés par l'app.
-    const target = path.join(outputDir, `${creator.slug}.jpg`);
+    // IMPORTANT : l'extension doit rester celle de `PORTRAIT_EXT`
+    // (scripts/lib/portraits.mjs) — c'est aussi celle de `creatorImage()`
+    // (`src/lib/catalog.ts`). Écrire un autre format ici faisait que les
+    // fichiers téléchargés n'étaient jamais demandés par l'app.
+    const target = path.join(outputDir, `${creator.slug}${PORTRAIT_EXT}`);
     try {
       const existing = await stat(target);
       if (existing.size >= 1_000) {

@@ -7,18 +7,24 @@
  * s'abonne pas, ce qui reste compatible avec le pré-rendu statique.
  */
 import {
-  applyPackResult,
+  bulkRecycleCards as engineBulkRecycleCards,
+  buyWithTokens as engineBuyWithTokens,
+  claimMilestone as engineClaimMilestone,
+  claimMissions as engineClaimMissions,
   claimSeason as engineClaimSeason,
+  claimStreakJackpot as engineClaimStreakJackpot,
   craftCreator as engineCraftCreator,
   equipTheme as engineEquipTheme,
   createInitialState,
   openPack as engineOpenPack,
+  openScenePack as engineOpenScenePack,
   recycleCard as engineRecycleCard,
   spendHourglass as engineSpendHourglass,
   type DrawnCard,
+  type LiveLogins,
+  type StreakRewardGrant,
   type PlayerState,
 } from "@/lib/game-engine";
-import type { CardVariant, Rarity } from "@/lib/catalog";
 import { deviceStorage } from "@/lib/storage";
 import {
   SAVE_KEY,
@@ -137,34 +143,29 @@ export const gameStore = {
   getSnapshot,
   getServerSnapshot,
 
-  openPack(now = Date.now()): DrawnCard[] {
-    const result = engineOpenPack(current(), now);
+  /**
+   * Ouvre un booster côté appareil (build sans cloud). `options.liveLogins`
+   * apporte le bonus Direct : les `login` des créateurs qui streament, lus
+   * dans le cache du direct au moment du geste.
+   */
+  openPack(
+    now = Date.now(),
+    options: { liveLogins?: LiveLogins } = {},
+  ): { cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
+    const result = engineOpenPack(current(), now, options);
     persist(result.state);
-    return result.cards;
+    // La récompense de série remonte avec les cartes : c'est l'écran de
+    // révélation qui l'annonce, au moment où elle est gagnée.
+    return { cards: result.cards, streakReward: result.streakReward };
   },
 
   /**
-   * Applique un tirage décidé par le serveur.
-   *
-   * Les cartes viennent du serveur (infalsifiables). Les compteurs de
-   * boosters sont ceux renvoyés par la fonction `open_pack()`. Les points,
-   * l'XP et les niveaux restent calculés localement.
+   * Ouvre le **Paquet Scène** du jour (build sans cloud). Le paquet choisit sa
+   * famille tout seul — celle que le joueur complète — et refuse un second
+   * paquet le même jour de jeu.
    */
-  applyServerPack(
-    cards: Array<{ creatorSlug: string; rarity: Rarity; variant: CardVariant; rareDrop: boolean }>,
-    serverPacks: number,
-    serverLastRegenAt: string,
-    serverOpenings: number,
-    now = Date.now(),
-  ): DrawnCard[] {
-    const result = applyPackResult(
-      current(),
-      cards,
-      serverPacks,
-      serverLastRegenAt,
-      serverOpenings,
-      now,
-    );
+  openScenePack(now = Date.now()): DrawnCard[] {
+    const result = engineOpenScenePack(current(), now);
     persist(result.state);
     return result.cards;
   },
@@ -178,6 +179,11 @@ export const gameStore = {
     persist(engineRecycleCard(current(), cardId, now));
   },
 
+  /** Recycle d'un seul coup tous les doublons du classeur. */
+  bulkRecycleCards(now = Date.now()): void {
+    persist(engineBulkRecycleCards(current(), now));
+  },
+
   /** Rejoint un créateur manquant contre des points (Atelier). */
   craftCreator(creatorSlug: string, now = Date.now()): void {
     persist(engineCraftCreator(current(), creatorSlug, now));
@@ -186,6 +192,35 @@ export const gameStore = {
   /** Réclame les paliers débloqués d'une saison. */
   claimSeason(seasonId: string, now = Date.now()): void {
     persist(engineClaimSeason(current(), seasonId, now));
+  },
+
+  /** Réclame la récompense d'un jalon atteint (écran Objectifs). */
+  claimMilestone(milestoneId: string, now = Date.now()): void {
+    persist(engineClaimMilestone(current(), milestoneId, now));
+  },
+
+  /** Réclame les sabliers des missions du jour terminées. */
+  claimMissions(now = Date.now()): number {
+    const before = current().hourglasses;
+    const next = engineClaimMissions(current(), now);
+    persist(next);
+    return next.hourglasses - before;
+  },
+
+  /**
+   * Dépense la récompense de série : le Perfect garanti, ou 3 sabliers.
+   * Renvoie ce que ça a donné (sabliers crédités, ou 0 pour le Perfect).
+   */
+  claimStreakJackpot(choice: "perfect" | "hourglasses", now = Date.now()): number {
+    const before = current().hourglasses;
+    const next = engineClaimStreakJackpot(current(), choice, now);
+    persist(next);
+    return next.hourglasses - before;
+  },
+
+  /** Achète un créateur manquant avec 400 jetons (jamais une Légendaire). */
+  buyWithTokens(creatorSlug: string, now = Date.now()): void {
+    persist(engineBuyWithTokens(current(), creatorSlug, now));
   },
 
   /** Équipe un thème de collection débloqué (cosmétique). */
