@@ -77,8 +77,10 @@ describe("0017_reinitialiser.sql (recommencer sa partie)", () => {
       path.join(process.cwd(), "src", "lib", "cloud", "store", "pack.ts"),
       "utf8",
     );
+    // Le geste vit dans la vue « Toi » (`profile-view.tsx`) depuis que la
+    // coque a été découpée : c'est là qu'est le bouton rouge, tout en bas.
     const app = readFileSync(
-      path.join(process.cwd(), "src", "components", "creator-deck-app.tsx"),
+      path.join(process.cwd(), "src", "components", "profile-view.tsx"),
       "utf8",
     );
     expect(api).toContain('core.rpc("reset_progress"');
