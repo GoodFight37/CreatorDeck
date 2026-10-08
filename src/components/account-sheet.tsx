@@ -390,7 +390,9 @@ export function AccountSheet({
                   {cloud.pendingEmail ? (
                     <div className="account-pending">
                       <label className="account-field">
-                        <span>Code reçu à {cloud.pendingEmail}</span>
+                        {/* L'adresse reste reconnaissable, jamais lisible : c'est la même
+                            règle que sur la carte d'identité. */}
+                        <span>Code reçu à {masquerEmail(cloud.pendingEmail)}</span>
                         <input
                           type="text"
                           inputMode="numeric"
