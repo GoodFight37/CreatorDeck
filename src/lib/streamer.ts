@@ -174,31 +174,45 @@ export function absenceSummary(
   const countedDays = Math.min(days, CAP_DAYS);
   const gained = countedDays * growthPerDay(subscribers);
   const after = subscribers + gained;
-  const before = tierFor(subscribers);
-  const now = tierFor(after);
-  const lines: string[] = [];
-
-  if (gained > 0) {
-    lines.push(`Pendant ton absence : +${count.format(gained)} abonnés.`);
-  } else {
-    lines.push("Ta chaîne n'a pas bougé — elle grandit pendant que tu joues.");
-  }
-  if (now !== before) {
-    lines.push(`Ta chaîne est passée « ${now.label} ».`);
-  }
-  if (days > countedDays) {
-    lines.push(
-      `(${countedDays} journées comptées sur ${count.format(days)} : au-delà de ${CAP_DAYS}, la chaîne ne cumule plus.)`,
-    );
-  }
   return {
     days,
     countedDays,
     gained,
     subscribers: after,
-    tierUp: now !== before ? now : null,
-    lines,
+    tierUp: tierFor(after) !== tierFor(subscribers) ? tierFor(after) : null,
+    lines: absenceLines({ days, countedDays, gained, before: subscribers, after }),
   };
+}
+
+/**
+ * Les phrases du retour, écrites **une seule fois**.
+ *
+ * Le même résumé vient de deux chemins : le moteur local (build sans cloud) et
+ * le serveur (`streamer_visit()`). Deux rédactions pour le même fait se
+ * contrediraient à l'écran.
+ */
+export function absenceLines(compte: {
+  days: number;
+  countedDays: number;
+  gained: number;
+  before: number;
+  after: number;
+}): string[] {
+  const lines: string[] = [];
+  if (compte.gained > 0) {
+    lines.push(`Pendant ton absence : +${count.format(compte.gained)} abonnés.`);
+  } else {
+    lines.push("Ta chaîne n'a pas bougé — elle grandit pendant que tu joues.");
+  }
+  if (tierFor(compte.after) !== tierFor(compte.before)) {
+    lines.push(`Ta chaîne est passée « ${tierFor(compte.after).label} ».`);
+  }
+  if (compte.days > compte.countedDays) {
+    lines.push(
+      `(${compte.countedDays} journées comptées sur ${count.format(compte.days)} : au-delà de ${CAP_DAYS}, la chaîne ne cumule plus.)`,
+    );
+  }
+  return lines;
 }
 
 /** Les formats ouverts à un joueur qui possède `ownedCreators` créateurs. */
@@ -268,6 +282,112 @@ export function resolveVideo(
 }
 
 /** La phrase du résumé, écrite une seule fois (écran, carnet, notification). */
+// --------------------------------------------------------------- l'état local
+/**
+ * Le **miroir local** de la chaîne : ce que le serveur garde dans
+ * `streamer_channels` et `streamer_videos` (`0036`), en plus petit.
+ *
+ * Il vit dans la sauvegarde pour deux raisons : l'écran doit pouvoir afficher la
+ * chaîne sans réseau, et un build sans cloud doit pouvoir y jouer. Mais il n'est
+ * jamais l'autorité : quand le serveur parle, `applyStreamerMirror()` réécrit ces
+ * valeurs-là — le même dessin qu'`applyWallet()` et `applyTokens()`.
+ */
+export type StreamerState = {
+  subscribers: number;
+  /** Epoch ms du dernier relevé — c'est lui qui borne l'absence payée. */
+  lastSeenAt: number;
+  /** La journée de jeu à laquelle `tokensToday` se rapporte (6 h UTC). */
+  tokensDay: string;
+  /** Jetons versés par la chaîne sur cette journée-là, plafonnés comme au serveur. */
+  tokensToday: number;
+  /** La dernière vidéo publiée : une seule par journée de jeu, jamais rejouée. */
+  video: StreamerVideoState | null;
+};
+
+export type StreamerVideoState = {
+  day: string;
+  format: string;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  gained: number;
+  /** Jetons réellement versés (0 quand le plafond du jour est atteint). */
+  tokens: number;
+};
+
+export function newStreamerState(now: number): StreamerState {
+  return { subscribers: 0, lastSeenAt: now, tokensDay: "", tokensToday: 0, video: null };
+}
+
+/** Le format portant cet identifiant, ou `null` s'il n'existe pas. */
+export function formatById(id: string): StreamerFormat | null {
+  return STREAMER.formats.find((format) => format.id === id) ?? null;
+}
+
+/** Les jetons déjà versés par la chaîne pour une journée de jeu donnée. */
+export function tokensOnDay(state: StreamerState, day: string): number {
+  return state.tokensDay === day ? state.tokensToday : 0;
+}
+
+/** Le plafond de jetons de la chaîne, par journée de jeu. */
+export const STREAMER_TOKEN_CAP = STREAMER.tokens.perDayCap;
+
+/**
+ * La vidéo du jour, jouée **localement** — le chemin du build sans cloud.
+ *
+ * Le dessin est celui du serveur : une seule vidéo par journée de jeu, les trois
+ * jets du fichier, et le versement plafonné à ce qui reste de la journée.
+ * `null` signifie « ce format n'existe pas » ; un format valide déjà publié
+ * aujourd'hui ressort avec `already: true` et la vidéo enregistrée, exactement
+ * comme `streamer_publish()`.
+ */
+export function playVideoLocally(
+  prev: StreamerState,
+  formatId: string,
+  day: string,
+  roll: (maxExclusive: number) => number = randomInt,
+): { state: StreamerState; video: StreamerVideoState; already: boolean } | null {
+  const format = formatById(formatId);
+  if (!format) return null;
+  if (prev.video?.day === day) return { state: prev, video: prev.video, already: true };
+
+  const outcome = resolveVideo(format, prev.subscribers, roll);
+  const deja = tokensOnDay(prev, day);
+  const tokens = Math.max(0, Math.min(outcome.tokens, STREAMER_TOKEN_CAP - deja));
+  const video: StreamerVideoState = {
+    day,
+    format: format.id,
+    success: outcome.success,
+    buzz: outcome.buzz,
+    badBuzz: outcome.badBuzz,
+    gained: outcome.gained,
+    tokens,
+  };
+  return {
+    state: {
+      subscribers: Math.max(0, prev.subscribers + outcome.gained),
+      lastSeenAt: prev.lastSeenAt,
+      tokensDay: day,
+      tokensToday: deja + tokens,
+      video,
+    },
+    video,
+    already: false,
+  };
+}
+
+/** La phrase qui résume une vidéo, à partir de ce que le serveur a répondu. */
+export function videoHeadline(video: {
+  format: StreamerFormat;
+  success: boolean;
+  buzz: boolean;
+  badBuzz: boolean;
+  gained: number;
+  tokens: number;
+}): string {
+  return headlineFor(video);
+}
+
 function headlineFor(outcome: {
   format: StreamerFormat;
   success: boolean;

@@ -79,6 +79,7 @@ import { EMPTY_CLOUD_STATE } from "@/lib/cloud/store/types";
 import { accountActions } from "@/lib/cloud/store/account";
 import { arenaActions } from "@/lib/cloud/store/arena";
 import { walletActions } from "@/lib/cloud/store/wallet";
+import { streamerActions } from "@/lib/cloud/store/streamer";
 import { marketActions } from "@/lib/cloud/store/market";
 import { packActions } from "@/lib/cloud/store/pack";
 import { socialActions } from "@/lib/cloud/store/social";
@@ -488,6 +489,7 @@ export function createCloudStore(deps: CloudDeps) {
     ...marketActions(ctx),
     ...arenaActions(ctx),
     ...walletActions(ctx),
+    ...streamerActions(ctx),
   };
   ctx.actions = actions;
 

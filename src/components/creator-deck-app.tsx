@@ -23,6 +23,7 @@ import { RevealOverlay } from "@/components/reveal-overlay";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
+import { StreamerSheet } from "@/components/streamer-sheet";
 import { ThemeSheet } from "@/components/theme-sheet";
 
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
@@ -36,6 +37,8 @@ import { minimizeApp, useAndroidBack } from "@/hooks/use-android-back";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLivePolling } from "@/hooks/use-live";
 import { PACKS } from "@/lib/catalog";
+import { gameDay } from "@/lib/progression";
+import { tierFor } from "@/lib/streamer";
 import { readySteals } from "@/lib/last-pack";
 
 import { playPackOpening, playReward } from "@/lib/sfx";
@@ -147,6 +150,7 @@ export function CreatorDeckApp() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [lastPackOpen, setLastPackOpen] = useState(false);
   const [arenaOpen, setArenaOpen] = useState(false);
+  const [streamerOpen, setStreamerOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
@@ -172,6 +176,7 @@ export function CreatorDeckApp() {
   useBackHandler(notificationsOpen, () => setNotificationsOpen(false));
   useBackHandler(wishlistOpen, () => setWishlistOpen(false));
   useBackHandler(arenaOpen, () => setArenaOpen(false));
+  useBackHandler(streamerOpen, () => setStreamerOpen(false));
   useBackHandler(lastPackOpen, () => setLastPackOpen(false));
   useBackHandler(marketOpen, () => setMarketOpen(false));
   useBackHandler(friendsOpen, () => setFriendsOpen(false));
@@ -414,6 +419,17 @@ export function CreatorDeckApp() {
     setStreakGain(null);
   }
 
+  // La ligne de « Ta chaîne » sur l'accueil : un chiffre qui bouge (les
+  // abonnés), un état (la vidéo du jour est faite ou pas). La porte n'existe
+  // qu'une fois la partie chargée — avant, il n'y a rien à dire.
+  const streamerLine = state
+    ? {
+        subscribers: state.streamer.subscribers,
+        tier: tierFor(state.streamer.subscribers).label,
+        publishedToday: state.streamer.video?.day === gameDay(now),
+      }
+    : null;
+
   if (!game) return <LoadingScreen />;
 
   return (
@@ -431,6 +447,8 @@ export function CreatorDeckApp() {
             onShowMissions={() => setTab("missions")}
             onShowAtelier={() => setTab("atelier")}
             onShowArena={() => setArenaOpen(true)}
+            streamerLine={streamerLine}
+            onShowStreamer={() => setStreamerOpen(true)}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}
@@ -557,6 +575,7 @@ export function CreatorDeckApp() {
       {marketOpen ? <MarketSheet onClose={() => setMarketOpen(false)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={() => setLastPackOpen(false)} /> : null}
       {arenaOpen ? <ArenaSheet onClose={() => setArenaOpen(false)} /> : null}
+      {streamerOpen ? <StreamerSheet onClose={() => setStreamerOpen(false)} /> : null}
       {wishlistOpen ? <WishlistSheet onClose={() => setWishlistOpen(false)} /> : null}
       {notificationsOpen ? <NotificationsSheet onClose={() => setNotificationsOpen(false)} /> : null}
       {accountOpen ? (

@@ -191,8 +191,8 @@ pareil ne bloquent plus la sauvegarde ».
 
 ```powershell
 npm ci
-npm test                                    # 874 tests, 60 fichiers
-npm run ecrans                              # les 18 écrans montés dans un DOM
+npm test                                    # 881 tests, 60 fichiers
+npm run ecrans                              # les 19 écrans montés dans un DOM
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
 npm run supabase:verify                     # 450 contrôles sur un Postgres jetable
 ```

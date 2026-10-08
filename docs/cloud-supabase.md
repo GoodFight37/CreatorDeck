@@ -1062,7 +1062,17 @@ qu'il arrive. C'est ce qui empêche la chaîne de devenir une machine à jetons,
 une machine à cartes.
 
 * **Le client** : `src/lib/cloud/api/streamer.ts` — trois appels (`streamerStatus`,
-  `streamerVisit`, `streamerPublish`), aucun montant transmis.
+  `streamerVisit`, `streamerPublish`), aucun montant transmis. Le magasin
+  (`src/lib/cloud/store/streamer.ts`) applique la règle des trois portes comme
+  les points et les jetons : sans cloud c'est le moteur local qui paie,
+  connecté c'est le serveur, et sans compte on refuse au lieu de fabriquer des
+  abonnés.
+* **L'écran** : la porte « Ta chaîne » sur l'accueil ouvre
+  `src/components/streamer-sheet.tsx` — abonnés, palier, formats (chances
+  publiées), résumé du retour, jetons du jour. L'état local (`state.streamer`)
+  n'est qu'un miroir : `applyStreamerMirror()` l'écrit quand le serveur a parlé,
+  et `sanitizeState()` le relit sans le croire (abonnés positifs, format connu,
+  jetons bornés au plafond).
 
 Un test miroir (`src/lib/supabase-streamer.test.ts`) compare le SQL au fichier :
 paliers, chances, plafonds, journée à 6 h UTC, tables fermées au joueur, et le fait

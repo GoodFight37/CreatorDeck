@@ -2656,6 +2656,37 @@ input:focus-visible {
 .pity-row.arena-row.done { color: var(--text); border-color: var(--line); background: var(--panel); }
 .pity-row.arena-row.idle { color: var(--muted); }
 
+/* La porte « Ta chaîne » : la ligne dit où en est la chaîne et s'il reste la
+   vidéo du jour à filmer. Deux tons, comme l'arène — « à faire » et « fait ». */
+.pity-row.streamer-row.hot { color: var(--text); border-color: rgb(var(--accent-rgb) / .4); background: rgb(var(--accent-rgb) / .07); }
+.pity-row.streamer-row.done { color: var(--muted); }
+
+/* ---- Ta chaîne (le simulateur de streameur) ------------------------------ */
+.chaine-return { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0; padding: 11px 12px; border: 1px solid rgb(var(--accent-rgb) / .3); border-radius: 11px; background: rgb(var(--accent-rgb) / .07); }
+.chaine-return svg { flex: none; margin-top: 2px; color: var(--accent-light); }
+.chaine-return div { display: flex; flex-direction: column; gap: 3px; }
+.chaine-return span { font-size: 13px; line-height: 1.5; }
+.chaine-state { margin: 14px 0 18px; }
+.chaine-numbers { display: flex; gap: 18px; }
+.chaine-numbers div { display: flex; flex-direction: column; gap: 2px; }
+.chaine-numbers strong { font-family: var(--font-display); font-size: 21px; font-weight: 600; letter-spacing: .01em; }
+.chaine-numbers span { color: var(--muted-2); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
+.chaine-next { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.chaine-video { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.chaine-video h3 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
+.chaine-intro { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.chaine-outcome { margin: 0; color: var(--accent-light); font-size: 14px; }
+.chaine-formats { display: flex; flex-direction: column; gap: 8px; }
+.chaine-format { display: flex; flex-direction: column; gap: 4px; padding: 11px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); text-align: left; cursor: pointer; }
+.chaine-format.actif { color: var(--text); border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .09); }
+.chaine-format-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.chaine-format-head strong { color: inherit; font-size: 14px; }
+.chaine-format-head span { color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.chaine-format-detail { font-size: 12.5px; line-height: 1.45; }
+.chaine-format-odds { color: var(--muted-2); font-size: 12px; }
+.chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; color: #2a1b06; border: 0; border-radius: 11px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 14px; font-weight: 900; cursor: pointer; }
+.chaine-publish:disabled { opacity: .55; cursor: default; }
+
 /* Le draft est définitif : l'écran le dit, et le refus vient du serveur. Le
    tirage raté a un bouton pour réessayer — un écran qui ne propose rien est un
    écran mort. */

@@ -91,6 +91,22 @@ describe("les écrans", () => {
     expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
   });
 
+  it("ouvre « Ta chaîne » et montre l'état, la vidéo du jour et les jetons", async () => {
+    await application();
+    banc.appuyer(/Ta chaîne/);
+    const chaine = banc.ecran("10-chaine");
+    // L'écran porte l'état de la chaîne, ses paliers, le calendrier de contenu
+    // et le plafond de jetons — c'est le serveur qui paiera, l'écran affiche.
+    expect(chaine).toContain("Ta chaîne");
+    expect(chaine).toContain("abonnés");
+    expect(chaine).toContain("La vidéo du jour");
+    // jsdom garde l'apostrophe nue dans un nœud de texte (les entités ne
+    // s'appliquent qu'aux attributs).
+    expect(chaine).toContain("Let's Play");
+    expect(chaine).toContain("jetons versés aujourd");
+    banc.fermer();
+  });
+
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {
     await application();
     const premier = banc.ecran("09-determinisme-a");

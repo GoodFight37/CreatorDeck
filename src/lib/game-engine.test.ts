@@ -37,6 +37,7 @@ import {
   claimMilestone,
   claimSeason,
   craftCreator,
+  applyStreamerMirror,
   applyWallet,
   createInitialState,
   creatorWeight,
@@ -52,11 +53,14 @@ import {
   sceneFamily,
   refreshBalances,
   seasonViews,
+  publishStreamerLocally,
   spendHourglass,
+  visitStreamerLocally,
   type DrawnCard,
   type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
+import { growthPerDay } from "@/lib/streamer";
 
 /**
  * Gèle l'aléa sur une suite de valeurs. `randomInt(n)` échantillonne par rejet
@@ -1286,5 +1290,95 @@ describe("applyWallet : le solde du serveur fait foi", () => {
     const state = { ...createInitialState(T0), points: 45 };
     expect(applyWallet(state, -10, T0).points).toBe(0);
     expect(applyWallet(state, Number.NaN, T0).points).toBe(45);
+  });
+});
+
+describe("la chaîne (le simulateur de streameur, 0036)", () => {
+  const JOUR = 24 * 3_600_000;
+
+  it("paie le retour du joueur, plafonné à sept journées de jeu", () => {
+    // Trente journées d'absence, sept payées : au-delà, une absence paierait
+    // mieux que le jeu.
+    const state = { ...createInitialState(T0) };
+    const visite = visitStreamerLocally(state, T0 + 30 * JOUR);
+    expect(visite.summary.days).toBe(30);
+    expect(visite.summary.countedDays).toBe(7);
+    expect(visite.summary.gained).toBe(7 * growthPerDay(0));
+    expect(visite.state.streamer.subscribers).toBe(7 * growthPerDay(0));
+    expect(visite.state.streamer.lastSeenAt).toBe(T0 + 30 * JOUR);
+  });
+
+  it("ne crédite rien quand l'horloge recule", () => {
+    const state = { ...createInitialState(T0) };
+    const visite = visitStreamerLocally(state, T0 - 5 * JOUR);
+    expect(visite.summary.days).toBe(0);
+    expect(visite.summary.gained).toBe(0);
+    expect(visite.state.streamer.subscribers).toBe(0);
+  });
+
+  it("ne paie l'absence qu'une fois", () => {
+    // Deux ouvertures d'affilée : la seconde ne doit rien verser — sinon un
+    // joueur pressé toucherait dix fois la même absence.
+    const state = { ...createInitialState(T0) };
+    const premiere = visitStreamerLocally(state, T0 + 3 * JOUR);
+    const seconde = visitStreamerLocally(premiere.state, T0 + 3 * JOUR);
+    expect(premiere.summary.gained).toBeGreaterThan(0);
+    expect(seconde.summary.gained).toBe(0);
+    expect(seconde.state.streamer.subscribers).toBe(premiere.state.streamer.subscribers);
+  });
+
+  it("publie une seule vidéo par journée de jeu", () => {
+    const state = { ...createInitialState(T0) };
+    // Deux jets à zéro : réussite, puis buzz. Let's Play : +240 × 3 = 720.
+    const premiere = publishStreamerLocally(state, "letsplay", T0, () => 0);
+    expect(premiere?.already).toBe(false);
+    expect(premiere?.video.success).toBe(true);
+    expect(premiere?.video.buzz).toBe(true);
+    expect(premiere?.video.gained).toBe(720);
+    expect(premiere?.video.tokens).toBe(16);
+    expect(premiere?.state.streamer.subscribers).toBe(720);
+
+    // La seconde publication du même jour relit la première, sans rien verser.
+    const seconde = publishStreamerLocally(premiere!.state, "ragebait", T0 + 3_600_000, () => 0);
+    expect(seconde?.already).toBe(true);
+    expect(seconde?.video.format).toBe("letsplay");
+    expect(seconde?.video.tokens).toBe(16);
+    expect(seconde?.state.streamer.subscribers).toBe(720);
+  });
+
+  it("ne paie rien sur une vidéo ratée, et paie la journée suivante", () => {
+    const state = { ...createInitialState(T0) };
+    // 999 partout : la vidéo tombe à plat (Let's Play n'a pas de bad buzz).
+    const rate = publishStreamerLocally(state, "letsplay", T0, () => 999);
+    expect(rate?.video.success).toBe(false);
+    expect(rate?.video.gained).toBe(0);
+    expect(rate?.video.tokens).toBe(0);
+    // Le lendemain, une réussite paie — et le compteur de jetons repart.
+    const lendemain = publishStreamerLocally(rate!.state, "letsplay", T0 + JOUR, () => 0);
+    expect(lendemain?.already).toBe(false);
+    expect(lendemain?.video.tokens).toBe(16);
+    expect(lendemain?.state.streamer.tokensToday).toBe(16);
+  });
+
+  it("refuse un format qui n'existe pas", () => {
+    const state = { ...createInitialState(T0) };
+    expect(publishStreamerLocally(state, "format-invente", T0, () => 0)).toBeNull();
+  });
+
+  it("adopte le miroir du serveur, et ne descend pas sous zéro", () => {
+    const state = { ...createInitialState(T0) };
+    const adopté = applyStreamerMirror(
+      state,
+      { subscribers: 2_640, lastSeenAt: T0 + JOUR, tokensDay: "2026-01-02", tokensToday: 6 },
+      T0 + JOUR,
+    );
+    expect(adopté.streamer).toEqual({
+      subscribers: 2_640,
+      lastSeenAt: T0 + JOUR,
+      tokensDay: "2026-01-02",
+      tokensToday: 6,
+      video: null,
+    });
+    expect(applyStreamerMirror(state, { subscribers: -5 }, T0).streamer.subscribers).toBe(0);
   });
 });

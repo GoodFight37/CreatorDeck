@@ -31,7 +31,7 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 - **Les règles vivent en double** : TypeScript **et** SQL. Une règle touchée d'un
   seul côté casse un test miroir (`src/lib/supabase-*.test.ts`) — c'est voulu.
   La dernière définition d'`open_pack()` est `0035_jetons.sql`.
-- **On vérifie en lançant, pas en relisant** : `npm test` (**874**),
+- **On vérifie en lançant, pas en relisant** : `npm test` (**881**),
   `npm run ecrans` (les **18** captures), `npm run supabase:verify`
   (**450** contrôles). Pour un déménagement de code : capture avant
   (`ECRANS_DUMP=/tmp/avant`), `diff -r` après.

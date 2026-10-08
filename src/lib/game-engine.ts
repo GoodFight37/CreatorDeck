@@ -28,6 +28,14 @@ import {
 } from "@/lib/catalog";
 import { DIRECT_BONUS, PITY, PULL_RATES, type RarityWeights } from "@/lib/pull-rates";
 import {
+  absenceSummary,
+  newStreamerState,
+  playVideoLocally,
+  type AbsenceSummary,
+  type StreamerState,
+  type StreamerVideoState,
+} from "@/lib/streamer";
+import {
   MISSIONS,
   PROGRESSION,
   START,
@@ -159,6 +167,16 @@ export type PlayerState = {
    * jeton ne s'achète pas et ne se troque pas : il ne s'obtient qu'en jouant.
    */
   tokens: number;
+  /**
+   * La **chaîne** (`0036_streamer.sql`) : abonnés, dernier relevé, vidéo du jour
+   * et jetons versés — un miroir de `streamer_channels` + `streamer_videos`.
+   *
+   * Ce n'est jamais l'autorité : quand le joueur est connecté, c'est le serveur
+   * qui compte (`applyStreamerMirror()` réécrit ce bloc). Sans cloud, c'est le
+   * moteur local qui le fait vivre (`visitStreamerLocally()`,
+   * `publishStreamerLocally()`), exactement comme les points avant `0027`.
+   */
+  streamer: StreamerState;
   /**
    * Boosters ouverts depuis le dernier Légendaire. Sert au plancher de
    * malchance (`PITY`) : à 12, le 5ᵉ slot en garantit un.
@@ -614,6 +632,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     claimedMilestones: [],
     themeId: DEFAULT_THEME_ID,
     tokens: 0,
+    streamer: newStreamerState(now),
     pityCounter: 0,
     missionDay: gameDay(now),
     missions: {},
@@ -1928,6 +1947,82 @@ export function applyTokens(state: PlayerState, serverTokens: number, now = Date
   const tokens = Number.isFinite(serverTokens) ? Math.max(0, Math.floor(serverTokens)) : state.tokens;
   if (tokens === state.tokens) return state;
   return { ...state, updatedAt: now, tokens };
+}
+
+/**
+ * Adopte l'état de la **chaîne** venu du serveur (`0036_streamer.sql`).
+ *
+ * Trois champs suffisent, et chacun a une raison d'être borné : les abonnés ne
+ * descendent pas sous zéro, le relevé est un instant, et le compteur de jetons
+ * du jour est recopié **avec sa journée de jeu** — sinon un solde d'hier
+ * s'afficherait comme celui d'aujourd'hui.
+ */
+export function applyStreamerMirror(
+  state: PlayerState,
+  mirror: Partial<StreamerState> & { video?: StreamerVideoState | null },
+  now = Date.now(),
+): PlayerState {
+  const prev = state.streamer;
+  const subscribers =
+    mirror.subscribers === undefined ? prev.subscribers : Math.max(0, Math.floor(mirror.subscribers));
+  const lastSeenAt = mirror.lastSeenAt === undefined ? prev.lastSeenAt : Math.floor(mirror.lastSeenAt);
+  const tokensDay = mirror.tokensDay ?? prev.tokensDay;
+  const tokensToday = mirror.tokensToday === undefined ? prev.tokensToday : Math.max(0, mirror.tokensToday);
+  // La vidéo se remplace une fois par jour : celle du jour même écrase la
+  // précédente, une vidéo d'hier ne réveille pas le passé.
+  const video = mirror.video !== undefined ? mirror.video : prev.video;
+  if (
+    subscribers === prev.subscribers &&
+    lastSeenAt === prev.lastSeenAt &&
+    tokensDay === prev.tokensDay &&
+    tokensToday === prev.tokensToday &&
+    video === prev.video
+  ) {
+    return state;
+  }
+  return { ...state, updatedAt: now, streamer: { subscribers, lastSeenAt, tokensDay, tokensToday, video } };
+}
+
+/**
+ * Le retour du joueur, joué **localement** (build sans cloud).
+ *
+ * Même règle que le serveur : les journées de jeu écoulées depuis le dernier
+ * relevé, plafonnées à sept, un écart négatif qui vaut zéro. Le relevé est
+ * ensuite daté — une absence ne se paie donc qu'une fois.
+ */
+export function visitStreamerLocally(
+  state: PlayerState,
+  now = Date.now(),
+): { state: PlayerState; summary: AbsenceSummary } {
+  const summary = absenceSummary(state.streamer.lastSeenAt, now, state.streamer.subscribers);
+  const next = applyStreamerMirror(
+    state,
+    { subscribers: summary.subscribers, lastSeenAt: now },
+    now,
+  );
+  return { state: next, summary };
+}
+
+/**
+ * La vidéo du jour, jouée **localement** (build sans cloud).
+ *
+ * `null` quand le format n'existe pas — l'écran ne propose que ceux du fichier.
+ * Un format déjà publié aujourd'hui ressort `already: true` : la vidéo du jour
+ * ne se rejoue pas plus ici qu'au serveur.
+ */
+export function publishStreamerLocally(
+  state: PlayerState,
+  formatId: string,
+  now = Date.now(),
+  roll?: (maxExclusive: number) => number,
+): { state: PlayerState; video: StreamerVideoState; already: boolean } | null {
+  const played = playVideoLocally(state.streamer, formatId, gameDay(now), roll);
+  if (!played) return null;
+  return {
+    state: applyStreamerMirror(state, played.state, now),
+    video: played.video,
+    already: played.already,
+  };
 }
 
 /**

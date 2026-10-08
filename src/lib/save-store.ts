@@ -19,6 +19,7 @@ import {
 import { SEASON_BY_ID } from "@/lib/seasons";
 import { MISSIONS, gameDay } from "@/lib/progression";
 import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
+import { STREAMER_TOKEN_CAP, formatById, newStreamerState, type StreamerVideoState } from "@/lib/streamer";
 
 /** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
@@ -163,6 +164,42 @@ function sanitizeSeasons(value: unknown): string[] {
  * `target + 1` est celle qu'écrit `claimMissions()` pour dire « réclamée » —
  * elle est donc valide, et c'est la borne haute.
  */
+/**
+ * La **chaîne** (`0036`) : un état relu sans être cru sur parole.
+ *
+ * Une sauvegarde bricolée ne doit pas offrir un million d'abonnés ni des jetons
+ * de chaîne au-delà du plafond : les abonnés sont des nombres positifs, le
+ * compteur du jour est borné par le plafond du fichier, et la vidéo n'est gardée
+ * que si son format existe vraiment. Tout ce qui ne se relit pas retombe sur un
+ * état neuf — l'écran, lui, s'affiche quand même.
+ */
+function sanitizeStreamerVideo(value: unknown): StreamerVideoState | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.day !== "string" || typeof value.format !== "string") return null;
+  if (!formatById(value.format)) return null;
+  const gained = typeof value.gained === "number" && Number.isFinite(value.gained) ? Math.trunc(value.gained) : 0;
+  return {
+    day: value.day,
+    format: value.format,
+    success: value.success === true,
+    buzz: value.buzz === true,
+    badBuzz: value.badBuzz === true,
+    gained,
+    tokens: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokens, 0)),
+  };
+}
+
+function sanitizeStreamer(value: unknown, now: number): PlayerState["streamer"] {
+  if (!isRecord(value)) return newStreamerState(now);
+  return {
+    subscribers: nonNegativeInt(value.subscribers, 0),
+    lastSeenAt: epochMs(value.lastSeenAt, now),
+    tokensDay: typeof value.tokensDay === "string" ? value.tokensDay : "",
+    tokensToday: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokensToday, 0)),
+    video: sanitizeStreamerVideo(value.video),
+  };
+}
+
 function sanitizeMissions(value: unknown): PlayerState["missions"] {
   if (!isRecord(value)) return {};
   const result: PlayerState["missions"] = {};
@@ -235,6 +272,7 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     // Une sauvegarde v6 démarre à zéro partout, ce qui est exact : elle n'a
     // jamais rien gagné de ces mécaniques.
     tokens: nonNegativeInt(raw.tokens, 0),
+    streamer: sanitizeStreamer(raw.streamer, now),
     pityCounter: nonNegativeInt(raw.pityCounter, 0),
     missionDay: typeof raw.missionDay === "string" ? raw.missionDay : gameDay(now),
     missions: sanitizeMissions(raw.missions),
