@@ -1,5 +1,6 @@
 import catalogConfig from "@/data/catalog.config.json";
 import creatorData from "@/data/creators.json";
+import retiredData from "@/data/retired.json";
 
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 export type CardVariant = "standard" | "live" | "holo" | "gold";
@@ -39,6 +40,32 @@ export type Creator = {
 export const CREATORS = creatorData as Creator[];
 
 /**
+ * Un créateur qui a quitté le classement (voir `src/lib/retired.ts`).
+ *
+ * `retiredEdition` est l'édition du catalogue pendant laquelle il est parti :
+ * il reste artisanable pendant celle-là, et plus après. `retiredAt` garde la
+ * date du constat, pour l'historique des données.
+ */
+export type RetiredCreator = Creator & {
+  retiredEdition: number;
+  retiredAt: string;
+};
+
+/**
+ * Les Sortants, lus depuis `src/data/retired.json`.
+ *
+ * Un slug déjà présent dans le catalogue courant est ignoré : si un créateur
+ * revient au classement, c'est le catalogue qui gagne, et sa carte redevient
+ * tirable. Le fichier peut donc garder une ligne « morte » sans casser le jeu.
+ */
+export const RETIRED_CREATORS: RetiredCreator[] = (
+  (retiredData as { creators?: RetiredCreator[] }).creators ?? []
+).filter(
+  (creator): creator is RetiredCreator =>
+    Boolean(creator && creator.slug && !(creatorData as Creator[]).some((c) => c.slug === creator.slug)),
+);
+
+/**
  * Taille et périmètre du catalogue, dérivés des données.
  *
  * Rien dans l'application ne code en dur ni la taille (« 500 ») ni le périmètre
@@ -56,7 +83,16 @@ type CatalogConfig = {
   edition?: string;
 };
 
-const CONFIG = catalogConfig as CatalogConfig;
+type CatalogConfigFull = CatalogConfig & { editionNumber?: number };
+
+const CONFIG = catalogConfig as CatalogConfigFull;
+
+/**
+ * Numéro de l'édition en cours : il s'incrémente à chaque régénération du
+ * catalogue (voir `scripts/build-twitch-catalog.mjs`). C'est lui qui date les
+ * Sortants et décide si leur fenêtre d'artisanat est encore ouverte.
+ */
+export const CATALOG_EDITION_NUMBER = CONFIG.editionNumber ?? 1;
 
 export const CATALOG_SIZE = CREATORS.length;
 /** « FR » ou « world » : périmètre du catalogue. */
@@ -76,8 +112,20 @@ export const CATALOG_EYEBROW = CONFIG.eyebrow ?? CATALOG_LABEL.toUpperCase();
 /** « ÉDITION TOP 500 FR » — accroche de la page d'accueil. */
 export const CATALOG_EDITION = CONFIG.edition ?? `ÉDITION ${CATALOG_EYEBROW}`;
 
+/** Les Sortants, par slug — pour savoir d'où vient une carte déjà possédée. */
+export const RETIRED_BY_SLUG = new Map(
+  RETIRED_CREATORS.map((creator) => [creator.slug, creator]),
+);
+
+/**
+ * Tous les créateurs connus : le catalogue courant **et** les Sortants.
+ *
+ * C'est la carte d'identité du jeu, pas la liste des tirages : une carte gardée
+ * d'une ancienne édition doit continuer à s'afficher (classeur, vitrine, hôte,
+ * Last Pack). Le tirage, lui, ne lit que `CREATORS`.
+ */
 export const CREATOR_BY_SLUG = new Map(
-  CREATORS.map((creator) => [creator.slug, creator]),
+  [...CREATORS, ...RETIRED_CREATORS].map((creator) => [creator.slug, creator]),
 );
 
 /**
@@ -182,21 +230,52 @@ export const VARIANT_META: Record<
  * Le booster contient 5 cartes dont la dernière est garantie Rare ou mieux, en
  * variante Live : la promesse du « live » de Twitch, à chaque ouverture.
  */
+/**
+ * Les deux paquets du jeu — il n'y en a pas d'autres.
+ *
+ * `live` est le paquet à réserve : quatre boosters, un toutes les demi-heures.
+ * `scene` n'est pas une réserve : c'est un rendez-vous, **un par jour de jeu**,
+ * qui tire cinq cartes de la famille que le joueur complète et ne contient
+ * aucune Légendaire (`pull-rates.json`). Il n'a donc ni `max` ni `regenMs` —
+ * la disponibilité se lit dans la journée (`sceneDay`, côté appareil ;
+ * `pack_draws`, côté serveur).
+ */
 export const PACKS = {
   live: {
     label: "Live Drop",
     eyebrow: CATALOG_EYEBROW,
-    description: "5 cartes · une variante Live garantie",
+    // « une variante Live garantie » était **faux** : la carte garantie est
+    // Live seulement si son créateur streame à cet instant (`_pack_choose_variant`).
+    // Une promesse qu'on lit cinquante fois par soirée doit dire vrai.
+    description: "5 cartes · 1 Rare ou mieux garantie",
     size: 5,
     points: 12,
     xp: 18,
     max: 4,
     regenMs: 30 * 60 * 1000,
   },
+  scene: {
+    label: "Paquet Scène",
+    eyebrow: "Ta famille",
+    description: "5 cartes de ta famille · jamais de Légendaire",
+    size: 5,
+    points: 10,
+    xp: 14,
+  },
 } as const;
 
+/**
+ * L'adresse d'un portrait. **WebP**, en 600 px : les 1000 visages pèsent
+ * 16,6 Mo au lieu de 29 — et ils font 86 % du poids de l'APK, donc c'est le
+ * seul chiffre que voit un joueur qui installe le jeu.
+ *
+ * L'extension est écrite ici **et** dans `scripts/lib/portraits.mjs`
+ * (`PORTRAIT_EXT`), qui la partagent le générateur, le contrôle du catalogue et
+ * l'élagage. `npm run catalog:check` tombe si un portrait manque : si les deux
+ * endroits divergent, c'est la CI qui le dit, pas le joueur.
+ */
 export function creatorImage(creator: Pick<Creator, "slug">) {
-  return `/creators/${creator.slug}.jpg`;
+  return `/creators/${creator.slug}.webp`;
 }
 
 export function formatFollowersCount(followers?: number) {

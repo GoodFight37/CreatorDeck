@@ -3,6 +3,11 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Notifications : Android 13 et plus ne les affiche qu'après un accord
+         explicite. La demande est faite par l'application (src/lib/push.ts) au
+         premier lancement connecté ; sans cette ligne, la demande n'a rien à
+         demander et le système refuse. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:allowBackup="true"
@@ -25,7 +30,29 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Retour de la connexion Twitch. Le dialogue se passe dans le
+                 navigateur (Supabase garde le secret du client Twitch) : quand
+                 Twitch a répondu, le navigateur revient sur
+                 `com.creatordeck.app://auth`, et c'est ce filtre qui rouvre
+                 l'application au lieu d'afficher une page d'erreur. La même
+                 adresse doit être autorisée dans les « Redirect URLs » du
+                 projet Supabase (voir docs/cloud-supabase.md §3). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.creatordeck.app" android:host="auth" />
+            </intent-filter>
+
         </activity>
+
+        <!-- Le canal des directs. L'application le crée au démarrage
+             (src/lib/push.ts) ; cette ligne sert de valeur par défaut pour une
+             notification envoyée sans `channel_id`. Sans elle, Android range
+             le message dans le canal « Divers », celui que personne ne voit. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="creatordeck-live-v2" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

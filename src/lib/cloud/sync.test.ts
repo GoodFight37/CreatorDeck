@@ -83,6 +83,28 @@ describe("empreinte d'une partie", () => {
     expect(stateFingerprint(stateWith({ claimedTiers: { S01: 2 } }))).not.toBe(stateFingerprint(base));
     expect(stateFingerprint(stateWith({ points: base.points + 1 }))).not.toBe(stateFingerprint(base));
   });
+
+  // L'économie « secondaire » compte aussi : sans elle, deux appareils dont
+  // seuls les jetons, la série ou le plancher de malchance avaient divergé
+  // étaient déclarés identiques, et le `noop` laissait la divergence en place.
+  it("change dès que l'économie secondaire change", () => {
+    const base = stateWith({ cards: [card("a", "kaicenat")] });
+    const fingerprint = stateFingerprint(base);
+    const variants: Partial<PlayerState>[] = [
+      { tokens: base.tokens + 5 },
+      { hourglasses: base.hourglasses + 1 },
+      { pityCounter: base.pityCounter + 1 },
+      { missionDay: "2026-03-02", missions: { pack: 1 } },
+      { streakDay: "2026-03-02", streak: base.streak + 1 },
+      { streakJackpot: true },
+      { sceneDay: "2026-03-02" },
+    ];
+    for (const variant of variants) {
+      expect(stateFingerprint(stateWith({ ...variant, cards: base.cards })), JSON.stringify(variant)).not.toBe(
+        fingerprint,
+      );
+    }
+  });
 });
 
 describe("statistiques locales", () => {
@@ -112,11 +134,13 @@ describe("statistiques locales", () => {
 describe("texte de l'écran de compte", () => {
   it("reste lisible quel que soit l'écart", () => {
     const decision = decideSync({ state: stateWith(), updatedAt: T0 }, null);
-    expect(describeSync(decision, null)).toBe("Jamais synchronisé.");
-    expect(describeSync(decision, T0, T0 + 30_000)).toBe("Synchronisé à l'instant.");
-    expect(describeSync(decision, T0, T0 + 60_000)).toBe("Synchronisé il y a 1 min.");
-    expect(describeSync(decision, T0, T0 + 12 * 60_000)).toBe("Synchronisé il y a 12 min.");
-    expect(describeSync(decision, T0, T0 + 5 * 3_600_000)).toBe("Synchronisé il y a 5 h.");
+    expect(describeSync(decision, null)).toBe("Pas encore synchronisé.");
+    expect(describeSync(decision, T0, T0 + 30_000)).toBe("Progression à jour à l'instant.");
+    expect(describeSync(decision, T0, T0 + 60_000)).toBe("Progression à jour, il y a 1 min.");
+    expect(describeSync(decision, T0, T0 + 12 * 60_000)).toBe("Progression à jour, il y a 12 min.");
+    expect(describeSync(decision, T0, T0 + 5 * 3_600_000)).toBe("Progression à jour, il y a 5 h.");
+    // L'ancienneté ne laisse jamais filtrer le nom technique de l'action.
     expect(describeSync(decision, T0, T0 + 3 * 86_400_000)).toMatch(/3 j/);
+    expect(describeSync(decision, T0, T0 + 3 * 86_400_000).toLowerCase()).not.toContain("push");
   });
 });

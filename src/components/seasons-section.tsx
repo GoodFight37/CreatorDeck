@@ -77,7 +77,6 @@ export function SeasonsSection({
     <section className="section-block">
       <div className="section-heading compact-heading">
         <div>
-          <p className="eyebrow">SAISONS</p>
           <h2>Complète une famille de jeux</h2>
         </div>
         <div className="season-summary">

@@ -1,0 +1,4 @@
+{
+  "note": "Les Sortants : les créateurs qui ont quitté le classement lors d'une régénération du catalogue (scripts/build-twitch-catalog.mjs). Un Sortant n'est plus tirable en booster, mais sa carte reste valable — elle est dans des classeurs, dans des échanges, dans des ventes. Ils vivent donc ici, à part du catalogue courant (src/data/creators.json), pour que la taille du catalogue et la complétion ne les comptent pas. Champs : les mêmes qu'un créateur, plus retiredEdition (l'édition du catalogue pendant laquelle il est parti — il reste artisanable pendant celle-là) et retiredAt (la date du constat).",
+  "creators": []
+}
