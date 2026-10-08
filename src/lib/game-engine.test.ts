@@ -60,7 +60,6 @@ import {
   seasonViews,
   publishStreamerLocally,
   spendHourglass,
-  visitStreamerLocally,
   type DrawnCard,
   type OwnedCard,
   type PlayerState,

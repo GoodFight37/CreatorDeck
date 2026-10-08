@@ -69,11 +69,12 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 - `README.md` — le **journal daté** des livraisons (du plus récent au plus
   ancien), l'architecture, les scripts, les tests.
 - `docs/cloud-supabase.md` — tout le serveur, §8 : chaque règle, migration par
-  migration, et la marche à suivre pour coller le SQL.
+  migration, et la marche à suivre pour poser le SQL (`npx supabase db push`).
 - `docs/revue-externe-2026-10.md` — les refus **techniques**, avec leur raison.
 - `docs/taux-de-drop.md` — les probabilités publiées, et comment les modifier.
 - `docs/catalogue-twitch.md` — le catalogue : périmètre, taille, et la
-  **cadence** (coller `0003_catalogue.sql` **avant** de distribuer un APK).
+  **cadence** (`npx supabase db push` pour `0003_catalogue.sql` **avant** de
+  distribuer un APK).
 - `docs/depot-et-github.md` — branches, APK de test, et la vie du dépôt.
 
 ## Vérifier une affirmation sur la base

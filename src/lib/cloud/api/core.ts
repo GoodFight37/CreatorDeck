@@ -125,7 +125,7 @@ export function messageFor(status: number, code: string, raw: string): string {
     (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) &&
     /trade|echange/i.test(raw)
   ) {
-    return "Les échanges ne sont pas installés sur ce projet : colle supabase/migrations/0005_echanges.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "Les échanges ne sont pas installés sur ce projet : pose supabase/migrations/0005_echanges.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Amis : la migration 0008 doit être collée dans le projet Supabase.
   //
@@ -139,7 +139,7 @@ export function messageFor(status: number, code: string, raw: string): string {
       raw,
     )
   ) {
-    return "Les amis ne sont pas installés sur ce projet : colle supabase/migrations/0008_friends.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "Les amis ne sont pas installés sur ce projet : pose supabase/migrations/0008_friends.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Les jetons : la migration 0035 doit être collée dans le projet.
   //
@@ -147,7 +147,7 @@ export function messageFor(status: number, code: string, raw: string): string {
   // le solde de jetons et l'achat aux jetons répondent « fonction inconnue »
   // tant qu'elle n'est pas là. Le message dit quoi coller, comme les autres.
   if (code === "PGRST202" && /tokens_get|tokens_spend|_tokens_|token_ledger/.test(raw)) {
-    return "Les jetons ne sont pas encore installés sur ce projet : colle supabase/migrations/0035_jetons.sql dans le SQL Editor (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
+    return "Les jetons ne sont pas encore installés sur ce projet : pose supabase/migrations/0035_jetons.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
   }
   // La chaîne : la migration 0036 doit être collée dans le projet.
   //
@@ -155,18 +155,18 @@ export function messageFor(status: number, code: string, raw: string): string {
   // l'accueil : la porte « Ta chaîne » répond « fonction inconnue ». Le message
   // nomme le fichier à coller, comme les autres.
   if (code === "PGRST202" && /streamer_status|streamer_visit|streamer_publish|streamer_channels|streamer_videos|_streamer_/.test(raw)) {
-    return "La chaîne n'est pas encore installée sur ce projet : colle supabase/migrations/0036_streamer.sql dans le SQL Editor (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
+    return "La chaîne n'est pas encore installée sur ce projet : pose supabase/migrations/0036_streamer.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 8), puis rouvre l'application.";
   }
   // La wishlist : la migration 0015 doit être collée dans le projet.
   if (code === "PGRST202" && /wishlist_slug|set_wishlist|clear_wishlist|_wishlist/.test(raw)) {
-    return "La wishlist n'est pas installée sur ce projet : colle supabase/migrations/0015_wishlist.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "La wishlist n'est pas installée sur ce projet : pose supabase/migrations/0015_wishlist.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Le Paquet Scène : la migration 0014 doit être collée dans le projet.
   if (
     code === "PGRST202" &&
     /scene_pack_choices|open_scene_pack/.test(raw)
   ) {
-    return "Le Paquet Scène n'est pas installé sur ce projet : colle supabase/migrations/0014_scene_pack.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "Le Paquet Scène n'est pas installé sur ce projet : pose supabase/migrations/0014_scene_pack.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // `open_pack` existe mais pas dans sa version à argument : c'est le signe que
   // la migration 0013 (plancher de malchance) n'est pas encore collée. Le
@@ -176,16 +176,16 @@ export function messageFor(status: number, code: string, raw: string): string {
     /open_pack\s*\(/.test(raw) &&
     !/open_pack\s*\(\s*\)/.test(raw)
   ) {
-    return "Le tirage a changé côté serveur : colle supabase/migrations/0013_progression.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "Le tirage a changé côté serveur : pose supabase/migrations/0013_progression.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   // Fonctions ou tables de tirage absentes : le projet Supabase n'a pas encore
   // reçu les migrations 0003/0004. Message actionnable plutôt que le jargon
   // PostgREST (« Could not find the function public.open_pack »).
   if (code === "PGRST202" || /could not find the function|function .* does not exist/i.test(raw)) {
-    return "Le tirage serveur n'est pas installé sur ce projet : colle supabase/migrations/0003_catalogue.sql puis 0004_tirage.sql dans le SQL Editor (docs/cloud-supabase.md, § 3), puis réessaie.";
+    return "Le tirage serveur n'est pas installé sur ce projet : pose supabase/migrations/0003_catalogue.sql puis 0004_tirage.sql avec `npx supabase db push` (docs/cloud-supabase.md, § 3), puis réessaie.";
   }
   if (code === "42P01" || /relation .* does not exist/i.test(raw)) {
-    return "Table manquante côté serveur : toutes les migrations de supabase/migrations/ n'ont pas été exécutées (docs/cloud-supabase.md, § 3).";
+    return "Table manquante côté serveur : toutes les migrations de supabase/migrations/ n'ont pas été posées — `npx supabase db push` dans le dossier du jeu (docs/cloud-supabase.md, § 3).";
   }
   if (status === 429) return "Trop de tentatives : patiente une minute avant de redemander un code.";
   if (status === 401 || status === 403) return "Session expirée : reconnecte-toi avec un nouveau code.";

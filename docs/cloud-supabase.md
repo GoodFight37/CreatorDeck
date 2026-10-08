@@ -188,42 +188,64 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
    Francfort) : c'est là que vivront la sauvegarde et le classement.
    Le palier gratuit suffit largement (500 Mo de base, 50 000 utilisateurs
    actifs par mois).
-2. **SQL Editor** → *New query* → colle tout le contenu de
-   [`supabase/migrations/0001_comptes_cloud.sql`](../supabase/migrations/0001_comptes_cloud.sql)
-   → **Run**. La requête crée les tables, les politiques RLS, les déclencheurs
-   et les fonctions d'envoi / lecture / classement. Exécute-la en premier, puis
-   ouvre une nouvelle requête pour chacune des migrations suivantes, dans
-   l'ordre :
+2. **Les migrations se posent en ligne de commande**, plus par copier-coller :
+   dans le dossier du jeu, sur ta machine,
+
+   ```powershell
+   npx supabase link --project-ref <ref du projet>   # une seule fois
+   npx supabase db push                              # à chaque nouvelle migration
+   ```
+
+   `db push` applique à la base liée, **dans l'ordre des numéros**, les fichiers
+   de `supabase/migrations/` qu'elle n'a pas encore vus, et garde la trace de ce
+   qu'il a posé dans la table `supabase_migrations.schema_migrations`. Un
+   fichier déjà appliqué n'est jamais rejoué (et un fichier absent ne l'est pas
+   non plus : c'est ce qui rend l'ordre des numéros si important). Si la base a
+   été montée à la main avant de lier le dossier, il faut d'abord lui **dire ce
+   qu'elle a déjà reçu** — une seule fois :
+
+   ```powershell
+   npx supabase migration repair --status applied 0001 0002 0003 … 0038
+   npx supabase migration list   # les colonnes Local et Remote doivent se répondre
+   ```
+
+   Ce qui suit dit **ce que chaque fichier apporte** (la liste est le contenu de
+   `supabase/migrations/`, dans l'ordre où `db push` les pose) :
+   - [`supabase/migrations/0001_comptes_cloud.sql`](../supabase/migrations/0001_comptes_cloud.sql)
+     → les tables, les politiques RLS, les déclencheurs et les fonctions
+     d'envoi / lecture / classement.
    - [`supabase/migrations/0002_vitrine.sql`](../supabase/migrations/0002_vitrine.sql)
-     → **Run** pour activer la vitrine et le contrôle de possession.
+     → activer la vitrine et le contrôle de possession.
    - [`supabase/migrations/0003_catalogue.sql`](../supabase/migrations/0003_catalogue.sql)
-     → **Run** pour peupler la table des créateurs (utilisée par le tirage
+     → peupler la table des créateurs (utilisée par le tirage
      serveur) et la passer en lecture seule pour les clients (RLS activée).
      **Fichier généré** par `scripts/build-supabase-catalogue.mjs` depuis
      `src/data/creators.json` : ne pas modifier à la main. Il porte aussi la
      **famille** de chaque créateur (`region`), qui sert à la complétion par
-     saison : si tu avais déjà collé une version antérieure, recolle-le.
+     saison : si la base porte une version antérieure du fichier,
+     `npx supabase db push --include-all` le rejoue.
    - [`supabase/migrations/0004_tirage.sql`](../supabase/migrations/0004_tirage.sql)
-     → **Run** pour activer le tirage des boosters côté serveur (`open_pack()`
+     → activer le tirage des boosters côté serveur (`open_pack()`
      et `pack_status()`).
    - [`supabase/migrations/0005_echanges.sql`](../supabase/migrations/0005_echanges.sql)
-     → **Run** pour activer les échanges de cartes (`create_trade()`,
+     → activer les échanges de cartes (`create_trade()`,
      `respond_trade()`, `cancel_trade()`, `list_trades()`, `search_players()`,
      `player_variants()`).
    - [`supabase/migrations/0006_profil_public.sql`](../supabase/migrations/0006_profil_public.sql)
-     → **Run** pour activer le profil public et les classements enrichis
+     → activer le profil public et les classements enrichis
      (`player_profile()`, projection `user_cards`, complétion, compteurs Gold et
      Holo, tri Gold, **complétion par famille** et **classement par famille**).
      Il recalcule les statistiques de tous les joueurs déjà en ligne : c'est
      normal qu'il travaille quelques secondes. Comme il grandit au fil des
-     versions, recolle-le : il est rejouable (`create or replace`).
+     versions, rejoue-le (`npx supabase db push --include-all`) : il est
+     rejouable (`create or replace`).
    - [`supabase/migrations/0007_direct.sql`](../supabase/migrations/0007_direct.sql)
-     → **Run** pour activer le **statut EN LIVE** (cache `live_streams` et
-     `live_state`), puis **re-coller `0003_catalogue.sql`** : il apporte la
+     → activer le **statut EN LIVE** (cache `live_streams` et
+     `live_state`), puis **rejouer `0003_catalogue.sql`** (`--include-all`) : il apporte la
      colonne `login`, la clé qui relie une diffusion Twitch à sa carte. Détail :
      §8, « Le direct ».
    - [`supabase/migrations/0008_friends.sql`](../supabase/migrations/0008_friends.sql)
-     → **Run** pour activer les **amis** (`friend_requests`, `friends`,
+     → activer les **amis** (`friend_requests`, `friends`,
      `send_friend_request()`, `list_friends()`, `has_friendship()`…). Détail :
      §8, « Les amis ».
    - **Se connecter avec Twitch** (facultatif, mais recommandé : c'est le
@@ -252,7 +274,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      endroits : ici, et dans les secrets de la fonction `refresh-live`
      (`TWITCH_CLIENT_SECRET`), sinon le badge « Direct » s'éteint.
    - [`supabase/migrations/0018_arena.sql`](../supabase/migrations/0018_arena.sql)
-     → **Run** pour activer **l'Arène** : cinq cartes alignées, au plus une
+     → activer **l'Arène** : cinq cartes alignées, au plus une
      Légendaire, au moins un créateur **en direct**, et un score qui est la
      **somme des viewers réels** — recalculée par le serveur à chaque dépôt.
      Semaine du lundi 6 h UTC au lundi 6 h UTC, classement hebdomadaire,
@@ -261,7 +283,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      l'écran Arène répond « fonction inconnue » ; le reste du jeu ne bouge pas.
      Détail : §8, « L'Arène ».
    - [`supabase/migrations/0019_integrite.sql`](../supabase/migrations/0019_integrite.sql)
-     → **Run** pour fermer trois trous d'intégrité : l'écriture directe des
+     → fermer trois trous d'intégrité : l'écriture directe des
      tables `saves`, `stats` et `pack_state` est **révoquée** aux rôles clients
      (seul le serveur écrit, via `push_save()`), la **réserve de boosters** naît
      côté serveur à trois et ne lit plus la sauvegarde du client, et une
@@ -269,7 +291,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
    - [`supabase/migrations/0039_invites_bureau.sql`](../supabase/migrations/0039_invites_bureau.sql)
-     → **Run** pour que la chaîne ait ses **invités sur le bureau** : deux cartes
+     → que la chaîne ait ses **invités sur le bureau** : deux cartes
      du classeur (deux créateurs différents, une carte qui est bien à toi),
      choisies par le joueur, qui amènent un **raid** — des abonnés, jamais des
      jetons — quand leur créateur est **réellement en direct** (fenêtre de dix
@@ -277,10 +299,11 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      relevé de la chaîne**, **une seule fois par journée de jeu** : la ligne de
      `streamer_raids` est la preuve du paiement, et changer d'invité après coup
      ne repaie pas. La migration remplace `streamer_status()` et
-     `streamer_visit()` de `0038` : **colle-la après `0038`**. Détail : §8,
+     `streamer_visit()` de `0038` : elle doit être posée **après `0038`**
+     (`db push` suit les numéros, il n'y a rien à décider). Détail : §8,
      « Les invités sur le bureau (`0039`) ».
    - [`supabase/migrations/0038_imprevus_setup.sql`](../supabase/migrations/0038_imprevus_setup.sql)
-     → **Run** pour que la chaîne ait ses **imprévus à choix** et son **setup** :
+     → que la chaîne ait ses **imprévus à choix** et son **setup** :
      une carte par journée de jeu, choisie côté serveur (`md5(joueur, journée)`,
      donc stable), **six cartes à deux côtés**, un tirage serveur et **aucun
      jeton**. Le client envoie la carte et le côté ; le serveur refuse une carte
@@ -292,10 +315,11 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      **préfixe** et `_streamer_setup_next()` rend le premier manquant : un
      palier « volé » ne compte pas et ne fait pas sauter l'étape suivante.
      La migration remplace `streamer_status()`, `streamer_visit()` et
-     `streamer_publish()` de `0036` : **colle-la après `0037`**. Détail : §8,
+     `streamer_publish()` de `0036` : elle doit être posée **après `0037`**
+     (`db push` s'en charge seul). Détail : §8,
      « Les imprévus et le setup de la chaîne (`0038`) ».
    - [`supabase/migrations/0037_gardes.sql`](../supabase/migrations/0037_gardes.sql)
-     → **Run** pour que les **deux alertes de perte** existent : « Ta série
+     → que les **deux alertes de perte** existent : « Ta série
      s'arrête ce soir » (la série est vivante — dernier booster hier — et la
      journée n'est pas faite) et « Réserve pleine : un booster se perd » (les
      quatre boosters attendent depuis qu'une recharge s'est perdue). Elle
@@ -304,7 +328,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      consomme plus le tour du direct. Sans elle, aucune de ces deux
      notifications ne part. Détail : §9.2.
    - [`supabase/migrations/0036_streamer.sql`](../supabase/migrations/0036_streamer.sql)
-     → **Run** pour que **la chaîne** (le simulateur de streameur) vive au
+     → que **la chaîne** (le simulateur de streameur) vive au
      serveur : `streamer_channels` (les abonnés, le dernier relevé) et
      `streamer_videos` (une vidéo par journée de jeu, index unique). Le retour du
      joueur (`streamer_visit()`) paie la croissance des journées écoulées,
@@ -316,7 +340,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      `0036`. Sans elle, la porte « Ta chaîne » répond « fonction inconnue » et le
      reste du jeu ne bouge pas. Détail : §8, « La chaîne vit au serveur (`0036`) ».
    - [`supabase/migrations/0035_jetons.sql`](../supabase/migrations/0035_jetons.sql)
-     → **Run** pour que **les jetons passent au serveur** : le solde vit dans
+     → que **les jetons passent au serveur** : le solde vit dans
      `tokens`, chaque mouvement est journalisé (`token_ledger`, index unique
      `(user_id, kind, ref)`), et le tirage comme la série **versent** leurs
      jetons au moment du fait (5 par booster, 7 en Prime Time, 10 au J4, 15 au
@@ -332,20 +356,20 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
      jetons, les missions du jour ».
    - [`supabase/migrations/0034_last_pack_protege.sql`](../supabase/migrations/0034_last_pack_protege.sql)
-     → **Run** pour que le **Last Pack protège les Légendaires et les Lives** :
+     → que le **Last Pack protège les Légendaires et les Lives** :
      ces deux cartes-là restent exposées dix minutes mais **ne se volent pas**.
      `_last_pack_cards()` renvoie `stealable` pour chaque carte, donc l'écran les
      grise et écrit « protégée » sur la place, et `last_pack_steal()` refuse de
      son côté — **avant tout verrouillage** : un refus ne laisse ni carte
      déplacée ni vol du jour entamé. Mêmes signatures qu'`0012` : `create or
-     replace`, rien à re-coller d'autre. Détail : §8, « Le Last Pack ».
+     replace`, rien d'autre à poser. Détail : §8, « Le Last Pack ».
    - [`supabase/migrations/0033_depart_maigre.sql`](../supabase/migrations/0033_depart_maigre.sql)
-     → **Run** pour que le **départ soit maigre** : une partie neuve commence
+     → que le **départ soit maigre** : une partie neuve commence
      avec **2 boosters**, comme le jeu local (`src/data/progression.json`, bloc
      `start`), au lieu de trois. `_pack_initial_packs()` est réécrite seule
      (même signature) ; un test miroir compare la réserve du serveur au fichier.
    - [`supabase/migrations/0032_serie_quotidienne.sql`](../supabase/migrations/0032_serie_quotidienne.sql)
-     → **Run** pour que **la série quotidienne paie ses jours** (décision du
+     → que **la série quotidienne paie ses jours** (décision du
      7 octobre 2026) : le booster qui fait avancer la série verse les points du
      jour coché — J1 40, J3 60, J4 80, J5 120, J6 150 — et le 7ᵉ jour reste le
      gros lot (Perfect garanti ou 3 sabliers), sans micro-récompense en plus. Le
@@ -359,14 +383,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      Détail : §8, « Le plancher de malchance, les jetons, les missions du
      jour ».
    - [`supabase/migrations/0031_pity_douze.sql`](../supabase/migrations/0031_pity_douze.sql)
-     → **Run** pour que le **plancher de malchance** passe de 80 à **12** boosters
+     → que le **plancher de malchance** passe de 80 à **12** boosters
      (décision du 7 octobre 2026, sur le brief « 12 packs jusqu'au pity »). Le
      corps est la copie exacte de la version en vigueur (`0022`), seul le seuil
      change : même signature, `create or replace` **remplace** la fonction — pas
      de surcharge possible. Sans elle, l'écran annoncerait « garanti dans 12 » et
      le serveur en exigerait 80 : le jeu mentirait.
    - [`supabase/migrations/0030_gold.sql`](../supabase/migrations/0030_gold.sql)
-     → **Run** pour que la variante **Gold** existe aussi hors « Perfect » : une
+     → que la variante **Gold** existe aussi hors « Perfect » : une
      Légendaire tirée ordinairement a **1 %** de chance d'être Gold (100 sur les
      10 000 du tirage de variante, comme le Holo à 75 — même échelle). Sans
      elle, le serveur ne produit **jamais** de Gold hors Perfect, alors que le
@@ -374,7 +398,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      mentirait. Même signature que `0011` (`text, boolean, boolean`), donc
      `create or replace` **remplace** la fonction — pas de surcharge possible.
    - [`supabase/migrations/0029_wallet_surcharge.sql`](../supabase/migrations/0029_wallet_surcharge.sql)
-     → **Run après `0027`** : range la **surcharge** laissée par la première
+     → applique la **surcharge** laissée par la première
      version de `0027`. Celle-ci créait `_wallet_apply` avec un cinquième
      paramètre (`p_once boolean default false`) ; la version corrigée n'en a plus
      que quatre, et `create or replace` — qui ne remplace que si la signature est
@@ -384,24 +408,25 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      vu en vrai le 7 octobre, et **le booster ne s'ouvrait plus**. La migration
      retire toute signature autre que `(uuid, integer, text, text)`, et refuse de
      retirer quoi que ce soit si la fonction canonique manque (il faut alors
-     recoller `0027` d'abord). Rejouable, sans effet sur une base neuve.
+     rejouer `0027` d'abord). Rejouable, sans effet sur une base neuve.
    - [`supabase/migrations/0028_wallet_saisons.sql`](../supabase/migrations/0028_wallet_saisons.sql)
-     → **Run après `0027`** : la grille des familles (les créateurs de chaque
+     → la grille des familles (les créateurs de chaque
      vague, le seuil et les points de chaque palier), **générée depuis le jeu**
      par `npm run supabase:saisons`. Sans elle, réclamer un palier de famille est
-     refusé avec un message qui le dit. Rejouable : recoller le fichier remplace
+     refusé avec un message qui le dit. Rejouable : rejouer le fichier remplace
      la grille au lieu de s'y ajouter.
    - [`supabase/migrations/0027_wallet.sql`](../supabase/migrations/0027_wallet.sql)
-     → **Run** pour que les **points vivent au serveur** : le solde quitte la
+     → que les **points vivent au serveur** : le solde quitte la
      sauvegarde pour la table `wallets`, l'hôtel et l'Atelier ne dépensent plus
      que ce que le serveur a encaissé, et une sauvegarde trafiquée n'achète plus
-     rien. ⚠️ **Après le collage**, lance une fois
-     `select public.wallet_backfill();` (SQL Editor) : chaque joueur connu ouvre
+     rien. ⚠️ **Après l'avoir posée**, lance une fois
+     `select public.wallet_backfill();` (à la main, avec la clé de service) :
+     chaque joueur connu ouvre
      son compte avec le solde de sa sauvegarde, sans attendre. Les joueurs qui
      arrivent ensuite s'ouvrent tout seuls. Détail : §8, « Les points vivent au
      serveur ».
    - [`supabase/migrations/0026_promo_codes.sql`](../supabase/migrations/0026_promo_codes.sql)
-     → **Run** pour les **codes promo** : un code donné en stream (« BOOSTER-2026 »)
+     → les **codes promo** : un code donné en stream (« BOOSTER-2026 »)
      se tape dans les réglages (Toi → menu → « J'ai un code ») et rend **un
      booster à ouvrir**, une fois par joueur. Un code inconnu, expiré ou épuisé
      est refusé ; une réserve pleine refuse **sans consommer** le code. Les deux
@@ -409,7 +434,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      `redeem_promo_code()`. Aucune création de code depuis l'application.
      Détail : §8, « Les codes promo ».
    - [`supabase/migrations/0022_pack_dans_saves.sql`](../supabase/migrations/0022_pack_dans_saves.sql)
-     → **Run** pour que le **tirage écrive la collection lui-même**, dans la
+     → que le **tirage écrive la collection lui-même**, dans la
      même transaction : plus de perte de cartes si l'appareil plante juste après
      un booster, plus d'écrasement par un second appareil, et le **blanchiment**
      fermé — une Légendaire ou une variante Live / Holo / Gold fabriquée dans la
@@ -417,36 +442,36 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      arbitrer l'envoi de sauvegarde par la **version serveur** reçue
      (`p_base_updated_at`) et non plus par l'horloge de l'appareil. Détail : §8,
      « La sauvegarde ne se perd plus (`0022`) ».
-     ⚠️ **Ordre de collage** : c'est la dernière migration, elle repasse après
-     les autres. Si tu recolles une migration **ancienne** (par exemple `0005`
-     pour les échanges, ou `0021` pour le registre), recolle `0022` **derrière** :
+     ⚠️ **Ordre** : c'est la dernière migration, elle repasse après les autres.
+     Si tu rejoues une migration **ancienne** (par exemple `0005` pour les
+     échanges, ou `0021` pour le registre), rejoue `0022` **derrière** :
      ces fichiers redéfinissent `create_trade()`, `respond_trade()`,
-     `market_sell()`… et sans ce recollage, les refus de provenance disparaissent
+     `market_sell()`… et sans ce rejeu, les refus de provenance disparaissent
      en silence (le vérificateur le contrôle : « les refus de `0022` survivent au
      recollage »).
    - [`supabase/migrations/0021_provenance.sql`](../supabase/migrations/0021_provenance.sql)
-     → **Run** pour que le serveur sache **d'où vient chaque carte** : le
+     → que le serveur sache **d'où vient chaque carte** : le
      registre `card_claims` retient ce qui a été réellement donné (tirage,
      Paquet Scène, échange, hôtel, vol), et une sauvegarde contenant une
      **Légendaire** ou une variante **Live / Holo / Gold** sans provenance
-     n'est plus classée (les cartes restent acquises). ⚠️ **Au moment du
-     collage, toutes les cartes déjà présentes dans les sauvegardes entrent au
+     n'est plus classée (les cartes restent acquises). ⚠️ **Au moment où elle est
+     posée, toutes les cartes déjà présentes dans les sauvegardes entrent au
      registre** : aucune collection existante n'est touchée. Détail : §8,
      « L'intégrité côté serveur ».
    - [`supabase/migrations/0020_identite.sql`](../supabase/migrations/0020_identite.sql)
-     → **Run** pour que deux joueurs ne puissent plus porter le même nom à une
+     → que deux joueurs ne puissent plus porter le même nom à une
      majuscule près (`profile_name_unique`). Un trigger plutôt qu'un index
      unique : la migration passe même si la base contient déjà des doublons, et
      le message est lisible par le joueur. Aucun compte existant n'est renommé.
    - [`supabase/migrations/0017_reinitialiser.sql`](../supabase/migrations/0017_reinitialiser.sql)
-     → **Run** pour que « **Réinitialiser la progression** » (écran Toi → menu)
+     → que « **Réinitialiser la progression** » (écran Toi → menu)
      rejoue vraiment la partie à zéro **en ligne aussi** : sans cette migration,
      le serveur gardait sa réserve de boosters, son journal de tirages et le
      Paquet Scène du jour, et un joueur qui repartait de zéro attendait quand
      même la recharge de la partie qu'il venait d'effacer. Détail : §8,
      « Recommencer sa partie ».
    - [`supabase/migrations/0016_sortants.sql`](../supabase/migrations/0016_sortants.sql)
-     → **Run** pour que **les Sortants** (les créateurs qui ont quitté le
+     → que **les Sortants** (les créateurs qui ont quitté le
      classement lors d'une régénération du catalogue) le soient aussi côté
      serveur : plus jamais tirés en booster, ni comptés dans la complétion, ni
      servis par le Paquet Scène — alors que leur ligne reste au catalogue, parce
@@ -454,13 +479,13 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      migration, une rotation du catalogue ne changerait rien en ligne. Détail :
      §8, « Les Sortants ».
    - [`supabase/migrations/0015_wishlist.sql`](../supabase/migrations/0015_wishlist.sql)
-     → **Run** pour que le **créateur épinglé** existe côté serveur : un joueur
+     → que le **créateur épinglé** existe côté serveur : un joueur
      épingle **un** créateur (celui qui lui manque), et son nom s'affiche sur sa
      fiche publique (`wishlist_slug`). Aucune possession exigée — on réclame
      justement ce qu'on n'a pas — et l'écriture passe par les fonctions, jamais
      par un `PATCH` de la table. Détail : §8, « La wishlist ».
    - [`supabase/migrations/0014_scene_pack.sql`](../supabase/migrations/0014_scene_pack.sql)
-     → **Run** pour que le **Paquet Scène** existe côté serveur : une fois par
+     → que le **Paquet Scène** existe côté serveur : une fois par
      **jour de jeu** (6 h UTC), cinq cartes de la famille visée, sans jamais de
      Légendaire. Le joueur **choisit** ses cartes parmi cinq listes de
      propositions, et le serveur recalcule ces listes avant d'accepter — un
@@ -468,36 +493,36 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      plancher de malchance (le journal distingue `kind = 'live'`). Détail :
      §8, « Le Paquet Scène ».
    - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
-     → **Run** pour que le **plancher de malchance** et la **série de jours**
+     → que le **plancher de malchance** et la **série de jours**
      existent aussi côté serveur : après 12 boosters d'affilée sans Légendaire,
      le tirage en garantit une, et le 7ᵉ jour d'affilée offre un Perfect (ou
      3 sabliers). Les deux compteurs sont relus depuis le journal des tirages,
      pas depuis la sauvegarde du téléphone — un compteur client se trafiquerait.
      Détail : §8, « Le plancher de malchance ».
    - [`supabase/migrations/0012_last_pack.sql`](../supabase/migrations/0012_last_pack.sql)
-     → **Run** pour que **le paquet reste exposé dix minutes** : les cinq cartes
+     → que **le paquet reste exposé dix minutes** : les cinq cartes
      du dernier booster d'un joueur sont visibles par ses amis, qui peuvent y
      prendre une carte (une par jour). La carte quitte vraiment la collection du
      propriétaire, et une vieille sauvegarde ne peut pas la faire revenir.
      Détail : §8, « Le Last Pack ».
    - [`supabase/migrations/0011_direct.sql`](../supabase/migrations/0011_direct.sql)
-     → **Run** pour que le **Direct fasse tomber plus**, côté serveur comme dans
+     → que le **Direct fasse tomber plus**, côté serveur comme dans
      le moteur : les créateurs qui streament pèsent ×1,5 dans leur rareté, la
      variante Live leur est réservée (20 %, et systématiquement sur la carte
      garantie), et rien de tout cela ne s'applique si le cache du direct a plus
      de dix minutes. Détail : §8, « Le bonus Direct ».
    - [`supabase/migrations/0010_ventes.sql`](../supabase/migrations/0010_ventes.sql)
-     → **Run** pour que le **carnet** sache dire « ta carte a été vendue » : une
+     → que le **carnet** sache dire « ta carte a été vendue » : une
      seule fonction (`market_sales()`), trois lignes de SQL. Le carnet marche
      sans — il n'annonce alors que les échanges et les amis.
    - [`supabase/migrations/0009_marche.sql`](../supabase/migrations/0009_marche.sql)
-     → **Run** pour activer l'**hôtel des ventes** : déposer un doublon (payé
+     → activer l'**hôtel des ventes** : déposer un doublon (payé
      comptant en points) et acheter au comptoir. Crée la table
      `market_listings` et les RPC `market_sell()`, `market_buy()`,
      `market_shelf()`, `market_listings_of()`. Détail : §8, « L'hôtel des
      ventes ».
 
-> **Avant de coller une migration qui touche au tirage**, on peut la jouer sur
+> **Avant de poser une migration qui touche au tirage**, on peut la jouer sur
 > un Postgres jetable, en local, sans toucher au projet Supabase :
 >
 > ```powershell
@@ -1064,9 +1089,21 @@ curl -s -X POST "https://<projet>.supabase.co/rest/v1/rpc/schema_versions" \
 
 C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
-existantes), donc son absence ne se voyait nulle part ailleurs. La même question
-se pose **dans le SQL Editor** de Supabase, en une ligne :
-`select public.schema_versions() -> '0039';` doit rendre `true`.
+existantes), donc son absence ne se voyait nulle part ailleurs.
+
+**Sur ta machine, le CLI répond la même chose en une commande** — c'est la
+façon normale de savoir où on en est :
+
+```powershell
+npx supabase migration list
+```
+
+Deux colonnes, `Local` et `Remote` : un numéro présent d'un seul côté est un
+fichier qui reste à poser (`db push`), ou une version que la base connaît sans
+que le dossier l'ait (là, `migration repair`). Le contrôle par la **base
+elle-même** (`schema_versions()`, lu avec la clé publique sur
+`/rest/v1/rpc/schema_versions`) reste utile quand on n'a **pas** de terminal
+sous la main — et il dit la même chose.
 
 Le workflow `.github/workflows/prod-check.yml` répondait à la même question
 depuis un runner et écrivait le verdict en clair dans le journal du run (une
@@ -1121,10 +1158,10 @@ Un test miroir (`src/lib/supabase-streamer.test.ts`) compare le SQL au fichier :
 paliers, chances, plafonds, journée à 6 h UTC, tables fermées au joueur, et le fait
 que le rapport `schema_versions()` est bien écrit par la **dernière** migration.
 
-**Coller `0036` après `0035`.** `schema_versions()` est réécrit par chaque
-migration qui l'étend : le rapport lu est celui de la **dernière** recollée.
-Coller `0035` après `0036` fait disparaître la ligne `0036` du rapport — les
-fonctions de la chaîne, elles, restent en place ; recoller `0036` la remet. Le
+**Poser `0036` après `0035`.** `schema_versions()` est réécrit par chaque
+migration qui l'étend : le rapport lu est celui de la **dernière** posée.
+Rejouer `0035` après `0036` fait disparaître la ligne `0036` du rapport — les
+fonctions de la chaîne, elles, restent en place ; rejouer `0036` la remet. Le
 vérifieur joue les deux cas plutôt que de les commenter.
 
 ### Les imprévus et le setup de la chaîne (`0038`)
@@ -1178,7 +1215,7 @@ affichées. Hors ligne, le moteur local (`chooseStreamerEventLocally`,
 carte qui n'est pas celle du jour est refusée en local aussi.
 
 **Coller `0038` après `0037`** (donc après `0036`). Les deux migrations
-remplacent des fonctions de `0036` : recoller `0036` seule après `0038` refait
+remplacent des fonctions de `0036` : rejouer `0036` seule après `0038` refait
 passer `streamer_status()` à l'ancienne version, et l'écran perd le setup
 (le vérifieur joue ce piège au lieu de le commenter).
 
@@ -1240,7 +1277,7 @@ quelque chose — les abonnés, jamais une monnaie.
   règles — refus compris.
 
 **Coller `0039` après `0038`.** Elle remplace `streamer_status()` et
-`streamer_visit()` : recoller `0038` seule après `0039` refait passer l'écran à
+`streamer_visit()` : rejouer `0038` seule après `0039` refait passer l'écran à
 l'ancienne version, et il perd le bureau — le vérifieur joue ce piège-là aussi.
 
 ### Le live de vingt secondes (aucune migration)
@@ -1249,8 +1286,8 @@ L'étape 5 — `src/components/streamer-live-game.tsx`, `src/lib/live-game.ts`,
 réglage dans `src/data/live-game.json` — est le **seul morceau de « Ta chaîne »
 qui n'a pas de porte côté serveur**, et c'est une décision, pas un oubli : le
 live **ne paie rien** (ni jeton, ni point, ni abonné) et ne change pas le tirage
-de la vidéo, donc il n'y a **rien à garder** : pas de table, pas de RPC, pas de
-`0039` à coller. Le plan de la scène est tiré **sur l'appareil** par un
+de la vidéo, donc il n'y a **rien à garder** : pas de table, pas de RPC, aucune
+migration à poser. Le plan de la scène est tiré **sur l'appareil** par un
 générateur amorcé par `(journée de jeu, palier)` — même journée, même palier,
 donc **même scène** à chaque ouverture — et l'appareil ne décide de rien qui
 paie : `streamer_publish(format)` reste le seul juge de ce que la journée
@@ -1298,10 +1335,10 @@ select status_code, created from net._http_response order by created desc limit 
 La seconde ligne montre les derniers appels réellement partis : `200` = la
 fonction a répondu. Si `cron.job` est vide, c'est que les extensions ne sont pas
 activées : **Database → Extensions**, activer `pg_cron` et `pg_net`, puis
-recoller la migration (elle est rejouable).
+rejouer la migration (`npx supabase db push --include-all` : elle est rejouable).
 
 Si la clé publique du projet change un jour, c'est la ligne `Authorization` de
-`public.cron_refresh_live()` qu'il faut suivre — la migration se recolle sans
+`public.cron_refresh_live()` qu'il faut suivre — la migration se rejoue sans
 risque, elle remplace l'horloge au lieu d'en ajouter une. Le créneau des 90 secondes est **réservé** par une écriture
 conditionnelle sur `live_state.refreshed_at` : deux appels simultanés ne
 consomment qu'une requête Twitch, l'autre répond `skipped` — avant, les deux
@@ -1346,7 +1383,7 @@ empêchent les deux de diverger : `src/lib/supabase-direct.test.ts` (les valeurs
 du fichier doivent être dans le SQL) et `npm run supabase:verify` (le tirage
 serveur, joué pour de vrai, y compris avec un cache périmé).
 
-Mise en place : `0011_direct.sql` → **Run** (§3), puis
+Mise en place : `0011_direct.sql` → (§3), puis
 `npm run supabase:verify` si tu veux le voir toi-même.
 
 ### Le Last Pack
@@ -1425,16 +1462,25 @@ coûte rien — c'est ce qui permet de la laisser sans jeton.
    integration*). Noter le **Client ID**, générer un **secret**.
 2. Supabase → **Edge Functions** → **Secrets** : ajouter
    `TWITCH_CLIENT_ID` et `TWITCH_CLIENT_SECRET`.
-3. Supabase → **Edge Functions** → *Deploy a new function* → **Via Editor** :
-   nom `refresh-live`, coller le contenu de
-   `supabase/functions/refresh-live/index.ts`, déployer. **Laisse « Verify
+3. **Déployer la fonction** — le plus sûr est la ligne de commande, qui relit
+   `supabase/config.toml` (et donc l'état voulu de « Verify JWT ») :
+
+   ```powershell
+   npx supabase functions deploy refresh-live
+   ```
+
+   Sinon, dans le tableau de bord : *Edge Functions* → *Deploy a new function* →
+   **Via Editor**, nom `refresh-live`, contenu de
+   `supabase/functions/refresh-live/index.ts`. **Laisse « Verify
    JWT » désactivé** : l'app envoie déjà un en-tête `Authorization` avec sa clé,
    et la fonction le vérifie elle-même. L'activer n'apporterait rien de plus —
    et avec une clé `sb_publishable_…` (et non un JWT) le portail peut refuser
    l'appel, donc l'éteindre si un jour tu l'allumes et que le badge Direct
    disparaît.
-4. SQL Editor : coller `0007_direct.sql`, puis **re-coller `0003_catalogue.sql`**
-   (il apporte la colonne `login`, la clé qui relie une diffusion à sa carte).
+4. `npx supabase db push` pose `0007_direct.sql`. Si `0003_catalogue.sql` est
+   déjà dans la base mais qu'il lui manque la colonne `login` (la clé qui relie
+   une diffusion à sa carte), rejoue-le : `npx supabase db push --include-all`
+   re-pose les fichiers déjà appliqués.
 5. Ouvrir l'app : le premier affichage déclenche le rafraîchissement.
 
 **Diagnostiquer depuis un navigateur** — la fonction répond en JSON, sans outil :
@@ -1658,10 +1704,10 @@ par l'appareil.
   prix.
 * **Le solde de la sauvegarde devient un miroir.** Il est réécrit par le serveur
   (`wallet_get()` le recale, les crédits aussi). Une sauvegarde gonflée à la main
-  est donc recollée à la vérité à la première lecture — et n'a rien pu acheter
+  est donc recollé à la vérité à la première lecture — et n'a rien pu acheter
   entre-temps.
 * **La bascule** : les joueurs avaient déjà des points. `wallet_backfill()` (à
-  lancer une fois après le collage) et `_wallet_ensure()` (au premier appel de
+  lancer une fois après la pose) et `_wallet_ensure()` (au premier appel de
   chaque joueur) ouvrent les comptes en reprenant le solde de la sauvegarde, une
   seule fois — borné à un million, parce qu'au-delà c'est une partie bricolée.
 * **Ce qui reste local, volontairement** : les sabliers (ils ne s'achètent ni ne
@@ -2109,10 +2155,13 @@ notification, et sans message d'erreur.
    **vrai secret** (clé privée) : il ne va **pas** dans le dépôt, mais dans les
    secrets Supabase : *Edge Functions* → *Secrets* (ou *Manage secrets*) →
    `FCM_SERVICE_ACCOUNT` = le contenu du JSON, collé tel quel.
-5. **Déployer la fonction** : *Edge Functions* → *Deploy a new function* →
-   *Via editor* → nom `notify-live` → coller
-   `supabase/functions/notify-live/index.ts`. **Laisser « Verify JWT »
-   désactivé** (la fonction vérifie elle-même l'en-tête `Authorization`).
+5. **Déployer la fonction** : `npx supabase functions deploy notify-live`
+   (ou, dans le tableau de bord, *Edge Functions* → *Deploy a new function* →
+   *Via editor*, nom `notify-live`, contenu de
+   `supabase/functions/notify-live/index.ts`). **Laisser « Verify JWT »
+   désactivé** (la fonction vérifie elle-même l'en-tête `Authorization`) : c'est
+   ce que `supabase/config.toml` déclare, pour qu'un déploiement ne change pas
+   cette décision sans le dire.
 
 #### Vérifier que ça marche (sans attendre un direct)
 
@@ -2248,10 +2297,10 @@ ferait perdre le direct du soir), et **l'interrupteur du carnet les coupe**
 comme tout le reste.
 
 **Un piège à connaître, trouvé par les contrôles.** `0023_notifications.sql`
-définit `push_targets()` ; `0037` la remplace. **Recoller `0023` seule après
+définit `push_targets()` ; `0037` la remplace. **Rejouer `0023` seule après
 coup efface donc les deux alertes** (le vérificateur a joué exactement ce cas).
-L'ordre de collage est celui du menu de migrations : `0036` puis `0037`, et si
-un fichier est recollé pour une raison quelconque, `0037` se recolle derrière.
+L'ordre de pose est celui du menu de migrations : `0036` puis `0037`, et si un
+fichier est rejoué pour une raison quelconque, `0037` se rejoue derrière.
 
 **Écarté, avec le chiffre qui manquait** (détail dans l'en-tête de
 `0037_gardes.sql`) : un **indicateur de malchance ajouté sur l'onglet Drop**
@@ -2283,21 +2332,21 @@ ou un Perfect, **à la demande** — `reveal-overlay.tsx`, `deservesSpotlight`).
 | « E-mail ou mot de passe incorrect » | mot de passe saisi différemment, ou compte créé par code (sans mot de passe) : attache-en un depuis l'appareil d'origine |
 | « Cette adresse est déjà utilisée par un autre compte » | cette adresse appartient à un autre compte : connecte-toi avec elle, ou change d'adresse |
 | « Cette adresse n'est pas confirmée » | **Confirm email** est activé et l'adresse n'a jamais été confirmée : désactive le réglage, ou confirme l'adresse |
-| Un message du serveur s'affiche avec des caractères bizarres (« paquet sc├¿ne ») | la migration a été collée depuis la console Windows, qui a relu ses octets UTF-8 en CP850. L'application **répare** ces phrases (`src/lib/cloud/mojibake.ts`), donc l'écran reste lisible ; pour nettoyer aussi la base, recolle la migration concernée depuis le navigateur (Ctrl+A, Ctrl+C) |
+| Un message du serveur s'affiche avec des caractères bizarres (« paquet sc├¿ne ») | la migration a été collée à la main depuis la console Windows, qui a relu ses octets UTF-8 en CP850. L'application **répare** ces phrases (`src/lib/cloud/mojibake.ts`), donc l'écran reste lisible ; pour nettoyer aussi la base, rejoue la migration concernée (`npx supabase db push --include-all`), qui envoie le fichier en UTF-8 sans passer par une console |
 | « Réinitialiser la progression » ne rend pas les boosters | le serveur n'avait pas encore `0017` : sa réserve vivait à part de la sauvegarde. Colle `0017_reinitialiser.sql` (§ 3) |
 | « echange : tu ne possèdes plus … » | la carte donnée a été recyclée ou échangée depuis l'offre : annule l'offre et recommence |
 | « Synchronise d'abord ta collection » (échange) | la partie locale et le cloud ont divergé : **Synchroniser** puis recommence (le serveur écrit toujours dans la collection du cloud) |
-| La puce « Par famille » n'apparaît pas dans le classement | `0006_profil_public.sql` n'a pas été recollé : il apporte la signature à trois arguments |
-| « Par famille » affiche 0 / 0 pour tout le monde | la famille choisie n'est pas la bonne, ou le catalogue n'a pas été recollé (`0003_catalogue.sql`, colonne `region`) |
+| La puce « Par famille » n'apparaît pas dans le classement | `0006_profil_public.sql` n'a pas été posé : il apporte la signature à trois arguments |
+| « Par famille » affiche 0 / 0 pour tout le monde | la famille choisie n'est pas la bonne, ou le catalogue n'a pas été reposé (`0003_catalogue.sql`, colonne `region`) |
 | La liste « Familles de collection » n'apparaît pas sur une fiche | `0006_profil_public.sql` n'a pas été recollé (il apporte `by_region`) |
-| Les familles sont toutes « Sans frontière » ou vides | `0003_catalogue.sql` n'a pas été recollé : la colonne `region` manque |
+| Les familles sont toutes « Sans frontière » ou vides | `0003_catalogue.sql` n'a pas été reposé : la colonne `region` manque |
 | « Les amis ne sont pas installés sur ce projet » | `0008_friends.sql` n'a pas été collé : § 3 |
 | L'entrée « Amis » n'apparaît pas dans le profil | le cloud n'est pas configuré dans ce build : sans serveur, il n'y a personne à ajouter |
-| Aucun badge « Direct » n'apparaît | table `0007` non collée, `0003` non recollée (colonne `login`), secrets Twitch absents, ou fonction `refresh-live` non déployée — l'appel à la fonction répond alors le détail |
+| Aucun badge « Direct » n'apparaît | `0007` non posée, `0003` non reposé (colonne `login`), secrets Twitch absents, ou fonction `refresh-live` non déployée — l'appel à la fonction répond alors le détail |
 | Un échange accepté n'apparaît pas tout de suite | l'appareil du proposeur s'aligne sur `list_trades()` : **Actualiser mes offres**, ou rouvre l'écran Compte |
 | « Le tirage serveur n'est pas installé sur ce projet » | `0003_catalogue.sql` et `0004_tirage.sql` ne sont pas (ou pas à jour) : § 3 |
 | « Connecte-toi pour ouvrir un booster » | build avec cloud : le tirage est décidé par le serveur — connecte-toi (raccourci « Mon compte ») |
-| « set-returning functions are not allowed in CASE », « BY value of FOR loop must be greater than zero » ou un `cards` NULL | `0004_tirage.sql` collé est une version antérieure : recolle le fichier (il est rejouable, `create or replace`) |
+| « set-returning functions are not allowed in CASE », « BY value of FOR loop must be greater than zero » ou un `cards` NULL | `0004_tirage.sql` est une version antérieure : rejoue le fichier (il est rejouable, `create or replace`) |
 | « Sauvegarde refusée par le serveur » | sauvegarde modifiée à la main (voir « ce que le serveur vérifie ») |
 | « Les comptes invités sont désactivés » | Dashboard → Authentication → Sign In / Providers → **Anonymous sign-ins** |
 | « Le service d'e-mail par défaut n'écrit qu'aux adresses de l'équipe » | normal : branche un SMTP, ou passe par un compte invité |

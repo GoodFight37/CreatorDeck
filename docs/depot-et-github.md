@@ -21,8 +21,9 @@ But : **un dépôt, une branche de référence, un historique léger.**
 - `main` reste la **branche de référence** ; le travail courant vit sur
   `arena/01a10c75-creatordeck`, poussée à chaque étape terminée — c'est cette
   branche qu'on teste. Le workflow **APK Android (debug)** accepte n'importe
-  quelle branche, et les migrations Supabase se collent dans le SQL Editor
-  **dans l'ordre**, de `0001` à la dernière.
+  quelle branche, et les migrations Supabase se posent avec
+  `npx supabase db push`, **dans l'ordre des numéros** — le CLI n'applique que
+  les fichiers que la base n'a pas encore vus.
 - La **PR #7** suit cette branche et sert de journal : elle reste ouverte
   jusqu'à la fin du chantier — on ne la fusionne pas au milieu.
 - Une branche `arena/…` par session : `arena/01a10c2b`, `arena/01a10c54`,
@@ -39,10 +40,18 @@ But : **un dépôt, une branche de référence, un historique léger.**
   distribution d'APK ne sont plus d'actualité**, et rien ne se vérifie plus tout
   seul : les contrôles se lancent à la main avant de pousser (voir « Ce que les
   workflows faisaient, et où c'est parti »). La sonde de production, elle, se
-  remplace par une ligne dans le SQL Editor : `select public.schema_versions();`.
-- **Migrations collées** : `0036`, `0037` et `0038` sont en production (vérifié
+  remplace par `npx supabase migration list` (deux colonnes, `Local` et
+  `Remote`), ou par la question posée à la base elle-même
+  (`select public.schema_versions();`) sur un téléphone.
+- **Les migrations se posent au CLI** : le dossier est lié au projet
+  (`supabase/config.toml` est versionné, les fonctions Edge y portent leur
+  `verify_jwt`), et `npx supabase db push` applique les fichiers que la base n'a
+  pas encore vus. La première fois, la base a été mise au niveau de ce qu'elle
+  portait déjà (`npx supabase migration repair --status applied 0001 … 0038`) :
+  rien n'a été rejoué, seule la table de suivi du CLI a été remplie.
+- **Migrations posées** : `0036`, `0037` et `0038` sont en production (vérifié
   le 8 octobre 2026). `0039_invites_bureau.sql` — les invités sur le bureau et
-  leur raid — **reste à coller** ; c'est la prochaine, et la dernière écrite à
+  leur raid — **reste à poser** ; c'est la prochaine, et la dernière écrite à
   ce jour.
 - **Ce que ça a coûté, et ce qui a été fait** : la suppression du dossier a
   cassé `src/lib/cloud/config.test.ts`, qui lisait les workflows sans se demander
@@ -113,7 +122,7 @@ distribution d'APK ne sont plus d'actualité**. Ce qu'ils portaient :
 | Construire l'APK et l'envoyer aux testeurs (Firebase App Distribution, groupe `testers`, secret `FIREBASE_SERVICE_ACCOUNT`) | **Supprimé** : on construit à la main (`npm run android:debug`) si besoin, et il n'y a plus de mail |
 | Publier la pré-release roulante et l'artefact du run | **Supprimé** : à publier à la main (`gh release upload debug-apk …`) |
 | `verif` : rejouer toute la pile SQL sur un Postgres jetable | `npm run supabase:verify`, **à la main** (501 contrôles) |
-| `prod-check` : demander à la production quelles migrations y sont collées | la requête `select public.schema_versions();` dans le **SQL Editor** de Supabase — c'est ce qui dit s'il reste un fichier à coller |
+| `prod-check` : demander à la production quelles migrations y sont collées | `npx supabase migration list` sur ta machine, ou la requête `select public.schema_versions();` quand on n'a qu'un téléphone — c'est ce qui dit s'il reste un fichier à poser |
 | Les contrôles avant build (`lint`, `typecheck`, `test`, `ecrans`) | `npm run lint`, `npm run typecheck`, `npm test`, `npm run ecrans` — **à la main**, avant de pousser |
 | L'avertissement « Cloud absent du bundle » | `npm run build` lui-même : `scripts/cloud-guard.mjs` prévient quand les deux variables publiques manquent, sur Vercel comme en local |
 

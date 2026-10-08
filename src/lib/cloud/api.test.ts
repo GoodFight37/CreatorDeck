@@ -711,7 +711,7 @@ describe("tirage serveur", () => {
       signedIn(),
     );
     await expect(api.openPack()).rejects.toThrowError(/0003_catalogue\.sql puis 0004_tirage\.sql/);
-    await expect(api.packStatus()).rejects.toThrowError(/SQL Editor/);
+    await expect(api.packStatus()).rejects.toThrowError(/npx supabase db push/);
   });
 
   it("distingue la migration du plancher de malchance de celles du tirage", async () => {

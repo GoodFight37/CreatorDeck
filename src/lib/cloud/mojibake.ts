@@ -1,12 +1,15 @@
 /**
  * Réparer un texte arrivé « doublement encodé ».
  *
- * Les migrations Supabase sont des fichiers UTF-8 qui se collent à la main. Sous
- * Windows, `curl.exe ... | Set-Clipboard` fait passer les octets par la page de
- * codes de la console : « scène » (deux octets UTF-8) devient « sc├¿ne » (ces
- * deux octets relus en CP850) avant même d'atteindre le SQL Editor. La base
- * garde alors ces caractères-là, et l'application les afficherait tels quels au
- * joueur — c'est arrivé : « paquet sc├¿ne : ton paquet du jour est d├⌐j├á ouvert ».
+ * Les migrations Supabase sont des fichiers UTF-8, et ils partaient à la main
+ * par la console. Sous Windows, `curl.exe ... | Set-Clipboard` fait passer les
+ * octets par la page de codes de la console : « scène » (deux octets UTF-8)
+ * devient « sc├¿ne » (ces deux octets relus en CP850) avant même d'atteindre la
+ * base. Elle garde alors ces caractères-là, et l'application les afficherait
+ * tels quels au joueur — c'est arrivé : « paquet sc├¿ne : ton paquet du jour
+ * est d├⌐j├á ouvert ». (Depuis que les migrations passent par
+ * `npx supabase db push`, le fichier ne traverse plus aucune console : la
+ * réparation reste là pour les textes déjà en base.)
  *
  * La transformation est **réversible** : il suffit de repasser chaque caractère
  * par sa valeur CP850, puis de relire les octets obtenus en UTF-8. La table

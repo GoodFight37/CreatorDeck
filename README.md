@@ -116,7 +116,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
 | `npm run catalog:ci` | contrôle renforcé (utilisé par la CI Android jusqu'au 8 octobre 2026) : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) ; `--prune` supprime les orphelins avant un commit |
-| `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données à coller dans le SQL Editor de Supabase) |
+| `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données appliqué par `npx supabase db push`) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
@@ -266,7 +266,10 @@ docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qu
                          est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0039` (réelles, rejouables, vérifiées)
+supabase/migrations/     la pile SQL, `0001` → `0039` (réelles, rejouables, vérifiées) :
+                         posées par `npx supabase db push`, dans l'ordre des numéros
+supabase/config.toml     le projet **lié** (le CLI) : rien de secret — la version des
+                         migrations et l'état voulu des fonctions Edge (`verify_jwt`)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
                          notify-live (direct → Firebase), secrets côté serveur
 docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (§8),

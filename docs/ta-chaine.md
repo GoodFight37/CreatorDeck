@@ -50,8 +50,9 @@
   client, et la croissance du setup est payée **partout** (statut, absence et
   vidéo du jour) par la même fonction `_streamer_growth()`.
 
-  > **Collée en production** (`0038`) avec `0036` et `0037`, le 8 octobre 2026.
-  > Pour vérifier : `select public.schema_versions() -> '0038';` rend `true`.
+  > **Posée en production** (`0038`) avec `0036` et `0037`, le 8 octobre 2026.
+  > Le geste est `npx supabase db push` ; pour vérifier après :
+  > `npx supabase migration list` (les colonnes Local et Remote se répondent).
 
 - [x] **Étape 5 : le live de 20 secondes (`StreamerLiveGame`)** — le premier
   mini-jeu de la chaîne : on passe en direct, **le chat défile** en bas du cadre
@@ -91,10 +92,12 @@
   collection pour choisir ; hors ligne, le moteur local
   (`setStreamerGuestLocally`, `payStreamerRaidLocally`) applique les mêmes règles.
 
-  > **À coller par le joueur : `0039_invites_bureau.sql`.** `0036`, `0037` et
-  > `0038` sont collées en production (vérifié le 8 octobre 2026). Un bouton
-  > « copier le contenu brut » et le SQL Editor suffisent ; pour **vérifier
-  > après** : `select public.schema_versions() -> '0039';` doit rendre `true`.
+  > **À poser par le joueur : `0039_invites_bureau.sql`** — un
+  > `npx supabase db push` dans le dossier du jeu, rien à copier. `0036`, `0037`
+  > et `0038` sont posées en production (vérifié le 8 octobre 2026) ; pour
+  > **vérifier après** : `npx supabase migration list`, ou la question posée à
+  > la base elle-même (`select public.schema_versions() -> '0039';` doit rendre
+  > `true`, si on n'a pas de terminal sous la main).
 
 ## 2. En cours
 

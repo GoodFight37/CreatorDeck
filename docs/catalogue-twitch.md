@@ -27,8 +27,8 @@ classeur au premier écran sans connexion. Ce qui en découle :
   cartes déjà tirées restent valides, et un créateur absent du nouveau Top passe
   en « Sortant » au lieu de disparaître) ;
 * **deux gestes, dans cet ordre** : régénérer (`npm run catalog:source`), puis
-  recoller `0003_catalogue.sql`. L'écart entre les deux copies se voit de deux
-  façons, et elles ne se valent pas :
+  rejouer `0003_catalogue.sql` (`npx supabase db push --include-all`). L'écart
+  entre les deux copies se voit de deux façons, et elles ne se valent pas :
 
   1. **base en avance sur l'APK** (le cas qu'on veut) : la base peut tirer un
      créateur que l'APK ne connaît pas encore, et l'écran affiche alors
@@ -38,8 +38,8 @@ classeur au premier écran sans connexion. Ce qui en découle :
      (`save_suspicions`, `0019`) — le joueur garde ses cartes, mais **il sort du
      classement** jusqu'à ce que la base rattrape.
 
-  D'où la règle : **coller `0003_catalogue.sql` d'abord**, distribuer l'APK
-  ensuite. Jamais l'inverse, et jamais d'écart qui dure ;
+  D'où la règle : **poser `0003_catalogue.sql` d'abord** (`db push`), et
+  distribuer l'APK ensuite. Jamais l'inverse, et jamais d'écart qui dure ;
 * la cadence retenue est celle des **saisons**, pas des mouvements quotidiens du
   classement : le Top 1000 bouge tous les jours à sa marge, et courir après
   chaque place coûterait un APK par jour pour rien.
@@ -472,7 +472,7 @@ Deux règles écrites dans le code, à ne pas perdre de vue :
   d'artisanat court depuis son départ, pas depuis la dernière génération.
 
 Ce qu'une rotation demande côté Supabase : régénérer `0003_catalogue.sql`
-(`npm run supabase:catalogue`, la colonne `retired` suit) puis coller
+(`npm run supabase:catalogue`, la colonne `retired` suit) puis poser
 `supabase/migrations/0016_sortants.sql`, qui fait lire ce drapeau au tirage, à
 la complétion et au Paquet Scène. Le détail des migrations est dans le README.
 
