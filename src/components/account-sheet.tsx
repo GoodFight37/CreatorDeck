@@ -22,7 +22,7 @@ import { useGame } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { PASSWORD_MIN, PASSWORD_WARNING, emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
-import { masquerEmail } from "@/lib/account-display";
+import { masquerEmail, type AccountFocus } from "@/lib/account-display";
 import { SyncBadge } from "@/components/account/sync-badge";
 import { LeaderboardSection } from "@/components/account/leaderboard-section";
 import { ShowcasePanel } from "@/components/account/showcase-panel";
@@ -80,7 +80,7 @@ export function AccountSheet({
 }: {
   onClose: () => void;
   /** Section à amener sous les yeux à l'ouverture (« Classement » du profil). */
-  focus?: "leaderboard" | null;
+  focus?: AccountFocus;
 }) {
   const cloud = useCloud();
   const live = useLive();
@@ -296,7 +296,9 @@ export function AccountSheet({
             {cloud.userId ? <ShowcasePanel /> : null}
             {cloud.userId ? (
               <section className="account-card">
-                <TradesPanel />
+                {/* Le carnet peut viser cette section : la feuille le dit au
+                    panneau, qui s'ouvre et se met sous les yeux. */}
+                <TradesPanel focus={focus} />
               </section>
             ) : null}
 

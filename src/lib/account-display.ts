@@ -77,6 +77,20 @@ export function etatSynchronisation(state: SyncState): SyncLine {
 }
 
 /**
+ * La **section que la feuille de compte met sous les yeux** à l'ouverture.
+ *
+ * `null` : on arrive en haut, comme toujours. Une valeur : la feuille s'ouvre
+ * avec cette section déjà ouverte et déjà défilée. C'est ce qui permet au carnet
+ * de mener quelque part de précis (« Diane te propose un échange » → les
+ * échanges), au lieu de déposer le joueur devant un écran qu'il faut fouiller.
+ *
+ * Le type vit ici, à côté de ce qui se **décide** pour l'écran, et il est
+ * partagé par l'application (qui choisit la section), la feuille (qui la passe)
+ * et le panneau (qui la montre).
+ */
+export type AccountFocus = "leaderboard" | "trades" | null;
+
+/**
  * Une adresse e-mail, masquée pour être lue — pas pour être utilisée.
  *
  * `kamet0@exemple.fr` → `k•••@e•••.fr` : le joueur reconnaît son adresse au

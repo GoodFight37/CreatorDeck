@@ -86,6 +86,15 @@ export const KIND_SECTIONS: Partial<Record<InboxKind, string>> = {
   // Une demande d'ami attend une réponse : on ouvre directement la liste des
   // demandes plutôt que celle des amis déjà acceptés.
   friend_request: "incoming",
+  // Un échange **attendu** : la feuille de compte s'ouvre sur la section des
+  // échanges, et le panneau s'y ouvre au lieu de rester replié. Sans ça, le
+  // carnet annonçait une offre et déposait le joueur en haut d'un écran où il
+  // fallait la retrouver à la main — c'est-à-dire nulle part.
+  trade_in: "trades",
+  // Une offre acceptée ou refusée se constate au même endroit : le panneau des
+  // échanges, qui porte l'historique.
+  trade_concluded: "trades",
+  trade_declined: "trades",
 };
 
 /** La destination d'une ligne : l'écran, et la section quand elle en a une. */

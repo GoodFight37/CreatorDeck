@@ -15,6 +15,7 @@
  * Aucun réseau : la session est simulée (`useCloud` est remplacé), et les
  * panneaux du dessous lisent le même état figé que la feuille.
  */
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -111,6 +112,46 @@ describe("l'écran Compte d'un joueur connecté", () => {
     for (const mot of ["cloud", "Supabase", "serveur", "Projet", "payload", "token", "json"]) {
       expect(ecran.toLowerCase(), `jargon encore affiché : ${mot}`).not.toContain(mot.toLowerCase());
     }
+  });
+
+  it("s'ouvre sur les échanges quand on vient du carnet, et se déplie", async () => {
+    // Le carnet annonce « Diane te propose un échange » : la feuille doit
+    // arriver **là**, panneau ouvert — pas en haut, avec l'échange replié deux
+    // écrans plus bas.
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+    try {
+      const { AccountSheet } = await import("@/components/account-sheet");
+      await banc.monter(<AccountSheet onClose={() => {}} focus="trades" />);
+
+      const panneau = document.querySelector<HTMLDetailsElement>(".trade-details");
+      expect(panneau).toBeTruthy();
+      expect(panneau!.open).toBe(true);
+      // Il s'est mis sous les yeux : c'est le même geste que le classement.
+      expect(scroll.mock.instances).toContain(panneau);
+      banc.ecran("24-compte-echanges");
+
+      // Toute autre arrivée ouvre la feuille en haut, panneau replié : la
+      // section n'est pas un état permanent.
+      banc.vider();
+      await banc.monter(<AccountSheet onClose={() => {}} />);
+      expect(document.querySelector<HTMLDetailsElement>(".trade-details")?.open).toBe(false);
+    } finally {
+      scroll.mockRestore();
+    }
+  });
+
+  it("garde le panneau des échanges refermable par le joueur", async () => {
+    // Arrivé dessus, on doit pouvoir le replier : l'ouverture automatique n'est
+    // pas un cadenas.
+    const { AccountSheet } = await import("@/components/account-sheet");
+    await banc.monter(<AccountSheet onClose={() => {}} focus="trades" />);
+    const panneau = document.querySelector<HTMLDetailsElement>(".trade-details")!;
+    expect(panneau.open).toBe(true);
+    act(() => {
+      panneau.open = false;
+      panneau.dispatchEvent(new Event("toggle"));
+    });
+    expect(document.querySelector<HTMLDetailsElement>(".trade-details")?.open).toBe(false);
   });
 
   it("a retiré tous les gestes manuels de sauvegarde", async () => {

@@ -123,8 +123,10 @@ l'étagère**, pas collée à des coordonnées écrites à la main.
 > « Super Pixel Effects Gigapack — Will Tice / unTied Games ». La licence autorise
 > l'usage commercial et l'embarquement dans un jeu, interdit la revente des
 > fichiers bruts, et demande cette ligne quelque part dans le produit ou sa
-> documentation : elle est ici, et le jeu n'affiche aucun générique pour
-> l'instant.
+> documentation. **Elle est aux deux endroits** : ici, et **dans le jeu**, sous
+> « Toi » → *Crédits* (`src/lib/credits.ts`, `src/components/credits.tsx`) — le
+> même écran nomme aussi Kenney (le décor), Chequered Ink (les bruits), Twitch
+> (les portraits), Lucide (les icônes) et les deux polices d'écriture.
 
 > **À ne pas confondre :** `public/fx/` et `public/sfx/` ne sont **pas** des
 > dossiers d'origine — ce sont les **livrables** du jeu (planches d'effets et

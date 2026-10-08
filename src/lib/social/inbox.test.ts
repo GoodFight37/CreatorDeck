@@ -393,6 +393,20 @@ describe("le carnet de notifications", () => {
     expect(KIND_SECTIONS.friend_request).toBe("incoming");
   });
 
+  it("envoie un échange sur les échanges, pas en haut du compte", () => {
+    // Le défaut que ça corrige : « Diane te propose un échange » ouvrait la
+    // feuille de compte **en haut**, panneau des échanges replié — le joueur
+    // devait retrouver l'offre à la main, c'est-à-dire ne pas la retrouver.
+    for (const kind of ["trade_in", "trade_concluded", "trade_declined"] as const) {
+      expect(cibleDe({ kind }), kind).toEqual({ target: "compte", section: "trades" });
+    }
+    // Et rien d'autre ne vise cette section : les autres familles gardent leur
+    // destination, en haut.
+    expect(KIND_SECTIONS.last_pack).toBeUndefined();
+    expect(KIND_SECTIONS.sale).toBeUndefined();
+    expect(KIND_SECTIONS.wishlist_live).toBeUndefined();
+  });
+
   it("fait atterrir chaque met là où il se constate", () => {
     // Ces quatre-là sont les plus faciles à se tromper : un échange vit dans
     // l'écran Compte, un Last Pack dans sa feuille, une vente et un direct

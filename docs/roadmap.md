@@ -11,6 +11,7 @@
 
 ### Chantiers en cours / Améliorations
 - [x] **« Du jus » : les moments rares se voient** (8 octobre 2026) : un **éclat** sur une Épique, une **explosion dorée** et un écran blanc sur une Légendaire comme sur un Perfect (planches pixel-art découpées en CSS, partant **avec** le son, coupées par le réglage des reflets), l'**achat d'un palier** qui fait vraiment entrer l'objet dans la pièce — il tombe, et la fumée marque l'endroit — et l'**emblème d'Arène** posé sur l'étagère du Studio (le pont TCG → Studio : ce qui se gagne dans l'Arène se voit chez soi)
+- [x] **Les crédits, et un carnet qui vise juste** (8 octobre 2026) : un écran **Crédits** discret sous « Toi » (Kenney pour le décor, unTied Games pour les effets — la ligne que sa licence demande —, Chequered Ink pour les bruits, Twitch, Lucide, les polices), et les notifications d'**échange** qui ouvrent la feuille de compte **sur la section des échanges**, panneau déjà ouvert et déjà à l'écran
 - [ ] Stabilisation des perfs mobiles (scroll fluide sur les 1 000 cartes)
 - [ ] Suite de tests Playwright (`npm run e2e`) & Vitest
 - [ ] Polissage visuel & haptique (reflets cartes Holo/Gold, retour tactile au swipe)

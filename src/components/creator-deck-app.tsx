@@ -15,6 +15,7 @@ import { MarketSheet } from "@/components/market-sheet";
 import { LastPackSheet } from "@/components/last-pack-sheet";
 import { ArenaSheet } from "@/components/arena-sheet";
 import { NotificationsSheet } from "@/components/notifications-sheet";
+import type { AccountFocus } from "@/lib/account-display";
 import type { InboxTarget } from "@/lib/social/inbox";
 import { friendsOpenedRecently } from "@/lib/social/inbox";
 import { AtelierView } from "@/components/atelier-view";
@@ -176,7 +177,7 @@ export function CreatorDeckApp() {
   // mensonge.
   const navLastPack = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? now, now);
   const [accountOpen, setAccountOpen] = useState(false);
-  const [accountFocus, setAccountFocus] = useState<"leaderboard" | null>(null);
+  const [accountFocus, setAccountFocus] = useState<AccountFocus>(null);
   // L'onglet sur lequel ouvrir la feuille des amis : le carnet sait qu'une
   // demande d'ami attend une réponse, la feuille des amis sait où elle range
   // les demandes. Le carnet le dit, la feuille l'applique.
@@ -221,7 +222,10 @@ export function CreatorDeckApp() {
       return;
     }
     if (target === "compte") {
-      setAccountFocus(null);
+      // Le carnet dit « échanges » ; la feuille sait ouvrir sa section des
+      // échanges et la mettre sous les yeux. Toute autre section ouvre la
+      // feuille en haut, comme avant.
+      setAccountFocus(section === "trades" ? "trades" : null);
       setAccountOpen(true);
       return;
     }

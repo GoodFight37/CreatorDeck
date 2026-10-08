@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { Crown, RefreshCw, Trophy } from "lucide-react";
+import type { AccountFocus } from "@/lib/account-display";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
 import { CATCH_ALL_REGION, REGION_FAMILIES } from "@/lib/regions";
@@ -31,7 +32,7 @@ const DEFAULT_FAMILY = FAMILY_CHOICES[0]?.id ?? "S10";
  * panneau porte son propre raccourci d'ouverture : quand on vient du profil par
  * « Classement mondial », la feuille s'ouvre déjà défilée ici.
  */
-export function LeaderboardSection({ focus }: { focus?: "leaderboard" | null }) {
+export function LeaderboardSection({ focus }: { focus?: AccountFocus }) {
   const cloud = useCloud();
   const leaderboardRef = useRef<HTMLElement | null>(null);
 

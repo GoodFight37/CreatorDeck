@@ -138,10 +138,10 @@ Quatre étages, quatre vitesses :
 
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
-  rareté, la pose des couronnes de l'Arène — tout ce qui se calcule sans
-  navigateur. C'est là que vit l'essentiel des règles (**1055 tests**, 70 fichiers
-  aujourd'hui), et **tout `public/` pèse 23 Mo** : le poids de l'APK et de
-  l'export Vercel se lit d'un coup d'œil.
+  rareté, la pose des couronnes de l'Arène, les crédits — tout ce qui se calcule
+  sans navigateur. C'est là que vit l'essentiel des règles (**1061 tests**,
+  71 fichiers aujourd'hui), et **tout `public/` pèse 23 Mo** : le poids de l'APK
+  et de l'export Vercel se lit d'un coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les cinq onglets, le marquage de l'onglet actif, l'accès au compte
@@ -304,6 +304,8 @@ docs/diagnostic.html     la page de diagnostic de la connexion cloud (hors
                          `public/`, donc hors de l'APK)
 docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refusé, vérifié
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
+src/lib/credits.ts       qui a fait le décor, les sons, les effets, les portraits
+                         (affiché sous « Toi » → *Crédits*)
 docs/assets-graphiques.md  les assets de public/streamer : lequel sert, lequel est 3D
 android/                 projet Capacitor Android (canal de notification et
                          son du jeu, app/src/main/res/raw/creatordeck.wav)

@@ -142,7 +142,7 @@ describe("le carnet de notifications", () => {
     await banc.monter(<NotificationsSheet onClose={() => {}} onGo={onGo} />);
 
     const attendus: Array<[number, string, string | undefined]> = [
-      [0, "compte", undefined], // une offre d'échange se répond dans le compte
+      [0, "compte", "trades"], // une offre d'échange se répond dans le compte, section Échanges
       [1, "amis", "incoming"], // une demande d'ami ouvre la liste des demandes
       [2, "last-pack", undefined], // un paquet volé se regarde là où il est exposé
       [3, "classeur", undefined], // le direct se voit sur la carte du créateur

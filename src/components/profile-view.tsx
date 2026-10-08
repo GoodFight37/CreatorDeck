@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
+import { CreditsBlock } from "@/components/credits";
 import { useCloud } from "@/hooks/use-cloud";
 
 import { useInbox } from "@/hooks/use-inbox";
@@ -360,6 +361,11 @@ export function ProfileView({
          * rallumer.
          */}
       </section>
+
+      {/* Les crédits : ce que le jeu n'a pas dessiné, et qui l'a fait. Discrets,
+          repliés, et avant le rouge — on ne tombe pas dessus en cherchant autre
+          chose, et deux licences demandent qu'ils soient là. */}
+      <CreditsBlock />
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
           accident. */}

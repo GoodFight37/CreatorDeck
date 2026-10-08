@@ -48,7 +48,8 @@ en 14 familles — ce sont exactement les dossiers de `public/sound effects/`).
 > unaltered assets as your own game assets. »
 
 Autrement dit : **usage commercial libre, crédit non obligatoire, revente des
-fichiers bruts interdite**. C'est cette dernière clause qui impose la forme
+fichiers bruts interdite**. Le crédit est donné quand même, à l'écran
+(« Toi » → *Crédits*) et ici. C'est cette dernière clause qui impose la forme
 retenue : on embarque une **sélection de 15 fichiers** dans le jeu (usage
 normal), on ne redistribue pas le pack — le dossier brut (400 fichiers, 87 Mo,
 `public/sound effects/` avant le 8 octobre 2026) n'est **pas** un livrable du

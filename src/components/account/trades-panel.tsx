@@ -8,9 +8,10 @@
  */
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { ArrowLeftRight, Check, RefreshCw, Search, UserSearch, X } from "lucide-react";
+import type { AccountFocus } from "@/lib/account-display";
 import { useCloud } from "@/hooks/use-cloud";
 import { useGame } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -63,10 +64,31 @@ function TradeCardTag({ card }: { card: TradeCard }) {
  * répond donc, créateur par créateur, quelles variantes le partenaire possède
  * — jamais sa collection entière.
  */
-export function TradesPanel() {
+export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const cloud = useCloud();
   const state = useGame();
   const [playerQuery, setPlayerQuery] = useState("");
+  // Le panneau est replié par défaut : c'est un panneau, pas la première chose
+  // qu'on lit. Il s'ouvre quand on **arrive** dessus — une offre annoncée par le
+  // carnet, qui a promis une offre à répondre et pas un sommaire à déplier — et
+  // il reste refermable : l'ouverture n'est pas un cadenas.
+  //
+  // L'état suit la section visée *pendant le rendu* (`arrivee`), le motif que
+  // React documente pour « une prop a changé » : pas d'effet qui écrit de
+  // l'état, donc pas de rendu en cascade — et le joueur peut refermer le
+  // panneau sans qu'il se rouvre tout seul.
+  const [arrivee, setArrivee] = useState<AccountFocus>(focus);
+  const [ouvert, setOuvert] = useState(focus === "trades");
+  if (arrivee !== focus) {
+    setArrivee(focus);
+    setOuvert(focus === "trades");
+  }
+  const panneau = useRef<HTMLDetailsElement | null>(null);
+  useEffect(() => {
+    // Le seul effet : **montrer** l'endroit. Le défilement est une affaire de
+    // navigateur, pas d'état React.
+    if (focus === "trades") panneau.current?.scrollIntoView({ block: "start" });
+  }, [focus]);
   const [players, setPlayers] = useState<PlayerSearchResult[]>([]);
   const [searchMessage, setSearchMessage] = useState<string | null>(null);
   const [partner, setPartner] = useState<PlayerSearchResult | null>(null);
@@ -160,7 +182,12 @@ export function TradesPanel() {
   const names = useMemo(() => new Map([...CREATOR_BY_SLUG].map(([slug, creator]) => [slug, creator.displayName])), []);
 
   return (
-    <details className="account-details trade-details">
+    <details
+      className="account-details trade-details"
+      ref={panneau}
+      open={ouvert}
+      onToggle={(event) => setOuvert(event.currentTarget.open)}
+    >
       <summary>
         <ArrowLeftRight size={12} /> Échanges
         {open.length ? <span className="account-count">{open.length}</span> : null}
