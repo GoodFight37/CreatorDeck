@@ -5,7 +5,6 @@
  * les filtres — collés sous la barre pendant qu'on feuillette.
  */
 import { useMemo, useState, type CSSProperties } from "react";
-import { playPageTurn, playSelect } from "@/lib/sfx";
 
 import { ArrowDownWideNarrow, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
@@ -251,11 +250,9 @@ export function CollectionView({
               key={value}
               className={filter === value ? "active" : ""}
               onClick={() => {
-                // Un filtre qu'on change est un filtre : le clic court, **pas**
-                // le froissement d'une poignée de cartes (le joueur l'entendait
-                // comme un son qui n'a rien à voir avec ce qu'il venait de
-                // toucher).
-                if (filter !== value) playSelect();
+                // **Aucun son.** Le joueur a demandé le 8 octobre 2026 au soir
+                // de retirer les deux derniers sons de déplacement, le filtre
+                // et la page : changer de filtre, c'est aller ailleurs.
                 setFilter(value);
                 setPage(0);
               }}
@@ -270,8 +267,8 @@ export function CollectionView({
       <div className="binder-pager">
         <button
           onClick={() => {
-            // Feuilleter, ça s'entend : un froissement de cartes par page.
-            playPageTurn();
+            // **Aucun son** : tourner une page, c'est se déplacer (retiré le
+            // 8 octobre 2026 au soir, comme le filtre ci-dessus).
             setPage((p) => Math.max(0, p - 1));
           }}
           disabled={safePage <= 0}
@@ -283,10 +280,7 @@ export function CollectionView({
           Page <strong>{safePage + 1}</strong> sur {totalPages} · {filtered.length} cartes
         </span>
         <button
-          onClick={() => {
-            playPageTurn();
-            setPage((p) => Math.min(totalPages - 1, p + 1));
-          }}
+          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
           disabled={safePage >= totalPages - 1}
         >
           <span>Suivant</span>

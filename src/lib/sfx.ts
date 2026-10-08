@@ -271,8 +271,6 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
  */
 export const SFX_USUELS: SampleName[] = [
   "card-draw",
-  "card-turn",
-  "select",
   "pop",
   "close",
   "chip-place",
@@ -559,22 +557,16 @@ export function playRefuse(): void {
 //
 // Et une règle plus importante encore, écrite après une remarque du joueur
 // (8 octobre 2026 : « enlève le son quand on clique sur des onglets ou des
-// paramètres ») : **se déplacer ne sonne pas**. Changer d'onglet, ouvrir une
-// feuille, toucher un interrupteur, régler le volume : rien. Le son accompagne
-// ce qu'on **fait** — ouvrir un booster, encaisser, feuilleter, refuser — pas
-// où l'on va. Les trois fonctions de déplacement (`playClick`, `playMenuOpen`,
-// `playMenuClose`) sont donc descendues en réserve, avec leurs bruitages.
+// paramètres »), puis poussée jusqu'au bout le même soir (« enlève les deux
+// sons de déplacement », en parlant du filtre du Binder et de ses pages) :
+// **se déplacer ne sonne pas**. Changer d'onglet, ouvrir une feuille, toucher
+// un interrupteur, régler le volume, filtrer un classeur, tourner une page :
+// rien. Le son accompagne ce qu'on **fait** — ouvrir un booster, encaisser,
+// refuser — pas où l'on va, et pas non plus où l'on regarde.
+//
+// Cinq fonctions sont descendues en réserve pour cette raison : `playClick`,
+// `playMenuOpen`, `playMenuClose`, `playSelect` et `playPageTurn`.
 // ---------------------------------------------------------------------------
-
-/** Une sélection qui compte (un filtre du Binder qu'on change). */
-export function playSelect(): void {
-  playSample("select");
-}
-
-/** On tourne une page : feuilleter le Binder (du carton, pas du papier). */
-export function playPageTurn(): void {
-  playSample("card-turn");
-}
 
 /** Des pièces tombent : une récompense est encaissée (points, sabliers, jetons). */
 export function playCoins(): void {
@@ -587,6 +579,9 @@ export function playCoins(): void {
 //  * `click`, `menu-open`, `close` (via `playClick`, `playMenuOpen`,
 //    `playMenuClose`) : la navigation et les réglages sont muets depuis le
 //    8 octobre 2026 — décision du joueur, et elle vaut pour tous les écrans ;
+//  * `select` et `card-turn` (via `playSelect`, `playPageTurn`) : les deux
+//    derniers sons de déplacement — le filtre du Binder et ses pages — sont
+//    partis le même soir, à la demande du joueur ;
 //  * `card-fan`, `equip`, `power-up`, `gather`, `fanfare` : ils servaient à la
 //    simulation de streameur, retirée le même jour.
 //
@@ -594,6 +589,16 @@ export function playCoins(): void {
 // restés dans `public/sfx/`** : le jour où un écran les redemande, il n'y a
 // qu'un appel à remettre, rien à rebrancher.
 // ---------------------------------------------------------------------------
+
+/** L'ancien son d'un filtre du Binder qu'on change. */
+export function playSelect(): void {
+  playSample("select");
+}
+
+/** L'ancien son d'une page du Binder qu'on tourne. */
+export function playPageTurn(): void {
+  playSample("card-turn");
+}
 
 /** Un clic feutré — l'ancien son des onglets et des lignes de réglage. */
 export function playClick(): void {

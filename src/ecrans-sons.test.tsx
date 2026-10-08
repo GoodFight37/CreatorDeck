@@ -94,6 +94,27 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
 
+  it("et le classeur est muet aussi : filtre et pages ne sonnent plus", async () => {
+    // Dernière demande du joueur (8 octobre 2026, le soir) : « enlève les deux
+    // sons de déplacement ». C'étaient les deux derniers — le filtre du Binder
+    // et ses pages. Ce test les touche vraiment, dans l'ordre, et compte.
+    await ecranToi();
+    await act(async () => {});
+    const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
+      .__sons;
+    banc.appuyer("Binder");
+    const avant = sons.oscillateurs + sons.bruitages;
+
+    // Un filtre, puis deux pages : trois gestes, aucun son.
+    const filtres = [...document.querySelectorAll<HTMLButtonElement>(".filter-chips button")];
+    expect(filtres.length, "aucun filtre dans le classeur").toBeGreaterThan(1);
+    banc.appuyer(filtres[1]!.textContent!.trim());
+    banc.appuyer("Suivant");
+    banc.appuyer("Précédent");
+
+    expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
+  });
+
   it("et le compteur fonctionne : acheter un booster, ça sonne", async () => {
     // Le contrôle qui donne sa valeur au test précédent : si le détecteur était
     // muet, le silence passerait pour une réussite. Ouvrir un booster, lui, doit

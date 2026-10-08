@@ -46,8 +46,9 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 ## Se déplacer ne sonne pas (8 octobre 2026)
 
 Deuxième retour du joueur, sur les sons : « enlève le son quand on clique sur des
-onglets ou des paramètres ». La règle est maintenant nette, et elle vaut pour
-toute l'application :
+onglets ou des paramètres » — puis, le même soir, « enlève les deux sons de
+déplacement » (le filtre du Binder et ses pages). La règle est maintenant nette,
+et elle vaut pour toute l'application :
 
 > **Le son accompagne ce qu'on fait, pas où l'on va.**
 
@@ -55,20 +56,22 @@ Ce qui est **muet** : les quatre onglets de la barre du bas, toutes les portes q
 mènent à un écran ou à une feuille (Objectifs, Atelier, Mon compte, Taux de drop,
 Thème du classeur), l'ouverture et la fermeture de **toutes** les feuilles,
 l'interrupteur *Son*, les trois crans de **Volume**, l'interrupteur *Reflets des
-cartes*, la ligne *Crédits*, et le carnet qui ouvre l'écran visé.
+cartes*, la ligne *Crédits*, le carnet qui ouvre l'écran visé, **un filtre du
+Binder qu'on change** et **une page qu'on tourne** — les deux derniers gestes de
+déplacement, partis à la demande du joueur.
 
 Ce qui **sonne** encore, et seulement ça : ouvrir un booster (le geste de
 déchirure, puis le pop), une carte qui se révèle (le papier **plus** la gamme de
-sa rareté), le « bang » d'une Épique ou mieux, le refus d'une carte, une
-récompense encaissée (les pièces), une page du Binder qu'on tourne, et un filtre
-qu'on change.
+sa rareté), le « bang » d'une Épique ou mieux, le refus d'une carte, et une
+récompense encaissée (les pièces). Rien d'autre : **le son ne dit que ce qu'on
+vient de faire**, jamais où l'on va ni où l'on regarde.
 
 C'est vérifié **pour de vrai**, pas par intention : le banc d'écrans instrumente
 l'audio (chaque oscillateur et chaque bruitage joué passe par un compteur), et
 `src/ecrans-sons.test.tsx` parcourt les quatre onglets, ouvre et referme les trois
-feuilles de l'écran *Toi*, puis constate que **zéro son** a été déclenché — avec,
-juste après, un test de contrôle qui ouvre un booster et vérifie que le compteur,
-lui, bouge.
+feuilles de l'écran *Toi*, **change un filtre du Binder et tourne deux pages**,
+puis constate que **zéro son** a été déclenché — avec, juste après, un test de
+contrôle qui ouvre un booster et vérifie que le compteur, lui, bouge.
 
 ## Les vibrations : le son qu'on sent (8 octobre 2026)
 

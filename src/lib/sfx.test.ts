@@ -229,11 +229,14 @@ describe("les bruitages embarqués", () => {
     for (const nom of SFX_USUELS) expect(noms).toContain(nom);
     // Rien n'est préchargé pour un son que personne n'entend. La liste des
     // « en réserve » a deux origines : les déplacements (`click`, `menu-open` —
-    // la navigation et les réglages sont muets depuis le 8 octobre 2026) et la
-    // simulation de streameur, retirée le même jour.
+    // la navigation et les réglages sont muets depuis le 8 octobre 2026 —, puis
+    // `select` et `card-turn`, le filtre du Binder et ses pages, retirés le même
+    // soir) et la simulation de streameur, retirée le même jour.
     for (const reserve of [
       "click",
       "menu-open",
+      "select",
+      "card-turn",
       "equip",
       "power-up",
       "fanfare",
