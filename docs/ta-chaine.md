@@ -99,25 +99,36 @@
   > appliqué `0039` seul. Plus rien ne se colle à la main ; pour **vérifier
   > après** : `npx supabase migration list` (les deux colonnes se répondent).
 
+- [x] **Étape 7 : le studio, payé en doublons** —
+  `supabase/migrations/0040_setup_doublons.sql`. La **seconde série** que la
+  note du fichier annonçait (« cette première partie » devait d'abord
+  accrocher) : trois paliers de plus (rangs 6 à 8), payés en **doublons** de la
+  collection. **La rareté donne le prix** — un Rare vaut 1, un Épique vaut 2 —
+  et une **Légendaire ne part jamais**, pas plus que la **dernière copie** d'un
+  couple créateur + variante (la règle du recyclage). Le serveur relit la carte
+  dans la sauvegarde, la rareté au catalogue, la valeur au barème : l'appel ne
+  porte que des identifiants de cartes, et l'écran applique **le verdict** (les
+  cartes réellement consommées), jamais la sélection. Une carte ne part qu'une
+  fois : la table `streamer_sacrifices` en porte la preuve. Prix 2, 5 et 10
+  points de sacrifice pour +100, +150 et +250 pour mille — **+100 % au bout des
+  huit paliers**, soit une chaîne qui grandit deux fois plus vite qu'à ses
+  débuts. L'écran ouvre le panneau **Le studio** : les doublons qui peuvent
+  partir, la sélection comptée, et une **confirmation** avant le départ.
+
 ## 2. En cours
 
-- [ ] **Le live du jour et la vidéo : rien n'est encore jugé** — ce qui est
-  **décidé et pas encore écrit**. Le mini-jeu livré à l'étape 5 ne fait
-  **que précéder** la publication : la vidéo reste payée et tirée par le serveur
-  (`streamer_publish`), exactement comme avant. La version « clip » initialement
-  prévue — où la précision du joueur **poussait le buzz** de la vidéo du jour —
-  n'est **pas** livrée, et c'est volontaire : une précision mesurée sur le
-  téléphone ne peut pas déplacer honnêtement un taux publié, et un score que le
-  serveur ne peut pas vérifier ne doit pas payer (la règle du projet : le tirage
-  et le jugement restent au serveur). Deux suites possibles, à trancher après
-  avoir joué :
-  - **la scène reste gratuite** (l'état actuel) : elle se rejoue tant qu'on
-    veut, elle ne paie rien, elle ne peut donc rien fausser ;
-  - **elle touche à la vidéo** — et il faut alors que **le serveur puisse la
-    juger** : une migration à part, avec la zone ou la fenêtre de tir tirée par
-    le serveur, **stable toute la journée**, la tolérance **affichée**, et une
-    seule tentative par journée. C'est là, et seulement là, qu'une `0039` (ou
-    plus tard) devient nécessaire.
+- [x] **L'arbitrage du live de vingt secondes : la scène reste gratuite**
+  (tranché le 8 octobre 2026, écrit sur la feuille de route). Le mini-jeu de
+  l'étape 5 **précède** la publication et ne décide de rien : la vidéo reste
+  payée et tirée par le serveur (`streamer_publish`), exactement comme avant, et
+  la scène se rejoue tant qu'on veut sans rien fausser. La version « clip » où
+  la précision du joueur poussait le buzz n'est **pas** livrée, et c'est
+  volontaire : une précision mesurée sur le téléphone ne peut pas déplacer
+  honnêtement un taux publié, et un score que le serveur ne peut pas vérifier ne
+  doit pas payer. Si un jour la scène doit toucher à la vidéo, il faudra que le
+  serveur puisse la juger — zone ou fenêtre de tir tirée par le serveur, stable
+  toute la journée, tolérance affichée, une tentative par journée — et c'est une
+  migration à part.
 
   > **Aucune migration à coller pour l'étape 5.** Le live ne paie rien, donc il
   > n'y a **rien à garder côté serveur** : pas de table, pas de porte, pas de
@@ -127,17 +138,14 @@
 
 ## 3. Ce qu'il reste à faire
 
-> Les **invités sur le bureau** — la dernière idée ouverte du chantier — sont
-> livrés à l'**étape 6** (§ 1). Il reste l'équilibrage, et la seconde série de
-> paliers de setup.
+> Les **invités sur le bureau** (étape 6) et la **seconde série de paliers**
+> (étape 7) sont livrés. Il ne reste que l'équilibrage — et il se fait en jouant.
 
-- [x] **Système d'améliorations de setup (Tycoon : micro, caméra, PC)** — déjà
-  livré à l'**étape 4** : les cinq paliers en points sont exactement ce système.
-  **Reste, si cette première partie accroche** (décision écrite dans le JSON,
-  pas encore engagée) : une seconde série de paliers payés en **doublons**, la
-  rareté donnant le palier, **jamais une Légendaire** — la note de
-  `src/data/streamer.json` le dit mot pour mot : « cette première partie » doit
-  d'abord accrocher.
+- [x] **Système d'améliorations de setup (Tycoon : micro, caméra, PC)** — livré
+  en deux séries : les cinq paliers en **points** (étape 4) et les trois paliers
+  en **doublons** (étape 7, § 1). La promesse de la note du fichier — « des
+  paliers payés en DOUBLONS, la rareté donnant le palier, jamais une
+  Légendaire » — est tenue : Rare = 1, Épique = 2, Légendaire jamais.
 
 - [ ] **Bilan et équilibrage des gains** — relire les chiffres **avec les vrais
   joueurs** (abonnés gagnés par journée, ce que paient les vidéos et les

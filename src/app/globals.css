@@ -2717,6 +2717,24 @@ input:focus-visible {
 .chaine-setup-note { color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
 .chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
 .chaine-setup-buy:disabled { opacity: .55; cursor: default; }
+/* Le studio : les paliers en doublons. Un doublon **choisi** se voit (bordure
+   d'accent), la ligne n'est pas un interrupteur mais une case à cocher géante —
+   et le prix se lit en clair : la rareté donne la valeur, jamais la couleur. */
+.chaine-studio { display: flex; flex-direction: column; gap: 8px; }
+.chaine-studio-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
+.chaine-studio-item { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 8px 11px; color: var(--text); text-align: left; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }
+.chaine-studio-item.choisi { border-color: rgb(var(--accent-rgb) / .75); background: rgb(var(--accent-rgb) / .12); }
+.chaine-studio-item:disabled { opacity: .5; cursor: default; }
+.chaine-studio-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.chaine-studio-head strong { font-size: 13.5px; }
+.chaine-studio-head span { color: var(--accent-light); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.chaine-studio-note { color: var(--muted-2); font-size: 12px; }
+.chaine-studio-confirme { display: flex; flex-direction: column; gap: 8px; padding: 10px 11px; border: 1px solid rgb(var(--accent-rgb) / .55); border-radius: 11px; background: rgb(var(--accent-rgb) / .09); }
+.chaine-studio-confirme p { margin: 0; font-size: 12.5px; line-height: 1.45; }
+.chaine-studio-boutons { display: flex; gap: 8px; }
+.chaine-studio-boutons .chaine-setup-buy { flex: 1; margin: 0; }
+.chaine-studio-annuler { padding: 10px 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: none; font-size: 13px; font-weight: 600; cursor: pointer; }
+.chaine-studio-annuler:disabled { opacity: .5; cursor: default; }
 /* Le bureau : deux places, et une liste de créateurs **en direct** pour les
    remplir. La place occupée par un invité en direct est la seule à s'allumer —
    c'est l'information qui compte : un invité hors ligne ne rapporte rien. */

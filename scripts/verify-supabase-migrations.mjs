@@ -165,6 +165,7 @@ try {
   const chaine = await readFile(path.join(MIGRATIONS, "0036_streamer.sql"), "utf8");
   const imprevus = await readFile(path.join(MIGRATIONS, "0038_imprevus_setup.sql"), "utf8");
   const invites = await readFile(path.join(MIGRATIONS, "0039_invites_bureau.sql"), "utf8");
+  const doublons = await readFile(path.join(MIGRATIONS, "0040_setup_doublons.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -206,6 +207,7 @@ try {
     ["0037_gardes.sql", gardes],
     ["0038_imprevus_setup.sql", imprevus],
     ["0039_invites_bureau.sql", invites],
+    ["0040_setup_doublons.sql", doublons],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -5581,10 +5583,12 @@ try {
   // les dernières, donc ce sont elles qu'il faut recoller en dernier.
   await client.query(gardes);
   await client.query(imprevus);
+  await client.query(invites);
+  await client.query(doublons);
   const rapportComplet = (await client.query("select public.schema_versions() as r")).rows[0].r;
   check(
-    "chaîne : la pile recollée dans l'ordre donne le rapport complet (0030 → 0038)",
-    ["0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0038"].every(
+    "chaîne : la pile recollée dans l'ordre donne le rapport complet (0030 → 0040)",
+    ["0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0038", "0039", "0040"].every(
       (cle) => rapportComplet[cle] === true,
     ),
     JSON.stringify(rapportComplet),
@@ -5602,15 +5606,18 @@ try {
 
   const niveaux = (
     await client.query(
-      "select level, price, growth_permille from public._streamer_setup_levels() order by rang",
+      "select l.level, l.price, l.growth_permille, public._streamer_setup_currency(l.level) as currency from public._streamer_setup_levels() l order by l.rang",
     )
   ).rows;
   check(
-    "setup : cinq paliers, dans l'ordre, pour +50 % de croissance au total",
-    niveaux.length === 5 &&
-      niveaux.map((row) => row.level).join(",") === "webcam,micro,lumiere,deco,studio" &&
-      niveaux.map((row) => row.price).join(",") === "120,320,780,1800,4200" &&
-      niveaux.reduce((total, row) => total + row.growth_permille, 0) === 500,
+    "setup : huit paliers, dans l'ordre, pour +100 % de croissance au total",
+    niveaux.length === 8 &&
+      niveaux.map((row) => row.level).join(",") ===
+        "webcam,micro,lumiere,deco,studio,webcam2,regie,plateau" &&
+      niveaux.map((row) => row.price).join(",") === "120,320,780,1800,4200,2,5,10" &&
+      niveaux.map((row) => row.currency).join(",") ===
+        "points,points,points,points,points,doublons,doublons,doublons" &&
+      niveaux.reduce((total, row) => total + row.growth_permille, 0) === 1000,
     JSON.stringify(niveaux),
   );
 
@@ -5925,6 +5932,255 @@ try {
     "select count(*) as n from public._streamer_events()",
     [],
     "permission denied",
+  );
+
+  // --- La seconde série du setup : les doublons (0040) ---------------------
+  //
+  // Ce qui se vérifie ici n'est pas l'agrément des cartes, c'est ce que le
+  // client ne peut pas faire : choisir son prix, sacrifier une Légendaire, sa
+  // dernière copie, une carte sans provenance, ou **la même carte deux fois**
+  // — la ligne du journal est la preuve du départ, et elle tient même quand la
+  // sauvegarde n'a pas encore suivi.
+  const DOUBLONS = "6d6d6d6d-4444-4444-8444-6d6d6d6d6d6d";
+  const rares = (
+    await client.query(
+      "select slug from public.creators where rarity = 'rare' and retired = false order by rank limit 4",
+    )
+  ).rows.map((row) => row.slug);
+  const epicDuo = (
+    await client.query(
+      "select slug from public.creators where rarity = 'epic' and retired = false order by rank limit 1",
+    )
+  ).rows[0].slug;
+  const legendaireDuo = (
+    await client.query(
+      "select slug from public.creators where rarity = 'legendary' and retired = false order by rank limit 1",
+    )
+  ).rows[0].slug;
+
+  await saveFor(DOUBLONS, [
+    card("dbl-ra-1", rares[0], "rare", "standard", 40),
+    card("dbl-ra-2", rares[0], "rare", "standard", 39),
+    card("dbl-rb-1", rares[1], "rare", "standard", 38),
+    card("dbl-rb-2", rares[1], "rare", "standard", 37),
+    card("dbl-rc-1", rares[2], "rare", "standard", 36),
+    card("dbl-rc-2", rares[2], "rare", "standard", 35),
+    // La dernière copie d'un couple : elle ne part jamais.
+    card("dbl-rs-1", rares[3], "rare", "standard", 34),
+    // Trois Épiques du même créateur : deux partent, il en reste un.
+    card("dbl-ep-1", epicDuo, "epic", "standard", 33),
+    card("dbl-ep-2", epicDuo, "epic", "standard", 32),
+    card("dbl-ep-3", epicDuo, "epic", "standard", 31),
+    // Une Légendaire, même en double : elle reste au classeur.
+    card("dbl-lg-1", legendaireDuo, "legendary", "standard", 30),
+    card("dbl-lg-2", legendaireDuo, "legendary", "standard", 29),
+    // Deux Holo sans aucun droit : la provenance doit refuser.
+    card("dbl-ho-1", rares[0], "rare", "holo", 28),
+    card("dbl-ho-2", rares[0], "rare", "holo", 27),
+  ]);
+  // Les droits de l'Épique : trois, pour vérifier qu'ils descendent de deux.
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [
+    DOUBLONS,
+    JSON.stringify([{ creatorSlug: epicDuo, rarity: "epic", variant: "standard" }]),
+  ]);
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [
+    DOUBLONS,
+    JSON.stringify([{ creatorSlug: epicDuo, rarity: "epic", variant: "standard" }]),
+  ]);
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [
+    DOUBLONS,
+    JSON.stringify([{ creatorSlug: epicDuo, rarity: "epic", variant: "standard" }]),
+  ]);
+
+  // Les cinq paliers en points d'abord : tant qu'ils manquent, la porte des
+  // doublons est fermée — et la porte des points refuse un palier en cartes.
+  await refuses(
+    "studio : le palier en doublons ne s'achète pas avec des points",
+    DOUBLONS,
+    "select public.streamer_setup_buy('webcam2') as r",
+    [],
+    "se paie en doublons",
+  );
+  await refuses(
+    "studio : les doublons attendent la fin des paliers en points",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-ra-1"]'::jsonb) as r`,
+    [],
+    "se paie encore en points",
+  );
+
+  await client.query(
+    "insert into public.streamer_setup (user_id, level) values ($1,'webcam'),($1,'micro'),($1,'lumiere'),($1,'deco'),($1,'studio')",
+    [DOUBLONS],
+  );
+
+  const valeurRare = (
+    await client.query("select value from public._streamer_sacrifice_values() where rarity = 'rare'")
+  ).rows[0].value;
+  const valeurEpic = (
+    await client.query("select value from public._streamer_sacrifice_values() where rarity = 'epic'")
+  ).rows[0].value;
+  check(
+    "studio : un Rare vaut 1, un Épique vaut 2 — et rien d'autre ne part",
+    Number(valeurRare) === 1 &&
+      Number(valeurEpic) === 2 &&
+      (await client.query("select count(*)::int as n from public._streamer_sacrifice_values()")).rows[0]
+        .n === 2,
+  );
+
+  await refuses(
+    "studio : une Légendaire ne part jamais, même en double",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-lg-1"]'::jsonb) as r`,
+    [],
+    "jamais une Légendaire",
+  );
+  await refuses(
+    "studio : la dernière copie ne part pas",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-rs-1"]'::jsonb) as r`,
+    [],
+    "ta seule copie",
+  );
+  await refuses(
+    "studio : le compte doit tomber juste sur le prix du palier",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-ra-1"]'::jsonb) as r`,
+    [],
+    "il faut 2 points de sacrifice",
+  );
+  await refuses(
+    "studio : une carte qui n'est pas dans le classeur ne part pas",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-fantome"]'::jsonb) as r`,
+    [],
+    "n'est plus dans ta collection",
+  );
+  await refuses(
+    "studio : une carte sans provenance ne part pas (la porte du recyclage, tenue)",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-ho-1","dbl-rb-1"]'::jsonb) as r`,
+    [],
+    "provenance",
+  );
+
+  const sacrifice6 = (
+    await asPlayer(DOUBLONS, `select public.streamer_setup_sacrifice('["dbl-ra-1","dbl-rb-1"]'::jsonb) as r`)
+  ).rows[0].r;
+  check(
+    "studio : deux Rares installent « webcam2 », et le bonus suit (+600 pour mille)",
+    Number(sacrifice6.value) === 2 &&
+      sacrifice6.level === "webcam2" &&
+      sacrifice6.setup.join(",") === "webcam,micro,lumiere,deco,studio,webcam2" &&
+      Number(sacrifice6.setup_bonus) === 600,
+    JSON.stringify(sacrifice6),
+  );
+  await refuses(
+    "studio : la même carte ne part pas deux fois (le journal est la preuve)",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-ra-1"]'::jsonb) as r`,
+    [],
+    "déjà partie au studio",
+  );
+
+  await refuses(
+    "studio : un Épique seul ne suffit pas pour un palier à cinq points",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-ep-1"]'::jsonb) as r`,
+    [],
+    "il faut 5 points de sacrifice",
+  );
+  const sacrifice7 = (
+    await asPlayer(
+      DOUBLONS,
+      `select public.streamer_setup_sacrifice('["dbl-ep-1","dbl-ep-2","dbl-ra-2"]'::jsonb) as r`,
+    )
+  ).rows[0].r;
+  check(
+    "studio : deux Épiques et un Rare installent « Régie » (+750 pour mille)",
+    Number(sacrifice7.value) === 5 &&
+      sacrifice7.level === "regie" &&
+      Number(sacrifice7.setup_bonus) === 750,
+    JSON.stringify(sacrifice7),
+  );
+  check(
+    "studio : le droit de l'Épique est consommé, pas seulement compté",
+    Number(
+      (
+        await client.query(
+          "select qty from public.card_claims where user_id = $1 and creator_slug = $2 and variant = 'standard'",
+          [DOUBLONS, epicDuo],
+        )
+      ).rows[0].qty,
+    ) === 1,
+  );
+  check(
+    "studio : le journal des départs porte les cartes parties, une fois chacune",
+    Number(
+      (
+        await client.query("select count(*)::int as n from public.streamer_sacrifices where user_id = $1", [
+          DOUBLONS,
+        ])
+      ).rows[0].n,
+    ) === 5 &&
+      Number(
+        (
+          await client.query(
+            "select count(distinct card_id)::int as n from public.streamer_sacrifices where user_id = $1",
+            [DOUBLONS],
+          )
+        ).rows[0].n,
+      ) === 5,
+  );
+  const prochain8 = (
+    await client.query(
+      "select l.level, l.price, public._streamer_setup_currency(l.level) as currency from public._streamer_setup_next($1) l",
+      [DOUBLONS],
+    )
+  ).rows[0];
+  check(
+    "studio : le dernier palier est en doublons (10 points de sacrifice)",
+    prochain8.level === "plateau" && Number(prochain8.price) === 10 && prochain8.currency === "doublons",
+    JSON.stringify(prochain8),
+  );
+  await refuses(
+    "studio : le dernier palier refuse un compte qui ne tombe pas juste",
+    DOUBLONS,
+    `select public.streamer_setup_sacrifice('["dbl-rc-1"]'::jsonb) as r`,
+    [],
+    "il faut 10 points de sacrifice",
+  );
+
+  // Au bout des huit paliers, la chaîne grandit deux fois plus vite : le bonus
+  // vaut 1000 pour mille, et c'est le même chiffre qui paie la vidéo.
+  await client.query("insert into public.streamer_setup (user_id, level) values ($1, 'plateau')", [
+    DOUBLONS,
+  ]);
+  check(
+    "studio : au bout des huit paliers, +100 % de croissance (1000 pour mille)",
+    Number(
+      (await client.query("select public._streamer_setup_bonus($1) as b", [DOUBLONS])).rows[0].b,
+    ) === 1000 &&
+      Number(
+        (
+          await client.query("select public._streamer_growth($1, 240) as g", [DOUBLONS])
+        ).rows[0].g,
+      ) === 480,
+  );
+
+  await refuses(
+    "studio : le journal des départs est fermé au joueur",
+    DOUBLONS,
+    "select count(*) as n from public.streamer_sacrifices",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "studio : sans compte, pas de sacrifice",
+    null,
+    `select public.streamer_setup_sacrifice('["dbl-rc-1"]'::jsonb) as r`,
+    [],
+    "connecte-toi",
   );
 
   // --- Les invités sur le bureau (0039) ------------------------------------
@@ -6253,6 +6509,7 @@ try {
   await client.query(gardes);
   await client.query(imprevus);
   await client.query(invites);
+  await client.query(doublons);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

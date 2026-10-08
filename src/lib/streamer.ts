@@ -58,7 +58,13 @@ export type StreamerSetupLevel = {
   label: string;
   /** Prix, dans la monnaie indiquée. */
   price: number;
-  currency: "points" | "cards";
+  /**
+   * La monnaie du palier. Les cinq premiers se paient en **points** (le wallet
+   * du serveur), les trois derniers en **doublons** (des cartes qui quittent le
+   * classeur — voir `setup.sacrifice`). Le mot « doublons » et pas « cartes » :
+   * c'est celui que le joueur lit à l'écran, et une seule copie ne part jamais.
+   */
+  currency: "points" | "doublons";
   /** Ce que ce palier ajoute à la croissance, pour mille (cumulatif). */
   growthPermille?: number;
   note?: string;
@@ -128,7 +134,12 @@ type StreamerData = {
   eventsNote: string;
   events: StreamerEvent[];
   tokens: { perDayCap: number; perSuccess: number; perBuzz: number; note: string };
-  setup: { note: string; levels: StreamerSetupLevel[] };
+  setup: {
+    note: string;
+    levels: StreamerSetupLevel[];
+    /** Ce que vaut un doublon qui part au studio, par rareté. */
+    sacrifice: { note: string; values: Record<string, number> };
+  };
   guests: {
     note: string;
     slots: number;
@@ -238,6 +249,27 @@ export function growthWithSetup(subscribers: number, owned: readonly string[]): 
 /** Le prochain palier de setup à acheter, ou `null` si tout est acheté. */
 export function nextSetupLevel(owned: readonly string[]): StreamerSetupLevel | null {
   return SETUP_LEVELS.find((level) => !owned.includes(level.id)) ?? null;
+}
+
+/** Ce que vaut un doublon qui part au studio, par rareté (fichier de règles). */
+export const SETUP_SACRIFICE_VALUES: Readonly<Record<string, number>> =
+  STREAMER.setup.sacrifice.values;
+
+/**
+ * Ce que vaut un doublon qui part au studio, selon sa rareté.
+ *
+ * **Zéro** veut dire « cette carte ne part pas » : les Communes et les Peu
+ * communes ne paient rien, et une **Légendaire** ne quitte jamais le classeur.
+ * C'est aussi la valeur que le serveur applique (`_streamer_sacrifice_values`),
+ * et le test miroir attrape un barème changé d'un seul côté.
+ */
+export function sacrificeValue(rarity: string): number {
+  return SETUP_SACRIFICE_VALUES[rarity] ?? 0;
+}
+
+/** Le prix d'un palier en doublons (0 quand le palier se paie en points). */
+export function sacrificePrice(level: StreamerSetupLevel): number {
+  return level.currency === "doublons" ? level.price : 0;
 }
 
 /**

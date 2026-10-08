@@ -243,7 +243,7 @@
     "note": "Ce que la chaîne rapporte en jetons : 6 pour une vidéo réussie, 10 de plus quand elle buzz, et un plafond de 40 jetons par journée de jeu, tenu par le serveur. Quarante, c'est huit boosters de croissance dans la monnaie la plus lente du jeu — assez pour que la chaîne compte, pas assez pour qu'elle remplace le tirage. Le plafond est appliqué côté serveur : le client peut annoncer ce qu'il veut, c'est le serveur qui paie."
   },
   "setup": {
-    "note": "Ton setup (caméra, micro, éclairage, déco) s'achète par paliers, dans l'ordre, et chaque palier fait grandir la chaîne plus vite : le bonus s'additionne et vaut pour toujours (+500 pour mille au total, soit une chaîne qui grandit une fois et demie plus vite). Les prix suivent la courbe de l'Atelier (`craftQuote`), et la dépense passe par le wallet du serveur (`_wallet_apply`) : un palier ne s'achète qu'une fois. La seconde partie — des paliers payés en DOUBLONS, la rareté donnant le palier, jamais une Légendaire — s'écrit seulement si cette première partie accroche.",
+    "note": "Ton setup s'achète par paliers, dans l'ordre, et chacun fait grandir la chaîne plus vite : le bonus s'additionne et vaut pour toujours. Les cinq premiers se paient en POINTS — les prix suivent la courbe de l'Atelier (`craftQuote`) et la dépense passe par le wallet du serveur (`_wallet_apply`). Les trois derniers se paient en DOUBLONS : la rareté donne le prix, la carte quitte le classeur, et ce n'est **jamais** une Légendaire ni la dernière copie d'un couple créateur + variante. Au bout des huit paliers : +1000 pour mille, soit une chaîne qui grandit deux fois plus vite qu'à ses débuts.",
     "levels": [
       {
         "id": "webcam",
@@ -284,8 +284,39 @@
         "currency": "points",
         "note": "Le dernier palier en points : après, il faut des cartes.",
         "growthPermille": 250
+      },
+      {
+        "id": "webcam2",
+        "label": "Deuxième caméra",
+        "price": 2,
+        "currency": "doublons",
+        "note": "Le plan large montre enfin ce qui se passe autour — et le studio ne tient plus dans un seul cadre.",
+        "growthPermille": 100
+      },
+      {
+        "id": "regie",
+        "label": "Régie",
+        "price": 5,
+        "currency": "doublons",
+        "note": "Les scènes s'enchaînent sans couper le direct : le chat arrête de voir des coupures.",
+        "growthPermille": 150
+      },
+      {
+        "id": "plateau",
+        "label": "Plateau pro",
+        "price": 10,
+        "currency": "doublons",
+        "note": "Le dernier palier : après lui, la chaîne grandit deux fois plus vite qu'à ses débuts.",
+        "growthPermille": 250
       }
-    ]
+    ],
+    "sacrifice": {
+      "note": "Ce que vaut un doublon qui part au studio : un Rare vaut 1, un Épique vaut 2. Une Légendaire ne part jamais, et le prix d'un palier se paie au compte juste.",
+      "values": {
+        "rare": 1,
+        "epic": 2
+      }
+    }
   },
   "guests": {
     "note": "Les invités sur le bureau : deux cartes de la collection tiennent le plateau, et chacune paie un **raid** quand son créateur est **réellement en direct** — le même direct que le badge de l'accueil, avec dix minutes de fraîcheur, jamais une donnée périmée. Le raid se paie **une fois par journée de jeu**, au moment du relevé de la chaîne, et il ne coûte rien : ni jeton, ni point, ni carte. Deux cartes de deux créateurs différents au maximum (pas deux copies du même) ; changer d'invité ne paie pas deux fois, et un invité dont le créateur ne streame pas ne rapporte rien ce jour-là.",

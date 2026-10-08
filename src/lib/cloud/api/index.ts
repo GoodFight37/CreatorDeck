@@ -34,6 +34,7 @@ import type {
   StreamerGuestsResult,
   StreamerReturn,
   StreamerSetupPurchase,
+  StreamerSetupSacrifice,
   StreamerStatus,
   StreamerVideo,
 } from "./streamer";
@@ -52,6 +53,7 @@ export type {
   StreamerRaidToday,
   StreamerReturn,
   StreamerSetupPurchase,
+  StreamerSetupSacrifice,
   StreamerStatus,
   StreamerVideo,
 } from "./streamer";
@@ -662,6 +664,14 @@ export class CloudApi {
    */
   async streamerSetupBuy(level: string): Promise<StreamerSetupPurchase> {
     return streamer.streamerSetupBuy(this.core, level);
+  }
+
+  /**
+   * Sacrifie des **doublons** pour le prochain palier du studio (`0040`) : les
+   * cartes quittent le classeur, et le serveur renvoie celles qu'il a prises.
+   */
+  async streamerSetupSacrifice(cardIds: string[]): Promise<StreamerSetupSacrifice> {
+    return streamer.streamerSetupSacrifice(this.core, cardIds);
   }
 
   /**

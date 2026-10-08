@@ -1295,6 +1295,61 @@ quelque chose — les abonnés, jamais une monnaie.
 `streamer_visit()` : rejouer `0038` seule après `0039` refait passer l'écran à
 l'ancienne version, et il perd le bureau — le vérifieur joue ce piège-là aussi.
 
+### Le studio, payé en doublons (`0040`)
+
+Les **cinq premiers paliers** du setup se paient en points (`0038`). Après eux,
+il faut des **cartes** : trois paliers de plus (rangs 6 à 8), payés en
+**doublons** de la collection — c'est la « seconde partie » que la note de
+`src/data/streamer.json` annonçait, et elle est livrée le 8 octobre 2026.
+
+* **La rareté donne le prix.** Un doublon **Rare** vaut 1, un **Épique** vaut 2
+  (`_streamer_sacrifice_values()`, miroir de `setup.sacrifice.values`) ; les
+  Communes et les Peu communes ne paient rien, et une **Légendaire ne part
+  jamais**. Les trois prix sont 2, 5 et 10 points de sacrifice, pour +100, +150
+  et +250 pour mille — au bout des huit paliers, la chaîne grandit **deux fois
+  plus vite** qu'à ses débuts (1000 pour mille).
+* **La porte est `streamer_setup_sacrifice(p_cards)`, et elle ne prend que des
+  identifiants de cartes.** Le serveur relit la carte dans la **sauvegarde du
+  joueur**, la rareté au **catalogue**, la valeur au barème, le prix dans
+  `_streamer_setup_levels()` : le client ne propose ni un prix, ni une valeur,
+  ni une rareté. Il renvoie les cartes qu'il a **réellement** consommées — c'est
+  ce verdict que l'écran applique, jamais la sélection du joueur.
+* **Les refus, dans l'ordre** : le prochain palier doit se payer en doublons
+  (les points d'abord) ; la carte doit être dans la collection ; le créateur au
+  catalogue et la variante connue ; la rareté doit payer ; **la carte ne doit
+  pas être déjà partie** ; ce qui **reste** du couple créateur + variante doit
+  être au moins une carte (la règle du recyclage et de l'hôtel — plusieurs copies
+  du même couple peuvent partir d'un coup, le compte se fait après) ; le total
+  doit tomber **juste** sur le prix ; la **provenance** doit être vérifiable
+  (`card_claim_covers`, la porte de sortie du recyclage).
+* **Une carte ne part qu'une fois.** Le registre `card_claims` ne suffit pas à
+  fermer la porte — pour une carte Standard non légendaire il dit « couverte »
+  par construction, et la sauvegarde n'est réécrite que par le client. D'où la
+  table `streamer_sacrifices` : **une ligne par carte partie**, clé primaire
+  `(user_id, card_id)`. C'est la même preuve que la ligne de `streamer_raids`
+  pour le raid ou l'index du journal du wallet pour le recyclage.
+* **`streamer_setup_buy()` garde sa porte fermée aux paliers en doublons.**
+  Sans cette garde, « webcam2 » coûterait deux **points** — le prix lu dans la
+  même table. Le vérifieur joue les deux refus (achat en points d'un palier en
+  doublons, sacrifice avant la fin des paliers en points).
+* **Côté appareil**, `sacrificeValue()`, `sacrificePrice()` et
+  `SETUP_SACRIFICE_VALUES` (`src/lib/streamer.ts`) portent le barème,
+  `sacrificeSetupLocally()` et `setupSacrificeCandidates()`
+  (`src/lib/game-engine.ts`) appliquent les mêmes refus **hors ligne** — mêmes
+  phrases qu'au serveur —, `streamerSetupSacrifice()` fait l'appel, et l'écran
+  « Ta chaîne » ouvre le panneau **Le studio** : les doublons Rares et Épiques
+  qui peuvent partir (jamais la dernière copie), la sélection comptée en points
+  de sacrifice, et une **confirmation** avant que quoi que ce soit ne quitte le
+  classeur. Le test `src/lib/supabase-streamer.test.ts` tient les deux barèmes
+  ensemble, et `npm run supabase:verify` (537 contrôles) joue le reste.
+
+**Poser `0040` après `0039`.** C'est la dernière migration écrite : elle
+remplace `_streamer_setup_levels()`, `streamer_setup_buy()` et
+`schema_versions()`, donc l'ordre du collage est l'ordre des numéros. Le geste
+est celui du projet — `npx supabase db push` dans le dossier du jeu — et pour
+vérifier après : `npx supabase migration list`, ou
+`select public.schema_versions() -> '0040';` qui doit rendre `true`.
+
 ### Le live de vingt secondes (aucune migration)
 
 L'étape 5 — `src/components/streamer-live-game.tsx`, `src/lib/live-game.ts`,

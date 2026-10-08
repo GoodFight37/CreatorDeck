@@ -1,11 +1,13 @@
 import type { CloudStoreContext } from "./context";
 import type { CloudActionOutcome } from "./types";
 import {
+  applySetupSacrifice,
   applyStreamerMirror,
   buyStreamerSetupLocally,
   chooseStreamerEventLocally,
   payStreamerRaidLocally,
   publishStreamerLocally,
+  sacrificeSetupLocally,
   setStreamerGuestLocally,
   visitStreamerLocally,
 } from "@/lib/game-engine";
@@ -486,6 +488,74 @@ export function streamerActions(ctx: CloudStoreContext) {
         return { status: "done", message, delta: 0 };
       } catch (error) {
         const refusal = ctx.cloudRefusal(error, "Ce palier de setup n'a pas pu être installé.");
+        ctx.publish({ busy: false, message: refusal.message, isError: true });
+        return refusal;
+      }
+    },
+
+    /**
+     * Sacrifie des **doublons** pour le prochain palier du studio (rangs 6+).
+     *
+     * Le serveur décide : il relit les cartes dans la sauvegarde, la rareté au
+     * catalogue et la valeur au barème (`streamer_setup_sacrifice`, `0040`). Il
+     * renvoie les cartes qu'il a **réellement** consommées — c'est ce verdict
+     * qu'on retire de la collection locale, pas la sélection du joueur : si un
+     * refus tombe, rien ne bouge (ni carte, ni droit).
+     */
+    async sacrificeStreamerSetup(cardIds: string[]): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      const local = ctx.deps.readState();
+      if (!local) {
+        const message = "Partie locale absente.";
+        ctx.publish({ busy: false, message, isError: true });
+        return { status: "unavailable", reason: "error", message };
+      }
+
+      if (!api) {
+        const sacrifice = sacrificeSetupLocally(local, cardIds, ctx.deps.now());
+        if ("error" in sacrifice) {
+          ctx.publish({ busy: false, message: sacrifice.error, isError: true });
+          return { status: "unavailable", reason: "error", message: sacrifice.error };
+        }
+        ctx.deps.applyState(sacrifice.state);
+        const message =
+          `« ${sacrifice.level.label} » est installé — ` +
+          `${sacrifice.value} doublon${sacrifice.value > 1 ? "s" : ""} parti${sacrifice.value > 1 ? "s" : ""} au studio.`;
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      }
+      if (!api.session()) {
+        const refus = noAccount();
+        return { status: "unavailable", reason: "no-session", message: refus.message };
+      }
+
+      ctx.publish({ busy: true, message: null, isError: false });
+      try {
+        const sacrifice = await api.streamerSetupSacrifice(cardIds);
+        const courant = ctx.deps.readState() ?? local;
+        // Le verdict du serveur, appliqué tel quel : les cartes qu'il a prises
+        // quittent le classeur, et le palier qu'il a installé s'allume.
+        const apres = applySetupSacrifice(
+          courant,
+          sacrifice.cards,
+          sacrifice.level,
+          ctx.deps.now(),
+        );
+        ctx.deps.applyState(
+          applyStreamerMirror(apres, { setup: sacrifice.setup }, ctx.deps.now()),
+        );
+        const niveau = setupLevelById(sacrifice.level);
+        const prises = sacrifice.cards.length;
+        const message =
+          `« ${niveau?.label ?? sacrifice.level} » est installé — ` +
+          `${prises} doublon${prises > 1 ? "s" : ""} ${prises > 1 ? "ont" : "a"} quitté le classeur.`;
+        ctx.publish({ busy: false, message, isError: false });
+        return { status: "done", message, delta: 0 };
+      } catch (error) {
+        const refusal = ctx.cloudRefusal(
+          error,
+          "Ce sacrifice n'a pas pu être fait — rien n'a bougé.",
+        );
         ctx.publish({ busy: false, message: refusal.message, isError: true });
         return refusal;
       }

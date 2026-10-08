@@ -1098,6 +1098,33 @@ describe("la chaîne (le simulateur de streameur)", () => {
     expect(achat.setupBonus).toBe(80);
   });
 
+  it("sacrifie des doublons par leurs identifiants, jamais par leur prix", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          ok: true,
+          level: "webcam2",
+          price: 2,
+          value: 2,
+          cards: ["dbl-ra-1", "dbl-rb-1"],
+          setup: ["webcam", "micro", "lumiere", "deco", "studio", "webcam2"],
+          setup_bonus: 600,
+        },
+      }),
+      signedIn(),
+    );
+    const sacrifice = await api.streamerSetupSacrifice(["dbl-ra-1", "dbl-rb-1"]);
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_setup_sacrifice");
+    // Le corps ne porte **que** la liste : ni rareté, ni valeur, ni prix.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({
+      p_cards: ["dbl-ra-1", "dbl-rb-1"],
+    });
+    // Et le verdict dit quelles cartes sont vraiment parties.
+    expect(sacrifice.cards).toEqual(["dbl-ra-1", "dbl-rb-1"]);
+    expect(sacrifice.value).toBe(2);
+    expect(sacrifice.setupBonus).toBe(600);
+  });
+
   it("relaie le refus d'un palier acheté dans le désordre", async () => {
     const { api } = client(
       () => ({ status: 400, body: { code: "P0001", message: "chaîne : il faut d'abord « micro »" } }),

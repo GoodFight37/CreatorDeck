@@ -85,6 +85,7 @@ export type CloudStoreActions = {
   publishStreamerVideo: ReturnType<typeof streamerActions>["publishStreamerVideo"];
   chooseStreamerEvent: ReturnType<typeof streamerActions>["chooseStreamerEvent"];
   buyStreamerSetup: ReturnType<typeof streamerActions>["buyStreamerSetup"];
+  sacrificeStreamerSetup: ReturnType<typeof streamerActions>["sacrificeStreamerSetup"];
   setStreamerGuest: ReturnType<typeof streamerActions>["setStreamerGuest"];
   craftWithTokens: ReturnType<typeof walletActions>["craftWithTokens"];
   claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];

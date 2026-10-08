@@ -35,6 +35,8 @@ import {
   newStreamerState,
   playEventLocally,
   raidForGuests,
+  sacrificePrice,
+  sacrificeValue,
   setupBonusPermille,
   nextSetupLevel,
   setupLevelById,
@@ -2114,6 +2116,9 @@ export function buyStreamerSetupLocally(
   if (state.streamer.setup.includes(level.id)) {
     return { error: `« ${level.label} » est déjà installé.` };
   }
+  if (level.currency !== "points") {
+    return { error: `« ${level.label} » se paie en doublons : les cartes partent au studio.` };
+  }
   const attendu = nextSetupLevel(state.streamer.setup);
   if (!attendu || attendu.id !== level.id) {
     return { error: `Il faut d'abord « ${attendu ? attendu.label : "—"} ».` };
@@ -2129,6 +2134,143 @@ export function buyStreamerSetupLocally(
       streamer: { ...state.streamer, setup: [...state.streamer.setup, level.id] },
     },
     level: { id: level.id, label: level.label },
+  };
+}
+
+/**
+ * Les doublons qui peuvent partir au studio, du plus récent au plus ancien.
+ *
+ * Trois conditions : la rareté doit payer (`sacrificeValue` > 0 — Rares et
+ * Épiques seulement, la Légendaire ne part jamais), la carte ne doit pas être la
+ * dernière copie de son couple créateur + variante, et elle doit être dans la
+ * collection. Le prix d'un palier est en **points de sacrifice**, pas en nombre
+ * de cartes : un Épique vaut deux Rares.
+ */
+export type SetupSacrificeCandidate = {
+  card: OwnedCard;
+  /** Ce que cette carte vaut au studio (1 pour un Rare, 2 pour un Épique). */
+  value: number;
+  /** Combien de copies de ce couple créateur + variante le joueur possède. */
+  copies: number;
+};
+
+export function setupSacrificeCandidates(state: PlayerState): SetupSacrificeCandidate[] {
+  const copies = new Map<string, number>();
+  for (const card of state.cards) {
+    const key = cardKey(card);
+    copies.set(key, (copies.get(key) ?? 0) + 1);
+  }
+  return state.cards
+    .map((card) => ({
+      card,
+      value: sacrificeValue(card.rarity),
+      copies: copies.get(cardKey(card)) ?? 1,
+    }))
+    .filter((entree) => entree.value > 0 && entree.copies >= 2)
+    .sort((a, b) => b.card.obtainedAt - a.card.obtainedAt);
+}
+
+/** Le total d'une sélection, en points de sacrifice. */
+export function sacrificeTally(cards: readonly OwnedCard[]): number {
+  return cards.reduce((total, card) => total + sacrificeValue(card.rarity), 0);
+}
+
+/**
+ * Sacrifie des doublons pour installer le **prochain palier du studio**
+ * (rangs 6 à 8), localement (build sans cloud).
+ *
+ * Les refus sont ceux du serveur (`streamer_setup_sacrifice`, `0040`) — mêmes
+ * phrases, même ordre, pour que le joueur lise la même chose en ligne et hors
+ * ligne :
+ *
+ *   * les paliers en **points** d'abord : on ne saute pas la file ;
+ *   * chaque carte doit être **dans la collection** ;
+ *   * **Rares et Épiques** seulement — jamais une Légendaire ;
+ *   * jamais la **dernière copie** d'un couple créateur + variante ;
+ *   * le compte doit tomber **juste** sur le prix du palier.
+ */
+export function sacrificeSetupLocally(
+  state: PlayerState,
+  cardIds: readonly string[],
+  now = Date.now(),
+): { state: PlayerState; level: { id: string; label: string }; value: number } | { error: string } {
+  const attendu = nextSetupLevel(state.streamer.setup);
+  if (!attendu) return { error: "Ton setup est complet." };
+  if (sacrificePrice(attendu) <= 0) {
+    return {
+      error: `Il reste des paliers en points : « ${attendu.label} » s'installe avec des points.`,
+    };
+  }
+
+  const choisis = [...new Set(cardIds)];
+  if (choisis.length === 0) return { error: "Choisis au moins un doublon." };
+
+  const cartes: OwnedCard[] = [];
+  for (const id of choisis) {
+    const card = state.cards.find((entry) => entry.id === id);
+    if (!card) return { error: "Une des cartes choisies n'est plus dans ta collection." };
+    if (sacrificeValue(card.rarity) <= 0) {
+      return {
+        error: "Seuls les doublons Rares et Épiques partent au studio — jamais une Légendaire.",
+      };
+    }
+    cartes.push(card);
+  }
+
+  // Jamais la dernière copie : on compte ce qui **reste** après le sacrifice,
+  // couple créateur + variante par couple.
+  const partants = new Map<string, number>();
+  for (const card of cartes) {
+    const key = cardKey(card);
+    partants.set(key, (partants.get(key) ?? 0) + 1);
+  }
+  for (const [key, partis] of partants) {
+    const possedes = state.cards.filter((entry) => cardKey(entry) === key).length;
+    if (possedes - partis < 1) {
+      return { error: "Impossible de sacrifier ta seule copie de cette carte." };
+    }
+  }
+
+  const valeur = sacrificeTally(cartes);
+  if (valeur !== attendu.price) {
+    return {
+      error: `Il faut ${attendu.price} points de sacrifice pour « ${attendu.label} » (tu en as ${valeur}).`,
+    };
+  }
+
+  const sacrifiees = new Set(cartes.map((card) => card.id));
+  return {
+    state: {
+      ...state,
+      updatedAt: now,
+      cards: state.cards.filter((card) => !sacrifiees.has(card.id)),
+      streamer: { ...state.streamer, setup: [...state.streamer.setup, attendu.id] },
+    },
+    level: { id: attendu.id, label: attendu.label },
+    value: valeur,
+  };
+}
+
+/**
+ * Applique un sacrifice **déjà accepté par le serveur** : les cartes qu'il a
+ * consommées quittent le classeur, et le palier qu'il a installé s'allume.
+ *
+ * Le chemin en ligne passe par ici et pas par `sacrificeSetupLocally` : le
+ * serveur a déjà joué les refus (il lit la sauvegarde et le registre des
+ * droits), et revalider localement pourrait refuser ce qu'il vient d'accepter.
+ */
+export function applySetupSacrifice(
+  state: PlayerState,
+  cardIds: readonly string[],
+  levelId: string,
+  now = Date.now(),
+): PlayerState {
+  const sacrifiees = new Set(cardIds);
+  return {
+    ...state,
+    updatedAt: now,
+    cards: state.cards.filter((card) => !sacrifiees.has(card.id)),
+    streamer: { ...state.streamer, setup: [...state.streamer.setup, levelId] },
   };
 }
 

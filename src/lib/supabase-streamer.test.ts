@@ -32,6 +32,7 @@ const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
 const FICHIER = "0036_streamer.sql";
 const FICHIER_IMPREVUS = "0038_imprevus_setup.sql";
 const FICHIER_BUREAU = "0039_invites_bureau.sql";
+const FICHIER_DOUBLONS = "0040_setup_doublons.sql";
 const SQL = readFileSync(path.join(MIGRATIONS, FICHIER), "utf8");
 /** Le fichier sans ses commentaires, puis sans ses retours à la ligne. */
 const CODE = SQL.split("\n")
@@ -48,6 +49,13 @@ const FLAT_IMPREVUS = SQL_IMPREVUS.split("\n")
 // Les invités sur le bureau : ni monnaie, ni tirage — des règles de direct.
 const SQL_BUREAU = readFileSync(path.join(MIGRATIONS, FICHIER_BUREAU), "utf8");
 const FLAT_BUREAU = SQL_BUREAU.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n")
+  .replace(/\s+/g, " ");
+
+// Le studio : les paliers en doublons, leur monnaie et le barème du sacrifice.
+const SQL_DOUBLONS = readFileSync(path.join(MIGRATIONS, FICHIER_DOUBLONS), "utf8");
+const FLAT_DOUBLONS = SQL_DOUBLONS.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n")
   .replace(/\s+/g, " ");
@@ -156,6 +164,72 @@ describe("0036_streamer.sql (la chaîne)", () => {
   });
 });
 
+describe("0040_setup_doublons.sql (le studio, payé en doublons)", () => {
+  it("porte la monnaie de chaque palier, dans le même ordre que le fichier", () => {
+    for (const niveau of SETUP_LEVELS) {
+      expect(FLAT_DOUBLONS).toContain(`('${niveau.id}', '${niveau.currency}')`);
+    }
+    const lignes = FLAT_DOUBLONS.match(/\('[a-z0-9-]+', '(points|doublons)'\)/g) ?? [];
+    expect(lignes.length).toBe(SETUP_LEVELS.length);
+  });
+
+  it("paie les doublons au même barème que le fichier", () => {
+    for (const [rarity, value] of Object.entries(STREAMER.setup.sacrifice.values)) {
+      expect(FLAT_DOUBLONS).toContain(`('${rarity}', ${value})`);
+    }
+    const lignes = FLAT_DOUBLONS.match(/\('(common|uncommon|rare|epic|legendary)', \d+\)/g) ?? [];
+    // Deux raretés seulement : Rare et Épique. Ni les Communes, ni les Peu
+    // communes, et surtout **pas la Légendaire**.
+    expect(lignes.length).toBe(2);
+    expect(STREAMER.setup.sacrifice.values).toEqual({ rare: 1, epic: 2 });
+  });
+
+  it("refuse une Légendaire, la dernière copie, et une carte déjà partie", () => {
+    // Les trois refus qui protègent la collection, mot pour mot : ce sont les
+    // mêmes phrases côté moteur local, pour que le joueur lise la même chose
+    // en ligne et hors ligne.
+    expect(FLAT_DOUBLONS).toContain("jamais une Légendaire");
+    expect(FLAT_DOUBLONS).toContain("ta seule copie");
+    expect(FLAT_DOUBLONS).toContain("cette carte est déjà partie au studio");
+    // Le compte tombe juste, et le prix vient du serveur.
+    expect(FLAT_DOUBLONS).toContain("il faut % points de sacrifice");
+    // La provenance reste la porte de sortie du recyclage.
+    expect(FLAT_DOUBLONS).toContain("provenance vérifiable");
+  });
+
+  it("ferme le journal des départs, et garde une carte par ligne", () => {
+    // La preuve du départ : une carte = une ligne, donc jamais deux paiements
+    // avec la même carte.
+    expect(FLAT_DOUBLONS).toContain("create table if not exists public.streamer_sacrifices");
+    expect(FLAT_DOUBLONS).toContain("primary key (user_id, card_id)");
+    expect(FLAT_DOUBLONS).toContain("alter table public.streamer_sacrifices enable row level security");
+    expect(FLAT_DOUBLONS).toContain(
+      "revoke all on table public.streamer_sacrifices from public, anon, authenticated",
+    );
+    expect(FLAT_DOUBLONS).toContain("from public.streamer_sacrifices d");
+    // Et la porte, elle, est ouverte au joueur connecté — pas aux autres.
+    expect(FLAT_DOUBLONS).toContain(
+      "grant execute on function public.streamer_setup_sacrifice(jsonb) to authenticated",
+    );
+    expect(FLAT_DOUBLONS).toContain(
+      "revoke all on function public.streamer_setup_sacrifice(jsonb) from public, anon",
+    );
+    expect(FLAT_DOUBLONS).toContain(
+      "revoke all on function public._streamer_sacrifice_values() from public, anon, authenticated",
+    );
+  });
+
+  it("ne laisse pas la porte des points vendre un palier en doublons", () => {
+    // `streamer_setup_buy()` est réécrit ici : sans la garde, « webcam2 »
+    // coûterait deux **points** — le prix lu dans la même table.
+    expect(FLAT_DOUBLONS).toContain("se paie en doublons");
+    expect(FLAT_DOUBLONS).toContain("public._streamer_setup_currency(v_niveau.level)");
+    const rapport = derniereDefinition("schema_versions");
+    expect(rapport).toContain("'0040'");
+    expect(rapport).toMatch(/to_regprocedure\('public\.streamer_setup_sacrifice\(jsonb\)'\)/);
+  });
+});
+
 describe("0038_imprevus_setup.sql (les imprévus et le setup)", () => {
   it("porte les mêmes côtés de carte que le fichier, à la virgule près", () => {
     // Le texte des cartes n'est pas ici (il vit dans le JSON) : ce sont les
@@ -174,18 +248,34 @@ describe("0038_imprevus_setup.sql (les imprévus et le setup)", () => {
   });
 
   it("chiffre les paliers de setup comme le fichier, dans l'ordre", () => {
+    // Les paliers vivent maintenant dans **deux** migrations : les cinq en
+    // points dans `0038`, et la liste complète (huit) dans `0040`, qui remplace
+    // la fonction. C'est la dernière définition qui fait foi — celle que la
+    // base jouera — donc c'est elle qu'on regarde, comme le fait le serveur.
+    const derniere = derniereDefinition("_streamer_setup_levels");
+    const flat = derniere
+      .split("\n")
+      .map((line) => line.replace(/--.*$/, ""))
+      .join("\n")
+      .replace(/\s+/g, " ");
     for (const niveau of SETUP_LEVELS) {
       const rang = SETUP_LEVELS.indexOf(niveau) + 1;
       const ligne = `(${rang}, '${niveau.id}', ${niveau.price}, ${niveau.growthPermille})`;
-      expect(FLAT_IMPREVUS).toContain(ligne);
+      expect(flat).toContain(ligne);
     }
-    const lignes = FLAT_IMPREVUS.match(/\(\d+, '(webcam|micro|lumiere|deco|studio)', \d+, \d+\)/g) ?? [];
-    expect(lignes.length).toBe(5);
-    expect(SETUP_LEVELS.length).toBe(5);
+    const lignes = flat.match(/\(\d+, '[a-z0-9-]+', \d+, \d+\)/g) ?? [];
+    expect(lignes.length).toBe(8);
+    expect(SETUP_LEVELS.length).toBe(8);
+    // Les cinq premiers sont bien ceux de `0038`, dans le même ordre : la
+    // seconde série **s'ajoute** à la première, elle ne la réécrit pas.
+    for (const niveau of SETUP_LEVELS.slice(0, 5)) {
+      const rang = SETUP_LEVELS.indexOf(niveau) + 1;
+      expect(FLAT_IMPREVUS).toContain(`(${rang}, '${niveau.id}', ${niveau.price}, ${niveau.growthPermille})`);
+    }
     // Le libellé, lui, n'est **pas** dans le SQL : il ne doit exister qu'une
     // fois, dans le fichier que lit l'écran.
     for (const niveau of SETUP_LEVELS) {
-      expect(FLAT_IMPREVUS).not.toContain(niveau.label);
+      expect(derniere).not.toContain(niveau.label);
     }
   });
 

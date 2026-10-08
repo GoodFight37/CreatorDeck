@@ -350,6 +350,50 @@ export async function streamerSetupBuy(
   };
 }
 
+/**
+ * Le résultat d'un **sacrifice de doublons** (`0040_setup_doublons.sql`).
+ *
+ * Il porte les cartes que le serveur a **réellement consommées** : c'est ce
+ * verdict-là que le client applique à sa collection, jamais la sélection du
+ * joueur — un refus ne doit rien retirer.
+ */
+export type StreamerSetupSacrifice = StreamerSetupPurchase & {
+  /** Les identifiants des cartes qui ont quitté le classeur. */
+  cards: string[];
+  /** Ce que la sélection valait, en points de sacrifice. */
+  value: number;
+};
+
+/**
+ * Sacrifie des **doublons** pour installer le prochain palier du studio (`0040`).
+ *
+ * Le client n'envoie que des **identifiants de cartes** : le prix vient du
+ * serveur, la rareté du catalogue, la valeur du barème. Le serveur relit la
+ * sauvegarde, consomme les droits, écrit le journal des départs, et renvoie les
+ * cartes consommées.
+ */
+export async function streamerSetupSacrifice(
+  core: CloudCore,
+  cardIds: string[],
+): Promise<StreamerSetupSacrifice> {
+  const record = asRecord(
+    await core.rpc("streamer_setup_sacrifice", { p_cards: cardIds }),
+  );
+  if (!record || record.ok !== true) {
+    throw new CloudError("Réponse de sacrifice illisible.", "invalid_response", 0);
+  }
+  return {
+    already: record.already === true,
+    level: String(record.level ?? ""),
+    price: Number(record.price ?? 0),
+    value: Number(record.value ?? 0),
+    cards: Array.isArray(record.cards) ? record.cards.map((item) => String(item)) : [],
+    setup: Array.isArray(record.setup) ? record.setup.map((item) => String(item)) : [],
+    setupBonus: Number(record.setup_bonus ?? 0),
+    points: Number(record.points ?? 0),
+  };
+}
+
 export async function streamerVisit(core: CloudCore): Promise<StreamerReturn> {
   const record = asRecord(await core.rpc("streamer_visit", {}));
   if (!record || record.ok !== true) {

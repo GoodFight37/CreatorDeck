@@ -37,9 +37,13 @@ import {
   claimMilestone,
   claimSeason,
   craftCreator,
+  applySetupSacrifice,
   applyStreamerMirror,
   payStreamerRaidLocally,
+  sacrificeSetupLocally,
+  sacrificeTally,
   setStreamerGuestLocally,
+  setupSacrificeCandidates,
   visitStreamerLocally,
   applyWallet,
   buyStreamerSetupLocally,
@@ -64,7 +68,14 @@ import {
   type OwnedCard,
   type PlayerState,
 } from "@/lib/game-engine";
-import { EVENTS, SETUP_LEVELS, eventForDay, setupLevelById, growthPerDay } from "@/lib/streamer";
+import {
+  EVENTS,
+  SETUP_LEVELS,
+  eventForDay,
+  growthPerDay,
+  growthWithSetup,
+  setupLevelById,
+} from "@/lib/streamer";
 
 /**
  * Gèle l'aléa sur une suite de valeurs. `randomInt(n)` échantillonne par rejet
@@ -1538,5 +1549,105 @@ describe("la chaîne (le simulateur de streameur, 0036)", () => {
     const refus = buyStreamerSetupLocally(pauvre, "webcam", T0);
     expect("error" in refus && refus.error).toMatch(/manque/);
     expect(SETUP_LEVELS.map((niveau) => niveau.id)).toContain("webcam");
+  });
+});
+
+describe("le studio : les paliers payés en doublons (0040)", () => {
+  const POINTS = SETUP_LEVELS.filter((niveau) => niveau.currency === "points").map((niveau) => niveau.id);
+  const LABEL6 = setupLevelById("webcam2")!.label;
+
+  /** Un état avec les cinq paliers en points, et les cartes qu'on lui donne. */
+  function studio(cards: OwnedCard[], setup: string[] = POINTS): PlayerState {
+    const base = createInitialState(T0);
+    return { ...base, cards, streamer: { ...base.streamer, setup } };
+  }
+
+  it("liste les doublons qui peuvent partir — et seulement ceux-là", () => {
+    // Rares et Épiques, en double au moins : une Commune ne vaut rien, une
+    // Légendaire ne part jamais, et une carte seule n'est pas un doublon.
+    const state = studio([
+      ownedCard("ra-1", "ibai", "rare"),
+      ownedCard("ra-2", "ibai", "rare"),
+      ownedCard("ep-1", "kamet0", "epic"),
+      ownedCard("lg-1", "ibai", "legendary"),
+      ownedCard("lg-2", "ibai", "legendary"),
+      // Un Épique seul, et des Communes en double chez un autre créateur : ni
+      // l'un ni les autres ne partent — la rareté d'abord.
+      ownedCard("co-1", "zacknani", "common"),
+      ownedCard("co-2", "zacknani", "common"),
+    ]);
+    const candidats = setupSacrificeCandidates(state);
+    expect(candidats.map((entree) => entree.card.id).sort()).toEqual(["ra-1", "ra-2"]);
+    expect(candidats[0].value).toBe(1);
+    // Le doublon se compte par **créateur + variante** (la règle du recyclage) :
+    // les deux Légendaires d'ibai comptent donc dans ses copies — elles ne
+    // partent pas, mais elles restent au classeur, et c'est ce qui compte.
+    expect(candidats[0].copies).toBe(4);
+    expect(sacrificeTally([ownedCard("x", "ibai", "rare"), ownedCard("y", "kamet0", "epic")])).toBe(3);
+  });
+
+  it("paie le palier en doublons et retire les cartes du classeur", () => {
+    const state = studio([
+      ownedCard("ra-1", "ibai", "rare"),
+      ownedCard("ra-2", "ibai", "rare"),
+      ownedCard("rb-1", "kamet0", "rare"),
+      ownedCard("rb-2", "kamet0", "rare"),
+    ]);
+    const sacrifice = sacrificeSetupLocally(state, ["ra-1", "rb-1"], T0 + 1000);
+    expect("error" in sacrifice).toBe(false);
+    if ("error" in sacrifice) return;
+    expect(sacrifice.level).toEqual({ id: "webcam2", label: LABEL6 });
+    expect(sacrifice.value).toBe(2);
+    expect(sacrifice.state.streamer.setup).toEqual([...POINTS, "webcam2"]);
+    // La dernière copie de chaque couple reste : il en reste une de chaque.
+    expect(sacrifice.state.cards.map((card) => card.id).sort()).toEqual(["ra-2", "rb-2"]);
+    // Et le bonus suit, tout de suite : 500 pour mille (les points) plus 100
+    // (le palier), donc 240 × 1,6 = 384 par jour — contre 360 avant lui.
+    expect(growthWithSetup(0, sacrifice.state.streamer.setup)).toBe(384);
+    expect(growthWithSetup(0, POINTS)).toBe(360);
+  });
+
+  it("refuse une Légendaire, la dernière copie, et un compte qui ne tombe pas juste", () => {
+    const state = studio([
+      ownedCard("lg-1", "ibai", "legendary"),
+      ownedCard("lg-2", "ibai", "legendary"),
+      // Un Rare dont c'est la **seule** copie : il ne part jamais.
+      ownedCard("seule", "kamet0", "rare"),
+      ownedCard("autre", "zacknani", "rare"),
+    ]);
+    const legendaire = sacrificeSetupLocally(state, ["lg-1"], T0);
+    expect("error" in legendaire && legendaire.error).toMatch(/jamais une Légendaire/);
+    const derniere = sacrificeSetupLocally(state, ["seule"], T0);
+    expect("error" in derniere && derniere.error).toMatch(/seule copie/);
+    // Deux copies du même couple dans le même panier : la seconde serait la
+    // dernière, donc le panier entier est refusé (rien ne part à moitié).
+    const paire = studio([ownedCard("m-1", "ibai", "rare"), ownedCard("m-2", "ibai", "rare")]);
+    const tout = sacrificeSetupLocally(paire, ["m-1", "m-2"], T0);
+    expect("error" in tout && tout.error).toMatch(/seule copie/);
+    // Un doublon qui ne suffit pas au prix : le compte doit tomber juste.
+    const incomplet = sacrificeSetupLocally(paire, ["m-1"], T0);
+    expect("error" in incomplet && incomplet.error).toMatch(/2 points de sacrifice/);
+    const inconnue = sacrificeSetupLocally(state, ["fantome"], T0);
+    expect("error" in inconnue && inconnue.error).toMatch(/collection/);
+  });
+
+  it("attend la fin des paliers en points, et l'achat en points refuse les doublons", () => {
+    const debut = studio([ownedCard("ra-1", "ibai", "rare"), ownedCard("ra-2", "ibai", "rare")], []);
+    const tropTot = sacrificeSetupLocally(debut, ["ra-1"], T0);
+    expect("error" in tropTot && tropTot.error).toMatch(/paliers en points/);
+    // La porte des points ne vend pas un palier en doublons (sinon « webcam2 »
+    // coûterait deux points, le prix lu dans la même table).
+    const riche = { ...createInitialState(T0), points: 10_000 };
+    const mauvaisePorte = buyStreamerSetupLocally(riche, "webcam2", T0);
+    expect("error" in mauvaisePorte && mauvaisePorte.error).toMatch(/se paie en doublons/);
+  });
+
+  it("applique le verdict du serveur, pas la sélection du joueur", () => {
+    // En ligne, le serveur relit la collection et renvoie les cartes qu'il a
+    // prises : c'est **cette liste** qui quitte le classeur.
+    const state = studio([ownedCard("ra-1", "ibai", "rare"), ownedCard("ra-2", "ibai", "rare")]);
+    const apres = applySetupSacrifice(state, ["ra-1"], "webcam2", T0 + 500);
+    expect(apres.cards.map((card) => card.id)).toEqual(["ra-2"]);
+    expect(apres.streamer.setup).toEqual([...POINTS, "webcam2"]);
   });
 });

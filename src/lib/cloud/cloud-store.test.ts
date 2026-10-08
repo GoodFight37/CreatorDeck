@@ -180,6 +180,7 @@ type FakeApi = {
   streamerEventToday: ReturnType<typeof vi.fn>;
   streamerChoose: ReturnType<typeof vi.fn>;
   streamerSetupBuy: ReturnType<typeof vi.fn>;
+  streamerSetupSacrifice: ReturnType<typeof vi.fn>;
   streamerVisit: ReturnType<typeof vi.fn>;
   streamerGuestSet: ReturnType<typeof vi.fn>;
 };
@@ -490,6 +491,16 @@ function harness(options: {
       setup: ["webcam"],
       setupBonus: 30,
       points: 880,
+    })),
+    streamerSetupSacrifice: vi.fn(async () => ({
+      already: false,
+      level: "webcam2",
+      price: 2,
+      value: 2,
+      cards: ["dbl-ra-1", "dbl-rb-1"],
+      setup: ["webcam", "micro", "lumiere", "deco", "studio", "webcam2"],
+      setupBonus: 600,
+      points: 0,
     })),
     streamerVisit: vi.fn(async () => ({
       days: 1,
@@ -2123,6 +2134,56 @@ describe("la chaîne côté store (les imprévus et le setup)", () => {
     expect(state.current.points).toBe(1000);
     expect(state.current.streamer.setup).toEqual([]);
     expect(api.walletGet).not.toHaveBeenCalled();
+  });
+
+  it("sacrifie les doublons choisis et retire les cartes que le serveur a prises", async () => {
+    const { store, api, state } = harness({
+      local: saveWith({
+        updatedAt: T0,
+        cards: [
+          { id: "dbl-ra-1", creatorSlug: "ibai", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+          { id: "dbl-ra-2", creatorSlug: "ibai", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+          { id: "dbl-rb-1", creatorSlug: "kamet0", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+          { id: "dbl-rb-2", creatorSlug: "kamet0", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+        ],
+      }),
+    });
+    store.subscribe(() => {});
+    const outcome = await store.sacrificeStreamerSetup(["dbl-ra-1", "dbl-rb-1"]);
+    // Le client n'envoie **que des identifiants** : le prix et la valeur sont
+    // relus au serveur, dans sa sauvegarde et au catalogue.
+    expect(api.streamerSetupSacrifice).toHaveBeenCalledWith(["dbl-ra-1", "dbl-rb-1"]);
+    expect(outcome.status).toBe("done");
+    // Le verdict du serveur : les deux cartes qu'il a prises ont quitté le
+    // classeur, les deux autres sont restées, et le palier est installé.
+    expect(state.current.cards.map((card) => card.id).sort()).toEqual(["dbl-ra-2", "dbl-rb-2"]);
+    expect(state.current.streamer.setup).toEqual([
+      "webcam", "micro", "lumiere", "deco", "studio", "webcam2",
+    ]);
+    expect(store.getSnapshot().message).toMatch(/webcam2|Deuxième caméra/i);
+  });
+
+  it("ne retire rien quand le serveur refuse le sacrifice", async () => {
+    const { store, api, state } = harness({
+      local: saveWith({
+        updatedAt: T0,
+        cards: [
+          { id: "dbl-ra-1", creatorSlug: "ibai", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+          { id: "dbl-ra-2", creatorSlug: "ibai", rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false },
+        ],
+        streamer: { ...createInitialState(T0).streamer, setup: ["webcam", "micro", "lumiere", "deco", "studio"] },
+      }),
+    });
+    store.subscribe(() => {});
+    api.streamerSetupSacrifice.mockRejectedValueOnce(
+      new CloudError("chaîne : impossible de sacrifier ta seule copie de cette carte", "P0001", 400),
+    );
+    const outcome = await store.sacrificeStreamerSetup(["dbl-ra-1", "dbl-ra-2"]);
+    expect(outcome.status).toBe("unavailable");
+    expect(store.getSnapshot().message).toMatch(/seule copie/);
+    // Rien n'a bougé : ni carte, ni palier.
+    expect(state.current.cards).toHaveLength(2);
+    expect(state.current.streamer.setup).toEqual(["webcam", "micro", "lumiere", "deco", "studio"]);
   });
 
   it("sans compte, l'imprévu et le setup passent par le moteur local", async () => {

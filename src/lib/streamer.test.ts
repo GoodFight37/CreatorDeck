@@ -38,6 +38,9 @@ import {
   raidLine,
   resolveEventChoice,
   resolveVideo,
+  sacrificePrice,
+  sacrificeValue,
+  SETUP_SACRIFICE_VALUES,
   setupBonusPermille,
   setupLevelById,
   tierFor,
@@ -319,14 +322,41 @@ describe("les imprévus", () => {
 });
 
 describe("le setup", () => {
-  it("les cinq paliers montent, et le bonus total fait +50 %", () => {
-    expect(SETUP_LEVELS.length).toBe(5);
-    for (let i = 1; i < SETUP_LEVELS.length; i += 1) {
-      expect(SETUP_LEVELS[i].price).toBeGreaterThan(SETUP_LEVELS[i - 1].price);
-      expect(SETUP_LEVELS[i].growthPermille ?? 0).toBeGreaterThanOrEqual(SETUP_LEVELS[i - 1].growthPermille ?? 0);
+  it("les huit paliers montent, et le bonus total fait +100 %", () => {
+    // Deux séries, deux monnaies : cinq paliers en points, puis trois en
+    // doublons. Les prix montent **dans chaque série** ; entre les deux, la
+    // monnaie change, donc le nombre redescend (4 200 points, puis 2 doublons).
+    expect(SETUP_LEVELS.length).toBe(8);
+    expect(SETUP_LEVELS.map((niveau) => niveau.currency).join(",")).toBe(
+      "points,points,points,points,points,doublons,doublons,doublons",
+    );
+    for (const serie of [
+      SETUP_LEVELS.filter((niveau) => niveau.currency === "points"),
+      SETUP_LEVELS.filter((niveau) => niveau.currency === "doublons"),
+    ]) {
+      for (let i = 1; i < serie.length; i += 1) {
+        expect(serie[i].price).toBeGreaterThan(serie[i - 1].price);
+        expect(serie[i].growthPermille ?? 0).toBeGreaterThanOrEqual(serie[i - 1].growthPermille ?? 0);
+      }
     }
-    expect(SETUP_LEVELS.every((niveau) => niveau.currency === "points")).toBe(true);
-    expect(setupBonusPermille(SETUP_LEVELS.map((niveau) => niveau.id))).toBe(500);
+    expect(setupBonusPermille(SETUP_LEVELS.map((niveau) => niveau.id))).toBe(1000);
+  });
+
+  it("paie les doublons au barème : un Rare vaut 1, un Épique vaut 2", () => {
+    // « La rareté donne le prix » — et ce qui n'est pas dans la liste ne part
+    // pas : une Légendaire ne quitte jamais le classeur.
+    expect(SETUP_SACRIFICE_VALUES).toEqual({ rare: 1, epic: 2 });
+    expect(sacrificeValue("rare")).toBe(1);
+    expect(sacrificeValue("epic")).toBe(2);
+    for (const rarity of ["common", "uncommon", "legendary", "inconnue"]) {
+      expect(sacrificeValue(rarity)).toBe(0);
+    }
+    // Le prix d'un palier se lit dans sa monnaie : 0 pour un palier en points.
+    expect(sacrificePrice(SETUP_LEVELS[0])).toBe(0);
+    expect(sacrificePrice(SETUP_LEVELS[4])).toBe(0);
+    expect(SETUP_LEVELS.filter((niveau) => sacrificePrice(niveau) > 0).map((niveau) => niveau.price)).toEqual([
+      2, 5, 10,
+    ]);
   });
 
   it("le bonus ne compte que le préfixe : un palier sauté ne vaut rien", () => {
@@ -342,7 +372,8 @@ describe("le setup", () => {
   it("la croissance suit le bonus, et le prochain palier suit l'ordre", () => {
     expect(growthWithSetup(0, [])).toBe(240);
     expect(growthWithSetup(0, ["webcam"])).toBe(247);
-    expect(growthWithSetup(0, SETUP_LEVELS.map((n) => n.id))).toBe(360);
+    // Au bout des huit paliers : +1000 pour mille, donc 240 × 2 = 480.
+    expect(growthWithSetup(0, SETUP_LEVELS.map((n) => n.id))).toBe(480);
     // Au palier « Gros streamer » : 3 200 × 1,03 = 3 296, arrondi vers le bas.
     expect(growthWithSetup(30_000, ["webcam"])).toBe(3296);
 

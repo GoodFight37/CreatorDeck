@@ -32,6 +32,7 @@ import { useGame, useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
+import { sacrificeTally, setupSacrificeCandidates } from "@/lib/game-engine";
 import type { StreamerOpening } from "@/lib/cloud/store/streamer";
 import { gameDay } from "@/lib/progression";
 import {
@@ -52,6 +53,8 @@ import {
   nextSetupLevel,
   raidForGuests,
   raidLine,
+  sacrificePrice,
+  sacrificeValue,
   setupBonusPermille,
   tierProgress,
   tokensOnDay,
@@ -74,6 +77,11 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const [formatId, setFormatId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
+  // Le studio (rangs 6 à 8) : les doublons choisis pour le prochain palier, et
+  // l'écran de confirmation — une carte qui quitte le classeur se confirme,
+  // comme le recyclage d'un doublon Live.
+  const [sacrifie, setSacrifie] = useState<string[]>([]);
+  const [confirmeSacrifice, setConfirmeSacrifice] = useState(false);
   // Le geste de la carte : la course du doigt, et le côté armé (rien tant que le
   // seuil n'est pas franchi). `armedRef` évite de vibrer à chaque pixel.
   const [drag, setDrag] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
@@ -133,6 +141,16 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const bonus = vue ? vue.setupBonus : setupBonusPermille(setup);
   const croissance = growthWithSetup(abonnes, setup);
   const prochain = nextSetupLevel(setup);
+  // Le studio : ce que le prochain palier coûte en doublons (0 s'il se paie en
+  // points), les doublons qui peuvent partir — Rares et Épiques, jamais la
+  // dernière copie, jamais une Légendaire — et la valeur de la sélection.
+  const prixDoublons = prochain ? sacrificePrice(prochain) : 0;
+  const candidats = useMemo(() => (state ? setupSacrificeCandidates(state) : []), [state]);
+  const choixStudio = useMemo(
+    () => candidats.filter((entree) => sacrifie.includes(entree.card.id)),
+    [candidats, sacrifie],
+  );
+  const valeurSacrifice = sacrificeTally(choixStudio.map((entree) => entree.card));
   // La carte du jour : celle que le serveur a donnée, sinon celle du moteur
   // local (même journée de jeu des deux côtés). Le **texte** vient toujours du
   // fichier de règles ; le serveur ne connaît que l'identifiant.
@@ -343,6 +361,27 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
       return;
     }
     setNotice({ message: issue.message ?? "Palier installé.", isError: false });
+  }
+
+  /**
+   * Sacrifie les doublons choisis pour installer le prochain palier du studio.
+   *
+   * Le serveur décide (il relit la collection et le barème) et renvoie les
+   * cartes qu'il a **réellement** prises : un refus ne retire rien.
+   */
+  async function sacrifier() {
+    if (busy || !prochain || valeurSacrifice !== prixDoublons) return;
+    setBusy(true);
+    setNotice(null);
+    const issue = await cloudStore.sacrificeStreamerSetup(sacrifie);
+    setBusy(false);
+    if (issue.status !== "done") {
+      setNotice({ message: issue.message, isError: true });
+      return;
+    }
+    setSacrifie([]);
+    setConfirmeSacrifice(false);
+    setNotice({ message: issue.message ?? "Sacrifice fait.", isError: false });
   }
 
   return (
@@ -578,7 +617,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           </h3>
           <p className="chaine-intro">
             Chaque palier s&apos;installe <strong>une fois</strong>, dans l&apos;ordre, et fait grandir la chaîne plus
-            vite — pour toujours.
+            vite — pour toujours. Les cinq premiers se paient en <strong>points</strong> ; les trois derniers en{" "}
+            <strong>doublons</strong> de ta collection.
             {bonus > 0
               ? ` Aujourd'hui : +${(bonus / 10).toFixed(0)} % de croissance (${count.format(croissance)} par jour au lieu de ${count.format(growthWithSetup(abonnes, []))}).`
               : ""}
@@ -599,6 +639,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                         <>
                           <Check size={13} /> installé
                         </>
+                      ) : niveau.currency === "doublons" ? (
+                        `${count.format(niveau.price)} doublon${niveau.price > 1 ? "s" : ""}`
                       ) : (
                         `${count.format(niveau.price)} points`
                       )}
@@ -610,7 +652,7 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                       ? ` (+${(niveau.growthPermille / 10).toFixed(0)} % de croissance)`
                       : ""}
                   </span>
-                  {suivant ? (
+                  {suivant && niveau.currency === "points" ? (
                     <button
                       type="button"
                       className="chaine-setup-buy"
@@ -624,10 +666,115 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               );
             })}
           </ul>
+
+          {/* Le studio : les paliers en doublons. La rareté donne le prix — un
+              Épique vaut deux Rares — et une Légendaire ne part jamais. */}
+          {prochain && prixDoublons > 0 ? (
+            <div className="chaine-studio">
+              <p className="chaine-intro">
+                « {prochain.label} » se paie en <strong>doublons</strong> : {count.format(prochain.price)} point
+                {prochain.price > 1 ? "s" : ""} de sacrifice. Un <strong>Rare</strong> vaut{" "}
+                {sacrificeValue("rare")}, un <strong>Épique</strong> vaut {sacrificeValue("epic")} — et une{" "}
+                <strong>Légendaire ne part jamais</strong>.
+              </p>
+              {candidats.length === 0 ? (
+                <p className="chaine-next">
+                  Aucun doublon Rare ou Épique dans ton classeur pour l&apos;instant : le studio attend. Les
+                  Communes et les Peu communes ne partent pas, une Légendaire non plus, et jamais la dernière
+                  copie d&apos;un créateur.
+                </p>
+              ) : (
+                <>
+                  <ul className="chaine-studio-list">
+                    {candidats.map((entree) => {
+                      const choisiIci = sacrifie.includes(entree.card.id);
+                      const nom =
+                        CREATOR_BY_SLUG.get(entree.card.creatorSlug)?.displayName ??
+                        entree.card.creatorSlug;
+                      return (
+                        <li key={entree.card.id}>
+                          <button
+                            type="button"
+                            className={`chaine-studio-item${choisiIci ? " choisi" : ""}`}
+                            disabled={busy}
+                            aria-pressed={choisiIci}
+                            onClick={() => {
+                              setConfirmeSacrifice(false);
+                              setSacrifie((actuel) =>
+                                actuel.includes(entree.card.id)
+                                  ? actuel.filter((id) => id !== entree.card.id)
+                                  : [...actuel, entree.card.id],
+                              );
+                            }}
+                          >
+                            <span className="chaine-studio-head">
+                              <strong>{nom}</strong>
+                              <span>+{entree.value}</span>
+                            </span>
+                            <span className="chaine-studio-note">
+                              {RARITY_META[entree.card.rarity].label}
+                              {entree.card.variant === "standard" ? "" : ` · ${entree.card.variant}`} ·{" "}
+                              {entree.copies} exemplaires
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <p className="chaine-next">
+                    Sélection : {valeurSacrifice} / {count.format(prochain.price)} point
+                    {prochain.price > 1 ? "s" : ""} de sacrifice.
+                  </p>
+                  {confirmeSacrifice ? (
+                    <div className="chaine-studio-confirme">
+                      <p>
+                        <strong>
+                          {choixStudio.length} carte{choixStudio.length > 1 ? "s" : ""}
+                        </strong>{" "}
+                        {choixStudio.length > 1 ? "quittent" : "quitte"} ton classeur{" "}
+                        <strong>définitivement</strong> — et « {prochain.label} » s&apos;installe.
+                      </p>
+                      <div className="chaine-studio-boutons">
+                        <button
+                          type="button"
+                          className="chaine-setup-buy"
+                          disabled={busy}
+                          onClick={() => void sacrifier()}
+                        >
+                          Oui, sacrifier
+                        </button>
+                        <button
+                          type="button"
+                          className="chaine-studio-annuler"
+                          disabled={busy}
+                          onClick={() => setConfirmeSacrifice(false)}
+                        >
+                          Annuler
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="chaine-setup-buy"
+                      disabled={busy || valeurSacrifice !== prochain.price}
+                      onClick={() => setConfirmeSacrifice(true)}
+                    >
+                      Sacrifier {choixStudio.length} doublon{choixStudio.length > 1 ? "s" : ""} pour «{" "}
+                      {prochain.label} »
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          ) : null}
+
           <p className="chaine-next">
             {prochain
-              ? `Prochain palier : « ${prochain.label} » à ${count.format(prochain.price)} points.`
-              : "Ton setup est complet : la chaîne grandit une fois et demie plus vite qu'à ses débuts."}
+              ? prochain.currency === "doublons"
+                ? `Prochain palier : « ${prochain.label} » — ${count.format(prochain.price)} point${prochain.price > 1 ? "s" : ""} de sacrifice (des doublons Rares ou Épiques).`
+                : `Prochain palier : « ${prochain.label} » à ${count.format(prochain.price)} points.`
+              : "Ton setup est complet : la chaîne grandit deux fois plus vite qu'à ses débuts."}
           </p>
         </section>
 
