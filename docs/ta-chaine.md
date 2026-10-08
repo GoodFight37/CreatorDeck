@@ -145,15 +145,48 @@
   > qui doit rendre `true`.
 
   > **Un mot sur la technique.** La scène est écrite dans le **système de
-  > variables CSS du projet** (`src/app/globals.css`, bloc `.chaine-scene*` :
-  > lueurs ≤ 0,65, aucune animation perpétuelle hors la pulsation du direct, que
-  > `prefers-reduced-motion` **et** l'interrupteur « Reflets des cartes »
-  > coupent). **Tailwind n'est pas branché dans ce dépôt** : les paquets sont
-  > bien installés (`tailwindcss`, `@tailwindcss/postcss`, postés par
-  > `postcss.config.mjs`), mais `globals.css` n'importe jamais Tailwind — aucune
-  > classe utilitaire ne s'applique aujourd'hui. La scène suit donc le reste du
-  > jeu ; brancher Tailwind serait un chantier à part, et il ne se fait pas en
-  > douce.
+  > variables CSS du projet** (`src/app/globals.css`, blocs `.chaine-stage*`,
+  > `.chaine-room`, `.chaine-stand*`, `.chaine-hud*` : lueurs ≤ 0,65, **une
+  > seule animation perpétuelle** — l'aura du direct — que `prefers-reduced-motion`
+  > **et** l'interrupteur « Reflets des cartes » coupent). **Tailwind n'est
+  > toujours pas branché dans ce dépôt** : les paquets sont bien installés
+  > (`tailwindcss`, `@tailwindcss/postcss`, postés par `postcss.config.mjs`),
+  > mais `globals.css` n'importe jamais Tailwind — **aucune classe utilitaire ne
+  > s'applique**. Brancher Tailwind serait un chantier à part (il toucherait
+  > tous les écrans) et ne se fait pas en douce : la refonte ci-dessous suit
+  > donc le système de tokens maison, celui du reste du jeu.
+
+
+- [x] **Étape 9 : la refonte visuelle — l'écran devient un jeu** —
+  `src/components/streamer-studio-stage.tsx`. La consigne est nette : « on
+  arrête le mode tableau de bord en texte ». Ce qui a changé :
+
+  * **le studio** est une **scène** dessinée en SVG (mur, panneaux acoustiques,
+    bandeau néon, sol, bureau) où **huit objets s'allument un par un avec les
+    paliers achetés** — et restent des **silhouettes éteintes** tant que le
+    palier n'est pas payé : on voit ce qui viendra ;
+  * **le HUD arcade** remplace les trois chiffres en texte : badge de rang
+    (trophée + palier), **jauge** d'abonnés qui se remplit vers le palier suivant
+    (« 0 / 2 500 »), pilule du rythme (« ⚡ +240 / jour »), compteur de jetons ;
+  * **les deux socles** sont des supports d'acrylique sur le bureau : une
+    **vraie carte** du classeur posée dessus (avec sa perspective), un
+    **piédestal translucide** au halo quand la place est libre — plus aucune
+    boîte pointillée « Place 1 libre / Choisir un invité » ;
+  * **un invité en direct** vire au rouge : aura qui pulse, badge **EN DIRECT**
+    et ses spectateurs, bandeau **« RAID ! »** ;
+  * **plus de notices** : des **badges** (« Événement du jour », « Vidéo du
+    jour », « Ton setup », « Vidéo publiée »), une **carte d'imprévu compacte**
+    (icône, titre, deux lignes, **deux gros boutons arcade** avec leurs
+    pourcentages), des tuiles de format, un **setup en cartes de palier** (rang,
+    prix, gain, action) ;
+  * ce qui reste écrit tient en **une ligne** : la journée de jeu (6 h UTC) et
+    le plafond d'absence — deux chiffres publiés que le joueur doit pouvoir
+    lire quelque part.
+
+  **Ce qui n'a pas bougé : la logique.** Le moteur (`src/lib/streamer.ts`), les
+  multiplicateurs (`src/data/streamer.json`) et le serveur (`0041`) sont
+  **inchangés** — `src/lib`, `src/data` et `supabase/` ne sont pas touchés par
+  ce commit. L'écran affiche toujours les chiffres que le serveur paiera.
 
 ## 2. En cours
 
@@ -179,7 +212,8 @@
 ## 3. Ce qu'il reste à faire
 
 > Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
-> (étape 7) et la **scène du bureau avec le plateau** (étape 8) sont livrés.
+> (étape 7), la **scène du bureau avec le plateau** (étape 8) et la **refonte
+> visuelle** (étape 9) sont livrés.
 > **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
 > (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
 > en jouant.

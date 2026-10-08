@@ -2662,19 +2662,66 @@ input:focus-visible {
 .pity-row.streamer-row.done { color: var(--muted); }
 
 /* ---- Ta chaîne (le simulateur de streameur) ------------------------------ */
+/* ---- Ta chaîne : les badges, les cartes et les boutons arcade -------------
+   L'écran est un jeu, pas un formulaire : chaque bloc ouvre sur une **pastille**
+   (un badge, pas un titre de page), les textes tiennent en deux lignes, et les
+   actions sont de gros boutons bombés — ils s'enfoncent quand on appuie. */
+.chaine-badge { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 5px 10px; color: #f2ecff; border: 1px solid rgb(168 85 247 / .4); border-radius: 999px; background: linear-gradient(180deg, rgb(60 42 106 / .75), rgb(26 19 44 / .75)); font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 0 18px -10px rgb(168 85 247 / .95); }
+.chaine-badge svg { color: #c4b5fd; }
+.chaine-badge-bonus { padding: 1px 6px; color: #2a1b06; border-radius: 999px; background: linear-gradient(180deg, #ffd27a, #f0a943); font-size: 11px; font-style: normal; font-weight: 900; }
+.chaine-note { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
+.chaine-outcome { margin: 0; padding: 10px 12px; color: var(--accent-light); border: 1px solid rgb(var(--accent-rgb) / .4); border-radius: 12px; background: rgb(var(--accent-rgb) / .08); font-size: 14px; line-height: 1.5; }
+
+/* La carte d'imprévu : compacte — l'icône, le titre, deux lignes de situation.
+   `touch-action: pan-y` laisse le défilement vertical au navigateur et ne garde
+   que l'horizontale pour le geste — sans ça, le doigt qui glisse la carte
+   ferait aussi défiler la feuille. */
+.chaine-card-head { display: flex; align-items: center; gap: 9px; }
+.chaine-card-icon { display: grid; flex: none; place-items: center; width: 32px; height: 32px; color: #f3ecff; border: 1px solid rgb(168 85 247 / .45); border-radius: 10px; background: linear-gradient(180deg, #4a3390, #2a1d54); box-shadow: 0 0 16px -8px rgb(168 85 247 / .95); }
+.chaine-card-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: .01em; }
+.chaine-card-text { display: -webkit-box; margin: 0; overflow: hidden; color: var(--muted); font-size: 12.5px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+/* Les deux actions : deux vrais boutons de jeu, avec leur pourcentage dessus. */
+.chaine-card-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.chaine-card-buttons button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 13px 10px 11px; color: #fff; border: 0; border-radius: 14px; background: linear-gradient(180deg, #7c4dff, #4b2ba8); box-shadow: 0 4px 0 #2c1870, inset 0 1px 0 rgb(255 255 255 / .35); font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: .01em; text-shadow: 0 1px 2px rgb(0 0 0 / .5); cursor: pointer; transition: transform .08s ease, box-shadow .08s ease; }
+.chaine-card-buttons button:last-child { background: linear-gradient(180deg, #ff5a8a, #c11f57); box-shadow: 0 4px 0 #7d0f36, inset 0 1px 0 rgb(255 255 255 / .35); }
+.chaine-card-buttons button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #2c1870, inset 0 1px 0 rgb(255 255 255 / .25); }
+.chaine-card-buttons button:disabled { opacity: .5; cursor: default; }
+.chaine-card-buttons button em { padding: 1px 7px; color: #fff; border-radius: 999px; background: rgb(0 0 0 / .35); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
+
+/* Les formats : une tuile compacte par format, le chiffre qui compte à droite. */
+.chaine-formats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.chaine-format { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); text-align: left; cursor: pointer; }
+.chaine-format.actif { color: var(--text); border-color: rgb(var(--accent-rgb) / .6); background: rgb(var(--accent-rgb) / .12); box-shadow: 0 0 18px -12px rgb(var(--accent-rgb) / .95); }
+.chaine-format-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.chaine-format-head strong { color: inherit; font-size: 13.5px; }
+.chaine-format-head em { color: var(--accent-light); font-size: 12.5px; font-style: normal; font-weight: 800; font-variant-numeric: tabular-nums; }
+.chaine-format-odds { color: var(--muted-2); font-size: 11.5px; font-variant-numeric: tabular-nums; }
+
+/* Le live et la publication : deux gros boutons, l'un pour jouer, l'autre pour
+   filer droit. */
+.chaine-live { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 10px; padding: 13px; color: #fff; border: 0; border-radius: 14px; background: linear-gradient(180deg, #ff5a6b, #cf1f3d); box-shadow: 0 4px 0 #7d0f24, inset 0 1px 0 rgb(255 255 255 / .35); font-family: var(--font-display); font-size: 15px; font-weight: 700; cursor: pointer; }
+.chaine-live em { padding: 2px 8px; border-radius: 999px; background: rgb(0 0 0 / .3); font-size: 11.5px; font-style: normal; font-weight: 600; }
+.chaine-live:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #7d0f24, inset 0 1px 0 rgb(255 255 255 / .25); }
+.chaine-live:disabled { opacity: .55; cursor: default; }
+.chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 13px; color: #2a1b06; border: 0; border-radius: 14px; background: linear-gradient(180deg, #ffd27a, #e59b32); box-shadow: 0 4px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .5); font-family: var(--font-display); font-size: 14.5px; font-weight: 800; cursor: pointer; }
+.chaine-publish:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .35); }
+.chaine-publish:disabled { opacity: .55; cursor: default; }
+
+/* Le setup : des cartes de palier — le rang, le nom, le prix, le gain. */
+.chaine-setup-rank { display: grid; flex: none; place-items: center; width: 26px; height: 26px; color: #efe6ff; border: 1px solid rgb(168 85 247 / .45); border-radius: 8px; background: rgb(168 85 247 / .16); font-family: var(--font-display); font-size: 12.5px; font-weight: 700; }
+.chaine-setup-item { flex-direction: row; align-items: center; gap: 9px; padding: 9px 10px; }
+.chaine-setup-item.installe .chaine-setup-rank { color: #0f2a17; border-color: rgb(94 231 154 / .55); background: linear-gradient(180deg, #7ff0b0, #35b06c); }
+.chaine-setup-head { flex: 1; min-width: 0; }
+.chaine-setup-head strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chaine-setup-buy { flex: none; margin: 0; padding: 9px 12px; border-radius: 11px; box-shadow: 0 3px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .5); font-size: 12.5px; }
+.chaine-setup-buy:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .35); }
+
 .chaine-return { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0; padding: 11px 12px; border: 1px solid rgb(var(--accent-rgb) / .3); border-radius: 11px; background: rgb(var(--accent-rgb) / .07); }
 .chaine-return svg { flex: none; margin-top: 2px; color: var(--accent-light); }
 .chaine-return div { display: flex; flex-direction: column; gap: 3px; }
 .chaine-return span { font-size: 13px; line-height: 1.5; }
-.chaine-state { margin: 14px 0 18px; }
-.chaine-numbers { display: flex; gap: 18px; }
-.chaine-numbers div { display: flex; flex-direction: column; gap: 2px; }
-.chaine-numbers strong { font-family: var(--font-display); font-size: 21px; font-weight: 600; letter-spacing: .01em; }
-.chaine-numbers span { color: var(--muted-2); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
-.chaine-next { margin: 10px 0 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .chaine-video { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-video h3 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
-.chaine-intro { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .chaine-outcome { margin: 0; color: var(--accent-light); font-size: 14px; }
 .chaine-formats { display: flex; flex-direction: column; gap: 8px; }
 .chaine-format { display: flex; flex-direction: column; gap: 4px; padding: 11px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); text-align: left; cursor: pointer; }
@@ -2682,18 +2729,15 @@ input:focus-visible {
 .chaine-format-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .chaine-format-head strong { color: inherit; font-size: 14px; }
 .chaine-format-head span { color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.chaine-format-detail { font-size: 12.5px; line-height: 1.45; }
 .chaine-format-odds { color: var(--muted-2); font-size: 12px; }
 .chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; color: #2a1b06; border: 0; border-radius: 11px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 14px; font-weight: 900; cursor: pointer; }
 .chaine-publish:disabled { opacity: .55; cursor: default; }
 .chaine-event { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-event h3 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
 /* La carte d'imprévu : elle se glisse. `touch-action: pan-y` laisse le
    défilement vertical au navigateur et ne garde que l'horizontale pour le geste
    — sans ça, le doigt qui glisse la carte ferait aussi défiler la feuille. */
 .chaine-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 14px; background: linear-gradient(160deg, rgb(var(--accent-rgb) / .12), rgba(255,255,255,.03)); box-shadow: 0 6px 20px rgba(0,0,0,.28); touch-action: pan-y; cursor: grab; user-select: none; will-change: transform; }
 .chaine-card.arme { border-color: rgb(var(--accent-rgb) / .7); }
-.chaine-card-kind { display: inline-flex; align-items: center; gap: 5px; color: var(--accent-light); font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; }
 .chaine-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: .01em; }
 .chaine-card-text { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 .chaine-card-sides { display: flex; justify-content: space-between; gap: 10px; margin-top: 2px; color: var(--muted-2); font-size: 12.5px; }
@@ -2704,9 +2748,7 @@ input:focus-visible {
 .chaine-card-buttons button { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px; color: var(--text); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.03); font-size: 13px; font-weight: 600; cursor: pointer; }
 .chaine-card-buttons button em { color: var(--accent-light); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
 .chaine-card-buttons button:disabled { opacity: .5; cursor: default; }
-.chaine-card-odds { display: flex; flex-direction: column; gap: 3px; margin: 0; color: var(--muted-2); font-size: 12px; }
 .chaine-setup { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-setup h3 { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
 .chaine-setup-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .chaine-setup-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); opacity: .55; }
 .chaine-setup-item.suivant { opacity: 1; border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .07); }
@@ -2714,7 +2756,6 @@ input:focus-visible {
 .chaine-setup-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
 .chaine-setup-head strong { font-size: 14px; }
 .chaine-setup-head > span { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.chaine-setup-note { color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
 .chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
 .chaine-setup-buy:disabled { opacity: .55; cursor: default; }
 /* Le studio : les paliers en doublons. Un doublon **choisi** se voit (bordure
@@ -2735,120 +2776,90 @@ input:focus-visible {
 .chaine-studio-boutons .chaine-setup-buy { flex: 1; margin: 0; }
 .chaine-studio-annuler { padding: 10px 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: none; font-size: 13px; font-weight: 600; cursor: pointer; }
 .chaine-studio-annuler:disabled { opacity: .5; cursor: default; }
-/* ─── Le bureau du streamer : la scène du studio ─────────────────────────────
-   La pièce visuelle de « Ta chaîne » : un fond de studio, deux socles, de vraies
-   cartes posées dessus. Ses couleurs (violet néon, rouge du direct) sont celles
-   de **l'illustration**, pas du chrome : la règle du bloc racine — « aucune
-   couleur d'interface en dur » — vaut pour l'interface, pas pour une scène.
+/* ─── Le studio : la scène de « Ta chaîne » ──────────────────────────────────
+   La pièce du mini-jeu, dessinée en SVG : mur, panneaux acoustiques, bandeau
+   néon, bureau, et les huit objets du setup qui s'allument un par un. Ses
+   couleurs (violet néon, cyan, rouge du direct) sont celles de
+   **l'illustration**, pas du chrome : la règle du bloc racine — « aucune couleur
+   d'interface en dur » — vaut pour l'interface, pas pour une scène.
 
    Une seule animation perpétuelle, et elle dit quelque chose : l'aura d'un
-   invité qui streame **maintenant**. Elle s'éteint avec le direct, et
-   `prefers-reduced-motion` la coupe entièrement. */
-.chaine-scene {
-  --scene-neon: #8b5cf6;
-  --scene-live: #ff4d5e;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.chaine-scene-title { display: flex; align-items: center; gap: 6px; margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; }
-.chaine-scene-title > span { margin-left: auto; color: var(--muted-2); font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }
-.chaine-scene-studio {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 14px 12px 12px;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  isolation: isolate;
-}
-.chaine-scene-wall {
-  position: absolute;
-  z-index: -2;
-  inset: 0;
-  background:
-    radial-gradient(120% 70% at 50% -10%, rgb(139 92 246 / .22), transparent 62%),
-    linear-gradient(180deg, #16121f 0%, #0c0a12 58%, #08070d 100%);
-}
-.chaine-scene.eclaire .chaine-scene-wall { background: radial-gradient(120% 70% at 50% -10%, rgb(139 92 246 / .34), transparent 64%), linear-gradient(180deg, #191325 0%, #0d0b14 58%, #08070d 100%); }
-.chaine-scene-neon {
-  position: absolute;
-  z-index: -1;
-  top: 12px;
-  left: 10%;
-  right: 10%;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--scene-neon);
-  opacity: .14;
-  transition: opacity .3s ease, box-shadow .3s ease;
-}
-.chaine-scene.eclaire .chaine-scene-neon { opacity: .8; box-shadow: 0 0 22px 3px rgb(139 92 246 / .55); }
-.chaine-scene.plateau .chaine-scene-neon { height: 4px; left: 4%; right: 4%; }
-.chaine-scene-floor { position: absolute; z-index: -1; left: -10%; right: -10%; bottom: 34%; height: 40px; border-radius: 50%; background: radial-gradient(60% 100% at 50% 50%, rgb(139 92 246 / .16), transparent 70%); }
-.chaine-scene-desk { position: absolute; z-index: -1; left: -6%; right: -6%; bottom: 0; height: 34%; border-top: 2px solid rgb(255 255 255 / .12); background: linear-gradient(180deg, #17131c, #0a080e); }
+   invité qui streame **maintenant**. Elle s'éteint avec le direct,
+   `prefers-reduced-motion` la coupe, et l'interrupteur « Reflets des cartes »
+   aussi. Tout le reste est immobile : un socle libre brille, mais ne clignote
+   pas. */
+.chaine-stage { display: flex; flex-direction: column; gap: 9px; margin-bottom: 14px; }
 
-/* Les objets du studio : chaque palier acheté allume le sien. Éteint, l'objet
-   reste visible en silhouette — on voit ce qu'on n'a pas encore. */
-.chaine-scene-props { position: relative; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0 0 2px; list-style: none; }
-.chaine-prop { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; color: var(--muted-2); border: 1px solid rgb(255 255 255 / .07); border-radius: 999px; background: rgb(0 0 0 / .28); font-size: 11.5px; font-weight: 600; opacity: .45; }
-.chaine-prop span { display: none; }
-.chaine-prop.on { color: #e7ded9; border-color: rgb(139 92 246 / .45); background: rgb(139 92 246 / .14); opacity: 1; box-shadow: 0 0 14px -4px rgb(139 92 246 / .7); }
-.chaine-prop.prop-lumiere.on { color: #f4e9ff; }
-.chaine-prop.prop-plateau.on { border-color: rgb(255 209 122 / .5); background: rgb(255 209 122 / .14); box-shadow: 0 0 16px -4px rgb(255 209 122 / .65); }
+/* Le HUD : le rang, la jauge d'abonnés, le rythme et les jetons. Des chiffres
+   de jeu, pas des phrases : c'est ce qu'on lit d'un coup d'œil en jouant. */
+.chaine-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 7px; padding: 7px 8px; border: 1px solid rgb(139 92 246 / .35); border-radius: 14px; background: linear-gradient(180deg, rgb(38 28 62 / .92), rgb(13 10 22 / .92)); box-shadow: 0 10px 26px -20px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .05); }
+.chaine-hud-rank { order: 1; display: inline-flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 4px; padding: 4px 8px; color: #f3ecff; border: 1px solid rgb(168 85 247 / .55); border-radius: 999px; background: linear-gradient(180deg, #4a3390, #2a1d54); box-shadow: 0 0 16px -6px rgb(168 85 247 / .95); font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chaine-hud-rank svg { flex: none; color: #ffd27a; }
+.chaine-hud-track { order: 3; position: relative; flex: 1 1 100%; height: 17px; overflow: hidden; border-radius: 999px; background: rgb(0 0 0 / .55); box-shadow: inset 0 1px 4px rgb(0 0 0 / .8), inset 0 0 0 1px rgb(255 255 255 / .06); }
+.chaine-hud-track i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #22d3ee, #a855f7 60%, #ff4d9d); box-shadow: 0 0 14px rgb(168 85 247 / .8); transition: width .45s cubic-bezier(.2, .7, .3, 1); }
+.chaine-hud-track span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgb(0 0 0 / .9); }
+.chaine-hud-pill { order: 2; display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 4px 8px; color: #ffe9b0; border: 1px solid rgb(255 209 122 / .45); border-radius: 999px; background: rgb(255 209 122 / .12); font-size: 11.5px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.chaine-hud-pill svg { color: #ffd27a; }
+.chaine-hud-pill.jetons { color: var(--accent-light); border-color: rgb(var(--accent-rgb) / .45); background: rgb(var(--accent-rgb) / .12); }
+.chaine-stage.raid .chaine-hud { border-color: rgb(255 77 94 / .5); }
 
-/* Les deux socles. */
-.chaine-scene-slots { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 4px 0 0; padding: 0; list-style: none; }
-.chaine-slot { position: relative; display: flex; flex-direction: column; gap: 6px; }
-.chaine-slot-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; padding: 12px 10px 10px; color: var(--muted); border: 1px dashed rgb(255 255 255 / .22); border-radius: 13px; background: rgb(255 255 255 / .02); cursor: pointer; }
-.chaine-slot-empty:disabled { opacity: .5; cursor: default; }
-.chaine-slot-socle { display: inline-flex; align-items: center; justify-content: center; width: 42px; height: 42px; color: #efe6ff; border: 1px solid rgb(139 92 246 / .55); border-radius: 50%; background: rgb(139 92 246 / .18); box-shadow: 0 0 18px -6px rgb(139 92 246 / .9); }
-.chaine-slot-label { font-size: 12.5px; font-weight: 700; }
-.chaine-slot-hint { color: var(--muted-2); font-size: 11.5px; }
-.chaine-slot-unknown { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 96px; color: var(--muted-2); font-size: 12px; }
-.chaine-slot-card { position: relative; width: 100%; border-radius: 12px; }
-.chaine-slot-card .creator-card { border-radius: 11px; box-shadow: 0 10px 22px -14px rgb(0 0 0 / .95), 0 0 0 1px rgb(255 255 255 / .06); }
-.chaine-slot.pose { padding: 8px 8px 9px; border: 1px solid rgb(255 255 255 / .12); border-radius: 13px; background: rgb(0 0 0 / .3); }
-.chaine-slot-meta { display: flex; flex-direction: column; gap: 1px; }
-.chaine-slot-meta strong { font-size: 12.5px; }
-.chaine-slot-meta span { color: var(--muted-2); font-size: 11.5px; }
-.chaine-slot-meta i { font-style: normal; font-weight: 700; }
-.chaine-slot-live { display: inline-flex; align-items: center; gap: 4px; color: #ffd9dc; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; }
-.chaine-slot-live svg { color: var(--scene-live); }
-.chaine-slot-off { color: var(--muted-2); font-size: 11.5px; }
-.chaine-slot-actions { display: flex; gap: 6px; }
-.chaine-slot-actions button { display: inline-flex; align-items: center; gap: 3px; padding: 6px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: none; font-size: 11.5px; font-weight: 600; cursor: pointer; }
-.chaine-slot-actions button:disabled { opacity: .5; cursor: default; }
-/* La place d'un invité en direct : aura rouge, et la carte qui respire. */
-.chaine-slot.en-direct { border-color: rgb(255 77 94 / .55); background: rgb(255 77 94 / .07); }
-.chaine-slot-aura { position: absolute; z-index: -1; inset: -6px; border-radius: 16px; background: radial-gradient(70% 70% at 50% 45%, rgb(255 77 94 / .42), transparent 72%); filter: blur(2px); animation: chaine-live-aura 2.6s ease-in-out infinite; }
-.chaine-slot.en-direct .chaine-slot-card { animation: chaine-live-card 2.6s ease-in-out infinite; }
-@keyframes chaine-live-aura { 0%, 100% { opacity: .55; transform: scale(.98); } 50% { opacity: 1; transform: scale(1.03); } }
-@keyframes chaine-live-card { 0%, 100% { box-shadow: 0 0 0 1px rgb(255 77 94 / .45), 0 10px 22px -14px rgb(0 0 0 / .95); } 50% { box-shadow: 0 0 22px 1px rgb(255 77 94 / .55), 0 10px 22px -14px rgb(0 0 0 / .95); } }
-.chaine-scene-raid { display: flex; align-items: center; gap: 6px; margin: 0; padding: 8px 10px; color: #ffe4e7; border: 1px solid rgb(255 77 94 / .5); border-radius: 11px; background: rgb(255 77 94 / .12); font-size: 12px; line-height: 1.45; }
-.chaine-scene-raid svg { color: var(--scene-live); }
-.chaine-scene-foot { display: flex; flex-direction: column; gap: 4px; margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
-.chaine-scene-foot strong { color: var(--accent-light); }
-.chaine-scene-raidline { color: var(--muted); }
-@media (min-width: 480px) { .chaine-prop span { display: inline; } }
+/* La pièce : le décor garde ses proportions, la scène ne se déforme pas. */
+.chaine-room { position: relative; width: 100%; max-width: 460px; margin-inline: auto; aspect-ratio: 320 / 280; overflow: hidden; border: 1px solid rgb(255 255 255 / .09); border-radius: 18px; background: #07060c; box-shadow: 0 18px 40px -28px rgb(0 0 0 / 1), inset 0 0 0 1px rgb(255 255 255 / .03); }
+.chaine-room svg { display: block; width: 100%; height: 100%; }
+.chaine-room.en-direct { border-color: rgb(255 77 94 / .45); }
+/* Un objet non acheté reste une **silhouette** : on voit la place qu'il prendra. */
+.chaine-object { opacity: .13; filter: grayscale(1); transition: opacity .4s ease, filter .4s ease; }
+.chaine-object.on { opacity: 1; filter: none; }
+
+/* Les socles : deux supports d'acrylique posés sur le bureau, pas deux boîtes. */
+.chaine-stands { position: absolute; inset: auto 5% 1.5%; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.chaine-stand { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; }
+.chaine-stand-base { display: block; width: 82%; height: 11px; border-radius: 3px 3px 8px 8px; background: linear-gradient(180deg, rgb(255 255 255 / .3), rgb(120 110 160 / .08)); box-shadow: 0 5px 12px -6px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .5); }
+.chaine-stand-glow { position: absolute; bottom: -4px; width: 84%; height: 20px; border-radius: 50%; background: radial-gradient(50% 50% at 50% 50%, rgb(168 85 247 / .6), transparent 72%); filter: blur(3px); }
+.chaine-stand-empty { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 100%; padding: 0; color: var(--muted); background: none; border: 0; cursor: pointer; }
+.chaine-stand-empty:disabled { opacity: .55; cursor: default; }
+.chaine-stand-plate { display: grid; place-items: center; width: min(58px, 21vw); aspect-ratio: .78; color: #f1e6ff; border: 1px solid rgb(168 85 247 / .5); border-radius: 10px; background: linear-gradient(180deg, rgb(168 85 247 / .22), rgb(255 255 255 / .03)); box-shadow: 0 0 24px -6px rgb(168 85 247 / .95), inset 0 0 20px -6px rgb(168 85 247 / .8); }
+.chaine-stand-plaque { color: var(--muted-2); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.chaine-stand-card { position: relative; z-index: 1; width: min(68px, 25vw); transform: perspective(720px) rotateX(7deg); transform-origin: 50% 100%; }
+.chaine-stand-card .creator-card { border-radius: 9px; box-shadow: 0 12px 22px -12px rgb(0 0 0 / .95), 0 0 0 1px rgb(255 255 255 / .08); }
+.chaine-stand-unknown { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 9px; font-size: 11px; }
+.chaine-stand.pose .chaine-stand-base { background: linear-gradient(180deg, rgb(255 255 255 / .45), rgb(120 110 160 / .12)); }
+.chaine-stand-meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 3px; font-size: 10.5px; line-height: 1.2; }
+.chaine-stand-meta i { font-style: normal; font-weight: 800; }
+.chaine-stand-meta em { padding: 1px 5px; color: #ded4ff; border-radius: 999px; background: rgb(168 85 247 / .18); font-style: normal; font-weight: 700; }
+.chaine-stand-meta em.raid { color: #ffe9b0; background: rgb(255 209 122 / .16); }
+.chaine-stand-actions { display: flex; gap: 5px; margin-top: 1px; }
+.chaine-stand-actions button { display: inline-flex; align-items: center; gap: 3px; padding: 4px 8px; color: var(--muted); border: 1px solid rgb(255 255 255 / .14); border-radius: 999px; background: rgb(0 0 0 / .35); font-size: 10.5px; font-weight: 700; cursor: pointer; }
+.chaine-stand-actions button:disabled { opacity: .5; cursor: default; }
+/* La carte d'un invité **en direct** vire au rouge, et respire. */
+.chaine-stand-aura { position: absolute; z-index: 0; left: 50%; bottom: 6px; width: 128%; height: 118%; transform: translateX(-50%); border-radius: 50%; background: radial-gradient(50% 50% at 50% 60%, rgb(255 77 94 / .5), transparent 70%); filter: blur(4px); animation: chaine-live-aura 2.6s ease-in-out infinite; }
+.chaine-stand.en-direct .chaine-stand-card { animation: chaine-live-card 2.6s ease-in-out infinite; }
+.chaine-stand.en-direct .chaine-stand-glow { background: radial-gradient(50% 50% at 50% 50%, rgb(255 77 94 / .7), transparent 72%); }
+.chaine-stand-live { position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 10px; font-weight: 900; letter-spacing: .08em; box-shadow: 0 0 14px -3px rgb(255 77 94 / .95); }
+@keyframes chaine-live-aura { 0%, 100% { opacity: .5; transform: translateX(-50%) scale(.96); } 50% { opacity: 1; transform: translateX(-50%) scale(1.05); } }
+@keyframes chaine-live-card { 0%, 100% { filter: drop-shadow(0 0 0 rgb(255 77 94 / 0)); } 50% { filter: drop-shadow(0 0 7px rgb(255 77 94 / .85)); } }
+
+/* Les états du soir : des pastilles, pas des paragraphes. */
+.chaine-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chaine-chip { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; color: var(--muted); border: 1px solid rgb(255 255 255 / .12); border-radius: 999px; background: rgb(0 0 0 / .3); font-size: 11.5px; font-weight: 700; }
+.chaine-chip.violet { color: #f0e7ff; border-color: rgb(168 85 247 / .5); background: rgb(168 85 247 / .16); }
+.chaine-chip.gold { color: #ffefc9; border-color: rgb(255 209 122 / .45); background: rgb(255 209 122 / .13); }
+.chaine-chip.live { color: #ffe3e6; border-color: rgb(255 77 94 / .6); background: rgb(255 77 94 / .16); }
+
 @media (prefers-reduced-motion: reduce) {
-  .chaine-slot-aura, .chaine-slot.en-direct .chaine-slot-card { animation: none; }
+  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card { animation: none; }
 }
-/* Même règle pour l'interrupteur du jeu (« Reflets des cartes », Réglages) :
-   l'aura du direct reste, mais elle ne pulse plus. */
-[data-card-fx="off"] .chaine-slot-aura, [data-card-fx="off"] .chaine-slot.en-direct .chaine-slot-card { animation: none; }
+/* Le réglage « Reflets des cartes » demande le calme : l'aura reste, elle ne
+   pulse plus. */
+[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card { animation: none; }
 
-/* Le bureau : la **scène** est plus haut (`.chaine-scene`), ici vit le classeur
-   qui remplit les places — les créateurs **en direct**, et rien d'autre : un
-   invité hors ligne n'amène rien, et le bureau ne sert qu'à ça. */
+/* Le classeur d'invités : il ne s'ouvre que sur un socle de la scène
+   (`.chaine-stage`), et il ne propose que les créateurs **en direct** — un
+   invité hors ligne n'amène rien. */
 .chaine-bureau { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
 .chaine-bureau-pick { display: flex; flex-direction: column; gap: 8px; padding: 11px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 12px; background: rgb(var(--accent-rgb) / .05); }
 .chaine-bureau-pick-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .chaine-bureau-pick-head button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: none; font-size: 12px; cursor: pointer; }
-.chaine-bureau-pick-hint { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
 .chaine-bureau-search { padding: 9px 11px; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.25); font-size: 13px; }
 .chaine-bureau-choix { display: flex; flex-direction: column; gap: 6px; max-height: 260px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
 .chaine-bureau-choix button { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 9px 11px; text-align: left; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }

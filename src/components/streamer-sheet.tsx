@@ -17,12 +17,18 @@ import {
   AlertTriangle,
   Check,
   ChevronRight,
-  Coins,
+  CirclePlay,
+  Clapperboard,
+  Gavel,
   Hammer,
+  Handshake,
   Info,
+  MoonStar,
   Radio,
   Sparkles,
   TrendingUp,
+  UsersRound,
+  WifiOff,
   X,
 } from "lucide-react";
 
@@ -37,6 +43,7 @@ import { gameDay } from "@/lib/progression";
 import {
   GUEST_SLOTS,
   GUEST_LIVE_WINDOW_MINUTES,
+  collabVideoPermille,
   SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKEN_CAP,
@@ -67,9 +74,22 @@ import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game";
 import { liveStore } from "@/lib/live-store";
 import { liveFor } from "@/lib/live";
-import { StreamerDeskStage } from "@/components/streamer-desk-stage";
+import { StreamerStudioStage } from "@/components/streamer-studio-stage";
 
 const count = new Intl.NumberFormat("fr-FR");
+
+/**
+ * Une icône par imprévu : la carte se lit avant de se lire. Le titre reste le
+ * texte du fichier de règles ; l'icône n'est qu'une porte d'entrée visuelle.
+ */
+const ICONES_IMPREVU: Record<string, typeof Sparkles> = {
+  modo: Gavel,
+  sponsor: Handshake,
+  clip: Clapperboard,
+  coupure: WifiOff,
+  raid: UsersRound,
+  nuit: MoonStar,
+};
 
 export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const state = useGame();
@@ -158,6 +178,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   // fichier de règles ; le serveur ne connaît que l'identifiant.
   const etatCarte = vue?.event ?? (streamer?.event?.day === jour ? streamer?.event : null);
   const carte = eventById(etatCarte?.event ?? "") ?? eventForDay(jour);
+  // L'icône de l'imprévu du jour : la carte du fichier de règles d'abord, sinon
+  // celle du jour. Une icône par famille d'imprévu, jamais une devinette.
+  const IconeImprevu = ICONES_IMPREVU[carte.id] ?? Sparkles;
   const coteGauche = eventChoice(carte, "gauche");
   const coteDroite = eventChoice(carte, "droite");
   const coteJoue = etatCarte ? eventChoice(carte, etatCarte.choice) : null;
@@ -437,14 +460,10 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
         {!cloud.configured ? (
           <div className="account-note neutral">
             <Info size={15} />
-            <div>
-              <strong>Cette version-ci n&apos;a pas de serveur</strong>
-              <span>
-                Ta chaîne vit alors sur cet appareil, avec les mêmes règles ({STREAMER.tokens.perSuccess}{" "}
-                jetons par vidéo réussie, +{STREAMER.tokens.perBuzz} si elle buzz, {STREAMER_TOKEN_CAP} au
-                plus par journée). Avec un compte, c&apos;est le serveur qui compte.
-              </span>
-            </div>
+            <span>
+              Sans serveur : ta chaîne vit sur cet appareil, mêmes règles ({STREAMER.tokens.perSuccess} jetons
+              par vidéo, +{STREAMER.tokens.perBuzz} si elle buzz, {STREAMER_TOKEN_CAP} au plus par jour).
+            </span>
           </div>
         ) : null}
 
@@ -467,10 +486,11 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           </div>
         ) : null}
 
-        {/* Le bureau du streamer : la scène. Deux socles, de vraies cartes, et
-            le studio qui s'allume avec le setup. C'est la pièce visuelle de
-            « Ta chaîne » — les chiffres viennent juste après. */}
-        <StreamerDeskStage
+        {/* Le studio : la scène. Le décor, les huit objets du setup qui
+            s'allument, les deux socles d'invités — et le HUD (rang, jauge
+            d'abonnés, rythme, jetons) qui remplace les trois chiffres de
+            l'ancien tableau de bord. */}
+        <StreamerStudioStage
           guests={guests}
           direct={direct}
           liveStreams={liveStreams}
@@ -480,6 +500,13 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           raidToday={raidPaye}
           raidLine={raidPaye > 0 ? raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] }) : null}
           raidPossible={raidPossible.gained}
+          subscribers={abonnes}
+          perDay={croissance}
+          tierLabel={progression.tier.label}
+          nextTierAt={progression.next ? progression.next.at : null}
+          progressRatio={progression.ratio}
+          tokens={jetons}
+          tokensCap={STREAMER_TOKEN_CAP}
           busy={busy}
           onOpenSlot={(place) => {
             setPlaceOuverte(place);
@@ -488,34 +515,13 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           onRemove={(place) => void poserInvite(place, null)}
         />
 
-        <section className="chaine-state">
-          <div className="chaine-numbers">
-            <div>
-              <strong>{count.format(abonnes)}</strong>
-              <span>abonnés</span>
-            </div>
-            <div>
-              <strong>+{count.format(croissance)}</strong>
-              <span>par jour</span>
-            </div>
-            <div>
-              <strong>{progression.tier.label}</strong>
-              <span>palier</span>
-            </div>
-          </div>
-          <div className="progress-track large">
-            <i style={{ width: `${Math.round(progression.ratio * 100)}%` }} />
-          </div>
-          <p className="chaine-next">
-            {progression.next
-              ? `Prochain palier : « ${progression.next.label} » à ${count.format(progression.next.at)} abonnés — ${count.format(progression.next.at - abonnes)} à trouver.`
-              : "Ta chaîne est au sommet : « Légende du direct »."}
-          </p>
-        </section>
-
-        {/* L'imprévu du jour : une carte, deux réponses, un tirage serveur. */}
+        {/* L'imprévu du jour : une carte, deux réponses, un tirage serveur.
+            Compacte : l'icône, le titre, deux lignes de situation, et les deux
+            actions arcade — leurs chances sont sur les boutons. */}
         <section className="chaine-event">
-          <h3>{carteJouee ? "L'imprévu du jour est joué" : "L'imprévu du jour"}</h3>
+          <h3 className="chaine-badge">
+            <Sparkles size={14} /> Événement du jour
+          </h3>
           {carteJouee && etatCarte && coteJoue ? (
             <p className="chaine-outcome">
               {eventHeadline({
@@ -528,11 +534,6 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
             </p>
           ) : (
             <>
-              <p className="chaine-intro">
-                Glisse la carte d&apos;un côté ou de l&apos;autre — ou appuie sur une réponse. La réussite, le buzz et le
-                bad buzz sont tirés par le serveur (ou par l&apos;appareil, sans compte) : l&apos;écran ne choisit que le
-                côté.
-              </p>
               <div
                 className={`chaine-card${armed ? " arme" : ""}`}
                 style={{
@@ -543,10 +544,12 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                 onPointerUp={cardEnd}
                 onPointerCancel={cardCancel}
               >
-                <span className="chaine-card-kind">
-                  <Sparkles size={13} /> Imprévu
+                <span className="chaine-card-head">
+                  <span className="chaine-card-icon" aria-hidden="true">
+                    <IconeImprevu size={17} />
+                  </span>
+                  <strong className="chaine-card-title">{carte.label}</strong>
                 </span>
-                <strong className="chaine-card-title">{carte.label}</strong>
                 <p className="chaine-card-text">{carte.detail}</p>
                 <div className="chaine-card-sides">
                   <span className={armed === "gauche" ? "arme" : undefined}>{coteGauche?.label}</span>
@@ -555,31 +558,22 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               </div>
               <div className="chaine-card-buttons">
                 <button type="button" disabled={busy} onClick={() => void repondre("gauche")}>
-                  {coteGauche?.label}
+                  <span>{coteGauche?.label}</span>
                   {coteGauche ? <em>{(coteGauche.successChancePermille / 10).toFixed(0)} %</em> : null}
                 </button>
                 <button type="button" disabled={busy} onClick={() => void repondre("droite")}>
-                  {coteDroite?.label}
+                  <span>{coteDroite?.label}</span>
                   {coteDroite ? <em>{(coteDroite.successChancePermille / 10).toFixed(0)} %</em> : null}
                 </button>
               </div>
-              <p className="chaine-card-odds">
-                {[coteGauche, coteDroite].map((cote, index) =>
-                  cote ? (
-                    <span key={cote.id}>
-                      {index === 0 ? "Gauche" : "Droite"} : ×{(cote.gainPermille / 1000).toFixed(1)} de la croissance
-                      {" · "}buzz {(cote.buzzPermille / 10).toFixed(0)} %
-                      {cote.badBuzzPermille > 0 ? ` · bad buzz ${(cote.badBuzzPermille / 10).toFixed(0)} %` : ""}
-                    </span>
-                  ) : null,
-                )}
-              </p>
             </>
           )}
         </section>
 
         <section className="chaine-video">
-          <h3>{deja ? "La vidéo du jour est publiée" : "La vidéo du jour"}</h3>
+          <h3 className="chaine-badge">
+            <CirclePlay size={14} /> {deja ? "Vidéo publiée" : "Vidéo du jour"}
+          </h3>
           {deja && video ? (
             <p className="chaine-outcome">
               {formatById(video.format)
@@ -591,10 +585,6 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
             </p>
           ) : (
             <>
-              <p className="chaine-intro">
-                Un format par journée de jeu. La réussite, le buzz et le bad buzz sont tirés par le serveur —
-                l&apos;appareil ne choisit que le format.
-              </p>
               <div className="chaine-formats" role="radiogroup" aria-label="Format de la vidéo du jour">
                 {(formats.length ? formats : STREAMER.formats).map((format) => {
                   const actif = choisi === format.id;
@@ -609,14 +599,13 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                     >
                       <span className="chaine-format-head">
                         <strong>{format.label}</strong>
-                        <span>{(format.successChancePermille / 10).toFixed(1)} % de réussite</span>
+                        <em>{(format.successChancePermille / 10).toFixed(0)} %</em>
                       </span>
-                      <span className="chaine-format-detail">{format.detail}</span>
                       <span className="chaine-format-odds">
-                        ×{(format.gainPermille / 1000).toFixed(1)} de la croissance · buzz{" "}
+                        ×{(format.gainPermille / 1000).toFixed(1)} gain · buzz{" "}
                         {(format.buzzPermille / 10).toFixed(0)} %
-                        {format.badBuzzPermille ? ` · bad buzz ${(format.badBuzzPermille / 10).toFixed(0)} %` : ""}
-                        {format.requiresCreator ? " · demande un créateur" : ""}
+                        {format.badBuzzPermille ? ` · bad ${(format.badBuzzPermille / 10).toFixed(0)} %` : ""}
+                        {format.requiresCreator ? " · créateur requis" : ""}
                       </span>
                     </button>
                   );
@@ -632,9 +621,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                 disabled={busy || !choisi}
                 onClick={() => setLiveOuvert(true)}
               >
-                <Radio size={15} />
-                Lancer le live de {LIVE_SECONDS} s
-                <span>chat qui défile et bulles à attraper — puis publie ta vidéo</span>
+                <CirclePlay size={17} />
+                <span>Lancer le live de {LIVE_SECONDS} s</span>
+                <em>{formatById(choisi)?.label ?? ""}</em>
               </button>
               <button type="button" className="chaine-publish" disabled={busy || !choisi} onClick={() => void publier()}>
                 {busy ? "Publication…" : "Publier sans jouer le live"}
@@ -642,29 +631,17 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               </button>
             </>
           )}
-          <div className="token-row">
-            <Coins size={14} />
-            <span>
-              <strong>{jetons}</strong> / {STREAMER_TOKEN_CAP} jetons versés aujourd&apos;hui par la chaîne
-            </span>
-          </div>
         </section>
 
-        {/* Ton setup : des paliers en points, une fois chacun, dans l'ordre. */}
+        {/* Ton setup : les paliers du studio. Le rang, le prix, le gain — et
+            l'action quand c'est le tour du palier. Les chiffres du HUD suivent. */}
         <section className="chaine-setup">
-          <h3>
-            <Hammer size={16} /> Ton setup
+          <h3 className="chaine-badge">
+            <Hammer size={14} /> Ton setup
+            {bonus > 0 ? <em className="chaine-badge-bonus">+{(bonus / 10).toFixed(0)} %</em> : null}
           </h3>
-          <p className="chaine-intro">
-            Chaque palier s&apos;installe <strong>une fois</strong>, dans l&apos;ordre, et fait grandir la chaîne plus
-            vite — pour toujours. Les cinq premiers se paient en <strong>points</strong> ; les trois derniers en{" "}
-            <strong>doublons</strong> de ta collection.
-            {bonus > 0
-              ? ` Aujourd'hui : +${(bonus / 10).toFixed(0)} % de croissance (${count.format(croissance)} par jour au lieu de ${count.format(growthWithSetup(abonnes, []))}).`
-              : ""}
-          </p>
           <ul className="chaine-setup-list">
-            {SETUP_LEVELS.map((niveau) => {
+            {SETUP_LEVELS.map((niveau, rang) => {
               const installe = setup.includes(niveau.id);
               const suivant = prochain?.id === niveau.id;
               return (
@@ -672,34 +649,34 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                   key={niveau.id}
                   className={`chaine-setup-item${installe ? " installe" : suivant ? " suivant" : ""}`}
                 >
+                  <span className="chaine-setup-rank" aria-hidden="true">
+                    {installe ? <Check size={13} /> : rang + 1}
+                  </span>
                   <span className="chaine-setup-head">
                     <strong>{niveau.label}</strong>
                     <span>
-                      {installe ? (
-                        <>
-                          <Check size={13} /> installé
-                        </>
-                      ) : niveau.currency === "doublons" ? (
-                        `${count.format(niveau.price)} doublon${niveau.price > 1 ? "s" : ""}`
-                      ) : (
-                        `${count.format(niveau.price)} points`
-                      )}
+                      {niveau.currency === "doublons"
+                        ? `${count.format(niveau.price)} doublon${niveau.price > 1 ? "s" : ""}`
+                        : `${count.format(niveau.price)} pts`}
+                      {niveau.growthPermille ? ` · +${(niveau.growthPermille / 10).toFixed(0)} %` : ""}
                     </span>
                   </span>
-                  <span className="chaine-setup-note">
-                    {niveau.note}
-                    {niveau.growthPermille
-                      ? ` (+${(niveau.growthPermille / 10).toFixed(0)} % de croissance)`
-                      : ""}
-                  </span>
-                  {suivant && niveau.currency === "points" ? (
+                  {suivant ? (
                     <button
                       type="button"
                       className="chaine-setup-buy"
                       disabled={busy}
-                      onClick={() => void acheter(niveau.id)}
+                      onClick={() =>
+                        niveau.currency === "points"
+                          ? void acheter(niveau.id)
+                          : document
+                              .querySelector(".chaine-studio")
+                              ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                      }
                     >
-                      Installer pour {count.format(niveau.price)} points
+                      {niveau.currency === "points"
+                        ? `Installer · ${count.format(niveau.price)} pts`
+                        : `Sacrifier · ${count.format(niveau.price)} doublon${niveau.price > 1 ? "s" : ""}`}
                     </button>
                   ) : null}
                 </li>
@@ -711,18 +688,17 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
               Épique vaut deux Rares — et une Légendaire ne part jamais. */}
           {prochain && prixDoublons > 0 ? (
             <div className="chaine-studio">
-              <p className="chaine-intro">
-                « {prochain.label} » se paie en <strong>doublons</strong> : {count.format(prochain.price)} point
-                {prochain.price > 1 ? "s" : ""} de sacrifice. Un <strong>Rare</strong> vaut{" "}
-                {sacrificeValue("rare")}, un <strong>Épique</strong> vaut {sacrificeValue("epic")} — et une{" "}
-                <strong>Légendaire ne part jamais</strong>.
-              </p>
+              <div className="chaine-chips">
+                <span className="chaine-chip violet">
+                  « {prochain.label} » · {count.format(prochain.price)} point
+                  {prochain.price > 1 ? "s" : ""} de sacrifice
+                </span>
+                <span className="chaine-chip">
+                  Rare = {sacrificeValue("rare")} · Épique = {sacrificeValue("epic")} · Légendaire jamais
+                </span>
+              </div>
               {candidats.length === 0 ? (
-                <p className="chaine-next">
-                  Aucun doublon Rare ou Épique dans ton classeur pour l&apos;instant : le studio attend. Les
-                  Communes et les Peu communes ne partent pas, une Légendaire non plus, et jamais la dernière
-                  copie d&apos;un créateur.
-                </p>
+                <p className="chaine-note">Aucun doublon Rare ou Épique pour l&apos;instant.</p>
               ) : (
                 <>
                   <ul className="chaine-studio-list">
@@ -761,9 +737,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                       );
                     })}
                   </ul>
-                  <p className="chaine-next">
-                    Sélection : {valeurSacrifice} / {count.format(prochain.price)} point
-                    {prochain.price > 1 ? "s" : ""} de sacrifice.
+                  <p className="chaine-note">
+                    Sélection {valeurSacrifice} / {count.format(prochain.price)} point
+                    {prochain.price > 1 ? "s" : ""} de sacrifice
                   </p>
                   {confirmeSacrifice ? (
                     <div className="chaine-studio-confirme">
@@ -809,27 +785,20 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
             </div>
           ) : null}
 
-          <p className="chaine-next">
+          <p className="chaine-note">
             {prochain
               ? prochain.currency === "doublons"
-                ? `Prochain palier : « ${prochain.label} » — ${count.format(prochain.price)} point${prochain.price > 1 ? "s" : ""} de sacrifice (des doublons Rares ou Épiques).`
-                : `Prochain palier : « ${prochain.label} » à ${count.format(prochain.price)} points.`
-              : "Ton setup est complet : la chaîne grandit deux fois plus vite qu'à ses débuts."}
+                ? `Suivant : ${prochain.label} · ${count.format(prochain.price)} point${prochain.price > 1 ? "s" : ""} de sacrifice`
+                : `Suivant : ${prochain.label} · ${count.format(prochain.price)} points`
+              : "Setup complet · +100 % de croissance"}
           </p>
         </section>
 
-        {/* Le bureau : la scène est plus haut, et la sélection vit ici. Ce que
-            la scène ne dit pas, l'intro le dit — les deux règles du plateau,
-            sans quoi le joueur ne saurait pas ce qu'il regarde. */}
-        <section className="chaine-bureau">
-          <p className="chaine-intro">
-            Tes <strong>{GUEST_SLOTS} invités</strong> (deux créateurs différents) pèsent sur la{" "}
-            <strong>vidéo du jour</strong> — la rareté d&apos;abord, et le direct en plus. Quand leur créateur
-            streame vraiment — la même fenêtre de {GUEST_LIVE_WINDOW_MINUTES} minutes que le badge du direct —
-            son passage paie aussi un <strong>raid</strong>, une fois par journée de jeu. Ça ne coûte rien, et
-            changer d&apos;invité ne repaie jamais.
-          </p>
-          {placeOuverte === null ? null : (
+        {/* Le classeur d'invités : il ne s'ouvre que sur un socle, et il ne
+            propose que des créateurs **en direct** — un invité hors ligne
+            n'amène rien. Deux créateurs différents, une carte par créateur. */}
+        {placeOuverte === null ? null : (
+          <section className="chaine-bureau">
             <div className="chaine-bureau-pick">
               <div className="chaine-bureau-pick-head">
                 <strong>Place {placeOuverte}</strong>
@@ -843,10 +812,13 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                   <X size={14} /> Fermer
                 </button>
               </div>
-              <p className="chaine-bureau-pick-hint">
-                Seuls les créateurs <strong>en direct maintenant</strong> sont proposés : un invité hors ligne
-                n&apos;amène rien, et le bureau ne sert qu&apos;à ça. Une carte par créateur.
-              </p>
+              <div className="chaine-chips">
+                <span className="chaine-chip violet">
+                  <Radio size={11} /> En direct maintenant
+                </span>
+                <span className="chaine-chip">Un créateur par carte</span>
+                <span className="chaine-chip">{GUEST_LIVE_WINDOW_MINUTES} min de fraîcheur</span>
+              </div>
               <input
                 className="chaine-bureau-search"
                 type="search"
@@ -866,8 +838,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                       >
                         <strong>{carte.label}</strong>
                         <span>
-                          {RARITY_META[carte.rarity].label} · +{(carte.permille / 10).toFixed(1)} % de croissance ·{" "}
-                          {count.format(Math.floor((croissance * carte.permille) / 1000))} abonnés au relevé
+                          {RARITY_META[carte.rarity].label} · relevé +
+                          {count.format(Math.floor((croissance * carte.permille) / 1000))} · plateau +
+                          {(collabVideoPermille(carte.rarity) / 10).toFixed(0)} %
                         </span>
                       </button>
                     </li>
@@ -875,20 +848,20 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                 </ul>
               ) : (
                 <p className="chaine-bureau-empty">
-                  {recherche.trim()
-                    ? `Aucun créateur en direct ne correspond à « ${recherche.trim()} ».`
-                    : "Aucun créateur de ta collection n'est en direct à cet instant — reviens quand l'un des tiens streame."}
+                  Aucun créateur de ta collection n&apos;est en direct maintenant.
                 </p>
               )}
             </div>
-          )}
-        </section>
+          </section>
+        )}
 
-        <p className="odds-intro">
-          La chaîne grandit <strong>par journées de jeu</strong> (6 h UTC, la même journée que les missions),
-          pendant que tu joues comme pendant ton absence — {STREAMER.growth.capDays} journées comptées au
-          plus, et une horloge reculée ne crédite rien.
-        </p>
+        {/* Les règles du soir, en une ligne : la journée de jeu, le plafond de
+            l'absence. Le reste (les taux, le tirage) vit au serveur et sur
+            l'écran des taux — pas de notice ici. */}
+        <div className="chaine-chips">
+          <span className="chaine-chip">Journées de jeu · 6 h UTC</span>
+          <span className="chaine-chip">Absence comptée {STREAMER.growth.capDays} jours au plus</span>
+        </div>
           </>
         )}
       </div>

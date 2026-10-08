@@ -106,7 +106,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **25 instantanés** : quatre onglets, feuilles ouvertes, un booster tiré, le live du jour, **le bureau du streamer** (socles, objets de studio allumés par le setup, aura du direct) — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **37 instantanés** : quatre onglets, feuilles ouvertes, un booster tiré, le live du jour, et **le studio de « Ta chaîne »** (HUD, décor, socles, aura du direct) — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -253,7 +253,8 @@ src/components/          UI : la coque (creator-deck-app.tsx — navigation,
 src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre onglets, feuilles,
 src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
 src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, le
-                         bureau du streamer (socles, cartes, aura du direct)
+                         studio de « Ta chaîne » (HUD, socles, cartes, aura du
+                         direct, gestes du doigt)
 src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)

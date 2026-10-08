@@ -91,59 +91,60 @@ describe("les écrans", () => {
     expect(revelation).toContain("cartes · 1 Rare ou mieux garantie");
   });
 
-  it("ouvre « Ta chaîne » et montre l'état, la vidéo du jour et les jetons", async () => {
+  it("ouvre « Ta chaîne » : le studio, le HUD, l'événement et la vidéo du jour", async () => {
     await application();
     banc.appuyer(/Ta chaîne/);
     const chaine = banc.ecran("10-chaine");
-    // L'écran porte l'état de la chaîne, ses paliers, le calendrier de contenu
-    // et le plafond de jetons — c'est le serveur qui paiera, l'écran affiche.
-    expect(chaine).toContain("Ta chaîne");
-    expect(chaine).toContain("abonnés");
-    expect(chaine).toContain("La vidéo du jour");
     // jsdom garde l'apostrophe nue dans un nœud de texte (les entités ne
     // s'appliquent qu'aux attributs).
+    expect(chaine).toContain("Ta chaîne");
     expect(chaine).toContain("Let's Play");
-    expect(chaine).toContain("jetons versés aujourd");
-    // L'imprévu du jour : la carte à glisser, ses deux réponses chiffrées et le
-    // repli au doigt. Les chances sont affichées, jamais cachées.
-    expect(chaine).toContain("imprévu du jour");
-    expect(chaine).toContain("Glisse la carte");
-    expect(chaine).toContain("%");
-    // Le setup : les cinq paliers, le prochain en clair, et son prix en points.
+    // **Le studio** : la scène (et non une liste), son HUD de jeu, la pièce avec
+    // ses huit objets éteints, et les deux socles d'invités libres.
+    expect(chaine).toContain("chaine-stage");
+    expect(document.querySelector(".chaine-hud-rank")).not.toBeNull();
+    expect(chaine).toContain("Petit canal");
+    expect(chaine).toContain("0 / 2\u202f500");
+    expect(chaine).toContain("+240 / jour");
+    expect(document.querySelectorAll(".chaine-object")).toHaveLength(8);
+    expect(document.querySelectorAll(".chaine-object.on")).toHaveLength(0);
+    expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
+    expect(chaine).toContain("Place 1");
+    // Les badges remplacent les titres et les notices : l'événement du jour, la
+    // vidéo du jour, le setup, et les deux grosses actions arcade.
+    expect(chaine).toContain("Événement du jour");
+    expect(chaine).toContain("Vidéo du jour");
     expect(chaine).toContain("Ton setup");
-    expect(chaine).toContain("Prochain palier");
-    expect(chaine).toContain("points");
-    // Le bureau : une **scène** (pas une liste de texte), deux socles libres,
-    // le studio à éteindre palier par palier, et la règle du raid écrite.
-    expect(chaine).toContain("chaine-scene");
-    expect(chaine).toContain("Le bureau du streamer");
-    expect(chaine).toContain("Le bureau");
-    expect(chaine).toContain("Place 1 libre");
-    expect(chaine).toContain("Place 2 libre");
-    expect(chaine).toContain("chaine-prop prop-webcam");
-    expect(document.querySelectorAll(".chaine-slot.libre")).toHaveLength(2);
-    expect(chaine).toContain("Invite une carte de ta collection");
-    expect(chaine).toContain("une fois par journée de jeu");
+    expect(document.querySelectorAll(".chaine-card-buttons button")).toHaveLength(2);
+    expect(chaine).toContain("%");
+    // **Aucune notice** : plus de mode d'emploi du backend ni de phrase de geste.
+    expect(chaine).not.toContain("Glisse la carte");
+    expect(chaine).not.toContain("Prochain palier");
+    expect(chaine).not.toContain("jetons versés aujourd");
+    expect(chaine).not.toContain("Le tirage de la vidéo");
+    expect(chaine).not.toContain("Place 1 libre");
     banc.fermer();
   });
 
   it("le socle du bureau ouvre le classeur, qui ne propose que des créateurs en direct", async () => {
     await application();
     banc.appuyer(/Ta chaîne/);
-    // Le « + » du socle de la place 1 : c'est le geste de la scène.
-    banc.appuyer(/^Place 1 libre/);
+    // Le socle de la place 1 est un bouton sans texte (le « + » est un dessin) :
+    // on l'ouvre par son nom accessible, comme le ferait un lecteur d'écran.
+    banc.appuyerNom("Choisir un invité pour la place 1");
     const choix = banc.ecran("10-chaine-bureau-choix");
     // Ce que l'écran promet, et ce qu'il refuse de faire : une liste inventée.
-    expect(choix).toContain("Seuls les créateurs");
+    expect(choix).toContain("En direct maintenant");
     expect(choix).toContain("Chercher un créateur en direct");
+    expect(choix).toContain("Un créateur par carte");
     // Ce banc n'a pas de table du direct (aucun cloud) : personne n'est
     // proposé, et l'écran le dit au lieu de laisser une liste vide muette.
     expect(choix).toContain("Aucun créateur de ta collection n'est en direct");
     banc.appuyer("Fermer");
-    // Fermer la feuille rend la scène telle quelle : la place est toujours là.
+    // Fermer le classeur rend la scène telle quelle : le socle est toujours là.
     const ferme = banc.ecran("10-chaine-bureau-ferme");
-    expect(ferme).toContain("Place 1 libre");
-    expect(ferme).toContain("Le bureau du streamer");
+    expect(ferme).toContain("Place 1");
+    expect(document.querySelectorAll(".chaine-stand.libre")).toHaveLength(2);
     banc.fermer();
   });
 
@@ -168,7 +169,10 @@ describe("les écrans", () => {
     doigt("pointermove", 118);
     doigt("pointerup", 118);
     await act(async () => {});
-    expect(banc.ecran("10-chaine-effleurement")).toContain("Glisse la carte d");
+    banc.ecran("10-chaine-effleurement");
+    // L'effleurement n'a rien joué : la carte est toujours là, entière.
+    expect(document.querySelector(".chaine-card")).not.toBeNull();
+    expect(document.querySelector(".chaine-outcome")).toBeNull();
 
     // Un geste **retiré** (appel entrant, défilement pris par le navigateur) :
     // la carte s'arme, puis l'annulation la repose sans jouer.
@@ -176,7 +180,10 @@ describe("les écrans", () => {
     doigt("pointermove", 90);
     doigt("pointercancel", 90);
     await act(async () => {});
-    expect(banc.ecran("10-chaine-geste-retire")).toContain("Glisse la carte d");
+    banc.ecran("10-chaine-geste-retire");
+    // Le geste retiré repose la carte : rien n'est armé, rien n'est joué.
+    expect(document.querySelector(".chaine-card-sides span.arme")).toBeNull();
+    expect(document.querySelector(".chaine-outcome")).toBeNull();
 
     // Un geste franc vers la gauche : le côté s'arme pendant le glissement…
     doigt("pointerdown", 200);
@@ -186,8 +193,10 @@ describe("les écrans", () => {
     doigt("pointerup", 90);
     await act(async () => {});
     const joue = banc.ecran("10-chaine-imprevu-joue");
-    expect(joue).toContain("imprévu du jour est joué");
-    expect(joue).not.toContain("Glisse la carte d");
+    // L'imprévu est joué : la carte laisse place au verdict du serveur.
+    expect(document.querySelector(".chaine-outcome")).not.toBeNull();
+    expect(document.querySelector(".chaine-card")).toBeNull();
+    expect(joue).toContain("Événement du jour");
     banc.fermer();
   });
 

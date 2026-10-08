@@ -78,6 +78,27 @@ export function creerBanc() {
     });
   }
 
+  /**
+   * Un appui **par nom accessible** : le socle d'un invité est un bouton sans
+   * texte (le « + » n'est qu'un dessin), son nom est son `aria-label`.
+   */
+  function appuyerNom(nom: string | RegExp) {
+    const cible = boutons().find((b) => {
+      const aria = b.getAttribute("aria-label") ?? "";
+      return typeof nom === "string" ? aria === nom : nom.test(aria);
+    });
+    if (!cible) {
+      throw new Error(
+        `bouton sans nom « ${String(nom)} » — vu : ${boutons()
+          .map((b) => b.getAttribute("aria-label") ?? (b.textContent ?? "").trim().slice(0, 24))
+          .join(" | ")}`,
+      );
+    }
+    act(() => {
+      cible.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+  }
+
   /** Le bouton croix des feuilles (`aria-label="Fermer"`). */
   function fermer() {
     const cible = document.querySelector<HTMLButtonElement>('button[aria-label="Fermer"]');
@@ -87,5 +108,16 @@ export function creerBanc() {
     });
   }
 
-  return { preparer, nettoyer, vider, monter, ecran, appuyer, fermer, boutons, racine: () => racine };
+  return {
+    preparer,
+    nettoyer,
+    vider,
+    monter,
+    ecran,
+    appuyer,
+    appuyerNom,
+    fermer,
+    boutons,
+    racine: () => racine,
+  };
 }
