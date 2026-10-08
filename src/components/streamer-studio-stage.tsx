@@ -49,6 +49,7 @@ import {
   collabVideoPermille,
   type StreamerGuest,
 } from "@/lib/streamer";
+import { EMBLEME_ASSET, emblemesSurLEtagere } from "@/lib/studio-emblem";
 import { studioArrivees, studioNuages } from "@/lib/studio-install";
 import {
   studioAccessories,
@@ -93,6 +94,13 @@ export type StreamerStudioStageProps = {
    * pièce est celle du quotidien, rien ne bouge.
    */
   justInstalled?: string | null;
+  /**
+   * Les **emblèmes d'Arène** gagnés (une semaine terminée dans le top 10) : ils
+   * attendent sur l'étagère du fond. Le pont entre les deux univers du jeu —
+   * ce qui se gagne dans l'Arène se voit dans le Studio (le TCG se joue dans le
+   * Drop et le Binder, la chaîne vit ici). Zéro : rien sur l'étagère.
+   */
+  emblemes?: number;
   /** Ce que le plateau vaut **maintenant**, pour mille (`collabFor()`). */
   collabPermille: number;
   /** Un invité streame à cet instant. */
@@ -171,6 +179,7 @@ export function StreamerStudioStage({
   liveStreams,
   setup,
   justInstalled = null,
+  emblemes = 0,
   collabPermille,
   collabLive,
   raidToday,
@@ -197,6 +206,9 @@ export function StreamerStudioStage({
   // deux listes viennent du **même** fichier de pièce : rien n'est écrit ici.
   const arrivees = useMemo(() => studioArrivees(justInstalled ?? ""), [justInstalled]);
   const fumee = useMemo(() => studioNuages(justInstalled ?? ""), [justInstalled]);
+  // Les couronnes de l'Arène : posées sur l'étagère, une par semaine gagnée
+  // (trois au plus). Rien à gagner, rien à montrer.
+  const couronnes = useMemo(() => emblemesSurLEtagere(emblemes), [emblemes]);
   // L'objet est-il de ceux qui viennent d'arriver, et à quel tour ?
   const tour = (id: string) => arrivees.findIndex((entree) => entree.id === id);
   const arrive = (id: string) => tour(id) >= 0;
@@ -321,6 +333,37 @@ export function StreamerStudioStage({
                 "--install-delay": retard(gadget.id),
               } as React.CSSProperties
             }
+          />
+        ))}
+
+        {/* L'emblème d'Arène, sur l'étagère du fond : le TCG qui entre dans le
+            Studio. Un gagne de l'Arène, et l'autre le voit chez soi. */}
+        {couronnes.map((couronne, index) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={`embleme-${index}`}
+            className="chaine-embleme"
+            src={EMBLEME_ASSET}
+            alt={index === 0 ? "" : undefined}
+            // Une seule ligne lisible pour tout le groupe : le nom de ce que
+            // c'est, et combien de semaines ça représente. Le reste est du
+            // dessin, il n'a rien à annoncer.
+            role={index === 0 ? "img" : undefined}
+            aria-label={
+              index === 0
+                ? couronnes.length > 1
+                  ? `Emblèmes d'Arène : ${couronnes.length}`
+                  : "Emblème d'Arène"
+                : undefined
+            }
+            aria-hidden={index === 0 ? undefined : true}
+            draggable={false}
+            style={{
+              left: partX(couronne.left),
+              top: partY(couronne.top),
+              width: partX(couronne.largeur),
+              height: partY(couronne.hauteur),
+            }}
           />
         ))}
 

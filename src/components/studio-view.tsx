@@ -549,6 +549,11 @@ export function StudioView() {
           liveStreams={liveStreams}
           setup={setup}
           justInstalled={installe}
+          // L'emblème d'Arène : une couronne par semaine terminée dans le
+          // top 10. C'est le serveur qui les connaît (`arena_me`, journal des
+          // semaines encaissées) ; hors ligne, l'Arène n'existe pas, donc rien
+          // sur l'étagère.
+          emblemes={(cloud.arenaMine?.claims ?? []).filter((claim) => claim.emblem).length}
           collabPermille={vue ? vue.collabPermille : collabPossible.permille}
           collabLive={vue ? vue.collabLive : collabPossible.live}
           raidToday={raidPaye}

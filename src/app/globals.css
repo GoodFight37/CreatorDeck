@@ -3030,3 +3030,10 @@ input:focus-visible {
 .notify-switch .menu-row > svg { margin-left: 0; }
 .notify-switch .menu-row > span:first-of-type { flex: 1; }
 .notify-switch .account-hint { margin: 6px 2px 0; }
+
+/* **L'emblème d'Arène** posé sur l'étagère du Studio : la couronne gagnée dans
+   l'Arène (top 10, une fois par semaine) vient se voir chez soi. C'est le seul
+   endroit où les deux univers du jeu se touchent — il ne rapporte rien, il
+   raconte. Une lueur douce, jamais un feu d'artifice : elle est là tous les
+   jours, pas au moment où on la gagne. */
+.chaine-embleme { position: absolute; z-index: 2; display: block; object-fit: contain; user-select: none; pointer-events: none; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .75)) drop-shadow(0 0 5px rgb(255 209 122 / .45)); }

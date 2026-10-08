@@ -139,7 +139,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**993 tests**, 62 fichiers aujourd'hui).
+  (**1055 tests**, 70 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les cinq onglets, le marquage de l'onglet actif, l'accès au compte
@@ -348,9 +348,11 @@ Le jeu a deux moitiés, et elles ne se mélangent pas :
   ([`docs/ta-chaine.md`](docs/ta-chaine.md)).
 
 Les deux se croisent **par les cartes** (un invité du Studio est une carte du
-Binder, un palier du studio se paie en doublons) — et c'est tout : aucun
-compteur du TCG ne compte les abonnés, aucun prix du Studio n'est payé en
-points de collection.
+Binder, un palier du studio se paie en doublons) et par **l'emblème d'Arène**,
+posé sur l'étagère de la pièce : ce qui se gagne dans l'Arène se voit chez soi,
+et ça ne rapporte rien de plus. Pour le reste, chacun chez soi : aucun compteur
+du TCG ne compte les abonnés, aucun prix du Studio n'est payé en points de
+collection.
 
 ## Économie, saisons et taux de drop
 

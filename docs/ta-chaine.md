@@ -242,6 +242,23 @@
   **inchangés** : mêmes paliers, mêmes multiplicateurs, même serveur (`0041`).
   La pièce ne décide de rien — elle montre.
 
+- [x] **Le jus : les moments rares se voient** (8 octobre 2026) — trois ajouts,
+  aucune règle touchée, **aucune migration à coller**. **La révélation** :
+  l'Épique a son **éclat**, la Légendaire et le Perfect leur **explosion dorée**
+  et leur écran blanc — des planches pixel-art (`public/fx/`, 44 Ko) découpées
+  en CSS, calées sur le son (`src/lib/fx.ts` décide, `effect-burst.tsx`
+  affiche) ; rien sous l'Épique, et tout se coupe avec le réglage des reflets.
+  **L'achat d'un palier** : la pièce se **relit** après l'achat (elle ne le
+  faisait qu'à l'ouverture de l'onglet — l'objet était payé et invisible), les
+  objets du palier **tombent en place**, du fond du mur vers le devant du
+  bureau, et une **bouffée de fumée** marque l'endroit où on vient de les
+  brancher (`src/lib/studio-install.ts` : trois nuages au plus, posés sur la
+  vraie pièce). Le récit du retour reste celui du premier relevé
+  (`releveApres()`) : acheter un palier n'efface plus la paie du joueur.
+  **L'emblème d'Arène** : la couronne gagnée dans l'Arène (top 10, une par
+  semaine) attend **sur l'étagère du Studio** — le pont TCG → Studio, il se
+  gagne dans l'Arène et se voit chez soi (`src/lib/studio-emblem.ts`).
+
 - [x] **Étape 10 bis : la pièce s'habille, le Studio s'entend** — deux
   ajouts, sans une ligne de logique. **Les fenêtres** : le kit fournit chaque
   mur en deux versions (pleine, et percée d'une fenêtre) ; les deux fenêtres
@@ -285,8 +302,10 @@
 
 > Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
 > (étape 7), la **scène du bureau avec le plateau** (étape 8), la **refonte
-> visuelle** (étape 9), **l'onglet Studio en vraies images** (étape 10) et
-> **l'habillage + les bruitages** (étape 10 bis) sont livrés.
+> visuelle** (étape 9), **l'onglet Studio en vraies images** (étape 10),
+> **l'habillage + les bruitages** (étape 10 bis) et **le jus** (les moments
+> rares qui se voient, l'arrivée d'un palier, l'emblème sur l'étagère) sont
+> livrés.
 > **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
 > (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
 > en jouant.

@@ -19,7 +19,10 @@
  *     retirer), et rien ne répond pendant que le serveur travaille ;
  *   * l'**arrivée d'un palier acheté** : ses objets tombent en place, dans
  *     l'ordre de la pièce, et une bouffée de fumée marque l'endroit — une seule
- *     fois, au moment de l'achat.
+ *     fois, au moment de l'achat ;
+ *   * l'**emblème d'Arène** : la couronne gagnée au TCG attend sur l'étagère du
+ *     Studio. C'est le seul pont entre les deux univers — il se voit, il ne se
+ *     lit pas.
  */
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -217,6 +220,39 @@ describe("le studio (la scène)", () => {
       "140ms",
       "280ms",
     ]);
+  });
+
+  it("pose l'emblème d'Arène sur l'étagère, une couronne par semaine gagnée", async () => {
+    // Sans emblème : rien sur l'étagère. C'est le cas de la grande majorité des
+    // joueurs, et il ne doit y avoir aucune trace d'un trophée qu'on n'a pas.
+    await scene();
+    expect(document.querySelectorAll(".chaine-embleme")).toHaveLength(0);
+
+    // Deux semaines gagnées : deux couronnes.
+    banc.vider();
+    await scene({ emblemes: 2 });
+    const couronnes = [...document.querySelectorAll<HTMLImageElement>(".chaine-embleme")];
+    expect(couronnes).toHaveLength(2);
+    // La bonne image, et **dans l'étagère** : une couronne ailleurs dans la
+    // pièce ne serait pas un trophée, juste un autocollant.
+    expect(couronnes[0]!.getAttribute("src")).toBe("/fx/couronne.png");
+    const etagere = [...document.querySelectorAll<HTMLElement>(".chaine-room img")].find((img) =>
+      img.getAttribute("src")?.includes("bookcaseClosed_SE"),
+    );
+    expect(etagere).toBeTruthy();
+    const hautMeuble = Number.parseFloat(etagere!.style.top);
+    for (const couronne of couronnes) {
+      const haut = Number.parseFloat(couronne.style.top);
+      expect(haut).toBeGreaterThan(hautMeuble);
+      expect(haut).toBeLessThan(hautMeuble + 3);
+    }
+    // Un emblème s'annonce une fois, pas une fois par couronne.
+    expect(document.querySelectorAll('[aria-label="Emblèmes d\'Arène : 2"]')).toHaveLength(1);
+
+    banc.vider();
+    await scene({ emblemes: 6 });
+    // Six semaines gagnées : trois couronnes, pas une étagère pleine.
+    expect(document.querySelectorAll(".chaine-embleme")).toHaveLength(3);
   });
 
   it("ne joue l'arrivée qu'une fois : au quotidien, la pièce ne bouge pas", async () => {

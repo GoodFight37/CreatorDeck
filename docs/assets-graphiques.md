@@ -55,7 +55,7 @@ de la pièce, et elle dit qu'il fait jour dehors.
 | `5/` | Modèles **GLB/FBX** (meubles) | Non (3D), lisible seulement par un moteur |
 | `DEMO_Cozy_UI_Pack_doboui` | UI « cozy » : boutons, cartes, hotbar | Possible, pas utilisé (l'interface est maison) |
 | `Pixel Crawler - Free Pack` | Personnages pixel-art | Possible, pas utilisé |
-| `Super Pixel Effects Gigapack (Free Version)` | Effets animés (éclairs, explosions…) en suites de PNG | Possible, pas utilisé |
+| `Super Pixel Effects Gigapack (Free Version)` | Effets animés (éclairs, explosions, fumées, symboles) en suites de PNG | **Oui — c'est le pack des effets** (voir plus bas) |
 | `KayKit_*` | Décors et personnages (Adventurers, Furniture Bits, Skeletons) | Possible, pas utilisé |
 | `interior free` | Intérieur low-poly | À inspecter |
 | `Farm RPG FREE 16x16` | Tuiles 16×16 | Possible, pas utilisé |
@@ -74,6 +74,35 @@ assets**, et ils partent dans l'APK via `public/`.
 * **Les packs d'interface** (`DEMO_Cozy_UI_Pack_doboui`) : l'interface du jeu a
   son propre système de tokens (`src/app/globals.css`) et ses propres badges.
   Y mêler des boutons dessinés casserait la cohérence des cinq onglets.
+
+## Les effets de moment rare, et la couronne de l'Arène
+
+Le pack d'effets fournit des **suites d'images** (une animation = quinze PNG). Le
+jeu n'en embarque que ce qu'il affiche, recopié dans **`public/fx/`** : trois
+**planches** (toutes les images d'une animation sur une seule ligne, découpées
+en CSS par `steps()` — une requête, zéro JavaScript par image) et une couronne.
+
+| Fichier | Contenu | D'où il vient |
+|---|---|---|
+| `public/fx/explosion.png` | 15 images de 192 px — l'explosion dorée | `PNG/Explosions/epic_explosion_002/epic_explosion_002_large_yellow` |
+| `public/fx/eclat.png` | 13 images de 128 px — l'éclat orange | `PNG/Explosions/epic_explosion_001/epic_explosion_001_large_orange` |
+| `public/fx/fumee.png` | 21 images de 64 px — la fumée blanche | `PNG/Smoke Bursts/directional_smoke_burst_001/directional_smoke_burst_001_large_white` |
+| `public/fx/couronne.png` | 1 image de 64 x 48 — l'emblème d'Arène | `PNG/Symbols/symbol_crown_001/symbol_crown_001_large_yellow` (image 19) |
+
+(Les chemins de la dernière colonne sont ceux de
+`Super Pixel Effects Gigapack (Free Version)/`, juste sous `public/streamer/`.)
+Le total pèse **44 Ko**, quand le dossier d'origine en pèse des dizaines de
+mégaoctets : les planches sont **générées** (`montage` d'ImageMagick, puis
+recadrage et compression), et `src/lib/fx.test.ts` lit l'en-tête de chaque PNG
+pour vérifier que la largeur annoncée vaut bien `images × image` — une planche
+recoupée de travers décale toute l'animation, et ça ne se voit qu'en jouant.
+La pose de la couronne, elle, est calculée sur la pièce
+(`src/lib/studio-emblem.ts`) : elle est **posée sur la face du haut de
+l'étagère**, pas collée à des coordonnées écrites à la main.
+
+> **Pour le nettoyage des assets :** `public/fx/` et `public/sfx/` ne sont **pas**
+> les dossiers d'origine — ils sont à garder tels quels, même quand
+> `public/streamer/Super Pixel Effects Gigapack (Free Version)/` sera supprimé.
 
 ## Voir la pièce sans navigateur
 
