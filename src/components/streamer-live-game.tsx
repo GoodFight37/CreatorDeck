@@ -134,7 +134,14 @@ export function StreamerLiveGame({
                 key={bulle.id}
                 type="button"
                 className={`live-alert live-alert-${bulle.kindId}`}
-                style={{ left: `${bulle.leftPercent}%`, top: `${bulle.topPercent}%` }}
+                // La position passe par une variable : le CSS s'en sert pour
+                // empêcher une bulle du bord droit d'être coupée par le cadre.
+                style={
+                  {
+                    "--live-left": `${bulle.leftPercent}%`,
+                    top: `${bulle.topPercent}%`,
+                  } as React.CSSProperties
+                }
                 onPointerDown={() => attraper(bulle.id)}
                 aria-label={`${bulle.label} — ${bulle.hint}`}
               >
