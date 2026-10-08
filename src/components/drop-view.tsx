@@ -24,7 +24,6 @@ import { formatViewers, liveFor } from "@/lib/live";
 
 import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
-import { tierFor } from "@/lib/streamer";
 
 import { buzz } from "@/lib/haptics";
 
@@ -87,8 +86,6 @@ export function HomeView({
   onShowMissions,
   onShowAtelier,
   onShowArena,
-  streamerLine,
-  onShowStreamer,
   onOpenScene,
   opening,
   usingHourglass,
@@ -112,13 +109,6 @@ export function HomeView({
   onShowAtelier: () => void;
   /** La ligne d'arène mène à l'écran Arène (dépôt, draft, classement). */
   onShowArena: () => void;
-  /**
-   * La ligne de « Ta chaîne » (abonnés, vidéo du jour faite ou pas) — `null`
-   * quand la partie n'est pas encore chargée.
-   */
-  streamerLine: { subscribers: number; tier: string; publishedToday: boolean } | null;
-  /** La porte « Ta chaîne » : l'écran du simulateur de streameur. */
-  onShowStreamer: () => void;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -437,24 +427,6 @@ export function HomeView({
             <span>
               {retiredLeft} Sortant{retiredLeft > 1 ? "s" : ""} encore artisanable
               {retiredLeft > 1 ? "s" : ""} · dernière édition
-            </span>
-            <ChevronRight size={14} />
-          </button>
-        ) : null}
-
-        {streamerLine ? (
-          <button
-            type="button"
-            className={`pity-row streamer-row${streamerLine.publishedToday ? " done" : " hot"}`}
-            onClick={onShowStreamer}
-            aria-label={`Ouvrir ta chaîne : ${streamerLine.subscribers.toLocaleString("fr-FR")} abonnés, ${
-              streamerLine.publishedToday ? "vidéo du jour publiée" : "vidéo du jour à filmer"
-            }`}
-          >
-            <Radio size={14} />
-            <span>
-              Ta chaîne · {streamerLine.subscribers.toLocaleString("fr-FR")} abonnés ·{" "}
-              {streamerLine.publishedToday ? "vidéo du jour publiée" : `« ${streamerLine.tier} », filme ta vidéo`}
             </span>
             <ChevronRight size={14} />
           </button>

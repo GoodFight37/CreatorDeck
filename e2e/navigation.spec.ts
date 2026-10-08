@@ -6,8 +6,8 @@ import { expect, test, type Page } from "@playwright/test";
  *   * la barre du bas montre **quatre piliers**, dans l'ordre ;
  *   * chaque onglet s'ouvre et se marque comme actif (`aria-current="page"`) ;
  *   * « Toi » propose bien d'ouvrir son compte ;
- *   * « Ta chaîne », qui n'a plus d'onglet depuis le 8 octobre 2026, s'ouvre par
- *     sa ligne de l'accueil et se referme par son bouton Retour ;
+ *   * la simulation de streameur (« Ta chaîne ») n'est **nulle part** : ni
+ *     onglet, ni ligne d'accueil, ni écran (retirée le 8 octobre 2026) ;
  *   * rien ne casse côté navigateur : **aucune erreur console**, aucune
  *     exception, sur un tour complet des quatre piliers.
  *
@@ -49,23 +49,13 @@ test("la barre du bas montre les quatre piliers, dans l'ordre", async ({ page })
   }
 });
 
-test("Ta chaîne s'ouvre par sa ligne de l'accueil, et Retour ramène au Drop", async ({ page }) => {
+test("la simulation de streameur n'est plus nulle part", async ({ page }) => {
   await openDeck(page);
-  const ligne = page.getByRole("button", { name: /Ouvrir ta chaîne/ });
-  await expect(ligne).toBeVisible({ timeout: 30_000 });
-  await ligne.click();
-
-  // L'écran se monte dans le flux, et **aucun onglet n'est actif** : la barre ne
-  // l'allume pas, il n'est plus dedans.
-  const hud = page.getByRole("region", { name: "Ta chaîne" });
-  await expect(hud).toBeVisible();
-  for (const label of TABS) {
-    await expect(tab(page, label)).not.toHaveAttribute("aria-current", "page");
-  }
-
-  // La sortie : le bouton Retour, du même côté que l'entrée.
-  await page.getByRole("button", { name: "Retour", exact: true }).click();
-  await expect(tab(page, "Drop")).toHaveAttribute("aria-current", "page");
+  // Ni ligne d'accueil, ni onglet, ni écran : elle a été retirée le 8 octobre
+  // 2026. C'est une absence qu'on vérifie, pas une présence.
+  await expect(page.getByText(/abonnés/)).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Ta chaîne" })).toHaveCount(0);
+  await expect(tab(page, "Studio")).toHaveCount(0);
 });
 
 test("chaque onglet s'ouvre et se marque comme actif", async ({ page }) => {

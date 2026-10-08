@@ -29,9 +29,15 @@ espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 | `coins.wav` | `Items/coin_jingle_small` | des jetons tombent (récompense réclamée) |
 | `gather.wav` | `Items/coins_gather_quick` | un lot de jetons d'un coup |
 | `equip.wav` | `Items/item_equip` | un palier de setup est acheté : l'équipement entre |
-| `power-up.wav` | `Retro/power_up` | la pièce monte d'un cran |
-| `chime.wav` | `Musical Effects/8_bit_chime_positive` | la vidéo du jour est publiée, une récompense tombe |
+| `power-up.wav` | `Retro/power_up` | un palier vient d'être franchi |
+| `chime.wav` | `Musical Effects/8_bit_chime_positive` | une récompense tombe (et la vidéo du jour, quand il y en avait une) |
 | `fanfare.wav` | `Musical Effects/brass_chime_positive` | un raid arrive (un invité est en direct) |
+
+> Les quatre derniers bruitages ont été choisis pour l'écran de la simulation de
+> streameur, **retiré de l'application le 8 octobre 2026 au soir**. Ils restent
+> dans le dépôt, comme le reste de ses sons : ils ne coûtent rien (moins de
+> 300 Ko à eux quatre) et les retirer obligerait à refaire l'inventaire du pack
+> le jour où l'écran reviendrait. Les trois premiers servent au jeu de cartes.
 
 Le **plan de notes synthétisé** reste par-dessus pour ce qu'un bruitage ne sait
 pas dire : la **rareté** d'une carte (l'accord qui monte, la note en plus pour

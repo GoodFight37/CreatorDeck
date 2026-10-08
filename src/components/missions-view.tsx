@@ -266,7 +266,7 @@ export function MissionsView({
             Chaque jour ouvert coche sa case ; la case du jour dit « à faire » ;
             la septième, c'est Le Grand Direct. Un jour manqué remet la série à
             J1 — c'est la règle du moteur, l'écran ne fait que la montrer. */}
-        <div className="streak-plan" role="list" aria-label="Planning du Streamer, sept jours">
+        <div className="streak-plan" role="list" aria-label="Planning de la semaine, sept jours">
           {Array.from({ length: game.streak.target }, (_, index) => {
             const day = index + 1;
             const final = day === game.streak.target;

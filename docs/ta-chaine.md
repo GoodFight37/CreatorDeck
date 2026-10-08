@@ -1,5 +1,26 @@
 # Suivi du chantier : Ta chaîne (Streamer Simulator)
 
+> ## ⚠️ Cette fonctionnalité n'est plus dans l'application
+>
+> La simulation de streameur — l'écran « Ta chaîne » et son live de vingt
+> secondes — a été **retirée de l'application le 8 octobre 2026 au soir**, sur
+> décision de produit : il ne reste, côté joueur, que les **quatre piliers** du
+> jeu de cartes (Drop, Binder, Craft, Toi).
+>
+> **Ce fichier reste la référence** de ce qui avait été construit : les étapes,
+> les règles, les chiffres, les décisions. Rien n'a été perdu côté moteur —
+> `src/lib/streamer.ts`, `src/data/streamer.json`, `src/lib/live-game.ts`,
+> `src/lib/swipe.ts`, les migrations `0036` à `0041` et leurs tests sont
+> **toujours dans le dépôt**, et **aucune migration n'est à recoller** si l'écran
+> revient un jour. Ce qui n'existe plus : le composant (`studio-view.tsx`), le
+> mini-jeu (`streamer-live-game.tsx`), la ligne de l'accueil qui les ouvrait, et
+> leurs styles.
+>
+> Ce qui reste **vivant** dans la suite du jeu : les **bruitages** (tous sous
+> l'interrupteur *Son*), les **cartes** et leurs effets de rareté, et l'**Arène**
+> (l'emblème qui se gagnait dans l'Arène ne se pose plus nulle part : il se lit
+> dans l'Arène).
+
 > **Ce fichier est la feuille de route du chantier.** Les cases disent l'état
 > **réel**, pas l'intention : une case se coche quand la chose est **livrée et
 > poussée** sur la branche de travail, jamais avant. À chaque livraison ou

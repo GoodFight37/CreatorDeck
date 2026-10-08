@@ -22,6 +22,13 @@ page : `git checkout 6050cb2 -- public/streamer`. La licence est **CC0** : elle
 n'a jamais demandé de le garder, et elle ne demande rien non plus pour l'avoir
 retiré.
 
+> **Et l'écran qui s'en servait ?** Retiré aussi, le même soir, sur demande du
+> joueur : la simulation de streameur (« Ta chaîne ») n'est **plus dans
+> l'application** — ni onglet, ni ligne d'accueil, ni écran. Ce fichier raconte
+> donc deux retraits : celui des packs jamais ouverts (la première vague), et
+> celui du kit Kenney, parti avec la pièce qu'il décorait. Le moteur, lui, est
+> resté dans le dépôt (`docs/ta-chaine.md`).
+
 ## Comment la pièce s'en servait (pour mémoire)
 
 | Où | Quoi | Licence |

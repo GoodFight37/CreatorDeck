@@ -70,7 +70,8 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
   les principes. Le **journal daté** des livraisons (du plus récent au plus
   ancien) vit dans `docs/historique-livraisons.md` ; le présent et la suite,
   dans `docs/roadmap.md`.
-- `docs/ta-chaine.md` — le chantier « Ta chaîne » : étapes livrées, ce qui
+- `docs/ta-chaine.md` — la **simulation de streameur**, retirée de
+  l'application le 8 octobre 2026 : ses étapes, ses règles, et son état. Le
   reste, et le détail de chaque règle.
 - `docs/assets-graphiques.md` — l'histoire de `public/streamer/` : ce qui a
   servi (le kit isométrique de la pièce du Studio, retirée le 8 octobre 2026),

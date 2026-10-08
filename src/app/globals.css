@@ -1719,9 +1719,11 @@ input:focus-visible {
   bottom: 0;
   left: max(0px, calc((100vw - 560px) / 2));
   display: grid;
-  /* Cinq lieux depuis que « Ta chaîne » a son onglet : Drop, Binder, Craft,
-     Studio, Toi. La barre ne change pas de hauteur, les libellés se serrent. */
-  grid-template-columns: repeat(5, 1fr);
+  /* **Quatre** colonnes, et c'est le nombre de piliers : Drop, Binder, Craft,
+     Toi. (Le cinquième onglet est parti le 8 octobre 2026 avec la simulation de
+     streameur — une barre à cinq colonnes pour quatre boutons laissait une case
+     vide à droite et décalait tout le monde à gauche.) */
+  grid-template-columns: repeat(4, 1fr);
   min-height: calc(63px + env(safe-area-inset-bottom));
   padding: 7px 7px env(safe-area-inset-bottom);
   border-top: 1px solid var(--line);
@@ -2751,227 +2753,14 @@ input:focus-visible {
 .pity-row.arena-row.done { color: var(--text); border-color: var(--line); background: var(--panel); }
 .pity-row.arena-row.idle { color: var(--muted); }
 
-/* La porte « Ta chaîne » : la ligne dit où en est la chaîne et s'il reste la
-   vidéo du jour à filmer. Deux tons, comme l'arène — « à faire » et « fait ». */
-.pity-row.streamer-row.hot { color: var(--text); border-color: rgb(var(--accent-rgb) / .4); background: rgb(var(--accent-rgb) / .07); }
-.pity-row.streamer-row.done { color: var(--muted); }
+/* La simulation de streameur (« Ta chaîne ») et son live de vingt secondes
+   ont été **retirées de l'application** le 8 octobre 2026 au soir, avec la
+   ligne de l'accueil qui les ouvrait. Le moteur, les règles, les données et
+   les migrations restent dans le dépôt (rien n'a été supprimé du métier) :
+   la seule chose qui a disparu, c'est ce que le joueur voyait. Leurs styles
+   sont partis en même temps qu'eux — et avec eux le `.live-bar` de 4 px qui
+   écrasait, plus haut dans ce fichier, la vraie barre « En direct » du Drop. */
 
-/* ---- Ta chaîne (le simulateur de streameur) ------------------------------ */
-/* ---- Ta chaîne : les badges, les cartes et les boutons arcade -------------
-   L'écran est un jeu, pas un formulaire : chaque bloc ouvre sur une **pastille**
-   (un badge, pas un titre de page), les textes tiennent en deux lignes, et les
-   actions sont de gros boutons bombés — ils s'enfoncent quand on appuie. */
-.chaine-badge { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 5px 10px; color: #f2ecff; border: 1px solid rgb(168 85 247 / .4); border-radius: 999px; background: linear-gradient(180deg, rgb(60 42 106 / .75), rgb(26 19 44 / .75)); font-family: var(--font-display); font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; box-shadow: 0 0 18px -10px rgb(168 85 247 / .95); }
-.chaine-badge svg { color: #c4b5fd; }
-.chaine-badge-bonus { padding: 1px 6px; color: #2a1b06; border-radius: 999px; background: linear-gradient(180deg, #ffd27a, #f0a943); font-size: 11px; font-style: normal; font-weight: 900; }
-.chaine-note { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
-.chaine-outcome { margin: 0; padding: 10px 12px; color: var(--accent-light); border: 1px solid rgb(var(--accent-rgb) / .4); border-radius: 12px; background: rgb(var(--accent-rgb) / .08); font-size: 14px; line-height: 1.5; }
-
-/* La carte d'imprévu : compacte — l'icône, le titre, deux lignes de situation.
-   `touch-action: pan-y` laisse le défilement vertical au navigateur et ne garde
-   que l'horizontale pour le geste — sans ça, le doigt qui glisse la carte
-   ferait aussi défiler la feuille. */
-.chaine-card-head { display: flex; align-items: center; gap: 9px; }
-.chaine-card-icon { display: grid; flex: none; place-items: center; width: 32px; height: 32px; color: #f3ecff; border: 1px solid rgb(168 85 247 / .45); border-radius: 10px; background: linear-gradient(180deg, #4a3390, #2a1d54); box-shadow: 0 0 16px -8px rgb(168 85 247 / .95); }
-.chaine-card-title { font-family: var(--font-display); font-size: 17px; font-weight: 600; line-height: 1.2; letter-spacing: .01em; }
-.chaine-card-text { display: -webkit-box; margin: 0; overflow: hidden; color: var(--muted); font-size: 12.5px; line-height: 1.45; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-
-/* Les deux actions : deux vrais boutons de jeu, avec leur pourcentage dessus. */
-.chaine-card-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.chaine-card-buttons button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 13px 10px 11px; color: #fff; border: 0; border-radius: 14px; background: linear-gradient(180deg, #7c4dff, #4b2ba8); box-shadow: 0 4px 0 #2c1870, inset 0 1px 0 rgb(255 255 255 / .35); font-family: var(--font-display); font-size: 14px; font-weight: 700; letter-spacing: .01em; text-shadow: 0 1px 2px rgb(0 0 0 / .5); cursor: pointer; transition: transform .08s ease, box-shadow .08s ease; }
-.chaine-card-buttons button:last-child { background: linear-gradient(180deg, #ff5a8a, #c11f57); box-shadow: 0 4px 0 #7d0f36, inset 0 1px 0 rgb(255 255 255 / .35); }
-.chaine-card-buttons button:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #2c1870, inset 0 1px 0 rgb(255 255 255 / .25); }
-.chaine-card-buttons button:disabled { opacity: .5; cursor: default; }
-.chaine-card-buttons button em { padding: 1px 7px; color: #fff; border-radius: 999px; background: rgb(0 0 0 / .35); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
-
-/* Les formats : une tuile compacte par format, le chiffre qui compte à droite. */
-.chaine-formats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.chaine-format { display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); text-align: left; cursor: pointer; }
-.chaine-format.actif { color: var(--text); border-color: rgb(var(--accent-rgb) / .6); background: rgb(var(--accent-rgb) / .12); box-shadow: 0 0 18px -12px rgb(var(--accent-rgb) / .95); }
-.chaine-format-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.chaine-format-head strong { color: inherit; font-size: 13.5px; }
-.chaine-format-head em { color: var(--accent-light); font-size: 12.5px; font-style: normal; font-weight: 800; font-variant-numeric: tabular-nums; }
-.chaine-format-odds { color: var(--muted-2); font-size: 11.5px; font-variant-numeric: tabular-nums; }
-
-/* Le live et la publication : deux gros boutons, l'un pour jouer, l'autre pour
-   filer droit. */
-.chaine-live { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 10px; padding: 13px; color: #fff; border: 0; border-radius: 14px; background: linear-gradient(180deg, #ff5a6b, #cf1f3d); box-shadow: 0 4px 0 #7d0f24, inset 0 1px 0 rgb(255 255 255 / .35); font-family: var(--font-display); font-size: 15px; font-weight: 700; cursor: pointer; }
-.chaine-live em { padding: 2px 8px; border-radius: 999px; background: rgb(0 0 0 / .3); font-size: 11.5px; font-style: normal; font-weight: 600; }
-.chaine-live:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #7d0f24, inset 0 1px 0 rgb(255 255 255 / .25); }
-.chaine-live:disabled { opacity: .55; cursor: default; }
-.chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 13px; color: #2a1b06; border: 0; border-radius: 14px; background: linear-gradient(180deg, #ffd27a, #e59b32); box-shadow: 0 4px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .5); font-family: var(--font-display); font-size: 14.5px; font-weight: 800; cursor: pointer; }
-.chaine-publish:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .35); }
-.chaine-publish:disabled { opacity: .55; cursor: default; }
-
-/* Le setup : des cartes de palier — le rang, le nom, le prix, le gain. */
-.chaine-setup-rank { display: grid; flex: none; place-items: center; width: 26px; height: 26px; color: #efe6ff; border: 1px solid rgb(168 85 247 / .45); border-radius: 8px; background: rgb(168 85 247 / .16); font-family: var(--font-display); font-size: 12.5px; font-weight: 700; }
-.chaine-setup-item { flex-direction: row; align-items: center; gap: 9px; padding: 9px 10px; }
-.chaine-setup-item.installe .chaine-setup-rank { color: #0f2a17; border-color: rgb(94 231 154 / .55); background: linear-gradient(180deg, #7ff0b0, #35b06c); }
-.chaine-setup-head { flex: 1; min-width: 0; }
-.chaine-setup-head strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chaine-setup-buy { flex: none; margin: 0; padding: 9px 12px; border-radius: 11px; box-shadow: 0 3px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .5); font-size: 12.5px; }
-.chaine-setup-buy:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #96651c, inset 0 1px 0 rgb(255 255 255 / .35); }
-
-.chaine-return { display: flex; align-items: flex-start; gap: 9px; margin: 12px 0; padding: 11px 12px; border: 1px solid rgb(var(--accent-rgb) / .3); border-radius: 11px; background: rgb(var(--accent-rgb) / .07); }
-.chaine-return svg { flex: none; margin-top: 2px; color: var(--accent-light); }
-.chaine-return div { display: flex; flex-direction: column; gap: 3px; }
-.chaine-return span { font-size: 13px; line-height: 1.5; }
-.chaine-video { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-outcome { margin: 0; color: var(--accent-light); font-size: 14px; }
-.chaine-formats { display: flex; flex-direction: column; gap: 8px; }
-.chaine-format { display: flex; flex-direction: column; gap: 4px; padding: 11px 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); text-align: left; cursor: pointer; }
-.chaine-format.actif { color: var(--text); border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .09); }
-.chaine-format-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.chaine-format-head strong { color: inherit; font-size: 14px; }
-.chaine-format-head span { color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.chaine-format-odds { color: var(--muted-2); font-size: 12px; }
-.chaine-publish { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; color: #2a1b06; border: 0; border-radius: 11px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 14px; font-weight: 900; cursor: pointer; }
-.chaine-publish:disabled { opacity: .55; cursor: default; }
-.chaine-event { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-/* La carte d'imprévu : elle se glisse. `touch-action: pan-y` laisse le
-   défilement vertical au navigateur et ne garde que l'horizontale pour le geste
-   — sans ça, le doigt qui glisse la carte ferait aussi défiler la feuille. */
-.chaine-card { display: flex; flex-direction: column; gap: 8px; padding: 14px 14px 12px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 14px; background: linear-gradient(160deg, rgb(var(--accent-rgb) / .12), rgba(255,255,255,.03)); box-shadow: 0 6px 20px rgba(0,0,0,.28); touch-action: pan-y; cursor: grab; user-select: none; will-change: transform; }
-.chaine-card.arme { border-color: rgb(var(--accent-rgb) / .7); }
-.chaine-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: .01em; }
-.chaine-card-text { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.chaine-card-sides { display: flex; justify-content: space-between; gap: 10px; margin-top: 2px; color: var(--muted-2); font-size: 12.5px; }
-.chaine-card-sides span { flex: 1; }
-.chaine-card-sides span:last-child { text-align: right; }
-.chaine-card-sides span.arme { color: var(--accent-light); }
-.chaine-card-buttons { display: flex; gap: 8px; }
-.chaine-card-buttons button { display: flex; flex: 1; flex-direction: column; align-items: center; gap: 2px; padding: 10px 8px; color: var(--text); border: 1px solid var(--line); border-radius: 11px; background: rgba(255,255,255,.03); font-size: 13px; font-weight: 600; cursor: pointer; }
-.chaine-card-buttons button em { color: var(--accent-light); font-size: 11.5px; font-style: normal; font-variant-numeric: tabular-nums; }
-.chaine-card-buttons button:disabled { opacity: .5; cursor: default; }
-.chaine-setup { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-setup-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.chaine-setup-item { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); opacity: .55; }
-.chaine-setup-item.suivant { opacity: 1; border-color: rgb(var(--accent-rgb) / .5); background: rgb(var(--accent-rgb) / .07); }
-.chaine-setup-item.installe { opacity: .85; border-color: rgba(255,255,255,.16); }
-.chaine-setup-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.chaine-setup-head strong { font-size: 14px; }
-.chaine-setup-head > span { display: inline-flex; align-items: center; gap: 4px; color: var(--accent-light); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
-.chaine-setup-buy:disabled { opacity: .55; cursor: default; }
-/* Le studio : les paliers en doublons. Un doublon **choisi** se voit (bordure
-   d'accent), la ligne n'est pas un interrupteur mais une case à cocher géante —
-   et le prix se lit en clair : la rareté donne la valeur, jamais la couleur. */
-.chaine-studio { display: flex; flex-direction: column; gap: 8px; }
-.chaine-studio-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
-.chaine-studio-item { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 8px 11px; color: var(--text); text-align: left; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }
-.chaine-studio-item.choisi { border-color: rgb(var(--accent-rgb) / .75); background: rgb(var(--accent-rgb) / .12); }
-.chaine-studio-item:disabled { opacity: .5; cursor: default; }
-.chaine-studio-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.chaine-studio-head strong { font-size: 13.5px; }
-.chaine-studio-head span { color: var(--accent-light); font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.chaine-studio-note { color: var(--muted-2); font-size: 12px; }
-.chaine-studio-confirme { display: flex; flex-direction: column; gap: 8px; padding: 10px 11px; border: 1px solid rgb(var(--accent-rgb) / .55); border-radius: 11px; background: rgb(var(--accent-rgb) / .09); }
-.chaine-studio-confirme p { margin: 0; font-size: 12.5px; line-height: 1.45; }
-.chaine-studio-boutons { display: flex; gap: 8px; }
-.chaine-studio-boutons .chaine-setup-buy { flex: 1; margin: 0; }
-.chaine-studio-annuler { padding: 10px 14px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: none; font-size: 13px; font-weight: 600; cursor: pointer; }
-.chaine-studio-annuler:disabled { opacity: .5; cursor: default; }
-/* ─── « Ta chaîne » : le HUD, le bureau, l'événement ─────────────────────────
-   La pièce visuelle du Studio (décor isométrique, objets de setup, socles) a
-   été retirée le 8 octobre 2026 : l'écran est revenu au **texte**, et il n'est
-   plus un onglet — il s'ouvre par la ligne « Ta chaîne » de l'accueil. Ce qui
-   reste ici est ce qui se lit : le HUD (rang, jauge, rythme, jetons), le
-   bureau des invités, la carte d'imprévu, les formats et le setup.
-
-   Plus aucune animation perpétuelle sur cet écran : le direct se dit en
-   **badges** (une carte d'invité qui vire au rouge, une puce « RAID ! »), pas
-   en lueurs qui tournent. */
-
-/* Le HUD : le rang, la jauge d'abonnés, le rythme et les jetons. Des chiffres
-   de jeu, pas des phrases : c'est ce qu'on lit d'un coup d'œil en jouant. */
-.chaine-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 7px; padding: 7px 8px; border: 1px solid rgb(139 92 246 / .35); border-radius: 14px; background: linear-gradient(180deg, rgb(38 28 62 / .92), rgb(13 10 22 / .92)); box-shadow: 0 10px 26px -20px rgb(0 0 0 / .95), inset 0 1px 0 rgb(255 255 255 / .05); }
-.chaine-hud-rank { order: 1; display: inline-flex; flex: 1 1 auto; min-width: 0; align-items: center; gap: 4px; padding: 4px 8px; color: #f3ecff; border: 1px solid rgb(168 85 247 / .55); border-radius: 999px; background: linear-gradient(180deg, #4a3390, #2a1d54); box-shadow: 0 0 16px -6px rgb(168 85 247 / .95); font-family: var(--font-display); font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.chaine-hud-rank svg { flex: none; color: #ffd27a; }
-.chaine-hud-track { order: 3; position: relative; flex: 1 1 100%; height: 17px; overflow: hidden; border-radius: 999px; background: rgb(0 0 0 / .55); box-shadow: inset 0 1px 4px rgb(0 0 0 / .8), inset 0 0 0 1px rgb(255 255 255 / .06); }
-.chaine-hud-track i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #22d3ee, #a855f7 60%, #ff4d9d); box-shadow: 0 0 14px rgb(168 85 247 / .8); transition: width .45s cubic-bezier(.2, .7, .3, 1); }
-.chaine-hud-track span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .02em; font-variant-numeric: tabular-nums; text-shadow: 0 1px 3px rgb(0 0 0 / .9); }
-.chaine-hud-pill { order: 2; display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 4px 8px; color: #ffe9b0; border: 1px solid rgb(255 209 122 / .45); border-radius: 999px; background: rgb(255 209 122 / .12); font-size: 11.5px; font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.chaine-hud-pill svg { color: #ffd27a; }
-.chaine-hud-pill.jetons { color: var(--accent-light); border-color: rgb(var(--accent-rgb) / .45); background: rgb(var(--accent-rgb) / .12); }
-.chaine-hud.raid { border-color: rgb(255 77 94 / .5); }
-
-/* Le retour : l'écran n'a plus d'onglet, donc plus d'onglet allumé pour dire
-   « tu es ici ». Un bouton, à gauche, discret — les quatre piliers de la barre
-   restent la sortie normale. */
-.chaine-retour { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; margin-bottom: 9px; padding: 6px 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; background: none; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.chaine-retour:hover { color: var(--text); }
-
-/* Le bureau : deux places côte à côte. Une place libre est un bouton — le
-   seul endroit de l'écran qui pose un invité ; une place prise est la carte de
-   l'invité, avec ce qu'elle paie. */
-.chaine-plateau { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
-.chaine-place { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 9px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.02); }
-.chaine-place.libre { align-items: stretch; justify-content: center; min-height: 132px; color: var(--muted); border-color: rgb(var(--accent-rgb) / .38); background: rgb(var(--accent-rgb) / .05); text-align: left; cursor: pointer; }
-.chaine-place.libre:disabled { opacity: .55; cursor: default; }
-.chaine-place-cta { align-self: center; color: var(--accent-light); font-size: 14px; font-weight: 700; }
-.chaine-place-note { color: var(--muted-2); font-size: 11.5px; line-height: 1.4; }
-.chaine-place-note strong { color: var(--text); }
-.chaine-place-change { width: 100%; padding: 0; background: none; border: 0; cursor: pointer; }
-.chaine-place-change:disabled { cursor: default; }
-.chaine-place-inconnu { display: grid; place-items: center; width: 100%; aspect-ratio: .715; color: var(--muted-2); border: 1px solid var(--line); border-radius: 8px; font-size: 10px; }
-.chaine-place-meta { display: flex; align-items: center; gap: 5px; font-size: 10.5px; white-space: nowrap; }
-.chaine-place-meta i { font-style: normal; font-weight: 800; }
-.chaine-place-meta em { color: #ded4ff; font-style: normal; font-weight: 700; font-variant-numeric: tabular-nums; }
-.chaine-place-retire { position: absolute; top: 6px; right: 6px; display: grid; place-items: center; width: 20px; height: 20px; color: #ffe3e6; border: 1px solid rgb(255 255 255 / .22); border-radius: 50%; background: rgb(10 6 14 / .82); cursor: pointer; }
-.chaine-place-retire:disabled { opacity: .5; cursor: default; }
-/* L'invité **en direct** : la carte vire au rouge et le badge le dit. Rien qui
-   tourne ni qui clignote — une couleur, un mot. */
-.chaine-place.en-direct { border-color: rgb(255 77 94 / .6); box-shadow: 0 0 18px -8px rgb(255 77 94 / .95); }
-.chaine-place-live { display: inline-flex; align-items: center; gap: 4px; padding: 2px 7px; color: #fff; border-radius: 999px; background: linear-gradient(180deg, #ff5a6b, #d6203a); font-size: 9.5px; font-weight: 900; letter-spacing: .07em; white-space: nowrap; }
-
-/* Le classeur d'invités : il ne s'ouvre que sur une place du bureau, et il ne
-   propose que les créateurs **en direct** — un invité hors ligne n'amène
-   rien. */
-.chaine-bureau { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.chaine-bureau-pick { display: flex; flex-direction: column; gap: 8px; padding: 11px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 12px; background: rgb(var(--accent-rgb) / .05); }
-.chaine-bureau-pick-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.chaine-bureau-pick-head button { display: inline-flex; align-items: center; gap: 4px; padding: 6px 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 8px; background: none; font-size: 12px; cursor: pointer; }
-.chaine-bureau-search { padding: 9px 11px; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.25); font-size: 13px; }
-.chaine-bureau-choix { display: flex; flex-direction: column; gap: 6px; max-height: 260px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
-.chaine-bureau-choix button { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 9px 11px; text-align: left; color: var(--text); border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.03); cursor: pointer; }
-.chaine-bureau-choix button:disabled { opacity: .5; cursor: default; }
-.chaine-bureau-choix strong { font-size: 13.5px; }
-.chaine-bureau-choix span { color: var(--muted-2); font-size: 12px; font-variant-numeric: tabular-nums; }
-.chaine-bureau-empty { margin: 0; color: var(--muted-2); font-size: 12.5px; line-height: 1.5; }
-/* Le live de vingt secondes : une scène, pas un panneau. Le cadre est sombre,
-   le chat respire en bas, les bulles tombent par-dessus et se touchent au doigt. */
-.chaine-live { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; margin-top: 10px; padding: 12px; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .5); border-radius: 12px; background: rgb(var(--accent-rgb) / .1); font-size: 14px; font-weight: 700; cursor: pointer; }
-.chaine-live span { color: var(--muted-2); font-size: 12px; font-weight: 400; }
-.chaine-live:disabled { opacity: .55; cursor: default; }
-.live { display: flex; flex-direction: column; gap: 10px; }
-.live-head { display: flex; align-items: center; gap: 10px; }
-.live-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: #fff; border-radius: 999px; background: #c0392b; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; }
-.live-time { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
-.live-quit { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: auto; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: transparent; cursor: pointer; }
-.live-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
-.live-bar span { display: block; height: 100%; background: linear-gradient(90deg, rgb(var(--accent-rgb) / .7), var(--accent-light)); transition: width .2s linear; }
-/* Le cadre du direct : il réserve toujours la même hauteur, sinon les bulles
-   sautent quand le chat gagne une ligne. */
-.live-stage { position: relative; min-height: 240px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(165deg, rgba(20,12,30,.9), rgba(8,6,14,.95)); overflow: hidden; }
-.live-stage-hint { margin: 0; color: var(--muted-2); font-size: 12px; }
-.live-alert { position: absolute; display: flex; flex-direction: column; gap: 2px; left: var(--live-left); max-width: min(62%, calc(100% - var(--live-left) - 14px)); padding: 9px 11px; text-align: left; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .55); border-radius: 12px; background: rgba(24,16,36,.92); box-shadow: 0 8px 18px rgba(0,0,0,.4); cursor: pointer; animation: live-pop .18s ease-out; }
-.live-alert strong { font-size: 13px; }
-.live-alert span { color: var(--muted-2); font-size: 11.5px; line-height: 1.35; }
-.live-alert-follow { border-color: rgba(120,200,255,.6); }
-.live-alert-sub { border-color: rgba(255,205,120,.6); }
-.live-alert-raid { border-color: rgba(255,140,190,.6); }
-.live-alert-don { border-color: rgba(150,255,180,.6); }
-@keyframes live-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-.live-chat { display: flex; flex-direction: column; gap: 4px; max-height: 132px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); overflow: hidden; }
-.live-chat-line { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
-.live-chat-line strong { color: var(--accent-light); font-weight: 700; }
-.live-chat-silence { margin: 0; color: var(--muted-2); font-size: 12.5px; }
-.live-foot { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
-.live-recap { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 14px; background: rgb(var(--accent-rgb) / .07); }
-.live-recap h3 { margin: 0; font-family: var(--font-display); font-size: 18px; }
-.live-recap-chat { margin: 0; color: var(--text); font-size: 13.5px; }
-.live-recap-note { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
-.live-again { padding: 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: transparent; font-size: 13px; cursor: pointer; }
 
 /* Le draft est définitif : l'écran le dit, et le refus vient du serveur. Le
    tirage raté a un bouton pour réessayer — un écran qui ne propose rien est un

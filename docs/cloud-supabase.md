@@ -1170,9 +1170,12 @@ une machine à cartes.
   les points et les jetons : sans cloud c'est le moteur local qui paie,
   connecté c'est le serveur, et sans compte on refuse au lieu de fabriquer des
   abonnés.
-* **L'écran** : la porte « Ta chaîne » sur l'accueil ouvre
-  `src/components/studio-view.tsx` — abonnés, palier, formats (chances
-  publiées), résumé du retour, jetons du jour. L'état local (`state.streamer`)
+* **L'écran** (il n'existe plus : il a été retiré de l'application le
+  8 octobre 2026 au soir, voir `docs/ta-chaine.md`) lisait tout ce que le
+  serveur écrit — abonnés, palier, formats (chances publiées), résumé du retour,
+  jetons du jour. Le serveur, lui, est **intact** : les fonctions ci-dessous
+  répondent toujours, et `npm run supabase:verify` les joue à chaque fois. L'état
+  local (`state.streamer`)
   n'est qu'un miroir : `applyStreamerMirror()` l'écrit quand le serveur a parlé,
   et `sanitizeState()` le relit sans le croire (abonnés positifs, format connu,
   jetons bornés au plafond).
@@ -1398,13 +1401,11 @@ pèsent sur la **vidéo du jour**.
   `collab_permille`, `collab_buzz_permille`, `collab_live`. C'est ce que la
   scène affiche — donc le chiffre annoncé est celui qui sera payé.
 * **Côté appareil**, `collabVideoPermille()`, `collabFor()` et `GUEST_COLLAB`
-  (`src/lib/streamer.ts`) portent le barème, `resolveVideo()` le reçoit en
-  cinquième paramètre, et l'écran de la chaîne (`src/components/studio-view.tsx`)
-  le **montre** : le bureau en deux places, les vraies cartes, la carte d'invité
-  qui vire au rouge avec son badge « EN DIRECT », et la puce qui résume le
-  plateau. (Le barème s'affichait sur la pièce du Studio jusqu'au 8 octobre 2026
-  au soir : la pièce est partie, le barème et son affichage sont restés.) Hors
-  ligne, le moteur local applique le même barème
+  (`src/lib/streamer.ts`) portent le barème, et `resolveVideo()` le reçoit en
+  cinquième paramètre. Il s'affichait sur l'écran de la chaîne, dans le bureau en
+  deux places — écran retiré le 8 octobre 2026 au soir ; **le barème et les
+  fonctions, eux, sont restés**, et c'est ce que le vérifieur compare au SQL.
+  Hors ligne, le moteur local applique le même barème
   (`playVideoLocally(state, formatId, day, roll, liveSlugs)`).
   `src/lib/supabase-streamer.test.ts` tient les deux barèmes ensemble,
   `src/ecrans.test.tsx` monte l'écran dans un DOM, et
@@ -1420,9 +1421,10 @@ rendre `true`.
 
 ### Le live de vingt secondes (aucune migration)
 
-L'étape 5 — `src/components/streamer-live-game.tsx`, `src/lib/live-game.ts`,
-réglage dans `src/data/live-game.json` — est le **seul morceau de « Ta chaîne »
-qui n'a pas de porte côté serveur**, et c'est une décision, pas un oubli : le
+L'étape 5 — `src/lib/live-game.ts` et son réglage dans
+`src/data/live-game.json` (le composant qui la jouait, `streamer-live-game.tsx`,
+est parti avec l'écran le 8 octobre 2026) — est le **seul morceau de la
+simulation qui n'a pas de porte côté serveur**, et c'est une décision, pas un oubli : le
 live **ne paie rien** (ni jeton, ni point, ni abonné) et ne change pas le tirage
 de la vidéo, donc il n'y a **rien à garder** : pas de table, pas de RPC, aucune
 migration à poser. Le plan de la scène est tiré **sur l'appareil** par un

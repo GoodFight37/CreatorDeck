@@ -94,8 +94,9 @@ et la **clé publishable** active le mode à plusieurs (comptes, sauvegarde,
 Le **passé** — le journal daté des livraisons, du plus récent au plus ancien —
 vit dans [`docs/historique-livraisons.md`](docs/historique-livraisons.md). Le
 **présent et la suite** se lisent dans [`docs/roadmap.md`](docs/roadmap.md), et
-le chantier « Ta chaîne » a sa propre feuille de route
-([`docs/ta-chaine.md`](docs/ta-chaine.md)).
+la simulation de streameur (« Ta chaîne ») a son dossier
+([`docs/ta-chaine.md`](docs/ta-chaine.md)) — **elle est hors de l'application**
+depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 
 ## Scripts
 
@@ -106,7 +107,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **49 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, le live de vingt secondes, **« Ta chaîne »** (HUD, bureau, imprévu joué, achat de palier), **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **36 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -157,10 +158,10 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **neuf fichiers** (43 tests, 49 captures) : le
+  écran a bougé. Il tourne dans **huit fichiers** (36 tests, 36 captures) : le
   carnet de notifications, l'écran Compte d'un joueur connecté, les crédits,
-  « Ta chaîne » (HUD, bureau, imprévu, live de vingt secondes) et **les mille
-  cartes** (ce que le DOM porte vraiment). Il tournait dans la CI de l'APK, à côté
+  **les mille cartes** (ce que le DOM porte vraiment) et **les effets de
+  rareté**. Il tournait dans la CI de l'APK, à côté
   de `lint`, `typecheck` et `test` — depuis la suppression des workflows
   (8 octobre 2026), c'est à relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
@@ -237,10 +238,14 @@ src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, comp
 src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
 src/lib/progression.ts   jetons, missions du jour, série de sept jours, Prime
                          Time (source unique : src/data/progression.json)
-src/lib/streamer.ts      « Ta chaîne » : formats, notoriété, imprévus, paliers,
-                         invités, plateau (source unique : src/data/streamer.json)
-src/lib/live-game.ts     le live de 20 s : plan déterministe, chat, bulles
-                         (source unique : src/data/live-game.json)
+src/lib/streamer.ts      la simulation de streameur, **hors écran depuis le
+                         8 octobre 2026** : formats, notoriété, imprévus,
+                         paliers, invités, plateau (source unique :
+                         src/data/streamer.json) — le moteur reste testé et
+                         aucune migration n'est à recoller s'il revient
+src/lib/live-game.ts     son live de 20 s : plan déterministe, chat, bulles
+                         (source unique : src/data/live-game.json) — même
+                         situation : la logique est là, l'écran n'y est plus
 src/lib/sfx.ts           les sons : bruitages embarqués (public/sfx) + plans de
                          notes synthétisés, coupés ensemble par le bouton Son
 src/lib/supabase-progression.test.ts  garde-fou : le contrat entre 0013 et le
@@ -255,10 +260,8 @@ src/lib/retired.test.ts  les Sortants : hors complétion, artisanables le temps
                          d'une édition, jamais une Légendaire
 src/lib/poster.ts        affiche de partage 1080×1350 dessinée sur l'appareil
 src/components/          UI : la coque (creator-deck-app.tsx — navigation,
-                         feuilles, toasts) et une vue par onglet (drop-view,
-                         binder-view, missions-view, studio-view, profile-view),
-                         « Ta chaîne » (studio-view.tsx et son live de 20 s,
-                         streamer-live-game.tsx), le chrome
+                         feuilles, toasts), une vue par onglet (drop-view,
+                         binder-view, missions-view, profile-view) et le chrome
                          partagé (app-chrome.tsx), les cartes et leurs fiches,
                          les feuilles (pack-odds-sheet, market-sheet,
                          account-sheet + account/*, notifications-sheet, amis,
@@ -266,7 +269,7 @@ src/components/          UI : la coque (creator-deck-app.tsx — navigation,
                          (error-boundary.tsx), l'overlay 16:9
 src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre piliers, feuilles,
 src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
-src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, et
+src/components/*.test.tsx  les scènes montées au doigt :
                          les gestes du doigt sur l'écran de la chaîne
 src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
@@ -287,7 +290,8 @@ scripts/                 génération des données et des avatars (scripts/lib/ 
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),
                          vérificateur des migrations (verify-supabase-migrations.mjs),
-                         bilan des courbes de « Ta chaîne » (streamer-bilan.ts)
+                         bilan des courbes de la simulation de streameur
+                         (streamer-bilan.ts — elle tourne encore **hors écran**)
 e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont le tirage
                          qui survit à un rechargement de page)
 docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qui
@@ -341,26 +345,23 @@ Principes :
   « arrivent » même si l'app était fermée. Un recul de l'horloge de l'appareil
   ne crédite rien.
 
-## Deux univers, deux mots
+## Le jeu, et la moitié qui a été retirée
 
-Le jeu a deux moitiés, et elles ne se mélangent pas :
+Le jeu est **un seul jeu**, et il tient en quatre écrans :
 
-- le **TCG** — le jeu de cartes : les boosters, la collection, l'artisanat, le
-  profil. C'est là que vivent les taux publiés, les raretés, le marché et les
-  échanges. Ses écrans sont **Drop**, **Binder**, **Craft** et **Toi** ;
-- le **Studio** — la simulation de streameur (l'ancien « Ta chaîne ») : la
-  chaîne qui grandit pendant l'absence, la vidéo du jour, les imprévus, les
-  paliers de setup, les invités sur le bureau. C'est **un onglet plein écran**,
-  le cinquième, et il a sa propre feuille de route
-  ([`docs/ta-chaine.md`](docs/ta-chaine.md)).
+- le jeu de cartes — les boosters, la collection, l'artisanat, le profil. C'est
+  là que vivent les taux publiés, les raretés, le marché et les échanges. Ses
+  quatre piliers sont **Drop**, **Binder**, **Craft** et **Toi**.
 
-Les deux se croisent **par les cartes** (un invité du Studio est une carte du
-Binder, un palier du studio se paie en doublons). L'emblème d'Arène se gagne et
-se lit dans l'Arène : la couronne qui le montrait sur l'étagère du Studio est
-partie avec la pièce, le 8 octobre 2026,
-et ça ne rapporte rien de plus. Pour le reste, chacun chez soi : aucun compteur
-du TCG ne compte les abonnés, aucun prix du Studio n'est payé en points de
-collection.
+Il a eu une **seconde moitié** : le **Studio** — une simulation de streameur
+(abonnés qui grandissent pendant l'absence, vidéo du jour, imprévus, paliers de
+setup, invités sur le bureau). Elle a été **retirée de l'application** le
+8 octobre 2026 au soir : ni onglet, ni ligne d'accueil, ni écran. **Son moteur
+est resté dans le dépôt**, dormant mais intact — `src/lib/streamer.ts`,
+`src/data/streamer.json`, les migrations `0036` à `0041`, les tests — et son
+dossier ([`docs/ta-chaine.md`](docs/ta-chaine.md)) reste la référence de ce
+qu'elle faisait. Rien n'est affiché, rien n'est payé, mais rien n'a été perdu :
+si elle revient, **aucune migration n'est à recoller**.
 
 ## Économie, saisons et taux de drop
 

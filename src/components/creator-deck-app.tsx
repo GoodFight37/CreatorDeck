@@ -25,7 +25,6 @@ import { RevealOverlay } from "@/components/reveal-overlay";
 import { WishlistSheet } from "@/components/wishlist-sheet";
 import { PublicProfileSheet } from "@/components/public-profile-sheet";
 import { StudioSheet } from "@/components/studio-sheet";
-import { StudioView } from "@/components/studio-view";
 import { ThemeSheet } from "@/components/theme-sheet";
 
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
@@ -39,8 +38,6 @@ import { minimizeApp, useAndroidBack } from "@/hooks/use-android-back";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLivePolling } from "@/hooks/use-live";
 import { PACKS } from "@/lib/catalog";
-import { gameDay } from "@/lib/progression";
-import { tierFor } from "@/lib/streamer";
 import { readySteals } from "@/lib/last-pack";
 
 import {
@@ -60,23 +57,17 @@ import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
 
-type Tab = "home" | "collection" | "missions" | "atelier" | "studio" | "profile";
+type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
 
 /*
- * Cinq lieux, un mot chacun. Le Studio quitte la feuille : « Ta chaîne » est un
- * onglet plein écran depuis le 8 octobre 2026 — sa pièce a besoin de la hauteur
- * de l'écran, et un jeu qui s'ouvre par-dessus la barre n'est pas un jeu. Les
- * objectifs, eux, restent hors de la barre : c'est un rendez-vous quotidien, pas
- * un endroit où l'on vit — ils s'ouvrent depuis le drop et depuis le menu.
- */
-/**
- * Les **quatre piliers** de la barre du bas : le TCG, et rien d'autre.
+ * **Quatre piliers, et c'est tout** : Drop, Binder, Craft, Toi. Les Objectifs
+ * restent hors de la barre — c'est un rendez-vous quotidien, pas un endroit où
+ * l'on vit — et s'ouvrent depuis le Drop et depuis le menu.
  *
- * Les autres écrans existent sans onglet et s'ouvrent par la porte qui les
- * concerne — les Objectifs depuis « Toi », et **« Ta chaîne » depuis sa ligne du
- * Drop**. La pièce visuelle du Studio a été retirée le 8 octobre 2026 (le jeu,
- * lui, reste) : un écran hors barre n'allume aucun onglet, et on en sort en
- * touchant un pilier.
+ * La simulation de streameur (« Ta chaîne ») a quitté l'application le
+ * 8 octobre 2026 : ni onglet, ni ligne d'accueil, ni écran. Son moteur est
+ * resté dans le dépôt (`src/lib/streamer.ts`, `src/data/streamer.json`, les
+ * migrations) — mais rien de tout ça n'est affiché.
  */
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Drop", icon: <Zap size={22} /> },
@@ -512,17 +503,6 @@ export function CreatorDeckApp() {
     setStreakGain(null);
   }
 
-  // La ligne de « Ta chaîne » sur l'accueil : un chiffre qui bouge (les
-  // abonnés), un état (la vidéo du jour est faite ou pas). La porte n'existe
-  // qu'une fois la partie chargée — avant, il n'y a rien à dire.
-  const streamerLine = state
-    ? {
-        subscribers: state.streamer.subscribers,
-        tier: tierFor(state.streamer.subscribers).label,
-        publishedToday: state.streamer.video?.day === gameDay(now),
-      }
-    : null;
-
   if (!game) return <LoadingScreen />;
 
   return (
@@ -546,8 +526,6 @@ export function CreatorDeckApp() {
               setTab("atelier");
             }}
             onShowArena={ouvrirFeuille(setArenaOpen)}
-            streamerLine={streamerLine}
-            onShowStreamer={() => setTab("studio")}
             onOpenScene={() => void handleOpenScenePack()}
             opening={opening}
             usingHourglass={usingHourglass}
@@ -560,10 +538,6 @@ export function CreatorDeckApp() {
         {tab === "collection" ? (
           <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} />
         ) : null}
-        {/* « Ta chaîne » : un écran **sans onglet**, ouvert par sa ligne du
-            Drop (comme les Objectifs depuis « Toi »). La pièce visuelle est
-            partie le 8 octobre 2026, la mécanique du mini-jeu est intacte. */}
-        {tab === "studio" ? <StudioView onBack={() => setTab("home")} /> : null}
         {tab === "missions" ? (
           <MissionsView
             game={game}
