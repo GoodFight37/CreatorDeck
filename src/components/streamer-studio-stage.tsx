@@ -15,7 +15,10 @@
  *     la pièce (la table de la webcam, l'enceinte, la lampe, le tapis, les
  *     panneaux acoustiques, les néons, le canapé, la console, le grand écran).
  *     Ce qui n'est pas acheté n'est pas là : aucune silhouette, aucune case à
- *     cocher, aucun pavé de texte ;
+ *     cocher, aucun pavé de texte. Et le jour de l'achat, ça se voit : les
+ *     objets du palier **tombent en place**, l'un après l'autre, avec une
+ *     bouffée de fumée là où on vient de les brancher (`justInstalled`, calculé
+ *     par `src/lib/studio-install.ts`). Une fois, pas en boucle ;
  *   * **le HUD arcade** remplace les chiffres en colonne : le badge de rang, la
  *     **jauge d'abonnés** qui se remplit vers le palier suivant (`0 / 2 500`),
  *     la pilule du rythme (`⚡ +240 / jour`) et les jetons du jour ;
@@ -34,9 +37,11 @@
  * le direct, `prefers-reduced-motion` la coupe, et l'interrupteur « Reflets des
  * cartes » aussi.
  */
+import { useMemo } from "react";
 import { Coins, Radio, Trophy, X, Zap } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
+import { EffectBurst } from "@/components/effect-burst";
 import { CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import type { LiveStream } from "@/lib/live";
 import {
@@ -44,6 +49,7 @@ import {
   collabVideoPermille,
   type StreamerGuest,
 } from "@/lib/streamer";
+import { studioArrivees, studioNuages } from "@/lib/studio-install";
 import {
   studioAccessories,
   studioCanvas,
@@ -81,6 +87,12 @@ export type StreamerStudioStageProps = {
   liveStreams: ReadonlyMap<string, LiveStream>;
   /** Les paliers de setup installés, dans l'ordre. */
   setup: readonly string[];
+  /**
+   * Le palier **qu'on vient d'acheter**, s'il y en a un : ses objets tombent en
+   * place et une bouffée de fumée marque l'endroit. `null` (ou absent) : la
+   * pièce est celle du quotidien, rien ne bouge.
+   */
+  justInstalled?: string | null;
   /** Ce que le plateau vaut **maintenant**, pour mille (`collabFor()`). */
   collabPermille: number;
   /** Un invité streame à cet instant. */
@@ -114,7 +126,21 @@ export type StreamerStudioStageProps = {
  * d'identité à chaque passage, et React remonterait les trente images de la
  * pièce à chaque abonné gagné.
  */
-function Sprite({ asset, left, top }: { asset: string; left: number; top: number }) {
+function Sprite({
+  asset,
+  left,
+  top,
+  /** L'objet vient d'être installé : il tombe en place au lieu d'apparaître. */
+  neuf = false,
+  /** Son tour d'arrivée, en ms (les objets d'un même palier se suivent). */
+  delayMs = 0,
+}: {
+  asset: string;
+  left: number;
+  top: number;
+  neuf?: boolean;
+  delayMs?: number;
+}) {
   const [largeur, hauteur] = studioSpriteSize(asset);
   return (
     // Les sprites du kit sont déjà des PNG à la bonne taille, posés en
@@ -122,7 +148,9 @@ function Sprite({ asset, left, top }: { asset: string; left: number; top: number
     // ici, et l'image n'a pas de taille intrinsèque à connaître d'avance.
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      className={`chaine-sprite${asset.includes("wall") ? (asset.includes("Window") ? " fenetre" : " mur") : ""}`}
+      className={`chaine-sprite${asset.includes("wall") ? (asset.includes("Window") ? " fenetre" : " mur") : ""}${
+        neuf ? " vient-d-installer" : ""
+      }`}
       src={studioSpriteUrl(asset)}
       alt=""
       draggable={false}
@@ -131,6 +159,7 @@ function Sprite({ asset, left, top }: { asset: string; left: number; top: number
         top: partY(top),
         width: partX(largeur),
         height: partY(hauteur),
+        ...(neuf ? ({ "--install-delay": `${delayMs}ms` } as React.CSSProperties) : {}),
       }}
     />
   );
@@ -141,6 +170,7 @@ export function StreamerStudioStage({
   direct,
   liveStreams,
   setup,
+  justInstalled = null,
   collabPermille,
   collabLive,
   raidToday,
@@ -161,6 +191,20 @@ export function StreamerStudioStage({
   const on = (id: string | null) => id === null || setup.includes(id);
   const places = Array.from({ length: GUEST_SLOTS }, (_, index) => index + 1);
   const ratio = Math.max(0, Math.min(1, progressRatio));
+
+  // Ce qui vient d'arriver : l'ordre de la pièce (`studioArrivees`) donne à
+  // chaque objet son tour, et `studioNuages` pose trois bouffées au plus. Les
+  // deux listes viennent du **même** fichier de pièce : rien n'est écrit ici.
+  const arrivees = useMemo(() => studioArrivees(justInstalled ?? ""), [justInstalled]);
+  const fumee = useMemo(() => studioNuages(justInstalled ?? ""), [justInstalled]);
+  // L'objet est-il de ceux qui viennent d'arriver, et à quel tour ?
+  const tour = (id: string) => arrivees.findIndex((entree) => entree.id === id);
+  const arrive = (id: string) => tour(id) >= 0;
+  // `revele` dit à la feuille de style de ne pas toucher au `transform` de ces
+  // formes : il ne se pose donc **que** sur ce qui arrive.
+  const classe = (id: string, extra: string) =>
+    arrive(id) ? `${extra} vient-d-installer revele` : extra;
+  const retard = (id: string) => (arrive(id) ? `${tour(id) * 90}ms` : "0ms");
 
   return (
     <section
@@ -212,10 +256,24 @@ export function StreamerStudioStage({
           <Sprite key={sprite.id} asset={sprite.asset} left={sprite.left} top={sprite.top} />
         ))}
         {PANNEAUX.filter((sprite) => on(sprite.setup)).map((sprite) => (
-          <Sprite key={sprite.id} asset={sprite.asset} left={sprite.left} top={sprite.top} />
+          <Sprite
+            key={sprite.id}
+            asset={sprite.asset}
+            left={sprite.left}
+            top={sprite.top}
+            neuf={arrive(sprite.id)}
+            delayMs={Math.max(0, tour(sprite.id)) * 90}
+          />
         ))}
         {MEUBLES.filter((sprite) => on(sprite.setup)).map((sprite) => (
-          <Sprite key={sprite.id} asset={sprite.asset} left={sprite.left} top={sprite.top} />
+          <Sprite
+            key={sprite.id}
+            asset={sprite.asset}
+            left={sprite.left}
+            top={sprite.top}
+            neuf={arrive(sprite.id)}
+            delayMs={Math.max(0, tour(sprite.id)) * 90}
+          />
         ))}
 
         {/* Les néons du mur : le studio s'allume quand on l'a payé. */}
@@ -223,19 +281,20 @@ export function StreamerStudioStage({
           lumiere.kind === "neon" ? (
             <i
               key={lumiere.id}
-              className={`chaine-neon ${lumiere.couleur}`}
+              className={classe(lumiere.id, `chaine-neon ${lumiere.couleur}`)}
               aria-hidden="true"
               style={{
                 left: partX(lumiere.at[0]),
                 top: partY(lumiere.at[1]),
                 width: partX(lumiere.longueur),
                 transform: `translate(-50%, -50%) rotate(${lumiere.angle}deg)`,
-              }}
+                "--install-delay": retard(lumiere.id),
+              } as React.CSSProperties}
             />
           ) : (
             <i
               key={lumiere.id}
-              className={`chaine-halo ${lumiere.couleur}`}
+              className={classe(lumiere.id, `chaine-halo ${lumiere.couleur}`)}
               aria-hidden="true"
               style={{
                 left: partX(lumiere.at[0]),
@@ -243,7 +302,8 @@ export function StreamerStudioStage({
                 width: partX(lumiere.rayon * 2),
                 height: partY(lumiere.rayon * 2),
                 transform: "translate(-50%, -50%)",
-              }}
+                "--install-delay": retard(lumiere.id),
+              } as React.CSSProperties}
             />
           ),
         )}
@@ -252,9 +312,29 @@ export function StreamerStudioStage({
         {GADGETS.filter((gadget) => on(gadget.setup)).map((gadget) => (
           <i
             key={gadget.id}
-            className={`chaine-gadget ${gadget.kind}`}
+            className={classe(gadget.id, `chaine-gadget ${gadget.kind}`)}
             aria-hidden="true"
-            style={{ left: partX(gadget.at[0]), top: partY(gadget.at[1]) }}
+            style={
+              {
+                left: partX(gadget.at[0]),
+                top: partY(gadget.at[1]),
+                "--install-delay": retard(gadget.id),
+              } as React.CSSProperties
+            }
+          />
+        ))}
+
+        {/* La fumée de l'installation : le palier qu'on vient d'acheter se
+            voit **arriver**. Les centres viennent de la pièce elle-même
+            (`studioNuages`), la taille et la découpe de la planche du CSS. */}
+        {fumee.map((nuage, index) => (
+          <EffectBurst
+            key={`fumee-${index}`}
+            kind="fumee"
+            className="fx-arrivee"
+            left={partX(nuage.at[0])}
+            offset={partY(nuage.at[1])}
+            delayMs={nuage.delayMs}
           />
         ))}
 

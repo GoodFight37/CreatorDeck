@@ -87,6 +87,32 @@ export type StreamerOpening =
 
 export type StreamerEventOpening = { status: "done"; headline: string; event: StreamerEventState };
 
+/**
+ * Le relevé d'**après** : l'ouverture fraîche, mais le récit du retour gardé.
+ *
+ * Un second relevé dans la même session ne paie plus rien — le moteur (local
+ * comme serveur) a déjà versé le retour du joueur. Les journées d'absence, ce
+ * qu'elles ont rapporté et leurs lignes appartiennent donc au **premier**
+ * relevé, et c'est à l'appelant de les garder : sans ça, acheter un palier ou
+ * rattraper un raid effacerait le « bon retour » de l'écran, et le joueur
+ * croirait avoir perdu sa paie.
+ */
+export function releveApres(
+  precedent: StreamerOpening | null,
+  nouveau: StreamerOpening,
+): StreamerOpening {
+  if (nouveau.status !== "done") return nouveau;
+  if (precedent?.status !== "done") return nouveau;
+  return {
+    ...nouveau,
+    // Ce que le second relevé apporte **en plus** garde sa place à la fin.
+    days: precedent.days,
+    countedDays: precedent.countedDays,
+    gained: precedent.gained,
+    lines: [...precedent.lines, ...nouveau.lines.slice(precedent.lines.length)],
+  };
+}
+
 /** Les raretés et variantes que l'appareil sait afficher (les mêmes qu'au serveur). */
 const RARETES = new Set<string>(["common", "uncommon", "rare", "epic", "legendary"]);
 const VARIANTES = new Set<string>(["standard", "live", "holo", "gold"]);

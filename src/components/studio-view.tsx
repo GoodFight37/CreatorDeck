@@ -40,7 +40,7 @@ import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import { sacrificeTally, setupSacrificeCandidates } from "@/lib/game-engine";
-import type { StreamerOpening } from "@/lib/cloud/store/streamer";
+import { releveApres, type StreamerOpening } from "@/lib/cloud/store/streamer";
 import { gameDay } from "@/lib/progression";
 import {
   GUEST_SLOTS,
@@ -124,6 +124,10 @@ export function StudioView() {
   // Le live de vingt secondes : ouvert, il prend tout l'écran — c'est une scène,
   // pas un panneau de plus.
   const [liveOuvert, setLiveOuvert] = useState(false);
+  // Le palier **qu'on vient d'installer** : ses objets tombent dans la pièce et
+  // une bouffée de fumée marque l'endroit. On l'éteint deux secondes plus tard,
+  // sinon la pièce rejouerait la scène à chaque retour dans l'onglet.
+  const [installe, setInstalle] = useState<string | null>(null);
   // Le bureau : la place qu'on est en train de remplir (1 ou 2, `null` sinon).
   const [placeOuverte, setPlaceOuverte] = useState<number | null>(null);
   const [recherche, setRecherche] = useState("");
@@ -150,6 +154,13 @@ export function StudioView() {
       vivant = false;
     };
   }, []);
+
+  // L'arrivée d'un palier ne dure que le temps qu'on la voie.
+  useEffect(() => {
+    if (!installe) return;
+    const minuterie = window.setTimeout(() => setInstalle(null), 2_000);
+    return () => window.clearTimeout(minuterie);
+  }, [installe]);
 
   const jour = gameDay(now);
   const streamer = state?.streamer;
@@ -399,24 +410,28 @@ export function StudioView() {
     let vivant = true;
     void cloudStore.openStreamer(direct).then((nouveau) => {
       if (!vivant) return;
-      setOpening((precedent) =>
-        precedent?.status === "done" && nouveau.status === "done"
-          ? {
-              ...nouveau,
-              // L'absence ne se rejoue pas : on garde le résumé du premier
-              // relevé et on y ajoute seulement ce que le second apporte.
-              days: precedent.days,
-              countedDays: precedent.countedDays,
-              gained: precedent.gained,
-              lines: [...precedent.lines, ...nouveau.lines.slice(precedent.lines.length)],
-            }
-          : nouveau,
-      );
+      // L'absence ne se rejoue pas : `releveApres` garde le résumé du premier
+      // relevé et n'ajoute que ce que le second apporte.
+      setOpening((precedent) => releveApres(precedent, nouveau));
     });
     return () => {
       vivant = false;
     };
   }, [opening, jour, raidPaye, guests, direct]);
+
+  /**
+   * Relit la pièce : ce que le serveur (ou le moteur local) vient d'écrire.
+   *
+   * L'ouverture de l'onglet est un **relevé**, pris une fois au montage. Tout ce
+   * qui change la chaîne après — un palier acheté, un invité posé — vit dans la
+   * sauvegarde, pas dans ce relevé : sans cette relecture, l'objet serait payé
+   * et resterait invisible jusqu'à ce qu'on quitte l'onglet. Elle garde le
+   * résumé du retour (`releveApres`), qui n'appartient qu'au premier relevé.
+   */
+  async function rafraichir() {
+    const nouveau = await cloudStore.openStreamer(direct);
+    setOpening((precedent) => releveApres(precedent, nouveau));
+  }
 
   /** Installe le prochain palier de setup (le prix est celui du serveur). */
   async function acheter(id: string) {
@@ -424,8 +439,8 @@ export function StudioView() {
     setBusy(true);
     setNotice(null);
     const issue = await cloudStore.buyStreamerSetup(id);
-    setBusy(false);
     if (issue.status !== "done") {
+      setBusy(false);
       setNotice({ message: issue.message, isError: true });
       return;
     }
@@ -434,6 +449,13 @@ export function StudioView() {
     playEquip();
     playPowerUp();
     setNotice({ message: issue.message ?? "Palier installé.", isError: false });
+    // **Puis la pièce se relit.** Le relevé d'ouverture est celui d'**avant**
+    // l'achat : sans cette relecture, l'objet serait payé mais n'entrerait
+    // jamais dans la pièce avant de quitter l'onglet. On joue l'arrivée juste
+    // après, pour que l'objet tombe et fume **ensemble**.
+    await rafraichir();
+    setBusy(false);
+    setInstalle(id);
   }
 
   /**
@@ -447,15 +469,22 @@ export function StudioView() {
     setBusy(true);
     setNotice(null);
     const issue = await cloudStore.sacrificeStreamerSetup(sacrifie);
-    setBusy(false);
     if (issue.status !== "done") {
+      setBusy(false);
       setNotice({ message: issue.message, isError: true });
       return;
     }
     setSacrifie([]);
     setConfirmeSacrifice(false);
     playCardPlace();
+    // Le palier s'installe : même arrivée que celui payé en points, relecture
+    // comprise (`rafraichir`), sinon l'objet n'entrerait pas dans la pièce.
+    playEquip();
     setNotice({ message: issue.message ?? "Sacrifice fait.", isError: false });
+    const id = prochain?.id ?? null;
+    await rafraichir();
+    setBusy(false);
+    setInstalle(id);
   }
 
   return (
@@ -519,6 +548,7 @@ export function StudioView() {
           direct={direct}
           liveStreams={liveStreams}
           setup={setup}
+          justInstalled={installe}
           collabPermille={vue ? vue.collabPermille : collabPossible.permille}
           collabLive={vue ? vue.collabLive : collabPossible.live}
           raidToday={raidPaye}

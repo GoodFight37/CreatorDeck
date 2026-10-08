@@ -1841,7 +1841,7 @@ input:focus-visible {
 .fx-burst {
   position: absolute;
   z-index: 4;
-  left: 50%;
+  left: var(--fx-left, 50%);
   top: var(--fx-offset, 50%);
   width: var(--fx-size);
   height: var(--fx-size);
@@ -2909,6 +2909,22 @@ input:focus-visible {
 .chaine-room.en-direct .chaine-gadget.webcam::after { animation: chaine-rec 1.2s steps(2, end) infinite; }
 @keyframes chaine-rec { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 
+/* **L'arrivée d'un palier acheté.** L'objet ne se contente pas d'exister : il
+   tombe en place, dans l'ordre de la pièce (le retard est posé par la scène, à
+   partir de `src/lib/studio-install.ts`), et une bouffée de fumée marque
+   l'endroit où on vient de le brancher. Une seule fois : la classe n'est là
+   qu'au moment de l'achat, jamais après. */
+.chaine-room .vient-d-installer { animation: chaine-installe 520ms cubic-bezier(.2, .8, .25, 1.12) both; animation-delay: var(--install-delay, 0ms); }
+@keyframes chaine-installe { from { opacity: 0; transform: translateY(9px) scale(.52); } to { opacity: 1; transform: none; } }
+/* Les formes CSS (webcam, micro, néons, halos) portent déjà leur propre
+   `transform` : elles arrivent en fondu, sans bouger de leur place. */
+.chaine-room .vient-d-installer.revele { animation-name: chaine-installe-fondu; }
+@keyframes chaine-installe-fondu { from { opacity: 0; } to { opacity: 1; } }
+/* La fumée : au-dessus du mobilier, et elle s'efface d'elle-même — le calme
+   (réglage des reflets, « réduire les animations ») la coupe ailleurs, avec les
+   autres effets du jeu. */
+.chaine-room .fx-arrivee { z-index: 4; opacity: .92; }
+
 /* Les socles : deux piédestaux translucides posés **sur le devant du bureau**.
    Un socle libre est une plaque de verre teintée (jamais une boîte pointillée,
    jamais un « + ») ; un socle occupé porte une vraie carte du classeur en
@@ -2939,11 +2955,11 @@ input:focus-visible {
 @keyframes chaine-live-card { 0%, 100% { filter: drop-shadow(0 0 0 rgb(255 77 94 / 0)); } 50% { filter: drop-shadow(0 0 7px rgb(255 77 94 / .85)); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card, .chaine-room.en-direct .chaine-gadget.webcam::after { animation: none; }
+  .chaine-stand-aura, .chaine-stand.en-direct .chaine-stand-card, .chaine-room.en-direct .chaine-gadget.webcam::after, .chaine-room .vient-d-installer { animation: none; }
 }
 /* Le réglage « Reflets des cartes » demande le calme : l'aura reste, elle ne
    pulse plus. */
-[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card, [data-card-fx="off"] .chaine-room.en-direct .chaine-gadget.webcam::after { animation: none; }
+[data-card-fx="off"] .chaine-stand-aura, [data-card-fx="off"] .chaine-stand.en-direct .chaine-stand-card, [data-card-fx="off"] .chaine-room.en-direct .chaine-gadget.webcam::after, [data-card-fx="off"] .chaine-room .vient-d-installer { animation: none; }
 
 /* Le classeur d'invités : il ne s'ouvre que sur un socle de la scène
    (`.chaine-stage`), et il ne propose que les créateurs **en direct** — un

@@ -22,6 +22,11 @@ import { FX_SHEETS, type FxKind } from "@/lib/fx";
 export function EffectBurst({
   kind,
   className = "",
+  /**
+   * Le centre horizontal. La révélation laisse 50 % (le milieu de la carte) ;
+   * la pièce du Studio, elle, pose la fumée sur l'objet qui vient d'arriver.
+   */
+  left = "50%",
   /** Le centre vertical : au milieu de la carte, ou un peu au-dessus. */
   offset = "50%",
   /**
@@ -34,6 +39,7 @@ export function EffectBurst({
 }: {
   kind: FxKind;
   className?: string;
+  left?: string;
   offset?: string;
   delayMs?: number;
 }) {
@@ -46,6 +52,7 @@ export function EffectBurst({
       style={
         {
           "--fx-size": `${sheet.size}px`,
+          "--fx-left": left,
           "--fx-offset": offset,
           "--fx-delay": `${Math.max(0, delayMs)}ms`,
         } as React.CSSProperties

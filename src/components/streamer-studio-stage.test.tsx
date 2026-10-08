@@ -16,7 +16,10 @@
  *   * l'**aura du direct** : elle ne s'allume que pour un créateur qui streame
  *     maintenant, et l'écran dit « EN DIRECT » sans mentir sur les spectateurs ;
  *   * les **gestes** : chaque socle, chaque carte a sa porte (ouvrir, changer,
- *     retirer), et rien ne répond pendant que le serveur travaille.
+ *     retirer), et rien ne répond pendant que le serveur travaille ;
+ *   * l'**arrivée d'un palier acheté** : ses objets tombent en place, dans
+ *     l'ordre de la pièce, et une bouffée de fumée marque l'endroit — une seule
+ *     fois, au moment de l'achat.
  */
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -184,6 +187,45 @@ describe("le studio (la scène)", () => {
     expect(document.querySelectorAll(".chaine-neon")).toHaveLength(2);
     expect(document.querySelectorAll(".chaine-gadget")).toHaveLength(2);
     expect(document.querySelector(".chaine-room")?.className).toContain("neon");
+  });
+
+  it("marque l'arrivée d'un palier : l'objet tombe, la fumée tombe avec lui", async () => {
+    // Le moment de l'achat : la déco est installée **à l'instant** (sept objets
+    // d'un coup). C'est le seul moment où la pièce a le droit de bouger.
+    await scene({ setup: ["deco"], justInstalled: "deco" });
+    banc.ecran("30-studio-arrivee");
+
+    // Sept objets arrivent, chacun à son tour (90 ms d'écart) : ils tombent en
+    // place au lieu de se téléporter entre deux images.
+    const arrives = [...document.querySelectorAll<HTMLElement>(".chaine-room .vient-d-installer")];
+    expect(arrives).toHaveLength(7);
+    const retards = arrives.map((el) => el.style.getPropertyValue("--install-delay"));
+    expect(new Set(retards).size).toBe(7);
+    for (const retard of retards) expect(retard).toMatch(/^\d+ms$/);
+
+    // La fumée : trois bouffées au plus, qui se suivent — et elles tombent bien
+    // **dans** la pièce, pas dans un coin de l'écran.
+    const fumees = [...document.querySelectorAll<HTMLElement>(".chaine-room .fx-burst.fx-fumee")];
+    expect(fumees).toHaveLength(3);
+    for (const fumee of fumees) {
+      expect(fumee.style.getPropertyValue("--fx-left")).toMatch(/%$/);
+      expect(fumee.style.getPropertyValue("--fx-offset")).toMatch(/%$/);
+      expect(fumee.style.getPropertyValue("--fx-size")).toBe("150px");
+    }
+    expect(fumees.map((fumee) => fumee.style.getPropertyValue("--fx-delay"))).toEqual([
+      "0ms",
+      "140ms",
+      "280ms",
+    ]);
+  });
+
+  it("ne joue l'arrivée qu'une fois : au quotidien, la pièce ne bouge pas", async () => {
+    // Sans achat en cours, rien ne tombe et rien ne fume — sinon la pièce
+    // rejouerait la scène à chaque retour dans l'onglet.
+    await scene({ setup: ["deco"] });
+    banc.ecran("30-studio-deco-posée");
+    expect(document.querySelectorAll(".chaine-room .vient-d-installer")).toHaveLength(0);
+    expect(document.querySelectorAll(".chaine-room .fx-burst")).toHaveLength(0);
   });
 
   it("pose une vraie carte du classeur sur son socle, et dit sa part", async () => {

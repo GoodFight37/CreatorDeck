@@ -94,6 +94,53 @@ describe("les écrans", () => {
     banc.fermer();
   });
 
+  it("achète un palier du Studio : l'objet entre dans la pièce, tombe, et fume", async () => {
+    // Le moment où les points partent : c'est celui qui doit **se voir**. Hors
+    // ligne, l'achat passe par le même moteur que le serveur
+    // (`buyStreamerSetupLocally`) — c'est donc le vrai achat, pas une image.
+    const { gameStore } = await import("@/lib/game-store");
+    await application();
+    const avant = gameStore.getSnapshot();
+    expect(avant).not.toBeNull();
+    await act(async () => {
+      gameStore.replaceState({ ...avant!, points: 500 });
+    });
+
+    try {
+      banc.appuyer("Studio");
+      banc.appuyer(/^Installer/);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(600);
+      });
+
+      // L'objet est **entré dans la pièce** (le relevé d'ouverture est relu après
+      // l'achat : c'est ce qui le fait apparaître tout de suite, et pas au
+      // prochain passage dans l'onglet), il tombe en place, et la fumée est là.
+      expect(document.querySelectorAll(".chaine-room .chaine-gadget.webcam")).toHaveLength(1);
+      expect(document.querySelectorAll(".chaine-room .vient-d-installer").length).toBeGreaterThan(0);
+      expect(document.querySelectorAll(".chaine-room .fx-burst.fx-fumee").length).toBeGreaterThan(0);
+
+      // Le palier est payé : la liste du setup le dit installé, et les points
+      // sont partis (le prix du premier palier).
+      expect(banc.ecran("08b-studio-achat")).toContain("chaine-setup-item installe");
+      expect(gameStore.getSnapshot()!.points).toBe(380);
+
+      // Deux secondes plus tard, la pièce est au calme : la scène ne se rejoue
+      // pas à chaque retour dans l'onglet.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2_100);
+      });
+      expect(document.querySelectorAll(".chaine-room .vient-d-installer")).toHaveLength(0);
+      expect(document.querySelectorAll(".chaine-room .fx-burst")).toHaveLength(0);
+    } finally {
+      // La partie est partagée par les bancs de ce fichier : on rend l'état
+      // trouvé, sinon le test suivant hérite d'un studio équipé.
+      await act(async () => {
+        gameStore.replaceState(avant!);
+      });
+    }
+  });
+
   it("tire un booster et montre la révélation", async () => {
     await application();
     banc.appuyer("Ouvrir le booster");
