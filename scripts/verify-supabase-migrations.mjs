@@ -5424,6 +5424,25 @@ try {
     JSON.stringify(paliers),
   );
 
+  // Le mini-jeu du direct (`src/lib/live-game.ts`) n'a **pas** de table : il ne
+  // paie rien, donc il n'y a rien à garder côté serveur. Ce qui doit en
+  // revanche rester d'accord, c'est le **nombre de paliers** : une cadence de
+  // chat et un nombre de bulles par palier de notoriété. Si un sixième palier
+  // apparaît dans le SQL sans que le fichier du live suive, le dernier palier
+  // vivrait une scène de palier inférieur sans que rien ne le dise.
+  const sceneLive = JSON.parse(
+    await readFile(path.join(ROOT, "src", "data", "live-game.json"), "utf8"),
+  );
+  const paliersSql = 5; // voir le contrôle ci-dessus : 0, 2500, 25 000, 250 000, 1 000 000
+  check(
+    "live : la scène suit les paliers du serveur (5 cadences, 5 nombres de bulles)",
+    sceneLive.chat.perMinute.length === paliersSql &&
+      sceneLive.alerts.count.length === paliersSql &&
+      sceneLive.chat.perMinute.every((n, i) => i === 0 || n > sceneLive.chat.perMinute[i - 1]) &&
+      sceneLive.alerts.count.every((n, i) => i === 0 || n > sceneLive.alerts.count[i - 1]),
+    JSON.stringify({ cadences: sceneLive.chat.perMinute, bulles: sceneLive.alerts.count }),
+  );
+
   const chaineNeuve = (await asPlayer(CHAINE, "select public.streamer_status() as r")).rows[0].r;
   check(
     "chaîne : une chaîne neuve part de zéro, aucune vidéo publiée",

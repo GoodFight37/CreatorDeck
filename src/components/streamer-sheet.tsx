@@ -52,6 +52,8 @@ import { TEAR_HAPTIC } from "@/lib/reveal";
 import { buzz } from "@/lib/haptics";
 import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 
+import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game";
+
 const count = new Intl.NumberFormat("fr-FR");
 
 export function StreamerSheet({ onClose }: { onClose: () => void }) {
@@ -65,6 +67,9 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   // Le geste de la carte : la course du doigt, et le côté armé (rien tant que le
   // seuil n'est pas franchi). `armedRef` évite de vibrer à chaque pixel.
   const [drag, setDrag] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
+  // Le live de vingt secondes : ouvert, il prend tout l'écran — c'est une scène,
+  // pas un panneau de plus.
+  const [liveOuvert, setLiveOuvert] = useState(false);
   const [armed, setArmed] = useState<SwipeSide | null>(null);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const armedRef = useRef<SwipeSide | null>(null);
@@ -223,6 +228,20 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           </button>
         </header>
 
+        {liveOuvert && choisi ? (
+          <StreamerLiveGame
+            day={jour}
+            subscribers={abonnes}
+            format={formatById(choisi) ?? STREAMER.formats[0]}
+            busy={busy}
+            onPublish={async () => {
+              await publier();
+              setLiveOuvert(false);
+            }}
+            onLeave={() => setLiveOuvert(false)}
+          />
+        ) : (
+          <>
         {notice ? (
           <div className={`account-note ${notice.isError ? "error" : "ok"}`}>
             {notice.isError ? <AlertTriangle size={15} /> : <Check size={15} />}
@@ -395,8 +414,22 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                   );
                 })}
               </div>
+              {/* Le live de vingt secondes : c'est le moment de jeu. Il ne paie
+                  rien — la vidéo reste tirée par le serveur — et le bouton
+                  « Publier » juste en dessous reste le repli de qui ne veut
+                  pas jouer la scène. */}
+              <button
+                type="button"
+                className="chaine-live"
+                disabled={busy || !choisi}
+                onClick={() => setLiveOuvert(true)}
+              >
+                <Radio size={15} />
+                Lancer le live de {LIVE_SECONDS} s
+                <span>chat qui défile et bulles à attraper — puis publie ta vidéo</span>
+              </button>
               <button type="button" className="chaine-publish" disabled={busy || !choisi} onClick={() => void publier()}>
-                {busy ? "Publication…" : "Publier la vidéo du jour"}
+                {busy ? "Publication…" : "Publier sans jouer le live"}
                 <ChevronRight size={15} />
               </button>
             </>
@@ -474,6 +507,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           pendant que tu joues comme pendant ton absence — {STREAMER.growth.capDays} journées comptées au
           plus, et une horloge reculée ne crédite rien.
         </p>
+          </>
+        )}
       </div>
     </div>
   );

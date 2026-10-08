@@ -1169,6 +1169,26 @@ remplacent des fonctions de `0036` : recoller `0036` seule après `0038` refait
 passer `streamer_status()` à l'ancienne version, et l'écran perd le setup
 (le vérifieur joue ce piège au lieu de le commenter).
 
+### Le live de vingt secondes (aucune migration)
+
+L'étape 5 — `src/components/streamer-live-game.tsx`, `src/lib/live-game.ts`,
+réglage dans `src/data/live-game.json` — est le **seul morceau de « Ta chaîne »
+qui n'a pas de porte côté serveur**, et c'est une décision, pas un oubli : le
+live **ne paie rien** (ni jeton, ni point, ni abonné) et ne change pas le tirage
+de la vidéo, donc il n'y a **rien à garder** : pas de table, pas de RPC, pas de
+`0039` à coller. Le plan de la scène est tiré **sur l'appareil** par un
+générateur amorcé par `(journée de jeu, palier)` — même journée, même palier,
+donc **même scène** à chaque ouverture — et l'appareil ne décide de rien qui
+paie : `streamer_publish(format)` reste le seul juge de ce que la journée
+rapporte. Ce que le vérifieur vérifie malgré tout est le **miroir des paliers** :
+cinq cadences de chat et cinq nombres de bulles dans `live-game.json`, comme les
+cinq paliers de `_streamer_per_day()`, pour qu'un palier ajouté d'un côté ne
+laisse pas l'autre en silence. Si un jour la précision du joueur doit toucher à
+la vidéo du jour, il faudra que **le serveur puisse la juger** — c'est alors, et
+seulement alors, qu'une migration (zone ou fenêtre de tir tirée par le serveur,
+stable toute la journée, tolérance affichée à l'écran, une tentative par
+journée) devient nécessaire ; c'est écrit dans `docs/ta-chaine.md` § 2.
+
 ### Le direct (statut EN LIVE)
 
 **Qui peut réveiller la fonction.** `refresh-live` demande un en-tête

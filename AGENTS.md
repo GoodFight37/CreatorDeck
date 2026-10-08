@@ -8,8 +8,10 @@ Avant de proposer quoi que ce soit :
 
 1. **`docs/perimetre.md`** — les règles non négociables et **ce qui a déjà été
    refusé**, avec la raison : ne pas reproposer sans chiffre nouveau ;
-2. le **tableau du suivi en haut du `README.md`** — le journal daté des
-   livraisons, du plus récent au plus ancien ;
+2. la **feuille de route** ([`docs/roadmap.md`](docs/roadmap.md)) puis le
+   **journal daté des livraisons**
+   ([`docs/historique-livraisons.md`](docs/historique-livraisons.md)) — le
+   passé, du plus récent au plus ancien ;
 3. **`docs/revue-externe-2026-10.md` § 3** — les refus techniques et leurs
    raisons.
 

@@ -2717,6 +2717,40 @@ input:focus-visible {
 .chaine-setup-note { color: var(--muted-2); font-size: 12.5px; line-height: 1.45; }
 .chaine-setup-buy { margin-top: 4px; padding: 10px; color: #2a1b06; border: 0; border-radius: 10px; background: linear-gradient(145deg,#ffd27a,#f0a943); font-size: 13.5px; font-weight: 900; cursor: pointer; }
 .chaine-setup-buy:disabled { opacity: .55; cursor: default; }
+/* Le live de vingt secondes : une scène, pas un panneau. Le cadre est sombre,
+   le chat respire en bas, les bulles tombent par-dessus et se touchent au doigt. */
+.chaine-live { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; margin-top: 10px; padding: 12px; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .5); border-radius: 12px; background: rgb(var(--accent-rgb) / .1); font-size: 14px; font-weight: 700; cursor: pointer; }
+.chaine-live span { color: var(--muted-2); font-size: 12px; font-weight: 400; }
+.chaine-live:disabled { opacity: .55; cursor: default; }
+.live { display: flex; flex-direction: column; gap: 10px; }
+.live-head { display: flex; align-items: center; gap: 10px; }
+.live-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; color: #fff; border-radius: 999px; background: #c0392b; font-size: 11.5px; font-weight: 800; letter-spacing: .08em; }
+.live-time { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.live-quit { display: inline-grid; place-items: center; width: 30px; height: 30px; margin-left: auto; color: var(--muted); border: 1px solid var(--line); border-radius: 9px; background: transparent; cursor: pointer; }
+.live-bar { height: 4px; border-radius: 999px; background: rgba(255,255,255,.08); overflow: hidden; }
+.live-bar span { display: block; height: 100%; background: linear-gradient(90deg, rgb(var(--accent-rgb) / .7), var(--accent-light)); transition: width .2s linear; }
+/* Le cadre du direct : il réserve toujours la même hauteur, sinon les bulles
+   sautent quand le chat gagne une ligne. */
+.live-stage { position: relative; min-height: 240px; padding: 8px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(165deg, rgba(20,12,30,.9), rgba(8,6,14,.95)); overflow: hidden; }
+.live-stage-hint { margin: 0; color: var(--muted-2); font-size: 12px; }
+.live-alert { position: absolute; display: flex; flex-direction: column; gap: 2px; max-width: 62%; padding: 9px 11px; text-align: left; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .55); border-radius: 12px; background: rgba(24,16,36,.92); box-shadow: 0 8px 18px rgba(0,0,0,.4); cursor: pointer; animation: live-pop .18s ease-out; }
+.live-alert strong { font-size: 13px; }
+.live-alert span { color: var(--muted-2); font-size: 11.5px; line-height: 1.35; }
+.live-alert-follow { border-color: rgba(120,200,255,.6); }
+.live-alert-sub { border-color: rgba(255,205,120,.6); }
+.live-alert-raid { border-color: rgba(255,140,190,.6); }
+.live-alert-don { border-color: rgba(150,255,180,.6); }
+@keyframes live-pop { from { transform: scale(.86); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.live-chat { display: flex; flex-direction: column; gap: 4px; max-height: 132px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.02); overflow: hidden; }
+.live-chat-line { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.live-chat-line strong { color: var(--accent-light); font-weight: 700; }
+.live-chat-silence { margin: 0; color: var(--muted-2); font-size: 12.5px; }
+.live-foot { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
+.live-recap { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 1px solid rgb(var(--accent-rgb) / .35); border-radius: 14px; background: rgb(var(--accent-rgb) / .07); }
+.live-recap h3 { margin: 0; font-family: var(--font-display); font-size: 18px; }
+.live-recap-chat { margin: 0; color: var(--text); font-size: 13.5px; }
+.live-recap-note { margin: 0; color: var(--muted-2); font-size: 12px; line-height: 1.5; }
+.live-again { padding: 9px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: transparent; font-size: 13px; cursor: pointer; }
 
 /* Le draft est définitif : l'écran le dit, et le refus vient du serveur. Le
    tirage raté a un bouton pour réessayer — un écran qui ne propose rien est un

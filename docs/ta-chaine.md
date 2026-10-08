@@ -55,23 +55,48 @@
   > après**, la même requête répond :
   > `select public.schema_versions() -> '0038';` doit rendre `true`.
 
+- [x] **Étape 5 : le live de 20 secondes (`StreamerLiveGame`)** — le premier
+  mini-jeu de la chaîne : on passe en direct, **le chat défile** en bas du cadre
+  et des **bulles d'alerte** tombent — un follower, un abonné, un raid, un
+  message qui compte. On les attrape en appuyant dessus **avant qu'elles ne
+  s'effacent** ; le bilan compte ce qui a été attrapé, puis propose de publier la
+  vidéo du jour. Le réglage (vingt secondes, les cadences du chat, la durée de
+  vie et le nombre des bulles par palier, les messages) vit dans
+  `src/data/live-game.json` ; la mécanique pure dans `src/lib/live-game.ts` ; la
+  scène dans `src/components/streamer-live-game.tsx`. Ce qui décide de tout :
+  **le plan ne dépend que de `(journée de jeu, palier)`** — un générateur amorcé
+  par ces deux valeurs — donc rouvrir l'écran **rejoue la même scène** : on ne
+  relance pas le live pour tomber sur un tirage plus clément. La **cadence suit
+  la notoriété** (8, 12, 18, 26, 36 messages/minute ; 1, 2, 3, 4, 5 bulles) :
+  c'est le miroir des cinq paliers du serveur, et le vérificateur l'attrape si
+  l'un des deux camps bouge sans l'autre. **Aucune monnaie ne tombe ici** — ni
+  jeton, ni point, ni abonné — et l'écran le dit mot pour mot.
+
 ## 2. En cours
 
-- [ ] **Mini-jeu interactif de Live de 20 s (`StreamerLiveGame`)** — le premier
-  mini-jeu de la chaîne, la **barre de timing** : tu coupes le clip au bon
-  moment.
-  - **Ce qui est décidé** : le mini-jeu **ne paie aucune monnaie nouvelle** — ni
-    jeton, ni point. Il fait **décoller la vidéo du jour** : le gain de la vidéo
-    est retiré **une fois**, puis un clip bien coupé pousse le buzz d'un côté, un
-    clip raté de l'autre. La chaîne garde ses deux portes existantes (la vidéo
-    pour les jetons, le setup pour les points).
-  - **Les règles prévues** : la zone à viser est **tirée par le serveur** et
-    **stable toute la journée** (même famille de règle que la carte du jour),
-    **une seule tentative par journée**, la tolérance (largeur de la zone) est
-    **affichée à l'écran**, et c'est le serveur qui juge et qui paie.
-  - **Où on en est** : le code n'est pas encore écrit. Étape suivante —
-    `0039` côté base, le module de timing côté moteur, l'écran, le test miroir,
-    la section du vérificateur, les tests et les docs dans le même commit.
+- [ ] **Le live du jour et la vidéo : rien n'est encore jugé** — ce qui est
+  **décidé et pas encore écrit**. Le mini-jeu livré à l'étape 5 ne fait
+  **que précéder** la publication : la vidéo reste payée et tirée par le serveur
+  (`streamer_publish`), exactement comme avant. La version « clip » initialement
+  prévue — où la précision du joueur **poussait le buzz** de la vidéo du jour —
+  n'est **pas** livrée, et c'est volontaire : une précision mesurée sur le
+  téléphone ne peut pas déplacer honnêtement un taux publié, et un score que le
+  serveur ne peut pas vérifier ne doit pas payer (la règle du projet : le tirage
+  et le jugement restent au serveur). Deux suites possibles, à trancher après
+  avoir joué :
+  - **la scène reste gratuite** (l'état actuel) : elle se rejoue tant qu'on
+    veut, elle ne paie rien, elle ne peut donc rien fausser ;
+  - **elle touche à la vidéo** — et il faut alors que **le serveur puisse la
+    juger** : une migration à part, avec la zone ou la fenêtre de tir tirée par
+    le serveur, **stable toute la journée**, la tolérance **affichée**, et une
+    seule tentative par journée. C'est là, et seulement là, qu'une `0039` (ou
+    plus tard) devient nécessaire.
+
+  > **Aucune migration à coller pour l'étape 5.** Le live ne paie rien, donc il
+  > n'y a **rien à garder côté serveur** : pas de table, pas de porte, pas de
+  > garde — et donc rien à coller. Le seul contrôle côté base est le **miroir
+  > des paliers** (cinq cadences de chat, cinq nombres de bulles), joué par
+  > `npm run supabase:verify`.
 
 ## 3. Ce qu'il reste à faire
 
@@ -96,4 +121,6 @@
   joueurs** (abonnés gagnés par journée, ce que paient les vidéos et les
   imprévus, ce que coûtent les paliers de setup), puis ajuster le fichier **et**
   le SQL dans le même geste, comme pour les taux de drop : une modification d'un
-  seul côté fait mentir l'écran, et le test miroir est là pour l'attraper.
+  seul côté fait mentir l'écran, et le test miroir est là pour l'attraper. Le
+  **live de 20 s** entre dans ce bilan : c'est là qu'on décidera, en jouant, s'il
+  reste une scène gratuite ou s'il touche à la vidéo du jour (voir § 2).
