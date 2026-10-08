@@ -28,11 +28,14 @@ import * as pack from "./pack";
 import * as social from "./social";
 import * as market from "./market";
 import * as arena from "./arena";
+import type { StreamerReturn, StreamerStatus, StreamerVideo } from "./streamer";
 import * as wallet from "./wallet";
+import * as streamer from "./streamer";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
 export * from "./types";
+export type { StreamerReturn, StreamerStatus, StreamerVideo } from "./streamer";
 export { CLOUD_SESSION_KEY, CloudError, familyRatio } from "./core";
 
 export class CloudApi {
@@ -578,6 +581,38 @@ export class CloudApi {
   /** Rejoint un créateur contre 400 jetons — le serveur relit le prix. */
   async tokensSpend(slug: string): Promise<{ spent: number; tokens: number }> {
     return wallet.tokensSpend(this.core, slug);
+  }
+
+  // ------------------------------------------------------------------ chaîne
+
+  /**
+   * L'état de la chaîne (`0036_streamer.sql`).
+   *
+   * C'est le serveur qui porte les abonnés : la partie locale en garde un
+   * miroir pour l'affichage, jamais l'autorité.
+   */
+  async streamerStatus(): Promise<StreamerStatus> {
+    return streamer.streamerStatus(this.core);
+  }
+
+  /**
+   * Le retour du joueur : la chaîne a grandi pendant son absence.
+   *
+   * Les journées comptées viennent de l'horloge **du serveur**, plafonnées à
+   * sept ; reculer l'horloge du téléphone ne crédite rien.
+   */
+  async streamerVisit(): Promise<StreamerReturn> {
+    return streamer.streamerVisit(this.core);
+  }
+
+  /**
+   * Publie la vidéo du jour et rend son résultat.
+   *
+   * Le tirage est fait par le serveur : le client envoie un nom de format et
+   * rien d'autre. Une seconde publication le même jour relit la première.
+   */
+  async streamerPublish(format: string): Promise<StreamerVideo> {
+    return streamer.streamerPublish(this.core, format);
   }
 
   // ------------------------------------------------------------------ saves

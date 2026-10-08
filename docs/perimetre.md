@@ -31,9 +31,9 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 - **Les règles vivent en double** : TypeScript **et** SQL. Une règle touchée d'un
   seul côté casse un test miroir (`src/lib/supabase-*.test.ts`) — c'est voulu.
   La dernière définition d'`open_pack()` est `0035_jetons.sql`.
-- **On vérifie en lançant, pas en relisant** : `npm test` (**843**),
+- **On vérifie en lançant, pas en relisant** : `npm test` (**874**),
   `npm run ecrans` (les **18** captures), `npm run supabase:verify`
-  (**434** contrôles). Pour un déménagement de code : capture avant
+  (**450** contrôles). Pour un déménagement de code : capture avant
   (`ECRANS_DUMP=/tmp/avant`), `diff -r` après.
 - **Les noms visibles** : Drop, Binder, Craft, Toi — et « Objectifs et saisons ».
   Un écran s'appelle comme le joueur le lit, pas comme le fichier s'appelle.
@@ -79,8 +79,8 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 Aucune affirmation sur le serveur ne se croit sur parole, la mienne comprise :
 
 - **ce qui est collé** : `schema_versions()`, lisible **sans compte**
-  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — six `true` attendus
-  pour `0030` → `0035` ;
+  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — sept `true` attendus
+  pour `0030` → `0036` ;
 - **une fonction existe** : `401`/`42501` = présente mais réservée au rôle de
   service ; `404`/`PGRST202` = absente.
 

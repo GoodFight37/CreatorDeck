@@ -162,6 +162,7 @@ try {
   const depart = await readFile(path.join(MIGRATIONS, "0033_depart_maigre.sql"), "utf8");
   const protege = await readFile(path.join(MIGRATIONS, "0034_last_pack_protege.sql"), "utf8");
   const jetons = await readFile(path.join(MIGRATIONS, "0035_jetons.sql"), "utf8");
+  const chaine = await readFile(path.join(MIGRATIONS, "0036_streamer.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -198,6 +199,7 @@ try {
     ["0033_depart_maigre.sql", depart],
     ["0034_last_pack_protege.sql", protege],
     ["0035_jetons.sql", jetons],
+    ["0036_streamer.sql", chaine],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -5146,6 +5148,165 @@ try {
     JSON.stringify(twins.map((row) => row.display_name)),
   );
 
+
+  // --- La chaîne (0036) ----------------------------------------------------
+  //
+  // Le simulateur de streameur : ce qu'on vérifie ici n'est pas l'agrément du
+  // jeu, c'est ce que le **client** ne peut pas faire — choisir son résultat,
+  // publier deux vidéos le même jour, se payer deux fois, ou gonfler ses
+  // abonnés avec l'horloge du téléphone.
+  const CHAINE = "3c3c3c3c-1111-4111-8111-3c3c3c3c3c3c";
+  const SANS_CARTE = "4d4d4d4d-2222-4222-8222-4d4d4d4d4d4d";
+  await player(CHAINE, "Chloé Stream", [card("chaine-1", "auronplay", "rare", "standard", 400)]);
+  await player(SANS_CARTE, "Nouvelle venue", []);
+
+  const paliers = (
+    await client.query(
+      `select public._streamer_per_day(0) as a, public._streamer_per_day(2499) as b,
+              public._streamer_per_day(2500) as c, public._streamer_per_day(25000) as d,
+              public._streamer_per_day(250000) as e, public._streamer_per_day(1000000) as f`,
+    )
+  ).rows[0];
+  check(
+    "chaîne : les paliers paient 240, puis 900, 3 200, 12 000 et 45 000 par jour",
+    paliers.a === 240 && paliers.b === 240 && paliers.c === 900 &&
+      paliers.d === 3200 && paliers.e === 12000 && paliers.f === 45000,
+    JSON.stringify(paliers),
+  );
+
+  const chaineNeuve = (await asPlayer(CHAINE, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "chaîne : une chaîne neuve part de zéro, aucune vidéo publiée",
+    Number(chaineNeuve.subscribers) === 0 && chaineNeuve.published_today === false &&
+      Number(chaineNeuve.per_day) === 240 && Number(chaineNeuve.tokens_today) === 0,
+    JSON.stringify(chaineNeuve),
+  );
+
+  // L'absence : on recule le relevé **du serveur** de trois jours, puis on
+  // revient. C'est exactement ce que fait le joueur en fermant l'application.
+  await client.query(
+    "update public.streamer_channels set last_seen_at = now() - interval '3 days' where user_id = $1",
+    [CHAINE],
+  );
+  const visite = (await asPlayer(CHAINE, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "chaîne : trois journées d'absence paient 3 × 240 abonnés",
+    Number(visite.days) === 3 && Number(visite.counted_days) === 3 &&
+      Number(visite.gained) === 720 && Number(visite.subscribers) === 720,
+    JSON.stringify(visite),
+  );
+
+  // Le plafond : trente journées d'absence ne paient pas plus que sept.
+  await client.query(
+    "update public.streamer_channels set last_seen_at = now() - interval '30 days' where user_id = $1",
+    [CHAINE],
+  );
+  const plafond = (await asPlayer(CHAINE, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "chaîne : au-delà de sept journées, la chaîne ne cumule plus",
+    Number(plafond.days) === 30 && Number(plafond.counted_days) === 7 &&
+      Number(plafond.gained) === 7 * 240,
+    JSON.stringify(plafond),
+  );
+
+  // Une horloge en arrière (un relevé dans le futur) ne crédite rien : c'est la
+  // promesse faite au joueur, et c'est ce qui rend l'ancrage serveur utile.
+  await client.query(
+    "update public.streamer_channels set last_seen_at = now() + interval '5 days' where user_id = $1",
+    [CHAINE],
+  );
+  const recul = (await asPlayer(CHAINE, "select public.streamer_visit() as r")).rows[0].r;
+  check(
+    "chaîne : un relevé dans le futur ne crédite aucun abonné",
+    Number(recul.days) === 0 && Number(recul.gained) === 0,
+    JSON.stringify(recul),
+  );
+
+  // La vidéo du jour : un résultat tiré **par le serveur**, donc l'invariant est
+  // ce qu'il faut vérifier (le tirage, lui, ne se prédit pas).
+  const avantVideo = (await asPlayer(CHAINE, "select public.streamer_status() as r")).rows[0].r;
+  const jetonsAvantVideo = (await asPlayer(CHAINE, "select public.tokens_get() as r")).rows[0].r.tokens;
+  const video = (await asPlayer(CHAINE, "select public.streamer_publish('letsplay') as r")).rows[0].r;
+  const gainsLetsPlay = [0, 240, 720];
+  check(
+    "chaîne : la vidéo du jour rend un résultat cohérent avec son format",
+    video.already === false && video.format === "letsplay" &&
+      gainsLetsPlay.includes(Number(video.gained)) &&
+      Number(video.subscribers) === Number(avantVideo.subscribers) + Number(video.gained),
+    JSON.stringify(video),
+  );
+  check(
+    "chaîne : le versement est plafonné (16 jetons au plus pour une vidéo)",
+    Number(video.tokens) <= 16 && Number(video.tokens_today) <= Number(video.tokens_cap),
+    JSON.stringify({ tokens: video.tokens, today: video.tokens_today, cap: video.tokens_cap }),
+  );
+
+  // Deuxième appel le même jour : on relit la première vidéo, on ne la rejoue
+  // pas — ni les abonnés, ni les jetons ne bougent.
+  const jetonsApresVideo = (await asPlayer(CHAINE, "select public.tokens_get() as r")).rows[0].r.tokens;
+  check(
+    "chaîne : le versement de la chaîne arrive sur le solde du serveur",
+    Number(jetonsApresVideo) - Number(jetonsAvantVideo) === Number(video.tokens),
+    JSON.stringify({ avant: jetonsAvantVideo, apres: jetonsApresVideo, verse: video.tokens }),
+  );
+  const rejeu = (await asPlayer(CHAINE, "select public.streamer_publish('ragebait') as r")).rows[0].r;
+  const jetonsRejeu = (await asPlayer(CHAINE, "select public.tokens_get() as r")).rows[0].r.tokens;
+  check(
+    "chaîne : une seule vidéo par journée de jeu, et un seul versement",
+    rejeu.already === true && rejeu.format === "letsplay" &&
+      Number(rejeu.gained) === Number(video.gained) && Number(jetonsRejeu) === Number(jetonsApresVideo),
+    JSON.stringify({ rejeu, jetonsRejeu }),
+  );
+
+  await refuses(
+    "chaîne : un format inventé est refusé",
+    CHAINE,
+    "select public.streamer_publish('nimportequoi') as r",
+    [],
+    "n'existe pas",
+  );
+  await refuses(
+    "chaîne : la collab demande de posséder un créateur",
+    SANS_CARTE,
+    "select public.streamer_publish('collab') as r",
+    [],
+    "posséder au moins un créateur",
+  );
+  await refuses(
+    "chaîne : la table des chaînes est fermée au joueur",
+    CHAINE,
+    "select count(*) as n from public.streamer_channels",
+    [],
+    "permission denied",
+  );
+  await refuses(
+    "chaîne : le journal des vidéos est fermé au joueur",
+    CHAINE,
+    "select count(*) as n from public.streamer_videos",
+    [],
+    "permission denied",
+  );
+
+  // Le rapport de version, et l'ordre du collage : `0035` **et** `0036`
+  // réécrivent `schema_versions()`, donc le rapport est celui de la **dernière**
+  // migration recollée. C'est un piège réel — le joueur colle depuis son
+  // téléphone — et il se reproduit ici avant d'être vérifié : on recollé `0035`
+  // seule, la ligne de la `0036` disparaît ; on recolle `0036`, elle revient.
+  await client.query(jetons);
+  const rapportSans = (await client.query("select public.schema_versions() as r")).rows[0].r;
+  check(
+    "chaîne : recoller `0035` après `0036` fait perdre la ligne de la 0036 (le rapport suit la dernière collée)",
+    rapportSans["0036"] === undefined && rapportSans["0035"] === true,
+    JSON.stringify(rapportSans),
+  );
+  await client.query(chaine);
+  const rapportAvec = (await client.query("select public.schema_versions() as r")).rows[0].r;
+  check(
+    "chaîne : la 0036 recollée en dernier rend le rapport complet",
+    rapportAvec["0036"] === true && rapportAvec["0035"] === true,
+    JSON.stringify(rapportAvec),
+  );
+
   // --- Rejouabilité --------------------------------------------------------
   await client.query(catalogue);
   await client.query(tirage);
@@ -5184,6 +5345,9 @@ try {
   await client.query(depart);
   await client.query(protege);
   await client.query(jetons);
+  // `0036` ferme la pile à son tour : elle réécrit `schema_versions()`, donc
+  // c'est elle la dernière recollée.
+  await client.query(chaine);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,
@@ -5342,6 +5506,11 @@ try {
     "migrations rejouables : la réinitialisation répond encore, sans rien effacer d'autre",
     (await asPlayer(A, "select public.reset_progress() as r")).rows[0].r.status === "reset" &&
       (await client.query("select count(*)::int as n from public.profiles where user_id = $1", [A])).rows[0].n === 1,
+  );
+  check(
+    "migrations rejouables : la chaîne répond encore, abonnés et vidéo compris",
+    (await asPlayer(CHAINE, "select public.streamer_status() as r")).rows[0].r.published_today === true &&
+      (await asPlayer(CHAINE, "select public.streamer_publish('letsplay') as r")).rows[0].r.already === true,
   );
   check(
     "migrations rejouables : le Last Pack répond encore, sans double publication",

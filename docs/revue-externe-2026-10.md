@@ -191,15 +191,15 @@ pareil ne bloquent plus la sauvegarde ».
 
 ```powershell
 npm ci
-npm test                                    # 843 tests, 58 fichiers
+npm test                                    # 874 tests, 60 fichiers
 npm run ecrans                              # les 18 écrans montés dans un DOM
 npm run e2e                                 # navigateur requis (npx playwright install chromium)
-npm run supabase:verify                     # 434 contrôles sur un Postgres jetable
+npm run supabase:verify                     # 450 contrôles sur un Postgres jetable
 ```
 
 Le vérifieur installe ses dépendances en `--no-save`
 (`npm install --no-save embedded-postgres pg`) : rien de plus dans l'APK ni
-dans la CI. Il joue `0001` → `0035` pour de vrai, avec les **mêmes règles de
+dans la CI. Il joue `0001` → `0036` pour de vrai, avec les **mêmes règles de
 droits que Supabase** (`alter default privileges` **avant** les migrations) —
 c'est ce détail qui a mis au jour trois contrôles qui passaient pour de
 mauvaises raisons : `user_cards` et `market_listings`, révoquées depuis `0006`

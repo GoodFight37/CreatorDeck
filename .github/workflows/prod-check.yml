@@ -56,17 +56,19 @@ jobs:
           sonde "last_pack_shelf" "{}" "0012, contrôle"
 
           # Les migrations à vérifier, de la plus récente à la plus ancienne.
+          sonde "streamer_status" "{}" "0036 ?"
+          sonde "_streamer_cap_days" "{}" "0036 ?"
           sonde "tokens_get" "{}" "0035 ?"
           sonde "_streak_reward_tokens" '{"p_day":4}' "0035 ?"
           sonde "_tokens_per_pack" '{"p_at":"2026-07-10T18:30:00Z"}' "0035 ?"
           sonde "token_prices" "{}" "0035 ?"
           sonde "_pack_initial_packs" "{}" "0033 ?"
 
-          # Le rapport de la base elle-même (`0035`) : chaque clé est un numéro
+          # Le rapport de la base elle-même (`0036`) : chaque clé est un numéro
           # de migration, la valeur dit si elle est dans la base. C'est la
           # réponse complète, y compris pour `0034` — qui ne crée aucun objet et
           # qu'aucune sonde de fonction ne peut voir.
-          sonde "schema_versions" "{}" "rapport complet (0035) ?"
+          sonde "schema_versions" "{}" "rapport complet (0036) ?"
 
       - name: Ce qui est collé, en clair
         env:
@@ -90,12 +92,12 @@ jobs:
           BODY=$(printf '%s' "$RAW" | sed '$d')
 
           if [ "$CODE" != "200" ]; then
-            echo "::warning title=Le rapport de la base ne répond pas::HTTP $CODE — 0035 n'est pas collée. Les contrôles au-dessus disent ce qui, lui, répond."
+            echo "::warning title=Le rapport de la base ne répond pas::HTTP $CODE — 0036 n'est pas collée. Les contrôles au-dessus disent ce qui, lui, répond."
             exit 0
           fi
 
           ABSENTES=""
-          for M in 0030 0031 0032 0033 0034 0035; do
+          for M in 0030 0031 0032 0033 0034 0035 0036; do
             ETAT=$(printf '%s' "$BODY" | jq -r --arg k "$M" '.[$k] // false')
             if [ "$ETAT" = "true" ]; then
               echo "::notice title=$M::collée"
@@ -108,5 +110,5 @@ jobs:
           if [ -n "$ABSENTES" ]; then
             echo "::warning title=Il reste à coller::$ABSENTES"
           else
-            echo "::notice title=La base est à jour::0030 à 0035, toutes collées"
+            echo "::notice title=La base est à jour::0030 à 0036, toutes collées"
           fi

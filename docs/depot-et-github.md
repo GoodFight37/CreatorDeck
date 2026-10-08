@@ -42,7 +42,7 @@ But : **un dépôt, une branche de référence, un historique léger.**
   comme « hors ligne » ou « sans compte » sans cette nuance — c'était vrai avant
   le chantier online, ça ne l'est plus.
 - Migrations Supabase collées par le joueur, dans l'ordre : `0003`, `0011` →
-  `0035`. Les dernières ferment des trous d'intégrité ou ajoutent une règle :
+  `0036`. Les dernières ferment des trous d'intégrité ou ajoutent une règle :
   `0019` (la sauvegarde, la réserve de boosters et les raretés déclarées ne
   s'écrivent plus depuis le client), `0020` (un pseudo = un joueur), `0021`
   (registre de provenance : une Légendaire ou une variante Live/Holo/Gold doit
@@ -53,13 +53,14 @@ But : **un dépôt, une branche de référence, un historique léger.**
   `0031` (plancher de malchance à 12), `0032` (la série paie ses jours),
   `0033` (départ maigre : 2 boosters, 2 sabliers), `0034` (une Légendaire ou une
   Live ne se vole pas au Last Pack), `0035` (les jetons au serveur, et le
-  rapport `schema_versions()`). La bascule de `0021` a inscrit 40 lignes pour
+  rapport `schema_versions()`), `0036` (la chaîne : abonnés, vidéo du jour et
+  jetons tenus par le serveur). La bascule de `0021` a inscrit 40 lignes pour
   toutes les collections existantes — personne ne perd son rang.
 - **État vérifié en production (8 octobre 2026)** : `schema_versions()` répond
-  `true` pour `0030` → `0035` — la base est à jour, et elle le dit elle-même,
+  `true` pour `0030` → `0036` — la base est à jour, et elle le dit elle-même,
   sans compte.
-- Le vérifieur `npm run supabase:verify` joue `0001` → `0035` sur un Postgres
-  jetable : **434 contrôles**. Il pose les droits de table comme Supabase
+- Le vérifieur `npm run supabase:verify` joue `0001` → `0036` sur un Postgres
+  jetable : **450 contrôles**. Il pose les droits de table comme Supabase
   (`alter default privileges` **avant** les migrations), sinon il redonnerait à
   `authenticated` ce que les migrations retirent et trois contrôles passeraient
   pour de mauvaises raisons.
@@ -92,7 +93,7 @@ Deux réglages, une seule fois, pour la voie n° 1 (console Firebase du projet
   porter le rôle *Firebase App Distribution Admin*.
 
 À côté du build, un second travail (`verif`) rejoue **toute la pile SQL**
-(`0001` → `0035`) sur un Postgres jetable et fait parler le serveur (434
+(`0001` → `0036`) sur un Postgres jetable et fait parler le serveur (450
 contrôles) : une migration cassée met le run au rouge sans priver le téléphone
 de son APK.
 

@@ -19,9 +19,9 @@ packs**. Le cloud apporte :
 7. les **amis**, le **carnet de notifications**, les **notifications de direct**
    (FCM), le **Last Pack**, le badge **EN LIVE**, la **wishlist** ;
 8. l'**hôtel des ventes**, l'**Arène** hebdomadaire, les **codes promo**, le
-   **plancher de malchance** et la **série de sept jours** relus côté serveur, et
-   les **jetons** — avec, depuis `0035`, `schema_versions()` pour dire ce qui est
-   collé.
+   **plancher de malchance** et la **série de sept jours** relus côté serveur, les
+   **jetons**, et, depuis `0036`, **la chaîne** — le simulateur de streameur — avec,
+   depuis `0035`, `schema_versions()` pour dire ce qui est collé.
 
 Le détail de chaque pièce est au §8 : c'est lui qui fait foi.
 
@@ -265,6 +265,18 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      sauvegarde qui déclare une **rareté inventée**, un **créateur hors
      catalogue** ou des **identifiants en double** n'est plus classée (les
      cartes restent acquises). Détail : §8, « L'intégrité côté serveur ».
+   - [`supabase/migrations/0036_streamer.sql`](../supabase/migrations/0036_streamer.sql)
+     → **Run** pour que **la chaîne** (le simulateur de streameur) vive au
+     serveur : `streamer_channels` (les abonnés, le dernier relevé) et
+     `streamer_videos` (une vidéo par journée de jeu, index unique). Le retour du
+     joueur (`streamer_visit()`) paie la croissance des journées écoulées,
+     **plafonnées à sept**, et ne crédite **rien** sur un écart négatif ;
+     `streamer_publish(format)` tire la vidéo du jour **côté serveur** — le client
+     n'envoie qu'un nom de format — et le versement (**6 jetons**, +10 au buzz,
+     plafond **40 par jour**) passe par `_tokens_apply()` de `0035`, donc une
+     seule fois par journée. La migration étend `schema_versions()` avec sa ligne
+     `0036`. Sans elle, la porte « Ta chaîne » répond « fonction inconnue » et le
+     reste du jeu ne bouge pas. Détail : §8, « La chaîne vit au serveur (`0036`) ».
    - [`supabase/migrations/0035_jetons.sql`](../supabase/migrations/0035_jetons.sql)
      → **Run** pour que **les jetons passent au serveur** : le solde vit dans
      `tokens`, chaque mouvement est journalisé (`token_ledger`, index unique
@@ -276,8 +288,8 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
      créateur retiré du classement ou déjà possédé. La bascule ouvre le compte
      **une fois** avec le solde déjà gagné (borné à un million, comme
      `_wallet_ensure()` dans `0027`). La migration ajoute aussi
-     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des six
-     dernières migrations (`0030` → `0035`) sont installées — c'est la réponse à
+     **`schema_versions()`** : lue **sans compte**, elle dit lesquelles des sept
+     dernières migrations (`0030` → `0036`) sont installées — c'est la réponse à
      « est-ce que c'est bien le SQL que j'ai collé ? », y compris pour `0034`,
      qui ne crée aucun objet. Détail : §8, « Le plancher de malchance, les
      jetons, les missions du jour ».
@@ -462,7 +474,7 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
 > eux, le vérificateur sort en succès **sans rien tester** — d'où la commande
 > dédiée.
 >
-> Le script exécute **les trente-cinq migrations** (`0001` à `0035`) pour de vrai, dans
+> Le script exécute **les trente-six migrations** (`0001` à `0036`) pour de vrai, dans
 > un Postgres jetable, puis contrôle : le catalogue (1000 créateurs), les
 > cartes (aucun doublon, une garantie Rare ou mieux), la recharge, la
 > reprise de l'état local, la distribution du slot garanti (82 / 15 / 3 de
@@ -556,7 +568,7 @@ Le même workflow porte deux contrôles **à côté** du build — ils ne le
 retardent pas et ne le bloquent pas :
 
 * le travail `verif` rejoue la pile SQL entière (`0001` → la dernière) sur un
-  Postgres jetable et fait parler le serveur (434 contrôles) : c'est le seul
+  Postgres jetable et fait parler le serveur (450 contrôles) : c'est le seul
   endroit qui dit qu'un fichier de migration s'applique encore, dans l'ordre,
   sur une base neuve ;
 * `npm run ecrans` monte l'application dans un DOM : les quatre onglets, les
@@ -1000,8 +1012,8 @@ de plus — et la réponse annonce alors `0 point`, parce que le serveur ne doit
 jamais promettre ce qu'il n'a pas versé. Un jour manqué remet la série à zéro :
 le prochain booster est un J1, et il paie à nouveau.
 
-**Savoir ce qui est collé (`0035`).** `schema_versions()` rend un objet
-`{ "0030": true, …, "0035": true }` : chaque clé est un numéro de migration, la
+**Savoir ce qui est collé (`0035`, complétée par `0036`).** `schema_versions()` rend un objet
+`{ "0030": true, …, "0036": true }` : chaque clé est un numéro de migration, la
 valeur dit si elle est **dans la base**. Elle ne lit que le catalogue (le texte
 des fonctions internes, via `_schema_body()`) et ne rend que des booléens — donc
 elle se lit **sans compte** :
@@ -1015,10 +1027,52 @@ C'est ce qui permet de vérifier une installation depuis un téléphone, sans
 ouvrir l'application : `0034` ne crée aucun objet (elle reprend deux fonctions
 existantes), donc son absence ne se voyait nulle part ailleurs. Le workflow
 `.github/workflows/prod-check.yml` interroge la même fonction et écrit le verdict
-en clair dans le journal du run — une ligne `0030` → `0035` par migration,
+en clair dans le journal du run — une ligne `0030` → `0036` par migration,
 `collée` ou `ABSENTE`, puis ce qu'il reste à coller, ou « la base est à jour ».
 Il se réveille quand ce fichier change (une poussée de code ne le déclenche pas)
 et depuis l'onglet Actions (`workflow_dispatch`).
+
+### La chaîne vit au serveur (`0036`)
+
+**Le simulateur de streameur (`0036_streamer.sql`).** La porte « Ta chaîne »
+s'ouvre depuis l'accueil : la chaîne grandit **par journées de jeu** (6 h UTC, la
+même journée que les missions et la série) et publie **une vidéo par journée**,
+choisie dans un calendrier de quatre formats. Ce qui se joue tout seul — la
+croissance pendant l'absence, le tirage de la vidéo, le gain, les jetons — est au
+**serveur** :
+
+- `streamer_status()` lit l'état : abonnés, croissance par jour, « la vidéo du
+  jour est publiée », jetons versés aujourd'hui, plafond ;
+- `streamer_visit()` calcule le **retour** : les journées de jeu écoulées depuis le
+  dernier passage, **plafonnées à sept** — une absence ne paie jamais mieux que le
+  jeu —, et un écart **négatif vaut zéro** : reculer l'horloge du téléphone ne
+  crédite rien. Le relevé (`last_seen_at`) vit dans `streamer_channels`, donc la
+  même absence ne se paie pas deux fois, même en changeant d'appareil ;
+- `streamer_publish(format)` **tire la vidéo** : réussite, buzz, bad buzz et gain
+  viennent de `random()` côté serveur, avec les mêmes chances que
+  `src/data/streamer.json` — le fichier que lit le moteur local. Le client
+  n'envoie **qu'un nom de format** : il ne peut pas s'offrir une réussite.
+  L'index unique `(user_id, day)` fait qu'une seconde publication le même jour
+  **relit** la première (`already: true`) au lieu de la rejouer.
+
+La chaîne paie en **jetons** — 6 par vidéo réussie, +10 si elle buzz, **plafonnés à
+40 par journée** — et le versement passe par `_tokens_apply()` (le journal de
+`0035`, dont l'index unique porte la journée) : un seul versement par jour, quoi
+qu'il arrive. C'est ce qui empêche la chaîne de devenir une machine à jetons, donc
+une machine à cartes.
+
+* **Le client** : `src/lib/cloud/api/streamer.ts` — trois appels (`streamerStatus`,
+  `streamerVisit`, `streamerPublish`), aucun montant transmis.
+
+Un test miroir (`src/lib/supabase-streamer.test.ts`) compare le SQL au fichier :
+paliers, chances, plafonds, journée à 6 h UTC, tables fermées au joueur, et le fait
+que le rapport `schema_versions()` est bien écrit par la **dernière** migration.
+
+**Coller `0036` après `0035`.** `schema_versions()` est réécrit par chaque
+migration qui l'étend : le rapport lu est celui de la **dernière** recollée.
+Coller `0035` après `0036` fait disparaître la ligne `0036` du rapport — les
+fonctions de la chaîne, elles, restent en place ; recoller `0036` la remet. Le
+vérifieur joue les deux cas plutôt que de les commenter.
 
 ### Le direct (statut EN LIVE)
 

@@ -842,6 +842,119 @@ describe("les points au serveur (wallet)", () => {
   });
 });
 
+describe("la chaîne (le simulateur de streameur)", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("lit l'état de la chaîne", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          ok: true,
+          subscribers: 2640,
+          per_day: 900,
+          day: "2026-10-08",
+          published_today: false,
+          tokens_today: 6,
+          tokens_cap: 40,
+        },
+      }),
+      signedIn(),
+    );
+    const etat = await api.streamerStatus();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_status");
+    expect(etat).toEqual({ subscribers: 2640, perDay: 900, day: "2026-10-08", publishedToday: false, tokensToday: 6, tokensCap: 40 });
+  });
+
+  it("rend le résumé du retour, journées comptées comprises", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: { ok: true, days: 30, counted_days: 7, gained: 1680, subscribers_before: 2500, subscribers: 4180, per_day: 240 },
+      }),
+      signedIn(),
+    );
+    const retour = await api.streamerVisit();
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_visit");
+    // Trente journées d'absence, sept payées : c'est le serveur qui tranche, et
+    // c'est ce chiffre-là que l'écran résume.
+    expect(retour.days).toBe(30);
+    expect(retour.countedDays).toBe(7);
+    expect(retour.gained).toBe(1680);
+    expect(retour.before).toBe(2500);
+    expect(retour.subscribers).toBe(4180);
+  });
+
+  it("n'envoie qu'un nom de format, jamais un résultat", async () => {
+    const { api, calls } = client(
+      () => ({
+        body: {
+          ok: true,
+          already: false,
+          format: "ragebait",
+          success: true,
+          buzz: false,
+          bad_buzz: false,
+          gained: 1920,
+          tokens: 6,
+          subscribers: 4560,
+          tokens_today: 6,
+          tokens_cap: 40,
+        },
+      }),
+      signedIn(),
+    );
+    const video = await api.streamerPublish("ragebait");
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/streamer_publish");
+    // Si le client pouvait annoncer « réussite » ou un gain, le joueur
+    // s'offrirait une Légende… un buzz à volonté.
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_format: "ragebait" });
+    expect(video.success).toBe(true);
+    expect(video.gained).toBe(1920);
+  });
+
+  it("relit la vidéo du jour sans la rejouer", async () => {
+    const { api } = client(
+      () => ({
+        body: { ok: true, already: true, format: "letsplay", success: true, buzz: false, bad_buzz: false, gained: 240, tokens: 6, subscribers: 2640, tokens_today: 6, tokens_cap: 40 },
+      }),
+      signedIn(),
+    );
+    const video = await api.streamerPublish("letsplay");
+    expect(video.already).toBe(true);
+    expect(video.tokens).toBe(6);
+  });
+
+  it("relaie le refus du serveur (collab sans créateur)", async () => {
+    const { api } = client(
+      () => ({ status: 400, body: { code: "P0001", message: "chaîne : une collab demande de posséder au moins un créateur" } }),
+      signedIn(),
+    );
+    await expect(api.streamerPublish("collab")).rejects.toThrowError(/posséder au moins un créateur/);
+  });
+
+  it("dit quelle migration coller quand la chaîne manque", async () => {
+    const { api } = client(
+      () => ({
+        status: 404,
+        body: { code: "PGRST202", message: "Could not find the function public.streamer_status() in the schema cache" },
+      }),
+      signedIn(),
+    );
+    await expect(api.streamerStatus()).rejects.toThrowError(/0036_streamer\.sql/);
+  });
+
+  it("n'invente pas un état quand la réponse est illisible", async () => {
+    const { api } = client(() => ({ body: {} }), signedIn());
+    await expect(api.streamerVisit()).rejects.toThrowError(/illisible/);
+  });
+});
+
 describe("codes promo", () => {
   function signedIn() {
     const storage = memoryStorage();

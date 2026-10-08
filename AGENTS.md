@@ -14,8 +14,8 @@ Avant de proposer quoi que ce soit :
    raisons.
 
 Pour vérifier de ton côté : `npm run dev:setup` (installe ce qu'il faut), puis
-`npm test` (**843** tests), `npm run ecrans` (**18** captures d'écran),
-`npm run supabase:verify` (**434** contrôles sur un Postgres jetable).
+`npm test` (**874** tests), `npm run ecrans` (**18** captures d'écran),
+`npm run supabase:verify` (**450** contrôles sur un Postgres jetable).
 
 Deux choses à ne pas faire : écrire sur la branche de travail sans consigne
 (**un seul écrivain à la fois**), et présenter un avis comme un résultat — ici,
