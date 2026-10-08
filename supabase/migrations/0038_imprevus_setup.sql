@@ -38,6 +38,17 @@
 -- Une ligne ajoutée à la main dans la table ne doit pas offrir le studio sans le
 -- micro : c'est la règle du fichier, elle est écrite ici aussi.
 --
+-- ---------------------------------------------------------------------------
+-- La vidéo du jour paie le setup
+-- ---------------------------------------------------------------------------
+-- `streamer_publish()` est réécrite **telle quelle**, à un appel près : la
+-- croissance journalière passe par `_streamer_growth()` au lieu de
+-- `_streamer_per_day()`. Sans ça l'écran annoncerait une croissance bonifiée
+-- (le setup vient d'être payé) et la vidéo en paierait une autre — le serveur
+-- dirait un chiffre et paierait le précédent. Les trois fonctions qui portent la
+-- croissance — `streamer_status()`, `streamer_visit()` et `streamer_publish()` —
+-- lisent donc la même, et il n'existe qu'un seul chiffre possible.
+--
 -- Rejouable : `create table if not exists`, `create or replace`, `revoke` et
 -- `grant` idempotents.
 
@@ -557,6 +568,148 @@ $$;
 
 revoke all on function public.streamer_choose(text, text) from public, anon;
 grant execute on function public.streamer_choose(text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- La vidéo du jour paie le setup
+-- ---------------------------------------------------------------------------
+
+/**
+ * Publie la vidéo de la journée de jeu et rend son résultat.
+ *
+ * Trois jets, dans l'ordre du fichier : la réussite, le buzz (seulement sur une
+ * réussite), le bad buzz (seulement sur un échec — une vidéo qui marche ne se
+ * retourne pas contre toi le même jour). Le gain vaut `gain_permille` pour mille
+ * de la croissance journalière : une réussite de Let's Play fait une journée,
+ * une de Rage bait en fait deux, un buzz triple, et un bad buzz coûte un quart
+ * de ce que la vidéo aurait rapporté.
+ *
+ * Ce que le client ne peut pas faire :
+ *
+ *   * choisir le résultat — le tirage est ici, avec `random()`, et le client
+ *     n'envoie qu'un **nom de format** ;
+ *   * publier deux vidéos le même jour — l'index unique, et le second appel
+ *     relit la première au lieu de la rejouer ;
+ *   * se payer deux fois — le versement passe par `_tokens_apply()`, dont le
+ *     journal unique porte la journée (`streamer`) ;
+ *   * annoncer une collab sans carte — la Collab demande au moins un créateur
+ *     dans la collection **du serveur** (`stats.unique_creators`).
+ */
+create or replace function public.streamer_publish(p_format text)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_user     uuid := auth.uid();
+  v_day      text;
+  v_existant public.streamer_videos;
+  v_row      public.streamer_channels;
+  v_fmt      record;
+  v_base     bigint;
+  v_gain     bigint;
+  v_success  boolean;
+  v_buzz     boolean;
+  v_bad      boolean;
+  v_tokens   integer;
+  v_paid     integer := 0;
+  v_deja     integer;
+  v_after    bigint;
+begin
+  perform public._streamer_ensure(v_user);
+  v_day := public._streamer_game_day(now());
+
+  -- Le format se valide **avant** tout le reste : un format inventé reste une
+  -- erreur du client, même un jour déjà publié — sinon le message serait
+  -- « déjà publiée » pour une faute de frappe, et le client croirait avoir
+  -- joué.
+  select * into v_fmt from public._streamer_format(p_format);
+  if not found then
+    raise exception 'chaîne : ce format de vidéo n''existe pas' using errcode = 'P0001';
+  end if;
+
+  -- Déjà publiée aujourd'hui : on relit la première, on ne la rejoue pas.
+  select * into v_existant
+    from public.streamer_videos v
+   where v.user_id = v_user and v.day = v_day;
+  if found then
+    select * into v_row from public.streamer_channels c where c.user_id = v_user;
+    return jsonb_build_object(
+      'ok', true,
+      'already', true,
+      'format', v_existant.format,
+      'success', v_existant.success,
+      'buzz', v_existant.buzz,
+      'bad_buzz', v_existant.bad_buzz,
+      'gained', v_existant.gained,
+      'tokens', v_existant.tokens,
+      'subscribers', v_row.subscribers,
+      'tokens_today', case when v_row.tokens_day = v_day then v_row.tokens_today else 0 end,
+      'tokens_cap', public._streamer_token_cap()
+    );
+  end if;
+
+  if v_fmt.needs_creator and not exists (
+    select 1 from public.stats s where s.user_id = v_user and s.unique_creators > 0
+  ) then
+    raise exception 'chaîne : une collab demande de posséder au moins un créateur'
+      using errcode = 'P0001';
+  end if;
+
+  select * into v_row from public.streamer_channels c where c.user_id = v_user for update;
+  v_base := public._streamer_growth(v_user, v_row.subscribers);
+
+  v_success := floor(random() * 1000)::integer < v_fmt.success_chance;
+  v_buzz := v_success and floor(random() * 1000)::integer < v_fmt.buzz_permille;
+  v_bad := (not v_success) and floor(random() * 1000)::integer < v_fmt.bad_buzz_permille;
+
+  if v_success then
+    v_gain := round(v_base * v_fmt.gain_permille / 1000.0)::bigint * case when v_buzz then 3 else 1 end;
+  elsif v_bad then
+    v_gain := -round(v_base * v_fmt.gain_permille / 1000.0 / 4.0)::bigint;
+  else
+    v_gain := 0;
+  end if;
+
+  -- Le versement, sous plafond : ce qui reste de la journée, jamais plus.
+  v_deja := case when v_row.tokens_day = v_day then v_row.tokens_today else 0 end;
+  v_tokens := public._streamer_token_gain(v_success, v_buzz);
+  v_paid := greatest(0, least(v_tokens, public._streamer_token_cap() - v_deja));
+
+  v_after := greatest(0, v_row.subscribers + v_gain);
+
+  insert into public.streamer_videos (user_id, day, format, success, buzz, bad_buzz, gained, tokens)
+  values (v_user, v_day, lower(p_format), v_success, v_buzz, v_bad, v_gain, v_paid);
+
+  update public.streamer_channels
+     set subscribers = v_after,
+         tokens_day = v_day,
+         tokens_today = v_deja + v_paid,
+         updated_at = now()
+   where user_id = v_user;
+
+  if v_paid > 0 then
+    perform public._tokens_apply(v_user, v_paid, 'streamer', v_day);
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'already', false,
+    'format', lower(p_format),
+    'success', v_success,
+    'buzz', v_buzz,
+    'bad_buzz', v_bad,
+    'gained', v_gain,
+    'tokens', v_paid,
+    'subscribers', v_after,
+    'tokens_today', v_deja + v_paid,
+    'tokens_cap', public._streamer_token_cap()
+  );
+end;
+$$;
+
+revoke all on function public.streamer_publish(text) from public, anon;
+grant execute on function public.streamer_publish(text) to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Le setup : acheter un palier

@@ -1143,8 +1143,12 @@ joueur choisit un côté.**
   bonus — et `_streamer_setup_next(user)` rend le premier palier manquant, donc
   elle **ne fait pas sauter l'étape suivante** non plus. `_streamer_growth(user,
   abonnés)` applique ce bonus, et c'est cette fonction que lisent
-  `streamer_status()` et `streamer_visit()` : la croissance payée pendant
-  l'absence est la même que celle payée sur une vidéo.
+  `streamer_status()`, `streamer_visit()` **et** `streamer_publish()` : la
+  croissance payée pendant l'absence est la même que celle payée sur une vidéo
+  — la vidéo du jour paie donc elle aussi 259 et non 240 quand le premier palier
+  est installé. Le vérifieur le joue pour de vrai : deux joueurs publient le
+  même format avec la **même graine** (`setseed`), donc le même tirage, et seule
+  la croissance diffère.
 
 **Côté appareil**, `src/lib/cloud/api/streamer.ts` porte les trois appels
 (`streamerEventToday`, `streamerChoose`, `streamerSetupBuy`) et

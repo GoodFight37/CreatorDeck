@@ -218,10 +218,20 @@ describe("0038_imprevus_setup.sql (les imprévus et le setup)", () => {
   it("fait grandir la chaîne du bonus, dans l'absence comme dans la vidéo", () => {
     // Le même pour-mille des deux côtés, appliqué à la croissance du palier.
     expect(FLAT_IMPREVUS).toMatch(/floor\(\s*public\._streamer_per_day\(p_subscribers\)\s*\* \(1000 \+ public\._streamer_setup_bonus\(p_user\)\) \/ 1000\.0\s*\)::integer/);
-    // `streamer_visit()` et `streamer_status()` passent par `_streamer_growth()` :
-    // une seule formule, donc un seul chiffre possible à l'écran.
+    // `streamer_visit()`, `streamer_status()` **et** `streamer_publish()` passent
+    // par `_streamer_growth()` : une seule formule, donc un seul chiffre
+    // possible. La vidéo est la plus importante des trois — c'est elle qui paie,
+    // et une vidéo qui ignorerait le setup ferait mentir l'écran.
     const visite = derniereDefinition("streamer_visit");
     expect(visite).toContain("public._streamer_growth(v_user, v_row.subscribers)");
+    // Le corps seul, sans ses commentaires : c'est le code qui paie, pas la
+    // prose du fichier — et pas non plus les autres fonctions du même fichier.
+    const fichier = derniereDefinition("streamer_publish");
+    const video = fichier
+      .slice(fichier.indexOf("create or replace function public.streamer_publish("))
+      .replace(/--.*$/gm, "");
+    expect(video).toContain("v_base := public._streamer_growth(v_user, v_row.subscribers)");
+    expect(video.slice(0, video.indexOf("$$;"))).not.toContain("_streamer_per_day");
     const status = derniereDefinition("streamer_status");
     expect(status).toContain("public._streamer_growth(v_user, v_row.subscribers)");
     expect(status).toContain("'setup_bonus'");

@@ -33,7 +33,7 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
   La dernière définition d'`open_pack()` est `0035_jetons.sql`.
 - **On vérifie en lançant, pas en relisant** : `npm test` (**931**),
   `npm run ecrans` (les **22** captures), `npm run supabase:verify`
-  (**500** contrôles). Pour un déménagement de code : capture avant
+  (**501** contrôles). Pour un déménagement de code : capture avant
   (`ECRANS_DUMP=/tmp/avant`), `diff -r` après.
 - **Les noms visibles** : Drop, Binder, Craft, Toi — et « Objectifs et saisons ».
   Un écran s'appelle comme le joueur le lit, pas comme le fichier s'appelle.

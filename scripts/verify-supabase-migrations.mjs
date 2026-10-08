@@ -5816,6 +5816,49 @@ try {
     JSON.stringify(suiteMicro),
   );
 
+  // Le contrôle qui compte le plus : **la vidéo paie le même chiffre que
+  // l'écran**. Avec webcam + micro le bonus vaut 80 pour mille, donc la
+  // croissance vaut 259 par jour (240 × 1,08) et plus 240.
+  //
+  // Le tirage est figé (`setseed`) : deux joueurs qui publient le même format
+  // avec la même graine ont **exactement** le même tirage, donc la seule
+  // différence possible entre leurs gains est la croissance. On cherche une
+  // graine qui donne une réussite — sinon les deux gains vaudraient zéro et le
+  // contrôle ne dirait rien — et on compare : 259 contre 240, 777 contre 720.
+  const TEMOIN = "7a7a7a7a-5555-4555-8555-7a7a7a7a7a7a";
+  await player(TEMOIN, "Témoin", []);
+  const etatAvantVideo = (await asPlayer(SETUP, "select public.streamer_status() as r")).rows[0].r;
+  const baseSetup = Number(etatAvantVideo.per_day);
+  let graineVideo = null;
+  for (let essai = 1; essai <= 40 && graineVideo === null; essai += 1) {
+    const graine = essai / 41;
+    await client.query("select setseed($1)", [graine]);
+    const premierJet = (await client.query("select floor(random() * 1000)::int as a")).rows[0].a;
+    // Let's Play réussit sous 760 pour mille.
+    if (Number(premierJet) < 760) graineVideo = graine;
+  }
+  await client.query("select setseed($1)", [graineVideo]);
+  const videoSetup = (
+    await asPlayer(SETUP, "select public.streamer_publish('letsplay') as r")
+  ).rows[0].r;
+  await client.query("select setseed($1)", [graineVideo]);
+  const videoTemoin = (
+    await asPlayer(TEMOIN, "select public.streamer_publish('letsplay') as r")
+  ).rows[0].r;
+  const gainSetup = Number(videoSetup.gained);
+  const gainTemoin = Number(videoTemoin.gained);
+  check(
+    "la vidéo du jour paie la croissance du setup (259 et non 240)",
+    graineVideo !== null &&
+      baseSetup === 259 &&
+      videoSetup.success === true &&
+      videoTemoin.success === true &&
+      videoSetup.buzz === videoTemoin.buzz &&
+      gainTemoin === 240 * (videoTemoin.buzz ? 3 : 1) &&
+      gainSetup === 259 * (videoSetup.buzz ? 3 : 1),
+    JSON.stringify({ graineVideo, gainSetup, gainTemoin, videoSetup, videoTemoin }),
+  );
+
   const ruine = "6f6f6f6f-4444-4444-8444-6f6f6f6f6f6f";
   await player(ruine, "Sidonie", []);
   await refuses(
