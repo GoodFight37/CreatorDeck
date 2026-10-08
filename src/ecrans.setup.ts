@@ -75,10 +75,20 @@ window.AudioContext ??= class {
   state = "running";
   currentTime = 0;
   createOscillator() {
-    return { connect: () => {}, start: () => {}, stop: () => {}, type: "", frequency: { value: 0 } };
+    return {
+      // `AudioNode.connect()` renvoie la destination : le moteur enchaîne
+      // `.connect(gain).connect(ctx.destination)`.
+      connect: (cible: unknown) => cible,
+      start: () => {},
+      stop: () => {},
+      type: "",
+      // Les gammes de rareté montent avec `setValueAtTime` : un banc qui
+      // déclenche un son ne doit pas mourir sur une méthode manquante.
+      frequency: { value: 0, setValueAtTime: () => {} },
+    };
   }
   createGain() {
-    return { connect: () => {}, gain: { value: 0, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} } };
+    return { connect: (cible: unknown) => cible, gain: { value: 0, setValueAtTime: () => {}, exponentialRampToValueAtTime: () => {} } };
   }
   destination = {};
   resume() {

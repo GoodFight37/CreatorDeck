@@ -1826,6 +1826,52 @@ input:focus-visible {
   padding: 13px 27px 4px;
 }
 .reveal-card { width: min(68vw, 300px); max-height: 63vh; animation: card-reveal 550ms cubic-bezier(.2,.8,.2,1) both; }
+
+/*
+ * --- Les effets de moment rare : un éclat pour une Épique, une explosion pour
+ * une Légendaire, un écran blanc pour un Perfect. Trois planches d'images
+ * (`public/fx/`, 44 Ko à elles quatre) qui se déroulent en `steps()` : une seule
+ * image chargée, aucun JavaScript par image, et l'animation reste dans le
+ * compositeur.
+ *
+ * Le réglage « Reflets des cartes » (`data-card-fx="off"` sur `<html>`) et le
+ * choix système « moins d'animations » les éteignent — un effet de cet acabit
+ * ne s'impose à personne.
+ */
+.fx-burst {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  top: var(--fx-offset, 50%);
+  width: var(--fx-size);
+  height: var(--fx-size);
+  margin-left: calc(var(--fx-size) / -2);
+  margin-top: calc(var(--fx-size) / -2);
+  background-repeat: no-repeat;
+  pointer-events: none;
+  /* Le pixel-art doit rester net quand on l'agrandit (192 px source → 330 px). */
+  image-rendering: pixelated;
+  animation-fill-mode: both;
+  animation-timing-function: steps(var(--fx-frames));
+  animation-duration: var(--fx-duration);
+  animation-delay: var(--fx-delay, 0ms);
+  animation-name: fx-play;
+}
+.fx-explosion { --fx-frames: 15; --fx-duration: 450ms; background-image: url(/fx/explosion.png); background-size: calc(15 * var(--fx-size)) var(--fx-size); }
+.fx-eclat { --fx-frames: 13; --fx-duration: 390ms; background-image: url(/fx/eclat.png); background-size: calc(13 * var(--fx-size)) var(--fx-size); }
+.fx-fumee { --fx-frames: 21; --fx-duration: 735ms; background-image: url(/fx/fumee.png); background-size: calc(21 * var(--fx-size)) var(--fx-size); }
+@keyframes fx-play { from { background-position: 0 0; } to { background-position: calc(-1 * var(--fx-frames) * var(--fx-size)) 0; } }
+
+/* L'écran blanc d'un Légendaire : court, et il repart tout seul. */
+.fx-flash { position: absolute; inset: 0; z-index: 9; background: #fff; pointer-events: none; animation: fx-flash 260ms ease-out both; }
+@keyframes fx-flash { 0% { opacity: 0; } 30% { opacity: .78; } 100% { opacity: 0; } }
+
+/* Couper les reflets coupe **tout** : c'est le réglage de secours de celui que
+   les effets fatiguent. */
+[data-card-fx="off"] .fx-burst, [data-card-fx="off"] .fx-flash { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .fx-burst, .fx-flash { display: none; }
+}
 @keyframes card-reveal { from { opacity: 0; transform: translateY(25px) rotateY(70deg) scale(.88); } to { opacity: 1; transform: none; } }
 .new-badge { position: relative; z-index: 5; justify-content: center; gap: 5px; margin-bottom: 10px; padding: 4px 10px; color: var(--ink); border-radius: 2px; background: var(--paper); font-family: var(--font-display); font-size: 15px; font-weight: 600; letter-spacing: .12em; }
 .reveal-name { margin-top: 16px; text-align: center; }

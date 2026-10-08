@@ -12,10 +12,12 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
+import { EffectBurst, EffectFlash } from "@/components/effect-burst";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { burstFor, flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
 import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
@@ -115,6 +117,19 @@ export function RevealOverlay({
   const isLast = index === cards.length - 1;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
+  /*
+   * L'effet du moment. La décision vit dans `src/lib/fx.ts` (testée à part) :
+   * un éclat pour une Épique, l'explosion dorée pour une Légendaire, et
+   * l'écran blanc pour les deux plus grands moments.
+   *
+   * L'éclat part **avec le son** : les deux observent le même silence
+   * (`silenceBefore`), sinon on verrait les étincelles avant d'entendre le bang.
+   * `cards.length` change d'une révélation à l'autre sans changer la carte :
+   * la clé ci-dessous garantit que l'animation repart au lieu de rester jouée.
+   */
+  const burst = burstFor(card.rarity, perfect);
+  const flash = flashFor(card.rarity, perfect);
+  const burstDelay = perfect ? 0 : silenceBefore(card.rarity);
 
   /**
    * Le geste de révélation. Tant que la carte résiste, l'appui ne fait que la
@@ -143,6 +158,7 @@ export function RevealOverlay({
       aria-label="Résultat du booster"
     >
       <div className="reveal-ambient" />
+      {flash ? <EffectFlash key={`flash-${card.id}`} /> : null}
       {perfect ? (
         <div className="perfect-banner" role="status">
           <Sparkles size={13} />
@@ -195,6 +211,7 @@ export function RevealOverlay({
       {perfect ? (
         /* Les cinq cartes ensemble : c'est le moment, il n'y a rien à faire. */
         <div className="reveal-perfect-grid">
+          {burst ? <EffectBurst key={`fx-${card.id}`} kind={burst} delayMs={burstDelay} /> : null}
           {cards.map((item) => {
             const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
             return dotCard ? (
@@ -210,6 +227,9 @@ export function RevealOverlay({
         </div>
       ) : (
         <div className="reveal-stage">
+          {/* L'explosion se pose **sur la carte**, pas sur l'écran : c'est elle
+              qu'on regarde, et un effet plein cadre noierait le nom du créateur. */}
+          {burst ? <EffectBurst key={`fx-${card.id}`} kind={burst} delayMs={burstDelay} offset="46%" /> : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className={shaking ? "reveal-shake" : ""}>
             <CreatorCard
