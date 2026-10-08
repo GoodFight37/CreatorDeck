@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "note": "Le simulateur de streameur : la chaîne grandit même application fermée, et chaque journée de jeu se joue en publiant UNE vidéo. Tout est ici — les paliers, ce que chaque palier rapporte par jour, les formats de vidéo et leurs chances — pour qu'un réglage d'économie se fasse sans toucher au code. Le serveur (0036_streamer.sql) porte la même règle de l'autre côté : la croissance est ancrée à un relevé serveur, jamais à l'horloge du téléphone, sinon reculer l'horloge deviendrait une façon de farmer.",
+  "growth": {
+    "capDays": 7,
+    "note": "La croissance s'accumule par journées de jeu (6 h UTC, comme les missions), plafonnée à 7 jours : au-delà, on ne cumule plus. Sans plafond, une absence de trois semaines paierait plus que de jouer, et le jeu récompenserait le fait de ne pas y être. Le relevé qui sert au calcul est celui du SERVEUR (`last_seen_at`) : un recul d'horloge ne crédite rien, il ne peut que retarder le compteur."
+  },
+  "tiers": [
+    { "id": "petit", "label": "Petit canal", "at": 0, "perDay": 240, "note": "Le début : une poignée de habitués, et chaque vidéo compte." },
+    { "id": "monte", "label": "Chaîne qui monte", "at": 2500, "perDay": 900, "note": "Le palier où le bouche-à-oreille commence à travailler pour toi." },
+    { "id": "gros", "label": "Gros streamer", "at": 25000, "perDay": 3200, "note": "Les marques commencent à écrire." },
+    { "id": "star", "label": "Star du direct", "at": 250000, "perDay": 12000, "note": "Ton nom est dans le classement, et les raids arrivent tout seuls." },
+    { "id": "legende", "label": "Légende du direct", "at": 1000000, "perDay": 45000, "note": "Le sommet : la chaîne grandit même quand tu dors." }
+  ],
+  "formats": [
+    {
+      "id": "letsplay",
+      "label": "Let's Play",
+      "detail": "Le format sûr : on joue, on discute, personne ne s'énerve.",
+      "successChancePermille": 760,
+      "gainPermille": 1000,
+      "buzzPermille": 40,
+      "badBuzzPermille": 0,
+      "requiresCreator": false
+    },
+    {
+      "id": "irl",
+      "label": "IRL",
+      "detail": "On sort, on montre autre chose — ça marche, ou ça tombe à plat.",
+      "successChancePermille": 620,
+      "gainPermille": 1400,
+      "buzzPermille": 90,
+      "badBuzzPermille": 0,
+      "requiresCreator": false
+    },
+    {
+      "id": "ragebait",
+      "label": "Rage bait",
+      "detail": "Ça fait parler — pas toujours en bien.",
+      "successChancePermille": 480,
+      "gainPermille": 2100,
+      "buzzPermille": 160,
+      "badBuzzPermille": 180
+    },
+    {
+      "id": "collab",
+      "label": "Collab",
+      "detail": "Avec un créateur de ta collection : la carte que tu as tirée travaille pour ta chaîne.",
+      "successChancePermille": 700,
+      "gainPermille": 1800,
+      "buzzPermille": 120,
+      "badBuzzPermille": 0,
+      "requiresCreator": true
+    }
+  ],
+  "tokens": {
+    "perDayCap": 40,
+    "perSuccess": 6,
+    "perBuzz": 10,
+    "note": "Ce que la chaîne rapporte en jetons : 6 pour une vidéo réussie, 10 de plus quand elle buzz, et un plafond de 40 jetons par journée de jeu, tenu par le serveur. Quarante, c'est huit boosters de croissance dans la monnaie la plus lente du jeu — assez pour que la chaîne compte, pas assez pour qu'elle remplace le tirage. Le plafond est appliqué côté serveur : le client peut annoncer ce qu'il veut, c'est le serveur qui paie."
+  },
+  "setup": {
+    "note": "Ton setup (caméra, micro, éclairage, déco) s'achète en deux temps : les premiers paliers en POINTS, à la courbe de l'Atelier (`craftCost` / `craftQuote`, déjà blindée côté serveur), les paliers hauts en DOUBLONS — la rareté donne le palier, et une Légendaire ne se consomme jamais (même règle que l'Atelier). La seconde partie s'écrit seulement si la première accroche.",
+    "levels": [
+      { "id": "webcam", "label": "Webcam correcte", "price": 120, "currency": "points", "note": "Le premier palier : le visage arrête de pixeliser." },
+      { "id": "micro", "label": "Micro qui ne crache pas", "price": 320, "currency": "points", "note": "On entend les basses, et le chat arrête de se plaindre." },
+      { "id": "lumiere", "label": "Éclairage", "price": 780, "currency": "points", "note": "La différence se voit à l'écran avant de s'entendre." },
+      { "id": "deco", "label": "Déco de fond", "price": 1800, "currency": "points", "note": "Ce que les nouveaux voient en premier." },
+      { "id": "studio", "label": "Vrai studio", "price": 4200, "currency": "points", "note": "Le dernier palier en points : après, il faut des cartes." }
+    ]
+  }
+}
