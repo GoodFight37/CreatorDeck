@@ -70,6 +70,41 @@ feuilles de l'écran *Toi*, puis constate que **zéro son** a été déclenché 
 juste après, un test de contrôle qui ouvre un booster et vérifie que le compteur,
 lui, bouge.
 
+## Les vibrations : le son qu'on sent (8 octobre 2026)
+
+L'haptique du jeu vit dans `src/lib/haptics.ts` — une fonction, `buzz()`, qui
+appelle `navigator.vibrate` quand l'appareil veut bien. **Les motifs, eux, sont
+purs** et vivent avec la mécanique qui les décide (`src/lib/reveal.ts`), donc ils
+se relisent sans téléphone.
+
+Où le téléphone vibre, et **une seule fois par geste** :
+
+| Geste | Motif | Ce que ça dit |
+|---|---|---|
+| Le tirage du booster **arme** (le doigt a franchi le seuil : 88 px, ou 80 px en moins de 200 ms) | `TEAR_HAPTIC` — 16 ms | « c'est prêt, lâche » |
+| Une carte se révèle | `revealHaptic(rareté, variante)` — plus long à mesure qu'on monte | la rareté, avant de la lire |
+| Une révélation **Perfect** | `PERFECT_HAPTIC` | le tirage rare par excellence |
+| On insiste sur une carte refusée | `resistHaptic()` | « non » |
+
+Le tirage ne vibre **pas à chaque pixel** : le motif part au franchissement du
+seuil, une fois. Un doigt qui redescend sous le seuil puis le repasse est un
+**nouveau** franchissement, donc une nouvelle vibration — c'est la bonne lecture.
+
+Trois silences volontaires, les mêmes que pour le son : pas d'API (iOS, ou un
+aperçu de bureau) → rien ne se passe, sans erreur ; un navigateur qui refuse
+l'appel (permission, onglet en arrière-plan) → l'exception est avalée ; et
+**l'interrupteur *Son* coupe aussi les vibrations** — un joueur qui coupe le son
+dans le métro ne veut pas que son téléphone bourdonne.
+
+C'est **compté**, comme le reste : le banc d'écrans remplace `navigator.vibrate`
+par un enregistreur (`src/ecrans.setup.ts`) et `src/ecrans-tactile.test.tsx`
+vérifie qu'un tirage de trois mouvements après le seuil ne produit **qu'une**
+vibration, et qu'aucune ne part quand le son est coupé.
+
+Et le **reflet des cartes Holo/Gold suit le doigt** (`--px`/`--py` écrits en
+direct sur le `.card-foil`, sans re-rendu React) : ce banc-là le prouve aussi,
+y compris que le réglage *Reflets des cartes* éteint l'effet entier.
+
 ## Le volume : mesuré, pas réglé au doigt mouillé
 
 C'est la correction du 8 octobre 2026, et elle vient d'un constat du joueur :

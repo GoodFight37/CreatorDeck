@@ -10,7 +10,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { ArrowLeftRight, Check, RefreshCw, Search, UserSearch, X } from "lucide-react";
+import { ArrowLeftRight, Check, ChevronLeft, ChevronRight, RefreshCw, Search, UserSearch, X } from "lucide-react";
 import type { AccountFocus } from "@/lib/account-display";
 import { useCloud } from "@/hooks/use-cloud";
 import { useGame } from "@/hooks/use-game";
@@ -28,6 +28,18 @@ import {
 const TRADE_QUERY_MIN = 2;
 const TRADE_PICK_LIMIT = 5;
 const TRADE_RESULT_LIMIT = 8;
+
+/**
+ * Vingt-quatre cartes par page dans « Tu donnes ».
+ *
+ * Un joueur qui a mis mille cartes de côté en possède des centaines de
+ * distinctes : les poser toutes d'un coup dans le DOM, c'est cent fois le travail
+ * de rendu pour une liste dont on ne regarde jamais plus que le premier écran.
+ * Et les tronquer en silence, c'est pire : la carte 25 existait, mais le joueur
+ * ne pouvait ni la voir ni la choisir. Vingt-quatre par page, avec le pager du
+ * classeur, et la phrase dit toujours où l'on est.
+ */
+const GIVEN_PER_PAGE = 24;
 
 const TRADE_STATUS_LABEL: Record<TradeStatus, string> = {
   open: "en attente",
@@ -113,18 +125,28 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
     return list;
   }, [state]);
 
-  const givenResults = useMemo(() => {
+  // La page de « Tu donnes » : l'état vit ici parce que la recherche la remet
+  // à zéro (voir `onChange` plus bas) — la page 3 d'une autre recherche ne veut
+  // rien dire, exactement comme la page 4 d'un autre tri au classement.
+  const [givenPage, setGivenPage] = useState(0);
+
+  const givenMatches = useMemo(() => {
     const needle = givenQuery.trim().toLocaleLowerCase("fr");
-    return myCards
-      .filter((card) => {
-        if (!needle) return true;
-        const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
-        return `${card.creatorSlug} ${creator?.displayName ?? ""} ${creator?.login ?? ""}`
-          .toLocaleLowerCase("fr")
-          .includes(needle);
-      })
-      .slice(0, 24);
+    return myCards.filter((card) => {
+      if (!needle) return true;
+      const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
+      return `${card.creatorSlug} ${creator?.displayName ?? ""} ${creator?.login ?? ""}`
+        .toLocaleLowerCase("fr")
+        .includes(needle);
+    });
   }, [myCards, givenQuery]);
+
+  const givenPages = Math.max(1, Math.ceil(givenMatches.length / GIVEN_PER_PAGE));
+  const givenSafePage = Math.min(givenPage, givenPages - 1);
+  const givenResults = useMemo(
+    () => givenMatches.slice(givenSafePage * GIVEN_PER_PAGE, (givenSafePage + 1) * GIVEN_PER_PAGE),
+    [givenMatches, givenSafePage],
+  );
 
   // Catalogue entier : on peut demander un créateur qu'on ne possède pas encore.
   const wantedResults = useMemo(() => {
@@ -359,7 +381,12 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
                 type="search"
                 placeholder="Une de tes cartes"
                 value={givenQuery}
-                onChange={(event) => setGivenQuery(event.target.value)}
+                onChange={(event) => {
+                  // Une recherche ramène toujours à la première page : la
+                  // page 3 d'une autre recherche ne veut rien dire.
+                  setGivenPage(0);
+                  setGivenQuery(event.target.value);
+                }}
               />
             </label>
             <div className="trade-pick" role="group" aria-label="Cartes que tu donnes">
@@ -386,6 +413,36 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
                 </p>
               ) : null}
             </div>
+            {/* Le pager du classeur, réemployé : deux flèches et une phrase. Il
+                n'apparaît que s'il y a vraiment plusieurs pages — et la phrase
+                compte les **cartes trouvées**, pas celles de la page : sur une
+                collection de mille cartes, c'est la seule façon de savoir que
+                l'on n'en voit qu'un morceau. */}
+            {givenPages > 1 ? (
+              <div className="binder-pager">
+                <button
+                  type="button"
+                  onClick={() => setGivenPage(Math.max(0, givenSafePage - 1))}
+                  disabled={givenSafePage <= 0}
+                >
+                  <ChevronLeft size={15} />
+                  <span>Précédent</span>
+                </button>
+                <span>
+                  Cartes <strong>{givenSafePage * GIVEN_PER_PAGE + 1}</strong>–
+                  <strong>{Math.min(givenMatches.length, (givenSafePage + 1) * GIVEN_PER_PAGE)}</strong> sur{" "}
+                  {givenMatches.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setGivenPage(Math.min(givenPages - 1, givenSafePage + 1))}
+                  disabled={givenSafePage >= givenPages - 1}
+                >
+                  <span>Suivant</span>
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            ) : null}
 
             <label className="account-field">
               <span>

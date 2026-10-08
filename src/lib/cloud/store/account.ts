@@ -667,7 +667,11 @@ export function accountActions(ctx: CloudStoreContext) {
       if (!ctx.networkReady(api)) return;
       ctx.publish({ busy: true, leaderboardMetric: metric, leaderboardRegion: region });
       try {
-        const rows = await api.leaderboard(20, metric, region);
+        // **Cent**, pas vingt : la fonction serveur borne elle-même à 100
+        // (`least(greatest(p_limit, 1), 100)`), et le panneau en montre vingt
+        // par page. Le joueur voit donc le top 100 au lieu du top 20, pour le
+        // même poids de DOM — c'est le classement qui gagne, pas l'écran.
+        const rows = await api.leaderboard(100, metric, region);
         ctx.publish({ busy: false, leaderboard: rows, message: null, isError: false });
       } catch (error) {
         ctx.fail(error, "Classement indisponible.");

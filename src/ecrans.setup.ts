@@ -69,7 +69,25 @@ globalThis.IntersectionObserver ??=
 
 window.scrollTo ??= (() => {}) as typeof window.scrollTo;
 Element.prototype.scrollIntoView ??= () => {};
-navigator.vibrate ??= () => true;
+// jsdom ne connaît pas la capture de pointeur : le tirage du booster s'y
+// accroche (« le doigt continue de piloter le geste même s'il sort de la zone »).
+Element.prototype.setPointerCapture ??= () => {};
+Element.prototype.releasePointerCapture ??= () => {};
+
+/**
+ * **Les vibrations, comptées.** Comme l'audio : le banc ne se contente pas de
+ * survivre à `navigator.vibrate`, il l'enregistre. C'est ce qui permet de
+ * vérifier deux promesses du jeu — le tirage du booster vibre **une fois**, et
+ * couper le son coupe **aussi** les vibrations (`src/lib/haptics.ts`, la règle
+ * « un joueur qui coupe le son dans le métro ne veut pas que son téléphone
+ * bourdonne »).
+ */
+export const vibrations: number[][] = [];
+navigator.vibrate = ((motif: number | number[]) => {
+  vibrations.push(Array.isArray(motif) ? motif : [motif]);
+  return true;
+}) as typeof navigator.vibrate;
+(globalThis as unknown as { __vibrations?: number[][] }).__vibrations = vibrations;
 
 /**
  * **Les sons, comptés.** Le banc ne se contente pas de survivre à l'audio : il
