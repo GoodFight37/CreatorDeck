@@ -111,6 +111,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
 | `npm run android:apk` | `android:sync` puis Gradle `assembleRelease` (non signé sans `signingConfigs`) |
+| `npm run streamer:bilan` | imprime le **bilan des courbes** de « Ta chaîne » (paliers et délais, gain moyen par format et par palier, choix d'imprévus, prix du setup, trente journées simulées) — il **lit** `src/data/streamer.json` par les fonctions du jeu, il n'équilibre rien |
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
@@ -288,7 +289,8 @@ public/streamer/         les assets graphiques fournis par le joueur : seul le
 scripts/                 génération des données et des avatars (scripts/lib/ = pipeline
                          image, échelle de raretés), build du catalogue,
                          seed Supabase (build-supabase-catalogue.mjs),
-                         vérificateur des migrations (verify-supabase-migrations.mjs)
+                         vérificateur des migrations (verify-supabase-migrations.mjs),
+                         bilan des courbes de « Ta chaîne » (streamer-bilan.ts)
 e2e/ + playwright.config.ts les gestes rejoués sur bureau et téléphone (dont le tirage
                          qui survit à un rechargement de page)
 docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qui

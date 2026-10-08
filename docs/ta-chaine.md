@@ -317,9 +317,28 @@
   Légendaire » — est tenue : Rare = 1, Épique = 2, Légendaire jamais.
 
 - [ ] **Bilan et équilibrage des gains** — relire les chiffres **avec les vrais
-  joueurs** (abonnés gagnés par journée, ce que paient les vidéos et les
+  joueurs** (l'outil pour les avoir sous les yeux est là : `npm run streamer:bilan`,
+  voir l'encadré ci-dessous) (abonnés gagnés par journée, ce que paient les vidéos et les
   imprévus, ce que coûtent les paliers de setup), puis ajuster le fichier **et**
   le SQL dans le même geste, comme pour les taux de drop : une modification d'un
   seul côté fait mentir l'écran, et le test miroir est là pour l'attraper. Le
   **live de 20 s** entre dans ce bilan : c'est là qu'on décidera, en jouant, s'il
   reste une scène gratuite ou s'il touche à la vidéo du jour (voir § 2).
+
+  > **L'outil de mesure : `npm run streamer:bilan`.** Il ne joue pas à ta place :
+  > il **lit les règles** (le JSON par les fonctions de `src/lib/streamer.ts`,
+  > aucun chiffre recopié) et met en tableau les paliers et leurs délais, ce
+  > qu'une publication rapporte en moyenne (400 tirages par format et par
+  > palier, hasard figé), ce que chaque réponse d'imprévu promet, ce que le
+  > setup coûte et rapporte, puis **trente journées jouées** par une politique
+  > déclarée — meilleur format, meilleur pari, aucun point dépensé — avec la
+  > même courbe, setup complet payé, en regard. Les chiffres du 8 octobre 2026 :
+  > 11 jours pour *Chaîne qui monte*, 36 pour *Gros streamer*, 170 pour *Star du
+  > direct* ; une **Collab** rapporte en moyenne +380 abonnés à zéro abonné
+  > contre +196 pour un *Let's Play* ; trente journées mènent à **313 690**
+  > abonnés sans un point dépensé et à **3 363 428** avec tout le setup payé
+  > (+100 % de croissance) ; et **150 jetons** seulement sur trente jours, quand
+  > le plafond quotidien en autorise 40 — il ne se touche pas (une vidéo par
+  > jour, 16 jetons au mieux) : c'est le genre de constat que l'outil sert à
+  > voir avant de toucher aux multiplicateurs, et **il n'en décide aucun** :
+  > ils vivent dans `src/data/streamer.json`, et la décision se prend en jouant.
