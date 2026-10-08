@@ -159,8 +159,8 @@ describe("plancher de malchance", () => {
   });
 
   it("un compteur déjà au-delà du seuil ne passe pas sous zéro", () => {
-    // Les joueurs d'avant le 7 octobre ont pu enchaîner bien plus que 12
-    // boosters sans Légendaire : leur compteur dépasse le nouveau seuil. Le
+    // Une partie d'avant le plancher actuel a pu enchaîner bien plus que 12
+    // boosters sans Légendaire : son compteur dépasse le seuil. Le
     // prochain booster paie, et l'écran ne doit pas annoncer « dans -56 ».
     const view = getGameView(makeState({ pityCounter: PITY.threshold + 56 }), MIDI);
     expect(view.pity.remaining).toBe(0);

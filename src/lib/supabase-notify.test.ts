@@ -110,7 +110,7 @@ describe("notify-live (la fonction qui envoie)", () => {
   it("n'accepte que le rôle de service — les deux nomenclatures de clé", () => {
     // `SUPABASE_SERVICE_ROLE_KEY` (JWT legacy) **et** `SUPABASE_SECRET_KEYS`
     // (`sb_secret_…`) : un projet récent ne donne que la seconde, et refuser
-    // la mauvaise clé avec un message muet a coûté une soirée (7 octobre).
+    // la mauvaise clé avec un message muet coûte une soirée.
     expect(FUNCTION).toContain('Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")');
     expect(FUNCTION).toContain('"SUPABASE_SECRET_KEYS"');
     expect(FUNCTION).toContain("SERVER_KEYS.some((key) => key.value === bearer)");
@@ -154,8 +154,8 @@ describe("notify-live (la fonction qui envoie)", () => {
   });
 
   it("fait sonner : le canal, le manifeste et la fonction disent le même id", () => {
-    // Une notification muette, vécue le 7 octobre : le canal Capacitor était
-    // né avec `sound: "default"` sans que le fichier `res/raw/default` existe.
+    // Une notification muette : le canal Capacitor était né avec
+    // `sound: "default"` sans que le fichier `res/raw/default` existe.
     // Un canal Android ne se répare pas après coup — il change d'identifiant,
     // et **les trois endroits** doivent suivre, sinon la notification part
     // sans canal (Android la range alors dans « Divers ») ou vers l'ancien.
@@ -217,8 +217,8 @@ describe("0024_push_state.sql (l'interrupteur dit la vérité)", () => {
 
 describe("l'interrupteur des notifications ne ment plus", () => {
   it("est relu au lancement, depuis le serveur", () => {
-    // Défaut du 7 octobre : l'état vivait en mémoire seulement, donc chaque
-    // ouverture affichait « éteint » alors que le serveur notifiait toujours.
+    // L'état vivait en mémoire seulement, donc chaque ouverture affichait
+    // « éteint » alors que le serveur notifiait toujours.
     expect(MAGASIN).toContain("async syncPushState()");
     expect(MAGASIN).toContain("api.pushState()");
     expect(CARNET).toContain("cloudStore.syncPushState()");

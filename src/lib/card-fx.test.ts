@@ -1,11 +1,10 @@
 /**
  * Les effets des cartes : ce qui brille, et à quel prix pour les yeux.
  *
- * Un retour du 7 octobre 2026 a mis le doigt sur un vrai défaut : la carte
- * **Live** portait des bandes de couleurs répétées au pixel près, qui
- * **défilaient en boucle**. Sur un téléphone, ça donnait « de vieilles télé avec
- * des bandes horribles » — et l'interrupteur des réglages ne coupait que le
- * gyroscope, pas le défilement.
+ * Le défaut à ne pas réintroduire : la carte **Live** portait des bandes de
+ * couleurs répétées au pixel près, qui **défilaient en boucle**. Sur un
+ * téléphone, ça donne « de vieilles télé avec des bandes horribles » — et un
+ * interrupteur qui ne coupe que le gyroscope, pas le défilement, ne coupe rien.
  *
  * Ces tests lisent `globals.css` comme un contrat de tenue : pas d'animation
  * perpétuelle sur une carte, des lueurs larges et peu contrastées, et un
@@ -80,7 +79,7 @@ describe("effets des cartes", () => {
   it("éteint le reflet quand le joueur le demande", () => {
     // Le réglage (onglet Toi → « Reflets des cartes ») écrit `data-card-fx` sur
     // `<html>` : le reflet disparaît, il ne se contente pas de cesser de suivre
-    // l'inclinaison — c'était le défaut signalé.
+    // l'inclinaison — c'est tout l'écart entre les deux.
     expect(CSS).toContain('[data-card-fx="off"] .card-foil { display: none; }');
   });
 });

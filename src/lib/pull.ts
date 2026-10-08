@@ -17,12 +17,11 @@
  *     chiquenaude franche vers le haut — le geste du joueur qui ouvre son
  *     dixième paquet.
  *
- * **Ce qu'aucune des deux ne doit accepter : un effleurement.** Rapporté par le
- * joueur le 7 octobre 2026 : « quand j'effleure le booster ça l'ouvre
- * directement, des fois je fais même pas exprès ». La première version armait à
- * **30 px en 260 ms** (≈ 115 px/s) : un doigt qui se pose, glisse d'un pixel et
- * se retire, ou le tout début d'un défilement, ouvrait un booster — un geste
- * qui consomme une réserve. Les deux seuils sont donc ceux d'un vrai geste :
+ * **Ce qu'aucune des deux ne doit accepter : un effleurement.** Le joueur, mot
+ * pour mot : « quand j'effleure le booster ça l'ouvre directement, des fois je
+ * fais même pas exprès ». Des seuils trop bas — **30 px en 260 ms** (≈ 115
+ * px/s) — laissent passer un doigt qui se pose, glisse d'un pixel et se retire,
+ * ou le tout début d'un défilement : un geste qui consomme une réserve. Les deux seuils sont donc ceux d'un vrai geste :
  * 88 px de remontée, ou 80 px en moins de 200 ms (≈ 400 px/s). Une chiquenaude
  * légitime les dépasse largement ; un effleurement, jamais.
  *

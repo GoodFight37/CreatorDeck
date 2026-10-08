@@ -6,12 +6,10 @@
  * doit rester légère dans l'APK : on n'utilise ici qu'une poignée de routes,
  * sans dépendance supplémentaire à maintenir et à auditer.
  *
- * Découpé le 7 octobre 2026 : cette classe ne garde que **la session, le
- * transport et les délégations**. Le travail par domaine vit à côté —
- * `account.ts` (compte, profil, classement), `pack.ts` (boosters, sauvegarde),
- * `social.ts` (échanges, amis), `market.ts` (hôtel, Last Pack), `arena.ts`
- * (Arène). Aucun comportement n'a changé : les corps de méthodes ont
- * simplement déménagé, et la suite de tests ne bouge pas.
+ * Cette classe ne garde que **la session, le transport et les délégations** :
+ * le travail par domaine vit à côté — `account.ts` (compte, profil,
+ * classement), `pack.ts` (boosters, sauvegarde), `social.ts` (échanges, amis),
+ * `market.ts` (hôtel, Last Pack), `arena.ts` (Arène).
  */
 import type { KeyValueStorage } from "@/lib/save-store";
 import type { CloudConfig } from "@/lib/cloud/config";

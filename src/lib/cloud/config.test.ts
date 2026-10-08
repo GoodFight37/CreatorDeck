@@ -53,10 +53,9 @@ describe("configuration du cloud", () => {
   /**
    * Les workflows du dépôt, tous ensemble.
    *
-   * Volontairement **sans nom de fichier en dur** : le 7 octobre, un contrôle
-   * qui visait `.github/workflows/android-apk.yml` a fait rougir la CI pour un
-   * simple renommage — le garde-fou gênait plus qu'il n'aidait. On lit donc ce
-   * qui existe, et on juge le contenu.
+   * Volontairement **sans nom de fichier en dur** : un contrôle qui vise un
+   * fichier précis rougit au premier renommage, et gêne plus qu'il n'aide. On
+   * lit donc ce qui existe, et on juge le contenu.
    */
   const workflows = readdirSync(path.join(process.cwd(), ".github", "workflows"))
     .filter((nom) => nom.endsWith(".yml") || nom.endsWith(".yaml"))
@@ -64,10 +63,9 @@ describe("configuration du cloud", () => {
   const joint = workflows.join("\n");
 
   it("un seul workflow construit l'APK, et il reçoit la configuration du cloud", () => {
-    // Le 7 octobre, une réécriture du workflow a laissé tomber les deux
-    // variables : l'APK se construisait **sans cloud** — même écran, mêmes
-    // boutons, mais aucun compte, aucun ami, aucun classement. La panne la plus
-    // coûteuse est celle qui ne se voit pas, donc elle a son garde-fou.
+    // Deux variables oubliées et l'APK se construit **sans cloud** : même écran,
+    // mêmes boutons, mais aucun compte, aucun ami, aucun classement. La panne la
+    // plus coûteuse est celle qui ne se voit pas, donc elle a son garde-fou.
     //
     // Deux fichiers qui construisent l'APK = deux builds et deux mails par
     // poussée : on veut exactement un constructeur.

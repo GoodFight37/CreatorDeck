@@ -19,8 +19,8 @@ import { isFlatStats } from "../../scripts/lib/avatars.mjs";
  */
 describe("portraits · sélection", () => {
   it("trouve les fichiers sans créateur, et rien d'autre", () => {
-    // Le dossier a porté des JPEG jusqu'au 7 octobre 2026 : un portrait resté
-    // en `.jpg` doit pouvoir être élagé, comme un `.webp` orphelin.
+    // Un portrait resté en `.jpg` doit pouvoir être élagé, comme un `.webp`
+    // orphelin : l'extension attendue vit à un seul endroit (`PORTRAIT_EXT`).
     expect(PORTRAIT_EXT).toBe(".webp");
     const files = ["squeezie.webp", "gotaga.webp", "ancien-streamer.webp", "README.md", ".gitkeep"];
     expect(selectOrphans(files, ["squeezie", "gotaga"])).toEqual(["ancien-streamer.webp"]);

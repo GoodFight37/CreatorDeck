@@ -101,7 +101,7 @@ describe("pull-rates", () => {
     expect(SQL_GOLD).toContain(`v_roll < ${PULL_RATES.live.variants.goldPermille}`);
     // Et la signature reste celle de production : trois paramètres. Une
     // signature différente créerait une **surcharge** au lieu de remplacer la
-    // fonction — c'est le piège qui a bloqué le jeu le 7 octobre.
+    // fonction — le piège qui fait que l'ancienne règle continue de tourner.
     expect(SQL_GOLD).toMatch(
       /create or replace function public\._pack_choose_variant\(\s*p_rarity text,\s*p_rare_drop boolean,\s*p_live boolean\s*\)/,
     );

@@ -418,7 +418,7 @@ export function accountActions(ctx: CloudStoreContext) {
      * L'écran ne peut pas le deviner : `pushLive` vit en mémoire, pas dans la
      * sauvegarde. Sans cette lecture, chaque ouverture de l'application
      * affichait un interrupteur éteint — alors que le serveur notifiait
-     * toujours (défaut signalé le 7 octobre).
+     * toujours.
      *
      * Silencieuse par principe : c'est une lecture d'arrière-plan à chaque
      * lancement. Un échec (hors ligne) laisse `pushLive` inconnu plutôt que de

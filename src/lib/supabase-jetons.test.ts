@@ -102,7 +102,7 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
 
   it("sait dire ce qui est collé, sans compte", () => {
     // « J'ai poussé le SQL d'avant, je sais pas si c'est ce dont tu me
-    // parlais » (8 octobre 2026). Le rapport répond en une lecture, et il doit
+    // parlais » : le rapport répond en une lecture, et il doit
     // rester lisible **sans compte** : un diagnostic qu'il faut se connecter
     // pour lire ne sert à rien quand c'est la connexion qu'on vérifie.
     const corps = corpsFonction(SQL, "schema_versions");

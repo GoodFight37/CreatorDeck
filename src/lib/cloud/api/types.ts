@@ -2,8 +2,8 @@
  * Les types publics du client cloud : ce que voit le reste de l'application
  * (session, sauvegarde distante, échanges, hôtel, Last Pack, arène, profils).
  *
- * Découpés hors de `api/index.ts` le 7 octobre 2026 : le client dépassait deux
- * mille lignes et une relecture s'y perdait. Aucun comportement n'a changé.
+ * Ils vivent hors de `api/index.ts` pour que le client reste lisible : ici, il
+ * n'y a que des formes de données, aucun appel.
  */
 export type CloudSession = {
   accessToken: string;

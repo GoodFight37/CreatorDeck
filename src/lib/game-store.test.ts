@@ -90,7 +90,7 @@ describe("gameStore", () => {
   it("propage les erreurs du moteur sans corrompre l'état", async () => {
     const store = await freshStore();
     store.subscribe(() => {});
-    // Épuise les boosters d'accueil (deux depuis le 7 octobre 2026).
+    // Épuise les boosters d'accueil (le départ en donne deux).
     for (let i = 0; i < 2; i += 1) store.openPack();
     const before = store.getSnapshot();
     expect(() => store.openPack()).toThrowError(/booster/i);

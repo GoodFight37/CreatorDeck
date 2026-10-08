@@ -43,8 +43,8 @@ const STORAGE_KEY = "creatordeck.tilt";
  *
  * Le CSS s'en sert pour **éteindre le reflet** des cartes : le réglage
  * « Reflets des cartes » coupe tout, pas seulement le gyroscope. C'est ce que
- * demande un joueur chez qui l'effet fatigue l'œil — et le défaut est doux
- * depuis le 7 octobre 2026 (plus de bandes animées, une simple lueur).
+ * demande un joueur chez qui l'effet fatigue l'œil — et le défaut est doux :
+ * plus de bandes animées, une simple lueur.
  */
 const ATTRIBUT = "cardFx";
 

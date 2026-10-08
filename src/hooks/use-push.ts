@@ -39,7 +39,7 @@ export function usePush(): void {
       // Déjà inscrit : rien à faire côté appareil, mais l'état de l'interrupteur
       // n'est **pas** dans la sauvegarde — il vit sur le serveur. Sans cette
       // relecture, rouvrir l'application affichait « éteint » alors que les
-      // notifications marchaient (défaut du 7 octobre, `0024_push_state.sql`).
+      // notifications marchaient (`0024_push_state.sql`).
       void cloudStore.syncPushState();
       return;
     }

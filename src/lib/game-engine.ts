@@ -600,8 +600,8 @@ export function createInitialState(now = Date.now()): PlayerState {
     updatedAt: now,
     level: 1,
     xp: 0,
-    // Le départ est **maigre** : deux boosters, deux sabliers, quarante points
-    // (décision du 7 octobre 2026). Les chiffres vivent dans
+    // Le départ est **maigre** : deux boosters, deux sabliers, quarante
+    // points. Les chiffres vivent dans
     // `src/data/progression.json` (`start`) — le serveur sert la même réserve
     // (`_pack_initial_packs()`, `0033`), et un test miroir compare les deux.
     points: START.points,

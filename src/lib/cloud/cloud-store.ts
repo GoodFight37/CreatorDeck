@@ -3,11 +3,9 @@
  * classement, échanges, hôtel, Last Pack, Arène) et la synchronisation de la
  * partie avec le serveur.
  *
- * Découpé le 7 octobre 2026 (2 400 lignes, une relecture s'y perdait) : ce
- * fichier garde **l'état, la synchronisation et les helpers**, et assemble
+ * Ce fichier garde **l'état, la synchronisation et les helpers**, et assemble
  * les actions par domaine — `store/account.ts`, `store/pack.ts`,
- * `store/social.ts`, `store/market.ts`, `store/arena.ts`. Les corps de
- * méthodes ont déménagé tels quels : les 108 tests du magasin ne bougent pas.
+ * `store/social.ts`, `store/market.ts`, `store/arena.ts`.
  */
 /**
  * État du compte et de la synchronisation, exposé à React.

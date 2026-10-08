@@ -59,8 +59,8 @@ export function NotificationsSheet({ onClose }: { onClose: () => void }) {
     // ainsi sur ce qui vient d'être lu à l'écran.
     void cloudStore.loadInbox().then(() => cloudStore.markInboxSeen());
     // L'interrupteur des notifications se relit au serveur : l'état ne vit pas
-    // dans la sauvegarde, et deviner « éteint » serait mentir (défaut du
-    // 7 octobre : il affichait éteint alors que les notifications marchaient).
+    // dans la sauvegarde, et deviner « éteint » serait mentir : l'interrupteur
+    // s'affichait éteint alors que les notifications partaient.
     void cloudStore.syncPushState();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

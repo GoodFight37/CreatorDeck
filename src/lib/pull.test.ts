@@ -4,9 +4,8 @@
  * Deux exigences qui tirent en sens inverse, et c'est tout l'équilibre du
  * module : un **vrai** geste doit ouvrir (lent ou vif, sans viser un trait
  * parfait), et un **effleurement** ne doit jamais rien ouvrir — parce qu'un
- * booster ouvert est un booster consommé. Le 7 octobre 2026, le joueur a
- * rapporté l'inverse : « ça l'ouvre directement, des fois je fais même pas
- * exprès ». Les tests de l'effleurement ci-dessous viennent de là.
+ * booster ouvert est un booster consommé. Les tests de l'effleurement
+ * ci-dessous gardent cette promesse-là.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -54,7 +53,7 @@ describe("le geste d'ouverture", () => {
     expect(mou.active).toBe(true);
   });
 
-  it("n'ouvre rien sur un effleurement (le retour du joueur, mot pour mot)", () => {
+  it("n'ouvre rien sur un effleurement", () => {
     // « Quand j'effleure le booster, ça l'ouvre directement. » Un doigt qui se
     // pose, glisse de quelques pixels et repart : rien ne doit s'ouvrir — ni
     // lentement, ni vite.

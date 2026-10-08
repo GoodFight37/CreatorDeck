@@ -2,8 +2,8 @@
  * L'état public du cloud (`CloudState`) et les types de réponse que l'écran
  * Compte manipule : compte, boosters, échanges, hôtel, Last Pack, Arène.
  *
- * Découpés hors de `cloud-store.ts` le 7 octobre 2026 (2 400 lignes, une
- * relecture s'y perdait). Aucun comportement n'a changé.
+ * Ils vivent hors de `cloud-store.ts` pour que le magasin reste lisible : ici,
+ * il n'y a que des formes de données et leur état initial.
  */
 /**
  * État du compte et de la synchronisation, exposé à React.
