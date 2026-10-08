@@ -538,6 +538,19 @@ Sans ces variables, l'APK se construit quand même : il se joue alors
 uniquement sur l'appareil, et l'écran de compte explique que le cloud n'est pas
 configuré.
 
+Le même workflow porte deux contrôles **à côté** du build — ils ne le
+retardent pas et ne le bloquent pas :
+
+* le travail `verif` rejoue la pile SQL entière (`0001` → la dernière) sur un
+  Postgres jetable et fait parler le serveur (434 contrôles) : c'est le seul
+  endroit qui dit qu'un fichier de migration s'applique encore, dans l'ordre,
+  sur une base neuve ;
+* `npm run ecrans` monte l'application dans un DOM : les quatre onglets, les
+  feuilles, un booster tiré et sa révélation.
+
+Une migration cassée ou un écran cassé met donc le run au rouge — sans priver
+le téléphone de son APK, qui reste téléchargeable.
+
 ## 6. Vérifier que tout fonctionne
 
 1. Ouvre l'app → **Profil → Sauvegarde cloud** ;
