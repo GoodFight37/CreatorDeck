@@ -99,6 +99,25 @@ export function creerBanc() {
     });
   }
 
+  /**
+   * Tape dans un champ. La valeur passe par le setter **natif** avant l'événement :
+   * React écoute `input` (et `change` pour un `<select>`), et poser `.value`
+   * tout seul ne réveille aucun `onChange` — le champ paraîtrait écrire dans le
+   * vide.
+   */
+  function saisir(champ: HTMLInputElement | HTMLSelectElement, texte: string) {
+    const select = champ instanceof window.HTMLSelectElement;
+    const setter = Object.getOwnPropertyDescriptor(
+      select ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype,
+      "value",
+    )?.set;
+    if (!setter) throw new Error("champ sans valeur : impossible de saisir");
+    act(() => {
+      setter.call(champ, texte);
+      champ.dispatchEvent(new window.Event(select ? "change" : "input", { bubbles: true }));
+    });
+  }
+
   /** Le bouton croix des feuilles (`aria-label="Fermer"`). */
   function fermer() {
     const cible = document.querySelector<HTMLButtonElement>('button[aria-label="Fermer"]');
@@ -116,6 +135,7 @@ export function creerBanc() {
     ecran,
     appuyer,
     appuyerNom,
+    saisir,
     fermer,
     boutons,
     racine: () => racine,

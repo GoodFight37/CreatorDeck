@@ -106,7 +106,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **60 instantanés** : les cinq onglets, les feuilles ouvertes, un booster révélé, le carnet, le live de vingt secondes, **le Studio** sous tous ses angles (pièce vide, meublée, sommet, invités, raid), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **61 instantanés** : les cinq onglets, les feuilles ouvertes, un booster révélé, le carnet, le live de vingt secondes, **le Studio** sous tous ses angles (pièce vide, meublée, sommet, invités, raid), **l'Atelier** (créateurs manquants, doublons), **les crédits** et **l'arrivée sur les échanges** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -156,9 +156,10 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **dix fichiers** (51 tests, 60 captures) : le carnet de
-  notifications, l'écran Compte d'un joueur connecté, les crédits, le Studio et
-  ses socles, le live de vingt secondes. Il tournait dans la CI de l'APK, à côté
+  écran a bougé. Il tourne dans **onze fichiers** (57 tests, 61 captures) : le carnet
+  de notifications, l'écran Compte d'un joueur connecté, les crédits, le Studio
+  et ses socles, le live de vingt secondes, et **les mille cartes** (ce que le
+  DOM porte vraiment). Il tournait dans la CI de l'APK, à côté
   de `lint`, `typecheck` et `test` — depuis la suppression des workflows
   (8 octobre 2026), c'est à relancer à la main.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour

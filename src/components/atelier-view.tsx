@@ -58,6 +58,9 @@ export function AtelierView({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CraftFilter>("all");
   const [page, setPage] = useState(0);
+  // Le feuilletage des doublons a son propre compteur : les deux listes n'ont
+  // pas la même longueur, et changer d'onglet repart de la première page.
+  const [recyclePage, setRecyclePage] = useState(0);
   // Les jetons sont la monnaie lente : 400, le prix unique de la carte visée,
   // contre 45 à 600 points selon la rareté. Deux monnaies, un seul atelier.
   const [wallet, setWallet] = useState<Wallet>("points");
@@ -74,6 +77,15 @@ export function AtelierView({
   } | null>(null);
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
+  // Les doublons se comptent en centaines dès qu'un joueur ouvre beaucoup : on
+  // les feuillette donc comme les créateurs manquants. Trois cents lignes
+  // posées d'un coup, c'est trois cents portraits à décoder et à mettre en
+  // page — le prix se paie au doigt, sur le téléphone, pas à l'écran de
+  // développement. Les comptes (l'onglet, « Tout recycler ») restent ceux du
+  // moteur : c'est **l'affichage** qui tient sur une page, jamais la règle.
+  const recyclePages = Math.max(1, Math.ceil(duplicates.length / PER_PAGE));
+  const recycleSafe = Math.min(recyclePage, recyclePages - 1);
+  const visibles = duplicates.slice(recycleSafe * PER_PAGE, (recycleSafe + 1) * PER_PAGE);
   // « Tout recycler » emporte les doublons **sauf les Live** : un doublon Live
   // se recycle un par un, jamais dans un clic qui emporte tout. La sélection
   // vient du moteur (`bulkRecyclableIds`), la même règle que le jeu sans cloud.
@@ -217,14 +229,20 @@ export function AtelierView({
       <div className="filter-chips atelier-tabs" aria-label="Mode de l'atelier">
         <button
           className={mode === "craft" ? "active" : ""}
-          onClick={() => setMode("craft")}
+          onClick={() => {
+            setMode("craft");
+            setPage(0);
+          }}
           aria-pressed={mode === "craft"}
         >
           Rejoindre ({missingCount})
         </button>
         <button
           className={mode === "recycle" ? "active" : ""}
-          onClick={() => setMode("recycle")}
+          onClick={() => {
+            setMode("recycle");
+            setRecyclePage(0);
+          }}
           aria-pressed={mode === "recycle"}
         >
           Recycler ({duplicates.reduce((sum, group) => sum + group.recyclableIds.length, 0)})
@@ -373,7 +391,6 @@ export function AtelierView({
                     alt=""
                     width={44}
                     height={44}
-                    quality={80}
                     sizes="44px"
                   />
                   <div className="atelier-copy">
@@ -450,8 +467,33 @@ export function AtelierView({
                 ) : null}
               </div>
 
+              {/* Le feuilletage n'apparaît qu'à partir de la deuxième page :
+                  trois doublons ne méritent pas un « Page 1 / 1 ». */}
+              {recyclePages > 1 ? (
+                <div className="binder-pager">
+                  <button
+                    onClick={() => setRecyclePage((p) => Math.max(0, p - 1))}
+                    disabled={recycleSafe <= 0}
+                  >
+                    <ChevronLeft size={15} />
+                    <span>Précédent</span>
+                  </button>
+                  <span>
+                    Page <strong>{recycleSafe + 1}</strong> / {recyclePages} · {duplicates.length}{" "}
+                    doublons
+                  </span>
+                  <button
+                    onClick={() => setRecyclePage((p) => Math.min(recyclePages - 1, p + 1))}
+                    disabled={recycleSafe >= recyclePages - 1}
+                  >
+                    <span>Suivant</span>
+                    <ChevronRight size={15} />
+                  </button>
+                </div>
+              ) : null}
+
               <div className="atelier-list">
-                {duplicates.map((group) => {
+                {visibles.map((group) => {
                   const creator = CREATOR_BY_SLUG.get(group.creatorSlug);
                   if (!creator) return null;
                   return (
@@ -462,7 +504,6 @@ export function AtelierView({
                         alt=""
                         width={44}
                         height={44}
-                        quality={80}
                         sizes="44px"
                       />
                       <div className="atelier-copy">
