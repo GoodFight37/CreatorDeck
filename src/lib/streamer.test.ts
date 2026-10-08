@@ -28,12 +28,16 @@ import {
   gameDaysBetween,
   growthPerDay,
   growthWithSetup,
+  GUEST_COLLAB,
+  collabFor,
+  collabVideoPermille,
   guestRaidPermille,
   liveGuestSlugs,
   newStreamerState,
   nextSetupLevel,
   nextTier,
   playEventLocally,
+  playVideoLocally,
   raidForGuests,
   raidLine,
   resolveEventChoice,
@@ -483,5 +487,129 @@ describe("les invités sur le bureau (0039)", () => {
     expect(raidLine({ gained: 4321, slugs: ["ibai", "kamet0"] })).toBe(
       "Raid : 2 invités sont passés en direct — +4\u202f321 abonnés.",
     );
+  });
+});
+
+describe("le plateau sur la vidéo du jour (0041)", () => {
+  const letsplay = STREAMER.formats.find((f) => f.id === "letsplay")!;
+  const ragebait = STREAMER.formats.find((f) => f.id === "ragebait")!;
+
+  /** Un invité posé : la place, le créateur, la rareté de sa carte. */
+  const invite = (slot: number, slug: string, rarity: string) => ({
+    slot,
+    cardId: `carte-${slot}`,
+    slug,
+    rarity: rarity as never,
+    variant: "standard" as never,
+  });
+
+  it("le barème vit dans le fichier, et monte avec la rareté", () => {
+    const raretes = ["common", "uncommon", "rare", "epic", "legendary"];
+    for (const rarity of raretes) expect(collabVideoPermille(rarity)).toBeGreaterThan(0);
+    for (let i = 1; i < raretes.length; i += 1) {
+      expect(collabVideoPermille(raretes[i])).toBeGreaterThan(collabVideoPermille(raretes[i - 1]));
+    }
+    // Une rareté inconnue (sauvegarde bricolée) ne vaut **rien**, jamais un défaut.
+    expect(collabVideoPermille("mystere")).toBe(0);
+    expect(collabVideoPermille("")).toBe(0);
+    // Le direct est un bonus, pas un remplacement : il paie plus qu'une Légendaire.
+    expect(GUEST_COLLAB.livePermille).toBeGreaterThan(collabVideoPermille("legendary"));
+    expect(GUEST_COLLAB.liveBuzzPermille).toBeGreaterThan(0);
+  });
+
+  it("additionne la rareté des invités, et le direct en plus", () => {
+    const bureau = [invite(1, "ibai", "uncommon"), invite(2, "kamet0", "legendary")];
+    const horsLigne = collabFor(bureau);
+    // 30 + 120 : chaque invité pèse sa rareté, et personne n'est en direct.
+    expect(horsLigne.permille).toBe(
+      collabVideoPermille("uncommon") + collabVideoPermille("legendary"),
+    );
+    expect(horsLigne.live).toBe(false);
+    expect(horsLigne.liveSlugs).toEqual([]);
+    expect(horsLigne.buzzPermille).toBe(0);
+
+    const enDirect = collabFor(bureau, new Set(["kamet0"]));
+    // Le direct **s'ajoute** au total : c'est ce total-là que le serveur paiera.
+    expect(enDirect.permille).toBe(horsLigne.permille + GUEST_COLLAB.livePermille);
+    expect(enDirect.live).toBe(true);
+    expect(enDirect.liveSlugs).toEqual(["kamet0"]);
+    expect(enDirect.buzzPermille).toBe(GUEST_COLLAB.liveBuzzPermille);
+
+    // Un bureau vide ne vaut rien — et un slug qui n'est pas au bureau non plus.
+    expect(collabFor([]).permille).toBe(0);
+    expect(collabFor(bureau, new Set(["autre"])).permille).toBe(horsLigne.permille);
+  });
+
+  it("paie le gain potentiel, avant le ×3 du buzz", () => {
+    const abonnes = 1000;
+    const base = growthPerDay(abonnes);
+    const plateau = collabFor([invite(1, "ibai", "legendary")], new Set(["ibai"]));
+    const nu = Math.round((base * letsplay.gainPermille) / 1000);
+    // Le plateau s'applique au gain du format, en gardant le même arrondi que
+    // le serveur (`floor`) : l'écran et la base tombent sur le même chiffre.
+    const attendu = Math.floor((nu * (1000 + plateau.permille)) / 1000);
+
+    const gagne = resolveVideo(letsplay, abonnes, suiteDeJets([0, 999]), 0, plateau);
+    expect(gagne.success).toBe(true);
+    expect(gagne.collab).toBe(120 + GUEST_COLLAB.livePermille);
+    expect(gagne.raid).toBe(true);
+    expect(gagne.gained).toBe(attendu);
+
+    const buzz = resolveVideo(letsplay, abonnes, suiteDeJets([0, letsplay.buzzPermille - 1]), 0, plateau);
+    // Le buzz triple le gain **du plateau** : trois fois le plateau, pas trois
+    // fois le gain nu. Sans plateau, la vidéo est le témoin.
+    expect(buzz.gained).toBe(attendu * 3);
+    const temoin = resolveVideo(letsplay, abonnes, suiteDeJets([0, 999]), 0, collabFor([]));
+    expect(temoin.collab).toBe(0);
+    expect(temoin.raid).toBe(false);
+    expect(temoin.gained).toBe(nu);
+  });
+
+  it("le direct pousse la chance de buzz : une vidéo que le plateau seul ne ferait pas buzzer", () => {
+    // Rage bait buzze 160 pour mille. À 300, elle ne buzze pas…
+    const seul = resolveVideo(ragebait, 2600, suiteDeJets([0, 300]));
+    expect(seul.success).toBe(true);
+    expect(seul.buzz).toBe(false);
+    // … et avec un invité **en direct**, 160 + 250 : la même valeur suffit.
+    const plateau = collabFor([invite(1, "ibai", "rare")], new Set(["ibai"]));
+    const avec = resolveVideo(ragebait, 2600, suiteDeJets([0, 300]), 0, plateau);
+    expect(avec.buzz).toBe(true);
+    expect(avec.collab).toBe(collabVideoPermille("rare") + GUEST_COLLAB.livePermille);
+    expect(avec.raid).toBe(true);
+  });
+
+  it("écrit le plateau et le raid dans la vidéo locale, et ne rejoue jamais", () => {
+    const etat = {
+      ...newStreamerState(T0),
+      subscribers: 2600,
+      guests: [invite(1, "ibai", "epic")],
+    };
+    const horsLigne = playVideoLocally(etat, "letsplay", "2026-10-08", suiteDeJets([0, 999]))!;
+    expect(horsLigne.already).toBe(false);
+    expect(horsLigne.video.collab).toBe(collabVideoPermille("epic"));
+    expect(horsLigne.video.raid).toBe(false);
+
+    const enDirect = playVideoLocally(
+      etat,
+      "letsplay",
+      "2026-10-08",
+      suiteDeJets([0, 999]),
+      new Set(["ibai"]),
+    )!;
+    expect(enDirect.video.collab).toBe(collabVideoPermille("epic") + GUEST_COLLAB.livePermille);
+    expect(enDirect.video.raid).toBe(true);
+
+    // Reposer la vidéo du jour rend celle qui est rangée, plateau compris : le
+    // tirage n'est pas rejoué, donc le joueur ne peut pas retenter la chance.
+    const rejoue = playVideoLocally(
+      enDirect.state,
+      "letsplay",
+      "2026-10-08",
+      suiteDeJets([999, 999]),
+      new Set(),
+    )!;
+    expect(rejoue.already).toBe(true);
+    expect(rejoue.video.collab).toBe(enDirect.video.collab);
+    expect(rejoue.video.raid).toBe(true);
   });
 });

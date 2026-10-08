@@ -145,6 +145,13 @@ type StreamerData = {
     slots: number;
     liveWindowMinutes: number;
     raidPermille: Record<string, number>;
+    /** Le plateau au moment de publier : gain de la vidéo, et le direct. */
+    collab: {
+      note: string;
+      videoPermille: Record<string, number>;
+      livePermille: number;
+      liveBuzzPermille: number;
+    };
   };
 };
 
@@ -370,6 +377,10 @@ export function availableFormats(ownedCreators: number): StreamerFormat[] {
 }
 
 export type VideoOutcome = {
+  /** Le bonus du plateau appliqué, pour mille. */
+  collab: number;
+  /** Un invité était en direct au moment du tirage. */
+  raid: boolean;
   format: StreamerFormat;
   /** La vidéo a réussi. */
   success: boolean;
@@ -404,12 +415,26 @@ export function resolveVideo(
   roll: (maxExclusive: number) => number = randomInt,
   /** Le bonus de croissance du setup acheté, pour mille (0 = aucun). */
   bonusPermille = 0,
+  /**
+   * Le **plateau** (`collabFor()`) : la rareté des invités, et le direct.
+   *
+   * Le bonus de rareté s'applique au gain potentiel — donc **avant** le ×3 du
+   * buzz : une vidéo qui buzz sur un plateau rare paie trois fois le plateau.
+   * Le direct, lui, pousse la **chance de buzz** de `liveBuzzPermille`
+   * (plafonnée à 100 %) : c'est lui qui fait basculer une vidéo ordinaire.
+   */
+  collab: CollabResult = { permille: 0, buzzPermille: 0, live: false, liveSlugs: [] },
 ): VideoOutcome {
   const base = growthPerDay(subscribers);
   const avecSetup = bonusPermille === 0 ? base : Math.floor((base * (1000 + bonusPermille)) / 1000);
-  const potential = Math.round((avecSetup * format.gainPermille) / 1000);
+  const gainFormat = Math.round((avecSetup * format.gainPermille) / 1000);
+  const potential =
+    collab.permille === 0
+      ? gainFormat
+      : Math.floor((gainFormat * (1000 + collab.permille)) / 1000);
+  const buzzChance = Math.min(1000, format.buzzPermille + collab.buzzPermille);
   const success = roll(1000) < format.successChancePermille;
-  const buzz = success && roll(1000) < format.buzzPermille;
+  const buzz = success && roll(1000) < buzzChance;
   const badBuzz = !success && roll(1000) < (format.badBuzzPermille ?? 0);
 
   let gained = 0;
@@ -429,6 +454,8 @@ export function resolveVideo(
     badBuzz,
     gained,
     tokens,
+    collab: collab.permille,
+    raid: collab.live,
     headline: headlineFor({ format, success, buzz, badBuzz, gained, tokens }),
   };
 }
@@ -576,6 +603,10 @@ export type StreamerVideoState = {
   gained: number;
   /** Jetons réellement versés (0 quand le plafond du jour est atteint). */
   tokens: number;
+  /** Le bonus du **plateau**, pour mille, appliqué à cette vidéo-là (0 = aucun invité). */
+  collab: number;
+  /** `true` si un invité streamait **au moment de publier** — c'est le moment « RAID ! ». */
+  raid: boolean;
 };
 
 export function newStreamerState(now: number): StreamerState {
@@ -608,6 +639,62 @@ export const GUEST_LIVE_WINDOW_MINUTES = STREAMER.guests.liveWindowMinutes;
 /** Ce qu'un invité de cette rareté paie quand il est en direct, pour mille. */
 export function guestRaidPermille(rarity: string): number {
   return STREAMER.guests.raidPermille[rarity] ?? 0;
+}
+
+/** Les règles du **plateau** : ce que les invités apportent à la vidéo du jour. */
+export const GUEST_COLLAB = STREAMER.guests.collab;
+
+/**
+ * Ce qu'un invité de cette rareté apporte à la **vidéo du jour**, pour mille.
+ *
+ * C'est le bonus de plateau : plus la carte est rare, plus le nom posé sur le
+ * bureau fait venir de monde. Zéro pour une rareté inconnue — une sauvegarde
+ * bricolée n'invente pas un bonus.
+ */
+export function collabVideoPermille(rarity: string): number {
+  return GUEST_COLLAB.videoPermille[rarity] ?? 0;
+}
+
+export type CollabResult = {
+  /** Le total du plateau, pour mille : les invités, **plus** le direct s'il y en a un. */
+  permille: number;
+  /** Le bonus de buzz quand un invité streame **maintenant**, pour mille. */
+  buzzPermille: number;
+  /** `true` si au moins un invité est en direct à cet instant. */
+  live: boolean;
+  /** Les créateurs invités **réellement en direct**, dans l'ordre du bureau. */
+  liveSlugs: string[];
+};
+
+/**
+ * Ce que le plateau vaut **maintenant**, avant de publier.
+ *
+ * Deux parts : la rareté des invités (toujours), et le direct (seulement si l'un
+ * d'eux streame à cet instant-là — le même test que le badge de l'accueil et que
+ * le raid, `liveGuestSlugs()`). C'est **exactement** ce que le serveur calcule au
+ * moment de `streamer_publish()` : le chiffre affiché avant de publier est celui
+ * qui sera payé, `_streamer_collab()` et cette fonction portant le même barème.
+ */
+export function collabFor(
+  guests: readonly StreamerGuest[],
+  liveSlugs: ReadonlySet<string> = new Set<string>(),
+): CollabResult {
+  let permille = 0;
+  const enDirect: string[] = [];
+  for (const guest of guests) {
+    permille += collabVideoPermille(guest.rarity);
+    if (liveSlugs.has(guest.slug)) enDirect.push(guest.slug);
+  }
+  const live = enDirect.length > 0;
+  return {
+    // Le direct s'ajoute au total : les invités pèsent leur rareté, et le fait
+    // qu'ils streament **maintenant** pèse le bonus du direct. C'est ce total-là
+    // que l'écran annonce et que le serveur applique (`_streamer_collab()`).
+    permille: permille + (live ? GUEST_COLLAB.livePermille : 0),
+    buzzPermille: live ? GUEST_COLLAB.liveBuzzPermille : 0,
+    live,
+    liveSlugs: enDirect,
+  };
 }
 
 export type RaidShare = {
@@ -722,12 +809,19 @@ export function playVideoLocally(
   formatId: string,
   day: string,
   roll: (maxExclusive: number) => number = randomInt,
+  /**
+   * Les créateurs invités **en direct** à cet instant (`liveGuestSlugs()`), ou
+   * un ensemble vide : sans table du direct, le plateau ne prend pas le bonus de
+   * buzz — mais la rareté des invités compte quand même.
+   */
+  liveSlugs: ReadonlySet<string> = new Set<string>(),
 ): { state: StreamerState; video: StreamerVideoState; already: boolean } | null {
   const format = formatById(formatId);
   if (!format) return null;
   if (prev.video?.day === day) return { state: prev, video: prev.video, already: true };
 
-  const outcome = resolveVideo(format, prev.subscribers, roll, setupBonusPermille(prev.setup));
+  const collab = collabFor(prev.guests, liveSlugs);
+  const outcome = resolveVideo(format, prev.subscribers, roll, setupBonusPermille(prev.setup), collab);
   const deja = tokensOnDay(prev, day);
   const tokens = Math.max(0, Math.min(outcome.tokens, STREAMER_TOKEN_CAP - deja));
   const video: StreamerVideoState = {
@@ -738,6 +832,8 @@ export function playVideoLocally(
     badBuzz: outcome.badBuzz,
     gained: outcome.gained,
     tokens,
+    collab: outcome.collab,
+    raid: outcome.raid,
   };
   return {
     state: {

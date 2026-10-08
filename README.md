@@ -106,7 +106,7 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — 24 instantanés : quatre onglets, feuilles ouvertes, un booster tiré, le live du jour — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **25 instantanés** : quatre onglets, feuilles ouvertes, un booster tiré, le live du jour, **le bureau du streamer** (socles, objets de studio allumés par le setup, aura du direct) — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -120,14 +120,17 @@ le chantier « Ta chaîne » a sa propre feuille de route
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0040` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+| `npm run supabase:verify` | joue les migrations `0001` → `0041` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
 1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
 barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
 interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
 change pas, les refus de carte et de côté, aucun jeton versé — et le setup : cinq paliers dans l'ordre,
 le prix au serveur, un palier volé qui ne compte pas et ne fait pas sauter l'étape suivante, puis les
 trois paliers en doublons (Rare = 1, Épique = 2, une Légendaire et la dernière copie refusées, une carte
-ne part qu'une fois — le journal des départs en porte la preuve et le vérifieur le joue). Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
+ne part qu'une fois — le journal des départs en porte la preuve et le vérifieur le joue), puis **le plateau sur la vidéo du jour** (`0041`) : le barème relu du fichier,
+une Légendaire invitée hors ligne puis en direct, les colonnes `collab`/`raid` écrites
+et relues, la republication qui ne rejoue rien, le direct périmé qui retombe sur la
+seule rareté — **548 contrôles** en tout. Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
 
 ## Tests
 
@@ -136,7 +139,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications — tout ce qui se
   calcule sans navigateur. C'est là que vit l'essentiel des règles
-  (**979 tests**, 62 fichiers aujourd'hui).
+  (**993 tests**, 62 fichiers aujourd'hui).
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre onglets, le marquage de l'onglet actif, l'accès au compte
@@ -249,6 +252,8 @@ src/components/          UI : la coque (creator-deck-app.tsx — navigation,
                          (error-boundary.tsx), l'overlay 16:9
 src/ecrans.test.tsx      le banc des écrans (jsdom) : quatre onglets, feuilles,
 src/ecrans-compte.test.tsx  un tirage — et le même banc cloud configuré
+src/components/*.test.tsx  les scènes montées au doigt : le live de 20 s, le
+                         bureau du streamer (socles, cartes, aura du direct)
 src/app/overlay/         la page 16:9 à coller dans OBS
 src/app/                 layout, page, styles globaux
 src/data/creators.json   les créateurs du catalogue (Top 1000 mondial aujourd'hui)
@@ -268,7 +273,7 @@ docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qu
                          est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0039` (réelles, rejouables, vérifiées) :
+supabase/migrations/     la pile SQL, `0001` → `0041` (réelles, rejouables, vérifiées) :
                          posées par `npx supabase db push`, dans l'ordre des numéros
 supabase/config.toml     le projet **lié** (le CLI) : rien de secret — la version des
                          migrations et l'état voulu des fonctions Edge (`verify_jwt`)

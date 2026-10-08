@@ -195,6 +195,11 @@ function sanitizeStreamerVideo(value: unknown): StreamerVideoState | null {
     badBuzz: value.badBuzz === true,
     gained,
     tokens: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokens, 0)),
+    // Le plateau de la vidéo (`0041`) : le bonus appliqué et le raid. Ils se
+    // relisent tels quels — une sauvegarde d'avant la `0041` retombe sur zéro,
+    // ce qui est exactement ce qu'elle valait.
+    collab: nonNegativeInt(value.collab, 0),
+    raid: value.raid === true,
   };
 }
 

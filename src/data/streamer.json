@@ -319,7 +319,7 @@
     }
   },
   "guests": {
-    "note": "Les invités sur le bureau : deux cartes de la collection tiennent le plateau, et chacune paie un **raid** quand son créateur est **réellement en direct** — le même direct que le badge de l'accueil, avec dix minutes de fraîcheur, jamais une donnée périmée. Le raid se paie **une fois par journée de jeu**, au moment du relevé de la chaîne, et il ne coûte rien : ni jeton, ni point, ni carte. Deux cartes de deux créateurs différents au maximum (pas deux copies du même) ; changer d'invité ne paie pas deux fois, et un invité dont le créateur ne streame pas ne rapporte rien ce jour-là.",
+    "note": "Les invités sur le bureau : deux cartes de la collection tiennent le plateau, et chacune paie un **raid** quand son créateur est **réellement en direct** — le même direct que le badge de l'accueil, avec dix minutes de fraîcheur. Le raid se paie **une fois par journée de jeu**, au moment du relevé de la chaîne, et il ne coûte rien. Deux cartes de deux créateurs différents au maximum ; changer d'invité ne paie pas deux fois. Et le plateau **compte aussi sur la vidéo** : voir `collab`.",
     "slots": 2,
     "liveWindowMinutes": 10,
     "raidPermille": {
@@ -328,6 +328,18 @@
       "rare": 40,
       "epic": 60,
       "legendary": 90
+    },
+    "collab": {
+      "note": "Le plateau, au moment de publier la vidéo du jour : la rareté des invités booste le gain de base (`videoPermille` — 2 % pour une Commune, 12 % pour une Légendaire), et si l'un d'eux streame **maintenant**, le direct ajoute `livePermille` au gain et `liveBuzzPermille` à la chance de buzz — c'est le moment **RAID !**. Rien de tout ça ne remplace le raid du relevé : le raid paie le passage d'un invité pendant l'absence (une fois par journée), le plateau booste la vidéo que tu publies. Les deux ne se cumulent pas sur la même ligne, et tout est tiré par le serveur.",
+      "videoPermille": {
+        "common": 20,
+        "uncommon": 30,
+        "rare": 50,
+        "epic": 80,
+        "legendary": 120
+      },
+      "livePermille": 150,
+      "liveBuzzPermille": 250
     }
   }
 }

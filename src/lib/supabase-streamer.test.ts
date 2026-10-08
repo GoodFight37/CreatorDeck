@@ -19,12 +19,14 @@ import { PROGRESSION } from "@/lib/progression";
 import {
   CAP_DAYS,
   EVENTS,
+  GUEST_COLLAB,
   GUEST_LIVE_WINDOW_MINUTES,
   GUEST_SLOTS,
   SETUP_LEVELS,
   STREAMER,
   STREAMER_TOKENS,
   TIERS,
+  collabVideoPermille,
 } from "@/lib/streamer";
 
 const ROOT = process.cwd();
@@ -33,6 +35,7 @@ const FICHIER = "0036_streamer.sql";
 const FICHIER_IMPREVUS = "0038_imprevus_setup.sql";
 const FICHIER_BUREAU = "0039_invites_bureau.sql";
 const FICHIER_DOUBLONS = "0040_setup_doublons.sql";
+const FICHIER_COLLAB = "0041_collab_plateau.sql";
 const SQL = readFileSync(path.join(MIGRATIONS, FICHIER), "utf8");
 /** Le fichier sans ses commentaires, puis sans ses retours à la ligne. */
 const CODE = SQL.split("\n")
@@ -56,6 +59,13 @@ const FLAT_BUREAU = SQL_BUREAU.split("\n")
 // Le studio : les paliers en doublons, leur monnaie et le barème du sacrifice.
 const SQL_DOUBLONS = readFileSync(path.join(MIGRATIONS, FICHIER_DOUBLONS), "utf8");
 const FLAT_DOUBLONS = SQL_DOUBLONS.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n")
+  .replace(/\s+/g, " ");
+
+// Le plateau : le barème des invités sur la vidéo du jour, et le moment « RAID ! ».
+const SQL_COLLAB = readFileSync(path.join(MIGRATIONS, FICHIER_COLLAB), "utf8");
+const FLAT_COLLAB = SQL_COLLAB.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n")
   .replace(/\s+/g, " ");
@@ -497,5 +507,124 @@ describe("0039_invites_bureau.sql (les invités sur le bureau)", () => {
     expect(verifieur).toContain("invités : un bureau neuf est vide, sans raid payé");
     expect(verifieur).toContain("invités : un direct périmé (vingt minutes) ne paie pas, le même frais paie");
     expect(verifieur).toContain("invités : recoller `0038` seule après `0039` fait perdre le bureau de l'écran");
+  });
+});
+
+describe("0041_collab_plateau.sql (le plateau)", () => {
+  const RARETES = ["common", "uncommon", "rare", "epic", "legendary"] as const;
+
+  it("paie les parts du fichier, rareté par rareté, et rien d'autre", () => {
+    // Le barème vit dans `_streamer_collab_values()`, miroir exact de
+    // `guests.collab.videoPermille` : même chiffre, même ordre de raretés.
+    for (const rarity of RARETES) {
+      expect(FLAT_COLLAB).toContain(`('${rarity}', ${collabVideoPermille(rarity)})`);
+    }
+    const lignes = FLAT_COLLAB.match(/\('(common|uncommon|rare|epic|legendary)', \d+\)/g) ?? [];
+    expect(lignes.length).toBe(RARETES.length);
+    // Le direct : le gain **et** la chance de buzz, les deux du fichier.
+    expect(FLAT_COLLAB).toContain(`as $$ select ${GUEST_COLLAB.livePermille}, ${GUEST_COLLAB.liveBuzzPermille}; $$`);
+  });
+
+  it("relit le bureau, le catalogue et le direct — jamais le client", () => {
+    // Les invités viennent de la table du bureau (`0039`), la rareté du barème
+    // par jointure, et le direct de `live_state` + `live_streams` : exactement
+    // la condition du raid, avec la même fenêtre de dix minutes.
+    expect(FLAT_COLLAB).toContain("from public._streamer_guests_of(p_user) g");
+    expect(FLAT_COLLAB).toContain("left join public._streamer_collab_values() v on v.rarity = g.rarity");
+    expect(FLAT_COLLAB).toContain("join public.live_streams l on l.login = c.login");
+    expect(FLAT_COLLAB).toContain("public._streamer_live_window()");
+    expect(FLAT_COLLAB).toContain("from public.live_state s order by s.refreshed_at desc limit 1");
+    // Et le total : la somme des raretés, plus le direct **s'il y en a un**.
+    expect(FLAT_COLLAB).toContain("coalesce((select sum(i.permille) from invites i), 0)");
+    expect(FLAT_COLLAB).toContain("then (select l.permille from public._streamer_collab_live() l)");
+  });
+
+  it("applique le plateau au potentiel, avant le ×3 du buzz", () => {
+    const publier = derniereDefinition("streamer_publish");
+    const flat = publier.split("\n").map((l) => l.replace(/--.*$/, "")).join("\n").replace(/\s+/g, " ");
+    // Le plateau est relu **au moment de publier**, pas à l'ouverture de l'écran.
+    expect(flat).toContain("select * into v_collab from public._streamer_collab(v_user)");
+    // Le gain du format, puis le plateau : l'ordre compte, c'est lui qui fait
+    // qu'un buzz paie trois fois le plateau.
+    const potentiel = flat.indexOf("v_potentiel := round(v_base * v_fmt.gain_permille / 1000.0)::bigint");
+    const plateau = flat.indexOf("v_potentiel := floor(v_potentiel * (1000 + v_collab.permille) / 1000.0)::bigint");
+    const tirage = flat.indexOf("v_success := floor(random() * 1000)::integer < v_fmt.success_chance");
+    expect(potentiel).toBeGreaterThan(-1);
+    expect(plateau).toBeGreaterThan(potentiel);
+    expect(tirage).toBeGreaterThan(plateau);
+    // Le direct pousse la chance de buzz, plafonnée à 100 % (1000 pour mille).
+    expect(flat).toContain(
+      "least(1000, v_fmt.buzz_permille + v_collab.buzz_permille)",
+    );
+    // La vidéo garde la trace : les deux colonnes de la `0041`, à l'insertion.
+    expect(flat).toContain("insert into public.streamer_videos (user_id, day, format, success, buzz, bad_buzz, gained, tokens, collab, raid)");
+    expect(flat).toContain("v_collab.permille, v_collab.live)");
+    // Et republier rend la vidéo rangée, plateau compris — pas des zéros.
+    expect(flat).toContain("'collab', v_existant.collab");
+    expect(flat).toContain("'raid', v_existant.raid");
+  });
+
+  it("range le plateau dans la vidéo, sans toucher au passé", () => {
+    // Deux colonnes ajoutées, jamais réécrites : les vidéos d'avant valent
+    // `collab = 0, raid = false` — ce qu'elles étaient vraiment.
+    expect(FLAT_COLLAB).toContain(
+      "alter table public.streamer_videos add column if not exists collab integer not null default 0",
+    );
+    expect(FLAT_COLLAB).toContain(
+      "alter table public.streamer_videos add column if not exists raid boolean not null default false",
+    );
+    expect(FLAT_COLLAB).toContain("comment on column public.streamer_videos.collab is");
+    expect(FLAT_COLLAB).toContain("comment on column public.streamer_videos.raid is");
+  });
+
+  it("annonce le plateau avant de publier, avec les trois champs de l'écran", () => {
+    const etat = derniereDefinition("streamer_status");
+    expect(etat).toContain("select * into v_collab from public._streamer_collab(v_user)");
+    for (const champ of ["'collab_permille'", "'collab_buzz_permille'", "'collab_live'"]) {
+      expect(etat).toContain(champ);
+    }
+    // Les champs de la `0039` (le raid) sont toujours là : étendre l'état ne
+    // doit pas faire tomber le bureau ni le relevé.
+    for (const champ of ["'guests'", "'raid_day'", "'raid_today'", "'setup_bonus'"]) {
+      expect(etat).toContain(champ);
+    }
+  });
+
+  it("ferme ses aides et n'ouvre rien de nouveau au client", () => {
+    for (const fonction of [
+      "_streamer_collab_values()",
+      "_streamer_collab_live()",
+      "_streamer_collab(uuid)",
+    ]) {
+      expect(FLAT_COLLAB).toContain(
+        `revoke all on function public.${fonction} from public, anon, authenticated`,
+      );
+    }
+    // Le barème **est** dans la base, mais le joueur n'a pas à le sonder : il
+    // passe par `streamer_status()`, qui l'annonce déjà.
+    expect(FLAT_COLLAB).not.toContain("grant execute on function public._streamer_collab");
+    // La seule porte retouchée est celle que l'écran appelle déjà.
+    expect(FLAT_COLLAB).toContain(
+      "revoke all on function public.streamer_status() from public, anon;",
+    );
+    expect(FLAT_COLLAB).toContain(
+      "grant execute on function public.streamer_status() to authenticated;",
+    );
+  });
+
+  it("déclare sa ligne dans le rapport de version, après la 0040", () => {
+    const rapport = derniereDefinition("schema_versions");
+    expect(rapport).toContain("'0041'");
+    expect(rapport).toMatch(/to_regprocedure\('public\._streamer_collab\(uuid\)'\)/);
+    expect(rapport).toContain("'0040'");
+    expect(rapport).toContain("'0039'");
+  });
+
+  it("est jouée pour de vrai par le vérificateur, pas seulement décrite ici", () => {
+    const verifieur = readFileSync(path.join(ROOT, "scripts", "verify-supabase-migrations.mjs"), "utf8");
+    expect(verifieur).toContain("0041_collab_plateau.sql");
+    expect(verifieur).toContain("plateau : les parts de rareté sont celles du fichier, et rien d'autre");
+    expect(verifieur).toContain("plateau : la vidéo paie le plateau (rareté seule, puis rareté + direct)");
+    expect(verifieur).toContain("plateau : un direct périmé retombe sur la seule rareté du bureau");
   });
 });

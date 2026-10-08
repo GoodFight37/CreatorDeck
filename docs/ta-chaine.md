@@ -115,6 +115,46 @@
   débuts. L'écran ouvre le panneau **Le studio** : les doublons qui peuvent
   partir, la sélection comptée, et une **confirmation** avant le départ.
 
+- [x] **Étape 8 : la scène du bureau, et le plateau sur la vidéo** —
+  `supabase/migrations/0041_collab_plateau.sql`, `src/components/streamer-desk-stage.tsx`.
+  Deux moitiés dans le même geste. **La scène d'abord** : le bureau n'est plus
+  une liste de texte, c'est le **studio** — mur sombre, néon violet, sol, et
+  **huit objets** qui s'allument un par un avec les paliers achetés (Caméra,
+  Micro, Éclairage néon, Déco, Fond de studio, Seconde caméra, Régie, Plateau).
+  Les deux places d'invités sont des **socles** : une carte posée est une
+  **vraie carte du classeur** (`CreatorCard` compacte), une place libre est un
+  socle **en pointillés** avec un « + » qui ouvre le classeur ; un invité dont le
+  créateur streame **maintenant** porte une **aura rouge qui pulse** et un badge
+  **LIVE**, et la scène passe en mode raid avec son bandeau **« RAID ! »**.
+  **Le plateau ensuite** : les invités comptent sur la **vidéo du jour**, au
+  moment de la publier — la **rareté donne le bonus** (2 % pour une Commune,
+  3, 5, 8, **12 % pour une Légendaire**) et un invité **en direct** ajoute
+  **+15 %** au gain et **+25 points de chance de buzz**. Le bonus de rareté
+  s'applique **avant** le ×3 du buzz : une vidéo qui buzze sur un plateau rare
+  paie **trois fois le plateau**. Le direct **s'ajoute** au total (rareté **plus**
+  direct), et **tous les multiplicateurs vivent dans `src/data/streamer.json`** —
+  la scène n'en invente aucun, le serveur les relit **au moment de publier**
+  (`_streamer_collab()`, `_streamer_collab_values()`, `_streamer_collab_live()`),
+  et `streamer_status()` annonce ce que le plateau vaut **maintenant**. Le raid
+  (`0039`) et la collab ne paient pas la même chose : le raid paie le passage d'un
+  invité **pendant l'absence** (une fois par journée, au relevé), la collab
+  bonifie la vidéo **que tu publies**.
+
+  > **Poser `0041` après `0040`** : `npx supabase db push`. Pour vérifier après :
+  > `npx supabase migration list`, ou `select public.schema_versions() -> '0041';`
+  > qui doit rendre `true`.
+
+  > **Un mot sur la technique.** La scène est écrite dans le **système de
+  > variables CSS du projet** (`src/app/globals.css`, bloc `.chaine-scene*` :
+  > lueurs ≤ 0,65, aucune animation perpétuelle hors la pulsation du direct, que
+  > `prefers-reduced-motion` **et** l'interrupteur « Reflets des cartes »
+  > coupent). **Tailwind n'est pas branché dans ce dépôt** : les paquets sont
+  > bien installés (`tailwindcss`, `@tailwindcss/postcss`, postés par
+  > `postcss.config.mjs`), mais `globals.css` n'importe jamais Tailwind — aucune
+  > classe utilitaire ne s'applique aujourd'hui. La scène suit donc le reste du
+  > jeu ; brancher Tailwind serait un chantier à part, et il ne se fait pas en
+  > douce.
+
 ## 2. En cours
 
 - [x] **L'arbitrage du live de vingt secondes : la scène reste gratuite**
@@ -138,8 +178,11 @@
 
 ## 3. Ce qu'il reste à faire
 
-> Les **invités sur le bureau** (étape 6) et la **seconde série de paliers**
-> (étape 7) sont livrés. Il ne reste que l'équilibrage — et il se fait en jouant.
+> Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
+> (étape 7) et la **scène du bureau avec le plateau** (étape 8) sont livrés.
+> **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
+> (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
+> en jouant.
 
 - [x] **Système d'améliorations de setup (Tycoon : micro, caméra, PC)** — livré
   en deux séries : les cinq paliers en **points** (étape 4) et les trois paliers

@@ -25,6 +25,7 @@
 - [x] Imprévus du jour (cartes à swipe) & « Ton setup » en 5 paliers de points (`0038`)
 - [x] Mini-jeu interactif de 20 s (Live, chat qui défile, bulles d'alerte)
 - [x] Invités sur le bureau (2 cartes du classeur, bonus Raid si le créateur est EN LIVE)
+- [x] Bureau **visuel** : la scène du studio (objets qui s'allument avec le setup, vraies cartes sur socle, aura rouge du direct, bandeau « RAID ! ») et le **plateau** qui booste la vidéo du jour (`0041`, étape 8 de `docs/ta-chaine.md`)
 - [x] Arbitrage du live de 20 s (scène d'immersion gratuite, tirage vidéo 100 % serveur)
 
 ### Prochaines étapes

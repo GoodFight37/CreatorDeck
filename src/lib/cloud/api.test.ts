@@ -887,7 +887,34 @@ describe("la chaîne (le simulateur de streameur)", () => {
       guests: [],
       raidToday: 0,
       raidDay: "",
+      // `0041` : le plateau. Même règle que les deux blocs du dessus — une base
+      // d'avant rend des valeurs neutres plutôt qu'une erreur.
+      collabPermille: 0,
+      collabBuzzPermille: 0,
+      collabLive: false,
     });
+  });
+
+  it("lit le plateau du moment quand le serveur le connaît (0041)", async () => {
+    const { api } = client(
+      () => ({
+        body: {
+          ok: true,
+          subscribers: 2640,
+          per_day: 900,
+          day: "2026-10-08",
+          collab_permille: 270,
+          collab_buzz_permille: 250,
+          collab_live: true,
+        },
+      }),
+      signedIn(),
+    );
+    const etat = await api.streamerStatus();
+    // Rareté **et** direct : c'est ce total-là que la vidéo paiera.
+    expect(etat.collabPermille).toBe(270);
+    expect(etat.collabBuzzPermille).toBe(250);
+    expect(etat.collabLive).toBe(true);
   });
 
   it("rend le résumé du retour, journées comptées comprises", async () => {
@@ -918,6 +945,8 @@ describe("la chaîne (le simulateur de streameur)", () => {
           success: true,
           buzz: false,
           bad_buzz: false,
+          collab: 270,
+          raid: true,
           gained: 1920,
           tokens: 6,
           subscribers: 4560,
@@ -932,6 +961,9 @@ describe("la chaîne (le simulateur de streameur)", () => {
     // Si le client pouvait annoncer « réussite » ou un gain, le joueur
     // s'offrirait une Légende… un buzz à volonté.
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_format: "ragebait" });
+    // `0041` : la vidéo revient avec le plateau qu'elle a payé, et le raid.
+    expect(video.collab).toBe(270);
+    expect(video.raid).toBe(true);
     expect(video.success).toBe(true);
     expect(video.gained).toBe(1920);
   });

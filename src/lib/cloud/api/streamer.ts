@@ -80,6 +80,12 @@ export type StreamerStatus = {
   raidToday: number;
   /** La journée du dernier raid payé (`''` s'il n'y en a pas). */
   raidDay: string;
+  /** Ce que le **plateau** vaut maintenant, pour mille — rareté **et** direct (`0041`). */
+  collabPermille: number;
+  /** Le bonus de buzz du direct, pour mille (`0` si personne ne streame). */
+  collabBuzzPermille: number;
+  /** Un invité streame à cet instant. */
+  collabLive: boolean;
 };
 
 /** La carte d'imprévu du jour, telle que le serveur la connaît (`0038`). */
@@ -156,6 +162,10 @@ export type StreamerGuestsResult = {
 export type StreamerVideo = {
   /** `true` si la vidéo du jour avait déjà été publiée : rien n'a été rejoué. */
   already: boolean;
+  /** Le bonus du **plateau** appliqué à cette vidéo, pour mille (`0041`). */
+  collab: number;
+  /** `true` si un invité streamait **au moment de publier** — le moment « RAID ! ». */
+  raid: boolean;
   /** Le format publié, choisi par le client. */
   format: string;
   success: boolean;
@@ -188,6 +198,9 @@ export async function streamerStatus(core: CloudCore): Promise<StreamerStatus> {
     guests: parseGuests(record.guests),
     raidToday: Number(record.raid_today ?? 0),
     raidDay: typeof record.raid_day === "string" ? record.raid_day : "",
+    collabPermille: Number(record.collab_permille ?? 0),
+    collabBuzzPermille: Number(record.collab_buzz_permille ?? 0),
+    collabLive: record.collab_live === true,
   };
 }
 
@@ -424,6 +437,10 @@ export async function streamerPublish(core: CloudCore, format: string): Promise<
   }
   return {
     already: record.already === true,
+    // Une base sans `0041` ne rend pas ces champs : la vidéo vaut alors un
+    // plateau nul, ce qui est exactement ce qu'elle était.
+    collab: Number(record.collab ?? 0),
+    raid: record.raid === true,
     format: String(record.format ?? format),
     success: record.success === true,
     buzz: record.buzz === true,

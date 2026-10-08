@@ -23,7 +23,6 @@ import {
   Radio,
   Sparkles,
   TrendingUp,
-  Users,
   X,
 } from "lucide-react";
 
@@ -42,6 +41,7 @@ import {
   STREAMER,
   STREAMER_TOKEN_CAP,
   availableFormats,
+  collabFor,
   eventById,
   eventChoice,
   eventForDay,
@@ -66,6 +66,8 @@ import { swipeVerdict, type SwipeSide } from "@/lib/swipe";
 
 import { LIVE_SECONDS, StreamerLiveGame } from "@/components/streamer-live-game";
 import { liveStore } from "@/lib/live-store";
+import { liveFor } from "@/lib/live";
+import { StreamerDeskStage } from "@/components/streamer-desk-stage";
 
 const count = new Intl.NumberFormat("fr-FR");
 
@@ -174,12 +176,27 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
   const raidDu = streamer?.raid?.day === jour ? streamer.raid : null;
   const raidPaye = vue ? vue.raidToday : raidDu?.gained ?? 0;
   const direct = useMemo(() => liveGuestSlugs(guests, live, now), [guests, live, now]);
+  // Le direct de chaque invité, pour que **sa carte** porte le badge (le même
+  // test de fraîcheur que la scène : `liveFor`, dix minutes).
+  const liveStreams = useMemo(() => {
+    const out = new Map<string, NonNullable<ReturnType<typeof liveFor>>>();
+    for (const invite of guests) {
+      const creator = CREATOR_BY_SLUG.get(invite.slug);
+      const stream = liveFor(live, creator?.login, now);
+      if (stream) out.set(invite.slug, stream);
+    }
+    return out;
+  }, [guests, live, now]);
   // Ce que le bureau vaudrait **maintenant**, avant de poser le deuxième : le
   // joueur voit ce que sa seconde carte apporterait, sans avoir à la poser.
   const raidPossible = useMemo(
     () => raidForGuests(croissance, guests, direct),
     [croissance, guests, direct],
   );
+  // Ce que le **plateau** vaut maintenant : le même calcul que le serveur au
+  // moment de publier (`collabFor`), donc le chiffre annoncé est celui qui sera
+  // payé — rareté des invités, et bonus du direct s'il y en a un.
+  const collabPossible = useMemo(() => collabFor(guests, direct), [guests, direct]);
   // Les cartes qu'on peut poser : un créateur **différent** de celui d'à côté,
   // encore en direct, et une seule carte par créateur (le plus rare d'abord).
   const choixInvites = useMemo(() => {
@@ -209,7 +226,7 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
     if (!choisi || busy) return;
     setBusy(true);
     setNotice(null);
-    const issue = await cloudStore.publishStreamerVideo(choisi);
+    const issue = await cloudStore.publishStreamerVideo(choisi, direct);
     setBusy(false);
     if (issue.status !== "done") {
       setNotice({ message: issue.message, isError: true });
@@ -450,6 +467,27 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           </div>
         ) : null}
 
+        {/* Le bureau du streamer : la scène. Deux socles, de vraies cartes, et
+            le studio qui s'allume avec le setup. C'est la pièce visuelle de
+            « Ta chaîne » — les chiffres viennent juste après. */}
+        <StreamerDeskStage
+          guests={guests}
+          direct={direct}
+          liveStreams={liveStreams}
+          setup={setup}
+          collabPermille={vue ? vue.collabPermille : collabPossible.permille}
+          collabLive={vue ? vue.collabLive : collabPossible.live}
+          raidToday={raidPaye}
+          raidLine={raidPaye > 0 ? raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] }) : null}
+          raidPossible={raidPossible.gained}
+          busy={busy}
+          onOpenSlot={(place) => {
+            setPlaceOuverte(place);
+            setRecherche("");
+          }}
+          onRemove={(place) => void poserInvite(place, null)}
+        />
+
         <section className="chaine-state">
           <div className="chaine-numbers">
             <div>
@@ -548,6 +586,8 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
                 ? `${formatById(video.format)!.label} : ${video.gained >= 0 ? "+" : "−"}${count.format(Math.abs(video.gained))} abonnés`
                 : "Vidéo publiée"}
               {video.tokens > 0 ? ` · +${video.tokens} jetons` : " · plafond de jetons atteint"}
+              {video.collab > 0 ? ` · plateau +${(video.collab / 10).toFixed(1)} %` : ""}
+              {video.raid ? " · RAID !" : ""}
             </p>
           ) : (
             <>
@@ -778,88 +818,17 @@ export function StreamerSheet({ onClose }: { onClose: () => void }) {
           </p>
         </section>
 
-        {/* Le bureau : deux invités choisis dans la collection. Ce sont eux,
-            et eux seuls, qui amènent un raid — quand leur créateur streame
-            vraiment. */}
+        {/* Le bureau : la scène est plus haut, et la sélection vit ici. Ce que
+            la scène ne dit pas, l'intro le dit — les deux règles du plateau,
+            sans quoi le joueur ne saurait pas ce qu'il regarde. */}
         <section className="chaine-bureau">
-          <h3>
-            <Users size={16} /> Le bureau
-          </h3>
           <p className="chaine-intro">
-            Invite <strong>{GUEST_SLOTS} cartes de ta collection</strong>, de deux créateurs différents. Quand le
-            créateur streame vraiment — la même fenêtre de {GUEST_LIVE_WINDOW_MINUTES} minutes que le badge du
-            direct — son passage fait grandir la chaîne <strong>une fois par journée de jeu</strong>. Ça ne coûte
-            rien, et changer d&apos;invité ne repaie jamais la journée.
+            Tes <strong>{GUEST_SLOTS} invités</strong> (deux créateurs différents) pèsent sur la{" "}
+            <strong>vidéo du jour</strong> — la rareté d&apos;abord, et le direct en plus. Quand leur créateur
+            streame vraiment — la même fenêtre de {GUEST_LIVE_WINDOW_MINUTES} minutes que le badge du direct —
+            son passage paie aussi un <strong>raid</strong>, une fois par journée de jeu. Ça ne coûte rien, et
+            changer d&apos;invité ne repaie jamais.
           </p>
-          <ul className="chaine-bureau-list">
-            {Array.from({ length: GUEST_SLOTS }, (_, index) => index + 1).map((place) => {
-              const invite = guests.find((guest) => guest.slot === place) ?? null;
-              const enDirect = invite ? direct.has(invite.slug) : false;
-              const nom = invite
-                ? CREATOR_BY_SLUG.get(invite.slug)?.displayName ?? invite.slug
-                : `Place ${place} libre`;
-              const part = invite ? guestRaidPermille(invite.rarity) : 0;
-              return (
-                <li
-                  key={place}
-                  className={`chaine-bureau-item${invite ? " pose" : ""}${enDirect ? " en-direct" : ""}`}
-                >
-                  <span className="chaine-bureau-head">
-                    <strong>{nom}</strong>
-                    <span>
-                      {invite ? (
-                        <>
-                          <i style={{ color: RARITY_META[invite.rarity].color }}>
-                            {RARITY_META[invite.rarity].label}
-                          </i>
-                          {" · +" + (part / 10).toFixed(1) + " % de croissance"}
-                        </>
-                      ) : (
-                        "aucune carte invitée"
-                      )}
-                    </span>
-                  </span>
-                  {invite ? (
-                    <span className="chaine-bureau-live">
-                      {enDirect ? (
-                        <>
-                          <Radio size={13} /> en direct — {count.format(Math.floor((croissance * part) / 1000))} abonnés
-                          au relevé
-                        </>
-                      ) : (
-                        "hors ligne : son passage ne rapporterait rien"
-                      )}
-                    </span>
-                  ) : null}
-                  <span className="chaine-bureau-actions">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => {
-                        setPlaceOuverte(place);
-                        setRecherche("");
-                      }}
-                    >
-                      {invite ? "Changer" : "Choisir un invité"}
-                    </button>
-                    {invite ? (
-                      <button type="button" disabled={busy} onClick={() => void poserInvite(place, null)}>
-                        Retirer
-                      </button>
-                    ) : null}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-          {raidPaye > 0 ? (
-            <p className="chaine-bureau-raid">{raidLine({ gained: raidPaye, slugs: raidDu?.slugs ?? [] })}</p>
-          ) : raidPossible.gained > 0 ? (
-            <p className="chaine-bureau-raid">
-              Un invité est en direct : ton relevé ajoute <strong>+{count.format(raidPossible.gained)} abonnés</strong>{" "}
-              — une fois pour la journée de jeu.
-            </p>
-          ) : null}
           {placeOuverte === null ? null : (
             <div className="chaine-bureau-pick">
               <div className="chaine-bureau-pick-head">

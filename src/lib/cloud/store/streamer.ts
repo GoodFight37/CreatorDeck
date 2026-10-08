@@ -15,6 +15,7 @@ import {
   GUEST_LIVE_WINDOW_MINUTES,
   STREAMER_TOKEN_CAP,
   absenceLines,
+  collabFor,
   eventById,
   eventChoice,
   eventForDay,
@@ -77,6 +78,10 @@ export type StreamerOpening =
       guests: StreamerGuest[];
       /** Le raid payé aujourd'hui (0 : personne n'est passé). */
       raidToday: number;
+      /** Ce que le **plateau** vaut maintenant, pour mille (`0041`). */
+      collabPermille: number;
+      /** Un invité streame à l'instant du relevé. */
+      collabLive: boolean;
     }
   | { status: "refused"; message: string };
 
@@ -156,6 +161,10 @@ export function streamerActions(ctx: CloudStoreContext) {
         const day = gameDay(ctx.deps.now());
         const lines = [...visit.summary.lines];
         if (raid.gained > 0 && raid.raid) lines.push(raidLine(raid.raid));
+        // Le plateau se calcule sur place, avec les mêmes règles que le
+        // serveur (`collabFor` porte le même barème que `_streamer_collab()`) :
+        // l'écran annonce donc le chiffre qui sera payé, dix secondes plus tard.
+        const plateau = collabFor(raid.state.streamer.guests, liveSlugs);
         return {
           status: "done",
           source: "local",
@@ -173,6 +182,8 @@ export function streamerActions(ctx: CloudStoreContext) {
           setupBonus: setupBonusPermille(raid.state.streamer.setup),
           guests: raid.state.streamer.guests,
           raidToday: raid.raid?.day === day ? raid.raid.gained : 0,
+          collabPermille: plateau.permille,
+          collabLive: plateau.live,
         };
       }
       if (!api.session()) return noAccount();
@@ -272,6 +283,8 @@ export function streamerActions(ctx: CloudStoreContext) {
           setupBonus: status.setupBonus,
           guests,
           raidToday: status.raidToday,
+          collabPermille: status.collabPermille,
+          collabLive: status.collabLive,
         };
       } catch (error) {
         const refusal = ctx.cloudRefusal(error, "La chaîne n'a pas pu être ouverte.");
@@ -287,7 +300,11 @@ export function streamerActions(ctx: CloudStoreContext) {
      * publication le même jour relit la première au lieu de la rejouer, et le
      * versement de jetons est plafonné à ce qui reste de la journée.
      */
-    async publishStreamerVideo(formatId: string): Promise<CloudActionOutcome> {
+    async publishStreamerVideo(
+      formatId: string,
+      /** Les créateurs invités en direct (le chemin local seul en a besoin). */
+      liveSlugs: ReadonlySet<string> = new Set<string>(),
+    ): Promise<CloudActionOutcome> {
       const api = ctx.resolve();
       const local = ctx.deps.readState();
       if (!local) {
@@ -297,7 +314,7 @@ export function streamerActions(ctx: CloudStoreContext) {
       }
 
       if (!api) {
-        const played = publishStreamerLocally(local, formatId, ctx.deps.now());
+        const played = publishStreamerLocally(local, formatId, ctx.deps.now(), undefined, liveSlugs);
         if (!played) {
           const message = "Ce format de vidéo n'existe pas.";
           ctx.publish({ busy: false, message, isError: true });
@@ -338,6 +355,10 @@ export function streamerActions(ctx: CloudStoreContext) {
                 badBuzz: video.badBuzz,
                 gained: video.gained,
                 tokens: video.tokens,
+                // Le plateau, tel que le serveur l'a payé (`0041`) : l'écran
+                // affiche le bonus qu'il a vraiment appliqué, et le raid.
+                collab: video.collab,
+                raid: video.raid,
               },
             },
             ctx.deps.now(),

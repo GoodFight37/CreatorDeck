@@ -166,6 +166,7 @@ try {
   const imprevus = await readFile(path.join(MIGRATIONS, "0038_imprevus_setup.sql"), "utf8");
   const invites = await readFile(path.join(MIGRATIONS, "0039_invites_bureau.sql"), "utf8");
   const doublons = await readFile(path.join(MIGRATIONS, "0040_setup_doublons.sql"), "utf8");
+  const collab = await readFile(path.join(MIGRATIONS, "0041_collab_plateau.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -208,6 +209,7 @@ try {
     ["0038_imprevus_setup.sql", imprevus],
     ["0039_invites_bureau.sql", invites],
     ["0040_setup_doublons.sql", doublons],
+    ["0041_collab_plateau.sql", collab],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -5585,10 +5587,11 @@ try {
   await client.query(imprevus);
   await client.query(invites);
   await client.query(doublons);
+  await client.query(collab);
   const rapportComplet = (await client.query("select public.schema_versions() as r")).rows[0].r;
   check(
-    "chaîne : la pile recollée dans l'ordre donne le rapport complet (0030 → 0040)",
-    ["0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0038", "0039", "0040"].every(
+    "chaîne : la pile recollée dans l'ordre donne le rapport complet (0030 → 0041)",
+    ["0030", "0031", "0032", "0033", "0034", "0035", "0036", "0037", "0038", "0039", "0040", "0041"].every(
       (cle) => rapportComplet[cle] === true,
     ),
     JSON.stringify(rapportComplet),
@@ -6183,6 +6186,196 @@ try {
     "connecte-toi",
   );
 
+  // --- Le plateau compte sur la vidéo (0041) -------------------------------
+  //
+  // Ce qui se vérifie ici : la rareté des invités pèse sur le gain de la vidéo
+  // du jour, le direct ajoute le moment « RAID ! » (gain **et** chance de buzz),
+  // et rien de tout ça ne vient du client. Le barème est relu dans le **fichier**
+  // (`src/data/streamer.json`), comme pour les parts du raid : deux copies, un
+  // seul chiffre.
+  const COLLAB_A = "8a8a8a8a-6666-4666-8666-8a8a8a8a8a8a";
+  const COLLAB_B = "8b8b8b8b-6666-4666-8666-8b8b8b8b8b8b";
+  const COLLAB_C = "8c8c8c8c-6666-4666-8666-8c8c8c8c8c8c";
+  const carteCollab = card("collab-1", legendaireDuo, "legendary", "standard", 30);
+  await player(COLLAB_A, "Témoin plateau", []);
+  await player(COLLAB_B, "Berthe plateau", [carteCollab]);
+  await player(COLLAB_C, "Céline plateau", [carteCollab]);
+
+  const reglagesCollab = JSON.parse(
+    await readFile(path.join(ROOT, "src", "data", "streamer.json"), "utf8"),
+  ).guests.collab;
+  const permillesCollab = (
+    await client.query("select rarity, permille from public._streamer_collab_values() order by rarity")
+  ).rows;
+  const collabSql = Object.fromEntries(permillesCollab.map((row) => [row.rarity, Number(row.permille)]));
+  const liveSql = (await client.query("select * from public._streamer_collab_live()")).rows[0];
+  check(
+    "plateau : les parts de rareté sont celles du fichier, et rien d'autre",
+    permillesCollab.length === 5 &&
+      Object.entries(reglagesCollab.videoPermille).every(
+        ([rarity, permille]) => collabSql[rarity] === permille,
+      ) &&
+      Object.keys(collabSql).join(",").length > 0,
+    JSON.stringify({ collabSql, fichier: reglagesCollab.videoPermille }),
+  );
+  check(
+    "plateau : le direct ajoute son gain et sa chance de buzz, comme le fichier",
+    Number(liveSql.permille) === reglagesCollab.livePermille &&
+      Number(liveSql.buzz_permille) === reglagesCollab.liveBuzzPermille,
+    JSON.stringify({ liveSql, fichier: reglagesCollab }),
+  );
+
+  const sansInvite = (await asPlayer(COLLAB_A, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "plateau : sans invité, aucun bonus — et l'écran le dit",
+    Number(sansInvite.collab_permille) === 0 &&
+      Number(sansInvite.collab_buzz_permille) === 0 &&
+      sansInvite.collab_live === false,
+    JSON.stringify(sansInvite),
+  );
+
+  // Un invité légendaire sur le bureau : le bonus de rareté, sans direct.
+  await asPlayer(COLLAB_B, "select public.streamer_guest_set(1, $1::jsonb) as r", [
+    JSON.stringify({ ...carteCollab, id: "collab-b" }),
+  ]);
+  await asPlayer(COLLAB_C, "select public.streamer_guest_set(1, $1::jsonb) as r", [
+    JSON.stringify({ ...carteCollab, id: "collab-c" }),
+  ]);
+  const etatB = (await asPlayer(COLLAB_B, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "plateau : une Légendaire invitée vaut le bonus de sa rareté, et pas le direct",
+    Number(etatB.collab_permille) === collabSql.legendary &&
+      Number(etatB.collab_buzz_permille) === 0 &&
+      etatB.collab_live === false,
+    JSON.stringify({ collab_permille: etatB.collab_permille, fichier: collabSql.legendary }),
+  );
+
+  // Le contrôle qui compte, première moitié : **sans direct**, la vidéo paie la
+  // seule rareté. Deux joueurs, la même graine, le même état de chaîne — donc le
+  // même tirage — et un seul écart : le plateau. Le potentiel nu se relit sur le
+  // témoin (`gained / 3` s'il a buzzé).
+  //
+  // L'ordre compte : ce tirage-là se fait **avant** d'allumer le direct, sinon le
+  // second joueur serait « en direct » lui aussi — la fraîcheur du cache est
+  // globale, comme dans la vraie vie.
+  let graineCollab = null;
+  for (let essai = 1; essai <= 40 && graineCollab === null; essai += 1) {
+    const graine = essai / 43;
+    await client.query("select setseed($1)", [graine]);
+    const premierJet = (await client.query("select floor(random() * 1000)::int as a")).rows[0].a;
+    if (Number(premierJet) < 760) graineCollab = graine;
+  }
+  await client.query("select setseed($1)", [graineCollab]);
+  const videoA = (await asPlayer(COLLAB_A, "select public.streamer_publish('letsplay') as r")).rows[0].r;
+  await client.query("select setseed($1)", [graineCollab]);
+  const videoB = (await asPlayer(COLLAB_B, "select public.streamer_publish('letsplay') as r")).rows[0].r;
+  const potentielNu = Number(videoA.gained) / (videoA.buzz ? 3 : 1);
+  const attenduB =
+    Math.floor((potentielNu * (1000 + collabSql.legendary)) / 1000) * (videoB.buzz ? 3 : 1);
+
+  // Le direct : on le fabrique comme `refresh-live`, puis on le retirera — la
+  // section suivante (le bureau) compte sur un direct absent.
+  const etatLiveAvant = (await client.query("select refreshed_at, streams from public.live_state where id")).rows[0];
+  const loginCollab = (
+    await client.query("select login from public.creators where slug = $1", [legendaireDuo])
+  ).rows[0].login;
+  await client.query(
+    `insert into public.live_streams (login, display_name, viewers, refreshed_at)
+     values ($1, 'Sur le plateau', 9120, now())
+     on conflict (login) do update set viewers = 9120, refreshed_at = now()`,
+    [loginCollab],
+  );
+  await client.query("update public.live_state set refreshed_at = now(), streams = 1");
+  const etatC = (await asPlayer(COLLAB_C, "select public.streamer_status() as r")).rows[0].r;
+  check(
+    "plateau : un invité en direct ajoute son bonus au total, et allume le RAIDS",
+    Number(etatC.collab_permille) === collabSql.legendary + Number(liveSql.permille) &&
+      Number(etatC.collab_buzz_permille) === Number(liveSql.buzz_permille) &&
+      etatC.collab_live === true,
+    JSON.stringify({ collab_permille: etatC.collab_permille, buzz: etatC.collab_buzz_permille }),
+  );
+
+  // Seconde moitié : **avec** le direct, le plateau vaut la rareté **plus** le
+  // bonus du direct, et la vidéo le paie.
+  await client.query("select setseed($1)", [graineCollab]);
+  const videoC = (await asPlayer(COLLAB_C, "select public.streamer_publish('letsplay') as r")).rows[0].r;
+  const attenduC =
+    Math.floor((potentielNu * (1000 + collabSql.legendary + Number(liveSql.permille))) / 1000) *
+    (videoC.buzz ? 3 : 1);
+  check(
+    "plateau : la vidéo paie le plateau (rareté seule, puis rareté + direct)",
+    graineCollab !== null &&
+      videoA.success === true &&
+      videoA.collab === 0 &&
+      videoA.raid === false &&
+      Number(videoA.gained) === potentielNu * (videoA.buzz ? 3 : 1) &&
+      Number(videoB.gained) === attenduB &&
+      Number(videoB.collab) === collabSql.legendary &&
+      videoB.raid === false &&
+      Number(videoC.gained) === attenduC &&
+      Number(videoC.collab) === collabSql.legendary + Number(liveSql.permille) &&
+      videoC.raid === true,
+    JSON.stringify({ graineCollab, videoA, videoB, videoC, attenduB, attenduC }),
+  );
+
+  // La vidéo garde la trace du plateau : deux colonnes, écrites à la publication.
+  const traceVideo = (
+    await client.query(
+      "select collab, raid from public.streamer_videos where user_id = $1 order by day desc limit 1",
+      [COLLAB_C],
+    )
+  ).rows[0];
+  check(
+    "plateau : la vidéo garde le bonus et le raid (les colonnes de la 0041)",
+    Number(traceVideo.collab) === collabSql.legendary + Number(liveSql.permille) &&
+      traceVideo.raid === true,
+    JSON.stringify(traceVideo),
+  );
+
+  // Reposer la vidéo du jour ne rejoue rien : elle ressort avec son plateau.
+  const rejoueC = (await asPlayer(COLLAB_C, "select public.streamer_publish('letsplay') as r")).rows[0].r;
+  check(
+    "plateau : republier la vidéo du jour rend celle qui est rangée, plateau compris",
+    rejoueC.already === true &&
+      Number(rejoueC.collab) === Number(videoC.collab) &&
+      rejoueC.raid === true &&
+      Number(rejoueC.gained) === Number(videoC.gained),
+    JSON.stringify(rejoueC),
+  );
+
+  // Le direct périmé : même invité, même ligne dans `live_streams`, mais un cache
+  // vieux de vingt minutes — le plateau retombe sur la seule rareté.
+  await client.query("update public.live_state set refreshed_at = now() - interval '20 minutes'");
+  const perimeCollab = (await asPlayer(COLLAB_B, "select public.streamer_status() as r")).rows[0].r;
+  await client.query(
+    "update public.live_state set refreshed_at = $1, streams = $2",
+    [etatLiveAvant.refreshed_at, etatLiveAvant.streams],
+  );
+  await client.query("delete from public.live_streams where login = $1", [loginCollab]);
+  check(
+    "plateau : un direct périmé retombe sur la seule rareté du bureau",
+    Number(perimeCollab.collab_permille) === collabSql.legendary &&
+      Number(perimeCollab.collab_buzz_permille) === 0 &&
+      perimeCollab.collab_live === false,
+    JSON.stringify(perimeCollab),
+  );
+
+  // Le barème reste au serveur : un joueur ne lit ni les tables, ni les fonctions.
+  await refuses(
+    "plateau : la fonction du plateau est fermée au joueur",
+    COLLAB_A,
+    "select * from public._streamer_collab($1)",
+    [COLLAB_A],
+    "permission denied",
+  );
+  await refuses(
+    "plateau : le barème de rareté est fermé au joueur",
+    COLLAB_A,
+    "select * from public._streamer_collab_values()",
+    [],
+    "permission denied",
+  );
+
   // --- Les invités sur le bureau (0039) ------------------------------------
   //
   // Le bloc précédent a recollé `0036` puis `0038` pour éprouver la pile, donc
@@ -6510,6 +6703,7 @@ try {
   await client.query(imprevus);
   await client.query(invites);
   await client.query(doublons);
+  await client.query(collab);
 
   // L'accident du 7 octobre, rejoué pour de vrai : on remet la vieille surcharge
   // à cinq paramètres, on vérifie que l'appel du jeu — quatre arguments **typés**,

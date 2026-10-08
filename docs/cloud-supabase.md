@@ -1341,14 +1341,71 @@ il faut des **cartes** : trois paliers de plus (rangs 6 à 8), payés en
   qui peuvent partir (jamais la dernière copie), la sélection comptée en points
   de sacrifice, et une **confirmation** avant que quoi que ce soit ne quitte le
   classeur. Le test `src/lib/supabase-streamer.test.ts` tient les deux barèmes
-  ensemble, et `npm run supabase:verify` (537 contrôles) joue le reste.
+  ensemble, et `npm run supabase:verify` (548 contrôles) joue le reste.
 
-**Poser `0040` après `0039`.** C'est la dernière migration écrite : elle
-remplace `_streamer_setup_levels()`, `streamer_setup_buy()` et
-`schema_versions()`, donc l'ordre du collage est l'ordre des numéros. Le geste
-est celui du projet — `npx supabase db push` dans le dossier du jeu — et pour
-vérifier après : `npx supabase migration list`, ou
-`select public.schema_versions() -> '0040';` qui doit rendre `true`.
+**Poser `0040` après `0039`.** Elle remplace `_streamer_setup_levels()`,
+`streamer_setup_buy()` et `schema_versions()`, donc l'ordre est celui des
+numéros. Le geste est celui du projet — `npx supabase db push` dans le dossier
+du jeu — et pour vérifier après : `npx supabase migration list`, ou
+`select public.schema_versions() -> '0040';` qui doit rendre `true`. La dernière
+migration écrite est la `0041` (juste en dessous) : **les deux se posent d'un
+coup**, `db push` les prend dans l'ordre.
+
+### Le plateau compte sur la vidéo (`0041`)
+
+`0039` a posé les invités **et** le raid : le passage d'un invité pendant
+l'absence, payé une fois par journée de jeu. `0041` ajoute la seconde moitié de
+l'idée, celle qu'on voit **en publiant** : les invités posés sur le bureau
+pèsent sur la **vidéo du jour**.
+
+* **La rareté donne le bonus de plateau** : 2 % pour une Commune, 3 % pour une
+  Peu commune, 5 % pour une Rare, 8 % pour une Épique, **12 % pour une
+  Légendaire** — `_streamer_collab_values()`, miroir exact de
+  `guests.collab.videoPermille`. Une rareté inconnue ne paie **rien**
+  (jointure `left join` : la part manque, elle ne vaut pas un défaut).
+* **Le direct ajoute le moment « RAID ! »** : si l'un des invités streame **au
+  moment de publier** — la même fenêtre de dix minutes que le badge et que le
+  raid (`_streamer_live_window()`, `live_state.refreshed_at`, et le créateur
+  effectivement dans `live_streams`) — le gain prend **+15 %** et la chance de
+  buzz **+25 points** (`_streamer_collab_live()`, miroir de `livePermille` et
+  `liveBuzzPermille`). Le direct **s'ajoute** au total : une Légendaire en
+  direct vaut 27 %.
+* **L'ordre du calcul, c'est la règle.** La croissance du jour (setup compris),
+  le format, **puis le plateau** : `floor(round(base × gain/1000) ×
+  (1000 + collab)/1000)`. Le bonus de rareté passe donc **avant** le ×3 du buzz
+  — une vidéo qui buzze sur un plateau rare paie **trois fois le plateau**.
+  Le direct, lui, pousse `least(1000, buzz_permille + collab.buzz_permille)` :
+  c'est lui qui fait basculer une vidéo ordinaire.
+* **Rien n'est envoyé par le client.** `streamer_publish()` (réécrite ici) relit
+  le bureau (`_streamer_guests_of`), la rareté au **barème**, et le direct dans
+  `live_state` — l'appel ne porte toujours **que le format**. Le plateau est relu
+  **au moment de publier** : si un invité passe en direct entre l'ouverture de
+  l'écran et la publication, c'est le moment-là qui compte.
+* **La vidéo garde la trace** : deux colonnes de plus, `streamer_videos.collab`
+  (le bonus appliqué, pour mille) et `streamer_videos.raid` (`true` si un invité
+  stremait à cet instant). Les vidéos publiées avant valent `0` et `false` — ce
+  qu'elles étaient vraiment. Republier la vidéo du jour rend la vidéo **rangée**,
+  plateau compris : le tirage n'est jamais rejoué.
+* **`streamer_status()` annonce le plateau avant de publier** :
+  `collab_permille`, `collab_buzz_permille`, `collab_live`. C'est ce que la
+  scène affiche — donc le chiffre annoncé est celui qui sera payé.
+* **Côté appareil**, `collabVideoPermille()`, `collabFor()` et `GUEST_COLLAB`
+  (`src/lib/streamer.ts`) portent le barème, `resolveVideo()` le reçoit en
+  cinquième paramètre, et la scène (`src/components/streamer-desk-stage.tsx`)
+  le **montre** : les socles, les vraies cartes, l'aura rouge du direct, le
+  bandeau « RAID ! », et le pied qui résume le plateau. Hors ligne, le moteur
+  local applique le même barème (`playVideoLocally(state, formatId, day, roll,
+  liveSlugs)`). `src/lib/supabase-streamer.test.ts` tient les deux barèmes
+  ensemble, `src/components/streamer-desk-stage.test.tsx` monte la scène dans un
+  DOM, et `npm run supabase:verify` (**548 contrôles**) joue le reste : barème
+  relu du fichier, Légendaire invitée **hors ligne** puis **en direct**, colonnes
+  écrites, republication, direct périmé, et les deux refus de permission.
+
+**Poser `0041` après `0040`.** C'est la dernière migration écrite : elle ajoute
+deux colonnes, puis remplace `streamer_publish()`, `streamer_status()` et
+`schema_versions()`. `npx supabase db push` les applique dans l'ordre des
+numéros ; pour vérifier après, `select public.schema_versions() -> '0041';` doit
+rendre `true`.
 
 ### Le live de vingt secondes (aucune migration)
 

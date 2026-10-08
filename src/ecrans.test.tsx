@@ -113,18 +113,25 @@ describe("les écrans", () => {
     expect(chaine).toContain("Ton setup");
     expect(chaine).toContain("Prochain palier");
     expect(chaine).toContain("points");
-    // Le bureau : deux places, et la règle du raid écrite noir sur blanc.
+    // Le bureau : une **scène** (pas une liste de texte), deux socles libres,
+    // le studio à éteindre palier par palier, et la règle du raid écrite.
+    expect(chaine).toContain("chaine-scene");
+    expect(chaine).toContain("Le bureau du streamer");
     expect(chaine).toContain("Le bureau");
     expect(chaine).toContain("Place 1 libre");
     expect(chaine).toContain("Place 2 libre");
+    expect(chaine).toContain("chaine-prop prop-webcam");
+    expect(document.querySelectorAll(".chaine-slot.libre")).toHaveLength(2);
+    expect(chaine).toContain("Invite une carte de ta collection");
     expect(chaine).toContain("une fois par journée de jeu");
     banc.fermer();
   });
 
-  it("le bureau ne propose que des créateurs en direct, et le dit quand il n'y en a aucun", async () => {
+  it("le socle du bureau ouvre le classeur, qui ne propose que des créateurs en direct", async () => {
     await application();
     banc.appuyer(/Ta chaîne/);
-    banc.appuyer("Choisir un invité");
+    // Le « + » du socle de la place 1 : c'est le geste de la scène.
+    banc.appuyer(/^Place 1 libre/);
     const choix = banc.ecran("10-chaine-bureau-choix");
     // Ce que l'écran promet, et ce qu'il refuse de faire : une liste inventée.
     expect(choix).toContain("Seuls les créateurs");
@@ -133,7 +140,10 @@ describe("les écrans", () => {
     // proposé, et l'écran le dit au lieu de laisser une liste vide muette.
     expect(choix).toContain("Aucun créateur de ta collection n'est en direct");
     banc.appuyer("Fermer");
-    expect(banc.ecran("10-chaine-bureau-ferme")).toContain("Place 1 libre");
+    // Fermer la feuille rend la scène telle quelle : la place est toujours là.
+    const ferme = banc.ecran("10-chaine-bureau-ferme");
+    expect(ferme).toContain("Place 1 libre");
+    expect(ferme).toContain("Le bureau du streamer");
     banc.fermer();
   });
 

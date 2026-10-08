@@ -2058,8 +2058,14 @@ export function publishStreamerLocally(
   formatId: string,
   now = Date.now(),
   roll?: (maxExclusive: number) => number,
+  /**
+   * Les créateurs invités **en direct** maintenant (`liveGuestSlugs()`), pour le
+   * moment « RAID ! » : sans table du direct, l'ensemble est vide et la vidéo
+   * garde seulement le bonus de rareté du plateau.
+   */
+  liveSlugs: ReadonlySet<string> = new Set<string>(),
 ): { state: PlayerState; video: StreamerVideoState; already: boolean } | null {
-  const played = playVideoLocally(state.streamer, formatId, gameDay(now), roll);
+  const played = playVideoLocally(state.streamer, formatId, gameDay(now), roll, liveSlugs);
   if (!played) return null;
   return {
     state: applyStreamerMirror(state, played.state, now),
