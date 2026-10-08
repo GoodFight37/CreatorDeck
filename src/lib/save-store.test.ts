@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { PACKS } from "@/lib/catalog";
+import { CREATORS, PACKS } from "@/lib/catalog";
 import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
 import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
+import { gameDay } from "@/lib/progression";
+import { setupBonusPermille } from "@/lib/streamer";
 import {
   LEGACY_SAVE_KEYS,
   SAVE_KEY,
@@ -149,6 +151,83 @@ describe("migration", () => {
     expect(view.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(first.slugs.length * 4);
   });
 
+  it("met à niveau une sauvegarde v5 : les jalons redeviennent réclamables", () => {
+    // La récompense des jalons n'existait pas en v5 : aucune partie ne perd
+    // quoi que ce soit, elle peut simplement réclamer ce qu'elle a déjà atteint.
+    const v5 = {
+      ...createInitialState(T0),
+      version: 5,
+      openings: 3,
+    };
+    delete (v5 as Record<string, unknown>).claimedMilestones;
+
+    const storage = memoryStorage();
+    storage.setItem("creatordeck.save.v5", JSON.stringify(v5));
+    const state = loadState(storage, T0 + 5);
+
+    expect(state?.version).toBe(SAVE_VERSION);
+    expect(state?.openings).toBe(3);
+    expect(state?.claimedMilestones).toEqual([]);
+    // L'ancienne clé disparaît : la sauvegarde vit désormais sous la clé v6.
+    expect(storage.data.has("creatordeck.save.v5")).toBe(false);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
+  });
+
+  it("met à niveau une sauvegarde v6 : jetons, pity et missions repartent de zéro", () => {
+    // Ces mécaniques n'existaient pas en v6 : une partie qui arrive de là-bas
+    // n'a rien gagné, donc ses compteurs sont à zéro — et sa journée de jeu est
+    // celle du chargement, pas une date vide qui ferait « mission neuve » à
+    // chaque ouverture.
+    const v6 = {
+      ...createInitialState(T0),
+      version: 6,
+      level: 4,
+      cards: [],
+    };
+    for (const key of ["tokens", "pityCounter", "missionDay", "missions", "streakDay", "streak", "streakJackpot"]) {
+      delete (v6 as Record<string, unknown>)[key];
+    }
+
+    const state = sanitizeState(v6, T0);
+    expect(state?.version).toBe(SAVE_VERSION);
+    expect(state?.level).toBe(4);
+    expect(state).toMatchObject({
+      tokens: 0,
+      pityCounter: 0,
+      missions: {},
+      streakDay: "",
+      streak: 0,
+      streakJackpot: false,
+    });
+    expect(state?.missionDay).toBe(gameDay(T0));
+  });
+
+  it("ramène un compteur de pity trafiqué à une valeur sensée", () => {
+    // Le compteur local ne décide de rien en ligne (le serveur relit son
+    // journal), mais un écran qui afficherait « -3 boosters » serait faux.
+    const raw = { ...createInitialState(T0), pityCounter: -3, tokens: -80 };
+    expect(sanitizeState(raw, T0)).toMatchObject({ pityCounter: 0, tokens: 0 });
+  });
+
+  it("borne la progression des missions et oublie les identifiants inconnus", () => {
+    const raw = {
+      ...createInitialState(T0),
+      missionDay: gameDay(T0),
+      missions: { pack: 40, recycle: 1, family: -2, fantome: 3 },
+    };
+    const missions = sanitizeState(raw, T0)?.missions ?? {};
+    expect(missions.pack).toBe(2);
+    expect(missions.recycle).toBe(1);
+    expect(missions.family).toBeUndefined();
+    expect(Object.keys(missions)).toEqual(["pack", "recycle"]);
+  });
+
+  it("filtre les jalons réclamés inconnus et les doublons", () => {
+    const raw = { ...createInitialState(T0), claimedMilestones: ["first", "first", "fantome", 7] };
+    expect(sanitizeState(raw, T0)?.claimedMilestones).toEqual(["first"]);
+    expect(sanitizeState({ ...createInitialState(T0), claimedMilestones: "first" }, T0)?.claimedMilestones).toEqual([]);
+  });
+
   it("filtre les paliers réclamés inconnus et borne les compteurs", () => {
     const season = SEASONS[0];
     const raw = {
@@ -175,5 +254,32 @@ describe("export/import", () => {
   it("explique clairement les erreurs", () => {
     expect(() => importSave("pas du json")).toThrowError(SaveError);
     expect(() => importSave('{"version":42}')).toThrowError(/incompatible/);
+  });
+});
+
+describe("marque d'échange", () => {
+  it("conserve `fromTrade` : sans elle, un échange serait appliqué deux fois", () => {
+    const state = {
+      ...createInitialState(T0),
+      cards: [
+        {
+          id: "carte-echangee",
+          creatorSlug: CREATORS[0].slug,
+          rarity: CREATORS[0].rarity,
+          variant: "holo" as const,
+          obtainedAt: T0,
+          rareDrop: false,
+          fromTrade: 42,
+        },
+      ],
+    };
+    const storage = memoryStorage();
+    saveState(storage, state);
+    const restored = loadState(storage, T0 + 1_000);
+
+    expect(restored?.cards[0]?.fromTrade).toBe(42);
+    // Une valeur bricolée à la main ne passe pas.
+    const broken = exportSave({ ...state, cards: [{ ...state.cards[0], fromTrade: -3 }] } as typeof state);
+    expect(importSave(broken, T0).cards[0]?.fromTrade).toBeUndefined();
   });
 });

@@ -23,7 +23,6 @@ export function ThemeSheet({
       <div className="odds-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">COSMÉTIQUES</p>
             <h2>Thème du classeur</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">
@@ -52,7 +51,7 @@ export function ThemeSheet({
                 style={{
                   // Aperçu honnête : le fond, les panneaux puis les accents,
                   // c'est-à-dire ce que le thème change réellement à l'écran.
-                  background: `linear-gradient(120deg, ${theme.tokens.bg} 0%, ${theme.tokens.panel3} 42%, ${theme.tokens.purple} 78%, ${theme.tokens.gold} 100%)`,
+                  background: `linear-gradient(120deg, ${theme.tokens.bg} 0%, ${theme.tokens.panel3} 42%, ${theme.tokens.accent} 78%, ${theme.tokens.gold} 100%)`,
                 }}
                 aria-hidden="true"
               >

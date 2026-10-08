@@ -36,7 +36,6 @@ export function StudioSheet({ onClose }: { onClose: () => void }) {
       <div className="odds-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">LABORATOIRE</p>
             <h2>Studio de tirages</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">

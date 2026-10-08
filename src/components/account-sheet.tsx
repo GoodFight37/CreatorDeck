@@ -1,109 +1,101 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import type { CSSProperties } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   Check,
-  CloudOff,
-  Crown,
   Download,
   Info,
+  KeyRound,
   LogOut,
-  Mail,
-  Plus,
+  Radio,
   RefreshCw,
-  Search,
-  Star,
-  Trophy,
+  ShieldCheck,
   Upload,
-  UserPlus,
+  UserRound,
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useLive } from "@/hooks/use-live";
+import { liveStore } from "@/lib/live-store";
 import { useGame } from "@/hooks/use-game";
-import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
+import { cloudStore } from "@/lib/cloud/cloud-store";
+import { PASSWORD_MIN, PASSWORD_WARNING, emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
-import { MAX_SHOWCASE, knownShowcase, ownedCreatorSlugs, toggleShowcase } from "@/lib/cloud/showcase";
-import { describeSync } from "@/lib/cloud/sync";
-import { CREATOR_BY_SLUG, creatorImage, RARITY_META } from "@/lib/catalog";
+import { masquerEmail, type AccountFocus } from "@/lib/account-display";
+import { SyncBadge } from "@/components/account/sync-badge";
+import { LeaderboardSection } from "@/components/account/leaderboard-section";
+import { ShowcasePanel } from "@/components/account/showcase-panel";
+import { SignInPanel } from "@/components/account/sign-in-panel";
+import { TradesPanel } from "@/components/account/trades-panel";
 
-const METRICS: { id: LeaderboardMetric; label: string }[] = [
-  { id: "unique_creators", label: "Cartes uniques" },
-  { id: "total_cards", label: "Cartes" },
-  { id: "legendary_cards", label: "Légendaires" },
-];
 
-const PICKER_LIMIT = 60;
-
-function ShowcaseCard({ slug, small = false }: { slug: string; small?: boolean }) {
-  const creator = CREATOR_BY_SLUG.get(slug);
-  if (!creator) return null;
-
-  const rarity = RARITY_META[creator.rarity];
-  const style = {
-    "--rarity": rarity.color,
-    "--rarity-glow": rarity.glow,
-  } as CSSProperties;
-
-  return (
-    <figure className={`showcase-card${small ? " is-small" : ""}`} style={style}>
-      <span className="showcase-photo">
-        <Image src={creatorImage(creator)} width={96} height={96} alt={creator.displayName} unoptimized />
-      </span>
-      <figcaption>
-        <b>{creator.displayName}</b>
-        <span>{rarity.label}</span>
-      </figcaption>
-    </figure>
-  );
+/**
+ * Ce que l'app sait du direct, en une phrase. Trois cas, et le troisième est
+ * celui qui explique un badge absent alors que tout a l'air branché : la liste
+ * est là, mais elle a plus de dix minutes — donc on ne montre rien.
+ */
+function describeLive(live: {
+  count: number;
+  refreshedAt: number | null;
+  stale: boolean;
+  loading: boolean;
+}): string {
+  if (live.loading) return "Lecture de la liste…";
+  if (!live.refreshedAt) {
+    return "Aucune donnée pour l'instant. La liste se remplit au premier rafraîchissement ; si rien ne change, personne n'est encore joignable.";
+  }
+  const minutes = Math.max(0, Math.round((Date.now() - live.refreshedAt) / 60_000));
+  const age = minutes < 1 ? "à l'instant" : minutes < 60 ? `il y a ${minutes} min` : `il y a ${Math.round(minutes / 60)} h`;
+  if (live.stale) {
+    return `Liste vieille de plus de dix minutes (${age}) : elle n'est plus affichée sur les cartes. Dernier relevé : ${live.count} en direct.`;
+  }
+  return live.count
+    ? `${live.count} créateur${live.count > 1 ? "s" : ""} en direct, relevé ${age}.`
+    : `Personne du catalogue n'est en direct, relevé ${age}.`;
 }
 
 /**
- * Écran « Compte & cloud » : identification, synchronisation de la partie et
- * classement mondial.
+ * Écran « Mon compte » : trois blocs, dans cet ordre de lecture.
  *
- * Deux façons d'avoir un compte, dans cet ordre :
- *  1. **compte invité** — un identifiant créé en un appui, sans e-mail, sans
- *     SMTP, donc utilisable tout de suite. En contrepartie il vit avec la
- *     session de l'appareil ;
- *  2. **adresse e-mail + code** — pour retrouver sa collection ailleurs, mais
- *     il faut un SMTP configuré côté Supabase (le service d'e-mail intégré est
- *     réservé aux tests).
+ *  1. **ton compte** — qui tu es, le nom au classement, et la pastille verte de
+ *     sauvegarde. La synchronisation ne se pilote plus à la main : elle a lieu
+ *     en tâche de fond, et il n'y a rien à décider ;
+ *  2. **ton profil public** — pseudo, vitrine, échanges : ce que les autres
+ *     voient ;
+ *  3. **ton compte, pour de vrai** — garder l'accès (adresse, mot de passe) et
+ *     se déconnecter.
  *
- * Rien n'est envoyé tant que le joueur n'a pas fait ce choix, et charger le
- * cloud demande deux appuis (le bouton se transforme en confirmation) : c'est
- * la seule action qui peut remplacer une partie locale.
+ * Le mélange des deux derniers blocs était le vrai défaut de cet écran : on y
+ * réglait sa vitrine au milieu des boutons d'infrastructure. Ils sont
+ * maintenant séparés, et l'infrastructure a disparu.
+ *
+ * Deux façons d'avoir un compte : un **compte invité** (un appui, sans adresse,
+ * utilisable tout de suite) ou une **adresse e-mail** avec mot de passe, ou,
+ * à défaut, un code de confirmation.
  */
-export function AccountSheet({ onClose }: { onClose: () => void }) {
+export function AccountSheet({
+  onClose,
+  focus,
+}: {
+  onClose: () => void;
+  /** Section à amener sous les yeux à l'ouverture (« Classement » du profil). */
+  focus?: AccountFocus;
+}) {
   const cloud = useCloud();
+  const live = useLive();
   const state = useGame();
-  const [email, setEmail] = useState(cloud.email ?? "");
-  const [code, setCode] = useState("");
+  // Le seul geste qui remplace une partie : il demande deux appuis (le bouton
+  // se transforme en confirmation). Le jeu ne décide pas à la place du joueur
+  // laquelle des deux parties est la bonne.
   const [confirmPull, setConfirmPull] = useState(false);
   // Brouillon du nom : `null` tant que le joueur n'a rien tapé, pour suivre la
   // valeur du serveur sans synchroniser un état par un effet.
   const [nameDraft, setNameDraft] = useState<string | null>(null);
-  const [showcaseDraft, setShowcaseDraft] = useState<string[] | null>(null);
-  const [query, setQuery] = useState("");
-  const [openProfile, setOpenProfile] = useState<string | null>(null);
-  const owned = useMemo(() => ownedCreatorSlugs(state?.cards ?? []), [state]);
-  const pinned = knownShowcase(cloud.showcase);
-  const selection = showcaseDraft ?? pinned;
-  const results = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase("fr");
-    return owned
-      .filter((slug) => {
-        const creator = CREATOR_BY_SLUG.get(slug);
-        if (!creator) return false;
-        if (!needle) return true;
-        return `${slug} ${creator.displayName} ${creator.login}`.toLocaleLowerCase("fr").includes(needle);
-      })
-      .slice(0, PICKER_LIMIT);
-  }, [owned, query]);
-  const showcaseChanged =
-    selection.length !== pinned.length || selection.some((slug, index) => slug !== pinned[index]);
+  // Compte : adresse à attacher (compte invité) et mot de passe.
+  const [keepEmail, setKeepEmail] = useState("");
+  const [keepPassword, setKeepPassword] = useState("");
+  const [keepCode, setKeepCode] = useState("");
 
   // Le classement et le nom ne sont chargés qu'à l'ouverture, et seulement si
   // on est connecté : aucun appel réseau pour un joueur hors ligne.
@@ -111,6 +103,7 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
     if (cloud.configured && cloud.userId) {
       void cloudStore.loadLeaderboard();
       void cloudStore.loadProfile();
+      void cloudStore.loadTrades();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -119,12 +112,11 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
   const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Compte et cloud">
+    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Mon compte">
       <div className="odds-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">COMPTE</p>
-            <h2>Cloud &amp; classement</h2>
+            <h2>Mon compte</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">
             <X size={18} />
@@ -135,32 +127,144 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
           <div className="account-note neutral">
             <Info size={15} />
             <div>
-              <strong>Cloud non configuré dans cette version</strong>
+              <strong>Joue pour toi, sur cet appareil</strong>
               <span>{CLOUD_DISABLED_HINT}</span>
             </div>
           </div>
         ) : (
           <>
             {cloud.userId ? (
+              <>
               <section className="account-card">
                 <div className="account-who">
-                  <span className="settings-icon purple">
-                    <Mail size={16} />
+                  <span className="settings-icon accent">
+                    <UserRound size={16} />
                   </span>
                   <div>
-                    <strong>{cloud.email ?? "Compte invité (sans e-mail)"}</strong>
+                    <strong>{cloud.displayName?.trim() || (cloud.email ? "Compte lié" : "Compte invité")}</strong>
                     <span>
-                      Projet {cloud.project} ·{" "}
-                      {describeSync({ action: cloud.decision ?? "noop", reason: "" }, cloud.remoteUpdatedAt)}
+                      {cloud.email ? masquerEmail(cloud.email) : "Sans adresse : ce compte vit sur cet appareil"}
                     </span>
                   </div>
-                  {cloud.pending ? (
-                    <span className="account-badge">à envoyer</span>
-                  ) : (
-                    <Check size={17} className="success-icon" />
-                  )}
+                  <span className="account-badge">compte lié</span>
                 </div>
+                <SyncBadge detail />
 
+                <p className="account-hint">
+                  {cloud.email
+                    ? "Ta partie suit ce compte : tu la retrouves sur n'importe quel téléphone."
+                    : "Ce compte est invité : l'enregistrement en ligne suit cet appareil. Attache une adresse pour le retrouver ailleurs."}
+                </p>
+              </section>
+
+              </>
+            ) : (
+              <SignInPanel />
+            )}
+
+            {/* Rien de la mécanique ici : ni bouton d'envoi, ni d'adresse à
+                copier. L'enregistrement se fait en tâche de fond, et la seule
+                chose qui se lit est la pastille de la carte du haut. */}
+
+            {/*
+              * Le seul moment où le joueur a une décision à prendre sur sa
+              * partie. Le serveur n'applique jamais une partie distante tout
+              * seul (ce serait effacer sans le dire) — et l'écran, lui, ne
+              * demande pas au joueur d'écrire « push » ou « pull » : il lui
+              * montre deux parties et deux phrases.
+              *
+              * C'est ce bloc qui remplace « Charger le cloud » et « Envoyer ma
+              * collection » : les mêmes gestes, mais seulement quand ils
+              * servent, et dits comme des choix.
+              */}
+            {cloud.userId && (cloud.decision === "pull" || cloud.decision === "conflict") ? (
+              <section className="account-card account-choice">
+                <div className="account-head">
+                  <AlertTriangle size={15} />
+                  <strong>Deux parties t&apos;attendent</strong>
+                </div>
+                <p className="account-hint">
+                  Celle de cet appareil et celle gardée en ligne ne racontent pas la même progression.
+                  Choisis celle que tu gardes : c&apos;est la seule fois où le jeu te le demande.
+                </p>
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className={`account-button ${confirmPull ? "danger" : ""}`}
+                    disabled={cloud.busy}
+                    onClick={() => {
+                      if (!confirmPull) {
+                        setConfirmPull(true);
+                        return;
+                      }
+                      setConfirmPull(false);
+                      void cloudStore.sync("pull");
+                    }}
+                  >
+                    <Download size={14} />
+                    {confirmPull ? "Confirmer : remplacer ma partie" : "Reprendre la partie en ligne"}
+                  </button>
+                  <button
+                    type="button"
+                    className="account-button ghost"
+                    disabled={cloud.busy}
+                    onClick={() => void cloudStore.sync("push")}
+                  >
+                    <Upload size={14} /> Garder celle de cet appareil
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {/*
+              * L'état du direct, sur la même ligne que le diagnostic : c'est la
+              * seule question qu'on se pose quand le badge n'apparaît pas —
+              * « est-ce que l'app sait qui streame, ou est-ce que personne ne
+              * streame ? ». La réponse est dans le nombre et dans son âge.
+              */}
+            {cloud.configured ? (
+              <section className="account-card">
+                <div className="account-head">
+                  <Radio size={15} />
+                  <strong>Direct</strong>
+                </div>
+                <p className="account-hint">{describeLive(live)}</p>
+                {live.error ? <p className="account-hint">{live.error}</p> : null}
+                <div className="account-actions">
+                  <button
+                    type="button"
+                    className="account-button ghost"
+                    disabled={live.loading}
+                    onClick={() => void liveStore.refresh({ force: true })}
+                  >
+                    <RefreshCw size={14} /> {live.loading ? "Lecture…" : "Rafraîchir la liste"}
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            {message ? (
+              <div className={`account-note ${cloud.isError ? "error" : "ok"}`}>
+                {cloud.isError ? <AlertTriangle size={15} /> : <Info size={15} />}
+                <span>{message}</span>
+              </div>
+            ) : null}
+
+            {/* Ce que les autres voient de toi : pseudo, vitrine, échanges.
+                C'est le profil public, pas un réglage de compte — d'où son
+                titre, et son ordre : il vient après « qui je suis ». */}
+            {cloud.userId ? (
+              <>
+              <section className="menu-group" aria-label="Profil public">
+                <h2>Profil public</h2>
+              </section>
+              {/*
+               * Le pseudo est une affaire **publique** : c'est le nom que les
+               * autres lisent au classement et sur la fiche. Il vivait dans la
+               * carte d'identité, au-dessus de la vitrine et des échanges —
+               * c'est-à-dire à l'endroit qui n'était pas le sien.
+               */}
+              <section className="account-card">
                 <label className="account-field">
                   <span>Nom au classement</span>
                   <input
@@ -185,71 +289,45 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                     <Check size={14} /> Enregistrer le nom
                   </button>
                 </div>
-
-                <div className="account-actions">
-                  <button type="button" className="account-button" disabled={cloud.busy} onClick={() => void cloudStore.sync("auto")}>
-                    <RefreshCw size={14} /> Synchroniser
-                  </button>
-                  <button type="button" className="account-button" disabled={cloud.busy} onClick={() => void cloudStore.sync("push")}>
-                    <Upload size={14} /> Envoyer ma collection
-                  </button>
-                  <button
-                    type="button"
-                    className={`account-button ${confirmPull ? "danger" : ""}`}
-                    disabled={cloud.busy}
-                    onClick={() => {
-                      if (!confirmPull) {
-                        setConfirmPull(true);
-                        return;
-                      }
-                      setConfirmPull(false);
-                      void cloudStore.sync("pull");
-                    }}
-                  >
-                    <Download size={14} />
-                    {confirmPull ? "Confirmer : remplacer ma partie" : "Charger le cloud"}
-                  </button>
-                  <button
-                    type="button"
-                    className="account-button ghost"
-                    disabled={cloud.busy}
-                    onClick={() => {
-                      setNameDraft(null);
-                      setShowcaseDraft(null);
-                      void cloudStore.signOut();
-                    }}
-                  >
-                    <LogOut size={14} /> Déconnexion
-                  </button>
-                </div>
-                <p className="account-hint">
-                  L&apos;envoi est automatique ~20 s après ta dernière action. « Charger le cloud » remplace la partie de
-                  cet appareil : à ne faire que si tu veux reprendre celle d&apos;un autre téléphone.
-                  {cloud.email
-                    ? ""
-                    : " Ce compte est invité : il est lié à la session de cet appareil tant qu'aucune adresse e-mail n'y est attachée."}
-                </p>
               </section>
-            ) : (
+              </>
+            ) : null}
+            {cloud.userId ? <LeaderboardSection focus={focus} /> : null}
+            {cloud.userId ? <ShowcasePanel /> : null}
+            {cloud.userId ? (
               <section className="account-card">
-                <p className="account-intro">
-                  Un compte sert à sauvegarder ta collection et à figurer au classement. La partie reste jouable sans
-                  compte : tout est local, comme aujourd&apos;hui.
-                </p>
-                <button type="button" className="account-button wide" disabled={cloud.busy} onClick={() => void cloudStore.signInAsGuest()}>
-                  <UserPlus size={14} /> Créer un compte invité (sans e-mail)
-                </button>
-                <p className="account-hint">
-                  Le plus rapide : aucun e-mail, aucun SMTP, aucun domaine. Le compte vit avec la session de cet
-                  appareil — l&apos;attacher à une adresse e-mail viendra ensuite, quand un envoi d&apos;e-mails sera
-                  configuré.
-                </p>
+                {/* Le carnet peut viser cette section : la feuille le dit au
+                    panneau, qui s'ouvre et se met sous les yeux. */}
+                <TradesPanel focus={focus} />
+              </section>
+            ) : null}
 
-                <details className="account-details">
-                  <summary>Ou se connecter par e-mail (nécessite un SMTP)</summary>
-                  <p className="account-hint">
-                    Supabase n&apos;envoie des e-mails qu&apos;à l&apos;équipe du projet par défaut : configure
-                    Authentication → Emails (Brevo, Resend… sont gratuits) pour utiliser cette voie.
+            {/* Les réglages du compte : ce qui touche à l'accès, pas au jeu.
+                Ils sont rangés en bas, une fois le reste lu — et la déconnexion
+                ferme la marche, comme elle ferme la session. */}
+            {cloud.userId ? (
+              <section className="menu-group" aria-label="Réglages du compte">
+                <h2>Réglages du compte</h2>
+              </section>
+            ) : null}
+            {/*
+              * Garder l'accès, et le perdre : les deux gestes du compte. Le
+              * bloc « Garder ce compte » (adresse à attacher) et le changement
+              * de mot de passe vivaient au milieu de l'écran, entre la vitrine
+              * et les échanges — au-dessus de ce qu'ils n'ont rien à voir.
+              */}
+            {cloud.email === null ? (
+                <section className="account-card">
+                  <div className="account-head">
+                    <ShieldCheck size={15} />
+                    <strong>Garder ce compte</strong>
+                  </div>
+                  <p className="account-intro">
+                    Ce compte est <b>invité</b> : il vit avec la session de cet appareil. Si tu la perds
+                    (réinstallation, données effacées), la collection est perdue. Attache une adresse pour la
+                    retrouver ailleurs. <b>Deux chemins</b> : avec un mot de passe, tout est immédiat et aucun
+                    e-mail n&apos;est envoyé ; sans mot de passe, un code à 6 chiffres arrive par e-mail, à
+                    saisir juste après.
                   </p>
                   <label className="account-field">
                     <span>Adresse e-mail</span>
@@ -258,262 +336,165 @@ export function AccountSheet({ onClose }: { onClose: () => void }) {
                       inputMode="email"
                       autoComplete="email"
                       placeholder="toi@exemple.fr"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
+                      value={keepEmail}
+                      onChange={(event) => setKeepEmail(event.target.value)}
                     />
                   </label>
-                  <button
-                    type="button"
-                    className="account-button wide"
-                    disabled={cloud.busy || !email.includes("@")}
-                    onClick={() => void cloudStore.requestCode(email.trim())}
-                  >
-                    <Mail size={14} /> Recevoir un code
-                  </button>
                   <label className="account-field">
-                    <span>Code à 6 chiffres</span>
+                    <span>Mot de passe ({PASSWORD_MIN} caractères minimum, facultatif)</span>
                     <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      placeholder="123456"
-                      maxLength={6}
-                      value={code}
-                      onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                      type="password"
+                      autoComplete="new-password"
+                      placeholder="Conseillé : sans envoi d'e-mail"
+                      value={keepPassword}
+                      onChange={(event) => setKeepPassword(event.target.value)}
                     />
                   </label>
-                  <button
-                    type="button"
-                    className="account-button wide"
-                    disabled={cloud.busy || code.length < 6}
-                    onClick={() => void cloudStore.verifyCode(email.trim(), code)}
-                  >
-                    <Check size={14} /> Valider le code
-                  </button>
-                </details>
-              </section>
-            )}
-
-            {message ? (
-              <div className={`account-note ${cloud.isError ? "error" : "ok"}`}>
-                {cloud.isError ? <AlertTriangle size={15} /> : <Info size={15} />}
-                <span>{message}</span>
-              </div>
-            ) : null}
-
-            {cloud.userId ? (
-              <section className="account-card">
-                <div className="account-head">
-                  <Star size={15} />
-                  <strong>Ma vitrine</strong>
-                  <span className="account-count">{pinned.length}/{MAX_SHOWCASE}</span>
-                </div>
-                {pinned.length ? (
-                  <div className="showcase-grid">
-                    {pinned.map((slug) => <ShowcaseCard key={slug} slug={slug} />)}
-                  </div>
-                ) : (
-                  <p className="account-hint">Aucune carte épinglée. Choisis-en jusqu&apos;à {MAX_SHOWCASE} parmi les créateurs que tu possèdes.</p>
-                )}
-
-                <details className="account-details">
-                  <summary>{pinned.length ? "Changer ma vitrine" : "Choisir mes cartes"}</summary>
-                  <p className="account-hint">
-                    Tu possèdes {owned.length} créateur{owned.length === 1 ? "" : "s"} distinct{owned.length === 1 ? "" : "s"}. Épingle jusqu&apos;à {MAX_SHOWCASE} cartes sur ton profil public.
-                  </p>
-                  <div className="showcase-picked" role="group" aria-label="Emplacements de la vitrine">
-                    {Array.from({ length: MAX_SHOWCASE }, (_, index) => {
-                      const slug = selection[index];
-                      if (slug) {
-                        const creator = CREATOR_BY_SLUG.get(slug);
-                        return (
-                          <div className="showcase-slot filled" key={`filled-${slug}`}>
-                            <ShowcaseCard slug={slug} small />
-                            <button
-                              type="button"
-                              className="showcase-remove"
-                              aria-label={`Retirer ${creator?.displayName ?? slug} de la vitrine`}
-                              title="Retirer cette carte"
-                              disabled={cloud.busy}
-                              onClick={() => setShowcaseDraft(selection.filter((_, selectedIndex) => selectedIndex !== index))}
-                            >
-                              <X size={10} />
-                            </button>
-                          </div>
-                        );
-                      }
-                      return (
-                        <span className="showcase-slot vide" key={`empty-${index}`} aria-label={`Emplacement libre ${index + 1}`}>
-                          <Plus size={14} />
-                        </span>
-                      );
-                    })}
-                  </div>
-
-                  <label className="account-field">
-                    <span><Search size={10} /> Rechercher un créateur possédé</span>
-                    <input
-                      type="search"
-                      placeholder="Nom, identifiant…"
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value)}
-                    />
-                  </label>
-                  <div className="showcase-picker" role="group" aria-label="Créateurs possédés">
-                    {results.map((slug) => {
-                      const creator = CREATOR_BY_SLUG.get(slug);
-                      if (!creator) return null;
-                      const selectedIndex = selection.indexOf(slug);
-                      const selected = selectedIndex >= 0;
-                      return (
-                        <button
-                          type="button"
-                          key={slug}
-                          className={`showcase-choice${selected ? " on" : ""}`}
-                          aria-pressed={selected}
-                          disabled={cloud.busy || (!selected && selection.length >= MAX_SHOWCASE)}
-                          onClick={() => setShowcaseDraft(toggleShowcase(selection, slug))}
-                        >
-                          <Image src={creatorImage(creator)} width={36} height={36} alt="" unoptimized />
-                          <span>{creator.displayName}</span>
-                          {selected ? <b aria-label={`Position ${selectedIndex + 1}`}>{selectedIndex + 1}</b> : null}
-                        </button>
-                      );
-                    })}
-                    {!results.length ? (
-                      <p className="account-hint">
-                        {owned.length ? "Aucun créateur ne correspond à cette recherche." : "Tu ne possèdes encore aucun créateur à épingler."}
-                      </p>
-                    ) : null}
-                    {results.length === PICKER_LIMIT && owned.length > PICKER_LIMIT ? (
-                      <p className="account-hint">Affichage limité aux {PICKER_LIMIT} premiers résultats. Affine ta recherche pour trouver une autre carte.</p>
-                    ) : null}
-                  </div>
+                  {emailProblem(keepEmail) && keepEmail ? (
+                    <p className="account-hint">{emailProblem(keepEmail)}</p>
+                  ) : null}
+                  {passwordProblem(keepPassword) && keepPassword ? (
+                    <p className="account-hint">{passwordProblem(keepPassword)}</p>
+                  ) : null}
                   <div className="account-actions">
                     <button
                       type="button"
                       className="account-button"
-                      disabled={cloud.busy || !showcaseChanged}
-                      onClick={() => {
-                        void cloudStore.setShowcase(selection).then((ok) => {
-                          if (ok) {
-                            setShowcaseDraft(null);
-                            setQuery("");
-                          }
-                        });
-                      }}
+                      disabled={
+                        cloud.busy ||
+                        !keepEmail.trim() ||
+                        Boolean(emailProblem(keepEmail)) ||
+                        Boolean(keepPassword && passwordProblem(keepPassword))
+                      }
+                      onClick={() =>
+                        void cloudStore
+                          .keepAccount({ email: keepEmail, password: keepPassword || undefined })
+                          .then((outcome) => {
+                            if (outcome.status === "done") {
+                              setKeepPassword("");
+                              setKeepEmail("");
+                            }
+                          })
+                      }
                     >
-                      <Check size={14} /> Enregistrer la vitrine
-                    </button>
-                    <button
-                      type="button"
-                      className="account-button ghost"
-                      disabled={cloud.busy}
-                      onClick={() => {
-                        setShowcaseDraft(null);
-                        setQuery("");
-                      }}
-                    >
-                      Annuler
+                      <ShieldCheck size={14} /> Attacher l&apos;adresse
                     </button>
                   </div>
-                </details>
-              </section>
-            ) : null}
-
+                  {keepPassword ? (
+                    <p className="account-hint">
+                      {PASSWORD_WARNING} Le mot de passe n&apos;est envoyé nulle part : il reste dans ton compte en ligne, illisible.
+                    </p>
+                  ) : (
+                    <p className="account-hint">
+                      Sans mot de passe, l&apos;adresse devra être confirmée par un code reçu par e-mail.
+                    </p>
+                  )}
+                  {cloud.pendingEmail ? (
+                    <div className="account-pending">
+                      <label className="account-field">
+                        {/* L'adresse reste reconnaissable, jamais lisible : c'est la même
+                            règle que sur la carte d'identité. */}
+                        <span>Code reçu à {masquerEmail(cloud.pendingEmail)}</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="one-time-code"
+                          maxLength={6}
+                          placeholder="123456"
+                          value={keepCode}
+                          onChange={(event) => setKeepCode(event.target.value)}
+                        />
+                      </label>
+                      <div className="account-actions">
+                        <button
+                          type="button"
+                          className="account-button"
+                          disabled={cloud.busy || !/^\d{6}$/.test(keepCode.replace(/\D/g, ""))}
+                          onClick={() =>
+                            void cloudStore.confirmEmailCode(keepCode).then((outcome) => {
+                              if (outcome.status === "done") setKeepCode("");
+                            })
+                          }
+                        >
+                          <Check size={14} /> Confirmer l&apos;adresse
+                        </button>
+                        <button
+                          type="button"
+                          className="account-button ghost"
+                          disabled={cloud.busy}
+                          onClick={() => void cloudStore.resendEmailCode()}
+                        >
+                          <RefreshCw size={13} /> Renvoyer le code
+                        </button>
+                      </div>
+                      <p className="account-hint">
+                        Le code n&apos;arrive pas ? Choisis plutôt un mot de passe (il ne demande aucun envoi) : ton
+                        adresse sera reconnue tout de suite.
+                      </p>
+                    </div>
+                  ) : null}
+                </section>
+              ) : (
+                <section className="account-card">
+                  <details className="account-details">
+                    <summary>
+                      <KeyRound size={12} /> Définir ou changer mon mot de passe
+                    </summary>
+                    <p className="account-hint">
+                      Utile pour te connecter ailleurs sans attendre un code par e-mail.
+                    </p>
+                    <label className="account-field">
+                      <span>Nouveau mot de passe ({PASSWORD_MIN} caractères minimum)</span>
+                      <input
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="Mot de passe"
+                        value={keepPassword}
+                        onChange={(event) => setKeepPassword(event.target.value)}
+                      />
+                    </label>
+                    {passwordProblem(keepPassword) && keepPassword ? (
+                      <p className="account-hint">{passwordProblem(keepPassword)}</p>
+                    ) : null}
+                    <div className="account-actions">
+                      <button
+                        type="button"
+                        className="account-button"
+                        disabled={cloud.busy || Boolean(passwordProblem(keepPassword))}
+                        onClick={() =>
+                          void cloudStore.keepAccount({ password: keepPassword }).then((outcome) => {
+                            if (outcome.status === "done") setKeepPassword("");
+                          })
+                        }
+                      >
+                        <KeyRound size={14} /> Enregistrer le mot de passe
+                      </button>
+                    </div>
+                    <p className="account-hint">{PASSWORD_WARNING}</p>
+                  </details>
+                </section>
+              )}
             {cloud.userId ? (
-              <section className="account-card">
-                <div className="account-head">
-                  <Trophy size={15} />
-                  <strong>Classement mondial</strong>
-                  <button type="button" className="account-refresh" disabled={cloud.busy} onClick={() => void cloudStore.loadLeaderboard()}>
-                    <RefreshCw size={13} />
-                  </button>
-                </div>
-                <div className="studio-group" role="group" aria-label="Tri du classement">
-                  {METRICS.map((metric) => (
-                    <button
-                      key={metric.id}
-                      type="button"
-                      className={`studio-chip ${cloud.leaderboardMetric === metric.id ? "active" : ""}`}
-                      onClick={() => void cloudStore.loadLeaderboard(metric.id)}
-                    >
-                      {metric.label}
-                    </button>
-                  ))}
-                </div>
-                {cloud.leaderboard.length ? (
-                  <ol className="leaderboard">
-                    {cloud.leaderboard.map((row) => {
-                      const expanded = openProfile === row.userId;
-                      const profileShowcase = knownShowcase(row.showcaseSlugs);
-                      const profileId = `leaderboard-profile-${row.userId}`;
-                      return (
-                        <li key={`${row.rank}-${row.userId}`} className={row.userId === cloud.userId ? "me" : ""}>
-                          <button
-                            type="button"
-                            className="leaderboard-row"
-                            aria-expanded={expanded}
-                            aria-controls={profileId}
-                            onClick={() => setOpenProfile(expanded ? null : row.userId)}
-                          >
-                            <b>{row.rank}</b>
-                            <span className="leaderboard-name">
-                              {row.displayName}
-                              {row.userId === cloud.userId ? " (toi)" : ""}
-                            </span>
-                            <span className="leaderboard-value">
-                              {cloud.leaderboardMetric === "total_cards"
-                                ? `${row.totalCards} cartes`
-                                : cloud.leaderboardMetric === "legendary_cards"
-                                  ? `${row.legendaryCards} légendaires`
-                                  : `${row.uniqueCreators} uniques`}
-                            </span>
-                            {row.rank === 1 ? <Crown size={13} className="leaderboard-crown" /> : null}
-                          </button>
-                          {expanded ? (
-                            <div id={profileId} className="leaderboard-profile">
-                              {profileShowcase.length ? (
-                                <div className="showcase-grid">
-                                  {profileShowcase.map((slug) => <ShowcaseCard key={slug} slug={slug} />)}
-                                </div>
-                              ) : (
-                                <p className="account-hint">Pas de vitrine pour l&apos;instant.</p>
-                              )}
-                              <ul className="leaderboard-stats">
-                                <li><b>{row.uniqueCreators.toLocaleString("fr-FR")}</b><span>Créateurs uniques</span></li>
-                                <li><b>{row.totalCards.toLocaleString("fr-FR")}</b><span>Cartes</span></li>
-                                <li><b>{row.legendaryCards.toLocaleString("fr-FR")}</b><span>Légendaires</span></li>
-                                <li><b>{row.level.toLocaleString("fr-FR")}</b><span>Niveau</span></li>
-                                <li><b>{row.points.toLocaleString("fr-FR")}</b><span>Points</span></li>
-                              </ul>
-                            </div>
-                          ) : null}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                ) : (
-                  <p className="account-hint">
-                    {cloud.busy ? "Chargement…" : "Personne au classement pour l'instant : envoie ta collection pour ouvrir la voie."}
-                  </p>
-                )}
-                <p className="account-hint">
-                  Touche une ligne du classement pour voir la vitrine et les chiffres publics du joueur. Le serveur
-                  recalcule les statistiques depuis chaque sauvegarde et écarte ce qu&apos;aucune partie ne peut produire.
-                </p>
-              </section>
+              <div className="account-actions">
+                <button
+                  type="button"
+                  className="account-button ghost"
+                  disabled={cloud.busy}
+                  onClick={() => {
+                    // Le brouillon de la vitrine n'est pas à toucher ici : la
+                    // déconnexion enlève `cloud.userId`, donc le panneau se
+                    // démonte et son brouillon part avec lui.
+                    setNameDraft(null);
+                    void cloudStore.signOut();
+                  }}
+                >
+                  <LogOut size={14} /> Déconnexion
+                </button>
+              </div>
             ) : null}
           </>
         )}
       </div>
     </div>
   );
-}
-
-/** Pastille d'état affichée dans le profil, sans ouvrir la feuille. */
-export function CloudBadge() {
-  const cloud = useCloud();
-  if (!cloud.configured || !cloud.userId) return <CloudOff size={15} className="muted-icon" />;
-  return cloud.pending ? <Upload size={15} className="pending-icon" /> : <Check size={15} className="success-icon" />;
 }

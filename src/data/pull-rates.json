@@ -1,6 +1,18 @@
 {
-  "version": 1,
-  "note": "Tables de tirage par slot, sur le modèle de pullRates.json de pokemon-tcg-pocket-database (MIT). Source de vérité unique : le moteur (src/lib/game-engine.ts) tire depuis ce fichier et l'écran « Taux de drop » affiche exactement les mêmes probabilités. Modifier un poids ici suffit à rééquilibrer le jeu, sans toucher au code.",
+  "version": 2,
+  "note": "Tables de tirage par slot, sur le modèle de pullRates.json de pokemon-tcg-pocket-database (MIT). Source de vérité unique : le moteur (src/lib/game-engine.ts) et le serveur (supabase/migrations/0011_direct.sql) tirent depuis ce fichier, et l'écran « Taux de drop » affiche exactement les mêmes probabilités. Modifier un poids ici suffit à rééquilibrer le jeu, sans toucher au code.",
+  "direct": {
+    "label": "Bonus Direct",
+    "creatorBias": 1.5,
+    "livePermille": 200,
+    "variant": "live",
+    "note": "Les créateurs qui streament au moment du tirage pèsent ×1,5 dans chaque rareté, et leur carte a 200‰ (20 %) de chance d'être en variante Live. La carte garantie est en variante Live quand son créateur est en direct. Sans information fraîche sur le direct (au-delà de dix minutes), le bonus est neutre et aucune variante Live n'est tirée : un badge faux serait pire que pas de badge."
+  },
+  "pity": {
+    "label": "Légendaire garanti",
+    "threshold": 12,
+    "note": "Après 12 boosters du Live Drop sans Légendaire, le 5ᵉ slot en garantit un — et le compteur repart de zéro dès qu'un Légendaire tombe, quel que soit le slot. Le Paquet Scène ne donne jamais de Légendaire : il ne compte donc ni ne casse cette série, qui ne parle que du Live Drop. Le compteur est affiché : « encore N boosters » sur l'accueil, et dans cet écran. Sans ce plancher, une série malchanceuse peut durer des mois ; avec lui, elle a un plancher, et il est écrit noir sur blanc."
+  },
   "packs": {
     "live": {
       "label": "Live Drop",
@@ -10,8 +22,7 @@
           "rare": 82,
           "epic": 15,
           "legendary": 3
-        },
-        "variant": "live"
+        }
       },
       "slots": [
         {
@@ -53,18 +64,79 @@
       ],
       "variants": {
         "holoPermille": 75,
-        "holoFromRarity": "uncommon"
+        "holoFromRarity": "uncommon",
+        "goldPermille": 100,
+        "goldRarity": "legendary",
+        "note": "Gold : 1 % sur une Légendaire (100 sur 10 000, la même échelle que le tirage de variante : le Holo, à 75, tombe 0,75 % du temps). Le Paquet Scène ne donne jamais de Légendaire : il n'a pas de goldPermille."
       },
       "rareDrop": {
         "label": "Perfect Live",
         "tagline": "Les 5 cartes en Épique ou mieux.",
-        "chancePermille": 5,
+        "chancePermille": 1,
         "weights": {
           "epic": 82,
           "legendary": 18
         },
         "variantUpgradePermille": 900
       }
+    },
+    "scene": {
+      "label": "Paquet Scène",
+      "slotCount": 4,
+      "guaranteed": {
+        "weights": {
+          "rare": 70,
+          "epic": 30
+        }
+      },
+      "slots": [
+        {
+          "weights": {
+            "common": 40,
+            "uncommon": 34,
+            "rare": 20,
+            "epic": 6
+          }
+        },
+        {
+          "weights": {
+            "common": 40,
+            "uncommon": 34,
+            "rare": 20,
+            "epic": 6
+          }
+        },
+        {
+          "weights": {
+            "common": 34,
+            "uncommon": 34,
+            "rare": 24,
+            "epic": 8
+          }
+        },
+        {
+          "weights": {
+            "common": 24,
+            "uncommon": 36,
+            "rare": 30,
+            "epic": 10
+          }
+        }
+      ],
+      "variants": {
+        "holoPermille": 75,
+        "holoFromRarity": "uncommon"
+      },
+      "rareDrop": {
+        "label": "Scène pleine",
+        "tagline": "Les 5 cartes en Épique — que des visages de ta famille.",
+        "chancePermille": 3,
+        "weights": {
+          "epic": 100
+        },
+        "variantUpgradePermille": 500
+      },
+      "note": "Le second paquet, et le seul autre : cinq cartes de la famille que tu complètes, jamais deux fois le même créateur dans la même ouverture. Aucune Légendaire n'y sort — la chasse aux Légendaires reste le Live Drop, et son plancher de malchance. C'est un paquet de complétion : il remplit une famille, il ne remplace pas le drop."
     }
   }
 }

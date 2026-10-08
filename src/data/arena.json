@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "note": "L'Arena : la seule épreuve du jeu qui se joue contre la réalité. On aligne cinq cartes de sa collection, il faut que l'une d'elles soit un créateur en direct, et le score est la somme des viewers réels au moment du dépôt. Aucun chiffre de ce fichier n'est décoratif : ils sont vérifiés par les tests et repris dans les textes de l'écran.",
+  "lineup": {
+    "size": 5,
+    "maxLegendary": 1,
+    "requiresLive": true,
+    "note": "Cinq cartes, dont au plus une Légendaire : les cinq meilleures cartes du classeur ne font pas une équipe, il faut choisir. Et au moins une carte d'un créateur qui streame maintenant — c'est elle qui fait vivre l'arène."
+  },
+  "score": {
+    "note": "Le score, c'est la somme des viewers réels des créateurs alignés. Un créateur hors direct vaut zéro : l'arène paie le direct, pas la collection."
+  },
+  "week": {
+    "startHourUtc": 6,
+    "startWeekday": 1,
+    "note": "La semaine d'arène commence le lundi à 6 h UTC (le même jour de jeu que les missions, décalé de six heures) et finit le lundi suivant à la même heure. La clé publiée est la date de ce lundi : « 2026-10-05 »."
+  },
+  "rewards": {
+    "hourglassesByRank": { "1": 5, "2": 3, "3": 2, "10": 1 },
+    "emblemTop": 10,
+    "note": "Récompense hebdomadaire remise au classement figé : 5 sabliers au 1er, 3 au 2e, 2 au 3e, 1 aux dix premiers, et l'emblème d'arène pour avoir terminé une semaine dans le top 10."
+  },
+  "draft": {
+    "startWeekday": 6,
+    "startHourUtc": 6,
+    "choicesPerSlot": 3,
+    "slotCount": 5,
+    "note": "Le week-end, la même arène se joue en draft : cinq emplacements, trois propositions chacun, on en garde une. Ouvert du samedi 6 h UTC au lundi 6 h UTC — quarante-huit heures, pas une de plus."
+  }
+}

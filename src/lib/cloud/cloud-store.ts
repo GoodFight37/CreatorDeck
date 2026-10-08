@@ -1,4 +1,13 @@
 /**
+ * Le magasin cloud : l'état que l'interface observe (session, compte,
+ * classement, échanges, hôtel, Last Pack, Arène) et la synchronisation de la
+ * partie avec le serveur.
+ *
+ * Ce fichier garde **l'état, la synchronisation et les helpers**, et assemble
+ * les actions par domaine — `store/account.ts`, `store/pack.ts`,
+ * `store/social.ts`, `store/market.ts`, `store/arena.ts`.
+ */
+/**
  * État du compte et de la synchronisation, exposé à React.
  *
  * Le store ne connaît ni React ni le DOM : on l'instancie avec ses dépendances
@@ -10,11 +19,48 @@
  * récent, on ne remplace pas la partie locale tout seul — on le dit, et le
  * joueur décide.
  */
-import type { PlayerState } from "@/lib/game-engine";
+import {
+  applyLastPackSteal,
+  applyScenePackResult,
+  applyMarketPurchase,
+  applyMarketSale,
+  applyPackResult,
+  applyPackStatus,
+  applyServerProgression,
+  applyTradeResult,
+  type DrawnCard,
+  type OwnedCard,
+  type PlayerState,
+  type TradeCard as EngineTradeCard,
+} from "@/lib/game-engine";
 import type { KeyValueStorage } from "@/lib/save-store";
 import { sanitizeState } from "@/lib/save-store";
 import { CLOUD_DISABLED_HINT, cloudConfig, type CloudConfig } from "@/lib/cloud/config";
-import { CloudApi, CloudError, type LeaderboardRow } from "@/lib/cloud/api";
+import {
+  CloudApi,
+  CloudError,
+  type ArenaBoard,
+  type ArenaMine,
+  type LeaderboardMetric,
+  type LeaderboardRow,
+  type LastPackShelf,
+  type MarketListing,
+  type PlayerProfile,
+  type PlayerSearchResult,
+  type TradeListItem,
+} from "@/lib/cloud/api";
+import {
+  EMPTY_FRIEND_LISTS,
+  type FriendLists,
+  type Friendship,
+  type SendFriendRequestOutcome,
+} from "@/lib/social/friends";
+import { applyAcceptedTrades, describeCards } from "@/lib/cloud/trades";
+import { buildInbox, seenKey, unreadCount, type InboxItem } from "@/lib/social/inbox";
+import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
+import { parseOAuthReturn } from "@/lib/cloud/twitch";
+import { applyArenaReward, arenaRankLabel, arenaWeekLabel } from "@/lib/arena";
+import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
 import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
 import { deviceStorage } from "@/lib/storage";
@@ -23,67 +69,29 @@ import { gameStore, onPersist } from "@/lib/game-store";
 /** Délai après la dernière action avant l'envoi automatique de la partie. */
 export const AUTO_PUSH_DEBOUNCE_MS = 20_000;
 
-export type LeaderboardMetric = "unique_creators" | "total_cards" | "legendary_cards";
+/** Tri du classement : le type vient du client (`leaderboard()` en base). */
+export type { LeaderboardMetric };
 
-export type CloudState = {
-  /** Un projet Supabase est-il configuré dans ce build ? */
-  configured: boolean;
-  /** Adresse e-mail du compte connecté, sinon `null` (compte invité). */
-  email: string | null;
-  /** Nom affiché au classement, tel qu'enregistré côté serveur. */
-  displayName: string | null;
-  /** Cartes épinglées sur le profil public (0 à 4 slugs, dans l'ordre choisi). */
-  showcase: string[];
-  userId: string | null;
-  /** Nom court du projet Supabase (affiché pour rassurer). */
-  project: string | null;
-  /** Un appel est en cours. */
-  busy: boolean;
-  /** Dernier message à afficher (succès ou erreur). */
-  message: string | null;
-  isError: boolean;
-  /** Dernière décision de synchronisation calculée. */
-  decision: SyncAction | null;
-  /** Horodatage serveur de la sauvegarde cloud connue. */
-  remoteUpdatedAt: number | null;
-  lastSyncAt: number | null;
-  /** Des changements locaux attendent d'être envoyés. */
-  pending: boolean;
-  leaderboard: LeaderboardRow[];
-  leaderboardMetric: LeaderboardMetric;
-};
+import type { CloudActionOutcome, CloudDeps, CloudState } from "@/lib/cloud/store/types";
+import type { CloudStoreActions } from "@/lib/cloud/store/context";
+import type { CloudStoreContext } from "@/lib/cloud/store/context";
+import { EMPTY_CLOUD_STATE } from "@/lib/cloud/store/types";
+import { accountActions } from "@/lib/cloud/store/account";
+import { arenaActions } from "@/lib/cloud/store/arena";
+import { walletActions } from "@/lib/cloud/store/wallet";
+import { streamerActions } from "@/lib/cloud/store/streamer";
+import { marketActions } from "@/lib/cloud/store/market";
+import { packActions } from "@/lib/cloud/store/pack";
+import { socialActions } from "@/lib/cloud/store/social";
 
-export type CloudDeps = {
-  config: () => CloudConfig | null;
-  storage: () => KeyValueStorage | null;
-  api: (config: CloudConfig, storage: KeyValueStorage | null) => CloudApi;
-  readState: () => PlayerState | null;
-  applyState: (state: PlayerState) => void;
-  now: () => number;
-};
+export * from "@/lib/cloud/store/types";
 
-/** État neutre : sert aussi de snapshot serveur (pré-rendu statique). */
-export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
-  configured: false,
-  email: null,
-  displayName: null,
-  showcase: [],
-  userId: null,
-  project: null,
-  busy: false,
-  message: null,
-  isError: false,
-  decision: null,
-  remoteUpdatedAt: null,
-  lastSyncAt: null,
-  pending: false,
-  leaderboard: [],
-  leaderboardMetric: "unique_creators",
-});
+
+/** Le magasin complet, tel que l'interface le consomme. */
+export type CloudStore = ReturnType<typeof createCloudStore>;
+
 
 const EMPTY = EMPTY_CLOUD_STATE;
-
-export type CloudStore = ReturnType<typeof createCloudStore>;
 
 export function createCloudStore(deps: CloudDeps) {
   const listeners = new Set<() => void>();
@@ -127,6 +135,25 @@ export function createCloudStore(deps: CloudDeps) {
     return api;
   }
 
+  /**
+   * Le joueur connecté, d'après la session. On ne se fie pas au seul état
+   * publié : la « dernière visite » du carnet doit être juste même si l'écran
+   * n'a pas encore lu le store.
+   */
+  function currentUserId(): string | null {
+    return resolve()?.session()?.userId ?? state.userId;
+  }
+
+  /** La date de la dernière visite du carnet, gardée sur l'appareil. */
+  function readSeen(userId: string | null): string | null {
+    if (!userId) return null;
+    try {
+      return deps.storage()?.getItem(seenKey(userId)) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
   function fail(error: unknown, fallback: string) {
     const message = error instanceof CloudError ? error.message : error instanceof Error ? error.message : fallback;
     publish({ busy: false, message, isError: true });
@@ -151,7 +178,12 @@ export function createCloudStore(deps: CloudDeps) {
     if (!local) return;
     publish({ busy: true });
     try {
-      const result = await api.pushSave(local, deviceUpdatedAt, saveVersion, force);
+      // La version serveur que le client connaît (`null` s'il n'a jamais rien
+      // lu) : c'est elle qui décide du conflit, à la place de l'horloge de
+      // l'appareil. Postgres garde les microsecondes, JavaScript les
+      // millisecondes — le serveur tolère cette milliseconde de marge.
+      const base = state.remoteUpdatedAt ? new Date(state.remoteUpdatedAt).toISOString() : null;
+      const result = await api.pushSave(local, deviceUpdatedAt, saveVersion, force, base);
       if (result.status === "pushed") {
         publish({
           busy: false,
@@ -159,7 +191,7 @@ export function createCloudStore(deps: CloudDeps) {
           decision: "push",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
-          message: "Collection envoyée au cloud.",
+          message: "Progression enregistrée en ligne.",
           isError: false,
         });
         return;
@@ -171,7 +203,7 @@ export function createCloudStore(deps: CloudDeps) {
           decision: "noop",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
-          message: "Cloud déjà à jour.",
+          message: "Tout est à jour.",
           isError: false,
         });
         return;
@@ -182,8 +214,7 @@ export function createCloudStore(deps: CloudDeps) {
           pending: true,
           decision: "conflict",
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || null,
-          message:
-            "Le cloud contient une partie plus récente (autre appareil). « Charger le cloud » l'adopte, « Envoyer » l'écrase.",
+          message: "Deux parties existent : choisis celle que tu gardes, juste au-dessus.",
           isError: false,
         });
         return;
@@ -191,11 +222,40 @@ export function createCloudStore(deps: CloudDeps) {
       publish({
         busy: false,
         isError: true,
-        message: `Sauvegarde refusée par le serveur : ${result.problems.join(" ; ")}`,
+        message: `L'enregistrement en ligne a été refusé : ${result.problems.join(" ; ")}`,
       });
     } catch (error) {
       fail(error, "Envoi impossible.");
     }
+  }
+
+  /**
+   * Envoie la partie **après une action décidée par le serveur** (échange, hôtel,
+   * Last Pack, arène, réinitialisation).
+   *
+   * Le serveur vient d'écrire sa version : pousser en forçant écraserait en
+   * silence la ligne qu'il vient de produire. On relit donc sa version, puis on
+   * envoie la nôtre **par-dessus** — sans jamais forcer. `p_force` reste réservé
+   * au bouton « Envoyer / écraser » de l'écran de conflit (et à
+   * « Envoyer ma collection », geste explicite du joueur).
+   *
+   * La lecture peut échouer (réseau) : on envoie quand même, sans forcer. Le
+   * serveur répondra « conflit » plutôt que d'écraser une partie qu'il n'a pas
+   * vue — c'est exactement ce qu'on veut.
+   */
+  async function pushAfterServer(): Promise<void> {
+    const api = resolve();
+    if (!networkReady(api)) return;
+    try {
+      const remote = await api.pullSave();
+      if (remote) {
+        publish({ remoteUpdatedAt: Date.parse(remote.updatedAt) || state.remoteUpdatedAt });
+      }
+    } catch {
+      // Sans lecture, on n'insiste pas : l'envoi qui suit reste sans forçage.
+    }
+    const local = deps.readState();
+    if (local) await push(local.version, local.updatedAt, false);
   }
 
   async function pull(): Promise<void> {
@@ -205,12 +265,12 @@ export function createCloudStore(deps: CloudDeps) {
     try {
       const remote = await api.pullSave();
       if (!remote) {
-        publish({ busy: false, message: "Aucune sauvegarde dans le cloud pour ce compte.", isError: false });
+        publish({ busy: false, message: "Aucune partie enregistrée en ligne pour ce compte.", isError: false });
         return;
       }
       const parsed = sanitizeState(remote.state, deps.now());
       if (!parsed) {
-        publish({ busy: false, message: "Sauvegarde cloud illisible : rien n'a été modifié.", isError: true });
+        publish({ busy: false, message: "Cette partie en ligne est illisible : rien n'a été modifié.", isError: true });
         return;
       }
       deps.applyState(parsed);
@@ -220,13 +280,219 @@ export function createCloudStore(deps: CloudDeps) {
         decision: "pull",
         remoteUpdatedAt: Date.parse(remote.updatedAt) || null,
         lastSyncAt: deps.now(),
-        message: `Partie chargée depuis le cloud (${syncStats(parsed).uniqueCreators} créateurs).`,
+        message: `Partie reprise depuis le jeu en ligne (${syncStats(parsed).uniqueCreators} créateurs).`,
         isError: false,
       });
     } catch (error) {
-      fail(error, "Chargement impossible.");
+      fail(error, "Reprise impossible pour l'instant.");
     }
   }
+
+  // ------------------------------------------------------------- échanges
+
+  /** Nom affiché du catalogue, pour écrire des messages lisibles. */
+  function creatorNames(): Map<string, string> {
+    const map = new Map<string, string>();
+    for (const [slug, creator] of CREATOR_BY_SLUG) map.set(slug, creator.displayName);
+    return map;
+  }
+
+  function asEngineCards(cards: readonly { creatorSlug: string; variant: string; rarity: string }[]): EngineTradeCard[] {
+    return cards.map((card) => ({
+      creatorSlug: card.creatorSlug,
+      variant: card.variant as CardVariant,
+      rarity: card.rarity as Rarity,
+    }));
+  }
+
+  /**
+   * Reconnaît le refus à corriger : pas de compte, réseau injoignable, cloud
+   * absent. Les autres erreurs remontent telles quelles (déjà en français).
+   */
+  function cloudRefusal(
+    error: unknown,
+    fallback: string,
+  ): Extract<CloudActionOutcome, { status: "unavailable" }> {
+    if (error instanceof CloudError) {
+      if (error.status === 401 || error.status === 403 || error.code === "no_session") {
+        return { status: "unavailable", reason: "no-session", message: error.message };
+      }
+      if (error.status === 0) return { status: "unavailable", reason: "offline", message: error.message };
+      return { status: "unavailable", reason: "error", message: error.message };
+    }
+    const message = error instanceof Error ? error.message : fallback;
+    return { status: "unavailable", reason: "error", message };
+  }
+
+  /** Refus immédiat quand le cloud n'est pas configuré ou qu'aucun compte n'est connecté. */
+  function tradeApi():
+    | { api: CloudApi }
+    | { refusal: Extract<CloudActionOutcome, { status: "unavailable" }> } {
+    const api = resolve();
+    if (!api) {
+      publish({ busy: false, message: CLOUD_DISABLED_HINT, isError: true });
+      return { refusal: { status: "unavailable", reason: "not-configured", message: CLOUD_DISABLED_HINT } };
+    }
+    if (!api.session()) {
+      const message = "Connecte-toi pour échanger des cartes.";
+      publish({ busy: false, message, isError: true });
+      return { refusal: { status: "unavailable", reason: "no-session", message } };
+    }
+    return { api };
+  }
+
+  /**
+   * Relit les offres et applique ce que le serveur a déjà tranché.
+   *
+   * Sert après chaque action, et à l'ouverture de l'écran. Les échanges
+   * acceptés pendant que cet appareil était ailleurs entrent dans la partie
+   * locale sans passer par un « Charger le cloud » manuel.
+   */
+  async function refreshTrades(
+    api: CloudApi,
+    prefix = "",
+  ): Promise<{ list: TradeListItem[]; applied: number; blocked: number }> {
+    const list = await api.listTrades();
+    const local = deps.readState();
+    let applied = 0;
+    let blocked = 0;
+    if (local) {
+      const result = applyAcceptedTrades(local, list, deps.now());
+      applied = result.applied;
+      blocked = result.blocked.length;
+      if (applied > 0) {
+        deps.applyState(result.state);
+        await pushAfterServer();
+      }
+    }
+    publish({ trades: list, tradesAt: deps.now(), busy: false });
+    if (blocked > 0) {
+      publish({
+        message: `${prefix}Un échange a changé une carte d'appareil : ta progression se recalera toute seule dans un instant.`,
+        isError: true,
+      });
+    } else if (applied > 0) {
+      publish({ message: `${prefix}${applied} échange${applied > 1 ? "s" : ""} accepté${applied > 1 ? "s" : ""} appliqué${applied > 1 ? "s" : ""} à ta collection.`, isError: false });
+    }
+    return { list, applied, blocked };
+  }
+
+  /**
+   * À la connexion (mot de passe ou code à 6 chiffres uniquement — jamais au
+   * simple retour dans l'app) : adopter la collection du cloud si cette partie
+   * n'a jamais servi.
+   *
+   * C'est le cas d'un nouveau téléphone : la partie locale est vierge (aucune
+   * carte, aucune ouverture — les points et sabliers d'accueil ne sont pas une
+   * progression) et le compte a déjà une collection. Rien ne peut être perdu —
+   * une partie vierge ne contient rien — donc on la remplace sans demander,
+   * sinon le premier envoi écraserait la collection du joueur. Dès que la
+   * partie locale a la moindre carte ou la moindre ouverture, on ne touche à
+   * rien : le joueur choisit (règle « jamais de perte silencieuse »).
+   *
+   * Renvoie le nombre de cartes adoptées (0 si rien n'a été fait).
+   */
+  async function adoptCloudIfEmpty(): Promise<number> {
+    const api = resolve();
+    const local = deps.readState();
+    if (!api?.session() || !local) return 0;
+    if (local.cards.length > 0 || local.openings > 0) return 0;
+    try {
+      const remote = await api.pullSave();
+      if (!remote) return 0;
+      const parsed = sanitizeState(remote.state, deps.now());
+      if (!parsed || parsed.cards.length === 0) return 0;
+      deps.applyState(parsed);
+      publish({
+        decision: "pull",
+        pending: false,
+        remoteUpdatedAt: Date.parse(remote.updatedAt) || null,
+        lastSyncAt: deps.now(),
+      });
+      return parsed.cards.length;
+    } catch {
+      // Hors ligne : la connexion vient de réussir, inutile d'alarmer.
+      return 0;
+    }
+  }
+
+  /** Phrase commune : ce qui a été récupéré en ligne, sinon rien à signaler. */
+  function connectedMessage(adopted: number): string {
+    if (adopted > 0) {
+      return `${adopted} carte${adopted > 1 ? "s" : ""} récupérée${adopted > 1 ? "s" : ""} depuis le jeu en ligne.`;
+    }
+    // Rien de récupéré : la partie de l'appareil reste la référence, et la
+    // synchronisation s'en occupe toute seule. Il n'y a donc rien à demander.
+    return "Compte connecté : ta progression est gardée en ligne.";
+  }
+
+  /**
+   * Lit la réserve côté serveur (`pack_status()`) et l'adopte dans la partie
+   * locale : compteur et compte à rebours affichés sont ceux du serveur, sans
+   * rien consommer. Silencieux en cas d'échec (hors ligne, pas de compte) :
+   * l'appelant garde alors son calcul local.
+   */
+  async function fetchPackStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
+    const api = resolve();
+    if (!api?.session()) return null;
+    try {
+      const status = await api.packStatus();
+      const local = deps.readState();
+      if (local) {
+        const adopted = applyServerProgression(
+          applyPackStatus(local, status.packs, status.lastRegenAt, deps.now()),
+          status,
+          deps.now(),
+        );
+        if (adopted !== local) deps.applyState(adopted);
+      }
+      return { packs: status.packs, nextPackAt: status.nextPackAt };
+    } catch {
+      // Sans réseau ou erreur : le client retombe sur le calcul local.
+      return null;
+    }
+  }
+
+  /**
+   * Le contexte donné aux actions : mêmes helpers que la fermeture ci-dessus,
+   * plus l'objet complet (`actions`) pour les appels d'une action à l'autre.
+   */
+  const ctx: CloudStoreContext = {
+    deps,
+    state: () => state,
+    publish,
+    snapshot,
+    resolve,
+    refreshIdentity,
+    currentUserId,
+    readSeen,
+    fail,
+    networkReady,
+    push,
+    pushAfterServer,
+    pull,
+    creatorNames,
+    asEngineCards,
+    cloudRefusal,
+    tradeApi,
+    refreshTrades,
+    adoptCloudIfEmpty,
+    connectedMessage,
+    fetchPackStatus,
+    // Posé juste après : une action peut en appeler une autre (`this.x()`).
+    actions: undefined as unknown as CloudStoreActions,
+  };
+
+  const actions: CloudStoreActions = {
+    ...accountActions(ctx),
+    ...packActions(ctx),
+    ...socialActions(ctx),
+    ...marketActions(ctx),
+    ...arenaActions(ctx),
+    ...walletActions(ctx),
+    ...streamerActions(ctx),
+  };
+  ctx.actions = actions;
 
   return {
     subscribe(listener: () => void) {
@@ -236,7 +502,6 @@ export function createCloudStore(deps: CloudDeps) {
     },
     getSnapshot: snapshot,
     getServerSnapshot: () => EMPTY_CLOUD_STATE,
-
     /** Branche la synchronisation automatique sur les écritures de la partie. */
     attach() {
       if (detachPersist) return detachPersist;
@@ -257,286 +522,8 @@ export function createCloudStore(deps: CloudDeps) {
       };
     },
 
-    async requestCode(email: string): Promise<void> {
-      const api = resolve();
-      if (!api) {
-        publish({ message: CLOUD_DISABLED_HINT, isError: true });
-        return;
-      }
-      publish({ busy: true, message: null, isError: false });
-      try {
-        await api.requestOtp(email);
-        publish({ busy: false, message: "Code envoyé : regarde ta boîte e-mail (et les indésirables).", isError: false });
-      } catch (error) {
-        fail(error, "Envoi du code impossible.");
-      }
-    },
-
-    async verifyCode(email: string, token: string): Promise<boolean> {
-      const api = resolve();
-      if (!api) {
-        publish({ message: CLOUD_DISABLED_HINT, isError: true });
-        return false;
-      }
-      publish({ busy: true, message: null, isError: false });
-      try {
-        const session = await api.verifyOtp(email, token.trim());
-        publish({
-          busy: false,
-          email: session.email,
-          userId: session.userId,
-          message: "Compte connecté. Ta collection locale reste la référence : envoie-la quand tu veux.",
-          isError: false,
-        });
-        return true;
-      } catch (error) {
-        fail(error, "Code refusé.");
-        return false;
-      }
-    },
-
-    /** Crée un compte invité (sans e-mail) et s'y connecte immédiatement. */
-    async signInAsGuest(): Promise<boolean> {
-      const api = resolve();
-      if (!api) {
-        publish({ message: CLOUD_DISABLED_HINT, isError: true });
-        return false;
-      }
-      publish({ busy: true, message: null, isError: false });
-      try {
-        const session = await api.signInAnonymously();
-        publish({
-          busy: false,
-          email: session.email,
-          displayName: null,
-          showcase: [],
-          userId: session.userId,
-          message: "Compte invité créé. Donne-toi un nom, puis envoie ta collection.",
-          isError: false,
-        });
-        return true;
-      } catch (error) {
-        fail(error, "Création du compte invité impossible.");
-        return false;
-      }
-    },
-
-    /** Renomme le joueur dans le classement (2 à 24 caractères). */
-    async rename(displayName: string): Promise<boolean> {
-      const api = resolve();
-      if (!networkReady(api)) return false;
-      const local = deps.readState();
-      const userId = api.session()?.userId;
-      if (!local || !userId) return false;
-      const name = displayName.trim();
-      if (name.length < 2 || name.length > 24) {
-        publish({ busy: false, message: "Le nom doit faire entre 2 et 24 caractères.", isError: true });
-        return false;
-      }
-      publish({ busy: true });
-      try {
-        await api.updateDisplayName(userId, name);
-        publish({ busy: false, displayName: name, message: `Nom du classement mis à jour : ${name}.`, isError: false });
-        return true;
-      } catch (error) {
-        fail(error, "Changement de nom impossible.");
-        return false;
-      }
-    },
-
-    /**
-     * Épingle jusqu'à 4 cartes de sa collection sur son profil public.
-     *
-     * Le serveur vérifie la possession : si une carte n'est pas dans la
-     * sauvegarde poussée, il refuse et on affiche son message tel quel. En
-     * local, on nettoie la liste et on borne à `MAX_SHOWCASE` avant d'appeler.
-     */
-    async setShowcase(slugs: readonly string[]): Promise<boolean> {
-      const api = resolve();
-      if (!networkReady(api)) return false;
-      const clean = normalizeShowcase(slugs);
-      if (slugs.length > MAX_SHOWCASE) {
-        publish({ busy: false, message: `Une vitrine affiche ${MAX_SHOWCASE} cartes au maximum.`, isError: true });
-        return false;
-      }
-      publish({ busy: true });
-      try {
-        const saved = await api.setShowcase(clean);
-        publish({
-          busy: false,
-          showcase: normalizeShowcase(saved.length ? saved : clean),
-          message: clean.length
-            ? `Vitrine mise à jour (${clean.length} carte${clean.length > 1 ? "s" : ""}).`
-            : "Vitrine vidée.",
-          isError: false,
-        });
-        return true;
-      } catch (error) {
-        fail(error, "Mise à jour de la vitrine impossible.");
-        return false;
-      }
-    },
-
-    /**
-     * Ouvre un booster côté serveur : les cartes sont tirées par la fonction
-     * `open_pack()` de Supabase, puis appliquées à la partie locale.
-     *
-     * Après le tirage, la sauvegarde est poussée immédiatement (pas d'attente
-     * des ~20 s du debounce) : les cartes sont infalsifiables, il faut les
-     * inscrire dans le cloud sans délai.
-     *
-     * Renvoie le nombre de cartes tirées, ou 0 si le tirage a échoué.
-     */
-    async openPack(): Promise<number> {
-      const api = resolve();
-      if (!networkReady(api)) return 0;
-      publish({ busy: true });
-      try {
-        const result = await api.openPack();
-        const cards = result.cards.map((card) => ({
-          creatorSlug: card.creatorSlug,
-          rarity: card.rarity as "common" | "uncommon" | "rare" | "epic" | "legendary",
-          variant: card.variant as "standard" | "live" | "holo" | "gold",
-          rareDrop: card.rareDrop,
-        }));
-        const drawn = gameStore.applyServerPack(
-          cards,
-          result.packs,
-          result.lastRegenAt,
-          result.openings,
-        );
-        // Pousser immédiatement la partie : les cartes du serveur doivent
-        // être inscrites dans le cloud sans attendre le debounce.
-        const local = deps.readState();
-        if (local) {
-          await push(local.version, local.updatedAt, true);
-        }
-        publish({
-          busy: false,
-          message: `Booster ouvert : ${drawn.length} carte${drawn.length > 1 ? "s" : ""} reçue${drawn.length > 1 ? "s" : ""}.`,
-          isError: false,
-        });
-        return drawn.length;
-      } catch (error) {
-        fail(error, "Ouverture du booster impossible.");
-        return 0;
-      }
-    },
-
-    /**
-     * Statut de la réserve de boosters, calculé par le serveur.
-     *
-     * Le client l'appelle à la connexion pour afficher le bon compteur sans
-     * dépendre de l'horloge locale.
-     */
-    async packStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
-      const api = resolve();
-      if (!api?.session()) return null;
-      try {
-        const status = await api.packStatus();
-        return { packs: status.packs, nextPackAt: status.nextPackAt };
-      } catch {
-        // Sans réseau ou erreur : le client retombe sur le calcul local.
-        return null;
-      }
-    },
-
-    async signOut(): Promise<void> {
-      const api = resolve();
-      publish({ busy: true });
-      try {
-        await api?.signOut();
-      } catch {
-        // La déconnexion locale suffit.
-      }
-      publish({
-        busy: false,
-        email: null,
-        displayName: null,
-        showcase: [],
-        userId: null,
-        pending: false,
-        decision: null,
-        remoteUpdatedAt: null,
-        leaderboard: [],
-        message: "Déconnecté. La partie continue en local, exactement comme avant.",
-        isError: false,
-      });
-    },
-
-    /** Synchronisation : `auto` respecte le plus récent, `push`/`pull` forcent. */
-    async sync(mode: "auto" | "push" | "pull" = "auto"): Promise<void> {
-      const local = deps.readState();
-      if (!local) return;
-      if (mode === "push") return push(local.version, local.updatedAt, true);
-      if (mode === "pull") return pull();
-
-      const api = resolve();
-      if (!networkReady(api)) return;
-      publish({ busy: true });
-      try {
-        const remote = await api.pullSave();
-        const decision = decideSync(
-          { state: local, updatedAt: local.updatedAt },
-          remote
-            ? { state: sanitizeState(remote.state, deps.now()) ?? local, deviceUpdatedAt: remote.deviceUpdatedAt }
-            : null,
-        );
-        publish({ busy: false, remoteUpdatedAt: remote ? Date.parse(remote.updatedAt) || null : null });
-        if (decision.action === "push") return push(local.version, local.updatedAt, false);
-        if (decision.action === "pull") {
-          publish({
-            decision: "pull",
-            message: "Le cloud est plus récent : ouvre « Charger le cloud » pour récupérer cette partie.",
-            isError: false,
-          });
-          return;
-        }
-        if (decision.action === "noop") {
-          publish({ decision: "noop", pending: false, lastSyncAt: deps.now(), message: decision.reason, isError: false });
-          return;
-        }
-        publish({ decision: "conflict", pending: true, message: decision.reason, isError: false });
-      } catch (error) {
-        fail(error, "Synchronisation impossible.");
-      }
-    },
-
-    /** Récupère le nom affiché (et la vitrine) pour préremplir l'écran. */
-    async loadProfile(): Promise<void> {
-      const api = resolve();
-      const userId = api?.session()?.userId;
-      if (!api || !userId) return;
-      try {
-        const profile = await api.profile(userId);
-        if (profile) {
-          publish({
-            displayName: profile.displayName,
-            showcase: normalizeShowcase(profile.showcaseSlugs),
-          });
-        }
-      } catch {
-        // Sans réseau, on garde le dernier nom connu.
-      }
-    },
-
-    async loadLeaderboard(metric: LeaderboardMetric = state.leaderboardMetric): Promise<void> {
-      const api = resolve();
-      if (!networkReady(api)) return;
-      publish({ busy: true, leaderboardMetric: metric });
-      try {
-        const rows = await api.leaderboard(20, metric);
-        publish({ busy: false, leaderboard: rows, message: null, isError: false });
-      } catch (error) {
-        fail(error, "Classement indisponible.");
-      }
-    },
-
-    /** Empreinte locale, utile pour diagnostiquer un conflit. */
-    fingerprint(): string | null {
-      const local = deps.readState();
-      return local ? stateFingerprint(local) : null;
-    },
+    // ---- les actions, par domaine (voir ./store) ---------------------------
+    ...actions,
   };
 }
 

@@ -1,4 +1,17 @@
 /**
+ * L'extension des portraits, écrite **une fois** pour tout le dépôt.
+ *
+ * Elle est en WebP depuis le 7 octobre 2026 : les mêmes 1000 visages en 600 px
+ * pèsent 16,6 Mo au lieu de 29 — et comme ils font 86 % du poids de l'APK,
+ * c'est le seul chiffre qui compte pour l'installation sur un téléphone. Les
+ * trois autres endroits qui doivent dire la même chose : `creatorImage()`
+ * (`src/lib/catalog.ts`), `encodeAvatar()` (`scripts/lib/avatars.mjs`) et les
+ * deux scripts de génération. `npm run catalog:check` tombe si un portrait
+ * manque — donc si l'un des quatre part sans les autres.
+ */
+export const PORTRAIT_EXT = ".webp";
+
+/**
  * Entretien du dossier `public/creators/`.
  *
  * Deux dérives coûtent cher quand le catalogue est embarqué dans l'APK :
@@ -16,30 +29,33 @@
 import { readdir, stat, unlink } from "node:fs/promises";
 import path from "node:path";
 
-/** Noms de fichiers attendus pour une liste de slugs : `<slug>.jpg`. */
+/** Noms de fichiers attendus pour une liste de slugs : `<slug>.webp`. */
 export function expectedPortraitNames(slugs) {
-  return slugs.map((slug) => `${slug}.jpg`);
+  return slugs.map((slug) => `${slug}${PORTRAIT_EXT}`);
 }
 
 /**
  * Fichiers du dossier qui ne correspondent à aucun créateur du catalogue.
  *
  * Deux précautions, parce qu'un élagage supprime des fichiers :
- *   - seuls les `.jpg` / `.jpeg` **en minuscules** sont candidats — c'est ce
- *     que le générateur écrit et ce que l'application demande ; un `.JPG`
- *     posé à la main n'est jamais supprimé (il sera signalé comme portrait
- *     manquant, ce qui est exact : `<slug>.jpg` n'existe pas) ;
+ *   - seuls les `.webp` **en minuscules** sont candidats, plus les anciens
+ *     `.jpg` / `.jpeg` (le dossier en a porté jusqu'au 7 octobre 2026 — un
+ *     portrait resté en JPEG doit pouvoir être élagé) ; un `.WEBP` posé à la
+ *     main n'est jamais supprimé (il sera signalé comme portrait manquant, ce
+ *     qui est exact : `<slug>.webp` n'existe pas) ;
  *   - les autres fichiers (README, index, sous-dossiers) sont ignorés.
  */
 export function selectOrphans(fileNames, slugs) {
   const keep = new Set(expectedPortraitNames(slugs));
-  return fileNames.filter((name) => /\.jpe?g$/.test(name) && !keep.has(name)).sort();
+  return fileNames
+    .filter((name) => /\.(webp|jpe?g)$/.test(name) && !keep.has(name))
+    .sort();
 }
 
 /** Créateurs sans fichier de portrait. */
 export function selectMissing(fileNames, slugs) {
   const present = new Set(fileNames);
-  return slugs.filter((slug) => !present.has(`${slug}.jpg`));
+  return slugs.filter((slug) => !present.has(`${slug}${PORTRAIT_EXT}`));
 }
 
 /** Somme des tailles des fichiers donnés (octets réellement présents). */

@@ -30,3 +30,7 @@ public/downloads/
 npm-debug.log*
 tsconfig.tsbuildinfo
 next-env.d.ts
+
+# Tests de bout en bout (Playwright) : sorties locales, jamais commitées.
+test-results/
+playwright-report/

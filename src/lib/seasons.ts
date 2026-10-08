@@ -23,7 +23,12 @@ import {
   REGION_WAVE_SIZE,
   type RegionFamily,
 } from "@/lib/regions";
-import { familyIdOf, pieceOf, splitSeason as splitSeasonBase } from "../../scripts/lib/seasons-split.mjs";
+import {
+  familyIdOf,
+  pieceOf,
+  splitSeason as splitSeasonBase,
+  tiersFor,
+} from "../../scripts/lib/seasons-split.mjs";
 import seasonConfig from "@/data/seasons.config.json";
 
 export type SeasonReward = { points: number; hourglasses: number };
@@ -79,54 +84,6 @@ type SeasonConfig = {
 
 const CONFIG = seasonConfig as SeasonConfig;
 
-/** Libellés des paliers, du plus accessible au plus rare. */
-const TIER_LABELS = ["Bronze", "Argent", "Or", "Arc-en-ciel"] as const;
-/** Parts du total de points attribuées aux paliers (cumulées à l'usage). */
-const TIER_SHARES = [0.15, 0.4, 0.7, 1];
-
-/**
- * Seuils d'une saison de `size` créateurs : 25 %, 50 %, 75 % et 100 %, toujours
- * strictement croissants et jamais supérieurs à la taille. Une petite saison a
- * donc moins de paliers (jamais deux paliers identiques ni un palier
- * inatteignable).
- */
-function tierThresholds(size: number): number[] {
-  const thresholds: number[] = [];
-  for (const share of [0.25, 0.5, 0.75, 1]) {
-    const wanted = Math.max(Math.ceil(share * size), (thresholds.at(-1) ?? 0) + 1);
-    const bounded = Math.min(size, wanted);
-    if (bounded !== thresholds.at(-1)) thresholds.push(bounded);
-  }
-  return thresholds;
-}
-
-/**
- * Paliers d'une saison. Les points sont répartis par cumul arrondi : la somme
- * des paliers retombe **exactement** sur le total historique
- * (`pointsPerCreator × taille`), donc l'économie du jeu ne bouge pas — elle est
- * simplement versée en cours de route au lieu d'attendre la complétion.
- */
-function tiersFor(size: number): SeasonTier[] {
-  const thresholds = tierThresholds(size);
-  const totalPoints = CONFIG.pointsPerCreator * size;
-  const shares = TIER_SHARES.slice(0, thresholds.length);
-  shares[shares.length - 1] = 1;
-
-  let previous = 0;
-  return thresholds.map((required, index) => {
-    const cumulative = Math.round(totalPoints * shares[index]);
-    const points = Math.max(1, cumulative - previous);
-    previous = cumulative;
-    const last = index === thresholds.length - 1;
-    return {
-      label: TIER_LABELS[index] ?? TIER_LABELS[TIER_LABELS.length - 1],
-      required,
-      reward: { points, hourglasses: last ? CONFIG.hourglassesPerSeason : 0 },
-      emblem: last,
-    };
-  });
-}
-
 /** Entrée d'une saison : le slug et sa famille, pour décrire chaque vague. */
 export type SeasonEntry = { slug: string; region?: string };
 
@@ -145,7 +102,9 @@ export function splitSeason(
   const pieces = splitSeasonBase(entries, meta, maxSize);
   return pieces.map((piece, index) => ({
     ...piece,
-    tiers: tiersFor(piece.slugs.length),
+    // Les paliers viennent du module partagé : l'application les affiche, le
+    // serveur les paie (`0028_wallet_saisons.sql`), une seule règle pour les deux.
+    tiers: tiersFor(piece.slugs.length, CONFIG),
     familyId: familyIdOf(piece.id),
     piece: pieceOf(piece.id),
     finalPiece: index === pieces.length - 1,
