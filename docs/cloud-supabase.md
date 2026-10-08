@@ -209,6 +209,14 @@ remplacé sans que le joueur le demande (« Charger le cloud »).
    npx supabase migration list   # les colonnes Local et Remote doivent se répondre
    ```
 
+   > ⚠️ **`migration repair` sans numéro** (« répare tout l'historique ») n'est
+   > **pas** un raccourci de la ligne ci-dessus : il **vide** la table de suivi
+   > (`truncate`) puis y marque **tout** le dossier local comme appliqué —
+   > dernière migration comprise. Une migration jamais exécutée serait donc
+   > considérée comme posée, et `db push` ne la poserait **jamais**. C'est la
+   > liste explicite des numéros, et elle seule, qui est sûre : elle ajoute les
+   > lignes demandées et ne touche à rien d'autre.
+
    Ce qui suit dit **ce que chaque fichier apporte** (la liste est le contenu de
    `supabase/migrations/`, dans l'ordre où `db push` les pose) :
    - [`supabase/migrations/0001_comptes_cloud.sql`](../supabase/migrations/0001_comptes_cloud.sql)
