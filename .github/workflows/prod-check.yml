@@ -1,0 +1,58 @@
+name: Vérification de production (temporaire)
+
+# Ce workflow ne construit rien et ne touche à rien : il **demande** au projet
+# Supabase de production quelles migrations y sont installées, et il l'écrit
+# dans le journal du run (`::notice`). Il existe parce que le bac à sable d'où
+# je travaille n'a accès qu'à api.github.com : la seule façon d'interroger la
+# production est de la faire depuis un runner.
+#
+# Il se supprime dès la réponse lue.
+on:
+  push:
+    paths:
+      - ".github/workflows/prod-check.yml"
+  workflow_dispatch:
+
+jobs:
+  etat:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Ce que la production connaît
+        env:
+          URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          ANON: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          set -u
+          if [ -z "${URL:-}" ] || [ -z "${ANON:-}" ]; then
+            echo "::error title=Configuration::URL ou clé anon absente des variables du dépôt"
+            exit 0
+          fi
+          # La variable peut porter « /rest/v1/ » au bout : on la réduit à l'origine.
+          BASE=$(printf '%s' "$URL" | sed -E 's#/rest/v1/?$##; s#/+$##')
+          echo "::notice title=Origine::${BASE}"
+
+          # Un appel de lecture seul, sans session : la fonction répond « connecte-toi »
+          # si elle existe, « Could not find the function » si la migration manque.
+          sonde() {
+            local nom="$1" corps="$2" note="$3"
+            local brut code message
+            brut=$(curl -sS -m 20 -w '\n%{http_code}' -X POST "$BASE/rest/v1/rpc/$nom" \
+              -H "apikey: $ANON" -H "Authorization: Bearer $ANON" \
+              -H "Content-Type: application/json" --data "$corps" 2>&1 || true)
+            code=$(printf '%s' "$brut" | tail -n1)
+            message=$(printf '%s' "$brut" | sed '$d' | tr -d '\n' | cut -c1-160)
+            echo "::notice title=$nom ($note)::HTTP $code · $message"
+          }
+
+          # Contrôles : des fonctions installées depuis longtemps. Si elles ne répondent
+          # pas comme prévu, c'est la sonde qui est cassée, pas la production.
+          sonde "pack_status" "{}" "0004, contrôle"
+          sonde "wallet_get" "{}" "0027, contrôle"
+          sonde "last_pack_shelf" "{}" "0012, contrôle"
+
+          # Les migrations à vérifier, de la plus récente à la plus ancienne.
+          sonde "tokens_get" "{}" "0035 ?"
+          sonde "_streak_reward_tokens" '{"p_day":4}' "0035 ?"
+          sonde "_tokens_per_pack" '{"p_at":"2026-07-10T18:30:00Z"}' "0035 ?"
+          sonde "token_prices" "{}" "0035 ?"
+          sonde "_pack_initial_packs" "{}" "0033 ?"

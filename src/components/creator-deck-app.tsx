@@ -370,17 +370,23 @@ function HomeView({
    * haut, et relâche. La règle vit dans `src/lib/pull.ts` (pure, testée) ; ici
    * il n'y a que le doigt, le son et le geste.
    *
-   * Deux garde-fous : on ne tire que si le booster est vraiment ouvrable (pas
-   * de geste qui ne mène nulle part), et le **bouton « Ouvrir » reste** — c'est
-   * le repli pour la souris, le clavier, et les doigts qui n'aiment pas tirer.
+   * Trois garde-fous : on ne tire que si le booster est vraiment ouvrable (pas
+   * de geste qui ne mène nulle part), **un geste retiré n'ouvre rien** (voir
+   * `pullCancel`), et le **bouton « Ouvrir » reste** — c'est le repli pour la
+   * souris, le clavier, et les doigts qui n'aiment pas tirer.
    */
   const pullRef = useRef<{ y: number; t: number } | null>(null);
+  // Le dernier verdict, en **référence** : `pointerup` peut arriver avant que
+  // React ait re-rendu l'état, et relire `pull.armed` à cet instant serait
+  // relire le geste d'avant (l'ouverture partait alors sur un mouvement périmé).
+  const armedRef = useRef(false);
   const [pull, setPull] = useState<PullVerdict>({ progress: 0, armed: false, active: false });
   const canPull = !opening && !needsAccount && stock > 0;
 
   function pullStart(event: PointerEvent<HTMLElement>) {
     if (!canPull) return;
     pullRef.current = { y: event.clientY, t: performance.now() };
+    armedRef.current = false;
     // Le doigt continue de piloter le geste même s'il sort de la zone du pack.
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -391,18 +397,34 @@ function HomeView({
     const verdict = pullVerdict(start.y - event.clientY, performance.now() - start.t);
     // Le seuil est franchi : une vibration courte et le bruit de l'objet qu'on
     // ouvre, **une seule fois** — pas à chaque pixel.
-    if (verdict.armed && !pull.armed) {
+    if (verdict.armed && !armedRef.current) {
       buzz(TEAR_HAPTIC);
       playTear();
     }
+    armedRef.current = verdict.armed;
     setPull(verdict);
   }
 
+  /** Le doigt se lève : si le geste a armé, le booster s'ouvre. */
   function pullEnd() {
-    const armed = pull.armed;
+    const armed = armedRef.current;
     pullRef.current = null;
+    armedRef.current = false;
     setPull({ progress: 0, armed: false, active: false });
     if (armed) onOpen();
+  }
+
+  /**
+   * Le geste est **retiré** (le navigateur reprend la main : défilement, appel
+   * entrant, changement d'application, deuxième doigt) : ça n'ouvre **rien**.
+   * C'est la différence entre relâcher et se faire couper — sans elle, un
+   * `pointercancel` au mauvais moment ouvrait un booster que personne n'avait
+   * tiré.
+   */
+  function pullCancel() {
+    pullRef.current = null;
+    armedRef.current = false;
+    setPull({ progress: 0, armed: false, active: false });
   }
 
   const pityCopy =
@@ -519,7 +541,7 @@ function HomeView({
         onPointerDown={pullStart}
         onPointerMove={pullMove}
         onPointerUp={pullEnd}
-        onPointerCancel={pullEnd}
+        onPointerCancel={pullCancel}
         aria-label={`${pack.label} : tire le booster vers le haut pour ouvrir, ou utilise le bouton Ouvrir`}
       >
         <div className="pack-shadow" />

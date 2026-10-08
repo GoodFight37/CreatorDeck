@@ -9,13 +9,22 @@
  * durée, il répond « armé » ou « pas armé ». C'est testable sans navigateur, et
  * la même règle vaut pour la souris et pour le doigt.
  *
- * Trois façons d'armer, parce qu'une seule ne suffit pas :
+ * Deux façons d'armer, parce qu'une seule ne suffit pas :
  *
  *   * **tirer loin** : `PULL_THRESHOLD_PX` de remontée, sans se presser — le
  *     geste lent et sûr, celui qu'on fait quand on ne connaît pas le jeu ;
- *   * **tirer sec** : `PULL_FLICK_PX` en moins de `PULL_FLICK_MS`, une chiquenaude
- *     vers le haut — le geste du joueur qui ouvre son dixième paquet ;
- *   * jamais vers le bas : descendre ne casse rien, ne fait rien.
+ *   * **tirer sec** : `PULL_FLICK_PX` en moins de `PULL_FLICK_MS`, une
+ *     chiquenaude franche vers le haut — le geste du joueur qui ouvre son
+ *     dixième paquet.
+ *
+ * **Ce qu'aucune des deux ne doit accepter : un effleurement.** Rapporté par le
+ * joueur le 7 octobre 2026 : « quand j'effleure le booster ça l'ouvre
+ * directement, des fois je fais même pas exprès ». La première version armait à
+ * **30 px en 260 ms** (≈ 115 px/s) : un doigt qui se pose, glisse d'un pixel et
+ * se retire, ou le tout début d'un défilement, ouvrait un booster — un geste
+ * qui consomme une réserve. Les deux seuils sont donc ceux d'un vrai geste :
+ * 88 px de remontée, ou 80 px en moins de 200 ms (≈ 400 px/s). Une chiquenaude
+ * légitime les dépasse largement ; un effleurement, jamais.
  *
  * Le retour visuel est continu (`progress`, de 0 à 1) : le paquet monte, la
  * couture s'ouvre, et le joueur voit qu'il avance **avant** que ça arme. Le
@@ -23,11 +32,11 @@
  */
 
 /** Distance de tirer à atteindre pour armer, en pixels CSS. */
-export const PULL_THRESHOLD_PX = 64;
+export const PULL_THRESHOLD_PX = 88;
 /** Une chiquenaude vers le haut : cette distance… */
-export const PULL_FLICK_PX = 30;
-/** …en moins de ce temps. */
-export const PULL_FLICK_MS = 260;
+export const PULL_FLICK_PX = 80;
+/** …en moins de ce temps (≈ 400 px/s : une chiquenaude, pas un glissement). */
+export const PULL_FLICK_MS = 200;
 /** Au-delà, le visuel est à fond (mais le seuil reste celui du dessus). */
 export const PULL_VISUAL_MAX_PX = 150;
 /** En dessous, on considère que ce n'était pas un geste (tap, tremblement). */

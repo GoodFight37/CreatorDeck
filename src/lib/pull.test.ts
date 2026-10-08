@@ -1,9 +1,12 @@
 /**
  * Le geste d'ouverture : ce qui arme, ce qui n'arme pas.
  *
- * Le test qui compte le plus est celui de la **permissivité** : un geste lent
- * de 64 px doit ouvrir, et une chiquenaude de 30 px aussi. Un geste vers le bas
- * ne doit jamais armer — c'est ce qui laisse la page défiler sous le doigt.
+ * Deux exigences qui tirent en sens inverse, et c'est tout l'équilibre du
+ * module : un **vrai** geste doit ouvrir (lent ou vif, sans viser un trait
+ * parfait), et un **effleurement** ne doit jamais rien ouvrir — parce qu'un
+ * booster ouvert est un booster consommé. Le 7 octobre 2026, le joueur a
+ * rapporté l'inverse : « ça l'ouvre directement, des fois je fais même pas
+ * exprès ». Les tests de l'effleurement ci-dessous viennent de là.
  */
 import { describe, expect, it } from "vitest";
 import {
@@ -49,6 +52,30 @@ describe("le geste d'ouverture", () => {
     const mou = pullVerdict(PULL_FLICK_PX - 2, PULL_FLICK_MS + 500);
     expect(mou.armed).toBe(false);
     expect(mou.active).toBe(true);
+  });
+
+  it("n'ouvre rien sur un effleurement (le retour du joueur, mot pour mot)", () => {
+    // « Quand j'effleure le booster, ça l'ouvre directement. » Un doigt qui se
+    // pose, glisse de quelques pixels et repart : rien ne doit s'ouvrir — ni
+    // lentement, ni vite.
+    expect(pullVerdict(30, 200).armed).toBe(false);
+    expect(pullVerdict(30, 40).armed).toBe(false);
+    expect(pullVerdict(48, 120).armed).toBe(false);
+    expect(pullVerdict(60, 150).armed).toBe(false);
+    // Même franchement vif, un petit geste reste un petit geste : la
+    // chiquenaude demande 80 px.
+    expect(pullVerdict(79, 10).armed).toBe(false);
+  });
+
+  it("arme dès qu'un vrai geste est là, même imparfait", () => {
+    // Le geste légitime ne doit pas devenir un exercice de précision : un
+    // balayage franchement vif, une chiquenaude nette, une longue tirée lente.
+    expect(pullVerdict(80, 120).armed).toBe(true);
+    expect(pullVerdict(96, 400).armed).toBe(true);
+    expect(pullVerdict(140, 900).armed).toBe(true);
+    // Et la limite du visuel n'est pas celle du geste : tirer plus loin que
+    // l'affichage arme toujours.
+    expect(pullVerdict(PULL_VISUAL_MAX_PX * 2, 1_000).armed).toBe(true);
   });
 
   it("montre l'avancement en continu, et se bloque à fond", () => {
