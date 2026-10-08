@@ -15,6 +15,10 @@ name: APK Android (debug)
 #
 # Les poussées qui ne touchent que la documentation ne construisent rien : elles
 # ne changent pas l'application, et l'APK de la poussée précédente reste valable.
+#
+# Un second travail (`verif`) rejoue la pile SQL complète sur un Postgres
+# jetable : il ne construit rien, mais il dit qu'un fichier de migration colle
+# encore. Voir la note devant le travail.
 on:
   push:
     branches: [main, arena/01a10c75-creatordeck]
@@ -35,6 +39,29 @@ permissions:
   contents: write
 
 jobs:
+  # La pile SQL rejouée de bout en bout (`0001` → la dernière) sur un Postgres
+  # jetable : c'est le seul contrôle qui dit qu'un fichier de migration
+  # s'applique encore, dans l'ordre, sur une base neuve — et que les règles du
+  # serveur répondent ce que le jeu attend (points, jetons, série, vol).
+  #
+  # Il tourne **à côté** du build, pas devant : si une migration casse, le joueur
+  # reçoit quand même son APK (le jeu n'en dépend pas pour se lancer) et le run
+  # passe au rouge pour le dire.
+  verif:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # `embedded-postgres` et `pg` sont installés hors lock (`--no-save`) : un
+      # `npm ci` seul les oublie, et `supabase:verify` sortirait alors **vert
+      # sans rien tester**. `dev:setup` les installe et échoue s'ils manquent.
+      - run: npm run dev:setup
+      - run: npm run supabase:verify
+
   apk:
     runs-on: ubuntu-24.04
     steps:
