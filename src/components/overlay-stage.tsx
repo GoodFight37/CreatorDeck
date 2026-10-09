@@ -24,7 +24,7 @@
  * Le tirage suit exactement les mêmes règles que le jeu : serveur quand un
  * compte est connecté, moteur local sinon — jamais un mélange des deux.
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Hourglass, Layers3, LoaderCircle, Zap } from "lucide-react";
 import { PackTear } from "@/components/pack-tear";
 import { RevealOverlay } from "@/components/reveal-overlay";
@@ -32,7 +32,7 @@ import { usePackOpening, type DrawSource } from "@/hooks/use-pack-opening";
 import { useGame, useNow } from "@/hooks/use-game";
 import { getGameView, type DrawnCard } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
-import { PACK_TEAR_HAPTIC, PACK_TEAR_MS, tearDurationMs } from "@/lib/reveal";
+import { PACK_TEAR_HAPTIC, tearDurationMs } from "@/lib/reveal";
 import { playPackOpening } from "@/lib/sfx";
 import { cardEffectsAllowed } from "@/lib/tilt";
 
@@ -51,6 +51,7 @@ export function OverlayStage() {
   const [kind, setKind] = useState<"live" | "scene">("live");
   const [busy, setBusy] = useState(false);
   const [tearing, setTearing] = useState(false);
+  const tearResolve = useRef<(() => void) | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
 
   // La vue dérivée (réserve de boosters, Paquet Scène du jour) : la recharge
@@ -73,10 +74,9 @@ export function OverlayStage() {
     setTearing(true);
     playPackOpening();
     buzz(PACK_TEAR_HAPTIC);
-    await new Promise<void>((resoudre) => {
-      window.setTimeout(resoudre, PACK_TEAR_MS);
+    await new Promise<void>((resolve) => {
+      tearResolve.current = resolve;
     });
-    setTearing(false);
   }, []);
 
   const openLive = useCallback(async () => {
@@ -159,7 +159,11 @@ export function OverlayStage() {
   return (
     <div className="overlay-root">
       <div className="overlay-frame">
-        {tearing ? <PackTear kind={kind} /> : null}
+        {tearing ? <PackTear kind={kind} autoCompleteAfterMs={650} onComplete={() => {
+          setTearing(false);
+          tearResolve.current?.();
+          tearResolve.current = null;
+        }} /> : null}
         {cards.length ? (
           <RevealOverlay
             key={cards[0]?.id ?? "reveal"}
