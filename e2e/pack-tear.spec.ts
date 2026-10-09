@@ -23,6 +23,7 @@ test("opening is controlled by the player, not an automatic timer", async ({ pag
   const brand = page.locator(".booster-foil-live .pack-brand");
   const crimp = page.locator(".booster-foil-strip");
   await expect(brand).toBeVisible();
+  await expect(tearing.locator("canvas.booster-foil-webgl")).toHaveCount(1);
   const brandBox = await brand.boundingBox();
   const crimpBox = await crimp.boundingBox();
   expect(brandBox).not.toBeNull();
