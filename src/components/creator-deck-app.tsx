@@ -352,8 +352,6 @@ export function CreatorDeckApp() {
   async function dechirer(kind: "live" | "scene"): Promise<void> {
     setTearing(true);
     setTearKind(kind);
-    playPackOpening();
-    buzz(PACK_TEAR_HAPTIC);
     await new Promise<void>((resolve) => {
       tearResolve.current = resolve;
     });
@@ -678,7 +676,10 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {tearing ? <PackTear kind={tearKind} onComplete={() => {
+      {tearing ? <PackTear kind={tearKind} onTear={() => {
+        playPackOpening();
+        buzz(PACK_TEAR_HAPTIC);
+      }} onComplete={() => {
         setTearing(false);
         tearResolve.current?.();
         tearResolve.current = null;
