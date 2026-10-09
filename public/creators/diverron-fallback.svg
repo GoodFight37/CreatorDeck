@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+<title>Visuel de remplacement DIVERRON</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#12182e"/><stop offset=".4" stop-color="#313658"/><stop offset="1" stop-color="#151023"/></linearGradient>
+<radialGradient id="light"><stop stop-color="#a2a8e7" stop-opacity=".7"/><stop offset=".5" stop-color="#7d73c0" stop-opacity=".28"/><stop offset="1" stop-color="#1a1535" stop-opacity="0"/></radialGradient>
+<linearGradient id="shard" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#d2dfff"/><stop offset=".3" stop-color="#8b9ce6"/><stop offset=".7" stop-color="#363d73"/><stop offset="1" stop-color="#b7bde8"/></linearGradient>
+</defs>
+<rect width="600" height="600" fill="url(#bg)"/>
+<rect width="600" height="600" fill="url(#light)"/>
+<g opacity=".3" stroke="#b4c4ec" fill="none"><circle cx="308" cy="284" r="209" stroke-width="3"/><circle cx="308" cy="284" r="172" stroke-width="1"/><path d="M-50 200L620 385 M-30 417L610 174" stroke-width="2"/></g>
+<g transform="translate(298 276)"><path d="M-110-150H12Q154-150 154-5Q154 142 11 142H-110Z" fill="url(#shard)" stroke="#dde9ff" stroke-width="8"/>
+<path d="M-43-78H13Q89-78 89-4Q89 73 11 73H-43Z" fill="#17182f"/>
+<path d="M-110-150L-58-93V94L-110 142" stroke="#f3f5ff" stroke-opacity=".55" stroke-width="4" fill="none"/></g>
+<path d="M0 496H600V600H0Z" fill="#11101f" opacity=".85"/>
+<text x="300" y="552" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="35" font-weight="800" letter-spacing="5" fill="#e7eaff">DIVERRON</text>
+</svg>
