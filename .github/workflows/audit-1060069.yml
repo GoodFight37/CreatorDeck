@@ -103,3 +103,43 @@ jobs:
             test-results/
           if-no-files-found: warn
           retention-days: 7
+
+  navigateur-cloud:
+    name: Test du chemin cloud avec RPC simulés
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout de la révision auditée
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Installer Chromium et ses dépendances système
+        run: npx playwright install --with-deps chromium
+      - name: Créer une configuration Supabase factice
+        run: |
+          cat > .env.local <<'EOF'
+          NEXT_PUBLIC_SUPABASE_URL=https://audit-test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY=audit-only-placeholder-key-not-a-real-supabase-key-000000000000000000000000
+          EOF
+      - name: Tester le tirage cloud (tous les RPC sont simulés par Playwright)
+        run: npm run e2e -- --grep "avec le serveur"
+        env:
+          CI: "true"
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Joindre les rapports du navigateur en cas d'échec
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-playwright-cloud-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
