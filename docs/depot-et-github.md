@@ -183,6 +183,48 @@ le 8 octobre 2026** avec le reste de `.github/workflows`. Depuis, plus rien ne s
 construit tout seul : pousser un essai **ne remplace pas** davantage l'APK
 installé sur le téléphone, mais c'est aussi le cas d'une poussée normale.
 
+## Suivre la branche de travail depuis ton poste (Windows)
+
+Le travail courant vit sur `arena/01a10c75-creatordeck`, pas sur `master`. Un
+`git pull` lancé depuis `master` répond donc :
+
+```
+There is no tracking information for the current branch.
+```
+
+Rien n'a été écrasé — Git n'a simplement pas deviné **avec quoi** fusionner. Deux
+façons de le dire, une seule fois chacune.
+
+**Le plus propre : une branche locale qui suit le travail.** À taper une ligne à
+la fois, dans PowerShell, depuis le dossier du dépôt :
+
+```
+git status
+git switch -c arena/01a10c75-creatordeck --track origin/arena/01a10c75-creatordeck
+git pull
+```
+
+Si Git répond que la branche existe déjà : `git switch arena/01a10c75-creatordeck`
+puis `git pull`. Ensuite, **`git pull` seul suffit** — c'est le but.
+
+**Ou alors, faire suivre le travail à `master`** (une seule ligne, à ne faire que
+si `git status` dit que `master` est à jour, sans commit local) :
+
+```
+git branch --set-upstream-to=origin/arena/01a10c75-creatordeck master
+git pull
+```
+
+Le `git status` d'avant compte : c'est lui qui dit si tu as des commits locaux ou
+des fichiers modifiés. S'il annonce « Your branch is ahead of … », **ne fais pas**
+la deuxième méthode — elle transformerait le rattrapage en fusion.
+
+**Rappel utile** : tu n'as pas besoin de `git pull` pour jouer. Vercel
+reconstruit le jeu à chaque poussée, et c'est là que ça se teste dans le
+navigateur du téléphone. On tire le code pour **poser les migrations**
+(`npx supabase db push`) et pour construire un APK à la main
+(`npm run android:debug`).
+
 ## Le jour où l'historique regrossit
 
 Si `main` finit par accumuler beaucoup d'objets (nouvelles versions du
