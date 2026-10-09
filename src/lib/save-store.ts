@@ -50,7 +50,7 @@ export const LEGACY_SAVE_KEYS = [
   "creatordeck.save.v1",
 ] as const;
 /** Versions de sauvegarde que ce build sait lire. */
-export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, SAVE_VERSION];
+export const SUPPORTED_SAVE_VERSIONS: readonly number[] = [1, 2, 3, 4, 5, 6, 7, 8, SAVE_VERSION];
 
 export interface KeyValueStorage {
   getItem(key: string): string | null;

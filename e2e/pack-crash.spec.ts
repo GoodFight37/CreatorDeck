@@ -21,7 +21,7 @@ import { join } from "node:path";
  *      garde-fou du prompt : « plus de `push(..., true)` après un tirage ».
  */
 
-const SAVE_KEY = "creatordeck.save.v8";
+const SAVE_KEY_PREFIX = "creatordeck.save.v";
 const SESSION_KEY = "creatordeck.cloud.session";
 
 /** Le `.env.local` du joueur, s'il existe : sans lui, pas de cloud à tester. */
@@ -48,12 +48,25 @@ async function openDeck(page: Page): Promise<void> {
 
 /** La partie telle que l'appareil l'a écrite. */
 async function savedCards(page: Page): Promise<Array<{ id: string; creatorSlug: string }>> {
-  return page.evaluate((key) => {
+  return page.evaluate((prefix) => {
+    // Ne pas figer ici la version d'une sauvegarde : la clé courante suit
+    // SAVE_VERSION dans le moteur (actuellement v9). Une ancienne clé v8 est
+    // une clé de migration, pas la sauvegarde que le jeu vient d'écrire.
+    const keys = Object.keys(window.localStorage)
+      .filter((key) => {
+        if (!key.startsWith(prefix)) return false;
+        return /^\d+$/.test(key.slice(prefix.length));
+      })
+      .sort((a, b) => Number(b.slice(prefix.length)) - Number(a.slice(prefix.length)));
+    const key = keys[0];
+    // L'état initial peut ne pas encore avoir été écrit avant le premier geste.
+    // Le test vérifie plus bas qu'un tirage, lui, est bien persisté.
+    if (!key) return [];
     const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     const state = JSON.parse(raw) as { cards?: Array<{ id: string; creatorSlug: string }> };
     return (state.cards ?? []).map((card) => ({ id: card.id, creatorSlug: card.creatorSlug }));
-  }, SAVE_KEY);
+  }, SAVE_KEY_PREFIX);
 }
 
 test("sans cloud : le tirage local survit à un rechargement", async ({ page }) => {
@@ -67,7 +80,23 @@ test("sans cloud : le tirage local survit à un rechargement", async ({ page }) 
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Fermer" }).click();
   const apresTirage = await savedCards(page);
-  expect(apresTirage.length).toBeGreaterThan(avant.length);
+  const sauvegardes = await page.evaluate((prefix) =>
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => {
+        try {
+          const value = JSON.parse(window.localStorage.getItem(key) ?? "null") as { cards?: unknown[] };
+          return { key, cards: value?.cards?.length ?? null };
+        } catch {
+          return { key, cards: "JSON illisible" };
+        }
+      }),
+    SAVE_KEY_PREFIX,
+  );
+  expect(
+    apresTirage.length,
+    `La collection doit être persistée après le tirage. Avant=${avant.length}, après=${apresTirage.length}, clés=${JSON.stringify(sauvegardes)}`,
+  ).toBeGreaterThan(avant.length);
 
   // Le « crash » : la page est rechargée, rien d'autre.
   await page.reload();

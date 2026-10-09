@@ -151,6 +151,31 @@ describe("migration", () => {
     expect(view.tiers.reduce((sum, tier) => sum + tier.reward.points, 0)).toBe(first.slugs.length * 4);
   });
 
+  it("met à niveau une sauvegarde v8 sans perdre la collection ni le jour du Paquet Scène", () => {
+    const v8 = {
+      ...createInitialState(T0),
+      version: 8,
+      points: 480,
+      cards: [
+        { id: "carte-v8", creatorSlug: "squeezie", rarity: "epic", variant: "standard", obtainedAt: T0, rareDrop: false },
+      ],
+      sceneDay: "2026-01-01",
+    };
+    const storage = memoryStorage();
+    storage.setItem("creatordeck.save.v8", JSON.stringify(v8));
+
+    const state = loadState(storage, T0 + 5);
+
+    expect(state).not.toBeNull();
+    expect(state?.version).toBe(SAVE_VERSION);
+    expect(state?.points).toBe(480);
+    expect(state?.cards).toEqual(v8.cards);
+    expect(state?.sceneDay).toBe("2026-01-01");
+    expect(state?.tribunal).toEqual({ day: "", verdicts: {}, claimed: false });
+    expect(storage.data.has("creatordeck.save.v8")).toBe(false);
+    expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
+  });
+
   it("met à niveau une sauvegarde v5 : les jalons redeviennent réclamables", () => {
     // La récompense des jalons n'existait pas en v5 : aucune partie ne perd
     // quoi que ce soit, elle peut simplement réclamer ce qu'elle a déjà atteint.

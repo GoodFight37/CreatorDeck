@@ -2,7 +2,7 @@ import type { CloudStoreContext } from "./context";
 import type { PackOpenOutcome, CloudActionOutcome } from "./types";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { CloudError } from "@/lib/cloud/api";
-import { applyPackResult, applyScenePackResult, applyServerProgression } from "@/lib/game-engine";
+import { applyPackResult, applyScenePackResult, applyServerProgression, SAVE_VERSION } from "@/lib/game-engine";
 import { sanitizeState } from "@/lib/save-store";
 
 /**
@@ -94,7 +94,16 @@ export function packActions(ctx: CloudStoreContext) {
         const remoteSave = result.save;
         const remote = remoteSave ? sanitizeState(remoteSave.state, ctx.deps.now()) : null;
         if (remote && remoteSave) {
-          ctx.deps.applyState(remote);
+          // Un ancien client peut encore avoir écrit une sauvegarde v8 sur le
+          // serveur. La forme distante est la vérité pour les cartes et les
+          // compteurs du tirage, mais le Tribunal (ajouté en v9) n'existait pas
+          // dans ce blob : ne pas effacer la séance locale en adoptant la ligne.
+          const remoteVersion = (remoteSave.state as { version?: unknown }).version;
+          const adopted =
+            typeof remoteVersion === "number" && remoteVersion < SAVE_VERSION
+              ? { ...remote, tribunal: local.tribunal }
+              : remote;
+          ctx.deps.applyState(adopted);
           ctx.publish({
             busy: false,
             pending: false,
