@@ -1,32 +1,45 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { PackArtwork } from "@/components/drop-view";
-import { FoilLight3D } from "@/components/foil-light-3d";
+import { FoilPack3D } from "@/components/foil-pack-3d";
 
-/** A tactile booster opening: swipe across the foil seal to tear the top strip. */
-export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterMs }: {
+/**
+ * One tactile interaction, one continuous cinematic sequence.
+ * The 3D foil geometry tears apart and a lit reveal portal bridges the scene
+ * to the actual first card. Nothing fake marked "CD" appears in between.
+ */
+export function PackTear({
+  kind = "live",
+  onComplete,
+  onTear,
+  autoCompleteAfterMs,
+}: {
   kind?: "live" | "scene";
   onComplete: () => void;
-  /** Plays the rip sound and haptic feedback at the actual tear, not on mount. */
   onTear?: () => void;
-  /** Broadcast overlay has no touch interaction; animate the tear automatically. */
   autoCompleteAfterMs?: number;
 }) {
   const [progress, setProgress] = useState(0);
   const [opened, setOpened] = useState(false);
-  const start = useRef<number | null>(null);
-  const done = useRef(false);
+  const startX = useRef<number | null>(null);
+  const completed = useRef(false);
+  const timer = useRef<number | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  const onTearRef = useRef(onTear);
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { onTearRef.current = onTear; }, [onTear]);
 
   const finish = useCallback(() => {
-    if (done.current) return;
-    done.current = true;
-    onTear?.();
+    if (completed.current) return;
+    completed.current = true;
+    startX.current = null;
     setProgress(100);
     setOpened(true);
-    window.setTimeout(onComplete, 900);
-  }, [onComplete, onTear]);
+    onTearRef.current?.();
+    // Mesh deformation and opening curtain share exactly this duration.
+    timer.current = window.setTimeout(() => onCompleteRef.current(), 1180);
+  }, []);
 
   useEffect(() => {
     if (autoCompleteAfterMs === undefined) return;
@@ -34,47 +47,32 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
     return () => window.clearTimeout(timeout);
   }, [autoCompleteAfterMs, finish]);
 
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+  }, []);
+
   return createPortal(
-    <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
-      <div className={`booster-opening-stage booster-opening-stage-${kind}`}>
-        <div className="booster-cinematic-orbit" aria-hidden="true"><i /><i /><i /></div>
+    <div className="pack-tear booster-interactive booster-cinematic" role="dialog"
+      aria-modal="true" aria-label="Ouvrir le booster">
+      <div className={"booster-opening-stage booster-premium-stage booster-premium-" + kind +
+        (opened ? " is-ripped" : "")}>
+        <div className="booster-stage-atmosphere" aria-hidden="true">
+          <span /><span /><span />
+        </div>
+        <div className="booster-premium-caption">
+          <span className="booster-caption-rule" />
+          <span>{kind === "scene" ? "PAQUET SCÈNE" : "LIVE DROP"}</span>
+          <span className="booster-caption-rule" />
+        </div>
         <p className="booster-opening-instruction">
-          {opened ? "Booster ouvert !" : "Glisse sur la couture pour déchirer"}
+          {opened ? "LA RÉVÉLATION COMMENCE" : "DÉCHIRE LA SOUDURE"}
         </p>
-        <div className={`booster-foil booster-foil-${kind} ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties} onPointerMove={(event) => {
-          if (opened || event.pointerType === "touch") return;
-          const bounds = event.currentTarget.getBoundingClientRect();
-          const x = (event.clientX - bounds.left) / bounds.width - .5;
-          const y = (event.clientY - bounds.top) / bounds.height - .5;
-          event.currentTarget.style.setProperty("--foil-yaw", `${Math.max(-5, Math.min(5, x * 10))}deg`);
-          event.currentTarget.style.setProperty("--foil-pitch", `${Math.max(-4, Math.min(4, -y * 8))}deg`);
-        }} onPointerLeave={(event) => {
-          event.currentTarget.style.removeProperty("--foil-yaw");
-          event.currentTarget.style.removeProperty("--foil-pitch");
-        }}>
-          <div className="booster-card-extract" aria-hidden="true"><span>CD</span></div>
-          <div className="booster-foil-spine" aria-hidden="true" />
-          <div className="booster-foil-fold booster-foil-fold-left" aria-hidden="true" />
-          <div className="booster-foil-fold booster-foil-fold-right" aria-hidden="true" />
-          <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
-            {kind === "live" ? (
-              <PackArtwork />
-            ) : (
-              <>
-                <span className="booster-foil-logo">CREATOR<br />DECK</span>
-                <span className="booster-foil-emblem">✦</span>
-                <span className="booster-foil-kind">PAQUET SCÈNE</span>
-                <span className="booster-foil-bottom">ÉDITION CRÉATEURS</span>
-              </>
-            )}
-            <FoilLight3D opened={opened} />
-            <span className="booster-foil-shine" />
-            <span className="booster-foil-lustre" aria-hidden="true" />
-            <span className="booster-foil-bottom-seal" aria-hidden="true" />
-          </div>
-          <div className="booster-foil-strip" aria-hidden="true">
-            <span className="booster-foil-top-crimp" />
-            <span className="booster-foil-strip-text">✦ CREATOR DECK ✦</span>
+        <div className={"booster-physical-scene" + (opened ? " booster-foil-open" : "")}
+          style={{ "--tear-progress": progress + "%" } as CSSProperties}>
+          <FoilPack3D kind={kind} progress={progress} opened={opened} />
+          <div className="booster-foil-glow" aria-hidden="true" />
+          <div className="booster-premium-lightburst" aria-hidden="true">
+            <span /><span /><span /><span />
           </div>
           <div
             className="booster-tear-track"
@@ -86,34 +84,57 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             aria-valuenow={Math.round(progress)}
             onPointerDown={(event) => {
               if (opened) return;
-              start.current = event.clientX;
-              event.currentTarget.closest(".booster-foil")?.classList.add("booster-foil-interacting");
+              startX.current = event.clientX;
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
-              if (opened || start.current === null) return;
-              const next = Math.max(0, Math.min(100, (event.clientX - start.current) / 180 * 100));
+              if (opened || startX.current === null) return;
+              const next = Math.max(0, Math.min(100,
+                ((event.clientX - startX.current) / 180) * 100));
               setProgress(next);
-              if (next >= 75) finish();
+              if (next >= 78) finish();
             }}
-            onPointerUp={(event) => { event.currentTarget.closest(".booster-foil")?.classList.remove("booster-foil-interacting"); if (!opened) { start.current = null; setProgress(0); } }}
-            onPointerCancel={(event) => { event.currentTarget.closest(".booster-foil")?.classList.remove("booster-foil-interacting"); if (!opened) { start.current = null; setProgress(0); } }}
+            onPointerUp={() => {
+              startX.current = null;
+              if (!completed.current) setProgress(0);
+            }}
+            onPointerCancel={() => {
+              startX.current = null;
+              if (!completed.current) setProgress(0);
+            }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+              if (event.key === "Enter" || event.key === " " ||
+                  event.key === "ArrowRight") {
                 event.preventDefault();
                 finish();
               }
             }}
           >
-            <span className="booster-tear-dashes" />
-            {progress > 0 && !opened ? <span className="booster-tear-trace" aria-hidden="true" /> : null}
-            {!opened && <span className="booster-tear-handle" style={{ left: `${6 + progress * .88}%` }}>→</span>}
+            <span className="booster-premium-perforation" aria-hidden="true" />
+            {progress > 0 && !opened ?
+              <span className="booster-tear-trace" aria-hidden="true" /> : null}
+            {!opened ? (
+              <span className="booster-tear-handle"
+                style={{ left: (8 + progress * .84) + "%" }}>
+                <span aria-hidden="true">→</span>
+              </span>
+            ) : null}
           </div>
-          <div className="booster-foil-cut" aria-hidden="true" />
-          <div className="booster-foil-glow" aria-hidden="true" />
-          <div className="booster-rip-shockwave" aria-hidden="true" />
         </div>
-        {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
+        <div className="booster-premium-actions">
+          {!opened ? (
+            <>
+              <p className="booster-premium-gesture">FAIS GLISSER LE CURSEUR VERS LA DROITE</p>
+              <button className="booster-open-button" type="button" onClick={finish}>
+                Ouvrir sans glisser
+              </button>
+            </>
+          ) : (
+            <p className="booster-premium-gesture booster-premium-loading" aria-live="polite">
+              <span aria-hidden="true">✦</span> DÉCOUVERTE EN COURS <span aria-hidden="true">✦</span>
+            </p>
+          )}
+        </div>
       </div>
     </div>,
     document.body,
