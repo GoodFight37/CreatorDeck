@@ -39,7 +39,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
         <p className="booster-opening-instruction">
           {opened ? "Booster ouvert !" : "Glisse sur la couture pour déchirer"}
         </p>
-        <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
+        <div className={`booster-foil booster-foil-${kind} ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
           <div className="booster-cards-inside" aria-hidden="true">
             <i /><i /><i />
           </div>
