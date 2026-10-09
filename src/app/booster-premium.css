@@ -335,3 +335,197 @@
     width: min(88vw, 460px, 51vh);
   }
 }
+
+
+/* Printed artwork is ONE asset on both the Drop screen and the opening,
+   including top/bottom crimps, side weld and all labels. */
+.pack-stage .pack-artwork.pack-live {
+  width: clamp(174px, 34vw, 207px);
+  height: auto;
+  aspect-ratio: 600 / 880;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  filter: drop-shadow(10px 24px 18px rgba(0,0,0,.62))
+          drop-shadow(0 0 20px rgba(191,74,127,.18));
+}
+.pack-stage .pack-artwork .pack-foil-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+}
+.booster-cinematic .booster-physical-scene {
+  position: relative;
+  isolation: isolate;
+  width: min(79vw, 356px, 47vh);
+  aspect-ratio: 600 / 880;
+  overflow: visible;
+  filter: drop-shadow(15px 26px 23px rgba(0,0,0,.63));
+}
+.booster-cinematic .foil-inner-shadow,
+.booster-cinematic .foil-card-chamber,
+.booster-cinematic .foil-body-piece,
+.booster-cinematic .foil-top-piece {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.booster-cinematic .foil-inner-shadow {
+  z-index: 1;
+  background: radial-gradient(ellipse 40% 55% at 50% 27%,
+    rgba(236, 128, 166, .13), transparent 83%);
+}
+.booster-cinematic .foil-card-chamber {
+  z-index: 2;
+  inset: 17% 17% 13%;
+  opacity: 0;
+  transform: translateY(22%);
+  transform-style: preserve-3d;
+}
+.booster-cinematic .foil-body-piece { z-index: 4; clip-path: inset(15.45% 0 0); }
+.booster-cinematic .foil-top-piece { z-index: 5; clip-path: inset(0 0 84.55%); transform-origin: 13% 15%; }
+.booster-cinematic .foil-printed-art {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+.booster-cinematic .booster-tear-track {
+  position: absolute;
+  z-index: 10;
+  top: 15.45%;
+  left: 0;
+  right: 0;
+  height: 58px;
+  transform: translateY(-50%);
+  touch-action: none;
+  border: 0;
+  background: transparent;
+  cursor: crosshair;
+}
+.booster-cinematic .booster-tear-track:focus-visible {
+  outline: 2px solid rgba(255,242,227,.9);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.booster-cinematic .foil-cut-slit {
+  position: absolute;
+  z-index: 7;
+  top: 15.25%;
+  height: 5px;
+  transform: translateY(-50%);
+  border-radius: 0 9px 9px 0;
+  background: linear-gradient(180deg, rgba(255,243,226,.78) 0%,
+    rgba(5,0,14,.94) 34%, rgba(7,0,15,.96) 80%, rgba(235,153,184,.8) 100%);
+  box-shadow: 0 0 5px 1px rgba(255, 200, 206, .6), 0 0 15px rgba(223, 92, 148, .32);
+  pointer-events: none;
+}
+.booster-cinematic .foil-cut-slit::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -3px;
+  width: 7px;
+  height: 11px;
+  background: radial-gradient(circle, rgba(255,246,220,.8), transparent 70%);
+  filter: blur(2px);
+}
+.booster-cinematic .foil-back-card {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255,224,187,.76);
+  border-radius: 4.5% / 3.4%;
+  background:
+    radial-gradient(circle at 51% 40%, rgba(215,104,181,.29), transparent 64%),
+    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255,212,223,.055) 15px 16px),
+    linear-gradient(146deg, #4c2249, #1b122e 50%, #652c54);
+  box-shadow: inset 0 0 0 5px rgba(245,197,194,.13),
+    0 0 0 1px rgba(0,0,0,.95), 0 12px 25px rgba(0,0,0,.38);
+  opacity: 0;
+  transform: translateY(36%) scale(.84);
+}
+.booster-cinematic .foil-back-card::before {
+  content: "";
+  position: absolute;
+  inset: 11%;
+  border: 1px solid rgba(255,227,193,.28);
+  border-radius: 3%;
+}
+.booster-cinematic .foil-back-emblem {
+  display: grid;
+  place-items: center;
+  width: 62%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(255,214,189,.62);
+  border-radius: 50%;
+  box-shadow: 0 0 0 7px rgba(255,199,185,.09),
+    inset 0 0 35px rgba(234,123,170,.18);
+  color: rgba(255,228,196,.94);
+  font-size: clamp(30px, 8vw, 56px);
+  text-shadow: 0 0 22px rgba(241,154,196,.43);
+}
+.booster-cinematic .booster-foil-open .foil-top-piece {
+  animation: foil-actual-cap-peel 1250ms cubic-bezier(.17,.8,.16,1) both;
+}
+.booster-cinematic .booster-foil-open .foil-body-piece {
+  animation: foil-actual-body-drop 1550ms cubic-bezier(.19,.7,.3,1) both;
+}
+.booster-cinematic .booster-foil-open .foil-card-chamber {
+  animation: foil-cards-chamber-rise 1700ms cubic-bezier(.13,.7,.2,1) both;
+}
+.booster-cinematic .booster-foil-open .foil-back-card {
+  animation: foil-card-exit 1650ms cubic-bezier(.13,.7,.2,1) both;
+  animation-delay: calc(var(--card-i) * 43ms);
+}
+.booster-cinematic .booster-foil-open .foil-cut-slit { animation: foil-cut-fade 600ms ease-out both; }
+.booster-cinematic .booster-foil-open .booster-foil-glow {
+  animation: foil-restrained-open-light 1650ms ease-out both;
+}
+@keyframes foil-actual-cap-peel {
+  0%, 8% { opacity: 1; transform: translate(0,0) rotate(0) rotateX(0deg); }
+  37% { opacity: 1; transform: translate(6%,-12%) rotate(15deg) rotateX(22deg); }
+  68% { opacity: .96; transform: translate(32%,-35%) rotate(34deg) rotateX(48deg); }
+  93%, 100% { opacity: 0; transform: translate(145%,-108%) rotate(71deg) rotateX(66deg); }
+}
+@keyframes foil-actual-body-drop {
+  0%, 20% { opacity: 1; transform: none; }
+  52% { opacity: 1; transform: translateY(8%) rotateX(-8deg); }
+  80% { opacity: .36; transform: translateY(43%) rotateX(-29deg) scale(.9); }
+  100% { opacity: 0; transform: translateY(77%) rotateX(-55deg) scale(.75); }
+}
+@keyframes foil-cards-chamber-rise {
+  0%, 17% { opacity: 0; transform: translateY(23%) scale(.88); }
+  38% { opacity: .36; transform: translateY(6%) scale(.9); }
+  60% { opacity: 1; transform: translateY(-5%) scale(.97); }
+  100% { opacity: 1; transform: translateY(-23%) scale(1.05); }
+}
+@keyframes foil-card-exit {
+  0%, 23% { opacity: 0; transform: translateY(39%) scale(.84); }
+  43% { opacity: .95; transform: translateY(7%) scale(.89); }
+  69% { opacity: 1; transform: translateY(-3%) scale(.97); }
+  100% { opacity: 1; transform: translateY(calc(-8% - var(--card-i) * 2%))
+    translateX(calc((var(--card-i) - 2) * 5px))
+    rotate(calc((var(--card-i) - 2) * 3deg)) scale(1); }
+}
+@keyframes foil-cut-fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes foil-restrained-open-light {
+  0%, 15% { opacity: 0; transform: scale(.7); }
+  40% { opacity: .4; transform: scale(.85); }
+  100% { opacity: .14; transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic .booster-foil-open .foil-top-piece,
+  .booster-cinematic .booster-foil-open .foil-body-piece,
+  .booster-cinematic .booster-foil-open .foil-card-chamber,
+  .booster-cinematic .booster-foil-open .foil-back-card,
+  .booster-cinematic .booster-foil-open .foil-cut-slit {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
+}
