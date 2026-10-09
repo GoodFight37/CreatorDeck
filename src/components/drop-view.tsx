@@ -9,7 +9,7 @@
  */
 import { useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
-import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, Radio, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
+import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
 
@@ -18,7 +18,7 @@ import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, PACKS, creatorImage } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
 
 import { formatViewers, liveFor } from "@/lib/live";
 
@@ -46,35 +46,19 @@ function formatCountdown(date: number | null, now: number) {
 
 
 export function PackArtwork() {
-  const people = [CREATORS[0], CREATORS[1], CREATORS[2]];
   return (
     <div className="pack-artwork pack-live">
-      <div className="pack-noise" />
-      <div className="pack-people">
-        {people.map((creator, index) => (
-          <Image
-            key={creator.slug}
-            src={creatorImage(creator)}
-            alt=""
-            width={92}
-            height={122}
-            style={{ "--person-index": index } as React.CSSProperties}
-          />
-        ))}
-      </div>
-      <div className="pack-brand">
-        <span>CREATOR</span>
-        <strong>DECK</strong>
-      </div>
-      <div className="pack-edition">
-        <Radio size={13} />
-        {`TOP ${CATALOG_SIZE} LIVE`}
-      </div>
-      <small>{PACKS.live.size} CARTES</small>
+      <Image
+        className="pack-foil-image"
+        src="/packs/live-foil.svg"
+        alt="Sachet Live Drop serti, illustration métallisée CreatorDeck"
+        fill
+        sizes="(max-width: 600px) 178px, 200px"
+        priority
+      />
     </div>
   );
 }
-
 
 export function HomeView({
   game,
