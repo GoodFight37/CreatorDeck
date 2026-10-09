@@ -117,6 +117,8 @@ describe("la révélation", () => {
     const css = readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
 
     const entrees = [
+      // Le retournement : la face tourne, le dos est derrière elle.
+      "reveal-flip",
       "card-reveal-punch",
       "card-reveal-epic",
       "card-reveal-legendary",
@@ -150,11 +152,36 @@ describe("la révélation", () => {
       }
     }
 
-    // Les raretés sont câblées sur la classe que `CreatorCard` écrit déjà.
-    expect(css).toContain(".reveal-card.rarity-epic");
-    expect(css).toContain(".reveal-card.rarity-legendary");
+    // Les raretés sont câblées sur le conteneur (c'est lui qui porte
+    // l'animation) ; l'écran écrit la classe sur les deux.
+    expect(css).toContain(".reveal-flip.rarity-epic");
+    expect(css).toContain(".reveal-flip.rarity-legendary");
     // Et le réglage de secours les remet à l'entrée commune.
-    expect(css).toContain('[data-card-fx="off"] .reveal-card.rarity-epic');
+    expect(css).toContain('[data-card-fx="off"] .reveal-flip.rarity-epic');
+  });
+
+  it("retourne une carte qui avait un dos", () => {
+    // Ce qui manquait : une carte qui tournait montrait sa face dès la première
+    // image — elle pivotait, elle ne se retournait pas. Il faut **deux** faces,
+    // chacune invisible de l'autre côté, et un conteneur qui pivote.
+    const css = readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+
+    // Le conteneur est en 3D, la carte et le dos se cachent l'un l'autre.
+    expect(css).toContain(".reveal-flip-face {");
+    expect(css).toContain("transform-style: preserve-3d");
+    expect(css).toMatch(
+      /\.reveal-flip-face > \.reveal-card,\s*\.reveal-flip-face > \.reveal-dos \{ backface-visibility: hidden; \}/,
+    );
+    expect(css).toMatch(/\.reveal-dos\b[^}]*backface-visibility: hidden/);
+    // Le dos est tourné : c'est lui qu'on voit au départ.
+    expect(css).toMatch(/\.reveal-dos\s*\{[^}]*rotateY\(180deg\)/);
+    // Et le conteneur part de l'autre côté : sans ça, la face serait visible
+    // d'emblée et le dos ne servirait à rien.
+    const cle = /@keyframes reveal-flip \{[\s\S]*?\n\}/.exec(css)?.[0] ?? "";
+    expect(cle, "@keyframes reveal-flip absent").not.toBe("");
+    const depart = Number(/0% \{ transform: rotateY\((-?\d+)deg/.exec(cle)?.[1] ?? "0");
+    expect(Math.abs(depart), "le retournement ne part pas du dos").toBeGreaterThan(90);
+    expect(/100% \{ transform: none/.test(cle), "la carte ne se pose pas face").toBe(true);
   });
 
   it("fait vibrer la déchirure plus longtemps que le geste qui arme", () => {

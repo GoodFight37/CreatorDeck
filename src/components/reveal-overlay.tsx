@@ -232,19 +232,25 @@ export function RevealOverlay({
           {cards.map((item) => {
             const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
             return dotCard ? (
-              <CreatorCard
-                key={item.id}
-                creator={dotCard}
-                variant={item.variant}
-                /*
-                 * La rareté **tirée**, écrite en plus de celle du créateur :
-                 * c'est elle qui décide du silence, du bang et de l'effet —
-                 * l'entrée doit venir du même endroit, sinon une Légendaire
-                 * pourrait arriver comme une commune.
-                 */
-                className={`reveal-card rarity-${item.rarity}`}
-                liveStream={liveFor(live, dotCard.login, now)}
-              />
+              <div key={item.id} className={`reveal-flip rarity-${item.rarity}`}>
+                <div className="reveal-flip-face">
+                  <CreatorCard
+                    creator={dotCard}
+                    variant={item.variant}
+                    /*
+                     * La rareté **tirée**, écrite en plus de celle du
+                     * créateur : c'est elle qui décide du silence, du bang et
+                     * de l'effet — l'entrée doit venir du même endroit, sinon
+                     * une Légendaire pourrait arriver comme une commune.
+                     */
+                    className={`reveal-card rarity-${item.rarity}`}
+                    liveStream={liveFor(live, dotCard.login, now)}
+                  />
+                  <span className="reveal-dos" aria-hidden="true">
+                    <span>CD</span>
+                  </span>
+                </div>
+              </div>
             ) : null;
           })}
         </div>
@@ -263,14 +269,23 @@ export function RevealOverlay({
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className={shaking ? "reveal-shake" : ""}>
-            <CreatorCard
-              key={card.id}
-              creator={creator}
-              variant={card.variant}
-              // Idem : la rareté du tirage, pas seulement celle du créateur.
-              className={`reveal-card rarity-${card.rarity}`}
-              liveStream={onAir}
-            />
+            <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
+              <div className="reveal-flip-face">
+                <CreatorCard
+                  creator={creator}
+                  variant={card.variant}
+                  // Idem : la rareté du tirage, pas seulement celle du créateur.
+                  className={`reveal-card rarity-${card.rarity}`}
+                  liveStream={onAir}
+                />
+                {/* Le dos : la face cachée de la carte, tant qu'elle n'est pas
+                    retournée. Sans lui, une carte qui tourne ne montre jamais
+                    qu'elle avait un dos. */}
+                <span className="reveal-dos" aria-hidden="true">
+                  <span>CD</span>
+                </span>
+              </div>
+            </div>
           </div>
           {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
               nameplate). Ici : l'état, et rien d'autre. */}

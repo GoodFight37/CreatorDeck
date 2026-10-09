@@ -1173,24 +1173,84 @@ input:focus-visible {
  * le parent (`.reveal-stage`, `.reveal-perfect-grid`) — c'est lui qui regarde,
  * pas la carte.
  */
-.reveal-card { animation: card-reveal-punch 720ms cubic-bezier(.16, 1.1, .3, 1) both; }
+/*
+ * Le conteneur de la carte révélée. Il porte l'entrée (monte, dépasse, se pose)
+ * **et** le point de vue : la perspective est ici, parce que c'est son enfant
+ * qui va se retourner, pas elle.
+ */
+.reveal-flip {
+  perspective: 1100px;
+  animation: card-reveal-punch 720ms cubic-bezier(.16, 1.1, .3, 1) both;
+}
 @keyframes card-reveal-punch {
   0% {
     opacity: 0;
-    transform: translateY(80px) scale(0.55) rotateY(110deg) rotateX(12deg);
+    transform: translateY(80px) scale(0.55);
     filter: brightness(0.4) blur(4px);
   }
   45% {
     opacity: 1;
-    transform: translateY(-18px) scale(1.12) rotateY(-8deg) rotateX(-4deg);
+    transform: translateY(-18px) scale(1.12);
     filter: brightness(1.35) blur(0);
   }
   70% {
     opacity: 1;
-    transform: translateY(6px) scale(0.97) rotateY(3deg);
+    transform: translateY(6px) scale(0.97);
     filter: brightness(1.05);
   }
   100% { opacity: 1; transform: none; filter: none; }
+}
+
+/*
+ * **Le retournement.** Avant, la carte tournait en montrant sa face dès la
+ * première image : elle pivotait, elle ne se retournait pas. Il y a maintenant
+ * deux faces — la carte, et un dos posé derrière elle, tourné de 180° — et
+ * chacune est invisible vue de l'autre côté (`backface-visibility`). Le
+ * conteneur part de -168° : le dos est face au joueur pendant la première
+ * moitié, la carte se présente ensuite et se pose.
+ *
+ * Le dos est dessiné en CSS (aucune image) et reprend trait pour trait la
+ * carte verrouillée du classeur : mêmes lignes diagonales, même marque.
+ */
+.reveal-flip-face {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: reveal-flip 720ms cubic-bezier(.16, 1.1, .3, 1) both;
+}
+@keyframes reveal-flip {
+  /* Le dos, bien face : il faut le temps de le voir, sinon ce n'est pas un
+     retournement, c'est un clignement. */
+  0% { transform: rotateY(-178deg); }
+  38% { transform: rotateY(-120deg); }
+  /* Le passage de l'autre côté (et donc l'échange des faces) se produit vers
+     45 % — un tiers de seconde de dos, puis la carte se présente. */
+  72% { transform: rotateY(12deg); }
+  88% { transform: rotateY(-5deg); }
+  100% { transform: none; }
+}
+.reveal-flip-face > .reveal-card,
+.reveal-flip-face > .reveal-dos { backface-visibility: hidden; }
+.reveal-dos {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, .07);
+  border-radius: 4.5% / 3.2%;
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, .022) 0 5px, transparent 5px 10px),
+    repeating-linear-gradient(-45deg, transparent 0 9px, rgb(var(--accent-rgb) / .07) 9px 11px),
+    var(--bg-deep);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 14px 26px -16px rgba(0, 0, 0, .95);
+  transform: rotateY(180deg);
+}
+.reveal-dos span {
+  color: rgba(255, 255, 255, .5);
+  font-family: var(--font-display);
+  font-size: clamp(11px, 4.6vw, 20px);
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
 }
 
 /*
@@ -1201,18 +1261,18 @@ input:focus-visible {
  * Le halo de fin reste à l'écran (c'est un style, pas une boucle) — et il
  * s'éteint avec le réglage « Reflets des cartes », plus bas.
  */
-.reveal-card.rarity-epic { animation-name: card-reveal-epic; }
-.reveal-card.rarity-legendary { animation-name: card-reveal-legendary; }
+.reveal-flip.rarity-epic { animation-name: card-reveal-epic; }
+.reveal-flip.rarity-legendary { animation-name: card-reveal-legendary; }
 
 @keyframes card-reveal-epic {
   0% {
     opacity: 0;
-    transform: translateY(90px) scale(0.5) rotateY(120deg);
+    transform: translateY(90px) scale(0.5);
     filter: brightness(0.3) drop-shadow(0 0 0 transparent);
   }
   40% {
     opacity: 1;
-    transform: translateY(-28px) scale(1.18) rotateY(-12deg);
+    transform: translateY(-28px) scale(1.18);
     filter: brightness(1.5) drop-shadow(0 0 28px rgba(168, 85, 247, 0.7));
   }
   100% {
@@ -1225,12 +1285,12 @@ input:focus-visible {
 @keyframes card-reveal-legendary {
   0% {
     opacity: 0;
-    transform: translateY(110px) scale(0.4) rotateY(140deg) rotateZ(-6deg);
+    transform: translateY(110px) scale(0.4) rotateZ(-6deg);
     filter: brightness(0.2) drop-shadow(0 0 0 transparent);
   }
   35% {
     opacity: 1;
-    transform: translateY(-40px) scale(1.25) rotateY(-18deg) rotateZ(4deg);
+    transform: translateY(-40px) scale(1.25) rotateZ(4deg);
     filter: brightness(1.8) drop-shadow(0 0 48px rgba(255, 190, 85, 0.95));
   }
   65% {
@@ -1245,12 +1305,14 @@ input:focus-visible {
 }
 
 /* Le réglage de secours : couper les reflets coupe **tout**, halo compris. */
-[data-card-fx="off"] .reveal-card.rarity-epic,
-[data-card-fx="off"] .reveal-card.rarity-legendary { animation-name: card-reveal-punch; }
+[data-card-fx="off"] .reveal-flip.rarity-epic,
+[data-card-fx="off"] .reveal-flip.rarity-legendary { animation-name: card-reveal-punch; }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-card { animation: none; }
-  .reveal-card.rarity-epic,
-  .reveal-card.rarity-legendary { animation: none; }
+  /* Sans animation, la face reste face : le dos ne se montre jamais. */
+  .reveal-flip,
+  .reveal-flip.rarity-epic,
+  .reveal-flip.rarity-legendary,
+  .reveal-flip-face { animation: none; }
 }
 
 /*
@@ -2725,6 +2787,12 @@ input:focus-visible {
 .reveal-spotlight .reveal-card {
   width: min(82vw, 360px);
   max-height: 70vh;
+}
+.reveal-spotlight .reveal-flip {
+  animation-duration: 920ms;
+  animation-timing-function: cubic-bezier(.12, 1.15, .25, 1);
+}
+.reveal-spotlight .reveal-flip-face {
   animation-duration: 920ms;
   animation-timing-function: cubic-bezier(.12, 1.15, .25, 1);
 }
@@ -2800,14 +2868,18 @@ input:focus-visible {
  * cascade décalerait l'effet et collerait les cinq cartes au même retard.
  */
 .reveal-perfect-grid { perspective: 1000px; }
-.reveal-perfect-grid .reveal-card { width: 100%; max-height: none; animation-duration: 780ms; }
-.reveal-perfect-grid .reveal-card:nth-of-type(1) { animation-delay: 0ms; }
-.reveal-perfect-grid .reveal-card:nth-of-type(2) { animation-delay: 80ms; }
-.reveal-perfect-grid .reveal-card:nth-of-type(3) { animation-delay: 160ms; }
-.reveal-perfect-grid .reveal-card:nth-of-type(4) { animation-delay: 240ms; }
-.reveal-perfect-grid .reveal-card:nth-of-type(5) { animation-delay: 320ms; }
+.reveal-perfect-grid .reveal-flip { width: 100%; animation-duration: 780ms; animation-delay: var(--cascade, 0ms); }
+.reveal-perfect-grid .reveal-card { width: 100%; max-height: none; }
+/* Le retard se lit dans une variable : l'entrée **et** le retournement de la
+   même carte partent ensemble. */
+.reveal-perfect-grid .reveal-flip-face { animation-duration: 780ms; animation-delay: var(--cascade, 0ms); }
+.reveal-perfect-grid .reveal-flip:nth-of-type(1) { --cascade: 0ms; }
+.reveal-perfect-grid .reveal-flip:nth-of-type(2) { --cascade: 80ms; }
+.reveal-perfect-grid .reveal-flip:nth-of-type(3) { --cascade: 160ms; }
+.reveal-perfect-grid .reveal-flip:nth-of-type(4) { --cascade: 240ms; }
+.reveal-perfect-grid .reveal-flip:nth-of-type(5) { --cascade: 320ms; }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-perfect-grid .reveal-card { animation-delay: 0ms; }
+  .reveal-perfect-grid .reveal-flip { --cascade: 0ms; }
 }
 
 .wishlist-block { margin: 0 0 16px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgb(var(--accent-rgb) / .05); }

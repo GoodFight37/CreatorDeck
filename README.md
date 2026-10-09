@@ -146,7 +146,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
-  l'essentiel des règles (**1076 tests**, 69 fichiers aujourd'hui), et **tout
+  l'essentiel des règles (**1077 tests**, 69 fichiers aujourd'hui), et **tout
   `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
   coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
