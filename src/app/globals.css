@@ -3251,3 +3251,94 @@ input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .pack-tear { display: none; }
 }
+
+
+/* ── Polish booster/reveal: éclat lumineux, sans nouvelle dépendance ──
+   Lot isolé sur design/booster-reveal-polish. Les règles restent additives
+   afin de pouvoir retirer ce bloc en un seul changement. */
+.pack-tear {
+  background:
+    radial-gradient(ellipse 52% 36% at 50% 43%, rgb(255 174 72 / .15), transparent 76%),
+    radial-gradient(ellipse 90% 70% at 50% 50%, rgb(var(--accent-rgb) / .10), transparent 74%),
+    rgb(var(--bg-rgb) / .97);
+}
+.pack-tear::before {
+  content: "";
+  position: absolute;
+  width: min(76vw, 330px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, rgb(255 213 130 / .2) 0%, rgb(255 137 48 / .09) 34%, transparent 70%);
+  animation: pack-tear-aura 700ms cubic-bezier(.16, .8, .25, 1) both;
+}
+.pack-tear-pack {
+  position: relative;
+  z-index: 1;
+  border-color: rgb(255 220 156 / .48);
+  background:
+    linear-gradient(115deg, transparent 22%, rgb(255 255 255 / .3) 48%, transparent 68%),
+    linear-gradient(158deg, #fff0cf 0%, var(--panel-2) 46%, var(--bg-deep) 100%);
+  box-shadow:
+    0 0 0 1px rgb(255 192 93 / .12),
+    0 0 28px rgb(255 161 58 / .18),
+    0 22px 60px rgb(0 0 0 / .42);
+}
+.pack-tear-seam {
+  z-index: 2;
+  width: 3px;
+  margin-left: -1.5px;
+  background: linear-gradient(180deg, transparent 0%, #fff8dc 12%, #fff 50%, #ffc46d 88%, transparent 100%);
+  box-shadow:
+    0 0 9px 3px rgb(255 255 255 / .72),
+    0 0 30px 10px rgb(255 172 67 / .48),
+    0 0 64px 20px rgb(255 114 42 / .2);
+}
+.pack-tear-grain {
+  z-index: 2;
+  background: linear-gradient(135deg, #fff5ce, #ffb84e 62%, #ff7848);
+  box-shadow: 0 0 10px rgb(255 177 73 / .72);
+}
+.pack-tear-legende {
+  color: #ffe2ac;
+  text-shadow: 0 0 18px rgb(255 174 72 / .36);
+}
+@keyframes pack-tear-aura {
+  0% { opacity: 0; transform: scale(.55); }
+  28% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.3); }
+}
+
+/* Le halo suit la rareté du moment, mais la carte reste lisible. */
+.reveal-spotlight .reveal-ambient {
+  background:
+    radial-gradient(ellipse 74% 40% at 50% 40%, rgb(255 184 76 / .2), transparent 72%),
+    radial-gradient(ellipse 90% 58% at 50% 42%, rgb(var(--accent-rgb) / .14), transparent 74%);
+}
+.reveal-perfect .reveal-ambient {
+  background:
+    radial-gradient(ellipse 85% 54% at 50% 42%, rgb(255 208 119 / .22), transparent 70%),
+    radial-gradient(ellipse 100% 75% at 50% 48%, rgb(255 128 56 / .12), transparent 76%);
+}
+.reveal-spotlight .reveal-name > p:first-child {
+  color: #ffe0a0;
+  text-shadow: 0 0 18px rgb(255 178 70 / .22);
+}
+.reveal-perfect .perfect-banner {
+  box-shadow: 0 0 22px rgb(255 190 86 / .28), 0 0 56px rgb(255 138 48 / .12);
+}
+.reveal-perfect-grid .reveal-flip.rarity-epic,
+.reveal-stage .reveal-flip.rarity-epic {
+  filter: drop-shadow(0 0 10px rgb(255 132 64 / .2));
+}
+.reveal-perfect-grid .reveal-flip.rarity-legendary,
+.reveal-stage .reveal-flip.rarity-legendary {
+  filter: drop-shadow(0 0 15px rgb(255 199 94 / .42));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-tear::before { animation: none; }
+  .pack-tear-pack, .pack-tear-seam, .pack-tear-grain, .pack-tear-legende {
+    animation-duration: 1ms;
+  }
+}
