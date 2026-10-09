@@ -70,6 +70,8 @@ test("a horizontal pointer swipe tears the booster", async ({ page }) => {
 
   const opened = page.locator(".booster-foil-open");
   await expect(opened).toBeVisible();
+  await expect(opened.locator(".booster-card-extract")).toHaveCount(1);
+  await expect(opened.locator(".booster-cards-inside")).toHaveCount(0);
   // The burst is a transparent radial halo, never a solid white square.
   const glowBackground = await opened.locator(".booster-foil-glow").evaluate(
     (element) => {
