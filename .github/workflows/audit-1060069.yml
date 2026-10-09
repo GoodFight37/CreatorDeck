@@ -1,0 +1,105 @@
+name: Audit temporaire — commit 1060069
+
+on:
+  push:
+    branches:
+      - "audit/run-tests-1060069"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creatordeck-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Unitaires, écrans, statique et build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout de la révision auditée
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Tests unitaires
+        run: npm test
+      - name: Scénarios et captures d'écrans
+        run: npm run ecrans
+      - name: Vérification TypeScript
+        run: npm run typecheck
+      - name: ESLint
+        run: npm run lint
+      - name: Vocabulaire de l'interface
+        run: node scripts/check-jargon.mjs
+      - name: Cohérence du catalogue et des saisons
+        run: npm run catalog:ci
+      - name: Build de production
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+  supabase:
+    name: Migrations SQL sur Postgres jetable
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout de la révision auditée
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Installer les dépendances de vérification SQL hors du dépôt
+        run: npm install --no-save embedded-postgres pg
+      - name: Vérification complète des migrations
+        run: npm run supabase:verify
+        env:
+          CI: "true"
+
+  navigateur:
+    name: Tests de bout en bout Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout de la révision auditée
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Installer Chromium et ses dépendances système
+        run: npx playwright install --with-deps chromium
+      - name: Tests de bout en bout (bureau et téléphone)
+        run: npm run e2e
+        env:
+          CI: "true"
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Joindre les rapports du navigateur en cas d'échec
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 7
