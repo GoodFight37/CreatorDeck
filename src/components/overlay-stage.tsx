@@ -72,8 +72,6 @@ export function OverlayStage() {
       return;
     }
     setTearing(true);
-    playPackOpening();
-    buzz(PACK_TEAR_HAPTIC);
     await new Promise<void>((resolve) => {
       tearResolve.current = resolve;
     });
@@ -159,7 +157,10 @@ export function OverlayStage() {
   return (
     <div className="overlay-root">
       <div className="overlay-frame">
-        {tearing ? <PackTear kind={kind} autoCompleteAfterMs={650} onComplete={() => {
+        {tearing ? <PackTear kind={kind} autoCompleteAfterMs={650} onTear={() => {
+          playPackOpening();
+          buzz(PACK_TEAR_HAPTIC);
+        }} onComplete={() => {
           setTearing(false);
           tearResolve.current?.();
           tearResolve.current = null;
