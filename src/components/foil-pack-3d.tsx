@@ -21,6 +21,8 @@ export function FoilPack3D({ kind, progress, opened }: {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // JSDOM has no GPU or 2D canvas: avoid calling its unimplemented methods.
+    if (/jsdom/i.test(navigator.userAgent)) return;
     const art = paintFoilArtwork(kind);
     const gl = canvas.getContext("webgl", {
       alpha: true, antialias: true, powerPreference: "low-power",
