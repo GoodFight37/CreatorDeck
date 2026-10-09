@@ -1,24 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /** A tactile booster opening: swipe across the foil seal to tear the top strip. */
-export function PackTear({ kind = "live", onComplete }: {
+export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
   kind?: "live" | "scene";
   onComplete: () => void;
+  /** Broadcast overlay has no touch interaction; animate the tear automatically. */
+  autoCompleteAfterMs?: number;
 }) {
   const [progress, setProgress] = useState(0);
   const [opened, setOpened] = useState(false);
   const start = useRef<number | null>(null);
   const done = useRef(false);
 
-  function finish() {
+  const finish = useCallback(() => {
     if (done.current) return;
     done.current = true;
     setProgress(100);
     setOpened(true);
     window.setTimeout(onComplete, 900);
-  }
+  }, [onComplete]);
+
+  useEffect(() => {
+    if (autoCompleteAfterMs === undefined) return;
+    const timeout = window.setTimeout(finish, autoCompleteAfterMs);
+    return () => window.clearTimeout(timeout);
+  }, [autoCompleteAfterMs, finish]);
 
   return (
     <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
