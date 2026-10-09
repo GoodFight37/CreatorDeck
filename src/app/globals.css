@@ -3957,12 +3957,15 @@ input:focus-visible {
 }
 /* Ripped foil leaves the screen; cards move up out of the dark slit. No
    solid white block, even for legendary drops. */
+/* Preserve layout but hide the label while cards are emerging. */
+.booster-opening-stage:has(.booster-foil-open) .booster-opening-instruction {
+  opacity: 0;
+}
 .booster-foil-open::after { animation: foil-wrapper-weld-fade 900ms ease-out both; }
 .booster-foil-open .booster-foil-strip { animation: foil-rip-away 900ms cubic-bezier(.14,.72,.26,1) both; }
 .booster-foil-open .booster-foil-body { animation: foil-collapse 900ms cubic-bezier(.16,.7,.2,1) both; }
 .booster-foil-open .booster-foil-glow { animation: foil-bloom 900ms ease-out both; }
 .booster-foil-open .booster-cards-inside { animation: foil-cards-rise 900ms cubic-bezier(.18,.7,.2,1) both; }
-.booster-foil-open .booster-foil-bottom-seal { animation: foil-collapse 900ms ease-in both; }
 .booster-foil-open .booster-foil-cut { animation: foil-cut-open 900ms ease-out both; }
 .booster-foil-open .booster-tear-track { visibility: hidden; }
 @keyframes foil-wrapper-weld-fade {
@@ -3990,8 +3993,8 @@ input:focus-visible {
 }
 @keyframes foil-cut-open {
   0%, 14% { height: 2px; opacity: 1; }
-  45% { height: 15px; opacity: 1; }
-  100% { height: 17px; opacity: 0; }
+  28% { height: 12px; opacity: .85; }
+  52%, 100% { height: 15px; opacity: 0; }
 }
 @keyframes booster-foil-arrive {
   0% { opacity: 0; transform: translateY(36px) rotate(-4deg) scale(.83); }
@@ -4004,8 +4007,7 @@ input:focus-visible {
   .booster-foil-open .booster-foil-body,
   .booster-foil-open .booster-foil-glow,
   .booster-foil-open .booster-cards-inside,
-  .booster-foil-open .booster-foil-cut,
-  .booster-foil-open .booster-foil-bottom-seal {
+  .booster-foil-open .booster-foil-cut {
     animation-duration: .01ms;
   }
 }
