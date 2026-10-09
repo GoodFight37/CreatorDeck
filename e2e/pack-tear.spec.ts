@@ -48,6 +48,9 @@ test("a horizontal pointer swipe tears the booster", async ({ page }) => {
   await page.mouse.move(startX, middleY);
   await page.mouse.down();
   await page.mouse.move(startX + 80, middleY, { steps: 6 });
+  // The foil is visibly cut while the finger moves, not only at release.
+  await expect(page.locator(".booster-tear-trace")).toBeVisible();
+  await expect(track).toHaveAttribute("aria-valuenow", /^[1-9][0-9]*$/);
   await page.screenshot({ path: `test-results/booster-${test.info().project.name}-swiping.png`, fullPage: false });
   await page.mouse.move(startX + 165, middleY, { steps: 6 });
   await page.mouse.up();
