@@ -30,7 +30,9 @@ export function PackTear({ kind = "live" }: { kind?: "live" | "scene" }) {
     <div className="pack-tear" role="status" aria-label="Le paquet s'ouvre">
       <div className="pack-tear-scene">
         <div className="pack-tear-pack" aria-hidden="true">
-          <span>CD</span>
+          <span className="pack-tear-half pack-tear-half-left" />
+          <span className="pack-tear-half pack-tear-half-right" />
+          <span className="pack-tear-pack-mark">CD</span>
         </div>
         <span className="pack-tear-seam" aria-hidden="true" />
         {GRAINS.map((grain) => (
