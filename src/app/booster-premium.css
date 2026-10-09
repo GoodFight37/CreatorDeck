@@ -1,0 +1,305 @@
+/* CreatorDeck / premium 3D booster cinematic.
+   Physically shaded and deforming mesh is painted by FoilPack3D.
+   None of the old flat foil divs or fake CD card backs are rendered. */
+.booster-cinematic {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  overflow: hidden;
+  background: #080810;
+  color: #f7e9e5;
+  pointer-events: auto;
+  touch-action: none;
+}
+.booster-cinematic .booster-premium-stage {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(9px, 2.3vh, 18px);
+  overflow: hidden;
+  padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse 43% 44% at 50% 47%, rgba(152, 49, 88, .21), transparent 90%),
+    radial-gradient(ellipse 70% 75% at 52% 62%, rgba(62, 26, 75, .22), transparent 90%),
+    #080810;
+}
+.booster-cinematic .booster-premium-scene {
+  background:
+    radial-gradient(ellipse 48% 48% at 50% 48%, rgba(126, 80, 204, .25), transparent 92%),
+    radial-gradient(ellipse 80% 68% at 52% 62%, rgba(52, 35, 106, .25), transparent 90%),
+    #080810;
+}
+.booster-premium-stage::before,
+.booster-premium-stage::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: 50%;
+  top: 48%;
+  pointer-events: none;
+  border-radius: 50%;
+}
+.booster-premium-stage::before {
+  width: min(900px, 180vw);
+  height: min(900px, 115vh);
+  transform: translate(-50%, -50%);
+  background: radial-gradient(circle, transparent 33%, rgba(255, 172, 168, .055) 34%, transparent 34.3%,
+    transparent 52%, rgba(226, 133, 176, .07) 52.3%, transparent 52.7%);
+}
+.booster-premium-stage::after {
+  width: min(580px, 120vw);
+  height: min(540px, 83vh);
+  transform: translate(-50%, -50%) rotate(-20deg);
+  border: 1px solid rgba(237, 140, 174, .065);
+  box-shadow: 0 0 85px rgba(212, 76, 132, .08);
+}
+.booster-stage-atmosphere {
+  position: absolute;
+  left: 50%;
+  top: 49%;
+  width: min(800px, 135vw);
+  height: min(760px, 94vh);
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  pointer-events: none;
+}
+.booster-stage-atmosphere span {
+  position: absolute;
+  width: 2px;
+  height: 65%;
+  top: 17%;
+  left: 50%;
+  background: linear-gradient(transparent, rgba(253, 154, 185, .12), transparent);
+  filter: blur(2px);
+  transform-origin: 50% 50%;
+}
+.booster-stage-atmosphere span:nth-child(1) { transform: rotate(47deg); }
+.booster-stage-atmosphere span:nth-child(2) { transform: rotate(-47deg); }
+.booster-stage-atmosphere span:nth-child(3) { transform: rotate(90deg); }
+.booster-premium-caption {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 205, 192, .68);
+  font: 800 10px/1.2 var(--font-body, Arial), sans-serif;
+  letter-spacing: .32em;
+}
+.booster-caption-rule {
+  display: inline-block;
+  height: 1px;
+  width: 25px;
+  background: linear-gradient(90deg, transparent, rgba(255, 197, 184, .6));
+}
+.booster-caption-rule:last-child { transform: rotate(180deg); }
+.booster-cinematic .booster-opening-instruction {
+  margin: 0;
+  color: rgba(255, 238, 231, .92);
+  font-size: 13px;
+  font-weight: 850;
+  text-align: center;
+  letter-spacing: .16em;
+  text-shadow: 0 1px 18px rgba(252, 122, 158, .25);
+}
+.booster-cinematic .booster-physical-scene {
+  position: relative;
+  isolation: isolate;
+  width: min(85vw, 386px, 48vh);
+  aspect-ratio: .71;
+  flex: 0 0 auto;
+  touch-action: none;
+  transform: translateZ(0);
+}
+.booster-cinematic .booster-pack-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(16px 31px 26px rgba(0, 0, 0, .75)) drop-shadow(-10px 4px 18px rgba(221, 94, 153, .12));
+  pointer-events: none;
+}
+.booster-cinematic .booster-physical-scene::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  bottom: 3%;
+  left: 8%;
+  width: 84%;
+  height: 22%;
+  background: radial-gradient(ellipse, rgba(229, 77, 124, .25), rgba(74, 19, 66, .14) 40%, transparent 76%);
+  filter: blur(24px);
+}
+.booster-cinematic .booster-tear-track {
+  position: absolute;
+  z-index: 12;
+  top: 20%;
+  left: 10%;
+  right: 10%;
+  height: 59px;
+  transform: translateY(-50%);
+  border-radius: 8px;
+  cursor: grab;
+  touch-action: none;
+  outline-offset: 2px;
+}
+.booster-cinematic .booster-tear-track:active { cursor: grabbing; }
+.booster-premium-perforation {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 50%;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, rgba(255, 237, 223, .83) 0 7px, transparent 7px 12px);
+  filter: drop-shadow(0 1px 2px #220617);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.booster-cinematic .booster-tear-handle {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 43px;
+  height: 43px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 245, 231, .92);
+  background: linear-gradient(130deg, #fffaf2 0%, #efd2c8 60%, #cba4ac);
+  box-shadow: 0 0 0 5px rgba(224, 127, 146, .22), 0 0 24px rgba(246, 152, 165, .63), 0 4px 16px rgba(14, 3, 15, .7);
+  transform: translate(-50%, -50%);
+  color: #642033;
+  font: 900 25px/1 Arial, sans-serif;
+  pointer-events: none;
+}
+.booster-cinematic .booster-tear-handle > span { transform: translateY(-1px); }
+.booster-cinematic .booster-tear-trace {
+  position: absolute;
+  left: 8%;
+  top: 50%;
+  width: calc(var(--tear-progress) * .84);
+  height: 4px;
+  border-radius: 9px;
+  transform: translateY(-50%);
+  background: linear-gradient(90deg, #ffecdc, #fff9e9);
+  box-shadow: 0 0 12px 2px rgba(255, 210, 182, .85), 0 0 32px 8px rgba(242, 103, 145, .35);
+  pointer-events: none;
+}
+.booster-cinematic .booster-tear-trace::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff8e7;
+  box-shadow: 0 0 18px rgba(255, 255, 235, .8);
+}
+.booster-cinematic .booster-foil-glow {
+  position: absolute;
+  z-index: 4;
+  inset: 9% -40% -12%;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 48% 43% at 50% 34%,
+    rgba(255, 244, 211, .56), rgba(241, 123, 166, .35) 34%, transparent 79%);
+}
+.booster-cinematic .booster-foil-open .booster-foil-glow {
+  animation: premium-portal-bloom 1180ms ease-out both;
+}
+.booster-premium-lightburst {
+  position: absolute;
+  z-index: 3;
+  inset: -25%;
+  pointer-events: none;
+  opacity: 0;
+}
+.booster-premium-lightburst span {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  width: 140%;
+  height: 12%;
+  transform: translate(-50%, -50%) rotate(-25deg);
+  background: linear-gradient(90deg, transparent, rgba(248, 164, 185, .20), transparent);
+  filter: blur(18px);
+}
+.booster-premium-lightburst span:nth-child(2) { transform: translate(-50%,-50%) rotate(27deg); }
+.booster-premium-lightburst span:nth-child(3) { transform: translate(-50%,-50%) rotate(65deg); }
+.booster-premium-lightburst span:nth-child(4) { transform: translate(-50%,-50%) rotate(-68deg); }
+.booster-cinematic .booster-foil-open .booster-premium-lightburst {
+  animation: premium-portal-rays 1180ms ease-out both;
+}
+.booster-cinematic .booster-foil-open .booster-tear-track { visibility: hidden; }
+@keyframes premium-portal-bloom {
+  0%, 16% { opacity: 0; transform: scale(.4); }
+  40% { opacity: .8; transform: scale(.86); }
+  72% { opacity: .86; transform: scale(1.26); }
+  100% { opacity: .72; transform: scale(1.7); }
+}
+@keyframes premium-portal-rays {
+  0%, 20% { opacity: 0; transform: scale(.35) rotate(-12deg); }
+  53% { opacity: .65; transform: scale(1.05) rotate(0); }
+  100% { opacity: .47; transform: scale(1.3) rotate(8deg); }
+}
+.booster-premium-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 78px;
+  gap: 11px;
+}
+.booster-premium-gesture {
+  margin: 0;
+  text-align: center;
+  letter-spacing: .13em;
+  font-size: 10px;
+  font-weight: 750;
+  color: rgba(255, 201, 203, .56);
+}
+.booster-cinematic .booster-open-button {
+  border: 1px solid rgba(255, 207, 206, .40);
+  border-radius: 99px;
+  background: rgba(40, 18, 39, .65);
+  color: rgba(255, 229, 224, .9);
+  padding: 11px 22px;
+  font: 750 12px/1.25 var(--font-body, Arial), sans-serif;
+  box-shadow: 0 8px 19px rgba(0, 0, 0, .2);
+}
+.booster-cinematic .booster-open-button:hover {
+  background: rgba(82, 36, 61, .75);
+  border-color: rgba(255, 229, 209, .65);
+}
+.booster-premium-loading {
+  color: #fff0e4;
+  animation: premium-loading 1180ms ease-out both;
+}
+@keyframes premium-loading {
+  0% { opacity: 0; letter-spacing: .4em; }
+  35% { opacity: 1; }
+  100% { opacity: .7; letter-spacing: .12em; }
+}
+.booster-cinematic .booster-tear-track:focus-visible,
+.booster-cinematic .booster-open-button:focus-visible {
+  outline: 2px solid #fff1db;
+  outline-offset: 6px;
+}
+@media (max-height: 660px) {
+  .booster-cinematic .booster-premium-stage { gap: 5px; }
+  .booster-cinematic .booster-physical-scene { width: min(70vw, 310px, 48vh); }
+  .booster-premium-actions { min-height: 56px; gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic .booster-foil-open .booster-foil-glow,
+  .booster-cinematic .booster-foil-open .booster-premium-lightburst,
+  .booster-premium-loading { animation-duration: .01ms; }
+}
