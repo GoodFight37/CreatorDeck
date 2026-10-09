@@ -299,6 +299,6 @@ export function usePoints(): {
 
   return useMemo(
     () => ({ serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason, claimTribunal }),
-    [serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason],
+    [serverSide, recycle, recycleAll, craft, claimMilestone, claimSeason, claimTribunal],
   );
 }
