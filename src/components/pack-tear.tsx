@@ -63,7 +63,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             aria-label="Déchirer le haut du booster"
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-valuenow={progress}
+            aria-valuenow={Math.round(progress)}
             onPointerDown={(event) => {
               if (opened) return;
               start.current = event.clientX;
