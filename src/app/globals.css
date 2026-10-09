@@ -3250,7 +3250,7 @@ input:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   /* L’ouverture du paquet reste visible même si les animations système sont réduites. */
-  .pack-tear { display: flex; }
+  .pack-tear { display: grid; }
 }
 
 
