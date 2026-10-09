@@ -4162,3 +4162,22 @@ input:focus-visible {
 }
 .reveal-flip.rarity-epic { filter: drop-shadow(0 9px 20px rgb(239 118 134 / .24)); }
 .reveal-flip.rarity-legendary { filter: drop-shadow(0 13px 30px rgb(255 206 111 / .34)); }
+
+/* True GPU-lit folded foil; text and artwork remain native and sharp.
+   Gracefully degrades to the existing CSS varnish without WebGL. */
+.booster-foil-webgl {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: .88;
+  transition: opacity 220ms ease-out;
+}
+.booster-foil-open .booster-foil-webgl { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .booster-foil-webgl { opacity: .45; }
+}
