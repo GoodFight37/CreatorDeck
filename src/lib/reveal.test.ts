@@ -186,10 +186,10 @@ describe("la révélation", () => {
 
   it("évite les aplats blancs carrés pendant l'ouverture et les cartes rares", () => {
     const css = readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
-    const eclair = /\\.fx-flash\\s*\\{([^}]+)\\}/.exec(css)?.[1] ?? "";
-    const halo = /\\.booster-foil-glow\\s*\\{([^}]+)\\}/.exec(css)?.[1] ?? "";
+    const eclair = css.split(".fx-flash {")[1]?.split("}")[0] ?? "";
+    const halo = css.split(".booster-foil-glow {")[1]?.split("}")[0] ?? "";
     expect(eclair, "la révélation rare ne doit pas être un panneau blanc").toContain("radial-gradient");
-    expect(eclair).not.toMatch(/background:\\s*#fff\\s*;/);
+    expect(eclair).not.toContain("background: #fff;");
     expect(halo, "l'ouverture doit éclairer sans carré opaque").toContain("radial-gradient");
     expect(css).toContain(".booster-foil-top-crimp");
     expect(css).toContain(".booster-foil-bottom-seal");
