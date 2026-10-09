@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 /** A tactile booster opening: swipe across the foil seal to tear the top strip. */
 export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
@@ -28,7 +29,7 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
     return () => window.clearTimeout(timeout);
   }, [autoCompleteAfterMs, finish]);
 
-  return (
+  return createPortal(
     <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
       <div className="booster-opening-stage">
         <p className="booster-opening-instruction">
@@ -80,6 +81,7 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
         </div>
         {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
