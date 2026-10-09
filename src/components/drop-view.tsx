@@ -45,7 +45,7 @@ function formatCountdown(date: number | null, now: number) {
 }
 
 
-function PackArtwork() {
+export function PackArtwork() {
   const people = [CREATORS[0], CREATORS[1], CREATORS[2]];
   return (
     <div className="pack-artwork pack-live">
