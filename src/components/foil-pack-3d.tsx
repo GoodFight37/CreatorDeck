@@ -232,7 +232,7 @@ function buildFoilGeometry() {
     const x=u*2-1;
     const bulge=Math.pow(Math.max(0,1-x*x),1.5)*Math.pow(Math.max(0,Math.sin(Math.PI*v)),.7);
     const sideCrease=.013*Math.sin(x*48+v*18)*Math.pow(Math.abs(x),4);
-    const seal=v<.085||v>.92?.017*Math.sin(u*140):0;
+    const seal=(v < .085 || v > .92) ? .017 * Math.sin(u * 140) : 0;
     const nx=.30*x-.07*Math.cos(x*48+v*18);
     const ny=.25*(v-.5);
     const norm=Math.hypot(nx,ny,1);
