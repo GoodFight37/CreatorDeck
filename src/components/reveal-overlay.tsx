@@ -12,12 +12,12 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
-import { EffectBurst, EffectFlash } from "@/components/effect-burst";
+import { EffectFlash } from "@/components/effect-burst";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { burstFor, burstScale, flashFor } from "@/lib/fx";
+import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
 import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
@@ -126,20 +126,12 @@ export function RevealOverlay({
   const termine = perfect || isLast;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
-  /*
-   * L'effet du moment. La décision vit dans `src/lib/fx.ts` (testée à part) :
-   * un éclat pour une Épique, le même **une fois et demie plus grand** pour une
-   * Légendaire (l'explosion dorée est partie le 9 octobre 2026 : elle n'était
-   * pas belle), et l'écran blanc pour les deux plus grands moments.
-   *
-   * L'éclat part **avec le son** : les deux observent le même silence
-   * (`silenceBefore`), sinon on verrait les étincelles avant d'entendre le bang.
-   * `cards.length` change d'une révélation à l'autre sans changer la carte :
-   * la clé ci-dessous garantit que l'animation repart au lieu de rester jouée.
-   */
-  const burst = burstFor(card.rarity, perfect);
+  // A soft aura lives BEHIND the rare cards. No pixel explosion overlays artwork.
+  // Respect the existing rare-card audio pause for a synchronized entrance.
+  const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
   const flash = flashFor(card.rarity, perfect);
-  const burstDelay = perfect ? 0 : silenceBefore(card.rarity);
+  const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
+  const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
 
   /**
    * Le geste de révélation. Tant que la carte résiste, l'appui ne fait que la
@@ -221,13 +213,8 @@ export function RevealOverlay({
       {perfect ? (
         /* Les cinq cartes ensemble : c'est le moment, il n'y a rien à faire. */
         <div className="reveal-perfect-grid">
-          {burst ? (
-            <EffectBurst
-              key={`fx-${card.id}`}
-              kind={burst}
-              scale={burstScale(card.rarity, perfect)}
-              delayMs={burstDelay}
-            />
+          {rareGlow ? (
+            <span key={`rare-glow-${card.id}`} className="reveal-rare-aura reveal-rare-aura-perfect" style={glowStyle} aria-hidden="true" />
           ) : null}
           {cards.map((item) => {
             const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
@@ -256,16 +243,9 @@ export function RevealOverlay({
         </div>
       ) : (
         <div className="reveal-stage">
-          {/* L'éclat se pose **sur la carte**, pas sur l'écran : c'est elle
-              qu'on regarde, et un effet plein cadre noierait le nom du créateur. */}
-          {burst ? (
-            <EffectBurst
-              key={`fx-${card.id}`}
-              kind={burst}
-              scale={burstScale(card.rarity, perfect)}
-              delayMs={burstDelay}
-              offset="46%"
-            />
+          {/* Discreet rarity glow behind the card; never an explosion on its portrait. */}
+          {rareGlow ? (
+            <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className={shaking ? "reveal-shake" : ""}>
