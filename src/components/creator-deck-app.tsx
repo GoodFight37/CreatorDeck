@@ -680,7 +680,7 @@ export function CreatorDeckApp() {
         </div>
       ) : null}
       {tearing ? <PackTear kind={tearKind} /> : null}
-      {opening ? (
+      {opening && !tearing ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
           <strong>Ouverture du booster…</strong>
