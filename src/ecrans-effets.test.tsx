@@ -73,15 +73,17 @@ describe("les effets de révélation", () => {
     // Légendaire ordinaire.
     const html = await reveler([carte("common")]);
     expect(html).not.toContain("fx-burst");
+    expect(html).not.toContain("reveal-rare-aura");
     expect(html).not.toContain("fx-flash");
   });
 
   it("donne un éclat à l'Épique, sans écran blanc", async () => {
     const html = await reveler([carte("epic")]);
-    expect(html).toContain("fx-burst fx-eclat");
+    expect(html).toContain("reveal-rare-aura");
+    expect(html).not.toContain("fx-burst");
     // La planche est décrite **en CSS** (nombre d'images, durée) : ce qui est
     // écrit dans le document, c'est la taille et le retard.
-    expect(html).toContain("--fx-size: 280px");
+    expect(html).toContain("--rare-delay: 520ms");
     // Pas de flash : une Épique n'a pas droit au plein écran.
     expect(html).not.toContain("fx-flash");
   });
@@ -91,10 +93,11 @@ describe("les effets de révélation", () => {
     // pas belle. Le Légendaire garde l'éclat de l'Épique, une fois et demie
     // plus grand — la taille fait la hiérarchie, plus un autre dessin.
     const html = await reveler([carte("legendary")]);
-    expect(html).toContain("fx-burst fx-eclat");
+    expect(html).toContain("reveal-rare-aura");
+    expect(html).not.toContain("fx-burst");
     expect(html).not.toContain("fx-explosion");
     expect(html).toContain("fx-flash");
-    expect(html).toContain("--fx-size: 420px");
+    expect(html).toContain("reveal-rare-aura-legendary");
   });
 
   it("écrit la rareté sur la carte, pour que l'entrée la suive", async () => {
@@ -120,20 +123,20 @@ describe("les effets de révélation", () => {
     // `silenceBefore()` vaut 520 ms pour une Épique ou une Légendaire : l'éclat
     // part avec le bang, pas avant.
     const epique = await reveler([carte("epic")]);
-    expect(epique).toContain("--fx-delay: 520ms");
+    expect(epique).toContain("--rare-delay: 520ms");
 
     banc.vider();
     banc.preparer();
     const legendaire = await reveler([carte("legendary")]);
-    expect(legendaire).toContain("--fx-delay: 520ms");
+    expect(legendaire).toContain("--rare-delay: 520ms");
     // Et la taille suit la rareté : l'éclat d'une Légendaire vaut une fois et
     // demie celui d'une Épique (280 px → 420 px). Les deux débordent
     // largement de la carte, sinon elle les cache.
-    expect(legendaire).toContain("--fx-size: 420px");
-    expect(epique).toContain("--fx-size: 280px");
+    expect(legendaire).toContain("reveal-rare-aura-legendary");
+    expect(epique).toContain("reveal-rare-aura-epic");
     // La durée vient de `FX_SHEETS`, écrite en ligne : 40 ms par image, de
     // quoi laisser le temps de voir.
-    expect(legendaire).toContain("--fx-duration: 520ms");
+    expect(legendaire).not.toContain("fx-burst");
   });
 
   it("joue l'éclat en grand d'emblée sur un Perfect, sans silence", async () => {
@@ -141,10 +144,11 @@ describe("les effets de révélation", () => {
     const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c")];
     cinq[0]!.rareDrop = true;
     const html = await reveler(cinq as never);
-    expect(html).toContain("fx-burst fx-eclat");
+    expect(html).toContain("reveal-rare-aura");
+    expect(html).not.toContain("fx-burst");
     // Tout le paquet est rare : l'éclat est à sa taille maximale.
-    expect(html).toContain("--fx-size: 420px");
-    expect(html).toContain("--fx-delay: 0ms");
+    expect(html).toContain("reveal-rare-aura-legendary");
+    expect(html).toContain("--rare-delay: 0ms");
     // Le blanc du Perfect est déjà là depuis le verrouillage… et l'effet part
     // au premier rendu, pas après un temps d'attente.
     expect(html).toContain("fx-flash");
@@ -212,8 +216,9 @@ describe("les effets de révélation", () => {
     // bien l'explosion qu'on doit voir. Le rejeu de l'animation, lui, tient à
     // la clé (`key={card.id}`) — le choix de la carte, au calcul testé ici.
     const html = await reveler([carte("common", "un"), carte("legendary", "deux")], 1);
-    expect(html).toContain("fx-burst fx-eclat");
-    expect(html).toContain("--fx-size: 420px");
+    expect(html).toContain("reveal-rare-aura");
+    expect(html).not.toContain("fx-burst");
+    expect(html).toContain("reveal-rare-aura-legendary");
     expect(html).toContain("fx-flash");
   });
 });
