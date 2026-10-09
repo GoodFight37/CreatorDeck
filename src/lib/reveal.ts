@@ -47,7 +47,7 @@ export const PERFECT_LOCK_MS = 2_600;
  * Il vaut **zéro** quand le joueur a coupé les effets de carte : ce réglage est
  * son bouton de secours, il ne doit pas seulement éteindre des pixels.
  */
-export const PACK_TEAR_MS = 700;
+export const PACK_TEAR_MS = 1_450;
 
 /**
  * Le motif de la déchirure : un coup sec, un blanc, puis le papier qui cède.
