@@ -36,7 +36,8 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
 
   return createPortal(
     <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
-      <div className="booster-opening-stage">
+      <div className={`booster-opening-stage booster-opening-stage-${kind}`}>
+        <div className="booster-cinematic-orbit" aria-hidden="true"><i /><i /><i /></div>
         <p className="booster-opening-instruction">
           {opened ? "Booster ouvert !" : "Glisse sur la couture pour déchirer"}
         </p>
@@ -52,6 +53,9 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
           event.currentTarget.style.removeProperty("--foil-pitch");
         }}>
           <div className="booster-card-extract" aria-hidden="true"><span>CD</span></div>
+          <div className="booster-foil-spine" aria-hidden="true" />
+          <div className="booster-foil-fold booster-foil-fold-left" aria-hidden="true" />
+          <div className="booster-foil-fold booster-foil-fold-right" aria-hidden="true" />
           <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
             {kind === "live" ? (
               <PackArtwork />
@@ -106,6 +110,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
           </div>
           <div className="booster-foil-cut" aria-hidden="true" />
           <div className="booster-foil-glow" aria-hidden="true" />
+          <div className="booster-rip-shockwave" aria-hidden="true" />
         </div>
         {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
       </div>
