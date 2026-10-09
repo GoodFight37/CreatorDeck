@@ -148,6 +148,8 @@ export function FoilPack3D({ kind, progress, opened }: {
     let tiltY = 0;
     let smoothX = 0;
     let smoothY = 0;
+    let gpuChecks = 0;
+    let gpuFrames = 0;
     const start = performance.now();
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const parent = canvas.parentElement;
@@ -186,7 +188,9 @@ export function FoilPack3D({ kind, progress, opened }: {
       gl.drawArrays(gl.TRIANGLES,0,geometry.length/10);
       // A canvas existing in the DOM is not proof the GPU drew anything.
       // Only hide the independently painted fallback after reading a real pixel.
-      if (!canvas.dataset.rendered && !openedRef.current) {
+      if (!canvas.dataset.rendered && !openedRef.current &&
+          gpuChecks < 8 && gpuFrames++ % 8 === 0) {
+        gpuChecks++;
         const pixel = new Uint8Array(4);
         gl.readPixels(Math.floor(width / 2), Math.floor(height / 2),
           1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
@@ -381,9 +385,11 @@ function startFoilBackup(
   if (!ctx) return () => {};
   let handle = 0;
   let openingAt: number | null = null;
+  let lastPaintedAt = -1000;
   const render = (now: number) => {
     handle = requestAnimationFrame(render);
-    if (document.hidden) return;
+    if (document.hidden || now - lastPaintedAt < 32) return;
+    lastPaintedAt = now;
     const b = canvas.getBoundingClientRect();
     const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     const w = Math.max(1, Math.round(b.width * dpr));
