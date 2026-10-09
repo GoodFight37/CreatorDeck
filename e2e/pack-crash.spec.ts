@@ -59,7 +59,9 @@ async function savedCards(page: Page): Promise<Array<{ id: string; creatorSlug: 
       })
       .sort((a, b) => Number(b.slice(prefix.length)) - Number(a.slice(prefix.length)));
     const key = keys[0];
-    if (!key) throw new Error(`Aucune clé de sauvegarde ${prefix}N dans localStorage.`);
+    // L'état initial peut ne pas encore avoir été écrit avant le premier geste.
+    // Le test vérifie plus bas qu'un tirage, lui, est bien persisté.
+    if (!key) return [];
     const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     const state = JSON.parse(raw) as { cards?: Array<{ id: string; creatorSlug: string }> };
