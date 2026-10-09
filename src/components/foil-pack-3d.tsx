@@ -13,6 +13,7 @@ export function FoilPack3D({ kind, progress, opened }: {
   opened: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const backupRef = useRef<HTMLCanvasElement>(null);
   const progressRef = useRef(progress);
   const openedRef = useRef(opened);
   useEffect(() => { progressRef.current = progress; }, [progress]);
@@ -24,30 +25,15 @@ export function FoilPack3D({ kind, progress, opened }: {
     // JSDOM has no GPU or 2D canvas: avoid calling its unimplemented methods.
     if (/jsdom/i.test(navigator.userAgent)) return;
     const art = paintFoilArtwork(kind);
+    // Independently painted foil stays visible if WebGL is unavailable or fails to draw.
+    const stopBackup = backupRef.current
+      ? startFoilBackup(backupRef.current, art, openedRef, progressRef)
+      : () => {};
     const gl = canvas.getContext("webgl", {
       alpha: true, antialias: true, powerPreference: "low-power",
       premultipliedAlpha: false,
     });
-    if (!gl) {
-      const ctx = canvas.getContext("2d");
-      const paint = () => {
-        if (!ctx) return;
-        const r = canvas.getBoundingClientRect();
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        canvas.width = Math.max(1, Math.round(r.width * dpr));
-        canvas.height = Math.max(1, Math.round(r.height * dpr));
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.transform(1, .025, -.09, 1, 0, 0);
-        ctx.drawImage(art, -canvas.width * .37, -canvas.height * .41,
-          canvas.width * .74, canvas.height * .82);
-        ctx.restore();
-      };
-      paint();
-      window.addEventListener("resize", paint);
-      return () => window.removeEventListener("resize", paint);
-    }
+    if (!gl) return stopBackup;
 
     const vertexSource = [
       "attribute vec3 aPosition;",
@@ -112,17 +98,17 @@ export function FoilPack3D({ kind, progress, opened }: {
     ].join("\n");
     const vertexShader = compile(gl, gl.VERTEX_SHADER, vertexSource);
     const fragmentShader = compile(gl, gl.FRAGMENT_SHADER, fragmentSource);
-    if (!vertexShader || !fragmentShader) return;
+    if (!vertexShader || !fragmentShader) return stopBackup;
     const program = gl.createProgram();
-    if (!program) return;
+    if (!program) return stopBackup;
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return;
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return stopBackup;
     gl.useProgram(program);
     const geometry = buildFoilGeometry();
     const buffer = gl.createBuffer();
-    if (!buffer) return;
+    if (!buffer) return stopBackup;
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(geometry), gl.STATIC_DRAW);
     const stride = 10 * Float32Array.BYTES_PER_ELEMENT;
@@ -136,7 +122,7 @@ export function FoilPack3D({ kind, progress, opened }: {
       gl.vertexAttribPointer(loc,size,gl.FLOAT,false,stride,offset);
     }
     const texture = gl.createTexture();
-    if (!texture) return;
+    if (!texture) return stopBackup;
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D,texture);
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
@@ -198,10 +184,22 @@ export function FoilPack3D({ kind, progress, opened }: {
       gl.uniform1f(uniforms.tear,progressRef.current/100);
       gl.uniform2f(uniforms.tilt,smoothX,smoothY);
       gl.drawArrays(gl.TRIANGLES,0,geometry.length/10);
+      // A canvas existing in the DOM is not proof the GPU drew anything.
+      // Only hide the independently painted fallback after reading a real pixel.
+      if (!canvas.dataset.rendered && !openedRef.current) {
+        const pixel = new Uint8Array(4);
+        gl.readPixels(Math.floor(width / 2), Math.floor(height / 2),
+          1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+        if (pixel[3] > 0) {
+          canvas.dataset.rendered = "true";
+          stopBackup();
+        }
+      }
     };
     request=requestAnimationFrame(render);
     return () => {
       cancelAnimationFrame(request);
+      stopBackup();
       observer.disconnect();
       parent?.removeEventListener("pointermove",pointer);
       parent?.removeEventListener("pointerleave",leave);
@@ -212,7 +210,12 @@ export function FoilPack3D({ kind, progress, opened }: {
       gl.deleteShader(fragmentShader);
     };
   }, [kind]);
-  return <canvas ref={canvasRef} className="booster-pack-canvas" aria-hidden="true" />;
+  return (
+    <>
+      <canvas ref={backupRef} className="booster-pack-fallback" aria-hidden="true" />
+      <canvas ref={canvasRef} className="booster-pack-canvas" aria-hidden="true" />
+    </>
+  );
 }
 
 function compile(gl: WebGLRenderingContext,type: number,source: string) {
@@ -363,4 +366,65 @@ function paintFoilArtwork(kind:"live"|"scene"): HTMLCanvasElement {
   g.fillStyle="rgba(255,219,207,.78)";
   g.fillText("5  C A R T E S   •   É D I T I O N   I",W/2,1032);
   return canvas;
+}
+
+
+/** Reliable foil draw when Chromium/WebView cannot run a WebGL shader.
+ * The cap and the body still separate; never show a blank canvas. */
+function startFoilBackup(
+  canvas: HTMLCanvasElement,
+  art: HTMLCanvasElement,
+  openedRef: { current: boolean },
+  progressRef: { current: number },
+) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return () => {};
+  let handle = 0;
+  let openingAt: number | null = null;
+  const render = (now: number) => {
+    handle = requestAnimationFrame(render);
+    if (document.hidden) return;
+    const b = canvas.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    const w = Math.max(1, Math.round(b.width * dpr));
+    const h = Math.max(1, Math.round(b.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    if (openedRef.current && openingAt === null) openingAt = now;
+    const open = openingAt === null ? 0 : Math.min(1, (now-openingAt)/1100);
+    const tear = progressRef.current / 100;
+    const packW = w * .76;
+    const packH = h * .83;
+    const x = -packW / 2;
+    const y = -packH / 2;
+    const cut = .135;
+    ctx.clearRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(w * .5, h * .5);
+    ctx.transform(.97, .01, -.10, .985, 0, 0);
+    // Visible folded side, including a dark opposite face.
+    ctx.fillStyle = "#130c1c";
+    ctx.fillRect(x + 11, y + 8 + open*90, packW + 7, packH);
+    ctx.shadowColor = "rgba(0,0,0,.8)";
+    ctx.shadowBlur = packW * .12;
+    ctx.shadowOffsetX = packW * .06;
+    ctx.shadowOffsetY = packW * .07;
+    ctx.drawImage(art, 0, art.height*cut, art.width, art.height*(1-cut),
+      x + open*packW*.05, y + packH*cut + open*packH*.18,
+      packW*(1-open*.10), packH*(1-cut));
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    ctx.save();
+    ctx.translate(open*packW*.85, -open*packH*.24 - tear*packH*.018);
+    ctx.rotate(-open*.68);
+    ctx.drawImage(art, 0, 0, art.width, art.height*cut,
+      x, y, packW, packH*cut);
+    ctx.restore();
+    ctx.restore();
+  };
+  handle = requestAnimationFrame(render);
+  return () => cancelAnimationFrame(handle);
 }
