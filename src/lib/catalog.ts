@@ -275,6 +275,9 @@ export const PACKS = {
  * endroits divergent, c'est la CI qui le dit, pas le joueur.
  */
 export function creatorImage(creator: Pick<Creator, "slug">) {
+  // The existing DIVERRON WebP produces a solid green rectangle in the game.
+  // Use an intentional offline artwork until a verified portrait is regenerated.
+  if (creator.slug === "diverron") return "/creators/diverron-fallback.svg";
   return `/creators/${creator.slug}.webp`;
 }
 
