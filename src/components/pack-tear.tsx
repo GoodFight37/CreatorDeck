@@ -40,7 +40,17 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
         <p className="booster-opening-instruction">
           {opened ? "Booster ouvert !" : "Glisse sur la couture pour déchirer"}
         </p>
-        <div className={`booster-foil booster-foil-${kind} ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
+        <div className={`booster-foil booster-foil-${kind} ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties} onPointerMove={(event) => {
+          if (opened || event.pointerType === "touch") return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          const x = (event.clientX - bounds.left) / bounds.width - .5;
+          const y = (event.clientY - bounds.top) / bounds.height - .5;
+          event.currentTarget.style.setProperty("--foil-yaw", `${Math.max(-5, Math.min(5, x * 10))}deg`);
+          event.currentTarget.style.setProperty("--foil-pitch", `${Math.max(-4, Math.min(4, -y * 8))}deg`);
+        }} onPointerLeave={(event) => {
+          event.currentTarget.style.removeProperty("--foil-yaw");
+          event.currentTarget.style.removeProperty("--foil-pitch");
+        }}>
           <div className="booster-card-extract" aria-hidden="true"><span>CD</span></div>
           <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
             {kind === "live" ? (
