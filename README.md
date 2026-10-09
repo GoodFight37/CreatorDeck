@@ -319,6 +319,8 @@ docs/cloud-supabase.md   tout le cloud : projet Supabase, comptes, migrations (�
 docs/diagnostic.html     la page de diagnostic de la connexion cloud (hors
                          `public/`, donc hors de l'APK)
 docs/revue-externe-2026-10.md  la revue externe d'octobre 2026 : traité, refusé, vérifié
+docs/atelier-et-problemes.md   les problèmes de l'atelier (bascule du dépôt, environnement,
+                         ce qu'on ne peut pas voir d'ici) — pour qui reprend le clavier
 docs/depot-et-github.md  la vie du dépôt : branches, APK de test, publications
 src/lib/credits.ts       qui a fait le décor, les sons, les effets, les portraits
                          (affiché sous « Toi » → *Crédits*)

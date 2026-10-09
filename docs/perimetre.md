@@ -81,6 +81,11 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 - `docs/cloud-supabase.md` — tout le serveur, §8 : chaque règle, migration par
   migration, et la marche à suivre pour poser le SQL (`npx supabase db push`).
 - `docs/revue-externe-2026-10.md` — les refus **techniques**, avec leur raison.
+- `docs/atelier-et-problemes.md` — **les problèmes de l'atelier**, pour celui qui
+  reprend le clavier : la **bascule du dépôt** et la recette qui la rattrape,
+  l'environnement (node_modules, deux Vitest, pas de navigateur), ce qu'on **ne
+  peut pas voir** d'ici (les captures du joueur n'arrivent jamais), et les
+  décisions en attente.
 - `docs/taux-de-drop.md` — les probabilités publiées, et comment les modifier.
 - `docs/catalogue-twitch.md` — le catalogue : périmètre, taille, et la
   **cadence** (`npx supabase db push` pour `0003_catalogue.sql` **avant** de
