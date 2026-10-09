@@ -169,6 +169,7 @@ export function CreatorDeckApp() {
   /** Le paquet est en train de s'ouvrir : le moment entre le geste et la carte. */
   const [tearing, setTearing] = useState(false);
   const [tearKind, setTearKind] = useState<"live" | "scene">("live");
+  const tearResolve = useRef<(() => void) | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
   const [errorHint, setErrorHint] = useState<"account" | null>(null);
@@ -354,10 +355,9 @@ export function CreatorDeckApp() {
     setTearKind(kind);
     playPackOpening();
     buzz(PACK_TEAR_HAPTIC);
-    await new Promise<void>((resoudre) => {
-      window.setTimeout(resoudre, PACK_TEAR_MS);
+    await new Promise<void>((resolve) => {
+      tearResolve.current = resolve;
     });
-    setTearing(false);
   }
 
   async function handleOpenPack() {
@@ -679,7 +679,11 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {tearing ? <PackTear kind={tearKind} /> : null}
+      {tearing ? <PackTear kind={tearKind} onComplete={() => {
+        setTearing(false);
+        tearResolve.current?.();
+        tearResolve.current = null;
+      }} /> : null}
       {opening && !tearing ? (
         <div className="opening-loader" aria-live="polite">
           <div className="mini-pack"><span>CD</span></div>
