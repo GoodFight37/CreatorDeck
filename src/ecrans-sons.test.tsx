@@ -115,7 +115,7 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
 
-  it("et le compteur fonctionne : acheter un booster, ça sonne", async () => {
+  it("le son du booster démarre à la déchirure, jamais avant", async () => {
     // Le contrôle qui donne sa valeur au test précédent : si le détecteur était
     // muet, le silence passerait pour une réussite. Ouvrir un booster, lui, doit
     // s'entendre (le pop du paquet, et la gamme de la première carte).
@@ -131,7 +131,10 @@ describe("le réglage du son", () => {
       await vi.advanceTimersByTimeAsync(1_500);
     });
 
-    expect(sons.oscillateurs + sons.bruitages, "le booster n'a rien joué").toBeGreaterThan(avant);
+    // Le premier appui ne déchire rien : le son doit attendre le geste.
+    expect(sons.oscillateurs + sons.bruitages, "le son a joué avant la déchirure").toBe(avant);
+    banc.appuyer("Ouvrir sans glisser");
+    expect(sons.oscillateurs + sons.bruitages, "la déchirure n'a rien joué").toBeGreaterThan(avant);
   });
 
   it("cache le volume quand le son est coupé", async () => {
