@@ -21,7 +21,7 @@ import { join } from "node:path";
  *      garde-fou du prompt : « plus de `push(..., true)` après un tirage ».
  */
 
-const SAVE_KEY = "creatordeck.save.v8";
+const SAVE_KEY_PREFIX = "creatordeck.save.v";
 const SESSION_KEY = "creatordeck.cloud.session";
 
 /** Le `.env.local` du joueur, s'il existe : sans lui, pas de cloud à tester. */
@@ -48,12 +48,23 @@ async function openDeck(page: Page): Promise<void> {
 
 /** La partie telle que l'appareil l'a écrite. */
 async function savedCards(page: Page): Promise<Array<{ id: string; creatorSlug: string }>> {
-  return page.evaluate((key) => {
+  return page.evaluate((prefix) => {
+    // Ne pas figer ici la version d'une sauvegarde : la clé courante suit
+    // SAVE_VERSION dans le moteur (actuellement v9). Une ancienne clé v8 est
+    // une clé de migration, pas la sauvegarde que le jeu vient d'écrire.
+    const keys = Object.keys(window.localStorage)
+      .filter((key) => {
+        if (!key.startsWith(prefix)) return false;
+        return /^\\d+$/.test(key.slice(prefix.length));
+      })
+      .sort((a, b) => Number(b.slice(prefix.length)) - Number(a.slice(prefix.length)));
+    const key = keys[0];
+    if (!key) throw new Error(`Aucune clé de sauvegarde ${prefix}N dans localStorage.`);
     const raw = window.localStorage.getItem(key);
     if (!raw) return [];
     const state = JSON.parse(raw) as { cards?: Array<{ id: string; creatorSlug: string }> };
     return (state.cards ?? []).map((card) => ({ id: card.id, creatorSlug: card.creatorSlug }));
-  }, SAVE_KEY);
+  }, SAVE_KEY_PREFIX);
 }
 
 test("sans cloud : le tirage local survit à un rechargement", async ({ page }) => {
