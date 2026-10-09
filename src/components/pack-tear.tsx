@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { PackArtwork } from "@/components/drop-view";
+import { FoilLight3D } from "@/components/foil-light-3d";
 
 /** A tactile booster opening: swipe across the foil seal to tear the top strip. */
 export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterMs }: {
@@ -52,6 +53,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
                 <span className="booster-foil-bottom">ÉDITION CRÉATEURS</span>
               </>
             )}
+            <FoilLight3D opened={opened} />
             <span className="booster-foil-shine" />
             <span className="booster-foil-lustre" aria-hidden="true" />
             <span className="booster-foil-bottom-seal" aria-hidden="true" />
