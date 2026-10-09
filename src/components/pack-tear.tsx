@@ -56,6 +56,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             )}
             <span className="booster-foil-shine" />
             <span className="booster-foil-lustre" aria-hidden="true" />
+            <span className="booster-foil-bottom-seal" aria-hidden="true" />
           </div>
           <div className="booster-foil-strip" aria-hidden="true">
             <span className="booster-foil-top-crimp" />
@@ -94,7 +95,6 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             {!opened && <span className="booster-tear-handle" style={{ left: `${6 + progress * .88}%` }}>→</span>}
           </div>
           <div className="booster-foil-cut" aria-hidden="true" />
-          <div className="booster-foil-bottom-seal" aria-hidden="true" />
           <div className="booster-foil-glow" aria-hidden="true" />
         </div>
         {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
