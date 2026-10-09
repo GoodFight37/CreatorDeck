@@ -116,7 +116,24 @@
   touch-action: none;
   transform: translateZ(0);
 }
+/* The backup is drawn independently. Hide only after WebGL produced actual pixels. */
+.booster-cinematic .booster-pack-fallback {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(17px 28px 27px rgba(0,0,0,.72));
+  pointer-events: none;
+}
+.booster-cinematic .booster-physical-scene:has(.booster-pack-canvas[data-rendered="true"])
+  .booster-pack-fallback { visibility: hidden; }
+
 .booster-cinematic .booster-pack-canvas {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
