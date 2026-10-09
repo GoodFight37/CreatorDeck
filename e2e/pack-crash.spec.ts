@@ -55,7 +55,7 @@ async function savedCards(page: Page): Promise<Array<{ id: string; creatorSlug: 
     const keys = Object.keys(window.localStorage)
       .filter((key) => {
         if (!key.startsWith(prefix)) return false;
-        return /^\\d+$/.test(key.slice(prefix.length));
+        return /^\d+$/.test(key.slice(prefix.length));
       })
       .sort((a, b) => Number(b.slice(prefix.length)) - Number(a.slice(prefix.length)));
     const key = keys[0];
