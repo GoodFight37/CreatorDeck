@@ -1,12 +1,26 @@
 # L'atelier : les problèmes ouverts au 9 octobre 2026
 
+> **À jour au 9 octobre 2026, commit `71f5097`, branche
+> `arena/01a10c75-creatordeck`.** Ce fichier peut être envoyé tel quel à un
+> relecteur externe : il décrit **ce qui ne marche pas dans l'atelier**, pas le
+> jeu. Pour le jeu : `README.md`. Pour ce qui est déjà tranché :
+> `docs/perimetre.md`. Pour les refus techniques motivés :
+> `docs/revue-externe-2026-10.md`.
+
 Ce fichier est écrit pour **celui qui reprend le clavier** — une autre IA, ou le
-joueur lui-même. Il ne décrit pas le jeu : il décrit **ce qui ne marche pas dans
-l'atelier**, ce qui coûte du temps, et ce qui attend une décision. Chaque ligne a
-été rencontrée pour de vrai, souvent plusieurs fois.
+joueur lui-même. Il ne décrit pas le jeu : il décrit **ce qui coûte du temps**,
+ce qui **casse**, et ce qui **attend une décision**. Chaque ligne a été
+rencontrée pour de vrai, souvent plusieurs fois.
 
 Il existe parce que la moitié de ces problèmes sont **invisibles dans le code** :
 on les découvre en perdant une heure, ou en détruisant une branche.
+
+**Un avertissement, pour le relecteur pressé** : une autre IA a déjà produit sur
+ce dépôt trois constats faux, un SQL en collision avec une migration existante
+(`0027`) et une capture d'écran non reproductible. La règle est dans
+`docs/perimetre.md` : *un avis n'est pas un résultat*. Toute affirmation se
+vérifie en lançant (`npm test`, `npm run ecrans`, `npm run supabase:verify`),
+jamais en relisant.
 
 ---
 
@@ -18,21 +32,30 @@ retombe sur la lignée **sœur** (`0861b55`, le parent de la branche de travail)
 `public/creators/*` « supprimés », et tous mes fichiers en `??`. Rien n'a bougé
 dans mon répertoire de travail — c'est l'index qui raconte une autre histoire.
 
+**Variante encore plus nette, vue le 9 octobre** : l'espace de travail entier est
+revenu à un **clone neuf et superficiel** — `git rev-list --count HEAD` valait
+**1**, et la référence distante `refs/remotes/origin/arena/…` n'existait plus du
+tout. Dans cet état, même `git fetch` ordinaire ne sait plus quoi rattraper.
+
 **Le danger.** Un `git add -A .` à cet instant **détruirait la branche** : il
 rétablirait le code d'avant le chantier en le faisant passer pour le mien. Ça
-s'est produit trois fois en vingt-quatre heures (8 et 9 octobre 2026).
+s'est produit **quatre fois en vingt-quatre heures** (8 et 9 octobre 2026).
 
 **La recette, éprouvée** (elle a sauvé les commits `15d4924`, `64d1243`,
-`a951a67` et `00778ae`) :
+`a951a67`, `00778ae`, `333eeac` et `c9bf700`) :
 
 1. ne **jamais** `git add -A .`, jamais `--force`, jamais de `worktree` ;
 2. copier **uniquement les fichiers touchés** dans un dossier hors dépôt
    (`/tmp/…`), en recréant les sous-dossiers ;
 3. `git fetch origin arena/01a10c75-creatordeck:refs/remotes/origin/arena/01a10c75-creatordeck`
-   — sans ce `fetch`, `origin/…` peut lui aussi être en retard ;
+   — **avec le nom complet de la référence**, sinon la référence distante n'est
+   pas recréée quand le clone est reparti de zéro. Si Git refuse parce que
+   l'historique est superficiel : `git fetch --unshallow origin` ;
 4. `git reset --hard origin/arena/01a10c75-creatordeck` ;
 5. **recopier** les fichiers par-dessus, puis `git status` : on doit retrouver
-   exactement sa liste, et rien d'autre ;
+   exactement sa liste, et rien d'autre. **Vérifier ensuite qu'un fichier du
+   dernier commit est bien là** (par exemple `src/components/pack-tear.tsx`), et
+   pas seulement le numéro de `HEAD` ;
 6. relancer les suites **avant** de committer (`node_modules` a souvent disparu
    entre-temps, voir § 2) ;
 7. committer avec `git add` **nommé**, fichier par fichier.
@@ -43,6 +66,10 @@ plus après une bascule est plus difficile à réparer que des fichiers recopié
 **La cause n'est pas identifiée.** C'est très probablement la sauvegarde
 automatique de l'espace de travail (les instantanés excluent `node_modules`,
 `.git` est partiellement capturé). Celui qui trouve la cause gagne des heures.
+
+**Ce que ça coûte, concrètement** : à chaque bascule, `node_modules` repart à zéro
+(≈ 25 s de `dev:setup`), les suites sont à rejouer (≈ 60 s), et le risque n'est
+pas la perte de temps mais la perte du travail.
 
 ## 2. L'environnement
 
@@ -65,10 +92,15 @@ automatique de l'espace de travail (les instantanés excluent `node_modules`,
 téléphone n'apparaissent à aucun endroit de l'espace de travail (vérifié : pas de
 dossier d'envois, `read_file` répond « File not found »). Conséquence directe :
 **chaque bug visuel est diagnostiqué à partir d'une phrase**, pas d'une image.
-Le 9 octobre, « les 5 cartes sont révélées en même temps et le bouton ne fait
-rien » a pu être résolu parce que le code ne produit cette scène **qu'à un seul
-endroit** (le tirage Perfect) — mais ce n'est pas une méthode, c'est de la
-chance.
+
+Deux exemples réels, à quelques heures d'intervalle :
+
+* « les 5 cartes sont révélées en même temps et le bouton ne fait rien » —
+  résolu parce que le code ne produit cette scène **qu'à un seul endroit** (le
+  tirage *Perfect*). Ce n'est pas une méthode, c'est de la chance ;
+* « les textes ne veulent rien dire » — il a fallu demander « les libellés de
+  l'écran, ou les dossiers ? » pour découvrir que c'était les 26 dossiers du
+  Tribunal, et non l'interface.
 
 Trois parades, par ordre d'utilité :
 
@@ -79,9 +111,11 @@ Trois parades, par ordre d'utilité :
 
 **Les animations CSS ne se vérifient pas.** Il n'y a pas de navigateur : je
 contrôle la structure (le DOM, les classes, les variables inline) et je raisonne
-sur la feuille de style. Le jugement — « est-ce que c'est beau ? » —
-appartient au joueur, et il a déjà tranché deux fois (l'explosion dorée est
-partie le 9 octobre pour cette raison).
+sur la feuille de style. Le jugement — « est-ce que c'est beau ? » — appartient
+au joueur, et il a déjà tranché deux fois (le décor isométrique est parti le
+8 octobre, l'explosion dorée le 9). Le retournement dos → face livré le 9 octobre
+n'a donc **jamais été vu** : il est vérifié en structure (deux faces,
+`backface-visibility`, un départ à plus de 90°), pas à l'œil.
 
 ## 4. Le piège des tests d'écrans
 
@@ -89,29 +123,29 @@ Les bancs (`src/ecrans-banc.tsx`, `npm run ecrans`) montent les composants **à 
 main**, et les composants tiennent souvent **leur propre état**. Deux
 conséquences, apprises à ses dépens :
 
-- un banc qui monte `RevealOverlay` (ou `TribunalView`) seul **ne passe pas par
+* un banc qui monte `RevealOverlay` (ou `TribunalView`) seul **ne passe pas par
   le moteur** : un test d'appui y est sans dents. Le bug des boutons morts du
   Tribunal (8 octobre) et celui du Perfect (9 octobre) ont tous les deux
   nécessité de monter **l'application entière** — ou au moins le composant avec
   de vrais rappels `vi.fn()` — pour que le test voie quelque chose ;
-- **toujours vérifier dans les deux sens** : rétablir la ligne fautive, lancer le
+* **toujours vérifier dans les deux sens** : rétablir la ligne fautive, lancer le
   test, constater qu'il **échoue**, puis le remettre. Un test qui n'a jamais rougi
   ne prouve rien. Les deux bugs ci-dessus ont chacun eu leur première version
   « verte pour rien ».
 
 ## 5. La chaîne des temps (fragile)
 
-L'ouverture d'un booster est maintenant un enchaînement : suspense du tirage
-**650 ms** → déchirure **700 ms** → silence **520 ms** devant une Épique ou
-mieux → entrée de carte **720 ms** (**920 ms** en plein écran) → verrou du
-Perfect **2 600 ms**. Chaque valeur vit dans un module (`OPENING_DELAY_MS`,
-`PACK_TEAR_MS`, `EPIC_SILENCE_MS`, `PERFECT_LOCK_MS`) et le CSS **lit** certaines
-d'entre elles en variable inline (`--lock-ms`, `--fx-duration`) — c'est voulu,
-une seule vérité. Deux précautions :
+L'ouverture d'un booster est un enchaînement : suspense du tirage **650 ms** →
+déchirure **700 ms** → silence **520 ms** devant une Épique ou mieux → entrée de
+carte **720 ms** (**920 ms** en plein écran, dont ~330 ms de dos avant que la
+carte se présente) → verrou du Perfect **2 600 ms**. Chaque valeur vit dans un
+module (`OPENING_DELAY_MS`, `PACK_TEAR_MS`, `EPIC_SILENCE_MS`,
+`PERFECT_LOCK_MS`) et le CSS **lit** certaines d'entre elles en variable inline
+(`--lock-ms`, `--fx-duration`) — c'est voulu, une seule vérité. Deux précautions :
 
-- les tests avancent les minuteries **fictives** à la main, avec de la marge :
+* les tests avancent les minuteries **fictives** à la main, avec de la marge :
   toucher une valeur sans regarder les tests les fait tomber ;
-- la durée totale ressentie est d'environ **2 s** avant la première carte sur un
+* la durée totale ressentie est d'environ **2 s** avant la première carte sur un
   tirage local. Si le joueur la trouve longue, c'est `PACK_TEAR_MS` qu'on
   raccourcit, pas le silence — le silence est ce qui fait le bruit.
 
@@ -121,21 +155,24 @@ une seule vérité. Deux précautions :
 |---|---|
 | **Migrations `0040`, `0041`, `0042`** | à coller par le joueur (`npx supabase db push`). Sans `0042`, le bilan du Tribunal affiche le refus du serveur au lieu de verser les points |
 | **PR #7** | ouverte, **à ne pas fusionner** sans redemander |
-| **Le retournement dos → face** | volontairement reporté : le joueur veut en reparler. L'entrée actuelle part sombre, floue et en miroir à 110°, ce qui *suggère* le dos sans le rendre. Un vrai dos demande un second élément en `backface-visibility` dans un conteneur `preserve-3d` — impossible sur `.creator-card` elle-même (elle rogne son contenu, ce qui aplatit la 3D), faisable sur un conteneur à elle |
+| **Le retournement dos → face** | livré le 9 octobre, **jamais vu** : deux réglages attendent un verdict au pouce — le dos est-il visible **assez longtemps** (~330 ms, `@keyframes reveal-flip`), et le halo doré de la Légendaire arrive-t-il au bon moment (`card-reveal-legendary`) ? |
 | **L'éclat (seul effet restant)** | l'explosion dorée est partie le 9 octobre ; l'éclat est-il, lui aussi, à revoir ? Si oui, il ne restera que le flash blanc et le halo doré de l'entrée |
+| **Le Perfect** | le bouton mentait (il proposait « Révéler la suivante » alors que les cinq cartes étaient à l'écran) : corrigé. Reste à savoir si le joueur **avait vu la bannière** « Booster Perfect » — si non, il y a autre chose |
 | **Pager du classement** | question ouverte, sans réponse |
 | **« Tu demandes »** | plafonné à 8, question ouverte |
-| **`src/lib/live-game.ts`** | seul orphelin réel hors tests, **gardé volontairement** (moteur de la simulation retirée) |
+| **`src/lib/live-game.ts`** | seul orphelin réel hors tests, **gardé volontairement** (moteur de la simulation retirée le 8 octobre) |
 | **Le Tribunal** | 24 cartes + recherche, seuil de karma à 60 % — à confirmer à l'usage |
 | **L'APK** | « rien pour l'instant » : Vercel suffit comme canal de test. À la main : `npm run android:debug` |
+| **Suivre la branche depuis Windows** | un `git pull` sur `master` répond « no tracking information » : la marche à suivre est dans `docs/depot-et-github.md` § « Suivre la branche de travail depuis ton poste » |
 
 ## 7. L'état du chantier au moment où ce fichier est écrit
 
-- branche `arena/01a10c75-creatordeck`, HEAD `00778ae` — *Le Perfect se range
-  d'un coup, et l'explosion dorée s'en va* ;
-- suites : `npm test` **1 076 tests** (69 fichiers), `npm run ecrans` **66 tests**
+- branche `arena/01a10c75-creatordeck`, HEAD `71f5097` — *Suivre la branche de
+  travail depuis Windows* ; le dernier livrable de jeu est `c9bf700` (*La carte
+  se retourne vraiment : un dos, une face*) ;
+- suites : `npm test` **1 077 tests** (69 fichiers), `npm run ecrans` **66 tests**
   (13 fichiers, 56 captures), `npm run supabase:verify` **559 contrôles** ;
-  `typecheck`, `eslint` et le scanner de vocabulaire muets ;
-- déploiement Vercel du commit `00778ae` : **succès** ;
+  `typecheck`, `eslint`, le scanner de vocabulaire et `npm run build` verts ;
+- déploiement Vercel du commit `71f5097` : **succès** ;
 - migrations posées en production : `0001` → `0039`. **Manquent `0040`, `0041`,
   `0042`.**

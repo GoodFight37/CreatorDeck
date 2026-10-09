@@ -111,7 +111,7 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **47 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits**, **l'arrivée sur les échanges**, **le classement feuilleté** et **le reflet d'une carte sous le doigt** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **56 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits**, **l'arrivée sur les échanges**, **le classement feuilleté** et **le reflet d'une carte sous le doigt** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -240,8 +240,11 @@ src/lib/supabase-notify.test.ts  garde-fou : jetons fermés, fenêtres de 0023,
                          Edge Function réservée au service, réglages Android
 src/lib/supabase-direct.test.ts  garde-fou : les taux du Direct dans pull-rates.json
                          doivent être ceux de 0011_direct.sql
-src/lib/reveal.ts        la mise en scène d'une révélation : silence, refus de
-                         la dernière carte, verrou du Perfect (testé)
+src/lib/reveal.ts        la mise en scène d'une révélation : la déchirure du
+                         paquet (700 ms), le silence, le refus de la dernière
+                         carte, le verrou du Perfect (testé)
+src/components/pack-tear.tsx  l'écran de déchirure, entre le geste et la
+                         première carte (carton, couture, grains)
 src/lib/last-pack.ts     Last Pack côté écran : fenêtre de dix minutes, compte
                          à rebours, ce qui reste à prendre (testé)
 src/lib/supabase-last-pack.test.ts  garde-fou : le contrat entre 0012 et l'écran
@@ -552,10 +555,22 @@ http://localhost:3000/overlay
 - la mise en scène est la même partout, et elle est décidée par un module pur
   (`src/lib/reveal.ts`, testé) : le **dernier emplacement refuse de se retourner**
   (une fois, deux si la carte est Épique ou mieux) ; une Épique ou une Légendaire
-  arrive après **400 ms de silence** puis un bang ; un **Perfect** montre les cinq
-  cartes d'un coup et verrouille l'écran deux secondes, avec la vibration la plus
-  longue du jeu. Un Légendaire ou un Perfect passe en plein écran, avec le titre du
-  direct, le nombre de spectateurs et un bouton vers l'affiche ;
+  arrive après **520 ms de silence** puis un bang ; un **Perfect** montre les cinq
+  cartes d'un coup, verrouille l'écran **deux secondes et demie** (une barre qui
+  se vide dit que l'attente est voulue) et se range d'un seul bouton, avec la
+  vibration la plus longue du jeu. Un Légendaire ou un Perfect passe en plein
+  écran, avec le titre du direct, le nombre de spectateurs et un bouton vers
+  l'affiche ;
+- entre le geste et la première carte, il y a un **paquet qui s'ouvre** :
+  `src/components/pack-tear.tsx` occupe 700 ms (le carton pivote et part en flou,
+  la couture laisse passer la lumière, six grains montent) pendant que le son de
+  l'ouverture part avec le geste et que le téléphone vibre. Il dure **zéro** si le
+  joueur a coupé les effets de carte ou demandé moins d'animations ;
+- **la carte se retourne vraiment** : elle a un dos (dessiné en CSS, comme une
+  carte verrouillée du classeur) et une face, chacune invisible de l'autre côté.
+  Le dos est face au joueur un tiers de seconde, puis la carte se présente,
+  dépasse et se pose. L'entrée porte la rareté : une Commune se pose, une Épique
+  arrive, une Légendaire arrive plus grande, avec un halo ;
 - le son se coupe (`creatordeck.muted`) et **coupe aussi les vibrations** — c'est le
   même interrupteur, dans « Toi → Son ».
 
