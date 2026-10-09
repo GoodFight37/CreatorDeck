@@ -3505,3 +3505,31 @@ input:focus-visible {
     animation-duration: 2400ms;
   }
 }
+
+/* Interactive foil booster — player controls the opening, not a timer. */
+.booster-interactive { pointer-events: auto; touch-action: none; z-index: 1500; }
+.booster-opening-stage { width: 100%; min-height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; background: radial-gradient(ellipse at center, #25205a 0%, #100d25 62%, #080711 100%); }
+.booster-opening-instruction { color: #f5edff; font-size: 14px; text-align: center; letter-spacing: .035em; }
+.booster-foil { width: min(64vw, 250px); aspect-ratio: .68; position: relative; filter: drop-shadow(0 22px 34px #0009); perspective: 600px; }
+.booster-foil-body { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px solid #a98aff; border-radius: 8px 8px 14px 14px; background: radial-gradient(circle at 50% 50%, #9b5df4 0%, #4a209a 38%, #20115a 75%, #120e35 100%); box-shadow: inset 0 0 24px #ffffff4a, inset 0 0 4px #fff; color: white; }
+.booster-foil-body::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(118deg, transparent 0 16px, #ffffff10 17px 19px, transparent 20px 35px); }
+.booster-foil-shine { position: absolute; inset: -40%; background: linear-gradient(115deg, transparent 37%, #ffffff44 49%, transparent 61%); transform: rotate(-12deg); animation: foil-shimmer 3s ease-in-out infinite alternate; }
+@keyframes foil-shimmer { from { translate: -25% 0; } to { translate: 25% 0; } }
+.booster-foil-logo { z-index: 1; font-size: clamp(19px, 5vw, 28px); line-height: .92; text-align: center; font-weight: 1000; font-style: italic; letter-spacing: -.04em; text-shadow: 0 3px 1px #26105b, 0 0 18px #f0aaff; }
+.booster-foil-emblem { z-index: 1; font-size: 110px; line-height: 1.2; color: #efb8ff; text-shadow: 0 0 28px #e4a4ff, 0 0 65px #a957ff; }
+.booster-foil-kind { z-index: 1; font-size: 15px; font-weight: 900; letter-spacing: .15em; text-shadow: 0 2px 8px #16053f; }
+.booster-foil-bottom { position: absolute; bottom: 15px; font-size: 9px; letter-spacing: .2em; }
+.booster-foil-strip { position: absolute; z-index: 3; inset: 0 0 auto; height: 18%; border-radius: 7px 7px 0 0; border: 2px solid #e3c7ff; background: linear-gradient(155deg, #3c167f, #a760ef 47%, #3c167f 85%); box-shadow: 0 5px 8px #0005; display: flex; align-items: center; justify-content: center; transform-origin: 100% 50%; }
+.booster-foil-strip-text { font-size: 9px; letter-spacing: .12em; font-weight: 900; color: #fff4ff; }
+.booster-tear-track { position: absolute; z-index: 5; left: -8%; right: -8%; top: 17%; height: 56px; transform: translateY(-50%); touch-action: none; cursor: grab; outline-offset: 6px; }
+.booster-tear-dashes { position: absolute; left: 7%; right: 7%; top: 50%; border-top: 2px dashed #f9d4ff; filter: drop-shadow(0 0 4px #fff); }
+.booster-tear-handle { position: absolute; top: 50%; transform: translate(-50%, -50%); display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: #fff; color: #6b24bb; box-shadow: 0 0 0 5px #a767f47a, 0 0 20px #fff9; font-size: 23px; }
+.booster-foil-glow { position: absolute; z-index: 2; left: 4%; right: 4%; top: 18%; height: 3px; background: #fff; box-shadow: 0 0 15px 7px #c45fff; opacity: 0; pointer-events: none; }
+.booster-foil-open .booster-foil-strip { animation: strip-fly 900ms ease-out forwards; }
+.booster-foil-open .booster-foil-body { animation: foil-fade 900ms ease-in forwards; }
+.booster-foil-open .booster-foil-glow { animation: foil-flash 900ms ease-out forwards; }
+.booster-foil-open .booster-tear-track { visibility: hidden; }
+@keyframes strip-fly { 0% { transform: translate(0,0) rotate(0); opacity: 1; } 100% { transform: translate(85px,-230px) rotate(48deg); opacity: 0; } }
+@keyframes foil-fade { 0%, 35% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.14) translateY(60px); } }
+@keyframes foil-flash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; transform: scaleY(45); } }
+.booster-open-button { color: #e6d5ff; background: transparent; border: 1px solid #a47fd0; border-radius: 100px; padding: 10px 20px; font-size: 13px; cursor: pointer; }
