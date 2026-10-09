@@ -122,9 +122,9 @@ describe("les écrans", () => {
     const dechirure = document.querySelector(".pack-tear");
     expect(dechirure, "le paquet ne s'ouvre jamais à l'écran").toBeTruthy();
     // Le booster est une vraie enveloppe et attend le geste, pas un chronomètre.
-    expect(dechirure!.querySelector(".booster-foil-body")).toBeTruthy();
-    expect(dechirure!.querySelector(".booster-foil-strip")).toBeTruthy();
-    expect(dechirure!.querySelector(".booster-tear-track")).toBeTruthy();
+    expect(dechirure!.querySelector(".booster-pack-canvas"), "la scène 3D doit exister").toBeTruthy();
+    expect(dechirure!.querySelector(".booster-tear-track"), "le geste de déchirure doit exister").toBeTruthy();
+    expect(dechirure!.querySelector(".booster-card-extract"), "plus de fausse carte CD").toBeNull();
     banc.ecran("11-dechirure");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(2_500);
