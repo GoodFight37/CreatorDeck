@@ -103,7 +103,8 @@ describe("les écrans", () => {
     expect(document.querySelector(".booster-interactive"), "le booster attend le geste du joueur").toBeTruthy();
     banc.appuyer("Ouvrir sans glisser");
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1_000);
+      // La déchirure physique et la transition lumière durent 1,18 s.
+      await vi.advanceTimersByTimeAsync(1_400);
     });
     const revelation = banc.ecran("08-revelation");
     expect(revelation).toContain("card-nameplate");
@@ -134,7 +135,8 @@ describe("les écrans", () => {
 
     banc.appuyer("Ouvrir sans glisser");
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(1_000);
+      // La déchirure physique et la transition lumière durent 1,18 s.
+      await vi.advanceTimersByTimeAsync(1_400);
     });
     expect(document.querySelector(".pack-tear"), "la déchirure ne s'arrête jamais").toBeNull();
     expect(document.querySelector(".reveal-overlay")).toBeTruthy();
