@@ -3249,7 +3249,8 @@ input:focus-visible {
   100% { opacity: .25; letter-spacing: .2em; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .pack-tear { display: none; }
+  /* L’ouverture du paquet reste visible même si les animations système sont réduites. */
+  .pack-tear { display: flex; }
 }
 
 
@@ -3391,4 +3392,10 @@ input:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   .pack-tear-pack::before,
   .pack-tear-pack::after { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-tear-scene { animation-duration: 1450ms; }
+  .pack-tear-pack { animation: pack-tear-pack-cinematic 1450ms ease-out both; }
+  .pack-tear-legende { animation-duration: 1450ms; }
 }
