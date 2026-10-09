@@ -3533,3 +3533,31 @@ input:focus-visible {
 @keyframes foil-fade { 0%, 35% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1.14) translateY(60px); } }
 @keyframes foil-flash { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: 0; transform: scaleY(45); } }
 .booster-open-button { color: #e6d5ff; background: transparent; border: 1px solid #a47fd0; border-radius: 100px; padding: 10px 20px; font-size: 13px; cursor: pointer; }
+
+/* Keep the booster artwork identical to the pack selected on the home screen. */
+.booster-foil-live { padding: 0; border-color: #f07981; background: #260d18; }
+.booster-foil-live .pack-artwork {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  flex: none;
+  transform: none;
+  transition: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.booster-foil-live .pack-people { top: 54px; height: 214px; }
+.booster-foil-live .pack-people img { width: 130px; height: 171px; }
+.booster-foil-live .pack-brand { top: 20px; left: 19px; }
+.booster-foil-live .pack-brand span { font-size: 18px; }
+.booster-foil-live .pack-brand strong { font-size: 39px; }
+.booster-foil-live .pack-edition { bottom: 54px; font-size: 14px; }
+.booster-foil-live .pack-artwork > small { bottom: 22px; font-size: 14px; }
+.booster-foil-live .booster-foil-shine { z-index: 8; pointer-events: none; }
+.booster-foil:has(.booster-foil-live) .booster-foil-strip {
+  border-color: #ffb4b7;
+  background: linear-gradient(155deg, #58151b, #d4505e 47%, #681c33 85%);
+}
+.booster-foil:has(.booster-foil-live) .booster-tear-handle { color: #b4233a; box-shadow: 0 0 0 5px #e74e627a, 0 0 20px #fff9; }
