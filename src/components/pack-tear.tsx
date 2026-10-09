@@ -5,9 +5,11 @@ import { createPortal } from "react-dom";
 import { PackArtwork } from "@/components/drop-view";
 
 /** A tactile booster opening: swipe across the foil seal to tear the top strip. */
-export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
+export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterMs }: {
   kind?: "live" | "scene";
   onComplete: () => void;
+  /** Plays the rip sound and haptic feedback at the actual tear, not on mount. */
+  onTear?: () => void;
   /** Broadcast overlay has no touch interaction; animate the tear automatically. */
   autoCompleteAfterMs?: number;
 }) {
@@ -19,10 +21,11 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
   const finish = useCallback(() => {
     if (done.current) return;
     done.current = true;
+    onTear?.();
     setProgress(100);
     setOpened(true);
     window.setTimeout(onComplete, 900);
-  }, [onComplete]);
+  }, [onComplete, onTear]);
 
   useEffect(() => {
     if (autoCompleteAfterMs === undefined) return;
@@ -36,7 +39,7 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
         <p className="booster-opening-instruction">
           {opened ? "Booster ouvert !" : "Glisse ton doigt sur la ligne pour déchirer"}
         </p>
-        <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`}>
+        <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
           <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
             {kind === "live" ? (
               <PackArtwork />
@@ -50,7 +53,7 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
             )}
             <span className="booster-foil-shine" />
           </div>
-          <div className="booster-foil-strip" style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
+          <div className="booster-foil-strip">
             <span className="booster-foil-strip-text">CREATOR DECK ✦ CREATOR DECK</span>
           </div>
           <div
@@ -82,6 +85,7 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
             }}
           >
             <span className="booster-tear-dashes" />
+            {progress > 0 && !opened ? <span className="booster-tear-trace" aria-hidden="true" /> : null}
             {!opened && <span className="booster-tear-handle" style={{ left: `${progress}%` }}>➜</span>}
           </div>
           <div className="booster-foil-glow" />
