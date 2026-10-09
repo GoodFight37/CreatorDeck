@@ -1,90 +1,80 @@
 import { expect, test } from "@playwright/test";
 
-/**
- * The player must actually tear the booster before cards appear.
- * Run on desktop and mobile, including the touch-sized 412px viewport.
- */
-test("opening is controlled by the player, not an automatic timer", async ({ page }) => {
+/** Genuine 3D foil, responsive tear gesture, no fake CD card or loading screen. */
+test("3D booster waits for the player and never shows a flat placeholder", async ({ page }) => {
   await page.goto("/");
-  const open = page.getByRole("button", { name: "Ouvrir le booster" });
-  await expect(open).toBeVisible({ timeout: 30_000 });
-  await open.click();
-
-  // The foil appears immediately: no small gray CD loading overlay.
-  await expect(page.locator(".opening-loader")).toHaveCount(0);
-  const tearing = page.getByRole("dialog", { name: "Ouvrir le booster" });
-  await expect(tearing).toBeVisible({ timeout: 30_000 });
-  const panel = await tearing.boundingBox();
-  expect(panel, "Le booster doit être dans la fenêtre, pas sous la page").not.toBeNull();
+  const button = page.getByRole("button", { name: "Ouvrir le booster" });
+  await expect(button).toBeVisible({ timeout: 30_000 });
+  await button.click();
+  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  await expect(dialog).toBeVisible({ timeout: 30_000 });
+  const panel = await dialog.boundingBox();
+  expect(panel).not.toBeNull();
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
   expect(panel?.height).toBeGreaterThan(500);
-  await expect(page.getByRole("slider", { name: "Déchirer le haut du booster" })).toBeVisible();
-  // A real foil pouch should keep its branding below the crimped tear strip.
-  const brand = page.locator(".booster-foil-live .pack-brand");
-  const crimp = page.locator(".booster-foil-strip");
-  await expect(brand).toBeVisible();
-  await expect(tearing.locator("canvas.booster-foil-webgl")).toHaveCount(1);
-  const brandBox = await brand.boundingBox();
-  const crimpBox = await crimp.boundingBox();
-  expect(brandBox).not.toBeNull();
-  expect(crimpBox).not.toBeNull();
-  expect(brandBox!.y).toBeGreaterThanOrEqual(crimpBox!.y + crimpBox!.height - 4);
-  await page.screenshot({ path: `test-results/booster-${test.info().project.name}-sealed.png`, fullPage: false });
-  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
-
-  // No auto-complete: even after the old 2.4s animation duration.
-  await page.waitForTimeout(2600);
-  await expect(tearing).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
-
-  // Accessible keyboard interaction also opens the pack.
-  await page.getByRole("slider", { name: "Déchirer le haut du booster" }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".opening-loader")).toHaveCount(0);
+  await expect(dialog.locator("canvas.booster-pack-canvas")).toBeVisible();
+  await expect(dialog.locator(".booster-premium-caption")).toContainText("LIVE DROP");
+  await expect(dialog.locator(".booster-card-extract")).toHaveCount(0);
+  await expect(dialog.locator(".booster-cards-inside")).toHaveCount(0);
+  const slider = dialog.getByRole("slider", { name: "Déchirer le haut du booster" });
+  await expect(slider).toBeVisible();
+
+  await page.screenshot({
+    path: "test-results/booster-" + test.info().project.name + "-sealed.png",
+    fullPage: false,
+  });
+  await page.waitForTimeout(2600);
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
+  await slider.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
+    .toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
 
-test("a horizontal pointer swipe tears the booster", async ({ page }) => {
+test("pointer swipe physically tears the 3D cap then reveals cards", async ({ page }) => {
   await page.goto("/");
-  const open = page.getByRole("button", { name: "Ouvrir le booster" });
-  await expect(open).toBeVisible({ timeout: 30_000 });
-  await open.click();
-
+  const button = page.getByRole("button", { name: "Ouvrir le booster" });
+  await expect(button).toBeVisible({ timeout: 30_000 });
+  await button.click();
   const track = page.getByRole("slider", { name: "Déchirer le haut du booster" });
-  await expect(track).toBeVisible({ timeout: 30_000 });
+  await expect(track).toBeVisible();
   const bounds = await track.boundingBox();
   expect(bounds).not.toBeNull();
   if (!bounds) return;
 
-  const startX = bounds.x + 24;
-  const middleY = bounds.y + bounds.height / 2;
-  await page.mouse.move(startX, middleY);
+  const startX = bounds.x + 22;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(startX, y);
   await page.mouse.down();
-  await page.mouse.move(startX + 80, middleY, { steps: 6 });
-  // The foil is visibly cut while the finger moves, not only at release.
+  await page.mouse.move(startX + 80, y, { steps: 6 });
   await expect(page.locator(".booster-tear-trace")).toBeVisible();
   await expect(track).toHaveAttribute("aria-valuenow", /^[1-9][0-9]*$/);
-  await page.screenshot({ path: `test-results/booster-${test.info().project.name}-swiping.png`, fullPage: false });
-  await page.mouse.move(startX + 165, middleY, { steps: 6 });
+  await page.screenshot({
+    path: "test-results/booster-" + test.info().project.name + "-swiping.png",
+    fullPage: false,
+  });
+  await page.mouse.move(startX + 165, y, { steps: 6 });
   await page.mouse.up();
-
   const opened = page.locator(".booster-foil-open");
   await expect(opened).toBeVisible();
-  await expect(opened.locator(".booster-card-extract")).toHaveCount(1);
-  await expect(opened.locator(".booster-cards-inside")).toHaveCount(0);
-  // The burst is a transparent radial halo, never a solid white square.
-  const glowBackground = await opened.locator(".booster-foil-glow").evaluate(
-    (element) => {
-      const style = window.getComputedStyle(element);
-      return { image: style.backgroundImage, color: style.backgroundColor };
-    },
-  );
-  expect(glowBackground.image).toContain("radial-gradient");
-  expect(glowBackground.color).toBe("rgba(0, 0, 0, 0)");
-  await page.waitForTimeout(170);
-  await page.screenshot({ path: `test-results/booster-${test.info().project.name}-opening.png`, fullPage: false });
-  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator(".opening-loader")).toHaveCount(0);
+  await expect(opened.locator("canvas.booster-pack-canvas")).toBeVisible();
+  await expect(opened.locator(".booster-card-extract")).toHaveCount(0);
+  const glow = await opened.locator(".booster-foil-glow").evaluate(element => {
+    const style = window.getComputedStyle(element);
+    return { image: style.backgroundImage, color: style.backgroundColor };
+  });
+  expect(glow.image).toContain("radial-gradient");
+  expect(glow.color).toBe("rgba(0, 0, 0, 0)");
+  await page.waitForTimeout(300);
+  await page.screenshot({
+    path: "test-results/booster-" + test.info().project.name + "-opening.png",
+    fullPage: false,
+  });
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
+    .toBeVisible({ timeout: 15_000 });
   await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
