@@ -40,6 +40,9 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
           {opened ? "Booster ouvert !" : "Glisse ton doigt sur la ligne pour déchirer"}
         </p>
         <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
+          <div className="booster-cards-inside" aria-hidden="true">
+            <i /><i /><i />
+          </div>
           <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
             {kind === "live" ? (
               <PackArtwork />
@@ -52,9 +55,11 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
               </>
             )}
             <span className="booster-foil-shine" />
+            <span className="booster-foil-lustre" aria-hidden="true" />
           </div>
-          <div className="booster-foil-strip">
-            <span className="booster-foil-strip-text">CREATOR DECK ✦ CREATOR DECK</span>
+          <div className="booster-foil-strip" aria-hidden="true">
+            <span className="booster-foil-top-crimp" />
+            <span className="booster-foil-strip-text">✦ CREATOR DECK ✦</span>
           </div>
           <div
             className="booster-tear-track"
@@ -88,7 +93,9 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             {progress > 0 && !opened ? <span className="booster-tear-trace" aria-hidden="true" /> : null}
             {!opened && <span className="booster-tear-handle" style={{ left: `${progress}%` }}>➜</span>}
           </div>
-          <div className="booster-foil-glow" />
+          <div className="booster-foil-cut" aria-hidden="true" />
+          <div className="booster-foil-bottom-seal" aria-hidden="true" />
+          <div className="booster-foil-glow" aria-hidden="true" />
         </div>
         {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
       </div>
