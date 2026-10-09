@@ -54,7 +54,6 @@ import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-
 import { gameDay } from "@/lib/progression";
 import {
   PACK_TEAR_HAPTIC,
-  PACK_TEAR_MS,
 } from "@/lib/reveal";
 import { dossiersDuJour } from "@/lib/tribunal";
 
