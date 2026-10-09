@@ -762,6 +762,54 @@ describe("store cloud", () => {
     expect(snapshot.isError).toBe(false);
   });
 
+  it("adopte les cartes d'une sauvegarde v8 sans effacer la séance locale v9", async () => {
+    const seance = {
+      day: "2026-03-01",
+      verdicts: { "t-01": "deban" as const },
+      claimed: false,
+    };
+    const local = saveWith({ tribunal: seance });
+    const { store, api, applied } = harness({ signedIn: true, local });
+    const serverCards = [
+      serverCard("kaicenat", "legendary", "live", 31),
+      serverCard("ibai", "epic", "holo", 32),
+      serverCard("ninja", "rare", "standard", 33),
+      serverCard("auronplay", "uncommon", "standard", 34),
+      serverCard("rubius", "common", "standard", 35),
+    ];
+    const oldServerState = {
+      ...local,
+      version: 8,
+      packs: 2,
+      openings: 4,
+      cards: serverCards,
+    } as unknown as PlayerState;
+    // Le format v8 ne connaissait pas le Tribunal, ajouté dans le format v9.
+    delete (oldServerState as unknown as Record<string, unknown>).tribunal;
+    api.openPack.mockResolvedValueOnce({
+      packs: 2,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 4,
+      cards: [
+        { creatorSlug: "kaicenat", rarity: "legendary", variant: "live", rareDrop: false },
+        { creatorSlug: "ibai", rarity: "epic", variant: "holo", rareDrop: false },
+        { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+        { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
+      ],
+      save: remoteRow(oldServerState, SERVER_SAVE_AT),
+    });
+
+    const outcome = await store.openPack();
+
+    expect(outcome.status).toBe("drawn");
+    expect(applied.at(-1)?.version).toBe(SAVE_VERSION);
+    expect(applied.at(-1)?.cards.map((entry) => entry.id)).toEqual(serverCards.map((entry) => entry.id));
+    expect(applied.at(-1)?.tribunal).toEqual(seance);
+    // Le serveur a déjà écrit les cartes : pas de ré-envoi de la collection.
+    expect(api.pushSave).not.toHaveBeenCalled();
+  });
+
   it("projet d'avant `0022` : le tirage est envoyé, mais jamais forcé", async () => {
     const { store, api } = harness({ signedIn: true });
     store.subscribe(() => {});
