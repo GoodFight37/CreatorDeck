@@ -4350,3 +4350,13 @@ input:focus-visible {
   .booster-foil-open .booster-foil-body,
   .booster-foil-open .booster-card-extract { animation-duration: .01ms; }
 }
+
+
+/* Keep the hit target absolutely stable while a finger/mouse tears the seam. */
+.booster-foil.booster-foil-interacting:not(.booster-foil-open) {
+  animation: none;
+  transform: rotateY(-5deg) rotateX(1deg);
+}
+.booster-foil.booster-foil-interacting .booster-tear-track {
+  transform: translateY(-50%) translateZ(45px);
+}
