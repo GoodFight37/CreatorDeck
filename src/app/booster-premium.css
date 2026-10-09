@@ -320,3 +320,18 @@
   .booster-cinematic .booster-foil-open .booster-premium-lightburst,
   .booster-premium-loading { animation-duration: .01ms; }
 }
+
+
+/* Opening is a genuine full-screen moment on desktop, not a 560px sheet
+   surrounded by dead-black columns from the mobile layout. */
+.booster-cinematic {
+  width: 100vw;
+  max-width: none;
+  margin: 0;
+}
+.booster-cinematic::before { display: none; }
+@media (min-width: 900px) and (min-height: 700px) {
+  .booster-cinematic .booster-physical-scene {
+    width: min(88vw, 460px, 51vh);
+  }
+}
