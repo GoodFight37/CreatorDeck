@@ -4011,3 +4011,62 @@ input:focus-visible {
     animation-duration: .01ms;
   }
 }
+
+
+/* Rarity atmosphere: no sprite or sticker over a creator portrait.
+   Layer the light under the turning card, delayed to coincide with the reveal. */
+.reveal-stage, .reveal-perfect-grid { isolation: isolate; }
+.reveal-rare-aura {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 42%;
+  width: min(85vw, 420px);
+  height: min(70vh, 500px);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.82);
+  opacity: 0;
+  background: radial-gradient(ellipse at center,
+    rgb(251 160 112 / .23) 0%, rgb(219 99 125 / .15) 38%, transparent 73%);
+  filter: blur(19px);
+  box-shadow: none;
+  pointer-events: none;
+  animation: rare-aura-arrive 1.4s ease-out var(--rare-delay, 0ms) both;
+}
+.reveal-rare-aura-legendary {
+  width: min(100vw, 500px);
+  height: min(76vh, 560px);
+  background: radial-gradient(ellipse at center,
+    rgb(255 223 151 / .34) 0%, rgb(246 173 98 / .19) 40%, transparent 76%);
+  filter: blur(24px);
+}
+.reveal-rare-aura-perfect {
+  top: 50%;
+  width: min(95vw, 860px);
+  height: min(74vh, 550px);
+  background: radial-gradient(ellipse at center,
+    rgb(255 222 155 / .29), rgb(212 141 90 / .13) 43%, transparent 76%);
+  filter: blur(25px);
+}
+@keyframes rare-aura-arrive {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.82); }
+  33% { opacity: .9; transform: translate(-50%, -50%) scale(1.025); }
+  100% { opacity: .64; transform: translate(-50%, -50%) scale(1); }
+}
+/* Turned cards and their labels always sit in front of the halo. */
+.reveal-stage > .reveal-shake,
+.reveal-stage > .reveal-flip,
+.reveal-stage > div:has(> .reveal-flip),
+.reveal-perfect-grid > .reveal-flip {
+  position: relative;
+  z-index: 2;
+}
+.reveal-stage > .new-badge,
+.reveal-stage > .reveal-name { position: relative; z-index: 3; }
+/* Small, restrained highlight along the rare card edge itself. */
+.reveal-card.rarity-epic { filter: drop-shadow(0 0 9px rgb(237 141 121 / .25)); }
+.reveal-card.rarity-legendary { filter: drop-shadow(0 0 15px rgb(255 207 139 / .38)); }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-rare-aura { animation: none; opacity: .52; transform: translate(-50%, -50%); }
+}
+[data-card-fx="off"] .reveal-rare-aura { display: none; }
