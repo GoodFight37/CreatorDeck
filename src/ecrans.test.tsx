@@ -101,10 +101,10 @@ describe("les écrans", () => {
       await vi.advanceTimersByTimeAsync(4_000);
     });
     expect(document.querySelector(".booster-interactive"), "le booster attend le geste du joueur").toBeTruthy();
-    banc.appuyer("Ouvrir sans glisser");
+    banc.appuyer("Ouvrir sans déchirer");
     await act(async () => {
-      // La déchirure physique et la transition lumière durent 1,18 s.
-      await vi.advanceTimersByTimeAsync(1_400);
+      // Le couvercle se détache, les dos sortent, puis la transition termine à 1,9 s.
+      await vi.advanceTimersByTimeAsync(2_100);
     });
     const revelation = banc.ecran("08-revelation");
     expect(revelation).toContain("card-nameplate");
@@ -123,8 +123,9 @@ describe("les écrans", () => {
     const dechirure = document.querySelector(".pack-tear");
     expect(dechirure, "le paquet ne s'ouvre jamais à l'écran").toBeTruthy();
     // Le booster est une vraie enveloppe et attend le geste, pas un chronomètre.
-    expect(dechirure!.querySelector(".booster-pack-canvas"), "la scène 3D doit exister").toBeTruthy();
-    expect(dechirure!.querySelector(".booster-tear-track"), "le geste de déchirure doit exister").toBeTruthy();
+    expect(dechirure!.querySelectorAll(".foil-printed-art").length, "sachet imprimé bord à bord").toBe(2);
+    expect(dechirure!.querySelectorAll(".foil-back-card").length, "les cinq dos sont présents").toBe(5);
+    expect(dechirure!.querySelector(".booster-tear-track"), "la zone de passage du doigt doit exister").toBeTruthy();
     expect(dechirure!.querySelector(".booster-card-extract"), "plus de fausse carte CD").toBeNull();
     banc.ecran("11-dechirure");
     await act(async () => {
@@ -133,10 +134,10 @@ describe("les écrans", () => {
     expect(document.querySelector(".pack-tear"), "le booster ne doit pas s'ouvrir tout seul").toBeTruthy();
     expect(document.querySelector(".reveal-overlay")).toBeNull();
 
-    banc.appuyer("Ouvrir sans glisser");
+    banc.appuyer("Ouvrir sans déchirer");
     await act(async () => {
-      // La déchirure physique et la transition lumière durent 1,18 s.
-      await vi.advanceTimersByTimeAsync(1_400);
+      // Le couvercle se détache, les dos sortent, puis la transition termine à 1,9 s.
+      await vi.advanceTimersByTimeAsync(2_100);
     });
     expect(document.querySelector(".pack-tear"), "la déchirure ne s'arrête jamais").toBeNull();
     expect(document.querySelector(".reveal-overlay")).toBeTruthy();
