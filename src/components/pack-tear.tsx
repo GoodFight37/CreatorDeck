@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { PackArtwork } from "@/components/drop-view";
 
 /** A tactile booster opening: swipe across the foil seal to tear the top strip. */
 export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
@@ -36,12 +37,18 @@ export function PackTear({ kind = "live", onComplete, autoCompleteAfterMs }: {
           {opened ? "Booster ouvert !" : "Glisse ton doigt sur la ligne pour déchirer"}
         </p>
         <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`}>
-          <div className="booster-foil-body">
+          <div className={`booster-foil-body ${kind === "live" ? "booster-foil-live" : ""}`}>
+            {kind === "live" ? (
+              <PackArtwork />
+            ) : (
+              <>
+                <span className="booster-foil-logo">CREATOR<br />DECK</span>
+                <span className="booster-foil-emblem">✦</span>
+                <span className="booster-foil-kind">PAQUET SCÈNE</span>
+                <span className="booster-foil-bottom">ÉDITION CRÉATEURS</span>
+              </>
+            )}
             <span className="booster-foil-shine" />
-            <span className="booster-foil-logo">CREATOR<br />DECK</span>
-            <span className="booster-foil-emblem">✦</span>
-            <span className="booster-foil-kind">{kind === "scene" ? "PAQUET SCÈNE" : "LIVE DROP"}</span>
-            <span className="booster-foil-bottom">ÉDITION CRÉATEURS</span>
           </div>
           <div className="booster-foil-strip" style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
             <span className="booster-foil-strip-text">CREATOR DECK ✦ CREATOR DECK</span>
