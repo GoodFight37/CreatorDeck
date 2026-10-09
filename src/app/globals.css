@@ -3551,7 +3551,7 @@ input:focus-visible {
   --foil-pink: #ec9b9e;
   position: relative;
   isolation: isolate;
-  width: min(70vw, 258px, 31vh);
+  width: min(70vw, 258px, 42vh);
   aspect-ratio: .672;
   perspective: 800px;
   filter: drop-shadow(0 24px 30px rgb(0 0 0 / .64));
@@ -3903,6 +3903,7 @@ input:focus-visible {
 }
 /* Ripped foil leaves the screen; cards move up out of the dark slit. No
    solid white block, even for legendary drops. */
+.booster-foil-open::after { animation: foil-wrapper-weld-fade 900ms ease-out both; }
 .booster-foil-open .booster-foil-strip { animation: foil-rip-away 900ms cubic-bezier(.14,.72,.26,1) both; }
 .booster-foil-open .booster-foil-body { animation: foil-collapse 900ms cubic-bezier(.16,.7,.2,1) both; }
 .booster-foil-open .booster-foil-glow { animation: foil-bloom 900ms ease-out both; }
@@ -3910,6 +3911,10 @@ input:focus-visible {
 .booster-foil-open .booster-foil-bottom-seal { animation: foil-collapse 900ms ease-in both; }
 .booster-foil-open .booster-foil-cut { animation: foil-cut-open 900ms ease-out both; }
 .booster-foil-open .booster-tear-track { visibility: hidden; }
+@keyframes foil-wrapper-weld-fade {
+  0%, 42% { opacity: 1; }
+  100% { opacity: 0; }
+}
 @keyframes foil-rip-away {
   0% { opacity: 1; transform: translate(0,0) rotate(0deg); }
   42% { opacity: 1; transform: translate(18px,-48px) rotate(9deg); }
