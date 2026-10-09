@@ -1,55 +1,77 @@
 "use client";
 
-/**
- * La déchirure : l'instant entre le geste et la première carte.
- *
- * Sans lui, on passe du bouton « Ouvrir » à une carte en plein écran sans
- * transition — le paquet n'existe jamais, il n'y a rien à ouvrir. Ici, il
- * s'ouvre en deux : la couture laisse passer la lumière, le carton pivote et
- * part en flou, six grains montent. Sept cents millisecondes, puis la carte
- * arrive : elle devient une **conséquence** au lieu d'un résultat.
- *
- * Ce composant ne décide de rien et ne joue rien : il **affiche**. La durée
- * vient de `src/lib/reveal.ts` (`PACK_TEAR_MS`), le son et la vibration restent
- * à l'écran qui ouvre le paquet — c'est lui qui tient l'interrupteur Son.
- *
- * Rien ne tourne en boucle : trois animations bornées, et l'écran quitte le DOM
- * à la fin.
- */
-const GRAINS = [
-  { angle: -128, delay: 0 },
-  { angle: -78, delay: 30 },
-  { angle: -28, delay: 60 },
-  { angle: 22, delay: 90 },
-  { angle: 72, delay: 120 },
-  { angle: 122, delay: 150 },
-] as const;
+import { useRef, useState } from "react";
 
-export function PackTear({ kind = "live" }: { kind?: "live" | "scene" }) {
+/** A tactile booster opening: swipe across the foil seal to tear the top strip. */
+export function PackTear({ kind = "live", onComplete }: {
+  kind?: "live" | "scene";
+  onComplete: () => void;
+}) {
+  const [progress, setProgress] = useState(0);
+  const [opened, setOpened] = useState(false);
+  const start = useRef<number | null>(null);
+  const done = useRef(false);
+
+  function finish() {
+    if (done.current) return;
+    done.current = true;
+    setProgress(100);
+    setOpened(true);
+    window.setTimeout(onComplete, 900);
+  }
+
   return (
-    <div className="pack-tear" role="status" aria-label="Le paquet s'ouvre">
-      <div className="pack-tear-scene">
-        <div className="pack-tear-pack" aria-hidden="true">
-          <span className="pack-tear-half pack-tear-half-left" />
-          <span className="pack-tear-half pack-tear-half-right" />
-          <span className="pack-tear-pack-mark">CD</span>
+    <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
+      <div className="booster-opening-stage">
+        <p className="booster-opening-instruction">
+          {opened ? "Booster ouvert !" : "Glisse ton doigt sur la ligne pour déchirer"}
+        </p>
+        <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`}>
+          <div className="booster-foil-body">
+            <span className="booster-foil-shine" />
+            <span className="booster-foil-logo">CREATOR<br />DECK</span>
+            <span className="booster-foil-emblem">✦</span>
+            <span className="booster-foil-kind">{kind === "scene" ? "PAQUET SCÈNE" : "LIVE DROP"}</span>
+            <span className="booster-foil-bottom">ÉDITION CRÉATEURS</span>
+          </div>
+          <div className="booster-foil-strip" style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
+            <span className="booster-foil-strip-text">CREATOR DECK ✦ CREATOR DECK</span>
+          </div>
+          <div
+            className="booster-tear-track"
+            role="slider"
+            tabIndex={opened ? -1 : 0}
+            aria-label="Déchirer le haut du booster"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            onPointerDown={(event) => {
+              if (opened) return;
+              start.current = event.clientX;
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              if (opened || start.current === null) return;
+              const next = Math.max(0, Math.min(100, (event.clientX - start.current) / 180 * 100));
+              setProgress(next);
+              if (next >= 75) finish();
+            }}
+            onPointerUp={() => { if (!opened) { start.current = null; setProgress(0); } }}
+            onPointerCancel={() => { if (!opened) { start.current = null; setProgress(0); } }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+                event.preventDefault();
+                finish();
+              }
+            }}
+          >
+            <span className="booster-tear-dashes" />
+            {!opened && <span className="booster-tear-handle" style={{ left: `${progress}%` }}>➜</span>}
+          </div>
+          <div className="booster-foil-glow" />
         </div>
-        <span className="pack-tear-seam" aria-hidden="true" />
-        {GRAINS.map((grain) => (
-          <span
-            key={grain.angle}
-            className="pack-tear-grain"
-            aria-hidden="true"
-            style={
-              {
-                "--angle": `${grain.angle}deg`,
-                animationDelay: `${grain.delay}ms`,
-              } as React.CSSProperties
-            }
-          />
-        ))}
+        {!opened && <button className="booster-open-button" type="button" onClick={finish}>Ouvrir sans glisser</button>}
       </div>
-      <p className="pack-tear-legende">{kind === "scene" ? "Paquet Scène" : "Live Drop"}</p>
     </div>
   );
 }
