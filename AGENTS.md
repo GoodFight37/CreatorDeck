@@ -26,29 +26,57 @@ jetable).
 
 ## Si tu écris dans ce dépôt
 
+**Ces règles lient l'IA, pas le joueur.** Elles ne protègent pas le code contre
+lui : si le joueur signale un problème, c'est un fait nouveau et la question est
+rouverte — il suffit de le dire. Et **une règle dont on ne dit pas la raison ne
+vaut rien** : chaque verrou ci-dessous écrit ce qu'il évite. Si tu penses que
+l'un d'eux est une erreur, dis-le avec ton argument — tu peux avoir raison, et
+c'est même souhaitable.
+
+### Les verrous : ils empêchent des dégâts, pas des idées
+
 - **Un seul écrivain à la fois.** Dis **quels fichiers** tu prends avant de
   commencer, et tire la branche avant de pousser (`git pull --rebase`). Pas de
-  `--force`, pas de `worktree`, et **jamais `git add -A .`** : un ajout global
-  peut rétablir l'ancien code en le faisant passer pour le tien — c'est arrivé
-  neuf fois en deux jours, voir `docs/atelier-et-problemes.md` § 1.
+  `--force`, pas de `worktree`.
+- **Jamais `git add -A .`** : l'index de ce dépôt peut raconter une autre
+  histoire que le répertoire de travail (voir `docs/atelier-et-problemes.md`
+  § 1) ; un ajout global rétablirait l'ancien code en le faisant passer pour le
+  tien. On ajoute **fichier par fichier**.
 - **Migrations SQL** : `NNNN_nom.sql` dans `supabase/migrations/`, et rien
-  d'autre. Jamais `supabase migration new` (préfixe à 14 chiffres : `db push`
-  refuse ensuite), jamais `0027_*` (le numéro est pris par `0027_wallet`), et
-  jamais `supabase migration repair` **sans la liste des numéros** — sans liste,
-  il marque tout le dossier comme posé et ta migration ne partira jamais.
+  d'autre. `supabase migration new` écrit un préfixe à 14 chiffres, que
+  `db push` refuse ensuite ; `0027_*` est déjà pris par `0027_wallet` ; et
+  `supabase migration repair` **sans la liste des numéros** marque tout le
+  dossier comme posé — la migration ne partira jamais, et rien ne le dira.
 - **Ne pose jamais de migration en production** : aucune route réseau ne sort
-  d'ici vers Supabase. Les migrations sont collées **par le joueur**
+  d'ici vers Supabase. Elles sont collées **par le joueur**
   (`npx supabase db push`). Au 9 octobre 2026 : `0001` → `0039` sont posées,
-  et **`0040`, `0041`, `0042` attendent**.
-- **Les compteurs vivent à trois endroits** : `README.md`, `docs/perimetre.md`
-  et le corps de la PR #7. Un test ajouté ou retiré se répercute dans les trois.
-- **Ne touche pas sans demande** : `src/lib/streamer.ts`,
-  `src/data/streamer.json`, `src/lib/swipe.ts`, les migrations déjà posées, et
-  les sons (trois consignes du 8 octobre : plus aucun son de déplacement,
-  plafond à −6 dBFS, ne pas ré-encoder les WAV).
+  **`0040`, `0041`, `0042` attendent**.
+- **Le crédit du pack d'effets** reste dans `src/lib/credits.ts` tant que
+  `public/fx/eclat.png` sert : c'est une obligation de licence, pas un usage.
 - **Ne fusionne pas la PR #7** sans que le joueur le redemande.
-- **Tant que `public/fx/eclat.png` sert**, la licence du pack d'effets exige que
-  son crédit reste dans `src/lib/credits.ts`.
+
+### Les décisions de goût : réversibles en un mot
+
+Celles-ci ne protègent aucun mécanisme. Ce sont des choix du joueur, datés,
+écrits pour qu'on ne les défasse pas **par inadvertance** — un « je veux que ça
+change » les lève, et une raison nouvelle les rouvre.
+
+- **Plus aucun son de déplacement** (8 octobre) : onglets, portes, feuilles,
+  interrupteur et reflets sont muets. Plafond à −6 dBFS, les WAV ne se
+  ré-encodent pas.
+- **L'explosion dorée a été supprimée** (9 octobre) : la hiérarchie des raretés
+  se lit dans la **taille**, plus dans un second sprite.
+- **`streamer.ts`, `streamer.json`, `swipe.ts`** : le joueur a demandé qu'on n'y
+  touche pas pendant le nettoyage du 8 octobre. Ce n'est pas un interdit
+  perpétuel — mais préviens avant d'y entrer.
+- **Ni Redux ni `store.ts`**, **pas de vocabulaire cloud dans l'interface** :
+  refusés avec leurs raisons dans `docs/revue-externe-2026-10.md` § 3.
+
+### Et un compteur qui vit à trois endroits
+
+`README.md`, `docs/perimetre.md` et le corps de la PR #7 portent les mêmes
+chiffres. Un test ajouté ou retiré se répercute dans les trois, sinon le
+suivant lira un compte faux.
 
 ## Deux principes
 
