@@ -147,7 +147,7 @@ describe("les effets de révélation", () => {
     expect(html).toContain("reveal-rare-aura");
     expect(html).not.toContain("fx-burst");
     // Tout le paquet est rare : l'éclat est à sa taille maximale.
-    expect(html).toContain("reveal-rare-aura-legendary");
+    expect(html).toContain("reveal-rare-aura-perfect");
     expect(html).toContain("--rare-delay: 0ms");
     // Le blanc du Perfect est déjà là depuis le verrouillage… et l'effet part
     // au premier rendu, pas après un temps d'attente.
