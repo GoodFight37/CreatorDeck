@@ -37,7 +37,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
     <div className="pack-tear booster-interactive" role="dialog" aria-modal="true" aria-label="Ouvrir le booster">
       <div className="booster-opening-stage">
         <p className="booster-opening-instruction">
-          {opened ? "Booster ouvert !" : "Glisse ton doigt sur la ligne pour déchirer"}
+          {opened ? "Booster ouvert !" : "Glisse sur la couture pour déchirer"}
         </p>
         <div className={`booster-foil ${opened ? "booster-foil-open" : ""}`} style={{ "--tear-progress": `${progress}%` } as React.CSSProperties}>
           <div className="booster-cards-inside" aria-hidden="true">
@@ -91,7 +91,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
           >
             <span className="booster-tear-dashes" />
             {progress > 0 && !opened ? <span className="booster-tear-trace" aria-hidden="true" /> : null}
-            {!opened && <span className="booster-tear-handle" style={{ left: `${progress}%` }}>➜</span>}
+            {!opened && <span className="booster-tear-handle" style={{ left: `${6 + progress * .88}%` }}>→</span>}
           </div>
           <div className="booster-foil-cut" aria-hidden="true" />
           <div className="booster-foil-bottom-seal" aria-hidden="true" />
