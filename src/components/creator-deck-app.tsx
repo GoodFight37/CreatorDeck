@@ -39,7 +39,6 @@ import { useTwitchReturn } from "@/hooks/use-twitch-return";
 import { minimizeApp, useAndroidBack } from "@/hooks/use-android-back";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive, useLivePolling } from "@/hooks/use-live";
-import { PACKS } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 
 import { buzz } from "@/lib/haptics";
