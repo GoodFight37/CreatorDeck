@@ -1,3 +1,4 @@
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 
 /**
@@ -25,7 +26,7 @@ describe("le jargon d'infrastructure à l'écran", () => {
     // `src/lib` compte : les messages du store, les avertissements de compte et
     // les libellés du carnet s'affichent autant qu'un `<p>` — c'est là que se
     // cachait « ouvre « Charger le cloud » » après la disparition du bouton.
-    const dossiersScannes = dossiers().map((d) => d.replace(`${process.cwd()}/`, ""));
+    const dossiersScannes = dossiers().map((d) => path.relative(process.cwd(), d).split(path.sep).join("/"));
     expect(dossiersScannes).toEqual(["src/components", "src/app", "src/lib", "src/hooks"]);
     // Et il y a du monde à lire : un dossier vide ferait passer le test pour de
     // mauvaises raisons.

@@ -315,6 +315,23 @@
 
 /* Printed artwork is ONE asset on both the Drop screen and the opening,
    including top/bottom crimps, side weld and all labels. */
+.pack-stage {
+  flex-direction: column;
+  gap: 12px;
+  padding: 32px 18px 18px;
+}
+/* Keep both labels in the flow: absolute bottom offsets made the gesture
+   hint overlap the pack description, especially on narrow phones. */
+.pack-stage .pack-copy,
+.pack-stage .pull-hint { position: static; }
+.pack-stage .pull-hint {
+  max-width: 100%;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--muted);
+}
+.pack-stage .pull-hint svg { flex-shrink: 0; }
+.pack-stage .pack-shadow { bottom: 116px; }
 .pack-stage .pack-artwork.pack-live {
   width: clamp(174px, 34vw, 207px);
   height: auto;

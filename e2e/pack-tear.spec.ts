@@ -1,5 +1,23 @@
 import { expect, test } from "@playwright/test";
 
+test("home pack artwork, title and gesture hint do not overlap", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
+  for (const width of [320, 360, 412, 1280]) {
+    await page.setViewportSize({ width, height: 915 });
+    const artwork = await page.locator(".pack-stage .pack-artwork").boundingBox();
+    const copy = await page.locator(".pack-stage .pack-copy").boundingBox();
+    const hint = await page.locator(".pack-stage .pull-hint").boundingBox();
+    expect(artwork).not.toBeNull();
+    expect(copy).not.toBeNull();
+    expect(hint).not.toBeNull();
+    expect(artwork!.y + artwork!.height, `illustration au-dessus du titre à ${width}px`).toBeLessThanOrEqual(copy!.y);
+    expect(copy!.y + copy!.height, `consigne sous la description à ${width}px`).toBeLessThanOrEqual(hint!.y);
+    expect(hint!.x).toBeGreaterThanOrEqual(0);
+    expect(hint!.x + hint!.width).toBeLessThanOrEqual(width);
+  }
+});
+
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
 test("home pack and opening use the same printed sachet, no WebGL or slider", async ({ page }) => {
   await page.goto("/");
