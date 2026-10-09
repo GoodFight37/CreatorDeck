@@ -13,6 +13,7 @@ import "@fontsource/barlow-condensed/500.css";
 import "@fontsource/barlow-condensed/600.css";
 import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
+import "./booster-premium.css";
 
 // Titre et description suivent le périmètre du catalogue (FR ou monde) : en
 // changer ne demande aucune retouche de ce fichier.
