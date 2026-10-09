@@ -184,6 +184,17 @@ describe("la révélation", () => {
     expect(/100% \{ transform: none/.test(cle), "la carte ne se pose pas face").toBe(true);
   });
 
+  it("évite les aplats blancs carrés pendant l'ouverture et les cartes rares", () => {
+    const css = readFileSync(path.join(process.cwd(), "src", "app", "globals.css"), "utf8");
+    const eclair = /\\.fx-flash\\s*\\{([^}]+)\\}/.exec(css)?.[1] ?? "";
+    const halo = /\\.booster-foil-glow\\s*\\{([^}]+)\\}/.exec(css)?.[1] ?? "";
+    expect(eclair, "la révélation rare ne doit pas être un panneau blanc").toContain("radial-gradient");
+    expect(eclair).not.toMatch(/background:\\s*#fff\\s*;/);
+    expect(halo, "l'ouverture doit éclairer sans carré opaque").toContain("radial-gradient");
+    expect(css).toContain(".booster-foil-top-crimp");
+    expect(css).toContain(".booster-foil-bottom-seal");
+  });
+
   it("fait vibrer la déchirure plus longtemps que le geste qui arme", () => {
     // Le geste (`TEAR_HAPTIC`) se passe sous le doigt : une pulsation. La
     // déchirure, elle, vient après — elle peut se permettre trois temps.
