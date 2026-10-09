@@ -243,7 +243,7 @@ export function RevealOverlay({
                     liveStream={liveFor(live, dotCard.login, now)}
                   />
                   <span className="reveal-dos" aria-hidden="true">
-                    <span>CD</span>
+                    <span className="reveal-back-sigil">✦</span>
                   </span>
                 </div>
               </div>
@@ -278,7 +278,7 @@ export function RevealOverlay({
                     retournée. Sans lui, une carte qui tourne ne montre jamais
                     qu'elle avait un dos. */}
                 <span className="reveal-dos" aria-hidden="true">
-                  <span>CD</span>
+                  <span className="reveal-back-sigil">✦</span>
                 </span>
               </div>
             </div>
