@@ -1,11 +1,11 @@
 # L'atelier : les problèmes ouverts au 9 octobre 2026
 
-> **À jour au 9 octobre 2026, commit `1060069`, branche
-> `arena/01a10c75-creatordeck`.** Ce fichier peut être envoyé tel quel à un
-> relecteur externe : il décrit **ce qui ne marche pas dans l'atelier**, pas le
-> jeu. Pour le jeu : `README.md`. Pour ce qui est déjà tranché :
-> `docs/perimetre.md`. Pour les refus techniques motivés :
-> `docs/revue-externe-2026-10.md`.
+> **À jour au 9 octobre 2026.** Branche `arena/01a10c75-creatordeck` ; le
+> détail commit par commit est dans `docs/historique-livraisons.md`. Ce fichier
+> peut être envoyé tel quel à un relecteur externe : il décrit **ce qui ne
+> marche pas dans l'atelier**, pas le jeu. Pour le jeu : `README.md`. Pour ce
+> qui est déjà tranché : `docs/perimetre.md`. Pour les refus techniques
+> motivés : `docs/revue-externe-2026-10.md`.
 
 Ce fichier est écrit pour **celui qui reprend le clavier** — une autre IA, ou le
 joueur lui-même. Il ne décrit pas le jeu : il décrit **ce qui coûte du temps**,
@@ -45,10 +45,11 @@ elle est là au réveil.
 
 **Le danger.** Un `git add -A .` à cet instant **détruirait la branche** : il
 rétablirait le code d'avant le chantier en le faisant passer pour le mien. Ça
-s'est produit **sept fois** entre le 8 et le 9 octobre 2026.
+s'est produit **neuf fois** entre le 8 et le 9 octobre 2026.
 
 **La recette, éprouvée** (elle a sauvé les commits `15d4924`, `64d1243`,
-`a951a67`, `00778ae`, `333eeac`, `c9bf700`, `71f5097` et `1060069`) :
+`a951a67`, `00778ae`, `333eeac`, `c9bf700`, `71f5097`, `1060069`,
+`59f0bb1` et `8cd2381`) :
 
 1. ne **jamais** `git add -A .`, jamais `--force`, jamais de `worktree` ;
 2. copier **uniquement les fichiers touchés** dans un dossier hors dépôt
@@ -88,8 +89,9 @@ pas la perte de temps mais la perte du travail.
 | **`gh pr edit` échoue** | erreur GraphQL « Projects classic » | `gh api -X PATCH repos/GoodFight37/CreatorDeck/pulls/7 --input <fichier.json>` |
 | **`curl` vers `*.vercel.app` rend `000`** | aucune route sortante | `gh api …/deployments?sha=<commit>` puis `…/statuses` |
 | **Aucune route vers la production Supabase** | impossible de sonder, impossible de `npx supabase db push` | le **joueur** pose les migrations ; on vérifie par `schema_versions()` ou la page `docs/diagnostic.html` |
-| **`npm run e2e` injouable ici** | pas de Chromium dans l'atelier | les tests Playwright (`e2e/pack-crash.spec.ts`) se lancent sur un poste avec `npx playwright install chromium` |
+| **`npm run e2e` injouable ici** | pas de Chromium dans l'atelier | les tests Playwright (`e2e/pack-crash.spec.ts`) se lancent sur un poste avec `npx playwright install chromium`, ou par le workflow `Vérification` sur GitHub, qui installe Chromium lui-même |
 | **Le serveur d'aperçu meurt** | le processus `next dev` ne survit pas aux tours (ni aux `reset --hard`) | le relancer (`npm run dev`, `0.0.0.0:3000`) ; d'abord `pkill -f "next dev"`, sinon Next bascule sur 3001 et l'aperçu pointe ailleurs |
+| **Aucune intégration continue** (jusqu'au 9 octobre) | les workflows ont été supprimés à la main le 8 octobre (`8760723`, et `ae5016f` sur `main`) : plus rien ne rejouait les suites, un commit pouvait partir sans qu'aucune suite ne repasse | depuis `8cd2381`, `.github/workflows/verification.yml` rejoue tout sur **toutes** les branches, sans aucun secret : le job cloud **simule les RPC** avec Playwright et une clé factice |
 | **Deux lignes de commandes à ne pas mélanger** | `bash` exige `command` **et** `cwd` ; `/tmp` n'est **pas** persistant | les copies de secours servent dans le tour, jamais au suivant |
 
 ## 3. Ce que je ne vois pas
@@ -173,12 +175,16 @@ module (`OPENING_DELAY_MS`, `PACK_TEAR_MS`, `EPIC_SILENCE_MS`,
 
 ## 7. L'état du chantier au moment où ce fichier est écrit
 
-- branche `arena/01a10c75-creatordeck`, HEAD `1060069` — *Tout remettre à jour
-  pour une relecture externe* ; le dernier livrable de jeu est `c9bf700` (*La carte
-  se retourne vraiment : un dos, une face*) ;
-- suites : `npm test` **1 077 tests** (69 fichiers), `npm run ecrans` **66 tests**
+- branche `arena/01a10c75-creatordeck` ; le dernier livrable **de jeu** est
+  `c9bf700` (*La carte se retourne vraiment : un dos, une face*), venu après
+  `00778ae` (le bouton du Perfect). Depuis, la branche a porté surtout de la
+  documentation, puis trois correctifs de sauvegarde (`59f0bb1`) et le retour
+  de l'intégration continue (`8cd2381`). L'historique complet est dans
+  `docs/historique-livraisons.md` ;
+- suites : `npm test` **1 079 tests** (69 fichiers), `npm run ecrans` **66 tests**
   (13 fichiers, 56 captures), `npm run supabase:verify` **559 contrôles** ;
   `typecheck`, `eslint`, le scanner de vocabulaire et `npm run build` verts ;
-- déploiement Vercel du commit `1060069` : **succès** ;
+- le dernier déploiement Vercel de la branche est au vert (il se relit avec
+  `gh api …/deployments?sha=<commit>`, jamais avec `curl`) ;
 - migrations posées en production : `0001` → `0039`. **Manquent `0040`, `0041`,
   `0042`.**
