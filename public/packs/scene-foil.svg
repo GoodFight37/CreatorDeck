@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="880" viewBox="0 0 600 880">
+<title>CreatorDeck — paquet SCÈNE</title>
+<defs>
+ <clipPath id="foil"><path d="M25 9H575L591 28V851L572 872H26L9 852V28Z"/></clipPath>
+ <linearGradient id="laminate" x1="0" y1="0" x2="1" y2=".27">
+ <stop offset="0" stop-color="#08071b"/><stop offset=".055" stop-color="#dcd0ff"/><stop offset=".095" stop-color="#493679"/>
+ <stop offset=".2" stop-color="#130e32"/><stop offset=".33" stop-color="#493679"/><stop offset=".52" stop-color="#130e32"/>
+ <stop offset=".73" stop-color="#493679"/><stop offset=".85" stop-color="#08071b"/><stop offset=".94" stop-color="#dcd0ff"/><stop offset="1" stop-color="#08071b"/>
+ </linearGradient>
+ <linearGradient id="vertical" x2="0" y2="1"><stop stop-color="#dcd0ff" stop-opacity=".34"/><stop offset=".17" stop-color="#130e32" stop-opacity=".12"/>
+ <stop offset=".51" stop-color="#08071b" stop-opacity=".1"/><stop offset=".83" stop-color="#a995e2" stop-opacity=".24"/><stop offset="1" stop-color="#08071b" stop-opacity=".7"/></linearGradient>
+ <radialGradient id="core"><stop stop-color="#a995e2" stop-opacity=".56"/><stop offset=".32" stop-color="#493679" stop-opacity=".42"/><stop offset=".76" stop-color="#130e32" stop-opacity=".12"/><stop offset="1" stop-color="#08071b" stop-opacity="0"/></radialGradient>
+ <radialGradient id="bezel"><stop stop-color="#dcd0ff" stop-opacity=".85"/><stop offset=".35" stop-color="#493679" stop-opacity=".7"/><stop offset=".82" stop-color="#08071b" stop-opacity=".94"/><stop offset="1" stop-color="#dcd0ff" stop-opacity=".45"/></radialGradient>
+ <linearGradient id="metal" x1=".2" x2=".8" y1="0" y2="1">
+ <stop stop-color="#dcd0ff"/><stop offset=".21" stop-color="#a995e2"/><stop offset=".4" stop-color="#493679"/>
+ <stop offset=".54" stop-color="#08071b"/><stop offset=".76" stop-color="#a995e2"/><stop offset="1" stop-color="#dcd0ff"/></linearGradient>
+ <linearGradient id="weld" x2=".18" y2="1"><stop stop-color="#dcd0ff"/><stop offset=".14" stop-color="#493679"/>
+ <stop offset=".44" stop-color="#08071b"/><stop offset=".71" stop-color="#493679"/><stop offset="1" stop-color="#dcd0ff"/></linearGradient>
+ <linearGradient id="side" x2="1" y2="0"><stop stop-color="#08071b"/><stop offset=".3" stop-color="#dcd0ff" stop-opacity=".7"/>
+ <stop offset=".52" stop-color="#08071b"/><stop offset=".76" stop-color="#493679"/><stop offset="1" stop-color="#08071b"/></linearGradient>
+ <pattern id="brushed" width="4" height="12" patternUnits="userSpaceOnUse"><path d="M0 1H4 M0 7H4" stroke="#dcd0ff" stroke-opacity=".055" stroke-width=".7"/></pattern>
+ <filter id="emboss" x="-25%" y="-25%" width="150%" height="150%"><feDropShadow dx="0" dy="9" stdDeviation="12" flood-color="#08071b" flood-opacity=".75"/></filter>
+</defs>
+<g clip-path="url(#foil)">
+<path d="M0 0H600V880H0Z" fill="url(#laminate)"/>
+<path d="M0 0H600V880H0Z" fill="url(#vertical)"/>
+<rect y="115" width="600" height="650" fill="url(#brushed)"/>
+<path d="M46 126Q103 238 53 407Q104 592 59 766" stroke="#dcd0ff" stroke-width="11" stroke-opacity=".16" fill="none"/>
+<path d="M555 120Q505 254 559 391Q506 566 546 769" stroke="#08071b" stroke-width="18" stroke-opacity=".65" fill="none"/>
+<path d="M18 170L69 280L23 432L65 581L22 730" fill="none" stroke="#dcd0ff" stroke-opacity=".24" stroke-width="18"/>
+<path d="M582 156L536 311L574 441L530 667L582 750" fill="none" stroke="#dcd0ff" stroke-opacity=".14" stroke-width="17"/>
+<path d="M-50 148L700 148L595 757L0 757Z" fill="url(#core)"/>
+<path d="M-280 135l345 598" stroke="#08071b" stroke-opacity="0.1" stroke-width="6"/><path d="M-221 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M-162 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M-103 135l345 598" stroke="#08071b" stroke-opacity="0.1" stroke-width="6"/><path d="M-44 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M15 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M74 135l345 598" stroke="#08071b" stroke-opacity="0.1" stroke-width="6"/><path d="M133 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M192 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M251 135l345 598" stroke="#08071b" stroke-opacity="0.1" stroke-width="6"/><path d="M310 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M369 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/><path d="M428 135l345 598" stroke="#08071b" stroke-opacity="0.1" stroke-width="6"/><path d="M487 135l345 598" stroke="#dcd0ff" stroke-opacity="0.046" stroke-width="1.5"/>
+<!-- Slit-ready top and bottom welds are part of the *image*, not HTML text. -->
+<rect x="0" y="0" width="600" height="120" fill="url(#weld)"/>
+<rect x="0" y="762" width="600" height="118" fill="url(#weld)"/>
+<path d="M19 16v103 M19 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M29 16v103 M29 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M39 16v103 M39 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M49 16v103 M49 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M59 16v103 M59 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M69 16v103 M69 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M79 16v103 M79 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M89 16v103 M89 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M99 16v103 M99 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M109 16v103 M109 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M119 16v103 M119 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M129 16v103 M129 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M139 16v103 M139 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M149 16v103 M149 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M159 16v103 M159 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M169 16v103 M169 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M179 16v103 M179 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M189 16v103 M189 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M199 16v103 M199 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M209 16v103 M209 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M219 16v103 M219 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M229 16v103 M229 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M239 16v103 M239 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M249 16v103 M249 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M259 16v103 M259 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M269 16v103 M269 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M279 16v103 M279 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M289 16v103 M289 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M299 16v103 M299 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M309 16v103 M309 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M319 16v103 M319 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M329 16v103 M329 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M339 16v103 M339 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M349 16v103 M349 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M359 16v103 M359 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M369 16v103 M369 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M379 16v103 M379 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M389 16v103 M389 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M399 16v103 M399 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M409 16v103 M409 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M419 16v103 M419 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M429 16v103 M429 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M439 16v103 M439 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M449 16v103 M449 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M459 16v103 M459 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M469 16v103 M469 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M479 16v103 M479 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M489 16v103 M489 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M499 16v103 M499 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M509 16v103 M509 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M519 16v103 M519 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M529 16v103 M529 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M539 16v103 M539 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M549 16v103 M549 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M559 16v103 M559 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/><path d="M569 16v103 M569 763v100" stroke="#08071b" stroke-opacity="0.35" stroke-width="4"/><path d="M579 16v103 M579 763v100" stroke="#dcd0ff" stroke-opacity="0.16" stroke-width="2"/>
+<path d="M10 119H590 M10 761H590" stroke="#dcd0ff" stroke-opacity=".83" stroke-width="3"/>
+<path d="M13 125H587 M13 755H587" stroke="#08071b" stroke-opacity=".72" stroke-width="7"/>
+<!-- Sealed side tranche folds -->
+<rect x="0" y="123" width="27" height="632" fill="url(#side)"/>
+<rect x="572" y="123" width="28" height="632" fill="url(#side)"/>
+<path d="M21 129V748 M579 129V748" stroke="#dcd0ff" stroke-opacity=".52" stroke-width="2"/>
+<path d="M40 152Q68 369 43 741 M558 148Q533 354 557 739" stroke="#dcd0ff" stroke-opacity=".13" stroke-width="9" fill="none"/>
+<!-- Artwork: foil-etched portal / mineral facets, continuous with the wrapper -->
+<g transform="translate(300 448)">
+<circle r="221" fill="none" stroke="#dcd0ff" stroke-opacity=".13" stroke-width="2"/>
+<ellipse rx="214" ry="113" transform="rotate(-22)" fill="none" stroke="#dcd0ff" stroke-opacity=".34" stroke-width="4"/>
+<ellipse rx="191" ry="139" transform="rotate(38)" fill="none" stroke="#a995e2" stroke-opacity=".21" stroke-width="2"/>
+<circle r="162" fill="url(#bezel)" stroke="#dcd0ff" stroke-opacity=".74" stroke-width="2"/>
+<circle r="148" fill="none" stroke="#08071b" stroke-opacity=".8" stroke-width="18"/>
+<circle r="139" fill="none" stroke="#dcd0ff" stroke-opacity=".42" stroke-width="2"/>
+<g filter="url(#emboss)">
+ <path d="M0 -143L133 -12L87 101L0 142L-114 30L-80 -91Z" fill="url(#metal)" stroke="#dcd0ff" stroke-width="6"/>
+ <path d="M0 -143V142L-80 -91Z" fill="#dcd0ff" fill-opacity=".12"/>
+ <path d="M0 -143L133 -12L0 16Z" fill="#dcd0ff" fill-opacity=".52"/>
+ <path d="M0 16L133 -12L87 101L0 142Z" fill="#08071b" fill-opacity=".58"/>
+ <path d="M0 16L-114 30L0 142Z" fill="#130e32" fill-opacity=".55"/>
+ <path d="M-80 -91L0 16L-114 30Z" fill="#493679" fill-opacity=".56"/>
+ <path d="M0 -143V142 M-114 30L133 -12" stroke="#dcd0ff" stroke-opacity=".38" stroke-width="3" fill="none"/>
+</g>
+<path d="M-39 -64L43 7L-39 75" fill="none" stroke="#dcd0ff" stroke-opacity=".9" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<!-- Edition inscriptions are PRINTED in the single asset -->
+<text x="300" y="185" fill="#dcd0ff" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="20" letter-spacing="7" text-anchor="middle">CREATORDECK</text>
+<path d="M122 209H478" stroke="#dcd0ff" stroke-opacity=".26" stroke-width="2"/>
+<text x="300" y="710" fill="#dcd0ff" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="28" letter-spacing="8" text-anchor="middle">SCÈNE</text>
+<text x="300" y="739" fill="#dcd0ff" fill-opacity=".62" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="13" letter-spacing="4" text-anchor="middle">ÉDITION FAMILLE</text>
+<path d="M150 791H450" stroke="#dcd0ff" stroke-opacity=".2" stroke-width="2"/>
+<text x="300" y="829" fill="#dcd0ff" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="16" letter-spacing="5" text-anchor="middle">5 CARTES • ÉDITION I</text>
+</g>
+<path d="M25 9H575L591 28V851L572 872H26L9 852V28Z" fill="none" stroke="#dcd0ff" stroke-opacity=".68" stroke-width="3"/>
+</svg>
