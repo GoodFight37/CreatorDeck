@@ -104,6 +104,14 @@ jobs:
         env:
           CI: "true"
           NEXT_TELEMETRY_DISABLED: "1"
+      - name: Joindre les captures de l'ouverture sur bureau et téléphone
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-booster-visual
+          path: test-results/booster-*.png
+          if-no-files-found: warn
+          retention-days: 7
       - name: Joindre les rapports du navigateur en cas d'échec
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4
