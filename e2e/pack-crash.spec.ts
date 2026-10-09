@@ -80,7 +80,23 @@ test("sans cloud : le tirage local survit à un rechargement", async ({ page }) 
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Fermer" }).click();
   const apresTirage = await savedCards(page);
-  expect(apresTirage.length).toBeGreaterThan(avant.length);
+  const sauvegardes = await page.evaluate((prefix) =>
+    Object.keys(window.localStorage)
+      .filter((key) => key.startsWith(prefix))
+      .map((key) => {
+        try {
+          const value = JSON.parse(window.localStorage.getItem(key) ?? "null") as { cards?: unknown[] };
+          return { key, cards: value?.cards?.length ?? null };
+        } catch {
+          return { key, cards: "JSON illisible" };
+        }
+      }),
+    SAVE_KEY_PREFIX,
+  );
+  expect(
+    apresTirage.length,
+    `La collection doit être persistée après le tirage. Avant=${avant.length}, après=${apresTirage.length}, clés=${JSON.stringify(sauvegardes)}`,
+  ).toBeGreaterThan(avant.length);
 
   // Le « crash » : la page est rechargée, rien d'autre.
   await page.reload();
