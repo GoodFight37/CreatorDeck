@@ -3989,7 +3989,9 @@ input:focus-visible {
 @keyframes foil-cards-rise {
   0%, 17% { opacity: 0; transform: translateY(18%) scale(.87); }
   47% { opacity: 1; transform: translateY(-6%) scale(1); }
-  100% { opacity: 0; transform: translateY(-65%) scale(1.04); }
+  /* Hold the card backs after the tear in case the server is still drawing.
+     Never fade the entire stage into an empty purple screen. */
+  100% { opacity: 1; transform: translateY(-14%) scale(1.04); }
 }
 @keyframes foil-cut-open {
   0%, 14% { height: 2px; opacity: 1; }
