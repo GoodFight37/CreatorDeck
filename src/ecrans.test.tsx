@@ -100,6 +100,11 @@ describe("les écrans", () => {
     await act(async () => {
       await vi.advanceTimersByTimeAsync(4_000);
     });
+    expect(document.querySelector(".booster-interactive"), "le booster attend le geste du joueur").toBeTruthy();
+    banc.appuyer("Ouvrir sans glisser");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1_000);
+    });
     const revelation = banc.ecran("08-revelation");
     expect(revelation).toContain("card-nameplate");
     // Le booster hors ligne n'est pas perdu : il sort de la réserve du jour.
@@ -116,14 +121,18 @@ describe("les écrans", () => {
     });
     const dechirure = document.querySelector(".pack-tear");
     expect(dechirure, "le paquet ne s'ouvre jamais à l'écran").toBeTruthy();
-    // Le carton, la couture et les grains : le moment se voit, il n'est pas
-    // seulement une attente vide.
-    expect(dechirure!.querySelector(".pack-tear-pack")).toBeTruthy();
-    expect(dechirure!.querySelector(".pack-tear-seam")).toBeTruthy();
-    expect(dechirure!.querySelectorAll(".pack-tear-grain").length).toBeGreaterThan(1);
+    // Le booster est une vraie enveloppe et attend le geste, pas un chronomètre.
+    expect(dechirure!.querySelector(".booster-foil-body")).toBeTruthy();
+    expect(dechirure!.querySelector(".booster-foil-strip")).toBeTruthy();
+    expect(dechirure!.querySelector(".booster-tear-track")).toBeTruthy();
     banc.ecran("11-dechirure");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(2_500);
+    });
+    expect(document.querySelector(".pack-tear"), "le booster ne doit pas s'ouvrir tout seul").toBeTruthy();
+    expect(document.querySelector(".reveal-overlay")).toBeNull();
 
-    // Et il finit : la déchirure quitte l'écran, la carte arrive.
+    banc.appuyer("Ouvrir sans glisser");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1_000);
     });
