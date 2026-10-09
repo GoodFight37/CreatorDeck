@@ -14,6 +14,19 @@ test("3D booster waits for the player and never shows a flat placeholder", async
   expect(panel?.height).toBeGreaterThan(500);
   await expect(page.locator(".opening-loader")).toHaveCount(0);
   await expect(dialog.locator("canvas.booster-pack-canvas")).toBeVisible();
+  await expect(dialog.locator("canvas.booster-pack-fallback")).toBeVisible();
+  // A mounted canvas is not enough: a previous GPU issue left the whole pack invisible.
+  // Verify real opaque pixels are painted before accepting the scene.
+  await expect.poll(async () => page.evaluate(() => {
+    const gpu = document.querySelector<HTMLCanvasElement>(".booster-pack-canvas");
+    if (gpu?.dataset.rendered === "true") return true;
+    const fallback = document.querySelector<HTMLCanvasElement>(".booster-pack-fallback");
+    if (!fallback || !fallback.width || !fallback.height) return false;
+    const ctx = fallback.getContext("2d");
+    if (!ctx) return false;
+    return ctx.getImageData(Math.floor(fallback.width / 2),
+      Math.floor(fallback.height / 2), 1, 1).data[3] > 20;
+  })).toBe(true);
   await expect(dialog.locator(".booster-premium-caption")).toContainText("LIVE DROP");
   await expect(dialog.locator(".booster-card-extract")).toHaveCount(0);
   await expect(dialog.locator(".booster-cards-inside")).toHaveCount(0);
