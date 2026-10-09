@@ -3348,9 +3348,7 @@ input:focus-visible {
 .pack-tear-pack {
   animation: pack-tear-pack-cinematic 850ms cubic-bezier(.18,.82,.2,1) both;
 }
-.pack-tear-pack::before,
-.pack-tear-pack::after {
-  content: "";
+.pack-tear-half {
   position: absolute;
   inset: 0;
   border: inherit;
@@ -3359,14 +3357,27 @@ input:focus-visible {
     linear-gradient(115deg, transparent 22%, rgb(255 255 255 / .34) 48%, transparent 68%),
     linear-gradient(158deg, #fff0cf 0%, var(--panel-2) 46%, var(--bg-deep) 100%);
   pointer-events: none;
+  will-change: transform, opacity;
 }
-.pack-tear-pack::before {
+.pack-tear-half-left {
   clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+  transform-origin: 100% 50%;
   animation: pack-tear-left 850ms cubic-bezier(.18,.82,.2,1) both;
 }
-.pack-tear-pack::after {
+.pack-tear-half-right {
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+  transform-origin: 0 50%;
   animation: pack-tear-right 850ms cubic-bezier(.18,.82,.2,1) both;
+}
+.pack-tear-pack-mark {
+  position: relative;
+  z-index: 1;
+  animation: pack-tear-mark 850ms ease-out both;
+}
+@keyframes pack-tear-mark {
+  0%, 20% { opacity: 1; transform: scale(1); }
+  45% { opacity: .7; transform: scale(1.15); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
 .pack-tear-seam { animation-duration: 780ms; }
 .pack-tear-grain { animation-duration: 800ms; }
@@ -3391,8 +3402,8 @@ input:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   /* Garder la déchirure lisible : mouvement plus court, mais les deux moitiés se séparent. */
-  .pack-tear-pack::before,
-  .pack-tear-pack::after { animation-duration: 650ms; }
+  .pack-tear-half { animation-duration: 650ms; }
+  .pack-tear-pack-mark { animation-duration: 650ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {
