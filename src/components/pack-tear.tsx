@@ -87,6 +87,7 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
             onPointerDown={(event) => {
               if (opened) return;
               start.current = event.clientX;
+              event.currentTarget.closest(".booster-foil")?.classList.add("booster-foil-interacting");
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
@@ -95,8 +96,8 @@ export function PackTear({ kind = "live", onComplete, onTear, autoCompleteAfterM
               setProgress(next);
               if (next >= 75) finish();
             }}
-            onPointerUp={() => { if (!opened) { start.current = null; setProgress(0); } }}
-            onPointerCancel={() => { if (!opened) { start.current = null; setProgress(0); } }}
+            onPointerUp={(event) => { event.currentTarget.closest(".booster-foil")?.classList.remove("booster-foil-interacting"); if (!opened) { start.current = null; setProgress(0); } }}
+            onPointerCancel={(event) => { event.currentTarget.closest(".booster-foil")?.classList.remove("booster-foil-interacting"); if (!opened) { start.current = null; setProgress(0); } }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
                 event.preventDefault();
