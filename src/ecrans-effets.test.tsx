@@ -74,12 +74,14 @@ describe("les effets de révélation", () => {
     const html = await reveler([carte("common")]);
     expect(html).not.toContain("fx-burst");
     expect(html).not.toContain("reveal-rare-aura");
+    expect(html).not.toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-flash");
   });
 
   it("donne un éclat à l'Épique, sans écran blanc", async () => {
     const html = await reveler([carte("epic")]);
     expect(html).toContain("reveal-rare-aura");
+    expect(html).toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-burst");
     // La planche est décrite **en CSS** (nombre d'images, durée) : ce qui est
     // écrit dans le document, c'est la taille et le retard.
@@ -94,6 +96,7 @@ describe("les effets de révélation", () => {
     // plus grand — la taille fait la hiérarchie, plus un autre dessin.
     const html = await reveler([carte("legendary")]);
     expect(html).toContain("reveal-rare-aura");
+    expect(html).toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-burst");
     expect(html).not.toContain("fx-explosion");
     expect(html).toContain("fx-flash");
@@ -145,6 +148,7 @@ describe("les effets de révélation", () => {
     cinq[0]!.rareDrop = true;
     const html = await reveler(cinq as never);
     expect(html).toContain("reveal-rare-aura");
+    expect(html).toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-burst");
     // Tout le paquet est rare : l'éclat est à sa taille maximale.
     expect(html).toContain("reveal-rare-aura-perfect");
@@ -217,6 +221,7 @@ describe("les effets de révélation", () => {
     // la clé (`key={card.id}`) — le choix de la carte, au calcul testé ici.
     const html = await reveler([carte("common", "un"), carte("legendary", "deux")], 1);
     expect(html).toContain("reveal-rare-aura");
+    expect(html).toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-burst");
     expect(html).toContain("reveal-rare-aura-legendary");
     expect(html).toContain("fx-flash");
