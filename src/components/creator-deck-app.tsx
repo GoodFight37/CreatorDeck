@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 import { BookOpen, CircleUserRound, Hammer, X, Zap } from "lucide-react";
 import { AccountSheet } from "@/components/account-sheet";
