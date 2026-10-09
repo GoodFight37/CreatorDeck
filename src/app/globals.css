@@ -3561,3 +3561,43 @@ input:focus-visible {
   background: linear-gradient(155deg, #58151b, #d4505e 47%, #681c33 85%);
 }
 .booster-foil:has(.booster-foil-live) .booster-tear-handle { color: #b4233a; box-shadow: 0 0 0 5px #e74e627a, 0 0 20px #fff9; }
+
+/* Final interaction polish: the seam lights up under the finger and the
+   selected pack gently moves into view before the player tears it. */
+.booster-foil {
+  animation: booster-foil-arrive 620ms cubic-bezier(.2,.85,.22,1) both;
+}
+.booster-foil-strip { height: 13%; }
+.booster-tear-track { top: 13%; }
+.booster-foil-glow { top: 13%; }
+.booster-tear-trace {
+  position: absolute;
+  z-index: 3;
+  left: 7%;
+  top: calc(50% - 2px);
+  width: calc(var(--tear-progress) * .86);
+  height: 4px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #ffc9e0, #fff, #fff7d7);
+  box-shadow: 0 0 8px 3px rgb(255 199 224 / .75), 0 0 23px 5px rgb(255 154 205 / .4);
+  pointer-events: none;
+}
+.booster-tear-trace::after {
+  content: "";
+  position: absolute;
+  right: -7px;
+  top: -6px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 13px 6px rgb(255 220 244 / .85), 0 0 32px 12px rgb(255 153 202 / .45);
+}
+@keyframes booster-foil-arrive {
+  0% { opacity: 0; transform: translateY(36px) rotate(-4deg) scale(.83); }
+  72% { opacity: 1; transform: translateY(-5px) rotate(.6deg) scale(1.025); }
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booster-foil { animation: none; }
+}
