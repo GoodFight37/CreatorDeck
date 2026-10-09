@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { SEASONS } from "@/lib/seasons";
-import { createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
+import { SAVE_VERSION, createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
 import {
   CloudError,
   type CloudApi,
