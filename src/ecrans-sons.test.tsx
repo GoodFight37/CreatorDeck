@@ -133,7 +133,7 @@ describe("le réglage du son", () => {
 
     // Le premier appui ne déchire rien : le son doit attendre le geste.
     expect(sons.oscillateurs + sons.bruitages, "le son a joué avant la déchirure").toBe(avant);
-    banc.appuyer("Ouvrir sans glisser");
+    banc.appuyer("Ouvrir sans déchirer");
     expect(sons.oscillateurs + sons.bruitages, "la déchirure n'a rien joué").toBeGreaterThan(avant);
   });
 
