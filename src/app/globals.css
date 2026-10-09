@@ -3442,3 +3442,66 @@ input:focus-visible {
   .pack-tear-half-left, .pack-tear-half-right { animation-duration: 850ms; }
   .pack-tear-pack-mark, .pack-tear-legende { animation-duration: 850ms; }
 }
+
+/* Booster opening v2: hold the sealed pack, tear it, then reveal the light.
+   All stages share PACK_TEAR_MS (2400ms); no early fade of the wrapper. */
+.pack-tear { z-index: 1000; }
+.pack-tear-scene { animation: booster-stage 2400ms ease-in-out both; }
+.pack-tear-pack { width: min(52vw, 208px); height: min(76vw, 302px); }
+.pack-tear-half-left { animation: booster-left 2400ms cubic-bezier(.2,.75,.2,1) both; }
+.pack-tear-half-right { animation: booster-right 2400ms cubic-bezier(.2,.75,.2,1) both; }
+.pack-tear-pack-mark { font-size: clamp(30px, 8vw, 46px); animation: booster-mark 2400ms ease both; }
+.pack-tear-seam { animation: booster-seam 2400ms ease both; }
+.pack-tear-grain { animation: booster-grain 2400ms cubic-bezier(.15,.8,.3,1) both; }
+.pack-tear-legende { animation: booster-caption 2400ms ease both; }
+.pack-tear::before { animation: booster-aura 2400ms ease both; }
+@keyframes booster-stage {
+  0% { opacity: 0; transform: translateY(30px) scale(.82); }
+  12%, 84% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: scale(1.16); }
+}
+@keyframes booster-left {
+  0%, 11% { opacity: 0; transform: translateX(0) rotate(0); }
+  17%, 43% { opacity: 1; transform: translateX(0) rotate(0); }
+  61% { opacity: 1; transform: translateX(-24px) rotate(-8deg); }
+  84% { opacity: 1; transform: translateX(-125px) rotate(-24deg); }
+  100% { opacity: 0; transform: translateX(-185px) rotate(-34deg); }
+}
+@keyframes booster-right {
+  0%, 11% { opacity: 0; transform: translateX(0) rotate(0); }
+  17%, 43% { opacity: 1; transform: translateX(0) rotate(0); }
+  61% { opacity: 1; transform: translateX(24px) rotate(8deg); }
+  84% { opacity: 1; transform: translateX(125px) rotate(24deg); }
+  100% { opacity: 0; transform: translateX(185px) rotate(34deg); }
+}
+@keyframes booster-mark {
+  0%, 14% { opacity: 0; } 20%, 44% { opacity: 1; transform: scale(1); }
+  60%, 100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes booster-seam {
+  0%, 42% { opacity: 0; transform: scaleY(.05); }
+  51% { opacity: 1; transform: scaleY(1); }
+  68% { opacity: 1; transform: scaleY(1.2); }
+  89%, 100% { opacity: 0; transform: scaleY(1.4); }
+}
+@keyframes booster-grain {
+  0%, 49% { opacity: 0; transform: rotate(var(--angle)) translateY(0) scale(.4); }
+  62% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateY(-170px) scale(1.3); }
+}
+@keyframes booster-caption {
+  0%, 12% { opacity: 0; }
+  22%, 77% { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes booster-aura {
+  0%, 38% { opacity: 0; transform: scale(.65); }
+  64% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.9); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pack-tear-scene, .pack-tear-half, .pack-tear-pack-mark,
+  .pack-tear-seam, .pack-tear-grain, .pack-tear-legende, .pack-tear::before {
+    animation-duration: 2400ms;
+  }
+}
