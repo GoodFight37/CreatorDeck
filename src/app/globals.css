@@ -3344,9 +3344,9 @@ input:focus-visible {
 
 
 /* ── Ouverture cinématique du booster ── */
-.pack-tear-scene { animation-duration: 1450ms; }
+.pack-tear-scene { animation-duration: 850ms; }
 .pack-tear-pack {
-  animation: pack-tear-pack-cinematic 1450ms cubic-bezier(.18,.82,.2,1) both;
+  animation: pack-tear-pack-cinematic 850ms cubic-bezier(.18,.82,.2,1) both;
 }
 .pack-tear-pack::before,
 .pack-tear-pack::after {
@@ -3362,15 +3362,15 @@ input:focus-visible {
 }
 .pack-tear-pack::before {
   clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
-  animation: pack-tear-left 1450ms cubic-bezier(.18,.82,.2,1) both;
+  animation: pack-tear-left 850ms cubic-bezier(.18,.82,.2,1) both;
 }
 .pack-tear-pack::after {
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
-  animation: pack-tear-right 1450ms cubic-bezier(.18,.82,.2,1) both;
+  animation: pack-tear-right 850ms cubic-bezier(.18,.82,.2,1) both;
 }
-.pack-tear-seam { animation-duration: 1250ms; }
-.pack-tear-grain { animation-duration: 1300ms; }
-.pack-tear-legende { animation-duration: 1450ms; }
+.pack-tear-seam { animation-duration: 780ms; }
+.pack-tear-grain { animation-duration: 800ms; }
+.pack-tear-legende { animation-duration: 850ms; }
 @keyframes pack-tear-pack-cinematic {
   0%, 12% { opacity: 1; transform: perspective(900px) rotateX(0) scale(1); filter: brightness(1); }
   28% { opacity: 1; transform: perspective(900px) rotateX(-8deg) scale(1.08); filter: brightness(1.35); }
@@ -3390,12 +3390,13 @@ input:focus-visible {
   100% { opacity: 0; transform: translateX(95px) rotate(24deg); }
 }
 @media (prefers-reduced-motion: reduce) {
+  /* Garder la déchirure lisible : mouvement plus court, mais les deux moitiés se séparent. */
   .pack-tear-pack::before,
-  .pack-tear-pack::after { animation: none; }
+  .pack-tear-pack::after { animation-duration: 650ms; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pack-tear-scene { animation-duration: 1450ms; }
-  .pack-tear-pack { animation: pack-tear-pack-cinematic 1450ms ease-out both; }
-  .pack-tear-legende { animation-duration: 1450ms; }
+  .pack-tear-scene { animation-duration: 850ms; }
+  .pack-tear-pack { animation: pack-tear-pack-cinematic 850ms ease-out both; }
+  .pack-tear-legende { animation-duration: 850ms; }
 }
