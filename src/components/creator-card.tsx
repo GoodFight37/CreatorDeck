@@ -162,7 +162,7 @@ export function CreatorCard({
         <Image
           className="card-photo"
           src={creatorImage(creator)}
-          alt={`Portrait officiel de ${creator.displayName}`}
+          alt={creator.slug === "diverron" ? "Illustration de remplacement DIVERRON" : `Portrait officiel de ${creator.displayName}`}
           fill
           draggable={false}
         />
