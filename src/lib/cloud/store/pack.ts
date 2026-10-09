@@ -98,7 +98,7 @@ export function packActions(ctx: CloudStoreContext) {
           // serveur. La forme distante est la vérité pour les cartes et les
           // compteurs du tirage, mais le Tribunal (ajouté en v9) n'existait pas
           // dans ce blob : ne pas effacer la séance locale en adoptant la ligne.
-          const remoteVersion = remoteSave.state.version;
+          const remoteVersion = (remoteSave.state as { version?: unknown }).version;
           const adopted =
             typeof remoteVersion === "number" && remoteVersion < SAVE_VERSION
               ? { ...remote, tribunal: local.tribunal }
