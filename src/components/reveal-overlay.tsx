@@ -154,12 +154,21 @@ export function RevealOverlay({
 
   return (
     <div
-      className={`reveal-overlay${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}`}
+      className={`reveal-overlay reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Résultat du booster"
     >
       <div className="reveal-ambient" />
+      {rareGlow ? (
+        <div className={`reveal-cinematic-field field-${perfect ? "perfect" : rarity}`}
+          style={glowStyle} aria-hidden="true">
+          <span className="reveal-field-corona" />
+          <span className="reveal-field-rays" />
+          <span className="reveal-field-orbit" />
+          <span className="reveal-field-orbit reveal-field-orbit-second" />
+        </div>
+      ) : null}
       {flash ? <EffectFlash key={`flash-${card.id}`} /> : null}
       {perfect ? (
         <div className="perfect-banner" role="status">
@@ -243,7 +252,14 @@ export function RevealOverlay({
         </div>
       ) : (
         <div className="reveal-stage">
-          {/* Discreet rarity glow behind the card; never an explosion on its portrait. */}
+          {rareGlow && !perfect ? (
+            <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true"
+              style={glowStyle}>
+              <span>CARTE D'EXCEPTION</span>
+              <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : "ÉPIQUE"}</strong>
+            </div>
+          ) : null}
+          {/* Light and geometry remain behind the artwork, never across the portrait. */}
           {rareGlow ? (
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
