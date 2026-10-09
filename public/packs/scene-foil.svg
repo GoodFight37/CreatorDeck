@@ -59,7 +59,17 @@
  <path d="M-80 -91L0 16L-114 30Z" fill="#493679" fill-opacity=".56"/>
  <path d="M0 -143V142 M-114 30L133 -12" stroke="#dcd0ff" stroke-opacity=".38" stroke-width="3" fill="none"/>
 </g>
-<path d="M-39 -64L43 7L-39 75" fill="none" stroke="#dcd0ff" stroke-opacity=".9" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+<!-- Studio microphone embossed on the printed foil: physical object, not a chevron/arrow. -->
+<g filter="url(#emboss)">
+ <rect x="-48" y="-103" width="96" height="146" rx="47" fill="#271943" fill-opacity=".88" stroke="#dcd0ff" stroke-width="7"/>
+ <path d="M-43 -38H43 M-46 -14H46 M-44 11H44" stroke="#dcd0ff" stroke-opacity=".46" stroke-width="5"/>
+ <path d="M-71 4V21C-71 119 71 119 71 21V4" fill="none" stroke="#dcd0ff" stroke-width="10" stroke-linecap="round"/>
+ <path d="M0 94V129 M-45 130H45" fill="none" stroke="#dcd0ff" stroke-width="11" stroke-linecap="round"/>
+ <path d="M-24 -83C-29 -54 -30 -34 -28 1" fill="none" stroke="#dcd0ff" stroke-opacity=".34" stroke-width="6" stroke-linecap="round"/>
+ <circle cx="-81" cy="-55" r="4" fill="#dcd0ff" fill-opacity=".75"/>
+ <circle cx="86" cy="-73" r="3" fill="#dcd0ff" fill-opacity=".64"/>
+ <path d="M-92 -67Q-118 -12 -90 42 M92 -69Q118 -12 91 43" stroke="#dcd0ff" stroke-opacity=".34" stroke-width="4" fill="none"/>
+</g>
 </g>
 <!-- Edition inscriptions are PRINTED in the single asset -->
 <text x="300" y="185" fill="#dcd0ff" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="20" letter-spacing="7" text-anchor="middle">CREATORDECK</text>
