@@ -52,11 +52,9 @@ import {
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
-import { cardEffectsAllowed } from "@/lib/tilt";
 import {
   PACK_TEAR_HAPTIC,
   PACK_TEAR_MS,
-  tearDurationMs,
 } from "@/lib/reveal";
 import { dossiersDuJour } from "@/lib/tribunal";
 
@@ -348,19 +346,10 @@ export function CreatorDeckApp() {
   }, [cloud.configured, cloud.userId]);
 
   /**
-   * La déchirure : le son part avec le geste, le téléphone vibre, et le paquet
-   * s'ouvre à l'écran avant la première carte.
-   *
-   * Elle dure **zéro** si le joueur a coupé les effets de carte ou demandé moins
-   * d'animations : ce réglage est son bouton de secours, il ne doit pas
-   * seulement éteindre des pixels — le faire attendre pour rien serait le
-   * punir d'avoir dit non.
+   * L'ouverture du booster est une étape de jeu, pas un reflet de carte : elle
+   * doit toujours apparaître, même si les effets holo sont désactivés.
    */
   async function dechirer(kind: "live" | "scene"): Promise<void> {
-    if (tearDurationMs(cardEffectsAllowed()) <= 0) {
-      playPackOpening();
-      return;
-    }
     setTearing(true);
     setTearKind(kind);
     playPackOpening();
