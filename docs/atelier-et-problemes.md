@@ -1,6 +1,6 @@
 # L'atelier : les problèmes ouverts au 9 octobre 2026
 
-> **À jour au 9 octobre 2026, commit `71f5097`, branche
+> **À jour au 9 octobre 2026, commit `1060069`, branche
 > `arena/01a10c75-creatordeck`.** Ce fichier peut être envoyé tel quel à un
 > relecteur externe : il décrit **ce qui ne marche pas dans l'atelier**, pas le
 > jeu. Pour le jeu : `README.md`. Pour ce qui est déjà tranché :
@@ -37,12 +37,18 @@ revenu à un **clone neuf et superficiel** — `git rev-list --count HEAD` valai
 **1**, et la référence distante `refs/remotes/origin/arena/…` n'existait plus du
 tout. Dans cet état, même `git fetch` ordinaire ne sait plus quoi rattraper.
 
+**C'est un problème d'environnement, pas de manipulation** : le 9 octobre,
+une bascule s'est produite alors qu'**aucune commande `git` n'avait été
+lancée depuis une vingtaine de minutes** — j'écrivais un fichier en dehors
+du dépôt. Rien de ce que je fais ne la déclenche, et rien ne l'annonce :
+elle est là au réveil.
+
 **Le danger.** Un `git add -A .` à cet instant **détruirait la branche** : il
 rétablirait le code d'avant le chantier en le faisant passer pour le mien. Ça
-s'est produit **quatre fois en vingt-quatre heures** (8 et 9 octobre 2026).
+s'est produit **sept fois** entre le 8 et le 9 octobre 2026.
 
 **La recette, éprouvée** (elle a sauvé les commits `15d4924`, `64d1243`,
-`a951a67`, `00778ae`, `333eeac` et `c9bf700`) :
+`a951a67`, `00778ae`, `333eeac`, `c9bf700`, `71f5097` et `1060069`) :
 
 1. ne **jamais** `git add -A .`, jamais `--force`, jamais de `worktree` ;
 2. copier **uniquement les fichiers touchés** dans un dossier hors dépôt
@@ -167,12 +173,12 @@ module (`OPENING_DELAY_MS`, `PACK_TEAR_MS`, `EPIC_SILENCE_MS`,
 
 ## 7. L'état du chantier au moment où ce fichier est écrit
 
-- branche `arena/01a10c75-creatordeck`, HEAD `71f5097` — *Suivre la branche de
-  travail depuis Windows* ; le dernier livrable de jeu est `c9bf700` (*La carte
+- branche `arena/01a10c75-creatordeck`, HEAD `1060069` — *Tout remettre à jour
+  pour une relecture externe* ; le dernier livrable de jeu est `c9bf700` (*La carte
   se retourne vraiment : un dos, une face*) ;
 - suites : `npm test` **1 077 tests** (69 fichiers), `npm run ecrans` **66 tests**
   (13 fichiers, 56 captures), `npm run supabase:verify` **559 contrôles** ;
   `typecheck`, `eslint`, le scanner de vocabulaire et `npm run build` verts ;
-- déploiement Vercel du commit `71f5097` : **succès** ;
+- déploiement Vercel du commit `1060069` : **succès** ;
 - migrations posées en production : `0001` → `0039`. **Manquent `0040`, `0041`,
   `0042`.**
