@@ -1,0 +1,200 @@
+/* Rarity cinema for real card reveals. Everything lives BEHIND the portrait;
+   the visual vocabulary is light, refraction and physical framing, not sprites. */
+.reveal-overlay.reveal-rarity-epic {
+  background:
+    radial-gradient(ellipse 77% 48% at 50% 43%, rgba(119, 27, 91, .32), transparent 79%),
+    #0a0912;
+}
+.reveal-overlay.reveal-rarity-legendary,
+.reveal-overlay.reveal-perfect {
+  background:
+    radial-gradient(ellipse 85% 60% at 50% 41%, rgba(104, 63, 29, .24), transparent 76%),
+    #090911;
+}
+.reveal-cinematic-field {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  --cinema-main: 229 79 181;
+  --cinema-secondary: 107 96 242;
+  --cinema-hot: 255 185 225;
+}
+.reveal-cinematic-field.field-legendary,
+.reveal-cinematic-field.field-perfect {
+  --cinema-main: 245 170 83;
+  --cinema-secondary: 226 102 71;
+  --cinema-hot: 255 234 161;
+}
+.reveal-field-corona {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(128vw, 750px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%, rgb(var(--cinema-hot) / .24), transparent 28%),
+    radial-gradient(circle at 50% 50%, transparent 28%, rgb(var(--cinema-main) / .48) 39%, rgb(var(--cinema-secondary) / .26) 48%, transparent 74%);
+  filter: blur(18px);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.54);
+  animation: reveal-corona-impact 1450ms cubic-bezier(.12,.7,.19,1)
+    var(--rare-delay, 0ms) both;
+}
+.reveal-field-rays {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: min(165vw, 980px);
+  aspect-ratio: 1;
+  background: repeating-conic-gradient(
+    from 13deg,
+    rgb(var(--cinema-hot) / .0) 0deg 15deg,
+    rgb(var(--cinema-hot) / .27) 17deg,
+    rgb(var(--cinema-main) / .13) 19deg,
+    transparent 23deg 45deg
+  );
+  -webkit-mask-image: radial-gradient(circle, transparent 0 21%, #000 30% 67%, transparent 76%);
+  mask-image: radial-gradient(circle, transparent 0 21%, #000 30% 67%, transparent 76%);
+  opacity: 0;
+  filter: blur(10px);
+  transform: translate(-50%, -50%) rotate(-28deg) scale(.82);
+  animation: reveal-rays-impact 1600ms cubic-bezier(.14,.7,.2,1)
+    var(--rare-delay, 0ms) both;
+}
+.reveal-field-orbit {
+  position: absolute;
+  top: 44%;
+  left: 50%;
+  width: min(145vw, 700px);
+  height: min(69vh, 500px);
+  border: 2px solid rgb(var(--cinema-hot) / .43);
+  border-radius: 50%;
+  box-shadow:
+    0 0 24px rgb(var(--cinema-main) / .35),
+    inset 0 0 12px rgb(var(--cinema-secondary) / .20);
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-31deg) rotateX(68deg) scale(.63);
+  animation: reveal-orbit-impact 1620ms cubic-bezier(.14,.8,.2,1)
+    var(--rare-delay, 0ms) both;
+}
+.reveal-field-orbit-second {
+  width: min(150vw, 760px);
+  height: min(83vh, 610px);
+  border-color: rgb(var(--cinema-main) / .24);
+  transform: translate(-50%, -50%) rotate(37deg) rotateX(72deg) scale(.59);
+  animation-delay: calc(var(--rare-delay, 0ms) + 105ms);
+}
+@keyframes reveal-corona-impact {
+  0%, 9% { opacity: 0; transform: translate(-50%, -50%) scale(.51); }
+  33% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  60% { opacity: .85; transform: translate(-50%, -50%) scale(1.2); }
+  100% { opacity: .54; transform: translate(-50%, -50%) scale(1.03); }
+}
+@keyframes reveal-rays-impact {
+  0%, 13% { opacity: 0; transform: translate(-50%, -50%) rotate(-36deg) scale(.65); }
+  37% { opacity: .9; transform: translate(-50%, -50%) rotate(4deg) scale(1.08); }
+  100% { opacity: .38; transform: translate(-50%, -50%) rotate(22deg) scale(1.16); }
+}
+@keyframes reveal-orbit-impact {
+  0%, 18% { opacity: 0; transform: translate(-50%, -50%) rotate(-62deg) rotateX(68deg) scale(.52); }
+  42% { opacity: .84; transform: translate(-50%, -50%) rotate(-31deg) rotateX(68deg) scale(1.12); }
+  100% { opacity: .36; transform: translate(-50%, -50%) rotate(-14deg) rotateX(68deg) scale(1); }
+}
+.reveal-rarity-kicker {
+  position: absolute;
+  top: clamp(2%, 4vh, 6%);
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 4px;
+  width: min(90%, 400px);
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  opacity: 0;
+  animation: reveal-kicker-arrive 900ms cubic-bezier(.13,.8,.25,1)
+    var(--rare-delay, 0ms) both;
+}
+.reveal-rarity-kicker span {
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .3em;
+  color: rgba(255, 220, 233, .7);
+}
+.reveal-rarity-kicker strong {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(24px, 7vw, 39px);
+  letter-spacing: .14em;
+  color: #ffb9e5;
+  text-shadow: 0 0 30px rgba(240, 86, 190, .65), 0 0 60px rgba(168, 83, 239, .27);
+}
+.reveal-rarity-kicker.rarity-legendary span {
+  color: rgba(255, 238, 198, .8);
+}
+.reveal-rarity-kicker.rarity-legendary strong {
+  color: #ffe0a0;
+  text-shadow: 0 0 30px rgba(250, 183, 91, .73), 0 0 64px rgba(247, 117, 65, .35);
+}
+@keyframes reveal-kicker-arrive {
+  0%, 18% { opacity: 0; transform: translate(-50%, 20px) scale(.86); letter-spacing: .45em; }
+  57% { opacity: 1; transform: translate(-50%, -4px) scale(1.07); }
+  100% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+.reveal-rarity-epic .reveal-stage > div:has(> .reveal-flip) {
+  filter: drop-shadow(0 13px 36px rgba(250, 92, 197, .34));
+}
+.reveal-rarity-legendary .reveal-stage > div:has(> .reveal-flip) {
+  filter: drop-shadow(0 17px 43px rgba(255, 191, 93, .45));
+}
+.reveal-rarity-epic .reveal-name > p:first-child {
+  color: #ffbfeb;
+  text-shadow: 0 0 20px rgba(243, 128, 219, .45);
+}
+.reveal-rarity-legendary .reveal-name > p:first-child {
+  color: #ffe2a4;
+  text-shadow: 0 0 25px rgba(251, 174, 91, .45);
+}
+.reveal-perfect .reveal-cinematic-field .reveal-field-corona {
+  width: min(165vw, 1000px);
+}
+.reveal-perfect .perfect-banner {
+  border-color: rgba(255, 212, 142, .65);
+  color: #fff3df;
+  background: linear-gradient(110deg, rgba(122, 72, 25, .45), rgba(58, 34, 48, .8));
+}
+/* A premium embossed back rather than a grey CD-labelled slab during flipping. */
+.reveal-dos {
+  border: 2px solid rgba(255, 208, 171, .64);
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(128, 55, 120, .58), transparent 63%),
+    repeating-linear-gradient(45deg, transparent 0 16px, rgba(255, 231, 218, .05) 17px 18px),
+    linear-gradient(125deg, #35172f, #140f29 58%, #5b2445);
+  box-shadow: inset 0 0 0 8px rgba(255, 211, 196, .05), 0 17px 42px rgba(0,0,0,.65);
+}
+.reveal-dos .reveal-back-sigil {
+  display: grid;
+  place-items: center;
+  width: 55%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 216, 191, .68);
+  box-shadow: 0 0 0 8px rgba(255, 209, 204, .07), inset 0 0 23px rgba(255, 184, 205, .29),
+    0 0 34px rgba(233, 93, 174, .17);
+  color: #ffdac8;
+  font-size: clamp(32px, 11vw, 62px);
+  text-shadow: 0 0 18px rgba(252, 187, 177, .59);
+}
+[data-card-fx="off"] .reveal-cinematic-field,
+[data-card-fx="off"] .reveal-rarity-kicker { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .reveal-cinematic-field span,
+  .reveal-rarity-kicker { animation: none; opacity: .42; }
+  .reveal-rarity-kicker { transform: translateX(-50%); opacity: 1; }
+  .reveal-field-corona { transform: translate(-50%,-50%) scale(1); }
+}
