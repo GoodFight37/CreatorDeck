@@ -77,6 +77,8 @@ test("sans cloud : le tirage local survit à un rechargement", async ({ page }) 
   }
   const avant = await savedCards(page);
   await open.click();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Ouvrir sans glisser" }).click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Fermer" }).click();
   const apresTirage = await savedCards(page);
@@ -227,6 +229,8 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
 
   await openDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible({ timeout: 30_000 });
+  await page.getByRole("button", { name: "Ouvrir sans glisser" }).click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Fermer" }).click();
 
