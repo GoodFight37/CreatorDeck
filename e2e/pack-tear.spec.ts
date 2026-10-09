@@ -17,6 +17,15 @@ test("opening is controlled by the player, not an automatic timer", async ({ pag
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
   expect(panel?.height).toBeGreaterThan(500);
   await expect(page.getByRole("slider", { name: "Déchirer le haut du booster" })).toBeVisible();
+  // A real foil pouch should keep its branding below the crimped tear strip.
+  const brand = page.locator(".booster-foil-live .pack-brand");
+  const crimp = page.locator(".booster-foil-strip");
+  await expect(brand).toBeVisible();
+  const brandBox = await brand.boundingBox();
+  const crimpBox = await crimp.boundingBox();
+  expect(brandBox).not.toBeNull();
+  expect(crimpBox).not.toBeNull();
+  expect(brandBox!.y).toBeGreaterThanOrEqual(crimpBox!.y + crimpBox!.height - 4);
   await page.screenshot({ path: `test-results/booster-${test.info().project.name}-sealed.png`, fullPage: false });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
 
@@ -55,5 +64,18 @@ test("a horizontal pointer swipe tears the booster", async ({ page }) => {
   await page.mouse.move(startX + 165, middleY, { steps: 6 });
   await page.mouse.up();
 
+  const opened = page.locator(".booster-foil-open");
+  await expect(opened).toBeVisible();
+  // The burst is a transparent radial halo, never a solid white square.
+  const glowBackground = await opened.locator(".booster-foil-glow").evaluate(
+    (element) => {
+      const style = window.getComputedStyle(element);
+      return { image: style.backgroundImage, color: style.backgroundColor };
+    },
+  );
+  expect(glowBackground.image).toContain("radial-gradient");
+  expect(glowBackground.color).toBe("rgba(0, 0, 0, 0)");
+  await page.waitForTimeout(170);
+  await page.screenshot({ path: `test-results/booster-${test.info().project.name}-opening.png`, fullPage: false });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 15_000 });
 });
