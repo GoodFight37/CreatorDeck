@@ -10,6 +10,8 @@ test("opening is controlled by the player, not an automatic timer", async ({ pag
   await expect(open).toBeVisible({ timeout: 30_000 });
   await open.click();
 
+  // The foil appears immediately: no small gray CD loading overlay.
+  await expect(page.locator(".opening-loader")).toHaveCount(0);
   const tearing = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await expect(tearing).toBeVisible({ timeout: 30_000 });
   const panel = await tearing.boundingBox();
@@ -38,6 +40,8 @@ test("opening is controlled by the player, not an automatic timer", async ({ pag
   await page.getByRole("slider", { name: "Déchirer le haut du booster" }).focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".opening-loader")).toHaveCount(0);
+  await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
 
 test("a horizontal pointer swipe tears the booster", async ({ page }) => {
@@ -78,4 +82,6 @@ test("a horizontal pointer swipe tears the booster", async ({ page }) => {
   await page.waitForTimeout(170);
   await page.screenshot({ path: `test-results/booster-${test.info().project.name}-opening.png`, fullPage: false });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator(".opening-loader")).toHaveCount(0);
+  await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
