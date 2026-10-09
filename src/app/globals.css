@@ -3327,13 +3327,11 @@ input:focus-visible {
 .reveal-perfect .perfect-banner {
   box-shadow: 0 0 22px rgb(255 190 86 / .28), 0 0 56px rgb(255 138 48 / .12);
 }
-.reveal-perfect-grid .reveal-flip.rarity-epic,
-.reveal-stage .reveal-flip.rarity-epic {
-  filter: drop-shadow(0 0 10px rgb(255 132 64 / .2));
+.reveal-card.rarity-epic {
+  filter: drop-shadow(0 0 10px rgb(255 132 64 / .24));
 }
-.reveal-perfect-grid .reveal-flip.rarity-legendary,
-.reveal-stage .reveal-flip.rarity-legendary {
-  filter: drop-shadow(0 0 15px rgb(255 199 94 / .42));
+.reveal-card.rarity-legendary {
+  filter: drop-shadow(0 0 15px rgb(255 199 94 / .48));
 }
 
 @media (prefers-reduced-motion: reduce) {
