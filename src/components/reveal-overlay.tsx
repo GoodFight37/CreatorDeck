@@ -255,7 +255,7 @@ export function RevealOverlay({
           {rareGlow && !perfect ? (
             <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true"
               style={glowStyle}>
-              <span>CARTE D'EXCEPTION</span>
+              <span>CARTE D&apos;EXCEPTION</span>
               <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : "ÉPIQUE"}</strong>
             </div>
           ) : null}
