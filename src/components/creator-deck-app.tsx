@@ -346,15 +346,21 @@ export function CreatorDeckApp() {
   }, [cloud.configured, cloud.userId]);
 
   /**
-   * L'ouverture du booster est une étape de jeu, pas un reflet de carte : elle
-   * doit toujours apparaître, même si les effets holo sont désactivés.
+   * Show the real booster from the first tap, while the server draws the cards.
+   * The tear can finish before the network does; the wrapper stays mounted
+   * until both the draw and the gesture have completed, with no empty frame.
    */
-  async function dechirer(kind: "live" | "scene"): Promise<void> {
-    setTearing(true);
+  function commencerDechirure(kind: "live" | "scene"): Promise<void> {
     setTearKind(kind);
-    await new Promise<void>((resolve) => {
+    setTearing(true);
+    return new Promise<void>((resolve) => {
       tearResolve.current = resolve;
     });
+  }
+
+  function terminerDechirure(): void {
+    tearResolve.current?.();
+    tearResolve.current = null;
   }
 
   async function handleOpenPack() {
@@ -362,24 +368,26 @@ export function CreatorDeckApp() {
     setOpening(true);
     setError(null);
     setErrorHint(null);
+    const dechirureTerminee = commencerDechirure("live");
     try {
-      // Qui tire — le serveur ou l'appareil — se décide dans `usePackOpening`,
-      // le même module que l'overlay 16:9.
+      // The server/local engine draws while the physical booster stays visible.
       const result = await openLivePack();
       if (result.status === "drawn") {
-        // Le paquet se déchire **avant** la première carte : sans ce temps, on
-        // passe du bouton à la carte sans que le paquet n'ait jamais existé.
-        await dechirer("live");
+        await dechirureTerminee;
+        // All four states commit together: the revealed card replaces the foil.
         setRevealKind("live");
         setDrawnCards(result.cards);
-        // Le jour coché et sa récompense : annoncés pendant la révélation, pas
-        // cachés dans une notification qui attend la fin.
         setStreakGain(result.streakReward ?? null);
         setRevealIndex(0);
+        setTearing(false);
         return;
       }
+      setTearing(false);
+      terminerDechirure();
       showError(result.message, result.needAccount ? "account" : null);
     } catch (caught) {
+      setTearing(false);
+      terminerDechirure();
       showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
     } finally {
       setOpening(false);
@@ -387,12 +395,7 @@ export function CreatorDeckApp() {
   }
 
   /**
-   * Ouvre le **Paquet Scène** du jour.
-   *
-   * Le même principe que le Live Drop : avec un compte, c'est le serveur qui
-   * décide — il donne les choix, le client tire dedans, le serveur vérifie (voir
-   * `0014_scene_pack.sql`). Sans compte configuré, le moteur local applique
-   * exactement les mêmes règles.
+   * Same continuous transition for the Scene pack, without a second loader.
    */
   async function handleOpenScenePack() {
     if (!game || sceneOpening || game.scene.opened) return;
@@ -404,17 +407,23 @@ export function CreatorDeckApp() {
     setSceneOpening(true);
     setError(null);
     setErrorHint(null);
+    const dechirureTerminee = commencerDechirure("scene");
     try {
       const result = await openScenePack();
       if (result.status === "drawn") {
-        await dechirer("scene");
+        await dechirureTerminee;
         setRevealKind("scene");
         setDrawnCards(result.cards);
         setRevealIndex(0);
+        setTearing(false);
         return;
       }
+      setTearing(false);
+      terminerDechirure();
       showError(result.message, result.needAccount ? "account" : null);
     } catch (caught) {
+      setTearing(false);
+      terminerDechirure();
       showError(caught instanceof Error ? caught.message : "Ouverture impossible.");
     } finally {
       setSceneOpening(false);
@@ -679,18 +688,7 @@ export function CreatorDeckApp() {
       {tearing ? <PackTear kind={tearKind} onTear={() => {
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
-      }} onComplete={() => {
-        setTearing(false);
-        tearResolve.current?.();
-        tearResolve.current = null;
-      }} /> : null}
-      {opening && !tearing ? (
-        <div className="opening-loader" aria-live="polite">
-          <div className="mini-pack"><span>CD</span></div>
-          <strong>Ouverture du booster…</strong>
-          <span>{PACKS.live.size} cartes, aucune en double.</span>
-        </div>
-      ) : null}
+      }} onComplete={terminerDechirure} /> : null}
       {oddsOpen ? (
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
