@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import Image from "next/image";
 import { createPortal } from "react-dom";
-import { FoilPack3D } from "@/components/foil-pack-3d";
 
 /**
- * One tactile interaction, one continuous cinematic sequence.
- * The 3D foil geometry tears apart and a lit reveal portal bridges the scene
- * to the actual first card. Nothing fake marked "CD" appears in between.
+ * Opening keeps the foil art as one printed image, cuts it where the finger
+ * passes, peels the upper weld off, then exposes and lifts actual card backs.
+ * Neither the pack nor its materials use WebGL.
  */
 export function PackTear({
   kind = "live",
@@ -20,25 +20,25 @@ export function PackTear({
   onTear?: () => void;
   autoCompleteAfterMs?: number;
 }) {
-  const [progress, setProgress] = useState(0);
+  const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
   const [opened, setOpened] = useState(false);
-  const startX = useRef<number | null>(null);
-  const completed = useRef(false);
+  const start = useRef<{ x: number; percent: number } | null>(null);
+  const done = useRef(false);
   const timer = useRef<number | null>(null);
-  const onCompleteRef = useRef(onComplete);
-  const onTearRef = useRef(onTear);
-  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
-  useEffect(() => { onTearRef.current = onTear; }, [onTear]);
+  const completeRef = useRef(onComplete);
+  const tearRef = useRef(onTear);
+  useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { tearRef.current = onTear; }, [onTear]);
 
   const finish = useCallback(() => {
-    if (completed.current) return;
-    completed.current = true;
-    startX.current = null;
-    setProgress(100);
+    if (done.current) return;
+    done.current = true;
+    start.current = null;
+    setCut((last) => ({ ...last, end: 96, progress: 100 }));
     setOpened(true);
-    onTearRef.current?.();
-    // Mesh deformation and opening curtain share exactly this duration.
-    timer.current = window.setTimeout(() => onCompleteRef.current(), 1180);
+    tearRef.current?.();
+    // Cap finishes peeling, card backs leave the pouch, THEN reveal replaces it.
+    timer.current = window.setTimeout(() => completeRef.current(), 1900);
   }, []);
 
   useEffect(() => {
@@ -47,91 +47,83 @@ export function PackTear({
     return () => window.clearTimeout(timeout);
   }, [autoCompleteAfterMs, finish]);
 
-  useEffect(() => () => {
-    if (timer.current !== null) window.clearTimeout(timer.current);
-  }, []);
+  useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
 
+  const artwork = kind === "scene" ? "/packs/scene-foil.svg" : "/packs/live-foil.svg";
   return createPortal(
     <div className="pack-tear booster-interactive booster-cinematic" role="dialog"
-      aria-modal="true" aria-label="Ouvrir le booster">
-      <div className={"booster-opening-stage booster-premium-stage booster-premium-" + kind +
-        (opened ? " is-ripped" : "")}>
-        <div className="booster-stage-atmosphere" aria-hidden="true">
-          <span /><span /><span />
-        </div>
-        <div className="booster-premium-caption">
-          <span className="booster-caption-rule" />
-          <span>{kind === "scene" ? "PAQUET SCÈNE" : "LIVE DROP"}</span>
-          <span className="booster-caption-rule" />
-        </div>
+      aria-label="Ouvrir le booster" aria-modal="true">
+      <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}>
+        <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LA RÉVÉLATION COMMENCE" : "DÉCHIRE LA SOUDURE"}
+          {opened ? "LES CARTES APPARAISSENT" : "PASSE TON DOIGT SUR LA SOUDURE"}
         </p>
-        <div className={"booster-physical-scene" + (opened ? " booster-foil-open" : "")}
-          style={{ "--tear-progress": progress + "%" } as CSSProperties}>
-          <FoilPack3D kind={kind} progress={progress} opened={opened} />
-          <div className="booster-foil-glow" aria-hidden="true" />
-          <div className="booster-premium-lightburst" aria-hidden="true">
-            <span /><span /><span /><span />
+        <div className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
+          style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>
+          <div className="foil-inner-shadow" aria-hidden="true" />
+          <div className="foil-card-chamber" aria-hidden="true">
+            {Array.from({ length: 5 }, (_, i) => (
+              <span key={i} className={`foil-back-card foil-back-card-${i + 1}`}
+                style={{ "--card-i": i } as CSSProperties}>
+                <span className="foil-back-emblem">✦</span>
+              </span>
+            ))}
           </div>
-          <div
-            className="booster-tear-track"
-            role="slider"
-            tabIndex={opened ? -1 : 0}
-            aria-label="Déchirer le haut du booster"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(progress)}
+          <div className="foil-body-piece" aria-hidden="true">
+            <Image src={artwork} alt="" fill sizes="(max-width:600px) 86vw, 380px"
+              className="foil-printed-art" priority />
+          </div>
+          <div className="foil-top-piece" aria-hidden="true">
+            <Image src={artwork} alt="" fill sizes="(max-width:600px) 86vw, 380px"
+              className="foil-printed-art" priority />
+          </div>
+          <span className="foil-cut-slit" aria-hidden="true"
+            style={{ left: `${cut.start}%`, width: `${Math.max(0, cut.end - cut.start)}%` }} />
+          <div className="booster-tear-track" role="button" tabIndex={opened ? -1 : 0}
+            aria-label="Déchirer le sachet en passant le doigt sur sa soudure"
             onPointerDown={(event) => {
               if (opened) return;
-              startX.current = event.clientX;
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const p = Math.max(4, Math.min(96, (event.clientX - bounds.left) / bounds.width * 100));
+              start.current = { x: event.clientX, percent: p };
+              setCut({ start: p, end: p, progress: 0 });
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
-              if (opened || startX.current === null) return;
-              const next = Math.max(0, Math.min(100,
-                ((event.clientX - startX.current) / 180) * 100));
-              setProgress(next);
-              if (next >= 78) finish();
+              if (opened || !start.current) return;
+              const bounds = event.currentTarget.getBoundingClientRect();
+              const end = Math.max(start.current.percent, Math.min(98,
+                (event.clientX - bounds.left) / bounds.width * 100));
+              const progress = Math.max(0, Math.min(100,
+                (event.clientX - start.current.x) / 180 * 100));
+              setCut({ start: start.current.percent, end, progress });
+              if (progress >= 82) finish();
             }}
             onPointerUp={() => {
-              startX.current = null;
-              if (!completed.current) setProgress(0);
+              start.current = null;
+              if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onPointerCancel={() => {
-              startX.current = null;
-              if (!completed.current) setProgress(0);
+              start.current = null;
+              if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " " ||
-                  event.key === "ArrowRight") {
+              if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
                 event.preventDefault();
                 finish();
               }
             }}
-          >
-            <span className="booster-premium-perforation" aria-hidden="true" />
-            {progress > 0 && !opened ?
-              <span className="booster-tear-trace" aria-hidden="true" /> : null}
-            {!opened ? (
-              <span className="booster-tear-handle"
-                style={{ left: (8 + progress * .84) + "%" }}>
-                <span aria-hidden="true">→</span>
-              </span>
-            ) : null}
-          </div>
+          />
+          <div className="booster-foil-glow" aria-hidden="true" />
         </div>
         <div className="booster-premium-actions">
           {!opened ? (
-            <>
-              <p className="booster-premium-gesture">FAIS GLISSER LE CURSEUR VERS LA DROITE</p>
-              <button className="booster-open-button" type="button" onClick={finish}>
-                Ouvrir sans glisser
-              </button>
-            </>
+            <button className="booster-open-button" type="button" onClick={finish}>
+              Ouvrir sans déchirer
+            </button>
           ) : (
             <p className="booster-premium-gesture booster-premium-loading" aria-live="polite">
-              <span aria-hidden="true">✦</span> DÉCOUVERTE EN COURS <span aria-hidden="true">✦</span>
+              <span aria-hidden="true">✦</span> DÉCOUVERTE EN COURS
             </p>
           )}
         </div>
