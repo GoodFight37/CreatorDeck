@@ -268,7 +268,7 @@
 
 - [x] **Le jus : les moments rares se voient** (8 octobre 2026) — trois ajouts,
   aucune règle touchée, **aucune migration à coller**. **La révélation** :
-  l'Épique a son **éclat**, la Légendaire et le Perfect leur **explosion dorée**
+  l'Épique a son **éclat**, la Légendaire et le Perfect le même **en plus grand**
   et leur écran blanc — des planches pixel-art (`public/fx/`, 44 Ko) découpées
   en CSS, calées sur le son (`src/lib/fx.ts` décide, `effect-burst.tsx`
   affiche) ; rien sous l'Épique, et tout se coupe avec le réglage des reflets.

@@ -124,18 +124,25 @@ temps qu'ils ne décrivaient plus rien.
 ## Les effets de moment rare, et la couronne de l'Arène
 
 Le pack d'effets fournit des **suites d'images** (une animation = quinze PNG). Le
-jeu n'en embarque que ce qu'il affiche, recopié dans **`public/fx/`** : deux
-**planches** (toutes les images d'une animation sur une seule ligne, découpées
-en CSS par `steps()` — une requête, zéro JavaScript par image).
+jeu n'en embarque que ce qu'il affiche, recopié dans **`public/fx/`** : **une**
+planche (toutes les images d'une animation sur une seule ligne, découpée en CSS
+par `steps()` — une requête, zéro JavaScript par image).
 
 | Fichier | Contenu | D'où il vient |
 |---|---|---|
-| `public/fx/explosion.png` | 15 images de 192 px — l'explosion dorée | `PNG/Explosions/epic_explosion_002/epic_explosion_002_large_yellow` |
 | `public/fx/eclat.png` | 13 images de 128 px — l'éclat orange | `PNG/Explosions/epic_explosion_001/epic_explosion_001_large_orange` |
 
-Deux autres fichiers sont partis le 8 octobre 2026 au soir, avec la pièce :
-`fumee.png` (21 images de 64 px, la bouffée qui marquait l'arrivée d'un palier)
-et `couronne.png` (64 x 48, l'emblème posé sur l'étagère). Leurs lignes du
+L'éclat sert **deux fois** : à sa taille sur une Épique, une fois et demie plus
+grand sur une Légendaire et un Perfect (`burstScale`, `src/lib/fx.ts`). La
+hiérarchie se joue sur la taille, plus sur le dessin — l'explosion dorée qui
+faisait le Légendaire est partie le 9 octobre 2026 : le joueur l'a vue et ne la
+trouvait pas belle.
+
+Trois autres fichiers sont partis : `fumee.png` (21 images de 64 px, la bouffée
+qui marquait l'arrivée d'un palier) et `couronne.png` (64 x 48, l'emblème posé
+sur l'étagère), le 8 octobre 2026 au soir avec la pièce ; `explosion.png`
+(15 images de 192 px, `PNG/Explosions/epic_explosion_002/
+epic_explosion_002_large_yellow`) le 9. Leurs lignes du
 tableau ci-dessus disaient exactement d'où elles venaient
 (`PNG/Smoke Bursts/directional_smoke_burst_001`,
 `PNG/Symbols/symbol_crown_001`) : c'est là qu'il faut retourner les chercher si

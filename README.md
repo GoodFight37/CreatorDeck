@@ -146,7 +146,7 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
-  l'essentiel des règles (**1075 tests**, 69 fichiers aujourd'hui), et **tout
+  l'essentiel des règles (**1076 tests**, 69 fichiers aujourd'hui), et **tout
   `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
   coup d'œil.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
@@ -163,7 +163,7 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **treize fichiers** (64 tests, 55 captures) : le
+  écran a bougé. Il tourne dans **treize fichiers** (66 tests, 56 captures) : le
   carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
   **réglage du son** (et son silence), **les mille cartes** (ce que le DOM porte
   vraiment), **les effets de rareté**, **le classement feuilleté**, **les gestes

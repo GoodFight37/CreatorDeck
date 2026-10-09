@@ -1966,11 +1966,13 @@ input:focus-visible {
 .reveal-card { width: min(68vw, 300px); max-height: 63vh; }
 
 /*
- * --- Les effets de moment rare : un éclat pour une Épique, une explosion pour
- * une Légendaire, un écran blanc pour un Perfect. Trois planches d'images
- * (`public/fx/`, 44 Ko à elles quatre) qui se déroulent en `steps()` : une seule
- * image chargée, aucun JavaScript par image, et l'animation reste dans le
- * compositeur.
+ * --- Les effets de moment rare : un éclat pour une Épique, le même **en plus
+ * grand** pour une Légendaire, un écran blanc pour un Perfect. L'explosion
+ * dorée qui faisait le Légendaire est partie le 9 octobre 2026 — le joueur ne
+ * la trouvait pas belle, et un effet qu'on n'a pas envie de revoir gâche le
+ * moment qu'il célèbre. Une planche d'images
+ * (`public/fx/`, 11 Ko) qui se déroule en `steps()` : une seule image chargée,
+ * aucun JavaScript par image, et l'animation reste dans le compositeur.
  *
  * Le réglage « Reflets des cartes » (`data-card-fx="off"` sur `<html>`) et le
  * choix système « moins d'animations » les éteignent — un effet de cet acabit
@@ -1998,7 +2000,6 @@ input:focus-visible {
 /* Les durées sont les valeurs de repli : `EffectBurst` écrit les vraies en
    ligne depuis `FX_SHEETS` (`src/lib/fx.ts`), c'est lui qui fait foi — un test
    vérifie que les deux ne divergent pas. */
-.fx-explosion { --fx-frames: 15; --fx-duration: 620ms; background-image: url(/fx/explosion.png); background-size: calc(15 * var(--fx-size)) var(--fx-size); }
 .fx-eclat { --fx-frames: 13; --fx-duration: 520ms; background-image: url(/fx/eclat.png); background-size: calc(13 * var(--fx-size)) var(--fx-size); }
 @keyframes fx-play { from { background-position: 0 0; } to { background-position: calc(-1 * var(--fx-frames) * var(--fx-size)) 0; } }
 
@@ -2047,6 +2048,24 @@ input:focus-visible {
 /* L'or est au légendaire : ici, un simple contour. */
 .reveal-guaranteed { display: inline-block; margin-top: 8px; padding: 3px 9px; color: var(--muted) !important; border: 1px solid var(--line-strong); border-radius: 2px; background: transparent; font-size: 12px !important; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
 .reveal-next { position: absolute; z-index: 3; right: 18px; bottom: calc(17px + env(safe-area-inset-bottom)); left: 18px; width: auto; }
+/*
+ * Le verrou du Perfect : un bouton désactivé qui ne dit rien passe pour une
+ * panne. La barre se vide en `PERFECT_LOCK_MS` — l'attente se voit, et le doigt
+ * comprend qu'il n'a rien cassé.
+ */
+.reveal-next.locked { overflow: hidden; }
+.reveal-next.locked::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  transform-origin: left center;
+  background: rgb(var(--accent-rgb) / .8);
+  animation: reveal-lock var(--lock-ms, 2600ms) linear both;
+}
+@keyframes reveal-lock { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
 .loading-screen {
   display: flex;

@@ -35,12 +35,18 @@ export function EffectBurst({
    * pas avant.
    */
   delayMs = 0,
+  /**
+   * De combien l'effet s'agrandit. Une Épique le reçoit à sa taille, une
+   * Légendaire et un Perfect une fois et demie plus grand (`burstScale`).
+   */
+  scale = 1,
 }: {
   kind: FxKind;
   className?: string;
   left?: string;
   offset?: string;
   delayMs?: number;
+  scale?: number;
 }) {
   const sheet = FX_SHEETS[kind];
   return (
@@ -53,7 +59,7 @@ export function EffectBurst({
        */
       style={
         {
-          "--fx-size": `${sheet.size}px`,
+          "--fx-size": `${Math.round(sheet.size * scale)}px`,
           "--fx-duration": `${sheet.durationMs}ms`,
           "--fx-left": left,
           "--fx-offset": offset,

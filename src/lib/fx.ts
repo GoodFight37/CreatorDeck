@@ -23,8 +23,16 @@
  */
 import type { Rarity } from "@/lib/catalog";
 
-/** Les effets disponibles, par nom de planche (`public/fx/<nom>.png`). */
-export type FxKind = "explosion" | "eclat";
+/**
+ * Les effets disponibles, par nom de planche (`public/fx/<nom>.png`).
+ *
+ * Il n'y en a plus qu'un. L'explosion dorée est partie le 9 octobre 2026 : le
+ * joueur l'a vue et ne la trouvait pas belle, et un effet qu'on n'a pas envie
+ * de revoir gâche le moment qu'il est censé célébrer. Le Légendaire et le
+ * Perfect gardent **le même éclat, en plus grand** (`burstScale`) : la taille
+ * fait la différence, pas un autre dessin.
+ */
+export type FxKind = "eclat";
 
 export type FxSheet = {
   /** Nombre d'images côte à côte dans la planche. */
@@ -50,9 +58,8 @@ export type FxSheet = {
  * largement — c'est un effet de *moment*, il doit se voir de biais.
  */
 export const FX_SHEETS: Record<FxKind, FxSheet> = {
-  // Le grand : 15 images de 192 px, l'explosion dorée du pack d'effets.
-  explosion: { frames: 15, frame: 192, durationMs: 620, size: 420 },
-  // Le moyen : 13 images de 128 px, l'éclat orange.
+  // 13 images de 128 px, l'éclat orange. Il s'agrandit pour le Légendaire et
+  // le Perfect (`burstScale`) : 280 px pour une Épique, 420 px pour le reste.
   eclat: { frames: 13, frame: 128, durationMs: 520, size: 280 },
 };
 
@@ -69,10 +76,20 @@ export function fxUrl(kind: FxKind): string {
  * courant, elle ne décide de rien.
  */
 export function burstFor(rarity: Rarity, perfect = false): FxKind | null {
-  if (perfect) return "explosion";
-  if (rarity === "legendary") return "explosion";
-  if (rarity === "epic") return "eclat";
+  if (perfect) return "eclat";
+  if (rarity === "legendary" || rarity === "epic") return "eclat";
   return null;
+}
+
+/**
+ * De **combien** l'éclat s'agrandit.
+ *
+ * C'est ce qui remplace l'explosion : une Épique reçoit l'éclat à sa taille,
+ * une Légendaire et un Perfect le reçoivent une fois et demie plus grand. Le
+ * moment rare se voit **plus gros**, pas autrement.
+ */
+export function burstScale(rarity: Rarity, perfect = false): number {
+  return perfect || rarity === "legendary" ? 1.5 : 1;
 }
 
 /**

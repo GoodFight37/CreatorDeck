@@ -17,7 +17,7 @@ import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { burstFor, flashFor } from "@/lib/fx";
+import { burstFor, burstScale, flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
 import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
@@ -115,12 +115,22 @@ export function RevealOverlay({
 
   if (!card || !creator) return null;
   const isLast = index === cards.length - 1;
+  /*
+   * Sur un Perfect, les cinq cartes sont **déjà** à l'écran : il n'y a plus rien
+   * à révéler. Le bouton qui dirait « Révéler la suivante » mentirait — il
+   * ramènerait le joueur en arrière, sur la deuxième carte, alors qu'il vient
+   * de voir les cinq. C'est exactement le bogue du 9 octobre 2026 : un joueur
+   * ouvre un Perfect, voit cinq cartes d'un coup, appuie, et il ne se passe
+   * rien de visible. Le paquet se range maintenant d'un coup.
+   */
+  const termine = perfect || isLast;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
   /*
    * L'effet du moment. La décision vit dans `src/lib/fx.ts` (testée à part) :
-   * un éclat pour une Épique, l'explosion dorée pour une Légendaire, et
-   * l'écran blanc pour les deux plus grands moments.
+   * un éclat pour une Épique, le même **une fois et demie plus grand** pour une
+   * Légendaire (l'explosion dorée est partie le 9 octobre 2026 : elle n'était
+   * pas belle), et l'écran blanc pour les deux plus grands moments.
    *
    * L'éclat part **avec le son** : les deux observent le même silence
    * (`silenceBefore`), sinon on verrait les étincelles avant d'entendre le bang.
@@ -146,7 +156,7 @@ export function RevealOverlay({
       window.setTimeout(() => setShaking(false), RESIST_SHAKE_MS);
       return;
     }
-    if (isLast) onClose();
+    if (termine) onClose();
     else onNext();
   }
 
@@ -211,7 +221,14 @@ export function RevealOverlay({
       {perfect ? (
         /* Les cinq cartes ensemble : c'est le moment, il n'y a rien à faire. */
         <div className="reveal-perfect-grid">
-          {burst ? <EffectBurst key={`fx-${card.id}`} kind={burst} delayMs={burstDelay} /> : null}
+          {burst ? (
+            <EffectBurst
+              key={`fx-${card.id}`}
+              kind={burst}
+              scale={burstScale(card.rarity, perfect)}
+              delayMs={burstDelay}
+            />
+          ) : null}
           {cards.map((item) => {
             const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
             return dotCard ? (
@@ -233,9 +250,17 @@ export function RevealOverlay({
         </div>
       ) : (
         <div className="reveal-stage">
-          {/* L'explosion se pose **sur la carte**, pas sur l'écran : c'est elle
+          {/* L'éclat se pose **sur la carte**, pas sur l'écran : c'est elle
               qu'on regarde, et un effet plein cadre noierait le nom du créateur. */}
-          {burst ? <EffectBurst key={`fx-${card.id}`} kind={burst} delayMs={burstDelay} offset="46%" /> : null}
+          {burst ? (
+            <EffectBurst
+              key={`fx-${card.id}`}
+              kind={burst}
+              scale={burstScale(card.rarity, perfect)}
+              delayMs={burstDelay}
+              offset="46%"
+            />
+          ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className={shaking ? "reveal-shake" : ""}>
             <CreatorCard
@@ -304,17 +329,30 @@ export function RevealOverlay({
         </div>
       )}
 
-      <button className="reveal-next" onClick={advance} disabled={locked}>
+      <button
+        className={`reveal-next${locked ? " locked" : ""}`}
+        onClick={advance}
+        disabled={locked}
+        // La barre du verrou lit la durée du module de mise en scène : une
+        // seule vérité, sinon elle finirait avant le bouton ou après lui.
+        style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
+      >
         <span>
           {locked
             ? "Perfect…"
             : resistLeft > 0
               ? "La carte résiste — insiste"
-              : isLast
+              : termine
                 ? "Ranger dans le classeur"
                 : "Révéler la suivante"}
         </span>
-        {locked ? <Sparkles size={18} /> : isLast ? <BookOpen size={18} /> : <ChevronRight size={18} />}
+        {locked ? (
+          <Sparkles size={18} />
+        ) : termine ? (
+          <BookOpen size={18} />
+        ) : (
+          <ChevronRight size={18} />
+        )}
       </button>
     </div>
   );

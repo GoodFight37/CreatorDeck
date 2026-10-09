@@ -41,7 +41,7 @@ export const CREDITS: readonly Credit[] = [
     licence: "utilisées pour illustrer les cartes",
   },
   {
-    quoi: "Les effets : éclats, explosions, fumées",
+    quoi: "Les effets : les éclats de révélation",
     qui: "Will Tice / unTied Games — « Super Pixel Effects »",
     licence: "crédit demandé par la licence",
   },

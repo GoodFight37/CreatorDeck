@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { FX_SHEETS, burstFor, flashFor, fxDurationMs, fxUrl } from "@/lib/fx";
+import { FX_SHEETS, burstFor, burstScale, flashFor, fxDurationMs, fxUrl } from "@/lib/fx";
 
 /**
  * Les effets de moment rare. Deux promesses, et le test les tient :
@@ -20,17 +20,32 @@ describe("l'effet d'une carte révélée", () => {
     expect(burstFor("rare")).toBeNull();
   });
 
-  it("donne un éclat à l'Épique, une explosion à la Légendaire", () => {
+  it("donne un éclat à l'Épique comme à la Légendaire", () => {
+    // L'explosion dorée est partie le 9 octobre 2026 : le joueur ne la trouvait
+    // pas belle. Ce qui distingue le Légendaire, c'est la **taille** de
+    // l'éclat, pas un autre dessin.
     expect(burstFor("epic")).toBe("eclat");
-    expect(burstFor("legendary")).toBe("explosion");
+    expect(burstFor("legendary")).toBe("eclat");
+  });
+
+  it("agrandit l'éclat pour le Légendaire et le Perfect", () => {
+    // La hiérarchie ne se joue plus sur le sprite mais sur la taille : une
+    // Épique à 1, une Légendaire et un Perfect à 1,5.
+    expect(burstScale("epic")).toBe(1);
+    expect(burstScale("common")).toBe(1);
+    expect(burstScale("legendary")).toBeGreaterThan(burstScale("epic"));
+    expect(burstScale("common", true)).toBeGreaterThan(burstScale("epic"));
+    // Et l'éclat d'un Légendaire reste plus grand que celui d'une Épique.
+    expect(burstScale("legendary") * FX_SHEETS.eclat.size).toBeGreaterThan(FX_SHEETS.eclat.size);
   });
 
   it("réserve le plus grand au Perfect, quelle que soit la carte", () => {
     // Le Perfect, c'est le paquet entier : même l'emplacement d'une commune
-    // reçoit l'explosion, puisque le moment est celui du paquet.
-    expect(burstFor("common", true)).toBe("explosion");
-    expect(burstFor("epic", true)).toBe("explosion");
-    expect(burstFor("legendary", true)).toBe("explosion");
+    // reçoit l'éclat en grand, puisque le moment est celui du paquet.
+    expect(burstFor("common", true)).toBe("eclat");
+    expect(burstFor("epic", true)).toBe("eclat");
+    expect(burstFor("legendary", true)).toBe("eclat");
+    expect(burstScale("common", true)).toBe(burstScale("legendary"));
   });
 
   it("ne fait clignoter l'écran que pour le Légendaire et le Perfect", () => {
@@ -80,13 +95,11 @@ describe("l'effet d'une carte révélée", () => {
       expect(parImage, kind).toBeLessThanOrEqual(60);
       expect(sheet.size, kind).toBeGreaterThanOrEqual(1.4 * sheet.frame);
     }
-    // L'explosion reste la plus grande et la plus longue des deux.
-    expect(FX_SHEETS.explosion.size).toBeGreaterThan(FX_SHEETS.eclat.size);
-    expect(FX_SHEETS.explosion.durationMs).toBeGreaterThan(FX_SHEETS.eclat.durationMs);
+    // Un seul effet reste : la taille fait la hiérarchie, plus deux dessins.
+    expect(Object.keys(FX_SHEETS)).toEqual(["eclat"]);
   });
 
   it("pointe des images servies depuis le dossier public", () => {
-    expect(fxUrl("explosion")).toBe("/fx/explosion.png");
     expect(fxUrl("eclat")).toBe("/fx/eclat.png");
   });
 });
@@ -118,19 +131,20 @@ describe("les planches d'effets", () => {
   });
 
   it("tiennent dans un budget ridiculement petit", () => {
-    // Le pack d'effets livré pèse des dizaines de mégaoctets ; on n'en embarque
-    // que **deux planches** (32 Ko), et c'est ce qui rend l'ajout acceptable.
-    // La fumée de l'arrivée d'un palier et la couronne de l'emblème d'Arène
-    // sont parties avec la pièce du Studio, le 8 octobre 2026 : plus d'usager,
-    // plus d'octets.
+    // Le pack d'effets livré pèse des dizaines de mégaoctets ; on n'embarque
+    // qu'**une planche** (11 Ko), et c'est ce qui rend l'ajout acceptable. La
+    // fumée de l'arrivée d'un palier et la couronne de l'emblème d'Arène sont
+    // parties avec la pièce du Studio, le 8 octobre 2026 (plus d'usager, plus
+    // d'octets) ; l'explosion dorée du Légendaire les a suivies le 9 : elle
+    // n'était pas belle.
     let total = 0;
     for (const kind of Object.keys(FX_SHEETS)) {
       total += statSync(path.join(process.cwd(), "public", "fx", `${kind}.png`)).size;
     }
-    expect(total).toBeLessThan(100 * 1024);
+    expect(total).toBeLessThan(40 * 1024);
     // Et le dossier `public/fx/` ne garde **rien d'autre** : un fichier oublié
     // là ne se chargerait jamais, mais il pèserait dans l'APK.
     const restants = readdirSync(path.join(process.cwd(), "public", "fx")).sort();
-    expect(restants).toEqual(["eclat.png", "explosion.png"]);
+    expect(restants).toEqual(["eclat.png"]);
   });
 });

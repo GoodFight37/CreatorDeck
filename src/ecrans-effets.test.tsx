@@ -1,6 +1,6 @@
 /**
  * Les effets de **moment rare**, montés pour de vrai : l'éclat d'une Épique,
- * l'explosion dorée (et l'écran blanc) d'une Légendaire, et rien du tout sur
+ * l'éclat en grand (et l'écran blanc) d'une Légendaire, et rien du tout sur
  * une carte ordinaire.
  *
  * Ce banc monte `RevealOverlay` directement, avec des cartes écrites à la main :
@@ -14,8 +14,10 @@
  *     rareté, sinon on verrait les étincelles avant d'entendre le bang ;
  *   * l'effet **part** (l'animation est bornée), il ne tourne pas en boucle.
  */
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
+import { PERFECT_LOCK_MS } from "@/lib/reveal";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -84,10 +86,15 @@ describe("les effets de révélation", () => {
     expect(html).not.toContain("fx-flash");
   });
 
-  it("donne l'explosion dorée **et** l'écran blanc à la Légendaire", async () => {
+  it("donne le même éclat **en plus grand**, et l'écran blanc, à la Légendaire", async () => {
+    // L'explosion dorée est partie le 9 octobre 2026 : le joueur ne la trouvait
+    // pas belle. Le Légendaire garde l'éclat de l'Épique, une fois et demie
+    // plus grand — la taille fait la hiérarchie, plus un autre dessin.
     const html = await reveler([carte("legendary")]);
-    expect(html).toContain("fx-burst fx-explosion");
+    expect(html).toContain("fx-burst fx-eclat");
+    expect(html).not.toContain("fx-explosion");
     expect(html).toContain("fx-flash");
+    expect(html).toContain("--fx-size: 420px");
   });
 
   it("écrit la rareté sur la carte, pour que l'entrée la suive", async () => {
@@ -119,25 +126,85 @@ describe("les effets de révélation", () => {
     banc.preparer();
     const legendaire = await reveler([carte("legendary")]);
     expect(legendaire).toContain("--fx-delay: 520ms");
-    // Et la taille suit l'effet : l'explosion est plus grande que l'éclat — et
-    // les deux débordent maintenant largement de la carte, sinon elle les
-    // cache.
+    // Et la taille suit la rareté : l'éclat d'une Légendaire vaut une fois et
+    // demie celui d'une Épique (280 px → 420 px). Les deux débordent
+    // largement de la carte, sinon elle les cache.
     expect(legendaire).toContain("--fx-size: 420px");
+    expect(epique).toContain("--fx-size: 280px");
     // La durée vient de `FX_SHEETS`, écrite en ligne : 40 ms par image, de
     // quoi laisser le temps de voir.
-    expect(legendaire).toContain("--fx-duration: 620ms");
+    expect(legendaire).toContain("--fx-duration: 520ms");
   });
 
-  it("joue l'explosion d'emblée sur un Perfect, sans silence", async () => {
+  it("joue l'éclat en grand d'emblée sur un Perfect, sans silence", async () => {
     // Le Perfect est le paquet entier : il n'a pas de silence, il est le moment.
     const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c")];
     cinq[0]!.rareDrop = true;
     const html = await reveler(cinq as never);
-    expect(html).toContain("fx-burst fx-explosion");
+    expect(html).toContain("fx-burst fx-eclat");
+    // Tout le paquet est rare : l'éclat est à sa taille maximale.
+    expect(html).toContain("--fx-size: 420px");
     expect(html).toContain("--fx-delay: 0ms");
     // Le blanc du Perfect est déjà là depuis le verrouillage… et l'effet part
     // au premier rendu, pas après un temps d'attente.
     expect(html).toContain("fx-flash");
+  });
+
+  it("range le paquet d'un coup quand le Perfect a tout montré", async () => {
+    /*
+     * Le bogue du 9 octobre 2026 : un joueur ouvre un booster, les **cinq**
+     * cartes apparaissent ensemble — c'est le tirage Perfect, voulu — et le
+     * bouton du bas propose « Révéler la suivante ». Il n'y a plus rien à
+     * révéler : l'appui ne faisait rien de visible, le joueur croyait à une
+     * panne. Quand les cinq sont à l'écran, le paquet se **range**.
+     */
+    const suivant = vi.fn();
+    const fermer = vi.fn();
+    const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c")];
+    cinq[0]!.rareDrop = true;
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay cards={cinq as never} index={0} onNext={suivant} onClose={fermer} />,
+    );
+
+    const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
+    // Pendant le verrou, le bouton est bien verrouillé — mais il **montre**
+    // l'attente (classe `locked` + barre) au lieu de ressembler à une panne.
+    expect(bouton().disabled, "le verrou du Perfect ne verrouille plus").toBe(true);
+    expect(bouton().className).toContain("locked");
+    expect(bouton().style.getPropertyValue("--lock-ms")).toBe(`${PERFECT_LOCK_MS}ms`);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(PERFECT_LOCK_MS + 50);
+    });
+
+    expect(bouton().disabled, "le Perfect reste verrouillé").toBe(false);
+    expect(bouton().textContent).toContain("Ranger dans le classeur");
+    expect(bouton().textContent).not.toContain("Révéler la suivante");
+    banc.ecran("12-perfect-range");
+
+    banc.appuyer("Ranger dans le classeur");
+    expect(fermer, "le Perfect ne se range pas").toHaveBeenCalledTimes(1);
+    expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
+  });
+
+  it("laisse le dernier emplacement résister, puis révéler la suivante", async () => {
+    // Le contrôle du test précédent : hors Perfect, « Révéler la suivante »
+    // reste le geste normal — c'est le Perfect seul qui change de bouton.
+    const suivant = vi.fn();
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay
+        cards={[carte("common", "un"), carte("rare", "deux")] as never}
+        index={0}
+        onNext={suivant}
+        onClose={() => {}}
+      />,
+    );
+    const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
+    expect(bouton().textContent).toContain("Révéler la suivante");
+    banc.appuyer("Révéler la suivante");
+    expect(suivant).toHaveBeenCalledTimes(1);
   });
 
   it("se choisit sur la carte du moment, pas sur la première du paquet", async () => {
@@ -145,7 +212,8 @@ describe("les effets de révélation", () => {
     // bien l'explosion qu'on doit voir. Le rejeu de l'animation, lui, tient à
     // la clé (`key={card.id}`) — le choix de la carte, au calcul testé ici.
     const html = await reveler([carte("common", "un"), carte("legendary", "deux")], 1);
-    expect(html).toContain("fx-burst fx-explosion");
+    expect(html).toContain("fx-burst fx-eclat");
+    expect(html).toContain("--fx-size: 420px");
     expect(html).toContain("fx-flash");
   });
 });
