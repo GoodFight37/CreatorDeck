@@ -1,6 +1,52 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — correction K-007, 10 octobre 2026, 11 h 03 Europe/Paris
+## Checkpoint courant — reprise réseau, 10 octobre 2026, 11 h 25 Europe/Paris
+
+- Agent : Codex Cloud ; reprise courte, réservation libérée à la passation.
+- Demande : l’utilisateur a ajouté `cdn.playwright.dev`, lancé la publication et
+  demande de retester immédiatement. Objectif : installer Chromium puis jouer E2E.
+- Base locale/distance propre et identique :
+  `7126cd88884694c5cfabc0512507088b140208d9`, branche
+  `design/booster-reveal-polish`. Pas de nouveau commit, aucun réaudit du jeu.
+  PR #8 / base arena : dernier état vérifié dans le checkpoint précédent,
+  pas de nouvelle lecture PR/CI dans cette reprise réseau.
+- Réalisé : deux tentatives de `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  node node_modules/@playwright/test/cli.js install chromium`, code 1 (403).
+  La première précédait la propagation ; ensuite HEAD sur le CDN répond 307.
+- `curl -sS -I --max-time 15` sur l’URL Chromium du CDN : code 0, HTTP 307
+  vers `https://storage.googleapis.com/chrome-for-testing-public/153.0.8010.12/linux64/chrome-linux64.zip`.
+  Même contrôle direct de cette destination : code 56, CONNECT 403.
+- HEAD sur `https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-linux.zip` :
+  code 0, HTTP 307 vers `playwright.download.prss.microsoft.com` ; HEAD direct
+  sur cette destination : code 56, CONNECT 403. Révisions lues dans le
+  `browsers.json` de Playwright verrouillé : Chromium 1243, FFmpeg 1011.
+- Conclusion vérifiée : le premier domaine est désormais accessible ; les
+  deux hôtes de redirection doivent aussi être autorisés. Aucun navigateur
+  installé, aucun E2E exécuté ; pas de nouveau test unitaire/SQL/build.
+- Lecture du brouillon lié à cette conversation : règle personnalisée
+  `cdn.playwright.dev`, preset `package_managers`. Tentative de sauvegarder
+  les trois domaines ci-dessous : **refus CONFLICT / stale_base**. La publication
+  ou un changement a périmé sa version de base. Sauvegarde de cet ajout
+  **non confirmée** ; ne pas relire/resoumettre le même brouillon en boucle.
+- Proposition réseau complète (règles personnalisées ; conserver les presets
+  et toute nouvelle règle utilisateur) : `cdn.playwright.dev`,
+  `storage.googleapis.com`, `playwright.download.prss.microsoft.com`.
+  Aucun script/secret/dépôt à modifier pour cette proposition.
+- Action opérateur : dans l’éditeur de l’environnement **actuel**, conserver
+  le premier domaine et ajouter les deux destinations, appuyer sur Entrée après
+  chacune, Save puis Publish. Pas besoin de recréer l’environnement. Si un
+  nouvel agent utilise les outils de brouillon, ouvrir une nouvelle session de
+  configuration liée à la version actuelle et réconcilier avant toute écriture.
+- Prochaine commande : retenter l’installation Chromium ci-dessus après
+  activation, puis `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  npm run e2e`. Ensuite chemin cloud simulé selon le workflow. Vercel/mobile
+  et production restent à valider, aucune fusion ni modification de main.
+- Fichiers de cette reprise : uniquement `docs/agent-handoff.md` et
+  `docs/known-issues.md`. Retrouver ce checkpoint par
+  `git log -1 --format=%H -- docs/agent-handoff.md` et comparer à la tête distante.
+  Publication Git à vérifier avant reprise, quota inconnu.
+
+## Historique — correction K-007, 10 octobre 2026, 11 h 03 Europe/Paris
 
 | Champ | Valeur |
 |---|---|
