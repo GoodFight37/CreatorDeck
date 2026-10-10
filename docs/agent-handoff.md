@@ -1,6 +1,41 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — visite Chromium locale, 10 octobre 2026, 12 h 41 Europe/Paris
+## Checkpoint courant — K-011 corrigé, 10 octobre 2026, Europe/Paris
+
+- Correction ciblée autorisée après visite locale ; réservation libérée.
+  Base locale/distante propre et identique `96209d23799dd14717a4e7e219e0ccbbcf9ccd5a`,
+  checkout existant sur `design/booster-reveal-polish`, aucun worktree/main/merge.
+- Code corrigé et testé : `d87b72c35d887de6ddd5a14c53b69a5a9c5b184c`.
+  Si le déclencheur connecté ne reçoit plus le focus après fermeture, le hook
+  utilise la cible explicitement marquée dans sa section. Le titre Scène est
+  cette cible (`tabIndex=-1`, hors de l'ordre Tab). Le paquet consommé reste
+  désactivé ; aucun changement d'économie, de tirage ou de mise en scène.
+- Nouveau scénario E2E « closing a consumed Scene pack returns focus to its
+  section heading » : avant correctif, code 1, 2/2 échecs bureau/téléphone sur
+  l'assertion de focus du titre ; bouton déjà désactivé. Après correctif, même
+  scénario plus « the revealed card keeps » existant : code 0, **4/4 réussis**,
+  16,9 s. Le scénario Live conserve ses assertions de focus/inert et dimensions.
+  Commande ciblée : `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  node node_modules/@playwright/test/cli.js test --grep
+  'closing a consumed Scene pack|the revealed card keeps' --reporter=line`.
+- `npm run typecheck` : code 0. ESLint direct sur les deux fichiers produit et
+  `e2e/pack-tear.spec.ts` : code 0, aucun diagnostic. `git diff --check` : code 0.
+  Pas de build de production, suite complète ou nouvelle visite Vercel ; CI
+  du nouveau correctif non vérifiée, ancienne CI verte `2d933c9` historique.
+- Serveur dev arrêté après vérification ; seul ajout automatique Next à AGENTS
+  sauvegardé puis retiré. Aucun manifeste/lock modifié. Artifacts et résumé
+  locaux : `/workspace/scratch/creatordeck-scene-focus/{before-results,after-results,results.txt}`,
+  non publiés et conservation entre environnements non garantie.
+- K-011 corrigé et vérifié automatiquement ; VIS-01/K-005 restent ouverts pour
+  validation humaine sur téléphone réel (fluidité, sons, vibrations, reflets).
+  CLOUD-01 non repris ; aucune production Supabase touchée.
+- Prochaine étape simple : passer à Luna / Faible pour consulter la CI du bon
+  SHA et guider la validation humaine. Revenir à GPT-6.1 Sol / Moyen avant un
+  nouveau diagnostic/correctif produit. Pas de nécessité démontrée de recréer
+  l'environnement. Commit contenant cette passation à retrouver via git log,
+  puis comparer au HEAD distant avant de reprendre.
+
+## Historique — visite Chromium locale, 10 octobre 2026, 12 h 41 Europe/Paris
 
 - Reprise autorisée après choix de la visite locale, puis validation sur téléphone réel.
   Checkout `/workspace/CreatorDeck` initialement propre sur `work` à `ae5016f` ;
