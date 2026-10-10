@@ -3,6 +3,7 @@
  *
  * npm run progression:bilan
  * Tirages aléatoires non seedés : les résultats varient d'une exécution à l'autre.
+ * npm run progression:bilan -- --runs=100 (100 trajectoires par profil/durée).
  * Ne teste PAS Supabase, les échanges, les achats marché, ni les horaires réels.
  */
 import { CREATORS, RARITY_META } from "../src/lib/catalog";
@@ -53,13 +54,14 @@ function simulate(profile: Profile, days: number) {
   let liveLegendaries = 0, sceneNew = 0;
   for (let day = 0; day < days; day++) {
     // Le Paquet Scène ne dépense aucun Live Drop.
-    const sceneNow = nowAt(day, 7, 30);
+    const sceneNow = nowAt(day, 6, 30);
     const sceneResult = openScenePack(state, sceneNow);
     state = sceneResult.state;
     scene++;
     sceneNew += sceneResult.cards.filter(c => c.isNew).length;
-    for (const hour of profile.hours) {
-      const now = nowAt(day, hour);
+    for (const [index, hour] of profile.hours.entries()) {
+      const sameHourBefore = profile.hours.slice(0, index).filter(h => h === hour).length;
+      const now = nowAt(day, hour, sameHourBefore);
       state = refreshBalances(state, now);
       if (state.packs <= 0) { missingPacks++; continue; }
       const result = openPack(state, now);
@@ -100,8 +102,33 @@ function simulate(profile: Profile, days: number) {
     crafted, bought, pointsLeft: state.points, tokensLeft: state.tokens,
     hourglassesLeft: state.hourglasses, firstRecycleDay };
 }
-console.log("AUDIT DU MOTEUR LOCAL — une seule trajectoire aléatoire par profil");
+const runsArg = process.argv.find(arg => arg.startsWith("--runs="));
+const runs = runsArg ? Number(runsArg.slice("--runs=".length)) : 1;
+if (!Number.isInteger(runs) || runs < 1 || runs > 1000) {
+  throw new Error("--runs doit être un entier entre 1 et 1000.");
+}
+const percentile = (sorted: number[], p: number) =>
+  sorted[Math.floor((sorted.length - 1) * p)];
+console.log(`AUDIT DU MOTEUR LOCAL — ${runs} trajectoire(s) aléatoire(s) par profil et durée`);
 console.log("Horaires en UTC, bonus Prime Time dépend du fuseau local du processus.");
+console.log("Tirages non seedés ; moteur local uniquement, sans Supabase ni échanges.");
 for (const days of [7, 30]) for (const p of profiles) {
-  console.log(JSON.stringify(simulate(p, days)));
+  const results = Array.from({ length: runs }, () => simulate(p, days));
+  if (runs === 1) {
+    console.log(JSON.stringify(results[0]));
+    continue;
+  }
+  const fields = ["unique", "completionPct", "liveLegendaries", "recycled",
+    "recycledPoints", "crafted", "bought", "pointsLeft", "tokensLeft",
+    "hourglassesLeft", "missingPacks"] as const;
+  const stats: Record<string, { mean: number; p10: number; median: number; p90: number }> = {};
+  for (const field of fields) {
+    const values = results.map(result => result[field]).sort((a, b) => a - b);
+    stats[field] = {
+      mean: Math.round(values.reduce((sum, value) => sum + value, 0) / runs * 100) / 100,
+      p10: percentile(values, 0.10), median: percentile(values, 0.50),
+      p90: percentile(values, 0.90),
+    };
+  }
+  console.log(JSON.stringify({ profile: p.name, days, runs, stats }));
 }
