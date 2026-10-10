@@ -6,42 +6,45 @@
 >
 > **Le pack d'origine n'est plus dans le dépôt** (8 octobre 2026) : après la
 > sélection, `public/sound effects/` (400 fichiers, 87 Mo) a été **retiré** —
-> c'est `public/sfx/` (15 fichiers, ≈1 Mo) qui est le livrable. Le tableau
+> c'est `public/sfx/` (10 fichiers, ≈640 Ko) qui est le livrable. Le tableau
 > ci-dessous garde les **chemins du pack**, pour retrouver un son d'origine si un
 > geste en réclame un nouveau.
 
 ## Ce que le jeu utilise
 
-**15 bruitages**, copiés dans `public/sfx/` sous des noms d'URL simples (sans
+**10 bruitages**, copiés dans `public/sfx/` sous des noms d'URL simples (sans
 espace ni accent — les packs d'origine ne sont pas nommés pour le web) :
 
 | Bruitage | Fichier d'origine | Où il sert |
 |---|---|---|
 | `card-draw.wav` | `Card and Board/card_draw_1` | une carte se retourne (révélation), un paquet se déchire |
-| `card-fan.wav` | `Card and Board/card_fan` | *en réserve* : faisait glisser une poignée de cartes |
-| `card-turn.wav` | `Card and Board/card_fan_2` | une page du Binder se tourne — **le seul son de déplacement qui reste**, et il est voulu : on tourne un carton |
+| `card-turn.wav` | `Card and Board/card_fan_2` | *en réserve* : une page du Binder se tournait — **plus joué** (les deux derniers gestes de déplacement sont partis le 8 octobre 2026, à la demande du joueur) |
 | `chip-place.wav` | `Card and Board/chips_place_1` | une carte qui claque (le « bang » d'une Épique ou mieux), et le **tampon** qui frappe le papier quand le Tribunal accorde la grâce |
 | `click.wav` | `UI/click_double_on` | *en réserve* : le clic feutré des onglets — **plus joué** (voir « Se déplacer ne sonne pas ») |
-| `select.wav` | `UI/select_1` | une sélection qui compte (un filtre du Binder, un cran de volume) |
+| `select.wav` | `UI/select_1` | *en réserve* : une sélection qui comptait (un filtre du Binder, un cran de volume) — **plus joué** |
 | `menu-open.wav` | `UI/toggle_on` | *en réserve* : une feuille s'ouvrait — **plus joué** |
 | `close.wav` | `Items/book_close` | le refus d'une carte (et, avant, la fermeture d'une feuille) |
 | `pop.wav` | `UI/pop_1` | le booster s'ouvre |
 | `coins.wav` | `Items/coin_jingle_small` | des pièces tombent (récompense de saison encaissée) |
-| `gather.wav` | `Items/coins_gather_quick` | *en réserve* : ramassait un lot de jetons d'un coup |
-| `equip.wav` | `Items/item_equip` | *en réserve* : l'équipement d'un palier de setup |
-| `power-up.wav` | `Retro/power_up` | *en réserve* : un palier de notoriété franchi |
 | `chime.wav` | `Musical Effects/8_bit_chime_positive` | une récompense tombe (palier réclamé, créateur rejoint) |
-| `fanfare.wav` | `Musical Effects/brass_chime_positive` | *en réserve* : l'arrivée d'un raid |
 
-> **Sept bruitages sont en réserve** (marqués ci-dessus) : cinq ont été choisis
-> pour la simulation de streameur (**retirée de l'application le 8 octobre
-> 2026**), et deux — `click`, `menu-open` — ont été mis de côté quand la
-> navigation et les réglages sont devenus muets, le même jour. Ils restent dans
-> `public/sfx/` et dans le catalogue : ils ne coûtent rien (moins de 400 Ko à eux
-> sept), ils sont **réglés comme les autres**, et les retirer obligerait à refaire
-> l'inventaire du pack le jour où un écran les redemanderait. Ce que la réserve
-> change, c'est qu'ils ne sont **plus préchargés** au démarrage (`SFX_USUELS`) :
-> rien ne se télécharge pour un son que personne n'entend.
+> **Quatre bruitages sont en réserve** (marqués ci-dessus) : `click` et
+> `menu-open`, mis de côté quand la navigation et les réglages sont devenus
+> muets (8 octobre 2026), puis `select` et `card-turn`, les deux derniers gestes
+> de déplacement — le filtre du Binder et ses pages — partis le même soir à la
+> demande du joueur. Ils restent dans `public/sfx/` et dans le catalogue : ils
+> ne coûtent rien (270 Ko à eux quatre), ils sont **réglés comme les autres**,
+> et les retirer obligerait à refaire l'inventaire du pack le jour où un écran
+> les redemanderait. Ce que la réserve change, c'est qu'ils ne sont **plus
+> préchargés** au démarrage (`SFX_USUELS`) : rien ne se télécharge pour un son
+> que personne n'entend.
+>
+> **Cinq autres sont partis pour de bon** le 9 octobre 2026, avec leurs fichiers
+> : `card-fan`, `gather`, `equip`, `power-up` et `fanfare` avaient été choisis
+> pour la **simulation de streameur**, retirée de l'application le 8 octobre.
+> Aucun écran ne les réclamait, et le mode n'existe plus : `public/sfx/` est
+> passé de 984 Ko à 644 Ko. Ils sont dans l'historique Git si on les veut de
+> retour.
 
 ## Le Tribunal : deux sons d'objet, synthétisés (8 octobre 2026)
 
@@ -176,10 +179,10 @@ en 14 familles — ce sont exactement les dossiers de `public/sound effects/`).
 Autrement dit : **usage commercial libre, crédit non obligatoire, revente des
 fichiers bruts interdite**. Le crédit est donné quand même, à l'écran
 (« Toi » → *Crédits*) et ici. C'est cette dernière clause qui impose la forme
-retenue : on embarque une **sélection de 15 fichiers** dans le jeu (usage
+retenue : on embarque une **sélection de 10 fichiers** dans le jeu (usage
 normal), on ne redistribue pas le pack — le dossier brut (400 fichiers, 87 Mo,
 `public/sound effects/` avant le 8 octobre 2026) n'est **pas** un livrable du
-jeu, et la sélection seule part dans l'APK (≈1 Mo). Il a donc été **retiré du
+jeu, et la sélection seule part dans l'APK (≈640 Ko). Il a donc été **retiré du
 dépôt** : le pack reste téléchargeable chez son auteur, et cette page dit
 exactement quels fichiers en viennent.
 

@@ -45,11 +45,11 @@ elle est là au réveil.
 
 **Le danger.** Un `git add -A .` à cet instant **détruirait la branche** : il
 rétablirait le code d'avant le chantier en le faisant passer pour le mien. Ça
-s'est produit **neuf fois** entre le 8 et le 9 octobre 2026.
+s'est produit **treize fois** entre le 8 et le 9 octobre 2026.
 
 **La recette, éprouvée** (elle a sauvé les commits `15d4924`, `64d1243`,
 `a951a67`, `00778ae`, `333eeac`, `c9bf700`, `71f5097`, `1060069`,
-`59f0bb1` et `8cd2381`) :
+`59f0bb1`, `8cd2381` et `79fa354`) :
 
 1. ne **jamais** `git add -A .`, jamais `--force`, jamais de `worktree` ;
 2. copier **uniquement les fichiers touchés** dans un dossier hors dépôt

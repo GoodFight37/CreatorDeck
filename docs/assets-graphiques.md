@@ -14,7 +14,7 @@ retirée dans la soirée du 8 octobre 2026 — l'onglet, le décor, l'emblème
 d'Arène, l'arrivée des paliers en fumée — et le kit est parti **avec elle** :
 plus rien ne le référençait, ni le code, ni les tests, ni la feuille de style.
 `public/` est donc passé de 23 Mo à **20 Mo**, et il ne contient plus que ce qui
-se joue : les portraits (19 Mo), les bruitages (1 Mo), la planche d'effets
+se joue : les portraits (19 Mo), les bruitages (640 Ko), la planche d'effets
 (11 Ko) et l'icône.
 
 Pour le récupérer, il est dans l'historique Git, comme tout le reste de cette
@@ -85,7 +85,7 @@ revue.
 
 | Dossier retiré | Poids | Ce que c'était |
 |---|---|---|
-| `public/sound effects/` | 87 Mo | le « 400 Sounds Pack » brut, dont les 15 bruits du jeu sont extraits ([`assets-sonores.md`](assets-sonores.md)) |
+| `public/sound effects/` | 87 Mo | le « 400 Sounds Pack » brut, dont les 10 bruits du jeu sont extraits ([`assets-sonores.md`](assets-sonores.md)) |
 | `Streamer/KayKit_Adventurers_2.0_FREE` | 23 Mo | décors et personnages 3D |
 | `Super Pixel Effects Gigapack (Free Version)` | 28 Mo | le pack d'effets, dont **une image** est gardée dans `public/fx/` (l'éclat ; l'explosion dorée en est partie le 9 octobre 2026) |
 | `KayKit_Skeletons_1.1_FREE` | 17 Mo | personnages 3D |

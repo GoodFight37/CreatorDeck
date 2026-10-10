@@ -95,7 +95,12 @@ describe("les bruitages embarqués", () => {
   }
 
   it("existe dans le dossier pour chaque nom du catalogue", () => {
-    expect(noms.length).toBeGreaterThanOrEqual(12);
+    // Dix : les six qu'on entend (`card-draw`, `pop`, `chime`, `chip-place`,
+    // `close`, `coins`) et les quatre gardés en réserve (`click`, `menu-open`,
+    // `select`, `card-turn`). Les cinq de la simulation de streameur sont
+    // partis le 9 octobre 2026. Le plancher existe pour qu'un dossier vidé ne
+    // passe pas inaperçu — pas pour figer un nombre.
+    expect(noms.length).toBeGreaterThanOrEqual(10);
     for (const nom of noms) {
       expect(() => entete(nom), `bruitage manquant : ${nom}`).not.toThrow();
       expect(sampleUrl(nom)).toBe(`/sfx/${SAMPLES[nom].file}`);
@@ -108,7 +113,7 @@ describe("les bruitages embarqués", () => {
       const t = entete(nom);
       expect(t.riff, `${nom} : pas un RIFF`).toBe("RIFF");
       expect(t.wave, `${nom} : pas un WAVE`).toBe("WAVE");
-      // Mono ou stéréo : les packs ne sont pas homogènes (le « power-up » du
+      // Mono ou stéréo : les packs ne sont pas homogènes (le « coins » du
       // pack Retro est mono), et Web Audio s'en fiche. Ce qui compte, c'est
       // que le fichier soit lisible et borné.
       expect([1, 2], `${nom} : canaux inattendus`).toContain(t.canaux);
@@ -227,22 +232,14 @@ describe("les bruitages embarqués", () => {
 
   it("précharge ce qu'on entend tout le temps, et rien de plus", () => {
     for (const nom of SFX_USUELS) expect(noms).toContain(nom);
-    // Rien n'est préchargé pour un son que personne n'entend. La liste des
-    // « en réserve » a deux origines : les déplacements (`click`, `menu-open` —
-    // la navigation et les réglages sont muets depuis le 8 octobre 2026 —, puis
-    // `select` et `card-turn`, le filtre du Binder et ses pages, retirés le même
-    // soir) et la simulation de streameur, retirée le même jour.
-    for (const reserve of [
-      "click",
-      "menu-open",
-      "select",
-      "card-turn",
-      "equip",
-      "power-up",
-      "fanfare",
-      "gather",
-      "card-fan",
-    ] as const) {
+    // Rien n'est préchargé pour un son que personne n'entend. La réserve, ce
+    // sont les quatre sons de déplacement que le joueur a fait taire le
+    // 8 octobre 2026 : la navigation et les réglages (`click`, `menu-open`),
+    // puis le filtre du Binder et ses pages (`select`, `card-turn`). Les cinq
+    // de la simulation de streameur (`card-fan`, `gather`, `equip`,
+    // `power-up`, `fanfare`) ne sont plus là du tout : partis le 9 octobre 2026
+    // avec leurs fichiers, le mode n'existe plus.
+    for (const reserve of ["click", "menu-open", "select", "card-turn"] as const) {
       expect(noms, `${reserve} doit rester au catalogue`).toContain(reserve);
       expect(SFX_USUELS, `${reserve} n'a rien à faire au préchargement`).not.toContain(reserve);
     }
@@ -256,7 +253,7 @@ describe("les bruitages embarqués", () => {
     expect(() => playSample("click")).not.toThrow();
     setMuted(false);
     expect(isMuted()).toBe(false);
-    expect(() => playSample("equip")).not.toThrow();
+    expect(() => playSample("select")).not.toThrow();
   });
 
   afterEach(() => setMuted(false));

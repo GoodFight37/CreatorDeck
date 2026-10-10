@@ -225,7 +225,6 @@ export function rewardPlan(): Note[] {
 
 export type SampleName =
   | "card-draw"
-  | "card-fan"
   | "card-turn"
   | "chip-place"
   | "click"
@@ -233,12 +232,8 @@ export type SampleName =
   | "pop"
   | "close"
   | "coins"
-  | "equip"
   | "menu-open"
-  | "chime"
-  | "power-up"
-  | "gather"
-  | "fanfare";
+  | "chime";
 
 /**
  * Le gain d'un bruitage : le chemin entre **ce qu'il mesure** et **ce qu'il doit
@@ -274,7 +269,6 @@ export function sampleGain(name: SampleName): number {
  */
 export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
   "card-draw": { file: "card-draw.wav", gain: sampleGain("card-draw") },
-  "card-fan": { file: "card-fan.wav", gain: sampleGain("card-fan") },
   "card-turn": { file: "card-turn.wav", gain: sampleGain("card-turn") },
   "chip-place": { file: "chip-place.wav", gain: sampleGain("chip-place") },
   click: { file: "click.wav", gain: sampleGain("click") },
@@ -282,12 +276,8 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
   pop: { file: "pop.wav", gain: sampleGain("pop") },
   close: { file: "close.wav", gain: sampleGain("close") },
   coins: { file: "coins.wav", gain: sampleGain("coins") },
-  equip: { file: "equip.wav", gain: sampleGain("equip") },
   "menu-open": { file: "menu-open.wav", gain: sampleGain("menu-open") },
   chime: { file: "chime.wav", gain: sampleGain("chime") },
-  "power-up": { file: "power-up.wav", gain: sampleGain("power-up") },
-  gather: { file: "gather.wav", gain: sampleGain("gather") },
-  fanfare: { file: "fanfare.wav", gain: sampleGain("fanfare") },
 };
 
 /**
@@ -298,9 +288,8 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
  *
  * Les autres ne sont pas préchargés, parce que plus aucun écran ne les joue :
  * `click` et `menu-open` depuis que la navigation et les réglages sont muets
- * (8 octobre 2026), et `card-fan`, `equip`, `power-up`, `gather`, `fanfare`
- * depuis le retrait de la simulation de streameur. Ils restent dans le
- * catalogue, réglés comme les autres, au cas où un écran les redemande.
+ * (8 octobre 2026). Ils restent dans le catalogue, réglés comme les autres, au
+ * cas où un écran les redemande.
  */
 export const SFX_USUELS: SampleName[] = [
   "card-draw",
@@ -631,12 +620,15 @@ export function playCoins(): void {
 //  * `select` et `card-turn` (via `playSelect`, `playPageTurn`) : les deux
 //    derniers sons de déplacement — le filtre du Binder et ses pages — sont
 //    partis le même soir, à la demande du joueur ;
-//  * `card-fan`, `equip`, `power-up`, `gather`, `fanfare` : ils servaient à la
-//    simulation de streameur, retirée le même jour.
 //
 // Ils restent ici, réglés comme les autres, parce que **les fichiers sont
 // restés dans `public/sfx/`** : le jour où un écran les redemande, il n'y a
 // qu'un appel à remettre, rien à rebrancher.
+//
+// Ceux de la simulation de streameur — `card-fan`, `equip`, `power-up`,
+// `gather`, `fanfare` — sont **partis** le 9 octobre 2026 avec leurs fichiers :
+// le mode n'existe plus et plus rien ne les réclame. Ils sont dans l'historique
+// Git si on les veut de retour.
 // ---------------------------------------------------------------------------
 
 /** L'ancien son d'un filtre du Binder qu'on change. */
@@ -664,37 +656,12 @@ export function playMenuClose(): void {
   playSample("close");
 }
 
-/** On fait glisser une poignée de cartes. */
-export function playCardFan(): void {
-  playSample("card-fan");
-}
-
 /** Une carte se pose quelque part (un doublon sacrifié, une carte cédée). */
 export function playCardPlace(): void {
   playSample("chip-place");
 }
 
-/** On récolte beaucoup de jetons d'un coup. */
-export function playGather(): void {
-  playSample("gather");
-}
-
-/** Un équipement est branché. */
-export function playEquip(): void {
-  playSample("equip");
-}
-
-/** Un palier de notoriété est franchi. */
-export function playPowerUp(): void {
-  playSample("power-up");
-}
-
 /** Une publication est encaissée. */
 export function playChime(): void {
   playSample("chime");
-}
-
-/** Un invité est en direct : le raid arrive. */
-export function playFanfare(): void {
-  playSample("fanfare");
 }
