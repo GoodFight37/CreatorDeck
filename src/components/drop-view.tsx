@@ -7,7 +7,7 @@
  * C'est le seul écran qui porte un geste (tirer vers le haut) : son verdict vit
  * dans `src/lib/pull.ts`, jamais ici.
  */
-import { useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
 import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, ShieldCheck, Swords, Trophy, Users, Zap } from "lucide-react";
 
@@ -45,18 +45,20 @@ function formatCountdown(date: number | null, now: number) {
 }
 
 
-export function PackArtwork() {
+export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean }) {
   return (
-    <div className="pack-artwork pack-live">
+    <button type="button" className="pack-artwork pack-live" onClick={onClick}
+      disabled={disabled} aria-label="Ouvrir le sachet Live Drop">
       <Image
         className="pack-foil-image"
         src="/packs/live-foil.svg"
         alt="Sachet Live Drop serti, illustration métallisée CreatorDeck"
         fill
-        sizes="(max-width: 600px) 178px, 200px"
+        sizes="(max-width: 390px) 46vw, 180px"
+        draggable={false}
         priority
       />
-    </div>
+    </button>
   );
 }
 
@@ -128,7 +130,8 @@ export function HomeView({
    * `pullCancel`), et le **bouton « Ouvrir » reste** — c'est le repli pour la
    * souris, le clavier, et les doigts qui n'aiment pas tirer.
    */
-  const pullRef = useRef<{ y: number; t: number } | null>(null);
+  const pullRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const draggedRef = useRef(false);
   // Le dernier verdict, en **référence** : `pointerup` peut arriver avant que
   // React ait re-rendu l'état, et relire `pull.armed` à cet instant serait
   // relire le geste d'avant (l'ouverture partait alors sur un mouvement périmé).
@@ -137,16 +140,19 @@ export function HomeView({
   const canPull = !opening && !needsAccount && stock > 0;
 
   function pullStart(event: PointerEvent<HTMLElement>) {
-    if (!canPull) return;
-    pullRef.current = { y: event.clientY, t: performance.now() };
+    if (!canPull || event.button !== 0 || event.isPrimary === false) return;
+    pullRef.current = { x: event.clientX, y: event.clientY, t: performance.now() };
+    draggedRef.current = false;
     armedRef.current = false;
     // Le doigt continue de piloter le geste même s'il sort de la zone du pack.
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const target = (event.target as HTMLElement).closest<HTMLButtonElement>(".pack-artwork");
+    (target ?? event.currentTarget).setPointerCapture(event.pointerId);
   }
 
   function pullMove(event: PointerEvent<HTMLElement>) {
     const start = pullRef.current;
     if (!start) return;
+    if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) draggedRef.current = true;
     const verdict = pullVerdict(start.y - event.clientY, performance.now() - start.t);
     // Le seuil est franchi : une vibration courte et le bruit de l'objet qu'on
     // ouvre, **une seule fois** — pas à chaque pixel.
@@ -175,9 +181,19 @@ export function HomeView({
    * tiré.
    */
   function pullCancel() {
+    draggedRef.current = true;
     pullRef.current = null;
     armedRef.current = false;
     setPull({ progress: 0, armed: false, active: false });
+  }
+
+  function openArtwork(event: MouseEvent<HTMLButtonElement>) {
+    // A drag's generated click must neither reopen nor turn an abandoned pull
+    // into a tap. Keyboard activation remains available after any gesture.
+    if (event.detail > 0 && draggedRef.current) return;
+    if (opening || (!needsAccount && stock <= 0)) return;
+    event.currentTarget.focus();
+    onOpen();
   }
 
   const pityCopy =
@@ -295,22 +311,22 @@ export function HomeView({
         onPointerMove={pullMove}
         onPointerUp={pullEnd}
         onPointerCancel={pullCancel}
-        aria-label={`${pack.label} : tire le booster vers le haut pour ouvrir, ou utilise le bouton Ouvrir`}
+        aria-label={`${pack.label} : appuie sur le sachet ou tire-le vers le haut pour ouvrir`}
       >
         <div className="pack-shadow" />
-        <PackArtwork />
+        <PackArtwork onClick={openArtwork} disabled={opening || (!needsAccount && stock <= 0)} />
         {/* La couture : elle s'ouvre avec le geste, avant que ça arme. Le joueur
             voit où il en est, le seuil n'est pas une surprise. */}
         <div className="pull-seam" aria-hidden="true" />
         <div className="pack-copy">
-          <h2>{pack.label}</h2>
+          <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
           <span>{pack.description}</span>
         </div>
         {/* Le mode d'emploi, toujours écrit — et il s'efface à mesure que le
             geste avance : au bout de deux boosters, on ne le lit plus. */}
         <p className="pull-hint">
           <ArrowUp size={14} />
-          Tire le booster vers le haut — ou appuie sur « Ouvrir ».
+          Appuie sur le sachet ou tire-le vers le haut.
         </p>
       </section>
 

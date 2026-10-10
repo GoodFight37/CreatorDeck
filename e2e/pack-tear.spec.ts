@@ -19,9 +19,12 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
   await page.goto("/");
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
-  const physical = await pack.locator(".booster-physical-scene").boundingBox();
-  const cardWidth = await pack.locator(".foil-card-chamber").evaluate((node) => (node as HTMLElement).offsetWidth);
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const extracted = await pack.locator(".foil-card-chamber").evaluate(async (node) => {
+    await Promise.all(node.getAnimations().map((animation) => animation.finished));
+    const bounds = node.getBoundingClientRect();
+    return { width: bounds.width, x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  });
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
@@ -33,9 +36,9 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
   const anchor = reveal.locator(".reveal-anchor");
   if (await anchor.count()) {
     const bounds = await anchor.boundingBox();
-    expect(Math.abs(bounds!.width - cardWidth)).toBeLessThanOrEqual(1);
-    expect(Math.abs(bounds!.x + bounds!.width / 2 - (physical!.x + physical!.width / 2))).toBeLessThanOrEqual(1);
-    expect(Math.abs(bounds!.y + bounds!.height / 2 - (physical!.y + physical!.height / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(bounds!.width - extracted.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(bounds!.x + bounds!.width / 2 - extracted.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(bounds!.y + bounds!.height / 2 - extracted.y)).toBeLessThanOrEqual(1);
   } else {
     await expect(reveal.locator(".reveal-perfect-grid .reveal-card")).toHaveCount(5);
   }
@@ -174,4 +177,97 @@ test("DIVERRON portrait never resolves to the damaged green webp", async ({ page
   });
   expect(url.status).toBe(200);
   expect(url.body).toContain("DIVERRON");
+});
+
+test("home sachet tap opens once and returns focus to the sachet", async ({ page }, testInfo) => {
+  await page.goto("/");
+  const sachet = page.getByRole("button", { name: "Ouvrir le sachet Live Drop" });
+  await expect(sachet).toBeEnabled();
+  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  if (testInfo.project.name === "téléphone") await sachet.tap();
+  else await sachet.click();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+  await expect(sachet).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
+});
+
+test("an abandoned home drag does not become a tap and an armed pull opens once", async ({ page }) => {
+  await page.goto("/");
+  const sachet = page.locator(".pack-artwork");
+  await expect(sachet).toBeEnabled();
+  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  const bounds = (await sachet.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 30, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x, y - 110, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+});
+
+test("compact sachet keeps the weld within thumb reach and accepts both swipe directions", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeEnabled();
+  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  const touch = await page.context().newCDPSession(page);
+  for (const reverse of [false, true]) {
+    await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+    const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+    for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 800 }, { width: 412, height: 915 }]) {
+      await page.setViewportSize(viewport);
+      const pack = (await dialog.locator(".booster-physical-scene").boundingBox())!;
+      const seam = (await dialog.locator(".booster-tear-track").boundingBox())!;
+      const action = (await dialog.locator(".booster-open-button").boundingBox())!;
+      expect(pack.width).toBeLessThanOrEqual(viewport.width * .65);
+      expect(pack.height).toBeLessThanOrEqual(viewport.height * .45);
+      const seamCenter = seam.y + seam.height / 2;
+      expect(seamCenter).toBeGreaterThan(viewport.height * .4);
+      expect(seamCenter).toBeLessThan(viewport.height * .6);
+      expect(pack.y + pack.height).toBeLessThan(action.y);
+      expect(action.y + action.height).toBeLessThanOrEqual(viewport.height);
+    }
+    const seam = (await dialog.locator(".booster-tear-track").boundingBox())!;
+    const from = reverse ? .88 : .12;
+    const to = reverse ? .12 : .88;
+    const y = seam.y + seam.height / 2;
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: seam.x + seam.width * from, y }] });
+    // A short trace is reversible and must not open the packet.
+    await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: seam.x + seam.width * (from + (to - from) * .2), y }] });
+    await touch.send("Input.dispatchTouchEvent", { type: "touchCancel", touchPoints: [] });
+    await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: seam.x + seam.width * from, y }] });
+    for (let step = 1; step <= 8; step++) {
+      await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: seam.x + seam.width * (from + (to - from) * step / 8), y }] });
+    }
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+    const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+    await expect(reveal).toBeVisible();
+    await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+  }
+  await touch.detach();
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 2}/4`);
+  if (stock === 2) {
+    await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeDisabled();
+    await expect(page.locator(".pack-copy h2")).toBeFocused();
+  }
 });

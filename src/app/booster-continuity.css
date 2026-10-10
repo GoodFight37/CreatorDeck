@@ -5,6 +5,9 @@
   --scene-card-width: min(68vw, 360px, calc((var(--scene-height) - 340px) * .715));
   --scene-card-height: calc(var(--scene-card-width) / .715);
   --scene-center: calc(var(--scene-height) * .48);
+  --scene-pack-width: min(64vw, 280px, 30dvh);
+  --scene-pack-height: calc(var(--scene-pack-width) * 880 / 600);
+  --scene-pack-center: calc(var(--scene-height) * .64);
   --scene-background:
     radial-gradient(ellipse 43% 44% at 50% 48%, rgba(152, 49, 88, .21), transparent 90%),
     radial-gradient(ellipse 70% 75% at 52% 62%, rgba(62, 26, 75, .22), transparent 90%),
@@ -26,14 +29,14 @@
 }
 .booster-cinematic .booster-physical-scene {
   position: absolute;
-  top: var(--scene-center);
+  top: var(--scene-pack-center);
   left: 50%;
-  width: calc(var(--scene-card-width) / .72);
+  width: var(--scene-pack-width);
   transform: translate(-50%, -50%);
 }
 .booster-cinematic .booster-opening-instruction {
   position: absolute;
-  top: max(22px, calc(var(--scene-center) - var(--scene-card-height) * .76 - 38px));
+  top: max(22px, calc(var(--scene-pack-center) - var(--scene-pack-height) / 2 - 48px));
   left: 16px;
   right: 16px;
   font-size: 11px;
@@ -46,9 +49,9 @@
 }
 .booster-cinematic .foil-card-chamber {
   inset: auto;
-  top: 50%;
+  top: calc(50% + var(--scene-center) - var(--scene-pack-center));
   left: 50%;
-  width: 72%;
+  width: var(--scene-card-width);
   aspect-ratio: .715;
   transform: translate(-50%, -30%);
 }
@@ -59,9 +62,9 @@
   animation-name: scene-card-settle;
 }
 @keyframes scene-cards-rise {
-  0%, 17% { opacity: 0; transform: translate(-50%, -27%) scale(.88); }
-  38% { opacity: .36; transform: translate(-50%, -35%) scale(.9); }
-  60% { opacity: 1; transform: translate(-50%, -44%) scale(.97); }
+  0%, 17% { opacity: 0; transform: translate(-50%, -12%) scale(.65); }
+  38% { opacity: .36; transform: translate(-50%, -22%) scale(.72); }
+  60% { opacity: 1; transform: translate(-50%, -40%) scale(.9); }
   100% { opacity: 1; transform: translate(-50%, -50%); }
 }
 @keyframes scene-card-settle {

@@ -318,7 +318,8 @@
 .pack-stage {
   flex-direction: column;
   gap: 12px;
-  padding: 32px 18px 18px;
+  min-height: clamp(300px, 42dvh, 360px);
+  padding: 24px 18px 18px;
 }
 /* Keep both labels in the flow: absolute bottom offsets made the gesture
    hint overlap the pack description, especially on narrow phones. */
@@ -333,7 +334,7 @@
 .pack-stage .pull-hint svg { flex-shrink: 0; }
 .pack-stage .pack-shadow { bottom: 116px; }
 .pack-stage .pack-artwork.pack-live {
-  width: clamp(174px, 34vw, 207px);
+  width: min(46vw, 180px);
   height: auto;
   aspect-ratio: 600 / 880;
   overflow: visible;
@@ -341,9 +342,13 @@
   border-radius: 0;
   background: none;
   box-shadow: none;
+  padding: 0;
+  cursor: pointer;
   filter: drop-shadow(10px 24px 18px rgba(0,0,0,.62))
           drop-shadow(0 0 20px rgba(191,74,127,.18));
 }
+.pack-stage .pack-artwork:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 6px; }
+.pack-stage .pack-artwork:disabled { cursor: default; }
 .pack-stage .pack-artwork .pack-foil-image {
   display: block;
   width: 100%;

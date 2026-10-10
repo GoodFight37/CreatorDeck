@@ -38,7 +38,7 @@ export function PackTear({
     if (done.current) return;
     done.current = true;
     start.current = null;
-    setCut((last) => ({ ...last, end: 96, progress: 100 }));
+    setCut({ start: 4, end: 96, progress: 100 });
     setOpened(true);
     tearRef.current?.();
     // Cap finishes peeling, card backs leave the pouch, THEN reveal replaces it.
@@ -74,11 +74,11 @@ export function PackTear({
             ))}
           </div>
           <div className="foil-body-piece" aria-hidden="true">
-            <Image src={artwork} alt="" fill sizes="(max-width:600px) 86vw, 380px"
+            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
           </div>
           <div className="foil-top-piece" aria-hidden="true">
-            <Image src={artwork} alt="" fill sizes="(max-width:600px) 86vw, 380px"
+            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
           </div>
           <span className="foil-cut-slit" aria-hidden="true"
@@ -86,7 +86,7 @@ export function PackTear({
           <div className="booster-tear-track" role="button" tabIndex={opened ? -1 : 0}
             aria-label="Déchirer le sachet en passant le doigt sur sa soudure"
             onPointerDown={(event) => {
-              if (opened) return;
+              if (opened || event.button !== 0 || event.isPrimary === false) return;
               const bounds = event.currentTarget.getBoundingClientRect();
               const p = Math.max(4, Math.min(96, (event.clientX - bounds.left) / bounds.width * 100));
               start.current = { x: event.clientX, percent: p };
@@ -96,12 +96,12 @@ export function PackTear({
             onPointerMove={(event) => {
               if (opened || !start.current) return;
               const bounds = event.currentTarget.getBoundingClientRect();
-              const end = Math.max(start.current.percent, Math.min(98,
+              const end = Math.max(2, Math.min(98,
                 (event.clientX - bounds.left) / bounds.width * 100));
               const progress = Math.max(0, Math.min(100,
-                (event.clientX - start.current.x) / 180 * 100));
-              setCut({ start: start.current.percent, end, progress });
-              if (progress >= 82) finish();
+                Math.abs(event.clientX - start.current.x) / (bounds.width * .55) * 100));
+              setCut({ start: Math.min(start.current.percent, end), end: Math.max(start.current.percent, end), progress });
+              if (progress >= 100) finish();
             }}
             onPointerUp={() => {
               start.current = null;
@@ -112,7 +112,7 @@ export function PackTear({
               if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight") {
+              if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight" || event.key === "ArrowLeft") {
                 event.preventDefault();
                 finish();
               }
