@@ -168,6 +168,7 @@ export function CreatorDeckApp() {
   const [tearing, setTearing] = useState(false);
   const [tearKind, setTearKind] = useState<"live" | "scene">("live");
   const tearResolve = useRef<(() => void) | null>(null);
+  const [presentationReturnFocus, setPresentationReturnFocus] = useState<HTMLElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
   const [errorHint, setErrorHint] = useState<"account" | null>(null);
@@ -350,6 +351,9 @@ export function CreatorDeckApp() {
    * until both the draw and the gesture have completed, with no empty frame.
    */
   function commencerDechirure(kind: "live" | "scene"): Promise<void> {
+    // Capture before the opening button is disabled, and keep it through reveal.
+    setPresentationReturnFocus(document.activeElement instanceof HTMLElement
+      ? document.activeElement : null);
     setTearKind(kind);
     setTearing(true);
     return new Promise<void>((resolve) => {
@@ -684,7 +688,7 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {tearing ? <PackTear kind={tearKind} onTear={() => {
+      {tearing ? <PackTear kind={tearKind} returnFocusTo={presentationReturnFocus} onTear={() => {
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
       }} onComplete={terminerDechirure} /> : null}
@@ -746,6 +750,7 @@ export function CreatorDeckApp() {
           cards={drawnCards}
           index={revealIndex}
           kind={revealKind}
+          returnFocusTo={presentationReturnFocus}
           streakReward={streakGain}
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}

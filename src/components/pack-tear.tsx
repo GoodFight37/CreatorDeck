@@ -15,13 +15,15 @@ export function PackTear({
   onComplete,
   onTear,
   autoCompleteAfterMs,
+  returnFocusTo,
 }: {
   kind?: "live" | "scene";
   onComplete: () => void;
   onTear?: () => void;
   autoCompleteAfterMs?: number;
+  returnFocusTo?: HTMLElement | null;
 }) {
-  const dialogRef = usePresentationFocus();
+  const dialogRef = usePresentationFocus(true, returnFocusTo);
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
   const [opened, setOpened] = useState(false);
   const start = useRef<{ x: number; percent: number } | null>(null);

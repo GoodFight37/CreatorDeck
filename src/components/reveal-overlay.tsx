@@ -46,6 +46,7 @@ export function RevealOverlay({
   onSkipAll,
   onNext,
   onClose,
+  returnFocusTo,
 }: {
   cards: DrawnCard[];
   index: number;
@@ -67,8 +68,9 @@ export function RevealOverlay({
   onSkipAll?: () => void;
   onNext: () => void;
   onClose: () => void;
+  returnFocusTo?: HTMLElement | null;
 }) {
-  const dialogRef = usePresentationFocus(!overlay);
+  const dialogRef = usePresentationFocus(!overlay, returnFocusTo);
   const card = cards[index];
   const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
   const live = useLive();

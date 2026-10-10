@@ -3,12 +3,12 @@
 import { useEffect, useRef } from "react";
 
 /** Keep keyboard navigation inside the opening, then return it to the game. */
-export function usePresentationFocus(active = true) {
+export function usePresentationFocus(active = true, returnFocusTo?: HTMLElement | null) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const dialog = ref.current;
     if (!active || !dialog) return;
-    const previous = document.activeElement;
+    const previous = returnFocusTo ?? document.activeElement;
     const game = document.querySelector<HTMLElement>(".app-shell");
     const wasInert = game?.inert ?? false;
     if (game) game.inert = true;
@@ -32,6 +32,6 @@ export function usePresentationFocus(active = true) {
       if (game) game.inert = wasInert;
       if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
     };
-  }, [active]);
+  }, [active, returnFocusTo]);
   return ref;
 }
