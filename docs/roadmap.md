@@ -30,21 +30,24 @@ Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 
 
 # Roadmap CreatorDeck
 
-## Checkpoint UX — 10 octobre 2026
+## Checkpoint UX — 10 octobre 2026, deux passes
 
-Code UX publié sur `main` au commit [`1769636`](https://github.com/GoodFight37/CreatorDeck/commit/1769636dab8069486f64dff3ed81404eb0e86bb6). Le retour produit du 10 octobre a déclenché une première passe UX :
-le Binder ouvre sur les cartes obtenues, l’état vide invite à ouvrir un booster
-et laisse le catalogue accessible à la demande ; les pages de catalogue sont
-limitées à 12 cartes. La révélation se termine par un récapitulatif des cinq
-cartes, du nombre de nouvelles et une réouverture directe si la réserve le
-permet. Son/reflets sont actifs sans préférence enregistrée ; un choix OFF
-persistant reste respecté. L’avis sur téléphone réel reste à recueillir.
+Deux lots UX sont publiés sur `main` : première boucle au commit [`1769636`](https://github.com/GoodFight37/CreatorDeck/commit/1769636dab8069486f64dff3ed81404eb0e86bb6), puis démarrage collection au commit [`09487de`](https://github.com/GoodFight37/CreatorDeck/commit/09487de). Le Binder ouvre sur les cartes obtenues, l’état vide invite à ouvrir un booster et laisse le catalogue accessible à la demande ; les pages de catalogue sont limitées à 12 cartes. La révélation se termine par un récapitulatif des cinq cartes, du nombre de nouvelles et une réouverture directe si la réserve le permet. Son/reflets sont actifs sans préférence enregistrée ; un choix OFF persistant reste respecté. L’Atelier cache ses listes avant dix copies recyclables, Toi met en avant les trois meilleures cartes possédées et la série, et Drop montre une mission existante. Aucune récompense ni règle d’économie n’a changé.
 
-Validation locale de cette passe : écrans **71/71**, tests son/reflets **32/32**,
-typecheck, lint et build réussis. La suite `npm test` complète conserve quatre
-échecs catalogue/migration hors périmètre UX ; GitHub Actions et le déploiement
+L’avis sur téléphone réel reste à recueillir.
+
+Validation locale après la deuxième passe : écrans **72/72**, typecheck, lint
+et build réussis ; contrôles ciblés après la dernière assertion **13/13**.
+`npm test` complet : **1102/1106**, avec quatre échecs préexistants de
+génération/synchronisation catalogue et saisons et de comptage SQL (`supabase-profil`).
+`npm run catalog:ci` échoue aussi parce que `0003_catalogue.sql` est dérivé de
+`creators.json`. Ces échecs sont hors périmètre UX et restent à corriger dans
+un lot de cohérence données/migrations. GitHub Actions et le déploiement
 Vercel du nouveau SHA n’ont pas été vérifiés ici (`gh` est absent de cette
-machine). Aucun accès à Supabase de production.
+machine). Aucun accès à Supabase de production. Le prochain lot produit à cadrer
+porte sur l’entrée sociale visible, les badges/avatars et la cohérence visuelle
+des portraits ; l’état de la configuration des rappels doit être vérifié avant
+tout nouveau push. La validation sur téléphone reste ouverte.
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
 ### Exécution réelle du bilan local — résultats transmis le 10 octobre 2026
@@ -156,10 +159,11 @@ instructions de reset ou d'envoi vers main.
 | ID / priorité | Travail / statut | Dépendances | Critères d'acceptation |
 |---|---|---|---|
 | COORD-01 / P0 | Consolidation et coordination — terminées sur `main` (`2c9b6c4`) | Historique GitHub et documentation de passation | Une seule branche distante (`main`) ; PR #7 intégrée, PR #8 fermée ; anciens résultats et limites consignés ci-dessus |
-| UX-01 / P1 | Première boucle de collection — implémentée, retour sur téléphone attendu | Binder, RevealOverlay, réserve de boosters | Vue « Obtenues » par défaut ; état vide sans compteur/page écrasants ; 12 cartes par page ; résumé des cinq cartes et découvertes ; réouverture directe si réserve disponible. Écrans 71/71, typecheck/lint/build OK ; avis tactile réel ouvert |
+| UX-01 / P1 | Première boucle de collection — implémentée, retour sur téléphone attendu | Binder, RevealOverlay, réserve de boosters | Vue « Obtenues » par défaut ; état vide sans compteur/page écrasants ; 12 cartes par page ; résumé des cinq cartes et découvertes ; réouverture directe si réserve disponible. Écrans 72/72, typecheck/lint/build OK ; avis tactile réel ouvert |
 | VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Le retour UX récent n’est pas une validation visuelle sur appareil |
-| QA-01 / P1 | Contrôles locaux UX — réussis ; suite projet/CI à établir | Environnement de test local et GitHub Actions | Écrans 71/71, son/reflets 32/32, typecheck/lint/build OK. `npm test` complet : quatre échecs déjà hors périmètre (tests de synchronisation catalogue/saisons et comptage de colonnes SQL). Le workflow courant n’a pas été consulté : `gh` absent |
-| UX-02 / P1 | Craft, profil et objectif court — à traiter dans la prochaine passe | Retour produit fourni le 10 octobre ; règles d’économie existantes | Réduire le bruit avant dix doublons, orienter Toi vers l’identité du collectionneur, afficher un objectif court sur Drop. Préserver économie, règles serveur et choix déjà mémorisés |
+| QA-01 / P1 | Contrôles locaux UX — code validé ; suite projet/CI à établir | Environnement de test local et GitHub Actions | Écrans 72/72, typecheck/lint/build OK. `npm test` : 1102/1106, quatre échecs catalogue/saisons/SQL ; `catalog:ci` signale le seed 0003 dérivé. GitHub Actions du nouveau SHA non vérifiées |
+| UX-02 / P1 | Craft, profil et objectif court — implémentés sur `main` (`09487de`) | Retour produit du 10 octobre ; règles d’économie existantes | Avant 10 copies recyclables, Atelier montre une progression courte et le retour Drop ; Toi met en avant vitrine locale et série, sans zéros initiaux ; Drop met en avant une mission déjà définie. Pas de changement d’économie ou de règles serveur |
+| UX-03 / P2 | Présence sociale et plancher visuel — à cadrer | Vitrine publique, carnet social et portraits existants | Rendre le showcase et les ouvertures d’amis visibles dans la boucle ; évaluer avatar/badge sans nouveau système serveur ; établir une politique de fallback visuel. Notifications existent déjà pour certains événements, vérifier leur configuration avant d’ajouter un rappel quotidien |
 | CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
 
 Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 corrigé dans `d87b72c` : retour au titre Scène quand le bouton consommé est désactivé ; scénario Scène et scénario Live existant 4/4 réussis bureau/téléphone. K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.

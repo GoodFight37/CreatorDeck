@@ -142,3 +142,19 @@ réglage, tandis que les animations lourdes suivent toujours le garde-fou de
 mouvement réduit. Aucun choix stocké n’est écrasé automatiquement. Décision
 adoptée à partir du retour joueur ; tests et état de validation sont consignés
 dans [la passation](agent-handoff.md) et [la roadmap](roadmap.md).
+
+## D-017 — 10 octobre 2026 : objectifs précoces, Craft et identité
+
+Le retour joueur pointe les premiers jours comme la période où l’Atelier, les
+menus de réglages et les objectifs trop nombreux peuvent noyer la collection.
+Le pilier Craft reste accessible, mais avant 10 copies recyclables il montre
+seulement la progression `N / 10` et un retour au Drop ; les listes de 1000
+créateurs et de recyclage ne s’affichent pas. À partir de 10, l’Atelier existant
+reprend sans changement de règles.
+
+Drop met en évidence une mission quotidienne déjà définie dans le moteur et
+ouvre le panneau d’objectifs existant. Toi place en tête une vitrine locale des
+trois meilleures cartes possédées (rareté, puis variante), avec l’état actuel
+de la série ; aucune donnée n’est publiée sans le parcours cloud existant. Les
+missions, leur économie et les récompenses restent inchangées. Décision adoptée
+sur le retour joueur ; critères et limites dans la passation et la roadmap.
