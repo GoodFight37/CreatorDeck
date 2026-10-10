@@ -479,7 +479,7 @@ export function HomeView({
       <section className={`scene-block${game.scene.opened ? " done" : ""}`}>
         <div className="scene-head">
           <div>
-            <h2>{game.scene.label}</h2>
+            <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
             <span>{PACKS.scene.description}</span>
           </div>
           <span className="scene-state">

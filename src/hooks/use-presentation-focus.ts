@@ -30,7 +30,15 @@ export function usePresentationFocus(active = true, returnFocusTo?: HTMLElement 
     return () => {
       dialog.removeEventListener("keydown", trapTab);
       if (game) game.inert = wasInert;
-      if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
+      if (previous instanceof HTMLElement && previous.isConnected) {
+        previous.focus({ preventScroll: true });
+        // A consumed pack can leave its trigger disabled. Stay in its section.
+        if (document.activeElement !== previous) {
+          previous.closest("section")
+            ?.querySelector<HTMLElement>("[data-presentation-focus-fallback]")
+            ?.focus({ preventScroll: true });
+        }
+      }
     };
   }, [active, returnFocusTo]);
   return ref;

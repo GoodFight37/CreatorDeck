@@ -1,5 +1,20 @@
 import { expect, test } from "@playwright/test";
 
+test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
+  await page.goto("/");
+  const open = page.locator(".scene-action");
+  await expect(open).toBeEnabled();
+  await open.focus();
+  await open.click();
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(open).toBeDisabled();
+  await expect(page.locator(".scene-head h2")).toBeFocused();
+  await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
+});
+
 test("the revealed card keeps the extracted card's size and center in a full-screen scene", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
