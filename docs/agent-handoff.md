@@ -1,6 +1,56 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — E2E exécutés, 10 octobre 2026, 11 h 45 Europe/Paris
+## Checkpoint courant — K-010 corrigé, 10 octobre 2026, 11 h 53 Europe/Paris
+
+- Agent : Codex Cloud ; correction ciblée autorisée (« let's go »), réservation
+  libérée à la passation. Modèle conseillé pour cette correction : Sol / Moyen.
+- Branche `design/booster-reveal-polish`, base locale/distante propre
+  `2765179cfe93c26dc23160cb432d1404e3235c87`, fetch design sans divergence.
+  PR #8 relue via HTML : DRAFT, base `arena/01a10c75-creatordeck`.
+  CI/commentaires distants non vérifiés. Aucun audit complet rejoué.
+- Correctif et SHA du code testé : `4b9fcca3b8e980fe5173535413d1a7bf036030a0`.
+  [Commit](https://github.com/GoodFight37/CreatorDeck/commit/4b9fcca3b8e980fe5173535413d1a7bf036030a0).
+  La cible de retour du focus est capturée dans le gestionnaire d'ouverture,
+  avant le commit React qui désactive le bouton, puis transmise à PackTear et
+  RevealOverlay. Le hook conserve son comportement habituel sans cible explicite.
+  Les ouvertures Live et Scène partagent cette capture ; la variante OBS
+  conserve la désactivation de la gestion du focus. Décision D-009.
+- Cause prouvée dans Chromium : bouton focalisé avant clic, désactivé pendant
+  la déchirure, focus sur BODY après fermeture. Le hook capturait trop tard
+  `document.activeElement` ; la transition ne conservait pas le déclencheur.
+- Contre-épreuve avant édition : `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  NEXT_TELEMETRY_DISABLED=1 npm run e2e -- --grep "the revealed card keeps"` :
+  **code 1, 2/2 échecs**, bureau et téléphone à `e2e/pack-tear.spec.ts:46`.
+- Même commande sur le correctif final : **code 0, 2/2 réussis**, 12,6 secondes.
+  Le test existant conserve ses assertions de focus, inert, navigation Tab,
+  dimensions et fermeture ; aucune assertion affaiblie, aucun nouveau test.
+- `npm run ecrans -- src/ecrans.test.tsx src/ecrans-tactile.test.tsx --maxWorkers=2` :
+  **code 0, 9/9 tests, 2 fichiers**. Rendus et haptique, pas un verdict visuel
+  sur téléphone réel. `npm run typecheck` : code 0. ESLint direct sur les quatre
+  fichiers produit modifiés : code 0, aucun diagnostic.
+- Première version locale utilisait une ref lue pendant le rendu : E2E 2/2,
+  mais lint refusé (`react-hooks/refs`, deux erreurs). Remplacée par un état
+  React pour la cible transmise ; E2E/typecheck/lint relancés et réussis.
+  Cette première version n'a jamais été commitée ou poussée.
+- Dépendances et navigateurs verrouillés de la reprise précédente réutilisés ;
+  aucun changement de branche/dépendances, aucun nouveau npm ci nécessaire.
+  AGENTS.md retrouve son contenu commité après retrait du seul bloc Next auto.
+  Logs locaux : `/tmp/creatordeck-focus/{before,after,screens}.log`.
+- Fichiers : quatre fichiers produit, passation, problèmes, roadmap, décisions
+  et journal. Commit documentaire à retrouver via
+  `git log -1 --format=%H -- docs/agent-handoff.md`, puis comparer au distant.
+  Publication à vérifier après push normal ; aucun merge ni modification de main.
+- Limites : suite E2E complète et cloud simulé non rejoués dans cette correction ;
+  leurs runs du checkpoint précédent restent historiques. Tests SQL/unitaires/
+  build non rejoués. Le scénario E2E cible le booster Live ; pas de nouveau
+  scénario Scène/OBS exécuté. Validation humaine Vercel/mobile et CI restent
+  en attente, aucune production Supabase sollicitée.
+- Prochaine étape : valider VIS-01 sur le preview Vercel correspondant au commit
+  publié (geste, continuité, halo/Perfect, réduction d'animations), consulter la
+  CI au bon SHA puis CLOUD-01 avec accès autorisé. K-010 est corrigé et vérifié
+  automatiquement ; ces validations restantes ne sont pas déclarées terminées.
+
+## Historique — E2E exécutés, 10 octobre 2026, 11 h 45 Europe/Paris
 
 - Agent : Codex Cloud ; reprise courte demandée, réservation libérée.
 - Branche `design/booster-reveal-polish`, code testé et HEAD distant vérifié :
