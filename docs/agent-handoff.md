@@ -11,7 +11,7 @@
 - Parité Paquet Scène : la migration additive 0043 et le moteur local suivent les règles de cinq créateurs distincts d'une famille, sans Légendaire ; événement Scène pleine à 3/1000 ; Épiques disponibles utilisés puis autres raretés autorisées ; candidat Rare/Épique réservé au cinquième emplacement ; familles incompatibles refusées.
 - Le dépôt consigne 35/35 tests ciblés et 559 contrôles SQL réussis sur PostgreSQL jetable sous WSL, migrations 0001–0043 comprises. Le test inclut familles avec peu ou zéro Épique, ouvertures du paquet et refus des familles incompatibles. Résultat fourni par l'utilisateur et repris dans la passation/roadmap ; cette session n'a pas exécuté ces tests.
 - Audit local de progression : 12 scénarios × 1 000 trajectoires, graine `20261010`, zéro paquet manquant, sur le code `7da3d1c301c949e6cbeaef6aecd6ec0c94ffe2f1`. Il reste un audit TypeScript local, pas une comparaison des RPC de progression.
-- Sur l'arbre applicatif de `53e6127d21a8e5d5ec173bfbe1b29e79d5f097c0` (identique à l'arbre de code consolidé), 70 fichiers / 1 104 tests, typecheck et build ont réussi. Le contrôle Vercel et le workflow GitHub Actions #258 sont verts sur le commit documentaire `ecfe17a` ; les quatre jobs Actions (qualité/build, E2E, SQL jetable, cloud simulé) ont réussi. Les commits suivants sont documentaires et ne changent pas l'arbre applicatif.
+- Sur l'arbre applicatif de `53e6127d21a8e5d5ec173bfbe1b29e79d5f097c0` (identique à l'arbre de code consolidé), 70 fichiers / 1 104 tests, typecheck et build ont réussi. Le workflow GitHub Actions #261 a réussi sur le commit documentaire `1b4efef` avec ses quatre jobs (qualité/build, E2E, SQL jetable, cloud simulé) ; le contrôle Vercel de ce commit est vert. Le run #260 avait également réussi sur le même arbre applicatif. Les commits depuis la consolidation sont documentaires ; le code du jeu n'a pas changé.
 - La roadmap et le rapport de progression ont été actualisés pour séparer l'état historique du premier audit des validations postérieures. Le SHA courant du document de passation sera retrouvé dans Git par `git log -1 --format=%H -- docs/agent-handoff.md` ; ne pas l'auto-référencer ici.
 
 ### Ce qui reste réellement ouvert
@@ -23,9 +23,9 @@
 
 ### Actions de documentation effectuées
 
-- `docs/roadmap.md` : commit `22c8c3c5faaefc50abc59c531232633d1c3b6efd`.
+- `docs/roadmap.md` : commit `1b4efef12987d504c8caefb451d92a5fbb3a04bd` ; les cases déjà couvertes par l'audit et les tests automatisés sont cochées, les dépendances externes restent ouvertes.
 - `docs/audit-progression.md` : commit `7a89ece59931656da7e2ea71b20e5550e2349f70`.
-- Résultat GitHub Actions #258 vérifié après écriture : quatre jobs réussis sur `ecfe17a` ; l'outil a fourni les quatre résumés de jobs, aucun log d'échec.
+- Résultat GitHub Actions #261 vérifié après écriture : quatre jobs réussis sur `1b4efef` ; le contrôle Vercel est aussi vert. Le run #260 sur le code courant avait déjà réussi ses quatre jobs.
 - Modifications limitées à la documentation ; aucun test de code n'a été lancé dans cette session, car aucun checkout du dépôt n'est présent dans l'espace local.
 
 ---
