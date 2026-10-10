@@ -41,6 +41,9 @@
   filter: none;
 }
 .booster-cinematic .booster-physical-scene.is-pulling { transition: none; }
+.booster-cinematic .booster-physical-scene.booster-foil-open {
+  transform: translate(-50%, -50%) perspective(900px) rotateX(0deg) rotateY(0deg);
+}
 .booster-cinematic .booster-physical-scene.is-pulling { transition: none; }
 .booster-cinematic .foil-depth-side,
 .booster-cinematic .foil-depth-bottom {
@@ -507,6 +510,9 @@ html:has(.booster-presentation) { overflow: hidden; }
 [data-card-fx="off"] .booster-cinematic .booster-physical-scene {
   transform: translate(-50%, -50%) perspective(900px) rotateX(1.5deg) rotateY(-4deg);
 }
+[data-card-fx="off"] .booster-cinematic .booster-physical-scene.booster-foil-open {
+  transform: translate(-50%, -50%) perspective(900px) rotateX(0deg) rotateY(0deg);
+}
 [data-card-fx="off"] .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); }
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip { animation: none; }
 [data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-top-piece {
@@ -540,6 +546,9 @@ html:has(.booster-presentation) { overflow: hidden; }
   .booster-cinematic .booster-physical-scene {
     transform: translate(-50%, -50%) perspective(900px) rotateX(1.5deg) rotateY(-4deg);
     transition: none;
+  }
+  .booster-cinematic .booster-physical-scene.booster-foil-open {
+    transform: translate(-50%, -50%) perspective(900px) rotateX(0deg) rotateY(0deg);
   }
   .reveal-game .reveal-stage > .reveal-anchor,
   .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); transition: none; }
