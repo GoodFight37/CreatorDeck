@@ -1,10 +1,25 @@
 # Roadmap CreatorDeck
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
+### Exécution réelle du bilan local — résultats transmis le 10 octobre 2026
+
+L'utilisateur a exécuté avec succès `npm run progression:bilan` sous Windows, depuis son clone local. **Une trajectoire aléatoire par profil**, sans seed et sans vérification cloud ; ces résultats ne sont pas des moyennes.
+
+| Profil | Durée | Live | Scène | Uniques | Recyclées | Points recyclage | Craft | Jetons achetés | Points restants | Sabliers restants |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Occasionnel | 7 j | 14 | 7 | 96 | 13 | 572 | 4 | 0 | 223 | 41 |
+| Régulier | 7 j | 42 | 7 | 224 | 28 | 1 027 | 7 | 0 | 605 | 62 |
+| Intensif | 7 j | 84 | 7 | 373 | 90 | 4 588 | 7 | 1 | 5 158 | 87 |
+| Occasionnel | 30 j | 60 | 30 | 301 | 177 | 10 579 | 27 | 1 | 170 | 140 |
+| Régulier | 30 j | 180 | 30 | 627 | 449 | 22 303 | 30 | 2 | 12 855 | 221 |
+| Intensif | 30 j | 360 | 30 | 848 | 1 122 | 59 542 | 30 | 5 | 53 365 | 323 |
+
+**Observations, non décisions d'équilibrage :** forte accumulation de points chez le joueur intensif, sabliers non consommés dans le scénario, progression rapide vers 85 % du catalogue en 30 jours pour le profil intensif. La stratégie de simulation fabrique au plus une carte par jour, et les horaires du modèle ne reflètent pas une distribution réelle d'utilisateurs. Faire des simulations multi-seeds et tester une stratégie de dépense plus réaliste avant tout changement de paramètres.
+
 ### Audit avec le moteur réel — outil ajouté le 10 octobre 2026
 
 - [x] Script `scripts/progression-bilan.ts` ajouté et commande `npm run progression:bilan` exposée dans `package.json` ; branche `design/booster-reveal-polish`.
-- [ ] **Exécuter et valider** la commande sur un clone installé (non exécutée dans cette intervention : l'environnement de travail ne dispose pas d'un checkout du dépôt ni de ses dépendances).
+- [x] **Exécuter** la commande sur un clone installé : succès confirmé par la sortie PowerShell fournie par l'utilisateur. Les résultats restent non reproductibles sans seed.
 - [ ] Ajouter une répétition statistique avec RNG contrôlé ou injection de hasard, puis exporter les métriques reproductibles.
 - [ ] Vérifier la parité des gains et de la sauvegarde avec Supabase sur un projet de test autorisé ; ne pas appliquer de migration en production sans validation.
 - [ ] Tester les échanges et l'hôtel des ventes avec deux comptes de test ; ce script est local et ne les couvre pas.
