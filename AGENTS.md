@@ -85,7 +85,10 @@ historiques utiles, en les datant et en signalant ce qui a été remplacé.
 
 Utiliser le lockfile (`npm ci` après changement de branche/de dépendances).
 `npm run dev:setup` prépare notamment `embedded-postgres` et `pg`, hors manifest ;
-contrôler que l'installation n'a pas modifié le lockfile involontairement.
+contrôler que l'installation n'a pas modifié le lockfile involontairement et
+que les versions installées correspondent au lock. Ne pas utiliser
+`npm_config_package_lock=false` pour `dev:setup` : ce flag désactive aussi la
+lecture du lock et peut faire flotter les dépendances (K-009).
 
 Choisir les vérifications adaptées et indiquer pour chacune la commande, le SHA,
 le résultat, le nombre de tests effectivement exécutés et ses limites :
