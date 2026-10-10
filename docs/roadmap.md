@@ -1,3 +1,11 @@
+## État courant après consolidation — 10 octobre 2026
+
+- GitHub ne contient plus qu'une branche, `main`, actuellement au commit `2c9b6c4ae98898711bb6041c2297b17ac2a1a312`. La PR #7 est intégrée ; la PR #8 est fermée car devenue obsolète.
+- Le correctif du Paquet Scène est intégré : tests ciblés 35/35 et vérification des migrations 0001–0043 sur PostgreSQL jetable sous WSL, avec 559 contrôles réussis selon les résultats consignés. Aucun accès ni changement en production.
+- L'audit du moteur local a terminé 12 000 trajectoires (12 scénarios × 1 000), graine `20261010`, sans paquet manquant. Il mesure le moteur TypeScript local ; il ne constitue pas une simulation de la progression côté Supabase.
+- Sur l'arbre de code du commit `53e6127d21a8e5d5ec173bfbe1b29e79d5f097c0`, les tests projet (70 fichiers, 1 104 tests), typecheck et build ont réussi ; le commit de consolidation `2c9b6c4` conserve le même arbre de code. Le contrôle Vercel de `2c9b6c4` est vert. Aucun run GitHub Actions complet pour ce commit n'a été confirmé.
+- Les anciennes notes ci-dessous sont conservées comme historique ; les priorités actives plus bas sont la référence pour la suite.
+
 ## Parite Scene Supabase - validation locale terminee, 10 octobre 2026
 
 - [x] Migration 0043 corrigee : cinq cartes distinctes, sans Legendaire, candidats garantis reserves et petites familles completees.
@@ -8,7 +16,7 @@
 
 ## Audit Scène validé — 10 octobre 2026
 
-Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 scénarios, 12 000 trajectoires, graine `20261010`, zéro paquet manquant. Résumé et limites : [audit-progression.md](audit-progression.md). L'audit valide uniquement le moteur local ; parité Supabase non vérifiée.
+Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 scénarios, 12 000 trajectoires, graine `20261010`, zéro paquet manquant. Résumé et limites : [audit-progression.md](audit-progression.md). Cet audit de progression valide uniquement le moteur TypeScript local. **À distinguer de la parité Paquet Scène**, vérifiée ensuite dans une base PostgreSQL jetable après la migration 0043.
 
 # Roadmap CreatorDeck
 
@@ -121,10 +129,10 @@ instructions de reset ou d'envoi vers main.
 
 | ID / priorité | Travail / statut | Dépendances | Critères d'acceptation |
 |---|---|---|---|
-| COORD-01 / P0 | Coordination permanente — livrée (checkpoint `beb1261a` vérifié sur GitHub) | Branche/PR vérifiées, publication Git | Cinq documents autonomes, historique préservé, tests distingués, commit et contenu confirmés sur GitHub ; compléments d'audit dans la passation |
-| VIS-01 / P1 | Valider la scène unique booster → cinq dos → révélations | PR #8, `pack-tear`, `reveal-overlay`, CSS de continuité | Suites écrans/E2E pertinentes ; geste et bouton de secours utilisables au tactile/clavier ; absence de rupture/spinner/labels superposés ; validation humaine sur téléphone, bureau et réduction d'animations ; preview `2d933c9` déployé, verdict humain en attente |
-| QA-01 / P1 | Rendre le test SQL d'arène déterministe et terminer les preuves CI/navigateur — **SQL corrigé**, focus K-010 corrigé et E2E ciblés 2/2 ; CI verte au SHA `2d933c9` | K-007, accès Chromium (K-008), GitHub CI | Contrôle « hors week-end » indépendant de la date réelle : 559/559 réussis le 10 octobre, fenêtres fermée/ouverte imposées et dates explicites vérifiées ; E2E joués le 10 octobre : 24 réussis / 2 échecs de focus, puis 2/2 cloud simulés ; K-010 corrigé ensuite (`4b9fcca`), même scénario bureau/téléphone 2/2 ; run CI #235 vert au SHA `2d933c9`, quatre jobs réussis ; cloud simulé sans valeur de preuve en production |
-| CLOUD-01 / P2 | Vérifier la version distante et les parcours en ligne | Accès autorisé au projet, variables publiques, statut `schema_versions()` | Version constatée depuis la base cible ; invité/compte, tirage, sauvegarde et Tribunal vérifiés ; aucune migration supposée appliquée sur simple présence dans Git |
+| COORD-01 / P0 | Consolidation et coordination — terminées sur `main` (`2c9b6c4`) | Historique GitHub et documentation de passation | Une seule branche distante (`main`) ; PR #7 intégrée, PR #8 fermée ; anciens résultats et limites consignés ci-dessus |
+| VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Les tests automatisés sont déjà exécutés sur les correctifs ciblés ; reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Aucun nouveau changement d'interface sans retour concret |
+| QA-01 / P1 | Vérifications automatisées — partie locale terminée, preuve CI courante incomplète | Environnement de test local et contrôles GitHub | Paquet Scène : tests 35/35 et migrations 0001–0043 vérifiées sur PostgreSQL jetable sous WSL ; 559 contrôles rapportés réussis. Sur l'arbre conservé dans `main` : 70 fichiers / 1 104 tests, typecheck et build réussis ; statut Vercel vert au commit `2c9b6c4`. Le statut GitHub Actions complet de ce commit reste à confirmer ; aucun résultat simulé ne vaut validation de production |
+| CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
 
 Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 corrigé dans `d87b72c` : retour au titre Scène quand le bouton consommé est désactivé ; scénario Scène et scénario Live existant 4/4 réussis bureau/téléphone. K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.
 
