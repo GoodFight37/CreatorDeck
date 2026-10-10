@@ -1,6 +1,92 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — 10 octobre 2026, 10 h 48, Europe/Paris
+## Checkpoint courant — correction K-007, 10 octobre 2026, 11 h 03 Europe/Paris
+
+| Champ | Valeur |
+|---|---|
+| Dernier agent | Codex Cloud |
+| Session / réservation | Correction SQL terminée ; réservation libérée à la remise de cette passation |
+| Branche | `design/booster-reveal-polish` |
+| Base de cette correction | `dedb03bed2b7442b2c841643cd06aace103ed4a6`, vérifiée identique au distant avant édition |
+| Commit contenant le correctif et cette passation | `git log -1 --format=%H -- scripts/verify-supabase-migrations.mjs` ; code testé : diff de ce fichier décrit ci-dessous sur la base indiquée |
+| PR vérifiée à la reprise | [#8](https://github.com/GoodFight37/CreatorDeck/pull/8), DRAFT ; base `arena/01a10c75-creatordeck`, tête design |
+| Publication | Publication à vérifier dans Git : retrouver le SHA du commit contenant ce document puis le comparer avec `git ls-remote origin refs/heads/design/booster-reveal-polish` avant reprise |
+
+### Demande, objectif et réalisation
+
+L’utilisateur choisit Codex Cloud + GitHub + Vercel et demande de poursuivre
+les priorités annoncées. Première étape réalisée : corriger K-007 sans changer
+les règles du jeu. Le banc attendait toujours un refus du draft, même le samedi.
+Il impose maintenant une fenêtre fermée puis ouverte sur le Postgres jetable.
+La définition originale de `_arena_draft_open(timestamptz)` est sauvegardée avant
+les overrides et restaurée dans `finally`, y compris si un appel lance une erreur.
+Les contrôles calendaires à dates explicites et les vraies RPC sont conservés.
+Aucun fichier produit, migration, dépendance ou lockfile n’est modifié.
+
+Fichiers : `scripts/verify-supabase-migrations.mjs`, `docs/roadmap.md`,
+`docs/agent-handoff.md`, `docs/decisions.md`, `docs/known-issues.md`,
+`docs/historique-livraisons.md`. Décision D-008 ; K-007 corrigé ; QA-01 SQL
+livré, navigateur/CI toujours incomplets. Les historiques ci-dessous sont conservés.
+
+### Vérifications réellement exécutées
+
+Node 24.19.0 ; Next 16.3.6 / Playwright 1.63.0 inchangés, dépendances du lock
+réutilisées ; embedded-postgres 18.4.0-beta.17 / pg 8.23.1 disponibles.
+Logs temporaires : `/tmp/creatordeck-arena/` ; cette synthèse est autonome.
+
+| Commande / contrôle | Résultat |
+|---|---|
+| Status, ls-remote, fetch design explicite, lecture HTML de PR #8 | Checkout initial propre, distant/local `dedb03be` ; aucun nouveau commit, PR toujours DRAFT et base arena |
+| `node --check scripts/verify-supabase-migrations.mjs` | Code 0 |
+| `node node_modules/eslint/bin/eslint.js scripts/verify-supabase-migrations.mjs` | Code 0, aucun diagnostic |
+| `npm run supabase:verify` | **Code 0, 559 contrôles réussis, 0 échec**, samedi 10 octobre ; fenêtres fermée/ouverte et restauration vérifiées, dates mercredi/samedi/dimanche/lundi contrôlées explicitement |
+| `node /tmp/creatordeck-arena/negative-control.mjs` | **Code 1 attendu, 558 réussis / 1 échec**, précisément « arène · draft : hors du week-end, c’est refusé » ; restauration de la fenêtre réussie |
+| `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright node node_modules/@playwright/test/cli.js install chromium` | Code 1 : HTTP 403 « Domain forbidden », URL `https://cdn.playwright.dev/builds/cft/153.0.8010.12/linux64/chrome-linux64.zip` ; navigateur toujours absent |
+| `git diff --check`, cohérence/liens des docs | Code 0 ; 22 liens relatifs vérifiés sans cible absente après correction du lien historique vers `ta-chaine.md`, ne prouvent pas le gameplay |
+
+Contre-épreuve reproductible : copier le vérifieur hors dépôt, adapter ROOT vers
+le checkout et rendre ses imports accessibles (symlink `node_modules` local).
+Juste après la fixture `select false`, lire `pg_get_functiondef` de
+`public.arena_draft_choices()` puis retirer uniquement le bloc
+`if not public._arena_draft_open(now()) then … end if` et réinstaller cette
+fonction sur la **base jetable**. Exécuter toute la copie et vérifier l’unique
+échec et le code 1. La copie temporaire n’est pas commise ; migrations et runner
+normal n’ont jamais reçu cette mutation. Il n’y a pas eu d’exécution avec
+l’horloge machine avancée à un jour ouvré : l’indépendance vient des fixtures,
+la règle calendaire est testée avec les dates explicites.
+
+Le premier contrôle des liens a trouvé un ancien lien relatif cassé dans le
+journal (`docs/ta-chaine.md` depuis `docs/`) ; il est corrigé vers `ta-chaine.md`,
+puis le contrôle a passé. Aucun contenu historique supprimé.
+
+Les suites unitaires/écrans/build/typecheck n’ont pas été rejouées pour ce
+changement ciblé du runner SQL. Leurs résultats de l’audit précédent sont
+historiques, pas de nouveaux runs. Aucun E2E exécuté ni CI distante confirmée.
+
+### Incomplet, préférences et prochaine action exacte
+
+- K-008 : téléchargement navigateur bloqué malgré une nouvelle tentative.
+  Dans les paramètres réseau de l’environnement Cloud, ajouter
+  `cdn.playwright.dev` aux domaines autorisés **sans supprimer les autres**,
+  puis relancer la commande Chromium ci-dessus et `npm run e2e`.
+  Pour le chemin cloud simulé, suivre `.github/workflows/verification.yml` ;
+  aucune clé réelle nécessaire. Ne pas confondre ces mocks avec la production.
+- Sur le preview Vercel correspondant au nouveau HEAD, faire valider au pouce
+  VIS-01 (ouverture continue, dos puis faces, halos/Perfect, réduction des
+  animations). Une appréciation utilisateur ne peut pas être inventée.
+- Consulter les contrôles GitHub du commit poussé ; K-006/CI non vérifiés par
+  cette session. Vérifier Supabase réel (CLOUD-01) uniquement avec accès autorisé.
+- Préférences : GitHub référence, Cloud développement, Vercel essais ; pas de
+  refonte générale, aucun merge/main, aucun changement de règle pour obtenir
+  des tests verts. Le quota restant n’est pas connu.
+- Avant toute reprise : lire AGENTS et ces quatre docs, vérifier status/HEAD,
+  fetcher design et examiner tout nouveau commit. Puis reprendre le navigateur
+  si son accès a changé ; sinon validation du preview Vercel et schéma distant
+  autorisé. Aucun déploiement ou test de production n’est affirmé ici.
+
+## Historique — audit documentaire du 10 octobre 2026
+
+### Checkpoint antérieur — 10 octobre 2026, 10 h 48, Europe/Paris
 
 | Champ | Valeur |
 |---|---|

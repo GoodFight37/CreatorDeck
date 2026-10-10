@@ -4595,26 +4595,28 @@ try {
     draftBase.length === 5 && draftBase.every((slot) => slot.every((slug) => arenaOwned.includes(slug))),
   );
 
-  // Le draft n'est jouable que le week-end : la phrase le dit.
-  check(
-    "arène · draft : hors du week-end, c'est refusé",
-    await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")
-      .then(() => false)
-      .catch((error) => /week-end/.test(String(error.message))),
-  );
-
-  // Le choix du draft, de bout en bout. Il n'est jouable que le week-end : pour
-  // l'exécuter quand même (le joueur, lui, n'aura qu'un samedi), on remplace la
-  // fenêtre par un « oui », on joue, puis on **remet la vraie fonction en
-  // place** — telle quelle, relue depuis la base.
+  // Les deux parcours RPC sont indépendants du jour où tourne la CI : on
+  // impose d'abord une fenêtre fermée, puis ouverte dans cette base jetable.
+  // La vraie règle calendaire est contrôlée à dates explicites plus haut.
+  // Même si un appel échoue, on restaure la définition exacte dans le finally.
   const legendarySlugs = new Set(arenaLegendaries.map((creator) => creator.slug));
   const draftOpenDef = (
     await client.query("select pg_get_functiondef('public._arena_draft_open(timestamptz)'::regprocedure) as def")
   ).rows[0].def;
-  await client.query(
-    "create or replace function public._arena_draft_open(p_at timestamptz) returns boolean language sql stable as $$ select true $$",
-  );
   try {
+    await client.query(
+      "create or replace function public._arena_draft_open(p_at timestamptz) returns boolean language sql stable as $$ select false $$",
+    );
+    check(
+      "arène · draft : hors du week-end, c'est refusé",
+      await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")
+        .then(() => false)
+        .catch((error) => /week-end/.test(String(error.message))),
+    );
+
+    await client.query(
+      "create or replace function public._arena_draft_open(p_at timestamptz) returns boolean language sql stable as $$ select true $$",
+    );
     const served = (await asPlayer(ARENA_A, "select public.arena_draft_choices() as r")).rows[0].r.slots;
     const offered = served.flat();
     // Les deux créateurs de test qui streament : le draft doit en offrir au
