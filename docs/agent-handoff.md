@@ -1,3 +1,43 @@
+## Passation vers la session Cloud — 11 octobre 2026
+
+### Où reprendre
+
+- **État GitHub vérifié via l’application GitHub** : le dépôt ne contient qu’une branche, `main`. Le dernier commit observé est `7ec7bfa84addc70781ea96409031c64eda831169` (« Document commit-based app version »), après le code `152c2173606037460f01b8de66f94b24bb720dc6`. PR #7 est intégrée et PR #8 fermée comme obsolète. La page et les fichiers de coordination sur `main` ont été lus.
+- Le shell du présent environnement ne résout pas `github.com` (`git ls-remote` échoue DNS). La consultation et la mise à jour de cette passation se font par le connecteur GitHub ; ne pas prétendre que le checkout local est synchronisé.
+- **Checkout local de cette session** : branche `main`, HEAD ancien `2c9b6c4ae98898711bb6041c2297b17ac2a1a312`, en retard sur GitHub. Il contient dix fichiers modifiés non commités (AGENTS.md, e2e/pack-tear.spec.ts, CSS et composants/sons du chantier booster). Ils ne sont pas inclus dans GitHub ; ne pas les écraser ni les considérer comme base de reprise Cloud. Le dossier est `work/CreatorDeck` dans l’espace Codex Documents.
+- Cette session n’a réalisé **aucun changement applicatif** pour la demande ci-dessous. Seuls les documents de passation, roadmap et décisions sont actualisés ; aucune migration de production n’a été lancée, aucune clé ni donnée de joueur consultée.
+
+### Demande en cours — à implémenter
+
+L’utilisateur a autorisé directement le travail sur `main` et veut :
+
+1. Un tutoriel de première partie dans une fenêtre moderne, court et clair, qui explique la boucle de départ.
+2. Remettre à zéro la progression de **tous** les comptes, y compris celui de Malik, pour que tous repartent comme des nouveaux joueurs ; garder les comptes/identités/profils et amis. Garder l’historique des échanges terminés et des ventes terminées ; annuler les échanges en attente et retirer les annonces de marché encore actives. La progression de jeu à remettre à zéro comprend collection/cartes, réserve et tirages, monnaie et ressources, missions/série/jours, Paquet Scène et progression d’arène.
+3. Après le tutoriel seulement, envoyer à chaque compte un cadeau unique de **cinq boosters**, dans une boîte/carte cadeau ou le carnet. Texte à afficher : « Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et vous offre 5 boosters. » Le cadeau doit être réclamable une seule fois, ne pas apparaître dans le tutoriel et être indépendant de la réserve normale.
+4. Corriger la fin d’ouverture illustrée par le screenshot utilisateur : retirer « Rouvrir un booster » comme action immédiate ; afficher **« Retour au Drop »** après le récapitulatif, sans ouvrir le booster suivant depuis la révélation.
+
+Aucun changement de taux, récompenses existantes ou règles de tirage. Le cadeau est la récompense nouvelle explicitement demandée. Ne pas supprimer les comptes/profils/amis ni les historiques terminés. Le reset global est une opération irréversible : implémenter une migration additive et la vérifier entièrement sur PostgreSQL jetable avant toute application. L’utilisateur a explicitement demandé le reset de tous, y compris lui-même ; avant une exécution réelle, vérifier le projet Supabase cible et son état, et s’arrêter si l’identité de la cible ou la possibilité de sauvegarde/récupération est incertaine. Aucune clé de service côté client et ne pas lire `.env.local`.
+
+### Point d’attention sur la base de code
+
+La passation précédente de la première boucle UX mentionne que le résumé de révélation appelle actuellement « Rouvrir un booster » lorsque la réserve le permet (code d’alors `1769636`). Vérifier ce comportement dans le code **courant** de `main` avant de corriger ; ne pas supposer que le vieux checkout représente le HEAD GitHub. L’interface doit retourner au Drop et laisser le joueur lancer une autre ouverture depuis l’accueil.
+
+Pour le cadeau, garder l’autorité serveur : RPC protégées, stock cadeau distinct, claim idempotent et ouverture qui utilise le moteur actuel sans contourner le tirage normal. Ajouter des tests UI/API et des régressions SQL montrant le reset exact, la conservation des identités/historiques, l’ordre tutoriel puis cadeau, l’unicité du claim et cinq ouvertures valides. Si l’ouverture du stock cadeau ne peut pas être raccordée proprement au moteur existant, résoudre et vérifier ce point avant de déclarer le chantier terminé.
+
+### Prompt prêt à coller dans la session Cloud
+
+> Reprends CreatorDeck depuis GitHub sur `main`, synchronise d’abord le checkout sur le HEAD courant (la dernière tête vérifiée était `7ec7bfa84addc70781ea96409031c64eda831169`, mais vérifie à nouveau), puis lis `AGENTS.md`, `docs/agent-handoff.md`, `docs/roadmap.md`, `docs/decisions.md`, `docs/known-issues.md`, `docs/perimetre.md` et `docs/historique-livraisons.md`. Préserve les changements locaux déjà présents dans ton checkout.
+>
+> Implémente le tutoriel de première partie, le reset global one-shot de toute la progression (y compris mon compte), et le cadeau serveur unique de cinq boosters, disponible seulement après le tutoriel avec une boîte de réception/carte cadeau affichant le message de Malik. Garde comptes, identités, profils, amis et historiques de ventes/échanges terminés ; annule les échanges en attente et retire les annonces actives. Le reset inclut collection, réserves/tirages, monnaies/ressources, missions/série, Paquet Scène et progression d’arène. Corrige aussi le récapitulatif post-ouverture : CTA « Retour au Drop », sans « ouvrir le prochain booster ». Aucun autre taux, récompense ou règle de tirage ne change.
+>
+> Fais une migration SQL additive, testée sur Postgres jetable, avec vérification explicite des tables et de tous les compteurs remis à zéro et conservés. Le cadeau doit utiliser le moteur de tirage actuel, être distinct de la réserve normale et être réclamable une fois. Mets les tests, docs de décisions, roadmap, known issues et cette passation à jour. Exécute les tests projet, écrans, typecheck, lint, build et `npm run supabase:verify`, en donnant commandes, SHA et résultats exacts. Aucun accès à la production ni déploiement automatique : avant d’appliquer la migration à la vraie base, revérifie le projet cible, le schéma courant et la sauvegarde ; arrête-toi si une incertitude subsiste. N’intègre pas une PR et ne supprime aucune branche.
+
+### Suite immédiate
+
+La session Cloud doit créer/actualiser son checkout depuis le `main` GitHub courant, puis commencer par le diff actuel de `reveal-overlay.tsx`, `creator-deck-app.tsx`, le flux cloud des boosters et les migrations `0043`+. Elle ne doit pas récupérer les dix modifications non commitées de l’ancien checkout sans les examiner séparément.
+
+---
+
 ## Checkpoint courant — version visible du build, 10 octobre 2026
 
 - Branche `main`, tête locale [`152c2173606037460f01b8de66f94b24bb720dc6`](https://github.com/GoodFight37/CreatorDeck/commit/152c2173606037460f01b8de66f94b24bb720dc6), enfant de `7b2d89a7ebffa5ba102867393357d1aab3931021`. Le commit code est local et reste à pousser avec cette passation après re-fetch/compare. Aucun autre fichier applicatif modifié.
