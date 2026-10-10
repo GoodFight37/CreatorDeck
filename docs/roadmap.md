@@ -1,3 +1,20 @@
+## Chantier actif — tutoriel, remise à zéro et cadeau — 11 octobre 2026
+
+L’utilisateur demande une reprise à zéro pour **tous les comptes**, lui compris, afin d’introduire un tutoriel de première partie. Le compte, l’identité, le profil et les amis restent ; l’historique des échanges et ventes terminés reste ; les échanges ouverts sont annulés et les annonces actives retirées. La progression à réinitialiser comprend collections/cartes, réserves et journaux de tirage, soldes/ressources, missions et série, Paquet Scène et arène.
+
+Après le tutoriel, chaque compte reçoit un cadeau unique de **cinq boosters**, réclamable séparément dans une boîte/carte cadeau ou le carnet, avec le message : « Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et vous offre 5 boosters. » Le cadeau ne fait pas partie du tutoriel, ne se cumule pas dans la réserve normale et doit être tiré côté serveur par le moteur existant.
+
+Le récapitulatif de révélation doit terminer par **« Retour au Drop »**. Ne pas offrir d’ouverture directe du booster suivant depuis cet écran ; le joueur peut revenir au Drop et ouvrir depuis l’accueil.
+
+- [ ] Tutoriel moderne de première partie ; état de fin fiable pour chaque compte/appareil.
+- [ ] Migration SQL additive, globale et idempotente : reset uniquement une fois à l’application, cadeau par compte, conservation et nettoyage selon le périmètre ci-dessus.
+- [ ] RPC serveur pour terminer le tutoriel, consulter/réclamer le cadeau et ouvrir les cinq boosters cadeau sans contourner les règles de tirage.
+- [ ] Régression du CTA post-ouverture, tests UI/API et fixture SQL couvrant données effacées, préservées, cadeau une fois et cinq ouvertures réelles.
+- [ ] Vérification sur Postgres jetable, suite projet, écrans, typecheck, lint, build et `catalog:ci` si pertinent ; documenter les résultats exacts.
+- [ ] Production : **non touchée**. Avant toute application, vérifier le projet Supabase réel, sa version de schéma, la sauvegarde et le plan de récupération. La demande utilisateur couvre le reset de tous, mais l’opération reste bloquée si la cible ou la sauvegarde ne peut pas être établie.
+
+Cette entrée est une demande planifiée, pas une preuve d’implémentation. Voir le prompt de reprise prêt à coller et les limites du checkout dans [la passation](agent-handoff.md).
+
 ## État courant après consolidation — 10 octobre 2026
 
 - GitHub ne contient plus qu'une branche, `main`, actuellement au commit `2c9b6c4ae98898711bb6041c2297b17ac2a1a312`. La PR #7 est intégrée ; la PR #8 est fermée car devenue obsolète.
