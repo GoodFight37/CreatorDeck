@@ -42,9 +42,11 @@ et build réussis ; contrôles ciblés après la dernière assertion **13/13**.
 génération/synchronisation catalogue et saisons et de comptage SQL (`supabase-profil`).
 `npm run catalog:ci` échoue aussi parce que `0003_catalogue.sql` est dérivé de
 `creators.json`. Ces échecs sont hors périmètre UX et restent à corriger dans
-un lot de cohérence données/migrations. GitHub Actions et le déploiement
-Vercel du nouveau SHA n’ont pas été vérifiés ici (`gh` est absent de cette
-machine). Aucun accès à Supabase de production. Le prochain lot produit à cadrer
+un lot de cohérence données/migrations. La prévisualisation Vercel du commit
+`427229f` est `READY` (`target: null`, alias `creator-deckk-git-main-hafsi37-2386.vercel.app`)
+et son contrôle combiné est vert ; ce n’est pas Production. L’outil Actions n’a
+retourné aucun run associé et n’établit donc pas l’état des workflows GitHub.
+Aucun accès à Supabase de production. Le prochain lot produit à cadrer
 porte sur l’entrée sociale visible, les badges/avatars et la cohérence visuelle
 des portraits ; l’état de la configuration des rappels doit être vérifié avant
 tout nouveau push. La validation sur téléphone reste ouverte.
@@ -161,7 +163,7 @@ instructions de reset ou d'envoi vers main.
 | COORD-01 / P0 | Consolidation et coordination — terminées sur `main` (`2c9b6c4`) | Historique GitHub et documentation de passation | Une seule branche distante (`main`) ; PR #7 intégrée, PR #8 fermée ; anciens résultats et limites consignés ci-dessus |
 | UX-01 / P1 | Première boucle de collection — implémentée, retour sur téléphone attendu | Binder, RevealOverlay, réserve de boosters | Vue « Obtenues » par défaut ; état vide sans compteur/page écrasants ; 12 cartes par page ; résumé des cinq cartes et découvertes ; réouverture directe si réserve disponible. Écrans 72/72, typecheck/lint/build OK ; avis tactile réel ouvert |
 | VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Le retour UX récent n’est pas une validation visuelle sur appareil |
-| QA-01 / P1 | Contrôles locaux UX — code validé ; suite projet/CI à établir | Environnement de test local et GitHub Actions | Écrans 72/72, typecheck/lint/build OK. `npm test` : 1102/1106, quatre échecs catalogue/saisons/SQL ; `catalog:ci` signale le seed 0003 dérivé. GitHub Actions du nouveau SHA non vérifiées |
+| QA-01 / P1 | Contrôles locaux UX — code validé ; suite projet/CI partiellement établie | Environnement de test local et GitHub Actions | Écrans 72/72, typecheck/lint/build OK. `npm test` : 1102/1106, quatre échecs catalogue/saisons/SQL ; `catalog:ci` signale le seed 0003 dérivé. Vercel preview READY, production non vérifiée ; Actions non établies |
 | UX-02 / P1 | Craft, profil et objectif court — implémentés sur `main` (`09487de`) | Retour produit du 10 octobre ; règles d’économie existantes | Avant 10 copies recyclables, Atelier montre une progression courte et le retour Drop ; Toi met en avant vitrine locale et série, sans zéros initiaux ; Drop met en avant une mission déjà définie. Pas de changement d’économie ou de règles serveur |
 | UX-03 / P2 | Présence sociale et plancher visuel — à cadrer | Vitrine publique, carnet social et portraits existants | Rendre le showcase et les ouvertures d’amis visibles dans la boucle ; évaluer avatar/badge sans nouveau système serveur ; établir une politique de fallback visuel. Notifications existent déjà pour certains événements, vérifier leur configuration avant d’ajouter un rappel quotidien |
 | CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
