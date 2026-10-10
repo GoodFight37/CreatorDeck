@@ -1,6 +1,19 @@
 # Roadmap CreatorDeck
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
+### Audit avec le moteur réel — outil ajouté le 10 octobre 2026
+
+- [x] Script `scripts/progression-bilan.ts` ajouté et commande `npm run progression:bilan` exposée dans `package.json` ; branche `design/booster-reveal-polish`.
+- [ ] **Exécuter et valider** la commande sur un clone installé (non exécutée dans cette intervention : l'environnement de travail ne dispose pas d'un checkout du dépôt ni de ses dépendances).
+- [ ] Ajouter une répétition statistique avec RNG contrôlé ou injection de hasard, puis exporter les métriques reproductibles.
+- [ ] Vérifier la parité des gains et de la sauvegarde avec Supabase sur un projet de test autorisé ; ne pas appliquer de migration en production sans validation.
+- [ ] Tester les échanges et l'hôtel des ventes avec deux comptes de test ; ce script est local et ne les couvre pas.
+
+**Couverture du script :** trois profils de 2, 6 et 12 ouvertures Live par jour sur 7 et 30 jours ; une Scène quotidienne, recyclage groupé hors Live, réclamation des missions/jalons/saisons, achat d'une carte Épique aux jetons et Craft d'une Rare ou Épique si possible. Les tirages ne sont pas seedés, donc une exécution produit six trajectoires aléatoires et non une distribution statistique. Le profil simule des visites fixes, sans dépenses de sabliers ni échanges. Les heures sont en UTC et le bonus Prime Time dépend du fuseau de l'environnement d'exécution. **Aucun chiffre du script n'est encore vérifié.**
+
+**Problèmes à investiguer :** la mission « recycle un doublon » peut être impossible le premier jour selon le tirage ; la rentabilité du Craft en fin de collection doit être mesurée ; les variantes Live sont exclues du recyclage groupé ; les achats ciblés en jetons et le Craft utilisent des cartes Standard ; les gains en cloud ont une autorité différente du local. Les anciennes estimations Monte-Carlo indépendantes ne tiennent pas compte de ces nuances et ne doivent pas servir seules à modifier l'équilibrage.
+
+
 ### Scénarios quantitatifs simplifiés — 10 octobre 2026
 ### Monte-Carlo indépendant — collection et doublons (10 octobre 2026)
 
