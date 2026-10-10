@@ -131,7 +131,7 @@ begin
           where c.region = p_family and not c.retired and c.rarity = w.key
             and c.rarity <> 'legendary'
             and not (c.slug = any(v_used_slugs))
-            and (v_reserved_slug is null or c.slug <> v_reserved_slug)
+            and (v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug)
             and (not (v_rare_drop_hit and v_epic_count between 1 and 4 and v_i = 5)
                  or c.slug = v_reserved_slug)
        );
@@ -153,7 +153,7 @@ begin
             where c.region = p_family and not c.retired and c.rarity = w.key
               and c.rarity <> 'legendary'
               and not (c.slug = any(v_used_slugs))
-              and (v_reserved_slug is null or c.slug <> v_reserved_slug)
+              and (v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug)
               and (not (v_rare_drop_hit and v_epic_count between 1 and 4 and v_i = 5)
                    or c.slug = v_reserved_slug)
          )
@@ -171,7 +171,7 @@ begin
      where c.region = p_family and not c.retired
        and c.rarity = v_selected_rarity and c.rarity <> 'legendary'
        and not (c.slug = any(v_used_slugs))
-       and (v_reserved_slug is null or c.slug <> v_reserved_slug)
+       and (v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug)
        and (not (v_rare_drop_hit and v_epic_count between 1 and 4 and v_i = 5)
             or c.slug = v_reserved_slug);
 
@@ -183,7 +183,7 @@ begin
      where c.region = p_family and not c.retired
        and c.rarity = v_selected_rarity and c.rarity <> 'legendary'
        and not (c.slug = any(v_used_slugs))
-       and (v_reserved_slug is null or c.slug <> v_reserved_slug)
+       and (v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug)
        and (not (v_rare_drop_hit and v_epic_count between 1 and 4 and v_i = 5)
             or c.slug = v_reserved_slug)
      order by c.slug

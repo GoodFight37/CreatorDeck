@@ -1,17 +1,9 @@
-## Parité Scène Supabase — en cours, 10 octobre 2026
+## Scene SQL parity checkpoint, 2026-10-10
 
-- [x] Migration additive `0043_scene_pack_eligibilite.sql` et cas de vérification
-  pour les cinq familles à moins de cinq Épiques, avec tirage normal/Scène pleine.
-- [x] Tests miroir ciblés : 35/35 ; TypeScript, syntaxe Node et `git diff --check`
-  réussis.
-- [ ] Exécuter `npm run supabase:verify` complètement sur PostgreSQL jetable.
-  Ici, Postgres refuse de démarrer sous le compte Administrateur Windows ; les
-  migrations n’ont pas été appliquées et aucun contrôle d’intégration n’a tourné.
-- [ ] Vérifier le contrôle CI Linux de la branche. Aucun accès à la production,
-  merge ou changement de `main`.
-
-La parité SQL ne sera déclarée validée qu’après un résultat réussi du banc
-Postgres. Décision D-014 ; problème K-014.
+- [x] Migration 0043 and integration cases published in `40bf3e9`.
+- [ ] Retest the slot-5 reservation fix with targeted Vitest and disposable Postgres.
+- [ ] The first WSL run failed with `25P02`: reserved candidate was excluded from slot 5. Local correction is not yet committed.
+- [ ] Do not declare SQL parity until the corrected WSL run passes. No production, `main`, or merge.
 
 ## Audit Scène validé — 10 octobre 2026
 

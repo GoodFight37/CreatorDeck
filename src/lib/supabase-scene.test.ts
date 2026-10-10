@@ -187,6 +187,7 @@ describe("0043_scene_pack_eligibilite.sql (parité des choix Scène)", () => {
   it("réserve un créateur de garantie avant les quatre premiers choix", () => {
     expect(LATEST_SCENE_CODE).toContain("c.slug <> v_reserved_slug");
     expect(LATEST_SCENE_CODE).toContain("c.slug = v_reserved_slug");
+    expect(LATEST_SCENE_CODE).toContain("v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug");
     expect(LATEST_SCENE_CODE).toContain("v_guaranteed_count <= 4");
     expect(LATEST_SCENE_CODE).toContain("v_rare_drop_hit and v_epic_count between 1 and 4");
   });
