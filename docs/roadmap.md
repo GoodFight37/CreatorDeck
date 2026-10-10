@@ -32,7 +32,7 @@ Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 
 
 ## Checkpoint UX — 10 octobre 2026
 
-Sur `main`, le retour produit du 10 octobre a déclenché une première passe UX :
+Code UX publié sur `main` au commit [`1769636`](https://github.com/GoodFight37/CreatorDeck/commit/1769636dab8069486f64dff3ed81404eb0e86bb6). Le retour produit du 10 octobre a déclenché une première passe UX :
 le Binder ouvre sur les cartes obtenues, l’état vide invite à ouvrir un booster
 et laisse le catalogue accessible à la demande ; les pages de catalogue sont
 limitées à 12 cartes. La révélation se termine par un récapitulatif des cinq
