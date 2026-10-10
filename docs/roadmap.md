@@ -1,5 +1,19 @@
 # Roadmap CreatorDeck
 
+## Audit produit — progression et économie (10 octobre 2026, première passe)
+
+**Portée :** revue statique des règles `src/lib/catalog.ts`, `src/data/progression.json`, `src/lib/progression.ts`, `src/lib/game-engine.ts`, `src/data/pull-rates.json`, `docs/taux-de-drop.md`. Pas de simulation exécutée, pas de test de production Supabase, aucune modification des règles.
+
+**Boucle constatée :** Live Drop de cinq cartes, réserve max 4, recharge 30 min ; Paquet Scène quotidien de cinq cartes orienté famille, sans Légendaire ; 3 missions quotidiennes (1 sablier chacune) ; série de sept jours, avec Perfect garanti ou 3 sabliers au jour 7 ; collection, recyclage, artisanat et achat ciblé par jetons. Les cartes, points et jetons en ligne sont sous autorité serveur, à confirmer sur la base effectivement déployée.
+
+**Ordres de grandeur vérifiables :** 5 jetons par Live Drop, 7 pendant le Prime Time (20 h–23 h selon l'heure locale de l'appareil), coût ciblé 400 jetons, soit 80 ouvertures hors Prime Time ou 58 si toutes les ouvertures rapportent 7 jetons (arrondi supérieur). 12 points et 18 XP par Live Drop ; 10 points et 14 XP par Scène ; 100 XP par niveau, 3 sabliers par niveau ; 1 sablier enlève 15 minutes de recharge. La réserve de 4 se remplit en 2 h à partir de zéro. Les gains de série, jalons, recyclage et saisons s'ajoutent : les chiffres ci-dessus ne sont **pas** une simulation complète.
+
+**Hypothèses produit à tester, pas des bugs établis :** (1) écart de progression entre 1–2 visites quotidiennes et 4–8 visites ; (2) valeur réelle des points face aux doublons et coûts de craft ; (3) disponibilité de la mission de recyclage au début d'une partie ; (4) impact du Prime Time local sur l'équité entre profils et fuseaux ; (5) lisibilité des récompenses et de la prochaine action dans Drop/Binder/Craft/Toi.
+
+**Dette documentaire constatée :** dans `src/lib/game-engine.ts`, le commentaire au-dessus de `openPack` mentionne encore un seuil de pity « 80 » et « 79 », alors que la condition exécutée utilise `PITY.threshold` et que `src/data/pull-rates.json` définit **12**. Vérifier puis corriger ce commentaire dans une passe dédiée ; ce n'est pas, en soi, une preuve de bug de tirage.
+
+**Prochaine étape recommandée :** établir une simulation reproductible des profils occasionnel (2 ouvertures/jour), régulier (6/jour), intensif (12/jour) sur 7 et 30 jours, avec prise en compte du plafond de réserve, des missions, des séries, des jalons, des doublons, du craft et des gains de jetons. Confronter ensuite aux tests miroir TS/SQL et à l'expérience sur téléphone avant toute modification d'équilibrage. Garder le polish des boosters en attente de retour utilisateur.
+
 ## Référence de coordination — audit du 10 octobre 2026
 
 Cette section décrit le **présent** ; les sections antérieures conservées plus
