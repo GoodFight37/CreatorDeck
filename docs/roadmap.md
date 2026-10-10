@@ -24,8 +24,9 @@ Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 
 - [x] Plier les flaps avec une fente lumineuse et extraire les cinq dos en cascade sous une seconde ; garder le relais existant de 1,9 s.
 - [x] Augmenter la présence de la carte plein écran et distinguer les raretés : entrée discrète pour les Communes, punch et halo bordeaux dès Rare, intensité croissante pour Épique/Légendaire.
 - [x] Rendre la déchirure plus longue et texturée. Conserver les timings du silence Épique, du verrou Perfect et du bang sur le flip.
-- [x] Tester Reflets désactivés / mouvement réduit : inclinaison tactile, specular, foil et animation lourde coupés. Typecheck, build, tests UI 70/70 et E2E bureau 11/11 réussis.
-- [ ] Confirmer le rendu et le geste sur téléphone réel (VIS-01). La suite générale signale quatre tests SQL/catalogue déjà désynchronisés, hors de ce chantier ; aucune migration Supabase n’a été touchée.
+- [x] Tester Reflets désactivés / mouvement réduit : inclinaison tactile, specular, foil et animation lourde coupés. Typecheck, build et tests UI 70/70 réussis.
+- [ ] E2E bureau 11/11 a passé avant le dernier ajustement de pose CSS ; le test ciblé après cet ajustement est resté suspendu au serveur Playwright local. À relancer avec le prochain parcours navigateur.
+- [ ] Confirmer le rendu et le geste sur téléphone réel (VIS-01). La suite générale signale quatre tests SQL/catalogue désynchronisés, hors de ce chantier ; aucune migration Supabase n’a été touchée. Le déploiement Vercel prêt pour `main` est une prévisualisation ; Production pointe toujours vers `arena/01a10c75-creatordeck`.
 
 # Roadmap CreatorDeck
 
