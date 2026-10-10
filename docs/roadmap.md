@@ -51,6 +51,14 @@ porte sur l’entrée sociale visible, les badges/avatars et la cohérence visue
 des portraits ; l’état de la configuration des rappels doit être vérifié avant
 tout nouveau push. La validation sur téléphone reste ouverte.
 
+## Identifiant de build — 10 octobre 2026
+
+Le profil Toi affiche une version courte issue du SHA Git de la compilation.
+Le commit applicatif `152c217` a passé les tests d’écran et de formatage, le
+typecheck, le lint et le build ; le bundle local contient ce SHA. Vercel et les
+Actions GitHub restent à vérifier sur la tête poussée avant de confirmer que la
+version affichée sur le preview est celle attendue.
+
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
 ### Exécution réelle du bilan local — résultats transmis le 10 octobre 2026
 
@@ -165,6 +173,7 @@ instructions de reset ou d'envoi vers main.
 | VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Le retour UX récent n’est pas une validation visuelle sur appareil |
 | QA-01 / P1 | Contrôles locaux UX — code validé ; suite projet/CI partiellement établie | Environnement de test local et GitHub Actions | Écrans 72/72, typecheck/lint/build OK. `npm test` : 1102/1106, quatre échecs catalogue/saisons/SQL ; `catalog:ci` signale le seed 0003 dérivé. Vercel preview READY, production non vérifiée ; Actions non établies |
 | UX-02 / P1 | Craft, profil et objectif court — implémentés sur `main` (`09487de`) | Retour produit du 10 octobre ; règles d’économie existantes | Avant 10 copies recyclables, Atelier montre une progression courte et le retour Drop ; Toi met en avant vitrine locale et série, sans zéros initiaux ; Drop met en avant une mission déjà définie. Pas de changement d’économie ou de règles serveur |
+| VERSION-01 / P2 | Identifiant du build dans Toi — implémenté sur `152c217`, publication à vérifier | SHA fourni par Vercel/GitHub ou checkout Git local ; profil | « Version abc1234 » se calcule automatiquement depuis le commit réellement compilé ; fallback « locale » sans SHA. UI 5/5, helper 2/2, typecheck/lint/build et recherche SHA dans bundle réussis ; vérifier Vercel après push |
 | UX-03 / P2 | Présence sociale et plancher visuel — à cadrer | Vitrine publique, carnet social et portraits existants | Rendre le showcase et les ouvertures d’amis visibles dans la boucle ; évaluer avatar/badge sans nouveau système serveur ; établir une politique de fallback visuel. Notifications existent déjà pour certains événements, vérifier leur configuration avant d’ajouter un rappel quotidien |
 | CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
 

@@ -158,3 +158,14 @@ trois meilleures cartes possédées (rareté, puis variante), avec l’état act
 de la série ; aucune donnée n’est publiée sans le parcours cloud existant. Les
 missions, leur économie et les récompenses restent inchangées. Décision adoptée
 sur le retour joueur ; critères et limites dans la passation et la roadmap.
+
+## D-018 — 10 octobre 2026 : version visible liée au commit Git
+
+Le joueur doit pouvoir distinguer un ancien build d’un build récent sans
+deviner le comportement de la mise à jour automatique. Le profil affiche donc
+un identifiant court dérivé du SHA Git embarqué : Vercel/GitHub transmettent le
+SHA du commit pendant la compilation, et le checkout local sert de repli pour
+les builds locaux/Android. Aucun numéro n’est incrémenté à la main ; un build
+sans dépôt Git affiche « locale ». Le SHA complet reste disponible dans
+l’infobulle et aucun secret n’est exposé. La preuve de compilation et l’état de
+publication sont consignés dans la passation.
