@@ -1,6 +1,50 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — reprise réseau, 10 octobre 2026, 11 h 25 Europe/Paris
+## Checkpoint courant — E2E exécutés, 10 octobre 2026, 11 h 45 Europe/Paris
+
+- Agent : Codex Cloud ; reprise courte demandée, réservation libérée.
+- Branche `design/booster-reveal-polish`, code testé et HEAD distant vérifié :
+  `c7c0f846838b26581052ef8df8d70e23b48fdafb`. Checkout initial propre sur
+  `work` (ancien main), fetch design puis switch explicite ; aucun travail perdu.
+  PR #8 relue via HTML : DRAFT, base `arena/01a10c75-creatordeck`.
+  CI distante/commentaires non vérifiés ; aucun audit complet rejoué.
+- `npm ci --cache /workspace/.npm --no-audit --no-fund` : code 0,
+  602 paquets. Next 16.3.6 / Playwright 1.63.0 comparés au lock : identiques,
+  manifeste et lockfile inchangés. Un essai Chromium lancé trop tôt pendant
+  npm ci a échoué (SyntaxError sur fichier en cours d'installation) ; relancé
+  seulement après la fin réussie de npm ci.
+- `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright node
+  node_modules/@playwright/test/cli.js install chromium` : **code 0**.
+  Chromium et Headless Shell 153.0.8010.12 / révision 1243, FFmpeg 1011 installés.
+  K-008 résolu : les trois domaines et redirections sont accessibles.
+- `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  NEXT_TELEMETRY_DISABLED=1 npm run e2e` : **code 1, 24 réussis,
+  2 échoués, 2 ignorés, 28 scénarios listés**, 1,7 minute.
+  Les échecs bureau/téléphone sont la même assertion de retour du focus après
+  fermeture : `e2e/pack-tear.spec.ts:46`. Le bouton « Ouvrir le booster »
+  reste inactif au sens du focus. K-010 ouvert ; cause non diagnostiquée.
+  Déchirure, continuité géométrique avant fermeture, réduction des animations,
+  navigation et persistance locale passent. Aucun correctif produit entrepris.
+- Recette `.github/workflows/verification.yml` : `.env.local` temporaire avec
+  URL `https://verification-test.supabase.co` et clé factice, puis même commande
+  avec `-- --grep "avec le serveur"` : **code 0, 2/2 réussis**, 14,4 secondes.
+  RPC interceptés par Playwright ; aucune preuve de production Supabase.
+  Fichier factice supprimé après le run ; aucun fichier utilisateur remplacé.
+- `next dev` a ajouté son bloc automatique dans AGENTS.md ; origine vérifiée
+  dans `node_modules/next/dist/server/lib/generate-agent-files.js`, seul ce bloc
+  retiré après arrêt du serveur. AGENTS retrouve son contenu commité.
+- Rapports, captures et logs des deux runs préservés séparément sous
+  `/tmp/creatordeck-e2e/{local-results,local-report,cloud-results,cloud-report}`,
+  `local.log` et `cloud.log`. Artifacts locaux, non publiés.
+- Fichiers du checkpoint : passation, problèmes, roadmap et journal.
+  Publication à retrouver par `git log -1 --format=%H -- docs/agent-handoff.md`
+  et à comparer au HEAD distant. Aucun merge ni modification de main.
+- Prochaine action : diagnostiquer K-010 sur la branche vérifiée et rejouer
+  `npm run e2e -- --grep "the revealed card keeps"` après correctif autorisé.
+  Validation humaine Vercel/mobile et CI distante restent en attente ; suites
+  unitaires/SQL/build historiques, non rejouées dans cette reprise.
+
+## Historique — reprise réseau, 10 octobre 2026, 11 h 25 Europe/Paris
 
 - Agent : Codex Cloud ; reprise courte, réservation libérée à la passation.
 - Demande : l’utilisateur a ajouté `cdn.playwright.dev`, lancé la publication et

@@ -18,7 +18,7 @@ chantiers suivants ; les autres sont les gros morceaux, dans l'ordre où ils ont
 
 | # | Chantier | État | Où c'est écrit |
 |---|---|---|---|
-| QA-01 / 2026-10-10 | **Le banc SQL du draft ne dépend plus du samedi** : fenêtre fermée puis ouverte dans le Postgres jetable, restauration exacte en `finally`, règles calendaires à dates explicites conservées. `npm run supabase:verify` : **559/559**, code 0. Aucune migration à appliquer. | **livrée (SQL)** ; E2E encore bloqués par le téléchargement Chromium | `scripts/verify-supabase-migrations.mjs`, [passation](agent-handoff.md), [K-007](known-issues.md) |
+| QA-01 / 2026-10-10 | **Le banc SQL du draft ne dépend plus du samedi** : fenêtre fermée puis ouverte dans le Postgres jetable, restauration exacte en `finally`, règles calendaires à dates explicites conservées. `npm run supabase:verify` : **559/559**, code 0. Aucune migration à appliquer. | **livrée (SQL)** ; Chromium installé le 10 octobre, E2E : 24 réussis / 2 échecs de focus K-010, cloud simulé 2/2 ; CI et validation humaine en attente | `scripts/verify-supabase-migrations.mjs`, [passation](agent-handoff.md), [K-007](known-issues.md) |
 | 1 | Boosters tirés côté serveur (jamais de repli silencieux hors ligne) | **livré** | `src/lib/cloud/cloud-store.ts`, § « Le tirage est décidé par le serveur » |
 | 2 | Refonte & migration en ligne (échanges, classements, profils, hôtel, Twitch, carnet) | **livré** | `docs/cloud-supabase.md` § 8 et 9 |
 | 3 | Audit externe | **fait** | ce README, section « Tests » |
