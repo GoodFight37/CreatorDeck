@@ -15,6 +15,7 @@ import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 import "./booster-premium.css";
 import "./reveal-premium.css";
+import "./booster-continuity.css";
 
 // Titre et description suivent le périmètre du catalogue (FR ou monde) : en
 // changer ne demande aucune retouche de ce fichier.

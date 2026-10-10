@@ -1,5 +1,66 @@
 import { expect, test } from "@playwright/test";
 
+test("the revealed card keeps the extracted card's size and center in a full-screen scene", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const physical = await pack.locator(".booster-physical-scene").boundingBox();
+  const cardWidth = await pack.locator(".foil-card-chamber").evaluate((node) => (node as HTMLElement).offsetWidth);
+  await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
+  await expect(reveal).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(reveal.locator(".reveal-next")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(reveal.locator(".reveal-header button").first()).toBeFocused();
+  const anchor = reveal.locator(".reveal-anchor");
+  if (await anchor.count()) {
+    const bounds = await anchor.boundingBox();
+    expect(Math.abs(bounds!.width - cardWidth)).toBeLessThanOrEqual(1);
+    expect(Math.abs(bounds!.x + bounds!.width / 2 - (physical!.x + physical!.width / 2))).toBeLessThanOrEqual(1);
+    expect(Math.abs(bounds!.y + bounds!.height / 2 - (physical!.y + physical!.height / 2))).toBeLessThanOrEqual(1);
+  } else {
+    await expect(reveal.locator(".reveal-perfect-grid .reveal-card")).toHaveCount(5);
+  }
+  for (const viewport of [{ width: 320, height: 568 }, { width: 412, height: 915 }, { width: 1920, height: 915 }]) {
+    await page.setViewportSize(viewport);
+    const panel = await reveal.boundingBox();
+    expect(panel!.x).toBe(0);
+    expect(panel!.width).toBe(viewport.width);
+    expect(panel!.height).toBe(viewport.height);
+    const action = await reveal.locator(".reveal-next").boundingBox();
+    expect(action!.y + action!.height).toBeLessThanOrEqual(viewport.height);
+    if (await anchor.count()) {
+      const card = await anchor.boundingBox();
+      const name = await reveal.locator(".reveal-name").boundingBox();
+      expect(Math.abs(card!.x + card!.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);
+      expect(card!.y + card!.height).toBeLessThan(name!.y);
+      expect(name!.y + name!.height).toBeLessThan(action!.y);
+    }
+  }
+  await expect(reveal.getByRole("button", { name: "Fermer", exact: true })).toBeEnabled();
+  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
+  await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeFocused();
+});
+
+test("reduced motion reveals a stationary front without a hidden card", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  await expect(reveal.locator(".reveal-card").first()).toBeVisible();
+  const motion = await reveal.locator(".reveal-flip-face").first().evaluate((node) => ({
+    animation: getComputedStyle(node).animationName,
+    transform: getComputedStyle(node).transform,
+  }));
+  expect(motion).toEqual({ animation: "none", transform: "none" });
+});
+
 test("home pack artwork, title and gesture hint do not overlap", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();

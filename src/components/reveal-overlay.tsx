@@ -10,12 +10,14 @@
  * n'offre **aucun raccourci**.
  */
 import { useEffect, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
 import { EffectFlash } from "@/components/effect-burst";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
@@ -27,13 +29,10 @@ import {
   isPerfect,
   PERFECT_HAPTIC,
   PERFECT_LOCK_MS,
-  resistCount,
-  RESIST_SHAKE_MS,
-  resistHaptic,
   revealHaptic,
   silenceBefore,
 } from "@/lib/reveal";
-import { playBang, playRefuse, playReveal } from "@/lib/sfx";
+import { playBang, playReveal } from "@/lib/sfx";
 import { bestCardOf } from "@/lib/social/inbox";
 import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
@@ -69,6 +68,7 @@ export function RevealOverlay({
   onNext: () => void;
   onClose: () => void;
 }) {
+  const dialogRef = usePresentationFocus(!overlay);
   const card = cards[index];
   const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
   const live = useLive();
@@ -79,14 +79,6 @@ export function RevealOverlay({
   // l'exécuter (jouer les sons, vibrer, verrouiller l'écran).
   const perfect = isPerfect(cards);
   const rarity = card?.rarity ?? "common";
-  // Le nombre de refus se **déduit** de l'emplacement courant : inutile de
-  // l'écrire dans un état au changement de carte, et donc inutile d'un effet
-  // qui redessinerait l'écran pour rien. Ce qui est écrit, c'est seulement ce
-  // que le joueur a consommé — et le composant est remonté pour chaque paquet
-  // (`key` côté parent), donc le compteur repart de zéro à chaque ouverture.
-  const [used, setUsed] = useState(0);
-  const resistLeft = Math.max(0, resistCount(index, cards.length, rarity) - used);
-  const [shaking, setShaking] = useState(false);
   const [locked, setLocked] = useState(perfect);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
@@ -133,35 +125,25 @@ export function RevealOverlay({
   const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
 
-  /**
-   * Le geste de révélation. Tant que la carte résiste, l'appui ne fait que la
-   * faire frémir : c'est le joueur qui insiste, et c'est pour ça qu'il obtient
-   * quelque chose.
-   */
+  // Une carte déjà révélée se range dès le premier appui.
   function advance() {
     if (locked) return;
-    if (resistLeft > 0) {
-      setUsed((value) => value + 1);
-      setShaking(true);
-      playRefuse();
-      buzz(resistHaptic());
-      window.setTimeout(() => setShaking(false), RESIST_SHAKE_MS);
-      return;
-    }
     if (termine) onClose();
     else onNext();
   }
 
-  return (
+  const content = (
     <div
-      className={`reveal-overlay reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}`}
+      ref={dialogRef}
+      tabIndex={-1}
+      className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Résultat du booster"
     >
       <div className="reveal-ambient" />
       {rareGlow ? (
-        <div className={`reveal-cinematic-field field-${perfect ? "perfect" : rarity}`}
+        <div key={card.id} className={`reveal-cinematic-field field-${perfect ? "perfect" : rarity}`}
           style={glowStyle} aria-hidden="true">
           <span className="reveal-field-corona" />
           <span className="reveal-field-rays" />
@@ -264,7 +246,7 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          <div className={shaking ? "reveal-shake" : ""}>
+          <div className="reveal-anchor" style={glowStyle}>
             <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
               <div className="reveal-flip-face">
                 <CreatorCard
@@ -351,9 +333,7 @@ export function RevealOverlay({
         <span>
           {locked
             ? "Perfect…"
-            : resistLeft > 0
-              ? "La carte résiste — insiste"
-              : termine
+            : termine
                 ? "Ranger dans le classeur"
                 : "Révéler la suivante"}
         </span>
@@ -367,4 +347,6 @@ export function RevealOverlay({
       </button>
     </div>
   );
+  // Le jeu et le sachet partagent le viewport. OBS garde son cadre 16:9.
+  return overlay ? content : createPortal(content, document.body);
 }

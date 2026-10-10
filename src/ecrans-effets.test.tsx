@@ -144,7 +144,7 @@ describe("les effets de révélation", () => {
 
   it("joue l'éclat en grand d'emblée sur un Perfect, sans silence", async () => {
     // Le Perfect est le paquet entier : il n'a pas de silence, il est le moment.
-    const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c")];
+    const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c"), carte("epic", "d"), carte("epic", "e")];
     cinq[0]!.rareDrop = true;
     const html = await reveler(cinq as never);
     expect(html).toContain("reveal-rare-aura");
@@ -168,7 +168,7 @@ describe("les effets de révélation", () => {
      */
     const suivant = vi.fn();
     const fermer = vi.fn();
-    const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c")];
+    const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c"), carte("epic", "d"), carte("epic", "e")];
     cinq[0]!.rareDrop = true;
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
@@ -196,7 +196,21 @@ describe("les effets de révélation", () => {
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
   });
 
-  it("laisse le dernier emplacement résister, puis révéler la suivante", async () => {
+  it.each(["rare", "epic", "legendary"] as const)("range la dernière carte %s dès le premier appui", async (rarity) => {
+    const fermer = vi.fn();
+    const suivant = vi.fn();
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay cards={[carte("common", "un"), carte(rarity, "deux")] as never}
+        index={1} onNext={suivant} onClose={fermer} />,
+    );
+    banc.ecran(`jeu-derniere-${rarity}`);
+    banc.appuyer("Ranger dans le classeur");
+    expect(fermer).toHaveBeenCalledTimes(1);
+    expect(suivant).not.toHaveBeenCalled();
+  });
+
+  it("révèle la suivante tant que le paquet n'est pas terminé", async () => {
     // Le contrôle du test précédent : hors Perfect, « Révéler la suivante »
     // reste le geste normal — c'est le Perfect seul qui change de bouton.
     const suivant = vi.fn();
@@ -211,6 +225,7 @@ describe("les effets de révélation", () => {
     );
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
     expect(bouton().textContent).toContain("Révéler la suivante");
+    banc.ecran("jeu-commune");
     banc.appuyer("Révéler la suivante");
     expect(suivant).toHaveBeenCalledTimes(1);
   });

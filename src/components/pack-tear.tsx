@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
@@ -20,6 +21,7 @@ export function PackTear({
   onTear?: () => void;
   autoCompleteAfterMs?: number;
 }) {
+  const dialogRef = usePresentationFocus();
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
   const [opened, setOpened] = useState(false);
   const start = useRef<{ x: number; percent: number } | null>(null);
@@ -51,7 +53,7 @@ export function PackTear({
 
   const artwork = kind === "scene" ? "/packs/scene-foil.svg" : "/packs/live-foil.svg";
   return createPortal(
-    <div className="pack-tear booster-interactive booster-cinematic" role="dialog"
+    <div ref={dialogRef} tabIndex={-1} className={`pack-tear booster-interactive booster-cinematic booster-presentation scene-${kind}`} role="dialog"
       aria-label="Ouvrir le booster" aria-modal="true">
       <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}>
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>

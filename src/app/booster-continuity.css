@@ -1,0 +1,233 @@
+/* One stage, one card size and one focal point from the pouch to the reveal.
+   Scoped to the game: the OBS presentation keeps its own 16:9 layout. */
+.booster-presentation {
+  --scene-height: max(100dvh, 520px);
+  --scene-card-width: min(68vw, 360px, calc((var(--scene-height) - 340px) * .715));
+  --scene-card-height: calc(var(--scene-card-width) / .715);
+  --scene-center: calc(var(--scene-height) * .48);
+  --scene-background:
+    radial-gradient(ellipse 43% 44% at 50% 48%, rgba(152, 49, 88, .21), transparent 90%),
+    radial-gradient(ellipse 70% 75% at 52% 62%, rgba(62, 26, 75, .22), transparent 90%),
+    #080810;
+  background: var(--scene-background);
+  isolation: isolate;
+  outline: none;
+}
+.booster-presentation.scene-scene {
+  --scene-background:
+    radial-gradient(ellipse 48% 48% at 50% 48%, rgba(126, 80, 204, .25), transparent 92%),
+    radial-gradient(ellipse 80% 68% at 52% 62%, rgba(52, 35, 106, .25), transparent 90%),
+    #080810;
+}
+.booster-cinematic .booster-premium-stage {
+  height: var(--scene-height);
+  min-height: var(--scene-height);
+  background: transparent;
+}
+.booster-cinematic .booster-physical-scene {
+  position: absolute;
+  top: var(--scene-center);
+  left: 50%;
+  width: calc(var(--scene-card-width) / .72);
+  transform: translate(-50%, -50%);
+}
+.booster-cinematic .booster-opening-instruction {
+  position: absolute;
+  top: max(22px, calc(var(--scene-center) - var(--scene-card-height) * .76 - 38px));
+  left: 16px;
+  right: 16px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.booster-cinematic .booster-premium-actions {
+  position: absolute;
+  bottom: max(22px, env(safe-area-inset-bottom));
+  min-height: 48px;
+}
+.booster-cinematic .foil-card-chamber {
+  inset: auto;
+  top: 50%;
+  left: 50%;
+  width: 72%;
+  aspect-ratio: .715;
+  transform: translate(-50%, -30%);
+}
+.booster-cinematic .booster-foil-open .foil-card-chamber {
+  animation-name: scene-cards-rise;
+}
+.booster-cinematic .booster-foil-open .foil-back-card {
+  animation-name: scene-card-settle;
+}
+@keyframes scene-cards-rise {
+  0%, 17% { opacity: 0; transform: translate(-50%, -27%) scale(.88); }
+  38% { opacity: .36; transform: translate(-50%, -35%) scale(.9); }
+  60% { opacity: 1; transform: translate(-50%, -44%) scale(.97); }
+  100% { opacity: 1; transform: translate(-50%, -50%); }
+}
+@keyframes scene-card-settle {
+  0%, 23% { opacity: 0; transform: translateY(39%) scale(.84); }
+  43% { opacity: .95; transform: translateY(7%) scale(.89); }
+  69% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 6px), 0)
+    rotate(calc((var(--card-i) - 4) * 3deg)); }
+  100% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 3px), calc((4 - var(--card-i)) * 3px))
+    rotate(calc((var(--card-i) - 4) * 1deg)); }
+}
+.reveal-overlay.reveal-game {
+  z-index: 1500;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--scene-background);
+}
+.reveal-game .reveal-ambient { display: none; }
+.reveal-game .reveal-header {
+  width: min(100%, 760px);
+  height: calc(68px + env(safe-area-inset-top));
+  margin: 0 auto;
+}
+.reveal-game .reveal-header button { width: 44px; height: 44px; }
+.reveal-game .reveal-stage {
+  position: absolute;
+  inset: 0;
+  height: var(--scene-height);
+  padding: 0;
+  pointer-events: none;
+}
+.reveal-game .reveal-stage button { pointer-events: auto; }
+.reveal-game .reveal-stage > .reveal-anchor {
+  position: absolute;
+  left: 50%;
+  top: var(--scene-center);
+  width: var(--scene-card-width);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+.reveal-game .reveal-stage .reveal-card {
+  width: var(--scene-card-width);
+  max-height: none;
+}
+.reveal-game .reveal-stage .reveal-flip { animation: scene-card-arrive 760ms ease-out both; }
+.reveal-game .reveal-stage .reveal-flip-face { animation: scene-card-turn 760ms cubic-bezier(.22,.65,.24,1) var(--rare-delay, 0ms) both; }
+/* The back is visible immediately, at the exact position of the extracted card. */
+@keyframes scene-card-arrive {
+  from { filter: brightness(.85); }
+  to { filter: brightness(1); }
+}
+@keyframes scene-card-turn {
+  0%, 12% { transform: rotateY(-180deg); }
+  80% { transform: rotateY(5deg); }
+  100% { transform: rotateY(0); }
+}
+.reveal-game .reveal-rarity-kicker {
+  top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 104px);
+}
+.reveal-game .reveal-stage > .new-badge {
+  position: absolute;
+  top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 36px);
+  margin: 0;
+}
+.reveal-game .reveal-name {
+  position: absolute;
+  top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 14px);
+  width: min(90%, 560px);
+  margin: 0;
+}
+.reveal-game .reveal-name p { font-size: 11px; letter-spacing: .1em; }
+.reveal-game .reveal-poster {
+  position: absolute;
+  bottom: 90px;
+  margin: 0;
+}
+.reveal-game .reveal-next {
+  top: calc(var(--scene-height) - 76px - env(safe-area-inset-bottom));
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  width: min(calc(100% - 36px), 480px);
+  min-height: 54px;
+  transform: translateX(-50%);
+}
+.reveal-game .reveal-next:active { transform: translateX(-50%) scale(.985); }
+.reveal-game .streak-gain {
+  position: absolute;
+  top: calc(var(--scene-height) - 116px - env(safe-area-inset-bottom));
+  left: 50%;
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 4px 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+html:has(.booster-presentation) { overflow: hidden; }
+.booster-cinematic { overflow-y: auto; }
+.booster-cinematic .booster-premium-stage::before,
+.booster-cinematic .booster-premium-stage::after,
+.booster-cinematic .booster-stage-atmosphere { display: none; }
+.booster-presentation::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: var(--scene-center);
+  left: 50%;
+  width: min(580px, 120vw);
+  height: min(540px, 83vh);
+  border: 1px solid rgba(237,140,174,.065);
+  border-radius: 50%;
+  box-shadow: 0 0 85px rgba(212,76,132,.08);
+  transform: translate(-50%, -50%) rotate(-20deg);
+  pointer-events: none;
+}
+.reveal-game .reveal-perfect-grid {
+  width: min(94%, 1120px);
+  margin: 12vh auto 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(8px, 2vw, 24px);
+}
+.reveal-game .reveal-perfect-grid .reveal-card { container-type: inline-size; }
+.reveal-game .reveal-perfect-grid .card-region {
+  font-size: clamp(7px, 4cqw, 10px);
+  letter-spacing: .08em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reveal-game .reveal-perfect-grid .card-nameplate h3 { font-size: clamp(12px, 14cqw, 28px); }
+.reveal-game .reveal-perfect-grid .card-footerline { font-size: clamp(7px, 5cqw, 11px); }
+.reveal-game .reveal-perfect-grid .card-rank { font-size: clamp(9px, 6cqw, 12px); }
+.reveal-game .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 74px auto 0; }
+.reveal-game.reveal-perfect .reveal-header { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
+/* The extracted backs and the turning card use the same printed pattern. */
+.booster-presentation .reveal-dos {
+  border: 2px solid rgba(255,224,187,.76);
+  background:
+    radial-gradient(circle at 51% 40%, rgba(215,104,181,.29), transparent 64%),
+    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255,212,223,.055) 15px 16px),
+    linear-gradient(146deg, #4c2249, #1b122e 50%, #652c54);
+  box-shadow: inset 0 0 0 5px rgba(245,197,194,.13), 0 0 0 1px rgba(0,0,0,.95), 0 12px 25px rgba(0,0,0,.38);
+}
+.booster-presentation .reveal-dos::before { content: ""; position: absolute; inset: 11%; border: 1px solid rgba(255,227,193,.28); border-radius: 3%; }
+.booster-presentation .reveal-back-sigil { width: 62%; }
+@media (max-width: 600px) {
+  .reveal-game .reveal-perfect-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12vh; gap: 12px; }
+  .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(4) { grid-column: 1; margin-left: 50%; }
+  .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(5) { grid-column: 2; margin-left: 50%; }
+}
+@media (max-height: 650px) {
+  .reveal-game .reveal-rarity-kicker { top: 65px; gap: 0; }
+  .reveal-game .reveal-rarity-kicker span { display: none; }
+  .reveal-game .reveal-rarity-kicker strong { font-size: 22px; }
+  .reveal-game .reveal-name p { font-size: 10px; }
+  .reveal-game .reveal-perfect-grid { margin-top: 20px; max-width: 650px; }
+  .reveal-game .reveal-perfect-grid .reveal-card { width: min(100%, 103px); margin: 0 auto; max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-game .reveal-stage .reveal-flip,
+  .reveal-game .reveal-stage .reveal-flip-face { animation: none; }
+}
+[data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip,
+[data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip-face { animation: none; }
