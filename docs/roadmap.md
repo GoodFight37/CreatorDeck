@@ -18,6 +18,15 @@
 
 Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 scénarios, 12 000 trajectoires, graine `20261010`, zéro paquet manquant. Résumé et limites : [audit-progression.md](audit-progression.md). Cet audit de progression valide uniquement le moteur TypeScript local. **À distinguer de la parité Paquet Scène**, vérifiée ensuite dans une base PostgreSQL jetable après la migration 0043.
 
+## Chantier visuel — ouverture de boosters, 10 octobre 2026
+
+- [x] Donner du volume CSS au sachet d’accueil et à PackTear, incliner l’objet sous le doigt, et animer son foil sans WebGL.
+- [x] Plier les flaps avec une fente lumineuse et extraire les cinq dos en cascade sous une seconde ; garder le relais existant de 1,9 s.
+- [x] Augmenter la présence de la carte plein écran et distinguer les raretés : entrée discrète pour les Communes, punch et halo bordeaux dès Rare, intensité croissante pour Épique/Légendaire.
+- [x] Rendre la déchirure plus longue et texturée. Conserver les timings du silence Épique, du verrou Perfect et du bang sur le flip.
+- [x] Tester Reflets désactivés / mouvement réduit : inclinaison tactile, specular, foil et animation lourde coupés. Typecheck, build, tests UI 70/70 et E2E bureau 11/11 réussis.
+- [ ] Confirmer le rendu et le geste sur téléphone réel (VIS-01). La suite générale signale quatre tests SQL/catalogue déjà désynchronisés, hors de ce chantier ; aucune migration Supabase n’a été touchée.
+
 # Roadmap CreatorDeck
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)

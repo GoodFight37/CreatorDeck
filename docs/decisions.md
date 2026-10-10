@@ -102,3 +102,19 @@ le simulateur, publier en magasin ou refondre l'application n'est prise ici.
 ID, date (Europe/Paris), agent/opérateur, demande et contexte, options examinées,
 décision et pourquoi, conséquences/réversibilité, preuves (fichier/commit/test),
 statut adopté/proposé/remplacé et lien vers l'entrée qui remplace la décision.
+
+## D-015 — 10 octobre 2026 : volume et poids de l’ouverture
+
+La demande est de rapprocher la sensation de l’ouverture d’un objet foil manipulé,
+en gardant la direction artistique bordeaux et les créateurs CreatorDeck. Le
+chantier est CSS/SVG uniquement, sans WebGL ni dépendance nouvelle. L’objet suit
+le doigt seulement si Reflets des cartes et le mouvement ne sont pas désactivés.
+Les flaps plient, une lumière traverse la fente, cinq dos sortent sous une seconde,
+puis RevealOverlay s’ouvre selon le relais déjà en place. Le Rare reçoit un halo
+bordeaux et un punch distincts des Communes ; aucun flash blanc ne lui est ajouté.
+
+La déchirure gagne un glissement de hauteur plus long. Le silence Épique (520 ms),
+le verrou Perfect (2,6 s), le bang calé sur le début du flip et le relais de
+1,9 s restent inchangés. Pas de changement d’économie, de taux, de récompense ou
+de backend. Adopté à la demande utilisateur ; validations et limites actuelles
+sont consignées dans [la passation](agent-handoff.md).

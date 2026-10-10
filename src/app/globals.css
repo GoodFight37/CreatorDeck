@@ -4149,6 +4149,13 @@ input:focus-visible {
     rgb(249 154 123 / .40) 0%, rgb(229 94 122 / .21) 32%, rgb(115 46 120 / .12) 52%, transparent 78%);
   filter: blur(21px);
 }
+.reveal-rare-aura-rare {
+  width: min(100vw, 520px);
+  height: min(82vh, 590px);
+  background: radial-gradient(ellipse at 50% 48%,
+    rgb(194 48 96 / .48) 0%, rgb(140 33 82 / .31) 36%, rgb(74 18 61 / .16) 58%, transparent 80%);
+  filter: blur(19px);
+}
 .reveal-rare-aura-legendary {
   width: min(110vw, 650px);
   height: min(86vh, 680px);

@@ -2,9 +2,9 @@
    Scoped to the game: the OBS presentation keeps its own 16:9 layout. */
 .booster-presentation {
   --scene-height: max(100dvh, 520px);
-  --scene-card-width: min(68vw, 360px, calc((var(--scene-height) - 340px) * .715));
+  --scene-card-width: min(74vw, 370px, calc((var(--scene-height) - 280px) * .715));
   --scene-card-height: calc(var(--scene-card-width) / .715);
-  --scene-center: calc(var(--scene-height) * .48);
+  --scene-center: calc(var(--scene-height) * .46);
   --scene-pack-width: min(64vw, 280px, 30dvh);
   --scene-pack-height: calc(var(--scene-pack-width) * 880 / 600);
   --scene-pack-center: calc(var(--scene-height) * .64);
@@ -32,7 +32,40 @@
   top: var(--scene-pack-center);
   left: 50%;
   width: var(--scene-pack-width);
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) perspective(900px)
+    rotateX(calc(var(--opening-tilt-x, 0deg) + 1.5deg))
+    rotateY(calc(var(--opening-tilt-y, 0deg) - 4deg));
+  transition: transform 140ms ease-out;
+  perspective: 900px;
+  transform-style: preserve-3d;
+  filter: none;
+}
+.booster-cinematic .booster-physical-scene.is-pulling { transition: none; }
+.booster-cinematic .booster-physical-scene.is-pulling { transition: none; }
+.booster-cinematic .foil-depth-side,
+.booster-cinematic .foil-depth-bottom {
+  position: absolute;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+.booster-cinematic .foil-depth-side { top: 4px; bottom: 7px; width: 11px; }
+.booster-cinematic .foil-depth-left {
+  left: -10px; transform: rotateY(-90deg); transform-origin: right center;
+  background: linear-gradient(90deg, #321123, #a74a66 55%, #47152d);
+  box-shadow: inset 1px 0 rgb(255 224 224 / .4);
+}
+.booster-cinematic .foil-depth-right {
+  right: -10px; transform: rotateY(90deg); transform-origin: left center;
+  background: linear-gradient(90deg, #e98d9d, #57152f 43%, #210b1d);
+  box-shadow: inset -2px 0 rgb(0 0 0 / .65);
+}
+.booster-cinematic .foil-depth-bottom {
+  left: 2px; right: 2px; bottom: -10px; height: 11px;
+  transform: rotateX(90deg); transform-origin: center top;
+  background: linear-gradient(180deg, #9b4961, #311326 84%);
+  box-shadow: inset 0 -2px rgb(0 0 0 / .58);
 }
 .booster-cinematic .booster-opening-instruction {
   position: absolute;
@@ -278,7 +311,7 @@ html:has(.booster-presentation) { overflow: hidden; }
   box-shadow: none;
   perspective: 1050px;
   transform: none;
-  filter: drop-shadow(11px 17px 12px rgb(0 0 0 / .42));
+  filter: drop-shadow(13px 20px 11px rgb(0 0 0 / .56));
 }
 .pack-3d-object {
   position: absolute;
@@ -374,16 +407,18 @@ html:has(.booster-presentation) { overflow: hidden; }
   animation-name: scene-body-fold; animation-timing-function: cubic-bezier(.2, .7, .24, 1);
 }
 @keyframes scene-cap-fold {
-  0%, 8% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0); }
-  34% { opacity: 1; transform: translateY(-2%) translateZ(13px) rotateX(48deg) rotateY(-4deg); }
-  62% { opacity: .9; transform: translateY(-8%) translateZ(18px) rotateX(83deg) rotateY(-11deg); }
-  100% { opacity: 0; transform: translate(34%, -48%) translateZ(24px) rotateX(106deg) rotateY(-18deg); }
+  0%, 8% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0) rotateZ(0); }
+  29% { opacity: 1; transform: translateY(-1%) translateZ(15px) rotateX(56deg) rotateY(-8deg) rotateZ(-2deg); }
+  43% { opacity: .96; transform: translate(2%, -3%) translateZ(10px) rotateX(39deg) rotateY(-17deg) rotateZ(3deg); }
+  66% { opacity: .82; transform: translateY(-9%) translateZ(20px) rotateX(91deg) rotateY(-12deg) rotateZ(-4deg); }
+  100% { opacity: 0; transform: translate(34%, -48%) translateZ(24px) rotateX(108deg) rotateY(-20deg) rotateZ(5deg); }
 }
 @keyframes scene-body-fold {
-  0%, 18% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0); }
-  45% { opacity: 1; transform: translateY(5%) translateZ(4px) rotateX(-18deg) rotateY(2deg); }
-  76% { opacity: .42; transform: translateY(24%) translateZ(-8px) rotateX(-39deg) rotateY(5deg); }
-  100% { opacity: 0; transform: translateY(60%) translateZ(-16px) rotateX(-56deg) rotateY(8deg); }
+  0%, 18% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0) rotateZ(0); }
+  37% { opacity: 1; transform: translateY(3%) translateZ(7px) rotateX(-23deg) rotateY(4deg) rotateZ(2deg); }
+  54% { opacity: .88; transform: translate(-2%, 8%) translateZ(1px) rotateX(-13deg) rotateY(-7deg) rotateZ(-3deg); }
+  78% { opacity: .42; transform: translateY(25%) translateZ(-8px) rotateX(-43deg) rotateY(6deg) rotateZ(4deg); }
+  100% { opacity: 0; transform: translateY(60%) translateZ(-16px) rotateX(-58deg) rotateY(10deg) rotateZ(-4deg); }
 }
 .booster-cinematic .booster-foil-open .foil-cut-slit::before { animation: scene-cut-light 620ms ease-out both; }
 @keyframes scene-cut-light {
@@ -392,12 +427,12 @@ html:has(.booster-presentation) { overflow: hidden; }
   100% { opacity: 0; transform: scaleY(.55); }
 }
 
-/* All five backs leave the chamber in a staggered, shallow 3D fan (~1.1 s). */
-.booster-cinematic .booster-foil-open .foil-card-chamber { animation-duration: 1080ms; }
+/* Five backs leave the chamber in a staggered 3D fan under one second. */
+.booster-cinematic .booster-foil-open .foil-card-chamber { animation-duration: 920ms; }
 .booster-cinematic .booster-foil-open .foil-back-card {
   animation-name: scene-card-extract;
-  animation-duration: 780ms;
-  animation-delay: calc(var(--card-i) * 76ms);
+  animation-duration: 700ms;
+  animation-delay: calc(var(--card-i) * 65ms);
   animation-timing-function: cubic-bezier(.18, .74, .22, 1);
 }
 @keyframes scene-card-extract {
@@ -422,6 +457,33 @@ html:has(.booster-presentation) { overflow: hidden; }
     rotateX(var(--reveal-tilt-x, 0deg)) rotateY(var(--reveal-tilt-y, 0deg));
 }
 .reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: preserve-3d; }
+.reveal-game .reveal-stage .reveal-card {
+  filter: drop-shadow(0 22px 26px rgb(0 0 0 / .62)) drop-shadow(0 8px 10px rgb(0 0 0 / .42));
+}
+.reveal-game .reveal-stage .reveal-flip.rarity-common { animation: common-card-arrive 440ms cubic-bezier(.2,.7,.24,1) both; }
+.reveal-game .reveal-stage .reveal-flip.rarity-uncommon { animation: common-card-arrive 520ms cubic-bezier(.2,.7,.24,1) both; }
+.reveal-game .reveal-stage .reveal-flip.rarity-rare { animation: rare-card-punch 650ms cubic-bezier(.18,.8,.2,1) both; }
+.reveal-game .reveal-stage .reveal-flip.rarity-epic { animation: epic-card-punch 760ms cubic-bezier(.16,.9,.2,1) both; }
+.reveal-game .reveal-stage .reveal-flip.rarity-legendary { animation: legendary-card-punch 900ms cubic-bezier(.12,.92,.2,1) both; }
+@keyframes common-card-arrive {
+  from { opacity: .72; transform: translateY(14px) scale(.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes rare-card-punch {
+  0% { opacity: .7; transform: translateY(28px) scale(.91) rotateZ(-1.5deg); }
+  68% { opacity: 1; transform: translateY(-7px) translateZ(24px) scale(1.025) rotateZ(.6deg); }
+  100% { transform: translateZ(14px) scale(1); }
+}
+@keyframes epic-card-punch {
+  0% { opacity: .6; transform: translateY(42px) translateZ(-10px) scale(.86) rotateZ(-3deg); }
+  62% { opacity: 1; transform: translateY(-12px) translateZ(32px) scale(1.055) rotateZ(1.2deg); }
+  100% { transform: translateZ(18px) scale(1); }
+}
+@keyframes legendary-card-punch {
+  0% { opacity: .45; transform: translateY(58px) translateZ(-20px) scale(.8) rotateZ(-5deg); }
+  58% { opacity: 1; transform: translateY(-18px) translateZ(42px) scale(1.09) rotateZ(1.8deg); }
+  100% { transform: translateZ(22px) scale(1); }
+}
 .reveal-game .reveal-stage .reveal-card .card-foil { opacity: .72; }
 .reveal-game .reveal-stage .reveal-card.variant-standard .card-foil {
   background: radial-gradient(circle at var(--px, 32%) var(--py, 18%),
@@ -442,7 +504,11 @@ html:has(.booster-presentation) { overflow: hidden; }
     rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))
     translateY(calc(var(--pull, 0) * -44px)) scale(calc(1 + var(--pull, 0) * .02));
 }
+[data-card-fx="off"] .booster-cinematic .booster-physical-scene {
+  transform: translate(-50%, -50%) perspective(900px) rotateX(1.5deg) rotateY(-4deg);
+}
 [data-card-fx="off"] .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); }
+[data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip { animation: none; }
 [data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-top-piece {
   animation: none; opacity: .3; transform: rotateX(84deg);
 }
@@ -471,8 +537,13 @@ html:has(.booster-presentation) { overflow: hidden; }
       translateY(calc(var(--pull, 0) * -44px)) scale(calc(1 + var(--pull, 0) * .02));
     transition: none;
   }
+  .booster-cinematic .booster-physical-scene {
+    transform: translate(-50%, -50%) perspective(900px) rotateX(1.5deg) rotateY(-4deg);
+    transition: none;
+  }
   .reveal-game .reveal-stage > .reveal-anchor,
   .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); transition: none; }
+  .reveal-game .reveal-stage .reveal-flip { animation: none; }
   .booster-cinematic .booster-foil-open .foil-top-piece {
     animation: none; opacity: .3; transform: rotateX(84deg);
   }
@@ -489,4 +560,5 @@ html:has(.booster-presentation) { overflow: hidden; }
   }
   .booster-cinematic .booster-foil-open .foil-cut-slit::before { display: none; }
   .booster-cinematic .booster-physical-scene::after { display: none; }
+  .reveal-game .reveal-stage .reveal-flip { animation: none; }
 }

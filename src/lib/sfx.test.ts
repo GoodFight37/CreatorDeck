@@ -7,6 +7,7 @@ import {
   SFX_LEVELS,
   SFX_LEVEL_LABELS,
   SFX_USUELS,
+  tearPlan,
   getSfxLevel,
   isMuted,
   packOpeningPlan,
@@ -27,7 +28,13 @@ import {
  * inaudible, vide ou douloureux — et que la rareté s'entend.
  */
 describe("plans de sons", () => {
-  const all = [packOpeningPlan(), rewardPlan(), ...(["common", "uncommon", "rare", "epic", "legendary"] as const).map((r) => revealPlan(r))];
+  const all = [packOpeningPlan(), rewardPlan(), tearPlan(), ...(["common", "uncommon", "rare", "epic", "legendary"] as const).map((r) => revealPlan(r))];
+
+  it("fait entendre une déchirure longue avec une descente de matière", () => {
+    const tear = tearPlan();
+    expect(Math.max(...tear.map((note) => note.at + note.duration))).toBeGreaterThanOrEqual(.45);
+    expect(tear.every((note) => (note.endFreq ?? note.freq) < note.freq)).toBe(true);
+  });
 
   it("reste dans le spectre audible, avec des durées plausibles", () => {
     for (const plan of all) {

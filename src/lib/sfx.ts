@@ -58,6 +58,8 @@ export type Note = {
   /** Décalage en secondes depuis le début du son. */
   at: number;
   duration: number;
+  /** Fréquence de fin optionnelle, pour un glissement de hauteur continu. */
+  endFreq?: number;
   type?: OscillatorType;
   gain?: number;
 };
@@ -141,9 +143,9 @@ export function packOpeningPlan(): Note[] {
  */
 export function tearPlan(): Note[] {
   return [
-    { freq: 1_320, at: 0, duration: 0.07, type: "sawtooth", gain: 0.032 },
-    { freq: 990, at: 0.045, duration: 0.09, type: "triangle", gain: 0.028 },
-    { freq: 660, at: 0.1, duration: 0.1, type: "sine", gain: 0.022 },
+    { freq: 1_420, endFreq: 460, at: 0, duration: 0.42, type: "sawtooth", gain: 0.026 },
+    { freq: 980, endFreq: 320, at: 0.055, duration: 0.48, type: "triangle", gain: 0.024 },
+    { freq: 620, endFreq: 210, at: 0.12, duration: 0.4, type: "sawtooth", gain: 0.018 },
   ];
 }
 
@@ -444,6 +446,10 @@ export function play(plan: Note[]): void {
     const gain = ctx.createGain();
     oscillator.type = note.type ?? "triangle";
     oscillator.frequency.setValueAtTime(note.freq, start + note.at);
+    if (note.endFreq && note.endFreq !== note.freq
+      && typeof oscillator.frequency.exponentialRampToValueAtTime === "function") {
+      oscillator.frequency.exponentialRampToValueAtTime(note.endFreq, start + note.at + note.duration);
+    }
     const peak = note.gain ?? 0.05;
     // Enveloppe percussive : attaque très courte, extinction douce. Sans elle,
     // chaque note claque (clics) au lieu de sonner.

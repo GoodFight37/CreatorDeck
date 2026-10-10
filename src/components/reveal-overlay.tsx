@@ -124,6 +124,7 @@ export function RevealOverlay({
   // A soft aura lives BEHIND the rare cards. No pixel explosion overlays artwork.
   // Respect the existing rare-card audio pause for a synchronized entrance.
   const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
+  const rarityAura = rareGlow || card.rarity === "rare";
   const flash = flashFor(card.rarity, perfect);
   const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
@@ -255,15 +256,15 @@ export function RevealOverlay({
         </div>
       ) : (
         <div className="reveal-stage">
-          {rareGlow && !perfect ? (
+          {rarityAura && !perfect ? (
             <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true"
               style={glowStyle}>
               <span>CARTE D&apos;EXCEPTION</span>
-              <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : "ÉPIQUE"}</strong>
+              <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : card.rarity === "epic" ? "ÉPIQUE" : "RARE"}</strong>
             </div>
           ) : null}
           {/* Light and geometry remain behind the artwork, never across the portrait. */}
-          {rareGlow ? (
+          {rarityAura ? (
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}

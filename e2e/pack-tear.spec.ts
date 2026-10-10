@@ -153,6 +153,14 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
 
   await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
   const openingPack = page.locator(".booster-physical-scene");
+  const reducedSeam = page.getByRole("button", { name: /D.chirer le sachet en passant le doigt/ });
+  const reducedBounds = (await reducedSeam.boundingBox())!;
+  await page.mouse.move(reducedBounds.x + reducedBounds.width * .15, reducedBounds.y + reducedBounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(reducedBounds.x + reducedBounds.width * .45, reducedBounds.y + reducedBounds.height / 2);
+  expect(await openingPack.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-tilt-y")))
+    .toBe("");
+  await page.mouse.up();
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").display)).toBe("none");
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
@@ -165,6 +173,15 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
   await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+  const offPack = page.locator(".booster-physical-scene");
+  const offSeam = page.getByRole("button", { name: /D.chirer le sachet en passant le doigt/ });
+  const offBounds = (await offSeam.boundingBox())!;
+  await page.mouse.move(offBounds.x + offBounds.width * .15, offBounds.y + offBounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(offBounds.x + offBounds.width * .45, offBounds.y + offBounds.height / 2);
+  expect(await offPack.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-tilt-y")))
+    .toBe("");
+  await page.mouse.up();
   expect(await page.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").display))
     .toBe("none");
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -202,8 +219,8 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
     return { duration: style.animationDuration, delay: style.animationDelay };
   });
   const milliseconds = (value: string) => parseFloat(value) * (value.endsWith("ms") ? 1 : 1_000);
-  expect(milliseconds(cascade.duration)).toBeCloseTo(780, 0);
-  expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_100);
+  expect(milliseconds(cascade.duration)).toBeCloseTo(700, 0);
+  expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_000);
 
   // The cut reveals a chamber of card backs; no hard cut while cap is still aloft.
   await page.waitForTimeout(1100);

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from "re
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
+import { cardEffectsAllowed } from "@/lib/tilt";
 
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
@@ -26,7 +27,8 @@ export function PackTear({
   const dialogRef = usePresentationFocus(true, returnFocusTo);
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
   const [opened, setOpened] = useState(false);
-  const start = useRef<{ x: number; percent: number } | null>(null);
+  const start = useRef<{ x: number; percent: number; centerX: number; centerY: number; halfWidth: number; halfHeight: number } | null>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const timer = useRef<number | null>(null);
   const completeRef = useRef(onComplete);
@@ -38,6 +40,9 @@ export function PackTear({
     if (done.current) return;
     done.current = true;
     start.current = null;
+    sceneRef.current?.classList.remove("is-pulling");
+    sceneRef.current?.style.removeProperty("--opening-tilt-x");
+    sceneRef.current?.style.removeProperty("--opening-tilt-y");
     setCut({ start: 4, end: 96, progress: 100 });
     setOpened(true);
     tearRef.current?.();
@@ -62,8 +67,11 @@ export function PackTear({
         <p className="booster-opening-instruction">
           {opened ? "LES CARTES APPARAISSENT" : "PASSE TON DOIGT SUR LA SOUDURE"}
         </p>
-        <div className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
+        <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
           style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>
+          <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
+          <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
+          <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
           <div className="foil-card-chamber" aria-hidden="true">
             {Array.from({ length: 5 }, (_, i) => (
@@ -89,13 +97,26 @@ export function PackTear({
               if (opened || event.button !== 0 || event.isPrimary === false) return;
               const bounds = event.currentTarget.getBoundingClientRect();
               const p = Math.max(4, Math.min(96, (event.clientX - bounds.left) / bounds.width * 100));
-              start.current = { x: event.clientX, percent: p };
+              const sceneBounds = sceneRef.current?.getBoundingClientRect();
+              start.current = { x: event.clientX, percent: p,
+                centerX: sceneBounds ? sceneBounds.left + sceneBounds.width / 2 : bounds.left + bounds.width / 2,
+                centerY: sceneBounds ? sceneBounds.top + sceneBounds.height / 2 : bounds.top + bounds.height / 2,
+                halfWidth: Math.max(1, (sceneBounds?.width ?? bounds.width) / 2),
+                halfHeight: Math.max(1, (sceneBounds?.height ?? bounds.height) / 2) };
+              sceneRef.current?.classList.add("is-pulling");
               setCut({ start: p, end: p, progress: 0 });
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
               if (opened || !start.current) return;
               const bounds = event.currentTarget.getBoundingClientRect();
+              const scene = sceneRef.current;
+              if (scene && cardEffectsAllowed()) {
+                const x = Math.max(-1, Math.min(1, (event.clientX - start.current.centerX) / start.current.halfWidth));
+                const y = Math.max(-1, Math.min(1, (event.clientY - start.current.centerY) / start.current.halfHeight));
+                scene.style.setProperty("--opening-tilt-x", `${-y * 5}deg`);
+                scene.style.setProperty("--opening-tilt-y", `${x * 7}deg`);
+              }
               const end = Math.max(2, Math.min(98,
                 (event.clientX - bounds.left) / bounds.width * 100));
               const progress = Math.max(0, Math.min(100,
@@ -105,10 +126,16 @@ export function PackTear({
             }}
             onPointerUp={() => {
               start.current = null;
+              sceneRef.current?.classList.remove("is-pulling");
+              sceneRef.current?.style.removeProperty("--opening-tilt-x");
+              sceneRef.current?.style.removeProperty("--opening-tilt-y");
               if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onPointerCancel={() => {
               start.current = null;
+              sceneRef.current?.classList.remove("is-pulling");
+              sceneRef.current?.style.removeProperty("--opening-tilt-x");
+              sceneRef.current?.style.removeProperty("--opening-tilt-y");
               if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onKeyDown={(event) => {

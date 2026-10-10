@@ -1,3 +1,11 @@
+## Checkpoint courant — polish d’ouverture des boosters, 10 octobre 2026
+
+- Le dépôt original est sur `main` (`9bc337d070c3e4aa64741add3bc387ea5d8e7a88`) ; l’utilisateur a autorisé le travail direct sur `main`. Le stash `préserver état local avant chantier visuel main` reste intact. Aucun secret n’a été lu et aucune base Supabase n’a été consultée ou modifiée.
+- Chantier demandé : volume CSS du sachet d’accueil et du sachet ouvert, inclinaison au doigt soumise à `cardEffectsAllowed()`, specular CSS, plis physiques et fente lumineuse, cascade 3D des cinq dos en 765 ms environ, carte révélée plus grande/plus profonde et hiérarchie commune → rare → épique → légendaire. Le Rare a un halo bordeaux sans flash blanc. Aucun changement de taux, récompense, économie ou de dépendance.
+- Le son de déchirure a une descente de fréquence longue ; son départ et le bang restent attachés au geste et au `--rare-delay` existants. Les constantes 520 ms de silence Épique, 2,6 s de verrou Perfect et 1,9 s avant RevealOverlay n’ont pas changé.
+- Validations sur le dépôt original : typecheck OK ; tests UI **70/70** ; E2E Playwright bureau **11/11** ; build Next OK. La suite complète affiche des échecs préexistants sans rapport avec les fichiers du chantier : seed catalogue/saisons et comptage `add column if not exists` Supabase (4 tests). Le run Playwright téléphone reste à confirmer ; le rendu réel doit être jugé sur téléphone par l’utilisateur avant de clôturer VIS-01.
+- Aucun changement serveur ni cloud ; le contrôle cloud du build indique que les variables publiques ne sont pas injectées dans ce build local.
+
 ## Checkpoint courant — roadmap et parité Scène, 10 octobre 2026
 
 ### État GitHub et portée

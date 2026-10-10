@@ -78,6 +78,14 @@ describe("les effets de révélation", () => {
     expect(html).not.toContain("fx-flash");
   });
 
+  it("donne au Rare son aura bordeaux, sans flash d'Épique", async () => {
+    const html = await reveler([carte("rare")]);
+    expect(html).toContain("reveal-rare-aura-rare");
+    expect(html).toContain("RARE");
+    expect(html).not.toContain("reveal-cinematic-field");
+    expect(html).not.toContain("fx-flash");
+  });
+
   it("donne un éclat à l'Épique, sans écran blanc", async () => {
     const html = await reveler([carte("epic")]);
     expect(html).toContain("reveal-rare-aura");

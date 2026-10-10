@@ -31,6 +31,7 @@ import { TEAR_HAPTIC } from "@/lib/reveal";
 import { playTear } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
 import { pullVerdict, type PullVerdict } from "@/lib/pull";
+import { cardEffectsAllowed } from "@/lib/tilt";
 
 
 function formatCountdown(date: number | null, now: number) {
@@ -166,8 +167,10 @@ export function HomeView({
       const bounds = packArtwork.getBoundingClientRect();
       const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - .5) * 2));
       const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - .5) * 2));
-      packArtwork.style.setProperty("--pack-tilt-x", `${-y * 12}deg`);
-      packArtwork.style.setProperty("--pack-tilt-y", `${x * 15}deg`);
+      if (cardEffectsAllowed()) {
+        packArtwork.style.setProperty("--pack-tilt-x", `${-y * 6}deg`);
+        packArtwork.style.setProperty("--pack-tilt-y", `${x * 8}deg`);
+      }
       event.currentTarget.style.setProperty("--pack-shadow-x", `${x * 18}px`);
       event.currentTarget.style.setProperty("--pack-shadow-scale", `${1 - Math.abs(x) * .12}`);
     }
