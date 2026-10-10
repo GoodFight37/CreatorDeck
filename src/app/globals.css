@@ -1564,6 +1564,15 @@ input:focus-visible {
 .binder-empty-state strong { max-width: 270px; color: var(--paper); font-family: var(--font-display); font-size: 22px; line-height: 1.05; }
 .binder-empty-state span { color: var(--muted); font-size: 13px; }
 .binder-empty-state button { min-height: 40px; margin-top: 7px; padding: 0 15px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--panel-2); color: var(--paper); font-size: 12px; font-weight: 700; }
+.atelier-warmup { display: flex; max-width: 420px; flex-direction: column; align-items: center; gap: 9px; margin: 40px auto 0; padding: 26px 20px; border: 1px solid var(--line); border-radius: 8px; background: radial-gradient(ellipse at 50% 0, rgba(156, 37, 69, .15), transparent 72%), var(--panel); text-align: center; }
+.atelier-warmup-icon { display: grid; width: 48px; height: 48px; place-items: center; border: 1px solid rgba(190, 72, 99, .42); border-radius: 50%; background: rgba(117, 23, 47, .2); color: #e49aaa; }
+.atelier-warmup > span { color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: .2em; }
+.atelier-warmup h2 { margin: 2px 0 0; color: var(--paper); font-family: var(--font-display); font-size: 28px; line-height: 1; }
+.atelier-warmup p { max-width: 275px; margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.atelier-warmup-meter { width: min(100%, 260px); height: 5px; margin-top: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.09); }
+.atelier-warmup-meter i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #7e1734, #df718e); }
+.atelier-warmup > strong { color: #e5bac5; font-size: 11px; font-variant-numeric: tabular-nums; }
+.atelier-warmup .primary-button { margin-top: 8px; }
 
 .streak-pill { color: #ffd48e; border-color: rgba(255,190,85,.18); background: rgba(255,190,85,.08); }
 .reward-summary-banner {
@@ -1736,6 +1745,15 @@ input:focus-visible {
 .stats-grid article { display: flex; min-width: 0; align-items: center; flex-direction: column; gap: 4px; padding: 14px 7px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; background: rgba(255, 255, 255, .025); }
 .stats-grid strong { color: white; font-size: 18px; }
 .stats-grid span { color: var(--muted); font-size: 12px; }
+.profile-showcase { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(145deg, rgba(117,23,47,.11), rgba(255,255,255,.02) 58%), var(--panel); }
+.profile-showcase-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.profile-showcase-heading > div:first-child > span { color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: .17em; }
+.profile-showcase-heading h2 { margin: 2px 0 0; color: var(--paper); font-family: var(--font-display); font-size: 23px; line-height: 1; }
+.profile-streak { display: inline-flex; max-width: 56%; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid rgba(208,149,82,.2); border-radius: 99px; background: rgba(208,149,82,.07); color: #e5c08c; font-size: 9px; line-height: 1.2; }
+.profile-streak svg { flex: 0 0 auto; }
+.profile-showcase-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.profile-showcase-cards .creator-card { box-shadow: 0 10px 22px -16px #000; }
+.profile-showcase-empty { margin: 0; padding: 12px 2px 3px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 
 /*
  * ═══ LE MENU DU PROFIL ═════════════════════════════════════════════════════
@@ -2230,6 +2248,11 @@ input:focus-visible {
  * mot, une flèche : c'est un renvoi, pas un bouton.
  */
 .home-links { display: flex; flex-direction: column; margin-top: 6px; }
+.daily-goal { position: relative; display: flex; min-height: 74px; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; margin: 8px 0 2px; padding: 10px 40px 10px 12px; border: 1px solid rgba(183, 71, 99, .32); border-radius: 6px; background: linear-gradient(110deg, rgba(117, 23, 47, .2), rgba(255,255,255,.025)); color: var(--paper); text-align: left; }
+.daily-goal > span { color: #d58b9c; font-size: 9px; font-weight: 750; letter-spacing: .17em; }
+.daily-goal strong { overflow: hidden; max-width: 100%; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.daily-goal small { color: var(--muted); font-size: 10px; }
+.daily-goal > svg { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); color: #d58b9c; }
 .text-link {
   display: flex;
   width: 100%;

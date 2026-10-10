@@ -45,7 +45,9 @@ describe("les écrans", () => {
 
   it("ouvre les quatre piliers, chacun avec son écran", async () => {
     await application();
-    expect(banc.ecran("01-accueil")).toContain("Ouvrir le booster");
+    const drop = banc.ecran("01-accueil");
+    expect(drop).toContain("Ouvrir le booster");
+    expect(drop).toContain("OBJECTIF DU JOUR");
 
     banc.appuyer("Binder");
     const binder = banc.ecran("02-binder");
@@ -65,7 +67,12 @@ describe("les écrans", () => {
 
     banc.appuyer("Toi");
     // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
-    expect(banc.ecran("04-toi")).toContain("Mon compte");
+    const profile = banc.ecran("04-toi");
+    expect(profile).toContain("Mon compte");
+    expect(profile).toContain("Ta vitrine");
+    expect(profile).toContain("Ta première carte t’attend.");
+    expect(profile).not.toContain("0/1000");
+    expect(profile).not.toContain("0 boosters");
   });
 
   it("ouvre les feuilles : le compte, les objectifs, les taux", async () => {

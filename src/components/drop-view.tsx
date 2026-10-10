@@ -234,6 +234,9 @@ export function HomeView({
   // endroit, le prochain booster.
   const packCopy = game.streak.jackpot ? `${pityCopy} · Perfect du 7ᵉ jour garanti` : pityCopy;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
+  const dailyMission = game.missions.find((mission) => !mission.done)
+    ?? game.missions.find((mission) => mission.done && !mission.claimed)
+    ?? null;
   // Les Sortants encore artisanables : ils ont quitté le classement (plus
   // tirables, hors complétion) mais leur fenêtre d'artisanat reste ouverte
   // pendant l'édition de leur départ. Ce sont les dernières cartes à rejoindre
@@ -507,6 +510,21 @@ export function HomeView({
         </button>
 
         <div className="home-links">
+          <button type="button" className="daily-goal" onClick={onShowMissions} aria-label="Voir l’objectif du jour">
+            <span>OBJECTIF DU JOUR</span>
+            {dailyMission ? (
+              <>
+                <strong>{dailyMission.label}</strong>
+                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
+              </>
+            ) : (
+              <>
+                <strong>Tes missions du jour sont terminées</strong>
+                <small>Reviens demain pour un nouvel objectif.</small>
+              </>
+            )}
+            <ChevronRight size={17} />
+          </button>
           <button type="button" className="text-link" onClick={onShowMissions}>
             <span>Objectifs et saisons</span>
             <ChevronRight size={15} />

@@ -597,7 +597,7 @@ export function CreatorDeckApp() {
           />
         ) : null}
         {tab === "atelier" ? (
-          <AtelierView game={game} onNotice={showNotice} onError={showError} />
+          <AtelierView game={game} onNotice={showNotice} onError={showError} onGoDrop={() => setTab("home")} />
         ) : null}
         {tab === "profile" ? (
           <ProfileView

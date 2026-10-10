@@ -199,8 +199,19 @@ describe("mille créateurs dans l'Atelier", () => {
 
   it("ne pose qu'une page de créateurs manquants", async () => {
     const { AtelierView } = await import("@/components/atelier-view");
-    const game = getGameView(createInitialState(T0), T0);
-    expect(game.stats.uniqueCreators).toBe(0);
+    const state = createInitialState(T0);
+    const creator = CATALOGUE[0]!;
+    state.cards = Array.from({ length: 11 }, (_, index) => ({
+      id: `starter-duplicate-${index}`,
+      creatorSlug: creator.slug,
+      rarity: creator.rarity,
+      variant: "standard" as const,
+      obtainedAt: T0 - index,
+      rareDrop: false,
+    }));
+    const game = getGameView(state, T0);
+    expect(game.stats.uniqueCreators).toBe(1);
+    expect(game.stats.duplicates).toBe(10);
 
     await banc.monter(
       <AtelierView game={game} onNotice={() => {}} onError={() => {}} />,
@@ -214,6 +225,20 @@ describe("mille créateurs dans l'Atelier", () => {
     banc.appuyer(/^Suivant/);
     expect(document.body.textContent).toContain("Page 2");
     expect(pose().lignes).toBe(LIGNES_PAR_PAGE);
+  });
+
+  it("simplifie l’Atelier jusqu’à dix doublons", async () => {
+    const { AtelierView } = await import("@/components/atelier-view");
+    const game = getGameView(createInitialState(T0), T0);
+    await banc.monter(
+      <AtelierView game={game} onNotice={() => {}} onError={() => {}} onGoDrop={() => {}} />,
+    );
+
+    expect(document.body.textContent).toContain("Encore 10 doublons");
+    expect(document.body.textContent).toContain("0 / 10 doublons");
+    expect(document.querySelectorAll(".atelier-row")).toHaveLength(0);
+    expect(document.body.textContent).not.toContain("1000 manquants");
+    expect(document.body.textContent).toContain("Retour au Drop");
   });
 
   it("ne pose qu'une page de doublons, même avec trois cents groupes", async () => {

@@ -49,10 +49,12 @@ export function AtelierView({
   game,
   onNotice,
   onError,
+  onGoDrop,
 }: {
   game: GameView;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
+  onGoDrop?: () => void;
 }) {
   const [mode, setMode] = useState<Mode>("craft");
   const [query, setQuery] = useState("");
@@ -229,6 +231,31 @@ export function AtelierView({
     } finally {
       setBulkBusy(false);
     }
+  }
+
+  // Craft reste visible comme pilier, mais n’expose pas ses deux listes vides
+  // avant que le joueur ait dix copies recyclables. Les règles de craft et de
+  // recyclage restent inchangées ; seul le premier écran est simplifié.
+  if (game.stats.duplicates < 10) {
+    const restant = Math.max(0, 10 - game.stats.duplicates);
+    return (
+      <div className="view atelier-view">
+        <section className="page-title-row">
+          <div><h1>Façonne ta collection</h1></div>
+        </section>
+        <section className="atelier-warmup" aria-label="Déblocage de l’Atelier">
+          <div className="atelier-warmup-icon"><Hammer size={22} /></div>
+          <span>ATELIER</span>
+          <h2>{restant ? `Encore ${restant} doublon${restant > 1 ? "s" : ""}` : "Ton atelier est prêt"}</h2>
+          <p>À 10 doublons, tu pourras recycler et façonner ta collection.</p>
+          <div className="atelier-warmup-meter" role="progressbar" aria-label="Progression avant l’ouverture de l’Atelier" aria-valuemin={0} aria-valuemax={10} aria-valuenow={game.stats.duplicates}>
+            <i style={{ width: `${Math.min(100, game.stats.duplicates * 10)}%` }} />
+          </div>
+          <strong>{Math.min(10, game.stats.duplicates)} / 10 doublons</strong>
+          {onGoDrop ? <button type="button" className="primary-button" onClick={onGoDrop}>Retour au Drop</button> : null}
+        </section>
+      </div>
+    );
   }
 
   return (

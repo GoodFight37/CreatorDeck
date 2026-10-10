@@ -10,17 +10,18 @@
  * suite se lisent mal, et une ligne qu'on ne trouve pas est une ligne qui
  * n'existe pas. Chaque titre dit ce qu'il y a dessous.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
+import { CreatorCard } from "@/components/creator-card";
 import { useCloud } from "@/hooks/use-cloud";
 
 import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
 
-import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
+import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 
 import { regionLabel } from "@/lib/regions";
@@ -41,6 +42,14 @@ import { type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
+const RARITY_SCORE: Record<Rarity, number> = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+};
+const VARIANT_SCORE = { standard: 0, live: 1, holo: 2, gold: 3 } as const;
 
 export function ProfileView({
   game,
@@ -96,6 +105,21 @@ export function ProfileView({
     void cloudStore.loadWishlist();
   }, [cloud.configured, cloud.userId]);
   const wishlistCreator = cloud.wishlistSlug ? CREATOR_BY_SLUG.get(cloud.wishlistSlug) ?? null : null;
+  const ownedCards = game.cards;
+  const showcase = useMemo(() => {
+    const bestByCreator = new Map<string, (typeof ownedCards)[number]>();
+    const score = (card: (typeof ownedCards)[number]) =>
+      RARITY_SCORE[card.rarity] * 10 + VARIANT_SCORE[card.variant];
+    for (const card of ownedCards) {
+      const previous = bestByCreator.get(card.creatorSlug);
+      if (!previous || score(card) > score(previous) || (score(card) === score(previous) && card.obtainedAt > previous.obtainedAt)) {
+        bestByCreator.set(card.creatorSlug, card);
+      }
+    }
+    return [...bestByCreator.values()]
+      .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt)
+      .slice(0, 3);
+  }, [ownedCards]);
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
@@ -191,23 +215,55 @@ export function ProfileView({
         </div>
       </section>
 
-      <div className="stats-grid">
-        <article>
-          <Layers3 size={18} />
-          <strong>{game.stats.totalCards}</strong>
-          <span>cartes</span>
-        </article>
-        <article>
-          <BookOpen size={18} />
-          <strong>{game.stats.uniqueCreators}/{CREATORS.length}</strong>
-          <span>streameurs</span>
-        </article>
-        <article>
-          <Zap size={18} />
-          <strong>{game.stats.openings}</strong>
-          <span>boosters</span>
-        </article>
-      </div>
+      {game.stats.totalCards > 0 ? (
+        <div className="stats-grid">
+          <article>
+            <Layers3 size={18} />
+            <strong>{game.stats.totalCards}</strong>
+            <span>cartes</span>
+          </article>
+          <article>
+            <BookOpen size={18} />
+            <strong>{game.stats.uniqueCreators}/{CREATORS.length}</strong>
+            <span>streameurs</span>
+          </article>
+          <article>
+            <Zap size={18} />
+            <strong>{game.stats.openings}</strong>
+            <span>boosters</span>
+          </article>
+        </div>
+      ) : null}
+
+      <section className="profile-showcase" aria-label="Vitrine de cartes">
+        <div className="profile-showcase-heading">
+          <div><span>À EXPOSER</span><h2>Ta vitrine</h2></div>
+          <div className="profile-streak">
+            <Zap size={14} />
+            <span>
+              {game.streak.jackpot
+                ? "Récompense de série prête"
+                : game.streak.todayDone
+                  ? `J${Math.max(1, game.streak.days)} validé aujourd’hui`
+                  : game.streak.days
+                    ? `${game.streak.days} jour${game.streak.days > 1 ? "s" : ""} d’affilée`
+                    : "Ta série commence aujourd’hui"}
+            </span>
+          </div>
+        </div>
+        {showcase.length ? (
+          <div className="profile-showcase-cards">
+            {showcase.map((card) => {
+              const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
+              return creator ? (
+                <CreatorCard key={card.id} creator={creator} variant={card.variant} compact />
+              ) : null;
+            })}
+          </div>
+        ) : (
+          <p className="profile-showcase-empty">Ta première carte t’attend. Ouvre un booster pour commencer ta vitrine.</p>
+        )}
+      </section>
 
       {/*
        * La wishlist. Elle ne s'affiche que sur un build avec cloud : un épinglé
