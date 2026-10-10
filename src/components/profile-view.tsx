@@ -41,6 +41,7 @@ import { type GameView } from "@/lib/game-engine";
 
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { BUILD_COMMIT, BUILD_VERSION } from "@/lib/build-version";
 
 const RARITY_SCORE: Record<Rarity, number> = {
   common: 0,
@@ -212,6 +213,12 @@ export function ProfileView({
         <div>
           <h1>Mon profil</h1>
           <span>{CATALOG_EDITION}</span>
+          <small
+            className="profile-build-version"
+            title={BUILD_COMMIT ? `Commit Git : ${BUILD_COMMIT}` : "Build sans commit Git associé"}
+          >
+            Version {BUILD_VERSION}
+          </small>
         </div>
       </section>
 
