@@ -2,6 +2,23 @@
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
 ### Scénarios quantitatifs simplifiés — 10 octobre 2026
+### Monte-Carlo indépendant — collection et doublons (10 octobre 2026)
+
+**Méthode :** 1 000 parties indépendantes pour chaque couple (2, 6, 12 Live Drop par jour) × (7, 30 jours), graine pseudo-aléatoire déterministe par partie. Reprise des cinq tables de rareté Live de `src/data/pull-rates.json`, du Perfect Live (1‰, 82 % Épique / 18 % Légendaire), de la garantie Légendaire au 12ᵉ booster sans Légendaire, et des effectifs actuels du catalogue (300 Communes, 300 Peu communes, 230 Rares, 120 Épiques, 50 Légendaires). Choix uniforme d'un créateur à l'intérieur de sa rareté. Chaque carte est « nouvelle » si le créateur n'a jamais été tiré ; sinon elle est comptée comme doublon et sa valeur de recyclage est additionnée à titre **potentiel**, pas comme crédit effectif.
+
+| Profil | Durée | Live | Créateurs distincts (moyenne) | Doublons (moyenne) | Points de recyclage potentiels (moyenne) | Boosters avec Légendaire (moyenne) |
+|---|---:|---:|---:|---:|---:|---:|
+| Occasionnel, 2/j | 7 j | 14 | 67,4 | 2,6 | 131,5 | 1,9 |
+| Occasionnel, 2/j | 30 j | 60 | 257,4 | 42,6 | 2 173,4 | 8,7 |
+| Régulier, 6/j | 7 j | 42 | 188,6 | 21,4 | 1 083,1 | 6,0 |
+| Régulier, 6/j | 30 j | 180 | 584,7 | 315,3 | 16 100,6 | 26,7 |
+| Intensif, 12/j | 7 j | 84 | 339,6 | 80,4 | 4 099,3 | 12,3 |
+| Intensif, 12/j | 30 j | 360 | 820,7 | 979,3 | 49 974,3 | 53,6 |
+
+**Interprétation prudente :** l'accumulation de doublons s'accélère fortement après plusieurs centaines de tirages ; le Craft, les jetons et les échanges sont donc cruciaux. Les valeurs de recyclage supposent que chaque doublon de créateur puisse être recyclé, **ce qui ne reproduit pas exactement la règle réelle** : le moteur distingue les variantes (Standard/Live/Holo/Gold), et protège notamment les Live du recyclage de masse. Les points sont des valeurs théoriques maximales dans ce modèle, non des revenus réels. Pas de Paquet Scène, pas de ciblage familial, pas de variations Live/Holo/Gold, pas de bonus Direct, pas de Craft, pas de missions, pas de dépenses, pas de simulation Supabase. Les résultats ne sont pas des mesures du moteur ni de l'application en production.
+
+**Suite obligatoire avant rééquilibrage :** intégrer les variantes, le Paquet Scène, les vraies règles de recyclage et d'artisanat ; exécuter les trajectoires directement avec `game-engine.ts` (et comparer au serveur), mesurer la complétion des familles et le temps jusqu'à la première carte ciblée. Aucun taux modifié à cette étape.
+
 
 Simulation exploratoire indépendante (et **non** exécution du moteur TypeScript ni du serveur). Hypothèses : stock initial 2, réserve maximale 4, recharge naturelle 1/30 min, visites fixes chaque jour (occasionnel 12 h/21 h, régulier 8 h/13 h/20 h, intensif 7 h/10 h/13 h/16 h/19 h/22 h), sans sabliers. Les ouvertures sont distribuées entre visites ; chaque scénario arrive à ouvrir ses 2, 6 ou 12 boosters Live quotidiens. Le Prime Time est compté seulement sur les ouvertures à 20 h. Points et jetons incluent les six petites récompenses de série, répétées chaque semaine, **sans** bonus de jalons, saisons, recyclage, missions, Paquet Scène, Perfect ni dépenses. Les chiffres sont des scénarios conditionnels, pas une prédiction des habitudes réelles.
 
