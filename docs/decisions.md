@@ -169,3 +169,10 @@ les builds locaux/Android. Aucun numéro n’est incrémenté à la main ; un bu
 sans dépôt Git affiche « locale ». Le SHA complet reste disponible dans
 l’infobulle et aucun secret n’est exposé. La preuve de compilation et l’état de
 publication sont consignés dans la passation.
+
+
+## D-019 — 11 octobre 2026 : reset global, tutoriel et cadeau de reprise
+
+À la demande explicite de Malik, réinitialiser une seule fois la progression de tous les comptes, y compris le sien, pour le lancement du tutoriel. Préserver comptes, identités, profils, amis et historique des ventes/échanges terminés ; annuler les échanges en cours et retirer les annonces actives. Effacer collections, réserves/journaux de tirage, monnaies/ressources, missions/série, Paquet Scène et progression d’arène. Chaque compte pourra réclamer **cinq boosters** une fois, uniquement après le tutoriel ; le texte de cadeau attribue la décision à Malik. Le stock cadeau reste distinct de la réserve normale et le tirage passe par le moteur serveur existant. Le récapitulatif d’ouverture se ferme sur « Retour au Drop », sans CTA de réouverture directe.
+
+Les règles de tirage et les récompenses existantes ne changent pas. L’implémentation doit être additive et testée sur PostgreSQL jetable ; aucune migration de production n’est comprise dans le travail de code. Avant une application réelle, vérifier le projet cible, le schéma, une sauvegarde et la possibilité de récupération. Au checkpoint du 11 octobre, cette décision est adoptée mais **aucune ligne de code de cette demande n’est encore implémentée**. Le scope détaillé et les critères de validation figurent dans la [roadmap](roadmap.md) et la [passation](agent-handoff.md).
