@@ -41,6 +41,8 @@ instructions de reset ou d'envoi vers main.
 | QA-01 / P1 | Rendre le test SQL d'arène déterministe et terminer les preuves CI/navigateur — **SQL corrigé**, focus K-010 corrigé et E2E ciblés 2/2 ; CI verte au SHA `2d933c9` | K-007, accès Chromium (K-008), GitHub CI | Contrôle « hors week-end » indépendant de la date réelle : 559/559 réussis le 10 octobre, fenêtres fermée/ouverte imposées et dates explicites vérifiées ; E2E joués le 10 octobre : 24 réussis / 2 échecs de focus, puis 2/2 cloud simulés ; K-010 corrigé ensuite (`4b9fcca`), même scénario bureau/téléphone 2/2 ; run CI #235 vert au SHA `2d933c9`, quatre jobs réussis ; cloud simulé sans valeur de preuve en production |
 | CLOUD-01 / P2 | Vérifier la version distante et les parcours en ligne | Accès autorisé au projet, variables publiques, statut `schema_versions()` | Version constatée depuis la base cible ; invité/compte, tirage, sauvegarde et Tribunal vérifiés ; aucune migration supposée appliquée sur simple présence dans Git |
 
+Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 : prévoir un retour du focus disponible après consommation du Paquet Scène ; K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.
+
 Les préférences encore ouvertes du dossier d'atelier (dos/halo, éclat, Perfect,
 limites de sélection) sont des demandes de validation, pas des décisions prises
 par cet audit. Ne pas modifier les probabilités ou ajouter un chantier sans demande.

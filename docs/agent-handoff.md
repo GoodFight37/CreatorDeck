@@ -1,6 +1,58 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — CI vérifiée, preview bloqué, 10 octobre 2026, 11 h 57 Europe/Paris
+## Checkpoint courant — visite Chromium locale, 10 octobre 2026, 12 h 41 Europe/Paris
+
+- Reprise autorisée après choix de la visite locale, puis validation sur téléphone réel.
+  Checkout `/workspace/CreatorDeck` initialement propre sur `work` à `ae5016f` ;
+  HEAD distant design vérifié à `66b78d583a33e7f135307ac371f2485e4654a2d6`, objets
+  récupérés puis switch explicite sur `design/booster-reveal-polish`, sans worktree,
+  reset, modification de main ni perte de travail. SHA du code visité : `66b78d5` ;
+  différence avec `2d933c9` uniquement documentaire. Réservation libérée.
+- Correction des conclusions de conversation : AGENTS et ce checkpoint existent
+  bien à `66b78d5`, et `2d933c9` est son ancêtre. La première lecture utilisait
+  un FETCH_HEAD ancien malgré un fetch `--no-write-fetch-head`. Les erreurs curl 7
+  et Python `Operation not permitted` en sandbox ne prouvaient pas une panne proxy.
+  La même requête avec autorisation d'exécution, proxy/CA inchangés, répond HTTP 302
+  vers `vercel.com/sso-api` ; suivre la redirection échoue avec curl 56,
+  `CONNECT tunnel failed, response 403`. Protection Vercel et domaine SSO non
+  autorisé ; aucune nécessité démontrée de recréer l'environnement. Aucune règle
+  réseau changée, aucun accès authentifié ou rendu Vercel obtenu.
+- Le nouvel environnement n'avait conservé ni Playwright ni Chromium. `npm ci
+  --cache /workspace/.npm --no-audit --no-fund` : code 0, 602 paquets ; Next 16.3.6
+  et Playwright 1.63.0 comparés au lock, identiques. Installation Chromium par le
+  CLI verrouillé : code 0, Chromium/Headless Shell 153.0.8010.12, révision 1243.
+  Serveur `NEXT_TELEMETRY_DISABLED=1 npm run dev -- --hostname 127.0.0.1` arrêté
+  après visite. Aucun build de production ni suite de tests relancé.
+- Visites directes via scripts temporaires, pas le runner E2E : Live bureau
+  1280×900, téléphone 412×915 avec vrais événements touch Chromium simulés,
+  réduction d'animations 320×568 ; HTTP 200, aucun pageerror, fermeture rend le
+  focus au bouton Live et enlève inert. Cartes et actions restent dans l'écran ;
+  face sans animation/transform en mode réduit. Captures scellé/coupure/dos/face
+  examinées ; vidéos enregistrées, pas de mesure de fluidité sur appareil réel.
+- Scène 412×915 : ouverture puis progression jusqu'à la cinquième carte observées.
+  Perfect à 320×568 et 1280×900 : cinq cartes visibles, captures examinées.
+  Perfect provoqué uniquement dans un contexte navigateur local isolé, en remplaçant
+  les tirages Uint32Array(1) par zéro ; aucune modification du moteur ou des taux,
+  aucun parcours serveur réel ni preuve probabiliste. Les autres contextes sont
+  indépendants. Audio/haptique et reflets coupés non validés par cette visite.
+- Nouveau point K-011 : après fermeture Scène, focus sur BODY, bouton Scène
+  désactivé « Reviens demain ». Reproduit deux fois ; inert=false, aucun pageerror.
+  Le hook tente de focaliser la cible capturée, mais le bouton consommé ne peut
+  plus recevoir le focus. K-010 Live reste corrigé ; ne pas rouvrir son symptôme.
+- Artifacts locaux hors dépôt : `/workspace/scratch/creatordeck-visual-66b78d5/`
+  (captures, vidéos, scripts, report.json, special-report.json, scene-focus-report.json).
+  Pas publiés, conservation entre environnements non garantie. Bloc Next ajouté
+  automatiquement à AGENTS sauvegardé avec les artifacts puis seul ce bloc retiré ;
+  aucun fichier produit, manifeste ou lock modifié.
+- CI verte à `2d933c9` conservée comme preuve historique, pas relue/rejouée ici.
+  VIS-01/K-005 restent ouverts pour appréciation au pouce, sons/vibrations et
+  fluidité sur téléphone réel. CLOUD-01 hors périmètre, aucune production touchée.
+- Prochaine action : corriger K-011 avec un retour clavier vers une cible disponible
+  après consommation Scène, puis visiter ce parcours ; valider sur téléphone réel
+  le même code (preview protégé accessible au joueur connecté ou APK).
+  Publication de ce checkpoint : retrouver son SHA via git log et comparer au distant.
+
+## Historique — CI vérifiée, preview bloqué, 10 octobre 2026, 11 h 57 Europe/Paris
 
 - Agent : Codex Cloud ; contrôle ciblé après le « go », réservation libérée.
   Branche `design/booster-reveal-polish`, HEAD local et distant identiques :
