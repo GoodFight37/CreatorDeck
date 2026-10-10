@@ -118,3 +118,27 @@ le verrou Perfect (2,6 s), le bang calé sur le début du flip et le relais de
 1,9 s restent inchangés. Pas de changement d’économie, de taux, de récompense ou
 de backend. Adopté à la demande utilisateur ; validations et limites actuelles
 sont consignées dans [la passation](agent-handoff.md).
+
+## D-016 — 10 octobre 2026 : première collection et boucle post-ouverture
+
+Le retour joueur décrit le classeur vide et l’absence de conclusion après
+l’ouverture comme deux ruptures de la boucle de collection. Le Binder ouvre
+maintenant sur « Obtenues » ; quand aucune carte n’est encore possédée, il
+remplace les compteurs à zéro et la pagination par une invitation à ouvrir un
+booster et un accès volontaire au catalogue. Le catalogue reste disponible,
+mais n’est plus le premier écran. Les pages du catalogue affichent au plus
+12 cartes.
+
+Après les cinq révélations, l’écran présente les cartes du paquet, le nombre de
+nouvelles et un bouton « Rouvrir un booster » qui relance réellement le tirage
+si la réserve Live le permet. Sinon, le bouton revient au Drop. L’overlay OBS
+garde son flux existant ; les sons de révélation, verrous et minutages ne
+changent pas.
+
+Le son et les reflets sont déjà actifs par défaut lorsqu’aucun choix local
+n’est enregistré. Un choix explicite « OFF » reste respecté ; les reflets
+restent coupés par `prefers-reduced-motion` sauf choix explicite prévu par le
+réglage, tandis que les animations lourdes suivent toujours le garde-fou de
+mouvement réduit. Aucun choix stocké n’est écrasé automatiquement. Décision
+adoptée à partir du retour joueur ; tests et état de validation sont consignés
+dans [la passation](agent-handoff.md) et [la roadmap](roadmap.md).

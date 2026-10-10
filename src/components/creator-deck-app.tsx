@@ -755,6 +755,10 @@ export function CreatorDeckApp() {
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
           onClose={closeReveal}
+          onReopen={game.player.packs > 0 ? () => {
+            closeReveal();
+            void handleOpenPack();
+          } : undefined}
         />
       ) : null}
     </main>

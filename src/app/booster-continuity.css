@@ -191,6 +191,38 @@
   transform: translateX(-50%);
 }
 .reveal-game .reveal-next:active { transform: translateX(-50%) scale(.985); }
+.reveal-game.reveal-summary-open .reveal-ambient { display: block; }
+.reveal-game.reveal-summary-open .reveal-summary {
+  position: absolute;
+  inset: calc(68px + env(safe-area-inset-top)) 0 calc(92px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(18px, 4vh, 34px);
+  width: min(100%, 560px);
+  margin: auto;
+  padding: 20px 18px;
+}
+.reveal-summary-copy { text-align: center; }
+.reveal-summary-copy > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .2em; }
+.reveal-summary-copy h2 { margin: 6px 0 2px; color: var(--paper); font-family: var(--font-display); font-size: clamp(38px, 12vw, 58px); line-height: .95; }
+.reveal-summary-copy p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+.reveal-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 8px; }
+.reveal-summary-card { position: relative; min-width: 0; text-align: center; }
+.reveal-summary-card .summary-card-art { width: 100%; border-radius: 5px; box-shadow: 0 8px 18px -12px #000; }
+.reveal-summary-card .summary-card-art .card-nameplate,
+.reveal-summary-card .summary-card-art .card-rank,
+.reveal-summary-card .summary-card-art .card-region { display: none; }
+.reveal-summary-card-name { display: block; overflow: hidden; margin-top: 6px; color: var(--paper); font-size: 10px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.reveal-summary-card-rarity { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+.reveal-summary-card > i { position: absolute; top: 4px; left: 50%; padding: 3px 5px; transform: translateX(-50%); border: 1px solid rgba(255,255,255,.26); border-radius: 99px; background: rgba(117,23,47,.94); color: #fff; font-size: 7px; font-style: normal; font-weight: 800; letter-spacing: .06em; white-space: nowrap; }
+.reveal-summary-card.is-new .summary-card-art { box-shadow: 0 0 0 1px rgba(192,77,105,.7), 0 10px 22px -12px rgba(192,77,105,.7); }
+.reveal-summary-open .reveal-perfect-grid,
+.reveal-summary-open .reveal-stage,
+.reveal-summary-open .reveal-cinematic-field,
+.reveal-summary-open .perfect-banner,
+.reveal-summary-open .streak-gain { display: none; }
+.reveal-summary-open .reveal-header > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .18em; }
 .reveal-game .streak-gain {
   position: absolute;
   top: calc(var(--scene-height) - 116px - env(safe-area-inset-bottom));

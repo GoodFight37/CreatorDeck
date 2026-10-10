@@ -108,7 +108,9 @@ describe("le réglage du son", () => {
     // Un filtre, puis deux pages : trois gestes, aucun son.
     const filtres = [...document.querySelectorAll<HTMLButtonElement>(".filter-chips button")];
     expect(filtres.length, "aucun filtre dans le classeur").toBeGreaterThan(1);
-    banc.appuyer(filtres[1]!.textContent!.trim());
+    // Le classeur s'ouvre sur les obtenues (vide au premier lancement) : on
+    // choisit le catalogue explicitement avant de feuilleter ses pages.
+    banc.appuyer(filtres[0]!.textContent!.trim());
     banc.appuyer("Suivant");
     banc.appuyer("Précédent");
 

@@ -47,6 +47,7 @@ export function RevealOverlay({
   onSkipAll,
   onNext,
   onClose,
+  onReopen,
   returnFocusTo,
 }: {
   cards: DrawnCard[];
@@ -69,6 +70,8 @@ export function RevealOverlay({
   onSkipAll?: () => void;
   onNext: () => void;
   onClose: () => void;
+  /** Rejouer un booster après le récapitulatif, si la réserve le permet. */
+  onReopen?: () => void;
   returnFocusTo?: HTMLElement | null;
 }) {
   const dialogRef = usePresentationFocus(!overlay, returnFocusTo);
@@ -82,7 +85,9 @@ export function RevealOverlay({
   // l'exécuter (jouer les sons, vibrer, verrouiller l'écran).
   const perfect = isPerfect(cards);
   const rarity = card?.rarity ?? "common";
+  const newCardCount = cards.filter((item) => item.isNew).length;
   const [locked, setLocked] = useState(perfect);
+  const [showSummary, setShowSummary] = useState(false);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -150,7 +155,10 @@ export function RevealOverlay({
   // Une carte déjà révélée se range dès le premier appui.
   function advance() {
     if (locked) return;
-    if (termine) onClose();
+    if (termine) {
+      if (overlay) onClose();
+      else setShowSummary(true);
+    }
     else onNext();
   }
 
@@ -158,7 +166,7 @@ export function RevealOverlay({
     <div
       ref={dialogRef}
       tabIndex={-1}
-      className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}`}
+      className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}${showSummary ? " reveal-summary-open" : ""}`}
       role="dialog"
       aria-modal="true"
       aria-label="Résultat du booster"
@@ -174,7 +182,7 @@ export function RevealOverlay({
         </div>
       ) : null}
       {flash ? <EffectFlash key={`flash-${card.id}`} /> : null}
-      {perfect ? (
+      {perfect && !showSummary ? (
         <div className="perfect-banner" role="status">
           <Sparkles size={13} />
           <span>
@@ -193,7 +201,7 @@ export function RevealOverlay({
         </div>
       ) : null}
       <div className="reveal-header">
-        <span>{perfect ? `${cards.length} / ${cards.length}` : `${index + 1} / ${cards.length}`}</span>
+        <span>{showSummary ? "RÉCAP" : perfect ? `${cards.length} / ${cards.length}` : `${index + 1} / ${cards.length}`}</span>
         <div className="reveal-dots">
           {cards.map((item, dotIndex) => {
             const shown = perfect || dotIndex <= index;
@@ -223,7 +231,7 @@ export function RevealOverlay({
         <button onClick={onClose} aria-label="Fermer" disabled={locked}><X size={20} /></button>
       </div>
 
-      {perfect ? (
+      {perfect && !showSummary ? (
         /* Les cinq cartes ensemble : c'est le moment, il n'y a rien à faire. */
         <div className="reveal-perfect-grid">
           {rareGlow ? (
@@ -254,6 +262,33 @@ export function RevealOverlay({
             ) : null;
           })}
         </div>
+      ) : showSummary ? (
+        <section className="reveal-summary" aria-label="Résumé du booster">
+          <div className="reveal-summary-copy" aria-live="polite">
+            <span>BOOSTER OUVERT</span>
+            <h2>{newCardCount} nouvelle{newCardCount === 1 ? "" : "s"}</h2>
+            <p>{cards.length} cartes dans ta collection</p>
+          </div>
+          <div className="reveal-summary-grid">
+            {cards.map((item) => {
+              const itemCreator = CREATOR_BY_SLUG.get(item.creatorSlug);
+              if (!itemCreator) return null;
+              return (
+                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id}>
+                  <CreatorCard
+                    creator={itemCreator}
+                    variant={item.variant}
+                    className={`summary-card-art rarity-${item.rarity}`}
+                    compact
+                  />
+                  <span className="reveal-summary-card-name">{itemCreator.displayName}</span>
+                  <span className="reveal-summary-card-rarity">{RARITY_META[item.rarity].label}</span>
+                  {item.isNew ? <i aria-label="Nouvelle carte">NOUVELLE</i> : null}
+                </div>
+              );
+            })}
+          </div>
+        </section>
       ) : (
         <div className="reveal-stage">
           {rarityAura && !perfect ? (
@@ -347,20 +382,24 @@ export function RevealOverlay({
 
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
-        onClick={advance}
+        onClick={showSummary ? (onReopen ?? onClose) : advance}
         disabled={locked}
         // La barre du verrou lit la durée du module de mise en scène : une
         // seule vérité, sinon elle finirait avant le bouton ou après lui.
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
       >
         <span>
-          {locked
+          {showSummary
+            ? onReopen ? "Rouvrir un booster" : "Retour au Drop"
+            : locked
             ? "Perfect…"
             : termine
                 ? "Ranger dans le classeur"
                 : "Révéler la suivante"}
         </span>
-        {locked ? (
+        {showSummary ? (
+          <Sparkles size={18} />
+        ) : locked ? (
           <Sparkles size={18} />
         ) : termine ? (
           <BookOpen size={18} />

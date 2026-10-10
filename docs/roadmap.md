@@ -30,6 +30,22 @@ Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 
 
 # Roadmap CreatorDeck
 
+## Checkpoint UX — 10 octobre 2026
+
+Sur `main`, le retour produit du 10 octobre a déclenché une première passe UX :
+le Binder ouvre sur les cartes obtenues, l’état vide invite à ouvrir un booster
+et laisse le catalogue accessible à la demande ; les pages de catalogue sont
+limitées à 12 cartes. La révélation se termine par un récapitulatif des cinq
+cartes, du nombre de nouvelles et une réouverture directe si la réserve le
+permet. Son/reflets sont actifs sans préférence enregistrée ; un choix OFF
+persistant reste respecté. L’avis sur téléphone réel reste à recueillir.
+
+Validation locale de cette passe : écrans **71/71**, tests son/reflets **32/32**,
+typecheck, lint et build réussis. La suite `npm test` complète conserve quatre
+échecs catalogue/migration hors périmètre UX ; GitHub Actions et le déploiement
+Vercel du nouveau SHA n’ont pas été vérifiés ici (`gh` est absent de cette
+machine). Aucun accès à Supabase de production.
+
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
 ### Exécution réelle du bilan local — résultats transmis le 10 octobre 2026
 
@@ -140,8 +156,10 @@ instructions de reset ou d'envoi vers main.
 | ID / priorité | Travail / statut | Dépendances | Critères d'acceptation |
 |---|---|---|---|
 | COORD-01 / P0 | Consolidation et coordination — terminées sur `main` (`2c9b6c4`) | Historique GitHub et documentation de passation | Une seule branche distante (`main`) ; PR #7 intégrée, PR #8 fermée ; anciens résultats et limites consignés ci-dessus |
-| VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Les tests automatisés sont déjà exécutés sur les correctifs ciblés ; reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Aucun nouveau changement d'interface sans retour concret |
-| QA-01 / P1 | Vérifications automatisées — terminées sur le code courant | Environnement de test local et contrôles GitHub | Le workflow GitHub Actions #260, commit `c7eff366`, a réussi dans ses quatre jobs : 70 fichiers / 1 104 tests, écrans/statique/typecheck/lint/build, E2E, migrations 0001–0043 sur PostgreSQL jetable et cloud simulé. Le contrôle Vercel est vert. Aucun résultat simulé ne vaut validation de production |
+| UX-01 / P1 | Première boucle de collection — implémentée, retour sur téléphone attendu | Binder, RevealOverlay, réserve de boosters | Vue « Obtenues » par défaut ; état vide sans compteur/page écrasants ; 12 cartes par page ; résumé des cinq cartes et découvertes ; réouverture directe si réserve disponible. Écrans 71/71, typecheck/lint/build OK ; avis tactile réel ouvert |
+| VIS-01 / P1 | Validation humaine de la scène booster → cinq dos → révélations — encore ouverte | Téléphone réel ; `pack-tear`, `reveal-overlay`, CSS de continuité | Reste l'avis humain sur téléphone (soudure à une main, rendu, rythme, reflets et réduction d'animations). Le retour UX récent n’est pas une validation visuelle sur appareil |
+| QA-01 / P1 | Contrôles locaux UX — réussis ; suite projet/CI à établir | Environnement de test local et GitHub Actions | Écrans 71/71, son/reflets 32/32, typecheck/lint/build OK. `npm test` complet : quatre échecs déjà hors périmètre (tests de synchronisation catalogue/saisons et comptage de colonnes SQL). Le workflow courant n’a pas été consulté : `gh` absent |
+| UX-02 / P1 | Craft, profil et objectif court — à traiter dans la prochaine passe | Retour produit fourni le 10 octobre ; règles d’économie existantes | Réduire le bruit avant dix doublons, orienter Toi vers l’identité du collectionneur, afficher un objectif court sur Drop. Préserver économie, règles serveur et choix déjà mémorisés |
 | CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
 
 Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 corrigé dans `d87b72c` : retour au titre Scène quand le bouton consommé est désactivé ; scénario Scène et scénario Live existant 4/4 réussis bureau/téléphone. K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.

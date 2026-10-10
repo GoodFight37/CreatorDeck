@@ -50,7 +50,7 @@ describe("les écrans", () => {
     banc.appuyer("Binder");
     const binder = banc.ecran("02-binder");
     expect(binder).toContain("binder-tools");
-    expect(binder).toContain("streameurs découverts");
+    expect(binder).toContain("Ta collection commence avec le prochain booster.");
 
     banc.appuyer("Craft");
     expect(banc.ecran("03-craft")).toContain("Façonne ta collection");

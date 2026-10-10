@@ -263,7 +263,26 @@ describe("les bruitages embarqués", () => {
     expect(() => playSample("select")).not.toThrow();
   });
 
-  afterEach(() => setMuted(false));
+  it("reste actif au premier lancement, tant qu'aucun choix n'est enregistré", async () => {
+    const valeurs = new Map<string, string>();
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) => valeurs.get(key) ?? null,
+        setItem: (key: string, value: string) => void valeurs.set(key, value),
+      },
+    });
+    vi.resetModules();
+    const audioNeuf = await import("@/lib/sfx");
+    expect(audioNeuf.isMuted()).toBe(false);
+    audioNeuf.setMuted(true);
+    expect(audioNeuf.isMuted()).toBe(true);
+    audioNeuf.setMuted(false);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    setMuted(false);
+  });
 });
 
 /**

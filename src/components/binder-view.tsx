@@ -45,13 +45,9 @@ export function CollectionView({
   /** Rejoindre un créateur manquant : dit `true` quand c'est payé. */
   onCraft: (slug: string) => Promise<boolean>;
 }) {
-  // Le classeur s'ouvre sur **ce qu'on possède** : mille créateurs font cent
-  // douze pages, et personne ne feuillette ça au pouce. Un joueur qui n'a encore
-  // rien ouvre sur le catalogue entier — sinon il verrait un classeur vide, ce
-  // qui est exact mais décourageant.
-  const [filter, setFilter] = useState<CollectionFilter>(() =>
-    game.cards.length > 0 ? "owned" : "all",
-  );
+  // Le classeur s'ouvre sur **ce qu'on possède**. Une première collection vide
+  // reçoit une invitation à ouvrir un booster et un accès explicite au catalogue.
+  const [filter, setFilter] = useState<CollectionFilter>("owned");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<BinderSort>("catalog");
   const [page, setPage] = useState(0);
@@ -69,9 +65,9 @@ export function CollectionView({
   // L'heure ne sert qu'à juger la fraîcheur du direct : une minute de précision
   // suffit (au-delà de dix minutes, tout disparaît de toute façon).
   const now = useNow(60_000);
-  // Une page de classeur, ce sont 9 pochettes (3 × 3) : ce qu'un écran de
-  // téléphone montre d'un coup, exactement comme on ouvre un classeur.
-  const perPage = 9;
+  // Une page reste courte et tourne vite au pouce : 12 pochettes (3 × 4),
+  // sans présenter tout le catalogue vide au premier regard.
+  const perPage = 12;
 
   const owned = useMemo(() => {
     const map = new Map<
@@ -144,6 +140,7 @@ export function CollectionView({
   }, [filter, live, now, owned, query, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const showPager = filtered.length > perPage;
   const safePage = Math.min(page, totalPages - 1);
   const visibleCreators = filtered.slice(
     safePage * perPage,
@@ -164,18 +161,25 @@ export function CollectionView({
           <h1>Mon classeur</h1>
         </div>
         <div className="collection-score">
-          <strong>{progress}%</strong>
-          <span>complété</span>
+          {game.stats.uniqueCreators ? (
+            <><strong>{progress}%</strong><span>complété</span></>
+          ) : (
+            <><strong>À toi</strong><span>ta première carte</span></>
+          )}
         </div>
       </section>
 
-      <div className="progress-track large">
-        <i style={{ width: `${progress}%` }} />
-      </div>
-      <div className="collection-meta">
-        <span>{game.stats.uniqueCreators} / {CREATORS.length} streameurs découverts</span>
-        <span>{game.stats.totalCards} cartes obtenues</span>
-      </div>
+      {game.stats.uniqueCreators ? (
+        <>
+          <div className="progress-track large">
+            <i style={{ width: `${progress}%` }} />
+          </div>
+          <div className="collection-meta">
+            <span>{game.stats.uniqueCreators} / {CREATORS.length} streameurs découverts</span>
+            <span>{game.stats.totalCards} cartes obtenues</span>
+          </div>
+        </>
+      ) : null}
 
       {/* La recherche, le tri et les filtres restent **collés sous la barre**
           pendant qu'on feuillette : chercher un créateur après avoir descendu
@@ -264,7 +268,7 @@ export function CollectionView({
       </div>
 
 
-      <div className="binder-pager">
+      {showPager ? <div className="binder-pager">
         <button
           onClick={() => {
             // **Aucun son** : tourner une page, c'est se déplacer (retiré le
@@ -286,7 +290,7 @@ export function CollectionView({
           <span>Suivant</span>
           <ChevronRight size={15} />
         </button>
-      </div>
+      </div> : null}
 
       <div className="binder-page">
         <div className="collection-grid">
@@ -316,7 +320,17 @@ export function CollectionView({
           })}
         </div>
         {!filtered.length ? (
-          <div className="no-results">Aucune carte ne correspond à ce filtre.</div>
+          <div className="binder-empty-state">
+            {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
+              <>
+                <strong>Ta collection commence avec le prochain booster.</strong>
+                <span>Les cartes que tu découvres apparaîtront ici.</span>
+                <button type="button" onClick={() => setFilter("all")}>Voir les créateurs à découvrir</button>
+              </>
+            ) : (
+              <span>Aucune carte ne correspond à cette recherche.</span>
+            )}
+          </div>
         ) : null}
       </div>
 

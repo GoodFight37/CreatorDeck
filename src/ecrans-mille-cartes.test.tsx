@@ -27,8 +27,8 @@ import { createInitialState, getGameView, type PlayerState } from "@/lib/game-en
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 
-/** Une page de classeur : 9 pochettes (3 × 3). */
-const CARTES_PAR_PAGE = 9;
+/** Une page de classeur : 12 pochettes (3 × 4). */
+const CARTES_PAR_PAGE = 12;
 /** Une page d'Atelier : 20 lignes. */
 const LIGNES_PAR_PAGE = 20;
 
@@ -124,10 +124,10 @@ describe("mille cartes dans le classeur", () => {
 
     await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
 
-    // Le classeur s'ouvre sur ce qu'on possède : 1 000 cartes, 112 pages.
+    // Le classeur s'ouvre sur ce qu'on possède : 1 000 cartes, pages courtes.
     expect(document.body.textContent).toContain(`/ ${CATALOG_SIZE}`);
     expect(pose().cartes).toBe(CARTES_PAR_PAGE);
-    // Neuf portraits, pas mille : c'est le décodage d'images qui coûte.
+    // Douze portraits maximum, pas mille : c'est le décodage d'images qui coûte.
     expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
 
     // Feuilleter ne change rien au poids : la page suivante remplace la
@@ -138,6 +138,23 @@ describe("mille cartes dans le classeur", () => {
       expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
     }
     expect(document.body.textContent).toContain("Page 4");
+  });
+
+  it("commence sur les cartes obtenues et évite le mur vide à l'arrivée", async () => {
+    const { CollectionView } = await import("@/components/binder-view");
+    const game = getGameView(createInitialState(T0), T0);
+    await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
+
+    expect(document.body.textContent).not.toContain("0 / 1000");
+    expect(document.body.textContent).toContain("ta première carte");
+    expect(document.body.textContent).toContain("Ta collection commence avec le prochain booster.");
+    expect(pose().cartes).toBe(0);
+    expect(document.body.textContent).not.toContain("Page 1 sur 112");
+    expect(document.querySelector(".binder-pager")).toBeNull();
+
+    banc.appuyer("Voir les créateurs à découvrir");
+    expect(pose().cartes).toBe(CARTES_PAR_PAGE);
+    expect(document.body.textContent).toContain("Toutes (1000)");
   });
 
   it("garde le plafond quand la recherche matche des centaines de noms", async () => {
