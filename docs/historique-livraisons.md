@@ -18,6 +18,7 @@ chantiers suivants ; les autres sont les gros morceaux, dans l'ordre où ils ont
 
 | # | Chantier | État | Où c'est écrit |
 |---|---|---|---|
+| VIS-01 / 2026-10-10 | Sachet plus compact, soudure accessible au milieu, appui sur sachet accueil et déchirure dans les deux sens ; glissement souris natif de l’image désactivé. | **implémenté**, code `0beb6b3` ; E2E ciblés 20/20, tactile simulé 4/4, typecheck/lint code 0 ; validation téléphone et CI attendues | `drop-view.tsx`, `pack-tear.tsx`, CSS booster, [D-012](decisions.md), [passation](agent-handoff.md) |
 | QA-01 / 2026-10-10 | **Le banc SQL du draft ne dépend plus du samedi** : fenêtre fermée puis ouverte dans le Postgres jetable, restauration exacte en `finally`, règles calendaires à dates explicites conservées. `npm run supabase:verify` : **559/559**, code 0. Aucune migration à appliquer. | **livrée (SQL)** ; Chromium installé le 10 octobre, E2E initial : 24 réussis / 2 échecs de focus, cloud simulé 2/2 ; K-010 corrigé ensuite (`4b9fcca`), scénario ciblé bureau/téléphone 2/2 ; CI #235 verte au SHA `2d933c9` ; validation humaine en attente | `scripts/verify-supabase-migrations.mjs`, [passation](agent-handoff.md), [K-007](known-issues.md) |
 | 1 | Boosters tirés côté serveur (jamais de repli silencieux hors ligne) | **livré** | `src/lib/cloud/cloud-store.ts`, § « Le tirage est décidé par le serveur » |
 | 2 | Refonte & migration en ligne (échanges, classements, profils, hôtel, Twitch, carnet) | **livré** | `docs/cloud-supabase.md` § 8 et 9 |

@@ -43,6 +43,13 @@ instructions de reset ou d'envoi vers main.
 
 Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 corrigé dans `d87b72c` : retour au titre Scène quand le bouton consommé est désactivé ; scénario Scène et scénario Live existant 4/4 réussis bureau/téléphone. K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.
 
+Retour humain reçu le 10 octobre : sachet trop grand, soudure difficile à
+atteindre à une main et appui accueil inactif. K-012 / D-012 implémentés dans
+`0beb6b3` : sachet compact, soudure centrale, appui accueil et tracé dans les deux
+sens. E2E ciblés 20/20, tactile simulé 4/4, typecheck/lint code 0 ; captures
+examinées. Nouvelle validation sur téléphone réel et CI du SHA publié attendues.
+VIS-01 reste en cours ; les autres appréciations visuelles ne sont pas closes.
+
 Les préférences encore ouvertes du dossier d'atelier (dos/halo, éclat, Perfect,
 limites de sélection) sont des demandes de validation, pas des décisions prises
 par cet audit. Ne pas modifier les probabilités ou ajouter un chantier sans demande.

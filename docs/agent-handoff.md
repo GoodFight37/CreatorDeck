@@ -1,6 +1,75 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — K-011 corrigé, 10 octobre 2026, Europe/Paris
+## Checkpoint courant — sachet compact et appui accueil, 10 octobre 2026, Europe/Paris
+
+- Demande utilisateur après essai sur son téléphone : paquet d'ouverture trop
+  grand, soudure difficile à atteindre à une main ; appui sur le sachet de
+  l'accueil sans effet. Cinq vidéos Pokémon TCG Pocket reçues et examinées
+  (main.mp4, main (1/2/3).mp4, Pokemon-TCG-Pocket-figure1-2.mp4) : références
+  de cadrage, déchirure horizontale et manipulation des cartes. Aucun média
+  Pokémon ajouté au produit. Correction autorisée par le « Go » après pause
+  pour changement de modèle. Réservation libérée.
+- Checkout existant `/workspace/CreatorDeck`, branche `design/booster-reveal-polish`,
+  initialement propre. Base locale/distante identique `34ffd32dda2e1f0941d674e813f4dbc4a9591b98`.
+  PR #8 relue via HTML : DRAFT, base `arena/01a10c75-creatordeck`, même tête.
+  Aucun main, worktree, merge, changement d'économie ou de règles réseau.
+- Code corrigé et testé : `0beb6b37027ced0630ed828604754aed17f7ffb7`.
+  [Commit](https://github.com/GoodFight37/CreatorDeck/commit/0beb6b37027ced0630ed828604754aed17f7ffb7).
+  Le sachet accueil est un bouton accessible ; appui/clavier et tirage vers le
+  haut ouvrent le même parcours. Les clics générés après un glissement sont
+  ignorés, le geste annulé reste sans ouverture. Le focus revient au sachet,
+  ou au titre Live Drop quand le dernier booster a été consommé.
+- Cause du paquet géant prouvée dans le CSS : sa largeur était la largeur carte
+  divisée par .72, soit environ 94 % de l'écran téléphone. Largeur maintenant
+  indépendante : min(64vw, 280px, 30dvh). À 412×915 : paquet 263,67×386,72 px,
+  soudure centrée à y=451,97 px (49,4 % de la hauteur). Les cartes grandissent
+  pendant l'extraction et finissent à la taille/position de la révélation.
+  Tracé accepté dans les deux sens, seuil 55 % de la largeur, zone haute de
+  58 px et bouton de secours conservés. Accueil plus compact sur petit écran.
+- Vérification finale : `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright
+  NEXT_TELEMETRY_DISABLED=1 node node_modules/@playwright/test/cli.js test
+  e2e/pack-tear.spec.ts --reporter=line` : **code 0, 20/20**, 1,2 min,
+  bureau et téléphone. Appui touch réel Chromium, clavier, réserve diminuée
+  une seule fois, tirage abandonné/armé, tracés touch CDP dans les deux sens,
+  cancel de soudure, géométrie 320×568/360×800/412×915, continuité, animations
+  réduites et focus Live/Scène. Test de continuité mesure désormais le dos
+  extrait à la fin de son animation, plutôt que le centre du sachet scellé.
+- `npm run ecrans -- src/ecrans-tactile.test.tsx --maxWorkers=2` : code 0,
+  **4/4**, 1 fichier, 5,40 s (reflets/vibrations simulés). `npm run typecheck`
+  et ESLint direct sur drop-view, pack-tear et e2e/pack-tear : code 0.
+  `git diff --check` : code 0. Pas de build de production, SQL, suite complète
+  ou nouveau parcours serveur. Next 16.3.6, Playwright 1.63.0 et Vitest 3.2.7
+  installés identiques au lock ; aucun manifeste/lock modifié.
+- Runs intermédiaires : 14/20, six attentes erronées de réserve initiale 3
+  au lieu de 2 ; attentes corrigées pour comparer à la réserve affichée.
+  Ensuite 18/20, deux échecs du vrai tirage souris : `dragstart` sur IMG puis
+  `pointercancel` sur BUTTON prouvés par les événements Chromium. Image
+  accueil désormais draggable=false ; run final 20/20. Ces runs échoués ne
+  constituent pas une preuve de réussite. Premier lancement E2E refusé avant
+  tests : serveur local listen EPERM ; relance avec autorisation d'exécution.
+- Captures bureau/téléphone examinées ; visite 412×915 HTTP 200, zéro pageerror.
+  Artifacts hors Git : `/workspace/scratch/creatordeck-thumb-polish/`
+  (first-results, second-results, final-results, final-e2e.log, home-412.png,
+  sealed-412.png, reveal-412.png, visual-report.json). Captures uniquement
+  locales, pas une mesure de fluidité/appareil réel ; conservation entre
+  environnements non garantie. Serveur dev arrêté ; seul bloc Next automatique
+  ajouté à AGENTS retiré, contenu original restauré.
+- Réseau : environnement connecté/en marche, observations actuelles, politique
+  déclarée restricted avec *.vercel.app et les trois hôtes Playwright ; état
+  d'application rapporté unknown. En sandbox Git refuse le proxy:8080 ; le
+  même contrôle autorisé répond correctement, SHA distant vérifié. Aucun
+  besoin démontré de recréer l'environnement. Vercel non revisité ici ; son
+  ancien blocage SSO ne constitue pas une nouvelle preuve d'accès au preview.
+- K-012 implémenté et vérifié automatiquement ; VIS-01/K-005 restent ouverts
+  pour appréciation à une main sur téléphone réel, fluidité, sons/reflets.
+  CI du nouveau SHA et nouveau preview non vérifiés. CLOUD-01 non repris.
+- Prochaine étape : Luna / Faible suffit pour vérifier la CI du SHA publié et
+  recueillir l'essai humain : appui sur sachet accueil, puis tracé de soudure
+  droite/gauche à une main. Revenir à GPT-6.1 Sol / Moyen avant autre correction.
+  Commit contenant cette passation : `git log -1 --format=%H -- docs/agent-handoff.md` ;
+  recontrôler le HEAD distant et le contenu des docs avant prochaine reprise.
+
+## Historique — K-011 corrigé, 10 octobre 2026, Europe/Paris
 
 - Correction ciblée autorisée après visite locale ; réservation libérée.
   Base locale/distante propre et identique `96209d23799dd14717a4e7e219e0ccbbcf9ccd5a`,

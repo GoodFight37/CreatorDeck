@@ -36,6 +36,24 @@ inventées par cet audit. Consulter les liens avant de réouvrir un sujet.
 | H-007 / 2026-10-09 | Fallback DIVERRON honnêtement nommé | Ne pas présenter le visuel de remplacement comme un portrait officiel ; commits `799a533`, `25970c1`, `diverron-fallback.svg`. |
 | H-008 / 2026-10-10 | Ouverture et révélation dans une scène cinématique continue | Éviter une rupture de scène entre geste, cinq dos et faces ; commit `4955d9b`, CSS `booster-continuity.css`. L'implémentation est présente ; le verdict visuel humain reste à obtenir. |
 
+## D-012 — 10 octobre 2026 : sachet compact et ouverture au toucher
+
+Demande explicite du joueur après capture mobile et vidéos Pokémon TCG Pocket :
+réduire le sachet de l'écran noir et atteindre sa soudure à une main ; rendre
+l'appui sur le sachet accueil effectif. Le sachet est désormais un bouton,
+avec tirage vers le haut conservé et exclusion du clic après glissement.
+Cette demande remplace pour l'appui immobile la préférence historique qui
+exigeait un tirage ; la règle pure `pullVerdict` ne change pas et les gestes
+retirés n'ouvrent rien. Le bouton sous la réserve reste disponible.
+
+Le paquet a une taille indépendante des cartes, sa soudure est placée près du
+milieu de l'écran, le tracé fonctionne dans les deux sens avec un seuil relatif.
+Les dos rejoignent la taille/position de révélation pendant l'extraction.
+Aucune reproduction d'assets Pokémon, refonte générale, règle de tirage ou
+économie modifiée. L'ancien sachet presque plein écran est rejeté par le joueur.
+Code `0beb6b37027ced0630ed828604754aed17f7ffb7` ; E2E ciblés 20/20, tactile simulé 4/4,
+TypeScript/lint code 0. Approbation et ergonomie sur appareil réel encore ouvertes.
+
 ## Questions ouvertes
 
 L'appréciation du dos → face, du halo, de l'éclat, du Perfect et des limites de
