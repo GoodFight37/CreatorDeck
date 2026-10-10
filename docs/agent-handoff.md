@@ -1,8 +1,10 @@
-## SQL parity checkpoint, 2026-10-10
+## Point de reprise SQL - validation locale terminee, 10 octobre 2026
 
-Branch `design/booster-reveal-polish` now has published commit `40bf3e9`. User ran `supabase:verify` under WSL `creator`; it reached migration 0043 and failed with PostgreSQL `25P02` during `scene_pack_choices`. Root cause: reserved candidate was excluded from slot 5. Local uncommitted fix limits exclusion to earlier slots; targeted static test added.
+Branche design/booster-reveal-polish. Le correctif SQL et les deux ajustements du banc sont valides ; ils sont inclus dans le commit de finalisation de cette reprise.
 
-Next: run targeted Vitest on Linux, rerun `npm run supabase:verify` against disposable PostgreSQL, then commit and push the correction only if checks pass. Previous Windows run had 30 tests and typecheck/build passed, but did not include `40bf3e9`. No production, secrets, `main`, or PR merge touched. Latest npm install reported 16 vulnerabilities; no automatic audit fix run.
+Validation executee dans la distribution WSL Ubuntu de l'utilisateur, sous creator : tests cibles 35/35 ; migrations 0001 a 0043 appliquees sur PostgreSQL jetable ; tous les controles du script reussissent, sortie finale "Toutes les verifications passent." Les cas S02/S03/S05/S07/S08 (branches normale et Scene pleine), fixture sans Epique, cinq cartes distinctes, interdiction du Legendaire, garantie finale et ouvertures open_scene_pack sont couverts. Aucun acces de production ni secret utilise.
+
+Le run a expose deux problemes de fixture : le nom depassait la contrainte du profil, puis un refus SQL attendu annulait la transaction de fixture. Les deux sont corriges ; le savepoint isole maintenant le refus. Tests, typecheck, build, syntaxe Node et diff-check reussis. Le code et la documentation sont commit/push sur la branche ; ne pas fusionner la PR ni toucher main ou production.
 
 ## Audit final reçu — 10 octobre 2026
 

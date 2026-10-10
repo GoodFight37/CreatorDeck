@@ -1,9 +1,10 @@
-## Scene SQL parity checkpoint, 2026-10-10
+## Parite Scene Supabase - validation locale terminee, 10 octobre 2026
 
-- [x] Migration 0043 and integration cases published in `40bf3e9`.
-- [ ] Retest the slot-5 reservation fix with targeted Vitest and disposable Postgres.
-- [ ] The first WSL run failed with `25P02`: reserved candidate was excluded from slot 5. Local correction is not yet committed.
-- [ ] Do not declare SQL parity until the corrected WSL run passes. No production, `main`, or merge.
+- [x] Migration 0043 corrigee : cinq cartes distinctes, sans Legendaire, candidats garantis reserves et petites familles completees.
+- [x] Tests cibles : 35/35.
+- [x] PostgreSQL jetable sous WSL : migrations 0001-0043 rejouees, tous les controles passent, y compris les familles a peu ou zero Epique et le refus des familles incompatibles.
+- [x] Aucun acces a Supabase production, aucun secret, aucun merge ni changement de main.
+- [x] Correctifs de fixture et documentation commit/push sur la branche ; aucun merge ni changement de production.
 
 ## Audit Scène validé — 10 octobre 2026
 

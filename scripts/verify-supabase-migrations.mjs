@@ -3950,7 +3950,7 @@ try {
         check(`paquet scène ${family} : identité de test rare_drop=${rareDrop}`, false, "aucune identité trouvée");
         continue;
       }
-      await player(userId, `Scene${family}${rareDrop ? "Rare" : "Normal"}`, []);
+      await player(userId, `Scene${familyIndex}${rareDrop ? "R" : "N"}`, []);
       const shelf = (await asPlayer(
         userId,
         "select public.scene_pack_choices($1) as r",
@@ -4035,12 +4035,21 @@ try {
       );
     }
   }
-  await refuses(
+  await client.query("savepoint scene_incompatible_family");
+  await client.query("select set_config('test.uid', $1, false)", [SCENE]);
+  await client.query("set role authenticated");
+  let incompatibleFamilyError = "";
+  try {
+    await client.query("select public.scene_pack_choices($1)", [incompatibleFamily]);
+  } catch (error) {
+    incompatibleFamilyError = String(error.message || "");
+  }
+  await client.query("rollback to savepoint scene_incompatible_family");
+  await client.query("release savepoint scene_incompatible_family");
+  check(
     "paquet scène : famille assez grande mais sans garantie Rare/Épique → refus",
-    SCENE,
-    "select public.scene_pack_choices($1)",
-    [incompatibleFamily],
-    "incompatible",
+    incompatibleFamilyError.includes("incompatible"),
+    incompatibleFamilyError,
   );
   // Les familles synthétiques et les dix joueurs d'essai ne survivent pas au
   // vérifieur : toutes ces mutations sont annulées sur la base jetable.
