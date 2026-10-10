@@ -1,0 +1,37 @@
+# Problèmes connus CreatorDeck
+
+Audit initial : 10 octobre 2026, branche `design/booster-reveal-polish`, code
+`4955d9bbd489777c6ffd74229613075a332cc9e9`. Consulter l'état GitHub actuel avant
+de reproduire. Ne pas confondre défaut confirmé, incident historique, limitation
+d'environnement et validation manquante. Le détail historique de l'atelier est
+conservé dans [atelier-et-problemes.md](atelier-et-problemes.md).
+
+## Registre
+
+| ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
+|---|---|---|---|---|
+| K-001 | Élevée, environnement | Historique confirmé les 8–9 octobre ; cause non démontrée | Une reprise Cloud peut revenir au parent/main/clone limité ; status montre des milliers de changements. Relever branche, HEAD, refs et fichiers avant d'éditer. | Origine automatique soupçonnée dans l'atelier, non prouvée. Sauvegarder les fichiers touchés, fetch explicite, ne pas add-all/force/reset aveugle. Le switch/tracking échoué de l'audit du 10 octobre était une erreur locale distincte, corrigée. |
+| K-002 | Moyenne, données visuelles | Portrait DIVERRON historique ; contournement présent | Dans le Binder, chercher DIVERRON et consulter la carte ; l'ancienne photo verte/corrompue est remplacée par un fallback. | Source image inutilisable signalée dans les commits ; `diverron-fallback.svg` et label honnête, pas un portrait officiel. Remplacement par une source fiable reste à décider. |
+| K-003 | Moyenne, déploiement | Version de production non vérifiée dans cet audit | Interroger `schema_versions()` sur le **vrai projet autorisé** ; vérifier les marqueurs des dernières migrations et parcours Tribunal. | L'ancien dossier rapporte `0040`–`0042` à poser ; ce n'est pas une preuve qu'elles manquent encore. Aucun accès de production utilisé ici. Vérifier avant toute migration, pas de réparation aveugle de l'historique. |
+| K-004 | Élevée quand présente, SQL | **Corrigé dans la branche actuelle**, ancien main concerné | Ancien `0004` : `open_pack()` échoue avec « set-returning functions are not allowed in CASE ». La lecture du code design montre `FROM unnest(...) ORDER BY array_position(...)`. | Correctif historique `942ba694`, déjà intégré ; la fonction finale est ensuite redéfinie dans `0035`. Ne pas importer les conclusions du checkout main dans design. Validation SQL courante à noter dans la passation. |
+| K-005 | Faible à moyenne, validation UI | Ouvert : approbation visuelle humaine | Tester sur téléphone et bureau : soudure tactile, dos visibles, faces/halo, Perfect, continuité ; répéter avec réduction d'animations, sons/reflets coupés. | Le code et les tests automatisés ne prouvent pas l'appréciation réelle ni les performances d'un appareil. Ne pas « corriger » les préférences sans verdict/documentation. |
+| K-006 | Moyenne, accès de l'agent | API GitHub refusée pendant cet audit | `gh pr view 8 --repo GoodFight37/CreatorDeck --json …` : GraphQL Forbidden ; REST `…/pulls/8` : HTTP 403. | Cause précise non établie (route/autorisations). Git HTTPS et page HTML accessibles ; PR vérifiée par la page et refs Git. CI/deployments non vérifiés, ne pas déclarer la PR verte. |
+
+## À ne pas transformer en nouveaux bugs
+
+- Les anciens compteurs 181/931/1077 des tests ne sont pas interchangeables :
+  ils appartiennent à des commits différents. Compter le run de la passation.
+- Les suites Playwright, écrans et SQL existent ; l'ancienne case non cochée de
+  roadmap est historique. Disponibilité d'un script ≠ exécution réussie.
+- L'APK debug ou build sans cloud d'un ancien main ne prouve pas le produit
+  distribué actuel ; la branche et ses variables de compilation changent le parcours.
+- Les questions « Tu demandes » limité à 8, pager et simulateur conservé sont
+  des choix/questions documentés, pas des bugs confirmés par cet audit.
+
+## Mise à jour d'un incident
+
+Ajouter un ID stable, date/agent, SHA/branche/environnement, gravité et impact,
+étapes minimales, attendu/observé, commandes/code de sortie, cause vérifiée ou
+hypothèse, statut, contournement et action recommandée. À la correction,
+conserver l'entrée avec commit et test de non-régression ; ne pas effacer l'histoire.
+Ne jamais publier de logs contenant des clés ou sessions.

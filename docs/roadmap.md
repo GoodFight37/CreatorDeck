@@ -1,5 +1,56 @@
 # Roadmap CreatorDeck
 
+## Référence de coordination — audit du 10 octobre 2026
+
+Cette section décrit le **présent** ; les sections antérieures conservées plus
+bas sont l'historique, avec leurs retraits et validations datées. Le code et les
+tests priment sur une ancienne case cochée. Voir [passation](agent-handoff.md),
+[décisions](decisions.md), [problèmes](known-issues.md) et [périmètre](perimetre.md).
+
+**Vision :** jeu de collection Twitch mobile, quatre piliers Drop/Binder/Craft/Toi,
+des ouvertures lisibles et tactiles, économie multijoueur tenue par Supabase.
+La simulation « Ta chaîne » reste retirée de l'interface ; son moteur conservé
+n'est pas une fonctionnalité à remettre par défaut. Aucune refonte dans cet audit.
+
+**Révision auditée :** `4955d9bbd489777c6ffd74229613075a332cc9e9`, branche
+`design/booster-reveal-polish`. [PR #8](https://github.com/GoodFight37/CreatorDeck/pull/8)
+en brouillon, base réelle `arena/01a10c75-creatordeck` (`6c46e4bec37dc91a32f368b586e59ce109a44784`).
+`main` (`ae5016f093c977e68943d92f5a7c3da17bca8021`) est beaucoup plus ancien.
+Ces observations doivent être revérifiées à chaque reprise, pas utilisées comme
+instructions de reset ou d'envoi vers main.
+
+### Fonctionnalités présentes dans le code
+
+| Ensemble | État constaté | Validation restante / référence |
+|---|---|---|
+| Catalogue 1000, tirage/Perfect/Gold/pity, jetons, missions et saisons | Implémenté en TS et SQL | Taux et tests miroir ; contrôler le build et la base cible |
+| Collection, filtres/pagination, craft/recyclage, thèmes | Implémenté | Tests unitaires/écrans et usage mobile |
+| Comptes, sauvegarde, échanges, amis, hôtel, Last Pack, arène | Implémenté côté client et migrations | Une implémentation ne prouve pas le déploiement Supabase actuel |
+| Direct Twitch, notifications, fonctions Edge | Code présent | Configuration distante/FCM et appareil à vérifier |
+| Tribunal des Bannis | Implémenté, migration `0042` présente | Présence de `0042` en production non vérifiée par cet audit |
+| Simulation « Ta chaîne » | Retirée de l'interface, moteur/tests conservés | Retour hors roadmap sans décision produit |
+| CI qualité, SQL et navigateur | Workflow `verification.yml` présent | État des runs GitHub à consulter séparément |
+| Ouverture imprimée Live/Scène et révélation continue | Implémentée sur branche, **validation en cours** | PR #8 ; critères ci-dessous |
+
+### Priorités actives
+
+| ID / priorité | Travail / statut | Dépendances | Critères d'acceptation |
+|---|---|---|---|
+| COORD-01 / P0 | Coordination permanente — en cours dans cet audit | Branche/PR vérifiées, publication Git | Cinq documents autonomes, historique préservé, tests distingués, commit et contenu confirmés sur GitHub |
+| VIS-01 / P1 | Valider la scène unique booster → cinq dos → révélations | PR #8, `pack-tear`, `reveal-overlay`, CSS de continuité | Suites écrans/E2E pertinentes ; geste et bouton de secours utilisables au tactile/clavier ; absence de rupture/spinner/labels superposés ; validation humaine sur téléphone, bureau et réduction d'animations |
+| QA-01 / P1 | Consolider les preuves de la branche et de la CI | Dépendances/verrouillage, navigateur, Postgres jetable | Commandes exécutées sur SHA précis ; nombres exacts ; échecs reproduits/diagnostiqués ; runs CI reliés au bon SHA, aucun test simulé présenté comme production |
+| CLOUD-01 / P2 | Vérifier la version distante et les parcours en ligne | Accès autorisé au projet, variables publiques, statut `schema_versions()` | Version constatée depuis la base cible ; invité/compte, tirage, sauvegarde et Tribunal vérifiés ; aucune migration supposée appliquée sur simple présence dans Git |
+
+Les préférences encore ouvertes du dossier d'atelier (dos/halo, éclat, Perfect,
+limites de sélection) sont des demandes de validation, pas des décisions prises
+par cet audit. Ne pas modifier les probabilités ou ajouter un chantier sans demande.
+
+### Historique conservé de la roadmap antérieure
+
+Les statuts « En place & Validé » ci-dessous reflètent les livraisons de leur
+date. En particulier, l'ancienne ligne « Suite de tests Playwright & Vitest »
+ne signifie plus que ces suites seraient absentes : elles existent maintenant.
+
 ## 📱 Volet 1 : Application Principale (TCG & Cloud)
 
 ### En place & Validé
