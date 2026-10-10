@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
@@ -36,6 +36,7 @@ import { playBang, playReveal } from "@/lib/sfx";
 import { bestCardOf } from "@/lib/social/inbox";
 import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
+import { cardEffectsAllowed } from "@/lib/tilt";
 
 export function RevealOverlay({
   cards,
@@ -126,6 +127,24 @@ export function RevealOverlay({
   const flash = flashFor(card.rarity, perfect);
   const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
+
+  function tiltRevealCard(event: PointerEvent<HTMLDivElement>) {
+    if (!cardEffectsAllowed()) return;
+    const target = event.currentTarget;
+    const bounds = target.getBoundingClientRect();
+    if (!bounds.width || !bounds.height) return;
+    const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - .5) * 2));
+    const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - .5) * 2));
+    target.style.setProperty("--reveal-tilt-x", `${-y * 13}deg`);
+    target.style.setProperty("--reveal-tilt-y", `${x * 17}deg`);
+    target.classList.add("is-tilting");
+  }
+
+  function resetRevealTilt(event: PointerEvent<HTMLDivElement>) {
+    event.currentTarget.style.removeProperty("--reveal-tilt-x");
+    event.currentTarget.style.removeProperty("--reveal-tilt-y");
+    event.currentTarget.classList.remove("is-tilting");
+  }
 
   // Une carte déjà révélée se range dès le premier appui.
   function advance() {
@@ -248,7 +267,8 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          <div className="reveal-anchor" style={glowStyle}>
+          <div className="reveal-anchor" style={glowStyle}
+            onPointerMove={tiltRevealCard} onPointerLeave={resetRevealTilt}>
             <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
               <div className="reveal-flip-face">
                 <CreatorCard

@@ -105,11 +105,18 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   const homeArt = page.locator(".pack-stage .pack-foil-image");
   await expect(homeArt).toBeVisible();
   await expect(homeArt).toHaveAttribute("src", "/packs/live-foil.svg");
+  await expect(page.locator(".pack-stage .pack-3d-side")).toHaveCount(3);
+  await expect(page.locator(".pack-stage .pack-specular")).toBeAttached();
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName))
+    .toBe("pack-specular-pass");
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
 
   const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await expect(dialog).toBeVisible();
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
+    getComputedStyle(node, "::after").animationName,
+  )).toBe("opening-foil-specular");
   const panel = await dialog.boundingBox();
   expect(panel).not.toBeNull();
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
@@ -137,6 +144,35 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
 
+test("reduced motion and the card-reflection switch stop the heavy pack and foil effects", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const homeSpecular = page.locator(".pack-specular");
+  await expect(homeSpecular).toBeAttached();
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
+
+  await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+  const openingPack = page.locator(".booster-physical-scene");
+  expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").display)).toBe("none");
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  expect(await reveal.locator(".card-foil").first().evaluate((node) => getComputedStyle(node).display))
+    .toBe("none");
+  await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
+  await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+  expect(await page.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").display))
+    .toBe("none");
+  await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
+  expect(await page.locator(".reveal-game .card-foil").first().evaluate((node) => getComputedStyle(node).display))
+    .toBe("none");
+});
+
 test("finger cuts the plastic where it passes, top peels, backs rise, then reveal", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
@@ -157,6 +193,17 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(x + 167, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  expect(await dialog.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).animationName))
+    .toBe("scene-cap-fold");
+  expect(await dialog.locator(".foil-body-piece").evaluate((node) => getComputedStyle(node).animationName))
+    .toBe("scene-body-fold");
+  const cascade = await dialog.locator(".foil-back-card").last().evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { duration: style.animationDuration, delay: style.animationDelay };
+  });
+  const milliseconds = (value: string) => parseFloat(value) * (value.endsWith("ms") ? 1 : 1_000);
+  expect(milliseconds(cascade.duration)).toBeCloseTo(780, 0);
+  expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_100);
 
   // The cut reveals a chamber of card backs; no hard cut while cap is still aloft.
   await page.waitForTimeout(1100);
@@ -208,6 +255,8 @@ test("an abandoned home drag does not become a tap and an armed pull opens once"
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x, y - 30, { steps: 5 });
+  expect(await sachet.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--pack-tilt-x")))
+    .not.toBe("");
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
   await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);

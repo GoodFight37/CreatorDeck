@@ -49,15 +49,23 @@ export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent
   return (
     <button type="button" className="pack-artwork pack-live" onClick={onClick}
       disabled={disabled} aria-label="Ouvrir le sachet Live Drop">
-      <Image
-        className="pack-foil-image"
-        src="/packs/live-foil.svg"
-        alt="Sachet Live Drop serti, illustration métallisée CreatorDeck"
-        fill
-        sizes="(max-width: 390px) 46vw, 180px"
-        draggable={false}
-        priority
-      />
+      <span className="pack-3d-object" aria-hidden="true">
+        <span className="pack-3d-side pack-3d-side-left" />
+        <span className="pack-3d-side pack-3d-side-right" />
+        <span className="pack-3d-side pack-3d-side-bottom" />
+        <span className="pack-3d-front">
+          <Image
+            className="pack-foil-image"
+            src="/packs/live-foil.svg"
+            alt=""
+            fill
+            sizes="(max-width: 390px) 46vw, 180px"
+            draggable={false}
+            priority
+          />
+          <span className="pack-specular" />
+        </span>
+      </span>
     </button>
   );
 }
@@ -153,6 +161,16 @@ export function HomeView({
     const start = pullRef.current;
     if (!start) return;
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 8) draggedRef.current = true;
+    const packArtwork = event.currentTarget.querySelector<HTMLButtonElement>(".pack-artwork");
+    if (packArtwork) {
+      const bounds = packArtwork.getBoundingClientRect();
+      const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - .5) * 2));
+      const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - .5) * 2));
+      packArtwork.style.setProperty("--pack-tilt-x", `${-y * 12}deg`);
+      packArtwork.style.setProperty("--pack-tilt-y", `${x * 15}deg`);
+      event.currentTarget.style.setProperty("--pack-shadow-x", `${x * 18}px`);
+      event.currentTarget.style.setProperty("--pack-shadow-scale", `${1 - Math.abs(x) * .12}`);
+    }
     const verdict = pullVerdict(start.y - event.clientY, performance.now() - start.t);
     // Le seuil est franchi : une vibration courte et le bruit de l'objet qu'on
     // ouvre, **une seule fois** — pas à chaque pixel.
@@ -165,10 +183,18 @@ export function HomeView({
   }
 
   /** Le doigt se lève : si le geste a armé, le booster s'ouvre. */
-  function pullEnd() {
+  function clearPullPose(stage: HTMLElement) {
+    stage.querySelector<HTMLButtonElement>(".pack-artwork")?.style.removeProperty("--pack-tilt-x");
+    stage.querySelector<HTMLButtonElement>(".pack-artwork")?.style.removeProperty("--pack-tilt-y");
+    stage.style.removeProperty("--pack-shadow-x");
+    stage.style.removeProperty("--pack-shadow-scale");
+  }
+
+  function pullEnd(event: PointerEvent<HTMLElement>) {
     const armed = armedRef.current;
     pullRef.current = null;
     armedRef.current = false;
+    clearPullPose(event.currentTarget);
     setPull({ progress: 0, armed: false, active: false });
     if (armed) onOpen();
   }
@@ -180,10 +206,11 @@ export function HomeView({
    * `pointercancel` au mauvais moment ouvrait un booster que personne n'avait
    * tiré.
    */
-  function pullCancel() {
+  function pullCancel(event: PointerEvent<HTMLElement>) {
     draggedRef.current = true;
     pullRef.current = null;
     armedRef.current = false;
+    clearPullPose(event.currentTarget);
     setPull({ progress: 0, armed: false, active: false });
   }
 

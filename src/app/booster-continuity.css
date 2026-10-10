@@ -234,3 +234,259 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip,
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip-face { animation: none; }
+
+/* Home sachet: a printed foil front with real CSS thickness, not a flat card. */
+.booster-cinematic .booster-physical-scene:not(.booster-foil-open)::after {
+  content: "";
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  border-radius: 10px;
+  pointer-events: none;
+  opacity: .3;
+  background: linear-gradient(108deg, transparent 35%, rgb(255 242 220 / .04) 42%,
+    rgb(255 235 213 / .42) 49%, rgb(255 205 225 / .1) 54%, transparent 62%);
+  mix-blend-mode: screen;
+  transform: translateX(-74%);
+  animation: opening-foil-specular 3.8s cubic-bezier(.3, 0, .2, 1) infinite;
+}
+.booster-cinematic .booster-physical-scene.booster-foil-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: foil-wrapper-weld-fade 900ms ease-out both;
+}
+@keyframes opening-foil-specular {
+  0%, 10% { opacity: 0; transform: translateX(-74%); }
+  24% { opacity: .34; }
+  66% { opacity: .22; transform: translateX(18%); }
+  84%, 100% { opacity: 0; transform: translateX(74%); }
+}
+.pack-stage .pack-shadow {
+  width: 198px;
+  opacity: .78;
+  transform: translateX(calc(-50% + var(--pack-shadow-x, 0px))) scaleX(var(--pack-shadow-scale, 1));
+  transition: transform 140ms ease-out, filter 180ms ease-out, opacity 180ms ease-out;
+}
+.pack-stage.pulling .pack-shadow { filter: blur(16px); opacity: .62; }
+.pack-artwork {
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  perspective: 1050px;
+  transform: none;
+  filter: drop-shadow(11px 17px 12px rgb(0 0 0 / .42));
+}
+.pack-3d-object {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: perspective(1050px)
+    rotateX(calc(2deg + var(--pack-tilt-x, 0deg)))
+    rotateY(calc(-5deg + var(--pack-tilt-y, 0deg)))
+    rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))
+    translateY(calc(var(--pull, 0) * -44px))
+    scale(calc(1 + var(--pull, 0) * .02));
+  transition: transform 180ms cubic-bezier(.22, 1, .36, 1);
+}
+.pack-stage.pulling .pack-artwork,
+.pack-stage.pulling .pack-3d-object { transition: none; }
+.pack-3d-front {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: hidden;
+  border: 1px solid rgb(255 237 224 / .42);
+  border-radius: 11px 11px 8px 8px;
+  background: #42182e;
+  transform: translateZ(8px);
+  backface-visibility: hidden;
+  box-shadow: inset 7px 0 12px rgb(255 230 218 / .14),
+    inset -9px 0 13px rgb(15 0 13 / .34), inset 0 -8px 12px rgb(12 0 10 / .3);
+}
+.pack-3d-front .pack-foil-image { object-fit: fill; user-select: none; }
+.pack-3d-side {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  backface-visibility: hidden;
+}
+.pack-3d-side-left {
+  z-index: 1; top: 2px; bottom: 4px; left: -12px; width: 13px;
+  transform: rotateY(-90deg); transform-origin: right center;
+  background: linear-gradient(90deg, #361329, #ad526e 52%, #42172e);
+  box-shadow: inset 1px 0 rgb(255 224 224 / .4);
+}
+.pack-3d-side-right {
+  z-index: 3; top: 2px; right: -12px; bottom: 4px; width: 13px;
+  transform: rotateY(90deg); transform-origin: left center;
+  background: linear-gradient(90deg, #f0a0a4, #5a1838 38%, #210d20);
+  box-shadow: inset -2px 0 rgb(0 0 0 / .62);
+}
+.pack-3d-side-bottom {
+  z-index: 3; right: 1px; bottom: -12px; left: 1px; height: 13px;
+  transform: rotateX(90deg); transform-origin: center top;
+  background: linear-gradient(180deg, #9b4961, #311326 84%);
+  box-shadow: inset 0 -2px rgb(0 0 0 / .55);
+}
+.pack-specular {
+  position: absolute; z-index: 2; inset: -15% -36%; display: block;
+  pointer-events: none; opacity: .52;
+  background: linear-gradient(108deg, transparent 37%, rgb(255 244 218 / .04) 43%,
+    rgb(255 229 206 / .5) 49%, rgb(255 205 225 / .12) 54%, transparent 62%);
+  mix-blend-mode: screen;
+  transform: translateX(-76%) skewX(-9deg);
+  animation: pack-specular-pass 3.4s cubic-bezier(.3, 0, .2, 1) infinite;
+}
+@keyframes pack-specular-pass {
+  0%, 12% { opacity: 0; transform: translateX(-76%) skewX(-9deg); }
+  25% { opacity: .5; }
+  64% { opacity: .3; transform: translateX(24%) skewX(-9deg); }
+  82%, 100% { opacity: 0; transform: translateX(76%) skewX(-9deg); }
+}
+
+/* A torn laminate hinges on its weld; light briefly shines through the cut. */
+.booster-cinematic .foil-top-piece {
+  transform-style: preserve-3d; transform-origin: 50% 100%; backface-visibility: hidden;
+}
+.booster-cinematic .foil-body-piece {
+  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden;
+}
+.booster-cinematic .foil-cut-slit {
+  height: 3px; overflow: visible;
+  background: linear-gradient(180deg, rgb(255 255 245 / .98), rgb(255 197 188 / .9) 38%,
+    rgb(25 4 22 / .78) 76%, rgb(255 230 209 / .96));
+  box-shadow: 0 0 7px 2px rgb(255 230 205 / .72), 0 0 26px 7px rgb(250 136 167 / .48);
+}
+.booster-cinematic .foil-cut-slit::before {
+  content: ""; position: absolute; z-index: -1; inset: -17px -4px; opacity: 0;
+  background: linear-gradient(180deg, transparent, rgb(255 219 200 / .72) 45%,
+    rgb(248 130 184 / .34) 58%, transparent);
+  filter: blur(7px);
+}
+.booster-cinematic .booster-foil-open .foil-top-piece {
+  animation-name: scene-cap-fold; animation-timing-function: cubic-bezier(.18, .76, .2, 1);
+}
+.booster-cinematic .booster-foil-open .foil-body-piece {
+  animation-name: scene-body-fold; animation-timing-function: cubic-bezier(.2, .7, .24, 1);
+}
+@keyframes scene-cap-fold {
+  0%, 8% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0); }
+  34% { opacity: 1; transform: translateY(-2%) translateZ(13px) rotateX(48deg) rotateY(-4deg); }
+  62% { opacity: .9; transform: translateY(-8%) translateZ(18px) rotateX(83deg) rotateY(-11deg); }
+  100% { opacity: 0; transform: translate(34%, -48%) translateZ(24px) rotateX(106deg) rotateY(-18deg); }
+}
+@keyframes scene-body-fold {
+  0%, 18% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0); }
+  45% { opacity: 1; transform: translateY(5%) translateZ(4px) rotateX(-18deg) rotateY(2deg); }
+  76% { opacity: .42; transform: translateY(24%) translateZ(-8px) rotateX(-39deg) rotateY(5deg); }
+  100% { opacity: 0; transform: translateY(60%) translateZ(-16px) rotateX(-56deg) rotateY(8deg); }
+}
+.booster-cinematic .booster-foil-open .foil-cut-slit::before { animation: scene-cut-light 620ms ease-out both; }
+@keyframes scene-cut-light {
+  0%, 15% { opacity: 0; transform: scaleY(.35); }
+  38% { opacity: 1; transform: scaleY(1); }
+  100% { opacity: 0; transform: scaleY(.55); }
+}
+
+/* All five backs leave the chamber in a staggered, shallow 3D fan (~1.1 s). */
+.booster-cinematic .booster-foil-open .foil-card-chamber { animation-duration: 1080ms; }
+.booster-cinematic .booster-foil-open .foil-back-card {
+  animation-name: scene-card-extract;
+  animation-duration: 780ms;
+  animation-delay: calc(var(--card-i) * 76ms);
+  animation-timing-function: cubic-bezier(.18, .74, .22, 1);
+}
+@keyframes scene-card-extract {
+  0%, 10% { opacity: 0; transform: translateY(36%) translateZ(-28px) rotateX(12deg)
+    rotateY(calc((var(--card-i) - 2) * 3deg)) scale(.82); }
+  44% { opacity: .92; transform: translateY(4%) translateZ(calc(var(--card-i) * 7px))
+    rotateX(4deg) rotateY(calc((var(--card-i) - 2) * 2deg)) scale(.94); }
+  100% { opacity: 1; transform: translateY(calc(-8% - var(--card-i) * 2%))
+    translateX(calc((var(--card-i) - 2) * 5px)) translateZ(calc(var(--card-i) * 9px))
+    rotateX(calc(2deg - var(--card-i) * .4deg))
+    rotateY(calc((var(--card-i) - 2) * 1.6deg))
+    rotate(calc((var(--card-i) - 2) * 3deg)) scale(1); }
+}
+
+/* The revealed card settles with a little thickness, then follows the finger. */
+.reveal-game .reveal-stage > .reveal-anchor {
+  perspective: 1100px; transform-style: preserve-3d;
+  transition: transform 110ms cubic-bezier(.2, .7, .2, 1);
+}
+.reveal-game .reveal-stage > .reveal-anchor.is-tilting {
+  transform: translate(-50%, -50%) translateZ(17px)
+    rotateX(var(--reveal-tilt-x, 0deg)) rotateY(var(--reveal-tilt-y, 0deg));
+}
+.reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: preserve-3d; }
+.reveal-game .reveal-stage .reveal-card .card-foil { opacity: .72; }
+.reveal-game .reveal-stage .reveal-card.variant-standard .card-foil {
+  background: radial-gradient(circle at var(--px, 32%) var(--py, 18%),
+    rgb(255 255 255 / .48), rgb(225 210 255 / .17) 22%, transparent 64%);
+}
+.reveal-game .reveal-stage .reveal-flip { transform-style: preserve-3d; }
+@keyframes scene-card-arrive {
+  from { filter: brightness(.85); transform: translateZ(0) rotateY(-1deg) rotateX(.6deg); }
+  to { filter: brightness(1); transform: translateZ(18px) rotateY(-1deg) rotateX(.6deg); }
+}
+
+/* Reduced motion and the reflection switch stop moving, layered effects.
+   The existing 1.9 s opening handoff and reveal locks remain untouched. */
+[data-card-fx="off"] .pack-specular,
+[data-card-fx="off"] .reveal-game .reveal-stage .card-foil { display: none; }
+[data-card-fx="off"] .pack-3d-object {
+  transform: perspective(1050px) rotateX(2deg) rotateY(-5deg)
+    rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))
+    translateY(calc(var(--pull, 0) * -44px)) scale(calc(1 + var(--pull, 0) * .02));
+}
+[data-card-fx="off"] .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); }
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-top-piece {
+  animation: none; opacity: .3; transform: rotateX(84deg);
+}
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-body-piece {
+  animation: none; opacity: .28; transform: rotateX(-18deg);
+}
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-card-chamber,
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-back-card { animation: none; opacity: 1; }
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-card-chamber { transform: translateY(-18%); }
+[data-card-fx="off"] .booster-cinematic.scene-scene .booster-foil-open .foil-card-chamber {
+  transform: translate(-50%, -50%);
+}
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-back-card {
+  transform: translateY(calc(-8% - var(--card-i) * 2%))
+    translateX(calc((var(--card-i) - 2) * 5px)) rotate(calc((var(--card-i) - 2) * 3deg));
+}
+[data-card-fx="off"] .booster-cinematic .booster-foil-open .foil-cut-slit::before { display: none; }
+[data-card-fx="off"] .booster-cinematic .booster-physical-scene::after { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pack-specular, .reveal-game .reveal-stage .card-foil { display: none; }
+  .pack-stage .pack-shadow { transition: none; filter: blur(12px); }
+  .pack-3d-object {
+    transform: perspective(1050px) rotateX(2deg) rotateY(-5deg)
+      rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))
+      translateY(calc(var(--pull, 0) * -44px)) scale(calc(1 + var(--pull, 0) * .02));
+    transition: none;
+  }
+  .reveal-game .reveal-stage > .reveal-anchor,
+  .reveal-game .reveal-stage > .reveal-anchor.is-tilting { transform: translate(-50%, -50%); transition: none; }
+  .booster-cinematic .booster-foil-open .foil-top-piece {
+    animation: none; opacity: .3; transform: rotateX(84deg);
+  }
+  .booster-cinematic .booster-foil-open .foil-body-piece {
+    animation: none; opacity: .28; transform: rotateX(-18deg);
+  }
+  .booster-cinematic .booster-foil-open .foil-card-chamber,
+  .booster-cinematic .booster-foil-open .foil-back-card { animation: none; opacity: 1; }
+  .booster-cinematic .booster-foil-open .foil-card-chamber { transform: translateY(-18%); }
+  .booster-cinematic.scene-scene .booster-foil-open .foil-card-chamber { transform: translate(-50%, -50%); }
+  .booster-cinematic .booster-foil-open .foil-back-card {
+    transform: translateY(calc(-8% - var(--card-i) * 2%))
+      translateX(calc((var(--card-i) - 2) * 5px)) rotate(calc((var(--card-i) - 2) * 3deg));
+  }
+  .booster-cinematic .booster-foil-open .foil-cut-slit::before { display: none; }
+  .booster-cinematic .booster-physical-scene::after { display: none; }
+}
