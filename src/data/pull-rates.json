@@ -129,7 +129,7 @@
       },
       "rareDrop": {
         "label": "Scène pleine",
-        "tagline": "Les 5 cartes en Épique — que des visages de ta famille.",
+        "tagline": "Les Épiques disponibles de ta famille, jusqu’à cinq.",
         "chancePermille": 3,
         "weights": {
           "epic": 100

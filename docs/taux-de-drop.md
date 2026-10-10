@@ -1,5 +1,14 @@
 # Taux de drop publiés
 
+Mise à jour du 10 octobre 2026 : les poids sont **nominaux**. Le tirage sans
+doublon, les raretés absentes d'une famille et la réserve du cinquième slot
+conditionnent les probabilités observées. Scène pleine reste à 0,3 % ; elle
+donne cinq Épiques si la famille en possède cinq éligibles, sinon tous ceux
+disponibles et un complément autorisé, avec Rare/Épique en cinquième position.
+Voir [le correctif local, la méthode et les limites Supabase](audit-progression.md).
+Les descriptions historiques ci-dessous ne constituent pas une preuve de
+parité du comportement serveur sur les petits viviers.
+
 CreatorDeck publie les probabilités de ses boosters — dans l'application
 (Accueil → « Taux de drop publiés », et Toi → **Progression** → « Taux de
 drop ») comme dans ce dépôt. Elles sont **calculées** depuis le fichier qui sert réellement au

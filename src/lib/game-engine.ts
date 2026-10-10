@@ -374,7 +374,7 @@ export const SCENE_MIN_FAMILY = PACKS.scene.size;
  * vérifie que la famille qu'on lui demande existe et tient bien cinq cartes.
  */
 export function sceneFamily(state: PlayerState): SceneFamily | null {
-  const families = familyTotals(state).filter((entry) => entry.total >= SCENE_MIN_FAMILY);
+  const families = familyTotals(state).filter((entry) => sceneCompatible(entry.familyId));
   if (!families.length) return null;
 
   let best: SceneFamily | null = null;
@@ -877,12 +877,20 @@ export function creatorWeight(creator: Creator, liveLogins?: LiveLogins): number
   return DIRECT_BONUS.creatorBias > 0 ? DIRECT_BONUS.creatorBias : 1;
 }
 
+/** Cinq candidats courants sans Légendaire, dont un pour la garantie finale. */
+function sceneCompatible(familyId: string): boolean {
+  const pool = CREATORS.filter(c => c.region === familyId &&
+    c.rarity !== "legendary" && !RETIRED_BY_SLUG.has(c.slug));
+  return new Set(pool.map(c => c.slug)).size >= SCENE_MIN_FAMILY &&
+    pool.some(c => c.rarity === "rare" || c.rarity === "epic");
+}
+
 /**
  * Tire une rareté selon `weights` (parmi celles encore disponibles), puis un
  * créateur dans la rareté choisie — uniformément, sauf bonus Direct : les
  * créateurs en direct pèsent × 1,5 (`pull-rates.json`). Les poids déclarés
- * décrivent donc exactement la probabilité affichée : c'est le contrat de
- * l'écran « Taux de drop ».
+ * sont nominaux : les raretés absentes ou réservées à la garantie sont retirées
+ * et les poids restants renormalisés, notamment dans les petites familles.
  */
 function chooseCreator(
   weights: RarityWeights,
@@ -1018,8 +1026,8 @@ function chooseVariant(
  * et variante Live). Omis ou vide : tirage neutre, aucune variante Live.
  *
  * `options.family` restreint le tirage à une famille (Paquet Scène) : aucun
- * créateur hors de cette famille ne peut sortir. La rareté Légendaire n'est pas
- * filtrée ici — c'est la table du paquet qui ne la contient pas.
+ * créateur hors de cette famille ne peut sortir. Une famille Scène doit avoir
+ * cinq candidats non légendaires et au moins un Rare/Épique pour la garantie.
  */
 export function drawPack(
   packType: PackType,
@@ -1043,8 +1051,12 @@ export function drawPack(
   const table = PULL_RATES[packType];
   const size = PACKS[packType].size;
   const liveLogins = options.liveLogins;
-  const pity = options.pity === true;
+  const pity = packType === "live" && options.pity === true;
   const family = options.family ?? null;
+  if (packType === "scene" && (!family || !sceneCompatible(family))) {
+    throw new GameError("Cette famille ne peut pas fournir cinq créateurs différents dont un Rare ou Épique.",
+      "SCENE_INCOMPATIBLE_FAMILY");
+  }
   const rareDrop =
     options.rareDrop ?? randomInt(1000) < table.rareDrop.chancePermille;
   const weightsFor = (index: number): RarityWeights =>
@@ -1052,9 +1064,37 @@ export function drawPack(
 
   const used = new Set<string>();
   const drawn: DrawnCard[] = [];
+  // Réserver le dernier candidat admissible, sans tirer la garantie à l'avance.
+  // Les poids nominaux restent inchangés ; seuls les choix impossibles sont retirés.
+  const finalWeights: RarityWeights = pity ? { legendary: 1 } :
+    rareDrop && packType !== "scene" ? table.rareDrop.weights : table.guaranteed.weights;
+  const eligible = CREATORS.filter(c => !RETIRED_BY_SLUG.has(c.slug) &&
+    (!family || c.region === family) && (packType !== "scene" || c.rarity !== "legendary"));
+  // Si le paquet a au plus autant de candidats finaux que de slots ordinaires,
+  // réserver un créateur dès maintenant : les quatre premiers ne doivent pas
+  // pouvoir épuiser toute la garantie. Pour Scène pleine, réserver un Épique
+  // tant qu'il en existe un ; sinon la garantie ordinaire reste en vigueur.
+  const reservationWeights = packType === "scene" && rareDrop &&
+    eligible.some(c => c.rarity === "epic") ? table.rareDrop.weights : finalWeights;
+  const reservationPool = eligible.filter(c => (reservationWeights[c.rarity] ?? 0) > 0);
+  const reservedSlug = reservationPool.length > 0 && reservationPool.length <= size - 1
+    ? reservationPool[randomInt(reservationPool.length)].slug
+    : null;
 
   for (let index = 0; index < size - 1; index += 1) {
-    const creator = chooseCreator(weightsFor(index), used, liveLogins, family);
+    const remaining = eligible.filter(c => !used.has(c.slug));
+    const reserved = remaining.filter(c => (finalWeights[c.rarity] ?? 0) > 0);
+    const excluded = new Set(used);
+    if (reservedSlug) excluded.add(reservedSlug);
+    else if (reserved.length === 1) excluded.add(reserved[0].slug);
+    let weights = weightsFor(index);
+    if (packType === "scene" && rareDrop) {
+      // Prendre tous les Épiques disponibles, en gardant un Rare/Épique en fin.
+      // Avec cinq Épiques ou plus, les cinq cartes sont donc Épiques.
+      weights = remaining.some(c => c.rarity === "epic" && !excluded.has(c.slug))
+        ? table.rareDrop.weights : table.slots[index].weights;
+    }
+    const creator = chooseCreator(weights, excluded, liveLogins, family);
     used.add(creator.slug);
     drawn.push({
       id: randomUUID(),
@@ -1069,14 +1109,10 @@ export function drawPack(
   // La carte garantie est en variante Live quand son créateur streame — c'est
   // le moment fort du paquet, et il porte la preuve de présence. Sous le
   // plancher de malchance, elle est **Légendaire**, quoi qu'en dise le tirage.
-  const guaranteed = pity
-    ? chooseCreator({ legendary: 1 }, used, liveLogins, family)
-    : chooseCreator(
-        rareDrop ? table.rareDrop.weights : table.guaranteed.weights,
-        used,
-        liveLogins,
-        family,
-      );
+  const sceneEpicsRemain = packType === "scene" && rareDrop &&
+    eligible.some(c => c.rarity === "epic" && !used.has(c.slug));
+  const guaranteed = chooseCreator(sceneEpicsRemain ? table.rareDrop.weights : finalWeights,
+    used, liveLogins, family);
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,

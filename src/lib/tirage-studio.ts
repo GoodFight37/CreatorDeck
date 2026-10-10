@@ -3,7 +3,8 @@
  * publiés donnent réellement sur un grand nombre d'ouvertures.
  *
  * Le tirage passe par le **même moteur** que le jeu (`drawPack`), donc la
- * simulation ne peut pas diverger des taux affichés à l'écran « Taux de drop ».
+ * simulation suit les contraintes du catalogue. Les taux affichés sont nominaux :
+ * la famille Scène, l'absence de doublons et la garantie conditionnent les tirages.
  * Rien n'est écrit dans la partie : ni cartes, ni points, ni statistiques.
  *
  * Le **bonus Direct** n'y est pas branché, exprès : il ne change aucune
@@ -13,7 +14,7 @@
  * cartes Live qui n'existent que pendant un vrai direct.
  */
 import type { PackType, Rarity } from "@/lib/catalog";
-import { drawPack } from "@/lib/game-engine";
+import { createInitialState, drawPack, sceneFamily } from "@/lib/game-engine";
 import { RARITIES, packOdds } from "@/lib/pull-rates";
 
 export type StudioResult = {
@@ -46,9 +47,11 @@ export function runStudio(packType: PackType, packs: number): StudioResult {
   const counts = emptyByRarity();
   let cards = 0;
   let perfect = 0;
+  // Le studio n'a pas de partie : choisir la même famille qu'une collection vide.
+  const family = packType === "scene" ? sceneFamily(createInitialState(0))?.familyId : undefined;
 
   for (let index = 0; index < count; index += 1) {
-    const drawn = drawPack(packType, owned);
+    const drawn = drawPack(packType, owned, { family });
     if (drawn[0]?.rareDrop) perfect += 1;
     for (const card of drawn) {
       counts[card.rarity] += 1;

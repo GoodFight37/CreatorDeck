@@ -54,6 +54,25 @@ Aucune reproduction d'assets Pokémon, refonte générale, règle de tirage ou
 Code `0beb6b37027ced0630ed828604754aed17f7ffb7` ; E2E ciblés 20/20, tactile simulé 4/4,
 TypeScript/lint code 0. Approbation et ergonomie sur appareil réel encore ouvertes.
 
+## D-013 — 10 octobre 2026 : petits viviers du Paquet Scène
+
+Décision explicite du joueur : cinq créateurs différents d'une famille, jamais
+Légendaires ; Scène pleine conserve 0,3 %, utilise cinq Épiques si possible,
+sinon tous les Épiques disponibles et complète avec les raretés autorisées.
+La garantie Rare/Épique reste au cinquième emplacement. Les tirages ordinaires
+réservent le dernier candidat de cette garantie. Une famille avec moins de
+cinq candidats non légendaires ou sans Rare/Épique est incompatible : exclue
+du ciblage automatique et refusée explicitement par le moteur de tirage.
+
+La décision corrige une impossibilité du moteur, sans changer de poids nominal,
+récompense, coût ou seuil. Régressions synthétiques de 0 à 6 Épiques, garantie
+unique Rare/Épique, épuisement ordinaire et frontière 3/1000 ; preuves et
+limites du chemin Supabase dans [l'audit](audit-progression.md). Aucun déploiement.
+
+L'audit utilise un RNG déterministe dans son seul processus, un fuseau imposé
+et compare épargne / craft-et-jetons ; ne pas remplacer le RNG du jeu ni
+conclure à un rééquilibrage sur ces seuls horaires et stratégies.
+
 ## Questions ouvertes
 
 L'appréciation du dos → face, du halo, de l'éclat, du Perfect et des limites de
