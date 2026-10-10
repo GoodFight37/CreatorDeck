@@ -1,3 +1,7 @@
+## Audit Scène validé — 10 octobre 2026
+
+Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 scénarios, 12 000 trajectoires, graine `20261010`, zéro paquet manquant. Résumé et limites : [audit-progression.md](audit-progression.md). L'audit valide uniquement le moteur local ; parité Supabase non vérifiée.
+
 # Roadmap CreatorDeck
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)

@@ -1,3 +1,7 @@
+## Audit final reçu — 10 octobre 2026
+
+L'utilisateur a fourni `audit-1000.txt` après `git pull` du commit `7da3d1c301c949e6cbeaef6aecd6ec0c94ffe2f1`. Vérification : commande et graine attendues, TZ Europe/Paris, Mulberry32, 12/12 scénarios à 1 000, 12 000 trajectoires, zéro `missingPacks`. Résultats détaillés et SHA dans [audit-progression.md](audit-progression.md) et [progression-manifest.json](audits/progression-manifest.json). Supabase local reste non vérifié ; aucun changement de production.
+
 # Passation opérationnelle CreatorDeck
 
 ## Checkpoint courant — sachet compact et appui accueil, 10 octobre 2026, Europe/Paris

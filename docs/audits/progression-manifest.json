@@ -1,0 +1,14 @@
+{
+  "branch": "design/booster-reveal-polish",
+  "sourceCommit": "7da3d1c301c949e6cbeaef6aecd6ec0c94ffe2f1",
+  "sourceFileSha256": "871708bbf04b32a6f9da138f5f57b0b2f77d0d4d91c9f97bb692886f0c54e009",
+  "seed": 20261010,
+  "timezone": "Europe/Paris",
+  "rng": "Mulberry32",
+  "runsPerScenario": 1000,
+  "scenarios": 12,
+  "trajectories": 12000,
+  "missingPacksMeanTotal": 0,
+  "results": "progression-1000.jsonl",
+  "resultsSha256": "d76bc463a7edb6903d3d2029e36aded24e29fe1cb657825c9bcd2d4bf52d28ff"
+}
