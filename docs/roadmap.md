@@ -1,6 +1,20 @@
 # Roadmap CreatorDeck
 
 ## Audit produit — progression et économie (10 octobre 2026, première passe)
+### Scénarios quantitatifs simplifiés — 10 octobre 2026
+
+Simulation exploratoire indépendante (et **non** exécution du moteur TypeScript ni du serveur). Hypothèses : stock initial 2, réserve maximale 4, recharge naturelle 1/30 min, visites fixes chaque jour (occasionnel 12 h/21 h, régulier 8 h/13 h/20 h, intensif 7 h/10 h/13 h/16 h/19 h/22 h), sans sabliers. Les ouvertures sont distribuées entre visites ; chaque scénario arrive à ouvrir ses 2, 6 ou 12 boosters Live quotidiens. Le Prime Time est compté seulement sur les ouvertures à 20 h. Points et jetons incluent les six petites récompenses de série, répétées chaque semaine, **sans** bonus de jalons, saisons, recyclage, missions, Paquet Scène, Perfect ni dépenses. Les chiffres sont des scénarios conditionnels, pas une prédiction des habitudes réelles.
+
+| Profil | 7 j : Live / jetons / points | 30 j : Live / jetons / points |
+|---|---:|---:|
+| Occasionnel, 2/j | 14 / 109 / 658 | 60 / 460 / 2 600 |
+| Régulier, 6/j | 42 / 263 / 994 | 180 / 1 120 / 4 040 |
+| Intensif, 12/j | 84 / 473 / 1 498 | 360 / 2 020 / 6 200 |
+
+**Lecture :** à 30 jours, le joueur intensif ouvre 6 fois plus de boosters que l'occasionnel ; les jetons progressent ici de 460 à 2 020 (×4,39) car les bonus fixes de série atténuent l'écart. Le régulier et l'intensif atteignent le coût de 400 jetons bien plus tôt, mais ce calcul n'intègre ni les autres récompenses ni les achats effectués. Ne **pas** interpréter le nombre de boosters divisé par 12 comme un nombre de Légendaires garanti : les tirages anticipés réinitialisent le compteur, et un Perfect peut aussi affecter le rythme.
+
+**Limites bloquantes avant décision d'équilibrage :** absence de tirages aléatoires de créateurs, donc pas de doublons, taux de collection, gains de recyclage, dépenses d'artisanat ou répartition des raretés ; pas de modèle de présence réelle aux heures de visite, de l'usage des sabliers, des missions, du Paquet Scène ni de la synchronisation Supabase. La prochaine passe doit exécuter le moteur réel sur des trajectoires reproductibles et documenter les résultats statistiques, sans modifier l'économie avant validation.
+
 
 **Portée :** revue statique des règles `src/lib/catalog.ts`, `src/data/progression.json`, `src/lib/progression.ts`, `src/lib/game-engine.ts`, `src/data/pull-rates.json`, `docs/taux-de-drop.md`. Pas de simulation exécutée, pas de test de production Supabase, aucune modification des règles.
 
