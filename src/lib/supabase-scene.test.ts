@@ -24,9 +24,16 @@ const SQL = readFileSync(
   path.join(ROOT, "supabase", "migrations", "0014_scene_pack.sql"),
   "utf8",
 );
+const LATEST_SCENE_SQL = readFileSync(
+  path.join(ROOT, "supabase", "migrations", "0043_scene_pack_eligibilite.sql"),
+  "utf8",
+);
 // Les contrôles de motifs portent sur le code seul : un commentaire qui
 // explique une règle cite forcément la règle.
 const CODE = SQL.split("\n")
+  .map((line) => line.replace(/--.*$/, ""))
+  .join("\n");
+const LATEST_SCENE_CODE = LATEST_SCENE_SQL.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n");
 
@@ -143,5 +150,61 @@ describe("0014_scene_pack.sql (le Paquet Scène côté serveur)", () => {
     expect(CODE).toContain("create table if not exists public.pack_scene");
     expect(CODE).not.toMatch(/drop table/i);
     expect(CODE).toMatch(/on conflict \(user_id\) do update/);
+  });
+});
+
+describe("0043_scene_pack_eligibilite.sql (parité des choix Scène)", () => {
+  it("garde les taux nominaux et le seuil Scène pleine à 3/1000", () => {
+    const table = PULL_RATES.scene;
+    for (const slot of table.slots) {
+      for (const [rarity, weight] of Object.entries(slot.weights)) {
+        const pattern = new RegExp(
+          `'\\{[^}]*"${rarity}": ${weight}[^}]*\\}'::jsonb`.replace(/\s+/g, "\\s*"),
+        );
+        expect(LATEST_SCENE_CODE, `${rarity} = ${weight}`).toMatch(pattern);
+      }
+    }
+    for (const [rarity, weight] of Object.entries(table.guaranteed.weights)) {
+      expect(sqlWeight(
+        LATEST_SCENE_CODE.slice(
+          LATEST_SCENE_CODE.indexOf("v_guaranteed jsonb"),
+          LATEST_SCENE_CODE.indexOf("v_rare_drop jsonb"),
+        ),
+        rarity,
+      )).toBe(weight);
+    }
+    expect(LATEST_SCENE_CODE).toContain(`v_rare_drop_permille integer := ${table.rareDrop.chancePermille}`);
+    expect(LATEST_SCENE_CODE).toContain("mod(abs(hashtext(v_seed)::bigint), 1000)");
+    expect(table.rareDrop.chancePermille).toBe(3);
+  });
+
+  it("refuse les familles trop petites ou sans candidat Rare/Épique", () => {
+    expect(LATEST_SCENE_CODE).toContain("v_family_count < 5 or v_guaranteed_count < 1");
+    expect(LATEST_SCENE_CODE).toContain("c.rarity <> 'legendary'");
+    expect(LATEST_SCENE_CODE).toContain("c.rarity in ('rare', 'epic')");
+  });
+
+  it("réserve un créateur de garantie avant les quatre premiers choix", () => {
+    expect(LATEST_SCENE_CODE).toContain("c.slug <> v_reserved_slug");
+    expect(LATEST_SCENE_CODE).toContain("c.slug = v_reserved_slug");
+    expect(LATEST_SCENE_CODE).toContain("v_guaranteed_count <= 4");
+    expect(LATEST_SCENE_CODE).toContain("v_rare_drop_hit and v_epic_count between 1 and 4");
+  });
+
+  it("sert tous les Épiques disponibles avant le complément Scène pleine", () => {
+    expect(LATEST_SCENE_CODE).toContain("v_rare_drop_hit and exists (");
+    expect(LATEST_SCENE_CODE).toContain("v_slot := v_rare_drop");
+    expect(LATEST_SCENE_CODE).toContain("v_slots[v_i] - 'epic'");
+    expect(LATEST_SCENE_CODE).toContain("v_i = 5 or v_reserved_slug is null or c.slug <> v_reserved_slug");
+    expect(LATEST_SCENE_CODE).toContain("c.slug = any(v_used_slugs)");
+  });
+
+  it("conserve les droits d'accès authentifiés de la fonction", () => {
+    expect(LATEST_SCENE_CODE).toContain(
+      "revoke all on function public.scene_pack_choices(text) from public, anon",
+    );
+    expect(LATEST_SCENE_CODE).toContain(
+      "grant execute on function public.scene_pack_choices(text) to authenticated",
+    );
   });
 });

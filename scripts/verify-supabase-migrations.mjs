@@ -168,6 +168,7 @@ try {
   const doublons = await readFile(path.join(MIGRATIONS, "0040_setup_doublons.sql"), "utf8");
   const collab = await readFile(path.join(MIGRATIONS, "0041_collab_plateau.sql"), "utf8");
   const tribunal = await readFile(path.join(MIGRATIONS, "0042_tribunal.sql"), "utf8");
+  const sceneCompatibility = await readFile(path.join(MIGRATIONS, "0043_scene_pack_eligibilite.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
@@ -212,6 +213,7 @@ try {
     ["0040_setup_doublons.sql", doublons],
     ["0041_collab_plateau.sql", collab],
     ["0042_tribunal.sql", tribunal],
+    ["0043_scene_pack_eligibilite.sql", sceneCompatibility],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -3872,6 +3874,177 @@ try {
     });
     return { shelf, pick };
   }
+
+  // Couvre les familles réelles qui ont moins de cinq Épiques. Les identités
+  // sont cherchées pour la journée courante afin d'exercer les deux branches
+  // du déclencheur déterministe 3/1000 sans modifier la base ou son horloge.
+  const smallEpicFamilies = ["S02", "S03", "S05", "S07", "S08"];
+  const noEpicFamily = "S10_TEST_NO_EPIC";
+  const incompatibleFamily = "S10_TEST_NO_GUARANTEE";
+  await client.query("begin");
+  await client.query(
+    `insert into public.creators (slug, login, display_name, rarity, rank, region, retired) values
+      ('scene-test-rare', 'scene-test-rare', 'Scene Test Rare', 'rare', 2001, $1, false),
+      ('scene-test-common-1', 'scene-test-common-1', 'Scene Test Common 1', 'common', 2002, $1, false),
+      ('scene-test-common-2', 'scene-test-common-2', 'Scene Test Common 2', 'common', 2003, $1, false),
+      ('scene-test-common-3', 'scene-test-common-3', 'Scene Test Common 3', 'common', 2004, $1, false),
+      ('scene-test-common-4', 'scene-test-common-4', 'Scene Test Common 4', 'common', 2005, $1, false),
+      ('scene-test-incompatible-1', 'scene-test-incompatible-1', 'Scene Test Incompatible 1', 'common', 2006, $2, false),
+      ('scene-test-incompatible-2', 'scene-test-incompatible-2', 'Scene Test Incompatible 2', 'common', 2007, $2, false),
+      ('scene-test-incompatible-3', 'scene-test-incompatible-3', 'Scene Test Incompatible 3', 'common', 2008, $2, false),
+      ('scene-test-incompatible-4', 'scene-test-incompatible-4', 'Scene Test Incompatible 4', 'common', 2009, $2, false),
+      ('scene-test-incompatible-5', 'scene-test-incompatible-5', 'Scene Test Incompatible 5', 'common', 2010, $2, false)`,
+    [noEpicFamily, incompatibleFamily],
+  );
+  const sceneProbeRows = await client.query(`
+    with families(family) as (
+      values ('S01'::text), ('S02'), ('S03'), ('S05'), ('S07'), ('S08'), ('S10_TEST_NO_EPIC')
+    ), probes as (
+      select f.family, md5('scene-parity-' || f.family || ':' || n)::uuid as user_id
+        from families f cross join generate_series(1, 10000) as nums(n)
+    ), rolls as (
+      select family, user_id,
+             mod(abs(hashtext(user_id::text || public._pack_game_day(now())::text || family)::bigint), 1000) < 3
+               as rare_drop
+        from probes
+    )
+    select distinct on (family, rare_drop) family, user_id::text as user_id, rare_drop
+      from rolls
+     order by family, rare_drop, user_id
+  `);
+  const sceneProbeUsers = new Map(
+    sceneProbeRows.rows.map((row) => [`${row.family}:${row.rare_drop}`, row.user_id]),
+  );
+
+  function pickSceneChoices(shelf, initialSeed) {
+    let seed = initialSeed >>> 0;
+    const used = new Set();
+    const picked = [];
+    for (const slot of shelf.choices) {
+      const free = slot.filter((entry) => entry.slug && !used.has(entry.slug));
+      if (!free.length) return null;
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const entry = free[seed % free.length];
+      used.add(entry.slug);
+      picked.push(entry);
+    }
+    return picked;
+  }
+
+  for (const [familyIndex, family] of [...smallEpicFamilies, noEpicFamily].entries()) {
+    const rarityCounts = (await client.query(
+      `select count(*) filter (where rarity = 'epic')::int as epics
+         from public.creators where region = $1 and not retired`,
+      [family],
+    )).rows[0];
+    const epicCount = rarityCounts.epics;
+    check(
+      `paquet scène : fixture ${family} réelle avec moins de cinq Épiques`,
+      epicCount < 5 && (family === noEpicFamily ? epicCount === 0 : epicCount > 0),
+      `epics=${epicCount}`,
+    );
+
+    for (const rareDrop of [false, true]) {
+      const userId = sceneProbeUsers.get(`${family}:${rareDrop}`);
+      if (!userId) {
+        check(`paquet scène ${family} : identité de test rare_drop=${rareDrop}`, false, "aucune identité trouvée");
+        continue;
+      }
+      await player(userId, `Scene${family}${rareDrop ? "Rare" : "Normal"}`, []);
+      const shelf = (await asPlayer(
+        userId,
+        "select public.scene_pack_choices($1) as r",
+        [family],
+      )).rows[0].r;
+      check(
+        `paquet scène ${family} : branche rare_drop=${rareDrop} déterministe`,
+        shelf.rare_drop === rareDrop && shelf.choices.length === 5 &&
+          shelf.choices.every((slot) => slot.length > 0),
+        JSON.stringify({ rare_drop: shelf.rare_drop, sizes: shelf.choices.map((slot) => slot.length) }),
+      );
+
+      let picksValid = true;
+      for (let trial = 0; trial < 100; trial += 1) {
+        const picked = pickSceneChoices(shelf, 0x51ce0000 + familyIndex * 100 + trial);
+        if (!picked || new Set(picked.map((entry) => entry.slug)).size !== 5 ||
+            picked.some((entry) => entry.rarity === "legendary") ||
+            (rareDrop && picked.filter((entry) => entry.rarity === "epic").length !== Math.min(epicCount, 5)) ||
+            (!rareDrop && !["rare", "epic"].includes(picked[4].rarity))) {
+          picksValid = false;
+          break;
+        }
+      }
+      check(
+        `paquet scène ${family} : 100 tirages distincts et garantie conforme (rare_drop=${rareDrop})`,
+        picksValid,
+      );
+
+      const selected = pickSceneChoices(shelf, 0x5ce00000 + familyIndex * 2 + Number(rareDrop));
+      const opened = (await asPlayer(
+        userId,
+        "select public.open_scene_pack($1, $2::jsonb) as r",
+        [family, JSON.stringify(selected.map((entry) => ({
+          creatorSlug: entry.slug,
+          rarity: entry.rarity,
+          variant: entry.variant,
+        })))],
+      )).rows[0].r;
+      check(
+        `paquet scène ${family} : ouverture serveur acceptée (rare_drop=${rareDrop})`,
+        opened.rare_drop === rareDrop && opened.cards.length === 5 &&
+          new Set(opened.cards.map((entry) => entry.creatorSlug)).size === 5 &&
+          opened.cards.every((entry) => entry.rarity !== "legendary") &&
+          (!rareDrop || opened.cards.filter((entry) => entry.rarity === "epic").length === Math.min(epicCount, 5)),
+        JSON.stringify(opened.cards.map((entry) => ({ slug: entry.creatorSlug, rarity: entry.rarity }))),
+      );
+    }
+  }
+
+  const fullEpicUser = sceneProbeUsers.get("S01:true");
+  if (!fullEpicUser) {
+    check("paquet scène S01 : identité de test Scène pleine", false, "aucune identité trouvée");
+  } else {
+    await player(fullEpicUser, "SceneS01Rare", []);
+    const fullEpicShelf = (await asPlayer(
+      fullEpicUser,
+      "select public.scene_pack_choices($1) as r",
+      ["S01"],
+    )).rows[0].r;
+    const fullEpicCards = pickSceneChoices(fullEpicShelf, 0x51ce5101);
+    check(
+      "paquet scène S01 : Scène pleine donne cinq Épiques si le vivier en contient au moins cinq",
+      fullEpicShelf.rare_drop === true && fullEpicCards?.length === 5 &&
+        fullEpicCards.every((entry) => entry.rarity === "epic"),
+      JSON.stringify(fullEpicCards?.map((entry) => entry.rarity)),
+    );
+    if (fullEpicCards) {
+      const fullEpicOpen = (await asPlayer(
+        fullEpicUser,
+        "select public.open_scene_pack($1, $2::jsonb) as r",
+        ["S01", JSON.stringify(fullEpicCards.map((entry) => ({
+          creatorSlug: entry.slug,
+          rarity: entry.rarity,
+          variant: entry.variant,
+        })))],
+      )).rows[0].r;
+      check(
+        "paquet scène S01 : open_scene_pack accepte les cinq Épiques distincts",
+        fullEpicOpen.rare_drop === true && fullEpicOpen.cards.length === 5 &&
+          fullEpicOpen.cards.every((entry) => entry.rarity === "epic") &&
+          new Set(fullEpicOpen.cards.map((entry) => entry.creatorSlug)).size === 5,
+      );
+    }
+  }
+  await refuses(
+    "paquet scène : famille assez grande mais sans garantie Rare/Épique → refus",
+    SCENE,
+    "select public.scene_pack_choices($1)",
+    [incompatibleFamily],
+    "incompatible",
+  );
+  // Les familles synthétiques et les dix joueurs d'essai ne survivent pas au
+  // vérifieur : toutes ces mutations sont annulées sur la base jetable.
+  await client.query("rollback");
 
   const scenePick = (await scenePickFor(SCENE, "S01")).pick;
   const sceneCards = scenePick.map((entry) => ({

@@ -512,6 +512,10 @@ remplacé sans que le joueur le demande : l'écran **Mon compte** affiche alors
      client ne peut pas répondre cinq Holo. Ce paquet ne fait pas monter le
      plancher de malchance (le journal distingue `kind = 'live'`). Détail :
      §8, « Le Paquet Scène ».
+    - [`supabase/migrations/0043_scene_pack_eligibilite.sql`](../supabase/migrations/0043_scene_pack_eligibilite.sql)
+      → complète `scene_pack_choices()` : petites familles, Scène pleine et
+      réserve du dernier candidat. Migration additive ; test Postgres jetable
+      non exécuté sous le compte Administrateur Windows (voir D-014/K-014).
    - [`supabase/migrations/0013_progression.sql`](../supabase/migrations/0013_progression.sql)
      → que le **plancher de malchance** et la **série de jours**
      existent aussi côté serveur : après 12 boosters d'affilée sans Légendaire,

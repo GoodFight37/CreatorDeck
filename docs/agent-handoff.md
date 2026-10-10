@@ -1,3 +1,31 @@
+## Point de reprise — parité Scène SQL en attente, 10 octobre 2026
+
+Branche `design/booster-reveal-polish`, base propre `35cdbcfc3bd2c26e379ea8699acd5d1d6ca50fe1`,
+distante identique au début de cette tâche. PR #8 relue via l’API publique :
+ouverte et brouillon, tête `35cdbcf`, base `arena/01a10c75-creatordeck`,
+`mergeable_state=dirty` au contrôle. Aucun commentaire de PR ni déploiement.
+
+Travail local non commité : nouvelle migration additive `0043_scene_pack_eligibilite.sql`,
+tests Vitest miroir dans `src/lib/supabase-scene.test.ts` et scénarios
+d’intégration dans `scripts/verify-supabase-migrations.mjs`. Cible : les cinq
+familles ayant 1–4 Épiques, tirages normal/Scène pleine, cinq cartes uniques,
+garantie et acceptation par `open_scene_pack`. Le vérifieur ajoute 0043 après
+0042. D-014, K-013/K-014 et roadmap mis à jour.
+
+Contrôles actuels : `npm test -- --run src/lib/supabase-scene.test.ts src/lib/scene-pack-regression.test.ts`
+35/35 ; `npm run typecheck` code 0 ; `node --check scripts/verify-supabase-migrations.mjs`
+code 0 ; `git diff --check` code 0. `npm run supabase:verify` a initialisé son
+cluster jetable puis échoué avant démarrage : Postgres interdit son lancement
+sous le compte Administrateur Windows. **Zéro migration et zéro contrôle SQL
+exécutés.** Docker/Podman absents ; WSL répond `E_ACCESSDENIED`. Ne pas annoncer
+la parité comme validée. Vérifier la CI Linux après push ou exécuter sous un
+compte non administrateur. Aucun projet Supabase distant ni secret utilisé.
+
+Prochaine action : revue du diff, commit/push normal sur cette branche, puis
+contrôle CI du SHA. Si l’environnement Linux n’exécute pas le vérifieur,
+demander un run depuis un compte Windows standard. Production, `main` et merge
+de PR restent exclus. Réservation active par cette session.
+
 ## Audit final reçu — 10 octobre 2026
 
 L'utilisateur a fourni `audit-1000.txt` après `git pull` du commit `7da3d1c301c949e6cbeaef6aecd6ec0c94ffe2f1`. Vérification : commande et graine attendues, TZ Europe/Paris, Mulberry32, 12/12 scénarios à 1 000, 12 000 trajectoires, zéro `missingPacks`. Résultats détaillés et SHA dans [audit-progression.md](audit-progression.md) et [progression-manifest.json](audits/progression-manifest.json). Supabase local reste non vérifié ; aucun changement de production.

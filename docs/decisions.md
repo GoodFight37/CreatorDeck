@@ -73,6 +73,23 @@ L'audit utilise un RNG déterministe dans son seul processus, un fuseau imposé
 et compare épargne / craft-et-jetons ; ne pas remplacer le RNG du jeu ni
 conclure à un rééquilibrage sur ces seuls horaires et stratégies.
 
+## D-014 — 10 octobre 2026 : parité SQL du Paquet Scène
+
+Ajouter la migration additive `0043_scene_pack_eligibilite.sql` au lieu de
+modifier `0016_sortants.sql`, déjà publié. Le serveur garde les poids déclarés
+et le seuil 3/1000, exclut les Légendaires, sert les Épiques disponibles lors
+de Scène pleine et réserve un candidat distinct pour le dernier slot. Une
+famille de moins de cinq créateurs non légendaires ou sans Rare/Épique est
+refusée. Le vérifieur exercera les cinq familles réelles à peu d’Épiques, les
+deux branches déterministes et l’acceptation par `open_scene_pack()` sur une
+base reconstruite. Aucun déploiement n’est autorisé par cette décision.
+
+Preuve actuelle : tests Vitest ciblés 35/35, TypeScript et syntaxe Node OK.
+`npm run supabase:verify` n’a pas pu démarrer PostgreSQL sous le compte
+Administrateur Windows ; **aucune migration ni aucun contrôle d’intégration
+SQL n’a été exécuté**. La parité reste non validée jusqu’à un run PostgreSQL
+jetable réussi (local non administrateur ou CI Linux).
+
 ## Questions ouvertes
 
 L'appréciation du dos → face, du halo, de l'éclat, du Perfect et des limites de

@@ -1,3 +1,18 @@
+## Parité Scène Supabase — en cours, 10 octobre 2026
+
+- [x] Migration additive `0043_scene_pack_eligibilite.sql` et cas de vérification
+  pour les cinq familles à moins de cinq Épiques, avec tirage normal/Scène pleine.
+- [x] Tests miroir ciblés : 35/35 ; TypeScript, syntaxe Node et `git diff --check`
+  réussis.
+- [ ] Exécuter `npm run supabase:verify` complètement sur PostgreSQL jetable.
+  Ici, Postgres refuse de démarrer sous le compte Administrateur Windows ; les
+  migrations n’ont pas été appliquées et aucun contrôle d’intégration n’a tourné.
+- [ ] Vérifier le contrôle CI Linux de la branche. Aucun accès à la production,
+  merge ou changement de `main`.
+
+La parité SQL ne sera déclarée validée qu’après un résultat réussi du banc
+Postgres. Décision D-014 ; problème K-014.
+
 ## Audit Scène validé — 10 octobre 2026
 
 Sur le commit `7da3d1c`, les 1 000 trajectoires par scénario ont terminé : 12 scénarios, 12 000 trajectoires, graine `20261010`, zéro paquet manquant. Résumé et limites : [audit-progression.md](audit-progression.md). L'audit valide uniquement le moteur local ; parité Supabase non vérifiée.
