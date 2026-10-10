@@ -1,6 +1,49 @@
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — K-010 corrigé, 10 octobre 2026, 11 h 53 Europe/Paris
+## Checkpoint courant — CI vérifiée, preview bloqué, 10 octobre 2026, 11 h 57 Europe/Paris
+
+- Agent : Codex Cloud ; contrôle ciblé après le « go », réservation libérée.
+  Branche `design/booster-reveal-polish`, HEAD local et distant identiques :
+  `2d933c92caa8bef0e08672239232e7da114620b8` ; checkout propre. Aucun changement produit ni nouveau test local.
+- PR #8 relue sur GitHub : DRAFT, base `arena/01a10c75-creatordeck`, tête
+  `2d933c92caa8bef0e08672239232e7da114620b8`. Workflow « Vérification »
+  [run #235](https://github.com/GoodFight37/CreatorDeck/actions/runs/38042993215)
+  **terminé avec succès** pour ce SHA. Les quatre jobs sont verts : unitaires/
+  écrans/statique/build, SQL sur Postgres jetable, E2E Playwright, chemin cloud
+  à RPC simulés. Leurs compteurs précis n'ont pas été extraits des logs ; ne
+  pas réutiliser les chiffres des runs locaux comme chiffres CI.
+- Le journal de la PR relie explicitement le même SHA au preview Vercel
+  [deployed](https://creator-deckk-rapfm1ejk-hafsi37-2386.vercel.app), daté du 10 octobre à 09 h 54 UTC ; le commentaire
+  Vercel signale « Ready ». Cette preuve porte sur le déploiement, pas sur la
+  qualité visuelle de l'ouverture.
+- `curl` vers le domaine du preview et l'alias
+  `https://creator-deckk-dev.vercel.app` : **code 56, CONNECT 403**.
+  Aucun rendu du preview n'a donc été chargé dans le navigateur de cet agent.
+  VIS-01 et K-005 restent ouverts : continuité et gestes au pouce, dos/faces,
+  halo/Perfect, réduction des animations, sons/reflets et bureau/téléphone
+  requièrent encore le verdict humain sur le lien ci-dessus.
+- `gh run list` et `gh pr view` : Forbidden ; `api.github.com` via curl :
+  CONNECT 403. Contrôle CI fait par les pages HTML GitHub publiques, reliées
+  au SHA exact, sans déduire les résultats d'une ancienne passation.
+- Skill cloud-onboarding `setup` consulté pour l'accès. Configuration active :
+  règles personnalisées Playwright, aucun domaine Vercel. Le brouillon renvoyé
+  a une `base_version_id` plus ancienne que la version active de l'environnement ;
+  aucun enregistrement n'a été tenté pour ne pas écraser un brouillon périmé.
+  Si l'agent doit visiter le preview, l'opérateur peut ajouter le domaine exact
+  `creator-deckk-rapfm1ejk-hafsi37-2386.vercel.app` dans les paramètres réseau de
+  l'environnement actuel, puis Save et Publish ; recontrôler l'accès après
+  activation. L'alias `creator-deckk-dev.vercel.app` n'est pas nécessaire
+  pour l'URL liée à ce commit. Cette configuration n'a pas été sauvegardée.
+- Fichiers : passation, roadmap, problèmes, journal. Publication documentaire
+  à retrouver avec `git log -1 --format=%H -- docs/agent-handoff.md`, puis
+  comparer au HEAD distant. Aucun merge ni modification de main.
+- Prochaine action : recueillir l'avis visuel du joueur sur le preview du SHA
+  ci-dessus ; si l'accès réseau est ouvert, lancer la visite Chromium sur cette
+  URL et noter le statut HTTP et les gestes observés. Ensuite reprendre CLOUD-01
+  uniquement avec le projet Supabase autorisé. Ne pas marquer VIS-01 terminé
+  sur la seule base de la CI ou du statut Vercel.
+
+## Historique — K-010 corrigé, 10 octobre 2026, 11 h 53 Europe/Paris
 
 - Agent : Codex Cloud ; correction ciblée autorisée (« let's go »), réservation
   libérée à la passation. Modèle conseillé pour cette correction : Sol / Moyen.
