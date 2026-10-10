@@ -8,9 +8,9 @@
 | Session / réservation | Correction SQL terminée ; réservation libérée à la remise de cette passation |
 | Branche | `design/booster-reveal-polish` |
 | Base de cette correction | `dedb03bed2b7442b2c841643cd06aace103ed4a6`, vérifiée identique au distant avant édition |
-| Commit contenant le correctif et cette passation | `git log -1 --format=%H -- scripts/verify-supabase-migrations.mjs` ; code testé : diff de ce fichier décrit ci-dessous sur la base indiquée |
+| Commit contenant le correctif et cette passation | Correctif `245742fb42972558a57cd57febd7dd7ba773f372` ; checkpoint documentaire : `git log -1 --format=%H -- docs/agent-handoff.md` |
 | PR vérifiée à la reprise | [#8](https://github.com/GoodFight37/CreatorDeck/pull/8), DRAFT ; base `arena/01a10c75-creatordeck`, tête design |
-| Publication | Publication à vérifier dans Git : retrouver le SHA du commit contenant ce document puis le comparer avec `git ls-remote origin refs/heads/design/booster-reveal-polish` avant reprise |
+| Publication | Correctif `245742fb42972558a57cd57febd7dd7ba773f372` poussé : SHA distant identique, les six fichiers relus au SHA depuis GitHub et comparés au commit ; retrouver puis vérifier le HEAD documentaire courant avant reprise |
 
 ### Demande, objectif et réalisation
 
@@ -66,9 +66,13 @@ historiques, pas de nouveaux runs. Aucun E2E exécuté ni CI distante confirmée
 ### Incomplet, préférences et prochaine action exacte
 
 - K-008 : téléchargement navigateur bloqué malgré une nouvelle tentative.
-  Dans les paramètres réseau de l’environnement Cloud, ajouter
-  `cdn.playwright.dev` aux domaines autorisés **sans supprimer les autres**,
-  puis relancer la commande Chromium ci-dessus et `npm run e2e`.
+  Le brouillon Cloud a été lu : réseau restreint, aucune règle personnalisée,
+  preset `package_managers`. Ajout du seul domaine `cdn.playwright.dev`
+  enregistré par l’outil de configuration : `status: saved`,
+  `requires_publish: true` ; autres champs et presets conservés.
+  **Ce brouillon n’est pas activé/publié.** Dans les paramètres de
+  l’environnement, revoir et enregistrer cet ajout puis publier l’environnement.
+  Ensuite relancer la commande Chromium ci-dessus et `npm run e2e`.
   Pour le chemin cloud simulé, suivre `.github/workflows/verification.yml` ;
   aucune clé réelle nécessaire. Ne pas confondre ces mocks avec la production.
 - Sur le preview Vercel correspondant au nouveau HEAD, faire valider au pouce
