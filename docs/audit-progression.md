@@ -34,10 +34,25 @@ ni une justification d'équilibrage.
 | intensif | 30 | épargne | 832.46 | 819 | 833 | 844 | 10.24 | 68998.79 | 2020.00 |
 | intensif | 30 | craft-et-jetons | 849.41 | 837 | 850 | 862 | 9.72 | 53866.34 | 121.60 |
 
-## Limites Supabase
+## Limites Supabase au moment de l'audit de progression
 
-L'audit appelle les fonctions TypeScript locales, pas les RPC Supabase. Le
-chemin cloud n'a pas été modifié ni testé par ces trajectoires. Le banc SQL
-local n'a pas pu démarrer sous le compte administrateur Windows : zéro contrôle
-SQL exécuté. La divergence Scène du chemin Supabase reste à vérifier et corriger
-sur une base jetable avant toute décision de déploiement.
+Ces 12 000 trajectoires appellent les fonctions TypeScript locales, pas les
+RPC Supabase. Elles ne valident donc pas la progression multi-jours côté serveur.
+Lors de cette première exécution, le banc SQL n'avait pas pu démarrer sous le
+compte administrateur Windows ; cette phrase décrit l'état de ce run, pas la
+validation ultérieure du Paquet Scène.
+
+## Validation ultérieure, séparée de l'audit de progression — 10 octobre 2026
+
+La parité du Paquet Scène a ensuite été corrigée dans la migration additive
+0043_scene_pack_eligibilite.sql, puis exercée sur PostgreSQL jetable sous WSL,
+avec l'utilisateur Linux non administrateur. La passation et la roadmap
+consignent 35/35 tests ciblés et les 559 contrôles du vérifieur SQL réussis,
+migrations 0001–0043 comprises, y compris familles avec peu ou zéro Épique,
+garantie du cinquième emplacement et familles incompatibles. Cette vérification
+est distincte des simulations de progression ci-dessus et n'a touché aucune
+base Supabase en production.
+
+Limite toujours ouverte : les trajectoires de progression restent une
+simulation du moteur TypeScript local ; elles ne constituent pas une
+comparaison des RPC de progression avec le serveur.
