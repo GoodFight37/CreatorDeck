@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
-test("Craft prépare une carte sans dépenser avant dix doublons", async ({ page }) => {
+test("Craft montre les recettes et bloque un achat sous son coût", async ({ page }) => {
   await gotoDeck(page);
   const creator = creatorData.find((entry) => entry.rarity === "common")!;
   await page.evaluate((entry) => {
@@ -19,27 +19,21 @@ test("Craft prépare une carte sans dépenser avant dix doublons", async ({ page
   });
   const before = await readCards();
   await page.getByRole("button", { name: "Craft", exact: true }).click();
-  await expect(page.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "9");
-  await expect(page.locator(".atelier-preview-wallet")).toContainText("+108 points");
-  await expect(page.locator(".atelier-preview-card")).toHaveCount(3);
-  await expect(page.locator(".atelier-row")).toHaveCount(0);
-  await expect(page.locator(".atelier-preview-card button, .atelier-preview-card [role=button]")).toHaveCount(0);
+  await expect(page.getByText("Rejoindre (999)")).toBeVisible();
+  await expect(page.locator(".atelier-cost-guide")).toContainText("Commune 45 · Peu commune 90 · Rare 220 · Épique 600 points");
+  await expect(page.locator(".atelier-row")).toHaveCount(20);
+  await expect(page.locator(".atelier-preview, .atelier-warmup")).toHaveCount(0);
+
+  await page.getByRole("button", { name: /^Communes/ }).click();
+  const recipe = page.locator(".atelier-row .craft-button").first();
+  await expect(recipe).toContainText("45");
+  await expect(recipe).toBeDisabled();
+  await expect(recipe).toHaveAttribute("title", "Il te manque 5 points");
   for (const viewport of [{ width: 320, height: 568 }, { width: 412, height: 915 }]) {
     await page.setViewportSize(viewport);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
-    await expect(page.locator(".atelier-preview-grid")).toBeVisible();
+    await expect(page.locator(".atelier-list")).toBeVisible();
   }
-  await page.locator(".atelier-preview").screenshot({ path: `test-results/craft-preview-${test.info().project.name}.png` });
+  await page.locator(".atelier-list").screenshot({ path: `test-results/craft-recipes-${test.info().project.name}.png` });
   expect(await readCards()).toEqual(before);
-  await page.getByRole("button", { name: "Choisir ma collection dans le Binder" }).click();
-  await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
-  await page.locator(".binder-collections-picker summary").click();
-  const choice = page.locator(".binder-collection-choices button").nth(4);
-  const goalName = await choice.locator("strong").innerText();
-  await choice.click();
-  await page.getByRole("button", { name: "Craft", exact: true }).click();
-  await expect(page.locator(".atelier-preview")).toContainText(goalName);
-  expect(await readCards()).toEqual(before);
-  await page.getByRole("button", { name: "Retour au Drop", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Un sachet. Cinq créateurs." })).toBeVisible();
 });
