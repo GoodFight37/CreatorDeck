@@ -8,6 +8,12 @@ migration en attente, `0048_sablier_booster_bonus.sql` ; « Applying migration
 vérifiés après application. » L’application serveur de 5/4 est donc confirmée.
 La CI de ce SHA [38146175554](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146175554)
 était verte, quatre jobs. L’autorisation permanente D-038 est publiée.
+Checkpoint documentaire [9768d1a85bc5d24f3c0664a98cb3738903d104ed](https://github.com/GoodFight37/CreatorDeck/commit/9768d1a85bc5d24f3c0664a98cb3738903d104ed)
+validé par la CI [38146941670](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146941670)
+(quatre jobs verts). Le contrôle automatique Supabase
+[38147141158](https://github.com/GoodFight37/CreatorDeck/actions/runs/38147141158)
+est aussi **success** : connexion TLS, CreatorDeck et historique vérifiés,
+base déjà à jour ; aucun SQL rejoué.
 Le statut GitHub du check Vercel sur `ef3a6ed` était `success`. Cela ne vérifie
 pas le contenu actuellement servi ni le parcours réel sur téléphone.
 
