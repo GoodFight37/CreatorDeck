@@ -1,3 +1,13 @@
+## Application 0047 confirmée — 11 octobre 2026
+
+Sur le code 5832b5d, CI complète 38140313000 et dry-run 38140323824 réussis,
+puis [application manuelle 38140515537](https://github.com/GoodFight37/CreatorDeck/actions/runs/38140515537)
+réussie. Historique et objets 0047 vérifiés par le script après CLI ; contrôle
+final en lecture seule 38140562490 également réussi. Seule nouvelle migration :
+0047, aucun ancien reset/repair/rejeu. Malik a explicitement accepté l’absence
+de sauvegarde. L’essai sur téléphone réel reste distinct et à effectuer.
+Les observations antérieures plus bas sont conservées comme historique.
+
 ## Compatibilité du CLI et vérification après application — 11 octobre 2026
 
 L’erreur « failed to parse config / invalid keys » du run 38139794012 vient du

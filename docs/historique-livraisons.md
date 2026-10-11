@@ -1,3 +1,14 @@
+## 11 octobre 2026 — 0047 appliquée au projet CreatorDeck
+
+Correctif d’outil 5832b5d publié, CI complète verte et dry-run réussi.
+Application manuelle 38140515537 **success**, après acceptation explicite de
+l’absence de sauvegarde par Malik. Versions enregistrées et table/RPC/trigger
+0047 vérifiés en lecture après CLI ; contrôle final 38140562490 **success**.
+Aucun reset, repair, rejeu historique, changement des gains ou taux. K-033
+résolu, K-030 activé côté serveur ; téléphone réel et version servie à tester.
+Passation Cloud/PC et roadmap actualisées. Logs détaillés inaccessibles au proxy,
+résultat vérifié par les étapes et les contrôles obligatoires du script publié.
+
 ## 11 octobre 2026 — correction de compatibilité du déploiement SQL
 
 Erreur fournie par Malik : CLI 2.39.2 refuse la configuration locale récente

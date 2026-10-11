@@ -998,7 +998,7 @@ consommer — et adopte le compteur et l'ancre (`last_regen_at`) dans la partie
 locale : l'affichage et le tirage ne divergent plus si l'horloge de l'appareil
 dérive ou si la sauvegarde locale a été bricolée. Depuis `aded8ff`, le sablier connecté appelle `use_hourglass(uuid)` après
 synchronisation de la partie. La migration [0047](../supabase/migrations/0047_sabliers_en_ligne.sql)
-(classée **manual**, non appliquée par cette session) relie débit de 1 et avance
+(classée **manual**, appliquée et vérifiée le 11 octobre 2026 via le [run 38140515537](https://github.com/GoodFight37/CreatorDeck/actions/runs/38140515537)) relie débit de 1 et avance
 de 15 min dans une transaction, avec rejeu UUID et garde des sauvegardes périmées.
 Un refus de synchronisation empêche la dépense ; une réponse perdue conserve la
 clé par compte, même après rechargement. Les gains restent calculés localement :

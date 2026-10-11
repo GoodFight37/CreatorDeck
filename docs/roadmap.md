@@ -4,7 +4,8 @@
 - [x] Dry-run réel réussi sur 9788208 : run 38139346769, aucune migration appliquée.
 - [x] Blocage K-032 reproduit ; correctif E2E cloud 6/6 localement, assertions conservées.
 - [x] Correctif 1dd5b53 publié, CI 38139620497 verte, dry-run 38139632409 réussi.
-- [ ] Application manuelle ciblée : incompatibilité CLI/config identifiée avant SQL (K-033), workdir temporaire et vérification post-CLI prêts, 24/24 tests locaux. Attendre CI/dry-run du correctif puis appliquer 0047 ; téléphone ensuite.
+- [x] Incompatibilité CLI/config résolue (5832b5d, 24/24 tests), CI 38140313000 verte ; application 0047 38140515537 réussie et historique/objets vérifiés, contrôle final 38140562490 réussi.
+- [ ] Essai débit/recharge/rechargement et ouverture sur téléphone réel.
 
 Voir le checkpoint courant pour preuves, limites et autorisation.
 
@@ -15,8 +16,7 @@ Voir le checkpoint courant pour preuves, limites et autorisation.
   garde contre les anciennes sauvegardes : code publié sur main, `aded8ff`.
 - [x] Contrôles locaux : 1117 tests unitaires, 83 DOM, 643 assertions SQL,
   E2E bureau/téléphone simulé 2/2 ; typecheck, lint et build webpack réussis.
-- [ ] Appliquer **0047**, classée manual, après vérification de la cible,
-  du schéma et du statut de récupération. Aucune application production faite.
+- [x] **0047** appliquée au projet CreatorDeck et versions/objets vérifiés (38140515537). Cible/historique contrôlés, absence de sauvegarde explicitement acceptée par Malik.
 - [ ] Vérifier le débit/recharge/rechargement sur téléphone réel et la version servie.
 - [ ] K-031 : corriger séparément le report du helper historique `_pack_refresh`.
 
