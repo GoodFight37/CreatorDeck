@@ -5,6 +5,8 @@ focus du Paquet Scène devenu repliable. Corrections locales ciblées confirmée
 les suites finales passent, preuves détaillées dans la passation. L’essai invité est un aperçu sans collection ni gains ;
 le compte reste requis pour jouer avec la collection serveur. Aucun nouveau
 problème SQL établi ; 645 contrôles du vérificateur jetable passent jusqu’à 0048.
+Une capture locale à 412×915 a aussi montré le sablier sous la navigation :
+réglage CSS final vérifié par 4 E2E, avec assertion de visibilité intégrale.
 K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck

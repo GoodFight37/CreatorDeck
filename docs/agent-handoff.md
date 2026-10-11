@@ -1,4 +1,4 @@
-## Checkpoint courant — audit produit P0/P1 prêt à publier — 11 octobre 2026
+## Checkpoint courant — audit produit P0/P1 publié, réglage de visibilité final — 11 octobre 2026
 
 Demande Malik : implémenter P0 puis P1 de l’audit produit, publication autorisée.
 Base vérifiée : `bbef1227bafb050dd024f77ea15c1bb3384e8aee`, branche `work`,
@@ -39,10 +39,22 @@ aucune configuration réseau changée. Chromium 1243 téléchargé via Playwrigh
   mission et à la réaction du cinquième verdict, puis suites finales vertes.
   Le mock de statut cloud et le setState dans effect ont été corrigés ; le choix
   tutoriel utilise useSyncExternalStore et conserve sa limite au rechargement.
-- Publication et CI distante à vérifier. Prochaine action : commit ciblé et push
-  normal main, vérifier les quatre jobs CI et l’automatique Supabase (aucun SQL
-  attendu), puis noter les SHA et liens réellement observés. Aucun téléphone
-  physique ni contenu Vercel effectivement servi validé à ce stade.
+- Première publication vérifiée sur main :
+  [`e33ac0a5145264d90772ae63b9cccb942c912157`](https://github.com/GoodFight37/CreatorDeck/commit/e33ac0a5145264d90772ae63b9cccb942c912157).
+  CI [38153473136](https://github.com/GoodFight37/CreatorDeck/actions/runs/38153473136)
+  **success**, quatre jobs : qualité, SQL jetable, 46 E2E sans cloud (8 ignorés
+  dédiés au cloud), puis 8/8 cloud simulés. Logs téléchargés et lus. Statut
+  GitHub Vercel success, sans preuve du contenu servi ni du téléphone réel.
+- Une capture locale du build statique à 412×915 a révélé le bouton sablier
+  partiellement sous la navigation. Ajustement final CSS : sachet 140 px maximum
+  et espacements réduits, mêmes faces/gestes/timings. Les **4 E2E** ciblés
+  `le Drop garde|home pack artwork` passent : bouton sablier entièrement au-dessus
+  de la navigation sur bureau/téléphone simulé, sachet/titre/consigne sans recouvrement.
+  Build complet précédent testé sur e33ac0a ; cet ajustement n’a touché que CSS
+  et assertion navigateur. Aucune suite SQL/logique répétée pour cette retouche.
+- Prochaine action : publier ce réglage final, vérifier les quatre jobs CI et
+  l’automatique Supabase (aucun SQL attendu), puis noter SHA et liens observés.
+  Aucun téléphone physique ni contenu Vercel effectivement servi validé.
 
 ---
 
