@@ -270,3 +270,14 @@ déclencheur et bouton retour utilisent les hooks existants.
 
 Preuves et commandes finales dans la passation ; captures et Chromium local
 ne remplacent pas une validation esthétique et tactile sur téléphone réel.
+
+## D-030 — 11 octobre 2026 : ne pas masquer l’action suivante du cadeau
+
+Le scénario E2E tutoriel + cinq boosters, repris depuis le brouillon de session,
+a montré que le toast vert « Cadeau réclamé » reste au-dessus du bouton
+« Ouvrir un booster cadeau » après la révélation. Il répète le message/la quantité
+que la boîte met déjà à jour et oblige à le fermer pour continuer. Retirer ce
+toast de succès seulement ; conserver le message officiel du cadeau, le solde et
+le toast des autres notifications. Aucun RPC/serveur/règle de jeu modifié.
+Parcours Playwright avec RPC interceptées : 2/2 bureau et téléphone simulé,
+réserve ordinaire intacte ; voir le checkpoint pour les autres contrôles.

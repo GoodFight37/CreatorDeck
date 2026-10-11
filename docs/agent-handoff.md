@@ -1,3 +1,16 @@
+## Checkpoint courant — parcours cadeau après le tutoriel — 11 octobre 2026
+
+- Reprise sur `main` au SHA local/distant `a0eeb7750153e9a1563e67505f384349850d1cd3`. Demande de Malik : trouver un travail autonome pendant qu’il attendra demain pour examiner le Drop/Binder. Le brouillon E2E ancien a servi de base ; le scénario cadeau est maintenant terminé et passe bureau/téléphone simulé.
+- Bug d’interface révélé en l’essayant : après « Réclamer mes 5 boosters », un toast vert persistant recouvrait le bouton « Ouvrir un booster cadeau » au retour de la révélation. Le message cadeau et le solde actualisés indiquent déjà le résultat. Toast redondant retiré de `claimAndOpenWelcomeGift`; le bouton reste directement utilisable et le message cadeau conservé. Aucun code tirage/solde/SQL modifié. D-030, K-027.
+- Test définitif `e2e/onboarding-gift.spec.ts` : étapes du tutoriel, message absent avant finition, premier claim après fin du tutoriel, **un claim**, cinq RPC d’ouverture ; cinq cartes révèlées pour chacun des cinq boosters, retour au Drop entre eux ; cadeau disparaît à épuisement, réserve normale reste à 2. Chaque réponse RPC est simulée par `page.route`. Le seul hôte configuré est la fixture de format `e2e.supabase.co`; toutes les RPC REST sont interceptées. Aucune connexion au projet CreatorDeck ni écriture production.
+- Vérification : `NEXT_PUBLIC_SUPABASE_URL=https://e2e.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=local-e2e-placeholder-key-01234567890123456789 NEXT_TELEMETRY_DISABLED=1 PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright npm run e2e -- e2e/onboarding-gift.spec.ts --reporter=line` → **code 0, 2/2**, bureau et téléphone simulé, 12,5 s. Premier essai avec `https://example.invalid` n’activait pas le code cloud (URL refusée par le validateur) ; configuration corrigée. Une première assertion vérifiait l’ordre avant l’appel claim, corrigée pour attendre le RPC ; la fixture marque maintenant le cadeau indisponible à 0 ; le toast produit est retiré après qu’il empêchait le clic. Tests définitifs après ces corrections : tous passent.
+- `npm run typecheck`, `npm run lint`, `git diff --check` : code 0. `XDG_CONFIG_HOME=/tmp/creatordeck-xdg NEXT_TELEMETRY_DISABLED=1 npm run build -- --webpack` : code 0, export `/`, `/_not-found`, `/overlay`; variables publiques Supabase absentes du build, RPC factices seulement dans E2E. Aucun accès ni changement sur la vraie base.
+- La section précédente décrit le checkpoint `4f91c71` avant ce travail et garde son historique. Le test initial non suivi est désormais suivi par Git et plus une tâche suspendue ; sa copie d’archive a été retirée.
+
+**Code publié et distant vérifié** : [`1070153`](https://github.com/GoodFight37/CreatorDeck/commit/1070153eec094be2629025546befa00a1670b761). La vérification précédente comparait `main` au parent `a0eeb77`, puis le push normal et `git ls-remote` confirment ce SHA. Le checkpoint est prêt sur le même HEAD ; la prochaine session doit encore vérifier la CI courante et la version Vercel, non consultées ici. Aucune migration réelle appliquée.
+
+---
+
 ## Checkpoint courant — accueil Drop et Binder — 11 octobre 2026
 
 - **Demande active satisfaite côté code** : Malik autorise pendant son sommeil
@@ -47,7 +60,7 @@ commit de livraison enregistré ci-dessous contient ce même contenu vérifié.
 scénarios « avec le serveur » demandent une configuration publique Supabase
 absente ici ; aucune preuve cloud réelle ou simulée nouvelle pour ces deux.
 Les six scénarios nouveaux passent, ainsi que navigation, crash local et
-déchirure. Le brouillon cadeau suspendu est volontairement exclu.
+déchirure. Le scénario cadeau ajouté au checkpoint courant est distinct et a ensuite passé 2/2 avec RPC factices.
 Commande : `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright npm run e2e -- e2e/navigation.spec.ts e2e/pack-crash.spec.ts e2e/pack-tear.spec.ts e2e/drop-binder.spec.ts --reporter=line`.
 Serveur réutilisé : `npm run start -- --listen 3000`, export compilé.
 
@@ -84,7 +97,7 @@ ce succès avec l’accès réseau de la session Cloud. API GitHub Actions refus
 1. Lire AGENTS et ce checkpoint sur [main GitHub](https://github.com/GoodFight37/CreatorDeck/blob/main/docs/agent-handoff.md). Vérifier état, branche, HEAD et HEAD distant avant de changer le checkout PC. Ne pas écraser de changements locaux ; fetcher/examiner toute divergence avant mise à jour normale.
 2. Prendre le SHA actuel de main, pas un ancien checkout ni le SHA de base mentionné ci-dessus. Les mêmes docs servent au Cloud et au PC ; pas de copie concurrente de la roadmap. Le commit documentaire se retrouve par `git log -1 --format=%H -- docs/agent-handoff.md`.
 3. Tester la nouvelle version servie sur le téléphone de Malik : ouverture par tap/glissement, réserve, fiche récente/fermeture/retour, Binder Dernières reçues/page/manquantes ; comparer à l’identité proposée. L’esthétique et la prise en main restent une validation utilisateur. Ne pas déclarer le déploiement déjà fait sans contrôle de la version servie.
-4. Le fichier préexistant non suivi `e2e/onboarding-gift.spec.ts` reste inchangé dans le checkout Cloud et explicitement suspendu. Copie exacte consultable sur GitHub dans [agent-drafts](agent-drafts/README.md), suffixe `.txt` : hors suite et hors bundle. Ne pas le réactiver ou le présenter validé ; reprise dédiée seulement si demandée.
+4. Le test du cadeau est maintenant suivi dans `e2e/onboarding-gift.spec.ts` et passe en navigateur bureau/téléphone simulé. Le code utilise seulement des URL et RPC factices ; il ne valide pas la base de production.
 5. Aucun chantier supplémentaire lancé après ces deux priorités. Ajustements tutoriel/cadeau évoqués restent pour plus tard ; ne pas refaire le reset global. Réservation Cloud libérée à la fin de cette livraison.
 
 **Code publié et SHA distant vérifié** : [4f91c71](https://github.com/GoodFight37/CreatorDeck/commit/4f91c71ff72dd0428044bbc33fce5a47c4cbacfa).

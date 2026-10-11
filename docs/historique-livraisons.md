@@ -1,3 +1,15 @@
+## 11 octobre 2026 — E2E du cadeau et ouverture suivante
+
+Correctif et test publiés sur main au commit [`1070153`](https://github.com/GoodFight37/CreatorDeck/commit/1070153eec094be2629025546befa00a1670b761).
+
+Parcours du tutoriel suivi par le cadeau complété et vérifié en navigateur, bureau
+et téléphone simulé (2/2), réponses RPC interceptées : un seul claim, cinq
+boosters ouverts avec cinq cartes chacun, solde standard intact. Le scénario a
+rendu visible un toast de succès qui recouvrait le bouton d’ouverture suivant ;
+le toast redondant a été retiré, le message/solde de la boîte restent explicites.
+Typecheck, lint, diff-check réussis. Aucun accès ou changement Supabase, aucune
+validation téléphone réel ou déploiement. Reprise Cloud/local : passation.
+
 ## 11 octobre 2026 — accueil Drop et Binder : table de collectionneur
 
 Code [4f91c71](https://github.com/GoodFight37/CreatorDeck/commit/4f91c71ff72dd0428044bbc33fce5a47c4cbacfa) publié sur main, SHA distant vérifié. Accueil avec sachet

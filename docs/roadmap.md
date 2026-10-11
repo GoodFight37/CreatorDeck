@@ -1,3 +1,16 @@
+## Test navigateur complet du cadeau — 11 octobre 2026
+
+- [x] Scénario bureau/téléphone simulé : tutoriel puis boîte cadeau, message,
+  ordre correct, un claim, cinq tirages de cinq cartes, solde standard intact.
+- [x] Suppression du toast redondant qui recouvrait le prochain bouton cadeau.
+- [x] 2/2 Playwright, typecheck, lint, build webpack et diff-check réussis avec RPC factices ;
+  aucune connexion à Supabase production ni migration.
+- [ ] Contrôle cadeau sur le téléphone réel et la version effectivement servie ;
+  attend le retour de Malik après examen du nouveau Drop/Binder.
+
+D-030, K-027 ; commande exacte et historique de diagnostic dans
+[la passation partagée](agent-handoff.md).
+
 ## Accueil Drop et Binder — 11 octobre 2026
 
 Chantier demandé par Malik pendant son absence : **les deux priorités sont
@@ -16,7 +29,7 @@ manquants, retour au Drop à vide. D-029 ; mêmes moteurs et règles.
   avec le commit réellement servi. Ni CI distante ni Vercel inspectés ici.
 
 Commandes/résultats navigateur et état Git exact : [checkpoint courant](agent-handoff.md).
-Brouillon test cadeau conservé et suspendu dans [agent-drafts](agent-drafts/README.md).
+Le brouillon cadeau, terminé comme test et validé en navigateur, est décrit plus haut.
 Passation commune Cloud/local maintenant explicite ; pas d’autre chantier lancé.
 
 **Automatisation Supabase** : Malik confirme le nouveau dry_run réussi après
