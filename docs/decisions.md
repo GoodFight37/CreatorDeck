@@ -425,3 +425,14 @@ mémorisée/suggérée et série existante restent visibles ; état vide avec ac
 Version technique descend près des crédits et menus sous l’identité. Pas de
 nouvelle préférence concurrente avec la vitrine publique, pas de migration.
 Preuves et limites dans la passation, suites GitHub en suivi selon mode économie.
+
+
+## D-045 — 11 octobre 2026 : prérequis montrés dans le menu Toi
+
+Arène indique les cinq cartes distinctes requises pour composer et la présence
+d’au moins un créateur en direct au dépôt ; le compte est nécessaire aux
+fonctions en ligne. Hôtel indique compte requis, nombre de doublons vendables et
+solde de points. Les feuilles restent consultables même avant ces conditions,
+pour expliquer le système sans écran mort. Valeurs dérivées de la collection et
+des fonctions existantes (`sellableCards`, solde joueur) ; aucun seuil inventé,
+aucun soft-lock ou migration ajouté. Vérification DOM ciblée 6/6, lint ciblé.

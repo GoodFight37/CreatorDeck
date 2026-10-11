@@ -1,3 +1,19 @@
+## Accès Arène/Hôtel — 11 octobre 2026
+
+Base de départ `9ea238459c6feaf31be770f1b2274b9d7fabb6f7`, main vérifié égal,
+checkout propre. Petit complément de l’identité du profil : les deux lignes
+indiquent maintenant leurs conditions et données utiles. Arène : équipe de cinq
+cartes distinctes (progression réelle X/5), au moins un créateur en direct au
+moment du dépôt. Hôtel : compte requis en ligne ; compte connecté, nombre de
+doublons réellement vendables et solde réel en points. Les feuilles restent
+consultables avant de remplir ces conditions. Aucune règle ou SQL changée.
+DOM ciblé `npm run ecrans -- src/ecrans-scene-profile.test.tsx` : 6/6 ; ESLint
+ciblé et diff-check réussis. Sur `38160206441`, SQL, tests/statique/build, RPC
+simulées success ; E2E encore in_progress au dernier relevé. Ce complément n’a
+pas encore déclenché de contrôles GitHub. Téléphone physique non vérifié.
+Réservation libérée après publication ; prochain travail à choisir après état
+final du run.
+
 ## Correctif CI du lot Scène/profil — 11 octobre 2026
 
 Base a106fde982733a4a0d8d6df3c61a678b788d1411, main vérifié identique.

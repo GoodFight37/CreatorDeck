@@ -101,6 +101,8 @@ describe("statut Scène et identité de collectionneur", () => {
     const { onGoDrop } = await profile([]);
     expect(document.querySelector(".profile-milestones")).toBeNull();
     expect(document.querySelector(".profile-collection-goal")).toBeNull();
+    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("0/5 cartes distinctes");
+    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("0 doublons à vendre · 40 pts");
     banc.appuyer("Trouver ma première carte");
     expect(onGoDrop).toHaveBeenCalledOnce();
   });

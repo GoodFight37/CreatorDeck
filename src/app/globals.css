@@ -1855,6 +1855,8 @@ input:focus-visible {
 }
 .menu-row > svg { margin-left: auto; flex: 0 0 auto; color: var(--muted-2); }
 .menu-row:active { background: rgba(255, 255, 255, .03); }
+.menu-row .menu-label { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: 2px; }
+.menu-row .menu-state { color: var(--muted-2); font-size: 12px; line-height: 1.3; }
 /* La ligne du volume : elle n'ouvre rien et ne bascule pas — elle choisit entre
    trois crans. Elle porte donc la même silhouette qu'une ligne de réglage, mais
    c'est un `div` : ce qui est cliquable, ce sont les trois pastilles. */

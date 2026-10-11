@@ -1,3 +1,11 @@
+## Accès Arène et Hôtel — clarification livrée localement (11 octobre 2026)
+
+Dans le menu Toi, afficher compte requis, cartes distinctes nécessaires (X/5),
+présence en direct au dépôt ; pour l’Hôtel, doublons vendables et points actuels.
+Feuilles accessibles pour comprendre les fonctions avant prérequis. Aucun gate,
+seuil économique ou SQL ajouté. DOM ciblé 6/6, ESLint/diff-check réussis.
+Publié/CI à vérifier après commit ; détails dans la passation.
+
 ## Profil et K-037 — statut Scène serveur (11 octobre 2026)
 
 Lot préparé pour main : disponibilité quotidienne vérifiée avant de proposer

@@ -25,6 +25,7 @@ import { useNow } from "@/hooks/use-game";
 
 import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
+import { sellableCards } from "@/lib/market";
 
 import { regionLabel } from "@/lib/regions";
 
@@ -109,6 +110,8 @@ export function ProfileView({
   // Les récompenses d'arène non encaissées : même principe que le Last Pack —
   // une pastille qui compte ce qui attend le joueur, pas ce qui l'attend lui.
   const arenaRewards = cloud.arenaMine?.pending.length ?? 0;
+  const arenaCards = new Set(game.cards.map((card) => card.creatorSlug)).size;
+  const marketDuplicates = sellableCards(game.cards).length;
   // L'épinglé se relit au montage de l'onglet, et à chaque changement de
   // compte : ce n'est pas l'épinglé d'un autre joueur qui doit s'afficher.
   useEffect(() => {
@@ -386,13 +389,17 @@ export function ProfileView({
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowMarket}>
-            <span>Hôtel des ventes{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
+            <span className="menu-label">Hôtel des ventes<small className="menu-state">
+              {!cloud.userId ? "Compte requis pour acheter ou vendre" : `${marketDuplicates} doublon${marketDuplicates === 1 ? "" : "s"} à vendre · ${game.player.points.toLocaleString("fr-FR")} pts`}
+            </small></span>
             <ChevronRight size={16} />
           </button>
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowArena}>
-            <span>Arène{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
+            <span className="menu-label">Arène<small className="menu-state">
+              {!cloud.userId ? "Compte requis · équipe de 5 cartes · 1 en direct" : `${arenaCards}/5 cartes distinctes · 1 créateur en direct au dépôt`}
+            </small></span>
             {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
             <ChevronRight size={16} />
           </button>
