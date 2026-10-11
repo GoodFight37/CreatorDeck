@@ -1029,7 +1029,11 @@ synchronisation de la partie. La migration [0047](../supabase/migrations/0047_sa
 (classée **manual**, appliquée et vérifiée le 11 octobre 2026 via le [run 38140515537](https://github.com/GoodFight37/CreatorDeck/actions/runs/38140515537)) relie débit de 1 et avance
 de 15 min dans une transaction, avec rejeu UUID et garde des sauvegardes périmées.
 Un refus de synchronisation empêche la dépense ; une réponse perdue conserve la
-clé par compte, même après rechargement. Les gains restent calculés localement :
+clé par compte, même après rechargement. Depuis `0048` (manual, en attente
+d’application), à 4/4 le sablier peut créer un booster bonus unique à 5/4 ; le
+serveur le conserve jusqu’à son ouverture, puis la réserve revient à 4/4. Le
+client hors cloud suit la même règle. Cette migration n’a pas été appliquée en
+production. Les gains restent calculés localement :
 la validation de leurs sources n'est pas déplacée côté serveur. Hors cloud,
 `spendHourglass()` reste utilisé. Le nouveau helper privé conserve correctement
 les minutes résiduelles ; le helper global ancien n'est pas modifié (K-031).

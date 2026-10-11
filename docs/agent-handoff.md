@@ -1,3 +1,39 @@
+## Checkpoint courant — sablier visible et booster bonus local — 11 octobre 2026
+
+- Demande : afficher l’action sablier sans menu, alléger l’accueil Drop et, à
+  4/4, permettre un booster unique à 5/4. Malik a confirmé explicitement le
+  comportement 5/4. Autorisation de publier ce correctif sur main donnée dans
+  la conversation ; pas d’application de migration en production.
+- État avant édition : branche `work`, HEAD `06a31d43ad21ad7b9439dea31481da1eebb98711`,
+  `origin/main` identique via `git ls-remote`; aucun commit local préexistant,
+  modifications de cette tâche uniquement. Aucun reset/force.
+- Changements locaux : bouton sablier visible, garanties/taux superflus retirés
+  de l’accueil, jetons repliés séparément ; moteur et sauvegarde acceptent un
+  unique excédent 5/4 ; migration `0048_sablier_booster_bonus.sql` (manual)
+  met le même comportement dans le serveur et les protections d’idempotence,
+  compte synchronisé, réserve et autorité serveur. Vérificateurs et attentes
+  de tests adaptés. K-031 non modifié.
+- Vérifications locales : `npm run supabase:verify` **code 0**, migrations
+  0001–0048 rejouées dans PostgreSQL jetable et toutes les vérifications passent,
+  y compris les scénarios sablier mis à jour ; `npm test -- src/lib/game-engine.test.ts
+  src/lib/save-store.test.ts src/lib/supabase-hourglasses.test.ts` **119 tests**
+  passent (le fichier supabase-hourglasses n’était pas présent et Vitest n’a
+  exécuté que les deux fichiers trouvés : 102 + 17) ; `npm run ecrans --
+  src/ecrans-drop-binder.test.tsx` **8/8** ; `npm run typecheck` code 0 ; ESLint
+  ciblé code 0 ; `git diff --check` code 0. `npm install --no-save` a ajouté les
+  deux dépendances temporaires embedded-postgres/pg avec cache `/tmp` et changé
+  deux paquets de node_modules seulement ; aucun changement suivi/lockfile.
+- Ni production ni serveur distant contactés ; 0048 pas appliquée, aucune
+  donnée réinitialisée, aucun workflow manuel lancé. Contrôle visuel/téléphone
+  non effectué. Pas de run GitHub déclenché pour ce travail à ce checkpoint.
+- Prochaine action : revue finale des diffs/docs, commit ciblé, publication
+  normale sur `main` autorisée par Malik, puis vérifier SHA distant, contrôles
+  CI réellement déclenchés et éventuel workflow Supabase automatique. 0048
+  restant `manual`, ne pas la déployer ; un job automatique doit la refuser ou
+  ne pas l’appliquer. Mettre à jour ce checkpoint avec les résultats observés.
+
+---
+
 ## K-034 — corrigé, publié et confirmé par le run automatique — 11 octobre 2026
 
 - Demande : corriger uniquement la prévalidation Supabase et publier sur main,

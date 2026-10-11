@@ -287,3 +287,20 @@ toast de succès seulement ; conserver le message officiel du cadeau, le solde e
 le toast des autres notifications. Aucun RPC/serveur/règle de jeu modifié.
 Parcours Playwright avec RPC interceptées : 2/2 bureau et téléphone simulé,
 réserve ordinaire intacte ; voir le checkpoint pour les autres contrôles.
+
+## D-037 — 11 octobre 2026 : sablier visible et booster bonus 5/4
+
+Après le retour de Malik sur l’écran Drop, le sablier ne doit plus être caché
+dans un détail replié ni désactivé uniquement parce que la réserve ordinaire
+est pleine. Le bouton est visible sous l’action d’ouverture ; garanties,
+compteur légendaire et texte « réserve pleine » redondant sont retirés de cette
+carte ; les jetons restent consultables dans une section repliée distincte.
+
+Règle choisie par Malik : à 4/4, dépenser un sablier crée un booster bonus à
+5/4. Un seul dépassement est admis ; un second sablier attend l’ouverture du
+bonus. L’ouverture ramène à 4/4 et reprend la recharge ordinaire. Le moteur
+local, la sauvegarde et le RPC restent alignés dans 0048. Celle-ci est `manual`
+et n’est pas appliquée en production. Base jetable jusqu’à 0048, tests ciblés,
+typecheck et ESLint sont décrits dans la passation ; le rendu réel téléphone et
+la CI du commit publié restent à constater avant de qualifier la fonctionnalité
+de livrée.

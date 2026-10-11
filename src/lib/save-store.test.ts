@@ -87,7 +87,7 @@ describe("sanitizeState", () => {
     };
     const state = sanitizeState(raw, T0);
     expect(state).not.toBeNull();
-    expect(state?.packs).toBe(PACKS.live.max);
+    expect(state?.packs).toBe(PACKS.live.maxWithHourglass);
     expect(state?.points).toBe(12);
     expect(state?.level).toBe(1);
     expect(state?.hourglasses).toBe(0);

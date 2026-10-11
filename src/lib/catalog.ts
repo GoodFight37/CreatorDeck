@@ -252,6 +252,8 @@ export const PACKS = {
     points: 12,
     xp: 18,
     max: 4,
+    /** Un sablier peut stocker un seul booster au-dessus de la réserve normale. */
+    maxWithHourglass: 5,
     regenMs: 30 * 60 * 1000,
   },
   scene: {

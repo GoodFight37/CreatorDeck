@@ -845,7 +845,9 @@ export function refreshBalances(state: PlayerState, now = Date.now()): PlayerSta
     return { stock: nextStock, last: nextLast };
   };
 
-  const pack = refreshOne(state.packs, PACKS.live.max, state.lastPackRegen, PACKS.live.regenMs);
+  const pack = state.packs > PACKS.live.max
+    ? { stock: Math.min(state.packs, PACKS.live.maxWithHourglass), last: state.lastPackRegen }
+    : refreshOne(state.packs, PACKS.live.max, state.lastPackRegen, PACKS.live.regenMs);
 
   if (pack.stock === state.packs && pack.last === state.lastPackRegen) {
     return state;
@@ -1843,7 +1845,9 @@ export function openPack(
 function clampPacks(value: number): number {
   // `4` en dur serait faux le jour où la réserve change ; on élargit le type
   // parce que `PACKS` est un `as const` dont un membre n'a pas de `max`.
-  const max = (PACKS[ACTIVE_PACK] as { max?: number }).max ?? 0;
+  const max = ACTIVE_PACK === "live"
+    ? PACKS.live.maxWithHourglass
+    : (PACKS[ACTIVE_PACK] as { max?: number }).max ?? 0;
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(max, Math.floor(value)));
 }
@@ -2752,8 +2756,20 @@ export function spendHourglass(state: PlayerState, now = Date.now()): PlayerStat
   if (refreshed.hourglasses <= 0) {
     throw new GameError("Aucun sablier disponible.", "NO_HOURGLASS");
   }
+  if (refreshed.packs >= PACKS.live.maxWithHourglass) {
+    throw new GameError("Ouvre le booster bonus avant d’utiliser un autre sablier.", "PACK_FULL");
+  }
+
+  // À 4/4, le sablier devient un seul booster bonus (5/4). Le premier tirage
+  // après cette réserve ramène le joueur à 4/4 et relance la recharge normale.
   if (refreshed.packs >= PACKS.live.max) {
-    throw new GameError("La réserve de boosters est déjà pleine.", "PACK_FULL");
+    return {
+      ...refreshed,
+      hourglasses: refreshed.hourglasses - 1,
+      packs: PACKS.live.maxWithHourglass,
+      lastPackRegen: now,
+      updatedAt: now,
+    };
   }
 
   const shifted: PlayerState = {

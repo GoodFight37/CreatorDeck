@@ -1,6 +1,7 @@
 /** Scénarios exécutés sur le Postgres jetable du vérificateur, jamais en production. */
-export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, sql }) {
+export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, sql, followupSql }) {
   await client.query(sql);
+  await client.query(followupSql);
   const user = 'f7777777-7777-4777-8777-777777777777';
   const other = 'f8888888-8888-4888-8888-888888888888';
   const request = '11111111-1111-4111-8111-111111111111';
@@ -29,8 +30,12 @@ export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, 
   const opened = (await asPlayer(user, 'select public.open_pack() r')).rows[0].r;
   check('sabliers : booster rechargé ouvre réellement cinq cartes', opened.cards.length === 5 && opened.packs === 0 && opened.save.state.hourglassesSpent === 1);
   await client.query('update public.pack_state set packs=4,last_regen_at=clock_timestamp() where user_id=$1', [user]);
-  await refuses('sabliers : réserve pleine refuse sans payer', user, 'select public.use_hourglass($1)', [nextRequest], 'réserve est pleine');
-  check('sabliers : refus réserve pleine laisse le solde intact', (await client.query("select state->>'hourglasses' balance from public.saves where user_id=$1", [user])).rows[0].balance === '3');
+  const bonus = (await asPlayer(user, 'select public.use_hourglass($1) r', [nextRequest])).rows[0].r;
+  check('sabliers : réserve pleine accepte un booster bonus à 5/4', bonus.save.state.packs === 5 && bonus.save.state.hourglasses === 2);
+  check('sabliers : le statut conserve 5/4 jusqu’à ouverture', (await asPlayer(user, 'select public.pack_status() r')).rows[0].r.packs === 5);
+  await refuses('sabliers : un seul booster bonus avant ouverture', user, 'select public.use_hourglass($1)', ['66666666-6666-4666-8666-666666666666'], 'booster bonus');
+  const bonusOpened = (await asPlayer(user, 'select public.open_pack() r')).rows[0].r;
+  check('sabliers : ouverture du bonus ramène à 4/4 et ouvre cinq cartes', bonusOpened.packs === 4 && bonusOpened.cards.length === 5);
   await client.query('update public.pack_state set packs=0,last_regen_at=clock_timestamp() where user_id=$1', [user]);
   await client.query("update public.saves set state=jsonb_set(state,'{hourglasses}','1') where user_id=$1", [user]);
 
@@ -43,18 +48,20 @@ export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, 
       await connection.query("select set_config('test.uid',$1,false)", [user]);
       await connection.query('set role authenticated');
     }));
-    const outcomes = await Promise.allSettled(racers.map((connection, index) => connection.query('select public.use_hourglass($1) r', [index ? '33333333-3333-4333-8333-333333333333' : nextRequest])));
+    const raceRequests = ['33333333-3333-4333-8333-333333333333', '55555555-5555-4555-8555-555555555555'];
+    const outcomes = await Promise.allSettled(racers.map((connection, index) => connection.query('select public.use_hourglass($1) r', [raceRequests[index]])));
     check('sabliers : deux demandes concurrentes, un seul dernier sablier dépensé', outcomes.filter((r) => r.status === 'fulfilled').length === 1 && outcomes.filter((r) => r.status === 'rejected' && r.reason.message.includes('plus de sablier')).length === 1);
   } finally { await Promise.all(racers.map((connection) => connection.end())); }
   await refuses('sabliers : solde vide refuse sans recharge', user, 'select public.use_hourglass($1)', ['44444444-4444-4444-8444-444444444444'], 'plus de sablier');
   const final = (await client.query('select state from public.saves where user_id=$1', [user])).rows[0].state;
   await client.query(sql);
-  check('sabliers : migration rejouée conserve solde et registre', (await client.query('select count(*)::int n from public.hourglass_spends where user_id=$1', [user])).rows[0].n === 2 && (await client.query('select state from public.saves where user_id=$1', [user])).rows[0].state.hourglasses === 0);
+  await client.query(followupSql);
+  check('sabliers : migrations rejouées conservent solde et registre', (await client.query('select count(*)::int n from public.hourglass_spends where user_id=$1', [user])).rows[0].n === 3 && (await client.query('select state from public.saves where user_id=$1', [user])).rows[0].state.hourglasses === 0);
   await asPlayer(user, 'select public.reset_progress()');
   check('sabliers : reset individuel nettoie seulement son registre', (await client.query('select count(*)::int n from public.hourglass_spends where user_id=$1', [user])).rows[0].n === 0);
   const reset = { ...template, playerId: user, hourglasses: 1, hourglassesSpent: 0, packs: 2, cards: [], openings: 0 };
   const pushed = (await asPlayer(user, 'select public.push_save($1::jsonb,9,0,true) r', [JSON.stringify(reset)])).rows[0].r;
   check('sabliers : nouvelle progression synchronisable après reset', pushed.status === 'pushed');
-  check('sabliers : la collection obtenue reste intacte après les dépenses', final.cards.length === 5);
+  check('sabliers : la collection obtenue reste intacte après les dépenses', final.cards.length === 10);
   await client.query("select set_config('test.uid','',false)");
 }

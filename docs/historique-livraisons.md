@@ -1,3 +1,20 @@
+## 11 octobre 2026 — action sablier visible et réserve bonus
+
+Sur l’écran Drop du téléphone, l’action était dissimulée dans « Jetons et
+sabliers » et désactivée quand les quatre boosters étaient déjà stockés. La
+nouvelle présentation met l’action sablier immédiatement sous « Ouvrir », retire
+les lignes de garantie et de compteur jugées encombrantes et replie les jetons
+seuls. Règle choisie par Malik : à 4/4, un sablier donne un booster bonus à 5/4 ;
+un autre sablier attend l’ouverture du bonus. Le moteur/sauvegarde et le RPC
+suivent cette règle avec `0048_sablier_booster_bonus.sql` (manual).
+
+Vérification locale : 119 tests logiques, 8 tests d’écran, vérificateur SQL
+complet sur PostgreSQL jetable jusqu’à 0048, typecheck, ESLint ciblé et
+diff-check passent. La dépendance SQL temporaire a été installée avec
+`--no-save`, cache `/tmp`, sans changement du dépôt/lockfile. À cette date,
+publication/CI et migration production en attente ; aucune validation réelle sur
+téléphone. Voir la passation courante et K-035.
+
 ## K-034 — résolu et confirmé en automatique — 11 octobre 2026
 
 Correctif publié sur main : [ee10a6d](https://github.com/GoodFight37/CreatorDeck/commit/ee10a6d46dcf8f91e585d77493f48271b981e31e).

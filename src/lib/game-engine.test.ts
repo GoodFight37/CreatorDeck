@@ -479,8 +479,8 @@ describe("applyPackStatus", () => {
     expect(state.packs).toBe(1);
   });
 
-  it("borne la réserve à 0..4 et retombe sur maintenant si la date est illisible", () => {
-    expect(applyPackStatus(makeState({ packs: 2 }), 9, T0, T0).packs).toBe(PACKS.live.max);
+  it("borne la réserve normale à 4 et conserve le bonus serveur 5/4", () => {
+    expect(applyPackStatus(makeState({ packs: 2 }), 9, T0, T0).packs).toBe(PACKS.live.maxWithHourglass);
     expect(applyPackStatus(makeState({ packs: 2 }), -3, T0, T0).packs).toBe(0);
     expect(applyPackStatus(makeState({ packs: 2 }), 1, "pas une date", T0).lastPackRegen).toBe(T0);
   });
@@ -514,11 +514,13 @@ describe("spendHourglass", () => {
     expect(next.hourglasses).toBe(0);
   });
 
-  it("refuse sans sablier ou si la réserve est pleine", () => {
+  it("crée un seul booster bonus à 4/4 et refuse un deuxième sablier à 5/4", () => {
     expect(() => spendHourglass(makeState({ hourglasses: 0 }), T0)).toThrowError(/sablier/i);
-    expect(() =>
-      spendHourglass(makeState({ hourglasses: 5, packs: PACKS.live.max }), T0),
-    ).toThrowError(/pleine/i);
+    const bonus = spendHourglass(makeState({ hourglasses: 5, packs: PACKS.live.max }), T0);
+    expect(bonus.packs).toBe(PACKS.live.maxWithHourglass);
+    expect(bonus.hourglasses).toBe(4);
+    expect(getGameView(bonus, T0).player.packs).toBe(PACKS.live.maxWithHourglass);
+    expect(() => spendHourglass(bonus, T0)).toThrowError(/booster bonus/i);
   });
 });
 

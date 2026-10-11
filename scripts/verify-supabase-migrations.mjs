@@ -222,6 +222,7 @@ try {
     ["0045_cadeau_claim_rejouable.sql", cadeauClaimRetry],
     ["0046_reset_rejoue_tutoriel.sql", resetTutorial],
     ["0047_sabliers_en_ligne.sql", await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8")],
+    ["0048_sablier_booster_bonus.sql", await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8")],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -7296,7 +7297,15 @@ try {
 
   );
 
-  await verifyHourglasses({ client, pg, asPlayer, refuses, check, sql: await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8") });
+  await verifyHourglasses({
+    client,
+    pg,
+    asPlayer,
+    refuses,
+    check,
+    sql: await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8"),
+    followupSql: await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8"),
+  });
 
   console.log("");
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);

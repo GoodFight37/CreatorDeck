@@ -10,7 +10,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Gem, Hourglass, Layers3, LoaderCircle, ShieldCheck, Swords, Users, Zap } from "lucide-react";
+import { ArrowUp, ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
@@ -133,8 +133,6 @@ export function HomeView({
   // Le seul compteur au format mm:ss du jeu : il bat à la seconde, et il ne
   // re-rend que ce panneau (le minuteur est local à l'écran Drop).
   const tick = useNow(1_000);
-  // Le compteur de malchance en une phrase. À 1 restant, c'est **ce** booster
-  // qui est garanti : le dire autrement ferait croire à un booster de plus.
   /*
    * Le geste d'ouverture : le doigt (ou la souris) part du booster, tire vers le
    * haut, et relâche. La règle vit dans `src/lib/pull.ts` (pure, testée) ; ici
@@ -232,13 +230,6 @@ export function HomeView({
     onOpen();
   }
 
-  const pityCopy =
-    game.pity.remaining <= 1
-      ? "Ce booster contient un Légendaire garanti"
-      : `Légendaire garanti dans ${game.pity.remaining} booster${game.pity.remaining > 1 ? "s" : ""}`;
-  // La série se dit sur la même ligne : les deux récompenses attendent au même
-  // endroit, le prochain booster.
-  const packCopy = game.streak.jackpot ? `${pityCopy} · Perfect du 7ᵉ jour garanti` : pityCopy;
   const [inspectCard, setInspectCard] = useState<GameView["cards"][number] | null>(null);
   useBackHandler(inspectCard !== null, () => setInspectCard(null));
   const findingFocus = usePresentationFocus(inspectCard !== null);
@@ -359,7 +350,7 @@ export function HomeView({
         <div className="pull-seam" aria-hidden="true" />
         <div className="pack-copy">
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
-          <span>{pack.description}</span>
+          <span>{pack.size} cartes</span>
         </div>
         {/* Le mode d'emploi, toujours écrit — et il s'efface à mesure que le
             geste avance : au bout de deux boosters, on ne le lit plus. */}
@@ -379,10 +370,11 @@ export function HomeView({
           </div>
           {/* Réserve pleine : l'état change de couleur, il ne clignote pas — le
               jeu n'a aucune animation perpétuelle. */}
-          <div className={`timer-copy${nextAt === null ? " full" : ""}`}>
-            <Clock3 size={14} />
-            <span>{nextAt === null ? "Réserve pleine" : `+1 dans ${formatCountdown(nextAt, tick)}`}</span>
-          </div>
+          {stock > pack.max ? (
+            <span className="reserve-bonus">+1 sablier</span>
+          ) : nextAt !== null ? (
+            <div className="timer-copy"><Clock3 size={14} /><span>+1 dans {formatCountdown(nextAt, tick)}</span></div>
+          ) : null}
         </div>
         <button
           className="primary-action"
@@ -401,28 +393,24 @@ export function HomeView({
           </span>
           {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
-        <div className="guarantee-row">
-          <ShieldCheck size={14} />
-          <span>1 Rare ou mieux garantie · Live si son créateur streame · aucun doublon</span>
-        </div>
-
-        {/* Le plancher de malchance, écrit sur l'écran d'accueil : c'est un
-            chiffre, pas une promesse en l'air — et il vient du même compteur
-            que celui qui décidera du tirage. Un appui ouvre les taux publiés,
-            qui portent la même règle. */}
         <button
-          type="button"
-          className={`pity-row${game.pity.remaining <= 1 ? " now" : ""}`}
-          onClick={onShowOdds}
-          aria-label={`Plancher de malchance : ${packCopy}`}
+          className="hourglass-action"
+          onClick={onUseHourglass}
+          disabled={(serverReserve && needsAccount) || stock >= pack.maxWithHourglass || game.player.hourglasses <= 0 || usingHourglass}
+          aria-label={usingHourglass ? "Utilisation du sablier" : `Utiliser un sablier, ${game.player.hourglasses} disponibles`}
         >
-          <Gem size={14} />
-          <span>{packCopy}</span>
-          <ChevronRight size={14} />
+          <Hourglass size={18} />
+          <span>{usingHourglass ? "Utilisation…" : stock >= pack.max && stock < pack.maxWithHourglass
+            ? "Utiliser 1 sablier · passer à 5/4"
+            : "Utiliser 1 sablier · avancer de 15 min"}</span>
+          <strong>{game.player.hourglasses}</strong>
         </button>
+        {serverReserve && needsAccount ? <small className="hourglass-note">Connecte-toi pour utiliser tes sabliers.</small> : null}
+        {stock >= pack.maxWithHourglass ? <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small> : null}
+        {game.player.hourglasses <= 0 ? <small className="hourglass-note">Tu n’as pas de sablier disponible.</small> : null}
 
         <details className="drop-pack-details">
-          <summary>Jetons et sabliers <ChevronRight size={15} /></summary>
+          <summary>Jetons <ChevronRight size={15} /></summary>
         {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
         <div className="token-row">
           <Coins size={14} />
@@ -434,16 +422,6 @@ export function HomeView({
             {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
           </span>
         </div>
-        <button
-          className="secondary-action"
-          onClick={onUseHourglass}
-          disabled={(serverReserve && needsAccount) || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
-        >
-          <Hourglass size={15} />
-          <span>
-            {usingHourglass ? "Utilisation…" : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
-          </span>
-        </button>
         </details>
       </section>
 

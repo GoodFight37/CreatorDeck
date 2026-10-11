@@ -350,7 +350,7 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     // Archives) : on additionne, borné à la nouvelle réserve — aucune partie ne
     // perd de boosters en passant.
     packs: Math.min(
-      PACKS.live.max,
+      PACKS.live.maxWithHourglass,
       nonNegativeInt(raw.packs, nonNegativeInt(raw.livePacks, 0) + nonNegativeInt(raw.archivePacks, 0)),
     ),
     // Ancre de recharge : la plus ancienne des deux (la plus favorable), en

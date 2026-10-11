@@ -76,23 +76,23 @@ describe("les sabliers du Drop en ligne", () => {
       onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
       tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={true} needsAccount={needsAccount} />);
-    const details = document.querySelector<HTMLDetailsElement>(".drop-details") ?? document.querySelector<HTMLDetailsElement>("details");
-    if (details) details.open = true;
     const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
     return { button, onUseHourglass };
   }
 
-  it("un compte connecté peut avancer une réserve vide", async () => {
-    const { button, onUseHourglass } = await drop();
+  it("le sablier reste visible sans ouvrir un volet et crée un booster bonus à 4/4", async () => {
+    const { button, onUseHourglass } = await drop({ packs: 4 });
     expect(button.disabled).toBe(false);
-    expect(button.textContent).toContain("avance de 15 min");
+    expect(button.closest("details")).toBeNull();
+    expect(button.textContent).toContain("2");
+    expect(button.textContent).toContain("5/4");
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
     expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");
   });
 
-  it.each([{ packs: 4 }, { hourglasses: 0 }, { needsAccount: true }, { busy: true }])(
-    "bloque le bouton si la dépense est impossible : %j", async (options) => {
+  it.each([{ packs: 5 }, { hourglasses: 0 }, { needsAccount: true }, { busy: true }])(
+    "bloque le bouton si aucune dépense n’est possible : %j", async (options) => {
       const { button, onUseHourglass } = await drop(options);
       expect(button.disabled).toBe(true);
       act(() => button.click());
