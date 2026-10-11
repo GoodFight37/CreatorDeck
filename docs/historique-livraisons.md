@@ -1,10 +1,20 @@
+## Triage roadmap et problèmes connus — 11 octobre 2026
+
+À `980bdf8` sur main, CI `38164889818` est verte (4/4 jobs), le statut Vercel
+du commit est success et il n’y a aucune PR ouverte. La roadmap sépare désormais
+le plan actif de l’historique ancien. K-039 est résolu après CI ; le parcours
+sablier réel est confirmé par Malik. VIS-01/K-038 est le seul retour humain
+prioritaire encore demandé ; plusieurs anciens essais après publication restent
+« inconnus », sans être présentés comme des bugs ouverts. Aucun code ni SQL changé.
+
 ## Présence sociale dans le Drop — 11 octobre 2026
 
 Le compteur conditionnel d’amis ayant ouvert un booster dans la dernière heure
 est maintenant visible directement sous le Paquet Scène, avec accès au Carnet ;
 il n’est plus caché dans le panneau secondaire. À zéro, aucune ligne n’apparaît.
 Vitrine du profil inchangée, aucun système social ou SQL ajouté. Test DOM ciblé
-7/7, typecheck/ESLint/diff-check verts ; CI post-publication à relever.
+7/7, typecheck/ESLint/diff-check verts ; CI `38164889818` verte (4 jobs) sur
+`980bdf8`.
 
 ## K-031 — ancre de recharge ordinaire — 11 octobre 2026
 

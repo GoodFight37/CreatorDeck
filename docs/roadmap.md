@@ -1,3 +1,33 @@
+## État courant — 11 octobre 2026
+
+Référence vérifiée : `main` = `980bdf8bc9f12f995702abbdd2270f429927d7aa`.
+CI GitHub `38164889818` : succès, quatre jobs (Playwright, unitaires/écrans/
+build, SQL jetable, cloud simulé). Statut Vercel du commit : succès, déploiement
+terminé. Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
+
+### Plan actif
+
+- **Code produit : aucun chantier déjà autorisé ne reste ouvert dans cette
+  roadmap.** Les lots d’accès Arène/Hôtel, profil/Craft/Binder, scène, scroll,
+  sablier et activité sociale sont livrés. Ne pas ressortir comme tâches les
+  anciennes suggestions de badges/avatars, équilibrage ou parité sans nouvelle
+  décision produit.
+- **Retour humain encore utile :** validation visuelle du nouveau départ du
+  sachet sur un téléphone réel (K-038 / VIS-01). Playwright simulé et CI sont
+  verts, mais ne remplacent pas ce contrôle physique.
+- **Sablier :** le parcours réel 4/4 → 5/4 → ouverture → 4/4 est confirmé par
+  Malik ; ce point n’est plus en attente (K-030, K-035, K-031).
+- **Contrôles réels facultatifs :** les notes ne permettent pas de confirmer les
+  essais après publication pour K-036 (défilement), K-037 (Paquet Scène), K-028
+  (objectif en ligne) et K-027 (cadeau). Leur état est « inconnu », pas « bug
+  ouvert » ; rien à faire en parallèle pour avancer sur le code. Les réouvrir
+  seulement si un essai révèle un défaut.
+
+Les sections datées ci-dessous sont un journal de livraisons et d’observations,
+pas une liste de tâches à reprendre. Les anciennes cases `[ ]` sont historiques
+tant qu’elles ne figurent pas dans le « Plan actif » ci-dessus. État détaillé et
+preuves dans [la passation](agent-handoff.md).
+
 ## Ouverture du sachet — cartes dégagées (11 octobre 2026)
 
 L’enveloppe disparaît pendant la sortie des cinq dos ; ses flancs et son ombre
@@ -86,7 +116,7 @@ Git/API/logs effectivement accessibles, preset et six domaines appliqués sans c
 Comptages CI, commandes, SHA et limites : [checkpoint courant](agent-handoff.md).
 Les sections suivantes sont des observations historiques datées.
 
-## Sablier visible et booster bonus — publié et appliqué ; essai téléphone en attente
+## Sablier visible et booster bonus — historique, essai téléphone confirmé
 
 - [x] Bouton sablier sorti du menu replié ; informations secondaires allégées.
 - [x] Réserve 4/4 → 5/4 par un sablier, un seul bonus consommable avant
@@ -97,8 +127,7 @@ Les sections suivantes sont des observations historiques datées.
   6 parcours cloud simulés inclus).
 - [x] Migration `0048` appliquée seule via run manuel 38146774310 ; connexion
   TLS, cible CreatorDeck, historique et vérification après application réussis.
-- [ ] Tester sur téléphone réel : sablier à 4/4 → 5/4, puis ouverture → 4/4.
-  La version effectivement servie n’a pas été vérifiée.
+- [x] Malik confirme le test réel : sablier à 4/4 → 5/4, puis ouverture → 4/4.
 
 K-035, D-037 ; détails et limites dans [la passation](agent-handoff.md).
 
@@ -407,7 +436,11 @@ instructions de reset ou d'envoi vers main.
 | CI qualité, SQL et navigateur | Workflow `verification.yml` présent | État des runs GitHub à consulter séparément |
 | Ouverture imprimée Live/Scène et révélation continue | Implémentée sur branche, **validation en cours** | PR #8 ; critères ci-dessous |
 
-### Priorités actives
+### Ancien tableau de priorités — remplacé le 11 octobre 2026
+
+Le tableau ci-dessous est conservé comme trace de l’audit initial. Ses statuts,
+compteurs et dépendances sont périmés ; le seul plan actif est le résumé en tête
+de ce document.
 
 | ID / priorité | Travail / statut | Dépendances | Critères d'acceptation |
 |---|---|---|---|
@@ -417,7 +450,7 @@ instructions de reset ou d'envoi vers main.
 | QA-01 / P1 | Contrôles locaux UX — code validé ; suite projet/CI partiellement établie | Environnement de test local et GitHub Actions | Écrans 72/72, typecheck/lint/build OK. `npm test` : 1102/1106, quatre échecs catalogue/saisons/SQL ; `catalog:ci` signale le seed 0003 dérivé. Vercel preview READY, production non vérifiée ; Actions non établies |
 | UX-02 / P1 | Craft, profil et objectif court — implémentés sur `main` (`09487de`) | Retour produit du 10 octobre ; règles d’économie existantes | Avant 10 copies recyclables, Atelier montre une progression courte et le retour Drop ; Toi met en avant vitrine locale et série, sans zéros initiaux ; Drop met en avant une mission déjà définie. Pas de changement d’économie ou de règles serveur |
 | VERSION-01 / P2 | Identifiant du build dans Toi — implémenté sur `152c217`, publication à vérifier | SHA fourni par Vercel/GitHub ou checkout Git local ; profil | « Version abc1234 » se calcule automatiquement depuis le commit réellement compilé ; fallback « locale » sans SHA. UI 5/5, helper 2/2, typecheck/lint/build et recherche SHA dans bundle réussis ; vérifier Vercel après push |
-| UX-03 / P2 | Activité sociale mieux exposée — première tranche implémentée | Vitrine du profil et ouvertures récentes dans le Carnet | Vitrine déjà visible en haut de Toi. Ouvertures des amis (fenêtre 1 h) sorties du repli « Progression, taux et activités » vers un CTA conditionnel direct au Carnet. DOM ciblé 7/7, typecheck/ESLint/diff-check verts ; CI en attente. Avatar/badge et fallback visuel séparés, aucun nouveau système serveur |
+| UX-03 / P2 | Activité sociale mieux exposée — livrée sur `980bdf8`, CI verte | Vitrine du profil et ouvertures récentes dans le Carnet | CTA conditionnel vers le Carnet sous le Paquet Scène. DOM ciblé 7/7 ; CI `38164889818` verte. Les idées avatar/badge/fallback ne sont pas planifiées. |
 | CLOUD-01 / différée | Vérifier les parcours et le schéma du projet Supabase distant — **hors périmètre sans autorisation explicite** | Accès autorisé au projet réel | Ne reprendre que si l'utilisateur demande explicitement cette vérification ; lire `schema_versions()` et tester les parcours sans appliquer de migration ni modifier les données |
 
 Visite locale du 10 octobre, code `66b78d5` : Live bureau/téléphone, Scène et Perfect simulé examinés, réduction des animations observée. Validation humaine sur appareil réel encore requise. K-011 corrigé dans `d87b72c` : retour au titre Scène quand le bouton consommé est désactivé ; scénario Scène et scénario Live existant 4/4 réussis bureau/téléphone. K-010 Live reste corrigé. Aucun nouveau build ou run CI/E2E complet.
@@ -475,7 +508,10 @@ ne signifie plus que ces suites seraient absentes : elles existent maintenant.
 - [x] **Le Studio devient un onglet plein écran, et la pièce passe aux vraies images** (étape 10 de `docs/ta-chaine.md`) : cinq onglets dans la barre du bas, plus de modale, et une **pièce isométrique du kit Kenney** (CC0) où chaque palier fait entrer son objet (`src/data/studio-room.json`, `src/lib/studio-room.ts`) — **retiré le 8 octobre 2026 au soir** : la barre revient à **quatre piliers**, la pièce, l'emblème d'Arène sur l'étagère et le kit Kenney (2,7 Mo) partent, le moteur ne bouge pas (`docs/ta-chaine.md` § 1)
 - [x] Arbitrage du live de 20 s (scène d'immersion gratuite, tirage vidéo 100 % serveur)
 
-### Prochaines étapes
+### Anciennes suggestions — non planifiées
+
+Les propositions suivantes proviennent d’un audit ancien et ne font pas partie
+du plan actif. Ne pas les reprendre sans nouvelle demande de Malik.
 - [x] **Paliers de setup avancés (Tycoon étendu) :** Financement des paliers 6+ via le sacrifice de doublons de cartes (Rares/Épiques) — livré le 8 octobre 2026 (`0040`, étape 7 de `docs/ta-chaine.md` : Rare = 1, Épique = 2, Légendaire jamais, une carte ne part qu'une fois)
 - [x] **Retirer la simulation de streameur de l'application** (8 octobre 2026, le soir) : le décor isométrique ne rentre pas dans la direction que prend le jeu, et le joueur a demandé qu'on l'enlève **complètement** — plus d'onglet, plus de ligne d'accueil, plus d'écran. Le **moteur reste** (`src/lib/streamer.ts`, ses données, ses migrations, ses tests) : rien n'est perdu, rien n'est à recoller, et son dossier est `docs/ta-chaine.md`
 - [ ] **Et ensuite ?** Rien n'est prévu pour la simulation : la remettre dans le jeu demanderait une direction visuelle ou un mode assumé — c'est une décision de produit, pas une dette

@@ -1,3 +1,24 @@
+## Tri documentaire — état courant vérifié le 11 octobre 2026
+
+`main` et `origin/main` étaient au même SHA
+`980bdf8bc9f12f995702abbdd2270f429927d7aa` au début du tri. CI
+`38164889818` terminée avec succès : Playwright, qualité/build, SQL jetable et
+cloud simulé (4/4 jobs). Statut Vercel du commit : succès, déploiement terminé.
+PR #7 fusionnée ; PR #8 et #3 fermées ; aucune PR ouverte.
+
+La roadmap distingue maintenant les chantiers livrés, les validations humaines
+et l’historique ancien. Aucun nouveau chantier de code issu des suggestions
+archivées n’est planifié. Le parcours sablier 4/4 → 5/4 → ouverture → 4/4 est
+confirmé par Malik. VIS-01/K-038 reste le seul contrôle humain prioritaire :
+apprécier le rendu de la sortie du sachet sur un téléphone physique. Les essais
+post-publication K-036/K-037/K-028/K-027 ne sont pas établis ; le registre les
+qualifie d’inconnus, pas de défauts ouverts.
+
+Documents actualisés : `roadmap.md`, `known-issues.md`, `decisions.md` et
+`historique-livraisons.md`. Aucun code, SQL, réglage réseau ou donnée modifiés ;
+`git diff --check` réussi. Le SHA du commit de ce checkpoint se consulte dans
+`git log -1 --format=%H -- docs/agent-handoff.md` après publication.
+
 ## UX-03 — activité sociale visible depuis le Drop — 11 octobre 2026
 
 Base propre vérifiée `e3de716b563c99fc0753dc1e7c5749b297d559f8`, `work` égale
@@ -11,7 +32,8 @@ n’est ajouté.
 Vérifications déjà exécutées après la modification :
 `npm run ecrans -- src/ecrans-scene-profile.test.tsx` **7/7** ; `npm run
 typecheck` et ESLint ciblé code 0. `git -c core.whitespace=cr-at-eol diff --check`
-code 0. CI GitHub post-publication reste à attendre. Aucun SQL, donnée ou
+code 0. CI GitHub `38164889818` terminée avec succès (4 jobs) sur `980bdf8`.
+Aucun SQL, donnée ou
 récompense modifié. Le test physique du sablier confirmé par Malik est noté dans
 le checkpoint K-031 ci-dessous.
 
