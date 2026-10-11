@@ -8,12 +8,16 @@ seuls. Règle choisie par Malik : à 4/4, un sablier donne un booster bonus à 5
 un autre sablier attend l’ouverture du bonus. Le moteur/sauvegarde et le RPC
 suivent cette règle avec `0048_sablier_booster_bonus.sql` (manual).
 
-Vérification locale : 119 tests logiques, 8 tests d’écran, vérificateur SQL
-complet sur PostgreSQL jetable jusqu’à 0048, typecheck, ESLint ciblé et
-diff-check passent. La dépendance SQL temporaire a été installée avec
-`--no-save`, cache `/tmp`, sans changement du dépôt/lockfile. À cette date,
-publication/CI et migration production en attente ; aucune validation réelle sur
-téléphone. Voir la passation courante et K-035.
+Vérification locale : 119 tests logiques, 8 tests ciblés d’écran,
+`supabase:verify` complet sur PostgreSQL jetable jusqu’à 0048, typecheck, ESLint
+ciblé et diff-check passent. CI finale
+[38145382045](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145382045)
+verte sur `6bc6be7` : 71 fichiers unitaires, 15 fichiers écran, SQL, 42 E2E,
+6 cloud simulés ; statique/build verts. Le premier run a exposé des assertions et
+sélecteurs obsolètes, corrigés avant le run vert. Automatisation
+[38145593723](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145593723)
+refusée avant SQL comme prévu pour 0048 `manual` sans approbation ; migration
+production et essai téléphone en attente. Voir passation courante et K-035.
 
 ## K-034 — résolu et confirmé en automatique — 11 octobre 2026
 

@@ -11,16 +11,18 @@ Git/API/logs effectivement accessibles, preset et six domaines appliqués sans c
 Comptages CI, commandes, SHA et limites : [checkpoint courant](agent-handoff.md).
 Les sections suivantes sont des observations historiques datées.
 
-## Sablier visible et booster bonus — implémenté localement, en attente de CI
+## Sablier visible et booster bonus — code publié, CI verte ; migration manuelle en attente
 
 - [x] Bouton sablier sorti du menu replié ; informations secondaires allégées.
 - [x] Réserve 4/4 → 5/4 par un sablier, un seul bonus consommable avant
   l’ouverture ; moteur local et RPC alignés dans migration `0048` (manual).
 - [x] Tests ciblés 119 unitaires, 8 écrans, SQL jetable jusqu’à 0048, typecheck,
   ESLint ciblé et diff-check passent localement.
-- [ ] Publier le patch autorisé sur main et vérifier les contrôles déclenchés.
-- [ ] Migration 0048 et rendu sur téléphone réel restent en attente ; aucune
-  application SQL production ni validation visuelle n’a eu lieu.
+- [x] Publié sur main `6bc6be7` ; CI 38145382045 verte (4 jobs, SQL, 42 E2E,
+  6 parcours cloud simulés inclus).
+- [ ] Migration 0048 non appliquée : automatique 38145593723 s’est arrêtée avant
+  SQL car `manual` exige `approve_manual`. Test téléphone réel en attente ; le
+  comportement 5/4 n’est pas encore actif sur le compte en production.
 
 K-035, D-037 ; détails et limites dans [la passation](agent-handoff.md).
 

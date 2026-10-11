@@ -1,4 +1,4 @@
-## Checkpoint courant — sablier visible et booster bonus local — 11 octobre 2026
+## Checkpoint courant — sablier visible, CI verte — 11 octobre 2026
 
 - Demande : afficher l’action sablier sans menu, alléger l’accueil Drop et, à
   4/4, permettre un booster unique à 5/4. Malik a confirmé explicitement le
@@ -23,9 +23,28 @@
   ciblé code 0 ; `git diff --check` code 0. `npm install --no-save` a ajouté les
   deux dépendances temporaires embedded-postgres/pg avec cache `/tmp` et changé
   deux paquets de node_modules seulement ; aucun changement suivi/lockfile.
-- Ni production ni serveur distant contactés ; 0048 pas appliquée, aucune
-  donnée réinitialisée, aucun workflow manuel lancé. Contrôle visuel/téléphone
-  non effectué. Pas de run GitHub déclenché pour ce travail à ce checkpoint.
+- Publication sur main : commits `402df83` (feature), `c3799de` (assertion de
+  révélation), `67d6fe9` (sélecteurs des deux E2E), `6bc6be7` (nom accessible).
+  Main et HEAD local confirment `6bc6be7f329f7ecf6fc44237447ea39237d357e1`.
+  Premier run 38144539343 échoué sur l’assertion UI ancienne ; run 38144662542
+  a encore révélé les deux sélecteurs E2E obsolètes. Le run final
+  [38145382045](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145382045)
+  est **success**, quatre jobs verts : unitaires 71 fichiers, écrans 15,
+  statique/build, SQL jetable (« Toutes les vérifications passent »), E2E
+  42 réussis et 6 cloud ignorés dans le job sans config, puis cloud simulé 6/6.
+- Workflow automatique [38145593723](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145593723)
+  **failure avant application**, log lu : `Validation manuelle requise :
+  0048_sablier_booster_bonus.sql.` C’est le comportement sûr attendu pour une
+  migration `manual` sans approbation ; aucun SQL de 0048 appliqué, aucune donnée
+  production modifiée. Aucun workflow manuel de déploiement déclenché.
+  0047 reste intacte. K-031 reste séparé.
+- Malik demande de ne plus attendre un nouvel accord pour les modifications
+  ciblées du dépôt qu’il demande et leur push normal sur `main`. `AGENTS.md` et
+  D-038 enregistrent cette autorisation permanente. Force-push, reset,
+  réécriture, fusion PR et application manuelle de migrations production restent
+  hors de cette autorisation ; aucun de ces actes n’a eu lieu.
+- Contrôle visuel/téléphone non effectué. E2E ciblés locaux non démarrés, faute
+  de Chromium 1243 installé ; CI distante fait foi pour ces scénarios simulés.
 - Publication initiale `402df83a57c545ce823bf145bc036a33209214a6` : run CI
   38144539343, SQL jetable vert mais job UI échoué sur l’ancienne assertion
   `src/ecrans.test.tsx` ; corrigée dans `c3799decbc0edfa8d4095af78549cba2fdc05f39`.
@@ -36,11 +55,12 @@
   corrigés localement. E2E ciblé local impossible : navigateur Chromium 1243
   absent (`browserType.launch: Executable doesn't exist`), et téléchargement
   Playwright non tenté. Aucun contournement proxy/TLS.
-- Prochaine action : publier le correctif ciblé des sélecteurs E2E, attendre
-  son run GitHub et lire les logs/contrôles. Vérifier le workflow Supabase
-  automatique déclenché ou absent après CI. 0048 restant `manual`, ne pas la
-  déployer ; le job automatique ne doit pas l’appliquer. Mettre à jour ce
-  checkpoint avec le résultat observé. Téléphone réel reste à tester.
+- Suite : si Malik souhaite rendre 5/4 actif sur son compte, 0048 doit être
+  appliquée séparément avec le parcours manuel `approve_manual`; aucune
+  application n’est incluse dans ce travail publié. Sinon le client cloud
+  conservera le comportement serveur 0047 jusqu’à application. Le test réel
+  sur téléphone reste à faire ; ne pas annoncer la nouvelle règle active en
+  production.
 
 ---
 

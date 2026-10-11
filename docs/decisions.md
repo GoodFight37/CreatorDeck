@@ -304,3 +304,19 @@ et n’est pas appliquée en production. Base jetable jusqu’à 0048, tests cib
 typecheck et ESLint sont décrits dans la passation ; le rendu réel téléphone et
 la CI du commit publié restent à constater avant de qualifier la fonctionnalité
 de livrée.
+
+## D-038 — 11 octobre 2026 : autorisation permanente de publier les changements demandés
+
+Malik demande de ne plus être interrompu pour redonner son accord aux commits
+ciblés et pushes normaux sur `main` correspondant à ses demandes de code ou de
+documentation. `AGENTS.md` porte maintenant cette autorisation permanente, pour
+réduire les allers-retours ; les résultats et contrôles GitHub restent à
+observer et à consigner après chaque publication.
+
+Cette autorisation ne vaut pas pour force-push, réécriture d’historique,
+suppression de branche, fusion de PR ni modification destructrice des données.
+Les migrations classées `manual` exigent toujours `approve_manual` et une
+demande correspondant à l’opération ; ce changement ne donne aucun accord pour
+appliquer `0048` en production. La publication normale de la correction K-035
+sur `main` est confirmée ; CI 38145382045 verte. Le workflow automatique
+38145593723 s’est arrêté avant SQL sur le garde-fou `manual`.

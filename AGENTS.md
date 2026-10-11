@@ -36,8 +36,13 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
 
 ## Protection du travail et publication
 
-- Ne jamais modifier, pousser ou fusionner `main` sans autorisation explicite.
-  Ne fusionner aucune PR sans autorisation ; conserver aussi les refus du périmètre.
+- Malik autorise de façon permanente les modifications de code et de
+  documentation correspondant à ses demandes, leur commit ciblé et leur push
+  normal direct sur `main` : ne pas suspendre ce travail pour lui redemander un
+  accord. Cette autorisation ne couvre pas les migrations manuelles en
+  production, resets/réparations de données, force-push, réécriture d'historique,
+  suppression de branches ni fusion de PR ; ces garde-fous restent applicables.
+  Respecter aussi tout refus explicite du périmètre.
 - Ne jamais écraser les modifications, commits ou fichiers d'un autre agent.
   Pas de push forcé, de suppression de branche ou de réécriture d'historique dans
   une reprise ordinaire. Les anciennes recettes de reset/mise à plat ne sont
