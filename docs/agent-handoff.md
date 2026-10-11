@@ -1,4 +1,4 @@
-## K-031 — ancre de recharge corrigée, migration à suivre — 11 octobre 2026
+## K-031 — ancre de recharge corrigée et téléphone vérifié — 11 octobre 2026
 
 Base vérifiée `ebed1aea3136b3fdca7ec088f3835ed83398ec8a`, branche `work` égale
 à `origin/main`, checkout propre au départ. K-031 est maintenant traité dans
@@ -27,9 +27,9 @@ cloud simulé et Playwright bureau/téléphone). Workflow Supabase
 [38163920425](https://github.com/GoodFight37/CreatorDeck/actions/runs/38163920425)
 success. Log lu : projet CreatorDeck, TLS et historique vérifiés ; seule
 0049 appliquée ; « Historique et objets attendus vérifiés après application. »
-Aucun reset, repair, déploiement manuel ni changement réseau. Test téléphone
-physique toujours à faire. Réservation libérée après vérification des liens,
-logs et SHA distant.
+Aucun reset, repair, déploiement manuel ni changement réseau. Malik confirme
+que le parcours sur téléphone est testé et que tout est bon. Réservation libérée
+après vérification des liens, logs et SHA distant.
 
 ## Ouverture visuelle du sachet — cartes dégagées, 11 octobre 2026
 

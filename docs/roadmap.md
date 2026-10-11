@@ -132,7 +132,7 @@ Voir le checkpoint courant pour preuves, limites et autorisation.
 - [x] Contrôles locaux : 1117 tests unitaires, 83 DOM, 643 assertions SQL,
   E2E bureau/téléphone simulé 2/2 ; typecheck, lint et build webpack réussis.
 - [x] **0047** appliquée au projet CreatorDeck et versions/objets vérifiés (38140515537). Cible/historique contrôlés, absence de sauvegarde explicitement acceptée par Malik.
-- [ ] Vérifier le débit/recharge/rechargement sur téléphone réel et la version servie.
+- [x] Malik confirme que le sablier a été testé sur téléphone réel et que tout est bon ; le comportement est validé par retour utilisateur. La version servie n’a pas été vérifiée séparément par l’agent.
 - [x] K-031 : corrigé par migration additive `0049_pack_refresh_ancre.sql`, appliquée et vérifiée automatiquement (38163920425) après CI verte (38163674938). Tests de conservation du temps restant en TypeScript et PostgreSQL jetable.
 
 K-030, D-032 ; gains locaux et montants conservés, pas de certification serveur

@@ -7,7 +7,8 @@ jetable vérifient le résiduel après 35 minutes, le plafond après 60 minutes 
 l’absence de gains répétés au même instant. CI 38163674938 : quatre jobs verts.
 Workflow automatique 38163920425 : success, log vérifié ; cible/TLS/historique
 contrôlés, seule 0049 appliquée, objets vérifiés ensuite. Pas de déploiement
-manuel. Téléphone physique et version servie restent à tester.
+manuel. Malik confirme le parcours sur téléphone physique réussi ; la version
+servie n’a pas été vérifiée indépendamment par l’agent.
 
 ## Sachet et sortie des cartes — 11 octobre 2026
 

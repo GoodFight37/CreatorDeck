@@ -1033,15 +1033,15 @@ clé par compte, même après rechargement. La migration `0048` (manual) a été
 appliquée seule et vérifiée sur CreatorDeck par le [run 38146774310](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146774310).
 À 4/4, le sablier peut créer un booster bonus unique à 5/4 ; le serveur le
 conserve jusqu’à son ouverture, puis la réserve revient à 4/4. Le client hors
-cloud suit la même règle. Le test sur téléphone et la version servie restent à
-vérifier. Les gains restent calculés localement :
+cloud suit la même règle. Malik confirme que le test sablier sur téléphone est
+réussi ; la version servie n’a pas été vérifiée séparément par l’agent. Les gains restent calculés localement :
 la validation de leurs sources n'est pas déplacée côté serveur. Hors cloud,
 `spendHourglass()` reste utilisé. Le helper privé des sabliers conserve les
 minutes résiduelles ; la migration additive 0049 corrige aussi l’ancre de
 recharge ordinaire dans `_pack_refresh`. Elle a été appliquée seule et vérifiée
 par le workflow automatique 38163920425 après CI verte 38163674938 ; TLS,
-projet CreatorDeck, historique et objets attendus contrôlés. Le test sur
-téléphone et la version servie restent à vérifier.
+projet CreatorDeck, historique et objets attendus contrôlés. Le test physique
+est confirmé par Malik ; la version servie n’a pas été vérifiée séparément.
 
 **Le catalogue est en lecture seule.** La table `public.creators`
 (`0003_catalogue.sql`) a la RLS activée et **aucune politique d'écriture** : ni
