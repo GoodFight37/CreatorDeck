@@ -1,7 +1,10 @@
 ## K-036 — scroll et ouverture distincts
 
-Correctif local : scroll libre depuis le sachet ou sa zone ; appui explicite pour
-la scène de déchirure. Publication et CI en cours ; téléphone réel à vérifier.
+Publié sur main `0d860d6` : scroll libre depuis le sachet ou sa zone ; appui
+explicite pour la scène de déchirure. CI 38155656424 success (50 E2E, 8 cloud
+simulés, 1118 unitaires, 86 DOM, 645 SQL). Supabase automatique 38155870699
+success, aucun SQL exécuté. Liens/preuves dans la passation ; téléphone réel
+à vérifier.
 
 ## Audit produit P0/P1 — publié et CI verte, 11 octobre 2026
 

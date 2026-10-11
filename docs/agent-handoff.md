@@ -1,4 +1,4 @@
-## En cours — K-036, ouverture involontaire pendant le scroll — 11 octobre 2026
+## K-036 publié et contrôles verts — ouverture involontaire pendant le scroll — 11 octobre 2026
 
 Demande Malik : le scroll de Drop ne doit pas ouvrir de booster. Base propre
 `caee41c2bff3eebe6845aee9e0fc68419168b9d2`, branche work et main identiques,
@@ -19,9 +19,25 @@ code 0, SQL jetable **645** contrôles, code 0. Premier E2E : 9 réussis, 1 éch
 scroll à cause de l’inertie entre deux gestes. Scénarios tactile séparés dans des
 pages indépendantes ; retest ciblé **4/4** réussi. Les 8 autres scénarios du
 premier run passent (appui/focus/clavier, glissements souris, dimensions et
-déchirure dans les deux sens). Prochaine étape : commiter/publier normalement
-main, vérifier CI et contrôle Supabase automatique,
-puis consigner les SHAs/runs observés. Aucun déploiement manuel demandé.
+déchirure dans les deux sens). Publication normale vérifiée sur main :
+[`0d860d61fac0763972e2433967452de444c72616`](https://github.com/GoodFight37/CreatorDeck/commit/0d860d61fac0763972e2433967452de444c72616).
+Contenu distant de cette passation comparé byte à byte. CI
+[38155656424](https://github.com/GoodFight37/CreatorDeck/actions/runs/38155656424)
+**success**, quatre jobs ; logs téléchargés et lus : **1118/1118** unitaires
+(71 fichiers), **86/86** DOM (16 fichiers), **645** contrôles SQL jetables,
+**50 E2E** sans cloud réussis, 8 ignorés dédiés au cloud, puis **8/8** cloud
+simulés. Typecheck/lint/jargon/catalogue et build export passent. Contrôle
+Supabase automatique
+[38155870699](https://github.com/GoodFight37/CreatorDeck/actions/runs/38155870699)
+**success** ; log lu : cible CreatorDeck, TLS et historique vérifiés, base déjà à
+jour, **aucun SQL de migration exécuté**. Statut GitHub Vercel success ; contenu
+servi et appareil physique non testés. Aucun déploiement manuel lancé.
+
+Complément documentaire uniquement : le SHA de ce checkpoint se retrouve par
+`git log -1 --format=%H -- docs/agent-handoff.md`. Aucun travail code restant
+sur K-036 ; vérifier le geste sur téléphone physique. Réservation libérée après
+publication du checkpoint. Les documents ci-dessous restent des preuves datées
+des livraisons précédentes.
 
 ## Checkpoint courant — audit produit P0/P1 publié et confirmé — 11 octobre 2026
 
