@@ -1,3 +1,12 @@
+## Sachet et sortie des cartes — 11 octobre 2026
+
+Le paquet plastique quitte la scène au rythme où les dos montent, au lieu de
+rester visible sous eux. Cap 980 ms, corps 1150 ms, côtés/ombre 1080 ms ; sans
+effets et en mouvement réduit, l’enveloppe s’efface tandis que la pile statique
+reste. Délai de déchirure vers Reveal fixé à 1900 ms conservé. Tests ciblés
+Playwright 4/4 (bureau et téléphone simulé), ESLint et diff-check verts. Aucun
+SQL, tirage ou économie touchés ; appareil physique non testé.
+
 ## Missions quotidiennes : quatre, et le Tribunal expliqué — 11 octobre 2026
 
 Depuis `a8f14d60e1814bc030aa3a7ec553e55b90979865`, correction limitée à
@@ -30,10 +39,11 @@ final du run.
 Base a106fde982733a4a0d8d6df3c61a678b788d1411, main vérifié identique.
 [Run 38159920539](https://github.com/GoodFight37/CreatorDeck/actions/runs/38159920539)
 terminé en échec : SQL jetable, unitaires/écrans/statique/build et E2E ordinaires
-success ; seul le job cloud simulé échoue. Log transmis par Malik lu : le test
-invité product-audit trouve deux boutons « Se connecter pour ouvrir » (Live et
-Scène), erreur strict mode sur bureau et téléphone. Correction du sélecteur
-limitée à .open-panel, sans changement produit ni SQL. Rejeu local uniquement
+success ; seul le job cloud simulé échoue. Lecture directe de son log : le
+scénario invité échoue sur bureau et téléphone car l’assertion ligne 50 ne trouve
+pas le bouton « Se connecter pour ouvrir » ; ce n’est pas une erreur strict-mode.
+Le commit `9ea2384` resserre ensuite la recherche au panneau Live, sans changement
+produit ni SQL. Rejeu local uniquement
 `npm run e2e -- e2e/product-audit.spec.ts --grep 'avec le serveur'`, avec variables
 publiques factices du job cloud : **2/2** passent, sortie 0, zéro tirage serveur.
 Diff-check passe. Publication normale main autorisée ; suivi du nouveau run

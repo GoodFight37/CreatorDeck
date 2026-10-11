@@ -1,3 +1,35 @@
+## Ouverture visuelle du sachet — cartes dégagées, 11 octobre 2026
+
+Base vérifiée `e3a6cb9a5a282f1249456f60f971bba45fd71fae`, branche `work` =
+`origin/main`, checkout propre avant cette tâche. Le défaut visuel vient de la
+coexistence des animations : enveloppe/couvercle conservaient 1250/1550 ms,
+flancs toujours visibles, alors que les dos finissent leur montée en moins d’une
+seconde. Reflets désactivés et mouvement réduit laissaient aussi une enveloppe
+fantôme. Correctif : capuchon 980 ms, corps 1150 ms, profondeur et ombre
+1080 ms, puis disparition complète du sachet ; modes sans effets coupent ces
+animations et cachent l’emballage en gardant les cinq dos. Temporisation fixe de
+1900 ms avant Reveal inchangée, aucune modification Reveal/Perfect/silence/tear,
+JS, tirage ou SQL.
+
+Vérification finale locale : `PLAYWRIGHT_BROWSERS_PATH=/tmp/creator-deck-playwright
+npx playwright test e2e/pack-tear.spec.ts --grep 'reduced motion and the
+card-reflection switch|finger cuts the plastic where it passes'` : **4/4**,
+bureau et téléphone simulé. `npx eslint e2e/pack-tear.spec.ts` et
+`git -c core.whitespace=cr-at-eol diff --check` code 0. Chromium installé sous
+`/tmp`, aucun changement de dépendance. Téléphone physique non testé. Le run
+[38159920539](https://github.com/GoodFight37/CreatorDeck/actions/runs/38159920539)
+a réellement eu 8 réussites et 2 échecs dans le scénario invité cloud : le test
+ne trouvait pas le bouton de connexion à `product-audit.spec.ts:50`, pas une
+ambiguïté strict-mode. L’assertion a été resserrée au panneau Live dans
+`9ea2384`, présent sur main ; aucun run de suivi n’a été vérifié ici.
+Configuration réseau laissée intacte ; état d’application du preset
+`package_managers` rapporté `unknown`, mais `git ls-remote`, `gh run view` et le
+téléchargement du log ont chacun effectivement fonctionné. Code et documents
+publiés sur main ; Malik suit les contrôles GitHub et signalera un échec. Le
+SHA du checkpoint documentaire se retrouve avec
+`git log -1 --format=%H -- docs/agent-handoff.md`. Réservation libérée après
+publication.
+
 ## Missions quotidiennes : quatre, et le Tribunal expliqué — 11 octobre 2026
 
 Depuis `a8f14d60e1814bc030aa3a7ec553e55b90979865`, correction limitée à
@@ -30,10 +62,11 @@ final du run.
 Base a106fde982733a4a0d8d6df3c61a678b788d1411, main vérifié identique.
 [Run 38159920539](https://github.com/GoodFight37/CreatorDeck/actions/runs/38159920539)
 terminé en échec : SQL jetable, unitaires/écrans/statique/build et E2E ordinaires
-success ; seul le job cloud simulé échoue. Log transmis par Malik lu : le test
-invité product-audit trouve deux boutons « Se connecter pour ouvrir » (Live et
-Scène), erreur strict mode sur bureau et téléphone. Correction du sélecteur
-limitée à .open-panel, sans changement produit ni SQL. Rejeu local uniquement
+success ; seul le job cloud simulé échoue. Lecture directe de son log : le
+scénario invité échoue sur bureau et téléphone car l’assertion ligne 50 ne trouve
+pas le bouton « Se connecter pour ouvrir » ; ce n’est pas une erreur strict-mode.
+Le commit `9ea2384` resserre ensuite la recherche au panneau Live, sans changement
+produit ni SQL. Rejeu local uniquement
 `npm run e2e -- e2e/product-audit.spec.ts --grep 'avec le serveur'`, avec variables
 publiques factices du job cloud : **2/2** passent, sortie 0, zéro tirage serveur.
 Diff-check passe. Publication normale main autorisée ; suivi du nouveau run

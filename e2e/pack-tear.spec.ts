@@ -165,7 +165,18 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.mouse.up();
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").display)).toBe("none");
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(openingPack).toHaveClass(/booster-foil-open/);
+  await expect.poll(() => openingPack.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).opacity))
+    .toBe("0");
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  const reducedPackOpacity = await openingPack.evaluate((node) =>
+    Object.fromEntries([".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-back-card"]
+      .map((selector) => [selector, getComputedStyle(node.querySelector(selector)!).opacity])),
+  );
+  expect(reducedPackOpacity[".foil-top-piece"]).toBe("0");
+  expect(reducedPackOpacity[".foil-body-piece"]).toBe("0");
+  expect(reducedPackOpacity[".foil-depth-side"]).toBe("0");
+  expect(reducedPackOpacity[".foil-back-card"]).toBe("1");
   await expect(reveal).toBeVisible();
   expect(await reveal.locator(".card-foil").first().evaluate((node) => getComputedStyle(node).display))
     .toBe("none");
@@ -187,6 +198,16 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   expect(await page.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").display))
     .toBe("none");
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(offPack).toHaveClass(/booster-foil-open/);
+  await expect.poll(() => offPack.locator(".foil-depth-bottom").evaluate((node) => getComputedStyle(node).opacity))
+    .toBe("0");
+  const offPackOpacity = await offPack.evaluate((node) =>
+    Object.fromEntries([".foil-body-piece", ".foil-depth-bottom", ".foil-back-card"]
+      .map((selector) => [selector, getComputedStyle(node.querySelector(selector)!).opacity])),
+  );
+  expect(offPackOpacity[".foil-body-piece"]).toBe("0");
+  expect(offPackOpacity[".foil-depth-bottom"]).toBe("0");
+  expect(offPackOpacity[".foil-back-card"]).toBe("1");
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   expect(await page.locator(".reveal-game .card-foil").first().evaluate((node) => getComputedStyle(node).display))
     .toBe("none");
@@ -228,6 +249,11 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.waitForTimeout(1100);
   await expect(dialog.locator(".foil-card-chamber")).toBeVisible();
   await expect(dialog.locator(".foil-back-card")).toHaveCount(5);
+  const packetOpacity = await dialog.evaluate((node) =>
+    [".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-depth-bottom"]
+      .map((selector) => Number(getComputedStyle(node.querySelector(selector)!).opacity)),
+  );
+  expect(packetOpacity.every((opacity) => opacity < .1)).toBe(true);
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-opening.png" });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))

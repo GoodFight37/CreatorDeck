@@ -1,3 +1,13 @@
+## Ouverture du sachet — cartes dégagées (11 octobre 2026)
+
+L’enveloppe disparaît pendant la sortie des cinq dos ; ses flancs et son ombre
+ne restent pas sous la pile. Disparition immédiate lorsque Reflets sont coupés
+ou que le système réduit les animations, pile visible dans les deux cas. Le
+passage à Reveal conserve son délai de 1900 ms, les timings Reveal/Perfect/
+silence/tear restent inchangés. E2E ciblé : 4/4 bureau et téléphone simulé ;
+Code publié sur main ; CI post-publication laissée au suivi de Malik. Pas de
+migration ni validation sur téléphone physique.
+
 ## Missions du jour — libellés corrigés (11 octobre 2026)
 
 Bilan toutes faites générique (les quatre missions de configuration), mission
