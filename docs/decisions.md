@@ -452,3 +452,12 @@ Le nombre de missions vient de la configuration ; le texte d’achèvement ne do
 pas coder « trois » quand le Tribunal a porté le total à quatre. La mission
 Tribunal garde sa cible de cinq verdicts distincts et l’explique dans Progression.
 Aucune règle/récompense changée. DOM ciblé 2/2, lint ciblé.
+
+
+## D-047 — 11 octobre 2026 : accès direct aux recettes et reflets sans capteur
+
+L’Atelier montre les recettes et coûts dès son ouverture ; chaque achat reste
+bloqué par le coût réel en points ou jetons. Le reflet de carte suit le pointeur
+et n’interroge aucun capteur d’orientation. Le Studio de tirages n’est pas
+disponible dans le build joueur. Le geste de déchirure reste en CSS avec les
+timings existants ; aucune règle économique ni SQL ne change.

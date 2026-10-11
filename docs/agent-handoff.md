@@ -1827,3 +1827,28 @@ La PR #8 cible toujours `arena/01a10c75-creatordeck`, base choisie à sa créati
 - Tests réseau concrets : les deux destinations Supabase refusées par le proxy, HTTP CONNECT 403, curl 56. Aucun accès de gestion prêt. Brouillon configuré et lisible, mais non publié ; liste des environnements en erreur sur le navigateur mobile. Aucun outil disponible pour publier ou envoyer un ticket de support.
 - Voie indépendante de cette interface : tableau de bord Supabase sur téléphone, avec requête SQL de lecture seulement et vérification des sauvegardes. Voir [le guide d'accès](supabase-reset-access.md). Les outils Cloud ne peuvent pas obtenir des identifiants depuis le PC éteint ni contourner la politique du proxy.
 - Préparation avant application : défaut détecté dans 0044, qui remplaçait `_save_add_pack_cards` en supprimant la synchronisation des compteurs ordinaires. Correction par helper cadeau séparé `_save_add_gift_cards`, sans droits d'exécution clients. Contrôles SQL de conservation du helper normal et de ses droits ajoutés. Validation du 11 octobre : `XDG_CONFIG_HOME=/tmp/creatordeck-xdg npm test` code 0, 71 fichiers / 1 109 tests ; `npm run supabase:verify` code 0, « Toutes les vérifications passent », dont les deux nouveaux contrôles. Pas de changement UI/TS, ni nouveau build ou essai téléphone pour ce correctif SQL.
+
+## Ergonomie Drop mobile, Atelier et robustesse visuelle — 11 octobre 2026
+
+- Code ciblé : commit `28084a92d91ce9b7747f84c2c460092398632cdc`, basé sur
+  `main` `c9e15ebb43a9e1125c631512deff0e44a0da59b9`. L’Atelier montre les
+  recettes dès le départ (filtre initial Communes pour exposer les prix), le
+  paiement reste bloqué par le coût réel. Drop compacté à 360×740 ; Tribunal
+  n’a qu’un CTA quand il est l’objectif du jour ; streak annoncé au récap ;
+  le verdict passe après 600 ms. Binder compacté. Studio de tirages exclu du
+  bundle joueur de production. Reflets au pointeur, sans `deviceorientation`.
+- CSS : `booster-premium.css`, `reveal-premium.css`, `booster-continuity.css`
+  n’ont plus aucun sélecteur ni `@keyframes` dupliqué exactement avec
+  `globals.css` (analyse PostCSS). La vieille règle CSS `.booster-foil-webgl`
+  inutilisée a été supprimée. La brillance continue du sachet s’arrête quand le
+  sachet est déchiré et pendant la révélation/Perfect. Le mouvement du paquet
+  conserve ses durées ; les arrivées utilisent `transform`/`opacity`.
+- Portraits : 1 000 raster décodés, 0 invalide ; SVG de remplacement DIVERRON
+  valide ; contrôle catalogue strict vert. `ernesingame.webp`, seul visuel à
+  dominante verte détecté, est un logo vert valide.
+- Vérification locale : 52 tests d’écran ciblés + 61 unitaires ciblés ; E2E
+  Drop/Binder et déchirure : 34/34 sur bureau et téléphone simulé ; typecheck,
+  lint, build production et `catalog:ci` réussis. Captures Playwright scellé /
+  déchiré ajoutées. Aucun SQL, migration, secret ou déploiement manuel touché.
+- L’essai sur téléphone physique reste à faire ; K-031 reste séparé. Contrôles
+  GitHub du commit publié à renseigner après leur exécution réelle.
