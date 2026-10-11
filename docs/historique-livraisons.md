@@ -44,6 +44,19 @@ Messages de connexion PostgreSQL classés sans secrets ; dry_run manuel en lectu
 
 # Historique des livraisons
 
+## 11 octobre 2026 — conserver l'objectif après un Live Drop en ligne
+
+Correctif publié sur main, [bd97f71](https://github.com/GoodFight37/CreatorDeck/commit/bd97f710d65d6ce59b9415726a3cab2e9011a8cb), SHA distant vérifié : après un tirage Live, conserver les compteurs
+`missionDay`/`missions` calculés localement quand la sauvegarde serveur est
+adoptée. Les cartes et la réserve restent issues du serveur. Test ciblé
+`npm test -- src/lib/cloud/cloud-store.test.ts` : 135/135 ; typecheck, ESLint
+ciblé et `git diff --check` code 0. Scène n'est pas comptée par règle existante. Les sabliers restent
+indisponibles en ligne selon le périmètre ; aucun SQL, déploiement ou compte réel
+touché. Voir K-028, D-031 et le checkpoint courant. Le refus proxy initial est
+résolu par l'exécution réseau autorisée hors du bac à sable, avec le même proxy
+et sans modification d'environnement (K-029). SHA de base `39d0625` ; aucune
+validation de déploiement ou sur compte réel, pas de récupération rétroactive.
+
 > **Le passé du projet, daté, du plus récent au plus ancien.** Ce tableau vivait
 > en haut du `README.md` ; il a été déplacé ici le 8 octobre 2026, pour que le
 > README redevienne une porte d'entrée courte. **Aucune ligne n'a été perdue** :

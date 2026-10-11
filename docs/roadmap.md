@@ -1,3 +1,15 @@
+## Objectif quotidien après Live Drop en ligne — 11 octobre 2026
+
+- [x] Conserver les compteurs de mission lors de l'adoption de la sauvegarde
+  serveur du Live Drop : correctif publié sur main, `bd97f71`, SHA vérifié.
+- [x] Test cloud ciblé 135/135, typecheck, ESLint ciblé et diff-check réussis.
+- [x] Accès GitHub rétabli par exécution réseau autorisée avec le proxy existant
+  (K-029) ; aucune règle réseau ou donnée Supabase changée.
+- [ ] Vérifier la version servie puis le prochain Live Drop → objectif 1/1 sur
+  téléphone réel ; aucune récupération rétroactive des ouvertures passées.
+
+K-028, D-031 ; commandes et publication dans [la passation](agent-handoff.md).
+
 ## Test navigateur complet du cadeau — 11 octobre 2026
 
 - [x] Scénario bureau/téléphone simulé : tutoriel puis boîte cadeau, message,

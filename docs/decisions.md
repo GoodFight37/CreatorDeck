@@ -6,6 +6,7 @@ remplacée plutôt que l'effacer. Une proposition en attente n'est pas adoptée.
 
 | ID / date | Décision et contexte | Justification / conséquences / preuve |
 |---|---|---|
+| D-031 / 2026-10-11 | Une ouverture Live côté serveur doit préserver les compteurs de mission calculés localement. | `open_pack()` reste l'autorité pour cartes/réserve et le Paquet Scène reste exclu de la mission « Ouvre un booster ». Le JSON serveur ne contenant pas ces missions locales, le client reprend uniquement `missionDay`/`missions` de son état calculé après tirage. Test `cloud-store.test.ts` 135/135, typecheck/ESLint ciblé réussis. Correctif publié sur main, bd97f71 ; aucune règle de mission/SQL changée. Les sabliers restent locaux et ne modifient pas la réserve serveur conformément au périmètre. |
 | D-001 / 2026-10-10 | Quatre documents de coordination + AGENTS communs à Codex Cloud, PC et ChatGPT | Demande utilisateur de continuité sans conversation ni quota ; mêmes règles pour tous, checkpoints réguliers, code/tests comme preuves. Le quota n'est pas observable de façon fiable. |
 | D-002 / 2026-10-10 | Documenter sur design, maintenir la base réelle de PR #8 | Git/page de PR : design `4955d9b`, base arena, main ancien. Aucun merge/main autorisé ; cette mission ne change pas le jeu. |
 | D-003 / 2026-10-10 | Un écrivain par branche, relecture distante avant chaque checkpoint/push | Préserver les travaux alternés et éviter l'écrasement ; passation indicative, aucun faux verrou technique. Push normal, fichiers ajoutés explicitement. |

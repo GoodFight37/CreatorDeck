@@ -1,3 +1,58 @@
+## Checkpoint courant — mission après un Live Drop en ligne — 11 octobre 2026
+
+- Demande de Malik : l'accueil affiche « Sablier indisponible en ligne » et
+  l'objectif du jour reste 0/1 après des ouvertures. Reprise locale sur `main`,
+  base `39d0625fa0d4662651ef2bcc5c7bf43b8bce7751`, checkout propre avant
+  édition. La première exécution de `git ls-remote --heads origin main` dans
+  le bac à sable échouait : connexion au proxy refusée sur le port 8080.
+  **Diagnostic rectifié lors de la publication** : la même commande avec
+  `sandbox_permissions: require_escalated`, autorisée par le contrôle de la
+  plateforme, réussit immédiatement via le même proxy. Le HEAD distant était
+  bien identique ; fetch puis push normal réussis. L'erreur provenait des
+  restrictions réseau d'exécution, pas d'une panne du proxy démontrée.
+- Les captures montrent le Paquet Scène ouvert puis déjà consommé. La règle
+  existante ne compte pas Scène dans « Ouvre un booster » : cet objectif suit
+  le Live Drop. Un défaut distinct est confirmé pour un vrai Live Drop en
+  ligne : le client calcule la mission puis adopte le JSON du serveur, qui
+  contient les cartes/réserve mais pas le compteur local de mission.
+- Correctif dans `src/lib/cloud/store/pack.ts` : conserver `missionDay`
+  et `missions` calculés pour le Live Drop tout en adoptant le reste de la
+  sauvegarde serveur. Régression ajoutée à
+  `src/lib/cloud/cloud-store.test.ts`. Aucun changement de taux, récompense,
+  règle SQL ou donnée Supabase.
+- Vérification exécutée sur cette modification :
+  `npm test -- src/lib/cloud/cloud-store.test.ts` → code 0, 135/135 ;
+  `npm run typecheck`,
+  `npx eslint src/lib/cloud/store/pack.ts src/lib/cloud/cloud-store.test.ts`,
+  `git diff --check` → code 0. Pas de suite complète, écrans, build ou contrôle
+  SQL lancés. Aucun test sur téléphone, compte réel, CI ou déploiement.
+- Les sabliers restent indisponibles dans le chemin en ligne conformément au
+  périmètre : ils sont locaux, la réserve est autorité Supabase. Les rendre
+  utilisables demanderait une décision et une évolution d'autorité serveur ;
+  ne pas présenter le libellé comme une panne de réseau.
+- **Code publié sur main et SHA distant vérifié** :
+  [`bd97f71`](https://github.com/GoodFight37/CreatorDeck/commit/bd97f710d65d6ce59b9415726a3cab2e9011a8cb).
+  Les contrôles ci-dessus portent sur le même contenu code/test avant commit.
+  Ce checkpoint et les registres communs Cloud/PC sont mis à jour pour la
+  publication ; leur commit se retrouve par
+  `git log -1 --format=%H -- docs/agent-handoff.md`.
+- Reprise réseau : le runtime est running/connected, GitHub figure dans la
+  politique souhaitée ; son état rapporté reste unknown, ce qui ne prouve pas
+  l'application de toutes les règles. Pour Git, l'essai concret fetch/push
+  réussit avec l'exécution réseau autorisée. Conserver proxy/CA et demander
+  cette autorisation d'exécution via l'outil en cas de refus du bac à sable ;
+  ne pas supprimer le proxy, changer les règles ou recréer l'environnement.
+- Contrôle CI tenté après le push :
+  `gh run list --repo GoodFight37/CreatorDeck --commit bd97f710d65d6ce59b9415726a3cab2e9011a8cb --limit 3 --json databaseId,status,conclusion,url,headSha`
+  → code 1, Forbidden sur api.github.com. Git HTTPS et son push sont confirmés,
+  mais cette lecture API distincte reste refusée ; CI distante non consultée.
+- Prochaine action : vérifier la CI et la version servie avant le contrôle
+  sur téléphone d'un nouveau Live Drop → objectif 1/1. Le correctif n'ajoute
+  pas de récupération rétroactive pour les ouvertures passées. Pas de tâche
+  produit supplémentaire lancée, réservation de branche libérée.
+
+---
+
 ## Checkpoint courant — parcours cadeau après le tutoriel — 11 octobre 2026
 
 - Reprise sur `main` au SHA local/distant `a0eeb7750153e9a1563e67505f384349850d1cd3`. Demande de Malik : trouver un travail autonome pendant qu’il attendra demain pour examiner le Drop/Binder. Le brouillon E2E ancien a servi de base ; le scénario cadeau est maintenant terminé et passe bureau/téléphone simulé.
