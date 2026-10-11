@@ -1038,8 +1038,10 @@ vérifier. Les gains restent calculés localement :
 la validation de leurs sources n'est pas déplacée côté serveur. Hors cloud,
 `spendHourglass()` reste utilisé. Le helper privé des sabliers conserve les
 minutes résiduelles ; la migration additive 0049 corrige aussi l’ancre de
-recharge ordinaire dans `_pack_refresh`. Son application automatique doit encore
-être vérifiée.
+recharge ordinaire dans `_pack_refresh`. Elle a été appliquée seule et vérifiée
+par le workflow automatique 38163920425 après CI verte 38163674938 ; TLS,
+projet CreatorDeck, historique et objets attendus contrôlés. Le test sur
+téléphone et la version servie restent à vérifier.
 
 **Le catalogue est en lecture seule.** La table `public.creators`
 (`0003_catalogue.sql`) a la RLS activée et **aucune politique d'écriture** : ni

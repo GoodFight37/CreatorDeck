@@ -17,18 +17,19 @@ vérifie également les 5 min restantes puis le prochain intervalle.
 
 Fichiers : migration `supabase/migrations/0049_pack_refresh_ancre.sql`, vérifieur
 SQL et scénario sabliers, test `refreshBalances`, roadmap, problèmes connus,
-décision D-048, journal, cloud-supabase. Migration `automatic` ; ne pas la
-lancer manuellement. La CI main doit être verte avant le workflow automatique,
-qui vérifie cible/TLS/historique et les objets après application. Aucun accès,
-changement ou déploiement de production n’a encore eu lieu pour 0049. K-031
-restera « en attente » jusqu’à observation du résultat automatique. Aucun reset,
-repair ni réapplication manuelle. L’essai sur téléphone physique reste à faire.
-
-Publication autorisée par Malik. Dernière vérification préalable :
-`git ls-remote --heads origin main` = `ebed1aea3136b3fdca7ec088f3835ed83398ec8a`.
-Après push normal, vérifier SHA distant, lien CI et workflow Supabase avant de
-marquer la migration appliquée. Réservation de la branche conservée jusqu’au
-checkpoint post-publication.
+décision D-048, journal, cloud-supabase. Migration `automatic` ; aucun lancement
+manuel. Commit publié normalement :
+[`76e8a62`](https://github.com/GoodFight37/CreatorDeck/commit/76e8a623282dc4faeca9482d687be7682b3de9bb),
+`main` vérifié au même SHA. CI
+[38163674938](https://github.com/GoodFight37/CreatorDeck/actions/runs/38163674938)
+success, quatre jobs verts (Postgres jetable, unitaires/écrans/statique/build,
+cloud simulé et Playwright bureau/téléphone). Workflow Supabase
+[38163920425](https://github.com/GoodFight37/CreatorDeck/actions/runs/38163920425)
+success. Log lu : projet CreatorDeck, TLS et historique vérifiés ; seule
+0049 appliquée ; « Historique et objets attendus vérifiés après application. »
+Aucun reset, repair, déploiement manuel ni changement réseau. Test téléphone
+physique toujours à faire. Réservation libérée après vérification des liens,
+logs et SHA distant.
 
 ## Ouverture visuelle du sachet — cartes dégagées, 11 octobre 2026
 

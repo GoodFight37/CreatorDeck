@@ -4,8 +4,10 @@ Migration additive 0049 remplace `_pack_refresh` : l’ancre avance du nombre
 exact de périodes gagnées (N × intervalle), et conserve le temps partiel restant.
 0048 et le baseline restent intacts. Tests ciblés TypeScript et PostgreSQL
 jetable vérifient le résiduel après 35 minutes, le plafond après 60 minutes et
-l’absence de gains répétés au même instant. CI et migration automatique en
-production restent à vérifier après publication ; aucun déploiement manuel.
+l’absence de gains répétés au même instant. CI 38163674938 : quatre jobs verts.
+Workflow automatique 38163920425 : success, log vérifié ; cible/TLS/historique
+contrôlés, seule 0049 appliquée, objets vérifiés ensuite. Pas de déploiement
+manuel. Téléphone physique et version servie restent à tester.
 
 ## Sachet et sortie des cartes — 11 octobre 2026
 
