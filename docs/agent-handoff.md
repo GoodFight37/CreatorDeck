@@ -1,4 +1,4 @@
-## K-034 — correction ciblée — 11 octobre 2026
+## K-034 — corrigé, publié et confirmé par le run automatique — 11 octobre 2026
 
 - Demande : corriger uniquement la prévalidation Supabase et publier sur main,
   autorisation explicite de Malik ; K-031 séparé, téléphone réel non validé.
@@ -25,11 +25,29 @@
   Les quatre nouveaux tests couvrent validation locale manual, manual enregistrée
   avec/sans nouvelle automatic, politique même sur version enregistrée et
   point d'entrée sans secret atteignant le contrôle de connexion. Tests locaux
-  sans production ; suites produit non répétées, CI complète attendue à publication.
-- Checkpoint préparé, publication et contrôles distants **à suivre** ; prochaine
-  action : publier normalement `HEAD:main`, confirmer le SHA distant, suivre
-  Vérification puis son run automatique Supabase et lire son log.
-  Réservation : cette session est le seul écrivain observé, pendant ce suivi.
+  sans production ; suites produit non répétées localement, exécutées par la CI.
+- Code publié normalement sur main :
+  [`ee10a6d46dcf8f91e585d77493f48271b981e31e`](https://github.com/GoodFight37/CreatorDeck/commit/ee10a6d46dcf8f91e585d77493f48271b981e31e),
+  SHA distant et contenu du premier checkpoint confirmés. Checkout `work`.
+- [Vérification 38142506934](https://github.com/GoodFight37/CreatorDeck/actions/runs/38142506934)
+  **success**, quatre jobs verts. Logs téléchargés : outil **28/28**,
+  `npm test` **1117/1117** (71 fichiers), `npm run ecrans` **83/83** (15 fichiers),
+  `npm run supabase:verify` **643 assertions ✅** sur Postgres jetable,
+  `npm run e2e` **42 réussis / 6 ignorés** sans cloud, puis les **6/6** scénarios
+  cloud passent séparément avec RPC simulées. Typecheck, lint, jargon, catalogue
+  et build de production réussis. Ce ne sont pas des tests sur compte réel.
+- [Automatisation Supabase 38142681999](https://github.com/GoodFight37/CreatorDeck/actions/runs/38142681999)
+  **success**, événement `workflow_run`, même SHA ee10a6d, sans approbation manual.
+  Log distant lu : « Connexion TLS, projet CreatorDeck et historique vérifiés. »
+  puis « La base est déjà à jour et vérifiée. Aucun SQL de migration exécuté. »
+  le 11 octobre à 15 h 19 (Europe/Paris). Le chemin base à jour a donc relu les
+  versions et table/RPC/trigger de 0047 sans appeler db push. **K-034 résolu**.
+- Statut GitHub Vercel sur ee10a6d : **success** ; version réellement servie et
+  téléphone non inspectés. Les résultats ci-dessus concernent le code ee10a6d.
+  Cette actualisation est documentaire ; son SHA se retrouve par Git ci-dessous.
+  Après sa publication, consulter ses contrôles GitHub sans répéter les tests
+  locaux ni lancer un workflow manuel. Réservation libérée, aucun autre chantier
+  réservé ; vérifier main courant à la prochaine reprise.
 - 0047 demeure appliquée (38140515537) et vérifiée (38140562490). Aucun SQL,
   baseline ou workflow modifié, aucun reset/repair/réapplication/déploiement manuel.
   Le risque sans sauvegarde accepté concerne seulement l'application passée.

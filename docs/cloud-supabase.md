@@ -1,12 +1,14 @@
-## K-034 — correctif testé, publication à suivre — 11 octobre 2026
+## K-034 — résolu et confirmé en automatique — 11 octobre 2026
 
-Validation locale des fichiers séparée du plan calculé sur l'historique réel.
-Manual déjà enregistrée ne bloque plus ; approbation maintenue si en attente.
-28/28 tests outil et contrôles ciblés réussis ; CI distante à suivre.
-Logs du run 38140833700 téléchargés : refus manual 0047 confirmé à distance.
-Git/API/logs accessibles avec le preset et les six domaines, sans changement réseau.
+Correctif publié sur main : [ee10a6d](https://github.com/GoodFight37/CreatorDeck/commit/ee10a6d46dcf8f91e585d77493f48271b981e31e).
+Validation locale des fichiers séparée du plan sur l'historique réel ; manual
+installée ne bloque plus, approbation maintenue pour manual en attente.
+[CI 38142506934](https://github.com/GoodFight37/CreatorDeck/actions/runs/38142506934) : quatre jobs verts, outil 28/28.
+[Run automatique 38142681999](https://github.com/GoodFight37/CreatorDeck/actions/runs/38142681999) : **success** sur ce SHA, log lu :
+« La base est déjà à jour et vérifiée. Aucun SQL de migration exécuté. »
+Git/API/logs effectivement accessibles, preset et six domaines appliqués sans changement réseau.
 0047 non réappliquée, K-031 inchangé, téléphone réel toujours à tester.
-Commandes, SHA de base et prochaine action : [checkpoint courant](agent-handoff.md).
+Comptages CI, commandes, SHA et limites : [checkpoint courant](agent-handoff.md).
 Les sections suivantes sont des observations historiques datées.
 
 ## Complément du 11 octobre 2026 — automatisation encore à corriger
