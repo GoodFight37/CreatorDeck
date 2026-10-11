@@ -1,3 +1,38 @@
+## Ergonomie courte et swipe de révélation — 11 octobre 2026
+
+- Brief courant : réduire le bruit du Drop, remonter les cartes Binder, ajouter
+  le swipe après flip, rendre visible le résultat d’un sablier, regrouper Toi,
+  vérifier la continuité/les gestes, mouvement réduit, doublons CSS et portraits.
+  Les briefs déjà déclarés faits et tous les timings/règles restent hors scope.
+- Base vérifiée : branche locale `work`, distante `main`, départ propre et égaux
+  à `878f7e9e3d9bc792ad3f4c893728e03ca3b36d17`. Pas de changement de branche
+  distant pendant cette passe ; pas de SQL.
+- Modifications : `drop-view.tsx` n’affiche qu’une note de réserve contextuelle ;
+  succès sablier via la notice existante avec résultat 5/4 ou avance de 15 min.
+  Binder garde son action/choix et condense sa bannière ; swipe horizontal/haut
+  après face visible, sans Perfect, bouton conservé, inclinaison coupée pendant
+  le geste. Familles Toi mieux séparées. Feuilles CSS scindées par
+  `.booster-presentation`; mouvement réduit neutralise le reflet infini pré-open.
+  Séquence, artwork, timing de 1,9 s, règles, économiques et données inchangés.
+- Preuves locales : écrans Drop/Binder + effets reveal **28/28** ; TypeScript et
+  ESLint ciblés code 0 ; build statique sans configuration cloud code 0 ; E2E
+  mouvement réduit/continuité **4/4**, recul/relâchement mi-course **2/2** et
+  swipe réel après flip avec bouton **2/2** (bureau et téléphone simulé). Scan sharp de
+  `public/creators` : **1 000** WebP décodés, aucune erreur ; seul
+  `diverron.webp` majoritairement vert (87 % au filtre de repérage), déjà remplacé
+  par `/creators/diverron-fallback.svg` dans l’app et couvert par E2E.
+- CSS : comparaison PostCSS des sélecteurs complets entre `globals.css`,
+  `booster-premium.css`, `reveal-premium.css`, `booster-continuity.css` : zéro
+  doublon exact ; zéro nom de keyframes partagé. Les overrides de continuité sont
+  explicitement scopés à la scène de présentation.
+- Le contrôle GitHub du commit parent `878f7e9` est terminé avec succès : run
+  [`38175177087`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38175177087).
+- Publication/CI : encore à relever avant clôture ; aucun SHA de correction ni
+  résultat GitHub ne doit être affirmé avant push et vérification.
+- Prochaine action : finir les vérifications ciblées, `git diff --check`, faire
+  un commit explicite et push normal `work:main` selon l’autorisation permanente,
+  vérifier le SHA distant et les contrôles déclenchés, puis reporter leurs états.
+
 ## Reprise cloud automatique — 11 octobre 2026
 
 - Demande : un compte déjà connecté doit retrouver sa partie automatiquement,
@@ -21,8 +56,10 @@
   sans forçage. TypeScript, ESLint ciblé, diff-check et build production : code 0
   (build local sans configuration cloud réelle). La limite téléphone physique
   reste distincte des tests Playwright.
-- Publication et contrôles distants : à relever après push ; ce checkpoint
-  contient les résultats locaux, pas une affirmation de CI verte.
+- Publication vérifiée : commit `878f7e9e3d9bc792ad3f4c893728e03ca3b36d17`
+  publié normalement sur `main`, SHA distant concordant. CI GitHub
+  [`38175177087`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38175177087)
+  terminée avec succès. Les détails locaux précèdent ce constat historique.
 
 ## Archive — tri documentaire avant les retours après publication, 11 octobre 2026
 

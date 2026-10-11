@@ -527,8 +527,19 @@ export function CreatorDeckApp() {
     try {
       if (cloud.configured) {
         const result = await cloudStore.useHourglass();
-        if (result.status !== "done") showError(result.message, cloudStore.getSnapshot().syncNeedsChoice || (result.status === "unavailable" && result.reason === "no-session") ? "account" : null);
-      } else gameStore.useHourglass();
+        if (result.status !== "done") {
+          showError(result.message, cloudStore.getSnapshot().syncNeedsChoice || (result.status === "unavailable" && result.reason === "no-session") ? "account" : null);
+        } else {
+          showNotice(game.player.packs === 4
+            ? "Sablier utilisé · réserve à 5/4, ton booster bonus t’attend."
+            : result.message ?? "Sablier utilisé · recharge avancée de 15 min.");
+        }
+      } else {
+        gameStore.useHourglass();
+        showNotice(game.player.packs === 4
+          ? "Sablier utilisé · réserve à 5/4, ton booster bonus t’attend."
+          : "Sablier utilisé · recharge avancée de 15 min.");
+      }
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");
     } finally {

@@ -475,3 +475,24 @@ action pendant la lecture conserve le choix explicite. Bloquer les envois
 automatiques quand ce choix est en attente. La clé d’une dépense à réponse
 perdue survit à la reprise. Tests du magasin, DOM et E2E à RPC simulées dans la
 passation ; aucune fusion de ressources ou modification de règle de jeu.
+
+## D-049 — 11 octobre 2026 : densité Drop/Binder, swipe de révélation et effets bornés
+
+Réduire les états répétitifs sous l’ouverture à une note conditionnelle et
+utiliser la notice existante pour expliquer le résultat du sablier. Garder la
+collection conseillée et le choix des pages, en condensant le chrome pour
+remonter la grille. Ajouter un balayage horizontal ou vers le haut uniquement
+après `flippedCardId`, avec le bouton en repli ; Perfect/verrouillage restent
+inchangés. Neutraliser l’inclinaison pendant le geste. Distinguer plus clairement
+les groupes du menu Toi sans déplacer les fonctions.
+
+Le sachet conserve son art imprimé et son geste existant. Le mouvement réduit
+coupe le reflet infini avant ouverture ; les réglages Reflets et le retrait de la
+scène continuent de couper les reflets actifs. Déchirure, flip, silence, Perfect
+et relais 1,9 s inchangés. CSS de continuité scopé à `.booster-presentation` ;
+contrôle des quatre feuilles : aucun sélecteur exact ni keyframe en double. Le
+geste lent suit le doigt ; recul/relâchement à mi-course annule et « Ouvrir sans
+déchirer » reste visible. Scan ciblé : 1 000 WebP décodés, seule source verte
+`diverron.webp`, déjà remplacée à l’affichage par le fallback existant. Aucun
+SQL, nouvelle monnaie, moteur ou règle de jeu. Adoptée à la demande du joueur ;
+preuves et limites dans la passation courante.

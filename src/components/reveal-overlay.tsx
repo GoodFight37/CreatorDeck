@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
@@ -88,6 +88,7 @@ export function RevealOverlay({
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
 
   // Le bouton d'avancement attend la fin réelle du retournement. Le minuteur
@@ -161,6 +162,16 @@ export function RevealOverlay({
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
 
   function tiltRevealCard(event: PointerEvent<HTMLDivElement>) {
+    const swipe = swipeStart.current;
+    if (swipe) {
+      const dx = event.clientX - swipe.x;
+      const dy = event.clientY - swipe.y;
+      if (Math.abs(dx) > 12 || Math.abs(dy) > 12) swipe.moved = true;
+      if (swipe.moved) {
+        resetRevealTilt(event);
+        return;
+      }
+    }
     if (!cardEffectsAllowed()) return;
     const target = event.currentTarget;
     const bounds = target.getBoundingClientRect();
@@ -176,6 +187,22 @@ export function RevealOverlay({
     event.currentTarget.style.removeProperty("--reveal-tilt-x");
     event.currentTarget.style.removeProperty("--reveal-tilt-y");
     event.currentTarget.classList.remove("is-tilting");
+  }
+
+  function startRevealSwipe(event: PointerEvent<HTMLDivElement>) {
+    if (locked || perfect || flippedCardId !== cardId || event.button !== 0) return;
+    swipeStart.current = { x: event.clientX, y: event.clientY, moved: false };
+  }
+
+  function endRevealSwipe(event: PointerEvent<HTMLDivElement>) {
+    const start = swipeStart.current;
+    swipeStart.current = null;
+    resetRevealTilt(event);
+    if (!start || locked || perfect || flippedCardId !== cardId) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.1) advance();
+    else if (dy <= -48 && Math.abs(dy) > Math.abs(dx) * 1.1) advance();
   }
 
   function finishFlip(event: AnimationEvent<HTMLDivElement>) {
@@ -348,7 +375,11 @@ export function RevealOverlay({
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className="reveal-anchor" style={glowStyle}
-            onPointerMove={tiltRevealCard} onPointerLeave={resetRevealTilt}>
+            onPointerDown={startRevealSwipe}
+            onPointerMove={tiltRevealCard}
+            onPointerUp={endRevealSwipe}
+            onPointerCancel={(event) => { swipeStart.current = null; resetRevealTilt(event); }}
+            onPointerLeave={(event) => { swipeStart.current = null; resetRevealTilt(event); }}>
             <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
               <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
                 <CreatorCard

@@ -1,6 +1,5 @@
-/* CreatorDeck / premium 3D booster cinematic.
-   Physically shaded and deforming mesh is painted by FoilPack3D.
-   None of the old flat foil divs or fake CD card backs are rendered. */
+/* CreatorDeck / CSS booster cinematic. The foil uses its printed art and
+   layered HTML/CSS pieces; no canvas or external 3D renderer is involved. */
 .booster-cinematic {
   position: fixed;
   inset: 0;

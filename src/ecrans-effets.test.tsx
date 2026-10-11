@@ -255,6 +255,27 @@ describe("les effets de révélation", () => {
     expect(suivant).toHaveBeenCalledTimes(1);
   });
 
+  it.each([
+    ["horizontal", 120, 2],
+    ["vers le haut", 2, -120],
+  ])("avance par balayage %s une fois la face visible", async (_direction, dx, dy) => {
+    const suivant = vi.fn();
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(<RevealOverlay cards={[carte("common", "a"), carte("rare", "b")] as never}
+      index={0} onNext={suivant} onClose={() => {}} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    const anchor = document.querySelector<HTMLDivElement>(".reveal-anchor")!;
+    const pointer = (type: string, x: number, y: number) => new window.MouseEvent(type, {
+      bubbles: true, clientX: x, clientY: y,
+    });
+    act(() => {
+      anchor.dispatchEvent(pointer("pointerdown", 100, 100));
+      anchor.dispatchEvent(pointer("pointermove", 100 + dx, 100 + dy));
+      anchor.dispatchEvent(pointer("pointerup", 100 + dx, 100 + dy));
+    });
+    expect(suivant).toHaveBeenCalledOnce();
+  });
+
   it("déverrouille la révélation si animationend ne vient jamais", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(

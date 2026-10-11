@@ -9,6 +9,13 @@ Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
 
 ### Plan actif
 
+- **Ergonomie courte et geste de révélation (11 octobre)** : compacter les
+  informations près du CTA, remonter la grille Binder, ajouter le swipe après
+  flip, confirmer l’effet du sablier, distinguer visuellement les familles de
+  Toi, et contrôler les reflets réduits, le CSS partagé et les portraits. Lot
+  ciblé implémenté ; tests locaux et publication sont consignés dans la dernière
+  passation. Aucun SQL.
+
 - **Reprise cloud automatique (11 octobre, D-048/K-040)** : lecture de la
   sauvegarde dès la restauration/connexion du compte, avant les compteurs ;
   aucun passage manuel par Compte dans le parcours normal du sablier. Un choix
@@ -42,6 +49,22 @@ Le seul verdict subjectif important avant un autre polissage visuel est A ; le
 retour C sur la formulation du Paquet Scène est à garder comme amélioration
 distincte du correctif fonctionnel. B, D, E et F sont confirmés. Le parcours
 sablier est déjà confirmé et ne figure plus dans cette liste.
+
+## Ergonomie courte et geste de révélation — 11 octobre 2026
+
+Les états du sablier se résument à une note contextuelle ; sa réussite affiche
+le nouvel effet dans la notice existante. La collection conseillée tient sur une
+ligne et le choix des pages du Binder est plus compact. Une carte accepte un
+balayage horizontal ou vers le haut après le flip ; le bouton reste disponible,
+et Perfect/verrouillage ne changent pas. Les familles du menu Toi sont séparées
+plus clairement. Le CSS de continuité est scopé à `.booster-presentation` ; le
+contrôle des quatre feuilles ne trouve aucun sélecteur exact ou keyframe en
+double. Le mouvement réduit coupe le reflet infini avant déchirure.
+
+Les tests de geste vérifient le glissement lent, le recul/relâchement et le
+chemin « Ouvrir sans déchirer ». Scan : 1 000 WebP décodés, aucun invalide ; seul
+`diverron.webp` ressort majoritairement vert et reste remplacé à l’affichage par
+`diverron-fallback.svg`. Aucun nouveau moteur, SQL, règle de jeu ou timing.
 
 Les sections datées ci-dessous sont un journal de livraisons et d’observations,
 pas une liste de tâches à reprendre. Les anciennes cases `[ ]` sont historiques

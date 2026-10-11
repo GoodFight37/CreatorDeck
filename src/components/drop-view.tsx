@@ -372,10 +372,15 @@ export function HomeView({
             : "Utiliser 1 sablier · avancer de 15 min"}</span>
           <strong>{game.player.hourglasses}</strong>
         </button>
-        {serverReserve && needsAccount ? <small className="hourglass-note">Connecte-toi pour utiliser tes sabliers.</small> : null}
-        {stock >= pack.maxWithHourglass ? <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small> : null}
-        {stock > pack.max && stock < pack.maxWithHourglass ? <small className="hourglass-note">La recharge reprend après l’ouverture du booster bonus.</small> : null}
-        {game.player.hourglasses <= 0 ? <small className="hourglass-note">Tu n’as pas de sablier disponible.</small> : null}
+        {serverReserve && needsAccount ? (
+          <small className="hourglass-note">Connecte-toi pour utiliser tes sabliers.</small>
+        ) : stock >= pack.maxWithHourglass ? (
+          <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small>
+        ) : stock > pack.max ? (
+          <small className="hourglass-note">La recharge reprend après l’ouverture du booster bonus.</small>
+        ) : game.player.hourglasses <= 0 ? (
+          <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
+        ) : null}
 
         {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
         <div className="token-row">

@@ -81,6 +81,29 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
   expect(motion).toEqual({ animation: "none", transform: "none" });
 });
 
+test("a horizontal swipe advances after the flip and the button remains available", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect(reveal).toBeVisible();
+  const button = reveal.getByRole("button", { name: "Révéler la suivante" });
+  await expect(button).toBeEnabled();
+  const anchor = reveal.locator(".reveal-anchor");
+  const bounds = (await anchor.boundingBox())!;
+  const x = bounds.x + bounds.width / 2;
+  const y = bounds.y + bounds.height / 2;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x - 90, y, { steps: 5 });
+  await page.mouse.up();
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("2 / 5");
+  await expect(reveal.getByRole("button", { name: "Révéler la suivante" })).toBeEnabled();
+  await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("3 / 5");
+});
+
 test("home pack artwork, title and gesture hint do not overlap", async ({ page }) => {
   await gotoDeck(page);
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
@@ -158,6 +181,8 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
 
   await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
   const openingPack = page.locator(".booster-physical-scene");
+  expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").animationName))
+    .toBe("none");
   const reducedSeam = page.getByRole("button", { name: /D.chirer le sachet en passant le doigt/ });
   const reducedBounds = (await reducedSeam.boundingBox())!;
   await page.mouse.move(reducedBounds.x + reducedBounds.width * .15, reducedBounds.y + reducedBounds.height / 2);
@@ -264,6 +289,31 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
   await expect(dialog).toHaveCount(0);
+});
+
+test("reversing or lifting halfway cancels cleanly and keeps the no-tear option", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const seam = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
+  const bounds = (await seam.boundingBox())!;
+  const touch = await page.context().newCDPSession(page);
+  const y = bounds.y + bounds.height / 2;
+  const start = bounds.x + bounds.width * .25;
+  const partial = bounds.x + bounds.width * .48;
+  const slit = dialog.locator(".foil-cut-slit");
+
+  await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: start, y }] });
+  await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: partial, y }] });
+  const partialWidth = await slit.evaluate((node) => (node as HTMLElement).style.width);
+  expect(parseFloat(partialWidth)).toBeGreaterThan(0);
+  expect(parseFloat(partialWidth)).toBeLessThan(100);
+  await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: start, y }] });
+  await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+
+  await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "Ouvrir sans déchirer" })).toBeVisible();
+  await touch.detach();
 });
 
 test("DIVERRON portrait never resolves to the damaged green webp", async ({ page }) => {

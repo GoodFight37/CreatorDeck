@@ -73,6 +73,7 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   const pushesBeforeRetry = pushes;
   await button.click();
   await expect(button).toContainText("1");
+  await expect(page.getByRole("status").filter({ hasText: "Sablier utilisé · recharge avancée de 15 min." })).toBeVisible();
   expect(requests).toHaveLength(2);
   expect(requests[0]).toBe(requests[1]);
   expect(spent.size).toBe(1);

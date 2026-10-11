@@ -126,6 +126,12 @@ describe("les sabliers du Drop en ligne", () => {
     expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");
   });
 
+  it("ne montre qu’une note contextuelle compacte pour la réserve", async () => {
+    await drop({ packs: 5 });
+    expect(document.querySelectorAll(".hourglass-note")).toHaveLength(1);
+    expect(document.querySelector(".hourglass-note")?.textContent).toContain("Ouvre le booster bonus");
+  });
+
   it.each([{ packs: 5 }, { hourglasses: 0 }, { needsAccount: true }, { busy: true }])(
     "bloque le bouton si aucune dépense n’est possible : %j", async (options) => {
       const { button, onUseHourglass } = await drop(options);
