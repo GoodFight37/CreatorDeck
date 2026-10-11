@@ -158,12 +158,14 @@ export function ProfileView({
   // c'est le bouton de secours de celui que l'effet fatigue.
   const [tiltOn, setTiltOn] = useState(() => tiltEnabled());
   const canTilt = true;
+  const studioAvailable = process.env.NODE_ENV !== "production";
   // Le studio de tirages est un outil de mise au point, pas une option de jeu :
   // il s'ouvre en appuyant cinq fois sur la pastille de niveau.
   const [tools, setTools] = useState(0);
   const [lastTap, setLastTap] = useState(0);
 
   function tapLevel() {
+    if (!studioAvailable) return;
     const now = Date.now();
     const count = now - lastTap > 3_000 ? 1 : tools + 1;
     setLastTap(now);
@@ -226,14 +228,13 @@ export function ProfileView({
   return (
     <div className="view profile-view">
       <section className="profile-card">
-        <button
-          type="button"
-          className="profile-avatar"
-          onClick={tapLevel}
-          aria-label={`Niveau ${game.player.level}`}
-        >
-          <span>{game.player.level}</span>
-        </button>
+        {studioAvailable ? (
+          <button type="button" className="profile-avatar" onClick={tapLevel} aria-label={`Niveau ${game.player.level}`}>
+            <span>{game.player.level}</span>
+          </button>
+        ) : (
+          <span className="profile-avatar" aria-label={`Niveau ${game.player.level}`}><span>{game.player.level}</span></span>
+        )}
         <div>
           <h1>{cloud.userId && cloud.displayName ? cloud.displayName : "Mon profil de collectionneur"}</h1>
           <span>{CATALOG_EDITION}</span>
@@ -434,7 +435,7 @@ export function ProfileView({
           <ChevronRight size={16} />
         </button>
         <button type="button" className="menu-row" onClick={onShowOdds}>
-          <span>Taux de drop</span>
+          <span>Taux officiels</span>
           <ChevronRight size={16} />
         </button>
       </section>

@@ -24,7 +24,7 @@
  * l'interrupteur du joueur les coupe comme les autres. Rien ne sonne à
  * l'ouverture, ni à la fermeture : se déplacer ne sonne pas.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, Search, Gavel, Stamp } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
@@ -122,6 +122,13 @@ export function TribunalView({
   const [paiement, setPaiement] = useState<TribunalPayout | null>(null);
   const [alerte, setAlerte] = useState<string | null>(null);
   const [occupe, setOccupe] = useState(false);
+
+  // Le tampon reste lisible, puis le dossier suivant arrive sans clic forcé.
+  useEffect(() => {
+    if (!reaction) return;
+    const timer = window.setTimeout(() => setReaction(null), 600);
+    return () => window.clearTimeout(timer);
+  }, [reaction]);
 
   /** Sans classeur, on siège quand même : le Tribunal est ouvert à tous. */
   const siegeOuvert = presidence !== null || cards.length === 0;

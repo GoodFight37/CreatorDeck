@@ -4,7 +4,7 @@
  * Le défaut à ne pas réintroduire : la carte **Live** portait des bandes de
  * couleurs répétées au pixel près, qui **défilaient en boucle**. Sur un
  * téléphone, ça donne « de vieilles télé avec des bandes horribles » — et un
- * interrupteur qui ne coupe que le gyroscope, pas le défilement, ne coupe rien.
+ * interrupteur qui ne coupe pas les animations de reflet ne coupe rien.
  *
  * Ces tests lisent `globals.css` comme un contrat de tenue : pas d'animation
  * perpétuelle sur une carte, des lueurs larges et peu contrastées, et un

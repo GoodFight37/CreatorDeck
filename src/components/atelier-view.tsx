@@ -32,9 +32,6 @@ import {
   type GameView,
 } from "@/lib/game-engine";
 import { usePoints } from "@/hooks/use-points";
-import { CreatorCard } from "@/components/creator-card";
-import { useBinderGoal } from "@/hooks/use-binder-goal";
-import { BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 
 type Mode = "craft" | "recycle";
 type CraftFilter = "all" | Rarity;
@@ -52,8 +49,6 @@ export function AtelierView({
   game,
   onNotice,
   onError,
-  onGoDrop,
-  onGoBinder,
 }: {
   game: GameView;
   onNotice: (message: string) => void;
@@ -63,7 +58,7 @@ export function AtelierView({
 }) {
   const [mode, setMode] = useState<Mode>("craft");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<CraftFilter>("all");
+  const [filter, setFilter] = useState<CraftFilter>("common");
   const [page, setPage] = useState(0);
   // Le feuilletage des doublons a son propre compteur : les deux listes n'ont
   // pas la même longueur, et changer d'onglet repart de la première page.
@@ -77,7 +72,6 @@ export function AtelierView({
   // Qui paie les points — l'appareil ou le serveur — et le refus quand il n'y a
   // pas de compte (voir `usePoints`).
   const points = usePoints();
-  const [binderGoal] = useBinderGoal();
   const [bulkBusy, setBulkBusy] = useState(false);
   // Un doublon Live ne part pas sur un clic perdu : on garde la carte en attente
   // et l'écran affiche la question. La variante Live ne se rachète pas.
@@ -122,18 +116,6 @@ export function AtelierView({
   const liveKept = duplicates
     .filter((group) => group.variant === "live")
     .reduce((sum, group) => sum + group.recyclableIds.length, 0);
-  const preview = useMemo(() => {
-    const owned = new Set(game.cards.map((card) => card.creatorSlug));
-    const goal = BINDER_COLLECTION_BY_ID.get(binderGoal ?? "")
-      ?? recommendBinderCollection(binderCollectionProgress(owned));
-    const preferred = new Set(goal?.slugs ?? []);
-    const candidates = CREATORS.filter((creator) => !owned.has(creator.slug)
-      && RARITY_META[creator.rarity].craftable && RARITY_META[creator.rarity].craftCost !== null)
-      .sort((a, b) => Number(preferred.has(b.slug)) - Number(preferred.has(a.slug))
-        || RARITY_META[a.rarity].craftCost! - RARITY_META[b.rarity].craftCost! || a.rank - b.rank)
-      .slice(0, 3);
-    return { candidates, goal, fromGoal: candidates.some((creator) => preferred.has(creator.slug)) };
-  }, [binderGoal, game.cards]);
   const missingCount = CREATORS.length - game.stats.uniqueCreators;
   // Les Sortants encore artisanables : ils ne sont plus dans le catalogue (donc
   // plus tirables, et hors complétion), mais leur fenêtre est ouverte pendant
@@ -249,59 +231,6 @@ export function AtelierView({
     } finally {
       setBulkBusy(false);
     }
-  }
-
-  // Craft reste visible comme pilier, mais n’expose pas ses deux listes vides
-  // avant que le joueur ait dix copies recyclables. Les règles de craft et de
-  // recyclage restent inchangées ; seul le premier écran est simplifié.
-  if (game.stats.duplicates < 10) {
-    const restant = Math.max(0, 10 - game.stats.duplicates);
-    return (
-      <div className="view atelier-view">
-        <section className="page-title-row">
-          <div><h1>Façonne ta collection</h1></div>
-        </section>
-        <section className="atelier-warmup" aria-label="Déblocage de l’Atelier">
-          <div className="atelier-warmup-icon"><Hammer size={22} /></div>
-          <span>ATELIER</span>
-          <h2>{restant ? `Encore ${restant} doublon${restant > 1 ? "s" : ""}` : "Ton atelier est prêt"}</h2>
-          <p>À 10 doublons, recycle les copies en trop pour choisir une carte manquante avec tes points.</p>
-          <div className="atelier-warmup-meter" role="progressbar" aria-label="Progression avant l’ouverture de l’Atelier" aria-valuemin={0} aria-valuemax={10} aria-valuenow={game.stats.duplicates}>
-            <i style={{ width: `${Math.min(100, game.stats.duplicates * 10)}%` }} />
-          </div>
-          <strong>{Math.min(10, game.stats.duplicates)} / 10 doublons</strong>
-          <p>Tu gardes toujours une copie de chaque variante.</p>
-          {onGoDrop ? <button type="button" className="primary-button" onClick={onGoDrop}>Retour au Drop</button> : null}
-        </section>
-        <section className="atelier-preview" aria-label="Aperçu de l’Atelier">
-          <div className="atelier-preview-wallet">
-            <span><Coins size={16} /> <strong>{game.player.points} points</strong> disponibles</span>
-            <span>Recyclage groupé à débloquer : <strong>+{bulkValue} points</strong></span>
-          </div>
-          {liveKept > 0 ? <p className="atelier-preview-note">{liveKept} doublon{liveKept > 1 ? "s" : ""} Live exclu{liveKept > 1 ? "s" : ""} du recyclage groupé ; tu décideras pour chacun.</p> : null}
-          <h2>Ta prochaine carte, à préparer</h2>
-          <p className="atelier-preview-note">{preview.goal
-            ? preview.fromGoal ? `En priorité : ${preview.goal.name}.` : `Aucune carte artisanable à trouver dans ${preview.goal.name}. Autres idées ci-dessous.`
-            : "Quelques créateurs manquants à rejoindre."} Aperçu uniquement avant 10 doublons.</p>
-          {preview.candidates.length ? (
-            <div className="atelier-preview-grid">
-              {preview.candidates.map((creator) => (
-                <div className="atelier-preview-card" key={creator.slug} role="group" aria-label={`Aperçu de ${creator.displayName}, carte non obtenue`}>
-                  <CreatorCard creator={creator} variant="standard" compact />
-                  <span>{creator.displayName}</span>
-                  <strong>{RARITY_META[creator.rarity].craftCost} points</strong>
-                  <small>{Math.max(0, RARITY_META[creator.rarity].craftCost! - game.player.points) > 0
-                    ? `Encore ${RARITY_META[creator.rarity].craftCost! - game.player.points} points`
-                    : "Coût déjà couvert"}</small>
-                </div>
-              ))}
-            </div>
-          ) : <p className="atelier-preview-note">Toutes les cartes artisanables du catalogue sont déjà réunies.</p>}
-          <p className="atelier-preview-note">Carte obtenue : Standard. Les Légendaires et les variantes Live, Holo et Gold restent dans les boosters.</p>
-          {onGoBinder ? <button type="button" className="atelier-preview-binder" onClick={onGoBinder}>Choisir ma collection dans le Binder <ChevronRight size={16} /></button> : null}
-        </section>
-      </div>
-    );
   }
 
   return (

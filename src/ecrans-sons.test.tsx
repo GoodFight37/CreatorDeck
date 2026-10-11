@@ -84,7 +84,7 @@ describe("le réglage du son", () => {
     // Puis les portes de l'écran Toi : le compte, les taux, les objectifs, le
     // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
     // d'écran, toutes muettes.
-    for (const porte of ["Mon compte", "Taux de drop", "Thème du classeur"]) {
+    for (const porte of ["Mon compte", "Taux officiels", "Thème du classeur"]) {
       banc.appuyer(porte);
       // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.
       banc.appuyerNom("Fermer");

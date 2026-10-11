@@ -98,7 +98,7 @@ describe("les écrans", () => {
     expect(banc.ecran("06-objectifs")).toContain("Progression");
 
     banc.appuyer("Toi");
-    banc.appuyer("Taux de drop");
+    banc.appuyer("Taux officiels");
     expect(banc.ecran("07-taux")).toContain("Taux de drop des boosters");
     banc.fermer();
   });

@@ -316,7 +316,7 @@
 
 /* Printed artwork is ONE asset on both the Drop screen and the opening,
    including top/bottom crimps, side weld and all labels. */
-.pack-stage {
+.home-view .pack-stage {
   flex-direction: column;
   gap: 12px;
   min-height: clamp(300px, 42dvh, 360px);

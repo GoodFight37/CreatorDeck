@@ -230,7 +230,7 @@ export function RevealOverlay({
           </span>
         </div>
       ) : null}
-      {streakReward ? (
+      {streakReward && showSummary ? (
         <div className="streak-gain" role="status">
           <Zap size={13} />
           <span>

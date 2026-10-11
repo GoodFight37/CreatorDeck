@@ -338,7 +338,7 @@ html:has(.booster-presentation) { overflow: hidden; }
   transition: transform 140ms ease-out, filter 180ms ease-out, opacity 180ms ease-out;
 }
 .pack-stage.pulling .pack-shadow { filter: blur(16px); opacity: .62; }
-.pack-artwork {
+.pack-stage .pack-artwork {
   overflow: visible;
   border: 0;
   border-radius: 0;
@@ -539,14 +539,17 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 .reveal-game .reveal-stage .reveal-flip { transform-style: preserve-3d; }
 @keyframes scene-card-arrive {
-  from { filter: brightness(.85); transform: translateZ(0) rotateY(-1deg) rotateX(.6deg); }
-  to { filter: brightness(1); transform: translateZ(18px) rotateY(-1deg) rotateX(.6deg); }
+  from { opacity: .85; transform: translateZ(0) rotateY(-1deg) rotateX(.6deg); }
+  to { opacity: 1; transform: translateZ(18px) rotateY(-1deg) rotateX(.6deg); }
 }
 
 /* Reduced motion and the reflection switch stop moving, layered effects.
    The existing 1.9 s opening handoff and reveal locks remain untouched. */
 [data-card-fx="off"] .pack-specular,
 [data-card-fx="off"] .reveal-game .reveal-stage .card-foil { display: none; }
+[data-card-fx="off"] .booster-foil-shine { animation: none; }
+body:has(.reveal-overlay) .pack-specular,
+body:has(.booster-cinematic .booster-foil-open) .pack-specular { animation: none; }
 [data-card-fx="off"] .pack-3d-object {
   transform: perspective(1050px) rotateX(2deg) rotateY(-5deg)
     rotateZ(calc(1deg - var(--pull, 0) * 1.6deg))

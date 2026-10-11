@@ -1218,7 +1218,7 @@ input:focus-visible {
 .creator-card.variant-live { box-shadow: 0 0 0 1px rgba(0, 0, 0, .85), 0 0 22px -10px rgba(255, 75, 158, .45), 0 14px 26px -16px rgba(0, 0, 0, .95); }
 
 /* Le réglage « Reflets des cartes » (onglet Toi → menu) coupe **tout** le
-   reflet, pas seulement le gyroscope : si le joueur dit stop, la carte
+   reflet : si le joueur dit stop, la carte
    redevient une image fixe. */
 [data-card-fx="off"] .card-foil { display: none; }
 
@@ -1815,6 +1815,7 @@ input:focus-visible {
   background: var(--panel-2);
   cursor: pointer;
 }
+.profile-avatar:not(button) { cursor: default; }
 /* Le chiffre est un compteur : display condensée, tabulaire. */
 .profile-avatar span { font-family: var(--font-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .profile-card h1 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 700; line-height: 1; }
@@ -4283,25 +4284,6 @@ input:focus-visible {
 }
 .reveal-flip.rarity-epic { filter: drop-shadow(0 9px 20px rgb(239 118 134 / .24)); }
 .reveal-flip.rarity-legendary { filter: drop-shadow(0 13px 30px rgb(255 206 111 / .34)); }
-
-/* True GPU-lit folded foil; text and artwork remain native and sharp.
-   Gracefully degrades to the existing CSS varnish without WebGL. */
-.booster-foil-webgl {
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: .88;
-  transition: opacity 220ms ease-out;
-}
-.booster-foil-open .booster-foil-webgl { opacity: 0; }
-@media (prefers-reduced-motion: reduce) {
-  .booster-foil-webgl { opacity: .45; }
-}
 
 /* Visible physical depth on the edge of the flexible foil, not just a drop shadow. */
 .booster-foil-body {

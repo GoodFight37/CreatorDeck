@@ -33,11 +33,13 @@ test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", 
 });
 
 test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
   await gotoDeck(page);
   await expect(page.getByRole("heading", { name: "Un sachet. Cinq créateurs." })).toBeVisible();
   const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(open).toBeEnabled();
   await expect(open).toBeInViewport();
+  await expect(page.locator(".pack-stage .pack-artwork")).toBeInViewport();
   const hourglass = page.getByRole("button", { name: /Utiliser 1 sablier/ });
   await expect(hourglass).toBeVisible();
   const hourglassBox = await hourglass.boundingBox();

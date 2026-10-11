@@ -116,6 +116,7 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
 
   const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
     getComputedStyle(node, "::after").animationName,
   )).toBe("opening-foil-specular");
@@ -140,9 +141,11 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await cut.focus();
   await page.keyboard.press("Enter");
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "disabled" });
   await expect(dialog.locator(".foil-top-piece")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
+  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   await expect(page.locator(".booster-interactive")).toHaveCount(0);
 });
 
@@ -178,6 +181,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   expect(reducedPackOpacity[".foil-depth-side"]).toBe("0");
   expect(reducedPackOpacity[".foil-back-card"]).toBe("1");
   await expect(reveal).toBeVisible();
+  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   expect(await reveal.locator(".card-foil").first().evaluate((node) => getComputedStyle(node).display))
     .toBe("none");
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
@@ -233,6 +237,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(x + 167, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   expect(await dialog.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).animationName))
     .toBe("scene-cap-fold");
   expect(await dialog.locator(".foil-body-piece").evaluate((node) => getComputedStyle(node).animationName))

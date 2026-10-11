@@ -181,8 +181,9 @@ describe("les effets de révélation", () => {
     cinq[2]!.isNew = true;
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
-      <RevealOverlay cards={cinq as never} index={0} onNext={suivant} onClose={fermer} />,
+      <RevealOverlay cards={cinq as never} index={0} streakReward={{ day: 2, points: 0, hourglasses: 1, tokens: 0 }} onNext={suivant} onClose={fermer} />,
     );
+    expect(document.querySelectorAll(".streak-gain")).toHaveLength(0);
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
     // Pendant le verrou, le bouton est bien verrouillé — mais il **montre**
@@ -201,6 +202,8 @@ describe("les effets de révélation", () => {
     banc.ecran("12-perfect-range");
 
     banc.appuyer("Ranger dans le classeur");
+    expect(document.querySelectorAll(".streak-gain")).toHaveLength(1);
+    expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 sablier");
     expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("1 nouvelle");
     expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);

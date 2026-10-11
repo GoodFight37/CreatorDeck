@@ -819,7 +819,7 @@ export function CreatorDeckApp() {
       {oddsOpen ? (
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
-      {studioOpen ? <StudioSheet onClose={fermerFeuille(setStudioOpen)} /> : null}
+      {process.env.NODE_ENV !== "production" && studioOpen ? <StudioSheet onClose={fermerFeuille(setStudioOpen)} /> : null}
       {friendsOpen ? <FriendsSheet initialTab={friendsTab} onClose={fermerFeuille(setFriendsOpen)} /> : null}
       {marketOpen ? <MarketSheet onClose={fermerFeuille(setMarketOpen)} /> : null}
       {lastPackOpen ? <LastPackSheet onClose={fermerFeuille(setLastPackOpen)} /> : null}

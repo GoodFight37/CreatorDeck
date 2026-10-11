@@ -163,13 +163,13 @@
 .reveal-perfect .reveal-cinematic-field .reveal-field-corona {
   width: min(165vw, 1000px);
 }
-.reveal-perfect .perfect-banner {
+.reveal-overlay.reveal-perfect .perfect-banner {
   border-color: rgba(255, 212, 142, .65);
   color: #fff3df;
   background: linear-gradient(110deg, rgba(122, 72, 25, .45), rgba(58, 34, 48, .8));
 }
 /* A premium embossed back rather than a grey CD-labelled slab during flipping. */
-.reveal-dos {
+.reveal-overlay .reveal-dos {
   border: 2px solid rgba(255, 208, 171, .64);
   background:
     radial-gradient(ellipse at 50% 50%, rgba(128, 55, 120, .58), transparent 63%),

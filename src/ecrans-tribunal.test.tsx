@@ -294,6 +294,16 @@ describe("le Tribunal des Bannis", () => {
     expect(document.querySelector(".tribunal-alerte")).toBeNull();
   });
 
+  it("passe automatiquement au dossier suivant après la réaction", async () => {
+    const { presider } = await ouvrir();
+    presider();
+    banc.appuyer("Accorder la grâce");
+    expect(document.querySelector(".tribunal-reaction")).toBeTruthy();
+    await act(async () => { await vi.advanceTimersByTimeAsync(600); });
+    expect(document.querySelector(".tribunal-reaction")).toBeNull();
+    expect(document.querySelector(".tribunal-count")?.textContent).toContain("Dossier 2");
+  });
+
   it("s'ouvre depuis l'accueil, avec le compte des dossiers du jour", async () => {
     // Le branchement : l'accueil annonce la séance, et le bandeau ouvre bien
     // l'écran. C'est le seul test qui monte l'application entière.

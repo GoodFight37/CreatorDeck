@@ -130,13 +130,12 @@ describe("statut Scène et identité de collectionneur", () => {
 
   it("annonce un Tribunal déjà payé tout en gardant l'accès pour rejouer", async () => {
     const { onShowTribunal } = await drop(0, true);
-    const row = document.querySelector<HTMLButtonElement>(".tribunal-row")!;
-    expect(row.textContent).toContain("Séance déjà récompensée · tu peux rejouer");
+    expect(document.querySelector(".tribunal-row")).toBeNull();
     const objective = document.querySelector<HTMLButtonElement>(".daily-goal")!;
     expect(objective.textContent).toContain("Juge 5 dossiers");
     expect(objective.textContent).toContain("Séance déjà récompensée · tu peux rejouer");
     expect(objective.textContent).not.toContain("récompense à réclamer");
-    row.click();
+    objective.click();
     expect(onShowTribunal).toHaveBeenCalledOnce();
   });
 

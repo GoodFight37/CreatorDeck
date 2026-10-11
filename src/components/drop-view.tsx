@@ -262,7 +262,7 @@ export function HomeView({
           </button>
         {/* Le Tribunal des Bannis : l'accroche du jour. Le compte dit la
             vérité — il reste tant d'appels à juger, et pas un de plus. */}
-        <button
+        {dailyMission?.id !== "tribunal" ? <button
           type="button"
           className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
           onClick={onShowTribunal}
@@ -285,7 +285,7 @@ export function HomeView({
           </span>
             {tribunalRestants > 0 ? <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b> : null}
           <ChevronRight size={14} />
-        </button>
+        </button> : null}
       </section>
 
       {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
@@ -475,7 +475,7 @@ export function HomeView({
       <details className="drop-secondary">
         <summary>Progression, taux et activités <ChevronRight size={15} /></summary>
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
-        <button type="button" className="text-link" onClick={onShowOdds}>Taux de drop publiés <ChevronRight size={15} /></button>
+        <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (
           <button
             type="button"
