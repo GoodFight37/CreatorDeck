@@ -1,3 +1,12 @@
+## 11 octobre 2026 — préparation de l’application 0047
+
+Blocage CI reproduit : les tests cadeau/sablier exigeaient un cloud alors que
+le job navigateur n’en configurait aucun. Scénarios intégrés à la sélection
+cloud simulée, sans retrait d’assertions ni modification SQL/workflow. Six
+parcours cloud passent localement ; dry-run production 38139346769 réussi.
+Malik accepte explicitement l’absence de sauvegarde ; aucune migration
+appliquée à ce stade. Suite générale 42/42 (6 cloud ignorés), typecheck/lint réussis ; CI et application restent à compléter dans la passation.
+
 ## 11 octobre 2026 — sabliers reliés à la réserve serveur
 
 Code [`aded8ff`](https://github.com/GoodFight37/CreatorDeck/commit/aded8ffa83446544065225e05922a42e5073be55) publié sur main,

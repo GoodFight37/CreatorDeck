@@ -1,3 +1,13 @@
+## Reprise d’application 0047 — 11 octobre 2026
+
+- [x] Absence de sauvegarde explicitement acceptée par Malik ; cible CreatorDeck et SQL additif relu.
+- [x] Dry-run réel réussi sur 9788208 : run 38139346769, aucune migration appliquée.
+- [x] Blocage K-032 reproduit ; correctif E2E cloud 6/6 localement, assertions conservées.
+- [ ] Publication du correctif, CI complète verte sur le nouveau SHA, dry-run courant.
+- [ ] Application manuelle ciblée 0047 puis vérification de l’exécution et essai téléphone.
+
+Voir le checkpoint courant pour preuves, limites et autorisation.
+
 ## Sabliers en ligne — correctif du 11 octobre 2026
 
 - [x] Origine retrouvée : `5c120f3`, passage de la réserve au serveur.

@@ -1,3 +1,29 @@
+## Reprise 0047 — correctif CI et dry-run — 11 octobre 2026
+
+- Malik demande de faire toutes les étapes proposées, y compris publication du correctif CI et application ciblée après contrôles. Il confirme CreatorDeck, l’absence de sauvegarde Supabase sur son forfait gratuit et accepte explicitement le risque de perte des données actuelles. Cette consigne remplace le blocage sauvegarde de la section précédente ; aucune sauvegarde/restauration ne peut être annoncée disponible.
+- Base GitHub vérifiée : `97882085cd46ec314a543081f7d426ff6df18339`, branche locale `work`, distant main stable, aucun autre changement distant observé. Publication sur main comprise dans la reprise demandée ; aucun worktree, merge de PR ou historique réécrit.
+- 0047 relue : aucune suppression, remise à zéro ou modification de lignes à l’installation. Ajout registre/fonctions/trigger/droits ; DROP TRIGGER remplace seulement son propre trigger. ON DELETE CASCADE ne s’exécute que lors d’une suppression ultérieure de pack_state. RPC use_hourglass modifie le solde/la réserve seulement lors de son appel. Aucune migration SQL ou baseline modifiée dans cette reprise.
+- K-032 reproduit : `npm run e2e -- e2e/hourglass-online.spec.ts e2e/onboarding-gift.spec.ts --project=bureau --timeout=20000 --reporter=line` sans variables publiques → code 1, 2 échecs (tutoriel présent / cadeau absent). Correctif : helper cloudUrl partagé, chargement des fichiers/env comme Next dev, skip explicite sans cloud ; noms « avec le serveur » sélectionnés par le job cloud existant. Aucune assertion retirée, workflow inchangé.
+- Scénarios cloud : `NEXT_PUBLIC_SUPABASE_URL=https://e2e.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=local-e2e-placeholder-key-01234567890123456789 XDG_CONFIG_HOME=/tmp/creatordeck-xdg PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright NEXT_TELEMETRY_DISABLED=1 npm run e2e -- --grep 'avec le serveur' --reporter=line` → code 0, **6/6** (tirage/cadeau/sablier × bureau/téléphone simulé), RPC factices uniquement.
+- Contrôle ciblé des deux nouveaux tests sans cloud → code 0, **4 ignorés**, aucune réussite fonctionnelle revendiquée. Typecheck, lint et diff-check : code 0. Suite générale : `XDG_CONFIG_HOME=/tmp/creatordeck-xdg PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright NEXT_TELEMETRY_DISABLED=1 npm run e2e -- --reporter=line` → code 0, **42 réussis / 6 cloud ignorés**, 1,7 min. Les six cloud ont passé séparément avec configuration factice.
+- Dry-run réel [38139346769](https://github.com/GoodFight37/CreatorDeck/actions/runs/38139346769), main `9788208` → **success**, étape de connexion/projet/historique exécutée et réussie, CLI d’application ignoré. Cible contrôlée par le script : `yzxchpybqrfegvecihxf` ; seul candidat nouveau hors baseline : 0047. Logs détaillés restent refusés par le proxy ; preuve par statut/étapes du workflow et script exact lu, aucun accès aux secrets.
+- Prochaine étape : publier le correctif et ce checkpoint après contrôles locaux ; attendre les quatre jobs CI du nouveau SHA, refaire un dry-run sur ce SHA stable, puis workflow main dry_run=false / approve_manual=true. Ne pas appliquer une autre migration ni réparer l’historique. La vérification sur téléphone réel et la version servie restent distinctes.
+- Checkpoint préparé pour publication avec le correctif ; son SHA se retrouve par `git log -1 --format=%H -- docs/agent-handoff.md`. Les sections précédentes sont historiques.
+
+---
+
+## Reprise 0047 suspendue avant application — 11 octobre 2026
+
+- Demande : continuer selon le checkpoint GitHub. Dernière consigne de Malik : **ne pas appliquer la migration** ; sauvegarde récente/restaurable non confirmée, fournir les vérifications à effectuer.
+- GitHub lu et fetché : main `97882085cd46ec314a543081f7d426ff6df18339`, seule branche distante. Checkout propre avant reprise, branche locale `work`, mise à jour fast-forward depuis `39d0625` ; aucun fichier utilisateur écrasé. Aucune édition de main, aucun push, workflow déclenché, migration, repair ou déploiement.
+- API GitHub accessible (HTTP 200). Vérification run [38136289714](https://github.com/GoodFight37/CreatorDeck/actions/runs/38136289714) : SQL jetable, qualité/build et cloud simulé réussis ; navigateur Playwright en échec. Mises à jour Supabase suivantes skipped. Logs refusés par le proxy ; annotations donnent seulement exit code 1. Hypothèse non reproduite : tests cadeau/sablier exécutés dans le job sans configuration cloud factice. Ne pas présenter cette hypothèse comme cause prouvée.
+- `node scripts/supabase-deploy.mjs --check` : code 0 ; `node scripts/supabase-deploy.test.mjs` : 21/21, code 0, aucun accès production. `npm ci --cache /workspace/.npm --no-audit --no-fund` : code 0, lockfile inchangé. Installation Chromium/FFmpeg dans le cache local ; téléchargement headless shell interrompu après consigne utilisateur, aucun E2E exécuté. Aucun changement produit/SQL/workflow.
+- Référence dans le dépôt : `yzxchpybqrfegvecihxf`. La réponse utilisateur contient `yzxchpybqrfegecihxf` : comparer la référence exacte dans le tableau de bord ; ne pas substituer silencieusement la cible.
+- Prochaine action opérateur : Supabase CreatorDeck → Database → Backups ; vérifier une sauvegarde terminée, sa date UTC et le mode de récupération proposé (daily/PITR), ou établir un dump complet et tester sa restauration dans une base isolée. Ne pas cliquer Restore sur la production pour tester. En l'absence de point récupérable confirmé, aucune application de 0047. Ensuite résoudre la CI navigateur, vérifier à nouveau cible/schéma/historique et plan limité à 0047 avant toute nouvelle autorisation d'application.
+- Checkpoint **local uniquement**, non commité/non publié ; réservation libérée. Les preuves antérieures ci-dessous restent historiques.
+
+---
+
 ## Checkpoint courant — sabliers reliés à la réserve en ligne — 11 octobre 2026
 
 Malik a autorisé le correctif et sa publication sur `main`, dans ce checkout

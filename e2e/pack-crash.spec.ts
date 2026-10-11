@@ -1,7 +1,5 @@
 import { type Page } from "@playwright/test";
-import { expect, test, gotoDeck } from "./fixtures";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 
 /**
  * Le contrat « un tirage ne se perd pas ».
@@ -24,20 +22,6 @@ import { join } from "node:path";
 
 const SAVE_KEY_PREFIX = "creatordeck.save.v";
 const SESSION_KEY = "creatordeck.cloud.session";
-
-/** Le `.env.local` du joueur, s'il existe : sans lui, pas de cloud à tester. */
-function cloudUrl(): string | null {
-  for (const file of [".env.local", ".env"]) {
-    try {
-      const content = readFileSync(join(process.cwd(), file), "utf8");
-      const match = content.match(/^NEXT_PUBLIC_SUPABASE_URL\s*=\s*"?([^"\n]+)"?/m);
-      if (match?.[1]) return match[1].trim();
-    } catch {
-      // Pas de fichier : on essaie le suivant.
-    }
-  }
-  return null;
-}
 
 /** Ouvre le jeu et attend que le bouton d'ouverture soit là. */
 async function openDeck(page: Page, tutorial = true): Promise<void> {

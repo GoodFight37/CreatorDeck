@@ -1,8 +1,9 @@
-import { expect, test } from "./fixtures";
+import { expect, test, cloudUrl } from "./fixtures";
 
 const USER = "11111111-1111-4111-8111-111111111111";
 
-test("sablier en ligne : réponse perdue, rejeu unique et réserve conservée après rechargement", async ({ page }) => {
+test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et réserve conservée après rechargement", async ({ page }) => {
+  test.skip(!cloudUrl(), "Ce scénario demande le cloud configuré ; exécuté avec les RPC simulées dans le job cloud.");
   const now = Date.now();
   let state: Record<string, unknown> = {
     version: 9, playerId: USER, createdAt: now, updatedAt: now,

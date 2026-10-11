@@ -1,10 +1,11 @@
-import { expect, test } from "./fixtures";
+import { expect, test, cloudUrl } from "./fixtures";
 
 const SESSION_KEY = "creatordeck.cloud.session";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
 const GIFT_MESSAGE = "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.";
 
-test("tutoriel puis cadeau unique : les cinq boosters cadeau s'ouvrent sans nouveau claim", async ({ page }) => {
+test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'ouvrent sans nouveau claim", async ({ page }) => {
+  test.skip(!cloudUrl(), "Ce scénario demande le cloud configuré ; exécuté avec les RPC simulées dans le job cloud.");
   let tutorialCompleted = false;
   let giftClaimed = false;
   let giftRemaining = 5;
