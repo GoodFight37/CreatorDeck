@@ -752,6 +752,10 @@ describe("store cloud", () => {
     expect(applied.at(-1)?.cards.every((card) => card.id.startsWith("5e2f0000-"))).toBe(true);
     expect(applied.at(-1)?.packs).toBe(2);
     expect(applied.at(-1)?.openings).toBe(4);
+    // La mission calculée pour le Live Drop survit à l'adoption de la
+    // sauvegarde serveur, qui n'enregistre pas les compteurs de mission.
+    expect(applied.at(-1)?.missions.pack).toBe(1);
+    expect(applied.at(-1)?.missionDay).toBe(gameDay(T0 + 60_000));
     // Le tirage n'est **plus** poussé : le serveur l'a déjà écrit. Un envoi
     // forcé ici écraserait la collection d'un autre appareil avec une version
     // d'avant le tirage.
