@@ -1,3 +1,20 @@
+## UX-03 — activité sociale visible depuis le Drop — 11 octobre 2026
+
+Base propre vérifiée `e3de716b563c99fc0753dc1e7c5749b297d559f8`, `work` égale
+à `origin/main`. Le nombre d’amis ayant ouvert récemment était déjà calculé,
+mais le CTA vers le Carnet se trouvait dans le repli « Progression, taux et
+activités ». Déplacement seul : ligne conditionnelle sous le Paquet Scène,
+visible hors repli, même action vers le Carnet. Rien n’apparaît à zéro. La
+vitrine du profil reste visible en haut de Toi ; aucun badge ou mécanisme serveur
+n’est ajouté.
+
+Vérifications déjà exécutées après la modification :
+`npm run ecrans -- src/ecrans-scene-profile.test.tsx` **7/7** ; `npm run
+typecheck` et ESLint ciblé code 0. `git -c core.whitespace=cr-at-eol diff --check`
+code 0. CI GitHub post-publication reste à attendre. Aucun SQL, donnée ou
+récompense modifié. Le test physique du sablier confirmé par Malik est noté dans
+le checkpoint K-031 ci-dessous.
+
 ## K-031 — ancre de recharge corrigée et téléphone vérifié — 11 octobre 2026
 
 Base vérifiée `ebed1aea3136b3fdca7ec088f3835ed83398ec8a`, branche `work` égale

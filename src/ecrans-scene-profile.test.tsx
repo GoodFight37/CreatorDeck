@@ -22,20 +22,31 @@ describe("statut Scène et identité de collectionneur", () => {
   beforeEach(() => { banc = creerBanc(); banc.preparer(); mocked.cloud = { ...EMPTY_CLOUD_STATE, configured: true, userId: "joueur" }; vi.clearAllMocks(); });
   afterEach(() => banc.nettoyer());
 
-  async function drop() {
+  async function drop(friendsOpening = 0) {
     const onOpen = vi.fn();
+    const onShowInbox = vi.fn();
     const noop = () => {};
-    await banc.monter(<HomeView game={getGameView(createInitialState(NOW), NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={onOpen} sceneBusy={false}
+    await banc.monter(<HomeView game={getGameView(createInitialState(NOW), NOW)} friendsOpening={friendsOpening}
+      onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop} onOpenScene={onOpen} sceneBusy={false}
       onUseHourglass={noop} onShowOdds={noop} onShowMissions={noop} onShowAtelier={noop} onShowArena={noop}
       onShowTribunal={noop} tribunalRestants={5} tribunalClose={false} opening={false} usingHourglass={false}
       now={NOW} serverReserve needsAccount={false} />);
-    return { onOpen, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
+    return { onOpen, onShowInbox, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
+
+  it("surface les ouvertures récentes des amis sans replier l’accès au Carnet", async () => {
+    const { onShowInbox } = await drop(2);
+    const friends = document.querySelector<HTMLButtonElement>(".friends-row")!;
+    expect(friends.textContent).toContain("2 amis ont ouvert un booster");
+    expect(friends.closest("details")).toBeNull();
+    friends.click();
+    expect(onShowInbox).toHaveBeenCalledOnce();
+  });
 
   it("ne propose aucune ouverture avant le statut serveur", async () => {
     mocked.cloud.sceneStatusLoading = true;
     const { button } = await drop();
+    expect(document.querySelector(".friends-row")).toBeNull();
     expect(button.disabled).toBe(true);
     expect(document.querySelector(".scene-state")?.textContent).toBe("Vérification…");
     expect(button.closest("details")).toBeNull();

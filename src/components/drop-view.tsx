@@ -445,28 +445,28 @@ export function HomeView({
         </button>
       </section>
 
+      {friendsOpening > 0 ? (
+        <button
+          type="button"
+          className="pity-row friends-row"
+          onClick={onShowInbox}
+          aria-label={`Ouvrir le carnet : ${friendsOpening} ami${
+            friendsOpening > 1 ? "s ont" : " a"
+          } ouvert un booster il y a moins d'une heure`}
+        >
+          <Users size={14} />
+          <span>
+            {friendsOpening} ami{friendsOpening > 1 ? "s ont" : " a"} ouvert un booster · moins
+            d&apos;une heure
+          </span>
+          <ChevronRight size={14} />
+        </button>
+      ) : null}
+
       <details className="drop-secondary">
         <summary>Progression, taux et activités <ChevronRight size={15} /></summary>
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux de drop publiés <ChevronRight size={15} /></button>
-        {friendsOpening > 0 ? (
-          <button
-            type="button"
-            className="pity-row friends-row"
-            onClick={onShowInbox}
-            aria-label={`Ouvrir le carnet : ${friendsOpening} ami${
-              friendsOpening > 1 ? "s ont" : " a"
-            } ouvert un booster il y a moins d'une heure`}
-          >
-            <Users size={14} />
-            <span>
-              {friendsOpening} ami{friendsOpening > 1 ? "s ont" : " a"} ouvert un booster · moins
-              d&apos;une heure
-            </span>
-            <ChevronRight size={14} />
-          </button>
-        ) : null}
-
         {retiredLeft > 0 ? (
           <button
             type="button"

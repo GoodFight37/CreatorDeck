@@ -1,3 +1,11 @@
+## Présence sociale dans le Drop — 11 octobre 2026
+
+Le compteur conditionnel d’amis ayant ouvert un booster dans la dernière heure
+est maintenant visible directement sous le Paquet Scène, avec accès au Carnet ;
+il n’est plus caché dans le panneau secondaire. À zéro, aucune ligne n’apparaît.
+Vitrine du profil inchangée, aucun système social ou SQL ajouté. Test DOM ciblé
+7/7, typecheck/ESLint/diff-check verts ; CI post-publication à relever.
+
 ## K-031 — ancre de recharge ordinaire — 11 octobre 2026
 
 Migration additive 0049 remplace `_pack_refresh` : l’ancre avance du nombre
