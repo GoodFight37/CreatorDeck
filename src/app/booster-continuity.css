@@ -311,13 +311,13 @@ html:has(.booster-presentation) { overflow: hidden; }
   z-index: 8;
   inset: 0;
   border-radius: 10px;
+  clip-path: inset(0 round 10px);
   pointer-events: none;
-  opacity: .3;
-  background: linear-gradient(108deg, transparent 35%, rgb(255 242 220 / .04) 42%,
-    rgb(255 235 213 / .42) 49%, rgb(255 205 225 / .1) 54%, transparent 62%);
+  opacity: .18;
+  background: linear-gradient(108deg, transparent 30%, rgb(255 242 220 / .03) 43%,
+    rgb(255 235 213 / .3) 49%, rgb(255 205 225 / .07) 55%, transparent 67%);
   mix-blend-mode: screen;
-  transform: translateX(-74%);
-  animation: opening-foil-specular 3.8s cubic-bezier(.3, 0, .2, 1) infinite;
+  animation: opening-foil-specular 1.3s ease-out 1 both;
 }
 .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::after {
   content: "";
@@ -327,10 +327,9 @@ html:has(.booster-presentation) { overflow: hidden; }
   animation: foil-wrapper-weld-fade 900ms ease-out both;
 }
 @keyframes opening-foil-specular {
-  0%, 10% { opacity: 0; transform: translateX(-74%); }
-  24% { opacity: .34; }
-  66% { opacity: .22; transform: translateX(18%); }
-  84%, 100% { opacity: 0; transform: translateX(74%); }
+  0% { opacity: 0; }
+  35% { opacity: .18; }
+  100% { opacity: .09; }
 }
 .home-view .pack-stage .pack-shadow {
   width: 198px;
@@ -637,4 +636,15 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before { display: none; }
   .booster-cinematic.booster-presentation .booster-physical-scene::after { display: none; }
   .reveal-game .reveal-stage .reveal-flip { animation: none; }
+}
+
+/* Specular is printed on the pack surface, never on the opened foil. */
+.booster-cinematic.booster-presentation .booster-physical-scene:is(.booster-foil-open, .is-ripped)::after,
+.booster-cinematic.booster-presentation .booster-physical-scene:is(.booster-foil-open, .is-ripped) .pack-specular,
+.booster-cinematic.booster-presentation .booster-physical-scene:is(.booster-foil-open, .is-ripped) .booster-foil-shine {
+  animation: none;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic.booster-presentation .pack-specular { animation: none; }
 }
