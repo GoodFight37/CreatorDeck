@@ -1,3 +1,31 @@
+## Portraits du Top 50 — recherche de sources alternatives (12 octobre 2026)
+
+- Malik souhaite remplacer en priorité les portraits des grands créateurs ; les
+  petits restent provisoirement avec les images actuelles. Il veut des images
+  individuelles plus intéressantes que les avatars Twitch, et pouvoir ajuster
+  une image par créateur ensuite.
+- Scan local de `public/creators/` : 1 000 fichiers, tous décodables et sortis
+  en 600×600. Le score Laplacien classe des candidats peu détaillés mais ne
+  prouve pas la pixellisation : le contenu (logos, dessins, memes, photos de
+  groupe, portraits) change fortement le score. Une planche du Top 50 a été
+  inspectée ; le besoin inclut la cohérence/choix des images, pas seulement le
+  flou.
+- Recommandation convenue : rechercher des portraits individuels issus de pages
+  officielles/sites de presse pour les 50 premiers du classement, garder les
+  petites chaînes inchangées, valider visuellement avant élargissement. Garder
+  chaque source et laisser un remplacement manuel par créateur.
+- Blocage observé : l’API Openverse répond au proxy par HTTP CONNECT 403 ; aucun
+  outil de recherche web n’est disponible dans cette session et seuls les hôtes
+  autorisés par l’environnement sont accessibles. Aucune configuration réseau
+  modifiée, aucune image téléchargée ou remplacée. Le site/source exact attendu
+  de Malik pourra servir de point d’entrée ; l’accès au domaine devra être
+  permis explicitement avant extraction.
+- Suite : ouvrir l’accès ciblé à une source ou recevoir les fichiers/URLs
+  sélectionnés ; rechercher les 50 images, noter provenance/licence, produire
+  une planche de validation, puis ajouter des overrides manuels sans écraser
+  les fichiers Twitch par défaut. Aucun changement applicatif ni test produit
+  dans cette passe.
+
 ## Reflet du sachet, continuité et pity — 11 octobre 2026
 
 - Demande basée sur la vidéo jointe : rendre le reflet foil collé au contour du

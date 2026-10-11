@@ -4,6 +4,8 @@ Code produit : `1439e44de55272a7accbceef9b66758e0ed60cbb` sur `main`. CI [`38178
 
 ### Plan actif
 
+- **Portraits alternatifs des grands créateurs (12 octobre)** : lot pilote proposé pour les 50 premiers, puis revue avant extension ; garder les petits avec leurs assets actuels et permettre le remplacement individuel. Inventaire local : 1 000 WebP 600×600 décodables, score de netteté seulement heuristique, planche Top 50 montrant des styles hétérogènes. Recherche externe bloquée par le proxy sur Openverse (HTTP CONNECT 403) ; aucune image ou configuration réseau modifiée. Voir la passation courante.
+
 - **Reflet foil / continuité / pity (11 octobre)** : terminé, publié `1439e44`, CI `38178996093` verte. Le vrai portrait SolaryHS reste en attente d’une source d’image autorisée (K-044). Pas de changement SQL.
 
 - **Ergonomie courte et geste de révélation (11 octobre)** : compacter les
