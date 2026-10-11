@@ -1,4 +1,4 @@
-## Tri documentaire — état courant vérifié le 11 octobre 2026
+## Archive — tri documentaire avant les retours après publication, 11 octobre 2026
 
 `main` et `origin/main` étaient au même SHA
 `980bdf8bc9f12f995702abbdd2270f429927d7aa` au début du tri. CI
@@ -20,7 +20,7 @@ K-005, K-006, K-012, K-020/21/27/28/36/37/38 sur cette liste ; l’ancien tablea
 de décisions de l’atelier, la revue externe et les pistes « Ta chaîne » sont
 marqués historiques ; le périmètre indique le vrai statut des PR et migrations.
 Les décisions D-022/023/024/032/034/035/048 reflètent leur issue réelle.
-La réponse A–F de Malik est attendue. `git diff --check` réussi. CI
+À cette date, la réponse A–F de Malik était attendue. `git diff --check` réussi. CI
 `38165486381` est verte sur `b3828d5` (quatre jobs). Le SHA du commit de ce checkpoint se consulte dans
 `git log -1 --format=%H -- docs/agent-handoff.md` après publication.
 
@@ -1177,7 +1177,26 @@ L'utilisateur a fourni `audit-1000.txt` après `git pull` du commit `7da3d1c301c
 
 # Passation opérationnelle CreatorDeck
 
-## Checkpoint courant — sachet compact et appui accueil, 10 octobre 2026, Europe/Paris
+## Checkpoint courant — retours après publication, 11 octobre 2026, Europe/Paris
+
+Malik a confirmé dans la conversation : défilement sans ouverture accidentelle
+(K-036), progression de l’objectif après Live Drop (K-028), cadeaux restants
+sans toast gênant (K-020/K-027) et visibilité des changements récents dans
+l’application (K-003). Pour le Paquet Scène (K-037), la fausse disponibilité et
+le refus clignotant sont corrigés ; reste une demande UX distincte : le texte
+« Reviens demain (nouvelle journée à 6 h UTC) » est jugé trop long et trop rouge.
+Ne pas traiter comme bug de disponibilité. Pour l’ouverture visuelle du booster
+(K-005/K-038), Malik demande une analyse externe par Grok avant de demander une
+modification ; avis subjectif encore ouvert, aucun résultat Grok connu.
+
+L’état produit décrit dans ce retour correspond au code `980bdf8` et au checkpoint
+documentaire `b3828d5` publiés sur `main` ; CI référencées vertes. Les notes de
+roadmap et de problèmes connus ont ensuite reçu les statuts ci-dessus dans le
+checkout local `d263756` et ses modifications non encore publiées. Pour tout
+travail ultérieur, vérifier l’état Git courant avant de supposer que ce dernier
+checkpoint documentaire a été publié.
+
+## Archive — sachet compact et appui accueil, 10 octobre 2026, Europe/Paris
 
 - Demande utilisateur après essai sur son téléphone : paquet d'ouverture trop
   grand, soudure difficile à atteindre à une main ; appui sur le sachet de

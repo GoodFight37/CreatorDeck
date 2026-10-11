@@ -25,15 +25,16 @@ nouveau chantier.
 
 | Repère | Ce qu’il faut confirmer | Référence |
 |---|---|---|
-| A | Sur téléphone, rendu et rythme de l’ouverture ; sachet absent pendant la sortie, toucher et reflets à ton goût | K-005, K-038, VIS-01 |
-| B | Le défilement ne déclenche plus l’ouverture ; un appui explicite l’ouvre | K-012, K-036 |
-| C | Le Paquet Scène affiche sa disponibilité réelle et ne clignote plus avec un faux refus « déjà ouvert » | K-037 |
-| D | Après un Live Drop, l’objectif du jour progresse bien | K-028 |
-| E | Les boosters cadeau restants s’ouvrent sans message/toast qui masque le bouton ; le tutoriel cadeau reste cohérent | K-020, K-027 |
-| F | L’application testée affiche bien les changements publiés récemment | K-003 |
+| A | Avis visuel sur l’ouverture : Malik estime que le rendu doit encore être revu et demande un regard externe à Grok ; aucun correctif demandé pour l’instant | K-005, K-038, VIS-01 |
+| B | Confirmé par Malik : le défilement ne déclenche plus l’ouverture accidentelle | K-012, K-036 |
+| C | Comportement de disponibilité corrigé selon Malik ; reste à améliorer le libellé/présentation du retour « Reviens demain, nouvelle journée à 6 h UTC », jugé trop long et trop rouge | K-037 |
+| D | Confirmé par Malik : l’objectif progresse après un Live Drop | K-028 |
+| E | Confirmé par Malik : aucun toast gênant constaté à l’ouverture des cadeaux restants | K-020, K-027 |
+| F | Confirmé par Malik : les changements récents sont visibles dans l’application | K-003 |
 
-Le seul verdict subjectif important avant un autre polissage visuel est A ; B–F
-peuvent simplement rester inconnus tant qu’ils n’ont pas été testés. Le parcours
+Le seul verdict subjectif important avant un autre polissage visuel est A ; le
+retour C sur la formulation du Paquet Scène est à garder comme amélioration
+distincte du correctif fonctionnel. B, D, E et F sont confirmés. Le parcours
 sablier est déjà confirmé et ne figure plus dans cette liste.
 
 Les sections datées ci-dessous sont un journal de livraisons et d’observations,
