@@ -240,6 +240,11 @@ export function packActions(ctx: CloudStoreContext) {
           // remplaçant aussitôt l'état local par la réponse du tirage.
           ctx.deps.applyState({
             ...adoptedWithHourglasses,
+            // `open_pack()` renvoie la pity dérivée du journal, mais son blob
+            // de sauvegarde peut encore contenir la valeur locale précédente.
+            // Garder la réponse calculée du tirage évite de réafficher le
+            // compteur antérieur après avoir déjà annoncé son nouvel état.
+            pityCounter: applied.state.pityCounter,
             missionDay: applied.state.missionDay,
             missions: applied.state.missions,
           });

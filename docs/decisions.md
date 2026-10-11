@@ -496,3 +496,16 @@ déchirer » reste visible. Scan ciblé : 1 000 WebP décodés, seule source ver
 `diverron.webp`, déjà remplacée à l’affichage par le fallback existant. Aucun
 SQL, nouvelle monnaie, moteur ou règle de jeu. Adoptée à la demande du joueur ;
 preuves et limites dans la passation courante.
+
+
+## D-052 — 11 octobre 2026 : reflet borné et pity serveur après adoption
+
+Le reflet du sachet partage la silhouette polygonale du SVG, effectue un seul
+passage discret, et ne se relance pas pendant l’interaction, le reveal ou Perfect.
+La pile de cartes passe devant le corps du sachet mais reste sous son rabat jusqu’à
+la sortie. Après un tirage connecté, adopter le `pityCounter` calculé depuis le
+journal serveur même quand le blob de sauvegarde renvoyé est en retard. Les heures,
+le plafond, le tirage, la réserve et les autres règles restent inchangés.
+SolaryHS et trois autres fichiers sont des avatars génériques malgré des chemins
+valides : ne pas remplacer une identité par le portrait d’un autre créateur ;
+remplacement réel suspendu à des sources d’image autorisées.

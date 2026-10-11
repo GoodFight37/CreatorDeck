@@ -134,15 +134,32 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await expect(page.locator(".pack-stage .pack-specular")).toBeAttached();
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName))
     .toBe("pack-specular-pass");
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { iterations: style.animationIterationCount, clip: style.clipPath };
+  })).toMatchObject({ iterations: "1" });
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).clipPath))
+    .toContain("polygon(");
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).backgroundSize))
+    .toBe("230% 100%");
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
 
   const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
   await expect(dialog).toBeVisible();
+  await expect(dialog.locator(".booster-opening-instruction"))
+    .toHaveText("GLISSE SUR LA BANDE STRIÉE EN HAUT");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
     getComputedStyle(node, "::after").animationName,
   )).toBe("opening-foil-specular");
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) => {
+    const style = getComputedStyle(node, "::after");
+    return { iterations: style.animationIterationCount, clip: style.clipPath };
+  })).toMatchObject({ iterations: "1" });
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
+    getComputedStyle(node, "::after").clipPath,
+  )).toContain("polygon(");
   const panel = await dialog.boundingBox();
   expect(panel).not.toBeNull();
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
@@ -164,6 +181,23 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await cut.focus();
   await page.keyboard.press("Enter");
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
+    getComputedStyle(node, "::after").animationName,
+  )).not.toBe("opening-foil-specular");
+  await page.waitForTimeout(700);
+  const emergingLayers = await dialog.evaluate((node) => {
+    const z = (selector: string) => Number(getComputedStyle(node.querySelector(selector)!).zIndex);
+    return {
+      chamberOverBody: z(".foil-card-chamber") > z(".foil-body-piece"),
+      capOverChamber: z(".foil-top-piece") > z(".foil-card-chamber"),
+      backs: Number(getComputedStyle(node.querySelector(".foil-back-card")!).opacity),
+      pouch: Number(getComputedStyle(node.querySelector(".foil-body-piece")!).opacity),
+    };
+  });
+  expect(emergingLayers.chamberOverBody).toBe(true);
+  expect(emergingLayers.capOverChamber).toBe(true);
+  expect(emergingLayers.backs).toBeGreaterThan(0);
+  expect(emergingLayers.pouch).toBeGreaterThan(0);
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "disabled" });
   await expect(dialog.locator(".foil-top-piece")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))

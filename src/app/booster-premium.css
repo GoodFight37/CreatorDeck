@@ -377,13 +377,13 @@
     rgba(236, 128, 166, .13), transparent 83%);
 }
 .booster-cinematic .foil-card-chamber {
-  z-index: 2;
+  z-index: 4;
   inset: 17% 17% 13%;
   opacity: 0;
   transform: translateY(22%);
   transform-style: preserve-3d;
 }
-.booster-cinematic .foil-body-piece { z-index: 4; clip-path: inset(15.45% 0 0); }
+.booster-cinematic .foil-body-piece { z-index: 3; clip-path: inset(15.45% 0 0); }
 .booster-cinematic .foil-top-piece { z-index: 5; clip-path: inset(0 0 84.55%); transform-origin: 13% 15%; }
 .booster-cinematic .foil-printed-art {
   width: 100%;

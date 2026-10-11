@@ -1,37 +1,47 @@
+## Reflet du sachet, continuité et pity — 11 octobre 2026
+
+- Demande basée sur la vidéo jointe : rendre le reflet foil collé au contour du
+  sachet, arrêter le balayage perpétuel, faire émerger les dos depuis l’enveloppe,
+  corriger le compteur pity après tirage serveur et vérifier les sabliers. Pas de
+  WebGL/Three.js, SQL, changement de règles ni refonte Drop.
+- Départ vérifié : branche locale `work`, HEAD distant `main` `ce729b1`. Le remote
+  contenait un commit CSS provisoire et son revert (`00ef8c2`, `ce729b1`) ; leur
+  diff net est vide par rapport au checkpoint documentaire `f66c36a`. Avance
+  intégrée par fast-forward, sans reset ni réécriture.
+- Modifications locales : CSS du reflet limité au même polygone que le chemin de
+  `live-foil.svg`; passage discret unique de 1,25–1,35 s, coupé en mouvement
+  réduit, Reflets off, geste, ouverture, reveal ou Perfect. Chamber relevée au
+  dessus du corps et maintenue sous le rabat pour que la pile commence à sortir
+  avant que l’enveloppe se retire. Consigne clarifiée sur la soudure. À
+  `openPack`, adoption du compteur pity serveur en même temps que la sauvegarde.
+- Pity reproduite : état local compteur 5 (7 à venir), réponse serveur après
+  tirage sans Légendaire = 6, sauvegarde RPC encore à 0. Avant le correctif,
+  adoption de cette sauvegarde écrasait le compteur visible à 0 (12 à venir).
+  Nouveau test vérifie aussi la vue UI restante = 6. Sablier J2 vérifié dans les
+  tests existants : max local/serveur = 3 et `GameView.player.hourglasses` suit.
+- Vidéo vérifiée : attente immobile sur la soudure et carte #341 SolaryHS avec
+  silhouette violette vide. `creatorImage` construit bien
+  `/creators/solaryhs.webp`; le WebP décode mais contient le modèle-avatar
+  générique. Comparaison d’images sur les 1 000 WebP : aucun décodage raté ; seuls
+  `j0niq`, `solaryhs`, `toaststix`, `xari` correspondent au même modèle vide.
+  Impossible de fournir un vrai visage à partir de l’image disponible : garder
+  l’asset ouvert au lieu de substituer le logo d’un autre créateur. Il faudra une
+  source officielle pour fermer ce point.
+- Tests locaux : cloud store **158/158** ; E2E pack tear complet **30/30** avant
+  l’assertion finale de consigne, puis cas principal **2/2** après cette assertion
+  (bureau/téléphone simulé) ; typecheck, ESLint ciblé et diff-check code 0.
+  Capture visuelle intermédiaire contrôlée à 700 ms : rabat au-dessus des cartes,
+  cartes au-dessus du corps de l’enveloppe, enveloppe toujours visible.
+- Téléchargement GoFile bloqué par la politique réseau observée (domaine absent,
+  état réseau `unknown`) ; la vidéo jointe a permis l’analyse. Aucun contournement.
+  Aucune donnée, clé, migration ou règle de jeu modifiée.
+- Publication/CI de ces changements : à relever après commit/push normal autorisé.
+  Le portrait SolaryHS et les trois autres avatars génériques restent ouverts,
+  uniquement faute de sources d’image réelles.
+
 ## Ergonomie courte et swipe de révélation — 11 octobre 2026
 
-- Brief courant : réduire le bruit du Drop, remonter les cartes Binder, ajouter
-  le swipe après flip, rendre visible le résultat d’un sablier, regrouper Toi,
-  vérifier la continuité/les gestes, mouvement réduit, doublons CSS et portraits.
-  Les briefs déjà déclarés faits et tous les timings/règles restent hors scope.
-- Base vérifiée : branche locale `work`, distante `main`, départ propre et égaux
-  à `878f7e9e3d9bc792ad3f4c893728e03ca3b36d17`. Pas de changement de branche
-  distant pendant cette passe ; pas de SQL.
-- Modifications : `drop-view.tsx` n’affiche qu’une note de réserve contextuelle ;
-  succès sablier via la notice existante avec résultat 5/4 ou avance de 15 min.
-  Binder garde son action/choix et condense sa bannière ; swipe horizontal/haut
-  après face visible, sans Perfect, bouton conservé, inclinaison coupée pendant
-  le geste. Familles Toi mieux séparées. Feuilles CSS scindées par
-  `.booster-presentation`; mouvement réduit neutralise le reflet infini pré-open.
-  Séquence, artwork, timing de 1,9 s, règles, économiques et données inchangés.
-- Preuves locales : écrans Drop/Binder + effets reveal **28/28** ; TypeScript et
-  ESLint ciblés code 0 ; build statique sans configuration cloud code 0 ; E2E
-  mouvement réduit/continuité **4/4**, recul/relâchement mi-course **2/2** et
-  swipe réel après flip avec bouton **2/2** (bureau et téléphone simulé). Scan sharp de
-  `public/creators` : **1 000** WebP décodés, aucune erreur ; seul
-  `diverron.webp` majoritairement vert (87 % au filtre de repérage), déjà remplacé
-  par `/creators/diverron-fallback.svg` dans l’app et couvert par E2E.
-- CSS : comparaison PostCSS des sélecteurs complets entre `globals.css`,
-  `booster-premium.css`, `reveal-premium.css`, `booster-continuity.css` : zéro
-  doublon exact ; zéro nom de keyframes partagé. Les overrides de continuité sont
-  explicitement scopés à la scène de présentation.
-- Le contrôle GitHub du commit parent `878f7e9` est terminé avec succès : run
-  [`38175177087`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38175177087).
-- Publication/CI : encore à relever avant clôture ; aucun SHA de correction ni
-  résultat GitHub ne doit être affirmé avant push et vérification.
-- Prochaine action : finir les vérifications ciblées, `git diff --check`, faire
-  un commit explicite et push normal `work:main` selon l’autorisation permanente,
-  vérifier le SHA distant et les contrôles déclenchés, puis reporter leurs états.
+Lot précédent : code `674fc1d`, CI [`38176673799`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38176673799) verte (4/4 jobs). Le checkpoint documentaire est `f66c36a`. Drop/Binder compactés, swipe post-flip et notice de sablier ; l’heure, le Perfect et les règles de déchirure n’ont pas changé. Tests ciblés : écrans 28/28, E2E mouvement réduit/continuité 4/4, annulation mi-course 2/2, swipe 2/2 ; typecheck/lint/build statique verts. Validation physique téléphone non faite.
 
 ## Reprise cloud automatique — 11 octobre 2026
 

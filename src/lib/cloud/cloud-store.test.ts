@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { SEASONS } from "@/lib/seasons";
-import { SAVE_VERSION, createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
+import { SAVE_VERSION, createInitialState, getGameView, type OwnedCard, type PlayerState } from "@/lib/game-engine";
 import {
   CloudError,
   type CloudApi,
@@ -874,6 +874,47 @@ describe("store cloud", () => {
     expect(snapshot.isError).toBe(false);
   });
 
+  it("garde la pity du tirage serveur quand la sauvegarde adoptée est en retard", async () => {
+    const local = saveWith({ pityCounter: 5, updatedAt: T0 });
+    const { store, api, applied } = harness({ signedIn: true, local });
+    api.openPack.mockImplementationOnce(async () => ({
+      packs: 2,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 4,
+      cards: [
+        { creatorSlug: "kaicenat", rarity: "epic", variant: "standard", rareDrop: false },
+        { creatorSlug: "ibai", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+        { creatorSlug: "rubius", rarity: "rare", variant: "standard", rareDrop: false },
+      ],
+      pity: 6,
+      streak: 2,
+      pityHit: false,
+      jackpot: false,
+      streakReward: null,
+      save: remoteRow({
+        ...local,
+        pityCounter: 0,
+        packs: 2,
+        openings: 4,
+        cards: [
+          serverCard("kaicenat", "epic", "standard"),
+          serverCard("ibai", "rare", "standard"),
+          serverCard("ninja", "rare", "standard"),
+          serverCard("auronplay", "uncommon", "standard"),
+          serverCard("rubius", "rare", "standard"),
+        ],
+      }, SERVER_SAVE_AT),
+    }));
+
+    const outcome = await store.openPack();
+
+    expect(outcome.status).toBe("drawn");
+    expect(applied.at(-1)?.pityCounter).toBe(6);
+    expect(getGameView(applied.at(-1)!, T0 + 60_000).pity.remaining).toBe(6);
+  });
+
   it.each([
     ["la sauvegarde serveur ne contient pas le gain local", 2, 3],
     ["la sauvegarde serveur contient déjà le gain local", 3, 3],
@@ -923,6 +964,7 @@ describe("store cloud", () => {
     if (outcome.status !== "drawn") throw new Error("tirage attendu");
     expect(outcome.streakReward).toMatchObject({ day: 2, hourglasses: 1 });
     expect(applied.at(-1)?.hourglasses).toBe(expected);
+    expect(getGameView(applied.at(-1)!, T0).player.hourglasses).toBe(expected);
   });
 
   it("adopte les cartes d'une sauvegarde v8 sans effacer la séance locale v9", async () => {

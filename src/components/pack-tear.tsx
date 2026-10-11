@@ -65,7 +65,7 @@ export function PackTear({
       <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}>
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LES CARTES APPARAISSENT" : "PASSE TON DOIGT SUR LA SOUDURE"}
+          {opened ? "LES CARTES APPARAISSENT" : "GLISSE SUR LA BANDE STRIÉE EN HAUT"}
         </p>
         <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
           style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>

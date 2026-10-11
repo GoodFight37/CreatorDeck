@@ -1,5 +1,10 @@
 /* One stage, one card size and one focal point from the pouch to the reveal.
    Scoped to the game: the OBS presentation keeps its own 16:9 layout. */
+:root {
+  /* Same eight corners as the printed path in /packs/live-foil.svg (600×880). */
+  --live-foil-clip: polygon(4.167% 1.023%, 95.833% 1.023%, 98.5% 3.182%,
+    98.5% 96.705%, 95.333% 99.091%, 4.333% 99.091%, 1.5% 96.818%, 1.5% 3.182%);
+}
 .booster-presentation {
   --scene-height: max(100dvh, 520px);
   --scene-card-width: min(74vw, 370px, calc((var(--scene-height) - 280px) * .715));
@@ -75,7 +80,9 @@
   top: max(22px, calc(var(--scene-pack-center) - var(--scene-pack-height) / 2 - 48px));
   left: 16px;
   right: 16px;
-  font-size: 11px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: .08em;
   line-height: 1.5;
 }
 .booster-cinematic.booster-presentation .booster-premium-actions {
@@ -310,14 +317,15 @@ html:has(.booster-presentation) { overflow: hidden; }
   position: absolute;
   z-index: 8;
   inset: 0;
-  border-radius: 10px;
+  clip-path: var(--live-foil-clip);
   pointer-events: none;
-  opacity: .3;
+  opacity: .2;
   background: linear-gradient(108deg, transparent 35%, rgb(255 242 220 / .04) 42%,
-    rgb(255 235 213 / .42) 49%, rgb(255 205 225 / .1) 54%, transparent 62%);
+    rgb(255 235 213 / .34) 49%, rgb(255 205 225 / .08) 54%, transparent 62%);
+  background-size: 230% 100%;
+  background-position: 0% 50%;
   mix-blend-mode: screen;
-  transform: translateX(-74%);
-  animation: opening-foil-specular 3.8s cubic-bezier(.3, 0, .2, 1) infinite;
+  animation: opening-foil-specular 1250ms ease-out 120ms 1 both;
 }
 .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::after {
   content: "";
@@ -327,10 +335,10 @@ html:has(.booster-presentation) { overflow: hidden; }
   animation: foil-wrapper-weld-fade 900ms ease-out both;
 }
 @keyframes opening-foil-specular {
-  0%, 10% { opacity: 0; transform: translateX(-74%); }
-  24% { opacity: .34; }
-  66% { opacity: .22; transform: translateX(18%); }
-  84%, 100% { opacity: 0; transform: translateX(74%); }
+  0%, 12% { opacity: 0; background-position: 0% 50%; }
+  30% { opacity: .2; }
+  72% { opacity: .12; background-position: 58% 50%; }
+  100% { opacity: 0; background-position: 100% 50%; }
 }
 .home-view .pack-stage .pack-shadow {
   width: 198px;
@@ -401,20 +409,26 @@ html:has(.booster-presentation) { overflow: hidden; }
   box-shadow: inset 0 -2px rgb(0 0 0 / .55);
 }
 .pack-specular {
-  position: absolute; z-index: 2; inset: -15% -36%; display: block;
-  pointer-events: none; opacity: .52;
+  position: absolute; z-index: 2; inset: 0; display: block;
+  clip-path: var(--live-foil-clip);
+  pointer-events: none; opacity: .2;
   background: linear-gradient(108deg, transparent 37%, rgb(255 244 218 / .04) 43%,
-    rgb(255 229 206 / .5) 49%, rgb(255 205 225 / .12) 54%, transparent 62%);
+    rgb(255 229 206 / .34) 49%, rgb(255 205 225 / .08) 54%, transparent 62%);
+  background-size: 230% 100%;
+  background-position: 0% 50%;
   mix-blend-mode: screen;
-  transform: translateX(-76%) skewX(-9deg);
-  animation: pack-specular-pass 3.4s cubic-bezier(.3, 0, .2, 1) infinite;
+  animation: pack-specular-pass 1350ms ease-out 100ms 1 both;
 }
 @keyframes pack-specular-pass {
-  0%, 12% { opacity: 0; transform: translateX(-76%) skewX(-9deg); }
-  25% { opacity: .5; }
-  64% { opacity: .3; transform: translateX(24%) skewX(-9deg); }
-  82%, 100% { opacity: 0; transform: translateX(76%) skewX(-9deg); }
+  0%, 12% { opacity: 0; background-position: 0% 50%; }
+  30% { opacity: .19; }
+  72% { opacity: .11; background-position: 58% 50%; }
+  100% { opacity: 0; background-position: 100% 50%; }
 }
+.pack-stage.pulling .pack-specular,
+body:has(.booster-cinematic.booster-presentation) .pack-specular,
+body:has(.reveal-overlay) .pack-specular,
+body:has(.perfect-banner) .pack-specular { animation: none; }
 
 /* A torn laminate hinges on its weld; light briefly shines through the cut. */
 .booster-cinematic.booster-presentation .foil-top-piece {

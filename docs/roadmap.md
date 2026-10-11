@@ -1,11 +1,10 @@
 ## État courant — 11 octobre 2026
 
-Code produit vérifié : `674fc1df26a5976b5c60c74852bb8b0061434fbf` sur `main`.
-CI GitHub `38176673799` : succès, quatre jobs (Playwright, unitaires/écrans/build,
-SQL jetable, cloud simulé). Vérification du 11 octobre 2026 ; voir la
-passation pour les contrôles locaux et les limites du test mobile simulé.
+Code produit avant ce lot : `ce729b1d440b09118e147a1866deb16cedfd3254` sur `main` ; le code produit est identique au commit vérifié `674fc1d` après revert net nul. CI `38176673799` verte, quatre jobs. Lot foil/pity actuel en cours localement ; SHA et CI de publication seront inscrits après push. Portraits manquants signalés dans K-044. Aucun changement SQL.
 
 ### Plan actif
+
+- **Reflet foil / continuité / pity (11 octobre)** : correction CSS et reprise de pity serveur implémentées localement ; tests ciblés verts. L’asset photo SolaryHS est un modèle-avatar générique, avec trois autres slugs identifiés ; vraie image source requise. Publication/CI en cours.
 
 - **Ergonomie courte et geste de révélation (11 octobre)** : compacter les
   informations près du CTA, remonter la grille Binder, ajouter le swipe après
