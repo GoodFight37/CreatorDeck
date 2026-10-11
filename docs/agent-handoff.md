@@ -1,3 +1,51 @@
+## Craft — aperçu utile avant dix doublons, 11 octobre 2026
+
+Demande Malik : enchaîner sur Craft pendant qu’il suit les contrôles Binder et
+renvoie les logs si nécessaire. Base propre `9635ad7529487cf6dca2b0a7d8f43f4d1c65f7ef`,
+branche work, main identique, aucune PR ouverte. Git fetch/API réussis, runtime
+connecté, réseau inchangé. Instructions AGENTS et mode économie conservés.
+Les contrôles Binder observés par API ont terminé **success** :
+[CI 38157114952](https://github.com/GoodFight37/CreatorDeck/actions/runs/38157114952),
+[Supabase 38157321349](https://github.com/GoodFight37/CreatorDeck/actions/runs/38157321349).
+Logs complets de ces runs non relus dans ce lot, pas de nouveaux compteurs annoncés.
+
+Avant dix copies recyclables : compteur/gate conservés, explication dernière
+copie gardée, solde actuel, valeur possible du recyclage groupé (hors Live),
+avertissement pour les Live à décider individuellement. Trois vrais aperçus de
+cartes Standard manquantes et artisanables, prix des métadonnées existantes,
+points encore nécessaires au solde actuel. Priorité au choix Binder ou à sa
+suggestion automatique ; si cette page n’a plus de manquantes artisanables,
+le texte l’annonce et propose d’autres cartes. Accès Binder pour choisir sa
+collection et retour Drop. Les aperçus n’ont aucun bouton d’achat/recyclage.
+À dix doublons, listes et actions existantes restent inchangées.
+
+Aucune règle d’économie modifiée, aucune migration nécessaire, aucun SQL de
+production lancé ; les contrôles SQL complets sont laissés à GitHub. Pas de
+changement Drop/tear/Perfect, son ou Reflets. K-031 séparé, téléphone physique
+et contenu Vercel servi non testés. Prochain chantier produit : identité du profil.
+
+Vérifications sur le diff basé sur 9635ad7 :
+- `npm run ecrans -- src/ecrans-atelier-preview.test.tsx src/ecrans-mille-cartes.test.tsx`
+  : **13/13** (5 nouveaux, 8 garde-fous de pagination/gate existants).
+- Après clarification du cas « page déjà réunie », retest
+  `npm run ecrans -- src/ecrans-atelier-preview.test.tsx` : **6/6**.
+- `npm run e2e -- e2e/craft-preview.spec.ts` : **2/2**, bureau/téléphone simulé,
+  neuf doublons, +108 points possibles pour neuf copies Standard communes,
+  aperçu sans dépense, navigation Binder/Craft/Drop, pas de débordement à 320/412 px.
+  Capture du panneau sur téléphone simulé inspectée.
+- Typecheck, ESLint ciblé, jargon et diff-check passent. Aucun audit général
+  ni répétition des suites SQL/build locales sans changement correspondant.
+
+Code et docs préparés dans un seul commit pour publication autorisée sur main.
+SHA : `git log -1 --format=%H -- docs/agent-handoff.md` ; comparer au main distant.
+Les nouvelles suites complètes CI/build/SQL sont confiées à GitHub et leur résultat
+n’est pas encore établi ici. L’agent transmet le lien et l’état observé après push,
+sans surveillance prolongée. Suivi :
+[Actions main](https://github.com/GoodFight37/CreatorDeck/actions?query=branch%3Amain).
+Malik ouvre le run Vérification, attend les quatre contrôles verts et transmet
+le nom/message d’un contrôle rouge. Le workflow Supabase automatique suit la CI ;
+aucun déploiement manuel ni replay de 0047/0048. Réservation libérée après publication.
+
 ## Binder — petites collections, 11 octobre 2026
 
 Demande Malik : commencer l’amélioration du Binder, puis Craft, puis identité du

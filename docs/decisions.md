@@ -383,3 +383,21 @@ Malik demande aussi le mode économie : tests adaptés, documentation dans le
 même commit, suites longues sur GitHub sans surveillance continue. L’agent
 transmet des liens et des instructions compréhensibles ; état pending conservé
 comme tel. Protections SQL/TLS/historique et autorisations existantes inchangées.
+
+## D-042 — 11 octobre 2026 : rendre Craft compréhensible avant le seuil
+
+Malik demande d’enchaîner sur Craft après le Binder. La progression existait,
+mais le panneau ne montrait ni la future carte ni l’utilité des doublons.
+Décision : conserver le seuil de dix copies recyclables et montrer trois aperçus
+Standard manquants, coûts et écart au solde actuel, plus la valeur estimée du
+recyclage groupé. Cette valeur suit duplicateGroups/unitValue existants et
+exclut les Live, comme bulkRecyclableIds. La dernière copie reste protégée.
+
+Priorité aux cartes artisanables de la collection Binder choisie, puis aux
+moins coûteuses ; sans choix, réutiliser la suggestion de page commencée. Une
+page déjà réunie ou sans manquante artisanable ne promet pas un achat ciblé :
+le texte annonce les autres idées. Les aperçus montrent le résultat Standard,
+ne sont pas des cartes possédées et ne déclenchent aucune dépense. Au-dessus
+du seuil les actions existantes sont conservées. Aucun taux, coût, gain ou SQL
+modifié. Accès Binder ajouté pour choisir la collection ; moteur/cloud inchangés.
+Validation DOM/navigateur ciblée dans la passation, pas de validation physique.

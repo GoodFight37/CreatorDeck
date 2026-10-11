@@ -1,3 +1,11 @@
+## 11 octobre 2026 — Craft avant déblocage
+
+Progression conservée, valeur des copies recyclables hors Live, trois vrais
+aperçus Standard avec coûts réels et priorité à la collection Binder. Navigation
+pour choisir sa collection ou revenir au Drop ; listes/actions inchangées à dix
+doublons. Aucun gain ni SQL ajouté. Tests locaux verts et suivi GitHub dans la
+passation ; identité du profil reste à faire.
+
 ## 11 octobre 2026 — Binder, collections de 12 cartes maximum
 
 Compteurs uniques par page, progression et noms manquants, choix par famille,

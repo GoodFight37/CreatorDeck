@@ -1,3 +1,11 @@
+## Craft — aperçu avant le seuil (11 octobre 2026)
+
+Seuil de dix doublons conservé, trois cartes manquantes à préparer avec les coûts
+réels. Les points du recyclage groupé annoncés excluent les Live. Si la page Binder
+choisie est complète ou uniquement non artisanable, les autres idées sont
+explicitement annoncées. Les aperçus ne dépensent rien. Vérifications locales
+vertes, nouvelles suites GitHub et téléphone réel restant à vérifier ; passation.
+
 ## Binder — validation des petites collections (11 octobre 2026)
 
 Compteurs calculés depuis les cartes présentes, aucun gain ajouté. Le premier

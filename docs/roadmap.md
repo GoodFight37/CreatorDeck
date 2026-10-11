@@ -1,3 +1,12 @@
+## Craft — préparer sa prochaine carte avant le seuil (11 octobre 2026)
+
+Lot préparé pour main : aperçu de trois cartes manquantes Standard, coûts réels,
+priorité à la collection Binder, valeur du recyclage groupé et explication des
+Live conservés. Seuil de dix copies recyclables inchangé ; aucun achat/recyclage
+avant déblocage. Local : 13 DOM puis 6 retests enrichis, 2 E2E réussis,
+typecheck/lint/jargon verts ; suites longues GitHub en suivi au joueur.
+Prochain lot : identité du profil. Preuves/limites dans la passation.
+
 ## Binder — collections courtes (11 octobre 2026)
 
 Lot préparé pour main : objectifs de 12 cartes maximum par famille, compteurs
@@ -6,8 +15,8 @@ conservée au démarrage. Local : 4 unitaires, 10 DOM, 8 E2E puis 2 retests cibl
 réussis ; suites GitHub laissées en suivi au joueur. Voir la passation.
 Critères : aucun doublon compté deux fois, pages limitées, choix retrouvé au
 rechargement, page complète explicite. Économie et paliers inchangés.
-Suite autorisée dans cet ordre : Craft utile avant le seuil, puis identité du
-profil ; ces deux lots ne sont pas implémentés par ce checkpoint.
+Craft avant le seuil est implémenté dans le checkpoint suivant ci-dessus ;
+identité du profil reste le prochain lot.
 
 ## K-036 — scroll et ouverture distincts
 
