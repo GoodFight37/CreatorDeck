@@ -2,7 +2,7 @@ import { act } from "react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { CREATORS } from "@/lib/catalog";
-import { SEASON_BY_ID } from "@/lib/seasons";
+import { BINDER_COLLECTION_BY_ID, BINDER_COLLECTIONS } from "@/lib/binder-collections";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { HomeView } from "@/components/drop-view";
 import { CollectionView } from "@/components/binder-view";
@@ -36,14 +36,14 @@ describe("le Binder guide la collection sans inventer de progression", () => {
 
   it("les doublons ne gonflent pas les pages et leurs filtres ne montrent que les manquantes", async () => {
     const family = CREATORS.filter((creator) => creator.region === "S01").slice(0, 2);
-    const { game } = await collection([family[0].slug, family[0].slug, family[1].slug]);
+    await collection([family[0].slug, family[0].slug, family[1].slug]);
     const goal = document.querySelector<HTMLButtonElement>(".binder-next-pages > button")!;
-    const season = game.seasons.find((entry) => goal.textContent?.includes(entry.name))!;
-    expect(goal.textContent).toContain(`2 / ${season.total}`);
+    const season = BINDER_COLLECTIONS.find((entry) => goal.textContent?.includes(entry.name))!;
+    expect(goal.textContent).toContain(`2 / ${season.slugs.length}`);
     act(() => goal.click());
-    const allowed = new Set(SEASON_BY_ID.get(season.id)!.slugs);
+    const allowed = new Set(BINDER_COLLECTION_BY_ID.get(season.id)!.slugs);
     const labels = [...document.querySelectorAll(".collection-grid .creator-card")].map((node) => node.getAttribute("aria-label")!);
-    expect(labels).toHaveLength(12);
+    expect(labels).toHaveLength(season.slugs.length - 2);
     for (const label of labels) {
       expect(label).toContain("non obtenue");
       const creator = CREATORS.find((entry) => label.startsWith(`${entry.displayName},`))!;
@@ -58,6 +58,29 @@ describe("le Binder guide la collection sans inventer de progression", () => {
   it("999 cartes ne sont pas annoncées comme une collection complète", async () => {
     await collection(CREATORS.slice(0, -1).map((creator) => creator.slug));
     expect(document.querySelector(".collection-score")?.textContent).toContain("99%");
+  });
+
+  it("permet de choisir une page encore vide sans inventer de cartes obtenues", async () => {
+    await collection([]);
+    const choice = document.querySelector<HTMLButtonElement>(".binder-collection-choices button")!;
+    act(() => choice.click());
+    expect(document.querySelector(".binder-next-pages")?.textContent).toContain("0 / 12");
+    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
+    expect([...document.querySelectorAll(".collection-grid .creator-card")].every((node) => node.getAttribute("aria-label")?.includes("non obtenue"))).toBe(true);
+    banc.appuyer("Revenir à la suggestion automatique");
+    expect(document.querySelector(".binder-next-pages")).toBeNull();
+    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(0);
+  });
+
+  it("affiche une page choisie complétée avec ses cartes et son compteur exact", async () => {
+    const first = BINDER_COLLECTIONS[0];
+    await collection(first.slugs);
+    const choice = document.querySelector<HTMLButtonElement>(".binder-collection-choices button")!;
+    act(() => choice.click());
+    expect(document.querySelector(".binder-next-pages")?.textContent).toContain("COLLECTION COMPLÉTÉE");
+    expect(document.querySelector(".binder-next-pages progress")?.getAttribute("value")).toBe("12");
+    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
+    expect([...document.querySelectorAll(".collection-grid .creator-card")].every((node) => !node.getAttribute("aria-label")?.includes("non obtenue"))).toBe(true);
   });
 });
 

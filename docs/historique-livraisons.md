@@ -1,3 +1,11 @@
+## 11 octobre 2026 — Binder, collections de 12 cartes maximum
+
+Compteurs uniques par page, progression et noms manquants, choix par famille,
+objectif gardé sur cet appareil et consultation directe des cartes manquantes
+ou d’une page terminée. Suggestion proche de la complétion ; Obtenues toujours
+initial. Aucune récompense ni migration ajoutée. Tests/publication dans la
+passation ; mode économie enregistré dans AGENTS.md. Craft et profil à suivre.
+
 ## 11 octobre 2026 — K-036, scroll du Drop
 
 Suppression du tirage sur l’accueil et de sa capture du pointeur. Appui/clavier

@@ -1,3 +1,56 @@
+## Binder — petites collections, 11 octobre 2026
+
+Demande Malik : commencer l’amélioration du Binder, puis Craft, puis identité du
+profil. Mode économie accepté : tests locaux ciblés, publication autorisée,
+contrôles longs laissés à GitHub sans surveillance jusqu’à leur fin ; fournir
+au joueur les liens et les étapes compréhensibles pour suivre les résultats.
+Consigne permanente enregistrée dans AGENTS.md dans le même lot.
+
+Base vérifiée propre `31be9aeb9fc38360517933977a6493a027be5b99`, branche work,
+main identique, aucune PR ouverte. Git fetch/API accessibles, derniers contrôles
+38155969838 et 38156196649 success. Runtime connecté ; preset package_managers
+et six domaines configurés, état d’application réseau unknown, aucune modification.
+
+Implémentation : les familles existantes, fondées sur les langues de diffusion,
+sont présentées en pages de 12 créateurs maximum. Compteur par créateur unique,
+progression, aperçu de trois noms manquants et accès direct aux manquantes.
+Suggestion automatique d’une page commencée proche de la fin ; choix explicite
+par famille, enregistré sur cet appareil et pour cette édition du catalogue.
+« Obtenues » reste la vue initiale même après rechargement. Page complète :
+mention explicite et accès aux cartes réunies. Aucun gain pour une petite page,
+les saisons/paliers serveur restent inchangés. Aucun SQL/migration nécessaire,
+0047/0048 non réappliquées, K-031 séparé. Pas de modification Drop/tear/Perfect,
+son ou Reflets. Le chantier Craft reste le prochain lot, puis le profil.
+
+Vérifications sur le diff basé sur 31be9ae :
+- `npm test -- src/lib/binder-collections.test.ts` : **4/4**, partition exhaustive
+  sans doublon, familles conservées, compteurs/suggestion exacts.
+- `npm run ecrans -- src/ecrans-drop-binder.test.tsx` : **10/10** au dernier run.
+  Un run intermédiaire avait 8 réussis et 2 échecs : liste initiale comparée à
+  un état null au lieu de la famille affichée. Même valeur résolue désormais
+  pour le select et sa liste, retest entier réussi.
+- `npm run e2e -- e2e/drop-binder.spec.ts` avec Chromium local : premier run
+  **6/8**, puis **8/8** après regroupement réel des familles (le scénario
+  attendait 12 cartes sur une vague de cinq). Après correction de la liste
+  initiale, retest du choix/persistance **2/2** réussi. Capture du bloc collection
+  sur téléphone simulé inspectée ; aucun débordement à 320 px.
+- Typecheck, ESLint des six fichiers TS/TSX concernés, jargon et diff-check
+  passent. Pas de nouvelle suite générale locale, ni de SQL production lancé.
+  Les suites complètes, le build et les contrôles SQL sont confiés à GitHub.
+
+Publication autorisée directe main, code et documentation dans un seul commit.
+SHA du lot : `git log -1 --format=%H -- docs/agent-handoff.md` ; comparer à main
+avant reprise. Suivi : [Actions main](https://github.com/GoodFight37/CreatorDeck/actions?query=branch%3Amain).
+Le résultat des nouvelles CI n’est pas encore établi dans ce checkpoint ; ne
+pas le présenter vert sur la base des runs précédents. Après la CI de vérification,
+le workflow Supabase automatique contrôle la base, sans migration nouvelle
+attendue. Ne pas lancer de déploiement manuel ni rejouer 0047/0048.
+Malik suit les suites longues et peut renvoyer un échec ; l’agent donnera le lien
+du run observé après push, sans surveillance jusqu’à la fin. Réservation libérée
+après publication. Prochain lot : Craft utile avant le seuil, puis profil.
+Appareil physique et contenu Vercel servi non testés.
+
+
 ## K-036 publié et contrôles verts — ouverture involontaire pendant le scroll — 11 octobre 2026
 
 Demande Malik : le scroll de Drop ne doit pas ouvrir de booster. Base propre

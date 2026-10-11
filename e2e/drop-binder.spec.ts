@@ -1,6 +1,37 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
+test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await expect(page.locator(".binder-next-pages")).toHaveCount(0);
+  await page.locator(".binder-collections-picker summary").click();
+  const family = page.getByRole("combobox", { name: "Famille de collection" });
+  const secondFamily = await family.locator("option").nth(1).getAttribute("value");
+  await family.selectOption(secondFamily!);
+  const choice = page.locator(".binder-collection-choices button").first();
+  const name = await choice.locator("strong").innerText();
+  await choice.click();
+  await expect(page.locator(".binder-next-pages")).toContainText(name);
+  await expect(page.locator(".binder-next-pages")).toContainText("0 / 12");
+  await expect(page.locator(".collection-grid .creator-card")).toHaveCount(12);
+  const firstLabels = await page.locator(".collection-grid .creator-card").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
+  expect(firstLabels.every((label) => label?.includes("non obtenue"))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.reload();
+  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await expect(page.getByRole("button", { name: /^Obtenues/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".collection-grid .creator-card")).toHaveCount(0);
+  await expect(page.locator(".binder-next-pages")).toContainText(name);
+  await page.locator(".binder-collections-picker summary").click();
+  await expect(family).toHaveValue(secondFamily!);
+  await page.locator(".binder-next-pages > button").click();
+  const restoredLabels = await page.locator(".collection-grid .creator-card").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
+  expect(restoredLabels).toEqual(firstLabels);
+  await page.locator(".binder-next-pages").screenshot({ path: `test-results/binder-collection-${test.info().project.name}.png` });
+});
+
 test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page }) => {
   await gotoDeck(page);
   await expect(page.getByRole("heading", { name: "Un sachet. Cinq créateurs." })).toBeVisible();
@@ -46,7 +77,8 @@ test("les pages à compléter montrent leurs manquantes ; les dernières reçues
   await goals.getByRole("button").first().click();
   await expect(page.getByRole("button", { name: "À découvrir", exact: true })).toHaveAttribute("aria-pressed", "true");
   const cards = page.locator(".collection-grid .creator-card");
-  await expect(cards).toHaveCount(12);
+  await expect(goals).toContainText("3 / 12");
+  await expect(cards).toHaveCount(9);
   const labels = await cards.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
   expect(labels.every((label) => label?.includes("non obtenue"))).toBe(true);
   for (const creator of creators) expect(labels.some((label) => label?.startsWith(`${creator.displayName},`))).toBe(false);

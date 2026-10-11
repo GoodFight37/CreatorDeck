@@ -1,3 +1,14 @@
+## Binder — validation des petites collections (11 octobre 2026)
+
+Compteurs calculés depuis les cartes présentes, aucun gain ajouté. Le premier
+scénario de choix attendait 12 cartes sur une vague qui n’en contenait que cinq ;
+familles regroupées avant découpage, retest 8/8 réussi. Une liste initiale vide
+a été détectée par 2 DOM : valeur résolue partagée avec le select, 10/10 DOM et
+2/2 retests navigateur du choix réussis. Vue Obtenues au démarrage
+conservée, objectif mémorisé uniquement sur cet appareil/édition. SQL non modifié.
+Contrôles complets GitHub et retour visuel physique restent à vérifier ; état
+courant dans la passation. K-031 reste un chantier séparé.
+
 ## Audit produit P0/P1 — corrections publiées et CI verte (11 octobre 2026)
 
 Le premier E2E du lot a détecté un CTA hors du pli sur écran court et le retour

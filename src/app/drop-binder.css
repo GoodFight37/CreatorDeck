@@ -164,6 +164,23 @@
 .binder-other-pages summary::-webkit-details-marker { display: none; }
 .binder-other-pages[open] summary svg { transform: rotate(90deg); }
 .binder-other-pages summary:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+.binder-next-pages progress { display: block; width: 100%; height: 6px; margin-top: 12px; accent-color: var(--accent-light); }
+.binder-collection-action { color: var(--paper); font-size: 12px; }
+.binder-missing-preview { color: var(--muted); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+.binder-collections-picker { margin: 0 0 18px; border-bottom: 1px solid var(--line-strong); }
+.binder-collections-picker summary { display: flex; min-height: 48px; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; }
+.binder-collections-picker summary::-webkit-details-marker { display: none; }
+.binder-collections-picker[open] summary svg { transform: rotate(90deg); }
+.binder-collections-picker > p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.binder-collections-picker > label { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+.binder-collections-picker select { width: 100%; min-height: 44px; padding: 8px; border: 1px solid var(--line-strong); border-radius: 3px; color: var(--text); background: var(--bg-soft); }
+.binder-collection-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 12px 0; }
+.binder-collection-choices button { display: flex; flex-direction: column; gap: 8px; min-height: 72px; padding: 10px; color: var(--text); border: 1px solid var(--line-strong); border-radius: 3px; background: var(--bg-soft); text-align: left; cursor: pointer; }
+.binder-collection-choices button[aria-pressed="true"] { border-color: var(--accent-light); }
+.binder-collection-choices strong { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.binder-collection-choices span { color: var(--muted); font-size: 12px; }
+.binder-auto-goal { min-height: 44px; padding: 8px 0; border: 0; background: none; color: var(--muted); font-size: 12px; text-align: left; cursor: pointer; }
+.binder-collections-picker :is(summary, select, button):focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
 .collection-view .binder-empty-state .binder-first-drop { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; background: var(--paper); color: var(--ink); border: none; border-radius: 2px; }
 
 /* Sur un téléphone court, le bouton reste visible dès l’arrivée. */

@@ -360,3 +360,26 @@ Drop. Le geste de déchirure est conservé dans la scène, ses timings et Perfec
 restent inchangés. Garder le tirage en réduisant sa zone a été écarté : cela
 laisserait le même conflit lorsqu’un scroll commence sur le sachet. Preuves et
 limites dans la passation ; validation physique du téléphone encore requise.
+
+## D-041 — 11 octobre 2026 : petits objectifs de collection dans le Binder
+
+Malik autorise à commencer par le Binder, avant Craft et identité du profil.
+Les saisons existantes sont de grands objectifs ; les présenter en pages de
+12 cartes maximum rend la prochaine étape atteignable et les manquantes lisibles.
+Les vagues existantes sont regroupées par famille avant ce découpage d’affichage.
+Le critère est le créateur unique possédé, indépendamment des copies/variantes.
+Un créateur actuel appartient à une seule petite page ; les Sortants restent
+consultables dans les vues existantes mais hors de ces objectifs actuels.
+
+Une page commencée proche de la fin est suggérée ; un choix explicite prévaut
+et est gardé sur cet appareil, par édition du catalogue. Il ne se synchronise
+pas au compte et n’ajoute pas de champ à la sauvegarde. Les cartes affichées au
+démarrage restent les Obtenues. Aucun gain ajouté, aucun palier de saison ni
+règle serveur modifié ; ces pages sont des objectifs de collection visuels.
+Le choix par jeu est écarté : les catégories changent, les familles par langue
+existent déjà (seasons.ts). Preuves et limites dans la passation.
+
+Malik demande aussi le mode économie : tests adaptés, documentation dans le
+même commit, suites longues sur GitHub sans surveillance continue. L’agent
+transmet des liens et des instructions compréhensibles ; état pending conservé
+comme tel. Protections SQL/TLS/historique et autorisations existantes inchangées.

@@ -1,3 +1,14 @@
+## Binder — collections courtes (11 octobre 2026)
+
+Lot préparé pour main : objectifs de 12 cartes maximum par famille, compteurs
+uniques, manquantes visibles, sélection gardée sur l’appareil et vue Obtenues
+conservée au démarrage. Local : 4 unitaires, 10 DOM, 8 E2E puis 2 retests ciblés
+réussis ; suites GitHub laissées en suivi au joueur. Voir la passation.
+Critères : aucun doublon compté deux fois, pages limitées, choix retrouvé au
+rechargement, page complète explicite. Économie et paliers inchangés.
+Suite autorisée dans cet ordre : Craft utile avant le seuil, puis identité du
+profil ; ces deux lots ne sont pas implémentés par ce checkpoint.
+
 ## K-036 — scroll et ouverture distincts
 
 Publié sur main `0d860d6` : scroll libre depuis le sachet ou sa zone ; appui

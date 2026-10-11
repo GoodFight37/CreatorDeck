@@ -89,6 +89,18 @@ historiques utiles, en les datant et en signalant ce qui a été remplacé.
 
 ## Vérifications et preuves
 
+### Mode économie demandé par Malik (11 octobre 2026)
+
+Diagnostic et lectures ciblés, tests locaux adaptés au diff, sans audit général
+ni répétition sans nouvel élément. Regrouper code et documentation dans le même
+commit lorsque possible. Après publication, relever et transmettre les liens et
+l'état réel des contrôles GitHub, puis laisser les suites longues tourner sans
+surveillance jusqu'à leur fin ; ne pas annoncer vert ce qui est encore en cours.
+Malik peut revenir avec un échec pour analyse. Lorsqu'une action lui revient,
+expliquer où aller, quoi lancer, le résultat attendu et quoi renvoyer, pas une
+commande seule. Les migrations nécessaires restent autorisées après les
+vérifications automatiques ; les protections SQL/TLS/historique restent requises.
+
 Utiliser le lockfile (`npm ci` après changement de branche/de dépendances).
 `npm run dev:setup` prépare notamment `embedded-postgres` et `pg`, hors manifest ;
 contrôler que l'installation n'a pas modifié le lockfile involontairement et
