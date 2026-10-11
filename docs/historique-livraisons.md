@@ -1,3 +1,12 @@
+## 11 octobre 2026 — correction de compatibilité du déploiement SQL
+
+Erreur fournie par Malik : CLI 2.39.2 refuse la configuration locale récente
+avant SQL. Dossier temporaire pour db push, mêmes migrations déjà contrôlées,
+configuration locale intacte ; lecture des versions et objets 0047 après CLI.
+Compatibilité testée avec binaire officiel et connexion locale factice ; 24/24
+tests outil réussis, contrôles statiques ciblés réussis. CI/dry-run/application
+sur le nouveau SHA encore à réaliser. Aucun SQL de migration modifié.
+
 ## 11 octobre 2026 — CI réparée, application 0047 en échec
 
 Correctif 1dd5b53 publié et SHA distant confirmé ; quatre jobs de Vérification

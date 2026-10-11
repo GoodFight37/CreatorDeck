@@ -1,5 +1,5 @@
 /** Déploiement via le CLI officiel, uniquement après contrôle du plan. */
-import { readFile, readdir, appendFile, mkdtemp, writeFile, rm } from "node:fs/promises";
+import { readFile, readdir, appendFile, mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { createHash, X509Certificate } from "node:crypto";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -30,6 +30,36 @@ export async function withCertificateUrl(url, certificate, action) {
     secured.searchParams.set('sslrootcert', path);
     return await action(secured);
   } finally { await rm(directory, { recursive: true, force: true }); }
+}
+/** Isoler db push des options locales, avec les mêmes SQL déjà contrôlés. */
+export async function withDeploymentDirectory(files, action) {
+  const directory = await mkdtemp(join(tmpdir(), 'creatordeck-db-push-'));
+  try {
+    await mkdir(join(directory, 'supabase', 'migrations'), { recursive: true });
+    await writeFile(join(directory, 'supabase', 'config.toml'), 'project_id = "CreatorDeck"\n[db]\nmajor_version = 17\n', { mode: 0o600 });
+    for (const file of files) {
+      await writeFile(join(directory, 'supabase', 'migrations', file.name), file.sql, { mode: 0o600 });
+    }
+    return await action(directory);
+  } finally { await rm(directory, { recursive: true, force: true }); }
+}
+/** Un succès CLI ne suffit pas : relire les versions et les objets de 0047. */
+export async function verifyRecordedMigrations(client, files) {
+  const result = await client.query('select version from supabase_migrations.schema_migrations order by version');
+  if (files.some(file => !result.rows.some(row => row.version === file.version))) {
+    throw new Error('Vérification après application : une version attendue manque dans l’historique. Aucune relance automatique.');
+  }
+  if (files.some(file => file.version === '0047')) {
+    const objects = await client.query(`select
+      to_regclass('public.hourglass_spends') is not null as registry,
+      to_regprocedure('public.use_hourglass(uuid)') is not null as rpc,
+      exists(select 1 from pg_trigger where tgrelid = to_regclass('public.saves')
+        and tgname = 'guard_hourglass_spends' and not tgisinternal
+        and tgenabled in ('O', 'A')) as guard`);
+    if (!objects.rows[0]?.registry || !objects.rows[0]?.rpc || !objects.rows[0]?.guard) {
+      throw new Error('Vérification après application : objets de 0047 incomplets. Aucune relance automatique.');
+    }
+  }
 }
 /** Messages fixes : ne jamais journaliser les paramètres du pilote PostgreSQL. */
 export function connectionFailure(error) {
@@ -122,12 +152,20 @@ async function main() {
   const url = checkTarget(process.env.SUPABASE_DB_URL);
   const ssl = await loadPostgresTls(process.env.SUPABASE_DB_CA_CERT);
   const { default: pg } = await import('pg');
-  const client = new pg.Client({
+  const connection = {
     host: url.hostname, port: Number(url.port || 5432), database: 'postgres',
     user: decodeURIComponent(url.username), password: decodeURIComponent(url.password),
     ssl, connectionTimeoutMillis: 15000,
     statement_timeout: 30000,
-  });
+  };
+  const verifyCurrent = async () => {
+    const verification = new pg.Client(connection);
+    try {
+      await verification.connect();
+      await verifyRecordedMigrations(verification, files);
+    } finally { await verification.end(); }
+  };
+  const client = new pg.Client(connection);
   let pending;
   try {
     try { await client.connect(); }
@@ -140,16 +178,20 @@ async function main() {
   } finally { await client.end(); }
   console.log('Connexion TLS, projet CreatorDeck et historique vérifiés.');
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, 'Connexion TLS au projet CreatorDeck et historique vérifiés.\n');
-  if (!pending.length) { console.log('La base est déjà à jour. Aucun SQL de migration exécuté.'); return; }
+  if (!pending.length) { await verifyCurrent(); console.log('La base est déjà à jour et vérifiée. Aucun SQL de migration exécuté.'); return; }
   console.log(`Migrations validées : ${pending.map(f => f.name).join(', ')}`);
   if (process.argv.includes('--dry-run')) { console.log('Lecture seule : aucun SQL exécuté.'); return; }
   await withCertificateUrl(url, ssl.ca, async (secured) => {
-    const run = spawnSync('supabase', ['db', 'push', '--db-url', secured.toString(), '--yes'], { encoding: 'utf8', timeout: 300000 });
-    const redact = text => String(text || '').split(secured.toString()).join('[connexion masquée]').split(url.toString()).join('[connexion masquée]').split(process.env.SUPABASE_DB_URL).join('[connexion masquée]').split(decodeURIComponent(url.password)).join('[mot de passe masqué]');
-    process.stdout.write(redact(run.stdout));
-    process.stderr.write(redact(run.stderr));
-    if (run.error || run.status !== 0) throw new Error('CLI Supabase en échec. Consulter la sortie masquée ; aucune réparation automatique.');
+    await withDeploymentDirectory(files, async directory => {
+      const run = spawnSync('supabase', ['db', 'push', '--workdir', directory, '--db-url', secured.toString(), '--yes'], { encoding: 'utf8', timeout: 300000 });
+      const redact = text => String(text || '').split(secured.toString()).join('[connexion masquée]').split(url.toString()).join('[connexion masquée]').split(process.env.SUPABASE_DB_URL).join('[connexion masquée]').split(decodeURIComponent(url.password)).join('[mot de passe masqué]');
+      process.stdout.write(redact(run.stdout));
+      process.stderr.write(redact(run.stderr));
+      if (run.error || run.status !== 0) throw new Error('CLI Supabase en échec. Consulter la sortie masquée ; aucune réparation automatique.');
+    });
   });
+  await verifyCurrent();
+  console.log('Historique et objets attendus vérifiés après application.');
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, `Migrations appliquées sur CreatorDeck : ${pending.map(f => f.name).join(', ')}\n`);
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

@@ -1,3 +1,20 @@
+## Compatibilité du CLI et vérification après application — 11 octobre 2026
+
+L’erreur « failed to parse config / invalid keys » du run 38139794012 vient du
+CLI 2.39.2 qui ne comprend pas les options locales récentes. Il a refusé la
+configuration avant toute exécution SQL. Le déploiement garde cette version
+explicite et utilise désormais un dossier temporaire : configuration minimale
+et copies exactes des migrations déjà validées. La configuration locale du
+dépôt n’est pas supprimée ou rétrogradée. La cible reste l’URL explicitement
+contrôlée ; TLS, historique et validation manual restent obligatoires.
+
+Après succès CLI, une lecture indépendante vérifie l’enregistrement des versions
+attendues ; pour 0047, elle vérifie aussi la table, le RPC et le trigger actif.
+Un défaut arrête le workflow sans relance ni réparation automatique. Le contrôle
+s’applique également lorsque la base est déjà à jour. Il ne dépense aucun sablier.
+Malik accepte explicitement l’absence de sauvegarde pour cette application 0047 ;
+cette décision ne constitue pas une sauvegarde ni une preuve de récupération.
+
 # Mises à jour automatiques Supabase
 
 Pour appliquer des migrations, le workflow **Mise à jour Supabase** attend la réussite du workflow

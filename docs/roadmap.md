@@ -4,7 +4,7 @@
 - [x] Dry-run réel réussi sur 9788208 : run 38139346769, aucune migration appliquée.
 - [x] Blocage K-032 reproduit ; correctif E2E cloud 6/6 localement, assertions conservées.
 - [x] Correctif 1dd5b53 publié, CI 38139620497 verte, dry-run 38139632409 réussi.
-- [ ] Application manuelle ciblée : run 38139794012 en échec ; dry-run après échec réussi, état exact 0047 à établir (K-033), aucune relance aveugle. Essai téléphone ensuite.
+- [ ] Application manuelle ciblée : incompatibilité CLI/config identifiée avant SQL (K-033), workdir temporaire et vérification post-CLI prêts, 24/24 tests locaux. Attendre CI/dry-run du correctif puis appliquer 0047 ; téléphone ensuite.
 
 Voir le checkpoint courant pour preuves, limites et autorisation.
 

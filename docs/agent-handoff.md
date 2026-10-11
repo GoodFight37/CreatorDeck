@@ -1,3 +1,16 @@
+## Reprise 0047 — incompatibilité CLI corrigée — 11 octobre 2026
+
+- Malik a fourni l’erreur du run manuel 38139794012 : connexion TLS/projet/historique validés, plan uniquement 0047, puis **failed to parse config / invalid keys** (health_timeout, orioledb_version, stockage récent, auth, local_smtp, pgdelta). Le CLI 2.39.2 a échoué **avant l’exécution SQL**. Autorisation d’appliquer uniquement 0047 et acceptation explicite sans sauvegarde toujours valides ; aucune nouvelle permission demandée.
+- Reprise sur `work`, HEAD/distant main `c76693a8a41b42780939a1a5564277a04a3b236f`, checkout propre, aucun autre écrivain observé. Aucun SQL/baseline, variable, secret, réseau ou réglage local Supabase modifié.
+- Correctif `scripts/supabase-deploy.mjs` : db push utilise `--workdir` dans un dossier temporaire, config minimale CreatorDeck / Postgres 17, copie exacte des SQL déjà contrôlés. CLI 2.39.2 conservé ; config.toml locale intacte. Dossier et CA supprimés dans finally après succès/échec. Contrôles cible/TLS/historique, refus des anciens fichiers et validation manual maintenus.
+- Contrôle réel après CLI : lecture des versions attendues et des objets 0047 (table hourglass_spends, RPC use_hourglass(uuid), trigger actif guard_hourglass_spends sur saves). Même contrôle si la base est déjà à jour ; aucune réussite d’application annoncée si un objet/version manque. Requêtes SELECT uniquement ; aucun débit sablier ni test sur compte réel.
+- Vérification locale avec binaire officiel **2.39.2**, empreinte SHA-256 officielle vérifiée `bd13b5afa5bdb06a254b8b24f63bc3ef679e1fb1bb245ee6e842d40955a7b2a5` : original config → invalid keys reproduit ; dossier temporaire avec les 47 SQL → config acceptée, erreur attendue connection refused sur 127.0.0.1:1 en dry-run. Aucun SQL exécuté ni accès production dans cet essai.
+- `node scripts/supabase-deploy.test.mjs` : **24/24**, code 0 (copies exactes, nettoyage succès/échec, rejet version/objets manquants, lecture seule). Premier passage 22/24 : assertion test SELECT suivie d’espace au lieu de tout blanc ; expression corrigée, requêtes/contrôles conservés. `node scripts/supabase-deploy.mjs --check`, syntaxe Node, ESLint ciblé et diff-check : code 0. Suites produit non relancées localement pour ce correctif d’outil ; CI complète à attendre sur le nouveau SHA.
+- Prochaine action autorisée : publier ce correctif, attendre les quatre jobs CI, dry-run du SHA courant, puis application manuelle uniquement 0047. Confirmer le succès du contrôle post-application ; téléphone réel ensuite. Aucune application de ce correctif n’a encore eu lieu au moment de ce checkpoint.
+- Checkpoint préparé pour publication, SHA par git log sur ce document. Les blocs précédents sont historiques.
+
+---
+
 ## Reprise 0047 — CI verte, application en échec — 11 octobre 2026
 
 - Correctif CI/code et checkpoint publiés sur main : [`1dd5b537ef7ebf3b72cfa40b1448819a74d92395`](https://github.com/GoodFight37/CreatorDeck/commit/1dd5b537ef7ebf3b72cfa40b1448819a74d92395), SHA distant vérifié ; checkout local `work`. Un seul écrivain observé. Aucun SQL/baseline/workflow modifié.

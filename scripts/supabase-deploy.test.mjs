@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import { spawnSync } from 'node:child_process';
 import assert from 'node:assert/strict';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { rootCertificates } from 'node:tls';
 import { X509Certificate } from 'node:crypto';
-import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, loadPostgresTls, withCertificateUrl } from './supabase-deploy.mjs';
+import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, loadPostgresTls, withCertificateUrl, withDeploymentDirectory, verifyRecordedMigrations } from './supabase-deploy.mjs';
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
@@ -122,4 +122,44 @@ test('dry-run force la vérification de connexion même sans migration nouvelle'
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Configurer le secret GitHub SUPABASE_DB_URL/);
   assert.doesNotMatch(result.stdout, /Aucune nouvelle migration/);
+});
+
+test('db push isolé : mêmes migrations, configuration minimale, nettoyage après succès et échec', async () => {
+  for (const fail of [false, true]) {
+    let directory;
+    const action = withDeploymentDirectory([old, next], async path => {
+      directory = path;
+      assert.deepEqual((await readdir(`${path}/supabase/migrations`)).sort(), [old.name, next.name]);
+      for (const file of [old, next]) assert.equal(await readFile(`${path}/supabase/migrations/${file.name}`, 'utf8'), file.sql);
+      const config = await readFile(`${path}/supabase/config.toml`, 'utf8');
+      assert.match(config, /project_id = "CreatorDeck"/);
+      assert.doesNotMatch(config, /health_timeout|orioledb|local_smtp|oauth_server|pgdelta/);
+      if (fail) throw new Error('fake-cli-error');
+    });
+    if (fail) await assert.rejects(action, /fake-cli-error/);
+    else await action;
+    await assert.rejects(stat(directory), { code: 'ENOENT' });
+  }
+});
+test('après CLI : historique incomplet ou objet 0047 absent empêchent toute réussite revendiquée', async () => {
+  for (const missing of ['version', 'registry', 'rpc', 'guard']) {
+    const client = { query: async sql => {
+      assert.match(sql, /^select\s/);
+      return sql.includes('schema_migrations')
+        ? { rows: (missing === 'version' ? ['0046'] : ['0046', '0047']).map(version => ({ version })) }
+        : { rows: [{ registry: missing !== 'registry', rpc: missing !== 'rpc', guard: missing !== 'guard' }] };
+    } };
+    await assert.rejects(verifyRecordedMigrations(client, [old, next]), /Vérification après application/);
+  }
+});
+test('après CLI : versions enregistrées et objets 0047 présents vérifiés en lecture seule', async () => {
+  const queries = [];
+  await verifyRecordedMigrations({ query: async sql => {
+    queries.push(sql);
+    return sql.includes('schema_migrations')
+      ? { rows: [{ version: '0046' }, { version: '0047' }] }
+      : { rows: [{ registry: true, rpc: true, guard: true }] };
+  } }, [old, next]);
+  assert.equal(queries.length, 2);
+  assert.ok(queries.every(sql => /^select\s/.test(sql)));
 });
