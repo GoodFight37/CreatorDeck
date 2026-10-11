@@ -1270,6 +1270,13 @@ export function recordVerdict(
   return {
     ...state,
     updatedAt: now,
+    missionDay: gameDay(now),
+    missions: {
+      ...(state.missionDay === gameDay(now) ? state.missions : {}),
+      tribunal: state.missionDay === gameDay(now) && (state.missions.tribunal ?? 0) > 5
+        ? state.missions.tribunal
+        : Object.keys({ ...seance.verdicts, [dossierId]: verdict }).length,
+    },
     // Un même dossier garde son dernier verdict : rejuger ne paie pas deux
     // fois, mais le joueur peut se raviser avant le bilan.
     tribunal: { ...seance, verdicts: { ...seance.verdicts, [dossierId]: verdict } },

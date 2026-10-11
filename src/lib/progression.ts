@@ -13,7 +13,7 @@
  */
 import progression from "@/data/progression.json";
 
-export type MissionId = "pack" | "recycle" | "family";
+export type MissionId = "pack" | "recycle" | "family" | "tribunal";
 
 export type MissionDef = {
   id: MissionId;

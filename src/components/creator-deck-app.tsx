@@ -154,6 +154,7 @@ export function CreatorDeckApp() {
     preloadSamples(SFX_USUELS);
   }, []);
   const [tab, setTab] = useState<Tab>("home");
+  const [tutorialReveal, setTutorialReveal] = useState(false);
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
@@ -321,7 +322,7 @@ export function CreatorDeckApp() {
 
   // Un seul endroit décide qui tire (le serveur ou l'appareil) : l'écran ne
   // fait qu'afficher ce qui revient — l'overlay 16:9 passe par le même module.
-  const { openLivePack, openScenePack } = usePackOpening(game);
+  const { openLivePack, openScenePack, tutorialAvailable } = usePackOpening(game);
 
   const showError = useCallback((message: string, hint: "account" | null = null) => {
     setNotice(null);
@@ -440,6 +441,7 @@ export function CreatorDeckApp() {
       if (result.status === "drawn") {
         await dechirureTerminee;
         // All four states commit together: the revealed card replaces the foil.
+        setTutorialReveal(result.tutorial ?? false);
         setRevealKind("live");
         setDrawnCards(result.cards);
         setStreakGain(result.streakReward ?? null);
@@ -616,6 +618,11 @@ export function CreatorDeckApp() {
   }
 
   function closeReveal() {
+    if (tutorialReveal) {
+      setTutorialReveal(false);
+      setAccountFocus(null);
+      setAccountOpen(true);
+    }
     setDrawnCards([]);
     setRevealIndex(0);
     // La récompense de série s'efface avec les cartes : elle appartient à ce
@@ -676,6 +683,7 @@ export function CreatorDeckApp() {
             sceneBusy={sceneOpening}
             now={now}
             serverReserve={cloud.configured}
+            tutorialAvailable={tutorialAvailable}
             needsAccount={cloud.configured && !cloud.userId}
           />
         ) : null}
@@ -716,6 +724,7 @@ export function CreatorDeckApp() {
             onShowMarket={ouvrirFeuille(setMarketOpen)}
             onShowLastPack={ouvrirFeuille(setLastPackOpen)}
             onShowArena={ouvrirFeuille(setArenaOpen)}
+            onShowTribunal={ouvrirFeuille(setTribunalOpen)}
             onShowWishlist={ouvrirFeuille(setWishlistOpen)}
             onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
             onShowOwnProfile={() => {
@@ -835,7 +844,8 @@ export function CreatorDeckApp() {
             if (outcome.status === "refused") showError(outcome.message);
             return { message: outcome.message, delta: outcome.delta };
           }}
-          onClose={fermerFeuille(setTribunalOpen)}
+          onShowObjective={() => { setTribunalOpen(false); setTab("missions"); }}
+          onClose={() => { setTribunalOpen(false); setTab("home"); }}
         />
       ) : null}
       {drawnCards.length ? (
@@ -847,6 +857,7 @@ export function CreatorDeckApp() {
           index={revealIndex}
           kind={revealKind}
           returnFocusTo={presentationReturnFocus}
+          tutorial={tutorialReveal}
           streakReward={streakGain}
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}

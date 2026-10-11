@@ -1,3 +1,4 @@
+import { dossiersDuJour } from "@/lib/tribunal";
 /**
  * Tests des mécaniques de progression ajoutées par l'étape 3 : jetons,
  * missions du jour, série de jours et plancher de malchance.
@@ -36,6 +37,7 @@ import {
   ownedSlugs,
   pityAfter,
   recycleCard,
+  recordVerdict,
   type PlayerState,
 } from "@/lib/game-engine";
 
@@ -563,5 +565,26 @@ describe("la vue publiée", () => {
     const view = getGameView(makeState(), PRIME);
     expect(view.tokens.primeTime).toBe(true);
     expect(view.tokens.perPack).toBe(PROGRESSION.tokens.perPack + PROGRESSION.tokens.primeTimeBonus);
+  });
+});
+
+
+describe("la mission quotidienne du Tribunal", () => {
+  it("compte les dossiers distincts, paie une fois et repart à zéro le lendemain", () => {
+    let state = makeState();
+    const dossiers = dossiersDuJour(gameDay(MIDI), state.playerId);
+    for (const dossier of dossiers) state = recordVerdict(state, dossier.id, "ban", MIDI);
+    state = recordVerdict(state, dossiers[0].id, "deban", MIDI);
+    expect(state.missions.tribunal).toBe(5);
+    const paid = claimMissions(state, MIDI);
+    expect(paid.hourglasses).toBe(state.hourglasses + 1);
+    expect(paid.missions.tribunal).toBe(6);
+    state = recordVerdict(paid, dossiers[0].id, "ban", MIDI);
+    expect(() => claimMissions(state, MIDI)).toThrow();
+    const tomorrow = MIDI + DAY;
+    const next = dossiersDuJour(gameDay(tomorrow), state.playerId)[0];
+    state = recordVerdict(state, next.id, "ban", tomorrow);
+    expect(state.missions.tribunal).toBe(1);
+    expect(getGameView(state, tomorrow).missions.find((m) => m.id === "tribunal")?.done).toBe(false);
   });
 });

@@ -78,10 +78,10 @@ describe("les jetons et les missions", () => {
     expect(TOKEN_TARGET_COST / PROGRESSION.tokens.perPack).toBe(80);
   });
 
-  it("il y a trois missions, et chacune paie un sablier", () => {
-    expect(MISSIONS).toHaveLength(3);
-    expect(MISSIONS.map((mission) => mission.id)).toEqual(["pack", "recycle", "family"]);
-    expect(MISSIONS.every((mission) => mission.target === 1)).toBe(true);
+  it("il y a quatre missions, et chacune paie un sablier", () => {
+    expect(MISSIONS).toHaveLength(4);
+    expect(MISSIONS.map((mission) => mission.id)).toEqual(["pack", "recycle", "family", "tribunal"]);
+    expect(MISSIONS.map((mission) => mission.target)).toEqual([1, 1, 1, 5]);
     expect(PROGRESSION.missions.reward.hourglasses).toBe(1);
   });
 

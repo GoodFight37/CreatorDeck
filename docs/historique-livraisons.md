@@ -1,3 +1,12 @@
+## 11 octobre 2026 — audit produit P0/P1
+
+Essai invité d’un pack tutoriel sans gains, accès Tribunal remonté près de
+l’objectif, karma/tampon/marteau et bilan avec CTA ; mission quotidienne de cinq
+dossiers. Drop replie taux/activités et Paquet Scène, profil indique les besoins
+de connexion et expose Reflets même sans capteur. L’identité/vitrine, defaults ON
+et effets premium déjà existants sont conservés ; ombre du sachet renforcée sans
+changer les timings reveal/tear. Livraison et preuves courantes : passation.
+
 ## 11 octobre 2026 — action sablier visible et réserve bonus
 
 Sur l’écran Drop du téléphone, l’action était dissimulée dans « Jetons et

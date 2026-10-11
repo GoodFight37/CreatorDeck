@@ -1,3 +1,12 @@
+## Audit produit P0/P1 — corrections validées localement (11 octobre 2026)
+
+Le premier E2E du lot a détecté un CTA hors du pli sur écran court et le retour
+focus du Paquet Scène devenu repliable. Corrections locales ciblées confirmées par 8 E2E bureau/téléphone simulé ;
+les suites finales passent, preuves détaillées dans la passation. L’essai invité est un aperçu sans collection ni gains ;
+le compte reste requis pour jouer avec la collection serveur. Aucun nouveau
+problème SQL établi ; 645 contrôles du vérificateur jetable passent jusqu’à 0048.
+K-031 reste inchangé ; parcours sur téléphone physique non validé.
+
 # Problèmes connus CreatorDeck
 
 Audit initial : 10 octobre 2026, branche `design/booster-reveal-polish`, code

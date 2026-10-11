@@ -25,7 +25,7 @@
     "reward": {
       "hourglasses": 1
     },
-    "note": "Trois missions par jour, remises à zéro à 6 h UTC (l'heure où Twitch recommence) : ouvrir un booster, recycler un doublon, et toucher la famille que tu complètes — ou un Direct. Chacune paie 1 sablier.",
+    "note": "Quatre missions par jour, remises à zéro à 6 h UTC. Chacune paie 1 sablier ; le Tribunal compte cinq dossiers distincts.",
     "list": [
       {
         "id": "pack",
@@ -44,6 +44,12 @@
         "label": "Touche ta famille ou un Direct",
         "detail": "Une carte de la famille que tu complètes, ou une carte Live",
         "target": 1
+      },
+      {
+        "id": "tribunal",
+        "label": "Juge 5 dossiers",
+        "detail": "Termine la séance du Tribunal des Bannis",
+        "target": 5
       }
     ]
   },

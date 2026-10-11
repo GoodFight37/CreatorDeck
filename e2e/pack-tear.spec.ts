@@ -2,6 +2,7 @@ import { expect, test, gotoDeck } from "./fixtures";
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
   await gotoDeck(page);
+  await page.locator(".scene-block summary").click();
   const open = page.locator(".scene-action");
   await expect(open).toBeEnabled();
   await open.focus();

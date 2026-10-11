@@ -1,3 +1,12 @@
+## Audit produit P0/P1 — 11 octobre 2026
+
+Implémentation locale : essai invité sans gains, Tribunal visible en un appui,
+feedback/bilan/mission de cinq dossiers, Drop secondaire replié, profil explicite,
+ombre de sachet renforcée. Son/reflets ON par défaut et vitrine/série/cascade/raretés
+existants conservés. Vérifications locales vertes (1118 unitaires, 86 DOM, 645 SQL, E2E ciblés) ;
+publication et CI distante à vérifier : voir passation.
+P2 et K-031 séparés ; validation sur téléphone réel toujours à effectuer.
+
 ## K-034 — résolu et confirmé en automatique — 11 octobre 2026
 
 Correctif publié sur main : [ee10a6d](https://github.com/GoodFight37/CreatorDeck/commit/ee10a6d46dcf8f91e585d77493f48271b981e31e).

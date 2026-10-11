@@ -38,6 +38,7 @@ import { cardEffectsAllowed } from "@/lib/tilt";
 
 /** Le petit texte sous les boutons : il dit qui décide, sans le décider. */
 const DRAW_SOURCE_LABEL: Record<DrawSource, string> = {
+  tutorial: "Pack tutoriel invité · aperçu sans gains",
   server: "Tirage décidé en ligne",
   account: "Non connecté — ouvre l'écran Compte dans le jeu",
   local: "Hors ligne : tirage local",

@@ -96,6 +96,7 @@ export function HomeView({
   now,
   serverReserve,
   needsAccount,
+  tutorialAvailable = false,
 }: {
   game: GameView;
   /** Combien d'amis ont ouvert un booster dans l'heure (0 = rien à dire). */
@@ -126,6 +127,7 @@ export function HomeView({
   serverReserve: boolean;
   /** Build avec cloud sans compte connecté : l'ouverture demande une connexion. */
   needsAccount: boolean;
+  tutorialAvailable?: boolean;
 }) {
   const pack = PACKS.live;
   const stock = game.player.packs;
@@ -150,7 +152,8 @@ export function HomeView({
   // relire le geste d'avant (l'ouverture partait alors sur un mouvement périmé).
   const armedRef = useRef(false);
   const [pull, setPull] = useState<PullVerdict>({ progress: 0, armed: false, active: false });
-  const canPull = !opening && !needsAccount && stock > 0;
+  const needsLogin = needsAccount && !tutorialAvailable;
+  const canPull = !opening && !needsLogin && (stock > 0 || needsAccount);
 
   function pullStart(event: PointerEvent<HTMLElement>) {
     if (!canPull || event.button !== 0 || event.isPrimary === false) return;
@@ -235,7 +238,8 @@ export function HomeView({
   const findingFocus = usePresentationFocus(inspectCard !== null);
   const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
-  const dailyMission = game.missions.find((mission) => !mission.done)
+  const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
+    ?? game.missions.find((mission) => !mission.done)
     ?? game.missions.find((mission) => mission.done && !mission.claimed)
     ?? null;
   // Les Sortants encore artisanables : ils ont quitté le classement (plus
@@ -308,8 +312,48 @@ export function HomeView({
       <header className="drop-intro">
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
         <h1>Un sachet.<br /><em>Cinq créateurs.</em></h1>
-        <p>{needsAccount ? "Connecte-toi. Ta collection t’attend." : stock > 0 ? "Le prochain nom de ta collection est peut-être dedans." : "Le prochain sachet se prépare. Ton Binder reste ouvert."}</p>
+        <p>{needsLogin ? "Connecte-toi. Ta collection t’attend." : needsAccount ? "Essaie un pack tutoriel gratuit avant de créer ton compte." : stock > 0 ? "Le prochain nom de ta collection est peut-être dedans." : "Le prochain sachet se prépare. Ton Binder reste ouvert."}</p>
       </header>
+
+      <section className="drop-priorities" aria-label="À jouer aujourd’hui">
+          <button type="button" className="daily-goal" onClick={dailyMission?.id === "tribunal" ? onShowTribunal : onShowMissions} aria-label="Voir l’objectif du jour">
+            <span>OBJECTIF DU JOUR</span>
+            {dailyMission ? (
+              <>
+                <strong>{dailyMission.label}</strong>
+                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
+              </>
+            ) : (
+              <>
+                <strong>Tes missions du jour sont terminées</strong>
+                <small>Reviens demain pour un nouvel objectif.</small>
+              </>
+            )}
+            <ChevronRight size={17} />
+          </button>
+        {/* Le Tribunal des Bannis : l'accroche du jour. Le compte dit la
+            vérité — il reste tant d'appels à juger, et pas un de plus. */}
+        <button
+          type="button"
+          className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
+          onClick={onShowTribunal}
+          aria-label={
+            tribunalClose
+              ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
+              : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
+          }
+        >
+          <Gavel size={22} />
+          <span>
+            <strong>Tribunal</strong> ·{" "}
+            {tribunalRestants > 0
+              ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
+              : "séance close, bilan disponible"}
+          </span>
+          {tribunalRestants > 0 ? <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b> : null}
+          <ChevronRight size={14} />
+        </button>
+      </section>
 
       {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
           streame (données fraîches) : sinon il n'y a rien à dire. Il est
@@ -363,16 +407,16 @@ export function HomeView({
       <section className="open-panel">
         <div className="stock-row">
           <div>
-            <span>Ta réserve</span>
+            <span>{needsAccount ? "Pack tutoriel" : "Ta réserve"}</span>
             <strong>
-              {stock}<small>/{pack.max}</small>
+              {needsAccount ? tutorialAvailable ? 1 : 0 : stock}<small>/{needsAccount ? 1 : pack.max}</small>
             </strong>
           </div>
           {/* Réserve pleine : l'état change de couleur, il ne clignote pas — le
               jeu n'a aucune animation perpétuelle. */}
           {stock > pack.max ? (
             <span className="reserve-bonus">+1 sablier</span>
-          ) : nextAt !== null ? (
+          ) : nextAt !== null && !needsAccount ? (
             <div className="timer-copy"><Clock3 size={14} /><span>+1 dans {formatCountdown(nextAt, tick)}</span></div>
           ) : null}
         </div>
@@ -389,7 +433,7 @@ export function HomeView({
             <Zap size={19} />
           )}
           <span>
-            {needsAccount ? "Se connecter pour ouvrir" : stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}
+            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer le pack tutoriel" : stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}
           </span>
           {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
@@ -425,34 +469,10 @@ export function HomeView({
         </details>
       </section>
 
-      <section className="drop-activities" aria-label="À jouer aujourd’hui">
-        <div className="drop-section-label"><span>APRÈS LE DROP</span><span>À TON RYTHME</span></div>
-        <div className="home-links">
-          <button type="button" className="daily-goal" onClick={onShowMissions} aria-label="Voir l’objectif du jour">
-            <span>OBJECTIF DU JOUR</span>
-            {dailyMission ? (
-              <>
-                <strong>{dailyMission.label}</strong>
-                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
-              </>
-            ) : (
-              <>
-                <strong>Tes missions du jour sont terminées</strong>
-                <small>Reviens demain pour un nouvel objectif.</small>
-              </>
-            )}
-            <ChevronRight size={17} />
-          </button>
-          <button type="button" className="text-link" onClick={onShowMissions}>
-            <span>Objectifs et saisons</span>
-            <ChevronRight size={15} />
-          </button>
-          <button type="button" className="text-link" onClick={onShowOdds}>
-            <span>Taux de drop publiés</span>
-            <ChevronRight size={15} />
-          </button>
-        </div>
-
+      <details className="drop-secondary">
+        <summary>Progression, taux et activités <ChevronRight size={15} /></summary>
+        <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
+        <button type="button" className="text-link" onClick={onShowOdds}>Taux de drop publiés <ChevronRight size={15} /></button>
         {friendsOpening > 0 ? (
           <button
             type="button"
@@ -502,35 +522,13 @@ export function HomeView({
           </button>
         ) : null}
 
-        {/* Le Tribunal des Bannis : l'accroche du jour. Le compte dit la
-            vérité — il reste tant d'appels à juger, et pas un de plus. */}
-        <button
-          type="button"
-          className={`pity-row tribunal-row${tribunalClose ? " done" : ""}`}
-          onClick={onShowTribunal}
-          aria-label={
-            tribunalClose
-              ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
-              : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
-          }
-        >
-          <Gavel size={14} />
-          <span>
-            Tribunal des Bannis ·{" "}
-            {tribunalRestants > 0
-              ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
-              : "séance close, bilan disponible"}
-          </span>
-          <ChevronRight size={14} />
-        </button>
-
-      </section>
+      </details>
 
       {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
           par jour de jeu. Il ne se recharge pas (le sablier n'y peut rien), il
           ne contient aucune Légendaire, et il ne touche ni au compteur de
           malchance ni à la série — c'est un paquet de complétion. */}
-      <section className={`scene-block${game.scene.opened ? " done" : ""}`}>
+      <section className={`scene-block${game.scene.opened ? " done" : ""}`}><details><summary>{game.scene.label} · {game.scene.opened ? "Ouvert aujourd’hui" : "Ta famille"}<ChevronRight size={15} /></summary>
         <div className="scene-head">
           <div>
             <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
@@ -587,7 +585,7 @@ export function HomeView({
                 : `Ouvrir le ${game.scene.label}`}
           </span>
         </button>
-      </section>
+      </details></section>
 
       <section className="section-block drop-findings">
         <div className="section-heading">

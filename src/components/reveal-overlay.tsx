@@ -43,6 +43,7 @@ export function RevealOverlay({
   index,
   kind = "live",
   overlay = false,
+  tutorial = false,
   streakReward = null,
   onSkipAll,
   onNext,
@@ -65,6 +66,7 @@ export function RevealOverlay({
    * montre les cinq cartes ; c'est le jeu normal qui a le droit de sauter.
    */
   overlay?: boolean;
+  tutorial?: boolean;
   /** Révèle les cinq cartes d'un coup — absent de l'overlay. */
   onSkipAll?: () => void;
   onNext: () => void;
@@ -262,9 +264,9 @@ export function RevealOverlay({
       ) : showSummary ? (
         <section className="reveal-summary" aria-label="Résumé du booster">
           <div className="reveal-summary-copy" aria-live="polite">
-            <span>BOOSTER OUVERT</span>
-            <h2>{newCardCount} nouvelle{newCardCount === 1 ? "" : "s"}</h2>
-            <p>{cards.length} cartes dans ta collection</p>
+            <span>{tutorial ? "PACK TUTORIEL" : "BOOSTER OUVERT"}</span>
+            <h2>{tutorial ? "À toi de collectionner" : `${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}`}</h2>
+            <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : `${cards.length} cartes dans ta collection`}</p>
           </div>
           <div className="reveal-summary-grid">
             {cards.map((item) => {
@@ -387,11 +389,11 @@ export function RevealOverlay({
       >
         <span>
           {showSummary
-            ? "Retour au Drop"
+            ? tutorial ? "Commencer ma collection" : "Retour au Drop"
             : locked
             ? "Perfect…"
             : termine
-                ? "Ranger dans le classeur"
+                ? tutorial ? "Terminer l’essai" : "Ranger dans le classeur"
                 : "Révéler la suivante"}
         </span>
         {showSummary ? (

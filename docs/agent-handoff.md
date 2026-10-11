@@ -1,3 +1,51 @@
+## Checkpoint courant — audit produit P0/P1 prêt à publier — 11 octobre 2026
+
+Demande Malik : implémenter P0 puis P1 de l’audit produit, publication autorisée.
+Base vérifiée : `bbef1227bafb050dd024f77ea15c1bb3384e8aee`, branche `work`,
+main distant identique, checkout initial propre, aucune PR ouverte. Un seul écrivain
+observé. Git fetch, API GitHub et téléchargement des logs Actions réussissent ;
+aucune configuration réseau changée. Chromium 1243 téléchargé via Playwright.
+
+- Modifications locales : un pack tutoriel invité fixe, sans écriture de cartes,
+  points, jetons, réserve ni RPC de tirage ; un essai par navigateur puis compte.
+  Tribunal et objectif placés au-dessus du sachet ; pastille de dossiers, karma
+  pendant la séance, tampon/marteau, cinquième réaction conservée, bilan et CTA.
+  Quatrième mission « Juge 5 dossiers », compteur distinct/idempotent ; après
+  le premier booster elle devient l’objectif prioritaire. Taux/activités et
+  Paquet Scène repliés. Profil : vitrine/série déjà présentes préservées, entrée
+  Tribunal, mentions de connexion pour menus sociaux, Reflets accessible même
+  sans gyroscope. Son/reflets ON sans préférence étaient déjà implémentés.
+  Sachet : faces, flaps, cascade 960 ms, hiérarchie rare et cadrage existants
+  conservés ; ombre rendue plus nette. Aucun timing JS reveal/tear modifié.
+- Pas de migration nouvelle nécessaire : la mission utilise les compteurs JSON
+  et les gains de sabliers déjà locaux. 0047/0048 restent appliquées, aucun reset,
+  repair ou SQL manuel en production. K-031 et le chantier P2 restent séparés.
+- Vérifications sur le diff basé sur bbef122 : `npm test` **1118/1118**, 71
+  fichiers ; `npm run ecrans` **86/86**, 16 fichiers ; `supabase:verify` **645**
+  contrôles réussis dans PostgreSQL jetable, migrations 0001–0048 seulement.
+  Typecheck, lint complet, jargon, catalog:ci, diff-check et politique migrations
+  passent ; 28 tests du déploiement passent. Build webpack/export statique réussi,
+  sans cloud local (ce build ne valide pas le bundle Vercel configuré).
+- Navigateur : premier run complet sans cloud 43 réussis, 8 ignorés, 3 échecs
+  (CTA sous le pli bureau court, focus Scène, sélecteur devenu obsolète pendant
+  une édition). Les 8 scénarios ciblés finaux passent sur bureau/téléphone simulé,
+  dont CTA dans la fenêtre, focus Scène, Tribunal accessible en un appui sans
+  scroll à 320×568 et 412×915, defaults ON et OFF conservés. Premiers 6 scénarios
+  cloud simulés verts ; le nouveau test invité attendait à tort le tutoriel à
+  trois étapes pour un visiteur non connecté. Attente corrigée, **2/2 invités**
+  passent. Aucun RPC réel en production utilisé pour ces scénarios.
+- Les suites initiales avaient aussi une attente « trois missions », le sélecteur
+  de l’ancien Tribunal et le bilan immédiat. Assertions adaptées à la quatrième
+  mission et à la réaction du cinquième verdict, puis suites finales vertes.
+  Le mock de statut cloud et le setState dans effect ont été corrigés ; le choix
+  tutoriel utilise useSyncExternalStore et conserve sa limite au rechargement.
+- Publication et CI distante à vérifier. Prochaine action : commit ciblé et push
+  normal main, vérifier les quatre jobs CI et l’automatique Supabase (aucun SQL
+  attendu), puis noter les SHA et liens réellement observés. Aucun téléphone
+  physique ni contenu Vercel effectivement servi validé à ce stade.
+
+---
+
 ## Checkpoint courant — sablier visible, migration appliquée — 11 octobre 2026
 
 Dernier déploiement SQL : [run 38146774310](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146774310)

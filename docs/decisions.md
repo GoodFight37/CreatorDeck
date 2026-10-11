@@ -322,3 +322,28 @@ automatique verte ; cette autorisation permanente les couvre lorsqu’elles sont
 nécessaires à la demande. La migration 0048 a été appliquée par 38146774310
 après CI verte ; voir D-037. Restent hors autorisation : resets/réparations,
 force-push, réécriture/suppression de branches et fusion de PR.
+
+
+## D-039 — 11 octobre 2026 : audit produit P0/P1
+
+Malik demande l’implémentation de son audit, en autorisant les changements de
+périmètre produit concernés. Un pack tutoriel fixe permet d’essayer l’ouverture
+avant compte ; ses cartes restent un aperçu, sans collection, récompense ni RPC.
+La limite d’un essai par navigateur sert le parcours, pas une protection économique
+(un stockage effacé permet de revoir un aperçu sans valeur). La connexion reste
+nécessaire pour démarrer la collection serveur et accéder au cloud/social.
+Les choix son/Reflets mémorisés sont conservés ; sans choix ils étaient déjà ON,
+et les animations continuent de suivre prefers-reduced-motion et Reflets OFF.
+
+Tribunal et objectif sont placés avant le sachet. Après un booster, l’objectif
+priorise les cinq dossiers du Tribunal. Cette quatrième mission paie le même
+sablier local que les missions existantes, une seule fois par journée ; les
+points de la séance restent calculés et payés par le serveur. Aucun nouveau SQL
+n’est nécessaire pour ce compteur JSON. Le bilan n’efface plus la cinquième
+réaction, et le calcul d’annonce inclut désormais les cinq verdicts.
+
+Taux/activités et Paquet Scène sont repliés. La vitrine de trois cartes, série,
+faces CSS, flaps, cascade et hiérarchie de rareté déjà présentes sont conservées.
+Ombre du sachet renforcée ; aucun WebGL ni modification des timings de silence,
+Perfect et déchirure. Validation courante et limites dans la passation ; aucun
+essai sur téléphone physique affirmé. P2 et K-031 restent hors de ce lot.

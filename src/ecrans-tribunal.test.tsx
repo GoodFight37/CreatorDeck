@@ -162,7 +162,7 @@ describe("le Tribunal des Bannis", () => {
         await Promise.resolve();
       });
       const suivant = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
-        (bouton) => (bouton.textContent ?? "").trim() === "Dossier suivant",
+        (bouton) => (bouton.textContent ?? "").trim() === "Dossier suivant" || (bouton.textContent ?? "").trim() === "Voir le bilan",
       );
       if (suivant) {
         act(() => {
@@ -256,6 +256,7 @@ describe("le Tribunal des Bannis", () => {
     // La récompense est versée à la cinquième décision : aucun bouton à oublier.
     expect(etat.paiements.length, "la séance n'a pas été encaissée").toBe(1);
     expect(bilan).toContain("Séance payée");
+    expect(bilan).toContain("Retour au Drop");
   });
 
   it("double la séance quand le créateur qui préside est en direct", async () => {

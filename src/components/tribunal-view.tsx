@@ -25,7 +25,7 @@
  * l'ouverture, ni à la fermeture : se déplacer ne sonne pas.
  */
 import { useMemo, useState } from "react";
-import { ChevronLeft, Search } from "lucide-react";
+import { ChevronLeft, Search, Gavel, Stamp } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
 import { useBackHandler } from "@/hooks/use-back-handler";
@@ -71,6 +71,7 @@ export function TribunalView({
   onVerdict,
   onClaim,
   onClose,
+  onShowObjective,
 }: {
   playerId: string;
   seance: TribunalSeance;
@@ -82,6 +83,7 @@ export function TribunalView({
   onVerdict: (dossierId: string, verdict: TribunalVerdict) => void;
   onClaim: (request: TribunalClaimRequest) => Promise<TribunalPayout>;
   onClose: () => void;
+  onShowObjective?: () => void;
 }) {
   // Le retour Android ferme l'écran : c'est le dernier de la pile.
   useBackHandler(true, onClose);
@@ -162,6 +164,12 @@ export function TribunalView({
     setOccupe(true);
     // Le serveur recalcule le karma et les points ; l'écran ne fait que
     // demander, avec ce qu'il a affiché.
+    const evaluations = dossiers.flatMap((dossier) => {
+      const verdict = verdicts[dossier.id];
+      return verdict ? [evaluateVerdict(dossier, verdict)] : [];
+    });
+    const finalKarma = karma(evaluations);
+    const finalReward = recompenseSeance(finalKarma, stream !== null);
     const resultat = await onClaim({
       // La journée du jour : c'est elle qui garde le paiement « une fois par
       // jour » côté serveur. Envoyer celle de la sauvegarde (vide au premier
@@ -169,8 +177,8 @@ export function TribunalView({
       day: jour,
       verdicts,
       login: createurPresident?.login ?? null,
-      karma: karmaPct,
-      points: recompense.points,
+      karma: finalKarma,
+      points: finalReward.points,
     });
     if (resultat.delta > 0) playCoins();
     setPaiement(resultat);
@@ -206,7 +214,7 @@ export function TribunalView({
     setReaction(null);
   }
 
-  if (bilan) {
+  if (bilan && !reaction) {
     return (
       <Bilan
         rendus={rendus}
@@ -221,6 +229,7 @@ export function TribunalView({
             ? () => void encaisser(seance.verdicts)
             : null
         }
+        onShowObjective={onShowObjective}
         onClose={onClose}
       />
     );
@@ -287,6 +296,8 @@ export function TribunalView({
         </p>
       </header>
 
+      <p className="tribunal-session-karma" role="status">Karma de séance <strong>{karmaPct} %</strong> · {rendus.length}/{dossiers.length} jugés</p>
+
       {createurPresident && cartePresidente ? (
         <div className="tribunal-seat">
           <CreatorCard
@@ -325,6 +336,10 @@ export function TribunalView({
 
       {reaction ? (
         <div className="tribunal-reaction" role="status">
+          <div className={`tribunal-verdict-mark ${reaction.verdict}`} aria-hidden="true">
+            {reaction.verdict === "deban" ? <Stamp size={34} /> : <Gavel size={34} />}
+            <strong>{reaction.verdict === "deban" ? "GRÂCE" : "BAN"}</strong>
+          </div>
           <p className="tribunal-reaction-verdict">
             {reaction.verdict === "deban" ? "Grâce accordée" : "Ban maintenu"}
             {evaluateVerdict(reaction.dossier, reaction.verdict).juste ? (
@@ -339,7 +354,7 @@ export function TribunalView({
           </p>
           <p className="tribunal-reaction-chat">{reactionDuChat(reaction.dossier, reaction.verdict)}</p>
           <button type="button" className="tribunal-next" onClick={suivant}>
-            Dossier suivant
+            {termine ? "Voir le bilan" : "Dossier suivant"}
           </button>
         </div>
       ) : null}
@@ -408,6 +423,7 @@ function Bilan({
   multiplicateurLive,
   createurPresident,
   onRetry,
+  onShowObjective,
   onClose,
 }: {
   rendus: ReturnType<typeof evaluateVerdict>[];
@@ -418,6 +434,7 @@ function Bilan({
   multiplicateurLive: boolean;
   createurPresident: Creator | null;
   onRetry: (() => void) | null;
+  onShowObjective?: () => void;
   onClose: () => void;
 }) {
   return (
@@ -487,6 +504,8 @@ function Bilan({
             </button>
           ) : null}
         </div>
+        <button type="button" className="tribunal-next" onClick={onClose}>Retour au Drop</button>
+        {onShowObjective ? <button type="button" className="tribunal-next" onClick={onShowObjective}>Voir mon objectif du jour</button> : null}
       </section>
     </div>
   );

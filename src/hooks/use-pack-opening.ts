@@ -11,7 +11,7 @@
  *
  *   1. **Build sans cloud** (développement, tests, jeu 100 % hors ligne) : le
  *      moteur local tire, après un court suspense ;
- *   2. **Cloud configuré, pas de compte** : on refuse, et le message dit quoi
+ *   2. **Cloud configuré, pas de compte** : un aperçu tutoriel sans gain, puis refus. Le message dit quoi
  *      faire. Jamais de repli silencieux vers le tirage local — les cartes
  *      d'un compte ne valent que si c'est le serveur qui les tire ;
  *   3. **Cloud configuré, compte connecté** : c'est le serveur qui tire.
@@ -19,8 +19,9 @@
  * Les écrans ne décident plus rien : ils appellent, puis ils affichent (le son,
  * la révélation, les erreurs restent à eux — ce sont des choix d'écran).
  */
-import { useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { useCloud } from "@/hooks/use-cloud";
+import { tutorialPack, hasSeenTutorialPack, subscribeTutorialPack, consumeTutorialPack } from "@/lib/tutorial-pack";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { DrawnCard, GameView, StreakRewardGrant } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
@@ -41,6 +42,7 @@ export type PackOpeningResult =
   | {
       status: "drawn";
       kind: PackOpeningKind;
+      tutorial?: boolean;
       cards: DrawnCard[];
       /**
        * Ce que la série a payé pour ce booster (jour 1 → 6), ou `null` : c'est
@@ -76,14 +78,16 @@ function preload(cards: ReadonlyArray<{ creatorSlug: string }>): void {
  * « Tirage décidé par le serveur » sous ses boutons). Jamais une décision :
  * `openLivePack()` et `openScenePack()` restent seuls juges.
  */
-export type DrawSource = "server" | "local" | "account";
+export type DrawSource = "server" | "local" | "account" | "tutorial";
 
 export function usePackOpening(game: GameView | null): {
   openLivePack: () => Promise<PackOpeningResult>;
   openScenePack: () => Promise<PackOpeningResult>;
   drawSource: DrawSource;
+  tutorialAvailable: boolean;
 } {
   const cloud = useCloud();
+  const tutorialAvailable = !useSyncExternalStore(subscribeTutorialPack, hasSeenTutorialPack, () => true);
 
   /**
    * Ouvre le **Live Drop**.
@@ -105,6 +109,13 @@ export function usePackOpening(game: GameView | null): {
       return { status: "drawn", kind: "live", cards, streakReward };
     }
     if (!cloud.userId) {
+      if (tutorialAvailable && !hasSeenTutorialPack()) {
+        consumeTutorialPack();
+        await suspense();
+        const cards = tutorialPack();
+        preload(cards);
+        return { status: "drawn", kind: "live", cards, tutorial: true };
+      }
       return {
         status: "refused",
         kind: "live",
@@ -137,7 +148,7 @@ export function usePackOpening(game: GameView | null): {
       message: outcome.message,
       needAccount: outcome.reason === "offline" || outcome.reason === "no-session",
     };
-  }, [cloud.configured, cloud.userId, game?.streak.jackpot]);
+  }, [cloud.configured, cloud.userId, game?.streak.jackpot, tutorialAvailable]);
 
   /**
    * Ouvre le **Paquet Scène** du jour.
@@ -189,7 +200,7 @@ export function usePackOpening(game: GameView | null): {
     ? "local"
     : cloud.userId
       ? "server"
-      : "account";
+      : tutorialAvailable ? "tutorial" : "account";
 
-  return { openLivePack, openScenePack, drawSource };
+  return { openLivePack, openScenePack, drawSource, tutorialAvailable };
 }

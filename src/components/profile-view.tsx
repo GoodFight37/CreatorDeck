@@ -26,7 +26,7 @@ import { readySteals } from "@/lib/last-pack";
 
 import { regionLabel } from "@/lib/regions";
 
-import { applyTiltChoice, setTiltEnabled, tiltAvailable, tiltEnabled } from "@/lib/tilt";
+import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 
 import {
   SFX_LEVEL_LABELS,
@@ -70,6 +70,7 @@ export function ProfileView({
   onShowNotifications,
   onShowOwnProfile,
   onShowWishlist,
+  onShowTribunal,
 }: {
   game: GameView;
   onProgressReset?: () => void;
@@ -88,6 +89,7 @@ export function ProfileView({
   onShowNotifications: () => void;
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
+  onShowTribunal?: () => void;
 }) {
   const cloud = useCloud();
   // Le compte du carnet passe par le hook, et non par le store : lui seul
@@ -139,7 +141,7 @@ export function ProfileView({
   // l'inclinaison quand l'appareil a un capteur. Le réglage coupe **tout** —
   // c'est le bouton de secours de celui que l'effet fatigue.
   const [tiltOn, setTiltOn] = useState(() => tiltEnabled());
-  const [canTilt] = useState(() => tiltAvailable());
+  const canTilt = true;
   // Le studio de tirages est un outil de mise au point, pas une option de jeu :
   // il s'ouvre en appuyant cinq fois sur la pastille de niveau.
   const [tools, setTools] = useState(0);
@@ -217,7 +219,7 @@ export function ProfileView({
           <span>{game.player.level}</span>
         </button>
         <div>
-          <h1>Mon profil</h1>
+          <h1>Ma collection</h1>
           <span>{CATALOG_EDITION}</span>
           <small
             className="profile-build-version"
@@ -355,33 +357,33 @@ export function ProfileView({
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowFriends}>
-            <span>Amis</span>
+            <span>Amis{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowMarket}>
-            <span>Hôtel des ventes</span>
+            <span>Hôtel des ventes{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
             <ChevronRight size={16} />
           </button>
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowArena}>
-            <span>Arène</span>
+            <span>Arène{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
             {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
             <ChevronRight size={16} />
           </button>
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowLastPack}>
-            <span>Last Pack</span>
+            <span>Last Pack{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
             {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
             <ChevronRight size={16} />
           </button>
         ) : null}
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowNotifications}>
-            <span>Notifications</span>
+            <span>Notifications{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
             {inboxUnread > 0 ? <b className="menu-count">{inboxUnread}</b> : null}
             <ChevronRight size={16} />
           </button>
@@ -395,6 +397,9 @@ export function ProfileView({
        */}
       <section className="menu-group" aria-label="Progression">
         <h2>Progression</h2>
+        {onShowTribunal ? <button type="button" className="menu-row" onClick={onShowTribunal}>
+          <span>Tribunal des Bannis</span><ChevronRight size={16} />
+        </button> : null}
         <button type="button" className="menu-row" onClick={onShowMissions}>
           <span>Objectifs et saisons</span>
           <ChevronRight size={16} />
