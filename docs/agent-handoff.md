@@ -1,20 +1,20 @@
-## Checkpoint courant — sablier visible, CI verte — 11 octobre 2026
+## Checkpoint courant — sablier visible, migration appliquée — 11 octobre 2026
 
-Dernier code publié : `6bc6be7f329f7ecf6fc44237447ea39237d357e1`, CI
-38145382045 verte sur 4/4 jobs. Autorisation permanente D-038 publiée dans
-`c556e82`. Dernier checkpoint publié avant cette mise à jour :
-`8560b52cbe84cb6a703fcb6b280265e283bb9694`, branche locale `work` et
-`origin/main` identiques. CI
-[38145925758](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145925758)
-verte, 4/4 jobs dont SQL jetable ; workflow automatique
-[38146124176](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146124176)
-arrêté avant SQL. Son log réel dit `Validation manuelle requise :
-0048_sablier_booster_bonus.sql.` Aucun changement production.
+Dernier déploiement SQL : [run 38146774310](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146774310)
+**success** sur le commit main `ef3a6ed47d473c187f4113e4eb9e5b38264274dc`.
+Logs lus : connexion TLS, projet CreatorDeck et historique vérifiés ; une seule
+migration en attente, `0048_sablier_booster_bonus.sql` ; « Applying migration
+0048_sablier_booster_bonus.sql... » puis « Historique et objets attendus
+vérifiés après application. » L’application serveur de 5/4 est donc confirmée.
+La CI de ce SHA [38146175554](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146175554)
+était verte, quatre jobs. L’autorisation permanente D-038 est publiée.
+Le statut GitHub du check Vercel sur `ef3a6ed` était `success`. Cela ne vérifie
+pas le contenu actuellement servi ni le parcours réel sur téléphone.
 
 - Demande : afficher l’action sablier sans menu, alléger l’accueil Drop et, à
   4/4, permettre un booster unique à 5/4. Malik a confirmé explicitement le
-  comportement 5/4. Autorisation de publier ce correctif sur main donnée dans
-  la conversation ; pas d’application de migration en production.
+  comportement 5/4. Malik autorise de façon permanente la publication et les
+  migrations nécessaires après CI automatique verte.
 - État avant édition : branche `work`, HEAD `06a31d43ad21ad7b9439dea31481da1eebb98711`,
   `origin/main` identique via `git ls-remote`; aucun commit local préexistant,
   modifications de cette tâche uniquement. Aucun reset/force.
@@ -43,17 +43,15 @@ arrêté avant SQL. Son log réel dit `Validation manuelle requise :
   est **success**, quatre jobs verts : unitaires 71 fichiers, écrans 15,
   statique/build, SQL jetable (« Toutes les vérifications passent »), E2E
   42 réussis et 6 cloud ignorés dans le job sans config, puis cloud simulé 6/6.
-- Workflow automatique [38145593723](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145593723)
-  **failure avant application**, log lu : `Validation manuelle requise :
-  0048_sablier_booster_bonus.sql.` C’est le comportement sûr attendu pour une
-  migration `manual` sans approbation ; aucun SQL de 0048 appliqué, aucune donnée
-  production modifiée. Aucun workflow manuel de déploiement déclenché.
-  0047 reste intacte. K-031 reste séparé.
+- Les workflows automatiques antérieurs 38145593723, 38145880229,
+  38146124176 et 38146374907 ont tous refusé 0048 `manual` avant SQL ; leurs
+  logs portaient le refus prévu. Après l’autorisation permanente de Malik, le
+  workflow dispatch manuel 38146774310 a appliqué 0048 seule et a confirmé
+  l’historique après application. 0047 reste intacte. K-031 reste séparé.
 - Malik demande de ne plus attendre un nouvel accord pour les modifications
-  ciblées du dépôt qu’il demande et leur push normal sur `main`. `AGENTS.md` et
-  D-038 enregistrent cette autorisation permanente. Force-push, reset,
-  réécriture, fusion PR et application manuelle de migrations production restent
-  hors de cette autorisation ; aucun de ces actes n’a eu lieu.
+  ciblées du dépôt, pushes normaux sur `main` et migrations Supabase nécessaires
+  après CI verte. `AGENTS.md` et D-038 enregistrent cette autorisation. Aucune
+  migration hors périmètre, réparation ou reset n’a été effectué.
 - Contrôle visuel/téléphone non effectué. E2E ciblés locaux non démarrés, faute
   de Chromium 1243 installé ; CI distante fait foi pour ces scénarios simulés.
 - Publication initiale `402df83a57c545ce823bf145bc036a33209214a6` : run CI
@@ -66,12 +64,9 @@ arrêté avant SQL. Son log réel dit `Validation manuelle requise :
   corrigés localement. E2E ciblé local impossible : navigateur Chromium 1243
   absent (`browserType.launch: Executable doesn't exist`), et téléchargement
   Playwright non tenté. Aucun contournement proxy/TLS.
-- Suite : si Malik souhaite rendre 5/4 actif sur son compte, 0048 doit être
-  appliquée séparément avec le parcours manuel `approve_manual`; aucune
-  application n’est incluse dans ce travail publié. Sinon le client cloud
-  conservera le comportement serveur 0047 jusqu’à application. Le test réel
-  sur téléphone reste à faire ; ne pas annoncer la nouvelle règle active en
-  production.
+- Suite : vérifier la version effectivement servie et tester le parcours sur
+  téléphone (4/4, sablier → 5/4, ouverture du bonus → 4/4). La migration et
+  l’historique serveur sont vérifiés ; le test physique n’a pas été effectué.
 
 ---
 

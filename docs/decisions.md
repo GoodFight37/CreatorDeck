@@ -299,24 +299,26 @@ carte ; les jetons restent consultables dans une section repliée distincte.
 Règle choisie par Malik : à 4/4, dépenser un sablier crée un booster bonus à
 5/4. Un seul dépassement est admis ; un second sablier attend l’ouverture du
 bonus. L’ouverture ramène à 4/4 et reprend la recharge ordinaire. Le moteur
-local, la sauvegarde et le RPC restent alignés dans 0048. Celle-ci est `manual`
-et n’est pas appliquée en production. Base jetable jusqu’à 0048, tests ciblés,
-typecheck et ESLint sont décrits dans la passation ; le rendu réel téléphone et
-la CI du commit publié restent à constater avant de qualifier la fonctionnalité
-de livrée.
+local, la sauvegarde et le RPC restent alignés dans 0048. Celle-ci est `manual`.
+Base jetable jusqu’à 0048, tests ciblés et CI sont décrits dans la passation.
+Après l’autorisation permanente de Malik, le run manuel 38146774310 a appliqué
+0048 seule ; cible CreatorDeck, TLS, historique et vérification après
+application ont réussi. Le rendu réel sur téléphone et la version effectivement
+servie restent à constater avant de qualifier l’expérience de livrée.
 
 ## D-038 — 11 octobre 2026 : autorisation permanente de publier les changements demandés
 
 Malik demande de ne plus être interrompu pour redonner son accord aux commits
 ciblés et pushes normaux sur `main` correspondant à ses demandes de code ou de
-documentation. `AGENTS.md` porte maintenant cette autorisation permanente, pour
-réduire les allers-retours ; les résultats et contrôles GitHub restent à
-observer et à consigner après chaque publication.
+documentation, ni aux migrations Supabase nécessaires en production après CI
+automatique verte. `AGENTS.md` porte cette autorisation permanente, pour réduire
+les allers-retours ; les résultats et contrôles GitHub restent à observer et à
+consigner après chaque publication/opération.
 
 Cette autorisation ne vaut pas pour force-push, réécriture d’historique,
 suppression de branche, fusion de PR ni modification destructrice des données.
-Les migrations classées `manual` exigent toujours `approve_manual` et une
-demande correspondant à l’opération ; ce changement ne donne aucun accord pour
-appliquer `0048` en production. La publication normale de la correction K-035
-sur `main` est confirmée ; CI 38145382045 verte. Le workflow automatique
-38145593723 s’est arrêté avant SQL sur le garde-fou `manual`.
+Les migrations classées `manual` exigent le paramètre `approve_manual` et une CI
+automatique verte ; cette autorisation permanente les couvre lorsqu’elles sont
+nécessaires à la demande. La migration 0048 a été appliquée par 38146774310
+après CI verte ; voir D-037. Restent hors autorisation : resets/réparations,
+force-push, réécriture/suppression de branches et fusion de PR.
