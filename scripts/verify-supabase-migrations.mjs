@@ -61,6 +61,7 @@
  *     réellement possédées (le créateur inventé ne compte nulle part), et le
  *     classement par famille lit `user_cards` sans jamais l'exposer.
  */
+import { verifyHourglasses } from "./verify-hourglasses.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -220,6 +221,7 @@ try {
     ["0044_tutoriel_reset_cadeau.sql", tutorielReset],
     ["0045_cadeau_claim_rejouable.sql", cadeauClaimRetry],
     ["0046_reset_rejoue_tutoriel.sql", resetTutorial],
+    ["0047_sabliers_en_ligne.sql", await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8")],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -7293,6 +7295,8 @@ try {
         (await client.query("select count(*)::int as n from public.pack_draws where kind <> 'gift'")).rows[0].n,
 
   );
+
+  await verifyHourglasses({ client, pg, asPlayer, refuses, check, sql: await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8") });
 
   console.log("");
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);

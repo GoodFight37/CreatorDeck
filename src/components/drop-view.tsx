@@ -122,7 +122,7 @@ export function HomeView({
   opening: boolean;
   usingHourglass: boolean;
   now: number;
-  /** La réserve vient du serveur : le sablier local ne peut pas l'avancer. */
+  /** La réserve vient du serveur ; un compte est requis pour la recharge. */
   serverReserve: boolean;
   /** Build avec cloud sans compte connecté : l'ouverture demande une connexion. */
   needsAccount: boolean;
@@ -437,13 +437,11 @@ export function HomeView({
         <button
           className="secondary-action"
           onClick={onUseHourglass}
-          disabled={serverReserve || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
+          disabled={(serverReserve && needsAccount) || stock >= pack.max || game.player.hourglasses <= 0 || usingHourglass}
         >
           <Hourglass size={15} />
           <span>
-            {serverReserve
-              ? "Sablier indisponible en ligne"
-              : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
+            {usingHourglass ? "Utilisation…" : `Utiliser 1 sablier (${game.player.hourglasses} disp.) · avance de 15 min`}
           </span>
         </button>
         </details>

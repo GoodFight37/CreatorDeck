@@ -227,6 +227,9 @@ export function messageFor(status: number, code: string, raw: string): string {
       "0014_scene_pack",
     );
   }
+  if (code === "PGRST202" && /use_hourglass/.test(raw)) {
+    return pasEncoreOuvert("La recharge par sablier n’est pas encore disponible : reviens un peu plus tard.", "recharge par sablier", "0047_sabliers_en_ligne");
+  }
   // `open_pack` existe mais pas dans sa version à argument : c'est le signe que
   // la migration 0013 (plancher de malchance) n'est pas encore collée. Le
   // message générique parlerait de 0003/0004, qui sont déjà là.

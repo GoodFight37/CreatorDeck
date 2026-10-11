@@ -70,6 +70,7 @@ export function stateFingerprint(state: PlayerState): string {
     state.xp,
     state.points,
     state.hourglasses,
+    state.hourglassesSpent,
     state.tokens,
     state.packs,
     state.openings,

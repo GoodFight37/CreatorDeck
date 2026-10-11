@@ -139,6 +139,7 @@ type FakeApi = {
   leaderboard: ReturnType<typeof vi.fn>;
   playerProfile: ReturnType<typeof vi.fn>;
   openPack: ReturnType<typeof vi.fn>;
+  useHourglass: ReturnType<typeof vi.fn>;
   packStatus: ReturnType<typeof vi.fn>;
   redeemPromoCode: ReturnType<typeof vi.fn>;
   walletGet: ReturnType<typeof vi.fn>;
@@ -227,6 +228,7 @@ function harness(options: {
 
   const api: FakeApi = {
     session: () => session,
+    useHourglass: vi.fn(async () => remoteRow(saveWith({ hourglasses: 1, hourglassesSpent: 1, packs: 3 }), SERVER_SAVE_AT)),
     signInAnonymously: vi.fn(async () => ({ ...SESSION, email: null })),
     profile: vi.fn(async () => ({ displayName: "Kaicenat", showcaseSlugs: [] })),
     updateDisplayName: vi.fn(async () => {}),
@@ -2458,5 +2460,63 @@ describe("le bureau côté store (0039)", () => {
     if (encore.status !== "done") return;
     expect(encore.raidToday).toBe(Math.floor((240 * 25) / 1000));
     expect(encore.lines.join(" ")).not.toContain("Raid :");
+  });
+});
+
+
+describe("sabliers : dépense en ligne confirmée et rejouable", () => {
+  it("synchronise les gains puis adopte le débit et la réserve écrits ensemble", async () => {
+    const { store, api, state, device } = harness({ local: saveWith({ hourglasses: 2, packs: 2 }) });
+    expect((await store.useHourglass()).status).toBe("done");
+    expect(api.pushSave).toHaveBeenCalledOnce();
+    expect(api.useHourglass).toHaveBeenCalledOnce();
+    expect(api.pushSave.mock.invocationCallOrder[0]).toBeLessThan(api.useHourglass.mock.invocationCallOrder[0]);
+    expect(state.current.hourglasses).toBe(1);
+    expect(state.current.hourglassesSpent).toBe(1);
+    expect(state.current.packs).toBe(3);
+    expect(device.getItem(`creatordeck:hourglass-request:${SESSION.userId}`)).toBeNull();
+  });
+
+  it("une réponse perdue garde la même demande et ne renvoie pas la partie périmée", async () => {
+    const { store, api, state } = harness({ local: saveWith({ hourglasses: 2 }) });
+    api.useHourglass.mockRejectedValueOnce(new CloudError("Connexion perdue", "network", 0));
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect(state.current.hourglasses).toBe(2);
+    expect((await store.useHourglass()).status).toBe("done");
+    expect(api.useHourglass.mock.calls[0][0]).toBe(api.useHourglass.mock.calls[1][0]);
+    expect(api.pushSave).toHaveBeenCalledOnce();
+    expect(state.current.hourglasses).toBe(1);
+  });
+
+  it("après un refus explicite, synchronise de nouveaux gains avant de réessayer", async () => {
+    const { store, api } = harness();
+    api.useHourglass.mockRejectedValueOnce(new CloudError("Tu n’as plus de sablier", "P0001", 400));
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect((await store.useHourglass()).status).toBe("done");
+    expect(api.pushSave).toHaveBeenCalledTimes(2);
+    expect(api.useHourglass.mock.calls[0][0]).not.toBe(api.useHourglass.mock.calls[1][0]);
+  });
+
+  it("deux appels simultanés n'envoient qu'une dépense", async () => {
+    const { store, api } = harness();
+    const results = await Promise.all([store.useHourglass(), store.useHourglass()]);
+    expect(results.map((r) => r.status).sort()).toEqual(["done", "unavailable"]);
+    expect(api.useHourglass).toHaveBeenCalledOnce();
+  });
+
+  it("un conflit de sauvegarde bloque le débit et préserve la partie", async () => {
+    const local = saveWith({ hourglasses: 2 });
+    const { store, api, state } = harness({ local, push: { status: "conflict", save: remoteRow(local, SERVER_SAVE_AT) } });
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect(api.useHourglass).not.toHaveBeenCalled();
+    expect(state.current).toBe(local);
+    expect(store.getSnapshot().decision).toBe("conflict");
+  });
+
+  it("sans compte, aucune dépense locale de secours", async () => {
+    const { store, api, state } = harness({ signedIn: false, local: saveWith({ hourglasses: 2 }) });
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect(api.useHourglass).not.toHaveBeenCalled();
+    expect(state.current.hourglasses).toBe(2);
   });
 });

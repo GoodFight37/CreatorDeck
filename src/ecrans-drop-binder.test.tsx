@@ -4,6 +4,7 @@ import { creerBanc, type Banc } from "@/ecrans-banc";
 import { CREATORS } from "@/lib/catalog";
 import { SEASON_BY_ID } from "@/lib/seasons";
 import { createInitialState, getGameView } from "@/lib/game-engine";
+import { HomeView } from "@/components/drop-view";
 import { CollectionView } from "@/components/binder-view";
 
 const NOW = Date.UTC(2026, 9, 11, 12);
@@ -58,4 +59,44 @@ describe("le Binder guide la collection sans inventer de progression", () => {
     await collection(CREATORS.slice(0, -1).map((creator) => creator.slug));
     expect(document.querySelector(".collection-score")?.textContent).toContain("99%");
   });
+});
+
+describe("les sabliers du Drop en ligne", () => {
+  let banc: Banc;
+  beforeEach(() => { banc = creerBanc(); banc.preparer(); });
+  afterEach(() => banc.nettoyer());
+
+  async function drop({ packs = 0, hourglasses = 2, needsAccount = false, busy = false } = {}) {
+    const state = { ...createInitialState(NOW), packs, hourglasses };
+    const onUseHourglass = vi.fn();
+    const noop = () => {};
+    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
+      sceneBusy={false} onUseHourglass={onUseHourglass} onShowOdds={noop}
+      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
+      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={busy}
+      now={NOW} serverReserve={true} needsAccount={needsAccount} />);
+    const details = document.querySelector<HTMLDetailsElement>(".drop-details") ?? document.querySelector<HTMLDetailsElement>("details");
+    if (details) details.open = true;
+    const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
+    return { button, onUseHourglass };
+  }
+
+  it("un compte connecté peut avancer une réserve vide", async () => {
+    const { button, onUseHourglass } = await drop();
+    expect(button.disabled).toBe(false);
+    expect(button.textContent).toContain("avance de 15 min");
+    act(() => button.click());
+    expect(onUseHourglass).toHaveBeenCalledOnce();
+    expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");
+  });
+
+  it.each([{ packs: 4 }, { hourglasses: 0 }, { needsAccount: true }, { busy: true }])(
+    "bloque le bouton si la dépense est impossible : %j", async (options) => {
+      const { button, onUseHourglass } = await drop(options);
+      expect(button.disabled).toBe(true);
+      act(() => button.click());
+      expect(onUseHourglass).not.toHaveBeenCalled();
+    },
+  );
 });

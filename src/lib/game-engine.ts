@@ -158,6 +158,8 @@ export type PlayerState = {
   xp: number;
   points: number;
   hourglasses: number;
+  /** Compteur de dépenses en ligne, protégé par le registre serveur. */
+  hourglassesSpent: number;
   /** Boosters en réserve (un seul type de booster). */
   packs: number;
   /** Epoch ms : ancre de la recharge en cours (voir refreshBalances). */
@@ -678,6 +680,7 @@ export function createInitialState(now = Date.now()): PlayerState {
     // (`_pack_initial_packs()`, `0033`), et un test miroir compare les deux.
     points: START.points,
     hourglasses: START.hourglasses,
+    hourglassesSpent: 0,
     packs: START.packs,
     lastPackRegen: now,
     openings: 0,

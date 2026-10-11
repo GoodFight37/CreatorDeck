@@ -3,6 +3,16 @@ import type { PushSaveResult, RemoteSaveRow } from "./types";
 import { CloudError, asRecord, parseSaveRow } from "./core";
 import { repairMojibake } from "@/lib/cloud/mojibake";
 
+/** Débit et recharge sont une seule transaction ; même identifiant = même dépense. */
+export async function useHourglass(core: CloudCore, requestId: string): Promise<RemoteSaveRow> {
+  const record = asRecord(await core.rpc("use_hourglass", { p_request_id: requestId }));
+  const save = parseSaveRow(record?.save);
+  if (!save || record?.status !== "used") {
+    throw new CloudError("Recharge impossible à confirmer. Réessaie pour retrouver ton solde.", "invalid_response", 0);
+  }
+  return save;
+}
+
 /**
  * Résultat d'un tirage serveur : cartes tirées + compteurs mis à jour.
  *

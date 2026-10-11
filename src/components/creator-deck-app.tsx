@@ -495,15 +495,21 @@ export function CreatorDeckApp() {
     }
   }
 
-  function handleUseHourglass() {
-    if (!game || usingHourglass) return;
+  const hourglassInFlight = useRef(false);
+  async function handleUseHourglass() {
+    if (!game || hourglassInFlight.current) return;
+    hourglassInFlight.current = true;
     setUsingHourglass(true);
     setError(null);
     try {
-      gameStore.useHourglass();
+      if (cloud.configured) {
+        const result = await cloudStore.useHourglass();
+        if (result.status !== "done") showError(result.message);
+      } else gameStore.useHourglass();
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");
     } finally {
+      hourglassInFlight.current = false;
       setUsingHourglass(false);
     }
   }

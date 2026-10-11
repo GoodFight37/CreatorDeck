@@ -345,6 +345,7 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     xp: nonNegativeInt(raw.xp, 0),
     points: nonNegativeInt(raw.points, 0),
     hourglasses: nonNegativeInt(raw.hourglasses, 0),
+    hourglassesSpent: nonNegativeInt(raw.hourglassesSpent, 0),
     // v5 : un seul booster. Les sauvegardes v4 avaient deux réserves (Live et
     // Archives) : on additionne, borné à la nouvelle réserve — aucune partie ne
     // perd de boosters en passant.

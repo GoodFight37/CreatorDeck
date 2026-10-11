@@ -1783,3 +1783,22 @@ describe("connexion Twitch", () => {
     expect(storage.data.has(CLOUD_SESSION_KEY)).toBe(false);
   });
 });
+
+
+describe("recharge par sablier", () => {
+  it("envoie uniquement la clé de rejeu et lit la sauvegarde confirmée", async () => {
+    const { api, calls } = client((url) => url.includes("/auth/") ? { body: SESSION_BODY } : { body: {
+      status: "used", save: { state: { version: 9, hourglasses: 4, hourglassesSpent: 1, packs: 1 }, save_version: 9, device_updated_at: 123, state_checksum: "abc", updated_at: "2026-10-11T10:00:00Z" },
+    } });
+    await api.verifyOtp("joueur@exemple.fr", "123456");
+    const saved = await api.useHourglass("12345678-1234-4234-8234-123456789012");
+    expect(saved.state).toMatchObject({ hourglasses: 4, hourglassesSpent: 1, packs: 1 });
+    expect(JSON.parse(String(calls.at(-1)?.init?.body))).toEqual({ p_request_id: "12345678-1234-4234-8234-123456789012" });
+    expect(calls.at(-1)?.url).toContain("/rpc/use_hourglass");
+  });
+  it("refuse une réponse sans sauvegarde, sans annoncer un succès", async () => {
+    const { api } = client((url) => url.includes("/auth/") ? { body: SESSION_BODY } : { body: { status: "used" } });
+    await api.verifyOtp("joueur@exemple.fr", "123456");
+    await expect(api.useHourglass("12345678-1234-4234-8234-123456789012")).rejects.toThrow("Recharge impossible à confirmer");
+  });
+});

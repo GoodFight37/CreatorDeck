@@ -461,6 +461,10 @@ export class CloudApi {
    * Les cartes sont infalsifiables : le serveur les a tirées avec le même
    * algorithme que le moteur local, et le client ne peut pas les modifier.
    */
+  async useHourglass(requestId: string) {
+    return pack.useHourglass(this.core, requestId);
+  }
+
   async openPack(
     /**
      * Récompense de série : `perfect` (défaut) force le tirage si le 7ᵉ jour

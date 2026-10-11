@@ -11,7 +11,51 @@ import { sanitizeState } from "@/lib/save-store";
  * d'objet. Aucun comportement n'a changé.
  */
 export function packActions(ctx: CloudStoreContext) {
+  let spendingHourglass = false;
   return {
+    async useHourglass(): Promise<CloudActionOutcome> {
+      const api = ctx.resolve();
+      const session = api?.session();
+      if (!api || !session) return { status: "unavailable", reason: "no-session", message: "Connecte-toi pour utiliser tes sabliers." };
+      if (spendingHourglass) return { status: "unavailable", reason: "error", message: "La recharge est déjà en cours." };
+      spendingHourglass = true;
+      const key = `creatordeck:hourglass-request:${session.userId}`;
+      const storage = ctx.deps.storage();
+      try {
+        let requestId = storage?.getItem(key) ?? null;
+        // Une réponse perdue se rejoue AVANT tout envoi de la sauvegarde
+        // ancienne : le serveur renvoie le solde actuel sans débiter à nouveau.
+        if (!requestId) {
+          const local = ctx.deps.readState();
+          if (!local) throw new Error("Partie illisible. Recharge l’application.");
+          const base = ctx.state().remoteUpdatedAt;
+          const pushed = await api.pushSave(local, local.updatedAt, local.version, false, base === null ? null : new Date(base).toISOString());
+          if (pushed.status !== "pushed" && pushed.status !== "unchanged") {
+            ctx.publish({ pending: true, decision: pushed.status === "conflict" ? "conflict" : "noop" });
+            throw new Error("Synchronise ta partie dans Compte avant d’utiliser un sablier.");
+          }
+          ctx.publish({ remoteUpdatedAt: Date.parse(pushed.save.updatedAt), pending: false });
+          requestId = crypto.randomUUID();
+          // Pas de requête si sa clé de rejeu ne peut pas être conservée.
+          if (!storage) throw new Error("Active le stockage de l’application pour utiliser un sablier.");
+          storage.setItem(key, requestId);
+        }
+        const saved = await api.useHourglass(requestId);
+        const next = sanitizeState(saved.state, ctx.deps.now());
+        if (!next) throw new Error("Recharge impossible à confirmer. Réessaie.");
+        ctx.deps.applyState(next);
+        storage?.removeItem(key);
+        const message = "Sablier utilisé · recharge avancée de 15 min.";
+        ctx.publish({ pending: false, decision: "noop", remoteUpdatedAt: Date.parse(saved.updatedAt), lastSyncAt: ctx.deps.now(), message, isError: false });
+        return { status: "done", message };
+      } catch (error) {
+        // Un refus HTTP explicite n’a pas dépensé : la prochaine tentative
+        // doit pouvoir synchroniser de nouveaux gains. Une panne ambiguë
+        // conserve au contraire la clé pour récupérer la transaction.
+        if (error instanceof CloudError && error.status >= 400 && error.status < 500) storage?.removeItem(key);
+        return ctx.cloudRefusal(error, error instanceof Error ? error.message : "Impossible d’utiliser un sablier.");
+      } finally { spendingHourglass = false; }
+    },
     async onboardingStatus() {
       const api = ctx.resolve();
       if (!api?.session()) return null;

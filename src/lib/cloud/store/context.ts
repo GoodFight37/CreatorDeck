@@ -74,6 +74,7 @@ export type CloudStoreActions = {
   registerPush: ReturnType<typeof accountActions>["registerPush"];
   setPushLive: ReturnType<typeof accountActions>["setPushLive"];
   syncPushState: ReturnType<typeof accountActions>["syncPushState"];
+  useHourglass: ReturnType<typeof packActions>["useHourglass"];
   openPack: ReturnType<typeof packActions>["openPack"];
   openScenePack: ReturnType<typeof packActions>["openScenePack"];
   packStatus: ReturnType<typeof packActions>["packStatus"];
