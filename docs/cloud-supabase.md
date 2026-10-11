@@ -1,3 +1,14 @@
+## Complément du 11 octobre 2026 — automatisation encore à corriger
+
+0047 est appliquée et vérifiée. **K-034 reste ouvert** : prévalidation sur le
+baseline refusant 0047 manual avant lecture de l'historique réel, même lorsqu'elle
+est déjà appliquée. Aucune correction de code effectuée dans ce checkpoint.
+Prochaine étape : corriger et tester ce cas sans réappliquer 0047 ni retirer
+l'approbation des migrations manuelles réellement en attente.
+Voir [la passation actualisée](passation-chat-temporaire-0047.md) pour reproduction,
+preuves, limites, réseau du nouvel environnement et blocage d'édition signalé.
+Les sections suivantes conservent les observations historiques datées.
+
 # Compte, cloud et jeu à plusieurs : sauvegarde, profils, échanges, amis, hôtel, Arène (Supabase)
 
 L'**APK et le site distribués** sont compilés **avec** le cloud : le jeu se

@@ -1,3 +1,39 @@
+## Complément de reprise — 11 octobre 2026, après la passation initiale
+
+État du code inspecté : `7b73b1864d122dd0cecd1ce5dba99da0c4b60899` sur main.
+**0047 reste appliquée et vérifiée ; ne pas la réappliquer.**
+
+- **K-034, non corrigé** : la première prévalidation de
+  `scripts/supabase-deploy.mjs` utilise les versions du baseline 0001–0046,
+  puis refuse 0047 manual avant de consulter l'historique réel. Reproduction
+  locale sans connexion : `SUPABASE_DB_URL='' node scripts/supabase-deploy.mjs`
+  renvoie « Validation manuelle requise : 0047_sabliers_en_ligne.sql. ».
+  Le run automatique [38140833700](https://github.com/GoodFight37/CreatorDeck/actions/runs/38140833700)
+  a échoué ; son erreur détaillée distante n'a pas été lue, donc le lien avec
+  cette cause reste un diagnostic cohérent avec la reproduction locale.
+- Prochaine correction : distinguer validation des fichiers et plan réellement
+  en attente ; exiger l'approbation des migrations manual seulement lorsqu'elles
+  sont absentes de l'historique réel. Tester le cas déjà appliqué et conserver
+  les protections baseline, cible, TLS, historique et contrôle des objets.
+  Aucune correction de code ni nouvelle application n'a été faite ici.
+- Le chat précédent pouvait lire la configuration et disposait d'un outil de
+  brouillon, mais aucun outil d'activation/publication. Malik signale que le
+  bouton Edit ne fonctionne plus ; cause interface non déterminée. Il choisit
+  de créer un nouvel environnement. Ne pas promettre que l'édition sera ensuite
+  toujours disponible.
+- Réseau initial recommandé : preset `package_managers`, domaines existants
+  `*.vercel.app`, `api.github.com`, `cdn.playwright.dev`,
+  `playwright.download.prss.microsoft.com`, `storage.googleapis.com`, plus
+  `results-receiver.actions.githubusercontent.com` pour les logs Actions.
+  Ce dernier domaine n'a pas été ajouté dans l'ancien environnement. Tester un
+  vrai téléchargement de logs avant d'annoncer cet accès actif ; d'autres
+  redirections peuvent nécessiter un diagnostic. Git/API fonctionnaient lors
+  du diagnostic précédent ; cela doit être revérifié dans le nouvel environnement.
+- Restent aussi l'essai sur téléphone et K-031, chantier séparé. L'acceptation
+  du risque sans sauvegarde concernait uniquement l'application passée de 0047.
+- Aucun agent ne réserve de travail pour cette reprise documentaire. Lire les
+  entrées courantes avant les checkpoints historiques conservés plus bas.
+
 # Passation à l’autre chat — déblocage Cloud et migration 0047
 
 Date : 11 octobre 2026. Dépôt : https://github.com/GoodFight37/CreatorDeck
