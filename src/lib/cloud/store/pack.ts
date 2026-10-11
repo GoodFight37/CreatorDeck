@@ -216,12 +216,21 @@ export function packActions(ctx: CloudStoreContext) {
             typeof remoteVersion === "number" && remoteVersion < SAVE_VERSION
               ? { ...remote, tribunal: local.tribunal }
               : remote;
+          // XP, niveaux et sabliers de série sont encore calculés localement.
+          // `open_pack()` écrit les cartes et la réserve, mais son blob peut
+          // précéder le gain local du jour (notamment le sablier de J2). Garder
+          // le plus haut des deux soldes préserve ce gain sans le doubler si le
+          // serveur l'avait déjà enregistré.
+          const adoptedWithHourglasses = {
+            ...adopted,
+            hourglasses: Math.max(adopted.hourglasses, applied.state.hourglasses),
+          };
           // La sauvegarde serveur garantit les cartes et la réserve, mais
           // `open_pack()` n'écrit pas les missions locales dans le JSON. Garder
           // la progression calculée pour ce Live Drop évite de la perdre en
           // remplaçant aussitôt l'état local par la réponse du tirage.
           ctx.deps.applyState({
-            ...adopted,
+            ...adoptedWithHourglasses,
             missionDay: applied.state.missionDay,
             missions: applied.state.missions,
           });

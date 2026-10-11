@@ -81,7 +81,7 @@ describe("les effets de révélation", () => {
   it("donne au Rare son aura bordeaux, sans flash d'Épique", async () => {
     const html = await reveler([carte("rare")]);
     expect(html).toContain("reveal-rare-aura-rare");
-    expect(html).toContain("RARE");
+    expect(html).not.toContain("CARTE D'EXCEPTION");
     expect(html).not.toContain("reveal-cinematic-field");
     expect(html).not.toContain("fx-flash");
   });
@@ -219,6 +219,7 @@ describe("les effets de révélation", () => {
         index={1} onNext={suivant} onClose={fermer} />,
     );
     banc.ecran(`jeu-derniere-${rarity}`);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     banc.appuyer("Ranger dans le classeur");
     expect(document.body.textContent).toContain("RÉCAP");
     expect(document.body.textContent).toContain("2 cartes dans ta collection");
@@ -243,9 +244,24 @@ describe("les effets de révélation", () => {
     );
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
     expect(bouton().textContent).toContain("Révéler la suivante");
+    expect(bouton().disabled, "la face doit finir son flip avant le prochain appui").toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(bouton().disabled).toBe(false);
     banc.ecran("jeu-commune");
     banc.appuyer("Révéler la suivante");
     expect(suivant).toHaveBeenCalledTimes(1);
+  });
+
+  it("déverrouille la révélation si animationend ne vient jamais", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay cards={[carte("common", "a"), carte("common", "b")] as never}
+        index={0} overlay onNext={() => {}} onClose={() => {}} />,
+    );
+    const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
+    expect(bouton.disabled).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(bouton.disabled).toBe(false);
   });
 
   it("se choisit sur la carte du moment, pas sur la première du paquet", async () => {

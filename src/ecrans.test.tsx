@@ -48,6 +48,9 @@ describe("les écrans", () => {
     const drop = banc.ecran("01-accueil");
     expect(drop).toContain("Ouvrir le booster");
     expect(drop).toContain("OBJECTIF DU JOUR");
+    expect(document.querySelector(".top-actions")?.textContent).toContain("Sab.");
+    expect(document.querySelector(".top-actions")?.textContent).toContain("Pts");
+    expect(document.querySelector(".top-actions")?.textContent).toContain("Niv.");
 
     banc.appuyer("Binder");
     const binder = banc.ecran("02-binder");
@@ -71,7 +74,7 @@ describe("les écrans", () => {
     expect(profile).toContain("Mon compte");
     expect(profile).toContain("Ta vitrine");
     expect(profile).toContain("Ta première carte t’attend.");
-    expect(profile).toMatch(/Version (?:[0-9a-f]{7}|locale)/);
+    expect(profile).not.toContain("Version ");
     expect(profile).not.toContain("0/1000");
     expect(profile).not.toContain("0 boosters");
   });

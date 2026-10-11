@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useState, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
@@ -87,6 +87,31 @@ export function RevealOverlay({
   const newCardCount = cards.filter((item) => item.isNew).length;
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
+  const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const cardId = card?.id;
+
+  // Le bouton d'avancement attend la fin réelle du retournement. Le minuteur
+  // sert de filet si le navigateur perd animationend ; le mouvement réduit
+  // rend la face immédiatement disponible.
+  useEffect(() => {
+    if (!cardId || perfect) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    const reducedFallback = reducedMotion?.matches
+      ? window.setTimeout(() => setFlippedCardId(cardId), 0)
+      : null;
+    const fallback = reducedMotion?.matches
+      ? null
+      : window.setTimeout(() => setFlippedCardId(cardId), 1_200);
+    const onMotionChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setFlippedCardId(cardId);
+    };
+    reducedMotion?.addEventListener?.("change", onMotionChange);
+    return () => {
+      if (reducedFallback !== null) window.clearTimeout(reducedFallback);
+      if (fallback !== null) window.clearTimeout(fallback);
+      reducedMotion?.removeEventListener?.("change", onMotionChange);
+    };
+  }, [cardId, perfect]);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -125,6 +150,8 @@ export function RevealOverlay({
   const termine = perfect || isLast;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
+  const posterAvailable = !overlay && cloud.configured && Boolean(cloud.userId) &&
+    (perfect || cards.some((item) => item.rarity === "legendary"));
   // A soft aura lives BEHIND the rare cards. No pixel explosion overlays artwork.
   // Respect the existing rare-card audio pause for a synchronized entrance.
   const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
@@ -149,6 +176,18 @@ export function RevealOverlay({
     event.currentTarget.style.removeProperty("--reveal-tilt-x");
     event.currentTarget.style.removeProperty("--reveal-tilt-y");
     event.currentTarget.classList.remove("is-tilting");
+  }
+
+  function finishFlip(event: AnimationEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    setFlippedCardId(card.id);
+  }
+
+  function makePoster() {
+    const selfId = cloud.userId;
+    if (!selfId) return;
+    onClose();
+    void cloudStore.openProfile(selfId);
   }
 
   // Une carte déjà révélée se range dès le premier appui.
@@ -287,10 +326,16 @@ export function RevealOverlay({
               );
             })}
           </div>
+          {posterAvailable ? (
+            <button type="button" className="reveal-poster" onClick={makePoster}>
+              <Share2 size={15} />
+              <span>Faire une affiche</span>
+            </button>
+          ) : null}
         </section>
       ) : (
         <div className="reveal-stage">
-          {rarityAura && !perfect ? (
+          {rareGlow && !perfect ? (
             <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true"
               style={glowStyle}>
               <span>CARTE D&apos;EXCEPTION</span>
@@ -305,7 +350,7 @@ export function RevealOverlay({
           <div className="reveal-anchor" style={glowStyle}
             onPointerMove={tiltRevealCard} onPointerLeave={resetRevealTilt}>
             <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
-              <div className="reveal-flip-face">
+              <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
                 <CreatorCard
                   creator={creator}
                   variant={card.variant}
@@ -356,33 +401,13 @@ export function RevealOverlay({
               <span className="reveal-guaranteed">Carte garantie du booster</span>
             ) : null}
           </div>
-          {/* L'affiche : le geste qui garde la trace d'un moment rare. Elle ne
-              s'affiche que si un compte existe (c'est lui qui a un profil à
-              dessiner), et seulement sur un Légendaire ou un Perfect. */}
-          {spotlight && cloud.configured && cloud.userId && !overlay ? (
-            <button
-              type="button"
-              className="reveal-poster"
-              onClick={() => {
-                // Le profil public lit l'identifiant hors du rendu : on le
-                // capture ici, sinon TypeScript ne peut pas savoir qu'il existe.
-                const selfId = cloud.userId;
-                if (!selfId) return;
-                onClose();
-                void cloudStore.openProfile(selfId);
-              }}
-            >
-              <Share2 size={15} />
-              <span>Faire une affiche</span>
-            </button>
-          ) : null}
         </div>
       )}
 
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
         onClick={showSummary ? onClose : advance}
-        disabled={locked}
+        disabled={locked || (!perfect && !showSummary && flippedCardId !== card.id)}
         // La barre du verrou lit la durée du module de mise en scène : une
         // seule vérité, sinon elle finirait avant le bouton ou après lui.
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}

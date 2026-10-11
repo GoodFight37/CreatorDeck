@@ -92,16 +92,28 @@ describe("les sabliers du Drop en ligne", () => {
   async function drop({ packs = 0, hourglasses = 2, needsAccount = false, busy = false } = {}) {
     const state = { ...createInitialState(NOW), packs, hourglasses };
     const onUseHourglass = vi.fn();
+    const onShowOdds = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
       onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={onUseHourglass} onShowOdds={noop}
+      sceneBusy={false} onUseHourglass={onUseHourglass} onShowOdds={onShowOdds}
       onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
       tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={true} needsAccount={needsAccount} />);
     const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
-    return { button, onUseHourglass };
+    return { button, onUseHourglass, onShowOdds };
   }
+
+  it("garde les jetons et la garantie légendaire visibles sous la réserve", async () => {
+    const { onShowOdds } = await drop();
+    const tokens = document.querySelector(".token-row")!;
+    const pity = document.querySelector<HTMLButtonElement>(".pity-row.now")!;
+    expect(tokens.closest("details")).toBeNull();
+    expect(tokens.textContent).toMatch(/\d+ jetons · encore \d+ pour une carte/);
+    expect(pity.textContent).toMatch(/Légendaire garanti (dans \d+ boosters|au prochain)/);
+    act(() => pity.click());
+    expect(onShowOdds).toHaveBeenCalledOnce();
+  });
 
   it("le sablier reste visible sans ouvrir un volet et crée un booster bonus à 4/4", async () => {
     const { button, onUseHourglass } = await drop({ packs: 4 });

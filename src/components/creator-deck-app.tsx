@@ -314,11 +314,15 @@ export function CreatorDeckApp() {
    */
   const tribunal = useMemo(() => {
     const jour = gameDay(now);
-    if (!state) return { restants: 5, close: false };
+    if (!state) return { restants: 5, close: false, claimed: false };
     const seance = state.tribunal.day === jour ? state.tribunal : null;
     const rendus = seance ? Object.keys(seance.verdicts).length : 0;
     const total = dossiersDuJour(jour, state.playerId).length;
-    return { restants: Math.max(0, total - rendus), close: rendus >= total && total > 0 };
+    return {
+      restants: Math.max(0, total - rendus),
+      close: rendus >= total && total > 0,
+      claimed: seance?.claimed ?? false,
+    };
   }, [state, now]);
 
   // Un seul endroit décide qui tire (le serveur ou l'appareil) : l'écran ne
@@ -690,6 +694,7 @@ export function CreatorDeckApp() {
             onShowTribunal={ouvrirFeuille(setTribunalOpen)}
             tribunalRestants={tribunal.restants}
             tribunalClose={tribunal.close}
+            tribunalPaid={tribunal.claimed}
             opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
             sceneBusy={sceneOpening}

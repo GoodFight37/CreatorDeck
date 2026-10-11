@@ -44,7 +44,6 @@ import { type GameView } from "@/lib/game-engine";
 
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { BUILD_COMMIT, BUILD_VERSION } from "@/lib/build-version";
 
 const RARITY_SCORE: Record<Rarity, number> = {
   common: 0,
@@ -398,7 +397,7 @@ export function ProfileView({
         {cloud.configured ? (
           <button type="button" className="menu-row" onClick={onShowArena}>
             <span className="menu-label">Arène<small className="menu-state">
-              {!cloud.userId ? "Compte requis · équipe de 5 cartes · 1 en direct" : `${arenaCards}/5 cartes distinctes · 1 créateur en direct au dépôt`}
+              {!cloud.userId ? "Compte requis · équipe de 5 cartes · 1 en direct" : `${arenaCards < 5 ? `${arenaCards}/5 cartes distinctes` : `${arenaCards} cartes · minimum 5`} · 1 créateur en direct au dépôt`}
             </small></span>
             {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
             <ChevronRight size={16} />
@@ -509,12 +508,6 @@ export function ProfileView({
       {/* Les crédits : ce que le jeu n'a pas dessiné, et qui l'a fait. Discrets,
           repliés, et avant le rouge — on ne tombe pas dessus en cherchant autre
           chose, et deux licences demandent qu'ils soient là. */}
-          <small
-            className="profile-build-version"
-            title={BUILD_COMMIT ? `Commit Git : ${BUILD_COMMIT}` : "Build sans commit Git associé"}
-          >
-            Version {BUILD_VERSION}
-          </small>
       <CreditsBlock />
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par

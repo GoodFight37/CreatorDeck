@@ -100,6 +100,7 @@ export function HomeView({
   onShowTribunal,
   tribunalRestants,
   tribunalClose,
+  tribunalPaid = false,
   opening,
   usingHourglass,
   sceneBusy,
@@ -130,6 +131,8 @@ export function HomeView({
   tribunalRestants: number;
   /** Vrai quand les cinq verdicts du jour ont été rendus. */
   tribunalClose: boolean;
+  /** Vrai si la séance du jour a déjà reçu son paiement (elle reste rejouable). */
+  tribunalPaid?: boolean;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
@@ -245,7 +248,9 @@ export function HomeView({
             {dailyMission ? (
               <>
                 <strong>{dailyMission.label}</strong>
-                <small>{dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
+            <small>{dailyMission.id === "tribunal" && tribunalPaid
+              ? "Séance déjà récompensée · tu peux rejouer"
+              : dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
               </>
             ) : (
               <>
@@ -262,7 +267,9 @@ export function HomeView({
           className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
           onClick={onShowTribunal}
           aria-label={
-            tribunalClose
+            tribunalPaid
+              ? "Ouvrir le Tribunal des Bannis : séance déjà récompensée, tu peux rejouer"
+              : tribunalClose
               ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
               : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
           }
@@ -270,11 +277,13 @@ export function HomeView({
           <Gavel size={22} />
           <span>
             <strong>Tribunal</strong> ·{" "}
-            {tribunalRestants > 0
+            {tribunalPaid
+              ? "Séance déjà récompensée · tu peux rejouer"
+              : tribunalRestants > 0
               ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
               : "séance close, bilan disponible"}
           </span>
-          {tribunalRestants > 0 ? <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b> : null}
+            {tribunalRestants > 0 ? <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b> : null}
           <ChevronRight size={14} />
         </button>
       </section>
@@ -324,12 +333,16 @@ export function HomeView({
           </div>
           {/* Réserve pleine : l'état change de couleur, il ne clignote pas — le
               jeu n'a aucune animation perpétuelle. */}
-          {stock > pack.max ? (
-            <span className="reserve-bonus">+1 sablier</span>
-          ) : nextAt !== null && !needsAccount ? (
-            <div className="timer-copy"><Clock3 size={14} /><span>+1 dans {formatCountdown(nextAt, tick)}</span></div>
+          {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
+          {nextAt !== null && !needsAccount ? (
+            <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
           ) : null}
         </div>
+        <button type="button" className="pity-row now" onClick={onShowOdds}
+          aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
+          <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
+          <ChevronRight size={14} />
+        </button>
         <button
           className="primary-action"
           onClick={onOpen}
@@ -361,22 +374,18 @@ export function HomeView({
         </button>
         {serverReserve && needsAccount ? <small className="hourglass-note">Connecte-toi pour utiliser tes sabliers.</small> : null}
         {stock >= pack.maxWithHourglass ? <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small> : null}
+        {stock > pack.max && stock < pack.maxWithHourglass ? <small className="hourglass-note">La recharge reprend après l’ouverture du booster bonus.</small> : null}
         {game.player.hourglasses <= 0 ? <small className="hourglass-note">Tu n’as pas de sablier disponible.</small> : null}
 
-        <details className="drop-pack-details">
-          <summary>Jetons <ChevronRight size={15} /></summary>
         {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
         <div className="token-row">
           <Coins size={14} />
           <span>
-            <strong>{game.tokens.count}</strong> jetons · +{game.tokens.perPack} par booster
-            {game.tokens.primeTime ? " (Prime Time)" : ""}
-          </span>
-          <span className="token-goal">
-            {game.tokens.missing > 0 ? `encore ${game.tokens.missing}` : "une carte au choix"}
+            <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
+              ? `encore ${game.tokens.missing} pour une carte`
+              : "une carte au choix disponible"}
           </span>
         </div>
-        </details>
       </section>
 
       {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
@@ -422,7 +431,7 @@ export function HomeView({
 
         <button
           type="button"
-          className="scene-action"
+          className={`scene-action${sceneOpened ? " is-opened" : ""}`}
           onClick={cloud.configured && cloud.userId && !sceneReady && !sceneOpened ? () => void cloudStore.packStatus() : onOpenScene}
           disabled={sceneBusy || opening || sceneOpened || cloud.sceneStatusLoading || !game.scene.family}
         >
@@ -437,7 +446,7 @@ export function HomeView({
             {sceneBusy
               ? "Ouverture…"
               : sceneOpened
-                ? "Reviens demain (nouvelle journée à 6 h UTC)"
+                ? "Déjà ouvert · demain matin"
                 : cloud.configured && !cloud.userId ? "Se connecter pour ouvrir"
                   : cloud.configured && !sceneReady ? "Vérifier la disponibilité"
                     : `Ouvrir le ${game.scene.label}`}

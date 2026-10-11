@@ -149,7 +149,7 @@ export function PackTear({
         </div>
         <div className="booster-premium-actions">
           {!opened ? (
-            <button className="booster-open-button" type="button" onClick={finish}>
+            <button className="booster-open-link" type="button" onClick={finish}>
               Ouvrir sans déchirer
             </button>
           ) : (

@@ -22,16 +22,24 @@ describe("statut Scène et identité de collectionneur", () => {
   beforeEach(() => { banc = creerBanc(); banc.preparer(); mocked.cloud = { ...EMPTY_CLOUD_STATE, configured: true, userId: "joueur" }; vi.clearAllMocks(); });
   afterEach(() => banc.nettoyer());
 
-  async function drop(friendsOpening = 0) {
+  async function drop(friendsOpening = 0, tribunalPaid = false) {
     const onOpen = vi.fn();
     const onShowInbox = vi.fn();
+    const onShowTribunal = vi.fn();
     const noop = () => {};
-    await banc.monter(<HomeView game={getGameView(createInitialState(NOW), NOW)} friendsOpening={friendsOpening}
+    const state = createInitialState(NOW);
+    if (tribunalPaid) {
+      state.openings = 1;
+      state.missionDay = gameDay(NOW);
+      state.missions = { ...state.missions, pack: 1 };
+      state.tribunal = { day: gameDay(NOW), verdicts: {}, claimed: true };
+    }
+    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={friendsOpening}
       onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop} onOpenScene={onOpen} sceneBusy={false}
       onUseHourglass={noop} onShowOdds={noop} onShowMissions={noop} onShowAtelier={noop} onShowArena={noop}
-      onShowTribunal={noop} tribunalRestants={5} tribunalClose={false} opening={false} usingHourglass={false}
+      onShowTribunal={onShowTribunal} tribunalRestants={5} tribunalClose={false} tribunalPaid={tribunalPaid} opening={false} usingHourglass={false}
       now={NOW} serverReserve needsAccount={false} />);
-    return { onOpen, onShowInbox, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
+    return { onOpen, onShowInbox, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
 
   it("surface les ouvertures récentes des amis sans replier l’accès au Carnet", async () => {
@@ -57,6 +65,8 @@ describe("statut Scène et identité de collectionneur", () => {
     const { button, onOpen } = await drop();
     expect(button.disabled).toBe(true);
     expect(document.querySelector(".scene-state")?.textContent).toBe("Ouvert aujourd’hui");
+    expect(button.textContent).toContain("Déjà ouvert · demain matin");
+    expect(button.className).toContain("is-opened");
     expect(onOpen).not.toHaveBeenCalled();
   });
 
@@ -116,5 +126,22 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("0 doublons à vendre · 40 pts");
     banc.appuyer("Trouver ma première carte");
     expect(onGoDrop).toHaveBeenCalledOnce();
+  });
+
+  it("annonce un Tribunal déjà payé tout en gardant l'accès pour rejouer", async () => {
+    const { onShowTribunal } = await drop(0, true);
+    const row = document.querySelector<HTMLButtonElement>(".tribunal-row")!;
+    expect(row.textContent).toContain("Séance déjà récompensée · tu peux rejouer");
+    const objective = document.querySelector<HTMLButtonElement>(".daily-goal")!;
+    expect(objective.textContent).toContain("Juge 5 dossiers");
+    expect(objective.textContent).toContain("Séance déjà récompensée · tu peux rejouer");
+    expect(objective.textContent).not.toContain("récompense à réclamer");
+    row.click();
+    expect(onShowTribunal).toHaveBeenCalledOnce();
+  });
+
+  it("présente le total d'arène comme un minimum une fois cinq cartes atteintes", async () => {
+    await profile(CREATORS.slice(0, 6).map((creator) => creator.slug));
+    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("6 cartes · minimum 5");
   });
 });

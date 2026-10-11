@@ -66,17 +66,20 @@ export function TopBar({ game }: { game: GameView }) {
         </div>
       </div>
       <div className="top-actions">
-        <div className="currency-chip" title="Sabliers">
+        <div className="currency-chip" title="Sabliers" aria-label={`${game.player.hourglasses} sabliers`}>
           <Hourglass size={14} />
           <b>{game.player.hourglasses}</b>
+          <small>Sab.</small>
         </div>
-        <div className="currency-chip warm" title="Points de collection">
+        <div className="currency-chip warm" title="Points de collection" aria-label={`${formatNumber(game.player.points)} points`}>
           <Coins size={14} />
           <b>{formatNumber(game.player.points)}</b>
+          <small>Pts</small>
         </div>
-        <div className="level-chip" title={`Niveau ${game.player.level}`}>
+        <div className="level-chip" title={`Niveau ${game.player.level}`} aria-label={`Niveau ${game.player.level}`}>
           <span>{game.player.level}</span>
           <i style={{ width: `${levelProgress}%` }} />
+          <small>Niv.</small>
         </div>
       </div>
     </header>

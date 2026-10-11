@@ -269,14 +269,23 @@ input:focus-visible {
   font-weight: 750;
 }
 
+.currency-chip small {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
 .level-chip {
   position: relative;
-  width: 31px;
+  min-width: 31px;
   height: 31px;
+  gap: 3px;
+  padding: 0 6px;
   justify-content: center;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 50%;
+  border-radius: 10px;
   background: var(--bg-soft);
 }
 
@@ -285,6 +294,14 @@ input:focus-visible {
   z-index: 1;
   font-size: 14px;
   font-weight: 800;
+}
+
+.level-chip small {
+  position: relative;
+  z-index: 1;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 700;
 }
 
 .level-chip i {
@@ -756,22 +773,22 @@ input:focus-visible {
 .hourglass-action {
   display: flex;
   width: 100%;
-  min-height: 52px;
+  min-height: 42px;
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
-  margin-top: 10px;
-  padding: 0 14px;
-  color: #4e3520;
-  border: 1px solid #d8ad67;
-  border-radius: 5px;
-  background: #f4dfb4;
+  margin-top: 6px;
+  padding: 0 4px;
+  color: var(--muted-2);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 650;
   text-align: left;
 }
-.hourglass-action svg { flex: 0 0 auto; color: #936023; }
+.hourglass-action svg { flex: 0 0 auto; color: var(--muted); }
 .hourglass-action span { flex: 1; }
 .hourglass-action strong { min-width: 28px; font-variant-numeric: tabular-nums; text-align: right; }
 .hourglass-action:disabled { opacity: .58; cursor: not-allowed; }
@@ -2782,6 +2799,8 @@ input:focus-visible {
 .scene-empty { display: block; margin-top: 12px; color: var(--muted); font-size: 12.5px; }
 .scene-action { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 13px; padding: 11px; color: var(--text); border: 1px solid rgb(var(--accent-rgb) / .45); border-radius: 11px; background: rgb(var(--accent-rgb) / .12); font-family: var(--font-display); font-size: 13.5px; font-weight: 600; letter-spacing: .03em; cursor: pointer; }
 .scene-action svg { color: var(--accent-light); }
+.scene-action.is-opened { color: var(--muted); border-color: var(--line); background: transparent; }
+.scene-action.is-opened svg { color: var(--muted); }
 .scene-action:disabled { opacity: .55; cursor: default; }
 .odds-packs { margin-bottom: 4px; }
 /* Le Sortant : un créateur qui a quitté le classement. Sa carte reste valable —
@@ -2932,6 +2951,7 @@ input:focus-visible {
   font-weight: 600;
   cursor: pointer;
 }
+.reveal-summary .reveal-poster { position: static; align-self: center; margin: 0; }
 
 /* Le Perfect : les cinq cartes ensemble, et l'écran ne se presse pas. */
 .perfect-banner {
@@ -4033,18 +4053,19 @@ input:focus-visible {
   font-weight: 900;
   letter-spacing: -.08em;
 }
-.booster-open-button {
-  border: 1px solid rgb(233 169 179 / .4);
-  border-radius: 999px;
-  padding: 10px 19px;
-  background: rgb(66 28 45 / .26);
+.booster-open-link {
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
   color: #e8c2ce;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: .045em;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
-.booster-open-button:focus-visible, .booster-tear-track:focus-visible {
+.booster-open-link:focus-visible, .booster-tear-track:focus-visible {
   outline: 2px solid #ffe7d4;
   outline-offset: 5px;
 }
@@ -4301,7 +4322,7 @@ input:focus-visible {
 .booster-opening-stage { position: relative; overflow: hidden; perspective: 900px; }
 .booster-opening-stage > .booster-foil,
 .booster-opening-stage > .booster-opening-instruction,
-.booster-opening-stage > .booster-open-button { position: relative; z-index: 2; }
+.booster-opening-stage > .booster-open-link { position: relative; z-index: 2; }
 .booster-opening-stage::before {
   content: "";
   position: absolute;

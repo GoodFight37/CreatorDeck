@@ -769,6 +769,57 @@ describe("store cloud", () => {
     expect(snapshot.isError).toBe(false);
   });
 
+  it.each([
+    ["la sauvegarde serveur ne contient pas le gain local", 2, 3],
+    ["la sauvegarde serveur contient déjà le gain local", 3, 3],
+  ])("conserve le sablier local de la série J2 quand %s", async (_case, remoteHourglasses, expected) => {
+    const local = saveWith({
+      hourglasses: 2,
+      streak: 1,
+      streakDay: gameDay(T0 - 24 * 60 * 60_000),
+      packs: 3,
+    });
+    const { store, api, applied } = harness({ signedIn: true, local });
+    const serverCards = [
+      serverCard("kaicenat", "legendary", "live"),
+      serverCard("ibai", "epic", "holo"),
+      serverCard("ninja", "rare", "standard"),
+      serverCard("auronplay", "uncommon", "standard"),
+      serverCard("rubius", "common", "standard"),
+    ];
+    api.openPack.mockResolvedValueOnce({
+      packs: 2,
+      lastRegenAt: "2026-03-01T10:00:00Z",
+      openings: 4,
+      cards: [
+        { creatorSlug: "kaicenat", rarity: "legendary", variant: "live", rareDrop: false },
+        { creatorSlug: "ibai", rarity: "epic", variant: "holo", rareDrop: false },
+        { creatorSlug: "ninja", rarity: "rare", variant: "standard", rareDrop: false },
+        { creatorSlug: "auronplay", rarity: "uncommon", variant: "standard", rareDrop: false },
+        { creatorSlug: "rubius", rarity: "common", variant: "standard", rareDrop: false },
+      ],
+      pity: 0,
+      streak: 2,
+      streakReward: { day: 2, points: 0, tokens: 0 },
+      save: remoteRow({
+        ...local,
+        packs: 2,
+        openings: 4,
+        streak: 2,
+        streakDay: gameDay(T0),
+        hourglasses: remoteHourglasses,
+        cards: serverCards,
+      }, SERVER_SAVE_AT),
+    });
+
+    const outcome = await store.openPack();
+
+    expect(outcome.status).toBe("drawn");
+    if (outcome.status !== "drawn") throw new Error("tirage attendu");
+    expect(outcome.streakReward).toMatchObject({ day: 2, hourglasses: 1 });
+    expect(applied.at(-1)?.hourglasses).toBe(expected);
+  });
+
   it("adopte les cartes d'une sauvegarde v8 sans effacer la séance locale v9", async () => {
     const seance = {
       day: "2026-03-01",
