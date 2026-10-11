@@ -1,12 +1,12 @@
 ## Triage roadmap et problèmes connus — 11 octobre 2026
 
-Le code produit `980bdf8` est inclus dans le checkpoint documentaire `d585db6`
+Le code produit `980bdf8` est inclus dans le checkpoint documentaire `b3828d5`
 sur main. CI `38164889818` est verte (4/4 jobs), le statut Vercel
 du commit est success et il n’y a aucune PR ouverte. La roadmap sépare désormais
 le plan actif de l’historique ancien. K-039 est résolu après CI ; le parcours
-sablier réel est confirmé par Malik. VIS-01/K-038 est le seul retour humain
-prioritaire encore demandé ; plusieurs anciens essais après publication restent
-« inconnus », sans être présentés comme des bugs ouverts. Aucun code ni SQL changé.
+sablier réel est confirmé par Malik. Les retours utilisateurs encore à rapprocher
+sont groupés A–F dans la roadmap ; ils sont des vérifications, pas des bugs
+actifs. Malik transmettra leurs lettres/statuts. Aucun code ni SQL changé.
 
 ## Présence sociale dans le Drop — 11 octobre 2026
 

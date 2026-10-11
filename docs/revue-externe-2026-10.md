@@ -1,4 +1,9 @@
-# Revue externe d'octobre 2026 — ce qui a été fait, refusé, ou reste ouvert
+# Revue externe d'octobre 2026 — archive des constats et réponses
+
+> **Revue historique, pas backlog courant.** Les constats, « reste ouvert » et
+> anciennes priorités ci-dessous décrivent l’état d’octobre 7. Ne pas les
+> recopier comme nouvelles tâches. Le plan actuel et les seuls retours joueur
+> encore à rapprocher sont dans [la roadmap](roadmap.md#retours-utilisateur-à-rapprocher--liste-unique).
 
 Ce document est le **suivi écrit** de la revue de sécurité/DB/perf envoyée par un
 relecteur externe le 7 octobre 2026. Chaque affirmation a été **vérifiée dans le

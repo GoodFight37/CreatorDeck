@@ -9,14 +9,19 @@ PR #7 fusionnée ; PR #8 et #3 fermées ; aucune PR ouverte.
 La roadmap distingue maintenant les chantiers livrés, les validations humaines
 et l’historique ancien. Aucun nouveau chantier de code issu des suggestions
 archivées n’est planifié. Le parcours sablier 4/4 → 5/4 → ouverture → 4/4 est
-confirmé par Malik. VIS-01/K-038 reste le seul contrôle humain prioritaire :
-apprécier le rendu de la sortie du sachet sur un téléphone physique. Les essais
-post-publication K-036/K-037/K-028/K-027 ne sont pas établis ; le registre les
-qualifie d’inconnus, pas de défauts ouverts.
+confirmé par Malik. Ses retours encore à rapprocher sont groupés A–F dans la
+roadmap : ouverture visuelle, scroll, Paquet Scène, objectif Live, cadeau/tutoriel
+et confirmation de la version visible. Malik a répondu qu’il transmettra les
+lettres et statuts ; aucun résultat A–F n’est encore consigné. Ils sont des
+vérifications, pas des bugs actifs.
 
-Documents actualisés : `roadmap.md`, `known-issues.md`, `decisions.md` et
-`historique-livraisons.md`. Aucun code, SQL, réglage réseau ou donnée modifiés ;
-`git diff --check` réussi. Le SHA du commit de ce checkpoint se consulte dans
+Documents actualisés : la roadmap porte la liste A–F, le registre mappe K-003,
+K-005, K-006, K-012, K-020/21/27/28/36/37/38 sur cette liste ; l’ancien tableau
+de décisions de l’atelier, la revue externe et les pistes « Ta chaîne » sont
+marqués historiques ; le périmètre indique le vrai statut des PR et migrations.
+Les décisions D-022/023/024/032/034/035/048 reflètent leur issue réelle.
+La réponse A–F de Malik est attendue. `git diff --check` réussi. CI
+`38165486381` est verte sur `b3828d5` (quatre jobs). Le SHA du commit de ce checkpoint se consulte dans
 `git log -1 --format=%H -- docs/agent-handoff.md` après publication.
 
 ## UX-03 — activité sociale visible depuis le Drop — 11 octobre 2026

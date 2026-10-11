@@ -344,7 +344,13 @@
   > des paliers** (cinq cadences de chat, cinq nombres de bulles), joué par
   > `npm run supabase:verify`.
 
-## 3. Ce qu'il reste à faire
+## 3. Anciennes propositions — archive, aucune tâche active
+
+> **Archive, pas chantier actif.** Cette section décrit l'ancien état de la
+> simulation retirée. Les mentions de migrations `0040`/`0041` en attente et
+> d'équilibrage sont dépassées : le projet CreatorDeck a depuis appliqué et
+> vérifié les migrations jusqu'à `0049`. Rien de cette simulation n'attend une
+> action du joueur ; seule une nouvelle demande produit pourrait la rouvrir.
 
 > Les **invités sur le bureau** (étape 6), la **seconde série de paliers**
 > (étape 7), la **scène du bureau avec le plateau** (étape 8), la **refonte
@@ -354,9 +360,8 @@
 > décor, emblème d'Arène, arrivée en fumée — a été **retirée** le 8 octobre 2026
 > au soir (voir le § 1) : ce qui suit décrit le jeu d'aujourd'hui, et la pièce
 > reviendra si et quand une direction visuelle est choisie.
-> **Deux migrations attendent le joueur** : `0040` puis `0041`, en une commande
-> (`npx supabase db push`). Il ne reste ensuite que l'équilibrage — et il se fait
-> en jouant.
+> À l'époque de cette note, `0040` puis `0041` restaient à appliquer. Cette
+> ancienne consigne est close ; voir l’avertissement ci-dessus.
 
 - [x] **Système d'améliorations de setup (Tycoon : micro, caméra, PC)** — livré
   en deux séries : les cinq paliers en **points** (étape 4) et les trois paliers

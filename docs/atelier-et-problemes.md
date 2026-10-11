@@ -1,6 +1,7 @@
-# L'atelier : les problèmes ouverts au 9 octobre 2026
+# L'atelier : archives au 9 octobre 2026
 
-> **À jour au 9 octobre 2026.** Branche `arena/01a10c75-creatordeck` ; le
+> **Archive historique — ne pas utiliser comme liste de tâches actuelle.** État
+> au 9 octobre 2026, branche `arena/01a10c75-creatordeck` ; le
 > détail commit par commit est dans `docs/historique-livraisons.md`. Ce fichier
 > peut être envoyé tel quel à un relecteur externe : il décrit **ce qui ne
 > marche pas dans l'atelier**, pas le jeu. Pour le jeu : `README.md`. Pour ce
@@ -157,7 +158,14 @@ module (`OPENING_DELAY_MS`, `PACK_TEAR_MS`, `EPIC_SILENCE_MS`,
   tirage local. Si le joueur la trouve longue, c'est `PACK_TEAR_MS` qu'on
   raccourcit, pas le silence — le silence est ce qui fait le bruit.
 
-## 6. Ce qui attend une décision du joueur
+## 6. Anciennes questions — remplacées par la liste courante
+
+Le tableau qui suit est une photographie du 9 octobre 2026. Ses questions ne
+sont plus un formulaire de décision : les migrations 0040–0042 ont été dépassées
+par les migrations de production jusqu’à 0049, la PR #7 a été fusionnée, et les
+contrôles encore utiles sont regroupés sous A–F dans la section courante de la
+[roadmap](roadmap.md#retours-utilisateur-à-rapprocher--liste-unique). Ne pas
+rejouer les anciennes opérations ni redemander séparément les choix visuels ci-dessous.
 
 | Sujet | État |
 |---|---|

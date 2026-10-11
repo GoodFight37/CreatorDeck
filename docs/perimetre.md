@@ -34,17 +34,21 @@ de ces gains ne sont pas intégralement validées côté serveur (D-032).
 - **Les règles vivent en double** : TypeScript **et** SQL. Une règle touchée d'un
   seul côté casse un test miroir (`src/lib/supabase-*.test.ts`) — c'est voulu.
   La dernière définition d'`open_pack()` est `0035_jetons.sql`.
-- **On vérifie en lançant, pas en relisant** : `npm test` (**1 077**, 69
-  fichiers), `npm run ecrans` (les **56** captures), `npm run supabase:verify`
-  (**559** contrôles). Pour un déménagement de code : capture avant
+- **On vérifie en lançant, pas en relisant** : les anciens nombres de tests
+  inscrits dans ce document sont datés. Utiliser la CI liée au commit courant
+  dans la [passation](agent-handoff.md) pour les chiffres exécutés ; ne pas
+  comparer des compteurs venant de commits différents. Pour un déménagement de code : capture avant
   (`ECRANS_DUMP=/tmp/avant`), `diff -r` après.
 - **Les noms visibles** : Drop, Binder, Craft, Toi — et « Objectifs et saisons ».
   Un écran s'appelle comme le joueur le lit, pas comme le fichier s'appelle.
 - **Jamais « hors ligne »** pour décrire le jeu : il est **en ligne**. Le build
   sans cloud est un mode de développement et de test, pas le jeu distribué.
 - **En français**, aucun contenu Pokémon, clé **anon/publishable** seulement.
-- **Un seul écrivain à la fois** sur la branche de travail, et **aucune PR n'est
-  fusionnée**. Une branche d'essai se relit, jamais ne se fusionne.
+- **Un seul écrivain à la fois** sur la branche de travail ; les anciennes
+  instructions de ne pas fusionner une PR décrivaient une période passée. La PR
+  #7 a été fusionnée et #8/#3 fermées le 11 octobre 2026 ; actuellement, aucune
+  PR n’est ouverte. Toute future fusion doit suivre l’autorisation de Malik et
+  les consignes courantes de `AGENTS.md`.
 - **Un avis n'est pas un résultat.** Les rapports externes — Gemini, Claude, Grok
   — se lisent dans le code avant d'être suivis : plusieurs ont produit des points
   faux, un SQL en collision avec une migration existante, et une capture
@@ -64,8 +68,8 @@ de ces gains ne sont pas intégralement validées côté serveur (D-032).
 | **Un rival hebdomadaire parmi ses amis** (écart de collection affiché) | **Refusé** : l'écart est déjà **public et comparable** (`player_profile()`, classements global / Gold / par famille, arène hebdomadaire). Le seul incrément serait une notification qui apprend à un joueur qu'un *ami* le dépasse — la comparaison sociale entre deux personnes qui se connaissent est la mécanique la plus toxique du lot (`supabase/migrations/0037_gardes.sql`, en-tête) |
 | **Roue casino**, **« Streameur du Jour »** | **Refusés** (revue Gemini) : remplacés par le **Planning du Streamer** et les missions du jour |
 | **Sabliers, XP et niveau au serveur** (au-delà des jetons) | **Migration globale refusée**, moteur hors cloud maintenu. Exception ciblée D-032 : dépense en ligne des sabliers reliée à la réserve serveur après constat K-030 ; gains/XP/niveau restent locaux |
-| **`@capacitor/preferences` pour la session** | **Suggestion ouverte**, non faite : la sauvegarde est un blob trop gros pour `Preferences` — `docs/revue-externe-2026-10.md` §3 |
-| **Une PR à fusionner** | **Non** : la PR #7 reste ouverte, aucune fusion — voir `docs/depot-et-github.md` |
+| **`@capacitor/preferences` pour la session** | Piste externe ancienne, en pause ; aucune décision ni tâche actuelle. Revoir seulement si un besoin concret apparaît. |
+| **Une PR à fusionner** | Aucune PR ouverte au 11 octobre 2026 : #7 est fusionnée, #8 et #3 fermées. Ne pas présenter leur ancien état comme une action à faire. |
 
 ## Où est le reste
 
@@ -100,10 +104,11 @@ de ces gains ne sont pas intégralement validées côté serveur (D-032).
 Aucune affirmation sur le serveur ne se croit sur parole, la mienne comprise :
 
 - **ce qui est collé** : `schema_versions()`, lisible **sans compte**
-  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — les `true` attendus
-  pour `0030` → `0039`, puis `0040`, `0041` et `0042` dès que le joueur les a
-  posées
-  (`npx supabase db push`) ;
+  (`POST /rest/v1/rpc/schema_versions` avec la clé anon) — vérifier les
+  migrations attendues pour le HEAD courant. Au 11 octobre 2026, le workflow
+  automatique a appliqué et vérifié `0049` sur CreatorDeck ; ne pas réutiliser
+  la vieille liste `0030`–`0042` ni coller manuellement des migrations déjà
+  installées ;
 - **une fonction existe** : `401`/`42501` = présente mais réservée au rôle de
   service ; `404`/`PGRST202` = absente.
 

@@ -1,10 +1,11 @@
 ## État courant — 11 octobre 2026
 
 Code produit vérifié : `980bdf8bc9f12f995702abbdd2270f429927d7aa` ; le tri
-documentaire est publié sur `main` dans `d585db612d839dc81c3c3cc94770d17d3f02da74`.
-CI GitHub `38164889818` : succès, quatre jobs (Playwright, unitaires/écrans/
-build, SQL jetable, cloud simulé). Statut Vercel du commit : succès, déploiement
-terminé. Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
+documentaire est publié sur `main` dans `b3828d508e72a4ebf8777ff321e53a3b051652b0`.
+CI GitHub `38164889818` sur le code et `38165486381` sur le checkpoint docs :
+succès, quatre jobs chacun (Playwright, unitaires/écrans/build, SQL jetable,
+cloud simulé). Statut Vercel du code `980bdf8` : succès, déploiement terminé.
+Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
 
 ### Plan actif
 
@@ -13,16 +14,27 @@ terminé. Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
   sablier et activité sociale sont livrés. Ne pas ressortir comme tâches les
   anciennes suggestions de badges/avatars, équilibrage ou parité sans nouvelle
   décision produit.
-- **Retour humain encore utile :** validation visuelle du nouveau départ du
-  sachet sur un téléphone réel (K-038 / VIS-01). Playwright simulé et CI sont
-  verts, mais ne remplacent pas ce contrôle physique.
 - **Sablier :** le parcours réel 4/4 → 5/4 → ouverture → 4/4 est confirmé par
   Malik ; ce point n’est plus en attente (K-030, K-035, K-031).
-- **Contrôles réels facultatifs :** les notes ne permettent pas de confirmer les
-  essais après publication pour K-036 (défilement), K-037 (Paquet Scène), K-028
-  (objectif en ligne) et K-027 (cadeau). Leur état est « inconnu », pas « bug
-  ouvert » ; rien à faire en parallèle pour avancer sur le code. Les réouvrir
-  seulement si un essai révèle un défaut.
+
+### Retours utilisateur à rapprocher — liste unique
+
+Ce sont des vérifications après publication, pas des bugs actifs ni des tâches
+de code. Les statuts inconnus restent en attente de retour, sans bloquer un
+nouveau chantier.
+
+| Repère | Ce qu’il faut confirmer | Référence |
+|---|---|---|
+| A | Sur téléphone, rendu et rythme de l’ouverture ; sachet absent pendant la sortie, toucher et reflets à ton goût | K-005, K-038, VIS-01 |
+| B | Le défilement ne déclenche plus l’ouverture ; un appui explicite l’ouvre | K-012, K-036 |
+| C | Le Paquet Scène affiche sa disponibilité réelle et ne clignote plus avec un faux refus « déjà ouvert » | K-037 |
+| D | Après un Live Drop, l’objectif du jour progresse bien | K-028 |
+| E | Les boosters cadeau restants s’ouvrent sans message/toast qui masque le bouton ; le tutoriel cadeau reste cohérent | K-020, K-027 |
+| F | L’application testée affiche bien les changements publiés récemment | K-003 |
+
+Le seul verdict subjectif important avant un autre polissage visuel est A ; B–F
+peuvent simplement rester inconnus tant qu’ils n’ont pas été testés. Le parcours
+sablier est déjà confirmé et ne figure plus dans cette liste.
 
 Les sections datées ci-dessous sont un journal de livraisons et d’observations,
 pas une liste de tâches à reprendre. Les anciennes cases `[ ]` sont historiques
@@ -36,8 +48,8 @@ ne restent pas sous la pile. Disparition immédiate lorsque Reflets sont coupés
 ou que le système réduit les animations, pile visible dans les deux cas. Le
 passage à Reveal conserve son délai de 1900 ms, les timings Reveal/Perfect/
 silence/tear restent inchangés. E2E ciblé : 4/4 bureau et téléphone simulé ;
-Code publié sur main ; CI post-publication laissée au suivi de Malik. Pas de
-migration ni validation sur téléphone physique.
+CI `38162996089` et `38164889818` vertes. Retour physique classé A dans le plan
+courant. Pas de migration.
 
 ## Missions du jour — libellés corrigés (11 octobre 2026)
 
@@ -132,13 +144,11 @@ Les sections suivantes sont des observations historiques datées.
 
 K-035, D-037 ; détails et limites dans [la passation](agent-handoff.md).
 
-## Complément du 11 octobre 2026 — automatisation encore à corriger
+## Complément historique du 11 octobre 2026 — K-034 avant correction
 
-0047 est appliquée et vérifiée. **K-034 reste ouvert** : prévalidation sur le
-baseline refusant 0047 manual avant lecture de l'historique réel, même lorsqu'elle
-est déjà appliquée. Aucune correction de code effectuée dans ce checkpoint.
-Prochaine étape : corriger et tester ce cas sans réappliquer 0047 ni retirer
-l'approbation des migrations manuelles réellement en attente.
+À cette date, 0047 est appliquée et vérifiée ; K-034 reste alors ouvert. Il a
+ensuite été corrigé dans `ee10a6d`, CI verte, run automatique `38142681999`
+réussi. Cette note garde la reproduction historique, pas une prochaine action.
 Voir [la passation actualisée](passation-chat-temporaire-0047.md) pour reproduction,
 preuves, limites, réseau du nouvel environnement et blocage d'édition signalé.
 Les sections suivantes conservent les observations historiques datées.

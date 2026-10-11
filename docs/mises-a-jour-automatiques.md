@@ -7,17 +7,18 @@ installée ne bloque plus, approbation maintenue pour manual en attente.
 [Run automatique 38142681999](https://github.com/GoodFight37/CreatorDeck/actions/runs/38142681999) : **success** sur ce SHA, log lu :
 « La base est déjà à jour et vérifiée. Aucun SQL de migration exécuté. »
 Git/API/logs effectivement accessibles, preset et six domaines appliqués sans changement réseau.
-0047 non réappliquée, K-031 inchangé, téléphone réel toujours à tester.
+0047 non réappliquée. K-031 a ensuite été corrigé par 0049, qui a été appliquée
+automatiquement et vérifiée ; Malik a confirmé le parcours sablier réel sur
+téléphone. Aucun de ces contrôles n’est en attente.
 Comptages CI, commandes, SHA et limites : [checkpoint courant](agent-handoff.md).
 Les sections suivantes sont des observations historiques datées.
 
-## Complément du 11 octobre 2026 — automatisation encore à corriger
+## Complément du 11 octobre 2026 — état historique, K-034 depuis résolu
 
-0047 est appliquée et vérifiée. **K-034 reste ouvert** : prévalidation sur le
-baseline refusant 0047 manual avant lecture de l'historique réel, même lorsqu'elle
-est déjà appliquée. Aucune correction de code effectuée dans ce checkpoint.
-Prochaine étape : corriger et tester ce cas sans réappliquer 0047 ni retirer
-l'approbation des migrations manuelles réellement en attente.
+0047 était appliquée et vérifiée ; à cette date, **K-034 restait ouvert** :
+prévalidation sur le baseline refusant 0047 manual déjà enregistrée. K-034 a
+ensuite été corrigé dans `ee10a6d`, testé et vérifié par le run automatique
+`38142681999`. Voir le résumé courant ci-dessus ; aucune action n’est en attente.
 Voir [la passation actualisée](passation-chat-temporaire-0047.md) pour reproduction,
 preuves, limites, réseau du nouvel environnement et blocage d'édition signalé.
 Les sections suivantes conservent les observations historiques datées.
