@@ -9,7 +9,7 @@
  */
 import { useState } from "react";
 
-import { BookOpen, Check, Gem, Layers3, Radio, RotateCcw, Sparkles, Target, Trophy, Unlock, Zap } from "lucide-react";
+import { BookOpen, Check, Gem, Gavel, Layers3, Radio, RotateCcw, Sparkles, Target, Trophy, Unlock, Zap } from "lucide-react";
 
 import { SeasonsSection } from "@/components/seasons-section";
 
@@ -83,6 +83,11 @@ const MISSION_LOOK: Record<string, { icon: React.ReactNode; label: string; detai
     icon: <Radio size={19} />,
     label: "Touche ta famille ou un Direct",
     detail: "Une carte de la famille visée, ou une variante Live",
+  },
+  tribunal: {
+    icon: <Gavel size={19} />,
+    label: "Juge 5 dossiers",
+    detail: "Rends un verdict sur 5 dossiers distincts au Tribunal des Bannis",
   },
 };
 
@@ -163,7 +168,7 @@ export function MissionsView({
 }) {
   const dayCopy =
     game.missions.filter((mission) => mission.done).length === game.missions.length
-      ? "Les trois missions du jour sont faites"
+      ? "Toutes les missions du jour sont faites"
       : `${game.missions.filter((mission) => mission.done).length}/${game.missions.length} mission${
           game.missions.length > 1 ? "s" : ""
         } du jour faite${game.missions.filter((mission) => mission.done).length > 1 ? "s" : ""}`;

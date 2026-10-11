@@ -436,3 +436,11 @@ solde de points. Les feuilles restent consultables même avant ces conditions,
 pour expliquer le système sans écran mort. Valeurs dérivées de la collection et
 des fonctions existantes (`sellableCards`, solde joueur) ; aucun seuil inventé,
 aucun soft-lock ou migration ajouté. Vérification DOM ciblée 6/6, lint ciblé.
+
+
+## D-046 — 11 octobre 2026 : récapitulatif des missions piloté par la liste
+
+Le nombre de missions vient de la configuration ; le texte d’achèvement ne doit
+pas coder « trois » quand le Tribunal a porté le total à quatre. La mission
+Tribunal garde sa cible de cinq verdicts distincts et l’explique dans Progression.
+Aucune règle/récompense changée. DOM ciblé 2/2, lint ciblé.

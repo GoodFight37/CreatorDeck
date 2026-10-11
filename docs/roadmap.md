@@ -1,3 +1,10 @@
+## Missions du jour — libellés corrigés (11 octobre 2026)
+
+Bilan toutes faites générique (les quatre missions de configuration), mission
+Tribunal avec explication des cinq dossiers distincts et icône. Aucun changement
+de progression/récompense. DOM 2/2, lint ciblé et diff-check verts ; contrôles
+GitHub suivis par Malik.
+
 ## Accès Arène et Hôtel — clarification livrée localement (11 octobre 2026)
 
 Dans le menu Toi, afficher compte requis, cartes distinctes nécessaires (X/5),

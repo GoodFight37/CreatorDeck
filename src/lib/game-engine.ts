@@ -634,7 +634,7 @@ export type GameView = {
     /** La journée de jeu (6 h UTC) qui décide — affichée en clair si besoin. */
     day: string;
   };
-  /** Les trois missions du jour. */
+  /** Les missions du jour configurées dans les données de progression. */
   missions: MissionView[];
   /** Série de jours, et la récompense qui attend si le 7ᵉ jour est atteint. */
   streak: {

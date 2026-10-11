@@ -1,3 +1,14 @@
+## Missions quotidiennes : quatre, et le Tribunal expliqué — 11 octobre 2026
+
+Depuis `a8f14d60e1814bc030aa3a7ec553e55b90979865`, correction limitée à
+Progression : le bilan terminé ne prétend plus qu’il n’y a que trois missions ;
+la mission Tribunal indique cinq dossiers distincts et reçoit une icône claire.
+Le type GameView ne fige plus le nombre de missions dans son commentaire. Aucune
+règle, cible, récompense ou SQL modifiée. `npm run ecrans --
+src/ecrans-missions.test.tsx` : 2/2 ; ESLint ciblé et diff-check verts.
+Contrôles GitHub laissés à Malik selon son souhait : il signale les erreurs.
+Réservation libérée après publication.
+
 ## Accès Arène/Hôtel — 11 octobre 2026
 
 Base de départ `9ea238459c6feaf31be770f1b2274b9d7fabb6f7`, main vérifié égal,
