@@ -26,11 +26,21 @@
 - Ni production ni serveur distant contactés ; 0048 pas appliquée, aucune
   donnée réinitialisée, aucun workflow manuel lancé. Contrôle visuel/téléphone
   non effectué. Pas de run GitHub déclenché pour ce travail à ce checkpoint.
-- Prochaine action : revue finale des diffs/docs, commit ciblé, publication
-  normale sur `main` autorisée par Malik, puis vérifier SHA distant, contrôles
-  CI réellement déclenchés et éventuel workflow Supabase automatique. 0048
-  restant `manual`, ne pas la déployer ; un job automatique doit la refuser ou
-  ne pas l’appliquer. Mettre à jour ce checkpoint avec les résultats observés.
+- Publication initiale `402df83a57c545ce823bf145bc036a33209214a6` : run CI
+  38144539343, SQL jetable vert mais job UI échoué sur l’ancienne assertion
+  `src/ecrans.test.tsx` ; corrigée dans `c3799decbc0edfa8d4095af78549cba2fdc05f39`.
+  Second run 38144662542 : unitaires/écrans/statique/build et SQL verts ; E2E
+  échoue car deux scénarios pointaient encore vers l’ancien menu. Logs lus :
+  `drop-binder.spec.ts` ciblait le bouton dans les détails, et le scénario
+  sablier (cloud simulé) attendait « Jetons et sabliers ». Ces sélecteurs sont
+  corrigés localement. E2E ciblé local impossible : navigateur Chromium 1243
+  absent (`browserType.launch: Executable doesn't exist`), et téléchargement
+  Playwright non tenté. Aucun contournement proxy/TLS.
+- Prochaine action : publier le correctif ciblé des sélecteurs E2E, attendre
+  son run GitHub et lire les logs/contrôles. Vérifier le workflow Supabase
+  automatique déclenché ou absent après CI. 0048 restant `manual`, ne pas la
+  déployer ; le job automatique ne doit pas l’appliquer. Mettre à jour ce
+  checkpoint avec le résultat observé. Téléphone réel reste à tester.
 
 ---
 

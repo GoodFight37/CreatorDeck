@@ -7,10 +7,9 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
   const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(open).toBeEnabled();
   await expect(open).toBeInViewport();
-  const details = page.locator(".drop-pack-details");
-  await expect(details).not.toHaveAttribute("open", "");
-  await details.locator("summary").click();
-  await expect(details.getByRole("button", { name: /Utiliser 1 sablier/ })).toBeVisible();
+  const hourglass = page.getByRole("button", { name: /Utiliser 1 sablier/ });
+  await expect(hourglass).toBeVisible();
+  await expect(page.locator(".drop-pack-details")).not.toContainText("Utiliser 1 sablier");
   await page.getByRole("button", { name: "Mon Binder", exact: false }).click();
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
   await page.getByRole("button", { name: "Retour au Drop", exact: true }).click();
