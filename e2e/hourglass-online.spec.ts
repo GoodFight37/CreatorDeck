@@ -52,7 +52,7 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   await page.goto("/");
   await expect(page.getByRole("dialog", { name: "Tutoriel CreatorDeck" })).toHaveCount(0);
   const button = page.getByRole("button", { name: /Utiliser 1 sablier/ });
-  await expect(page.locator(".drop-pack-details")).not.toContainText("Utiliser 1 sablier");
+  await expect(page.locator(".hourglass-action").locator("xpath=ancestor::details")).toHaveCount(0);
   await expect(button).toBeEnabled();
   await button.click();
   await expect(page.getByText("Recharge impossible à confirmer. Réessaie pour retrouver ton solde.", { exact: true })).toBeVisible();

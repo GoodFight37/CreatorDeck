@@ -85,12 +85,13 @@
 .home-view .open-panel .pity-row { color: var(--ink); border-color: var(--muted); font-size: 12px; }
 .home-view .open-panel .pity-row svg { color: var(--accent-deep); }
 .home-view .open-panel .pity-row.now { font-weight: 600; }
-.drop-pack-details { margin-top: 8px; border-top: 1px dashed var(--muted); }
-.drop-pack-details summary { display: flex; min-height: 44px; align-items: center; justify-content: space-between; color: var(--ink); font-size: 12px; cursor: pointer; list-style: none; }
-.drop-pack-details summary::-webkit-details-marker { display: none; }
-.drop-pack-details[open] summary svg { transform: rotate(90deg); }
-.drop-pack-details summary:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
-.home-view .token-row, .home-view .token-row strong, .home-view .token-goal { color: var(--ink); }
+@media (max-width: 430px) {
+  .home-view .open-panel { padding: 14px; }
+  .home-view .stock-row { margin-bottom: 8px; }
+  .home-view .open-panel .pity-row { margin-top: 4px; padding-block: 5px; }
+  .home-view .token-row { margin-top: 4px; }
+}
+.home-view .token-row, .home-view .token-row strong { color: var(--ink); }
 .home-view .secondary-action { color: var(--ink); border-color: var(--muted); font-size: 12px; line-height: 1.5; padding-block: 9px; }
 
 .drop-activities { margin-top: 28px; }

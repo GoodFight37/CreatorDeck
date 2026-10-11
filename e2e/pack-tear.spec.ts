@@ -352,7 +352,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
       await page.setViewportSize(viewport);
       const pack = (await dialog.locator(".booster-physical-scene").boundingBox())!;
       const seam = (await dialog.locator(".booster-tear-track").boundingBox())!;
-      const action = (await dialog.locator(".booster-open-button").boundingBox())!;
+      const action = (await dialog.locator(".booster-open-link").boundingBox())!;
       expect(pack.width).toBeLessThanOrEqual(viewport.width * .65);
       expect(pack.height).toBeLessThanOrEqual(viewport.height * .45);
       const seamCenter = seam.y + seam.height / 2;
