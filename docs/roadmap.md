@@ -1,3 +1,15 @@
+## Sabliers en ligne — diagnostic du 11 octobre 2026
+
+- [x] Retrouver l'origine du blocage : `5c120f3`, 5 octobre, passage de
+  réserve/ouvertures au serveur et désactivation explicite des sabliers locaux.
+- [ ] Définir et implémenter une dépense avec recharge serveur cohérente,
+  validation du solde et absence de double dépense. Aucun correctif engagé.
+
+Les gains de sabliers restent présents, leur dépense en ligne n'est pas
+implémentée. Le nouvel accueil conserve un verrou ancien. K-030 et preuves
+historiques dans [la passation](agent-handoff.md) ; aucun changement de données,
+récompenses ou SQL lors du diagnostic.
+
 ## Objectif quotidien après Live Drop en ligne — 11 octobre 2026
 
 - [x] Conserver les compteurs de mission lors de l'adoption de la sauvegarde

@@ -1,3 +1,44 @@
+## Checkpoint courant — diagnostic des sabliers en ligne — 11 octobre 2026
+
+- Demande de Malik : retrouver pourquoi les sabliers, utilisables auparavant,
+  affichent maintenant « Sablier indisponible en ligne ». Diagnostic seulement,
+  aucune modification produit/SQL et aucune opération Supabase.
+- Reprise sur `main`, local/distant `1efbf5772be71aeba2ffc15e11a0760d97db29e0`,
+  checkout propre ; `git ls-remote --heads origin main` réussi avec l'exécution
+  réseau autorisée et le proxy hérité.
+- Cause historique prouvée : commit
+  [`5c120f3`](https://github.com/GoodFight37/CreatorDeck/commit/5c120f3488a83b71a4216e86bc1b6a69cc726469),
+  5 octobre 2026, « Écran : ouvrir un booster passe par le serveur ».
+  Dans le même diff, l'ouverture passe de `gameStore.openPack()` à
+  `cloudStore.openPack()`, la réserve est relue par `pack_status()`, et le
+  bouton des sabliers reçoit `disabled={serverReserve || ...}` avec
+  `serverReserve={cloud.configured}`. Le commit explique explicitement que
+  le sablier local ne peut pas avancer une réserve serveur.
+- Avant ce commit, le bouton était actif et appelait déjà
+  `gameStore.useHourglass()` → `spendHourglass()` : débit local d'un sablier
+  et recul de `lastPackRegen` de 15 minutes. Cette opération n'est toujours
+  reliée à aucun RPC de dépense/accélération de recharge. Le serveur lit
+  `pack_state.last_regen_at` ; modifier l'ancre locale n'avance pas sa réserve.
+- Le découpage `b365450` du 8 octobre transporte le verrou dans
+  `drop-view.tsx` et emploie le message court actuel. La refonte Drop/Binder
+  `4f91c71` conserve ce comportement ; elle n'introduit pas le blocage.
+- Les sabliers restent attribués par les missions, jalons, niveaux et certains
+  gains d'arène alors que leur dépense est bloquée dans le jeu en ligne :
+  intégration fonctionnelle incomplète, K-030. L'ancienne conservation locale
+  était une décision d'architecture, pas une preuve d'un parcours en ligne
+  complet. La version anciennement servie au téléphone n'a pas été identifiée.
+- Preuves : `git show 5c120f3` et parent, historique `git log -S`, lecture du
+  handler actuel, du moteur et des migrations. Aucun test/build relancé :
+  diagnostic par code/historique, aucun comportement modifié.
+- Prochaine étape proposée, non implémentée : définir puis tester une dépense
+  de sablier reliée à la recharge serveur, avec validation du solde et une
+  opération atomique évitant les doubles dépenses. Réactiver seulement le
+  bouton actuel pourrait dépenser un sablier sans avancer la réserve réelle.
+  Aucun déplacement global XP/niveau/sabliers adopté dans ce diagnostic.
+  Diagnostic enregistré dans les documents partagés ; réservation libérée.
+
+---
+
 ## Checkpoint courant — mission après un Live Drop en ligne — 11 octobre 2026
 
 - Demande de Malik : l'accueil affiche « Sablier indisponible en ligne » et
