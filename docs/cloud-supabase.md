@@ -396,9 +396,11 @@ remplacé sans que le joueur le demande : l'écran **Mon compte** affiche alors
      versement passe par `_wallet_apply()` avec une référence par **journée de
      jeu** (`serie-jN-<jour>`) : dix boosters le même jour ne paient qu'une fois,
      et la réponse annonce `0 point` dans ce cas — le serveur ne promet jamais ce
-     qu'il n'a pas versé. Les **jetons** et les **sabliers** ne passent pas par
-     le serveur : ils vivent sur l'appareil, qui les ajoute à partir du même
-     barème (`src/data/progression.json`). Même signature que `0031` :
+     qu'il n'a pas versé. Au moment de cette migration, les **jetons** et les
+     **sabliers** étaient ajoutés sur l'appareil à partir du même barème
+     (`src/data/progression.json`) ; `0035` a ensuite déplacé les jetons côté
+     serveur, et `0047` a relié la dépense des sabliers à la réserve en ligne.
+     Même signature que `0031` :
      `create or replace` **remplace** la fonction — pas de surcharge possible.
      Détail : §8, « Le plancher de malchance, les jetons, les missions du
      jour ».
@@ -863,9 +865,11 @@ vérifiées par un test qui échoue si on les retire :
 
 ### Ce que le serveur ne vérifie pas (volontairement)
 
-L'XP et le niveau restent calculés sur l'appareil, comme les **sabliers** et
-les **jetons** : ces ressources-là n'ouvrent que du contenu solo et ne valent
-rien pour un autre joueur. Le **contenu des boosters** (donc les cartes) et,
+L'XP et le niveau restent calculés sur l'appareil. Les gains de sabliers sont
+aussi déterminés côté client : le serveur contrôle le solde enregistré et leur
+dépense atomique en ligne depuis `0047`, mais ne certifie pas l'origine de chaque
+gain. Les **jetons** sont enregistrés et dépensés côté serveur depuis `0035`.
+Le **contenu des boosters** (donc les cartes) et,
 depuis `0027`, le **solde de points** sont décidés et écrits par le serveur — un
 solde trafiqué dans la sauvegarde est recollé à la vérité à la première lecture
 et n'a rien pu acheter entre-temps. Depuis `0019`, une sauvegarde qui invente
@@ -1427,11 +1431,12 @@ pèsent sur la **vidéo du jour**.
   relu du fichier, Légendaire invitée **hors ligne** puis **en direct**, colonnes
   écrites, republication, direct périmé, et les deux refus de permission.
 
-**Poser `0041` après `0040`.** C'est la dernière migration écrite : elle ajoute
-deux colonnes, puis remplace `streamer_publish()`, `streamer_status()` et
-`schema_versions()`. `npx supabase db push` les applique dans l'ordre des
-numéros ; pour vérifier après, `select public.schema_versions() -> '0041';` doit
-rendre `true`.
+**Repère historique : `0041` suit `0040`.** Elle ajoute deux colonnes, puis
+remplace `streamer_publish()`, `streamer_status()` et `schema_versions()`. Des
+migrations `0042` à `0047` ont depuis été ajoutées ; 0047 est appliquée et
+vérifiée sur CreatorDeck. Pour tout déploiement actuel, suivre
+[la procédure Supabase](mises-a-jour-automatiques.md), pas les anciennes
+instructions de pose de cette section.
 
 ### Le Tribunal paie sa séance (`0042`)
 

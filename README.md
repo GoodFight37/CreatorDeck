@@ -111,7 +111,7 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run start` | sert `out/` tel qu'il sera embarqué (`serve`) |
 | `npm run lint` / `typecheck` / `test` | ESLint · `tsc --noEmit` · Vitest (moteur, sauvegarde, store) |
 | `npm run e2e` | tests de bout en bout : le jeu dans un vrai navigateur (Playwright). Première fois : `npx playwright install chromium` |
-| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans de l'application — **56 instantanés** : les quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits**, **l'arrivée sur les échanges**, **le classement feuilleté** et **le reflet d'une carte sous le doigt** — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
+| `npm run ecrans` | monte l'application dans un DOM (jsdom) et capture les écrans des quatre piliers, les feuilles ouvertes, un booster révélé, le carnet, **l'Atelier** (créateurs manquants, doublons), **les crédits**, **l'arrivée sur les échanges**, le classement et le reflet d'une carte sous le doigt — horloge et hasard figés. `ECRANS_DUMP=/tmp/avant npm run ecrans` puis `diff -r` dit si un écran a bougé après un déménagement de code |
 | `npm run android:sync` | `build` puis copie `out/` dans le projet Android (`cap sync`) |
 | `npm run android:open` | ouvre `android/` dans Android Studio |
 | `npm run android:debug` | `android:sync` puis Gradle `assembleDebug` (APK de test, signé debug) |
@@ -127,7 +127,7 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
 | `npm run essai:start` | passe le dossier sur une branche `essai/<date>-<heure>` **avant** de laisser un autre outil y travailler |
 | `npm run essai:push` | range (et déplace au besoin) le travail sur la branche d'essai, la pousse, et ramène le dossier sur la branche de travail (`-- "message"` pour choisir le message) |
-| `npm run supabase:verify` | joue les migrations `0001` → `0042` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
+| `npm run supabase:verify` | joue les migrations `0001` → `0047` sur un **Postgres jetable** et contrôle les règles côté serveur (tirage, Direct, échanges, amis, hôtel, carnet, Last Pack (et la protection des Légendaires et des Lives), pity, Paquet Scène, wishlist, Sortants, réinitialisation, Arène, intégrité, identité, provenance, tirage rangé dans la collection, blanchiment, arbitrage de l'envoi, notifications, état de l'interrupteur, veille automatique du direct, points au serveur, barème des paliers, grille des familles, surcharge de `_wallet_apply` et Gold à
 1 % hors Perfect, seuil du plancher de malchance dans la fonction installée,
 barème de la série et versement des points du jour, jetons au serveur et Prime Time du fuseau du jeu, rapport de version des migrations, réserve d'accueil, la chaîne — paliers de notoriété, absence plafonnée, horloge reculée, vidéo du jour, jetons plafonnés — et les deux alertes de perte : série vivante non faite, réserve pleine dont la recharge se perd, une seule fois par soirée,
 interrupteur compris, les imprévus à choix — six cartes, deux côtés chacune, la carte du jour qui ne
@@ -137,7 +137,7 @@ trois paliers en doublons (Rare = 1, Épique = 2, une Légendaire et la dernièr
 ne part qu'une fois — le journal des départs en porte la preuve et le vérifieur le joue), puis **le plateau sur la vidéo du jour** (`0041`) : le barème relu du fichier,
 une Légendaire invitée hors ligne puis en direct, les colonnes `collab`/`raid` écrites
 et relues, la republication qui ne rejoue rien, le direct périmé qui retombe sur la
-seule rareté — **548 contrôles** en tout. Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
+seule rareté, ainsi que la dépense atomique des sabliers en ligne. Dépendances en `--no-save` : rien de plus dans l'APK ni dans le dépôt |
 
 ## Tests
 
@@ -311,8 +311,9 @@ docs/perimetre.md        la porte d'entrée : ce que le dépôt attend, et ce qu
                          est déjà refusé (lire avant de proposer)
 docs/taux-de-drop.md     comment lire, vérifier et modifier les taux de drop
 docs/catalogue-twitch.md construire le catalogue : périmètre, taille, budget images, runbook
-supabase/migrations/     la pile SQL, `0001` → `0041` (réelles, rejouables, vérifiées) :
-                         posées par `npx supabase db push`, dans l'ordre des numéros
+supabase/migrations/     la pile SQL, `0001` → `0047` (vérifiées localement ; 0047
+                         appliquée et vérifiée sur CreatorDeck) : voir
+                         docs/mises-a-jour-automatiques.md pour la procédure de déploiement
 supabase/config.toml     le projet **lié** (le CLI) : rien de secret — la version des
                          migrations et l'état voulu des fonctions Edge (`verify_jwt`)
 supabase/functions/      les Edge Functions : refresh-live (Twitch → `live_streams`),
@@ -738,8 +739,9 @@ fonctions identiques à l'appel, et le booster ne s'ouvrait plus). `0030` ajoute
 la **Gold à 1 %** sur une Légendaire, hors « Perfect ».
 
 Restent calculés sur l'appareil, **volontairement** : l'**XP**, le **niveau** et
-les **sabliers**. Ils ne valent rien pour un autre joueur ; le contenu des
-boosters, les cartes, les points **et les jetons** (`0035`), eux, sont serveur.
+les gains de **sabliers**. En ligne, le solde et leur dépense sont contrôlés par
+le serveur depuis `0047`; hors cloud, le moteur local reste utilisé. Le contenu
+des boosters, les cartes, les points et les jetons (`0035`) sont aussi côté serveur.
 
 Le **plancher de malchance** et la **série de jours**, eux, sont calculés des
 deux côtés — et le serveur ne croit personne sur parole : il les relit depuis
@@ -968,9 +970,10 @@ version web hébergée.
   vaut donc 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes
   communes à l'Atelier, jamais une Légendaire. Les **points** sont versés par le
   serveur (`0032_serie_quotidienne.sql`) avec une référence par journée de jeu :
-  dix boosters le même jour ne paient qu'une fois. Les **jetons** et les
-  **sabliers** vivent sur l'appareil, comme les missions — le serveur ne les
-  connaît pas et ne les crée pas. Le barème est écrit une seule fois,
+  dix boosters le même jour ne paient qu'une fois. Les récompenses en **jetons**
+  sont créditées côté serveur (`0035`), tandis que les gains de **sabliers** et
+  les missions restent calculés sur l'appareil ; depuis `0047`, le serveur valide
+  le solde et la dépense d'un sablier en ligne. Le barème est écrit une seule fois,
   `src/lib/progression.json` (`streak.rewards`), et les tests miroirs
   (`src/lib/game-progression.test.ts`, `scripts/verify-supabase-migrations.mjs`)
   refusent qu'un côté parte sans l'autre. Elle remplace `open_pack()` (l'ancienne

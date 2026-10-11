@@ -74,7 +74,9 @@ Passation commune Cloud/local maintenant explicite ; pas d’autre chantier lanc
 **Automatisation Supabase** : Malik confirme le nouveau dry_run réussi après
 la CA intégrée dans `37e34e6`. Contrôle en lecture seule réussi selon opérateur ;
 ce retour remplace les statuts historiques « connexion à valider » ci-dessous.
-Application d’une future migration non exercée, aucune migration dans ce lot UI.
+La migration 0047 a depuis été appliquée et vérifiée ; voir le checkpoint courant
+et [la procédure](mises-a-jour-automatiques.md). Ce paragraphe décrit le lot UI
+au moment où il a été livré, avant l'application de 0047.
 
 ## CA Supabase intégrée — 11 octobre 2026
 
