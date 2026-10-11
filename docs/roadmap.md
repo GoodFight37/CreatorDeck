@@ -1,14 +1,19 @@
-## Sabliers en ligne — diagnostic du 11 octobre 2026
+## Sabliers en ligne — correctif du 11 octobre 2026
 
-- [x] Retrouver l'origine du blocage : `5c120f3`, 5 octobre, passage de
-  réserve/ouvertures au serveur et désactivation explicite des sabliers locaux.
-- [ ] Définir et implémenter une dépense avec recharge serveur cohérente,
-  validation du solde et absence de double dépense. Aucun correctif engagé.
+- [x] Origine retrouvée : `5c120f3`, passage de la réserve au serveur.
+- [x] Débit/recharge atomiques, solde synchronisé, clé de rejeu persistante et
+  garde contre les anciennes sauvegardes : code publié sur main, `aded8ff`.
+- [x] Contrôles locaux : 1117 tests unitaires, 83 DOM, 643 assertions SQL,
+  E2E bureau/téléphone simulé 2/2 ; typecheck, lint et build webpack réussis.
+- [ ] Appliquer **0047**, classée manual, après vérification de la cible,
+  du schéma et du statut de récupération. Aucune application production faite.
+- [ ] Vérifier le débit/recharge/rechargement sur téléphone réel et la version servie.
+- [ ] K-031 : corriger séparément le report du helper historique `_pack_refresh`.
 
-Les gains de sabliers restent présents, leur dépense en ligne n'est pas
-implémentée. Le nouvel accueil conserve un verrou ancien. K-030 et preuves
-historiques dans [la passation](agent-handoff.md) ; aucun changement de données,
-récompenses ou SQL lors du diagnostic.
+K-030, D-032 ; gains locaux et montants conservés, pas de certification serveur
+complète de leurs sources. Le nouveau helper privé préserve le temps résiduel
+pour les sabliers ; aucune correction globale de la recharge ordinaire.
+Commandes, preuves, limites et reprise Cloud/PC dans [la passation](agent-handoff.md).
 
 ## Objectif quotidien après Live Drop en ligne — 11 octobre 2026
 

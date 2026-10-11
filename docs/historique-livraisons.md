@@ -1,3 +1,19 @@
+## 11 octobre 2026 — sabliers reliés à la réserve serveur
+
+Code [`aded8ff`](https://github.com/GoodFight37/CreatorDeck/commit/aded8ffa83446544065225e05922a42e5073be55) publié sur main,
+SHA distant vérifié. Débit/recharge atomiques, rejeu persistant par compte,
+protection des sauvegardes périmées ; mêmes gains et avance de 15 minutes.
+Migration additive 0047 **manual**, non appliquée en production. Gains toujours
+calculés localement : validation de leurs sources non migrée.
+
+Contrôles locaux : 1117/1117 unitaires, 83/83 DOM, 643 assertions SQL dont
+19 sabliers, E2E 2/2 bureau/téléphone simulé ; typecheck, lint, build webpack,
+politique de migration, jargon et catalogue réussis. Build sans variables cloud ;
+E2E avec configuration/API factices. Aucun déploiement ni téléphone réel.
+K-031 découvert : correction du report limitée au nouveau helper des sabliers,
+helper historique inchangé après refus du remplacement global par auto-review.
+Passation Cloud/PC et prochaines actions actualisées dans les registres communs.
+
 ## 11 octobre 2026 — E2E du cadeau et ouverture suivante
 
 Correctif et test publiés sur main au commit [`1070153`](https://github.com/GoodFight37/CreatorDeck/commit/1070153eec094be2629025546befa00a1670b761).

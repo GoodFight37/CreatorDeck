@@ -996,9 +996,15 @@ qu'il faut se connecter, et propose un accès direct à l'écran Compte.
 lit `pack_status()` — même calcul de recharge que `open_pack()`, sans rien
 consommer — et adopte le compteur et l'ancre (`last_regen_at`) dans la partie
 locale : l'affichage et le tirage ne divergent plus si l'horloge de l'appareil
-dérive ou si la sauvegarde locale a été bricolée. Le sablier (`spendHourglass`)
-ne sait avancer qu'une réserve locale : il est donc désactivé dans les builds
-avec cloud (l'écran l'explique), et reste actif dans les builds sans cloud.
+dérive ou si la sauvegarde locale a été bricolée. Depuis `aded8ff`, le sablier connecté appelle `use_hourglass(uuid)` après
+synchronisation de la partie. La migration [0047](../supabase/migrations/0047_sabliers_en_ligne.sql)
+(classée **manual**, non appliquée par cette session) relie débit de 1 et avance
+de 15 min dans une transaction, avec rejeu UUID et garde des sauvegardes périmées.
+Un refus de synchronisation empêche la dépense ; une réponse perdue conserve la
+clé par compte, même après rechargement. Les gains restent calculés localement :
+la validation de leurs sources n'est pas déplacée côté serveur. Hors cloud,
+`spendHourglass()` reste utilisé. Le nouveau helper privé conserve correctement
+les minutes résiduelles ; le helper global ancien n'est pas modifié (K-031).
 
 **Le catalogue est en lecture seule.** La table `public.creators`
 (`0003_catalogue.sql`) a la RLS activée et **aucune politique d'écriture** : ni
@@ -1892,8 +1898,9 @@ par l'appareil.
   lancer une fois après la pose) et `_wallet_ensure()` (au premier appel de
   chaque joueur) ouvrent les comptes en reprenant le solde de la sauvegarde, une
   seule fois — borné à un million, parce qu'au-delà c'est une partie bricolée.
-* **Ce qui reste local, volontairement** : les sabliers (ils ne s'achètent ni ne
-  s'échangent), l'XP et le niveau. Ils ne valent rien pour un autre joueur.
+* **Ce qui reste local** : les gains de sabliers, l'XP et le niveau. D-032
+  raccorde uniquement la dépense à la recharge serveur (0047) ; ceci ne certifie
+  pas côté serveur la provenance de chaque gain.
 * **Ce qu'un client trafiqué ne peut plus faire** : annoncer une rareté de
   recyclage (elle vient du catalogue), réclamer un palier de collection non
   atteint (le serveur compte), demander 3000 points pour un catalogue complet

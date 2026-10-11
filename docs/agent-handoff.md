@@ -1,3 +1,101 @@
+## Checkpoint courant — sabliers reliés à la réserve en ligne — 11 octobre 2026
+
+Malik a autorisé le correctif et sa publication sur `main`, dans ce checkout
+Cloud. Base vérifiée avant édition : `1d5bd26c77d31f6ebc5265429d6b4c3a93fc7e15`,
+local/distant identiques et checkout propre. Aucun worktree, merge, effacement
+ou accès Supabase production. Code publié :
+[`aded8ff`](https://github.com/GoodFight37/CreatorDeck/commit/aded8ffa83446544065225e05922a42e5073be55),
+SHA distant confirmé. Le commit de cette passation se retrouve avec
+`git log -1 --format=%H -- docs/agent-handoff.md`.
+
+### Réalisé
+
+- Le Drop connecté propose à nouveau « Utiliser 1 sablier » : synchronisation
+  des gains avant dépense, puis RPC `use_hourglass(uuid)` ; aucune dépense
+  locale de repli en ligne. Hors cloud, moteur local conservé.
+- Migration additive/idempotente
+  [`0047_sabliers_en_ligne.sql`](../supabase/migrations/0047_sabliers_en_ligne.sql),
+  classée **manual** pour empêcher une application automatique à la production.
+  Verrous réserve puis sauvegarde, débit exact de 1 et avance de 15 minutes
+  atomiques ; refus sans compte, sans solde ou réserve pleine. Le registre
+  privé interdit les écritures clients. Même UUID = même dépense.
+- La clé de rejeu est conservée par compte dans le stockage de l'appareil :
+  une réponse perdue, même suivie d'un rechargement, peut être récupérée sans
+  nouveau débit ni envoi préalable de l'ancienne partie. Un refus HTTP explicite
+  libère la clé pour synchroniser de nouveaux gains lors du prochain essai.
+- Champ additif `hourglassesSpent`, valeur 0 pour les anciennes sauvegardes ;
+  garde SQL contre la restauration d'un solde d'avant dépense, même par envoi
+  forcé. Reset individuel : registre supprimé par cascade avec `pack_state`,
+  nouvelle progression à compteur 0 acceptée ; cadeau/tutoriel inchangés.
+- Les **gains** de sabliers restent calculés localement et synchronisés comme
+  auparavant. Le serveur contrôle la dépense du solde enregistré, mais ne
+  certifie pas l'origine de chaque gain : ceci n'est pas une migration complète
+  de l'économie sous autorité serveur. XP/niveau, récompenses et taux inchangés.
+- Découverte connexe K-031 : `_pack_refresh` reporte N millisecondes au lieu
+  de N intervalles. Le contrôle automatique a rejeté son remplacement global
+  comme dépassant la portée. Alternative retenue : helper privé
+  `_hourglass_refresh`, employé uniquement par le nouveau RPC, avec report
+  correct des minutes restantes. Le helper historique n'est **pas modifié** ;
+  sa correction générale reste un chantier séparé, sans essai production.
+
+### Contrôles réellement exécutés
+
+Sur le contenu produit du commit `aded8ffa83446544065225e05922a42e5073be55` :
+
+| Commande | Résultat final |
+|---|---|
+| `npm test -- --maxWorkers=2` | code 0, 71 fichiers, **1117/1117** tests |
+| `npm run ecrans -- --maxWorkers=2` | code 0, 15 fichiers, **83/83** tests DOM |
+| `npm run typecheck` | code 0 |
+| `npm run lint` | code 0 |
+| `XDG_CONFIG_HOME=/tmp/creatordeck-xdg NEXT_TELEMETRY_DISABLED=1 npm run build -- --webpack` | code 0, export statique `/`, `/_not-found`, `/overlay` ; variables cloud absentes, build local sans cloud |
+| `npm run supabase:verify` | code 0, **643** assertions réussies, dont **19** scénarios sabliers ; Postgres jetable, aucune production |
+| `node scripts/supabase-deploy.mjs --check` | code 0, politique valide, aucun accès réseau |
+| `node scripts/check-jargon.mjs` | code 0, aucun jargon détecté |
+| `npm run catalog:ci` | code 0, 1000 créateurs, seeds catalogue/saisons à jour |
+| `git diff --check` | code 0 |
+
+Commande navigateur exacte :
+```sh
+NEXT_PUBLIC_SUPABASE_URL=https://e2e.supabase.co NEXT_PUBLIC_SUPABASE_ANON_KEY=local-e2e-placeholder-key-01234567890123456789 NEXT_TELEMETRY_DISABLED=1 PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright npm run e2e -- e2e/hourglass-online.spec.ts --reporter=line
+```
+Résultat code 0, **2/2**, bureau et téléphone **simulé**. Réponses RPC factices :
+recharge, réponse perdue, rechargement avant rejeu, un seul débit et réserve
+conservée après une seconde reprise. SQL : deux connexions concurrentes se
+partageant un dernier sablier → une seule dépense ; booster rechargé ouvre
+réellement cinq cartes, refus/ancienne sauvegarde/rejeu/reset testés.
+
+Incidents pendant vérification : première suite locale 17 échecs de lancement
+`spawnSync git EPERM`/sous-processus Node, résolus par exécution autorisée sans
+changer les tests ; premier build refus de `TypeScript --showConfig`, même
+commande réussie avec exécution autorisée. Premier scénario SQL : cast JSON du
+fixture corrigé ; deux assertions ont ensuite révélé K-031, résolu **dans le
+nouveau parcours seulement**. Première tentative E2E interrompue volontairement
+pour corriger le libellé du `<summary>`, puis parcours complet réussi. Aucun
+contrôle échoué présenté comme une réussite initiale.
+
+### Reste à faire et reprise Cloud/PC
+
+1. **0047 non appliquée en production.** Vérifier la cible réelle, le schéma et
+   le statut de sauvegarde/récupération avant toute application réelle ; ne pas
+   inférer ces points de la réussite du Postgres jetable. Ne pas déclencher
+   `--approve-manual` ni déployer automatiquement. Migration nouvelle uniquement,
+   aucune retouche de 0001–0046 ou de leur baseline.
+2. Après application et version servie vérifiées : téléphone réel, réserve
+   non pleine, solde positif → 1 sablier débité, recharge avancée de 15 min,
+   puis rechargement et ouverture du booster disponible. Aucun test téléphone,
+   compte réel, CI distante ou déploiement confirmé par cette session.
+3. K-031 : traiter séparément le report général de recharge, après revue de
+   portée et test de l'ouverture naturelle ; ne pas réécrire une migration déjà
+   appliquée. K-028 : prochain Live Drop réel → objectif quotidien 1/1 reste
+   à confirmer. Taux/cadeau/reset global inchangés.
+4. Git HTTPS marche avec `require_escalated` et le proxy hérité ; API `gh`
+   bloquée auparavant. Ne pas recréer l'environnement ni changer les règles
+   réseau. Consulter ce checkpoint depuis Cloud **ou PC** avant de reprendre,
+   vérifier le HEAD GitHub actuel. Réservation libérée à la publication.
+
+---
+
 ## Checkpoint courant — diagnostic des sabliers en ligne — 11 octobre 2026
 
 - Demande de Malik : retrouver pourquoi les sabliers, utilisables auparavant,

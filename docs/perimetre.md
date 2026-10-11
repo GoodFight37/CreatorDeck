@@ -15,7 +15,10 @@ du classement mondial. **Le jeu, c'est l'APK Android** : c'est là qu'il se joue
 au pouce. GitHub n'est qu'un **bac** où les outils écrivent du code — ni
 magasin, ni iOS, ni publication. Le serveur (Supabase) décide de ce qui compte :
 le **tirage des boosters**, les **points**, les **jetons** ; l'XP, le niveau et
-les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
+les gains de sabliers restent calculés sur l'appareil. Depuis le correctif
+`aded8ff` et après application de 0047, leur **dépense en ligne** débite le solde
+synchronisé et avance atomiquement la réserve serveur de 15 minutes. Les sources
+de ces gains ne sont pas intégralement validées côté serveur (D-032).
 
 ## Les règles non négociables
 
@@ -60,7 +63,7 @@ les sabliers restent sur l'appareil (ils ne valent rien pour un autre joueur).
 | **Un indicateur de malchance ajouté à l'onglet Drop** | **Rien à faire** : la ligne existe déjà sur l'accueil — « Légendaire garanti dans N boosters » (`src/components/drop-view.tsx`), cliquable vers les taux publiés. Un second compteur dirait la même chose en plus anxiogène |
 | **Un rival hebdomadaire parmi ses amis** (écart de collection affiché) | **Refusé** : l'écart est déjà **public et comparable** (`player_profile()`, classements global / Gold / par famille, arène hebdomadaire). Le seul incrément serait une notification qui apprend à un joueur qu'un *ami* le dépasse — la comparaison sociale entre deux personnes qui se connaissent est la mécanique la plus toxique du lot (`supabase/migrations/0037_gardes.sql`, en-tête) |
 | **Roue casino**, **« Streameur du Jour »** | **Refusés** (revue Gemini) : remplacés par le **Planning du Streamer** et les missions du jour |
-| **Sabliers, XP et niveau au serveur** (au-delà des jetons) | **Refusés** : ils ne valent rien pour un autre joueur, et les déplacer casserait le jeu dans un build sans cloud |
+| **Sabliers, XP et niveau au serveur** (au-delà des jetons) | **Migration globale refusée**, moteur hors cloud maintenu. Exception ciblée D-032 : dépense en ligne des sabliers reliée à la réserve serveur après constat K-030 ; gains/XP/niveau restent locaux |
 | **`@capacitor/preferences` pour la session** | **Suggestion ouverte**, non faite : la sauvegarde est un blob trop gros pour `Preferences` — `docs/revue-externe-2026-10.md` §3 |
 | **Une PR à fusionner** | **Non** : la PR #7 reste ouverte, aucune fusion — voir `docs/depot-et-github.md` |
 
