@@ -1,3 +1,20 @@
+## Correctif CI du lot Scène/profil — 11 octobre 2026
+
+Base a106fde982733a4a0d8d6df3c61a678b788d1411, main vérifié identique.
+[Run 38159920539](https://github.com/GoodFight37/CreatorDeck/actions/runs/38159920539)
+terminé en échec : SQL jetable, unitaires/écrans/statique/build et E2E ordinaires
+success ; seul le job cloud simulé échoue. Log transmis par Malik lu : le test
+invité product-audit trouve deux boutons « Se connecter pour ouvrir » (Live et
+Scène), erreur strict mode sur bureau et téléphone. Correction du sélecteur
+limitée à .open-panel, sans changement produit ni SQL. Rejeu local uniquement
+`npm run e2e -- e2e/product-audit.spec.ts --grep 'avec le serveur'`, avec variables
+publiques factices du job cloud : **2/2** passent, sortie 0, zéro tirage serveur.
+Diff-check passe. Publication normale main autorisée ; suivi du nouveau run
+transmis après push, sans attendre les suites longues. Réservation libérée après
+publication. SHA de cette passation : `git log -1 --format=%H -- docs/agent-handoff.md`.
+Téléphone physique non validé ; prochain chantier proposé : accès Arène/marché,
+non engagé. Mode ultra économie conservé.
+
 ## Profil et K-037 — Paquet Scène faussement disponible, 11 octobre 2026
 
 Demande Malik : poursuivre le profil, avec priorité au Paquet Scène qui s’affiche

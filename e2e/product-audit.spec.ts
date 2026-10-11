@@ -47,7 +47,7 @@ test("avec le serveur : pack tutoriel invité, sans gain ni appel de tirage", as
   await expect(page.getByRole("dialog", { name: "Mon compte", exact: true })).toBeVisible();
   expect(calls).toBe(0);
   await gotoDeck(page, false);
-  await expect(page.getByRole("button", { name: "Se connecter pour ouvrir", exact: true })).toBeVisible();
+  await expect(page.locator(".open-panel").getByRole("button", { name: "Se connecter pour ouvrir", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
   await expect(page.locator(".binder-empty-state")).toBeVisible();
 });
