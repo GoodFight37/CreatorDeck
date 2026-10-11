@@ -1852,3 +1852,25 @@ La PR #8 cible toujours `arena/01a10c75-creatordeck`, base choisie à sa créati
   déchiré ajoutées. Aucun SQL, migration, secret ou déploiement manuel touché.
 - L’essai sur téléphone physique reste à faire ; K-031 reste séparé. Contrôles
   GitHub du commit publié à renseigner après leur exécution réelle.
+
+### Vérification finale — 11 octobre 2026
+
+- État source publié sur `main` : `c6e38eda18f73698091c449c7b5dfb93bacda66c`.
+  Vérification GitHub `38172486592` : succès pour unitaires/écrans/statique/build,
+  E2E Playwright bureau+téléphone simulé, parcours cloud à RPC simulés et
+  migrations sur PostgreSQL jetable. La compilation de production et les
+  scénarios d’écran sont donc vérifiés sur ce SHA.
+- Workflow automatique « Mise à jour Supabase » `38172742924` : succès ; le
+  journal dit « La base est déjà à jour et vérifiée. Aucun SQL de migration
+  exécuté. » Aucune migration n’a été appliquée à la production dans ce lot.
+- Le premier essai E2E localement avait passé Drop/Binder et pack-tear (34/34),
+  puis Craft (2/2). Les assertions Craft obsolètes ont été réécrites pour
+  vérifier recettes/coûts accessibles et paiement encore bloqué par le solde ;
+  elles n’ont pas été supprimées. Le contrôle GitHub final sur le SHA publié
+  passe intégralement.
+- Audit B : aucun doublon exact de sélecteur ou de `@keyframes` entre les trois
+  feuilles visuelles dédiées et `globals.css` après scoping ; animations
+  décoratives stoppées quand le sachet est ouvert / révélation affichée ;
+  aucune lecture gyroscopique restante. Le parcours physique Android et sa
+  mesure de performances réelles restent non vérifiés ; l’E2E téléphone est
+  une émulation Playwright.
