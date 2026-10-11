@@ -192,6 +192,9 @@ export function RevealOverlay({
   function startRevealSwipe(event: PointerEvent<HTMLDivElement>) {
     if (locked || perfect || flippedCardId !== cardId || event.button !== 0) return;
     swipeStart.current = { x: event.clientX, y: event.clientY, moved: false };
+    if (Number.isFinite(event.pointerId)) {
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* activation clavier/synthétique */ }
+    }
   }
 
   function endRevealSwipe(event: PointerEvent<HTMLDivElement>) {

@@ -96,7 +96,7 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   const y = bounds.y + bounds.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x - 90, y, { steps: 5 });
+  await page.mouse.move(x - bounds.width * .8, y, { steps: 5 });
   await page.mouse.up();
   await expect(reveal.locator(".reveal-header > span")).toHaveText("2 / 5");
   await expect(reveal.getByRole("button", { name: "Révéler la suivante" })).toBeEnabled();
