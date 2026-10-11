@@ -16,11 +16,14 @@
   chaque source et laisser un remplacement manuel par créateur.
 - Blocage observé : l’API Openverse répond au proxy par HTTP CONNECT 403 ; aucun
   outil de recherche web n’est disponible dans cette session et seuls les hôtes
-  autorisés par l’environnement sont accessibles. Aucune configuration réseau
-  modifiée, aucune image téléchargée ou remplacée. Le site/source exact attendu
-  de Malik pourra servir de point d’entrée ; l’accès au domaine devra être
-  permis explicitement avant extraction.
-- Suite : ouvrir l’accès ciblé à une source ou recevoir les fichiers/URLs
+  autorisés par l’environnement sont accessibles. La mise à jour de la liste
+  ciblée a été refusée avec `draft_not_editable`; relecture confirme que les six
+  domaines initiaux sont inchangés. Proposition préservée dans
+  `/tmp/creator-image-network-access-proposal.json` pour l’onboarding. Aucune
+  image téléchargée ou remplacée. L’accès du domaine source exact devra être
+  permis avant extraction.
+- Suite : ouvrir une nouvelle session d’onboarding depuis les réglages pour
+  appliquer la liste ciblée, ou recevoir les fichiers/URLs
   sélectionnés ; rechercher les 50 images, noter provenance/licence, produire
   une planche de validation, puis ajouter des overrides manuels sans écraser
   les fichiers Twitch par défaut. Aucun changement applicatif ni test produit
