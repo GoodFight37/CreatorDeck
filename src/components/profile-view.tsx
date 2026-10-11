@@ -16,6 +16,8 @@ import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
 import { CreatorCard } from "@/components/creator-card";
+import { useBinderGoal } from "@/hooks/use-binder-goal";
+import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useCloud } from "@/hooks/use-cloud";
 
 import { useInbox } from "@/hooks/use-inbox";
@@ -71,6 +73,8 @@ export function ProfileView({
   onShowOwnProfile,
   onShowWishlist,
   onShowTribunal,
+  onGoBinder,
+  onGoDrop,
 }: {
   game: GameView;
   onProgressReset?: () => void;
@@ -90,6 +94,8 @@ export function ProfileView({
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
   onShowTribunal?: () => void;
+  onGoBinder?: () => void;
+  onGoDrop?: () => void;
 }) {
   const cloud = useCloud();
   // Le compte du carnet passe par le hook, et non par le store : lui seul
@@ -108,6 +114,7 @@ export function ProfileView({
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
     void cloudStore.loadWishlist();
+    void cloudStore.loadProfile();
   }, [cloud.configured, cloud.userId]);
   const wishlistCreator = cloud.wishlistSlug ? CREATOR_BY_SLUG.get(cloud.wishlistSlug) ?? null : null;
   const ownedCards = game.cards;
@@ -121,10 +128,17 @@ export function ProfileView({
         bestByCreator.set(card.creatorSlug, card);
       }
     }
-    return [...bestByCreator.values()]
-      .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt)
-      .slice(0, 3);
-  }, [ownedCards]);
+    const pinned = cloud.showcase.map((slug) => bestByCreator.get(slug)).filter((card) => card !== undefined);
+    const pinnedSlugs = new Set(pinned.map((card) => card.creatorSlug));
+    const automatic = [...bestByCreator.values()].filter((card) => !pinnedSlugs.has(card.creatorSlug))
+      .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt);
+    return [...pinned, ...automatic].slice(0, 3);
+  }, [ownedCards, cloud.showcase]);
+  const [binderGoal] = useBinderGoal();
+  const collections = useMemo(() => binderCollectionProgress(new Set(ownedCards.map((card) => card.creatorSlug))), [ownedCards]);
+  const collectionGoal = collections.find((collection) => collection.id === binderGoal) ?? recommendBinderCollection(collections);
+  const completedPages = collections.filter((collection) => collection.missing.length === 0).length;
+  const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
   // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
   // dessiner le bon côté de l'interrupteur.
   const [soundOn, setSoundOn] = useState(() => !isMuted());
@@ -219,14 +233,9 @@ export function ProfileView({
           <span>{game.player.level}</span>
         </button>
         <div>
-          <h1>Ma collection</h1>
+          <h1>{cloud.userId && cloud.displayName ? cloud.displayName : "Mon profil de collectionneur"}</h1>
           <span>{CATALOG_EDITION}</span>
-          <small
-            className="profile-build-version"
-            title={BUILD_COMMIT ? `Commit Git : ${BUILD_COMMIT}` : "Build sans commit Git associé"}
-          >
-            Version {BUILD_VERSION}
-          </small>
+
         </div>
       </section>
 
@@ -276,9 +285,23 @@ export function ProfileView({
             })}
           </div>
         ) : (
-          <p className="profile-showcase-empty">Ta première carte t’attend. Ouvre un booster pour commencer ta vitrine.</p>
+          <div className="profile-showcase-empty"><p>Ta première carte t’attend. Ouvre un booster pour commencer ta vitrine.</p>
+            {onGoDrop ? <button type="button" className="profile-identity-action" onClick={onGoDrop}>Trouver ma première carte <ChevronRight size={16} /></button> : null}</div>
         )}
+        {cloud.configured ? <button type="button" className="profile-identity-action" onClick={onShowAccount}>
+          {cloud.userId ? "Personnaliser mon pseudo et ma vitrine" : "Lier un compte pour personnaliser mon profil"}<ChevronRight size={16} />
+        </button> : null}
       </section>
+
+      {game.stats.totalCards > 0 ? <section className="profile-milestones" aria-label="Mes collections réunies">
+        <span><strong>{completedPages}</strong> page{completedPages > 1 ? "s" : ""} réunie{completedPages > 1 ? "s" : ""}</span>
+        <span><strong>{legendaryNames}</strong> Légendaire{legendaryNames > 1 ? "s" : ""} différente{legendaryNames > 1 ? "s" : ""}</span>
+      </section> : null}
+      {collectionGoal && onGoBinder ? <button type="button" className="profile-collection-goal" onClick={onGoBinder}>
+        <span><small>{collectionGoal.missing.length ? "MA COLLECTION EN COURS" : "MA COLLECTION COMPLÉTÉE"}</small><strong>{collectionGoal.name}</strong>
+          <span>{collectionGoal.owned}/{collectionGoal.total} cartes · {collectionGoal.missing.length ? `${collectionGoal.missing.length} à trouver` : "Complétée"}</span></span>
+        <ChevronRight size={18} />
+      </button> : null}
 
       {/*
        * La wishlist. Elle ne s'affiche que sur un build avec cloud : un épinglé
@@ -479,6 +502,12 @@ export function ProfileView({
       {/* Les crédits : ce que le jeu n'a pas dessiné, et qui l'a fait. Discrets,
           repliés, et avant le rouge — on ne tombe pas dessus en cherchant autre
           chose, et deux licences demandent qu'ils soient là. */}
+          <small
+            className="profile-build-version"
+            title={BUILD_COMMIT ? `Commit Git : ${BUILD_COMMIT}` : "Build sans commit Git associé"}
+          >
+            Version {BUILD_VERSION}
+          </small>
       <CreditsBlock />
 
       {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par

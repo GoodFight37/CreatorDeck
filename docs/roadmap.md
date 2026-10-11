@@ -1,3 +1,14 @@
+## Profil et K-037 — statut Scène serveur (11 octobre 2026)
+
+Lot préparé pour main : disponibilité quotidienne vérifiée avant de proposer
+l’ouverture et à nouveau avant déchirure ; refus déjà ouvert normalisé, Scène
+visible et expliqué. Profil : pseudo, vitrine épinglée/automatique, pages réunies,
+Légendaires uniques, collection en cours et personnalisation existante accessible.
+Local : 146 unitaires magasin, 16 DOM, 6 E2E locaux et 2 cloud simulés réussis ;
+contrôles longs GitHub en suivi au joueur, téléphone physique non validé.
+Binder, Craft et identité du profil sont implémentés ; aucun nouvel équilibrage,
+SQL ni chantier K-031 inclus. Preuves et limites dans la passation.
+
 ## Craft — préparer sa prochaine carte avant le seuil (11 octobre 2026)
 
 Lot préparé pour main : aperçu de trois cartes manquantes Standard, coûts réels,
@@ -5,7 +16,7 @@ priorité à la collection Binder, valeur du recyclage groupé et explication de
 Live conservés. Seuil de dix copies recyclables inchangé ; aucun achat/recyclage
 avant déblocage. Local : 13 DOM puis 6 retests enrichis, 2 E2E réussis,
 typecheck/lint/jargon verts ; suites longues GitHub en suivi au joueur.
-Prochain lot : identité du profil. Preuves/limites dans la passation.
+Identité du profil implémentée dans le lot suivant ci-dessus. Preuves/limites dans la passation.
 
 ## Binder — collections courtes (11 octobre 2026)
 
@@ -16,7 +27,7 @@ réussis ; suites GitHub laissées en suivi au joueur. Voir la passation.
 Critères : aucun doublon compté deux fois, pages limitées, choix retrouvé au
 rechargement, page complète explicite. Économie et paliers inchangés.
 Craft avant le seuil est implémenté dans le checkpoint suivant ci-dessus ;
-identité du profil reste le prochain lot.
+identité du profil est implémentée dans le lot ci-dessus.
 
 ## K-036 — scroll et ouverture distincts
 

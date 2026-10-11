@@ -1,3 +1,4 @@
+import { gameDay } from "@/lib/progression";
 import type { CloudStoreContext } from "./context";
 import type { PackOpenOutcome, CloudActionOutcome } from "./types";
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
@@ -339,6 +340,9 @@ export function packActions(ctx: CloudStoreContext) {
           ctx.deps.now(),
         );
         const message = `Paquet Scène : ${applied.cards.length} cartes de ta famille.`;
+        const userId = api.session()?.userId;
+        if (userId) ctx.publish({ sceneStatus: { userId, day: gameDay(ctx.deps.now()), ready: false } });
+        void ctx.fetchPackStatus();
         // Même contrat que `openPack` : le serveur a écrit la collection, le
         // client l'adopte au lieu de pousser la sienne.
         const remoteSave = result.save;
@@ -361,6 +365,14 @@ export function packActions(ctx: CloudStoreContext) {
         ctx.publish({ busy: false, message, isError: false });
         return { status: "drawn", cards: applied.cards };
       } catch (error) {
+        if (error instanceof CloudError && /paquet.*déjà.*ouvert/i.test(error.message)) {
+          await ctx.fetchPackStatus();
+          const userId = api.session()?.userId;
+          const message = "Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC.";
+          if (userId) ctx.publish({ busy: false, isError: false, message,
+            sceneStatusLoading: false, sceneStatus: { userId, day: gameDay(ctx.deps.now()), ready: false } });
+          return { status: "unavailable", reason: "already-opened", message };
+        }
         // Réseau coupé : même consigne que sans compte — se connecter.
         if (error instanceof CloudError && error.status === 0) {
           const message = "Connexion perdue : ton Paquet Scène n'a pas été ouvert.";

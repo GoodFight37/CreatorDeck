@@ -141,6 +141,7 @@ export function CreatorDeckApp() {
   // minuteur **local** (`HomeView`). Un `useNow(1_000)` ici re-rendait les
   // mille cartes de la collection une fois par seconde, pour rien.
   const now = useNow(30_000);
+  const currentSceneDay = gameDay(now);
   // Le direct se rafraîchit tant que l'écran principal est monté (lecture au
   // démarrage, toutes les trois minutes, et au retour dans l'app).
   useLivePolling();
@@ -345,7 +346,7 @@ export function CreatorDeckApp() {
     // Le solde aussi : depuis `0027_wallet.sql`, c'est le serveur qui tient la
     // caisse, et une sauvegarde bricolée est recollée à la vérité ici.
     void cloudStore.syncWallet();
-  }, [cloud.configured, cloud.userId]);
+  }, [cloud.configured, cloud.userId, currentSceneDay]);
 
   const [tutorialStep, setTutorialStep] = useState<number | null>(null);
   const [giftBusy, setGiftBusy] = useState(false);
@@ -430,7 +431,7 @@ export function CreatorDeckApp() {
   }
 
   async function handleOpenPack() {
-    if (!game || opening) return;
+    if (!game || opening || sceneOpening) return;
     setOpening(true);
     setError(null);
     setErrorHint(null);
@@ -465,7 +466,7 @@ export function CreatorDeckApp() {
    * Same continuous transition for the Scene pack, without a second loader.
    */
   async function handleOpenScenePack() {
-    if (!game || sceneOpening || game.scene.opened) return;
+    if (!game || sceneOpening || opening || (!cloud.configured && game.scene.opened)) return;
     const family = game.scene.family;
     if (!family) {
       showError("Aucune famille n'est assez grande pour un Paquet Scène.");
@@ -474,8 +475,18 @@ export function CreatorDeckApp() {
     setSceneOpening(true);
     setError(null);
     setErrorHint(null);
-    const dechirureTerminee = commencerDechirure("scene");
     try {
+      if (cloud.configured) {
+        if (!cloud.userId) { showError("Connecte-toi pour ouvrir ton paquet de famille.", "account"); return; }
+        const status = await cloudStore.packStatus();
+        const verified = cloudStore.getSnapshot().sceneStatus;
+        if (!status || !verified || verified.userId !== cloud.userId) {
+          showError("Disponibilité impossible à vérifier. Réessaie quand la connexion revient.");
+          return;
+        }
+        if (!verified.ready) { showNotice("Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC."); return; }
+      }
+      const dechirureTerminee = commencerDechirure("scene");
       const result = await openScenePack();
       if (result.status === "drawn") {
         await dechirureTerminee;
@@ -487,7 +498,8 @@ export function CreatorDeckApp() {
       }
       setTearing(false);
       terminerDechirure();
-      showError(result.message, result.needAccount ? "account" : null);
+      if (result.alreadyOpened) showNotice(result.message);
+      else showError(result.message, result.needAccount ? "account" : null);
     } catch (caught) {
       setTearing(false);
       terminerDechirure();
@@ -678,7 +690,7 @@ export function CreatorDeckApp() {
             onShowTribunal={ouvrirFeuille(setTribunalOpen)}
             tribunalRestants={tribunal.restants}
             tribunalClose={tribunal.close}
-            opening={opening}
+            opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
             sceneBusy={sceneOpening}
             now={now}
@@ -725,6 +737,8 @@ export function CreatorDeckApp() {
             onShowLastPack={ouvrirFeuille(setLastPackOpen)}
             onShowArena={ouvrirFeuille(setArenaOpen)}
             onShowTribunal={ouvrirFeuille(setTribunalOpen)}
+            onGoBinder={() => setTab("collection")}
+            onGoDrop={() => setTab("home")}
             onShowWishlist={ouvrirFeuille(setWishlistOpen)}
             onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
             onShowOwnProfile={() => {

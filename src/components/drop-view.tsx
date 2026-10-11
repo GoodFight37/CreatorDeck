@@ -20,6 +20,8 @@ import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS } from "@/
 
 import { formatViewers, liveFor } from "@/lib/live";
 
+import { gameDay } from "@/lib/progression";
+import { cloudStore } from "@/lib/cloud/cloud-store";
 import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 
@@ -174,6 +176,10 @@ export function HomeView({
   );
   const live = useLive();
   const cloud = useCloud();
+  const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
+    ? cloud.sceneStatus : null;
+  const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
+  const sceneOpened = !cloud.configured ? game.scene.opened : verifiedScene?.ready === false;
   // La ligne d'arène de l'accueil : ce qui compte pour le joueur, dans l'ordre
   // — une récompense qui attend, un draft ouvert (une décision à prendre), ce
   // qu'il a déjà déposé, ou rien du tout. Aucune ligne n'apparaît sans compte :
@@ -373,6 +379,72 @@ export function HomeView({
         </details>
       </section>
 
+      {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
+          par jour de jeu. Il ne se recharge pas (le sablier n'y peut rien), il
+          ne contient aucune Légendaire, et il ne touche ni au compteur de
+          malchance ni à la série — c'est un paquet de complétion. */}
+      <section className={`scene-block${sceneOpened ? " done" : ""}`} aria-label="Ton paquet de famille du jour" data-ready={sceneReady}>
+        <div className="scene-head">
+          <div>
+            <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
+            <span>5 cartes de ta famille · 1 paquet par jour</span>
+          </div>
+          <span className="scene-state">
+            {sceneOpened ? "Ouvert aujourd’hui" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
+          </span>
+        </div>
+
+        <p className="scene-purpose">Un rendez-vous quotidien pour compléter ta famille, en plus du Live Drop. Pas de Légendaire dans ce paquet.</p>
+        {game.scene.family ? (
+          <div className="scene-family">
+            <div className="scene-family-copy">
+              <strong>{game.scene.family.name}</strong>
+              <span>
+                {game.scene.family.owned}/{game.scene.family.total} découverts · il t&apos;en
+                manque {game.scene.family.total - game.scene.family.owned}
+              </span>
+            </div>
+            <div className="progress-track">
+              <i
+                style={{
+                  width: `${Math.round(
+                    (game.scene.family.owned / game.scene.family.total) * 100,
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <span className="scene-empty">
+            Aucune famille n&apos;est assez grande pour un paquet — le Live Drop reste là.
+          </span>
+        )}
+
+        <button
+          type="button"
+          className="scene-action"
+          onClick={cloud.configured && cloud.userId && !sceneReady && !sceneOpened ? () => void cloudStore.packStatus() : onOpenScene}
+          disabled={sceneBusy || opening || sceneOpened || cloud.sceneStatusLoading || !game.scene.family}
+        >
+          {sceneBusy ? (
+            <LoaderCircle className="spin" size={17} />
+          ) : sceneOpened ? (
+            <Clock3 size={17} />
+          ) : (
+            <Layers3 size={17} />
+          )}
+          <span>
+            {sceneBusy
+              ? "Ouverture…"
+              : sceneOpened
+                ? "Reviens demain (nouvelle journée à 6 h UTC)"
+                : cloud.configured && !cloud.userId ? "Se connecter pour ouvrir"
+                  : cloud.configured && !sceneReady ? "Vérifier la disponibilité"
+                    : `Ouvrir le ${game.scene.label}`}
+          </span>
+        </button>
+      </section>
+
       <details className="drop-secondary">
         <summary>Progression, taux et activités <ChevronRight size={15} /></summary>
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
@@ -427,69 +499,6 @@ export function HomeView({
         ) : null}
 
       </details>
-
-      {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
-          par jour de jeu. Il ne se recharge pas (le sablier n'y peut rien), il
-          ne contient aucune Légendaire, et il ne touche ni au compteur de
-          malchance ni à la série — c'est un paquet de complétion. */}
-      <section className={`scene-block${game.scene.opened ? " done" : ""}`}><details><summary>{game.scene.label} · {game.scene.opened ? "Ouvert aujourd’hui" : "Ta famille"}<ChevronRight size={15} /></summary>
-        <div className="scene-head">
-          <div>
-            <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
-            <span>{PACKS.scene.description}</span>
-          </div>
-          <span className="scene-state">
-            {game.scene.opened ? "Ouvert aujourd'hui" : "Disponible"}
-          </span>
-        </div>
-
-        {game.scene.family ? (
-          <div className="scene-family">
-            <div className="scene-family-copy">
-              <strong>{game.scene.family.name}</strong>
-              <span>
-                {game.scene.family.owned}/{game.scene.family.total} découverts · il t&apos;en
-                manque {game.scene.family.total - game.scene.family.owned}
-              </span>
-            </div>
-            <div className="progress-track">
-              <i
-                style={{
-                  width: `${Math.round(
-                    (game.scene.family.owned / game.scene.family.total) * 100,
-                  )}%`,
-                }}
-              />
-            </div>
-          </div>
-        ) : (
-          <span className="scene-empty">
-            Aucune famille n&apos;est assez grande pour un paquet — le Live Drop reste là.
-          </span>
-        )}
-
-        <button
-          type="button"
-          className="scene-action"
-          onClick={onOpenScene}
-          disabled={sceneBusy || game.scene.opened || !game.scene.family}
-        >
-          {sceneBusy ? (
-            <LoaderCircle className="spin" size={17} />
-          ) : game.scene.opened ? (
-            <Clock3 size={17} />
-          ) : (
-            <Layers3 size={17} />
-          )}
-          <span>
-            {sceneBusy
-              ? "Ouverture…"
-              : game.scene.opened
-                ? "Reviens demain (nouvelle journée à 6 h UTC)"
-                : `Ouvrir le ${game.scene.label}`}
-          </span>
-        </button>
-      </details></section>
 
       <section className="section-block drop-findings">
         <div className="section-heading">

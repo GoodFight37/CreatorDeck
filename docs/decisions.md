@@ -401,3 +401,27 @@ ne sont pas des cartes possédées et ne déclenchent aucune dépense. Au-dessus
 du seuil les actions existantes sont conservées. Aucun taux, coût, gain ou SQL
 modifié. Accès Binder ajouté pour choisir la collection ; moteur/cloud inchangés.
 Validation DOM/navigateur ciblée dans la passation, pas de validation physique.
+
+## D-043 — 11 octobre 2026 : Scène doit refléter le serveur avant ouverture
+
+Malik signale faux état disponible, déchirure fugace, refus répété et mise à
+l’écart du paquet. Le statut RPC existe déjà, mais ses champs Scène étaient
+ignorés. Décision : statut dédié au compte/jour, inconnu pendant vérification
+ou panne, adoption du jour serveur en lecture et nouvelle vérification avant
+toute déchirure. Réponses anciennes ignorées ; succès/refus déjà ouvert ferment
+le bouton. Le refus normal devient une notice lisible. Aucun SQL ajouté, aucune
+réinitialisation pour rendre un paquet disponible. Les protections serveur et
+la règle un paquet par jour restent intactes. Section visible après Live et avant
+les activités secondaires, rôle de complétion expliqué, aucun timing reveal changé.
+
+## D-044 — 11 octobre 2026 : profil de collectionneur avec les données existantes
+
+Pseudo et trois cartes sont au premier plan. Les cartes épinglées dans l’éditeur
+public existant sont prioritaires si possédées, les meilleures cartes complètent
+la vitrine ; le profil public conserve ses quatre emplacements. L’accès à la
+personnalisation ouvre Compte. Pages réunies et Légendaires uniques sont calculées
+sur la collection réelle, pas des récompenses nouvelles. Collection Binder
+mémorisée/suggérée et série existante restent visibles ; état vide avec accès Drop.
+Version technique descend près des crédits et menus sous l’identité. Pas de
+nouvelle préférence concurrente avec la vitrine publique, pas de migration.
+Preuves et limites dans la passation, suites GitHub en suivi selon mode économie.

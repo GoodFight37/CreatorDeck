@@ -19,6 +19,7 @@
  * récent, on ne remplace pas la partie locale tout seul — on le dit, et le
  * joueur décide.
  */
+import { gameDay } from "@/lib/progression";
 import {
   applyLastPackSteal,
   applyScenePackResult,
@@ -432,11 +433,18 @@ export function createCloudStore(deps: CloudDeps) {
    * rien consommer. Silencieux en cas d'échec (hors ligne, pas de compte) :
    * l'appelant garde alors son calcul local.
    */
+  let packStatusRequest = 0;
   async function fetchPackStatus(): Promise<{ packs: number; nextPackAt: string | null } | null> {
     const api = resolve();
-    if (!api?.session()) return null;
+    const userId = api?.session()?.userId;
+    if (!api || !userId) return null;
+    const request = ++packStatusRequest;
+    publish({ sceneStatusLoading: true });
     try {
       const status = await api.packStatus();
+      if (currentUserId() !== userId || request !== packStatusRequest) return null;
+      publish({ sceneStatusLoading: false, sceneStatus: typeof status.sceneReady === "boolean"
+        ? { userId, day: gameDay(deps.now()), ready: status.sceneReady } : null });
       const local = deps.readState();
       if (local) {
         const adopted = applyServerProgression(
@@ -444,11 +452,15 @@ export function createCloudStore(deps: CloudDeps) {
           status,
           deps.now(),
         );
-        if (adopted !== local) deps.applyState(adopted);
+        const sceneDay = status.sceneDay;
+        const reconciled = typeof sceneDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(sceneDay)
+          ? { ...adopted, sceneDay } : adopted;
+        if (reconciled !== local) deps.applyState(reconciled);
       }
       return { packs: status.packs, nextPackAt: status.nextPackAt };
     } catch {
-      // Sans réseau ou erreur : le client retombe sur le calcul local.
+      // Le Live conserve son calcul local ; Scène n'annonce pas une disponibilité inconnue.
+      if (currentUserId() === userId && request === packStatusRequest) publish({ sceneStatusLoading: false, sceneStatus: null });
       return null;
     }
   }

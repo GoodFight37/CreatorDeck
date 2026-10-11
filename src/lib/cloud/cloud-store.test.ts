@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { SEASONS } from "@/lib/seasons";
 import { SAVE_VERSION, createInitialState, type OwnedCard, type PlayerState } from "@/lib/game-engine";
 import {
@@ -2518,5 +2519,64 @@ describe("sabliers : dépense en ligne confirmée et rejouable", () => {
     expect((await store.useHourglass()).status).toBe("unavailable");
     expect(api.useHourglass).not.toHaveBeenCalled();
     expect(state.current.hourglasses).toBe(2);
+  });
+});
+
+
+describe("statut du Paquet Scène", () => {
+  it("adopte le jour serveur sans accorder de cartes ni de points", async () => {
+    const { store, api, state } = harness({ signedIn: true, local: saveWith({ sceneDay: "", points: 400 }) });
+    const status = await api.packStatus();
+    api.packStatus.mockResolvedValue({ ...status, sceneDay: gameDay(T0), sceneReady: false });
+    const before = state.current.cards;
+    await store.packStatus();
+    expect(state.current.sceneDay).toBe(gameDay(T0));
+    expect(state.current.cards).toBe(before);
+    expect(state.current.points).toBe(400);
+    expect(store.getSnapshot().sceneStatus).toEqual({ userId: SESSION.userId, day: gameDay(T0), ready: false });
+  });
+
+  it("une disponibilité inconnue après panne reste inconnue", async () => {
+    const { store, api } = harness({ signedIn: true });
+    api.packStatus.mockRejectedValue(new CloudError("réseau", "offline", 0));
+    await expect(store.packStatus()).resolves.toBeNull();
+    expect(store.getSnapshot().sceneStatus).toBeNull();
+    expect(store.getSnapshot().sceneStatusLoading).toBe(false);
+  });
+
+  it("un refus déjà ouvert réaligne le statut et devient un message normal", async () => {
+    const { store, api } = harness({ signedIn: true });
+    const status = await api.packStatus();
+    api.packStatus.mockResolvedValue({ ...status, sceneDay: gameDay(T0), sceneReady: false });
+    Object.assign(api, { scenePackChoices: vi.fn().mockRejectedValue(new CloudError("paquet scène : ton paquet du jour est déjà ouvert", "P0001", 400)) });
+    await expect(store.openScenePack("S01")).resolves.toMatchObject({ status: "unavailable", reason: "already-opened", message: "Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC." });
+    expect(store.getSnapshot().isError).toBe(false);
+    expect(store.getSnapshot().sceneStatus?.ready).toBe(false);
+  });
+
+  it("un tirage Scène réussi ferme immédiatement sa disponibilité", async () => {
+    const { store, api } = harness({ signedIn: true });
+    const choices = SEASONS[0].slugs.map((slug) => CREATOR_BY_SLUG.get(slug)!).filter((creator) => creator.rarity !== "legendary").slice(0, 5).map((creator) => ({ slug: creator.slug, rarity: creator.rarity, variant: "standard" }));
+    const status = await api.packStatus();
+    api.packStatus.mockResolvedValue({ ...status, sceneReady: false, sceneDay: gameDay(T0) });
+    Object.assign(api, {
+      scenePackChoices: vi.fn().mockResolvedValue({ choices: choices.map((choice) => [choice]) }),
+      openScenePack: vi.fn().mockResolvedValue({ cards: choices.map((choice) => ({ creatorSlug: choice.slug, rarity: choice.rarity, variant: choice.variant, rareDrop: false })), sceneDay: gameDay(T0) }),
+    });
+    await expect(store.openScenePack("S01")).resolves.toMatchObject({ status: "drawn" });
+    expect(store.getSnapshot().sceneStatus?.ready).toBe(false);
+  });
+
+  it("une réponse plus ancienne ne remplace pas le dernier statut", async () => {
+    const { store, api } = harness({ signedIn: true });
+    const status = await api.packStatus();
+    let complete!: (value: typeof status) => void;
+    api.packStatus.mockImplementationOnce(() => new Promise((resolve) => { complete = resolve; }));
+    const first = store.packStatus();
+    api.packStatus.mockResolvedValueOnce({ ...status, sceneReady: false, sceneDay: gameDay(T0) });
+    await store.packStatus();
+    complete({ ...status, sceneReady: true, sceneDay: null });
+    await first;
+    expect(store.getSnapshot().sceneStatus?.ready).toBe(false);
   });
 });

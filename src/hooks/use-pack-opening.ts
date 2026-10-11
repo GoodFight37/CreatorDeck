@@ -56,7 +56,7 @@ export type PackOpeningResult =
    * Rien n'a été tiré et rien n'est cassé : `needAccount` dit si le refus se
    * règle par une connexion (l'écran peut alors pointer vers Compte).
    */
-  | { status: "refused"; kind: PackOpeningKind; message: string; needAccount: boolean };
+  | { status: "refused"; kind: PackOpeningKind; message: string; needAccount: boolean; alreadyOpened?: boolean };
 
 function suspense(): Promise<void> {
   return new Promise((resolve) => {
@@ -193,6 +193,7 @@ export function usePackOpening(game: GameView | null): {
       kind: "scene",
       message: outcome.message,
       needAccount: outcome.reason === "offline" || outcome.reason === "no-session",
+      alreadyOpened: outcome.reason === "already-opened",
     };
   }, [cloud.configured, cloud.userId, game?.scene.family?.familyId]);
 

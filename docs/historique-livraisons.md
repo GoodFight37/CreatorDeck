@@ -1,3 +1,12 @@
+## 11 octobre 2026 — identité du profil et statut Paquet Scène
+
+Profil montre pseudo, cartes épinglées possédées, pages réunies, Légendaires
+uniques et collection Binder ; personnalisation réutilise Compte, version plus
+bas. Scène sort du volet replié, explique son rôle quotidien et se fonde sur le
+statut serveur. Revalidation au clic avant déchirure, refus déjà ouvert sans
+préfixe ni fausse erreur. Pas de SQL/économie/timing modifié. Tests locaux et
+suivi GitHub dans la passation ; téléphone physique non validé.
+
 ## 11 octobre 2026 — Craft avant déblocage
 
 Progression conservée, valeur des copies recyclables hors Live, trois vrais

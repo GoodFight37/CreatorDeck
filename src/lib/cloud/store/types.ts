@@ -96,6 +96,9 @@ export type CloudState = {
   /** Un enregistrement de wishlist est en cours (le bouton attend). */
   wishlistBusy: boolean;
   userId: string | null;
+  /** Statut serveur du paquet quotidien, attaché au compte et à la journée. */
+  sceneStatus: { userId: string; day: string; ready: boolean } | null;
+  sceneStatusLoading: boolean;
   /** Nom court du projet Supabase (affiché pour rassurer). */
   project: string | null;
   /** Un appel est en cours. */
@@ -242,7 +245,7 @@ export type PackOpenOutcome =
     }
   | {
       status: "unavailable";
-      reason: "offline" | "no-session" | "no-packs" | "not-configured" | "error";
+      reason: "offline" | "no-session" | "no-packs" | "not-configured" | "already-opened" | "error";
       message: string;
     };
 
@@ -344,6 +347,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   wishlistSlug: null,
   wishlistBusy: false,
   userId: null,
+  sceneStatus: null,
+  sceneStatusLoading: false,
   project: null,
   busy: false,
   message: null,

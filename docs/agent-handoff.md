@@ -1,3 +1,66 @@
+## Profil et K-037 — Paquet Scène faussement disponible, 11 octobre 2026
+
+Demande Malik : poursuivre le profil, avec priorité au Paquet Scène qui s’affiche
+« Disponible », lance brièvement la déchirure puis refuse « déjà ouvert ». Il juge
+également le paquet isolé et son rôle peu clair. Base propre
+`b64d178111ba48ad1328afbf794e4d98b77ebc69`, branche work et main identiques,
+aucune PR ouverte, Git fetch/API accessibles, réseau inchangé. Craft confirmé
+par API : [CI 38157646859](https://github.com/GoodFight37/CreatorDeck/actions/runs/38157646859)
+et [Supabase 38157840967](https://github.com/GoodFight37/CreatorDeck/actions/runs/38157840967)
+success. Malik confirme également les contrôles verts. Logs complets non relus.
+
+Cause K-037 prouvée : pack_status expose scene_day/scene_ready, mais fetchPackStatus
+n’utilisait pas ces champs, et HomeView se fiait uniquement au JSON local.
+Correctif : statut Scène serveur lié au compte et à la journée, état de vérification
+explicite et aucune ouverture annoncée avant confirmation. Le jour serveur est
+adopté sans gain/cartes ; réponse ancienne ignorée, panne remet la disponibilité
+à inconnue. Statut rechargé au changement de journée et revérifié au clic avant
+la scène de déchirure. Un refus déjà ouvert recale le statut et devient une notice
+« Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC. », sans préfixe répété.
+Après un tirage réussi, la disponibilité ferme immédiatement. Ouvertures Live
+et Scène ne peuvent plus se superposer pendant la vérification. Timings reveal,
+Perfect, déchirure et règle quotidienne inchangés. Aucune migration nécessaire.
+
+Scène : section visible après le panneau Live, avant les activités secondaires,
+sans details ni opacité de punition. Rôle expliqué : cinq cartes de la famille,
+un paquet par jour, sans Légendaire ; statut et bouton cohérents, famille actuelle
+et progression existantes conservées. Les tests de focus Scène restent verts.
+
+Profil : pseudo du compte en tête, trois cartes possédées épinglées prioritaires
+puis meilleures cartes automatiques pour compléter, sans doublon. Éditeur existant
+Compte réutilisé pour personnaliser pseudo/vitrine ; les quatre emplacements du
+profil public ne sont pas modifiés. Pages réunies et Légendaires uniques, série
+existante, collection Binder en cours ou complétée et accès au Binder. État vide
+avec CTA première carte. Version technique déplacée près des crédits ; menus et
+réglages restent dessous. Aucun compteur inventé ni nouvelle récompense.
+
+Vérifications locales sur le diff basé sur b64d178 :
+- `npm test -- src/lib/cloud/cloud-store.test.ts` : **146/146**, cinq cas Scène
+  ajoutés (adoption, panne, refus, réponse ancienne, succès). Après ajustement de
+  la fixture aux raretés réelles, le cas succès est retesté seul.
+- `npm run ecrans -- src/ecrans-scene-profile.test.tsx src/ecrans-drop-binder.test.tsx`
+  : **16/16**, six nouveaux cas état Scène/profil, dix garde-fous Binder/Drop.
+- E2E ciblés Scène/profil/focus : **6/6**, bureau/téléphone simulé ; rôle visible,
+  consommation unique/rechargement, réserve Live conservée, vitrine/pages, lien
+  Binder et absence de débordement à 320/412 px.
+- E2E `avec le serveur` de scene-profile.spec.ts : **2/2** avec configuration
+  publique factice en variables de commande, toutes les RPC simulées. Vérification
+  initiale retardée, puis ouverture ailleurs : zéro appel de tirage, zéro scène
+  de déchirure. Pas une preuve de comportement de la base réelle.
+- Typecheck, ESLint ciblé, jargon et diff-check passent. Pas de suites générales
+  SQL/build locales répétées ; confiées aux contrôles GitHub. 0047/0048 ne sont
+  pas réappliquées, pas de déploiement manuel, K-031 séparé. Téléphone physique
+  et contenu Vercel servi restent non vérifiés.
+
+Code/docs préparés pour publication normale main dans un seul commit. SHA du lot :
+`git log -1 --format=%H -- docs/agent-handoff.md` ; comparer au main distant.
+[Actions main](https://github.com/GoodFight37/CreatorDeck/actions?query=branch%3Amain)
+reste le suivi ; l’agent transmettra le run et son état observé après push,
+sans surveillance des longues suites. Ne pas déclarer leurs résultats verts
+avant observation. Malik peut transmettre le contrôle rouge et son erreur.
+Réservation libérée après publication ; pas de chantier produit additionnel
+engagé dans ce lot.
+
 ## Craft — aperçu utile avant dix doublons, 11 octobre 2026
 
 Demande Malik : enchaîner sur Craft pendant qu’il suit les contrôles Binder et
