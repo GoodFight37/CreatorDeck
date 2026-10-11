@@ -393,7 +393,8 @@ export function CreatorDeckApp() {
       if (!cloud.onboarding?.giftClaimed) {
         const claim = await cloudStore.claimReturnGift();
         if (claim.status !== "done") { showError(claim.message, claim.status === "unavailable" && claim.reason === "no-session" ? "account" : null); return; }
-        setNotice("Cadeau réclamé : 5 boosters distincts de ta réserve t’attendent.");
+        // La boîte cadeau indique aussitôt son nouveau solde. Un toast ici
+        // masquerait le bouton suivant pendant cette ouverture en plusieurs boosters.
       }
       setTutorialStep(null);
       setWelcomeSeenKey(welcomeKey);
