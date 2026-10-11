@@ -1,6 +1,7 @@
 ## État courant — 11 octobre 2026
 
-Référence vérifiée : `main` = `980bdf8bc9f12f995702abbdd2270f429927d7aa`.
+Code produit vérifié : `980bdf8bc9f12f995702abbdd2270f429927d7aa` ; le tri
+documentaire est publié sur `main` dans `d585db612d839dc81c3c3cc94770d17d3f02da74`.
 CI GitHub `38164889818` : succès, quatre jobs (Playwright, unitaires/écrans/
 build, SQL jetable, cloud simulé). Statut Vercel du commit : succès, déploiement
 terminé. Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.

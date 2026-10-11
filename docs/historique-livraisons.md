@@ -1,6 +1,7 @@
 ## Triage roadmap et problèmes connus — 11 octobre 2026
 
-À `980bdf8` sur main, CI `38164889818` est verte (4/4 jobs), le statut Vercel
+Le code produit `980bdf8` est inclus dans le checkpoint documentaire `d585db6`
+sur main. CI `38164889818` est verte (4/4 jobs), le statut Vercel
 du commit est success et il n’y a aucune PR ouverte. La roadmap sépare désormais
 le plan actif de l’historique ancien. K-039 est résolu après CI ; le parcours
 sablier réel est confirmé par Malik. VIS-01/K-038 est le seul retour humain

@@ -33,7 +33,8 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck
 
-État du registre actualisé le 11 octobre 2026 sur `main` `980bdf8`. La CI
+État du registre actualisé le 11 octobre 2026 sur `main` `d585db6`, pour le code
+produit `980bdf8`. La CI
 `38164889818` est verte (quatre jobs). Le registre ne signifie pas que chaque
 ancienne validation sur téléphone est encore ouverte : voir les statuts précis
 ci-dessous et le [plan courant](roadmap.md#état-courant--11-octobre-2026).
@@ -48,7 +49,7 @@ conservé dans [atelier-et-problemes.md](atelier-et-problemes.md).
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|
-| K-039 | Faible, découvrabilité sociale | Résolu sur main `980bdf8` ; CI `38164889818` verte (4 jobs) | Les ouvertures récentes des amis (dernière heure) n’apparaissaient dans le Drop qu’après ouverture d’un panneau secondaire. | CTA conditionnel déplacé hors du repli, sous le Paquet Scène ; il mène au Carnet et n’ajoute rien quand il n’y a pas d’activité. DOM ciblé 7/7 ; CI complète verte. Aucun changement de données, notification ou serveur. |
+| K-039 | Faible, découvrabilité sociale | Résolu dans le code `980bdf8` (inclus dans `main` `d585db6`) ; CI `38164889818` verte (4 jobs) | Les ouvertures récentes des amis (dernière heure) n’apparaissaient dans le Drop qu’après ouverture d’un panneau secondaire. | CTA conditionnel déplacé hors du repli, sous le Paquet Scène ; il mène au Carnet et n’ajoute rien quand il n’y a pas d’activité. DOM ciblé 7/7 ; CI complète verte. Aucun changement de données, notification ou serveur. |
 | K-031 | Élevée, recharge ordinaire | Résolu sur main `76e8a62` ; 0049 appliquée et vérifiée automatiquement ; téléphone confirmé par Malik | Après plusieurs intervalles gagnés avec stock sous le plafond, la réserve pouvait regagner trop tôt au contrôle suivant. | 0048 avançait l’ancre de N millisecondes au lieu de N × intervalle. 0049 remplace uniquement `_pack_refresh` par la formule correcte. Tests : TypeScript 103/103, toutes assertions SQL jetables ; CI 38163674938 quatre jobs verts ; automatique 38163920425 success, log confirme TLS/projet/historique, application 0049 seulement et post-vérification des objets. Malik confirme le test sur téléphone réussi. |
 | K-038 | Moyenne, continuité visuelle du booster | CI 38162996089 verte (4 jobs) ; téléphone réel attendu | Après la déchirure, les cinq dos montaient mais le sachet ouvert restait visible dessous ; Reflets coupés ou mouvement réduit laissaient une enveloppe fantôme. | Durées héritées du cap/corps (1250/1550 ms) dépassaient la montée des cartes ; profondeur statique, règles d’accessibilité conservaient une faible opacité. Cap 980 ms, corps 1150 ms, côtés/ombre 1080 ms puis opacité nulle ; sans effets/mouvement réduit, emballage masqué et dos conservés. Timer 1900 ms et Reveal/Perfect/tear inchangés. E2E locaux 4/4 bureau/téléphone simulé, CI complète verte. Téléphone réel pas encore confirmé. |
 | K-037 | Élevée, faux état Scène | Correctif publié ; CI 38162996089 verte ; téléphone réel attendu | Paquet annoncé disponible puis déchirure fugace et refus « déjà ouvert ». | Champs scene_day/scene_ready ignorés dans le magasin, affichage fondé sur JSON local. Statut serveur par compte/journée, revalidation avant déchirure, refus normalisé et disponibilité refermée. 146 unitaires magasin, 16 DOM, 6 E2E locaux et 2 cloud simulés verts ; CI complète verte. Téléphone réel non vérifié ici. |
