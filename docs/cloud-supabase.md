@@ -1,3 +1,14 @@
+## K-034 — correctif testé, publication à suivre — 11 octobre 2026
+
+Validation locale des fichiers séparée du plan calculé sur l'historique réel.
+Manual déjà enregistrée ne bloque plus ; approbation maintenue si en attente.
+28/28 tests outil et contrôles ciblés réussis ; CI distante à suivre.
+Logs du run 38140833700 téléchargés : refus manual 0047 confirmé à distance.
+Git/API/logs accessibles avec le preset et les six domaines, sans changement réseau.
+0047 non réappliquée, K-031 inchangé, téléphone réel toujours à tester.
+Commandes, SHA de base et prochaine action : [checkpoint courant](agent-handoff.md).
+Les sections suivantes sont des observations historiques datées.
+
 ## Complément du 11 octobre 2026 — automatisation encore à corriger
 
 0047 est appliquée et vérifiée. **K-034 reste ouvert** : prévalidation sur le

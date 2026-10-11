@@ -109,20 +109,28 @@ export function checkTarget(value) {
   url.searchParams.set('sslmode', 'verify-full');
   return url;
 }
-export function migrationPlan(files, baseline, applied, approveManual = false) {
+/** Politique locale uniquement : le baseline ne représente pas l’historique réel. */
+export function validateMigrationFiles(files, baseline) {
   const versions = new Set(files.map(f => f.version));
   if (versions.size !== files.length) throw new Error("Numéro de migration dupliqué.");
   for (const [name, hash] of Object.entries(baseline)) {
     if (!files.some(f => f.name === name && f.hash === hash)) throw new Error(`Migration historique modifiée/manquante : ${name}. Ajouter une nouvelle migration.`);
   }
+  for (const f of files.filter(f => !baseline[f.name])) {
+    if (Number(f.version) <= 46) throw new Error("Une migration historique ne peut jamais être rejouée automatiquement.");
+    if (!f.sql.match(/^-- creatordeck-deploy: (automatic|manual)\r?$/m)) throw new Error(`Mode de déploiement manquant : ${f.name}.`);
+  }
+}
+/** L’approbation ne concerne que les migrations absentes de l’historique lu en base. */
+export function migrationPlan(files, baseline, applied, approveManual = false) {
+  validateMigrationFiles(files, baseline);
+  const versions = new Set(files.map(f => f.version));
   const missingHistory = files.filter(f => baseline[f.name] && !applied.includes(f.version));
   if (missingHistory.length) throw new Error("Historique Supabase incomplet : migrations anciennes appliquées à la main. Vérifier leur état avant de réconcilier l'historique ; aucun SQL exécuté.");
   if (applied.some(v => !versions.has(v))) throw new Error("La base possède une migration absente de cette révision. Déploiement arrêté.");
   const pending = files.filter(f => !applied.includes(f.version));
   for (const f of pending) {
-    if (Number(f.version) <= 46) throw new Error("Une migration historique ne peut jamais être rejouée automatiquement.");
     const mode = f.sql.match(/^-- creatordeck-deploy: (automatic|manual)\r?$/m)?.[1];
-    if (!mode) throw new Error(`Mode de déploiement manquant : ${f.name}.`);
     if (mode === 'manual' && !approveManual) throw new Error(`Validation manuelle requise : ${f.name}.`);
   }
   return pending;
@@ -138,8 +146,7 @@ async function main() {
   const files = await filesOnDisk();
   const baseline = JSON.parse(await readFile('supabase/deploy-baseline.json', 'utf8'));
   // Vérifier les fichiers même quand il n'y a rien à déployer.
-  const baselineVersions = files.filter(f => baseline[f.name]).map(f => f.version);
-  migrationPlan(files, baseline, baselineVersions, process.argv.includes('--check') || process.argv.includes('--dry-run') || process.argv.includes('--approve-manual'));
+  validateMigrationFiles(files, baseline);
   if (process.argv.includes('--check')) {
     console.log('Politique des migrations valide. Aucun accès réseau.');
     return;

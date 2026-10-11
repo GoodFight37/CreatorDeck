@@ -1,3 +1,46 @@
+## K-034 — correction ciblée — 11 octobre 2026
+
+- Demande : corriger uniquement la prévalidation Supabase et publier sur main,
+  autorisation explicite de Malik ; K-031 séparé, téléphone réel non validé.
+- Reprise : checkout `work` propre à `7b73b1864d122dd0cecd1ce5dba99da0c4b60899`,
+  avance rapide vers main `d7a257c6e19b0d04cea9b744e56721f65a84582f` après
+  inspection du seul commit documentaire manquant. Aucun travail local perdu,
+  aucune PR ouverte ni nouvelle activité distante observée.
+- Environnement : preset `package_managers`, six domaines demandés, politique
+  `enforced` et observations courantes. `git ls-remote`, fetch, API REST et
+  `gh run view 38140833700 --log-failed` réussis. Le log distant désormais lu
+  contient « Validation manuelle requise : 0047_sabliers_en_ligne.sql. », puis
+  exit code 1. L'ancienne hypothèse est donc confirmée par cette nouvelle lecture.
+  Aucun réglage réseau, secret ou TLS modifié.
+- Correctif : `validateMigrationFiles` contrôle doublons, empreintes du baseline,
+  versions nouvelles et modes déclarés sans historique synthétique. Le plan
+  utilise uniquement l'historique réel ; manual déjà enregistrée n'est pas en
+  attente, manual absente exige toujours approbation pour appliquer. `--check`
+  reste hors réseau ; dry-run reste en lecture seule. Cible, TLS, historique,
+  workdir CLI et relecture finale des versions/objets sont conservés.
+- Vérification sur le diff basé sur d7a257c :
+  `node scripts/supabase-deploy.test.mjs` **28/28**, aucun ignoré, code 0 ;
+  `node scripts/supabase-deploy.mjs --check`, `node --check` des deux scripts,
+  ESLint ciblé sur les deux scripts et `git diff --check` : code 0.
+  Les quatre nouveaux tests couvrent validation locale manual, manual enregistrée
+  avec/sans nouvelle automatic, politique même sur version enregistrée et
+  point d'entrée sans secret atteignant le contrôle de connexion. Tests locaux
+  sans production ; suites produit non répétées, CI complète attendue à publication.
+- Checkpoint préparé, publication et contrôles distants **à suivre** ; prochaine
+  action : publier normalement `HEAD:main`, confirmer le SHA distant, suivre
+  Vérification puis son run automatique Supabase et lire son log.
+  Réservation : cette session est le seul écrivain observé, pendant ce suivi.
+- 0047 demeure appliquée (38140515537) et vérifiée (38140562490). Aucun SQL,
+  baseline ou workflow modifié, aucun reset/repair/réapplication/déploiement manuel.
+  Le risque sans sauvegarde accepté concerne seulement l'application passée.
+  Prochaine validation produit : essai sablier sur téléphone par Malik.
+
+Les blocs suivants sont historiques et leurs limites d'accès datées ont été
+remplacées par les observations ci-dessus. SHA du checkpoint par
+`git log -1 --format=%H -- docs/agent-handoff.md`.
+
+---
+
 ## Complément de reprise — 11 octobre 2026, après la passation initiale
 
 État du code inspecté : `7b73b1864d122dd0cecd1ce5dba99da0c4b60899` sur main.

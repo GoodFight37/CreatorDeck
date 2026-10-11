@@ -4,10 +4,31 @@ import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { rootCertificates } from 'node:tls';
 import { X509Certificate } from 'node:crypto';
-import { checkTarget, migrationPlan, PROJECT, connectionFailure, postgresTls, loadPostgresTls, withCertificateUrl, withDeploymentDirectory, verifyRecordedMigrations } from './supabase-deploy.mjs';
+import { checkTarget, validateMigrationFiles, migrationPlan, PROJECT, connectionFailure, postgresTls, loadPostgresTls, withCertificateUrl, withDeploymentDirectory, verifyRecordedMigrations } from './supabase-deploy.mjs';
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
+const manual = { ...next, sql: '-- creatordeck-deploy: manual\nselect 1;' };
+test('validation locale accepte manual sans inventer un historique ou une approbation', () => {
+  validateMigrationFiles([old, manual], baseline);
+});
+test('manual déjà enregistrée ne bloque ni une base à jour ni une nouvelle automatic', () => {
+  assert.deepEqual(migrationPlan([old, manual], baseline, ['0046', '0047']), []);
+  const automatic = { ...next, name: '0048_fix.sql', version: '0048' };
+  assert.deepEqual(migrationPlan([old, manual, automatic], baseline, ['0046', '0047']), [automatic]);
+  assert.throws(() => migrationPlan([old, manual, automatic], baseline, ['0046']), /Validation manuelle/);
+});
+test('politique des fichiers vérifiée même pour une migration déjà enregistrée', () => {
+  assert.throws(() => migrationPlan([old, { ...manual, sql: 'select 1;' }], baseline, ['0046', '0047']), /Mode/);
+});
+test('chemin automatique réel : atteint le contrôle du secret au lieu de refuser manual avant connexion', () => {
+  const result = spawnSync(process.execPath, ['scripts/supabase-deploy.mjs'], {
+    encoding: 'utf8', env: { ...process.env, SUPABASE_DB_URL: '' },
+  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /Configurer le secret GitHub SUPABASE_DB_URL/);
+  assert.doesNotMatch(result.stderr, /Validation manuelle/);
+});
 test('sans secret CA : certificat Supabase fourni intégré ; override explicite conservé', async () => {
   const tls = await loadPostgresTls('');
   assert.equal(tls.rejectUnauthorized, true);

@@ -1,3 +1,14 @@
+## K-034 — correctif testé, publication à suivre — 11 octobre 2026
+
+Validation locale des fichiers séparée du plan calculé sur l'historique réel.
+Manual déjà enregistrée ne bloque plus ; approbation maintenue si en attente.
+28/28 tests outil et contrôles ciblés réussis ; CI distante à suivre.
+Logs du run 38140833700 téléchargés : refus manual 0047 confirmé à distance.
+Git/API/logs accessibles avec le preset et les six domaines, sans changement réseau.
+0047 non réappliquée, K-031 inchangé, téléphone réel toujours à tester.
+Commandes, SHA de base et prochaine action : [checkpoint courant](agent-handoff.md).
+Les sections suivantes sont des observations historiques datées.
+
 ## Complément du 11 octobre 2026 — automatisation encore à corriger
 
 0047 est appliquée et vérifiée. **K-034 reste ouvert** : prévalidation sur le
@@ -125,7 +136,7 @@ les effets arbitraires du SQL. Les opérations ordinaires compatibles et
 vérifiées peuvent être classées automatic. Les tests sur PostgreSQL jetable
 restent obligatoires ; ajouter les migrations au vérifieur du projet.
 
-Une migration manual bloque tout le plan jusqu'à une exécution explicite dans
+Une migration manual réellement en attente bloque tout le plan jusqu'à une exécution explicite dans
 [Actions → Mise à jour Supabase](https://github.com/GoodFight37/CreatorDeck/actions/workflows/supabase-deploy.yml)
 → **Run workflow**, branche `main`, option de validation manual cochée et **dry_run décochée**. Examiner
 **toutes** les migrations en attente avant ce clic : il autorise tout le plan,
