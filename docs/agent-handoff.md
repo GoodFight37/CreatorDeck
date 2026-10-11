@@ -1,3 +1,28 @@
+## En cours — K-036, ouverture involontaire pendant le scroll — 11 octobre 2026
+
+Demande Malik : le scroll de Drop ne doit pas ouvrir de booster. Base propre
+`caee41c2bff3eebe6845aee9e0fc68419168b9d2`, branche work et main identiques,
+Git/API/logs Actions accessibles ; aucune modification réseau. Dernières CI
+38154126175 et Supabase 38154322446 success avant ce correctif.
+
+Cause confirmée : `.pack-stage` capturait le pointeur, `touch-action: none`
+et un tirage vertical armé lançait `onOpen` sur tout le bloc. Suppression des
+handlers de tirage et autorisation du scroll vertical/pincement. Le bouton sachet
+ignore les clics générés après glissement ; appui/clavier ouvrent la scène dédiée,
+où la déchirure reste disponible. Consigne et aria-label mis à jour. Aucun timing
+Perfect/reveal/tear ni règle de tirage modifié. Aucun nouveau SQL nécessaire ;
+0047/0048 ne sont pas réappliquées, K-031 séparé, téléphone réel non testé.
+
+Diff : drop-view.tsx, globals.css, ecrans-tactile.test.tsx, pack-tear.spec.ts
+et docs de coordination. Local : 12/12 DOM ciblés, typecheck et ESLint ciblé
+code 0, SQL jetable **645** contrôles, code 0. Premier E2E : 9 réussis, 1 échec de remise à zéro du
+scroll à cause de l’inertie entre deux gestes. Scénarios tactile séparés dans des
+pages indépendantes ; retest ciblé **4/4** réussi. Les 8 autres scénarios du
+premier run passent (appui/focus/clavier, glissements souris, dimensions et
+déchirure dans les deux sens). Prochaine étape : commiter/publier normalement
+main, vérifier CI et contrôle Supabase automatique,
+puis consigner les SHAs/runs observés. Aucun déploiement manuel demandé.
+
 ## Checkpoint courant — audit produit P0/P1 publié et confirmé — 11 octobre 2026
 
 Demande Malik : implémenter P0 puis P1 de l’audit produit, publication autorisée.

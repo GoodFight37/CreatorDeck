@@ -10,8 +10,7 @@
  *     sur le `.card-foil`, sans re-rendu React) ;
  *   * le réglage « Reflets des cartes » coupe **tout** le reflet, pas seulement
  *     le capteur (`data-card-fx="off"` sur `<html>`, que le CSS écoute) ;
- *   * le tirage du booster **vibre une fois** quand le geste arme — et pas à
- *     chaque pixel ;
+ *   * un défilement sur Drop ne déclenche ni ouverture ni vibration ;
  *   * couper le **Son** coupe aussi les vibrations : un joueur qui coupe le son
  *     dans le métro ne veut pas que son téléphone bourdonne.
  *
@@ -144,7 +143,7 @@ describe("les gestes qui se sentent", () => {
     }
   });
 
-  it("vibre une fois quand le booster s'arme, jamais deux", async () => {
+  it("un défilement sur l’accueil ne déclenche ni ouverture ni vibration", async () => {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
 
@@ -164,10 +163,10 @@ describe("les gestes qui se sentent", () => {
     doigt("pointermove", 260);
     await act(async () => {});
 
-    // **Une** vibration, courte : le motif du déchirement du paquet. Le doigt a
-    // bougé trois fois après le seuil, et rien n'a vibré en plus.
-    expect(vibrations()).toHaveLength(1);
-    expect(vibrations()[0]).toEqual([16]);
+    doigt("pointerup", 260);
+    expect(document.querySelector(".booster-physical-scene")).toBeNull();
+    expect(document.querySelector(".reveal-overlay")).toBeNull();
+    expect(vibrations()).toHaveLength(0);
   });
 
   it("ne vibre pas du tout quand le son est coupé", async () => {

@@ -1,3 +1,9 @@
+## 11 octobre 2026 — K-036, scroll du Drop
+
+Suppression du tirage sur l’accueil et de sa capture du pointeur. Appui/clavier
+ouvrent la scène séparée ; déchirure et Perfect inchangés. Tests/publication :
+voir le checkpoint courant de la passation.
+
 ## 11 octobre 2026 — audit produit P0/P1
 
 Essai invité d’un pack tutoriel sans gains, accès Tribunal remonté près de

@@ -1,3 +1,8 @@
+## K-036 — scroll et ouverture distincts
+
+Correctif local : scroll libre depuis le sachet ou sa zone ; appui explicite pour
+la scène de déchirure. Publication et CI en cours ; téléphone réel à vérifier.
+
 ## Audit produit P0/P1 — publié et CI verte, 11 octobre 2026
 
 Essai invité sans gains, Tribunal visible en un appui avec feedback/bilan/mission

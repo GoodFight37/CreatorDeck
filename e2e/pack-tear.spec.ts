@@ -264,7 +264,7 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
 });
 
-test("an abandoned home drag does not become a tap and an armed pull opens once", async ({ page }) => {
+test("home drags never open a booster; an intentional tap opens its separate scene", async ({ page }) => {
   await gotoDeck(page);
   const sachet = page.locator(".pack-artwork");
   await expect(sachet).toBeEnabled();
@@ -275,8 +275,6 @@ test("an abandoned home drag does not become a tap and an armed pull opens once"
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x, y - 30, { steps: 5 });
-  expect(await sachet.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--pack-tilt-x")))
-    .not.toBe("");
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
   await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
@@ -284,6 +282,9 @@ test("an abandoned home drag does not become a tap and an armed pull opens once"
   await page.mouse.down();
   await page.mouse.move(x, y - 110, { steps: 10 });
   await page.mouse.up();
+  await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await sachet.click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
@@ -291,6 +292,27 @@ test("an abandoned home drag does not become a tap and an armed pull opens once"
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
 });
+
+for (const selector of [".pack-stage", ".pack-artwork"]) {
+  test(`touch scrolling from ${selector} does not open or consume a booster`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await gotoDeck(page);
+    const stock = await page.locator(".stock-row strong").innerText();
+    const touch = await page.context().newCDPSession(page);
+    const bounds = (await page.locator(selector).boundingBox())!;
+    const x = selector === ".pack-stage" ? bounds.x + 8 : bounds.x + bounds.width / 2;
+    const y = bounds.y + bounds.height / 2;
+    await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    for (let step = 1; step <= 8; step++) {
+      await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y - step * 15 }] });
+    }
+    await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(20);
+    await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
+    await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toHaveCount(0);
+    await expect(page.locator(".stock-row strong")).toHaveText(stock);
+  });
+}
 
 test("compact sachet keeps the weld within thumb reach and accepts both swipe directions", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });

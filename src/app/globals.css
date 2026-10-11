@@ -457,10 +457,8 @@ input:focus-visible {
   justify-content: center;
   margin: 8px -18px 0;
   overflow: hidden;
-  /* Le geste est vertical : sans ça, le navigateur fait défiler la page sous le
-     doigt au lieu de laisser tirer le booster. */
-  touch-action: none;
-  cursor: grab;
+  /* L’accueil défile librement, y compris depuis le sachet. */
+  touch-action: pan-y pinch-zoom;
 }
 .pack-stage.pulling { cursor: grabbing; }
 

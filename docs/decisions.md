@@ -347,3 +347,16 @@ faces CSS, flaps, cascade et hiérarchie de rareté déjà présentes sont conse
 Ombre du sachet renforcée ; aucun WebGL ni modification des timings de silence,
 Perfect et déchirure. Validation courante et limites dans la passation ; aucun
 essai sur téléphone physique affirmé. P2 et K-031 restent hors de ce lot.
+
+## D-040 — 11 octobre 2026 : séparer scroll de Drop et déchirure
+
+Malik signale une ouverture involontaire en essayant de défiler. La zone entière
+capturait le pointeur et le seuil vertical déclenchait l’ouverture. Décision :
+retirer le tirage de l’accueil et autoriser le scroll/pincement natifs. Un appui
+sur le sachet ou le CTA prépare la scène dédiée ; le clavier reste disponible.
+Un mouvement de plus de 8 px ou pointercancel neutralise le clic tactile/souris
+qui pourrait suivre sur le sachet. Aucun pointer capture ni preventDefault sur
+Drop. Le geste de déchirure est conservé dans la scène, ses timings et Perfect
+restent inchangés. Garder le tirage en réduisant sa zone a été écarté : cela
+laisserait le même conflit lorsqu’un scroll commence sur le sachet. Preuves et
+limites dans la passation ; validation physique du téléphone encore requise.
