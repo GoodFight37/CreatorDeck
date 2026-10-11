@@ -1937,3 +1937,24 @@ La PR #8 cible toujours `arena/01a10c75-creatordeck`, base choisie à sa créati
   aucune lecture gyroscopique restante. Le parcours physique Android et sa
   mesure de performances réelles restent non vérifiés ; l’E2E téléphone est
   une émulation Playwright.
+
+
+## Ergonomie courte / swipe de révélation — clôture CI, 11 octobre 2026
+
+Le commit de suivi `674fc1df26a5976b5c60c74852bb8b0061434fbf` est publié sur
+`main` ; `git ls-remote` a confirmé le même SHA. Le suivi capture le pointeur
+pendant le swipe, y compris si le doigt sort des limites de la carte. CI
+`38176673799` sur ce SHA : `success`, quatre jobs réussis (unitaires/écrans/
+statique/build, Playwright, cloud RPC simulés, Postgres jetable).
+
+Preuves locales : DOM Drop/Binder et révélation 28/28, puis révélation après le
+suivi de capture 16/16 ; E2E mouvement réduit/continuité 4/4, abandon à mi-course
+2/2, swipe horizontal 2/2 sur bureau et téléphone simulé. Typecheck, ESLint ciblé,
+build statique et diff-check réussis. Le build local n’avait pas les variables
+Supabase et ne constitue pas un test cloud réel ; les tests cloud de CI utilisent
+des RPC simulées. Scan Sharp : les 1 000 portraits WebP se décodent ;
+`diverron.webp` est le seul visuellement vert selon le filtre de luminance et
+l’application utilise déjà `diverron-fallback.svg`. Les quatre feuilles CSS ne
+partagent aucun sélecteur exact ni nom de keyframe. Le test Playwright mobile
+est une émulation, pas une validation sur téléphone physique. Aucun SQL, donnée,
+secret ou règle de jeu modifiés.

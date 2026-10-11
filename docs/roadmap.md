@@ -1,20 +1,17 @@
 ## État courant — 11 octobre 2026
 
-Code produit vérifié : `980bdf8bc9f12f995702abbdd2270f429927d7aa` ; le tri
-documentaire est publié sur `main` dans `b3828d508e72a4ebf8777ff321e53a3b051652b0`.
-CI GitHub `38164889818` sur le code et `38165486381` sur le checkpoint docs :
-succès, quatre jobs chacun (Playwright, unitaires/écrans/build, SQL jetable,
-cloud simulé). Statut Vercel du code `980bdf8` : succès, déploiement terminé.
-Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
+Code produit vérifié : `674fc1df26a5976b5c60c74852bb8b0061434fbf` sur `main`.
+CI GitHub `38176673799` : succès, quatre jobs (Playwright, unitaires/écrans/build,
+SQL jetable, cloud simulé). Vérification du 11 octobre 2026 ; voir la
+passation pour les contrôles locaux et les limites du test mobile simulé.
 
 ### Plan actif
 
 - **Ergonomie courte et geste de révélation (11 octobre)** : compacter les
   informations près du CTA, remonter la grille Binder, ajouter le swipe après
   flip, confirmer l’effet du sablier, distinguer visuellement les familles de
-  Toi, et contrôler les reflets réduits, le CSS partagé et les portraits. Lot
-  ciblé implémenté ; tests locaux et publication sont consignés dans la dernière
-  passation. Aucun SQL.
+  Toi, et contrôler les reflets réduits, le CSS partagé et les portraits. Lot ciblé publié dans `674fc1d` ; CI `38176673799` verte (quatre jobs).
+  Tests locaux ciblés et limites consignés dans la dernière passation. Aucun SQL.
 
 - **Reprise cloud automatique (11 octobre, D-048/K-040)** : lecture de la
   sauvegarde dès la restauration/connexion du compte, avant les compteurs ;
