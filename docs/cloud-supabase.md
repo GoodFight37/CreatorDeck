@@ -1036,8 +1036,10 @@ conserve jusqu’à son ouverture, puis la réserve revient à 4/4. Le client ho
 cloud suit la même règle. Le test sur téléphone et la version servie restent à
 vérifier. Les gains restent calculés localement :
 la validation de leurs sources n'est pas déplacée côté serveur. Hors cloud,
-`spendHourglass()` reste utilisé. Le nouveau helper privé conserve correctement
-les minutes résiduelles ; le helper global ancien n'est pas modifié (K-031).
+`spendHourglass()` reste utilisé. Le helper privé des sabliers conserve les
+minutes résiduelles ; la migration additive 0049 corrige aussi l’ancre de
+recharge ordinaire dans `_pack_refresh`. Son application automatique doit encore
+être vérifiée.
 
 **Le catalogue est en lecture seule.** La table `public.creators`
 (`0003_catalogue.sql`) a la RLS activée et **aucune politique d'écriture** : ni

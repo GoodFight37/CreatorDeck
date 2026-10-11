@@ -1,3 +1,35 @@
+## K-031 — ancre de recharge corrigée, migration à suivre — 11 octobre 2026
+
+Base vérifiée `ebed1aea3136b3fdca7ec088f3835ed83398ec8a`, branche `work` égale
+à `origin/main`, checkout propre au départ. K-031 est maintenant traité dans
+0049 additive, sans réécrire 0048 ni modifier le baseline. La 0048 calculait
+`anchor + N milliseconds` après avoir accordé N boosters ; 0049 avance de
+`N × p_interval_ms`, garde la fraction d’intervalle restante et préserve
+plafond, comportement à stock plein et droits privés.
+
+Tests locaux : `npm test -- src/lib/game-engine.test.ts` **103/103** ;
+`npm run supabase:verify` terminé avec toutes assertions vertes, migrations
+0001–0049 dans Postgres jetable (pas production) ; `npm run typecheck`, ESLint
+ciblé, `node scripts/supabase-deploy.mjs --check` et `git diff --check` code 0.
+Le test SQL couvre 35 min (1 booster, ancre à 30 min), 60 min (plafond à 4,
+ancre à maintenant), et appels répétés sans gain supplémentaire. Le test moteur
+vérifie également les 5 min restantes puis le prochain intervalle.
+
+Fichiers : migration `supabase/migrations/0049_pack_refresh_ancre.sql`, vérifieur
+SQL et scénario sabliers, test `refreshBalances`, roadmap, problèmes connus,
+décision D-048, journal, cloud-supabase. Migration `automatic` ; ne pas la
+lancer manuellement. La CI main doit être verte avant le workflow automatique,
+qui vérifie cible/TLS/historique et les objets après application. Aucun accès,
+changement ou déploiement de production n’a encore eu lieu pour 0049. K-031
+restera « en attente » jusqu’à observation du résultat automatique. Aucun reset,
+repair ni réapplication manuelle. L’essai sur téléphone physique reste à faire.
+
+Publication autorisée par Malik. Dernière vérification préalable :
+`git ls-remote --heads origin main` = `ebed1aea3136b3fdca7ec088f3835ed83398ec8a`.
+Après push normal, vérifier SHA distant, lien CI et workflow Supabase avant de
+marquer la migration appliquée. Réservation de la branche conservée jusqu’au
+checkpoint post-publication.
+
 ## Ouverture visuelle du sachet — cartes dégagées, 11 octobre 2026
 
 Base vérifiée `e3a6cb9a5a282f1249456f60f971bba45fd71fae`, branche `work` =

@@ -133,7 +133,7 @@ Voir le checkpoint courant pour preuves, limites et autorisation.
   E2E bureau/téléphone simulé 2/2 ; typecheck, lint et build webpack réussis.
 - [x] **0047** appliquée au projet CreatorDeck et versions/objets vérifiés (38140515537). Cible/historique contrôlés, absence de sauvegarde explicitement acceptée par Malik.
 - [ ] Vérifier le débit/recharge/rechargement sur téléphone réel et la version servie.
-- [ ] K-031 : corriger séparément le report du helper historique `_pack_refresh`.
+- [x] K-031 : corrigé par migration additive `0049_pack_refresh_ancre.sql` ; tests de conservation du temps restant ajoutés en TypeScript et PostgreSQL jetable. Publication et application automatique à confirmer après CI.
 
 K-030, D-032 ; gains locaux et montants conservés, pas de certification serveur
 complète de leurs sources. Le nouveau helper privé préserve le temps résiduel

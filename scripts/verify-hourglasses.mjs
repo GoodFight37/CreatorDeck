@@ -1,7 +1,31 @@
 /** Scénarios exécutés sur le Postgres jetable du vérificateur, jamais en production. */
-export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, sql, followupSql }) {
+export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, sql, followupSql, finalSql }) {
   await client.query(sql);
   await client.query(followupSql);
+  await client.query(finalSql);
+  const refreshStart = '2026-01-01T00:00:00.000Z';
+  const refreshCases = [
+    { packs: 1, now: '2026-01-01T00:35:00.000Z', expectedPacks: 2, expectedAnchor: '2026-01-01T00:30:00.000Z' },
+    { packs: 2, now: '2026-01-01T01:00:00.000Z', expectedPacks: 4, expectedAnchor: '2026-01-01T01:00:00.000Z' },
+  ];
+  for (const testCase of refreshCases) {
+    const result = (await client.query(
+      'select public._pack_refresh($1,4,$2::timestamptz,1800000,$3::timestamptz) r',
+      [testCase.packs, refreshStart, testCase.now],
+    )).rows[0].r;
+    check(
+      `recharge ordinaire : ${testCase.expectedPacks} boosters, ancre ${testCase.expectedAnchor}`,
+      result.packs === testCase.expectedPacks && Date.parse(result.last_regen_at) === Date.parse(testCase.expectedAnchor),
+    );
+    const repeated = (await client.query(
+      'select public._pack_refresh($1,4,$2::timestamptz,1800000,$3::timestamptz) r',
+      [result.packs, result.last_regen_at, testCase.now],
+    )).rows[0].r;
+    check(
+      `recharge ordinaire : aucun intervalle rejoué à ${testCase.now}`,
+      repeated.packs === result.packs && Date.parse(repeated.last_regen_at) === Date.parse(testCase.expectedAnchor),
+    );
+  }
   const user = 'f7777777-7777-4777-8777-777777777777';
   const other = 'f8888888-8888-4888-8888-888888888888';
   const request = '11111111-1111-4111-8111-111111111111';
@@ -56,6 +80,7 @@ export async function verifyHourglasses({ client, pg, asPlayer, refuses, check, 
   const final = (await client.query('select state from public.saves where user_id=$1', [user])).rows[0].state;
   await client.query(sql);
   await client.query(followupSql);
+  await client.query(finalSql);
   check('sabliers : migrations rejouées conservent solde et registre', (await client.query('select count(*)::int n from public.hourglass_spends where user_id=$1', [user])).rows[0].n === 3 && (await client.query('select state from public.saves where user_id=$1', [user])).rows[0].state.hourglasses === 0);
   await asPlayer(user, 'select public.reset_progress()');
   check('sabliers : reset individuel nettoie seulement son registre', (await client.query('select count(*)::int n from public.hourglass_spends where user_id=$1', [user])).rows[0].n === 0);

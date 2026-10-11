@@ -223,6 +223,7 @@ try {
     ["0046_reset_rejoue_tutoriel.sql", resetTutorial],
     ["0047_sabliers_en_ligne.sql", await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8")],
     ["0048_sablier_booster_bonus.sql", await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8")],
+    ["0049_pack_refresh_ancre.sql", await readFile(path.join(MIGRATIONS, "0049_pack_refresh_ancre.sql"), "utf8")],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -7305,6 +7306,7 @@ try {
     check,
     sql: await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8"),
     followupSql: await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8"),
+    finalSql: await readFile(path.join(MIGRATIONS, "0049_pack_refresh_ancre.sql"), "utf8"),
   });
 
   console.log("");

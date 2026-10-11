@@ -1,3 +1,12 @@
+## K-031 — ancre de recharge ordinaire — 11 octobre 2026
+
+Migration additive 0049 remplace `_pack_refresh` : l’ancre avance du nombre
+exact de périodes gagnées (N × intervalle), et conserve le temps partiel restant.
+0048 et le baseline restent intacts. Tests ciblés TypeScript et PostgreSQL
+jetable vérifient le résiduel après 35 minutes, le plafond après 60 minutes et
+l’absence de gains répétés au même instant. CI et migration automatique en
+production restent à vérifier après publication ; aucun déploiement manuel.
+
 ## Sachet et sortie des cartes — 11 octobre 2026
 
 Le paquet plastique quitte la scène au rythme où les dos montent, au lieu de

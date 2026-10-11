@@ -156,6 +156,21 @@ describe("refreshBalances", () => {
     expect(refreshed.lastPackRegen).toBe(T0);
   });
 
+  it("conserve le temps restant après plusieurs intervalles gagnés", () => {
+    const state = makeState({ packs: 1, lastPackRegen: T0 - 35 * 60_000 });
+    const first = refreshBalances(state, T0);
+    expect(first.packs).toBe(2);
+    expect(first.lastPackRegen).toBe(T0 - 5 * 60_000);
+
+    const sameTime = refreshBalances(first, T0);
+    expect(sameTime.packs).toBe(2);
+    expect(sameTime.lastPackRegen).toBe(first.lastPackRegen);
+
+    const nextInterval = refreshBalances(first, T0 + 25 * 60_000);
+    expect(nextInterval.packs).toBe(3);
+    expect(nextInterval.lastPackRegen).toBe(T0 + 25 * 60_000);
+  });
+
   it("plafonne au maximum du booster et ré-ancre sur now", () => {
     const state = makeState({ lastPackRegen: T0 - 100 * HOUR });
     const refreshed = refreshBalances(state, T0);
