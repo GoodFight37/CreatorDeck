@@ -35,7 +35,10 @@
 - Téléchargement GoFile bloqué par la politique réseau observée (domaine absent,
   état réseau `unknown`) ; la vidéo jointe a permis l’analyse. Aucun contournement.
   Aucune donnée, clé, migration ou règle de jeu modifiée.
-- Publication/CI de ces changements : à relever après commit/push normal autorisé.
+- Publié normalement sur `main` : `1439e44de55272a7accbceef9b66758e0ed60cbb`.
+  CI [`38178996093`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38178996093)
+  verte, **4/4 jobs** : unitaires/écrans/build, E2E bureau/téléphone, migrations
+  PostgreSQL jetable et cloud simulé. Aucune migration de production lancée.
   Le portrait SolaryHS et les trois autres avatars génériques restent ouverts,
   uniquement faute de sources d’image réelles.
 
