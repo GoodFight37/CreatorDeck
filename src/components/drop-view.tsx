@@ -397,7 +397,7 @@ export function HomeView({
           className="hourglass-action"
           onClick={onUseHourglass}
           disabled={(serverReserve && needsAccount) || stock >= pack.maxWithHourglass || game.player.hourglasses <= 0 || usingHourglass}
-          aria-label={usingHourglass ? "Utilisation du sablier" : `Utiliser un sablier, ${game.player.hourglasses} disponibles`}
+          aria-label={usingHourglass ? "Utilisation du sablier" : `Utiliser 1 sablier, ${game.player.hourglasses} disponibles`}
         >
           <Hourglass size={18} />
           <span>{usingHourglass ? "Utilisation…" : stock >= pack.max && stock < pack.maxWithHourglass
