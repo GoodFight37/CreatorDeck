@@ -227,18 +227,21 @@ describe("mille créateurs dans l'Atelier", () => {
     expect(pose().lignes).toBe(LIGNES_PAR_PAGE);
   });
 
-  it("simplifie l’Atelier jusqu’à dix doublons", async () => {
+  it("montre les recettes avant dix doublons et bloque l’achat sous son coût", async () => {
     const { AtelierView } = await import("@/components/atelier-view");
     const game = getGameView(createInitialState(T0), T0);
     await banc.monter(
-      <AtelierView game={game} onNotice={() => {}} onError={() => {}} onGoDrop={() => {}} />,
+      <AtelierView game={game} onNotice={() => {}} onError={() => {}} />,
     );
 
-    expect(document.body.textContent).toContain("Encore 10 doublons");
-    expect(document.body.textContent).toContain("0 / 10 doublons");
-    expect(document.querySelectorAll(".atelier-row")).toHaveLength(0);
-    expect(document.body.textContent).not.toContain("1000 manquants");
-    expect(document.body.textContent).toContain("Retour au Drop");
+    expect(document.body.textContent).toContain("Rejoindre (1000)");
+    expect(document.querySelectorAll(".atelier-row")).toHaveLength(LIGNES_PAR_PAGE);
+    expect(document.querySelector(".atelier-cost-guide")?.textContent).toContain("Commune 45");
+    banc.appuyer(/^Communes/);
+    const craft = document.querySelector<HTMLButtonElement>(".atelier-row .craft-button")!;
+    expect(craft.textContent).toContain("45");
+    expect(craft.disabled).toBe(true);
+    expect(craft.title).toContain("Il te manque 5 points");
   });
 
   it("ne pose qu'une page de doublons, même avec trois cents groupes", async () => {

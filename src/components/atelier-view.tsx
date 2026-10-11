@@ -58,7 +58,7 @@ export function AtelierView({
 }) {
   const [mode, setMode] = useState<Mode>("craft");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<CraftFilter>("common");
+  const [filter, setFilter] = useState<CraftFilter>("all");
   const [page, setPage] = useState(0);
   // Le feuilletage des doublons a son propre compteur : les deux listes n'ont
   // pas la même longueur, et changer d'onglet repart de la première page.
@@ -275,6 +275,9 @@ export function AtelierView({
             Rejoins un créateur manquant avec tes points. La carte obtenue est toujours
             <strong> Standard</strong> : les variantes Live, Holo et Gold restent la récompense des
             boosters.
+          </p>
+          <p className="atelier-cost-guide" aria-label="Coûts de craft">
+            Coûts : Commune 45 · Peu commune 90 · Rare 220 · Épique 600 points. Légendaire : booster.
           </p>
 
           {/* Les Sortants : ils ne sont plus dans les boosters, et leur fenêtre

@@ -1832,8 +1832,8 @@ La PR #8 cible toujours `arena/01a10c75-creatordeck`, base choisie à sa créati
 
 - Code ciblé : commit `28084a92d91ce9b7747f84c2c460092398632cdc`, basé sur
   `main` `c9e15ebb43a9e1125c631512deff0e44a0da59b9`. L’Atelier montre les
-  recettes dès le départ (filtre initial Communes pour exposer les prix), le
-  paiement reste bloqué par le coût réel. Drop compacté à 360×740 ; Tribunal
+  recettes dès le départ avec barème de prix visible et pagination catalogue
+  conservée ; chaque paiement reste bloqué par le coût réel. Drop compacté à 360×740 ; Tribunal
   n’a qu’un CTA quand il est l’objectif du jour ; streak annoncé au récap ;
   le verdict passe après 600 ms. Binder compacté. Studio de tirages exclu du
   bundle joueur de production. Reflets au pointeur, sans `deviceorientation`.

@@ -33,6 +33,8 @@ describe("atelier consultable sans doublons", () => {
     expect(document.querySelector(".atelier-warmup")).toBeNull();
     expect(document.querySelector(".atelier-preview")).toBeNull();
     expect(document.querySelectorAll(".atelier-row").length).toBeGreaterThan(0);
+    expect(document.querySelector(".atelier-cost-guide")?.textContent).toContain("Commune 45 · Peu commune 90 · Rare 220 · Épique 600 points");
+    banc.appuyer(/^Communes/);
     const recipeButton = document.querySelector<HTMLButtonElement>(".atelier-row .craft-button")!;
     expect(recipeButton.textContent).toMatch(/\d+/);
     expect(recipeButton.title).toMatch(/Il te manque \d+ points/);
