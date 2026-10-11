@@ -1,13 +1,15 @@
 ## Checkpoint courant — sablier visible, CI verte — 11 octobre 2026
 
-Dernier checkpoint documentaire : `c556e829745d7df7c4e014a8e76e3692b0a2bdb1`
-(branche locale `work`, `origin/main` identique). Sa CI
-[38145709683](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145709683)
-est **success**, 4/4 jobs ; son workflow automatique
-[38145880229](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145880229)
-s’est arrêté avant SQL avec le log `Validation manuelle requise :
-0048_sablier_booster_bonus.sql.` Aucun changement production. Le commit
-`c556e82` contient la règle d’autorisation permanente (D-038) et ce checkpoint.
+Dernier code publié : `6bc6be7f329f7ecf6fc44237447ea39237d357e1`, CI
+38145382045 verte sur 4/4 jobs. Autorisation permanente D-038 publiée dans
+`c556e82`. Dernier checkpoint publié avant cette mise à jour :
+`8560b52cbe84cb6a703fcb6b280265e283bb9694`, branche locale `work` et
+`origin/main` identiques. CI
+[38145925758](https://github.com/GoodFight37/CreatorDeck/actions/runs/38145925758)
+verte, 4/4 jobs dont SQL jetable ; workflow automatique
+[38146124176](https://github.com/GoodFight37/CreatorDeck/actions/runs/38146124176)
+arrêté avant SQL. Son log réel dit `Validation manuelle requise :
+0048_sablier_booster_bonus.sql.` Aucun changement production.
 
 - Demande : afficher l’action sablier sans menu, alléger l’accueil Drop et, à
   4/4, permettre un booster unique à 5/4. Malik a confirmé explicitement le
