@@ -56,6 +56,18 @@ conservé dans [atelier-et-problemes.md](atelier-et-problemes.md).
 
 ## Registre
 
+K-040 — 11 octobre 2026 : copie cloud non reprise au démarrage, corrigé
+localement. Le message exact « sabliers : charge la sauvegarde du cloud dans
+Compte avant de synchroniser » vient du trigger `_guard_hourglass_spends`
+quand le compteur local ne correspond pas au registre serveur. La session était
+restaurée sans lecture de la sauvegarde ; le rafraîchissement de la réserve
+pouvait dater cette vieille copie plus récemment. Reprise automatique avant
+compteurs et envoi, comparaison avec la dernière version synchronisée,
+préservation des conflits réels et du rejeu. Test simulé : compteur local 0,
+serveur 1, horloge locale plus récente ; aucune écriture périmée, sablier utilisé
+puis réponse perdue rejouée une seule fois après rechargement. E2E bureau et
+téléphone simulé verts ; publication/CI dans la passation.
+
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|
 | K-039 | Faible, découvrabilité sociale | Résolu dans le code `980bdf8` (inclus dans `main` `d585db6`) ; CI `38164889818` verte (4 jobs) | Les ouvertures récentes des amis (dernière heure) n’apparaissaient dans le Drop qu’après ouverture d’un panneau secondaire. | CTA conditionnel déplacé hors du repli, sous le Paquet Scène ; il mène au Carnet et n’ajoute rien quand il n’y a pas d’activité. DOM ciblé 7/7 ; CI complète verte. Aucun changement de données, notification ou serveur. |

@@ -20,6 +20,7 @@ import { MAX_SHOWCASE } from "@/lib/cloud/showcase";
  * d'objet. Aucun comportement n'a changé.
  */
 export function accountActions(ctx: CloudStoreContext) {
+  let autoSync: Promise<void> | null = null;
   return {
     async requestCode(email: string): Promise<void> {
       const api = ctx.resolve();
@@ -517,6 +518,9 @@ export function accountActions(ctx: CloudStoreContext) {
         pendingEmail: null,
         pending: false,
         decision: null,
+        syncNeedsChoice: false,
+        saveSyncing: false,
+        lastSyncAt: null,
         remoteUpdatedAt: null,
         leaderboard: [],
         leaderboardMetric: "unique_creators",
@@ -563,41 +567,83 @@ export function accountActions(ctx: CloudStoreContext) {
       if (!local) return;
       if (mode === "push") return ctx.push(local.version, local.updatedAt, true);
       if (mode === "pull") return ctx.pull();
-
+      if (autoSync) return autoSync;
       const api = ctx.resolve();
       if (!ctx.networkReady(api)) return;
-      ctx.publish({ busy: true });
-      try {
-        const remote = await api.pullSave();
-        const decision = decideSync(
-          { state: local, updatedAt: local.updatedAt },
-          remote
-            ? { state: sanitizeState(remote.state, ctx.deps.now()) ?? local, deviceUpdatedAt: remote.deviceUpdatedAt }
-            : null,
-        );
-        ctx.publish({ busy: false, remoteUpdatedAt: remote ? Date.parse(remote.updatedAt) || null : null });
-        if (decision.action === "push") return ctx.push(local.version, local.updatedAt, false);
-        if (decision.action === "pull") {
-          ctx.publish({
-            decision: "pull",
-            // La décision n'est pas appliquée toute seule (on ne remplace
-            // jamais une partie sans le dire) : l'écran Compte affiche alors
-            // **deux boutons**, l'un pour reprendre celle d'en ligne, l'autre
-            // pour garder la sienne. Le message annonce l'écran, il ne nomme
-            // plus un bouton qui n'existe pas.
-            message: "Une partie plus récente t'attend en ligne : choisis celle que tu gardes dans Mon compte.",
-            isError: false,
-          });
-          return;
+      const userId = api.session()?.userId;
+      if (ctx.state().syncNeedsChoice) return;
+      // Une dépense dont la réponse s'est perdue doit être rejouée avant
+      // tout envoi de l'ancienne sauvegarde.
+      if (ctx.deps.storage()?.getItem(`creatordeck:hourglass-request:${userId}`)) return;
+      autoSync = (async () => {
+        ctx.publish({ busy: true, saveSyncing: true, isError: false });
+        try {
+          const remote = await api.pullSave();
+          if (api.session()?.userId !== userId) return;
+          const parsed = remote ? sanitizeState(remote.state, ctx.deps.now()) : null;
+          if (remote && !parsed) throw new Error("Cette partie en ligne est illisible : rien n'a été modifié.");
+          const current = ctx.deps.readState();
+          if (!current) return;
+          // Si le joueur a agi pendant la lecture, ne pas écraser son action.
+          const changedDuringRead = stateFingerprint(current) !== stateFingerprint(local);
+          const staleHourglassMarker = parsed && local.hourglassesSpent !== parsed.hourglassesSpent;
+          let anchor: { remoteUpdatedAt: number; fingerprint: string } | null = null;
+          try {
+            const saved = JSON.parse(ctx.deps.storage()?.getItem(`creatordeck:sync-anchor:${userId}`) ?? "null");
+            if (saved && Number.isFinite(saved.remoteUpdatedAt) && typeof saved.fingerprint === "string") anchor = saved;
+          } catch { /* Ancienne installation : comparaison prudente sans référence. */ }
+          let decision = parsed && (staleHourglassMarker || (local.cards.length === 0 && local.openings === 0 && parsed.cards.length > 0))
+            ? { action: "pull" as const, reason: "Collection récupérée sur cet appareil." }
+            : decideSync(
+              { state: local, updatedAt: local.updatedAt },
+              remote && parsed ? { state: parsed, deviceUpdatedAt: remote.deviceUpdatedAt } : null,
+            );
+          if (anchor && remote && parsed && !staleHourglassMarker) {
+            if (Math.abs(anchor.remoteUpdatedAt - Date.parse(remote.updatedAt)) <= 1) {
+              decision = stateFingerprint(local) === stateFingerprint(parsed)
+                ? { action: "noop", reason: "Tout est à jour." }
+                : { action: "push", reason: "Les changements de cet appareil sont enregistrés." };
+            } else {
+              decision = anchor.fingerprint === stateFingerprint(local)
+                ? { action: "pull", reason: "Progression en ligne récupérée." }
+                : { action: "conflict", reason: "Les deux parties ont changé : choisis celle à garder dans Mon compte." };
+            }
+          }
+          ctx.publish({ busy: false, remoteUpdatedAt: remote ? Date.parse(remote.updatedAt) || null : null });
+          if (changedDuringRead && parsed && stateFingerprint(current) !== stateFingerprint(parsed)) {
+            ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true,
+              message: "Ta partie a changé pendant la synchronisation : choisis celle à garder dans Mon compte.", isError: false });
+            return;
+          }
+          if (decision.action === "push") return ctx.push(current.version, current.updatedAt, false);
+          if (decision.action === "pull" && parsed) {
+            const remoteCards = new Set(parsed.cards.map((card) => card.id));
+            if ((!anchor || anchor.fingerprint !== stateFingerprint(local)) && local.cards.some((card) => !remoteCards.has(card.id))) {
+              ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true,
+                message: "Certaines cartes diffèrent entre tes deux parties : choisis celle à garder dans Mon compte.", isError: false });
+              return;
+            }
+            ctx.deps.applyState(parsed);
+            ctx.publish({
+              decision: "noop", syncNeedsChoice: false, pending: false, lastSyncAt: ctx.deps.now(),
+              message: "Ta progression en ligne a été chargée automatiquement.",
+              isError: false,
+            });
+            return;
+          }
+          if (decision.action === "noop") {
+            ctx.publish({ decision: "noop", syncNeedsChoice: false, pending: false, lastSyncAt: ctx.deps.now(), message: decision.reason, isError: false });
+            return;
+          }
+          ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true, message: decision.reason, isError: false });
+        } catch (error) {
+          ctx.fail(error, "Synchronisation impossible.");
         }
-        if (decision.action === "noop") {
-          ctx.publish({ decision: "noop", pending: false, lastSyncAt: ctx.deps.now(), message: decision.reason, isError: false });
-          return;
-        }
-        ctx.publish({ decision: "conflict", pending: true, message: decision.reason, isError: false });
-      } catch (error) {
-        ctx.fail(error, "Synchronisation impossible.");
-      }
+      })().finally(() => {
+        autoSync = null;
+        if (api.session()?.userId === userId) ctx.publish({ saveSyncing: false });
+      });
+      return autoSync;
     },
 
     /** Récupère le nom affiché (et la vitrine) pour préremplir l'écran. */

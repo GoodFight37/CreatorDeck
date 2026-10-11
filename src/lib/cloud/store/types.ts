@@ -108,6 +108,10 @@ export type CloudState = {
   isError: boolean;
   /** Dernière décision de synchronisation calculée. */
   decision: SyncAction | null;
+  /** Deux sauvegardes divergentes attendent un choix explicite. */
+  syncNeedsChoice: boolean;
+  /** Lecture/envoi de la sauvegarde automatique en cours. */
+  saveSyncing: boolean;
   /** Horodatage serveur de la sauvegarde cloud connue. */
   remoteUpdatedAt: number | null;
   lastSyncAt: number | null;
@@ -355,6 +359,8 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   isError: false,
   pendingEmail: null,
   decision: null,
+  syncNeedsChoice: false,
+  saveSyncing: false,
   remoteUpdatedAt: null,
   lastSyncAt: null,
   pending: false,

@@ -7,11 +7,12 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   const now = Date.now();
   let state: Record<string, unknown> = {
     version: 9, playerId: USER, createdAt: now, updatedAt: now,
-    level: 1, xp: 0, points: 0, hourglasses: 2, hourglassesSpent: 0,
+    level: 1, xp: 0, points: 0, hourglasses: 2, hourglassesSpent: 1,
     packs: 0, lastPackRegen: now - 20 * 60_000, openings: 0, cards: [],
     claimedTiers: {}, claimedMilestones: [], themeId: "default",
   };
-  const seed = { ...state };
+  // L'appareil conserve une vieille copie ; la session existe déjà au lancement.
+  const seed = { ...state, hourglasses: 3, hourglassesSpent: 0, updatedAt: now + 120_000 };
   let updatedAt = new Date(now).toISOString();
   const row = () => ({ state, save_version: 9, device_updated_at: now, state_checksum: "test", updated_at: updatedAt });
   const requests: string[] = [];
@@ -27,7 +28,14 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
     if (name === "tokens_get") return answer({ ok: true, tokens: 0 });
     if (name === "push_save") {
       pushes += 1;
-      state = route.request().postDataJSON().p_state;
+      const payload = route.request().postDataJSON();
+      if (Date.parse(payload.p_base_updated_at) !== Date.parse(updatedAt)) {
+        return answer({ status: "conflict", save: row() });
+      }
+      if (payload.p_state.hourglassesSpent !== state.hourglassesSpent) {
+        return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ code: "P0001", message: "sabliers : charge la sauvegarde du cloud dans Compte avant de synchroniser" }) });
+      }
+      state = payload.p_state;
       updatedAt = new Date().toISOString();
       return answer({ status: "pushed", save: row() });
     }
@@ -36,7 +44,7 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
       requests.push(id);
       if (!spent.has(id)) {
         spent.add(id);
-        state = { ...state, hourglasses: 1, hourglassesSpent: 1, packs: 1, lastPackRegen: Date.now() - 5 * 60_000 };
+        state = { ...state, hourglasses: 1, hourglassesSpent: 2, packs: 1, lastPackRegen: Date.now() - 5 * 60_000 };
         updatedAt = new Date().toISOString();
       }
       // Le serveur a payé, mais la première réponse ne permet pas de le confirmer.
@@ -52,6 +60,8 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
   await page.goto("/");
   await expect(page.getByRole("dialog", { name: "Tutoriel CreatorDeck" })).toHaveCount(0);
   const button = page.getByRole("button", { name: /Utiliser 1 sablier/ });
+  await expect(button).toContainText("2");
+  await expect(page.getByText(/Synchronise ta partie dans Compte/)).toHaveCount(0);
   await expect(page.locator(".hourglass-action").locator("xpath=ancestor::details")).toHaveCount(0);
   await expect(button).toBeEnabled();
   await button.click();

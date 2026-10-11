@@ -1,3 +1,29 @@
+## Reprise cloud automatique — 11 octobre 2026
+
+- Demande : un compte déjà connecté doit retrouver sa partie automatiquement,
+  sans détour par Compte avant le sablier. Base locale/distance contrôlée propre
+  `86baacc7c390a53126f6be91f2e862d2213b79a4`, branche `work`, publication normale
+  directe vers `main` autorisée. Aucun autre écrivain détecté.
+- Cause du message exact retrouvée dans `_guard_hourglass_spends` de 0047 :
+  ancien compteur de dépenses renvoyé par la copie locale. La session était
+  restaurée sans lire la sauvegarde ; les lectures de réserve/solde pouvaient
+  rendre cette copie artificiellement récente.
+- Implémentation : sync automatique avant compteurs ; référence de version et
+  empreinte par compte ; reprise des changements cloud seuls / envoi des
+  changements locaux seuls sans forçage. Compteur de dépenses périmé repris
+  depuis le serveur. Conflits et actions pendant lecture protégés ; sablier
+  attend une sync en cours et conserve sa clé de rejeu. Choix Compte retiré
+  après résolution, envois automatiques bloqués tant qu’il reste à résoudre.
+- Tests locaux : magasin+sync **167/167**, Compte/Drop/profil **28/28**, E2E
+  cloud à RPC simulées **10/10** bureau/téléphone simulé. Le test pack-crash
+  conserve zéro renvoi immédiat après tirage et vérifie maintenant l’envoi
+  normal des missions locales au rechargement, avec les mêmes IDs serveur et
+  sans forçage. TypeScript, ESLint ciblé, diff-check et build production : code 0
+  (build local sans configuration cloud réelle). La limite téléphone physique
+  reste distincte des tests Playwright.
+- Publication et contrôles distants : à relever après push ; ce checkpoint
+  contient les résultats locaux, pas une affirmation de CI verte.
+
 ## Archive — tri documentaire avant les retours après publication, 11 octobre 2026
 
 `main` et `origin/main` étaient au même SHA

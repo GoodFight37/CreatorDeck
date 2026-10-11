@@ -15,9 +15,9 @@
  * fausse partie (`src/lib/cloud/cloud-store.test.ts`). L'instance utilisée par
  * l'application est exportée en bas du fichier.
  *
- * Règle de conduite : **jamais de perte silencieuse**. Si le cloud est plus
- * récent, on ne remplace pas la partie locale tout seul — on le dit, et le
- * joueur décide.
+ * La reprise automatique adopte une sauvegarde cloud nettement plus récente.
+ * Deux progressions divergentes attendent un choix ; aucun envoi automatique
+ * ne peut contourner ce choix.
  */
 import { gameDay } from "@/lib/progression";
 import {
@@ -107,6 +107,20 @@ export function createCloudStore(deps: CloudDeps) {
 
   function publish(patch: Partial<CloudState>) {
     state = { ...state, ...patch };
+    // Retenir la version serveur vue lors d'une synchronisation confirmée.
+    // Au prochain lancement, elle distingue une simple copie locale en attente
+    // d'envoi d'une progression réellement modifiée sur deux appareils.
+    if (patch.pending === false && patch.lastSyncAt && state.remoteUpdatedAt !== null && !state.syncNeedsChoice) {
+      const userId = resolve()?.session()?.userId;
+      const local = deps.readState();
+      if (userId && local) {
+        try {
+          deps.storage()?.setItem(`creatordeck:sync-anchor:${userId}`, JSON.stringify({
+            remoteUpdatedAt: state.remoteUpdatedAt, fingerprint: stateFingerprint(local),
+          }));
+        } catch { /* Sans stockage, la comparaison prudente reste disponible. */ }
+      }
+    }
     for (const listener of listeners) listener();
   }
 
@@ -177,6 +191,8 @@ export function createCloudStore(deps: CloudDeps) {
     if (!networkReady(api)) return;
     const local = deps.readState();
     if (!local) return;
+    if (state.syncNeedsChoice && !force) return;
+    if (!force && deps.storage()?.getItem(`creatordeck:hourglass-request:${api.session()?.userId}`)) return;
     publish({ busy: true });
     try {
       // La version serveur que le client connaît (`null` s'il n'a jamais rien
@@ -190,6 +206,7 @@ export function createCloudStore(deps: CloudDeps) {
           busy: false,
           pending: false,
           decision: "push",
+          syncNeedsChoice: false,
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
           message: "Progression enregistrée en ligne.",
@@ -202,6 +219,7 @@ export function createCloudStore(deps: CloudDeps) {
           busy: false,
           pending: false,
           decision: "noop",
+          syncNeedsChoice: false,
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || deps.now(),
           lastSyncAt: deps.now(),
           message: "Tout est à jour.",
@@ -214,6 +232,7 @@ export function createCloudStore(deps: CloudDeps) {
           busy: false,
           pending: true,
           decision: "conflict",
+          syncNeedsChoice: true,
           remoteUpdatedAt: Date.parse(result.save.updatedAt) || null,
           message: "Deux parties existent : choisis celle que tu gardes, juste au-dessus.",
           isError: false,
@@ -278,7 +297,8 @@ export function createCloudStore(deps: CloudDeps) {
       publish({
         busy: false,
         pending: false,
-        decision: "pull",
+        decision: "noop",
+        syncNeedsChoice: false,
         remoteUpdatedAt: Date.parse(remote.updatedAt) || null,
         lastSyncAt: deps.now(),
         message: `Partie reprise depuis le jeu en ligne (${syncStats(parsed).uniqueCreators} créateurs).`,

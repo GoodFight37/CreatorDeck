@@ -461,3 +461,17 @@ bloqué par le coût réel en points ou jetons. Le reflet de carte suit le point
 et n’interroge aucun capteur d’orientation. Le Studio de tirages n’est pas
 disponible dans le build joueur. Le geste de déchirure reste en CSS avec les
 timings existants ; aucune règle économique ni SQL ne change.
+
+## D-048 — 11 octobre 2026 : reprise cloud automatique
+
+À la demande de Malik, lancer la synchronisation dès qu’un compte est retrouvé
+ou connecté, avant de lire ses compteurs. Garder sur l’appareil une référence
+par compte (version serveur et empreinte locale), pour envoyer les changements
+locaux seuls et charger les changements cloud seuls sans détour par Compte.
+Une copie au compteur de dépenses sablier périmé reprend la sauvegarde serveur
+avant tout envoi ; le registre de dépenses reste l’autorité. Sans référence,
+protéger les cartes locales absentes du cloud ; une vraie divergence ou une
+action pendant la lecture conserve le choix explicite. Bloquer les envois
+automatiques quand ce choix est en attente. La clé d’une dépense à réponse
+perdue survit à la reprise. Tests du magasin, DOM et E2E à RPC simulées dans la
+passation ; aucune fusion de ressources ou modification de règle de jeu.

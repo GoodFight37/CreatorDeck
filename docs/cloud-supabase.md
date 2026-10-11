@@ -724,15 +724,25 @@ synchronisée »). Rien à presser.
 Deux appareils peuvent jouer la même collection. La règle est volontairement
 prudente :
 
+* **au lancement et à la connexion** → lecture automatique de la sauvegarde
+  avant le rafraîchissement de la réserve et du solde ;
 * **le contenu identique** → rien à faire ;
-* **un côté nettement plus récent** (plus de 30 s d'écart) → l'app propose
-  d'envoyer ou de charger, jamais les deux ;
+* **une version déjà synchronisée est connue** → changements locaux seuls
+  envoyés sans forçage ; changements cloud seuls chargés automatiquement ;
+* **ancienne installation sans référence** → comparaison prudente des dates
+  (30 s de marge), avec protection des cartes locales absentes du cloud ;
+* **compteur de sabliers dépensés périmé** → reprise de la sauvegarde serveur
+  avant tout envoi, pour respecter le registre de dépenses ;
 * **les deux ont bougé** → l'app ne tranche pas : l'écran **Mon compte** montre
   **Deux parties t'attendent** — *Reprendre la partie en ligne* adopte la version
   distante, *Garder celle de cet appareil* écrase la sauvegarde en ligne.
 
 Aucune fusion automatique : mélanger deux progressions produirait une
 collection impossible à défendre côté serveur.
+
+Un conflit en attente bloque les envois automatiques et le sablier jusqu’au
+choix. Une dépense à réponse perdue garde sa clé de rejeu avant tout nouvel
+envoi. Référence : D-048 et K-040 (11 octobre 2026).
 
 ## 8. Ce que le serveur vérifie (et ce qu'il ne vérifie pas)
 

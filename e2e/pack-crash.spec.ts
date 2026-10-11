@@ -91,7 +91,7 @@ test("sans cloud : le tirage local survit à un rechargement", async ({ page }) 
   expect(await savedCards(page)).toEqual(apresTirage);
 });
 
-test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'est renvoyé", async ({ page }) => {
+test("avec le serveur : cartes serveur sans renvoi immédiat, puis synchronisation au rechargement", async ({ page }) => {
   const url = cloudUrl();
   test.skip(!url, "Pas de `.env.local` : ce test demande un projet Supabase configuré.");
 
@@ -110,12 +110,13 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
     rareDrop: false,
   }));
 
-  const pushes: string[] = [];
+  const pushes: Array<{ cards: Array<{ id: string }>; force: boolean }> = [];
+  let cloudSave: Record<string, unknown> | null = null;
   await page.route("**/rest/v1/rpc/*", async (route) => {
     const call = route.request().url().split("/rpc/")[1] ?? "";
-    let body: { p_state?: unknown } | null = null;
+    let body: { p_state?: { cards: Array<{ id: string }> }; p_force?: boolean; p_device_updated_at?: number; p_save_version?: number } | null = null;
     try {
-      body = route.request().postDataJSON() as { p_state?: unknown };
+      body = route.request().postDataJSON();
     } catch {
       body = null;
     }
@@ -125,8 +126,16 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
     if (call === "onboarding_status") {
       return answer({ tutorial_completed: true, gift_available: false, gift_claimed: false, gift_remaining: 0, message: "" });
     }
+    if (call === "pull_save") {
+      if (!cloudSave) {
+        const initial = await page.evaluate(() => JSON.parse(localStorage.getItem("creatordeck.save.v9")!));
+        cloudSave = { state: initial, save_version: 9, device_updated_at: initial.updatedAt,
+          state_checksum: "abc", updated_at: new Date().toISOString(), verified: true };
+      }
+      return answer(cloudSave);
+    }
     if (call.startsWith("open_pack")) {
-      return answer({
+      const result = {
         packs: 2,
         last_regen_at: new Date().toISOString(),
         openings: 4,
@@ -161,38 +170,18 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
           updated_at: "2026-03-01T10:00:05Z",
           verified: true,
         },
-      });
+      };
+      cloudSave = result.save;
+      return answer(result);
     }
     if (call.startsWith("push_save")) {
-      // Le prompt est précis : après un tirage, le client ne pousse **plus**
-      // rien. On note l'appel (et son `p_force`) pour le reprocher au test.
-      pushes.push(JSON.stringify(body?.p_state ?? null).slice(0, 40));
-      return answer({
-        status: "conflict",
-        save: {
-          state: {
-            version: 8,
-            playerId: "11111111-1111-4111-8111-111111111111",
-            createdAt: 1_760_000_000_000,
-            updatedAt: 1_770_000_000_000,
-            level: 3,
-            xp: 120,
-            points: 45,
-            hourglasses: 0,
-            packs: 2,
-            lastPackRegen: 1_770_000_000_000,
-            openings: 4,
-            cards: drawn,
-            claimedTiers: [],
-            themeId: "default",
-          },
-          save_version: 8,
-          device_updated_at: 1_770_000_000_000,
-          state_checksum: "abc",
-          updated_at: "2026-03-01T10:00:05Z",
-          verified: true,
-        },
-      });
+      // La reprise automatique peut enregistrer les missions locales au
+      // rechargement ; le tirage lui-même ne renvoie toujours aucune carte.
+      pushes.push({ cards: body?.p_state?.cards ?? [], force: body?.p_force ?? false });
+      cloudSave = { state: body?.p_state, save_version: body?.p_save_version,
+        device_updated_at: body?.p_device_updated_at, state_checksum: "abc",
+        updated_at: new Date().toISOString(), verified: true };
+      return answer({ status: "pushed", save: cloudSave });
     }
     if (call.startsWith("pack_status")) {
       return answer({ packs: 3, last_regen_at: new Date().toISOString(), openings: 3, pity: 0, streak: 1, scene_day: null });
@@ -232,5 +221,7 @@ test("avec le serveur : les cartes du tirage sont celles du serveur, et rien n'e
   await page.reload();
   await expect(page.getByRole("button", { name: /Ouvrir le booster|Recharge en cours/ })).toBeVisible({ timeout: 30_000 });
   expect(await savedCards(page)).toEqual(apresTirage);
-  expect(pushes).toEqual([]);
+  await expect.poll(() => pushes.length).toBe(1);
+  expect(pushes[0]?.force).toBe(false);
+  expect(pushes[0]?.cards.map((card) => card.id)).toEqual(drawn.map((card) => card.id));
 });

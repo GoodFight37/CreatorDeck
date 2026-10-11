@@ -177,7 +177,7 @@ export function AccountSheet({
               * collection » : les mêmes gestes, mais seulement quand ils
               * servent, et dits comme des choix.
               */}
-            {cloud.userId && (cloud.decision === "pull" || cloud.decision === "conflict") ? (
+            {cloud.userId && cloud.syncNeedsChoice ? (
               <section className="account-card account-choice">
                 <div className="account-head">
                   <AlertTriangle size={15} />

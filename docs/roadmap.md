@@ -9,6 +9,12 @@ Aucun PR ouvert ; PR #7 fusionnée, PR #8 et #3 fermées.
 
 ### Plan actif
 
+- **Reprise cloud automatique (11 octobre, D-048/K-040)** : lecture de la
+  sauvegarde dès la restauration/connexion du compte, avant les compteurs ;
+  aucun passage manuel par Compte dans le parcours normal du sablier. Un choix
+  reste réservé aux progressions réellement divergentes. Code et tests ciblés
+  terminés ; état de publication et CI dans la passation.
+
 - **Code produit : aucun chantier déjà autorisé ne reste ouvert dans cette
   roadmap.** Les lots d’accès Arène/Hôtel, profil/Craft/Binder, scène, scroll,
   sablier et activité sociale sont livrés. Ne pas ressortir comme tâches les

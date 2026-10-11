@@ -576,17 +576,122 @@ describe("store cloud", () => {
     expect(store.getSnapshot().pending).toBe(false);
   });
 
-  it("ne remplace jamais la partie locale sans confirmation", async () => {
+  it("charge automatiquement la sauvegarde nettement plus récente du cloud", async () => {
     const remote = saveWith({ cards: [card("a", "kaicenat")], updatedAt: T0 + 10 * 60_000 });
     const { store, applied } = harness({ local: saveWith({ updatedAt: T0 }), remote: remoteRow(remote, "2026-03-01T10:10:00Z") });
     store.subscribe(() => {});
     await store.sync("auto");
-    expect(store.getSnapshot().decision).toBe("pull");
-    // Le message annonce l'écran (où le joueur choisit), il ne nomme plus un
-    // bouton qui n'existe plus.
-    expect(store.getSnapshot().message).toMatch(/Mon compte/);
-    expect(store.getSnapshot().message).not.toMatch(/Charger le cloud/);
+    expect(store.getSnapshot().decision).toBe("noop");
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+    expect(store.getSnapshot().message).toMatch(/chargée automatiquement/);
+    expect(applied).toHaveLength(1);
+    expect(applied[0]?.cards).toEqual(remote.cards);
+  });
+
+  it("un vrai conflit interdit les envois automatiques et le sablier jusqu'au choix", async () => {
+    const local = saveWith({ cards: [card("a", "kaicenat")], hourglasses: 2 });
+    const remote = saveWith({ cards: [card("b", "ibai")], hourglasses: 3 });
+    const { store, api, state } = harness({ local, remote: remoteRow(remote, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    expect(store.getSnapshot().syncNeedsChoice).toBe(true);
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect(api.pushSave).not.toHaveBeenCalled();
+    expect(api.useHourglass).not.toHaveBeenCalled();
+    expect(state.current).toBe(local);
+    await store.sync("pull");
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+    expect((await store.useHourglass()).status).toBe("done");
+  });
+
+  it("un appareil vierge récupère la collection même si sa création locale est plus récente", async () => {
+    const remote = saveWith({ cards: [card("a", "kaicenat")] });
+    const { store, api, state } = harness({
+      local: saveWith({ updatedAt: T0 + 120_000 }), remote: remoteRow(remote, SERVER_SAVE_AT),
+    });
+    await store.sync("auto");
+    expect(state.current.cards).toEqual(remote.cards);
+    expect(api.pushSave).not.toHaveBeenCalled();
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+  });
+
+  it("charge le compteur de dépenses serveur même si la copie périmée a été rafraîchie plus récemment", async () => {
+    const cards = [card("a", "kaicenat")];
+    const remote = saveWith({ cards, hourglasses: 1, hourglassesSpent: 1 });
+    const { store, api, state } = harness({ local: saveWith({ cards, hourglasses: 2, updatedAt: T0 + 120_000 }),
+      remote: remoteRow(remote, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    expect(state.current.hourglassesSpent).toBe(1);
+    expect(state.current.hourglasses).toBe(1);
+    expect(api.pushSave).not.toHaveBeenCalled();
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+  });
+
+  it("ne remplace pas automatiquement des cartes locales absentes d'une sauvegarde plus récente", async () => {
+    const local = saveWith({ cards: [card("a", "kaicenat")] });
+    const remote = saveWith({ cards: [card("b", "ibai")], updatedAt: T0 + 120_000 });
+    const { store, api, state } = harness({ local, remote: remoteRow(remote, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    expect(state.current).toBe(local);
+    expect(store.getSnapshot().syncNeedsChoice).toBe(true);
+    expect(api.pushSave).not.toHaveBeenCalled();
+  });
+
+  it("enregistre les changements locaux quand la version serveur connue n'a pas changé", async () => {
+    const local = saveWith();
+    const { store, api, state, device } = harness({ local, remote: remoteRow(local, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    expect(device.getItem(`creatordeck:sync-anchor:${SESSION.userId}`)).not.toBeNull();
+    state.current = { ...local, missions: { ...local.missions, pack: 1 }, updatedAt: T0 + 1000 };
+    await store.sync("auto");
+    expect(api.pushSave).toHaveBeenCalledOnce();
+    expect(api.pushSave.mock.calls[0][3]).toBe(false);
+    expect(api.pushSave.mock.calls[0][4]).toBe(new Date(SERVER_SAVE_AT).toISOString());
+    expect(state.current.missions.pack).toBe(1);
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+  });
+
+  it("reprend les changements serveur seuls et bloque quand les deux appareils ont changé", async () => {
+    const local = saveWith({ cards: [card("a", "kaicenat")] });
+    const { store, api, state } = harness({ local, remote: remoteRow(local, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    const remote = saveWith({ cards: [card("b", "ibai")] });
+    api.pullSave.mockResolvedValue(remoteRow(remote, "2026-03-01T10:00:06Z"));
+    await store.sync("auto");
+    expect(state.current.cards).toEqual(remote.cards);
+    expect(api.pushSave).not.toHaveBeenCalled();
+    state.current = { ...state.current, themeId: "red" };
+    api.pullSave.mockResolvedValue(remoteRow({ ...remote, tokens: 123 }, "2026-03-01T10:00:07Z"));
+    await store.sync("auto");
+    expect(store.getSnapshot().syncNeedsChoice).toBe(true);
+    expect(state.current.themeId).toBe("red");
+    expect(api.pushSave).not.toHaveBeenCalled();
+  });
+
+  it("la lecture automatique refuse une sauvegarde illisible sans en envoyer une autre", async () => {
+    const local = saveWith({ hourglasses: 2 });
+    const { store, api, state } = harness({ local,
+      remote: remoteRow({ invalid: true } as unknown as PlayerState, SERVER_SAVE_AT) });
+    expect((await store.useHourglass()).status).toBe("unavailable");
+    expect(state.current).toBe(local);
+    expect(api.pushSave).not.toHaveBeenCalled();
+    expect(api.useHourglass).not.toHaveBeenCalled();
+    expect(store.getSnapshot().isError).toBe(true);
+  });
+
+  it("partage la lecture automatique en cours et préserve une action faite pendant la lecture", async () => {
+    const local = saveWith({ hourglasses: 2 });
+    const { store, api, state, applied } = harness({ local });
+    let finish!: (value: RemoteSaveRow) => void;
+    api.pullSave.mockImplementationOnce(() => new Promise<RemoteSaveRow>((resolve) => { finish = resolve; }));
+    const first = store.sync("auto");
+    const second = store.sync("auto");
+    state.current = { ...local, tokens: 123 };
+    finish(remoteRow(saveWith({ updatedAt: T0 + 120_000 }), SERVER_SAVE_AT));
+    await Promise.all([first, second]);
+    expect(api.pullSave).toHaveBeenCalledOnce();
     expect(applied).toHaveLength(0);
+    expect(state.current.tokens).toBe(123);
+    expect(store.getSnapshot().syncNeedsChoice).toBe(true);
   });
 
   it("adopte la partie du cloud quand on le demande explicitement", async () => {
@@ -2517,6 +2622,23 @@ describe("le bureau côté store (0039)", () => {
 
 
 describe("sabliers : dépense en ligne confirmée et rejouable", () => {
+  it("attend la reprise automatique déjà en cours avant de dépenser", async () => {
+    const local = saveWith({ hourglasses: 2 });
+    const { store, api } = harness({ local, remote: remoteRow(local, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    let finish!: (value: RemoteSaveRow) => void;
+    api.pullSave.mockImplementationOnce(() => new Promise<RemoteSaveRow>((resolve) => { finish = resolve; }));
+    const syncing = store.sync("auto");
+    const spending = store.useHourglass();
+    expect(api.useHourglass).not.toHaveBeenCalled();
+    finish(remoteRow(local, SERVER_SAVE_AT));
+    await syncing;
+    expect((await spending).status).toBe("done");
+    expect(api.pullSave).toHaveBeenCalledTimes(2);
+    expect(api.useHourglass).toHaveBeenCalledOnce();
+    expect(api.pushSave).not.toHaveBeenCalled();
+  });
+
   it("synchronise les gains puis adopte le débit et la réserve écrits ensemble", async () => {
     const { store, api, state, device } = harness({ local: saveWith({ hourglasses: 2, packs: 2 }) });
     expect((await store.useHourglass()).status).toBe("done");

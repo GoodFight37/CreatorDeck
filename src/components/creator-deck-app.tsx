@@ -345,11 +345,16 @@ export function CreatorDeckApp() {
   // recharge). Silencieux si le réseau ne répond pas.
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
-    void cloudStore.packStatus();
-    void cloudStore.refreshOnboarding();
-    // Le solde aussi : depuis `0027_wallet.sql`, c'est le serveur qui tient la
-    // caisse, et une sauvegarde bricolée est recollée à la vérité ici.
-    void cloudStore.syncWallet();
+    let active = true;
+    // Lire la sauvegarde avant de rafraîchir ses compteurs : ces lectures
+    // serveur ne doivent pas faire passer une vieille copie pour plus récente.
+    void cloudStore.sync("auto").then(() => {
+      if (!active || cloudStore.getSnapshot().userId !== cloud.userId) return;
+      void cloudStore.packStatus();
+      void cloudStore.refreshOnboarding();
+      void cloudStore.syncWallet();
+    });
+    return () => { active = false; };
   }, [cloud.configured, cloud.userId, currentSceneDay]);
 
   const [tutorialStep, setTutorialStep] = useState<number | null>(null);
@@ -522,7 +527,7 @@ export function CreatorDeckApp() {
     try {
       if (cloud.configured) {
         const result = await cloudStore.useHourglass();
-        if (result.status !== "done") showError(result.message);
+        if (result.status !== "done") showError(result.message, cloudStore.getSnapshot().syncNeedsChoice || (result.status === "unavailable" && result.reason === "no-session") ? "account" : null);
       } else gameStore.useHourglass();
     } catch (caught) {
       showError(caught instanceof Error ? caught.message : "Impossible d'utiliser un sablier.");

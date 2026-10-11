@@ -27,15 +27,24 @@ export function packActions(ctx: CloudStoreContext) {
         // Une réponse perdue se rejoue AVANT tout envoi de la sauvegarde
         // ancienne : le serveur renvoie le solde actuel sans débiter à nouveau.
         if (!requestId) {
+          const needsInitialSync = ctx.state().saveSyncing || ctx.state().remoteUpdatedAt === null || ctx.state().lastSyncAt === null;
+          if (needsInitialSync) await ctx.actions.sync("auto");
+          if (api.session()?.userId !== session.userId) throw new Error("Ton compte a changé. Réessaie.");
+          if (ctx.state().syncNeedsChoice) throw new Error("Deux parties sont différentes : choisis celle à garder dans Mon compte avant d’utiliser un sablier.");
+          if (needsInitialSync && ctx.state().lastSyncAt === null) throw new Error("Ta partie en ligne n’a pas pu être chargée. Réessaie quand la connexion revient.");
           const local = ctx.deps.readState();
           if (!local) throw new Error("Partie illisible. Recharge l’application.");
           const base = ctx.state().remoteUpdatedAt;
-          const pushed = await api.pushSave(local, local.updatedAt, local.version, false, base === null ? null : new Date(base).toISOString());
-          if (pushed.status !== "pushed" && pushed.status !== "unchanged") {
-            ctx.publish({ pending: true, decision: pushed.status === "conflict" ? "conflict" : "noop" });
-            throw new Error("Synchronise ta partie dans Compte avant d’utiliser un sablier.");
+          const pushed = needsInitialSync && !ctx.state().pending ? null : await api.pushSave(local, local.updatedAt, local.version, false, base === null ? null : new Date(base).toISOString());
+          if (pushed) {
+            if (pushed.status !== "pushed" && pushed.status !== "unchanged") {
+              ctx.publish({ pending: true, decision: pushed.status === "conflict" ? "conflict" : "noop", syncNeedsChoice: pushed.status === "conflict" });
+              throw new Error(pushed.status === "conflict"
+                ? "Deux parties sont différentes : choisis celle à garder dans Mon compte avant d’utiliser un sablier."
+                : pushed.problems.join(" "));
+            }
+            ctx.publish({ remoteUpdatedAt: Date.parse(pushed.save.updatedAt), pending: false });
           }
-          ctx.publish({ remoteUpdatedAt: Date.parse(pushed.save.updatedAt), pending: false });
           requestId = crypto.randomUUID();
           // Pas de requête si sa clé de rejeu ne peut pas être conservée.
           if (!storage) throw new Error("Active le stockage de l’application pour utiliser un sablier.");

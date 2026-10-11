@@ -40,6 +40,7 @@ const monde = vi.hoisted(() => ({
     busy: false,
     isError: false,
     decision: "noop" as string | null,
+    syncNeedsChoice: false,
     remoteUpdatedAt: Date.UTC(2026, 9, 8, 11, 0, 0),
     lastSyncAt: Date.UTC(2026, 9, 8, 11, 0, 0),
     message: null as string | null,
@@ -181,7 +182,8 @@ describe("l'écran Compte d'un joueur connecté", () => {
      * uniquement quand il y a vraiment une décision à prendre.
      */
     const { AccountSheet } = await import("@/components/account-sheet");
-    monde.surcharge.decision = "pull";
+    monde.surcharge.decision = "conflict";
+    monde.surcharge.syncNeedsChoice = true;
     try {
       await banc.monter(<AccountSheet onClose={() => {}} />);
       const choix = banc.ecran("28-compte-deux-parties");
@@ -195,6 +197,7 @@ describe("l'écran Compte d'un joueur connecté", () => {
       }
     } finally {
       monde.surcharge.decision = "noop";
+      monde.surcharge.syncNeedsChoice = false;
     }
 
     // Rien à décider : pas de carte. Un jeu qui demande de choisir quand il n'y
