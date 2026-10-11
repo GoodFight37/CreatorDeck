@@ -1,3 +1,12 @@
+## 11 octobre 2026 — CI réparée, application 0047 en échec
+
+Correctif 1dd5b53 publié et SHA distant confirmé ; quatre jobs de Vérification
+38139620497 verts. Dry-run courant 38139632409 réussi. Application manuelle
+explicitement autorisée par Malik sans sauvegarde : run 38139794012 failure
+à l’étape Supabase. Aucun succès d’application revendiqué et aucune relance
+aveugle. Dry-run après échec 38139855092 réussi ; logs détaillés Forbidden,
+erreur expurgée demandée à l’opérateur. K-032 résolu, K-033 ouvert.
+
 ## 11 octobre 2026 — préparation de l’application 0047
 
 Blocage CI reproduit : les tests cadeau/sablier exigeaient un cloud alors que
