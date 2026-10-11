@@ -1,4 +1,4 @@
-## Audit produit P0/P1 — corrections validées localement (11 octobre 2026)
+## Audit produit P0/P1 — corrections publiées et CI verte (11 octobre 2026)
 
 Le premier E2E du lot a détecté un CTA hors du pli sur écran court et le retour
 focus du Paquet Scène devenu repliable. Corrections locales ciblées confirmées par 8 E2E bureau/téléphone simulé ;
@@ -7,6 +7,9 @@ le compte reste requis pour jouer avec la collection serveur. Aucun nouveau
 problème SQL établi ; 645 contrôles du vérificateur jetable passent jusqu’à 0048.
 Une capture locale à 412×915 a aussi montré le sablier sous la navigation :
 réglage CSS final vérifié par 4 E2E, avec assertion de visibilité intégrale.
+Code final main `3d3ef31` : CI 38153757540 success (1118 unitaires, 86 DOM,
+645 SQL, 46 E2E + 8 cloud simulés). Contrôle Supabase 38153978544 success,
+base déjà à jour, aucun SQL exécuté. Liens dans la passation.
 K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck

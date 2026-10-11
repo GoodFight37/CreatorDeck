@@ -1,4 +1,4 @@
-## Checkpoint courant — audit produit P0/P1 publié, réglage de visibilité final — 11 octobre 2026
+## Checkpoint courant — audit produit P0/P1 publié et confirmé — 11 octobre 2026
 
 Demande Malik : implémenter P0 puis P1 de l’audit produit, publication autorisée.
 Base vérifiée : `bbef1227bafb050dd024f77ea15c1bb3384e8aee`, branche `work`,
@@ -52,9 +52,29 @@ aucune configuration réseau changée. Chromium 1243 téléchargé via Playwrigh
   de la navigation sur bureau/téléphone simulé, sachet/titre/consigne sans recouvrement.
   Build complet précédent testé sur e33ac0a ; cet ajustement n’a touché que CSS
   et assertion navigateur. Aucune suite SQL/logique répétée pour cette retouche.
-- Prochaine action : publier ce réglage final, vérifier les quatre jobs CI et
-  l’automatique Supabase (aucun SQL attendu), puis noter SHA et liens observés.
-  Aucun téléphone physique ni contenu Vercel effectivement servi validé.
+- Code final publié et vérifié sur main :
+  [`3d3ef31988373287d22451df7aee065064300594`](https://github.com/GoodFight37/CreatorDeck/commit/3d3ef31988373287d22451df7aee065064300594).
+  CI [38153757540](https://github.com/GoodFight37/CreatorDeck/actions/runs/38153757540)
+  **success**, quatre jobs. Logs lus : **1118/1118** unitaires (71 fichiers),
+  **86/86** DOM (16 fichiers), **645** contrôles SQL jetables, statique/build
+  verts, **46 E2E** réussis et 8 ignorés dans le build sans cloud, puis
+  **8/8 cloud simulés**, dont le nouveau pack invité. L’assertion du sablier
+  entier au-dessus de la navigation passe sur bureau et téléphone simulé.
+- Contrôle automatique Supabase final
+  [38153978544](https://github.com/GoodFight37/CreatorDeck/actions/runs/38153978544)
+  **success** sur 3d3ef31. Logs lus : connexion TLS, projet CreatorDeck et
+  historique vérifiés ; « La base est déjà à jour et vérifiée. Aucun SQL de
+  migration exécuté. » Le premier automatique
+  [38153644482](https://github.com/GoodFight37/CreatorDeck/actions/runs/38153644482)
+  avait confirmé la même absence de SQL sur e33ac0a. Aucun secret modifié.
+- Statut GitHub Vercel **success** sur 3d3ef31. Ce statut ne démontre pas le
+  contenu actuellement servi. Les captures/tests étaient locaux ou dans CI,
+  jamais un téléphone physique. Validation téléphone toujours à faire.
+- P0/P1 terminés pour ce lot ; P2/K-031 restent séparés. Pas de migration à
+  appliquer, pas de réapplication 0047/0048, reset ou réparation. Réservation
+  de travail libérée après publication documentaire. Pour reprendre : comparer
+  HEAD/main et lire ce checkpoint ; prochain travail produit sur téléphone
+  consiste à vérifier le sablier, l’accès Tribunal et le pack tutoriel réel.
 
 ---
 

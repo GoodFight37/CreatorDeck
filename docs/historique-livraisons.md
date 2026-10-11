@@ -5,7 +5,11 @@ l’objectif, karma/tampon/marteau et bilan avec CTA ; mission quotidienne de ci
 dossiers. Drop replie taux/activités et Paquet Scène, profil indique les besoins
 de connexion et expose Reflets même sans capteur. L’identité/vitrine, defaults ON
 et effets premium déjà existants sont conservés ; ombre du sachet renforcée sans
-changer les timings reveal/tear. Livraison et preuves courantes : passation.
+changer les timings reveal/tear. Code final publié `3d3ef31`, CI 38153757540
+success (1118 unitaires, 86 DOM, 645 SQL, 46 E2E + 8 cloud simulés).
+Contrôle Supabase 38153978544 success, aucun SQL exécuté. Capture locale et E2E
+ont motivé un réglage final du sachet pour garder le sablier au-dessus de la nav.
+Téléphone physique non validé ; liens et détails dans la passation.
 
 ## 11 octobre 2026 — action sablier visible et réserve bonus
 

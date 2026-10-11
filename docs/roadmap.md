@@ -1,11 +1,13 @@
-## Audit produit P0/P1 — 11 octobre 2026
+## Audit produit P0/P1 — publié et CI verte, 11 octobre 2026
 
-Implémentation locale : essai invité sans gains, Tribunal visible en un appui,
-feedback/bilan/mission de cinq dossiers, Drop secondaire replié, profil explicite,
-ombre de sachet renforcée. Son/reflets ON par défaut et vitrine/série/cascade/raretés
-existants conservés. Vérifications locales vertes (1118 unitaires, 86 DOM, 645 SQL, E2E ciblés) ;
-publication et CI distante à vérifier : voir passation.
-P2 et K-031 séparés ; validation sur téléphone réel toujours à effectuer.
+Essai invité sans gains, Tribunal visible en un appui avec feedback/bilan/mission
+« Juge 5 dossiers », objectif prioritaire après le premier booster, Drop secondaire
+replié et profil explicite. Son/reflets ON par défaut et vitrine/série/cascade/raretés
+existants conservés. Sachet et espacements ajustés pour garder le sablier au-dessus
+de la navigation. Code main `3d3ef31`, CI **38153757540 success** : 1118 unitaires,
+86 DOM, 645 SQL, 46 E2E sans cloud et 8 cloud simulés. Contrôle Supabase
+**38153978544 success**, aucun SQL exécuté. Liens/preuves dans la passation.
+P2 et K-031 séparés ; validation sur téléphone physique toujours à effectuer.
 
 ## K-034 — résolu et confirmé en automatique — 11 octobre 2026
 
