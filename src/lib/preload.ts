@@ -13,10 +13,7 @@
  * rien faire du tout, jamais jeter.
  */
 
-/** Le portrait d'un créateur, tel que `creatorImage()` le construit. */
-function portraitUrl(slug: string): string {
-  return `/creators/${slug}.webp`;
-}
+import { creatorPortraitUrl } from "@/lib/creator-portraits";
 
 /**
  * Demande au navigateur de charger ces portraits, sans les afficher.
@@ -35,6 +32,6 @@ export function preloadPortraits(slugs: Iterable<string>): void {
     // `decoding = "async"` : même si le portrait est déjà en cache, le décodage
     // ne bloque pas la révélation en cours.
     image.decoding = "async";
-    image.src = portraitUrl(slug);
+    image.src = creatorPortraitUrl(slug);
   }
 }

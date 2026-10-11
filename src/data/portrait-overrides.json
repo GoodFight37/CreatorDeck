@@ -1,0 +1,22 @@
+{
+  "rubius": {
+    "name": "Rubius",
+    "image": "/creators/curated/rubius.webp",
+    "title": "El Rubius en el Festival de cinema de Sitges 2018 (recorte)",
+    "author": "Moritz Barcelona from Barcelona, Catalunya",
+    "source": "https://commons.wikimedia.org/wiki/File:El_Rubius_en_el_Festival_de_cinema_de_Sitges_2018_(recorte).jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "changes": "Recadrage carré et conversion WebP, 900 × 900 px."
+  },
+  "shroud": {
+    "name": "Shroud",
+    "image": "/creators/curated/shroud.webp",
+    "title": "Shroud at PUBG PGI 2018 (cropped)",
+    "author": "Nate Herrera n8bit_",
+    "source": "https://commons.wikimedia.org/wiki/File:Shroud_at_PUBG_PGI_2018_(cropped).jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Recadrage carré et conversion WebP, 900 × 900 px. Cette adaptation reste sous CC BY-SA 4.0."
+  }
+}

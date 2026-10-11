@@ -1,5 +1,26 @@
 # Construire le catalogue Twitch : périmètre et taille
 
+## Remplacer un portrait individuellement — 12 octobre 2026
+
+Les portraits sélectionnés vont dans `public/creators/curated/<slug>.webp` ;
+`src/data/portrait-overrides.json` active chaque remplacement et contient
+nom, titre, auteur, source, licence et modifications. Carte, affiche et
+préchargement utilisent le même choix. Rubius et Shroud inaugurent ce chemin
+en 900 × 900 px ; les autres avatars restent inchangés. La régénération Twitch
+et l'élagage du dossier parent ne touchent pas ces fichiers.
+
+Pour changer une image existante : remplacer son WebP et actualiser son entrée
+de provenance. Pour en ajouter une : ajouter le fichier et son entrée au
+registre. L'utilisateur peut fournir une photo avec le nom du créateur ;
+l'intégration convertit l'original sans l'agrandir et conserve sa provenance.
+Cela reste une modification embarquée, nécessitant une nouvelle version de
+l'application, pas une modification instantanée depuis le téléphone.
+Les crédits se déplient dans **Toi → Réglages → Crédits des images**, sans texte
+sur les cartes. Les fichiers Flickr du lot fourni, marqués tous droits
+réservés, ne sont pas intégrés.
+
+## Catalogue généré
+
 Le jeu ne code en dur ni la taille (« 500 ») ni le périmètre (« FR ») : passer
 au monde entier, à 1000 ou à 2000 créateurs est un **changement de données**,
 pas de code. Ce document est le mode d'emploi, avec les chiffres mesurés sur ce

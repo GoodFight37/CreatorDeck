@@ -1,3 +1,42 @@
+## Portraits sélectionnés et crédits — 12 octobre 2026
+
+- Accord : intégrer Rubius/Shroud, crédits discrets dans les réglages ; recherche
+  du reste ouverte, aucune promesse de 50 remplacements. Base locale `work`
+  et main identiques `ab4c5f8`, départ propre, aucune PR ouverte. API : CI
+  précédente `38181695989` et contrôle Supabase `38181947616` success.
+- Deux ZIP fournis : 10 originaux décodables, manifeste/index identiques aux
+  fichiers joints séparément. Quatre licences documentées, six droits à vérifier,
+  39 sans candidate, une organisation. AdinRoss non retenu pour qualité ; Rivers
+  reste à comparer ; fichiers Flickr tous droits réservés non intégrés.
+- Rubius/Shroud recadrés au nord en carré WebP 900 px qualité 90 sans
+  agrandissement (210 762 octets). Captures de cartes bureau/téléphone simulé
+  inspectées. Registre `src/data/portrait-overrides.json`, sources/auteurs/licences
+  et modifications selon le manifeste fourni, pas revérifiés à distance.
+  CC BY 2.0 / CC BY-SA 4.0 ; adaptation Shroud sous même licence.
+- `creator-portraits.ts` résout carte/affiche/préchargement ensemble. Avatars
+  Twitch conservés, `public/creators/curated` ignoré par régénération/élagage.
+  Mode d'emploi dans `docs/catalogue-twitch.md`. Un remplacement reste une
+  modification embarquée à publier, pas un changement instantané sur téléphone.
+- « Crédits des images » replié dans Toi → Réglages. Aucun crédit sur les
+  cartes ; description accessible « Portrait de », sans prétendre « officiel ».
+- Tests ciblés : creator-portraits/preload/credits **13/13** unitaires ;
+  ecrans-credits/ecrans-scene-profile **11/11** DOM ; portrait-credits.spec.ts
+  **2/2** E2E bureau/téléphone simulé. Premier E2E bloqué avant scénario par
+  cache home absent ; relance réussie avec
+  `PLAYWRIGHT_BROWSERS_PATH=/workspace/.cache/ms-playwright` (cache déjà présent).
+  Typecheck, ESLint ciblé, jargon, catalog:ci et diff-check verts ; build statique
+  local réussi sans cloud. Téléphone physique non testé.
+- Publication normale main autorisée ; SHA du lot via
+  `git log -1 --format=%H -- src/data/portrait-overrides.json`.
+  CI de ce lot non observée à la rédaction ; relever après push, ne pas
+  annoncer vert tant que les suites tournent. Réservation libérée à publication.
+- Suite : l’ancien réseau reste actif ici ; ne pas refaire la configuration.
+  Nouveau chat = recherche/téléchargement seulement, sans relire le dépôt.
+  Essayer un vrai navigateur pour Google Images si disponible : le HTML non
+  exploitable du rapport ne prouve pas un échec au navigateur. Aucun catalogue
+  universel alternatif établi ; sélection ciblée, images de créateurs/kits presse
+  et provenance conservée. Les petits gardent leurs avatars actuels.
+
 ## Portraits du Top 50 — recherche de sources alternatives (12 octobre 2026)
 
 - Malik souhaite remplacer en priorité les portraits des grands créateurs ; les

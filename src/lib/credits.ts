@@ -37,7 +37,7 @@ export type Credit = {
 export const CREDITS: readonly Credit[] = [
   {
     quoi: "Les portraits des créateurs",
-    qui: "Twitch — les photos officielles des chaînes, affichées telles quelles",
+    qui: "Twitch pour les avatars ; autres portraits et auteurs dans « Crédits des images »",
     licence: "utilisées pour illustrer les cartes",
   },
   {

@@ -45,6 +45,16 @@ describe("préchargement des portraits", () => {
     expect(demandes).toEqual(["/creators/ibai.webp"]);
   });
 
+  it("précharge le remplacement affiché et le vrai visuel de secours", () => {
+    const demandes = espion();
+    preloadPortraits(["rubius", "shroud", "diverron", "rubius"]);
+    expect(demandes).toEqual([
+      "/creators/curated/rubius.webp",
+      "/creators/curated/shroud.webp",
+      "/creators/diverron-fallback.svg",
+    ]);
+  });
+
   it("ignore les entrées vides sans jeter", () => {
     const demandes = espion();
     preloadPortraits(["", "squeezie", undefined as unknown as string]);

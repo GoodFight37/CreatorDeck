@@ -1,6 +1,7 @@
 import catalogConfig from "@/data/catalog.config.json";
 import creatorData from "@/data/creators.json";
 import retiredData from "@/data/retired.json";
+import { creatorPortraitUrl } from "@/lib/creator-portraits";
 
 export type Rarity = "common" | "uncommon" | "rare" | "epic" | "legendary";
 export type CardVariant = "standard" | "live" | "holo" | "gold";
@@ -267,7 +268,8 @@ export const PACKS = {
 } as const;
 
 /**
- * L'adresse d'un portrait. **WebP**, en 600 px : les 1000 visages pèsent
+ * L'adresse d'un portrait. Avatars **WebP** en 600 px, remplacements sélectionnés
+ * en 900 px via le registre partagé. Les 1000 avatars pèsent
  * 16,6 Mo au lieu de 29 — et ils font 86 % du poids de l'APK, donc c'est le
  * seul chiffre que voit un joueur qui installe le jeu.
  *
@@ -277,10 +279,7 @@ export const PACKS = {
  * endroits divergent, c'est la CI qui le dit, pas le joueur.
  */
 export function creatorImage(creator: Pick<Creator, "slug">) {
-  // The existing DIVERRON WebP produces a solid green rectangle in the game.
-  // Use an intentional offline artwork until a verified portrait is regenerated.
-  if (creator.slug === "diverron") return "/creators/diverron-fallback.svg";
-  return `/creators/${creator.slug}.webp`;
+  return creatorPortraitUrl(creator.slug);
 }
 
 export function formatFollowersCount(followers?: number) {

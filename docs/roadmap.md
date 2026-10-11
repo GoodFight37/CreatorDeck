@@ -4,7 +4,7 @@ Code produit : `1439e44de55272a7accbceef9b66758e0ed60cbb` sur `main`. CI [`38178
 
 ### Plan actif
 
-- **Portraits alternatifs des grands créateurs (12 octobre)** : lot pilote proposé pour les 50 premiers, puis revue avant extension ; garder les petits avec leurs assets actuels et permettre le remplacement individuel. Inventaire local : 1 000 WebP 600×600 décodables, score de netteté seulement heuristique, planche Top 50 montrant des styles hétérogènes. Recherche externe bloquée par le proxy sur Openverse (HTTP CONNECT 403). L’ajout ciblé de domaines à la configuration a été refusé car le brouillon est verrouillé ; proposition téléchargeable et état dans la passation. Aucune image modifiée.
+- **Portraits alternatifs (12 octobre, K-045)** : Rubius/Shroud intégrés en 900 px, crédits repliés dans les réglages, registre protégé des régénérations Twitch. Tests locaux : 13 unitaires, 11 DOM, 2 E2E verts ; publication/CI dans la passation. Recherche générale encore ouverte : 10 candidates sur 50 entrées seulement. Prochaine piste : recherche via navigateur dans la session qui a les bons accès ; le HTML Google inutilisable dans le rapport ne prouve pas un échec au navigateur. Les petits créateurs gardent leurs images actuelles.
 
 - **Reflet foil / continuité / pity (11 octobre)** : terminé, publié `1439e44`, CI `38178996093` verte. Le vrai portrait SolaryHS reste en attente d’une source d’image autorisée (K-044). Pas de changement SQL.
 
@@ -20,7 +20,7 @@ Code produit : `1439e44de55272a7accbceef9b66758e0ed60cbb` sur `main`. CI [`38178
   reste réservé aux progressions réellement divergentes. Code et tests ciblés
   terminés ; état de publication et CI dans la passation.
 
-- **Code produit : aucun chantier déjà autorisé ne reste ouvert dans cette
+- **Ancien bilan de triage du 11 octobre, remplacé par les lots actifs ci-dessus : aucun chantier déjà autorisé ne restait ouvert dans cette
   roadmap.** Les lots d’accès Arène/Hôtel, profil/Craft/Binder, scène, scroll,
   sablier et activité sociale sont livrés. Ne pas ressortir comme tâches les
   anciennes suggestions de badges/avatars, équilibrage ou parité sans nouvelle

@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
+import { ImageCredits } from "@/components/image-credits";
 import { CreatorCard } from "@/components/creator-card";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -496,6 +497,7 @@ export function ProfileView({
             </span>
           </button>
         ) : null}
+        <ImageCredits />
         {/*
          * Le code promo n'est plus dans le menu : il ne sert que le jour où un
          * code existe, et « Toi » a déjà trop de portes pour un écran de

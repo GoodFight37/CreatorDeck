@@ -58,4 +58,22 @@ describe("les crédits de l'écran Toi", () => {
     banc.appuyer("Crédits");
     expect(document.querySelector(".credits-list")).toBeNull();
   });
+
+  it("présente les auteurs et licences des nouveaux portraits dans les réglages seulement", async () => {
+    await ecranToi();
+    expect(document.querySelector("#image-credits")).toBeNull();
+    const settings = document.querySelector('[aria-label="Réglages"]');
+    expect(settings?.textContent).toContain("Crédits des images");
+    banc.appuyer("Crédits des images");
+    const credits = document.querySelector("#image-credits")!;
+    expect(settings?.contains(credits)).toBe(true);
+    expect(credits.textContent).toContain("Moritz Barcelona");
+    expect(credits.textContent).toContain("Nate Herrera n8bit_");
+    expect(credits.textContent).toContain("Recadrage carré");
+    expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by/2.0/"]')).not.toBeNull();
+    expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by-sa/4.0/"]')).not.toBeNull();
+    expect(credits.querySelectorAll("a")).toHaveLength(4);
+    banc.appuyer("Crédits des images");
+    expect(document.querySelector("#image-credits")).toBeNull();
+  });
 });
