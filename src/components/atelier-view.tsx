@@ -422,7 +422,7 @@ export function AtelierView({
                 </button>
                 {liveKept > 0 ? (
                   <span className="atelier-bulk-note">
-                    {liveKept} doublon{liveKept > 1 ? "s" : ""} Live à part
+                    {liveKept} doublon{liveKept > 1 ? "s" : ""} Live à recycler un par un
                   </span>
                 ) : null}
               </div>

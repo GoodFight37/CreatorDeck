@@ -1,3 +1,11 @@
+## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
+
+Accès aux thèmes et découverte depuis Binder vide restaurés, indication Live
+explicitée et marquage du Tribunal ajusté. Titres compacts Gemini conservés avec
+assertions exactes actualisées. [Détail et preuves](correctifs-interface-2026-10-13.md) :
+116/116 DOM, typecheck/lint/build et 26 scénarios navigateur vérifiés. Deux
+cas navigateur cloud non exécutés localement ; nouvelle CI à confirmer.
+
 ## Ouverture : correction après essai téléphone — 13 octobre 2026
 
 Retour réel : sachet trop brillant et attente parfois bloquée. D-063 coupe

@@ -1,3 +1,20 @@
+## Checkpoint corrections CI interface — 13 octobre 2026
+
+Malik délègue à Codex tous les échecs après les changements Gemini. Sur base
+main 6a206b0, cinq échecs DOM corrigés sans revenir sur le layout compact :
+accès Thème du classeur, découverte du catalogue depuis Binder vide, indication
+Live, marquage Tribunal unique. Titres intentionnels Atelier/Cinq créateurs
+conservés et assertions exactes adaptées, aucun contrôle affaibli.
+[Rapport](correctifs-interface-2026-10-13.md). 116/116 DOM, typecheck/lint/build
+réussis ; 24 succès navigateur + 2/2 retests de titre Drop. Deux cas cloud
+conditionnels non exécutés localement. CI précédente 38320145804 : 1144 unités,
+SQL/cloud simulé verts, cinq DOM rouges avant correction, navigateur encore en
+cours au relevé ; aucune affirmation sur la nouvelle CI/Vercel.
+Publication main ciblée autorisée, portraits préexistants/26 lignes locales
+préservés hors commit, aucune réservation active. Prochaine action : laisser
+la CI nouvelle tourner, analyser seulement un échec signalé, essai Vercel après
+déploiement. Aucun changement supplémentaire du booster ou SQL.
+
 ## Compilation débloquée — 13 octobre 2026
 
 Malik autorise désormais la réparation du fichier Drop laissé à Gemini, dont

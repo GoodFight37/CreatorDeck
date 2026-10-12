@@ -166,7 +166,7 @@ export function CollectionView({
           {game.stats.uniqueCreators ? (
             <><strong>{progress}%</strong><span>complété</span></>
           ) : (
-            <><strong>À toi</strong><span>première carte</span></>
+            <><strong>À toi</strong><span>ta première carte</span></>
           )}
         </div>
       </section>
@@ -389,7 +389,10 @@ export function CollectionView({
           <div className="binder-empty-state">
             {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
               <>
-                <strong>Ouvre ton premier booster pour démarrer le classeur.</strong>
+                <strong>Ta collection commence avec le prochain booster.</strong>
+                <button type="button" className="binder-first-drop" onClick={() => { setFilter("all"); setPage(0); }}>
+                  Voir les créateurs à découvrir <ChevronRight size={16} />
+                </button>
                 {onGoDrop ? (
                   <button type="button" className="binder-first-drop" onClick={onGoDrop}>
                     Retour au Drop <ChevronRight size={16} />

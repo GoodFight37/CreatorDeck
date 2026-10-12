@@ -316,7 +316,7 @@ export function HomeView({
         {dailyMission?.id === "tribunal" ? (
           <button
             type="button"
-            className={`daily-goal tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
+            className={`daily-goal tribunal-entry${tribunalClose ? " done" : ""}`}
             onClick={onShowTribunal}
             aria-label={
               tribunalPaid

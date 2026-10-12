@@ -48,6 +48,7 @@ export function ProfileView({
   onError,
   onShowOdds,
   onShowMissions,
+  onShowThemes,
   onShowStudio,
   onShowAccount,
   onShowLeaderboard,
@@ -407,6 +408,9 @@ export function ProfileView({
       {/* Réglages minimaux */}
       <section className="menu-group" aria-label="Réglages">
         <h2>Réglages</h2>
+        {onShowThemes ? <button type="button" className="menu-row" onClick={onShowThemes}>
+          <span>Thème du classeur</span><ChevronRight size={16} />
+        </button> : null}
         <button
           type="button"
           className="menu-row"

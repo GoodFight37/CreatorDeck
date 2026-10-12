@@ -58,7 +58,8 @@ describe("les écrans", () => {
     expect(binder).toContain("Ta collection commence avec le prochain booster.");
 
     banc.appuyer("Craft");
-    expect(banc.ecran("03-craft")).toContain("Façonne ta collection");
+    banc.ecran("03-craft");
+    expect(document.querySelector(".view.atelier-view h1")?.textContent).toBe("Atelier");
 
     // **Quatre piliers, et rien d'autre** : la simulation de streameur
     // (« Ta chaîne ») a quitté l'application le 8 octobre 2026 — ni onglet, ni
