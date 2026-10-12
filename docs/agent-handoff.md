@@ -1,3 +1,20 @@
+## Reprise économique du chantier portraits — 12 octobre 2026
+
+Lire **[la passation courte](passation-portraits.md)** pour ce seul chantier,
+selon l'exception de lecture ajoutée à AGENTS.md à la demande de Malik.
+Ne pas relire les archives ci-dessous ni refaire les briefs déjà réalisés.
+Code portraits `433ee065f98c8ff2956d90c480acfb59f0890b86` publié sur main,
+[CI 38186329103](https://github.com/GoodFight37/CreatorDeck/actions/runs/38186329103)
+**success : 4/4 jobs**, et
+[workflow automatique 38186571263](https://github.com/GoodFight37/CreatorDeck/actions/runs/38186571263)
+success, résultats lus par API. Portraits/attributions/remplacements individuels
+implémentés ; recherche générale encore ouverte. Google/Phosphore toujours
+bloqués dans l'ancienne session après le changement d'environnement : nouveaux
+tests directs CONNECT 403 ; aucun besoin de refaire les réglages. Utiliser le
+nouveau chat avec les accès activés, recherche seule sans réapprendre le dépôt.
+Le checkpoint de cette passation est le commit qui contient ce paragraphe.
+Sa CI documentaire sera distincte de la CI produit verte référencée ci-dessus.
+
 ## Portraits sélectionnés et crédits — 12 octobre 2026
 
 - Accord : intégrer Rubius/Shroud, crédits discrets dans les réglages ; recherche
@@ -28,8 +45,8 @@
   local réussi sans cloud. Téléphone physique non testé.
 - Publication normale main autorisée ; SHA du lot via
   `git log -1 --format=%H -- src/data/portrait-overrides.json`.
-  CI de ce lot non observée à la rédaction ; relever après push, ne pas
-  annoncer vert tant que les suites tournent. Réservation libérée à publication.
+  CI de ce lot désormais success (4/4 jobs), voir le checkpoint en tête.
+  Réservation libérée à publication.
 - Suite : l’ancien réseau reste actif ici ; ne pas refaire la configuration.
   Nouveau chat = recherche/téléchargement seulement, sans relire le dépôt.
   Essayer un vrai navigateur pour Google Images si disponible : le HTML non

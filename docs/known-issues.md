@@ -33,8 +33,8 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck
 
-État du registre actualisé le 11 octobre 2026. Code `main` `1439e44` ; CI
-`38178996093` verte (quatre jobs). Le registre ne signifie pas que chaque
+État du registre actualisé le 11 octobre 2026. Code `main` `433ee06` ; CI
+`38186329103` verte (quatre jobs). Le registre ne signifie pas que chaque
 ancienne validation sur téléphone est encore ouverte : voir les statuts précis
 ci-dessous et le [plan courant](roadmap.md#état-courant--11-octobre-2026).
 
@@ -69,7 +69,7 @@ téléphone simulé verts ; publication/CI dans la passation.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|
-| K-045 | Moyenne, style et qualité des portraits | Premier lot local validé ; recherche générale ouverte | ZIP : 10 candidates pour 50 entrées, la résolution ne garantit pas la netteté. | Rubius/Shroud en 900 px ; crédits dans les réglages et préchargement aligné. 13 unitaires, 11 DOM, 2 E2E verts. Six candidates ont des droits à vérifier ; AdinRoss écarté pour qualité, Rivers reste à comparer. Les 48 autres portraits du Top 50 restent inchangés. CI/publication dans la passation. |
+| K-045 | Moyenne, style et qualité des portraits | Premier lot publié, CI verte ; recherche générale ouverte | ZIP : 10 candidates pour 50 entrées, la résolution ne garantit pas la netteté. | Rubius/Shroud en 900 px ; crédits dans les réglages et préchargement aligné. 13 unitaires, 11 DOM, 2 E2E verts. Six candidates ont des droits à vérifier ; AdinRoss écarté pour qualité, Rivers reste à comparer. Les 48 autres portraits du Top 50 restent inchangés. Code 433ee06, CI 38186329103 verte ; reprise via passation-portraits.md. |
 | K-044 | Moyenne, portraits de créateurs | Source officielle requise | La carte SolaryHS (#341) montre un avatar violet sans visage malgré un chemin d’image présent. | `creatorImage` résout bien `/creators/solaryhs.webp`, mais le WebP est lui-même l’avatar générique. Comparaison après resize 48×48 repère seulement trois autres variantes du même placeholder : `j0niq`, `toaststix`, `xari`. Les 1 000 WebP décodent. Ne pas substituer le portrait d’un autre créateur ; attente d’images correctes. |
 | K-043 | Faible, compteur pity après tirage | Corrigé et testé sur `main` `1439e44` ; CI `38178996093` verte | Le compteur affichait 7 avant puis 12 après un booster sans Légendaire. | `open_pack()` renvoie le compteur du journal après tirage ; l’adoption de `save.state` pouvait réécraser cette réponse par l’ancien `pityCounter`. Le client conserve maintenant la progression serveur calculée. Reproduction unitaire, vue restante 7→6 vérifiée. |
 | K-042 | Faible, reflet/continuité du sachet | Corrigé et testé sur `main` `1439e44` ; CI `38178996093` verte | Vidéo : bande lumineuse indépendante persistante, longue attente immobile et dos apparemment séparés du sachet. | Reflet clipé sur la silhouette SVG et animé une seule fois, 1,25–1,35 s ; arrêté en ouverture/reveal/Perfect ou effets réduits. Consigne indique la bande soudée haute. Z-index : cartes au-dessus du corps, sous le rabat. E2E local 30/30 et assertions finales 2/2 ; CI complète verte. |

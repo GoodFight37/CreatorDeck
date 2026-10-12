@@ -6,6 +6,18 @@ développement et aux tests. Communiquer et documenter en français.
 
 ## À chaque début et reprise de session
 
+### Exception de lecture : reprise du chantier portraits (12 octobre 2026)
+
+À la demande de Malik pour économiser le quota, **pour les seuls portraits**,
+les lectures générales des points 1 et 2 ci-dessous sont remplacées par
+`docs/passation-portraits.md`, puis les fichiers directement nécessaires.
+Ne pas charger les longues archives, refaire un audit global ou relancer des
+tests sans changement. La passation courte est la source de reprise de ce lot.
+Les règles de protection/publication, la vérification du HEAD et les tests
+adaptés aux modifications restent applicables. Une recherche de photos seule
+ne nécessite ni clone, ni installation, ni lecture du code. Si la tâche sort
+du chantier portraits, reprendre les lectures générales correspondantes.
+
 1. Lire [la passation](docs/agent-handoff.md), [la roadmap](docs/roadmap.md),
    [les décisions](docs/decisions.md) et [les problèmes](docs/known-issues.md).
 2. Lire aussi [le périmètre](docs/perimetre.md), le
