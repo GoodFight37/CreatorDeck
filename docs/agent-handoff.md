@@ -1,3 +1,16 @@
+## Reprise autonome : finaliser la CI — 13 octobre 2026
+
+Malik demande désormais de finir et vérifier de bout en bout. Sur base main
+5e9f67f, les contrôles distants unitaires/DOM/statique/build/SQL/cloud simulé
+passent ; Vercel success. L'ancienne CI complète 38320145804 révélait encore
+un test de peel obsolète sur bureau/téléphone : attente d'un sheen supprimé.
+Il vérifie maintenant l'absence du sheen et du GPU par défaut, en gardant tous
+les contrôles du geste et du continuum. Suite ouverture complète 42/42 locale,
+lint ciblé et diff-check réussis. [Rapport actualisé](correctifs-interface-2026-10-13.md).
+Aucune autre modification produit. Nouvelle CI à suivre jusqu'à son résultat
+pour clôturer cette mission ; pas d'audit hors sujet. Les 26 lignes/portraits
+préexistants restent hors commit. Aucune réservation concurrente détectée.
+
 ## Checkpoint corrections CI interface — 13 octobre 2026
 
 Malik délègue à Codex tous les échecs après les changements Gemini. Sur base

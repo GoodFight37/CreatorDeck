@@ -326,7 +326,8 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   const slit = dialog.locator(".foil-cut-slit");
   await expect.poll(async () => (await slit.boundingBox())?.width ?? 0).toBeGreaterThan(10);
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-light-x"))).not.toBe("");
-  expect(await dialog.locator(".foil-material-sheen").first().evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
+  await expect(dialog.locator("canvas")).toHaveCount(0);
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-swiping.png" });
   await page.mouse.move(x + 167, y, { steps: 8 });
   await page.mouse.up();

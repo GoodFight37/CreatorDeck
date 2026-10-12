@@ -35,3 +35,18 @@ l'économie, des règles SQL ou des dépendances. Portraits locaux hors commit.
   parcours (CTA accessible, sablier au-dessus de la navigation, aller/retour
   Binder, absence d'erreurs console, recettes/coûts) restent intactes.
 - Nouvelle CI/Vercel laissés sans surveillance en boucle, mode économie.
+
+## Reprise autonome : dernière attente obsolète d'ouverture
+
+La CI complète de 6a206b0 a également signalé deux échecs du même test de peel
+(bureau/téléphone) : il attendait `.foil-material-sheen`, supprimé volontairement
+pour enlever la bande brillante. Ce test vérifie désormais l'absence du sheen
+et du canvas par défaut ; ses contrôles de glissé, découpe, rabat, extraction,
+fondu et continuité restent intacts. Toute la suite d'ouverture est exécutée :
+**42/42** sur bureau et téléphone simulé, captures strictes incluses. ESLint
+ciblé et diff-check réussis. Aucun changement de rendu supplémentaire.
+
+Sur 5e9f67f, la CI distante confirme déjà 1144 unitaires, 116 DOM, statique/build,
+SQL et cloud simulé verts. Le statut Vercel de ce commit est success. La dernière
+correction de test reçoit sa propre CI ; la mission autonome la vérifie jusqu'au
+résultat, contrairement au suivi court demandé précédemment.
