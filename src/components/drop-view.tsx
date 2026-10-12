@@ -1,4 +1,3 @@
-// src/components/drop-view.tsx
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
@@ -212,7 +211,7 @@ export function HomeView({
 
   return (
     <div className="view home-view">
-      {/* En-tête allégé sans texte superflu */}
+      {/* En-tête allégé sans paragraphe repoussant le booster */}
       <header className="drop-intro" style={{ marginBottom: "0.5rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
         <h1>Un sachet. <em>Cinq créateurs.</em></h1>
@@ -221,7 +220,7 @@ export function HomeView({
         ) : null}
       </header>
 
-      {/* Sachet + CTA au-dessus du pli */}
+      {/* Hiérarchie principale : sachet + CTA au-dessus du pli sur mobile */}
       <section className="pack-stage stage-live"
         aria-label={`${pack.label} : appuie sur le sachet pour préparer l'ouverture`}
       >
@@ -261,7 +260,7 @@ export function HomeView({
             <LoaderCircle className="spin" size={19} />
           ) : needsAccount ? (
             <CircleUserRound size={19} />
-          ) : (
+          )} : (
             <Zap size={19} />
           )}
           <span>
@@ -301,7 +300,7 @@ export function HomeView({
         </div>
       </section>
 
-      {/* Direct : sous le CTA */}
+      {/* Direct : sous le panneau d'action */}
       {featured ? (
         <button
           type="button"
@@ -320,12 +319,12 @@ export function HomeView({
         </button>
       ) : null}
 
-      {/* Objectifs & Activités */}
+      {/* Objectifs & Activités : fusionnés sans doublon superflu */}
       <section className="drop-priorities" aria-label="À jouer aujourd’hui">
         {dailyMission?.id === "tribunal" ? (
           <button
             type="button"
-            className={`daily-goal tribunal-merged${tribunalClose ? " done" : ""}`}
+            className={`daily-goal tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
             onClick={onShowTribunal}
             aria-label={
               tribunalPaid
@@ -336,7 +335,7 @@ export function HomeView({
             }
           >
             <Gavel size={20} />
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
               <span>OBJECTIF DU JOUR · TRIBUNAL</span>
               <strong>{dailyMission.label}</strong>
               <small>
@@ -411,7 +410,7 @@ export function HomeView({
         )}
       </section>
 
-      {/* Paquet Scène / Famille : badge neutre (pas d'alerte rouge type erreur), libellé exact pour les tests */}
+      {/* Paquet Scène / Famille : badge neutre (non rouge d'erreur), libellé exact pour les tests */}
       <section
         className={`scene-block${sceneOpened ? " done is-neutral" : ""}`}
         aria-label="Ton paquet de famille du jour"
