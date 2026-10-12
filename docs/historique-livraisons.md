@@ -1,3 +1,12 @@
+## Portraits, identité et bilan actualisé — 12 octobre 2026
+
+Lot portraits publié `10699eb` : 300 manuels conservés, 699 Upscayl optimisés,
+Diverron restauré depuis une photo fournie ; identité Skyrozz/skyrroztv déjà
+corrigée dans `f2cae8d` et migration 0050. CI complète et Vercel Production
+success. [Bilan et preuves](etat-projet-2026-10-12.md). Appuis pendant le flip
+corrigés dans `3f33b19` et inclus dans cette révision. Les anciennes entrées
+ci-dessous décrivent leur état à leur date, pas le backlog actuel.
+
 ## Triage roadmap et problèmes connus — 11 octobre 2026
 
 Le code produit `980bdf8` est inclus dans le checkpoint documentaire `b3828d5`

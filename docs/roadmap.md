@@ -1,54 +1,50 @@
+# Roadmap CreatorDeck
+
 ## État courant — 12 octobre 2026
 
-Code produit : `433ee065f98c8ff2956d90c480acfb59f0890b86` sur `main`. [CI 38186329103](https://github.com/GoodFight37/CreatorDeck/actions/runs/38186329103) verte, quatre jobs. Pour reprendre les portraits sans charger les archives : [passation courte](passation-portraits.md).
+Code produit vérifié : `10699eb` sur `main`. **CI complète et déploiement Vercel
+Production réussis.** [Bilan courant, preuves et limites](etat-projet-2026-10-12.md).
+Cette première section est le plan actuel ; tout ce qui suit « Historique » est
+un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
 ### Plan actif
 
-- **Atelier local portraits v1.5.0** : parcours carrousel façon Tinder, une image à la fois, flèches, rejeter une candidate, garder en provisoire et avancer au créateur suivant ; import personnel sans quitter le carrousel. Sélections non publiables avant crédits/droits. Tests serveur/updater et navigateur simulé ciblés ; Windows physique à confirmer. Voir D-057 et la passation portraits.
+1. **Avis externe sur l’ouverture des boosters** : Grok doit examiner le rendu
+   et le parcours actuels ; décider ensuite du polish utile. Les tests passent,
+   l’appréciation esthétique/tactile sur téléphone reste distincte.
+2. **Remplacer trois silhouettes** : SolaryHS, j0niq, toaststix. Xari est corrigé.
+   Le lot des 1 000 routes est intégré ; une route n’est pas une photo vérifiée.
+3. **Valider/simplifier le retour Paquet Scène déjà ouvert** : bug fonctionnel
+   corrigé ; revoir les libellés et leur présentation actuels si encore gênants.
+   Bouton : « Déjà ouvert · demain matin ». Refus : « Déjà ouvert aujourd’hui.
+   Le prochain arrive à 6 h UTC. ».
+4. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
+   éventuellement personnages de séries. Aucun développement engagé ; choix
+   des personnes et organisation des cartes à définir.
 
-- **Portraits alternatifs (12 octobre, K-045)** : Rubius/Shroud intégrés en 900 px, crédits repliés dans les réglages, registre protégé des régénérations Twitch. Tests locaux : 13 unitaires, 11 DOM, 2 E2E verts ; publié sur main, CI complète verte. Recherche générale encore ouverte : 10 candidates sur 50 entrées seulement. Prochaine piste : recherche via navigateur dans la session qui a les bons accès ; le HTML Google inutilisable dans le rapport ne prouve pas un échec au navigateur. **Périmètre remplacé par Malik : refaire les portraits des 1 000 créateurs avec de belles images**, petits compris. Voir [le suivi complet](portrait-suivi-complet.csv) ; sélection et intégration par lots, chantier non terminé. Premier lot autonome : huit nouveaux portraits intégrés localement et vérifiés (21 unitaires, 2 DOM), total 10 avec Rubius/Shroud ; collecte complète en cours.
+### Livraisons terminées
 
-- **Reflet foil / continuité / pity (11 octobre)** : terminé, publié `1439e44`, CI `38178996093` verte. Le vrai portrait SolaryHS reste en attente d’une source d’image autorisée (K-044). Pas de changement SQL.
+- **Portraits du 12 octobre** : 300 manuels + 699 Upscayl + Diverron restauré IA ;
+  publiés dans `10699eb`, CI et Vercel réussis. Sources/crédits incomplets indiqués
+  dans les réglages ; aucune promesse de 1 000 photos nettes et identités vérifiées.
+- **Skyrozz / Twitch skyrroztv** : identité et migration 0050 corrigées.
+- **Appuis pendant le flip** : appui mémorisé puis consommé ; correctif
+  `3f33b19` inclus dans la révision actuelle, CI verte.
+- **Reprise cloud, sabliers/recharge, pity, scroll, Craft/Binder, Arène/Hôtel,
+  profils/activité sociale** : livrés. Scroll, sablier, objectif Live, cadeaux
+  et visibilité des mises à jour ont déjà été confirmés par Malik.
+- **Atelier Windows v1.5** : parcours carrousel publié ; variante Gemini utilisée
+  par Malik distincte du jeu Vercel et pas réputée identique à la version GitHub.
 
-- **Ergonomie courte et geste de révélation (11 octobre)** : compacter les
-  informations près du CTA, remonter la grille Binder, ajouter le swipe après
-  flip, confirmer l’effet du sablier, distinguer visuellement les familles de
-  Toi, et contrôler les reflets réduits, le CSS partagé et les portraits. Lot ciblé publié dans `674fc1d` ; CI `38176673799` verte (quatre jobs).
-  Tests locaux ciblés et limites consignés dans la dernière passation. Aucun SQL.
+### Validation et éléments hors plan
 
-- **Reprise cloud automatique (11 octobre, D-048/K-040)** : lecture de la
-  sauvegarde dès la restauration/connexion du compte, avant les compteurs ;
-  aucun passage manuel par Compte dans le parcours normal du sablier. Un choix
-  reste réservé aux progressions réellement divergentes. Code et tests ciblés
-  terminés ; état de publication et CI dans la passation.
+Avis visuel/performances sur téléphone physique restant à recueillir ; les
+E2E téléphone sont simulés. 20 anciennes sélections Commons restent locales,
+préservées et non publiées. Leur publication n’est pas une étape bloquante.
+Aucune nouvelle refonte économique, simulation « Ta chaîne », i18n, analytics
+ou publication sur stores n’est planifiée.
 
-- **Ancien bilan de triage du 11 octobre, remplacé par les lots actifs ci-dessus : aucun chantier déjà autorisé ne restait ouvert dans cette
-  roadmap.** Les lots d’accès Arène/Hôtel, profil/Craft/Binder, scène, scroll,
-  sablier et activité sociale sont livrés. Ne pas ressortir comme tâches les
-  anciennes suggestions de badges/avatars, équilibrage ou parité sans nouvelle
-  décision produit.
-- **Sablier :** le parcours réel 4/4 → 5/4 → ouverture → 4/4 est confirmé par
-  Malik ; ce point n’est plus en attente (K-030, K-035, K-031).
-
-### Retours utilisateur à rapprocher — liste unique
-
-Ce sont des vérifications après publication, pas des bugs actifs ni des tâches
-de code. Les statuts inconnus restent en attente de retour, sans bloquer un
-nouveau chantier.
-
-| Repère | Ce qu’il faut confirmer | Référence |
-|---|---|---|
-| A | Avis visuel sur l’ouverture : Malik estime que le rendu doit encore être revu et demande un regard externe à Grok ; aucun correctif demandé pour l’instant | K-005, K-038, VIS-01 |
-| B | Confirmé par Malik : le défilement ne déclenche plus l’ouverture accidentelle | K-012, K-036 |
-| C | Comportement de disponibilité corrigé selon Malik ; reste à améliorer le libellé/présentation du retour « Reviens demain, nouvelle journée à 6 h UTC », jugé trop long et trop rouge | K-037 |
-| D | Confirmé par Malik : l’objectif progresse après un Live Drop | K-028 |
-| E | Confirmé par Malik : aucun toast gênant constaté à l’ouverture des cadeaux restants | K-020, K-027 |
-| F | Confirmé par Malik : les changements récents sont visibles dans l’application | K-003 |
-
-Le seul verdict subjectif important avant un autre polissage visuel est A ; le
-retour C sur la formulation du Paquet Scène est à garder comme amélioration
-distincte du correctif fonctionnel. B, D, E et F sont confirmés. Le parcours
-sablier est déjà confirmé et ne figure plus dans cette liste.
+## Historique — statuts à leur date, remplacés par le plan ci-dessus
 
 ## Ergonomie courte et geste de révélation — 11 octobre 2026
 

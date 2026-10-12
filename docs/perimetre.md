@@ -11,9 +11,10 @@ tranchées, en croyant les découvrir.
 ## Le jeu, en trois phrases
 
 CreatorDeck est un jeu de cartes à collectionner sur les **1000 chaînes Twitch**
-du classement mondial. **Le jeu, c'est l'APK Android** : c'est là qu'il se joue,
-au pouce. GitHub n'est qu'un **bac** où les outils écrivent du code — ni
-magasin, ni iOS, ni publication. Le serveur (Supabase) décide de ce qui compte :
+du classement mondial. **Malik utilise le site Vercel connecté à GitHub/main** : le jeu se joue
+au pouce dans le navigateur, avec Supabase. Le support APK Android/Capacitor
+reste présent, mais aucune nouvelle publication sur un store n’est planifiée.
+GitHub contient le code et déclenche les contrôles/déploiements. Le serveur (Supabase) décide de ce qui compte :
 le **tirage des boosters**, les **points**, les **jetons** ; l'XP, le niveau et
 les gains de sabliers restent calculés sur l'appareil. Depuis le correctif
 `aded8ff` et après application de 0047, leur **dépense en ligne** débite le solde
@@ -60,7 +61,7 @@ de ces gains ne sont pas intégralement validées côté serveur (D-032).
 |---|---|
 | **i18n** (chaque chaîne en dur, `<html lang="fr">`) | **Pour plus tard, assumé** : un seul public aujourd'hui, et c'est une refonte de chaque composant, pas l'ajout d'un fichier de traduction |
 | **Analytics de rétention** (funnels D1/D7, écran de décrochage) | **Plus tard** : décision du joueur. Le besoin immédiat (« aucune remontée ») est couvert par le **filet de sécurité** (`src/components/error-boundary.tsx`) |
-| **Play Store, iOS, RGPD, droit à l'image, ToS Twitch** | **Hors sujet** : l'APK est le jeu, il n'est pas publié |
+| **Play Store, iOS, RGPD, droit à l'image, ToS Twitch** | **Hors plan de développement actuel** : pas de lancement sur les stores décidé |
 | **Découpage du JavaScript** (`next/dynamic` sur les feuilles) | **Mesuré puis refusé** : 85 Ko sur les 1 075 Ko analysés au démarrage (**8 %**), contre 13 fichiers de plus et un premier appui moins instantané (`README`, journal **11.27**) |
 | **Partage automatique après un gros pull** | **Refusé** : l'affiche existe déjà, **à la demande** (« Faire une affiche », sur un Légendaire ou un Perfect) |
 | **Un troisième transport réseau** pour le temps réel | **Rien à faire aujourd'hui** : le transport a déjà ses deux chemins (`fetch` sur le web, `CapacitorHttp` dans l'APK) et aucun besoin temps réel n'est prévu |

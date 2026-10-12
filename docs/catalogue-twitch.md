@@ -1,12 +1,23 @@
 # Construire le catalogue Twitch : périmètre et taille
 
-## Remplacer un portrait individuellement — 12 octobre 2026
+## État actuel des images — 12 octobre 2026
+
+300 choix manuels (450 px), 699 Upscayl (720 px) et Diverron fourni/restauré IA
+(900 px) sont intégrés dans `10699eb`, CI et Vercel réussis. Les remplacements
+crédités gardent leur priorité sur Upscayl. Registres séparés :
+`manual-portrait-overrides.json`, `portrait-overrides.json`,
+`provided-portrait-overrides.json`, `upscaled-portrait-overrides.json`.
+Les bases Twitch ci-dessous restent en 600 px ; leur taille n’est pas celle de
+toutes les images affichées. Sources/licences absentes indiquées dans les
+crédits ; trois avatars génériques restent à remplacer. [Bilan](etat-projet-2026-10-12.md).
+
+## Remplacer un portrait individuellement — historique du premier lot
 
 Les portraits sélectionnés vont dans `public/creators/curated/<slug>.webp` ;
 `src/data/portrait-overrides.json` active chaque remplacement et contient
 nom, titre, auteur, source, licence et modifications. Carte, affiche et
 préchargement utilisent le même choix. Rubius et Shroud inaugurent ce chemin
-en 900 × 900 px ; les autres avatars restent inchangés. La régénération Twitch
+en 900 × 900 px ; cette phrase décrit le premier lot, remplacé par l’état actuel ci-dessus. La régénération Twitch
 et l'élagage du dossier parent ne touchent pas ces fichiers.
 
 Pour changer une image existante : remplacer son WebP et actualiser son entrée

@@ -1,6 +1,11 @@
 # Reprise courte : portraits CreatorDeck — 12 octobre 2026
 
-## État vérifié
+**Checkpoint courant :** lot publié `10699eb`, CI complète et Vercel Production
+réussis. 300 manuels + 699 Upscayl + Diverron restauré IA. Trois silhouettes
+restent : SolaryHS, j0niq, toaststix. [Bilan actuel](etat-projet-2026-10-12.md).
+Les sections antérieures ci-dessous sont historiques.
+
+## État historique — premier lot Rubius/Shroud
 
 Code publié sur `main` : `433ee065f98c8ff2956d90c480acfb59f0890b86`.
 [CI](https://github.com/GoodFight37/CreatorDeck/actions/runs/38186329103) :

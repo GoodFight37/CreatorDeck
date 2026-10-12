@@ -43,6 +43,20 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
+## État actuel et revue externe — 12 octobre 2026
+
+Malik utilise **CreatorDeck sur Vercel**, alimenté par GitHub `main`, avec
+Supabase. Les mises à jour du site arrivent via Vercel ; aucun `git pull` n’est
+nécessaire sur le PC du joueur. Android/Capacitor reste supporté dans le code.
+
+Le lot `10699eb` (300 portraits manuels, 699 Upscayl, Diverron restauré avec IA)
+est publié, CI complète et Vercel Production réussis. **Trois silhouettes
+restent à remplacer** : SolaryHS, j0niq et toaststix. Revue du rendu des boosters,
+retour Paquet Scène et éventuel élargissement du catalogue sont dans le
+[plan actif](docs/roadmap.md). [Bilan vérifié pour le relecteur](docs/etat-projet-2026-10-12.md)
+et [brief à transmettre à Grok](docs/revue-grok-2026-10-12.md).
+Les anciens chiffres et statuts datés ci-dessous ne remplacent pas ce bilan.
+
 ## Prérequis
 
 - Node.js ≥ 20
@@ -51,7 +65,7 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 ## Démarrage rapide
 
 ```bash
-npm install
+npm ci
 npm run dev        # http://localhost:3000 (rechargement à chaud)
 ```
 
@@ -146,9 +160,8 @@ Quatre étages, quatre vitesses :
 * **`npm test`** (Vitest) : le moteur, la sauvegarde, les stores, les grilles de
   prix, les retours de connexion, le carnet de notifications, les effets de
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
-  l'essentiel des règles (**1077 tests**, 69 fichiers aujourd'hui), et **tout
-  `public/` pèse 20 Mo** : le poids de l'APK et de l'export Vercel se lit d'un
-  coup d'œil.
+  l'essentiel des règles. Les compteurs du commit publié se trouvent dans le
+  [bilan vérifié](docs/etat-projet-2026-10-12.md) ; ils évoluent avec le code.
 * **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
   un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
   écran : les quatre piliers, le marquage de l'onglet actif, l'accès au compte
@@ -292,7 +305,8 @@ src/data/retired.json    les Sortants : hors tirage et hors complétion, mais
 src/data/pull-rates.json les tables de tirage par slot (source des taux publiés)
 src/data/seasons.config.json le découpage des saisons
 src/data/catalog.config.json taille attendue du catalogue (vérifiée par catalog:check)
-public/creators/         portraits (600×600 WebP via `npm run assets:regen`)
+public/creators/         bases Twitch 600 px + sous-dossiers manual/ (450 px),
+                         upscaled/ (720 px), curated/ et provided/ (900 px)
 public/sfx/              les bruitages embarqués du jeu (15 fichiers, ≈1 Mo,
                          sélection de « 400 Sounds Pack » de Chequered Ink)
 public/streamer/         l'histoire de ce dossier est dans
@@ -1001,6 +1015,15 @@ version web hébergée.
   reste du temps, une **pastille verte** suffit.
 
 ## Images des créateurs
+
+État au 12 octobre : 300 choix manuels 450 px, 699 versions Upscayl 720 px,
+Diverron fourni/restauré IA 900 px, et remplacements crédités 900 px.
+`creatorPortraitUrl()` choisit la même image pour carte, affiche et préchargement :
+manuelle → créditée → fournie → secours Diverron → Upscayl → base Twitch.
+Les fichiers du lot sont protégés par leurs sous-dossiers et registres séparés.
+Les règles ci-dessous concernent **les bases téléchargées depuis Twitch** ;
+elles ne décrivent pas les imports manuels ou les agrandissements IA autorisés
+par Malik. Voir [le bilan d’import](docs/portrait-import-upscayl-2026-10-12.md).
 
 - Le CDN Twitch sert chaque photo de profil en tailles fixes (28 → **600 px**) :
   l'URL renvoyée par les API se termine par `-300x300.png`, et la variante
