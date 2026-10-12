@@ -14,6 +14,9 @@ un journal daté et ne doit pas rouvrir une tâche déjà livrée.
    Revue Grok du rendu et du parcours, puis corrections visuelles à cadrer.
    Ce n’est pas une simple attente de validation : l’insatisfaction est établie.
    Les tests fonctionnels verts ne prouvent pas la qualité esthétique.
+   [Analyse de la vidéo renvoyée](reference-ouverture-2026-10-12.md) : continuité
+   paquet → cartes, cadrage stable et interface épurée ; aucune animation
+   modifiée dans cette passe.
 2. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
    éventuellement personnages de séries. Aucun développement engagé ; choix
    des personnes et organisation des cartes à définir.

@@ -19,9 +19,9 @@ une tâche de remplacement. Aucune collecte exhaustive des portraits demandée.
 
 Malik précise que le rendu actuel des boosters n’est pas à la hauteur des
 vidéos de référence envoyées auparavant. Il attend une vraie amélioration
-visuelle, pas seulement une confirmation que les tests passent. Les notes
-d’analyse de ces références sont historiques ; les fichiers vidéo originaux
-ne sont plus présents dans l’espace actuel de l’agent.
+visuelle, pas seulement une confirmation que les tests passent. Malik a renvoyé une vidéo :
+voir docs/reference-ouverture-2026-10-12.md pour son analyse actuelle. La vidéo
+elle-même reste hors Git ; la revue visuelle directe nécessite le fichier joint.
 
 Évalue surtout :
 1. Le parcours ouverture → cinq cartes → récapitulatif, son rythme, lisibilité,
