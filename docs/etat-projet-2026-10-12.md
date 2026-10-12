@@ -25,7 +25,7 @@ Aucune PR ouverte au dernier contrôle GitHub.
 
 | Chantier | État actuel | Fin attendue |
 |---|---|---|
-| Ouverture des boosters : avis esthétique et tactile | Revue externe Grok demandée ; correctifs déjà publiés et E2E verts | Examiner le rendu actuel, puis décider des changements utiles ; jugement final sur le téléphone de Malik |
+| Ouverture des boosters à améliorer | Malik confirme que le rendu n’est pas à la hauteur des vidéos de référence ; revue Grok demandée | Comparer le rendu actuel à la direction attendue, cadrer puis réaliser les corrections visuelles |
 | Extension du catalogue | Idée de Malik : autres personnes connues, éventuellement personnages de séries ; **pas encore cadrée ni implémentée** | Définir les personnes et l’organisation des nouvelles cartes avant développement |
 
 Les vérifications sur téléphone réel (rendu, rythme, performances, parcours
@@ -37,7 +37,7 @@ sont pas à redemander.
 
 Malik confirme que le message du Paquet Scène déjà ouvert est désormais bon.
 K-037 est clos, aucune nouvelle simplification requise. La revue du booster est
-une appréciation externe demandée, pas un besoin d’aide technique : l’agent peut
+une amélioration visuelle nécessaire selon Malik, avec revue externe demandée : l’agent peut
 observer le parcours en navigateur de test, mais ne ressent pas l’usage du
 téléphone physique de Malik. Aucun bug actuel de l’ouverture n’est établi ici.
 

@@ -9,9 +9,11 @@ un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
 ### Plan actif
 
-1. **Avis externe sur l’ouverture des boosters** : Grok doit examiner le rendu
-   et le parcours actuels ; décider ensuite du polish utile. Les tests passent,
-   l’appréciation esthétique/tactile sur téléphone reste distincte.
+1. **Ouverture des boosters à améliorer** : Malik confirme le 12 octobre que
+   le rendu actuel n’est pas à la hauteur des vidéos de référence déjà envoyées.
+   Revue Grok du rendu et du parcours, puis corrections visuelles à cadrer.
+   Ce n’est pas une simple attente de validation : l’insatisfaction est établie.
+   Les tests fonctionnels verts ne prouvent pas la qualité esthétique.
 2. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
    éventuellement personnages de séries. Aucun développement engagé ; choix
    des personnes et organisation des cartes à définir.

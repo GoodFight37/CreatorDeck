@@ -17,6 +17,12 @@ vérifiées. Malik accepte les avatars génériques quand le créateur n’a pas
 photo de profil, notamment SolaryHS, j0niq et toaststix. Ce n’est pas un bug ni
 une tâche de remplacement. Aucune collecte exhaustive des portraits demandée.
 
+Malik précise que le rendu actuel des boosters n’est pas à la hauteur des
+vidéos de référence envoyées auparavant. Il attend une vraie amélioration
+visuelle, pas seulement une confirmation que les tests passent. Les notes
+d’analyse de ces références sont historiques ; les fichiers vidéo originaux
+ne sont plus présents dans l’espace actuel de l’agent.
+
 Évalue surtout :
 1. Le parcours ouverture → cinq cartes → récapitulatif, son rythme, lisibilité,
    effets et ergonomie mobile. Les appuis arrivés pendant le flip sont désormais
