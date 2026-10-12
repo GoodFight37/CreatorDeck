@@ -96,7 +96,8 @@ Le navigateur utilise la confiance limitée au certificat CA du proxy de session
 (SPKI), sans désactiver globalement TLS. Google atteint avec Chromium affiche
 une vérification anti-robot : aucun contournement. Phosphore refuse le tunnel
 HTTP 403. Flickr accessible ; filtre commercial CC sans résultat pour Gotaga,
-Squeezie, AmineMaTue et Ninja streamer ; résultats xQc non pertinents.
+AmineMaTue et Ninja streamer ; Squeezie renvoie 25 résultats (titres examinés,
+homonymes principalement), aucune candidate retenue ; résultats xQc non pertinents.
 Bing répond 200 mais donne des résultats sans rapport : pas une preuve de source.
 
 Prochaine action ciblée : comparer Gotaga 2018 à l’avatar actuel, confirmer les
