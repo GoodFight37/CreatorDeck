@@ -107,3 +107,48 @@ L’export contient aussi `suivi-sources.json` pour transmettre notes et sources
 Pour mettre à jour une première version, fermer son lanceur puis remplacer les
 fichiers de l’outil par ceux du nouveau ZIP, **en conservant `_travail`**. Les
 choix précédents restent compatibles ; relancer ensuite `LANCER.cmd`.
+
+## Mode rapide par lots — version 1.2.0
+
+**Validation rapide par lots** montre 20 créateurs avec l’image actuelle et
+jusqu’à trois candidates assez grandes. Les propositions présentes passent
+avant les cas sans candidate. Tri sur le nom du fichier, la revue de licence et
+la résolution : aucun système ne confirme la personne ni la netteté du visage.
+L’aperçu carré est un cadrage central, sans détection de visage.
+
+Cocher les bonnes personnes et cadrages. **Préparer les photos cochées** récupère
+les originales comme brouillons, sans déclarer les droits validés. Pour un lot
+prêt, vérifier les sources, cocher aussi les droits pour chaque portrait, puis
+**Garder les cadrages cochés et vérifiés** : export WebP 900 px et crédits.
+**Examiner** permet de corriger un cadrage avant validation ; une photo de groupe
+ne doit pas être validée sans vérifier la personne dans le carré. Une erreur de
+téléchargement arrête le lot, en conservant les éléments déjà enregistrés.
+
+Le filtre d’étape facilite la reprise des brouillons. **Garder et suivant**
+enchaîne les créateurs. Originale, champs et cadrage sont sauvegardés après une
+modification et lors du changement de créateur. À la réouverture, le dernier
+créateur et son brouillon sont restaurés. Attendre la sauvegarde avant fermeture ;
+un avertissement de navigateur apparaît si un travail est encore en attente.
+Une image trop petite peut rester en brouillon, mais ne peut pas être exportée.
+
+Les 998 recherches ne garantissent pas 998 bonnes photos : beaucoup contiennent
+des homonymes. Le mode rapide aide à trier ; il ne promet pas les 1 000 nouveaux
+portraits publiables en deux ou trois heures. Les cas sans bonne source restent
+à reprendre manuellement, leur image actuelle restant disponible.
+
+## Mise à jour sans réinstallation
+
+Le bouton **Vérifier les mises à jour** compare la version avec le dépôt officiel.
+Pour installer une correction : fermer la fenêtre noire de l’atelier, puis
+double-cliquer **METTRE-A-JOUR.cmd** dans le même dossier. Relancer `LANCER.cmd`.
+Aucune réinstallation de Node ni récupération des grosses données n’est requise.
+Le téléchargement remplace uniquement les fichiers du programme. `seed/` et
+`_travail/` restent en place. Le code précédent est sauvegardé sous
+`_travail/sauvegardes-outil/`. Les empreintes des fichiers sont vérifiées avant
+leur remplacement ; un problème réseau laisse le code existant en place.
+
+Cette première installation de la mise à jour nécessite le nouveau ZIP :
+extraire ses fichiers dans le dossier existant en conservant `_travail/`.
+Ensuite, les corrections compatibles se récupèrent avec le lanceur de mise à
+jour. Le paquet reste inférieur à 10 Mo ; les mises à jour du code sont beaucoup
+plus petites. Un futur changement de données peut nécessiter un paquet séparé.

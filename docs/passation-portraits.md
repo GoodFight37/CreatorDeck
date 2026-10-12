@@ -220,3 +220,36 @@ Chromium Linux : recherches externes présentes, suivi, sauvegarde d’originale
 rechargement/reprise, autorisation directe et export vérifiés sans accès externe.
 Import URL réel, presse-papiers système et PC Windows non testés. ZIP reconstruit
 au même emplacement, données initiales conservées, état d’essai retiré.
+
+### Version 1.2.0 : lots, reprise automatique et mises à jour
+
+Malik veut réduire la sélection à quelques heures et recevoir les corrections
+sans réinstallation. Ajout d’une planche de 20 créateurs (jusqu’à trois
+candidates, image actuelle et aperçu carré central), préparation des originales
+cochées et validation groupée avec confirmation individuelle identité/cadrage
+et droits. Tri par correspondance de titre, revue de licence et résolution,
+aucune reconnaissance de visage ou validation automatique d’identité. La
+collecte contient 267 créateurs avec au moins une raster >=900 px, homonymes
+possibles : ne pas garantir 1 000 nouvelles photos en trois heures.
+
+Ajout sauvegarde automatique originale/champs/cadrage, reprise du dernier
+créateur, filtres d’étape, Garder et suivant, aperçu du choix enregistré,
+pistes sous 900 px conservables sans export. Brouillon Commons indépendant des
+résultats récents, avec conservation du signal licence à vérifier.
+
+Mise à jour : `METTRE-A-JOUR.cmd`, `update.mjs`, manifeste `release.json`.
+Source fixe dépôt officiel/main, liste limitée de fichiers de code, SHA-256
+vérifiés avant remplacement, sauvegarde et repli si application échoue ; aucune
+écriture dans seed ou choix. Fermer l’atelier, lancer la mise à jour, relancer.
+Premier passage à 1.2.0 via le ZIP, en conservant `_travail`. Le fichier update
+est également actualisable. Publier un nouveau manifeste après chaque changement
+futur du code distribué, sinon les empreintes empêcheront la mise à jour.
+
+Tests base `a5cb014` : serveur + updater 4/4 ; corruption du téléchargement
+refusée sans toucher au code existant ni aux choix. Test Chromium reproductible
+`node tools/portrait-studio/browser.test.mjs` : validation groupée bloquée sans
+confirmation, import URL simulé, sauvegarde automatique, reprise du créateur et
+du brouillon, Garder et suivant, export réussi. ESLint ciblé réussi. Tests sur
+Linux et réponses réseau simulées ; Windows physique non testé. ZIP 8,6 Mio,
+intégrité vérifiée, aucun état de test inclus. Travail portraits préexistant
+conservé et non intégré par cette publication. Réservation libérée.

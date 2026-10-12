@@ -49,7 +49,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
   const research = await jsonFile(path.join(seed, "research.json"), {});
   const stateFile = path.join(work, "state.json");
   const state = await jsonFile(stateFile, { choices: {}, skipped: {}, downloaded: {}, searches: {} });
-  state.drafts ??= {}; state.tracking ??= {};
+  state.drafts ??= {}; state.tracking ??= {}; state.rejected ??= {}; state.session ??= {};
   const catalog = new Map(creators.map((c) => [c.slug, c]));
   await mkdir(path.join(work, "originales"), { recursive: true });
   await mkdir(path.join(work, "portraits"), { recursive: true });
@@ -91,7 +91,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         if (req.method !== "GET" && req.headers.origin !== `http://${host}`) { res.writeHead(403).end(); return; }
       }
       const reply = (data) => { res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }); res.end(JSON.stringify(data)); };
-      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, batch }); return; }
+      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, rejected: state.rejected, session: state.session, batch }); return; }
       if (url.pathname === "/api/candidates") { const slug = url.searchParams.get("slug"); creator(slug); reply({ candidates: candidates(slug) }); return; }
       if (url.pathname === "/api/photo") { const bytes = await original(url.searchParams.get("slug"), url.searchParams.get("id")); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(bytes); return; }
       if (req.method === "POST" && url.pathname === "/api/search") { const b = await bodyJson(req); reply({ candidates: await search(b.slug) }); return; }
@@ -102,6 +102,16 @@ export async function createStudio({ directory = here, port = 4317, open = false
         (async () => { try { for (const slug of slugs) { await search(slug); batch.done++; await new Promise((r) => setTimeout(r, 1500)); } } catch (e) { batch.error = e.message; } finally { batch.running = false; } })(); return;
       }
       if (req.method === "POST" && url.pathname === "/api/skip") { const b = await bodyJson(req); creator(b.slug); state.skipped[b.slug] = true; await save(); reply({ ok: true }); return; }
+      if (url.pathname === "/api/update-check") {
+        const local = await jsonFile(path.join(directory, "release.json"), { version: "ancienne" });
+        const latest = await remote("https://raw.githubusercontent.com/GoodFight37/CreatorDeck/main/tools/portrait-studio/release.json");
+        reply({ current: local.version, latest: latest.version, available: local.version !== latest.version }); return;
+      }
+      if (url.pathname === "/api/review") {
+        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 900 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
+      }
+      if (req.method === "POST" && url.pathname === "/api/session") { const b = await bodyJson(req); creator(b.slug); state.session.slug = b.slug; await save(); reply({ ok: true }); return; }
+      if (req.method === "POST" && url.pathname === "/api/reject") { const b = await bodyJson(req); creator(b.slug); state.rejected[b.slug] = [...new Set([...(state.rejected[b.slug] || []), Number(b.pageid)])]; await save(); reply({ ok: true }); return; }
       if (req.method === "POST" && url.pathname === "/api/tracking") {
         const b = await bodyJson(req); creator(b.slug);
         if (!["À chercher", "Trouvé", "À cadrer"].includes(b.status)) throw Error("Étape inconnue");
@@ -112,7 +122,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         const b = await bodyJson(req); creator(b.slug); const bytes = Buffer.from(b.original, "base64");
         if (!bytes.length || bytes.length > 24 * 1024 * 1024) throw Error("Originale vide ou trop lourde (24 Mo maximum)");
         await writeFile(path.join(work, "originales", b.slug + "-draft"), bytes);
-        state.drafts[b.slug] = { title: String(b.title || "Photo importée"), source: b.source ? httpsUrl(b.source) : "", author: String(b.author || ""), license: String(b.license || ""), permission: String(b.permission || ""), proofUrl: b.proofUrl ? httpsUrl(b.proofUrl) : "", pageid: b.pageid };
+        state.drafts[b.slug] = { title: String(b.title || "Photo importée"), source: b.source ? httpsUrl(b.source) : "", author: String(b.author || ""), license: String(b.license || ""), permission: String(b.permission || ""), crop: b.crop, reviewNeeded: Boolean(b.reviewNeeded), proofUrl: b.proofUrl ? httpsUrl(b.proofUrl) : "", pageid: b.pageid };
         state.tracking[b.slug] = { ...state.tracking[b.slug], status: "À cadrer" }; await save(); reply({ ok: true }); return;
       }
       if (url.pathname === "/api/draft-photo" && req.method === "GET") {
@@ -120,7 +130,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
       }
       if (req.method === "POST" && url.pathname === "/api/select") {
         const b = await bodyJson(req); const c = creator(b.slug);
-        const candidate = b.pageid ? findCandidate(b.slug, b.pageid) : null;
+        const candidate = b.pageid ? (state.drafts[b.slug]?.pageid === b.pageid ? state.drafts[b.slug] : findCandidate(b.slug, b.pageid)) : null;
         if (!b.verified || !b.author?.trim() || !b.title?.trim()) throw Error("Vérifie l’identité, la licence et les crédits avant de garder la photo");
         const source = httpsUrl(b.source);
         const direct = b.license === "Autorisation directe";
@@ -149,6 +159,8 @@ export async function createStudio({ directory = here, port = 4317, open = false
         reply({ directory: target, count: Object.keys(patch).length }); return;
       }
       if (url.pathname === "/" || url.pathname === "/app.js") { const file = url.pathname === "/" ? "index.html" : "app.js"; res.writeHead(200, { "Content-Type": mime[path.extname(file)], "Cache-Control": "no-store" }); res.end(await readFile(path.join(directory, file))); return; }
+      const picked = url.pathname.match(/^\/chosen\/([a-z0-9-]+)\.webp$/);
+      if (picked) { creator(picked[1]); res.writeHead(200, { "Content-Type": "image/webp", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "portraits", picked[1] + ".webp"))); return; }
       const match = url.pathname.match(/^\/seed\/(avatars|portraits)\/([a-z0-9-]+)\.webp$/);
       if (match) { creator(match[2]); res.writeHead(200, { "Content-Type": "image/webp" }); res.end(await readFile(path.join(seed, match[1], match[2] + ".webp"))); return; }
       res.writeHead(404).end();
