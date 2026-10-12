@@ -13,7 +13,28 @@ Les crédits sont repliés dans **Toi → Réglages → Crédits des images**,
 jamais sur les cartes. Avatars Twitch conservés ; les remplacements sont
 protégés des régénérations. Sources/licences issues du manifeste fourni.
 
-## Reste à faire
+## Périmètre actuel — correction explicite de Malik, 12 octobre 2026
+
+**Malik demande de refaire les portraits des 1 000 créateurs avec de belles
+images.** La restriction aux grands créateurs et la conservation systématique
+des petits sont remplacées par cette instruction. La recherche concerne tout
+le catalogue ; travailler par lots est une organisation, pas une limitation
+au Top 50 ni aux cinq noms du premier lot. Les fonctionnalités déjà terminées
+restent le chemin d’intégration. Style choisi par Malik : **photos nettes, visage visible, cadrage individuel
+cohérent**. Appliquer ce critère aux 1 000 créateurs.
+
+[Suivi complet](portrait-suivi-complet.csv) : une ligne par créateur, statut
+initial explicite ; **Rubius/Shroud sont exclus de la nouvelle recherche**,
+à la demande explicite de Malik avant son départ dormir. Les 998 autres
+créateurs restent dans le périmètre. Définir des candidates
+nettes, correctement attribuées au créateur et documentées, puis sélectionner
+et intégrer par lots. La recherche précédente de six images reste disponible.
+
+L’accès GitHub a échoué lors de la clarification précédente, puis a été
+rétabli avant le lancement du lot complet : `git ls-remote`, API GitHub et
+fetch réussis, main distant/local à `32697cf`, aucune PR ouverte.
+
+## Ancien périmètre, remplacé par la demande ci-dessus
 
 Malik souhaite des photos plus nettes et intéressantes pour les grands
 créateurs, puis ajuster individuellement. Garder les petits avec leurs images
@@ -29,7 +50,8 @@ effectués après le changement. Ne pas lui faire refaire l'environnement.
 Tester les accès dans sa nouvelle session et avancer avec les sources accessibles.
 Les échecs Google du premier rapport provenaient de pages HTML non exploitables :
 essayer un vrai navigateur s'il est disponible, sans contourner les protections.
-Travailler par petits lots ; pas de nouveau modèle coûteux ou de recherche exhaustive.
+Ancienne consigne remplacée par l’autorisation de Malik : avancer au maximum
+sur les 998 portraits restants, sans intervention pendant son sommeil.
 
 ## Lecture minimale et prochaine action
 
@@ -107,3 +129,23 @@ plus tard une vraie alternative nette. Ne pas relancer les recherches infructueu
 Google/Phosphore sans nouvel élément ; aucun audit général requis.
 Réservation libérée après ce checkpoint ; suites applicatives non relancées
 pour cette recherche et ces seuls changements documentaires.
+
+## Collecte complète autonome — checkpoint de lancement
+
+Malik autorise recherche, téléchargement et intégration au maximum pendant son
+absence. Style : photos nettes, visage visible, cadrage individuel cohérent.
+Rubius et Shroud conservés ; aucune recherche supplémentaire pour ces deux noms.
+
+Collecte Commons reprenable : `node scripts/research-portraits.mjs --output
+/workspace/artifacts/portraits-complet-2026-10-12 --stage search --workers 3`.
+Puis même commande avec `--stage download`. Les résultats et originales sont
+hors Git, les données intégrées restent dans le registre existant. Le script
+exclut automatiquement les remplacements déjà présents, garde les erreurs et
+n’active jamais une image sans examen. Les résultats limités à 12 par recherche
+sont des candidates, pas des identités ni des qualités validées.
+
+Pilote 20/20 recherches réussies, puis recherche des 998 lancée ; trois appels
+simultanés maximum, pause entre appels. Installation `npm ci` initiale refusée
+à cause du cache /home/agent/.npm, puis `npm ci --cache /workspace/.cache/npm`
+réussie (602 packages, lockfile inchangé). Aucun test applicatif encore relancé.
+La session est l’unique écrivain observé, réservation portraits active.

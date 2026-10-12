@@ -2070,3 +2070,23 @@ réserves, SHA-256, accès testés et prochaine action. ZIP local dans
 Décodage/dimensions Sharp des 6 fichiers et intégrité ZIP réussis ; aucun test
 applicatif exécuté pour ce diff documentaire. Réservation libérée. Publication
 normale vers main ; SHA du checkpoint par `git log -1 --format=%H -- docs/passation-portraits.md`.
+
+## Changement de périmètre portraits — instruction explicite de Malik
+
+Refaire les portraits des 1 000 créateurs avec de belles images, petits compris.
+Style confirmé : photos nettes, visage visible, cadrage individuel cohérent.
+Voir D-055, passation-portraits.md et portrait-suivi-complet.csv. Les cinq noms
+précédents sont un premier lot seulement. Ces changements sont locaux : Git
+HTTPS échoue à cette reprise avec une demande de Username non interactive ;
+aucun push ni état GitHub vérifié. Ne pas publier avant resynchronisation sûre.
+
+## Lancement autonome des 998 portraits restants
+
+Autorisation explicite de Malik avant son sommeil : avancer au maximum sur
+les belles photos, conserver les deux portraits déjà intégrés. Accès GitHub
+rétabli et main synchronisé à `32697cf` après le refus précédent. Pilote Commons
+20 recherches/20 réussi ; traitement complet en cours, caches et originales
+`/workspace/artifacts/portraits-complet-2026-10-12`. Script reprenable
+`scripts/research-portraits.mjs`, aucun remplacement automatique. npm ci réussi
+avec cache writable, lockfile inchangé. Voir la passation courte pour la suite.
+Réservation portraits active dans cette session.

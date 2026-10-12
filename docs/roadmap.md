@@ -4,7 +4,7 @@ Code produit : `433ee065f98c8ff2956d90c480acfb59f0890b86` sur `main`. [CI 381863
 
 ### Plan actif
 
-- **Portraits alternatifs (12 octobre, K-045)** : Rubius/Shroud intégrés en 900 px, crédits repliés dans les réglages, registre protégé des régénérations Twitch. Tests locaux : 13 unitaires, 11 DOM, 2 E2E verts ; publié sur main, CI complète verte. Recherche générale encore ouverte : 10 candidates sur 50 entrées seulement. Prochaine piste : recherche via navigateur dans la session qui a les bons accès ; le HTML Google inutilisable dans le rapport ne prouve pas un échec au navigateur. Les petits créateurs gardent leurs images actuelles.
+- **Portraits alternatifs (12 octobre, K-045)** : Rubius/Shroud intégrés en 900 px, crédits repliés dans les réglages, registre protégé des régénérations Twitch. Tests locaux : 13 unitaires, 11 DOM, 2 E2E verts ; publié sur main, CI complète verte. Recherche générale encore ouverte : 10 candidates sur 50 entrées seulement. Prochaine piste : recherche via navigateur dans la session qui a les bons accès ; le HTML Google inutilisable dans le rapport ne prouve pas un échec au navigateur. **Périmètre remplacé par Malik : refaire les portraits des 1 000 créateurs avec de belles images**, petits compris. Voir [le suivi complet](portrait-suivi-complet.csv) ; sélection et intégration par lots, chantier non terminé.
 
 - **Reflet foil / continuité / pity (11 octobre)** : terminé, publié `1439e44`, CI `38178996093` verte. Le vrai portrait SolaryHS reste en attente d’une source d’image autorisée (K-044). Pas de changement SQL.
 
