@@ -61,3 +61,25 @@ local et navigateur mobile simulé, pas un essai de production authentifié.
 Aucun téléphone physique ni ressenti haptique/audio sur appareil validé.
 La CI et le déploiement du commit publié sont à relever après le push, sans
 utiliser les résultats de l’ancien commit portraits comme preuve de ce lot.
+
+## Correctif final et vérification laissée à Malik
+
+La CI du commit `9fa849a7c92d454700e6d377361d6e28e0204a00` a validé
+1144 tests unitaires, 113 tests DOM et 10 tests cloud simulés. Les tests
+navigateur comptent 63 succès sur 64 : seule la capture mobile du sachet
+ouvert échoue sur deux pixels. Vercel a déployé ce commit avec succès.
+
+Le symbole textuel du dos est remplacé par `CardBackEmblem`, un SVG partagé
+entre les cartes extraites et retournées, pour réduire la dépendance aux
+polices système. Les deux références visuelles du sachet ouvert sont adaptées ;
+aucune tolérance de test n'est modifiée. Vérifications locales déjà exécutées :
+2 captures mises à jour, 27 tests DOM réussis, typecheck et lint ciblé réussis.
+Le passage strict des captures après mise à jour et la nouvelle CI restent à
+confirmer. À la demande de Malik, aucune suite supplémentaire ni surveillance
+CI n'est lancée avant publication du correctif.
+
+Vérification utilisateur : ouvrir un booster sur téléphone, faire un glissé
+lent puis relâcher à mi-course, terminer l'ouverture, vérifier que les cartes
+sortent du sachet sans coupure, attendre le flip et swiper vers la suivante
+jusqu'au récapitulatif. Tester aussi le bouton de secours. Envoyer une courte
+vidéo si le rendu ou le geste pose problème.

@@ -182,6 +182,7 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await expect(dialog.locator(".booster-tear-handle")).toHaveCount(0);
   await expect(dialog.locator(".booster-premium-gesture")).toHaveCount(0);
   await expect(dialog.locator(".foil-back-card")).toHaveCount(5);
+  await expect(dialog.locator(".foil-back-emblem svg")).toHaveCount(5);
   const cut = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
   await expect(cut).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-sealed.png" });

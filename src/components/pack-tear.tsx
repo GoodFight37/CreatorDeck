@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
+import { CardBackEmblem } from "@/components/card-back-emblem";
 
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
@@ -101,7 +102,7 @@ export function PackTear({
             {Array.from({ length: 5 }, (_, i) => (
               <span key={i} className={`foil-back-card foil-back-card-${i + 1}`}
                 style={{ "--card-i": i } as CSSProperties}>
-                <span className="foil-back-emblem">✦</span>
+                <span className="foil-back-emblem"><CardBackEmblem /></span>
               </span>
             ))}
           </div>

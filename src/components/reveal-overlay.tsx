@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
+import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
 import { EffectFlash } from "@/components/effect-burst";
 import { useCloud } from "@/hooks/use-cloud";
@@ -347,7 +348,7 @@ export function RevealOverlay({
                     liveStream={liveFor(live, dotCard.login, now)}
                   />
                   <span className="reveal-dos" aria-hidden="true">
-                    <span className="reveal-back-sigil">✦</span>
+                    <span className="reveal-back-sigil"><CardBackEmblem /></span>
                   </span>
                 </div>
               </div>
@@ -420,7 +421,7 @@ export function RevealOverlay({
                     retournée. Sans lui, une carte qui tourne ne montre jamais
                     qu'elle avait un dos. */}
                 <span className="reveal-dos" aria-hidden="true">
-                  <span className="reveal-back-sigil">✦</span>
+                  <span className="reveal-back-sigil"><CardBackEmblem /></span>
                 </span>
               </div>
             </div>
