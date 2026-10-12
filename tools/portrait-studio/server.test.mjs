@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { createStudio, httpsUrl, webpSize, zipFiles } from "./server.mjs";
+import { createStudio, httpsUrl, webpSize, zipFiles, portraitOutputSize } from "./server.mjs";
+import { createRequire } from "node:module";
+const require = createRequire(new URL("../../package.json", import.meta.url)); const sharp = require("sharp");
 
 test("les téléchargements restent HTTPS et sur Wikimedia", () => {
   assert.equal(httpsUrl("https://upload.wikimedia.org/a.jpg", ["upload.wikimedia.org"]), "https://upload.wikimedia.org/a.jpg");
@@ -12,6 +14,9 @@ test("les téléchargements restent HTTPS et sur Wikimedia", () => {
 test("la taille du WebP est lue dans le fichier, pas dans le formulaire", async () => {
   const data = await readFile(new URL("../../public/creators/curated/mastu.webp", import.meta.url));
   assert.deepEqual(webpSize(data), [900, 900]); assert.throws(() => webpSize(Buffer.from("fichier arbitraire")));
+});
+test("les originaux moyens gardent leur résolution sans agrandissement", () => {
+  assert.equal(portraitOutputSize(800), 800); assert.equal(portraitOutputSize(1200), 900); assert.throws(() => portraitOutputSize(599), /600 px minimum/);
 });
 test("un choix persiste et l’export préserve la base sans modifier un dépôt", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "portrait-studio-test-"));
@@ -43,6 +48,12 @@ test("un choix persiste et l’export préserve la base sans modifier un dépôt
     assert.equal((await fetch(origin + "/api/receive", { method: "POST", headers: { ...bridgeHeaders, Origin: "https://untrusted.example" }, body: receiveBody })).status, 403);
     assert.equal((await fetch(origin + "/api/receive", { method: "POST", headers: bridgeHeaders, body: receiveBody })).status, 200);
     const inbox = await (await fetch(origin + "/api/inbox", { headers: { Authorization: `Bearer ${studio.token}` } })).json(); assert.equal(inbox.items.length, 1); assert.equal(inbox.items[0].slug, "new");
+    const duplicateBody = JSON.stringify({ slug: "prepared", original: fixture.toString("base64"), imageUrl: "https://example.com/other.webp", source: "https://example.com/other", title: "Même photo" });
+    const duplicate = await (await fetch(origin + "/api/receive", { method: "POST", headers: bridgeHeaders, body: duplicateBody })).json(); assert.equal(duplicate.duplicates[0].slug, "new");
+    const queryResponse = await post("/api/search-query", { slug: "new", query: "Ibai Llanos streamer" }); assert.equal(queryResponse.status, 200);
+    const currentState = await (await fetch(origin + "/api/state", { headers: { Authorization: `Bearer ${studio.token}` } })).json(); assert.equal(currentState.searchQueries.new, "Ibai Llanos streamer");
+    const medium = await sharp(fixture).resize(800, 800).webp().toBuffer(); const mediumBody = { ...body, crop: { x: 0, y: 0, size: 800 }, webp: medium.toString("base64") };
+    assert.equal((await post("/api/select", mediumBody)).status, 200); assert.deepEqual(webpSize(await readFile(path.join(studio.work, "portraits/new.webp"))), [800, 800]);
     assert.equal((await post("/api/select", body)).status, 200);
     assert.equal((await post("/api/tracking", { slug: "new", status: "Trouvé", links: "https://example.com/source", notes: "Source officielle" })).status, 200);
     assert.equal((await post("/api/draft", { slug: "new", original: fixture.toString("base64"), title: "Photo à cadrer" })).status, 200);

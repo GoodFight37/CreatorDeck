@@ -28,15 +28,21 @@ function renderNames() {
 function closeEditor() { revision++; $("editor").classList.add("hidden"); image = null; selected = null; if (blobUrl) URL.revokeObjectURL(blobUrl); blobUrl = null; }
 async function choose(next) {
   await autosave(); closeEditor(); slug = next; await api("/api/session", { slug }); renderNames(); const c = state.creators.find((c) => c.slug === slug); $("name").textContent = c.displayName;
-  $("google").href = "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(c.displayName + " portrait");
-  $("flickr").href = "https://www.flickr.com/search/?license=4%2C5%2C9%2C10&text=" + encodeURIComponent(c.displayName);
+  const searchName = state.searchQueries[slug] || c.searchQuery || state.researchQueries[slug] || c.displayName;
+  $("searchName").value = state.searchQueries[slug] || c.searchQuery || "";
+  function setSearchLinks(terms) {
+    const value = terms.trim() || c.displayName;
+    $("google").href = "https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(value + " portrait");
+    $("flickr").href = "https://www.flickr.com/search/?license=4%2C5%2C9%2C10&text=" + encodeURIComponent(value);
+    const query = encodeURIComponent(value + " portrait");
+    for (const [label, url] of [["Bing Images", "https://www.bing.com/images/search?q=" + query], ["YouTube", "https://www.youtube.com/results?search_query=" + query], ["Instagram", "https://www.google.com/search?q=" + encodeURIComponent(value + " site:instagram.com")], ["X", "https://www.google.com/search?q=" + encodeURIComponent(value + " site:x.com")], ["Comptes officiels", "https://www.google.com/search?q=" + encodeURIComponent(value + " site officiel comptes officiels")]]) safeLink(url, label, $("external"));
+  }
   const tracking = state.tracking[slug] || {};
   $("stage").value = tracking.status === "Prêt" ? "À cadrer" : tracking.status || "À chercher";
   $("links").value = (tracking.links || []).join("\n"); $("notes").value = tracking.notes || "";
   $("resumeDraft").disabled = !state.drafts[slug];
   $("external").replaceChildren();
-  const query = encodeURIComponent(c.displayName + " portrait");
-  for (const [label, url] of [["Bing Images", "https://www.bing.com/images/search?q=" + query], ["YouTube", "https://www.youtube.com/results?search_query=" + query], ["Instagram", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site:instagram.com")], ["X", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site:x.com")], ["Comptes officiels", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site officiel comptes officiels")]]) safeLink(url, label, $("external"));
+  $("external").replaceChildren(); setSearchLinks(searchName);
   for (const link of tracking.links || []) safeLink(link, "Source enregistrée", $("external"));
   $("existing").replaceChildren(); const old = element("img", "", $("existing")); old.className = "current"; old.src = `/seed/avatars/${slug}.webp`; old.alt = "Avatar du catalogue";
   if (state.visual[slug]) { const n = element("img", "", $("existing")); n.className = "current"; n.src = `/visual/${slug}.webp`; n.alt = "Photo choisie, droits à vérifier"; }
@@ -63,17 +69,18 @@ async function setImage(blob, candidate, expectedSlug = slug) {
   if (expectedSlug !== slug) return;
   closeEditor(); const currentRevision = revision; unsaved = true; selected = { ...candidate, blob }; blobUrl = URL.createObjectURL(blob); image = new Image(); image.src = blobUrl; await image.decode();
   if (currentRevision !== revision || expectedSlug !== slug) return;
-  $("visualNext").disabled = $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 900;
-  cx = image.naturalWidth / 2; cy = image.naturalHeight / 2; $("zoom").max = Math.max(1, Math.min(image.naturalWidth, image.naturalHeight) / 900); $("zoom").value = "1";
+  $("visualNext").disabled = $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 600;
+  cx = image.naturalWidth / 2; cy = image.naturalHeight / 2; $("zoom").max = Math.max(1, Math.min(image.naturalWidth, image.naturalHeight) / 600); $("zoom").value = "1";
   $("title").value = candidate.title || ""; $("author").value = candidate.author || ""; $("source").value = candidate.source || ""; $("license").value = candidate.license || "";
   if (!$("license").value) $("license").value = "";
   $("proofUrl").value = candidate.proofUrl || ""; $("permission").value = candidate.permission || "";
   $("verified").checked = false; $("rights").textContent = candidate.reviewNeeded ? "Commons signale une licence à vérifier. N’exporte pas cette image avant confirmation auprès de la source." : "La licence indiquée est celle de la source ; vérifie aussi l’identité et l’auteur.";
   if (candidate.crop) { cx = candidate.crop.x + candidate.crop.size / 2; cy = candidate.crop.y + candidate.crop.size / 2; $("zoom").value = Math.min(image.naturalWidth, image.naturalHeight) / candidate.crop.size; }
-  $("editor").classList.remove("hidden"); draw(); if ($("keep").disabled) message("Image trop petite pour l’export : sauvegardée comme piste, cherche une meilleure originale."); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); scheduleSave();
+  $("editor").classList.remove("hidden"); draw(); if ($("keep").disabled) message("Image sous 600 px : conserve-la comme piste et cherche une meilleure originale."); else if (Math.min(image.naturalWidth, image.naturalHeight) < 900) message("Originale sous 900 px : le portrait sera exporté à sa résolution native, sans agrandissement."); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); scheduleSave();
 }
 async function loadCandidate(c) { const expectedSlug = slug; message("Téléchargement de l’originale…"); const response = await fetch(`/api/photo?slug=${encodeURIComponent(slug)}&id=${c.pageid}`, { headers: { Authorization: `Bearer ${token}` } }); if (!response.ok) throw Error((await response.json()).error); await setImage(await response.blob(), c, expectedSlug); if (expectedSlug === slug) message("Originale chargée. Ajuste le cadre et vérifie les crédits."); }
 function crop() { const size = Math.min(image.naturalWidth, image.naturalHeight) / Number($("zoom").value); cx = Math.max(size / 2, Math.min(image.naturalWidth - size / 2, cx)); cy = Math.max(size / 2, Math.min(image.naturalHeight - size / 2, cy)); return { x: cx - size / 2, y: cy - size / 2, size }; }
+function outputSide(r) { return Math.min(900, Math.floor(r.size)); }
 function draw() { if (!image) return; const r = crop(); context.clearRect(0, 0, 450, 450); context.drawImage(image, r.x, r.y, r.size, r.size, 0, 0, 450, 450); $("dimensions").textContent = `Originale : ${image.naturalWidth} × ${image.naturalHeight} px. Zone conservée : ${Math.round(r.size)} px.`; }
 canvas.onpointerdown = (e) => { if (!image) return; drag = { x: e.clientX, y: e.clientY, cx, cy }; canvas.setPointerCapture(e.pointerId); };
 canvas.onpointermove = (e) => { if (!drag || !image) return; const ratio = crop().size / canvas.getBoundingClientRect().width; cx = drag.cx - (e.clientX - drag.x) * ratio; cy = drag.cy - (e.clientY - drag.y) * ratio; draw(); };
@@ -86,13 +93,14 @@ $("keep").onclick = async () => {
   $("keep").disabled = true;
   const expectedSlug = slug;
   try {
-    if (!image) return; await autosave(); const r = crop(); const output = document.createElement("canvas"); output.width = output.height = 900; output.getContext("2d").drawImage(image, r.x, r.y, r.size, r.size, 0, 0, 900, 900);
+    if (!image) return; await autosave(); const r = crop(); const side = outputSide(r); if (side < 900 && !window.confirm(`Cette originale fera un portrait de ${side} × ${side} px, sans agrandissement. Continuer ?`)) return; const output = document.createElement("canvas"); output.width = output.height = side; output.getContext("2d").drawImage(image, r.x, r.y, r.size, r.size, 0, 0, side, side);
     const data = output.toDataURL("image/webp", 0.9); if (!data.startsWith("data:image/webp;")) throw Error("Utilise Edge ou Chrome pour exporter le WebP.");
     const license = $("license").value; const match = license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/); const licenseUrl = match ? `https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/` : "https://creativecommons.org/publicdomain/zero/1.0/";
     await api("/api/select", { slug, pageid: selected.pageid, title: $("title").value, author: $("author").value, source: $("source").value, license, licenseUrl, proofUrl: $("proofUrl").value, permission: $("permission").value, verified: $("verified").checked, crop: r, webp: data.split(",")[1] });
     if (expectedSlug === slug) closeEditor(); await refresh(); if (nextAfterKeep && expectedSlug === slug) { const next = state.creators.find(c => !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } nextAfterKeep = false; message("Portrait enregistré sur ce PC. Clique sur Exporter pour préparer les fichiers à intégrer.");
   } catch (e) { message(e.message); } finally { $("keep").disabled = false; nextAfterKeep = false; }
 };
+$("saveSearchName").onclick = async () => { try { const query = $("searchName").value.trim(); await api("/api/search-query", { slug, query }); if (query) state.searchQueries[slug] = query; else delete state.searchQueries[slug]; await choose(slug); message("Nom de recherche enregistré. Les liens navigateur et la prochaine recherche Commons l’utiliseront."); } catch (e) { message(e.message); } };
 $("export").onclick = async () => { try { const result = await api("/api/export", {});
     const response = await fetch("/api/export-zip", { headers: { Authorization: `Bearer ${token}` } }); if (!response.ok) throw Error("Export enregistré, mais téléchargement du ZIP impossible.");
     const url = URL.createObjectURL(await response.blob()); const link = element("a", "", document.body); link.href = url; link.download = "CreatorDeck-Portraits.zip"; link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
@@ -200,7 +208,7 @@ async function saveReview(pending = false) {
       const c=box.candidate(); if(!pending && (!c.author || !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(c.license))) throw Error("Crédits incomplets : utilise Examiner pour ce créateur.");
       const response=await fetch(`/api/photo?slug=${box.dataset.slug}&id=${c.pageid}`,{headers:{Authorization:`Bearer ${token}`}}); if(!response.ok) throw Error((await response.json()).error);
       const blob=await response.blob(); const url=URL.createObjectURL(blob);
-      try {const photo=new Image();photo.src=url;await photo.decode();const size=Math.min(photo.naturalWidth,photo.naturalHeight);if(size<900)throw Error("Originale trop petite");const x=(photo.naturalWidth-size)/2,y=(photo.naturalHeight-size)/2;const output=document.createElement("canvas");output.width=output.height=900;output.getContext("2d").drawImage(photo,x,y,size,size,0,0,900,900);
+      try {const photo=new Image();photo.src=url;await photo.decode();const size=Math.min(photo.naturalWidth,photo.naturalHeight);if(size<600)throw Error("Originale trop petite");if(size<900&&!window.confirm(`Cette originale fera un portrait de ${size} × ${size} px, sans agrandissement. Continuer ?`))continue;const x=(photo.naturalWidth-size)/2,y=(photo.naturalHeight-size)/2;const side=Math.min(900,Math.floor(size));const output=document.createElement("canvas");output.width=output.height=side;output.getContext("2d").drawImage(photo,x,y,size,size,0,0,side,side);
       const match=c.license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/);
       await api(pending ? "/api/visual" : "/api/select",{slug:box.dataset.slug,pageid:c.pageid,title:c.title,author:c.author,source:c.source,license:c.license,licenseUrl:match?`https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/`:"https://creativecommons.org/publicdomain/zero/1.0/",verified:true,crop:{x,y,size},webp:output.toDataURL("image/webp",.9).split(",")[1]});
       }finally{URL.revokeObjectURL(url);} box.checked=false;count++;message(`${count} portraits du lot enregistrés.`);
@@ -218,7 +226,7 @@ $("visualNext").onclick=async()=>{
   const opened=next ? window.open("about:blank","creatordeck-search") : null;
   $("visualNext").disabled=true;
   try{
-    if(!image)throw Error("Ajoute une photo avant de choisir."); await autosave(); const r=crop(); const output=document.createElement("canvas");output.width=output.height=900;output.getContext("2d").drawImage(image,r.x,r.y,r.size,r.size,0,0,900,900);
+    if(!image)throw Error("Ajoute une photo avant de choisir."); await autosave(); const r=crop(); const side=outputSide(r); if(side<900&&!window.confirm(`Cette originale fera un portrait de ${side} × ${side} px, sans agrandissement. Continuer ?`))return; const output=document.createElement("canvas");output.width=output.height=side;output.getContext("2d").drawImage(image,r.x,r.y,r.size,r.size,0,0,side,side);
     await api("/api/visual",{slug,title:$("title").value,author:$("author").value,source:$("source").value,license:$("license").value,permission:$("permission").value,proofUrl:$("proofUrl").value,crop:r,webp:output.toDataURL("image/webp",.9).split(",")[1]});
     closeEditor();unsaved=false;await refresh();if(next){await choose(next.slug);if(opened)opened.location.href=$("google").href;}message("Photo choisie et cadrée. Droits à vérifier plus tard ; elle reste séparée des portraits publiables.");
   }catch(e){if(opened)opened.close();message(e.message);}finally{$("visualNext").disabled=false;}
@@ -231,7 +239,8 @@ async function receivePhotos(force = false){
  if(!items.length || (image && !force))return;
    const item=items[0]; await choose(item.slug); const response=await fetch("/api/inbox-photo?id="+item.id,{headers:{Authorization:`Bearer ${token}`}});if(!response.ok)throw Error("Photo reçue introuvable");
    await setImage(await response.blob(),{title:item.title,source:item.source},item.slug);await autosave();await refresh();await api("/api/inbox-opened",{id:item.id});
-   message(`Photo reçue pour ${item.name}. Vérifie la personne, ajuste le cadrage puis choisis et passe au suivant. Droits à compléter plus tard.`);
+   const duplicateWarning=item.duplicates?.length?` Attention : image/source déjà associée à ${item.duplicates.map(x=>x.name).join(", ")}. Vérifie avant de continuer.`:"";
+   message(`Photo reçue pour ${item.name}. Vérifie la personne, ajuste le cadrage puis choisis et passe au suivant. Droits à compléter plus tard.${duplicateWarning}`);
  }finally{bridgeOpening=false;}
 }
 setInterval(()=>receivePhotos().catch(e=>message(e.message)),2000);

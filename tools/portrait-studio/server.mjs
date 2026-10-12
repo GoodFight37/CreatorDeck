@@ -23,6 +23,10 @@ export function webpSize(data) {
   if (kind === "VP8L") { const bits = data.readUInt32LE(21); return [(bits & 16383) + 1, ((bits >>> 14) & 16383) + 1]; }
   throw Error("Format WebP non reconnu");
 }
+export function portraitOutputSize(sourceSize) {
+  if (!Number.isFinite(sourceSize) || sourceSize < 600) throw Error("Portrait trop petit : 600 px minimum");
+  return Math.min(900, Math.floor(sourceSize));
+}
 export function zipFiles(entries) {
   const table = Array.from({ length: 256 }, (_, n) => { let c = n; for (let i = 0; i < 8; i++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
   const parts = []; const central = []; let offset = 0;
@@ -61,7 +65,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
   const research = await jsonFile(path.join(seed, "research.json"), {});
   const stateFile = path.join(work, "state.json");
   const state = await jsonFile(stateFile, { choices: {}, skipped: {}, downloaded: {}, searches: {} });
-  state.drafts ??= {}; state.tracking ??= {}; state.rejected ??= {}; state.session ??= {}; state.inbox ??= {}; state.visual ??= {};
+  state.drafts ??= {}; state.tracking ??= {}; state.rejected ??= {}; state.session ??= {}; state.inbox ??= {}; state.visual ??= {}; state.searchQueries ??= {};
   const catalog = new Map(creators.map((c) => [c.slug, c]));
   await mkdir(path.join(work, "originales"), { recursive: true });
   await mkdir(path.join(work, "portraits"), { recursive: true });
@@ -75,7 +79,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
   const candidates = (slug) => state.searches[slug]?.candidates ?? research[slug]?.candidates ?? [];
   const findCandidate = (slug, id) => { creator(slug); const c = candidates(slug).find((x) => String(x.pageid) === String(id)); if (!c) throw Error("Candidate inconnue"); return c; };
   async function search(slug) {
-    const c = creator(slug); const query = research[slug]?.query || `"${c.displayName.replaceAll('"', "")}"`;
+    const c = creator(slug); const query = state.searchQueries[slug] || research[slug]?.query || `"${c.displayName.replaceAll('"', "")}"`;
     const params = new URLSearchParams({ action: "query", generator: "search", gsrsearch: query, gsrnamespace: "6", gsrlimit: "12", prop: "imageinfo", iiprop: "url|size|extmetadata", iiurlwidth: "320", format: "json", maxlag: "5" });
     const payload = await remote("https://commons.wikimedia.org/w/api.php?" + params);
     if (payload.error) throw Error(payload.error.info);
@@ -96,6 +100,37 @@ export async function createStudio({ directory = here, port = 4317, open = false
     }
     return readFile(path.join(work, "originales", key));
   }
+  async function duplicateMatches(bytes, source, imageUrl, slug) {
+    const hash = createHash("sha256").update(bytes).digest("hex"); const matches = [];
+    const seen = new Set();
+    const add = (otherSlug, label) => { if (otherSlug && otherSlug !== slug && !seen.has(otherSlug)) { seen.add(otherSlug); matches.push({ slug: otherSlug, name: catalog.get(otherSlug)?.displayName || otherSlug, reason: label }); } };
+    for (const item of Object.values(state.inbox)) {
+      if (item.sha256 === hash || item.source === source || item.imageUrl === imageUrl) add(item.slug, "image ou source déjà reçue");
+    }
+    for (const collection of [state.choices, state.visual, state.drafts]) for (const [otherSlug, item] of Object.entries(collection)) {
+      if (item.source && item.source === source) add(otherSlug, "source déjà associée");
+    }
+    for (const [key, item] of Object.entries(state.downloaded)) {
+      if (item.sha256 === hash) add(creators.find((c) => key.startsWith(c.slug + "-"))?.slug, "image déjà téléchargée");
+    }
+    const files = await readdir(path.join(work, "originales"));
+    for (const file of files) {
+      const filePath = path.join(work, "originales", file); let otherSlug;
+      if (file.startsWith("inbox-")) otherSlug = state.inbox[file.slice(6)]?.slug;
+      else if (file.endsWith("-draft")) otherSlug = file.slice(0, -6);
+      else otherSlug = creators.find((c) => file.startsWith(c.slug + "-"))?.slug;
+      if (!otherSlug || otherSlug === slug || seen.has(otherSlug)) continue;
+      try { if (createHash("sha256").update(await readFile(filePath)).digest("hex") === hash) add(otherSlug, "image identique déjà enregistrée"); } catch { /* Un fichier temporairement indisponible ne bloque pas l’import. */ }
+    }
+    for (const folder of [path.join(work, "portraits"), path.join(work, "selections"), path.join(seed, "portraits")]) {
+      let savedFiles = []; try { savedFiles = await readdir(folder); } catch { continue; }
+      for (const file of savedFiles.filter((name) => name.endsWith(".webp"))) {
+        const otherSlug = file.slice(0, -5); if (!catalog.has(otherSlug) || otherSlug === slug || seen.has(otherSlug)) continue;
+        try { if (createHash("sha256").update(await readFile(path.join(folder, file))).digest("hex") === hash) add(otherSlug, "image identique déjà sélectionnée"); } catch { /* L’alerte reste indicative. */ }
+      }
+    }
+    return matches;
+  }
   const server = http.createServer(async (req, res) => {
     try {
       const host = req.headers.host;
@@ -112,16 +147,18 @@ export async function createStudio({ directory = here, port = 4317, open = false
       if (req.method === "POST" && url.pathname === "/api/receive") {
         const b = await bodyJson(req); const c = creator(b.slug); const source = httpsUrl(b.source); const imageUrl = httpsUrl(b.imageUrl);
         const bytes = Buffer.from(b.original, "base64"); if (!bytes.length || bytes.length > 24 * 1024 * 1024) throw Error("Image vide ou trop lourde");
+        const sha256 = createHash("sha256").update(bytes).digest("hex"); const duplicates = await duplicateMatches(bytes, source, imageUrl, c.slug);
         const id = randomBytes(12).toString("hex"); await writeFile(path.join(work, "originales", "inbox-" + id), bytes);
-        state.inbox[id] = { id, slug: c.slug, name: c.displayName, source, imageUrl, title: String(b.title || "Photo reçue"), receivedAt: new Date().toISOString(), opened: false }; await save(); reply({ ok: true }); return;
+        state.inbox[id] = { id, slug: c.slug, name: c.displayName, source, imageUrl, sha256, duplicates, title: String(b.title || "Photo reçue"), receivedAt: new Date().toISOString(), opened: false }; await save(); reply({ ok: true, duplicates }); return;
       }
       if (url.pathname === "/api/inbox") { reply({ items: Object.values(state.inbox).filter(x => !x.opened) }); return; }
       if (url.pathname === "/api/inbox-photo") { const id = url.searchParams.get("id"); if (!/^[a-f0-9]{24}$/.test(id || "") || !state.inbox[id]) throw Error("Photo inconnue"); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "originales", "inbox-" + id))); return; }
       if (req.method === "POST" && url.pathname === "/api/inbox-opened") { const b = await bodyJson(req); if (!state.inbox[b.id]) throw Error("Photo inconnue"); state.inbox[b.id].opened = true; await save(); reply({ ok: true }); return; }
-      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, received: state.inbox, rejected: state.rejected, session: state.session, visual: state.visual, batch }); return; }
+      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, received: state.inbox, rejected: state.rejected, session: state.session, visual: state.visual, searchQueries: state.searchQueries, researchQueries: Object.fromEntries(Object.entries(research).map(([key, value]) => [key, value.query || ""])), batch }); return; }
       if (url.pathname === "/api/candidates") { const slug = url.searchParams.get("slug"); creator(slug); reply({ candidates: candidates(slug) }); return; }
       if (url.pathname === "/api/photo") { const bytes = await original(url.searchParams.get("slug"), url.searchParams.get("id")); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(bytes); return; }
       if (req.method === "POST" && url.pathname === "/api/search") { const b = await bodyJson(req); reply({ candidates: await search(b.slug) }); return; }
+      if (req.method === "POST" && url.pathname === "/api/search-query") { const b = await bodyJson(req); creator(b.slug); const query = String(b.query || "").trim().slice(0, 160); if (query) state.searchQueries[b.slug] = query; else delete state.searchQueries[b.slug]; await save(); reply({ ok: true, query: query || creator(b.slug).displayName }); return; }
       if (req.method === "POST" && url.pathname === "/api/batch") {
         if (batch.running) throw Error("Un lot est déjà en cours");
         const slugs = creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug] && !research[c.slug] && !state.searches[c.slug]).slice(0, 20).map((c) => c.slug);
@@ -135,7 +172,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         reply({ current: local.version, latest: latest.version, available: local.version !== latest.version }); return;
       }
       if (url.pathname === "/api/review") {
-        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 900 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
+        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 600 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
       }
       if (req.method === "POST" && url.pathname === "/api/session") { const b = await bodyJson(req); creator(b.slug); state.session.slug = b.slug; await save(); reply({ ok: true }); return; }
       if (req.method === "POST" && url.pathname === "/api/reject") { const b = await bodyJson(req); creator(b.slug); state.rejected[b.slug] = [...new Set([...(state.rejected[b.slug] || []), Number(b.pageid)])]; await save(); reply({ ok: true }); return; }
@@ -166,8 +203,9 @@ export async function createStudio({ directory = here, port = 4317, open = false
         const licenseUrl = pending ? "" : direct ? httpsUrl(b.proofUrl) : httpsUrl(b.licenseUrl, ["creativecommons.org"]);
         if (!pending && !direct && !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(b.license)) throw Error("Choisis une licence ou une autorisation directe documentée");
         const bytes = Buffer.from(b.webp, "base64"); const size = webpSize(bytes);
-        if (size[0] !== 900 || size[1] !== 900) throw Error("Le portrait doit être un WebP carré de 900 px");
-        if (![b.crop?.size, b.crop?.x, b.crop?.y].every(Number.isFinite) || b.crop.size < 900 || b.crop.x < 0 || b.crop.y < 0) throw Error("Cadrage incorrect ou agrandissement interdit");
+        const targetSize = portraitOutputSize(b.crop?.size);
+        if (size[0] !== targetSize || size[1] !== targetSize) throw Error(`Le WebP doit être carré et faire ${targetSize} px, sans agrandissement`);
+        if (![b.crop?.size, b.crop?.x, b.crop?.y].every(Number.isFinite) || b.crop.x < 0 || b.crop.y < 0) throw Error("Cadrage incorrect ou agrandissement interdit");
         if (pending) {
           await mkdir(path.join(work, "selections"), { recursive: true }); await writeFile(path.join(work, "selections", b.slug + ".webp"), bytes);
           if (candidate && state.downloaded[`${b.slug}-${b.pageid}`]) {
@@ -179,7 +217,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         }
         delete state.visual[b.slug];
         await writeFile(path.join(work, "portraits", b.slug + ".webp"), bytes);
-        let changes = `Recadrage carré individuel (${Math.round(b.crop.x)}, ${Math.round(b.crop.y)}, ${Math.round(b.crop.size)} px) et conversion WebP, 900 × 900 px, sans agrandissement.`;
+        let changes = `Recadrage carré individuel (${Math.round(b.crop.x)}, ${Math.round(b.crop.y)}, ${Math.round(b.crop.size)} px) et conversion WebP, ${targetSize} × ${targetSize} px, sans agrandissement.`;
         if (direct) changes += ` Autorisation déclarée : ${b.permission.trim()}. Preuve : ${licenseUrl}`;
         if (b.license.includes("BY-SA")) changes += ` Cette adaptation reste sous ${b.license}.`;
         state.choices[b.slug] = { name: c.displayName, image: `/creators/curated/${b.slug}.webp`, title: b.title, author: b.author.trim(), source, license: b.license, licenseUrl, changes, original: candidate?.original ?? "fichier fourni sur le PC", selectedAt: new Date().toISOString() };

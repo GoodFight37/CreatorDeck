@@ -24,7 +24,12 @@ vingt autres déjà préparés sont inclus dans le premier export.
 - Cliquer sur un créateur. Examiner les candidates enregistrées ; les résultats
   peuvent être des homonymes, des photos de groupe ou des images sans rapport.
 - **Examiner et cadrer** récupère l’originale. Déplacer l’image avec la souris et
-  régler le zoom. Le résultat fait 900 × 900 px sans agrandissement.
+  régler le zoom. Le résultat fait jusqu’à 900 × 900 px sans agrandissement.
+  Pour une originale de 600 à 899 px, l’atelier demande confirmation et exporte
+  à la résolution native ; sous 600 px, elle reste une piste non exportable.
+- Le champ **Nom/alias de recherche** permet de préciser le vrai nom ou une
+  formulation désambiguïsée (par exemple « Ibai Llanos streamer »). Enregistre-la
+  une fois : les liens navigateur et la prochaine recherche Commons la réutilisent.
 - Vérifier la personne, l’auteur et la licence sur **Ouvrir la source**. Confirmer
   la vérification puis cliquer **Garder ce portrait**.
 - Si aucune candidate ne convient, ouvrir **Google Images** ou **Flickr** dans
@@ -65,8 +70,10 @@ sa préparation ; le serveur et le parcours navigateur sont vérifiés sur Linux
 Un HTTP 403/429 ou un délai dépassé vient de l’accès à la source : réessayer plus
 tard, ouvrir la source dans le navigateur ou utiliser une originale déjà sur le
 PC. L’outil ne contourne ni une protection réseau ni une vérification anti-robot.
-Une photo de moins de 900 px sur son petit côté est refusée pour éviter de
-l’agrandir. Si la page indique « accès refusé », relancer `LANCER.cmd` et utiliser
+Une photo de moins de 600 px sur son petit côté est refusée pour éviter de
+l’agrandir. Entre 600 et 899 px, confirme l’export à taille native. À la réception
+d’une image identique ou d’une source déjà attribuée, l’atelier affiche un
+avertissement non bloquant avec le créateur associé. Si la page indique « accès refusé », relancer `LANCER.cmd` et utiliser
 la nouvelle fenêtre, plutôt qu’un ancien favori.
 
 ## Reconstruire le paquet depuis le dépôt (Codex)
@@ -111,7 +118,7 @@ choix précédents restent compatibles ; relancer ensuite `LANCER.cmd`.
 ## Mode rapide par lots — version 1.2.0
 
 **Validation rapide par lots** montre 20 créateurs avec l’image actuelle et
-jusqu’à trois candidates assez grandes. Les propositions présentes passent
+jusqu’à trois candidates d’au moins 600 px. Les propositions présentes passent
 avant les cas sans candidate. Tri sur le nom du fichier, la revue de licence et
 la résolution : aucun système ne confirme la personne ni la netteté du visage.
 L’aperçu carré est un cadrage central, sans détection de visage.
@@ -119,7 +126,7 @@ L’aperçu carré est un cadrage central, sans détection de visage.
 Cocher les bonnes personnes et cadrages. **Préparer les photos cochées** récupère
 les originales comme brouillons, sans déclarer les droits validés. Pour un lot
 prêt, vérifier les sources, cocher aussi les droits pour chaque portrait, puis
-**Garder les cadrages cochés et vérifiés** : export WebP 900 px et crédits.
+**Garder les cadrages cochés et vérifiés** : export WebP jusqu’à 900 px et crédits.
 **Examiner** permet de corriger un cadrage avant validation ; une photo de groupe
 ne doit pas être validée sans vérifier la personne dans le carré. Une erreur de
 téléchargement arrête le lot, en conservant les éléments déjà enregistrés.

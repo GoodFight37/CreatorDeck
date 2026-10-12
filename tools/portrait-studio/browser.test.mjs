@@ -27,6 +27,8 @@ if(url.pathname==='/api/photo')return route.fulfill({body:photo,contentType:'ima
 if(url.hostname==='upload.wikimedia.org')return route.fulfill({body:photo,contentType:'image/webp',headers:{'Access-Control-Allow-Origin':'*'}});
 if(url.hostname==='127.0.0.1')return route.continue();return route.abort();});
 await page.goto(studio.url);await page.waitForFunction(()=>document.querySelector('#progress').textContent==='0 / 3 prêts');
+await page.locator('#searchName').fill('One streamer officiel');await page.locator('#saveSearchName').click();await page.waitForFunction(()=>decodeURIComponent(document.querySelector('#google').href).includes('One streamer officiel'));
+assert.equal(studio.state.searchQueries.one,'One streamer officiel');
 await page.locator('#review').click();await page.locator('#reviewCards input[data-slug]').check();await page.locator('#approveReview').click();await page.waitForFunction(()=>document.querySelector('#message').textContent.includes('Confirme les droits'));
 assert.equal(Object.keys(studio.state.choices).length,0);
 await page.locator('#reviewCards input[data-rights]').check();await page.locator('#approveReview').click();await page.waitForFunction(()=>document.querySelector('#progress').textContent==='1 / 3 prêts');
