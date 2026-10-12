@@ -1,5 +1,6 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creators from "../src/data/creators.json";
+import manualPortraits from "../src/data/manual-portrait-overrides.json";
 
 test("les portraits sélectionnés se chargent et leurs crédits restent dans les réglages", async ({ page }, testInfo) => {
   await gotoDeck(page);
@@ -16,9 +17,9 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await page.reload();
   await page.getByRole("button", { name: "Toi", exact: true }).click();
   for (const slug of ["rubius", "shroud"]) {
-    const portrait = page.locator(`img[src="/creators/curated/${slug}.webp"]`).first();
+    const portrait = page.locator(`img[src="${manualPortraits[slug as keyof typeof manualPortraits]}"]`).first();
     await expect(portrait).toBeVisible();
-    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth)).toBe(900);
+    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth)).toBe(450);
   }
   await expect(page.locator(".creator-card")).not.toContainText(["Moritz Barcelona", "Nate Herrera"]);
   await expect(page.locator("#image-credits")).toHaveCount(0);
