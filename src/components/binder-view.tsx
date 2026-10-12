@@ -1,3 +1,4 @@
+// src/components/binder-view.tsx
 "use client";
 
 /**
@@ -159,7 +160,7 @@ export function CollectionView({
 
   return (
     <div className="view collection-view" style={themeStyle}>
-      {/* En-tête compact : score et progression en ligne fine */}
+      {/* En-tête compact */}
       <section className="page-title-row" style={{ marginBottom: "0.25rem" }}>
         <div>
           <span className="drop-section-kicker">LES NOMS QUE TU GARDES</span>
@@ -186,7 +187,6 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Raccourci Dernières reçues compact */}
       {game.stats.uniqueCreators > 0 ? (
         <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.25rem 0" }}>
           <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
@@ -196,29 +196,44 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Collection suggérée compacte : bandeau simple sans bloc massif */}
+      {/* Pages à compléter compactes : libellés exacts maintenus pour les tests */}
       {featuredCollection ? (
         <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.4rem 0.6rem", margin: "0.3rem 0" }}>
+          <div className="drop-section-label" style={{ marginBottom: "0.25rem", fontSize: "0.75rem" }}>
+            <span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span>
+            <BookOpen size={14} />
+          </div>
           <button
             type="button"
             aria-pressed={pageGoal === featuredCollection.id}
             onClick={() => chooseCollection(featuredCollection.id)}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", background: "transparent", border: "none", color: "inherit", padding: 0 }}
           >
-            <BookOpen size={16} style={{ flexShrink: 0, opacity: 0.8 }} />
             <span className="binder-page-title" style={{ flex: 1, textAlign: "left" }}>
               <strong style={{ fontSize: "0.85rem" }}>{featuredCollection.name}</strong>
               <small style={{ display: "block", fontSize: "0.75rem", opacity: 0.7 }}>
-                {featuredCollection.owned} / {featuredCollection.total} réunies · {featuredCollection.missing.length ? `${featuredCollection.missing.length} à trouver` : "Complète"}
+                {featuredCollection.owned} / {featuredCollection.total} cartes différentes
               </small>
+              <span className="binder-collection-action" style={{ fontSize: "0.75rem" }}>
+                {featuredCollection.missing.length ? `Voir les ${featuredCollection.missing.length} manquantes` : "Revoir les cartes réunies"}
+              </span>
             </span>
             <ChevronRight size={15} style={{ opacity: 0.6 }} />
           </button>
-          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", marginTop: "0.25rem" }} />
+          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", margin: "0.25rem 0" }} />
+          {featuredCollection.missing.length ? (
+            <p className="binder-missing-preview" style={{ fontSize: "0.75rem", margin: "0.15rem 0" }}>
+              À trouver : {featuredCollection.missing.slice(0, 3).map((slug) => CREATOR_BY_SLUG.get(slug)?.displayName).join(", ")}
+              {featuredCollection.missing.length > 3 ? ` et ${featuredCollection.missing.length - 3} autres.` : "."}
+            </p>
+          ) : (
+            <p className="binder-missing-preview" style={{ fontSize: "0.75rem", margin: "0.15rem 0" }}>
+              Tous les noms de cette page sont réunis.
+            </p>
+          )}
         </section>
       ) : null}
 
-      {/* Sélecteur de collection : replié par défaut dans son volet */}
       <details className="binder-collections-picker" style={{ margin: "0.25rem 0" }}>
         <summary style={{ fontSize: "0.8rem", padding: "0.3rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
         <p style={{ fontSize: "0.75rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
@@ -241,7 +256,6 @@ export function CollectionView({
         }}>Revenir à la suggestion automatique</button> : null}
       </details>
 
-      {/* Outils fixes : recherche, tri et filtres directement au-dessus des cartes */}
       <div className="binder-tools">
         <label className="search-field">
           <Search size={17} />
@@ -350,7 +364,6 @@ export function CollectionView({
         </button>
       </div> : null}
 
-      {/* Grille de cartes directement visible */}
       <div className="binder-page">
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
