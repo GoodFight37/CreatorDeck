@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
@@ -17,12 +17,15 @@ export function PackTear({
   onTear,
   autoCompleteAfterMs,
   returnFocusTo,
+  children,
 }: {
   kind?: "live" | "scene";
   onComplete: () => void;
   onTear?: () => void;
   autoCompleteAfterMs?: number;
   returnFocusTo?: HTMLElement | null;
+  /** The revealed cards live inside the same mounted opening, never a second portal. */
+  children?: ReactNode;
 }) {
   const dialogRef = usePresentationFocus(true, returnFocusTo);
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
@@ -30,11 +33,26 @@ export function PackTear({
   const start = useRef<{ x: number; percent: number; centerX: number; centerY: number; halfWidth: number; halfHeight: number } | null>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
+  const extractionCompleted = useRef(false);
+  const revealing = Boolean(children);
   const timer = useRef<number | null>(null);
   const completeRef = useRef(onComplete);
   const tearRef = useRef(onTear);
   useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
   useEffect(() => { tearRef.current = onTear; }, [onTear]);
+
+  // The no-tear link is removed after activation. Keep focus inside the SAME
+  // dialog when its card controls appear; do not mount a second focus trap.
+  useEffect(() => {
+    if (revealing) dialogRef.current?.focus({ preventScroll: true });
+  }, [dialogRef, revealing]);
+
+  const completeExtraction = useCallback(() => {
+    if (extractionCompleted.current) return;
+    extractionCompleted.current = true;
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    completeRef.current();
+  }, []);
 
   const finish = useCallback(() => {
     if (done.current) return;
@@ -43,12 +61,14 @@ export function PackTear({
     sceneRef.current?.classList.remove("is-pulling");
     sceneRef.current?.style.removeProperty("--opening-tilt-x");
     sceneRef.current?.style.removeProperty("--opening-tilt-y");
+    sceneRef.current?.style.removeProperty("--opening-light-x");
     setCut({ start: 4, end: 96, progress: 100 });
     setOpened(true);
     tearRef.current?.();
-    // Cap finishes peeling, card backs leave the pouch, THEN reveal replaces it.
-    timer.current = window.setTimeout(() => completeRef.current(), 1900);
-  }, []);
+    // animationend opens the face IN this scene. This timer is only a lost-event
+    // fallback; it never destroys the pouch or replaces the presentation root.
+    timer.current = window.setTimeout(completeExtraction, cardEffectsAllowed() ? 1_200 : 0);
+  }, [completeExtraction]);
 
   useEffect(() => {
     if (autoCompleteAfterMs === undefined) return;
@@ -60,9 +80,11 @@ export function PackTear({
 
   const artwork = kind === "scene" ? "/packs/scene-foil.svg" : "/packs/live-foil.svg";
   return createPortal(
-    <div ref={dialogRef} tabIndex={-1} className={`pack-tear booster-interactive booster-cinematic booster-presentation scene-${kind}`} role="dialog"
-      aria-label="Ouvrir le booster" aria-modal="true">
-      <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}>
+    <div ref={dialogRef} tabIndex={-1} className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`} role="dialog"
+      data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
+      aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"} aria-modal="true">
+      <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}
+          aria-hidden={revealing || undefined} inert={revealing}>
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
           {opened ? "LES CARTES APPARAISSENT" : "GLISSE SUR LA BANDE STRIÉE EN HAUT"}
@@ -73,7 +95,9 @@ export function PackTear({
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
-          <div className="foil-card-chamber" aria-hidden="true">
+          <div className="foil-card-chamber" aria-hidden="true" onAnimationEnd={(event) => {
+            if (event.target === event.currentTarget && done.current) completeExtraction();
+          }}>
             {Array.from({ length: 5 }, (_, i) => (
               <span key={i} className={`foil-back-card foil-back-card-${i + 1}`}
                 style={{ "--card-i": i } as CSSProperties}>
@@ -84,10 +108,12 @@ export function PackTear({
           <div className="foil-body-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
+            <span className="foil-material-sheen" />
           </div>
           <div className="foil-top-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
+            <span className="foil-material-sheen" />
           </div>
           <span className="foil-cut-slit" aria-hidden="true"
             style={{ left: `${cut.start}%`, width: `${Math.max(0, cut.end - cut.start)}%` }} />
@@ -116,6 +142,7 @@ export function PackTear({
                 const y = Math.max(-1, Math.min(1, (event.clientY - start.current.centerY) / start.current.halfHeight));
                 scene.style.setProperty("--opening-tilt-x", `${-y * 5}deg`);
                 scene.style.setProperty("--opening-tilt-y", `${x * 7}deg`);
+                scene.style.setProperty("--opening-light-x", `${50 + x * 35}%`);
               }
               const end = Math.max(2, Math.min(98,
                 (event.clientX - bounds.left) / bounds.width * 100));
@@ -129,6 +156,7 @@ export function PackTear({
               sceneRef.current?.classList.remove("is-pulling");
               sceneRef.current?.style.removeProperty("--opening-tilt-x");
               sceneRef.current?.style.removeProperty("--opening-tilt-y");
+              sceneRef.current?.style.removeProperty("--opening-light-x");
               if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onPointerCancel={() => {
@@ -136,6 +164,7 @@ export function PackTear({
               sceneRef.current?.classList.remove("is-pulling");
               sceneRef.current?.style.removeProperty("--opening-tilt-x");
               sceneRef.current?.style.removeProperty("--opening-tilt-y");
+              sceneRef.current?.style.removeProperty("--opening-light-x");
               if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
             }}
             onKeyDown={(event) => {
@@ -159,6 +188,7 @@ export function PackTear({
           )}
         </div>
       </div>
+      {children}
     </div>,
     document.body,
   );

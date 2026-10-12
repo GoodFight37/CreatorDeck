@@ -43,6 +43,7 @@ export function RevealOverlay({
   index,
   kind = "live",
   overlay = false,
+  embedded = false,
   tutorial = false,
   streakReward = null,
   onSkipAll,
@@ -66,6 +67,8 @@ export function RevealOverlay({
    * montre les cinq cartes ; c'est le jeu normal qui a le droit de sauter.
    */
   overlay?: boolean;
+  /** Reuse PackTear’s portal, scene and focus trap throughout a tactile opening. */
+  embedded?: boolean;
   tutorial?: boolean;
   /** Révèle les cinq cartes d'un coup — absent de l'overlay. */
   onSkipAll?: () => void;
@@ -73,7 +76,7 @@ export function RevealOverlay({
   onClose: () => void;
   returnFocusTo?: HTMLElement | null;
 }) {
-  const dialogRef = usePresentationFocus(!overlay, returnFocusTo);
+  const dialogRef = usePresentationFocus(!overlay && !embedded, returnFocusTo);
   const card = cards[index];
   const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
   const live = useLive();
@@ -109,18 +112,19 @@ export function RevealOverlay({
   useEffect(() => {
     if (!cardId || perfect) return;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    const reducedFallback = reducedMotion?.matches
+    const immediate = !cardEffectsAllowed();
+    const reducedFallback = immediate
       ? window.setTimeout(() => {
           setFlippedCardId(cardId);
           finishQueuedAdvance(cardId);
         }, 0)
       : null;
-    const fallback = reducedMotion?.matches
+    const fallback = immediate
       ? null
       : window.setTimeout(() => {
           setFlippedCardId(cardId);
           finishQueuedAdvance(cardId);
-        }, 1_200);
+        }, 1_200 + silenceBefore(rarity));
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setFlippedCardId(cardId);
@@ -133,7 +137,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, finishQueuedAdvance, perfect]);
+  }, [cardId, finishQueuedAdvance, perfect, rarity]);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -182,36 +186,27 @@ export function RevealOverlay({
   const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
 
-  function tiltRevealCard(event: PointerEvent<HTMLDivElement>) {
+  function moveRevealSwipe(event: PointerEvent<HTMLDivElement>) {
     const swipe = swipeStart.current;
-    if (swipe) {
-      const dx = event.clientX - swipe.x;
-      const dy = event.clientY - swipe.y;
-      if (Math.abs(dx) > 12 || Math.abs(dy) > 12) swipe.moved = true;
-      if (swipe.moved) {
-        resetRevealTilt(event);
-        return;
-      }
-    }
-    if (!cardEffectsAllowed()) return;
+    if (!swipe || flippedCardId !== cardId || locked) return;
+    const dx = event.clientX - swipe.x;
+    const dy = event.clientY - swipe.y;
+    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) swipe.moved = true;
+    if (!swipe.moved) return;
     const target = event.currentTarget;
-    const bounds = target.getBoundingClientRect();
-    if (!bounds.width || !bounds.height) return;
-    const x = Math.max(-1, Math.min(1, ((event.clientX - bounds.left) / bounds.width - .5) * 2));
-    const y = Math.max(-1, Math.min(1, ((event.clientY - bounds.top) / bounds.height - .5) * 2));
-    target.style.setProperty("--reveal-tilt-x", `${-y * 13}deg`);
-    target.style.setProperty("--reveal-tilt-y", `${x * 17}deg`);
-    target.classList.add("is-tilting");
+    target.style.setProperty("--reveal-drag-x", `${Math.max(-140, Math.min(140, dx))}px`);
+    target.style.setProperty("--reveal-drag-y", `${Math.max(-140, Math.min(100, dy))}px`);
+    target.classList.add("is-swiping");
   }
 
-  function resetRevealTilt(event: PointerEvent<HTMLDivElement>) {
-    event.currentTarget.style.removeProperty("--reveal-tilt-x");
-    event.currentTarget.style.removeProperty("--reveal-tilt-y");
-    event.currentTarget.classList.remove("is-tilting");
+  function resetRevealDrag(event: PointerEvent<HTMLDivElement>) {
+    event.currentTarget.style.removeProperty("--reveal-drag-x");
+    event.currentTarget.style.removeProperty("--reveal-drag-y");
+    event.currentTarget.classList.remove("is-swiping");
   }
 
   function startRevealSwipe(event: PointerEvent<HTMLDivElement>) {
-    if (locked || perfect || flippedCardId !== cardId || event.button !== 0) return;
+    if (locked || perfect || flippedCardId !== cardId || event.button !== 0 || event.isPrimary === false) return;
     swipeStart.current = { x: event.clientX, y: event.clientY, moved: false };
     if (Number.isFinite(event.pointerId)) {
       try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* activation clavier/synthétique */ }
@@ -221,7 +216,7 @@ export function RevealOverlay({
   function endRevealSwipe(event: PointerEvent<HTMLDivElement>) {
     const start = swipeStart.current;
     swipeStart.current = null;
-    resetRevealTilt(event);
+    resetRevealDrag(event);
     if (!start || locked || perfect || flippedCardId !== cardId) return;
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
@@ -262,10 +257,11 @@ export function RevealOverlay({
     <div
       ref={dialogRef}
       tabIndex={-1}
-      className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}${showSummary ? " reveal-summary-open" : ""}`}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Résultat du booster"
+      data-reveal-index={index}
+      className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}${showSummary ? " reveal-summary-open" : ""}${embedded ? " reveal-embedded" : ""}`}
+      role={embedded ? undefined : "dialog"}
+      aria-modal={embedded ? undefined : true}
+      aria-label={embedded ? undefined : "Résultat du booster"}
     >
       <div className="reveal-ambient" />
       {rareGlow ? (
@@ -407,10 +403,10 @@ export function RevealOverlay({
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
           <div className="reveal-anchor" style={glowStyle}
             onPointerDown={startRevealSwipe}
-            onPointerMove={tiltRevealCard}
+            onPointerMove={moveRevealSwipe}
             onPointerUp={endRevealSwipe}
-            onPointerCancel={(event) => { swipeStart.current = null; resetRevealTilt(event); }}
-            onPointerLeave={(event) => { swipeStart.current = null; resetRevealTilt(event); }}>
+            onPointerCancel={(event) => { swipeStart.current = null; resetRevealDrag(event); }}
+            onPointerLeave={(event) => { swipeStart.current = null; resetRevealDrag(event); }}>
             <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
               <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
                 <CreatorCard
@@ -498,5 +494,5 @@ export function RevealOverlay({
     </div>
   );
   // Le jeu et le sachet partagent le viewport. OBS garde son cadre 16:9.
-  return overlay ? content : createPortal(content, document.body);
+  return overlay || embedded ? content : createPortal(content, document.body);
 }

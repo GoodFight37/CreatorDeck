@@ -17,7 +17,7 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { PERFECT_LOCK_MS } from "@/lib/reveal";
+import { PERFECT_LOCK_MS, silenceBefore } from "@/lib/reveal";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -222,7 +222,7 @@ describe("les effets de révélation", () => {
         index={1} onNext={suivant} onClose={fermer} />,
     );
     banc.ecran(`jeu-derniere-${rarity}`);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200 + silenceBefore(rarity)); });
     banc.appuyer("Ranger dans le classeur");
     expect(document.body.textContent).toContain("RÉCAP");
     expect(document.body.textContent).toContain("2 cartes dans ta collection");
@@ -274,6 +274,65 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(pointer("pointerup", 100 + dx, 100 + dy));
     });
     expect(suivant).toHaveBeenCalledOnce();
+  });
+
+  it("ne saute pas le flip et ramène une carte relâchée avant le seuil", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const next = vi.fn();
+    await banc.monter(<RevealOverlay cards={[carte("common", "a"), carte("rare", "b")] as never}
+      index={0} onNext={next} onClose={() => {}} />);
+    const anchor = document.querySelector<HTMLDivElement>(".reveal-anchor")!;
+    const pointer = (type: string, x: number, y: number) => new window.MouseEvent(type, {
+      bubbles: true, clientX: x, clientY: y,
+    });
+    act(() => {
+      anchor.dispatchEvent(pointer("pointerdown", 100, 100));
+      anchor.dispatchEvent(pointer("pointerup", 200, 100));
+    });
+    expect(next).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    act(() => {
+      anchor.dispatchEvent(pointer("pointerdown", 100, 100));
+      anchor.dispatchEvent(pointer("pointermove", 124, 100));
+    });
+    expect(anchor.classList.contains("is-swiping")).toBe(true);
+    expect(anchor.style.getPropertyValue("--reveal-drag-x")).toBe("24px");
+    expect(anchor.style.getPropertyValue("--reveal-tilt-y")).toBe("");
+    act(() => { anchor.dispatchEvent(pointer("pointerup", 124, 100)); });
+    expect(next).not.toHaveBeenCalled();
+    expect(anchor.classList.contains("is-swiping")).toBe(false);
+    expect(anchor.style.getPropertyValue("--reveal-drag-x")).toBe("");
+  });
+
+  it("le balayage de la dernière carte ouvre le récapitulatif sans fermer ni avancer", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const next = vi.fn(), close = vi.fn();
+    await banc.monter(<RevealOverlay cards={[carte("common", "a")] as never}
+      index={0} onNext={next} onClose={close} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    const anchor = document.querySelector<HTMLDivElement>(".reveal-anchor")!;
+    act(() => {
+      anchor.dispatchEvent(new window.MouseEvent("pointerdown", { bubbles: true, clientX: 100, clientY: 180 }));
+      anchor.dispatchEvent(new window.MouseEvent("pointermove", { bubbles: true, clientX: 100, clientY: 90 }));
+      anchor.dispatchEvent(new window.MouseEvent("pointerup", { bubbles: true, clientX: 100, clientY: 90 }));
+    });
+    expect(document.querySelector(".reveal-summary")).toBeTruthy();
+    expect(next).not.toHaveBeenCalled();
+    expect(close).not.toHaveBeenCalled();
+    banc.appuyer("Retour au Drop");
+    expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("le filet de sécurité n’avance pas avant la fin d’un flip retardé Épique", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const next = vi.fn();
+    await banc.monter(<RevealOverlay cards={[carte("epic", "a"), carte("common", "b")] as never}
+      index={0} onNext={next} onClose={() => {}} />);
+    banc.appuyer("Révéler la suivante");
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(next).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(520); });
+    expect(next).toHaveBeenCalledOnce();
   });
 
   it("déverrouille la révélation si animationend ne vient jamais", async () => {

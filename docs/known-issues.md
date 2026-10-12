@@ -62,6 +62,14 @@ conservé dans [atelier-et-problemes.md](atelier-et-problemes.md).
 
 ## Registre
 
+**K-047 — continuum d’ouverture : corrigé dans le nouveau lot du 12 octobre.**
+Le sachet était démonté avant le second portail de révélation, avec un reflet
+porté par la scène et une inclinaison libre de carte. Le portail reste désormais
+monté, la révélation est intégrée, le reflet suit la matière et la carte suit
+un geste planaire après flip. [Fichiers, preuves et limites](booster-continuum-2026-10-12.md).
+Le jugement esthétique sur téléphone reste distinct des tests fonctionnels.
+
+
 K-040 — 11 octobre 2026 : copie cloud non reprise au démarrage, corrigé
 localement. Le message exact « sabliers : charge la sauvegarde du cloud dans
 Compte avant de synchroniser » vient du trigger `_guard_hourglass_spends`

@@ -1,3 +1,17 @@
+## Checkpoint ouverture continue — 12 octobre 2026
+
+Demande exclusive de Malik : continuum avant polish, matière et geste, sans
+nouvelle dépendance 3D, refonte du jeu ni SQL. Les quatre points sont implémentés :
+PackTear reste monté et contient la révélation ; coque en fondu, reflet masqué
+sur ses morceaux, swipe planaire après flip, repli du peel incomplet.
+[Rapport détaillé et preuves](booster-continuum-2026-10-12.md), D-061/K-047.
+Unitaires complets 1 164/1 164 localement, écrans complets 112/112 puis fichier
+final effets 19/19, E2E ouverture 30/30, lint/typecheck/build réussis. Les
+compteurs CI seront propres au commit publié ; les 20 portraits locaux restent
+hors commit. Captures et vidéo hors Git dans /workspace/artifacts/booster-continuum.
+Le téléphone physique et le jugement esthétique restent non validés.
+Les fichiers de sélection portraits préexistants sont préservés sans publication.
+
 ## Checkpoint courant — 12 octobre 2026, bilan pour revue Grok
 
 Le code produit vérifié est `10699eb` sur main : CI complète et déploiement

@@ -523,3 +523,17 @@ j0niq et toaststix sortent donc du plan de remplacement et K-044 est clos par
 acceptation du choix visuel. Aucun portrait inventé ni nouvelle collecte
 requise, aucune modification du code ou des images. La roadmap et le brief
 Grok reflètent cette décision.
+
+## D-061 — 12 octobre 2026 : une scène persistante pour l’ouverture
+
+Malik impose le continuum avant le polish, sans Three.js/WebGL/Unity ni autre
+moteur ou dépendance 3D. PackTear reste propriétaire du portail, du fond et du
+focus jusqu’au récap/fermeture ; RevealOverlay est intégré comme enfant pour
+les paquets manipulés. La fin d’extraction dépend d’animationend, avec filet
+borné, et ne commande plus le remplacement du sachet par un nouvel écran.
+La coque se retire visuellement en fondu après l’arrivée des cartes.
+
+Le reflet appartient aux morceaux imprimés, masqués/découpés comme le sachet,
+et suit le doigt sans cycle. La carte se déplace dans le plan après son flip ;
+aucun inspecteur 3D libre. Les pauses de rareté, le Perfect, le bouton de secours,
+les gains et RPC existants restent conservés. [Rapport et preuves](booster-continuum-2026-10-12.md).

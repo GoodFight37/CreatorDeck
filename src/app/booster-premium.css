@@ -392,6 +392,21 @@
   -webkit-user-drag: none;
   user-select: none;
 }
+.booster-cinematic .foil-material-sheen {
+  position: absolute;
+  inset: 0;
+  clip-path: var(--live-foil-clip);
+  mask-image: url("/packs/live-foil.svg");
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  pointer-events: none;
+  opacity: .24;
+  background: linear-gradient(108deg, transparent 35%, rgba(255,242,220,.08) 42%,
+    rgba(255,235,213,.48) 49%, rgba(255,205,225,.08) 54%, transparent 62%);
+  background-size: 230% 100%;
+  background-position: var(--opening-light-x, 50%) 50%;
+  mix-blend-mode: screen;
+}
 .booster-cinematic .booster-tear-track {
   position: absolute;
   z-index: 10;

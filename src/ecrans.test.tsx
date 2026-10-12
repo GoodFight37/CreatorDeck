@@ -153,7 +153,7 @@ describe("les écrans", () => {
     expect(document.querySelector(".booster-interactive"), "le booster attend le geste du joueur").toBeTruthy();
     banc.appuyer("Ouvrir sans déchirer");
     await act(async () => {
-      // Le couvercle se détache, les dos sortent, puis la transition termine à 1,9 s.
+      // Sans animationend dans jsdom, le filet termine l’extraction ; la scène reste montée.
       await vi.advanceTimersByTimeAsync(2_100);
     });
     const revelation = banc.ecran("08-revelation");
@@ -186,11 +186,37 @@ describe("les écrans", () => {
 
     banc.appuyer("Ouvrir sans déchirer");
     await act(async () => {
-      // Le couvercle se détache, les dos sortent, puis la transition termine à 1,9 s.
+      // Sans animationend dans jsdom, le filet termine l’extraction ; la scène reste montée.
       await vi.advanceTimersByTimeAsync(2_100);
     });
-    expect(document.querySelector(".pack-tear"), "la déchirure ne s'arrête jamais").toBeNull();
-    expect(document.querySelector(".reveal-overlay")).toBeTruthy();
+    expect(document.querySelector(".pack-tear"), "la scène ne doit pas être remplacée").toBe(dechirure);
+    expect(dechirure!.getAttribute("data-opening-phase")).toBe("revealing");
+    expect(dechirure!.querySelectorAll(".foil-printed-art")).toHaveLength(2);
+    expect(dechirure!.querySelector(".reveal-overlay")).toBeTruthy();
+    expect(dechirure!.querySelectorAll('[role="dialog"]')).toHaveLength(0);
+    act(() => { dechirure!.querySelector<HTMLButtonElement>('.reveal-header button[aria-label="Fermer"]')!.click(); });
+    expect(document.querySelector(".pack-tear")).toBeNull();
+  });
+
+  it("termine l’extraction sur animationend une fois, sans démonter le sachet", async () => {
+    const { PackTear } = await import("@/components/pack-tear");
+    const completed = vi.fn();
+    await banc.monter(<PackTear onComplete={completed} />);
+    const scene = document.querySelector(".opening-continuum")!;
+    banc.appuyer("Ouvrir sans déchirer");
+    expect(completed).not.toHaveBeenCalled();
+    const chamber = scene.querySelector(".foil-card-chamber")!;
+    act(() => { chamber.querySelector(".foil-back-card")!.dispatchEvent(new Event("animationend", { bubbles: true })); });
+    expect(completed).not.toHaveBeenCalled();
+    act(() => {
+      // React/jsdom uses the WebKit name when AnimationEvent is unavailable.
+      chamber.dispatchEvent(new Event("animationend", { bubbles: true }));
+      chamber.dispatchEvent(new Event("webkitAnimationEnd", { bubbles: true }));
+    });
+    expect(completed).toHaveBeenCalledOnce();
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000); });
+    expect(completed).toHaveBeenCalledOnce();
+    expect(document.querySelector(".opening-continuum")).toBe(scene);
   });
 
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {

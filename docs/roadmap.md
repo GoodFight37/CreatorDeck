@@ -2,21 +2,20 @@
 
 ## État courant — 12 octobre 2026
 
-Code produit vérifié : `10699eb` sur `main`. **CI complète et déploiement Vercel
-Production réussis.** [Bilan courant, preuves et limites](etat-projet-2026-10-12.md).
+Référence du lot portraits : `10699eb`, **CI et Vercel Production réussis**.
+Nouveau lot d’ouverture : [continuum, matière et geste](booster-continuum-2026-10-12.md),
+implémenté et vérifié localement ; sa publication/CI est distincte. [Bilan courant, preuves et limites](etat-projet-2026-10-12.md).
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
 ### Plan actif
 
-1. **Ouverture des boosters à améliorer** : Malik confirme le 12 octobre que
-   le rendu actuel n’est pas à la hauteur des vidéos de référence déjà envoyées.
-   Revue Grok du rendu et du parcours, puis corrections visuelles à cadrer.
-   Ce n’est pas une simple attente de validation : l’insatisfaction est établie.
-   Les tests fonctionnels verts ne prouvent pas la qualité esthétique.
-   [Analyse de la vidéo renvoyée](reference-ouverture-2026-10-12.md) : continuité
-   paquet → cartes, cadrage stable et interface épurée ; aucune animation
-   modifiée dans cette passe.
+1. **Ouverture : continuum, matière et geste implémentés** à la demande de Malik.
+   Même scène du sachet au récap, coque retirée en fondu, reflet sur les morceaux
+   imprimés et manipulation de carte après flip. Quatre points du cahier des
+   charges faits ; [preuves et limites](booster-continuum-2026-10-12.md).
+   Reste l’appréciation du rendu/rythme sur téléphone réel : les tests ne sont
+   pas un verdict esthétique et le rendu n’est pas présenté comme « Pocket ».
 2. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
    éventuellement personnages de séries. Aucun développement engagé ; choix
    des personnes et organisation des cartes à définir.

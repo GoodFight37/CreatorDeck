@@ -1,5 +1,10 @@
 # CreatorDeck — bilan actuel et suite
 
+**Mise à jour ouverture** : [les quatre points continuum/matière/geste sont
+implémentés et vérifiés localement](booster-continuum-2026-10-12.md). Les preuves
+CI/Vercel de `10699eb` ci-dessous concernent le lot portraits précédent ;
+elles ne valident pas à elles seules cette nouvelle ouverture.
+
 ## État vérifié — 12 octobre 2026
 
 Application utilisée par Malik : **site Vercel connecté à GitHub/main**, avec
@@ -25,7 +30,7 @@ Aucune PR ouverte au dernier contrôle GitHub.
 
 | Chantier | État actuel | Fin attendue |
 |---|---|---|
-| Ouverture des boosters à améliorer | Malik confirme que le rendu n’est pas à la hauteur des vidéos de référence ; revue Grok demandée | Comparer le rendu actuel à la direction attendue, cadrer puis réaliser les corrections visuelles |
+| Ouverture : retour visuel après le nouveau lot | Continuum, reflet matière et gestes implémentés ; preuves dans le rapport dédié | Juger le rendu/rythme sur téléphone réel, puis décider d’éventuels ajustements |
 | Extension du catalogue | Idée de Malik : autres personnes connues, éventuellement personnages de séries ; **pas encore cadrée ni implémentée** | Définir les personnes et l’organisation des nouvelles cartes avant développement |
 
 Les vérifications sur téléphone réel (rendu, rythme, performances, parcours

@@ -23,6 +23,11 @@ visuelle, pas seulement une confirmation que les tests passent. Malik a renvoyé
 voir docs/reference-ouverture-2026-10-12.md pour son analyse actuelle. La vidéo
 elle-même reste hors Git ; la revue visuelle directe nécessite le fichier joint.
 
+Le cahier des charges continuum/matière/geste a ensuite été implémenté :
+lis docs/booster-continuum-2026-10-12.md et vérifie le code courant.
+Ne présente plus le démontage PackTear → second portail Reveal comme le flux
+actuel ; la révélation est intégrée dans la scène persistante.
+
 Évalue surtout :
 1. Le parcours ouverture → cinq cartes → récapitulatif, son rythme, lisibilité,
    effets et ergonomie mobile. Les appuis arrivés pendant le flip sont désormais

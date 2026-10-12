@@ -1,5 +1,9 @@
 # Référence visuelle d’ouverture — 12 octobre 2026
 
+**Analyse préalable historique** : les descriptions du délai 1 900 ms et des
+deux présentations séparées ci-dessous décrivent le code avant le nouveau
+[correctif continuum](booster-continuum-2026-10-12.md).
+
 Malik a renvoyé `Pokemon-TCG-Pocket-figure1-2.mp4` pour préciser le rendu attendu.
 Vidéo examinée à partir d’une planche de 27 images à deux images/seconde :
 13,5 secondes, portrait 288 × 640 px, 30 images/seconde. Pas de comparaison

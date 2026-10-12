@@ -450,13 +450,12 @@ export function CreatorDeckApp() {
       const result = await openLivePack();
       if (result.status === "drawn") {
         await dechirureTerminee;
-        // All four states commit together: the revealed card replaces the foil.
+        // Keep PackTear mounted: the face now joins its extracted backs in one scene.
         setTutorialReveal(result.tutorial ?? false);
         setRevealKind("live");
         setDrawnCards(result.cards);
         setStreakGain(result.streakReward ?? null);
         setRevealIndex(0);
-        setTearing(false);
         return;
       }
       setTearing(false);
@@ -502,7 +501,6 @@ export function CreatorDeckApp() {
         setRevealKind("scene");
         setDrawnCards(result.cards);
         setRevealIndex(0);
-        setTearing(false);
         return;
       }
       setTearing(false);
@@ -650,6 +648,7 @@ export function CreatorDeckApp() {
   }
 
   function closeReveal() {
+    setTearing(false);
     if (tutorialReveal) {
       setTutorialReveal(false);
       setAccountFocus(null);
@@ -663,6 +662,24 @@ export function CreatorDeckApp() {
   }
 
   if (!game) return <LoadingScreen />;
+
+  const revealPresentation = drawnCards.length ? (
+        <RevealOverlay
+          // Une clé par paquet : les compteurs de refus et le verrou du Perfect
+          // repartent de zéro à chaque ouverture, sans effet de réinitialisation.
+          key={drawnCards[0]?.id ?? "reveal"}
+          embedded={tearing}
+          cards={drawnCards}
+          index={revealIndex}
+          kind={revealKind}
+          returnFocusTo={presentationReturnFocus}
+          tutorial={tutorialReveal}
+          streakReward={streakGain}
+          onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
+          onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
+          onClose={closeReveal}
+        />
+  ) : null;
 
   return (
     <main className="app-shell">
@@ -831,7 +848,7 @@ export function CreatorDeckApp() {
       {tearing ? <PackTear kind={tearKind} returnFocusTo={presentationReturnFocus} onTear={() => {
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
-      }} onComplete={terminerDechirure} /> : null}
+      }} onComplete={terminerDechirure}>{revealPresentation}</PackTear> : revealPresentation}
       {oddsOpen ? (
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
@@ -883,22 +900,7 @@ export function CreatorDeckApp() {
           onClose={() => { setTribunalOpen(false); setTab("home"); }}
         />
       ) : null}
-      {drawnCards.length ? (
-        <RevealOverlay
-          // Une clé par paquet : les compteurs de refus et le verrou du Perfect
-          // repartent de zéro à chaque ouverture, sans effet de réinitialisation.
-          key={drawnCards[0]?.id ?? "reveal"}
-          cards={drawnCards}
-          index={revealIndex}
-          kind={revealKind}
-          returnFocusTo={presentationReturnFocus}
-          tutorial={tutorialReveal}
-          streakReward={streakGain}
-          onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
-          onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}
-          onClose={closeReveal}
-        />
-      ) : null}
+
     </main>
   );
 }

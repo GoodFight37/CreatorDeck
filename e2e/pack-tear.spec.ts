@@ -18,15 +18,20 @@ test("closing a consumed Scene pack returns focus to its section heading", async
 test("the revealed card keeps the extracted card's size and center in a full-screen scene", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
-  const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const pack = page.locator(".opening-continuum");
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const sceneIdentity = await pack.elementHandle();
   const extracted = await pack.locator(".foil-card-chamber").evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
-    const bounds = node.getBoundingClientRect();
+    const bounds = node.querySelector(".foil-back-card-5")!.getBoundingClientRect();
     return { width: bounds.width, x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
   });
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
+  expect(await sceneIdentity!.evaluate((node) => node.isConnected && node === document.querySelector(".opening-continuum"))).toBe(true);
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(reveal.locator(".foil-printed-art")).toHaveCount(2);
+  expect(await reveal.locator(".reveal-embedded").evaluate((node) => getComputedStyle(node).backgroundColor)).toBe("rgba(0, 0, 0, 0)");
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
   await expect(reveal).toBeFocused();
   // Perfect locks the controls briefly: test tab wrapping once they are available.
@@ -84,7 +89,7 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
 test("a horizontal swipe advances after the flip and the button remains available", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
-  const pack = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const pack = page.locator(".opening-continuum");
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
@@ -151,21 +156,21 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
 
-  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
   await expect(dialog.locator(".booster-opening-instruction"))
     .toHaveText("GLISSE SUR LA BANDE STRIÉE EN HAUT");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
-  expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
-    getComputedStyle(node, "::after").animationName,
-  )).toBe("opening-foil-specular");
-  expect(await dialog.locator(".booster-physical-scene").evaluate((node) => {
-    const style = getComputedStyle(node, "::after");
-    return { iterations: style.animationIterationCount, clip: style.clipPath };
-  })).toMatchObject({ iterations: "1" });
-  expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
-    getComputedStyle(node, "::after").clipPath,
-  )).toContain("polygon(");
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
+  await expect(dialog.locator(".foil-material-sheen")).toHaveCount(2);
+  const material = await dialog.locator(".foil-material-sheen").first().evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { animation: style.animationName, clip: style.clipPath, mask: style.maskImage, parent: node.parentElement!.className };
+  });
+  expect(material.animation).toBe("none");
+  expect(material.clip).toContain("polygon(");
+  expect(material.mask).toContain("live-foil.svg");
+  expect(material.parent).toBe("foil-body-piece");
   const panel = await dialog.boundingBox();
   expect(panel).not.toBeNull();
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
@@ -204,12 +209,22 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   expect(emergingLayers.capOverChamber).toBe(true);
   expect(emergingLayers.backs).toBeGreaterThan(0);
   expect(emergingLayers.pouch).toBeGreaterThan(0);
-  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "disabled" });
-  await expect(dialog.locator(".foil-top-piece")).toBeVisible();
+  await dialog.locator(".booster-physical-scene").evaluate((node) => {
+    for (const animation of node.getAnimations({ subtree: true })) {
+      animation.pause();
+      animation.currentTime = 700;
+    }
+  });
+  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "allow" });
+  await dialog.locator(".booster-physical-scene").evaluate((node) => {
+    for (const animation of node.getAnimations({ subtree: true })) animation.play();
+  });
+  await expect(dialog.locator(".foil-top-piece")).toBeAttached();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
   expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
-  await expect(page.locator(".booster-interactive")).toHaveCount(0);
+  await expect(page.locator(".opening-continuum")).toHaveCount(1);
+  await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
 });
 
 test("reduced motion and the card-reflection switch stop the heavy pack and foil effects", async ({ page }) => {
@@ -285,7 +300,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
 test("finger cuts the plastic where it passes, top peels, backs rise, then reveal", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
-  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
   const zone = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
   const bounds = await zone.boundingBox();
@@ -298,6 +313,8 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(x + 80, y, { steps: 8 });
   const slit = dialog.locator(".foil-cut-slit");
   await expect.poll(async () => (await slit.boundingBox())?.width ?? 0).toBeGreaterThan(10);
+  expect(await dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-light-x"))).not.toBe("");
+  expect(await dialog.locator(".foil-material-sheen").first().evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-swiping.png" });
   await page.mouse.move(x + 167, y, { steps: 8 });
   await page.mouse.up();
@@ -323,18 +340,23 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
     [".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-depth-bottom"]
       .map((selector) => Number(getComputedStyle(node.querySelector(selector)!).opacity)),
   );
-  expect(packetOpacity.every((opacity) => opacity < .1)).toBe(true);
-  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
+  // The parent retires gently after the face enters; the body need not disappear
+  // prematurely during extraction. Inspect its rendered ancestor, not only local opacity.
+  await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => Number(getComputedStyle(node).opacity))).toBeLessThan(.1);
+  expect(packetOpacity[1]).toBeGreaterThan(0);
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-opening.png" });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
-  await expect(dialog).toHaveCount(0);
+  await expect(dialog).toHaveCount(1);
+  await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
+  await expect(dialog.locator(".reveal-embedded")).toHaveCount(1);
 });
 
 test("reversing or lifting halfway cancels cleanly and keeps the no-tear option", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
-  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const dialog = page.locator(".opening-continuum");
   const seam = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
   const bounds = (await seam.boundingBox())!;
   const touch = await page.context().newCDPSession(page);
@@ -444,7 +466,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   const touch = await page.context().newCDPSession(page);
   for (const reverse of [false, true]) {
     await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
-    const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+    const dialog = page.locator(".opening-continuum");
     for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 800 }, { width: 412, height: 915 }]) {
       await page.setViewportSize(viewport);
       const pack = (await dialog.locator(".booster-physical-scene").boundingBox())!;

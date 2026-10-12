@@ -55,7 +55,9 @@ notamment SolaryHS, j0niq et toaststix. Le retour Paquet Scène est confirmé bo
 par Malik. Revue du rendu des boosters et éventuel élargissement du catalogue sont dans le
 [plan actif](docs/roadmap.md). [Bilan vérifié pour le relecteur](docs/etat-projet-2026-10-12.md)
 et [brief à transmettre à Grok](docs/revue-grok-2026-10-12.md).
-Les anciens chiffres et statuts datés ci-dessous ne remplacent pas ce bilan.
+Nouveau lot d’ouverture : [continuum, matière et geste](docs/booster-continuum-2026-10-12.md) ;
+scène montée du sachet au récap, reflet masqué sur ses morceaux et cartes
+manipulées au doigt après flip. Les anciens chiffres/statuts restent datés.
 
 ## Prérequis
 
