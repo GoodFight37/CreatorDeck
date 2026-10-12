@@ -466,4 +466,5 @@ sur Postgres jetable. E2E : 64 réussis sur bureau/téléphone, 10 scénarios av
 serveur ignorés, puis les 10 parcours cloud simulés réussis. Les assertions SQL
 d’arène devenues périmées avec la date étaient aussi corrigées : fin de semaine
 relative au lundi publié, et carte intruse différente des choix déjà pris.
-Publication et CI GitHub à renseigner.
+Publié sur `main` dans `3f33b19` ; la CI complète `38251607393` est verte (4/4
+jobs), incluant E2E bureau/téléphone, Postgres jetable et cloud simulé.
