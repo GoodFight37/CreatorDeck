@@ -9,7 +9,8 @@ crédités gardent leur priorité sur Upscayl. Registres séparés :
 `provided-portrait-overrides.json`, `upscaled-portrait-overrides.json`.
 Les bases Twitch ci-dessous restent en 600 px ; leur taille n’est pas celle de
 toutes les images affichées. Sources/licences absentes indiquées dans les
-crédits ; trois avatars génériques restent à remplacer. [Bilan](etat-projet-2026-10-12.md).
+crédits. Les avatars génériques sans photo de profil sont acceptés par Malik ;
+aucun remplacement requis. [Bilan](etat-projet-2026-10-12.md).
 
 ## Remplacer un portrait individuellement — historique du premier lot
 

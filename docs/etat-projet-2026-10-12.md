@@ -26,7 +26,6 @@ Aucune PR ouverte au dernier contrôle GitHub.
 | Chantier | État actuel | Fin attendue |
 |---|---|---|
 | Ouverture des boosters : avis esthétique et tactile | Revue externe Grok demandée ; correctifs déjà publiés et E2E verts | Examiner le rendu actuel, puis décider des changements utiles ; jugement final sur le téléphone de Malik |
-| Trois portraits génériques | **SolaryHS, j0niq et toaststix** ont encore une silhouette violette ; vérification visuelle des fichiers actuellement servis. Xari a désormais une photo | Choisir une image correspondant à chacun, intégrer et publier |
 | Retour du Paquet Scène déjà ouvert | Fonctionnement corrigé ; demande de présentation plus courte/neutre encore à valider | Le bouton actuel dit « Déjà ouvert · demain matin » ; le refus de revalidation dit « Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC. ». Juger ces états actuels, sans attribuer au code l’ancien texte |
 | Extension du catalogue | Idée de Malik : autres personnes connues, éventuellement personnages de séries ; **pas encore cadrée ni implémentée** | Définir les personnes et l’organisation des nouvelles cartes avant développement |
 
@@ -39,8 +38,10 @@ sont pas à redemander.
 
 - Lot portraits : **300 choix manuels + 699 fichiers Upscayl + une photo de
   Diverron restaurée avec IA**. Les 1 000 créateurs ont une route d’image ; cela
-  ne signifie pas 1 000 photos humaines vérifiées. Les trois silhouettes
-  ci-dessus restent à remplacer. Crédits repliés dans Toi → Réglages.
+  ne signifie pas 1 000 photos humaines vérifiées. **Les avatars génériques sont
+  acceptés par Malik** pour les créateurs sans photo de profil, notamment
+  SolaryHS, j0niq et toaststix : aucune recherche/remplacement demandé.
+  Crédits repliés dans Toi → Réglages.
 - Identité Skyrozz corrigée, compte Twitch `skyrroztv` ; migration dédiée 0050.
 - Appuis rapides sur « Révéler la suivante » mémorisés pendant le flip :
   correctif `3f33b19`, inclus dans le code courant et la CI complète verte.

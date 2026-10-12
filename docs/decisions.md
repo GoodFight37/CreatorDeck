@@ -514,3 +514,12 @@ le plafond, le tirage, la réserve et les autres règles restent inchangés.
 SolaryHS et trois autres fichiers sont des avatars génériques malgré des chemins
 valides : ne pas remplacer une identité par le portrait d’un autre créateur ;
 remplacement réel suspendu à des sources d’image autorisées.
+
+## D-060 — 12 octobre 2026 : conserver les avatars génériques sans photo
+
+Instruction explicite de Malik : si un créateur n’a pas de photo de profil,
+son avatar générique convient et ne constitue pas un problème. SolaryHS,
+j0niq et toaststix sortent donc du plan de remplacement et K-044 est clos par
+acceptation du choix visuel. Aucun portrait inventé ni nouvelle collecte
+requise, aucune modification du code ou des images. La roadmap et le brief
+Grok reflètent cette décision.

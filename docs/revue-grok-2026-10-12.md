@@ -13,8 +13,9 @@ multijoueurs. Le support Android existe, mais Vercel est son usage actuel.
 
 Aujourd’hui les 1 000 routes d’images sont intégrées : 300 manuelles, 699
 Upscayl, Diverron restauré avec IA. Ce ne sont pas 1 000 identités/photos
-vérifiées. SolaryHS, j0niq et toaststix restent des silhouettes. Ne repropose
-pas une collecte exhaustive des portraits ; les améliorations seront ciblées.
+vérifiées. Malik accepte les avatars génériques quand le créateur n’a pas de
+photo de profil, notamment SolaryHS, j0niq et toaststix. Ce n’est pas un bug ni
+une tâche de remplacement. Aucune collecte exhaustive des portraits demandée.
 
 Évalue surtout :
 1. Le parcours ouverture → cinq cartes → récapitulatif, son rythme, lisibilité,

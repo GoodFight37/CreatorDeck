@@ -1,8 +1,9 @@
 # Reprise courte : portraits CreatorDeck — 12 octobre 2026
 
 **Checkpoint courant :** lot publié `10699eb`, CI complète et Vercel Production
-réussis. 300 manuels + 699 Upscayl + Diverron restauré IA. Trois silhouettes
-restent : SolaryHS, j0niq, toaststix. [Bilan actuel](etat-projet-2026-10-12.md).
+réussis. 300 manuels + 699 Upscayl + Diverron restauré IA. Malik accepte les
+avatars génériques sans photo de profil, dont SolaryHS, j0niq et toaststix :
+aucune recherche/remplacement requis. [Bilan actuel](etat-projet-2026-10-12.md).
 Les sections antérieures ci-dessous sont historiques.
 
 ## État historique — premier lot Rubius/Shroud
