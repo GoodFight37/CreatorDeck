@@ -317,5 +317,5 @@ Code modifié dans `tools/portrait-studio/` ; version `1.5.0`, mise à jour par
 tools/portrait-studio test` 6/6 ; `node tools/portrait-studio/browser.test.mjs`
 réussi avec Chromium et sources simulées (carrousel, flèches, rejet, choix
 provisoire, import local, reprise/validation préexistantes, export séparé) ;
-ESLint ciblé réussi. Windows physique et récupération réelle Wikimedia depuis
-le PC utilisateur non testés.
+ESLint ciblé réussi. CI GitHub du commit `9e9a906` : succès, quatre jobs. Windows physique et
+récupération réelle Wikimedia depuis le PC utilisateur non testés.
