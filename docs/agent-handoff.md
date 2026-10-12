@@ -2058,3 +2058,15 @@ l’application utilise déjà `diverron-fallback.svg`. Les quatre feuilles CSS 
 partagent aucun sélecteur exact ni nom de keyframe. Le test Playwright mobile
 est une émulation, pas une validation sur téléphone physique. Aucun SQL, donnée,
 secret ou règle de jeu modifiés.
+
+## Checkpoint recherche portraits — 12 octobre 2026
+
+Reprise ciblée autorisée par Malik depuis `929d9af`, sans relire les archives.
+Six fichiers originaux pour cinq créateurs examinés ; aucun nouveau remplacement.
+Voir [la passation courte](passation-portraits.md#recherche-reprise-dans-la-nouvelle-session--12-octobre-2026)
+et [le manifeste](portrait-recherche-2026-10-12.csv) pour les sources, licences,
+réserves, SHA-256, accès testés et prochaine action. ZIP local dans
+`/workspace/artifacts/portraits-2026-10-12.zip`, non versionné : à conserver.
+Décodage/dimensions Sharp des 6 fichiers et intégrité ZIP réussis ; aucun test
+applicatif exécuté pour ce diff documentaire. Réservation libérée. Publication
+normale vers main ; SHA du checkpoint par `git log -1 --format=%H -- docs/passation-portraits.md`.
