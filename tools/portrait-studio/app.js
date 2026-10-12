@@ -3,7 +3,7 @@ const token = location.hash.slice(1) || sessionStorage.getItem("portrait-studio-
 if (token) sessionStorage.setItem("portrait-studio-token", token);
 history.replaceState(null, "", location.pathname);
 let saveTimer = null; let unsaved = false; let saving = Promise.resolve(); let nextAfterKeep = false; let reviewItems = []; let reviewOffset = 0;
-let state; let slug; let image; let selected; let blobUrl; let cx = 0; let cy = 0; let drag; let revision = 0;
+let bridgeOpening = false; let state; let slug; let image; let selected; let blobUrl; let cx = 0; let cy = 0; let drag; let revision = 0;
 const canvas = $("crop"); const context = canvas.getContext("2d");
 function message(text) { $("message").textContent = text; }
 async function api(url, data) {
@@ -12,16 +12,16 @@ async function api(url, data) {
 }
 function element(tag, text, parent) { const e = document.createElement(tag); if (text) e.textContent = text; parent?.append(e); return e; }
 function safeLink(url, text, parent) { try { if (new URL(url).protocol !== "https:") return; const e = element("a", text, parent); e.href = url; e.target = "_blank"; e.rel = "noopener noreferrer"; } catch { /* Adresse absente. */ } }
-async function refresh() { state = await api("/api/state"); renderNames(); $("progress").textContent = `${Object.keys(state.base).length + Object.keys(state.choices).filter((s) => !state.base[s]).length} / ${state.creators.length} prêts`; }
+async function refresh() { state = await api("/api/state"); renderNames(); $("progress").textContent = `${Object.keys(state.base).length + Object.keys(state.choices).filter((s) => !state.base[s]).length} / ${state.creators.length} prêts${Object.keys(state.visual).length ? ` · ${Object.keys(state.visual).length} photos choisies, droits à vérifier` : ""}`; }
 function renderNames() {
   const filter = $("filter").value.toLocaleLowerCase("fr"); $("names").replaceChildren();
   for (const c of state.creators) {
-    const done = state.base[c.slug] || state.choices[c.slug];
-    if ($("statusFilter").value && $("statusFilter").value !== (done ? "Prêt" : state.tracking[c.slug]?.status || "À chercher")) continue;
+    const done = state.base[c.slug] || state.choices[c.slug] || state.visual[c.slug];
+    if ($("statusFilter").value && $("statusFilter").value !== (state.visual[c.slug] ? "Droits à vérifier" : done ? "Prêt" : state.tracking[c.slug]?.status || "À chercher")) continue;
     if (done && !$("showDone").checked) continue;
     if (!(c.slug + " " + c.displayName).toLocaleLowerCase("fr").includes(filter)) continue;
     const b = element("button", `${c.rank}. ${c.displayName}`, $("names"));
-    element("small", done ? "Portrait prêt" : state.skipped[c.slug] ? "Passé, à reprendre" : state.tracking[c.slug]?.status || "À chercher", b);
+    element("small", state.visual[c.slug] ? "Photo choisie · droits à vérifier" : done ? "Portrait prêt" : state.skipped[c.slug] ? "Passé, à reprendre" : state.tracking[c.slug]?.status || "À chercher", b);
     if (c.slug === slug) b.classList.add("active"); b.onclick = () => choose(c.slug).catch((e) => message(e.message));
   }
 }
@@ -39,6 +39,7 @@ async function choose(next) {
   for (const [label, url] of [["Bing Images", "https://www.bing.com/images/search?q=" + query], ["YouTube", "https://www.youtube.com/results?search_query=" + query], ["Instagram", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site:instagram.com")], ["X", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site:x.com")], ["Comptes officiels", "https://www.google.com/search?q=" + encodeURIComponent(c.displayName + " site officiel comptes officiels")]]) safeLink(url, label, $("external"));
   for (const link of tracking.links || []) safeLink(link, "Source enregistrée", $("external"));
   $("existing").replaceChildren(); const old = element("img", "", $("existing")); old.className = "current"; old.src = `/seed/avatars/${slug}.webp`; old.alt = "Avatar du catalogue";
+  if (state.visual[slug]) { const n = element("img", "", $("existing")); n.className = "current"; n.src = `/visual/${slug}.webp`; n.alt = "Photo choisie, droits à vérifier"; }
   if (state.choices[slug]) { const n = element("img", "", $("existing")); n.className = "current"; n.src = `/chosen/${slug}.webp`; n.alt = "Portrait retenu"; }
   const ready = state.choices[slug] || state.base[slug]; if (ready) { element("p", "Portrait déjà prêt — il sera conservé tant que tu ne le remplaces pas.", $("existing")); if (state.base[slug] && !state.choices[slug]) { const n = element("img", "", $("existing")); n.className = "current"; n.src = `/seed/portraits/${slug}.webp`; n.alt = "Portrait préparé"; } }
   const result = await api("/api/candidates?slug=" + encodeURIComponent(slug)); if (slug !== next) return; renderCandidates(result.candidates); if (state.drafts[slug]) { const response = await fetch("/api/draft-photo?slug=" + slug, { headers: { Authorization: `Bearer ${token}` } }); if (response.ok) await setImage(await response.blob(), state.drafts[slug], next); } message("Choisis une candidate, ajoute une photo du PC, ou recherche dans ton navigateur.");
@@ -62,7 +63,7 @@ async function setImage(blob, candidate, expectedSlug = slug) {
   if (expectedSlug !== slug) return;
   closeEditor(); const currentRevision = revision; unsaved = true; selected = { ...candidate, blob }; blobUrl = URL.createObjectURL(blob); image = new Image(); image.src = blobUrl; await image.decode();
   if (currentRevision !== revision || expectedSlug !== slug) return;
-  $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 900;
+  $("visualNext").disabled = $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 900;
   cx = image.naturalWidth / 2; cy = image.naturalHeight / 2; $("zoom").max = Math.max(1, Math.min(image.naturalWidth, image.naturalHeight) / 900); $("zoom").value = "1";
   $("title").value = candidate.title || ""; $("author").value = candidate.author || ""; $("source").value = candidate.source || ""; $("license").value = candidate.license || "";
   if (!$("license").value) $("license").value = "";
@@ -80,7 +81,7 @@ canvas.onpointerup = canvas.onpointercancel = () => { drag = null; }; $("zoom").
 $("filter").oninput = renderNames; $("showDone").onchange = renderNames; $("cancel").onclick = async () => { try { await autosave(); closeEditor(); unsaved = false; } catch(e) { message(e.message); } };
 $("file").onchange = async () => { try { const file = $("file").files[0]; if (file) await setImage(file, { title: file.name }); } catch (e) { message(e.message); } };
 $("search").onclick = async () => { try { const expectedSlug = slug; message("Recherche Commons en cours…"); const result = await api("/api/search", { slug }); if (expectedSlug !== slug) return; renderCandidates(result.candidates); message("Recherche enregistrée sur le PC."); } catch (e) { message(e.message); } };
-$("skip").onclick = async () => { try { await api("/api/skip", { slug }); await refresh(); const next = state.creators.find((c) => !state.base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } catch (e) { message(e.message); } };
+$("skip").onclick = async () => { try { await api("/api/skip", { slug }); await refresh(); const next = state.creators.find((c) => !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } catch (e) { message(e.message); } };
 $("keep").onclick = async () => {
   $("keep").disabled = true;
   const expectedSlug = slug;
@@ -89,13 +90,16 @@ $("keep").onclick = async () => {
     const data = output.toDataURL("image/webp", 0.9); if (!data.startsWith("data:image/webp;")) throw Error("Utilise Edge ou Chrome pour exporter le WebP.");
     const license = $("license").value; const match = license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/); const licenseUrl = match ? `https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/` : "https://creativecommons.org/publicdomain/zero/1.0/";
     await api("/api/select", { slug, pageid: selected.pageid, title: $("title").value, author: $("author").value, source: $("source").value, license, licenseUrl, proofUrl: $("proofUrl").value, permission: $("permission").value, verified: $("verified").checked, crop: r, webp: data.split(",")[1] });
-    if (expectedSlug === slug) closeEditor(); await refresh(); if (nextAfterKeep && expectedSlug === slug) { const next = state.creators.find(c => !state.base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } nextAfterKeep = false; message("Portrait enregistré sur ce PC. Clique sur Exporter pour préparer les fichiers à intégrer.");
+    if (expectedSlug === slug) closeEditor(); await refresh(); if (nextAfterKeep && expectedSlug === slug) { const next = state.creators.find(c => !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } nextAfterKeep = false; message("Portrait enregistré sur ce PC. Clique sur Exporter pour préparer les fichiers à intégrer.");
   } catch (e) { message(e.message); } finally { $("keep").disabled = false; nextAfterKeep = false; }
 };
-$("export").onclick = async () => { try { const result = await api("/api/export", {}); message(`${result.count} portraits exportés dans :\n${result.directory}\nCompresse ce dossier en ZIP pour le transmettre à Codex. Aucun fichier du jeu ni GitHub n’a été modifié.`); } catch (e) { message(e.message); } };
+$("export").onclick = async () => { try { const result = await api("/api/export", {});
+    const response = await fetch("/api/export-zip", { headers: { Authorization: `Bearer ${token}` } }); if (!response.ok) throw Error("Export enregistré, mais téléchargement du ZIP impossible.");
+    const url = URL.createObjectURL(await response.blob()); const link = element("a", "", document.body); link.href = url; link.download = "CreatorDeck-Portraits.zip"; link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+    message(`${result.count} portraits exportés dans :\n${result.directory}\n${result.pendingCount || 0} sélections avec droits à vérifier dans A-VERIFIER (à ne pas publier).\nLe ZIP a été téléchargé : transmets-le à Codex. Aucun fichier du jeu ni GitHub n’a été modifié.`); } catch (e) { message(e.message); } };
 $("batch").onclick = async () => { try { const result = await api("/api/batch", {}); state.batch = result; message(result.total ? `Lot lancé : ${result.total} recherches, sans IA. Tu peux continuer à choisir les photos.` : "Les recherches initiales sont déjà présentes. Relance seulement celles des créateurs qui n’ont pas de bonne candidate."); } catch (e) { message(e.message); } };
 setInterval(async () => { if (state?.batch?.running) { try { await refresh(); if (!state.batch.running) message(state.batch.error || "Lot terminé et enregistré."); } catch { /* Le serveur peut avoir été fermé. */ } } }, 3000);
-try { await refresh(); const first = state.creators.find(c => c.slug === state.session.slug) || state.creators.find((c) => !state.base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug]) || state.creators[0]; await choose(first.slug); } catch (e) { message(e.message); }
+try { await refresh(); const first = state.creators.find(c => c.slug === state.session.slug) || state.creators.find((c) => !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]) || state.creators[0]; await choose(first.slug); } catch (e) { message(e.message); }
 
 async function importUrl(value) {
   const expectedSlug = slug;
@@ -185,21 +189,51 @@ $("prepareReview").onclick=async()=>{
 };
 
 $("updates").onclick=async()=>{try{const r=await api("/api/update-check");message(r.available?`Nouvelle version ${r.latest} disponible. Ferme le lanceur, puis double-clique METTRE-A-JOUR.cmd. Tes photos et choix seront conservés.`:`Version ${r.current} à jour.`);}catch(e){message("Vérification impossible : "+e.message);}};
-$("approveReview").onclick=async()=>{
-  $("approveReview").disabled=true; let count=0;
+async function saveReview(pending = false) {
+  if ($("approveReview").disabled) return;
+  $("chooseReview").disabled = true; $("approveReview").disabled=true; let count=0;
   try {
     const boxes=[...$("reviewCards").querySelectorAll("input[data-slug]:checked")];
     if(!boxes.length) throw Error("Coche les photos à garder.");
-    if(boxes.some(b=>!b.rights.checked)) throw Error("Confirme les droits sur la source pour chaque photo cochée, ou utilise Préparer pour les garder en brouillon.");
+    if(!pending && boxes.some(b=>!b.rights.checked)) throw Error("Confirme les droits sur la source pour chaque photo cochée, ou utilise Préparer pour les garder en brouillon.");
     for(const box of boxes) {
-      const c=box.candidate(); if(!c.author || !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(c.license)) throw Error("Crédits incomplets : utilise Examiner pour ce créateur.");
+      const c=box.candidate(); if(!pending && (!c.author || !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(c.license))) throw Error("Crédits incomplets : utilise Examiner pour ce créateur.");
       const response=await fetch(`/api/photo?slug=${box.dataset.slug}&id=${c.pageid}`,{headers:{Authorization:`Bearer ${token}`}}); if(!response.ok) throw Error((await response.json()).error);
       const blob=await response.blob(); const url=URL.createObjectURL(blob);
       try {const photo=new Image();photo.src=url;await photo.decode();const size=Math.min(photo.naturalWidth,photo.naturalHeight);if(size<900)throw Error("Originale trop petite");const x=(photo.naturalWidth-size)/2,y=(photo.naturalHeight-size)/2;const output=document.createElement("canvas");output.width=output.height=900;output.getContext("2d").drawImage(photo,x,y,size,size,0,0,900,900);
       const match=c.license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/);
-      await api("/api/select",{slug:box.dataset.slug,pageid:c.pageid,title:c.title,author:c.author,source:c.source,license:c.license,licenseUrl:match?`https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/`:"https://creativecommons.org/publicdomain/zero/1.0/",verified:true,crop:{x,y,size},webp:output.toDataURL("image/webp",.9).split(",")[1]});
+      await api(pending ? "/api/visual" : "/api/select",{slug:box.dataset.slug,pageid:c.pageid,title:c.title,author:c.author,source:c.source,license:c.license,licenseUrl:match?`https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/`:"https://creativecommons.org/publicdomain/zero/1.0/",verified:true,crop:{x,y,size},webp:output.toDataURL("image/webp",.9).split(",")[1]});
       }finally{URL.revokeObjectURL(url);} box.checked=false;count++;message(`${count} portraits du lot enregistrés.`);
     }
     await refresh(); reviewItems=(await api("/api/review")).items; reviewOffset=0;renderReview();
-  }catch(e){message(`${count} portraits enregistrés. ${e.message}`);}finally{$("approveReview").disabled=false;}
+  }catch(e){message(`${count} portraits enregistrés. ${e.message}`);}finally{$("approveReview").disabled=false; $("chooseReview").disabled=false;}
 };
+
+$("approveReview").onclick = () => saveReview(false);
+$("chooseReview").onclick = () => saveReview(true);
+$("connectBrowser").onclick=async()=>{try{const r=await api("/api/connect");await navigator.clipboard.writeText(r.connection);message("Connexion copiée. Dans l’extension CreatorDeck, colle-la puis clique Connecter. Ne partage pas ce lien.");}catch(e){message("Connexion impossible : "+e.message);}};
+$("quickSearch").onclick=()=>{window.open($("google").href,"creatordeck-search");};
+$("visualNext").onclick=async()=>{
+  const next=state.creators.find(c=>c.slug!==slug && !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]);
+  const opened=next ? window.open("about:blank","creatordeck-search") : null;
+  $("visualNext").disabled=true;
+  try{
+    if(!image)throw Error("Ajoute une photo avant de choisir."); await autosave(); const r=crop(); const output=document.createElement("canvas");output.width=output.height=900;output.getContext("2d").drawImage(image,r.x,r.y,r.size,r.size,0,0,900,900);
+    await api("/api/visual",{slug,title:$("title").value,author:$("author").value,source:$("source").value,license:$("license").value,permission:$("permission").value,proofUrl:$("proofUrl").value,crop:r,webp:output.toDataURL("image/webp",.9).split(",")[1]});
+    closeEditor();unsaved=false;await refresh();if(next){await choose(next.slug);if(opened)opened.location.href=$("google").href;}message("Photo choisie et cadrée. Droits à vérifier plus tard ; elle reste séparée des portraits publiables.");
+  }catch(e){if(opened)opened.close();message(e.message);}finally{$("visualNext").disabled=false;}
+};
+async function receivePhotos(force = false){
+ if(bridgeOpening || document.visibilityState!=="visible" || !state)return;
+ bridgeOpening=true;
+ try{
+ const items=(await api("/api/inbox")).items; $("receivedPhoto").classList.toggle("hidden", !items.length); $("receivedPhoto").textContent=`Ouvrir une photo reçue (${items.length})`;
+ if(!items.length || (image && !force))return;
+   const item=items[0]; await choose(item.slug); const response=await fetch("/api/inbox-photo?id="+item.id,{headers:{Authorization:`Bearer ${token}`}});if(!response.ok)throw Error("Photo reçue introuvable");
+   await setImage(await response.blob(),{title:item.title,source:item.source},item.slug);await autosave();await refresh();await api("/api/inbox-opened",{id:item.id});
+   message(`Photo reçue pour ${item.name}. Vérifie la personne, ajuste le cadrage puis choisis et passe au suivant. Droits à compléter plus tard.`);
+ }finally{bridgeOpening=false;}
+}
+setInterval(()=>receivePhotos().catch(e=>message(e.message)),2000);
+
+$("receivedPhoto").onclick=()=>receivePhotos(true).catch(e=>message(e.message));

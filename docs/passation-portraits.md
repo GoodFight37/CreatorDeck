@@ -253,3 +253,47 @@ du brouillon, Garder et suivant, export réussi. ESLint ciblé réussi. Tests su
 Linux et réponses réseau simulées ; Windows physique non testé. ZIP 8,6 Mio,
 intégrité vérifiée, aucun état de test inclus. Travail portraits préexistant
 conservé et non intégré par cette publication. Réservation libérée.
+
+### Version 1.3.0 : connecteur navigateur et sélection avant droits
+
+Malik demande de simplifier au maximum le passage Google Images → atelier.
+Connecteur MV3 Chrome/Edge dans `tools/portrait-studio/extension/`, menu clic
+ droit image, capture URL directe et page source (imgurl/imgrefurl si disponibles),
+transfert à l’atelier et retour au premier plan. Permission HTTPS optionnelle
+explicite pour les téléchargements choisis ; aucun cookie des comptes récupéré.
+HTTP localhost fixe 127.0.0.1:4317. Connexion initiale par bouton Copier la
+connexion navigateur puis collage dans le popup ; clé locale persistante sous
+`_travail/connexion-navigateur.json`, jamais dans Git ou les exports. Autorisation
+restreinte pour cette clé à bridge-state et receive ; contrôle d’origine et
+Bearer. Cible figée avant téléchargement. Inbox persistante, pas d’écrasement
+automatique d’un éditeur ouvert. Photos reçues ouvrables depuis un bouton dédié.
+
+Parcours : Rechercher ce créateur → clic droit Envoyer à CreatorDeck → cadrage →
+Choisir la photo et rechercher le suivant (onglet de recherche réutilisé).
+La sélection esthétique peut avancer sans crédits complets ; statut Droits à
+vérifier, stockage séparé, exclusion du patch de publication. Validation groupée
+sans droits possible, droits traités ensuite. Le dernier cadrage et l’originale
+restent reprenables. Export ZIP direct, avec dossiers public/ et A-VERIFIER
+séparés et manifestes explicites. ZIP sans dépendance runtime, CRC32 contrôlé.
+
+Livrables locaux : ZIP complet Windows toujours 8,6 Mio ; complément seul
+`/workspace/artifacts/CreatorDeck-Extension-Navigateur.zip` (quelques Kio).
+Utilisateur 1.2 : lancer METTRE-A-JOUR.cmd, extraire le complément dans le dossier
+de l’atelier et charger une seule fois extension/ via chrome://extensions ou
+edge://extensions, mode développeur. Installation détaillée dans
+[la notice](../tools/portrait-studio/extension/INSTALLER.md). Le nouvel updater
+actualise aussi les fichiers de l’extension via extensionFiles dans le manifeste,
+compatible avec l’ancien updater qui ignore cette section. Après actualisation,
+recharger l’extension ou redémarrer le navigateur. Choix et recherches conservés.
+
+Base vérifiée `9bd1ca4`. Tests serveur+updater enrichis 5/5, dont clé bridge refusée
+sur les API ordinaires, origine étrangère refusée, inbox, export pending séparé,
+ZIP et mise à jour ajoutant l’extension sans supprimer les choix ; ESLint ciblé
+réussi. Chromium : connecteur réel exécuté avec API Chrome et téléchargement
+simulés, transfert au vrai serveur, réception dans l’éditeur, sélection sans
+licence, export et ZIP lu avec Python zipfile réussis. Le chargement réel MV3
+est bloqué par politique administrateur du Chromium cloud : essais timeout puis
+CDP explicitement refusé. Aucun contournement poursuivi ; clic droit réel,
+permissions, Chrome/Edge Windows et accès aux sites non validés. Ne pas annoncer
+le connecteur testé physiquement ni garantir tous les sites. ZIPs vérifiés,
+aucun état de test inclus, portraits préexistants non publiés par ce commit.

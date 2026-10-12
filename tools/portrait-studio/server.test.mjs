@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { createStudio, httpsUrl, webpSize } from "./server.mjs";
+import { createStudio, httpsUrl, webpSize, zipFiles } from "./server.mjs";
 
 test("les téléchargements restent HTTPS et sur Wikimedia", () => {
   assert.equal(httpsUrl("https://upload.wikimedia.org/a.jpg", ["upload.wikimedia.org"]), "https://upload.wikimedia.org/a.jpg");
@@ -31,6 +31,18 @@ test("un choix persiste et l’export préserve la base sans modifier un dépôt
     const body = { slug: "new", title: "Photo", author: "Auteur", source: "https://commons.wikimedia.org/wiki/File:Photo.jpg", license: "CC BY 4.0", licenseUrl: "https://creativecommons.org/licenses/by/4.0/", verified: true, crop: { x: 0, y: 0, size: 900 }, webp: fixture.toString("base64") };
     assert.equal((await post("/api/select", { ...body, crop: { x: 0, y: 0, size: 500 } })).status, 400);
     assert.equal((await post("/api/select", { ...body, verified: false })).status, 400);
+    assert.equal((await post("/api/visual", { ...body, author: "", license: "", verified: false })).status, 200);
+    const pendingExport = await (await post("/api/export", {})).json(); assert.equal(pendingExport.count, 1); assert.equal(pendingExport.pendingCount, 1);
+    const pendingPatch = JSON.parse(await readFile(path.join(pendingExport.directory, "portrait-overrides.patch.json"), "utf8")); assert.equal(pendingPatch.new, undefined);
+    const connection = await (await fetch(origin + "/api/connect", { headers: { Authorization: `Bearer ${studio.token}` } })).json();
+    const bridgeToken = new URL(connection.connection).hash.slice(1);
+    assert.equal((await fetch(origin + "/api/state", { headers: { Authorization: `Bearer ${bridgeToken}` } })).status, 403);
+    await post("/api/session", { slug: "new" });
+    const bridgeHeaders = { Authorization: `Bearer ${bridgeToken}`, "X-Studio-Bridge": "1", "Content-Type": "application/json" };
+    const receiveBody = JSON.stringify({ slug: "new", original: fixture.toString("base64"), imageUrl: "https://example.com/photo.webp", source: "https://example.com/page", title: "Image reçue" });
+    assert.equal((await fetch(origin + "/api/receive", { method: "POST", headers: { ...bridgeHeaders, Origin: "https://untrusted.example" }, body: receiveBody })).status, 403);
+    assert.equal((await fetch(origin + "/api/receive", { method: "POST", headers: bridgeHeaders, body: receiveBody })).status, 200);
+    const inbox = await (await fetch(origin + "/api/inbox", { headers: { Authorization: `Bearer ${studio.token}` } })).json(); assert.equal(inbox.items.length, 1); assert.equal(inbox.items[0].slug, "new");
     assert.equal((await post("/api/select", body)).status, 200);
     assert.equal((await post("/api/tracking", { slug: "new", status: "Trouvé", links: "https://example.com/source", notes: "Source officielle" })).status, 200);
     assert.equal((await post("/api/draft", { slug: "new", original: fixture.toString("base64"), title: "Photo à cadrer" })).status, 200);
@@ -43,4 +55,11 @@ test("un choix persiste et l’export préserve la base sans modifier un dépôt
     assert.deepEqual(JSON.parse(await readFile(path.join(seed, "published.json"), "utf8")), { existing });
     assert.deepEqual(await readFile(path.join(exported.directory, "public/creators/curated/new.webp")), fixture);
   } finally { await new Promise((r) => studio.server.close(r)); await rm(directory, { recursive: true, force: true }); }
+});
+
+test("le ZIP exporté est lisible sans dépendance et conserve les données", () => {
+  const data = Buffer.from("123456789"); const zip = zipFiles([["photo.webp", data]]);
+  assert.equal(zip.readUInt32LE(0), 0x04034b50); assert.equal(zip.readUInt32LE(14), 0xcbf43926);
+  assert.equal(zip.subarray(30, 40).toString(), "photo.webp"); assert.deepEqual(zip.subarray(40, 49), data);
+  assert.equal(zip.readUInt32LE(zip.length-22), 0x06054b50); assert.equal(zip.readUInt16LE(zip.length-14), 1);
 });

@@ -152,3 +152,43 @@ extraire ses fichiers dans le dossier existant en conservant `_travail/`.
 Ensuite, les corrections compatibles se récupèrent avec le lanceur de mise à
 jour. Le paquet reste inférieur à 10 Mo ; les mises à jour du code sont beaucoup
 plus petites. Un futur changement de données peut nécessiter un paquet séparé.
+
+## Parcours depuis ton navigateur — version 1.3.0
+
+Le dossier `extension/` contient un connecteur Chrome/Edge. Suivre
+[son installation initiale](extension/INSTALLER.md). Une fois connecté :
+
+1. **Rechercher ce créateur** ouvre Google Images dans un onglet réutilisable.
+2. Sur une bonne image, clic droit → **Envoyer à CreatorDeck**.
+3. La photo et sa source sont reçues ; vérifier la personne et le cadrage.
+4. **Choisir la photo et rechercher le suivant** enregistre ta sélection et
+   ouvre la recherche du prochain créateur restant.
+
+Les photos reçues ne remplacent pas automatiquement un éditeur en cours ;
+**Ouvrir une photo reçue** permet de les ouvrir ensuite. La file conserve les
+originales et leurs sources. Les transferts sont associés au créateur ouvert
+au moment du clic, même si tu changes ensuite de fiche.
+
+Tu peux choisir et cadrer avant de renseigner les droits. Le filtre
+**Droits à vérifier** rassemble ces sélections. Elles sont exportées dans
+`A-VERIFIER`, avec un manifeste séparé, et ne sont jamais ajoutées au patch de
+publication. Pour les rendre publiables, reprendre le brouillon, compléter
+l’auteur/la source/la licence ou l’autorisation puis **Garder ce portrait**.
+Le mode par lots propose aussi **Choisir les cadrages cochés (droits plus tard)**.
+
+**Exporter les portraits prêts** télécharge maintenant un ZIP directement :
+plus besoin de compresser le dossier dans l’Explorateur. Il inclut les portraits
+prêts, leurs crédits et les sélections encore à vérifier dans un dossier séparé.
+Une copie reste sous `_travail/EXPORT`. Transmettre le ZIP pour intégration.
+
+Si tu possèdes déjà la version 1.2.0, son lanceur de mise à jour récupère le
+nouveau code de l’atelier. Pour ajouter le connecteur la première fois, extraire
+le petit ZIP de l’extension dans le dossier de l’atelier et suivre sa notice.
+Les versions suivantes de l’updater actualisent aussi les fichiers de l’extension.
+Après mise à jour, recharger l’extension dans Chrome/Edge ou redémarrer le navigateur.
+
+Vérifications : serveur et updater, parcours Chromium avec le code du connecteur
+et les API Chrome simulées, ZIP lu par un lecteur indépendant. Le navigateur du
+cloud interdit les extensions non empaquetées par règle administrateur : le clic
+droit réel, la demande de permission et le chargement sur Windows restent à tester.
+Les téléchargements des sites qui refusent l’accès restent à faire manuellement.

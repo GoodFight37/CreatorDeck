@@ -1,13 +1,20 @@
 {
-  "version": "1.2.0",
+  "version": "1.3.0",
   "files": {
-    "server.mjs": "5f0bef7140694b7db4cc0945c466750568f6fd488c61d2fad4e2dcf394aa60eb",
-    "app.js": "2020fbffbfe685202cf579bd3d201f1aab274bbb53133a3a8276f0b422157161",
-    "index.html": "4ea7028906429499dc47784ec41c5285b33d7bb3ff08153b7c46313b213d00c3",
-    "README.md": "c0008ed2ccd37f8d68d684d99c9a99cb5df73c22cce52a96ef9bec9261105648",
-    "package.json": "017f60f25ca1a49a7d6a3ad6dac987a79f10b5e07bef124df64128d5834fcef1",
+    "server.mjs": "aa1ff875b27c509a31383ebc14b2aafb32bd1db17fee2837a52c0ef20366035e",
+    "app.js": "494bcddfa32f315ecbf8a4e3bb2c55373b50a5b4829b06dd774698d1c69a42a2",
+    "index.html": "19500463170664c52c8fc4364b491280d0c19c5b021366ef16707ee71f80c094",
+    "README.md": "b1932f0c3d21c8d3d5c4241e2cb1ba7c486124be9d06fce7a3eedf8060cb8760",
+    "package.json": "d717d4949380b4e49734cfe3ec572bb9d51ce40396ab782265f819830222ba7d",
     "LANCER.cmd": "efae1cba7d4eb9a4f0f2881c6ed4a9ff1a930d9dbd635d39069d0d73a7b121f1",
-    "update.mjs": "2728b67df068d4e692b5b5536c40e6b6d7fda76cdba27272bac054f4a36e7fd8",
+    "update.mjs": "2cd71efa2ecf9c8c379a9a334ee33c0f47f61fad65ecc00747c91cd044c73af7",
     "METTRE-A-JOUR.cmd": "4985e0cdfc8f0e40749876e91da8405adee185603d5fb42ce0a7670c58ca74c1"
+  },
+  "extensionFiles": {
+    "extension/manifest.json": "ed39c44eae000f6357bf151cc74cdf1fbdafb9d5d68cf89be6e8e2e61250cfd7",
+    "extension/background.js": "3703c611cf576f8b3a8746b0c6432e444c1137fd49916e276145e8cd55a354db",
+    "extension/popup.js": "bdc2da87a96e3653d1439987590c4ae60572514da337cc1ec788c488386b31a7",
+    "extension/popup.html": "79be458a76fafe97fe2311d78d5ba15525d30bc6cc26f7be4fa652e803e3de91",
+    "extension/INSTALLER.md": "bcd1d9429daeca82e46d51896f8533d76a87a1bb5776b613b51cc2ab168ea670"
   }
 }

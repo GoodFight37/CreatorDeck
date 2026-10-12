@@ -1,5 +1,5 @@
 import http from "node:http";
-import { readFile, writeFile, mkdir, rename, copyFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir, rename, copyFile, readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes, createHash } from "node:crypto";
@@ -22,6 +22,18 @@ export function webpSize(data) {
   if (kind === "VP8 ") return [data.readUInt16LE(26) & 16383, data.readUInt16LE(28) & 16383];
   if (kind === "VP8L") { const bits = data.readUInt32LE(21); return [(bits & 16383) + 1, ((bits >>> 14) & 16383) + 1]; }
   throw Error("Format WebP non reconnu");
+}
+export function zipFiles(entries) {
+  const table = Array.from({ length: 256 }, (_, n) => { let c = n; for (let i = 0; i < 8; i++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const parts = []; const central = []; let offset = 0;
+  for (const [name, data] of entries) {
+    const filename = Buffer.from(name); let crc = 0xffffffff; for (const byte of data) crc = table[(crc ^ byte) & 255] ^ (crc >>> 8); crc = (crc ^ 0xffffffff) >>> 0;
+    const local = Buffer.alloc(30); local.writeUInt32LE(0x04034b50, 0); local.writeUInt16LE(20, 4); local.writeUInt16LE(0x800, 6); local.writeUInt16LE(33, 12); local.writeUInt32LE(crc, 14); local.writeUInt32LE(data.length, 18); local.writeUInt32LE(data.length, 22); local.writeUInt16LE(filename.length, 26);
+    const index = Buffer.alloc(46); index.writeUInt32LE(0x02014b50, 0); index.writeUInt16LE(20, 4); index.writeUInt16LE(20, 6); index.writeUInt16LE(0x800, 8); index.writeUInt16LE(33, 14); index.writeUInt32LE(crc, 16); index.writeUInt32LE(data.length, 20); index.writeUInt32LE(data.length, 24); index.writeUInt16LE(filename.length, 28); index.writeUInt32LE(offset, 42);
+    parts.push(local, filename, data); central.push(index, filename); offset += local.length + filename.length + data.length;
+  }
+  const directory = Buffer.concat(central); const end = Buffer.alloc(22); end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(directory.length, 12); end.writeUInt32LE(offset, 16);
+  return Buffer.concat([...parts, directory, end]);
 }
 async function jsonFile(file, fallback) {
   try { return JSON.parse(await readFile(file, "utf8")); } catch (e) { if (e.code === "ENOENT") return fallback; throw e; }
@@ -49,12 +61,15 @@ export async function createStudio({ directory = here, port = 4317, open = false
   const research = await jsonFile(path.join(seed, "research.json"), {});
   const stateFile = path.join(work, "state.json");
   const state = await jsonFile(stateFile, { choices: {}, skipped: {}, downloaded: {}, searches: {} });
-  state.drafts ??= {}; state.tracking ??= {}; state.rejected ??= {}; state.session ??= {};
+  state.drafts ??= {}; state.tracking ??= {}; state.rejected ??= {}; state.session ??= {}; state.inbox ??= {}; state.visual ??= {};
   const catalog = new Map(creators.map((c) => [c.slug, c]));
   await mkdir(path.join(work, "originales"), { recursive: true });
   await mkdir(path.join(work, "portraits"), { recursive: true });
   let saves = Promise.resolve(); let batch = { running: false, done: 0, total: 0, error: "" };
   const token = randomBytes(24).toString("hex");
+  const bridgeFile = path.join(work, "connexion-navigateur.json");
+  const bridge = await jsonFile(bridgeFile, { token: randomBytes(24).toString("hex") });
+  await writeFile(bridgeFile, JSON.stringify(bridge));
   const save = () => { const text = JSON.stringify(state, null, 2); saves = saves.catch(() => {}).then(async () => { await writeFile(stateFile + ".tmp", text); await rename(stateFile + ".tmp", stateFile); }); return saves; };
   const creator = (slug) => { if (!safeId(slug) || !catalog.has(slug)) throw Error("Créateur inconnu"); return catalog.get(slug); };
   const candidates = (slug) => state.searches[slug]?.candidates ?? research[slug]?.candidates ?? [];
@@ -87,17 +102,29 @@ export async function createStudio({ directory = here, port = 4317, open = false
       if (host !== `127.0.0.1:${server.address().port}` && host !== `localhost:${server.address().port}`) { res.writeHead(403).end(); return; }
       const url = new URL(req.url, `http://${host}`);
       if (url.pathname.startsWith("/api/")) {
-        if (req.headers.authorization !== `Bearer ${token}`) { res.writeHead(403, { "Content-Type": "application/json" }).end(JSON.stringify({ error: "Accès refusé : relance LANCER.cmd et utilise la nouvelle fenêtre." })); return; }
-        if (req.method !== "GET" && req.headers.origin !== `http://${host}`) { res.writeHead(403).end(); return; }
+        const fromBridge = req.headers.authorization === `Bearer ${bridge.token}` && ["/api/bridge-state", "/api/receive"].includes(url.pathname);
+        if (req.headers.authorization !== `Bearer ${token}` && !fromBridge) { res.writeHead(403, { "Content-Type": "application/json" }).end(JSON.stringify({ error: "Accès refusé : relance LANCER.cmd et utilise la nouvelle fenêtre." })); return; }
+        if (req.method !== "GET" && req.headers.origin !== `http://${host}` && !(fromBridge && ((/^chrome-extension:\/\/[a-p]{32}$/.test(req.headers.origin || "")) || (!req.headers.origin && req.headers["x-studio-bridge"] === "1")))) { res.writeHead(403).end(); return; }
       }
       const reply = (data) => { res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }); res.end(JSON.stringify(data)); };
-      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, rejected: state.rejected, session: state.session, batch }); return; }
+      if (url.pathname === "/api/connect") { reply({ connection: `http://127.0.0.1:${server.address().port}/#${bridge.token}` }); return; }
+      if (url.pathname === "/api/bridge-state") { const c = catalog.get(state.session.slug); reply({ slug: c?.slug, name: c?.displayName }); return; }
+      if (req.method === "POST" && url.pathname === "/api/receive") {
+        const b = await bodyJson(req); const c = creator(b.slug); const source = httpsUrl(b.source); const imageUrl = httpsUrl(b.imageUrl);
+        const bytes = Buffer.from(b.original, "base64"); if (!bytes.length || bytes.length > 24 * 1024 * 1024) throw Error("Image vide ou trop lourde");
+        const id = randomBytes(12).toString("hex"); await writeFile(path.join(work, "originales", "inbox-" + id), bytes);
+        state.inbox[id] = { id, slug: c.slug, name: c.displayName, source, imageUrl, title: String(b.title || "Photo reçue"), receivedAt: new Date().toISOString(), opened: false }; await save(); reply({ ok: true }); return;
+      }
+      if (url.pathname === "/api/inbox") { reply({ items: Object.values(state.inbox).filter(x => !x.opened) }); return; }
+      if (url.pathname === "/api/inbox-photo") { const id = url.searchParams.get("id"); if (!/^[a-f0-9]{24}$/.test(id || "") || !state.inbox[id]) throw Error("Photo inconnue"); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "originales", "inbox-" + id))); return; }
+      if (req.method === "POST" && url.pathname === "/api/inbox-opened") { const b = await bodyJson(req); if (!state.inbox[b.id]) throw Error("Photo inconnue"); state.inbox[b.id].opened = true; await save(); reply({ ok: true }); return; }
+      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, received: state.inbox, rejected: state.rejected, session: state.session, visual: state.visual, batch }); return; }
       if (url.pathname === "/api/candidates") { const slug = url.searchParams.get("slug"); creator(slug); reply({ candidates: candidates(slug) }); return; }
       if (url.pathname === "/api/photo") { const bytes = await original(url.searchParams.get("slug"), url.searchParams.get("id")); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(bytes); return; }
       if (req.method === "POST" && url.pathname === "/api/search") { const b = await bodyJson(req); reply({ candidates: await search(b.slug) }); return; }
       if (req.method === "POST" && url.pathname === "/api/batch") {
         if (batch.running) throw Error("Un lot est déjà en cours");
-        const slugs = creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug] && !research[c.slug] && !state.searches[c.slug]).slice(0, 20).map((c) => c.slug);
+        const slugs = creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug] && !research[c.slug] && !state.searches[c.slug]).slice(0, 20).map((c) => c.slug);
         batch = { running: true, done: 0, total: slugs.length, error: "" }; reply(batch);
         (async () => { try { for (const slug of slugs) { await search(slug); batch.done++; await new Promise((r) => setTimeout(r, 1500)); } } catch (e) { batch.error = e.message; } finally { batch.running = false; } })(); return;
       }
@@ -108,13 +135,13 @@ export async function createStudio({ directory = here, port = 4317, open = false
         reply({ current: local.version, latest: latest.version, available: local.version !== latest.version }); return;
       }
       if (url.pathname === "/api/review") {
-        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 900 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
+        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 900 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
       }
       if (req.method === "POST" && url.pathname === "/api/session") { const b = await bodyJson(req); creator(b.slug); state.session.slug = b.slug; await save(); reply({ ok: true }); return; }
       if (req.method === "POST" && url.pathname === "/api/reject") { const b = await bodyJson(req); creator(b.slug); state.rejected[b.slug] = [...new Set([...(state.rejected[b.slug] || []), Number(b.pageid)])]; await save(); reply({ ok: true }); return; }
       if (req.method === "POST" && url.pathname === "/api/tracking") {
         const b = await bodyJson(req); creator(b.slug);
-        if (!["À chercher", "Trouvé", "À cadrer"].includes(b.status)) throw Error("Étape inconnue");
+        if (!["À chercher", "Trouvé", "À cadrer", "Droits à vérifier"].includes(b.status)) throw Error("Étape inconnue");
         const links = String(b.links || "").split("\n").map((x) => x.trim()).filter(Boolean).map((x) => httpsUrl(x));
         state.tracking[b.slug] = { status: b.status, links, notes: String(b.notes || "").slice(0, 10000) }; await save(); reply({ ok: true }); return;
       }
@@ -128,18 +155,29 @@ export async function createStudio({ directory = here, port = 4317, open = false
       if (url.pathname === "/api/draft-photo" && req.method === "GET") {
         const slug = url.searchParams.get("slug"); creator(slug); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "originales", slug + "-draft"))); return;
       }
-      if (req.method === "POST" && url.pathname === "/api/select") {
-        const b = await bodyJson(req); const c = creator(b.slug);
+      if (req.method === "POST" && ["/api/select", "/api/visual"].includes(url.pathname)) {
+        const b = await bodyJson(req); const c = creator(b.slug); const pending = url.pathname === "/api/visual";
         const candidate = b.pageid ? (state.drafts[b.slug]?.pageid === b.pageid ? state.drafts[b.slug] : findCandidate(b.slug, b.pageid)) : null;
-        if (!b.verified || !b.author?.trim() || !b.title?.trim()) throw Error("Vérifie l’identité, la licence et les crédits avant de garder la photo");
-        const source = httpsUrl(b.source);
+        if (!pending && (!b.verified || !b.author?.trim() || !b.title?.trim())) throw Error("Vérifie l’identité, la licence et les crédits avant de garder la photo");
+        const source = b.source ? httpsUrl(b.source) : "";
+        if (!pending && !source) throw Error("Source requise");
         const direct = b.license === "Autorisation directe";
-        if (direct && (!b.permission?.trim() || !b.proofUrl)) throw Error("Précise la portée de l’autorisation et son lien de preuve");
-        const licenseUrl = direct ? httpsUrl(b.proofUrl) : httpsUrl(b.licenseUrl, ["creativecommons.org"]);
-        if (!direct && !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(b.license)) throw Error("Choisis une licence ou une autorisation directe documentée");
+        if (!pending && direct && (!b.permission?.trim() || !b.proofUrl)) throw Error("Précise la portée de l’autorisation et son lien de preuve");
+        const licenseUrl = pending ? "" : direct ? httpsUrl(b.proofUrl) : httpsUrl(b.licenseUrl, ["creativecommons.org"]);
+        if (!pending && !direct && !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(b.license)) throw Error("Choisis une licence ou une autorisation directe documentée");
         const bytes = Buffer.from(b.webp, "base64"); const size = webpSize(bytes);
         if (size[0] !== 900 || size[1] !== 900) throw Error("Le portrait doit être un WebP carré de 900 px");
         if (![b.crop?.size, b.crop?.x, b.crop?.y].every(Number.isFinite) || b.crop.size < 900 || b.crop.x < 0 || b.crop.y < 0) throw Error("Cadrage incorrect ou agrandissement interdit");
+        if (pending) {
+          await mkdir(path.join(work, "selections"), { recursive: true }); await writeFile(path.join(work, "selections", b.slug + ".webp"), bytes);
+          if (candidate && state.downloaded[`${b.slug}-${b.pageid}`]) {
+            await copyFile(path.join(work, "originales", `${b.slug}-${b.pageid}`), path.join(work, "originales", b.slug + "-draft"));
+            state.drafts[b.slug] = { ...candidate, title: b.title || candidate.title, author: b.author || candidate.author, source, crop: b.crop };
+          }
+          state.visual[b.slug] = { name: c.displayName, title: b.title || c.displayName, author: b.author || "", source, license: b.license || "", proofUrl: b.proofUrl || "", permission: b.permission || "", crop: b.crop, rightsStatus: "à vérifier" };
+          state.tracking[b.slug] = { ...state.tracking[b.slug], status: "Droits à vérifier" }; delete state.skipped[b.slug]; await save(); reply({ ok: true }); return;
+        }
+        delete state.visual[b.slug];
         await writeFile(path.join(work, "portraits", b.slug + ".webp"), bytes);
         let changes = `Recadrage carré individuel (${Math.round(b.crop.x)}, ${Math.round(b.crop.y)}, ${Math.round(b.crop.size)} px) et conversion WebP, 900 × 900 px, sans agrandissement.`;
         if (direct) changes += ` Autorisation déclarée : ${b.permission.trim()}. Preuve : ${licenseUrl}`;
@@ -154,11 +192,26 @@ export async function createStudio({ directory = here, port = 4317, open = false
         for (const [slug, item] of Object.entries(base)) if (!published[slug]) { await copyFile(path.join(seed, "portraits", slug + ".webp"), path.join(images, slug + ".webp")); patch[slug] = item; }
         for (const [slug, item] of Object.entries(state.choices)) { await copyFile(path.join(work, "portraits", slug + ".webp"), path.join(images, slug + ".webp")); const { original: ignoredOriginal, selectedAt: ignoredDate, ...entry } = item; void ignoredOriginal; void ignoredDate; patch[slug] = entry; }
         await writeFile(path.join(target, "portrait-overrides.patch.json"), JSON.stringify(patch, null, 2) + "\n");
-        await writeFile(path.join(target, "suivi-sources.json"), JSON.stringify({ tracking: state.tracking, drafts: state.drafts }, null, 2));
-        await writeFile(path.join(target, "README.txt"), "Importer les images dans public/creators/curated et fusionner les entrées du JSON avec src/data/portrait-overrides.json. Ne pas écraser le registre complet. Les crédits sont déjà affichés par CreatorDeck. Ce dossier ne publie rien automatiquement.\n");
-        reply({ directory: target, count: Object.keys(patch).length }); return;
+        const pendingDir = path.join(target, "A-VERIFIER"); await mkdir(pendingDir, { recursive: true });
+        for (const file of await readdir(pendingDir)) if (file.endsWith(".webp") && catalog.has(file.slice(0, -5)) && !state.visual[file.slice(0, -5)]) await unlink(path.join(pendingDir, file));
+        for (const slug of Object.keys(state.visual)) await copyFile(path.join(work, "selections", slug + ".webp"), path.join(pendingDir, slug + ".webp"));
+        await writeFile(path.join(pendingDir, "selections-non-publiables.json"), JSON.stringify(state.visual, null, 2));
+        await writeFile(path.join(target, "suivi-sources.json"), JSON.stringify({ tracking: state.tracking, drafts: state.drafts, received: state.inbox }, null, 2));
+        await writeFile(path.join(target, "README.txt"), "Importer les images dans public/creators/curated et fusionner les entrées du JSON avec src/data/portrait-overrides.json. Ne pas écraser le registre complet. A-VERIFIER contient des sélections non publiables : ne pas les intégrer sans vérification des droits. Les crédits sont déjà affichés par CreatorDeck. Ce dossier ne publie rien automatiquement.\n");
+        reply({ directory: target, count: Object.keys(patch).length, pendingCount: Object.keys(state.visual).length }); return;
+      }
+      if (url.pathname === "/api/export-zip" && req.method === "GET") {
+        const target = path.join(work, "EXPORT"); const patch = await jsonFile(path.join(target, "portrait-overrides.patch.json"), null); if (!patch) throw Error("Lance d’abord l’export");
+        const pending = await jsonFile(path.join(target, "A-VERIFIER", "selections-non-publiables.json"), {}); const entries = [];
+        const names = ["portrait-overrides.patch.json", "suivi-sources.json", "README.txt", "A-VERIFIER/selections-non-publiables.json"];
+        for (const slug of Object.keys(patch)) { creator(slug); names.push(`public/creators/curated/${slug}.webp`); }
+        for (const slug of Object.keys(pending)) { creator(slug); names.push(`A-VERIFIER/${slug}.webp`); }
+        for (const name of names) entries.push([name, await readFile(path.join(target, name))]);
+        res.writeHead(200, { "Content-Type": "application/zip", "Content-Disposition": 'attachment; filename="CreatorDeck-Portraits.zip"', "Cache-Control": "no-store" }); res.end(zipFiles(entries)); return;
       }
       if (url.pathname === "/" || url.pathname === "/app.js") { const file = url.pathname === "/" ? "index.html" : "app.js"; res.writeHead(200, { "Content-Type": mime[path.extname(file)], "Cache-Control": "no-store" }); res.end(await readFile(path.join(directory, file))); return; }
+      const visual = url.pathname.match(/^\/visual\/([a-z0-9-]+)\.webp$/);
+      if (visual) { creator(visual[1]); res.writeHead(200, { "Content-Type": "image/webp", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "selections", visual[1] + ".webp"))); return; }
       const picked = url.pathname.match(/^\/chosen\/([a-z0-9-]+)\.webp$/);
       if (picked) { creator(picked[1]); res.writeHead(200, { "Content-Type": "image/webp", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "portraits", picked[1] + ".webp"))); return; }
       const match = url.pathname.match(/^\/seed\/(avatars|portraits)\/([a-z0-9-]+)\.webp$/);

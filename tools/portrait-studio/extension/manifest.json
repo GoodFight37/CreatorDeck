@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "CreatorDeck \u2014 envoyer une photo",
+  "version": "1.3.0",
+  "description": "Envoie l\u2019image choisie et sa source \u00e0 ton atelier local CreatorDeck.",
+  "permissions": [
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CreatorDeck"
+  }
+}
