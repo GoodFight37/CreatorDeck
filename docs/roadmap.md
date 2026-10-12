@@ -1,12 +1,16 @@
 # Roadmap CreatorDeck
 
-## État courant — 12 octobre 2026
+## État courant — 13 octobre 2026
 
 Référence du lot portraits : `10699eb`, **CI et Vercel Production réussis**.
 Nouveau lot d’ouverture : [continuum, matière et geste](booster-continuum-2026-10-12.md),
 implémenté et vérifié localement ; sa publication/CI est distincte. [Bilan courant, preuves et limites](etat-projet-2026-10-12.md).
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
+
+Sachet 3D minimal ajouté au continuum sur instruction du 13 octobre :
+[livrable hybride et limites](booster-3d-2026-10-13.md), D-062 remplace
+l'interdiction de 3D de D-061. Validation visuelle sur téléphone réel restante.
 
 ### Plan actif
 

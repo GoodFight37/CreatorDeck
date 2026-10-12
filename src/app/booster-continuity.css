@@ -670,3 +670,26 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-physical-scene::after { display: none; }
   .reveal-game .reveal-stage .reveal-flip { animation: none; }
 }
+
+/* Only the opening pouch gets a GPU surface. Cards/focus/gesture stay shared. */
+.opening-foil-3d {
+  position: absolute;
+  inset: -17.5%;
+  z-index: 3;
+  pointer-events: none;
+}
+.opening-foil-3d canvas { display: block; width: 100%; height: 100%; }
+.booster-cinematic.booster-presentation .booster-physical-scene.has-foil-3d {
+  transform: translate(-50%, -50%);
+}
+.has-foil-3d > .foil-body-piece,
+.has-foil-3d > .foil-top-piece,
+.has-foil-3d > .foil-depth-side,
+.has-foil-3d > .foil-depth-bottom,
+.has-foil-3d > .foil-inner-shadow,
+.has-foil-3d > .foil-cut-slit,
+.has-foil-3d > .booster-foil-glow { visibility: hidden; }
+.booster-cinematic.booster-presentation .booster-physical-scene.has-foil-3d::before { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .opening-foil-3d { display: none; }
+}

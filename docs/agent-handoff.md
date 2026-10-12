@@ -1,3 +1,27 @@
+## Checkpoint sachet 3D limité — 13 octobre 2026
+
+Nouvelle demande de Malik : Three.js autorisé pour l'ouverture uniquement ;
+restriction 3D de D-061 remplacée par D-062. Base vérifiée `1069ba5`, main.
+Le continuum reste monté à la première face. Sachet courbé et rabat piloté
+par le glissé, matériau physique et reflet collé à la géométrie. Dos/faces HTML
+conservés : résultat hybride, pas simulation de plastique équivalente à Pocket.
+Import GPU différé ; 2D pour mouvement réduit/effets coupés et perte WebGL.
+[Livrable, fichiers et limites](booster-3d-2026-10-13.md).
+
+Vérifications de ce lot : 27/27 DOM existants, 10/10 E2E ciblés bureau/mobile
+(simulé), typecheck, ESLint ciblé, build statique et diff-check réussis.
+La capture bureau d'extraction précédente montrait parfois une face ; horloge
+et animations figées avant reveal, assertion extracting renforcée, référence
+corrigée sans modifier la tolérance. Nouveau passage strict des captures réussi.
+Three.js est l'unique nouvelle dépendance 3D de production ; @types/three en dev.
+Aucun SQL ni changement Drop/Binder/Craft/économie. Travail portraits préexistant
+préservé et non publié. Publication directe main autorisée ; CI/Vercel de ce
+nouveau lot laissés sans surveillance, selon le mode économie demandé.
+Prochaine action utilisateur : essai 30 secondes du peel/repli/sortie/swipe sur
+site après déploiement, puis vidéo si le geste/raccord ne convient pas. Aucun
+agent actif/réservation à conserver. Le commit contenant ce checkpoint est
+retrouvable via git log -1 -- docs/agent-handoff.md.
+
 ## Checkpoint ouverture continue — 12 octobre 2026
 
 Demande exclusive de Malik : continuum avant polish, matière et geste, sans

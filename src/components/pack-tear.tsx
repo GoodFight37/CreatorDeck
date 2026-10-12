@@ -6,11 +6,12 @@ import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { CardBackEmblem } from "@/components/card-back-emblem";
+import { PackFoil3D } from "@/components/pack-foil-3d";
 
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
  * passes, peels the upper weld off, then exposes and lifts actual card backs.
- * Neither the pack nor its materials use WebGL.
+ * A lazy mesh enhances the pouch only; the 2D continuum stays as fallback.
  */
 export function PackTear({
   kind = "live",
@@ -92,6 +93,7 @@ export function PackTear({
         </p>
         <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
           style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>
+          <PackFoil3D artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />

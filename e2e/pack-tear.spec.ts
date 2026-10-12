@@ -134,7 +134,14 @@ test("home pack artwork, title and gesture hint do not overlap", async ({ page }
 });
 
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
-test("home pack and opening use the same printed sachet, no WebGL or slider", async ({ page }) => {
+test("2D fallback keeps the printed sachet and extraction when WebGL is unavailable", async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+      if (type.startsWith("webgl")) return null;
+      return original.call(this, type as "2d", ...args);
+    } as typeof original;
+  });
   await gotoDeck(page);
   const open = page.getByRole("button", { name: "Ouvrir le booster" });
   await expect(open).toBeVisible({ timeout: 30_000 });
@@ -191,12 +198,21 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).not.toBeVisible();
 
   await cut.focus();
+  await page.clock.install();
+  await page.clock.pauseAt(new Date());
   await page.keyboard.press("Enter");
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) =>
     getComputedStyle(node, "::after").animationName,
   )).not.toBe("opening-foil-specular");
-  await page.waitForTimeout(700);
+  await dialog.locator(".booster-physical-scene").evaluate((node) => {
+    for (const animation of node.getAnimations({ subtree: true })) {
+      animation.pause();
+      animation.currentTime = 700;
+    }
+  });
+  await expect(dialog).toHaveAttribute("data-opening-phase", "extracting");
+  await expect(dialog.locator(".reveal-embedded")).toHaveCount(0);
   const emergingLayers = await dialog.evaluate((node) => {
     const z = (selector: string) => Number(getComputedStyle(node.querySelector(selector)!).zIndex);
     return {
@@ -220,6 +236,7 @@ test("home pack and opening use the same printed sachet, no WebGL or slider", as
   await dialog.locator(".booster-physical-scene").evaluate((node) => {
     for (const animation of node.getAnimations({ subtree: true })) animation.play();
   });
+  await page.clock.resume();
   await expect(dialog.locator(".foil-top-piece")).toBeAttached();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });

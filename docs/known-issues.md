@@ -1,3 +1,10 @@
+## Ouverture hybride — 13 octobre 2026
+
+Le sachet dispose désormais d'une amélioration Three.js limitée à l'ouverture,
+avec secours 2D. [Preuves et limites](booster-3d-2026-10-13.md), D-062.
+L'extraction des dos reste HTML et le plastique n'est pas simulé physiquement ;
+K-047 reste soumis au jugement visuel sur téléphone, pas clos par les tests.
+
 ## Lecture actuelle — 12 octobre 2026
 
 Le registre ci-dessous est actualisé pour `10699eb`. Lire d’abord

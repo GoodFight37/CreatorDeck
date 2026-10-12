@@ -537,3 +537,13 @@ Le reflet appartient aux morceaux imprimés, masqués/découpés comme le sachet
 et suit le doigt sans cycle. La carte se déplace dans le plan après son flip ;
 aucun inspecteur 3D libre. Les pauses de rareté, le Perfect, le bouton de secours,
 les gains et RPC existants restent conservés. [Rapport et preuves](booster-continuum-2026-10-12.md).
+
+## D-062 — 13 octobre 2026 : 3D autorisée uniquement pour le sachet ouvert
+
+Malik clarifie que l'interdiction de 3D était une contrainte externe et autorise
+Three.js pour l'ouverture. Cette demande remplace la restriction 3D de D-061,
+sans abandonner sa continuité. Choix : un moteur Three.js chargé à la demande,
+maillage léger du sachet, matériau physique et peel piloté par le glissé ; dos
+et faces HTML existants conservés dans le même portail. Mouvement réduit,
+effets coupés ou perte GPU utilisent le continuum 2D. Pas de moteur physique,
+Unity, refonte des écrans, des règles ou de SQL. [Livrable, essais et limites](booster-3d-2026-10-13.md).
