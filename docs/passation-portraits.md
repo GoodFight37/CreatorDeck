@@ -319,3 +319,23 @@ réussi avec Chromium et sources simulées (carrousel, flèches, rejet, choix
 provisoire, import local, reprise/validation préexistantes, export séparé) ;
 ESLint ciblé réussi. CI GitHub du commit `9e9a906` : succès, quatre jobs. Windows physique et
 récupération réelle Wikimedia depuis le PC utilisateur non testés.
+
+### Import du lot Upscayl — 12 octobre 2026
+
+Malik a fourni 11 ZIP pour les 700 portraits restants. Les parties 1 à 9
+contiennent exactement 700 WebP 720 × 720 px uniques et décodables ; tous les
+slugs correspondent au catalogue. Les parties 10 et 11 ne sont pas utilisées :
+elles dupliquent des fichiers déjà présents et la dernière entrée de la 11 est
+tronquée. Les versions 9pasha et Livibee restent servies depuis leurs portraits
+Commons crédités ; l’upscale devient le repli après les sélections manuelles et
+les portraits crédités.
+
+Les 700 fichiers ont été réencodés avec Sharp WebP qualité 82, effort 5, sans
+changement de dimensions. Diverron reste exclu de ce lot, car son upscale conserve
+son avatar vert endommagé. Malik a fourni l’unique autre photo trouvée pour lui ;
+elle a été restaurée avec IA et intégrée en WebP 900 × 900 px. La source et
+l’auteur de la photo fournie ne sont pas documentés. Les 699 routes Upscayl
+utilisées pèsent 18,2 Mio au lieu des 247 Mio bruts. Le lot manuel de 300 portraits
+450 × 450 px n’a pas changé. Les sources/licences des images Upscayl ne figuraient
+pas dans le ZIP. Détail et limites :
+[import Upscayl](portrait-import-upscayl-2026-10-12.md).

@@ -72,6 +72,9 @@ describe("les crédits de l'écran Toi", () => {
     expect(credits.textContent).toContain("Nate Herrera n8bit_");
     expect(credits.textContent).toContain("Recadrage carré");
     expect(credits.textContent).toContain("Portraits importés manuellement (300)");
+    expect(credits.textContent).toContain("Portraits upscalés avec Upscayl (699)");
+    expect(credits.textContent).toContain("Portrait fourni et restauré avec IA (1)");
+    expect(credits.textContent).toContain("DIVERRON");
     expect(credits.textContent).toContain("Source et licence non fournies dans l’archive reçue");
     expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by/2.0/"]')).not.toBeNull();
     expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by-sa/4.0/"]')).not.toBeNull();

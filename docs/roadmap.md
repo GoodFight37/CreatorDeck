@@ -63,8 +63,9 @@ double. Le mouvement réduit coupe le reflet infini avant déchirure.
 
 Les tests de geste vérifient le glissement lent, le recul/relâchement et le
 chemin « Ouvrir sans déchirer ». Scan : 1 000 WebP décodés, aucun invalide ; seul
-`diverron.webp` ressort majoritairement vert et reste remplacé à l’affichage par
-`diverron-fallback.svg`. Aucun nouveau moteur, SQL, règle de jeu ou timing.
+`diverron.webp` ressortait majoritairement vert. Le 12 octobre, une photo fournie
+et restaurée a remplacé le secours SVG à l’affichage. Aucun nouveau moteur, SQL,
+règle de jeu ou timing.
 
 Les sections datées ci-dessous sont un journal de livraisons et d’observations,
 pas une liste de tâches à reprendre. Les anciennes cases `[ ]` sont historiques

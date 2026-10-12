@@ -52,7 +52,7 @@ describe("préchargement des portraits", () => {
     expect(demandes).toEqual([
       MANUAL_PORTRAIT_OVERRIDES.rubius,
       MANUAL_PORTRAIT_OVERRIDES.shroud,
-      "/creators/diverron-fallback.svg",
+      "/creators/provided/diverron.webp",
     ]);
   });
 

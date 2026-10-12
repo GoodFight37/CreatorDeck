@@ -356,14 +356,16 @@ test("reversing or lifting halfway cancels cleanly and keeps the no-tear option"
   await touch.detach();
 });
 
-test("DIVERRON portrait never resolves to the damaged green webp", async ({ page }) => {
+test("DIVERRON portrait resolves to the restored user-provided photo", async ({ page }) => {
   await gotoDeck(page);
   const url = await page.evaluate(async () => {
-    const response = await fetch("/creators/diverron-fallback.svg");
-    return { status: response.status, body: await response.text() };
+    const response = await fetch("/creators/provided/diverron.webp");
+    const bodyBytes = (await response.arrayBuffer()).byteLength;
+    return { status: response.status, type: response.headers.get("content-type"), bodyBytes };
   });
   expect(url.status).toBe(200);
-  expect(url.body).toContain("DIVERRON");
+  expect(url.type).toContain("image/webp");
+  expect(url.bodyBytes).toBeGreaterThan(10_000);
 });
 
 test("home sachet tap opens once and returns focus to the sachet", async ({ page }, testInfo) => {
