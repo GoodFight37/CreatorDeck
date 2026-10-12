@@ -9,22 +9,16 @@ import { useMemo, useState, type CSSProperties } from "react";
 import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
-
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { BINDER_FAMILIES, BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
-
 import { useNow } from "@/hooks/use-game";
-
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive } from "@/hooks/use-live";
 import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
-
 import { liveFor } from "@/lib/live";
-
 import { craftQuote, type GameView } from "@/lib/game-engine";
-
 
 type CollectionFilter = "all" | "owned" | "missing" | "live" | "retired" | Rarity;
 
@@ -36,7 +30,6 @@ const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   { common: 0, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
 );
 
-
 export function CollectionView({
   game,
   themeStyle,
@@ -45,12 +38,9 @@ export function CollectionView({
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
-  /** Rejoindre un créateur manquant : dit `true` quand c'est payé. */
   onCraft: (slug: string) => Promise<boolean>;
   onGoDrop?: () => void;
 }) {
-  // Le classeur s'ouvre sur **ce qu'on possède**. Une première collection vide
-  // reçoit une invitation à ouvrir un booster et un accès explicite au catalogue.
   const [filter, setFilter] = useState<CollectionFilter>("owned");
   const [pageGoal, setPageGoal] = useState<string | null>(null);
   const [savedGoal, saveGoal] = useBinderGoal();
@@ -65,15 +55,10 @@ export function CollectionView({
     variant: CardVariant;
     liveStream: ReturnType<typeof liveFor>;
   } | null>(null);
-  // Le bouton retour d'Android ferme la fiche ouverte avant tout le reste :
-  // c'est l'écran du dessus, et c'est ce que le doigt attend.
+
   useBackHandler(inspect !== null, () => setInspect(null));
   const live = useLive();
-  // L'heure ne sert qu'à juger la fraîcheur du direct : une minute de précision
-  // suffit (au-delà de dix minutes, tout disparaît de toute façon).
   const now = useNow(60_000);
-  // Une page reste courte et tourne vite au pouce : 12 pochettes (3 × 4),
-  // sans présenter tout le catalogue vide au premier regard.
   const perPage = 12;
 
   const owned = useMemo(() => {
@@ -83,7 +68,6 @@ export function CollectionView({
         count: number;
         bestVariant: CardVariant;
         variants: Set<CardVariant>;
-        /* La copie la plus récente : l'ordre « Dernières obtenues » la lit. */
         latestAt: number;
       }
     >();
@@ -113,10 +97,6 @@ export function CollectionView({
 
   const filtered = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
-    // Les Sortants que le joueur possède : ils s'affichent à la fin du classeur
-    // (leur rang n'est plus comparable aux autres, et ils ne sont plus
-    // tirables). Sans filtre « Sortants », ils restent visibles — une carte
-    // possédée qui disparaîtrait de son propre classeur serait un bug.
     const retiredCards = RETIRED_CREATORS.filter((creator) => owned.has(creator.slug));
     const goalSlugs = pageGoal ? new Set(BINDER_COLLECTION_BY_ID.get(pageGoal)?.slugs ?? []) : null;
     const matches = (creator: Creator) => {
@@ -136,10 +116,7 @@ export function CollectionView({
       if (filter !== "all") return creator.rarity === filter;
       return true;
     });
-    // Le tri s'applique à ce qui reste, puis la pagination coupe : chercher,
-    // filtrer et trier donne la même première page, quel que soit l'ordre des
-    // gestes. Les Sortants gardent leur place à la fin du classeur : leur rang
-    // n'est plus comparable aux autres, et ils ne sont plus tirables.
+
     const sorted = sortBinder(
       current,
       sort,
@@ -175,8 +152,6 @@ export function CollectionView({
     setPage(0);
   }
 
-  // Combien de cartes du classeur ne sont plus tirables : ce sont les Sortants
-  // du joueur, et c'est ce que le filtre compte.
   const retiredOwned = useMemo(
     () => [...owned.keys()].filter((slug) => RETIRED_BY_SLUG.has(slug)).length,
     [owned],
@@ -184,10 +159,11 @@ export function CollectionView({
 
   return (
     <div className="view collection-view" style={themeStyle}>
-      <section className="page-title-row">
+      {/* En-tête compact : score et progression en ligne fine */}
+      <section className="page-title-row" style={{ marginBottom: "0.25rem" }}>
         <div>
           <span className="drop-section-kicker">LES NOMS QUE TU GARDES</span>
-          <h1>Mon classeur</h1>
+          <h1 style={{ fontSize: "1.4rem" }}>Mon classeur</h1>
         </div>
         <div className="collection-score">
           {game.stats.uniqueCreators ? (
@@ -199,50 +175,54 @@ export function CollectionView({
       </section>
 
       {game.stats.uniqueCreators ? (
-        <>
-          <div className="progress-track large">
+        <div style={{ marginBottom: "0.35rem" }}>
+          <div className="progress-track" style={{ height: "4px" }}>
             <i style={{ width: `${progress}%` }} />
           </div>
-          <div className="collection-meta">
-            <span>{game.stats.uniqueCreators} / {CREATORS.length} streameurs découverts</span>
+          <div className="collection-meta" style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>
+            <span>{game.stats.uniqueCreators} / {CREATORS.length} découverts</span>
             <span>{game.stats.totalCards} cartes obtenues</span>
           </div>
-        </>
-      ) : null}
-
-      {game.stats.uniqueCreators > 0 ? (
-        <div className="binder-quick-views" aria-label="Parcourir ma collection">
-          <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
-            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
-          }}>Dernières reçues <ChevronRight size={15} /></button>
-          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
         </div>
       ) : null}
 
+      {/* Raccourci Dernières reçues compact */}
+      {game.stats.uniqueCreators > 0 ? (
+        <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.25rem 0" }}>
+          <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
+            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
+          }}>Dernières reçues <ChevronRight size={14} /></button>
+          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""}</span>
+        </div>
+      ) : null}
+
+      {/* Collection suggérée compacte : bandeau simple sans bloc massif */}
       {featuredCollection ? (
-        <section className="binder-next-pages" aria-label="Pages à compléter">
-          <div className="drop-section-label"><span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span><BookOpen size={16} /></div>
-          <button type="button" aria-pressed={pageGoal === featuredCollection.id}
-            onClick={() => chooseCollection(featuredCollection.id)}>
-            <span className="binder-page-title">
-              <strong>{featuredCollection.name}</strong>
-              <small>{featuredCollection.owned} / {featuredCollection.total} cartes différentes</small>
-              <span className="binder-collection-action">{featuredCollection.missing.length ? `Voir les ${featuredCollection.missing.length} manquantes` : "Revoir les cartes réunies"}</span>
+        <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.4rem 0.6rem", margin: "0.3rem 0" }}>
+          <button
+            type="button"
+            aria-pressed={pageGoal === featuredCollection.id}
+            onClick={() => chooseCollection(featuredCollection.id)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", background: "transparent", border: "none", color: "inherit", padding: 0 }}
+          >
+            <BookOpen size={16} style={{ flexShrink: 0, opacity: 0.8 }} />
+            <span className="binder-page-title" style={{ flex: 1, textAlign: "left" }}>
+              <strong style={{ fontSize: "0.85rem" }}>{featuredCollection.name}</strong>
+              <small style={{ display: "block", fontSize: "0.75rem", opacity: 0.7 }}>
+                {featuredCollection.owned} / {featuredCollection.total} réunies · {featuredCollection.missing.length ? `${featuredCollection.missing.length} à trouver` : "Complète"}
+              </small>
             </span>
-            <ChevronRight size={16} />
+            <ChevronRight size={15} style={{ opacity: 0.6 }} />
           </button>
-          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} />
-          {featuredCollection.missing.length ? (
-            <p className="binder-missing-preview">À trouver : {featuredCollection.missing.slice(0, 3).map((slug) => CREATOR_BY_SLUG.get(slug)?.displayName).join(", ")}
-              {featuredCollection.missing.length > 3 ? ` et ${featuredCollection.missing.length - 3} autres.` : "."}</p>
-          ) : <p className="binder-missing-preview">Tous les noms de cette page sont réunis.</p>}
+          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", marginTop: "0.25rem" }} />
         </section>
       ) : null}
 
-      <details className="binder-collections-picker">
-        <summary>Choisir une collection <ChevronRight size={16} /></summary>
-        <p>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
-        <label>Famille
+      {/* Sélecteur de collection : replié par défaut dans son volet */}
+      <details className="binder-collections-picker" style={{ margin: "0.25rem 0" }}>
+        <summary style={{ fontSize: "0.8rem", padding: "0.3rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
+        <p style={{ fontSize: "0.75rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
+        <label style={{ fontSize: "0.75rem" }}>Famille
           <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>
             {BINDER_FAMILIES.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}
           </select>
@@ -261,12 +241,10 @@ export function CollectionView({
         }}>Revenir à la suggestion automatique</button> : null}
       </details>
 
-      {/* La recherche, le tri et les filtres restent **collés sous la barre**
-          pendant qu'on feuillette : chercher un créateur après avoir descendu
-          trois pages ne devrait pas demander de remonter trois pages. */}
+      {/* Outils fixes : recherche, tri et filtres directement au-dessus des cartes */}
       <div className="binder-tools">
-          <label className="search-field">
-            <Search size={17} />
+        <label className="search-field">
+          <Search size={17} />
           <input
             value={query}
             onChange={(event) => {
@@ -314,13 +292,9 @@ export function CollectionView({
               ["all", `Toutes (${CREATORS.length})`],
               ["owned", `Obtenues (${game.stats.uniqueCreators})`],
               ["missing", "À découvrir"],
-              // Les Sortants n'apparaissent que s'il y en a : un filtre vide n'a
-              // rien à faire dans la barre.
               ...(retiredOwned
                 ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])
                 : []),
-              // Le direct n'apparaît que si l'app sait vraiment qui streame : un
-              // filtre qui ne peut rien donner n'a rien à faire là.
               ...(live.configured && live.count && !live.stale
                 ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
                 : []),
@@ -336,9 +310,6 @@ export function CollectionView({
               className={filter === value ? "active" : ""}
               aria-pressed={filter === value}
               onClick={() => {
-                // **Aucun son.** Le joueur a demandé le 8 octobre 2026 au soir
-                // de retirer les deux derniers sons de déplacement, le filtre
-                // et la page : changer de filtre, c'est aller ailleurs.
                 setFilter(value);
                 setPageGoal(null);
                 setPage(0);
@@ -350,7 +321,6 @@ export function CollectionView({
         </div>
       </div>
 
-
       {activePage ? (
         <div className="binder-active-page" role="status">
           <span>{filter === "missing" ? "À découvrir" : "Collection"} · <strong>{activePage.name}</strong> · {activePage.owned}/{activePage.total}</span>
@@ -361,8 +331,6 @@ export function CollectionView({
       {showPager ? <div className="binder-pager">
         <button
           onClick={() => {
-            // **Aucun son** : tourner une page, c'est se déplacer (retiré le
-            // 8 octobre 2026 au soir, comme le filtre ci-dessus).
             setPage((p) => Math.max(0, p - 1));
           }}
           disabled={safePage <= 0}
@@ -382,6 +350,7 @@ export function CollectionView({
         </button>
       </div> : null}
 
+      {/* Grille de cartes directement visible */}
       <div className="binder-page">
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
@@ -437,8 +406,6 @@ export function CollectionView({
           onCraft={async (slug) => {
             setCrafting(slug);
             try {
-              // Le prix et la règle viennent du moteur (`craftQuote`) : la modale
-              // ne décide rien, elle demande.
               if (await onCraft(slug)) setInspect(null);
             } finally {
               setCrafting(null);
@@ -450,4 +417,3 @@ export function CollectionView({
     </div>
   );
 }
-
