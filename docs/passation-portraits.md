@@ -171,3 +171,35 @@ sur téléphone physique. Collecte encore active ; 998/998 recherches Commons
 réussies, Flickr en fin de collecte/reprise de réponses vides. L’erreur des
 grosses originales est résolue par le client HTTP du même contexte navigateur,
 même proxy et confiance TLS, au lieu du tampon de l’inspecteur Chromium.
+
+## Atelier local Windows — 12 octobre 2026
+
+Malik a arrêté la collecte autonome pour économiser son quota et demandé un
+outil sur son PC Windows. Ne pas relancer les recherches massives ni les
+fonctionnalités déjà terminées. Outil : [notice](../tools/portrait-studio/README.md),
+`tools/portrait-studio/`. Node 24, aucune dépendance d’exécution, aucun appel IA.
+Lanceur Windows, interface navigateur, candidates Commons mises en cache,
+choix manuel, cadrage WebP 900 px sans agrandissement, crédits, état local
+reprenable et export séparé ; aucune écriture GitHub ou dans le jeu.
+
+Paquet local : `/workspace/artifacts/CreatorDeck-Atelier-Portraits-Windows.zip`.
+Il contient les 1 000 créateurs, 998 recherches Commons et 30 portraits préparés.
+Les 30 sont masqués par défaut. Base publiée utilisée : `f8474f1` (10 portraits) ;
+les 20 portraits locaux supplémentaires sont inclus au premier export.
+Ces 20 images et le registre local restent préexistants et non publiés par
+le commit de l’outil. Le ZIP contient les données, le code Git ne les duplique
+pas. Conserver le ZIP avant fermeture de l’environnement.
+
+Vérifications du seul outil sur base `f8474f1` :
+`node --test tools/portrait-studio/server.test.mjs` : 3/3 ;
+`npx eslint tools/portrait-studio/*.mjs tools/portrait-studio/app.js` : réussi.
+Parcours Playwright/Chromium Linux réussi, sans accès externe : liste de 970
+créateurs restants, import local, cadrage, sauvegarde, rechargement et export
+avec patch préservant la base. État d’essai supprimé du paquet. Lanceur Windows
+non exécuté sur PC physique ; récupération réseau sur le PC non testée.
+
+Prochaine action de Malik : installer Node 24 LTS, extraire le ZIP et lancer
+`LANCER.cmd`. Choisir les portraits puis exporter ; compresser `_travail/EXPORT`
+et transmettre uniquement ce ZIP pour l’intégration ciblée. Les homonymes et
+licences demandent une vérification humaine. Aucune recherche IA nécessaire.
+Réservation libérée après livraison de l’outil.
