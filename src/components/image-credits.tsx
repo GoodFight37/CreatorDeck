@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
+import { MANUAL_PORTRAIT_OVERRIDES, PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
+import { CREATORS } from "@/lib/catalog";
 
 /** Les attributions restent dans les réglages, jamais sur les cartes. */
 export function ImageCredits() {
@@ -15,6 +16,22 @@ export function ImageCredits() {
       </button>
       {open ? (
         <dl id="image-credits" className="credits-list">
+          {Object.keys(MANUAL_PORTRAIT_OVERRIDES).length > 0 ? (
+            <div>
+              <dt>Portraits importés manuellement ({Object.keys(MANUAL_PORTRAIT_OVERRIDES).length})</dt>
+              <dd>
+                Source et licence non fournies dans l’archive reçue. Ces portraits sont utilisés tels quels ; leurs crédits restent à documenter.
+                <details>
+                  <summary>Afficher la liste</summary>
+                  <ul>
+                    {Object.keys(MANUAL_PORTRAIT_OVERRIDES).map((slug) => (
+                      <li key={slug}>{CREATORS.find((creator) => creator.slug === slug)?.displayName ?? slug}</li>
+                    ))}
+                  </ul>
+                </details>
+              </dd>
+            </div>
+          ) : null}
           {Object.entries(PORTRAIT_OVERRIDES).map(([slug, portrait]) => (
             <div key={slug}>
               <dt>{portrait.name}</dt>

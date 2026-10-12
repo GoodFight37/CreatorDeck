@@ -174,6 +174,7 @@ try {
   const resetTutorial = await readFile(path.join(MIGRATIONS, "0046_reset_rejoue_tutoriel.sql"), "utf8");
   const cadeauClaimRetry = await readFile(path.join(MIGRATIONS, "0045_cadeau_claim_rejouable.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
+  const skyrozzIdentity = await readFile(path.join(MIGRATIONS, "0050_skyrozz_identity.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -224,6 +225,7 @@ try {
     ["0047_sabliers_en_ligne.sql", await readFile(path.join(MIGRATIONS, "0047_sabliers_en_ligne.sql"), "utf8")],
     ["0048_sablier_booster_bonus.sql", await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8")],
     ["0049_pack_refresh_ancre.sql", await readFile(path.join(MIGRATIONS, "0049_pack_refresh_ancre.sql"), "utf8")],
+    ["0050_skyrozz_identity.sql", skyrozzIdentity],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -242,6 +244,12 @@ try {
   for (const [name, sql] of migrations) {
     if (name !== "0044_tutoriel_reset_cadeau.sql" && name !== "0045_cadeau_claim_rejouable.sql") await client.query(sql);
   }
+
+  // Rejoue la correction comme sur une base déjà créée avant le changement de login.
+  await client.query("update public.creators set login='skyroz', display_name='Skyroz' where slug='skyroz'");
+  await client.query(skyrozzIdentity);
+  const skyrozzRow = await client.query("select login, display_name from public.creators where slug='skyroz'");
+  check("catalogue : identité Skyrozz corrigée en migration", skyrozzRow.rows[0]?.login === "skyrroztv" && skyrozzRow.rows[0]?.display_name === "Skyrozz", JSON.stringify(skyrozzRow.rows[0]));
 
   const ordinaryPackHelperBeforeReset = (await client.query("select pg_get_functiondef('public._save_add_pack_cards(uuid,jsonb,integer,timestamptz,integer,timestamptz)'::regprocedure) as definition")).rows[0].definition;
 

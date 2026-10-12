@@ -277,7 +277,7 @@ insert into public.creators (slug, login, display_name, rarity, rank, region, re
   ('luzu-tv', 'luzu_tv', 'LUZU_TV', 'rare', 238, 'S02', false),
   ('anniefuchsia', 'anniefuchsia', 'AnnieFuchsia', 'rare', 239, 'S04', false),
   ('cs2-paragon-ru', 'cs2_paragon_ru', 'cs2_paragon_ru', 'rare', 240, 'S06', false),
-  ('skyroz', 'skyroz', 'Skyroz', 'rare', 241, 'S01', false),
+  ('skyroz', 'skyrroztv', 'Skyrozz', 'rare', 241, 'S01', false),
   ('glorious-e', 'glorious_e', 'Glorious_E', 'rare', 242, 'S04', false),
   ('ziqoftw', 'ziqoftw', 'Ziqoftw', 'rare', 243, 'S04', false),
   ('alpha54', 'alpha54', 'Alpha54', 'rare', 244, 'S01', false),

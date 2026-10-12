@@ -173,7 +173,7 @@ const CURATED_REGIONS = {
     "damdamdeo", "lutti", "kotei", "wakz", "lrb", "narkuss", "skyyart", "gobgg",
     "nisqy", "hanssama", "cabochardlol", "saken_lol", "targamas", "rhobalas_lol",
     "solary", "karminecorp", "gentlemates", "vitality", "mandatory", "chowh1",
-    "wisethug", "brokybrawks", "skyroz", "moman", "jirayalol", "krl_stream", "1pvcs",
+    "wisethug", "brokybrawks", "skyrroztv", "moman", "jirayalol", "krl_stream", "1pvcs",
     "shaiiko", "sixquatre", "vatira_", "zenrl", "kaydop", "fairy_peak", "alpha54",
     "ferra", "kinstaar", "airwaks", "valouzz", "pidi", "theodort", "avamin", "snakou",
     "gaspow", "loupiote", "modiiie",
@@ -239,7 +239,7 @@ const CURATED_FR_LOGINS = [
   "shisheyu_mayamoto", "damdamdeo", "lutti", "kotei", "wakz", "lrb", "narkuss", "skyyart",
   "gobgg", "nisqy", "hanssama", "cabochardlol", "saken_lol", "targamas", "rhobalas_lol",
   "marex_lol", "crocodyle_lol", "otp_lol", "solary", "solaryfortnite", "solaryhs", "karminecorp",
-  "gentlemates", "vitality", "mandatory", "chowh1", "wisethug", "brokybrawks", "skyroz",
+  "gentlemates", "vitality", "mandatory", "chowh1", "wisethug", "brokybrawks", "skyrroztv",
   "moman", "jirayalol", "krl_stream", "1pvcs", "shaiiko", "sixquatre", "vatira_", "zenrl",
   "kaydop", "fairy_peak", "alpha54", "ferra", "kinstaar", "airwaks", "valouzz", "pidi",
   "lebouseuh", "theodort", "avamin", "snakou", "gaspow", "loupiote", "modiiie"
