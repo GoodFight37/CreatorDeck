@@ -1,4 +1,3 @@
-// src/components/binder-view.tsx
 "use client";
 
 /**
@@ -181,7 +180,7 @@ export function CollectionView({
             <i style={{ width: `${progress}%` }} />
           </div>
           <div className="collection-meta" style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>
-            <span>{game.stats.uniqueCreators} / {CREATORS.length} découverts</span>
+            <span>{game.stats.uniqueCreators} / {CREATORS.length} streameurs découverts</span>
             <span>{game.stats.totalCards} cartes obtenues</span>
           </div>
         </div>
@@ -192,11 +191,11 @@ export function CollectionView({
           <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
             setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
           }}>Dernières reçues <ChevronRight size={14} /></button>
-          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""}</span>
+          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
         </div>
       ) : null}
 
-      {/* Pages à compléter compactes : libellés exacts maintenus pour les tests */}
+      {/* Pages à compléter compactes avec structure et libellés complets pour les tests */}
       {featuredCollection ? (
         <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.4rem 0.6rem", margin: "0.3rem 0" }}>
           <div className="drop-section-label" style={{ marginBottom: "0.25rem", fontSize: "0.75rem" }}>
@@ -234,6 +233,7 @@ export function CollectionView({
         </section>
       ) : null}
 
+      {/* Sélecteur de collection : replié par défaut */}
       <details className="binder-collections-picker" style={{ margin: "0.25rem 0" }}>
         <summary style={{ fontSize: "0.8rem", padding: "0.3rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
         <p style={{ fontSize: "0.75rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
@@ -256,6 +256,7 @@ export function CollectionView({
         }}>Revenir à la suggestion automatique</button> : null}
       </details>
 
+      {/* Barre d'outils fixe */}
       <div className="binder-tools">
         <label className="search-field">
           <Search size={17} />
@@ -364,6 +365,7 @@ export function CollectionView({
         </button>
       </div> : null}
 
+      {/* Grille de cartes directement visible */}
       <div className="binder-page">
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
