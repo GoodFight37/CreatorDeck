@@ -49,6 +49,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
   const research = await jsonFile(path.join(seed, "research.json"), {});
   const stateFile = path.join(work, "state.json");
   const state = await jsonFile(stateFile, { choices: {}, skipped: {}, downloaded: {}, searches: {} });
+  state.drafts ??= {}; state.tracking ??= {};
   const catalog = new Map(creators.map((c) => [c.slug, c]));
   await mkdir(path.join(work, "originales"), { recursive: true });
   await mkdir(path.join(work, "portraits"), { recursive: true });
@@ -90,7 +91,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         if (req.method !== "GET" && req.headers.origin !== `http://${host}`) { res.writeHead(403).end(); return; }
       }
       const reply = (data) => { res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" }); res.end(JSON.stringify(data)); };
-      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, batch }); return; }
+      if (url.pathname === "/api/state") { reply({ creators, base, choices: state.choices, skipped: state.skipped, tracking: state.tracking, drafts: state.drafts, batch }); return; }
       if (url.pathname === "/api/candidates") { const slug = url.searchParams.get("slug"); creator(slug); reply({ candidates: candidates(slug) }); return; }
       if (url.pathname === "/api/photo") { const bytes = await original(url.searchParams.get("slug"), url.searchParams.get("id")); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(bytes); return; }
       if (req.method === "POST" && url.pathname === "/api/search") { const b = await bodyJson(req); reply({ candidates: await search(b.slug) }); return; }
@@ -101,19 +102,40 @@ export async function createStudio({ directory = here, port = 4317, open = false
         (async () => { try { for (const slug of slugs) { await search(slug); batch.done++; await new Promise((r) => setTimeout(r, 1500)); } } catch (e) { batch.error = e.message; } finally { batch.running = false; } })(); return;
       }
       if (req.method === "POST" && url.pathname === "/api/skip") { const b = await bodyJson(req); creator(b.slug); state.skipped[b.slug] = true; await save(); reply({ ok: true }); return; }
+      if (req.method === "POST" && url.pathname === "/api/tracking") {
+        const b = await bodyJson(req); creator(b.slug);
+        if (!["À chercher", "Trouvé", "À cadrer"].includes(b.status)) throw Error("Étape inconnue");
+        const links = String(b.links || "").split("\n").map((x) => x.trim()).filter(Boolean).map((x) => httpsUrl(x));
+        state.tracking[b.slug] = { status: b.status, links, notes: String(b.notes || "").slice(0, 10000) }; await save(); reply({ ok: true }); return;
+      }
+      if (req.method === "POST" && url.pathname === "/api/draft") {
+        const b = await bodyJson(req); creator(b.slug); const bytes = Buffer.from(b.original, "base64");
+        if (!bytes.length || bytes.length > 24 * 1024 * 1024) throw Error("Originale vide ou trop lourde (24 Mo maximum)");
+        await writeFile(path.join(work, "originales", b.slug + "-draft"), bytes);
+        state.drafts[b.slug] = { title: String(b.title || "Photo importée"), source: b.source ? httpsUrl(b.source) : "", author: String(b.author || ""), license: String(b.license || ""), permission: String(b.permission || ""), proofUrl: b.proofUrl ? httpsUrl(b.proofUrl) : "", pageid: b.pageid };
+        state.tracking[b.slug] = { ...state.tracking[b.slug], status: "À cadrer" }; await save(); reply({ ok: true }); return;
+      }
+      if (url.pathname === "/api/draft-photo" && req.method === "GET") {
+        const slug = url.searchParams.get("slug"); creator(slug); res.writeHead(200, { "Content-Type": "application/octet-stream", "Cache-Control": "no-store" }); res.end(await readFile(path.join(work, "originales", slug + "-draft"))); return;
+      }
       if (req.method === "POST" && url.pathname === "/api/select") {
         const b = await bodyJson(req); const c = creator(b.slug);
         const candidate = b.pageid ? findCandidate(b.slug, b.pageid) : null;
         if (!b.verified || !b.author?.trim() || !b.title?.trim()) throw Error("Vérifie l’identité, la licence et les crédits avant de garder la photo");
-        const source = httpsUrl(b.source); const licenseUrl = httpsUrl(b.licenseUrl, ["creativecommons.org"]);
-        if (!/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(b.license)) throw Error("Choisis une licence CC autorisant ce cadrage ; autres droits à traiter séparément");
+        const source = httpsUrl(b.source);
+        const direct = b.license === "Autorisation directe";
+        if (direct && (!b.permission?.trim() || !b.proofUrl)) throw Error("Précise la portée de l’autorisation et son lien de preuve");
+        const licenseUrl = direct ? httpsUrl(b.proofUrl) : httpsUrl(b.licenseUrl, ["creativecommons.org"]);
+        if (!direct && !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(b.license)) throw Error("Choisis une licence ou une autorisation directe documentée");
         const bytes = Buffer.from(b.webp, "base64"); const size = webpSize(bytes);
         if (size[0] !== 900 || size[1] !== 900) throw Error("Le portrait doit être un WebP carré de 900 px");
         if (![b.crop?.size, b.crop?.x, b.crop?.y].every(Number.isFinite) || b.crop.size < 900 || b.crop.x < 0 || b.crop.y < 0) throw Error("Cadrage incorrect ou agrandissement interdit");
         await writeFile(path.join(work, "portraits", b.slug + ".webp"), bytes);
         let changes = `Recadrage carré individuel (${Math.round(b.crop.x)}, ${Math.round(b.crop.y)}, ${Math.round(b.crop.size)} px) et conversion WebP, 900 × 900 px, sans agrandissement.`;
+        if (direct) changes += ` Autorisation déclarée : ${b.permission.trim()}. Preuve : ${licenseUrl}`;
         if (b.license.includes("BY-SA")) changes += ` Cette adaptation reste sous ${b.license}.`;
         state.choices[b.slug] = { name: c.displayName, image: `/creators/curated/${b.slug}.webp`, title: b.title, author: b.author.trim(), source, license: b.license, licenseUrl, changes, original: candidate?.original ?? "fichier fourni sur le PC", selectedAt: new Date().toISOString() };
+        state.tracking[b.slug] = { ...state.tracking[b.slug], status: "Prêt" };
         delete state.skipped[b.slug]; await save(); reply({ ok: true }); return;
       }
       if (req.method === "POST" && url.pathname === "/api/export") {
@@ -122,6 +144,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         for (const [slug, item] of Object.entries(base)) if (!published[slug]) { await copyFile(path.join(seed, "portraits", slug + ".webp"), path.join(images, slug + ".webp")); patch[slug] = item; }
         for (const [slug, item] of Object.entries(state.choices)) { await copyFile(path.join(work, "portraits", slug + ".webp"), path.join(images, slug + ".webp")); const { original: ignoredOriginal, selectedAt: ignoredDate, ...entry } = item; void ignoredOriginal; void ignoredDate; patch[slug] = entry; }
         await writeFile(path.join(target, "portrait-overrides.patch.json"), JSON.stringify(patch, null, 2) + "\n");
+        await writeFile(path.join(target, "suivi-sources.json"), JSON.stringify({ tracking: state.tracking, drafts: state.drafts }, null, 2));
         await writeFile(path.join(target, "README.txt"), "Importer les images dans public/creators/curated et fusionner les entrées du JSON avec src/data/portrait-overrides.json. Ne pas écraser le registre complet. Les crédits sont déjà affichés par CreatorDeck. Ce dossier ne publie rien automatiquement.\n");
         reply({ directory: target, count: Object.keys(patch).length }); return;
       }

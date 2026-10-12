@@ -203,3 +203,20 @@ Prochaine action de Malik : installer Node 24 LTS, extraire le ZIP et lancer
 et transmettre uniquement ce ZIP pour l’intégration ciblée. Les homonymes et
 licences demandent une vérification humaine. Aucune recherche IA nécessaire.
 Réservation libérée après livraison de l’outil.
+
+### Atelier élargi à la demande de Malik
+
+Ajout des recherches dans le navigateur habituel (Bing, YouTube, Instagram, X,
+comptes officiels), import par URL HTTPS avec repli manuel si CORS, dépôt de
+fichier et collage d’image. Suivi persistant À chercher/Trouvé/À cadrer/Prêt,
+liens et notes multiples, sauvegarde et reprise d’une originale avant validation.
+Autorisations directes acceptées avec lien de preuve et portée documentée,
+transmises avec les crédits ; aucune vérification automatique de ces preuves.
+Ancien `_travail` compatible, à conserver lors du remplacement de l’outil.
+Aucun modèle particulier nécessaire, aucun appel IA à l’utilisation.
+
+Base vérifiée `f3a3c53`. Tests serveur enrichis : 3/3 ; ESLint ciblé réussi.
+Chromium Linux : recherches externes présentes, suivi, sauvegarde d’originale,
+rechargement/reprise, autorisation directe et export vérifiés sans accès externe.
+Import URL réel, presse-papiers système et PC Windows non testés. ZIP reconstruit
+au même emplacement, données initiales conservées, état d’essai retiré.

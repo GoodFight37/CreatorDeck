@@ -32,7 +32,12 @@ test("un choix persiste et l’export préserve la base sans modifier un dépôt
     assert.equal((await post("/api/select", { ...body, crop: { x: 0, y: 0, size: 500 } })).status, 400);
     assert.equal((await post("/api/select", { ...body, verified: false })).status, 400);
     assert.equal((await post("/api/select", body)).status, 200);
-    const saved = JSON.parse(await readFile(path.join(studio.work, "state.json"), "utf8")); assert.equal(saved.choices.new.author, "Auteur");
+    assert.equal((await post("/api/tracking", { slug: "new", status: "Trouvé", links: "https://example.com/source", notes: "Source officielle" })).status, 200);
+    assert.equal((await post("/api/draft", { slug: "new", original: fixture.toString("base64"), title: "Photo à cadrer" })).status, 200);
+    const draftResponse = await fetch(origin + "/api/draft-photo?slug=new", { headers: { Authorization: `Bearer ${studio.token}` } }); assert.deepEqual(Buffer.from(await draftResponse.arrayBuffer()), fixture);
+    assert.equal((await post("/api/select", { ...body, license: "Autorisation directe", proofUrl: "https://example.com/permission", permission: "" })).status, 400);
+    assert.equal((await post("/api/select", { ...body, license: "Autorisation directe", proofUrl: "https://example.com/permission", permission: "Utilisation dans CreatorDeck et recadrage autorisés" })).status, 200);
+    const saved = JSON.parse(await readFile(path.join(studio.work, "state.json"), "utf8")); assert.equal(saved.choices.new.author, "Auteur"); assert.equal(saved.tracking.new.status, "Prêt"); assert.equal(saved.choices.new.licenseUrl, "https://example.com/permission");
     const response = await post("/api/export", {}); assert.equal(response.status, 200); const exported = await response.json(); assert.equal(exported.count, 2);
     const patch = JSON.parse(await readFile(path.join(exported.directory, "portrait-overrides.patch.json"), "utf8")); assert.deepEqual(Object.keys(patch).sort(), ["new", "prepared"]);
     assert.deepEqual(JSON.parse(await readFile(path.join(seed, "published.json"), "utf8")), { existing });

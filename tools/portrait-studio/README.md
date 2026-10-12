@@ -30,11 +30,10 @@ vingt autres déjà préparés sont inclus dans le premier export.
 - Si aucune candidate ne convient, ouvrir **Google Images** ou **Flickr** dans
   ton navigateur, ou relancer la recherche Commons. Une photo visible en ligne
   n’est pas automatiquement autorisée pour le jeu. Les licences compatibles
-  prises en charge ici sont CC BY, CC BY-SA et CC0 ; les autres cas restent à
-  examiner séparément.
+  prises en charge ici sont CC BY, CC BY-SA et CC0 ; les autorisations directes sont aussi prises en charge avec un lien de preuve et leur portée.
 - **Photo du PC** permet de cadrer un JPEG, PNG ou WebP que tu as déjà. Renseigner
   son auteur, son lien de source ou d’autorisation et sa vraie licence. Conserver
-  l’original sur le PC si tu veux refaire son cadrage plus tard.
+  l’original sur le PC, ou cliquer **Sauvegarder cette photo pour plus tard**.
 - **Passer ce créateur** ne le supprime pas : il reste dans la liste, indiqué
   « passé, à reprendre ». Tu peux revenir dessus.
 
@@ -80,3 +79,31 @@ node tools/portrait-studio/pack.mjs --research /chemin/vers/la/collecte
 
 Le script prépare `seed/` sans réseau. Copier ce dossier, les fichiers du présent
 outil et le lanceur dans un ZIP, sans `_travail/` ni `node_modules/`.
+
+## Nouveautés : recherches avec ton navigateur
+
+Les liens Bing Images, YouTube, Instagram, X et comptes officiels complètent
+Google Images et Flickr. Ils ouvrent ton navigateur habituel : tu utilises tes
+comptes et peux résoudre une vérification manuellement. Les résultats externes
+ne sont pas automatiquement collectés ou reconnus comme officiels.
+
+Déposer un fichier sur la zone indiquée, coller une image avec Ctrl+V, ou
+renseigner son URL HTTPS directe. Certains sites refusent l’accès depuis une
+autre page (CORS) : télécharger dans le navigateur puis déposer le fichier.
+Les cookies de tes comptes ne sont pas récupérés par l’outil.
+
+Le panneau **Suivi et sources supplémentaires** conserve étape, liens et notes.
+Les étapes sont À chercher, Trouvé, À cadrer ; garder le portrait le marque Prêt.
+**Sauvegarder cette photo pour plus tard** conserve l’originale et les crédits,
+puis **Reprendre la photo importée** permet de refaire le cadrage après fermeture.
+La position du cadrage non validé n’est pas enregistrée.
+
+Pour **Autorisation directe**, renseigner l’auteur, la page source, un lien HTTPS
+vers la preuve d’autorisation et sa portée (jeu, recadrage, etc.). Un simple lien
+vers un profil n’est pas une autorisation. Garder une copie de la preuve : l’outil
+conserve le lien et ton texte, sans vérifier ou télécharger cette preuve.
+L’export contient aussi `suivi-sources.json` pour transmettre notes et sources.
+
+Pour mettre à jour une première version, fermer son lanceur puis remplacer les
+fichiers de l’outil par ceux du nouveau ZIP, **en conservant `_travail`**. Les
+choix précédents restent compatibles ; relancer ensuite `LANCER.cmd`.
