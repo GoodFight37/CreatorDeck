@@ -278,14 +278,18 @@ describe("les effets de révélation", () => {
 
   it("déverrouille la révélation si animationend ne vient jamais", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const suivant = vi.fn();
     await banc.monter(
       <RevealOverlay cards={[carte("common", "a"), carte("common", "b")] as never}
-        index={0} overlay onNext={() => {}} onClose={() => {}} />,
+        index={0} overlay onNext={suivant} onClose={() => {}} />,
     );
     const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
-    expect(bouton.disabled).toBe(true);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(bouton.disabled).toBe(false);
+    banc.appuyer("Révéler la suivante");
+    expect(bouton.textContent).toContain("Suite programmée");
+    expect(suivant).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(suivant).toHaveBeenCalledOnce();
   });
 
   it("se choisit sur la carte du moment, pas sur la première du paquet", async () => {

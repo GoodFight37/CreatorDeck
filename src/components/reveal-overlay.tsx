@@ -88,8 +88,14 @@ export function RevealOverlay({
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
+  const [advanceQueuedFor, setAdvanceQueuedFor] = useState<string | null>(null);
+  const advanceRef = useRef<() => void>(() => {});
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
+
+  useEffect(() => {
+    advanceRef.current = advance;
+  });
 
   // Le bouton d'avancement attend la fin réelle du retournement. Le minuteur
   // sert de filet si le navigateur perd animationend ; le mouvement réduit
@@ -113,6 +119,18 @@ export function RevealOverlay({
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
   }, [cardId, perfect]);
+
+  // Un appui pendant le retournement compte : dès que la face est visible,
+  // on passe à la carte suivante. Le bouton reste utilisable au lieu de
+  // laisser le navigateur avaler le clic parce que `animationend` n'est pas arrivé.
+  useEffect(() => {
+    if (!cardId || advanceQueuedFor !== cardId || flippedCardId !== cardId || locked) return;
+    const timer = window.setTimeout(() => {
+      setAdvanceQueuedFor(null);
+      advanceRef.current();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [advanceQueuedFor, cardId, flippedCardId, locked]);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -223,6 +241,10 @@ export function RevealOverlay({
   // Une carte déjà révélée se range dès le premier appui.
   function advance() {
     if (locked) return;
+    if (!perfect && !showSummary && flippedCardId !== card.id) {
+      setAdvanceQueuedFor(card.id);
+      return;
+    }
     if (termine) {
       if (overlay) onClose();
       else setShowSummary(true);
@@ -441,7 +463,7 @@ export function RevealOverlay({
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
         onClick={showSummary ? onClose : advance}
-        disabled={locked || (!perfect && !showSummary && flippedCardId !== card.id)}
+        disabled={locked}
         // La barre du verrou lit la durée du module de mise en scène : une
         // seule vérité, sinon elle finirait avant le bouton ou après lui.
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
@@ -451,6 +473,8 @@ export function RevealOverlay({
             ? tutorial ? "Commencer ma collection" : "Retour au Drop"
             : locked
             ? "Perfect…"
+            : advanceQueuedFor === card.id
+            ? "Suite programmée…"
             : termine
                 ? tutorial ? "Terminer l’essai" : "Ranger dans le classeur"
                 : "Révéler la suivante"}

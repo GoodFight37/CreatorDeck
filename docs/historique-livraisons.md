@@ -449,3 +449,14 @@ son sel. Le décor éclaire la scène ; il ne dit pas quoi répondre.
 **Corollaire** : les identifiants et les verdicts attendus n'ont pas bougé, donc
 la vérité serveur (`0042_tribunal.sql`, à coller par le joueur) reste alignée
 avec le fichier — c'est d'ailleurs un test qui le garantit.
+
+## Appui rapide pendant la révélation — 12 octobre 2026
+
+Dans le jeu et le Paquet Scène, le premier toucher sur « Révéler la suivante »
+pendant le flip est maintenant retenu. Le flip courant termine, puis le paquet
+avance d’une carte ; le bouton affiche « Suite programmée… ». Le Perfect conserve
+son verrou de 2,6 s. Le geste ne peut pas sauter plusieurs cartes.
+
+Le banc DOM de révélation met à jour la régression correspondante. ESLint ciblé
+et `npm run typecheck` réussis ; le banc DOM n’a pas été exécuté dans cette passe.
+Publication et CI à renseigner après le push.
