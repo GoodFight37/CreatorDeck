@@ -1,11 +1,9 @@
 "use client";
 
 /**
- * L'écran **Binder** : le classeur, ses milles cartes, la recherche, le tri et
- * les filtres — collés sous la barre pendant qu'on feuillette.
+ * L'écran **Binder** : grille de collection immédiate, recherche et filtres compacts.
  */
 import { useMemo, useState, type CSSProperties } from "react";
-
 import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
@@ -159,35 +157,35 @@ export function CollectionView({
 
   return (
     <div className="view collection-view" style={themeStyle}>
-      {/* En-tête compact */}
-      <section className="page-title-row" style={{ marginBottom: "0.25rem" }}>
+      {/* En-tête sobre : titre direct sans slogans marketing empilés */}
+      <section className="page-title-row" style={{ marginBottom: "0.2rem" }}>
         <div>
-          <span className="drop-section-kicker">LES NOMS QUE TU GARDES</span>
-          <h1 style={{ fontSize: "1.4rem" }}>Mon classeur</h1>
+          <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Mon classeur</h1>
         </div>
         <div className="collection-score">
           {game.stats.uniqueCreators ? (
             <><strong>{progress}%</strong><span>complété</span></>
           ) : (
-            <><strong>À toi</strong><span>ta première carte</span></>
+            <><strong>À toi</strong><span>première carte</span></>
           )}
         </div>
       </section>
 
       {game.stats.uniqueCreators ? (
-        <div style={{ marginBottom: "0.35rem" }}>
+        <div style={{ marginBottom: "0.3rem" }}>
           <div className="progress-track" style={{ height: "4px" }}>
             <i style={{ width: `${progress}%` }} />
           </div>
-          <div className="collection-meta" style={{ fontSize: "0.75rem", marginTop: "0.25rem" }}>
+          <div className="collection-meta" style={{ fontSize: "0.75rem", marginTop: "0.2rem" }}>
             <span>{game.stats.uniqueCreators} / {CREATORS.length} streameurs découverts</span>
             <span>{game.stats.totalCards} cartes obtenues</span>
           </div>
         </div>
       ) : null}
 
+      {/* Raccourci Dernières reçues */}
       {game.stats.uniqueCreators > 0 ? (
-        <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.25rem 0" }}>
+        <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.2rem 0" }}>
           <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
             setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
           }}>Dernières reçues <ChevronRight size={14} /></button>
@@ -195,12 +193,12 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Pages à compléter compactes avec structure et libellés complets pour les tests */}
+      {/* Pages à compléter : bandeau compact conservant le contrat de test */}
       {featuredCollection ? (
-        <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.4rem 0.6rem", margin: "0.3rem 0" }}>
-          <div className="drop-section-label" style={{ marginBottom: "0.25rem", fontSize: "0.75rem" }}>
+        <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.35rem 0.6rem", margin: "0.25rem 0" }}>
+          <div className="drop-section-label" style={{ marginBottom: "0.2rem", fontSize: "0.72rem" }}>
             <span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span>
-            <BookOpen size={14} />
+            <BookOpen size={13} />
           </div>
           <button
             type="button"
@@ -210,34 +208,34 @@ export function CollectionView({
           >
             <span className="binder-page-title" style={{ flex: 1, textAlign: "left" }}>
               <strong style={{ fontSize: "0.85rem" }}>{featuredCollection.name}</strong>
-              <small style={{ display: "block", fontSize: "0.75rem", opacity: 0.7 }}>
+              <small style={{ display: "block", fontSize: "0.72rem", opacity: 0.7 }}>
                 {featuredCollection.owned} / {featuredCollection.total} cartes différentes
               </small>
-              <span className="binder-collection-action" style={{ fontSize: "0.75rem" }}>
+              <span className="binder-collection-action" style={{ fontSize: "0.72rem" }}>
                 {featuredCollection.missing.length ? `Voir les ${featuredCollection.missing.length} manquantes` : "Revoir les cartes réunies"}
               </span>
             </span>
             <ChevronRight size={15} style={{ opacity: 0.6 }} />
           </button>
-          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", margin: "0.25rem 0" }} />
+          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", margin: "0.2rem 0" }} />
           {featuredCollection.missing.length ? (
-            <p className="binder-missing-preview" style={{ fontSize: "0.75rem", margin: "0.15rem 0" }}>
+            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
               À trouver : {featuredCollection.missing.slice(0, 3).map((slug) => CREATOR_BY_SLUG.get(slug)?.displayName).join(", ")}
               {featuredCollection.missing.length > 3 ? ` et ${featuredCollection.missing.length - 3} autres.` : "."}
             </p>
           ) : (
-            <p className="binder-missing-preview" style={{ fontSize: "0.75rem", margin: "0.15rem 0" }}>
+            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
               Tous les noms de cette page sont réunis.
             </p>
           )}
         </section>
       ) : null}
 
-      {/* Sélecteur de collection : replié par défaut */}
-      <details className="binder-collections-picker" style={{ margin: "0.25rem 0" }}>
-        <summary style={{ fontSize: "0.8rem", padding: "0.3rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
-        <p style={{ fontSize: "0.75rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
-        <label style={{ fontSize: "0.75rem" }}>Famille
+      {/* Sélecteur replié */}
+      <details className="binder-collections-picker" style={{ margin: "0.2rem 0" }}>
+        <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
+        <p style={{ fontSize: "0.72rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
+        <label style={{ fontSize: "0.72rem" }}>Famille
           <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>
             {BINDER_FAMILIES.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}
           </select>
@@ -256,10 +254,10 @@ export function CollectionView({
         }}>Revenir à la suggestion automatique</button> : null}
       </details>
 
-      {/* Barre d'outils fixe */}
+      {/* Outils compacts au-dessus des pochettes */}
       <div className="binder-tools">
         <label className="search-field">
-          <Search size={17} />
+          <Search size={16} />
           <input
             value={query}
             onChange={(event) => {
@@ -277,13 +275,13 @@ export function CollectionView({
               }}
               aria-label="Effacer la recherche"
             >
-              <X size={15} />
+              <X size={14} />
             </button>
           ) : null}
         </label>
 
         <label className="sort-field">
-          <ArrowDownWideNarrow size={17} />
+          <ArrowDownWideNarrow size={16} />
           <span className="sort-label">Trier</span>
           <select
             value={sort}
@@ -339,33 +337,25 @@ export function CollectionView({
       {activePage ? (
         <div className="binder-active-page" role="status">
           <span>{filter === "missing" ? "À découvrir" : "Collection"} · <strong>{activePage.name}</strong> · {activePage.owned}/{activePage.total}</span>
-          <button type="button" aria-label="Retirer le filtre de page" onClick={() => { setPageGoal(null); setPage(0); }}><X size={17} /></button>
+          <button type="button" aria-label="Retirer le filtre de page" onClick={() => { setPageGoal(null); setPage(0); }}><X size={16} /></button>
         </div>
       ) : null}
 
-      {showPager ? <div className="binder-pager">
-        <button
-          onClick={() => {
-            setPage((p) => Math.max(0, p - 1));
-          }}
-          disabled={safePage <= 0}
-        >
-          <ChevronLeft size={15} />
-          <span>Précédent</span>
-        </button>
-        <span>
-          Page <strong>{safePage + 1}</strong> sur {totalPages} · {filtered.length} cartes
-        </span>
-        <button
-          onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-          disabled={safePage >= totalPages - 1}
-        >
-          <span>Suivant</span>
-          <ChevronRight size={15} />
-        </button>
-      </div> : null}
+      {showPager ? (
+        <div className="binder-pager">
+          <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage <= 0}>
+            <ChevronLeft size={15} />
+            <span>Précédent</span>
+          </button>
+          <span>Page <strong>{safePage + 1}</strong> / {totalPages} · {filtered.length} cartes</span>
+          <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>
+            <span>Suivant</span>
+            <ChevronRight size={15} />
+          </button>
+        </div>
+      ) : null}
 
-      {/* Grille de cartes directement visible */}
+      {/* Grille de cartes visible immédiatement */}
       <div className="binder-page">
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
@@ -393,14 +383,18 @@ export function CollectionView({
             );
           })}
         </div>
+
+        {/* Empty state épuré : 1 phrase + 1 CTA */}
         {!filtered.length ? (
           <div className="binder-empty-state">
             {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
               <>
-                <strong>Ta collection commence avec le prochain booster.</strong>
-                <span>Les cartes que tu découvres apparaîtront ici.</span>
-                {onGoDrop ? <button type="button" className="binder-first-drop" onClick={onGoDrop}>Retour au Drop <ChevronRight size={16} /></button> : null}
-                <button type="button" onClick={() => { setFilter("all"); setPageGoal(null); setPage(0); }}>Voir les créateurs à découvrir</button>
+                <strong>Ouvre ton premier booster pour démarrer le classeur.</strong>
+                {onGoDrop ? (
+                  <button type="button" className="binder-first-drop" onClick={onGoDrop}>
+                    Retour au Drop <ChevronRight size={16} />
+                  </button>
+                ) : null}
               </>
             ) : (
               <span>Aucune carte ne correspond à cette recherche.</span>

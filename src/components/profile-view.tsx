@@ -1,17 +1,9 @@
 "use client";
 
 /**
- * L'écran **Toi** : les statistiques, la wishlist, puis **trois familles** de
- * portes — Compte (tout ce qui vit en ligne), Progression (ce que le jeu
- * publie : objectifs, taux) et Réglages (thème, son, reflets) — et, tout en
- * bas, le bouton rouge de remise à zéro.
- *
- * Trois familles et pas une seule liste : sur un téléphone, onze lignes à la
- * suite se lisent mal, et une ligne qu'on ne trouve pas est une ligne qui
- * n'existe pas. Chaque titre dit ce qu'il y a dessous.
+ * L'écran **Toi** : vitrine, progression et réglages essentiels.
  */
 import { useEffect, useMemo, useState } from "react";
-
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
@@ -20,18 +12,13 @@ import { CreatorCard } from "@/components/creator-card";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useCloud } from "@/hooks/use-cloud";
-
 import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
-
 import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 import { sellableCards } from "@/lib/market";
-
 import { regionLabel } from "@/lib/regions";
-
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
-
 import {
   SFX_LEVEL_LABELS,
   SFX_LEVELS,
@@ -42,7 +29,6 @@ import {
   type SfxLevel,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
-
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
@@ -62,7 +48,6 @@ export function ProfileView({
   onError,
   onShowOdds,
   onShowMissions,
-  onShowThemes,
   onShowStudio,
   onShowAccount,
   onShowLeaderboard,
@@ -83,7 +68,7 @@ export function ProfileView({
   onError: (message: string) => void;
   onShowOdds: () => void;
   onShowMissions: () => void;
-  onShowThemes: () => void;
+  onShowThemes?: () => void;
   onShowStudio: () => void;
   onShowAccount: () => void;
   onShowLeaderboard: () => void;
@@ -99,28 +84,22 @@ export function ProfileView({
   onGoDrop?: () => void;
 }) {
   const cloud = useCloud();
-  // Le compte du carnet passe par le hook, et non par le store : lui seul
-  // ajoute la ligne du direct du créateur épinglé, que le serveur ne fabrique
-  // pas. La pastille et la feuille comptent ainsi exactement la même liste.
   const { unread: inboxUnread } = useInbox();
-  // Ce qui est prenable maintenant : la pastille du menu, calculée à partir de
-  // l'étagère du serveur et de son horloge (voir `readySteals`).
   const lastPackNow = useNow(15_000);
   const lastPackReady = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? lastPackNow, lastPackNow);
-  // Les récompenses d'arène non encaissées : même principe que le Last Pack —
-  // une pastille qui compte ce qui attend le joueur, pas ce qui l'attend lui.
   const arenaRewards = cloud.arenaMine?.pending.length ?? 0;
   const arenaCards = new Set(game.cards.map((card) => card.creatorSlug)).size;
   const marketDuplicates = sellableCards(game.cards).length;
-  // L'épinglé se relit au montage de l'onglet, et à chaque changement de
-  // compte : ce n'est pas l'épinglé d'un autre joueur qui doit s'afficher.
+
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
     void cloudStore.loadWishlist();
     void cloudStore.loadProfile();
   }, [cloud.configured, cloud.userId]);
+
   const wishlistCreator = cloud.wishlistSlug ? CREATOR_BY_SLUG.get(cloud.wishlistSlug) ?? null : null;
   const ownedCards = game.cards;
+
   const showcase = useMemo(() => {
     const bestByCreator = new Map<string, (typeof ownedCards)[number]>();
     const score = (card: (typeof ownedCards)[number]) =>
@@ -137,31 +116,23 @@ export function ProfileView({
       .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt);
     return [...pinned, ...automatic].slice(0, 3);
   }, [ownedCards, cloud.showcase]);
+
   const [binderGoal] = useBinderGoal();
   const collections = useMemo(() => binderCollectionProgress(new Set(ownedCards.map((card) => card.creatorSlug))), [ownedCards]);
   const collectionGoal = collections.find((collection) => collection.id === binderGoal) ?? recommendBinderCollection(collections);
   const completedPages = collections.filter((collection) => collection.missing.length === 0).length;
   const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
-  // Le son vit hors de React (module Web Audio) : l'état local ne sert qu'à
-  // dessiner le bon côté de l'interrupteur.
+
   const [soundOn, setSoundOn] = useState(() => !isMuted());
-  // Le cran de volume vit dans le module du son (comme le silence) : l'état
-  // local ne sert qu'à dessiner le cran choisi.
   const [soundLevel, setSoundLevel] = useState<SfxLevel>(() => getSfxLevel());
-  // Le réglage des reflets s'applique au document dès le démarrage : sans ça,
-  // un joueur qui les a coupés les reverrait le temps d'un rendu (le CSS, lui,
-  // ne connaît pas `localStorage`).
+
   useEffect(() => {
     applyTiltChoice();
   }, []);
-  // Les reflets des cartes (Holo, Gold, Live) : le foil suit le doigt, et
-  // l'inclinaison quand l'appareil a un capteur. Le réglage coupe **tout** —
-  // c'est le bouton de secours de celui que l'effet fatigue.
+
   const [tiltOn, setTiltOn] = useState(() => tiltEnabled());
   const canTilt = true;
   const studioAvailable = process.env.NODE_ENV !== "production";
-  // Le studio de tirages est un outil de mise au point, pas une option de jeu :
-  // il s'ouvre en appuyant cinq fois sur la pastille de niveau.
   const [tools, setTools] = useState(0);
   const [lastTap, setLastTap] = useState(0);
 
@@ -184,12 +155,6 @@ export function ProfileView({
     setTiltEnabled(next);
   }
 
-  /**
-   * Les réglages sont **muets** (8 octobre 2026 : « enlève le son quand on
-   * clique sur des onglets ou des paramètres »). C'est d'ailleurs le seul
-   * endroit où un son de réglage était franchement gênant : on y vient
-   * justement parce qu'un son dérange.
-   */
   function toggleSound() {
     const next = !soundOn;
     setSoundOn(next);
@@ -205,8 +170,6 @@ export function ProfileView({
     if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.\n\nSi tu joues connecté, ce qui est enregistré en ligne est effacé aussi.")) {
       return;
     }
-    // L'appareil d'abord, le serveur ensuite : la partie neuve qu'il faut
-    // remonter est celle que `gameStore.reset()` vient d'écrire.
     gameStore.reset();
     if (!cloud.configured || !cloud.userId) {
       onProgressReset?.();
@@ -218,10 +181,7 @@ export function ProfileView({
     if (outcome.status === "done") {
       onProgressReset?.();
       onNotice(outcome.message);
-    }
-    else if (outcome.status === "unavailable") {
-      // L'appareil a bien redémarré : le serveur, lui, garde sa réserve. On le
-      // dit, plutôt que de laisser croire à une remise à zéro complète.
+    } else if (outcome.status === "unavailable") {
       onError(`Partie locale remise à zéro. En ligne : ${outcome.message}`);
     }
   }
@@ -239,7 +199,6 @@ export function ProfileView({
         <div>
           <h1>{cloud.userId && cloud.displayName ? cloud.displayName : "Mon profil de collectionneur"}</h1>
           <span>{CATALOG_EDITION}</span>
-
         </div>
       </section>
 
@@ -263,6 +222,7 @@ export function ProfileView({
         </div>
       ) : null}
 
+      {/* Vitrine centrale */}
       <section className="profile-showcase" aria-label="Vitrine de cartes">
         <div className="profile-showcase-heading">
           <div><span>À EXPOSER</span><h2>Ta vitrine</h2></div>
@@ -289,29 +249,38 @@ export function ProfileView({
             })}
           </div>
         ) : (
-          <div className="profile-showcase-empty"><p>Ta première carte t’attend. Ouvre un booster pour commencer ta vitrine.</p>
-            {onGoDrop ? <button type="button" className="profile-identity-action" onClick={onGoDrop}>Trouver ma première carte <ChevronRight size={16} /></button> : null}</div>
+          <div className="profile-showcase-empty">
+            <p>Ta première carte t’attend. Ouvre un booster pour commencer ta vitrine.</p>
+            {onGoDrop ? <button type="button" className="profile-identity-action" onClick={onGoDrop}>Trouver ma première carte <ChevronRight size={16} /></button> : null}
+          </div>
         )}
-        {cloud.configured ? <button type="button" className="profile-identity-action" onClick={onShowAccount}>
-          {cloud.userId ? "Personnaliser mon pseudo et ma vitrine" : "Lier un compte pour personnaliser mon profil"}<ChevronRight size={16} />
-        </button> : null}
+        {cloud.configured ? (
+          <button type="button" className="profile-identity-action" onClick={onShowAccount}>
+            {cloud.userId ? "Personnaliser mon pseudo et ma vitrine" : "Lier un compte pour personnaliser mon profil"}
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
       </section>
 
-      {game.stats.totalCards > 0 ? <section className="profile-milestones" aria-label="Mes collections réunies">
-        <span><strong>{completedPages}</strong> page{completedPages > 1 ? "s" : ""} réunie{completedPages > 1 ? "s" : ""}</span>
-        <span><strong>{legendaryNames}</strong> Légendaire{legendaryNames > 1 ? "s" : ""} différente{legendaryNames > 1 ? "s" : ""}</span>
-      </section> : null}
-      {collectionGoal && onGoBinder ? <button type="button" className="profile-collection-goal" onClick={onGoBinder}>
-        <span><small>{collectionGoal.missing.length ? "MA COLLECTION EN COURS" : "MA COLLECTION COMPLÉTÉE"}</small><strong>{collectionGoal.name}</strong>
-          <span>{collectionGoal.owned}/{collectionGoal.total} cartes · {collectionGoal.missing.length ? `${collectionGoal.missing.length} à trouver` : "Complétée"}</span></span>
-        <ChevronRight size={18} />
-      </button> : null}
+      {game.stats.totalCards > 0 ? (
+        <section className="profile-milestones" aria-label="Mes collections réunies">
+          <span><strong>{completedPages}</strong> page{completedPages > 1 ? "s" : ""} réunie{completedPages > 1 ? "s" : ""}</span>
+          <span><strong>{legendaryNames}</strong> Légendaire{legendaryNames > 1 ? "s" : ""} différente{legendaryNames > 1 ? "s" : ""}</span>
+        </section>
+      ) : null}
 
-      {/*
-       * La wishlist. Elle ne s'affiche que sur un build avec cloud : un épinglé
-       * que personne ne peut voir n'a pas de sens, et un bloc grisé de plus
-       * encombrerait l'onglet pour rien.
-       */}
+      {collectionGoal && onGoBinder ? (
+        <button type="button" className="profile-collection-goal" onClick={onGoBinder}>
+          <span>
+            <small>{collectionGoal.missing.length ? "MA COLLECTION EN COURS" : "MA COLLECTION COMPLÉTÉE"}</small>
+            <strong>{collectionGoal.name}</strong>
+            <span>{collectionGoal.owned}/{collectionGoal.total} cartes · {collectionGoal.missing.length ? `${collectionGoal.missing.length} à trouver` : "Complétée"}</span>
+          </span>
+          <ChevronRight size={18} />
+        </button>
+      ) : null}
+
+      {/* Wishlist */}
       {cloud.configured ? (
         <section className="wishlist-block" aria-label="Wishlist">
           <div className="wishlist-title">
@@ -320,117 +289,37 @@ export function ProfileView({
           </div>
           {!cloud.userId ? (
             <div className="wishlist-body">
-              <p>
-                Connecte-toi pour épingler le créateur que tu cherches : les autres le verront sur
-                ta fiche.
-              </p>
+              <p>Connecte-toi pour épingler le créateur que tu cherches : les autres le verront sur ta fiche.</p>
             </div>
           ) : wishlistCreator ? (
             <div className="wishlist-body">
               <div className="wishlist-name">
                 <b>{wishlistCreator.displayName}</b>
-                <span>
-                  {RARITY_META[wishlistCreator.rarity].label} · {regionLabel(wishlistCreator.region)}
-                </span>
+                <span>{RARITY_META[wishlistCreator.rarity].label} · {regionLabel(wishlistCreator.region)}</span>
               </div>
               <div className="wishlist-actions">
-                <button type="button" className="account-button ghost" onClick={onShowWishlist}>
-                  Changer
-                </button>
-                <button
-                  type="button"
-                  className="account-button ghost"
-                  disabled={cloud.wishlistBusy}
-                  onClick={() => void cloudStore.clearWishlist()}
-                >
-                  Retirer
-                </button>
+                <button type="button" className="account-button ghost" onClick={onShowWishlist}>Changer</button>
+                <button type="button" className="account-button ghost" disabled={cloud.wishlistBusy} onClick={() => void cloudStore.clearWishlist()}>Retirer</button>
               </div>
             </div>
           ) : (
             <div className="wishlist-body">
               <p>Le créateur qui te manque le plus. Un seul, et il s&apos;affiche chez toi.</p>
-              <button type="button" className="account-button ghost" onClick={onShowWishlist}>
-                Épingler un créateur
-              </button>
+              <button type="button" className="account-button ghost" onClick={onShowWishlist}>Épingler un créateur</button>
             </div>
           )}
         </section>
       ) : null}
 
-      {/*
-       * Le menu : trois familles, des libellés seuls. Pas de sous-texte pour
-       * expliquer chaque ligne — un menu de jeu se lit d'un coup d'œil. Ce qui
-       * a besoin d'explications les donne là où on s'en sert : l'écran Compte,
-       * la feuille des taux, le thème.
-       */}
-      <section className="menu-group" aria-label="Compte">
-        <h2>Compte</h2>
-        <button type="button" className="menu-row" onClick={onShowAccount}>
-          <span>Mon compte</span>
-          <ChevronRight size={16} />
-        </button>
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowLeaderboard}>
-            <span>Classement mondial</span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured && cloud.userId ? (
-          <button type="button" className="menu-row" onClick={onShowOwnProfile}>
-            <span>Ma fiche publique</span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowFriends}>
-            <span>Amis{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowMarket}>
-            <span className="menu-label">Hôtel des ventes<small className="menu-state">
-              {!cloud.userId ? "Compte requis pour acheter ou vendre" : `${marketDuplicates} doublon${marketDuplicates === 1 ? "" : "s"} à vendre · ${game.player.points.toLocaleString("fr-FR")} pts`}
-            </small></span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowArena}>
-            <span className="menu-label">Arène<small className="menu-state">
-              {!cloud.userId ? "Compte requis · équipe de 5 cartes · 1 en direct" : `${arenaCards < 5 ? `${arenaCards}/5 cartes distinctes` : `${arenaCards} cartes · minimum 5`} · 1 créateur en direct au dépôt`}
-            </small></span>
-            {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowLastPack}>
-            <span>Last Pack{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
-            {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        {cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowNotifications}>
-            <span>Notifications{!cloud.userId ? <small className="menu-state">Connecte-toi pour accéder</small> : null}</span>
-            {inboxUnread > 0 ? <b className="menu-count">{inboxUnread}</b> : null}
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-      </section>
-
-      {/*
-       * Progression : ce que le jeu publie (les objectifs de la saison, les
-       * taux du tirage). Ce sont des écrans qu'on ouvre pour lire, pas pour
-       * jouer — d'où leur famille à part.
-       */}
+      {/* Progression */}
       <section className="menu-group" aria-label="Progression">
         <h2>Progression</h2>
-        {onShowTribunal ? <button type="button" className="menu-row" onClick={onShowTribunal}>
-          <span>Tribunal des Bannis</span><ChevronRight size={16} />
-        </button> : null}
+        {onShowTribunal ? (
+          <button type="button" className="menu-row" onClick={onShowTribunal}>
+            <span>Tribunal des Bannis</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
         <button type="button" className="menu-row" onClick={onShowMissions}>
           <span>Objectifs et saisons</span>
           <ChevronRight size={16} />
@@ -441,15 +330,83 @@ export function ProfileView({
         </button>
       </section>
 
-      {/* Réglages : les trois choses qu'on règle une fois. Le thème est une
-          porte (il se choisit), le son et les reflets sont des interrupteurs
-          (ils se coupent sur place). */}
-      <section className="menu-group" aria-label="Réglages">
-        <h2>Réglages</h2>
-        <button type="button" className="menu-row" onClick={onShowThemes}>
-          <span>Thème du classeur</span>
+      {/* Compte & En ligne */}
+      <section className="menu-group" aria-label="Compte">
+        <h2>Compte</h2>
+        <button type="button" className="menu-row" onClick={onShowAccount}>
+          <span>Mon compte</span>
           <ChevronRight size={16} />
         </button>
+
+        {cloud.configured && cloud.userId ? (
+          <>
+            <button type="button" className="menu-row" onClick={onShowLeaderboard}>
+              <span>Classement mondial</span>
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowOwnProfile}>
+              <span>Ma fiche publique</span>
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowFriends}>
+              <span>Amis</span>
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowMarket}>
+              <span className="menu-label">
+                Hôtel des ventes
+                <small className="menu-state">
+                  {marketDuplicates} doublon{marketDuplicates === 1 ? "" : "s"} à vendre · {game.player.points.toLocaleString("fr-FR")} pts
+                </small>
+              </span>
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowArena}>
+              <span className="menu-label">
+                Arène
+                <small className="menu-state">
+                  {arenaCards < 5 ? `${arenaCards}/5 cartes distinctes` : `${arenaCards} cartes · minimum 5`} · 1 créateur en direct au dépôt
+                </small>
+              </span>
+              {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowLastPack}>
+              <span>Last Pack</span>
+              {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
+              <ChevronRight size={16} />
+            </button>
+            <button type="button" className="menu-row" onClick={onShowNotifications}>
+              <span>Notifications</span>
+              {inboxUnread > 0 ? <b className="menu-count">{inboxUnread}</b> : null}
+              <ChevronRight size={16} />
+            </button>
+          </>
+        ) : cloud.configured ? (
+          /* En non-connecté : volet unique condensé sans mur de 5 lignes grises */
+          <details className="menu-locked-group" style={{ margin: "0.2rem 0" }}>
+            <summary className="menu-row" style={{ cursor: "pointer" }}>
+              <span className="menu-label">
+                Fonctionnalités en ligne
+                <small className="menu-state">Arène, Ventes, Amis · Connexion requise</small>
+              </span>
+              <ChevronRight size={16} />
+            </summary>
+            <div style={{ paddingLeft: "0.75rem", opacity: 0.85 }}>
+              <button type="button" className="menu-row" onClick={onShowLeaderboard}><span>Classement mondial</span><ChevronRight size={16} /></button>
+              <button type="button" className="menu-row" onClick={onShowFriends}><span>Amis</span><ChevronRight size={16} /></button>
+              <button type="button" className="menu-row" onClick={onShowMarket}><span>Hôtel des ventes</span><ChevronRight size={16} /></button>
+              <button type="button" className="menu-row" onClick={onShowArena}><span>Arène</span><ChevronRight size={16} /></button>
+              <button type="button" className="menu-row" onClick={onShowLastPack}><span>Last Pack</span><ChevronRight size={16} /></button>
+              <button type="button" className="menu-row" onClick={onShowNotifications}><span>Notifications</span><ChevronRight size={16} /></button>
+            </div>
+          </details>
+        ) : null}
+      </section>
+
+      {/* Réglages minimaux */}
+      <section className="menu-group" aria-label="Réglages">
+        <h2>Réglages</h2>
         <button
           type="button"
           className="menu-row"
@@ -462,11 +419,9 @@ export function ProfileView({
             <i />
           </span>
         </button>
-        {/* Le volume, sous l'interrupteur et seulement quand le son est actif :
-            trois crans, pas un curseur — c'est un réglage qu'on cherche quand un
-            son dérange, pas une balance à ajuster. */}
+
         {soundOn ? (
-          <div className="menu-row sound-row">
+          <div className="menu-row sound-row" style={{ paddingTop: "0.2rem", paddingBottom: "0.2rem" }}>
             <span id="volume-label">Volume</span>
             <div className="sound-choice" role="group" aria-labelledby="volume-label">
               {SFX_LEVELS.map((cran) => (
@@ -483,6 +438,7 @@ export function ProfileView({
             </div>
           </div>
         ) : null}
+
         {canTilt ? (
           <button
             type="button"
@@ -497,28 +453,15 @@ export function ProfileView({
             </span>
           </button>
         ) : null}
+
         <ImageCredits />
-        {/*
-         * Le code promo n'est plus dans le menu : il ne sert que le jour où un
-         * code existe, et « Toi » a déjà trop de portes pour un écran de
-         * téléphone. Sa place, quand il reviendra, est **ici** : c'est un
-         * réglage, pas une activité. L'écran (`promo-code-sheet.tsx`) et la
-         * fonction serveur restent en place — remettre la ligne suffit à le
-         * rallumer.
-         */}
       </section>
 
-      {/* Les crédits : ce que le jeu n'a pas dessiné, et qui l'a fait. Discrets,
-          repliés, et avant le rouge — on ne tombe pas dessus en cherchant autre
-          chose, et deux licences demandent qu'ils soient là. */}
       <CreditsBlock />
 
-      {/* Le rouge, tout en bas et séparé du reste : on ne le touche pas par
-          accident. */}
       <button type="button" className="menu-reset" onClick={() => void handleReset()}>
         Réinitialiser la progression
       </button>
     </div>
   );
 }
-
