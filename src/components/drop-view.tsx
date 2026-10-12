@@ -260,7 +260,7 @@ export function HomeView({
             <LoaderCircle className="spin" size={19} />
           ) : needsAccount ? (
             <CircleUserRound size={19} />
-          )} : (
+          ) : (
             <Zap size={19} />
           )}
           <span>

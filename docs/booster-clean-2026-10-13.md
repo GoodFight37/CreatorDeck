@@ -76,3 +76,11 @@ dans la même scène. Swiper après le flip. Sur un autre paquet, utiliser
 « Ouvrir sans déchirer ». Si l'attente persiste : « Afficher les cartes », puis
 « Retour au jeu pendant l’attente » si c'est le réseau. Ne pas relancer le tirage.
 Envoyer une courte vidéo et préciser le bouton/geste utilisé si cela bloque.
+
+## Blocage de compilation corrigé — 13 octobre 2026
+
+Après autorisation explicite de Malik, correction limitée à l'accolade superflue
+sur le ternaire du bouton dans `drop-view.tsx:263`. Les modifications visuelles
+Gemini sont conservées. Typecheck, lint ciblé Drop et build statique réussissent
+sur `b7970dc` avec cette correction. Les échecs décrits plus haut sont historiques ;
+la publication de cette réparation ne prouve pas encore le statut Vercel/CI.

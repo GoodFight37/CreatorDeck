@@ -1,3 +1,16 @@
+## Compilation débloquée — 13 octobre 2026
+
+Malik autorise désormais la réparation du fichier Drop laissé à Gemini, dont
+le contexte est épuisé. Une seule accolade superflue supprimée dans le ternaire
+de drop-view.tsx:263 ; aucun changement de layout ou règle. Base main b7970dc,
+HEAD distant vérifié identique avant publication. Typecheck, lint ciblé Drop,
+build statique et diff-check réussis. Le correctif 2D/continuum précédent est
+inclus et peut maintenant compiler. CI/Vercel non surveillés, mode économie.
+[Rapport actualisé](booster-clean-2026-10-13.md). Les paragraphes de blocage
+ci-dessous sont historiques. Travail portraits local préservé hors commit.
+Aucune réservation active ; prochaine action utilisateur : tester après
+le déploiement Vercel. Le commit du checkpoint se retrouve dans le journal.
+
 ## Checkpoint ouverture propre, GPU off par défaut — 13 octobre 2026
 
 Retour téléphone/Vercel de Malik : sachet trop brillant, GPU intermittent,
