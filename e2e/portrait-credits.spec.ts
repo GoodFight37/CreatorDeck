@@ -29,7 +29,7 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(settings.locator("#image-credits")).toContainText("Moritz Barcelona");
   await expect(settings.locator("#image-credits")).toContainText("Nate Herrera n8bit_");
-  await expect(settings.getByRole("link", { name: "CC BY-SA 4.0", exact: true })).toHaveAttribute("href", "https://creativecommons.org/licenses/by-sa/4.0/");
+  await expect(settings.getByRole("link", { name: "CC BY-SA 4.0", exact: true }).first()).toHaveAttribute("href", "https://creativecommons.org/licenses/by-sa/4.0/");
   await toggle.click();
   await expect(settings.locator("#image-credits")).toHaveCount(0);
 });

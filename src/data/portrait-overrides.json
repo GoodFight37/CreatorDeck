@@ -18,5 +18,85 @@
     "license": "CC BY-SA 4.0",
     "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
     "changes": "Recadrage carré et conversion WebP, 900 × 900 px. Cette adaptation reste sous CC BY-SA 4.0."
+  },
+  "gotaga": {
+    "name": "Gotaga",
+    "image": "/creators/curated/gotaga.webp",
+    "title": "Gotaga 2018.jpg",
+    "author": "Collectif Red House",
+    "source": "https://commons.wikimedia.org/wiki/File:Gotaga_2018.jpg",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "changes": "Recadrage carré individuel (0, 0, 1054 × 1054 px) et conversion WebP, 900 × 900 px, sans agrandissement."
+  },
+  "amouranth": {
+    "name": "AMOURANTH",
+    "image": "/creators/curated/amouranth.webp",
+    "title": "Amouranth in 2022 10.png",
+    "author": "Esfand",
+    "source": "https://commons.wikimedia.org/wiki/File:Amouranth_in_2022_10.png",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "changes": "Recadrage carré individuel (0, 0, 957 × 957 px) et conversion WebP, 900 × 900 px, sans agrandissement."
+  },
+  "mastu": {
+    "name": "Mastu",
+    "image": "/creators/curated/mastu.webp",
+    "title": "Mastu lors du ZEVENT 2025.jpg",
+    "author": "Mickaël Schauli",
+    "source": "https://commons.wikimedia.org/wiki/File:Mastu_lors_du_ZEVENT_2025.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Recadrage carré individuel (250, 380, 2900 × 2900 px) et conversion WebP, 900 × 900 px, sans agrandissement. Cette adaptation reste sous CC BY-SA 4.0."
+  },
+  "maghla": {
+    "name": "Maghla",
+    "image": "/creators/curated/maghla.webp",
+    "title": "Portrait de Maghla - ZEVENT 2026 par Mickaël Schauli.jpg",
+    "author": "Mickaël Schauli",
+    "source": "https://commons.wikimedia.org/wiki/File:Portrait_de_Maghla_-_ZEVENT_2026_par_Micka%C3%ABl_Schauli.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Recadrage carré individuel (100, 400, 3000 × 3000 px) et conversion WebP, 900 × 900 px, sans agrandissement. Cette adaptation reste sous CC BY-SA 4.0."
+  },
+  "zerator": {
+    "name": "ZeratoR",
+    "image": "/creators/curated/zerator.webp",
+    "title": "Zerator portrait.jpg",
+    "author": "Adrien Nougaret/ZeratoR",
+    "source": "https://commons.wikimedia.org/wiki/File:Zerator_portrait.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Recadrage carré individuel (500, 650, 2850 × 2850 px) et conversion WebP, 900 × 900 px, sans agrandissement. Cette adaptation reste sous CC BY-SA 4.0."
+  },
+  "nadeshot": {
+    "name": "Nadeshot",
+    "image": "/creators/curated/nadeshot.webp",
+    "title": "Nadeshot, Disrupt SF TechCrunch Disrupt 2019 (48838148003) (cropped).jpg",
+    "author": "Max Morse / TechCrunch",
+    "source": "https://commons.wikimedia.org/wiki/File:Nadeshot,_Disrupt_SF_TechCrunch_Disrupt_2019_(48838148003)_(cropped).jpg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "changes": "Recadrage carré individuel (0, 70, 2721 × 2721 px) et conversion WebP, 900 × 900 px, sans agrandissement."
+  },
+  "valkyrae": {
+    "name": "Valkyrae",
+    "image": "/creators/curated/valkyrae.webp",
+    "title": "Valkyrae for 100 Thieves (cropped).jpg",
+    "author": "Sean Finnegan",
+    "source": "https://commons.wikimedia.org/wiki/File:Valkyrae_for_100_Thieves_(cropped).jpg",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "changes": "Recadrage carré individuel (150, 70, 2600 × 2600 px) et conversion WebP, 900 × 900 px, sans agrandissement. Cette adaptation reste sous CC BY-SA 2.0."
+  },
+  "doublelift": {
+    "name": "Doublelift",
+    "image": "/creators/curated/doublelift.webp",
+    "title": "Doublelift at the NA LCS Spring 2016 Finals.jpg",
+    "author": "Kevin Chang for Team Liquid",
+    "source": "https://commons.wikimedia.org/wiki/File:Doublelift_at_the_NA_LCS_Spring_2016_Finals.jpg",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "changes": "Recadrage carré individuel (2, 30, 900 × 900 px) et conversion WebP, 900 × 900 px, sans agrandissement. Cette adaptation reste sous CC BY-SA 4.0."
   }
 }

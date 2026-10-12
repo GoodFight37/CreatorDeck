@@ -9,6 +9,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
+import { PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 
@@ -72,7 +73,7 @@ describe("les crédits de l'écran Toi", () => {
     expect(credits.textContent).toContain("Recadrage carré");
     expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by/2.0/"]')).not.toBeNull();
     expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by-sa/4.0/"]')).not.toBeNull();
-    expect(credits.querySelectorAll("a")).toHaveLength(4);
+    expect(credits.querySelectorAll("a")).toHaveLength(Object.keys(PORTRAIT_OVERRIDES).length * 2);
     banc.appuyer("Crédits des images");
     expect(document.querySelector("#image-credits")).toBeNull();
   });

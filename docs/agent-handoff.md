@@ -2090,3 +2090,11 @@ rétabli et main synchronisé à `32697cf` après le refus précédent. Pilote C
 `scripts/research-portraits.mjs`, aucun remplacement automatique. npm ci réussi
 avec cache writable, lockfile inchangé. Voir la passation courte pour la suite.
 Réservation portraits active dans cette session.
+
+## Premier lot autonome : huit nouveaux portraits
+
+Gotaga, Amouranth, Mastu, Maghla, ZeratoR, Nadeshot, Valkyrae, Doublelift intégrés
+au registre et en WebP 900 px, source et cadrage consignés dans
+portrait-selection-2026-10-12.json. Unitaires ciblés 21/21, DOM crédits 2/2,
+typecheck, catalogue, ESLint ciblé et diff-check réussis depuis `54b1bc4`.
+Collecte des 998 encore active, build/E2E final restant à exécuter.

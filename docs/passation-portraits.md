@@ -149,3 +149,25 @@ simultanés maximum, pause entre appels. Installation `npm ci` initiale refusée
 à cause du cache /home/agent/.npm, puis `npm ci --cache /workspace/.cache/npm`
 réussie (602 packages, lockfile inchangé). Aucun test applicatif encore relancé.
 La session est l’unique écrivain observé, réservation portraits active.
+
+## Premier lot intégré pendant la collecte complète
+
+Huit nouveaux portraits locaux : Gotaga, Amouranth, Mastu, Maghla, ZeratoR,
+Nadeshot, Valkyrae et Doublelift. Rubius et Shroud conservés. Originaux et
+cadrages examinés, WebP 900 px sans agrandissement, crédits dans le registre
+existant. [Sélections et coordonnées de cadrage](portrait-selection-2026-10-12.json)
+avec empreintes des originales et preuves de provenance. Mastu/Maghla proviennent
+des œuvres personnelles de Mickaël Schauli ; ZeratoR dispose d’une permission
+VRT Commons ; les sources Flickr des dérivés ont leurs licences indiquées.
+
+Vérifications locales sur le diff depuis `54b1bc4` : `npm test --
+src/lib/creator-portraits.test.ts src/lib/preload.test.ts src/lib/credits.test.ts`
+21/21 ; `npm run ecrans -- src/ecrans-credits.test.tsx` 2/2 ; typecheck,
+catalog:ci, ESLint ciblé et diff-check réussis. Premier essai unitaire : un
+attendu Gotaga encore sur l’ancien avatar a échoué ; attente mise à jour et
+21 tests repassés. Tests des crédits adaptés au nombre croissant d’attributions.
+Build et E2E de ce lot seront exécutés au checkpoint final, aucune preuve
+sur téléphone physique. Collecte encore active ; 998/998 recherches Commons
+réussies, Flickr en fin de collecte/reprise de réponses vides. L’erreur des
+grosses originales est résolue par le client HTTP du même contexte navigateur,
+même proxy et confiance TLS, au lieu du tampon de l’inspecteur Chromium.

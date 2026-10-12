@@ -1,0 +1,186 @@
+[
+  {
+    "slug": "gotaga",
+    "pageid": 120331449,
+    "source": "https://commons.wikimedia.org/wiki/File:Gotaga_2018.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/a/ad/Gotaga_2018.jpg",
+    "originalSha256": "3cec77c02824d1372321e1d1e722f22afe3fe5b40f233ef3452fe17b47bfdce6",
+    "originalSize": [
+      1054,
+      1054
+    ],
+    "crop": {
+      "left": 0,
+      "top": 0,
+      "size": 1054
+    },
+    "output": "/creators/curated/gotaga.webp",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "author": "Collectif Red House",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Revue de licence Commons relevée",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "amouranth",
+    "pageid": 134887449,
+    "source": "https://commons.wikimedia.org/wiki/File:Amouranth_in_2022_10.png",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Amouranth_in_2022_10.png",
+    "originalSha256": "81dd285fd6ec932a92bbde5674ac9521f95b0c6c729e75a37f7021536bb23384",
+    "originalSize": [
+      957,
+      1080
+    ],
+    "crop": {
+      "left": 0,
+      "top": 0,
+      "size": 957
+    },
+    "output": "/creators/curated/amouranth.webp",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "author": "Esfand",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Revue de licence Commons relevée",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "mastu",
+    "pageid": 174440678,
+    "source": "https://commons.wikimedia.org/wiki/File:Mastu_lors_du_ZEVENT_2025.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/86/Mastu_lors_du_ZEVENT_2025.jpg",
+    "originalSha256": "49effee659d6adbedfd17b3cc1fba627827a435efaf0451d2b08c9701039ce89",
+    "originalSize": [
+      3389,
+      5093
+    ],
+    "crop": {
+      "left": 250,
+      "top": 380,
+      "size": 2900
+    },
+    "output": "/creators/curated/mastu.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "maghla",
+    "pageid": 201105676,
+    "source": "https://commons.wikimedia.org/wiki/File:Portrait_de_Maghla_-_ZEVENT_2026_par_Micka%C3%ABl_Schauli.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/2/25/Portrait_de_Maghla_-_ZEVENT_2026_par_Micka%C3%ABl_Schauli.jpg",
+    "originalSha256": "096218592f5c8c31dbbdf8bba418c22f7e56156a11541ef187f9b6ca9bd3e5f9",
+    "originalSize": [
+      3208,
+      4822
+    ],
+    "crop": {
+      "left": 100,
+      "top": 400,
+      "size": 3000
+    },
+    "output": "/creators/curated/maghla.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "zerator",
+    "pageid": 64032082,
+    "source": "https://commons.wikimedia.org/wiki/File:Zerator_portrait.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Zerator_portrait.jpg",
+    "originalSha256": "1bed0dabadc244c637c0e2c1707aa7356371ecd42238ee43ce1f2d98c6fbc51e",
+    "originalSize": [
+      3456,
+      5184
+    ],
+    "crop": {
+      "left": 500,
+      "top": 650,
+      "size": 2850
+    },
+    "output": "/creators/curated/zerator.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Adrien Nougaret/ZeratoR",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Autorisation VRT confirmée sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "nadeshot",
+    "pageid": 110734946,
+    "source": "https://commons.wikimedia.org/wiki/File:Nadeshot,_Disrupt_SF_TechCrunch_Disrupt_2019_(48838148003)_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/0f/Nadeshot%2C_Disrupt_SF_TechCrunch_Disrupt_2019_%2848838148003%29_%28cropped%29.jpg",
+    "originalSha256": "3ea05c32ff38065f6ea0e0b32428723d1adf826ee134fc960488e247584150f2",
+    "originalSize": [
+      2721,
+      4084
+    ],
+    "crop": {
+      "left": 0,
+      "top": 70,
+      "size": 2721
+    },
+    "output": "/creators/curated/nadeshot.webp",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "author": "Max Morse / TechCrunch",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "valkyrae",
+    "pageid": 102291865,
+    "source": "https://commons.wikimedia.org/wiki/File:Valkyrae_for_100_Thieves_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/0/03/Valkyrae_for_100_Thieves_%28cropped%29.jpg",
+    "originalSha256": "b52db8170aee41158167df809e308401e771567d0389065ccb33d91be4be8cbe",
+    "originalSize": [
+      2934,
+      4188
+    ],
+    "crop": {
+      "left": 150,
+      "top": 70,
+      "size": 2600
+    },
+    "output": "/creators/curated/valkyrae.webp",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "author": "Sean Finnegan",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "doublelift",
+    "pageid": 128900656,
+    "source": "https://commons.wikimedia.org/wiki/File:Doublelift_at_the_NA_LCS_Spring_2016_Finals.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/92/Doublelift_at_the_NA_LCS_Spring_2016_Finals.jpg",
+    "originalSha256": "fff6566ae8ca60f2f53d069ce25bb1c78ffa5aa2fce061cdb95c7c86cc972db0",
+    "originalSize": [
+      905,
+      1108
+    ],
+    "crop": {
+      "left": 2,
+      "top": 30,
+      "size": 900
+    },
+    "output": "/creators/curated/doublelift.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Kevin Chang for Team Liquid",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  }
+]

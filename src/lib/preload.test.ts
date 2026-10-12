@@ -33,7 +33,7 @@ describe("préchargement des portraits", () => {
   it("demande le portrait de chaque créateur, à l'adresse de l'application", () => {
     const demandes = espion();
     preloadPortraits(["squeezie", "gotaga"]);
-    expect(demandes).toEqual(["/creators/squeezie.webp", "/creators/gotaga.webp"]);
+    expect(demandes).toEqual(["/creators/squeezie.webp", "/creators/curated/gotaga.webp"]);
   });
 
   it("ne demande qu'une fois le même créateur", () => {
