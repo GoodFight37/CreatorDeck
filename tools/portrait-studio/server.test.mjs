@@ -16,7 +16,7 @@ test("la taille du WebP est lue dans le fichier, pas dans le formulaire", async 
   assert.deepEqual(webpSize(data), [900, 900]); assert.throws(() => webpSize(Buffer.from("fichier arbitraire")));
 });
 test("les originaux moyens gardent leur résolution sans agrandissement", () => {
-  assert.equal(portraitOutputSize(800), 800); assert.equal(portraitOutputSize(1200), 900); assert.throws(() => portraitOutputSize(599), /600 px minimum/);
+  assert.equal(portraitOutputSize(399), 399); assert.equal(portraitOutputSize(800), 800); assert.equal(portraitOutputSize(1200), 900); assert.throws(() => portraitOutputSize(299), /300 px minimum/);
 });
 test("un choix persiste et l’export préserve la base sans modifier un dépôt", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "portrait-studio-test-"));

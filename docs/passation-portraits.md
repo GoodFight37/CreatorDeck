@@ -297,3 +297,25 @@ CDP explicitement refusé. Aucun contournement poursuivi ; clic droit réel,
 permissions, Chrome/Edge Windows et accès aux sites non validés. Ne pas annoncer
 le connecteur testé physiquement ni garantir tous les sites. ZIPs vérifiés,
 aucun état de test inclus, portraits préexistants non publiés par ce commit.
+
+
+### Atelier linéaire v1.5.0 — sélection rapide
+
+À la demande de Malik : mode carrousel plein écran « façon Tinder », avec une
+image visible, flèches pour comparer, rejet mémorisé de la candidate, maintien
+du créateur dans la file quand on passe sans trancher, bouton « Garder →
+créateur suivant » et import d’une photo personnelle depuis ce même écran.
+Les détails source/licence sont repliés. Les choix sont provisoires, restent
+dans « droits à vérifier » et sont exclus du patch de portraits publiables.
+Les originales de 300 à 899 px restent utilisables à résolution native, sans
+confirmation répétée ni agrandissement ; sous 300 px elles sont refusées.
+
+Code modifié dans `tools/portrait-studio/` ; version `1.5.0`, mise à jour par
+`Vérifier les mises à jour` puis fermeture de l’atelier et lancement de
+`METTRE-A-JOUR.cmd`. L’updater existant sauvegarde le code et préserve
+`_travail`. Aucun ZIP complet nécessaire. Tests ciblés : `npm --prefix
+tools/portrait-studio test` 6/6 ; `node tools/portrait-studio/browser.test.mjs`
+réussi avec Chromium et sources simulées (carrousel, flèches, rejet, choix
+provisoire, import local, reprise/validation préexistantes, export séparé) ;
+ESLint ciblé réussi. Windows physique et récupération réelle Wikimedia depuis
+le PC utilisateur non testés.

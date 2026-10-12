@@ -1,11 +1,11 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "files": {
-    "server.mjs": "6b9798ad6c0f562a7b57201c13b0a8c024a069c0abcd5a29777963ccff6e01ff",
-    "app.js": "c0d5e0dfc9f52a26541571411b6bb8c3325629bd87f08187741e085b43467bd2",
-    "index.html": "37dde63903605ea7bda9e3c016b8fc57d30b7387d7b1f02d9b6d233f55a94552",
-    "README.md": "9721d7087fc61000aaf95eab8526c6a68f3dd230954b16c48d46cf0928f2466d",
-    "package.json": "c1d345a504f4b4908a10ee552afc5fdb7b0ee06d0736cb20852be824efbae84d",
+    "server.mjs": "7d590d52ea2367b5eaa7d993ac0222b6144ae61e9e2fcd50f8cd234af26be398",
+    "app.js": "2946b848d96bd6d08250f55889a11ca87bffdd75183617b4cc1afcd6309d2dac",
+    "index.html": "0c2559a8f0cad3242f6b5ad51d489c3152b149978c760c95aa8b90c7e46c4b17",
+    "README.md": "b052dde48955176cc06b242fa3978977106a13e02568f30ab4864bd86c288bf6",
+    "package.json": "d7f60ce53829eb53b907707fc4058227eae9130a1fd023c23aa06d74972033ca",
     "LANCER.cmd": "efae1cba7d4eb9a4f0f2881c6ed4a9ff1a930d9dbd635d39069d0d73a7b121f1",
     "update.mjs": "2cd71efa2ecf9c8c379a9a334ee33c0f47f61fad65ecc00747c91cd044c73af7",
     "METTRE-A-JOUR.cmd": "4985e0cdfc8f0e40749876e91da8405adee185603d5fb42ce0a7670c58ca74c1"

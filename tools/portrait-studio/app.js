@@ -2,8 +2,8 @@ const $ = (id) => document.getElementById(id);
 const token = location.hash.slice(1) || sessionStorage.getItem("portrait-studio-token");
 if (token) sessionStorage.setItem("portrait-studio-token", token);
 history.replaceState(null, "", location.pathname);
-let saveTimer = null; let unsaved = false; let saving = Promise.resolve(); let nextAfterKeep = false; let reviewItems = []; let reviewOffset = 0;
-let bridgeOpening = false; let state; let slug; let image; let selected; let blobUrl; let cx = 0; let cy = 0; let drag; let revision = 0;
+let saveTimer = null; let unsaved = false; let saving = Promise.resolve(); let nextAfterKeep = false; let reviewItems = []; let reviewCreatorIndex = 0; let reviewCandidateIndex = 0; let reviewUrl = null; let reviewLoad = 0;
+let bridgeOpening = false; let importInReview = false; let state; let slug; let image; let selected; let blobUrl; let cx = 0; let cy = 0; let drag; let revision = 0;
 const canvas = $("crop"); const context = canvas.getContext("2d");
 function message(text) { $("message").textContent = text; }
 async function api(url, data) {
@@ -65,18 +65,67 @@ function renderCandidates(list) {
     const b = element("button", "Examiner et cadrer", card); b.onclick = () => loadCandidate(c).catch((e) => message(e.message));
   }
 }
+function reviewQueue() { return reviewItems; }
+function currentReviewItem() { return reviewQueue()[reviewCreatorIndex]; }
+function reviewDetails(item, c) {
+  const box = $("reviewSource"); box.replaceChildren();
+  element("p", `${c.title || "Photo candidate"} · ${c.width} × ${c.height} · ${c.license || "Licence inconnue"}`, box);
+  safeLink(c.source, "Voir la source", box);
+  $("reviewCreator").textContent = item.displayName;
+  $("reviewPosition").textContent = `Créateur ${reviewCreatorIndex + 1} / ${reviewQueue().length} · Image ${reviewCandidateIndex + 1} / ${item.candidates.length}`;
+  $("prevCandidate").disabled = $("nextCandidate").disabled = item.candidates.length < 2;
+  $("keepCandidate").disabled = false; $("rejectCandidate").disabled = false;
+  $("reviewMessage").textContent = "Vérifie le visage. Garde cette image ou rejette-la.";
+}
+async function showReviewCandidate() {
+  const item = currentReviewItem();
+  if (!item) {
+    $("reviewCreator").textContent = "Aucun candidat enregistré";
+    $("reviewImage").removeAttribute("src"); $("reviewPosition").textContent = "";
+    $("reviewMessage").textContent = "Lance une recherche, puis reviens ici, ou importe une image depuis la fiche du créateur.";
+    $("prevCandidate").disabled = $("nextCandidate").disabled = $("keepCandidate").disabled = $("rejectCandidate").disabled = true;
+    return;
+  }
+  $("reviewCreator").textContent = item.displayName;
+  $("reviewPosition").textContent = `Créateur ${reviewCreatorIndex + 1} / ${reviewQueue().length}`;
+  if (!item.candidates.length) {
+    if (reviewUrl) URL.revokeObjectURL(reviewUrl); reviewUrl = null;
+    $("reviewImage").removeAttribute("src"); $("reviewSource").replaceChildren();
+    $("reviewMessage").textContent = "Pas encore de photo candidate. Cherche une photo ou importe la tienne, ou passe au créateur suivant.";
+    $("prevCandidate").disabled = $("nextCandidate").disabled = $("keepCandidate").disabled = $("rejectCandidate").disabled = true;
+    return;
+  }
+  reviewCandidateIndex = Math.max(0, Math.min(reviewCandidateIndex, item.candidates.length - 1));
+  const candidate = item.candidates[reviewCandidateIndex]; reviewDetails(item, candidate);
+  if (reviewUrl) URL.revokeObjectURL(reviewUrl); reviewUrl = null;
+  const loadId = ++reviewLoad; $("reviewImage").removeAttribute("src"); $("reviewMessage").textContent = "Chargement de la photo…"; $("keepCandidate").disabled = true;
+  try {
+    let url;
+    if (candidate.localBlob) url = URL.createObjectURL(candidate.localBlob);
+    else { const endpoint = candidate.localDraft ? `/api/draft-photo?slug=${encodeURIComponent(item.slug)}` : `/api/photo?slug=${encodeURIComponent(item.slug)}&id=${candidate.pageid}`; const response = await fetch(endpoint, { headers: { Authorization: `Bearer ${token}` } }); if (!response.ok) throw Error("Photo inaccessible"); url = URL.createObjectURL(await response.blob()); }
+    if (loadId !== reviewLoad) { URL.revokeObjectURL(url); return; }
+    reviewUrl = url; const img = $("reviewImage"); img.src = url; await img.decode();
+    if (loadId === reviewLoad) { $("reviewMessage").textContent = ""; $("keepCandidate").disabled = false; }
+  } catch {
+    if (loadId === reviewLoad) $("reviewMessage").textContent = "Cette image ne se charge pas. Utilise une flèche pour continuer.";
+  }
+}
+function moveReviewCreator(next) {
+  const queue = reviewQueue(); if (!queue.length) return;
+  reviewCreatorIndex = (next + queue.length) % queue.length; reviewCandidateIndex = 0; showReviewCandidate();
+}
 async function setImage(blob, candidate, expectedSlug = slug) {
   if (expectedSlug !== slug) return;
   closeEditor(); const currentRevision = revision; unsaved = true; selected = { ...candidate, blob }; blobUrl = URL.createObjectURL(blob); image = new Image(); image.src = blobUrl; await image.decode();
   if (currentRevision !== revision || expectedSlug !== slug) return;
-  $("visualNext").disabled = $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 600;
-  cx = image.naturalWidth / 2; cy = image.naturalHeight / 2; $("zoom").max = Math.max(1, Math.min(image.naturalWidth, image.naturalHeight) / 600); $("zoom").value = "1";
+  $("visualNext").disabled = $("keep").disabled = $("keepNext").disabled = Math.min(image.naturalWidth, image.naturalHeight) < 300;
+  cx = image.naturalWidth / 2; cy = image.naturalHeight / 2; $("zoom").max = Math.max(1, Math.min(image.naturalWidth, image.naturalHeight) / 300); $("zoom").value = "1";
   $("title").value = candidate.title || ""; $("author").value = candidate.author || ""; $("source").value = candidate.source || ""; $("license").value = candidate.license || "";
   if (!$("license").value) $("license").value = "";
   $("proofUrl").value = candidate.proofUrl || ""; $("permission").value = candidate.permission || "";
   $("verified").checked = false; $("rights").textContent = candidate.reviewNeeded ? "Commons signale une licence à vérifier. N’exporte pas cette image avant confirmation auprès de la source." : "La licence indiquée est celle de la source ; vérifie aussi l’identité et l’auteur.";
   if (candidate.crop) { cx = candidate.crop.x + candidate.crop.size / 2; cy = candidate.crop.y + candidate.crop.size / 2; $("zoom").value = Math.min(image.naturalWidth, image.naturalHeight) / candidate.crop.size; }
-  $("editor").classList.remove("hidden"); draw(); if ($("keep").disabled) message("Image sous 600 px : conserve-la comme piste et cherche une meilleure originale."); else if (Math.min(image.naturalWidth, image.naturalHeight) < 900) message("Originale sous 900 px : le portrait sera exporté à sa résolution native, sans agrandissement."); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); scheduleSave();
+  $("editor").classList.remove("hidden"); draw(); if ($("keep").disabled) message("Image sous 300 px : elle reste une piste, sans export."); else if (Math.min(image.naturalWidth, image.naturalHeight) < 900) message("Originale sous 900 px : le portrait sera exporté à sa résolution native, sans agrandissement."); $("editor").scrollIntoView({ behavior: "smooth", block: "start" }); scheduleSave();
 }
 async function loadCandidate(c) { const expectedSlug = slug; message("Téléchargement de l’originale…"); const response = await fetch(`/api/photo?slug=${encodeURIComponent(slug)}&id=${c.pageid}`, { headers: { Authorization: `Bearer ${token}` } }); if (!response.ok) throw Error((await response.json()).error); await setImage(await response.blob(), c, expectedSlug); if (expectedSlug === slug) message("Originale chargée. Ajuste le cadre et vérifie les crédits."); }
 function crop() { const size = Math.min(image.naturalWidth, image.naturalHeight) / Number($("zoom").value); cx = Math.max(size / 2, Math.min(image.naturalWidth - size / 2, cx)); cy = Math.max(size / 2, Math.min(image.naturalHeight - size / 2, cy)); return { x: cx - size / 2, y: cy - size / 2, size }; }
@@ -86,14 +135,15 @@ canvas.onpointerdown = (e) => { if (!image) return; drag = { x: e.clientX, y: e.
 canvas.onpointermove = (e) => { if (!drag || !image) return; const ratio = crop().size / canvas.getBoundingClientRect().width; cx = drag.cx - (e.clientX - drag.x) * ratio; cy = drag.cy - (e.clientY - drag.y) * ratio; draw(); };
 canvas.onpointerup = canvas.onpointercancel = () => { drag = null; }; $("zoom").oninput = draw;
 $("filter").oninput = renderNames; $("showDone").onchange = renderNames; $("cancel").onclick = async () => { try { await autosave(); closeEditor(); unsaved = false; } catch(e) { message(e.message); } };
-$("file").onchange = async () => { try { const file = $("file").files[0]; if (file) await setImage(file, { title: file.name }); } catch (e) { message(e.message); } };
+$("file").onchange = async () => { try { const file = $("file").files[0]; $("file").value = ""; if (!file) return; if (importInReview) { importInReview = false; const item = currentReviewItem(); const probe = new Image(); const url = URL.createObjectURL(file); probe.src = url; await probe.decode(); URL.revokeObjectURL(url); if (!item) return; const original = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(",")[1]); reader.onerror = reject; reader.readAsDataURL(file); }); await api("/api/draft", { slug: item.slug, original, title: file.name, width: probe.naturalWidth, height: probe.naturalHeight, crop: { x: 0, y: 0, size: Math.min(probe.naturalWidth, probe.naturalHeight) } }); await refresh(); reviewItems = (await api("/api/review")).items; reviewCreatorIndex = reviewItems.findIndex(x => x.slug === item.slug); const updated = currentReviewItem(); reviewCandidateIndex = Math.max(0, updated.candidates.length - 1); await showReviewCandidate(); } else await setImage(file, { title: file.name }); } catch (e) { importInReview = false; message(e.message); } };
+$("file").oncancel = () => { importInReview = false; };
 $("search").onclick = async () => { try { const expectedSlug = slug; message("Recherche Commons en cours…"); const result = await api("/api/search", { slug }); if (expectedSlug !== slug) return; renderCandidates(result.candidates); message("Recherche enregistrée sur le PC."); } catch (e) { message(e.message); } };
 $("skip").onclick = async () => { try { await api("/api/skip", { slug }); await refresh(); const next = state.creators.find((c) => !state.base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]); if (next) await choose(next.slug); } catch (e) { message(e.message); } };
 $("keep").onclick = async () => {
   $("keep").disabled = true;
   const expectedSlug = slug;
   try {
-    if (!image) return; await autosave(); const r = crop(); const side = outputSide(r); if (side < 900 && !window.confirm(`Cette originale fera un portrait de ${side} × ${side} px, sans agrandissement. Continuer ?`)) return; const output = document.createElement("canvas"); output.width = output.height = side; output.getContext("2d").drawImage(image, r.x, r.y, r.size, r.size, 0, 0, side, side);
+    if (!image) return; await autosave(); const r = crop(); const side = outputSide(r); const output = document.createElement("canvas"); output.width = output.height = side; output.getContext("2d").drawImage(image, r.x, r.y, r.size, r.size, 0, 0, side, side);
     const data = output.toDataURL("image/webp", 0.9); if (!data.startsWith("data:image/webp;")) throw Error("Utilise Edge ou Chrome pour exporter le WebP.");
     const license = $("license").value; const match = license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/); const licenseUrl = match ? `https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/` : "https://creativecommons.org/publicdomain/zero/1.0/";
     await api("/api/select", { slug, pageid: selected.pageid, title: $("title").value, author: $("author").value, source: $("source").value, license, licenseUrl, proofUrl: $("proofUrl").value, permission: $("permission").value, verified: $("verified").checked, crop: r, webp: data.split(",")[1] });
@@ -149,7 +199,7 @@ async function autosave() {
   clearTimeout(saveTimer); saveTimer = null;
   const expectedSlug = slug; const candidate = selected;
   if (!candidate?.blob || !image?.complete || candidate.blob.size > 24 * 1024 * 1024) return saving;
-  const fields = { slug: expectedSlug, title: $("title").value, author: $("author").value, source: $("source").value, license: $("license").value, permission: $("permission").value, proofUrl: $("proofUrl").value, crop: crop(), pageid: candidate.pageid, reviewNeeded: candidate.reviewNeeded };
+  const fields = { slug: expectedSlug, width: image.naturalWidth, height: image.naturalHeight, title: $("title").value, author: $("author").value, source: $("source").value, license: $("license").value, permission: $("permission").value, proofUrl: $("proofUrl").value, crop: crop(), pageid: candidate.pageid, reviewNeeded: candidate.reviewNeeded };
   saving = saving.catch(() => {}).then(async () => {
     const original = await new Promise((resolve,reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(",")[1]); reader.onerror = reject; reader.readAsDataURL(candidate.blob); });
     await api("/api/draft", { ...fields, original }); if (expectedSlug === slug && candidate === selected && saveTimer === null) unsaved = false;
@@ -160,65 +210,27 @@ function scheduleSave() { unsaved = true; clearTimeout(saveTimer); saveTimer = s
 for (const id of ["title","author","source","license","permission","proofUrl","zoom"]) $(id).addEventListener("input", scheduleSave);
 canvas.addEventListener("pointerup", () => autosave().catch(e => message(e.message)));
 window.addEventListener("beforeunload", e => { if (unsaved) { e.preventDefault(); e.returnValue = ""; } });
-$("review").onclick = async () => { try { reviewItems = (await api("/api/review")).items; reviewOffset = 0; $("reviewPanel").classList.remove("hidden"); renderReview(); } catch(e) { message(e.message); } };
-$("closeReview").onclick = () => $("reviewPanel").classList.add("hidden");
-$("moreReview").onclick = () => { reviewOffset += 20; renderReview(); };
-function renderReview() {
-  $("reviewCards").replaceChildren();
-  for(const item of reviewItems.slice(reviewOffset, reviewOffset+20)) {
-    const card=element("article", "", $("reviewCards")); card.className="candidate"; element("h3",item.displayName,card);
-    const old=element("img","",card); old.src=`/seed/avatars/${item.slug}.webp`; old.alt="Image actuelle";
-    if(!item.candidates.length) { element("p","Aucune candidate assez grande : recherche manuelle à reprendre.",card); continue; }
-    const select=element("select","",card); for(const c of item.candidates) {const option=element("option",c.title,select);option.value=c.pageid;}
-    const preview=element("img","",card); preview.src=thumbnail(item.candidates[0]); preview.alt="Cadrage central proposé"; preview.style.objectFit="cover"; preview.style.height="auto"; preview.style.aspectRatio="1"; select.onchange=()=>preview.src=thumbnail(item.candidates.find(c=>String(c.pageid)===select.value));
-    const credits=element("p","",card); const source=element("div","",card);
-    function info() { const c=item.candidates.find(c=>String(c.pageid)===select.value); credits.textContent=`${c.author || "Auteur manquant"} · ${c.license || "Licence inconnue"}${c.reviewNeeded ? " · droits à vérifier" : ""}`; source.replaceChildren(); safeLink(c.source,"Vérifier la source",source); }
-    info(); select.addEventListener("change",info);
-    const label=element("label","Bonne personne et cadrage correct",card); const checked=element("input","",label); checked.type="checkbox";
-    checked.dataset.slug=item.slug;
-    const rightsLabel=element("label","Droits et auteur vérifiés sur la source",card); rightsLabel.style.display="block";
-    const rights=element("input","",rightsLabel); rights.type="checkbox"; rights.dataset.rights="true";
-    checked.rights=rights; select.addEventListener("change",()=>{checked.checked=false;rights.checked=false;});
-    const open=element("button","Examiner",card); open.onclick=async()=>{try{await choose(item.slug);await loadCandidate(item.candidates.find(c=>String(c.pageid)===select.value));}catch(e){message(e.message);}};
-    checked.candidate=()=>item.candidates.find(c=>String(c.pageid)===select.value);
-  }
-  $("moreReview").disabled=reviewOffset+20>=reviewItems.length;
-}
-$("prepareReview").onclick=async()=>{
-  $("prepareReview").disabled=true;
-  let count=0;
-  try {for(const box of $("reviewCards").querySelectorAll("input[data-slug]:checked")) {
-    const c=box.candidate(); const response=await fetch(`/api/photo?slug=${box.dataset.slug}&id=${c.pageid}`,{headers:{Authorization:`Bearer ${token}`}});
-    if(!response.ok) throw Error((await response.json()).error);
-    const blob=await response.blob(); const original=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(",")[1]);r.onerror=reject;r.readAsDataURL(blob);});
-    await api("/api/draft",{...c,slug:box.dataset.slug,original}); box.checked=false; count++;
-    message(`${count} originales préparées. Le cadrage et les droits restent à confirmer.`);
-  } await refresh(); }catch(e){message(`${count} photos préparées. ${e.message}`);}finally{$("prepareReview").disabled=false;}
-};
-
-$("updates").onclick=async()=>{try{const r=await api("/api/update-check");message(r.available?`Nouvelle version ${r.latest} disponible. Ferme le lanceur, puis double-clique METTRE-A-JOUR.cmd. Tes photos et choix seront conservés.`:`Version ${r.current} à jour.`);}catch(e){message("Vérification impossible : "+e.message);}};
-async function saveReview(pending = false) {
-  if ($("approveReview").disabled) return;
-  $("chooseReview").disabled = true; $("approveReview").disabled=true; let count=0;
+$("review").onclick = async () => { try { reviewItems = (await api("/api/review")).items; reviewCreatorIndex = 0; reviewCandidateIndex = 0; $("reviewPanel").classList.remove("hidden"); await showReviewCandidate(); } catch(e) { message(e.message); } };
+$("closeReview").onclick = () => { $("reviewPanel").classList.add("hidden"); if (reviewUrl) URL.revokeObjectURL(reviewUrl); reviewUrl = null; };
+$("prevCandidate").onclick = () => { const item = currentReviewItem(); if (item) { reviewCandidateIndex = (reviewCandidateIndex + item.candidates.length - 1) % item.candidates.length; showReviewCandidate(); } };
+$("nextCandidate").onclick = () => { const item = currentReviewItem(); if (item) { reviewCandidateIndex = (reviewCandidateIndex + 1) % item.candidates.length; showReviewCandidate(); } };
+$("nextReviewCreator").onclick = () => moveReviewCreator(reviewCreatorIndex + 1);
+$("rejectCandidate").onclick = async () => { const item = currentReviewItem(); const c = item?.candidates[reviewCandidateIndex]; if (!item || !c) return; try { if (!c.localBlob) await api("/api/reject", { slug: item.slug, pageid: c.pageid }); item.candidates.splice(reviewCandidateIndex, 1); if (!item.candidates.length) { reviewItems.splice(reviewItems.indexOf(item), 1); reviewCreatorIndex = Math.min(reviewCreatorIndex, Math.max(0, reviewQueue().length - 1)); reviewCandidateIndex = 0; } else reviewCandidateIndex %= item.candidates.length; await showReviewCandidate(); } catch (e) { message(e.message); } };
+$("searchAnother").onclick = async () => { const item = currentReviewItem(); if (!item) return; const c = state.creators.find(x => x.slug === item.slug); const query = state.searchQueries[item.slug] || c?.searchQuery || c?.displayName || item.displayName; window.open("https://www.google.com/search?tbm=isch&q=" + encodeURIComponent(query + " portrait"), "_blank", "noopener"); };
+$("importAnother").onclick = async () => { const item = currentReviewItem(); if (!item) return; try { await choose(item.slug); importInReview = true; $("file").value = ""; $("file").click(); } catch (e) { message(e.message); } };
+$("keepCandidate").onclick = async () => {
+  const item = currentReviewItem(); const c = item?.candidates[reviewCandidateIndex]; const img = $("reviewImage"); if (!item || !c || !img.naturalWidth) return;
+  $("keepCandidate").disabled = true;
   try {
-    const boxes=[...$("reviewCards").querySelectorAll("input[data-slug]:checked")];
-    if(!boxes.length) throw Error("Coche les photos à garder.");
-    if(!pending && boxes.some(b=>!b.rights.checked)) throw Error("Confirme les droits sur la source pour chaque photo cochée, ou utilise Préparer pour les garder en brouillon.");
-    for(const box of boxes) {
-      const c=box.candidate(); if(!pending && (!c.author || !/^(CC BY(?:-SA)? [234]\.0|CC0)$/.test(c.license))) throw Error("Crédits incomplets : utilise Examiner pour ce créateur.");
-      const response=await fetch(`/api/photo?slug=${box.dataset.slug}&id=${c.pageid}`,{headers:{Authorization:`Bearer ${token}`}}); if(!response.ok) throw Error((await response.json()).error);
-      const blob=await response.blob(); const url=URL.createObjectURL(blob);
-      try {const photo=new Image();photo.src=url;await photo.decode();const size=Math.min(photo.naturalWidth,photo.naturalHeight);if(size<600)throw Error("Originale trop petite");if(size<900&&!window.confirm(`Cette originale fera un portrait de ${size} × ${size} px, sans agrandissement. Continuer ?`))continue;const x=(photo.naturalWidth-size)/2,y=(photo.naturalHeight-size)/2;const side=Math.min(900,Math.floor(size));const output=document.createElement("canvas");output.width=output.height=side;output.getContext("2d").drawImage(photo,x,y,size,size,0,0,side,side);
-      const match=c.license.match(/^CC (BY(?:-SA)?) ([234]\.0)$/);
-      await api(pending ? "/api/visual" : "/api/select",{slug:box.dataset.slug,pageid:c.pageid,title:c.title,author:c.author,source:c.source,license:c.license,licenseUrl:match?`https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/`:"https://creativecommons.org/publicdomain/zero/1.0/",verified:true,crop:{x,y,size},webp:output.toDataURL("image/webp",.9).split(",")[1]});
-      }finally{URL.revokeObjectURL(url);} box.checked=false;count++;message(`${count} portraits du lot enregistrés.`);
-    }
-    await refresh(); reviewItems=(await api("/api/review")).items; reviewOffset=0;renderReview();
-  }catch(e){message(`${count} portraits enregistrés. ${e.message}`);}finally{$("approveReview").disabled=false; $("chooseReview").disabled=false;}
+    const size = Math.min(img.naturalWidth, img.naturalHeight); const side = Math.min(900, size); const x = (img.naturalWidth - size) / 2; const y = (img.naturalHeight - size) / 2;
+    const output = document.createElement("canvas"); output.width = output.height = side; output.getContext("2d").drawImage(img, x, y, size, size, 0, 0, side, side);
+    const match = (c.license || "").match(/^CC (BY(?:-SA)?) ([234]\.0)$/);
+    await api("/api/visual", { slug: item.slug, pageid: c.pageid, title: c.title || item.displayName, author: c.author || "", source: c.source || "", license: c.license || "", licenseUrl: match ? `https://creativecommons.org/licenses/${match[1].toLowerCase()}/${match[2]}/` : "", verified: false, crop: { x, y, size }, webp: output.toDataURL("image/webp", .9).split(",")[1] });
+    await refresh(); reviewItems.splice(reviewItems.indexOf(item), 1); reviewCreatorIndex = Math.min(reviewCreatorIndex, Math.max(0, reviewQueue().length - 1)); reviewCandidateIndex = 0; await showReviewCandidate();
+    $("reviewMessage").textContent = `${item.displayName} gardé comme choix provisoire. Tu peux continuer au créateur suivant.`;
+  } catch (e) { $("reviewMessage").textContent = e.message; $("keepCandidate").disabled = false; }
 };
-
-$("approveReview").onclick = () => saveReview(false);
-$("chooseReview").onclick = () => saveReview(true);
+$("updates").onclick=async()=>{try{const r=await api("/api/update-check");message(r.available?`Nouvelle version ${r.latest} disponible. Ferme le lanceur, puis double-clique METTRE-A-JOUR.cmd. Tes photos et choix seront conservés.`:`Version ${r.current} à jour.`);}catch(e){message("Vérification impossible : "+e.message);}};
 $("connectBrowser").onclick=async()=>{try{const r=await api("/api/connect");await navigator.clipboard.writeText(r.connection);message("Connexion copiée. Dans l’extension CreatorDeck, colle-la puis clique Connecter. Ne partage pas ce lien.");}catch(e){message("Connexion impossible : "+e.message);}};
 $("quickSearch").onclick=()=>{window.open($("google").href,"creatordeck-search");};
 $("visualNext").onclick=async()=>{

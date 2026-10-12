@@ -21,12 +21,19 @@ vingt autres déjà préparés sont inclus dans le premier export.
 
 ## Choisir des photos
 
+Pour parcourir vite les candidats, cliquer sur **Choisir des portraits** : une grande image
+s’affiche à la fois. Utiliser les flèches pour comparer, **Garder → créateur suivant**
+pour conserver un choix provisoire, **Rejeter cette image** pour l’écarter, ou
+**Créateur suivant** pour revenir plus tard. Les candidats sans résultat restent
+parcourables ; on peut importer une photo depuis le même écran. Les détails sont
+repliés. Un choix reste à vérifier et ne devient pas publiable par ce geste.
+
 - Cliquer sur un créateur. Examiner les candidates enregistrées ; les résultats
   peuvent être des homonymes, des photos de groupe ou des images sans rapport.
 - **Examiner et cadrer** récupère l’originale. Déplacer l’image avec la souris et
   régler le zoom. Le résultat fait jusqu’à 900 × 900 px sans agrandissement.
-  Pour une originale de 600 à 899 px, l’atelier demande confirmation et exporte
-  à la résolution native ; sous 600 px, elle reste une piste non exportable.
+  Les photos de 300 à 899 px sont gardées à leur résolution native ; l’atelier
+  ne les agrandit pas. Les images de moins de 300 px restent refusées.
 - Le champ **Nom/alias de recherche** permet de préciser le vrai nom ou une
   formulation désambiguïsée (par exemple « Ibai Llanos streamer »). Enregistre-la
   une fois : les liens navigateur et la prochaine recherche Commons la réutilisent.
@@ -70,8 +77,8 @@ sa préparation ; le serveur et le parcours navigateur sont vérifiés sur Linux
 Un HTTP 403/429 ou un délai dépassé vient de l’accès à la source : réessayer plus
 tard, ouvrir la source dans le navigateur ou utiliser une originale déjà sur le
 PC. L’outil ne contourne ni une protection réseau ni une vérification anti-robot.
-Une photo de moins de 600 px sur son petit côté est refusée pour éviter de
-l’agrandir. Entre 600 et 899 px, confirme l’export à taille native. À la réception
+Une photo de moins de 300 px sur son petit côté est refusée. Les photos plus petites
+que 900 px restent à leur résolution native, sans agrandissement. À la réception
 d’une image identique ou d’une source déjà attribuée, l’atelier affiche un
 avertissement non bloquant avec le créateur associé. Si la page indique « accès refusé », relancer `LANCER.cmd` et utiliser
 la nouvelle fenêtre, plutôt qu’un ancien favori.

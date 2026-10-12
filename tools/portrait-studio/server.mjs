@@ -24,7 +24,7 @@ export function webpSize(data) {
   throw Error("Format WebP non reconnu");
 }
 export function portraitOutputSize(sourceSize) {
-  if (!Number.isFinite(sourceSize) || sourceSize < 600) throw Error("Portrait trop petit : 600 px minimum");
+  if (!Number.isFinite(sourceSize) || sourceSize < 300) throw Error("Portrait trop petit : 300 px minimum");
   return Math.min(900, Math.floor(sourceSize));
 }
 export function zipFiles(entries) {
@@ -172,7 +172,12 @@ export async function createStudio({ directory = here, port = 4317, open = false
         reply({ current: local.version, latest: latest.version, available: local.version !== latest.version }); return;
       }
       if (url.pathname === "/api/review") {
-        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]).map((c) => ({ ...c, candidates: candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 600 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height)).slice(0,3) })).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
+        reply({ items: creators.filter((c) => !base[c.slug] && !state.choices[c.slug] && !state.visual[c.slug] && !state.skipped[c.slug]).map((c) => {
+          const list = candidates(c.slug).filter((p) => Math.min(p.width, p.height) >= 300 && /\.(jpg|jpeg|png|webp)(\?|$)/i.test(p.original || "") && !(state.rejected[c.slug] || []).includes(p.pageid)).sort((a,b) => Number(Boolean(b.titleMatch))-Number(Boolean(a.titleMatch)) || Number(Boolean(a.reviewNeeded))-Number(Boolean(b.reviewNeeded)) || Math.min(b.width,b.height)-Math.min(a.width,a.height));
+          const draft = state.drafts[c.slug];
+          if (draft && !draft.pageid && Number(draft.width) >= 300 && !(state.rejected[c.slug] || []).includes(-1)) list.push({ ...draft, pageid: -1, localDraft: true, width: draft.width, height: draft.height });
+          return { ...c, candidates: list };
+        }).sort((a,b) => Number(Boolean(b.candidates.length))-Number(Boolean(a.candidates.length))) }); return;
       }
       if (req.method === "POST" && url.pathname === "/api/session") { const b = await bodyJson(req); creator(b.slug); state.session.slug = b.slug; await save(); reply({ ok: true }); return; }
       if (req.method === "POST" && url.pathname === "/api/reject") { const b = await bodyJson(req); creator(b.slug); state.rejected[b.slug] = [...new Set([...(state.rejected[b.slug] || []), Number(b.pageid)])]; await save(); reply({ ok: true }); return; }
@@ -186,7 +191,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
         const b = await bodyJson(req); creator(b.slug); const bytes = Buffer.from(b.original, "base64");
         if (!bytes.length || bytes.length > 24 * 1024 * 1024) throw Error("Originale vide ou trop lourde (24 Mo maximum)");
         await writeFile(path.join(work, "originales", b.slug + "-draft"), bytes);
-        state.drafts[b.slug] = { title: String(b.title || "Photo importée"), source: b.source ? httpsUrl(b.source) : "", author: String(b.author || ""), license: String(b.license || ""), permission: String(b.permission || ""), crop: b.crop, reviewNeeded: Boolean(b.reviewNeeded), proofUrl: b.proofUrl ? httpsUrl(b.proofUrl) : "", pageid: b.pageid };
+        state.drafts[b.slug] = { title: String(b.title || "Photo importée"), width: Number(b.width) || 0, height: Number(b.height) || 0, source: b.source ? httpsUrl(b.source) : "", author: String(b.author || ""), license: String(b.license || ""), permission: String(b.permission || ""), crop: b.crop, reviewNeeded: Boolean(b.reviewNeeded), proofUrl: b.proofUrl ? httpsUrl(b.proofUrl) : "", pageid: b.pageid };
         state.tracking[b.slug] = { ...state.tracking[b.slug], status: "À cadrer" }; await save(); reply({ ok: true }); return;
       }
       if (url.pathname === "/api/draft-photo" && req.method === "GET") {
@@ -194,7 +199,7 @@ export async function createStudio({ directory = here, port = 4317, open = false
       }
       if (req.method === "POST" && ["/api/select", "/api/visual"].includes(url.pathname)) {
         const b = await bodyJson(req); const c = creator(b.slug); const pending = url.pathname === "/api/visual";
-        const candidate = b.pageid ? (state.drafts[b.slug]?.pageid === b.pageid ? state.drafts[b.slug] : findCandidate(b.slug, b.pageid)) : null;
+        const candidate = b.pageid === -1 && state.drafts[b.slug] && !state.drafts[b.slug].pageid ? state.drafts[b.slug] : b.pageid ? (state.drafts[b.slug]?.pageid === b.pageid ? state.drafts[b.slug] : findCandidate(b.slug, b.pageid)) : null;
         if (!pending && (!b.verified || !b.author?.trim() || !b.title?.trim())) throw Error("Vérifie l’identité, la licence et les crédits avant de garder la photo");
         const source = b.source ? httpsUrl(b.source) : "";
         if (!pending && !source) throw Error("Source requise");
