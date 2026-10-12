@@ -10,21 +10,15 @@ import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
-
 import { useCloud } from "@/hooks/use-cloud";
-
 import { useNow } from "@/hooks/use-game";
-
 import { useLive } from "@/hooks/use-live";
 import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
-
 import { formatViewers, liveFor } from "@/lib/live";
-
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
-
 import { type GameView } from "@/lib/game-engine";
 
 function formatCountdown(date: number | null, now: number) {
@@ -211,16 +205,14 @@ export function HomeView({
 
   return (
     <div className="view home-view">
-      {/* En-tête allégé sans paragraphe repoussant le booster */}
-      <header className="drop-intro" style={{ marginBottom: "0.5rem" }}>
+      {/* En-tête concis : zéro blabla marketing */}
+      <header className="drop-intro" style={{ marginBottom: "0.4rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1>Un sachet. <em>Cinq créateurs.</em></h1>
-        {needsLogin || needsAccount ? (
-          <p>{needsLogin ? "Connecte-toi pour ouvrir ta réserve." : "Pack tutoriel gratuit disponible sans compte."}</p>
-        ) : null}
+        <h1 style={{ fontSize: "1.5rem", margin: "0.2rem 0" }}>Cinq créateurs.</h1>
+        {needsLogin ? <p>Connecte-toi pour ouvrir ta réserve.</p> : null}
       </header>
 
-      {/* Hiérarchie principale : sachet + CTA au-dessus du pli sur mobile */}
+      {/* Sachet + CTA d'abord : au-dessus du pli */}
       <section className="pack-stage stage-live"
         aria-label={`${pack.label} : appuie sur le sachet pour préparer l'ouverture`}
       >
@@ -300,7 +292,7 @@ export function HomeView({
         </div>
       </section>
 
-      {/* Direct : sous le panneau d'action */}
+      {/* Direct sous le CTA */}
       {featured ? (
         <button
           type="button"
@@ -319,7 +311,7 @@ export function HomeView({
         </button>
       ) : null}
 
-      {/* Objectifs & Activités : fusionnés sans doublon superflu */}
+      {/* Priorités & Missions compactées sans doublon */}
       <section className="drop-priorities" aria-label="À jouer aujourd’hui">
         {dailyMission?.id === "tribunal" ? (
           <button
@@ -410,7 +402,7 @@ export function HomeView({
         )}
       </section>
 
-      {/* Paquet Scène / Famille : badge neutre (non rouge d'erreur), libellé exact pour les tests */}
+      {/* Paquet Scène avec statut neutre */}
       <section
         className={`scene-block${sceneOpened ? " done is-neutral" : ""}`}
         aria-label="Ton paquet de famille du jour"
