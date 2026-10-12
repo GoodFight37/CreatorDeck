@@ -25,9 +25,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 
-
 import { type GameView } from "@/lib/game-engine";
-
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -39,7 +37,6 @@ function formatCountdown(date: number | null, now: number) {
     ? `${hours}h ${String(minutes).padStart(2, "0")}m`
     : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
-
 
 export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean }) {
   const start = useRef<{ x: number; y: number } | null>(null);
@@ -58,8 +55,6 @@ export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent
       onPointerUp={() => { start.current = null; }}
       onPointerCancel={() => { start.current = null; dragged.current = true; }}
       onClick={(event) => {
-        // Le navigateur garde le scroll ; ignorer aussi le clic issu d'un glissement.
-        // Une activation clavier (detail = 0) reste toujours disponible.
         if (event.detail > 0 && dragged.current) return;
         onClick(event);
       }}
@@ -110,9 +105,7 @@ export function HomeView({
   tutorialAvailable = false,
 }: {
   game: GameView;
-  /** Combien d'amis ont ouvert un booster dans l'heure (0 = rien à dire). */
   friendsOpening: number;
-  /** La ligne des amis ouvre le carnet, qui porte les ouvertures en détail. */
   onShowInbox: () => void;
   onShowCollection: () => void;
   onOpen: () => void;
@@ -121,32 +114,22 @@ export function HomeView({
   onUseHourglass: () => void;
   onShowOdds: () => void;
   onShowMissions: () => void;
-  /** Les Sortants : la ligne d'accueil mène à l'Atelier. */
   onShowAtelier: () => void;
-  /** La ligne d'arène mène à l'écran Arène (dépôt, draft, classement). */
   onShowArena: () => void;
-  /** Ouvre le Tribunal des Bannis (muet : on se déplace). */
   onShowTribunal: () => void;
-  /** Dossiers encore à juger aujourd'hui (0 = séance terminée). */
   tribunalRestants: number;
-  /** Vrai quand les cinq verdicts du jour ont été rendus. */
   tribunalClose: boolean;
-  /** Vrai si la séance du jour a déjà reçu son paiement (elle reste rejouable). */
   tribunalPaid?: boolean;
   opening: boolean;
   usingHourglass: boolean;
   now: number;
-  /** La réserve vient du serveur ; un compte est requis pour la recharge. */
   serverReserve: boolean;
-  /** Build avec cloud sans compte connecté : l'ouverture demande une connexion. */
   needsAccount: boolean;
   tutorialAvailable?: boolean;
 }) {
   const pack = PACKS.live;
   const stock = game.player.packs;
   const nextAt = game.player.nextPackAt;
-  // Le seul compteur au format mm:ss du jeu : il bat à la seconde, et il ne
-  // re-rend que ce panneau (le minuteur est local à l'écran Drop).
   const tick = useNow(1_000);
   const needsLogin = needsAccount && !tutorialAvailable;
 
@@ -165,11 +148,7 @@ export function HomeView({
     ?? game.missions.find((mission) => !mission.done)
     ?? game.missions.find((mission) => mission.done && !mission.claimed)
     ?? null;
-  // Les Sortants encore artisanables : ils ont quitté le classement (plus
-  // tirables, hors complétion) mais leur fenêtre d'artisanat reste ouverte
-  // pendant l'édition de leur départ. Ce sont les dernières cartes à rejoindre
-  // — et elles se fabriquent, elles ne se tirent plus. On compte celles qu'il
-  // reste à obtenir : à zéro, la ligne disparaît.
+
   const retiredLeft = useMemo(
     () =>
       craftableRetired().filter(
@@ -183,10 +162,7 @@ export function HomeView({
     ? cloud.sceneStatus : null;
   const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
   const sceneOpened = !cloud.configured ? game.scene.opened : verifiedScene?.ready === false;
-  // La ligne d'arène de l'accueil : ce qui compte pour le joueur, dans l'ordre
-  // — une récompense qui attend, un draft ouvert (une décision à prendre), ce
-  // qu'il a déjà déposé, ou rien du tout. Aucune ligne n'apparaît sans compte :
-  // l'arène n'existe qu'en ligne, et un bouton qui refuse est un piège.
+
   const arenaNow = useNow(30_000);
   const arenaLine = useMemo(() => {
     if (!cloud.configured || !cloud.userId) return null;
@@ -223,8 +199,7 @@ export function HomeView({
       label: "Arène : aucune équipe cette semaine",
     };
   }, [cloud.configured, cloud.userId, cloud.arenaMine, arenaNow]);
-  // Le direct le plus regardé parmi les créateurs du Top 1000, pour le bandeau :
-  // c'est le « lower third » d'une régie — une ligne, un chiffre, un nom.
+
   const featured = useMemo(() => {
     if (live.stale || !live.count) return null;
     let top: { login: string; viewers: number } | null = null;
@@ -236,81 +211,16 @@ export function HomeView({
 
   return (
     <div className="view home-view">
-      <header className="drop-intro">
+      {/* En-tête allégé : direct vers l'essentiel, pas de pavé de texte repoussant le booster */}
+      <header className="drop-intro" style={{ marginBottom: "0.5rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1>Un sachet.<br /><em>Cinq créateurs.</em></h1>
-        <p>{needsLogin ? "Connecte-toi. Ta collection t’attend." : needsAccount ? "Essaie un pack tutoriel gratuit avant de créer ton compte." : stock > 0 ? "Le prochain nom de ta collection est peut-être dedans." : "Le prochain sachet se prépare. Ton Binder reste ouvert."}</p>
+        <h1>Un sachet. <em>Cinq créateurs.</em></h1>
+        {needsLogin || needsAccount ? (
+          <p>{needsLogin ? "Connecte-toi pour ouvrir ta réserve." : "Pack tutoriel gratuit disponible sans compte."}</p>
+        ) : null}
       </header>
 
-      <section className="drop-priorities" aria-label="À jouer aujourd’hui">
-          <button type="button" className="daily-goal" onClick={dailyMission?.id === "tribunal" ? onShowTribunal : onShowMissions} aria-label="Voir l’objectif du jour">
-            <span>OBJECTIF DU JOUR</span>
-            {dailyMission ? (
-              <>
-                <strong>{dailyMission.label}</strong>
-            <small>{dailyMission.id === "tribunal" && tribunalPaid
-              ? "Séance déjà récompensée · tu peux rejouer"
-              : dailyMission.done ? "Terminé · récompense à réclamer" : `${dailyMission.progress} / ${dailyMission.target}`}</small>
-              </>
-            ) : (
-              <>
-                <strong>Tes missions du jour sont terminées</strong>
-                <small>Reviens demain pour un nouvel objectif.</small>
-              </>
-            )}
-            <ChevronRight size={17} />
-          </button>
-        {/* Le Tribunal des Bannis : l'accroche du jour. Le compte dit la
-            vérité — il reste tant d'appels à juger, et pas un de plus. */}
-        {dailyMission?.id !== "tribunal" ? <button
-          type="button"
-          className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
-          onClick={onShowTribunal}
-          aria-label={
-            tribunalPaid
-              ? "Ouvrir le Tribunal des Bannis : séance déjà récompensée, tu peux rejouer"
-              : tribunalClose
-              ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
-              : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
-          }
-        >
-          <Gavel size={22} />
-          <span>
-            <strong>Tribunal</strong> ·{" "}
-            {tribunalPaid
-              ? "Séance déjà récompensée · tu peux rejouer"
-              : tribunalRestants > 0
-              ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
-              : "séance close, bilan disponible"}
-          </span>
-            {tribunalRestants > 0 ? <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b> : null}
-          <ChevronRight size={14} />
-        </button> : null}
-      </section>
-
-      {/* Le bandeau du direct. Il n'apparaît que si l'app sait vraiment qui
-          streame (données fraîches) : sinon il n'y a rien à dire. Il est
-          cliquable parce qu'il annonce quelque chose sur le tirage — les
-          créateurs en direct pèsent plus lourd et eux seuls peuvent sortir en
-          variante Live. Un appui ouvre les taux publiés, qui le disent. */}
-      {featured ? (
-        <button
-          type="button"
-          className="live-bar"
-          onClick={onShowOdds}
-          aria-label={`${live.count} créateurs en direct. Bonus Direct actif : voir les taux publiés.`}
-        >
-          <i aria-hidden="true" />
-          <span className="live-bar-tag">En direct</span>
-          <span className="live-bar-who">
-            {live.count} sur {CATALOG_SIZE}
-            {` · @${featured.login}`}
-            {featured.viewers > 0 ? ` ${formatViewers(featured.viewers)}` : ""}
-          </span>
-          <span className="live-bar-boost">Bonus Direct</span>
-        </button>
-      ) : null}
-
+      {/* Hiérarchie principale : sachet + CTA au-dessus du pli */}
       <section className="pack-stage stage-live"
         aria-label={`${pack.label} : appuie sur le sachet pour préparer l'ouverture`}
       >
@@ -331,8 +241,6 @@ export function HomeView({
               {needsAccount ? tutorialAvailable ? 1 : 0 : stock}<small>/{needsAccount ? 1 : pack.max}</small>
             </strong>
           </div>
-          {/* Réserve pleine : l'état change de couleur, il ne clignote pas — le
-              jeu n'a aucune animation perpétuelle. */}
           {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
           {nextAt !== null && !needsAccount ? (
             <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
@@ -382,7 +290,6 @@ export function HomeView({
           <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
         ) : null}
 
-        {/* Les jetons : la monnaie lente des boosters, dépensée à l'Atelier. */}
         <div className="token-row">
           <Coins size={14} />
           <span>
@@ -393,18 +300,132 @@ export function HomeView({
         </div>
       </section>
 
-      {/* Le second paquet, et le seul autre : celui de **ta** famille, une fois
-          par jour de jeu. Il ne se recharge pas (le sablier n'y peut rien), il
-          ne contient aucune Légendaire, et il ne touche ni au compteur de
-          malchance ni à la série — c'est un paquet de complétion. */}
-      <section className={`scene-block${sceneOpened ? " done" : ""}`} aria-label="Ton paquet de famille du jour" data-ready={sceneReady}>
+      {/* Direct : sous le CTA */}
+      {featured ? (
+        <button
+          type="button"
+          className="live-bar"
+          onClick={onShowOdds}
+          aria-label={`${live.count} créateurs en direct. Bonus Direct actif : voir les taux publiés.`}
+        >
+          <i aria-hidden="true" />
+          <span className="live-bar-tag">En direct</span>
+          <span className="live-bar-who">
+            {live.count} sur {CATALOG_SIZE}
+            {` · @${featured.login}`}
+            {featured.viewers > 0 ? ` ${formatViewers(featured.viewers)}` : ""}
+          </span>
+          <span className="live-bar-boost">Bonus Direct</span>
+        </button>
+      ) : null}
+
+      {/* Priorités & Missions ensuite : fusionnées intelligemment pour désencombrer l'écran */}
+      <section className="drop-priorities" aria-label="À jouer aujourd’hui">
+        {dailyMission?.id === "tribunal" ? (
+          <button
+            type="button"
+            className={`daily-goal tribunal-merged${tribunalClose ? " done" : ""}`}
+            onClick={onShowTribunal}
+            aria-label={
+              tribunalPaid
+                ? "Objectif du jour : Tribunal des Bannis (séance déjà récompensée, tu peux rejouer)"
+                : tribunalClose
+                ? "Objectif du jour : Tribunal des Bannis (séance close, bilan disponible)"
+                : `Objectif du jour : Tribunal des Bannis (${tribunalRestants} dossier(s) en attente)`
+            }
+          >
+            <Gavel size={20} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span>OBJECTIF DU JOUR · TRIBUNAL</span>
+              <strong>{dailyMission.label}</strong>
+              <small>
+                {tribunalPaid
+                  ? "Séance déjà récompensée · tu peux rejouer"
+                  : tribunalRestants > 0
+                  ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
+                  : dailyMission.done
+                  ? "Terminé · récompense à réclamer"
+                  : "Séance close · bilan disponible"}
+              </small>
+            </div>
+            {tribunalRestants > 0 ? (
+              <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b>
+            ) : (
+              <ChevronRight size={17} />
+            )}
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="daily-goal"
+              onClick={onShowMissions}
+              aria-label="Voir l’objectif du jour"
+            >
+              <span>OBJECTIF DU JOUR</span>
+              {dailyMission ? (
+                <>
+                  <strong>{dailyMission.label}</strong>
+                  <small>
+                    {dailyMission.done
+                      ? "Terminé · récompense à réclamer"
+                      : `${dailyMission.progress} / ${dailyMission.target}`}
+                  </small>
+                </>
+              ) : (
+                <>
+                  <strong>Tes missions du jour sont terminées</strong>
+                  <small>Reviens demain pour un nouvel objectif.</small>
+                </>
+              )}
+              <ChevronRight size={17} />
+            </button>
+            <button
+              type="button"
+              className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
+              onClick={onShowTribunal}
+              aria-label={
+                tribunalPaid
+                  ? "Ouvrir le Tribunal des Bannis : séance déjà récompensée, tu peux rejouer"
+                  : tribunalClose
+                  ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
+                  : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
+              }
+            >
+              <Gavel size={20} />
+              <span>
+                <strong>Tribunal</strong> ·{" "}
+                {tribunalPaid
+                  ? "Séance déjà récompensée · tu peux rejouer"
+                  : tribunalRestants > 0
+                  ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
+                  : "séance close, bilan disponible"}
+              </span>
+              {tribunalRestants > 0 ? (
+                <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b>
+              ) : null}
+              <ChevronRight size={14} />
+            </button>
+          </>
+        )}
+      </section>
+
+      {/* Paquet Scène / Famille : badge neutre "Reviens demain", aucun encadré rouge type erreur */}
+      <section
+        className={`scene-block${sceneOpened ? " done is-neutral" : ""}`}
+        aria-label="Ton paquet de famille du jour"
+        data-ready={sceneOpened ? "done" : sceneReady ? "true" : "false"}
+      >
         <div className="scene-head">
           <div>
             <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
             <span>5 cartes de ta famille · 1 paquet par jour</span>
           </div>
-          <span className="scene-state">
-            {sceneOpened ? "Ouvert aujourd’hui" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
+          <span
+            className={`scene-state${sceneOpened ? " scene-state-neutral is-neutral" : ""}`}
+            style={sceneOpened ? { borderColor: "rgba(255, 255, 255, 0.15)", background: "rgba(255, 255, 255, 0.05)", color: "#94a3b8" } : undefined}
+          >
+            {sceneOpened ? "Reviens demain" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
           </span>
         </div>
 
@@ -511,7 +532,6 @@ export function HomeView({
             <ChevronRight size={14} />
           </button>
         ) : null}
-
       </details>
 
       <section className="section-block drop-findings">
@@ -550,12 +570,11 @@ export function HomeView({
       </section>
       {inspectCard && inspectedCreator ? createPortal(
         <div ref={findingFocus} tabIndex={-1}>
-        <CardInspectModal creator={inspectedCreator} variant={inspectCard.variant}
-          ownedCount={game.cards.filter((card) => card.creatorSlug === inspectCard.creatorSlug && card.variant === inspectCard.variant).length}
-          liveStream={liveFor(live, inspectedCreator.login, now)} onClose={() => setInspectCard(null)} />
+          <CardInspectModal creator={inspectedCreator} variant={inspectCard.variant}
+            ownedCount={game.cards.filter((card) => card.creatorSlug === inspectCard.creatorSlug && card.variant === inspectCard.variant).length}
+            liveStream={liveFor(live, inspectedCreator.login, now)} onClose={() => setInspectCard(null)} />
         </div>, document.body
       ) : null}
     </div>
   );
 }
-
