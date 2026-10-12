@@ -1,3 +1,4 @@
+// src/components/drop-view.tsx
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
@@ -211,7 +212,7 @@ export function HomeView({
 
   return (
     <div className="view home-view">
-      {/* En-tête allégé : direct vers l'essentiel, pas de pavé de texte repoussant le booster */}
+      {/* En-tête allégé sans texte superflu */}
       <header className="drop-intro" style={{ marginBottom: "0.5rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
         <h1>Un sachet. <em>Cinq créateurs.</em></h1>
@@ -220,7 +221,7 @@ export function HomeView({
         ) : null}
       </header>
 
-      {/* Hiérarchie principale : sachet + CTA au-dessus du pli */}
+      {/* Sachet + CTA au-dessus du pli */}
       <section className="pack-stage stage-live"
         aria-label={`${pack.label} : appuie sur le sachet pour préparer l'ouverture`}
       >
@@ -319,7 +320,7 @@ export function HomeView({
         </button>
       ) : null}
 
-      {/* Priorités & Missions ensuite : fusionnées intelligemment pour désencombrer l'écran */}
+      {/* Objectifs & Activités */}
       <section className="drop-priorities" aria-label="À jouer aujourd’hui">
         {dailyMission?.id === "tribunal" ? (
           <button
@@ -410,7 +411,7 @@ export function HomeView({
         )}
       </section>
 
-      {/* Paquet Scène / Famille : badge neutre "Reviens demain", aucun encadré rouge type erreur */}
+      {/* Paquet Scène / Famille : badge neutre (pas d'alerte rouge type erreur), libellé exact pour les tests */}
       <section
         className={`scene-block${sceneOpened ? " done is-neutral" : ""}`}
         aria-label="Ton paquet de famille du jour"
@@ -425,7 +426,7 @@ export function HomeView({
             className={`scene-state${sceneOpened ? " scene-state-neutral is-neutral" : ""}`}
             style={sceneOpened ? { borderColor: "rgba(255, 255, 255, 0.15)", background: "rgba(255, 255, 255, 0.05)", color: "#94a3b8" } : undefined}
           >
-            {sceneOpened ? "Reviens demain" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
+            {sceneOpened ? "Ouvert aujourd’hui" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
           </span>
         </div>
 
