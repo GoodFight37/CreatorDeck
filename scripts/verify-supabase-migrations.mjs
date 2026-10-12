@@ -4793,11 +4793,13 @@ try {
       board.rows[1].score === arenaSecond.score,
     JSON.stringify(board.rows.map((row) => [row.rank, row.score])),
   );
+  const expectedArenaEnd = new Date(`${board.week}T06:00:00.000Z`);
+  expectedArenaEnd.setUTCDate(expectedArenaEnd.getUTCDate() + 7);
   check(
     "arène : la fin de semaine publiée est le lundi suivant à 6 h UTC",
-    new Date(board.endsAt).getUTCHours() === 6 &&
-      new Date(board.endsAt).getUTCDay() === 1 &&
-      board.week === "2026-10-05",
+    new Date(board.endsAt).getTime() === expectedArenaEnd.getTime() &&
+      new Date(board.endsAt).getUTCHours() === 6 &&
+      new Date(board.endsAt).getUTCDay() === 1,
     `${board.week} -> ${board.endsAt}`,
   );
 
@@ -4944,9 +4946,11 @@ try {
     // Un choix hors des propositions est refusé — le serveur recalcule le
     // tirage, il ne fait pas confiance à la liste affichée.
     const swapAt = draftLineup.findIndex((slug) => !liveOwned.has(slug));
-    const intruder = served[swapAt].find(() => true);
-    const swapped = draftLineup.map((slug, index) => (index === swapAt ? intruder : slug));
-    swapped[swapAt] = arenaOwned.find((slug) => !served[swapAt].includes(slug));
+    const swapped = [...draftLineup];
+    swapped[swapAt] = arenaOwned.find((slug) =>
+      !served[swapAt].includes(slug) && !draftLineup.includes(slug) &&
+      !legendarySlugs.has(slug) && !liveOwned.has(slug),
+    );
     check(
       "arène · draft : une carte non proposée est refusée",
       await asPlayer(ARENA_A, "select public.arena_draft_pick($1::text[]) as r", [swapped])

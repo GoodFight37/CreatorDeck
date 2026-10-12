@@ -247,11 +247,11 @@ describe("les effets de révélation", () => {
     );
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
     expect(bouton().textContent).toContain("Révéler la suivante");
-    expect(bouton().disabled, "la face doit finir son flip avant le prochain appui").toBe(true);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(bouton().disabled).toBe(false);
-    banc.ecran("jeu-commune");
     banc.appuyer("Révéler la suivante");
+    expect(bouton().textContent).toContain("Suite programmée");
+    expect(suivant).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(suivant).toHaveBeenCalledTimes(1);
   });
 

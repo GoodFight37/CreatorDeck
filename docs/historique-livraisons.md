@@ -457,6 +457,13 @@ pendant le flip est maintenant retenu. Le flip courant termine, puis le paquet
 avance d’une carte ; le bouton affiche « Suite programmée… ». Le Perfect conserve
 son verrou de 2,6 s. Le geste ne peut pas sauter plusieurs cartes.
 
-Le banc DOM de révélation met à jour la régression correspondante. ESLint ciblé
-et `npm run typecheck` réussis ; le banc DOM n’a pas été exécuté dans cette passe.
-Publication et CI à renseigner après le push.
+Le test DOM reproduit désormais un appui rapide et a révélé une closure périmée :
+la fin du flip ne voyait pas l’appui mis en file. Une référence synchronisée
+consomme cette demande une seule fois, au `animationend` ou au filet de sécurité.
+La régression DOM passe (16/16), ainsi que toute la suite écrans (109/109),
+les unitaires (1 162/1 162), typecheck, ESLint, catalogue, build et migrations
+sur Postgres jetable. E2E : 64 réussis sur bureau/téléphone, 10 scénarios avec
+serveur ignorés, puis les 10 parcours cloud simulés réussis. Les assertions SQL
+d’arène devenues périmées avec la date étaient aussi corrigées : fin de semaine
+relative au lundi publié, et carte intruse différente des choix déjà pris.
+Publication et CI GitHub à renseigner.

@@ -88,6 +88,12 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
+  // Wait for the card flip: swipes during the flip are intentionally ignored;
+  // taps are queued separately by the next-button behavior.
+  await expect(reveal.locator(".reveal-flip-face").first()).toHaveCSS("animation-name", /scene-card-turn/);
+  await reveal.locator(".reveal-flip-face").first().evaluate(async (node) => {
+    await Promise.all(node.getAnimations().map((animation) => animation.finished));
+  });
   const button = reveal.getByRole("button", { name: "Révéler la suivante" });
   await expect(button).toBeEnabled();
   const anchor = reveal.locator(".reveal-anchor");

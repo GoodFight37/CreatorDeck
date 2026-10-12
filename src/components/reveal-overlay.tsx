@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
@@ -89,13 +89,19 @@ export function RevealOverlay({
   const [showSummary, setShowSummary] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const [advanceQueuedFor, setAdvanceQueuedFor] = useState<string | null>(null);
-  const advanceRef = useRef<() => void>(() => {});
+  const queuedAdvanceRef = useRef<string | null>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
 
-  useEffect(() => {
-    advanceRef.current = advance;
-  });
+  const finishQueuedAdvance = useCallback((id: string) => {
+    if (queuedAdvanceRef.current !== id || locked) return;
+    queuedAdvanceRef.current = null;
+    setAdvanceQueuedFor(null);
+    if (perfect || showSummary || index >= cards.length - 1) {
+      if (overlay) onClose();
+      else setShowSummary(true);
+    } else onNext();
+  }, [cards.length, index, locked, onClose, onNext, overlay, perfect, showSummary]);
 
   // Le bouton d'avancement attend la fin réelle du retournement. Le minuteur
   // sert de filet si le navigateur perd animationend ; le mouvement réduit
@@ -104,13 +110,22 @@ export function RevealOverlay({
     if (!cardId || perfect) return;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const reducedFallback = reducedMotion?.matches
-      ? window.setTimeout(() => setFlippedCardId(cardId), 0)
+      ? window.setTimeout(() => {
+          setFlippedCardId(cardId);
+          finishQueuedAdvance(cardId);
+        }, 0)
       : null;
     const fallback = reducedMotion?.matches
       ? null
-      : window.setTimeout(() => setFlippedCardId(cardId), 1_200);
+      : window.setTimeout(() => {
+          setFlippedCardId(cardId);
+          finishQueuedAdvance(cardId);
+        }, 1_200);
     const onMotionChange = (event: MediaQueryListEvent) => {
-      if (event.matches) setFlippedCardId(cardId);
+      if (event.matches) {
+        setFlippedCardId(cardId);
+        finishQueuedAdvance(cardId);
+      }
     };
     reducedMotion?.addEventListener?.("change", onMotionChange);
     return () => {
@@ -118,19 +133,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, perfect]);
-
-  // Un appui pendant le retournement compte : dès que la face est visible,
-  // on passe à la carte suivante. Le bouton reste utilisable au lieu de
-  // laisser le navigateur avaler le clic parce que `animationend` n'est pas arrivé.
-  useEffect(() => {
-    if (!cardId || advanceQueuedFor !== cardId || flippedCardId !== cardId || locked) return;
-    const timer = window.setTimeout(() => {
-      setAdvanceQueuedFor(null);
-      advanceRef.current();
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [advanceQueuedFor, cardId, flippedCardId, locked]);
+  }, [cardId, finishQueuedAdvance, perfect]);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -229,6 +232,7 @@ export function RevealOverlay({
   function finishFlip(event: AnimationEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     setFlippedCardId(card.id);
+    finishQueuedAdvance(card.id);
   }
 
   function makePoster() {
@@ -242,6 +246,8 @@ export function RevealOverlay({
   function advance() {
     if (locked) return;
     if (!perfect && !showSummary && flippedCardId !== card.id) {
+      if (queuedAdvanceRef.current === card.id) return;
+      queuedAdvanceRef.current = card.id;
       setAdvanceQueuedFor(card.id);
       return;
     }
