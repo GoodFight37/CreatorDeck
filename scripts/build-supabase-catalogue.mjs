@@ -21,6 +21,20 @@ const CREATORS_FILE = path.join(ROOT, "src/data/creators.json");
 const RETIRED_FILE = path.join(ROOT, "src/data/retired.json");
 const OUTPUT_FILE = path.join(ROOT, "supabase/migrations/0003_catalogue.sql");
 
+// `0003` est le seed historique appliqué en production : les corrections de
+// catalogue ultérieures passent par une nouvelle migration, jamais par une
+// réécriture de ce fichier. En --check, on vérifie donc que son ancien état
+// correspond au catalogue courant après retour des champs corrigés, et que la
+// migration déclarée applique bien les valeurs actuelles.
+const HISTORIC_CATALOGUE_CORRECTIONS = [
+  {
+    slug: "skyroz",
+    migration: "0050_skyrozz_identity.sql",
+    before: { login: "skyroz", displayName: "Skyroz" },
+    after: { login: "skyrroztv", displayName: "Skyrozz" },
+  },
+];
+
 const VALID_RARITIES = new Set(["common", "uncommon", "rare", "epic", "legendary"]);
 
 async function main() {
@@ -88,10 +102,34 @@ async function main() {
       process.exit(1);
     }
     if (existing !== sql) {
-      console.error(
-        "0003_catalogue.sql a dérivé de creators.json. Relance : node scripts/build-supabase-catalogue.mjs",
-      );
-      process.exit(1);
+      const historicalCreators = creators.map((creator) => ({ ...creator }));
+      for (const correction of HISTORIC_CATALOGUE_CORRECTIONS) {
+        const creator = historicalCreators.find((entry) => entry.slug === correction.slug);
+        if (!creator || Object.entries(correction.after).some(([field, value]) => creator[field] !== value)) {
+          console.error(`Correction historique incohérente pour ${correction.slug} dans creators.json.`);
+          process.exit(1);
+        }
+        const migrationPath = path.join(ROOT, "supabase/migrations", correction.migration);
+        const migration = (await readFile(migrationPath, "utf8")).replace(/\s+/g, " ").toLowerCase();
+        if (!migration.includes(`where slug = '${correction.slug}'`)) {
+          console.error(`La migration ${correction.migration} ne cible pas ${correction.slug}.`);
+          process.exit(1);
+        }
+        const sqlFields = { login: "login", displayName: "display_name" };
+        for (const [field, value] of Object.entries(correction.after)) {
+          if (!migration.includes(`${sqlFields[field]} = '${value.toLowerCase()}'`)) {
+            console.error(`La migration ${correction.migration} n'applique pas la valeur actuelle de ${field}.`);
+            process.exit(1);
+          }
+        }
+        Object.assign(creator, correction.before);
+      }
+      if (existing !== generateSql(historicalCreators, retired)) {
+        console.error("0003_catalogue.sql a dérivé du seed historique sans correction ultérieure déclarée.");
+        process.exit(1);
+      }
+      console.log("0003_catalogue.sql est intact ; l’identité corrigée est portée par une migration ultérieure.");
+      return;
     }
     console.log("0003_catalogue.sql est à jour.");
     return;
