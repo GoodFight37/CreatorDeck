@@ -14,7 +14,7 @@ export async function createFoilRenderer(host: HTMLElement, artwork: string, onL
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.35;
+  renderer.toneMappingExposure = .88;
   renderer.setClearColor(0, 0);
   const canvas = renderer.domElement;
   const lost = (event: Event) => { event.preventDefault(); onLost(); };
@@ -31,17 +31,17 @@ export async function createFoilRenderer(host: HTMLElement, artwork: string, onL
   room.dispose();
   pmrem.dispose();
   scene.environment = environment.texture;
-  scene.environmentIntensity = .45;
+  scene.environmentIntensity = .12;
   const camera = new THREE.OrthographicCamera(-1.35, 1.35, HEIGHT * .675, -HEIGHT * .675, .1, 20);
   camera.position.z = 8;
   const pouch = new THREE.Group();
   scene.add(pouch);
-  const material = new THREE.MeshPhysicalMaterial({ map: texture, metalness: .38, roughness: .32,
-    clearcoat: .7, clearcoatRoughness: .24, side: THREE.DoubleSide, alphaTest: .45, transparent: true });
+  const material = new THREE.MeshPhysicalMaterial({ map: texture, metalness: .08, roughness: .62,
+    clearcoat: .1, clearcoatRoughness: .55, side: THREE.DoubleSide, alphaTest: .45, transparent: true });
   const capMaterial = material.clone();
   const backMaterial = material.clone();
   backMaterial.color.set("#6c405c");
-  backMaterial.roughness = .48;
+  backMaterial.roughness = .65;
 
   // Subdivision gives actual bulging laminate normals and crimped welds.
   const makeSheet = (bottom: number, top: number) => {
@@ -70,11 +70,11 @@ export async function createFoilRenderer(host: HTMLElement, artwork: string, onL
   rear.position.z = -.055;
   rear.rotation.y = Math.PI;
   pouch.add(rear, body, cap);
-  scene.add(new THREE.HemisphereLight(0xfff0df, 0x25192e, 2.4));
-  const key = new THREE.DirectionalLight(0xffe8d3, 3.4);
+  scene.add(new THREE.HemisphereLight(0xfff0df, 0x25192e, 1.3));
+  const key = new THREE.DirectionalLight(0xffe8d3, 1.5);
   key.position.set(-2, 3, 4);
   scene.add(key);
-  const rim = new THREE.DirectionalLight(0xdebaff, 1.7);
+  const rim = new THREE.DirectionalLight(0xdebaff, .6);
   rim.position.set(3, -.5, 2);
   scene.add(rim);
 
@@ -106,15 +106,16 @@ export async function createFoilRenderer(host: HTMLElement, artwork: string, onL
     capMaterial.opacity = 1 - ease;
     // Specular is evaluated on the curved mesh, clipped by the printed alpha.
     // After opening, stop the active glint while leaving diffuse shell visible.
-    material.clearcoat = pose.opened ? 0 : .7;
-    capMaterial.clearcoat = pose.opened ? 0 : .7;
-    material.metalness = pose.opened ? 0 : .38;
-    capMaterial.metalness = pose.opened ? 0 : .38;
-    backMaterial.clearcoat = pose.opened ? 0 : .7;
-    backMaterial.metalness = pose.opened ? 0 : .38;
+    material.clearcoat = pose.opened ? 0 : .1;
+    capMaterial.clearcoat = pose.opened ? 0 : .1;
+    material.metalness = pose.opened ? 0 : .08;
+    capMaterial.metalness = pose.opened ? 0 : .08;
+    backMaterial.clearcoat = pose.opened ? 0 : .1;
+    backMaterial.metalness = pose.opened ? 0 : .08;
     material.specularIntensity = capMaterial.specularIntensity = backMaterial.specularIntensity = pose.opened ? 0 : 1;
     key.position.x = -2 + finger * 2;
-    renderer.render(scene, camera);
+    try { renderer.render(scene, camera); }
+    catch { onLost(); return; }
     canvas.dataset.foilFrames = String(Number(canvas.dataset.foilFrames ?? 0) + 1);
     frame = pose.opened && t < 1 ? requestAnimationFrame(draw) : 0;
   };

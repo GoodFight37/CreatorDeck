@@ -677,7 +677,9 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   inset: -17.5%;
   z-index: 3;
   pointer-events: none;
+  visibility: hidden;
 }
+.has-foil-3d > .opening-foil-3d { visibility: visible; }
 .opening-foil-3d canvas { display: block; width: 100%; height: 100%; }
 .booster-cinematic.booster-presentation .booster-physical-scene.has-foil-3d {
   transform: translate(-50%, -50%);
@@ -693,3 +695,15 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .opening-foil-3d { display: none; }
 }
+
+/* Opening-only cleanup: no added screen-blended sheen or cut-light flash. */
+.opening-continuum .foil-material-sheen,
+.opening-continuum .booster-foil-glow,
+.opening-continuum .foil-cut-slit::before,
+.booster-cinematic.booster-presentation .booster-physical-scene::before { display: none; }
+.booster-cinematic.booster-presentation .foil-cut-slit {
+  background: rgba(225, 193, 202, .55);
+  box-shadow: none;
+}
+.opening-continuum .foil-inner-shadow { background: none; }
+.opening-continuum .booster-premium-loading .booster-open-link { margin-top: 8px; }

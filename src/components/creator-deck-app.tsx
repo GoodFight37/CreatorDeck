@@ -170,6 +170,7 @@ export function CreatorDeckApp() {
   const [tearing, setTearing] = useState(false);
   const [tearKind, setTearKind] = useState<"live" | "scene">("live");
   const tearResolve = useRef<(() => void) | null>(null);
+  const pendingPresentationLeft = useRef(false);
   const [presentationReturnFocus, setPresentationReturnFocus] = useState<HTMLElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
@@ -424,6 +425,7 @@ export function CreatorDeckApp() {
    * until both the draw and the gesture have completed, with no empty frame.
    */
   function commencerDechirure(kind: "live" | "scene"): Promise<void> {
+    pendingPresentationLeft.current = false;
     // Capture before the opening button is disabled, and keep it through reveal.
     setPresentationReturnFocus(document.activeElement instanceof HTMLElement
       ? document.activeElement : null);
@@ -439,6 +441,13 @@ export function CreatorDeckApp() {
     tearResolve.current = null;
   }
 
+  function leavePendingPresentation(): void {
+    pendingPresentationLeft.current = true;
+    terminerDechirure();
+    setTearing(false);
+    showNotice("Le tirage continue. Aucun autre paquet n’est lancé.");
+  }
+
   async function handleOpenPack() {
     if (!game || opening || sceneOpening) return;
     setOpening(true);
@@ -450,6 +459,10 @@ export function CreatorDeckApp() {
       const result = await openLivePack();
       if (result.status === "drawn") {
         await dechirureTerminee;
+        if (pendingPresentationLeft.current) {
+          showNotice(result.tutorial ? "Aperçu terminé. Connecte-toi pour collectionner tes cartes." : "Paquet ouvert : retrouve tes cartes dans le Binder.");
+          return;
+        }
         // Keep PackTear mounted: the face now joins its extracted backs in one scene.
         setTutorialReveal(result.tutorial ?? false);
         setRevealKind("live");
@@ -498,6 +511,10 @@ export function CreatorDeckApp() {
       const result = await openScenePack();
       if (result.status === "drawn") {
         await dechirureTerminee;
+        if (pendingPresentationLeft.current) {
+          showNotice("Paquet ouvert : retrouve tes cartes dans le Binder.");
+          return;
+        }
         setRevealKind("scene");
         setDrawnCards(result.cards);
         setRevealIndex(0);
@@ -848,7 +865,7 @@ export function CreatorDeckApp() {
       {tearing ? <PackTear kind={tearKind} returnFocusTo={presentationReturnFocus} onTear={() => {
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
-      }} onComplete={terminerDechirure}>{revealPresentation}</PackTear> : revealPresentation}
+      }} onComplete={terminerDechirure} onLeavePending={leavePendingPresentation}>{revealPresentation}</PackTear> : revealPresentation}
       {oddsOpen ? (
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}

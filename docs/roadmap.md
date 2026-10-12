@@ -8,15 +8,16 @@ implémenté et vérifié localement ; sa publication/CI est distincte. [Bilan c
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
-Sachet 3D minimal ajouté au continuum sur instruction du 13 octobre :
-[livrable hybride et limites](booster-3d-2026-10-13.md), D-062 remplace
-l'interdiction de 3D de D-061. Validation visuelle sur téléphone réel restante.
+Après retour téléphone : **2D plus mate par défaut, 3D en aperçu seulement**,
+fin d'extraction et sortie d'attente renforcées. [Diagnostic et livrable](booster-clean-2026-10-13.md),
+D-063. Le jugement visuel sur appareil réel reste à faire ; D-062 n'impose
+plus l'activation GPU par défaut.
 
 ### Plan actif
 
 1. **Ouverture : continuum, matière et geste implémentés** à la demande de Malik.
    Même scène du sachet au récap, coque retirée en fondu, reflet sur les morceaux
-   imprimés et manipulation de carte après flip. Quatre points du cahier des
+   imprimés et manipulation de carte après flip. Mode 2D par défaut (D-063). Quatre points du cahier des
    charges faits ; [preuves et limites](booster-continuum-2026-10-12.md).
    Reste l’appréciation du rendu/rythme sur téléphone réel : les tests ne sont
    pas un verdict esthétique et le rendu n’est pas présenté comme « Pocket ».

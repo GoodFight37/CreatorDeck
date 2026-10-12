@@ -1,3 +1,34 @@
+## Checkpoint ouverture propre, GPU off par défaut — 13 octobre 2026
+
+Retour téléphone/Vercel de Malik : sachet trop brillant, GPU intermittent,
+attente parfois bloquée. [Diagnostic et livrable](booster-clean-2026-10-13.md),
+D-063. 3D désactivée par défaut, aperçu explicite opening3d=1 ; paramètres
+GPU fortement réduits. Impression dédiée plus mate pour Live/Scène, aucun
+sheen CSS ajouté. Art d'accueil et fichiers Drop/Binder/Tribunal non édités.
+
+Continuum et swipe conservés. Secours armé avant son/vibration, animationcancel
+et absence d'effets terminent aussi. Reprise manuelle Afficher les cartes.
+Retour volontaire au jeu pendant attente réseau, sans rejouer le tirage ;
+réponse tardive conservée dans le Binder sans overlay tardif. Aucun SQL ou
+changement d'économie/dépendances. 30/30 DOM et 16/16 E2E ciblés bureau/mobile
+simulé réussis sur base b073dcb + correctif, avant les deux derniers commits
+Gemini. Peel et lien sans déchirure testés avec le timer de secours figé.
+Captures adaptées à l'impression changée, puis passage strict réussi.
+
+Main synchronisé par fast-forward jusqu'à 7dcc672 (six commits Gemini sur
+Drop/Binder conservés). Ce dernier état contient une faute de JSX introduite
+par 692f0a9 dans drop-view.tsx:263–265 : TS1005/TS1381. Typecheck et build
+échouent à cette faute ; lint ciblé du lot passe. Malik est invité à transmettre
+la correction à Gemini ; interdiction explicite de toucher ce fichier respectée.
+Une publication du correctif seul est autorisée, mais ne prouve PAS déploiement
+Vercel réussi tant que ce JSX n'est pas réparé. Aucun suivi CI en boucle.
+
+Travail portraits et ses 26 lignes de passation locales préexistantes préservés,
+non stagés. Pas d'agent lancé, aucune réservation active. Prochaine action :
+Gemini corrige son JSX puis Malik teste le paquet tutoriel sur Vercel après
+compilation/déploiement. Le commit du checkpoint se retrouve via git log -1
+-- docs/agent-handoff.md.
+
 ## Checkpoint sachet 3D limité — 13 octobre 2026
 
 Nouvelle demande de Malik : Three.js autorisé pour l'ouverture uniquement ;

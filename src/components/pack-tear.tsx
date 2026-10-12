@@ -17,6 +17,7 @@ export function PackTear({
   kind = "live",
   onComplete,
   onTear,
+  onLeavePending,
   autoCompleteAfterMs,
   returnFocusTo,
   children,
@@ -24,6 +25,8 @@ export function PackTear({
   kind?: "live" | "scene";
   onComplete: () => void;
   onTear?: () => void;
+  /** Leaves the presentation only; the in-flight draw is not retried/cancelled. */
+  onLeavePending?: () => void;
   autoCompleteAfterMs?: number;
   returnFocusTo?: HTMLElement | null;
   /** The revealed cards live inside the same mounted opening, never a second portal. */
@@ -32,8 +35,12 @@ export function PackTear({
   const dialogRef = usePresentationFocus(true, returnFocusTo);
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
   const [opened, setOpened] = useState(false);
+  // Explicit preview only, until the GPU material is approved on a real phone.
+  const [foil3D] = useState(() => typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("opening3d") === "1");
   const start = useRef<{ x: number; percent: number; centerX: number; centerY: number; halfWidth: number; halfHeight: number } | null>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
+  const chamberRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const extractionCompleted = useRef(false);
   const revealing = Boolean(children);
@@ -66,11 +73,24 @@ export function PackTear({
     sceneRef.current?.style.removeProperty("--opening-light-x");
     setCut({ start: 4, end: 96, progress: 100 });
     setOpened(true);
-    tearRef.current?.();
     // animationend opens the face IN this scene. This timer is only a lost-event
     // fallback; it never destroys the pouch or replaces the presentation root.
-    timer.current = window.setTimeout(completeExtraction, cardEffectsAllowed() ? 1_200 : 0);
+    const effects = cardEffectsAllowed();
+    if (effects) timer.current = window.setTimeout(completeExtraction, 1_200);
+    // Audio/haptics are optional: they cannot strand an already opened pouch.
+    try { tearRef.current?.(); } catch { console.warn("Son/vibration indisponible pendant l’ouverture."); }
+    if (!effects) completeExtraction();
   }, [completeExtraction]);
+
+  useEffect(() => {
+    const chamber = chamberRef.current;
+    if (!opened || !chamber) return;
+    const cancelled = (event: Event) => {
+      if (event.target === chamber) completeExtraction();
+    };
+    chamber.addEventListener("animationcancel", cancelled);
+    return () => chamber.removeEventListener("animationcancel", cancelled);
+  }, [opened, completeExtraction]);
 
   useEffect(() => {
     if (autoCompleteAfterMs === undefined) return;
@@ -80,7 +100,7 @@ export function PackTear({
 
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
 
-  const artwork = kind === "scene" ? "/packs/scene-foil.svg" : "/packs/live-foil.svg";
+  const artwork = kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg";
   return createPortal(
     <div ref={dialogRef} tabIndex={-1} className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`} role="dialog"
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
@@ -93,12 +113,12 @@ export function PackTear({
         </p>
         <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
           style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>
-          <PackFoil3D artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
+          <PackFoil3D enabled={foil3D} artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
-          <div className="foil-card-chamber" aria-hidden="true" onAnimationEnd={(event) => {
+          <div ref={chamberRef} className="foil-card-chamber" aria-hidden="true" onAnimationEnd={(event) => {
             if (event.target === event.currentTarget && done.current) completeExtraction();
           }}>
             {Array.from({ length: 5 }, (_, i) => (
@@ -111,12 +131,10 @@ export function PackTear({
           <div className="foil-body-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
-            <span className="foil-material-sheen" />
           </div>
           <div className="foil-top-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
-            <span className="foil-material-sheen" />
           </div>
           <span className="foil-cut-slit" aria-hidden="true"
             style={{ left: `${cut.start}%`, width: `${Math.max(0, cut.end - cut.start)}%` }} />
@@ -185,9 +203,13 @@ export function PackTear({
               Ouvrir sans déchirer
             </button>
           ) : (
-            <p className="booster-premium-gesture booster-premium-loading" aria-live="polite">
+            <div className="booster-premium-loading" aria-live="polite">
+            <p className="booster-premium-gesture">
               <span aria-hidden="true">✦</span> DÉCOUVERTE EN COURS
             </p>
+            <button className="booster-open-link" type="button" onClick={completeExtraction}>Afficher les cartes</button>
+            {onLeavePending ? <button className="booster-open-link" type="button" onClick={onLeavePending}>Retour au jeu pendant l’attente</button> : null}
+            </div>
           )}
         </div>
       </div>

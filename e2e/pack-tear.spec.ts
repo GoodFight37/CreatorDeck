@@ -136,6 +136,7 @@ test("home pack artwork, title and gesture hint do not overlap", async ({ page }
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
 test("2D fallback keeps the printed sachet and extraction when WebGL is unavailable", async ({ page }) => {
   await page.addInitScript(() => {
+    history.replaceState(null, "", "?opening3d=1");
     const original = HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
       if (type.startsWith("webgl")) return null;
@@ -169,22 +170,15 @@ test("2D fallback keeps the printed sachet and extraction when WebGL is unavaila
     .toHaveText("GLISSE SUR LA BANDE STRIÉE EN HAUT");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
-  await expect(dialog.locator(".foil-material-sheen")).toHaveCount(2);
-  const material = await dialog.locator(".foil-material-sheen").first().evaluate((node) => {
-    const style = getComputedStyle(node);
-    return { animation: style.animationName, clip: style.clipPath, mask: style.maskImage, parent: node.parentElement!.className };
-  });
-  expect(material.animation).toBe("none");
-  expect(material.clip).toContain("polygon(");
-  expect(material.mask).toContain("live-foil.svg");
-  expect(material.parent).toBe("foil-body-piece");
+  await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
+  expect(await dialog.locator(".booster-foil-glow").evaluate(node => getComputedStyle(node).display)).toBe("none");
   const panel = await dialog.boundingBox();
   expect(panel).not.toBeNull();
   expect(Math.abs(panel?.y ?? Infinity)).toBeLessThanOrEqual(1);
   expect(panel?.height).toBeGreaterThan(500);
   await expect(page.locator(".opening-loader")).toHaveCount(0);
   await expect(dialog.locator(".foil-printed-art")).toHaveCount(2);
-  await expect(dialog.locator('.foil-printed-art[src="/packs/live-foil.svg"]')).toHaveCount(2);
+  await expect(dialog.locator('.foil-printed-art[src="/packs/live-opening.svg"]')).toHaveCount(2);
   await expect(dialog.locator("canvas")).toHaveCount(0);
   await expect(dialog.locator(".booster-tear-handle")).toHaveCount(0);
   await expect(dialog.locator(".booster-premium-gesture")).toHaveCount(0);

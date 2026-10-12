@@ -219,6 +219,48 @@ describe("les écrans", () => {
     expect(document.querySelector(".opening-continuum")).toBe(scene);
   });
 
+  it("termine malgré un son en erreur et un animationend absent", async () => {
+    const { PackTear } = await import("@/components/pack-tear");
+    const completed = vi.fn();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    await banc.monter(<PackTear onComplete={completed} onTear={() => { throw new Error("audio indisponible"); }} />);
+    banc.appuyer("Ouvrir sans déchirer");
+    expect(completed).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(completed).toHaveBeenCalledOnce();
+    expect(document.querySelector(".opening-continuum")).toBeTruthy();
+    warn.mockRestore();
+  });
+
+  it("termine sur annulation de l'animation ou secours manuel, une seule fois", async () => {
+    const { PackTear } = await import("@/components/pack-tear");
+    const completed = vi.fn();
+    await banc.monter(<PackTear onComplete={completed} />);
+    banc.appuyer("Ouvrir sans déchirer");
+    act(() => { document.querySelector(".foil-card-chamber")!.dispatchEvent(new Event("animationcancel")); });
+    expect(completed).toHaveBeenCalledOnce();
+    banc.appuyer("Afficher les cartes");
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_000); });
+    expect(completed).toHaveBeenCalledOnce();
+  });
+
+  it("quitte une présentation en attente sans relancer ni perdre le tirage", async () => {
+    const { gameStore } = await import("@/lib/game-store");
+    gameStore.reset(T0);
+    await application();
+    banc.appuyer("Ouvrir le booster");
+    banc.appuyer("Ouvrir sans déchirer");
+    banc.appuyer("Retour au jeu pendant l’attente");
+    expect(document.querySelector(".opening-continuum")).toBeNull();
+    expect(document.body.textContent).toContain("Le tirage continue");
+    // The same local draw finishes once; no late isolated reveal or second draw.
+    await act(async () => { await vi.advanceTimersByTimeAsync(700); });
+    expect(document.querySelector(".reveal-overlay")).toBeNull();
+    expect(document.body.textContent).toContain("retrouve tes cartes dans le Binder");
+    expect(gameStore.getSnapshot()!.openings).toBe(1);
+    expect(gameStore.getSnapshot()!.cards).toHaveLength(5);
+  });
+
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {
     await application();
     const premier = banc.ecran("09-determinisme-a");

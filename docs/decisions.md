@@ -547,3 +547,14 @@ maillage léger du sachet, matériau physique et peel piloté par le glissé ; d
 et faces HTML existants conservés dans le même portail. Mouvement réduit,
 effets coupés ou perte GPU utilisent le continuum 2D. Pas de moteur physique,
 Unity, refonte des écrans, des règles ou de SQL. [Livrable, essais et limites](booster-3d-2026-10-13.md).
+
+## D-063 — 13 octobre 2026 : 2D propre par défaut après retour téléphone
+
+Malik juge le sachet GPU trop brillant et instable sur Vercel/téléphone. Priorité
+à un parcours jouable : 3D désactivée par défaut, prévisualisation explicite
+seulement, impression d'ouverture plus mate et aucune bande CSS ajoutée.
+Le continuum et le swipe sont conservés. Fin d'extraction indépendante du
+son/vibration, annulation d'animation et secours manuel couverts. Sortie
+volontaire d'une attente réseau sans rejouer le tirage ni perdre les cartes
+retournées ensuite. D-062 reste une autorisation de 3D, pas son activation par
+défaut. [Diagnostic, preuves et limites](booster-clean-2026-10-13.md).

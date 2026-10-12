@@ -1,3 +1,13 @@
+## Ouverture : correction après essai téléphone — 13 octobre 2026
+
+Retour réel : sachet trop brillant et attente parfois bloquée. D-063 coupe
+la 3D par défaut, remplace seulement l'impression d'ouverture, supprime le
+sheen ajouté et garantit une fin d'extraction indépendante des effets audio.
+Secours manuel et sortie de l'attente réseau sans second tirage ajoutés.
+[Diagnostic et preuves](booster-clean-2026-10-13.md). K-047 garde sa validation
+visuelle sur téléphone ; le correctif ne prétend pas reproduire Pocket.
+Les paragraphes suivants décrivent les étapes précédentes.
+
 ## Ouverture hybride — 13 octobre 2026
 
 Le sachet dispose désormais d'une amélioration Three.js limitée à l'ouverture,
