@@ -6,8 +6,8 @@ sur son PC pour recevoir la mise à jour du site. [Bilan actuel et preuves](etat
 [plan actif](roadmap.md#plan-actif), [brief Grok](revue-grok-2026-10-12.md).
 Les entrées précédentes ci-dessous sont historiques. Les avatars génériques
 sans photo de profil sont acceptés par Malik (SolaryHS/j0niq/toaststix) : aucun
-remplacement requis. Revue visuelle des boosters et retour Paquet Scène ouverts,
-extension du catalogue à cadrer. Les 20 anciens portraits Commons et
+remplacement requis. Retour Paquet Scène confirmé bon par Malik le 12 octobre.
+Revue externe visuelle des boosters et extension du catalogue restent à cadrer. Les 20 anciens portraits Commons et
 leurs modifications locales sont préservés, non publiés, sans bloquer le lot.
 Actualisation documentaire seulement, aucun changement de gameplay/SQL.
 

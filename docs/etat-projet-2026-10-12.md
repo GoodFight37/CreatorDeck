@@ -26,13 +26,20 @@ Aucune PR ouverte au dernier contrôle GitHub.
 | Chantier | État actuel | Fin attendue |
 |---|---|---|
 | Ouverture des boosters : avis esthétique et tactile | Revue externe Grok demandée ; correctifs déjà publiés et E2E verts | Examiner le rendu actuel, puis décider des changements utiles ; jugement final sur le téléphone de Malik |
-| Retour du Paquet Scène déjà ouvert | Fonctionnement corrigé ; demande de présentation plus courte/neutre encore à valider | Le bouton actuel dit « Déjà ouvert · demain matin » ; le refus de revalidation dit « Déjà ouvert aujourd’hui. Le prochain arrive à 6 h UTC. ». Juger ces états actuels, sans attribuer au code l’ancien texte |
 | Extension du catalogue | Idée de Malik : autres personnes connues, éventuellement personnages de séries ; **pas encore cadrée ni implémentée** | Définir les personnes et l’organisation des nouvelles cartes avant développement |
 
 Les vérifications sur téléphone réel (rendu, rythme, performances, parcours
 cloud) sont des validations restantes, pas des bugs établis. Les avis déjà
 confirmés par Malik sur scroll, sablier/recharge, objectif Live et cadeaux ne
 sont pas à redemander.
+
+### Retour confirmé le 12 octobre
+
+Malik confirme que le message du Paquet Scène déjà ouvert est désormais bon.
+K-037 est clos, aucune nouvelle simplification requise. La revue du booster est
+une appréciation externe demandée, pas un besoin d’aide technique : l’agent peut
+observer le parcours en navigateur de test, mais ne ressent pas l’usage du
+téléphone physique de Malik. Aucun bug actuel de l’ouverture n’est établi ici.
 
 ### Livré
 

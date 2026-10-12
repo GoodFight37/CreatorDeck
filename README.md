@@ -51,8 +51,8 @@ nécessaire sur le PC du joueur. Android/Capacitor reste supporté dans le code.
 
 Le lot `10699eb` (300 portraits manuels, 699 Upscayl, Diverron restauré avec IA)
 est publié, CI complète et Vercel Production réussis. **Avatars génériques acceptés par Malik** pour les créateurs sans photo de profil,
-notamment SolaryHS, j0niq et toaststix. Revue du rendu des boosters,
-retour Paquet Scène et éventuel élargissement du catalogue sont dans le
+notamment SolaryHS, j0niq et toaststix. Le retour Paquet Scène est confirmé bon
+par Malik. Revue du rendu des boosters et éventuel élargissement du catalogue sont dans le
 [plan actif](docs/roadmap.md). [Bilan vérifié pour le relecteur](docs/etat-projet-2026-10-12.md)
 et [brief à transmettre à Grok](docs/revue-grok-2026-10-12.md).
 Les anciens chiffres et statuts datés ci-dessous ne remplacent pas ce bilan.

@@ -21,7 +21,8 @@ une tâche de remplacement. Aucune collecte exhaustive des portraits demandée.
 1. Le parcours ouverture → cinq cartes → récapitulatif, son rythme, lisibilité,
    effets et ergonomie mobile. Les appuis arrivés pendant le flip sont désormais
    mémorisés : vérifie le code actuel avant de présenter cela comme un bug.
-2. Le retour du Paquet Scène déjà ouvert : juge les libellés et états actuels.
+2. Le retour du Paquet Scène déjà ouvert est confirmé bon par Malik : aucune
+   nouvelle correction n’est demandée sur ce point.
 3. Les améliorations utiles aux quatre piliers, par priorité et coût approximatif.
 4. L’idée d’élargir le catalogue à d’autres personnalités/personnages : propose
    un cadrage, sans supposer qu’une nouvelle famille ou mécanique est décidée.
