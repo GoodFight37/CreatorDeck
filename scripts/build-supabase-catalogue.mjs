@@ -106,7 +106,9 @@ async function main() {
       for (const correction of HISTORIC_CATALOGUE_CORRECTIONS) {
         const creator = historicalCreators.find((entry) => entry.slug === correction.slug);
         if (!creator || Object.entries(correction.after).some(([field, value]) => creator[field] !== value)) {
-          console.error(`Correction historique incohérente pour ${correction.slug} dans creators.json.`);
+          console.error(
+            "0003_catalogue.sql a dérivé de creators.json. Relance : node scripts/build-supabase-catalogue.mjs",
+          );
           process.exit(1);
         }
         const migrationPath = path.join(ROOT, "supabase/migrations", correction.migration);
@@ -128,7 +130,7 @@ async function main() {
         console.error("0003_catalogue.sql a dérivé du seed historique sans correction ultérieure déclarée.");
         process.exit(1);
       }
-      console.log("0003_catalogue.sql est intact ; l’identité corrigée est portée par une migration ultérieure.");
+      console.log("0003_catalogue.sql est à jour dans son état historique ; l’identité corrigée est portée par une migration ultérieure.");
       return;
     }
     console.log("0003_catalogue.sql est à jour.");

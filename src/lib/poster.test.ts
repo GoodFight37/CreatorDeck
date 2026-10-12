@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { PlayerProfile } from "@/lib/cloud/api";
 import { POSTER_HEIGHT, POSTER_WIDTH, posterFileName, posterModel } from "@/lib/poster";
-import { PORTRAIT_EXT } from "../../scripts/lib/portraits.mjs";
+import { creatorPortraitUrl } from "@/lib/creator-portraits";
 
 /**
  * Ce qui se teste ici, c'est le **contenu** de l'affiche : les textes et les
@@ -59,9 +59,8 @@ describe("affiche de partage", () => {
     // montrer une carte qu'elle ne sait pas dessiner.
     expect(model.cards.map((card) => card.slug)).toEqual(["kaicenat", "ibai"]);
     expect(model.cards[0]?.displayName.length).toBeGreaterThan(0);
-    // L'extension vient de `PORTRAIT_EXT` : le jour où les portraits changent de
-    // format, l'affiche suit au lieu de casser.
-    expect(model.cards[0]?.image).toBe(`/creators/kaicenat${PORTRAIT_EXT}`);
+    // L'affiche reprend le même chemin d'image que les cartes du catalogue.
+    expect(model.cards[0]?.image).toBe(creatorPortraitUrl("kaicenat"));
     expect(model.cards[0]?.color).toMatch(/^#|^rgb/);
   });
 

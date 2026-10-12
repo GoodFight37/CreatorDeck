@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { preloadPortraits } from "@/lib/preload";
+import { MANUAL_PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
 
 /**
  * Le préchargement des portraits : cinq visages demandés **avant** la
@@ -33,7 +34,7 @@ describe("préchargement des portraits", () => {
   it("demande le portrait de chaque créateur, à l'adresse de l'application", () => {
     const demandes = espion();
     preloadPortraits(["squeezie", "gotaga"]);
-    expect(demandes).toEqual(["/creators/squeezie.webp", "/creators/curated/gotaga.webp"]);
+    expect(demandes).toEqual([MANUAL_PORTRAIT_OVERRIDES.squeezie, MANUAL_PORTRAIT_OVERRIDES.gotaga]);
   });
 
   it("ne demande qu'une fois le même créateur", () => {
@@ -42,15 +43,15 @@ describe("préchargement des portraits", () => {
     // des répétitions : ce n'est pas au navigateur de dédoublonner.
     const demandes = espion();
     preloadPortraits(["ibai", "ibai", "ibai"]);
-    expect(demandes).toEqual(["/creators/ibai.webp"]);
+    expect(demandes).toEqual([MANUAL_PORTRAIT_OVERRIDES.ibai]);
   });
 
   it("précharge le remplacement affiché et le vrai visuel de secours", () => {
     const demandes = espion();
     preloadPortraits(["rubius", "shroud", "diverron", "rubius"]);
     expect(demandes).toEqual([
-      "/creators/curated/rubius.webp",
-      "/creators/curated/shroud.webp",
+      MANUAL_PORTRAIT_OVERRIDES.rubius,
+      MANUAL_PORTRAIT_OVERRIDES.shroud,
       "/creators/diverron-fallback.svg",
     ]);
   });
@@ -58,7 +59,7 @@ describe("préchargement des portraits", () => {
   it("ignore les entrées vides sans jeter", () => {
     const demandes = espion();
     preloadPortraits(["", "squeezie", undefined as unknown as string]);
-    expect(demandes).toEqual(["/creators/squeezie.webp"]);
+    expect(demandes).toEqual([MANUAL_PORTRAIT_OVERRIDES.squeezie]);
   });
 
   it("ne fait rien hors navigateur", () => {
