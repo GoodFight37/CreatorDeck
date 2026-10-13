@@ -1,5 +1,15 @@
 # Décisions CreatorDeck
 
+## D-073 — 13 octobre 2026 : distinguer carte obtenue en direct et stream actif
+
+La variante persistée `live` reste un souvenir utile à de futurs designs. Son
+badge devient « Obtenue en direct » (libellé compact « Acquis live »), et la
+fiche précise qu’il s’agit de la provenance du tirage. Le direct actuel demeure
+un état distinct, affiché seulement à partir d’un snapshot frais, avec un lien
+vers l’URL Twitch de la chaîne. Pas de dépendance à un schéma de données ni de
+perte de variante ; aucun stream actif n’est simulé si les données sont périmées.
+Les vérifications et limites sont dans le checkpoint du 13 octobre.
+
 ## D-072 — 13 octobre 2026 : corner peek sur la carte garantie
 
 Après le flip des quatre premières cartes d’un booster ordinaire, la cinquième

@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Sparkles, Hammer, LoaderCircle } from "lucide-react";
+import { X, Sparkles, Hammer, LoaderCircle, ExternalLink } from "lucide-react";
 import { CreatorCard } from "@/components/creator-card";
 import { RARITY_META, type CardVariant, type Creator } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
@@ -81,7 +81,9 @@ export function CardInspectModal({
 
             <div className="odds-intro" style={{ margin: 0 }}>
               {isOwned
-                ? `${creator.displayName} est déjà dans ton classeur. Tu as ${ownedCount} copie${ownedCount > 1 ? "s" : ""} dans cette variante.`
+                ? variant === "live"
+                  ? `${creator.displayName} a été obtenu pendant un direct. Tu as ${ownedCount} exemplaire${ownedCount > 1 ? "s" : ""} de cette variante souvenir.`
+                  : `${creator.displayName} est déjà dans ton classeur. Tu as ${ownedCount} copie${ownedCount > 1 ? "s" : ""} dans cette variante.`
                 : `${creator.displayName} n'est pas encore dans ton classeur.`}
             </div>
 
@@ -127,14 +129,20 @@ export function CardInspectModal({
             ) : null}
 
             {liveStream ? (
-              <div className="odds-stat">
-                <span>Direct</span>
-                <strong>
-                  <Sparkles size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
-                  {liveStream.title ? `${liveStream.title} · ` : ""}
-                  {viewersLabel(liveStream.viewers)}
-                </strong>
-              </div>
+              <>
+                <div className="odds-stat">
+                  <span>En direct maintenant</span>
+                  <strong>
+                    <Sparkles size={14} style={{ verticalAlign: "middle", marginRight: 6 }} />
+                    {liveStream.title ? `${liveStream.title} · ` : ""}
+                    {viewersLabel(liveStream.viewers)}
+                  </strong>
+                </div>
+                <a className="inspect-twitch-link" href={`https://www.twitch.tv/${creator.login}`}
+                  target="_blank" rel="noopener noreferrer">
+                  <ExternalLink size={15} aria-hidden="true" /> Ouvrir le live sur Twitch
+                </a>
+              </>
             ) : null}
           </div>
 

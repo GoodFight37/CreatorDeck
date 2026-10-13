@@ -114,7 +114,7 @@ export function CreatorCard({
     <article
       className={`creator-card rarity-${creator.rarity} variant-${variant} ${shiny ? "is-shiny" : ""} ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
       style={style}
-      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", variante Live" : ""}${liveStream ? ", en direct sur Twitch" : ""}`}
+      aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", carte obtenue pendant un direct" : ""}${liveStream ? ", en direct sur Twitch maintenant" : ""}`}
       onPointerMove={trackPointer}
       onPointerLeave={() => {
         const foil = foilRef.current;
@@ -152,16 +152,18 @@ export function CreatorCard({
               confondre avec la variante Live : la variante est une matière de
               carte, le direct est un fait. Deux endroits, deux formes. */}
           {liveStream ? (
-            <span className={`card-on-air${compact ? " is-dot" : ""}`}>
+            <span className={`card-on-air${compact ? " is-dot" : ""}`}
+              title={`En direct maintenant sur Twitch${liveStream.title ? ` : ${liveStream.title}` : ""}`}
+              aria-label={`En direct maintenant sur Twitch${liveStream.title ? ` : ${liveStream.title}` : ""}`}>
               <i aria-hidden="true" />
               {compact ? null : "Direct"}
             </span>
           ) : null}
         </div>
         {variant === "live" ? (
-          <span className="card-live">
+          <span className="card-live" title="Carte obtenue pendant un direct Twitch" aria-label="Obtenue pendant un direct Twitch">
             <i aria-hidden="true" />
-            Live
+            {compact ? "Acquis live" : "Obtenue en direct"}
           </span>
         ) : null}
       </div>

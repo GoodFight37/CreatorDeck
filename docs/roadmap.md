@@ -17,6 +17,14 @@ success 5/5 ; statut Vercel success. Le test cloud cadeau qui avait échoué sur
 le premier commit Corner Peek est maintenant vert après exclusion des boosters
 de bienvenue de cette interaction.
 
+### Provenance Live clarifiée — 13 octobre
+
+K-048 corrigé : la carte conserve sa variante souvenir et dit « Obtenue en
+direct », tandis que le badge « En direct maintenant » et l’action Twitch
+n’apparaissent que lorsqu’un snapshot frais est disponible. Aucun SQL ni modèle
+de donnée modifié. 124 tests d’écrans, typecheck, lint et build réussis localement ;
+CI/Vercel de ce lot à relever après push. Voir D-073 et K-048.
+
 ### Corner peek — livré localement le 13 octobre
 
 Sur la cinquième carte garantie d’un booster ordinaire, tirer le coin haut droit

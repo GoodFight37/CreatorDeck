@@ -1,3 +1,24 @@
+## Provenance Live distinguée du stream actif — 13 octobre 2026
+
+Reprise du problème K-048 après la clôture du Corner Peek. La carte garde sa
+variante persistée `live` pour son futur habillage, mais le libellé n’annonce
+plus un direct en cours : carte complète « Obtenue en direct », format compact
+« Acquis live », fiche détaillant la provenance. Le badge « En direct maintenant »
+vient uniquement du `liveStream` frais et la fiche propose alors un lien externe
+`https://www.twitch.tv/<login>`. Avec un stream terminé/périmé, la provenance
+reste mais ni statut courant ni lien ne sont affichés. Aucune migration, aucune
+modification à l’économie.
+
+Fichiers : `src/components/creator-card.tsx`,
+`src/components/card-inspect-modal.tsx`, `src/app/globals.css`, nouveau
+`src/ecrans-live-provenance.test.tsx`; docs : décisions D-073, K-048, roadmap.
+Tests adaptés : test nouveau 2/2 ; `npm run ecrans` 21 fichiers / 124 tests ;
+`npm run typecheck`, `npm run lint` et `npm run build` passent. La fiche ouvre
+un URL HTTPS Twitch (qui laisse l’OS ouvrir l’app Twitch si ses liens universels
+sont configurés), aucun schéma `twitch://` n’est forcé ni vérifié sur téléphone.
+À l’instant du checkpoint le lot est local, non commit/non poussé ; HEAD main et
+origin/main avant modification = `fb8008996d30e1f0b8938adfff15287d2f401e44`.
+
 ## Corner peek sur la carte garantie — 13 octobre 2026
 
 Suite au « Go » de Malik : seule la cinquième carte garantie du reveal d’un

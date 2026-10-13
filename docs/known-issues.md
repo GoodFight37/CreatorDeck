@@ -24,8 +24,12 @@ Malik remarque que la carte d’Étoile porte toujours « Live » alors qu’il 
 streame plus. Le code sépare bien la variante `live` persistée à l’obtention
 du direct actuel `liveStream` ; le badge persistant constitue une provenance
 utile pour le futur visuel alternatif. Ce n’est pas une preuve qu’Étoile est en
-direct maintenant. Aucun composant Binder modifié ; clarifier plus tard le
-libellé de provenance et maintenir un indicateur séparé pour le direct réel.
+direct maintenant. Corrigé : le badge indique « Obtenue en direct » (compact :
+« Acquis live »), la fiche explique la provenance, et un stream frais apparaît
+séparément comme « En direct maintenant » avec un lien Twitch. Sans snapshot frais,
+aucun statut ni lien actif n’est rendu. D-073 ; tests écran 2/2, suite écrans,
+typecheck, lint et build vérifiés. SHA/code/CI définitifs dans le checkpoint de
+passation.
 
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
@@ -166,7 +170,7 @@ téléphone simulé verts ; publication/CI dans la passation.
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|
 | K-049 | Faible, fiabilité de la CI navigateur | Corrigé et publié dans `ac6ff4b6` ; CI `38400588529` verte | Run `38397134313` : six Playwright rouges, avec des retries d’une minute et attentes d’ancienne UI. | Hint Drop restauré ; attentes Scène/Tribunal alignées sur l’UI demandée sans supprimer de contrôle ; Playwright séparé en deux shards parallèles, même couverture. Deux shards locaux : 41 passés + 5 cloud ignorés chacun. Nouveau run : 5/5 jobs verts en 2 min 31 s, contre 10 min 12 s précédemment. |
-| K-048 | Faible, libellé/provenance Live | Diagnostic confirmé ; texte à choisir plus tard | Une carte d’Étoile garde « Live » après la fin de son direct. | `variant: "live"` est la provenance persistée de la carte ; `liveStream` est l’état Twitch actuel séparé. Garder la variante pour le futur design alternatif et clarifier le badge. Aucun changement Binder dans ce lot. |
+| K-048 | Faible, libellé/provenance Live | Corrigé dans le lot du 13 octobre ; publication/CI à relever | Une carte d’Étoile garde « Live » après la fin de son direct. | La variante persistée est désormais libellée « Obtenue en direct » ; `liveStream` reste l’état actuel. La fiche distingue la provenance et n’offre le lien Twitch que si le snapshot est frais. D-073 ; tests écran 2/2, 124 tests écran au total, lint/typecheck/build locaux réussis. |
 | K-046 | Faible, tactile/révélation | Corrigé et publié sur `main` (`3f33b19`) ; CI `38251607393` verte | Toucher « Révéler la suivante » pendant le retournement animait le bouton mais n’avançait pas ; il fallait toucher une seconde fois. | La fermeture d’`animationend` ne voyait pas l’appui arrivé après son rendu initial. Une référence synchronisée retient un seul appui par carte et le consomme à la fin du flip ou du filet de sécurité. Perfect/verrou inchangés. Régression DOM 16/16 ; suite E2E bureau/téléphone et cloud simulé verte. |
 | K-045 | Moyenne, style et qualité des portraits | Lot complet intégré le 12 octobre (`10699eb`) ; améliorations individuelles possibles | 300 manuels, 699 Upscayl et Diverron restauré IA ; les 1 000 routes existent mais ne prouvent pas 1 000 portraits nets et vérifiés. | CI complète et Vercel réussis. Sources/licences des imports souvent absentes, détails IA reconstruits ; avatars génériques acceptés par Malik (K-044). |
 | K-044 | Choix visuel accepté | Clos le 12 octobre, instruction explicite de Malik | SolaryHS, j0niq et toaststix gardent leur avatar générique. | Sans photo de profil, conserver l’avatar générique ; aucune recherche/remplacement demandé. Ce n’est plus un bug ni une tâche de roadmap. |

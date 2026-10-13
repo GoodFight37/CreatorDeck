@@ -1101,6 +1101,23 @@ input:focus-visible {
   animation: none;
 }
 
+.inspect-twitch-link {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid rgb(var(--accent-rgb) / .55);
+  border-radius: 6px;
+  color: var(--accent-light);
+  background: rgb(var(--accent-rgb) / .12);
+  font-weight: 700;
+  text-decoration: none;
+}
+.inspect-twitch-link:hover { background: rgb(var(--accent-rgb) / .2); }
+.inspect-twitch-link:focus-visible { outline: 2px solid var(--accent-light); outline-offset: 3px; }
+
 /*
  * La pastille « en direct ». Elle vit sur plusieurs dizaines d'éléments à la
  * fois (chaque carte Live, chaque bandeau) et **toutes en phase** : une
@@ -1439,7 +1456,7 @@ input:focus-visible {
 .creator-card.is-compact .card-nameplate h3 { font-size: clamp(12px, 4.4vw, 17px); }
 .creator-card.is-compact .card-footerline { display: none; }
 .creator-card.is-compact .card-rank { font-size: clamp(10px, 3.2vw, 13px); }
-.creator-card.is-compact .card-live { padding: 2px 5px; letter-spacing: .06em; }
+.creator-card.is-compact .card-live { padding: 2px 4px; font-size: clamp(8px, 2vw, 9px); letter-spacing: .025em; }
 .creator-card.is-compact .card-live i { width: 4px; height: 4px; }
 
 
