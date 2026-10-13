@@ -169,6 +169,9 @@ export function CreatorDeckApp() {
       if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest(
         "button, a, input, select, textarea, [role='button'], [role='switch']",
       )) return;
+      // The onboarding's Continue/Finish buttons are not game controls; keep
+      // the audio request tied to the first action in the actual game hub.
+      if (event.target.closest(".welcome-overlay")) return;
       startGameAudio("hub");
       window.removeEventListener("pointerdown", startOnFirstControl, true);
       window.removeEventListener("keydown", startOnFirstControl, true);

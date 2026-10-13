@@ -263,7 +263,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(open).toBeVisible({ timeout: 30_000 });
   const homeArt = page.locator(".pack-stage .pack-foil-image");
   await expect(homeArt).toBeVisible();
-  await expect(homeArt).toHaveAttribute("src", "/packs/live-foil.svg");
+  await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.svg");
   await expect(page.locator(".pack-stage .pack-3d-side")).toHaveCount(3);
   await expect(page.locator(".pack-stage .pack-specular")).toBeAttached();
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName))
