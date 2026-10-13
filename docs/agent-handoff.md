@@ -16,8 +16,11 @@ Tests adaptés : test nouveau 2/2 ; `npm run ecrans` 21 fichiers / 124 tests ;
 `npm run typecheck`, `npm run lint` et `npm run build` passent. La fiche ouvre
 un URL HTTPS Twitch (qui laisse l’OS ouvrir l’app Twitch si ses liens universels
 sont configurés), aucun schéma `twitch://` n’est forcé ni vérifié sur téléphone.
-À l’instant du checkpoint le lot est local, non commit/non poussé ; HEAD main et
-origin/main avant modification = `fb8008996d30e1f0b8938adfff15287d2f401e44`.
+Publication : [`a39dc6e5`](https://github.com/GoodFight37/CreatorDeck/commit/a39dc6e5a35d266219a5dfd7f10af996b87a5ff6),
+HEAD distant `main` vérifié identique. CI
+[`38410082291`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38410082291)
+**success, 5/5 jobs** ; Vercel **success** :
+[`CLF2nYBNPmShtYniXji5LQ51DmdV`](https://vercel.com/hafsi37-2386/creator-deckk/CLF2nYBNPmShtYniXji5LQ51DmdV).
 
 ## Corner peek sur la carte garantie — 13 octobre 2026
 

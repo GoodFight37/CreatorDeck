@@ -22,8 +22,9 @@ de bienvenue de cette interaction.
 K-048 corrigé : la carte conserve sa variante souvenir et dit « Obtenue en
 direct », tandis que le badge « En direct maintenant » et l’action Twitch
 n’apparaissent que lorsqu’un snapshot frais est disponible. Aucun SQL ni modèle
-de donnée modifié. 124 tests d’écrans, typecheck, lint et build réussis localement ;
-CI/Vercel de ce lot à relever après push. Voir D-073 et K-048.
+de donnée modifié. 124 tests d’écrans, typecheck, lint et build réussis localement.
+Code `a39dc6e5` publié ; GitHub `38410082291` success 5/5 et Vercel success.
+Voir D-073 et K-048.
 
 ### Corner peek — livré localement le 13 octobre
 
