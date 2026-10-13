@@ -23,13 +23,32 @@ restent non cliquables ; ni chaîne ancienne ni stream périmé ne sont proposé
 Le lancement de l’app Twitch dépend des liens universels configurés sur le
 téléphone, et n’est pas garanti. Ce choix de lien public n’est pas un avis
 juridique ni une confirmation officielle de Twitch. Test écran adapté 2/2 ;
-voir D-074. Cette extension locale reste à committer/publier et sa CI reste à
-relever après publication.
-Publication : [`a39dc6e5`](https://github.com/GoodFight37/CreatorDeck/commit/a39dc6e5a35d266219a5dfd7f10af996b87a5ff6),
+voir D-074. Le correctif du badge compact est publié avec le commit
+[`0e53fa6c`](https://github.com/GoodFight37/CreatorDeck/commit/0e53fa6cc383353eb63f5c16dcb676956d985f83).
 HEAD distant `main` vérifié identique. CI
-[`38410082291`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38410082291)
-**success, 5/5 jobs** ; Vercel **success** :
-[`CLF2nYBNPmShtYniXji5LQ51DmdV`](https://vercel.com/hafsi37-2386/creator-deckk/CLF2nYBNPmShtYniXji5LQ51DmdV).
+[`38411066062`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411066062)
+**success, 5/5 jobs** (3 min 26 s) ; le workflow Supabase
+[`38411556260`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411556260)
+**success** (25 s) ; Vercel **success** :
+[`EmvsSBTbyvsSjoY1RgyHbRcvZ13o`](https://vercel.com/hafsi37-2386/creator-deckk/EmvsSBTbyvsSjoY1RgyHbRcvZ13o).
+
+## Audit de pistes portraits — branche séparée, 13 octobre 2026
+
+La branche
+[`fcc/revue-portraits-50`](https://github.com/GoodFight37/CreatorDeck/tree/fcc/revue-portraits-50)
+est poussée jusqu’au commit
+[`297f049b`](https://github.com/GoodFight37/CreatorDeck/commit/297f049b0a27f192b3a757ff0df3ba6578317d30),
+qui descend de `main` `0e53fa6c`. Elle conserve l’audit de 50 pistes dans
+`manifeste.csv`, son brief et un index de revue. Résultats : 40 sans source
+adéquate, 5 droits à vérifier, 4 utilisables sous conditions d’attribution et
+1 entrée organisation ESLCS. Rubius et Shroud sont les deux pistes déjà
+intégrées ; AdinRoss et Rivers restent des pistes non intégrées. Les fichiers
+image candidats ne sont pas dans cette branche et aucune nouvelle image n’est
+approuvée. Garder cette recherche séparée de `main` jusqu’à une sélection
+visuelle et une vérification des droits ; les statuts du manifeste ne sont pas
+une autorisation juridique. Le diff de branche a passé `git diff --check` ;
+aucun test produit n’est pertinent pour ces seuls fichiers d’audit. Le travail
+n’est donc pas fusionné ni inclus dans l’app publiée.
 
 ## Corner peek sur la carte garantie — 13 octobre 2026
 

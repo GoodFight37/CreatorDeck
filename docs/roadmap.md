@@ -2,20 +2,21 @@
 
 ## État courant — 13 octobre 2026
 
-Référence publiée : code `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd`, complété
-par le checkpoint documentaire `c21684377dfcc4f54c5864fb3a37a21149d35b9d`
-(SHA distant vérifié). Le run de correction CI
-[38400588529](https://github.com/GoodFight37/CreatorDeck/actions/runs/38400588529)
-est vert, 5/5 jobs en 2 min 31 s (contre 10 min 12 s au run précédent).
-Vercel est aussi success sur ce SHA.
+Référence publiée : `main` à `0e53fa6cc383353eb63f5c16dcb676956d985f83`
+(SHA distant vérifié). Le badge compact de direct ouvre maintenant la chaîne
+Twitch lorsque le snapshot est frais ; la CI
+[38411066062](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411066062)
+est verte, 5/5 jobs en 3 min 26 s. Le workflow Supabase
+[38411556260](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411556260)
+et Vercel sont aussi success sur ce SHA.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
-Checkpoint suivant : code `95db6b6f9e59de5c7a623f1e462b3dbf2a144223` sur `main`.
-Run GitHub [`38408591588`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38408591588)
-success 5/5 ; statut Vercel success. Le test cloud cadeau qui avait échoué sur
-le premier commit Corner Peek est maintenant vert après exclusion des boosters
-de bienvenue de cette interaction.
+Le travail portrait est également suivi séparément sur
+[`fcc/revue-portraits-50`](https://github.com/GoodFight37/CreatorDeck/tree/fcc/revue-portraits-50),
+dernier commit `297f049b`. Cette branche ne contient pas les images candidates ;
+aucune nouvelle image n’est approuvée et rien n’est fusionné dans `main`.
+Voir le checkpoint détaillé dans [la passation](agent-handoff.md).
 
 ### Provenance Live clarifiée — 13 octobre
 
@@ -27,6 +28,11 @@ de l’app native dépend des liens universels du téléphone. Aucun SQL ni mod�
 de donnée modifié. Test écran ciblé réussi localement.
 Code `a39dc6e5` publié ; GitHub `38410082291` success 5/5 et Vercel success.
 Voir D-073 et K-048.
+
+Le correctif ultérieur rend également le badge compact « Direct » cliquable
+quand les données du stream sont fraîches. Publié dans `0e53fa6c` ; CI GitHub
+`38411066062` success 5/5 et Vercel success. Les badges de provenance restent
+non cliquables.
 
 ### Corner peek — livré localement le 13 octobre
 
