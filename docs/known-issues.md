@@ -1,3 +1,13 @@
+## Attentes E2E devenues obsolètes — corrigées localement, 13 octobre 2026
+
+Le run `38477480148` sur `00b22d4b` a échoué sur trois attentes de tests : nom
+du bouton d’avancement du reveal, panneau « Fonctionnalités en ligne » replié,
+et portraits testés depuis la mauvaise vue initiale du Binder. Les assertions
+ont été adaptées sans retirer de couverture ; le chargement réel des portraits
+continue d’être vérifié. Lint et suite E2E complète locaux : 89 passés, 11
+scénarios cloud ignorés, zéro échec ; cadeau cloud simulé : 2/2. À confirmer par
+la CI du nouveau commit.
+
 ## Couche audio et hiérarchie de jeu — publiée, CI en cours, 13 octobre 2026
 
 La première boucle musicale et les réglages associés sont vérifiés localement ;

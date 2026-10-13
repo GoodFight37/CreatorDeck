@@ -1,3 +1,21 @@
+## Réparation des tests E2E après CI — 13 octobre 2026
+
+Le run `38477480148` du SHA `00b22d4b` a révélé des attentes obsolètes dans les
+tests, sans régression produit : le bouton d’avancement du reveal s’appelle
+« Carte suivante » ; « Mon compte » se trouve dans le panneau en ligne replié ;
+et le Binder démarre sur une collection alors que les portraits vérifiés sont
+dans « Dernières reçues ». Le scénario cloud cadeau utilisait lui aussi
+l’ancien libellé d’action. Les trois tests ont été alignés sur l’interface
+existante, en gardant les assertions de comportement et de chargement d’image.
+
+Vérification locale : `npm run lint` réussi ; E2E complets **89 réussis / 11
+ignorés** (scénarios cloud non configurés dans la suite normale, zéro échec).
+Le parcours cloud cadeau, lancé avec les valeurs factices prévues par le
+workflow, passe **2/2** sur bureau et téléphone ; les appels RPC restent
+interceptés. Aucun fichier produit, animation ou donnée n’a été modifié. Les
+changements sont publiés dans le commit de tests suivant ; statut CI à relever
+après le push.
+
 ## Sensation de jeu A → E — publié, CI en cours, 13 octobre 2026
 
 Base contrôlée : `736c3f7d4e7ee0f44cc70c59ed05a0f24216e7d1`. Publié sur `main`

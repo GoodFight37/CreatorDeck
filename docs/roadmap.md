@@ -2,11 +2,10 @@
 
 ## État actuel — 13 octobre 2026
 
-**État du code :** `main` publié sur `00b22d4b` pour le chantier sensation de
-jeu décrit ci-dessous. Les contrôles locaux sont verts ; la CI GitHub
-[`38477480148`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38477480148)
-est encore en file d’attente. Voir le [checkpoint](agent-handoff.md) pour les
-preuves et limites exactes.
+**État du code :** `main` contient le chantier sensation de jeu et le correctif
+des tests E2E pour l’interface actuelle. E2E locaux : 89 réussis, 11 scénarios
+cloud ignorés ; CI du commit correctif à vérifier après publication. Voir le
+[checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
   13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose
