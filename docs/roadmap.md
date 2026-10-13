@@ -2,24 +2,15 @@
 
 ## État courant — 13 octobre 2026
 
-Base de la branche prototype : `main` `f93ffcc8ed2f31c6def11e14f08f14a105d41865`,
-après `e184f5d` et son suivi documentaire. La vérification du commit de code
-[38441932774](https://github.com/GoodFight37/CreatorDeck/actions/runs/38441932774)
-est verte, 5/5 ; Supabase
-[38442505857](https://github.com/GoodFight37/CreatorDeck/actions/runs/38442505857)
-est success. Depuis, `origin/main` a avancé à
-`b4d08e5802b72f6d75e44bc31be853dae4ea0c26` avec une étude exploratoire de
-croissance du catalogue ([rapport sur main](https://github.com/GoodFight37/CreatorDeck/blob/main/docs/audit-croissance-catalogue.md)).
-Cette simulation locale n’ajoute aucune identité au jeu et ne change ni les taux
-ni les RPC ; elle n’est pas intégrée à la branche du prototype pour garder le
-livrable isolé. `origin/main` est depuis passé aux checkpoints documentaires
-`26def354` et `5dbdb4c` (dernière HEAD observée `5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`).
-CI du commit fonctionnel `b4d08e5` :
+Dernier jalon fonctionnel vérifié : l'étude sur l'agrandissement du catalogue,
+publiée dans `b4d08e5802b72f6d75e44bc31be853dae4ea0c26` ; le checkpoint de
+publication documentaire est `26def354313af3700bbb403bf3718139eac5e689`.
+L'étude est une simulation exploratoire ; elle ne modifie ni les taux, ni les
+cartes du jeu. Voir [l'étude et ses résultats](audit-croissance-catalogue.md).
+La vérification GitHub
 [38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
-verte, 5/5 jobs ; Supabase
-[38444683090](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444683090)
-success. Le badge compact de direct ouvre maintenant la chaîne Twitch lorsque
-le snapshot est frais.
+est verte, 5/5 blocs. Le badge compact de direct ouvre la chaîne Twitch lorsque
+le snapshot est frais ; les validations de ce jalon sont archivées plus bas.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
@@ -120,16 +111,17 @@ aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
    Reste l’appréciation du rendu/rythme sur téléphone réel : les tests ne sont
    pas un verdict esthétique et le rendu n’est pas présenté comme « Pocket ».
 2. **Cadrer l’extension du catalogue**, idée de Malik : créateurs Twitch et,
-   éventuellement, personnages fictifs. Le prototype isolé `/catalogue-demo`
-   permet de comparer un classeur mixte et un classement indépendant par
-   univers ; noms fictifs et visuels temporaires explicitement marqués. Validé
-   localement : 8/8 E2E, 1 164 tests unitaires, 124 tests d’écran, typecheck,
-   lint ciblé et build. La CI GitHub de la branche
-   [38444219083](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444219083)
-   est verte, 5/5 jobs. Le prototype ne modifie pas les données du jeu et ne
-   valide ni l’ajout d’identités réelles, ni des licences, ni le modèle de
-   progression final. Prochaine étape : retour sur l’interface et cadrage
-   explicite des univers/règles avant tout branchement en production.
+   éventuellement, personnages fictifs. L’[étude de croissance](audit-croissance-catalogue.md)
+   mesure 1 000→1 500/2 000/3 000 cartes à taux inchangés avec des identifiants
+   synthétiques ; elle ne modifie ni l’économie ni les règles et ne modélise pas
+   les personnages fictifs. Séparément, le prototype isolé `/catalogue-demo`
+   compare un classeur mixte et des classements distincts par univers, avec noms
+   fictifs et visuels temporaires marqués. Revalidation locale après reprise sur
+   `main` `5dbdb4c` : E2E 8/8, unitaires 1 164/1 164, écrans 124/124, typecheck,
+   lint ciblé, `catalog:ci`, simulation déterministe (24 lignes identiques au
+   JSONL archivé) et build statique réussis. Aucun contenu réel/licencié n’est
+   intégré au jeu. Prochaine étape : retour sur l’interface et cadrage explicite
+   des univers/règles avant tout branchement en production.
 3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
    courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
    deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et
@@ -562,7 +554,7 @@ L'utilisateur a exécuté avec succès `npm run progression:bilan` sous Windows,
 
 **Interprétation prudente :** l'accumulation de doublons s'accélère fortement après plusieurs centaines de tirages ; le Craft, les jetons et les échanges sont donc cruciaux. Les valeurs de recyclage supposent que chaque doublon de créateur puisse être recyclé, **ce qui ne reproduit pas exactement la règle réelle** : le moteur distingue les variantes (Standard/Live/Holo/Gold), et protège notamment les Live du recyclage de masse. Les points sont des valeurs théoriques maximales dans ce modèle, non des revenus réels. Pas de Paquet Scène, pas de ciblage familial, pas de variations Live/Holo/Gold, pas de bonus Direct, pas de Craft, pas de missions, pas de dépenses, pas de simulation Supabase. Les résultats ne sont pas des mesures du moteur ni de l'application en production.
 
-**Suite de simulation locale réalisée depuis cette estimation :** le script décrit plus haut appelle désormais `game-engine.ts` et couvre variantes, Paquet Scène, recyclage réel, Craft, missions/jalons/saisons et achats en jetons, avec des tirages seedés. Les horaires ont été alignés sur l'heure locale et 100 répétitions par scénario sont consignées dans [l'audit](audit-progression.md). Restent hors mesure la comparaison aux RPC Supabase, la complétion par famille et le temps d'obtention d'une carte ciblée. Aucun taux n'a été modifié sur la base de ces simulations.
+**Suite de simulation locale réalisée depuis cette estimation :** le script décrit plus haut appelle désormais `game-engine.ts` et couvre variantes, Paquet Scène, recyclage réel, Craft, missions/jalons/saisons et achats en jetons, avec des tirages seedés. Les horaires ont été alignés sur l'heure locale et 100 répétitions par scénario sont consignées dans [l'audit](audit-progression.md). La comparaison de catalogues agrandis, la complétion moyenne par famille et l'acquisition d'une cible par rareté sont maintenant mesurées séparément dans [l'étude de croissance](audit-croissance-catalogue.md). Ces scénarios restent indépendants du moteur et du serveur ; aucun taux n'a été modifié.
 
 
 Simulation exploratoire indépendante (et **non** exécution du moteur TypeScript ni du serveur). Hypothèses : stock initial 2, réserve maximale 4, recharge naturelle 1/30 min, visites fixes chaque jour (occasionnel 12 h/21 h, régulier 8 h/13 h/20 h, intensif 7 h/10 h/13 h/16 h/19 h/22 h), sans sabliers. Les ouvertures sont distribuées entre visites ; chaque scénario arrive à ouvrir ses 2, 6 ou 12 boosters Live quotidiens. Le Prime Time est compté seulement sur les ouvertures à 20 h. Points et jetons incluent les six petites récompenses de série, répétées chaque semaine, **sans** bonus de jalons, saisons, recyclage, missions, Paquet Scène, Perfect ni dépenses. Les chiffres sont des scénarios conditionnels, pas une prédiction des habitudes réelles.

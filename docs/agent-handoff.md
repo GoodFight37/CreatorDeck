@@ -2608,6 +2608,60 @@ réussie. ESLint ciblé, typecheck (après mise de côté temporaire du cache `.
 stale de l'autre branche) et `git diff --check` réussis. Pas de test Supabase.
 Le prototype catalogue d'Arena et le pilote portraits restent séparés.
 
+## Étude d'agrandissement du catalogue — 13 octobre 2026
+
+À la demande de Malik, comparer le catalogue actuel à 1 500, 2 000 et 3 000
+cartes avec les taux inchangés, pour éclairer les futurs ajouts. Branche de
+travail `codex/catalog-growth-study`, basée sur `main` vérifié à
+`f93ffcc8ed2f31c6def11e14f08f14a105d41865`. Quatre éléments locaux :
+`scripts/catalogue-growth-simulation.ts`, commande `npm run catalogue:growth`,
+`docs/audit-croissance-catalogue.md` et les résultats bruts
+`docs/audits/catalogue-growth-300.jsonl`. Aucune entrée/identité/image n'a été
+ajoutée au catalogue du jeu et aucun taux, économie ou RPC n'a été modifié.
+
+Le modèle réutilise les tables de rareté actuelles et les familles ; les ajouts
+sont des identifiants synthétiques répartis au prorata. 300 parties seedées par
+cas, soit 7 200 trajectoires (4 tailles × 3 rythmes × 2 durées), simulent 2, 6
+ou 12 Live par jour et une Scène par jour pendant 30/90 jours. Il suit les
+cartes uniques, la part de collection, la complétion des familles et les chances
+d'acquérir une cible choisie au hasard dans une rareté. Limites : outil Monte
+Carlo indépendant, ni moteur par carte ni RPC Supabase ; pas de Craft, échanges,
+missions, récompenses, Direct, variantes ou recharge de réserve. Les paquets
+quotidiens sont supposés ouverts.
+
+Résultat principal : avec les règles inchangées, un grand catalogue augmente le
+nombre absolu de cartes collectées, mais réduit la part complétée et les chances
+de trouver une cible précise, surtout pour le profil occasionnel. À 3 000 cartes,
+la cible Légendaire tirée au hasard est obtenue avant 90 jours dans 23,3 % des
+parties occasionnelles contre 54 % à 1 000 cartes. Recommandation exploratoire :
+ne pas verser plusieurs milliers de cartes d'un seul coup sans présenter des
+objectifs/saisons lisibles et sans décider si de nouvelles familles/contenus
+ont une progression distincte. Ce n'est pas une décision d'équilibrage.
+La famille S09, deux cartes aujourd'hui, atteint six dans le scénario 3 000 et
+devient admissible au Paquet Scène ; c'est une conséquence de l'hypothèse de
+répartition, pas une promesse de contenu.
+
+Contrôles locaux : `npm run catalogue:growth -- --runs=300 --seed=20261013`
+(24 lignes JSON, 300 parties chacune), `npx eslint
+scripts/catalogue-growth-simulation.ts`, `npm run typecheck` (cache `.next`
+stale déplacé temporairement puis restauré), validation JSONL et
+`git diff --check`. Résultats SHA-256
+`00a2b06754e0aacbdd3f36dc946543c787520e0cd198bcce1e9625cc67f1afa1`.
+Comparaison de cohérence avec le moteur de progression précédent : les moyennes
+sur 30 jours diffèrent de moins de deux cartes uniques. Pas de test de bout en
+bout ou cloud requis pour cette analyse autonome.
+
+Publié normalement sur `main` après vérification du parent distant. Commit
+`b4d08e5802b72f6d75e44bc31be853dae4ea0c26`, SHA distant confirmé par
+`git ls-remote`. La vérification GitHub
+[38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
+est terminée avec 5/5 blocs réussis : SQL jetable, tests unitaires/écrans/
+statique/build, deux lots Playwright et parcours cloud à RPC simulés. Le
+workflow émet un avertissement d'obsolescence Node 20 des actions, mais aucun
+échec. L’étude chiffrée, le prototype d’interface et le chantier portraits sont
+des livrables distincts ; le rapport ne modélise pas les personnages fictifs et
+ne prescrit aucune règle de progression produit.
+
 ## Comparateur de catalogue multi-univers — 13 octobre 2026
 
 ### Demande, décision et périmètre
@@ -2639,16 +2693,18 @@ CI GitHub [`38444219083`](https://github.com/GoodFight37/CreatorDeck/actions/run
 le test de chemin cloud utilise des RPC simulés ; aucune migration ni écriture
 sur Supabase de production.
 
-Pendant la clôture, `origin/main` a avancé de `f93ffcc` au commit fonctionnel
+`main` a avancé de `f93ffcc` au commit fonctionnel
 `b4d08e5802b72f6d75e44bc31be853dae4ea0c26` (étude de croissance), puis aux
-checkpoints documentaires `26def354` et `5dbdb4c`; la dernière HEAD observée est
-`5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`. Le code de l’étude ajoute une
-simulation Monte-Carlo locale de catalogues synthétiques, son script de commande
-et ses rapports, sans modifier les identités publiées, les taux ou les RPC.
-La CI du commit fonctionnel `b4d08e5` (`38444258514`) est success, 5/5 jobs ; le
-workflow Supabase (`38444683090`) est success. Commits examinés mais non fusionnés
-dans la branche du prototype, pour garder ce livrable isolé et ne pas mélanger
-l’étude parallèle. La branche reste basée sur `f93ffcc`.
+checkpoints documentaires `26def354` et `5dbdb4c`; la base demandée pour cette
+reprise est `5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`. Les changements amont
+ont été fusionnés normalement dans Arena, sans réécrire l’historique. Le rapport,
+le JSONL, `scripts/catalogue-growth-simulation.ts` et la commande
+`npm run catalogue:growth` sont conservés tels quels. Il s’agit d’une simulation
+locale à identifiants synthétiques, sans modification du catalogue publié, des
+taux, de l’économie ou des RPC ; elle reste distincte du prototype d’interface.
+La CI du commit fonctionnel `b4d08e5` (`38444258514`) et le workflow Supabase
+(`38444683090`) étaient verts avant cette réconciliation ; les contrôles de la
+branche après fusion restent à relancer.
 
 Fichiers du prototype :
 - `src/app/catalogue-demo/page.tsx` — entrée de route statique ;
@@ -2670,6 +2726,40 @@ Fichiers du prototype :
 - `git diff --check` : succès.
 
 `npm ci` a réussi (610 paquets ; lockfile inchangé) mais a signalé 16 vulnérabilités des dépendances (4 modérées, 10 élevées, 2 critiques) ; aucun audit correctif ni changement de dépendance n’a été fait dans ce prototype.
+
+### Réconciliation avec `main` `5dbdb4c`
+
+La branche publiée a été mise à jour par un merge normal, sans réécriture
+d’historique ; les conflits étaient limités à `docs/roadmap.md` et
+`docs/agent-handoff.md`. La roadmap conserve l’état du jalon de croissance de
+`main` et le prototype comme expérience d’interface distincte. La passation
+conserve l’étude complète, ses hypothèses, résultats, limites et empreinte
+JSONL, puis le checkpoint du prototype. Les fichiers amont de l’étude et la
+commande `npm run catalogue:growth` sont restés inchangés.
+
+Revalidation locale après intégration :
+- `npm test` : **73 fichiers, 1 164/1 164** ; les diagnostics stderr des
+  fixtures négatives de génération restent attendus, code de sortie 0.
+- `npm run ecrans` : **21 fichiers, 124/124**.
+- E2E ciblé : **8/8**, bureau et téléphone simulé, fenêtres 320–412 px ; le
+  serveur de test a utilisé le port 3001, le port 3000 étant réservé à l’aperçu.
+- `npm run typecheck`, lint ciblé du prototype et du script de croissance,
+  `node scripts/check-jargon.mjs`, `npm run catalog:ci` : succès.
+- `npm run catalogue:growth -- --runs=300 --seed=20261013` : 24 lignes JSONL ;
+  sortie identique à `docs/audits/catalogue-growth-300.jsonl`, SHA-256
+  `00a2b06754e0aacbdd3f36dc946543c787520e0cd198bcce1e9625cc67f1afa1`.
+- `npm run build` : succès ; `/catalogue-demo` est pré-rendue en statique. Seul
+  avertissement : variables publiques Supabase absentes dans l’environnement
+  local, sans configuration ajoutée.
+- Axe-core 4.14.0 : 0 violation, 28 règles passées à 1280×900, 390×844 et
+  320×844 ; les 149 éléments de contraste en arrière-plan dégradé restent à
+  vérifier manuellement. Ratios représentatifs : 8,46:1–18,10:1 ; ce n’est pas
+  un audit RGAA exhaustif.
+- `git diff --check` : succès après résolution des conflits et de la documentation.
+
+La CI GitHub complète du merge (y compris SQL jetable, E2E en shards et RPC
+simulés) reste à suivre après le push ; aucune migration de production n’a été
+lancée.
 
 ### Prévisualisation et suite
 
