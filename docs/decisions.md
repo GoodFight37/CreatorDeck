@@ -1,5 +1,16 @@
 # Décisions CreatorDeck
 
+## D-079 — 13 octobre 2026 : revalider un conflit avant l’usage d’un sablier
+
+Après un blocage dû à deux sauvegardes différentes, une tentative de sablier
+refait la comparaison en lecture seule. Si elles sont désormais réconciliées,
+le parcours automatique normal reprend ; si elles divergent encore, le débit
+reste bloqué jusqu’au choix dans Mon compte. Aucun push, pull ou merge forcé
+n’est ajouté. Motif : éviter qu’un ancien diagnostic de conflit persiste après
+une resynchronisation, tout en protégeant une progression potentiellement
+différente. Store cloud 159/159 et navigateur cloud simulé 2/2 ; CI du nouveau
+SHA à vérifier. Téléphone réel et sauvegarde du compte de Malik non inspectés.
+
 ## D-078 — 13 octobre 2026 : première couche musicale et rythme de jeu
 
 Le premier geste de booster déverrouille l'audio mobile et démarre une boucle

@@ -562,7 +562,10 @@ export function accountActions(ctx: CloudStoreContext) {
      * geste explicite du joueur, le seul endroit avec l'écran de conflit où
      * `p_force` est légitime.
      */
-    async sync(mode: "auto" | "push" | "pull" = "auto"): Promise<void> {
+    async sync(
+      mode: "auto" | "push" | "pull" = "auto",
+      options: { recheckConflict?: boolean } = {},
+    ): Promise<void> {
       const local = ctx.deps.readState();
       if (!local) return;
       if (mode === "push") return ctx.push(local.version, local.updatedAt, true);
@@ -571,7 +574,13 @@ export function accountActions(ctx: CloudStoreContext) {
       const api = ctx.resolve();
       if (!ctx.networkReady(api)) return;
       const userId = api.session()?.userId;
-      if (ctx.state().syncNeedsChoice) return;
+      if (ctx.state().syncNeedsChoice && !options.recheckConflict) return;
+      if (options.recheckConflict && ctx.state().syncNeedsChoice) {
+        // Un conflit déjà affiché peut avoir été résolu depuis (autre onglet,
+        // appareil ou reprise après mise à jour). Relire les deux côtés ne
+        // choisit ni ne pousse rien à lui seul ; le calcul normal décidera.
+        ctx.publish({ syncNeedsChoice: false, decision: null, message: null, isError: false });
+      }
       // Une dépense dont la réponse s'est perdue doit être rejouée avant
       // tout envoi de l'ancienne sauvegarde.
       if (ctx.deps.storage()?.getItem(`creatordeck:hourglass-request:${userId}`)) return;

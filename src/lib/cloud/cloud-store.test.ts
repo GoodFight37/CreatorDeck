@@ -603,6 +603,20 @@ describe("store cloud", () => {
     expect((await store.useHourglass()).status).toBe("done");
   });
 
+  it("revalide un conflit mémorisé avant de débloquer le sablier si les deux parties sont redevenues identiques", async () => {
+    const local = saveWith({ cards: [card("a", "kaicenat")], hourglasses: 2 });
+    const remote = saveWith({ cards: [card("b", "ibai")], hourglasses: 3 });
+    const { store, api } = harness({ local, remote: remoteRow(remote, SERVER_SAVE_AT) });
+    await store.sync("auto");
+    expect(store.getSnapshot().syncNeedsChoice).toBe(true);
+
+    api.pullSave.mockResolvedValueOnce(remoteRow(local, "2026-03-01T10:00:07Z"));
+    expect((await store.useHourglass()).status).toBe("done");
+    expect(api.pullSave).toHaveBeenCalledTimes(2);
+    expect(api.useHourglass).toHaveBeenCalledOnce();
+    expect(store.getSnapshot().syncNeedsChoice).toBe(false);
+  });
+
   it("un appareil vierge récupère la collection même si sa création locale est plus récente", async () => {
     const remote = saveWith({ cards: [card("a", "kaicenat")] });
     const { store, api, state } = harness({

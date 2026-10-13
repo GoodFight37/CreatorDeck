@@ -190,17 +190,15 @@ un geste planaire après flip. [Fichiers, preuves et limites](booster-continuum-
 Le jugement esthétique sur téléphone reste distinct des tests fonctionnels.
 
 
-K-040 — 11 octobre 2026 : copie cloud non reprise au démarrage, corrigé
-localement. Le message exact « sabliers : charge la sauvegarde du cloud dans
-Compte avant de synchroniser » vient du trigger `_guard_hourglass_spends`
-quand le compteur local ne correspond pas au registre serveur. La session était
-restaurée sans lecture de la sauvegarde ; le rafraîchissement de la réserve
-pouvait dater cette vieille copie plus récemment. Reprise automatique avant
-compteurs et envoi, comparaison avec la dernière version synchronisée,
-préservation des conflits réels et du rejeu. Test simulé : compteur local 0,
-serveur 1, horloge locale plus récente ; aucune écriture périmée, sablier utilisé
-puis réponse perdue rejouée une seule fois après rechargement. E2E bureau et
-téléphone simulé verts ; publication/CI dans la passation.
+K-040 — sablier bloqué par écart local/cloud. La reprise automatique avant le
+sablier et le garde-fou SQL ont déjà été publiés (`878f7e9e`, CI antérieure
+verte). Le nouveau message « Deux parties sont différentes… » est distinct du
+refus SQL : il signale un conflit de sauvegardes, où pousser l’une pourrait
+effacer l’autre. Le sablier relit maintenant les deux parties avant de refuser
+sur la base d’un conflit mémorisé ; aucune partie n’est choisie automatiquement
+en cas de divergence persistante. Tests locaux de la relance : store 159/159,
+E2E cloud simulés 2/2, typecheck et lint réussis. Nouvelle CI à vérifier après
+publication ; conflit réel multi-appareil toujours à résoudre depuis Mon compte.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|

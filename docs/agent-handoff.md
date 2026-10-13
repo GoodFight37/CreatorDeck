@@ -1,3 +1,20 @@
+## Sablier — nouvelle vérification avant refus, 13 octobre 2026
+
+Le message « Deux parties sont différentes… » vient d’une garde qui empêche de
+débiter un sablier tant que la sauvegarde locale et celle du cloud divergent.
+Le parcours relisait désormais le cloud au démarrage, mais un conflit mémorisé
+était ensuite traité comme définitif lors de la tentative suivante. Le sablier
+demande maintenant une nouvelle comparaison automatique avant de rester bloqué.
+Cette relecture ne force ni push, ni pull, ni fusion ; si la divergence persiste,
+le choix dans Mon compte reste requis. Ça peut lever un ancien blocage si les
+parties ont été resynchronisées entre-temps, mais ne résout pas un vrai conflit
+multi-appareil.
+
+Tests locaux : `src/lib/cloud/cloud-store.test.ts` **159/159** ; E2E cloud à RPC
+simulés `e2e/hourglass-online.spec.ts` **2/2** (bureau/téléphone) ; ESLint ciblé
+et `npm run typecheck` réussis. Aucun test ni débit de sablier sur le compte de
+Malik ou en production. Publication et CI à relever après push.
+
 ## Réparation des tests E2E après CI — publiée et vérifiée, 13 octobre 2026
 
 Le run `38477480148` du SHA `00b22d4b` a révélé des attentes obsolètes dans les

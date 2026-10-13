@@ -28,7 +28,10 @@ export function packActions(ctx: CloudStoreContext) {
         // ancienne : le serveur renvoie le solde actuel sans débiter à nouveau.
         if (!requestId) {
           const needsInitialSync = ctx.state().saveSyncing || ctx.state().remoteUpdatedAt === null || ctx.state().lastSyncAt === null;
-          if (needsInitialSync) await ctx.actions.sync("auto");
+          const recheckConflict = ctx.state().syncNeedsChoice;
+          if (needsInitialSync || recheckConflict) {
+            await ctx.actions.sync("auto", { recheckConflict });
+          }
           if (api.session()?.userId !== session.userId) throw new Error("Ton compte a changé. Réessaie.");
           if (ctx.state().syncNeedsChoice) throw new Error("Deux parties sont différentes : choisis celle à garder dans Mon compte avant d’utiliser un sablier.");
           if (needsInitialSync && ctx.state().lastSyncAt === null) throw new Error("Ta partie en ligne n’a pas pu être chargée. Réessaie quand la connexion revient.");

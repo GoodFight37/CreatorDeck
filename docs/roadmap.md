@@ -23,6 +23,10 @@ et la couleur de la boucle. Voir le
   conserve la provenance d'obtention Live, tandis que le statut de direct actuel
   dépend d'un snapshot récent. Aucun changement d'économie ou de schéma de
   données n'est en attente dans ces livraisons.
+- **Sablier connecté :** le contrôle relit désormais le cloud lorsqu’un conflit
+  antérieur bloque l’action ; il ne consomme rien tant que le conflit persiste.
+  Tests ciblés locaux verts, CI du correctif à vérifier. Voir
+  [D-079](decisions.md) et la [passation](agent-handoff.md).
 
 ## Livraison publiée — sensation de jeu, 13 octobre 2026
 
