@@ -1,5 +1,15 @@
 # Décisions CreatorDeck
 
+## D-065 — 13 octobre 2026 : ne plus afficher les versions Upscayl
+
+Malik observe des détails de visage artificiels dans les portraits agrandis
+par IA et choisit de revenir aux images Twitch d’origine. Les fichiers WebP
+Upscayl et leur registre restent conservés comme archives, mais la sélection
+des portraits ne les active plus. Les portraits manuels, les sélections Commons
+avec provenance et la photo fournie de Diverron gardent leur priorité.
+Vérification locale adaptée : sélection de l’image sur le catalogue, crédits
+et build ; [état du correctif](portrait-upscale-review-2026-10-13.md).
+
 Ce registre est autonome, mais ne remplace pas le code ni les décisions
 détaillées existantes. Ajouter des entrées datées ; marquer une décision
 remplacée plutôt que l'effacer. Une proposition en attente n'est pas adoptée.

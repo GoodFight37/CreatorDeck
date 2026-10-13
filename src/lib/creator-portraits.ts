@@ -29,7 +29,7 @@ export function creatorPortraitUrl(slug: string): string {
   if (providedReplacement) return providedReplacement;
   // Visuel de secours si aucun portrait fourni n'est encore disponible.
   if (slug === "diverron") return "/creators/diverron-fallback.svg";
-  const upscaledReplacement = Object.hasOwn(UPSCALED_PORTRAIT_OVERRIDES, slug) ? UPSCALED_PORTRAIT_OVERRIDES[slug] : undefined;
-  if (upscaledReplacement) return upscaledReplacement;
+  // Upscayl a parfois reconstruit artificiellement des détails de visage.
+  // Garder ses fichiers archivés, mais afficher l’avatar Twitch original.
   return `/creators/${slug}.webp`;
 }

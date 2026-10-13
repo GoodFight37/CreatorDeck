@@ -34,9 +34,9 @@ export function ImageCredits() {
           ) : null}
           {Object.keys(UPSCALED_PORTRAIT_OVERRIDES).length > 0 ? (
             <div>
-              <dt>Portraits upscalés avec Upscayl ({Object.keys(UPSCALED_PORTRAIT_OVERRIDES).length})</dt>
+              <dt>Versions Upscayl archivées ({Object.keys(UPSCALED_PORTRAIT_OVERRIDES).length})</dt>
               <dd>
-                Versions WebP 720 × 720 px, encodées pour le jeu. L’archive ne précisait pas les sources ni les licences des images d’origine.
+                Ces images agrandies artificiellement ne sont plus affichées sur les cartes. Le jeu utilise les portraits originaux des chaînes. Les fichiers Upscayl sont conservés dans l’archive du projet ; les sources et licences fournies avec ces anciens fichiers restent incomplètes.
                 <details>
                   <summary>Afficher la liste</summary>
                   <ul>

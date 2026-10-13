@@ -1,3 +1,21 @@
+## Retour aux originaux de la vague Upscayl — 13 octobre 2026
+
+Malik signale des visages artificiels sur plusieurs portraits passés par IA.
+Comparaison de sept paires : effet visible notamment sur 2lew et asmongold247.
+Le sélecteur affiche maintenant `/creators/<slug>.webp` pour les entrées Upscayl,
+sauf si un choix manuel, Commons crédité ou photo fournie a priorité. Les 699
+WebP Upscayl et leur registre restent présents, mais sont identifiés comme
+archivés/non affichés dans les crédits.
+
+Contrôles adaptés réussis : 51/51 unitaires portraits, 2/2 DOM crédits, 2/2 E2E
+bureau/téléphone simulé ; E2E charge l’original 600 px de 2lew. TypeScript,
+ESLint ciblé, catalogue, jargon et build statique sans cloud réussis.
+Publication sur `main` en préparation après nouveau contrôle du HEAD distant.
+[Rapport](portrait-upscale-review-2026-10-13.md). Branche `main`, base locale
+et distante `d1f1ce6` égales au départ ; modification ciblée, non commitée tant
+que le build n’est pas relevé. Publication normale sur main autorisée, aucune
+suppression des images. Téléphone physique non testé. Aucune collecte relancée.
+
 ## Reprise intégrale du ZIP — 13 octobre 2026
 
 Les deux lots locaux sont récupérés : 40 fichiers contrôlés par empreinte,

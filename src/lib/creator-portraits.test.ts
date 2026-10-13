@@ -30,7 +30,13 @@ describe("portraits sélectionnés", () => {
     }
     for (const [slug, imagePath] of Object.entries(UPSCALED_PORTRAIT_OVERRIDES)) {
       expect(CREATORS.some((creator) => creator.slug === slug)).toBe(true);
-      const expectedPath = PORTRAIT_OVERRIDES[slug]?.image ?? imagePath;
+      const expectedPath = creatorPortraitUrl(slug);
+      expect(expectedPath).toBe(
+        MANUAL_PORTRAIT_OVERRIDES[slug]
+          ?? PORTRAIT_OVERRIDES[slug]?.image
+          ?? PROVIDED_PORTRAIT_OVERRIDES[slug]
+          ?? `/creators/${slug}.webp`,
+      );
       expect(creatorPortraitUrl(slug)).toBe(expectedPath);
       expect(creatorImage({ slug })).toBe(expectedPath);
       expect(imagePath).toMatch(/^\/creators\/upscaled\/[a-z0-9-]+\.webp$/);

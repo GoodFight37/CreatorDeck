@@ -57,6 +57,16 @@ Malik confirme le 12 octobre que les créateurs sans photo de profil gardent
 leur avatar générique. SolaryHS, j0niq et toaststix ne sont plus des anomalies
 ni des remplacements à rechercher. Aucun changement de fichier image requis.
 
+### Portraits Upscayl remplacés par les originaux
+
+Malik constate que plusieurs portraits agrandis par IA reconstruisent les
+visages et paraissent artificiels. Les avatars Twitch d’origine sont rétablis
+pour cet ensemble ; portraits manuels, choix Commons crédités et photo fournie
+pour Diverron gardent leur priorité. Les 699 fichiers Upscayl et leur registre
+restent conservés dans le dépôt comme archives, sans servir à l’affichage.
+Les tests d’intégration vérifient que chaque créateur retombe sur son avatar
+d’origine lorsque aucun remplacement prioritaire ne s’applique.
+
 ### Validation et éléments hors plan
 
 Avis visuel/performances sur téléphone physique restant à recueillir ; les

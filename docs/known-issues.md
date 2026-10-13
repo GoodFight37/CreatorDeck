@@ -65,6 +65,15 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck
 
+### Visages artificiels dans certains anciens portraits Upscayl — 13 octobre 2026
+
+Malik signale que plusieurs agrandissements IA reconstruisent les traits et
+semblent peu naturels. Le catalogue réutilise les avatars Twitch d’origine
+pour cette catégorie ; les choix manuels et les images avec provenance gardent
+leur priorité. Les fichiers Upscayl sont archivés et leurs crédits indiquent
+qu’ils ne sont plus affichés. Tests adaptés à l’enregistrement actif à retrouver
+dans [le bilan](portrait-upscale-review-2026-10-13.md).
+
 État courant : code `10699eb`, CI complète et Vercel Production réussis le
 12 octobre 2026. Voir [le bilan vérifié](etat-projet-2026-10-12.md) et
 [le plan actif](roadmap.md#plan-actif). Les anciennes observations restent

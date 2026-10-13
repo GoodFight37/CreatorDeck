@@ -2,7 +2,8 @@ import { expect, test, gotoDeck } from "./fixtures";
 import creators from "../src/data/creators.json";
 import manualPortraits from "../src/data/manual-portrait-overrides.json";
 import curatedPortraits from "../src/data/portrait-overrides.json";
-const displayedPortraits = ["rubius", "shroud", "gotaga", "mastu", "maghla", "livibee", "9pasha"];
+import upscaledPortraits from "../src/data/upscaled-portrait-overrides.json";
+const displayedPortraits = ["rubius", "shroud", "gotaga", "mastu", "maghla", "livibee", "9pasha", "2lew"];
 
 test("les portraits sélectionnés se chargent et leurs crédits restent dans les réglages", async ({ page }, testInfo) => {
   await gotoDeck(page);
@@ -20,10 +21,11 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await page.getByRole("button", { name: "Binder", exact: true }).click();
   for (const slug of displayedPortraits) {
     const manual = manualPortraits[slug as keyof typeof manualPortraits];
-    const image = manual ?? curatedPortraits[slug as keyof typeof curatedPortraits].image;
+    const curated = curatedPortraits[slug as keyof typeof curatedPortraits];
+    const image = manual ?? curated?.image ?? `/creators/${slug}.webp`;
     const portrait = page.locator(`img[src="${image}"]`).first();
     await expect(portrait).toBeVisible();
-    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth)).toBe(manual ? 450 : 900);
+    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth)).toBe(manual ? 450 : curated ? 900 : 600);
   }
   await expect(page.locator(".creator-card")).not.toContainText(["Moritz Barcelona", "Nate Herrera"]);
   await expect(page.locator("#image-credits")).toHaveCount(0);
@@ -35,6 +37,9 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await expect(settings.locator("#image-credits")).toContainText("Moritz Barcelona");
   await expect(settings.locator("#image-credits")).toContainText("Nate Herrera n8bit_");
+  await expect(settings.locator("#image-credits")).toContainText("Versions Upscayl archivées (699)");
+  await expect(settings.locator("#image-credits")).toContainText("ne sont plus affichées sur les cartes");
+  expect(upscaledPortraits["2lew"]).toBe("/creators/upscaled/2lew.webp");
   for (const slug of ["livibee", "9pasha"] as const) {
     await expect(settings.locator("#image-credits")).toContainText(curatedPortraits[slug].author);
     await expect(settings.locator(`#image-credits a[href="${curatedPortraits[slug].source}"]`)).toHaveCount(1);
