@@ -1,3 +1,18 @@
+## Lot Drop + Craft uniquement — 13 octobre 2026
+
+Malik réserve Binder/profil/Toi à Gemini. UI limitée à drop-view, atelier-view
+et nouvelle feuille drop-craft.css (scopée aux deux vues, pas de globals partagé).
+Drop : sachet/CTA entièrement avant navigation à 360×740 et 320×568, garantie
+après CTA en une ligne, textes/statut Scène neutres et objectifs compacts.
+Craft : à portée par défaut, coûts les moins chers si rien n’est finançable,
+exploration explicite, règles/raretés repliées, pager après liste, Recycler vide
+avec retour Drop. Aucun fichier interdit, SQL, économie ou pity modifié.
+26/26 DOM, 8/8 E2E ciblés, types/lint/build statique sans cloud réussis.
+[Rapport autonome et fichiers](drop-craft-priorites-2026-10-13.md).
+Base main `fda166f7`, distante vérifiée égale ; publication avec ce checkpoint,
+CI à relever après push, ressenti sur téléphone physique encore à vérifier.
+Respecter la répartition des fichiers avec Gemini lors de la reprise.
+
 ## Peel : ouverture au relâchement — 13 octobre 2026
 
 Retour Malik après `180827ba` : ouverture avant lever le doigt et languette

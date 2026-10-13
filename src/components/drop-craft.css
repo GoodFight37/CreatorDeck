@@ -1,0 +1,42 @@
+/* Only the Drop and Atelier screens; no opening, Binder or profile selectors. */
+.home-view .drop-intro h1 { margin: 4px 0; font-size: 22px; }
+.home-view .drop-intro .drop-edition > span:first-child { display: none; }
+.home-view .pack-stage.stage-live { min-height: 220px; height: clamp(220px, 29svh, 270px); margin-top: 0; padding-block: 8px; gap: 6px; }
+.home-view .pack-copy { bottom: 4px; }
+.home-view .pack-shadow { bottom: 38px; }
+.home-view .open-panel.open-panel { padding: 10px 12px; }
+.home-view .stock-row { margin-bottom: 8px; }
+.home-view .open-panel .primary-action { min-height: 48px; }
+.home-view .open-panel .pity-row.now { margin-top: 6px; padding: 5px 0; border: 0; background: none; font-size: 12px; }
+.home-view .hourglass-action { min-height: 38px; margin-top: 5px; font-size: 12px; }
+.home-view .token-row { margin-top: 6px; font-size: 12px; }
+.home-view .drop-priorities { display: grid; gap: 6px; margin-top: 10px; }
+.home-view .drop-priorities .daily-goal { min-height: 56px; margin: 0; padding-block: 8px; }
+.home-view .drop-priorities .daily-goal.tribunal-entry { display: flex; flex-direction: row; align-items: center; gap: 9px; }
+.home-view .drop-priorities .daily-goal.tribunal-entry > svg:first-child { position: static; transform: none; flex-shrink: 0; }
+.home-view .drop-priorities .tribunal-row { margin: 0; padding: 8px 10px; min-height: 44px; font-size: 12px; }
+.home-view .scene-block .scene-state,
+.home-view .scene-block .scene-action.is-opened { color: var(--muted); border-color: var(--line); background: var(--panel); }
+.home-view .scene-purpose { margin-block: 6px; font-size: 12px; }
+.atelier-view .atelier-list { gap: 0; margin-top: 10px; }
+.atelier-view .atelier-row { border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: none; padding: 10px 2px; }
+.atelier-view .atelier-row .atelier-copy > span { font-size: 11px; }
+.atelier-view .atelier-rules-details summary { display: flex; align-items: center; gap: 5px; min-height: 32px; }
+.atelier-view .atelier-scope { margin-block: 8px; }
+.atelier-view .binder-pager { margin-top: 12px; }
+.atelier-view .atelier-recycle-link { display: flex; align-items: center; gap: 6px; min-height: 44px; }
+.atelier-view .empty-collection { flex-wrap: wrap; }
+@media (max-height: 700px) {
+  .home-view .pack-stage.stage-live { min-height: 200px; height: 29svh; }
+  .home-view .pack-stage.stage-live .pack-artwork.pack-live { width: 108px; height: 158px; flex-shrink: 0; }
+}
+.atelier-view .atelier-rarity-filters { margin-top: 8px; }
+.atelier-view .atelier-rarity-filters summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 10px 0; }
+/* Override older short-screen rules only inside the Drop, preserving the object ratio. */
+.home-view .pack-stage.stage-live .pack-artwork.pack-live { width: min(36vw, 130px, 18svh); height: auto; flex-shrink: 0; }
+.home-view .drop-priorities.drop-priorities { grid-template-columns: 1fr; }
+.home-view .drop-priorities .tribunal-row > span { display: block; }
+.home-view .drop-priorities .tribunal-row strong { display: inline; font: inherit; font-weight: 600; }
+@media (max-height: 700px) {
+  .home-view .pack-stage.stage-live .pack-artwork.pack-live { width: 108px; height: auto; }
+}

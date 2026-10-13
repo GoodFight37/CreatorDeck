@@ -19,11 +19,13 @@ test("Craft montre les recettes et bloque un achat sous son coût", async ({ pag
   });
   const before = await readCards();
   await page.getByRole("button", { name: "Craft", exact: true }).click();
-  await expect(page.getByText("Rejoindre (999)")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Créer", exact: true })).toBeVisible();
+  await expect(page.locator(".atelier-rules-details")).not.toHaveAttribute("open");
   await expect(page.locator(".atelier-cost-guide")).toContainText("Commune 45 · Peu commune 90 · Rare 220 · Épique 600 points");
   await expect(page.locator(".atelier-row")).toHaveCount(20);
   await expect(page.locator(".atelier-preview, .atelier-warmup")).toHaveCount(0);
 
+  await page.locator(".atelier-rarity-filters summary").click();
   await page.getByRole("button", { name: /^Communes/ }).click();
   const recipe = page.locator(".atelier-row .craft-button").first();
   await expect(recipe).toContainText("45");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import "./drop-craft.css";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -41,6 +42,7 @@ export function AtelierView({
   game,
   onNotice,
   onError,
+  onGoDrop,
 }: {
   game: GameView;
   onNotice: (message: string) => void;
@@ -52,6 +54,7 @@ export function AtelierView({
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<CraftFilter>("all");
   const [page, setPage] = useState(0);
+  const [scope, setScope] = useState<"reachable" | "all">("reachable");
   const [recyclePage, setRecyclePage] = useState(0);
   const [recycleQuery, setRecycleQuery] = useState("");
   const [wallet, setWallet] = useState<Wallet>("points");
@@ -112,16 +115,23 @@ export function AtelierView({
 
   const craftable = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
+    const owned = new Set(game.cards.map(card => card.creatorSlug));
+    const price = (creator: (typeof CREATORS)[number]) => {
+      const meta = RARITY_META[creator.rarity];
+      if (!meta.craftable) return Infinity;
+      return wallet === "tokens" ? game.tokens.targetCost : meta.craftCost ?? Infinity;
+    };
     return [...retiredCraftable, ...CREATORS].filter((creator) => {
-      if (game.cards.some((card) => card.creatorSlug === creator.slug)) return false;
-      if (q) {
-        const hay = `${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr");
-        if (!hay.includes(q)) return false;
+      if (owned.has(creator.slug)) return false;
+      if (q && !`${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr").includes(q)) return false;
+      if (filter !== "all" && creator.rarity !== filter) return false;
+      // Search and explicit rarity filters can explore the full catalogue.
+      if (scope === "reachable" && !q && filter === "all") {
+        return Number.isFinite(price(creator)) && (affordableCount === 0 || price(creator) <= balance);
       }
-      if (filter !== "all") return creator.rarity === filter;
       return true;
-    });
-  }, [filter, game.cards, query, retiredCraftable]);
+    }).sort((a, b) => price(a) - price(b) || a.rank - b.rank);
+  }, [filter, game.cards, query, retiredCraftable, wallet, game.tokens.targetCost, scope, balance, affordableCount]);
 
   const totalPages = Math.max(1, Math.ceil(craftable.length / PER_PAGE));
   const safePage = Math.min(page, totalPages - 1);
@@ -209,7 +219,7 @@ export function AtelierView({
           }}
           aria-pressed={mode === "craft"}
         >
-          Rejoindre ({missingCount})
+          Créer
         </button>
         <button
           className={mode === "recycle" ? "active" : ""}
@@ -249,14 +259,14 @@ export function AtelierView({
           <div className="filter-chips wallet-chips" aria-label="Monnaie" style={{ margin: "0.25rem 0" }}>
             <button
               className={wallet === "points" ? "active" : ""}
-              onClick={() => setWallet("points")}
+              onClick={() => { setWallet("points"); setPage(0); }}
               aria-pressed={wallet === "points"}
             >
               Points ({game.player.points})
             </button>
             <button
               className={wallet === "tokens" ? "active" : ""}
-              onClick={() => setWallet("tokens")}
+              onClick={() => { setWallet("tokens"); setPage(0); }}
               aria-pressed={wallet === "tokens"}
             >
               Jetons ({game.tokens.count}/{game.tokens.targetCost})
@@ -266,11 +276,25 @@ export function AtelierView({
           {/* Mise en avant claire des cartes à portée */}
           <p className="wallet-note" style={{ margin: "0.2rem 0", fontSize: "0.78rem" }}>
             {affordableCount > 0
-              ? `${affordableCount} créateur${affordableCount > 1 ? "s" : ""} disponible${affordableCount > 1 ? "s" : ""} avec tes ${wallet === "tokens" ? "jetons" : "points"}.`
+              ? "Cartes Standard disponibles."
               : wallet === "tokens"
                 ? `Encore ${Math.max(0, game.tokens.targetCost - game.tokens.count)} jetons avant la prochaine carte.`
-                : "Recycle des doublons pour obtenir des points."}
+                : "Les recettes les moins chères d’abord. Recycle des doublons pour gagner des points."}
           </p>
+
+          <div className="filter-chips atelier-scope" aria-label="Recettes affichées">
+            <button type="button" aria-pressed={scope === "reachable"} className={scope === "reachable" ? "active" : ""}
+              onClick={() => { setScope("reachable"); setFilter("all"); setQuery(""); setPage(0); }}>
+              {affordableCount > 0 ? `À portée (${affordableCount})` : "Prochaines cartes"}
+            </button>
+            <button type="button" aria-pressed={scope === "all"} className={scope === "all" ? "active" : ""}
+              onClick={() => { setScope("all"); setPage(0); }}>Toutes les recettes</button>
+          </div>
+          {affordableCount === 0 && wallet === "points" ? (
+            <button type="button" className="text-link atelier-recycle-link" onClick={() => { setMode("recycle"); setRecyclePage(0); }}>
+              <Recycle size={15} /> Voir mes doublons ({duplicates.reduce((sum, group) => sum + group.recyclableIds.length, 0)})
+            </button>
+          ) : null}
 
           <label className="search-field">
             <Search size={16} />
@@ -296,6 +320,8 @@ export function AtelierView({
             ) : null}
           </label>
 
+          <details className="atelier-rarity-filters">
+            <summary>Filtrer par rareté</summary>
           <div className="filter-chips" aria-label="Filtres de rareté" style={{ margin: "0.25rem 0" }}>
             {(
               [
@@ -320,22 +346,7 @@ export function AtelierView({
             ))}
           </div>
 
-          <div className="binder-pager">
-            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage <= 0}>
-              <ChevronLeft size={15} />
-              <span>Précédent</span>
-            </button>
-            <span>
-              Page <strong>{safePage + 1}</strong> / {totalPages} · {craftable.length} manquants
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-              disabled={safePage >= totalPages - 1}
-            >
-              <span>Suivant</span>
-              <ChevronRight size={15} />
-            </button>
-          </div>
+          </details>
 
           {/* Liste épurée */}
           <div className="atelier-list">
@@ -357,7 +368,7 @@ export function AtelierView({
                   <div className="atelier-copy">
                     <strong>{creator.displayName}</strong>
                     <span>
-                      #{creator.rank} · {regionLabel(creator.region)}
+                      {regionLabel(creator.region)}
                     </span>
                   </div>
                   {isRetired(creator.slug) ? <span className="card-retired">Sortant</span> : null}
@@ -392,6 +403,25 @@ export function AtelierView({
               );
             })}
           </div>
+
+          {totalPages > 1 ? (
+<div className="binder-pager">
+            <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage <= 0}>
+              <ChevronLeft size={15} />
+              <span>Précédent</span>
+            </button>
+            <span>
+              Page <strong>{safePage + 1}</strong> / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={safePage >= totalPages - 1}
+            >
+              <span>Suivant</span>
+              <ChevronRight size={15} />
+            </button>
+          </div>
+          ) : null}
 
           {!craftable.length ? (
             <div className="no-results">
@@ -559,9 +589,10 @@ export function AtelierView({
               <div>
                 <strong>Aucun doublon pour l&apos;instant</strong>
                 <span>
-                  Ouvre des boosters : les doublons apparaissent vite et se transforment ici en points.
+                  Boosters → doublons → points → carte au choix. Ta dernière copie reste dans le classeur.
                 </span>
               </div>
+              {onGoDrop ? <button type="button" className="secondary-action" onClick={onGoDrop}>Retour au Drop</button> : null}
             </div>
           )}
         </>

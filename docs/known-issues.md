@@ -1,3 +1,13 @@
+## Drop et Craft : hiérarchie encombrée — 13 octobre 2026
+
+CTA après garantie et Atelier trié par rang : pages initiales remplies de
+légendaires non artisanables malgré l’annonce des cartes disponibles. Correction
+UI : CTA avant infos, scène Drop compacte, scope à portée et tri par coût,
+raretés/règles repliées, Recycler vide utile. 26/26 DOM et 8/8 E2E ciblés,
+CTA entièrement visible avant navigation à 320×568 et 360×740. Avis téléphone
+physique et état CI du commit à relever ; fichiers réservés à Gemini préservés.
+[Rapport](drop-craft-priorites-2026-10-13.md).
+
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
 ## Ouverture avant relâchement / languette instable — 13 octobre 2026

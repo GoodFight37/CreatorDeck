@@ -6,6 +6,8 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
 
+import "./drop-craft.css";
+
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { useBackHandler } from "@/hooks/use-back-handler";
@@ -208,8 +210,7 @@ export function HomeView({
       {/* En-tête concis : zéro blabla marketing */}
       <header className="drop-intro" style={{ marginBottom: "0.4rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1 style={{ fontSize: "1.5rem", margin: "0.2rem 0" }}>Cinq créateurs.</h1>
-        {needsLogin ? <p>Connecte-toi pour ouvrir ta réserve.</p> : null}
+        <h1>Drop</h1>
       </header>
 
       {/* Sachet + CTA d'abord : au-dessus du pli */}
@@ -222,7 +223,6 @@ export function HomeView({
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
           <span>{pack.size} cartes</span>
         </div>
-        <p className="pull-hint">Appuie sur le sachet pour préparer l’ouverture.</p>
       </section>
 
       <section className="open-panel">
@@ -238,11 +238,6 @@ export function HomeView({
             <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
           ) : null}
         </div>
-        <button type="button" className="pity-row now" onClick={onShowOdds}
-          aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
-          <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
-          <ChevronRight size={14} />
-        </button>
         <button
           className="primary-action"
           onClick={onOpen}
@@ -260,6 +255,11 @@ export function HomeView({
           </span>
           {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
         </button>
+        <button type="button" className="pity-row now" onClick={onShowOdds}
+          aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
+          <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
+          <ChevronRight size={14} />
+        </button>
         <button
           className="hourglass-action"
           onClick={onUseHourglass}
@@ -273,7 +273,7 @@ export function HomeView({
           <strong>{game.player.hourglasses}</strong>
         </button>
         {serverReserve && needsAccount ? (
-          <small className="hourglass-note">Connecte-toi pour utiliser tes sabliers.</small>
+          null
         ) : stock >= pack.maxWithHourglass ? (
           <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small>
         ) : stock > pack.max ? (
@@ -415,13 +415,12 @@ export function HomeView({
           </div>
           <span
             className={`scene-state${sceneOpened ? " scene-state-neutral is-neutral" : ""}`}
-            style={sceneOpened ? { borderColor: "rgba(255, 255, 255, 0.15)", background: "rgba(255, 255, 255, 0.05)", color: "#94a3b8" } : undefined}
           >
             {sceneOpened ? "Ouvert aujourd’hui" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
           </span>
         </div>
 
-        <p className="scene-purpose">Un rendez-vous quotidien pour compléter ta famille, en plus du Live Drop. Pas de Légendaire dans ce paquet.</p>
+        <p className="scene-purpose">Pas de Légendaire dans ce paquet.</p>
         {game.scene.family ? (
           <div className="scene-family">
             <div className="scene-family-copy">

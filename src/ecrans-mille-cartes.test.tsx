@@ -22,7 +22,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 
-import { CATALOG_SIZE, CREATORS } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, RARITY_META } from "@/lib/catalog";
 import { createInitialState, getGameView, type PlayerState } from "@/lib/game-engine";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
@@ -217,8 +217,9 @@ describe("mille créateurs dans l'Atelier", () => {
       <AtelierView game={game} onNotice={() => {}} onError={() => {}} />,
     );
 
-    // « Page 1 / 50 · 1000 manquants » : les comptes sont ceux du catalogue.
-    expect(document.body.textContent).toContain(`Page 1 / ${Math.ceil(CATALOG_SIZE / LIGNES_PAR_PAGE)}`);
+    // Solde insuffisant : recettes artisanables triées par coût, une seule page DOM.
+    const recipes = CREATORS.filter(entry => entry.slug !== creator.slug && RARITY_META[entry.rarity].craftable);
+    expect(document.body.textContent).toContain(`Page 1 / ${Math.ceil(recipes.length / LIGNES_PAR_PAGE)}`);
     expect(pose().lignes).toBe(LIGNES_PAR_PAGE);
     expect(pose().portraits).toBeLessThanOrEqual(LIGNES_PAR_PAGE);
 
@@ -234,7 +235,7 @@ describe("mille créateurs dans l'Atelier", () => {
       <AtelierView game={game} onNotice={() => {}} onError={() => {}} />,
     );
 
-    expect(document.body.textContent).toContain("Rejoindre (1000)");
+    expect(banc.boutons().some(button => button.textContent === "Créer")).toBe(true);
     expect(document.querySelectorAll(".atelier-row")).toHaveLength(LIGNES_PAR_PAGE);
     expect(document.querySelector(".atelier-cost-guide")?.textContent).toContain("Commune 45");
     banc.appuyer(/^Communes/);

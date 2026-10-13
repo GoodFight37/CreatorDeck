@@ -35,7 +35,7 @@ test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", 
 test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   await gotoDeck(page);
-  await expect(page.getByRole("heading", { name: "Cinq créateurs." })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Drop", exact: true })).toBeVisible();
   const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(open).toBeEnabled();
   await expect(open).toBeInViewport();

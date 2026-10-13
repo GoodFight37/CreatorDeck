@@ -1,5 +1,15 @@
 # Décisions CreatorDeck
 
+## D-069 — 13 octobre 2026 : hiérarchie Drop et priorité des recettes accessibles
+
+Demande limitée aux UI Drop/Craft ; Binder/Toi réservés à Gemini, ouverture
+interdite. CTA du Drop avant le ticket d’information. Atelier : vue à portée
+par défaut, recettes bon marché à préparer si solde insuffisant ; exploration
+complète/recherche possibles sans rendre l’achat autorisé. Règles et raretés
+repliées, liste paginée conservée pour limiter le DOM. Recycler zéro doublon
+montre la boucle et propose le Drop. Aucun changement de l’économie.
+[Preuves et fichiers](drop-craft-priorites-2026-10-13.md).
+
 ## D-068 — 13 octobre 2026 : ouvrir uniquement au relâchement
 
 Demande explicite de Malik : une coupe suffisante ne déclenche plus finish

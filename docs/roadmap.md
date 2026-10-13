@@ -31,6 +31,13 @@ ouverture par largeur/soulèvement et repli prévisible. Vérifications ciblées
 puis appréciation du ressenti sur téléphone ; aucune nouvelle refonte des
 écrans. [Avant/après et test en 30 s](booster-peel-guide-2026-10-13.md).
 
+### Drop + Craft — hiérarchie mobile
+
+UI implémentée : sachet/CTA avant les infos ; Atelier à portée, règles/raretés
+repliées et Recycler visible à zéro doublon. 26 DOM et 8 E2E ciblés réussis,
+avis téléphone physique attendu. Gemini conserve Binder/profil/Toi ; aucune
+modification d’ouverture ou économique. [Livrable](drop-craft-priorites-2026-10-13.md).
+
 ### Plan actif
 
 1. **Ouverture : continuum, matière et geste implémentés** à la demande de Malik.
