@@ -45,7 +45,7 @@ quand les données du stream sont fraîches. Publié dans `0e53fa6c` ; CI GitHub
 `38411066062` success 5/5 et Vercel success. Les badges de provenance restent
 non cliquables.
 
-### Corner peek — livré localement le 13 octobre
+### Corner peek — retiré le 13 octobre après essai
 
 Sur la cinquième carte garantie d’un booster ordinaire, tirer le coin haut droit
 permet de jeter un bref œil au portrait ; le flip complet n’arrive qu’au
@@ -56,8 +56,10 @@ d’écrans, 84 E2E réussis / 12 cloud ignorés, lint, typecheck et build réus
 Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
 `38407219931` a repéré cette exception ; correctif ensuite validé localement par
 122 tests écran et le shard RPC simulé 10/10. CI finale `38408591588` success,
-5/5 jobs. Le geste est vérifié sur téléphone simulé, pas encore sur un appareil
-physique. Voir D-072 et le dernier checkpoint de [la passation](agent-handoff.md).
+5/5 jobs pour cette version historique. Malik a jugé la languette peu naturelle
+et a demandé son retrait. Le code et le geste ont été supprimés ; la cinquième
+carte reprend son reveal automatique normal. Suite : Arena peut proposer une
+alternative sans languette, à valider séparément. Voir D-072 et la passation.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 

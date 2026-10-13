@@ -118,7 +118,7 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await expect(reveal.locator(".reveal-header > span")).toHaveText("3 / 5");
 });
 
-test("la carte garantie se soulève au doigt avant son retournement complet", async ({ page }, testInfo) => {
+test("la carte garantie se révèle sans languette", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "téléphone", "Le geste tactile est vérifié sur le projet téléphone.");
   await page.addInitScript(() => {
     Object.defineProperty(crypto, "getRandomValues", {
@@ -142,34 +142,14 @@ test("la carte garantie se soulève au doigt avant son retournement complet", as
     await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
   }
 
-  const anchor = reveal.locator(".reveal-anchor");
-  const handle = reveal.getByRole("button", { name: "Tire le coin vers le centre pour jeter un œil à la carte garantie" });
-  await expect(anchor).toHaveClass(/is-corner-peeking/);
-  await expect(handle).toBeVisible();
-  await expect(reveal.locator(".reveal-flip-face")).toHaveCSS("animation-name", "none");
-
-  const bounds = (await handle.boundingBox())!;
-  const x = bounds.x + bounds.width * .8;
-  const y = bounds.y + bounds.height * .2;
-  const touch = await page.context().newCDPSession(page);
-  await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ id: 1, x, y }] });
-  await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ id: 1, x: x - 5, y: y + 5 }] });
-  await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await expect(anchor).toHaveClass(/is-corner-peeking/);
-  await expect(reveal.getByRole("button", { name: "Retourner la carte" })).toBeEnabled();
-
-  await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ id: 1, x, y }] });
-  await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ id: 1, x: x - 22, y: y + 22 }] });
-  const peekClip = await reveal.locator(".reveal-corner-peek-art").evaluate((node) => getComputedStyle(node).clipPath);
-  expect(peekClip).not.toContain("100% 0px, 100% 0px");
-  await page.screenshot({ path: "test-results/corner-peek-phone.png" });
-  await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await expect(anchor).not.toHaveClass(/is-corner-peeking/);
+  await expect(reveal.locator(".reveal-corner-handle")).toHaveCount(0);
+  await reveal.locator(".reveal-flip-face").evaluate(async (node) => {
+    await Promise.all(node.getAnimations().map((animation) => animation.finished));
+  });
   await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
-  await touch.detach();
 });
 
-test("le raccourci de révélation complète garde son parcours sans corner peek", async ({ page }, testInfo) => {
+test("le raccourci de révélation complète garde son parcours", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "bureau", "Le raccourci est testé une fois sur le projet bureau.");
   await page.addInitScript(() => {
     Object.defineProperty(crypto, "getRandomValues", {

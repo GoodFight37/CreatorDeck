@@ -696,7 +696,6 @@ export function CreatorDeckApp() {
           kind={revealKind}
           returnFocusTo={presentationReturnFocus}
           tutorial={tutorialReveal}
-          cornerPeekDisabled={welcomeGiftReveal}
           streakReward={streakGain}
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}

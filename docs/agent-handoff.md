@@ -1,3 +1,16 @@
+## Languette de reveal retirée — 13 octobre 2026
+
+À la demande de Malik après essai, suppression complète du corner peek : la
+languette paraissait artificielle et son apparition variable prêtait à
+confusion. La cinquième carte garantie reprend le retournement automatique
+ordinaire ; aucun geste additionnel n’est requis. L’état retiré et la suite
+Arena sont consignés plus bas. Sur `ee521e0148fc0c578de9d2aa7fb4a310cfb48e18`,
+`npm run ecrans` passe 123/123, `npm run typecheck`, `npm run lint --
+--no-warn-ignored` et `npm run build` réussissent ; l’E2E téléphone ciblé passe
+1/1 (la variante bureau est ignorée), `git diff --check` passe. Pas de test sur
+téléphone physique. Les modifications sont locales sur `codex/catalog-growth-study` ;
+pas encore publiées et CI distante non lancée.
+
 ## Provenance Live distinguée du stream actif — 13 octobre 2026
 
 Reprise du problème K-048 après la clôture du Corner Peek. La carte garde sa
@@ -76,47 +89,42 @@ renouvelée dans le terminal selon le README du pilote, puis lancer des lots de
 reconstruit les visages ; conserver l’avatar actuel lorsqu’aucune meilleure
 photo n’est trouvée.
 
-## Corner peek sur la carte garantie — 13 octobre 2026
+## Corner peek retiré — 13 octobre 2026
 
-Suite au « Go » de Malik : seule la cinquième carte garantie du reveal d’un
-booster ordinaire attend désormais un geste facultatif. Tirer son coin haut
-droit vers le centre entrouvre un fragment du portrait ; le seuil armé ne retourne
-la carte qu’au relâchement. Reculer ou annuler replie le coin. Le bouton principal
-« Retourner la carte », le bouton de coin activé au clavier et le raccourci
-« Révéler les cinq cartes d’un coup » restent des chemins directs. Perfect, les
-quatre premières cartes, le flux OBS, économie, Binder, Drop et Craft ne changent
-pas ; effets désactivés/mouvement réduit gardent le reveal direct. Aucun GPU
-réactivé par défaut.
+Après essai, Malik a trouvé la languette peu naturelle et a demandé son retrait.
+Le composant, le geste tactile, l’affichage conditionnel et le CSS associé ont
+été supprimés. La cinquième carte reprend le retournement automatique ordinaire ;
+il n’y a plus de pause nécessitant un geste pour continuer. Une alternative est
+à concevoir séparément avec Arena ; aucune nouvelle interaction n’est décidée.
 
-Fichiers produit/tests : `src/components/reveal-overlay.tsx`,
-`src/components/creator-deck-app.tsx`,
-`src/app/booster-continuity.css`, `src/ecrans-effets.test.tsx`,
-`e2e/pack-tear.spec.ts`. Validation finale locale : `npm test` 73 fichiers /
-1 164 tests ; `npm run ecrans` 20 fichiers / 122 tests ; `npm run e2e` 84 réussis,
-12 ignorés faute de backend/cloud optionnel ; `npm run lint`, `npm run typecheck`,
-`npm run build` et `git diff --check` réussis. La première CI `38407219931` a
-révélé que le cadeau de bienvenue partage aussi le type de reveal Live : le test
-attendait son bouton direct « Ranger dans le classeur ». Le peek est maintenant
-désactivé explicitement pour les cinq boosters cadeau ; test écran de régression
-ajouté, shard cloud simulé 10/10 et test peek/raccourci bureau-téléphone 2/2
-réussis localement après correction.
-Le navigateur téléphone simulé
-exerce le geste et le chemin de repli ; cela ne remplace pas le toucher sur un
-téléphone physique. Le build local n’a pas de clés Supabase, donc n’atteste pas
-le cloud. Le premier commit `64114bd7` avait une CI rouge uniquement sur les deux
-variantes du scénario cadeau (les quatre autres jobs étaient verts). Correctif
-publié dans `95db6b6f`. Nouvelle CI GitHub
+Fichiers concernés : `src/components/reveal-overlay.tsx`,
+`src/components/creator-deck-app.tsx`, `src/app/booster-continuity.css`,
+`src/ecrans-effets.test.tsx`, `e2e/pack-tear.spec.ts`. Validation du retrait sur
+`ee521e0148fc0c578de9d2aa7fb4a310cfb48e18` : `npm run ecrans` 123/123,
+`npm run typecheck` réussi, `npm run lint -- --no-warn-ignored` réussi,
+`npm run e2e -- e2e/pack-tear.spec.ts -g 'la carte garantie se révèle sans languette'`
+1 réussi / 1 ignoré (la variante bureau est hors de ce scénario téléphone),
+`git diff --check` réussi. Build statique local réussi sans configuration
+Supabase ; il ne valide pas les fonctions cloud. Pas de test sur téléphone
+physique.
+
+Les résultats et contrôles qui suivent sont historiques : ils validaient
+l’ancienne languette et ne valident pas son retrait. À cette date, le navigateur
+téléphone simulé exerçait le geste, sans remplacer un essai physique. Le premier
+commit `64114bd7` avait une CI rouge uniquement sur les deux variantes du scénario
+cadeau (les quatre autres jobs étaient verts). Correctif publié dans `95db6b6f`.
+Nouvelle CI GitHub
 [`38408591588`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38408591588)
 **success, 5/5 jobs** ; Vercel **success** sur le même SHA, déploiement
 [`BFrPJ7iFMSin4mf11D47MUTG1KGJ`](https://vercel.com/hafsi37-2386/creator-deckk/BFrPJ7iFMSin4mf11D47MUTG1KGJ).
 Le SHA distant `main` a été vérifié à `95db6b6f` avant ce checkpoint documentaire.
 
-Prochaine vérification produit : Malik essaie ce geste sur téléphone et donne
-son avis sur l’emplacement du coin, la facilité à le saisir et la taille de
-l’aperçu. La feuille de route produit reste consignée comme idées non commencées :
+Suite : Arena peut étudier une nouvelle proposition de game feel pour le reveal
+de la cinquième carte, sans réintroduire le corner peek. La feuille de route
+produit reste consignée comme idées non commencées :
 soundbites de streameurs et hype Perfect ; feuilletage, reflets et sleeves du
 Binder ; deep-link Twitch et événements de drop ; Trade Radar, Last Pack et
-export Story. Aucun de ces chantiers n’est inclus dans le corner peek.
+export Story. Ces idées restent distinctes du reveal actuel ; aucune n’est incluse.
 
 ## Contrôle de stabilisation des quatre piliers — 13 octobre 2026
 

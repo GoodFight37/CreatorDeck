@@ -31,6 +31,15 @@ aucun statut ni lien actif n’est rendu. D-073 ; tests écran 2/2, suite écran
 typecheck, lint et build vérifiés. SHA/code/CI définitifs dans le checkpoint de
 passation.
 
+## Languette d’aperçu artificielle et inconstante — retirée le 13 octobre 2026
+
+Retour de Malik après essai : la languette de coin paraissait peu naturelle et
+n’apparaissait pas à chaque ouverture selon les conditions du reveal. La
+mécanique et son attente dédiée ont été supprimées ; la cinquième carte reprend
+le retournement automatique ordinaire. Une alternative de game feel reste à
+concevoir avec Arena, sans réintroduire la languette. Vérifications du retrait
+et SHA dans [la passation](agent-handoff.md).
+
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
 ## Ouverture avant relâchement / languette instable — 13 octobre 2026

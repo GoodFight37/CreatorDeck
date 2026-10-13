@@ -46,7 +46,7 @@ est de lier vers la destination publique Twitch sans incorporer son lecteur ;
 cela ne constitue pas un avis juridique ni une garantie de Twitch. Test écran
 ciblé dans le checkpoint du 13 octobre.
 
-## D-072 — 13 octobre 2026 : corner peek sur la carte garantie
+## D-072 — 13 octobre 2026 : corner peek sur la carte garantie — retiré
 
 Après le flip des quatre premières cartes d’un booster ordinaire, la cinquième
 reste face cachée et son coin supérieur droit peut être tiré vers le centre
@@ -59,6 +59,13 @@ reste disponible. GPU reste désactivé par défaut. Tests DOM/E2E, suites, buil
 limites sont consignés dans la passation du 13 octobre. Les cadeaux de
 bienvenue conservent aussi le parcours direct : ils partagent la scène Live,
 mais ne sont pas des boosters ordinaires pour cette interaction.
+
+Le 13 octobre, Malik a demandé de retirer cette mécanique après essai : la
+languette paraissait artificielle et son apparition variable prêtait à
+confusion. Le code, le geste et l’attente spéciale de la cinquième carte sont
+supprimés. La carte garantie reprend le retournement automatique ordinaire.
+Une éventuelle nouvelle proposition doit être conçue séparément par Arena ;
+aucune nouvelle interaction tactile n’est décidée à ce stade.
 
 ## D-069 — 13 octobre 2026 : hiérarchie Drop et priorité des recettes accessibles
 
