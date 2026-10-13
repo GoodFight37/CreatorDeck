@@ -56,14 +56,17 @@ Limites et prochain contrôle : faire écouter la BGM sur téléphone et examine
 les portraits à l’œil. Le placeholder ne repère pas les images techniquement
 nettes mais mauvaises/obscures.
 
-## Mix BGM — réglage d’écoute local, 13 octobre 2026
+## Mix BGM — réglage publié et CI verte, 13 octobre 2026
 
 Après CI verte du checkpoint précédent (`15b6ec4529ef3718e370bc6d75a1daab45656abf`,
 run `38480069643`), le gain hub a été remonté de `0,14` à `0,24` : l’asset a
 un niveau moyen de `-22 dBFS`, donc l’ancien gain atténuait trop le fond. Le gain
 pack reste `0,018` et le Tribunal reste à zéro. Le volume global/SFX, les timings
-reveal et le comportement autoplay ne changent pas. Test de contrat ajouté ;
-audition sur téléphone réel encore attendue avant de déclarer l’asset fini.
+reveal et le comportement autoplay ne changent pas. Test de contrat ajouté.
+Publié par `9c625747` (code), avec mise à jour documentaire `35ca7f7b` ; CI
+[`38481257763`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38481257763)
+verte, 6/6 jobs. L’audition sur téléphone réel reste attendue avant de déclarer
+l’asset fini.
 
 ## Portraits manuels — ZIP `portraits-01.zip` — 13 octobre 2026
 

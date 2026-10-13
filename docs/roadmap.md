@@ -2,10 +2,10 @@
 
 ## État actuel — 13 octobre 2026
 
-**État du code :** `main` au SHA `15b6ec45` ; correctif E2E publié et CI
-[`38480069643`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38480069643)
-verte, 6/6 jobs. Le mix BGM a été ajusté localement après mesure de l’asset ;
-écoute téléphone encore nécessaire. Voir le
+**État du code :** `main` au SHA `35ca7f7b` ; mix BGM du hub ajusté et CI
+[`38481257763`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38481257763)
+verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niveau
+et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
