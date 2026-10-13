@@ -1,3 +1,16 @@
+## CI ouverture : assertion de consigne corrigée — 13 octobre 2026
+
+Autorisation explicite de Malik pour corriger mon travail antérieur malgré la
+réservation des fichiers d’ouverture. Les runs 38390390205 et 38393724063 ont
+échoué uniquement sur le scénario fallback 2D (bureau/téléphone) : assertion
+restée sur l’ancienne consigne, alors que le peel affiche « GUIDE LA COUPE SUR
+LA BANDE STRIÉE ». Assertion exacte actualisée dans e2e/pack-tear.spec.ts ;
+aucune modification d’animation, aucun snapshot régénéré ni contrôle retiré.
+Playwright ciblé 2/2 réussi sur fbac626d + correction, captures strictes incluses.
+ESLint/diff-check réussis. Nouveau commit distant 010a929b sur profile-view
+intégré par fast-forward sans écrasement ; seul le test et ces docs sont édités.
+Publication normale avec ce checkpoint, nouvelle CI à relever après push.
+
 ## Lot Drop + Craft uniquement — 13 octobre 2026
 
 Malik réserve Binder/profil/Toi à Gemini. UI limitée à drop-view, atelier-view

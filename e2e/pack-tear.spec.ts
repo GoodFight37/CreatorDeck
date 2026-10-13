@@ -170,7 +170,7 @@ test("2D fallback keeps the printed sachet and extraction when WebGL is unavaila
   const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
   await expect(dialog.locator(".booster-opening-instruction"))
-    .toHaveText("GLISSE SUR LA BANDE STRIÉE EN HAUT");
+    .toHaveText("GUIDE LA COUPE SUR LA BANDE STRIÉE");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);

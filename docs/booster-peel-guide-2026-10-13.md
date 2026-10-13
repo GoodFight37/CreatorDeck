@@ -81,3 +81,13 @@ vidéo de validation CreatorDeck sont disponibles dans cet environnement.
 
 Contrôles de cette correction : 10/10 E2E ciblés bureau/téléphone simulé,
 TypeScript, ESLint ciblé, build statique sans cloud et diff-check réussis.
+
+## Correction CI de l’assertion oubliée
+
+Runs 38390390205 et 38393724063 : seul le scénario fallback 2D échoue dans ses
+deux projets sur l’ancienne consigne « GLISSE SUR LA BANDE STRIÉE EN HAUT ».
+Le test attend désormais exactement la nouvelle consigne ; ses vérifications
+WebGL/fallback, continuum et captures strictes restent intactes. Deux scénarios
+retentés localement, 2/2 réussis ; aucune mise à jour de snapshot.
+Malik autorise explicitement cette correction de mon lot précédent ; le commit
+distant concurrent 010a929b (profil) est conservé par fast-forward.
