@@ -40,16 +40,26 @@ export function PackTear({
   const pullProgress = useRef(0);
   const [opened, setOpened] = useState(false);
   const [releaseReady, setReleaseReady] = useState(false);
+  const [showSlowFallback, setShowSlowFallback] = useState(false);
   // Explicit preview only, until the GPU material is approved on a real phone.
   const [foil3D] = useState(() => typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("opening3d") === "1");
-  const start = useRef<{ x: number; y: number; pointerId: number; ready: boolean; bounds: { left: number; top: number; width: number; height: number }; points: { x: number; y: number }[]; percent: number } | null>(null);
+  const start = useRef<{
+    x: number;
+    y: number;
+    pointerId: number;
+    ready: boolean;
+    bounds: { left: number; top: number; width: number; height: number };
+    points: { x: number; y: number }[];
+    percent: number;
+  } | null>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const chamberRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
   const extractionCompleted = useRef(false);
   const revealing = Boolean(children);
   const timer = useRef<number | null>(null);
+  const slowTimer = useRef<number | null>(null);
   const completeRef = useRef(onComplete);
   const tearRef = useRef(onTear);
   useEffect(() => { completeRef.current = onComplete; }, [onComplete]);
@@ -64,7 +74,14 @@ export function PackTear({
   const completeExtraction = useCallback(() => {
     if (extractionCompleted.current) return;
     extractionCompleted.current = true;
-    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (timer.current !== null) {
+      window.clearTimeout(timer.current);
+      timer.current = null;
+    }
+    if (slowTimer.current !== null) {
+      window.clearTimeout(slowTimer.current);
+      slowTimer.current = null;
+    }
     completeRef.current();
   }, []);
 
@@ -77,15 +94,26 @@ export function PackTear({
     sceneRef.current?.style.removeProperty("--opening-tilt-y");
     sceneRef.current?.style.removeProperty("--opening-light-x");
     sceneRef.current?.style.setProperty("--peel-release", String(pullProgress.current));
-    setCut(current => ({ ...current, start: 4, end: 96, progress: 100 }));
+    setCut((current) => ({ ...current, start: 4, end: 96, progress: 100 }));
     setOpened(true);
-    // animationend opens the face IN this scene. This timer is only a lost-event
-    // fallback; it never destroys the pouch or replaces the presentation root.
+
     const effects = cardEffectsAllowed();
-    if (effects) timer.current = window.setTimeout(completeExtraction, 1_200);
-    // Audio/haptics are optional: they cannot strand an already opened pouch.
-    try { tearRef.current?.(); } catch { console.warn("Son/vibration indisponible pendant l’ouverture."); }
-    if (!effects) completeExtraction();
+    if (effects) {
+      // Enchaînement direct fluide : les cartes montent et basculent automatiquement sur la 1re carte
+      timer.current = window.setTimeout(completeExtraction, 720);
+      // Secours en cas de latence réseau prolongée (> 2.2s)
+      slowTimer.current = window.setTimeout(() => {
+        setShowSlowFallback(true);
+      }, 2200);
+    } else {
+      completeExtraction();
+    }
+
+    try {
+      tearRef.current?.();
+    } catch {
+      console.warn("Son/vibration indisponible pendant l’ouverture.");
+    }
   }, [completeExtraction]);
 
   useEffect(() => {
@@ -104,75 +132,117 @@ export function PackTear({
     return () => window.clearTimeout(timeout);
   }, [autoCompleteAfterMs, finish]);
 
-  useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
+  useEffect(() => () => {
+    if (timer.current !== null) window.clearTimeout(timer.current);
+    if (slowTimer.current !== null) window.clearTimeout(slowTimer.current);
+  }, []);
 
   const retract = () => {
     start.current = null;
     if (done.current) return;
     sceneRef.current?.classList.remove("is-pulling");
-    for (const key of ["--opening-tilt-x", "--opening-tilt-y", "--opening-light-x"]) sceneRef.current?.style.removeProperty(key);
+    for (const key of ["--opening-tilt-x", "--opening-tilt-y", "--opening-light-x"]) {
+      sceneRef.current?.style.removeProperty(key);
+    }
     pullProgress.current = 0;
     setReturning(true);
     setReleaseReady(false);
     setPull({ x: 0, y: 0, angle: 0 });
-    setCut(current => ({ ...current, progress: 0 }));
+    setCut((current) => ({ ...current, progress: 0 }));
   };
-  // The real sampled cut separates both printed pieces, rather than filling a rail.
-  const edge = [...new Map(trace.map(point => [Math.round(point.x), point])).values()]
+
+  const edge = [...new Map(trace.map((point) => [Math.round(point.x), point])).values()]
     .sort((a, b) => a.x - b.x);
-  const boundary = edge.length > 1 ? edge.map(point => `${point.x}% ${point.y}%`).join(", ") : "0% 15.45%, 100% 15.45%";
+  const boundary = edge.length > 1
+    ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
+    : "0% 15.45%, 100% 15.45%";
   const artwork = kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg";
+
   return createPortal(
-    <div ref={dialogRef} tabIndex={-1} className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`} role="dialog"
+    <div
+      ref={dialogRef}
+      tabIndex={-1}
+      className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`}
+      role="dialog"
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
-      aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"} aria-modal="true">
-      <div className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}
-          aria-hidden={revealing || undefined} inert={revealing}>
+      aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"}
+      aria-modal="true"
+    >
+      <div
+        className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}
+        aria-hidden={revealing || undefined}
+        inert={revealing}
+      >
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LES CARTES APPARAISSENT" : releaseReady ? "RELÂCHE POUR OUVRIR" : "GUIDE LA COUPE SUR LA BANDE STRIÉE"}
+          {opened ? "LES CARTES APPARAISSENT" : releaseReady ? "RELÂCHE OU TERMINE LE GESTE" : "DÉCHIRE LE HAUT DU BOOSTER"}
         </p>
-        <div ref={sceneRef} className={`booster-physical-scene${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
-          style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%`,
-            "--peel-progress": cut.progress / 100, "--peel-direction": cut.direction,
+        <div
+          ref={sceneRef}
+          className={`booster-physical-scene${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
+          style={{
+            "--cut-start": `${cut.start}%`,
+            "--cut-end": `${cut.end}%`,
+            "--peel-progress": cut.progress / 100,
+            "--peel-direction": cut.direction,
             "--peel-origin-x": `${cut.origin}%`,
-            "--peel-x": `${pull.x}px`, "--peel-y": `${pull.y}px`, "--peel-angle": `${pull.angle}deg`,
-            "--cut-top": `polygon(0% 0%, 100% 0%, 100% 15.45%, ${[...edge].reverse().map(point => `${point.x}% ${point.y}%`).join(", ") || "0% 15.45%"}, 0% 15.45%)`,
-            "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)` } as CSSProperties}>
+            "--peel-x": `${pull.x}px`,
+            "--peel-y": `${pull.y}px`,
+            "--peel-angle": `${pull.angle}deg`,
+            "--cut-top": `polygon(0% 0%, 100% 0%, 100% 15.45%, ${[...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || "0% 15.45%"}, 0% 15.45%)`,
+            "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)`,
+          } as CSSProperties}
+        >
           <PackFoil3D enabled={foil3D} artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
-          <div ref={chamberRef} className="foil-card-chamber" aria-hidden="true" onAnimationEnd={(event) => {
-            if (event.target === event.currentTarget && done.current) completeExtraction();
-          }}>
+          <div
+            ref={chamberRef}
+            className="foil-card-chamber"
+            aria-hidden="true"
+            onAnimationEnd={(event) => {
+              if (event.target === event.currentTarget && done.current) completeExtraction();
+            }}
+          >
             {Array.from({ length: 5 }, (_, i) => (
-              <span key={i} className={`foil-back-card foil-back-card-${i + 1}`}
-                style={{ "--card-i": i } as CSSProperties}>
+              <span key={i} className={`foil-back-card foil-back-card-${i + 1}`} style={{ "--card-i": i } as CSSProperties}>
                 <span className="foil-back-emblem"><CardBackEmblem /></span>
               </span>
             ))}
           </div>
           <div className="foil-body-piece" aria-hidden="true">
-            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
-              className="foil-printed-art" priority />
+            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
           <div className="foil-top-piece" aria-hidden="true">
-            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
-              className="foil-printed-art" priority />
+            <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
           <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <polyline className="foil-cut-slit" points={trace.map(point => `${point.x},${point.y}`).join(" ")} />
+            <polyline className="foil-cut-slit" points={trace.map((point) => `${point.x},${point.y}`).join(" ")} />
+            <polyline className="foil-cut-glow" points={trace.map((point) => `${point.x},${point.y}`).join(" ")} />
           </svg>
-          <div className="booster-tear-track booster-peel-zone" role="button" tabIndex={opened ? -1 : 0}
-            aria-label="Déchirer le sachet en passant le doigt sur sa soudure"
+          <div
+            className="booster-tear-track booster-peel-zone"
+            role="button"
+            tabIndex={opened ? -1 : 0}
+            aria-label="Déchirer le haut du sachet en passant le doigt sur la soudure"
             onPointerDown={(event) => {
               if (opened || start.current || event.button !== 0 || event.isPrimary === false) return;
               const bounds = sceneRef.current!.getBoundingClientRect();
-              const point = { x: Math.max(2, Math.min(98, (event.clientX - bounds.left) / bounds.width * 100)),
-                y: Math.max(6, Math.min(23, (event.clientY - bounds.top) / bounds.height * 100)) };
-              start.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId, ready: false, bounds, points: [point], percent: point.x };
+              const point = {
+                x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
+                y: Math.max(2, Math.min(32, ((event.clientY - bounds.top) / bounds.height) * 100)),
+              };
+              start.current = {
+                x: event.clientX,
+                y: event.clientY,
+                pointerId: event.pointerId,
+                ready: false,
+                bounds,
+                points: [point],
+                percent: point.x,
+              };
               setReturning(false);
               setReleaseReady(false);
               setTrace([point]);
@@ -180,37 +250,67 @@ export function PackTear({
               sceneRef.current?.classList.add("is-pulling");
               pullProgress.current = 0;
               setCut({ start: point.x, end: point.x, progress: 0, direction: 1, origin: point.x });
-              event.currentTarget.setPointerCapture(event.pointerId);
+              try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* capture */ }
             }}
             onPointerMove={(event) => {
               const gesture = start.current;
               if (opened || !gesture || gesture.pointerId !== event.pointerId) return;
               const bounds = gesture.bounds;
-              const point = { x: Math.max(2, Math.min(98, (event.clientX - bounds.left) / bounds.width * 100)),
-                y: Math.max(6, Math.min(23, (event.clientY - bounds.top) / bounds.height * 100)) };
+              const point = {
+                x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
+                y: Math.max(2, Math.min(32, ((event.clientY - bounds.top) / bounds.height) * 100)),
+              };
               const previous = gesture.points[gesture.points.length - 1];
-              if (Math.hypot(point.x - previous.x, point.y - previous.y) >= .4) gesture.points.push(point);
-              const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
-              // Opening area combines the cut's width and the lifted lip. Vertical
-              // pulls can open a shorter cut; scribbling in place cannot accumulate a gauge.
-              const span = Math.max(...gesture.points.map(p => p.x)) - Math.min(...gesture.points.map(p => p.x));
+              if (Math.hypot(point.x - previous.x, point.y - previous.y) >= 0.3) {
+                gesture.points.push(point);
+              }
+              const dx = event.clientX - gesture.x;
+              const dy = event.clientY - gesture.y;
+
+              let pathLength = 0;
+              for (let i = 1; i < gesture.points.length; i++) {
+                const p1 = gesture.points[i - 1];
+                const p2 = gesture.points[i];
+                pathLength += Math.hypot(p2.x - p1.x, (p2.y - p1.y) * 1.3);
+              }
+              const minX = Math.min(...gesture.points.map((p) => p.x));
+              const maxX = Math.max(...gesture.points.map((p) => p.x));
+              const span = maxX - minX;
+
               const lift = Math.max(0, -dy / bounds.height);
-              const aperture = span / 100 * (.5 + Math.min(.3, lift) * 3);
-              const progress = Math.min(99, aperture / .25 * 100);
+              const tearEnergy = Math.max(span, pathLength * 0.72);
+              const aperture = (tearEnergy / 100) * (0.65 + Math.min(0.35, lift) * 2.5);
+              const progress = Math.min(99, Math.round((aperture / 0.32) * 100));
               pullProgress.current = progress / 100;
+
               setTrace([...gesture.points]);
-              setPull({ x: Math.max(-24, Math.min(24, dx * .16)), y: Math.max(-65, Math.min(28, dy * .55)),
-                angle: Math.max(-12, Math.min(12, Math.atan2(dy, bounds.width * .5) * 180 / Math.PI)) });
-              setCut({ start: Math.min(...gesture.points.map(p => p.x)), end: Math.max(...gesture.points.map(p => p.x)), progress,
-                direction: dx >= 0 ? 1 : -1, origin: gesture.percent });
+              setPull({
+                x: Math.max(-28, Math.min(28, dx * 0.18)),
+                y: Math.max(-68, Math.min(30, dy * 0.55)),
+                angle: Math.max(-14, Math.min(14, (Math.atan2(dy, bounds.width * 0.5) * 180) / Math.PI)),
+              });
+              setCut({
+                start: minX,
+                end: maxX,
+                progress,
+                direction: dx >= 0 ? 1 : -1,
+                origin: gesture.percent,
+              });
+
               const scene = sceneRef.current;
               if (scene && cardEffectsAllowed()) {
                 scene.style.setProperty("--opening-tilt-x", `${-Math.max(-1, Math.min(1, dy / bounds.height)) * 5}deg`);
                 scene.style.setProperty("--opening-tilt-y", `${Math.max(-1, Math.min(1, dx / bounds.width)) * 7}deg`);
                 scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
-              gesture.ready = span >= 20 && aperture >= .25;
-              setReleaseReady(gesture.ready);
+
+              const isSufficient = span >= 38 || aperture >= 0.28 || pathLength >= 42;
+              gesture.ready = isSufficient;
+              setReleaseReady(isSufficient);
+
+              if (span >= 65 || progress >= 82 || pathLength >= 62) {
+                finish();
+              }
             }}
             onPointerUp={(event) => {
               const gesture = start.current;
@@ -218,8 +318,12 @@ export function PackTear({
               if (gesture.ready) finish();
               else retract();
             }}
-            onPointerCancel={(event) => { if (start.current?.pointerId === event.pointerId) retract(); }}
-            onLostPointerCapture={(event) => { if (start.current?.pointerId === event.pointerId) retract(); }}
+            onPointerCancel={(event) => {
+              if (start.current?.pointerId === event.pointerId) retract();
+            }}
+            onLostPointerCapture={(event) => {
+              if (start.current?.pointerId === event.pointerId && !done.current) retract();
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight" || event.key === "ArrowLeft") {
                 event.preventDefault();
@@ -234,15 +338,21 @@ export function PackTear({
             <button className="booster-open-link" type="button" onClick={finish}>
               Ouvrir sans déchirer
             </button>
-          ) : (
+          ) : showSlowFallback && !revealing ? (
             <div className="booster-premium-loading" aria-live="polite">
-            <p className="booster-premium-gesture">
-              <span aria-hidden="true">✦</span> DÉCOUVERTE EN COURS
-            </p>
-            <button className="booster-open-link" type="button" onClick={completeExtraction}>Afficher les cartes</button>
-            {onLeavePending ? <button className="booster-open-link" type="button" onClick={onLeavePending}>Retour au jeu pendant l’attente</button> : null}
+              <p className="booster-premium-gesture">
+                <span aria-hidden="true">✦</span> CHARGEMENT DES CARTES…
+              </p>
+              <button className="booster-open-link" type="button" onClick={completeExtraction}>
+                Afficher les cartes
+              </button>
+              {onLeavePending ? (
+                <button className="booster-open-link" type="button" onClick={onLeavePending}>
+                  Retour au jeu pendant l’attente
+                </button>
+              ) : null}
             </div>
-          )}
+          ) : null}
         </div>
       </div>
       {children}
