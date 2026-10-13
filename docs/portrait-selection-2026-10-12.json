@@ -182,5 +182,465 @@
     "identity": "Nom de la description et portrait examinés individuellement",
     "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
     "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "ultia",
+    "pageid": 199196702,
+    "source": "https://commons.wikimedia.org/wiki/File:Ultia_lors_du_ZEVENT_2026_-_Par_Micka%C3%ABl_Schauli.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Ultia_lors_du_ZEVENT_2026_-_Par_Micka%C3%ABl_Schauli.jpg",
+    "originalSha256": "6492fc932e963571362ea9e266952f4352b0a456240ffb32c2db467f77700cf9",
+    "originalSize": [
+      2959,
+      4448
+    ],
+    "crop": {
+      "left": 150,
+      "top": 100,
+      "size": 2600
+    },
+    "output": "/creators/curated/ultia.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "saken-lol",
+    "pageid": 130461338,
+    "source": "https://commons.wikimedia.org/wiki/File:KC_Saken_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/1a/KC_Saken_%28cropped%29.jpg",
+    "originalSha256": "48d613730084f1625668106fcc0a2b420c52f3d612a724de4819eaa49b078c3f",
+    "originalSize": [
+      1751,
+      2047
+    ],
+    "crop": {
+      "left": 0,
+      "top": 0,
+      "size": 1751
+    },
+    "output": "/creators/curated/saken-lol.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "ElliotLC",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "cabochardlol",
+    "pageid": 141509622,
+    "source": "https://commons.wikimedia.org/wiki/File:KC_Cabochard_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b9/KC_Cabochard_%28cropped%29.jpg",
+    "originalSha256": "8c396c1716b603d07555f28e9b87e54a2f5dea3bed0839c91f322770df9d3da0",
+    "originalSize": [
+      1528,
+      2068
+    ],
+    "crop": {
+      "left": 0,
+      "top": 0,
+      "size": 1528
+    },
+    "output": "/creators/curated/cabochardlol.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "ElliotLC",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "kayane",
+    "pageid": 25951551,
+    "source": "https://commons.wikimedia.org/wiki/File:Kayane_-_Monaco_Anime_Game_Show_-_P1560594.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/51/Kayane_-_Monaco_Anime_Game_Show_-_P1560594.jpg",
+    "originalSha256": "82d38a501837aad9dcbe5eef03bedc2c9c9ce055810e51831b2e9cc873c01ab0",
+    "originalSize": [
+      3456,
+      4608
+    ],
+    "crop": {
+      "left": 250,
+      "top": 300,
+      "size": 2950
+    },
+    "output": "/creators/curated/kayane.webp",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "author": "Yves Tennevin",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "fildrong",
+    "pageid": 138628816,
+    "source": "https://commons.wikimedia.org/wiki/File:Fildrong_at_Gamefest_2023_by_Micka%C3%ABl_Schauli_-_12.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/4/48/Fildrong_at_Gamefest_2023_by_Micka%C3%ABl_Schauli_-_12.jpg",
+    "originalSha256": "bc27a30e89601a406993e8121c86e0f6497a7451e9510ff609d2112b1ffc0ef6",
+    "originalSize": [
+      1362,
+      2048
+    ],
+    "crop": {
+      "left": 200,
+      "top": 250,
+      "size": 1000
+    },
+    "output": "/creators/curated/fildrong.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli / Wikimedia Commons",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "esfandtv",
+    "pageid": 122049877,
+    "source": "https://commons.wikimedia.org/wiki/File:Esfand_2022.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/9/98/Esfand_2022.jpg",
+    "originalSha256": "2df216cb7a1eb0e4e6a950887cb97f4bed1ce6e1555c0b50672b52e017090b54",
+    "originalSize": [
+      1279,
+      953
+    ],
+    "crop": {
+      "left": 150,
+      "top": 0,
+      "size": 953
+    },
+    "output": "/creators/curated/esfandtv.webp",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+    "author": "EsfandTV",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Revue de licence Commons relevée",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "f0rest",
+    "pageid": 110183378,
+    "source": "https://commons.wikimedia.org/wiki/File:IEM_Katowice_2019_f0rest_IMG_1297_(47347471282)_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/b9/IEM_Katowice_2019_f0rest_IMG_1297_%2847347471282%29_%28cropped%29.jpg",
+    "originalSha256": "406909d9423fa928b150468efd28bb4e7d0a9205edfcbcde8092ecb29343f463",
+    "originalSize": [
+      2998,
+      4000
+    ],
+    "crop": {
+      "left": 100,
+      "top": 130,
+      "size": 2800
+    },
+    "output": "/creators/curated/f0rest.webp",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "author": "Esports Kingdom",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "livibee",
+    "pageid": 75102813,
+    "source": "https://commons.wikimedia.org/wiki/File:Livibee_at_2014_MLG_Anaheim.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Livibee_at_2014_MLG_Anaheim.jpg",
+    "originalSha256": "6dc3f1ecc680b94caf91fffc82c8a46bcd0494c48a5ce27f146d189be99c4a54",
+    "originalSize": [
+      1920,
+      1278
+    ],
+    "crop": {
+      "left": 630,
+      "top": 0,
+      "size": 1200
+    },
+    "output": "/creators/curated/livibee.webp",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "author": "Kevin Chang",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "gerardromero",
+    "pageid": 141893806,
+    "source": "https://commons.wikimedia.org/wiki/File:Gerard_Romero_061A0742_(cropped).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/66/Gerard_Romero_061A0742_%28cropped%29.jpg",
+    "originalSha256": "0853a7162f8b50c58bb1fe1012b8b2e7cd000566f8bd9124d24c56a8aa14421d",
+    "originalSize": [
+      1739,
+      2234
+    ],
+    "crop": {
+      "left": 70,
+      "top": 80,
+      "size": 1600
+    },
+    "output": "/creators/curated/gerardromero.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Es llop verd",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "domingo",
+    "pageid": 176646652,
+    "source": "https://commons.wikimedia.org/wiki/File:Domingo_(Pierre-Alexis_Bizot)_durant_le_ZEVENT_2025_-_11.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/d/dd/Domingo_%28Pierre-Alexis_Bizot%29_durant_le_ZEVENT_2025_-_11.jpg",
+    "originalSha256": "f54e8fa0a10e584eb8164971dab4fddf5f25fd6117a6f9bc12e15f33f474bacc",
+    "originalSize": [
+      6048,
+      4024
+    ],
+    "crop": {
+      "left": 3350,
+      "top": 950,
+      "size": 1950
+    },
+    "output": "/creators/curated/domingo.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "etoiles",
+    "pageid": 174430740,
+    "source": "https://commons.wikimedia.org/wiki/File:Etoiles_(Rayenne_Guendil)_lors_du_ZEVENT_2025.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Etoiles_%28Rayenne_Guendil%29_lors_du_ZEVENT_2025.jpg",
+    "originalSha256": "a7e97a672dc9b3c41849071197ebddbe5f5f60faa8be772559ba0af30232f13f",
+    "originalSize": [
+      3197,
+      4795
+    ],
+    "crop": {
+      "left": 100,
+      "top": 220,
+      "size": 2990
+    },
+    "output": "/creators/curated/etoiles.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "samueletienne",
+    "pageid": 174440679,
+    "source": "https://commons.wikimedia.org/wiki/File:Samuel_Etienne_lors_du_ZEVENT_2025.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/69/Samuel_Etienne_lors_du_ZEVENT_2025.jpg",
+    "originalSha256": "583f63ab7728ea3370f9b969ff0f12222561a95d76eaa5d9c18d2d356df7270f",
+    "originalSize": [
+      2961,
+      4441
+    ],
+    "crop": {
+      "left": 120,
+      "top": 150,
+      "size": 2700
+    },
+    "output": "/creators/curated/samueletienne.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "ponce",
+    "pageid": 174577067,
+    "source": "https://commons.wikimedia.org/wiki/File:Aur%C3%A9lien_Gilles_(Ponce)_lors_du_ZEVENT_2025.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Aur%C3%A9lien_Gilles_%28Ponce%29_lors_du_ZEVENT_2025.jpg",
+    "originalSha256": "def3ce6ecab5ba9f3724529d0c7ed5284baa406d6608877dd20c68177736617b",
+    "originalSize": [
+      2876,
+      4314
+    ],
+    "crop": {
+      "left": 100,
+      "top": 250,
+      "size": 2600
+    },
+    "output": "/creators/curated/ponce.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "jltomy",
+    "pageid": 176670438,
+    "source": "https://commons.wikimedia.org/wiki/File:JL_Tomy_lors_du_ZEVENT_2025_-_05.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/f/f2/JL_Tomy_lors_du_ZEVENT_2025_-_05.jpg",
+    "originalSha256": "362aa70a85f5038aeafa64dfb6beb0ad309bbee2aba4b6a34cba5ff59611fbd0",
+    "originalSize": [
+      2151,
+      3233
+    ],
+    "crop": {
+      "left": 70,
+      "top": 250,
+      "size": 2010
+    },
+    "output": "/creators/curated/jltomy.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "ramzes",
+    "pageid": 102729243,
+    "source": "https://commons.wikimedia.org/wiki/File:RAMZES666_before_The_International_2018.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/5/5c/RAMZES666_before_The_International_2018.jpg",
+    "originalSha256": "f32efa30965f27da1b23034814c6e84c0fc01de79f07e062b3e590868bee55cc",
+    "originalSize": [
+      2560,
+      1920
+    ],
+    "crop": {
+      "left": 850,
+      "top": 0,
+      "size": 1450
+    },
+    "output": "/creators/curated/ramzes.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Roman Dvoryankin",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "9pasha",
+    "pageid": 150968665,
+    "source": "https://commons.wikimedia.org/wiki/File:9pasha_at_The_International_2018_(extract).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/1/19/9pasha_at_The_International_2018_%28extract%29.jpg",
+    "originalSha256": "05bc242173ebfebe1b32b18786f759ea767718110c6bc5676f6e47f4c7aa8abb",
+    "originalSize": [
+      1707,
+      2277
+    ],
+    "crop": {
+      "left": 200,
+      "top": 0,
+      "size": 1500
+    },
+    "output": "/creators/curated/9pasha.webp",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "author": "Dota 2 The International",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Licence et provenance de la source parente relevées sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "chowh1",
+    "pageid": 201107342,
+    "source": "https://commons.wikimedia.org/wiki/File:ChowH1_%C3%A0_son_setup_-_ZEVENT_2026_par_Micka%C3%ABl_Schauli.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/8/81/ChowH1_%C3%A0_son_setup_-_ZEVENT_2026_par_Micka%C3%ABl_Schauli.jpg",
+    "originalSha256": "fb3610258e9e92ad86dc0584f9215dd20fe16b2d3e282aee88c3d9df9f1f8c15",
+    "originalSize": [
+      6048,
+      4024
+    ],
+    "crop": {
+      "left": 2200,
+      "top": 200,
+      "size": 2600
+    },
+    "output": "/creators/curated/chowh1.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "ninja",
+    "pageid": 140729839,
+    "source": "https://commons.wikimedia.org/wiki/File:Ninja_(52900448126).jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/b/be/Ninja_%2852900448126%29.jpg",
+    "originalSha256": "9d28c93041f1239c147a5baba50f6d0a834d4bbf9bc460569caa60781227370e",
+    "originalSize": [
+      2880,
+      2160
+    ],
+    "crop": {
+      "left": 1670,
+      "top": 370,
+      "size": 1100
+    },
+    "output": "/creators/curated/ninja.webp",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0/",
+    "author": "State Farm",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Revue de licence Commons relevée",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "antoinedaniel",
+    "pageid": 48419743,
+    "source": "https://commons.wikimedia.org/wiki/File:Antoine_Daniel_-_N%C3%A9oCast2_-_1.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/3/31/Antoine_Daniel_-_N%C3%A9oCast2_-_1.jpg",
+    "originalSha256": "db576be7b481719996e88bf4ffc5cde78708354f3a7b3ec78459e9c86ec8b8ae",
+    "originalSize": [
+      5472,
+      3648
+    ],
+    "crop": {
+      "left": 1100,
+      "top": 0,
+      "size": 3100
+    },
+    "output": "/creators/curated/antoinedaniel.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Grég(ory) Viénot - @ArtificeBoy",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
+  },
+  {
+    "slug": "mistermv",
+    "pageid": 199411747,
+    "source": "https://commons.wikimedia.org/wiki/File:Xavier_Dang_(MisterMV)_lors_du_ZEVENT_2026.jpg",
+    "original": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Xavier_Dang_%28MisterMV%29_lors_du_ZEVENT_2026.jpg",
+    "originalSha256": "31a279b5ce85ccb154fc406294de80ace73e4213b4700b4cd6e2bcd1f4bb951d",
+    "originalSize": [
+      3087,
+      4630
+    ],
+    "crop": {
+      "left": 160,
+      "top": 250,
+      "size": 2800
+    },
+    "output": "/creators/curated/mistermv.webp",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "author": "Mickaël Schauli",
+    "identity": "Nom de la description et portrait examinés individuellement",
+    "licenseEvidence": "Œuvre personnelle et licence explicite du titulaire sur Commons",
+    "visual": "Originale et recadrage examinés ; photo individuelle, visage visible"
   }
 ]

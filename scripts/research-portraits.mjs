@@ -16,6 +16,7 @@ const limit = Number(option("--limit", "1000"));
 const workers = Math.min(3, Math.max(1, Number(option("--workers", "2"))));
 const stage = option("--stage", "search");
 const selectedSlugs = new Set(option("--slugs", "").split(",").filter(Boolean));
+const selectedPageIds = new Set(option("--pageids", "").split(",").filter(Boolean).map(Number));
 const queryMapFile = option("--query-map", "");
 const queryMap = queryMapFile ? JSON.parse(await readFile(queryMapFile, "utf8")) : {};
 const creators = JSON.parse(await readFile("src/data/creators.json", "utf8"));
@@ -121,23 +122,37 @@ async function search(page, creator) {
 
 async function download(page, creator) {
   const result = await loadJson(path.join(root, "search", `${creator.slug}.json`));
-  if (!result || result.state !== "searched") return;
+  if (!result || result.state !== "searched") return 0;
+  let requests = 0;
   const ambiguous = new Set(["buster", "dream", "faker", "ludwig", "michou", "locklear", "gaules", "forsen", "carola", "ponce", "chap", "grimm", "poko", "pengu", "repaz", "cyr", "ache", "ferra", "tolkin", "penta", "sharonqueen", "merryweather", "greentea", "mandatory", "vitality", "solary", "eslcs"]);
-  const selected = result.candidates.filter((candidate) => {
+  const eligible = result.candidates.filter((candidate) => {
+    if (selectedPageIds.size) return selectedPageIds.has(candidate.pageid) && candidate.reuseLicense && Math.min(candidate.width, candidate.height) >= 900;
     const context = /Twitch|esports|YouTub|streamer|gaming|gamer|League.of.Legends|Counter.Strike|ZEVENT|Zack|DreamHack|Fortnite|PUBG|Call.of.Duty|Overwatch|OpTic|Rocket.League/i.test(candidate.observation);
     return candidate.eligible && (candidate.titleMatch || candidate.namedCategory) && (!ambiguous.has(creator.slug) || context);
-  }).slice(0, 2);
+  });
+  const selected = selectedPageIds.size ? eligible : eligible.slice(0, 2);
   for (const candidate of selected) {
     const key = `${creator.slug}-${candidate.pageid}`;
     const metaFile = path.join(root, "downloads", `${key}.json`);
     if ((await loadJson(metaFile))?.state === "downloaded") continue;
+    requests++;
     try {
       // Le client du même contexte garde le proxy et la confiance TLS de session,
       // mais ne dépend pas du petit tampon d'images de l'inspecteur Chromium.
       const userAgent = await page.evaluate(() => navigator.userAgent);
-      const response = await page.context().request.get(candidate.original, {
-        headers: { "User-Agent": userAgent }, timeout: 45000,
-      });
+      let response;
+      for (let attempt = 0; attempt < 3; attempt++) {
+        response = await page.context().request.get(candidate.original, {
+          headers: { "User-Agent": userAgent }, timeout: 45000,
+        });
+        if (response.status() !== 429 || attempt === 2) break;
+        const header = response.headers()["retry-after"];
+        const seconds = Number(header);
+        const delay = header && Number.isFinite(seconds) ? seconds * 1000 : 45000;
+        if (delay > 120000) break;
+        await response.dispose();
+        await page.waitForTimeout(Math.max(delay, 15000));
+      }
       if (response.status() !== 200) throw new Error(`Image HTTP ${response.status()}`);
       if (!response.headers()["content-type"]?.startsWith("image/")) throw new Error("Réponse non image");
       const data = await response.body();
@@ -151,16 +166,19 @@ async function download(page, creator) {
       errors++;
     }
   }
+  return requests;
 }
 
 async function proof(page, creator) {
   const result = await loadJson(path.join(root, "search", `${creator.slug}.json`));
-  if (!result || result.state !== "searched") return;
+  if (!result || result.state !== "searched") return 0;
+  let requests = 0;
   for (const candidate of result.candidates) {
     const key = `${creator.slug}-${candidate.pageid}`;
     if ((await loadJson(path.join(root, "downloads", `${key}.json`)))?.state !== "downloaded") continue;
     const file = path.join(root, "proofs", `${key}.json`);
     if ((await loadJson(file))?.state === "captured") continue;
+    requests++;
     const response = await page.goto(candidate.source, { waitUntil: "domcontentloaded", timeout: 30000 });
     if (response.status() !== 200) throw new Error(`Page source HTTP ${response.status()}`);
     const text = await page.locator("#mw-content-text").innerText();
@@ -168,6 +186,7 @@ async function proof(page, creator) {
     const reviewed = /was reviewed on|was reviewed by|reviewed.*Flickreview|permission.*VRTS|permission.*verified|Permission received/i.test(text);
     await saveJson(file, { state: "captured", source: candidate.source, capturedAt: new Date().toISOString(), reviewNeeded, reviewed, text });
   }
+  return requests;
 }
 
 try {
@@ -175,12 +194,13 @@ try {
     const page = await browser.newPage();
     while (cursor < pending.length) {
       const creator = pending[cursor++];
+      let networkWork = true;
       try {
         if (stage === "search") {
           const result = await search(page, creator);
           await saveJson(path.join(root, "search", `${creator.slug}.json`), result);
-        } else if (stage === "download") await download(page, creator);
-        else if (stage === "proof") await proof(page, creator);
+        } else if (stage === "download") networkWork = (await download(page, creator)) > 0;
+        else if (stage === "proof") networkWork = (await proof(page, creator)) > 0;
         else throw new Error("Stage inconnu ; utiliser search, download ou proof");
       } catch (error) {
         errors++;
@@ -189,7 +209,7 @@ try {
       }
       completed++;
       if (completed % 25 === 0 || completed === queue.length) console.log(`${stage}: ${completed}/${queue.length}, erreurs ${errors}`);
-      await page.waitForTimeout(700);
+      if (networkWork) await page.waitForTimeout(stage === "download" ? 1500 : 700);
     }
     await page.close();
   }));

@@ -1,3 +1,31 @@
+## Reprise du ZIP — 13 octobre 2026
+
+Mission de Malik : récupérer et publier tout le travail local, sans nouvelle
+collecte ni substitution des choix déjà livrés. Base et main distant vérifiés
+identiques : `6f63374bc38f2746fb5e4c73db5dea50243d5274`. Patch binaire contrôlé,
+40 empreintes vérifiées avant application et fichiers restaurés à l’identique.
+
+Lot portraits : les 20 WebP curated non publiés sont récupérés avec leurs
+attributions, cadrages, suivi complet et améliorations du script de collecte.
+Registre passé de 10 à 30 ; les dix entrées antérieures restent identiques.
+Priorité manuelle conservée : 18 nouvelles images restent en réserve ; seules
+Livibee et 9pasha prennent priorité sur leurs versions Upscayl à l’affichage.
+Les 300 choix manuels, 699 images Upscayl et Diverron ne sont pas refaits.
+Le test navigateur récupéré est renforcé pour les deux images réellement actives,
+leurs dimensions 900 px et leurs sources dans les crédits, sans retirer les
+contrôles des portraits manuels 450 px.
+
+Validation indépendante du booster : 51/51 tests unitaires ciblés (portraits,
+préchargement, crédits), dont décodage de tous les curated ; 2/2 DOM crédits
+inclus dans les 32/32 DOM ciblés de la reprise. Typecheck, lint ciblé, catalogue,
+vocabulaire et build statique sans cloud réussis après `npm ci` ; lock inchangé.
+Parcours navigateur portraits bureau/téléphone simulé : 2/2 réussis.
+Publication en préparation.
+Les sources/licences sont reprises du ZIP, sans nouvelle enquête externe.
+État de publication et résultats définitifs : [rapport de reprise](reprise-zip-2026-10-13.md).
+Les checkpoints plus anciens ci-dessous sont historiques. Aucune réservation
+active ni nouvelle recherche à relancer.
+
 # Reprise courte : portraits CreatorDeck — 12 octobre 2026
 
 **Checkpoint courant :** lot publié `10699eb`, CI complète et Vercel Production
