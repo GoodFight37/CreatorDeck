@@ -1,3 +1,33 @@
+## Corner peek sur la carte garantie — 13 octobre 2026
+
+Suite au « Go » de Malik : seule la cinquième carte garantie du reveal d’un
+booster ordinaire attend désormais un geste facultatif. Tirer son coin haut
+droit vers le centre entrouvre un fragment du portrait ; le seuil armé ne retourne
+la carte qu’au relâchement. Reculer ou annuler replie le coin. Le bouton principal
+« Retourner la carte », le bouton de coin activé au clavier et le raccourci
+« Révéler les cinq cartes d’un coup » restent des chemins directs. Perfect, les
+quatre premières cartes, le flux OBS, économie, Binder, Drop et Craft ne changent
+pas ; effets désactivés/mouvement réduit gardent le reveal direct. Aucun GPU
+réactivé par défaut.
+
+Fichiers produit/tests : `src/components/reveal-overlay.tsx`,
+`src/app/booster-continuity.css`, `src/ecrans-effets.test.tsx`,
+`e2e/pack-tear.spec.ts`. Validation finale locale : `npm test` 73 fichiers /
+1 164 tests ; `npm run ecrans` 20 fichiers / 121 tests ; `npm run e2e` 84 réussis,
+12 ignorés faute de backend/cloud optionnel ; `npm run lint`, `npm run typecheck`,
+`npm run build` et `git diff --check` réussis. Le navigateur téléphone simulé
+exerce le geste et le chemin de repli ; cela ne remplace pas le toucher sur un
+téléphone physique. Le build local n’a pas de clés Supabase, donc n’atteste pas
+le cloud. HEAD local et distant vérifiés égaux à `6835d623` avant cette
+modification ; relever le SHA publié et la CI correspondante après push.
+
+Prochaine vérification produit : Malik essaie ce geste sur téléphone et donne
+son avis sur l’emplacement du coin, la facilité à le saisir et la taille de
+l’aperçu. La feuille de route produit reste consignée comme idées non commencées :
+soundbites de streameurs et hype Perfect ; feuilletage, reflets et sleeves du
+Binder ; deep-link Twitch et événements de drop ; Trade Radar, Last Pack et
+export Story. Aucun de ces chantiers n’est inclus dans le corner peek.
+
 ## Contrôle de stabilisation des quatre piliers — 13 octobre 2026
 
 Audit local du SHA `c21684377dfcc4f54c5864fb3a37a21149d35b9d` (`main`, distant

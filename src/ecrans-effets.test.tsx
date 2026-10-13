@@ -183,6 +183,7 @@ describe("les effets de révélation", () => {
     await banc.monter(
       <RevealOverlay cards={cinq as never} index={0} streakReward={{ day: 2, points: 0, hourglasses: 1, tokens: 0 }} onNext={suivant} onClose={fermer} />,
     );
+    expect(document.querySelector(".reveal-corner-handle"), "le Perfect garde ses cinq cartes immédiates").toBeNull();
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(0);
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
@@ -335,6 +336,42 @@ describe("les effets de révélation", () => {
     expect(next).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(520); });
     expect(next).toHaveBeenCalledOnce();
+  });
+
+  it("propose le coin uniquement sur la cinquième carte ordinaire, avec un bouton de révélation direct", async () => {
+    const fermer = vi.fn();
+    const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `garantie-${index}`));
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay cards={cinq as never} index={4} onNext={() => {}} onClose={fermer} />,
+    );
+
+    expect(document.querySelector(".reveal-anchor")?.classList.contains("is-corner-peeking")).toBe(true);
+    expect(document.querySelector(".reveal-corner-handle")?.getAttribute("aria-label"))
+      .toContain("carte garantie");
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
+      .toContain("Retourner la carte");
+
+    banc.appuyer("Retourner la carte");
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_250); });
+    expect(document.querySelector(".reveal-anchor")?.classList.contains("is-corner-peeking")).toBe(false);
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
+      .toContain("Ranger dans le classeur");
+  });
+
+  it("conserve le retournement direct quand les effets de carte sont coupés", async () => {
+    document.documentElement.dataset.cardFx = "off";
+    try {
+      const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `sobre-${index}`));
+      const { RevealOverlay } = await import("@/components/reveal-overlay");
+      await banc.monter(<RevealOverlay cards={cinq as never} index={4} onNext={() => {}} onClose={() => {}} />);
+      expect(document.querySelector(".reveal-corner-handle")).toBeNull();
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
+        .toContain("Ranger dans le classeur");
+    } finally {
+      delete document.documentElement.dataset.cardFx;
+    }
   });
 
   it("déverrouille la révélation si animationend ne vient jamais", async () => {

@@ -1,5 +1,17 @@
 # Décisions CreatorDeck
 
+## D-072 — 13 octobre 2026 : corner peek sur la carte garantie
+
+Après le flip des quatre premières cartes d’un booster ordinaire, la cinquième
+reste face cachée et son coin supérieur droit peut être tiré vers le centre
+pour dévoiler un petit aperçu. L’ouverture complète se fait au relâchement après
+un seuil court ; un geste interrompu replie le coin. Perfect, OBS, autres cartes
+et flux d’ouverture restent inchangés. Mouvement réduit/effets désactivés
+utilisent le reveal direct existant. Le CTA « Retourner la carte » et le bouton
+accessible au clavier contournent l’aperçu ; le raccourci de révélation complète
+reste disponible. GPU reste désactivé par défaut. Tests DOM/E2E, suites, build et
+limites sont consignés dans la passation du 13 octobre.
+
 ## D-069 — 13 octobre 2026 : hiérarchie Drop et priorité des recettes accessibles
 
 Demande limitée aux UI Drop/Craft ; Binder/Toi réservés à Gemini, ouverture

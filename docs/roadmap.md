@@ -11,6 +11,18 @@ Vercel est aussi success sur ce SHA.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
+
+### Corner peek — livré localement le 13 octobre
+
+Sur la cinquième carte garantie d’un booster ordinaire, tirer le coin haut droit
+permet de jeter un bref œil au portrait ; le flip complet n’arrive qu’au
+relâchement après le seuil. Un geste court replie le coin. Bouton principal,
+clavier et reveal complet gardent leurs raccourcis ; Perfect, OBS, autres écrans
+et défaut GPU sont inchangés. Validation locale complète : 1 164 tests, 121 tests
+d’écrans, 84 E2E réussis / 12 cloud ignorés, lint, typecheck et build réussis.
+Le geste est vérifié sur téléphone simulé, pas encore sur un appareil physique.
+Voir D-072 et le dernier checkpoint de [la passation](agent-handoff.md). SHA
+GitHub/CI à actualiser après publication.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
@@ -66,6 +78,10 @@ aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
 2. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
    éventuellement personnages de séries. Aucun développement engagé ; choix
    des personnes et organisation des cartes à définir.
+3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
+   courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
+   deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et
+   export Story. Les dépendances et règles restent à cadrer avant tout chantier.
 
 ### Livraisons terminées
 

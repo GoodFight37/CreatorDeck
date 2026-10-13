@@ -22,7 +22,7 @@ import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
-import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import { creatorImage, CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
 import { regionLabel } from "@/lib/regions";
 import {
@@ -93,9 +93,16 @@ export function RevealOverlay({
   const [showSummary, setShowSummary] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const [advanceQueuedFor, setAdvanceQueuedFor] = useState<string | null>(null);
+  const [skipAllRequested, setSkipAllRequested] = useState(false);
+  const [cornerPeek, setCornerPeek] = useState<{ cardId: string; phase: "peek" | "revealing" } | null>(null);
   const queuedAdvanceRef = useRef<string | null>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+  const cornerPull = useRef<{ pointerId: number; x: number; y: number; progress: number } | null>(null);
+  const cornerVisualRef = useRef<HTMLDivElement | null>(null);
   const cardId = card?.id;
+  const cornerPeekAvailable = !overlay && !perfect && !skipAllRequested && cards.length === 5 && index === 4 && cardEffectsAllowed();
+  const cornerPeekPhase = cornerPeek?.cardId === cardId ? cornerPeek.phase : "peek";
+  const cornerPeekWaiting = cornerPeekAvailable && cornerPeekPhase === "peek";
 
   const finishQueuedAdvance = useCallback((id: string) => {
     if (queuedAdvanceRef.current !== id || locked) return;
@@ -111,7 +118,7 @@ export function RevealOverlay({
   // sert de filet si le navigateur perd animationend ; le mouvement réduit
   // rend la face immédiatement disponible.
   useEffect(() => {
-    if (!cardId || perfect) return;
+    if (!cardId || perfect || cornerPeekWaiting) return;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const immediate = !cardEffectsAllowed();
     const reducedFallback = immediate
@@ -138,7 +145,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, finishQueuedAdvance, perfect, rarity]);
+  }, [cardId, cornerPeekWaiting, finishQueuedAdvance, perfect, rarity]);
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
   // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
@@ -225,6 +232,65 @@ export function RevealOverlay({
     else if (dy <= -48 && Math.abs(dy) > Math.abs(dx) * 1.1) advance();
   }
 
+  function resetCornerPeekVisual() {
+    cornerPull.current = null;
+    const visual = cornerVisualRef.current;
+    if (!visual) return;
+    visual.style.removeProperty("--corner-peek-width");
+    visual.style.removeProperty("--corner-peek-height");
+    visual.style.removeProperty("--corner-peek-shift-x");
+    visual.style.removeProperty("--corner-peek-shift-y");
+    visual.style.removeProperty("--corner-peek-tilt");
+  }
+
+  function revealCornerCard() {
+    if (!cornerPeekWaiting || !cardId) return;
+    resetCornerPeekVisual();
+    setCornerPeek({ cardId, phase: "revealing" });
+  }
+
+  function startCornerPeek(event: PointerEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (!cornerPeekWaiting || event.button !== 0 || event.isPrimary === false) return;
+    event.preventDefault();
+    cornerPull.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, progress: 0 };
+    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* capture tactile indisponible */ }
+  }
+
+  function moveCornerPeek(event: PointerEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    const pull = cornerPull.current;
+    if (!pull || pull.pointerId !== event.pointerId || !cornerPeekWaiting) return;
+    event.preventDefault();
+    const dx = event.clientX - pull.x;
+    const dy = event.clientY - pull.y;
+    // Le coin supérieur droit se tire vers le centre : bas et gauche.
+    const progress = Math.max(0, Math.min(1, 0.06 + (Math.max(0, -dx) + Math.max(0, dy)) / 90));
+    pull.progress = progress;
+    const visual = cornerVisualRef.current;
+    if (!visual) return;
+    visual.style.setProperty("--corner-peek-width", `${(progress * 30).toFixed(1)}%`);
+    visual.style.setProperty("--corner-peek-height", `${(progress * 40).toFixed(1)}%`);
+    visual.style.setProperty("--corner-peek-shift-x", `${Math.max(-32, dx * 0.46).toFixed(1)}px`);
+    visual.style.setProperty("--corner-peek-shift-y", `${Math.min(32, dy * 0.46).toFixed(1)}px`);
+    visual.style.setProperty("--corner-peek-tilt", `${Math.max(-16, Math.min(16, (dy - dx) * 0.2)).toFixed(1)}deg`);
+  }
+
+  function endCornerPeek(event: PointerEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    const pull = cornerPull.current;
+    if (!pull || pull.pointerId !== event.pointerId) return;
+    const opened = pull.progress >= 0.28;
+    resetCornerPeekVisual();
+    if (opened) revealCornerCard();
+  }
+
+  function cancelCornerPeek(event: PointerEvent<HTMLButtonElement>) {
+    event.stopPropagation();
+    if (cornerPull.current?.pointerId !== event.pointerId) return;
+    resetCornerPeekVisual();
+  }
+
   function finishFlip(event: AnimationEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     setFlippedCardId(card.id);
@@ -236,6 +302,11 @@ export function RevealOverlay({
     if (!selfId) return;
     onClose();
     void cloudStore.openProfile(selfId);
+  }
+
+  function skipRemainingCards() {
+    setSkipAllRequested(true);
+    onSkipAll?.();
   }
 
   // Une carte déjà révélée se range dès le premier appui.
@@ -311,11 +382,11 @@ export function RevealOverlay({
         </div>
         {/* Le raccourci des cinq cartes : hors overlay seulement. Devant un
             public, on regarde la mise en scène jusqu'au bout. */}
-        {!overlay && !perfect && !isLast ? (
+        {!overlay && !perfect && !isLast && onSkipAll ? (
           <button
             type="button"
             className="reveal-skip"
-            onClick={onSkipAll}
+            onClick={skipRemainingCards}
             aria-label="Révéler les cinq cartes d'un coup"
           >
             ×{cards.length - index}
@@ -402,7 +473,8 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          <div className="reveal-anchor" style={glowStyle}
+          <div style={glowStyle}
+            className={`reveal-anchor${cornerPeekWaiting ? " is-corner-peeking" : ""}`}
             onPointerDown={startRevealSwipe}
             onPointerMove={moveRevealSwipe}
             onPointerUp={endRevealSwipe}
@@ -425,6 +497,24 @@ export function RevealOverlay({
                 </span>
               </div>
             </div>
+            {cornerPeekWaiting ? (
+              <>
+                <div ref={cornerVisualRef} className="reveal-corner-peek-visual"
+                  style={{ "--corner-peek-image": `url("${creatorImage(creator)}")` } as CSSProperties}>
+                  <span className="reveal-corner-peek-art" aria-hidden="true" />
+                  <button type="button" className="reveal-corner-handle"
+                    aria-label="Tire le coin vers le centre pour jeter un œil à la carte garantie"
+                    onPointerDown={startCornerPeek}
+                    onPointerMove={moveCornerPeek}
+                    onPointerUp={endCornerPeek}
+                    onPointerCancel={cancelCornerPeek}
+                    onLostPointerCapture={cancelCornerPeek}
+                    onClick={(event) => { if (event.detail === 0) revealCornerCard(); }}>
+                    <span aria-hidden="true">↙</span>
+                  </button>
+                </div>
+              </>
+            ) : null}
           </div>
           {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
               nameplate). Ici : l'état, et rien d'autre. */}
@@ -459,6 +549,9 @@ export function RevealOverlay({
             {isLast && !perfect ? (
               <span className="reveal-guaranteed">Carte garantie du booster</span>
             ) : null}
+            {cornerPeekWaiting ? (
+              <span className="reveal-corner-instruction">Tire le coin pour jeter un œil</span>
+            ) : null}
           </div>
         </div>
       )}
@@ -470,7 +563,7 @@ export function RevealOverlay({
       ) : null}
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
-        onClick={showSummary ? onClose : advance}
+        onClick={showSummary ? onClose : cornerPeekWaiting ? revealCornerCard : advance}
         disabled={locked}
         // La barre du verrou lit la durée du module de mise en scène : une
         // seule vérité, sinon elle finirait avant le bouton ou après lui.
@@ -479,6 +572,8 @@ export function RevealOverlay({
         <span>
           {showSummary
             ? tutorial ? "Commencer ma collection" : "Retour au Drop"
+            : cornerPeekWaiting
+            ? "Retourner la carte"
             : locked
             ? "Perfect…"
             : advanceQueuedFor === card.id
