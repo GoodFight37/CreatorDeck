@@ -19,6 +19,20 @@ propositions via le ZIP et renvoie le JSON exporté. Le taux du pilote ne prouve
 pas une solution automatique pour tout le catalogue ; aucune relance des 697
 tant que ce résultat n’est pas évalué. Suites précédentes ci-dessous historiques.
 
+## Critère de choix des portraits — clarification de Malik, 13 octobre 2026
+
+Pour décider si une photo remplace un portrait dans le jeu, Malik demande de
+juger **la qualité visuelle** : bonne personne reconnaissable, image nette,
+visage lisible, pas de pixelisation gênante et cadrage utilisable. L’absence de
+source, de crédit ou de licence renseignée **ne suffit pas à écarter une photo**
+et ne doit pas devenir un blocage produit. Ces champs peuvent rester comme notes
+de recherche, mais ne déterminent pas le tri visuel. Si l’image elle-même n’est
+pas disponible pour inspection, dire qu’elle reste à regarder ; ne pas la
+classer comme mauvaise à cause de sa source.
+
+Cette consigne remplace les anciennes formulations ci-dessous qui demandaient
+une attribution ou une vérification de source comme condition de sélection.
+
 Préférence de Malik : proposer un changement de modèle avant le chantier puis
 s’arrêter et attendre son « go ». Ne pas prétendre connaître le sélecteur de
 modèle de son interface.
@@ -82,14 +96,16 @@ des petits sont remplacées par cette instruction. La recherche concerne tout
 le catalogue ; travailler par lots est une organisation, pas une limitation
 au Top 50 ni aux cinq noms du premier lot. Les fonctionnalités déjà terminées
 restent le chemin d’intégration. Style choisi par Malik : **photos nettes, visage visible, cadrage individuel
-cohérent**. Appliquer ce critère aux 1 000 créateurs.
+cohérent**. Appliquer ce critère aux 1 000 créateurs. La source ou l’absence de
+crédit ne décide pas si une image est visuellement retenue ; voir la clarification
+ci-dessus.
 
 [Suivi complet](portrait-suivi-complet.csv) : une ligne par créateur, statut
 initial explicite ; **Rubius/Shroud sont exclus de la nouvelle recherche**,
 à la demande explicite de Malik avant son départ dormir. Les 998 autres
-créateurs restent dans le périmètre. Définir des candidates
-nettes, correctement attribuées au créateur et documentées, puis sélectionner
-et intégrer par lots. La recherche précédente de six images reste disponible.
+créateurs restent dans le périmètre. Comparer les candidates sur leur qualité
+visuelle et les intégrer par lots selon ce critère. La recherche précédente de
+six images reste disponible.
 
 L’accès GitHub a échoué lors de la clarification précédente, puis a été
 rétabli avant le lancement du lot complet : `git ls-remote`, API GitHub et

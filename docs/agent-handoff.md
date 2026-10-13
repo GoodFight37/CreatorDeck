@@ -39,14 +39,14 @@ La branche
 est poussée jusqu’au commit
 [`297f049b`](https://github.com/GoodFight37/CreatorDeck/commit/297f049b0a27f192b3a757ff0df3ba6578317d30),
 qui descend de `main` `0e53fa6c`. Elle conserve l’audit de 50 pistes dans
-`manifeste.csv`, son brief et un index de revue. Résultats : 40 sans source
-adéquate, 5 droits à vérifier, 4 utilisables sous conditions d’attribution et
-1 entrée organisation ESLCS. Rubius et Shroud sont les deux pistes déjà
-intégrées ; AdinRoss et Rivers restent des pistes non intégrées. Les fichiers
-image candidats ne sont pas dans cette branche et aucune nouvelle image n’est
-approuvée. Garder cette recherche séparée de `main` jusqu’à une sélection
-visuelle et une vérification des droits ; les statuts du manifeste ne sont pas
-une autorisation juridique. Le diff de branche a passé `git diff --check` ;
+`manifeste.csv`, son brief et un index de revue. Les catégories de source/licence
+du manifeste sont des notes de recherche, **pas des critères pour écarter un
+portrait** : Malik demande de choisir selon la qualité visuelle (bonne personne,
+netteté, visage lisible, résolution et cadrage utilisables). Rubius et Shroud
+sont les deux pistes déjà intégrées ; AdinRoss et Rivers restent des pistes non
+intégrées. Les fichiers image candidats ne sont pas dans cette branche ; leur
+qualité visuelle reste donc à examiner. Le diff de branche a passé
+`git diff --check` ;
 aucun test produit n’est pertinent pour ces seuls fichiers d’audit. Le travail
 n’est donc pas fusionné ni inclus dans l’app publiée.
 

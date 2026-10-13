@@ -64,6 +64,11 @@ passent ; les cinq jobs ont fini en 2 min 31 s (au lieu de 10 min 12 s au run
 précédent). Le contrôle Vercel du même commit est vert. Le badge de variante « Live » garde
 la provenance de la carte ; un indicateur séparé reflète le direct actif.
 
+Pour les prochains portraits, le choix dépend de la qualité visuelle de l’image
+(bonne personne, netteté, visage lisible, résolution et cadrage). L’absence de
+source ou de crédit ne suffit pas à l’écarter. Voir la
+[passation portraits](docs/passation-portraits.md).
+
 ## Prérequis
 
 - Node.js ≥ 20

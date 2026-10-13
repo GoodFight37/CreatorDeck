@@ -15,8 +15,12 @@ hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
 Le travail portrait est également suivi séparément sur
 [`fcc/revue-portraits-50`](https://github.com/GoodFight37/CreatorDeck/tree/fcc/revue-portraits-50),
 dernier commit `297f049b`. Cette branche ne contient pas les images candidates ;
-aucune nouvelle image n’est approuvée et rien n’est fusionné dans `main`.
-Voir le checkpoint détaillé dans [la passation](agent-handoff.md).
+les catégories de source du manifeste ne servent pas de filtre produit. Malik
+demande de retenir ou d’écarter les images selon leur qualité visuelle (bonne
+personne, netteté, visage lisible, résolution et cadrage utilisables). Les
+fichiers image ne sont pas dans cette branche ; leur qualité reste à regarder.
+Voir le checkpoint détaillé dans [la passation](agent-handoff.md) et la règle
+complète dans [la passation portraits](passation-portraits.md).
 
 ### Provenance Live clarifiée — 13 octobre
 
