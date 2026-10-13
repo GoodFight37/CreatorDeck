@@ -2,13 +2,13 @@
 
 ## État courant — 13 octobre 2026
 
-Référence publiée : `main` à `0e53fa6cc383353eb63f5c16dcb676956d985f83`
-(SHA distant vérifié). Le badge compact de direct ouvre maintenant la chaîne
-Twitch lorsque le snapshot est frais ; la CI
-[38411066062](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411066062)
-est verte, 5/5 jobs en 3 min 26 s. Le workflow Supabase
-[38411556260](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411556260)
-et Vercel sont aussi success sur ce SHA.
+Référence publiée vérifiée : `main` à `f93ffcc8ed2f31c6def11e14f08f14a105d41865`.
+La vérification GitHub du commit de code précédent
+[38441932774](https://github.com/GoodFight37/CreatorDeck/actions/runs/38441932774)
+est verte, 5/5 jobs ; `f93ffcc` est un suivi documentaire. Le workflow Supabase
+[38442505857](https://github.com/GoodFight37/CreatorDeck/actions/runs/38442505857)
+est success sur `f93ffcc`. Le badge compact de direct ouvre maintenant la chaîne
+Twitch lorsque le snapshot est frais.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
@@ -108,9 +108,15 @@ aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
    charges faits ; [preuves et limites](booster-continuum-2026-10-12.md).
    Reste l’appréciation du rendu/rythme sur téléphone réel : les tests ne sont
    pas un verdict esthétique et le rendu n’est pas présenté comme « Pocket ».
-2. **Cadrer l’extension du catalogue**, idée de Malik : personnes connues,
-   éventuellement personnages de séries. Aucun développement engagé ; choix
-   des personnes et organisation des cartes à définir.
+2. **Cadrer l’extension du catalogue**, idée de Malik : créateurs Twitch et,
+   éventuellement, personnages fictifs. Le prototype isolé `/catalogue-demo`
+   permet de comparer un classeur mixte et un classement indépendant par
+   univers ; noms fictifs et visuels temporaires explicitement marqués. Validé
+   localement : 8/8 E2E, 1 164 tests unitaires, 124 tests d’écran, typecheck,
+   lint ciblé et build. Il ne modifie pas les données du jeu et ne valide ni
+   l’ajout d’identités réelles, ni des licences, ni le modèle de progression
+   final. Prochaine étape : retour sur l’interface et cadrage explicite des
+   univers/règles avant tout branchement en production.
 3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
    courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
    deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et

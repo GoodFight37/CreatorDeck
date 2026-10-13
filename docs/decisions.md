@@ -1,5 +1,17 @@
 # Décisions CreatorDeck
 
+## D-076 — 13 octobre 2026 : démonstrateur de classeur multi-univers isolé
+
+Créer `/catalogue-demo` comme prototype d’interface autonome pour comparer un
+même classeur mêlant créateurs Twitch fictifs et personnages fictifs, avec un
+classement et une progression distincts par univers. Les noms, handles,
+collectionneurs, scores de progression et univers sont des fixtures inventées ;
+les illustrations CSS abstraites portent chacune le marquage « Visuel temporaire ».
+La route ne lit ni n’écrit le catalogue, les sauvegardes, Supabase, les boosters
+ou l’économie du jeu et n’active aucun choix artistique/licence pour une version
+produit. L’objectif est de tester la hiérarchie d’écran et la comparaison mobile,
+pas de préjuger des règles finales d’un catalogue étendu.
+
 ## D-075 — 13 octobre 2026 : sélection des portraits sur la qualité visuelle
 
 Pour remplacer les portraits actuels, la source ou l’absence de crédit ne sert
