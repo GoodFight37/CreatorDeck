@@ -387,9 +387,9 @@ test("reversing or lifting halfway cancels cleanly and keeps the no-tear option"
 
   await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: start, y }] });
   await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: partial, y }] });
-  const partialWidth = await slit.evaluate((node) => (node as HTMLElement).style.width);
-  expect(parseFloat(partialWidth)).toBeGreaterThan(0);
-  expect(parseFloat(partialWidth)).toBeLessThan(100);
+  const partialWidth = (await slit.boundingBox())!.width;
+  expect(partialWidth).toBeGreaterThan(0);
+  expect(partialWidth).toBeLessThan(bounds.width);
   expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).not.toBe("none");
   await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: start, y }] });
   await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
@@ -527,4 +527,28 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
     await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();
   }
+});
+
+ test("guided peel follows curved Y samples and opens with a shorter lifted cut", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const dialog = page.locator(".opening-continuum");
+  const identity = await dialog.elementHandle();
+  const zone = (await dialog.locator(".booster-peel-zone").boundingBox())!;
+  const x = zone.x + zone.width * .35, y = zone.y + zone.height * .65;
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x + zone.width * .1, y - zone.height * .2, { steps: 4 });
+  await page.mouse.move(x + zone.width * .18, y + zone.height * .1, { steps: 4 });
+  const samples = await dialog.locator(".foil-cut-slit").getAttribute("points");
+  const ys = samples!.split(" ").map(point => Number(point.split(",")[1]));
+  expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(2);
+  expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).clipPath)).toContain("polygon");
+  await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
+  await page.screenshot({ path: "test-results/peel-guide-" + test.info().project.name + ".png" });
+  await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
+  await page.mouse.up();
+  await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
+  expect(await identity!.evaluate(node => node.isConnected)).toBe(true);
+  await expect(dialog.locator("canvas")).toHaveCount(0);
 });

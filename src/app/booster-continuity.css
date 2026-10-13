@@ -471,9 +471,9 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   100% { opacity: 0; }
 }
 @keyframes scene-cap-fold {
-  0%, 8% { opacity: 1; transform: translate3d(calc(var(--peel-direction) * var(--peel-release, 0) * 10px),
-    calc(var(--peel-release, 0) * -24px), calc(var(--peel-release, 0) * 26px))
-    rotateX(calc(var(--peel-release, 0) * 68deg)) rotateZ(calc(var(--peel-direction) * var(--peel-release, 0) * -4deg)); }
+  0%, 8% { opacity: 1; transform: translate3d(var(--peel-x, 0px),
+    calc(var(--peel-y, 0px) - var(--peel-release, 0) * 14px), calc(var(--peel-release, 0) * 26px))
+    rotateX(calc(var(--peel-release, 0) * 68deg)) rotateZ(var(--peel-angle, 0deg)); }
   29% { opacity: 1; transform: translateY(-4%) translateZ(24px) rotateX(84deg) rotateZ(calc(var(--peel-direction) * -6deg)); }
   43% { opacity: .96; transform: translate(7%, -8%) translateZ(30px) rotateX(96deg) rotateZ(calc(var(--peel-direction) * -10deg)); }
   66% { opacity: .82; transform: translateY(-9%) translateZ(20px) rotateX(91deg) rotateY(-12deg) rotateZ(-4deg); }
@@ -758,3 +758,38 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }
 }
 [data-card-fx="off"] .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }
+
+/* Peel zone: a sampled seam, with a lip that follows both pointer axes. */
+.booster-cinematic.booster-presentation .booster-peel-zone {
+  top: 5%; height: 19%; min-height: 48px; transform: none;
+}
+.booster-cinematic.booster-presentation .foil-top-piece {
+  clip-path: var(--cut-top, inset(0 0 84.55%));
+}
+.booster-cinematic.booster-presentation .foil-body-piece {
+  clip-path: var(--cut-body, inset(15.45% 0 0));
+}
+.booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
+  transform: translate3d(var(--peel-x, 0px), calc(var(--peel-y, 0px) - var(--peel-progress) * 14px), calc(var(--peel-progress) * 26px))
+    rotateX(calc(var(--peel-progress) * 68deg)) rotateZ(var(--peel-angle, 0deg));
+}
+.booster-cinematic .foil-cut-trace {
+  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 7;
+  overflow: visible; pointer-events: none; transition: opacity 160ms ease-out;
+}
+.booster-cinematic.booster-presentation .foil-cut-trace .foil-cut-slit {
+  position: static; fill: none; stroke: #301b23; stroke-width: 3px;
+  stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 1px 0 #f4cead); box-shadow: none; transform: none; clip-path: none;
+}
+.booster-cinematic .is-returning .foil-cut-trace { opacity: 0; }
+.booster-cinematic.booster-presentation .is-returning .foil-top-piece { clip-path: inset(0 0 84.55%); }
+.booster-cinematic.booster-presentation .is-returning .foil-body-piece { clip-path: inset(15.45% 0 0); }
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic .foil-cut-trace { transition: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
+}
+[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }

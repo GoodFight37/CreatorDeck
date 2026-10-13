@@ -1,5 +1,14 @@
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
+## Peel trop linéaire — 13 octobre 2026
+
+Problème joueur démontré : `abs(deltaX)/(width*.55)` et fente horizontale fixe
+font sentir une jauge. Correction ciblée : zone tactile haute, trace X/Y,
+clips des pièces suivant la trace, rabat sous le geste ; seuil de surface
+ouverte et repli au relâchement. Tests navigateur dédiés ; acceptation du
+ressenti par Malik sur téléphone encore requise. Aucun résultat esthétique
+sur appareil réel revendiqué. [Détails](booster-peel-guide-2026-10-13.md).
+
 Accès aux thèmes et découverte depuis Binder vide restaurés, indication Live
 explicitée et marquage du Tribunal ajusté. Titres compacts Gemini conservés avec
 assertions exactes actualisées. [Détail et preuves](correctifs-interface-2026-10-13.md) :

@@ -34,12 +34,15 @@ export function PackTear({
 }) {
   const dialogRef = usePresentationFocus(true, returnFocusTo);
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
+  const [trace, setTrace] = useState<{ x: number; y: number }[]>([]);
+  const [returning, setReturning] = useState(false);
+  const [pull, setPull] = useState({ x: 0, y: 0, angle: 0 });
   const pullProgress = useRef(0);
   const [opened, setOpened] = useState(false);
   // Explicit preview only, until the GPU material is approved on a real phone.
   const [foil3D] = useState(() => typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("opening3d") === "1");
-  const start = useRef<{ x: number; percent: number; centerX: number; centerY: number; halfWidth: number; halfHeight: number } | null>(null);
+  const start = useRef<{ x: number; y: number; pointerId: number; points: { x: number; y: number }[]; percent: number; centerX: number; centerY: number; halfWidth: number; halfHeight: number } | null>(null);
   const sceneRef = useRef<HTMLDivElement>(null);
   const chamberRef = useRef<HTMLDivElement>(null);
   const done = useRef(false);
@@ -102,6 +105,20 @@ export function PackTear({
 
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
 
+  const retract = () => {
+    start.current = null;
+    if (done.current) return;
+    sceneRef.current?.classList.remove("is-pulling");
+    for (const key of ["--opening-tilt-x", "--opening-tilt-y", "--opening-light-x"]) sceneRef.current?.style.removeProperty(key);
+    pullProgress.current = 0;
+    setReturning(true);
+    setPull({ x: 0, y: 0, angle: 0 });
+    setCut(current => ({ ...current, progress: 0 }));
+  };
+  // The real sampled cut separates both printed pieces, rather than filling a rail.
+  const edge = [...new Map(trace.map(point => [Math.round(point.x), point])).values()]
+    .sort((a, b) => a.x - b.x);
+  const boundary = edge.length > 1 ? edge.map(point => `${point.x}% ${point.y}%`).join(", ") : "0% 15.45%, 100% 15.45%";
   const artwork = kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg";
   return createPortal(
     <div ref={dialogRef} tabIndex={-1} className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`} role="dialog"
@@ -111,12 +128,15 @@ export function PackTear({
           aria-hidden={revealing || undefined} inert={revealing}>
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LES CARTES APPARAISSENT" : "GLISSE SUR LA BANDE STRIÉE EN HAUT"}
+          {opened ? "LES CARTES APPARAISSENT" : "GUIDE LA COUPE SUR LA BANDE STRIÉE"}
         </p>
-        <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
+        <div ref={sceneRef} className={`booster-physical-scene${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
           style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%`,
             "--peel-progress": cut.progress / 100, "--peel-direction": cut.direction,
-            "--peel-origin-x": `${cut.origin}%` } as CSSProperties}>
+            "--peel-origin-x": `${cut.origin}%`,
+            "--peel-x": `${pull.x}px`, "--peel-y": `${pull.y}px`, "--peel-angle": `${pull.angle}deg`,
+            "--cut-top": `polygon(0% 0%, 100% 0%, 100% 15.45%, ${[...edge].reverse().map(point => `${point.x}% ${point.y}%`).join(", ") || "0% 15.45%"}, 0% 15.45%)`,
+            "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)` } as CSSProperties}>
           <PackFoil3D enabled={foil3D} artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
@@ -140,61 +160,60 @@ export function PackTear({
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px"
               className="foil-printed-art" priority />
           </div>
-          <span className="foil-cut-slit" aria-hidden="true"
-            style={{ left: `${cut.start}%`, width: `${Math.max(0, cut.end - cut.start)}%` }} />
-          <div className="booster-tear-track" role="button" tabIndex={opened ? -1 : 0}
+          <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <polyline className="foil-cut-slit" points={trace.map(point => `${point.x},${point.y}`).join(" ")} />
+          </svg>
+          <div className="booster-tear-track booster-peel-zone" role="button" tabIndex={opened ? -1 : 0}
             aria-label="Déchirer le sachet en passant le doigt sur sa soudure"
             onPointerDown={(event) => {
-              if (opened || event.button !== 0 || event.isPrimary === false) return;
-              const bounds = event.currentTarget.getBoundingClientRect();
-              const p = Math.max(4, Math.min(96, (event.clientX - bounds.left) / bounds.width * 100));
-              const sceneBounds = sceneRef.current?.getBoundingClientRect();
-              start.current = { x: event.clientX, percent: p,
-                centerX: sceneBounds ? sceneBounds.left + sceneBounds.width / 2 : bounds.left + bounds.width / 2,
-                centerY: sceneBounds ? sceneBounds.top + sceneBounds.height / 2 : bounds.top + bounds.height / 2,
-                halfWidth: Math.max(1, (sceneBounds?.width ?? bounds.width) / 2),
-                halfHeight: Math.max(1, (sceneBounds?.height ?? bounds.height) / 2) };
+              if (opened || start.current || event.button !== 0 || event.isPrimary === false) return;
+              const bounds = sceneRef.current!.getBoundingClientRect();
+              const point = { x: Math.max(2, Math.min(98, (event.clientX - bounds.left) / bounds.width * 100)),
+                y: Math.max(6, Math.min(23, (event.clientY - bounds.top) / bounds.height * 100)) };
+              start.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId, points: [point], percent: point.x,
+                centerX: bounds.left + bounds.width / 2, centerY: bounds.top + bounds.height / 2,
+                halfWidth: Math.max(1, bounds.width / 2), halfHeight: Math.max(1, bounds.height / 2) };
+              setReturning(false);
+              setTrace([point]);
+              setPull({ x: 0, y: 0, angle: 0 });
               sceneRef.current?.classList.add("is-pulling");
               pullProgress.current = 0;
-              setCut({ start: p, end: p, progress: 0, direction: 1, origin: p });
+              setCut({ start: point.x, end: point.x, progress: 0, direction: 1, origin: point.x });
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
-              if (opened || !start.current) return;
-              const bounds = event.currentTarget.getBoundingClientRect();
+              const gesture = start.current;
+              if (opened || !gesture || gesture.pointerId !== event.pointerId) return;
+              const bounds = sceneRef.current!.getBoundingClientRect();
+              const point = { x: Math.max(2, Math.min(98, (event.clientX - bounds.left) / bounds.width * 100)),
+                y: Math.max(6, Math.min(23, (event.clientY - bounds.top) / bounds.height * 100)) };
+              const previous = gesture.points[gesture.points.length - 1];
+              if (Math.hypot(point.x - previous.x, point.y - previous.y) < .4) return;
+              gesture.points.push(point);
+              const dx = event.clientX - gesture.x, dy = event.clientY - gesture.y;
+              // Opening area combines the cut's width and the lifted lip. Vertical
+              // pulls can open a shorter cut; scribbling in place cannot accumulate a gauge.
+              const span = Math.max(...gesture.points.map(p => p.x)) - Math.min(...gesture.points.map(p => p.x));
+              const lift = Math.max(0, -dy / bounds.height);
+              const aperture = span / 100 * (.5 + Math.min(.3, lift) * 3);
+              const progress = Math.min(99, aperture / .25 * 100);
+              pullProgress.current = progress / 100;
+              setTrace([...gesture.points]);
+              setPull({ x: Math.max(-24, Math.min(24, dx * .16)), y: Math.max(-65, Math.min(28, dy * .55)),
+                angle: Math.max(-18, Math.min(18, Math.atan2(point.y - previous.y, Math.abs(point.x - previous.x) + 1) * 180 / Math.PI)) });
+              setCut({ start: Math.min(...gesture.points.map(p => p.x)), end: Math.max(...gesture.points.map(p => p.x)), progress,
+                direction: dx >= 0 ? 1 : -1, origin: gesture.percent });
               const scene = sceneRef.current;
               if (scene && cardEffectsAllowed()) {
-                const x = Math.max(-1, Math.min(1, (event.clientX - start.current.centerX) / start.current.halfWidth));
-                const y = Math.max(-1, Math.min(1, (event.clientY - start.current.centerY) / start.current.halfHeight));
-                scene.style.setProperty("--opening-tilt-x", `${-y * 5}deg`);
-                scene.style.setProperty("--opening-tilt-y", `${x * 7}deg`);
-                scene.style.setProperty("--opening-light-x", `${50 + x * 35}%`);
+                scene.style.setProperty("--opening-tilt-x", `${-Math.max(-1, Math.min(1, dy / bounds.height)) * 5}deg`);
+                scene.style.setProperty("--opening-tilt-y", `${Math.max(-1, Math.min(1, dx / bounds.width)) * 7}deg`);
+                scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
-              const end = Math.max(2, Math.min(98,
-                (event.clientX - bounds.left) / bounds.width * 100));
-              const progress = Math.max(0, Math.min(100,
-                Math.abs(event.clientX - start.current.x) / (bounds.width * .55) * 100));
-              pullProgress.current = progress / 100;
-              setCut({ start: Math.min(start.current.percent, end), end: Math.max(start.current.percent, end), progress,
-                direction: event.clientX >= start.current.x ? 1 : -1, origin: start.current.percent });
-              if (progress >= 100) finish();
+              if (span >= 20 && aperture >= .25) finish();
             }}
-            onPointerUp={() => {
-              start.current = null;
-              sceneRef.current?.classList.remove("is-pulling");
-              sceneRef.current?.style.removeProperty("--opening-tilt-x");
-              sceneRef.current?.style.removeProperty("--opening-tilt-y");
-              sceneRef.current?.style.removeProperty("--opening-light-x");
-              if (!done.current) { pullProgress.current = 0; setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 }); }
-            }}
-            onPointerCancel={() => {
-              start.current = null;
-              sceneRef.current?.classList.remove("is-pulling");
-              sceneRef.current?.style.removeProperty("--opening-tilt-x");
-              sceneRef.current?.style.removeProperty("--opening-tilt-y");
-              sceneRef.current?.style.removeProperty("--opening-light-x");
-              if (!done.current) { pullProgress.current = 0; setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 }); }
-            }}
+            onPointerUp={(event) => { if (start.current?.pointerId === event.pointerId) retract(); }}
+            onPointerCancel={(event) => { if (start.current?.pointerId === event.pointerId) retract(); }}
+            onLostPointerCapture={(event) => { if (start.current?.pointerId === event.pointerId) retract(); }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight" || event.key === "ArrowLeft") {
                 event.preventDefault();

@@ -1,5 +1,16 @@
 # Décisions CreatorDeck
 
+## D-067 — 13 octobre 2026 : coupe guidée plutôt que rail horizontal
+
+Malik refuse le ressenti de jauge G→D. La bande haute devient une zone tactile
+qui accepte des départs libres et conserve les échantillons X/Y du doigt.
+La trace découpe les deux pièces imprimées ; déplacement vertical et angle
+pilotent le rabat. Le seuil mesure une ouverture suffisante (largeur fendue et
+soulèvement), sans alignement parfait. Relâchement précoce/cancel/perte de
+capture replient ; clavier et bouton de secours conservés. Continuum inchangé,
+GPU non activé par défaut ; aucun chantier sur les autres écrans.
+[Spécification et vérifications](booster-peel-guide-2026-10-13.md).
+
 ## D-066 — 13 octobre 2026 : pilote de recherche/cadrage automatisé puis revue
 
 Malik demande d’automatiser le reste du catalogue et de corriger les exceptions

@@ -1,3 +1,18 @@
+## Peel guidé en deux axes — 13 octobre 2026
+
+Demande unique de Malik : remplacer la jauge horizontale par une coupe guidée
+sur la bande haute. Zone 2D, trace SVG échantillonnée X/Y, découpe des deux
+pièces sur cette trace ; rabat piloté par déplacement/angle. Ouverture par
+largeur fendue × soulèvement, pas distance X depuis l’origine ; petits gestes
+interrompus, annulation et perte de capture replient sans ouvrir. Même portail,
+GPU opt-in inchangé, aucun changement Drop/Binder/Craft/profil.
+[Livrable, seuils et preuves](booster-peel-guide-2026-10-13.md). Base main
+`c6e85a4c`, propre et égale au distant au départ. 11/11 DOM, 8/8 E2E ciblés
+puis 4/4 après correction CSS, typecheck/lint/build statique sans cloud et
+diff-check réussis. Publication normale main avec ce checkpoint ; CI à relever
+après push. Validation du ressenti sur téléphone physique encore attendue.
+Aucune réservation concurrente observée, réservation libérée après publication.
+
 ## Pilote automatique portraits livré — 13 octobre 2026
 
 Après recherche, carte blanche de Malik pour un pilote de vingt créateurs.
