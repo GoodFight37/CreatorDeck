@@ -197,8 +197,10 @@ refus SQL : il signale un conflit de sauvegardes, où pousser l’une pourrait
 effacer l’autre. Le sablier relit maintenant les deux parties avant de refuser
 sur la base d’un conflit mémorisé ; aucune partie n’est choisie automatiquement
 en cas de divergence persistante. Tests locaux de la relance : store 159/159,
-E2E cloud simulés 2/2, typecheck et lint réussis. Nouvelle CI à vérifier après
-publication ; conflit réel multi-appareil toujours à résoudre depuis Mon compte.
+E2E cloud simulés 2/2, typecheck et lint réussis. Correctif publié `1ebc6415` ;
+CI `38482257038` verte 6/6 et Vercel success. Le contrôle Supabase a confirmé
+qu’aucun SQL n’était en attente. Conflit réel multi-appareil toujours à résoudre
+depuis Mon compte.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|

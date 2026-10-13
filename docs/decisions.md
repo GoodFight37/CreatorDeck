@@ -8,8 +8,9 @@ le parcours automatique normal reprend ; si elles divergent encore, le débit
 reste bloqué jusqu’au choix dans Mon compte. Aucun push, pull ou merge forcé
 n’est ajouté. Motif : éviter qu’un ancien diagnostic de conflit persiste après
 une resynchronisation, tout en protégeant une progression potentiellement
-différente. Store cloud 159/159 et navigateur cloud simulé 2/2 ; CI du nouveau
-SHA à vérifier. Téléphone réel et sauvegarde du compte de Malik non inspectés.
+différente. Store cloud 159/159 et navigateur cloud simulé 2/2. Publié
+`1ebc6415`, CI `38482257038` verte, Vercel success ; aucune migration SQL en
+attente. Téléphone réel et sauvegarde du compte de Malik non inspectés.
 
 ## D-078 — 13 octobre 2026 : première couche musicale et rythme de jeu
 

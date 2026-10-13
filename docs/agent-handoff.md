@@ -12,8 +12,12 @@ multi-appareil.
 
 Tests locaux : `src/lib/cloud/cloud-store.test.ts` **159/159** ; E2E cloud à RPC
 simulés `e2e/hourglass-online.spec.ts` **2/2** (bureau/téléphone) ; ESLint ciblé
-et `npm run typecheck` réussis. Aucun test ni débit de sablier sur le compte de
-Malik ou en production. Publication et CI à relever après push.
+et `npm run typecheck` réussis. Publié sur `main` au SHA
+`1ebc6415fe87625f767d1730f4b351ece60c7190` ; [CI `38482257038`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38482257038)
+verte, 6/6 jobs. [Vercel](https://vercel.com/hafsi37-2386/creator-deckk/JATRcGfhWmVykfnRUT2VYX9eiE6U)
+success. Le contrôle Supabase [`38482501752`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38482501752)
+a confirmé que la base est déjà à jour ; aucun SQL de migration exécuté. Aucun
+test ni débit de sablier sur le compte de Malik.
 
 ## Réparation des tests E2E après CI — publiée et vérifiée, 13 octobre 2026
 

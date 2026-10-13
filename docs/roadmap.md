@@ -25,7 +25,7 @@ et la couleur de la boucle. Voir le
   données n'est en attente dans ces livraisons.
 - **Sablier connecté :** le contrôle relit désormais le cloud lorsqu’un conflit
   antérieur bloque l’action ; il ne consomme rien tant que le conflit persiste.
-  Tests ciblés locaux verts, CI du correctif à vérifier. Voir
+  Correctif `1ebc6415` publié, CI `38482257038` verte (6/6), Vercel success. Voir
   [D-079](decisions.md) et la [passation](agent-handoff.md).
 
 ## Livraison publiée — sensation de jeu, 13 octobre 2026
