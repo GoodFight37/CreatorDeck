@@ -160,6 +160,26 @@ export function CreatorDeckApp() {
   useEffect(() => {
     preloadSamples(SFX_USUELS);
   }, []);
+  // Les navigateurs mobiles bloquent l'autoplay. Le premier geste explicite
+  // vers un contrôle démarre la musique du hub, même si le joueur ne peut pas
+  // encore ouvrir de booster. Le clic d'ouverture passera ensuite la scène en
+  // mode pack et gardera ses bruitages prioritaires.
+  useEffect(() => {
+    const startOnFirstControl = (event: Event) => {
+      if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest(
+        "button, a, input, select, textarea, [role='button'], [role='switch']",
+      )) return;
+      startGameAudio("hub");
+      window.removeEventListener("pointerdown", startOnFirstControl, true);
+      window.removeEventListener("keydown", startOnFirstControl, true);
+    };
+    window.addEventListener("pointerdown", startOnFirstControl, true);
+    window.addEventListener("keydown", startOnFirstControl, true);
+    return () => {
+      window.removeEventListener("pointerdown", startOnFirstControl, true);
+      window.removeEventListener("keydown", startOnFirstControl, true);
+    };
+  }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);
   const [welcomeGiftReveal, setWelcomeGiftReveal] = useState(false);

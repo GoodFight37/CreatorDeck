@@ -62,7 +62,7 @@ export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent
         <span className="pack-3d-front">
           <Image
             className="pack-foil-image"
-            src="/packs/live-foil.svg"
+            src="/packs/live-opening.svg"
             alt=""
             fill
             sizes="(max-width: 390px) 46vw, 180px"
