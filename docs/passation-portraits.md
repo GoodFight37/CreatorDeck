@@ -1,23 +1,27 @@
 ## Pilote automatique disponible — 13 octobre 2026
 
-Malik donne carte blanche après la recherche, pour le pilote de 20 créateurs.
-`tools/portrait-pilot/` fait la recherche SerpApi, le tri et le cadrage local
-MediaPipe, puis une galerie avant/après. 300 manuels, Commons existants,
-Diverron et avatars génériques explicitement acceptés sont protégés. Le jeu
-reste sur les choix actuels ; aucun nouveau portrait publié par ce pilote.
-Résultat réel : 1 925 résultats de recherche, 100 candidates examinées pour
-téléchargement, 33 décodées, six propositions techniques / vingt créateurs,
-quatorze avatars conservés. Personnes/droits non certifiés automatiquement.
-Le compte SerpApi a compté trente recherches sur le forfait gratuit ; 220 restent
-au relevé. Clé temporaire supprimée, jamais versionnée ; remplacement conseillé
-après son envoi dans le chat. Aucun compte/subscription créé par Codex.
-[Bilan exact, ZIP et limites](portrait-pilot-2026-10-13.md).
-7/7 tests Node, 3/3 Python, ESLint/diff-check et vraie galerie 412/1 400 px/export
-réussis. Pilote publié `ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55`, CI GitHub
-38388400407 et Vercel success. Avant toute extension, Malik revoit les six
-propositions via le ZIP et renvoie le JSON exporté. Le taux du pilote ne prouve
-pas une solution automatique pour tout le catalogue ; aucune relance des 697
-tant que ce résultat n’est pas évalué. Suites précédentes ci-dessous historiques.
+`tools/portrait-pilot/` recherche des candidats, prépare un recadrage et crée une
+galerie avant/après ; il ne modifie jamais le jeu automatiquement. Le critère
+est visuel : créateur reconnaissable, netteté, absence de pixelisation gênante,
+rendu naturel et cadrage. Une source absente ne bloque pas une candidate ; les
+indices du détecteur et de netteté n’ont pas valeur de verdict. Les 300 choix
+manuels, 30 portraits déjà validés, Diverron et les avatars explicitement
+acceptés restent protégés.
+
+Il reste 694 créateurs candidats selon le filtre de protection réel. Rejeu local
+des 20 profils du pilote depuis les recherches en cache : 1 925 résultats
+enregistrés, 33 images décodées, 15 profils avec une candidate à comparer et 5
+sans nouvel aperçu. Le nouveau mode ne demande pas de recherche et n’a consommé
+aucune requête externe. La revue visuelle a trouvé du bruit (logos, groupes,
+images déjà identiques) ; le compteur 15 n’est pas 15 approbations. Brouillon
+hors dépôt : `/workspace/artifacts/portrait-review/CreatorDeck-revue-visuelle-20.zip`.
+Voir [le rapport du pilote](portrait-pilot-2026-10-13.md) et la règle D-075.
+
+La clé SerpApi temporaire a été supprimée ; aucune `SERPAPI_API_KEY` n’est
+disponible dans ce checkout. Le solde gratuit relevé précédemment est périmé.
+Pour chercher les 674 profils restants après ce pilote, entrer une clé renouvelée
+dans le terminal local, jamais dans le chat, puis lancer des lots de 20–50 dans
+un dossier de revue hors dépôt. Détails et limites historiques ci-dessous.
 
 ## Critère de choix des portraits — clarification de Malik, 13 octobre 2026
 

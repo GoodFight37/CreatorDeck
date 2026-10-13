@@ -1,5 +1,16 @@
 # Décisions CreatorDeck
 
+## D-075 — 13 octobre 2026 : sélection des portraits sur la qualité visuelle
+
+Pour remplacer les portraits actuels, la source ou l’absence de crédit ne sert
+pas de filtre. Le choix se fait en comparant l’image : créateur reconnaissable,
+netteté, absence de pixelisation gênante, rendu naturel et cadrage. La détection
+automatique de visage, les dimensions annoncées et le score de netteté restent
+des indices ; aucun n’accepte ou ne rejette seul une photo. Les 300 choix
+manuels et les portraits déjà validés restent protégés. Une galerie prépare les
+comparaisons et exporte des brouillons, sans changer automatiquement les assets
+du jeu. Voir le pilote et le checkpoint qualité-first du 13 octobre.
+
 ## D-073 — 13 octobre 2026 : distinguer carte obtenue en direct et stream actif
 
 La variante persistée `live` reste un souvenir utile à de futurs designs. Son

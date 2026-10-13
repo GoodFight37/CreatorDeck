@@ -39,16 +39,42 @@ La branche
 est poussée jusqu’au commit
 [`297f049b`](https://github.com/GoodFight37/CreatorDeck/commit/297f049b0a27f192b3a757ff0df3ba6578317d30),
 qui descend de `main` `0e53fa6c`. Elle conserve l’audit de 50 pistes dans
-`manifeste.csv`, son brief et un index de revue. Les catégories de source/licence
-du manifeste sont des notes de recherche, **pas des critères pour écarter un
-portrait** : Malik demande de choisir selon la qualité visuelle (bonne personne,
-netteté, visage lisible, résolution et cadrage utilisables). Rubius et Shroud
-sont les deux pistes déjà intégrées ; AdinRoss et Rivers restent des pistes non
-intégrées. Les fichiers image candidats ne sont pas dans cette branche ; leur
-qualité visuelle reste donc à examiner. Le diff de branche a passé
-`git diff --check` ;
-aucun test produit n’est pertinent pour ces seuls fichiers d’audit. Le travail
-n’est donc pas fusionné ni inclus dans l’app publiée.
+`manifeste.csv`, son brief et un index de revue. Vérification du registre local :
+**les 50 slugs de cet audit sont tous déjà dans les 300 choix manuels**. Ils sont
+protégés et ne font pas partie du lot à refaire. Garder la branche comme archive
+de recherche seulement ; ne pas remplacer ces choix. Les catégories de source du
+manifeste ne sont jamais un filtre visuel.
+
+## Reprise du lot portraits non manuels — 13 octobre 2026
+
+Le filtre réel de `tools/portrait-pilot/pilot.mjs` protège les 300 manuels, les
+30 portraits déjà validés, Diverron et trois avatars explicitement acceptés ;
+**694 créateurs restent candidats** dans le catalogue de 1 000. Aucun des 300
+choix manuels n’est modifié. Le pilote existant sur 20 de ces profils a été
+rejoué depuis son cache : 1 925 résultats enregistrés, zéro nouvelle recherche
+facturée, 33 images téléchargées/décodées. La sélection qualité-first expose
+15 profils avec une image à comparer et 5 sans nouvelle image. Cela ne veut pas
+dire que les 15 sont bonnes : la revue visuelle a repéré des graphiques, photos
+de groupe, doublons ou cadrages faibles parmi les suggestions ; TheViper paraît
+une amélioration nette, Mmorpg a du texte dans l’image, les autres doivent être
+choisies à l’œil. Le brouillon local est
+`/workspace/artifacts/portrait-review/CreatorDeck-revue-visuelle-20.zip` ; il
+n’est pas versionné et n’a changé aucun asset du jeu.
+
+Le pilote n’écarte plus une image parce que son titre ne cite pas le créateur,
+qu’aucun visage n’a été détecté ou qu’aucune page source n’est fournie. Les
+dimensions, visages détectés et netteté restent visibles comme indices ; Malik
+choisit à l’œil et peut garder l’actuel. Tests outil : 7/7 Node/Playwright,
+3/3 Python. Aucun remplacement n’a été intégré.
+
+La recherche des 674 profils restants nécessite une clé SerpApi disponible dans
+l’environnement qui lance l’outil. `SERPAPI_API_KEY` est absente de cette
+session ; ne pas coller de secret dans le chat. La dernière observation de quota
+est ancienne et ne garantit pas le solde actuel. Pour continuer, entrer la clé
+renouvelée dans le terminal selon le README du pilote, puis lancer des lots de
+20–50 vers un dossier de revue hors dépôt. Ne jamais utiliser d’upscaler qui
+reconstruit les visages ; conserver l’avatar actuel lorsqu’aucune meilleure
+photo n’est trouvée.
 
 ## Corner peek sur la carte garantie — 13 octobre 2026
 

@@ -53,8 +53,9 @@ Le code publié sur `main` inclut la reprise de l’ouverture continue, le peel 
 le retour aux avatars originaux pour les anciens Upscayl, un pilote de revue
 automatique de portraits et la hiérarchie Drop/Craft. Les 300 choix manuels
 restent prioritaires ; les 699 images Upscayl sont archivées et non affichées.
-Le pilote a produit six propositions techniques sur vingt, sans certifier les
-identités ni les droits. Voir le [plan courant](docs/roadmap.md), la
+Le pilote a produit une image à comparer pour quinze profils sur vingt ; ces
+candidates ne sont pas automatiquement des remplacements. Le choix est fait à
+l’œil, sans bloquer sur la source ; les 300 choix manuels restent protégés. Voir le [plan courant](docs/roadmap.md), la
 [passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
 
 Le correctif des tests Drop/Scène et le nouveau découpage Playwright sont publiés

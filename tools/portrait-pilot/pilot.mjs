@@ -31,8 +31,8 @@ export function normalizeSerpResults(payload) {
     throw Error("Recherche SerpApi refusée ; vérifier le tableau de bord du service.");
   }
   return (payload.images_results ?? []).flatMap((item) => {
-    if (!item.original || !item.link) return [];
-    return [{ title: String(item.title ?? ""), source: item.link, original: item.original,
+    if (!item.original) return [];
+    return [{ title: String(item.title ?? ""), source: String(item.link ?? ""), original: item.original,
       declaredWidth: Number(item.original_width) || null, declaredHeight: Number(item.original_height) || null,
       description: String(item.source ?? ""), provider: "serpapi-google-images" }];
   });
@@ -44,22 +44,25 @@ export function rankCandidates(creator, candidates, aliases = []) {
   const unique = new Map();
   for (const candidate of candidates) {
     try {
-      const image = new URL(candidate.original), source = new URL(candidate.source);
-      if (image.protocol !== "https:" || source.protocol !== "https:" || image.username || image.password
-        || source.username || source.password) continue;
+      const image = new URL(candidate.original);
+      if (image.protocol !== "https:" || image.username || image.password) continue;
+      let sourceHref = "";
+      try {
+        const source = candidate.source ? new URL(candidate.source) : null;
+        if (source?.protocol === "https:" && !source.username && !source.password) sourceHref = source.href;
+      } catch { /* La page de contexte est facultative : seule l’image doit être accessible. */ }
       image.hash = "";
       const titleMatches = terms.some((term) => normalize(candidate.title).includes(term));
-      const sourceMatches = terms.some((term) => normalize(source.pathname).includes(term));
+      const sourceMatches = sourceHref && terms.some((term) => normalize(new URL(sourceHref).pathname).includes(term));
       const score = Number(titleMatches) * 60 + Number(sourceMatches) * 40;
       const shortNameWithoutContext = normalize(creator.name ?? creator.login ?? creator.slug).length <= 4
         && !/twitch/i.test([candidate.title, candidate.source, candidate.description].join(" "));
       const declaredSize = Math.min(Number(candidate.declaredWidth) || 0, Number(candidate.declaredHeight) || 0);
-      const record = { ...candidate, original: image.href, source: source.href,
+      const record = { ...candidate, original: image.href, source: sourceHref,
         id: createHash("sha256").update(image.href).digest("hex").slice(0, 16),
         nameEvidence: score > 0, nameScore: score,
         declaredSize,
-        shortNameWithoutContext,
-        identityStatus: "à vérifier", rightsStatus: "à vérifier" };
+        shortNameWithoutContext };
       const previous = unique.get(image.href);
       if (!previous || previous.nameScore < score) unique.set(image.href, record);
     } catch { /* Une mauvaise URL est écartée, sans interrompre les autres candidates. */ }
@@ -162,12 +165,12 @@ export async function runPilot(options) {
     searchResults: jobs.reduce((n, job) => n + job.found, 0),
     downloaded: analyzed.creators.flatMap((creator) => creator.candidates).filter((c) => c.downloaded).length,
     analyzed: analyzed.creators.flatMap((creator) => creator.candidates).filter((c) => c.analyzed).length,
-    technicalProposals: analyzed.creators.filter((creator) => creator.proposal).length,
+    creatorsWithCandidates: analyzed.creators.filter((creator) => creator.proposal).length,
     keptCurrent: analyzed.creators.filter((creator) => !creator.proposal).length,
     identityConfirmed: 0, publicationReady: 0,
   };
   const report = { ...analyzed, stats, generatedAt: new Date().toISOString(),
-    note: "Propositions techniques uniquement. Personnes et droits non certifiés. Aucune image du jeu modifiée." };
+    note: "Comparaison visuelle préparatoire. Aucune image du jeu n’est modifiée." };
   await saveJson(path.join(output, "manifest.json"), report);
   await writeFile(path.join(output, "index.html"), renderGallery(report));
   console.log(JSON.stringify(stats, null, 2));

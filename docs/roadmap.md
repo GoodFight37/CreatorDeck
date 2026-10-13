@@ -12,6 +12,11 @@ et Vercel sont aussi success sur ce SHA.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
+Portraits : les 300 choix manuels sont protégés ; 694 créateurs restent
+candidats après toutes les protections (les 20 du pilote sont compris dans ces
+694). Le pilote qualité-first affiche les images à
+comparer, sans filtre de source et sans remplacement automatique. La recherche
+des nouveaux lots attend une clé SerpApi dans l’environnement d’exécution.
 Le travail portrait est également suivi séparément sur
 [`fcc/revue-portraits-50`](https://github.com/GoodFight37/CreatorDeck/tree/fcc/revue-portraits-50),
 dernier commit `297f049b`. Cette branche ne contient pas les images candidates ;
@@ -151,10 +156,13 @@ d’origine lorsque aucun remplacement prioritaire ne s’applique.
 ### Automatisation des portraits — pilote de vingt
 
 Outil local de recherche SerpApi/tri/cadrage et galerie de revue implémenté,
-sans modifier les photos actuelles. **Six propositions techniques sur vingt**,
-quatorze avatars conservés ; revue des personnes, sources et choix visuels par
-Malik avant extension. Les 300 manuels restent protégés. La recherche complète
-automatique des 697 n’est pas déclarée résolue. [Bilan et ZIP](portrait-pilot-2026-10-13.md).
+sans modifier les photos actuelles. Rejeu depuis le cache : 15 profils sur 20
+ont une image candidate à comparer, 5 gardent leur image actuelle faute de
+nouvelle candidate ; le compteur inclut du bruit et n’est pas une approbation.
+Les sources ne filtrent pas les choix ; Malik compare netteté, rendu, visage et
+cadrage dans une galerie locale. Les 300 manuels restent protégés. La recherche
+des 674 autres profils n’est pas faite faute de clé dans cet environnement.
+[Bilan et ZIP](portrait-pilot-2026-10-13.md) ; [règle D-075](decisions.md).
 
 ### Validation et éléments hors plan
 

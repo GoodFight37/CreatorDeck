@@ -1,5 +1,37 @@
 # Pilote automatique de portraits — 13 octobre 2026
 
+## Addendum : revue qualité-first — 13 octobre 2026
+
+La première version de la galerie filtrait une candidate lorsque son titre ne
+mentionnait pas le créateur ou lorsqu’aucun visage n’était automatiquement
+détecté. Malik a précisé que la sélection dépend de l’image : netteté, visage
+reconnaissable, naturel et cadrage. La galerie accepte donc les fichiers
+décodés distincts de l’actuel pour comparaison ; les noms, détections et scores
+restent des indices, pas des conditions de sélection. La source n’est pas un
+filtre. Aucun asset du jeu n’est modifié.
+
+Rejeu du pilote 20 à partir du cache existant : **0 recherche externe**, 1 925
+résultats déjà enregistrés, 33 fichiers décodés, 15 profils avec une candidate
+à comparer et 5 sans nouvelle candidate. Contact sheet de revue : cinq
+suggestions sont manifestement des graphiques, images de groupe ou autres
+résultats faibles/doublons ; TheViper ressort comme amélioration visuelle nette,
+Mmorpg a un texte incrusté et doit être comparé à l’œil. Le nombre 15 représente
+des candidats à regarder, pas des portraits approuvés.
+
+La version qualité-first du ZIP est produite hors dépôt à
+`/workspace/artifacts/portrait-review/CreatorDeck-revue-visuelle-20.zip`.
+Vérifications après la modification de l’outil : Node/Playwright **7/7** et
+Python **3/3**. La liste de 50 portraits sur la branche `fcc/revue-portraits-50`
+a été comparée aux registres : les 50 font partie des 300 choix manuels déjà
+protégés, donc cette branche n’est pas le lot restant.
+
+Le filtre courant du pilote protège 306 slugs au total (300 manuels et les autres
+choix/avatars protégés) ; **694 créateurs restent candidats**, dont 20 passés
+dans le pilote. La variable `SERPAPI_API_KEY` est absente de l’environnement
+actuel ; aucun nouveau lot de recherche ne peut partir sans que la clé renouvelée
+soit saisie dans le terminal local. L’ancienne observation de quota n’est plus
+un solde fiable. Ne pas mettre la clé dans Git ni dans le chat.
+
 ## Demande et périmètre
 
 Malik autorise un essai concret après recherche : automatiser recherche, tri et

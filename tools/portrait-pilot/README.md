@@ -14,11 +14,14 @@ sont locales. Examiner les propositions, conserver l’actuelle quand nécessair
 puis **Exporter mes choix**. Le fichier `choix-portraits-pilote.json` contient
 les décisions et références, en brouillons visuels. Conserver aussi le ZIP.
 
-La galerie indique les rejets : nom absent, plusieurs visages, détail du
-cadrage insuffisant, fichier inaccessible ou même image pour plusieurs
-créateurs. « Proposition technique » ne signifie ni bonne personne, ni droits
-confirmés, ni avis esthétique. Le score de netteté est indicatif seulement.
-Les personnes et sources seront vérifiées avant une intégration au jeu.
+La galerie met côte à côte l’image actuelle et les candidates recadrées. Le
+détecteur et le score de netteté donnent des indices, pas un verdict : ils ne
+reconnaissent pas la personne et ne peuvent pas décider si le rendu est beau.
+Une candidate téléchargeable reste sélectionnable même si son titre ne contient
+pas le nom ou si le logiciel n’a pas détecté de visage. Choisis à l’œil une photo
+nette, reconnaissable, non pixelisée et bien cadrée ; conserve l’image actuelle
+si aucune candidate ne la surpasse. La galerie et son export restent un brouillon
+et ne changent jamais automatiquement les portraits du jeu.
 
 ## Lancer un autre lot depuis le dépôt
 
@@ -93,6 +96,6 @@ node --test tools/portrait-pilot/pilot.test.mjs
 
 Le navigateur du dépôt (Chromium Playwright) est nécessaire à ce contrôle.
 Le pilote réel mesure séparément résultats trouvés, téléchargements, analyses,
-propositions techniques et images actuelles conservées. Les clés et les
+profils avec une image à comparer et profils sans nouvelle candidate. Les clés et les
 modèles téléchargés ne sont pas versionnés. Les fichiers tiers restent hors
 Git ; seuls le code, les instructions et le bilan sont publiés.

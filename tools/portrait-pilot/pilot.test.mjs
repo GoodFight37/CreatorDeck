@@ -16,28 +16,34 @@ test("les 300 choix manuels et les autres portraits validés sont exclus, même 
 test("les réponses SerpApi sont réduites aux données publiques d’image, jamais aux paramètres de clé", () => {
   const normalized = normalizeSerpResults({ search_parameters: { api_key: "secret" }, images_results: [
     { title: "Creator", link: "https://example.com/source", original: "https://example.com/image.jpg", thumbnail: "thumb" },
+    { title: "Image sans page associée", original: "https://cdn.example.com/photo.jpg" },
     { title: "Miniature sans originale", thumbnail: "thumb" },
   ] });
-  assert.equal(normalized.length, 1);
+  assert.equal(normalized.length, 2);
   assert.equal(normalized[0].original, "https://example.com/image.jpg");
+  assert.equal(normalized[1].source, "");
   assert.equal(JSON.stringify(normalized).includes("secret"), false);
   assert.deepEqual(normalizeSerpResults({ error: "Google Images hasn't returned any results for this query." }), []);
   assert.throws(() => normalizeSerpResults({ error: "Invalid API key: secret" }), /Recherche SerpApi refusée/);
 });
 
-test("les homonymes sans nom concordant restent signalés et les doublons d’URL ne gonflent pas la sélection", () => {
+test("le nom sert au classement de recherche, pas à bloquer une candidate visuelle ; doublons d’URL dédupliqués", () => {
   const ranked = rankCandidates({ slug: "creator-one", name: "Creator One", login: "creator_one" }, [
     { title: "Autre personne", source: "https://example.com/other", original: "https://example.com/image.jpg#fragment" },
     { title: "Creator One portrait", source: "https://example.com/creator-one", original: "https://example.com/image.jpg" },
     { title: "Homonyme", source: "https://example.com/other", original: "https://example.com/other.jpg" },
+    { title: "", source: "", original: "https://cdn.example.com/no-page.jpg" },
     { title: "Interdit", source: "https://example.com/source", original: "http://example.com/no-tls.jpg" },
     { title: "Secret URL", source: "https://example.com/source", original: "https://user:secret@example.com/image.jpg" },
   ]);
-  assert.equal(ranked.length, 2);
+  assert.equal(ranked.length, 3);
   assert.equal(ranked[0].nameEvidence, true);
-  assert.equal(ranked[1].nameEvidence, false);
-  assert.equal(ranked[0].rightsStatus, "à vérifier");
-  assert.equal(ranked[0].identityStatus, "à vérifier");
+  const noPage = ranked.find((candidate) => candidate.original.includes("no-page.jpg"));
+  assert.ok(noPage);
+  assert.equal(noPage.nameEvidence, false);
+  assert.equal(noPage.source, "");
+  assert.equal("rightsStatus" in ranked[0], false);
+  assert.equal("identityStatus" in ranked[0], false);
 });
 
 test("les photos annoncées assez grandes passent avant les petites images de profil, sans certifier leurs dimensions", () => {
@@ -46,7 +52,6 @@ test("les photos annoncées assez grandes passent avant les petites images de pr
     { title: "Creator", source: "https://example.com/creator", original: "https://example.com/event.jpg", declaredWidth: 1600, declaredHeight: 1200 },
   ]);
   assert.match(ranked[0].original, /event.jpg/);
-  assert.equal(ranked[0].rightsStatus, "à vérifier");
 });
 
 test("un nom court trouvé sur une autre plateforme garde un avertissement d’homonyme", () => {
@@ -62,15 +67,15 @@ test("une sortie vers les fichiers de production est refusée avant réseau ou �
   await assert.rejects(runPilot({ output: path.resolve("public/creators"), limit: 20 }), /Sortie dans le dépôt refusée/);
 });
 
-test("galerie réelle : source échappée, revue persistante, filtre et export de brouillons sans patch publiable", async () => {
+test("galerie réelle : sélection visuelle sans nom/source requis, revue persistante et export sans patch", async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "portrait-pilot-"));
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage({ acceptDownloads: true });
     const malicious = "</script><script>window.injected=true</script>";
-    const report = { generatedAt: "2026-10-13T00:00:00Z", stats: { creators: 2, searchResults: 1, technicalProposals: 1, keptCurrent: 1 }, creators: [
+    const report = { generatedAt: "2026-10-13T00:00:00Z", stats: { creators: 2, searchResults: 1, creatorsWithCandidates: 1, keptCurrent: 1 }, creators: [
       { slug: "one", name: malicious, login: "one", rank: 1, before: "before.webp", proposal: "photo", candidates: [
-        { id: "photo", title: malicious, source: "https://example.com/source", preview: "preview.webp", technicalEligible: true, dimensions: [900, 900], faceCount: 1, reasons: [] },
+        { id: "photo", title: malicious, source: "https://example.com/source", preview: "preview.webp", reviewable: true, nameEvidence: false, dimensions: [900, 900], faceCount: 0, reasons: [] },
       ] },
       { slug: "two", name: "Two", login: "two", rank: 2, before: "before.webp", proposal: null, candidates: [] },
     ] };
@@ -78,8 +83,10 @@ test("galerie réelle : source échappée, revue persistante, filtre et export d
     await page.goto("http://pilot.test/");
     assert.equal(await page.evaluate(() => window.injected), undefined);
     assert.equal(await page.locator("article").count(), 2);
-    assert.equal(await page.locator('[data-slug="two"] button').filter({ hasText: "Garder la proposition" }).isDisabled(), true);
-    await page.locator('[data-slug="one"] button').filter({ hasText: "Garder la proposition" }).click();
+    assert.equal(await page.locator('[data-slug="one"] button').filter({ hasText: "Choisir cette photo" }).isDisabled(), false);
+    assert.equal(await page.locator('[data-slug="one"]').getByText(/droits|source/i).count(), 0);
+    assert.equal(await page.locator('[data-slug="two"] button').filter({ hasText: "Choisir cette photo" }).isDisabled(), true);
+    await page.locator('[data-slug="one"] button').filter({ hasText: "Choisir cette photo" }).click();
     await page.reload();
     assert.equal(await page.locator("#progress").textContent(), "1/2 créateurs examinés. Export : choix visuels uniquement, pas un fichier de publication.");
     await page.locator("#filter").selectOption("unreviewed");
@@ -93,9 +100,9 @@ test("galerie réelle : source échappée, revue persistante, filtre et export d
     const saved = JSON.parse(await readFile(file, "utf8"));
     assert.equal(saved.decisions.length, 1);
     assert.equal(saved.decisions[0].status, "visual-selected");
-    assert.equal(saved.decisions[0].identityStatus, "à vérifier");
-    assert.equal(saved.decisions[0].rightsStatus, "à vérifier");
-    assert.match(saved.note, /Aucun patch de publication/);
+    assert.equal("identityStatus" in saved.decisions[0], false);
+    assert.equal("rightsStatus" in saved.decisions[0], false);
+    assert.match(saved.note, /Aucune image du jeu n’a été changée/);
   } finally {
     await browser.close();
     await rm(directory, { recursive: true, force: true });

@@ -124,7 +124,7 @@ def main():
             creator["before"] = before
             for candidate in creator["candidates"]:
                 candidate["reasons"] = []
-                candidate["technicalEligible"] = False
+                candidate["reviewable"] = False
                 candidate["downloaded"] = False
                 candidate["analyzed"] = False
                 filename = slug + "-" + candidate["id"]
@@ -149,10 +149,6 @@ def main():
                     faces = detection.detections
                     candidate["analyzed"] = True
                     candidate["faceCount"] = len(faces)
-                    if not candidate["nameEvidence"]:
-                        candidate["reasons"].append("Nom non retrouvé dans le titre ou la page source")
-                    if candidate.get("shortNameWithoutContext"):
-                        candidate["reasons"].append("Nom court sans contexte Twitch : risque d’homonyme")
                     if len(faces) != 1:
                         candidate["reasons"].append("Aucun visage détecté" if not faces else "Plusieurs visages : personne à choisir")
                         size = min(width, height)
@@ -181,7 +177,12 @@ def main():
                     grey = cv2.cvtColor(np.asarray(cut), cv2.COLOR_RGB2GRAY)
                     candidate["sharpnessIndicator"] = round(float(cv2.Laplacian(grey, cv2.CV_64F).var()), 2)
                     # La netteté n'est pas un seuil universel : logos et dessins faussent ce score.
-                    candidate["technicalEligible"] = len(faces) == 1 and size >= 450 and candidate["nameEvidence"] and not candidate["sameAsCurrent"] and not candidate.get("shortNameWithoutContext")
+                    # L’automatisation prépare une comparaison visuelle ; elle ne
+                    # décide ni de l’identité ni de la qualité à la place du joueur.
+                    # Une photo décodée différente reste sélectionnable même si le
+                    # moteur n’a pas trouvé le nom dans son titre ou ne détecte pas
+                    # un visage (logos d’équipes, avatars illustrés, etc.).
+                    candidate["reviewable"] = not candidate["sameAsCurrent"]
                     candidate["technicalScore"] = candidate["nameScore"] + min(size / 30, 30)
                     cross_creator.setdefault(candidate["sha256"], set()).add(slug)
                 except Exception as error:
@@ -194,8 +195,7 @@ def main():
         for candidate in creator["candidates"]:
             if len(cross_creator.get(candidate.get("sha256"), set())) > 1:
                 candidate["reasons"].append("Image identique proposée pour plusieurs créateurs")
-                candidate["technicalEligible"] = False
-        eligible = sorted([c for c in creator["candidates"] if c["technicalEligible"]],
+        eligible = sorted([c for c in creator["candidates"] if c["reviewable"]],
                           key=lambda c: c["technicalScore"], reverse=True)
         creator["proposal"] = eligible[0]["id"] if eligible else None
     (output / "analysis.json").write_text(json.dumps(jobs, ensure_ascii=False, indent=2) + "\n")
