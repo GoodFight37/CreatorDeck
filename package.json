@@ -27,7 +27,8 @@
     "essai:start": "node scripts/push-essai.mjs --start",
     "essai:push": "node scripts/push-essai.mjs",
     "supabase:verify": "node scripts/verify-supabase-migrations.mjs",
-    "progression:bilan": "vite-node --config vitest.config.ts scripts/progression-bilan.ts"
+    "progression:bilan": "vite-node --config vitest.config.ts scripts/progression-bilan.ts",
+    "catalogue:growth": "vite-node --config vitest.config.ts scripts/catalogue-growth-simulation.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",

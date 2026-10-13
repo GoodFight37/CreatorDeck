@@ -2,13 +2,13 @@
 
 ## État courant — 13 octobre 2026
 
-Référence publiée : `main` à `0e53fa6cc383353eb63f5c16dcb676956d985f83`
-(SHA distant vérifié). Le badge compact de direct ouvre maintenant la chaîne
-Twitch lorsque le snapshot est frais ; la CI
-[38411066062](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411066062)
-est verte, 5/5 jobs en 3 min 26 s. Le workflow Supabase
-[38411556260](https://github.com/GoodFight37/CreatorDeck/actions/runs/38411556260)
-et Vercel sont aussi success sur ce SHA.
+Dernier jalon publié vérifié avant l'étude catalogue : `main` à
+`f93ffcc8ed2f31c6def11e14f08f14a105d41865` (passation de l'audit de progression
+en heure locale). Le travail décrit ci-dessous sur l'agrandissement du
+catalogue est une simulation exploratoire ; il ne modifie ni les taux, ni les
+cartes du jeu. Voir [l'étude et ses résultats](audit-croissance-catalogue.md).
+Le badge compact de direct ouvre la chaîne Twitch lorsque le snapshot est frais ;
+les validations de ce jalon sont archivées plus bas.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
@@ -543,7 +543,7 @@ L'utilisateur a exécuté avec succès `npm run progression:bilan` sous Windows,
 
 **Interprétation prudente :** l'accumulation de doublons s'accélère fortement après plusieurs centaines de tirages ; le Craft, les jetons et les échanges sont donc cruciaux. Les valeurs de recyclage supposent que chaque doublon de créateur puisse être recyclé, **ce qui ne reproduit pas exactement la règle réelle** : le moteur distingue les variantes (Standard/Live/Holo/Gold), et protège notamment les Live du recyclage de masse. Les points sont des valeurs théoriques maximales dans ce modèle, non des revenus réels. Pas de Paquet Scène, pas de ciblage familial, pas de variations Live/Holo/Gold, pas de bonus Direct, pas de Craft, pas de missions, pas de dépenses, pas de simulation Supabase. Les résultats ne sont pas des mesures du moteur ni de l'application en production.
 
-**Suite de simulation locale réalisée depuis cette estimation :** le script décrit plus haut appelle désormais `game-engine.ts` et couvre variantes, Paquet Scène, recyclage réel, Craft, missions/jalons/saisons et achats en jetons, avec des tirages seedés. Les horaires ont été alignés sur l'heure locale et 100 répétitions par scénario sont consignées dans [l'audit](audit-progression.md). Restent hors mesure la comparaison aux RPC Supabase, la complétion par famille et le temps d'obtention d'une carte ciblée. Aucun taux n'a été modifié sur la base de ces simulations.
+**Suite de simulation locale réalisée depuis cette estimation :** le script décrit plus haut appelle désormais `game-engine.ts` et couvre variantes, Paquet Scène, recyclage réel, Craft, missions/jalons/saisons et achats en jetons, avec des tirages seedés. Les horaires ont été alignés sur l'heure locale et 100 répétitions par scénario sont consignées dans [l'audit](audit-progression.md). La comparaison de catalogues agrandis, la complétion moyenne par famille et l'acquisition d'une cible par rareté sont maintenant mesurées séparément dans [l'étude de croissance](audit-croissance-catalogue.md). Ces scénarios restent indépendants du moteur et du serveur ; aucun taux n'a été modifié.
 
 
 Simulation exploratoire indépendante (et **non** exécution du moteur TypeScript ni du serveur). Hypothèses : stock initial 2, réserve maximale 4, recharge naturelle 1/30 min, visites fixes chaque jour (occasionnel 12 h/21 h, régulier 8 h/13 h/20 h, intensif 7 h/10 h/13 h/16 h/19 h/22 h), sans sabliers. Les ouvertures sont distribuées entre visites ; chaque scénario arrive à ouvrir ses 2, 6 ou 12 boosters Live quotidiens. Le Prime Time est compté seulement sur les ouvertures à 20 h. Points et jetons incluent les six petites récompenses de série, répétées chaque semaine, **sans** bonus de jalons, saisons, recyclage, missions, Paquet Scène, Perfect ni dépenses. Les chiffres sont des scénarios conditionnels, pas une prédiction des habitudes réelles.

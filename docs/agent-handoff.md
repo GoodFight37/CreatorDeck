@@ -2603,3 +2603,52 @@ Exécution complète `--seed=20261010` (une trajectoire par scénario) égalemen
 réussie. ESLint ciblé, typecheck (après mise de côté temporaire du cache `.next`
 stale de l'autre branche) et `git diff --check` réussis. Pas de test Supabase.
 Le prototype catalogue d'Arena et le pilote portraits restent séparés.
+
+## Étude d'agrandissement du catalogue — 13 octobre 2026
+
+À la demande de Malik, comparer le catalogue actuel à 1 500, 2 000 et 3 000
+cartes avec les taux inchangés, pour éclairer les futurs ajouts. Branche de
+travail `codex/catalog-growth-study`, basée sur `main` vérifié à
+`f93ffcc8ed2f31c6def11e14f08f14a105d41865`. Quatre éléments locaux :
+`scripts/catalogue-growth-simulation.ts`, commande `npm run catalogue:growth`,
+`docs/audit-croissance-catalogue.md` et les résultats bruts
+`docs/audits/catalogue-growth-300.jsonl`. Aucune entrée/identité/image n'a été
+ajoutée au catalogue du jeu et aucun taux, économie ou RPC n'a été modifié.
+
+Le modèle réutilise les tables de rareté actuelles et les familles ; les ajouts
+sont des identifiants synthétiques répartis au prorata. 300 parties seedées par
+cas, soit 7 200 trajectoires (4 tailles × 3 rythmes × 2 durées), simulent 2, 6
+ou 12 Live par jour et une Scène par jour pendant 30/90 jours. Il suit les
+cartes uniques, la part de collection, la complétion des familles et les chances
+d'acquérir une cible choisie au hasard dans une rareté. Limites : outil Monte
+Carlo indépendant, ni moteur par carte ni RPC Supabase ; pas de Craft, échanges,
+missions, récompenses, Direct, variantes ou recharge de réserve. Les paquets
+quotidiens sont supposés ouverts.
+
+Résultat principal : avec les règles inchangées, un grand catalogue augmente le
+nombre absolu de cartes collectées, mais réduit la part complétée et les chances
+de trouver une cible précise, surtout pour le profil occasionnel. À 3 000 cartes,
+la cible Légendaire tirée au hasard est obtenue avant 90 jours dans 23,3 % des
+parties occasionnelles contre 54 % à 1 000 cartes. Recommandation exploratoire :
+ne pas verser plusieurs milliers de cartes d'un seul coup sans présenter des
+objectifs/saisons lisibles et sans décider si de nouvelles familles/contenus
+ont une progression distincte. Ce n'est pas une décision d'équilibrage.
+La famille S09, deux cartes aujourd'hui, atteint six dans le scénario 3 000 et
+devient admissible au Paquet Scène ; c'est une conséquence de l'hypothèse de
+répartition, pas une promesse de contenu.
+
+Contrôles locaux : `npm run catalogue:growth -- --runs=300 --seed=20261013`
+(24 lignes JSON, 300 parties chacune), `npx eslint
+scripts/catalogue-growth-simulation.ts`, `npm run typecheck` (cache `.next`
+stale déplacé temporairement puis restauré), validation JSONL et
+`git diff --check`. Résultats SHA-256
+`00a2b06754e0aacbdd3f36dc946543c787520e0cd198bcce1e9625cc67f1afa1`.
+Comparaison de cohérence avec le moteur de progression précédent : les moyennes
+sur 30 jours diffèrent de moins de deux cartes uniques. Pas de test de bout en
+bout ou cloud requis pour cette analyse autonome.
+
+Publication normale autorisée selon AGENTS.md, sous réserve de revérifier `main`
+avant commit/push. À ce checkpoint, l'étude et sa passation sont encore locales ;
+aucun commit ni push de cette étude n'a été effectué. Après publication,
+consigner ici le SHA distant et l'état exact de la CI. Arena, prototype de
+catalogue et chantier portraits demeurent séparés.
