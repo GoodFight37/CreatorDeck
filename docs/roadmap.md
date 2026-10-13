@@ -100,12 +100,14 @@ complets (41 réussis + 5 scénarios cloud ignorés chacun) passent localement ;
 CI GitHub `38400588529` verte. Avis téléphone physique attendu.
 [Livrable](drop-craft-priorites-2026-10-13.md).
 
-### Provenance de la variante Live — à clarifier plus tard
+### Provenance Live — clarification livrée
 
-La variante `live` d’une carte est sauvegardée au tirage et peut rester sur la
-carte après la fin du direct. Le statut `liveStream` décrit le stream actuel.
-Malik souhaite garder la provenance pour un futur design/portrait alternatif ;
-aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
+La variante `live` reste la provenance persistée du tirage et peut rester sur la
+carte après la fin du stream. Elle s’affiche « Obtenue en direct » (« Acquis
+live » en compact) ; le direct actuel vient séparément d’un snapshot frais. Le
+badge cliquable et la fiche ouvrent alors la chaîne Twitch en HTTPS. K-048 et
+D-071 sont clarifiés par D-073/D-074 ; aucun changement du Binder ni de schéma
+de données n’est en attente.
 
 ### Plan actif
 

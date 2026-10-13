@@ -17,10 +17,10 @@ Reprise du problème K-048 après la clôture du Corner Peek. La carte garde sa
 variante persistée `live` pour son futur habillage, mais le libellé n’annonce
 plus un direct en cours : carte complète « Obtenue en direct », format compact
 « Acquis live », fiche détaillant la provenance. Le badge « En direct maintenant »
-vient uniquement du `liveStream` frais et la fiche propose alors un lien externe
-`https://www.twitch.tv/<login>`. Avec un stream terminé/périmé, la provenance
-reste mais ni statut courant ni lien ne sont affichés. Aucune migration, aucune
-modification à l’économie.
+vient uniquement du `liveStream` frais ; le badge actif comme le lien dans la
+fiche ouvrent `https://www.twitch.tv/<login>`. Avec un stream terminé/périmé, la
+provenance reste mais ni statut courant ni lien actif ne sont affichés. Aucune
+migration, aucune modification à l’économie.
 
 Fichiers : `src/components/creator-card.tsx`,
 `src/components/card-inspect-modal.tsx`, `src/app/globals.css`, nouveau

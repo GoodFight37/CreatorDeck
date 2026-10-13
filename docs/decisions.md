@@ -710,12 +710,13 @@ et 2 min 25 s), contre 10 min 12 s avant, soit environ 75 % de moins sur cet
 échantillon. Les pushes limités à Markdown/docs peuvent omettre la CI produit ;
 les pull requests gardent les vérifications.
 
-## D-071 — 13 octobre 2026 : préserver la provenance Live des cartes
+## D-071 — 13 octobre 2026 : préserver la provenance Live des cartes — clarifié
 
 Malik veut garder l’information qu’une carte a été obtenue pendant un direct,
 pour pouvoir proposer plus tard un design ou portrait alternatif. Le modèle a
 déjà `variant: "live"` persisté ; le direct actuel vient d’une autre source,
 `liveStream`, et expire quand l’état serveur devient périmé. Garder ces deux
-notions distinctes. Le badge actuel « Live » décrit la variante obtenue et reste
-donc après la fin du stream ; son libellé pourra être clarifié plus tard. Aucun
-changement du Binder ou choix final de texte dans ce lot.
+notions distinctes. Le libellé provisoire « Live » a ensuite été remplacé par
+« Obtenue en direct » / « Acquis live » dans D-073. Le badge de direct actuel
+ouvre la chaîne Twitch via HTTPS selon D-074. Aucun changement du Binder ni du
+schéma de données n’a été requis.
