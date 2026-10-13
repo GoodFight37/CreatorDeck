@@ -1,4 +1,4 @@
-## Réparation des tests E2E après CI — 13 octobre 2026
+## Réparation des tests E2E après CI — publiée et vérifiée, 13 octobre 2026
 
 Le run `38477480148` du SHA `00b22d4b` a révélé des attentes obsolètes dans les
 tests, sans régression produit : le bouton d’avancement du reveal s’appelle
@@ -13,10 +13,11 @@ ignorés** (scénarios cloud non configurés dans la suite normale, zéro échec
 Le parcours cloud cadeau, lancé avec les valeurs factices prévues par le
 workflow, passe **2/2** sur bureau et téléphone ; les appels RPC restent
 interceptés. Aucun fichier produit, animation ou donnée n’a été modifié. Les
-changements sont publiés dans le commit de tests suivant ; statut CI à relever
-après le push.
+changements sont publiés (`754bde21`, puis passation `15b6ec45`) ; CI
+[`38480069643`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38480069643)
+verte, 6/6 jobs.
 
-## Sensation de jeu A → E — publié, CI en cours, 13 octobre 2026
+## Sensation de jeu A → E — publiée, CI verte, 13 octobre 2026
 
 Base contrôlée : `736c3f7d4e7ee0f44cc70c59ed05a0f24216e7d1`. Publié sur `main`
 par le commit `00b22d4be01f9999c6e0bb155d893cf146fc1bcd`. `git ls-remote` a
@@ -45,15 +46,24 @@ confirmé le même SHA sur `origin/main`. Aucun SQL ni taux de tirage modifié.
 Vérifications locales : `npm test` 73 fichiers / 1 166 tests ; `npm run ecrans`
 22 fichiers / 127 tests ; typecheck, ESLint et build de production réussis.
 E2E ciblés : 43 réussis / 1 ignoré dans la suite pack/reveal et E2E sans WebGL
-4/4 sur bureau et téléphone simulé. CI GitHub `38477480148`
-(https://github.com/GoodFight37/CreatorDeck/actions/runs/38477480148) est en
-file d’attente au dernier contrôle ; aucun téléphone physique n’a été utilisé.
+4/4 sur bureau et téléphone simulé. CI GitHub `38480069643`
+(https://github.com/GoodFight37/CreatorDeck/actions/runs/38480069643) verte,
+6/6 jobs ; aucun téléphone physique n’a été utilisé.
 Build local sans variables Supabase :
 le warning cloud est attendu ; les routes statiques compilent.
 
-Limites et prochain contrôle : faire écouter la BGM sur téléphone, décider si
-son volume/couleur convient, et examiner les portraits à l’œil. Le placeholder
-ne repère pas les images techniquement nettes mais mauvaises/obscures. Le SHA distant est vérifié ; actualiser le statut Actions quand le run se termine.
+Limites et prochain contrôle : faire écouter la BGM sur téléphone et examiner
+les portraits à l’œil. Le placeholder ne repère pas les images techniquement
+nettes mais mauvaises/obscures.
+
+## Mix BGM — réglage d’écoute local, 13 octobre 2026
+
+Après CI verte du checkpoint précédent (`15b6ec4529ef3718e370bc6d75a1daab45656abf`,
+run `38480069643`), le gain hub a été remonté de `0,14` à `0,24` : l’asset a
+un niveau moyen de `-22 dBFS`, donc l’ancien gain atténuait trop le fond. Le gain
+pack reste `0,018` et le Tribunal reste à zéro. Le volume global/SFX, les timings
+reveal et le comportement autoplay ne changent pas. Test de contrat ajouté ;
+audition sur téléphone réel encore attendue avant de déclarer l’asset fini.
 
 ## Portraits manuels — ZIP `portraits-01.zip` — 13 octobre 2026
 

@@ -1,22 +1,28 @@
-## Attentes E2E devenues obsolètes — corrigées localement, 13 octobre 2026
+## Attentes E2E devenues obsolètes — corrigées et publiées, 13 octobre 2026
 
 Le run `38477480148` sur `00b22d4b` a échoué sur trois attentes de tests : nom
 du bouton d’avancement du reveal, panneau « Fonctionnalités en ligne » replié,
 et portraits testés depuis la mauvaise vue initiale du Binder. Les assertions
 ont été adaptées sans retirer de couverture ; le chargement réel des portraits
 continue d’être vérifié. Lint et suite E2E complète locaux : 89 passés, 11
-scénarios cloud ignorés, zéro échec ; cadeau cloud simulé : 2/2. À confirmer par
-la CI du nouveau commit.
+scénarios cloud ignorés, zéro échec ; cadeau cloud simulé : 2/2. Correctif
+publié `754bde21` ; CI `38480069643` verte, 6/6 jobs.
 
-## Couche audio et hiérarchie de jeu — publiée, CI en cours, 13 octobre 2026
+## Couche audio et hiérarchie de jeu — publiée, CI verte, 13 octobre 2026
 
-La première boucle musicale et les réglages associés sont vérifiés localement ;
+La première boucle musicale et les réglages associés sont vérifiés ;
 la boucle reste un prototype à écouter sur téléphone. Le sachet utilise
 uniquement CSS dans le composant d’ouverture ; le chemin Three/WebGL n’est plus
 initialisé, même si `?opening3d=1` est présent. Un portrait dont le fichier ne
 charge pas reçoit un placeholder, mais aucune détection automatique ne classe
-les images floues ou pixelisées. Publiée par `00b22d4b` ; CI `38477480148` encore en attente au dernier contrôle.
-Les détails et validations sont dans le [checkpoint actif](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026).
+les images floues ou pixelisées. Publiée par `00b22d4b` ; la CI finale est
+`38480069643`, verte (6/6 jobs).
+Le correctif E2E est depuis publié et CI verte : `15b6ec45`, run
+[`38480069643`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38480069643),
+6/6 jobs. Le gain du hub a été relevé localement à 0,24 après mesure du niveau
+de l’asset ; reste à écouter sur téléphone. Détails dans le
+[checkpoint actif](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026)
+et le suivi audio de l’agent handoff.
 
 ## Drop et Craft : hiérarchie encombrée — 13 octobre 2026
 

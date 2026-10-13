@@ -2,9 +2,10 @@
 
 ## État actuel — 13 octobre 2026
 
-**État du code :** `main` contient le chantier sensation de jeu et le correctif
-des tests E2E pour l’interface actuelle. E2E locaux : 89 réussis, 11 scénarios
-cloud ignorés ; CI du commit correctif à vérifier après publication. Voir le
+**État du code :** `main` au SHA `15b6ec45` ; correctif E2E publié et CI
+[`38480069643`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38480069643)
+verte, 6/6 jobs. Le mix BGM a été ajusté localement après mesure de l’asset ;
+écoute téléphone encore nécessaire. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
@@ -51,7 +52,8 @@ Implémentation locale vérifiée, dans l’ordre demandé A → E :
 
 Validation sur appareil physique non effectuée. Le rendu sonore du prototype et
 la lisibilité des portraits doivent être jugés sur téléphone avant toute
-affirmation de finition visuelle.
+affirmation de finition visuelle. Le gain de hub a été relevé localement à 0,24 ;
+voir [audio-assets.md](audio-assets.md) et le checkpoint de passation.
 
 ## Prochaines étapes
 

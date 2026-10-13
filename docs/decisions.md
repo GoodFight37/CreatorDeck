@@ -9,7 +9,9 @@ boucle est fortement baissée pendant le pack et coupée au Tribunal. De courts
 stingers renforcent la Légendaire, le Perfect et le bilan du Tribunal sans
 déplacer les délais de silence, les flips, le Perfect ou le tear. La musique est
 un prototype synthétisé, pas un asset final ; procédure de remplacement dans
-[la note d'assets audio](audio-assets.md). Reflets sont activés par défaut ; `prefers-reduced-motion` neutralise les animations
+[la note d'assets audio](audio-assets.md). Le gain BGM du hub est fixé à `0,24`,
+ducké à `0,018` pendant le pack et nul au Tribunal ; l’écoute réelle sur
+téléphone reste à faire. Reflets sont activés par défaut ; `prefers-reduced-motion` neutralise les animations
 même lorsque le réglage Reflets est actif.
 
 Le Binder reste sur 12 cartes par page (dans la plage voulue de 12–18), ajoute
@@ -20,7 +22,7 @@ teinte aussi le Drop. Le Tribunal quotidien, ses verdicts visuels et son bilan
 existaient déjà ; cette passe les conserve et son stinger se joue après le
 paiement du bilan. Tests unitaires/écrans, types, lint, build et E2E bureau/
 téléphone simulé vérifiés localement. Le sachet n’initialise aucun moteur WebGL.
-Commit `00b22d4b`, CI `38477480148` en attente ; détails et limites dans la
+Commit `00b22d4b`, CI `38480069643` verte (6/6 jobs) ; détails et limites dans la
 [passation](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026).
 
 ## D-077 — 13 octobre 2026 : créer un bref temps d’anticipation avant la carte garantie

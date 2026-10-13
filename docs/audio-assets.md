@@ -6,9 +6,15 @@ ni voix, ni sample tiers. Son intention : basse feutrée, ambiance tardive de
 stream, sans nappe fantasy ni effet de victoire permanent. Ce n'est pas encore
 un master final.
 
+Le mix applicatif donne un gain relatif de `0,24` au hub, `0,018` pendant un
+pack et `0` au Tribunal. Le niveau moyen mesuré de l’asset est `-22 dBFS` ; le
+gain précédent de `0,14` le rendait trop discret sur le papier. Ces valeurs
+restent à écouter sur un téléphone réel ; le cran global continue de s'appliquer
+à tout le bus sonore.
+
 Le premier geste d'ouverture crée/déverrouille l'AudioContext et démarre la
 boucle, ce qui respecte la politique autoplay des navigateurs mobiles. Au hub,
-le gain reste bas ; il descend fortement pendant un booster ; le Tribunal coupe
+le gain reste en arrière-plan ; il descend fortement pendant un booster ; le Tribunal coupe
 la musique pour laisser les sons de tampon et de marteau respirer. La commande
 Son coupe musique, bruitages et synthèse ensemble ; les trois crans de volume
 existants pilotent aussi la musique. Reflets et Son sont activés par défaut si
