@@ -35,16 +35,17 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   const toggle = settings.getByRole("button", { name: "Crédits des images" });
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(settings.locator("#image-credits")).toContainText("Moritz Barcelona");
-  await expect(settings.locator("#image-credits")).toContainText("Nate Herrera n8bit_");
+  await expect(settings.locator("#image-credits")).not.toContainText("Moritz Barcelona");
+  await expect(settings.locator("#image-credits")).not.toContainText("Nate Herrera n8bit_");
+  await expect(settings.locator("#image-credits")).toContainText("Kevin Chang");
   await expect(settings.locator("#image-credits")).toContainText("Versions Upscayl archivées (699)");
   await expect(settings.locator("#image-credits")).toContainText("ne sont plus affichées sur les cartes");
   expect(upscaledPortraits["2lew"]).toBe("/creators/upscaled/2lew.webp");
-  for (const slug of ["livibee", "9pasha"] as const) {
-    await expect(settings.locator("#image-credits")).toContainText(curatedPortraits[slug].author);
-    await expect(settings.locator(`#image-credits a[href="${curatedPortraits[slug].source}"]`)).toHaveCount(1);
-  }
-  await expect(settings.getByRole("link", { name: "CC BY-SA 4.0", exact: true }).first()).toHaveAttribute("href", "https://creativecommons.org/licenses/by-sa/4.0/");
+  await expect(settings.locator("#image-credits")).toContainText(curatedPortraits.livibee.author);
+  await expect(settings.locator(`#image-credits a[href="${curatedPortraits.livibee.source}"]`)).toHaveCount(1);
+  await expect(settings.locator("#image-credits")).not.toContainText(curatedPortraits["9pasha"].author);
+  await expect(settings.locator(`#image-credits a[href="${curatedPortraits["9pasha"].source}"]`)).toHaveCount(0);
+  await expect(settings.getByRole("link", { name: "CC BY-SA 3.0", exact: true })).toHaveAttribute("href", "https://creativecommons.org/licenses/by-sa/3.0/");
   await toggle.click();
   await expect(settings.locator("#image-credits")).toHaveCount(0);
 });
