@@ -152,12 +152,16 @@ export function CreatorCard({
               confondre avec la variante Live : la variante est une matière de
               carte, le direct est un fait. Deux endroits, deux formes. */}
           {liveStream ? (
-            <span className={`card-on-air${compact ? " is-dot" : ""}`}
-              title={`En direct maintenant sur Twitch${liveStream.title ? ` : ${liveStream.title}` : ""}`}
-              aria-label={`En direct maintenant sur Twitch${liveStream.title ? ` : ${liveStream.title}` : ""}`}>
+            <a
+              className={`card-on-air${compact ? " is-dot" : ""}`}
+              href={`https://www.twitch.tv/${encodeURIComponent(creator.login)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`Ouvrir la chaîne Twitch de ${creator.displayName}${liveStream.title ? ` : ${liveStream.title}` : ""}`}
+              aria-label={`Ouvrir la chaîne Twitch de ${creator.displayName}, en direct maintenant${liveStream.title ? ` : ${liveStream.title}` : ""}`}>
               <i aria-hidden="true" />
               {compact ? null : "Direct"}
-            </span>
+            </a>
           ) : null}
         </div>
         {variant === "live" ? (
