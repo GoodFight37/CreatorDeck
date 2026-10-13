@@ -20,8 +20,13 @@ import { sellableCards } from "@/lib/market";
 import { regionLabel } from "@/lib/regions";
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 import {
+  SFX_LEVEL_LABELS,
+  SFX_LEVELS,
+  getSfxLevel,
   isMuted,
   setMuted,
+  setSfxLevel,
+  type SfxLevel,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
@@ -120,6 +125,7 @@ export function ProfileView({
   const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
 
   const [soundOn, setSoundOn] = useState(() => !isMuted());
+  const [soundLevel, setSoundLevel] = useState<SfxLevel>(() => getSfxLevel());
 
   useEffect(() => {
     applyTiltChoice();
@@ -154,6 +160,11 @@ export function ProfileView({
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
+  }
+
+  function choisirVolume(cran: SfxLevel) {
+    setSoundLevel(cran);
+    setSfxLevel(cran);
   }
 
   async function handleReset() {
@@ -383,9 +394,15 @@ export function ProfileView({
         ) : null}
       </section>
 
-      {/* Réglages minimaux */}
+      {/* Réglages */}
       <section className="menu-group" aria-label="Réglages">
         <h2>Réglages</h2>
+        {onShowThemes ? (
+          <button type="button" className="menu-row" onClick={onShowThemes}>
+            <span>Thème du classeur</span>
+            <ChevronRight size={16} />
+          </button>
+        ) : null}
         <button
           type="button"
           className="menu-row"
@@ -398,6 +415,25 @@ export function ProfileView({
             <i />
           </span>
         </button>
+
+        {soundOn ? (
+          <div className="menu-row sound-row" style={{ paddingTop: "0.2rem", paddingBottom: "0.2rem" }}>
+            <span id="volume-label">Volume</span>
+            <div className="sound-choice" role="group" aria-labelledby="volume-label">
+              {SFX_LEVELS.map((cran) => (
+                <button
+                  key={cran}
+                  type="button"
+                  className={soundLevel === cran ? "sound-chip active" : "sound-chip"}
+                  aria-pressed={soundLevel === cran}
+                  onClick={() => choisirVolume(cran)}
+                >
+                  {SFX_LEVEL_LABELS[cran]}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {canTilt ? (
           <button
