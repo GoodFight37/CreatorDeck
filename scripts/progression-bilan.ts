@@ -4,7 +4,7 @@
  * npm run progression:bilan
  * Tirages reproductibles : --seed=20261010, fuseau fixé Europe/Paris.
  * npm run progression:bilan -- --runs=100 (100 trajectoires par profil/durée).
- * Ne teste PAS Supabase, les échanges, les achats marché, ni les horaires réels.
+ * Ne teste PAS Supabase, les échanges, les achats marché, ni la présence réelle.
  */
 import { CREATORS, RARITY_META } from "../src/lib/catalog";
 import {
@@ -38,9 +38,8 @@ const profiles: Profile[] = [
   { name: "regulier", hours: [8, 8, 13, 13, 20, 20] },
   { name: "intensif", hours: [7, 7, 10, 10, 13, 13, 16, 16, 19, 19, 22, 22] },
 ];
-const origin = Date.UTC(2026, 9, 12, 0, 0);
 const nowAt = (day: number, hour: number, minute = 0) =>
-  origin + day * 86_400_000 + hour * 3_600_000 + minute * 60_000;
+  new Date(2026, 9, 12 + day, hour, minute).getTime();
 
 function claimReady(state: PlayerState, now: number): PlayerState {
   for (const m of milestoneViews(state)) {
@@ -79,6 +78,9 @@ function simulate(profile: Profile, days: number, strategy: Strategy) {
     for (const [index, hour] of profile.hours.entries()) {
       const sameHourBefore = profile.hours.slice(0, index).filter(h => h === hour).length;
       const now = nowAt(day, hour, sameHourBefore);
+      if (new Date(now).getHours() !== hour) {
+        throw new Error(`L'horaire local ${hour} h n'est pas représentable au jour ${day + 1}.`);
+      }
       state = refreshBalances(state, now);
       if (state.packs <= 0) { missingPacks++; continue; }
       const result = openPack(state, now);
@@ -132,7 +134,7 @@ if (!Number.isInteger(runs) || runs < 1 || runs > 1000) {
 const percentile = (sorted: number[], p: number) =>
   sorted[Math.floor((sorted.length - 1) * p)];
 console.log(`AUDIT DU MOTEUR LOCAL — ${runs} trajectoires par scénario ; seed=${seed} ; TZ=${process.env.TZ}`);
-console.log("Horaires UTC ; Mulberry32 ; moteur local uniquement, sans Supabase ni échanges.");
+console.log("Horaires de visite en heure locale Europe/Paris ; Mulberry32 ; moteur local uniquement, sans Supabase ni échanges.");
 function runAudit() {
   for (const days of [7, 30]) for (const [profileIndex, p] of profiles.entries()) for (const strategy of ["epargne", "craft-et-jetons"] as const) {
     const results = Array.from({ length: runs }, (_, run) => {

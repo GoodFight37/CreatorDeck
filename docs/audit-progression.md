@@ -56,3 +56,42 @@ base Supabase en production.
 Limite toujours ouverte : les trajectoires de progression restent une
 simulation du moteur TypeScript local ; elles ne constituent pas une
 comparaison des RPC de progression avec le serveur.
+
+## Scénarios avec horaires de visite en heure locale — 13 octobre 2026
+
+Une revue a relevé que le script convertissait les heures des profils en
+horaires UTC, alors que le Prime Time est calculé par le moteur en heure locale.
+Un créneau « 21 h » passait donc à 23 h à Paris en été (hors Prime Time) puis à
+22 h en hiver (Prime Time). Ce n'était pas un défaut de règle du jeu, mais une
+hypothèse de simulation qui faisait varier l'heure habituelle du joueur au
+changement d'heure.
+
+Le script construit désormais ses visites à heure fixe dans `Europe/Paris`, y
+compris au passage été/hiver. Commande :
+`npm run progression:bilan -- --runs=100 --seed=20261010`. Résultat : 12
+scénarios, 1 200 trajectoires, zéro paquet manquant. Les résultats complets sont
+dans [le JSONL](audits/progression-local-time-100.jsonl) ; SHA-256 :
+`02ca7260e116bd9d50c8bd0a3fecc8e5374534b968bbe529da25a7e96fe693e1`.
+
+| Profil | Jours | Stratégie | Uniques moy. | Jetons restants moy. | Points restants moy. | Crafts moy. | Achats aux jetons moy. |
+|---|---:|---|---:|---:|---:|---:|---:|
+| Occasionnel | 7 | Épargne | 93,79 | 109 | 2 706,04 | 0 | 0 |
+| Occasionnel | 7 | Craft + jetons | 97,99 | 109 | 651,99 | 4,09 | 0 |
+| Régulier | 7 | Épargne | 210,41 | 263 | 5 489,50 | 0 | 0 |
+| Régulier | 7 | Craft + jetons | 216,80 | 263 | 1 585,61 | 6,65 | 0 |
+| Intensif | 7 | Épargne | 356,83 | 473 | 9 769,76 | 0 | 0 |
+| Intensif | 7 | Craft + jetons | 365,14 | 73 | 5 690,43 | 7 | 1 |
+| Occasionnel | 30 | Épargne | 316,79 | 460 | 12 200,58 | 0 | 0 |
+| Occasionnel | 30 | Craft + jetons | 333,28 | 60 | 371,78 | 20,97 | 1 |
+| Régulier | 30 | Épargne | 611,49 | 1 120 | 31 077,04 | 0 | 0 |
+| Régulier | 30 | Craft + jetons | 635,82 | 320 | 14 621,05 | 29,69 | 2 |
+| Intensif | 30 | Épargne | 833,96 | 2 020 | 68 938,34 | 0 | 0 |
+| Intensif | 30 | Craft + jetons | 848,96 | 132 | 54 369,60 | 30 | 4,72 |
+
+Pour le profil occasionnel sur 30 jours, l'épargne atteint 460 jetons avec des
+visites stables à 9 h et 21 h locales, contre 434 dans l'ancien modèle UTC qui
+traversait un changement d'heure. Les autres métriques restent des résultats
+de scénarios synthétiques : 100 répétitions donnent une tendance reproductible,
+pas une prévision du comportement réel. Les règles du jeu n'ont pas changé ;
+Supabase, les échanges, la présence réelle, les missions Tribunal et les
+dépenses de sabliers ne sont toujours pas simulés.

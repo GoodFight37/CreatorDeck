@@ -2581,3 +2581,22 @@ et ZIP voisins, pas publiées sur une Release. Ne pas redémarrer une collecte
 complète. Prochaine étape : décider une méthode plus économique avec Malik,
 puis reprendre uniquement la publication des 20 images locales si retenue.
 Réservation de recherche libérée ; préserver tous les fichiers locaux.
+
+## Audit indépendant de la progression — 13 octobre 2026
+
+Pendant que le pilote portraits est traité séparément, correction documentaire
+et locale du simulateur : les profils de `scripts/progression-bilan.ts` sont
+maintenant générés en heure locale Europe/Paris, la même référence que le
+Prime Time, au lieu d'heures UTC qui changeaient l'habitude simulée à l'automne.
+Aucune règle du jeu, économie, écran, ni donnée portrait touchée.
+
+Branche locale `codex/progression-local-time`, base `main` vérifiée
+`1ced6cc1147e598d305ee830721b793fd54eeae4`. 100 parties × 12 scénarios
+(1 200 au total), seed `20261010`, zéro paquet manquant. JSONL et comparaison
+avec l'ancien calendrier dans `docs/audit-progression.md` et
+`docs/audits/progression-local-time-100.jsonl` (SHA-256
+`02ca7260e116bd9d50c8bd0a3fecc8e5374534b968bbe529da25a7e96fe693e1`).
+Exécution complète `--seed=20261010` (une trajectoire par scénario) également
+réussie. ESLint ciblé, typecheck (après mise de côté temporaire du cache `.next`
+stale de l'autre branche) et `git diff --check` réussis. Pas de test Supabase.
+Le prototype catalogue d'Arena et le pilote portraits restent séparés.
