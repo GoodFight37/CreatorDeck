@@ -2,13 +2,14 @@
 
 ## État courant — 13 octobre 2026
 
-Dernier jalon publié vérifié avant l'étude catalogue : `main` à
-`f93ffcc8ed2f31c6def11e14f08f14a105d41865` (passation de l'audit de progression
-en heure locale). Le travail décrit ci-dessous sur l'agrandissement du
-catalogue est une simulation exploratoire ; il ne modifie ni les taux, ni les
+Dernier jalon publié vérifié : `main` à
+`b4d08e5802b72f6d75e44bc31be853dae4ea0c26`. L'étude sur l'agrandissement du
+catalogue est une simulation exploratoire ; elle ne modifie ni les taux, ni les
 cartes du jeu. Voir [l'étude et ses résultats](audit-croissance-catalogue.md).
-Le badge compact de direct ouvre la chaîne Twitch lorsque le snapshot est frais ;
-les validations de ce jalon sont archivées plus bas.
+La vérification GitHub
+[38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
+est verte, 5/5 blocs. Le badge compact de direct ouvre la chaîne Twitch lorsque
+le snapshot est frais ; les validations de ce jalon sont archivées plus bas.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.

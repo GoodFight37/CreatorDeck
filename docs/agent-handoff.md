@@ -2647,8 +2647,11 @@ Comparaison de cohérence avec le moteur de progression précédent : les moyenn
 sur 30 jours diffèrent de moins de deux cartes uniques. Pas de test de bout en
 bout ou cloud requis pour cette analyse autonome.
 
-Publication normale autorisée selon AGENTS.md, sous réserve de revérifier `main`
-avant commit/push. À ce checkpoint, l'étude et sa passation sont encore locales ;
-aucun commit ni push de cette étude n'a été effectué. Après publication,
-consigner ici le SHA distant et l'état exact de la CI. Arena, prototype de
-catalogue et chantier portraits demeurent séparés.
+Publié normalement sur `main` après vérification du parent distant. Commit
+`b4d08e5802b72f6d75e44bc31be853dae4ea0c26`, SHA distant confirmé par
+`git ls-remote`. La vérification GitHub
+[38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
+est terminée avec 5/5 blocs réussis : SQL jetable, tests unitaires/écrans/
+statique/build, deux lots Playwright et parcours cloud à RPC simulés. Le
+workflow émet un avertissement d'obsolescence Node 20 des actions, mais aucun
+échec. Arena, prototype de catalogue et chantier portraits demeurent séparés.
