@@ -376,7 +376,12 @@ export const SFX_LEVEL_LABELS: Record<SfxLevel, string> = {
 /** Ce que vaut chaque cran, en gain linéaire (−8 dB, −2,5 dB, 0 dB). */
 const LEVEL_GAIN: Record<SfxLevel, number> = { discret: 0.4, normal: 0.75, fort: 1 };
 export type MusicScene = "hub" | "pack" | "tribunal";
-const MUSIC_GAIN: Record<MusicScene, number> = { hub: 0.14, pack: 0.018, tribunal: 0 };
+/** Gains relatifs de BGM avant le volume global : hub présent, pack très ducké. */
+export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
+  hub: 0.24,
+  pack: 0.018,
+  tribunal: 0,
+};
 
 let level: SfxLevel = "normal";
 
@@ -456,7 +461,7 @@ function masterBus(ctx: AudioContextLike): GainNode {
 
 function applyMusicScene(ctx: AudioContextLike): void {
   if (!musicGain) return;
-  const target = MUSIC_GAIN[musicScene] * LEVEL_GAIN[getSfxLevel()];
+  const target = MUSIC_SCENE_GAIN[musicScene] * LEVEL_GAIN[getSfxLevel()];
   const parameter = musicGain.gain;
   parameter.setTargetAtTime(isMuted() ? 0 : target, ctx.currentTime, 0.22);
 }

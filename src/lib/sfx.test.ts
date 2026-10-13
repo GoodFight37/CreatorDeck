@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import NIVEAUX_SFX from "@/data/sfx-niveaux.json";
 import {
   SAMPLES,
+  MUSIC_SCENE_GAIN,
   SFX_LEVELS,
   SFX_LEVEL_LABELS,
   SFX_USUELS,
@@ -84,6 +85,14 @@ describe("plans de sons", () => {
       expect(withVariant.length).toBe(standard.length + 1);
       expect(withVariant.at(-1)?.freq).toBeGreaterThan(standard.at(-1)?.freq ?? 0);
     }
+  });
+});
+
+describe("mix de la musique", () => {
+  it("garde la boucle audible au hub, très en retrait pendant un pack et absente au Tribunal", () => {
+    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThan(0.2);
+    expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeLessThan(0.1);
+    expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
 });
 
