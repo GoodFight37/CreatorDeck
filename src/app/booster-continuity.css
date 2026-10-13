@@ -49,7 +49,6 @@
 .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open {
   transform: translate(-50%, -50%) perspective(900px) rotateX(0deg) rotateY(0deg);
 }
-.booster-cinematic.booster-presentation .booster-physical-scene.is-pulling { transition: none; }
 .booster-cinematic.booster-presentation .foil-depth-side,
 .booster-cinematic.booster-presentation .foil-depth-bottom {
   position: absolute;
@@ -169,6 +168,10 @@
   transform: translate(-50%, -50%);
   pointer-events: auto;
   touch-action: none;
+  cursor: grab;
+}
+.reveal-game .reveal-stage > .reveal-anchor:active {
+  cursor: grabbing;
 }
 .reveal-game .reveal-stage .reveal-card {
   width: var(--scene-card-width);
@@ -176,7 +179,6 @@
 }
 .reveal-game .reveal-stage .reveal-flip { animation: scene-card-arrive 760ms ease-out both; }
 .reveal-game .reveal-stage .reveal-flip-face { animation: scene-card-turn 760ms cubic-bezier(.22,.65,.24,1) var(--rare-delay, 0ms) both; }
-/* The back is visible immediately, at the exact position of the extracted card. */
 @keyframes scene-card-arrive {
   from { filter: brightness(.85); }
   to { filter: brightness(1); }
@@ -297,7 +299,6 @@ html:has(.booster-presentation) { overflow: hidden; }
 .reveal-game .reveal-perfect-grid .card-rank { font-size: clamp(9px, 6cqw, 12px); }
 .reveal-game .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 74px auto 0; }
 .reveal-game.reveal-perfect .reveal-header { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
-/* The extracted backs and the turning card use the same printed pattern. */
 .booster-presentation .reveal-dos {
   border: 2px solid rgba(255,224,187,.76);
   background:
@@ -320,6 +321,7 @@ html:has(.booster-presentation) { overflow: hidden; }
   .reveal-game .reveal-name p { font-size: 10px; }
   .reveal-game .reveal-perfect-grid { margin-top: 20px; max-width: 650px; }
   .reveal-game .reveal-perfect-grid .reveal-card { width: min(100%, 103px); margin: 0 auto; max-height: none; }
+  .reveal-swipe-prompt { top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 36px); font-size: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal-game .reveal-stage .reveal-flip,
@@ -328,8 +330,6 @@ html:has(.booster-presentation) { overflow: hidden; }
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip,
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip-face { animation: none; }
 
-/* Home sachet: a printed foil front with real CSS thickness, not a flat card. */
-/* Reflection belongs to the two printed pieces, never to the scene bounds. */
 .booster-cinematic.booster-presentation .booster-physical-scene::after { content: none; }
 .booster-foil-open .foil-material-sheen,
 .opening-continuum.is-revealing .foil-material-sheen { display: none; }
@@ -424,7 +424,6 @@ body:has(.booster-cinematic.booster-presentation) .pack-specular,
 body:has(.reveal-overlay) .pack-specular,
 body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 
-/* A torn laminate hinges on its weld; light briefly shines through the cut. */
 .booster-cinematic.booster-presentation .foil-top-piece {
   transform-style: preserve-3d; transform-origin: var(--peel-origin-x, 50%) 15.45%; backface-visibility: hidden;
   transition: transform 160ms ease-out;
@@ -493,7 +492,6 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   100% { opacity: 0; transform: scaleY(.55); }
 }
 
-/* Five backs leave the chamber in a staggered 3D fan under one second. */
 .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber { animation-duration: 920ms; }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
   animation-name: scene-card-extract;
@@ -510,14 +508,21 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
     calc((4 - var(--card-i)) * -2px)); }
 }
 
-/* The revealed card settles with a little thickness, then follows the finger. */
+/* Interaction tactile de la carte */
 .reveal-game .reveal-stage > .reveal-anchor {
-  perspective: 1100px; transform-style: preserve-3d;
-  transition: transform 110ms cubic-bezier(.2, .7, .2, 1);
+  perspective: 1100px;
+  transform-style: preserve-3d;
+  transition: transform 140ms cubic-bezier(.2, .7, .2, 1);
+  cursor: grab;
+}
+.reveal-game .reveal-stage > .reveal-anchor:active {
+  cursor: grabbing;
 }
 .reveal-game .reveal-stage > .reveal-anchor.is-swiping {
   transition: none;
-  transform: translate(-50%, -50%) translate(var(--reveal-drag-x, 0px), var(--reveal-drag-y, 0px));
+  transform: translate(-50%, -50%)
+    translate(var(--reveal-drag-x, 0px), var(--reveal-drag-y, 0px))
+    rotate(var(--reveal-drag-rotate, 0deg));
 }
 .reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: preserve-3d; }
 .reveal-game .reveal-stage .reveal-card {
@@ -586,15 +591,11 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   .reveal-game .reveal-stage > .reveal-anchor { transition: none; }
 }
 
-/* Reduced motion and the reflection switch stop moving, layered effects.
-   Extraction completes on animationend; the existing reveal locks are preserved. */
 [data-card-fx="off"] .pack-specular,
 [data-card-fx="off"] .reveal-game .reveal-stage .card-foil { display: none; }
 [data-card-fx="off"] .booster-foil-shine { animation: none; }
 body:has(.reveal-overlay) .pack-specular,
 body:has(.booster-cinematic.booster-presentation .booster-foil-open) .pack-specular { animation: none; }
-/* Les anciens calques foil ne sont plus rendus dans la scène actuelle ; ces
-   gardes évitent qu'ils reprennent un cycle si le markup est réutilisé. */
 .booster-foil-open .booster-foil-shine,
 body:has(.reveal-overlay) .booster-foil,
 body:has(.reveal-overlay) .booster-foil-shine,
@@ -664,133 +665,4 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-foil-open .foil-body-piece {
     animation: none; opacity: 0; transform: rotateX(-18deg);
   }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-side,
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom,
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-inner-shadow,
-  .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::before,
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit { animation: none; opacity: 0; }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber,
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card { animation: none; opacity: 1; }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber { transform: translateY(-18%); }
-  .booster-cinematic.booster-presentation.scene-scene .booster-foil-open .foil-card-chamber { transform: translate(-50%, -50%); }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
-    transform: translateY(calc(-8% - var(--card-i) * 2%))
-      translateX(calc((var(--card-i) - 2) * 5px)) rotate(calc((var(--card-i) - 2) * 3deg));
-  }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before { display: none; }
-  .booster-cinematic.booster-presentation .booster-physical-scene::after { display: none; }
-  .reveal-game .reveal-stage .reveal-flip { animation: none; }
-}
-
-/* Only the opening pouch gets a GPU surface. Cards/focus/gesture stay shared. */
-.opening-foil-3d {
-  position: absolute;
-  inset: -17.5%;
-  z-index: 3;
-  pointer-events: none;
-  visibility: hidden;
-}
-.has-foil-3d > .opening-foil-3d { visibility: visible; }
-.opening-foil-3d canvas { display: block; width: 100%; height: 100%; }
-.booster-cinematic.booster-presentation .booster-physical-scene.has-foil-3d {
-  transform: translate(-50%, -50%);
-}
-.has-foil-3d > .foil-body-piece,
-.has-foil-3d > .foil-top-piece,
-.has-foil-3d > .foil-depth-side,
-.has-foil-3d > .foil-depth-bottom,
-.has-foil-3d > .foil-inner-shadow,
-.has-foil-3d > .foil-cut-slit,
-.has-foil-3d > .booster-foil-glow { visibility: hidden; }
-.booster-cinematic.booster-presentation .booster-physical-scene.has-foil-3d::before { display: none; }
-@media (prefers-reduced-motion: reduce) {
-  .opening-foil-3d { display: none; }
-}
-
-/* Opening-only cleanup: no added screen-blended sheen or cut-light flash. */
-.opening-continuum .foil-material-sheen,
-.opening-continuum .booster-foil-glow,
-.opening-continuum .foil-cut-slit::before,
-.booster-cinematic.booster-presentation .booster-physical-scene::before { display: none; }
-.booster-cinematic.booster-presentation .foil-cut-slit {
-  background: rgba(225, 193, 202, .55);
-  box-shadow: none;
-}
-.opening-continuum .foil-inner-shadow { background: none; }
-.opening-continuum .booster-premium-loading .booster-open-link { margin-top: 8px; }
-
-/* Visible opening wave: printed packaging, finger-led peel, gesture-first cards. */
-.opening-continuum .booster-stage-atmosphere { display: none; }
-.opening-continuum .foil-cut-slit {
-  height: 5px;
-  border-top: 1px solid #e7d5c1;
-  border-bottom: 2px solid #090c14;
-  background: #1b1420;
-  clip-path: polygon(0 30%, 8% 0, 17% 35%, 26% 0, 37% 30%, 48% 0,
-    58% 30%, 69% 0, 80% 30%, 90% 0, 100% 30%, 100% 100%, 0 100%);
-}
-.reveal-game:has(.reveal-anchor):not(.reveal-summary-open) .reveal-next {
-  width: min(70%, 240px);
-  min-height: 44px;
-  color: var(--text);
-  background: rgba(16, 17, 24, .85);
-  border: 1px solid rgba(242, 238, 230, .22);
-  box-shadow: none;
-  font-size: 13px;
-}
-.reveal-swipe-cue {
-  position: absolute;
-  bottom: calc(100px + env(safe-area-inset-bottom));
-  left: 16px;
-  right: 16px;
-  color: #f2eee6;
-  text-align: center;
-  font-size: 14px;
-}
-.reveal-swipe-cue span { display: block; margin-bottom: 4px; font-size: 24px; letter-spacing: 15px; }
-@media (prefers-reduced-motion: reduce) {
-  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
-}
-[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
-
-/* Motion-off must be static on the first frame, including tiny global fades. */
-@media (prefers-reduced-motion: reduce) {
-  .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }
-}
-[data-card-fx="off"] .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }
-
-/* Peel zone: a sampled seam, with a lip that follows both pointer axes. */
-.booster-cinematic.booster-presentation .booster-peel-zone {
-  top: 5%; height: 19%; min-height: 48px; transform: none;
-}
-.booster-cinematic.booster-presentation .foil-top-piece {
-  clip-path: var(--cut-top, inset(0 0 84.55%));
-}
-.booster-cinematic.booster-presentation .foil-body-piece {
-  clip-path: var(--cut-body, inset(15.45% 0 0));
-}
-.booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
-  transition: transform 50ms linear;
-  transform: translate3d(var(--peel-x, 0px), calc(var(--peel-y, 0px) - var(--peel-progress) * 14px), calc(var(--peel-progress) * 26px))
-    rotateX(calc(var(--peel-progress) * 68deg)) rotateZ(var(--peel-angle, 0deg));
-}
-.booster-cinematic .foil-cut-trace {
-  position: absolute; inset: 0; width: 100%; height: 100%; z-index: 7;
-  overflow: visible; pointer-events: none; transition: opacity 160ms ease-out;
-}
-.booster-cinematic.booster-presentation .foil-cut-trace .foil-cut-slit {
-  position: static; fill: none; stroke: #301b23; stroke-width: 3px;
-  stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 1px 0 #f4cead); box-shadow: none; transform: none; clip-path: none;
-}
-.booster-cinematic .is-returning .foil-cut-trace { opacity: 0; }
-.booster-cinematic.booster-presentation .is-returning .foil-top-piece { clip-path: inset(0 0 84.55%); }
-.booster-cinematic.booster-presentation .is-returning .foil-body-piece { clip-path: inset(15.45% 0 0); }
-@media (prefers-reduced-motion: reduce) {
-  .booster-cinematic .foil-cut-trace { transition: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; transition: none; }
-}
-[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; transition: none; }
+  .booster-cinematic.booster-presentation .booster-foil-open .
