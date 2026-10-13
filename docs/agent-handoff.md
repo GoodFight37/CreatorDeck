@@ -11,7 +11,9 @@ par défaut : l’identité et les droits ne sont pas certifiés par le détecte
 7/7 Node, 3/3 Python, ESLint ciblé/diff-check, galerie réelle bureau/mobile
 simulé et export/ZIP réussis. Base main `34fdf0b2`, HEAD distant vérifié avant
 publication des outils. Pas de nouvelle suite du jeu relancée localement, code
-jeu inchangé. CI du nouveau checkpoint à relever ; aucun succès anticipé.
+jeu inchangé. Pilote publié : [`ed20ebd8`](https://github.com/GoodFight37/CreatorDeck/commit/ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55).
+CI GitHub [38388400407](https://github.com/GoodFight37/CreatorDeck/actions/runs/38388400407)
+success ; Vercel success. Aucun succès Android physique revendiqué.
 
 Compte SerpApi Free Plan : trente recherches comptées, 220 restantes au relevé.
 La clé reçue a servi uniquement à ce pilote, puis son fichier temporaire a été

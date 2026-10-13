@@ -3,7 +3,9 @@
 > d’ouverture et 2/2 E2E portraits réussis, captures strictes inchangées ;
 > 32/32 DOM ciblés, typecheck/lint/catalogue/build réussis. Suite complémentaire
 > 12/12 réussie : total 42 E2E ouverture + 2 portraits. Publiée dans
-> [93626653](https://github.com/GoodFight37/CreatorDeck/commit/93626653d8f3cc34412b4a752b9f0a5455918d2a), SHA main distant confirmé. CI en cours au relevé. [État actuel de reprise](reprise-zip-2026-10-13.md).
+> [93626653](https://github.com/GoodFight37/CreatorDeck/commit/93626653d8f3cc34412b4a752b9f0a5455918d2a), SHA main distant confirmé.
+> La CI de reprise [38379579144](https://github.com/GoodFight37/CreatorDeck/actions/runs/38379579144)
+> et Vercel ont depuis terminé avec succès. [État actuel de reprise](reprise-zip-2026-10-13.md).
 > Le texte ci-dessous décrit l’état au moment de l’export, désormais historique.
 
 # Vague visuelle : sachet fermé et peel — 13 octobre 2026

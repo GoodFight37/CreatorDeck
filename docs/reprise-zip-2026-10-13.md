@@ -106,3 +106,11 @@ Réservation libérée. Aucun travail produit local restant ; prochaine action :
 laisser la CI terminer, reprendre uniquement si un échec est signalé. L’avis
 visuel sur téléphone physique et les crédits manquants des anciens lots
 manuels/Upscayl restent les limites préexistantes, non résolues par cette reprise.
+
+### Résultat asynchrone après le relevé
+
+La CI de reprise `38379579144` et le déploiement Vercel ont ensuite terminé
+avec succès. Le checkpoint documentaire et outil portraits ultérieur
+`ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55` a également passé sa CI
+[`38388400407`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38388400407)
+et Vercel. Aucun test sur téléphone physique n’a été fait.

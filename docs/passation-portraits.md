@@ -13,10 +13,11 @@ au relevé. Clé temporaire supprimée, jamais versionnée ; remplacement consei
 après son envoi dans le chat. Aucun compte/subscription créé par Codex.
 [Bilan exact, ZIP et limites](portrait-pilot-2026-10-13.md).
 7/7 tests Node, 3/3 Python, ESLint/diff-check et vraie galerie 412/1 400 px/export
-réussis. Avant toute extension, Malik revoit les six propositions via le ZIP et
-renvoie le JSON exporté. Le taux du pilote ne prouve pas une solution automatique
-pour tout le catalogue ; aucune relance des 697 tant que ce résultat n’est pas
-évalué. Suites précédentes ci-dessous historiques.
+réussis. Pilote publié `ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55`, CI GitHub
+38388400407 et Vercel success. Avant toute extension, Malik revoit les six
+propositions via le ZIP et renvoie le JSON exporté. Le taux du pilote ne prouve
+pas une solution automatique pour tout le catalogue ; aucune relance des 697
+tant que ce résultat n’est pas évalué. Suites précédentes ci-dessous historiques.
 
 Préférence de Malik : proposer un changement de modèle avant le chantier puis
 s’arrêter et attendre son « go ». Ne pas prétendre connaître le sélecteur de

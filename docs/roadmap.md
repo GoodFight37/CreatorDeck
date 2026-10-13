@@ -2,9 +2,13 @@
 
 ## État courant — 13 octobre 2026
 
-Référence du lot portraits : `10699eb`, **CI et Vercel Production réussis**.
-Nouveau lot d’ouverture : [continuum, matière et geste](booster-continuum-2026-10-12.md),
-implémenté et vérifié localement ; sa publication/CI est distincte. [Bilan courant, preuves et limites](etat-projet-2026-10-12.md).
+Référence du lot de code courant : pilote portraits `ed20ebd8`, **CI GitHub et
+Vercel success**. Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ;
+le pilote n’a changé aucun asset ni sélection active.
+Le lot d’ouverture est aussi publié : continuité dans `93626653` et reprise
+visuelle du sachet dans le même lot de reprise. CI de reprise
+[38379579144](https://github.com/GoodFight37/CreatorDeck/actions/runs/38379579144)
+et Vercel success. [Bilan et limites](reprise-zip-2026-10-13.md).
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
@@ -33,9 +37,10 @@ réel reste à recueillir ; les mentions de blocage GitHub décrivent l’export
 
 ### Livraisons terminées
 
-- **Portraits du 12 octobre** : 300 manuels + 699 Upscayl + Diverron restauré IA ;
-  publiés dans `10699eb`, CI et Vercel réussis. Sources/crédits incomplets indiqués
-  dans les réglages ; aucune promesse de 1 000 photos nettes et identités vérifiées.
+- **Portraits du 12 octobre** : 300 choix manuels préservés ; les 699 fichiers
+  Upscayl restent archivés mais ne sont plus affichés ; sélections Commons
+  créditées et choix acceptés conservés. Modifications publiées ; aucune promesse
+  de 1 000 photos nettes et identités vérifiées.
 - **Skyrozz / Twitch skyrroztv** : identité et migration 0050 corrigées.
 - **Appuis pendant le flip** : appui mémorisé puis consommé ; correctif
   `3f33b19` inclus dans la révision actuelle, CI verte.

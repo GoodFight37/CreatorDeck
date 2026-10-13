@@ -1,19 +1,51 @@
-# Brief de revue à Grok — CreatorDeck, 12 octobre 2026
+# Brief de revue à Grok — CreatorDeck, actualisé le 13 octobre 2026
 
 Tu as accès à GitHub : https://github.com/GoodFight37/CreatorDeck, branche main.
-Lis d’abord README.md, docs/etat-projet-2026-10-12.md, le plan actif de
-docs/roadmap.md et docs/perimetre.md, puis le code correspondant à tes constats.
-Le code produit vérifié est 10699eb ; les commits documentaires ultérieurs
-actualisent le bilan. Ne traite pas une archive datée comme l’état actuel.
+Pars du HEAD courant (pilote portraits `ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55`),
+puis lis README.md, `docs/agent-handoff.md`, le plan actif de `docs/roadmap.md`,
+`docs/perimetre.md` et les rapports récents liés au sujet. Les rapports datés
+expliquent les décisions ; vérifie le code courant avant tout constat.
+
+## État des portraits — mise à jour importante
+
+Malik a trouvé artificiels plusieurs visages agrandis par Upscayl. Le code
+réaffiche donc les avatars Twitch d’origine pour les entrées concernées. Les
+699 fichiers agrandis restent archivés, mais ne servent plus à l’affichage.
+Les 300 portraits choisis manuellement restent intacts ; les remplacements
+Commons crédités et la photo fournie de Diverron gardent leur priorité.
+Voir `docs/portrait-upscale-review-2026-10-13.md` et décision D-065.
+
+Un pilote d’automatisation a ensuite été créé dans `tools/portrait-pilot/` :
+SerpApi Google Images recherche des candidates, MediaPipe local détecte et
+cadre un visage, puis une galerie permet une revue humaine. Sur 20 créateurs,
+1 925 résultats de recherche ont donné 100 candidates analysées, six
+propositions techniques et quatorze portraits actuels conservés. Aucune identité
+ni licence n’est certifiée automatiquement ; zéro portrait est prêt à publier.
+Les 300 choix manuels et portraits déjà acceptés sont protégés. Le rapport
+`docs/portrait-pilot-2026-10-13.md` donne la méthode, les exemples, les limites
+et les tests. La CI du commit `ed20ebd8` est verte (run 38388400407).
+
+Malik doit encore ouvrir le ZIP de galerie et décider pour les six propositions.
+Ne présente pas le pilote comme un remplacement automatique fiable des quelque
+697 avatars restants. Il n’y a eu aucune modification des assets/sélecteurs du
+jeu dans le commit du pilote.
+
+Pour cette revue, évalue séparément : (1) si le retour aux originaux répond au
+problème visuel décrit ; (2) si les preuves et la galerie rendent la revue
+humaine pratique ; (3) quels garde-fous ou étapes manquent avant d’étendre la
+recherche au reste. Ne déduis pas l’identité d’une personne en regardant son
+visage. Distingue bug démontré, jugement esthétique et incertitude sur la source
+ou les droits. N’affirme pas que les six propositions sont validées.
 
 Malik veut ton avis sur l’application qu’il utilise sur Vercel : facilité au
 pouce, lisibilité, plaisir d’ouvrir et de collectionner, rythme et rendu des
 boosters. Quatre piliers : Drop, Binder, Craft, Toi ; Supabase gère les actions
 multijoueurs. Le support Android existe, mais Vercel est son usage actuel.
 
-Aujourd’hui les 1 000 routes d’images sont intégrées : 300 manuelles, 699
-Upscayl, Diverron restauré avec IA. Ce ne sont pas 1 000 identités/photos
-vérifiées. Malik accepte les avatars génériques quand le créateur n’a pas de
+Le catalogue a 1 000 routes d’images, mais elles ne représentent pas 1 000
+identités/photos vérifiées : 300 choix manuels, 699 images Upscayl archivées
+et non affichées, ainsi que les sélections Commons créditées et les choix
+acceptés. Malik accepte les avatars génériques quand le créateur n’a pas de
 photo de profil, notamment SolaryHS, j0niq et toaststix. Ce n’est pas un bug ni
 une tâche de remplacement. Aucune collecte exhaustive des portraits demandée.
 
