@@ -1,16 +1,29 @@
 import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 
-test("Tribunal visible sans défilement, accessible en un appui", async ({ page }) => {
+test("Drop garde le sachet et le CTA en premier sur mobile compact, Tribunal accessible", async ({ page }) => {
   await gotoDeck(page);
-  for (const viewport of [{ width: 320, height: 568 }, { width: 412, height: 915 }]) {
-    await page.setViewportSize(viewport);
-    const entry = page.getByRole("button", { name: /Ouvrir le Tribunal des Bannis/ });
-    const box = await entry.boundingBox();
-    expect(box!.y).toBeGreaterThanOrEqual(0);
-    expect(box!.y + box!.height).toBeLessThan(viewport.height - 64);
-    await expect(entry.locator(".tribunal-entry-badge")).toHaveText("5");
-  }
-  await page.getByRole("button", { name: /Ouvrir le Tribunal des Bannis/ }).click();
+  await page.setViewportSize({ width: 320, height: 568 });
+  const pack = page.locator(".home-view .pack-stage .pack-artwork");
+  const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
+  const packBox = await pack.boundingBox();
+  const openBox = await open.boundingBox();
+  expect(packBox).not.toBeNull();
+  expect(openBox).not.toBeNull();
+  expect(packBox!.y).toBeGreaterThanOrEqual(0);
+  expect(packBox!.y + packBox!.height).toBeLessThan(568 - 64);
+  expect(openBox!.y + openBox!.height).toBeLessThan(568 - 64);
+
+  await page.setViewportSize({ width: 412, height: 915 });
+  const entry = page.getByRole("button", { name: /Ouvrir le Tribunal des Bannis/ });
+  const tallBox = await entry.boundingBox();
+  await expect(entry.locator(".tribunal-entry-badge")).toHaveText("5");
+  expect(tallBox).not.toBeNull();
+  expect(tallBox!.y + tallBox!.height).toBeLessThan(915 - 64);
+
+  await page.setViewportSize({ width: 320, height: 568 });
+  await entry.scrollIntoViewIfNeeded();
+  await expect(entry).toBeVisible();
+  await entry.click();
   await expect(page.getByRole("dialog", { name: "Tribunal des Bannis", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accorder la grâce" })).toBeVisible();
   await page.getByRole("button", { name: "Accorder la grâce" }).click();

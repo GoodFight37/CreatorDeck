@@ -223,6 +223,7 @@ export function HomeView({
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
           <span>{pack.size} cartes</span>
         </div>
+        <p className="pull-hint">Appuie sur le sachet pour préparer l’ouverture.</p>
       </section>
 
       <section className="open-panel">

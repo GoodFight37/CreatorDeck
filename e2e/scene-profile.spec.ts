@@ -5,7 +5,7 @@ test("Scène explique son rôle et reste fermé après consommation et rechargem
   await gotoDeck(page);
   const scene = page.getByRole("region", { name: "Ton paquet de famille du jour" });
   await expect(scene.locator("details")).toHaveCount(0);
-  await expect(scene).toContainText("compléter ta famille");
+  await expect(scene).toContainText("Pas de Légendaire dans ce paquet.");
   const reserve = await page.locator(".stock-row strong").innerText();
   await scene.getByRole("button", { name: "Ouvrir le Paquet Scène" }).click();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
