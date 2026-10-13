@@ -10,6 +10,19 @@ vers l’URL Twitch de la chaîne. Pas de dépendance à un schéma de données 
 perte de variante ; aucun stream actif n’est simulé si les données sont périmées.
 Les vérifications et limites sont dans le checkpoint du 13 octobre.
 
+## D-074 — 13 octobre 2026 : ouvrir une chaîne depuis le badge de direct actuel
+
+Quand une carte a un snapshot live frais, son badge « Direct » est aussi un
+lien HTTPS vers `https://www.twitch.tv/<login>` qui s’ouvre dans un nouvel
+onglet/contexte avec `noopener noreferrer`. Ainsi, l’appareil peut ouvrir le
+site ou l’application Twitch via ses liens universels, selon sa configuration.
+La variante souvenir « Obtenue en direct » reste non cliquable, et aucun lien
+vers un live terminé ou périmé n’est fabriqué. On n’impose pas de schéma privé
+`twitch://` ni n’affirme un lancement natif garanti. La règle générale suivie
+est de lier vers la destination publique Twitch sans incorporer son lecteur ;
+cela ne constitue pas un avis juridique ni une garantie de Twitch. Test écran
+ciblé dans le checkpoint du 13 octobre.
+
 ## D-072 — 13 octobre 2026 : corner peek sur la carte garantie
 
 Après le flip des quatre premières cartes d’un booster ordinaire, la cinquième

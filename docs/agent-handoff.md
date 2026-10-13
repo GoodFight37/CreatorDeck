@@ -16,6 +16,15 @@ Tests adaptés : test nouveau 2/2 ; `npm run ecrans` 21 fichiers / 124 tests ;
 `npm run typecheck`, `npm run lint` et `npm run build` passent. La fiche ouvre
 un URL HTTPS Twitch (qui laisse l’OS ouvrir l’app Twitch si ses liens universels
 sont configurés), aucun schéma `twitch://` n’est forcé ni vérifié sur téléphone.
+Reprise autorisée par Malik pour rendre aussi le badge compact « Direct » de la
+carte cliquable : s’il a un snapshot frais, il ouvre la même URL HTTPS Twitch
+dans un nouvel onglet avec `noopener noreferrer`. Les badges de provenance
+restent non cliquables ; ni chaîne ancienne ni stream périmé ne sont proposés.
+Le lancement de l’app Twitch dépend des liens universels configurés sur le
+téléphone, et n’est pas garanti. Ce choix de lien public n’est pas un avis
+juridique ni une confirmation officielle de Twitch. Test écran adapté 2/2 ;
+voir D-074. Cette extension locale reste à committer/publier et sa CI reste à
+relever après publication.
 Publication : [`a39dc6e5`](https://github.com/GoodFight37/CreatorDeck/commit/a39dc6e5a35d266219a5dfd7f10af996b87a5ff6),
 HEAD distant `main` vérifié identique. CI
 [`38410082291`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38410082291)
