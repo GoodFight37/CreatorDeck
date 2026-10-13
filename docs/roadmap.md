@@ -14,7 +14,8 @@ D-063. Le jugement visuel sur appareil réel reste à faire ; D-062 n'impose
 plus l'activation GPU par défaut.
 
 Vague visuelle du 13 octobre : [sachet contrasté et peel sous le doigt](booster-visible-2026-10-13.md),
-récupérée dans une nouvelle session et revérifiée sans conflit sur la base distante.
+récupérée dans une nouvelle session, revérifiée et publiée dans `93626653`,
+SHA distant confirmé ; CI en cours au relevé de reprise.
 [Publication et contrôles de reprise](reprise-zip-2026-10-13.md). L’avis sur téléphone
 réel reste à recueillir ; les mentions de blocage GitHub décrivent l’export initial.
 
@@ -60,7 +61,7 @@ ni des remplacements à rechercher. Aucun changement de fichier image requis.
 
 Avis visuel/performances sur téléphone physique restant à recueillir ; les
 E2E téléphone sont simulés. Les 20 anciennes sélections Commons sont
-récupérées avec leur provenance pour publication, sans remplacer les choix manuels
+publiées avec leur provenance dans `cf25f665`, sans remplacer les choix manuels
 prioritaires ; [état réel](reprise-zip-2026-10-13.md).
 Aucune nouvelle refonte économique, simulation « Ta chaîne », i18n, analytics
 ou publication sur stores n’est planifiée.

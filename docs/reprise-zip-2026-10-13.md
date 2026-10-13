@@ -43,7 +43,9 @@ reprise ajoutée/actualisée. Aucun comportement produit supplémentaire changé
 
 ## Vérifications de cette session
 
-Code vérifié : base ci-dessus + les deux lots restaurés et le test renforcé.
+Code audité et publié : `93626653d8f3cc34412b4a752b9f0a5455918d2a` (les deux lots restaurés et le test
+renforcé). Les tests ont tourné avant commit sur ces fichiers, inchangés ensuite ;
+seule la documentation est actualisée après publication.
 Les résultats de l’ancienne session sont conservés comme historique et ne
 remplacent pas les runs de cette reprise.
 
@@ -73,11 +75,34 @@ scénarios GPU/2D, animationend et secours réussis. Total navigateur **44/44** 
 42 ouverture (30 + 12), 2 portraits. Références visuelles du ZIP validées sans
 régénération ni changement de tolérance.
 
-## Publication
+## Publication vérifiée
 
-Commits ciblés puis push normal sur `main` après nouveau contrôle du HEAD
-distant prévus. Aucun force-push ni réécriture d’historique. La CI de la base
-[38321561095](https://github.com/GoodFight37/CreatorDeck/actions/runs/38321561095)
-est success ; elle ne valide pas les deux lots récupérés. Les SHAs et nouveaux
-liens CI seront relevés après publication ; ne pas annoncer leur succès avant
-observation. Réservation libérée en fin de reprise.
+Deux commits ciblés publiés par push normal sur `main` :
+
+- [Portraits cf25f665](https://github.com/GoodFight37/CreatorDeck/commit/cf25f665dd217ea8e6689502d08dca85d07f9c36).
+- [Booster 93626653](https://github.com/GoodFight37/CreatorDeck/commit/93626653d8f3cc34412b4a752b9f0a5455918d2a).
+
+Avant chaque commit/push : branche/HEAD et main distant revérifiés ; aucun
+commit concurrent observé. Push `6f63374b..93626653` réussi, puis `git ls-remote`
+a confirmé le SHA produit ci-dessus. Le blob du rapport distant correspond
+à celui du commit local (API GitHub). Aucun reset ni force-push.
+
+Au relevé **13 octobre 2026, 09:54:12 UTC**, la nouvelle
+[CI Vérification 38379579144](https://github.com/GoodFight37/CreatorDeck/actions/runs/38379579144)
+est **in_progress**, quatre jobs démarrés, aucune conclusion encore disponible.
+Vercel est **pending** sur ce SHA. Les succès de la CI de base ne sont pas
+utilisés pour annoncer la réussite de la reprise distante.
+
+Ce checkpoint ne modifie ensuite que la documentation et déclenche une
+nouvelle vérification GitHub ; le run précédent peut être annulé par la règle
+`cancel-in-progress` du dépôt. L’état ci-dessus est une observation du SHA
+produit, pas une promesse sur la CI du checkpoint documentaire. Consulter
+[les derniers runs de main](https://github.com/GoodFight37/CreatorDeck/actions/workflows/verification.yml?query=branch%3Amain)
+et retrouver le SHA du checkpoint avec
+`git log -1 --format=%H -- docs/reprise-zip-2026-10-13.md`.
+Aucune suite longue surveillée en boucle : consigne économie du dépôt respectée.
+
+Réservation libérée. Aucun travail produit local restant ; prochaine action :
+laisser la CI terminer, reprendre uniquement si un échec est signalé. L’avis
+visuel sur téléphone physique et les crédits manquants des anciens lots
+manuels/Upscayl restent les limites préexistantes, non résolues par cette reprise.

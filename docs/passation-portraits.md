@@ -20,7 +20,9 @@ préchargement, crédits), dont décodage de tous les curated ; 2/2 DOM crédits
 inclus dans les 32/32 DOM ciblés de la reprise. Typecheck, lint ciblé, catalogue,
 vocabulaire et build statique sans cloud réussis après `npm ci` ; lock inchangé.
 Parcours navigateur portraits bureau/téléphone simulé : 2/2 réussis.
-Publication en préparation.
+Lot portraits publié dans [cf25f665](https://github.com/GoodFight37/CreatorDeck/commit/cf25f665dd217ea8e6689502d08dca85d07f9c36),
+inclus dans main `93626653d8f3cc34412b4a752b9f0a5455918d2a`, SHA distant confirmé.
+CI de reprise en cours au relevé du rapport, aucun succès distant encore annoncé.
 Les sources/licences sont reprises du ZIP, sans nouvelle enquête externe.
 État de publication et résultats définitifs : [rapport de reprise](reprise-zip-2026-10-13.md).
 Les checkpoints plus anciens ci-dessous sont historiques. Aucune réservation

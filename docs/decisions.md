@@ -574,5 +574,6 @@ Cette décision et le code sont locaux, non publiés, l'accès GitHub étant ind
 
 L’indisponibilité GitHub ci-dessus concernait uniquement la session exportatrice.
 Dans la nouvelle session, main distant est à la base annoncée, patch récupéré
-sans conflit et tests adaptés rejoués. Aucun nouveau choix visuel ni réactivation
+sans conflit et tests adaptés rejoués ; code publié dans `93626653`, SHA distant
+confirmé et CI de reprise en cours au relevé. Aucun nouveau choix visuel ni réactivation
 GPU ; [publication et contrôles](reprise-zip-2026-10-13.md).

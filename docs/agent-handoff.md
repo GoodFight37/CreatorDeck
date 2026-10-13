@@ -12,8 +12,12 @@ Livibee/9pasha actifs). Booster restauré sans nouvelle refonte, GPU toujours of
 2 portraits, captures strictes, types/lint ciblé/catalogue/vocabulaire/build verts.
 Build et parcours locaux sans cloud ; téléphone physique non testé.
 [Rapport autonome de reprise](reprise-zip-2026-10-13.md),
-[passation portraits](passation-portraits.md). Publication normale en préparation,
-HEAD distant revérifié avant commit/push ; aucun reset ni force-push.
+[passation portraits](passation-portraits.md). Code audité **publié et vérifié sur GitHub** :
+`93626653d8f3cc34412b4a752b9f0a5455918d2a` (booster), avec le commit portraits ci-dessus.
+Push normal et SHA distant confirmés ; aucun reset ni force-push.
+Au 13 octobre 2026 à 09:54:12 UTC : [CI 38379579144](https://github.com/GoodFight37/CreatorDeck/actions/runs/38379579144)
+in_progress (4 jobs), Vercel pending. Le checkpoint documentaire déclenche
+une nouvelle CI ; aucun succès distant de la reprise annoncé avant conclusion.
 Les sections d’export et checkpoints antérieurs ci-dessous sont historiques.
 Aucune nouvelle collecte, aucun agent délégué, réservation libérée.
 
