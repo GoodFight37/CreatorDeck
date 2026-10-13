@@ -90,13 +90,13 @@ jobs:
           CI: "true"
 
   navigateur:
-    name: Tests de bout en bout Playwright (${{ matrix.shard }}/2)
+    name: Tests de bout en bout Playwright (${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
+        shard: [1, 2, 3]
     steps:
       - name: Récupérer la révision à vérifier
         uses: actions/checkout@v4
@@ -112,7 +112,7 @@ jobs:
       - name: Installer Chromium et ses dépendances système
         run: npx playwright install --with-deps chromium
       - name: Tests de bout en bout (bureau et téléphone)
-        run: npm run e2e -- --shard=${{ matrix.shard }}/2
+        run: npm run e2e -- --shard=${{ matrix.shard }}/3
         env:
           CI: "true"
           NEXT_TELEMETRY_DISABLED: "1"
