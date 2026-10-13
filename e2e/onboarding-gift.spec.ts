@@ -104,7 +104,7 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
     await expect(reveal.locator(".reveal-card")).toHaveCount(1);
     for (let shown = 1; shown < 5; shown += 1) {
       await expect(reveal.locator(".reveal-header")).toContainText(`${shown} / 5`);
-      await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+      await reveal.getByRole("button", { name: "Carte suivante" }).click();
     }
     await expect(reveal.locator(".reveal-header")).toContainText("5 / 5");
     await reveal.getByRole("button", { name: "Ranger dans le classeur" }).click();

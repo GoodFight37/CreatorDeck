@@ -19,13 +19,17 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   }, creators.filter((creator) => displayedPortraits.includes(creator.slug)));
   await page.reload();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
+  // Le Binder s’ouvre sur sa collection à compléter ; cette vue regroupe les
+  // cartes obtenues de toutes les familles avant de vérifier les portraits.
+  await page.getByRole("button", { name: "Dernières reçues" }).click();
   for (const slug of displayedPortraits) {
     const manual = manualPortraits[slug as keyof typeof manualPortraits];
     const curated = curatedPortraits[slug as keyof typeof curatedPortraits];
-    const image = manual ?? curated?.image ?? `/creators/${slug}.webp`;
-    const portrait = page.locator(`img[src="${image}"]`).first();
+    const creator = creators.find((entry) => entry.slug === slug)!;
+    const portrait = page.getByRole("img", { name: `Portrait de ${creator.displayName}`, exact: true });
     await expect(portrait).toBeVisible();
-    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth)).toBe(manual ? 450 : curated ? 900 : 600);
+    await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth))
+      .toBe(manual ? 450 : curated ? 900 : 600);
   }
   await expect(page.locator(".creator-card")).not.toContainText(["Moritz Barcelona", "Nate Herrera"]);
   await expect(page.locator("#image-credits")).toHaveCount(0);

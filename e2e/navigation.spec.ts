@@ -81,8 +81,11 @@ test("« Toi » propose d'ouvrir son compte", async ({ page }) => {
   await openDeck(page);
   await tab(page, "Toi").click();
   await expect(tab(page, "Toi")).toHaveAttribute("aria-current", "page");
-  // Une seule ligne, un seul nom : « Mon compte ». L'écran ne s'appelle plus
-  // par le nom de l'infrastructure qu'il range.
+  const online = page.getByText("Fonctionnalités en ligne", { exact: true });
+  await expect(online).toBeVisible();
+  await expect(page.getByRole("button", { name: "Mon compte", exact: true })).toHaveCount(0);
+  await online.click();
+  // Le compte reste disponible, mais dans le volet en ligne replié par défaut.
   const account = page.getByRole("button", { name: "Mon compte", exact: true });
   await expect(account.first()).toBeVisible();
 });
