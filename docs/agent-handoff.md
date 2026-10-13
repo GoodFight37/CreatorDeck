@@ -1,3 +1,15 @@
+## CI navigateur répartie en trois shards — 13 octobre 2026
+
+Workflow `.github/workflows/verification.yml` : Playwright est réparti sur
+trois lots équilibrés par nombre de tests (35/35/34 instances, aucun scénario
+retiré). Publié sur `main` en `ebf57e8e809b00e83c1eeb7586d43ca76b4337af`.
+CI [`38453353488`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38453353488)
+verte, 6/6 jobs, 3 min 04 s ; le run précédent à deux shards avait pris
+3 min 21 s. Gain observé : 17 secondes sur ce run, à confirmer sur d’autres
+exécutions car le temps varie. Les trois shards Playwright ont réussi ; leur
+job le plus long a pris 180 s. Aucune suppression de tests. Le détail reste
+dans K-049.
+
 ## Languette de reveal retirée — 13 octobre 2026
 
 À la demande de Malik après essai, suppression complète du corner peek : la

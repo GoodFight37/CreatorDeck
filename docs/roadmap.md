@@ -2,6 +2,12 @@
 
 ## État courant — 13 octobre 2026
 
+La CI navigateur est distribuée en trois shards Playwright sans réduction de
+couverture. Commit `ebf57e8e`, run
+[`38453353488`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38453353488)
+vert (6/6 jobs, 3 min 04 s), soit 17 secondes de moins que le run précédent à
+deux shards ; ce gain reste à confirmer sur plusieurs exécutions.
+
 Dernier jalon fonctionnel vérifié : l'étude sur l'agrandissement du catalogue,
 publiée dans `b4d08e5802b72f6d75e44bc31be853dae4ea0c26` ; le checkpoint de
 publication documentaire est `26def354313af3700bbb403bf3718139eac5e689`.
