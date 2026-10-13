@@ -52,10 +52,13 @@ nécessaire sur le PC du joueur. Android/Capacitor reste supporté dans le code.
 Le code publié sur `main` inclut la reprise de l’ouverture continue, le peel guidé,
 le retour aux avatars originaux pour les anciens Upscayl, un pilote de revue
 automatique de portraits et la hiérarchie Drop/Craft. Les 300 choix manuels
-restent prioritaires ; les 699 images Upscayl sont archivées et non affichées.
-Le pilote a produit une image à comparer pour quinze profils sur vingt ; ces
-candidates ne sont pas automatiquement des remplacements. Le choix est fait à
-l’œil, sans bloquer sur la source ; les 300 choix manuels restent protégés. Voir le [plan courant](docs/roadmap.md), la
+initiaux restent prioritaires ; un lot de 154 portraits choisis par Malik a été
+ajouté le 13 octobre, soit 454 portraits manuels protégés. Les 699 images Upscayl
+sont archivées et non affichées. Le pilote laisse 542 profils candidats sur
+1 000 ; il sert à comparer les images et n’applique aucun remplacement tout seul.
+Le choix se fait à l’œil, selon l’identité, la netteté, la lisibilité du visage,
+la résolution et le cadrage, sans écarter une image uniquement faute de source.
+Voir le [plan courant](docs/roadmap.md), la
 [passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
 
 Le correctif des tests Drop/Scène et le nouveau découpage Playwright sont publiés

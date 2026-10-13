@@ -9,7 +9,13 @@ les crédits n’affichent plus sa source précédente comme celle de l’image 
 détaillés dans [le rapport d’import](portrait-import-manuel-lot-2026-10-13.md).
 Vérifications locales : portrait 33/33, `npm test` 73 fichiers / 1 164 tests,
 `npm run ecrans` 21 fichiers / 124 tests, typecheck, ESLint ciblé et build
-réussis ; CI complète après publication à relever.
+réussis. Le premier CI sur `a621417c` a échoué uniquement sur des attentes E2E
+de crédits qui ne correspondaient plus aux portraits remplacés ; ces attentes
+ont été corrigées dans `fd6d35270d196f1deba0d0a1a8f65f6b508242e2`. CI finale
+[`38469322128`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
+verte, 6/6 jobs, incluant unitaires/écrans/build, trois shards Playwright,
+migrations Postgres jetable et chemin cloud à RPC simulés. Le HEAD distant
+`main` a été vérifié identique à `fd6d3527`.
 
 ## Beat automatique sur la cinquième carte — 13 octobre 2026
 

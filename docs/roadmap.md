@@ -2,6 +2,12 @@
 
 ## État courant — 13 octobre 2026
 
+Portraits : le lot manuel de 154 images est publié sur `main`. Le registre
+protège désormais 454 portraits choisis manuellement ; 542 autres profils
+restent candidats au pilote visuel. Le run GitHub final
+[`38469322128`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
+sur `fd6d3527` est vert, 6/6 jobs. Voir le [rapport d’import](portrait-import-manuel-lot-2026-10-13.md).
+
 Après le retrait de la languette, la cinquième carte d’un reveal séquentiel
 ordinaire reçoit une pause automatique de 360 ms avant son flip. Perfect,
 Reflets désactivés et mouvement réduit restent sans pause. Livré par Arena en

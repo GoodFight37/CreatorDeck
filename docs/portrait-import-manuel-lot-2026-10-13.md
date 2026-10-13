@@ -24,4 +24,10 @@ Vérifications locales : portrait ciblé 33/33, `npm test` 73 fichiers / 1 164
 tests, `npm run ecrans` 21 fichiers / 124 tests, `npm run typecheck`, ESLint
 ciblé et `npm run build` réussis. Le build local sans cloud a émis l’avertissement
 habituel sur les variables Supabase absentes ; la compilation statique a réussi.
-La CI complète après publication reste à relever.
+Le premier CI sur `a621417c` a révélé uniquement des attentes E2E de crédits
+devenues obsolètes après les remplacements. Elles ont été mises à jour dans
+`fd6d3527`. Le run final
+[`38469322128`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
+est vert, 6/6 jobs : tests/unitaires et build, trois shards Playwright,
+migrations Postgres jetable et chemin cloud simulé. Le SHA distant de `main`
+a été vérifié à `fd6d35270d196f1deba0d0a1a8f65f6b508242e2`.
