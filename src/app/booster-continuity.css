@@ -217,6 +217,15 @@
   min-height: 54px;
   transform: translateX(-50%);
 }
+.reveal-game .reveal-next.is-secondary {
+  width: min(70%, 240px);
+  min-height: 44px;
+  color: var(--text);
+  border: 1px solid rgba(242, 238, 230, .22);
+  background: rgba(16, 17, 24, .85);
+  box-shadow: none;
+  font-size: 13px;
+}
 .reveal-game .reveal-next:active { transform: translateX(-50%) scale(.985); }
 .reveal-game.reveal-summary-open .reveal-ambient { display: block; }
 .reveal-game.reveal-summary-open .reveal-summary {
@@ -434,6 +443,12 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
     calc(var(--peel-progress) * -24px), calc(var(--peel-progress) * 26px))
     rotateX(calc(var(--peel-progress) * 68deg))
     rotateZ(calc(var(--peel-direction) * var(--peel-progress) * -4deg));
+}
+.booster-cinematic.booster-presentation .foil-top-piece {
+  clip-path: var(--cut-top, inset(0 0 84.55%));
+}
+.booster-cinematic.booster-presentation .foil-body-piece {
+  clip-path: var(--cut-body, inset(15.45% 0 0));
 }
 .booster-cinematic.booster-presentation .foil-body-piece {
   transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden; transition: none;
@@ -665,4 +680,32 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-foil-open .foil-body-piece {
     animation: none; opacity: 0; transform: rotateX(-18deg);
   }
-  .booster-cinematic.booster-presentation .booster-foil-open .
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-side,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-inner-shadow,
+  .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::before,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit {
+    animation: none;
+    opacity: 0;
+  }
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
+    animation: none;
+    opacity: 1;
+  }
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber {
+    transform: translateY(-18%);
+  }
+  .booster-cinematic.booster-presentation.scene-scene .booster-foil-open .foil-card-chamber {
+    transform: translate(-50%, -50%);
+  }
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
+    transform: translateY(calc(-8% - var(--card-i) * 2%))
+      translateX(calc((var(--card-i) - 2) * 5px))
+      rotate(calc((var(--card-i) - 2) * 3deg));
+  }
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before,
+  .booster-cinematic.booster-presentation .booster-physical-scene::after {
+    display: none;
+  }
+}

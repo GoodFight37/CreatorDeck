@@ -173,7 +173,7 @@ export function RevealOverlay({
   }
 
   function startRevealSwipe(event: PointerEvent<HTMLDivElement>) {
-    if (locked || perfect || showSummary || event.button !== 0 || event.isPrimary === false) return;
+    if (locked || perfect || showSummary || flippedCardId !== cardId || event.button !== 0 || event.isPrimary === false) return;
     swipeStart.current = { x: event.clientX, y: event.clientY, moved: false };
     if (Number.isFinite(event.pointerId)) {
       try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* ignore */ }
@@ -182,7 +182,7 @@ export function RevealOverlay({
 
   function moveRevealSwipe(event: PointerEvent<HTMLDivElement>) {
     const swipe = swipeStart.current;
-    if (!swipe || locked || perfect || showSummary) return;
+    if (!swipe || locked || perfect || showSummary || flippedCardId !== cardId) return;
     const dx = event.clientX - swipe.x;
     const dy = event.clientY - swipe.y;
     if (Math.abs(dx) > 6 || Math.abs(dy) > 6) swipe.moved = true;
@@ -201,7 +201,7 @@ export function RevealOverlay({
     const start = swipeStart.current;
     swipeStart.current = null;
     resetRevealDrag(anchorRef.current || event.currentTarget);
-    if (!start || locked || perfect || showSummary) return;
+    if (!start || locked || perfect || showSummary || flippedCardId !== cardId) return;
 
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
@@ -448,7 +448,7 @@ export function RevealOverlay({
         </div>
       )}
 
-      {!showSummary && !perfect && !locked ? (
+      {!showSummary && !perfect && !locked && flippedCardId === cardId ? (
         <div className="reveal-swipe-prompt" aria-hidden="true">
           <span className="reveal-swipe-arrow">‹</span>
           <span className="reveal-swipe-label">Glisse la carte</span>

@@ -170,7 +170,7 @@ describe("les effets de révélation", () => {
     /*
      * Le bogue du 9 octobre 2026 : un joueur ouvre un booster, les **cinq**
      * cartes apparaissent ensemble — c'est le tirage Perfect, voulu — et le
-     * bouton du bas propose « Révéler la suivante ». Il n'y a plus rien à
+     * bouton du bas propose « Carte suivante ». Il n'y a plus rien à
      * révéler : l'appui ne faisait rien de visible, le joueur croyait à une
      * panne. Quand les cinq sont à l'écran, le paquet se **range**.
      */
@@ -200,7 +200,7 @@ describe("les effets de révélation", () => {
 
     expect(bouton().disabled, "le Perfect reste verrouillé").toBe(false);
     expect(bouton().textContent).toContain("Ranger dans le classeur");
-    expect(bouton().textContent).not.toContain("Révéler la suivante");
+    expect(bouton().textContent).not.toContain("Carte suivante");
     banc.ecran("12-perfect-range");
 
     banc.appuyer("Ranger dans le classeur");
@@ -235,7 +235,7 @@ describe("les effets de révélation", () => {
   });
 
   it("révèle la suivante tant que le paquet n'est pas terminé", async () => {
-    // Le contrôle du test précédent : hors Perfect, « Révéler la suivante »
+    // Le contrôle du test précédent : hors Perfect, « Carte suivante »
     // reste le geste normal — c'est le Perfect seul qui change de bouton.
     const suivant = vi.fn();
     const { RevealOverlay } = await import("@/components/reveal-overlay");
@@ -248,10 +248,10 @@ describe("les effets de révélation", () => {
       />,
     );
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
-    expect(bouton().textContent).toContain("Révéler la suivante");
+    expect(bouton().textContent).toContain("Carte suivante");
     expect(bouton().disabled).toBe(false);
-    banc.appuyer("Révéler la suivante");
-    expect(bouton().textContent).toContain("Suite programmée");
+    banc.appuyer("Carte suivante");
+    expect(bouton().textContent).toContain("Suite…");
     expect(suivant).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(suivant).toHaveBeenCalledTimes(1);
@@ -292,9 +292,9 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(pointer("pointerup", 200, 100));
     });
     expect(next).not.toHaveBeenCalled();
-    expect(document.querySelector(".reveal-swipe-cue")).toBeNull();
+    expect(document.querySelector(".reveal-swipe-prompt")).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
-    expect(document.querySelector(".reveal-swipe-cue")?.textContent).toContain("Glisse la carte");
+    expect(document.querySelector(".reveal-swipe-prompt")?.textContent).toContain("Glisse la carte");
     act(() => {
       anchor.dispatchEvent(pointer("pointerdown", 100, 100));
       anchor.dispatchEvent(pointer("pointermove", 124, 100));
@@ -332,7 +332,7 @@ describe("les effets de révélation", () => {
     const next = vi.fn();
     await banc.monter(<RevealOverlay cards={[carte("epic", "a"), carte("common", "b")] as never}
       index={0} onNext={next} onClose={() => {}} />);
-    banc.appuyer("Révéler la suivante");
+    banc.appuyer("Carte suivante");
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(next).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(520); });
@@ -369,7 +369,7 @@ describe("les effets de révélation", () => {
 
     banc.appuyer("Ranger dans le classeur");
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
-      .toContain("Suite programmée");
+      .toContain("Suite…");
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(fermer).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(359); });
@@ -403,8 +403,8 @@ describe("les effets de révélation", () => {
     );
     const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
     expect(bouton.disabled).toBe(false);
-    banc.appuyer("Révéler la suivante");
-    expect(bouton.textContent).toContain("Suite programmée");
+    banc.appuyer("Carte suivante");
+    expect(bouton.textContent).toContain("Suite…");
     expect(suivant).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(suivant).toHaveBeenCalledOnce();

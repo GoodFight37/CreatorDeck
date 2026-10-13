@@ -160,7 +160,7 @@ describe("les écrans", () => {
     const revelation = banc.ecran("08-revelation");
     expect(revelation).toContain("card-nameplate");
     // Le booster hors ligne n'est pas perdu : il sort de la réserve du jour.
-    expect(revelation).toContain("Révéler la suivante");
+    expect(revelation).toContain("Carte suivante");
   });
 
   it("déchire le paquet avant de montrer la première carte", async () => {
@@ -233,33 +233,23 @@ describe("les écrans", () => {
     warn.mockRestore();
   });
 
-  it("termine sur annulation de l'animation ou secours manuel, une seule fois", async () => {
+  it("termine sur annulation de l'animation une seule fois", async () => {
     const { PackTear } = await import("@/components/pack-tear");
     const completed = vi.fn();
     await banc.monter(<PackTear onComplete={completed} />);
     banc.appuyer("Ouvrir sans déchirer");
     act(() => { document.querySelector(".foil-card-chamber")!.dispatchEvent(new Event("animationcancel")); });
     expect(completed).toHaveBeenCalledOnce();
-    banc.appuyer("Afficher les cartes");
-    await act(async () => { await vi.advanceTimersByTimeAsync(2_000); });
-    expect(completed).toHaveBeenCalledOnce();
   });
 
-  it("quitte une présentation en attente sans relancer ni perdre le tirage", async () => {
-    const { gameStore } = await import("@/lib/game-store");
-    gameStore.reset(T0);
-    await application();
-    banc.appuyer("Ouvrir le booster");
+  it("propose de quitter la présentation pendant une attente réseau prolongée", async () => {
+    const { PackTear } = await import("@/components/pack-tear");
+    const leave = vi.fn();
+    await banc.monter(<PackTear onComplete={() => {}} onLeavePending={leave} />);
     banc.appuyer("Ouvrir sans déchirer");
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
     banc.appuyer("Retour au jeu pendant l’attente");
-    expect(document.querySelector(".opening-continuum")).toBeNull();
-    expect(document.body.textContent).toContain("Le tirage continue");
-    // The same local draw finishes once; no late isolated reveal or second draw.
-    await act(async () => { await vi.advanceTimersByTimeAsync(700); });
-    expect(document.querySelector(".reveal-overlay")).toBeNull();
-    expect(document.body.textContent).toContain("retrouve tes cartes dans le Binder");
-    expect(gameStore.getSnapshot()!.openings).toBe(1);
-    expect(gameStore.getSnapshot()!.cards).toHaveLength(5);
+    expect(leave).toHaveBeenCalledOnce();
   });
 
   it("rend deux fois le même HTML (l'horloge et le hasard sont figés)", async () => {

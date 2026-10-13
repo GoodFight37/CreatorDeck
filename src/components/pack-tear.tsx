@@ -71,16 +71,18 @@ export function PackTear({
     if (revealing) dialogRef.current?.focus({ preventScroll: true });
   }, [dialogRef, revealing]);
 
+  useEffect(() => {
+    if (!revealing || slowTimer.current === null) return;
+    window.clearTimeout(slowTimer.current);
+    slowTimer.current = null;
+  }, [revealing]);
+
   const completeExtraction = useCallback(() => {
     if (extractionCompleted.current) return;
     extractionCompleted.current = true;
     if (timer.current !== null) {
       window.clearTimeout(timer.current);
       timer.current = null;
-    }
-    if (slowTimer.current !== null) {
-      window.clearTimeout(slowTimer.current);
-      slowTimer.current = null;
     }
     completeRef.current();
   }, []);
@@ -175,7 +177,7 @@ export function PackTear({
       >
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LES CARTES APPARAISSENT" : releaseReady ? "RELÂCHE OU TERMINE LE GESTE" : "DÉCHIRE LE HAUT DU BOOSTER"}
+          {opened ? "LES CARTES APPARAISSENT" : releaseReady ? "RELÂCHE POUR OUVRIR" : "DÉCHIRE LE HAUT DU BOOSTER"}
         </p>
         <div
           ref={sceneRef}
@@ -308,9 +310,6 @@ export function PackTear({
               gesture.ready = isSufficient;
               setReleaseReady(isSufficient);
 
-              if (span >= 65 || progress >= 82 || pathLength >= 62) {
-                finish();
-              }
             }}
             onPointerUp={(event) => {
               const gesture = start.current;
@@ -343,9 +342,6 @@ export function PackTear({
               <p className="booster-premium-gesture">
                 <span aria-hidden="true">✦</span> CHARGEMENT DES CARTES…
               </p>
-              <button className="booster-open-link" type="button" onClick={completeExtraction}>
-                Afficher les cartes
-              </button>
               {onLeavePending ? (
                 <button className="booster-open-link" type="button" onClick={onLeavePending}>
                   Retour au jeu pendant l’attente

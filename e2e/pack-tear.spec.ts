@@ -95,7 +95,7 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
   expect(motion).toEqual({ animation: "none", transform: "none" });
 
   for (let index = 2; index <= 5; index++) {
-    await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+    await reveal.getByRole("button", { name: "Carte suivante" }).click();
     await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
   }
   const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
@@ -121,7 +121,7 @@ test("Reflets OFF supprime l'attente dédiée à la carte garantie", async ({ pa
   await page.locator(".opening-continuum").getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   for (let index = 2; index <= 5; index++) {
-    await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+    await reveal.getByRole("button", { name: "Carte suivante" }).click();
     await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
   }
   const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
@@ -144,12 +144,12 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await reveal.locator(".reveal-flip-face").first().evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
-  const button = reveal.getByRole("button", { name: "Révéler la suivante" });
+  const button = reveal.getByRole("button", { name: "Carte suivante" });
   await expect(button).toBeEnabled();
   const anchor = reveal.locator(".reveal-anchor");
   const bounds = (await anchor.boundingBox())!;
-  await expect(reveal.locator(".reveal-swipe-cue")).toHaveText("← → Glisse la carte pour continuer");
-  await expect(reveal.locator(".reveal-swipe-cue")).toBeVisible();
+  await expect(reveal.locator(".reveal-swipe-prompt")).toContainText("Glisse la carte");
+  await expect(reveal.locator(".reveal-swipe-prompt")).toBeVisible();
   expect((await button.boundingBox())!.width).toBeLessThan(bounds.width);
   const x = bounds.x + bounds.width / 2;
   const y = bounds.y + bounds.height / 2;
@@ -158,8 +158,8 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await page.mouse.move(x - bounds.width * .8, y, { steps: 5 });
   await page.mouse.up();
   await expect(reveal.locator(".reveal-header > span")).toHaveText("2 / 5");
-  await expect(reveal.getByRole("button", { name: "Révéler la suivante" })).toBeEnabled();
-  await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+  await expect(reveal.getByRole("button", { name: "Carte suivante" })).toBeEnabled();
+  await reveal.getByRole("button", { name: "Carte suivante" }).click();
   await expect(reveal.locator(".reveal-header > span")).toHaveText("3 / 5");
 });
 
@@ -182,7 +182,7 @@ test("la carte garantie se retourne automatiquement, sans languette ni second ge
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   for (let index = 2; index <= 5; index++) {
-    await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+    await reveal.getByRole("button", { name: "Carte suivante" }).click();
     await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
   }
 
