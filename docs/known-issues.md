@@ -8,6 +8,25 @@ CTA entièrement visible avant navigation à 320×568 et 360×740. Avis téléph
 physique et état CI du commit à relever ; fichiers réservés à Gemini préservés.
 [Rapport](drop-craft-priorites-2026-10-13.md).
 
+## CI après hiérarchie Drop — 13 octobre 2026
+
+Run `38397134313` sur `5eba4275` : 76 réussis, 10 cloud ignorés, six échecs
+Playwright (trois causes bureau/téléphone) après 8 min 42 s. Le hint Drop avait
+été supprimé par mégarde ; deux assertions E2E attendaient une ancienne copie
+ou un ancien ordre d’écran. Hint restauré, tests réalignés sur le texte Scène et
+la priorité sachet/CTA ; 8/8 cas ciblés et les deux shards E2E complets réussis
+localement (41 passés + 5 cloud ignorés chacun). Correctif publié `ac6ff4b6` ;
+CI GitHub `38400588529` verte (5/5 jobs, 2 min 31 s).
+
+## Badge Live sur une carte — statut actuel / provenance — 13 octobre 2026
+
+Malik remarque que la carte d’Étoile porte toujours « Live » alors qu’il ne
+streame plus. Le code sépare bien la variante `live` persistée à l’obtention
+du direct actuel `liveStream` ; le badge persistant constitue une provenance
+utile pour le futur visuel alternatif. Ce n’est pas une preuve qu’Étoile est en
+direct maintenant. Aucun composant Binder modifié ; clarifier plus tard le
+libellé de provenance et maintenir un indicateur séparé pour le direct réel.
+
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
 ## Ouverture avant relâchement / languette instable — 13 octobre 2026
@@ -146,6 +165,8 @@ téléphone simulé verts ; publication/CI dans la passation.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|
+| K-049 | Faible, fiabilité de la CI navigateur | Corrigé et publié dans `ac6ff4b6` ; CI `38400588529` verte | Run `38397134313` : six Playwright rouges, avec des retries d’une minute et attentes d’ancienne UI. | Hint Drop restauré ; attentes Scène/Tribunal alignées sur l’UI demandée sans supprimer de contrôle ; Playwright séparé en deux shards parallèles, même couverture. Deux shards locaux : 41 passés + 5 cloud ignorés chacun. Nouveau run : 5/5 jobs verts en 2 min 31 s, contre 10 min 12 s précédemment. |
+| K-048 | Faible, libellé/provenance Live | Diagnostic confirmé ; texte à choisir plus tard | Une carte d’Étoile garde « Live » après la fin de son direct. | `variant: "live"` est la provenance persistée de la carte ; `liveStream` est l’état Twitch actuel séparé. Garder la variante pour le futur design alternatif et clarifier le badge. Aucun changement Binder dans ce lot. |
 | K-046 | Faible, tactile/révélation | Corrigé et publié sur `main` (`3f33b19`) ; CI `38251607393` verte | Toucher « Révéler la suivante » pendant le retournement animait le bouton mais n’avançait pas ; il fallait toucher une seconde fois. | La fermeture d’`animationend` ne voyait pas l’appui arrivé après son rendu initial. Une référence synchronisée retient un seul appui par carte et le consomme à la fin du flip ou du filet de sécurité. Perfect/verrou inchangés. Régression DOM 16/16 ; suite E2E bureau/téléphone et cloud simulé verte. |
 | K-045 | Moyenne, style et qualité des portraits | Lot complet intégré le 12 octobre (`10699eb`) ; améliorations individuelles possibles | 300 manuels, 699 Upscayl et Diverron restauré IA ; les 1 000 routes existent mais ne prouvent pas 1 000 portraits nets et vérifiés. | CI complète et Vercel réussis. Sources/licences des imports souvent absentes, détails IA reconstruits ; avatars génériques acceptés par Malik (K-044). |
 | K-044 | Choix visuel accepté | Clos le 12 octobre, instruction explicite de Malik | SolaryHS, j0niq et toaststix gardent leur avatar générique. | Sans photo de profil, conserver l’avatar générique ; aucune recherche/remplacement demandé. Ce n’est plus un bug ni une tâche de roadmap. |

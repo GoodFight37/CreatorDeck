@@ -1,3 +1,36 @@
+## CI Playwright accélérée et provenance Live — 13 octobre 2026
+
+Main publié : `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd`, SHA distant vérifié.
+Le run `38397134313` sur `5eba4275` a échoué après 10 min 12 s, dont 8 min 42 s
+pour 92 cas Playwright séquentiels. Six lignes rouges représentaient trois
+causes : l’aide `.pull-hint` avait disparu du Drop, le test Scène attendait
+l’ancien texte, et le test Tribunal exigeait sa présence au premier écran
+320×568 malgré la nouvelle priorité sachet/CTA.
+
+Correction publiée : aide gestuelle restaurée ; texte Scène testé avec son
+libellé actuel ; le test mobile contrôle sachet + CTA au premier écran, garde le
+Tribunal visible à 412×915 et le vérifie après défilement à 320×568. Rien n’a
+été retiré du produit. Les deux partitions locales complètes ont réussi :
+41 passés / 5 cloud ignorés chacune, en 1 min 48 s et 2 min. Le workflow lance
+maintenant bureau et téléphone dans deux jobs Playwright parallèles, 46 tests
+chacun ; les noms d’artefacts sont distincts. Les poussées ne contenant que des
+Markdown/docs ignorent la CI produit ; les pull requests restent vérifiées.
+Run GitHub `38400588529` : **success, 5/5 jobs**. Durée totale 2 min 31 s, shard
+1 en 2 min 12 s, shard 2 en 2 min 25 s, contre 10 min 12 s au run précédent
+(environ 75 % de moins). Aucun test retiré. Le gain est mesuré sur ce run, pas
+une promesse pour chaque charge GitHub. Vercel est aussi **success** sur ce SHA ;
+check de déploiement : https://vercel.com/hafsi37-2386/creator-deckk/95H42uLRVMjkzJEoZqnykMEL3duk.
+Le workflow Supabase `38400913537` est success ; aucun SQL n’a changé dans ce lot.
+
+Retour Malik sur Étoile : conserver la trace d’une carte obtenue pendant un
+direct, car elle pourra servir à un design/portrait alternatif. Lecture du code :
+`variant === "live"` est cette variante persistée et produit le badge « Live » ;
+`liveStream` séparé sert au direct réel et aux détails du stream actuel, avec
+fraîcheur limitée. Le libellé du badge de variante peut donc prêter à confusion
+après la fin du direct. Aucun code Binder modifié ; prochaine discussion produit
+possible : distinguer « obtenue en direct » du statut « en direct maintenant »,
+sans effacer la variante ni la provenance.
+
 ## CI ouverture : assertion de consigne corrigée — 13 octobre 2026
 
 Autorisation explicite de Malik pour corriger mon travail antérieur malgré la

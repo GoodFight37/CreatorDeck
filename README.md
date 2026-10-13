@@ -43,21 +43,26 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
-## État actuel et revue externe — 12 octobre 2026
+## État actuel — 13 octobre 2026
 
 Malik utilise **CreatorDeck sur Vercel**, alimenté par GitHub `main`, avec
 Supabase. Les mises à jour du site arrivent via Vercel ; aucun `git pull` n’est
 nécessaire sur le PC du joueur. Android/Capacitor reste supporté dans le code.
 
-Le lot `10699eb` (300 portraits manuels, 699 Upscayl, Diverron restauré avec IA)
-est publié, CI complète et Vercel Production réussis. **Avatars génériques acceptés par Malik** pour les créateurs sans photo de profil,
-notamment SolaryHS, j0niq et toaststix. Le retour Paquet Scène est confirmé bon
-par Malik. Revue du rendu des boosters et éventuel élargissement du catalogue sont dans le
-[plan actif](docs/roadmap.md). [Bilan vérifié pour le relecteur](docs/etat-projet-2026-10-12.md)
-et [brief à transmettre à Grok](docs/revue-grok-2026-10-12.md).
-Nouveau lot d’ouverture : [continuum 2D propre et secours d’ouverture](docs/booster-clean-2026-10-13.md) ;
-3D désactivée par défaut après essai téléphone ; scène montée du sachet au récap et cartes
-manipulées au doigt après flip. Les anciens chiffres/statuts restent datés.
+Le code publié sur `main` inclut la reprise de l’ouverture continue, le peel guidé,
+le retour aux avatars originaux pour les anciens Upscayl, un pilote de revue
+automatique de portraits et la hiérarchie Drop/Craft. Les 300 choix manuels
+restent prioritaires ; les 699 images Upscayl sont archivées et non affichées.
+Le pilote a produit six propositions techniques sur vingt, sans certifier les
+identités ni les droits. Voir le [plan courant](docs/roadmap.md), la
+[passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
+
+Le correctif des tests Drop/Scène et le nouveau découpage Playwright sont publiés
+dans `ac6ff4b6`. Les deux shards locaux et le run GitHub
+[38400588529](https://github.com/GoodFight37/CreatorDeck/actions/runs/38400588529)
+passent ; les cinq jobs ont fini en 2 min 31 s (au lieu de 10 min 12 s au run
+précédent). Le contrôle Vercel du même commit est vert. Le badge de variante « Live » garde
+la provenance de la carte ; un indicateur séparé reflète le direct actif.
 
 ## Prérequis
 
@@ -137,7 +142,7 @@ depuis le 8 octobre 2026 au soir, et son moteur reste dans le dépôt.
 | `npm run catalog:build` | valide les données du jeu et publie `dist/catalog/` (catalogue compact + métadonnées de version) |
 | `npm run catalog:check` | validation seule des données, sans écriture (CI) |
 | `npm run catalog:source` | régénère `src/data/creators.json` + les portraits depuis Twitch — **Top 1000 mondial** par défaut (`--count N`, `--languages FR` pour restreindre ; **sous Windows, passer par les variables d'environnement**, voir `docs/catalogue-twitch.md`) |
-| `npm run catalog:ci` | contrôle renforcé (utilisé par la CI Android jusqu'au 8 octobre 2026) : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour |
+| `npm run catalog:ci` | contrôle renforcé du catalogue : portrait manquant ou orphelin = échec (voir « Embarquer le catalogue dans l'APK ») + vérifie que `0003_catalogue.sql` est à jour ; également utilisé par le workflow de vérification |
 | `npm run assets:regen` | (re)télécharge les portraits en 600×600 **WebP** (`scripts/regen-avatars.mjs`) ; `--prune` supprime les orphelins avant un commit |
 | `npm run supabase:catalogue` | régénère `supabase/migrations/0003_catalogue.sql` depuis `src/data/creators.json` (fichier de données appliqué par `npx supabase db push`) |
 | `npm run dev:setup` | remet la machine en état en une commande (installation complète si `node_modules` a disparu, plus les deux paquets de vérification en `--no-save`) |
@@ -164,12 +169,11 @@ Quatre étages, quatre vitesses :
   rareté, les crédits — tout ce qui se calcule sans navigateur. C'est là que vit
   l'essentiel des règles. Les compteurs du commit publié se trouvent dans le
   [bilan vérifié](docs/etat-projet-2026-10-12.md) ; ils évoluent avec le code.
-* **`npm run e2e`** (Playwright) : le jeu **réellement ouvert** dans Chromium, sur
-  un écran de bureau et sur un écran de téléphone (412 × 915). Cinq gestes par
-  écran : les quatre piliers, le marquage de l'onglet actif, l'accès au compte
-  depuis « Toi », la barre du bas toujours cliquable, et **zéro erreur console**
-  sur un tour complet — une requête ratée y est nommée par son adresse, ce qui
-  distingue un bug du jeu d'un réseau coupé. S'y ajoute `e2e/pack-crash.spec.ts` :
+* **`npm run e2e`** (Playwright) : le jeu réellement ouvert dans Chromium, sur
+  bureau et téléphone (412 × 915), avec parcours des piliers, ouverture, gestes,
+  rendu mobile, accessibilité et persistance. La CI répartit les deux projets en
+  **deux shards parallèles** ; la couverture reste complète et chaque shard garde
+  un worker pour éviter la contention avec `next dev`. S'y ajoute `e2e/pack-crash.spec.ts` :
   un booster ouvert, la page rechargée, **les cinq mêmes cartes** — et, quand un
   cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
   collection derrière un tirage (le serveur l'a déjà écrite, `0022`).
@@ -185,9 +189,9 @@ Quatre étages, quatre vitesses :
   qui se sentent** (le foil sous le doigt, la vibration du tirage), **les
   échanges** (la liste « Tu donnes » et ses pages) et **le Tribunal des Bannis**
   (le ticket, la grâce et le marteau qui s'entendent, la reprise au troisième
-  dossier après une séance quittée, le bilan). Il tournait dans la CI de l'APK, à côté
-  de `lint`, `typecheck` et `test` — depuis la suppression des workflows
-  (8 octobre 2026), c'est à relancer à la main.
+  dossier après une séance quittée, le bilan). Cette suite tourne dans
+  `.github/workflows/verification.yml` avec les tests, le lint, TypeScript, SQL
+  jetable et build. Les scénarios cloud utilisent des RPC simulés.
 * **`npm run supabase:verify`** (Postgres jetable) : les migrations jouées pour
   de vrai, puis rejouées — catalogue, tirage (distribution du slot garanti),
   échanges à trois joueurs, vitrine, profils, amis, hôtel des ventes, carnet,
@@ -605,10 +609,10 @@ FCM, côté Android — `src/lib/push.ts` ne s'enregistre que sur une plateforme
 native (`Capacitor.isNativePlatform()`). Dans Vercel, l'écran du carnet reste
 visible, mais le téléphone ne sonne pas.
 
-**L'APK reste possible, à la main.** Depuis le 8 octobre 2026, les workflows
-GitHub ont été supprimés (`.github/workflows`, commits `ae5016f` puis
-`8760723`) : plus rien ne se construit ni ne se vérifie tout seul. La commande
-est `npm run android:debug` (Gradle `assembleDebug`), et **Firebase App
+**L'APK reste possible, à la main.** L'ancien workflow Android a été retiré le
+8 octobre 2026 (`ae5016f`, `8760723`) ; le workflow actuel vérifie le produit,
+mais ne construit ni ne distribue l'APK. La commande est
+`npm run android:debug` (Gradle `assembleDebug`), et **Firebase App
 Distribution n'est plus utilisé** — le lien de la pré-release roulante
 (`https://github.com/GoodFight37/test/releases/download/debug-apk/creatordeck-debug.apk`)
 ne changera donc que si un APK y est **publié à la main**

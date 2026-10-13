@@ -1,10 +1,40 @@
 # Brief de revue à Grok — CreatorDeck, actualisé le 13 octobre 2026
 
 Tu as accès à GitHub : https://github.com/GoodFight37/CreatorDeck, branche main.
-Pars du HEAD courant (pilote portraits `ed20ebd842dcea65acdf5e9b7ebb48f89a5a5e55`),
-puis lis README.md, `docs/agent-handoff.md`, le plan actif de `docs/roadmap.md`,
-`docs/perimetre.md` et les rapports récents liés au sujet. Les rapports datés
-expliquent les décisions ; vérifie le code courant avant tout constat.
+Dernier commit vérifié : `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd`. Lis
+README.md, `docs/agent-handoff.md`, le plan actif de `docs/roadmap.md`,
+`docs/perimetre.md` et les rapports liés au sujet. Vérifie le HEAD et l’état
+Actions actuel avant tout constat : le run `38400588529` est vert (5/5 jobs,
+2 min 31 s) et le contrôle Vercel associé est success.
+
+## Mises à jour du 13 octobre après le dernier run CI
+
+Le run `38397134313` sur `5eba4275` a duré 10 min 12 s, dont 8 min 42 s de
+Playwright, puis échoué sur six exécutions (trois causes répétées bureau et
+téléphone) : hint d’appui au sachet absent, assertion Scène sur une ancienne
+phrase, et test demandant encore le Tribunal au premier écran 320×568. Le hint
+a été restauré ; les tests suivent le texte actuel et la hiérarchie mobile
+sachet/CTA, tout en gardant le Tribunal visible à 412×915 et accessible après
+défilement à 320×568. Aucun contrôle produit n’a été supprimé. Les deux shards
+locaux complets ont passé 41 tests chacun, avec cinq scénarios cloud ignorés
+par shard. La CI publiée utilise deux runners parallèles, 46 cas par shard ;
+le run `38400588529` a passé les cinq jobs en 2 min 31 s, contre 10 min 12 s
+pour le précédent, sans retrait de tests.
+
+Drop/Craft : le Drop présente le sachet et le CTA d’abord ; l’Atelier affiche
+par défaut les recettes à portée et garde Recycler utile sans doublon. Les
+coûts, le pity, l’économie, le SQL et les fichiers de Gemini restent inchangés.
+Voir `docs/drop-craft-priorites-2026-10-13.md`.
+
+Étoile n’est actuellement plus en direct selon Malik, mais sa carte porte
+encore « Live ». Le code montre que ce badge vient de la variante de carte
+`variant: "live"`, persistée quand elle est tirée pendant un direct. Le statut
+de stream actuel est séparé (`liveStream`) et sert à l’indicateur/aux détails
+du direct. Malik veut conserver la provenance pour un futur design ou portrait
+alternatif ; ne recommande pas de supprimer cette métadonnée. La question
+ouverte est seulement le libellé (« obtenue en direct » ou équivalent) afin de
+ne pas faire croire que la personne streame maintenant. Aucun changement Binder
+n’a été fait dans cette reprise ; le texte final reste à décider plus tard.
 
 ## État des portraits — mise à jour importante
 
@@ -75,9 +105,11 @@ Sépare chaque constat en : bug démontré, amélioration subjective, hypothèse
 conditions de reproduction. Si tu ne peux pas ouvrir le site ou voir des
 captures, dis-le et ne prétends pas juger une animation par sa seule CSS.
 
-La CI du produit est verte : 1 144 unitaires, 109 écrans, 64 E2E, 10 cloud
-simulés, SQL jetable/statique/build. Cela ne prouve ni l’expérience sur téléphone
-physique ni tous les parcours de production entre plusieurs comptes.
+La dernière CI distante vérifiée (run 38400588529, commit `ac6ff4b6`) est verte
+sur ses cinq jobs. Les E2E sont répartis en deux shards ; le run complet a pris
+2 min 31 s après une précédente exécution de 10 min 12 s. Cela ne prouve ni
+l’expérience sur téléphone physique ni tous les parcours de production entre
+plusieurs comptes.
 
 Fais une revue uniquement, sans modifier le code. Termine par cinq actions
 maximum, concrètes et classées. Ne réouvre pas la simulation « Ta chaîne »,

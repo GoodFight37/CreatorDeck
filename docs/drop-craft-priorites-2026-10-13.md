@@ -54,3 +54,14 @@ Publication ciblée main normale après vérification distante, CI à relever.
 Aucun fichier interdit touché : binder-view, profile-view, pack-tear,
 pack-foil-*, reveal-overlay, overlay-stage, booster-*.css, three ; ni SQL,
 moteur économique ou calcul de pity. Aucun travail concurrent écrasé.
+
+## Correctifs après le premier run GitHub
+
+Le run `38397134313` sur `5eba4275` a révélé trois écarts dans six exécutions
+(bureau/téléphone) : l’indication d’appui au sachet avait disparu, un test
+attendait l’ancienne phrase du Paquet Scène et un autre exigeait le Tribunal au
+premier écran compact malgré la priorité sachet/CTA. Le hint est restauré ; les
+tests reflètent le texte actuel, le CTA visible à 320×568, puis le Tribunal
+visible à 412×915 et atteignable après défilement à 320×568. Aucune assertion
+produit n’a été retirée. Les deux shards complets passent localement ; le run
+publié `38400588529` est vert (5/5 jobs, 2 min 31 s au total).

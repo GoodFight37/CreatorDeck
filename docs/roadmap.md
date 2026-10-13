@@ -2,13 +2,14 @@
 
 ## État courant — 13 octobre 2026
 
-Référence du lot de code courant : pilote portraits `ed20ebd8`, **CI GitHub et
-Vercel success**. Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ;
-le pilote n’a changé aucun asset ni sélection active.
-Le lot d’ouverture est aussi publié : continuité dans `93626653` et reprise
-visuelle du sachet dans le même lot de reprise. CI de reprise
-[38379579144](https://github.com/GoodFight37/CreatorDeck/actions/runs/38379579144)
-et Vercel success. [Bilan et limites](reprise-zip-2026-10-13.md).
+Référence publiée : `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd` (SHA distant
+vérifié). Le run de correction CI
+[38400588529](https://github.com/GoodFight37/CreatorDeck/actions/runs/38400588529)
+est vert, 5/5 jobs en 2 min 31 s (contre 10 min 12 s au run précédent).
+Vercel est aussi success sur ce SHA.
+Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
+n’a changé aucun asset ni sélection active. Continuité, peel guidé et
+hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
@@ -34,9 +35,18 @@ puis appréciation du ressenti sur téléphone ; aucune nouvelle refonte des
 ### Drop + Craft — hiérarchie mobile
 
 UI implémentée : sachet/CTA avant les infos ; Atelier à portée, règles/raretés
-repliées et Recycler visible à zéro doublon. 26 DOM et 8 E2E ciblés réussis,
-avis téléphone physique attendu. Gemini conserve Binder/profil/Toi ; aucune
-modification d’ouverture ou économique. [Livrable](drop-craft-priorites-2026-10-13.md).
+repliées et Recycler visible à zéro doublon. Une consigne gestuelle Drop
+restaurée après le signalement CI. 26 DOM, 8 E2E ciblés et les deux shards
+complets (41 réussis + 5 scénarios cloud ignorés chacun) passent localement ;
+CI GitHub `38400588529` verte. Avis téléphone physique attendu.
+[Livrable](drop-craft-priorites-2026-10-13.md).
+
+### Provenance de la variante Live — à clarifier plus tard
+
+La variante `live` d’une carte est sauvegardée au tirage et peut rester sur la
+carte après la fin du direct. Le statut `liveStream` décrit le stream actuel.
+Malik souhaite garder la provenance pour un futur design/portrait alternatif ;
+aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
 
 ### Plan actif
 

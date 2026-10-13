@@ -629,3 +629,26 @@ Dans la nouvelle session, main distant est à la base annoncée, patch récupér
 sans conflit et tests adaptés rejoués ; code publié dans `93626653`, SHA distant
 confirmé et CI de reprise en cours au relevé. Aucun nouveau choix visuel ni réactivation
 GPU ; [publication et contrôles](reprise-zip-2026-10-13.md).
+
+## D-070 — 13 octobre 2026 : répartir Playwright sans réduire la couverture
+
+Le run `38397134313` durait 10 min 12 s ; Playwright seul occupait 8 min 42 s
+avec un seul worker. Conserver ce worker pour éviter que `next dev` se batte
+avec plusieurs onglets, et séparer ses deux projets bureau/téléphone en deux
+jobs indépendants. Chaque shard reçoit 46 cas, les deux s’exécutent en parallèle,
+aucun test n’est retiré. Deux partitions locales ont passé 41 tests chacune
+(cinq scénarios cloud ignorés comme prévu) en 1 min 48 s et 2 min. Le run GitHub
+`38400588529` a réussi les cinq jobs ; durée 2 min 31 s (shards de 2 min 12 s
+et 2 min 25 s), contre 10 min 12 s avant, soit environ 75 % de moins sur cet
+échantillon. Les pushes limités à Markdown/docs peuvent omettre la CI produit ;
+les pull requests gardent les vérifications.
+
+## D-071 — 13 octobre 2026 : préserver la provenance Live des cartes
+
+Malik veut garder l’information qu’une carte a été obtenue pendant un direct,
+pour pouvoir proposer plus tard un design ou portrait alternatif. Le modèle a
+déjà `variant: "live"` persisté ; le direct actuel vient d’une autre source,
+`liveStream`, et expire quand l’état serveur devient périmé. Garder ces deux
+notions distinctes. Le badge actuel « Live » décrit la variante obtenue et reste
+donc après la fin du stream ; son libellé pourra être clarifié plus tard. Aucun
+changement du Binder ou choix final de texte dans ce lot.
