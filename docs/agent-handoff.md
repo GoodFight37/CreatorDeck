@@ -3,13 +3,13 @@
 À la demande de Malik après essai, suppression complète du corner peek : la
 languette paraissait artificielle et son apparition variable prêtait à
 confusion. La cinquième carte garantie reprend le retournement automatique
-ordinaire ; aucun geste additionnel n’est requis. L’état retiré et la suite
-Arena sont consignés plus bas. Sur `ee521e0148fc0c578de9d2aa7fb4a310cfb48e18`,
-`npm run ecrans` passe 123/123, `npm run typecheck`, `npm run lint --
---no-warn-ignored` et `npm run build` réussissent ; l’E2E téléphone ciblé passe
-1/1 (la variante bureau est ignorée), `git diff --check` passe. Pas de test sur
-téléphone physique. Les modifications sont locales sur `codex/catalog-growth-study` ;
-pas encore publiées et CI distante non lancée.
+ordinaire ; aucun geste additionnel n’est requis. Publié sur `main` par
+`1f4deadb13d1e146f66d838d7248e5cb04ed2e84`. CI
+[`38450915873`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38450915873)
+success, 5/5 jobs. Vérifications locales : `npm run ecrans` 123/123,
+`npm run typecheck`, `npm run lint -- --no-warn-ignored`, `npm run build`,
+`git diff --check` réussis ; E2E téléphone ciblé 1 réussi / 1 ignoré (variante
+bureau hors du scénario). Aucun essai sur téléphone physique.
 
 ## Provenance Live distinguée du stream actif — 13 octobre 2026
 
@@ -99,14 +99,8 @@ il n’y a plus de pause nécessitant un geste pour continuer. Une alternative e
 
 Fichiers concernés : `src/components/reveal-overlay.tsx`,
 `src/components/creator-deck-app.tsx`, `src/app/booster-continuity.css`,
-`src/ecrans-effets.test.tsx`, `e2e/pack-tear.spec.ts`. Validation du retrait sur
-`ee521e0148fc0c578de9d2aa7fb4a310cfb48e18` : `npm run ecrans` 123/123,
-`npm run typecheck` réussi, `npm run lint -- --no-warn-ignored` réussi,
-`npm run e2e -- e2e/pack-tear.spec.ts -g 'la carte garantie se révèle sans languette'`
-1 réussi / 1 ignoré (la variante bureau est hors de ce scénario téléphone),
-`git diff --check` réussi. Build statique local réussi sans configuration
-Supabase ; il ne valide pas les fonctions cloud. Pas de test sur téléphone
-physique.
+`src/ecrans-effets.test.tsx`, `e2e/pack-tear.spec.ts`. Le build local sans
+configuration Supabase n’atteste pas les fonctions cloud.
 
 Les résultats et contrôles qui suivent sont historiques : ils validaient
 l’ancienne languette et ne valident pas son retrait. À cette date, le navigateur

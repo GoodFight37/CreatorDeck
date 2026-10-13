@@ -59,7 +59,10 @@ Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
 5/5 jobs pour cette version historique. Malik a jugé la languette peu naturelle
 et a demandé son retrait. Le code et le geste ont été supprimés ; la cinquième
 carte reprend son reveal automatique normal. Suite : Arena peut proposer une
-alternative sans languette, à valider séparément. Voir D-072 et la passation.
+alternative sans languette, à valider séparément. Le retrait est publié dans
+`1f4deadb` ; CI `38450915873` verte 5/5. Vérifications locales : 123 tests
+d’écran, E2E tactile ciblé, typecheck, lint, build et diff-check réussis. Voir
+D-072 et la passation.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
