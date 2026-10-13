@@ -12,8 +12,10 @@ gain précédent de `0,14` le rendait trop discret sur le papier. Ces valeurs
 restent à écouter sur un téléphone réel ; le cran global continue de s'appliquer
 à tout le bus sonore.
 
-Le premier geste d'ouverture crée/déverrouille l'AudioContext et démarre la
-boucle, ce qui respecte la politique autoplay des navigateurs mobiles. Au hub,
+Le premier appui ou geste clavier explicite sur un contrôle crée/déverrouille
+l'AudioContext et démarre la boucle, ce qui respecte la politique autoplay des
+navigateurs mobiles, même si la réserve est vide. L'ouverture du booster fait
+ensuite passer le mix à la scène pack. Au hub,
 le gain reste en arrière-plan ; il descend fortement pendant un booster ; le Tribunal coupe
 la musique pour laisser les sons de tampon et de marteau respirer. La commande
 Son coupe musique, bruitages et synthèse ensemble ; les trois crans de volume

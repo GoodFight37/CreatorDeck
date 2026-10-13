@@ -62,6 +62,12 @@ la résolution et le cadrage, sans écarter une image uniquement faute de source
 Voir le [plan courant](docs/roadmap.md), la
 [passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
 
+Depuis `8bf36ba0`, la façade du sachet sur Drop utilise le visuel mat de la scène
+d’ouverture. La musique démarre au premier appui explicite sur un contrôle, même
+si la réserve est vide ; l’ouverture la baisse fortement pour laisser les SFX
+devant. Le déploiement Vercel et la CI de ce commit sont terminés ; 6/6 jobs
+passent. Le volume reste à écouter sur téléphone.
+
 Le badge Live distingue la provenance de la carte du statut de direct actuel.
 La CI répartit maintenant les tests Playwright sur trois shards, sans retirer de
 scénarios. Les résultats sont liés au SHA testé ; voir le checkpoint courant et

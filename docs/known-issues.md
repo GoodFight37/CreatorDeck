@@ -1,3 +1,18 @@
+## Ancien visuel du sachet et musique absente au hub — corrigé et publié, 13 octobre 2026
+
+Sur l’accueil Drop, la façade restait `live-foil.svg`, tandis que la scène de
+déchirure utilisait déjà `live-opening.svg` : le nouveau sachet n’était donc pas
+visible avant le tap d’ouverture. La BGM, elle, ne démarrait qu’au démarrage
+d’un tirage ; un joueur avec une réserve vide pouvait rester au hub sans son,
+même avec Son activé. Le correctif aligne l’image d’accueil sur celle de
+l’ouverture et lance la boucle au premier appui explicite sur un contrôle, ce
+qui reste compatible avec le blocage d’autoplay mobile. Il ne déclenche pas de
+bruitage de navigation. Publié au SHA `8bf36ba0` ; déploiement Vercel réussi et
+CI `38485767846` verte (6/6). Le premier run `38485191463` avait échoué sur deux
+attentes Playwright, corrigées sans retirer d’assertion. Suites locales :
+1 168 tests unitaires, 127 tests d’écran, typecheck, lint ciblé et build réussis.
+Une écoute physique reste nécessaire pour confirmer le niveau perçu.
+
 ## Attentes E2E devenues obsolètes — corrigées et publiées, 13 octobre 2026
 
 Le run `38477480148` sur `00b22d4b` a échoué sur trois attentes de tests : nom

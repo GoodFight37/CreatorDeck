@@ -2,8 +2,10 @@
 
 ## État actuel — 13 octobre 2026
 
-**État du code :** `main` au SHA `35ca7f7b` ; mix BGM du hub ajusté et CI
-[`38481257763`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38481257763)
+**État du code :** `main` au SHA `8bf36ba0` ; sachet d’accueil aligné sur le
+visuel d’ouverture et musique lancée au premier appui explicite. Vercel a
+déployé ce commit ; CI GitHub
+[`38485767846`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38485767846)
 verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niveau
 et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.

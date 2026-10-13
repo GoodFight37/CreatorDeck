@@ -1,5 +1,19 @@
 # Décisions CreatorDeck
 
+## D-080 — 13 octobre 2026 : faire voir le sachet actuel et démarrer la musique au premier appui
+
+L’accueil Drop utilise désormais le même visuel mat que la scène d’ouverture
+(`live-opening.svg`) au lieu de l’ancienne façade (`live-foil.svg`). Sur mobile,
+le navigateur attend un geste explicite avant d’autoriser la musique ; le
+premier appui clavier ou tactile sur un contrôle du jeu (hors tutoriel) démarre
+donc la boucle du hub, même si la réserve ne permet pas encore d’ouvrir un
+booster. Le geste d’ouverture conserve ensuite le mix réduit du pack. Aucun
+effet sonore de navigation n’est ajouté. Motif : la version précédente laissait
+l’ancien sachet sur l’accueil et le hub silencieux tant que le joueur n’avait
+pas pu lancer un tirage. Publié `8bf36ba0`, CI `38485767846` verte (6/6) ; à
+valider à l’écoute sur téléphone physique, car les tests automatisés ne mesurent
+pas le volume perçu.
+
 ## D-079 — 13 octobre 2026 : revalider un conflit avant l’usage d’un sablier
 
 Après un blocage dû à deux sauvegardes différentes, une tentative de sablier

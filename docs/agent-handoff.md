@@ -1,3 +1,31 @@
+## Visuel Drop et démarrage de la musique — publié, Vercel actif, CI verte, 13 octobre 2026
+
+Malik voyait encore la façade violette au hub et n’entendait pas la BGM. Les deux
+causes étaient distinctes : `drop-view.tsx` chargeait encore `live-foil.svg`,
+alors que seule la scène de déchirure chargeait `live-opening.svg` ; et
+`startGameAudio` n’était appelé qu’au début d’un tirage. Avec une réserve vide,
+aucun geste ne débloquait donc la musique. Le Drop pointe maintenant vers le
+sachet mat de l’ouverture ; le premier appui clavier/tactile sur un contrôle du
+jeu (pas les étapes « Continuer/Terminer » du tutoriel) démarre la musique du
+hub, et l’ouverture passe ensuite au mix très atténué du pack. La navigation
+reste sans bruitage. Un test CI initial avait des attentes obsolètes et
+capturait la requête après le clic ; `8bf36ba0` corrige l’assertion et évite
+que le tutoriel consomme le premier démarrage audio.
+
+Code publié sur `main` au SHA `8bf36ba0e931a721690cb1eab9d996d2473328fd` ;
+`git ls-remote` confirme ce SHA. Vercel Production a terminé avec succès :
+https://creator-deckk-pjc4vo305-hafsi37-2386.vercel.app . CI GitHub
+[`38485767846`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38485767846)
+verte, 6/6 jobs. Le premier run `38485191463` avait échoué sur le test
+musique (requête chargée dans les contrôles du tutoriel) et une URL attendue
+obsolète ; le correctif a été vérifié localement puis la CI complète est passée.
+Vérifications locales : `npm test` 73 fichiers / 1 168 tests,
+`npm run ecrans` 22 fichiers / 127 tests, typecheck, ESLint ciblé et build de
+production réussis. L’écoute sur un téléphone physique reste à faire ; les
+vérifications navigateur ne valident pas le niveau perçu. La lecture automatisée
+des URL de fichiers Vercel est restée bloquée par un 403 de l’intégration ; le
+statut de déploiement Vercel, lui, est `success`.
+
 ## Sablier — nouvelle vérification avant refus, 13 octobre 2026
 
 Le message « Deux parties sont différentes… » vient d’une garde qui empêche de
