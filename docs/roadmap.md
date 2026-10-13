@@ -2,9 +2,10 @@
 
 ## État courant — 13 octobre 2026
 
-Dernier jalon publié vérifié : `main` à
-`b4d08e5802b72f6d75e44bc31be853dae4ea0c26`. L'étude sur l'agrandissement du
-catalogue est une simulation exploratoire ; elle ne modifie ni les taux, ni les
+Dernier jalon fonctionnel vérifié : l'étude sur l'agrandissement du catalogue,
+publiée dans `b4d08e5802b72f6d75e44bc31be853dae4ea0c26` ; le checkpoint de
+publication documentaire est `26def354313af3700bbb403bf3718139eac5e689`.
+L'étude est une simulation exploratoire ; elle ne modifie ni les taux, ni les
 cartes du jeu. Voir [l'étude et ses résultats](audit-croissance-catalogue.md).
 La vérification GitHub
 [38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
