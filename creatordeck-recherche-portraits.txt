@@ -1,0 +1,76 @@
+Mission limitée : rechercher et télécharger des portraits pour CreatorDeck. Le développement et l’intégration restent dans l’autre chat. Ne lis pas le dépôt ni sa documentation ; toute l’information nécessaire est ci-dessous. Ne modifie ni code, ni images existantes, ni configuration réseau, ni secrets. Aucun push.
+
+Objectif : proposer une photo individuelle plus intéressante et plus nette que les avatars Twitch actuels pour les 50 entrées ci-dessous. C’est un classement mondial, pas uniquement français. Les comptes Twitch servent seulement à identifier la bonne personne.
+
+Commence par tester les accès réels à Google/Bing, Wikimedia Commons et au lien Phosphore fourni plus bas. Si des sites sont bloqués, utilise les sources accessibles ; ne contourne ni proxy, ni TLS, ni connexion obligatoire. Rapporte les blocages sans demander de recréer l’environnement.
+
+Critères :
+- Bonne personne, visage reconnaissable, portrait individuel, cadrage compatible avec une carte carrée. Pas de photo de groupe, miniature YouTube, collage, texte incrusté ou filigrane.
+- Source originale idéalement 900 à 1200 pixels ou davantage sur le petit côté. N’agrandis pas artificiellement une petite image. Si aucune source convenable n’existe, note « aucune source adéquate ».
+- Privilégie les photos fournies pour réutilisation par le créateur, les kits presse avec conditions explicites et les images à licence compatible. Google/Pinterest servent au repérage : récupère l’original et sa provenance quand possible, jamais seulement la vignette de recherche.
+- Public et téléchargeable ne signifie pas autorisé pour l’application : note les conditions vérifiées. Si elles sont inconnues, marque « droits à vérifier », sans présenter l’image comme prête à publier. Ne collecte pas d’images privées.
+- Une seule candidate par créateur suffit. Limite la recherche initiale à trois pistes pertinentes par entrée pour économiser le quota ; aucune recherche exhaustive nécessaire. Pas de changement d’identité ni d’image générée pour remplir les trous.
+- Si l’entrée est une organisation (notamment ESLCS), conserve son identité de marque et indique « organisation, conserver image actuelle », au lieu de chercher un visage.
+
+Téléchargements : petits lots, au maximum deux simultanés, pas de téléchargement répété du même fichier. Respecte les limites des sites ; en cas de limitation, arrête la source et note-le. Conserve les originaux sans recadrage ni conversion.
+
+Livrable :
+1. Un ou plusieurs ZIP de moins de 25 Mo chacun contenant les images originales, nommées avec les slugs ci-dessous et leur extension réelle.
+2. Un manifeste CSV inclus : slug, nom, URL de la page source, URL directe, largeur, hauteur, crédit/auteur si connu, licence ou droits observés, statut (« utilisable selon conditions vérifiées », « droits à vérifier », « aucune source adéquate », « organisation »), commentaire bref.
+3. Si facile, un index HTML local d’aperçu qui référence les fichiers téléchargés. Sinon le manifeste suffit. Ne crée pas de dépendance pour cela.
+4. Un bilan bref : nombre de photos, celles nécessitant validation des droits et entrées sans candidate. Fournis des liens de téléchargement vers les ZIP.
+
+Exemple de lien proposé par l’utilisateur, à inspecter sans supposer l’identité ni les droits :
+https://www.phosphore.com/wp-content/uploads/2018/09/CEvKBReWEAEbL-G.jpg
+
+Liste (slug de fichier | nom affiché | compte permettant de confirmer l’identité) :
+kaicenat | KaiCenat | compte Twitch public : kaicenat
+ibai | ibai | compte Twitch public : ibai
+ninja | Ninja | compte Twitch public : ninja
+auronplay | auronplay | compte Twitch public : auronplay
+rubius | Rubius | compte Twitch public : rubius
+xqc | xQc | compte Twitch public : xqc
+thegrefg | TheGrefg | compte Twitch public : thegrefg
+juansguarnizo | juansguarnizo | compte Twitch public : juansguarnizo
+jynxzi | Jynxzi | compte Twitch public : jynxzi
+shroud | shroud | compte Twitch public : shroud
+elmariana | ElMariana | compte Twitch public : elmariana
+pokimane | pokimane | compte Twitch public : pokimane
+sodapoppin | sodapoppin | compte Twitch public : sodapoppin
+caseoh | caseoh_ | compte Twitch public : caseoh_
+alanzoka | alanzoka | compte Twitch public : alanzoka
+timthetatman | TimTheTatman | compte Twitch public : timthetatman
+eslcs | ESLCS | compte Twitch public : eslcs
+rivers-gg | rivers_gg | compte Twitch public : rivers_gg
+adinross | AdinRoss | compte Twitch public : adinross
+tommyinnit | tommyinnit | compte Twitch public : tommyinnit
+nickmercs | NICKMERCS | compte Twitch public : nickmercs
+squeezie | Squeezie | compte Twitch public : squeezie
+summit1g | summit1g | compte Twitch public : summit1g
+quackity | Quackity | compte Twitch public : quackity
+ishowspeed | IShowSpeed | compte Twitch public : ishowspeed
+amouranth | AMOURANTH | compte Twitch public : amouranth
+dream | Dream | compte Twitch public : dream
+montanablack88 | MontanaBlack88 | compte Twitch public : montanablack88
+gotaga | Gotaga | compte Twitch public : gotaga
+buster | buster | compte Twitch public : buster
+illojuan | IlloJuan | compte Twitch public : illojuan
+georgenotfound | GeorgeNotFound | compte Twitch public : georgenotfound
+gaules | Gaules | compte Twitch public : gaules
+missasinfonia | MissaSinfonia | compte Twitch public : missasinfonia
+aminematue | aminematue | compte Twitch public : aminematue
+philza | Philza | compte Twitch public : philza
+casimito | casimito | compte Twitch public : casimito
+coscu | coscu | compte Twitch public : coscu
+s1mple | s1mple | compte Twitch public : s1mple
+symfuhny | Symfuhny | compte Twitch public : symfuhny
+trymacs | Trymacs | compte Twitch public : trymacs
+cellbit | Cellbit | compte Twitch public : cellbit
+sykkuno | Sykkuno | compte Twitch public : sykkuno
+ludwig | Ludwig | compte Twitch public : ludwig
+faker | Faker | compte Twitch public : faker
+bratishkinoff | bratishkinoff | compte Twitch public : bratishkinoff
+asmongold | Asmongold | compte Twitch public : asmongold
+tarik | tarik | compte Twitch public : tarik
+strogo | StRoGo | compte Twitch public : strogo
+karljacobs | karljacobs | compte Twitch public : karljacobs
