@@ -22,7 +22,7 @@ import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
-import { creatorImage, CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
+import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
 import { liveFor, viewersLabel } from "@/lib/live";
 import { regionLabel } from "@/lib/regions";
 import {
@@ -56,24 +56,11 @@ export function RevealOverlay({
 }: {
   cards: DrawnCard[];
   index: number;
-  /**
-   * Ce que la série a payé pour ce booster (jour 1 → 6) : la récompense
-   * s'annonce **pendant** la révélation, pas après — c'est le moment où elle
-   * est gagnée, et c'est ce qui donne envie de revenir demain.
-   */
   streakReward?: StreakRewardGrant | null;
-  /** Quel paquet a été ouvert : le tirage rare ne se raconte pas pareil. */
   kind?: "live" | "scene";
-  /**
-   * Rendu dans l'overlay 16:9 (source navigateur d'un direct). Une seule
-   * différence, mais elle compte : **pas de raccourci**. Devant un public, on
-   * montre les cinq cartes ; c'est le jeu normal qui a le droit de sauter.
-   */
   overlay?: boolean;
-  /** Reuse PackTear’s portal, scene and focus trap throughout a tactile opening. */
   embedded?: boolean;
   tutorial?: boolean;
-  /** Révèle les cinq cartes d'un coup — absent de l'overlay. */
   onSkipAll?: () => void;
   onNext: () => void;
   onClose: () => void;
@@ -86,8 +73,6 @@ export function RevealOverlay({
   const now = useNow(60_000);
   const cloud = useCloud();
 
-  // La mise en scène vient de `src/lib/reveal.ts` : ici, on ne fait que
-  // l'exécuter (jouer les sons, vibrer, verrouiller l'écran).
   const perfect = isPerfect(cards);
   const rarity = card?.rarity ?? "common";
   const newCardCount = cards.filter((item) => item.isNew).length;
@@ -96,6 +81,7 @@ export function RevealOverlay({
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const [advanceQueuedFor, setAdvanceQueuedFor] = useState<string | null>(null);
   const queuedAdvanceRef = useRef<string | null>(null);
+  const anchorRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
@@ -110,9 +96,6 @@ export function RevealOverlay({
     } else onNext();
   }, [cards.length, index, locked, onClose, onNext, overlay, perfect, showSummary]);
 
-  // Le bouton d'avancement attend la fin réelle du retournement. Le minuteur
-  // sert de filet si le navigateur perd animationend ; le mouvement réduit
-  // rend la face immédiatement disponible.
   useEffect(() => {
     if (!cardId || perfect) return;
 
@@ -146,9 +129,6 @@ export function RevealOverlay({
     };
   }, [cardId, finishQueuedAdvance, isFifthSequentialReveal, perfect, rarity]);
 
-
-  // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
-  // une Légendaire n'est pas une attente : c'est ce qui fait le bruit.
   useEffect(() => {
     if (!card || perfect) return;
     const silence = silenceBefore(card.rarity);
@@ -160,8 +140,6 @@ export function RevealOverlay({
     return () => window.clearTimeout(timer);
   }, [card, perfect]);
 
-  // Le Perfect : les cinq d'un coup, l'écran verrouillé deux secondes, et la
-  // vibration la plus longue de l'application.
   useEffect(() => {
     if (!perfect) return;
     const best = bestCardOf(cards);
@@ -173,63 +151,74 @@ export function RevealOverlay({
 
   if (!card || !creator) return null;
   const isLast = index === cards.length - 1;
-  /*
-   * Sur un Perfect, les cinq cartes sont **déjà** à l'écran : il n'y a plus rien
-   * à révéler. Le bouton qui dirait « Révéler la suivante » mentirait — il
-   * ramènerait le joueur en arrière, sur la deuxième carte, alors qu'il vient
-   * de voir les cinq. C'est exactement le bogue du 9 octobre 2026 : un joueur
-   * ouvre un Perfect, voit cinq cartes d'un coup, appuie, et il ne se passe
-   * rien de visible. Le paquet se range maintenant d'un coup.
-   */
   const termine = perfect || isLast;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
   const posterAvailable = !overlay && cloud.configured && Boolean(cloud.userId) &&
     (perfect || cards.some((item) => item.rarity === "legendary"));
-  // A soft aura lives BEHIND the rare cards. No pixel explosion overlays artwork.
-  // Respect the existing rare-card audio pause for a synchronized entrance.
   const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
   const rarityAura = rareGlow || card.rarity === "rare";
   const flash = flashFor(card.rarity, perfect);
   const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
   const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
 
-  function moveRevealSwipe(event: PointerEvent<HTMLDivElement>) {
-    const swipe = swipeStart.current;
-    if (!swipe || flippedCardId !== cardId || locked) return;
-    const dx = event.clientX - swipe.x;
-    const dy = event.clientY - swipe.y;
-    if (Math.abs(dx) > 12 || Math.abs(dy) > 12) swipe.moved = true;
-    if (!swipe.moved) return;
-    const target = event.currentTarget;
-    target.style.setProperty("--reveal-drag-x", `${Math.max(-140, Math.min(140, dx))}px`);
-    target.style.setProperty("--reveal-drag-y", `${Math.max(-140, Math.min(100, dy))}px`);
-    target.classList.add("is-swiping");
-  }
-
-  function resetRevealDrag(event: PointerEvent<HTMLDivElement>) {
-    event.currentTarget.style.removeProperty("--reveal-drag-x");
-    event.currentTarget.style.removeProperty("--reveal-drag-y");
-    event.currentTarget.classList.remove("is-swiping");
+  function resetRevealDrag(element?: HTMLElement | null) {
+    const target = element || anchorRef.current;
+    if (target) {
+      target.style.removeProperty("--reveal-drag-x");
+      target.style.removeProperty("--reveal-drag-y");
+      target.style.removeProperty("--reveal-drag-rotate");
+      target.classList.remove("is-swiping");
+    }
   }
 
   function startRevealSwipe(event: PointerEvent<HTMLDivElement>) {
-    if (locked || perfect || flippedCardId !== cardId || event.button !== 0 || event.isPrimary === false) return;
+    if (locked || perfect || showSummary || event.button !== 0 || event.isPrimary === false) return;
     swipeStart.current = { x: event.clientX, y: event.clientY, moved: false };
     if (Number.isFinite(event.pointerId)) {
-      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* activation clavier/synthétique */ }
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* ignore */ }
     }
+  }
+
+  function moveRevealSwipe(event: PointerEvent<HTMLDivElement>) {
+    const swipe = swipeStart.current;
+    if (!swipe || locked || perfect || showSummary) return;
+    const dx = event.clientX - swipe.x;
+    const dy = event.clientY - swipe.y;
+    if (Math.abs(dx) > 6 || Math.abs(dy) > 6) swipe.moved = true;
+    if (!swipe.moved) return;
+
+    const anchor = anchorRef.current || event.currentTarget;
+    const clampedX = Math.max(-160, Math.min(160, dx));
+    const clampedY = Math.max(-140, Math.min(110, dy));
+    anchor.style.setProperty("--reveal-drag-x", `${clampedX}px`);
+    anchor.style.setProperty("--reveal-drag-y", `${clampedY}px`);
+    anchor.style.setProperty("--reveal-drag-rotate", `${clampedX * 0.08}deg`);
+    anchor.classList.add("is-swiping");
   }
 
   function endRevealSwipe(event: PointerEvent<HTMLDivElement>) {
     const start = swipeStart.current;
     swipeStart.current = null;
-    resetRevealDrag(event);
-    if (!start || locked || perfect || flippedCardId !== cardId) return;
+    resetRevealDrag(anchorRef.current || event.currentTarget);
+    if (!start || locked || perfect || showSummary) return;
+
     const dx = event.clientX - start.x;
     const dy = event.clientY - start.y;
-    if (Math.abs(dx) >= 48 && Math.abs(dx) > Math.abs(dy) * 1.1) advance();
-    else if (dy <= -48 && Math.abs(dy) > Math.abs(dx) * 1.1) advance();
+    const dist = Math.hypot(dx, dy);
+
+    // Détection d'un swipe franc (horizontal, vertical haut, ou diagonale)
+    if (Math.abs(dx) >= 36 || dy <= -36 || dist >= 42) {
+      advance();
+    } else if (dist < 8) {
+      // Un tap direct sur la carte avance également sans obliger à viser le bouton
+      advance();
+    }
+  }
+
+  function cancelRevealSwipe() {
+    swipeStart.current = null;
+    resetRevealDrag(anchorRef.current);
   }
 
   function finishFlip(event: AnimationEvent<HTMLDivElement>) {
@@ -249,7 +238,6 @@ export function RevealOverlay({
     onSkipAll?.();
   }
 
-  // Une carte déjà révélée se range dès le premier appui.
   function advance() {
     if (locked) return;
     if (!perfect && !showSummary && flippedCardId !== card.id) {
@@ -261,8 +249,7 @@ export function RevealOverlay({
     if (termine) {
       if (overlay) onClose();
       else setShowSummary(true);
-    }
-    else onNext();
+    } else onNext();
   }
 
   const content = (
@@ -277,8 +264,7 @@ export function RevealOverlay({
     >
       <div className="reveal-ambient" />
       {rareGlow ? (
-        <div key={card.id} className={`reveal-cinematic-field field-${perfect ? "perfect" : rarity}`}
-          style={glowStyle} aria-hidden="true">
+        <div key={card.id} className={`reveal-cinematic-field field-${perfect ? "perfect" : rarity}`} style={glowStyle} aria-hidden="true">
           <span className="reveal-field-corona" />
           <span className="reveal-field-rays" />
           <span className="reveal-field-orbit" />
@@ -320,8 +306,6 @@ export function RevealOverlay({
             );
           })}
         </div>
-        {/* Le raccourci des cinq cartes : hors overlay seulement. Devant un
-            public, on regarde la mise en scène jusqu'au bout. */}
         {!overlay && !perfect && !isLast && onSkipAll ? (
           <button
             type="button"
@@ -336,7 +320,6 @@ export function RevealOverlay({
       </div>
 
       {perfect && !showSummary ? (
-        /* Les cinq cartes ensemble : c'est le moment, il n'y a rien à faire. */
         <div className="reveal-perfect-grid">
           {rareGlow ? (
             <span key={`rare-glow-${card.id}`} className="reveal-rare-aura reveal-rare-aura-perfect" style={glowStyle} aria-hidden="true" />
@@ -349,12 +332,6 @@ export function RevealOverlay({
                   <CreatorCard
                     creator={dotCard}
                     variant={item.variant}
-                    /*
-                     * La rareté **tirée**, écrite en plus de celle du
-                     * créateur : c'est elle qui décide du silence, du bang et
-                     * de l'effet — l'entrée doit venir du même endroit, sinon
-                     * une Légendaire pourrait arriver comme une commune.
-                     */
                     className={`reveal-card rarity-${item.rarity}`}
                     liveStream={liveFor(live, dotCard.login, now)}
                   />
@@ -402,57 +379,49 @@ export function RevealOverlay({
       ) : (
         <div className="reveal-stage">
           {rareGlow && !perfect ? (
-            <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true"
-              style={glowStyle}>
+            <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true" style={glowStyle}>
               <span>CARTE D&apos;EXCEPTION</span>
               <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : card.rarity === "epic" ? "ÉPIQUE" : "RARE"}</strong>
             </div>
           ) : null}
-          {/* Light and geometry remain behind the artwork, never across the portrait. */}
           {rarityAura ? (
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          <div style={glowStyle}
+          <div
+            ref={anchorRef}
+            style={glowStyle}
             className="reveal-anchor"
-
             onPointerDown={startRevealSwipe}
             onPointerMove={moveRevealSwipe}
             onPointerUp={endRevealSwipe}
-            onPointerCancel={(event) => { swipeStart.current = null; resetRevealDrag(event); }}
-            onPointerLeave={(event) => { swipeStart.current = null; resetRevealDrag(event); }}>
+            onPointerCancel={cancelRevealSwipe}
+            onPointerLeave={cancelRevealSwipe}
+          >
             <div
               key={card.id}
               style={isFifthSequentialReveal
                 ? { "--fifth-reveal-beat": `${FIFTH_CARD_REVEAL_BEAT_MS}ms` } as CSSProperties
                 : undefined}
-              className={`reveal-flip rarity-${card.rarity}${isFifthSequentialReveal ? " reveal-fifth-card" : ""}`}>
+              className={`reveal-flip rarity-${card.rarity}${isFifthSequentialReveal ? " reveal-fifth-card" : ""}`}
+            >
               <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
                 <CreatorCard
                   creator={creator}
                   variant={card.variant}
-                  // Idem : la rareté du tirage, pas seulement celle du créateur.
                   className={`reveal-card rarity-${card.rarity}`}
                   liveStream={onAir}
                 />
-                {/* Le dos : la face cachée de la carte, tant qu'elle n'est pas
-                    retournée. Sans lui, une carte qui tourne ne montre jamais
-                    qu'elle avait un dos. */}
                 <span className="reveal-dos" aria-hidden="true">
                   <span className="reveal-back-sigil"><CardBackEmblem /></span>
                 </span>
               </div>
             </div>
           </div>
-          {/* Le rang, le nom et la région sont déjà sur la carte (tampon,
-              nameplate). Ici : l'état, et rien d'autre. */}
           <div className="reveal-name">
             <p>
               {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
             </p>
-            {/* Le meilleur moment de l'ouverture : la carte tombe pendant que la
-                personne est en train de streamer. En plein écran (Légendaire ou
-                Perfect), le titre du direct prend la place du simple libellé. */}
             {onAir ? (
               spotlight ? (
                 <p className="reveal-live-show">
@@ -472,8 +441,6 @@ export function RevealOverlay({
                 </p>
               )
             ) : null}
-            {/* Le tirage réserve toujours la dernière carte : le dire évite de
-                croire à un hasard, et annonce le moment fort du paquet. */}
             {isLast && !perfect ? (
               <span className="reveal-guaranteed">Carte garantie du booster</span>
             ) : null}
@@ -481,18 +448,18 @@ export function RevealOverlay({
         </div>
       )}
 
-      {!showSummary && !perfect && !locked && flippedCardId === card.id ? (
-        <p className="reveal-swipe-cue"><span aria-hidden="true">← →</span>{" "}
-          Glisse la carte pour continuer
-        </p>
+      {!showSummary && !perfect && !locked ? (
+        <div className="reveal-swipe-prompt" aria-hidden="true">
+          <span className="reveal-swipe-arrow">‹</span>
+          <span className="reveal-swipe-label">Glisse la carte</span>
+          <span className="reveal-swipe-arrow">›</span>
+        </div>
       ) : null}
-      <button
-        className={`reveal-next${locked ? " locked" : ""}`}
-        onClick={showSummary ? onClose : advance}
 
+      <button
+        className={`reveal-next${locked ? " locked" : ""}${!showSummary && !perfect ? " is-secondary" : ""}`}
+        onClick={showSummary ? onClose : advance}
         disabled={locked}
-        // La barre du verrou lit la durée du module de mise en scène : une
-        // seule vérité, sinon elle finirait avant le bouton ou après lui.
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
       >
         <span>
@@ -501,23 +468,22 @@ export function RevealOverlay({
             : locked
             ? "Perfect…"
             : advanceQueuedFor === card.id
-            ? "Suite programmée…"
+            ? "Suite…"
             : termine
                 ? tutorial ? "Terminer l’essai" : "Ranger dans le classeur"
-                : "Révéler la suivante"}
+                : "Carte suivante"}
         </span>
         {showSummary ? (
           <Sparkles size={18} />
         ) : locked ? (
           <Sparkles size={18} />
         ) : termine ? (
-          <BookOpen size={18} />
+          <BookOpen size={16} />
         ) : (
-          <ChevronRight size={18} />
+          <ChevronRight size={15} />
         )}
       </button>
     </div>
   );
-  // Le jeu et le sachet partagent le viewport. OBS garde son cadre 16:9.
   return overlay || embedded ? content : createPortal(content, document.body);
 }
