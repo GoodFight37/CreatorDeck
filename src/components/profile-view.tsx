@@ -20,13 +20,8 @@ import { sellableCards } from "@/lib/market";
 import { regionLabel } from "@/lib/regions";
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 import {
-  SFX_LEVEL_LABELS,
-  SFX_LEVELS,
-  getSfxLevel,
   isMuted,
   setMuted,
-  setSfxLevel,
-  type SfxLevel,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
@@ -125,7 +120,6 @@ export function ProfileView({
   const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
 
   const [soundOn, setSoundOn] = useState(() => !isMuted());
-  const [soundLevel, setSoundLevel] = useState<SfxLevel>(() => getSfxLevel());
 
   useEffect(() => {
     applyTiltChoice();
@@ -160,11 +154,6 @@ export function ProfileView({
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
-  }
-
-  function choisirVolume(cran: SfxLevel) {
-    setSoundLevel(cran);
-    setSfxLevel(cran);
   }
 
   async function handleReset() {
@@ -384,33 +373,19 @@ export function ProfileView({
             </button>
           </>
         ) : cloud.configured ? (
-          /* En non-connecté : volet unique condensé sans mur de 5 lignes grises */
-          <details className="menu-locked-group" style={{ margin: "0.2rem 0" }}>
-            <summary className="menu-row" style={{ cursor: "pointer" }}>
-              <span className="menu-label">
-                Fonctionnalités en ligne
-                <small className="menu-state">Arène, Ventes, Amis · Connexion requise</small>
-              </span>
-              <ChevronRight size={16} />
-            </summary>
-            <div style={{ paddingLeft: "0.75rem", opacity: 0.85 }}>
-              <button type="button" className="menu-row" onClick={onShowLeaderboard}><span>Classement mondial</span><ChevronRight size={16} /></button>
-              <button type="button" className="menu-row" onClick={onShowFriends}><span>Amis</span><ChevronRight size={16} /></button>
-              <button type="button" className="menu-row" onClick={onShowMarket}><span>Hôtel des ventes</span><ChevronRight size={16} /></button>
-              <button type="button" className="menu-row" onClick={onShowArena}><span>Arène</span><ChevronRight size={16} /></button>
-              <button type="button" className="menu-row" onClick={onShowLastPack}><span>Last Pack</span><ChevronRight size={16} /></button>
-              <button type="button" className="menu-row" onClick={onShowNotifications}><span>Notifications</span><ChevronRight size={16} /></button>
-            </div>
-          </details>
+          <button type="button" className="menu-row" onClick={onShowAccount}>
+            <span className="menu-label">
+              Fonctionnalités en ligne
+              <small className="menu-state">Arène, Ventes, Amis · Connexion requise</small>
+            </span>
+            <ChevronRight size={16} />
+          </button>
         ) : null}
       </section>
 
       {/* Réglages minimaux */}
       <section className="menu-group" aria-label="Réglages">
         <h2>Réglages</h2>
-        {onShowThemes ? <button type="button" className="menu-row" onClick={onShowThemes}>
-          <span>Thème du classeur</span><ChevronRight size={16} />
-        </button> : null}
         <button
           type="button"
           className="menu-row"
@@ -423,25 +398,6 @@ export function ProfileView({
             <i />
           </span>
         </button>
-
-        {soundOn ? (
-          <div className="menu-row sound-row" style={{ paddingTop: "0.2rem", paddingBottom: "0.2rem" }}>
-            <span id="volume-label">Volume</span>
-            <div className="sound-choice" role="group" aria-labelledby="volume-label">
-              {SFX_LEVELS.map((cran) => (
-                <button
-                  key={cran}
-                  type="button"
-                  className={soundLevel === cran ? "sound-chip active" : "sound-chip"}
-                  aria-pressed={soundLevel === cran}
-                  onClick={() => choisirVolume(cran)}
-                >
-                  {SFX_LEVEL_LABELS[cran]}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
 
         {canTilt ? (
           <button
