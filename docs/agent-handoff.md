@@ -2631,9 +2631,24 @@ avancé à `f93ffcc8ed2f31c6def11e14f08f14a105d41865` par les commits
 (checkpoint documentaire). Ces commits ont été examinés, puis la branche a été
 mise à jour par fast-forward avant l’ajout du prototype ; ils sont des ancêtres
 amont, pas des changements de ce prototype. Le commit fonctionnel est
-[`2816ac6b04c8b217bf57c248e6648e13710409d2`](https://github.com/GoodFight37/CreatorDeck/commit/2816ac6b04c8b217bf57c248e6648e13710409d2).
-Au dernier contrôle avant publication, `origin/arena` pointait encore sur
-`1ced6cc`; le push de ce checkpoint reste à vérifier.
+[`2816ac6b04c8b217bf57c248e6648e13710409d2`](https://github.com/GoodFight37/CreatorDeck/commit/2816ac6b04c8b217bf57c248e6648e13710409d2). Le
+premier checkpoint documentaire (`aac0f57c2614e0ec3bf01beba9ef19382e005b29`)
+a été poussé normalement et vérifié par `git ls-remote` sur la branche.
+CI GitHub [`38444219083`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444219083)
+**success, 5/5 jobs**. Les migrations ont été vérifiées sur Postgres jetable et
+le test de chemin cloud utilise des RPC simulés ; aucune migration ni écriture
+sur Supabase de production.
+
+Pendant la clôture, `origin/main` a avancé de `f93ffcc` au commit fonctionnel
+`b4d08e5802b72f6d75e44bc31be853dae4ea0c26` (étude de croissance), puis aux
+checkpoints documentaires `26def354` et `5dbdb4c`; la dernière HEAD observée est
+`5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`. Le code de l’étude ajoute une
+simulation Monte-Carlo locale de catalogues synthétiques, son script de commande
+et ses rapports, sans modifier les identités publiées, les taux ou les RPC.
+La CI du commit fonctionnel `b4d08e5` (`38444258514`) est success, 5/5 jobs ; le
+workflow Supabase (`38444683090`) est success. Commits examinés mais non fusionnés
+dans la branche du prototype, pour garder ce livrable isolé et ne pas mélanger
+l’étude parallèle. La branche reste basée sur `f93ffcc`.
 
 Fichiers du prototype :
 - `src/app/catalogue-demo/page.tsx` — entrée de route statique ;
@@ -2665,7 +2680,8 @@ L’ouvrir depuis le Live Preview puis ajouter `/catalogue-demo`. En local :
 ignorées par Git : `test-results/catalogue-demo-320-téléphone.png` et
 `test-results/catalogue-demo-390-téléphone.png`.
 
-Après le push, vérifier le SHA distant de `arena/6c5a89f2-creatordeck` et suivre
-les contrôles GitHub réellement déclenchés. Ensuite recueillir le retour sur
-l’interface et cadrer explicitement les univers/règles avant tout branchement
-en production ; ne pas ajouter de vrais comptes ou licences dans cette tâche.
+Avant toute prochaine publication, revérifier le SHA distant de
+`arena/6c5a89f2-creatordeck` et suivre les contrôles GitHub réellement déclenchés.
+Prochaine étape produit : recueillir le retour sur l’interface et cadrer
+explicitement les univers/règles avant tout branchement en production ; ne pas
+ajouter de vrais comptes ou licences dans cette tâche.

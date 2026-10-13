@@ -2,13 +2,24 @@
 
 ## État courant — 13 octobre 2026
 
-Référence publiée vérifiée : `main` à `f93ffcc8ed2f31c6def11e14f08f14a105d41865`.
-La vérification GitHub du commit de code précédent
+Base de la branche prototype : `main` `f93ffcc8ed2f31c6def11e14f08f14a105d41865`,
+après `e184f5d` et son suivi documentaire. La vérification du commit de code
 [38441932774](https://github.com/GoodFight37/CreatorDeck/actions/runs/38441932774)
-est verte, 5/5 jobs ; `f93ffcc` est un suivi documentaire. Le workflow Supabase
+est verte, 5/5 ; Supabase
 [38442505857](https://github.com/GoodFight37/CreatorDeck/actions/runs/38442505857)
-est success sur `f93ffcc`. Le badge compact de direct ouvre maintenant la chaîne
-Twitch lorsque le snapshot est frais.
+est success. Depuis, `origin/main` a avancé à
+`b4d08e5802b72f6d75e44bc31be853dae4ea0c26` avec une étude exploratoire de
+croissance du catalogue ([rapport sur main](https://github.com/GoodFight37/CreatorDeck/blob/main/docs/audit-croissance-catalogue.md)).
+Cette simulation locale n’ajoute aucune identité au jeu et ne change ni les taux
+ni les RPC ; elle n’est pas intégrée à la branche du prototype pour garder le
+livrable isolé. `origin/main` est depuis passé aux checkpoints documentaires
+`26def354` et `5dbdb4c` (dernière HEAD observée `5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`).
+CI du commit fonctionnel `b4d08e5` :
+[38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
+verte, 5/5 jobs ; Supabase
+[38444683090](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444683090)
+success. Le badge compact de direct ouvre maintenant la chaîne Twitch lorsque
+le snapshot est frais.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
@@ -113,10 +124,12 @@ aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
    permet de comparer un classeur mixte et un classement indépendant par
    univers ; noms fictifs et visuels temporaires explicitement marqués. Validé
    localement : 8/8 E2E, 1 164 tests unitaires, 124 tests d’écran, typecheck,
-   lint ciblé et build. Il ne modifie pas les données du jeu et ne valide ni
-   l’ajout d’identités réelles, ni des licences, ni le modèle de progression
-   final. Prochaine étape : retour sur l’interface et cadrage explicite des
-   univers/règles avant tout branchement en production.
+   lint ciblé et build. La CI GitHub de la branche
+   [38444219083](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444219083)
+   est verte, 5/5 jobs. Le prototype ne modifie pas les données du jeu et ne
+   valide ni l’ajout d’identités réelles, ni des licences, ni le modèle de
+   progression final. Prochaine étape : retour sur l’interface et cadrage
+   explicite des univers/règles avant tout branchement en production.
 3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
    courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
    deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et
