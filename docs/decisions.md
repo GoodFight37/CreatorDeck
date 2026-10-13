@@ -20,7 +20,7 @@ teinte aussi le Drop. Le Tribunal quotidien, ses verdicts visuels et son bilan
 existaient déjà ; cette passe les conserve et son stinger se joue après le
 paiement du bilan. Tests unitaires/écrans, types, lint, build et E2E bureau/
 téléphone simulé vérifiés localement. Le sachet n’initialise aucun moteur WebGL.
-Limites et statut non publié dans la
+Commit `00b22d4b`, CI `38477480148` en attente ; détails et limites dans la
 [passation](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026).
 
 ## D-077 — 13 octobre 2026 : créer un bref temps d’anticipation avant la carte garantie

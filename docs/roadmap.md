@@ -2,10 +2,10 @@
 
 ## État actuel — 13 octobre 2026
 
-**État de départ vérifié :** `main` local et distant étaient sur
-`736c3f7d` avant le chantier sensation de jeu décrit ci-dessous. Ce chantier
-est maintenant implémenté et validé localement ; son commit et sa CI restent à
-inscrire après publication. Voir le [checkpoint](agent-handoff.md) pour les
+**État du code :** `main` publié sur `00b22d4b` pour le chantier sensation de
+jeu décrit ci-dessous. Les contrôles locaux sont verts ; la CI GitHub
+[`38477480148`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38477480148)
+est encore en file d’attente. Voir le [checkpoint](agent-handoff.md) pour les
 preuves et limites exactes.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
@@ -24,7 +24,7 @@ preuves et limites exactes.
   dépend d'un snapshot récent. Aucun changement d'économie ou de schéma de
   données n'est en attente dans ces livraisons.
 
-## Livraison préparée — sensation de jeu, 13 octobre 2026
+## Livraison publiée — sensation de jeu, 13 octobre 2026
 
 Implémentation locale vérifiée, dans l’ordre demandé A → E :
 

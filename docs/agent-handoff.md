@@ -1,8 +1,8 @@
-## Sensation de jeu A → E — vérification locale, 13 octobre 2026
+## Sensation de jeu A → E — publié, CI en cours, 13 octobre 2026
 
-Base contrôlée : `main` local et `origin/main` égaux à
-`736c3f7d4e7ee0f44cc70c59ed05a0f24216e7d1`. Travail effectué localement,
-pas encore commité à ce checkpoint. Aucun SQL ni taux de tirage modifié.
+Base contrôlée : `736c3f7d4e7ee0f44cc70c59ed05a0f24216e7d1`. Publié sur `main`
+par le commit `00b22d4be01f9999c6e0bb155d893cf146fc1bcd`. `git ls-remote` a
+confirmé le même SHA sur `origin/main`. Aucun SQL ni taux de tirage modifié.
 
 - **Audio :** boucle prototype originale `public/music/hub-late-night.mp3`
   (24 s, MP3 mono 64 kbit/s, 188 Ko), lancée seulement au premier geste pour
@@ -25,19 +25,17 @@ pas encore commité à ce checkpoint. Aucun SQL ni taux de tirage modifié.
   page supprimée sous `prefers-reduced-motion`, filtre Obtenues inchangé.
 
 Vérifications locales : `npm test` 73 fichiers / 1 166 tests ; `npm run ecrans`
-22 fichiers / 126 tests ; typecheck, ESLint et build de production réussis.
-E2E sachet 37 réussis, un scénario hors périmètre ignoré et deux assertions d’un
-test CSS-only corrigées puis réussies sur bureau/téléphone ; E2E sans WebGL 4/4.
-La CI historique du SHA de base `736c3f7d` (run
-[`38473812949`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38473812949))
-était encore en cours au dernier contrôle. Aucune CI n’a encore testé ce lot et
-aucun téléphone physique n’a été utilisé. Build local sans variables Supabase :
+22 fichiers / 127 tests ; typecheck, ESLint et build de production réussis.
+E2E ciblés : 43 réussis / 1 ignoré dans la suite pack/reveal et E2E sans WebGL
+4/4 sur bureau et téléphone simulé. CI GitHub `38477480148`
+(https://github.com/GoodFight37/CreatorDeck/actions/runs/38477480148) est en
+file d’attente au dernier contrôle ; aucun téléphone physique n’a été utilisé.
+Build local sans variables Supabase :
 le warning cloud est attendu ; les routes statiques compilent.
 
 Limites et prochain contrôle : faire écouter la BGM sur téléphone, décider si
 son volume/couleur convient, et examiner les portraits à l’œil. Le placeholder
-ne repère pas les images techniquement nettes mais mauvaises/obscures. Mettre à
-jour ce checkpoint après commit et vérification du SHA distant/Actions.
+ne repère pas les images techniquement nettes mais mauvaises/obscures. Le SHA distant est vérifié ; actualiser le statut Actions quand le run se termine.
 
 ## Portraits manuels — ZIP `portraits-01.zip` — 13 octobre 2026
 
