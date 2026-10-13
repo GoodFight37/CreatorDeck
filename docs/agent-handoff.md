@@ -11,15 +11,24 @@ pas ; effets désactivés/mouvement réduit gardent le reveal direct. Aucun GPU
 réactivé par défaut.
 
 Fichiers produit/tests : `src/components/reveal-overlay.tsx`,
+`src/components/creator-deck-app.tsx`,
 `src/app/booster-continuity.css`, `src/ecrans-effets.test.tsx`,
 `e2e/pack-tear.spec.ts`. Validation finale locale : `npm test` 73 fichiers /
-1 164 tests ; `npm run ecrans` 20 fichiers / 121 tests ; `npm run e2e` 84 réussis,
+1 164 tests ; `npm run ecrans` 20 fichiers / 122 tests ; `npm run e2e` 84 réussis,
 12 ignorés faute de backend/cloud optionnel ; `npm run lint`, `npm run typecheck`,
-`npm run build` et `git diff --check` réussis. Le navigateur téléphone simulé
+`npm run build` et `git diff --check` réussis. La première CI `38407219931` a
+révélé que le cadeau de bienvenue partage aussi le type de reveal Live : le test
+attendait son bouton direct « Ranger dans le classeur ». Le peek est maintenant
+désactivé explicitement pour les cinq boosters cadeau ; test écran de régression
+ajouté, shard cloud simulé 10/10 et test peek/raccourci bureau-téléphone 2/2
+réussis localement après correction. Une nouvelle CI doit confirmer le correctif.
+Le navigateur téléphone simulé
 exerce le geste et le chemin de repli ; cela ne remplace pas le toucher sur un
 téléphone physique. Le build local n’a pas de clés Supabase, donc n’atteste pas
-le cloud. HEAD local et distant vérifiés égaux à `6835d623` avant cette
-modification ; relever le SHA publié et la CI correspondante après push.
+le cloud. Commit initial `64114bd7` publié, mais sa CI est rouge uniquement sur
+les deux variantes du scénario cadeau (les autres quatre jobs verts) ; correctif
+en attente d’un commit et d’un nouveau run. Relever ensuite le SHA distant, la CI
+et Vercel avant de déclarer la livraison terminée.
 
 Prochaine vérification produit : Malik essaie ce geste sur téléphone et donne
 son avis sur l’emplacement du coin, la facilité à le saisir et la taille de

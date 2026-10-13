@@ -359,6 +359,16 @@ describe("les effets de révélation", () => {
       .toContain("Ranger dans le classeur");
   });
 
+  it("garde le parcours direct des paquets cadeau de bienvenue", async () => {
+    const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `cadeau-${index}`));
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(<RevealOverlay cards={cinq as never} index={4} cornerPeekDisabled
+      onNext={() => {}} onClose={() => {}} />);
+    expect(document.querySelector(".reveal-corner-handle")).toBeNull();
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
+      .toContain("Ranger dans le classeur");
+  });
+
   it("conserve le retournement direct quand les effets de carte sont coupés", async () => {
     document.documentElement.dataset.cardFx = "off";
     try {

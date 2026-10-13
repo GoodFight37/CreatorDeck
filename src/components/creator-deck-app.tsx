@@ -156,6 +156,7 @@ export function CreatorDeckApp() {
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);
+  const [welcomeGiftReveal, setWelcomeGiftReveal] = useState(false);
   const [opening, setOpening] = useState(false);
   const [usingHourglass, setUsingHourglass] = useState(false);
   const [drawnCards, setDrawnCards] = useState<DrawnCard[]>([]);
@@ -412,6 +413,7 @@ export function CreatorDeckApp() {
       setWelcomeSeenKey(welcomeKey);
       const result = await cloudStore.openReturnGiftPack();
       if (result.status !== "drawn") { showError(result.message); return; }
+      setWelcomeGiftReveal(true);
       setRevealKind("live");
       setDrawnCards(result.cards);
       setStreakGain(null);
@@ -465,6 +467,7 @@ export function CreatorDeckApp() {
         }
         // Keep PackTear mounted: the face now joins its extracted backs in one scene.
         setTutorialReveal(result.tutorial ?? false);
+        setWelcomeGiftReveal(false);
         setRevealKind("live");
         setDrawnCards(result.cards);
         setStreakGain(result.streakReward ?? null);
@@ -516,6 +519,7 @@ export function CreatorDeckApp() {
           return;
         }
         setRevealKind("scene");
+        setWelcomeGiftReveal(false);
         setDrawnCards(result.cards);
         setRevealIndex(0);
         return;
@@ -671,6 +675,7 @@ export function CreatorDeckApp() {
       setAccountFocus(null);
       setAccountOpen(true);
     }
+    setWelcomeGiftReveal(false);
     setDrawnCards([]);
     setRevealIndex(0);
     // La récompense de série s'efface avec les cartes : elle appartient à ce
@@ -691,6 +696,7 @@ export function CreatorDeckApp() {
           kind={revealKind}
           returnFocusTo={presentationReturnFocus}
           tutorial={tutorialReveal}
+          cornerPeekDisabled={welcomeGiftReveal}
           streakReward={streakGain}
           onSkipAll={() => setRevealIndex(drawnCards.length - 1)}
           onNext={() => setRevealIndex((value) => Math.min(value + 1, drawnCards.length - 1))}

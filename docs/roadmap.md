@@ -20,9 +20,12 @@ relâchement après le seuil. Un geste court replie le coin. Bouton principal,
 clavier et reveal complet gardent leurs raccourcis ; Perfect, OBS, autres écrans
 et défaut GPU sont inchangés. Validation locale complète : 1 164 tests, 121 tests
 d’écrans, 84 E2E réussis / 12 cloud ignorés, lint, typecheck et build réussis.
-Le geste est vérifié sur téléphone simulé, pas encore sur un appareil physique.
-Voir D-072 et le dernier checkpoint de [la passation](agent-handoff.md). SHA
-GitHub/CI à actualiser après publication.
+Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
+`38407219931` a repéré cette exception ; correctif ensuite validé localement par
+122 tests écran et le shard RPC simulé 10/10. Une nouvelle CI est requise avant
+de déclarer la livraison validée à distance. Le geste est vérifié sur téléphone
+simulé, pas encore sur un appareil physique. Voir D-072 et le dernier checkpoint
+de [la passation](agent-handoff.md). SHA GitHub/CI à actualiser après publication.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 

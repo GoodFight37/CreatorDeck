@@ -10,7 +10,9 @@ et flux d’ouverture restent inchangés. Mouvement réduit/effets désactivés
 utilisent le reveal direct existant. Le CTA « Retourner la carte » et le bouton
 accessible au clavier contournent l’aperçu ; le raccourci de révélation complète
 reste disponible. GPU reste désactivé par défaut. Tests DOM/E2E, suites, build et
-limites sont consignés dans la passation du 13 octobre.
+limites sont consignés dans la passation du 13 octobre. Les cadeaux de
+bienvenue conservent aussi le parcours direct : ils partagent la scène Live,
+mais ne sont pas des boosters ordinaires pour cette interaction.
 
 ## D-069 — 13 octobre 2026 : hiérarchie Drop et priorité des recettes accessibles
 

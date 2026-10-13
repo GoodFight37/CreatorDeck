@@ -46,6 +46,7 @@ export function RevealOverlay({
   overlay = false,
   embedded = false,
   tutorial = false,
+  cornerPeekDisabled = false,
   streakReward = null,
   onSkipAll,
   onNext,
@@ -71,6 +72,8 @@ export function RevealOverlay({
   /** Reuse PackTear’s portal, scene and focus trap throughout a tactile opening. */
   embedded?: boolean;
   tutorial?: boolean;
+  /** Cadeau de retour : conserver son parcours direct, identique au tutoriel. */
+  cornerPeekDisabled?: boolean;
   /** Révèle les cinq cartes d'un coup — absent de l'overlay. */
   onSkipAll?: () => void;
   onNext: () => void;
@@ -100,7 +103,7 @@ export function RevealOverlay({
   const cornerPull = useRef<{ pointerId: number; x: number; y: number; progress: number } | null>(null);
   const cornerVisualRef = useRef<HTMLDivElement | null>(null);
   const cardId = card?.id;
-  const cornerPeekAvailable = !overlay && !perfect && !skipAllRequested && cards.length === 5 && index === 4 && cardEffectsAllowed();
+  const cornerPeekAvailable = !overlay && !tutorial && !cornerPeekDisabled && !perfect && !skipAllRequested && cards.length === 5 && index === 4 && cardEffectsAllowed();
   const cornerPeekPhase = cornerPeek?.cardId === cardId ? cornerPeek.phase : "peek";
   const cornerPeekWaiting = cornerPeekAvailable && cornerPeekPhase === "peek";
 
