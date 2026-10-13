@@ -184,6 +184,7 @@ describe("les effets de révélation", () => {
       <RevealOverlay cards={cinq as never} index={0} streakReward={{ day: 2, points: 0, hourglasses: 1, tokens: 0 }} onNext={suivant} onClose={fermer} />,
     );
     expect(document.querySelector(".reveal-corner-handle"), "le Perfect garde ses cinq cartes immédiates").toBeNull();
+    expect(document.querySelector(".reveal-fifth-card"), "le Perfect ne reçoit pas le temps de pose séquentiel").toBeNull();
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(0);
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
@@ -347,12 +348,34 @@ describe("les effets de révélation", () => {
     );
 
     expect(document.querySelector(".reveal-corner-handle")).toBeNull();
+    expect(document.querySelector(".reveal-flip.reveal-fifth-card .reveal-flip-face"),
+      "la cinquième carte garde le retournement automatique ordinaire").not.toBeNull();
+    expect(document.querySelectorAll(".reveal-next")).toHaveLength(1);
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
       .toContain("Ranger dans le classeur");
 
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_250); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_600); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
       .toContain("Ranger dans le classeur");
+  });
+
+  it("termine la pose de la cinquième carte sans exiger un second appui", async () => {
+    const fermer = vi.fn();
+    const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `filet-${index}`));
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(
+      <RevealOverlay cards={cinq as never} index={4} overlay onNext={() => {}} onClose={fermer} />,
+    );
+
+    banc.appuyer("Ranger dans le classeur");
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
+      .toContain("Suite programmée");
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(fermer).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(359); });
+    expect(fermer).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(fermer).toHaveBeenCalledOnce();
   });
 
   it("conserve le retournement direct quand les effets de carte sont coupés", async () => {
@@ -361,6 +384,8 @@ describe("les effets de révélation", () => {
       const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `sobre-${index}`));
       const { RevealOverlay } = await import("@/components/reveal-overlay");
       await banc.monter(<RevealOverlay cards={cinq as never} index={4} onNext={() => {}} onClose={() => {}} />);
+      expect(document.querySelector(".reveal-flip.reveal-fifth-card .reveal-flip-face"),
+        "Reflets OFF garde le même emplacement sans la pause CSS").not.toBeNull();
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
       expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
         .toContain("Ranger dans le classeur");

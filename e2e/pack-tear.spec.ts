@@ -73,6 +73,15 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
 
 test("reduced motion reveals a stationary front without a hidden card", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, "getRandomValues", {
+      configurable: true,
+      value: (array: ArrayBufferView) => {
+        if (array instanceof Uint32Array) { array.fill(123); return array; }
+        throw new Error("Type aléatoire inattendu dans le test mouvement réduit.");
+      },
+    });
+  });
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -84,6 +93,42 @@ test("reduced motion reveals a stationary front without a hidden card", async ({
     transform: getComputedStyle(node).transform,
   }));
   expect(motion).toEqual({ animation: "none", transform: "none" });
+
+  for (let index = 2; index <= 5; index++) {
+    await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+    await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
+  }
+  const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
+  await expect(fifthFlip).toHaveCount(1);
+  await expect(fifthFlip).toHaveCSS("animation-name", "none");
+  await expect(fifthFlip).toHaveCSS("animation-delay", "0s");
+  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+});
+
+test("Reflets OFF supprime l'attente dédiée à la carte garantie", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, "getRandomValues", {
+      configurable: true,
+      value: (array: ArrayBufferView) => {
+        if (array instanceof Uint32Array) { array.fill(123); return array; }
+        throw new Error("Type aléatoire inattendu dans le test Reflets OFF.");
+      },
+    });
+  });
+  await gotoDeck(page);
+  await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  await page.locator(".opening-continuum").getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  for (let index = 2; index <= 5; index++) {
+    await reveal.getByRole("button", { name: "Révéler la suivante" }).click();
+    await expect(reveal.locator(".reveal-header > span")).toHaveText(`${index} / 5`);
+  }
+  const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
+  await expect(fifthFlip).toHaveCount(1);
+  await expect(fifthFlip).toHaveCSS("animation-name", "none");
+  await expect(fifthFlip).toHaveCSS("animation-delay", "0s");
+  await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
 });
 
 test("a horizontal swipe advances after the flip and the button remains available", async ({ page }) => {
@@ -118,8 +163,7 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await expect(reveal.locator(".reveal-header > span")).toHaveText("3 / 5");
 });
 
-test("la carte garantie se révèle sans languette", async ({ page }, testInfo) => {
-  test.skip(testInfo.project.name !== "téléphone", "Le geste tactile est vérifié sur le projet téléphone.");
+test("la carte garantie se retourne automatiquement, sans languette ni second geste", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(crypto, "getRandomValues", {
       configurable: true,
@@ -143,7 +187,12 @@ test("la carte garantie se révèle sans languette", async ({ page }, testInfo) 
   }
 
   await expect(reveal.locator(".reveal-corner-handle")).toHaveCount(0);
-  await reveal.locator(".reveal-flip-face").evaluate(async (node) => {
+  const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
+  await expect(fifthFlip).toHaveCount(1);
+  await expect(fifthFlip).toHaveCSS("animation-name", /scene-card-turn/);
+  await expect(fifthFlip).toHaveCSS("animation-delay", /^(360ms|0\.36s)$/);
+  // Reaching 5/5 starts the turn on its own; no extra tap or command is needed.
+  await fifthFlip.evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
   await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();

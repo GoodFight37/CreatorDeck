@@ -1299,6 +1299,16 @@ input:focus-visible {
   transform-style: preserve-3d;
   animation: reveal-flip 720ms cubic-bezier(.16, 1.1, .3, 1) both;
 }
+/* The guaranteed back settles for one brief, automatic beat before the usual turn. */
+.reveal-overlay .reveal-flip.reveal-fifth-card .reveal-flip-face {
+  animation-delay: calc(var(--rare-delay, 0ms) + var(--fifth-reveal-beat, 0ms));
+}
+[data-card-fx="off"] .reveal-overlay .reveal-flip.reveal-fifth-card .reveal-flip-face {
+  animation-delay: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-overlay .reveal-flip.reveal-fifth-card .reveal-flip-face { animation-delay: 0ms; }
+}
 @keyframes reveal-flip {
   /* Le dos, bien face : il faut le temps de le voir, sinon ce n'est pas un
      retournement, c'est un clignement. */

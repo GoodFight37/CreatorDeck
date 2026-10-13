@@ -39,6 +39,8 @@ import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
 import { cardEffectsAllowed } from "@/lib/tilt";
 
+const FIFTH_CARD_REVEAL_BEAT_MS = 360;
+
 export function RevealOverlay({
   cards,
   index,
@@ -96,6 +98,7 @@ export function RevealOverlay({
   const queuedAdvanceRef = useRef<string | null>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
+  const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
 
   const finishQueuedAdvance = useCallback((id: string) => {
     if (queuedAdvanceRef.current !== id || locked) return;
@@ -114,7 +117,9 @@ export function RevealOverlay({
     if (!cardId || perfect) return;
 
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
-    const immediate = !cardEffectsAllowed();
+    const effectsAllowed = cardEffectsAllowed();
+    const immediate = !effectsAllowed;
+    const fifthRevealBeat = effectsAllowed && isFifthSequentialReveal ? FIFTH_CARD_REVEAL_BEAT_MS : 0;
     const reducedFallback = immediate
       ? window.setTimeout(() => {
           setFlippedCardId(cardId);
@@ -126,7 +131,7 @@ export function RevealOverlay({
       : window.setTimeout(() => {
           setFlippedCardId(cardId);
           finishQueuedAdvance(cardId);
-        }, 1_200 + silenceBefore(rarity));
+        }, 1_200 + silenceBefore(rarity) + fifthRevealBeat);
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setFlippedCardId(cardId);
@@ -139,7 +144,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, finishQueuedAdvance, perfect, rarity]);
+  }, [cardId, finishQueuedAdvance, isFifthSequentialReveal, perfect, rarity]);
 
 
   // Le son et la vibration de la carte. Le blanc de 400 ms devant une Épique ou
@@ -416,7 +421,12 @@ export function RevealOverlay({
             onPointerUp={endRevealSwipe}
             onPointerCancel={(event) => { swipeStart.current = null; resetRevealDrag(event); }}
             onPointerLeave={(event) => { swipeStart.current = null; resetRevealDrag(event); }}>
-            <div key={card.id} className={`reveal-flip rarity-${card.rarity}`}>
+            <div
+              key={card.id}
+              style={isFifthSequentialReveal
+                ? { "--fifth-reveal-beat": `${FIFTH_CARD_REVEAL_BEAT_MS}ms` } as CSSProperties
+                : undefined}
+              className={`reveal-flip rarity-${card.rarity}${isFifthSequentialReveal ? " reveal-fifth-card" : ""}`}>
               <div className="reveal-flip-face" onAnimationEnd={finishFlip}>
                 <CreatorCard
                   creator={creator}
