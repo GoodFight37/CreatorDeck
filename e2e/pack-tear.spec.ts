@@ -546,6 +546,11 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.screenshot({ path: "test-results/peel-guide-" + test.info().project.name + ".png" });
   await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
+  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
+  // Even a sufficient cut must remain sealed for as long as the finger is down.
+  await page.waitForTimeout(350);
+  await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
+  await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();

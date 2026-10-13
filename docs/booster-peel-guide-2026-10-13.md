@@ -9,7 +9,7 @@ Objectif unique : supprimer le ressenti de rail horizontal. Base vérifiée
 2. Avant : point de coupe fixé sur une ligne ; après : départ libre dans la zone haute.
 3. Avant : le rabat suit un pourcentage ; après : il suit déplacement et angle.
 4. Avant : seuil horizontal ; après : largeur fendue combinée au soulèvement.
-5. Relâcher tôt replie ; la scène persiste et la 3D reste désactivée par défaut.
+5. Seul le relâchement ouvre si le seuil est atteint ; sinon il replie.
 
 ## Implémentation et limites
 
@@ -65,3 +65,19 @@ pas de validation sur téléphone physique. Code et docs publiés ensemble par
 push normal après contrôle du HEAD distant ; retrouver le SHA avec
 `git log -1 --format=%H -- src/components/pack-tear.tsx`. Nouvelle CI à relever
 après push, aucun succès anticipé.
+
+## Correction après retour joueur — ouverture au relâchement
+
+La version `180827ba` ouvrait dès que pointerMove dépassait le seuil : corrigé,
+le seuil arme seulement le geste et la consigne devient « RELÂCHE POUR OUVRIR ».
+PointerUp ouvre si suffisant ; pointerCancel/perte de capture replient toujours.
+Les coordonnées sont calculées dans les bounds du début du geste, sans feedback
+avec l’inclinaison du sachet. L’angle repose sur le déplacement global, borné à
+±12°, plutôt que sur la tangente instantanée ; transformation interpolée 50 ms,
+transition désactivée dans les modes sans effets. Test : maintenir une coupe
+suffisante sans lever pendant 350 ms laisse le sachet scellé, puis lever ouvre.
+La vidéo Pocket originale n’a pas été retrouvée ; seule l’analyse datée et la
+vidéo de validation CreatorDeck sont disponibles dans cet environnement.
+
+Contrôles de cette correction : 10/10 E2E ciblés bureau/téléphone simulé,
+TypeScript, ESLint ciblé, build statique sans cloud et diff-check réussis.

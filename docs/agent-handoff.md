@@ -1,3 +1,17 @@
+## Peel : ouverture au relâchement — 13 octobre 2026
+
+Retour Malik après `180827ba` : ouverture avant lever le doigt et languette
+saccadée. Le seuil arme seulement l’ouverture ; seul pointerUp du pointeur
+capturé la déclenche. Annulation/perte de capture replient même après le seuil.
+Coordonnées figées à pointerDown, angle fondé sur le déplacement total plutôt
+que la tangente entre deux événements ; interpolation visuelle 50 ms, aucune
+transition si effets désactivés/mouvement réduit. Une consigne invite à relâcher.
+Référence Pocket originale absente de ce workspace ; analyse écrite conservée,
+vidéo locale retrouvée = validation CreatorDeck, pas référence Pocket.
+10/10 scénarios navigateur ciblés, types/lint/build statique sans cloud et
+diff-check réussis ; publication avec ce checkpoint après vérification distante ;
+ressenti physique encore à confirmer. Base main `180827ba`, distant identique.
+
 ## Peel guidé en deux axes — 13 octobre 2026
 
 Demande unique de Malik : remplacer la jauge horizontale par une coupe guidée

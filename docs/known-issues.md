@@ -1,5 +1,14 @@
 ## Cinq échecs DOM corrigés après les changements de layout — 13 octobre 2026
 
+## Ouverture avant relâchement / languette instable — 13 octobre 2026
+
+Retour sur `180827ba` : le seuil était exécuté dans pointerMove ; angle calculé
+sur deux points successifs et bounds relus sur une scène inclinée, donnant des
+variations brusques. Correction : déclenchement dans pointerUp uniquement,
+repère figé, angle global et interpolation courte. Cancel n’ouvre jamais.
+Test navigateur maintient la coupe suffisante 350 ms avant de lever le doigt.
+Validation du ressenti sur téléphone encore attendue.
+
 ## Peel trop linéaire — 13 octobre 2026
 
 Problème joueur démontré : `abs(deltaX)/(width*.55)` et fente horizontale fixe

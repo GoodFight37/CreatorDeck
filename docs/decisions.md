@@ -1,5 +1,14 @@
 # Décisions CreatorDeck
 
+## D-068 — 13 octobre 2026 : ouvrir uniquement au relâchement
+
+Demande explicite de Malik : une coupe suffisante ne déclenche plus finish
+pendant pointerMove. Elle arme l’ouverture, effectuée uniquement au pointerUp.
+Cancel/perte de capture replient. Pour stabiliser la languette, repère de coupe
+figé au début du geste, angle du déplacement global borné à ±12°, interpolation
+50 ms désactivée dans les modes sans effets. La trace reste pilotée en X/Y.
+Le ressenti sur téléphone doit encore être jugé par Malik.
+
 ## D-067 — 13 octobre 2026 : coupe guidée plutôt que rail horizontal
 
 Malik refuse le ressenti de jauge G→D. La bande haute devient une zone tactile

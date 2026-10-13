@@ -770,6 +770,7 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   clip-path: var(--cut-body, inset(15.45% 0 0));
 }
 .booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
+  transition: transform 50ms linear;
   transform: translate3d(var(--peel-x, 0px), calc(var(--peel-y, 0px) - var(--peel-progress) * 14px), calc(var(--peel-progress) * 26px))
     rotateX(calc(var(--peel-progress) * 68deg)) rotateZ(var(--peel-angle, 0deg));
 }
@@ -790,6 +791,6 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
+  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; transition: none; }
 }
-[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
+[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; transition: none; }

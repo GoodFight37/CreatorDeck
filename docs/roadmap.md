@@ -26,6 +26,7 @@ réel reste à recueillir ; les mentions de blocage GitHub décrivent l’export
 ### Peel guidé — demande unique du 13 octobre
 
 Rail 1D remplacé par une zone et une trace X/Y, rabat piloté par le doigt,
+ouverture déclenchée uniquement au relâchement après le seuil (retour Malik),
 ouverture par largeur/soulèvement et repli prévisible. Vérifications ciblées
 puis appréciation du ressenti sur téléphone ; aucune nouvelle refonte des
 écrans. [Avant/après et test en 30 s](booster-peel-guide-2026-10-13.md).
