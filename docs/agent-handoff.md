@@ -1,3 +1,18 @@
+## Beat automatique sur la cinquième carte — 13 octobre 2026
+
+Après le retrait du corner peek jugé peu naturel, la cinquième carte d’un
+reveal séquentiel ordinaire reste face cachée 360 ms supplémentaires, puis
+joue le retournement automatique habituel. Pas de languette, flèche ou geste
+additionnel ; le Perfect n’est pas concerné. Reflets désactivés et mouvement
+réduit suppriment l’attente. Arena a livré `1ae5f2c8244090597c0271849174476fc64521f8`
+sur `arena/6c5a89f2-creatordeck`, basé sur `a8c8e800`. Diff limité à
+`src/components/reveal-overlay.tsx`, `src/app/globals.css`,
+`src/ecrans-effets.test.tsx` et `e2e/pack-tear.spec.ts`. CI
+[`38464097660`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38464097660)
+verte, 6/6 jobs, incluant build et E2E bureau/téléphone simulé. Intégré à
+`main` par fast-forward ; le ressenti en jeu reste à valider par Malik. Si la
+pause déplaît, revert ciblé du commit `1ae5f2c8`.
+
 ## CI navigateur répartie en trois shards — 13 octobre 2026
 
 Workflow `.github/workflows/verification.yml` : Playwright est réparti sur

@@ -2,6 +2,12 @@
 
 ## État courant — 13 octobre 2026
 
+Après le retrait de la languette, la cinquième carte d’un reveal séquentiel
+ordinaire reçoit une pause automatique de 360 ms avant son flip. Perfect,
+Reflets désactivés et mouvement réduit restent sans pause. Livré par Arena en
+`1ae5f2c8`, intégré sur `main` ; CI `38464097660` verte, 6/6 jobs. Le ressenti
+sur l’application par Malik reste à valider. Voir D-077 et la passation.
+
 La CI navigateur est distribuée en trois shards Playwright sans réduction de
 couverture. Commit `ebf57e8e`, run
 [`38453353488`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38453353488)
@@ -64,8 +70,10 @@ Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
 122 tests écran et le shard RPC simulé 10/10. CI finale `38408591588` success,
 5/5 jobs pour cette version historique. Malik a jugé la languette peu naturelle
 et a demandé son retrait. Le code et le geste ont été supprimés ; la cinquième
-carte reprend son reveal automatique normal. Suite : Arena peut proposer une
-alternative sans languette, à valider séparément. Le retrait est publié dans
+carte reprend son reveal automatique normal. Une alternative sans languette a
+été ajoutée : pause automatique de 360 ms avant son flip, hors Perfect, Reflets
+OFF et mouvement réduit. Intégrée par fast-forward dans `1ae5f2c8`, CI
+`38464097660` verte 6/6 ; ressenti utilisateur encore à valider. Le retrait est publié dans
 `1f4deadb` ; CI `38450915873` verte 5/5. Vérifications locales : 123 tests
 d’écran, E2E tactile ciblé, typecheck, lint, build et diff-check réussis. Voir
 D-072 et la passation.

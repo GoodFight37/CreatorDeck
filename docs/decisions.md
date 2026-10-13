@@ -1,5 +1,15 @@
 # Décisions CreatorDeck
 
+## D-077 — 13 octobre 2026 : créer un bref temps d’anticipation avant la carte garantie
+
+Après le retrait du corner peek, la cinquième carte d’un reveal séquentiel
+ordinaire attend 360 ms avant son retournement automatique habituel. L’attente
+est absente du Perfect, de Reflets désactivés et du mouvement réduit. Aucun
+geste, contrôle ou changement de règle de tirage n’est ajouté. Arena a livré
+`1ae5f2c8`, vérifié par la CI complète `38464097660` (6/6 jobs) et intégré à
+`main` par fast-forward. La validation du ressenti par Malik reste nécessaire ;
+si elle échoue, le changement est isolé et réversible par un revert ciblé.
+
 ## D-076 — 13 octobre 2026 : démonstrateur de classeur multi-univers isolé
 
 Créer `/catalogue-demo` comme prototype d’interface autonome pour comparer un
