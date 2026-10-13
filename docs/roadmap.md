@@ -119,9 +119,11 @@ aucun changement du Binder n’est demandé maintenant. Voir K-048 et D-071.
    fictifs et visuels temporaires marqués. Revalidation locale après reprise sur
    `main` `5dbdb4c` : E2E 8/8, unitaires 1 164/1 164, écrans 124/124, typecheck,
    lint ciblé, `catalog:ci`, simulation déterministe (24 lignes identiques au
-   JSONL archivé) et build statique réussis. Aucun contenu réel/licencié n’est
-   intégré au jeu. Prochaine étape : retour sur l’interface et cadrage explicite
-   des univers/règles avant tout branchement en production.
+   JSONL archivé) et build statique réussis. La CI post-merge
+   [38446898234](https://github.com/GoodFight37/CreatorDeck/actions/runs/38446898234)
+   est verte, 5/5 jobs (dont SQL jetable et RPC simulés). Aucun contenu
+   réel/licencié n’est intégré au jeu. Prochaine étape : retour sur l’interface
+   et cadrage explicite des univers/règles avant tout branchement en production.
 3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
    courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
    deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et

@@ -2757,9 +2757,14 @@ Revalidation locale après intégration :
   un audit RGAA exhaustif.
 - `git diff --check` : succès après résolution des conflits et de la documentation.
 
-La CI GitHub complète du merge (y compris SQL jetable, E2E en shards et RPC
-simulés) reste à suivre après le push ; aucune migration de production n’a été
-lancée.
+Le merge a été commité en
+`b662f0abd9ee8ec30c4f42df93290e5fc3971f01` (parent `main` :
+`5dbdb4ca4d5102f7663a77ff9c27c584c0afd699`) et poussé normalement ; `git ls-remote`
+a confirmé ce SHA sur `arena/6c5a89f2-creatordeck`. CI GitHub
+[`38446898234`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38446898234)
+**success, 5/5 jobs** : unitaires/écrans/statique/build, deux lots Playwright,
+Postgres jetable et chemin cloud à RPC simulés. Aucune migration ou écriture
+sur Supabase de production.
 
 ### Prévisualisation et suite
 
