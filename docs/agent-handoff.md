@@ -2590,8 +2590,11 @@ maintenant générés en heure locale Europe/Paris, la même référence que le
 Prime Time, au lieu d'heures UTC qui changeaient l'habitude simulée à l'automne.
 Aucune règle du jeu, économie, écran, ni donnée portrait touchée.
 
-Branche locale `codex/progression-local-time`, base `main` vérifiée
-`1ced6cc1147e598d305ee830721b793fd54eeae4`. 100 parties × 12 scénarios
+Branche de travail `codex/progression-local-time`, partie de `main`
+`1ced6cc1147e598d305ee830721b793fd54eeae4`. Commit publié normalement sur
+`main` : `e184f5d6064e8fd836045b44e1f531b3c1014c4c`, confirmé par `git ls-remote`.
+La CI GitHub `38441932774` était encore en cours à la rédaction du checkpoint.
+100 parties × 12 scénarios
 (1 200 au total), seed `20261010`, zéro paquet manquant. JSONL et comparaison
 avec l'ancien calendrier dans `docs/audit-progression.md` et
 `docs/audits/progression-local-time-100.jsonl` (SHA-256
