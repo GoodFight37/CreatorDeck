@@ -21,14 +21,17 @@ révélé que le cadeau de bienvenue partage aussi le type de reveal Live : le t
 attendait son bouton direct « Ranger dans le classeur ». Le peek est maintenant
 désactivé explicitement pour les cinq boosters cadeau ; test écran de régression
 ajouté, shard cloud simulé 10/10 et test peek/raccourci bureau-téléphone 2/2
-réussis localement après correction. Une nouvelle CI doit confirmer le correctif.
+réussis localement après correction.
 Le navigateur téléphone simulé
 exerce le geste et le chemin de repli ; cela ne remplace pas le toucher sur un
 téléphone physique. Le build local n’a pas de clés Supabase, donc n’atteste pas
-le cloud. Commit initial `64114bd7` publié, mais sa CI est rouge uniquement sur
-les deux variantes du scénario cadeau (les autres quatre jobs verts) ; correctif
-en attente d’un commit et d’un nouveau run. Relever ensuite le SHA distant, la CI
-et Vercel avant de déclarer la livraison terminée.
+le cloud. Le premier commit `64114bd7` avait une CI rouge uniquement sur les deux
+variantes du scénario cadeau (les quatre autres jobs étaient verts). Correctif
+publié dans `95db6b6f`. Nouvelle CI GitHub
+[`38408591588`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38408591588)
+**success, 5/5 jobs** ; Vercel **success** sur le même SHA, déploiement
+[`BFrPJ7iFMSin4mf11D47MUTG1KGJ`](https://vercel.com/hafsi37-2386/creator-deckk/BFrPJ7iFMSin4mf11D47MUTG1KGJ).
+Le SHA distant `main` a été vérifié à `95db6b6f` avant ce checkpoint documentaire.
 
 Prochaine vérification produit : Malik essaie ce geste sur téléphone et donne
 son avis sur l’emplacement du coin, la facilité à le saisir et la taille de

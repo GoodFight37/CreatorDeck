@@ -11,6 +11,11 @@ Vercel est aussi success sur ce SHA.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
+Checkpoint suivant : code `95db6b6f9e59de5c7a623f1e462b3dbf2a144223` sur `main`.
+Run GitHub [`38408591588`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38408591588)
+success 5/5 ; statut Vercel success. Le test cloud cadeau qui avait échoué sur
+le premier commit Corner Peek est maintenant vert après exclusion des boosters
+de bienvenue de cette interaction.
 
 ### Corner peek — livré localement le 13 octobre
 
@@ -22,10 +27,9 @@ et défaut GPU sont inchangés. Validation locale complète : 1 164 tests, 121 t
 d’écrans, 84 E2E réussis / 12 cloud ignorés, lint, typecheck et build réussis.
 Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
 `38407219931` a repéré cette exception ; correctif ensuite validé localement par
-122 tests écran et le shard RPC simulé 10/10. Une nouvelle CI est requise avant
-de déclarer la livraison validée à distance. Le geste est vérifié sur téléphone
-simulé, pas encore sur un appareil physique. Voir D-072 et le dernier checkpoint
-de [la passation](agent-handoff.md). SHA GitHub/CI à actualiser après publication.
+122 tests écran et le shard RPC simulé 10/10. CI finale `38408591588` success,
+5/5 jobs. Le geste est vérifié sur téléphone simulé, pas encore sur un appareil
+physique. Voir D-072 et le dernier checkpoint de [la passation](agent-handoff.md).
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
 
