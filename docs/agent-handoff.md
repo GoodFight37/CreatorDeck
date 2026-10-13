@@ -2593,8 +2593,12 @@ Aucune règle du jeu, économie, écran, ni donnée portrait touchée.
 Branche de travail `codex/progression-local-time`, partie de `main`
 `1ced6cc1147e598d305ee830721b793fd54eeae4`. Commit publié normalement sur
 `main` : `e184f5d6064e8fd836045b44e1f531b3c1014c4c`, confirmé par `git ls-remote`.
-La CI GitHub `38441932774` était encore en cours à la rédaction du checkpoint.
-100 parties × 12 scénarios
+La CI GitHub
+[`38441932774`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38441932774)
+est maintenant **success, 5/5 jobs**. Le suivi documentaire `f93ffcc` a été
+publié sur `main` ; le workflow Supabase
+[`38442505857`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38442505857)
+est également **success**. 100 parties × 12 scénarios
 (1 200 au total), seed `20261010`, zéro paquet manquant. JSONL et comparaison
 avec l'ancien calendrier dans `docs/audit-progression.md` et
 `docs/audits/progression-local-time-100.jsonl` (SHA-256
@@ -2603,3 +2607,65 @@ Exécution complète `--seed=20261010` (une trajectoire par scénario) égalemen
 réussie. ESLint ciblé, typecheck (après mise de côté temporaire du cache `.next`
 stale de l'autre branche) et `git diff --check` réussis. Pas de test Supabase.
 Le prototype catalogue d'Arena et le pilote portraits restent séparés.
+
+## Comparateur de catalogue multi-univers — 13 octobre 2026
+
+### Demande, décision et périmètre
+
+Prototype unique à `/catalogue-demo` pour comparer un classeur mêlant des
+créateurs Twitch fictifs et des personnages fictifs, avec progression et
+classement séparés par univers. La recherche et les filtres sont interactifs ;
+la page est responsive. Tous les noms/comptes sont inventés. Les portraits sont
+des illustrations CSS abstraites, chacune marquée « Visuel temporaire ».
+Décision D-076 : l’expérience sert à évaluer l’interface, sans décider les
+identités, licences ou règles d’une version produit. Route isolée ; aucun
+changement au jeu de production, aux portraits existants, à Supabase, aux
+boosters ou à l’économie. `package-lock.json` est inchangé.
+
+### État Git et fichiers
+
+Branche fixe `arena/6c5a89f2-creatordeck`. La branche partait de
+`1ced6cc1147e598d305ee830721b793fd54eeae4`; à la vérification, `main` avait
+avancé à `f93ffcc8ed2f31c6def11e14f08f14a105d41865` par les commits
+`e184f5d` (correction d’un simulateur local de progression) et `f93ffcc`
+(checkpoint documentaire). Ces commits ont été examinés, puis la branche a été
+mise à jour par fast-forward avant l’ajout du prototype ; ils sont des ancêtres
+amont, pas des changements de ce prototype. Le commit fonctionnel est
+[`2816ac6b04c8b217bf57c248e6648e13710409d2`](https://github.com/GoodFight37/CreatorDeck/commit/2816ac6b04c8b217bf57c248e6648e13710409d2).
+Au dernier contrôle avant publication, `origin/arena` pointait encore sur
+`1ced6cc`; le push de ce checkpoint reste à vérifier.
+
+Fichiers du prototype :
+- `src/app/catalogue-demo/page.tsx` — entrée de route statique ;
+- `src/app/catalogue-demo/catalogue-demo.tsx` — interface, recherche et filtres ;
+- `src/app/catalogue-demo/demo-data.ts` — jeu de données fictif ;
+- `src/app/catalogue-demo/page.module.css` — visuels temporaires et responsive ;
+- `e2e/catalogue-demo.spec.ts` — scénarios navigateur ;
+- `docs/decisions.md` — D-076 ; `docs/roadmap.md` — statut et prochaine étape.
+
+### Vérifications finales sur le code du commit `2816ac6`
+
+- `LD_LIBRARY_PATH=/tmp/al2023/lib npm run e2e -- --config=/tmp/catalogue-demo.playwright.config.mjs` : **8/8**, bureau et téléphone simulé ; le contrôle responsive couvre 320, 360, 390 et 412 px. Port 3000 étant occupé par la prévisualisation, le serveur E2E a choisi 3001 (avertissement non bloquant).
+- `npm test` : **73 fichiers, 1 164/1 164**. Messages stderr liés aux fixtures négatives de génération ; code de sortie 0.
+- `npm run ecrans` : **21 fichiers, 124/124**.
+- `npm run typecheck` : succès ; lint ciblé
+  `npx eslint src/app/catalogue-demo/page.tsx src/app/catalogue-demo/catalogue-demo.tsx src/app/catalogue-demo/demo-data.ts e2e/catalogue-demo.spec.ts` : succès ; `node scripts/check-jargon.mjs` : succès ; `npm run catalog:ci` : succès, sans écriture.
+- `npm run build` : succès, `/catalogue-demo` exportée en statique. Avertissement attendu : les variables publiques Supabase ne sont pas définies dans ce build local ; aucune configuration Supabase n’a été ajoutée.
+- Audit axe-core **4.14.0**, tags WCAG 2.0/2.1/2.2 A/AA, à 1280×900, 390×844 et 320×844 : **0 violation**, 28 règles en succès par fenêtre. Les 149 éléments de contraste restent marqués « à vérifier » par axe à cause des fonds dégradés ; des ratios représentatifs ont été vérifiés manuellement entre **8,46:1 et 18,10:1**. Ce contrôle n’est pas un audit RGAA exhaustif ni un test avec lecteur d’écran.
+- `git diff --check` : succès.
+
+`npm ci` a réussi (610 paquets ; lockfile inchangé) mais a signalé 16 vulnérabilités des dépendances (4 modérées, 10 élevées, 2 critiques) ; aucun audit correctif ni changement de dépendance n’a été fait dans ce prototype.
+
+### Prévisualisation et suite
+
+Prévisualisation statique active sur le port 3000, processus
+`prototype-catalogue-creatordeck-f0b9c5bf` ; `GET /catalogue-demo` répond 200.
+L’ouvrir depuis le Live Preview puis ajouter `/catalogue-demo`. En local :
+`npm run dev`, puis `http://localhost:3000/catalogue-demo`. Captures mobiles,
+ignorées par Git : `test-results/catalogue-demo-320-téléphone.png` et
+`test-results/catalogue-demo-390-téléphone.png`.
+
+Après le push, vérifier le SHA distant de `arena/6c5a89f2-creatordeck` et suivre
+les contrôles GitHub réellement déclenchés. Ensuite recueillir le retour sur
+l’interface et cadrer explicitement les univers/règles avant tout branchement
+en production ; ne pas ajouter de vrais comptes ou licences dans cette tâche.
