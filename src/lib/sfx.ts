@@ -219,6 +219,31 @@ export function rewardPlan(): Note[] {
   ];
 }
 
+/** Repère bref de Légendaire, après le silence déjà prévu par le reveal. */
+export function legendaryStingerPlan(): Note[] {
+  return [
+    { freq: 1_046.5, at: 0, duration: 0.22, type: "sine", gain: 0.035 },
+    { freq: 1_568, at: 0.09, duration: 0.34, type: "sine", gain: 0.03 },
+  ];
+}
+
+/** Signature courte du Perfect, sans déplacer le flip ni son verrou. */
+export function perfectStingerPlan(): Note[] {
+  return [
+    { freq: 392, at: 0, duration: 0.16, type: "triangle", gain: 0.035 },
+    { freq: 587.33, at: 0.075, duration: 0.24, type: "triangle", gain: 0.035 },
+    { freq: 783.99, at: 0.15, duration: 0.32, type: "sine", gain: 0.03 },
+  ];
+}
+
+/** Accord de fin sec, joué une fois le bilan du Tribunal payé. */
+export function tribunalEndStingerPlan(): Note[] {
+  return [
+    { freq: 146.83, at: 0, duration: 0.19, type: "triangle", gain: 0.035 },
+    { freq: 220, at: 0.08, duration: 0.28, type: "triangle", gain: 0.03 },
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // Les bruitages embarqués. **Un nom pour un fichier**, et rien d'autre : le
 // catalogue est la seule liste, `src/lib/sfx.test.ts` vérifie que chacun existe
@@ -295,6 +320,7 @@ export const SAMPLES: Record<SampleName, { file: string; gain: number }> = {
  */
 export const SFX_USUELS: SampleName[] = [
   "card-draw",
+  "card-turn",
   "pop",
   "close",
   "chip-place",
@@ -349,6 +375,8 @@ export const SFX_LEVEL_LABELS: Record<SfxLevel, string> = {
 
 /** Ce que vaut chaque cran, en gain linéaire (−8 dB, −2,5 dB, 0 dB). */
 const LEVEL_GAIN: Record<SfxLevel, number> = { discret: 0.4, normal: 0.75, fort: 1 };
+export type MusicScene = "hub" | "pack" | "tribunal";
+const MUSIC_GAIN: Record<MusicScene, number> = { hub: 0.14, pack: 0.018, tribunal: 0 };
 
 let level: SfxLevel = "normal";
 
@@ -381,7 +409,8 @@ export function getSfxLevel(): SfxLevel {
 export function setSfxLevel(value: SfxLevel): void {
   loadPreference();
   level = value;
-  if (bus) bus.gain.value = LEVEL_GAIN[level];
+  if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
+  if (context) applyMusicScene(context);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(LEVEL_KEY, level);
@@ -393,6 +422,8 @@ export function setSfxLevel(value: SfxLevel): void {
 export function setMuted(value: boolean): void {
   loadPreference();
   muted = Boolean(value);
+  if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
+  if (context) applyMusicScene(context);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, muted ? "1" : "0");
@@ -409,6 +440,11 @@ export function setMuted(value: boolean): void {
  * choisi par le joueur.
  */
 let bus: GainNode | null = null;
+let musicGain: GainNode | null = null;
+let musicSource: AudioBufferSourceNode | null = null;
+let musicBuffer: AudioBuffer | null = null;
+let musicLoading: Promise<void> | null = null;
+let musicScene: MusicScene = "hub";
 
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
@@ -416,6 +452,55 @@ function masterBus(ctx: AudioContextLike): GainNode {
   bus.gain.value = LEVEL_GAIN[getSfxLevel()];
   bus.connect(ctx.destination);
   return bus;
+}
+
+function applyMusicScene(ctx: AudioContextLike): void {
+  if (!musicGain) return;
+  const target = MUSIC_GAIN[musicScene] * LEVEL_GAIN[getSfxLevel()];
+  const parameter = musicGain.gain;
+  parameter.setTargetAtTime(isMuted() ? 0 : target, ctx.currentTime, 0.22);
+}
+
+function startMusicSource(ctx: AudioContextLike): void {
+  if (!musicBuffer || musicSource) return;
+  try {
+    musicGain = ctx.createGain();
+    musicGain.connect(masterBus(ctx));
+    musicSource = ctx.createBufferSource();
+    musicSource.buffer = musicBuffer;
+    musicSource.loop = true;
+    musicSource.connect(musicGain);
+    applyMusicScene(ctx);
+    musicSource.start();
+  } catch {
+    musicSource = null;
+    musicGain = null;
+  }
+}
+
+/** Déverrouille l'audio sur le premier geste joueur et lance la boucle du hub. */
+export function startGameAudio(scene: MusicScene = "hub"): void {
+  musicScene = scene;
+  if (isMuted()) return;
+  const ctx = audioContext();
+  if (!ctx) return;
+  if (ctx.state === "suspended") void ctx.resume();
+  if (!musicLoading && !musicBuffer) {
+    musicLoading = fetch("/music/hub-late-night.mp3")
+      .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
+      .then((data) => ctx.decodeAudioData(data))
+      .then((buffer) => { musicBuffer = buffer; startMusicSource(ctx); })
+      .catch(() => { /* La partie reste jouable sans musique. */ })
+      .then(() => { musicLoading = null; });
+  }
+  startMusicSource(ctx);
+  applyMusicScene(ctx);
+}
+
+/** Atténue fortement la boucle pendant un pack et la coupe au Tribunal. */
+export function setMusicScene(scene: MusicScene): void {
+  musicScene = scene;
+  if (context) applyMusicScene(context);
 }
 
 function audioContext(): AudioContextLike | null {
@@ -561,6 +646,18 @@ export function playReveal(rarity: Rarity, variant: CardVariant = "standard"): v
 export function playReward(): void {
   play(rewardPlan());
   playSample("chime", 0.8);
+}
+
+export function playLegendaryStinger(): void {
+  play(legendaryStingerPlan());
+}
+
+export function playPerfectStinger(): void {
+  play(perfectStingerPlan());
+}
+
+export function playTribunalEndStinger(): void {
+  play(tribunalEndStingerPlan());
 }
 
 /** Le bang d'une carte Épique ou mieux (à jouer après le silence). */

@@ -32,7 +32,7 @@ import { useBackHandler } from "@/hooks/use-back-handler";
 import { CREATOR_BY_SLUG, type Creator } from "@/lib/catalog";
 import { liveFor, type LiveSnapshot } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
-import { playCoins, playGavel, playGrace } from "@/lib/sfx";
+import { playCoins, playGavel, playGrace, playTribunalEndStinger } from "@/lib/sfx";
 import {
   badgesAffiches,
   dossiersDuJour,
@@ -188,6 +188,7 @@ export function TribunalView({
       points: finalReward.points,
     });
     if (resultat.delta > 0) playCoins();
+    playTribunalEndStinger();
     setPaiement(resultat);
     setOccupe(false);
     return resultat;

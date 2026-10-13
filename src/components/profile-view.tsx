@@ -26,6 +26,7 @@ import {
   isMuted,
   setMuted,
   setSfxLevel,
+  startGameAudio,
   type SfxLevel,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
@@ -160,6 +161,7 @@ export function ProfileView({
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
+    if (next) startGameAudio();
   }
 
   function choisirVolume(cran: SfxLevel) {
@@ -203,26 +205,6 @@ export function ProfileView({
         </div>
       </section>
 
-      {game.stats.totalCards > 0 ? (
-        <div className="stats-grid">
-          <article>
-            <Layers3 size={18} />
-            <strong>{game.stats.totalCards}</strong>
-            <span>cartes</span>
-          </article>
-          <article>
-            <BookOpen size={18} />
-            <strong>{game.stats.uniqueCreators}/{CREATORS.length}</strong>
-            <span>streameurs</span>
-          </article>
-          <article>
-            <Zap size={18} />
-            <strong>{game.stats.openings}</strong>
-            <span>boosters</span>
-          </article>
-        </div>
-      ) : null}
-
       {/* Vitrine centrale */}
       <section className="profile-showcase" aria-label="Vitrine de cartes">
         <div className="profile-showcase-heading">
@@ -264,6 +246,29 @@ export function ProfileView({
       </section>
 
       {game.stats.totalCards > 0 ? (
+        <details className="profile-stats-fold">
+          <summary>Progression de collection</summary>
+          <div className="stats-grid">
+            <article>
+              <Layers3 size={18} />
+              <strong>{game.stats.totalCards}</strong>
+              <span>cartes</span>
+            </article>
+            <article>
+              <BookOpen size={18} />
+              <strong>{game.stats.uniqueCreators}/{CREATORS.length}</strong>
+              <span>streameurs</span>
+            </article>
+            <article>
+              <Zap size={18} />
+              <strong>{game.stats.openings}</strong>
+              <span>boosters</span>
+            </article>
+          </div>
+        </details>
+      ) : null}
+
+      {game.stats.totalCards > 0 ? (
         <section className="profile-milestones" aria-label="Mes collections réunies">
           <span><strong>{completedPages}</strong> page{completedPages > 1 ? "s" : ""} réunie{completedPages > 1 ? "s" : ""}</span>
           <span><strong>{legendaryNames}</strong> Légendaire{legendaryNames > 1 ? "s" : ""} différente{legendaryNames > 1 ? "s" : ""}</span>
@@ -281,6 +286,8 @@ export function ProfileView({
         </button>
       ) : null}
 
+      <details className="profile-online-fold">
+        <summary>Fonctionnalités en ligne</summary>
       {/* Wishlist */}
       {cloud.configured ? (
         <section className="wishlist-block" aria-label="Wishlist">
@@ -393,6 +400,7 @@ export function ProfileView({
           </button>
         ) : null}
       </section>
+      </details>
 
       {/* Réglages */}
       <section className="menu-group" aria-label="Réglages">

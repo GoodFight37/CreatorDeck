@@ -1,5 +1,28 @@
 # Décisions CreatorDeck
 
+## D-078 — 13 octobre 2026 : première couche musicale et rythme de jeu
+
+Le premier geste de booster déverrouille l'audio mobile et démarre une boucle
+originale discrète du hub, encodée dans `public/music/hub-late-night.mp3`. Le
+réglage global Son et ses trois crans pilotent BGM, bruitages et synthèse ; la
+boucle est fortement baissée pendant le pack et coupée au Tribunal. De courts
+stingers renforcent la Légendaire, le Perfect et le bilan du Tribunal sans
+déplacer les délais de silence, les flips, le Perfect ou le tear. La musique est
+un prototype synthétisé, pas un asset final ; procédure de remplacement dans
+[la note d'assets audio](audio-assets.md). Reflets sont activés par défaut ; `prefers-reduced-motion` neutralise les animations
+même lorsque le réglage Reflets est actif.
+
+Le Binder reste sur 12 cartes par page (dans la plage voulue de 12–18), ajoute
+un mouvement d'entrée discret et joue le son de page existant lors des flèches ;
+les filtres restent muets. La vitrine/streak du profil passe avant les statistiques
+(qui sont repliées), les fonctions en ligne sont repliées, et le thème du Binder
+teinte aussi le Drop. Le Tribunal quotidien, ses verdicts visuels et son bilan
+existaient déjà ; cette passe les conserve et son stinger se joue après le
+paiement du bilan. Tests unitaires/écrans, types, lint, build et E2E bureau/
+téléphone simulé vérifiés localement. Le sachet n’initialise aucun moteur WebGL.
+Limites et statut non publié dans la
+[passation](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026).
+
 ## D-077 — 13 octobre 2026 : créer un bref temps d’anticipation avant la carte garantie
 
 Après le retrait du corner peek, la cinquième carte d’un reveal séquentiel

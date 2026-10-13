@@ -947,6 +947,31 @@ input:focus-visible {
   filter: saturate(.97) contrast(1.05) brightness(.98);
 }
 
+.card-photo-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--rarity) 68%, white);
+  background:
+    radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--rarity) 22%, transparent), transparent 56%),
+    linear-gradient(145deg, #20242d, #111319 72%);
+}
+.card-photo-placeholder::before {
+  content: "";
+  position: absolute;
+  width: 58%;
+  aspect-ratio: 1;
+  border: 1px solid color-mix(in srgb, var(--rarity) 34%, transparent);
+  border-radius: 50%;
+}
+.card-photo-placeholder span {
+  position: relative;
+  font: 700 clamp(1.6rem, 14vw, 3rem)/1 var(--font-display);
+  letter-spacing: .04em;
+}
+
 /* Assombrissement du portrait : assez pour que la nameplate, le rang et la
    pastille Live tiennent dessus, pas assez pour effacer le créateur. */
 .card-photo-shade {
@@ -1612,6 +1637,14 @@ input:focus-visible {
   box-shadow:
     inset 0 0 0 1px rgba(0, 0, 0, .55),
     0 20px 34px -26px #000;
+  animation: binder-page-in 180ms cubic-bezier(.2,.75,.25,1) both;
+}
+@keyframes binder-page-in {
+  from { opacity: .7; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .binder-page { animation: none; }
 }
 
 .collection-grid {
@@ -1853,6 +1886,12 @@ input:focus-visible {
 .stats-grid article { display: flex; min-width: 0; align-items: center; flex-direction: column; gap: 4px; padding: 14px 7px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; background: rgba(255, 255, 255, .025); }
 .stats-grid strong { color: white; font-size: 18px; }
 .stats-grid span { color: var(--muted); font-size: 12px; }
+.profile-stats-fold { padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.profile-stats-fold summary { color: var(--muted); cursor: pointer; font-size: 12px; }
+.profile-stats-fold .stats-grid { margin-top: 8px; }
+.profile-online-fold { padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.profile-online-fold > summary { color: var(--muted); cursor: pointer; font-size: 12px; }
+.profile-online-fold[open] > summary { margin-bottom: 12px; }
 .profile-showcase { margin-top: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 6px; background: linear-gradient(145deg, rgba(117,23,47,.11), rgba(255,255,255,.02) 58%), var(--panel); }
 .profile-showcase-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .profile-showcase-heading > div:first-child > span { color: var(--muted); font-size: 9px; font-weight: 750; letter-spacing: .17em; }

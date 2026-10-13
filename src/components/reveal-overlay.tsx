@@ -33,7 +33,7 @@ import {
   revealHaptic,
   silenceBefore,
 } from "@/lib/reveal";
-import { playBang, playReveal } from "@/lib/sfx";
+import { playBang, playLegendaryStinger, playPerfectStinger, playReveal } from "@/lib/sfx";
 import { bestCardOf } from "@/lib/social/inbox";
 import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
@@ -135,6 +135,7 @@ export function RevealOverlay({
     const timer = window.setTimeout(() => {
       if (silence > 0) playBang(card.rarity, card.variant);
       else playReveal(card.rarity, card.variant);
+      if (card.rarity === "legendary") playLegendaryStinger();
       buzz(revealHaptic(card.rarity, card.variant));
     }, silence);
     return () => window.clearTimeout(timer);
@@ -144,6 +145,7 @@ export function RevealOverlay({
     if (!perfect) return;
     const best = bestCardOf(cards);
     playBang((best?.rarity as Rarity) ?? "epic", (best?.variant ?? "standard") as CardVariant);
+    playPerfectStinger();
     buzz(PERFECT_HAPTIC);
     const timer = window.setTimeout(() => setLocked(false), PERFECT_LOCK_MS);
     return () => window.clearTimeout(timer);

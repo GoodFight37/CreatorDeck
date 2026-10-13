@@ -47,6 +47,7 @@ describe("les écrans", () => {
     await application();
     const drop = banc.ecran("01-accueil");
     expect(drop).toContain("Ouvrir le booster");
+    expect(document.documentElement.dataset.cardFx).toBe("on");
     expect(drop).toContain("OBJECTIF DU JOUR");
     expect(document.querySelector(".top-actions")?.textContent).toContain("Sab.");
     expect(document.querySelector(".top-actions")?.textContent).toContain("Pts");

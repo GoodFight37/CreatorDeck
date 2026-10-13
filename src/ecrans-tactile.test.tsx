@@ -116,6 +116,23 @@ describe("les gestes qui se sentent", () => {
     expect(foilSobre?.style.getPropertyValue("--px")).toBe("");
   });
 
+  it("remplace un portrait manquant par un dos cohérent plutôt qu'une icône cassée", async () => {
+    const [{ CreatorCard }, { CREATORS }] = await Promise.all([
+      import("@/components/creator-card"),
+      import("@/lib/catalog"),
+    ]);
+    const creator = CREATORS.find((item) => !item.slug.startsWith("retired")) ?? CREATORS[0];
+    await banc.monter(<CreatorCard creator={creator} />);
+    const portrait = document.querySelector<HTMLImageElement>(".card-photo");
+    expect(portrait).toBeTruthy();
+    await act(async () => {
+      portrait!.dispatchEvent(new Event("error"));
+    });
+    expect(document.querySelector(".card-photo")).toBeNull();
+    expect(document.querySelector(".card-photo-placeholder")?.getAttribute("role")).toBe("img");
+    expect(document.querySelector(".card-photo-placeholder")?.textContent?.trim()).toBeTruthy();
+  });
+
   it("coupe tout le reflet quand le joueur le demande", async () => {
     const [{ CreatorCard }, { CREATORS }, { applyTiltChoice, setTiltEnabled }] = await Promise.all([
       import("@/components/creator-card"),
@@ -195,5 +212,24 @@ describe("les gestes qui se sentent", () => {
     // réglage qui ment.
     expect(vibrations()).toHaveLength(0);
     setMuted(false);
+  });
+});
+
+describe("portrait de secours", () => {
+  it("remplace une image en erreur par des initiales lisibles", async () => {
+    const { CreatorCard } = await import("@/components/creator-card");
+    const { CREATORS } = await import("@/lib/catalog");
+    const banc = creerBanc();
+    banc.preparer();
+    await banc.monter(<CreatorCard creator={CREATORS.find((creator) => creator.displayName.trim().includes(" ")) ?? CREATORS[0]} />);
+    const image = document.querySelector<HTMLImageElement>(".card-photo");
+    expect(image).toBeTruthy();
+    await act(async () => {
+      image!.dispatchEvent(new Event("error"));
+    });
+    const fallback = document.querySelector<HTMLElement>(".card-photo-placeholder");
+    expect(fallback?.getAttribute("role")).toBe("img");
+    expect(fallback?.textContent?.trim()).toMatch(/^[A-Z]{1,2}$/);
+    banc.nettoyer();
   });
 });

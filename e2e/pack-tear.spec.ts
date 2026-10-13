@@ -1,5 +1,17 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
+test("la musique du hub est demandée au premier geste, pas au chargement", async ({ page }) => {
+  await gotoDeck(page);
+  let musiqueDemandee = false;
+  page.on("request", (request) => {
+    if (request.url().endsWith("/music/hub-late-night.mp3")) musiqueDemandee = true;
+  });
+  await expect.poll(() => musiqueDemandee).toBe(false);
+  const musique = page.waitForResponse((response) => response.url().endsWith("/music/hub-late-night.mp3"));
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  expect((await musique).status()).toBe(200);
+});
+
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
   await gotoDeck(page);
   const open = page.locator(".scene-action");
@@ -245,15 +257,7 @@ test("home pack artwork, title and gesture hint do not overlap", async ({ page }
 });
 
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
-test("2D fallback keeps the printed sachet and extraction when WebGL is unavailable", async ({ page }) => {
-  await page.addInitScript(() => {
-    history.replaceState(null, "", "?opening3d=1");
-    const original = HTMLCanvasElement.prototype.getContext;
-    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
-      if (type.startsWith("webgl")) return null;
-      return original.call(this, type as "2d", ...args);
-    } as typeof original;
-  });
+test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ page }) => {
   await gotoDeck(page);
   const open = page.getByRole("button", { name: "Ouvrir le booster" });
   await expect(open).toBeVisible({ timeout: 30_000 });
@@ -278,7 +282,7 @@ test("2D fallback keeps the printed sachet and extraction when WebGL is unavaila
   const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
   await expect(dialog.locator(".booster-opening-instruction"))
-    .toHaveText("GUIDE LA COUPE SUR LA BANDE STRIÉE");
+    .toHaveText("DÉCHIRE LE HAUT DU BOOSTER");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
@@ -295,7 +299,7 @@ test("2D fallback keeps the printed sachet and extraction when WebGL is unavaila
   await expect(dialog.locator(".booster-premium-gesture")).toHaveCount(0);
   await expect(dialog.locator(".foil-back-card")).toHaveCount(5);
   await expect(dialog.locator(".foil-back-emblem svg")).toHaveCount(5);
-  const cut = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
+  const cut = dialog.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });
   await expect(cut).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-sealed.png" });
   await page.waitForTimeout(2600);
@@ -361,7 +365,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   const openingPack = page.locator(".booster-physical-scene");
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").animationName))
     .toBe("none");
-  const reducedSeam = page.getByRole("button", { name: /D.chirer le sachet en passant le doigt/ });
+  const reducedSeam = page.getByRole("button", { name: /D.chirer le haut du sachet en passant le doigt/ });
   const reducedBounds = (await reducedSeam.boundingBox())!;
   await page.mouse.move(reducedBounds.x + reducedBounds.width * .15, reducedBounds.y + reducedBounds.height / 2);
   await page.mouse.down();
@@ -375,6 +379,8 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await expect.poll(() => openingPack.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).opacity))
     .toBe("0");
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  await expect.poll(() => openingPack.locator(".foil-depth-side").first().evaluate((node) => getComputedStyle(node).opacity))
+    .toBe("0");
   const reducedPackOpacity = await openingPack.evaluate((node) =>
     Object.fromEntries([".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-back-card"]
       .map((selector) => [selector, getComputedStyle(node.querySelector(selector)!).opacity])),
@@ -394,7 +400,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
   await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
   const offPack = page.locator(".booster-physical-scene");
-  const offSeam = page.getByRole("button", { name: /D.chirer le sachet en passant le doigt/ });
+  const offSeam = page.getByRole("button", { name: /D.chirer le haut du sachet en passant le doigt/ });
   const offBounds = (await offSeam.boundingBox())!;
   await page.mouse.move(offBounds.x + offBounds.width * .15, offBounds.y + offBounds.height / 2);
   await page.mouse.down();
@@ -425,7 +431,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
-  const zone = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
+  const zone = dialog.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });
   const bounds = await zone.boundingBox();
   expect(bounds).not.toBeNull();
   if (!bounds) return;
@@ -485,7 +491,7 @@ test("reversing or lifting halfway cancels cleanly and keeps the no-tear option"
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
-  const seam = dialog.getByRole("button", { name: "Déchirer le sachet en passant le doigt sur sa soudure" });
+  const seam = dialog.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });
   const bounds = (await seam.boundingBox())!;
   const touch = await page.context().newCDPSession(page);
   const y = bounds.y + bounds.height / 2;

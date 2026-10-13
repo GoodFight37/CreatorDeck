@@ -1,3 +1,13 @@
+## Couche audio et hiérarchie de jeu — implémentées localement, 13 octobre 2026
+
+La première boucle musicale et les réglages associés sont vérifiés localement ;
+la boucle reste un prototype à écouter sur téléphone. Le sachet utilise
+uniquement CSS dans le composant d’ouverture ; le chemin Three/WebGL n’est plus
+initialisé, même si `?opening3d=1` est présent. Un portrait dont le fichier ne
+charge pas reçoit un placeholder, mais aucune détection automatique ne classe
+les images floues ou pixelisées. Les détails et validations sont dans le
+[checkpoint actif](agent-handoff.md#sensation-de-jeu-a--e--vérification-locale-13-octobre-2026).
+
 ## Drop et Craft : hiérarchie encombrée — 13 octobre 2026
 
 CTA après garantie et Atelier trié par rang : pages initiales remplies de

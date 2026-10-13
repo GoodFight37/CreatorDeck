@@ -8,6 +8,9 @@ import {
   SFX_LEVEL_LABELS,
   SFX_USUELS,
   tearPlan,
+  legendaryStingerPlan,
+  perfectStingerPlan,
+  tribunalEndStingerPlan,
   getSfxLevel,
   isMuted,
   packOpeningPlan,
@@ -28,7 +31,15 @@ import {
  * inaudible, vide ou douloureux — et que la rareté s'entend.
  */
 describe("plans de sons", () => {
-  const all = [packOpeningPlan(), rewardPlan(), tearPlan(), ...(["common", "uncommon", "rare", "epic", "legendary"] as const).map((r) => revealPlan(r))];
+  const all = [packOpeningPlan(), rewardPlan(), tearPlan(), legendaryStingerPlan(), perfectStingerPlan(), tribunalEndStingerPlan(), ...(["common", "uncommon", "rare", "epic", "legendary"] as const).map((r) => revealPlan(r))];
+
+  it("garde les trois stingers courts et dans le niveau des autres sons", () => {
+    for (const stinger of [legendaryStingerPlan(), perfectStingerPlan(), tribunalEndStingerPlan()]) {
+      expect(stinger.length).toBeGreaterThan(0);
+      expect(Math.max(...stinger.map((note) => note.at + note.duration))).toBeLessThanOrEqual(0.5);
+      expect(stinger.every((note) => note.gain !== undefined && note.gain <= 0.04)).toBe(true);
+    }
+  });
 
   it("fait entendre une déchirure longue avec une descente de matière", () => {
     const tear = tearPlan();
@@ -112,6 +123,14 @@ describe("les bruitages embarqués", () => {
       expect(() => entete(nom), `bruitage manquant : ${nom}`).not.toThrow();
       expect(sampleUrl(nom)).toBe(`/sfx/${SAMPLES[nom].file}`);
     }
+  });
+
+  it("embarque une boucle BGM compressée et lisible par le navigateur", () => {
+    const fichier = path.join(process.cwd(), "public", "music", "hub-late-night.mp3");
+    const audio = readFileSync(fichier);
+    expect(audio.length).toBeGreaterThan(32_000);
+    expect(audio.length).toBeLessThan(300_000);
+    expect(audio.includes(Buffer.from([0xff, 0xfb])) || audio.includes(Buffer.from([0xff, 0xf3]))).toBe(true);
   });
 
   it("est un WAV lisible, court, et pas douloureux", () => {
@@ -242,11 +261,12 @@ describe("les bruitages embarqués", () => {
     // Rien n'est préchargé pour un son que personne n'entend. La réserve, ce
     // sont les quatre sons de déplacement que le joueur a fait taire le
     // 8 octobre 2026 : la navigation et les réglages (`click`, `menu-open`),
-    // puis le filtre du Binder et ses pages (`select`, `card-turn`). Les cinq
+    // puis le filtre du Binder (`select`). Le son de page est de nouveau joué
+    // par le feuilletage. Les cinq
     // de la simulation de streameur (`card-fan`, `gather`, `equip`,
     // `power-up`, `fanfare`) ne sont plus là du tout : partis le 9 octobre 2026
     // avec leurs fichiers, le mode n'existe plus.
-    for (const reserve of ["click", "menu-open", "select", "card-turn"] as const) {
+    for (const reserve of ["click", "menu-open", "select"] as const) {
       expect(noms, `${reserve} doit rester au catalogue`).toContain(reserve);
       expect(SFX_USUELS, `${reserve} n'a rien à faire au préchargement`).not.toContain(reserve);
     }

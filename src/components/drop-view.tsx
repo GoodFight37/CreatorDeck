@@ -1,7 +1,7 @@
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
-import { useMemo, useRef, useState, type MouseEvent } from "react";
+import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
 import { ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
@@ -78,6 +78,7 @@ export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent
 
 export function HomeView({
   game,
+  themeStyle,
   friendsOpening,
   onShowInbox,
   onShowCollection,
@@ -101,6 +102,7 @@ export function HomeView({
   tutorialAvailable = false,
 }: {
   game: GameView;
+  themeStyle?: CSSProperties;
   friendsOpening: number;
   onShowInbox: () => void;
   onShowCollection: () => void;
@@ -206,7 +208,7 @@ export function HomeView({
   }, [live]);
 
   return (
-    <div className="view home-view">
+    <div className="view home-view" style={themeStyle}>
       {/* En-tête concis : zéro blabla marketing */}
       <header className="drop-intro" style={{ marginBottom: "0.4rem" }}>
         <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>

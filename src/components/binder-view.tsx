@@ -17,6 +17,7 @@ import { useLive } from "@/hooks/use-live";
 import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
 import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
+import { playPageTurn } from "@/lib/sfx";
 
 type CollectionFilter = "all" | "owned" | "missing" | "live" | "retired" | Rarity;
 
@@ -127,6 +128,12 @@ export function CollectionView({
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const showPager = filtered.length > perPage;
   const safePage = Math.min(page, totalPages - 1);
+  function turnPage(next: number) {
+    const target = Math.max(0, Math.min(totalPages - 1, next));
+    if (target === safePage) return;
+    playPageTurn();
+    setPage(target);
+  }
   const visibleCreators = filtered.slice(
     safePage * perPage,
     (safePage + 1) * perPage,
@@ -272,12 +279,12 @@ export function CollectionView({
 
       {showPager ? (
         <div className="binder-pager">
-          <button onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={safePage <= 0}>
+          <button onClick={() => turnPage(safePage - 1)} disabled={safePage <= 0}>
             <ChevronLeft size={15} />
             <span>Précédent</span>
           </button>
           <span>Page <strong>{safePage + 1}</strong> / {totalPages} · {filtered.length} cartes</span>
-          <button onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={safePage >= totalPages - 1}>
+          <button onClick={() => turnPage(safePage + 1)} disabled={safePage >= totalPages - 1}>
             <span>Suivant</span>
             <ChevronRight size={15} />
           </button>
@@ -285,7 +292,7 @@ export function CollectionView({
       ) : null}
 
       {/* Grille de cartes visible immédiatement en haut de page */}
-      <div className="binder-page">
+      <div className="binder-page" key={safePage} data-page={safePage + 1}>
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
             const item = owned.get(creator.slug);
@@ -386,7 +393,7 @@ export function CollectionView({
       {/* Sélecteur replié */}
       <details className="binder-collections-picker" style={{ margin: "0.2rem 0" }}>
         <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
-        <p style={{ fontSize: "0.72rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
+        <p style={{ fontSize: "0.72rem" }}>Les pages font 12 cartes. Ton choix est gardé sur cet appareil.</p>
         <label style={{ fontSize: "0.72rem" }}>Famille
           <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>
             {BINDER_FAMILIES.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties, type PointerEvent } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import Image from "next/image";
 import {
   creatorImage,
@@ -66,6 +66,9 @@ export function CreatorCard({
   // rien — et 1 000 cartes n'ont pas besoin de 1 000 écouteurs.
   const shiny = !locked && !compact && variant !== "standard";
   const foilRef = useRef<HTMLDivElement | null>(null);
+  const portrait = creatorImage(creator);
+  const [failedPortrait, setFailedPortrait] = useState<string | null>(null);
+  const portraitFailed = failedPortrait === portrait;
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
     const foil = foilRef.current;
@@ -125,13 +128,20 @@ export function CreatorCard({
       {...cardProps}
     >
       <div className="card-photo-wrap">
-        <Image
-          className="card-photo"
-          src={creatorImage(creator)}
-          alt={`Portrait de ${creator.displayName}`}
-          fill
-          draggable={false}
-        />
+        {portraitFailed ? (
+          <div className="card-photo-placeholder" role="img" aria-label={`Portrait indisponible pour ${creator.displayName}`}>
+            <span aria-hidden="true">{creator.displayName.trim().split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toLocaleUpperCase("fr")}</span>
+          </div>
+        ) : (
+          <Image
+            className="card-photo"
+            src={portrait}
+            alt={`Portrait de ${creator.displayName}`}
+            fill
+            draggable={false}
+            onError={() => setFailedPortrait(portrait)}
+          />
+        )}
         <div className="card-photo-shade" />
       </div>
 

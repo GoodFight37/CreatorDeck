@@ -19,7 +19,7 @@ export function tiltEnabled(): boolean {
     const choice = window.localStorage.getItem(STORAGE_KEY);
     if (choice === "off") return false;
     if (choice === "on") return true;
-    return !prefersReducedMotion();
+    return true;
   } catch {
     return true;
   }

@@ -447,6 +447,9 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 .booster-cinematic.booster-presentation .foil-top-piece {
   clip-path: var(--cut-top, inset(0 0 84.55%));
 }
+.booster-cinematic.booster-presentation .booster-foil-glow {
+  display: none;
+}
 .booster-cinematic.booster-presentation .foil-body-piece {
   clip-path: var(--cut-body, inset(15.45% 0 0));
 }
@@ -707,5 +710,10 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before,
   .booster-cinematic.booster-presentation .booster-physical-scene::after {
     display: none;
+  }
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-side,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom {
+    animation: none !important;
+    opacity: 0 !important;
   }
 }

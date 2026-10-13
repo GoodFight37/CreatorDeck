@@ -6,12 +6,11 @@ import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { CardBackEmblem } from "@/components/card-back-emblem";
-import { PackFoil3D } from "@/components/pack-foil-3d";
 
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
  * passes, peels the upper weld off, then exposes and lifts actual card backs.
- * A lazy mesh enhances the pouch only; the 2D continuum stays as fallback.
+ * The pouch stays CSS-only; card backs and faces remain real UI elements.
  */
 export function PackTear({
   kind = "live",
@@ -41,9 +40,6 @@ export function PackTear({
   const [opened, setOpened] = useState(false);
   const [releaseReady, setReleaseReady] = useState(false);
   const [showSlowFallback, setShowSlowFallback] = useState(false);
-  // Explicit preview only, until the GPU material is approved on a real phone.
-  const [foil3D] = useState(() => typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("opening3d") === "1");
   const start = useRef<{
     x: number;
     y: number;
@@ -195,7 +191,6 @@ export function PackTear({
             "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)`,
           } as CSSProperties}
         >
-          <PackFoil3D enabled={foil3D} artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />
@@ -269,18 +264,15 @@ export function PackTear({
               const dx = event.clientX - gesture.x;
               const dy = event.clientY - gesture.y;
 
-              let pathLength = 0;
-              for (let i = 1; i < gesture.points.length; i++) {
-                const p1 = gesture.points[i - 1];
-                const p2 = gesture.points[i];
-                pathLength += Math.hypot(p2.x - p1.x, (p2.y - p1.y) * 1.3);
-              }
               const minX = Math.min(...gesture.points.map((p) => p.x));
               const maxX = Math.max(...gesture.points.map((p) => p.x));
+              const minY = Math.min(...gesture.points.map((p) => p.y));
+              const maxY = Math.max(...gesture.points.map((p) => p.y));
               const span = maxX - minX;
+              const verticalSpread = maxY - minY;
 
               const lift = Math.max(0, -dy / bounds.height);
-              const tearEnergy = Math.max(span, pathLength * 0.72);
+              const tearEnergy = span + verticalSpread * 0.35;
               const aperture = (tearEnergy / 100) * (0.65 + Math.min(0.35, lift) * 2.5);
               const progress = Math.min(99, Math.round((aperture / 0.32) * 100));
               pullProgress.current = progress / 100;
@@ -306,7 +298,7 @@ export function PackTear({
                 scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
 
-              const isSufficient = span >= 38 || aperture >= 0.28 || pathLength >= 42;
+              const isSufficient = span >= 38 || aperture >= 0.28;
               gesture.ready = isSufficient;
               setReleaseReady(isSufficient);
 

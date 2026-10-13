@@ -94,10 +94,7 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
 
-  it("et le classeur est muet aussi : filtre et pages ne sonnent plus", async () => {
-    // Dernière demande du joueur (8 octobre 2026, le soir) : « enlève les deux
-    // sons de déplacement ». C'étaient les deux derniers — le filtre du Binder
-    // et ses pages. Ce test les touche vraiment, dans l'ordre, et compte.
+  it("garde les filtres muets, mais donne un son bref au feuilletage", async () => {
     await ecranToi();
     await act(async () => {});
     const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
@@ -105,16 +102,18 @@ describe("le réglage du son", () => {
     banc.appuyer("Binder");
     const avant = sons.oscillateurs + sons.bruitages;
 
-    // Un filtre, puis deux pages : trois gestes, aucun son.
+    // Les filtres sont de la navigation ; seuls les tours de page sont sonores.
     const filtres = [...document.querySelectorAll<HTMLButtonElement>(".filter-chips button")];
     expect(filtres.length, "aucun filtre dans le classeur").toBeGreaterThan(1);
     // Le classeur s'ouvre sur les obtenues (vide au premier lancement) : on
     // choisit le catalogue explicitement avant de feuilleter ses pages.
     banc.appuyer(filtres[0]!.textContent!.trim());
+    expect(sons.oscillateurs + sons.bruitages, "un filtre a sonné").toBe(avant);
     banc.appuyer("Suivant");
+    expect(sons.oscillateurs + sons.bruitages, "la page n'a pas sonné").toBe(avant + 1);
     banc.appuyer("Précédent");
 
-    expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
+    expect(sons.oscillateurs + sons.bruitages, "le retour de page n'a pas sonné").toBe(avant + 2);
   });
 
   it("le son du booster démarre à la déchirure, jamais avant", async () => {

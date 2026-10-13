@@ -23,6 +23,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   pas la liste des tâches encore ouvertes.
 - **Détails techniques d'une fonctionnalité** : le document spécialisé lié par
   la roadmap ou la passation.
+- **Assets audio et boucle BGM** : [audio-assets.md](audio-assets.md), avec la procédure pour remplacer le prototype.
 
 Une ancienne section peut décrire un état remplacé depuis. En cas de divergence,
 vérifier `main`, les commits et la CI, puis actualiser le checkpoint courant et

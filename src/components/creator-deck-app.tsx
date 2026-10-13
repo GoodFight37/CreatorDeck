@@ -48,6 +48,8 @@ import {
   playPackOpening,
   playReward,
   preloadSamples,
+  setMusicScene,
+  startGameAudio,
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
@@ -57,6 +59,7 @@ import {
 import { dossiersDuJour } from "@/lib/tribunal";
 
 import { THEME_VAR_NAMES } from "@/lib/cosmetics";
+import { applyTiltChoice } from "@/lib/tilt";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
@@ -82,6 +85,9 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 
 export function CreatorDeckApp() {
+  useEffect(() => {
+    applyTiltChoice();
+  }, []);
   // L'aiguille de preuve sociale : « N amis ont ouvert un booster il y a moins
   // d'une heure ». Elle se lit dans le carnet (aucun appel serveur en plus) et
   // se recalcule à la minute, pour qu'elle disparaisse toute seule.
@@ -187,6 +193,9 @@ export function CreatorDeckApp() {
   const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [tribunalOpen, setTribunalOpen] = useState(false);
+  useEffect(() => {
+    setMusicScene(tribunalOpen ? "tribunal" : tearing || drawnCards.length > 0 ? "pack" : "hub");
+  }, [drawnCards.length, tearing, tribunalOpen]);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -401,6 +410,7 @@ export function CreatorDeckApp() {
 
   async function claimAndOpenWelcomeGift() {
     if (giftBusy) return;
+    startGameAudio("pack");
     setGiftBusy(true);
     try {
       if (!cloud.onboarding?.giftClaimed) {
@@ -427,6 +437,7 @@ export function CreatorDeckApp() {
    * until both the draw and the gesture have completed, with no empty frame.
    */
   function commencerDechirure(kind: "live" | "scene"): Promise<void> {
+    startGameAudio("pack");
     pendingPresentationLeft.current = false;
     // Capture before the opening button is disabled, and keep it through reveal.
     setPresentationReturnFocus(document.activeElement instanceof HTMLElement
@@ -736,6 +747,7 @@ export function CreatorDeckApp() {
         {tab === "home" ? (
           <HomeView
             game={game}
+            themeStyle={themeStyle}
             friendsOpening={friendsOpening}
             onShowInbox={() => setNotificationsOpen(true)}
             onShowCollection={() => setTab("collection")}

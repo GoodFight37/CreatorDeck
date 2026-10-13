@@ -19,11 +19,11 @@ function fakeBrowser(reducedMotion = false) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("réglage Reflets des cartes", () => {
-  it("reste actif par défaut, sauf si le système réduit les animations", () => {
+  it("reste activé par défaut même si le système réduit le mouvement", () => {
     fakeBrowser();
     expect(tiltEnabled()).toBe(true);
     fakeBrowser(true);
-    expect(tiltEnabled()).toBe(false);
+    expect(tiltEnabled()).toBe(true);
   });
 
   it("mémorise le choix et l'applique au document", () => {

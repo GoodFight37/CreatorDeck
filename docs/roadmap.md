@@ -2,12 +2,11 @@
 
 ## État actuel — 13 octobre 2026
 
-**État du code :** le dernier commit applicatif vérifié sur `main` est
-`fd6d3527` ; sa CI GitHub
-[38469322128](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
-est verte, 6/6 jobs. Les commits documentaires postérieurs ne changent pas
-l'application. Voir le [checkpoint](agent-handoff.md) pour les preuves et
-limites exactes.
+**État de départ vérifié :** `main` local et distant étaient sur
+`736c3f7d` avant le chantier sensation de jeu décrit ci-dessous. Ce chantier
+est maintenant implémenté et validé localement ; son commit et sa CI restent à
+inscrire après publication. Voir le [checkpoint](agent-handoff.md) pour les
+preuves et limites exactes.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
   13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose
@@ -25,6 +24,36 @@ limites exactes.
   dépend d'un snapshot récent. Aucun changement d'économie ou de schéma de
   données n'est en attente dans ces livraisons.
 
+## Livraison préparée — sensation de jeu, 13 octobre 2026
+
+Implémentation locale vérifiée, dans l’ordre demandé A → E :
+
+- **A — Audio :** première BGM originale et compressée dans `public/music/`,
+  lancée au premier geste, ducking durant pack/reveal, silence musical au
+  Tribunal. Le réglage Son et le volume global la pilotent avec les SFX ;
+  signatures courtes pour Légendaire, Perfect et fin du Tribunal. Réglages Son
+  et Reflets activés par défaut sans préférence mémorisée. Asset encore prototype ;
+  remplacement documenté dans [audio-assets.md](audio-assets.md).
+- **B — Booster/cartes :** conserver la scène foil CSS et ses cinq dos ; ajout
+  d’un placeholder cohérent en cas d’échec de chargement d’un portrait. Ce filet
+  ne détecte pas encore automatiquement les portraits flous/pixelisés ; la
+  qualité visuelle doit rester revue à l’œil. Le chemin WebGL est retiré du
+  composant d’ouverture ; le sachet demeure entièrement CSS. Les timings de
+  reveal restent inchangés.
+- **C — Tribunal :** quotidien, jauge de karma, tampon/grâce, marteau/ban et
+  bilan existaient déjà ; ils sont conservés, avec un stinger de clôture.
+- **D — Jeu plutôt qu’app :** le Drop gardait déjà le sachet/CTA en tête et le
+  Tribunal près des objectifs. Le thème du Binder s’applique maintenant aussi
+  au Drop ; vitrine/streak remontés dans Toi, statistiques et fonctions en ligne
+  repliées.
+- **E — Binder :** 12 cartes par page (dans la plage 12–18), petite entrée de page
+  neutralisée par `prefers-reduced-motion`, et son de page existant sur les
+  flèches. Le filtre par cartes obtenues reste le défaut.
+
+Validation sur appareil physique non effectuée. Le rendu sonore du prototype et
+la lisibilité des portraits doivent être jugés sur téléphone avant toute
+affirmation de finition visuelle.
+
 ## Prochaines étapes
 
 1. Recueillir le retour de Malik sur le rythme du reveal de la cinquième carte
@@ -33,10 +62,14 @@ limites exactes.
 2. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
    avant toute intégration réelle de nouveaux univers. La simulation de croissance
    et le prototype ne modifient pas le catalogue, les taux ou l'économie.
-3. Garder au backlog, sans développement engagé : soundbites et hype Perfect ;
-   feuilletage, reflets par rareté et sleeves Binder ; événements Twitch ; Trade
-   Radar, variante « Last Pack revanchard » et export Story. Les règles et dépendances restent
-   à définir avant de planifier ces fonctionnalités.
+3. Idées au backlog, sans développement engagé :
+   - **Lien permanent vers la chaîne Twitch depuis une carte**, même hors ligne.
+     L'emplacement reste à décider (sous la carte ou dans sa fiche). C'est
+     distinct du badge « Direct », qui dépend d'un snapshot frais (D-074).
+   - Soundbites des créateurs et effet Perfect renforcé.
+   - Feuilletage, reflets par rareté et sleeves de Binder.
+   - Événements Twitch, Trade Radar, variante « Last Pack revanchard » et export
+     Story. Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus
 
