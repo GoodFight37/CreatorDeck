@@ -26,9 +26,9 @@ le snapshot est frais ; les validations de ce jalon sont archivées plus bas.
 Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
 n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
-Portraits : les 300 choix manuels sont protégés ; 694 créateurs restent
-candidats après toutes les protections (les 20 du pilote sont compris dans ces
-694). Le pilote qualité-first affiche les images à
+Portraits : 454 choix manuels sont protégés après import du lot du 13 octobre ;
+542 créateurs restent candidats après toutes les protections. Le pilote
+qualité-first affiche les images à
 comparer, sans filtre de source et sans remplacement automatique. La recherche
 des nouveaux lots attend une clé SerpApi dans l’environnement d’exécution.
 Le travail portrait est également suivi séparément sur
@@ -40,6 +40,7 @@ personne, netteté, visage lisible, résolution et cadrage utilisables). Les
 fichiers image ne sont pas dans cette branche ; leur qualité reste à regarder.
 Voir le checkpoint détaillé dans [la passation](agent-handoff.md) et la règle
 complète dans [la passation portraits](passation-portraits.md).
+Voir aussi [l’import manuel du lot 13 octobre](portrait-import-manuel-lot-2026-10-13.md).
 
 ### Provenance Live clarifiée — 13 octobre
 

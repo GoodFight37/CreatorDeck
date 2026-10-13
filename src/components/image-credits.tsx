@@ -8,6 +8,8 @@ import { CREATORS } from "@/lib/catalog";
 /** Les attributions restent dans les réglages, jamais sur les cartes. */
 export function ImageCredits() {
   const [open, setOpen] = useState(false);
+  const creditedPortraits = Object.entries(PORTRAIT_OVERRIDES)
+    .filter(([slug]) => !Object.hasOwn(MANUAL_PORTRAIT_OVERRIDES, slug));
   return (
     <div>
       <button type="button" className="menu-row" aria-expanded={open} aria-controls="image-credits" onClick={() => setOpen(!open)}>
@@ -64,7 +66,7 @@ export function ImageCredits() {
               </dd>
             </div>
           ) : null}
-          {Object.entries(PORTRAIT_OVERRIDES).map(([slug, portrait]) => (
+          {creditedPortraits.map(([slug, portrait]) => (
             <div key={slug}>
               <dt>{portrait.name}</dt>
               <dd>

@@ -15,8 +15,8 @@ describe("portraits sélectionnés", () => {
       && creator.slug !== "diverron")).toEqual([]);
   });
 
-  it("charge les 300 portraits manuels et les 699 versions Upscayl utilisables", async () => {
-    expect(Object.keys(MANUAL_PORTRAIT_OVERRIDES)).toHaveLength(300);
+  it("charge les 454 portraits manuels et les 699 versions Upscayl utilisables", async () => {
+    expect(Object.keys(MANUAL_PORTRAIT_OVERRIDES)).toHaveLength(454);
     expect(Object.keys(UPSCALED_PORTRAIT_OVERRIDES)).toHaveLength(699);
     for (const [slug, imagePath] of Object.entries(MANUAL_PORTRAIT_OVERRIDES)) {
       expect(CREATORS.some((creator) => creator.slug === slug)).toBe(true);

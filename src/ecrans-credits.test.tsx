@@ -9,7 +9,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
+import { MANUAL_PORTRAIT_OVERRIDES, PORTRAIT_OVERRIDES } from "@/lib/creator-portraits";
 
 const T0 = Date.UTC(2026, 9, 8, 12, 0, 0);
 
@@ -68,18 +68,19 @@ describe("les crédits de l'écran Toi", () => {
     banc.appuyer("Crédits des images");
     const credits = document.querySelector("#image-credits")!;
     expect(settings?.contains(credits)).toBe(true);
-    expect(credits.textContent).toContain("Moritz Barcelona");
-    expect(credits.textContent).toContain("Nate Herrera n8bit_");
+    expect(credits.textContent).not.toContain("Moritz Barcelona");
+    expect(credits.textContent).toContain("Kevin Chang");
     expect(credits.textContent).toContain("Recadrage carré");
-    expect(credits.textContent).toContain("Portraits importés manuellement (300)");
+    expect(credits.textContent).toContain("Portraits importés manuellement (454)");
     expect(credits.textContent).toContain("Versions Upscayl archivées (699)");
     expect(credits.textContent).toContain("ne sont plus affichées sur les cartes");
     expect(credits.textContent).toContain("Portrait fourni et restauré avec IA (1)");
     expect(credits.textContent).toContain("DIVERRON");
     expect(credits.textContent).toContain("Source et licence non fournies dans l’archive reçue");
-    expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by/2.0/"]')).not.toBeNull();
-    expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by-sa/4.0/"]')).not.toBeNull();
-    expect(credits.querySelectorAll("a")).toHaveLength(Object.keys(PORTRAIT_OVERRIDES).length * 2);
+    expect(credits.querySelector('a[href="https://creativecommons.org/licenses/by-sa/3.0/"]')).not.toBeNull();
+    const activeCreditedPortraits = Object.keys(PORTRAIT_OVERRIDES)
+      .filter((slug) => !Object.hasOwn(MANUAL_PORTRAIT_OVERRIDES, slug));
+    expect(credits.querySelectorAll("a")).toHaveLength(activeCreditedPortraits.length * 2);
     banc.appuyer("Crédits des images");
     expect(document.querySelector("#image-credits")).toBeNull();
   });

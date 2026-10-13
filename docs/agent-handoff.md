@@ -1,3 +1,16 @@
+## Portraits manuels — ZIP `portraits-01.zip` — 13 octobre 2026
+
+Import du lot fourni par Malik : 154 WebP carrés 450 × 450, décodables, tous
+correspondant à des slugs connus. Le manifeste inclus est un exemple fictif et
+n’a pas été utilisé. Les 300 choix manuels précédents restent inchangés ; le
+registre passe à 454 images. `9pasha` remplace une photo auparavant créditée ;
+les crédits n’affichent plus sa source précédente comme celle de l’image active.
+542 créateurs restent candidats selon le filtre du pilote. Fichiers et tests
+détaillés dans [le rapport d’import](portrait-import-manuel-lot-2026-10-13.md).
+Vérifications locales : portrait 33/33, `npm test` 73 fichiers / 1 164 tests,
+`npm run ecrans` 21 fichiers / 124 tests, typecheck, ESLint ciblé et build
+réussis ; CI complète après publication à relever.
+
 ## Beat automatique sur la cinquième carte — 13 octobre 2026
 
 Après le retrait du corner peek jugé peu naturel, la cinquième carte d’un
