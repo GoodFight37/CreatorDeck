@@ -1,5 +1,17 @@
 # Décisions CreatorDeck
 
+## D-066 — 13 octobre 2026 : pilote de recherche/cadrage automatisé puis revue
+
+Malik demande d’automatiser le reste du catalogue et de corriger les exceptions
+après coup, ses 300 choix manuels étant conservés. Carte blanche pour le pilote
+de vingt : SerpApi Google Images, détection de visage locale non générative,
+galerie avant/après exportant seulement des brouillons. Les portraits existants
+restent actifs jusqu’à vérification des propositions. Résultat réel : six
+propositions techniques sur vingt, pas une garantie pour les 697 restants ;
+les critères de personne et de droits restent distincts du score technique.
+Cache des recherches/images, limites explicites et protections du périmètre.
+[Preuves, commandes, coûts observés et limites](portrait-pilot-2026-10-13.md).
+
 ## D-065 — 13 octobre 2026 : ne plus afficher les versions Upscayl
 
 Malik observe des détails de visage artificiels dans les portraits agrandis

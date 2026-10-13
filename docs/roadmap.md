@@ -67,6 +67,14 @@ restent conservés dans le dépôt comme archives, sans servir à l’affichage.
 Les tests d’intégration vérifient que chaque créateur retombe sur son avatar
 d’origine lorsque aucun remplacement prioritaire ne s’applique.
 
+### Automatisation des portraits — pilote de vingt
+
+Outil local de recherche SerpApi/tri/cadrage et galerie de revue implémenté,
+sans modifier les photos actuelles. **Six propositions techniques sur vingt**,
+quatorze avatars conservés ; revue des personnes, sources et choix visuels par
+Malik avant extension. Les 300 manuels restent protégés. La recherche complète
+automatique des 697 n’est pas déclarée résolue. [Bilan et ZIP](portrait-pilot-2026-10-13.md).
+
 ### Validation et éléments hors plan
 
 Avis visuel/performances sur téléphone physique restant à recueillir ; les

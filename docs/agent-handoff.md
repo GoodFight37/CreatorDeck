@@ -1,3 +1,26 @@
+## Pilote automatique portraits livré — 13 octobre 2026
+
+Après recherche, carte blanche de Malik pour un pilote de vingt créateurs.
+Outil local `tools/portrait-pilot/`, SerpApi réellement appelé, MediaPipe CPU,
+galerie autonome et ZIP de revue. Aucun asset/sélecteur/registre du jeu changé.
+300 choix manuels et remplacements déjà validés protégés. 1 925 résultats,
+100 candidates sélectionnées, 33 téléchargées/décodées, six propositions
+techniques, quatorze avatars actuels conservés. Aucun portrait prêt à publier
+par défaut : l’identité et les droits ne sont pas certifiés par le détecteur.
+[Bilan et procédure de revue](portrait-pilot-2026-10-13.md).
+7/7 Node, 3/3 Python, ESLint ciblé/diff-check, galerie réelle bureau/mobile
+simulé et export/ZIP réussis. Base main `34fdf0b2`, HEAD distant vérifié avant
+publication des outils. Pas de nouvelle suite du jeu relancée localement, code
+jeu inchangé. CI du nouveau checkpoint à relever ; aucun succès anticipé.
+
+Compte SerpApi Free Plan : trente recherches comptées, 220 restantes au relevé.
+La clé reçue a servi uniquement à ce pilote, puis son fichier temporaire a été
+supprimé ; aucun secret versionné, aucun achat. Remplacement de la clé conseillé
+après envoi dans le chat. Prochaine action : Malik extrait le ZIP, ouvre index,
+revoit les six propositions et renvoie son JSON de choix avant une extension.
+Réservation libérée. Modèle : si changement conseillé, annoncer puis s’arrêter
+jusqu’au « go » ; ne pas supposer le modèle sélectionné dans l’interface.
+
 ## Retour aux originaux de la vague Upscayl — 13 octobre 2026
 
 Malik signale des visages artificiels sur plusieurs portraits passés par IA.

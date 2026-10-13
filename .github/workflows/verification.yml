@@ -108,6 +108,8 @@ jobs:
         env:
           CI: "true"
           NEXT_TELEMETRY_DISABLED: "1"
+      - name: Pilote portraits (protection, normalisation et galerie)
+        run: node --test tools/portrait-pilot/pilot.test.mjs
       - name: Joindre les captures de l'ouverture sur bureau et téléphone
         if: ${{ always() }}
         uses: actions/upload-artifact@v4

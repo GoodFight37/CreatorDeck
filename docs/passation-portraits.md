@@ -1,3 +1,27 @@
+## Pilote automatique disponible — 13 octobre 2026
+
+Malik donne carte blanche après la recherche, pour le pilote de 20 créateurs.
+`tools/portrait-pilot/` fait la recherche SerpApi, le tri et le cadrage local
+MediaPipe, puis une galerie avant/après. 300 manuels, Commons existants,
+Diverron et avatars génériques explicitement acceptés sont protégés. Le jeu
+reste sur les choix actuels ; aucun nouveau portrait publié par ce pilote.
+Résultat réel : 1 925 résultats de recherche, 100 candidates examinées pour
+téléchargement, 33 décodées, six propositions techniques / vingt créateurs,
+quatorze avatars conservés. Personnes/droits non certifiés automatiquement.
+Le compte SerpApi a compté trente recherches sur le forfait gratuit ; 220 restent
+au relevé. Clé temporaire supprimée, jamais versionnée ; remplacement conseillé
+après son envoi dans le chat. Aucun compte/subscription créé par Codex.
+[Bilan exact, ZIP et limites](portrait-pilot-2026-10-13.md).
+7/7 tests Node, 3/3 Python, ESLint/diff-check et vraie galerie 412/1 400 px/export
+réussis. Avant toute extension, Malik revoit les six propositions via le ZIP et
+renvoie le JSON exporté. Le taux du pilote ne prouve pas une solution automatique
+pour tout le catalogue ; aucune relance des 697 tant que ce résultat n’est pas
+évalué. Suites précédentes ci-dessous historiques.
+
+Préférence de Malik : proposer un changement de modèle avant le chantier puis
+s’arrêter et attendre son « go ». Ne pas prétendre connaître le sélecteur de
+modèle de son interface.
+
 ## Reprise du ZIP — 13 octobre 2026
 
 Mission de Malik : récupérer et publier tout le travail local, sans nouvelle
