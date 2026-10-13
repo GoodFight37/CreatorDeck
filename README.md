@@ -39,7 +39,8 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > **Tu es une IA, ou un relecteur pressé ?** Commence par
 > [`docs/perimetre.md`](docs/perimetre.md) : ce que ce dépôt attend de toi, et
 > **ce qui a déjà été refusé** — avec la raison, pour ne pas rouvrir un débat
-> tranché. Le **journal daté** des livraisons vit dans
+> tranché. Le [guide des documents](docs/README.md) indique quel fichier fait
+> autorité pour chaque question. Le **journal daté** des livraisons vit dans
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
@@ -61,12 +62,10 @@ la résolution et le cadrage, sans écarter une image uniquement faute de source
 Voir le [plan courant](docs/roadmap.md), la
 [passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
 
-Le correctif des tests Drop/Scène et le nouveau découpage Playwright sont publiés
-dans `ac6ff4b6`. Les deux shards locaux et le run GitHub
-[38400588529](https://github.com/GoodFight37/CreatorDeck/actions/runs/38400588529)
-passent ; les cinq jobs ont fini en 2 min 31 s (au lieu de 10 min 12 s au run
-précédent). Le contrôle Vercel du même commit est vert. Le badge de variante « Live » garde
-la provenance de la carte ; un indicateur séparé reflète le direct actif.
+Le badge Live distingue la provenance de la carte du statut de direct actuel.
+La CI répartit maintenant les tests Playwright sur trois shards, sans retirer de
+scénarios. Les résultats sont liés au SHA testé ; voir le checkpoint courant et
+la [roadmap](docs/roadmap.md), plutôt que les anciens compteurs de cette page.
 
 Pour les prochains portraits, le choix dépend de la qualité visuelle de l’image
 (bonne personne, netteté, visage lisible, résolution et cadrage). L’absence de
@@ -181,7 +180,7 @@ Quatre étages, quatre vitesses :
 * **`npm run e2e`** (Playwright) : le jeu réellement ouvert dans Chromium, sur
   bureau et téléphone (412 × 915), avec parcours des piliers, ouverture, gestes,
   rendu mobile, accessibilité et persistance. La CI répartit les deux projets en
-  **deux shards parallèles** ; la couverture reste complète et chaque shard garde
+  **trois shards parallèles** ; la couverture reste complète et chaque shard garde
   un worker pour éviter la contention avec `next dev`. S'y ajoute `e2e/pack-crash.spec.ts` :
   un booster ouvert, la page rechargée, **les cinq mêmes cartes** — et, quand un
   cloud est configuré (`.env.local`), la preuve que le client ne renvoie plus sa
@@ -191,7 +190,8 @@ Quatre étages, quatre vitesses :
   révélation, et le **filet de sécurité** qui s'affiche quand un écran plante — horloge et hasard figés, donc deux exécutions rendent le même
   HTML. C'est le filet des déménagements de code : on capture avant
   (`ECRANS_DUMP=/tmp/avant`), on découpe, on relance, et un `diff -r` dit si un
-  écran a bougé. Il tourne dans **treize fichiers** (66 tests, 56 captures) : le
+  écran a bougé. Le nombre de tests et captures évolue avec le code ; voir le run
+  courant avant de citer des compteurs historiques : le
   carnet de notifications, l'écran Compte d'un joueur connecté, les crédits, le
   **réglage du son** (et son silence), **les mille cartes** (ce que le DOM porte
   vraiment), **les effets de rareté**, **le classement feuilleté**, **les gestes

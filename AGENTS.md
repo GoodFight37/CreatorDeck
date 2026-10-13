@@ -18,12 +18,14 @@ adaptés aux modifications restent applicables. Une recherche de photos seule
 ne nécessite ni clone, ni installation, ni lecture du code. Si la tâche sort
 du chantier portraits, reprendre les lectures générales correspondantes.
 
-1. Lire [la passation](docs/agent-handoff.md), [la roadmap](docs/roadmap.md),
-   [les décisions](docs/decisions.md) et [les problèmes](docs/known-issues.md).
-2. Lire aussi [le périmètre](docs/perimetre.md), le
-   [journal des livraisons](docs/historique-livraisons.md),
-   [la revue externe § 3](docs/revue-externe-2026-10.md) et les documents du
-   composant concerné. Ne pas reproposer une option refusée sans élément nouveau.
+1. Lire le [guide des documents](docs/README.md), puis le premier checkpoint
+   de la [passation](docs/agent-handoff.md), la [roadmap](docs/roadmap.md) et
+   le [périmètre](docs/perimetre.md). Ne pas parcourir les archives complètes
+   par défaut.
+2. Consulter les décisions, problèmes connus, revue externe et documents du
+   composant **seulement s'ils concernent la tâche**. Ne pas reproposer une
+   option refusée sans élément nouveau. Le journal des livraisons est une
+   archive, pas une liste de travaux ouverts.
 3. Vérifier l'état **actuel** de GitHub : branche, HEAD, base et état de la PR,
    nouveaux commits, commentaires pertinents et contrôles CI. Une passation est
    une observation datée, jamais une preuve que rien n'a bougé depuis.

@@ -1,218 +1,42 @@
 # Roadmap CreatorDeck
 
-## État courant — 13 octobre 2026
+## État actuel — 13 octobre 2026
 
-Portraits : le lot manuel de 154 images est publié sur `main`. Le registre
-protège désormais 454 portraits choisis manuellement ; 542 autres profils
-restent candidats au pilote visuel. Le run GitHub final
-[`38469322128`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
-sur `fd6d3527` est vert, 6/6 jobs. Voir le [rapport d’import](portrait-import-manuel-lot-2026-10-13.md).
+**État du code :** le dernier commit applicatif vérifié sur `main` est
+`fd6d3527` ; sa CI GitHub
+[38469322128](https://github.com/GoodFight37/CreatorDeck/actions/runs/38469322128)
+est verte, 6/6 jobs. Les commits documentaires postérieurs ne changent pas
+l'application. Voir le [checkpoint](agent-handoff.md) pour les preuves et
+limites exactes.
 
-Après le retrait de la languette, la cinquième carte d’un reveal séquentiel
-ordinaire reçoit une pause automatique de 360 ms avant son flip. Perfect,
-Reflets désactivés et mouvement réduit restent sans pause. Livré par Arena en
-`1ae5f2c8`, intégré sur `main` ; CI `38464097660` verte, 6/6 jobs. Le ressenti
-sur l’application par Malik reste à valider. Voir D-077 et la passation.
+- **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
+  13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose
+  des images à comparer et n'en remplace aucune automatiquement. Le critère est
+  visuel : identité, netteté, visage lisible, résolution et cadrage. Voir le
+  [rapport d'import](portrait-import-manuel-lot-2026-10-13.md) et le
+  [pilote](portrait-pilot-2026-10-13.md).
+- **Ouverture :** peel guidé et continuum publiés, 3D désactivée par défaut.
+  Après le retrait de la languette, la cinquième carte ordinaire attend 360 ms
+  avant son flip ; Perfect, Reflets désactivés et mouvement réduit n'attendent
+  pas. Le ressenti sur téléphone réel reste à confirmer. Voir
+  [D-077](decisions.md) et le [rapport d'ouverture](booster-continuum-2026-10-12.md).
+- **Autres piliers :** Drop et Craft ont reçu leurs ajustements mobiles. Binder
+  conserve la provenance d'obtention Live, tandis que le statut de direct actuel
+  dépend d'un snapshot récent. Aucun changement d'économie ou de schéma de
+  données n'est en attente dans ces livraisons.
 
-La CI navigateur est distribuée en trois shards Playwright sans réduction de
-couverture. Commit `ebf57e8e`, run
-[`38453353488`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38453353488)
-vert (6/6 jobs, 3 min 04 s), soit 17 secondes de moins que le run précédent à
-deux shards ; ce gain reste à confirmer sur plusieurs exécutions.
+## Prochaines étapes
 
-Dernier jalon fonctionnel vérifié : l'étude sur l'agrandissement du catalogue,
-publiée dans `b4d08e5802b72f6d75e44bc31be853dae4ea0c26` ; le checkpoint de
-publication documentaire est `26def354313af3700bbb403bf3718139eac5e689`.
-L'étude est une simulation exploratoire ; elle ne modifie ni les taux, ni les
-cartes du jeu. Voir [l'étude et ses résultats](audit-croissance-catalogue.md).
-La vérification GitHub
-[38444258514](https://github.com/GoodFight37/CreatorDeck/actions/runs/38444258514)
-est verte, 5/5 blocs. Le badge compact de direct ouvre la chaîne Twitch lorsque
-le snapshot est frais ; les validations de ce jalon sont archivées plus bas.
-Les Upscayl sont archivés/non affichés depuis `34fdf0b2` ; le pilote portraits
-n’a changé aucun asset ni sélection active. Continuité, peel guidé et
-hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
-Portraits : 454 choix manuels sont protégés après import du lot du 13 octobre ;
-542 créateurs restent candidats après toutes les protections. Le pilote
-qualité-first affiche les images à
-comparer, sans filtre de source et sans remplacement automatique. La recherche
-des nouveaux lots attend une clé SerpApi dans l’environnement d’exécution.
-Le travail portrait est également suivi séparément sur
-[`fcc/revue-portraits-50`](https://github.com/GoodFight37/CreatorDeck/tree/fcc/revue-portraits-50),
-dernier commit `297f049b`. Cette branche ne contient pas les images candidates ;
-les catégories de source du manifeste ne servent pas de filtre produit. Malik
-demande de retenir ou d’écarter les images selon leur qualité visuelle (bonne
-personne, netteté, visage lisible, résolution et cadrage utilisables). Les
-fichiers image ne sont pas dans cette branche ; leur qualité reste à regarder.
-Voir le checkpoint détaillé dans [la passation](agent-handoff.md) et la règle
-complète dans [la passation portraits](passation-portraits.md).
-Voir aussi [l’import manuel du lot 13 octobre](portrait-import-manuel-lot-2026-10-13.md).
-
-### Provenance Live clarifiée — 13 octobre
-
-K-048 corrigé : la carte conserve sa variante souvenir et dit « Obtenue en
-direct », tandis que le badge « En direct maintenant » et l’action Twitch
-n’apparaissent que lorsqu’un snapshot frais est disponible. Le badge de direct
-ouvre désormais la chaîne par HTTPS Twitch dans un nouvel onglet ; l’ouverture
-de l’app native dépend des liens universels du téléphone. Aucun SQL ni modèle
-de donnée modifié. Test écran ciblé réussi localement.
-Code `a39dc6e5` publié ; GitHub `38410082291` success 5/5 et Vercel success.
-Voir D-073 et K-048.
-
-Le correctif ultérieur rend également le badge compact « Direct » cliquable
-quand les données du stream sont fraîches. Publié dans `0e53fa6c` ; CI GitHub
-`38411066062` success 5/5 et Vercel success. Les badges de provenance restent
-non cliquables.
-
-### Corner peek — retiré le 13 octobre après essai
-
-Sur la cinquième carte garantie d’un booster ordinaire, tirer le coin haut droit
-permet de jeter un bref œil au portrait ; le flip complet n’arrive qu’au
-relâchement après le seuil. Un geste court replie le coin. Bouton principal,
-clavier et reveal complet gardent leurs raccourcis ; Perfect, OBS, autres écrans
-et défaut GPU sont inchangés. Validation locale complète : 1 164 tests, 121 tests
-d’écrans, 84 E2E réussis / 12 cloud ignorés, lint, typecheck et build réussis.
-Les cadeaux de bienvenue gardent aussi le parcours direct. Le premier run GitHub
-`38407219931` a repéré cette exception ; correctif ensuite validé localement par
-122 tests écran et le shard RPC simulé 10/10. CI finale `38408591588` success,
-5/5 jobs pour cette version historique. Malik a jugé la languette peu naturelle
-et a demandé son retrait. Le code et le geste ont été supprimés ; la cinquième
-carte reprend son reveal automatique normal. Une alternative sans languette a
-été ajoutée : pause automatique de 360 ms avant son flip, hors Perfect, Reflets
-OFF et mouvement réduit. Intégrée par fast-forward dans `1ae5f2c8`, CI
-`38464097660` verte 6/6 ; ressenti utilisateur encore à valider. Le retrait est publié dans
-`1f4deadb` ; CI `38450915873` verte 5/5. Vérifications locales : 123 tests
-d’écran, E2E tactile ciblé, typecheck, lint, build et diff-check réussis. Voir
-D-072 et la passation.
-Cette première section est le plan actuel ; tout ce qui suit « Historique » est
-un journal daté et ne doit pas rouvrir une tâche déjà livrée.
-
-Contrôle de stabilisation des quatre piliers sur `c2168437` : `npm test`
-1 164/1 164, `npm run ecrans` 119/119, `npm run e2e` 82 réussis et 10 ignorés
-(parcours cloud sans configuration), sur bureau et téléphone simulé. Aucun
-défaut reproductible détecté ; validation visuelle sur téléphone réel toujours
-distincte. [Détails et limites](agent-handoff.md).
-
-Après retour téléphone : **2D plus mate par défaut, 3D en aperçu seulement**,
-fin d'extraction et sortie d'attente renforcées. [Diagnostic et livrable](booster-clean-2026-10-13.md),
-D-063. Le jugement visuel sur appareil réel reste à faire ; D-062 n'impose
-plus l'activation GPU par défaut.
-
-Vague visuelle du 13 octobre : [sachet contrasté et peel sous le doigt](booster-visible-2026-10-13.md),
-récupérée dans une nouvelle session, revérifiée et publiée dans `93626653`,
-SHA distant confirmé ; CI en cours au relevé de reprise.
-[Publication et contrôles de reprise](reprise-zip-2026-10-13.md). L’avis sur téléphone
-réel reste à recueillir ; les mentions de blocage GitHub décrivent l’export initial.
-
-### Peel guidé — demande unique du 13 octobre
-
-Rail 1D remplacé par une zone et une trace X/Y, rabat piloté par le doigt,
-ouverture déclenchée uniquement au relâchement après le seuil (retour Malik),
-ouverture par largeur/soulèvement et repli prévisible. Vérifications ciblées
-puis appréciation du ressenti sur téléphone ; aucune nouvelle refonte des
-écrans. [Avant/après et test en 30 s](booster-peel-guide-2026-10-13.md).
-
-### Drop + Craft — hiérarchie mobile
-
-UI implémentée : sachet/CTA avant les infos ; Atelier à portée, règles/raretés
-repliées et Recycler visible à zéro doublon. Une consigne gestuelle Drop
-restaurée après le signalement CI. 26 DOM, 8 E2E ciblés et les deux shards
-complets (41 réussis + 5 scénarios cloud ignorés chacun) passent localement ;
-CI GitHub `38400588529` verte. Avis téléphone physique attendu.
-[Livrable](drop-craft-priorites-2026-10-13.md).
-
-### Provenance Live — clarification livrée
-
-La variante `live` reste la provenance persistée du tirage et peut rester sur la
-carte après la fin du stream. Elle s’affiche « Obtenue en direct » (« Acquis
-live » en compact) ; le direct actuel vient séparément d’un snapshot frais. Le
-badge cliquable et la fiche ouvrent alors la chaîne Twitch en HTTPS. K-048 et
-D-071 sont clarifiés par D-073/D-074 ; aucun changement du Binder ni de schéma
-de données n’est en attente.
-
-### Plan actif
-
-1. **Ouverture : continuum, matière et geste implémentés** à la demande de Malik.
-   Même scène du sachet au récap, coque retirée en fondu, reflet sur les morceaux
-   imprimés et manipulation de carte après flip. Mode 2D par défaut (D-063). Quatre points du cahier des
-   charges faits ; [preuves et limites](booster-continuum-2026-10-12.md).
-   Reste l’appréciation du rendu/rythme sur téléphone réel : les tests ne sont
-   pas un verdict esthétique et le rendu n’est pas présenté comme « Pocket ».
-2. **Cadrer l’extension du catalogue**, idée de Malik : créateurs Twitch et,
-   éventuellement, personnages fictifs. L’[étude de croissance](audit-croissance-catalogue.md)
-   mesure 1 000→1 500/2 000/3 000 cartes à taux inchangés avec des identifiants
-   synthétiques ; elle ne modifie ni l’économie ni les règles et ne modélise pas
-   les personnages fictifs. Séparément, le prototype isolé `/catalogue-demo`
-   compare un classeur mixte et des classements distincts par univers, avec noms
-   fictifs et visuels temporaires marqués. Revalidation locale après reprise sur
-   `main` `5dbdb4c` : E2E 8/8, unitaires 1 164/1 164, écrans 124/124, typecheck,
-   lint ciblé, `catalog:ci`, simulation déterministe (24 lignes identiques au
-   JSONL archivé) et build statique réussis. La CI post-merge
-   [38446898234](https://github.com/GoodFight37/CreatorDeck/actions/runs/38446898234)
-   est verte, 5/5 jobs (dont SQL jetable et RPC simulés). Aucun contenu
-   réel/licencié n’est intégré au jeu. Prochaine étape : retour sur l’interface
-   et cadrage explicite des univers/règles avant tout branchement en production.
-3. **Vision produit à garder au backlog, sans démarrer maintenant** : soundbites
-   courts et hype Perfect ; feuilletage, reflets par rareté et sleeves du Binder ;
-   deep-link Twitch et événements communautaires ; Trade Radar, Last Pack et
-   export Story. Les dépendances et règles restent à cadrer avant tout chantier.
-
-### Livraisons terminées
-
-- **Portraits du 12 octobre** : 300 choix manuels préservés ; les 699 fichiers
-  Upscayl restent archivés mais ne sont plus affichés ; sélections Commons
-  créditées et choix acceptés conservés. Modifications publiées ; aucune promesse
-  de 1 000 photos nettes et identités vérifiées.
-- **Skyrozz / Twitch skyrroztv** : identité et migration 0050 corrigées.
-- **Appuis pendant le flip** : appui mémorisé puis consommé ; correctif
-  `3f33b19` inclus dans la révision actuelle, CI verte.
-- **Reprise cloud, sabliers/recharge, pity, scroll, Craft/Binder, Arène/Hôtel,
-  profils/activité sociale** : livrés. Scroll, sablier, objectif Live, cadeaux
-  et visibilité des mises à jour ont déjà été confirmés par Malik.
-- **Atelier Windows v1.5** : parcours carrousel publié ; variante Gemini utilisée
-  par Malik distincte du jeu Vercel et pas réputée identique à la version GitHub.
-
-### Retour Paquet Scène confirmé
-
-Malik confirme le 12 octobre que la présentation actuelle est bonne et a déjà
-été corrigée. Ce point sort du plan actif ; K-037 est clos, aucun nouveau
-correctif de message requis.
-
-### Avatars génériques acceptés
-
-Malik confirme le 12 octobre que les créateurs sans photo de profil gardent
-leur avatar générique. SolaryHS, j0niq et toaststix ne sont plus des anomalies
-ni des remplacements à rechercher. Aucun changement de fichier image requis.
-
-### Portraits Upscayl remplacés par les originaux
-
-Malik constate que plusieurs portraits agrandis par IA reconstruisent les
-visages et paraissent artificiels. Les avatars Twitch d’origine sont rétablis
-pour cet ensemble ; portraits manuels, choix Commons crédités et photo fournie
-pour Diverron gardent leur priorité. Les 699 fichiers Upscayl et leur registre
-restent conservés dans le dépôt comme archives, sans servir à l’affichage.
-Les tests d’intégration vérifient que chaque créateur retombe sur son avatar
-d’origine lorsque aucun remplacement prioritaire ne s’applique.
-
-### Automatisation des portraits — pilote de vingt
-
-Outil local de recherche SerpApi/tri/cadrage et galerie de revue implémenté,
-sans modifier les photos actuelles. Rejeu depuis le cache : 15 profils sur 20
-ont une image candidate à comparer, 5 gardent leur image actuelle faute de
-nouvelle candidate ; le compteur inclut du bruit et n’est pas une approbation.
-Les sources ne filtrent pas les choix ; Malik compare netteté, rendu, visage et
-cadrage dans une galerie locale. Les 300 manuels restent protégés. La recherche
-des 674 autres profils n’est pas faite faute de clé dans cet environnement.
-[Bilan et ZIP](portrait-pilot-2026-10-13.md) ; [règle D-075](decisions.md).
-
-### Validation et éléments hors plan
-
-Avis visuel/performances sur téléphone physique restant à recueillir ; les
-E2E téléphone sont simulés. Les 20 anciennes sélections Commons sont
-publiées avec leur provenance dans `cf25f665`, sans remplacer les choix manuels
-prioritaires ; [état réel](reprise-zip-2026-10-13.md).
-Aucune nouvelle refonte économique, simulation « Ta chaîne », i18n, analytics
-ou publication sur stores n’est planifiée.
+1. Recueillir le retour de Malik sur le rythme du reveal de la cinquième carte
+   et l'ouverture sur téléphone réel. Les tests navigateur ne remplacent pas
+   cet essai.
+2. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
+   avant toute intégration réelle de nouveaux univers. La simulation de croissance
+   et le prototype ne modifient pas le catalogue, les taux ou l'économie.
+3. Garder au backlog, sans développement engagé : soundbites et hype Perfect ;
+   feuilletage, reflets par rareté et sleeves Binder ; événements Twitch ; Trade
+   Radar, variante « Last Pack revanchard » et export Story. Les règles et dépendances restent
+   à définir avant de planifier ces fonctionnalités.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus
 
