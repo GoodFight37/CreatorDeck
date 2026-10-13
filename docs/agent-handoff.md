@@ -1,3 +1,18 @@
+## Contrôle de stabilisation des quatre piliers — 13 octobre 2026
+
+Audit local du SHA `c21684377dfcc4f54c5864fb3a37a21149d35b9d` (`main`, distant
+vérifié égal), sans modification de code : `npm test` passe 73 fichiers / 1 164
+tests ; `npm run ecrans` passe 20 fichiers / 119 tests ; `npm run e2e` passe
+82 scénarios sur 92 en 3 min 54 s, avec 10 scénarios cloud ignorés faute de
+configuration serveur. Les E2E bureau/téléphone vérifient notamment les quatre
+onglets, les vues Drop/Binder/Craft/Toi, le contenu à 320 px, le CTA Drop avant
+navigation, les recettes à portée, le recyclage vide, et l’absence d’erreur
+console lors du tour des onglets. Aucun défaut reproductible trouvé dans ces
+contrôles. Les avertissements WebGL du navigateur d’essai déclenchent le
+fallback 2D prévu et les scénarios correspondants réussissent. Limite : les
+captures DOM/E2E ne remplacent pas une appréciation visuelle sur téléphone réel.
+État du checkout propre après les tests ; aucun code ou test affaibli.
+
 ## CI Playwright accélérée et provenance Live — 13 octobre 2026
 
 Main publié : `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd`, SHA distant vérifié.

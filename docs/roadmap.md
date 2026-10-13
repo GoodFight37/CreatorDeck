@@ -2,8 +2,9 @@
 
 ## État courant — 13 octobre 2026
 
-Référence publiée : `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd` (SHA distant
-vérifié). Le run de correction CI
+Référence publiée : code `ac6ff4b6dd9eadf858afdc8dac3007670deed2cd`, complété
+par le checkpoint documentaire `c21684377dfcc4f54c5864fb3a37a21149d35b9d`
+(SHA distant vérifié). Le run de correction CI
 [38400588529](https://github.com/GoodFight37/CreatorDeck/actions/runs/38400588529)
 est vert, 5/5 jobs en 2 min 31 s (contre 10 min 12 s au run précédent).
 Vercel est aussi success sur ce SHA.
@@ -12,6 +13,12 @@ n’a changé aucun asset ni sélection active. Continuité, peel guidé et
 hiérarchie Drop/Craft sont publiés ; voir les rapports dédiés.
 Cette première section est le plan actuel ; tout ce qui suit « Historique » est
 un journal daté et ne doit pas rouvrir une tâche déjà livrée.
+
+Contrôle de stabilisation des quatre piliers sur `c2168437` : `npm test`
+1 164/1 164, `npm run ecrans` 119/119, `npm run e2e` 82 réussis et 10 ignorés
+(parcours cloud sans configuration), sur bureau et téléphone simulé. Aucun
+défaut reproductible détecté ; validation visuelle sur téléphone réel toujours
+distincte. [Détails et limites](agent-handoff.md).
 
 Après retour téléphone : **2D plus mate par défaut, 3D en aperçu seulement**,
 fin d'extraction et sortie d'attente renforcées. [Diagnostic et livrable](booster-clean-2026-10-13.md),
