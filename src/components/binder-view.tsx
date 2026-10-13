@@ -157,17 +157,13 @@ export function CollectionView({
 
   return (
     <div className="view collection-view" style={themeStyle}>
-      {/* En-tête sobre : titre direct sans slogans marketing empilés */}
+      {/* En-tête sobre : titre direct */}
       <section className="page-title-row" style={{ marginBottom: "0.2rem" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Mon classeur</h1>
         </div>
         <div className="collection-score">
-          {game.stats.uniqueCreators ? (
-            <><strong>{progress}%</strong><span>complété</span></>
-          ) : (
-            <><strong>À toi</strong><span>ta première carte</span></>
-          )}
+          <strong>{progress}%</strong><span>complété</span>
         </div>
       </section>
 
@@ -182,77 +178,6 @@ export function CollectionView({
           </div>
         </div>
       ) : null}
-
-      {/* Raccourci Dernières reçues */}
-      {game.stats.uniqueCreators > 0 ? (
-        <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.2rem 0" }}>
-          <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
-            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
-          }}>Dernières reçues <ChevronRight size={14} /></button>
-          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
-        </div>
-      ) : null}
-
-      {/* Pages à compléter : bandeau compact conservant le contrat de test */}
-      {featuredCollection ? (
-        <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.35rem 0.6rem", margin: "0.25rem 0" }}>
-          <div className="drop-section-label" style={{ marginBottom: "0.2rem", fontSize: "0.72rem" }}>
-            <span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span>
-            <BookOpen size={13} />
-          </div>
-          <button
-            type="button"
-            aria-pressed={pageGoal === featuredCollection.id}
-            onClick={() => chooseCollection(featuredCollection.id)}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", background: "transparent", border: "none", color: "inherit", padding: 0 }}
-          >
-            <span className="binder-page-title" style={{ flex: 1, textAlign: "left" }}>
-              <strong style={{ fontSize: "0.85rem" }}>{featuredCollection.name}</strong>
-              <small style={{ display: "block", fontSize: "0.72rem", opacity: 0.7 }}>
-                {featuredCollection.owned} / {featuredCollection.total} cartes différentes
-              </small>
-              <span className="binder-collection-action" style={{ fontSize: "0.72rem" }}>
-                {featuredCollection.missing.length ? `Voir les ${featuredCollection.missing.length} manquantes` : "Revoir les cartes réunies"}
-              </span>
-            </span>
-            <ChevronRight size={15} style={{ opacity: 0.6 }} />
-          </button>
-          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", margin: "0.2rem 0" }} />
-          {featuredCollection.missing.length ? (
-            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
-              À trouver : {featuredCollection.missing.slice(0, 3).map((slug) => CREATOR_BY_SLUG.get(slug)?.displayName).join(", ")}
-              {featuredCollection.missing.length > 3 ? ` et ${featuredCollection.missing.length - 3} autres.` : "."}
-            </p>
-          ) : (
-            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
-              Tous les noms de cette page sont réunis.
-            </p>
-          )}
-        </section>
-      ) : null}
-
-      {/* Sélecteur replié */}
-      <details className="binder-collections-picker" style={{ margin: "0.2rem 0" }}>
-        <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
-        <p style={{ fontSize: "0.72rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
-        <label style={{ fontSize: "0.72rem" }}>Famille
-          <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>
-            {BINDER_FAMILIES.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}
-          </select>
-        </label>
-        <div className="binder-collection-choices">
-          {collections.filter((collection) => collection.familyId === pickerFamily).map((collection) => (
-            <button type="button" key={collection.id} aria-pressed={savedGoal === collection.id}
-              onClick={() => chooseCollection(collection.id)}>
-              <strong>{collection.name}</strong>
-              <span>{collection.owned}/{collection.total} · {collection.missing.length ? `${collection.missing.length} à trouver` : "Complétée"}</span>
-            </button>
-          ))}
-        </div>
-        {savedGoal ? <button type="button" className="binder-auto-goal" onClick={() => {
-          saveGoal(null); setPageGoal(null); setFilter("owned"); setQuery(""); setPage(0);
-        }}>Revenir à la suggestion automatique</button> : null}
-      </details>
 
       {/* Outils compacts au-dessus des pochettes */}
       <div className="binder-tools">
@@ -299,7 +224,7 @@ export function CollectionView({
           </select>
         </label>
 
-        <div className="filter-chips" aria-label="Filtres de collection">
+        <div className="filter-chips" aria-label="Filtres de collection" style={{ display: "flex", flexWrap: "nowrap", overflowX: "auto", paddingBottom: "0.2rem" }}>
           {(
             [
               ["all", `Toutes (${CREATORS.length})`],
@@ -389,15 +314,14 @@ export function CollectionView({
           <div className="binder-empty-state">
             {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
               <>
-                <strong>Ta collection commence avec le prochain booster.</strong>
-                <button type="button" className="binder-first-drop" onClick={() => { setFilter("all"); setPage(0); }}>
-                  Voir les créateurs à découvrir <ChevronRight size={16} />
+                <span>Ton classeur est vide pour l’instant.</span>
+                <button
+                  type="button"
+                  className="binder-first-drop"
+                  onClick={onGoDrop ?? (() => { setFilter("all"); setPage(0); })}
+                >
+                  {onGoDrop ? "Retour au Drop" : "Découvrir les cartes"} <ChevronRight size={16} />
                 </button>
-                {onGoDrop ? (
-                  <button type="button" className="binder-first-drop" onClick={onGoDrop}>
-                    Retour au Drop <ChevronRight size={16} />
-                  </button>
-                ) : null}
               </>
             ) : (
               <span>Aucune carte ne correspond à cette recherche.</span>
@@ -405,6 +329,77 @@ export function CollectionView({
           </div>
         ) : null}
       </div>
+
+      {/* Raccourci Dernières reçues */}
+      {game.stats.uniqueCreators > 0 ? (
+        <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.2rem 0" }}>
+          <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
+            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
+          }}>Dernières reçues <ChevronRight size={14} /></button>
+          <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
+        </div>
+      ) : null}
+
+      {/* Pages à compléter : bandeau compact conservant le contrat de test */}
+      {featuredCollection ? (
+        <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.35rem 0.6rem", margin: "0.25rem 0" }}>
+          <div className="drop-section-label" style={{ marginBottom: "0.2rem", fontSize: "0.72rem" }}>
+            <span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span>
+            <BookOpen size={13} />
+          </div>
+          <button
+            type="button"
+            aria-pressed={pageGoal === featuredCollection.id}
+            onClick={() => chooseCollection(featuredCollection.id)}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%", background: "transparent", border: "none", color: "inherit", padding: 0 }}
+          >
+            <span className="binder-page-title" style={{ flex: 1, textAlign: "left" }}>
+              <strong style={{ fontSize: "0.85rem" }}>{featuredCollection.name}</strong>
+              <small style={{ display: "block", fontSize: "0.72rem", opacity: 0.7 }}>
+                {featuredCollection.owned} / {featuredCollection.total} cartes différentes
+              </small>
+              <span className="binder-collection-action" style={{ fontSize: "0.72rem" }}>
+                {featuredCollection.missing.length ? `Voir les ${featuredCollection.missing.length} manquantes` : "Revoir les cartes réunies"}
+              </span>
+            </span>
+            <ChevronRight size={15} style={{ opacity: 0.6 }} />
+          </button>
+          <progress aria-label={`Progression de ${featuredCollection.name}`} value={featuredCollection.owned} max={featuredCollection.total} style={{ height: "3px", width: "100%", margin: "0.2rem 0" }} />
+          {featuredCollection.missing.length ? (
+            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
+              À trouver : {featuredCollection.missing.slice(0, 3).map((slug) => CREATOR_BY_SLUG.get(slug)?.displayName).join(", ")}
+              {featuredCollection.missing.length > 3 ? ` et ${featuredCollection.missing.length - 3} autres.` : "."}
+            </p>
+          ) : (
+            <p className="binder-missing-preview" style={{ fontSize: "0.72rem", margin: "0.1rem 0" }}>
+              Tous les noms de cette page sont réunis.
+            </p>
+          )}
+        </section>
+      ) : null}
+
+      {/* Sélecteur replié */}
+      <details className="binder-collections-picker" style={{ margin: "0.2rem 0" }}>
+        <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
+        <p style={{ fontSize: "0.72rem" }}>Une page de 12 cartes maximum. Ton choix est gardé sur cet appareil.</p>
+        <label style={{ fontSize: "0.72rem" }}>Famille
+          <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>
+            {BINDER_FAMILIES.map((season) => <option key={season.id} value={season.id}>{season.name}</option>)}
+          </select>
+        </label>
+        <div className="binder-collection-choices">
+          {collections.filter((collection) => collection.familyId === pickerFamily).map((collection) => (
+            <button type="button" key={collection.id} aria-pressed={savedGoal === collection.id}
+              onClick={() => chooseCollection(collection.id)}>
+              <strong>{collection.name}</strong>
+              <span>{collection.owned}/{collection.total} · {collection.missing.length ? `${collection.missing.length} à trouver` : "Complétée"}</span>
+            </button>
+          ))}
+        </div>
+        {savedGoal ? <button type="button" className="binder-auto-goal" onClick={() => {
+          saveGoal(null); setPageGoal(null); setFilter("owned"); setQuery(""); setPage(0);
+        }}>Revenir à la suggestion automatique</button> : null}
+      </details>
 
       {inspect ? (
         <CardInspectModal
