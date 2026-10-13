@@ -33,7 +33,8 @@ export function PackTear({
   children?: ReactNode;
 }) {
   const dialogRef = usePresentationFocus(true, returnFocusTo);
-  const [cut, setCut] = useState({ start: 7, end: 7, progress: 0 });
+  const [cut, setCut] = useState({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
+  const pullProgress = useRef(0);
   const [opened, setOpened] = useState(false);
   // Explicit preview only, until the GPU material is approved on a real phone.
   const [foil3D] = useState(() => typeof window !== "undefined" &&
@@ -71,7 +72,8 @@ export function PackTear({
     sceneRef.current?.style.removeProperty("--opening-tilt-x");
     sceneRef.current?.style.removeProperty("--opening-tilt-y");
     sceneRef.current?.style.removeProperty("--opening-light-x");
-    setCut({ start: 4, end: 96, progress: 100 });
+    sceneRef.current?.style.setProperty("--peel-release", String(pullProgress.current));
+    setCut(current => ({ ...current, start: 4, end: 96, progress: 100 }));
     setOpened(true);
     // animationend opens the face IN this scene. This timer is only a lost-event
     // fallback; it never destroys the pouch or replaces the presentation root.
@@ -112,7 +114,9 @@ export function PackTear({
           {opened ? "LES CARTES APPARAISSENT" : "GLISSE SUR LA BANDE STRIÉE EN HAUT"}
         </p>
         <div ref={sceneRef} className={`booster-physical-scene${opened ? " booster-foil-open" : ""}`}
-          style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%` } as CSSProperties}>
+          style={{ "--cut-start": `${cut.start}%`, "--cut-end": `${cut.end}%`,
+            "--peel-progress": cut.progress / 100, "--peel-direction": cut.direction,
+            "--peel-origin-x": `${cut.origin}%` } as CSSProperties}>
           <PackFoil3D enabled={foil3D} artwork={artwork} progress={cut.progress} from={cut.start} to={cut.end} opened={opened} />
           <span className="foil-depth-side foil-depth-left" aria-hidden="true" />
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
@@ -151,7 +155,8 @@ export function PackTear({
                 halfWidth: Math.max(1, (sceneBounds?.width ?? bounds.width) / 2),
                 halfHeight: Math.max(1, (sceneBounds?.height ?? bounds.height) / 2) };
               sceneRef.current?.classList.add("is-pulling");
-              setCut({ start: p, end: p, progress: 0 });
+              pullProgress.current = 0;
+              setCut({ start: p, end: p, progress: 0, direction: 1, origin: p });
               event.currentTarget.setPointerCapture(event.pointerId);
             }}
             onPointerMove={(event) => {
@@ -169,7 +174,9 @@ export function PackTear({
                 (event.clientX - bounds.left) / bounds.width * 100));
               const progress = Math.max(0, Math.min(100,
                 Math.abs(event.clientX - start.current.x) / (bounds.width * .55) * 100));
-              setCut({ start: Math.min(start.current.percent, end), end: Math.max(start.current.percent, end), progress });
+              pullProgress.current = progress / 100;
+              setCut({ start: Math.min(start.current.percent, end), end: Math.max(start.current.percent, end), progress,
+                direction: event.clientX >= start.current.x ? 1 : -1, origin: start.current.percent });
               if (progress >= 100) finish();
             }}
             onPointerUp={() => {
@@ -178,7 +185,7 @@ export function PackTear({
               sceneRef.current?.style.removeProperty("--opening-tilt-x");
               sceneRef.current?.style.removeProperty("--opening-tilt-y");
               sceneRef.current?.style.removeProperty("--opening-light-x");
-              if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
+              if (!done.current) { pullProgress.current = 0; setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 }); }
             }}
             onPointerCancel={() => {
               start.current = null;
@@ -186,7 +193,7 @@ export function PackTear({
               sceneRef.current?.style.removeProperty("--opening-tilt-x");
               sceneRef.current?.style.removeProperty("--opening-tilt-y");
               sceneRef.current?.style.removeProperty("--opening-light-x");
-              if (!done.current) setCut({ start: 7, end: 7, progress: 0 });
+              if (!done.current) { pullProgress.current = 0; setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 }); }
             }}
             onKeyDown={(event) => {
               if (event.key === "Enter" || event.key === " " || event.key === "ArrowRight" || event.key === "ArrowLeft") {

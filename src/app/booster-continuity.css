@@ -12,7 +12,7 @@
   --scene-center: calc(var(--scene-height) * .46);
   --scene-pack-width: min(64vw, 280px, 30dvh);
   --scene-pack-height: calc(var(--scene-pack-width) * 880 / 600);
-  --scene-pack-center: calc(var(--scene-height) * .57);
+  --scene-pack-center: calc(var(--scene-height) * .58);
   --scene-background:
     radial-gradient(ellipse 43% 44% at 50% 48%, rgba(152, 49, 88, .21), transparent 90%),
     radial-gradient(ellipse 70% 75% at 52% 62%, rgba(62, 26, 75, .22), transparent 90%),
@@ -142,8 +142,9 @@
 }
 @keyframes opening-shell-retire {
   from { opacity: 1; }
-  to { opacity: 0; }
+  to { opacity: .75; }
 }
+.opening-continuum.is-revealing .foil-card-chamber { visibility: hidden; }
 .reveal-embedded[data-reveal-index="0"] .reveal-stage .reveal-flip { animation: none; }
 .reveal-game .reveal-ambient { display: none; }
 .reveal-game .reveal-header {
@@ -425,10 +426,18 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 
 /* A torn laminate hinges on its weld; light briefly shines through the cut. */
 .booster-cinematic.booster-presentation .foil-top-piece {
-  transform-style: preserve-3d; transform-origin: 50% 100%; backface-visibility: hidden;
+  transform-style: preserve-3d; transform-origin: var(--peel-origin-x, 50%) 15.45%; backface-visibility: hidden;
+  transition: transform 160ms ease-out;
+}
+.booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
+  transition: none;
+  transform: translate3d(calc(var(--peel-direction) * var(--peel-progress) * 10px),
+    calc(var(--peel-progress) * -24px), calc(var(--peel-progress) * 26px))
+    rotateX(calc(var(--peel-progress) * 68deg))
+    rotateZ(calc(var(--peel-direction) * var(--peel-progress) * -4deg));
 }
 .booster-cinematic.booster-presentation .foil-body-piece {
-  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden;
+  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden; transition: none;
 }
 .booster-cinematic.booster-presentation .foil-cut-slit {
   height: 3px; overflow: visible;
@@ -443,7 +452,7 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   filter: blur(7px);
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-top-piece {
-  animation-name: scene-cap-fold; animation-duration: 980ms;
+  animation-name: scene-cap-fold; animation-duration: 680ms;
   animation-timing-function: cubic-bezier(.18, .76, .2, 1);
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-body-piece {
@@ -462,9 +471,11 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   100% { opacity: 0; }
 }
 @keyframes scene-cap-fold {
-  0%, 8% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0) rotateZ(0); }
-  29% { opacity: 1; transform: translateY(-1%) translateZ(15px) rotateX(56deg) rotateY(-8deg) rotateZ(-2deg); }
-  43% { opacity: .96; transform: translate(2%, -3%) translateZ(10px) rotateX(39deg) rotateY(-17deg) rotateZ(3deg); }
+  0%, 8% { opacity: 1; transform: translate3d(calc(var(--peel-direction) * var(--peel-release, 0) * 10px),
+    calc(var(--peel-release, 0) * -24px), calc(var(--peel-release, 0) * 26px))
+    rotateX(calc(var(--peel-release, 0) * 68deg)) rotateZ(calc(var(--peel-direction) * var(--peel-release, 0) * -4deg)); }
+  29% { opacity: 1; transform: translateY(-4%) translateZ(24px) rotateX(84deg) rotateZ(calc(var(--peel-direction) * -6deg)); }
+  43% { opacity: .96; transform: translate(7%, -8%) translateZ(30px) rotateX(96deg) rotateZ(calc(var(--peel-direction) * -10deg)); }
   66% { opacity: .82; transform: translateY(-9%) translateZ(20px) rotateX(91deg) rotateY(-12deg) rotateZ(-4deg); }
   100% { opacity: 0; transform: translate(34%, -48%) translateZ(24px) rotateX(108deg) rotateY(-20deg) rotateZ(5deg); }
 }
@@ -707,3 +718,43 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 }
 .opening-continuum .foil-inner-shadow { background: none; }
 .opening-continuum .booster-premium-loading .booster-open-link { margin-top: 8px; }
+
+/* Visible opening wave: printed packaging, finger-led peel, gesture-first cards. */
+.opening-continuum .booster-stage-atmosphere { display: none; }
+.opening-continuum .foil-cut-slit {
+  height: 5px;
+  border-top: 1px solid #e7d5c1;
+  border-bottom: 2px solid #090c14;
+  background: #1b1420;
+  clip-path: polygon(0 30%, 8% 0, 17% 35%, 26% 0, 37% 30%, 48% 0,
+    58% 30%, 69% 0, 80% 30%, 90% 0, 100% 30%, 100% 100%, 0 100%);
+}
+.reveal-game:has(.reveal-anchor):not(.reveal-summary-open) .reveal-next {
+  width: min(70%, 240px);
+  min-height: 44px;
+  color: var(--text);
+  background: rgba(16, 17, 24, .85);
+  border: 1px solid rgba(242, 238, 230, .22);
+  box-shadow: none;
+  font-size: 13px;
+}
+.reveal-swipe-cue {
+  position: absolute;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  left: 16px;
+  right: 16px;
+  color: #f2eee6;
+  text-align: center;
+  font-size: 14px;
+}
+.reveal-swipe-cue span { display: block; margin-bottom: 4px; font-size: 24px; letter-spacing: 15px; }
+@media (prefers-reduced-motion: reduce) {
+  .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
+}
+[data-card-fx="off"] .booster-cinematic.booster-presentation .is-pulling .foil-top-piece { transform: none; }
+
+/* Motion-off must be static on the first frame, including tiny global fades. */
+@media (prefers-reduced-motion: reduce) {
+  .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }
+}
+[data-card-fx="off"] .opening-continuum.booster-presentation .booster-physical-scene * { transition-property: none; }

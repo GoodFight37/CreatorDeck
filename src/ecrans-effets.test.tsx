@@ -290,7 +290,9 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(pointer("pointerup", 200, 100));
     });
     expect(next).not.toHaveBeenCalled();
+    expect(document.querySelector(".reveal-swipe-cue")).toBeNull();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(document.querySelector(".reveal-swipe-cue")?.textContent).toContain("Glisse la carte");
     act(() => {
       anchor.dispatchEvent(pointer("pointerdown", 100, 100));
       anchor.dispatchEvent(pointer("pointermove", 124, 100));

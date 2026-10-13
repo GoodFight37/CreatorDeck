@@ -13,6 +13,11 @@ fin d'extraction et sortie d'attente renforcées. [Diagnostic et livrable](boost
 D-063. Le jugement visuel sur appareil réel reste à faire ; D-062 n'impose
 plus l'activation GPU par défaut.
 
+Vague visuelle du 13 octobre : [sachet contrasté et peel sous le doigt](booster-visible-2026-10-13.md),
+récupérée dans une nouvelle session et revérifiée sans conflit sur la base distante.
+[Publication et contrôles de reprise](reprise-zip-2026-10-13.md). L’avis sur téléphone
+réel reste à recueillir ; les mentions de blocage GitHub décrivent l’export initial.
+
 ### Plan actif
 
 1. **Ouverture : continuum, matière et geste implémentés** à la demande de Malik.
@@ -54,8 +59,9 @@ ni des remplacements à rechercher. Aucun changement de fichier image requis.
 ### Validation et éléments hors plan
 
 Avis visuel/performances sur téléphone physique restant à recueillir ; les
-E2E téléphone sont simulés. 20 anciennes sélections Commons restent locales,
-préservées et non publiées. Leur publication n’est pas une étape bloquante.
+E2E téléphone sont simulés. Les 20 anciennes sélections Commons sont
+récupérées avec leur provenance pour publication, sans remplacer les choix manuels
+prioritaires ; [état réel](reprise-zip-2026-10-13.md).
 Aucune nouvelle refonte économique, simulation « Ta chaîne », i18n, analytics
 ou publication sur stores n’est planifiée.
 

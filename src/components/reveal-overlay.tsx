@@ -463,6 +463,11 @@ export function RevealOverlay({
         </div>
       )}
 
+      {!showSummary && !perfect && !locked && flippedCardId === card.id ? (
+        <p className="reveal-swipe-cue"><span aria-hidden="true">← →</span>{" "}
+          Glisse la carte pour continuer
+        </p>
+      ) : null}
       <button
         className={`reveal-next${locked ? " locked" : ""}`}
         onClick={showSummary ? onClose : advance}

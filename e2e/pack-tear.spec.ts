@@ -103,6 +103,9 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   await expect(button).toBeEnabled();
   const anchor = reveal.locator(".reveal-anchor");
   const bounds = (await anchor.boundingBox())!;
+  await expect(reveal.locator(".reveal-swipe-cue")).toHaveText("← → Glisse la carte pour continuer");
+  await expect(reveal.locator(".reveal-swipe-cue")).toBeVisible();
+  expect((await button.boundingBox())!.width).toBeLessThan(bounds.width);
   const x = bounds.x + bounds.width / 2;
   const y = bounds.y + bounds.height / 2;
   await page.mouse.move(x, y);
@@ -322,14 +325,19 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   const y = bounds.y + bounds.height / 2;
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + 80, y, { steps: 8 });
+  await page.mouse.move(x + bounds.width * .28, y, { steps: 8 });
   const slit = dialog.locator(".foil-cut-slit");
   await expect.poll(async () => (await slit.boundingBox())?.width ?? 0).toBeGreaterThan(10);
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-light-x"))).not.toBe("");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
   await expect(dialog.locator("canvas")).toHaveCount(0);
+  const pull = await dialog.locator(".booster-physical-scene").evaluate(node => Number((node as HTMLElement).style.getPropertyValue("--peel-progress")));
+  expect(pull).toBeGreaterThan(.3);
+  expect(pull).toBeLessThan(1);
+  expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).not.toBe("none");
+  await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-swiping.png" });
-  await page.mouse.move(x + 167, y, { steps: 8 });
+  await page.mouse.move(bounds.x + bounds.width * .88, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
   expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
@@ -345,18 +353,17 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   expect(milliseconds(cascade.duration)).toBeCloseTo(700, 0);
   expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_000);
 
-  // The cut reveals a chamber of card backs; no hard cut while cap is still aloft.
-  await page.waitForTimeout(1100);
-  await expect(dialog.locator(".foil-card-chamber")).toBeVisible();
+  // The shell remains visible after the face; the duplicate backs are hidden.
+  await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
+  await expect(dialog.locator(".foil-card-chamber")).toBeHidden();
   await expect(dialog.locator(".foil-back-card")).toHaveCount(5);
   const packetOpacity = await dialog.evaluate((node) =>
     [".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-depth-bottom"]
       .map((selector) => Number(getComputedStyle(node.querySelector(selector)!).opacity)),
   );
-  // The parent retires gently after the face enters; the body need not disappear
-  // prematurely during extraction. Inspect its rendered ancestor, not only local opacity.
-  await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => Number(getComputedStyle(node).opacity))).toBeLessThan(.1);
-  expect(packetOpacity[1]).toBeGreaterThan(0);
+  // A visible opened shell must survive the first face; no cut to isolated cards.
+  await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => Number(getComputedStyle(node).opacity))).toBeGreaterThan(.5);
+  expect(packetOpacity[1]).toBeGreaterThan(.2);
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-opening.png" });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
@@ -383,11 +390,13 @@ test("reversing or lifting halfway cancels cleanly and keeps the no-tear option"
   const partialWidth = await slit.evaluate((node) => (node as HTMLElement).style.width);
   expect(parseFloat(partialWidth)).toBeGreaterThan(0);
   expect(parseFloat(partialWidth)).toBeLessThan(100);
+  expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).not.toBe("none");
   await touch.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x: start, y }] });
   await touch.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
 
   await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
   await expect(dialog.getByRole("button", { name: "Ouvrir sans déchirer" })).toBeVisible();
+  await expect.poll(() => dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).toBe("none");
   await touch.detach();
 });
 

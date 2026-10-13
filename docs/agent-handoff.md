@@ -1,3 +1,63 @@
+## Reprise intégrale du ZIP — 13 octobre 2026
+
+Les deux lots locaux sont récupérés : 40 fichiers contrôlés par empreinte,
+patch appliqué sans conflit sur main distant à la base `6f63374`. Git HTTPS
+et API `gh` fonctionnent dans cette session ; l’ancien environnement n’est pas
+réparé. Branche locale initiale `work` propre, puis `main` créée à la même base.
+
+Portraits commités dans `cf25f665dd217ea8e6689502d08dca85d07f9c36` : 20 images,
+sources/suivi/script conservés, priorité manuelle inchangée (18 en réserve,
+Livibee/9pasha actifs). Booster restauré sans nouvelle refonte, GPU toujours off.
+51/51 unitaires portraits, 32/32 DOM, 44/44 navigateur dont 42 ouverture et
+2 portraits, captures strictes, types/lint ciblé/catalogue/vocabulaire/build verts.
+Build et parcours locaux sans cloud ; téléphone physique non testé.
+[Rapport autonome de reprise](reprise-zip-2026-10-13.md),
+[passation portraits](passation-portraits.md). Publication normale en préparation,
+HEAD distant revérifié avant commit/push ; aucun reset ni force-push.
+Les sections d’export et checkpoints antérieurs ci-dessous sont historiques.
+Aucune nouvelle collecte, aucun agent délégué, réservation libérée.
+
+## Vague visuelle ouverture — 13 octobre 2026, checkpoint local
+
+Demande unique : progrès visible en dix secondes, fermé + peel avant tout,
+menus exclus, GPU off. [Rapport autonome](booster-visible-2026-10-13.md), D-064.
+Base locale 6f63374 ; artworks Live/Scène contrastés, rabat sous le doigt,
+repli au relâchement, départ de fin depuis la position atteinte, coque visible
+à la première face et indication swipe après flip. Taille ergonomique initiale
+conservée, aucun menu/règle/SQL/dépendance modifié. Preuves avant/après et vidéo
+9 s dans /workspace/artifacts/booster-visible-2026-10-13.
+
+30/30 DOM ; 40 succès dans le passage complet des 42 E2E, puis 2/2 retests de
+swipe après correction du séparateur de texte ; 6/6 répétitions mouvement réduit.
+Typecheck/lint ciblé/build/diff-check réussis. Captures strictes actualisées puis
+contrôlées. Cette vague n'est ni commitée ni poussée : API GitHub 401 et Git
+HTTPS sans identité, runtime sans liaison d'identité déclarée. Malik indique
+n'avoir rien désactivé ; aucune faute utilisateur supposée. Un incident transport
+exec passager s'est résolu sans perte de fichiers. Le HEAD distant doit être
+vérifié avant intégration/publication. Les anciennes preuves CI/Vercel vertes
+concernent 6f63374, pas cette nouvelle vague. Préserver les portraits locaux.
+Prochaine action : rétablir l'accès, fetch/inspecter main, intégrer uniquement
+les fichiers listés dans le rapport sans écraser les menus, puis publier et
+vérifier sa CI. Pas d'agent délégué ni de réservation concurrente connue.
+
+## Clôture autonome validée — 13 octobre 2026
+
+Produit publié : 6f63374bc38f2746fb5e4c73db5dea50243d5274. CI finale
+38321561095 terminée **success, 4/4 jobs**, confirmé par la dernière page du
+journal de suivi conservé dans /workspace/artifacts/validation-finale-2026-10-13.
+Unitaires/DOM/statique/build, SQL jetable, navigateur et cloud simulé verts.
+42/42 tests d'ouverture locaux, captures strictes comprises. Vercel success
+sur ce même commit, relevé avant interruption des accès ; bilan.md contient
+les liens et limites. Aucun correctif supplémentaire ni test à relancer.
+Les mentions de CI encore attendue ci-dessous sont historiques.
+
+Après reprise, API GitHub HTTP 401 et Git HTTPS sans authentification ; runtime
+sans secrets/identités configurés. Ce checkpoint final est **local, non publié**,
+les correctifs produit ont été publiés auparavant et leur CI a terminé verte.
+Aucun agent/veille active. Portraits préexistants et leurs 26 lignes conservés.
+Reste l'appréciation du rendu sur téléphone réel, sans promesse d'équivalence
+Pocket ; 3D off par défaut. Ne reprendre le code que sur demande ou nouvel échec.
+
 ## Reprise autonome : finaliser la CI — 13 octobre 2026
 
 Malik demande désormais de finir et vérifier de bout en bout. Sur base main
@@ -2223,3 +2283,29 @@ au registre et en WebP 900 px, source et cadrage consignés dans
 portrait-selection-2026-10-12.json. Unitaires ciblés 21/21, DOM crédits 2/2,
 typecheck, catalogue, ESLint ciblé et diff-check réussis depuis `54b1bc4`.
 Collecte des 998 encore active, build/E2E final restant à exécuter.
+
+## Pause demandée par Malik — bilan local avant changement de méthode
+
+Malik signale une consommation de quota trop élevée et demande le bilan avant
+une autre méthode. Suspendre les nouvelles recherches et contrôles coûteux.
+HEAD publié vérifié précédemment : `f8474f1`, huit nouveaux portraits publiés
+(avec Rubius/Shroud : dix), CI 38194626649 et Supabase 38194869061 success.
+Le registre local contient désormais 30 portraits : 28 nouveaux, les deux
+anciens strictement conservés. Les 20 nouveaux du dernier lot sont **locaux,
+non commités, non poussés**. Leurs images sont dans public/creators/curated,
+les sources/cadrages dans docs/portrait-selection-2026-10-12.json ; autres
+fichiers locaux : registre, E2E crédits, script de collecte et suivi complet.
+
+998 recherches Commons réussies ; 998 tentatives Flickr, 918 réponses
+exploitables et 80 non exploitables. 274 fichiers originaux récupérés, dont
+beaucoup de résultats hors sujet : ne pas annoncer 274 portraits utilisables.
+Les tableaux distinguent recherche, téléchargement et sélection. Les grosses
+images évincées du tampon Chromium ont été récupérées avec le client HTTP du
+même contexte ; quelques URL restent en HTTP 429. YouTube refuse le tunnel :
+licences Squeezie/Amine non confirmées, aucun remplacement pour ces deux.
+
+Archives/galerie préparées dans /workspace/artifacts/portraits-livraison-2026-10-12
+et ZIP voisins, pas publiées sur une Release. Ne pas redémarrer une collecte
+complète. Prochaine étape : décider une méthode plus économique avec Malik,
+puis reprendre uniquement la publication des 20 images locales si retenue.
+Réservation de recherche libérée ; préserver tous les fichiers locaux.

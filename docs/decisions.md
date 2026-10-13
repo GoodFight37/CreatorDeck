@@ -558,3 +558,21 @@ son/vibration, annulation d'animation et secours manuel couverts. Sortie
 volontaire d'une attente réseau sans rejouer le tirage ni perdre les cartes
 retournées ensuite. D-062 reste une autorisation de 3D, pas son activation par
 défaut. [Diagnostic, preuves et limites](booster-clean-2026-10-13.md).
+
+## D-064 — 13 octobre 2026 : vague visible sur le sachet et le peel (locale)
+
+Malik demande une différence perceptible en dix secondes et exclut les menus.
+Choix : impression d'ouverture contrastée, rabat directement piloté par la
+progression du doigt, coque conservée à la première face et swipe rendu principal.
+Les tailles ergonomiques initiales restent conservées. Pas de 3D GPU réactivée,
+chrome ou nouvel effet perpétuel. Avant/après réels et vidéo de neuf secondes
+servent de preuve ; l'avis du joueur reste à recueillir. [Rapport](booster-visible-2026-10-13.md).
+Cette décision et le code sont locaux, non publiés, l'accès GitHub étant indisponible.
+
+
+### Reprise de D-064 — 13 octobre 2026
+
+L’indisponibilité GitHub ci-dessus concernait uniquement la session exportatrice.
+Dans la nouvelle session, main distant est à la base annoncée, patch récupéré
+sans conflit et tests adaptés rejoués. Aucun nouveau choix visuel ni réactivation
+GPU ; [publication et contrôles](reprise-zip-2026-10-13.md).
