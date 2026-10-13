@@ -157,13 +157,17 @@ export function CollectionView({
 
   return (
     <div className="view collection-view" style={themeStyle}>
-      {/* En-tête sobre : titre direct */}
+      {/* En-tête : titre sobre et score */}
       <section className="page-title-row" style={{ marginBottom: "0.2rem" }}>
         <div>
           <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Mon classeur</h1>
         </div>
         <div className="collection-score">
-          <strong>{progress}%</strong><span>complété</span>
+          {game.stats.uniqueCreators ? (
+            <><strong>{progress}%</strong><span>complété</span></>
+          ) : (
+            <><strong>À toi</strong><span>ta première carte</span></>
+          )}
         </div>
       </section>
 
@@ -179,7 +183,7 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Outils compacts au-dessus des pochettes */}
+      {/* Outils compacts : recherche, tri et puces scrollables en 1 seule ligne */}
       <div className="binder-tools">
         <label className="search-field">
           <Search size={16} />
@@ -280,7 +284,7 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Grille de cartes visible immédiatement */}
+      {/* Grille de cartes visible immédiatement en haut de page */}
       <div className="binder-page">
         <div className="collection-grid">
           {visibleCreators.map((creator) => {
@@ -309,19 +313,20 @@ export function CollectionView({
           })}
         </div>
 
-        {/* Empty state épuré : 1 phrase + 1 CTA */}
+        {/* Empty state épuré avec la phrase contractuelle */}
         {!filtered.length ? (
           <div className="binder-empty-state">
             {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
               <>
-                <span>Ton classeur est vide pour l’instant.</span>
-                <button
-                  type="button"
-                  className="binder-first-drop"
-                  onClick={onGoDrop ?? (() => { setFilter("all"); setPage(0); })}
-                >
-                  {onGoDrop ? "Retour au Drop" : "Découvrir les cartes"} <ChevronRight size={16} />
+                <strong>Ta collection commence avec le prochain booster.</strong>
+                <button type="button" className="binder-first-drop" onClick={() => { setFilter("all"); setPage(0); }}>
+                  Voir les créateurs à découvrir <ChevronRight size={16} />
                 </button>
+                {onGoDrop ? (
+                  <button type="button" className="binder-first-drop" onClick={onGoDrop}>
+                    Retour au Drop <ChevronRight size={16} />
+                  </button>
+                ) : null}
               </>
             ) : (
               <span>Aucune carte ne correspond à cette recherche.</span>
@@ -330,7 +335,7 @@ export function CollectionView({
         ) : null}
       </div>
 
-      {/* Raccourci Dernières reçues */}
+      {/* Raccourci Dernières reçues replacé sous les pochettes */}
       {game.stats.uniqueCreators > 0 ? (
         <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.2rem 0" }}>
           <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
@@ -340,7 +345,7 @@ export function CollectionView({
         </div>
       ) : null}
 
-      {/* Pages à compléter : bandeau compact conservant le contrat de test */}
+      {/* Pages à compléter : bandeau placé après la grille pour ne pas masquer les cartes */}
       {featuredCollection ? (
         <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.35rem 0.6rem", margin: "0.25rem 0" }}>
           <div className="drop-section-label" style={{ marginBottom: "0.2rem", fontSize: "0.72rem" }}>
