@@ -149,13 +149,13 @@ export function PackTear({
     setCut((current) => ({ ...current, progress: 0 }));
   };
 
-  // The first pass over each horizontal slice is the cut the player made.
-  // Keeping its first sample prevents later back-and-forth motion from
-  // rewriting the seam or drawing a self-crossing slit.
+  // Keep one live sample per horizontal slice so the cut can respond to Y
+  // changes and retracing. Sorting by X makes the physical seam a single safe
+  // edge; it never uses the self-crossing chronological path as a clip polygon.
   const edgeBySlice = new Map<number, { x: number; y: number }>();
   for (const point of trace) {
     const slice = Math.round(point.x);
-    if (!edgeBySlice.has(slice)) edgeBySlice.set(slice, point);
+    edgeBySlice.set(slice, point);
   }
   const edge = [...edgeBySlice.values()].sort((a, b) => a.x - b.x);
   const boundary = edge.length > 1
@@ -258,7 +258,7 @@ export function PackTear({
             }}
             onPointerMove={(event) => {
               const gesture = start.current;
-              if (opened || !gesture || gesture.pointerId !== event.pointerId || gesture.ready) return;
+              if (opened || !gesture || gesture.pointerId !== event.pointerId) return;
               const bounds = gesture.bounds;
               const point = {
                 x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
@@ -305,10 +305,10 @@ export function PackTear({
                 scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
 
-              const isSufficient = span >= 38 || aperture >= 0.28;
-              if (isSufficient) {
-                // The cut is now armed: keep the physical result steady while
-                // the player decides when to release and open the pack.
+              const isSufficient = aperture >= 0.28;
+              if (isSufficient && !gesture.ready) {
+                // Crossing the opening threshold enables release, but the
+                // hand still guides the seam and foil until pointerUp.
                 gesture.ready = true;
                 setReleaseReady(true);
               }

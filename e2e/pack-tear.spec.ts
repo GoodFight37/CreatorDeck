@@ -719,7 +719,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   await expect(dialog.locator("canvas")).toHaveCount(0);
 });
 
-test("armed peel stays physically stable through repeated back-and-forth motion", async ({ page }) => {
+test("armed peel keeps following a back-and-forth cut until release", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
@@ -732,14 +732,18 @@ test("armed peel stays physically stable through repeated back-and-forth motion"
   await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
   await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
   await page.waitForTimeout(350);
-  const armedStyle = await scene.getAttribute("style");
-  const armedSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
+  const initialStyle = await scene.getAttribute("style");
+  const initialSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
+  const subsequentSlits: string[] = [];
 
   for (const [dx, dy] of [[-.2, .1], [.28, -.2], [-.12, -.1], [.24, .15]]) {
     await page.mouse.move(x + zone.width * dx, y + zone.height * dy, { steps: 3 });
-    await expect(scene).toHaveAttribute("style", armedStyle!);
-    await expect(dialog.locator(".foil-cut-slit")).toHaveAttribute("points", armedSlit!);
+    subsequentSlits.push((await dialog.locator(".foil-cut-slit").getAttribute("points")) ?? "");
   }
+  expect(await scene.getAttribute("style")).not.toBe(initialStyle);
+  expect(subsequentSlits.some((points) => points !== initialSlit)).toBe(true);
+  const seamXs = subsequentSlits.at(-1)!.split(" ").map((point) => Number(point.split(",")[0]));
+  expect(seamXs.every((value, index) => index === 0 || value >= seamXs[index - 1])).toBe(true);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
 
