@@ -1,8 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
+import { isPeelOpenable, PEEL_MIN_COVERAGE, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 
 describe("géométrie de la fente du booster", () => {
+  it("exige une coupe presque complète avant de permettre l'ouverture", () => {
+    expect(PEEL_MIN_COVERAGE).toBe(88);
+    expect(isPeelOpenable(35, 0.8)).toBe(false);
+    expect(isPeelOpenable(87.9, 0.8)).toBe(false);
+    expect(isPeelOpenable(88, 0.27)).toBe(false);
+    expect(isPeelOpenable(88, 0.28)).toBe(true);
+  });
+
   it("garde un bord trié et lisse malgré les retours répétés", () => {
     const points = Array.from({ length: 80 }, (_, index) => {
       const x = index < 40 ? index * 2.4 : (79 - index) * 2.4;

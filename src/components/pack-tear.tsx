@@ -5,7 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
-import { PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
+import { isPeelOpenable, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
 /**
@@ -47,6 +47,7 @@ export function PackTear({
     pointerId: number;
     ready: boolean;
     bounds: { left: number; top: number; width: number; height: number };
+    seamWidth: number;
     points: { x: number; y: number }[];
     percent: number;
   } | null>(null);
@@ -146,8 +147,9 @@ export function PackTear({
     pullProgress.current = 0;
     setReturning(true);
     setReleaseReady(false);
+    setTrace([]);
     setPull({ x: 0, y: 0, angle: 0 });
-    setCut((current) => ({ ...current, progress: 0 }));
+    setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
   };
 
   // Collapse the chronological touch trace into a smooth, monotone weld. The
@@ -229,6 +231,7 @@ export function PackTear({
             onPointerDown={(event) => {
               if (opened || start.current || event.button !== 0 || event.isPrimary === false) return;
               const bounds = sceneRef.current!.getBoundingClientRect();
+              const seamBounds = event.currentTarget.getBoundingClientRect();
               const point = {
                 x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
                 y: Math.max(PEEL_ZONE_Y.min, Math.min(PEEL_ZONE_Y.max, ((event.clientY - bounds.top) / bounds.height) * 100)),
@@ -239,6 +242,7 @@ export function PackTear({
                 pointerId: event.pointerId,
                 ready: false,
                 bounds,
+                seamWidth: (seamBounds.width / bounds.width) * 100,
                 points: [point],
                 percent: point.x,
               };
@@ -306,8 +310,10 @@ export function PackTear({
                 scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
 
-              const isSufficient = aperture >= 0.28;
-              if (isSufficient && !gesture.ready) {
+              // A strong lift on a short local stroke must not fold the full
+              // flap. Require almost the full seam before enabling release.
+              const seamCoverage = (span / gesture.seamWidth) * 100;
+              if (isPeelOpenable(seamCoverage, aperture) && !gesture.ready) {
                 // Crossing the opening threshold enables release, but the
                 // hand still guides the seam and foil until pointerUp.
                 gesture.ready = true;

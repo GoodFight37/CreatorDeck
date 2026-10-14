@@ -1,3 +1,25 @@
+## Peel local, seuil de coupe complète et repli sans trace — vérifié localement, 14 octobre 2026
+
+Les captures de Malik montrent deux défauts : une coupe courte peut laisser son
+trait après relâchement ; le soulèvement d'une petite zone peut armer le geste,
+alors que l'animation replie la totalité du rabat. `isPeelOpenable()` exige
+maintenant au moins 88 % de la largeur effective de la zone tactile et
+l'ouverture minimale déjà requise. Le tracé et le bord clipé restent guidés
+par le doigt ; une tentative incomplète efface la trace, réinitialise la coupe et
+replie le sachet avec une transition courte. L'ouverture reste déclenchée au
+relâchement après ce seuil. Les contrôles à seuils unitaires passent (3/3), le
+typecheck et ESLint ciblé passent ; E2E `e2e/pack-tear.spec.ts` : 47 réussis,
+1 scénario cloud conditionnel ignoré. Les 4 parcours ciblés passent en bureau
+et téléphone simulé (8/8). `npm run build` réussit ; le garde-cloud indique
+que les variables Supabase ne sont pas présentes, donc ce build local est
+statique sans cloud. Aucun téléphone physique testé. Pas encore publié :
+revérifier le diff et la base distante avant commit/push.
+
+Fichiers applicatifs : `src/components/pack-tear.tsx`,
+`src/lib/peel-geometry.ts`, son test, `src/app/booster-continuity.css` et
+`e2e/pack-tear.spec.ts`. Aucun changement aux piliers, à l'économie ou aux
+timings des reveals.
+
 ## Tracé du peel lissé et limité à la soudure — publié, 14 octobre 2026
 
 Malik montre un tracé lumineux en zigzag pendant des va-et-vient sur le sachet,

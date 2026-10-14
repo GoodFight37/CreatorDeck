@@ -446,6 +446,7 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 }
 .booster-cinematic.booster-presentation .foil-top-piece {
   clip-path: var(--cut-top, inset(0 0 84.55%));
+  transition: clip-path 180ms ease-out, transform 160ms ease-out;
 }
 .booster-cinematic.booster-presentation .booster-foil-glow {
   display: none;
@@ -454,7 +455,11 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   clip-path: var(--cut-body, inset(15.45% 0 0));
 }
 .booster-cinematic.booster-presentation .foil-body-piece {
-  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden; transition: none;
+  transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden;
+  transition: clip-path 180ms ease-out;
+}
+.booster-cinematic.booster-presentation .is-pulling .foil-body-piece {
+  transition: none;
 }
 .booster-cinematic.booster-presentation .foil-cut-slit {
   stroke: rgb(255 211 187 / .9);

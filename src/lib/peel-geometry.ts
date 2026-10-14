@@ -3,6 +3,14 @@ export type PeelPoint = { x: number; y: number };
 /** The welded band, in percent of the booster scene. */
 export const PEEL_ZONE_Y = { min: 10, max: 21 } as const;
 
+/** Opening folds the whole flap, so the seam must be nearly fully cut first. */
+export const PEEL_MIN_COVERAGE = 88;
+export const PEEL_MIN_APERTURE = 0.28;
+
+export function isPeelOpenable(coverage: number, aperture: number): boolean {
+  return coverage >= PEEL_MIN_COVERAGE && aperture >= PEEL_MIN_APERTURE;
+}
+
 /**
  * Turn raw touch samples into one calm, monotone seam. Per-slice medians make
  * rapid retracing harmless; a short weighted filter softens sensor jitter.

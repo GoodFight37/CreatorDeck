@@ -498,7 +498,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).transform)).not.toBe("none");
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-swiping.png" });
-  await page.mouse.move(bounds.x + bounds.width * .88, y, { steps: 8 });
+  await page.mouse.move(bounds.x + bounds.width * .96, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
   expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
@@ -664,8 +664,8 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
       expect(action.y + action.height).toBeLessThanOrEqual(viewport.height);
     }
     const seam = (await dialog.locator(".booster-tear-track").boundingBox())!;
-    const from = reverse ? .88 : .12;
-    const to = reverse ? .12 : .88;
+    const from = reverse ? .96 : .04;
+    const to = reverse ? .04 : .96;
     const y = seam.y + seam.height / 2;
     await touch.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: seam.x + seam.width * from, y }] });
     // A short trace is reversible and must not open the packet.
@@ -690,13 +690,13 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   }
 });
 
- test("guided peel follows curved Y samples and opens with a shorter lifted cut", async ({ page }) => {
+test("guided peel follows curved Y samples and opens after almost the full seam is cut", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
   const identity = await dialog.elementHandle();
   const zone = (await dialog.locator(".booster-peel-zone").boundingBox())!;
-  const x = zone.x + zone.width * .35, y = zone.y + zone.height * .65;
+  const x = zone.x + zone.width * .04, y = zone.y + zone.height * .65;
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(x + zone.width * .1, y - zone.height * .2, { steps: 4 });
   await page.mouse.move(x + zone.width * .18, y + zone.height * .1, { steps: 4 });
@@ -706,7 +706,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   expect(await dialog.locator(".foil-top-piece").evaluate(node => getComputedStyle(node).clipPath)).toContain("polygon");
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.screenshot({ path: "test-results/peel-guide-" + test.info().project.name + ".png" });
-  await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
+  await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
   await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
   // Even a sufficient cut must remain sealed for as long as the finger is down.
   await page.waitForTimeout(350);
@@ -725,18 +725,18 @@ test("armed peel keeps following a back-and-forth cut until release", async ({ p
   const dialog = page.locator(".opening-continuum");
   const zone = (await dialog.locator(".booster-peel-zone").boundingBox())!;
   const scene = dialog.locator(".booster-physical-scene");
-  const x = zone.x + zone.width * .35, y = zone.y + zone.height * .65;
+  const x = zone.x + zone.width * .04, y = zone.y + zone.height * .65;
 
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
+  await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
   await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
   await page.waitForTimeout(350);
   const initialStyle = await scene.getAttribute("style");
   const initialSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
   const subsequentSlits: string[] = [];
 
-  for (const [dx, dy] of [[-.2, .1], [.28, -.2], [-.12, -.1], [.24, .15]]) {
+  for (const [dx, dy] of [[.86, .1], [.98, -.2], [.90, -.1], [.97, .15]]) {
     await page.mouse.move(x + zone.width * dx, y + zone.height * dy, { steps: 3 });
     subsequentSlits.push((await dialog.locator(".foil-cut-slit").getAttribute("points")) ?? "");
   }
@@ -762,17 +762,40 @@ test("armed peel keeps following a back-and-forth cut until release", async ({ p
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
 });
 
+test("a local lifted stroke retracts on release and leaves no trace", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const dialog = page.locator(".opening-continuum");
+  const zone = (await dialog.locator(".booster-peel-zone").boundingBox())!;
+  const scene = (await dialog.locator(".booster-physical-scene").boundingBox())!;
+  const x = zone.x + zone.width * .35;
+  const y = zone.y + zone.height / 2;
+
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  // Strong lift and a visible trace, but only across a local portion of the weld.
+  await page.mouse.move(x + zone.width * .23, y - scene.height * .45, { steps: 6 });
+  await expect(dialog.locator(".foil-cut-slit")).not.toHaveAttribute("points", "");
+  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toHaveCount(0);
+  await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
+  await page.mouse.up();
+
+  await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
+  await expect(dialog.locator(".foil-cut-slit")).toHaveAttribute("points", "");
+  await expect(dialog.getByRole("button", { name: "Ouvrir sans déchirer" })).toBeVisible();
+});
+
 test("cancelling an armed peel retracts instead of opening", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
   const seam = dialog.locator(".booster-peel-zone");
   const zone = (await seam.boundingBox())!;
-  const x = zone.x + zone.width * .35, y = zone.y + zone.height * .65;
+  const x = zone.x + zone.width * .04, y = zone.y + zone.height * .65;
 
   await page.mouse.move(x, y);
   await page.mouse.down();
-  await page.mouse.move(x + zone.width * .32, y - zone.height * .95, { steps: 8 });
+  await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
   await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
   await seam.dispatchEvent("pointercancel", { pointerId: 1 });
   await page.mouse.up();

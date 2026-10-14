@@ -1,3 +1,16 @@
+## Coupe partielle qui ouvre tout le rabat ou laisse une trace — correctif local en vérification, 14 octobre 2026
+
+Reproduction : sur l'écran d'ouverture, tirer fortement une petite portion de
+la soudure puis relâcher ; selon l'amplitude verticale, le rabat entier pouvait
+s'ouvrir. Un geste trop court pouvait aussi laisser le tracé et le bord coupé
+visibles. Cause dans `pack-tear.tsx` : l'ouverture mesurait surtout l'effort
+combiné sans longueur minimale de coupe, alors que `finish()` anime tout le
+rabat ; `retract()` remettait le progrès à zéro mais gardait `trace`. Correctif
+local : exiger 88 % de couverture de la zone tactile réelle et l'effort minimal, vider le
+tracé/contour incomplet au relâchement et animer le retour. Tests E2E et
+publication encore en cours ; le résultat final et la preuve distante seront
+ajoutés dans la passation. Aucun essai physique revendiqué.
+
 ## Tracé dentelé et trop blanc pendant le peel — corrigé, 14 octobre 2026
 
 La vidéo/capture montre des zigzags quand le doigt repart en arrière et un
