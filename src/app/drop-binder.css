@@ -102,25 +102,7 @@
   position: relative;
   transform: translateZ(6px);
 }
-.home-view .pack-specular {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(115deg,
-    transparent 30%,
-    rgba(255,240,220,.08) 42%,
-    rgba(255,230,210,.35) 50%,
-    rgba(255,200,220,.08) 58%,
-    transparent 70%);
-  background-size: 220% 100%;
-  animation: pack-sheen 4.5s ease-in-out infinite;
-  mix-blend-mode: screen;
-  opacity: .45;
-}
-@keyframes pack-sheen {
-  0%, 100% { background-position: 120% 50%; }
-  50% { background-position: -20% 50%; }
-}
+/* The foil specular is defined in booster-continuity.css. Keep one animation source. */
 .home-view .pack-copy h2 { font-size: 24px; letter-spacing: .07em; }
 .home-view .pack-copy span { font-size: 12px; }
 .home-view .pull-hint { font-size: 12px; }
