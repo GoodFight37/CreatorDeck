@@ -28,35 +28,34 @@ sur les deux interrupteurs ; un ancien choix ON garde les deux actifs. Reflets
 reste activé par défaut si aucun choix n'est enregistré ;
 `prefers-reduced-motion` reste prioritaire sur les animations.
 
-## Pistes à écouter avant de choisir
+## Direction et exemples d'écoute — choix final en attente
 
-La nappe actuelle est un prototype original, volontairement sans rythme : elle
-explique le son entendu, mais ne donne pas encore au hub une vraie identité
-musicale. Ces quatre morceaux sont des candidats à écouter ; aucun n'est encore
-intégré. Les licences consultées permettent l'utilisation dans un projet
-commercial avec attribution ; le crédit devra apparaître dans les crédits du
-jeu si l'un d'eux est retenu.
+Le 14 octobre, Malik a partagé `snow_day.mp3` et `springly_sprigs.mp3` comme
+exemples de direction, en précisant que ce n'est pas encore son avis final.
+Ils proviennent de [Fantasy Song Pack Volume 1 sur OpenGameArt](https://opengameart.org/content/fantasy-song-pack-volume-1),
+attribué à troubadour et publié sous CC0. La page indique que les morceaux du
+pack sont libres d'utilisation sans crédit. Ces deux fichiers sont des repères
+de goût uniquement : ils ne sont pas intégrés au dépôt ni choisis pour la BGM.
 
-1. [Neon Noir — Shane Ivers](https://www.silvermansound.com/free-music/neon-noir) :
-   synthwave chaleureux, basse, cordes et batterie, 80 BPM, 5:12. Candidat
-   principal pour une ambiance tard le soir avec un vrai groove.
-2. [Resonance — Scott Buckley](https://www.scottbuckley.com.au/library/resonance/) :
-   electronica sombre ; démarre par une pulsation et guitare d'ambiance puis
-   s'ouvre sur une partie plus synthé et entraînante. CC BY 4.0, crédit requis.
-3. [Assembly Not Required — AndyGun11](https://opengameart.org/content/assembly-not-required-dark-synthwave-electronic-body-music) :
-   boucle courte, dark synthwave / EBM, explicitement prévue pour boucler ;
-   CC BY 4.0, crédit du morceau et du pseudo requis.
-4. [Nightchaser — Shane Ivers](https://www.silvermansound.com/free-music/nightchaser) :
-   techno/trance sombre, basse profonde, 115 BPM, 3:39. Le choix le plus énergique,
-   possiblement trop présent comme fond permanent.
+La première shortlist (Neon Noir, Resonance, Assembly Not Required et
+Nightchaser) ne correspond pas à la direction souhaitée par Malik ; ne pas la
+reproposer comme sélection active. Chercher plutôt une mélodie d'aventure
+marquée, chaleureuse et mémorable, avec une couleur de jeu console/JRPG, sans
+reprendre de thème, de mélodie ou d'enregistrement Nintendo/Pokémon. Ne pas
+déduire de ces deux exemples un choix de genre final plus précis que cela.
 
-Mixkit n'est pas retenu : sa licence gratuite exclut explicitement les jeux
-vidéo. Les détails peuvent évoluer ; avant intégration, revalider la licence de
-la piste choisie et garder une copie de sa page/licence et du texte de crédit.
-L'étape de comparaison recommandée est un aperçu temporaire dans l'application :
-chaque candidate s'écoute depuis le même écran et le même volume, sans modifier
-le rythme d'ouverture ni le reste des sons. La piste sera remplacée dans le hub
-seulement après le choix de Malik.
+Avant d'intégrer tout morceau, vérifier sa licence directement auprès de la
+source et conserver la page/licence ainsi que le crédit demandé. « Unreleased »
+ne veut pas dire libre de droits : une chanson et son enregistrement sont deux
+droits distincts. Pour intégrer un morceau commercial unreleased dans le jeu,
+il faut une autorisation écrite couvrant la composition/synchronisation et le
+master/enregistrement, obtenue auprès des ayants droit concernés. Une fuite,
+un crédit ou la disponibilité d'un fichier ne donnent pas cette autorisation.
+
+La comparaison recommandée reste un aperçu temporaire dans l'application :
+chaque candidate s'écoute depuis le même écran et au même volume, sans modifier
+le rythme d'ouverture ni les autres sons. La piste du hub ne sera remplacée
+qu'après le choix de Malik.
 
 ## Remplacer par un asset final
 

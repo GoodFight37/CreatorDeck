@@ -3,9 +3,10 @@
 - Projet : CreatorDeck, application web testée sur Vercel. Malik n’utilise pas
   l’APK pour ses validations. Lire `AGENTS.md`, `docs/README.md`, la roadmap,
   le périmètre et ce checkpoint avant de reprendre.
-- Git : `main` est la branche de travail et de publication. À ce checkpoint,
-  le dépôt était propre et `main` local correspondait à `origin/main` au SHA
-  `c16992c7230666f24f4d71df7d210f4399bef9e2`. Re-vérifier GitHub au démarrage.
+- Git : `main` est la branche de travail et de publication. Base vérifiée de
+  cette reprise : `2a1fa3c30481f7fd3d4338ca6ac1458f41c116a2`, checkout local
+  propre et identique à `origin/main`. Le commit qui contient ce checkpoint
+  est retrouvable par `git log -1 --format=%H -- docs/agent-handoff.md`.
 - Dernier changement applicatif : peel libre au commit
   `3fec7895fae6bbed0eb05bf4baa6e246f55fefdc` ; zone Y 6–26 %, couverture
   64 %, tracé X/Y du doigt conservé, ouverture au relâchement, extraction des
@@ -13,11 +14,21 @@
   jour documentaire : l’indicateur de version web peut donc être plus récent
   que le code de jeu.
 - CI du code : GitHub Actions [run 38573481379](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379),
-  6/6 jobs verts. Vercel Production `READY` sur le code `3fec7895`, URL
+  6/6 jobs verts sur le code `3fec7895`. Le check Vercel du commit documentaire
+  `2a1fa3c3` est `success` ; Vercel Production est `READY` sur ce SHA, URL
   [creator-deckk.vercel.app](https://creator-deckk.vercel.app).
 - À ne pas considérer comme résolu : Malik trouve encore le geste de coupe
   peu naturel. Les tests automatisés ne remplacent pas son ressenti tactile.
   Ne pas revenir à un rail linéaire ni remettre un tracé blanc agressif.
+- Audio : Malik a fourni `snow_day.mp3` et `springly_sprigs.mp3` de
+  [Fantasy Song Pack Volume 1](https://opengameart.org/content/fantasy-song-pack-volume-1)
+  (CC0), comme références provisoires et non comme choix final. La shortlist
+  synthwave/techno précédente ne correspond pas à son goût. Chercher une
+  mélodie d'aventure console/JRPG chaleureuse et mémorable, sans reprendre de
+  musique Nintendo/Pokémon. Fichiers non ajoutés au dépôt ; aucune piste
+  retenue. Les morceaux unreleased de Juice WRLD ne sont pas libres par défaut :
+  ne rien intégrer sans autorisation écrite pour composition/synchronisation et
+  master/enregistrement. Voir [audio-assets.md](audio-assets.md).
 - Pas de fichiers applicatifs à réserver : le prochain chat peut poursuivre
   selon la roadmap. Après chaque livraison vérifiée, mettre à jour les docs,
   pousser normalement sur `main`, puis confirmer le SHA distant, CI et Vercel.

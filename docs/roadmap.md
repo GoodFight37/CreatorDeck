@@ -23,9 +23,13 @@ Build local sans variables Supabase ; il ne vérifie pas le cloud. La sensation
 réelle reste à confirmer par Malik sur le site ; les tests simulés ne valent pas
 un test tactile. Voir D-092 et le dernier checkpoint de passation.
 
-**Audio :** la piste sans percussion publiée reste un prototype. Les quatre
-candidats à écouter et leurs crédits sont répertoriés dans
-[audio-assets.md](audio-assets.md) ; aucune piste n'a encore été choisie.
+**Audio :** la piste publiée reste un prototype. Malik a fourni
+`snow_day.mp3` et `springly_sprigs.mp3` comme références provisoires, pas comme
+choix final. Elles viennent du pack OpenGameArt CC0 ; la shortlist synthwave/
+techno précédente a été écartée comme mauvaise direction. Chercher une mélodie
+d'aventure console/JRPG, chaleureuse et mémorable, puis préparer l'aperçu
+temporaire dans l'application. Aucune candidate n'est intégrée ou retenue.
+Détails et limites de licence dans [audio-assets.md](audio-assets.md).
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`
@@ -149,9 +153,10 @@ checkpoint de passation pour le dernier mix.
    deux tiers de la soudure, le repli d'un trait court et l'extraction sans
    second clic. Le retour de Malik déterminera si la sensation est enfin
    acceptable ; les scénarios navigateur ne la certifient pas.
-2. Malik écoute les quatre pistes de [audio-assets.md](audio-assets.md) sur son
-   PC et choisit une candidate (ou demande une nouvelle shortlist) avant toute
-   intégration.
+2. Reprendre la sélection musicale depuis les deux références provisoires de
+   Malik ; bâtir une comparaison temporaire dans l'application avant de choisir
+   ou d'intégrer la BGM. Toute piste unreleased exige une autorisation écrite
+   des ayants droit pour la composition et l'enregistrement.
 3. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
    avant toute intégration réelle de nouveaux univers. La simulation de croissance
    et le prototype ne modifient pas le catalogue, les taux ou l'économie.
