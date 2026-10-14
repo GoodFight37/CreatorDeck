@@ -1,17 +1,17 @@
-## Geste de déchirure encore trop rigide au test joueur — reprise locale, 14 octobre 2026
+## Geste du peel encore perfectible après amélioration partielle — ouvert, 14 octobre 2026
 
-Malik indique que le haut du sachet reste linéaire/raide et qu'un swipe franc
-ne l'ouvre pas de façon fiable sur le web Vercel. Le geste publié avant cette
-reprise était identifié par `eb12a1b` dans l'application ; la logique en cause
-avait une couture retriée par X et un seuil de 88 %. Correction locale en
-cours : chemin chronologique X/Y, bande Y 6–26 %, couverture 64 %, effort
-minimum `0,22`, rabat déplacé par le doigt, lueur et points discrets. Ouverture
-au relâchement conservée ; les cartes s'extraient automatiquement ensuite.
-Code publié sur `main` au SHA
-`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`, Vercel Production `READY` et CI
-GitHub `38573481379` verte (6/6). E2E bureau/téléphone simulé : 49 réussis,
-1 scénario cloud ignoré. Le ressenti de Malik sur le nouveau site reste à
-recueillir. Ne pas fermer ce problème sur la seule base des tests.
+Sur l'ancienne version `eb12a1b`, le haut du sachet restait linéaire et un swipe
+franc ne l'ouvrait pas de façon fiable. Le correctif publié au SHA
+`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc` garde le tracé chronologique X/Y,
+la bande Y 6–26 %, une couverture de 64 %, l'effort minimal `0,22`, le suivi du
+rabat et l'ouverture au relâchement ; les cartes s'extraient automatiquement.
+Lors du retest du pack tutoriel sur Vercel, Malik rapporte que l'ouverture se
+fait normalement, mais que le geste n'est pas parfait. Aucun défaut précis
+supplémentaire n'est décrit. Statut : amélioration partielle, ressenti encore
+ouvert ; ne pas clore sur la seule base des tests. CI du code
+`38573481379` verte (6/6), E2E 49 réussis/1 scénario cloud ignoré. Le déploiement
+Production actuel `99fc67ca` ne change que la documentation ; le code servi est
+toujours `3fec7895`.
 
 ## Coupe partielle qui ouvrait tout le rabat ou laissait une trace — corrigé et publié, 14 octobre 2026
 

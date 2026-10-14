@@ -4,7 +4,7 @@
   l’APK pour ses validations. Lire `AGENTS.md`, `docs/README.md`, la roadmap,
   le périmètre et ce checkpoint avant de reprendre.
 - Git : `main` est la branche de travail et de publication. Base vérifiée de
-  cette reprise : `2a1fa3c30481f7fd3d4338ca6ac1458f41c116a2`, checkout local
+  cette reprise : `99fc67ca2d76e1e743b8d50ffd9f4042083e74d7`, checkout local
   propre et identique à `origin/main`. Le commit qui contient ce checkpoint
   est retrouvable par `git log -1 --format=%H -- docs/agent-handoff.md`.
 - Dernier changement applicatif : peel libre au commit
@@ -15,11 +15,13 @@
   que le code de jeu.
 - CI du code : GitHub Actions [run 38573481379](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379),
   6/6 jobs verts sur le code `3fec7895`. Le check Vercel du commit documentaire
-  `2a1fa3c3` est `success` ; Vercel Production est `READY` sur ce SHA, URL
+  `99fc67ca` est `success` ; Vercel Production est `READY` sur ce SHA, URL
   [creator-deckk.vercel.app](https://creator-deckk.vercel.app).
-- À ne pas considérer comme résolu : Malik trouve encore le geste de coupe
-  peu naturel. Les tests automatisés ne remplacent pas son ressenti tactile.
-  Ne pas revenir à un rail linéaire ni remettre un tracé blanc agressif.
+- Peel : après le test du pack tutoriel sur Vercel, Malik confirme que le pack
+  s'ouvre normalement, mais trouve encore le geste perfectible. Aucun défaut
+  précis supplémentaire n'a été décrit ; garder le ressenti ouvert et ne pas
+  le déclarer résolu grâce aux seuls tests automatisés. Ne pas revenir à un
+  rail linéaire ni remettre un tracé blanc agressif.
 - Audio : Malik a fourni `snow_day.mp3` et `springly_sprigs.mp3` de
   [Fantasy Song Pack Volume 1](https://opengameart.org/content/fantasy-song-pack-volume-1)
   (CC0), comme références provisoires et non comme choix final. La shortlist

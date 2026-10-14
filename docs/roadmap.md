@@ -2,26 +2,23 @@
 
 ## État actuel — 14 octobre 2026
 
-**Version web :** Malik voit `eb12a1b` dans Toi ; c'était le SHA en production
-avant le correctif ci-dessous. Les changements locaux ne sont pas annoncés
-comme disponibles sur Vercel avant la vérification du commit et du déploiement.
+**Version web :** Production est `READY` sur le commit documentaire
+`99fc67ca2d76e1e743b8d50ffd9f4042083e74d7`; le code du peel servi reste celui de
+`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`. L'empreinte visible peut indiquer
+le commit documentaire plutôt que le dernier commit applicatif.
 
-**Peel libre — code publié, ressenti à confirmer :** Malik confirme que le haut
-du sachet paraît encore rigide et qu'un swipe franc ouvre mal. Le défaut venait
-du chemin retrié/médianisé par X et du seuil de 88 %. Le code local conserve
-maintenant l'ordre du doigt, ses retours en X et les variations en Y ; la zone
-Y passe à 6–26 %, le seuil de couverture à 64 % et l'effort minimal à `0,22`.
-Le rabat suit X/Y, une lueur et de petites étincelles suivent la fente, et le
-relâchement reste nécessaire. Les cartes s'extraient ensuite automatiquement.
-Géométrie 3/3, typecheck, ESLint ciblé, E2E sachet 49 réussis/1 scénario cloud
-ignoré, écrans 130/130 et build réussi. CI GitHub
+**Peel libre — ouverture confirmée, sensation encore perfectible :** au test du
+pack tutoriel sur Vercel, Malik confirme que le sachet s'ouvre normalement,
+mais précise que le geste n'est pas parfait. Aucun nouveau symptôme concret
+n'est rapporté ; garder le point ouvert et ne pas inventer de correctif avant
+un défaut plus précis. Le code publié conserve l'ordre X/Y du doigt dans la
+bande Y 6–26 %, avec 64 % de couverture, effort minimal `0,22`, ouverture au
+relâchement et extraction automatique des cartes. CI GitHub
 [`38573481379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379)
-verte (6/6). Vercel Production `READY` pour le SHA code
-`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`, déploiement
-[`68vZFVuDBdVQ6YMoLie3BVFSiBYj`](https://vercel.com/hafsi37-2386/creator-deckk/68vZFVuDBdVQ6YMoLie3BVFSiBYj).
-Build local sans variables Supabase ; il ne vérifie pas le cloud. La sensation
-réelle reste à confirmer par Malik sur le site ; les tests simulés ne valent pas
-un test tactile. Voir D-092 et le dernier checkpoint de passation.
+verte (6/6) sur le code `3fec7895`. Les vérifications géométrie 3/3, E2E
+49 réussis/1 scénario cloud ignoré, écrans 130/130, typecheck, ESLint et build
+datent de cette livraison. Elles ne certifient pas la sensation tactile. Voir
+D-092, [le problème connu](known-issues.md) et le dernier checkpoint.
 
 **Audio :** la piste publiée reste un prototype. Malik a fourni
 `snow_day.mp3` et `springly_sprigs.mp3` comme références provisoires, pas comme
