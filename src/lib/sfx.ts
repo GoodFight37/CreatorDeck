@@ -62,6 +62,7 @@ export type Note = {
 
 const STORAGE_KEY = "creatordeck.muted";
 const MUSIC_STORAGE_KEY = "creatordeck.music-muted";
+const MUSIC_SRC = "/music/hub-late-night.mp3";
 
 /**
  * Onde de base par rareté.
@@ -404,7 +405,8 @@ export function setMuted(value: boolean): void {
 export function setMusicMuted(value: boolean): void {
   loadPreference();
   musicMuted = Boolean(value);
-  if (musicGain && context) applyMusicScene(context);
+  if (musicMuted) stopHubMusic();
+  else if (musicGain && context) applyMusicScene(context);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(MUSIC_STORAGE_KEY, musicMuted ? "1" : "0");
@@ -465,7 +467,7 @@ export function startGameAudio(scene: MusicScene = "hub"): void {
   if (!ctx) return;
   if (ctx.state === "suspended") void ctx.resume();
   if (!musicLoading && !musicBuffer) {
-    musicLoading = fetch("/music/hub-late-night.mp3")
+    musicLoading = fetch(MUSIC_SRC)
       .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
       .then((data) => ctx.decodeAudioData(data))
       .then((buffer) => { musicBuffer = buffer; startMusicSource(ctx); })
@@ -474,6 +476,28 @@ export function startGameAudio(scene: MusicScene = "hub"): void {
   }
   startMusicSource(ctx);
   applyMusicScene(ctx);
+}
+
+/** Start the existing single Web Audio hub loop, without creating a second player. */
+export function playHubMusic(): void {
+  if (isMusicMuted()) return;
+  startGameAudio(musicScene);
+}
+
+/** Duck the hub during the tear; scene restoration is owned by the app. */
+export function duckHubMusic(duck = true): void {
+  if (isMusicMuted()) return;
+  setMusicScene(duck ? "pack" : "hub");
+}
+
+/** Silence the existing hub loop without changing the music preference. */
+export function stopHubMusic(): void {
+  if (musicSource) {
+    try { musicSource.stop(); } catch { /* Already stopped. */ }
+    musicSource.disconnect();
+    musicSource = null;
+  }
+  if (musicGain) { musicGain.disconnect(); musicGain = null; }
 }
 
 /** Atténue fortement la boucle pendant un pack et la coupe au Tribunal. */
