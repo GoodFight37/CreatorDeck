@@ -1,5 +1,20 @@
 # Décisions CreatorDeck
 
+## D-084 — 14 octobre 2026 : figer la coupe armée pendant le maintien du doigt
+
+Malik a montré qu'un mouvement répété de va-et-vient pouvait faire paraître le
+sachet cassé. La coupe conserve désormais le premier point tracé sur chaque
+portion horizontale, ce qui empêche les retours de réécrire la fente. Dès que
+l'ouverture suffisante est atteinte, le sachet et son tracé restent fixes tant
+que le doigt est posé ; le booster s'ouvre toujours uniquement au relâchement.
+Une annulation ou perte de capture replie encore le sachet, y compris après le
+seuil. Aucun changement des tirages, timings de reveal, effets ou autres écrans.
+E2E ciblés de la coupe guidée, du maintien avec va-et-vient et de l'annulation
+après seuil : 6/6 bureau/téléphone simulé. Suite `e2e/pack-tear.spec.ts` :
+43 réussis, un scénario conditionnel ignoré ; écrans 129/129, typecheck,
+ESLint ciblé et `git diff --check` réussis. CI distante à vérifier après push.
+Essai sur téléphone physique encore requis.
+
 ## D-083 — 14 octobre 2026 : codes de test séparés de la réserve normale
 
 La limite de quatre boosters est celle de la recharge normale, pas un obstacle

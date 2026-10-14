@@ -1,3 +1,17 @@
+## Va-et-vient pendant le peel — correctif local en validation, 14 octobre 2026
+
+Malik a reproduit une coupe visuellement cassée en gardant le doigt posé et en
+faisant plusieurs allers-retours. Cause probable confirmée dans le composant :
+le dernier échantillon d'une portion X remplaçait le premier dans la silhouette,
+et le tracé SVG réutilisait toute la trajectoire chronologique, y compris ses
+retours. Le premier échantillon de chaque portion est maintenant conservé ; dès
+que le seuil arme l'ouverture, toute la scène reste stable jusqu'au relâchement.
+Le booster ne s'ouvre toujours pas avant pointerUp. Annulation/perte de capture
+replient sans ouvrir. Vérification locale : `e2e/pack-tear.spec.ts` 43 réussis,
+un scénario conditionnel ignoré ; écrans 129/129, typecheck, ESLint ciblé et
+`git diff --check` réussis. CI distante à vérifier après publication. Avis sur
+téléphone physique encore attendu.
+
 ## Missions du booster non conservées au retour cloud — corrigé sur `main`, 14 octobre 2026
 
 Après le passage à une synchronisation où le cloud fait foi, la première CI de

@@ -1,3 +1,20 @@
+## Peel stable après va-et-vient — correctif local en validation, 14 octobre 2026
+
+Malik a reproduit un sachet visuellement cassé en gardant le doigt posé et en
+faisant des allers-retours. `pack-tear.tsx` garde le premier point de coupe de
+chaque tranche X et réutilise cette silhouette pour la fente ; une fois le
+seuil atteint, le tracé, le rabat et l'inclinaison ne bougent plus sous le doigt.
+Le booster s'ouvre uniquement au relâchement ; cancel/perte de capture replient.
+En complément, un E2E dédié vérifie qu'une annulation après le seuil ne tire pas
+de cartes.
+
+Fichiers : `src/components/pack-tear.tsx`, `e2e/pack-tear.spec.ts`,
+`docs/decisions.md`, `docs/known-issues.md`, `docs/roadmap.md`.
+E2E ciblés : 6/6 (bureau et téléphone simulé) ; suite `e2e/pack-tear.spec.ts` :
+43 réussis et un scénario conditionnel ignoré. `npm run ecrans` 129/129,
+`npm run typecheck`, ESLint ciblé et `git diff --check` réussis. Aucun test
+physique sur téléphone n'est revendiqué. CI distante à relever après push.
+
 ## Fenêtre « J'ai un code booster » invisible sur mobile — corrigée et publiée, 14 octobre 2026
 
 La capture de Malik montrait le profil assombri et flou, sans panneau du code.

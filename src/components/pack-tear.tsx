@@ -149,8 +149,15 @@ export function PackTear({
     setCut((current) => ({ ...current, progress: 0 }));
   };
 
-  const edge = [...new Map(trace.map((point) => [Math.round(point.x), point])).values()]
-    .sort((a, b) => a.x - b.x);
+  // The first pass over each horizontal slice is the cut the player made.
+  // Keeping its first sample prevents later back-and-forth motion from
+  // rewriting the seam or drawing a self-crossing slit.
+  const edgeBySlice = new Map<number, { x: number; y: number }>();
+  for (const point of trace) {
+    const slice = Math.round(point.x);
+    if (!edgeBySlice.has(slice)) edgeBySlice.set(slice, point);
+  }
+  const edge = [...edgeBySlice.values()].sort((a, b) => a.x - b.x);
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
     : "0% 15.45%, 100% 15.45%";
@@ -216,8 +223,8 @@ export function PackTear({
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
           <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <polyline className="foil-cut-slit" points={trace.map((point) => `${point.x},${point.y}`).join(" ")} />
-            <polyline className="foil-cut-glow" points={trace.map((point) => `${point.x},${point.y}`).join(" ")} />
+            <polyline className="foil-cut-slit" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
+            <polyline className="foil-cut-glow" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
           </svg>
           <div
             className="booster-tear-track booster-peel-zone"
@@ -251,7 +258,7 @@ export function PackTear({
             }}
             onPointerMove={(event) => {
               const gesture = start.current;
-              if (opened || !gesture || gesture.pointerId !== event.pointerId) return;
+              if (opened || !gesture || gesture.pointerId !== event.pointerId || gesture.ready) return;
               const bounds = gesture.bounds;
               const point = {
                 x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
@@ -299,8 +306,12 @@ export function PackTear({
               }
 
               const isSufficient = span >= 38 || aperture >= 0.28;
-              gesture.ready = isSufficient;
-              setReleaseReady(isSufficient);
+              if (isSufficient) {
+                // The cut is now armed: keep the physical result steady while
+                // the player decides when to release and open the pack.
+                gesture.ready = true;
+                setReleaseReady(true);
+              }
 
             }}
             onPointerUp={(event) => {

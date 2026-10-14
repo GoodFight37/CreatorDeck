@@ -40,7 +40,9 @@ reste nécessaire pour juger le niveau et la couleur de la boucle. Voir le
 - **Ouverture :** peel guidé et continuum publiés, 3D désactivée par défaut.
   Après le retrait de la languette, la cinquième carte ordinaire attend 360 ms
   avant son flip ; Perfect, Reflets désactivés et mouvement réduit n'attendent
-  pas. Le ressenti sur téléphone réel reste à confirmer. Voir
+  pas. Correctif local en validation : la coupe ne se déforme plus en va-et-vient
+  et reste figée une fois armée ; seul le relâchement ouvre le booster. Le
+  ressenti sur téléphone réel reste à confirmer. Voir
   [D-077](decisions.md) et le [rapport d'ouverture](booster-continuum-2026-10-12.md).
 - **Autres piliers :** Drop et Craft ont reçu leurs ajustements mobiles. Binder
   conserve la provenance d'obtention Live, tandis que le statut de direct actuel
