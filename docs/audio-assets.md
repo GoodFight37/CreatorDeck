@@ -8,10 +8,13 @@ un master final.
 
 Le mix applicatif donne un gain relatif de `0,9` au hub, `0,018` pendant un
 pack et `0` au Tribunal. Analyse `ffmpeg ebur128` : la boucle source est à
-`-26,4 LUFS` intégrés ; le gain hub précédent `0,24`, combiné au volume global
-Normal (`0,75`), la ramenait à environ `-41,3 LUFS`, trop bas pour rester
-audible sur un haut-parleur de téléphone. Le gain `0,9` la place autour de
-`-29,8 LUFS` au cran Normal, avec une crête maximale estimée à `-14,1 dBFS` :
+`-26,4 LUFS` intégrés. Avant correction, le gain de scène `0,24` était appliqué
+au canal musical, puis le volume Normal (`0,75`) était appliqué deux fois : sur
+le canal musical et sur le bus partagé. Le résultat était donc environ
+`-43,8 LUFS`, trop bas pour rester audible sur téléphone. Le gain de scène
+`0,9` est maintenant appliqué au canal ; le volume global ne s'applique qu'une
+fois sur le bus. La boucle se situe autour de `-29,8 LUFS` au cran Normal, avec
+une crête maximale estimée à `-14,1 dBFS` :
 elle reste en fond et conserve de la marge pour les bruitages. Le cran Discret
 reste plus bas. Ces niveaux doivent encore être jugés à l'écoute sur téléphone ;
 la mesure ne remplace pas l'essai physique.

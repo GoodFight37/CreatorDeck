@@ -378,9 +378,8 @@ const LEVEL_GAIN: Record<SfxLevel, number> = { discret: 0.4, normal: 0.75, fort:
 export type MusicScene = "hub" | "pack" | "tribunal";
 /** Gains relatifs de BGM avant le volume global : hub présent, pack très ducké. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  // La boucle prototype est à environ -26 LUFS. À 0,24 avec le volume global
-  // normal (0,75), elle tombait vers -41 LUFS et disparaissait sur téléphone.
-  // 0,9 la laisse en fond tout en gardant plus de 13 dB de marge en crête.
+  // Le volume global est appliqué une seule fois sur le bus partagé.
+  // 0,9 laisse la boucle en fond tout en gardant plus de 13 dB de marge en crête.
   hub: 0.9,
   pack: 0.018,
   tribunal: 0,
@@ -418,7 +417,6 @@ export function setSfxLevel(value: SfxLevel): void {
   loadPreference();
   level = value;
   if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
-  if (context) applyMusicScene(context);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(LEVEL_KEY, level);
@@ -431,7 +429,6 @@ export function setMuted(value: boolean): void {
   loadPreference();
   muted = Boolean(value);
   if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
-  if (context) applyMusicScene(context);
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, muted ? "1" : "0");
@@ -464,7 +461,9 @@ function masterBus(ctx: AudioContextLike): GainNode {
 
 function applyMusicScene(ctx: AudioContextLike): void {
   if (!musicGain) return;
-  const target = MUSIC_SCENE_GAIN[musicScene] * LEVEL_GAIN[getSfxLevel()];
+  // The shared bus already applies the player's master volume and mute.
+  // Applying them here too would square the volume for music only.
+  const target = MUSIC_SCENE_GAIN[musicScene];
   const parameter = musicGain.gain;
   parameter.setTargetAtTime(isMuted() ? 0 : target, ctx.currentTime, 0.22);
 }

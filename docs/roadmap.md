@@ -11,12 +11,14 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   du peel publié à ce SHA, CI `38494377386` verte (6/6), Vercel Production
   `READY`. Voir le [checkpoint](agent-handoff.md) pour les preuves et limites.
 
-- **Audio, passe de niveau en cours :** mesure de la BGM source à `-26,4 LUFS` ;
-  l'ancien gain la plaçait vers `-41,3 LUFS` au réglage Normal. Le code local
-  monte le gain du hub à `0,9` ; baisse pack, silence Tribunal, préférences et
-  timings restent inchangés. Tests projet 1 169/1 169, écrans 129/129, E2E audio
-  4/4, types/lint/build réussis ; écoute téléphone physique pas encore
-  disponible. Code local non encore publié ; voir [D-085](decisions.md).
+- **Audio, correction du niveau en cours :** la BGM source mesure `-26,4 LUFS` ;
+  son niveau de départ était environ `-43,8 LUFS`, car le volume global était
+  appliqué deux fois en plus du gain de scène. Le code local porte le gain hub à
+  `0,9` et applique le volume global une seule fois (`-29,8 LUFS` estimés au
+  réglage Normal). Ducking pack, silence Tribunal, préférences et timings sont
+  inchangés. Tests locaux 1 169/1 169, écrans 129/129, E2E audio 2/2,
+  typecheck/lint/build réussis. CI du correctif en attente ; écoute physique
+  encore nécessaire. Voir [D-085](decisions.md).
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
   existante est la référence à la connexion et au retour de l'appli ou du réseau.
@@ -90,8 +92,8 @@ Implémentation locale vérifiée, dans l’ordre demandé A → E :
 
 Validation sur appareil physique non effectuée. Le rendu sonore du prototype et
 la lisibilité des portraits doivent être jugés sur téléphone avant toute
-affirmation de finition visuelle. Le gain de hub a été relevé localement à 0,24 ;
-voir [audio-assets.md](audio-assets.md) et le checkpoint de passation.
+affirmation de finition visuelle. Voir [audio-assets.md](audio-assets.md) et le
+checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 

@@ -2,17 +2,19 @@
 
 ## D-085 — 14 octobre 2026 : relever la BGM du hub devenue inaudible
 
-Le prototype `hub-late-night.mp3` mesurait `-26,4 LUFS` intégrés. Avec le gain
-hub `0,24` et le volume global Normal `0,75`, le mix descendait à environ
-`-41,3 LUFS`, ce qui explique pourquoi la musique pouvait disparaître sur
-haut-parleur mobile. Le gain hub passe à `0,9` (mix Normal estimé à `-29,8 LUFS`,
-crête estimée `-14,1 dBFS`). Le ducking pack reste à `0,018`, le Tribunal reste
-muet et le réglage global agit toujours sur tout le bus. Aucun nouvel asset,
-bruitage ou changement de timing. Mesure source avec ffmpeg ; test Web Audio
-simulé vérifiant une boucle unique, les trois scènes et le mute. Écoute physique
-encore requise avant d'ajuster davantage. Tests locaux : audio ciblé 23/23,
-E2E audio 4/4, suite projet 1 169/1 169 et écrans 129/129, typecheck, ESLint
-ciblé et build statique cloudless réussis. CI distante à relever après push.
+Le prototype `hub-late-night.mp3` mesurait `-26,4 LUFS` intégrés. Le gain de scène
+`0,24` était appliqué au canal musical, puis le volume Normal `0,75` au canal et
+au bus partagé : cette double atténuation ramenait la boucle à environ
+`-43,8 LUFS`. Le gain de scène passe à `0,9` et le volume global est appliqué
+une seule fois sur le bus (mix Normal estimé à `-29,8 LUFS`, crête
+`-14,1 dBFS`). Le ducking pack reste à `0,018`, le Tribunal reste muet. Aucun
+nouvel asset, bruitage ou changement de timing. Mesure source avec ffmpeg ; test
+Web Audio simulé vérifiant une boucle unique, les trois scènes et le mute.
+Écoute physique encore requise. Vérifications locales après le correctif :
+`npm test` 1 169/1 169, `npm run ecrans` 129/129, test E2E audio 2/2
+(bureau et téléphone simulé), typecheck, ESLint ciblé, build statique cloudless
+et `git diff --check` réussis. CI de la première passe BGM verte ; CI du
+correctif de double atténuation à relever après push.
 
 ## D-084 — 14 octobre 2026 : figer la coupe armée pendant le maintien du doigt
 

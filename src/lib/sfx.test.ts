@@ -137,22 +137,24 @@ describe("mix de la musique", () => {
 
       expect(sources[0].loop).toBe(true);
       expect(sources[0].start).toHaveBeenCalledOnce();
-      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.75);
+      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
 
       audio.setMusicScene("pack");
-      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack * 0.75);
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack);
       audio.setMusicScene("tribunal");
       expect(targetHistory.at(-1)).toBe(0);
       audio.setMusicScene("hub");
-      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.75);
-      audio.setSfxLevel("fort");
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      expect(gainNodes[1].gain.value).toBeCloseTo(0.75);
+      audio.setSfxLevel("fort");
+      expect(gainNodes[1].gain.value).toBeCloseTo(1);
       audio.setSfxLevel("discret");
-      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.4);
+      expect(gainNodes[1].gain.value).toBeCloseTo(0.4);
       audio.setMuted(true);
-      expect(targetHistory.at(-1)).toBe(0);
+      expect(gainNodes[1].gain.value).toBe(0);
       audio.setMuted(false);
-      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.4);
+      expect(gainNodes[1].gain.value).toBeCloseTo(0.4);
+      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
       audio.setSfxLevel("normal");
       expect(sources).toHaveLength(1);
     } finally {

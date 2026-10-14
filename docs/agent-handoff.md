@@ -1,17 +1,17 @@
 ## BGM du hub trop basse — correction du gain en cours, 14 octobre 2026
 
-Le fichier audio était chargé, mais une mesure `ffmpeg ebur128` révèle
-`-26,4 LUFS` intégrés. Au gain hub `0,24` et volume global Normal `0,75`, le
-mix estimé était seulement `-41,3 LUFS`, expliquant la musique quasi inaudible.
-Gain hub porté localement à `0,9` (mix Normal estimé `-29,8 LUFS`, crête
-`-14,1 dBFS`). Ducking pack `0,018`, silence Tribunal, autoplay, mute, volume
-global et fichiers audio inchangés. Test AudioContext factice : une boucle
-unique démarre et scènes hub/pack/Tribunal, crans de volume et mute règlent
-bien le gain. Vérifications locales : sfx 23/23, E2E audio 4/4 (bureau +
-téléphone simulé), tests projet 1 169/1 169, écrans 129/129, typecheck, ESLint
-ciblé et build statique réussis (sans variables Supabase, donc sans session
-cloud réelle). Mesure `ffmpeg ebur128`. CI distante à vérifier après publication ;
-écoute sur appareil réel non effectuée.
+La boucle était chargée, mais le mix avait deux défauts : le gain hub `0,24`
+était trop bas et le volume Normal `0,75` était appliqué deux fois à la BGM
+(canal musical puis bus), donnant environ `-43,8 LUFS` depuis une source à
+`-26,4 LUFS`. Le code local porte le gain de scène à `0,9` et applique le volume
+global une seule fois sur le bus : environ `-29,8 LUFS`, crête estimée
+`-14,1 dBFS`. Ducking pack `0,018`, silence Tribunal, autoplay, mute et assets
+inchangés. Le test AudioContext vérifie une boucle unique, les trois scènes,
+les crans globaux et le mute. Vérifications locales après correction : tests
+projet 1 169/1 169, écrans 129/129, E2E audio 2/2 sur bureau/téléphone simulé,
+typecheck, ESLint ciblé, build cloudless et `git diff --check` réussis. La CI de
+la première passe est verte ; CI du correctif en attente. Écoute physique non
+effectuée.
 Voir [D-085](decisions.md) et [la fiche audio](audio-assets.md).
 
 ## Peel stable après va-et-vient — corrigé et publié, 14 octobre 2026

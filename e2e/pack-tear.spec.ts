@@ -50,7 +50,7 @@ test("la boucle démarre dans Web Audio avec le gain normal du hub", async ({ pa
     (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
   );
   expect(probe?.loops).toEqual([true]);
-  expect(probe?.gains.some((gain) => Math.abs(gain - 0.675) < 0.001)).toBe(true);
+  expect(probe?.gains.some((gain) => Math.abs(gain - 0.9) < 0.001)).toBe(true);
 });
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
