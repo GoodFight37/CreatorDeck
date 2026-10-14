@@ -2,11 +2,13 @@
 
 ## État actuel — 14 octobre 2026
 
-**Lot Toi complet (D-101) — implémenté, publication en cours :** vitrine
+**Lot Toi complet (D-101) — clos, publié et vérifié sur Vercel :** vitrine
 inspectable et noms complets, variantes/quantités réelles, niveau/XP et
 collection visibles, accès direct aux objectifs, réglages et outils regroupés.
 États vide/partiel, compte/sauvegarde/conflit/erreur traités ensemble.
-18 DOM et cinq scénarios navigateur uniques réussis (détails au checkpoint).
+18 DOM et cinq scénarios navigateur uniques réussis. Code `261625f5`, Vercel
+Production `READY` / `success` ; profil invité, progression/objectifs et réglages
+contrôlés à 320/390 px, sans écriture sur un compte. Détails au checkpoint.
 Aucune règle, audio, économie ou fonctionnalité serveur ajoutée.
 
 **Lot Craft / Atelier (D-100) — clos, publié et vérifié sur Vercel :** aperçu de

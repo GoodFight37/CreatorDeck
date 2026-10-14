@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Toi complet, vérifié localement, publication en cours
+## Checkpoint courant — lot Toi complet publié, Vercel vérifié
 
 - Demande : « Fait tout d'un coup » pour le pilier Toi complet. Base `main`
   propre `ae8dfacd04286851149ca1601154ede8c5d008d3`, GitHub identique par
@@ -29,8 +29,21 @@
   et hiérarchie lisibles. Capture pleine page recadre les barres fixes :
   ce n’est pas une mesure de leur position dans la page défilée. Build final
   `npm run build` réussi, cinq pages exportées. Variables Supabase absentes
-  localement : preuve de compilation seulement. Publication et parcours invité
-  Production à compléter avant clôture ; ressenti tactile non certifié.
+  localement : preuve de compilation seulement.
+- Publication : [`261625f52f2f64081758df500048daf92b424d66`](https://github.com/GoodFight37/CreatorDeck/commit/261625f52f2f64081758df500048daf92b424d66),
+  push normal `main` et SHA vérifiés par ls-remote. Documentation distante
+  relue via GitHub. Vercel Production du même SHA
+  [`4stHp9TVH6a77KQ4x4giRTwmg59w`](https://vercel.com/hafsi37-2386/creator-deckk/4stHp9TVH6a77KQ4x4giRTwmg59w)
+  `READY`, contrôle `success`. Aucun run GitHub Actions retourné pour ce
+  commit ; aucune CI générale déclarée verte.
+- Site [creator-deckk.vercel.app](https://creator-deckk.vercel.app/) parcouru
+  dans Chromium mobile : empreinte Web `261625f`, profil vide, XP, collection,
+  objectif ouvrant Progression, réglages repliés puis accessibles, deux
+  interrupteurs audio conservés et reset replié. Largeurs 320/390 conformes,
+  aucune erreur JavaScript observée. Aucune donnée factice injectée ni compte
+  réel modifié en Production ; collection possédée, variantes, conflits et
+  attentes couverts par fixtures locales/DOM seulement. Ressenti tactile non
+  certifié. Lot Toi clos ; réservation libérée après le checkpoint de clôture.
 
 ## Checkpoint précédent — lot Atelier complet publié, Vercel vérifié
 

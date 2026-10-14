@@ -8,8 +8,9 @@ existante mais déduplique et rend les cartes consultables avec leurs variantes
 réelles. Parcours XP/collection/objectifs visible ; réglages et reset regroupés,
 statut du compte et erreurs affichés sans prétendre synchroniser.
 Preuves : 18/18 DOM, cinq scénarios navigateur uniques après correction du
-serveur cible et d'un titre de test. Publication et contrôle Vercel dans le
-checkpoint courant ; pas de compte réel modifié pour tester les variantes.
+serveur cible et d'un titre de test. Code `261625f5`, Vercel Production `READY`
+/ `success` ; parcours invité Toi → Progression et réglages contrôlés à 320/390 px.
+Détails au checkpoint ; pas de compte réel modifié pour tester les variantes.
 Le ressenti tactile et les opérations de sauvegarde réelles ne sont pas
 certifiés par les mocks ou les mesures Chromium.
 

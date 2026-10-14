@@ -67,8 +67,8 @@ courant pour les tests et les limites de cette émulation mobile.
 Le pilier **Toi** réunit vitrine inspectable, variantes possédées, niveau/XP,
 collection et accès direct aux objectifs. Compte, réglages et informations
 restent disponibles dans des sections repliées ; états de sauvegarde et
-erreurs reprennent les données existantes. D-101 ; preuves et publication
-au checkpoint courant.
+erreurs reprennent les données existantes. Publié sur Vercel (`261625f5`),
+parcours invité vérifié à 320/390 px. D-101 ; preuves et limites au checkpoint.
 
 L’Atelier propose un aperçu avant création ou recyclage, avec confirmation,
 coût et solde, attente protégée contre les doubles clics, puis carte créée ou
