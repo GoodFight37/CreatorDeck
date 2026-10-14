@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
+import { playHubMusic, duckHubMusic } from "@/lib/sfx";
 import { isPeelOpenable, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
@@ -88,6 +89,7 @@ export function PackTear({
   const finish = useCallback(() => {
     if (done.current) return;
     done.current = true;
+    duckHubMusic(true);
     start.current = null;
     sceneRef.current?.classList.remove("is-pulling");
     sceneRef.current?.style.removeProperty("--opening-tilt-x");
@@ -135,6 +137,7 @@ export function PackTear({
   useEffect(() => () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     if (slowTimer.current !== null) window.clearTimeout(slowTimer.current);
+    duckHubMusic(false);
   }, []);
 
   const retract = () => {
@@ -240,6 +243,7 @@ export function PackTear({
             aria-label="Déchirer le haut du sachet en passant le doigt sur la soudure"
             onPointerDown={(event) => {
               if (opened || start.current || event.button !== 0 || event.isPrimary === false) return;
+              playHubMusic();
               const bounds = sceneRef.current!.getBoundingClientRect();
               const seamBounds = event.currentTarget.getBoundingClientRect();
               const point = {
