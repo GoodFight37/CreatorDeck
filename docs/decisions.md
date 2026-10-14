@@ -10,11 +10,13 @@ une seule fois sur le bus (mix Normal estimé à `-29,8 LUFS`, crête
 `-14,1 dBFS`). Le ducking pack reste à `0,018`, le Tribunal reste muet. Aucun
 nouvel asset, bruitage ou changement de timing. Mesure source avec ffmpeg ; test
 Web Audio simulé vérifiant une boucle unique, les trois scènes et le mute.
-Écoute physique encore requise. Vérifications locales après le correctif :
+Écoute physique encore requise. Vérifications locales :
 `npm test` 1 169/1 169, `npm run ecrans` 129/129, test E2E audio 2/2
 (bureau et téléphone simulé), typecheck, ESLint ciblé, build statique cloudless
-et `git diff --check` réussis. CI de la première passe BGM verte ; CI du
-correctif de double atténuation à relever après push.
+et `git diff --check` réussis. Publié sur `main` au SHA
+`861870ee66054646b3215bb360ca48b74ab1ff01` ; CI
+[`38496749379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38496749379)
+verte (6/6), Vercel Production READY.
 
 ## D-084 — 14 octobre 2026 : figer la coupe armée pendant le maintien du doigt
 

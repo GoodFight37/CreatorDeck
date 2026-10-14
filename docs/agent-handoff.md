@@ -1,4 +1,4 @@
-## BGM du hub trop basse — correction du gain en cours, 14 octobre 2026
+## BGM du hub — double atténuation corrigée et publiée, 14 octobre 2026
 
 La boucle était chargée, mais le mix avait deux défauts : le gain hub `0,24`
 était trop bas et le volume Normal `0,75` était appliqué deux fois à la BGM
@@ -9,9 +9,12 @@ global une seule fois sur le bus : environ `-29,8 LUFS`, crête estimée
 inchangés. Le test AudioContext vérifie une boucle unique, les trois scènes,
 les crans globaux et le mute. Vérifications locales après correction : tests
 projet 1 169/1 169, écrans 129/129, E2E audio 2/2 sur bureau/téléphone simulé,
-typecheck, ESLint ciblé, build cloudless et `git diff --check` réussis. La CI de
-la première passe est verte ; CI du correctif en attente. Écoute physique non
-effectuée.
+typecheck, ESLint ciblé, build cloudless et `git diff --check` réussis. Correctif
+publié sur `main` au SHA `861870ee66054646b3215bb360ca48b74ab1ff01`. CI GitHub
+[`38496749379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38496749379)
+verte, 6/6 jobs ; Vercel Production `READY` pour ce SHA :
+https://creator-deckk.vercel.app . Écoute physique non effectuée ; la valeur
+LUFS estime un niveau, elle ne remplace pas le test sur haut-parleur réel.
 Voir [D-085](decisions.md) et [la fiche audio](audio-assets.md).
 
 ## Peel stable après va-et-vient — corrigé et publié, 14 octobre 2026

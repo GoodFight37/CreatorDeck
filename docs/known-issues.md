@@ -1,4 +1,4 @@
-## BGM du hub trop basse sur téléphone — correction publiée à vérifier en CI, 14 octobre 2026
+## BGM du hub trop basse sur téléphone — double atténuation corrigée, 14 octobre 2026
 
 La boucle existait et était demandée au premier geste, mais son niveau source
 est `-26,4 LUFS`. Le gain de scène `0,24` était suivi d'une double application
@@ -9,9 +9,11 @@ Normal, crête estimée à `-14,1 dBFS`. Le ducking pack (`0,018`), le silence d
 Tribunal et les réglages du joueur restent inchangés. Tests locaux : `npm test`
 1 169/1 169, `npm run ecrans` 129/129, E2E audio bureau/téléphone 2/2,
 typecheck, ESLint ciblé, build statique cloudless et `git diff --check` réussis.
-La CI de la première passe BGM est verte ; la CI de ce correctif reste à vérifier.
-Écoute sur téléphone réel toujours requise. Détails dans
-[audio-assets.md](audio-assets.md) et D-085.
+Publié sur `main` au SHA `861870ee66054646b3215bb360ca48b74ab1ff01`. CI GitHub
+[`38496749379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38496749379)
+verte, 6/6 jobs ; Vercel Production `READY`. Écoute sur téléphone réel toujours
+requise pour juger le rendu acoustique. Détails dans [audio-assets.md](audio-assets.md)
+et D-085.
 
 ## Va-et-vient pendant le peel — corrigé et publié, 14 octobre 2026
 

@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `b6a3605ce8b77e41244f4fef9f8e9300fd7ec634` ;
+**État du code :** `main` au SHA `861870ee66054646b3215bb360ca48b74ab1ff01` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -11,14 +11,17 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   du peel publié à ce SHA, CI `38494377386` verte (6/6), Vercel Production
   `READY`. Voir le [checkpoint](agent-handoff.md) pour les preuves et limites.
 
-- **Audio, correction du niveau en cours :** la BGM source mesure `-26,4 LUFS` ;
+- **Audio, double atténuation corrigée :** la BGM source mesure `-26,4 LUFS` ;
   son niveau de départ était environ `-43,8 LUFS`, car le volume global était
   appliqué deux fois en plus du gain de scène. Le code local porte le gain hub à
   `0,9` et applique le volume global une seule fois (`-29,8 LUFS` estimés au
   réglage Normal). Ducking pack, silence Tribunal, préférences et timings sont
   inchangés. Tests locaux 1 169/1 169, écrans 129/129, E2E audio 2/2,
-  typecheck/lint/build réussis. CI du correctif en attente ; écoute physique
-  encore nécessaire. Voir [D-085](decisions.md).
+  typecheck/lint/build réussis. Publié sur `main` au SHA
+  `861870ee66054646b3215bb360ca48b74ab1ff01`, CI
+  [`38496749379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38496749379)
+  verte (6/6) et Vercel Production READY. L'écoute physique reste nécessaire.
+  Voir [D-085](decisions.md).
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
   existante est la référence à la connexion et au retour de l'appli ou du réseau.
