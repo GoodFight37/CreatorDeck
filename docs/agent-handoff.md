@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — rituel peel → extraction → reveal vérifié localement
+## Checkpoint courant — rituel peel → extraction → reveal publié et vérifié sur Vercel
 
 - Demande : chantier UI du rituel, sans refaire l'accueil ni toucher au moteur,
   aux tirages ou à la BGM. Base `main` propre `283f408632009b606833cdc664fb3aefc910648c`,
@@ -40,14 +40,31 @@
   changés avec le nouveau rythme à 700 ms). Les scellés restent inchangés.
   Retest `CSS-only pouch` avec les projets bureau/téléphone et Chromium
   Playwright prévu : 2/2 réussis.
-- Limites : Chromium à 390 × 844 est une émulation ; le ressenti tactile
-  reste ouvert. Aucune validation joueur ni nouveau déploiement revendiqués.
-  Une interruption de quota a eu lieu pendant le diagnostic, avant toute édition.
+- Publication : code + tests + docs poussés normalement sur `main` au SHA
+  [`aabd4169c98ed1d67579ee52e7074b11f9ce198c`](https://github.com/GoodFight37/CreatorDeck/commit/aabd4169c98ed1d67579ee52e7074b11f9ce198c),
+  confirmé par `git ls-remote`. Contenu distant du checkpoint relu via GitHub.
+  Vercel Production du même SHA
+  [`AAuaYzBGVe3ZMbnkwF6sDG7yKfib`](https://vercel.com/hafsi37-2386/creator-deckk/AAuaYzBGVe3ZMbnkwF6sDG7yKfib)
+  `READY`, contrôle `success`. GitHub Actions : aucun run retourné pour ce SHA
+  lors du relevé ; aucun succès de CI complète revendiqué.
+- Vérification réelle du site [creator-deckk.vercel.app](https://creator-deckk.vercel.app/)
+  avec Chromium à 390 × 844, profil vierge : titre unique, ESSAYER et détails
+  repliés ; petit trait annulé sans trace ; coupe large armée/scellée jusqu'au
+  relâchement ; cinq dos opaques à 1 s, première face à 1209,6 ms ; cinq cartes
+  suivies une à une, Rare avec animation d'impact ; résumé 3 + 2, sachet masqué,
+  `scrollWidth = 390`, pas de fermeture automatique. Aucun compte connecté ni
+  booster consommé : tutoriel gratuit seulement. Capture locale inspectée :
+  `/tmp/creatordeck-ritual-production-390.png` (non versionnée).
+- Limites : Chromium mobile est une émulation ; le ressenti tactile et l'écoute
+  des SFX sur appareil restent ouverts. Les tests ne certifient pas la sensation.
+  Une interruption de quota avait eu lieu pendant le diagnostic, avant édition.
 - Fichiers : `pack-tear.tsx`, `reveal-overlay.tsx`, `drop-view.tsx`,
-  `booster-continuity.css`, timings `lib/reveal.ts`, tests associés et docs.
-  Prochaine étape : commit/push normal sur `main`, puis relever SHA, CI/Vercel
-  et vérifier le tutoriel sur la Production web. Aucun déploiement local sans
-  Supabase ne doit remplacer le build Vercel connecté.
+  `booster-continuity.css`, timings `lib/reveal.ts`, tests et snapshots déchirés,
+  README, roadmap, décisions D-097, problèmes connus et guide de peel actualisés.
+  Réservation libérée. Prochaine reprise : vérifier HEAD/CI/déploiement courants,
+  conserver ce rituel et attendre un retour précis avant de retoucher le seuil.
+  Le SHA du checkpoint documentaire se retrouve par `git log -1 --format=%H --
+  docs/agent-handoff.md` ; il peut être plus récent que le code vérifié ci-dessus.
 
 ## Historique — Drop mobile corrigé et déployé
 

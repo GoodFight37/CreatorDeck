@@ -27,6 +27,13 @@
   est supprimé ; ESSAYER/Plus d'infos reste compact. Le feeling tactile reste
   une validation joueur ; les tests ne le déclarent pas résolu.
 
+Validation D-097 : logique 16/16, écrans effets/tutoriel 28/28 et écrans généraux
+11/11, lots Chromium mobile 6/6 puis 8/8, snapshots bureau/téléphone 2/2,
+TypeScript, ESLint, diff-check et build réussis. Code `aabd4169` publié ; Vercel
+`READY` / `success`. Tutoriel parcouru sur Production à 390 × 844 (cinq dos à
+1 s, reveal à ~1,21 s, résumé lisible, largeur 390). Aucun run GitHub Actions
+retourné au relevé ; pas de CI globale ni de ressenti physique déclarés validés.
+
 ## D-096 — 14 octobre 2026 : plans latéraux orientés vers le joueur
 
 - Constat vérifié sur la Production Vercel en viewport 390 × 844 : le Drop

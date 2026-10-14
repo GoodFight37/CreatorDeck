@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**Rituel d'ouverture — implémenté, vérifié localement (14 octobre) :** garder
+**Rituel d'ouverture — publié et vérifié sur Vercel (14 octobre) :** garder
 l'accueil amélioré, retirer seulement « LE DROP » en double. Peel libre avec
 résistance progressive et signal du seuil, consigne « TIRE / RELÂCHE » ;
 extraction JS/CSS unifiée à 1,2 s, cinq dos posés avant le reveal ; impact tenu
@@ -13,7 +13,11 @@ nouveau gameplay. Critères : pas d'ouverture par petit trait, aucun skip par
 appui pendant le flip, Commune/Rare/Légendaire distinctes, résumé lisible à
 390 × 844, modes OFF/mouvement réduit respectés. D-097 et checkpoint courant
 pour les preuves : build/statique/écrans et parcours Chromium ciblés passent.
-Le ressenti tactile reste ouvert ; publication à confirmer.
+Code publié sur `main` à `aabd4169`, Vercel Production `READY` / contrôle
+`success`. Le tutoriel de Production a été parcouru à 390 × 844 : coupe courte
+annulée, ouverture au relâchement, cinq dos à 1 s, reveal à ~1,21 s, cinq cartes
+et résumé 3 + 2 sans débordement. Aucun run Actions retourné au relevé, donc pas
+de CI complète déclarée verte. Le ressenti tactile reste ouvert.
 
 ### Historique des livraisons précédentes
 

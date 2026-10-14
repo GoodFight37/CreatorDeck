@@ -1,4 +1,4 @@
-## Rituel trop sec — corrigé et vérifié localement, 14 octobre 2026
+## Rituel trop sec — corrigé, déployé et vérifié sur Vercel, 14 octobre 2026
 
 Reproduction sur `283f4086` : ouvrir un booster, relâcher une coupe suffisante ;
 le timer JS passe aux faces après 720 ms alors que la montée CSS prend 920 ms.
@@ -10,6 +10,9 @@ et lumière/SFX synchronisés, résumé mobile 3 + 2 avec noms lisibles, sans sa
 pendant la pose des cinq cartes (650 ms si effets ON), puis action du joueur. Seuils
 anti-tap et verrou des avances conservés. Consignes courtes et résistance
 progressive du rabat. Validation/publication dans le checkpoint courant.
+Publié sur `main` à `aabd4169` ; Vercel `READY` / `success`. Le tutoriel
+Production à 390 × 844 confirme les cinq dos à 1 s, le reveal à 1209,6 ms,
+les cinq cartes et le résumé sans débordement. Aucun compte ni tirage consommé.
 Une première passe Chromium a détecté une priorité CSS qui gardait le nom de
 l'animation rare en mouvement réduit : règle désormais limitée aux effets ON
 et `prefers-reduced-motion: no-preference`. Les retests OFF/réduit passent.
