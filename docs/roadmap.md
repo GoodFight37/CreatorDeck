@@ -10,11 +10,15 @@ verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niv
 et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
-- **Sync compte :** publié sur `main` (`c5ac85c6`) ; la sauvegarde en ligne est
-  automatiquement la référence à la connexion et au retour de l'appli ou
-  du réseau ; le sablier ne doit plus ouvrir un choix de versions. À valider et
-  publier après les tests. Recharger le cloud peut remplacer les progrès faits
-  hors ligne.
+- **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
+  existante est la référence à la connexion et au retour de l'appli ou du réseau.
+  Les missions locales calculées après un tirage sont réenregistrées sans
+  forçage. La réserve de boosters reste côté serveur : le guide des codes privés
+  explique comment obtenir des boosters de test sans réinitialiser le compte.
+  Une progression faite hors ligne est remplacée au retour en ligne. La CI du
+  suivi `c3ab397e` est encore en cours ; son déploiement Vercel est READY. Pour Android,
+  une APK déjà installée doit être reconstruite et réinstallée ; Vercel ne la met
+  pas à jour.
 - **Tests de booster sur compte réel :** aucun crédit illimité n'a été ajouté.
   Les réserves sont gérées par Supabase ; le moyen ponctuel déjà supporté est
   un lot de codes promo privés créé dans le SQL Editor (jusqu'à 100 ouvertures

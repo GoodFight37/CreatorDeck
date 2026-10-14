@@ -16,11 +16,25 @@ La reprise d'un tirage concurrent relit le serveur avant d'adopter son état.
 
 Validation locale : 1 168 tests unitaires, 128 tests d'écran, TypeScript,
 ESLint ciblé et build de production réussis ; build cloudless sans variables
-Supabase, donc il n'exerce pas une vraie session. Publié le 14 octobre sur
-`main` au SHA `c5ac85c6da72f02073d5cd8d31e6adeb5d030ce9`. CI
-[`38487628741`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38487628741)
-en cours au dernier contrôle. Aucune sauvegarde de compte ni donnée de
-production n'a été inspectée ou modifiée.
+Supabase, donc il n'exerce pas une vraie session. Le code de sync est publié sur
+`main` au SHA `fc5b47ff0793e8ff273dfccd381f50b158bd4fa4`. Le premier run
+`38487628741` a échoué sur le rechargement après un tirage ; le suivi est décrit
+en D-082. Aucune sauvegarde de compte ni donnée de production n'a été inspectée
+ou modifiée.
+
+## D-082 — 14 octobre 2026 : conserver les missions après un tirage serveur
+
+`open_pack()` écrit les cartes et la réserve côté serveur, tandis que les
+compteurs de missions du Drop sont calculés localement. Après adoption de la
+sauvegarde du tirage, l'application enregistre donc l'état fusionné par un push
+normal fondé sur une relecture serveur (`force=false`). Les identifiants des
+cartes générées par le serveur et la séance locale v9 sont préservés. Une
+réponse de conflit n'autorise jamais un écrasement forcé. Le rechargement reprend
+ensuite cet état et ne déclenche pas de second push. Tests locaux : suite cloud
+simulée E2E 2/2 bureau/téléphone. Le contrôle TypeScript distant a d'abord
+relevé deux paramètres de callback implicites dans les assertions de test ; ils
+sont typés dans `c3ab397e`. Vercel pour ce SHA est READY ; la CI GitHub
+`38488559202` est encore en cours au dernier contrôle.
 
 ## D-080 — 13 octobre 2026 : faire voir le sachet actuel et démarrer la musique au premier appui
 

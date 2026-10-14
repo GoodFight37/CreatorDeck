@@ -27,6 +27,29 @@ production changée. Publié sur `main` au SHA
 en cours (6 jobs au dernier contrôle). Vercel reste à vérifier. Aucun test sur
 le compte de Malik ni accès administrateur Supabase.
 
+### Correctif CI : missions locales après un tirage serveur — 14 octobre 2026
+
+La première CI du changement ci-dessus a révélé que le rechargement cloud,
+désormais prioritaire, pouvait écarter les missions mises à jour localement
+après le tirage. Le RPC avait déjà enregistré les cinq cartes et la réserve,
+mais pas les compteurs de missions. `openPack()` envoie donc maintenant l'état
+fusionné juste après le tirage avec le contrôle de version normal (`force=false`)
+après relecture serveur. Les cartes conservent leurs identifiants serveur ; une
+écriture concurrente n'est jamais forcée. Le test cloud simulé vérifie les IDs,
+le push normal, les missions, puis l'absence de second push au rechargement.
+
+Validation : `npm test` 73 fichiers / 1 168 tests ; `npm run ecrans` 22 fichiers /
+128 tests ; E2E cloud simulé 2/2 bureau/téléphone ; TypeScript, ESLint ciblé,
+`git diff --check` et build production réussis. Le build local reste cloudless,
+sans variables Supabase. Correctif publié sur `main` au SHA
+`fc5b47ff0793e8ff273dfccd381f50b158bd4fa4`. Sa première CI a échoué sur le
+typage de deux nouvelles assertions de tests ; annotations ajoutées au commit
+`c3ab397e614307c222acd3817c474e05113f225f`. Vercel pour ce dernier SHA est
+**READY** ; CI GitHub
+[`38488559202`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38488559202)
+en cours, 6 jobs actifs au dernier contrôle. Aucun test sur le compte réel et
+aucune donnée de production modifiée.
+
 ## Visuel Drop et démarrage de la musique — publié, Vercel actif, CI verte, 13 octobre 2026
 
 Malik voyait encore la façade violette au hub et n’entendait pas la BGM. Les deux

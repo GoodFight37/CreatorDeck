@@ -44,7 +44,7 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
-## État actuel — 13 octobre 2026
+## État actuel — 14 octobre 2026
 
 Malik utilise **CreatorDeck sur Vercel**, alimenté par GitHub `main`, avec
 Supabase. Les mises à jour du site arrivent via Vercel ; aucun `git pull` n’est
@@ -72,6 +72,15 @@ Le badge Live distingue la provenance de la carte du statut de direct actuel.
 La CI répartit maintenant les tests Playwright sur trois shards, sans retirer de
 scénarios. Les résultats sont liés au SHA testé ; voir le checkpoint courant et
 la [roadmap](docs/roadmap.md), plutôt que les anciens compteurs de cette page.
+
+Pour un compte connecté, la sauvegarde Supabase est maintenant reprise
+automatiquement à l'ouverture/au retour de l'application et fait foi sur une
+copie locale divergente. Les missions calculées lors d'un tirage sont ensuite
+enregistrées sans forçage. Le correctif est publié sur `main` (`fc5b47ff`) et
+le dernier build Vercel (`c3ab397e`) est READY ; sa CI GitHub est encore en
+cours, voir le [checkpoint](docs/agent-handoff.md). Vercel met à jour le site ;
+une APK Android déjà installée doit être reconstruite et réinstallée séparément
+pour recevoir ces changements.
 
 Pour les prochains portraits, le choix dépend de la qualité visuelle de l’image
 (bonne personne, netteté, visage lisible, résolution et cadrage). L’absence de
