@@ -6,7 +6,7 @@
 avant le correctif ci-dessous. Les changements locaux ne sont pas annoncés
 comme disponibles sur Vercel avant la vérification du commit et du déploiement.
 
-**Peel libre — correctif en cours de publication :** Malik confirme que le haut
+**Peel libre — code publié, ressenti à confirmer :** Malik confirme que le haut
 du sachet paraît encore rigide et qu'un swipe franc ouvre mal. Le défaut venait
 du chemin retrié/médianisé par X et du seuil de 88 %. Le code local conserve
 maintenant l'ordre du doigt, ses retours en X et les variations en Y ; la zone
@@ -14,10 +14,14 @@ Y passe à 6–26 %, le seuil de couverture à 64 % et l'effort minimal à `0,22
 Le rabat suit X/Y, une lueur et de petites étincelles suivent la fente, et le
 relâchement reste nécessaire. Les cartes s'extraient ensuite automatiquement.
 Géométrie 3/3, typecheck, ESLint ciblé, E2E sachet 49 réussis/1 scénario cloud
-ignoré, écrans 130/130 et build réussi. Build local sans variables Supabase ;
-il ne vérifie pas le cloud. La sensation réelle reste à vérifier par Malik sur
-Vercel après déploiement ; les tests simulés ne valent pas un test tactile.
-Voir D-092 et le dernier checkpoint de passation.
+ignoré, écrans 130/130 et build réussi. CI GitHub
+[`38573481379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379)
+verte (6/6). Vercel Production `READY` pour le SHA code
+`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`, déploiement
+[`68vZFVuDBdVQ6YMoLie3BVFSiBYj`](https://vercel.com/hafsi37-2386/creator-deckk/68vZFVuDBdVQ6YMoLie3BVFSiBYj).
+Build local sans variables Supabase ; il ne vérifie pas le cloud. La sensation
+réelle reste à confirmer par Malik sur le site ; les tests simulés ne valent pas
+un test tactile. Voir D-092 et le dernier checkpoint de passation.
 
 **Audio :** la piste sans percussion publiée reste un prototype. Les quatre
 candidats à écouter et leurs crédits sont répertoriés dans

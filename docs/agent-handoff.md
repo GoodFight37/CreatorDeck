@@ -1,4 +1,4 @@
-## Peel libre sur la bande haute — prêt localement, 14 octobre 2026
+## Peel libre sur la bande haute — publié, ressenti joueur à confirmer, 14 octobre 2026
 
 Malik a testé le web Vercel et décrit un rabat « dur comme du bois » : la coupe
 restait une ligne, le doigt ne guidait pas le tracé et un swipe franc ne
@@ -21,10 +21,16 @@ Craft, Toi, SQL, pity math ou PackFoil3D.
 Vérifications locales : géométrie 3/3, typecheck, ESLint ciblé, E2E
 `e2e/pack-tear.spec.ts` 49 réussis / 1 scénario cloud conditionnel ignoré,
 `npm run ecrans` 130/130, build réussi. Le build local n'avait pas de variables
-Supabase, donc il ne valide pas le cloud. Aucune validation sur Vercel après ce
-changement ni retour de Malik sur cette version ne sont encore établis. Sa
-version web au départ était `eb12a1b9`; attendre le SHA Vercel réel après push
-avant d'annoncer que le nouveau geste est en ligne.
+Supabase, donc il ne valide pas le cloud. Code publié sur `main` au SHA
+`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`. La CI GitHub
+[`38573481379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379)
+est verte (6/6 jobs). Vercel Production est `READY` pour ce SHA, déploiement
+[`68vZFVuDBdVQ6YMoLie3BVFSiBYj`](https://vercel.com/hafsi37-2386/creator-deckk/68vZFVuDBdVQ6YMoLie3BVFSiBYj),
+alias `https://creator-deckk.vercel.app`. La version web au départ était
+`eb12a1b9`. La sensation du geste dans les mains de Malik reste à confirmer ;
+ne pas déclarer le problème résolu sur la base des tests. Le checkpoint
+documentaire qui inscrit ces statuts ne change aucun fichier applicatif ; son
+SHA peut donc être plus récent que le commit de code `3fec7895` affiché ici.
 
 Retest rapide sur Vercel après déploiement : ouvrir le pack tutoriel ; tracer
 une diagonale ou un petit retour sur la bande striée ; vérifier que le trait et

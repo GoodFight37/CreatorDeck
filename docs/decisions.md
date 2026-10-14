@@ -20,7 +20,9 @@ inachevé même si les tests passent. Vérifications navigateur requises pour
 régressions seulement, jamais pour contraindre le tracé à être monotone. Tests
 locaux de cette itération : géométrie 3/3, E2E sachet 49 réussis/1 scénario
 cloud ignoré, écrans 130/130, typecheck, lint ciblé et build statique réussis.
-Publication et ressenti Vercel à confirmer dans la passation.
+Publié sur `main` au SHA code `3fec7895fae6bbed0eb05bf4baa6e246f55fefdc` ; CI
+[`38573481379`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379)
+verte (6/6) et Vercel Production `READY`.
 
 ## D-091 — 14 octobre 2026 : n'ouvrir le rabat qu'après une coupe presque complète
 

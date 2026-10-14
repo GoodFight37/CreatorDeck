@@ -7,9 +7,11 @@ avait une couture retriée par X et un seuil de 88 %. Correction locale en
 cours : chemin chronologique X/Y, bande Y 6–26 %, couverture 64 %, effort
 minimum `0,22`, rabat déplacé par le doigt, lueur et points discrets. Ouverture
 au relâchement conservée ; les cartes s'extraient automatiquement ensuite.
-Code testé localement en E2E bureau/téléphone simulé (49 réussis, 1 scénario
-cloud ignoré), mais pas encore testé sur le nouveau déploiement Vercel ni
-accepté par Malik. Ne pas fermer ce problème sur la seule base des tests.
+Code publié sur `main` au SHA
+`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`, Vercel Production `READY` et CI
+GitHub `38573481379` verte (6/6). E2E bureau/téléphone simulé : 49 réussis,
+1 scénario cloud ignoré. Le ressenti de Malik sur le nouveau site reste à
+recueillir. Ne pas fermer ce problème sur la seule base des tests.
 
 ## Coupe partielle qui ouvrait tout le rabat ou laissait une trace — corrigé et publié, 14 octobre 2026
 
