@@ -2,8 +2,9 @@
 
 ## État actuel — 14 octobre 2026
 
-**Reprise après audit audio/Drop :** la base de cet audit est le code publié
-`d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`. La correction locale centralise
+**Reprise après audit audio/Drop :** audit démarré depuis
+`d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, correction publiée sur `main` au
+SHA `ab740821724773c2b2a0a1f874a30f6f7e10a80a`. Elle centralise
 le démarrage de la BGM dans l'action de jeu, protège la boucle contre les
 chargements asynchrones après mute et supprime le pilotage concurrent dans les
 composants du pack. Le Drop conserve `min(58vw, 220px, 34dvh)` en hauteur courte
@@ -13,12 +14,21 @@ au lieu d'être réduit par des media queries contradictoires ; les tests vérif
 téléphone, le rendu des biseaux et la sensation du peel restent des validations
 joueur, pas des succès déduits des tests.
 
-La suite de test ciblée passe : 7 E2E téléphone, typecheck et écrans 130/130.
-La suite unitaire complète a 1 154 tests réussis et 17 échecs sans rapport
+La suite ciblée passe : 7 E2E téléphone, typecheck et écrans 130/130. Le run
+GitHub [`38609156903`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38609156903)
+valide build/unitaires/statique, chemin cloud simulé et migrations SQL, mais ses
+trois shards E2E ont échoué : borne de taille d'ouverture trop stricte et deux
+snapshots d'ouverture obsolètes. Ces attentes sont corrigées localement ; la
+nouvelle CI doit confirmer les E2E.
+La suite unitaire locale complète a 1 154 tests réussis et 17 échecs sans rapport
 direct avec ces changements (sous-processus Git refusés par le sandbox et
 sorties vides des scripts de vérification des seeds). Le build local n'est pas
 encore confirmé ; il est bloqué dans le worker Next de cet environnement. Voir
-le checkpoint pour le détail et le statut Vercel après publication.
+Turbopack local reste suspendu après compilation ; Webpack local retourne une
+erreur de lecture de `tsc --showConfig`, alors que le build CI passe. Vercel
+Production `READY` pour `ab740821` ; l'alias `creator-deckk.vercel.app` sert ce
+déploiement. La lecture du contenu par le connecteur est bloquée en 403, donc
+la production n'a pas été inspectée par navigateur dans cette session.
 
 **Version web :** Production est `READY` sur le commit documentaire
 `99fc67ca2d76e1e743b8d50ffd9f4042083e74d7`; le code du peel servi reste celui de

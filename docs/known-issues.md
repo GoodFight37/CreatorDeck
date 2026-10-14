@@ -1,4 +1,4 @@
-## Audit du démarrage musical et des tailles Drop — corrigé localement, publication en attente
+## Audit du démarrage musical et des tailles Drop — audio corrigé, CI E2E en reprise
 
 À la base `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, le montage préchargeait
 les SFX et créait donc un `AudioContext` avant toute interaction. Le gestionnaire
@@ -8,7 +8,10 @@ et rétablissait le hub au démontage, même si le propriétaire d'écran demand
 une autre scène. Le correctif local réserve le démarrage à l'ouverture réelle,
 centralise les transitions dans l'app, bloque la source si mute est activé
 pendant le chargement et recrée une unique source au redémarrage. Tests ciblés
-E2E téléphone 7/7 et unitaires SFX 22/22.
+E2E téléphone 7/7 et unitaires SFX 22/22. Le premier run CI `38609156903` a
+trouvé trois shards E2E rouges, attribués aux attentes de taille et snapshots
+périmés de la pochette d'ouverture. Ces shards n'ont pas signalé de défaut dans
+les parcours audio ni les contrôles Drop 390 × 844.
 
 Sur les petits viewports, des media queries CSS réduisaient la taille du booster
 en 52/48/44vw, tandis qu'une règle concurrente la réimposait plus tard depuis
@@ -16,10 +19,14 @@ en 52/48/44vw, tandis qu'une règle concurrente la réimposait plus tard depuis
 `min(58vw, 220px, 34dvh)` ; en écran court, les CTA sont accessibles par scroll.
 E2E Drop mobile compact et 390 × 844 réussis. Aucun artefact latéral net n'est
 apparu dans la capture Chromium, mais biseaux et rendu réel restent à confirmer
-sur téléphone. L'audit global a aussi découvert 17 échecs indépendants : 11
+sur téléphone. L'audit unitaire local a aussi découvert 17 échecs indépendants : 11
 appels Git interdits par l'environnement de test et 6 sorties de tests seed
-vides. Build Next suspendu dans l'environnement ; vérifier CI et Vercel après
-publication avant de déclarer le lot terminé.
+vides. Correctif audio/Drop publié sur `main` au SHA `ab740821` ; correction des
+assertions et snapshots en attente de publication. Turbopack local reste
+suspendu après compilation et l'essai Webpack n'arrive pas à lire
+`tsc --showConfig` ; le build GitHub passe et le typecheck direct passe.
+Déploiement Vercel `READY` sur `ab740821`, mais inspection directe refusée au
+connecteur en 403.
 
 ## Geste du peel encore perfectible après amélioration partielle — ouvert, 14 octobre 2026
 

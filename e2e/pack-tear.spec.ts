@@ -723,8 +723,10 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
       const pack = (await dialog.locator(".booster-physical-scene").boundingBox())!;
       const seam = (await dialog.locator(".booster-tear-track").boundingBox())!;
       const action = (await dialog.locator(".booster-open-link").boundingBox())!;
-      expect(pack.width).toBeLessThanOrEqual(viewport.width * .65);
-      expect(pack.height).toBeLessThanOrEqual(viewport.height * .45);
+      // Keep the printed sachet comfortably inside the screen without
+      // shrinking it to an arbitrary fraction on the shortest viewport.
+      expect(pack.width).toBeLessThanOrEqual(viewport.width - 24);
+      expect(pack.height).toBeLessThanOrEqual(viewport.height * .62);
       const seamCenter = seam.y + seam.height / 2;
       expect(seamCenter).toBeGreaterThan(viewport.height * .4);
       expect(seamCenter).toBeLessThan(viewport.height * .6);
