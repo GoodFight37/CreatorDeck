@@ -5,6 +5,7 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
+import { PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
 /**
@@ -149,15 +150,9 @@ export function PackTear({
     setCut((current) => ({ ...current, progress: 0 }));
   };
 
-  // Keep one live sample per horizontal slice so the cut can respond to Y
-  // changes and retracing. Sorting by X makes the physical seam a single safe
-  // edge; it never uses the self-crossing chronological path as a clip polygon.
-  const edgeBySlice = new Map<number, { x: number; y: number }>();
-  for (const point of trace) {
-    const slice = Math.round(point.x);
-    edgeBySlice.set(slice, point);
-  }
-  const edge = [...edgeBySlice.values()].sort((a, b) => a.x - b.x);
+  // Collapse the chronological touch trace into a smooth, monotone weld. The
+  // raw path may cross itself, but neither the slit nor the foil clip does.
+  const edge = smoothPeelEdge(trace);
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
     : "0% 15.45%, 100% 15.45%";
@@ -236,7 +231,7 @@ export function PackTear({
               const bounds = sceneRef.current!.getBoundingClientRect();
               const point = {
                 x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
-                y: Math.max(2, Math.min(32, ((event.clientY - bounds.top) / bounds.height) * 100)),
+                y: Math.max(PEEL_ZONE_Y.min, Math.min(PEEL_ZONE_Y.max, ((event.clientY - bounds.top) / bounds.height) * 100)),
               };
               start.current = {
                 x: event.clientX,
@@ -260,9 +255,15 @@ export function PackTear({
               const gesture = start.current;
               if (opened || !gesture || gesture.pointerId !== event.pointerId) return;
               const bounds = gesture.bounds;
+              const rawY = ((event.clientY - bounds.top) / bounds.height) * 100;
+              // Lifting through the seam is a valid peel; dragging down into
+              // the artwork is ignored so wandering strokes cannot cut it.
+              if (rawY > PEEL_ZONE_Y.max) return;
               const point = {
                 x: Math.max(2, Math.min(98, ((event.clientX - bounds.left) / bounds.width) * 100)),
-                y: Math.max(2, Math.min(32, ((event.clientY - bounds.top) / bounds.height) * 100)),
+                // The lifted samples still count toward peel effort. The edge
+                // builder separately drops them from the visible weld trace.
+                y: Math.max(2, rawY),
               };
               const previous = gesture.points[gesture.points.length - 1];
               if (Math.hypot(point.x - previous.x, point.y - previous.y) >= 0.3) {

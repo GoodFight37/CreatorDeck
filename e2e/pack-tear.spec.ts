@@ -744,6 +744,16 @@ test("armed peel keeps following a back-and-forth cut until release", async ({ p
   expect(subsequentSlits.some((points) => points !== initialSlit)).toBe(true);
   const seamXs = subsequentSlits.at(-1)!.split(" ").map((point) => Number(point.split(",")[0]));
   expect(seamXs.every((value, index) => index === 0 || value >= seamXs[index - 1])).toBe(true);
+  const seamYs = subsequentSlits.at(-1)!.split(" ").map((point) => Number(point.split(",")[1]));
+  expect(Math.min(...seamYs)).toBeGreaterThanOrEqual(10);
+  expect(Math.max(...seamYs)).toBeLessThanOrEqual(21);
+
+  // Dragging wildly across the printed artwork cannot pull the cut away from
+  // the narrow top weld or turn it into a scribble.
+  const sceneBounds = (await scene.boundingBox())!;
+  const stableSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
+  await page.mouse.move(x + zone.width * .18, sceneBounds.y + sceneBounds.height * .42, { steps: 4 });
+  await expect(dialog.locator(".foil-cut-slit")).toHaveAttribute("points", stableSlit!);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);
 
