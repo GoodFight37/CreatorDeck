@@ -1,5 +1,18 @@
 # Décisions CreatorDeck
 
+## D-088 — 14 octobre 2026 : dessiner la coupe du booster avec un vrai contour SVG
+
+La vidéo de Malik montre le seuil « Relâche pour ouvrir » sans fente visible,
+avant que les cartes apparaissent. Le tracé avait été converti en `polyline`
+SVG, mais gardait des propriétés de barre HTML : un `background` ne peint pas
+le chemin SVG et aucun `stroke` n'était défini. La coupe géométrique était
+calculée, mais invisible. Le tracé occupe désormais la surface du sachet et
+dessine la trajectoire du doigt en trait clair, doublé d'un halo rose. Il reste
+figé quand l'ouverture suffisante est atteinte, puis s'efface avec l'animation
+de déchirure au relâchement. Aucun changement du seuil, du moment d'ouverture,
+des tirages ou des timings de reveal. Un E2E vérifie le contour SVG. L'état de
+publication et les résultats exacts figurent dans la passation.
+
 ## D-087 — 14 octobre 2026 : séparer les interrupteurs audio et choisir la BGM à l'écoute
 
 Malik indique que la boucle actuelle ressemble à un son de fond plutôt qu'à

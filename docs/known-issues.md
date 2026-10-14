@@ -1,3 +1,18 @@
+## Fente du booster invisible pendant le geste — corrigée, 14 octobre 2026
+
+La vidéo de Malik montre l'état « Relâche pour ouvrir » alors que le sachet
+semble intact, puis les cartes sortent sans coupe visible. Cause confirmée dans
+le code : le tracé était passé d'une barre HTML à une `polyline` SVG, mais
+gardait le style HTML (`background`, dimensions et pseudo-élément) ; aucun
+`stroke` SVG ne dessinait réellement la trajectoire. Le seuil et la coupe
+calculée continuaient de fonctionner, ce qui explique que l'ouverture se
+lance mais que le doigt ne laisse plus de trace visible. Correction locale :
+SVG positionné sur toute la pochette, trait clair + halo violet/rose, avec
+assertion E2E sur le contour calculé. Commit `269ec4d7` sur `main`. E2E ouverture :
+45 réussis et un scénario cloud conditionnel ignoré ; typecheck, ESLint ciblé,
+build statique et `git diff --check` réussis. Vérifier CI et Vercel après le
+push. Le rendu sur téléphone physique reste à confirmer après déploiement.
+
 ## Assertion E2E de réglage audio obsolète — corrigée, CI relancée, 14 octobre 2026
 
 La CI `38499177407` a échoué sur le test `product-audit.spec.ts` téléphone :
