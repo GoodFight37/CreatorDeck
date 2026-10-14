@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `269ec4d7b9a5c0d5d04699e387a730b26196264e` ;
+**État du code :** `main` au SHA `c2277ac53900e18c6b3c64cc33408e093c7679aa` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -61,8 +61,9 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   14 octobre, le contour SVG invisible a été corrigé dans le commit
   `269ec4d7` : le tracé visible suit maintenant le doigt, avec un halo. Les
   E2E d'ouverture passent (45 réussis, 1 scénario cloud ignoré), ainsi que le
-  typecheck, ESLint et le build. Push, CI et validation physique restent à
-  vérifier. Voir [D-084](decisions.md), [D-088](decisions.md) et le
+  typecheck, ESLint et le build. Poussé sur `main` ; Vercel Production `READY`,
+  CI GitHub `38561091030` encore en cours au dernier relevé. L'essai physique
+  reste à confirmer. Voir [D-084](decisions.md), [D-088](decisions.md) et le
   [rapport d'ouverture](booster-continuum-2026-10-12.md).
 - **Autres piliers :** Drop et Craft ont reçu leurs ajustements mobiles. Binder
   conserve la provenance d'obtention Live, tandis que le statut de direct actuel

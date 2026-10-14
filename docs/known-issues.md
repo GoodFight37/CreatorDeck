@@ -10,8 +10,9 @@ lance mais que le doigt ne laisse plus de trace visible. Correction locale :
 SVG positionné sur toute la pochette, trait clair + halo violet/rose, avec
 assertion E2E sur le contour calculé. Commit `269ec4d7` sur `main`. E2E ouverture :
 45 réussis et un scénario cloud conditionnel ignoré ; typecheck, ESLint ciblé,
-build statique et `git diff --check` réussis. Vérifier CI et Vercel après le
-push. Le rendu sur téléphone physique reste à confirmer après déploiement.
+build statique et `git diff --check` réussis. Poussé sur `main` dans le SHA
+`c2277ac5` ; Vercel Production `READY`, CI GitHub `38561091030` en cours au
+dernier relevé. Le rendu sur téléphone physique reste à confirmer.
 
 ## Assertion E2E de réglage audio obsolète — corrigée, CI relancée, 14 octobre 2026
 

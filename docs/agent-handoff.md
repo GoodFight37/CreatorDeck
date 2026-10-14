@@ -13,11 +13,14 @@ le contour SVG ; une capture téléphone simulé montre la fente sur la soudure.
 Fichiers : `src/components/pack-tear.tsx`,
 `src/app/booster-premium.css`, `src/app/booster-continuity.css`,
 `e2e/pack-tear.spec.ts`, `docs/decisions.md`, `docs/known-issues.md` et
-`docs/roadmap.md`. Commit de code `269ec4d7` sur `main`. Vérifications : la
+`docs/roadmap.md`. Commit de code `269ec4d7` et passation publiée sur `main`
+au SHA `c2277ac53900e18c6b3c64cc33408e093c7679aa`. Vérifications : la
 suite `e2e/pack-tear.spec.ts` passe (45 réussis, 1 scénario cloud conditionnel
 ignoré), typecheck, ESLint ciblé, build statique et `git diff --check` passent.
-La publication distante et ses contrôles CI/Vercel restent à vérifier. Aucun
-déploiement physique Android revendiqué.
+Vercel Production est `READY` pour ce SHA. La CI GitHub
+[`38561091030`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38561091030)
+était encore en cours au relevé suivant le push. Aucun déploiement physique
+Android revendiqué.
 
 ## Audio — interrupteurs publiés, sélection d'une BGM en attente, 14 octobre 2026
 
