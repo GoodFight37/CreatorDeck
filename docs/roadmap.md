@@ -2,6 +2,16 @@
 
 ## État actuel — 14 octobre 2026
 
+**Binder — implémenté et vérifié localement (autorisé par Malik) :** feuille
+CSS directionnelle, glissement horizontal avec flèches/clavier conservés,
+scroll vertical natif, noms complets et rareté sous les pochettes. Garder
+12 cartes/page, vue Obtenues, recherche/tri/collections et possession. Aucune
+nouvelle règle de jeu, audio ou sleeve à débloquer. Critères : pas de fiche
+ouverte par un swipe, tap normal fonctionnel, bords/annulation/filtres corrects,
+OFF/mouvement réduit sans attente, noms longs visibles à 320/390 px, aucun
+débordement. DOM 29/29, E2E mobile 7/7 nouveaux + 3/3 existants, TypeScript,
+ESLint et build réussis ; publication en attente. Preuves : checkpoint courant, D-098.
+
 **Rituel d'ouverture — publié et vérifié sur Vercel (14 octobre) :** garder
 l'accueil amélioré, retirer seulement « LE DROP » en double. Peel libre avec
 résistance progressive et signal du seuil, consigne « TIRE / RELÂCHE » ;
@@ -227,26 +237,20 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Vérifier sur Vercel que la version portant le nouveau SHA est servie ; en
-   30 secondes, tester une coupe en diagonale/avec retour, un swipe d'environ
-   deux tiers de la soudure, le repli d'un trait court et l'extraction sans
-   second clic. Le retour de Malik déterminera si la sensation est enfin
-   acceptable ; les scénarios navigateur ne la certifient pas.
-2. Reprendre la sélection musicale depuis les deux références provisoires de
-   Malik ; bâtir une comparaison temporaire dans l'application avant de choisir
-   ou d'intégrer la BGM. Toute piste unreleased exige une autorisation écrite
-   des ayants droit pour la composition et l'enregistrement.
-3. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
-   avant toute intégration réelle de nouveaux univers. La simulation de croissance
-   et le prototype ne modifient pas le catalogue, les taux ou l'économie.
-4. Idées au backlog, sans développement engagé :
-   - **Lien permanent vers la chaîne Twitch depuis une carte**, même hors ligne.
-     L'emplacement reste à décider (sous la carte ou dans sa fiche). C'est
-     distinct du badge « Direct », qui dépend d'un snapshot frais (D-074).
-   - Soundbites des créateurs et effet Perfect renforcé.
-   - Feuilletage, reflets par rareté et sleeves de Binder.
-   - Événements Twitch, Trade Radar, variante « Last Pack revanchard » et export
-     Story. Les règles et dépendances restent à définir avant développement.
+1. Publier le lot Binder autorisé sur main et contrôler le Binder sur Vercel
+   après ses tests ciblés et son build réussis. Garder le Drop et son rituel livrés.
+2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
+   autres travaux sur une demande de test joueur ni retoucher les seuils sans
+   symptôme précis. Le parcours automatique du rituel sur Vercel a déjà passé.
+3. Musique mise de côté à la demande de Malik. Les deux pistes restent des
+   références provisoires ; aucune nouvelle sélection engagée.
+4. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
+   avant toute intégration réelle de nouveaux univers. Le prototype et la
+   simulation ne modifient ni catalogue, ni taux, ni économie.
+5. Backlog sans développement engagé : lien permanent Twitch depuis une carte,
+   soundbites des créateurs, Perfect renforcé, reflets par rareté et sleeves de
+   Binder, événements Twitch, Trade Radar, Last Pack revanchard et export Story.
+   Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus
 

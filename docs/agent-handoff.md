@@ -1,6 +1,47 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — rituel peel → extraction → reveal publié et vérifié sur Vercel
+## Checkpoint courant — Binder : feuilletage et lisibilité vérifiés localement
+
+- Malik autorise la suite UI Binder après le rituel livré. Périmètre retenu :
+  feuilletage plus physique et lisibilité ; pas de refonte Drop, audio, gameplay,
+  monnaies, portraits ou tirages. Base `main` propre et identique à GitHub
+  `2e3c4396a53915e6809a89378e4a5e324edbd087` (ls-remote et fetch).
+- Observation avant : page déplacée de 8 px en 180 ms, noms longs tronqués ;
+  région parfois sur quatre lignes sur les petits portraits. Capture avant :
+  `/tmp/creatordeck-binder-before-390.png`, collection factice de 24 cartes.
+- Local : feuille directionnelle en perspective 340 ms, tranche et pochettes
+  plus lisibles. Glissement horizontal à seuil max(48 px, 18 % de largeur),
+  résistance aux bords, capture seulement après intention horizontale. Le
+  scroll vertical reste natif. Taps après un glissement supprimés pour ne pas
+  ouvrir une fiche ; tap normal et clavier conservés. Flèches et son existants.
+- Une page garde 12 cartes ; vue Obtenues, tris, recherche, objectifs et règles
+  de possession inchangés. Noms complets/rareté sous la pochette, pas de région
+  recouvrant les portraits compacts. Dos des non-obtenues conservés, marque
+  ajustée pour tenir. Styles limités à `.collection-view`.
+- Verrou court pendant le tour de feuille (secours 420 ms), annulé par les
+  filtres ; OFF/mouvement réduit : passage immédiat sans animation. Aucun
+  écouteur global ni dépendance ajoutés. Une seule feuille est montée.
+- Vérifications : DOM Binder/catalogue/son 29/29, TypeScript et ESLint ciblé
+  réussis (`npm run typecheck`, ESLint ciblé, `git diff --check`). Ancienne
+  assertion audio adaptée pour attendre le tour de feuille avant Précédent
+  (jsdom ne joue pas CSS), aucun son modifié.
+- E2E Chromium 390 × 844 : `e2e/binder-feuilletage.spec.ts` 7/7 (flèches/sens,
+  répétition, swipes/tap, bords/filtres/clavier, scroll tactile CDP, OFF/réduit,
+  noms longs 320/390). Scénarios Binder existants de `e2e/drop-binder.spec.ts`
+  3/3 (objectif mémorisé, manquantes/obtenues, géométrie 320 px). Pas de suite
+  E2E globale revendiquée. `npm run build` réussi : export statique sans les
+  variables Supabase locales ; pas une preuve cloud. Captures avant/après
+  inspectées, noms entiers et régions retirées des vignettes seulement.
+- Fichiers : `src/components/binder-view.tsx`, `src/app/drop-binder.css`,
+  `src/ecrans-drop-binder.test.tsx`, `src/ecrans-sons.test.tsx`,
+  `e2e/binder-feuilletage.spec.ts`, docs. Capture locale après :
+  `/tmp/creatordeck-binder-after-390.png`, comparée à l'avant.
+- Prochaine action : commit
+  et push normal sur `main`, relever CI/Vercel et parcourir le Binder public.
+  Rien de ce lot n'est encore publié. Réservation Binder active dans ce chat.
+  Ressenti physique sur appareil non certifié par Chromium.
+
+## Historique — rituel peel → extraction → reveal publié et vérifié sur Vercel
 
 - Demande : chantier UI du rituel, sans refaire l'accueil ni toucher au moteur,
   aux tirages ou à la BGM. Base `main` propre `283f408632009b606833cdc664fb3aefc910648c`,

@@ -64,6 +64,11 @@ suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
 le joueur. Le tutoriel de Production passe à 390 × 844 ; voir le checkpoint
 courant pour les tests et les limites de cette émulation mobile.
 
+Le Binder reçoit une passe UI de feuilletage et de lisibilité : feuille en
+perspective, geste horizontal avec flèches/clavier conservés et noms complets
+sous les pochettes. Il garde 12 cartes/page, Obtenues et ses objectifs existants.
+Validation et publication de ce lot dans le checkpoint courant.
+
 L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
 La musique `springly_sprigs` remplace provisoirement la nappe bourdonnante ;
 elle est préchargée au lancement puis commence au premier geste autorisé par le

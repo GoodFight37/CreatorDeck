@@ -102,6 +102,8 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un filtre a sonné").toBe(avant);
     banc.appuyer("Suivant");
     expect(sons.oscillateurs + sons.bruitages, "la page n'a pas sonné").toBe(avant + 1);
+    // jsdom ne joue pas le tour de feuille : attendre son filet de sécurité.
+    await act(async () => { await vi.advanceTimersByTimeAsync(420); });
     banc.appuyer("Précédent");
 
     expect(sons.oscillateurs + sons.bruitages, "le retour de page n'a pas sonné").toBe(avant + 2);

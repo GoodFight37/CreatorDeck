@@ -57,6 +57,27 @@ describe("le Binder guide la collection sans inventer de progression", () => {
     expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(2);
   });
 
+  it("garde les douze cartes et ignore un second feuilletage avant la pose", async () => {
+    vi.useFakeTimers();
+    try {
+      await collection(CREATORS.slice(0, 25).map((creator) => creator.slug));
+      const sheet = () => document.querySelector(".binder-page")!;
+      expect(sheet().getAttribute("data-page")).toBe("1");
+      banc.appuyer("Suivant");
+      expect(sheet().getAttribute("data-page")).toBe("2");
+      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
+      banc.appuyer("Suivant");
+      expect(sheet().getAttribute("data-page")).toBe("2");
+      await act(async () => { await vi.advanceTimersByTimeAsync(420); });
+      banc.appuyer("Suivant");
+      expect(sheet().getAttribute("data-page")).toBe("3");
+      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(1);
+      await act(async () => { await vi.advanceTimersByTimeAsync(420); });
+      banc.appuyer("Suivant");
+      expect(sheet().getAttribute("data-page")).toBe("3");
+    } finally { vi.useRealTimers(); }
+  });
+
   it("999 cartes ne sont pas annoncées comme une collection complète", async () => {
     await collection(CREATORS.slice(0, -1).map((creator) => creator.slug));
     expect(document.querySelector(".collection-score")?.textContent).toContain("99%");

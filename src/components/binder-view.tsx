@@ -3,7 +3,7 @@
 /**
  * L'écran **Binder** : grille de collection immédiate, recherche et filtres compacts.
  */
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
@@ -14,9 +14,10 @@ import { BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
 import { useNow } from "@/hooks/use-game";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, RARITY_META, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
 import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
+import { cardEffectsAllowed } from "@/lib/tilt";
 import { playPageTurn } from "@/lib/sfx";
 
 type CollectionFilter = "all" | "owned" | "missing" | "live" | "retired" | Rarity;
@@ -47,6 +48,18 @@ export function CollectionView({
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<BinderSort>("catalog");
   const [page, setPage] = useState(0);
+  const [turnDirection, setTurnDirection] = useState(0);
+  const [turning, setTurning] = useState(false);
+  const turnLock = useRef(false);
+  const turnTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const swipe = useRef<{ id: number; x: number; y: number; horizontal: boolean } | null>(null);
+  const suppressClick = useRef(false);
+
+  useEffect(() => () => {
+    if (turnTimer.current !== null) clearTimeout(turnTimer.current);
+  }, []);
+
   const [crafting, setCrafting] = useState<string | null>(null);
   const [inspect, setInspect] = useState<{
     creator: Creator;
@@ -125,15 +138,79 @@ export function CollectionView({
     return filter === "all" ? [...sorted, ...retiredCards] : sorted;
   }, [filter, live, now, owned, pageGoal, query, sort]);
 
+  function finishTurn() {
+    if (turnTimer.current !== null) clearTimeout(turnTimer.current);
+    turnTimer.current = null;
+    turnLock.current = false;
+    setTurning(false);
+    setTurnDirection(0);
+  }
+
+  function resetDrag() {
+    swipe.current = null;
+    surfaceRef.current?.classList.remove("is-dragging");
+    surfaceRef.current?.style.removeProperty("--binder-drag");
+  }
+
+  function resetPage() {
+    finishTurn();
+    resetDrag();
+    setPage(0);
+  }
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const showPager = filtered.length > perPage;
   const safePage = Math.min(page, totalPages - 1);
   function turnPage(next: number) {
     const target = Math.max(0, Math.min(totalPages - 1, next));
-    if (target === safePage) return;
+    if (target === safePage || turnLock.current) return;
     playPageTurn();
+    const effects = cardEffectsAllowed();
+    setTurnDirection(effects ? Math.sign(target - safePage) : 0);
+    turnLock.current = effects;
+    setTurning(effects);
     setPage(target);
+    // Secours si animationend est interrompu ou indisponible.
+    if (effects) turnTimer.current = setTimeout(finishTurn, 420);
   }
+  function startPageSwipe(event: PointerEvent<HTMLDivElement>) {
+    suppressClick.current = false;
+    if (!showPager || turnLock.current || event.button !== 0 || event.isPrimary === false ||
+      (event.target as Element).closest("a, button, input, select")) return;
+    swipe.current = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal: false };
+  }
+
+  function movePageSwipe(event: PointerEvent<HTMLDivElement>) {
+    const gesture = swipe.current;
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    if (!gesture.horizontal) {
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { resetDrag(); return; }
+      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+      gesture.horizontal = true;
+      suppressClick.current = true;
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* capture facultative */ }
+    }
+    event.preventDefault();
+    if (!cardEffectsAllowed()) return;
+    const blocked = dx > 0 ? safePage === 0 : safePage === totalPages - 1;
+    const resisted = (blocked ? 12 : 42) * Math.tanh(dx / 160);
+    event.currentTarget.style.setProperty("--binder-drag", `${resisted}px`);
+    event.currentTarget.classList.add("is-dragging");
+  }
+
+  function endPageSwipe(event: PointerEvent<HTMLDivElement>) {
+    const gesture = swipe.current;
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    const threshold = Math.max(48, event.currentTarget.clientWidth * .18);
+    resetDrag();
+    if (gesture.horizontal && Math.abs(dx) >= threshold && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      turnPage(safePage + (dx < 0 ? 1 : -1));
+    }
+  }
+
   const visibleCreators = filtered.slice(
     safePage * perPage,
     (safePage + 1) * perPage,
@@ -154,7 +231,7 @@ export function CollectionView({
     setPageGoal(id);
     setFilter(collection.slugs.every((slug) => owned.has(slug)) ? "all" : "missing");
     setQuery("");
-    setPage(0);
+    resetPage();
   }
 
   const retiredOwned = useMemo(
@@ -198,7 +275,7 @@ export function CollectionView({
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
-              setPage(0);
+              resetPage();
             }}
             placeholder={`Rechercher un streameur, rang (#1 à #${CATALOG_SIZE}) ou jeu…`}
             aria-label="Rechercher un créateur"
@@ -207,7 +284,7 @@ export function CollectionView({
             <button
               onClick={() => {
                 setQuery("");
-                setPage(0);
+                resetPage();
               }}
               aria-label="Effacer la recherche"
             >
@@ -223,7 +300,7 @@ export function CollectionView({
             value={sort}
             onChange={(event) => {
               setSort(event.target.value as BinderSort);
-              setPage(0);
+              resetPage();
             }}
             aria-label="Trier le classeur"
           >
@@ -261,7 +338,7 @@ export function CollectionView({
               onClick={() => {
                 setFilter(value);
                 setPageGoal(null);
-                setPage(0);
+                resetPage();
               }}
             >
               {label}
@@ -273,18 +350,18 @@ export function CollectionView({
       {activePage ? (
         <div className="binder-active-page" role="status">
           <span>{filter === "missing" ? "À découvrir" : "Collection"} · <strong>{activePage.name}</strong> · {activePage.owned}/{activePage.total}</span>
-          <button type="button" aria-label="Retirer le filtre de page" onClick={() => { setPageGoal(null); setPage(0); }}><X size={16} /></button>
+          <button type="button" aria-label="Retirer le filtre de page" onClick={() => { setPageGoal(null); resetPage(); }}><X size={16} /></button>
         </div>
       ) : null}
 
       {showPager ? (
         <div className="binder-pager">
-          <button onClick={() => turnPage(safePage - 1)} disabled={safePage <= 0}>
+          <button onClick={() => turnPage(safePage - 1)} disabled={turning || safePage <= 0}>
             <ChevronLeft size={15} />
             <span>Précédent</span>
           </button>
-          <span>Page <strong>{safePage + 1}</strong> / {totalPages} · {filtered.length} cartes</span>
-          <button onClick={() => turnPage(safePage + 1)} disabled={safePage >= totalPages - 1}>
+          <span role="status" aria-live="polite" aria-atomic="true">Page <strong>{safePage + 1}</strong> / {totalPages} · {filtered.length} cartes</span>
+          <button onClick={() => turnPage(safePage + 1)} disabled={turning || safePage >= totalPages - 1}>
             <span>Suivant</span>
             <ChevronRight size={15} />
           </button>
@@ -292,61 +369,95 @@ export function CollectionView({
       ) : null}
 
       {/* Grille de cartes visible immédiatement en haut de page */}
-      <div className="binder-page" key={safePage} data-page={safePage + 1}>
-        <div className="collection-grid">
-          {visibleCreators.map((creator) => {
-            const item = owned.get(creator.slug);
-            const currentLive = liveFor(live, creator.login, now);
-            return (
-              <div className="binder-pocket" key={creator.slug}>
-                <CreatorCard
-                  creator={creator}
-                  variant={item?.bestVariant ?? "standard"}
-                  locked={!item}
-                  compact
-                  liveStream={currentLive}
-                  onClick={() => setInspect({
-                    creator,
-                    count: item?.count ?? 0,
-                    variant: item?.bestVariant ?? "standard",
-                    liveStream: currentLive,
-                  })}
-                />
-                {item && item.count > 1 ? (
-                  <span className="pocket-count">×{item.count}</span>
-                ) : null}
-              </div>
-            );
-          })}
+      <div
+        className="binder-surface"
+        ref={surfaceRef}
+        role="group"
+        aria-label="Pages du classeur"
+        tabIndex={showPager ? 0 : undefined}
+        onPointerDown={startPageSwipe}
+        onPointerMove={movePageSwipe}
+        onPointerUp={endPageSwipe}
+        onPointerCancel={resetDrag}
+        onLostPointerCapture={resetDrag}
+        onClickCapture={(event) => {
+          if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); }
+        }}
+        onKeyDown={(event) => {
+          if (event.target !== event.currentTarget || !showPager) return;
+          if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
+            event.preventDefault();
+            turnPage(safePage + (event.key === "ArrowRight" ? 1 : -1));
+          }
+        }}
+      >
+        <div className="binder-page" key={safePage} data-page={safePage + 1}
+          data-turn={turnDirection > 0 ? "next" : turnDirection < 0 ? "previous" : "none"}
+          style={{ "--binder-direction": turnDirection } as CSSProperties}
+          onAnimationEnd={(event) => { if (event.target === event.currentTarget) finishTurn(); }}
+        >
+          <div className="collection-grid">
+            {visibleCreators.map((creator) => {
+              const item = owned.get(creator.slug);
+              const currentLive = liveFor(live, creator.login, now);
+              return (
+                <div className="binder-pocket" key={creator.slug} style={{ "--pocket-rarity": RARITY_META[creator.rarity].color } as CSSProperties}>
+                  <div className="binder-card-slot">
+                    <CreatorCard
+                      creator={creator}
+                      variant={item?.bestVariant ?? "standard"}
+                      locked={!item}
+                      compact
+                      liveStream={currentLive}
+                      onClick={() => setInspect({
+                        creator,
+                        count: item?.count ?? 0,
+                        variant: item?.bestVariant ?? "standard",
+                        liveStream: currentLive,
+                      })}
+                    />
+                    {item && item.count > 1 ? (
+                      <span className="pocket-count">×{item.count}</span>
+                    ) : null}
+                  </div>
+                  <span className="binder-card-caption" aria-hidden="true">
+                    <strong>{creator.displayName}</strong>
+                    <small>{RARITY_META[creator.rarity].label}{!item ? " · À découvrir" : ""}</small>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Empty state épuré avec la phrase contractuelle */}
+          {!filtered.length ? (
+            <div className="binder-empty-state">
+              {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
+                <>
+                  <strong>Ta collection commence avec le prochain booster.</strong>
+                  <button type="button" className="binder-first-drop" onClick={() => { setFilter("all"); resetPage(); }}>
+                    Voir les créateurs à découvrir <ChevronRight size={16} />
+                  </button>
+                  {onGoDrop ? (
+                    <button type="button" className="binder-first-drop" onClick={onGoDrop}>
+                      Retour au Drop <ChevronRight size={16} />
+                    </button>
+                  ) : null}
+                </>
+              ) : (
+                <span>Aucune carte ne correspond à cette recherche.</span>
+              )}
+            </div>
+          ) : null}
         </div>
 
-        {/* Empty state épuré avec la phrase contractuelle */}
-        {!filtered.length ? (
-          <div className="binder-empty-state">
-            {filter === "owned" && game.stats.uniqueCreators === 0 && !query ? (
-              <>
-                <strong>Ta collection commence avec le prochain booster.</strong>
-                <button type="button" className="binder-first-drop" onClick={() => { setFilter("all"); setPage(0); }}>
-                  Voir les créateurs à découvrir <ChevronRight size={16} />
-                </button>
-                {onGoDrop ? (
-                  <button type="button" className="binder-first-drop" onClick={onGoDrop}>
-                    Retour au Drop <ChevronRight size={16} />
-                  </button>
-                ) : null}
-              </>
-            ) : (
-              <span>Aucune carte ne correspond à cette recherche.</span>
-            )}
-          </div>
-        ) : null}
       </div>
 
       {/* Raccourci Dernières reçues replacé sous les pochettes */}
       {game.stats.uniqueCreators > 0 ? (
         <div className="binder-quick-views" aria-label="Parcourir ma collection" style={{ margin: "0.2rem 0" }}>
           <button type="button" aria-pressed={sort === "recent" && filter === "owned" && !pageGoal && !query} onClick={() => {
-            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); setPage(0);
+            setSort("recent"); setFilter("owned"); setPageGoal(null); setQuery(""); resetPage();
           }}>Dernières reçues <ChevronRight size={14} /></button>
           <span>{game.stats.duplicates} doublon{game.stats.duplicates > 1 ? "s" : ""} recyclable{game.stats.duplicates > 1 ? "s" : ""}</span>
         </div>
@@ -409,7 +520,7 @@ export function CollectionView({
           ))}
         </div>
         {savedGoal ? <button type="button" className="binder-auto-goal" onClick={() => {
-          saveGoal(null); setPageGoal(null); setFilter("owned"); setQuery(""); setPage(0);
+          saveGoal(null); setPageGoal(null); setFilter("owned"); setQuery(""); resetPage();
         }}>Revenir à la suggestion automatique</button> : null}
       </details>
 

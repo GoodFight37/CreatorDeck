@@ -1,5 +1,29 @@
 # Décisions CreatorDeck
 
+## D-098 — 14 octobre 2026 : feuilleter le Binder sans gêner la consultation
+
+- Autorisation de Malik pour le chantier UI recommandé : feuilletage physique
+  et lisibilité. Garder 12 cartes/page, Obtenues par défaut, objectifs et tris.
+- Remplacer la translation de 8 px par une entrée directionnelle de feuille
+  en perspective (340 ms). Glissement horizontal possible sur la feuille,
+  seuil max(48 px, 18 % de largeur) et capture après intention horizontale
+  seulement ; le scroll vertical et le zoom restent natifs. Petit glissement
+  ou annulation : retour à la pose, sans fiche ouverte. Bords résistants.
+- Flèches et clavier restent disponibles. Le tour ignore les répétitions tant
+  qu'il n'est pas posé (secours 420 ms), les filtres annulent le tour et
+  reviennent à la première page. Sans effets/mouvement réduit : immédiat.
+- Ajouter des étiquettes lisibles sous les pochettes : nom complet avec retour
+  à la ligne et rareté en texte + point coloré. Les libellés internes de région
+  ne recouvrent plus les portraits compacts dans le Binder ; cartes et inspect
+  ailleurs inchangés. Les cartes manquantes gardent un dos, jamais de portrait.
+- Limiter les styles au Binder, garder une seule feuille/12 cartes montées ;
+  pas de WebGL, de sleeve à gagner, nouveau son ou réglage. Le son de page
+  existant se déclenche sur un changement effectif, les filtres restent muets.
+- Alternative écartée : simuler deux pages complètes avec des cartes clonées,
+  agrandir globalement CreatorCard, changer la densité ou les règles du jeu.
+  La validation Chromium couvre les gestes et la géométrie, pas le ressenti
+  au doigt du joueur. Preuves/version dans le checkpoint courant.
+
 ## D-097 — 14 octobre 2026 : donner un temps physique au rituel d'ouverture
 
 - Demande : faire sentir peel → extraction → reveal comme un objet manipulé,
