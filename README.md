@@ -57,6 +57,12 @@ perfectible. Le ressenti reste ouvert ; les tests automatiques ne le déclarent
 pas résolu. L'état, le SHA et la prochaine priorité sont dans la
 [roadmap](docs/roadmap.md) et la [passation](docs/agent-handoff.md).
 
+Le rituel d'ouverture est implémenté et vérifié localement : consignes « TIRE /
+RELÂCHE », extraction des cinq dos à 1,2 s, pause d'impact et lumière renforcée
+pour les rares, puis résumé mobile des cinq cartes en deux rangées. Le bouton
+suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
+le joueur. Voir le checkpoint courant pour les tests et la publication.
+
 L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
 La musique `springly_sprigs` remplace provisoirement la nappe bourdonnante ;
 elle est préchargée au lancement puis commence au premier geste autorisé par le

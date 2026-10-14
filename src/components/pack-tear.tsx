@@ -5,7 +5,9 @@ import Image from "next/image";
 import { createPortal } from "react-dom";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
-import { isPeelOpenable, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
+import { isPeelOpenable, PEEL_MIN_APERTURE, PEEL_MIN_COVERAGE, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
+import { buzz } from "@/lib/haptics";
+import { PACK_TEAR_MS, TEAR_HAPTIC } from "@/lib/reveal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
 /**
@@ -99,8 +101,8 @@ export function PackTear({
 
     const effects = cardEffectsAllowed();
     if (effects) {
-      // Enchaînement direct fluide : les cartes montent et basculent automatiquement sur la 1re carte
-      timer.current = window.setTimeout(completeExtraction, 720);
+      // Laisser les cinq dos se poser avant la première face.
+      timer.current = window.setTimeout(completeExtraction, PACK_TEAR_MS);
       // Secours en cas de latence réseau prolongée (> 2.2s)
       slowTimer.current = window.setTimeout(() => {
         setShowSlowFallback(true);
@@ -166,6 +168,7 @@ export function PackTear({
       tabIndex={-1}
       className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`}
       role="dialog"
+      style={{ "--pack-extraction-ms": `${PACK_TEAR_MS}ms` } as CSSProperties}
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
       aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"}
       aria-modal="true"
@@ -177,11 +180,11 @@ export function PackTear({
       >
         <div className="booster-stage-atmosphere" aria-hidden="true"><span /><span /><span /></div>
         <p className="booster-opening-instruction">
-          {opened ? "LES CARTES APPARAISSENT" : releaseReady ? "RELÂCHE POUR OUVRIR" : "DÉCHIRE LE HAUT DU BOOSTER"}
+          {opened ? "" : releaseReady ? "RELÂCHE" : "TIRE"}
         </p>
         <div
           ref={sceneRef}
-          className={`booster-physical-scene${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
+          className={`booster-physical-scene${releaseReady ? " is-release-ready" : ""}${returning ? " is-returning" : ""}${opened ? " booster-foil-open" : ""}`}
           style={{
             "--cut-start": `${cut.start}%`,
             "--cut-end": `${cut.end}%`,
@@ -296,13 +299,17 @@ export function PackTear({
               const lift = Math.max(0, -dy / bounds.height);
               const tearEnergy = span + verticalSpread * 0.35;
               const aperture = (tearEnergy / 100) * (0.65 + Math.min(0.35, lift) * 2.5);
-              const progress = Math.min(99, Math.round((aperture / 0.32) * 100));
+              const seamCoverage = (span / gesture.seamWidth) * 100;
+              // Le rabat ne paraît prêt que lorsque les deux seuils le sont.
+              const progress = Math.min(99, Math.round(Math.min(
+                seamCoverage / PEEL_MIN_COVERAGE, aperture / PEEL_MIN_APERTURE,
+              ) * 100));
               pullProgress.current = progress / 100;
 
               setTrace([...gesture.points]);
               setPull({
-                x: Math.max(-28, Math.min(28, dx * 0.18)),
-                y: Math.max(-68, Math.min(30, dy * 0.55)),
+                x: 28 * Math.tanh(dx / 180),
+                y: dy < 0 ? 68 * Math.tanh(dy / 150) : 30 * Math.tanh(dy / 100),
                 angle: Math.max(-14, Math.min(14, (Math.atan2(dy, bounds.width * 0.5) * 180) / Math.PI)),
               });
               setCut({
@@ -322,12 +329,12 @@ export function PackTear({
 
               // Require a broad stroke plus lift/aperture so a tap or tiny
               // local scratch cannot fold the entire flap.
-              const seamCoverage = (span / gesture.seamWidth) * 100;
               if (isPeelOpenable(seamCoverage, aperture) && !gesture.ready) {
                 // Crossing the opening threshold enables release, but the
                 // hand still guides the seam and foil until pointerUp.
                 gesture.ready = true;
                 setReleaseReady(true);
+                buzz(TEAR_HAPTIC);
               }
 
             }}

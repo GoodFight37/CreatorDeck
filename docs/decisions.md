@@ -1,5 +1,32 @@
 # Décisions CreatorDeck
 
+## D-097 — 14 octobre 2026 : donner un temps physique au rituel d'ouverture
+
+- Demande : faire sentir peel → extraction → reveal comme un objet manipulé,
+  avec un temps fort pour les rares et un récapitulatif lisible.
+- Cause prouvée : le timer JS de 720 ms précédait la fin CSS à 920 ms. Décision :
+  unifier JS/CSS à 1200 ms, éventail bref des cinq dos puis pose à l'échelle et
+  au centre du reveal. Garder le passage immédiat sans effets/mouvement réduit.
+- Conserver les seuils et le tracé libre D-092 : ne pas durcir arbitrairement
+  un geste déjà jugé perfectible. Le déplacement du rabat résiste progressivement
+  (courbe saturante), sa progression suit les deux seuils, lueur et vibration
+  unique signalent « RELÂCHE ». Pas de minuterie tactile ni ouverture avant
+  relâchement ; tap/petit trait et annulation continuent de replier.
+- Rare/Épique/Légendaire : flip 840/960/1120 ms, pause à face visible entre
+  48 % et 60 %. Le SFX déjà disponible et la lumière partent à 48 %, après
+  le silence existant et, si applicable, la pose du cinquième dos. Séparer délai
+  de flip et délai d'impact évite d'accumuler les retards. Commune : flip
+  simple, reflet moins intense. Le Perfect et l'overlay OBS gardent leur rituel.
+- Le récapitulatif existant reste obligatoire dans le parcours séquentiel
+  normal : trois puis deux cartes sur téléphone, noms non tronqués, animation
+  courte, défilement en fenêtre basse, sachet retiré du fond. Garde de 650 ms
+  pendant la pose (effets ON), afin que le double tap de « Ranger » ne ferme
+  pas le résumé immédiatement. Retour explicite ; pas de fermeture auto.
+- Alternative refusée : refonte de l'accueil, WebGL, particules, nouveau lecteur
+  ou musique, et changement des tirages. Seul le titre « LE DROP » redondant
+  est supprimé ; ESSAYER/Plus d'infos reste compact. Le feeling tactile reste
+  une validation joueur ; les tests ne le déclarent pas résolu.
+
 ## D-096 — 14 octobre 2026 : plans latéraux orientés vers le joueur
 
 - Constat vérifié sur la Production Vercel en viewport 390 × 844 : le Drop

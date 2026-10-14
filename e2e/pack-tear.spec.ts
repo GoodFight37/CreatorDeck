@@ -155,6 +155,106 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
   await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeFocused();
 });
 
+for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 9999]] as const) {
+  test(`le rituel ${rarity} respecte sa pause d'impact et son verrou`, async ({ page }) => {
+    await page.addInitScript((seed) => {
+      const original = crypto.getRandomValues.bind(crypto);
+      Object.defineProperty(crypto, "getRandomValues", { configurable: true, value: (array: ArrayBufferView) => {
+        if (array instanceof Uint32Array) { array.fill(seed); return array; }
+        return original(array);
+      } });
+    }, seed);
+    await gotoDeck(page);
+    await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+    await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+    const reveal = page.locator(".reveal-game");
+    await expect(reveal).toHaveClass(new RegExp(`reveal-rarity-${rarity}`));
+    const face = reveal.locator(".reveal-flip-face");
+    const motion = await face.evaluate((node) => {
+      const animation = node.getAnimations()[0];
+      animation.pause();
+      const timing = animation.effect!.getTiming();
+      const duration = Number(timing.duration);
+      animation.currentTime = Number(timing.delay) + duration * .50;
+      const matrix = () => Array.from(new DOMMatrixReadOnly(getComputedStyle(node).transform).toFloat64Array())
+        .map((value) => Math.round(value * 1_000_000) / 1_000_000);
+      const impact = matrix();
+      animation.currentTime = Number(timing.delay) + duration * .58;
+      const held = matrix();
+      return { impact, held, name: getComputedStyle(node).animationName, duration };
+    });
+    await expect(reveal.locator(".reveal-next")).toBeDisabled();
+    if (rarity === "common") {
+      expect(motion.name).toBe("scene-card-turn");
+      expect(motion.impact).not.toEqual(motion.held);
+      await expect(reveal.locator(".reveal-rare-aura")).toHaveCount(0);
+    } else {
+      expect(motion.name).toBe("scene-card-impact-turn");
+      expect(motion.impact).toEqual(motion.held);
+      await expect(reveal.locator(`.reveal-rare-aura-${rarity}`)).toBeVisible();
+    }
+    await page.screenshot({ path: `test-results/ritual-${rarity}-${test.info().project.name}.png` });
+    await face.evaluate((node) => node.getAnimations()[0].finish());
+    await expect(reveal.locator(".reveal-next")).toBeEnabled();
+  });
+}
+
+test("les cinq dos se posent avant le reveal et le récapitulatif attend le joueur", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  const pack = page.locator(".opening-continuum");
+  await pack.evaluate((node) => {
+    const probe = { startedAt: 0, revealAfterMs: 0, phaseAtOneSecond: "", backs: 0 };
+    (window as typeof window & { ritualProbe?: typeof probe }).ritualProbe = probe;
+    const observer = new MutationObserver(() => {
+      const phase = node.getAttribute("data-opening-phase");
+      if (phase === "extracting" && !probe.startedAt) {
+        probe.startedAt = performance.now();
+        window.setTimeout(() => {
+          probe.phaseAtOneSecond = node.getAttribute("data-opening-phase") || "";
+          probe.backs = [...node.querySelectorAll(".foil-back-card")]
+            .filter((back) => Number(getComputedStyle(back).opacity) > 0.9).length;
+        }, 1_000);
+      } else if (phase === "revealing" && probe.startedAt) {
+        probe.revealAfterMs = performance.now() - probe.startedAt;
+        observer.disconnect();
+      }
+    });
+    observer.observe(node, { attributes: true, attributeFilter: ["data-opening-phase"] });
+  });
+  await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(pack).toHaveAttribute("data-opening-phase", "revealing");
+  const probe = await page.evaluate(() => (window as typeof window & {
+    ritualProbe?: { revealAfterMs: number; phaseAtOneSecond: string; backs: number };
+  }).ritualProbe);
+  expect(probe?.phaseAtOneSecond).toBe("extracting");
+  expect(probe?.backs).toBe(5);
+  expect(probe!.revealAfterMs).toBeGreaterThanOrEqual(1_100);
+  // Each face must finish before advancing; no forced reveal or skipped animation.
+  for (let i = 0; i < 5; i++) {
+    await expect(pack.locator(".reveal-next")).toBeEnabled();
+    await pack.locator(".reveal-next").click();
+    if (await pack.locator(".reveal-summary").count()) break; // Perfect has one step.
+  }
+  await expect(pack.locator(".reveal-summary-card")).toHaveCount(5);
+  const summary = pack.locator(".reveal-summary-grid");
+  const geometry = await summary.evaluate((node) => ({
+    columns: getComputedStyle(node).gridTemplateColumns.split(" ").length,
+    width: document.documentElement.scrollWidth,
+    viewport: window.innerWidth,
+  }));
+  expect(geometry.columns).toBe(geometry.viewport <= 480 ? 3 : 5);
+  expect(geometry.width).toBe(geometry.viewport);
+  await pack.locator(".reveal-summary-grid").evaluate(async (node) => {
+    await Promise.all([...node.querySelectorAll(".reveal-summary-card")]
+      .flatMap((card) => card.getAnimations()).map((animation) => animation.finished));
+  });
+  await expect(pack.locator(".booster-opening-stage")).toBeHidden();
+  await page.screenshot({ path: `test-results/ritual-summary-${test.info().project.name}.png` });
+  await pack.getByRole("button", { name: "Retour au Drop", exact: true }).click();
+  await expect(pack).toHaveCount(0);
+});
+
 test("reduced motion reveals a stationary front without a hidden card", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.addInitScript(() => {
@@ -223,8 +323,8 @@ test("a horizontal swipe advances after the flip and the button remains availabl
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
   // Wait for the card flip: swipes during the flip are intentionally ignored;
-  // taps are queued separately by the next-button behavior.
-  await expect(reveal.locator(".reveal-flip-face").first()).toHaveCSS("animation-name", /scene-card-turn/);
+  // taps received during the flip are also ignored.
+  await expect(reveal.locator(".reveal-flip-face").first()).toHaveCSS("animation-name", /scene-card-(?:turn|impact-turn)/);
   await reveal.locator(".reveal-flip-face").first().evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
@@ -273,7 +373,7 @@ test("la carte garantie se retourne automatiquement, sans languette ni second ge
   await expect(reveal.locator(".reveal-corner-handle")).toHaveCount(0);
   const fifthFlip = reveal.locator(".reveal-flip.reveal-fifth-card .reveal-flip-face");
   await expect(fifthFlip).toHaveCount(1);
-  await expect(fifthFlip).toHaveCSS("animation-name", /scene-card-turn/);
+  await expect(fifthFlip).toHaveCSS("animation-name", /scene-card-(?:turn|impact-turn)/);
   await expect(fifthFlip).toHaveCSS("animation-delay", /^(360ms|0\.36s)$/);
   // Reaching 5/5 starts the turn on its own; no extra tap or command is needed.
   await fifthFlip.evaluate(async (node) => {
@@ -337,7 +437,7 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
   await reveal.getByRole("button", { name: "Révéler les cinq cartes d'un coup" }).click();
   await expect(reveal.locator(".reveal-header > span")).toHaveText("5 / 5");
   await expect(reveal.locator(".reveal-corner-handle")).toHaveCount(0);
-  await expect(reveal.locator(".reveal-flip-face")).toHaveCSS("animation-name", /scene-card-turn/);
+  await expect(reveal.locator(".reveal-flip-face")).toHaveCSS("animation-name", /scene-card-(?:turn|impact-turn)/);
   await reveal.locator(".reveal-flip-face").evaluate(async (node) => {
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
@@ -346,6 +446,8 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
 
 test("home pack artwork stays named and the long gesture hint is removed", async ({ page }) => {
   await gotoDeck(page);
+  await expect(page.locator(".drop-edition")).not.toContainText("DROP");
+  await expect(page.locator(".drop-intro h1")).toHaveText("Drop");
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
   for (const width of [320, 360, 412, 1280]) {
     await page.setViewportSize({ width, height: 915 });
@@ -387,7 +489,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
   await expect(dialog.locator(".booster-opening-instruction"))
-    .toHaveText("DÉCHIRE LE HAUT DU BOOSTER");
+    .toHaveText("TIRE");
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
@@ -575,8 +677,8 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
     return { duration: style.animationDuration, delay: style.animationDelay };
   });
   const milliseconds = (value: string) => parseFloat(value) * (value.endsWith("ms") ? 1 : 1_000);
-  expect(milliseconds(cascade.duration)).toBeCloseTo(700, 0);
-  expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_000);
+  expect(milliseconds(cascade.duration)).toBeCloseTo(950, 0);
+  expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_200);
 
   // The shell remains visible after the face; the duplicate backs are hidden.
   await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
@@ -631,7 +733,7 @@ test("free peel follows a bent retracing stroke and opens on a broad swipe", asy
     .evaluate((node) => (node as HTMLElement).style.getPropertyValue("--cut-top"));
   expect(capCut).toContain(`${trace[0][0]}% ${trace[0][1]}%`);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
-  await expect(dialog.locator(".booster-opening-instruction")).toHaveText("RELÂCHE POUR OUVRIR");
+  await expect(dialog.locator(".booster-opening-instruction")).toHaveText("RELÂCHE");
   await page.screenshot({ path: `test-results/free-peel-${test.info().project.name}.png` });
 
   await page.mouse.up();
@@ -814,7 +916,7 @@ test("peel follows curved Y samples and opens after a broad cross-band swipe", a
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.screenshot({ path: "test-results/peel-guide-" + test.info().project.name + ".png" });
   await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
-  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("RELÂCHE", { exact: true })).toBeVisible();
   // Even a sufficient cut must remain sealed for as long as the finger is down.
   await page.waitForTimeout(350);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
@@ -837,7 +939,7 @@ test("armed peel keeps following a back-and-forth cut until release", async ({ p
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
-  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("RELÂCHE", { exact: true })).toBeVisible();
   await page.waitForTimeout(350);
   const initialStyle = await scene.getAttribute("style");
   const initialSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
@@ -885,7 +987,7 @@ test("a local lifted stroke retracts on release and leaves no trace", async ({ p
   // Strong lift and a visible trace, but only across a local portion of the weld.
   await page.mouse.move(x + zone.width * .23, y - scene.height * .45, { steps: 6 });
   await expect(dialog.locator(".foil-cut-slit")).not.toHaveAttribute("points", "");
-  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toHaveCount(0);
+  await expect(dialog.getByText("RELÂCHE", { exact: true })).toHaveCount(0);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await page.mouse.up();
 
@@ -905,7 +1007,7 @@ test("cancelling an armed peel retracts instead of opening", async ({ page }) =>
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x + zone.width * .92, y - zone.height * .95, { steps: 8 });
-  await expect(dialog.getByText("RELÂCHE POUR OUVRIR", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("RELÂCHE", { exact: true })).toBeVisible();
   await seam.dispatchEvent("pointercancel", { pointerId: 1 });
   await page.mouse.up();
 

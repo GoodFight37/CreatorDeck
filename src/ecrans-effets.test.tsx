@@ -17,7 +17,7 @@
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { PERFECT_LOCK_MS, silenceBefore } from "@/lib/reveal";
+import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -211,6 +211,9 @@ describe("les effets de révélation", () => {
     expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
     expect(bouton().textContent).toContain("Retour au Drop");
     banc.appuyer("Retour au Drop");
+    expect(fermer, "le double tap ne ferme pas le récap avant sa pose").not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    banc.appuyer("Retour au Drop");
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
   });
@@ -229,6 +232,7 @@ describe("les effets de révélation", () => {
     expect(document.body.textContent).toContain("RÉCAP");
     expect(document.body.textContent).toContain("2 cartes dans ta collection");
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent).toContain("Retour au Drop");
+    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
     banc.appuyer("Retour au Drop");
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant).not.toHaveBeenCalled();
@@ -329,6 +333,7 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".reveal-summary")).toBeTruthy();
     expect(next).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
     banc.appuyer("Retour au Drop");
     expect(close).toHaveBeenCalledOnce();
   });
@@ -427,6 +432,34 @@ describe("les effets de révélation", () => {
     expect(bouton.disabled).toBe(false);
     banc.appuyer("Carte suivante");
     expect(suivant).toHaveBeenCalledOnce();
+  });
+
+  it.each(["rare", "epic", "legendary"] as const)("synchronise le SFX %s sur l'impact, y compris au cinquième emplacement", async (rarity) => {
+    const sounds = await import("@/lib/sfx");
+    const bang = vi.spyOn(sounds, "playBang").mockImplementation(() => {});
+    const stinger = vi.spyOn(sounds, "playLegendaryStinger").mockImplementation(() => {});
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const cards = Array.from({ length: 5 }, (_, i) => carte(i === 4 ? rarity : "common", `impact-${i}`));
+    try {
+      await banc.monter(<RevealOverlay cards={cards as never} index={4} onNext={() => {}} onClose={() => {}} />);
+      const timing = revealTiming(rarity, true, true);
+      const next = document.querySelector<HTMLButtonElement>(".reveal-next")!;
+      expect(next.disabled).toBe(true);
+      await act(async () => { await vi.advanceTimersByTimeAsync(timing.impactMs - 1); });
+      expect(bang).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+      expect(bang).toHaveBeenCalledExactlyOnceWith(rarity, "standard");
+      expect(stinger).toHaveBeenCalledTimes(rarity === "legendary" ? 1 : 0);
+      expect(next.disabled).toBe(true);
+      // jsdom ne joue pas les animations CSS : vérifier le filet de sécurité.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_200 + silenceBefore(rarity) + 360 - timing.impactMs);
+      });
+      expect(next.disabled).toBe(false);
+    } finally {
+      bang.mockRestore();
+      stinger.mockRestore();
+    }
   });
 
   it("se choisit sur la carte du moment, pas sur la première du paquet", async () => {

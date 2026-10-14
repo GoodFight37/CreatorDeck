@@ -31,6 +31,7 @@ import {
   PERFECT_HAPTIC,
   PERFECT_LOCK_MS,
   revealHaptic,
+  revealTiming,
   silenceBefore,
 } from "@/lib/reveal";
 import { playBang, playLegendaryStinger, playPerfectStinger, playReveal } from "@/lib/sfx";
@@ -78,11 +79,21 @@ export function RevealOverlay({
   const newCardCount = cards.filter((item) => item.isNew).length;
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
+  const [summaryReady, setSummaryReady] = useState(false);
+  const summaryLocked = showSummary && !summaryReady && cardEffectsAllowed();
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
+  const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal);
+
+  useEffect(() => {
+    if (!showSummary) return;
+    // Le second tap sur « Ranger » ne doit pas fermer les cartes en cascade.
+    const timer = window.setTimeout(() => setSummaryReady(true), 650);
+    return () => window.clearTimeout(timer);
+  }, [showSummary]);
 
   useEffect(() => {
     if (!cardId || perfect) return;
@@ -116,15 +127,15 @@ export function RevealOverlay({
 
   useEffect(() => {
     if (!card || perfect) return;
-    const silence = silenceBefore(card.rarity);
+    const silence = overlay ? silenceBefore(card.rarity) : timing.impactMs;
     const timer = window.setTimeout(() => {
-      if (silence > 0) playBang(card.rarity, card.variant);
+      if (silenceBefore(card.rarity) > 0 || (!overlay && card.rarity === "rare")) playBang(card.rarity, card.variant);
       else playReveal(card.rarity, card.variant);
       if (card.rarity === "legendary") playLegendaryStinger();
       buzz(revealHaptic(card.rarity, card.variant));
     }, silence);
     return () => window.clearTimeout(timer);
-  }, [card, perfect]);
+  }, [card, perfect, overlay, timing.impactMs]);
 
   useEffect(() => {
     if (!perfect) return;
@@ -146,8 +157,12 @@ export function RevealOverlay({
   const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
   const rarityAura = rareGlow || card.rarity === "rare";
   const flash = flashFor(card.rarity, perfect);
-  const glowDelay = perfect ? 0 : silenceBefore(card.rarity);
-  const glowStyle = { "--rare-delay": `${glowDelay}ms` } as CSSProperties;
+  const glowDelay = perfect ? 0 : overlay ? silenceBefore(card.rarity) : timing.impactMs;
+  const glowStyle = {
+    "--rare-delay": `${glowDelay}ms`,
+    "--flip-delay": `${timing.leadMs}ms`,
+    "--flip-ms": `${timing.flipMs}ms`,
+  } as CSSProperties;
 
   function resetRevealDrag(element?: HTMLElement | null) {
     const target = element || anchorRef.current;
@@ -240,6 +255,7 @@ export function RevealOverlay({
       ref={dialogRef}
       tabIndex={-1}
       data-reveal-index={index}
+      style={glowStyle}
       className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}${showSummary ? " reveal-summary-open" : ""}${embedded ? " reveal-embedded" : ""}`}
       role={embedded ? undefined : "dialog"}
       aria-modal={embedded ? undefined : true}
@@ -299,7 +315,7 @@ export function RevealOverlay({
             ×{cards.length - index}
           </button>
         ) : null}
-        <button onClick={onClose} aria-label="Fermer" disabled={locked}><X size={20} /></button>
+        <button onClick={() => { if (!summaryLocked) onClose(); }} aria-label="Fermer" disabled={locked || summaryLocked}><X size={20} /></button>
       </div>
 
       {perfect && !showSummary ? (
@@ -334,11 +350,11 @@ export function RevealOverlay({
             <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : `${cards.length} cartes dans ta collection`}</p>
           </div>
           <div className="reveal-summary-grid">
-            {cards.map((item) => {
+            {cards.map((item, summaryIndex) => {
               const itemCreator = CREATOR_BY_SLUG.get(item.creatorSlug);
               if (!itemCreator) return null;
               return (
-                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id}>
+                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>
                   <CreatorCard
                     creator={itemCreator}
                     variant={item.variant}
@@ -441,8 +457,8 @@ export function RevealOverlay({
 
       <button
         className={`reveal-next${locked ? " locked" : ""}${!showSummary && !perfect ? " is-secondary" : ""}`}
-        onClick={showSummary ? onClose : advance}
-        disabled={locked || (!perfect && !showSummary && flippedCardId !== cardId)}
+        onClick={showSummary ? () => { if (!summaryLocked) onClose(); } : advance}
+        disabled={locked || summaryLocked || (!perfect && !showSummary && flippedCardId !== cardId)}
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
       >
         <span>

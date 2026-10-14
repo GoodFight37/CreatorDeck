@@ -41,13 +41,13 @@ export const PERFECT_LOCK_MS = 2_600;
  * en ms.
  *
  * Sans lui, on passe du bouton « Ouvrir » à une carte en plein écran sans
- * transition : le paquet n'existe jamais, il n'y a rien à ouvrir. Sept cents
- * millisecondes de déchirure, et la carte qui suit devient une conséquence.
+ * transition : le paquet n'existe jamais, il n'y a rien à ouvrir. Les cinq dos
+ * montent et se posent pendant 1,2 seconde avant la première face.
  *
  * Il vaut **zéro** quand le joueur a coupé les effets de carte : ce réglage est
  * son bouton de secours, il ne doit pas seulement éteindre des pixels.
  */
-export const PACK_TEAR_MS = 850;
+export const PACK_TEAR_MS = 1_200;
 
 /**
  * Le motif de la déchirure : un coup sec, un blanc, puis le papier qui cède.
@@ -97,6 +97,15 @@ export function resistCount(index: number, count: number, rarity: Rarity): numbe
  */
 export function silenceBefore(rarity: Rarity): number {
   return SILENT_RARITIES.has(rarity) ? EPIC_SILENCE_MS : 0;
+}
+
+/** Timings du flip physique. Le son et la lumière frappent au début du hit-stop. */
+export function revealTiming(rarity: Rarity, effectsOn: boolean, fifth = false) {
+  if (!effectsOn) return { flipMs: 0, leadMs: 0, impactMs: 0 };
+  const flipMs = rarity === "legendary" ? 1_120 : rarity === "epic" ? 960 : rarity === "rare" ? 840 : 760;
+  const leadMs = silenceBefore(rarity) + (fifth ? 360 : 0);
+  const impactMs = leadMs + (["rare", "epic", "legendary"].includes(rarity) ? Math.round(flipMs * 0.48) : 0);
+  return { flipMs, leadMs, impactMs };
 }
 
 /**

@@ -212,7 +212,7 @@ export function HomeView({
     <div className="view home-view" style={themeStyle}>
       {/* En-tête concis : zéro blabla marketing */}
       <header className="drop-intro" style={{ marginBottom: "0.4rem" }}>
-        <div className="drop-edition"><span>LE DROP</span><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+        <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
         <h1>Drop</h1>
       </header>
 

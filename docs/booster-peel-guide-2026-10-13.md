@@ -1,4 +1,17 @@
-# Peel guidé — 13 octobre 2026
+# État courant du peel — 14 octobre 2026
+
+Le guide du 13 octobre ci-dessous est historique. Les seuils courants sont
+ceux de D-092 : couverture de la bande ≥ 64 %, effort/ouverture ≥ 0,22, zone Y
+6–26 %, tracé chronologique libre et ouverture au relâchement uniquement.
+Le chantier D-097 garde ces seuils : résistance progressive du rabat, progression
+visuelle liée aux deux seuils, lueur/vibration unique au franchissement,
+« TIRE / RELÂCHE ». Les petits traits/annulations replient et effacent la coupe.
+Extraction JS/CSS unifiée à 1200 ms avec cinq dos puis reveal à taille/centre
+constants ; OFF/mouvement réduit sans attente. Timings des rares et résumé
+mobile décrits dans D-097 et le checkpoint courant de la passation. Le ressenti
+sur téléphone reste à confirmer ; ce guide ne constitue pas une validation joueur.
+
+# Historique — peel guidé du 13 octobre 2026
 
 Objectif unique : supprimer le ressenti de rail horizontal. Base vérifiée
 `c6e85a4cdb34f4b00895654b09db19ad18292829`, branche main.

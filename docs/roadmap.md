@@ -2,6 +2,21 @@
 
 ## État actuel — 14 octobre 2026
 
+**Rituel d'ouverture — implémenté, vérifié localement (14 octobre) :** garder
+l'accueil amélioré, retirer seulement « LE DROP » en double. Peel libre avec
+résistance progressive et signal du seuil, consigne « TIRE / RELÂCHE » ;
+extraction JS/CSS unifiée à 1,2 s, cinq dos posés avant le reveal ; impact tenu
+et lumière/SFX existants synchronisés pour les rares. Récapitulatif mobile
+3 + 2 avec noms lisibles, sachet masqué et retour explicite après sa pose
+(garde anti-double-tap de 650 ms si effets ON). Pas de BGM, tirage, économie ou
+nouveau gameplay. Critères : pas d'ouverture par petit trait, aucun skip par
+appui pendant le flip, Commune/Rare/Légendaire distinctes, résumé lisible à
+390 × 844, modes OFF/mouvement réduit respectés. D-097 et checkpoint courant
+pour les preuves : build/statique/écrans et parcours Chromium ciblés passent.
+Le ressenti tactile reste ouvert ; publication à confirmer.
+
+### Historique des livraisons précédentes
+
 **Reprise après audit audio/Drop :** audit démarré depuis
 `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, correction publiée sur `main` et
 validée au SHA `348ec6943d8f17e62d02739096a1a6b632abed0a`. Elle centralise

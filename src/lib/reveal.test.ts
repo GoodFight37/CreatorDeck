@@ -101,8 +101,8 @@ describe("la révélation", () => {
     // Le moment entre le geste et la première carte : sans lui, le paquet
     // n'existe pas, il n'y a rien à ouvrir.
     expect(tearDurationMs(true)).toBe(PACK_TEAR_MS);
-    expect(PACK_TEAR_MS).toBeGreaterThanOrEqual(600);
-    expect(PACK_TEAR_MS).toBeLessThanOrEqual(900);
+    expect(PACK_TEAR_MS).toBeGreaterThanOrEqual(1_000);
+    expect(PACK_TEAR_MS).toBeLessThanOrEqual(1_200);
     // Le réglage de secours ne doit pas seulement éteindre des pixels : il
     // raccourcit l'attente aussi, sinon on fait poireauter quelqu'un qui a dit
     // non pour le regarder attendre.

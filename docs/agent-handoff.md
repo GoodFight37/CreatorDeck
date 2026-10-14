@@ -1,6 +1,55 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — Drop mobile corrigé et déployé
+## Checkpoint courant — rituel peel → extraction → reveal vérifié localement
+
+- Demande : chantier UI du rituel, sans refaire l'accueil ni toucher au moteur,
+  aux tirages ou à la BGM. Base `main` propre `283f408632009b606833cdc664fb3aefc910648c`,
+  confirmée via l'API GitHub puis `git ls-remote`/fetch. Le premier échec Git
+  provenait du sandbox réseau ; la commande autorisée hors sandbox fonctionne.
+- Correction locale : titre « LE DROP » redondant retiré ; ticket tutoriel
+  conservé. Rabat à résistance progressive, progression visuelle alignée sur
+  les deux seuils existants (64 % / 0,22), lueur et vibration unique au seuil,
+  « TIRE / RELÂCHE ». Le tracé libre et l'ouverture au relâchement restent.
+- Extraction : ancien timer 720 ms interrompant une animation 920 ms ; source
+  commune `PACK_TEAR_MS = 1200` pour JS/CSS, cinq dos en éventail puis posés au
+  centre/à la taille du reveal. OFF/mouvement réduit : passage immédiat.
+- Reveal : commune sobre ; Rare/Épique/Légendaire ont un hit-stop de 12 % du
+  flip (101/115/134 ms), lumière et SFX existants calés sur l'impact, y compris
+  après les 360 ms de pose de la cinquième carte. Aucun fichier audio modifié.
+  Le verrou des appuis pendant le flip est conservé. Résumé mobile en 3 + 2,
+  noms lisibles, sachet masqué et arrivée courte ; fermeture par action du joueur
+  après une garde de 650 ms contre le double tap (sans attente si effets OFF/réduit).
+- Vérifications locales : `npm test -- src/lib/reveal.test.ts src/lib/peel-geometry.test.ts`
+  16/16 ; `npm run ecrans -- src/ecrans-effets.test.tsx src/ecrans-drop-binder.test.tsx
+  src/ecrans-pack-pending.test.tsx src/ecrans-tutorial-pack.test.tsx` 40/40 avant
+  les nouveaux scénarios ; derniers passages effets/tutoriel 28/28 et
+  `src/ecrans.test.tsx` 11/11. TypeScript, ESLint ciblé et diff-check réussis.
+  Build final `npm run build` réussi (export statique sans variables Supabase,
+  donc pas une validation cloud). Aucun SQL ni asset audio touché.
+- Chromium système à 390 × 844 : comparaison Commune/Rare/Légendaire,
+  extraction à 1 s/résumé et modes OFF/réduit 6/6 ; après le dernier ajustement
+  du résumé, lot ciblé extraction/résumé/OFF/réduit/double-appui/peel 8/8.
+  Continuité taille/centre, peel courbe, avance horizontale, cinquième carte
+  et titre également passés dans les lots précédents. Captures inspectées.
+- Échecs intermédiaires corrigés : priorité CSS qui laissait l'animation rare
+  active en mouvement réduit ; assertion de matrices 3D trop exacte (résidu
+  numérique ~10⁻¹⁵) ; test jsdom qui simulait un animationend non pris en charge.
+  Le snapshot scellé testé par erreur en 390 px différait d'un attendu en
+  412 px : retest avec dimensions/projets de CI et Chromium Playwright 1243.
+  Les seuls snapshots déchirés sont actualisés après inspection (74/130 pixels
+  changés avec le nouveau rythme à 700 ms). Les scellés restent inchangés.
+  Retest `CSS-only pouch` avec les projets bureau/téléphone et Chromium
+  Playwright prévu : 2/2 réussis.
+- Limites : Chromium à 390 × 844 est une émulation ; le ressenti tactile
+  reste ouvert. Aucune validation joueur ni nouveau déploiement revendiqués.
+  Une interruption de quota a eu lieu pendant le diagnostic, avant toute édition.
+- Fichiers : `pack-tear.tsx`, `reveal-overlay.tsx`, `drop-view.tsx`,
+  `booster-continuity.css`, timings `lib/reveal.ts`, tests associés et docs.
+  Prochaine étape : commit/push normal sur `main`, puis relever SHA, CI/Vercel
+  et vérifier le tutoriel sur la Production web. Aucun déploiement local sans
+  Supabase ne doit remplacer le build Vercel connecté.
+
+## Historique — Drop mobile corrigé et déployé
 
 - Depuis `main` / `52afc5ca69971f4c1b913c2ace6fc8ca435efcc6`, une capture
   Chromium de la Production à 390 × 844 a montré que les plans latéraux CSS

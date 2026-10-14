@@ -1,3 +1,21 @@
+## Rituel trop sec — corrigé et vérifié localement, 14 octobre 2026
+
+Reproduction sur `283f4086` : ouvrir un booster, relâcher une coupe suffisante ;
+le timer JS passe aux faces après 720 ms alors que la montée CSS prend 920 ms.
+Les rares partagent le flip de la commune et les SFX de la cinquième carte
+n'incluent pas sa pose supplémentaire. Gravité UX : le parcours fonctionne mais
+le rythme et la lisibilité des cinq dos sont insuffisants.
+Correction : JS/CSS à 1,2 s, dos en éventail puis posés, pause à l'impact rare
+et lumière/SFX synchronisés, résumé mobile 3 + 2 avec noms lisibles, sans sachet derrière. Retour verrouillé
+pendant la pose des cinq cartes (650 ms si effets ON), puis action du joueur. Seuils
+anti-tap et verrou des avances conservés. Consignes courtes et résistance
+progressive du rabat. Validation/publication dans le checkpoint courant.
+Une première passe Chromium a détecté une priorité CSS qui gardait le nom de
+l'animation rare en mouvement réduit : règle désormais limitée aux effets ON
+et `prefers-reduced-motion: no-preference`. Les retests OFF/réduit passent.
+Le ressenti physique du peel reste ouvert ; pas de correction tactile déclarée
+sur la seule base des tests.
+
 ## Drop trop plat et ticket trop formulaire — cause corrigée et déployée
 
 Malik rapporte que l'accueil donne un visuel d'illustration plate : faces du
