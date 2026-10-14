@@ -1,3 +1,27 @@
+# Reprise rapide — 14 octobre 2026
+
+- Projet : CreatorDeck, application web testée sur Vercel. Malik n’utilise pas
+  l’APK pour ses validations. Lire `AGENTS.md`, `docs/README.md`, la roadmap,
+  le périmètre et ce checkpoint avant de reprendre.
+- Git : `main` est la branche de travail et de publication. À ce checkpoint,
+  le dépôt était propre et `main` local correspondait à `origin/main` au SHA
+  `c16992c7230666f24f4d71df7d210f4399bef9e2`. Re-vérifier GitHub au démarrage.
+- Dernier changement applicatif : peel libre au commit
+  `3fec7895fae6bbed0eb05bf4baa6e246f55fefdc` ; zone Y 6–26 %, couverture
+  64 %, tracé X/Y du doigt conservé, ouverture au relâchement, extraction des
+  cartes automatique. Le SHA plus récent `c16992c7` ne contient qu’une mise à
+  jour documentaire : l’indicateur de version web peut donc être plus récent
+  que le code de jeu.
+- CI du code : GitHub Actions [run 38573481379](https://github.com/GoodFight37/CreatorDeck/actions/runs/38573481379),
+  6/6 jobs verts. Vercel Production `READY` sur le code `3fec7895`, URL
+  [creator-deckk.vercel.app](https://creator-deckk.vercel.app).
+- À ne pas considérer comme résolu : Malik trouve encore le geste de coupe
+  peu naturel. Les tests automatisés ne remplacent pas son ressenti tactile.
+  Ne pas revenir à un rail linéaire ni remettre un tracé blanc agressif.
+- Pas de fichiers applicatifs à réserver : le prochain chat peut poursuivre
+  selon la roadmap. Après chaque livraison vérifiée, mettre à jour les docs,
+  pousser normalement sur `main`, puis confirmer le SHA distant, CI et Vercel.
+
 ## Peel libre sur la bande haute — publié, ressenti joueur à confirmer, 14 octobre 2026
 
 Malik a testé le web Vercel et décrit un rabat « dur comme du bois » : la coupe
