@@ -86,10 +86,10 @@ describe("plans de sons", () => {
 });
 
 describe("mix de la musique", () => {
-  it("garde la boucle audible au hub, très en retrait pendant un pack et absente au Tribunal", () => {
-    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThanOrEqual(0.85);
-    expect(MUSIC_SCENE_GAIN.hub).toBeLessThanOrEqual(1);
-    expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeLessThan(0.1);
+  it("garde la musique modérée au hub, un peu plus basse pendant un pack et absente au Tribunal", () => {
+    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThanOrEqual(0.25);
+    expect(MUSIC_SCENE_GAIN.hub).toBeLessThanOrEqual(0.4);
+    expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeCloseTo(0.5);
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
 
@@ -214,7 +214,7 @@ describe("les bruitages embarqués", () => {
     const fichier = path.join(process.cwd(), "public", "music", "hub-late-night.mp3");
     const audio = readFileSync(fichier);
     expect(audio.length).toBeGreaterThan(32_000);
-    expect(audio.length).toBeLessThan(300_000);
+    expect(audio.length).toBeLessThan(1_000_000);
     expect(audio.includes(Buffer.from([0xff, 0xfb])) || audio.includes(Buffer.from([0xff, 0xf3]))).toBe(true);
   });
 

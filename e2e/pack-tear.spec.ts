@@ -39,7 +39,7 @@ test("le premier clic de jeu démarre une seule boucle Web Audio, pas le tutorie
     (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
   );
   expect(probe?.loops).toEqual([true]);
-  expect(probe?.gains.some((gain) => Math.abs(gain - 0.018) < 0.001)).toBe(true);
+  expect(probe?.gains.some((gain) => Math.abs(gain - 0.16) < 0.001)).toBe(true);
 });
 
 test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au hub à la fermeture", async ({ page }) => {
@@ -68,14 +68,14 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const scene = page.locator(".opening-continuum");
   await expect.poll(() => page.evaluate(() =>
-    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.018) ?? false,
+    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.16) ?? false,
   )).toBe(true);
   await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.getByRole("dialog", { name: "Résultat du booster" }).getByRole("button", { name: "Fermer", exact: true }).click();
   await expect.poll(() => page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.at(-1) ?? 0,
-  )).toBe(0.9);
+  )).toBe(0.32);
   const probe = await page.evaluate(() => (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; loops: boolean[] } }).__creatorDeckAudioProbe);
   expect(probe?.loops.filter(Boolean)).toHaveLength(1);
 });
@@ -276,6 +276,40 @@ test("la carte garantie se retourne automatiquement, sans languette ni second ge
     await Promise.all(node.getAnimations().map((animation) => animation.finished));
   });
   await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
+});
+
+test("les appuis répétés pendant le retournement ne sautent pas de révélation", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, "getRandomValues", {
+      configurable: true,
+      value: (array: ArrayBufferView) => {
+        if (array instanceof Uint32Array) {
+          array.fill(123);
+          return array;
+        }
+        throw new Error("Type aléatoire inattendu dans le test de révélation.");
+      },
+    });
+  });
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  await page.locator(".opening-continuum").getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
+  const next = reveal.locator(".reveal-next");
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("1 / 5");
+  await expect(next).toBeEnabled();
+  await next.click();
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("2 / 5");
+
+  // Simule des taps arrivés pendant que la deuxième carte se retourne.
+  await next.evaluate((button) => {
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+  await expect(next).toBeEnabled();
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("2 / 5");
+  await next.click();
+  await expect(reveal.locator(".reveal-header > span")).toHaveText("3 / 5");
 });
 
 test("le raccourci de révélation complète garde son parcours", async ({ page }, testInfo) => {

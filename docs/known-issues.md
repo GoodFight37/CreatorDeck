@@ -1,3 +1,20 @@
+## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
+
+Le prototype de 24 s a été remplacé par `springly_sprigs` (asset CC0 fourni par
+Malik, 142 s), réencodé mono 24 kHz/48 kbit/s. Le gain hub est ramené à `0,32` ;
+pendant le booster/reveal, la piste reste audible à `0,16` au lieu de presque
+s'arrêter à `0,018`. Le choix de piste reste provisoire.
+
+Le bouton « Carte suivante » est désormais désactivé jusqu'à la fin du flip et
+les appuis pendant l'animation ne sont plus mis en file. Cela supprime la chaîne
+où un appui en attente avançait juste après le flip et où le tap suivant pouvait
+consommer la carte qui venait d'apparaître. Le raccourci explicite « Révéler les
+cinq cartes d'un coup » est conservé. 22 tests audio, 33 tests d'écrans ciblés,
+typecheck et ESLint ciblé passent localement. Le scénario Playwright a été ajouté,
+mais le serveur de test local n'a pas démarré ; sa validation CI reste en attente.
+Le niveau acoustique sur téléphone et le choix musical restent à vérifier après
+déploiement.
+
 ## Audit du démarrage musical et des tailles Drop — corrigé et publié, 14 octobre 2026
 
 À la base `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, le montage préchargeait
@@ -115,7 +132,7 @@ faute de configuration. Correctif de test publié sur `main` au SHA
 `38499499108`, en attente/en cours au dernier relevé. Aucun défaut applicatif
 n'est indiqué par cet échec.
 
-## BGM du hub trop abstraite, choix d'une vraie musique en attente — 14 octobre 2026
+## Historique — nappe du hub trop abstraite, 14 octobre 2026
 
 Malik entend la piste actuelle comme un son plutôt qu'une musique. Le fichier
 est bien une nappe synthétique prototype de 24 secondes, sans rythme ni
@@ -128,7 +145,7 @@ intégrée avant le choix du joueur. Les réglages publiés séparent désormais
 le changement est sur `main` (`ee62de9e`) et Vercel Production est READY. Le test
 écoute sur téléphone et la sélection d'une piste restent à faire.
 
-## Pulsation « tac-tac » de la musique du hub — corrigée et publiée, 14 octobre 2026
+## Historique — pulsation « tac-tac » de la musique du hub, 14 octobre 2026
 
 Malik entendait une pulsation ressemblant à des coups, toutes les ~0,5–1 s.
 Le fichier était bien servi par Vercel et identique à celui du dépôt : le motif
@@ -142,7 +159,7 @@ verte (6/6), Vercel Production READY ; hash du MP3 distant identique à l'asset
 publié. Écoute sur téléphone réel non effectuée. Voir [D-086](decisions.md) et
 [audio-assets.md](audio-assets.md).
 
-## BGM du hub trop basse sur téléphone — double atténuation corrigée, 14 octobre 2026
+## Historique — BGM du hub trop basse sur téléphone, 14 octobre 2026
 
 La boucle existait et était demandée au premier geste, mais son niveau source
 est `-26,4 LUFS`. Le gain de scène `0,24` était suivi d'une double application

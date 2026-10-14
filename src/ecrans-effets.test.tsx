@@ -235,8 +235,8 @@ describe("les effets de révélation", () => {
   });
 
   it("révèle la suivante tant que le paquet n'est pas terminé", async () => {
-    // Le contrôle du test précédent : hors Perfect, « Carte suivante »
-    // reste le geste normal — c'est le Perfect seul qui change de bouton.
+    // Hors Perfect, « Carte suivante » reste le geste normal après le flip ;
+    // pendant le retournement, le bouton est verrouillé.
     const suivant = vi.fn();
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
@@ -248,12 +248,18 @@ describe("les effets de révélation", () => {
       />,
     );
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
-    expect(bouton().textContent).toContain("Carte suivante");
-    expect(bouton().disabled).toBe(false);
-    banc.appuyer("Carte suivante");
-    expect(bouton().textContent).toContain("Suite…");
+    expect(bouton().textContent).toContain("Révélation…");
+    expect(bouton().disabled).toBe(true);
+    act(() => {
+      bouton().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+      bouton().dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+    expect(bouton().textContent).toContain("Révélation…");
     expect(suivant).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(suivant).not.toHaveBeenCalled();
+    expect(bouton().disabled).toBe(false);
+    banc.appuyer("Carte suivante");
     expect(suivant).toHaveBeenCalledTimes(1);
   });
 
@@ -332,10 +338,14 @@ describe("les effets de révélation", () => {
     const next = vi.fn();
     await banc.monter(<RevealOverlay cards={[carte("epic", "a"), carte("common", "b")] as never}
       index={0} onNext={next} onClose={() => {}} />);
-    banc.appuyer("Carte suivante");
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.disabled).toBe(true);
+    act(() => document.querySelector<HTMLButtonElement>(".reveal-next")!
+      .dispatchEvent(new window.MouseEvent("click", { bubbles: true })));
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(next).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(520); });
+    expect(next).not.toHaveBeenCalled();
+    banc.appuyer("Carte suivante");
     expect(next).toHaveBeenCalledOnce();
   });
 
@@ -352,14 +362,14 @@ describe("les effets de révélation", () => {
       "la cinquième carte garde le retournement automatique ordinaire").not.toBeNull();
     expect(document.querySelectorAll(".reveal-next")).toHaveLength(1);
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
-      .toContain("Ranger dans le classeur");
+      .toContain("Révélation…");
 
     await act(async () => { await vi.advanceTimersByTimeAsync(1_600); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
       .toContain("Ranger dans le classeur");
   });
 
-  it("termine la pose de la cinquième carte sans exiger un second appui", async () => {
+  it("ignore l'appui pendant le flip de la cinquième carte", async () => {
     const fermer = vi.fn();
     const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `filet-${index}`));
     const { RevealOverlay } = await import("@/components/reveal-overlay");
@@ -367,14 +377,17 @@ describe("les effets de révélation", () => {
       <RevealOverlay cards={cinq as never} index={4} overlay onNext={() => {}} onClose={fermer} />,
     );
 
-    banc.appuyer("Ranger dans le classeur");
-    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
-      .toContain("Suite…");
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.disabled).toBe(true);
+    act(() => document.querySelector<HTMLButtonElement>(".reveal-next")!
+      .dispatchEvent(new window.MouseEvent("click", { bubbles: true })));
+    expect(fermer).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(fermer).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(359); });
     expect(fermer).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.disabled).toBe(false);
+    banc.appuyer("Ranger dans le classeur");
     expect(fermer).toHaveBeenCalledOnce();
   });
 
@@ -394,7 +407,7 @@ describe("les effets de révélation", () => {
     }
   });
 
-  it("déverrouille la révélation si animationend ne vient jamais", async () => {
+  it("ignore les appuis répétés pendant le retournement", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     const suivant = vi.fn();
     await banc.monter(
@@ -402,11 +415,17 @@ describe("les effets de révélation", () => {
         index={0} overlay onNext={suivant} onClose={() => {}} />,
     );
     const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
-    expect(bouton.disabled).toBe(false);
-    banc.appuyer("Carte suivante");
-    expect(bouton.textContent).toContain("Suite…");
+    expect(bouton.disabled).toBe(true);
+    act(() => {
+      bouton.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+      bouton.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+    expect(bouton.textContent).toContain("Révélation…");
     expect(suivant).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(suivant).not.toHaveBeenCalled();
+    expect(bouton.disabled).toBe(false);
+    banc.appuyer("Carte suivante");
     expect(suivant).toHaveBeenCalledOnce();
   });
 

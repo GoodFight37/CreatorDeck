@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useCallback, useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
@@ -79,22 +79,10 @@ export function RevealOverlay({
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
-  const [advanceQueuedFor, setAdvanceQueuedFor] = useState<string | null>(null);
-  const queuedAdvanceRef = useRef<string | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
-
-  const finishQueuedAdvance = useCallback((id: string) => {
-    if (queuedAdvanceRef.current !== id || locked) return;
-    queuedAdvanceRef.current = null;
-    setAdvanceQueuedFor(null);
-    if (perfect || showSummary || index >= cards.length - 1) {
-      if (overlay) onClose();
-      else setShowSummary(true);
-    } else onNext();
-  }, [cards.length, index, locked, onClose, onNext, overlay, perfect, showSummary]);
 
   useEffect(() => {
     if (!cardId || perfect) return;
@@ -106,19 +94,16 @@ export function RevealOverlay({
     const reducedFallback = immediate
       ? window.setTimeout(() => {
           setFlippedCardId(cardId);
-          finishQueuedAdvance(cardId);
         }, 0)
       : null;
     const fallback = immediate
       ? null
       : window.setTimeout(() => {
           setFlippedCardId(cardId);
-          finishQueuedAdvance(cardId);
         }, 1_200 + silenceBefore(rarity) + fifthRevealBeat);
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setFlippedCardId(cardId);
-        finishQueuedAdvance(cardId);
       }
     };
     reducedMotion?.addEventListener?.("change", onMotionChange);
@@ -127,7 +112,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, finishQueuedAdvance, isFifthSequentialReveal, perfect, rarity]);
+  }, [cardId, isFifthSequentialReveal, perfect, rarity]);
 
   useEffect(() => {
     if (!card || perfect) return;
@@ -226,7 +211,6 @@ export function RevealOverlay({
   function finishFlip(event: AnimationEvent<HTMLDivElement>) {
     if (event.target !== event.currentTarget) return;
     setFlippedCardId(card.id);
-    finishQueuedAdvance(card.id);
   }
 
   function makePoster() {
@@ -242,12 +226,9 @@ export function RevealOverlay({
 
   function advance() {
     if (locked) return;
-    if (!perfect && !showSummary && flippedCardId !== card.id) {
-      if (queuedAdvanceRef.current === card.id) return;
-      queuedAdvanceRef.current = card.id;
-      setAdvanceQueuedFor(card.id);
-      return;
-    }
+    // Ignore les activations pendant le flip : elles ne doivent pas s'empiler
+    // et révéler la carte suivante avant que le joueur ait pu la voir.
+    if (!perfect && !showSummary && flippedCardId !== card.id) return;
     if (termine) {
       if (overlay) onClose();
       else setShowSummary(true);
@@ -461,7 +442,7 @@ export function RevealOverlay({
       <button
         className={`reveal-next${locked ? " locked" : ""}${!showSummary && !perfect ? " is-secondary" : ""}`}
         onClick={showSummary ? onClose : advance}
-        disabled={locked}
+        disabled={locked || (!perfect && !showSummary && flippedCardId !== cardId)}
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
       >
         <span>
@@ -469,8 +450,8 @@ export function RevealOverlay({
             ? tutorial ? "Commencer ma collection" : "Retour au Drop"
             : locked
             ? "Perfect…"
-            : advanceQueuedFor === card.id
-            ? "Suite…"
+            : !perfect && flippedCardId !== card.id
+            ? "Révélation…"
             : termine
                 ? tutorial ? "Terminer l’essai" : "Ranger dans le classeur"
                 : "Carte suivante"}

@@ -161,7 +161,7 @@ describe("les écrans", () => {
     const revelation = banc.ecran("08-revelation");
     expect(revelation).toContain("card-nameplate");
     // Le booster hors ligne n'est pas perdu : il sort de la réserve du jour.
-    expect(revelation).toContain("Carte suivante");
+    expect(revelation).toContain("Révélation…");
   });
 
   it("déchire le paquet avant de montrer la première carte", async () => {

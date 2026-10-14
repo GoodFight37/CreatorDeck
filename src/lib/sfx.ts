@@ -353,11 +353,11 @@ let muted = false;
 let musicMuted = false;
 let loaded = false;
 export type MusicScene = "hub" | "pack" | "tribunal";
-/** Gains relatifs de BGM avant le volume global : hub présent, pack très ducké. */
+/** Gains relatifs de BGM : fond discret, légèrement atténué pendant le pack. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  // 0,9 laisse la boucle en fond tout en gardant plus de 13 dB de marge en crête.
-  hub: 0.9,
-  pack: 0.018,
+  // L'asset de référence est maîtrisé à -15,5 LUFS ; garder un fond modéré.
+  hub: 0.32,
+  pack: 0.16,
   tribunal: 0,
 };
 

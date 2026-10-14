@@ -1,6 +1,29 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — audit audio et composition Drop
+## Checkpoint courant — BGM remplacée, avances de révélation protégées
+
+- Reprise locale depuis `main` / `origin/main` au SHA documentaire
+  `86871af7cb50ae95ef7481ea9d3e2ed2e9afb790`. L'API GitHub confirme ce HEAD ;
+  `git ls-remote` ne passe pas actuellement le proxy de cet environnement.
+- Audio : l'asset bourdonnant de 24 s est remplacé par la piste provisoire
+  `springly_sprigs` fournie par Malik (OpenGameArt CC0), 142 s, compressée en MP3
+  mono 24 kHz/48 kbit/s (~834 KiB). Gain hub `0,32`, pack/reveal `0,16`, Tribunal
+  `0`. La boucle reste unique et le pack n'est plus presque silencieux. Le
+  réglage Son de l'application et celui de Musique restent distincts.
+- Cartes : une avance demandée pendant le retournement était mise en file puis
+  exécutée au flip end ; un tap suivant pouvait donc avancer la carte suivante.
+  Le bouton est maintenant désactivé jusqu'à la fin de l'animation, et les taps
+  reçus pendant ce délai ne sont pas conservés. Le raccourci de révélation totale
+  reste disponible.
+- Tests locaux : audio 22/22, écrans concernés 33/33, typecheck et ESLint ciblé
+  réussis. CI du commit reste à lancer. Le scénario Playwright double tap est ajouté,
+  mais le serveur défini par Playwright s'arrête avant le test (exit 1 sans autre
+  diagnostic dans cette exécution). Écoute physique/Vercel non effectuée.
+- Asset confirmé côté dépôt par ffprobe (142,272 s, 48 kbit/s) ; source mesurée à
+  `-15,5 LUFS` / `-0,6 dBTP`. Il reste à confirmer le niveau et la préférence sur
+  Vercel. Ne pas modifier les SFX : la demande concerne la musique.
+
+## Historique — audit audio et composition Drop
 
 - Branche `main`, base auditée `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683` ;
   audit audio/Drop publié sur `main` en trois commits : correctif applicatif

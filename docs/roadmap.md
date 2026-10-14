@@ -47,13 +47,19 @@ verte (6/6) sur le code `3fec7895`. Les vérifications géométrie 3/3, E2E
 datent de cette livraison. Elles ne certifient pas la sensation tactile. Voir
 D-092, [le problème connu](known-issues.md) et le dernier checkpoint.
 
-**Audio :** la piste publiée reste un prototype. Malik a fourni
-`snow_day.mp3` et `springly_sprigs.mp3` comme références provisoires, pas comme
-choix final. Elles viennent du pack OpenGameArt CC0 ; la shortlist synthwave/
-techno précédente a été écartée comme mauvaise direction. Chercher une mélodie
-d'aventure console/JRPG, chaleureuse et mémorable, puis préparer l'aperçu
-temporaire dans l'application. Aucune candidate n'est intégrée ou retenue.
-Détails et limites de licence dans [audio-assets.md](audio-assets.md).
+**Audio :** les deux pistes fournies restent des références provisoires. À sa
+demande, `springly_sprigs` remplace maintenant la nappe bourdonnante dans
+`public/music/hub-late-night.mp3` ; `snow_day` reste hors dépôt. Gain réduit au
+hub (`0,32`) et conservé à mi-niveau relatif durant booster/reveal (`0,16`) pour
+que la musique ne semble plus s'arrêter. Le choix final et l'écoute Vercel sur
+téléphone restent ouverts. Voir [audio-assets.md](audio-assets.md).
+
+**Avance des cartes :** un appui pendant le flip était mis en file et exécuté
+au terme de l'animation ; un second appui pouvait alors agir sur la carte
+suivante immédiatement. L'avance est maintenant ignorée et le bouton désactivé
+jusqu'à la face visible. Le raccourci explicite « Révéler les cinq cartes d'un
+coup » reste disponible. Tests unitaires écran ciblés passent ; Playwright local
+n'a pas démarré son serveur. Vérifier le nouveau scénario dans la CI après push.
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`

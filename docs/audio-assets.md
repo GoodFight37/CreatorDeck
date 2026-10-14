@@ -1,19 +1,17 @@
-# Couche musicale — 13–14 octobre 2026
+# Couche musicale — mise à jour 14 octobre 2026
 
-`public/music/hub-late-night.mp3` est une boucle prototype originale de 24 s,
-synthétisée pour CreatorDeck puis encodée en MP3 mono 64 kbit/s. Elle ne contient
-ni voix, ni sample tiers, ni percussion. Le premier prototype avait une pulsation
-percussive qui ressemblait à des petits coups réguliers sur haut-parleur mobile ;
-le fichier actuel est une nappe grave et douce, sans accents rapprochés.
-Ce n'est pas encore un master final.
+`public/music/hub-late-night.mp3` conserve son chemin technique pour éviter de
+changer le moteur : son contenu est maintenant `springly_sprigs.mp3` du pack
+[Fantasy Song Pack Volume 1](https://opengameart.org/content/fantasy-song-pack-volume-1)
+(troubadour, CC0). Malik a autorisé le choix de l'une de ses deux références ;
+cette piste est donc provisoire. Le master est conservé en entier (142 s),
+réencodé en MP3 mono 24 kHz/48 kbit/s (~834 KiB). La source est mesurée à
+`-15,5 LUFS` et `-0,6 dBTP` ; ce fichier remplace la nappe bourdonnante de 24 s.
 
-Le mix applicatif donne un gain relatif de `0,9` au hub, `0,018` pendant un
-pack et `0` au Tribunal. Analyse `ffmpeg ebur128` : la boucle source est à
-`-22,7 LUFS` intégrés (crête vraie `-11,5 dBFS`, LRA `1,5 LU`). L'ancien asset
-mesurait `-26,4 LUFS` et contenait la pulsation rapportée. La piste actuelle,
-directement branchée sur la sortie média, se situe théoriquement autour de
-`-23,6 LUFS` au hub après le gain `0,9`. Le téléphone règle le volume perçu ;
-ces mesures ne remplacent pas l'écoute physique.
+Les gains relatifs sont `0,32` au hub, `0,16` pendant le pack et `0` au
+Tribunal. Ainsi la piste reste présente pendant l'ouverture, environ 6 dB plus
+basse qu'au hub, au lieu de tomber presque au silence. Le niveau acoustique réel
+dépend toujours du téléphone et de son volume média.
 
 Le préchargement des bruitages peut créer l'AudioContext au montage, mais ne
 démarre pas la musique. La boucle unique ne démarre que dans l'action de jeu
@@ -26,9 +24,9 @@ décodage termine après le premier geste, le moteur reprend l'AudioContext
 suspendu avant de démarrer. Le garde `musicStopped` empêche un mute intervenu
 pendant le chargement de lancer la piste en retard. Unmute ou redémarrage
 explicite crée une nouvelle source en boucle, sans doublon. Au hub la musique
-reste en fond ; elle baisse à `0,018` pendant le booster et tout le reveal ; le
+reste en fond ; elle baisse à `0,16` pendant le booster et tout le reveal ; le
 Tribunal la coupe à `0` pour laisser respirer les sons de tampon et de marteau.
-Le gain hub est `0,9`. Deux réglages séparés
+Le gain hub est `0,32`. Deux réglages séparés
 dans Toi pilotent désormais les sons de jeu (bruitages et synthèse) et la
 musique. Ils sont activés par défaut et mémorisés séparément. Les crans de
 volume dans l'application ont été retirés : le volume média du téléphone règle
@@ -40,18 +38,22 @@ reste activé par défaut si aucun choix n'est enregistré ;
 Les tests unitaires instrumentent la source Web Audio pour vérifier boucle,
 mute/unmute, arrêt/redémarrage et scènes. Les E2E simulent le graphe audio :
 ils vérifient qu'aucune boucle ne démarre durant l'onboarding, qu'un clic de jeu
-en démarre une seule, que le gain est `0,018` pendant déchirure/reveal et revient
-à `0,9` après fermeture. Cela ne prouve pas le niveau acoustique sur le
+en démarre une seule, que le gain est `0,16` pendant déchirure/reveal et revient
+à `0,32` après fermeture. Cela ne prouve pas le niveau acoustique sur le
 haut-parleur d'un téléphone ; le ressenti doit encore être contrôlé sur Vercel.
 
 ## Direction et exemples d'écoute — choix final en attente
 
 Le 14 octobre, Malik a partagé `snow_day.mp3` et `springly_sprigs.mp3` comme
-exemples de direction, en précisant que ce n'est pas encore son avis final.
+exemples de direction, en précisant que ce n'est pas encore son avis final. Il
+a ensuite demandé de remplacer immédiatement la nappe par l'une des deux ;
+`springly_sprigs` est intégrée à titre provisoire, sans prétendre que son choix
+musical final est confirmé.
 Ils proviennent de [Fantasy Song Pack Volume 1 sur OpenGameArt](https://opengameart.org/content/fantasy-song-pack-volume-1),
 attribué à troubadour et publié sous CC0. La page indique que les morceaux du
-pack sont libres d'utilisation sans crédit. Ces deux fichiers sont des repères
-de goût uniquement : ils ne sont pas intégrés au dépôt ni choisis pour la BGM.
+pack sont libres d'utilisation sans crédit. `snow_day` reste une référence
+seulement ; `springly_sprigs` est l'asset actuellement intégré, en attente d'un
+retour après écoute sur Vercel.
 
 La première shortlist (Neon Noir, Resonance, Assembly Not Required et
 Nightchaser) ne correspond pas à la direction souhaitée par Malik ; ne pas la
@@ -91,12 +93,13 @@ Le fichier actuel est généré avec le script Python standard-library :
 
 ```sh
 python scripts/generate-hub-music.py
-ffmpeg -hide_banner -loglevel error -y -i /tmp/creatordeck-hub-ambient.wav -codec:a libmp3lame -b:a 64k -ar 24000 -ac 1 public/music/hub-late-night.mp3
+ffmpeg -hide_banner -loglevel error -y -i /tmp/creatordeck-hub-ambient.wav -codec:a libmp3lame -b:a 64k -ar 24000 -ac 1 /tmp/hub-late-night-prototype.mp3
 ```
 
 Les fréquences sont alignées sur la durée pour que leurs phases se rejoignent
 à la fin de la boucle. Le script ne dépend pas de paquets Python tiers ; FFmpeg
-et son encodeur MP3 servent seulement à compresser le WAV temporaire.
+et son encodeur MP3 servent seulement à compresser le WAV temporaire. Garder sa
+sortie dans `/tmp` : elle représente l'ancienne nappe, pas la piste sélectionnée.
 
 Les sons de reveal déjà présents servent de stingers courts : `playBang` pour
 les raretés qui suivent leur silence, `playReward` pour les jalons, et les sons
