@@ -263,43 +263,46 @@ export function HomeView({
             ) : null}
           </div>
         ) : null}
-        <button type="button" className="pity-row now" onClick={onShowOdds}
-          aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
-          <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
-          <ChevronRight size={14} />
-        </button>
-        <button
-          className="hourglass-action"
-          onClick={onUseHourglass}
-          disabled={(serverReserve && needsAccount) || stock >= pack.maxWithHourglass || game.player.hourglasses <= 0 || usingHourglass}
-          aria-label={usingHourglass ? "Utilisation du sablier" : `Utiliser 1 sablier, ${game.player.hourglasses} disponibles`}
-        >
-          <Hourglass size={18} />
-          <span>{usingHourglass ? "Utilisation…" : stock >= pack.max && stock < pack.maxWithHourglass
-            ? "Utiliser 1 sablier · passer à 5/4"
-            : "Utiliser 1 sablier · avancer de 15 min"}</span>
-          <strong>{game.player.hourglasses}</strong>
-        </button>
-        {serverReserve && needsAccount ? (
-          null
-        ) : stock >= pack.maxWithHourglass ? (
-          <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small>
-        ) : stock > pack.max ? (
-          <small className="hourglass-note">La recharge reprend après l’ouverture du booster bonus.</small>
-        ) : game.player.hourglasses <= 0 ? (
-          <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
-        ) : null}
+        <details className="drop-secondary-details" open={!needsAccount}>
+          <summary>Plus d’infos</summary>
+          <button type="button" className="pity-row now" onClick={onShowOdds}
+            aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
+            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
+            <ChevronRight size={14} />
+          </button>
+          <button
+            className="hourglass-action"
+            onClick={onUseHourglass}
+            disabled={(serverReserve && needsAccount) || stock >= pack.maxWithHourglass || game.player.hourglasses <= 0 || usingHourglass}
+            aria-label={usingHourglass ? "Utilisation du sablier" : `Utiliser 1 sablier, ${game.player.hourglasses} disponibles`}
+          >
+            <Hourglass size={18} />
+            <span>{usingHourglass ? "Utilisation…" : stock >= pack.max && stock < pack.maxWithHourglass
+              ? "Utiliser 1 sablier · passer à 5/4"
+              : "Utiliser 1 sablier · avancer de 15 min"}</span>
+            <strong>{game.player.hourglasses}</strong>
+          </button>
+          {serverReserve && needsAccount ? (
+            null
+          ) : stock >= pack.maxWithHourglass ? (
+            <small className="hourglass-note">Ouvre le booster bonus avant d’en utiliser un autre.</small>
+          ) : stock > pack.max ? (
+            <small className="hourglass-note">La recharge reprend après l’ouverture du booster bonus.</small>
+          ) : game.player.hourglasses <= 0 ? (
+            <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
+          ) : null}
 
-        <details className="drop-token-details">
-          <summary>Jetons <strong>{game.tokens.count}</strong></summary>
-          <div className="token-row">
-            <Coins size={14} />
-            <span>
-              <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
-                ? `encore ${game.tokens.missing} pour une carte`
-                : "une carte au choix disponible"}
-            </span>
-          </div>
+          <details className="drop-token-details">
+            <summary>Jetons <strong>{game.tokens.count}</strong></summary>
+            <div className="token-row">
+              <Coins size={14} />
+              <span>
+                <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
+                  ? `encore ${game.tokens.missing} pour une carte`
+                  : "une carte au choix disponible"}
+              </span>
+            </div>
+          </details>
         </details>
       </section>
 

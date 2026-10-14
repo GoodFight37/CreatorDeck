@@ -14,8 +14,10 @@ test("Drop garde le sachet accessible, sans débordement, en viewport mobile com
     expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
     await expect(page.getByRole("button", { name: /Essayer|Ouvrir le booster/ })).toBeVisible();
     const cta = (await page.locator(".primary-action").boundingBox())!;
-    const pity = (await page.locator(".pity-row.now").boundingBox())!;
-    expect(cta.y + cta.height).toBeLessThanOrEqual(pity.y);
+    const secondary = page.locator(".drop-secondary-details > summary");
+    const pity = page.locator(".pity-row.now");
+    const nextInfo = (await secondary.isVisible() ? await secondary.boundingBox() : await pity.boundingBox())!;
+    expect(cta.y + cta.height).toBeLessThanOrEqual(nextInfo.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     await page.screenshot({ path: `test-results/drop-priorites-${viewport.width}-${test.info().project.name}.png` });
   }
@@ -35,9 +37,10 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   expect(await page.locator(".pack-stage").evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
-  const side = page.locator(".pack-stage .pack-3d-side-right");
+  const side = page.locator(".pack-stage .pack-3d-side-left");
   await expect(side).toBeVisible();
-  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("16px");
+  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("20px");
+  expect((await side.boundingBox())!.width).toBeGreaterThanOrEqual(12);
   expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
   const sheenStyle = await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node));
   expect(sheenStyle.animationIterationCount).toBe("infinite");
@@ -50,6 +53,15 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+
+  await page.locator(".open-panel").evaluate((panel) => {
+    panel.dataset.tutorial = "true";
+    panel.querySelector<HTMLDetailsElement>(".drop-secondary-details")!.open = false;
+  });
+  await expect(page.locator(".drop-secondary-details > summary")).toBeVisible();
+  await expect(page.locator(".pity-row.now")).toBeHidden();
+  await page.locator(".drop-secondary-details > summary").click();
+  await expect(page.locator(".pity-row.now")).toBeVisible();
 });
 
 test("Craft démarre sur les recettes à portée et le recyclage reste utile à vide", async ({ page }) => {

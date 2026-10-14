@@ -118,10 +118,21 @@ describe("les sabliers du Drop en ligne", () => {
     expect(onShowOdds).toHaveBeenCalledOnce();
   });
 
-  it("le sablier reste visible sans ouvrir un volet et crée un booster bonus à 4/4", async () => {
+  it("replie les infos secondaires du tutoriel derrière un lien discret", async () => {
+    await drop({ needsAccount: true });
+    const details = document.querySelector<HTMLDetailsElement>(".drop-secondary-details")!;
+    expect(details.open).toBe(false);
+    expect(details.querySelector("summary")?.textContent).toBe("Plus d’infos");
+    expect(details.querySelector(".pity-row.now")).not.toBeNull();
+    expect(details.querySelector(".hourglass-action")).not.toBeNull();
+    act(() => details.querySelector("summary")!.click());
+    expect(details.open).toBe(true);
+  });
+
+  it("le sablier reste visible pour un joueur et crée un booster bonus à 4/4", async () => {
     const { button, onUseHourglass } = await drop({ packs: 4 });
     expect(button.disabled).toBe(false);
-    expect(button.closest("details")).toBeNull();
+    expect(button.closest<HTMLDetailsElement>("details.drop-secondary-details")?.open).toBe(true);
     expect(button.textContent).toContain("2");
     expect(button.textContent).toContain("5/4");
     act(() => button.click());

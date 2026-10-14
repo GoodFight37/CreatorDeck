@@ -66,10 +66,17 @@ fait boucler un sheen doux en 5 s, renforce sol/halo et place le CTA avant les
 infos secondaires. Le hint long est supprimé, le nom du pack reste visible et
 les jetons sont repliés dans les détails. Aucun audio, WebGL ou changement de
 gameplay. Tests d'écrans 13/13, typecheck, ESLint ciblé et diff-check réussis.
-E2E téléphone non exécutés : Chromium headless Playwright manque dans
-l'environnement. Publié sur `main` au SHA `47f5f4fa`, déploiement Vercel
-Production `READY` (contrôle `success`). Le ressenti des côtés 3D et de la
-hiérarchie visuelle à 390 × 844 reste ouvert; voir le checkpoint de passation.
+Les E2E téléphone ont d'abord été bloqués par l'absence du Chromium Playwright
+prévu; un second passage via Chromium système les a exécutés. Publié sur `main`
+au SHA `47f5f4fa`, Vercel Production `READY` (contrôle `success`). La capture a
+révélé que les côtés restaient discrets; voir le suivi ci-dessous.
+
+**Suite du contrôle visuel :** une capture Production à 390 × 844 a révélé que
+les faces CSS du sachet étaient orientées vers l'arrière. Correctif local :
+faces tournées vers l'avant/20 px, sheen rendu plus perceptible, et ticket
+tutoriel ramené à « Essayer » + un volet secondaire. Écrans 14/14 et E2E
+Chromium mobile 4/4 passent, ainsi que typecheck et ESLint. Push/READY Vercel
+du complément à relever avant fermeture du défaut perceptif.
 
 **Avance des cartes :** un appui pendant le flip était mis en file et exécuté
 au terme de l'animation ; un second appui pouvait alors agir sur la carte

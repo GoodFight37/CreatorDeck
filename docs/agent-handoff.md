@@ -1,5 +1,26 @@
 # Reprise rapide — 14 octobre 2026
 
+## Checkpoint courant — côtés du sachet visibles sur mobile
+
+- Reprise depuis `main` au SHA `52afc5ca69971f4c1b913c2ace6fc8ca435efcc6`.
+  J'ai capturé la Production Vercel en Chromium à 390 × 844 : dimensions et
+  placement du pack corrects, mais ses plans latéraux étaient orientés vers
+  l'arrière et se peignaient sous la face. Dans le ticket tutoriel, garantie,
+  sablier et jetons restaient en trois lignes secondaires visibles.
+- Correctif local : inverser la rotation Y des côtés gauche/droit, garder
+  l'inclinaison demandée, porter leur profondeur à 20 px et éclaircir le foil;
+  renforcer le passage de lumière sans changer sa boucle de 5 s. Regrouper les
+  informations secondaires sous « Plus d’infos » uniquement en tutoriel. Elles
+  restent directement visibles pour le joueur normal et réapparaissent au clic.
+- Portée UI seulement : aucune modification audio, économie, tirage, opening
+  flow ou gameplay.
+- Validation locale : écran Drop 14/14, TypeScript et ESLint ciblé passent.
+  Chromium mobile ciblé : Drop compact + 390 × 844 2/2; cohérence de la
+  pochette et extraction PackTear 2/2. À 390 × 844, le sachet entier tient,
+  son flanc gauche mesuré dépasse 12 px, le CTA reste visible et il n'y a pas
+  de débordement horizontal. Cette vérification concerne le patch local; le
+  correctif doit encore être publié et son déploiement Vercel confirmé.
+
 ## Checkpoint courant — scène visuelle du Drop
 
 - Demande de Malik : rendre le Drop tactile/TCG et réduire les éléments qui

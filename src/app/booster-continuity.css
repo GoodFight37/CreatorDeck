@@ -394,40 +394,40 @@ html:has(.booster-presentation) { overflow: hidden; }
   backface-visibility: hidden;
 }
 .pack-3d-side-left {
-  z-index: 1; top: 2px; bottom: 4px; left: -14px; width: 16px;
-  transform: rotateY(-90deg); transform-origin: right center;
-  background: linear-gradient(90deg, #361329, #ad526e 52%, #42172e);
-  box-shadow: inset 1px 0 rgb(255 224 224 / .4);
+  z-index: 1; top: 2px; bottom: 4px; left: -18px; width: 20px;
+  transform: rotateY(90deg); transform-origin: right center;
+  background: linear-gradient(90deg, #220b18, #b75470 28%, #f2a1ad 55%, #6d1a3b 82%, #290d1c);
+  box-shadow: inset 2px 0 rgb(255 235 226 / .7), inset -2px 0 rgb(15 0 12 / .72);
 }
 .pack-3d-side-right {
-  z-index: 3; top: 2px; right: -14px; bottom: 4px; width: 16px;
-  transform: rotateY(90deg); transform-origin: left center;
-  background: linear-gradient(90deg, #f0a0a4, #5a1838 38%, #210d20);
+  z-index: 3; top: 2px; right: -18px; bottom: 4px; width: 20px;
+  transform: rotateY(-90deg); transform-origin: left center;
+  background: linear-gradient(90deg, #f4c7ad, #a44162 28%, #5c1537 56%, #200a19);
   box-shadow: inset -2px 0 rgb(0 0 0 / .62);
 }
 .pack-3d-side-bottom {
-  z-index: 3; right: 1px; bottom: -13px; left: 1px; height: 14px;
+  z-index: 3; right: 1px; bottom: -17px; left: 1px; height: 18px;
   transform: rotateX(90deg); transform-origin: center top;
-  background: linear-gradient(180deg, #9b4961, #311326 84%);
-  box-shadow: inset 0 -2px rgb(0 0 0 / .55);
+  background: linear-gradient(180deg, #f0a0a7, #8a2447 42%, #210a19);
+  box-shadow: inset 0 2px rgb(255 230 220 / .62), inset 0 -3px rgb(12 0 10 / .7);
 }
 .pack-specular {
   position: absolute; z-index: 2; inset: 0; display: block;
   clip-path: var(--live-foil-clip);
   mask-image: url("/packs/live-foil.svg"); mask-size: 100% 100%; mask-repeat: no-repeat;
-  pointer-events: none; opacity: .28;
-  background: linear-gradient(108deg, transparent 37%, rgb(255 244 218 / .04) 43%,
-    rgb(255 229 206 / .34) 49%, rgb(255 205 225 / .08) 54%, transparent 62%);
+  pointer-events: none; opacity: .42;
+  background: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .04) 41%,
+    rgb(255 249 230 / .62) 49%, rgb(255 166 205 / .2) 55%, transparent 64%);
   background-size: 230% 100%;
   background-position: 0% 50%;
   mix-blend-mode: screen;
   animation: pack-specular-pass 5s ease-in-out 250ms infinite;
 }
 @keyframes pack-specular-pass {
-  0%, 12% { opacity: .04; background-position: 0% 50%; }
-  45% { opacity: .38; background-position: 55% 50%; }
-  78% { opacity: .24; background-position: 100% 50%; }
-  100% { opacity: .04; background-position: 100% 50%; }
+  0%, 8% { opacity: .1; background-position: 0% 50%; }
+  45% { opacity: .56; background-position: 55% 50%; }
+  78% { opacity: .34; background-position: 100% 50%; }
+  100% { opacity: .1; background-position: 100% 50%; }
 }
 .pack-stage.pulling .pack-specular,
 body:has(.booster-cinematic.booster-presentation) .pack-specular,

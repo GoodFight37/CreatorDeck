@@ -1,18 +1,16 @@
-## Drop trop plat et ticket trop formulaire — correctif implémenté, validation visuelle ouverte
+## Drop trop plat et ticket trop formulaire — correction affinée, redéploiement en attente
 
 Malik rapporte que l'accueil donne un visuel d'illustration plate : faces du
 sachet peu lisibles, hint long, label inerte et ticket crème administratif.
-Cause structurelle probable : filtre appliqué au bouton parent qui aplatit son
-arbre CSS `preserve-3d`; une media query ramenait aussi la largeur du booster à
-52vw/30dvh sur les écrans courts. Correctif local : conserver les 58vw,
-supprimer le filtre du héros, renforcer les faces bordeaux et leur lumière,
-donner une vignette/ombre de sol, enlever le hint, rendre le ticket CTA-first et
-replier les jetons. Le patch est publié sur `main` (`47f5f4fa`), Vercel
-Production est `READY` et le contrôle est `success`. Les tests DOM Drop (13/13)
-passent. Les E2E ont été tentés, mais ne démarrent pas ici : Chromium headless
-Playwright est absent. Ni capture ni rendu navigateur n'ont été validés. Les
-côtés CSS 3D, le focus sur le sachet et le feeling restent à juger à l'écran
-mobile avant de clore le constat perceptif.
+La capture Vercel 390 × 844 a confirmé que le flanc restait trop discret. Cause
+prouvée : les plans CSS 3D gauche/droit étaient tournés dans le sens inverse du
+tilt et masqués derrière la face. Une correction locale tourne ces plans vers
+la caméra, les épaissit à 20 px, renforce le sheen, et regroupe les secondaires
+du tutoriel sous « Plus d’infos ». Taille, nom du pack, CTA, scroll et
+hiérarchie restent en place. Validation locale : écrans 14/14, E2E mobile 4/4,
+typecheck, ESLint et diff-check réussis. La correction est en attente du push et
+du déploiement Vercel; l'impression définitive du foil en production reste à
+revalider après le déploiement.
 
 ## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
 

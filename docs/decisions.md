@@ -1,5 +1,24 @@
 # Décisions CreatorDeck
 
+## D-096 — 14 octobre 2026 : plans latéraux orientés vers le joueur
+
+- Constat vérifié sur la Production Vercel en viewport 390 × 844 : le Drop
+  gardait la taille/hiérarchie attendues, mais le flanc du sachet restait un
+  filet. Les règles orientaient les plans latéraux à l'opposé du signe de la
+  rotation Y du pack; ils se retrouvaient derrière la face imprimée.
+- Décision : conserver le tilt du pack `rotateY(-8deg) rotateX(5deg)` et
+  tourner les faces latérales dans le sens où le bord gauche s'extrude vers la
+  caméra. Leur profondeur passe de 16 à 20 px avec un foil bordeaux clair; le
+  bord droit complète le volume. Intensifier modérément le sheen 5 s.
+- Réduire le ticket tutoriel à l'action « Essayer » et un seul lien « Plus
+  d’infos »; taux, sablier et jetons restent accessibles dedans. Le joueur
+  normal garde ces éléments visibles et les jetons déjà repliés.
+- Preuve : E2E Chromium téléphone 4/4 (Drop compact/390 × 844 et continuité
+  PackTear), tests d'écran 14/14, TypeScript, ESLint et diff-check. Les faces
+  dépassent 12 px au rectangle transformé en 390 × 844 sans débordement.
+  C'est une mesure navigateur du patch local; le jugement final du rendu en
+  production dépend de la confirmation Vercel.
+
 ## D-094 — 14 octobre 2026 : le Drop est une scène d’ouverture de booster
 
 À la demande de Malik, traiter le Drop comme une scène TCG tactile : conserver

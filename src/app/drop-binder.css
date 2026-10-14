@@ -89,27 +89,27 @@
 }
 .home-view .pack-3d-side-left {
   z-index: 1;
-  top: 2px; bottom: 4px; left: -14px; width: 16px;
-  transform: rotateY(-90deg);
+  top: 2px; bottom: 4px; left: -18px; width: 20px;
+  transform: rotateY(90deg);
   transform-origin: right center;
-  background: linear-gradient(90deg, #220b18, #b75470 48%, #55162f 78%, #290d1c);
-  box-shadow: inset 2px 0 rgba(255,220,226,.5), inset -2px 0 rgba(15,0,12,.65);
+  background: linear-gradient(90deg, #220b18, #b75470 28%, #f2a1ad 55%, #6d1a3b 82%, #290d1c);
+  box-shadow: inset 2px 0 rgba(255,235,226,.7), inset -2px 0 rgba(15,0,12,.72), 0 0 8px rgba(185,47,91,.22);
 }
 .home-view .pack-3d-side-right {
   z-index: 3;
-  top: 2px; bottom: 4px; right: -14px; width: 16px;
-  transform: rotateY(90deg);
+  top: 2px; bottom: 4px; right: -18px; width: 20px;
+  transform: rotateY(-90deg);
   transform-origin: left center;
-  background: linear-gradient(90deg, #f4a2aa, #a44162 28%, #5c1537 56%, #200a19);
+  background: linear-gradient(90deg, #f4c7ad, #a44162 28%, #5c1537 56%, #200a19);
   box-shadow: inset 2px 0 rgba(255,235,226,.65), inset -3px 0 rgba(12,0,10,.7);
 }
 .home-view .pack-3d-side-bottom {
   z-index: 3;
-  left: 2px; right: 2px; bottom: -13px; height: 14px;
+  left: 2px; right: 2px; bottom: -17px; height: 18px;
   transform: rotateX(90deg);
   transform-origin: center top;
-  background: linear-gradient(180deg, #bb5b75, #6c1b3b 48%, #210a19);
-  box-shadow: inset 0 2px rgba(255,218,226,.42), inset 0 -3px rgba(12,0,10,.7);
+  background: linear-gradient(180deg, #f0a0a7, #8a2447 42%, #210a19);
+  box-shadow: inset 0 2px rgba(255,230,220,.62), inset 0 -3px rgba(12,0,10,.7);
 }
 .home-view .pack-3d-front {
   display: block;
@@ -196,6 +196,9 @@
 .home-view .drop-token-details summary { min-height: 28px; cursor: pointer; list-style-position: inside; }
 .home-view .drop-token-details summary strong { margin-left: 4px; color: #382522; }
 .home-view .drop-token-details .token-row { margin: 0; font-size: 11px; }
+.home-view .drop-secondary-details { margin-top: 2px; color: rgba(49,35,31,.68); font-size: 11px; text-align: center; }
+.home-view .drop-secondary-details > summary { min-height: 30px; cursor: pointer; list-style-position: inside; }
+.home-view .open-panel:not([data-tutorial="true"]) .drop-secondary-details > summary { display: none; }
 .home-view .secondary-action { color: var(--ink); border-color: var(--muted); font-size: 12px; line-height: 1.5; padding-block: 9px; }
 
 .drop-activities { margin-top: 28px; }
