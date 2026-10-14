@@ -67,7 +67,8 @@ courant pour les tests et les limites de cette émulation mobile.
 **Toi → Nouveautés** rassemble les mises à jour du jeu : historique, détail,
 notes non lues et marquage de lecture sur cet appareil, sans compte ni popup
 au lancement. Chaque livraison visible ajoute sa note au même commit que le
-code ; [procédure](docs/nouveautes.md). Publication et preuves au checkpoint.
+code ; [procédure](docs/nouveautes.md). Publié sur Vercel (`3fe32e8d`),
+lecture et persistance vérifiées à 320/390 px ; preuves au checkpoint.
 
 Le pilier **Toi** réunit vitrine inspectable, variantes possédées, niveau/XP,
 collection et accès direct aux objectifs. Compte, réglages et informations

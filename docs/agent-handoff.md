@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Nouveautés complet, publication en préparation
+## Checkpoint courant — lot Nouveautés complet publié, Vercel vérifié
 
 - Demande : gros lot autonome jusqu’à publication. Choix : système de patch
   notes proposé juste avant, accepté par l’autorisation générale de Malik.
@@ -26,7 +26,21 @@
   ciblés réussis. Aucun test échoué dans ces runs. Captures liste/détail à
   390×844 inspectées, lisibles sans coupure. Build final `npm run build`
   réussi, cinq pages exportées ; variables Supabase locales absentes : preuve
-  de compilation, pas de cloud. Publication et contrôle Production à compléter.
+  de compilation, pas de cloud.
+- Publication : [`3fe32e8dba3b5020d07c63662179784b1ea1b5fa`](https://github.com/GoodFight37/CreatorDeck/commit/3fe32e8dba3b5020d07c63662179784b1ea1b5fa),
+  push normal `main`, SHA vérifié par ls-remote, procédure `nouveautes.md`
+  confirmée sur GitHub. Vercel Production du même SHA
+  [`B8s1mwbBoWMxgusrfoUGG6hFGVht`](https://vercel.com/hafsi37-2386/creator-deckk/B8s1mwbBoWMxgusrfoUGG6hFGVht)
+  `READY`, contrôle `success`. Aucun run GitHub Actions retourné pour ce SHA ;
+  pas de CI générale déclarée verte.
+- [Site publié](https://creator-deckk.vercel.app/) parcouru dans Chromium :
+  empreinte Web `3fe32e8`, sept notes, badge et entrée Toi, détail puis lecture
+  individuelle (7 → 6), état conservé après rechargement, lecture globale,
+  disparition du repère, fermeture/focus/restauration de l’app et largeurs
+  320/390 conformes. Aucune erreur JavaScript observée. Le script écrit
+  seulement les marqueurs locaux de son navigateur neuf, aucun compte ou
+  sauvegarde de jeu réelle modifié. Lot clos, réservation libérée après
+  le checkpoint documentaire de clôture.
 - Limites : les marqueurs de lecture sont locaux, non synchronisés entre
   appareils ; aucune garantie d’écriture atomique entre onglets concurrents.
   Les notes initiales ne constituent pas un historique exhaustif du dépôt.

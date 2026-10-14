@@ -2,12 +2,14 @@
 
 ## État actuel — 14 octobre 2026
 
-**Journal Nouveautés (D-102) — implémenté, validation finale en cours :** historique
+**Journal Nouveautés (D-102) — clos, publié et vérifié sur Vercel :** historique
 joueur depuis Toi, détail/filtre, repère discret de non-lu, lecture explicite
 individuelle/globale, persistance locale et repli session si stockage bloqué.
 Sept notes initiales, règle de publication par livraison dans AGENTS et
-`nouveautes.md`. Aucun nouveau backend, gameplay ou audio. Preuves et
-publication au checkpoint courant.
+`nouveautes.md`. Aucun nouveau backend, gameplay ou audio. Logique 8/8,
+DOM 21/21, navigateur 4/4 et build/statique réussis. Code `3fe32e8d`, Vercel
+Production `READY` / `success` ; historique/lecture/rechargement/focus contrôlés
+sur le site à 320/390 px. Détails et limites au checkpoint courant.
 
 **Lot Toi complet (D-101) — clos, publié et vérifié sur Vercel :** vitrine
 inspectable et noms complets, variantes/quantités réelles, niveau/XP et

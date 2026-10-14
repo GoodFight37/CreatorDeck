@@ -8,7 +8,9 @@ un autre appareil ou un effacement du stockage peut montrer les mêmes notes
 non lues. Stockage refusé : lecture conservée pour la session, avec message,
 sans bloquer l’historique. Les conflits simultanés entre onglets n’ont pas de
 garantie atomique ; aucune donnée de jeu n’est écrite par le journal.
-Validation et état publié dans le checkpoint courant.
+Logique 8/8, DOM 21/21, quatre parcours navigateur et build/statique réussis.
+Code `3fe32e8d`, Vercel Production `READY` / `success` : sept notes, lecture,
+rechargement, badge/focus et largeurs 320/390 contrôlés. Détails au checkpoint.
 
 ## Toi — objectifs masqués et vitrine non consultable, corrigés (14 octobre 2026)
 
