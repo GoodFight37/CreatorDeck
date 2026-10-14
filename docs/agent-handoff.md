@@ -1,4 +1,4 @@
-## Crédits booster de test personnels — local validé, publication à faire, 14 octobre 2026
+## Crédits booster de test personnels — publiés et migration appliquée, 14 octobre 2026
 
 Demande de Malik : un code facile à saisir (`MALIK`) donnant 50 boosters pour
 tester l'ouverture sur son compte sans réinitialiser sa progression. La réserve
@@ -10,18 +10,26 @@ utilisation, sans expiration) et le guide donne une requête qui le lie à l'ema
 du compte Supabase.
 
 Fichiers concernés : migration `0051_boosters_promo_personnels.sql`, API et
-store cloud, écran Drop, tests et guide `booster-test-access.md`. Vérifications
-déjà réussies : `npm run supabase:verify` (Postgres jetable, migrations 0001–0051,
-compte propriétaire, refus d'un autre compte, crédit de 50 et ouverture réelle),
-`npm test` (73 fichiers, 1 168 tests), `npm run ecrans` (22 fichiers, 129 tests),
-`npm run typecheck`, ESLint ciblé, `npm run build`, `node scripts/supabase-deploy.mjs --check`
-et `git diff --check`. Le build est cloudless faute de variables Supabase locales ;
-il ne teste pas le compte réel. La migration simulée n'a pas modifié la production.
-État : branche `main`, base locale `7f21ec55329f19e07aedfd4b78eb57934e85cc05`,
-changements non publiés. Aucun code promo ni donnée de production n'a été créé
-ou modifié. Après publication, la CI verte déclenchera l'application automatique
-de 0051 ; Malik devra ensuite insérer `MALIK` dans le SQL Editor avec l'email de
-son compte Supabase.
+store cloud, écran Drop, tests et guide `booster-test-access.md`. Code publié sur
+`main` au SHA `5bdf9f21317a2d6b6557c1cc70f968a3379236e6`. La CI GitHub
+[`38490854882`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38490854882)
+est verte (6/6 jobs). Le déploiement automatique Supabase
+[`38491098387`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38491098387)
+a appliqué 0051 et vérifié l'historique et les objets attendus. Vercel Production
+est READY pour ce SHA :
+https://creator-deckk-mfqwzlhel-hafsi37-2386.vercel.app .
+
+Vérifications locales : `npm run supabase:verify` (Postgres jetable, migrations
+0001–0051, compte propriétaire, refus d'un autre compte, crédit de 50 et ouverture
+réelle), `npm test` (73 fichiers, 1 168 tests), `npm run ecrans` (22 fichiers,
+129 tests), `npm run typecheck`, ESLint ciblé, `npm run build`,
+`node scripts/supabase-deploy.mjs --check` et `git diff --check`. Le build local
+était cloudless ; la migration de production, elle, a été déployée et vérifiée.
+Aucun code promo personnel n'a encore été créé. Malik doit insérer `MALIK` dans
+le SQL Editor avec l'adresse exacte de son compte Supabase, selon
+[le guide](booster-test-access.md). Le code est désormais disponible dans
+l'application après actualisation/rechargement ; pour une APK Capacitor, une
+nouvelle APK reste nécessaire.
 
 ## Synchronisation du compte et codes de test — code local, 14 octobre 2026
 

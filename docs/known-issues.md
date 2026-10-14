@@ -324,3 +324,17 @@ déploiement Supabase de production restent à vérifier avant de considérer le
 correctif publié. Aucun code ni compte de production n'a été modifié.
 Après publication, créer le code via le [guide](booster-test-access.md), puis
 vérifier les ouvertures dans l'application.
+## Boosters de test personnels — migration déployée, code à créer, 14 octobre 2026
+
+Le plafond de quatre reste réservé à la recharge ordinaire ; les boosters
+bonus ont maintenant un solde distinct et sont dépensés après cette réserve.
+La migration additive 0051 lie les codes au compte destinataire et permet
+jusqu'à 50 boosters. Code sur `main` : `5bdf9f21317a2d6b6557c1cc70f968a3379236e6`.
+CI GitHub `38490854882` verte (6/6), migration Supabase automatique
+`38491098387` appliquée et objets vérifiés ; Vercel Production READY.
+La seule étape restante est l'insertion du code `MALIK` dans le SQL Editor avec
+l'email exact du compte, selon [le guide](booster-test-access.md). Aucun code
+ni crédit n'a encore été créé. Après insertion, le joueur saisit `MALIK` dans
+Toi → Fonctionnalités en ligne → J'ai un code booster. Une APK Capacitor doit
+être reconstruite pour contenir le nouveau client ; le déploiement Vercel met
+à jour la version web.

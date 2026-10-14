@@ -1,13 +1,13 @@
 # Roadmap CreatorDeck
 
-## État actuel — 13 octobre 2026
+## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `8bf36ba0` ; sachet d’accueil aligné sur le
-visuel d’ouverture et musique lancée au premier appui explicite. Vercel a
-déployé ce commit ; CI GitHub
-[`38485767846`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38485767846)
-verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niveau
-et la couleur de la boucle. Voir le
+**État du code :** `main` au SHA `5bdf9f21317a2d6b6557c1cc70f968a3379236e6` ;
+les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
+reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
+appliquée par `38491098387` et Vercel Production READY. La correction précédente
+du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphone
+reste nécessaire pour juger le niveau et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
@@ -22,11 +22,14 @@ et la couleur de la boucle. Voir le
   pas à jour.
 - **Tests de booster sur compte réel :** l'implémentation locale ajoute un
   solde bonus distinct de la réserve et le compteur au Drop ; la recharge
-  normale ne change pas. La migration 0051 et ses tests Postgres passent en
-  local ; CI et publication restent à vérifier. Après son déploiement, le code
-  `MALIK` (50 ouvertures, lié au compte, une seule utilisation) sera créé dans
-  Supabase. Voir le [guide](booster-test-access.md) et le
-  [checkpoint](agent-handoff.md).
+  normale ne change pas. Migration 0051 publiée et appliquée sur Supabase.
+  Code publié au SHA `5bdf9f21317a2d6b6557c1cc70f968a3379236e6` ; CI
+  [`38490854882`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38490854882)
+  verte (6/6), Supabase [`38491098387`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38491098387)
+  et Vercel Production READY. À faire côté Malik : créer le code personnel
+  `MALIK` (50 ouvertures, une seule utilisation, réservé à son compte) avec
+  l'adresse Supabase, via le [guide](booster-test-access.md). Aucun code n'a
+  encore été créé.
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
   13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose

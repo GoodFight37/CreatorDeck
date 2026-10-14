@@ -9,10 +9,12 @@ ne dépense ce solde qu'après épuisement de la réserve normale. Le code deman
 `MALIK` est prévu pour 50 ouvertures, une seule rédemption, avec `recipient_id`
 lié au compte Supabase du joueur. Aucun tirage, carte, point, jeton ou formule
 d'économie n'est modifié. La migration est additive ; elle ne doit être
-appliquée qu'après tests et CI verte. L'insertion du code et l'adresse du compte
-restent à faire dans le SQL Editor après déploiement. État local : Postgres,
-unitaires, écrans, typecheck, ESLint ciblé et build réussis ; changement pas
-encore publié, aucune donnée de production ni code promo créé.
+appliquée qu'après tests et CI verte. Migration 0051 publiée sur `main` au SHA
+`5bdf9f21317a2d6b6557c1cc70f968a3379236e6`, CI GitHub `38490854882` verte
+(6/6), Supabase `38491098387` l'a appliquée et a vérifié les objets ; Vercel
+Production est READY. Postgres jetable, unitaires, écrans, typecheck, ESLint et
+build réussis. Aucun code promo n'a encore été créé : Malik doit insérer `MALIK`
+avec son email de compte dans SQL Editor, selon `docs/booster-test-access.md`.
 
 ## D-081 — 14 octobre 2026 : le cloud fait foi dès qu'un compte est connecté
 

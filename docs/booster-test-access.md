@@ -7,10 +7,10 @@ liés au compte et ne modifient ni les taux ni les cartes directement.
 
 ## Créer le code personnel `MALIK` (50 boosters, une seule fois)
 
-Après le déploiement de la migration `0051_boosters_promo_personnels.sql`, ouvre
-le SQL Editor du projet Supabase CreatorDeck et exécute cette commande en
-remplaçant `EMAIL_DU_COMPTE_SUPABASE` par l'adresse utilisée pour te connecter
-dans CreatorDeck :
+La migration `0051_boosters_promo_personnels.sql` est déjà appliquée en
+production. Ouvre le SQL Editor du projet Supabase CreatorDeck et exécute cette
+commande en remplaçant `EMAIL_DU_COMPTE_SUPABASE` par l'adresse exacte utilisée
+pour te connecter dans CreatorDeck :
 
 ```sql
 insert into public.promo_codes (code, packs, max_uses, recipient_id, note)
