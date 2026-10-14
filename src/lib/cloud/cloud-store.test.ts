@@ -2131,6 +2131,7 @@ describe("les codes promo", () => {
     // ce que `pack_status()` répond juste après.
     api.packStatus.mockResolvedValueOnce({
       packs: 4,
+      promoPacks: 1,
       lastRegenAt: "2026-03-01T10:00:00Z",
       openings: 3,
       nextPackAt: null,
@@ -2146,8 +2147,9 @@ describe("les codes promo", () => {
     // qui fait foi, et le compteur de l'accueil affiche le bon total même si
     // une autre rédemption est passée entre-temps sur un autre appareil.
     expect(api.packStatus).toHaveBeenCalledTimes(1);
-    expect(outcome).toEqual({ status: "done", message: "Code accepté : un booster t'attend." });
+    expect(outcome).toEqual({ status: "done", message: "Code accepté : un booster de test t'attend." });
     expect(store.getSnapshot().isError).toBe(false);
+    expect(store.getSnapshot().promoPacks).toBe(1);
     expect(state.current.packs).toBe(4);
   });
 

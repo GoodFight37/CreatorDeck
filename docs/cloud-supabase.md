@@ -2618,3 +2618,18 @@ réseau (« Réseau injoignable ») alors que le même appel fonctionne dans Chr
 `fetch` partout ailleurs. Appel **explicite** au plugin, et non son patch
 automatique de `fetch` : l'interception Android des requêtes du WebView ne voit
 pas le corps des POST, ce qui laissait échouer la création de compte invité.
+## Migration 0051 — crédits booster promo privés
+
+`0051_boosters_promo_personnels.sql` ajoute `pack_state.promo_packs` et le
+champ facultatif `promo_codes.recipient_id`. Les crédits bonus restent séparés
+de la réserve rechargeable ; `open_pack()` les dépense seulement lorsque la
+réserve normale est vide. Le solde n'est lisible que par le joueur connecté via
+`pack_status()` et n'est jamais modifiable directement depuis le client.
+
+Après la CI verte sur `main`, le workflow Supabase applique automatiquement
+cette migration et vérifie l'historique. Ensuite, pour créer le code personnel
+de 50 boosters, suivre [le guide booster-test-access](booster-test-access.md)
+dans le SQL Editor avec l'email du compte CreatorDeck. Le code `MALIK` est lié
+au UUID correspondant, limité à une utilisation et sans expiration. Une
+simulation locale Postgres ne prouve pas que la production l'a déjà appliquée :
+vérifier le run Supabase et le statut du code dans le tableau de bord.

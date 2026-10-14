@@ -1,5 +1,19 @@
 # Décisions CreatorDeck
 
+## D-083 — 14 octobre 2026 : codes de test séparés de la réserve normale
+
+La limite de quatre boosters est celle de la recharge normale, pas un obstacle
+à conserver pour les récompenses promo de test. Une récompense longue est
+stockée dans `pack_state.promo_packs`, distinctement et côté serveur ; un tirage
+ne dépense ce solde qu'après épuisement de la réserve normale. Le code demandé
+`MALIK` est prévu pour 50 ouvertures, une seule rédemption, avec `recipient_id`
+lié au compte Supabase du joueur. Aucun tirage, carte, point, jeton ou formule
+d'économie n'est modifié. La migration est additive ; elle ne doit être
+appliquée qu'après tests et CI verte. L'insertion du code et l'adresse du compte
+restent à faire dans le SQL Editor après déploiement. État local : Postgres,
+unitaires, écrans, typecheck, ESLint ciblé et build réussis ; changement pas
+encore publié, aucune donnée de production ni code promo créé.
+
 ## D-081 — 14 octobre 2026 : le cloud fait foi dès qu'un compte est connecté
 
 À la demande de Malik, une sauvegarde en ligne existante remplace

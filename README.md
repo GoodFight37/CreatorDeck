@@ -82,6 +82,13 @@ voir le [checkpoint](docs/agent-handoff.md). Vercel met à jour le site ;
 une APK Android déjà installée doit être reconstruite et réinstallée séparément
 pour recevoir ces changements.
 
+Les récompenses de test ont leur propre solde serveur, séparé de la réserve qui
+se recharge. La migration et l'interface du code personnel `MALIK` (50
+ouvertures, lié au compte) sont en cours de vérification ; le code doit encore
+être créé dans le SQL Editor après publication. Voir le
+[guide des boosters de test](docs/booster-test-access.md) et l'état vérifié dans
+la [passation](docs/agent-handoff.md).
+
 Pour les prochains portraits, le choix dépend de la qualité visuelle de l’image
 (bonne personne, netteté, visage lisible, résolution et cadrage). L’absence de
 source ou de crédit ne suffit pas à l’écarter. Voir la

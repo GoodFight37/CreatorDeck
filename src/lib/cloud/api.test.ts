@@ -647,6 +647,7 @@ describe("tirage serveur", () => {
       () => ({
         body: {
           packs: 2,
+          promo_packs: 49,
           last_regen_at: "2026-01-01T12:30:00Z",
           openings: 7,
           cards: [
@@ -663,6 +664,7 @@ describe("tirage serveur", () => {
     const result = await api.openPack();
     expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/open_pack");
     expect(result.packs).toBe(2);
+    expect(result.promoPacks).toBe(49);
     expect(result.openings).toBe(7);
     expect(result.cards).toHaveLength(5);
     expect(result.cards[0]).toMatchObject({ creatorSlug: "kaicenat", rarity: "legendary", variant: "live" });
@@ -716,6 +718,7 @@ describe("tirage serveur", () => {
       () => ({
         body: {
           packs: 3,
+          promo_packs: 50,
           last_regen_at: "2026-01-01T12:00:00Z",
           openings: 5,
           next_pack_at: "2026-01-01T12:30:00Z",
@@ -726,6 +729,7 @@ describe("tirage serveur", () => {
     const status = await api.packStatus();
     expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/pack_status");
     expect(status.packs).toBe(3);
+    expect(status.promoPacks).toBe(50);
     expect(status.nextPackAt).toBe("2026-01-01T12:30:00Z");
   });
 
@@ -1235,7 +1239,7 @@ describe("codes promo", () => {
 
   it("envoie le code au serveur et lit la réserve qu'il a écrite", async () => {
     const { api, calls } = client(
-      () => ({ body: { ok: true, packs: 1, reserve: 4, note: "stream du 7 octobre" } }),
+      () => ({ body: { ok: true, packs: 50, reserve: 0, promo_packs: 50, note: "test perso" } }),
       signedIn(),
     );
     const result = await api.redeemPromoCode("booster-2026");
@@ -1244,7 +1248,7 @@ describe("codes promo", () => {
     // espaces) — un contrôle dans l'application serait un contrôle qu'on peut
     // s'accorder.
     expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_code: "booster-2026" });
-    expect(result).toEqual({ granted: 1, reserve: 4, note: "stream du 7 octobre" });
+    expect(result).toEqual({ granted: 50, reserve: 0, promoPacks: 50, note: "test perso" });
   });
 
   it("affiche le refus du serveur tel quel", async () => {

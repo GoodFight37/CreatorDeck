@@ -475,6 +475,7 @@ export class CloudApi {
     jackpot: "perfect" | "hourglasses" = "perfect",
   ): Promise<{
     packs: number;
+    promoPacks?: number;
     lastRegenAt: string;
     openings: number;
     cards: Array<{
@@ -550,6 +551,7 @@ export class CloudApi {
    */
   async packStatus(): Promise<{
     packs: number;
+    promoPacks?: number;
     lastRegenAt: string;
     openings: number;
     nextPackAt: string | null;

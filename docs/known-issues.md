@@ -310,3 +310,17 @@ Ajouter un ID stable, date/agent, SHA/branche/environnement, gravité et impact,
 hypothèse, statut, contournement et action recommandée. À la correction,
 conserver l'entrée avec commit et test de non-régression ; ne pas effacer l'histoire.
 Ne jamais publier de logs contenant des clés ou sessions.
+## Code booster de test limité par la réserve — vérifié en local, publication en attente, 14 octobre 2026
+
+Malik ne pouvait pas enchaîner ses tests : les codes promo créditaient la réserve
+normale, plafonnée à quatre (cinq avec sablier), puis refusaient tout nouveau
+code. Cette limite protège la recharge, mais bloquait à tort un lot de 50
+ouvertures de test. Le correctif sépare `promo_packs`, consomme ces
+crédits après la réserve normale et affiche leur nombre à part dans le Drop ;
+`MALIK` sera lié à son compte et utilisable une fois. La migration additive
+0051 passe dans le vérificateur Postgres local, comme les 1 168 tests unitaires,
+129 tests d'écran, le typecheck, ESLint ciblé et le build. La CI distante et le
+déploiement Supabase de production restent à vérifier avant de considérer le
+correctif publié. Aucun code ni compte de production n'a été modifié.
+Après publication, créer le code via le [guide](booster-test-access.md), puis
+vérifier les ouvertures dans l'application.

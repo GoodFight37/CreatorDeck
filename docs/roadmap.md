@@ -20,11 +20,13 @@ et la couleur de la boucle. Voir le
   Pour Android,
   une APK déjà installée doit être reconstruite et réinstallée ; Vercel ne la met
   pas à jour.
-- **Tests de booster sur compte réel :** aucun crédit illimité n'a été ajouté.
-  Les réserves sont gérées par Supabase ; le moyen ponctuel déjà supporté est
-  un lot de codes promo privés créé dans le SQL Editor (jusqu'à 100 ouvertures
-  par lot décrit), sans toucher aux données d'autres comptes. Voir
-  [le guide](booster-test-access.md).
+- **Tests de booster sur compte réel :** l'implémentation locale ajoute un
+  solde bonus distinct de la réserve et le compteur au Drop ; la recharge
+  normale ne change pas. La migration 0051 et ses tests Postgres passent en
+  local ; CI et publication restent à vérifier. Après son déploiement, le code
+  `MALIK` (50 ouvertures, lié au compte, une seule utilisation) sera créé dans
+  Supabase. Voir le [guide](booster-test-access.md) et le
+  [checkpoint](agent-handoff.md).
 
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
   13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose

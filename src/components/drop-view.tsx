@@ -125,14 +125,16 @@ export function HomeView({
   needsAccount: boolean;
   tutorialAvailable?: boolean;
 }) {
+  const cloud = useCloud();
   const pack = PACKS.live;
   const stock = game.player.packs;
+  const promoPacks = cloud.configured && cloud.userId ? cloud.promoPacks : 0;
   const nextAt = game.player.nextPackAt;
   const tick = useNow(1_000);
   const needsLogin = needsAccount && !tutorialAvailable;
 
   function openArtwork(event: MouseEvent<HTMLButtonElement>) {
-    if (opening || (!needsAccount && stock <= 0)) return;
+    if (opening || (!needsAccount && stock <= 0 && promoPacks <= 0)) return;
     event.currentTarget.focus();
     onOpen();
   }
@@ -155,7 +157,6 @@ export function HomeView({
     [game.cards],
   );
   const live = useLive();
-  const cloud = useCloud();
   const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
     ? cloud.sceneStatus : null;
   const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
@@ -237,6 +238,11 @@ export function HomeView({
             </strong>
           </div>
           {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
+          {promoPacks > 0 && !needsAccount ? (
+            <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
+              {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
+            </span>
+          ) : null}
           {nextAt !== null && !needsAccount ? (
             <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
           ) : null}
@@ -244,7 +250,7 @@ export function HomeView({
         <button
           className="primary-action"
           onClick={onOpen}
-          disabled={opening || (!needsAccount && stock <= 0)}
+          disabled={opening || (!needsAccount && stock <= 0 && promoPacks <= 0)}
         >
           {opening ? (
             <LoaderCircle className="spin" size={19} />
@@ -254,9 +260,9 @@ export function HomeView({
             <Zap size={19} />
           )}
           <span>
-            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer le pack tutoriel" : stock > 0 ? "Ouvrir le booster" : "Recharge en cours"}
+            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer le pack tutoriel" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
           </span>
-          {needsAccount || stock > 0 ? <ChevronRight size={19} /> : null}
+          {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
         </button>
         <button type="button" className="pity-row now" onClick={onShowOdds}
           aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>

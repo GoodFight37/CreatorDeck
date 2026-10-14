@@ -138,7 +138,7 @@ export function createCloudStore(deps: CloudDeps) {
     const config = deps.config();
     const session = api?.session() ?? null;
     if (!api || !config) {
-      publish({ configured: false, email: null, userId: null, project: null, message: CLOUD_DISABLED_HINT });
+      publish({ configured: false, email: null, userId: null, promoPacks: 0, project: null, message: CLOUD_DISABLED_HINT });
       return null;
     }
     publish({
@@ -146,6 +146,7 @@ export function createCloudStore(deps: CloudDeps) {
       project: config.url.replace(/^https:\/\//, "").split(".")[0] ?? "supabase",
       email: session?.email ?? null,
       userId: session?.userId ?? null,
+      promoPacks: session?.userId === state.userId ? state.promoPacks : 0,
     });
     return api;
   }
@@ -481,7 +482,7 @@ export function createCloudStore(deps: CloudDeps) {
     try {
       const status = await api.packStatus();
       if (currentUserId() !== userId || request !== packStatusRequest) return null;
-      publish({ sceneStatusLoading: false, sceneStatus: typeof status.sceneReady === "boolean"
+      publish({ promoPacks: status.promoPacks ?? 0, sceneStatusLoading: false, sceneStatus: typeof status.sceneReady === "boolean"
         ? { userId, day: gameDay(deps.now()), ready: status.sceneReady } : null });
       const local = deps.readState();
       if (local) {

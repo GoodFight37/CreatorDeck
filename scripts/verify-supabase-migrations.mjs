@@ -175,6 +175,7 @@ try {
   const cadeauClaimRetry = await readFile(path.join(MIGRATIONS, "0045_cadeau_claim_rejouable.sql"), "utf8");
   const gardes = await readFile(path.join(MIGRATIONS, "0037_gardes.sql"), "utf8");
   const skyrozzIdentity = await readFile(path.join(MIGRATIONS, "0050_skyrozz_identity.sql"), "utf8");
+  const promoBoosters = await readFile(path.join(MIGRATIONS, "0051_boosters_promo_personnels.sql"), "utf8");
   const migrations = [
     ["0001_comptes_cloud.sql", await readFile(path.join(MIGRATIONS, "0001_comptes_cloud.sql"), "utf8")],
     ["0002_vitrine.sql", await readFile(path.join(MIGRATIONS, "0002_vitrine.sql"), "utf8")],
@@ -226,6 +227,7 @@ try {
     ["0048_sablier_booster_bonus.sql", await readFile(path.join(MIGRATIONS, "0048_sablier_booster_bonus.sql"), "utf8")],
     ["0049_pack_refresh_ancre.sql", await readFile(path.join(MIGRATIONS, "0049_pack_refresh_ancre.sql"), "utf8")],
     ["0050_skyrozz_identity.sql", skyrozzIdentity],
+    ["0051_boosters_promo_personnels.sql", promoBoosters],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -1440,11 +1442,8 @@ try {
     (await client.query("select count(*)::int as n from pg_proc where proname = 'cron_refresh_live'")).rows[0].n === 1,
   );
 
-  // --- Les codes promo (0026) ----------------------------------------------
-  // Un code donne **un booster**, une fois par joueur, et seulement si la
-  // réserve a de la place (elle est plafonnée à quatre). `last_regen_at` est
-  // reposé à chaque fois : sans ça, une réserve d'ancienne fixture se
-  // régénérerait toute seule et les contrôles dépendraient de l'heure.
+  // --- Les codes promo (0026 / 0051) ---------------------------------------
+  // Les récompenses vivent dans un solde séparé de la réserve rechargeable.
   async function setReserve(userId, packs) {
     await client.query(
       `insert into public.pack_state (user_id, packs, last_regen_at, openings) values ($1, $2, now(), 0)
@@ -1462,12 +1461,13 @@ try {
   const redeemi = (await asPlayer(C, "select public.redeem_promo_code('booster-test') as r")).rows[0].r;
   check(
     "codes promo : un code donne un booster, quelle que soit la casse tapée",
-    redeemi.ok === true && redeemi.packs === 1 && redeemi.reserve === 1,
+    redeemi.ok === true && redeemi.packs === 1 && redeemi.reserve === 0 && redeemi.promo_packs === 1,
     JSON.stringify(redeemi),
   );
   check(
-    "codes promo : le booster arrive vraiment dans la réserve du serveur",
-    (await asPlayer(C, "select public.pack_status() as r")).rows[0].r.packs === 1,
+    "codes promo : le crédit arrive dans le solde bonus, sans gonfler la réserve",
+    (await asPlayer(C, "select public.pack_status() as r")).rows[0].r.packs === 0 &&
+      (await asPlayer(C, "select public.pack_status() as r")).rows[0].r.promo_packs === 1,
   );
   await refuses(
     "codes promo : le même code ne sert qu'une fois par joueur",
@@ -1491,29 +1491,34 @@ try {
     "expiré",
   );
 
-  // Réserve pleine : refus **sans consommer** le code. On le prouve en le
-  // donnant juste après à un autre joueur, et en comptant les rédemptions.
+  // Une réserve pleine n'empêche plus de créditer le solde bonus.
   await setReserve(C, 4);
-  let reservePleine = "";
-  try {
-    await asPlayer(C, "select public.redeem_promo_code('DEJA-PRIS') as r");
-  } catch (error) {
-    reservePleine = String(error.message || "");
-  }
-  await setReserve(B, 0);
   check(
-    "codes promo : une réserve pleine refuse le code sans le consommer",
-    reservePleine.includes("réserve est pleine") &&
-      (await asPlayer(B, "select public.redeem_promo_code('DEJA-PRIS') as r")).rows[0].r.reserve === 1 &&
-      (await client.query("select count(*)::int as n from public.promo_redemptions where code = 'DEJA-PRIS'")).rows[0].n === 1,
-    reservePleine || "aucune erreur levée",
+    "codes promo : réserve pleine acceptée, bonus gardé séparément",
+    (await asPlayer(C, "select public.redeem_promo_code('DEJA-PRIS') as r")).rows[0].r.reserve === 4 &&
+      (await asPlayer(C, "select public.pack_status() as r")).rows[0].r.promo_packs === 2,
   );
+
+  // Un gros code est lié à un utilisateur : les autres ne peuvent ni le
+  // réclamer ni brûler son usage. Ses 50 ouvertures passent par le vrai tirage.
+  await client.query("insert into public.promo_codes(code,packs,max_uses,recipient_id,note) values('MALIK',50,1,$1,'test privé')", [C]);
+  await refuses("codes promo : le code personnel refuse un autre compte", B,
+    "select public.redeem_promo_code('MALIK')", [], "réservé à un autre compte");
+  const malikGrant = (await asPlayer(C, "select public.redeem_promo_code('MALIK') as r")).rows[0].r;
+  check("codes promo : MALIK crédite 50 boosters sans toucher à la réserve",
+    malikGrant.packs === 50 && malikGrant.reserve === 4 && malikGrant.promo_packs === 52, JSON.stringify(malikGrant));
+  await setReserve(C, 0);
+  const promoDraw = (await asPlayer(C, "select public.open_pack() as r")).rows[0].r;
+  const promoStatus = (await asPlayer(C, "select public.pack_status() as r")).rows[0].r;
+  check("codes promo : tirage bonus réel consomme un crédit et range cinq cartes",
+    promoDraw.cards.length === 5 && promoDraw.packs === 0 && promoDraw.promo_packs === 51 && promoStatus.promo_packs === 51,
+    `reste=${promoStatus.promo_packs}`);
 
   // Épuisé : le code à un seul usage part une fois, puis refuse tout le monde.
   await setReserve(B, 0);
   check(
     "codes promo : un code à un seul usage part une fois",
-    (await asPlayer(B, "select public.redeem_promo_code('UN-SEUL') as r")).rows[0].r.reserve === 2,
+    (await asPlayer(B, "select public.redeem_promo_code('UN-SEUL') as r")).rows[0].r.promo_packs === 2,
   );
   await setReserve(A, 0);
   await refuses(
@@ -1555,6 +1560,13 @@ try {
       // Chloé l'a rédempté, le refus d'Alix ci-dessus (code épuisé) n'a rien
       // consommé, et la migration rejouée n'a pas doublé les lignes.
       (await client.query("select used from public.promo_codes where code = 'BOOSTER-TEST'")).rows[0].used === 1,
+  );
+  await client.query(promoBoosters);
+  check(
+    "codes promo : rejouer 0051 conserve crédits, propriétaire et rédemptions",
+    (await client.query("select promo_packs from public.pack_state where user_id=$1", [C])).rows[0].promo_packs === 51 &&
+      (await client.query("select recipient_id from public.promo_codes where code='MALIK'")).rows[0].recipient_id === C &&
+      (await client.query("select count(*)::int n from public.promo_redemptions where code='MALIK'")).rows[0].n === 1,
   );
 
   // --- Rejouabilité de la migration ----------------------------------------
@@ -6007,7 +6019,7 @@ try {
       joue.choice === "gauche" &&
       Number(joue.gained) === gainAttendu &&
       (joue.success || !joue.buzz) &&
-      (joue.success || !joue.bad_buzz) &&
+      !(joue.success && joue.bad_buzz) &&
       Number(joue.subscribers) === Math.max(0, Number(abonnesAvant) + Number(joue.gained)),
     JSON.stringify({ joue, abonnesAvant, coteGauche, potentiel, gainAttendu }),
   );

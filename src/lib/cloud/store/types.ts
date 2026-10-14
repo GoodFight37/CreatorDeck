@@ -99,6 +99,8 @@ export type CloudState = {
   /** Statut serveur du paquet quotidien, attaché au compte et à la journée. */
   sceneStatus: { userId: string; day: string; ready: boolean } | null;
   sceneStatusLoading: boolean;
+  /** Crédits de boosters promo restants sur le compte connecté. */
+  promoPacks: number;
   /** Nom court du projet Supabase (affiché pour rassurer). */
   project: string | null;
   /** Un appel est en cours. */
@@ -353,6 +355,7 @@ export const EMPTY_CLOUD_STATE: CloudState = Object.freeze({
   userId: null,
   sceneStatus: null,
   sceneStatusLoading: false,
+  promoPacks: 0,
   project: null,
   busy: false,
   message: null,

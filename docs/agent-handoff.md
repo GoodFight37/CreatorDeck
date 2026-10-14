@@ -1,3 +1,28 @@
+## Crédits booster de test personnels — local validé, publication à faire, 14 octobre 2026
+
+Demande de Malik : un code facile à saisir (`MALIK`) donnant 50 boosters pour
+tester l'ouverture sur son compte sans réinitialiser sa progression. La réserve
+rechargeable reste plafonnée normalement. Ajout local : nouveau champ
+serveur `pack_state.promo_packs`, code promo jusqu'à 50 ouvertures et liaison
+optionnelle à `recipient_id`, ouverture des boosters bonus quand la réserve est
+vide, et affichage distinct dans le Drop. Le code prévu est personnel (une
+utilisation, sans expiration) et le guide donne une requête qui le lie à l'email
+du compte Supabase.
+
+Fichiers concernés : migration `0051_boosters_promo_personnels.sql`, API et
+store cloud, écran Drop, tests et guide `booster-test-access.md`. Vérifications
+déjà réussies : `npm run supabase:verify` (Postgres jetable, migrations 0001–0051,
+compte propriétaire, refus d'un autre compte, crédit de 50 et ouverture réelle),
+`npm test` (73 fichiers, 1 168 tests), `npm run ecrans` (22 fichiers, 129 tests),
+`npm run typecheck`, ESLint ciblé, `npm run build`, `node scripts/supabase-deploy.mjs --check`
+et `git diff --check`. Le build est cloudless faute de variables Supabase locales ;
+il ne teste pas le compte réel. La migration simulée n'a pas modifié la production.
+État : branche `main`, base locale `7f21ec55329f19e07aedfd4b78eb57934e85cc05`,
+changements non publiés. Aucun code promo ni donnée de production n'a été créé
+ou modifié. Après publication, la CI verte déclenchera l'application automatique
+de 0051 ; Malik devra ensuite insérer `MALIK` dans le SQL Editor avec l'email de
+son compte Supabase.
+
 ## Synchronisation du compte et codes de test — code local, 14 octobre 2026
 
 À la demande de Malik, le cloud devient la référence lorsqu'un compte connecté

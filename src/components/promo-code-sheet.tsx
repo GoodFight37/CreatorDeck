@@ -75,7 +75,7 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
               <strong>Code booster</strong>
             </div>
             <p className="account-intro">
-              Un code ajoute les boosters indiqués à ta réserve. Il se réclame une fois par joueur.
+                Un code ajoute les boosters indiqués à ton solde bonus. Il se réclame une fois par joueur.
             </p>
             <label className="account-field">
               <span>Code</span>

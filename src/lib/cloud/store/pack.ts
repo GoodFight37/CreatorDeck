@@ -164,6 +164,7 @@ export function packActions(ctx: CloudStoreContext) {
       ctx.publish({ busy: true });
       try {
         const result = await api.openPack(jackpot);
+        if (typeof result.promoPacks === "number") ctx.publish({ promoPacks: result.promoPacks });
         const cards = result.cards.map((card) => ({
           creatorSlug: card.creatorSlug,
           rarity: card.rarity as "common" | "uncommon" | "rare" | "epic" | "legendary",
@@ -463,8 +464,8 @@ export function packActions(ctx: CloudStoreContext) {
         await ctx.fetchPackStatus();
         const message =
           result.granted > 1
-            ? `Code accepté : ${result.granted} boosters t'attendent.`
-            : "Code accepté : un booster t'attend.";
+            ? `Code accepté : ${result.granted} boosters de test t'attendent.`
+            : "Code accepté : un booster de test t'attend.";
         ctx.publish({ busy: false, message, isError: false });
         return { status: "done", message };
       } catch (error) {

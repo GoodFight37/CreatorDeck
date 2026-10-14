@@ -10,11 +10,13 @@ import { CollectionView } from "@/components/binder-view";
 const NOW = Date.UTC(2026, 9, 11, 12);
 vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
 vi.mock("@/hooks/use-live", () => ({ useLive: () => ({ byLogin: new Map(), count: 0, stale: true, configured: false }) }));
+const cloudMock = vi.hoisted(() => ({ current: { configured: false, userId: null as string | null, promoPacks: 0 } }));
+vi.mock("@/hooks/use-cloud", () => ({ useCloud: () => cloudMock.current }));
 
 describe("le Binder guide la collection sans inventer de progression", () => {
   let banc: Banc;
   beforeEach(() => { banc = creerBanc(); banc.preparer(); });
-  afterEach(() => banc.nettoyer());
+  afterEach(() => { banc.nettoyer(); cloudMock.current = { configured: false, userId: null, promoPacks: 0 }; });
 
   async function collection(slugs: string[]) {
     const state = createInitialState(NOW);
@@ -124,6 +126,23 @@ describe("les sabliers du Drop en ligne", () => {
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
     expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");
+  });
+
+  it("laisse ouvrir les boosters promo quand la réserve rechargeable est vide", async () => {
+    cloudMock.current = { configured: true, userId: "malik", promoPacks: 50 };
+    const state = { ...createInitialState(NOW), packs: 0 };
+    const onOpen = vi.fn();
+    await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
+      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onOpenScene={vi.fn()}
+      sceneBusy={false} onUseHourglass={vi.fn()} onShowOdds={vi.fn()}
+      onShowMissions={vi.fn()} onShowAtelier={vi.fn()} onShowArena={vi.fn()} onShowTribunal={vi.fn()}
+      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={true} needsAccount={false} />);
+    const button = banc.boutons().find((entry) => entry.textContent?.includes("Ouvrir un booster de test"))!;
+    expect(button.disabled).toBe(false);
+    expect(document.body.textContent).toContain("50 boosters de test");
+    act(() => button.click());
+    expect(onOpen).toHaveBeenCalledOnce();
   });
 
   it("ne montre qu’une note contextuelle compacte pour la réserve", async () => {

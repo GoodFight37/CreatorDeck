@@ -30,6 +30,7 @@ export async function openPack(
   jackpot: "perfect" | "hourglasses" = "perfect",
 ): Promise<{
   packs: number;
+  promoPacks?: number;
   lastRegenAt: string;
   openings: number;
   cards: Array<{
@@ -89,6 +90,7 @@ export async function openPack(
     : [];
   return {
     packs: Number(record.packs ?? 0),
+    ...(typeof record.promo_packs === "number" ? { promoPacks: record.promo_packs } : {}),
     lastRegenAt: String(record.last_regen_at ?? ""),
     openings: Number(record.openings ?? 0),
     cards,
@@ -200,6 +202,7 @@ export async function openScenePack(
  */
 export async function packStatus(core: CloudCore): Promise<{
   packs: number;
+  promoPacks?: number;
   lastRegenAt: string;
   openings: number;
   nextPackAt: string | null;
@@ -221,6 +224,7 @@ export async function packStatus(core: CloudCore): Promise<{
   }
   return {
     packs: Number(record.packs ?? 0),
+    ...(typeof record.promo_packs === "number" ? { promoPacks: record.promo_packs } : {}),
     lastRegenAt: String(record.last_regen_at ?? ""),
     openings: Number(record.openings ?? 0),
     nextPackAt: record.next_pack_at ? String(record.next_pack_at) : null,
@@ -238,8 +242,8 @@ export async function packStatus(core: CloudCore): Promise<{
 /**
  * Rédème un **code promo** (`0026_promo_codes.sql`).
  *
- * Le code donne un booster **à ouvrir** : le serveur l'écrit dans sa réserve
- * (`pack_state`) et renvoie la réserve telle qu'elle est **après**. Le code
+ * Le code donne des boosters **à ouvrir** : le serveur les écrit dans le solde
+ * bonus (`pack_state.promo_packs`), distinct de la réserve rechargeable. Le code
  * lui-même n'est jamais jugé ici — ni la casse, ni la date, ni les usages : le
  * serveur seul sait ce qui existe.
  *
@@ -255,6 +259,8 @@ export async function redeemPromoCode(
   granted: number;
   /** La réserve totale du serveur après la rédemption. */
   reserve: number;
+  /** Les crédits promo encore disponibles après la rédemption. */
+  promoPacks?: number;
   /** La note que l'organisateur avait mise sur le code (souvent vide). */
   note: string;
 }> {
@@ -266,6 +272,7 @@ export async function redeemPromoCode(
   return {
     granted: Number(record.packs ?? 1),
     reserve: Number(record.reserve ?? 0),
+    ...(typeof record.promo_packs === "number" ? { promoPacks: record.promo_packs } : {}),
     note: String(record.note ?? ""),
   };
 }
