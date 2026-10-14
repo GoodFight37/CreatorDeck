@@ -24,6 +24,13 @@
   La validation Chromium couvre les gestes et la géométrie, pas le ressenti
   au doigt du joueur. Preuves/version dans le checkpoint courant.
 
+Validation D-098 : DOM Binder/catalogue/son 29/29 ; Chromium mobile nouveaux
+scénarios 7/7 et Binder existants ciblés 3/3 ; TypeScript, ESLint, diff-check et
+build réussis. Publié sur `main` à `da48f70c`, Vercel Production `READY` / contrôle
+`success`. Parcours invité réel (catalogue non obtenu) : pages, swipe, tap,
+recherche de nom long et largeur 320/390 px conformes. Aucun run Actions
+retourné au relevé ; aucune CI globale ni sensation physique certifiée.
+
 ## D-097 — 14 octobre 2026 : donner un temps physique au rituel d'ouverture
 
 - Demande : faire sentir peel → extraction → reveal comme un objet manipulé,

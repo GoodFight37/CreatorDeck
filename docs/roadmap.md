@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**Binder — implémenté et vérifié localement (autorisé par Malik) :** feuille
+**Binder — publié et vérifié sur Vercel (autorisé par Malik) :** feuille
 CSS directionnelle, glissement horizontal avec flèches/clavier conservés,
 scroll vertical natif, noms complets et rareté sous les pochettes. Garder
 12 cartes/page, vue Obtenues, recherche/tri/collections et possession. Aucune
@@ -10,7 +10,11 @@ nouvelle règle de jeu, audio ou sleeve à débloquer. Critères : pas de fiche
 ouverte par un swipe, tap normal fonctionnel, bords/annulation/filtres corrects,
 OFF/mouvement réduit sans attente, noms longs visibles à 320/390 px, aucun
 débordement. DOM 29/29, E2E mobile 7/7 nouveaux + 3/3 existants, TypeScript,
-ESLint et build réussis ; publication en attente. Preuves : checkpoint courant, D-098.
+ESLint et build réussis. Publié à `da48f70c`, Vercel Production `READY` / contrôle
+`success`. Parcours invité de Production vérifié : 12 dos/page, flèches, verrou,
+swipe, retour, fiche au tap, nom long complet et largeur correcte à 320/390 px.
+Cartes possédées vérifiées dans les fixtures locales seulement. Aucun run Actions
+retourné au relevé ; CI complète non certifiée. Preuves : checkpoint courant, D-098.
 
 **Rituel d'ouverture — publié et vérifié sur Vercel (14 octobre) :** garder
 l'accueil amélioré, retirer seulement « LE DROP » en double. Peel libre avec
@@ -237,8 +241,9 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Publier le lot Binder autorisé sur main et contrôler le Binder sur Vercel
-   après ses tests ciblés et son build réussis. Garder le Drop et son rituel livrés.
+1. Le lot Binder feuilletage/lisibilité est livré et contrôlé sur Vercel.
+   Garder cette base ainsi que le Drop et son rituel ; aucun autre chantier
+   du backlog n’est engagé automatiquement.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
    autres travaux sur une demande de test joueur ni retoucher les seuils sans
    symptôme précis. Le parcours automatique du rituel sur Vercel a déjà passé.

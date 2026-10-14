@@ -1,13 +1,16 @@
-## Binder — noms tronqués et feuilletage peu lisible, correction locale vérifiée
+## Binder — noms tronqués et feuilletage peu lisible, corrigés et déployés
 
 Observation sur `2e3c4396`, 390 × 844 : nom long tronqué (JuanSGuarnizo),
 libellés de région sur plusieurs lignes couvrant une part du petit portrait ;
 le tour de page est une translation de 8 px/180 ms. Défaut UX de lisibilité,
-pas une perte de cartes. Correction locale D-098 : étiquettes complètes sous
+pas une perte de cartes. Correction D-098 : étiquettes complètes sous
 pochettes, région retirée des vignettes Binder, feuille directionnelle et geste
 horizontal sans capter le scroll vertical. Une seule feuille de 12 cartes,
 aucune règle de possession modifiée. Tests/publication : checkpoint courant.
 DOM 29/29, E2E Binder mobile 7/7 + 3/3, TypeScript, ESLint et build passent.
+Publié à `da48f70c`, Vercel `READY` / `success`. En Production, parcours invité
+Toutes vérifié : 12 dos/page, flèches, verrou, swipe, retour et tap, nom long
+sans débordement à 320/390 px. Possession vérifiée dans les fixtures locales.
 Le ressenti physique n'est pas déduit des tests.
 
 ## Rituel trop sec — corrigé, déployé et vérifié sur Vercel, 14 octobre 2026

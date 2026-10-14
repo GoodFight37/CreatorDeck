@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — Binder : feuilletage et lisibilité vérifiés localement
+## Checkpoint courant — Binder : feuilletage et lisibilité publiés, Vercel vérifié
 
 - Malik autorise la suite UI Binder après le rituel livré. Périmètre retenu :
   feuilletage plus physique et lisibilité ; pas de refonte Drop, audio, gameplay,
@@ -9,7 +9,7 @@
 - Observation avant : page déplacée de 8 px en 180 ms, noms longs tronqués ;
   région parfois sur quatre lignes sur les petits portraits. Capture avant :
   `/tmp/creatordeck-binder-before-390.png`, collection factice de 24 cartes.
-- Local : feuille directionnelle en perspective 340 ms, tranche et pochettes
+- Livré : feuille directionnelle en perspective 340 ms, tranche et pochettes
   plus lisibles. Glissement horizontal à seuil max(48 px, 18 % de largeur),
   résistance aux bords, capture seulement après intention horizontale. Le
   scroll vertical reste natif. Taps après un glissement supprimés pour ne pas
@@ -36,10 +36,26 @@
   `src/ecrans-drop-binder.test.tsx`, `src/ecrans-sons.test.tsx`,
   `e2e/binder-feuilletage.spec.ts`, docs. Capture locale après :
   `/tmp/creatordeck-binder-after-390.png`, comparée à l'avant.
-- Prochaine action : commit
-  et push normal sur `main`, relever CI/Vercel et parcourir le Binder public.
-  Rien de ce lot n'est encore publié. Réservation Binder active dans ce chat.
-  Ressenti physique sur appareil non certifié par Chromium.
+- Publication : commit code/tests/docs
+  [`da48f70ca2e1f07770031f1bc7d41dca41bb28b1`](https://github.com/GoodFight37/CreatorDeck/commit/da48f70ca2e1f07770031f1bc7d41dca41bb28b1)
+  poussé normalement sur `main`, confirmé par `git ls-remote`. Vercel Production
+  [`55rio7hVNG29G668LNVGt3CPZgUz`](https://vercel.com/hafsi37-2386/creator-deckk/55rio7hVNG29G668LNVGt3CPZgUz)
+  `READY`, contrôle `success`, SHA identique. GitHub Actions : aucun run retourné
+  au relevé pour ce SHA ; ne pas déclarer la CI globale verte.
+- Production [creator-deckk.vercel.app](https://creator-deckk.vercel.app/) parcourue
+  avec Chromium, profil invité vierge : Obtenues par défaut puis Toutes,
+  12 dos/page et leurs libellés, flèches/sens/verrou, swipe sans fiche ouverte,
+  retour et tap qui ouvre la fiche. Nom `streameruniversitario` entier ;
+  `scrollWidth` égal à 320 puis 390. Aucun compte ni collection serveur touchés,
+  aucune fausse carte injectée en Production. Les cartes possédées ont été
+  contrôlées uniquement dans les fixtures locales. Capture Production inspectée :
+  `/tmp/creatordeck-binder-production-390.png` (non versionnée).
+- Réservation libérée. Le feuilletage et la lisibilité de ce lot sont livrés ;
+  reflets par rareté et sleeves restent au backlog, sans nouvelles règles ou
+  récompenses décidées. Ressenti sur appareil non certifié par Chromium.
+  Avant une prochaine reprise, relire HEAD/CI/déploiement ; ne pas rouvrir Drop,
+  peel, audio ou économie sans demande. Retrouver le SHA du checkpoint par
+  `git log -1 --format=%H -- docs/agent-handoff.md`.
 
 ## Historique — rituel peel → extraction → reveal publié et vérifié sur Vercel
 
