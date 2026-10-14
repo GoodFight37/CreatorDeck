@@ -51,8 +51,7 @@
 }
 
 /* PACK GROS — c’est le cœur du jeu */
-.home-view .pack-stage .pack-artwork.pack-live {
-  width: min(58vw, 220px, 34dvh);
+.home-view .pack-stage .pack-artwork.pack-live { width: min(58vw, 220px, 34dvh); transform: perspective(900px) rotateY(-6deg) rotateX(4deg); }
   height: auto;
   aspect-ratio: 600 / 880;
   overflow: visible;
