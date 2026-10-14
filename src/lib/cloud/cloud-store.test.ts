@@ -876,7 +876,7 @@ describe("store cloud", () => {
     // Les cartes gardent leurs IDs serveur, tandis que le push normal enregistre
     // aussi les missions calculées localement. Aucun écrasement forcé.
     expect(api.pushSave).toHaveBeenCalledTimes(1);
-    expect(api.pushSave.mock.calls[0]?.[0].cards.map((card) => card.id)).toEqual(
+    expect(api.pushSave.mock.calls[0]?.[0].cards.map((card: OwnedCard) => card.id)).toEqual(
       applied.at(-1)?.cards.map((card) => card.id),
     );
     expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
@@ -1026,7 +1026,7 @@ describe("store cloud", () => {
     // Le push normal conserve la séance v9 ajoutée localement et les IDs de
     // cartes serveur, sans passer par un écrasement forcé.
     expect(api.pushSave).toHaveBeenCalledTimes(1);
-    expect(api.pushSave.mock.calls[0]?.[0].cards.map((entry) => entry.id)).toEqual(serverCards.map((entry) => entry.id));
+    expect(api.pushSave.mock.calls[0]?.[0].cards.map((entry: OwnedCard) => entry.id)).toEqual(serverCards.map((entry) => entry.id));
     expect(api.pushSave.mock.calls[0]?.[0].tribunal).toEqual(seance);
     expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
   });
