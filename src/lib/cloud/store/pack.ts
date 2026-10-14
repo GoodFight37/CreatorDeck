@@ -251,6 +251,12 @@ export function packActions(ctx: CloudStoreContext) {
             missionDay: applied.state.missionDay,
             missions: applied.state.missions,
           });
+          // Le RPC persiste déjà les cartes et la réserve, mais le calcul des
+          // missions reste côté client. Enregistrer l'état fusionné maintenant
+          // évite de perdre cette progression au prochain rechargement. Le
+          // pushAfterServer relit la version serveur puis utilise le contrôle
+          // de version normal : aucune sauvegarde concurrente n'est forcée.
+          await ctx.pushAfterServer();
           ctx.publish({
             busy: false,
             pending: false,

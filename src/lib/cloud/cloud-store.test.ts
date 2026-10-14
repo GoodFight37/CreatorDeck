@@ -873,10 +873,13 @@ describe("store cloud", () => {
     // sauvegarde serveur, qui n'enregistre pas les compteurs de mission.
     expect(applied.at(-1)?.missions.pack).toBe(1);
     expect(applied.at(-1)?.missionDay).toBe(gameDay(T0 + 60_000));
-    // Le tirage n'est **plus** poussé : le serveur l'a déjà écrit. Un envoi
-    // forcé ici écraserait la collection d'un autre appareil avec une version
-    // d'avant le tirage.
-    expect(api.pushSave).not.toHaveBeenCalled();
+    // Les cartes gardent leurs IDs serveur, tandis que le push normal enregistre
+    // aussi les missions calculées localement. Aucun écrasement forcé.
+    expect(api.pushSave).toHaveBeenCalledTimes(1);
+    expect(api.pushSave.mock.calls[0]?.[0].cards.map((card) => card.id)).toEqual(
+      applied.at(-1)?.cards.map((card) => card.id),
+    );
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
     const snapshot = store.getSnapshot();
     expect(snapshot.remoteUpdatedAt).toBe(Date.parse(SERVER_SAVE_AT));
     expect(snapshot.message).toContain("5 cartes");
@@ -1020,8 +1023,12 @@ describe("store cloud", () => {
     expect(applied.at(-1)?.version).toBe(SAVE_VERSION);
     expect(applied.at(-1)?.cards.map((entry) => entry.id)).toEqual(serverCards.map((entry) => entry.id));
     expect(applied.at(-1)?.tribunal).toEqual(seance);
-    // Le serveur a déjà écrit les cartes : pas de ré-envoi de la collection.
-    expect(api.pushSave).not.toHaveBeenCalled();
+    // Le push normal conserve la séance v9 ajoutée localement et les IDs de
+    // cartes serveur, sans passer par un écrasement forcé.
+    expect(api.pushSave).toHaveBeenCalledTimes(1);
+    expect(api.pushSave.mock.calls[0]?.[0].cards.map((entry) => entry.id)).toEqual(serverCards.map((entry) => entry.id));
+    expect(api.pushSave.mock.calls[0]?.[0].tribunal).toEqual(seance);
+    expect(api.pushSave.mock.calls[0]?.[3]).toBe(false);
   });
 
   it("projet d'avant `0022` : le tirage est envoyé, mais jamais forcé", async () => {

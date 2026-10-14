@@ -91,7 +91,7 @@ test("sans cloud : le tirage local survit à un rechargement", async ({ page }) 
   expect(await savedCards(page)).toEqual(apresTirage);
 });
 
-test("avec le serveur : cartes serveur sans renvoi immédiat, puis synchronisation au rechargement", async ({ page }) => {
+test("avec le serveur : cartes serveur et missions locales synchronisées sans écrasement forcé", async ({ page }) => {
   const url = cloudUrl();
   test.skip(!url, "Pas de `.env.local` : ce test demande un projet Supabase configuré.");
 
@@ -215,13 +215,14 @@ test("avec le serveur : cartes serveur sans renvoi immédiat, puis synchronisati
   // Les cinq cartes présentes sont **celles du serveur**, identifiants compris.
   const apresTirage = await savedCards(page);
   expect(apresTirage.map((card) => card.id)).toEqual(drawn.map((card) => card.id));
-  expect(pushes).toEqual([]);
-
-  // Et le « crash » ne change rien : le rechargement relit le même état.
-  await page.reload();
-  await expect(page.getByRole("button", { name: /Ouvrir le booster|Recharge en cours/ })).toBeVisible({ timeout: 30_000 });
-  expect(await savedCards(page)).toEqual(apresTirage);
   await expect.poll(() => pushes.length).toBe(1);
   expect(pushes[0]?.force).toBe(false);
   expect(pushes[0]?.cards.map((card) => card.id)).toEqual(drawn.map((card) => card.id));
+
+  // Le push sauvegarde les missions locales ; le « crash » ne renvoie pas une
+  // deuxième fois la collection et le rechargement reprend le même état.
+  await page.reload();
+  await expect(page.getByRole("button", { name: /Ouvrir le booster|Recharge en cours/ })).toBeVisible({ timeout: 30_000 });
+  expect(await savedCards(page)).toEqual(apresTirage);
+  expect(pushes).toHaveLength(1);
 });
