@@ -1,5 +1,19 @@
 # Décisions CreatorDeck
 
+## D-085 — 14 octobre 2026 : relever la BGM du hub devenue inaudible
+
+Le prototype `hub-late-night.mp3` mesurait `-26,4 LUFS` intégrés. Avec le gain
+hub `0,24` et le volume global Normal `0,75`, le mix descendait à environ
+`-41,3 LUFS`, ce qui explique pourquoi la musique pouvait disparaître sur
+haut-parleur mobile. Le gain hub passe à `0,9` (mix Normal estimé à `-29,8 LUFS`,
+crête estimée `-14,1 dBFS`). Le ducking pack reste à `0,018`, le Tribunal reste
+muet et le réglage global agit toujours sur tout le bus. Aucun nouvel asset,
+bruitage ou changement de timing. Mesure source avec ffmpeg ; test Web Audio
+simulé vérifiant une boucle unique, les trois scènes et le mute. Écoute physique
+encore requise avant d'ajuster davantage. Tests locaux : audio ciblé 23/23,
+E2E audio 4/4, suite projet 1 169/1 169 et écrans 129/129, typecheck, ESLint
+ciblé et build statique cloudless réussis. CI distante à relever après push.
+
 ## D-084 — 14 octobre 2026 : figer la coupe armée pendant le maintien du doigt
 
 Malik a montré qu'un mouvement répété de va-et-vient pouvait faire paraître le
@@ -105,7 +119,7 @@ boucle est fortement baissée pendant le pack et coupée au Tribunal. De courts
 stingers renforcent la Légendaire, le Perfect et le bilan du Tribunal sans
 déplacer les délais de silence, les flips, le Perfect ou le tear. La musique est
 un prototype synthétisé, pas un asset final ; procédure de remplacement dans
-[la note d'assets audio](audio-assets.md). Le gain BGM du hub est fixé à `0,24`,
+[la note d'assets audio](audio-assets.md). Le gain BGM du hub était fixé à `0,24`,
 ducké à `0,018` pendant le pack et nul au Tribunal ; l’écoute réelle sur
 téléphone reste à faire. Reflets sont activés par défaut ; `prefers-reduced-motion` neutralise les animations
 même lorsque le réglage Reflets est actif.

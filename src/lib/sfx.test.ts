@@ -90,9 +90,75 @@ describe("plans de sons", () => {
 
 describe("mix de la musique", () => {
   it("garde la boucle audible au hub, très en retrait pendant un pack et absente au Tribunal", () => {
-    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThan(0.2);
+    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThanOrEqual(0.85);
+    expect(MUSIC_SCENE_GAIN.hub).toBeLessThanOrEqual(1);
     expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeLessThan(0.1);
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
+  });
+
+  it("démarre une seule boucle et applique le mix hub, pack, Tribunal puis muet", async () => {
+    const targetHistory: number[] = [];
+    const gainNodes: Array<{ gain: { value: number; setTargetAtTime: (value: number) => void }; connect: () => void }> = [];
+    const sources: Array<{ loop: boolean; start: ReturnType<typeof vi.fn>; connect: () => void }> = [];
+    const audioBuffer = { duration: 24 };
+    const fakeWindow = {
+      localStorage: { getItem: () => null, setItem: () => {} },
+      AudioContext: class {
+        currentTime = 0;
+        state = "running";
+        destination = {};
+        sampleRate = 24_000;
+        resume = vi.fn(async () => {});
+        decodeAudioData = vi.fn(async () => audioBuffer);
+        createGain() {
+          const gain = {
+            value: 0,
+            setTargetAtTime: (value: number) => { gain.value = value; targetHistory.push(value); },
+          };
+          const node = { gain, connect: () => {} };
+          gainNodes.push(node);
+          return node;
+        }
+        createBufferSource() {
+          const source = { loop: false, buffer: null, start: vi.fn(), connect: () => {} };
+          sources.push(source);
+          return source;
+        }
+        createOscillator() { throw new Error("not needed by BGM test"); }
+      },
+    };
+    vi.stubGlobal("window", fakeWindow);
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(8) })));
+    vi.resetModules();
+    try {
+      const audio = await import("@/lib/sfx");
+      audio.startGameAudio("hub");
+      await vi.waitFor(() => expect(sources).toHaveLength(1));
+
+      expect(sources[0].loop).toBe(true);
+      expect(sources[0].start).toHaveBeenCalledOnce();
+      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.75);
+
+      audio.setMusicScene("pack");
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack * 0.75);
+      audio.setMusicScene("tribunal");
+      expect(targetHistory.at(-1)).toBe(0);
+      audio.setMusicScene("hub");
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.75);
+      audio.setSfxLevel("fort");
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      audio.setSfxLevel("discret");
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.4);
+      audio.setMuted(true);
+      expect(targetHistory.at(-1)).toBe(0);
+      audio.setMuted(false);
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub * 0.4);
+      audio.setSfxLevel("normal");
+      expect(sources).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+      vi.resetModules();
+    }
   });
 });
 

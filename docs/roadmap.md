@@ -11,6 +11,13 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   du peel publié à ce SHA, CI `38494377386` verte (6/6), Vercel Production
   `READY`. Voir le [checkpoint](agent-handoff.md) pour les preuves et limites.
 
+- **Audio, passe de niveau en cours :** mesure de la BGM source à `-26,4 LUFS` ;
+  l'ancien gain la plaçait vers `-41,3 LUFS` au réglage Normal. Le code local
+  monte le gain du hub à `0,9` ; baisse pack, silence Tribunal, préférences et
+  timings restent inchangés. Tests projet 1 169/1 169, écrans 129/129, E2E audio
+  4/4, types/lint/build réussis ; écoute téléphone physique pas encore
+  disponible. Code local non encore publié ; voir [D-085](decisions.md).
+
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
   existante est la référence à la connexion et au retour de l'appli ou du réseau.
   Les missions locales calculées après un tirage sont réenregistrées sans
@@ -63,7 +70,8 @@ Implémentation locale vérifiée, dans l’ordre demandé A → E :
   Tribunal. Le réglage Son et le volume global la pilotent avec les SFX ;
   signatures courtes pour Légendaire, Perfect et fin du Tribunal. Réglages Son
   et Reflets activés par défaut sans préférence mémorisée. Asset encore prototype ;
-  remplacement documenté dans [audio-assets.md](audio-assets.md).
+  remplacement documenté dans [audio-assets.md](audio-assets.md). Un défaut de
+  niveau est maintenant suivi séparément en D-085.
 - **B — Booster/cartes :** conserver la scène foil CSS et ses cinq dos ; ajout
   d’un placeholder cohérent en cas d’échec de chargement d’un portrait. Ce filet
   ne détecte pas encore automatiquement les portraits flous/pixelisés ; la

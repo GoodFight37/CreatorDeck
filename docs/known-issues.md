@@ -1,3 +1,17 @@
+## BGM du hub trop basse sur téléphone — correctif local en vérification, 14 octobre 2026
+
+La boucle existait bien et était demandée au premier geste, mais son niveau
+source est `-26,4 LUFS`. Le gain hub `0,24` et le volume global Normal `0,75`
+la ramenaient à environ `-41,3 LUFS`. Le gain local passe à `0,9`, soit environ
+`-29,8 LUFS` au niveau Normal, sans changer le ducking pack (`0,018`), le silence
+Tribunal ou les réglages du joueur. La crête estimée reste à `-14,1 dBFS`.
+Nouveau test Web Audio vérifie le démarrage d'une unique boucle et le mix des
+scènes, crans et mute. Tests locaux : sfx 23/23, tests projet 1 169/1 169,
+écrans 129/129, E2E du démarrage audio 4/4, typecheck, ESLint ciblé et build
+statique cloudless réussis. CI distante à vérifier après publication ; écoute
+sur téléphone réel toujours requise. Détails dans [audio-assets.md](audio-assets.md)
+et D-085.
+
 ## Va-et-vient pendant le peel — corrigé et publié, 14 octobre 2026
 
 Malik a reproduit une coupe visuellement cassée en gardant le doigt posé et en

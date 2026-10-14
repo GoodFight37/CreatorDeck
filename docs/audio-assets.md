@@ -1,4 +1,4 @@
-# Couche musicale — 13 octobre 2026
+# Couche musicale — 13–14 octobre 2026
 
 `public/music/hub-late-night.mp3` est une boucle prototype originale de 24 s,
 synthétisée pour CreatorDeck puis encodée en MP3 mono 64 kbit/s. Elle ne contient
@@ -6,11 +6,15 @@ ni voix, ni sample tiers. Son intention : basse feutrée, ambiance tardive de
 stream, sans nappe fantasy ni effet de victoire permanent. Ce n'est pas encore
 un master final.
 
-Le mix applicatif donne un gain relatif de `0,24` au hub, `0,018` pendant un
-pack et `0` au Tribunal. Le niveau moyen mesuré de l’asset est `-22 dBFS` ; le
-gain précédent de `0,14` le rendait trop discret sur le papier. Ces valeurs
-restent à écouter sur un téléphone réel ; le cran global continue de s'appliquer
-à tout le bus sonore.
+Le mix applicatif donne un gain relatif de `0,9` au hub, `0,018` pendant un
+pack et `0` au Tribunal. Analyse `ffmpeg ebur128` : la boucle source est à
+`-26,4 LUFS` intégrés ; le gain hub précédent `0,24`, combiné au volume global
+Normal (`0,75`), la ramenait à environ `-41,3 LUFS`, trop bas pour rester
+audible sur un haut-parleur de téléphone. Le gain `0,9` la place autour de
+`-29,8 LUFS` au cran Normal, avec une crête maximale estimée à `-14,1 dBFS` :
+elle reste en fond et conserve de la marge pour les bruitages. Le cran Discret
+reste plus bas. Ces niveaux doivent encore être jugés à l'écoute sur téléphone ;
+la mesure ne remplace pas l'essai physique.
 
 Le premier appui ou geste clavier explicite sur un contrôle crée/déverrouille
 l'AudioContext et démarre la boucle, ce qui respecte la politique autoplay des

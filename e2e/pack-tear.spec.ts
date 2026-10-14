@@ -12,6 +12,47 @@ test("la musique du hub est demandée au premier geste, pas au chargement", asyn
   expect((await musique).status()).toBe(200);
 });
 
+test("la boucle démarre dans Web Audio avec le gain normal du hub", async ({ page }) => {
+  await page.addInitScript(() => {
+    const probe = { starts: 0, gains: [] as number[], loops: [] as boolean[] };
+    (window as typeof window & { __creatorDeckAudioProbe?: typeof probe }).__creatorDeckAudioProbe = probe;
+    const createGain = AudioContext.prototype.createGain;
+    AudioContext.prototype.createGain = function () {
+      const node = createGain.call(this);
+      const schedule = node.gain.setTargetAtTime.bind(node.gain);
+      node.gain.setTargetAtTime = (value, time, constant) => {
+        probe.gains.push(value);
+        return schedule(value, time, constant);
+      };
+      return node;
+    };
+    const createSource = AudioContext.prototype.createBufferSource;
+    AudioContext.prototype.createBufferSource = function () {
+      const source = createSource.call(this);
+      const start = source.start.bind(source);
+      source.start = (when, offset, duration) => {
+        probe.starts += 1;
+        probe.loops.push(source.loop);
+        return start(when, offset, duration);
+      };
+      return source;
+    };
+  });
+  await gotoDeck(page);
+  const music = page.waitForResponse((response) => response.url().endsWith("/music/hub-late-night.mp3"));
+  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  expect((await music).status()).toBe(200);
+
+  await expect.poll(() => page.evaluate(() =>
+    (window as typeof window & { __creatorDeckAudioProbe?: { starts: number } }).__creatorDeckAudioProbe?.starts ?? 0,
+  )).toBe(1);
+  const probe = await page.evaluate(() =>
+    (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
+  );
+  expect(probe?.loops).toEqual([true]);
+  expect(probe?.gains.some((gain) => Math.abs(gain - 0.675) < 0.001)).toBe(true);
+});
+
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
   await gotoDeck(page);
   const open = page.locator(".scene-action");

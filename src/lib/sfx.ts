@@ -378,7 +378,10 @@ const LEVEL_GAIN: Record<SfxLevel, number> = { discret: 0.4, normal: 0.75, fort:
 export type MusicScene = "hub" | "pack" | "tribunal";
 /** Gains relatifs de BGM avant le volume global : hub présent, pack très ducké. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  hub: 0.24,
+  // La boucle prototype est à environ -26 LUFS. À 0,24 avec le volume global
+  // normal (0,75), elle tombait vers -41 LUFS et disparaissait sur téléphone.
+  // 0,9 la laisse en fond tout en gardant plus de 13 dB de marge en crête.
+  hub: 0.9,
   pack: 0.018,
   tribunal: 0,
 };
