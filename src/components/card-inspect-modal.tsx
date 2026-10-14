@@ -1,12 +1,19 @@
 "use client";
 
+import { useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { X, Sparkles, Hammer, LoaderCircle, ExternalLink } from "lucide-react";
+import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
-import { RARITY_META, type CardVariant, type Creator } from "@/lib/catalog";
+import { RARITY_META, VARIANT_META, type CardVariant, type Creator } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
 
 type CardInspectModalProps = {
+  presentation?: "sheet" | "binder";
+  themeStyle?: CSSProperties;
+  copies?: { variant: CardVariant; count: number }[];
   creator: Creator;
   ownedCount: number;
   variant: CardVariant;
@@ -22,6 +29,9 @@ type CardInspectModalProps = {
 };
 
 export function CardInspectModal({
+  presentation = "sheet",
+  themeStyle,
+  copies = [],
   creator,
   ownedCount,
   variant,
@@ -34,13 +44,22 @@ export function CardInspectModal({
 }: CardInspectModalProps) {
   const rarity = RARITY_META[creator.rarity];
   const isOwned = ownedCount > 0;
+  const binder = presentation === "binder";
+  const [selection, setSelection] = useState(variant);
+  const selected = copies.find((copy) => copy.variant === selection);
+  const shownVariant = binder && selected ? selected.variant : variant;
+  const shownCount = binder && selected ? selected.count : ownedCount;
+  const dialogRef = usePresentationFocus(binder);
 
-  return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label={`Carte de ${creator.displayName}`}>
-      <div className="odds-panel" style={{ maxWidth: 680 }}>
+  const content = (
+    <div ref={dialogRef} tabIndex={binder ? -1 : undefined}
+      style={{ ...themeStyle, "--inspect-rarity": rarity.color } as CSSProperties}
+      onKeyDown={(event) => { if (binder && event.key === "Escape") { event.stopPropagation(); onClose(); } }}
+      className={`odds-overlay${binder ? ` card-vault vault-${creator.rarity}` : ""}`} role="dialog" aria-modal="true" aria-label={`Carte de ${creator.displayName}`}>
+      <div className="odds-panel inspect-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">Fiche créateur</p>
+            <p className="eyebrow">{binder ? `CARTE #${String(creator.rank).padStart(3, "0")} · ${rarity.label}` : "Fiche créateur"}</p>
             <h2>{creator.displayName}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">
@@ -48,19 +67,32 @@ export function CardInspectModal({
           </button>
         </header>
 
-        <div style={{ display: "grid", gap: 18 }}>
-          <div style={{ display: "flex", justifyContent: "center" }}>
+        <div className="inspect-layout">
+          <div className="inspect-card-stage">
             <CreatorCard
               creator={creator}
-              variant={variant}
-              count={ownedCount || 1}
+              variant={shownVariant}
+              count={shownCount || 1}
+              interactiveFoil={binder}
+              className={binder ? "binder-feature-card" : ""}
               locked={!isOwned}
               liveStream={liveStream}
             />
+            {binder && !isOwned ? <span className="inspect-back-seal" aria-hidden="true"><CardBackEmblem /></span> : null}
           </div>
 
-          <div style={{ display: "grid", gap: 10 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+          <div className="inspect-details">
+            {binder && copies.length > 0 ? (
+              <div className="inspect-variants" role="group" aria-label="Variantes possédées">
+                {copies.map((copy) => (
+                  <button type="button" key={copy.variant} aria-pressed={shownVariant === copy.variant}
+                    onClick={() => setSelection(copy.variant)}>
+                    {VARIANT_META[copy.variant].label} <span>×{copy.count}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className="inspect-facts">
               <div className="odds-stat">
                 <span>Rareté</span>
                 <strong style={{ color: rarity.color }}>{rarity.label}</strong>
@@ -80,7 +112,9 @@ export function CardInspectModal({
             </div>
 
             <div className="odds-intro" style={{ margin: 0 }}>
-              {isOwned
+              {binder && isOwned
+                ? `${ownedCount} exemplaire${ownedCount > 1 ? "s" : ""} au total · ${VARIANT_META[shownVariant].label} : ${shownCount}.`
+                : isOwned
                 ? variant === "live"
                   ? `${creator.displayName} a été obtenu pendant un direct. Tu as ${ownedCount} exemplaire${ownedCount > 1 ? "s" : ""} de cette variante souvenir.`
                   : `${creator.displayName} est déjà dans ton classeur. Tu as ${ownedCount} copie${ownedCount > 1 ? "s" : ""} dans cette variante.`
@@ -146,7 +180,7 @@ export function CardInspectModal({
             ) : null}
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div className="inspect-footer">
             <button type="button" className="primary-button" onClick={onClose}>
               Fermer
             </button>
@@ -155,4 +189,5 @@ export function CardInspectModal({
       </div>
     </div>
   );
+  return binder ? createPortal(content, document.body) : content;
 }

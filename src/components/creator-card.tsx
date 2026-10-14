@@ -9,6 +9,7 @@ import {
   type CardVariant,
   type Creator,
 } from "@/lib/catalog";
+import { cardEffectsAllowed } from "@/lib/tilt";
 import { isRetired } from "@/lib/retired";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
@@ -20,6 +21,8 @@ type CreatorCardProps = {
   count?: number;
   locked?: boolean;
   compact?: boolean;
+  /** Reflet au geste de la carte agrandie du Binder, sans changer les autres vues. */
+  interactiveFoil?: boolean;
   className?: string;
   onClick?: () => void;
   /**
@@ -54,6 +57,7 @@ export function CreatorCard({
   count = 1,
   locked = false,
   compact = false,
+  interactiveFoil = false,
   className = "",
   onClick,
   liveStream = null,
@@ -64,7 +68,7 @@ export function CreatorCard({
   // Le foil ne « suit le doigt » que sur une carte assez grande pour qu'on le
   // voie : dans la grille du classeur (2 ou 3 cm de large), c'est du calcul pour
   // rien — et 1 000 cartes n'ont pas besoin de 1 000 écouteurs.
-  const shiny = !locked && !compact && variant !== "standard";
+  const shiny = !locked && !compact && (variant !== "standard" || (interactiveFoil && creator.rarity !== "common"));
   const foilRef = useRef<HTMLDivElement | null>(null);
   const portrait = creatorImage(creator);
   const [failedPortrait, setFailedPortrait] = useState<string | null>(null);
@@ -72,10 +76,14 @@ export function CreatorCard({
 
   function trackPointer(event: PointerEvent<HTMLElement>) {
     const foil = foilRef.current;
-    if (!foil || !shiny) return;
+    if (!foil || !shiny || (interactiveFoil && !cardEffectsAllowed())) return;
     const box = event.currentTarget.getBoundingClientRect();
     foil.style.setProperty("--px", `${(((event.clientX - box.left) / box.width) * 100).toFixed(1)}%`);
     foil.style.setProperty("--py", `${(((event.clientY - box.top) / box.height) * 100).toFixed(1)}%`);
+    if (interactiveFoil) {
+      event.currentTarget.style.setProperty("--card-tilt-y", `${((event.clientX - box.left) / box.width - .5) * 8}deg`);
+      event.currentTarget.style.setProperty("--card-tilt-x", `${(.5 - (event.clientY - box.top) / box.height) * 6}deg`);
+    }
   }
 
   const style = {
@@ -119,7 +127,11 @@ export function CreatorCard({
       style={style}
       aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}${variant === "live" ? ", carte obtenue pendant un direct" : ""}${liveStream ? ", en direct sur Twitch maintenant" : ""}`}
       onPointerMove={trackPointer}
-      onPointerLeave={() => {
+      onPointerLeave={(event) => {
+        if (interactiveFoil) {
+          event.currentTarget.style.removeProperty("--card-tilt-x");
+          event.currentTarget.style.removeProperty("--card-tilt-y");
+        }
         const foil = foilRef.current;
         if (!foil) return;
         foil.style.removeProperty("--px");

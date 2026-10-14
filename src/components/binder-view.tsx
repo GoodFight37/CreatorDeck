@@ -6,6 +6,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
+import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { BINDER_FAMILIES, BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -14,7 +15,7 @@ import { BINDER_SORTS, sortBinder, type BinderSort } from "@/lib/binder-sort";
 import { useNow } from "@/hooks/use-game";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, RARITY_META, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
+import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, RARITY_META, VARIANT_META, type CardVariant, type Creator, type Rarity } from "@/lib/catalog";
 import { liveFor } from "@/lib/live";
 import { craftQuote, type GameView } from "@/lib/game-engine";
 import { cardEffectsAllowed } from "@/lib/tilt";
@@ -80,6 +81,7 @@ export function CollectionView({
         count: number;
         bestVariant: CardVariant;
         variants: Set<CardVariant>;
+        variantCounts: Map<CardVariant, number>;
         latestAt: number;
       }
     >();
@@ -94,11 +96,13 @@ export function CollectionView({
         count: 0,
         bestVariant: "standard" as CardVariant,
         variants: new Set<CardVariant>(),
+        variantCounts: new Map<CardVariant, number>(),
         latestAt: 0,
       };
       value.count += 1;
       value.latestAt = Math.max(value.latestAt, card.obtainedAt);
       value.variants.add(card.variant);
+      value.variantCounts.set(card.variant, (value.variantCounts.get(card.variant) ?? 0) + 1);
       if (variantScore[card.variant] > variantScore[value.bestVariant]) {
         value.bestVariant = card.variant;
       }
@@ -181,7 +185,14 @@ export function CollectionView({
 
   function movePageSwipe(event: PointerEvent<HTMLDivElement>) {
     const gesture = swipe.current;
-    if (!gesture || gesture.id !== event.pointerId) return;
+    if (!gesture) {
+      if (cardEffectsAllowed()) {
+        const bounds = event.currentTarget.getBoundingClientRect();
+        event.currentTarget.style.setProperty("--binder-light-x", `${((event.clientX - bounds.left) / bounds.width) * 100}%`);
+      }
+      return;
+    }
+    if (gesture.id !== event.pointerId) return;
     const dx = event.clientX - gesture.x;
     const dy = event.clientY - gesture.y;
     if (!gesture.horizontal) {
@@ -416,13 +427,14 @@ export function CollectionView({
                         liveStream: currentLive,
                       })}
                     />
+                    {!item ? <span className="binder-back-seal" aria-hidden="true"><CardBackEmblem /></span> : null}
                     {item && item.count > 1 ? (
                       <span className="pocket-count">×{item.count}</span>
                     ) : null}
                   </div>
                   <span className="binder-card-caption" aria-hidden="true">
                     <strong>{creator.displayName}</strong>
-                    <small>{RARITY_META[creator.rarity].label}{!item ? " · À découvrir" : ""}</small>
+                    <small>{RARITY_META[creator.rarity].label}{!item ? " · À découvrir" : item.bestVariant !== "standard" ? ` · ${VARIANT_META[item.bestVariant].label}` : ""}</small>
                   </span>
                 </div>
               );
@@ -526,6 +538,11 @@ export function CollectionView({
 
       {inspect ? (
         <CardInspectModal
+          presentation="binder"
+          themeStyle={themeStyle}
+          copies={(["standard", "live", "holo", "gold"] as const)
+            .filter((variant) => owned.get(inspect.creator.slug)?.variants.has(variant))
+            .map((variant) => ({ variant, count: owned.get(inspect.creator.slug)?.variantCounts.get(variant) ?? 0 }))}
           creator={inspect.creator}
           ownedCount={inspect.count}
           variant={inspect.variant}

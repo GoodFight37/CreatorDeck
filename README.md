@@ -64,6 +64,11 @@ suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
 le joueur. Le tutoriel de Production passe à 390 × 844 ; voir le checkpoint
 courant pour les tests et les limites de cette émulation mobile.
 
+Le lot Binder complet regroupe désormais les pages physiques, les matières
+par rareté, les protecteurs/dos et la fiche de collection avec variantes
+possédées et compteurs exacts. La validation et la publication du lot final
+sont dans le checkpoint courant (D-099).
+
 Le Binder propose un feuilletage et des libellés plus lisibles : feuille en
 perspective, geste horizontal avec flèches/clavier conservés et noms complets
 sous les pochettes. Il garde 12 cartes/page, Obtenues et ses objectifs existants.

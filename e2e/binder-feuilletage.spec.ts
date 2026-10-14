@@ -39,17 +39,30 @@ test("les flèches tournent la feuille dans le bon sens sans sauter de page", as
   const next = page.getByRole("button", { name: "Suivant", exact: true });
   const previous = page.getByRole("button", { name: "Précédent", exact: true });
   await expect(previous).toBeDisabled();
-  await next.click();
-  await expect(sheet).toHaveAttribute("data-page", "2");
-  await expect(sheet).toHaveAttribute("data-turn", "next");
-  await expect(sheet).toHaveCSS("animation-name", "binder-sheet-turn");
-  await next.dispatchEvent("click");
+  await page.evaluate(() => {
+    const turns: { direction: string; animation: string }[] = [];
+    (window as typeof window & { binderTurns?: typeof turns }).binderTurns = turns;
+    new MutationObserver(() => {
+      const sheet = document.querySelector<HTMLElement>(".binder-page")!;
+      if (sheet.dataset.turn !== "none") turns.push({ direction: sheet.dataset.turn!, animation: getComputedStyle(sheet).animationName });
+    }).observe(document.querySelector(".binder-surface")!, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-turn"] });
+  });
+  // Deux activations dans le même tour : aucune latence Playwright ne peut
+  // déplacer le second appui après la fin légitime de l'animation.
+  await next.evaluate((button) => {
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    button.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
   await expect(sheet).toHaveAttribute("data-page", "2");
   await expect(page.locator(".collection-grid .creator-card")).toHaveCount(12);
   await expect(previous).toBeEnabled();
   await previous.click();
-  await expect(sheet).toHaveAttribute("data-turn", "previous");
   await expect(sheet).toHaveAttribute("data-page", "1");
+  const turns = await page.evaluate(() => (window as typeof window & {
+    binderTurns?: { direction: string; animation: string }[];
+  }).binderTurns!);
+  expect(turns).toContainEqual({ direction: "next", animation: "binder-sheet-turn" });
+  expect(turns).toContainEqual({ direction: "previous", animation: "binder-sheet-turn" });
 });
 
 test("glisser feuillette, un petit geste revient et un tap ouvre toujours la fiche", async ({ page }) => {

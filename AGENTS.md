@@ -105,6 +105,13 @@ historiques utiles, en les datant et en signalant ce qui a été remplacé.
 
 ### Mode économie demandé par Malik (11 octobre 2026)
 
+**Lots complets demandés par Malik (14 octobre 2026) :** cadrer et terminer
+un ensemble cohérent (interface, états, gestes, accessibilité, responsive,
+vérifications, documentation et publication), sans arrêter après deux ou trois
+retouches pour proposer le reste du même chantier. Traiter ensemble les éléments
+déjà autorisés ; revenir ensuite pour un défaut concret ou une nouvelle demande.
+Le mode économie limite les contrôles inutiles, pas la complétude de la livraison.
+
 Diagnostic et lectures ciblés, tests locaux adaptés au diff, sans audit général
 ni répétition sans nouvel élément. Regrouper code et documentation dans le même
 commit lorsque possible. Après publication, relever et transmettre les liens et

@@ -1,5 +1,28 @@
 # Décisions CreatorDeck
 
+## D-099 — 14 octobre 2026 : terminer un lot Binder cohérent et vérifiable
+
+- Malik demande de cesser les livraisons de deux ou trois retouches suivies
+  d'une proposition de reprendre le même écran. Le périmètre d'un lot couvre
+  interface, états, gestes, accessibilité, responsive, tests adaptés, docs et
+  publication ; ensuite passer à un autre chantier, sauf défaut concret.
+- Clore le Binder en intégrant aux pages livrées : finitions de pochettes et
+  dos, reflets différenciés par rareté/variante, fiche de consultation physique
+  et accès aux variantes réellement possédées. Pas de nouvelles récompenses,
+  achats ou mécanisme d'obtention de sleeves ; ce sont des protecteurs visuels.
+- Une lumière dirigée par le geste, jamais un balayage en boucle. Commune mate,
+  rares plus réfléchissantes, variantes Holo/Gold/Live distinctes. Le masque
+  du reflet protège le nom ; OFF/réduit coupe reflets/inclinaison. Une feuille
+  de 12 cartes et un seul gestionnaire de lumière, sans WebGL ni capteurs.
+- La fiche Binder utilise le focus existant dans un portail et rend le focus
+  à sa carte ; les autres usages de CardInspectModal gardent leur présentation.
+  Les variantes se consultent sans mutation du jeu. Quantités exactes par
+  variante et total séparé : l'ancien texte attribuait abusivement le total
+  à la meilleure variante. Calcul depuis les cartes déjà chargées.
+- Alternative écartée : nouveaux sons, règles de jeu, faux doublons, variantes
+  inventées, ou styles qui changent les cartes du Drop/reveal. Ressenti réel
+  non certifié par les scénarios Chromium. Preuves/version dans la passation.
+
 ## D-098 — 14 octobre 2026 : feuilleter le Binder sans gêner la consultation
 
 - Autorisation de Malik pour le chantier UI recommandé : feuilletage physique

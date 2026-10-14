@@ -2,6 +2,15 @@
 
 ## État actuel — 14 octobre 2026
 
+**Lot Binder complet — vérifié localement, publication en cours :** finir ensemble feuilletage,
+protections/dos, matières par rareté, consultation des variantes possédées,
+fiche carte, accessibilité et responsive. D-099. Le lot précédent est conservé
+comme base, sans repartir en petites livraisons. Quantités par variante issues
+des cartes existantes, 12 cartes montées, OFF/réduit respectés. Publication et
+vérifications du lot complet dans le checkpoint courant : DOM 31/31, cinq
+scénarios finitions et sept de feuilletage réussis (un test de timing corrigé),
+TypeScript, ESLint et build passent. Ressenti tactile non certifié.
+
 **Binder — publié et vérifié sur Vercel (autorisé par Malik) :** feuille
 CSS directionnelle, glissement horizontal avec flèches/clavier conservés,
 scroll vertical natif, noms complets et rareté sous les pochettes. Garder
@@ -241,9 +250,8 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Le lot Binder feuilletage/lisibilité est livré et contrôlé sur Vercel.
-   Garder cette base ainsi que le Drop et son rituel ; aucun autre chantier
-   du backlog n’est engagé automatiquement.
+1. Terminer et publier le lot Binder complet (D-099), puis changer de chantier.
+   Ne plus proposer séparément les matières, dos, fiche et variantes du même lot.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
    autres travaux sur une demande de test joueur ni retoucher les seuils sans
    symptôme précis. Le parcours automatique du rituel sur Vercel a déjà passé.
@@ -253,8 +261,7 @@ checkpoint de passation pour le dernier mix.
    avant toute intégration réelle de nouveaux univers. Le prototype et la
    simulation ne modifient ni catalogue, ni taux, ni économie.
 5. Backlog sans développement engagé : lien permanent Twitch depuis une carte,
-   soundbites des créateurs, Perfect renforcé, reflets par rareté et sleeves de
-   Binder, événements Twitch, Trade Radar, Last Pack revanchard et export Story.
+   soundbites des créateurs, Perfect renforcé, événements Twitch, Trade Radar, Last Pack revanchard et export Story.
    Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus

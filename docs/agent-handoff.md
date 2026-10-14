@@ -1,6 +1,46 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — Binder : feuilletage et lisibilité publiés, Vercel vérifié
+## Checkpoint courant — lot Binder complet vérifié localement
+
+- Malik refuse les petites passes successives : terminer un ensemble cohérent
+  avec interface, états, gestes, accessibilité, responsive, docs et publication,
+  puis changer de chantier. Préférence ajoutée dans `AGENTS.md`, décision D-099.
+- Base `main` propre `2f15ea60464624a50e053be9a5d4552baef22df1`, confirmée par
+  ls-remote et fetch avant édition. Feuilletage précédent conservé et inclus
+  dans la validation de ce lot : pas un nouveau cycle de micro-chantiers.
+- Lot : matières mates/foil par rareté et variante ; lumière au geste sur les
+  pochettes, aucun balayage permanent ; finition des protecteurs, dos avec
+  l'emblème du pack ; carte agrandie dans une chambre de consultation Binder,
+  focus captif/retour à la carte et fermeture Escape. 12 cartes montées.
+- Variantes déjà possédées consultables dans la fiche. La vue précédente
+  affichait la meilleure variante avec le nombre total de copies toutes
+  variantes confondues, puis disait que ce total appartenait à cette variante.
+  Le Binder garde le total et calcule les quantités par variante depuis les
+  cartes existantes. Aucun compte, règle de possession ou craft modifié.
+- Fiche Binder seulement (`presentation="binder"`) : portail, fond de scène,
+  grande carte au geste, variantes et informations réelles. Les autres fiches
+  gardent leur présentation ; CreatorCard ne change de comportement qu'avec
+  l'opt-in de la fiche Binder. OFF/réduit : reflets et inclinaison coupés.
+- Validation : DOM ciblés 31/31, typecheck/ESLint réussis. Premier lot Chromium
+  11/12 : le test flèches envoyait son deuxième clic après la fin de l'animation
+  sous charge. Corrigé en envoyant les deux activations dans le même tour JS
+  et observant le sens au changement DOM ; retest 1/1. Cinq cas de finition
+  passent (matières, compteurs, focus, manquantes, responsive, OFF/réduit),
+  passe finale finitions 5/5 après ajustement visuel des faits. Build final
+  `npm run build` réussi, export statique sans variables Supabase locales
+  (donc aucune validation cloud revendiquée). Typecheck, ESLint ciblé et
+  `git diff --check` réussis.
+- Captures locales inspectées : `test-results/binder-matieres-téléphone.png`,
+  `binder-fiche-téléphone.png` et dos. Les libellés des faits sont séparés des
+  valeurs ; la photo et le nom restent lisibles sous le foil. Aucune boucle
+  décorative ni dépendance, audio, gameplay, Drop ou ouverture modifiés.
+- Fichiers applicatifs : `binder-view.tsx`, `creator-card.tsx`,
+  `card-inspect-modal.tsx`, `drop-binder.css`. Tests navigateur Binder et docs.
+  Réservation Binder active ; prochaine action : commit
+  et push normaux sur main, relever CI/READY et parcourir la Production.
+  Rien de ce lot final n'est encore publié ; ressenti tactile non certifié.
+
+## Historique — Binder : feuilletage et lisibilité publiés, Vercel vérifié
 
 - Malik autorise la suite UI Binder après le rituel livré. Périmètre retenu :
   feuilletage plus physique et lisibilité ; pas de refonte Drop, audio, gameplay,

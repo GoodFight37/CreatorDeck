@@ -420,3 +420,149 @@
 }
 
 .collection-view .collection-grid .card-region { display: none; }
+
+/* Matières du Binder : une lumière au geste, jamais de balayage automatique. */
+.collection-view .binder-pocket { --finish-strength: 0; }
+.collection-view .binder-pocket:has(.rarity-uncommon:not(.is-locked)) { --finish-strength: .05; }
+.collection-view .binder-pocket:has(.rarity-rare:not(.is-locked)) { --finish-strength: .14; }
+.collection-view .binder-pocket:has(.rarity-epic:not(.is-locked)) { --finish-strength: .22; }
+.collection-view .binder-pocket:has(.rarity-legendary:not(.is-locked)) { --finish-strength: .29; }
+.collection-view .binder-pocket:has(.variant-holo) { --finish-strength: .26; }
+.collection-view .binder-pocket:has(.variant-gold) { --finish-strength: .34; }
+.collection-view .binder-card-slot .card-foil {
+  opacity: var(--finish-strength);
+  background: radial-gradient(ellipse at var(--binder-light-x, 32%) 22%,
+    rgb(255 247 217 / .65), color-mix(in srgb, var(--pocket-rarity) 30%, transparent) 30%, transparent 68%);
+  mask-image: linear-gradient(#000 0% 58%, transparent 86%);
+  mix-blend-mode: screen;
+}
+.collection-view .binder-card-slot:has(.rarity-rare),
+.collection-view .binder-card-slot:has(.rarity-epic),
+.collection-view .binder-card-slot:has(.rarity-legendary) {
+  border-color: color-mix(in srgb, var(--pocket-rarity) 30%, #343039);
+  box-shadow: inset 0 1px rgb(255 255 255 / .18), 0 6px 10px -8px #000;
+}
+.collection-view .binder-card-slot:has(.variant-gold) {
+  border-color: #b78f51;
+  box-shadow: inset 0 0 0 1px rgb(247 205 126 / .25), 0 5px 12px -8px #b78f51;
+}
+.collection-view .binder-card-slot .card-back {
+  justify-content: space-between;
+  padding-block: 15%;
+  background: radial-gradient(ellipse at 50% 45%, rgb(158 84 104 / .12), transparent 65%),
+    repeating-linear-gradient(135deg, transparent 0 9px, rgb(255 232 196 / .025) 10px 11px), #15121c;
+}
+.collection-view .binder-back-seal {
+  position: absolute; top: 50%; left: 50%; display: grid; place-items: center;
+  width: 42%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(45deg);
+  color: #bfa78c; border: 1px solid rgb(218 184 150 / .28);
+  box-shadow: 0 0 0 4px rgb(218 184 150 / .04); pointer-events: none;
+}
+.collection-view .binder-back-seal svg { width: 65%; height: 65%; transform: rotate(-45deg); }
+.collection-view .binder-card-slot:focus-within { outline: 2px solid var(--paper); outline-offset: 3px; }
+
+/* La fiche de base conserve son rendu ; le Binder ouvre sa chambre de collection. */
+.inspect-panel { max-width: 680px; }
+.inspect-layout { display: grid; gap: 18px; }
+.inspect-card-stage { display: flex; justify-content: center; }
+.inspect-details { display: grid; gap: 10px; }
+.inspect-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.inspect-footer { display: flex; justify-content: flex-end; }
+.card-vault {
+  z-index: 1500; align-items: center; outline: none;
+  background: radial-gradient(ellipse at 50% 32%, color-mix(in srgb, var(--inspect-rarity) 10%, transparent), transparent 65%), #0b0910;
+  overscroll-behavior: contain;
+}
+.card-vault .inspect-panel {
+  width: 100%; max-width: 980px; height: 100dvh; max-height: 100dvh;
+  padding: max(12px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
+  border: 0; border-radius: 0; background: transparent; animation: none;
+  overscroll-behavior: contain;
+}
+.card-vault .inspect-panel::before { content: none; }
+.card-vault .odds-head {
+  position: sticky; top: 0; z-index: 10; align-items: flex-start; gap: 12px;
+  margin: 0 0 16px; padding: 10px 0 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--inspect-rarity) 22%, #241e29);
+  background: #0b0910;
+}
+.card-vault .odds-head > div { min-width: 0; }
+.card-vault .odds-head .eyebrow { color: var(--inspect-rarity); font-size: 10px; letter-spacing: .15em; }
+.card-vault .odds-head h2 { font-size: clamp(26px, 8vw, 42px); line-height: 1; overflow-wrap: anywhere; }
+.card-vault .odds-head > button { min-width: 44px; min-height: 44px; flex: none; }
+.card-vault .inspect-card-stage {
+  position: relative; padding: 16px 12px 28px; perspective: 1000px;
+  background: radial-gradient(ellipse at 50% 70%, color-mix(in srgb, var(--inspect-rarity) 9%, transparent), transparent 67%);
+}
+.card-vault .binder-feature-card {
+  width: min(66vw, 250px, 34dvh); max-height: none;
+  transform: perspective(1000px) rotateY(calc(-4deg + var(--card-tilt-y, 0deg))) rotateX(calc(2deg + var(--card-tilt-x, 0deg))); box-shadow: 10px 20px 28px -16px #000;
+}
+.card-vault .binder-feature-card .card-foil {
+  opacity: var(--finish-strength, 0);
+  background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%),
+    rgb(255 249 228 / .7), color-mix(in srgb, var(--rarity) 25%, transparent) 25%, transparent 65%);
+  mask-image: linear-gradient(#000 0% 55%, transparent 87%); mix-blend-mode: screen;
+}
+.card-vault.vault-uncommon { --finish-strength: .08; }
+.card-vault.vault-rare { --finish-strength: .23; }
+.card-vault.vault-epic { --finish-strength: .32; }
+.card-vault.vault-legendary { --finish-strength: .4; }
+.card-vault .binder-feature-card.variant-holo .card-foil {
+  opacity: .35; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff9e6a6,
+    #a3edeb55 20%, #d18adc44 40%, transparent 68%);
+}
+.card-vault .binder-feature-card.variant-gold .card-foil {
+  opacity: .42; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #fff4c2bb, #dda44a66 30%, transparent 68%);
+}
+.card-vault .binder-feature-card.variant-live .card-foil {
+  opacity: .25; background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%), #ffc4dd99, #d54bab55 30%, transparent 68%);
+}
+.card-vault .inspect-variants { display: flex; flex-wrap: wrap; gap: 8px; }
+.card-vault .inspect-variants button {
+  min-height: 44px; padding: 8px 12px; border: 1px solid #4b3b48; border-radius: 3px;
+  background: #18121c; color: var(--paper); font-size: 12px; cursor: pointer;
+}
+.card-vault .inspect-variants button span { color: var(--muted); margin-left: 6px; }
+.card-vault .inspect-variants button[aria-pressed="true"] {
+  border-color: var(--inspect-rarity); background: color-mix(in srgb, var(--inspect-rarity) 12%, #171019);
+}
+.card-vault .inspect-facts .odds-stat {
+  padding: 10px 0; border: 0; border-bottom: 1px solid #302530; border-radius: 0; background: none;
+}
+.card-vault .inspect-facts .odds-stat strong { font-size: 16px; overflow-wrap: anywhere; }
+.card-vault .odds-intro { font-size: 12px; line-height: 1.5; }
+.card-vault .inspect-footer .primary-button { min-height: 48px; width: 100%; }
+.card-vault :is(button, a):focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+@media (min-width: 760px) {
+  .card-vault .inspect-layout { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: 28px; }
+  .card-vault .inspect-card-stage { position: sticky; top: 100px; }
+  .card-vault .binder-feature-card { width: min(32vw, 330px, 45dvh); }
+  .card-vault .inspect-footer { grid-column: 2; }
+}
+[data-card-fx="off"] .collection-view .binder-card-slot::after,
+[data-card-fx="off"] .collection-view .binder-card-slot .card-foil,
+[data-card-fx="off"] .card-vault .binder-feature-card .card-foil { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .collection-view .binder-card-slot::after,
+  .collection-view .binder-card-slot .card-foil,
+  .card-vault .binder-feature-card .card-foil { display: none; }
+  .card-vault .binder-feature-card { transform: none; }
+}
+
+.card-vault .is-locked .card-back { justify-content: space-between; padding-block: 15%; }
+.card-vault .inspect-back-seal {
+  position: absolute; top: calc(50% - 6px); left: 50%; display: grid; place-items: center;
+  width: min(24vw, 85px); aspect-ratio: 1; border: 1px solid #af937966;
+  color: #d6bda1; transform: translate(-50%, -50%) rotate(45deg); pointer-events: none;
+  box-shadow: 0 0 0 7px #af937910;
+}
+.card-vault .inspect-back-seal svg { width: 65%; height: 65%; transform: rotate(-45deg); }
+
+[data-card-fx="off"] .card-vault .binder-feature-card { transform: none; }
+.card-vault .inspect-facts .odds-stat { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.card-vault .inspect-facts .odds-stat > span { color: var(--muted); font-size: 11px; }
+.card-vault .inspect-footer .primary-button {
+  border: 1px solid #4b3b48; background: #211622; color: var(--paper);
+  font-family: var(--font-display); font-size: 18px; letter-spacing: .06em;
+}
