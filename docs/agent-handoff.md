@@ -8,7 +8,10 @@ fin du fichier de 24 s. Asset remplacé localement par une nappe sans percussion
 générée par `scripts/generate-hub-music.py` puis compressée en MP3. Mesures du
 nouveau fichier : `-22,7 LUFS`, crête vraie `-11,5 dBFS`. Tests ciblés et suite
 projet passent (1 169/1 169), E2E audio 2/2, typecheck, lint et build réussis.
-Asset non publié ; écoute physique reste à faire. Détails : [D-086](decisions.md) et
+Publié sur `main` au SHA `67a9319452e27cb792032584e28448a6c6cc7fe7`. CI
+[`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
+verte (6/6), Vercel Production READY ; SHA-256 du fichier distant identique.
+Écoute physique reste à faire. Détails : [D-086](decisions.md) et
 [audio-assets.md](audio-assets.md).
 
 ## BGM du hub — double atténuation corrigée et publiée, 14 octobre 2026

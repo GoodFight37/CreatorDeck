@@ -1,12 +1,15 @@
-## Pulsation « tac-tac » de la musique du hub — correction locale validée, 14 octobre 2026
+## Pulsation « tac-tac » de la musique du hub — corrigée et publiée, 14 octobre 2026
 
 Malik entendait une pulsation ressemblant à des coups, toutes les ~0,5–1 s.
 Le fichier était bien servi par Vercel et identique à celui du dépôt : le motif
 était dans la composition d'origine, pas dans le code qui boucle la piste (24 s)
 ni dans l'hébergement. Le prototype a été remplacé par une nappe synthétique
 continue, sans percussion. Le volume, le mute et les changements de scène sont
-inchangés. Tests ciblés, suite projet, build et E2E audio réussis. Asset non
-publié ; écoute sur téléphone réel non effectuée. Voir [D-086](decisions.md) et
+inchangés. Tests ciblés, suite projet, build et E2E audio réussis. Publié sur
+`main` au SHA `67a9319452e27cb792032584e28448a6c6cc7fe7`, CI
+[`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
+verte (6/6), Vercel Production READY ; hash du MP3 distant identique à l'asset
+publié. Écoute sur téléphone réel non effectuée. Voir [D-086](decisions.md) et
 [audio-assets.md](audio-assets.md).
 
 ## BGM du hub trop basse sur téléphone — double atténuation corrigée, 14 octobre 2026

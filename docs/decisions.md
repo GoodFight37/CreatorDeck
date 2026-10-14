@@ -14,7 +14,11 @@ de jeu ne changent pas. Génération reproductible dans
 encore nécessaire avant de figer l'asset final. Générateur rejoué et MP3
 identique au hash ; décodage FFmpeg valide. Tests : fichier audio 23/23, projet
 1 169/1 169, E2E audio 2/2 (bureau/téléphone simulé), typecheck, ESLint ciblé,
-build cloudless et `git diff --check` réussis. Asset non publié ; CI à suivre.
+build cloudless et `git diff --check` réussis. Publié sur `main` au SHA
+`67a9319452e27cb792032584e28448a6c6cc7fe7`. CI
+[`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
+verte (6/6), Vercel Production READY ; le MP3 servi par Vercel a le même
+SHA-256 que l'asset local. L'écoute physique reste à faire.
 
 ## D-085 — 14 octobre 2026 : relever la BGM du hub devenue inaudible
 

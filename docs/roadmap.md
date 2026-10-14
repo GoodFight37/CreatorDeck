@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `861870ee66054646b3215bb360ca48b74ab1ff01` ;
+**État du code :** `main` au SHA `67a9319452e27cb792032584e28448a6c6cc7fe7` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -13,9 +13,11 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
 
 - **Audio :** la double atténuation du volume est corrigée et publiée (`-29,8 LUFS`
   estimés au réglage Normal). Après le retour de Malik sur la pulsation
-  percussive, un nouvel asset sans percussion est prêt localement : 24 s,
-  `-22,7 LUFS` source, niveau de mix estimé `-26,1 LUFS`. Tests locaux réussis ;
-  publication et CI à suivre, écoute physique encore nécessaire. Voir
+  percussive, un nouvel asset sans percussion a été publié : 24 s, `-22,7 LUFS`
+  source, niveau de mix estimé `-26,1 LUFS`. CI
+  [`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
+  verte (6/6), Vercel Production READY ; SHA-256 distant identique. Écoute
+  physique encore nécessaire. Voir
   [D-085](decisions.md), [D-086](decisions.md) et [audio-assets.md](audio-assets.md).
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
