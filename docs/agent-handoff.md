@@ -1,16 +1,19 @@
-## Fenêtre « J'ai un code booster » invisible sur mobile — diagnostic corrigé localement, 14 octobre 2026
+## Fenêtre « J'ai un code booster » invisible sur mobile — corrigée et publiée, 14 octobre 2026
 
 La capture de Malik montrait le profil assombri et flou, sans panneau du code.
 Cause : `ProfileView` utilise une animation `transform`; le `position: fixed` de
 `PromoCodeSheet`, enfant de cette vue, prenait le long écran du profil pour
 repère et était ensuite rogné par la coque de l'application. Le composant monte
 maintenant la feuille dans `document.body`, comme modale indépendante de la vue.
-Tests locaux : `npm run ecrans` (22 fichiers, 129/129), TypeScript et ESLint
-ciblé réussis ; `npm run e2e -- e2e/scene-profile.spec.ts` (6 réussis, deux
-scénarios cloud ignorés) vérifie le panneau dans le viewport bureau et téléphone.
-`git diff --check` réussi. Code non publié au dernier pointage ; CI, Vercel et
-éventuelle APK restent à vérifier après push. Aucune donnée ou crédit Supabase
-modifié.
+Publié sur `main` au SHA `7413d47bbc0f2aefeac47afcbeb749b366db8bb0`. CI GitHub
+[`38492822813`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38492822813)
+verte, 6/6 jobs ; Vercel Production READY pour ce SHA. Tests locaux :
+`npm run ecrans` (22 fichiers, 129/129), TypeScript et ESLint ciblé réussis ;
+`npm run e2e -- e2e/scene-profile.spec.ts` (6 réussis, deux scénarios cloud
+ignorés) vérifie le panneau dans le viewport bureau et téléphone.
+`git diff --check` réussi. Aucune donnée ou crédit Supabase modifié. Une APK Capacitor
+installée doit être reconstruite pour embarquer le changement ; le site web est
+à jour.
 
 ## Crédits booster de test personnels — publiés et migration appliquée, 14 octobre 2026
 
