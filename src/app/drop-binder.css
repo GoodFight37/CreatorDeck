@@ -45,7 +45,10 @@
   letter-spacing: .025em;
   pointer-events: none;
 }
-.home-view .pack-stage .pack-artwork.pack-live { width: min(42vw, 140px, 22dvh); }
+.home-view .pack-stage .pack-artwork.pack-live {
+  width: min(58vw, 220px, 34dvh);
+  transform: perspective(900px) rotateY(-6deg) rotateX(4deg);
+  transform-style: preserve-3d; }
 .home-view .pack-copy h2 { font-size: 24px; letter-spacing: .07em; }
 .home-view .pack-copy span { font-size: 12px; }
 .home-view .pull-hint { font-size: 12px; }
