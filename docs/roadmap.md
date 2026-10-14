@@ -3,8 +3,8 @@
 ## État actuel — 14 octobre 2026
 
 **Reprise après audit audio/Drop :** audit démarré depuis
-`d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, correction publiée sur `main` au
-SHA `ab740821724773c2b2a0a1f874a30f6f7e10a80a`. Elle centralise
+`d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, correction publiée sur `main` et
+validée au SHA `348ec6943d8f17e62d02739096a1a6b632abed0a`. Elle centralise
 le démarrage de la BGM dans l'action de jeu, protège la boucle contre les
 chargements asynchrones après mute et supprime le pilotage concurrent dans les
 composants du pack. Le Drop conserve `min(58vw, 220px, 34dvh)` en hauteur courte
@@ -14,26 +14,25 @@ au lieu d'être réduit par des media queries contradictoires ; les tests vérif
 téléphone, le rendu des biseaux et la sensation du peel restent des validations
 joueur, pas des succès déduits des tests.
 
-La suite ciblée passe : 7 E2E téléphone, typecheck et écrans 130/130. Le run
-GitHub [`38609156903`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38609156903)
-valide build/unitaires/statique, chemin cloud simulé et migrations SQL, mais ses
-trois shards E2E ont échoué : borne de taille d'ouverture trop stricte et deux
-snapshots d'ouverture obsolètes. Ces attentes sont corrigées localement ; la
-nouvelle CI doit confirmer les E2E.
-La suite unitaire locale complète a 1 154 tests réussis et 17 échecs sans rapport
-direct avec ces changements (sous-processus Git refusés par le sandbox et
-sorties vides des scripts de vérification des seeds). Le build local n'est pas
-encore confirmé ; il est bloqué dans le worker Next de cet environnement. Voir
-Turbopack local reste suspendu après compilation ; Webpack local retourne une
-erreur de lecture de `tsc --showConfig`, alors que le build CI passe. Vercel
-Production `READY` pour `ab740821` ; l'alias `creator-deckk.vercel.app` sert ce
-déploiement. La lecture du contenu par le connecteur est bloquée en 403, donc
-la production n'a pas été inspectée par navigateur dans cette session.
+La CI complète [`38610672014`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38610672014)
+est verte (6/6 jobs) : unitaires 1 171/1 171, écrans 130/130, E2E 103 réussis
+et 11 scénarios cloud conditionnels ignorés, cloud simulé, migrations SQL,
+ESLint, typecheck et build. Le premier run avait identifié une attente de taille
+arbitraire et des snapshots d'ouverture périmés ; ils ont été corrigés et
+revalidés. Les vérifications ciblées 390 × 844 confirment labels, hint,
+séparation de 12 px avec le ticket, accès CTA par scroll et absence de
+débordement horizontal. La capture ne montre pas d'artefact latéral net.
+Le test unitaire local isolé donne 1 154 succès et 17 erreurs sandbox (Git
+`EPERM`/sorties seed silencieuses), mais la suite complète passe sur runner CI.
+Build local bloqué par l'environnement (worker Turbopack suspendu, Webpack ne
+lit pas `tsc --showConfig`), build CI réussi. Vercel Production `READY` sur
+`348ec694`, alias `creator-deckk.vercel.app`. La lecture du contenu par le
+connecteur est refusée en 403 ; aucun contrôle navigateur de production revendiqué.
 
-**Version web :** Production est `READY` sur le commit documentaire
-`99fc67ca2d76e1e743b8d50ffd9f4042083e74d7`; le code du peel servi reste celui de
-`3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`. L'empreinte visible peut indiquer
-le commit documentaire plutôt que le dernier commit applicatif.
+**Empreinte de version (historique) :** le correctif de l’indicateur prévu en
+D-018 a été publié au SHA `7e5ecbd2859ae734c772703b1e291650d18c5b1e`. La
+Production actuelle est `READY` sur `348ec6943d8f17e62d02739096a1a6b632abed0a` ;
+le code du peel conserve son dernier changement au commit `3fec7895`.
 
 **Peel libre — ouverture confirmée, sensation encore perfectible :** au test du
 pack tutoriel sur Vercel, Malik confirme que le sachet s'ouvre normalement,

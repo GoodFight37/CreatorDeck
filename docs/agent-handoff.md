@@ -3,9 +3,11 @@
 ## Checkpoint courant — audit audio et composition Drop
 
 - Branche `main`, base auditée `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683` ;
-  correctif commité et poussé au SHA
-  [`ab740821724773c2b2a0a1f874a30f6f7e10a80a`](https://github.com/GoodFight37/CreatorDeck/commit/ab740821724773c2b2a0a1f874a30f6f7e10a80a),
-  parent direct `d19471fe`. GitHub `main` a été relu et confirme ce SHA.
+  audit audio/Drop publié sur `main` en trois commits : correctif applicatif
+  [`ab740821`](https://github.com/GoodFight37/CreatorDeck/commit/ab740821724773c2b2a0a1f874a30f6f7e10a80a),
+  bornes et snapshots d'ouverture `823cdfb8`, puis snapshots déchirés et limite
+  de placement de soudure `348ec6943d8f17e62d02739096a1a6b632abed0a`.
+  GitHub `main` a été relu après chaque push ; son HEAD est `348ec694`.
 - Audio : le préchargement SFX crée un `AudioContext` dès le montage, mais ne
   doit pas lancer la BGM. Auparavant le démarrage au premier contrôle incluait
   des actions d'onboarding/navigation, et `PackTear` commandait lui-même le
@@ -23,22 +25,24 @@
   l'absence de débordement horizontal et au moins 12 px entre scène et ticket.
   Capture Playwright disponible dans `test-results/`; elle ne remplace pas le
   rendu d'un téléphone physique.
-- Validation : E2E ciblé téléphone 7/7, `npm run ecrans` 130/130,
-  `npm run typecheck` passe, `src/lib/sfx.test.ts` 22/22. La suite unitaire
-  globale donne 1 154 réussis et 17 échecs hors lot : 11 `spawnSync git EPERM`
-  dans `push-essai.test.ts`, six scripts seed catalogue/saisons sans sortie
-  attendue. Le build statique local reste non confirmé : le worker Next est
-  suspendu après la compilation malgré nettoyage des workers orphelins ; ne pas
-  le compter comme réussi. Le build/unitaires/statique, le chemin cloud simulé
-  et les migrations SQL de GitHub Actions ont passé ; les trois shards E2E ont
-  échoué sur une borne de taille d'ouverture trop stricte et deux snapshots du
-  sachet obsolètes, sans échec audio/Drop mobile ciblé. Les critères/snapshots
-  sont corrigés localement pour garder le sachet servi, avec marge écran plutôt
-  qu'une réduction arbitraire ; relancer CI avant clôture. Le déploiement Vercel
-  [41FufrhkN2g5oPuvCujDVdYmBcDU](https://vercel.com/hafsi37-2386/creator-deckk/41FufrhkN2g5oPuvCujDVdYmBcDU)
-  est `READY` sur `ab740821` (alias production `creator-deckk.vercel.app`). La
-  lecture directe du site par le connecteur a été refusée en 403 ; ne pas
-  revendiquer une inspection du DOM de production.
+- Validation finale : GitHub Actions
+  [`38610672014`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38610672014)
+  verte, 6/6 jobs : 1 171 unitaires, écrans 130/130, 103 E2E réussis et 11
+  scénarios cloud conditionnels ignorés, chemin cloud à RPC simulés, migrations
+  SQL jetables, ESLint, typecheck et build. `src/lib/sfx.test.ts` 22/22 ; E2E
+  audio/Drop ciblé téléphone 7/7. Le run précédent a exposé le seuil 65 % et
+  trois captures de pochette obsolètes ; critères/snapshots ajustés aux captures
+  CI inspectées sans réduire le sachet. Le test d'ouverture valide le grand
+  pack, les labels, le hint, le scroll compact et le jeu sans débordement.
+- Le test unitaire local isolé donnait 1 154 réussis et 17 erreurs dues au
+  sandbox (`spawnSync git EPERM`, et sorties silencieuses des vérificateurs de
+  seeds) ; la suite entière passe sur le runner CI. Le build local turbopack est
+  resté suspendu et Webpack n'a pas lu `tsc --showConfig`, limites non reproduites
+  en CI. Vercel Production `READY` sur
+  [`348ec694`](https://vercel.com/hafsi37-2386/creator-deckk/8Kq1MuCaYuU7XeQG6ARjKrorhXSQ),
+  alias [creator-deckk.vercel.app](https://creator-deckk.vercel.app). Le contenu
+  du site n'a pas pu être lu par le connecteur (403), bien que le build/deploy
+  soit `READY`.
 - Restent ouverts : choix final de la musique, écoute sur haut-parleur réel,
   contrôle physique des biseaux/côtés 3D, et sensation du peel. Malik teste le
   web Vercel, jamais l'APK. Les E2E ne closent aucun de ces retours subjectifs.
@@ -78,6 +82,11 @@
 - Pas de fichiers applicatifs à réserver : le prochain chat peut poursuivre
   selon la roadmap. Après chaque livraison vérifiée, mettre à jour les docs,
   pousser normalement sur `main`, puis confirmer le SHA distant, CI et Vercel.
+
+## Checkpoint historique — reprise au 14 octobre 2026
+
+Les paragraphes ci-dessous documentent la reprise antérieure avant l'audit audio/Drop.
+Le checkpoint courant ci-dessus est la référence pour les SHA, CI et déploiement actuels.
 
 ## Peel libre sur la bande haute — publié, ressenti joueur à confirmer, 14 octobre 2026
 

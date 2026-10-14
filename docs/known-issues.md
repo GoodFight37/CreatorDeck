@@ -1,4 +1,4 @@
-## Audit du démarrage musical et des tailles Drop — audio corrigé, CI E2E en reprise
+## Audit du démarrage musical et des tailles Drop — corrigé et publié, 14 octobre 2026
 
 À la base `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, le montage préchargeait
 les SFX et créait donc un `AudioContext` avant toute interaction. Le gestionnaire
@@ -8,10 +8,10 @@ et rétablissait le hub au démontage, même si le propriétaire d'écran demand
 une autre scène. Le correctif local réserve le démarrage à l'ouverture réelle,
 centralise les transitions dans l'app, bloque la source si mute est activé
 pendant le chargement et recrée une unique source au redémarrage. Tests ciblés
-E2E téléphone 7/7 et unitaires SFX 22/22. Le premier run CI `38609156903` a
-trouvé trois shards E2E rouges, attribués aux attentes de taille et snapshots
-périmés de la pochette d'ouverture. Ces shards n'ont pas signalé de défaut dans
-les parcours audio ni les contrôles Drop 390 × 844.
+E2E téléphone 7/7 et unitaires SFX 22/22. Les deux premiers runs CI ont révélé
+une attente de taille trop stricte et des snapshots de pochette déchirée périmés.
+Les critères et captures ont été corrigés puis vérifiés sur GitHub Actions
+`38610672014` (6/6 jobs verts).
 
 Sur les petits viewports, des media queries CSS réduisaient la taille du booster
 en 52/48/44vw, tandis qu'une règle concurrente la réimposait plus tard depuis
@@ -19,14 +19,15 @@ en 52/48/44vw, tandis qu'une règle concurrente la réimposait plus tard depuis
 `min(58vw, 220px, 34dvh)` ; en écran court, les CTA sont accessibles par scroll.
 E2E Drop mobile compact et 390 × 844 réussis. Aucun artefact latéral net n'est
 apparu dans la capture Chromium, mais biseaux et rendu réel restent à confirmer
-sur téléphone. L'audit unitaire local a aussi découvert 17 échecs indépendants : 11
-appels Git interdits par l'environnement de test et 6 sorties de tests seed
-vides. Correctif audio/Drop publié sur `main` au SHA `ab740821` ; correction des
-assertions et snapshots en attente de publication. Turbopack local reste
-suspendu après compilation et l'essai Webpack n'arrive pas à lire
-`tsc --showConfig` ; le build GitHub passe et le typecheck direct passe.
-Déploiement Vercel `READY` sur `ab740821`, mais inspection directe refusée au
-connecteur en 403.
+sur téléphone. Correctif audio, critères et snapshots publiés sur `main` aux
+commits `ab740821`, `823cdfb8` et `348ec694`. Suite CI complète : unitaires
+1 171/1 171, écrans 130/130, E2E 103 réussis/11 scénarios cloud conditionnels
+ignorés, typecheck, ESLint, build, cloud simulé et migrations SQL réussis. La
+suite unitaire locale avait 17 erreurs d'environnement (11 appels Git `EPERM`,
+6 sorties de processus seed vides) ; le build local turbopack/Webpack était
+aussi bloqué par le runner, sans reproduire ces limites en CI. Vercel Production
+`READY` sur `348ec694`. La lecture du site par le connecteur répond 403 ; aucun
+contrôle navigateur distant n'est revendiqué.
 
 ## Geste du peel encore perfectible après amélioration partielle — ouvert, 14 octobre 2026
 
