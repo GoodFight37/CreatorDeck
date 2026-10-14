@@ -67,8 +67,9 @@ infos secondaires. Le hint long est supprimé, le nom du pack reste visible et
 les jetons sont repliés dans les détails. Aucun audio, WebGL ou changement de
 gameplay. Tests d'écrans 13/13, typecheck, ESLint ciblé et diff-check réussis.
 E2E téléphone non exécutés : Chromium headless Playwright manque dans
-l'environnement. Après publication, vérifier le preview Vercel à 390 × 844 ;
-le ressenti des côtés 3D et de la hiérarchie visuelle reste ouvert.
+l'environnement. Publié sur `main` au SHA `47f5f4fa`, déploiement Vercel
+Production `READY` (contrôle `success`). Le ressenti des côtés 3D et de la
+hiérarchie visuelle à 390 × 844 reste ouvert; voir le checkpoint de passation.
 
 **Avance des cartes :** un appui pendant le flip était mis en file et exécuté
 au terme de l'animation ; un second appui pouvait alors agir sur la carte

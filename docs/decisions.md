@@ -1065,5 +1065,6 @@ schéma de données n’a été requis.
 - Preuve/limite : tests d'écrans 13/13, TypeScript, ESLint ciblé et
   `git diff --check` passent. Les deux scénarios Playwright téléphone
   s'arrêtent avant lancement faute de Chromium headless dans l'environnement;
-  le rendu et l'épaisseur perçue des côtés ne sont pas confirmés. Vérifier le
-  déploiement Vercel à 390 × 844 avant clôture visuelle.
+  le rendu et l'épaisseur perçue des côtés ne sont pas confirmés. Correctif
+  publié sur `main` (`47f5f4fa`), Vercel Production READY / contrôle `success`;
+  validation visuelle mobile à 390 × 844 encore ouverte.

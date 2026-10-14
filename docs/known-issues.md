@@ -7,11 +7,12 @@ arbre CSS `preserve-3d`; une media query ramenait aussi la largeur du booster à
 52vw/30dvh sur les écrans courts. Correctif local : conserver les 58vw,
 supprimer le filtre du héros, renforcer les faces bordeaux et leur lumière,
 donner une vignette/ombre de sol, enlever le hint, rendre le ticket CTA-first et
-replier les jetons. Les tests DOM Drop (13/13) passent. Les E2E ont été tentés,
-mais ne démarrent pas ici : Chromium headless Playwright est absent. Ni capture
-ni rendu navigateur n'ont été validés. Vérifier le preview Vercel à 390 × 844
-avant de déclarer l'impression de jeu corrigée; les côtés CSS 3D restent
-notamment à juger à l'écran.
+replier les jetons. Le patch est publié sur `main` (`47f5f4fa`), Vercel
+Production est `READY` et le contrôle est `success`. Les tests DOM Drop (13/13)
+passent. Les E2E ont été tentés, mais ne démarrent pas ici : Chromium headless
+Playwright est absent. Ni capture ni rendu navigateur n'ont été validés. Les
+côtés CSS 3D, le focus sur le sachet et le feeling restent à juger à l'écran
+mobile avant de clore le constat perceptif.
 
 ## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
 
