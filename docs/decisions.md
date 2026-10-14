@@ -13,11 +13,12 @@ de soudure ; elle n'est pas remplacée par une barre de progression. Un relâch�
 avant seuil efface le trait et replie le sachet, avec retour visuel bref. Code
 publié sur `main` au SHA `8619f461792bc55f77aab826907e4025f866f097`, confirmé
 sur le distant ; Vercel Production READY. Tests E2E bureau/téléphone simulé :
-47 réussis, 1 scénario cloud conditionnel ignoré. La CI `38569239104` a échoué
-uniquement sur une ancienne assertion du banc d'écrans qui interdisait le texte
-de version déjà présent dans Toi ; assertion mise à jour pour vérifier son
-format, suite d'écrans locale 130/130. La CI sera relancée avec le correctif de
-test. Aucun essai sur téléphone physique.
+47 réussis, 1 scénario cloud conditionnel ignoré. La CI initiale `38569239104`
+a relevé une ancienne assertion du banc d'écrans qui interdisait le texte de
+version déjà présent dans Toi ; assertion corrigée pour vérifier son format,
+suite d'écrans locale 130/130. CI de reprise `38569853793` verte (6/6 jobs).
+Le correctif de test est au commit `13f471e5`. Aucun essai sur téléphone
+physique.
 
 ## D-090 — 14 octobre 2026 : couper dans la soudure sans effet de gribouillage
 

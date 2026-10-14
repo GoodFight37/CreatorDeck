@@ -20,8 +20,9 @@ est terminée avec 5 jobs réussis et un échec dans le banc d'écrans : une
 ancienne assertion refusait le libellé « Version … » du profil alors que cette
 version est déjà affichée et testée ailleurs. Assertion réalignée sur le
 format attendu ; le test isolé passe (11/11) et toute la suite `npm run ecrans`
-passe (130/130). Ce correctif de test et le relevé sont à publier ; CI relancée
-ensuite. Aucun téléphone physique testé.
+passe (130/130). Correctif du test publié au commit `13f471e5`. CI de reprise
+[`38569853793`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38569853793)
+verte, 6/6 jobs. Aucun téléphone physique testé.
 
 Fichiers applicatifs : `src/components/pack-tear.tsx`,
 `src/lib/peel-geometry.ts`, son test, `src/app/booster-continuity.css` et

@@ -10,10 +10,10 @@ publié : exiger 88 % de couverture de la zone tactile réelle et l'effort
 minimal, vider le tracé/contour incomplet au relâchement et animer le retour.
 SHA `8619f461792bc55f77aab826907e4025f866f097` vérifié sur `main` ; Vercel
 Production READY. E2E bureau/téléphone simulé 47 réussis, 1 scénario cloud
-conditionnel ignoré. La CI `38569239104` a échoué uniquement sur une ancienne
-assertion sans rapport avec ce défaut (banc Toi interdisant le texte de
-version). Assertion mise à jour ; `npm run ecrans` passe 130/130 en local, CI
-à relancer. Aucun essai physique revendiqué.
+conditionnel ignoré. La CI `38569239104` a échoué sur une ancienne assertion
+du banc Toi qui interdisait le texte de version déjà affiché. Test corrigé au
+commit `13f471e5` ; `npm run ecrans` passe 130/130 en local et CI de reprise
+`38569853793` passe 6/6. Aucun essai physique revendiqué.
 
 ## Tracé dentelé et trop blanc pendant le peel — corrigé, 14 octobre 2026
 
