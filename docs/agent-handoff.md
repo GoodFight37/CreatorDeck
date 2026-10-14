@@ -1,3 +1,36 @@
+## Identifier clairement le build installé — publié, Vercel READY, 14 octobre 2026
+
+Malik rapporte que le champ du code cadeau et son solde de boosters test ont
+disparu puis réapparu. Le premier est du code d’interface ; le second est une
+donnée du compte Supabase. Leur changement ensemble ne prouve donc pas que
+Vercel sert aléatoirement plusieurs versions. En particulier, Vercel met à jour
+le site web, mais ne remplace jamais les fichiers déjà embarqués dans une APK
+Capacitor. Un retour à une ancienne interface peut venir d’une APK ancienne ou
+d’un autre contexte/build ; les cadeaux peuvent aussi varier avec le compte et
+sa synchronisation.
+
+Le dépôt avait déjà `src/lib/build-version.ts` et le style `.profile-build-version`,
+mais aucun rendu JSX : la décision D-018 était donc documentée sans indicateur
+visible. Le correctif ajoute dans Toi → Réglages l’empreinte « Version Android/Web ·
+<7 caractères du commit> », avec le SHA complet au survol et un test écran. Cela
+identifie le code, pas la version des données distantes. Le SHA courant avant ce
+changement était `89b95b0f2d366879aa39e23ed54e60c2170c995d`, confirmé identique à
+`origin/main`. Le code et son test sont publiés sur `main` au commit
+`7e5ecbd2859ae734c772703b1e291650d18c5b1e` ; SHA distant vérifié. Test écran
+`npm run ecrans -- src/ecrans-scene-profile.test.tsx` : 11/11 ;
+`npm run typecheck`, ESLint ciblé et `git diff --check` réussis ; `npm run build`
+réussi. Avertissement attendu : les variables Supabase ne sont pas configurées
+dans ce checkout, donc ce build local ne valide pas le cloud.
+
+Vercel Production a créé le déploiement
+[`5tfxiyrLTrhTPsLXPC9Qco7KhD7d`](https://vercel.com/hafsi37-2386/creator-deckk/5tfxiyrLTrhTPsLXPC9Qco7KhD7d)
+pour le SHA `7e5ecbd2` ; état `READY`, alias de production
+`https://creator-deckk.vercel.app`. Le statut GitHub visible est Vercel
+`success` ; le connecteur ne rapporte pas de workflow runs pour ce SHA,
+ce qui ne permet pas de conclure qu’aucune CI ne tourne. Vérifier ces statuts
+avant d’annoncer le déploiement terminé. L’indicateur ne sera visible qu’après
+le déploiement web, ou la reconstruction/réinstallation Android correspondante.
+
 ## Peel trop tôt figé après le seuil — corrigé, 14 octobre 2026
 
 Malik précise que depuis le correctif du va-et-vient, le peel paraît rigide,

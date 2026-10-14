@@ -529,6 +529,16 @@ sans dépôt Git affiche « locale ». Le SHA complet reste disponible dans
 l’infobulle et aucun secret n’est exposé. La preuve de compilation et l’état de
 publication sont consignés dans la passation.
 
+**Complément du 14 octobre 2026 :** l’audit a trouvé l’utilitaire et le style,
+mais aucun JSX qui les affichait ; cette intention n’était donc pas livrée à
+l’écran. L’indicateur est maintenant rendu dans Toi → Réglages, sous la forme
+« Version Android/Web · <7 caractères du commit> », avec le SHA complet au
+survol. Il renseigne l’identité du code installé ; boosters de test et codes
+réclamés restent des données cloud séparées.
+Le rendu est publié au SHA `7e5ecbd2859ae734c772703b1e291650d18c5b1e` ; le
+déploiement Vercel Production est `READY`. Une APK préexistante n’est pas mise
+à jour par Vercel.
+
 
 ## D-019 — 11 octobre 2026 : reset global, tutoriel et cadeau de reprise
 

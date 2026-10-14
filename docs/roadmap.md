@@ -2,7 +2,16 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `abcd2d0ad5b5c4d896a21f9b68496c9af4a4b832` ;
+**Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
+effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`
+dans Toi → Réglages et garde le SHA complet au survol. Il distingue le bundle
+du site et celui d’une APK, mais ne décrit pas le solde Supabase du compte.
+Un déploiement Vercel met à jour le web ; une APK installée doit être
+reconstruite et réinstallée. Code publié au SHA
+`7e5ecbd2859ae734c772703b1e291650d18c5b1e` ; Vercel Production `READY`.
+Voir la [passation](agent-handoff.md).
+
+**État du code avant le point version :** `main` au SHA `abcd2d0ad5b5c4d896a21f9b68496c9af4a4b832` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
