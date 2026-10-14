@@ -20,6 +20,7 @@ import { formatViewers, liveFor } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { arenaDraftWindow } from "@/lib/arena";
+import { playHubMusic } from "@/lib/sfx";
 import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
 
