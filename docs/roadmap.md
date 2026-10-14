@@ -15,8 +15,9 @@ et la couleur de la boucle. Voir le
   Les missions locales calculées après un tirage sont réenregistrées sans
   forçage. La réserve de boosters reste côté serveur : le guide des codes privés
   explique comment obtenir des boosters de test sans réinitialiser le compte.
-  Une progression faite hors ligne est remplacée au retour en ligne. La CI du
-  suivi `c3ab397e` est encore en cours ; son déploiement Vercel est READY. Pour Android,
+  Une progression faite hors ligne est remplacée au retour en ligne. Le suivi
+  `c3ab397e` est validé par la CI (`38488559202`, 6/6) et déployé sur Vercel.
+  Pour Android,
   une APK déjà installée doit être reconstruite et réinstallée ; Vercel ne la met
   pas à jour.
 - **Tests de booster sur compte réel :** aucun crédit illimité n'a été ajouté.

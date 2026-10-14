@@ -11,8 +11,8 @@ est vert en local sur bureau et téléphone simulé (2/2), ainsi que les suites
 complètes unitaires (1 168) et écrans (128). Correctif publié au SHA
 `fc5b47ff0793e8ff273dfccd381f50b158bd4fa4`. La CI a signalé deux types
 implicites dans les assertions ; correction typée publiée dans `c3ab397e`.
-Vercel est READY pour ce SHA ; CI GitHub `38488559202` encore en cours au
-dernier contrôle. Aucun compte réel ni donnée de production testé.
+Vercel est READY pour ce SHA ; CI GitHub `38488559202` verte, 6/6 jobs. Aucun
+compte réel ni donnée de production testé.
 
 ## Ancien visuel du sachet et musique absente au hub — corrigé et publié, 13 octobre 2026
 

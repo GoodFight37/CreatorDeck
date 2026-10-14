@@ -33,8 +33,9 @@ réponse de conflit n'autorise jamais un écrasement forcé. Le rechargement rep
 ensuite cet état et ne déclenche pas de second push. Tests locaux : suite cloud
 simulée E2E 2/2 bureau/téléphone. Le contrôle TypeScript distant a d'abord
 relevé deux paramètres de callback implicites dans les assertions de test ; ils
-sont typés dans `c3ab397e`. Vercel pour ce SHA est READY ; la CI GitHub
-`38488559202` est encore en cours au dernier contrôle.
+sont typés dans `c3ab397e`. Vercel pour ce SHA est READY ; CI GitHub
+[`38488559202`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38488559202)
+verte, 6/6 jobs.
 
 ## D-080 — 13 octobre 2026 : faire voir le sachet actuel et démarrer la musique au premier appui
 

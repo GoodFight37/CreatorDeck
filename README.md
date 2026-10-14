@@ -77,8 +77,8 @@ Pour un compte connecté, la sauvegarde Supabase est maintenant reprise
 automatiquement à l'ouverture/au retour de l'application et fait foi sur une
 copie locale divergente. Les missions calculées lors d'un tirage sont ensuite
 enregistrées sans forçage. Le correctif est publié sur `main` (`fc5b47ff`) et
-le dernier build Vercel (`c3ab397e`) est READY ; sa CI GitHub est encore en
-cours, voir le [checkpoint](docs/agent-handoff.md). Vercel met à jour le site ;
+le dernier build Vercel (`c3ab397e`) est READY et sa CI GitHub est verte (6/6),
+voir le [checkpoint](docs/agent-handoff.md). Vercel met à jour le site ;
 une APK Android déjà installée doit être reconstruite et réinstallée séparément
 pour recevoir ces changements.
 

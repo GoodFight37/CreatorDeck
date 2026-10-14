@@ -47,8 +47,9 @@ typage de deux nouvelles assertions de tests ; annotations ajoutées au commit
 `c3ab397e614307c222acd3817c474e05113f225f`. Vercel pour ce dernier SHA est
 **READY** ; CI GitHub
 [`38488559202`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38488559202)
-en cours, 6 jobs actifs au dernier contrôle. Aucun test sur le compte réel et
-aucune donnée de production modifiée.
+verte, **6/6 jobs**. Vercel est également READY pour le code et le checkpoint
+documentaire. Aucun test sur le compte réel et aucune donnée de production
+modifiée.
 
 ## Visuel Drop et démarrage de la musique — publié, Vercel actif, CI verte, 13 octobre 2026
 
