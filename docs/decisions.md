@@ -6,12 +6,15 @@ Les captures montrent qu'une petite coupe locale peut afficher « Relâche pour
 ouvrir » et que son trait persiste après un geste trop court. Comme l'animation
 de libération plie le rabat entier, exiger simultanément l'effort d'ouverture
 existant et au moins 88 % de couverture de la largeur tactile réelle de la
-soudure. Cette marge permet de relâcher avant le bord tout en empêchant une coupe à gauche ou au
+soudure. Cette marge permet de relâcher avant le bord tout en empêchant une
+coupe à gauche ou au
 milieu de déplier tout le haut. La trajectoire demeure libre en Y dans la bande
 de soudure ; elle n'est pas remplacée par une barre de progression. Un relâché
-avant seuil efface le trait et replie le sachet, avec retour visuel bref. Le
-code et les vérifications E2E sont en cours localement au 14 octobre ; ne pas
-annoncer publié ni validé sur téléphone avant les contrôles et le SHA distant.
+avant seuil efface le trait et replie le sachet, avec retour visuel bref. Code
+publié sur `main` au SHA `8619f461792bc55f77aab826907e4025f866f097`, confirmé
+sur le distant ; Vercel Production READY. Tests E2E bureau/téléphone simulé :
+47 réussis, 1 scénario cloud conditionnel ignoré ; CI GitHub `38569239104` en
+cours au relevé. Aucun essai sur téléphone physique.
 
 ## D-090 — 14 octobre 2026 : couper dans la soudure sans effet de gribouillage
 

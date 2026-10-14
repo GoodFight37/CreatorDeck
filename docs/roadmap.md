@@ -6,12 +6,13 @@
 plus un zigzag : médiane par tranches, lissage court et contour limité à la
 soudure ; la couleur blanche/halo est assourdie. Le mouvement au-dessus pour
 soulever reste reconnu, descendre sur l’illustration ne tord plus la coupe.
-Nouveau correctif local en vérification après les captures suivantes : l'ouverture
-doit attendre une coupe couvrant presque toute la soudure (88 % de sa largeur tactile) et une coupe
-incomplète doit s'effacer au repli. Seuil actuel de libération au relâchement ;
-tests E2E en cours, pas encore publié ni essayé sur téléphone. L'état précédent
-du tracé lissé est publié sur `main` au SHA `0c4c7b9f808838484b9ece1dbe6bd752831b1395`,
-Vercel Production READY ; E2E 45 réussis/1 scénario cloud ignoré.
+Correctif publié après les captures : ouverture seulement après une coupe qui
+couvre au moins 88 % de la largeur tactile de la soudure et atteint l'effort
+minimal ; une tentative incomplète efface son trait et replie le sachet. Le
+relâchement reste obligatoire. SHA `8619f461792bc55f77aab826907e4025f866f097`
+confirmé sur `main`, Vercel Production READY ; E2E 47 réussis/1 scénario cloud
+ignoré. CI `38569239104` en cours ; essai sur téléphone réel à faire. Le
+lissage précédent est au SHA `0c4c7b9f808838484b9ece1dbe6bd752831b1395`.
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`

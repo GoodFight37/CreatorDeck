@@ -1,4 +1,4 @@
-## Peel local, seuil de coupe complète et repli sans trace — vérifié localement, 14 octobre 2026
+## Peel local, seuil de coupe complète et repli sans trace — publié, 14 octobre 2026
 
 Les captures de Malik montrent deux défauts : une coupe courte peut laisser son
 trait après relâchement ; le soulèvement d'une petite zone peut armer le geste,
@@ -7,13 +7,16 @@ maintenant au moins 88 % de la largeur effective de la zone tactile et
 l'ouverture minimale déjà requise. Le tracé et le bord clipé restent guidés
 par le doigt ; une tentative incomplète efface la trace, réinitialise la coupe et
 replie le sachet avec une transition courte. L'ouverture reste déclenchée au
-relâchement après ce seuil. Les contrôles à seuils unitaires passent (3/3), le
+relâchement après ce seuil. Code publié sur `main`, SHA
+`8619f461792bc55f77aab826907e4025f866f097`, vérifié sur la branche distante ;
+Vercel Production `READY` sur ce commit. Les contrôles à seuils unitaires
+passent (3/3), le
 typecheck et ESLint ciblé passent ; E2E `e2e/pack-tear.spec.ts` : 47 réussis,
 1 scénario cloud conditionnel ignoré. Les 4 parcours ciblés passent en bureau
 et téléphone simulé (8/8). `npm run build` réussit ; le garde-cloud indique
 que les variables Supabase ne sont pas présentes, donc ce build local est
-statique sans cloud. Aucun téléphone physique testé. Pas encore publié :
-revérifier le diff et la base distante avant commit/push.
+statique sans cloud. La CI GitHub [`38569239104`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38569239104)
+est en cours (6 jobs au dernier relevé). Aucun téléphone physique testé.
 
 Fichiers applicatifs : `src/components/pack-tear.tsx`,
 `src/lib/peel-geometry.ts`, son test, `src/app/booster-continuity.css` et
