@@ -1,3 +1,14 @@
+## Tracé dentelé et trop blanc pendant le peel — corrigé, 14 octobre 2026
+
+La vidéo/capture montre des zigzags quand le doigt repart en arrière et un
+halo blanc trop intense. La coupe était reconstruite depuis le dernier Y de
+chaque tranche X, puis les tranches étaient triées ; le chemin temporel se
+transformait donc en dentelures. Le contour est maintenant médian/lissé et
+cantonné à la bande de soudure. Le déplacement vers le bas sur l’illustration
+ne le déforme pas ; le soulèvement requis reste pris en compte. Trait champagne
+et halo rose assourdis. Code `0c4c7b9f`, CI check Vercel success et production
+READY. E2E du peel : 45 réussis, 1 scénario cloud ignoré ; pas d’essai physique.
+
 ## Peel trop court et figé trop tôt — corrigé, 14 octobre 2026
 
 Après le correctif anti-casse, l'ouverture s'armait à `span >= 38` même si la

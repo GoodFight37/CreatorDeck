@@ -1,3 +1,30 @@
+## Tracé du peel lissé et limité à la soudure — publié, 14 octobre 2026
+
+Malik montre un tracé lumineux en zigzag pendant des va-et-vient sur le sachet,
+et juge le blanc trop agressif. La cause est dans la reconstruction de la coupe :
+garder le dernier Y par tranche X puis trier les X transforme les retours du
+doigt en dents dans le contour. Le code utilise maintenant les médianes par
+tranches de 2 % et un lissage pondéré court ; seuls les échantillons dans la
+bande de soudure alimentent le contour. Les mouvements vers le bas dans l’art
+sont ignorés ; lever le doigt au-dessus de la soudure reste valide et continue
+de compter dans l’effort, sans dessiner hors zone. La ligne est passée d’un
+blanc/halo fort à un trait champagne fin avec halo rose assourdi. Le seuil et
+l’ouverture au relâchement ne changent pas.
+
+Code publié sur `main`, commit `0c4c7b9f808838484b9ece1dbe6bd752831b1395` ; SHA
+distant vérifié. Contrôles : `npm test -- src/lib/peel-geometry.test.ts` 2/2 ;
+`npm run e2e -- e2e/pack-tear.spec.ts` 45 réussis, 1 test cloud conditionnel
+ignoré ; `npm run typecheck`, ESLint ciblé et build statique réussis. Le build
+local sans variables Supabase n’est pas une validation cloud. Les modifications
+du fichier CSS CRLF ont été contrôlées avec `git -c core.whitespace=cr-at-eol
+diff --check`. Vercel Production est `READY` sur le même SHA ; check GitHub
+Vercel `success`. Aucun test sur téléphone physique revendiqué.
+
+Fichiers : `src/lib/peel-geometry.ts` (médiane/lissage), son test unitaire,
+`src/components/pack-tear.tsx`, les CSS premium/continuity et
+`e2e/pack-tear.spec.ts` (contour contenu dans la soudure malgré le glissement
+hors zone). Aucun changement au Drop, à l’économie ou au flux de révélation.
+
 ## Identifier clairement le build installé — publié, Vercel READY, 14 octobre 2026
 
 Malik rapporte que le champ du code cadeau et son solde de boosters test ont

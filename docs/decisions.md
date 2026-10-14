@@ -1,5 +1,20 @@
 # Décisions CreatorDeck
 
+## D-090 — 14 octobre 2026 : couper dans la soudure sans effet de gribouillage
+
+La capture de Malik montre qu’un tracé chronologique retrié par X produit des
+dents lorsqu’on fait des va-et-vient, et que le trait blanc/halo trop lumineux
+ressemble à un gribouillage. Construire la fente depuis une médiane de points
+par tranches horizontales de 2 %, puis appliquer un lissage pondéré court. La
+géométrie visible n’accepte que la bande supérieure (Y 10–21 % du sachet) ;
+descendre sur l’illustration ne la déforme pas. Le mouvement de soulèvement
+au-dessus de la soudure compte encore pour l’effort mais ne dessine pas hors de
+la bande. Garder le seuil et l’ouverture au relâchement inchangés. Réduire le
+trait champagne à 1,6 px et son halo rose à 5 px/42 % d’opacité. Tests unitaires
+2/2 et E2E bureau/téléphone simulé 45 réussis, 1 scénario cloud ignoré ;
+typecheck, ESLint ciblé, build réussis. Publié à `0c4c7b9f`; Vercel READY.
+Pas d’essai sur appareil physique.
+
 ## D-089 — 14 octobre 2026 : conserver le guidage du peel jusqu'au relâchement
 
 Après la correction des va-et-vient, Malik constate que la coupe semble plus

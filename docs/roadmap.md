@@ -2,6 +2,15 @@
 
 ## État actuel — 14 octobre 2026
 
+**Peel guidé :** suite à la capture de Malik, les retours du doigt ne dessinent
+plus un zigzag : médiane par tranches, lissage court et contour limité à la
+soudure ; la couleur blanche/halo est assourdie. Le mouvement au-dessus pour
+soulever reste reconnu, descendre sur l’illustration ne tord plus la coupe.
+Seuil et ouverture au relâchement inchangés. Publié sur `main` au SHA
+`0c4c7b9f808838484b9ece1dbe6bd752831b1395`, Vercel Production READY ; E2E
+45 réussis/1 scénario cloud ignoré. Un essai sur le téléphone réel reste à
+faire pour juger la sensation et le rendu fin.
+
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`
 dans Toi → Réglages et garde le SHA complet au survol. Il distingue le bundle
