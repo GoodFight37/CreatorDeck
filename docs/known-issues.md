@@ -216,8 +216,8 @@ Vérifié localement : store cloud 159/159, `npm test` 73 fichiers / 1 168 tests
 `npm run ecrans` 22 fichiers / 128 tests, TypeScript, ESLint ciblé et build
 réussis. Le build local n'avait pas de variables Supabase ; aucune session réelle
 ni compte de Malik n'a été testé, et aucune donnée de production n'a été modifiée.
-Publication à vérifier. Conséquence : les changements joués hors ligne seront
-remplacés au prochain retour en ligne.
+Publié `c5ac85c6` ; CI `38487628741` en cours au dernier contrôle. Conséquence :
+les changements joués hors ligne seront remplacés au prochain retour en ligne.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|

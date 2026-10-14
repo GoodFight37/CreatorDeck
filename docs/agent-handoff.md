@@ -21,8 +21,11 @@ Vérifications locales : `npm test` 73 fichiers / 1 168 tests ;
 `npm run ecrans` 22 fichiers / 128 tests ; typecheck, ESLint ciblé et build de
 production réussis. Le build est cloudless (variables Supabase absentes), donc
 il ne valide pas le compte réel. Aucun code promo créé et aucune donnée de
-production changée. Code local non publié à ce checkpoint ; avant le push,
-revérifier `main` distant et son SHA.
+production changée. Publié sur `main` au SHA
+`c5ac85c6da72f02073d5cd8d31e6adeb5d030ce9` ; CI GitHub
+[`38487628741`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38487628741)
+en cours (6 jobs au dernier contrôle). Vercel reste à vérifier. Aucun test sur
+le compte de Malik ni accès administrateur Supabase.
 
 ## Visuel Drop et démarrage de la musique — publié, Vercel actif, CI verte, 13 octobre 2026
 

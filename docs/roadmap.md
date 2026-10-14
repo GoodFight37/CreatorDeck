@@ -10,8 +10,8 @@ verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niv
 et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
-- **Sync compte :** correctif local vérifié, prêt à publier, pour que la sauvegarde
-  en ligne soit automatiquement la référence à la connexion et au retour de l'appli ou
+- **Sync compte :** publié sur `main` (`c5ac85c6`) ; la sauvegarde en ligne est
+  automatiquement la référence à la connexion et au retour de l'appli ou
   du réseau ; le sablier ne doit plus ouvrir un choix de versions. À valider et
   publier après les tests. Recharger le cloud peut remplacer les progrès faits
   hors ligne.

@@ -16,8 +16,11 @@ La reprise d'un tirage concurrent relit le serveur avant d'adopter son état.
 
 Validation locale : 1 168 tests unitaires, 128 tests d'écran, TypeScript,
 ESLint ciblé et build de production réussis ; build cloudless sans variables
-Supabase, donc il n'exerce pas une vraie session. Aucune sauvegarde de compte
-ni donnée de production n'a été inspectée ou modifiée. Publication à vérifier.
+Supabase, donc il n'exerce pas une vraie session. Publié le 14 octobre sur
+`main` au SHA `c5ac85c6da72f02073d5cd8d31e6adeb5d030ce9`. CI
+[`38487628741`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38487628741)
+en cours au dernier contrôle. Aucune sauvegarde de compte ni donnée de
+production n'a été inspectée ou modifiée.
 
 ## D-080 — 13 octobre 2026 : faire voir le sachet actuel et démarrer la musique au premier appui
 
