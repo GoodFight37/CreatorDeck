@@ -2,14 +2,18 @@
 
 ## État actuel — 14 octobre 2026
 
-**Lot Binder complet — vérifié localement, publication en cours :** finir ensemble feuilletage,
+**Lot Binder complet — clos, publié et vérifié sur Vercel :** finir ensemble feuilletage,
 protections/dos, matières par rareté, consultation des variantes possédées,
 fiche carte, accessibilité et responsive. D-099. Le lot précédent est conservé
 comme base, sans repartir en petites livraisons. Quantités par variante issues
 des cartes existantes, 12 cartes montées, OFF/réduit respectés. Publication et
 vérifications du lot complet dans le checkpoint courant : DOM 31/31, cinq
 scénarios finitions et sept de feuilletage réussis (un test de timing corrigé),
-TypeScript, ESLint et build passent. Ressenti tactile non certifié.
+TypeScript, ESLint et build passent. Publié à `7d127c0f`, Vercel Production
+`READY` / `success`. Parcours invité de Production contrôlé : pages, dos,
+fiche plein écran, focus/fermeture et largeur 320/390 conformes. Variantes et
+matières possédées contrôlées dans les fixtures locales seulement. Aucun run
+Actions retourné au relevé ; ressenti tactile non certifié.
 
 **Binder — publié et vérifié sur Vercel (autorisé par Malik) :** feuille
 CSS directionnelle, glissement horizontal avec flèches/clavier conservés,
@@ -250,8 +254,9 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Terminer et publier le lot Binder complet (D-099), puis changer de chantier.
-   Ne plus proposer séparément les matières, dos, fiche et variantes du même lot.
+1. Le lot Binder complet (D-099) est livré et contrôlé. Passer à un autre
+   chantier cohérent autorisé ; ne plus proposer séparément les matières,
+   dos, fiche et variantes de ce lot clos.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
    autres travaux sur une demande de test joueur ni retoucher les seuils sans
    symptôme précis. Le parcours automatique du rituel sur Vercel a déjà passé.

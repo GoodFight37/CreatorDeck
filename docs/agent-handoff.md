@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Binder complet vérifié localement
+## Checkpoint courant — lot Binder complet publié, Vercel vérifié
 
 - Malik refuse les petites passes successives : terminer un ensemble cohérent
   avec interface, états, gestes, accessibilité, responsive, docs et publication,
@@ -36,9 +36,26 @@
   décorative ni dépendance, audio, gameplay, Drop ou ouverture modifiés.
 - Fichiers applicatifs : `binder-view.tsx`, `creator-card.tsx`,
   `card-inspect-modal.tsx`, `drop-binder.css`. Tests navigateur Binder et docs.
-  Réservation Binder active ; prochaine action : commit
-  et push normaux sur main, relever CI/READY et parcourir la Production.
-  Rien de ce lot final n'est encore publié ; ressenti tactile non certifié.
+  Publication : code/tests/docs au commit
+  [`7d127c0ffaa35709b3db55e5951c1ae2fc48aa16`](https://github.com/GoodFight37/CreatorDeck/commit/7d127c0ffaa35709b3db55e5951c1ae2fc48aa16),
+  push normal sur `main` confirmé par ls-remote. Vercel Production du même SHA
+  [`7bXeQ9WwPa95J4Uo2i6TSGRHSUSd`](https://vercel.com/hafsi37-2386/creator-deckk/7bXeQ9WwPa95J4Uo2i6TSGRHSUSd)
+  `READY`, contrôle `success`. Aucun run GitHub Actions retourné au relevé,
+  donc aucune CI complète déclarée verte.
+- Contrôle du site [creator-deckk.vercel.app](https://creator-deckk.vercel.app/)
+  à 390 × 844 en invité, sans fausse carte injectée ni compte connecté :
+  Obtenues par défaut puis Toutes, 12 dos, flèches/verrou/swipe/retour, noms
+  longs, fiche plein écran avec emblème, fond inert, focus et fermeture Escape
+  avec retour à la carte. Largeur 320/390 conforme. Capture inspectée :
+  `/tmp/creatordeck-binder-final-production-390.png`. Les matières et variantes
+  possédées sont validées dans les fixtures locales seulement (5 cas navigateur
+  de finition réussis), pas dans la collection serveur d'un joueur.
+- Lot UI Binder clos : feuilletage, matières, protecteurs, dos, variantes,
+  compteurs, fiche et accessibilité traités ensemble. Réservation libérée.
+  Ne plus proposer des micro-retouches du même lot ; prochaine livraison sur
+  un autre chantier complet autorisé. Retour Binder seulement pour défaut
+  concret ou nouvelle demande. Ressenti tactile non certifié par Chromium.
+  SHA du checkpoint : `git log -1 --format=%H -- docs/agent-handoff.md`.
 
 ## Historique — Binder : feuilletage et lisibilité publiés, Vercel vérifié
 

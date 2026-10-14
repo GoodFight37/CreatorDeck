@@ -1,4 +1,4 @@
-## Binder — compteur de variante trompeur et finitions dispersées, lot en validation
+## Binder — compteur de variante trompeur corrigé, lot complet livré
 
 Sur `2f15ea60`, le Binder agrège le nombre de copies et choisit la meilleure
 variante ; sa fiche dit ensuite « copies dans cette variante » avec le total.
@@ -6,7 +6,11 @@ Avec deux Standard et une Gold, cela attribue trois copies à Gold à tort.
 D-099 sépare quantités réelles par variante et total, avec consultation des
 variantes déjà possédées. Aucun stock ni solde changé. Les matières, dos,
 pochettes et fiche font partie du même lot, avec OFF/réduit et accessibilité.
-Statut, preuves et publication : checkpoint courant. La sensation tactile
+Publié à `7d127c0f`, Vercel `READY` / `success`. DOM 31/31, cas navigateur
+matières/variantes/focus 5/5, feuilletage retesté après correction d'un test de
+timing, types/lint/build réussis. Site invité parcouru à 320/390 px ; quantités
+possédées contrôlées dans les fixtures locales, aucun compte modifié.
+Preuves détaillées : checkpoint courant. La sensation tactile
 reste ouverte ; ne pas la confondre avec les résultats navigateur.
 
 ## Binder — noms tronqués et feuilletage peu lisible, corrigés et déployés

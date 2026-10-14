@@ -23,6 +23,13 @@
   inventées, ou styles qui changent les cartes du Drop/reveal. Ressenti réel
   non certifié par les scénarios Chromium. Preuves/version dans la passation.
 
+Validation D-099 : DOM ciblés 31/31 ; 11/12 E2E initiaux puis test de timing
+corrigé/retenté 1/1, finitions finales 5/5 ; types, lint, diff-check et build
+réussis. Publié à `7d127c0f`, Vercel Production `READY` / `success`. Site invité
+parcouru à 320/390 px : pages, dos, fiche, focus, fermeture conformes ; variantes
+possédées vérifiées localement. Aucun run Actions retourné. Lot clos, pas de
+micro-chantier Binder restant à reproposer automatiquement.
+
 ## D-098 — 14 octobre 2026 : feuilleter le Binder sans gêner la consultation
 
 - Autorisation de Malik pour le chantier UI recommandé : feuilletage physique
