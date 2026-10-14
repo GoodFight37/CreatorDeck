@@ -1,5 +1,39 @@
 # Reprise rapide — 14 octobre 2026
 
+## Checkpoint courant — audit audio et composition Drop
+
+- Branche `main`, base auditée `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683` ;
+  corrections applicatives et documentation en cours sur cette base. Vérifier
+  le SHA distant après le commit de cette passation.
+- Audio : le préchargement SFX crée un `AudioContext` dès le montage, mais ne
+  doit pas lancer la BGM. Auparavant le démarrage au premier contrôle incluait
+  des actions d'onboarding/navigation, et `PackTear` commandait lui-même le
+  duck puis restaurait le hub au démontage, ce qui pouvait rendre la scène
+  incohérente. Une seule boucle Web Audio est maintenant lancée par l'action
+  réelle d'ouverture (booster ou cadeau tutoriel) ; l'app reste propriétaire
+  de la scène. `setMusicScene` ne démarre jamais de source. Un mute durant le
+  chargement interdit le démarrage tardif ; mute puis unmute et stop/redémarrage
+  recréent une source unique. Gain testé : hub `0.9`, pack/reveal `0.018`,
+  Tribunal `0`. Son de l'application et Musique restent indépendants.
+- Drop : les règles courtes qui réduisaient la pochette à 52/48/44vw
+  contredisaient la taille mobile voulue. Leur retrait conserve la taille
+  commune `min(58vw, 220px, 34dvh)` ; le contenu et les CTA restent accessibles
+  par défilement. À 390 × 844, le test vérifie les labels, l'indication de geste,
+  l'absence de débordement horizontal et au moins 12 px entre scène et ticket.
+  Capture Playwright disponible dans `test-results/`; elle ne remplace pas le
+  rendu d'un téléphone physique.
+- Validation : E2E ciblé téléphone 7/7, `npm run ecrans` 130/130,
+  `npm run typecheck` passe, `src/lib/sfx.test.ts` 22/22. La suite unitaire
+  globale donne 1 154 réussis et 17 échecs hors lot : 11 `spawnSync git EPERM`
+  dans `push-essai.test.ts`, six scripts seed catalogue/saisons sans sortie
+  attendue. Le build statique local reste non confirmé : le worker Next est
+  suspendu après la compilation malgré nettoyage des workers orphelins ; ne pas
+  le compter comme réussi. Vercel/CI pour le nouveau SHA à vérifier après push.
+- Restent ouverts : choix final de la musique, écoute sur haut-parleur réel,
+  contrôle physique des biseaux/côtés 3D, et sensation du peel. Malik teste le
+  web Vercel, jamais l'APK. Les E2E ne closent aucun de ces retours subjectifs.
+
+
 - Projet : CreatorDeck, application web testée sur Vercel. Malik n’utilise pas
   l’APK pour ses validations. Lire `AGENTS.md`, `docs/README.md`, la roadmap,
   le périmètre et ce checkpoint avant de reprendre.

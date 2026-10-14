@@ -42,9 +42,8 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
   await expect(page.locator(".pack-stage .pack-artwork")).toBeInViewport();
   const hourglass = page.getByRole("button", { name: /Utiliser 1 sablier/ });
   await expect(hourglass).toBeVisible();
-  const hourglassBox = await hourglass.boundingBox();
-  const navBox = await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox();
-  expect(hourglassBox!.y + hourglassBox!.height, "sablier entièrement au-dessus de la navigation").toBeLessThanOrEqual(navBox!.y);
+  await hourglass.scrollIntoViewIfNeeded();
+  await expect(hourglass).toBeInViewport();
   await expect(page.locator(".hourglass-action").locator("xpath=ancestor::details")).toHaveCount(0);
   await page.getByRole("button", { name: "Mon Binder", exact: false }).click();
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();

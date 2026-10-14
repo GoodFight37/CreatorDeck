@@ -15,11 +15,20 @@ directement branchée sur la sortie média, se situe théoriquement autour de
 `-23,6 LUFS` au hub après le gain `0,9`. Le téléphone règle le volume perçu ;
 ces mesures ne remplacent pas l'écoute physique.
 
-Le premier geste joueur crée/déverrouille l'AudioContext, conformément à la
-politique autoplay des navigateurs mobiles, même si la réserve est vide.
-L'ouverture du booster fait ensuite passer le mix à la scène pack. Au hub la
-musique reste en fond ; elle baisse pendant le booster ; le Tribunal la coupe
-pour laisser respirer les sons de tampon et de marteau. Deux réglages séparés
+Le préchargement des bruitages peut créer l'AudioContext au montage, mais ne
+démarre pas la musique. La boucle unique ne démarre que dans l'action de jeu
+qui ouvre réellement un booster ou le cadeau tutoriel, afin de conserver un
+geste utilisateur valide sur navigateur mobile. La navigation et la fin de
+l'onboarding restent muettes. `creator-deck-app.tsx` est l'unique propriétaire
+des scènes ; `setMusicScene()` ne crée jamais de lecteur ni de source et les
+composants de reveal ne restaurent pas eux-mêmes le hub au démontage. Si le
+décodage termine après le premier geste, le moteur reprend l'AudioContext
+suspendu avant de démarrer. Le garde `musicStopped` empêche un mute intervenu
+pendant le chargement de lancer la piste en retard. Unmute ou redémarrage
+explicite crée une nouvelle source en boucle, sans doublon. Au hub la musique
+reste en fond ; elle baisse à `0,018` pendant le booster et tout le reveal ; le
+Tribunal la coupe à `0` pour laisser respirer les sons de tampon et de marteau.
+Le gain hub est `0,9`. Deux réglages séparés
 dans Toi pilotent désormais les sons de jeu (bruitages et synthèse) et la
 musique. Ils sont activés par défaut et mémorisés séparément. Les crans de
 volume dans l'application ont été retirés : le volume média du téléphone règle
@@ -27,6 +36,13 @@ les deux. Pour les joueurs déjà installés, un ancien choix Son OFF devient OF
 sur les deux interrupteurs ; un ancien choix ON garde les deux actifs. Reflets
 reste activé par défaut si aucun choix n'est enregistré ;
 `prefers-reduced-motion` reste prioritaire sur les animations.
+
+Les tests unitaires instrumentent la source Web Audio pour vérifier boucle,
+mute/unmute, arrêt/redémarrage et scènes. Les E2E simulent le graphe audio :
+ils vérifient qu'aucune boucle ne démarre durant l'onboarding, qu'un clic de jeu
+en démarre une seule, que le gain est `0,018` pendant déchirure/reveal et revient
+à `0,9` après fermeture. Cela ne prouve pas le niveau acoustique sur le
+haut-parleur d'un téléphone ; le ressenti doit encore être contrôlé sur Vercel.
 
 ## Direction et exemples d'écoute — choix final en attente
 

@@ -52,15 +52,18 @@ après la fin du déploiement Vercel. L'empreinte affichée dans Toi permet de
 comparer la version ouverte avec le dernier checkpoint de la
 [passation](docs/agent-handoff.md).
 
-Le chantier tactile du booster est en reprise après un test joueur : la coupe
-doit suivre un tracé libre sur la soudure, pas former un rail. L'état, le SHA et
-le retour attendu sont dans la [roadmap](docs/roadmap.md) et la
-[passation](docs/agent-handoff.md). Aucun succès visuel n'est déduit du seul fait
-que les E2E passent.
+Le peel libre s'ouvre normalement au test Vercel, mais Malik le trouve encore
+perfectible. Le ressenti reste ouvert ; les tests automatiques ne le déclarent
+pas résolu. L'état, le SHA et la prochaine priorité sont dans la
+[roadmap](docs/roadmap.md) et la [passation](docs/agent-handoff.md).
 
 L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
 La BGM actuelle reste un prototype ; les candidats à écouter, avec leurs
-crédits, sont dans [audio-assets.md](docs/audio-assets.md). Pour le reste,
+crédits, sont dans [audio-assets.md](docs/audio-assets.md). L'audit courant
+garde une seule boucle Web Audio, démarrée par une action de jeu, atténuée
+pendant l'ouverture et le reveal, puis rétablie à la fermeture. Le Drop garde
+son grand booster sur les petits écrans et fait défiler son contenu. Le rendu
+physique reste à confirmer. Pour le reste,
 consulter le [plan courant](docs/roadmap.md), les
 [problèmes connus](docs/known-issues.md) et le [guide des documents](docs/README.md).
 

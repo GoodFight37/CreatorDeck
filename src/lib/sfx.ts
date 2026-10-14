@@ -426,6 +426,7 @@ let musicSource: AudioBufferSourceNode | null = null;
 let musicBuffer: AudioBuffer | null = null;
 let musicLoading: Promise<void> | null = null;
 let musicScene: MusicScene = "hub";
+let musicStopped = false;
 
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
@@ -443,7 +444,7 @@ function applyMusicScene(ctx: AudioContextLike): void {
 }
 
 function startMusicSource(ctx: AudioContextLike): void {
-  if (!musicBuffer || musicSource) return;
+  if (!musicBuffer || musicSource || musicMuted || musicStopped) return;
   try {
     musicGain = ctx.createGain();
     musicGain.connect(ctx.destination);
@@ -463,14 +464,25 @@ function startMusicSource(ctx: AudioContextLike): void {
 export function startGameAudio(scene: MusicScene = "hub"): void {
   musicScene = scene;
   if (isMusicMuted()) return;
+  musicStopped = false;
   const ctx = audioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") void ctx.resume();
+  if (musicSource) {
+    applyMusicScene(ctx);
+    return;
+  }
   if (!musicLoading && !musicBuffer) {
     musicLoading = fetch(MUSIC_SRC)
       .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
       .then((data) => ctx.decodeAudioData(data))
-      .then((buffer) => { musicBuffer = buffer; startMusicSource(ctx); })
+      .then((buffer) => {
+        musicBuffer = buffer;
+        // Decode may finish after the trusted tap has returned. Retry resume
+        // before creating the one loop so mobile browsers do not stay silent.
+        if (ctx.state === "suspended") void ctx.resume();
+        startMusicSource(ctx);
+      })
       .catch(() => { /* La partie reste jouable sans musique. */ })
       .then(() => { musicLoading = null; });
   }
@@ -492,6 +504,7 @@ export function duckHubMusic(duck = true): void {
 
 /** Silence the existing hub loop without changing the music preference. */
 export function stopHubMusic(): void {
+  musicStopped = true;
   if (musicSource) {
     try { musicSource.stop(); } catch { /* Already stopped. */ }
     musicSource.disconnect();
@@ -503,7 +516,7 @@ export function stopHubMusic(): void {
 /** Atténue fortement la boucle pendant un pack et la coupe au Tribunal. */
 export function setMusicScene(scene: MusicScene): void {
   musicScene = scene;
-  if (context) applyMusicScene(context);
+  if (context && musicSource) applyMusicScene(context);
 }
 
 function audioContext(): AudioContextLike | null {

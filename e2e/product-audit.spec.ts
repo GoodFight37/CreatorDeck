@@ -1,6 +1,6 @@
 import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 
-test("Drop garde le sachet et le CTA en premier sur mobile compact, Tribunal accessible", async ({ page }) => {
+test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Tribunal accessible", async ({ page }) => {
   await gotoDeck(page);
   await page.setViewportSize({ width: 320, height: 568 });
   const pack = page.locator(".home-view .pack-stage .pack-artwork");
@@ -11,14 +11,16 @@ test("Drop garde le sachet et le CTA en premier sur mobile compact, Tribunal acc
   expect(openBox).not.toBeNull();
   expect(packBox!.y).toBeGreaterThanOrEqual(0);
   expect(packBox!.y + packBox!.height).toBeLessThan(568 - 64);
-  expect(openBox!.y + openBox!.height).toBeLessThan(568 - 64);
+  await open.scrollIntoViewIfNeeded();
+  await expect(open).toBeInViewport();
 
   await page.setViewportSize({ width: 412, height: 915 });
   const entry = page.getByRole("button", { name: /Ouvrir le Tribunal des Bannis/ });
   const tallBox = await entry.boundingBox();
   await expect(entry.locator(".tribunal-entry-badge")).toHaveText("5");
   expect(tallBox).not.toBeNull();
-  expect(tallBox!.y + tallBox!.height).toBeLessThan(915 - 64);
+  await entry.scrollIntoViewIfNeeded();
+  await expect(entry).toBeInViewport();
 
   await page.setViewportSize({ width: 320, height: 568 });
   await entry.scrollIntoViewIfNeeded();

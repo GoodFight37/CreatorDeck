@@ -1,18 +1,6 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
-test("la musique du hub est demandée au premier geste, pas au chargement", async ({ page }) => {
-  await gotoDeck(page);
-  let musiqueDemandee = false;
-  page.on("request", (request) => {
-    if (request.url().endsWith("/music/hub-late-night.mp3")) musiqueDemandee = true;
-  });
-  await expect.poll(() => musiqueDemandee).toBe(false);
-  const musique = page.waitForResponse((response) => response.url().endsWith("/music/hub-late-night.mp3"));
-  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
-  expect((await musique).status()).toBe(200);
-});
-
-test("la boucle démarre dans Web Audio avec le gain normal du hub", async ({ page }) => {
+test("le premier clic de jeu démarre une seule boucle Web Audio, pas le tutoriel", async ({ page }) => {
   await page.addInitScript(() => {
     const probe = { starts: 0, gains: [] as number[], loops: [] as boolean[] };
     (window as typeof window & { __creatorDeckAudioProbe?: typeof probe }).__creatorDeckAudioProbe = probe;
@@ -39,18 +27,57 @@ test("la boucle démarre dans Web Audio avec le gain normal du hub", async ({ pa
     };
   });
   await gotoDeck(page);
-  const music = page.waitForResponse((response) => response.url().endsWith("/music/hub-late-night.mp3"));
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
-  expect((await music).status()).toBe(200);
+  await expect.poll(() => page.evaluate(() =>
+    (window as typeof window & { __creatorDeckAudioProbe?: { loops: boolean[] } }).__creatorDeckAudioProbe?.loops.filter(Boolean).length ?? 0,
+  )).toBe(0);
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
 
   await expect.poll(() => page.evaluate(() =>
-    (window as typeof window & { __creatorDeckAudioProbe?: { starts: number } }).__creatorDeckAudioProbe?.starts ?? 0,
+    (window as typeof window & { __creatorDeckAudioProbe?: { loops: boolean[] } }).__creatorDeckAudioProbe?.loops.filter(Boolean).length ?? 0,
   )).toBe(1);
   const probe = await page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; gains: number[]; loops: boolean[] } }).__creatorDeckAudioProbe,
   );
   expect(probe?.loops).toEqual([true]);
-  expect(probe?.gains.some((gain) => Math.abs(gain - 0.9) < 0.001)).toBe(true);
+  expect(probe?.gains.some((gain) => Math.abs(gain - 0.018) < 0.001)).toBe(true);
+});
+
+test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au hub à la fermeture", async ({ page }) => {
+  await page.addInitScript(() => {
+    const probe = { starts: 0, loops: [] as boolean[], gains: [] as number[] };
+    (window as typeof window & { __creatorDeckAudioProbe?: typeof probe }).__creatorDeckAudioProbe = probe;
+    const createGain = AudioContext.prototype.createGain;
+    AudioContext.prototype.createGain = function () {
+      const node = createGain.call(this);
+      const schedule = node.gain.setTargetAtTime.bind(node.gain);
+      node.gain.setTargetAtTime = (value, time, constant) => {
+        probe.gains.push(value);
+        return schedule(value, time, constant);
+      };
+      return node;
+    };
+    const createSource = AudioContext.prototype.createBufferSource;
+    AudioContext.prototype.createBufferSource = function () {
+      const source = createSource.call(this);
+      const start = source.start.bind(source);
+      source.start = (...args) => { probe.starts += 1; probe.loops.push(source.loop); return start(...args); };
+      return source;
+    };
+  });
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  const scene = page.locator(".opening-continuum");
+  await expect.poll(() => page.evaluate(() =>
+    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.018) ?? false,
+  )).toBe(true);
+  await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
+  await page.getByRole("dialog", { name: "Résultat du booster" }).getByRole("button", { name: "Fermer", exact: true }).click();
+  await expect.poll(() => page.evaluate(() =>
+    (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.at(-1) ?? 0,
+  )).toBe(0.9);
+  const probe = await page.evaluate(() => (window as typeof window & { __creatorDeckAudioProbe?: { starts: number; loops: boolean[] } }).__creatorDeckAudioProbe);
+  expect(probe?.loops.filter(Boolean)).toHaveLength(1);
 });
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {

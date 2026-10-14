@@ -1,20 +1,39 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
-test("Drop garde le sachet et le CTA complets avant la navigation sur mobile", async ({ page }) => {
+test("Drop garde le sachet accessible, sans débordement, en viewport mobile compact", async ({ page }) => {
   await gotoDeck(page);
   for (const viewport of [{ width: 360, height: 740 }, { width: 320, height: 568 }]) {
     await page.setViewportSize(viewport); await page.evaluate(() => window.scrollTo(0, 0));
-    const nav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;
-    for (const selector of [".pack-artwork", ".open-panel .primary-action"]) {
-      const rect = (await page.locator(selector).boundingBox())!;
-      expect(rect.y).toBeGreaterThanOrEqual(0); expect(rect.y + rect.height).toBeLessThanOrEqual(nav.y);
-    }
+    const pack = page.locator(".pack-stage .pack-artwork");
+    const packRect = (await pack.boundingBox())!;
+    expect(packRect.y).toBeGreaterThanOrEqual(0);
+    expect(packRect.height).toBeGreaterThanOrEqual(Math.min(viewport.width * .58, 220, viewport.height * .34) - 1);
+    await expect(page.locator(".pack-stage .pack-copy")).toBeVisible();
+    const stage = (await page.locator(".pack-stage").boundingBox())!;
+    const ticket = (await page.locator(".open-panel").boundingBox())!;
+    expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
+    await expect(page.getByRole("button", { name: /Essayer le pack tutoriel|Ouvrir le booster/ })).toBeVisible();
     const cta = (await page.locator(".primary-action").boundingBox())!;
     const pity = (await page.locator(".pity-row.now").boundingBox())!;
     expect(cta.y + cta.height).toBeLessThanOrEqual(pity.y);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
     await page.screenshot({ path: `test-results/drop-priorites-${viewport.width}-${test.info().project.name}.png` });
   }
+});
+
+test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page }) => {
+  await gotoDeck(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const pack = page.locator(".pack-stage .pack-artwork");
+  const box = (await pack.boundingBox())!;
+  expect(box.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
+  await expect(page.locator(".pack-stage .pack-copy")).toContainText("5 cartes");
+  await expect(page.locator(".pack-stage .pull-hint")).toBeVisible();
+  const stage = (await page.locator(".pack-stage").boundingBox())!;
+  const ticket = (await page.locator(".open-panel").boundingBox())!;
+  expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
 });
 
 test("Craft démarre sur les recettes à portée et le recyclage reste utile à vide", async ({ page }) => {

@@ -48,8 +48,8 @@ import {
   playPackOpening,
   playReward,
   preloadSamples,
-  setMusicScene,
   startGameAudio,
+  setMusicScene,
 } from "@/lib/sfx";
 import { getGameView, type DrawnCard, type StreakRewardGrant } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
@@ -159,29 +159,6 @@ export function CreatorDeckApp() {
   // charge à l'ouverture de son onglet.)
   useEffect(() => {
     preloadSamples(SFX_USUELS);
-  }, []);
-  // Les navigateurs mobiles bloquent l'autoplay. Le premier geste explicite
-  // vers un contrôle démarre la musique du hub, même si le joueur ne peut pas
-  // encore ouvrir de booster. Le clic d'ouverture passera ensuite la scène en
-  // mode pack et gardera ses bruitages prioritaires.
-  useEffect(() => {
-    const startOnFirstControl = (event: Event) => {
-      if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest(
-        "button, a, input, select, textarea, [role='button'], [role='switch']",
-      )) return;
-      // The onboarding's Continue/Finish buttons are not game controls; keep
-      // the audio request tied to the first action in the actual game hub.
-      if (event.target.closest(".welcome-overlay")) return;
-      startGameAudio("hub");
-      window.removeEventListener("pointerdown", startOnFirstControl, true);
-      window.removeEventListener("keydown", startOnFirstControl, true);
-    };
-    window.addEventListener("pointerdown", startOnFirstControl, true);
-    window.addEventListener("keydown", startOnFirstControl, true);
-    return () => {
-      window.removeEventListener("pointerdown", startOnFirstControl, true);
-      window.removeEventListener("keydown", startOnFirstControl, true);
-    };
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);
@@ -433,7 +410,7 @@ export function CreatorDeckApp() {
 
   async function claimAndOpenWelcomeGift() {
     if (giftBusy) return;
-    startGameAudio("pack");
+    startGameAudio("hub");
     setGiftBusy(true);
     try {
       if (!cloud.onboarding?.giftClaimed) {
@@ -460,7 +437,9 @@ export function CreatorDeckApp() {
    * until both the draw and the gesture have completed, with no empty frame.
    */
   function commencerDechirure(kind: "live" | "scene"): Promise<void> {
-    startGameAudio("pack");
+    // Start inside the trusted gameplay gesture so mobile browsers unlock
+    // Web Audio. The scene effect immediately applies the pack duck.
+    startGameAudio("hub");
     pendingPresentationLeft.current = false;
     // Capture before the opening button is disabled, and keep it through reveal.
     setPresentationReturnFocus(document.activeElement instanceof HTMLElement

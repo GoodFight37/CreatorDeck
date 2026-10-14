@@ -1,5 +1,26 @@
 # Décisions CreatorDeck
 
+## D-093 — 14 octobre 2026 : un seul propriétaire de la musique et garder le grand booster
+
+`creator-deck-app.tsx` est l'unique propriétaire des scènes musicales. Le
+préchargement SFX peut créer l'AudioContext, mais ne démarre pas la BGM ;
+`setMusicScene()` met seulement à jour la scène et le gain d'une source déjà
+existante. Seules les actions qui ouvrent un booster ou le cadeau tutoriel
+démarrent la boucle, dans leur gestionnaire de geste utilisateur. Les
+composants enfant d'ouverture ne pilotent ni l'atténuation ni le retour au hub.
+Cela évite l'autoplay pendant l'onboarding et une restauration de scène au
+démontage. Garder les préférences Son de l'application et Musique distinctes ;
+le mute musical interrompt aussi un chargement en cours. Gains conservés : hub
+`0,9`, pack/reveal `0,018`, Tribunal `0`. Les tests instrumentés contrôlent une
+seule boucle et le retour au hub après fermeture.
+
+Pour le Drop, garder le booster à `min(58vw, 220px, 34dvh)` également sur les
+écrans courts. Les CTA peuvent être atteints par le défilement de la page ; ne
+pas réduire la pochette pour forcer tout l'accueil au-dessus de la navigation.
+À 390 × 844, vérifier labels, hint, absence de débordement horizontal et au
+moins 12 px entre la scène et le ticket. Le rendu des côtés sur un vrai appareil
+et le ressenti tactile restent des validations joueur.
+
 ## D-092 — 14 octobre 2026 : laisser le joueur dessiner la coupe librement
 
 Après le test Vercel, Malik confirme que le sachet paraît encore « dur comme du

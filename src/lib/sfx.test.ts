@@ -95,8 +95,8 @@ describe("mix de la musique", () => {
 
   it("démarre une boucle, applique les scènes et sépare les deux interrupteurs", async () => {
     const targetHistory: number[] = [];
-    const gainNodes: Array<{ gain: { value: number; setTargetAtTime: (value: number) => void }; connect: () => void }> = [];
-    const sources: Array<{ loop: boolean; start: ReturnType<typeof vi.fn>; connect: () => void }> = [];
+    const gainNodes: Array<{ gain: { value: number; setTargetAtTime: (value: number) => void }; connect: () => void; disconnect: ReturnType<typeof vi.fn> }> = [];
+    const sources: Array<{ loop: boolean; start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; connect: () => void }> = [];
     const audioBuffer = { duration: 24 };
     const fakeWindow = {
       localStorage: { getItem: () => null, setItem: () => {} },
@@ -112,12 +112,12 @@ describe("mix de la musique", () => {
             value: 0,
             setTargetAtTime: (value: number) => { gain.value = value; targetHistory.push(value); },
           };
-          const node = { gain, connect: () => {} };
+          const node = { gain, connect: () => {}, disconnect: vi.fn() };
           gainNodes.push(node);
           return node;
         }
         createBufferSource() {
-          const source = { loop: false, buffer: null, start: vi.fn(), connect: () => {} };
+          const source = { loop: false, buffer: null, start: vi.fn(), stop: vi.fn(), disconnect: vi.fn(), connect: () => {} };
           sources.push(source);
           return source;
         }
@@ -146,10 +146,25 @@ describe("mix de la musique", () => {
       expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
       audio.setMuted(false);
       audio.setMusicMuted(true);
-      expect(targetHistory.at(-1)).toBe(0);
+      expect(sources[0].stop).toHaveBeenCalledOnce();
+      expect(gainNodes[0].disconnect).toHaveBeenCalledOnce();
       audio.setMusicMuted(false);
-      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
-      expect(sources).toHaveLength(1);
+      await vi.waitFor(() => expect(sources).toHaveLength(2));
+      expect(sources[1].start).toHaveBeenCalledOnce();
+      expect(gainNodes[1].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      audio.setMusicScene("pack");
+      audio.stopHubMusic();
+      expect(sources[1].stop).toHaveBeenCalledOnce();
+      audio.startGameAudio("pack");
+      await vi.waitFor(() => expect(sources).toHaveLength(3));
+      expect(sources[2].start).toHaveBeenCalledOnce();
+      expect(sources[2].loop).toBe(true);
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack);
+      audio.stopHubMusic();
+      audio.startGameAudio("hub");
+      await vi.waitFor(() => expect(sources).toHaveLength(4));
+      expect(sources.slice(1).every((source) => source.start.mock.calls.length === 1)).toBe(true);
+      expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
     } finally {
       vi.unstubAllGlobals();
       vi.resetModules();

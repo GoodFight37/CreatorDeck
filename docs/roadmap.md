@@ -2,6 +2,24 @@
 
 ## État actuel — 14 octobre 2026
 
+**Reprise après audit audio/Drop :** la base de cet audit est le code publié
+`d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`. La correction locale centralise
+le démarrage de la BGM dans l'action de jeu, protège la boucle contre les
+chargements asynchrones après mute et supprime le pilotage concurrent dans les
+composants du pack. Le Drop conserve `min(58vw, 220px, 34dvh)` en hauteur courte
+au lieu d'être réduit par des media queries contradictoires ; les tests vérifient
+390 × 844 et le défilement des CTA en petit viewport. Voir le checkpoint de
+[passation](agent-handoff.md) pour les résultats exacts. La lecture réelle sur
+téléphone, le rendu des biseaux et la sensation du peel restent des validations
+joueur, pas des succès déduits des tests.
+
+La suite de test ciblée passe : 7 E2E téléphone, typecheck et écrans 130/130.
+La suite unitaire complète a 1 154 tests réussis et 17 échecs sans rapport
+direct avec ces changements (sous-processus Git refusés par le sandbox et
+sorties vides des scripts de vérification des seeds). Le build local n'est pas
+encore confirmé ; il est bloqué dans le worker Next de cet environnement. Voir
+le checkpoint pour le détail et le statut Vercel après publication.
+
 **Version web :** Production est `READY` sur le commit documentaire
 `99fc67ca2d76e1e743b8d50ffd9f4042083e74d7`; le code du peel servi reste celui de
 `3fec7895fae6bbed0eb05bf4baa6e246f55fefdc`. L'empreinte visible peut indiquer
