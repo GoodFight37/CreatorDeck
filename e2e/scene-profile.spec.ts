@@ -52,6 +52,20 @@ test("Toi montre sa vitrine, ses pages réunies et retrouve la collection choisi
   await expect(page.locator(".binder-next-pages")).toContainText(name);
 });
 
+test("la feuille du code booster reste entièrement visible sur téléphone", async ({ page }) => {
+  await page.setViewportSize({ width: 412, height: 915 });
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.locator(".profile-online-fold > summary").click();
+  await page.getByRole("button", { name: "J'ai un code booster" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "J'ai un code" });
+  const panel = dialog.locator(".odds-panel");
+  await expect(dialog).toBeVisible();
+  await expect(panel).toBeInViewport({ ratio: 1 });
+  await expect(dialog.getByRole("heading", { name: "J'ai un code" })).toBeVisible();
+});
+
 test("avec le serveur : Scène attend le statut puis revalide avant toute déchirure", async ({ page }) => {
   test.skip(!cloudUrl(), "RPC simulés dans le job cloud, aucune base réelle utilisée.");
   const user = "11111111-1111-4111-8111-111111111111";

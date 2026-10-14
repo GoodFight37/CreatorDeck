@@ -17,6 +17,7 @@
  * c'est exactement ce que le joueur a besoin de lire.
  */
 import { useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { AlertTriangle, Info, Ticket, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
 import { RACCOURCIS_LISIBLES, connecteToi } from "@/lib/cloud/store-text";
@@ -36,7 +37,11 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
     if (outcome.status === "done") setCode("");
   }
 
-  return (
+  // ProfileView animates its screen with `transform`. A fixed-position dialog
+  // rendered inside that animated subtree is positioned against the long
+  // profile page (and clipped by app-shell), so only its dimmed backdrop is
+  // visible on mobile. Mount the dialog at document level like a real modal.
+  return createPortal(
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="J'ai un code">
       <div className="odds-panel">
         <header className="odds-head">
@@ -107,6 +112,7 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

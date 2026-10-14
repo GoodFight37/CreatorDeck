@@ -338,3 +338,16 @@ ni crédit n'a encore été créé. Après insertion, le joueur saisit `MALIK` d
 Toi → Fonctionnalités en ligne → J'ai un code booster. Une APK Capacitor doit
 être reconstruite pour contenir le nouveau client ; le déploiement Vercel met
 à jour la version web.
+
+## Fenêtre du code booster invisible sur téléphone — corrigée, 14 octobre 2026
+
+Après l'appui sur « J'ai un code booster », le voile assombrissait le profil
+mais la fenêtre restait hors de l'écran. `ProfileView` est animé par un
+`transform` ; le positionnement `fixed` de la fenêtre prenait donc comme repère
+la longue page du profil, puis l'overflow du cadre principal la coupait. La
+feuille est désormais montée dans `document.body`, hors de cette animation et
+de ce rognage. Le test écran vérifie qu'elle est attachée au niveau du document
+et que son titre/champ sont présents. Écrans : 129/129 ; E2E ciblé : 6 réussis
+(bureau et téléphone), deux scénarios cloud ignorés faute de configuration réelle ;
+TypeScript et lint ciblé réussis. CI et déploiement à consigner après publication ;
+l'APK devra être reconstruite pour intégrer le correctif.

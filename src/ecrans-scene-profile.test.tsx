@@ -131,7 +131,10 @@ describe("statut Scène et identité de collectionneur", () => {
   it("ouvre la feuille de rédemption des boosters depuis les fonctions en ligne", async () => {
     await profile([]);
     banc.appuyer("J'ai un code booster");
-    expect(document.querySelector('[role="dialog"][aria-label="J\'ai un code"]')).not.toBeNull();
+    const dialog = document.querySelector('[role="dialog"][aria-label="J\'ai un code"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.parentElement).toBe(document.body);
+    expect(dialog?.querySelector(".odds-panel h2")?.textContent).toBe("J'ai un code");
     expect(document.querySelector<HTMLInputElement>('[role="dialog"] input')?.placeholder).toBe("BOOSTER-2026");
   });
 
