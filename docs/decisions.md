@@ -13,8 +13,11 @@ plus de niveaux Discret/Normal/Fort. La liste de candidats et leurs licences
 est dans [audio-assets.md](audio-assets.md). Aucune piste externe n'est encore
 intégrée : Malik l'écoutera et choisira avant remplacement. Le ducking du pack,
 le silence du Tribunal, les timings de reveal et les effets restent inchangés.
-Les interrupteurs et le mix séparé sont validés par les tests ciblés ; le rendu
-des candidats et le nouvel asset restent à choisir et à écouter sur téléphone.
+Les interrupteurs et le mix séparé passent les tests ciblés (22 unitaires audio,
+6 tests d'écran), le typecheck, ESLint ciblé et le build cloudless. Publié sur
+`main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a`, Vercel Production
+READY ; la CI GitHub `38499177407` tournait lors du dernier relevé. Le rendu des
+candidats et le nouvel asset restent à choisir et à écouter sur téléphone.
 
 ## D-086 — 14 octobre 2026 : retirer la pulsation percussive de la BGM
 

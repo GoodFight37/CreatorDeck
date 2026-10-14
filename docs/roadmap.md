@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État de départ de cette reprise :** `main` au SHA `b5e240363fb841df6e1a4d8c541e592e0c6301f9` ;
+**État du code :** `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -15,12 +15,13 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   Malik sur le « tac-tac » : 24 s, `-22,7 LUFS` source. La reprise locale
   sépare maintenant l'interrupteur Son de l'application de celui de la Musique
   et retire les niveaux de volume ; la shortlist de pistes à écouter est dans
-  [audio-assets.md](audio-assets.md). Aucun morceau externe choisi ou intégré
-  pour l'instant. Le mix conserve son ducking du pack et le silence Tribunal.
-  CI
+  [audio-assets.md](audio-assets.md). Ces deux interrupteurs sont publiés sur
+  `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a`, Vercel Production
+  READY. Aucun morceau externe choisi ou intégré pour l'instant. Le mix
+  conserve son ducking du pack et le silence Tribunal. CI
   [`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
-  verte (6/6), Vercel Production READY pour l'ancien code publié ; les contrôles
-  séparés sont encore locaux. Écoute physique et choix d'une piste nécessaires.
+  verte (6/6) pour le code précédent ; le run `38499177407` du dernier commit
+  est encore en cours. Écoute physique et choix d'une piste nécessaires.
   Voir
   [D-085](decisions.md), [D-086](decisions.md) et [audio-assets.md](audio-assets.md).
 

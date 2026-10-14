@@ -6,9 +6,10 @@ percussion ; ce comportement est conforme à sa composition, mais ne donne pas
 au hub l'identité musicale souhaitée. Une sélection de quatre pistes de
 synthwave/electronica est préparée dans [audio-assets.md](audio-assets.md), avec
 licences d'utilisation dans un jeu et crédit requis. Aucune candidate n'est
-intégrée avant le choix du joueur. Les réglages locaux séparent désormais
+intégrée avant le choix du joueur. Les réglages publiés séparent désormais
 « Son de l’application » de « Musique » et retirent les niveaux de volume ;
-test écoute sur téléphone et sélection restent à faire.
+le changement est sur `main` (`ee62de9e`) et Vercel Production est READY. Le test
+écoute sur téléphone et la sélection d'une piste restent à faire.
 
 ## Pulsation « tac-tac » de la musique du hub — corrigée et publiée, 14 octobre 2026
 
