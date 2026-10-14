@@ -11,7 +11,9 @@ couvre au moins 88 % de la largeur tactile de la soudure et atteint l'effort
 minimal ; une tentative incomplète efface son trait et replie le sachet. Le
 relâchement reste obligatoire. SHA `8619f461792bc55f77aab826907e4025f866f097`
 confirmé sur `main`, Vercel Production READY ; E2E 47 réussis/1 scénario cloud
-ignoré. CI `38569239104` en cours ; essai sur téléphone réel à faire. Le
+ignoré. La première CI a bloqué sur une vieille assertion Toi qui interdisait
+le numéro de version déjà visible ; correction du test faite, `npm run ecrans`
+passe 130/130, CI de confirmation à relancer. Essai sur téléphone réel à faire. Le
 lissage précédent est au SHA `0c4c7b9f808838484b9ece1dbe6bd752831b1395`.
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas

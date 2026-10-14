@@ -16,7 +16,12 @@ typecheck et ESLint ciblé passent ; E2E `e2e/pack-tear.spec.ts` : 47 réussis,
 et téléphone simulé (8/8). `npm run build` réussit ; le garde-cloud indique
 que les variables Supabase ne sont pas présentes, donc ce build local est
 statique sans cloud. La CI GitHub [`38569239104`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38569239104)
-est en cours (6 jobs au dernier relevé). Aucun téléphone physique testé.
+est terminée avec 5 jobs réussis et un échec dans le banc d'écrans : une
+ancienne assertion refusait le libellé « Version … » du profil alors que cette
+version est déjà affichée et testée ailleurs. Assertion réalignée sur le
+format attendu ; le test isolé passe (11/11) et toute la suite `npm run ecrans`
+passe (130/130). Ce correctif de test et le relevé sont à publier ; CI relancée
+ensuite. Aucun téléphone physique testé.
 
 Fichiers applicatifs : `src/components/pack-tear.tsx`,
 `src/lib/peel-geometry.ts`, son test, `src/app/booster-continuity.css` et

@@ -76,7 +76,7 @@ describe("les écrans", () => {
     expect(profile).toContain("Mon compte");
     expect(profile).toContain("Ta vitrine");
     expect(profile).toContain("Ta première carte t’attend.");
-    expect(profile).not.toContain("Version ");
+    expect(profile).toMatch(/Version (?:Android|Web) · (?:[a-f0-9]{7}|locale)/);
     expect(profile).not.toContain("0/1000");
     expect(profile).not.toContain("0 boosters");
   });
