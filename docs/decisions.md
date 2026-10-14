@@ -1,5 +1,36 @@
 # Décisions CreatorDeck
 
+## D-102 — 14 octobre 2026 : un journal joueur livré avec chaque mise à jour
+
+**Contexte :** Malik demande des patch notes consultables, puis autorise un
+projet complet sans nouvelle étape de confirmation. Les lots précédents sont
+publiés mais leur historique se trouve surtout dans les documents techniques.
+
+**Décision :** entrée Nouveautés dans Toi, accessible sans compte, historique
+récent en premier, détail, filtre non lu et marquage explicite individuel/global.
+Repère discret dans la navigation Toi, séparé de Last Pack. Aucun popup imposé.
+Sept notes initiales résument journal, Toi, Atelier, Binder, rituel, Drop et audio.
+Elles ne prétendent pas reconstituer tout Git ni déclarer le peel parfait.
+
+**Publication :** source statique typée dans `release-notes.ts`, livrée avec le
+code. Ajouter une note à chaque changement joueur (consigne permanente dans
+AGENTS et procédure `nouveautes.md`), sans badge pour un commit de documentation
+ou de test seul. Identifiants publiés stables ; pas de notes automatiques issues
+des commits techniques, CMS, nouveau flux réseau ou migration.
+
+**Lecture :** préférence locale indépendante de la sauvegarde, liste versionnée
+d’identifiants lus, nouveaux identifiants non lus. Store unique abonnable pour
+navigation/profil/feuille ; persistance, événements entre onglets et relecture
+avant écriture. Stockage invalide toléré ; si bloqué, repli session explicitement
+signalé. Ne pas promettre une synchro entre appareils ou une écriture atomique
+entre onglets. Aucune carte, monnaie, préférence audio ou compte modifié.
+
+**Accessibilité :** portail hors app inerte, focus captif, retour/Escape et
+restauration du défilement/focus. Focus replacé dans la feuille lorsqu’un
+marquage fait disparaître/désactive la commande. Mobile 320/390 et bureau
+1024, sans animation requise. Preuves et déploiement au checkpoint courant.
+
+
 ## D-101 — 14 octobre 2026 : terminer le pilier Toi en un seul lot
 
 **Contexte :** après les lots Drop/ouverture, Binder et Atelier, Malik autorise

@@ -1,6 +1,38 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Toi complet publié, Vercel vérifié
+## Checkpoint courant — lot Nouveautés complet, publication en préparation
+
+- Demande : gros lot autonome jusqu’à publication. Choix : système de patch
+  notes proposé juste avant, accepté par l’autorisation générale de Malik.
+  Base `main` propre `bf0dcbabd29753d0620d675cf46b40d489d712d3`, GitHub
+  identique via ls-remote/fetch ; contrôle Vercel précédent réussi.
+- D-102 : entrée Toi → Nouveautés, sept notes joueur récentes, historique,
+  détail/filtre non lu, marquage individuel/global explicite, repère sur Toi.
+  Aucun popup au lancement. Store local indépendant, même onglet/autres onglets,
+  stockage mal formé toléré, stockage bloqué → lecture session avec message.
+- Focus captif/portail, app inerte, fermeture Escape/Retour, focus et défilement
+  restaurés ; focus remis au dialogue quand une commande disparaît/se désactive.
+  Last Pack conserve son indicateur séparé. Aucun compte/monnaie/carte/audio
+  modifié ; notes statiques livrées avec le code, sans serveur supplémentaire.
+- AGENTS exige désormais une note pour chaque livraison joueur, même commit
+  que le code ; exemption pour documentation/tests seuls. Procédure dans
+  `docs/nouveautes.md`, ajoutée au guide. Ne pas changer les IDs publiés.
+- Fichiers : données/store `release-notes.ts`, hook `use-release-notes.ts`,
+  feuille/CSS `release-notes-sheet.tsx`/`release-notes.css`, entrées ProfileView
+  et CreatorDeckApp, tests logique/DOM/navigateur et documentation.
+- Tests : logique 8/8 ; DOM ciblés journal + profil 21/21 ; trois scénarios
+  navigateur lecture/persistance/focus, responsive/mouvement réduit et stockage
+  refusé 3/3, puis propagation entre deux onglets 1/1. Typecheck et ESLint
+  ciblés réussis. Aucun test échoué dans ces runs. Captures liste/détail à
+  390×844 inspectées, lisibles sans coupure. Build final `npm run build`
+  réussi, cinq pages exportées ; variables Supabase locales absentes : preuve
+  de compilation, pas de cloud. Publication et contrôle Production à compléter.
+- Limites : les marqueurs de lecture sont locaux, non synchronisés entre
+  appareils ; aucune garantie d’écriture atomique entre onglets concurrents.
+  Les notes initiales ne constituent pas un historique exhaustif du dépôt.
+  Ressenti tactile et APK non certifiés par Chromium.
+
+## Checkpoint précédent — lot Toi complet publié, Vercel vérifié
 
 - Demande : « Fait tout d'un coup » pour le pilier Toi complet. Base `main`
   propre `ae8dfacd04286851149ca1601154ede8c5d008d3`, GitHub identique par

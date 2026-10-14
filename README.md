@@ -64,6 +64,11 @@ suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
 le joueur. Le tutoriel de Production passe à 390 × 844 ; voir le checkpoint
 courant pour les tests et les limites de cette émulation mobile.
 
+**Toi → Nouveautés** rassemble les mises à jour du jeu : historique, détail,
+notes non lues et marquage de lecture sur cet appareil, sans compte ni popup
+au lancement. Chaque livraison visible ajoute sa note au même commit que le
+code ; [procédure](docs/nouveautes.md). Publication et preuves au checkpoint.
+
 Le pilier **Toi** réunit vitrine inspectable, variantes possédées, niveau/XP,
 collection et accès direct aux objectifs. Compte, réglages et informations
 restent disponibles dans des sections repliées ; états de sauvegarde et

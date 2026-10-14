@@ -1,3 +1,15 @@
+## Nouveautés — historique joueur ajouté (14 octobre 2026)
+
+Base `bf0dcbab` : les changements récents n'avaient pas de journal destiné aux
+joueurs. D-102 ajoute historique/détail/non-lu dans Toi et la consigne d’ajout
+à chaque livraison visible, sans popup ni nouveau système de notifications
+serveur. **Limite assumée :** lecture locale au navigateur, pas au compte ;
+un autre appareil ou un effacement du stockage peut montrer les mêmes notes
+non lues. Stockage refusé : lecture conservée pour la session, avec message,
+sans bloquer l’historique. Les conflits simultanés entre onglets n’ont pas de
+garantie atomique ; aucune donnée de jeu n’est écrite par le journal.
+Validation et état publié dans le checkpoint courant.
+
 ## Toi — objectifs masqués et vitrine non consultable, corrigés (14 octobre 2026)
 
 Base `ae8dfacd` : les objectifs/Tribunal étaient repliés dans les fonctionnalités

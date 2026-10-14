@@ -2,6 +2,13 @@
 
 ## État actuel — 14 octobre 2026
 
+**Journal Nouveautés (D-102) — implémenté, validation finale en cours :** historique
+joueur depuis Toi, détail/filtre, repère discret de non-lu, lecture explicite
+individuelle/globale, persistance locale et repli session si stockage bloqué.
+Sept notes initiales, règle de publication par livraison dans AGENTS et
+`nouveautes.md`. Aucun nouveau backend, gameplay ou audio. Preuves et
+publication au checkpoint courant.
+
 **Lot Toi complet (D-101) — clos, publié et vérifié sur Vercel :** vitrine
 inspectable et noms complets, variantes/quantités réelles, niveau/XP et
 collection visibles, accès direct aux objectifs, réglages et outils regroupés.
@@ -272,7 +279,8 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Le lot Toi complet (D-101) suit Atelier (D-100) et Binder (D-099). Passer à un autre
+1. Nouveautés (D-102) complète les lots Toi (D-101), Atelier (D-100) et Binder
+   (D-099). Ajouter les prochaines notes avec chaque livraison visible. Passer à un autre
    chantier cohérent autorisé ; ne plus proposer séparément les matières,
    dos, fiche et variantes de ce lot clos.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les

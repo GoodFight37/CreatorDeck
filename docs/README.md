@@ -19,6 +19,8 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   de `docs/agent-handoff.md`, avec SHA et liens de CI.
 - **Décisions durables** : `docs/decisions.md`.
 - **Défauts encore ouverts** : `docs/known-issues.md`.
+- **Notes visibles par les joueurs** : [nouveautes.md](nouveautes.md), procédure
+  de publication et lecture dans Toi → Nouveautés.
 - **Anciennes livraisons** : `docs/historique-livraisons.md`. C'est une archive,
   pas la liste des tâches encore ouvertes.
 - **Détails techniques d'une fonctionnalité** : le document spécialisé lié par

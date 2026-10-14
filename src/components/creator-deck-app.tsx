@@ -33,6 +33,7 @@ import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
 import { usePoints } from "@/hooks/use-points";
 import { usePush } from "@/hooks/use-push";
+import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
@@ -86,6 +87,7 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
 
 
 export function CreatorDeckApp() {
+  const { unreadCount: unreadReleaseNotes } = useReleaseNotes();
   useEffect(() => {
     applyTiltChoice();
   }, []);
@@ -841,6 +843,7 @@ export function CreatorDeckApp() {
         ) : null}
       </div>
 
+      <span id="release-notes-nav-description" hidden>{unreadReleaseNotes} note{unreadReleaseNotes > 1 ? "s" : ""} non lue{unreadReleaseNotes > 1 ? "s" : ""} dans Nouveautés</span>
       <nav className="bottom-nav" aria-label="Navigation principale">
         {NAV_ITEMS.map((item) => (
           <button
@@ -850,9 +853,11 @@ export function CreatorDeckApp() {
             // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
             onClick={() => setTab(item.id)}
             aria-current={tab === item.id ? "page" : undefined}
+            aria-describedby={item.id === "profile" && unreadReleaseNotes > 0 ? "release-notes-nav-description" : undefined}
           >
             {item.icon}
             <span>{item.label}</span>
+            {item.id === "profile" && unreadReleaseNotes > 0 ? <i className="nav-news-dot" aria-hidden="true" /> : null}
             {/* La pastille du Last Pack : « il y a un paquet à prendre, là,
                 maintenant ». Elle vit sur l'onglet qui mène au menu, comme
                 celle du carnet — pas de cinquième onglet. */}

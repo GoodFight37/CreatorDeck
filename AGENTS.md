@@ -90,6 +90,11 @@ historiques utiles, en les datant et en signalant ce qui a été remplacé.
 - Documenter toute décision importante dans `docs/decisions.md` : date,
   contexte, décision, justification, alternatives/refus, preuves et conséquences.
   Cela inclut l'interface, les animations, le tactile, les sons et les règles du jeu.
+- Pour chaque livraison visible par les joueurs, ajouter sa note en français
+  dans `src/lib/release-notes.ts` **dans le même commit que le code**, en tête
+  et avec un identifiant unique stable. Préserver les anciennes notes et ne
+  décrire que ce qui est réellement livré ; pas de nouveau repère pour un
+  commit seulement documentaire/de test. Procédure : `docs/nouveautes.md`.
 - Mettre à jour la roadmap dès qu'un statut change, avec dépendances et critères
   d'acceptation. « Implémenté » ne signifie ni « validé sur téléphone » ni
   « déployé ». Ne jamais marquer terminé un travail incomplet.

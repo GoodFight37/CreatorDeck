@@ -4,6 +4,8 @@
  * L'écran **Toi** : vitrine, progression et réglages essentiels.
  */
 import "./profile-collection.css";
+import { ReleaseNotesSheet } from "@/components/release-notes-sheet";
+import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { useBackHandler } from "@/hooks/use-back-handler";
@@ -154,6 +156,8 @@ export function ProfileView({
   const [tools, setTools] = useState(0);
   const [lastTap, setLastTap] = useState(0);
   const [showPromoCode, setShowPromoCode] = useState(false);
+  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
+  const { unreadCount: unreadNotes } = useReleaseNotes();
 
   function tapLevel() {
     if (!studioAvailable) return;
@@ -330,6 +334,12 @@ export function ProfileView({
           <ChevronRight size={18} />
         </button>
       ) : null}
+
+      <button type="button" className="profile-news" onClick={() => setShowReleaseNotes(true)} aria-label={`Nouveautés${unreadNotes ? ` · ${unreadNotes} notes non lues` : " · Tout est lu"}`}>
+        <BookOpen size={22} /><span><strong>Nouveautés</strong><small>Les mises à jour de CreatorDeck</small></span>
+        {unreadNotes > 0 ? <b aria-hidden="true">{unreadNotes}</b> : <ChevronRight size={18} />}
+      </button>
+      {showReleaseNotes ? <ReleaseNotesSheet onClose={() => setShowReleaseNotes(false)} /> : null}
 
       <details className="profile-online-fold">
         <summary>Fonctionnalités en ligne</summary>
