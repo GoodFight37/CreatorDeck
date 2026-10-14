@@ -1,5 +1,21 @@
 # Décisions CreatorDeck
 
+## D-086 — 14 octobre 2026 : retirer la pulsation percussive de la BGM
+
+Malik entendait un « tac-tac » régulier quand Son était activé. Le MP3 servi par
+Vercel était identique à celui du dépôt ; la pulsation se trouvait dans la
+composition et n'était pas un défaut de mise en boucle (la piste boucle toutes
+les 24 s). Remplacement du prototype par une nappe synthétique douce sans
+percussion, accents rapprochés ni samples tiers. Nouveau fichier : 24 s, MP3 mono
+64 kbit/s, `-22,7 LUFS`, crête vraie `-11,5 dBFS`; au gain de scène et volume
+Normal, niveau estimé `-26,1 LUFS`. Le ducking, le mute, les SFX et les timings
+de jeu ne changent pas. Génération reproductible dans
+`scripts/generate-hub-music.py`, détails dans `audio-assets.md`. Écoute physique
+encore nécessaire avant de figer l'asset final. Générateur rejoué et MP3
+identique au hash ; décodage FFmpeg valide. Tests : fichier audio 23/23, projet
+1 169/1 169, E2E audio 2/2 (bureau/téléphone simulé), typecheck, ESLint ciblé,
+build cloudless et `git diff --check` réussis. Asset non publié ; CI à suivre.
+
 ## D-085 — 14 octobre 2026 : relever la BGM du hub devenue inaudible
 
 Le prototype `hub-late-night.mp3` mesurait `-26,4 LUFS` intégrés. Le gain de scène

@@ -2,19 +2,19 @@
 
 `public/music/hub-late-night.mp3` est une boucle prototype originale de 24 s,
 synthétisée pour CreatorDeck puis encodée en MP3 mono 64 kbit/s. Elle ne contient
-ni voix, ni sample tiers. Son intention : basse feutrée, ambiance tardive de
-stream, sans nappe fantasy ni effet de victoire permanent. Ce n'est pas encore
-un master final.
+ni voix, ni sample tiers, ni percussion. Le premier prototype avait une pulsation
+percussive qui ressemblait à des petits coups réguliers sur haut-parleur mobile ;
+le fichier actuel est une nappe grave et douce, sans accents rapprochés.
+Ce n'est pas encore un master final.
 
 Le mix applicatif donne un gain relatif de `0,9` au hub, `0,018` pendant un
 pack et `0` au Tribunal. Analyse `ffmpeg ebur128` : la boucle source est à
-`-26,4 LUFS` intégrés. Avant correction, le gain de scène `0,24` était appliqué
-au canal musical, puis le volume Normal (`0,75`) était appliqué deux fois : sur
-le canal musical et sur le bus partagé. Le résultat était donc environ
-`-43,8 LUFS`, trop bas pour rester audible sur téléphone. Le gain de scène
-`0,9` est maintenant appliqué au canal ; le volume global ne s'applique qu'une
-fois sur le bus. La boucle se situe autour de `-29,8 LUFS` au cran Normal, avec
-une crête maximale estimée à `-14,1 dBFS` :
+`-22,7 LUFS` intégrés (crête vraie `-11,5 dBFS`, LRA `1,5 LU`). L'ancien asset
+mesurait `-26,4 LUFS` et contenait la pulsation rapportée. Avec son ancien gain
+de scène `0,24` et le volume Normal (`0,75`) appliqué deux fois, il tombait vers
+`-43,8 LUFS`. Le gain de scène `0,9` est maintenant appliqué au canal, et le
+volume global une seule fois sur le bus. Le nouvel asset se situe autour de
+`-26,1 LUFS` au cran Normal, avec une crête vraie estimée à `-14,9 dBFS` :
 elle reste en fond et conserve de la marge pour les bruitages. Le cran Discret
 reste plus bas. Ces niveaux doivent encore être jugés à l'écoute sur téléphone ;
 la mesure ne remplace pas l'essai physique.
@@ -39,8 +39,21 @@ les animations elles-mêmes.
    perçu discret. Ne pas inclure de voix/sample sans droits documentés.
 3. Garder `src/lib/sfx.test.ts` vert : il vérifie la présence d'un flux MP3 et
    une taille raisonnable. Vérifier l'écoute au casque et sur haut-parleur de
-   téléphone avant de remplacer le prototype.
+   téléphone avant de figer l'asset final.
 4. Si le nom ou le format change, mettre à jour ce document et le test.
+
+## Régénérer la boucle prototype
+
+Le fichier actuel est généré avec le script Python standard-library :
+
+```sh
+python scripts/generate-hub-music.py
+ffmpeg -hide_banner -loglevel error -y -i /tmp/creatordeck-hub-ambient.wav -codec:a libmp3lame -b:a 64k -ar 24000 -ac 1 public/music/hub-late-night.mp3
+```
+
+Les fréquences sont alignées sur la durée pour que leurs phases se rejoignent
+à la fin de la boucle. Le script ne dépend pas de paquets Python tiers ; FFmpeg
+et son encodeur MP3 servent seulement à compresser le WAV temporaire.
 
 Les sons de reveal déjà présents servent de stingers courts : `playBang` pour
 les raretés qui suivent leur silence, `playReward` pour les jalons, et les sons

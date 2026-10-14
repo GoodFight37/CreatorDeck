@@ -1,3 +1,16 @@
+## Pulsation de la BGM — nouvel asset local à vérifier, 14 octobre 2026
+
+Après que Malik a décrit une pulsation « tac-tac » rapprochée, j'ai comparé
+l'asset local et celui servi par `https://creator-deckk.vercel.app/music/hub-late-night.mp3` :
+les SHA-256 correspondaient, et la réponse Vercel était 200 `audio/mpeg`. La
+source prototype contenait la pulsation ; le nœud Web Audio ne boucle qu'à la
+fin du fichier de 24 s. Asset remplacé localement par une nappe sans percussion,
+générée par `scripts/generate-hub-music.py` puis compressée en MP3. Mesures du
+nouveau fichier : `-22,7 LUFS`, crête vraie `-11,5 dBFS`. Tests ciblés et suite
+projet passent (1 169/1 169), E2E audio 2/2, typecheck, lint et build réussis.
+Asset non publié ; écoute physique reste à faire. Détails : [D-086](decisions.md) et
+[audio-assets.md](audio-assets.md).
+
 ## BGM du hub — double atténuation corrigée et publiée, 14 octobre 2026
 
 La boucle était chargée, mais le mix avait deux défauts : le gain hub `0,24`
