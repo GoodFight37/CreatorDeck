@@ -58,8 +58,12 @@ téléphone restent ouverts. Voir [audio-assets.md](audio-assets.md).
 au terme de l'animation ; un second appui pouvait alors agir sur la carte
 suivante immédiatement. L'avance est maintenant ignorée et le bouton désactivé
 jusqu'à la face visible. Le raccourci explicite « Révéler les cinq cartes d'un
-coup » reste disponible. Tests unitaires écran ciblés passent ; Playwright local
-n'a pas démarré son serveur. Vérifier le nouveau scénario dans la CI après push.
+coup » reste disponible. Tests ciblés locaux passent ; Playwright local n'a pas
+démarré son serveur. Le scénario a passé GitHub Actions
+[`38613807945`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38613807945),
+avec 105/105 E2E verts.
+Vercel status check `success` ; API de déploiement renvoie 403, donc état READY
+non confirmé indépendamment. Le niveau sonore sur appareil reste à écouter.
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`

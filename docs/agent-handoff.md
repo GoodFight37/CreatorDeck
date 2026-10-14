@@ -16,9 +16,15 @@
   reçus pendant ce délai ne sont pas conservés. Le raccourci de révélation totale
   reste disponible.
 - Tests locaux : audio 22/22, écrans concernés 33/33, typecheck et ESLint ciblé
-  réussis. CI du commit reste à lancer. Le scénario Playwright double tap est ajouté,
-  mais le serveur défini par Playwright s'arrête avant le test (exit 1 sans autre
-  diagnostic dans cette exécution). Écoute physique/Vercel non effectuée.
+  réussis. Le serveur E2E local s'est arrêté avant les tests (exit 1 sans autre
+  diagnostic), mais le run GitHub Actions
+  [38613807945](https://github.com/GoodFight37/CreatorDeck/actions/runs/38613807945)
+  est vert : unitaires 1 171/1 171, écrans 130/130, Playwright 105/105, cloud
+  simulé, migrations, lint et build.
+- Vercel status check `success` pour `00a52bb3`. L'API Vercel détaillée renvoie
+  403 dans cette session ; statut `READY` indépendant non vérifié. URL de test :
+  [creator-deckk.vercel.app](https://creator-deckk.vercel.app/). L'écoute réelle
+  reste à faire par Malik.
 - Asset confirmé côté dépôt par ffprobe (142,272 s, 48 kbit/s) ; source mesurée à
   `-15,5 LUFS` / `-0,6 dBTP`. Il reste à confirmer le niveau et la préférence sur
   Vercel. Ne pas modifier les SFX : la demande concerne la musique.

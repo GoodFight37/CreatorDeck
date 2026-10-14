@@ -10,10 +10,13 @@ les appuis pendant l'animation ne sont plus mis en file. Cela supprime la chaîn
 où un appui en attente avançait juste après le flip et où le tap suivant pouvait
 consommer la carte qui venait d'apparaître. Le raccourci explicite « Révéler les
 cinq cartes d'un coup » est conservé. 22 tests audio, 33 tests d'écrans ciblés,
-typecheck et ESLint ciblé passent localement. Le scénario Playwright a été ajouté,
-mais le serveur de test local n'a pas démarré ; sa validation CI reste en attente.
-Le niveau acoustique sur téléphone et le choix musical restent à vérifier après
-déploiement.
+typecheck et ESLint ciblé passent localement. Le serveur Playwright local n'a pas
+démarré, mais la CI GitHub [`38613807945`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38613807945)
+a réussi : unitaires 1 171/1 171, écrans 130/130, E2E 105/105 (dont le test de
+double appui), migrations, cloud simulé et build. Le check Vercel de ce commit
+est `success` ; l'API détaillée Vercel répond 403, donc son état `READY` ne peut
+pas être affirmé indépendamment ici. L'écoute sur téléphone et le choix musical
+final restent ouverts.
 
 ## Audit du démarrage musical et des tailles Drop — corrigé et publié, 14 octobre 2026
 
