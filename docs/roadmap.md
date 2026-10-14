@@ -59,6 +59,17 @@ carte de 1,4 dB, la borne de crête des SFX restant inchangée. SFX/audio 23/23,
 typecheck et ESLint ciblé passent. Le choix final et l'écoute Vercel sur
 téléphone restent ouverts. Voir [audio-assets.md](audio-assets.md).
 
+**Drop — direction visuelle en cours :** objectif « scène d'ouverture de booster »
+plutôt que carte/formulaire. Le patch local garde le pack à
+`min(58vw, 220px, 34dvh)` sur petits écrans, rend ses faces CSS 3D plus lisibles,
+fait boucler un sheen doux en 5 s, renforce sol/halo et place le CTA avant les
+infos secondaires. Le hint long est supprimé, le nom du pack reste visible et
+les jetons sont repliés dans les détails. Aucun audio, WebGL ou changement de
+gameplay. Tests d'écrans 13/13, typecheck, ESLint ciblé et diff-check réussis.
+E2E téléphone non exécutés : Chromium headless Playwright manque dans
+l'environnement. Après publication, vérifier le preview Vercel à 390 × 844 ;
+le ressenti des côtés 3D et de la hiérarchie visuelle reste ouvert.
+
 **Avance des cartes :** un appui pendant le flip était mis en file et exécuté
 au terme de l'animation ; un second appui pouvait alors agir sur la carte
 suivante immédiatement. L'avance est maintenant ignorée et le bouton désactivé

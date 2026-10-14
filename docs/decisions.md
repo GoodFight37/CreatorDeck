@@ -1,5 +1,22 @@
 # Décisions CreatorDeck
 
+## D-094 — 14 octobre 2026 : le Drop est une scène d’ouverture de booster
+
+À la demande de Malik, traiter le Drop comme une scène TCG tactile : conserver
+le sachet à `min(58vw, 220px, 34dvh)`, exposer ses côtés en CSS 3D (aucun
+WebGL), ajouter un sheen léger qui boucle en 5 s et une ombre au sol. Retirer
+la phrase tuto sous le sachet, garder son nom et ses cinq cartes en petit label,
+puis mettre l'action d'ouverture avant les compteurs du ticket. Le compteur de
+jetons est consultable dans un volet secondaire ; les autres actions existantes
+restent accessibles. En tutoriel, le seul CTA principal est « Essayer ».
+
+Les filtres sur le bouton aplatissent les enfants `preserve-3d`, donc la
+profondeur doit être rendue sans filtre sur le bouton. La taille du pack et ses
+côtés restent visibles dans le test 390 × 844, sans réduire le booster pour
+faire tenir toute la page dans l'écran. Les tests navigateur vérifient la
+géométrie, l'animation, l'absence de hint long, le ticket et le débordement ; ils
+ne remplacent pas l'impression de jeu vérifiée sur le Vercel mobile.
+
 ## D-093 — 14 octobre 2026 : un seul propriétaire de la musique et garder le grand booster
 
 `creator-deck-app.tsx` est l'unique propriétaire des scènes musicales. Le
@@ -1032,3 +1049,21 @@ notions distinctes. Le libellé provisoire « Live » a ensuite été remplacé 
 « Obtenue en direct » / « Acquis live » dans D-073. Le badge de direct actuel
 ouvre la chaîne Twitch via HTTPS selon D-074. Aucun changement du Binder ni du
 schéma de données n’a été requis.
+## D-095 — 14 octobre 2026 : scène visuelle du Drop
+
+- Contexte : retour utilisateur sur la direction trop plate et le ticket trop
+  proche d'un formulaire. L'objectif est une sensation de booster TCG, sans
+  changer le gameplay ni le moteur d'ouverture.
+- Décision : garder le sachet à `min(58vw, 220px, 34dvh)`, donner la
+  perspective au conteneur parent sans filtre qui aplatit `preserve-3d`, rendre
+  les faces latérales bordeaux/foil plus larges, ajouter un reflet doux en
+  boucle de 5 s, une ombre elliptique et une vignette. Supprimer le texte
+  tutoriel sous le pack, remonter le CTA et replier l'explication des jetons.
+  Le mode tutoriel n'affiche que « Essayer » comme CTA principal.
+- Alternatives refusées : rétrécir la pochette sur viewport bas, ajouter du
+  WebGL/particules, modifier les règles ou l'audio.
+- Preuve/limite : tests d'écrans 13/13, TypeScript, ESLint ciblé et
+  `git diff --check` passent. Les deux scénarios Playwright téléphone
+  s'arrêtent avant lancement faute de Chromium headless dans l'environnement;
+  le rendu et l'épaisseur perçue des côtés ne sont pas confirmés. Vérifier le
+  déploiement Vercel à 390 × 844 avant clôture visuelle.

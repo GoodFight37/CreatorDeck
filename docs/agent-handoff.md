@@ -1,5 +1,27 @@
 # Reprise rapide — 14 octobre 2026
 
+## Checkpoint courant — scène visuelle du Drop
+
+- Demande de Malik : rendre le Drop tactile/TCG et réduire les éléments qui
+  ressemblent à un formulaire. Base locale et GitHub vérifiées avant édition :
+  `main` / `7667dae973dec1f5cb8902bdf168e7e087bbe7e6` ; déploiement Vercel de
+  cette base `success`. `git ls-remote` est bloqué par le proxy.
+- Changements locaux : taille `min(58vw, 220px, 34dvh)` gardée sur écrans
+  courts, bouton sans filtre pour préserver `preserve-3d`, faces foil plus
+  lisibles, sheen léger 5 s, ombre au sol et vignette de scène ; phrase tuto
+  retirée, label « LIVE DROP · 5 cartes » gardé, CTA « Essayer » et bouton
+  principal remontés au-dessus des infos secondaires. Jetons dans `<details>`.
+- Portée : CSS et structure visuelle légers uniquement. Aucun audio, nouvelle
+  feature gameplay, règle d'économie ou WebGL.
+- Validation locale : tests d'écrans Drop 13/13, `npm run typecheck`, ESLint
+  ciblé et `git diff --check` réussis. E2E tenté pour les deux cas téléphone
+  (viewport compact et 390 × 844), mais Playwright s'arrête avant les tests car
+  son binaire Chromium headless requis est absent. Pas de rendu navigateur ni
+  capture; le ressenti visuel reste donc à confirmer sur le preview Vercel.
+- À la reprise : vérifier le SHA GitHub/Vercel après publication et parcourir
+  le rendu Vercel à 390 × 844. La validation DOM ne prouve pas l'épaisseur
+  perçue des côtés CSS 3D.
+
 ## Checkpoint courant — fondus audio et effets de carte renforcés
 
 - Révision du 14 octobre : BGM préchargée/décodée au montage sans autoplay, puis

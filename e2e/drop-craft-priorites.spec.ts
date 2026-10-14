@@ -12,7 +12,7 @@ test("Drop garde le sachet accessible, sans débordement, en viewport mobile com
     const stage = (await page.locator(".pack-stage").boundingBox())!;
     const ticket = (await page.locator(".open-panel").boundingBox())!;
     expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
-    await expect(page.getByRole("button", { name: /Essayer le pack tutoriel|Ouvrir le booster/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Essayer|Ouvrir le booster/ })).toBeVisible();
     const cta = (await page.locator(".primary-action").boundingBox())!;
     const pity = (await page.locator(".pity-row.now").boundingBox())!;
     expect(cta.y + cta.height).toBeLessThanOrEqual(pity.y);
@@ -27,13 +27,29 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   const pack = page.locator(".pack-stage .pack-artwork");
   const box = (await pack.boundingBox())!;
   expect(box.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
+  expect(box.y).toBeGreaterThanOrEqual(0);
+  expect(box.y + box.height).toBeLessThanOrEqual(844);
   await expect(page.locator(".pack-stage .pack-copy")).toContainText("5 cartes");
-  await expect(page.locator(".pack-stage .pull-hint")).toBeVisible();
+  await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
+  await expect(page.locator(".open-panel .primary-action")).toHaveCSS("min-height", "58px");
+  expect(await page.locator(".pack-stage").evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
+  expect(await pack.evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
+  expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
+  const side = page.locator(".pack-stage .pack-3d-side-right");
+  await expect(side).toBeVisible();
+  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("16px");
+  expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
+  const sheenStyle = await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node));
+  expect(sheenStyle.animationIterationCount).toBe("infinite");
+  expect(sheenStyle.animationDuration).toBe("5s");
   const stage = (await page.locator(".pack-stage").boundingBox())!;
   const ticket = (await page.locator(".open-panel").boundingBox())!;
   expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await expect(page.locator(".open-panel > .primary-action")).toBeVisible();
   await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
 });
 
 test("Craft démarre sur les recettes à portée et le recyclage reste utile à vide", async ({ page }) => {

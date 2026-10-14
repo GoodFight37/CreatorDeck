@@ -4,7 +4,7 @@
 import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { ChevronRight, CircleUserRound, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
+import { ChevronRight, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
 
 import "./drop-craft.css";
 
@@ -218,35 +218,17 @@ export function HomeView({
 
       {/* Sachet + CTA d'abord : au-dessus du pli */}
       <section className="pack-stage stage-live"
-        aria-label={`${pack.label} : appuie sur le sachet pour préparer l'ouverture`}
+        aria-label={`${pack.label} : ${pack.size} cartes`}
       >
         <div className="pack-shadow" />
         <PackArtwork onClick={openArtwork} disabled={opening || (!needsAccount && stock <= 0)} />
         <div className="pack-copy">
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
-          <span>{pack.size} cartes</span>
+          <span>· {pack.size} cartes</span>
         </div>
-        <p className="pull-hint">Appuie sur le sachet pour préparer l’ouverture.</p>
       </section>
 
-      <section className="open-panel">
-        <div className="stock-row">
-          <div>
-            <span>{needsAccount ? "Pack tutoriel" : "Ta réserve"}</span>
-            <strong>
-              {needsAccount ? tutorialAvailable ? 1 : 0 : stock}<small>/{needsAccount ? 1 : pack.max}</small>
-            </strong>
-          </div>
-          {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
-          {promoPacks > 0 && !needsAccount ? (
-            <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
-              {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
-            </span>
-          ) : null}
-          {nextAt !== null && !needsAccount ? (
-            <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
-          ) : null}
-        </div>
+      <section className="open-panel" data-tutorial={needsAccount ? "true" : "false"}>
         <button
           className="primary-action"
           onClick={onOpen}
@@ -255,15 +237,32 @@ export function HomeView({
           {opening ? (
             <LoaderCircle className="spin" size={19} />
           ) : needsAccount ? (
-            <CircleUserRound size={19} />
+            <Zap size={19} />
           ) : (
             <Zap size={19} />
           )}
           <span>
-            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer le pack tutoriel" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
+            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
           </span>
           {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
         </button>
+        {!needsAccount ? (
+          <div className="stock-row">
+            <div>
+              <span>Ta réserve</span>
+              <strong>{stock}<small>/{pack.max}</small></strong>
+            </div>
+            {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
+            {promoPacks > 0 ? (
+              <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
+                {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
+              </span>
+            ) : null}
+            {nextAt !== null ? (
+              <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
+            ) : null}
+          </div>
+        ) : null}
         <button type="button" className="pity-row now" onClick={onShowOdds}
           aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
           <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
@@ -291,14 +290,17 @@ export function HomeView({
           <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
         ) : null}
 
-        <div className="token-row">
-          <Coins size={14} />
-          <span>
-            <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
-              ? `encore ${game.tokens.missing} pour une carte`
-              : "une carte au choix disponible"}
-          </span>
-        </div>
+        <details className="drop-token-details">
+          <summary>Jetons <strong>{game.tokens.count}</strong></summary>
+          <div className="token-row">
+            <Coins size={14} />
+            <span>
+              <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
+                ? `encore ${game.tokens.missing} pour une carte`
+                : "une carte au choix disponible"}
+            </span>
+          </div>
+        </details>
       </section>
 
       {/* Direct sous le CTA */}

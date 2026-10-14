@@ -334,7 +334,7 @@
 .pack-stage .pull-hint svg { flex-shrink: 0; }
 .pack-stage .pack-shadow { bottom: 116px; }
 .pack-stage .pack-artwork.pack-live {
-  width: min(46vw, 180px);
+  width: min(58vw, 220px, 34dvh);
   height: auto;
   aspect-ratio: 600 / 880;
   overflow: visible;

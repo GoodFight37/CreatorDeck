@@ -59,7 +59,7 @@ test("avec le serveur : pack tutoriel invité, sans gain ni appel de tirage", as
   let calls = 0;
   await page.route("**/rest/v1/rpc/open_pack", async (route) => { calls++; await route.abort(); });
   await gotoDeck(page, false);
-  await page.getByRole("button", { name: "Essayer le pack tutoriel", exact: true }).click();
+  await page.getByRole("button", { name: "Essayer", exact: true }).click();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();

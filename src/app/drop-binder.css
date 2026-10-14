@@ -27,14 +27,20 @@
 .home-view .pack-stage {
   position: relative;
   isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   min-height: 0;
-  margin: 12px 0 0;
-  padding: 20px 12px 28px;
-  gap: 10px;
-  border-top: 1px solid var(--line);
+  margin: 8px 0 0;
+  padding: 18px 14px 30px;
+  gap: 8px;
+  overflow: visible;
+  border: 0;
   background:
-    radial-gradient(ellipse 55% 30% at 50% 82%, rgba(0,0,0,.55), transparent 72%),
-    radial-gradient(ellipse 40% 22% at 50% 74%, rgba(191,74,127,.14), transparent 75%);
+    radial-gradient(ellipse 58% 16% at 50% 88%, rgba(112,20,53,.34), transparent 78%),
+    radial-gradient(ellipse 76% 66% at 50% 43%, rgba(146,49,84,.12), transparent 78%),
+    radial-gradient(ellipse 110% 82% at 50% 48%, transparent 48%, rgba(0,0,0,.4) 100%);
 }
 .home-view .pack-stage::before {
   content: "DROP";
@@ -45,7 +51,7 @@
   transform: translateX(-50%);
   color: transparent;
   -webkit-text-stroke: 1px var(--line-strong);
-  opacity: .35;
+  opacity: .13;
   font: 700 clamp(100px, 31vw, 170px)/1 var(--font-display);
   letter-spacing: .025em;
   pointer-events: none;
@@ -56,15 +62,17 @@
   width: min(58vw, 220px, 34dvh);
   height: auto;
   aspect-ratio: 600 / 880;
+  position: relative;
+  flex: 0 0 auto;
   overflow: visible;
   border: 0;
   background: none;
   box-shadow: none;
   padding: 0;
-  transform: perspective(900px) rotateY(-6deg) rotateX(4deg);
+  transform: perspective(900px) rotateY(-8deg) rotateX(5deg);
   transform-style: preserve-3d;
-  filter: drop-shadow(10px 24px 18px rgba(0,0,0,.62))
-          drop-shadow(0 0 20px rgba(191,74,127,.18));
+  filter: none;
+  z-index: 1;
 }
 .home-view .pack-3d-object {
   display: block;
@@ -72,6 +80,7 @@
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
+  transform: rotateX(var(--pack-tilt-x, 0deg)) rotateY(var(--pack-tilt-y, 0deg));
 }
 .home-view .pack-3d-side {
   position: absolute;
@@ -79,22 +88,28 @@
   backface-visibility: hidden;
 }
 .home-view .pack-3d-side-left {
-  top: 3%; bottom: 3%; left: -8px; width: 10px;
+  z-index: 1;
+  top: 2px; bottom: 4px; left: -14px; width: 16px;
   transform: rotateY(-90deg);
   transform-origin: right center;
-  background: linear-gradient(90deg, #2a0f1c, #8a3a52 55%, #3d1228);
+  background: linear-gradient(90deg, #220b18, #b75470 48%, #55162f 78%, #290d1c);
+  box-shadow: inset 2px 0 rgba(255,220,226,.5), inset -2px 0 rgba(15,0,12,.65);
 }
 .home-view .pack-3d-side-right {
-  top: 3%; bottom: 3%; right: -8px; width: 10px;
+  z-index: 3;
+  top: 2px; bottom: 4px; right: -14px; width: 16px;
   transform: rotateY(90deg);
   transform-origin: left center;
-  background: linear-gradient(90deg, #d4788a, #4a1530 45%, #1a0a14);
+  background: linear-gradient(90deg, #f4a2aa, #a44162 28%, #5c1537 56%, #200a19);
+  box-shadow: inset 2px 0 rgba(255,235,226,.65), inset -3px 0 rgba(12,0,10,.7);
 }
 .home-view .pack-3d-side-bottom {
-  left: 2%; right: 2%; bottom: -8px; height: 10px;
+  z-index: 3;
+  left: 2px; right: 2px; bottom: -13px; height: 14px;
   transform: rotateX(90deg);
   transform-origin: center top;
-  background: linear-gradient(180deg, #8a3a52, #2a0f1c);
+  background: linear-gradient(180deg, #bb5b75, #6c1b3b 48%, #210a19);
+  box-shadow: inset 0 2px rgba(255,218,226,.42), inset 0 -3px rgba(12,0,10,.7);
 }
 .home-view .pack-3d-front {
   display: block;
@@ -104,33 +119,45 @@
   transform: translateZ(6px);
 }
 /* The foil specular is defined in booster-continuity.css. Keep one animation source. */
-.home-view .pack-copy h2 { font-size: 24px; letter-spacing: .07em; }
-.home-view .pack-copy span { font-size: 12px; }
-.home-view .pull-hint { font-size: 12px; }
+.home-view .pack-copy {
+  position: static;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0,0,0,.8);
+}
+.home-view .pack-copy h2 { color: #f7e9e7; font-size: 15px; letter-spacing: .14em; }
+.home-view .pack-copy span { color: rgba(241,221,224,.7); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
 .home-view .pack-shadow {
   left: 50%;
-  bottom: 72px;
-  width: 58%;
-  height: 28px;
+  bottom: auto;
+  top: calc(18px + min(58vw, 220px, 34dvh) * 1.4667 - 3px);
+  width: min(78%, 250px);
+  height: 42px;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse, rgba(0,0,0,.65), transparent 70%);
-  filter: blur(8px);
-  opacity: 1;
+  background: radial-gradient(ellipse, rgba(0,0,0,.9) 0 32%, rgba(0,0,0,.55) 50%, rgba(125,20,55,.3) 68%, transparent 100%);
+  filter: blur(12px);
+  opacity: .95;
 }
 
 .home-view .open-panel {
   position: relative;
-  margin-top: 18px;
-  padding: 16px;
-  border: none;
-  border-radius: 2px;
-  background: var(--paper);
+  margin-top: 12px;
+  padding: 14px 14px 12px;
+  border: 1px solid rgba(250,224,205,.62);
+  border-radius: 7px;
+  background: linear-gradient(145deg, #f1e3cc 0%, #e8d6b9 56%, #d9c19f 100%);
   color: var(--ink);
+  box-shadow: inset 0 0 0 2px rgba(103,48,48,.1), 0 16px 34px rgba(0,0,0,.34);
 }
 .home-view .open-panel::before, .home-view .open-panel::after {
   content: "";
   position: absolute;
-  top: 52px;
+  top: 34px;
   width: 14px;
   height: 14px;
   border-radius: 50%;
@@ -144,15 +171,31 @@
 .home-view .stock-row strong small { color: var(--muted-2); font-size: 20px; }
 .home-view .timer-copy { color: var(--accent-deep); font-size: 12px; font-variant-numeric: tabular-nums; }
 .home-view .timer-copy.full { color: var(--ink); }
-.home-view .primary-action { background: var(--accent-deep); color: var(--paper); min-height: 54px; border-radius: 2px; }
-.home-view .primary-action:disabled { background: var(--panel-3); color: var(--paper); opacity: .65; }
+.home-view .primary-action {
+  min-height: 58px;
+  border: 1px solid rgba(255,232,229,.38);
+  border-radius: 4px;
+  background: linear-gradient(180deg, #a52c54 0%, #791735 62%, #60142e 100%);
+  color: #fff4ee;
+  box-shadow: inset 0 1px rgba(255,255,255,.22), 0 5px 0 #421023, 0 10px 18px rgba(71,7,28,.28);
+  text-shadow: 0 1px 2px rgba(28,0,12,.35);
+}
+.home-view .primary-action:disabled { background: #563344; color: #e4d4dc; opacity: .75; box-shadow: inset 0 1px rgba(255,255,255,.12); }
+.home-view .open-panel[data-tutorial="true"] .primary-action { min-height: 62px; font-size: 25px; letter-spacing: .12em; }
+.home-view .open-panel[data-tutorial="true"] .pity-row,
+.home-view .open-panel[data-tutorial="true"] .hourglass-action,
+.home-view .open-panel[data-tutorial="true"] .drop-token-details { opacity: .58; }
 .home-view .guarantee-row { align-items: flex-start; color: var(--ink); font-size: 12px; line-height: 1.5; text-align: center; }
 .home-view .guarantee-row svg { flex: none; margin-top: 2px; color: var(--accent-deep); }
-.home-view .open-panel .pity-row { color: var(--ink); border-color: var(--muted); font-size: 12px; }
+.home-view .open-panel .pity-row { min-height: 34px; color: #684d42; border-color: rgba(92,53,47,.22); font-size: 11px; }
 .home-view .open-panel .pity-row svg { color: var(--accent-deep); }
 .home-view .open-panel .pity-row.now { font-weight: 600; }
 .home-view .hourglass-note { display: block; margin: 4px 0 0; color: color-mix(in srgb, var(--ink) 70%, transparent); font-size: 11px; line-height: 1.25; text-align: center; }
 .home-view .token-row, .home-view .token-row strong { color: var(--ink); }
+.home-view .drop-token-details { margin-top: 4px; color: rgba(49,35,31,.72); font-size: 11px; text-align: center; }
+.home-view .drop-token-details summary { min-height: 28px; cursor: pointer; list-style-position: inside; }
+.home-view .drop-token-details summary strong { margin-left: 4px; color: #382522; }
+.home-view .drop-token-details .token-row { margin: 0; font-size: 11px; }
 .home-view .secondary-action { color: var(--ink); border-color: var(--muted); font-size: 12px; line-height: 1.5; padding-block: 9px; }
 
 .drop-activities { margin-top: 28px; }
@@ -275,7 +318,7 @@
   .home-view { padding-top: 10px; }
   .drop-intro h1 { margin-block: 6px; font-size: 30px; }
   .drop-intro p { font-size: 12px; line-height: 1.3; }
-  .home-view .pack-stage { padding-block: 12px 20px; gap: 6px; margin-top: 8px; }
+  .home-view .pack-stage { padding-block: 12px 26px; gap: 8px; margin-top: 8px; }
   .home-view .pack-copy { display: block; }
   .drop-priorities { margin-top: 8px; }
   .drop-priorities .daily-goal, .tribunal-entry { min-height: 68px; }
@@ -287,8 +330,7 @@
   .drop-priorities .daily-goal, .tribunal-entry { min-height: 54px; padding-block: 6px; }
   .drop-priorities .daily-goal strong { font-size: 15px; }
   .drop-priorities .daily-goal small { display: none; }
-  .home-view .pack-stage { margin-top: 5px; padding-block: 8px 16px; gap: 4px; }
-  .home-view .pull-hint { display: none; }
+  .home-view .pack-stage { margin-top: 5px; padding-block: 12px 26px; gap: 8px; }
   .home-view .open-panel { margin-top: 14px; padding: 9px; }
   .home-view .stock-row { margin-bottom: 5px; }
   .home-view .stock-row strong { font-size: 24px; }

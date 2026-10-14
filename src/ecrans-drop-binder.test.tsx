@@ -106,11 +106,12 @@ describe("les sabliers du Drop en ligne", () => {
     return { button, onUseHourglass, onShowOdds };
   }
 
-  it("garde les jetons et la garantie légendaire visibles sous la réserve", async () => {
+  it("range les jetons dans les détails et garde la garantie légendaire accessible", async () => {
     const { onShowOdds } = await drop();
     const tokens = document.querySelector(".token-row")!;
     const pity = document.querySelector<HTMLButtonElement>(".pity-row.now")!;
-    expect(tokens.closest("details")).toBeNull();
+    expect(tokens.closest("details")).not.toBeNull();
+    expect((tokens.closest("details") as HTMLDetailsElement).open).toBe(false);
     expect(tokens.textContent).toMatch(/\d+ jetons · encore \d+ pour une carte/);
     expect(pity.textContent).toMatch(/Légendaire garanti (dans \d+ boosters|au prochain)/);
     act(() => pity.click());

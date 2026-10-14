@@ -344,21 +344,18 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
   await expect(reveal.getByRole("button", { name: "Ranger dans le classeur" })).toBeEnabled();
 });
 
-test("home pack artwork, title and gesture hint do not overlap", async ({ page }) => {
+test("home pack artwork stays named and the long gesture hint is removed", async ({ page }) => {
   await gotoDeck(page);
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
   for (const width of [320, 360, 412, 1280]) {
     await page.setViewportSize({ width, height: 915 });
     const artwork = await page.locator(".pack-stage .pack-artwork").boundingBox();
     const copy = await page.locator(".pack-stage .pack-copy").boundingBox();
-    const hint = await page.locator(".pack-stage .pull-hint").boundingBox();
     expect(artwork).not.toBeNull();
     expect(copy).not.toBeNull();
-    expect(hint).not.toBeNull();
     expect(artwork!.y + artwork!.height, `illustration au-dessus du titre à ${width}px`).toBeLessThanOrEqual(copy!.y);
-    expect(copy!.y + copy!.height, `consigne sous la description à ${width}px`).toBeLessThanOrEqual(hint!.y);
-    expect(hint!.x).toBeGreaterThanOrEqual(0);
-    expect(hint!.x + hint!.width).toBeLessThanOrEqual(width);
+    await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
 });
 
@@ -377,7 +374,9 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => {
     const style = getComputedStyle(node);
     return { iterations: style.animationIterationCount, clip: style.clipPath };
-  })).toMatchObject({ iterations: "1" });
+  })).toMatchObject({ iterations: "infinite" });
+  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationDuration))
+    .toBe("5s");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).clipPath))
     .toContain("polygon(");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).backgroundSize))

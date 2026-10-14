@@ -1,3 +1,18 @@
+## Drop trop plat et ticket trop formulaire — correctif implémenté, validation visuelle ouverte
+
+Malik rapporte que l'accueil donne un visuel d'illustration plate : faces du
+sachet peu lisibles, hint long, label inerte et ticket crème administratif.
+Cause structurelle probable : filtre appliqué au bouton parent qui aplatit son
+arbre CSS `preserve-3d`; une media query ramenait aussi la largeur du booster à
+52vw/30dvh sur les écrans courts. Correctif local : conserver les 58vw,
+supprimer le filtre du héros, renforcer les faces bordeaux et leur lumière,
+donner une vignette/ombre de sol, enlever le hint, rendre le ticket CTA-first et
+replier les jetons. Les tests DOM Drop (13/13) passent. Les E2E ont été tentés,
+mais ne démarrent pas ici : Chromium headless Playwright est absent. Ni capture
+ni rendu navigateur n'ont été validés. Vérifier le preview Vercel à 390 × 844
+avant de déclarer l'impression de jeu corrigée; les côtés CSS 3D restent
+notamment à juger à l'écran.
+
 ## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
 
 Le prototype de 24 s a été remplacé par `springly_sprigs` (asset CC0 fourni par
