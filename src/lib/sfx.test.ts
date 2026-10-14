@@ -93,11 +93,25 @@ describe("mix de la musique", () => {
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
 
+  it("remonte uniquement les deux sons de manipulation des cartes", () => {
+    expect(NIVEAUX_SFX.niveaux["card-draw"].cibleDb).toBe(-25);
+    expect(NIVEAUX_SFX.niveaux["card-turn"].cibleDb).toBe(-28.6);
+    expect(NIVEAUX_SFX.niveaux.click.cibleDb).toBe(-32);
+  });
+
   it("démarre une boucle, applique les scènes et sépare les deux interrupteurs", async () => {
     const targetHistory: number[] = [];
-    const gainNodes: Array<{ gain: { value: number; setTargetAtTime: (value: number) => void }; connect: () => void; disconnect: ReturnType<typeof vi.fn> }> = [];
-    const sources: Array<{ loop: boolean; start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; connect: () => void }> = [];
-    const audioBuffer = { duration: 24 };
+    const rampHistory: Array<{ value: number; endTime: number }> = [];
+    const decoded: AudioBuffer[] = [];
+    const gainNodes: Array<{ gain: { value: number; setValueAtTime: (value: number) => void; linearRampToValueAtTime: (value: number, endTime: number) => void; cancelScheduledValues: () => void }; connect: () => void; disconnect: ReturnType<typeof vi.fn> }> = [];
+    const sources: Array<{ loop: boolean; loopStart: number; loopEnd: number; buffer: AudioBuffer | null; start: ReturnType<typeof vi.fn>; stop: ReturnType<typeof vi.fn>; disconnect: ReturnType<typeof vi.fn>; connect: () => void }> = [];
+    const audioBuffer = {
+      duration: 8,
+      sampleRate: 10,
+      length: 80,
+      numberOfChannels: 1,
+      getChannelData: () => Float32Array.from({ length: 80 }, (_, i) => i < 12 ? 0 : i > 68 ? 0.5 : 0.25),
+    } as unknown as AudioBuffer;
     const fakeWindow = {
       localStorage: { getItem: () => null, setItem: () => {} },
       AudioContext: class {
@@ -106,18 +120,34 @@ describe("mix de la musique", () => {
         destination = {};
         sampleRate = 24_000;
         resume = vi.fn(async () => {});
-        decodeAudioData = vi.fn(async () => audioBuffer);
+        decodeAudioData = vi.fn(async () => { decoded.push(audioBuffer); return audioBuffer; });
+        createBuffer(_channels: number, length: number, sampleRate: number) {
+          const channels = [new Float32Array(length)];
+          return {
+            duration: length / sampleRate,
+            sampleRate,
+            length,
+            numberOfChannels: channels.length,
+            getChannelData: (channel: number) => channels[channel],
+          } as unknown as AudioBuffer;
+        }
         createGain() {
           const gain = {
             value: 0,
-            setTargetAtTime: (value: number) => { gain.value = value; targetHistory.push(value); },
+            cancelScheduledValues: vi.fn(),
+            setValueAtTime: (value: number) => { gain.value = value; },
+            linearRampToValueAtTime: (value: number, endTime: number) => {
+              gain.value = value;
+              targetHistory.push(value);
+              rampHistory.push({ value, endTime });
+            },
           };
           const node = { gain, connect: () => {}, disconnect: vi.fn() };
           gainNodes.push(node);
           return node;
         }
         createBufferSource() {
-          const source = { loop: false, buffer: null, start: vi.fn(), stop: vi.fn(), disconnect: vi.fn(), connect: () => {} };
+          const source = { loop: false, loopStart: 0, loopEnd: 0, buffer: null as AudioBuffer | null, start: vi.fn(), stop: vi.fn(), disconnect: vi.fn(), connect: () => {} };
           sources.push(source);
           return source;
         }
@@ -129,12 +159,18 @@ describe("mix de la musique", () => {
     vi.resetModules();
     try {
       const audio = await import("@/lib/sfx");
+      audio.preloadGameMusic();
+      await vi.waitFor(() => expect(decoded).toHaveLength(1));
+      expect(sources).toHaveLength(0);
       audio.startGameAudio("hub");
       await vi.waitFor(() => expect(sources).toHaveLength(1));
 
       expect(sources[0].loop).toBe(true);
+      expect(sources[0].loopStart).toBeCloseTo(1.2);
+      expect(sources[0].buffer).not.toBe(audioBuffer);
       expect(sources[0].start).toHaveBeenCalledOnce();
       expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      expect(rampHistory[0]).toEqual({ value: MUSIC_SCENE_GAIN.hub, endTime: 1.4 });
 
       audio.setMusicScene("pack");
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack);
@@ -146,23 +182,24 @@ describe("mix de la musique", () => {
       expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
       audio.setMuted(false);
       audio.setMusicMuted(true);
-      expect(sources[0].stop).toHaveBeenCalledOnce();
-      expect(gainNodes[0].disconnect).toHaveBeenCalledOnce();
+      expect(sources[0].stop).not.toHaveBeenCalled();
+      expect(gainNodes[0].gain.value).toBe(0);
       audio.setMusicMuted(false);
-      await vi.waitFor(() => expect(sources).toHaveLength(2));
-      expect(sources[1].start).toHaveBeenCalledOnce();
-      expect(gainNodes[1].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      expect(sources).toHaveLength(1);
+      expect(sources[0].start).toHaveBeenCalledOnce();
+      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
+      expect(rampHistory.at(-1)?.endTime).toBe(1.4);
       audio.setMusicScene("pack");
       audio.stopHubMusic();
-      expect(sources[1].stop).toHaveBeenCalledOnce();
+      expect(sources[0].stop).toHaveBeenCalledOnce();
       audio.startGameAudio("pack");
-      await vi.waitFor(() => expect(sources).toHaveLength(3));
-      expect(sources[2].start).toHaveBeenCalledOnce();
-      expect(sources[2].loop).toBe(true);
+      await vi.waitFor(() => expect(sources).toHaveLength(2));
+      expect(sources[1].start).toHaveBeenCalledOnce();
+      expect(sources[1].loop).toBe(true);
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.pack);
       audio.stopHubMusic();
       audio.startGameAudio("hub");
-      await vi.waitFor(() => expect(sources).toHaveLength(4));
+      await vi.waitFor(() => expect(sources).toHaveLength(3));
       expect(sources.slice(1).every((source) => source.start.mock.calls.length === 1)).toBe(true);
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
     } finally {

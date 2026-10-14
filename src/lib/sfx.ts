@@ -345,6 +345,7 @@ type AudioContextLike = {
   createOscillator: () => OscillatorNode;
   createGain: () => GainNode;
   createBufferSource: () => AudioBufferSourceNode;
+  createBuffer: (numberOfChannels: number, length: number, sampleRate: number) => AudioBuffer;
   decodeAudioData: (data: ArrayBuffer) => Promise<AudioBuffer>;
 };
 
@@ -404,15 +405,22 @@ export function setMuted(value: boolean): void {
 export function setMusicMuted(value: boolean): void {
   loadPreference();
   musicMuted = Boolean(value);
-  if (musicMuted) stopHubMusic();
-  else if (musicGain && context) applyMusicScene(context);
+  if (musicGain && context) {
+    rampMusicGain(context, musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene], musicMuted ? MUSIC_MUTE_FADE_SECONDS : MUSIC_FADE_IN_SECONDS);
+  }
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(MUSIC_STORAGE_KEY, musicMuted ? "1" : "0");
   } catch {
     // Le choix ne survivra pas au rechargement, ce n'est pas bloquant.
   }
-  if (!musicMuted) startGameAudio(musicScene);
+  if (!musicMuted) {
+    if (musicSource && context) {
+      if (context.state === "suspended") void context.resume();
+    } else {
+      startGameAudio(musicScene);
+    }
+  }
 }
 
 /**
@@ -426,6 +434,11 @@ let musicBuffer: AudioBuffer | null = null;
 let musicLoading: Promise<void> | null = null;
 let musicScene: MusicScene = "hub";
 let musicStopped = false;
+let musicRequested = false;
+let musicLoopStart = 0;
+const MUSIC_FADE_IN_SECONDS = 1.4;
+const MUSIC_MUTE_FADE_SECONDS = 0.35;
+const MUSIC_LOOP_CROSSFADE_SECONDS = 1.2;
 
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
@@ -438,20 +451,52 @@ function masterBus(ctx: AudioContextLike): GainNode {
 function applyMusicScene(ctx: AudioContextLike): void {
   if (!musicGain) return;
   const target = musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene];
+  rampMusicGain(ctx, target, 0.28);
+}
+
+function rampMusicGain(ctx: AudioContextLike, target: number, duration: number): void {
+  if (!musicGain) return;
   const parameter = musicGain.gain;
-  parameter.setTargetAtTime(target, ctx.currentTime, 0.22);
+  parameter.cancelScheduledValues(ctx.currentTime);
+  parameter.setValueAtTime(parameter.value, ctx.currentTime);
+  parameter.linearRampToValueAtTime(target, ctx.currentTime + duration);
+}
+
+/** Prépare une transition tail → tête avant la boucle, sans couper la lecture. */
+function crossfadeLoopSeam(ctx: AudioContextLike, source: AudioBuffer): { buffer: AudioBuffer; loopStart: number } {
+  const overlap = Math.min(Math.floor(source.sampleRate * MUSIC_LOOP_CROSSFADE_SECONDS), Math.floor(source.length / 4));
+  if (!overlap || source.numberOfChannels < 1) return { buffer: source, loopStart: 0 };
+  try {
+    const loop = ctx.createBuffer(source.numberOfChannels, source.length, source.sampleRate);
+    for (let channel = 0; channel < source.numberOfChannels; channel += 1) {
+      const input = source.getChannelData(channel);
+      const output = loop.getChannelData(channel);
+      output.set(input);
+      const start = source.length - overlap;
+      for (let i = 0; i < overlap; i += 1) {
+        const blend = i / overlap;
+        output[start + i] = input[start + i] * (1 - blend) + input[i] * blend;
+      }
+    }
+    return { buffer: loop, loopStart: overlap / source.sampleRate };
+  } catch {
+    return { buffer: source, loopStart: 0 };
+  }
 }
 
 function startMusicSource(ctx: AudioContextLike): void {
   if (!musicBuffer || musicSource || musicMuted || musicStopped) return;
   try {
     musicGain = ctx.createGain();
+    musicGain.gain.setValueAtTime(0, ctx.currentTime);
     musicGain.connect(ctx.destination);
     musicSource = ctx.createBufferSource();
     musicSource.buffer = musicBuffer;
     musicSource.loop = true;
+    musicSource.loopStart = musicLoopStart;
+    musicSource.loopEnd = musicBuffer.duration;
     musicSource.connect(musicGain);
-    applyMusicScene(ctx);
+    rampMusicGain(ctx, MUSIC_SCENE_GAIN[musicScene], MUSIC_FADE_IN_SECONDS);
     musicSource.start();
   } catch {
     musicSource = null;
@@ -464,6 +509,7 @@ export function startGameAudio(scene: MusicScene = "hub"): void {
   musicScene = scene;
   if (isMusicMuted()) return;
   musicStopped = false;
+  musicRequested = true;
   const ctx = audioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") void ctx.resume();
@@ -471,22 +517,29 @@ export function startGameAudio(scene: MusicScene = "hub"): void {
     applyMusicScene(ctx);
     return;
   }
-  if (!musicLoading && !musicBuffer) {
-    musicLoading = fetch(MUSIC_SRC)
-      .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
-      .then((data) => ctx.decodeAudioData(data))
-      .then((buffer) => {
-        musicBuffer = buffer;
-        // Decode may finish after the trusted tap has returned. Retry resume
-        // before creating the one loop so mobile browsers do not stay silent.
+  preloadGameMusic();
+  startMusicSource(ctx);
+}
+
+/** Charge et décode en avance pour que la première action autorisée soit immédiate. */
+export function preloadGameMusic(): void {
+  if (musicBuffer || musicLoading || isMusicMuted()) return;
+  const ctx = audioContext();
+  if (!ctx) return;
+  musicLoading = fetch(MUSIC_SRC)
+    .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
+    .then((data) => ctx.decodeAudioData(data))
+    .then((buffer) => {
+      const loop = crossfadeLoopSeam(ctx, buffer);
+      musicBuffer = loop.buffer;
+      musicLoopStart = loop.loopStart;
+      if (musicRequested) {
         if (ctx.state === "suspended") void ctx.resume();
         startMusicSource(ctx);
-      })
-      .catch(() => { /* La partie reste jouable sans musique. */ })
-      .then(() => { musicLoading = null; });
-  }
-  startMusicSource(ctx);
-  applyMusicScene(ctx);
+      }
+    })
+    .catch(() => { /* La partie reste jouable sans musique. */ })
+    .then(() => { musicLoading = null; });
 }
 
 /** Start the existing single Web Audio hub loop, without creating a second player. */
@@ -504,6 +557,7 @@ export function duckHubMusic(duck = true): void {
 /** Silence the existing hub loop without changing the music preference. */
 export function stopHubMusic(): void {
   musicStopped = true;
+  musicRequested = false;
   if (musicSource) {
     try { musicSource.stop(); } catch { /* Already stopped. */ }
     musicSource.disconnect();

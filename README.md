@@ -59,9 +59,12 @@ pas résolu. L'état, le SHA et la prochaine priorité sont dans la
 
 L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
 La musique `springly_sprigs` remplace provisoirement la nappe bourdonnante ;
-elle commence à l'entrée dans le jeu, à très faible volume, et reste en fond
-pendant l'ouverture. La piste finale et le niveau réel sur téléphone restent à
-confirmer. La boucle Web Audio unique démarre par un geste joueur. Pendant le reveal, le bouton
+elle est préchargée au lancement puis commence au premier geste autorisé par le
+navigateur (fin du tutoriel ou premier contrôle d'un joueur de retour), avec un
+fondu. Couper/réactiver la musique garde sa position ; le raccord de boucle est
+adouci. Les sons de tirage et de retournement des cartes sont renforcés sans
+changer les autres effets. La piste finale et le niveau réel sur téléphone
+restent à confirmer. Pendant le reveal, le bouton
 suivant reste désactivé jusqu'à la fin du retournement ; les appuis pendant
 l'animation ne sont pas mis en file. Le Drop garde son grand booster sur les
 petits écrans et fait défiler son contenu. Le rendu physique reste à confirmer. Pour le reste,

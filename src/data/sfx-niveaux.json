@@ -7,12 +7,12 @@
     "card-draw": {
       "rmsDb": -15.65,
       "creteDb": 0,
-      "cibleDb": -29
+      "cibleDb": -25
     },
     "card-turn": {
       "rmsDb": -22.64,
       "creteDb": 0,
-      "cibleDb": -30
+      "cibleDb": -28.6
     },
     "chime": {
       "rmsDb": -23.54,

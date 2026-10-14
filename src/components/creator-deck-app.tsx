@@ -47,6 +47,7 @@ import {
   playCoins,
   playPackOpening,
   playReward,
+  preloadGameMusic,
   preloadSamples,
   startGameAudio,
   setMusicScene,
@@ -159,6 +160,7 @@ export function CreatorDeckApp() {
   // charge à l'ouverture de son onglet.)
   useEffect(() => {
     preloadSamples(SFX_USUELS);
+    preloadGameMusic();
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);

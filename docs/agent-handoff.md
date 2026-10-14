@@ -1,16 +1,18 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — BGM remplacée, avances de révélation protégées
+## Checkpoint courant — fondus audio et effets de carte renforcés
 
-- Dernière demande : BGM trop forte et démarrant seulement à l'ouverture d'un
-  booster. Gain désormais `0,08` au hub et `0,04` en pack (un quart des gains
-  précédents). Démarrage au bouton « Terminer » du tutoriel, avant l'écriture
-  cloud, et au premier geste de jeu pour les joueurs de retour ; un seul moteur
-  et une seule boucle.
-- Vérification ciblée de cette petite révision : audio 22/22, typecheck,
-  ESLint des fichiers touchés et `git diff --check` réussis. Playwright global
-  non relancé à la demande de Malik ; son test audio a été mis à jour pour le
-  nouveau moment de démarrage et les nouveaux gains.
+- Révision du 14 octobre : BGM préchargée/décodée au montage sans autoplay, puis
+  démarre au premier geste autorisé par le navigateur avec fondu de 1,4 s. Le
+  raccord cyclique a un fondu croisé de 1,2 s. Mute/unmute garde la position et
+  fait un fondu de 0,35/1,4 s sans créer une autre source. Le préchargement
+  réduit l'attente après le geste, mais le navigateur interdit l'autoplay sonore
+  sur mobile. Les gains musicaux restent `0,08` hub / `0,04` pack.
+- Les cibles des seuls SFX de carte sont remontées : pioche `-29 → -25 dBFS`,
+  retournement `-30 → -28,6 dBFS` (borne de crête `-6 dBFS` conservée).
+- Validation ciblée : SFX/audio 23/23, typecheck, ESLint des fichiers touchés,
+  régénération des niveaux SFX et `git diff --check` réussis. Aucun E2E complet
+  relancé ; l'écoute subjective reste ouverte.
 
 - Reprise locale depuis `main` / `origin/main` au SHA documentaire
   `86871af7cb50ae95ef7481ea9d3e2ed2e9afb790`. L'API GitHub confirme ce HEAD ;

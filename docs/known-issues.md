@@ -26,6 +26,18 @@ Validation ciblée : tests audio 22/22, typecheck et ESLint touché réussis. Le
 Playwright du moment de démarrage est actualisé, mais la suite E2E complète n'a
 pas été relancée pour cette révision courte.
 
+## Musique sans fondu au démarrage/reprise — corrigé localement, 14 octobre 2026
+
+Le MP3 est maintenant préchargé au montage, sans créer de lecteur ni démarrer
+avant le geste exigé par le navigateur. La boucle démarre avec un fondu de 1,4 s
+et un raccord pré-mélangé sur 1,2 s. Le mute baisse le gain en 0,35 s sans
+arrêter la source ; la réactivation remonte en 1,4 s au même point de lecture.
+Les sons de pioche et retournement montent respectivement de 4 dB et 1,4 dB,
+sans changer les autres cibles ni la borne de crête globale. Tests audio/SFX
+23/23, typecheck, ESLint ciblé et génération de la table des niveaux passent.
+Le comportement acoustique et le raccord de boucle restent à écouter sur
+Vercel ; aucune suite Playwright n'a été lancée pour ce changement.
+
 ## Audit du démarrage musical et des tailles Drop — corrigé et publié, 14 octobre 2026
 
 À la base `d19471fe89b8e7ecda21fc7cce53f6ddeab4d683`, le montage préchargeait

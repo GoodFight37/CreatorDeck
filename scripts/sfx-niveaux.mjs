@@ -46,21 +46,14 @@ const CIBLES = {
   select: -26,
   "menu-open": -30,
   close: -30,
-  "card-turn": -30,
-  "card-fan": -30,
+  "card-turn": -28.6,
   "chip-place": -30,
   // Les gestes qui portent quelque chose : le papier d'une carte, le paquet.
-  "card-draw": -29,
+  "card-draw": -25,
   pop: -29,
-  // Ce qui se gagne : les pièces, le carillon, la fanfare.
+  // Ce qui se gagne : les pièces et le carillon.
   coins: -28,
   chime: -28,
-  fanfare: -28,
-  // En réserve : plus aucun écran ne les joue aujourd'hui (ils servaient à la
-  // simulation de streameur), mais ils restent réglés au cas où.
-  equip: -29,
-  "power-up": -29,
-  gather: -28,
 };
 
 /**
