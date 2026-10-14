@@ -1,6 +1,38 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Atelier complet publié, Vercel vérifié
+## Checkpoint courant — lot Toi complet, vérifié localement, publication en cours
+
+- Demande : « Fait tout d'un coup » pour le pilier Toi complet. Base `main`
+  propre `ae8dfacd04286851149ca1601154ede8c5d008d3`, GitHub identique par
+  ls-remote/fetch ; contrôle Vercel précédent réussi. Aucun écrivain concurrent
+  observé. D-101, règles D-044/D-045 conservées.
+- Lot : vitrine physique avec noms entiers et trois places, épinglées dédupliquées,
+  vides décoratifs, inspection réutilisant le modal Binder (variantes/quantités,
+  portail/focus/retour/Escape). Niveau/XP, collection et objectifs visibles,
+  Tribunal accessible hors menu en ligne. Compte, réglages/crédits/version
+  regroupés ; reset replié avec sa confirmation existante. États compte,
+  sauvegarde, conflit et erreur réels ; wishlist bloquée pendant le retrait.
+- Fichiers : `profile-view.tsx`, nouveau `profile-collection.css`, tests
+  `ecrans-profile-complete.test.tsx` et `e2e/profile-complete.spec.ts`, docs.
+  Aucun moteur, migration, prix, audio ou autre pilier modifié.
+- `npm run ecrans -- src/ecrans-profile-complete.test.tsx
+  src/ecrans-scene-profile.test.tsx` : **18/18**. Typecheck/ESLint ciblés réussis.
+- Chromium mobile : cinq scénarios uniques du profil passent (trois nouveaux,
+  deux existants), largeur 320/390 + test existant 412. Premier lancement
+  5 échecs de connexion : second serveur refusé par le verrou Next ; reprise
+  sur le serveur déjà actif 3000. Ensuite 4/5, puis retest du cinquième 1/1 :
+  assertion attendait « Objectifs et saisons » alors que l'écran existant est
+  titré « Progression ». Test corrigé sans changer cet écran. Aucun scénario
+  cloud ignoré compté comme réussi. Variantes, quantités et reset annulé testés
+  localement ; pas de transaction réelle nécessaire.
+- Captures vide et vitrine partielle inspectées ; noms complets, dos décoratifs
+  et hiérarchie lisibles. Capture pleine page recadre les barres fixes :
+  ce n’est pas une mesure de leur position dans la page défilée. Build final
+  `npm run build` réussi, cinq pages exportées. Variables Supabase absentes
+  localement : preuve de compilation seulement. Publication et parcours invité
+  Production à compléter avant clôture ; ressenti tactile non certifié.
+
+## Checkpoint précédent — lot Atelier complet publié, Vercel vérifié
 
 - Demande : lot Craft complet autorisé par « Go », après Binder clos. Base
   `main` propre `f9cee11fd285194782666791d02553bedfac09bb`, identique à GitHub

@@ -1,5 +1,39 @@
 # Décisions CreatorDeck
 
+## D-101 — 14 octobre 2026 : terminer le pilier Toi en un seul lot
+
+**Contexte :** après les lots Drop/ouverture, Binder et Atelier, Malik autorise
+le profil complet. Vitrine et série existaient ; les objectifs locaux étaient
+rangés dans « Fonctionnalités en ligne », la progression était surtout repliée
+et les petites cartes exposées ne permettaient aucune inspection.
+
+**Décision :** conserver les trois emplacements et la priorité aux épinglées
+possédées de D-044, dédupliquer les slugs, compléter avec les meilleures cartes
+réelles. Montrer noms complets/rareté/variante sous les cartes, emplacements
+vides décoratifs quand la collection est partielle et accès Drop si vide.
+Réutiliser la présentation de carte du Binder pour consulter variantes et
+quantités exactes ; aucune préférence de favori concurrente ajoutée.
+
+Le parcours montre XP/niveau, collection et objectif du jour à partir de
+`GameView`, avec accès direct aux objectifs et au Tribunal. La collection
+Binder mémorisée, les accomplissements, les statistiques détaillées et la
+série restent conservés. Compte/en ligne puis réglages/informations sont
+repliés ; reset derrière « Gestion de la progression », confirmation existante
+conservée. Aucun changement du mécanisme de reset, des sons ou de l’économie.
+
+**États et accessibilité :** statut compte/sauvegarde/conflit dérivé du store,
+erreur réelle visible, commandes wishlist bloquées pendant son retrait.
+Inspection via portail existant, app inerte, focus captif et restauré, Escape
+et retour. Barres de progression natives nommées, contrôles au clavier, noms
+longs et layout mobile ; pas de nouvelle animation permanente.
+
+**Preuves :** 18/18 tests DOM ciblés ; cinq scénarios navigateur uniques passent
+après reprise sur le serveur actif et correction d'un titre attendu par le
+test (« Progression »). Variantes et collection possédée testées avec fixtures
+locales seulement. Vérifications statiques/build, publication et parcours
+invité Vercel consignés au checkpoint courant. Aucun nouveau backend ni écran.
+
+
 ## D-100 — 14 octobre 2026 : terminer le parcours Atelier avant de changer de chantier
 
 **Contexte :** lot Craft / Atelier autorisé par Malik après clôture du Binder.

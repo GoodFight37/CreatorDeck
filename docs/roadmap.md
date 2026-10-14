@@ -2,6 +2,13 @@
 
 ## État actuel — 14 octobre 2026
 
+**Lot Toi complet (D-101) — implémenté, publication en cours :** vitrine
+inspectable et noms complets, variantes/quantités réelles, niveau/XP et
+collection visibles, accès direct aux objectifs, réglages et outils regroupés.
+États vide/partiel, compte/sauvegarde/conflit/erreur traités ensemble.
+18 DOM et cinq scénarios navigateur uniques réussis (détails au checkpoint).
+Aucune règle, audio, économie ou fonctionnalité serveur ajoutée.
+
 **Lot Craft / Atelier (D-100) — clos, publié et vérifié sur Vercel :** aperçu de
 carte avant confirmation, coût/solde/monnaie, manque et refus visibles, attente
 verrouillée, résultat création/recyclage avec suite directe classeur/recettes.
@@ -263,7 +270,7 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Le lot Atelier complet (D-100) suit le Binder clos (D-099). Passer à un autre
+1. Le lot Toi complet (D-101) suit Atelier (D-100) et Binder (D-099). Passer à un autre
    chantier cohérent autorisé ; ne plus proposer séparément les matières,
    dos, fiche et variantes de ce lot clos.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les

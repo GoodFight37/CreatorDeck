@@ -1,3 +1,18 @@
+## Toi — objectifs masqués et vitrine non consultable, corrigés (14 octobre 2026)
+
+Base `ae8dfacd` : les objectifs/Tribunal étaient repliés dans les fonctionnalités
+en ligne malgré leur utilité locale ; vitrine sans inspection ni noms complets
+externes. Un slug répété dans les épinglées pouvait occuper plusieurs places.
+Défauts UX, sans corruption de cartes démontrée. D-101 conserve la sélection
+existante mais déduplique et rend les cartes consultables avec leurs variantes
+réelles. Parcours XP/collection/objectifs visible ; réglages et reset regroupés,
+statut du compte et erreurs affichés sans prétendre synchroniser.
+Preuves : 18/18 DOM, cinq scénarios navigateur uniques après correction du
+serveur cible et d'un titre de test. Publication et contrôle Vercel dans le
+checkpoint courant ; pas de compte réel modifié pour tester les variantes.
+Le ressenti tactile et les opérations de sauvegarde réelles ne sont pas
+certifiés par les mocks ou les mesures Chromium.
+
 ## Atelier — dépense immédiate et résultat trop fugitif, corrigés (14 octobre 2026)
 
 Sur la base `f9cee11f`, un clic sur le prix déclenchait immédiatement le craft ;

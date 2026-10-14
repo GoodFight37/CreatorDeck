@@ -1,0 +1,98 @@
+import { act } from "react";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { creerBanc, type Banc } from "@/ecrans-banc";
+import { EMPTY_CLOUD_STATE, type CloudState } from "@/lib/cloud/cloud-store";
+import { createInitialState, getGameView } from "@/lib/game-engine";
+import { gameDay } from "@/lib/progression";
+import { CREATORS } from "@/lib/catalog";
+import { ProfileView } from "@/components/profile-view";
+const NOW = Date.UTC(2026, 9, 14, 16);
+const mocked = vi.hoisted(() => ({ cloud: {} as CloudState }));
+vi.mock("@/hooks/use-cloud", () => ({ useCloud: () => mocked.cloud }));
+vi.mock("@/hooks/use-inbox", () => ({ useInbox: () => ({ unread: 0 }) }));
+vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
+vi.mock("@/lib/cloud/cloud-store", async (original) => ({ ...await original<object>(), cloudStore: { loadWishlist: vi.fn(), loadProfile: vi.fn() } }));
+
+describe("Toi : vitrine, parcours et menus complets", () => {
+  let banc: Banc;
+  beforeEach(() => { banc = creerBanc(); banc.preparer(); mocked.cloud = { ...EMPTY_CLOUD_STATE }; });
+  afterEach(() => banc.nettoyer());
+  async function profile(copies = 0, rewardReady = false) {
+    const creator = CREATORS.find((entry) => entry.rarity === "common")!;
+    const state = createInitialState(NOW);
+    state.cards = Array.from({length: copies}, (_, i) => ({ id: `card-${i}`, creatorSlug: creator.slug, rarity: creator.rarity,
+      variant: i === 2 ? "gold" as const : "standard" as const, obtainedAt: NOW + i, rareDrop: false }));
+    if (rewardReady) { state.missionDay = gameDay(NOW); state.missions = { pack: 1 }; }
+    const game = getGameView(state, NOW);
+    const onShowMissions = vi.fn(), onShowAccount = vi.fn(); const noop = vi.fn();
+    await banc.monter(<ProfileView game={game} onNotice={noop} onError={noop} onShowOdds={noop} onShowMissions={onShowMissions}
+      onShowThemes={noop} onShowStudio={noop} onShowAccount={onShowAccount} onShowLeaderboard={noop} onShowFriends={noop}
+      onShowMarket={noop} onShowLastPack={noop} onShowArena={noop} onShowNotifications={noop} onShowOwnProfile={noop}
+      onShowWishlist={noop} onGoBinder={noop} onGoDrop={noop} onShowTribunal={noop} />);
+    return { game, creator, onShowMissions, onShowAccount };
+  }
+  it("rend la progression et les objectifs accessibles sans ouvrir les fonctions en ligne", async () => {
+    const { game, onShowMissions } = await profile();
+    const xp = document.querySelector<HTMLProgressElement>('.profile-xp')!;
+    expect(xp.value).toBe(game.player.xp); expect(xp.max).toBe(game.player.xpNext);
+    const objective = document.querySelector('.profile-objective')!;
+    expect(objective.closest('details')).toBeNull(); banc.appuyer(/^Objectifs et saisons/);
+    expect(onShowMissions).toHaveBeenCalledOnce();
+    expect(document.querySelector('.profile-collection-total')?.textContent).toContain('0 / 1000');
+  });
+  it("expose une carte possédée une seule fois même si la liste épinglée contient un doublon", async () => {
+    const creator = CREATORS.find((entry) => entry.rarity === "common")!;
+    mocked.cloud.showcase = [creator.slug, creator.slug, "absente"];
+    await profile(3);
+    expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(1);
+    expect(document.querySelectorAll('.profile-showcase-placeholder')).toHaveLength(2);
+    expect(document.querySelector('.profile-showcase-slot figcaption')?.textContent).toContain(creator.displayName);
+    expect(document.querySelector('.profile-showcase-slot figcaption')?.textContent).toContain('Gold');
+    act(() => document.querySelector<HTMLElement>('.profile-showcase .creator-card')!.click());
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.parentElement).toBe(document.body);
+    expect(dialog.textContent).toContain('Gold');
+    expect(document.querySelector('.inspect-variants [aria-pressed="true"]')?.textContent).toContain('Gold ×1');
+    banc.appuyer(/^Standard/);
+    expect(dialog.querySelector('.odds-intro')?.textContent).toContain('Standard : 2');
+    act(() => dialog.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape', bubbles:true})));
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+  it("replie réglages et réinitialisation et conserve les deux interrupteurs distincts", async () => {
+    await profile();
+    expect(document.querySelector<HTMLDetailsElement>('.profile-settings-fold')!.open).toBe(false);
+    expect(document.querySelector<HTMLDetailsElement>('.profile-danger-fold')!.open).toBe(false);
+    const labels = [...document.querySelectorAll('[role="switch"]')].map((node) => node.textContent);
+    expect(labels).toContain('Son de l’application'); expect(labels).toContain('Musique');
+    expect(document.querySelector('.menu-reset')?.closest('.profile-settings-fold')).not.toBeNull();
+    expect(document.querySelector('.profile-build-version')).not.toBeNull();
+  });
+  it("annonce un conflit de synchronisation et l’erreur réelle sans prétendre sauvegarder", async () => {
+    mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', syncNeedsChoice:true, isError:true, message:'Connexion indisponible'};
+    const { onShowAccount } = await profile();
+    expect(document.querySelector('.profile-account-status')?.textContent).toContain('Synchronisation à vérifier');
+    expect(document.querySelector('[role="alert"]')?.textContent).toBe('Connexion indisponible');
+    banc.appuyer('Synchronisation à vérifier'); expect(onShowAccount).toHaveBeenCalledOnce();
+  });
+  it("annonce l’attente de sauvegarde sans masquer la collection existante", async () => {
+    mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', saveSyncing:true};
+    await profile(1);
+    expect(document.querySelector('.profile-account-status')?.textContent).toContain('Sauvegarde en cours');
+    expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(1);
+  });
+  it("signale les objectifs déjà accomplis à réclamer depuis les valeurs du moteur", async () => {
+    const { game } = await profile(0, true);
+    const count = game.missions.filter((mission) => mission.done && !mission.claimed).length;
+    expect(count).toBeGreaterThan(0);
+    expect(document.querySelector('.profile-objective')?.textContent).toContain(`${count} objectif${count > 1 ? "s" : ""} à réclamer`);
+  });
+  it("garde la wishlist visible et bloque ses commandes pendant un retrait", async () => {
+    mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', wishlistBusy:true, wishlistSlug:CREATORS[0].slug};
+    await profile();
+    expect(document.querySelector('.wishlist-name')?.textContent).toContain(CREATORS[0].displayName);
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('.wishlist-actions button')];
+    expect(buttons).toHaveLength(2); expect(buttons.every((button) => button.disabled)).toBe(true);
+    expect(buttons[1].textContent).toBe('Retrait…');
+  });
+
+});

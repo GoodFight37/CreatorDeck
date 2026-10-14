@@ -3,6 +3,10 @@
 /**
  * L'écran **Toi** : vitrine, progression et réglages essentiels.
  */
+import "./profile-collection.css";
+import { CardInspectModal } from "@/components/card-inspect-modal";
+import { CardBackEmblem } from "@/components/card-back-emblem";
+import { useBackHandler } from "@/hooks/use-back-handler";
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
@@ -16,7 +20,7 @@ import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binde
 import { useCloud } from "@/hooks/use-cloud";
 import { useInbox } from "@/hooks/use-inbox";
 import { useNow } from "@/hooks/use-game";
-import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, type Rarity } from "@/lib/catalog";
+import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, VARIANT_META, type Rarity } from "@/lib/catalog";
 import { readySteals } from "@/lib/last-pack";
 import { sellableCards } from "@/lib/market";
 import { regionLabel } from "@/lib/regions";
@@ -111,12 +115,25 @@ export function ProfileView({
         bestByCreator.set(card.creatorSlug, card);
       }
     }
-    const pinned = cloud.showcase.map((slug) => bestByCreator.get(slug)).filter((card) => card !== undefined);
+    const pinned = [...new Set(cloud.showcase)].map((slug) => bestByCreator.get(slug)).filter((card) => card !== undefined);
     const pinnedSlugs = new Set(pinned.map((card) => card.creatorSlug));
     const automatic = [...bestByCreator.values()].filter((card) => !pinnedSlugs.has(card.creatorSlug))
       .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt);
     return [...pinned, ...automatic].slice(0, 3);
   }, [ownedCards, cloud.showcase]);
+
+  const [inspectSlug, setInspectSlug] = useState<string | null>(null);
+  const inspectCreator = inspectSlug ? CREATOR_BY_SLUG.get(inspectSlug) : undefined;
+  const inspectCopies = useMemo(() => {
+    const counts = new Map<(typeof ownedCards)[number]["variant"], number>();
+    for (const card of ownedCards) if (card.creatorSlug === inspectSlug) counts.set(card.variant, (counts.get(card.variant) ?? 0) + 1);
+    return [...counts].map(([variant, count]) => ({ variant, count }));
+  }, [ownedCards, inspectSlug]);
+  useBackHandler(inspectSlug !== null, () => setInspectSlug(null));
+  const readyMissions = game.missions.filter((mission) => mission.done && !mission.claimed).length;
+  const nextMission = game.missions.find((mission) => !mission.done);
+  const completedMissions = game.missions.filter((mission) => mission.done).length;
+  const xp = Math.max(0, Math.min(game.player.xp, game.player.xpNext));
 
   const [binderGoal] = useBinderGoal();
   const collections = useMemo(() => binderCollectionProgress(new Set(ownedCards.map((card) => card.creatorSlug))), [ownedCards]);
@@ -191,6 +208,11 @@ export function ProfileView({
 
   return (
     <div className="view profile-view">
+      {inspectCreator && inspectCopies.length ? <CardInspectModal presentation="binder" creator={inspectCreator}
+        ownedCount={inspectCopies.reduce((sum, copy) => sum + copy.count, 0)}
+        variant={showcase.find((card) => card.creatorSlug === inspectSlug)?.variant ?? inspectCopies[0].variant}
+        copies={inspectCopies} liveStream={null} onClose={() => setInspectSlug(null)} /> : null}
+      <p className="profile-overline">TOI · COLLECTIONNEUR</p>
       <section className="profile-card">
         {studioAvailable ? (
           <button type="button" className="profile-avatar" onClick={tapLevel} aria-label={`Niveau ${game.player.level}`}>
@@ -204,6 +226,13 @@ export function ProfileView({
           <span>{CATALOG_EDITION}</span>
         </div>
       </section>
+
+      <button type="button" className="profile-account-status" onClick={onShowAccount}>
+        <span>{!cloud.configured ? "Profil de développement" : !cloud.userId ? "Lie ton compte pour retrouver ta collection" : cloud.syncNeedsChoice ? "Synchronisation à vérifier" : cloud.saveSyncing ? "Sauvegarde en cours…" : cloud.pending ? "Sauvegarde en attente" : cloud.isError ? "Compte · une action demande ton attention" : "Compte connecté"}</span>
+        <ChevronRight size={16} />
+      </button>
+
+      {cloud.isError && cloud.message ? <p className="profile-account-feedback" role="alert">{cloud.message}</p> : null}
 
       {/* Vitrine centrale */}
       <section className="profile-showcase" aria-label="Vitrine de cartes">
@@ -227,9 +256,13 @@ export function ProfileView({
             {showcase.map((card) => {
               const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
               return creator ? (
-                <CreatorCard key={card.id} creator={creator} variant={card.variant} compact />
+                <figure className="profile-showcase-slot" key={card.id}>
+                  <CreatorCard creator={creator} variant={card.variant} compact onClick={() => setInspectSlug(card.creatorSlug)} />
+                  <figcaption><strong>{creator.displayName}</strong><span>{RARITY_META[creator.rarity].label} · {VARIANT_META[card.variant].label}</span></figcaption>
+                </figure>
               ) : null;
             })}
+            {Array.from({ length: 3 - showcase.length }, (_, index) => <div className="profile-showcase-placeholder" key={`empty-${index}`} aria-hidden="true"><CardBackEmblem /><span>Prochaine trouvaille</span></div>)}
           </div>
         ) : (
           <div className="profile-showcase-empty">
@@ -243,6 +276,18 @@ export function ProfileView({
             <ChevronRight size={16} />
           </button>
         ) : null}
+      </section>
+
+      <section className="profile-journey" aria-label="Ton parcours">
+        <div className="profile-journey-head"><h2>Ton parcours</h2><span>Niveau {game.player.level}</span></div>
+        <div className="profile-xp-label"><span>Prochain niveau</span><strong>{xp} / {game.player.xpNext} XP</strong></div>
+        <progress className="profile-xp" aria-label="Expérience vers le prochain niveau" value={xp} max={game.player.xpNext} />
+        <div className="profile-collection-total"><strong>{game.stats.uniqueCreators}<small> / {CREATORS.length}</small></strong><span>créateurs réunis</span></div>
+        <progress className="profile-collection-meter" aria-label="Collection de créateurs" value={game.stats.uniqueCreators} max={CREATORS.length} />
+        <button type="button" className="profile-objective" onClick={onShowMissions}>
+          <Target size={20} /><span><strong>Objectifs et saisons</strong><small>{readyMissions > 0 ? `${readyMissions} objectif${readyMissions > 1 ? "s" : ""} à réclamer` : nextMission ? `${nextMission.label} · ${nextMission.progress}/${nextMission.target}` : `${completedMissions}/${game.missions.length} objectifs du jour terminés`}</small></span><ChevronRight size={18} />
+        </button>
+        {onShowTribunal ? <button type="button" className="profile-journey-link" onClick={onShowTribunal}>Tribunal des Bannis <ChevronRight size={16} /></button> : null}
       </section>
 
       {game.stats.totalCards > 0 ? (
@@ -309,8 +354,8 @@ export function ProfileView({
                 <span>{RARITY_META[wishlistCreator.rarity].label} · {regionLabel(wishlistCreator.region)}</span>
               </div>
               <div className="wishlist-actions">
-                <button type="button" className="account-button ghost" onClick={onShowWishlist}>Changer</button>
-                <button type="button" className="account-button ghost" disabled={cloud.wishlistBusy} onClick={() => void cloudStore.clearWishlist()}>Retirer</button>
+                <button type="button" className="account-button ghost" disabled={cloud.wishlistBusy} onClick={onShowWishlist}>Changer</button>
+                <button type="button" className="account-button ghost" disabled={cloud.wishlistBusy} onClick={() => void cloudStore.clearWishlist()}>{cloud.wishlistBusy ? "Retrait…" : "Retirer"}</button>
               </div>
             </div>
           ) : (
@@ -321,25 +366,6 @@ export function ProfileView({
           )}
         </section>
       ) : null}
-
-      {/* Progression */}
-      <section className="menu-group" aria-label="Progression">
-        <h2>Progression</h2>
-        {onShowTribunal ? (
-          <button type="button" className="menu-row" onClick={onShowTribunal}>
-            <span>Tribunal des Bannis</span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        <button type="button" className="menu-row" onClick={onShowMissions}>
-          <span>Objectifs et saisons</span>
-          <ChevronRight size={16} />
-        </button>
-        <button type="button" className="menu-row" onClick={onShowOdds}>
-          <span>Taux officiels</span>
-          <ChevronRight size={16} />
-        </button>
-      </section>
 
       {/* Compte & En ligne */}
       <section className="menu-group" aria-label="Compte">
@@ -406,6 +432,8 @@ export function ProfileView({
       </details>
 
       {/* Réglages */}
+      <details className="profile-settings-fold">
+      <summary>Réglages et informations</summary>
       <section className="menu-group" aria-label="Réglages">
         <h2>Réglages</h2>
         {onShowThemes ? (
@@ -454,6 +482,7 @@ export function ProfileView({
           </button>
         ) : null}
 
+        <button type="button" className="menu-row" onClick={onShowOdds}><span>Taux officiels</span><ChevronRight size={16} /></button>
         <ImageCredits />
         <small
           className="profile-build-version"
@@ -466,9 +495,11 @@ export function ProfileView({
 
       <CreditsBlock />
 
-      <button type="button" className="menu-reset" onClick={() => void handleReset()}>
-        Réinitialiser la progression
-      </button>
+      <details className="profile-danger-fold"><summary>Gestion de la progression</summary>
+        <p>La réinitialisation efface les cartes et la progression. Une confirmation sera demandée.</p>
+        <button type="button" className="menu-reset" onClick={() => void handleReset()}>Réinitialiser la progression</button>
+      </details>
+      </details>
       {showPromoCode ? <PromoCodeSheet onClose={() => setShowPromoCode(false)} /> : null}
     </div>
   );

@@ -64,6 +64,12 @@ suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
 le joueur. Le tutoriel de Production passe à 390 × 844 ; voir le checkpoint
 courant pour les tests et les limites de cette émulation mobile.
 
+Le pilier **Toi** réunit vitrine inspectable, variantes possédées, niveau/XP,
+collection et accès direct aux objectifs. Compte, réglages et informations
+restent disponibles dans des sections repliées ; états de sauvegarde et
+erreurs reprennent les données existantes. D-101 ; preuves et publication
+au checkpoint courant.
+
 L’Atelier propose un aperçu avant création ou recyclage, avec confirmation,
 coût et solde, attente protégée contre les doubles clics, puis carte créée ou
 bilan des points réellement obtenus. Accès direct au classeur ou aux recettes ;
