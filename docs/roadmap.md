@@ -2,6 +2,13 @@
 
 ## État actuel — 14 octobre 2026
 
+**Lot Craft / Atelier (D-100) — implémenté et vérifié localement :** aperçu de
+carte avant confirmation, coût/solde/monnaie, manque et refus visibles, attente
+verrouillée, résultat création/recyclage avec suite directe classeur/recettes.
+Live et dernière copie protégés comme avant. 14 DOM réussis, trois scénarios
+navigateur uniques réussis à 320/390 px ; publication au checkpoint courant.
+Aucun moteur, prix, tirage, audio ou Supabase modifié.
+
 **Lot Binder complet — clos, publié et vérifié sur Vercel :** finir ensemble feuilletage,
 protections/dos, matières par rareté, consultation des variantes possédées,
 fiche carte, accessibilité et responsive. D-099. Le lot précédent est conservé
@@ -254,7 +261,7 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Le lot Binder complet (D-099) est livré et contrôlé. Passer à un autre
+1. Le lot Atelier complet (D-100) suit le Binder clos (D-099). Passer à un autre
    chantier cohérent autorisé ; ne plus proposer séparément les matières,
    dos, fiche et variantes de ce lot clos.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les

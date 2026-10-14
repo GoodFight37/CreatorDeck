@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import "./drop-craft.css";
+import "./atelier-ritual.css";
+import { AtelierTransaction, type AtelierAction } from "./atelier-transaction";
 import Image from "next/image";
 import {
   ChevronLeft,
@@ -28,7 +30,6 @@ import { craftableRetired, isRetired } from "@/lib/retired";
 import {
   bulkRecyclableIds,
   duplicateGroups,
-  recycleNeedsConfirm,
   type GameView,
 } from "@/lib/game-engine";
 import { usePoints } from "@/hooks/use-points";
@@ -43,6 +44,7 @@ export function AtelierView({
   onNotice,
   onError,
   onGoDrop,
+  onGoBinder,
 }: {
   game: GameView;
   onNotice: (message: string) => void;
@@ -59,12 +61,7 @@ export function AtelierView({
   const [recycleQuery, setRecycleQuery] = useState("");
   const [wallet, setWallet] = useState<Wallet>("points");
   const points = usePoints();
-  const [bulkBusy, setBulkBusy] = useState(false);
-  const [pendingLive, setPendingLive] = useState<{
-    cardId: string;
-    name: string;
-    value: number;
-  } | null>(null);
+  const [action, setAction] = useState<AtelierAction | null>(null);
 
   const duplicates = useMemo(() => duplicateGroups({ cards: game.cards }), [game.cards]);
   const doublons = useMemo(() => {
@@ -137,71 +134,38 @@ export function AtelierView({
   const safePage = Math.min(page, totalPages - 1);
   const visible = craftable.slice(safePage * PER_PAGE, (safePage + 1) * PER_PAGE);
 
-  async function handleCraft(slug: string, displayName: string) {
-    try {
-      if (wallet === "tokens") {
-        const done = await points.craft(slug, true);
-        if (done.status === "refused") return onError(done.message);
-        onNotice(`${displayName} rejoint ton classeur pour ${game.tokens.targetCost} jetons !`);
-      } else {
-        const done = await points.craft(slug, false);
-        if (done.status === "refused") return onError(done.message);
-        const listed = CREATOR_BY_SLUG.get(slug)?.rarity;
-        const price = listed ? RARITY_META[listed].craftCost : null;
-        const paid = done.delta !== undefined && done.delta < 0 ? -done.delta : (price ?? 0);
-        onNotice(`${displayName} rejoint ton classeur pour ${paid} points !`);
-      }
-    } catch (caught) {
-      onError(caught instanceof Error ? caught.message : "Artisanat impossible.");
-    }
+  function handleCraft(slug: string, displayName: string) {
+    const creator = CREATOR_BY_SLUG.get(slug)!;
+    setAction({ kind: "craft", creator, name: displayName, wallet,
+      cost: wallet === "tokens" ? game.tokens.targetCost : RARITY_META[creator.rarity].craftCost ?? 0 });
   }
 
-  async function handleRecycle(cardId: string, displayName: string, value: number) {
-    try {
-      const done = await points.recycle(cardId);
-      if (done.status === "refused") return onError(done.message);
-      const gained = done.delta ?? value;
-      onNotice(
-        gained > 0
-          ? `Doublon de ${displayName} recyclé : +${gained} points.`
-          : `Doublon de ${displayName} déjà recyclé — rien à encaisser.`,
-      );
-    } catch (caught) {
-      onError(caught instanceof Error ? caught.message : "Recyclage impossible.");
-    }
+  function handleRecycle(cardId: string, displayName: string, value: number) {
+    const card = game.cards.find((entry) => entry.id === cardId);
+    setAction({ kind: "recycle", cardId, name: displayName, cost: value,
+      creator: card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined, variant: card?.variant });
   }
 
-  async function handleBulkRecycle() {
-    if (bulkBusy || !bulkIds.length) return;
-    setBulkBusy(true);
-    try {
-      const outcome = await points.recycleAll(bulkIds);
-      if (outcome.status === "refused") {
-        onError(outcome.message ?? "Recyclage impossible.");
-        return;
-      }
-      const parts = [
-        outcome.count > 0
-          ? `${outcome.count} doublon${outcome.count > 1 ? "s" : ""} transformé${outcome.count > 1 ? "s" : ""} en +${outcome.delta} points`
-          : "Aucun doublon à recycler",
-        liveKept > 0
-          ? `${liveKept} doublon${liveKept > 1 ? "s" : ""} Live à recycler un par un`
-          : "",
-      ].filter(Boolean);
-      if (outcome.message) onError(outcome.message);
-      onNotice(`Tout recyclé : ${parts.join(" · ")}.`);
-    } catch (caught) {
-      onError(caught instanceof Error ? caught.message : "Recyclage impossible.");
-    } finally {
-      setBulkBusy(false);
-    }
+  function handleBulkRecycle() {
+    if (bulkIds.length) setAction({ kind: "bulk", ids: [...bulkIds], name: "Tes doublons", cost: bulkValue, liveKept });
+  }
+
+  function closeAction() {
+    setAction(null);
+    requestAnimationFrame(() => {
+      if (document.activeElement === document.body) document.getElementById("atelier-heading")?.focus();
+    });
   }
 
   return (
     <div className="view atelier-view">
+      {action ? <AtelierTransaction action={action} points={points} balance={action.kind === "craft" && action.wallet === "tokens" ? game.tokens.count : game.player.points}
+        onClose={closeAction} onNotice={onNotice} onError={onError}
+        onGoBinder={onGoBinder} onCreate={() => { setAction(null); setMode("craft"); setPage(0); }} /> : null}
+      <p className="atelier-kicker">DOUBLONS → POINTS → TA PROCHAINE CARTE</p>
       <section className="page-title-row" style={{ marginBottom: "0.25rem" }}>
         <div>
-          <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Atelier</h1>
+          <h1 id="atelier-heading" tabIndex={-1}>Atelier</h1>
         </div>
         <div className="atelier-wallet">
           {wallet === "tokens" ? <Sparkles size={14} /> : <Coins size={14} />}
@@ -366,7 +330,7 @@ export function AtelierView({
                     sizes="40px"
                   />
                   <div className="atelier-copy">
-                    <strong>{creator.displayName}</strong>
+                    <button type="button" className="atelier-preview-name" onClick={() => handleCraft(creator.slug, creator.displayName)} aria-label={`Aperçu de ${creator.displayName}`}><strong>{creator.displayName}</strong></button>
                     <span>
                       {regionLabel(creator.region)}
                     </span>
@@ -444,11 +408,11 @@ export function AtelierView({
                   type="button"
                   className="craft-button recycle"
                   onClick={handleBulkRecycle}
-                  disabled={bulkBusy || !bulkIds.length}
+                  disabled={!bulkIds.length}
                   title={`Recycler tous les doublons (${bulkIds.length}) pour ${bulkValue} points — les Live restent en place`}
                 >
                   <Recycle size={13} />
-                  {bulkBusy ? "Recyclage…" : `Tout recycler · +${bulkValue}`}
+                  {`Tout recycler · +${bulkValue}`}
                 </button>
                 {liveKept > 0 ? (
                   <span className="atelier-bulk-note">
@@ -523,57 +487,11 @@ export function AtelierView({
                           {VARIANT_META[group.variant].label} · {RARITY_META[group.rarity].label} · ×{group.count}
                         </span>
                       </div>
-                      {recycleNeedsConfirm(group.variant) ? (
-                        pendingLive?.cardId === group.recyclableIds[0] ? (
-                          <div className="atelier-confirm">
-                            <span>Recycler ce doublon Live ?</span>
-                            <button
-                              type="button"
-                              className="craft-button recycle"
-                              onClick={() => {
-                                const pending = pendingLive;
-                                setPendingLive(null);
-                                if (pending) handleRecycle(pending.cardId, pending.name, pending.value);
-                              }}
-                            >
-                              Oui, +{group.unitValue}
-                            </button>
-                            <button
-                              type="button"
-                              className="craft-button"
-                              onClick={() => setPendingLive(null)}
-                            >
-                              Annuler
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className="craft-button recycle"
-                            onClick={() =>
-                              setPendingLive({
-                                cardId: group.recyclableIds[0],
-                                name: creator.displayName,
-                                value: group.unitValue,
-                              })
-                            }
-                            title={`Recycler un doublon Live de ${creator.displayName} — confirmation demandée`}
-                          >
-                            <Recycle size={13} />+{group.unitValue}
-                          </button>
-                        )
-                      ) : (
-                        <button
-                          type="button"
-                          className="craft-button recycle"
-                          onClick={() =>
-                            handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)
-                          }
-                          title={`Recycler un doublon de ${creator.displayName}`}
-                        >
-                          <Recycle size={13} />+{group.unitValue}
-                        </button>
-                      )}
+                      <button type="button" className="craft-button recycle"
+                        onClick={() => handleRecycle(group.recyclableIds[0], creator.displayName, group.unitValue)}
+                        title={`Aperçu du recyclage de ${creator.displayName}`}>
+                        <Recycle size={13} />+{group.unitValue}
+                      </button>
                     </article>
                   );
                 })}

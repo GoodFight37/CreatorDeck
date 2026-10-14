@@ -1,3 +1,17 @@
+## Atelier — dépense immédiate et résultat trop fugitif, corrigés (14 octobre 2026)
+
+Sur la base `f9cee11f`, un clic sur le prix déclenchait immédiatement le craft ;
+le recyclage groupé ne demandait aucun bilan avant départ et le succès était
+une notification seulement. Défaut UX, pas une corruption de solde démontrée.
+D-100 : présentation avec aperçu/confirmation, verrou commun anti-double clic,
+refus et exception visibles, résultat persistant et delta réel du hook ; le
+bilan partiel groupé n'est pas transformé en succès intégral. Live exclus du
+groupé et dernière copie restent protégés. Tests DOM 14/14 et trois scénarios
+navigateur uniques réussis ; publication/déploiement au checkpoint courant.
+Limite : transactions serveur réelles non dépensées en production ; les cas
+refus/partiel sont simulés et le parcours complet fonctionne dans le moteur
+local. Le ressenti sur appareil n'est pas certifié par Chromium.
+
 ## Binder — compteur de variante trompeur corrigé, lot complet livré
 
 Sur `2f15ea60`, le Binder agrège le nombre de copies et choisit la meilleure

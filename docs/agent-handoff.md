@@ -1,6 +1,37 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Binder complet publié, Vercel vérifié
+## Checkpoint courant — lot Atelier terminé localement, publication en cours
+
+- Demande : lot Craft complet autorisé par « Go », après Binder clos. Base
+  `main` propre `f9cee11fd285194782666791d02553bedfac09bb`, identique à GitHub
+  via ls-remote/fetch. Un seul écrivain observé ; aucune divergence.
+- D-100 : aperçu physique Standard, monnaie/coût/solde, confirmation création,
+  recyclage individuel/groupé (Live explicite), attente verrouillée, résultat
+  persistant avec accès classeur ou recettes. Le hook existant décide des
+  transactions ; aucun changement audio, économie, moteur ou SQL.
+- Fichiers : `atelier-view.tsx`, nouveaux `atelier-transaction.tsx` et
+  `atelier-ritual.css`, test DOM `ecrans-atelier-transaction.test.tsx`, navigateur
+  `atelier-ritual.spec.ts`, README/roadmap/known-issues/decisions/passation.
+- Tests : `npm run ecrans -- src/ecrans-atelier-transaction.test.tsx
+  src/ecrans-atelier-preview.test.tsx src/ecrans-drop-craft-priorites.test.tsx`
+  **14/14**. Typecheck et ESLint ciblé réussis. Chromium via configuration
+  temporaire mobile 390×844 : trois scénarios uniques passent, dont recette
+  existante et parcours recyclage → points → création → classeur, puis focus
+  et aperçu sans financement. Un premier échec E2E était un sélecteur ambigu
+  entre notification et résultat, corrigé ; un test jetons utilisait un solde
+  inférieur au coût et a été corrigé (prix inchangé).
+- Captures inspectées et mesures : 320/390 px, dialogue/CTA accessibles,
+  aucune largeur dépassée ; focus captif et retour, Escape, OFF/réduit prévus.
+  Captures Playwright après redimensionnement parfois en retard de composition
+  GPU ; capture fraîche 390 et mesures DOM confirment le contenu non coupé.
+- Build final `npm run build` réussi (export des cinq pages).
+  Build local sans variables Supabase : preuve de compilation, pas de cloud.
+- Publication : à compléter après commit/push normal et contrôle Vercel.
+  Actions sur la base : aucun run retourné, donc aucune CI générale revendiquée.
+  Contrôle Production prévu sans achat ni recyclage réel, transactions testées
+  localement et refus/partiels simulés. Le ressenti tactile reste non certifié.
+
+## Checkpoint précédent — lot Binder complet publié, Vercel vérifié
 
 - Malik refuse les petites passes successives : terminer un ensemble cohérent
   avec interface, états, gestes, accessibilité, responsive, docs et publication,

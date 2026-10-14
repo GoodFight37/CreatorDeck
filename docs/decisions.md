@@ -1,5 +1,36 @@
 # Décisions CreatorDeck
 
+## D-100 — 14 octobre 2026 : terminer le parcours Atelier avant de changer de chantier
+
+**Contexte :** lot Craft / Atelier autorisé par Malik après clôture du Binder.
+Les petites lignes dépensaient immédiatement ; création et recyclage ne
+laissaient qu'une notification, sans aperçu, attente commune ou résultat durable.
+
+**Décision :** conserver les recettes, filtres, prix et `usePoints`, et ouvrir
+une présentation dédiée avant toute dépense ou recyclage. Aperçu Standard,
+monnaie/solde/coût réels, manque affiché et confirmation explicite. Résultat
+visible avec la carte créée et accès au classeur, ou points réellement gagnés
+et retour aux recettes. Recyclage individuel et groupé confirmés ; Live toujours
+exclu du groupé, dernière copie protégée par le moteur existant.
+
+**Fiabilité :** verrou synchrone anti-double clic jusqu'à la réponse, commandes
+et fermeture neutralisées pendant l'attente, refus/exception visibles sans
+succès anticipé. Le bilan groupé restitue le nombre, delta et éventuel arrêt
+partiel retournés par le hook. Pas de second moteur, changement SQL, prix,
+récompense, audio ou animation d'ouverture. La création respecte OFF/réduit.
+
+**Accessibilité :** portail hors app rendue inerte, focus captif, Escape/retour
+hors attente, retour au déclencheur ou titre si la recette a disparu.
+
+**Preuves :** 14/14 tests DOM ciblés ; trois scénarios navigateur uniques passent
+(recettes, recyclage → création → classeur, aperçu/focus). Un premier échec
+navigateur venait d'un sélecteur trouvant notification et résultat ; corrigé en
+ciblant le dialogue. Un test jetons utilisait 100 pour un coût réel de 400,
+corrigé avec un solde suffisant, sans changer le prix. Captures/mesures à
+320/390 px, vérification TypeScript/ESLint/build ; détails et publication au
+checkpoint courant. Aucun achat ni recyclage réel en production pour les tests.
+
+
 ## D-099 — 14 octobre 2026 : terminer un lot Binder cohérent et vérifiable
 
 - Malik demande de cesser les livraisons de deux ou trois retouches suivies
