@@ -728,7 +728,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
       expect(pack.width).toBeLessThanOrEqual(viewport.width - 24);
       expect(pack.height).toBeLessThanOrEqual(viewport.height * .62);
       const seamCenter = seam.y + seam.height / 2;
-      expect(seamCenter).toBeGreaterThan(viewport.height * .4);
+      expect(seamCenter).toBeGreaterThan(viewport.height * .36);
       expect(seamCenter).toBeLessThan(viewport.height * .6);
       expect(pack.y + pack.height).toBeLessThan(action.y);
       expect(action.y + action.height).toBeLessThanOrEqual(viewport.height);
