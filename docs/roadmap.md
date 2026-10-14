@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a` ;
+**État du code :** `main` au SHA `28af5919f1565e9867db13fe4d6f9e7032607c7c` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -18,10 +18,11 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   [audio-assets.md](audio-assets.md). Ces deux interrupteurs sont publiés sur
   `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a`, Vercel Production
   READY. Aucun morceau externe choisi ou intégré pour l'instant. Le mix
-  conserve son ducking du pack et le silence Tribunal. CI
-  [`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
-  verte (6/6) pour le code précédent ; le run `38499177407` du dernier commit
-  est encore en cours. Écoute physique et choix d'une piste nécessaires.
+  conserve son ducking du pack et le silence Tribunal. La première CI audio
+  (`38499177407`) a révélé un nom accessible obsolète dans un test E2E ; corrigé
+  et publié au SHA `28af5919`. La nouvelle CI `38499499108` était en attente/
+  cours au dernier relevé. Vercel sert le code audio de `ee62de9e`. Écoute
+  physique et choix d'une piste nécessaires.
   Voir
   [D-085](decisions.md), [D-086](decisions.md) et [audio-assets.md](audio-assets.md).
 

@@ -2,7 +2,7 @@
 
 Malik préfère deux options indépendantes (« Son de l’application » et
 « Musique ») et le volume média du téléphone au choix Discret/Normal/Fort. Le
-code local implémente ces deux interrupteurs, persistés séparément ; le son
+code publié implémente ces deux interrupteurs, persistés séparément ; le son
 actuel reste le prototype de nappe de 24 s. Une shortlist à écouter (Neon Noir,
 Resonance, Assembly Not Required, Nightchaser) et les crédits/licences requis
 sont dans [audio-assets.md](audio-assets.md). N'intègre pas de candidat avant
@@ -14,8 +14,9 @@ https://creator-deckk.vercel.app . CI GitHub
 [`38499177407`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38499177407)
 avait signalé une assertion E2E obsolète qui attendait l'ancien nom exact
 « Son ». La mise à jour de l'E2E au nom « Son de l’application » passe en local
-sur téléphone simulé (2 passés, 1 scénario cloud ignoré). Le correctif de test
-et le nouveau checkpoint sont en cours de publication ; relire la nouvelle CI.
+sur téléphone simulé (2 passés, 1 scénario cloud ignoré). L'assertion est
+corrigée et publiée au SHA `28af5919f1565e9867db13fe4d6f9e7032607c7c`.
+Nouvelle CI `38499499108` en attente/en cours lors du dernier relevé ; à relire.
 L'ancien
 choix global Son OFF est migré vers les deux interrupteurs OFF au premier
 démarrage, pour ne pas rallumer l'audio d'un joueur existant.

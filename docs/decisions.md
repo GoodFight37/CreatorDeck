@@ -18,9 +18,10 @@ Les interrupteurs et le mix séparé passent les tests ciblés (22 unitaires aud
 `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a`, Vercel Production
 READY. La CI `38499177407` a révélé une attente E2E utilisant le nom exact
 obsolète « Son » ; le scénario adapté au nouveau nom passe en local sur mobile
-(2 réussis, 1 scénario cloud ignoré). Le correctif E2E doit encore repasser la
-CI distante. Le rendu des candidats et le nouvel asset restent à choisir et à
-écouter sur téléphone.
+(2 réussis, 1 scénario cloud ignoré). Correctif E2E et documents publiés au
+SHA `28af5919f1565e9867db13fe4d6f9e7032607c7c` ; nouvelle CI `38499499108`
+était en attente/en cours au dernier relevé. Le rendu des candidats et le nouvel
+asset restent à choisir et à écouter sur téléphone.
 
 ## D-086 — 14 octobre 2026 : retirer la pulsation percussive de la BGM
 
