@@ -16,8 +16,11 @@ le silence du Tribunal, les timings de reveal et les effets restent inchangés.
 Les interrupteurs et le mix séparé passent les tests ciblés (22 unitaires audio,
 6 tests d'écran), le typecheck, ESLint ciblé et le build cloudless. Publié sur
 `main` au SHA `ee62de9e95fdccad513a0435956bf816927a345a`, Vercel Production
-READY ; la CI GitHub `38499177407` tournait lors du dernier relevé. Le rendu des
-candidats et le nouvel asset restent à choisir et à écouter sur téléphone.
+READY. La CI `38499177407` a révélé une attente E2E utilisant le nom exact
+obsolète « Son » ; le scénario adapté au nouveau nom passe en local sur mobile
+(2 réussis, 1 scénario cloud ignoré). Le correctif E2E doit encore repasser la
+CI distante. Le rendu des candidats et le nouvel asset restent à choisir et à
+écouter sur téléphone.
 
 ## D-086 — 14 octobre 2026 : retirer la pulsation percussive de la BGM
 

@@ -31,18 +31,23 @@ test("Drop garde le sachet et le CTA en premier sur mobile compact, Tribunal acc
   await expect(page.locator(".tribunal-session-karma")).toContainText("1/5 jugés");
 });
 
-test("son et reflets actifs par défaut, OFF conservé au rechargement", async ({ page }) => {
+test("sons, musique et reflets actifs par défaut, OFF conservé au rechargement", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Toi", exact: true }).click();
-  const sound = page.getByRole("switch", { name: "Son", exact: true });
+  const sound = page.getByRole("switch", { name: "Son de l’application", exact: true });
+  const music = page.getByRole("switch", { name: "Musique", exact: true });
   const fx = page.getByRole("switch", { name: "Reflets des cartes", exact: true });
   await expect(sound).toHaveAttribute("aria-checked", "true");
+  await expect(music).toHaveAttribute("aria-checked", "true");
   await expect(fx).toHaveAttribute("aria-checked", "true");
   await sound.click();
+  await expect(music).toHaveAttribute("aria-checked", "true");
+  await music.click();
   await fx.click();
   await gotoDeck(page, false);
   await page.getByRole("button", { name: "Toi", exact: true }).click();
   await expect(sound).toHaveAttribute("aria-checked", "false");
+  await expect(music).toHaveAttribute("aria-checked", "false");
   await expect(fx).toHaveAttribute("aria-checked", "false");
   await expect(page.locator("html")).toHaveAttribute("data-card-fx", "off");
 });

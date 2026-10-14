@@ -1,3 +1,13 @@
+## Assertion E2E de réglage audio devenue obsolète — correction locale, 14 octobre 2026
+
+La CI `38499177407` a échoué sur le test `product-audit.spec.ts` téléphone :
+il cherchait encore un interrupteur accessible nommé exactement « Son », que
+le changement a renommé « Son de l’application ». Le test couvre maintenant
+les deux nouveaux réglages, leur indépendance, le choix par défaut et la
+persistance. Vérification locale : deux E2E réussis, un scénario cloud ignoré
+faute de configuration. Correctif de test et documentation en attente de
+publication/reprise CI ; aucun défaut applicatif n'est indiqué par cet échec.
+
 ## BGM du hub trop abstraite, choix d'une vraie musique en attente — 14 octobre 2026
 
 Malik entend la piste actuelle comme un son plutôt qu'une musique. Le fichier

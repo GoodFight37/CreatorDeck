@@ -12,8 +12,11 @@ et `git diff --check` réussis. Publié sur `main` au SHA
 `ee62de9e95fdccad513a0435956bf816927a345a`. Vercel Production READY pour
 https://creator-deckk.vercel.app . CI GitHub
 [`38499177407`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38499177407)
-en cours lors de la dernière vérification ; ses six jobs n'avaient pas encore
-terminé. L'ancien
+avait signalé une assertion E2E obsolète qui attendait l'ancien nom exact
+« Son ». La mise à jour de l'E2E au nom « Son de l’application » passe en local
+sur téléphone simulé (2 passés, 1 scénario cloud ignoré). Le correctif de test
+et le nouveau checkpoint sont en cours de publication ; relire la nouvelle CI.
+L'ancien
 choix global Son OFF est migré vers les deux interrupteurs OFF au premier
 démarrage, pour ne pas rallumer l'audio d'un joueur existant.
 SHA de départ `b5e240363fb841df6e1a4d8c541e592e0c6301f9`, branche `main`.
