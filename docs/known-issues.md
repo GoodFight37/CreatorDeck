@@ -1,4 +1,4 @@
-## Drop trop plat et ticket trop formulaire — correction affinée, redéploiement en attente
+## Drop trop plat et ticket trop formulaire — cause corrigée et déployée
 
 Malik rapporte que l'accueil donne un visuel d'illustration plate : faces du
 sachet peu lisibles, hint long, label inerte et ticket crème administratif.
@@ -8,9 +8,11 @@ tilt et masqués derrière la face. Une correction locale tourne ces plans vers
 la caméra, les épaissit à 20 px, renforce le sheen, et regroupe les secondaires
 du tutoriel sous « Plus d’infos ». Taille, nom du pack, CTA, scroll et
 hiérarchie restent en place. Validation locale : écrans 14/14, E2E mobile 4/4,
-typecheck, ESLint et diff-check réussis. La correction est en attente du push et
-du déploiement Vercel; l'impression définitive du foil en production reste à
-revalider après le déploiement.
+typecheck, ESLint et diff-check réussis. Publié à `08785e43`; le déploiement
+Vercel est `READY` / `success`. Chromium en production à 390 × 844 confirme le
+flanc foil visible (14,4 px), le bouton « Essayer », le volet secondaire fermé,
+et aucune largeur de document supérieure à 390 px. Cause technique fermée; la
+préférence esthétique générale reste subjective.
 
 ## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
 

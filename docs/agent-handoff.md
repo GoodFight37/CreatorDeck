@@ -1,6 +1,30 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — côtés du sachet visibles sur mobile
+## Checkpoint courant — Drop mobile corrigé et déployé
+
+- Depuis `main` / `52afc5ca69971f4c1b913c2ace6fc8ca435efcc6`, une capture
+  Chromium de la Production à 390 × 844 a montré que les plans latéraux CSS
+  étaient inversés : ils partaient vers l'arrière et restaient sous la face.
+- Correctif publié sur `main` au SHA
+  [`08785e43`](https://github.com/GoodFight37/CreatorDeck/commit/08785e43a813857ee0de4819cbac3abc7c6c974c).
+  `git ls-remote` confirme ce HEAD. Déploiement Vercel Production du même SHA
+  `READY`, contrôle `success`, URL stable
+  [creator-deckk.vercel.app](https://creator-deckk.vercel.app/).
+- Vérification du rendu Production à 390 × 844 avec Chromium : sachet entier,
+  face latérale foil visible (rectangle transformé 14,4 px), `scrollWidth` 390,
+  CTA tutoriel « Essayer », volet « Plus d’infos » fermé. Le label « LIVE DROP ·
+  5 cartes » reste visible. Les lignes taux/sablier/jetons s’ouvrent dans le
+  volet. Aucun APK.
+- Tests du patch avant publication : tests d'écran Drop 14/14, E2E téléphone
+  ciblés 4/4 (Drop compact, Drop 390 × 844, continuité et extraction PackTear),
+  typecheck, ESLint ciblé et `git diff --check` réussis. Aucun workflow Actions
+  n'est retourné pour ce SHA.
+- Cause/fix : rotation des deux faces latérales corrigée et épaisseur portée à
+  20 px; sheen 5 s renforcé; infos secondaires du tutoriel repliées. Changements
+  UI seulement. Les critères géométriques et de hiérarchie observés sont
+  satisfaits; le goût visuel global reste propre au joueur.
+
+## Historique — diagnostic local des côtés avant publication
 
 - Reprise depuis `main` au SHA `52afc5ca69971f4c1b913c2ace6fc8ca435efcc6`.
   J'ai capturé la Production Vercel en Chromium à 390 × 844 : dimensions et
@@ -16,12 +40,10 @@
   flow ou gameplay.
 - Validation locale : écran Drop 14/14, TypeScript et ESLint ciblé passent.
   Chromium mobile ciblé : Drop compact + 390 × 844 2/2; cohérence de la
-  pochette et extraction PackTear 2/2. À 390 × 844, le sachet entier tient,
-  son flanc gauche mesuré dépasse 12 px, le CTA reste visible et il n'y a pas
-  de débordement horizontal. Cette vérification concerne le patch local; le
-  correctif doit encore être publié et son déploiement Vercel confirmé.
+  pochette et extraction PackTear 2/2. L'observation de production et la
+  publication sont consignées dans le checkpoint courant ci-dessus.
 
-## Checkpoint courant — scène visuelle du Drop
+## Historique — première passe visuelle du Drop
 
 - Demande de Malik : rendre le Drop tactile/TCG et réduire les éléments qui
   ressemblent à un formulaire. Base de départ vérifiée : `main` /
@@ -42,9 +64,8 @@
   capture. GitHub Actions n'a retourné aucun run associé à ce SHA; le contrôle
   Vercel est `success` et le déploiement Production `READY`, lié au même SHA.
   Le rendu est disponible sur [creator-deckk.vercel.app](https://creator-deckk.vercel.app/).
-- Reste à juger sur navigateur mobile à 390 × 844 l'épaisseur perçue des côtés,
-  la priorité visuelle du sachet et le feeling global. La validation DOM et
-  l'état Vercel READY ne prouvent pas ces critères perceptifs.
+- Le contrôle mobile ultérieur a révélé les côtés trop discrets et a déclenché
+  le correctif documenté dans le checkpoint courant en tête de fichier.
 
 ## Checkpoint courant — fondus audio et effets de carte renforcés
 

@@ -16,8 +16,10 @@
 - Preuve : E2E Chromium téléphone 4/4 (Drop compact/390 × 844 et continuité
   PackTear), tests d'écran 14/14, TypeScript, ESLint et diff-check. Les faces
   dépassent 12 px au rectangle transformé en 390 × 844 sans débordement.
-  C'est une mesure navigateur du patch local; le jugement final du rendu en
-  production dépend de la confirmation Vercel.
+  Poussé sur `main` au SHA `08785e43`; Vercel Production est `READY` et son
+  contrôle `success`. Chromium a ensuite confirmé sur cette Production à
+  390 × 844 la face latérale (14,4 px), le CTA « Essayer », les infos tutoriel
+  repliées et l'absence de débordement horizontal.
 
 ## D-094 — 14 octobre 2026 : le Drop est une scène d’ouverture de booster
 

@@ -71,12 +71,14 @@ prévu; un second passage via Chromium système les a exécutés. Publié sur `m
 au SHA `47f5f4fa`, Vercel Production `READY` (contrôle `success`). La capture a
 révélé que les côtés restaient discrets; voir le suivi ci-dessous.
 
-**Suite du contrôle visuel :** une capture Production à 390 × 844 a révélé que
-les faces CSS du sachet étaient orientées vers l'arrière. Correctif local :
-faces tournées vers l'avant/20 px, sheen rendu plus perceptible, et ticket
+**Suite du contrôle visuel — terminée :** une capture Production à 390 × 844 a
+révélé que les faces CSS du sachet étaient orientées vers l'arrière. Correctif
+publié à `08785e43` : faces tournées vers le joueur/20 px, sheen renforcé, ticket
 tutoriel ramené à « Essayer » + un volet secondaire. Écrans 14/14 et E2E
-Chromium mobile 4/4 passent, ainsi que typecheck et ESLint. Push/READY Vercel
-du complément à relever avant fermeture du défaut perceptif.
+Chromium mobile 4/4, typecheck et ESLint passent. Vercel Production du SHA
+`08785e43` est `READY` / `success`; Chromium a confirmé la face foil de 14,4 px,
+le volet tutoriel fermé et l'absence de débordement. Voir le checkpoint de
+passation pour les résultats détaillés.
 
 **Avance des cartes :** un appui pendant le flip était mis en file et exécuté
 au terme de l'animation ; un second appui pouvait alors agir sur la carte
