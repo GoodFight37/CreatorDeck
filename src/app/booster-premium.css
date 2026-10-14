@@ -452,6 +452,22 @@
   filter: drop-shadow(0 0 1px rgba(255, 232, 211, .7))
     drop-shadow(0 0 3px rgba(237, 116, 155, .4));
 }
+.booster-cinematic .foil-cut-spark {
+  fill: rgba(255, 225, 195, .92);
+  opacity: 0;
+  filter: drop-shadow(0 0 2px rgba(242, 139, 174, .58));
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.booster-cinematic .is-pulling .foil-cut-spark {
+  opacity: .72;
+  animation: peel-spark-pulse 620ms ease-in-out infinite alternate;
+}
+@keyframes peel-spark-pulse {
+  from { opacity: .34; transform: scale(.72); }
+  to { opacity: .82; transform: scale(1.16); }
+}
+.booster-cinematic .booster-foil-open .foil-cut-spark { animation: foil-cut-fade 600ms ease-out both; }
 .booster-cinematic .foil-back-card {
   position: absolute;
   inset: 0;
@@ -539,6 +555,7 @@
   100% { opacity: .14; transform: scale(1.12); }
 }
 @media (prefers-reduced-motion: reduce) {
+  .booster-cinematic .is-pulling .foil-cut-spark { animation: none; opacity: .55; }
   .booster-cinematic .booster-foil-open .foil-top-piece,
   .booster-cinematic .booster-foil-open .foil-body-piece,
   .booster-cinematic .booster-foil-open .foil-card-chamber,

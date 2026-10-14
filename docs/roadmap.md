@@ -2,20 +2,26 @@
 
 ## État actuel — 14 octobre 2026
 
-**Peel guidé :** suite à la capture de Malik, les retours du doigt ne dessinent
-plus un zigzag : médiane par tranches, lissage court et contour limité à la
-soudure ; la couleur blanche/halo est assourdie. Le mouvement au-dessus pour
-soulever reste reconnu, descendre sur l’illustration ne tord plus la coupe.
-Correctif publié après les captures : ouverture seulement après une coupe qui
-couvre au moins 88 % de la largeur tactile de la soudure et atteint l'effort
-minimal ; une tentative incomplète efface son trait et replie le sachet. Le
-relâchement reste obligatoire. SHA `8619f461792bc55f77aab826907e4025f866f097`
-confirmé sur `main`, Vercel Production READY ; E2E 47 réussis/1 scénario cloud
-ignoré. La première CI a bloqué sur une vieille assertion Toi qui interdisait
-le numéro de version déjà visible ; test corrigé au commit `13f471e5`,
-`npm run ecrans` passe 130/130 et CI de reprise `38569853793` est verte (6/6).
-Essai sur téléphone réel à faire. Le
-lissage précédent est au SHA `0c4c7b9f808838484b9ece1dbe6bd752831b1395`.
+**Version web :** Malik voit `eb12a1b` dans Toi ; c'était le SHA en production
+avant le correctif ci-dessous. Les changements locaux ne sont pas annoncés
+comme disponibles sur Vercel avant la vérification du commit et du déploiement.
+
+**Peel libre — correctif en cours de publication :** Malik confirme que le haut
+du sachet paraît encore rigide et qu'un swipe franc ouvre mal. Le défaut venait
+du chemin retrié/médianisé par X et du seuil de 88 %. Le code local conserve
+maintenant l'ordre du doigt, ses retours en X et les variations en Y ; la zone
+Y passe à 6–26 %, le seuil de couverture à 64 % et l'effort minimal à `0,22`.
+Le rabat suit X/Y, une lueur et de petites étincelles suivent la fente, et le
+relâchement reste nécessaire. Les cartes s'extraient ensuite automatiquement.
+Géométrie 3/3, typecheck, ESLint ciblé, E2E sachet 49 réussis/1 scénario cloud
+ignoré, écrans 130/130 et build réussi. Build local sans variables Supabase ;
+il ne vérifie pas le cloud. La sensation réelle reste à vérifier par Malik sur
+Vercel après déploiement ; les tests simulés ne valent pas un test tactile.
+Voir D-092 et le dernier checkpoint de passation.
+
+**Audio :** la piste sans percussion publiée reste un prototype. Les quatre
+candidats à écouter et leurs crédits sont répertoriés dans
+[audio-assets.md](audio-assets.md) ; aucune piste n'a encore été choisie.
 
 **Empreinte de version :** l’indicateur prévu dans D-018 n’était pas
 effectivement rendu. Le correctif ajoute `Version Android/Web · <commit court>`
@@ -134,13 +140,18 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Recueillir le retour de Malik sur le rythme du reveal de la cinquième carte
-   et l'ouverture sur téléphone réel. Les tests navigateur ne remplacent pas
-   cet essai.
-2. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
+1. Vérifier sur Vercel que la version portant le nouveau SHA est servie ; en
+   30 secondes, tester une coupe en diagonale/avec retour, un swipe d'environ
+   deux tiers de la soudure, le repli d'un trait court et l'extraction sans
+   second clic. Le retour de Malik déterminera si la sensation est enfin
+   acceptable ; les scénarios navigateur ne la certifient pas.
+2. Malik écoute les quatre pistes de [audio-assets.md](audio-assets.md) sur son
+   PC et choisit une candidate (ou demande une nouvelle shortlist) avant toute
+   intégration.
+3. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
    avant toute intégration réelle de nouveaux univers. La simulation de croissance
    et le prototype ne modifient pas le catalogue, les taux ou l'économie.
-3. Idées au backlog, sans développement engagé :
+4. Idées au backlog, sans développement engagé :
    - **Lien permanent vers la chaîne Twitch depuis une carte**, même hors ligne.
      L'emplacement reste à décider (sous la carte ou dans sa fiche). C'est
      distinct du badge « Direct », qui dépend d'un snapshot frais (D-074).

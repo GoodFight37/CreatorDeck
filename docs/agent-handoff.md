@@ -1,3 +1,39 @@
+## Peel libre sur la bande haute — prêt localement, 14 octobre 2026
+
+Malik a testé le web Vercel et décrit un rabat « dur comme du bois » : la coupe
+restait une ligne, le doigt ne guidait pas le tracé et un swipe franc ne
+suffisait souvent pas. L'ancienne géométrie triait les échantillons par X,
+prenait leurs médianes et lissait la soudure en forme monotone ; le seuil de
+couverture était de 88 %. La préférence joueur est désormais explicite : le
+path doit garder son ordre tactile, ses retours en X et ses variations en Y ;
+ne pas re-trier ou contraindre le geste pour satisfaire une capture CI.
+
+Implémentation locale sur `main` depuis `eb12a1b9` : zone Y élargie à 6–26 %,
+couverture minimale abaissée à 64 %, effort minimal anti-tap conservé (`0,22`).
+Le filtre n'enlève qu'une faible part de jitter et préserve les retracés ; le
+rabat suit le déplacement X/Y du doigt. Une lueur fine et quelques points
+animés suivent la coupe ; l'animation de ces points s'arrête avec
+`prefers-reduced-motion`. Le booster s'ouvre toujours au relâchement après
+seuil. Les cartes commencent leur extraction automatiquement ensuite, sans
+bouton « Afficher les cartes » bloquant. Aucun changement au Drop, Binder,
+Craft, Toi, SQL, pity math ou PackFoil3D.
+
+Vérifications locales : géométrie 3/3, typecheck, ESLint ciblé, E2E
+`e2e/pack-tear.spec.ts` 49 réussis / 1 scénario cloud conditionnel ignoré,
+`npm run ecrans` 130/130, build réussi. Le build local n'avait pas de variables
+Supabase, donc il ne valide pas le cloud. Aucune validation sur Vercel après ce
+changement ni retour de Malik sur cette version ne sont encore établis. Sa
+version web au départ était `eb12a1b9`; attendre le SHA Vercel réel après push
+avant d'annoncer que le nouveau geste est en ligne.
+
+Retest rapide sur Vercel après déploiement : ouvrir le pack tutoriel ; tracer
+une diagonale ou un petit retour sur la bande striée ; vérifier que le trait et
+le rabat suivent le doigt ; faire un swipe large (~2/3 du haut), relâcher et
+confirmer que les cartes commencent sans second clic. Un tap ou trait court
+doit replier le sachet sans consommation. Le rendu E2E confirme une trajectoire
+courbe et un retour en X en bureau/téléphone simulé, pas la sensation au toucher
+sur l'appareil de Malik.
+
 ## Peel local, seuil de coupe complète et repli sans trace — publié, 14 octobre 2026
 
 Les captures de Malik montrent deux défauts : une coupe courte peut laisser son

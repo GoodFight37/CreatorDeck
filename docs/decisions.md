@@ -1,5 +1,27 @@
 # Décisions CreatorDeck
 
+## D-092 — 14 octobre 2026 : laisser le joueur dessiner la coupe librement
+
+Après le test Vercel, Malik confirme que le sachet paraît encore « dur comme du
+bois » : la coupe doit être tracée au doigt au lieu de ressembler à un rail. La
+version précédente retriait les points par X, les ramenait à une médiane et
+exigeait 88 % de la soudure ; ce choix est remplacé. Garder l'ordre tactile,
+les retracés X et la variation Y dans la bande haute, avec seulement un filtre
+léger anti-jitter. Couverture minimale 64 %, zone Y 6–26 % et effort minimal
+`0,22` pour écarter les taps ; ouvrir uniquement au relâchement. Le rabat suit
+le déplacement du doigt. Ajouter un discret slit/lueur/points, sans réactiver
+PackFoil3D ni déplacer le travail vers Drop, Binder, Craft, Toi, SQL ou le pity.
+Les cartes doivent commencer à apparaître automatiquement après la coupe,
+sans clic bloquant « Afficher les cartes ».
+
+Le critère principal est le ressenti du joueur sur le site Vercel : si un swipe
+franc ne l'ouvre pas ou si son tracé n'est pas reconnaissable, le travail reste
+inachevé même si les tests passent. Vérifications navigateur requises pour
+régressions seulement, jamais pour contraindre le tracé à être monotone. Tests
+locaux de cette itération : géométrie 3/3, E2E sachet 49 réussis/1 scénario
+cloud ignoré, écrans 130/130, typecheck, lint ciblé et build statique réussis.
+Publication et ressenti Vercel à confirmer dans la passation.
+
 ## D-091 — 14 octobre 2026 : n'ouvrir le rabat qu'après une coupe presque complète
 
 Les captures montrent qu'une petite coupe locale peut afficher « Relâche pour

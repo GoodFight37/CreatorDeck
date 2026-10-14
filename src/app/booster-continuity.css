@@ -439,10 +439,10 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 }
 .booster-cinematic.booster-presentation .is-pulling .foil-top-piece {
   transition: none;
-  transform: translate3d(calc(var(--peel-direction) * var(--peel-progress) * 10px),
-    calc(var(--peel-progress) * -24px), calc(var(--peel-progress) * 26px))
-    rotateX(calc(var(--peel-progress) * 68deg))
-    rotateZ(calc(var(--peel-direction) * var(--peel-progress) * -4deg));
+  transform: translate3d(var(--peel-x, 0px), var(--peel-y, 0px),
+    calc(var(--peel-progress) * 22px))
+    rotateX(calc(var(--peel-progress) * 42deg))
+    rotateZ(var(--peel-angle, 0deg));
 }
 .booster-cinematic.booster-presentation .foil-top-piece {
   clip-path: var(--cut-top, inset(0 0 84.55%));

@@ -1,3 +1,16 @@
+## Geste de déchirure encore trop rigide au test joueur — reprise locale, 14 octobre 2026
+
+Malik indique que le haut du sachet reste linéaire/raide et qu'un swipe franc
+ne l'ouvre pas de façon fiable sur le web Vercel. Le geste publié avant cette
+reprise était identifié par `eb12a1b` dans l'application ; la logique en cause
+avait une couture retriée par X et un seuil de 88 %. Correction locale en
+cours : chemin chronologique X/Y, bande Y 6–26 %, couverture 64 %, effort
+minimum `0,22`, rabat déplacé par le doigt, lueur et points discrets. Ouverture
+au relâchement conservée ; les cartes s'extraient automatiquement ensuite.
+Code testé localement en E2E bureau/téléphone simulé (49 réussis, 1 scénario
+cloud ignoré), mais pas encore testé sur le nouveau déploiement Vercel ni
+accepté par Malik. Ne pas fermer ce problème sur la seule base des tests.
+
 ## Coupe partielle qui ouvrait tout le rabat ou laissait une trace — corrigé et publié, 14 octobre 2026
 
 Reproduction : sur l'écran d'ouverture, tirer fortement une petite portion de

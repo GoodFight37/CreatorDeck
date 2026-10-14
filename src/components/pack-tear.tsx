@@ -152,8 +152,8 @@ export function PackTear({
     setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
   };
 
-  // Collapse the chronological touch trace into a smooth, monotone weld. The
-  // raw path may cross itself, but neither the slit nor the foil clip does.
+  // Keep the drawn path in touch order: X reversals and deliberate Y bends are
+  // part of the cut, not noise to collapse into a horizontal rail.
   const edge = smoothPeelEdge(trace);
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
@@ -222,6 +222,16 @@ export function PackTear({
           <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <polyline className="foil-cut-glow" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
             <polyline className="foil-cut-slit" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
+            {edge.filter((_, index) => index % 5 === 2).map((point, index) => (
+              <circle
+                key={`${index}-${point.x.toFixed(1)}-${point.y.toFixed(1)}`}
+                className="foil-cut-spark"
+                cx={point.x}
+                cy={point.y}
+                r="0.42"
+                style={{ animationDelay: `${(index % 4) * 45}ms` }}
+              />
+            ))}
           </svg>
           <div
             className="booster-tear-track booster-peel-zone"
@@ -310,8 +320,8 @@ export function PackTear({
                 scene.style.setProperty("--opening-light-x", `${point.x}%`);
               }
 
-              // A strong lift on a short local stroke must not fold the full
-              // flap. Require almost the full seam before enabling release.
+              // Require a broad stroke plus lift/aperture so a tap or tiny
+              // local scratch cannot fold the entire flap.
               const seamCoverage = (span / gesture.seamWidth) * 100;
               if (isPeelOpenable(seamCoverage, aperture) && !gesture.ready) {
                 // Crossing the opening threshold enables release, but the

@@ -534,6 +534,47 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await expect(dialog.locator(".reveal-embedded")).toHaveCount(1);
 });
 
+test("free peel follows a bent retracing stroke and opens on a broad swipe", async ({ page }) => {
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster" }).click();
+  const dialog = page.locator(".opening-continuum");
+  const seam = dialog.getByRole("button", { name: "Déchirer le haut du sachet en passant le doigt sur la soudure" });
+  const bounds = (await seam.boundingBox())!;
+  const centerY = bounds.y + bounds.height * 0.5;
+  const points = [
+    [0.1, 0.5],
+    [0.34, 0.25],
+    [0.58, 0.78],
+    [0.39, 0.42],
+    [0.78, 0.65],
+  ] as const;
+
+  await page.mouse.move(bounds.x + bounds.width * points[0][0], centerY);
+  await page.mouse.down();
+  for (const [x, y] of points.slice(1)) {
+    await page.mouse.move(bounds.x + bounds.width * x, bounds.y + bounds.height * y, { steps: 4 });
+  }
+
+  const slit = dialog.locator(".foil-cut-slit");
+  await expect(slit).toHaveAttribute("points", / /);
+  const trace = (await slit.getAttribute("points"))!
+    .trim()
+    .split(/\s+/)
+    .map((pair) => pair.split(",").map(Number));
+  expect(trace.some(([x], index) => index > 0 && x < trace[index - 1][0] - 2)).toBe(true);
+  expect(Math.max(...trace.map(([, y]) => y)) - Math.min(...trace.map(([, y]) => y))).toBeGreaterThan(3);
+  const capCut = await dialog.locator(".booster-physical-scene")
+    .evaluate((node) => (node as HTMLElement).style.getPropertyValue("--cut-top"));
+  expect(capCut).toContain(`${trace[0][0]}% ${trace[0][1]}%`);
+  await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
+  await expect(dialog.locator(".booster-opening-instruction")).toHaveText("RELÂCHE POUR OUVRIR");
+  await page.screenshot({ path: `test-results/free-peel-${test.info().project.name}.png` });
+
+  await page.mouse.up();
+  await expect(dialog.locator(".booster-foil-open")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible({ timeout: 5_000 });
+});
+
 test("reversing or lifting halfway cancels cleanly and keeps the no-tear option", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
@@ -690,7 +731,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   }
 });
 
-test("guided peel follows curved Y samples and opens after almost the full seam is cut", async ({ page }) => {
+test("peel follows curved Y samples and opens after a broad cross-band swipe", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
@@ -743,16 +784,18 @@ test("armed peel keeps following a back-and-forth cut until release", async ({ p
   expect(await scene.getAttribute("style")).not.toBe(initialStyle);
   expect(subsequentSlits.some((points) => points !== initialSlit)).toBe(true);
   const seamXs = subsequentSlits.at(-1)!.split(" ").map((point) => Number(point.split(",")[0]));
-  expect(seamXs.every((value, index) => index === 0 || value >= seamXs[index - 1])).toBe(true);
+  const furthestX = Math.max(...seamXs);
+  expect(seamXs.some((value) => value < furthestX - 2)).toBe(true);
   const seamYs = subsequentSlits.at(-1)!.split(" ").map((point) => Number(point.split(",")[1]));
-  expect(Math.min(...seamYs)).toBeGreaterThanOrEqual(10);
-  expect(Math.max(...seamYs)).toBeLessThanOrEqual(21);
+  expect(Math.min(...seamYs)).toBeGreaterThanOrEqual(6);
+  expect(Math.max(...seamYs)).toBeLessThanOrEqual(26);
+  expect(await dialog.locator(".foil-cut-spark").count()).toBeGreaterThan(0);
 
   // Dragging wildly across the printed artwork cannot pull the cut away from
   // the narrow top weld or turn it into a scribble.
   const sceneBounds = (await scene.boundingBox())!;
   const stableSlit = await dialog.locator(".foil-cut-slit").getAttribute("points");
-  await page.mouse.move(x + zone.width * .18, sceneBounds.y + sceneBounds.height * .42, { steps: 4 });
+  await page.mouse.move(x + zone.width * .18, sceneBounds.y + sceneBounds.height * .42, { steps: 1 });
   await expect(dialog.locator(".foil-cut-slit")).toHaveAttribute("points", stableSlit!);
   await expect(dialog).toHaveAttribute("data-opening-phase", "sealed");
   await expect(dialog.locator(".booster-foil-open")).toHaveCount(0);

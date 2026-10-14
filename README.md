@@ -46,53 +46,23 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 
 ## État actuel — 14 octobre 2026
 
-Malik utilise **CreatorDeck sur Vercel**, alimenté par GitHub `main`, avec
-Supabase. Les mises à jour du site arrivent via Vercel ; aucun `git pull` n’est
-nécessaire sur le PC du joueur. Android/Capacitor reste supporté dans le code.
+Malik utilise **la version web de CreatorDeck sur Vercel**, connectée à
+Supabase. GitHub `main` alimente le site ; les changements deviennent visibles
+après la fin du déploiement Vercel. L'empreinte affichée dans Toi permet de
+comparer la version ouverte avec le dernier checkpoint de la
+[passation](docs/agent-handoff.md).
 
-Le code publié sur `main` inclut la reprise de l’ouverture continue, le peel guidé,
-le retour aux avatars originaux pour les anciens Upscayl, un pilote de revue
-automatique de portraits et la hiérarchie Drop/Craft. Les 300 choix manuels
-initiaux restent prioritaires ; un lot de 154 portraits choisis par Malik a été
-ajouté le 13 octobre, soit 454 portraits manuels protégés. Les 699 images Upscayl
-sont archivées et non affichées. Le pilote laisse 542 profils candidats sur
-1 000 ; il sert à comparer les images et n’applique aucun remplacement tout seul.
-Le choix se fait à l’œil, selon l’identité, la netteté, la lisibilité du visage,
-la résolution et le cadrage, sans écarter une image uniquement faute de source.
-Voir le [plan courant](docs/roadmap.md), la
-[passation](docs/agent-handoff.md) et le [brief Grok](docs/revue-grok-2026-10-12.md).
+Le chantier tactile du booster est en reprise après un test joueur : la coupe
+doit suivre un tracé libre sur la soudure, pas former un rail. L'état, le SHA et
+le retour attendu sont dans la [roadmap](docs/roadmap.md) et la
+[passation](docs/agent-handoff.md). Aucun succès visuel n'est déduit du seul fait
+que les E2E passent.
 
-Depuis `8bf36ba0`, la façade du sachet sur Drop utilise le visuel mat de la scène
-d’ouverture. La musique démarre au premier appui explicite sur un contrôle, même
-si la réserve est vide ; l’ouverture la baisse fortement pour laisser les SFX
-devant. Le déploiement Vercel et la CI de ce commit sont terminés ; 6/6 jobs
-passent. Le volume reste à écouter sur téléphone.
-
-Le badge Live distingue la provenance de la carte du statut de direct actuel.
-La CI répartit maintenant les tests Playwright sur trois shards, sans retirer de
-scénarios. Les résultats sont liés au SHA testé ; voir le checkpoint courant et
-la [roadmap](docs/roadmap.md), plutôt que les anciens compteurs de cette page.
-
-Pour un compte connecté, la sauvegarde Supabase est maintenant reprise
-automatiquement à l'ouverture/au retour de l'application et fait foi sur une
-copie locale divergente. Les missions calculées lors d'un tirage sont ensuite
-enregistrées sans forçage. Le correctif est publié sur `main` (`fc5b47ff`) et
-le dernier build Vercel (`c3ab397e`) est READY et sa CI GitHub est verte (6/6),
-voir le [checkpoint](docs/agent-handoff.md). Vercel met à jour le site ;
-une APK Android déjà installée doit être reconstruite et réinstallée séparément
-pour recevoir ces changements.
-
-Les récompenses de test ont leur propre solde serveur, séparé de la réserve qui
-se recharge. La migration et l'interface du code personnel `MALIK` (50
-ouvertures, lié au compte) sont en cours de vérification ; le code doit encore
-être créé dans le SQL Editor après publication. Voir le
-[guide des boosters de test](docs/booster-test-access.md) et l'état vérifié dans
-la [passation](docs/agent-handoff.md).
-
-Pour les prochains portraits, le choix dépend de la qualité visuelle de l’image
-(bonne personne, netteté, visage lisible, résolution et cadrage). L’absence de
-source ou de crédit ne suffit pas à l’écarter. Voir la
-[passation portraits](docs/passation-portraits.md).
+L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
+La BGM actuelle reste un prototype ; les candidats à écouter, avec leurs
+crédits, sont dans [audio-assets.md](docs/audio-assets.md). Pour le reste,
+consulter le [plan courant](docs/roadmap.md), les
+[problèmes connus](docs/known-issues.md) et le [guide des documents](docs/README.md).
 
 ## Prérequis
 
