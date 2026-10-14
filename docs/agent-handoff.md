@@ -1,4 +1,4 @@
-## Peel stable après va-et-vient — correctif local en validation, 14 octobre 2026
+## Peel stable après va-et-vient — corrigé et publié, 14 octobre 2026
 
 Malik a reproduit un sachet visuellement cassé en gardant le doigt posé et en
 faisant des allers-retours. `pack-tear.tsx` garde le premier point de coupe de
@@ -10,10 +10,14 @@ de cartes.
 
 Fichiers : `src/components/pack-tear.tsx`, `e2e/pack-tear.spec.ts`,
 `docs/decisions.md`, `docs/known-issues.md`, `docs/roadmap.md`.
-E2E ciblés : 6/6 (bureau et téléphone simulé) ; suite `e2e/pack-tear.spec.ts` :
-43 réussis et un scénario conditionnel ignoré. `npm run ecrans` 129/129,
-`npm run typecheck`, ESLint ciblé et `git diff --check` réussis. Aucun test
-physique sur téléphone n'est revendiqué. CI distante à relever après push.
+Publié sur `main` au SHA `b6a3605ce8b77e41244f4fef9f8e9300fd7ec634`.
+GitHub Actions [`38494377386`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38494377386)
+verte, 6/6 jobs ; Vercel Production `READY` pour ce SHA :
+https://creator-deckk-p31u9pp8f-hafsi37-2386.vercel.app . E2E ciblés : 6/6
+(bureau et téléphone simulé) ; suite `e2e/pack-tear.spec.ts` : 43 réussis et un
+scénario conditionnel ignoré. `npm run ecrans` 129/129, `npm run typecheck`,
+ESLint ciblé et `git diff --check` réussis. Aucun test physique sur téléphone
+n'est revendiqué ; Malik doit encore essayer le geste sur son appareil.
 
 ## Fenêtre « J'ai un code booster » invisible sur mobile — corrigée et publiée, 14 octobre 2026
 

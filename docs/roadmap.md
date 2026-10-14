@@ -2,13 +2,14 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `5bdf9f21317a2d6b6557c1cc70f968a3379236e6` ;
+**État du code :** `main` au SHA `b6a3605ce8b77e41244f4fef9f8e9300fd7ec634` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
 du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphone
-reste nécessaire pour juger le niveau et la couleur de la boucle. Voir le
-[checkpoint](agent-handoff.md) pour les preuves et limites exactes.
+  reste nécessaire pour juger le niveau et la couleur de la boucle. Correctif
+  du peel publié à ce SHA, CI `38494377386` verte (6/6), Vercel Production
+  `READY`. Voir le [checkpoint](agent-handoff.md) pour les preuves et limites.
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne
   existante est la référence à la connexion et au retour de l'appli ou du réseau.
@@ -40,9 +41,9 @@ reste nécessaire pour juger le niveau et la couleur de la boucle. Voir le
 - **Ouverture :** peel guidé et continuum publiés, 3D désactivée par défaut.
   Après le retrait de la languette, la cinquième carte ordinaire attend 360 ms
   avant son flip ; Perfect, Reflets désactivés et mouvement réduit n'attendent
-  pas. Correctif local en validation : la coupe ne se déforme plus en va-et-vient
-  et reste figée une fois armée ; seul le relâchement ouvre le booster. Le
-  ressenti sur téléphone réel reste à confirmer. Voir
+  pas. Le correctif publié stabilise la coupe lors des va-et-vient et la fige
+  une fois armée ; seul le relâchement ouvre le booster. Le ressenti sur
+  téléphone réel reste à confirmer. Voir
   [D-077](decisions.md) et le [rapport d'ouverture](booster-continuum-2026-10-12.md).
 - **Autres piliers :** Drop et Craft ont reçu leurs ajustements mobiles. Binder
   conserve la provenance d'obtention Live, tandis que le statut de direct actuel

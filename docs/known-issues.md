@@ -1,4 +1,4 @@
-## Va-et-vient pendant le peel — correctif local en validation, 14 octobre 2026
+## Va-et-vient pendant le peel — corrigé et publié, 14 octobre 2026
 
 Malik a reproduit une coupe visuellement cassée en gardant le doigt posé et en
 faisant plusieurs allers-retours. Cause probable confirmée dans le composant :
@@ -9,8 +9,9 @@ que le seuil arme l'ouverture, toute la scène reste stable jusqu'au relâchemen
 Le booster ne s'ouvre toujours pas avant pointerUp. Annulation/perte de capture
 replient sans ouvrir. Vérification locale : `e2e/pack-tear.spec.ts` 43 réussis,
 un scénario conditionnel ignoré ; écrans 129/129, typecheck, ESLint ciblé et
-`git diff --check` réussis. CI distante à vérifier après publication. Avis sur
-téléphone physique encore attendu.
+`git diff --check` réussis. Publié au SHA
+`b6a3605ce8b77e41244f4fef9f8e9300fd7ec634` ; CI GitHub `38494377386` verte
+(6/6), Vercel Production `READY`. Avis sur téléphone physique encore attendu.
 
 ## Missions du booster non conservées au retour cloud — corrigé sur `main`, 14 octobre 2026
 

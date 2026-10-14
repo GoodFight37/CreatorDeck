@@ -12,8 +12,9 @@ seuil. Aucun changement des tirages, timings de reveal, effets ou autres écrans
 E2E ciblés de la coupe guidée, du maintien avec va-et-vient et de l'annulation
 après seuil : 6/6 bureau/téléphone simulé. Suite `e2e/pack-tear.spec.ts` :
 43 réussis, un scénario conditionnel ignoré ; écrans 129/129, typecheck,
-ESLint ciblé et `git diff --check` réussis. CI distante à vérifier après push.
-Essai sur téléphone physique encore requis.
+ESLint ciblé et `git diff --check` réussis. Publié au SHA
+`b6a3605ce8b77e41244f4fef9f8e9300fd7ec634`, CI `38494377386` verte (6/6) et
+Vercel Production `READY`. Essai sur téléphone physique encore requis.
 
 ## D-083 — 14 octobre 2026 : codes de test séparés de la réserve normale
 
