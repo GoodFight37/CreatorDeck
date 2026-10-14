@@ -33,10 +33,10 @@
 .atelier-view .atelier-rarity-filters { margin-top: 8px; }
 .atelier-view .atelier-rarity-filters summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 10px 0; }
 /* Override older short-screen rules only inside the Drop, preserving the object ratio. */
-.home-view .pack-stage.stage-live .pack-artwork.pack-live { width: min(36vw, 130px, 18svh); height: auto; flex-shrink: 0; }
+.home-view .pack-stage.stage-live .pack-artwork.pack-live { width: min(58vw, 220px, 34dvh); height: auto; flex-shrink: 0; }
 .home-view .drop-priorities.drop-priorities { grid-template-columns: 1fr; }
 .home-view .drop-priorities .tribunal-row > span { display: block; }
 .home-view .drop-priorities .tribunal-row strong { display: inline; font: inherit; font-weight: 600; }
 @media (max-height: 700px) {
-  .home-view .pack-stage.stage-live .pack-artwork.pack-live { width: 108px; height: auto; }
+  .home-view .pack-stage.stage-live .pack-artwork.pack-live { width: min(52vw, 200px, 30dvh); height: auto; }
 }
