@@ -138,6 +138,13 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(document.querySelector<HTMLInputElement>('[role="dialog"] input')?.placeholder).toBe("BOOSTER-2026");
   });
 
+  it("affiche l’identifiant du build dans les réglages du profil", async () => {
+    await profile([]);
+    const version = document.querySelector<HTMLElement>(".profile-build-version");
+    expect(version?.textContent).toMatch(/^Version (Android|Web) · ([a-f0-9]{7}|locale)$/);
+    expect(version?.title).toMatch(/Commit complet|Build local/);
+  });
+
   it("annonce un Tribunal déjà payé tout en gardant l'accès pour rejouer", async () => {
     const { onShowTribunal } = await drop(0, true);
     expect(document.querySelector(".tribunal-row")).toBeNull();

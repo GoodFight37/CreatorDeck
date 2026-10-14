@@ -10,6 +10,7 @@ import { CreditsBlock } from "@/components/credits";
 import { ImageCredits } from "@/components/image-credits";
 import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { CreatorCard } from "@/components/creator-card";
+import { Capacitor } from "@capacitor/core";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useCloud } from "@/hooks/use-cloud";
@@ -27,6 +28,7 @@ import {
   setMuted,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
+import { BUILD_COMMIT, BUILD_VERSION } from "@/lib/build-version";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
@@ -453,6 +455,13 @@ export function ProfileView({
         ) : null}
 
         <ImageCredits />
+        <small
+          className="profile-build-version"
+          title={BUILD_COMMIT ? `Commit complet : ${BUILD_COMMIT}` : "Build local sans commit Git"}
+          aria-label={`Version ${Capacitor.isNativePlatform() ? "Android" : "Web"} ${BUILD_VERSION}`}
+        >
+          Version {Capacitor.isNativePlatform() ? "Android" : "Web"} · {BUILD_VERSION}
+        </small>
       </section>
 
       <CreditsBlock />
