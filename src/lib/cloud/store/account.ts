@@ -4,7 +4,6 @@ import { pushSupported, readPushToken, requestPushToken, writePushToken } from "
 import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { buildInbox, seenKey, unreadCount } from "@/lib/social/inbox";
-import { decideSync, syncStats } from "@/lib/cloud/sync";
 import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { normalizeShowcase } from "@/lib/cloud/showcase";
 import { parseOAuthReturn } from "@/lib/cloud/twitch";
@@ -556,7 +555,9 @@ export function accountActions(ctx: CloudStoreContext) {
     },
 
     /**
-     * Synchronisation : `auto` respecte le plus récent, `push`/`pull` forcent.
+     * Synchronisation : en mode `auto`, la sauvegarde distante est la référence
+     * dès qu'un compte connecté en possède une. `push` reste réservé au geste
+     * explicite « Envoyer ma collection » ; `pull` reste une reprise demandée.
      *
      * `push` est le bouton « Envoyer ma collection » de l'écran Compte — un
      * geste explicite du joueur, le seul endroit avec l'écran de conflit où
@@ -564,7 +565,7 @@ export function accountActions(ctx: CloudStoreContext) {
      */
     async sync(
       mode: "auto" | "push" | "pull" = "auto",
-      options: { recheckConflict?: boolean } = {},
+      _options: { recheckConflict?: boolean } = {},
     ): Promise<void> {
       const local = ctx.deps.readState();
       if (!local) return;
@@ -574,18 +575,14 @@ export function accountActions(ctx: CloudStoreContext) {
       const api = ctx.resolve();
       if (!ctx.networkReady(api)) return;
       const userId = api.session()?.userId;
-      if (ctx.state().syncNeedsChoice && !options.recheckConflict) return;
-      if (options.recheckConflict && ctx.state().syncNeedsChoice) {
-        // Un conflit déjà affiché peut avoir été résolu depuis (autre onglet,
-        // appareil ou reprise après mise à jour). Relire les deux côtés ne
-        // choisit ni ne pousse rien à lui seul ; le calcul normal décidera.
-        ctx.publish({ syncNeedsChoice: false, decision: null, message: null, isError: false });
-      }
+      // Un choix mémorisé par l'ancienne règle n'est plus bloquant : quand le
+      // compte est connecté, la copie du cloud fait foi.
+      if (ctx.state().syncNeedsChoice) ctx.publish({ syncNeedsChoice: false, decision: null, message: null, isError: false });
       // Une dépense dont la réponse s'est perdue doit être rejouée avant
       // tout envoi de l'ancienne sauvegarde.
       if (ctx.deps.storage()?.getItem(`creatordeck:hourglass-request:${userId}`)) return;
       autoSync = (async () => {
-        ctx.publish({ busy: true, saveSyncing: true, isError: false });
+        ctx.publish({ busy: true, saveSyncing: true, syncNeedsChoice: false, isError: false });
         try {
           const remote = await api.pullSave();
           if (api.session()?.userId !== userId) return;
@@ -593,58 +590,38 @@ export function accountActions(ctx: CloudStoreContext) {
           if (remote && !parsed) throw new Error("Cette partie en ligne est illisible : rien n'a été modifié.");
           const current = ctx.deps.readState();
           if (!current) return;
-          // Si le joueur a agi pendant la lecture, ne pas écraser son action.
+          // Une action concurrente ne doit pas recréer un conflit : la seconde
+          // lecture ci-dessous récupère son résultat si le serveur l'a déjà écrit.
           const changedDuringRead = stateFingerprint(current) !== stateFingerprint(local);
-          const staleHourglassMarker = parsed && local.hourglassesSpent !== parsed.hourglassesSpent;
-          let anchor: { remoteUpdatedAt: number; fingerprint: string } | null = null;
-          try {
-            const saved = JSON.parse(ctx.deps.storage()?.getItem(`creatordeck:sync-anchor:${userId}`) ?? "null");
-            if (saved && Number.isFinite(saved.remoteUpdatedAt) && typeof saved.fingerprint === "string") anchor = saved;
-          } catch { /* Ancienne installation : comparaison prudente sans référence. */ }
-          let decision = parsed && (staleHourglassMarker || (local.cards.length === 0 && local.openings === 0 && parsed.cards.length > 0))
-            ? { action: "pull" as const, reason: "Collection récupérée sur cet appareil." }
-            : decideSync(
-              { state: local, updatedAt: local.updatedAt },
-              remote && parsed ? { state: parsed, deviceUpdatedAt: remote.deviceUpdatedAt } : null,
-            );
-          if (anchor && remote && parsed && !staleHourglassMarker) {
-            if (Math.abs(anchor.remoteUpdatedAt - Date.parse(remote.updatedAt)) <= 1) {
-              decision = stateFingerprint(local) === stateFingerprint(parsed)
-                ? { action: "noop", reason: "Tout est à jour." }
-                : { action: "push", reason: "Les changements de cet appareil sont enregistrés." };
-            } else {
-              decision = anchor.fingerprint === stateFingerprint(local)
-                ? { action: "pull", reason: "Progression en ligne récupérée." }
-                : { action: "conflict", reason: "Les deux parties ont changé : choisis celle à garder dans Mon compte." };
-            }
-          }
           ctx.publish({ busy: false, remoteUpdatedAt: remote ? Date.parse(remote.updatedAt) || null : null });
-          if (changedDuringRead && parsed && stateFingerprint(current) !== stateFingerprint(parsed)) {
-            ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true,
-              message: "Ta partie a changé pendant la synchronisation : choisis celle à garder dans Mon compte.", isError: false });
-            return;
-          }
-          if (decision.action === "push") return ctx.push(current.version, current.updatedAt, false);
-          if (decision.action === "pull" && parsed) {
-            const remoteCards = new Set(parsed.cards.map((card) => card.id));
-            if ((!anchor || anchor.fingerprint !== stateFingerprint(local)) && local.cards.some((card) => !remoteCards.has(card.id))) {
-              ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true,
-                message: "Certaines cartes diffèrent entre tes deux parties : choisis celle à garder dans Mon compte.", isError: false });
-              return;
+          if (parsed) {
+            // Une action peut avoir été enregistrée sur le serveur pendant le
+            // pull (ex. tirage). Dans ce cas relire une fois afin d'adopter son
+            // résultat plutôt que d'écraser son retour local avec un snapshot
+            // déjà dépassé.
+            let authoritative = parsed;
+            if (changedDuringRead) {
+              const latest = await api.pullSave();
+              if (api.session()?.userId !== userId) return;
+              const latestState = latest ? sanitizeState(latest.state, ctx.deps.now()) : null;
+              if (latest && !latestState) throw new Error("Cette partie en ligne est illisible : rien n'a été modifié.");
+              if (latestState) {
+                authoritative = latestState;
+                ctx.publish({ remoteUpdatedAt: latest ? Date.parse(latest.updatedAt) || null : null });
+              }
             }
-            ctx.deps.applyState(parsed);
+            ctx.deps.applyState(authoritative);
             ctx.publish({
-              decision: "noop", syncNeedsChoice: false, pending: false, lastSyncAt: ctx.deps.now(),
-              message: "Ta progression en ligne a été chargée automatiquement.",
+              decision: stateFingerprint(current) === stateFingerprint(authoritative) ? "noop" : "pull",
+              syncNeedsChoice: false, pending: false, lastSyncAt: ctx.deps.now(),
+              message: changedDuringRead ? "La progression en ligne a été actualisée." : "La progression en ligne a été chargée automatiquement.",
               isError: false,
             });
             return;
           }
-          if (decision.action === "noop") {
-            ctx.publish({ decision: "noop", syncNeedsChoice: false, pending: false, lastSyncAt: ctx.deps.now(), message: decision.reason, isError: false });
-            return;
-          }
-          ctx.publish({ decision: "conflict", syncNeedsChoice: true, pending: true, message: decision.reason, isError: false });
+          // Compte neuf : il n'existe encore aucune sauvegarde en ligne à
+          // privilégier, la partie locale initialise donc le compte.
+          return ctx.push(current.version, current.updatedAt, false, true);
         } catch (error) {
           ctx.fail(error, "Synchronisation impossible.");
         }

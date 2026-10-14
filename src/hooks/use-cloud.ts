@@ -23,5 +23,17 @@ export function useCloud(): CloudState {
  * que lire l'état (une feuille ouverte puis fermée) n'arment pas de minuteur.
  */
 export function useCloudAutoSync(): void {
-  useEffect(() => cloudStore.attach(), []);
+  useEffect(() => {
+    const detach = cloudStore.attach();
+    const refreshOnlineSave = () => {
+      if (document.visibilityState === "visible" && navigator.onLine) void cloudStore.sync("auto");
+    };
+    document.addEventListener("visibilitychange", refreshOnlineSave);
+    window.addEventListener("online", refreshOnlineSave);
+    return () => {
+      detach();
+      document.removeEventListener("visibilitychange", refreshOnlineSave);
+      window.removeEventListener("online", refreshOnlineSave);
+    };
+  }, []);
 }

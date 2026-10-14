@@ -1,3 +1,29 @@
+## Synchronisation du compte et codes de test — code local, 14 octobre 2026
+
+À la demande de Malik, le cloud devient la référence lorsqu'un compte connecté
+possède déjà une sauvegarde : le démarrage, la connexion, le retour au premier
+plan et le retour du réseau la rechargent automatiquement. Les conflits issus
+d'un push automatique adoptent aussi l'état renvoyé par le serveur ; ils ne
+bloquent plus le sablier. Un compte cloud neuf peut toujours être initialisé par
+la partie locale. Les actions sensibles qui exigent une collection synchronisée
+gardent leur refus si leur push explicite échoue. Conséquence assumée : des
+progrès faits hors ligne sont remplacés au retour en ligne.
+
+Le composant de code promo existait mais n'était relié à aucun bouton ; il est
+maintenant accessible dans Toi → Fonctionnalités en ligne. Le guide
+[booster-test-access.md](booster-test-access.md) explique comment créer 25 codes
+privés de quatre boosters dans le SQL Editor (100 ouvertures cumulées), sans
+modifier les cartes ou les règles de tirage directement. Aucun code n'a été
+créé dans la base et aucun compte utilisateur n'a été modifié depuis cette
+session : elle ne dispose pas d'accès administrateur Supabase.
+
+Vérifications locales : `npm test` 73 fichiers / 1 168 tests ;
+`npm run ecrans` 22 fichiers / 128 tests ; typecheck, ESLint ciblé et build de
+production réussis. Le build est cloudless (variables Supabase absentes), donc
+il ne valide pas le compte réel. Aucun code promo créé et aucune donnée de
+production changée. Code local non publié à ce checkpoint ; avant le push,
+revérifier `main` distant et son SHA.
+
 ## Visuel Drop et démarrage de la musique — publié, Vercel actif, CI verte, 13 octobre 2026
 
 Malik voyait encore la façade violette au hub et n’entendait pas la BGM. Les deux

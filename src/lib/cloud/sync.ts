@@ -10,10 +10,9 @@
  *   * **grâce**  : tolérance de 30 s entre deux horodatages d'appareils, le
  *     temps qu'une horloge dérive un peu.
  *
- * On ne fusionne **jamais** deux parties automatiquement : une collection est
- * un tout cohérent (les cartes, les points, les paliers réclamés). Mélanger
- * deux progressions donnerait un état impossible à défendre côté serveur. En
- * cas de doute, on demande au joueur.
+ * Cette fonction conserve la comparaison historique utilisée par ses tests.
+ * Le parcours connecté de l'application adopte désormais directement la
+ * sauvegarde serveur ; il ne fusionne pas deux progressions.
  */
 import type { PlayerState } from "@/lib/game-engine";
 

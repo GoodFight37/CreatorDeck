@@ -62,7 +62,7 @@ import { emailProblem, passwordProblem } from "@/lib/cloud/credentials";
 import { parseOAuthReturn } from "@/lib/cloud/twitch";
 import { applyArenaReward, arenaRankLabel, arenaWeekLabel } from "@/lib/arena";
 import { CREATOR_BY_SLUG, type CardVariant, type Rarity } from "@/lib/catalog";
-import { decideSync, stateFingerprint, syncStats, type SyncAction } from "@/lib/cloud/sync";
+import { stateFingerprint, syncStats } from "@/lib/cloud/sync";
 import { MAX_SHOWCASE, normalizeShowcase } from "@/lib/cloud/showcase";
 import { deviceStorage } from "@/lib/storage";
 import { gameStore, onPersist } from "@/lib/game-store";
@@ -186,12 +186,12 @@ export function createCloudStore(deps: CloudDeps) {
     return true;
   }
 
-  async function push(saveVersion: number, deviceUpdatedAt: number, force: boolean): Promise<void> {
+  async function push(saveVersion: number, deviceUpdatedAt: number, force: boolean, adoptCloudOnConflict = false): Promise<void> {
     const api = resolve();
     if (!networkReady(api)) return;
     const local = deps.readState();
     if (!local) return;
-    if (state.syncNeedsChoice && !force) return;
+    if (state.syncNeedsChoice && !force && !adoptCloudOnConflict) return;
     if (!force && deps.storage()?.getItem(`creatordeck:hourglass-request:${api.session()?.userId}`)) return;
     publish({ busy: true });
     try {
@@ -228,6 +228,24 @@ export function createCloudStore(deps: CloudDeps) {
         return;
       }
       if (result.status === "conflict") {
+        if (adoptCloudOnConflict && !force) {
+          // Un push automatique ne demande plus au joueur de choisir : le
+          // serveur est la référence dès qu'une sauvegarde existe.
+          const parsed = sanitizeState(result.save.state, deps.now());
+          if (!parsed) throw new Error("Cette partie en ligne est illisible : rien n'a été modifié.");
+          deps.applyState(parsed);
+          publish({
+            busy: false,
+            pending: false,
+            decision: "pull",
+            syncNeedsChoice: false,
+            remoteUpdatedAt: Date.parse(result.save.updatedAt) || null,
+            lastSyncAt: deps.now(),
+            message: "La progression en ligne a été chargée automatiquement.",
+            isError: false,
+          });
+          return;
+        }
         publish({
           busy: false,
           pending: true,
@@ -275,7 +293,7 @@ export function createCloudStore(deps: CloudDeps) {
       // Sans lecture, on n'insiste pas : l'envoi qui suit reste sans forçage.
     }
     const local = deps.readState();
-    if (local) await push(local.version, local.updatedAt, false);
+    if (local) await push(local.version, local.updatedAt, false, true);
   }
 
   async function pull(): Promise<void> {
@@ -442,9 +460,9 @@ export function createCloudStore(deps: CloudDeps) {
     if (adopted > 0) {
       return `${adopted} carte${adopted > 1 ? "s" : ""} récupérée${adopted > 1 ? "s" : ""} depuis le jeu en ligne.`;
     }
-    // Rien de récupéré : la partie de l'appareil reste la référence, et la
-    // synchronisation s'en occupe toute seule. Il n'y a donc rien à demander.
-    return "Compte connecté : ta progression est gardée en ligne.";
+    // Une fois connecté, la sauvegarde du cloud est la référence sur cet
+    // appareil ; une copie locale différente sera remplacée au prochain pull.
+    return "Compte connecté : la progression en ligne est la référence.";
   }
 
   /**
@@ -545,7 +563,7 @@ export function createCloudStore(deps: CloudDeps) {
           pushTimer = null;
           const local = deps.readState();
           if (!local) return;
-          void push(local.version, local.updatedAt, false);
+          void push(local.version, local.updatedAt, false, true);
         }, AUTO_PUSH_DEBOUNCE_MS);
       });
       return () => {

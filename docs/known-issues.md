@@ -205,17 +205,19 @@ un geste planaire après flip. [Fichiers, preuves et limites](booster-continuum-
 Le jugement esthétique sur téléphone reste distinct des tests fonctionnels.
 
 
-K-040 — sablier bloqué par écart local/cloud. La reprise automatique avant le
-sablier et le garde-fou SQL ont déjà été publiés (`878f7e9e`, CI antérieure
-verte). Le nouveau message « Deux parties sont différentes… » est distinct du
-refus SQL : il signale un conflit de sauvegardes, où pousser l’une pourrait
-effacer l’autre. Le sablier relit maintenant les deux parties avant de refuser
-sur la base d’un conflit mémorisé ; aucune partie n’est choisie automatiquement
-en cas de divergence persistante. Tests locaux de la relance : store 159/159,
-E2E cloud simulés 2/2, typecheck et lint réussis. Correctif publié `1ebc6415` ;
-CI `38482257038` verte 6/6 et Vercel success. Le contrôle Supabase a confirmé
-qu’aucun SQL n’était en attente. Conflit réel multi-appareil toujours à résoudre
-depuis Mon compte.
+K-040 — conflit local/cloud bloquant le sablier. Le diagnostic historique
+(`1ebc6415`) demandait encore un choix manuel en cas de divergence persistante,
+ce qui faisait réapparaître le message après redémarrage. Correctif demandé le
+14 octobre : quand le compte est connecté, l'état du cloud remplace la copie
+locale au démarrage, à la connexion, au retour au premier plan et au retour du
+réseau ; un conflit d'envoi automatique adopte aussi la version renvoyée par le
+serveur. Une partie locale sans sauvegarde cloud initialise toujours le compte.
+Vérifié localement : store cloud 159/159, `npm test` 73 fichiers / 1 168 tests,
+`npm run ecrans` 22 fichiers / 128 tests, TypeScript, ESLint ciblé et build
+réussis. Le build local n'avait pas de variables Supabase ; aucune session réelle
+ni compte de Malik n'a été testé, et aucune donnée de production n'a été modifiée.
+Publication à vérifier. Conséquence : les changements joués hors ligne seront
+remplacés au prochain retour en ligne.
 
 | ID | Gravité / nature | Statut / portée | Symptôme et reproduction | Cause / contournement |
 |---|---|---|---|---|

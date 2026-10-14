@@ -8,6 +8,7 @@ import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
 import { ImageCredits } from "@/components/image-credits";
+import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { CreatorCard } from "@/components/creator-card";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -137,6 +138,7 @@ export function ProfileView({
   const studioAvailable = process.env.NODE_ENV !== "production";
   const [tools, setTools] = useState(0);
   const [lastTap, setLastTap] = useState(0);
+  const [showPromoCode, setShowPromoCode] = useState(false);
 
   function tapLevel() {
     if (!studioAvailable) return;
@@ -288,7 +290,10 @@ export function ProfileView({
 
       <details className="profile-online-fold">
         <summary>Fonctionnalités en ligne</summary>
-      {/* Wishlist */}
+        <button type="button" className="account-button ghost" onClick={() => setShowPromoCode(true)}>
+          J&apos;ai un code booster
+        </button>
+        {/* Wishlist */}
       {cloud.configured ? (
         <section className="wishlist-block" aria-label="Wishlist">
           <div className="wishlist-title">
@@ -466,6 +471,7 @@ export function ProfileView({
       <button type="button" className="menu-reset" onClick={() => void handleReset()}>
         Réinitialiser la progression
       </button>
+      {showPromoCode ? <PromoCodeSheet onClose={() => setShowPromoCode(false)} /> : null}
     </div>
   );
 }

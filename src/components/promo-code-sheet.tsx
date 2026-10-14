@@ -72,11 +72,10 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
           <form className="account-card" onSubmit={(event) => void submit(event)}>
             <div className="account-head">
               <Ticket size={15} />
-              <strong>Un code du stream</strong>
+              <strong>Code booster</strong>
             </div>
             <p className="account-intro">
-              Un code donne un booster à ouvrir. Il se tape une fois par joueur — la casse et les
-              espaces n&apos;ont pas d&apos;importance.
+              Un code ajoute les boosters indiqués à ta réserve. Il se réclame une fois par joueur.
             </p>
             <label className="account-field">
               <span>Code</span>

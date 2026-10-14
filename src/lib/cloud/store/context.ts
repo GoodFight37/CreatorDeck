@@ -29,7 +29,7 @@ export type CloudStoreContext = {
   readSeen(userId: string | null): string | null;
   fail(error: unknown, fallback: string): void;
   networkReady(api: CloudApi | null): api is CloudApi;
-  push(saveVersion: number, deviceUpdatedAt: number, force: boolean): Promise<void>;
+  push(saveVersion: number, deviceUpdatedAt: number, force: boolean, adoptCloudOnConflict?: boolean): Promise<void>;
   pushAfterServer(): Promise<void>;
   pull(): Promise<void>;
   creatorNames(): Map<string, string>;

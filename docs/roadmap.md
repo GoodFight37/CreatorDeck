@@ -10,6 +10,17 @@ verte, 6/6 jobs. L’écoute sur téléphone reste nécessaire pour juger le niv
 et la couleur de la boucle. Voir le
 [checkpoint](agent-handoff.md) pour les preuves et limites exactes.
 
+- **Sync compte :** correctif local vérifié, prêt à publier, pour que la sauvegarde
+  en ligne soit automatiquement la référence à la connexion et au retour de l'appli ou
+  du réseau ; le sablier ne doit plus ouvrir un choix de versions. À valider et
+  publier après les tests. Recharger le cloud peut remplacer les progrès faits
+  hors ligne.
+- **Tests de booster sur compte réel :** aucun crédit illimité n'a été ajouté.
+  Les réserves sont gérées par Supabase ; le moyen ponctuel déjà supporté est
+  un lot de codes promo privés créé dans le SQL Editor (jusqu'à 100 ouvertures
+  par lot décrit), sans toucher aux données d'autres comptes. Voir
+  [le guide](booster-test-access.md).
+
 - **Portraits :** 454 choix manuels protégés, dont le lot de 154 importé le
   13 octobre ; 542 profils restent à examiner dans le pilote. Celui-ci propose
   des images à comparer et n'en remplace aucune automatiquement. Le critère est

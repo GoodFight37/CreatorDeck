@@ -1,5 +1,24 @@
 # Décisions CreatorDeck
 
+## D-081 — 14 octobre 2026 : le cloud fait foi dès qu'un compte est connecté
+
+À la demande de Malik, une sauvegarde en ligne existante remplace
+automatiquement toute copie locale différente à la connexion, au démarrage, au
+retour de l'application au premier plan et au retour du réseau. Aucune boîte de
+choix ne bloque les sabliers. Si le serveur refuse un envoi automatique parce
+qu'une autre version vient d'être écrite, le client adopte la sauvegarde que le
+serveur renvoie. Un compte sans sauvegarde distante conserve son initialisation
+locale et l'envoie. Les actions transactionnelles (échange, vente, etc.) gardent
+leur garde : elles ne se poursuivent pas si leur synchronisation explicite
+échoue. Conséquence assumée : une progression faite hors ligne sur un compte
+connecté est remplacée par la version en ligne au prochain retour du réseau.
+La reprise d'un tirage concurrent relit le serveur avant d'adopter son état.
+
+Validation locale : 1 168 tests unitaires, 128 tests d'écran, TypeScript,
+ESLint ciblé et build de production réussis ; build cloudless sans variables
+Supabase, donc il n'exerce pas une vraie session. Aucune sauvegarde de compte
+ni donnée de production n'a été inspectée ou modifiée. Publication à vérifier.
+
 ## D-080 — 13 octobre 2026 : faire voir le sachet actuel et démarrer la musique au premier appui
 
 L’accueil Drop utilise désormais le même visuel mat que la scène d’ouverture
@@ -22,7 +41,8 @@ le parcours automatique normal reprend ; si elles divergent encore, le débit
 reste bloqué jusqu’au choix dans Mon compte. Aucun push, pull ou merge forcé
 n’est ajouté. Motif : éviter qu’un ancien diagnostic de conflit persiste après
 une resynchronisation, tout en protégeant une progression potentiellement
-différente. Store cloud 159/159 et navigateur cloud simulé 2/2. Publié
+différente. Cette règle est remplacée par D-081 à la demande de Malik. Store
+cloud 159/159 et navigateur cloud simulé 2/2. Publié
 `1ebc6415`, CI `38482257038` verte, Vercel success ; aucune migration SQL en
 attente. Téléphone réel et sauvegarde du compte de Malik non inspectés.
 

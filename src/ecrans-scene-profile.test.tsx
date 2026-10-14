@@ -128,6 +128,13 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(onGoDrop).toHaveBeenCalledOnce();
   });
 
+  it("ouvre la feuille de rédemption des boosters depuis les fonctions en ligne", async () => {
+    await profile([]);
+    banc.appuyer("J'ai un code booster");
+    expect(document.querySelector('[role="dialog"][aria-label="J\'ai un code"]')).not.toBeNull();
+    expect(document.querySelector<HTMLInputElement>('[role="dialog"] input')?.placeholder).toBe("BOOSTER-2026");
+  });
+
   it("annonce un Tribunal déjà payé tout en gardant l'accès pour rejouer", async () => {
     const { onShowTribunal } = await drop(0, true);
     expect(document.querySelector(".tribunal-row")).toBeNull();
