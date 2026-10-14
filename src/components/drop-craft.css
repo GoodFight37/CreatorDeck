@@ -28,7 +28,6 @@
 .atelier-view .empty-collection { flex-wrap: wrap; }
 @media (max-height: 700px) {
   .home-view .pack-stage.stage-live { min-height: 200px; height: 29svh; }
-  .home-view .pack-stage.stage-live .pack-artwork.pack-live { width: 108px; height: 158px; flex-shrink: 0; }
 }
 .atelier-view .atelier-rarity-filters { margin-top: 8px; }
 .atelier-view .atelier-rarity-filters summary { cursor: pointer; color: var(--muted); font-size: 12px; padding: 10px 0; }
