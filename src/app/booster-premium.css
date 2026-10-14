@@ -425,27 +425,32 @@
   outline-offset: -2px;
   border-radius: 6px;
 }
-.booster-cinematic .foil-cut-slit {
+.booster-cinematic .foil-cut-trace {
   position: absolute;
   z-index: 7;
-  top: 15.25%;
-  height: 5px;
-  transform: translateY(-50%);
-  border-radius: 0 9px 9px 0;
-  background: linear-gradient(180deg, rgba(255,243,226,.78) 0%,
-    rgba(5,0,14,.94) 34%, rgba(7,0,15,.96) 80%, rgba(235,153,184,.8) 100%);
-  box-shadow: 0 0 5px 1px rgba(255, 200, 206, .6), 0 0 15px rgba(223, 92, 148, .32);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
   pointer-events: none;
 }
-.booster-cinematic .foil-cut-slit::after {
-  content: "";
-  position: absolute;
-  right: -2px;
-  top: -3px;
-  width: 7px;
-  height: 11px;
-  background: radial-gradient(circle, rgba(255,246,220,.8), transparent 70%);
-  filter: blur(2px);
+.booster-cinematic .foil-cut-trace polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.booster-cinematic .foil-cut-glow {
+  stroke: rgba(255, 105, 174, .78);
+  stroke-width: 9px;
+  opacity: .68;
+  filter: blur(3px);
+}
+.booster-cinematic .foil-cut-slit {
+  stroke: rgba(255, 248, 227, .98);
+  stroke-width: 2.4px;
+  filter: drop-shadow(0 0 2px rgba(255, 243, 216, .95))
+    drop-shadow(0 0 7px rgba(255, 138, 184, .8));
 }
 .booster-cinematic .foil-back-card {
   position: absolute;
@@ -496,7 +501,8 @@
   animation: foil-card-exit 1650ms cubic-bezier(.13,.7,.2,1) both;
   animation-delay: calc(var(--card-i) * 43ms);
 }
-.booster-cinematic .booster-foil-open .foil-cut-slit { animation: foil-cut-fade 600ms ease-out both; }
+.booster-cinematic .booster-foil-open .foil-cut-slit,
+.booster-cinematic .booster-foil-open .foil-cut-glow { animation: foil-cut-fade 600ms ease-out both; }
 .booster-cinematic .booster-foil-open .booster-foil-glow {
   animation: foil-restrained-open-light 1650ms ease-out both;
 }
@@ -537,7 +543,8 @@
   .booster-cinematic .booster-foil-open .foil-body-piece,
   .booster-cinematic .booster-foil-open .foil-card-chamber,
   .booster-cinematic .booster-foil-open .foil-back-card,
-  .booster-cinematic .booster-foil-open .foil-cut-slit {
+  .booster-cinematic .booster-foil-open .foil-cut-slit,
+  .booster-cinematic .booster-foil-open .foil-cut-glow {
     animation-duration: 0.01ms;
     animation-delay: 0ms;
   }

@@ -457,16 +457,15 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   transform-style: preserve-3d; transform-origin: 50% 15.45%; backface-visibility: hidden; transition: none;
 }
 .booster-cinematic.booster-presentation .foil-cut-slit {
-  height: 3px; overflow: visible;
-  background: linear-gradient(180deg, rgb(255 255 245 / .98), rgb(255 197 188 / .9) 38%,
-    rgb(25 4 22 / .78) 76%, rgb(255 230 209 / .96));
-  box-shadow: 0 0 7px 2px rgb(255 230 205 / .72), 0 0 26px 7px rgb(250 136 167 / .48);
+  stroke: rgb(255 249 230 / .98);
+  stroke-width: 2.8px;
+  filter: drop-shadow(0 0 2px rgb(255 230 205 / .9))
+    drop-shadow(0 0 8px rgb(250 136 167 / .8));
 }
-.booster-cinematic.booster-presentation .foil-cut-slit::before {
-  content: ""; position: absolute; z-index: -1; inset: -17px -4px; opacity: 0;
-  background: linear-gradient(180deg, transparent, rgb(255 219 200 / .72) 45%,
-    rgb(248 130 184 / .34) 58%, transparent);
-  filter: blur(7px);
+.booster-cinematic.booster-presentation .foil-cut-glow {
+  stroke: rgb(248 130 184 / .82);
+  stroke-width: 10px;
+  filter: blur(3.5px);
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-top-piece {
   animation-name: scene-cap-fold; animation-duration: 680ms;
@@ -503,7 +502,7 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
   78% { opacity: .55; transform: translateY(25%) translateZ(-8px) rotateX(-25deg) rotateY(4deg); }
   100% { opacity: .35; transform: translateY(34%) translateZ(-12px) rotateX(-28deg) rotateY(4deg); }
 }
-.booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before { animation: scene-cut-light 620ms ease-out both; }
+.booster-cinematic.booster-presentation .booster-foil-open .foil-cut-glow { animation: scene-cut-light 620ms ease-out both; }
 @keyframes scene-cut-light {
   0%, 15% { opacity: 0; transform: scaleY(.35); }
   38% { opacity: 1; transform: scaleY(1); }
@@ -642,7 +641,8 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom,
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-inner-shadow,
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::before,
-[data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit { animation: none; opacity: 0; }
+[data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit,
+[data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-glow { animation: none; opacity: 0; }
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber,
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card { animation: none; opacity: 1; }
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber { transform: translateY(-18%); }
@@ -653,7 +653,6 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   transform: translateY(calc(-8% - var(--card-i) * 2%))
     translateX(calc((var(--card-i) - 2) * 5px)) rotate(calc((var(--card-i) - 2) * 3deg));
 }
-[data-card-fx="off"] .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before { display: none; }
 [data-card-fx="off"] .booster-cinematic.booster-presentation .booster-physical-scene::after { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -687,7 +686,8 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom,
   .booster-cinematic.booster-presentation .booster-foil-open .foil-inner-shadow,
   .booster-cinematic.booster-presentation .booster-physical-scene.booster-foil-open::before,
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit {
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit,
+  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-glow {
     animation: none;
     opacity: 0;
   }
@@ -707,7 +707,6 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
       translateX(calc((var(--card-i) - 2) * 5px))
       rotate(calc((var(--card-i) - 2) * 3deg));
   }
-  .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-slit::before,
   .booster-cinematic.booster-presentation .booster-physical-scene::after {
     display: none;
   }

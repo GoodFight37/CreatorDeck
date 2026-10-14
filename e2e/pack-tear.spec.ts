@@ -483,6 +483,12 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(x + bounds.width * .28, y, { steps: 8 });
   const slit = dialog.locator(".foil-cut-slit");
   await expect.poll(async () => (await slit.boundingBox())?.width ?? 0).toBeGreaterThan(10);
+  await expect.poll(() => slit.evaluate((node) => getComputedStyle(node).getPropertyValue("stroke")))
+    .toMatch(/^rgba?\(/);
+  expect(await slit.evaluate((node) =>
+    parseFloat(getComputedStyle(node).getPropertyValue("stroke-width")),
+  )).toBeGreaterThan(0);
+  expect(await slit.getAttribute("points")).toContain(",");
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-light-x"))).not.toBe("");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
   await expect(dialog.locator("canvas")).toHaveCount(0);

@@ -223,8 +223,8 @@ export function PackTear({
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
           <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            <polyline className="foil-cut-slit" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
             <polyline className="foil-cut-glow" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
+            <polyline className="foil-cut-slit" points={edge.map((point) => `${point.x},${point.y}`).join(" ")} />
           </svg>
           <div
             className="booster-tear-track booster-peel-zone"
