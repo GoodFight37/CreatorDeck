@@ -1,5 +1,22 @@
 # Décisions CreatorDeck
 
+## D-089 — 14 octobre 2026 : conserver le guidage du peel jusqu'au relâchement
+
+Après la correction des va-et-vient, Malik constate que la coupe semble plus
+rigide et plus linéaire. Le seuil `span >= 38` armait la coupe tôt, puis
+`gesture.ready` bloquait entièrement `pointerMove` : plus de suivi du doigt,
+plus d'influence Y ni de retouche de la fente avant le relâchement. Le seuil est
+maintenant fondé sur l'ouverture combinée (étendue horizontale, variation Y et
+soulèvement), sans règle de longueur horizontale seule. Après armement, le
+doigt continue de déplacer le rabat et de guider la fente jusqu'à `pointerUp`.
+Un seul Y courant par tranche X, trié en profil monotone, guide la géométrie
+sans réutiliser une polyline temporelle comme clip auto-croisé. Le paquet reste
+fermé pendant le toucher ; `pointerUp` ouvre si le seuil a été atteint ;
+annulation/perte de capture replie. Tests bureau/téléphone simulé : E2E complet
+du peel 45 réussis, 1 scénario cloud conditionnel ignoré ; typecheck, ESLint
+ciblé et build statique réussis. Commit `abcd2d0a` ; état de publication dans
+la passation. Aucun test sur téléphone physique revendiqué.
+
 ## D-088 — 14 octobre 2026 : dessiner la coupe du booster avec un vrai contour SVG
 
 La vidéo de Malik montre le seuil « Relâche pour ouvrir » sans fente visible,

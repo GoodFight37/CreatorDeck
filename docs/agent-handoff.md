@@ -1,3 +1,25 @@
+## Peel trop tôt figé après le seuil — corrigé, 14 octobre 2026
+
+Malik précise que depuis le correctif du va-et-vient, le peel paraît rigide,
+plus linéaire et moins pilotable. Cause trouvée dans le code publié : le simple
+parcours de 38 % de largeur armait l'ouverture, puis `onPointerMove` ignorait
+tous les mouvements suivants. Le profil de coupe gardait aussi le premier
+point de chaque tranche X, ce qui rendait les retours en Y sans effet.
+Maintenant, seul le seuil d'ouverture combinée (étendue X + variation Y +
+soulèvement) arme le relâchement ; le doigt continue de guider le rabat et le
+profil jusqu'à `pointerUp`. Le profil conserve le dernier Y de chaque tranche,
+trié sur X, afin que la forme reste une fente unique sans polygone auto-croisé.
+Une annulation replie toujours le sachet et n'ouvre pas le booster.
+
+Code : `src/components/pack-tear.tsx`, test : `e2e/pack-tear.spec.ts`.
+Commit `abcd2d0ad5b5c4d896a21f9b68496c9af4a4b832` poussé sur `main` après la
+base `69fe48ca`. La suite `e2e/pack-tear.spec.ts` passe : 45 réussis, 1 scénario
+cloud ignoré ; typecheck, ESLint ciblé et build statique réussis. CI GitHub
+[`38563130307`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38563130307)
+et le déploiement Vercel Production du SHA `abcd2d0a` étaient en cours au
+dernier relevé. Vérifier leur état avant de conclure ; le test sur téléphone
+physique reste à faire. Le contour SVG corrigé au commit `269ec4d7` est conservé.
+
 ## Tracé de coupe invisible sur téléphone — corrigé localement, 14 octobre 2026
 
 La vidéo `Screenrecorder-2026-10-14-13-55-50-261.mp4` confirme le défaut :

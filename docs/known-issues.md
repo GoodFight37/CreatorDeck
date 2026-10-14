@@ -1,3 +1,18 @@
+## Peel trop court et figé trop tôt — corrigé, 14 octobre 2026
+
+Après le correctif anti-casse, l'ouverture s'armait à `span >= 38` même si la
+forme de la fente n'était pas assez ouverte, puis cessait tout suivi du doigt
+tant qu'il restait posé. En outre, conserver le premier point de chaque X
+empêchait les retours en Y de guider la coupe. Cela rendait le geste court,
+rigide et proche d'un rail. Le seuil dépend maintenant de la surface ouverte
+(X, Y et soulèvement) ; après armement, la fente et le rabat continuent de
+suivre le doigt jusqu'au relâchement. Un profil à Y courant, trié par X, garde
+une silhouette de coupe unique pendant les va-et-vient. L'ouverture reste au
+relâchement ; cancel replie. Commit `abcd2d0a` poussé sur `main`. E2E peel :
+45 réussis, 1 scénario cloud ignoré ; typecheck, ESLint ciblé et build statique
+passent. La CI `38563130307` et le déploiement Vercel du commit étaient en
+cours au dernier relevé. Validation sur téléphone réel à faire.
+
 ## Fente du booster invisible pendant le geste — corrigée, 14 octobre 2026
 
 La vidéo de Malik montre l'état « Relâche pour ouvrir » alors que le sachet

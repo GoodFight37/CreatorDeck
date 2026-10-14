@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `c2277ac53900e18c6b3c64cc33408e093c7679aa` ;
+**État du code :** `main` au SHA `abcd2d0ad5b5c4d896a21f9b68496c9af4a4b832` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -56,14 +56,16 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
 - **Ouverture :** peel guidé et continuum publiés, 3D désactivée par défaut.
   Après le retrait de la languette, la cinquième carte ordinaire attend 360 ms
   avant son flip ; Perfect, Reflets désactivés et mouvement réduit n'attendent
-  pas. Le correctif publié stabilise la coupe lors des va-et-vient et la fige
-  une fois armée ; seul le relâchement ouvre le booster. Après la vidéo du
-  14 octobre, le contour SVG invisible a été corrigé dans le commit
-  `269ec4d7` : le tracé visible suit maintenant le doigt, avec un halo. Les
-  E2E d'ouverture passent (45 réussis, 1 scénario cloud ignoré), ainsi que le
-  typecheck, ESLint et le build. Poussé sur `main` ; Vercel Production `READY`,
-  CI GitHub `38561091030` encore en cours au dernier relevé. L'essai physique
-  reste à confirmer. Voir [D-084](decisions.md), [D-088](decisions.md) et le
+  pas. Le correctif publié `b6a3605c` contre les allers-retours figeait le
+  geste trop tôt : seuil horizontal de 38 %, puis aucun suivi du doigt. Le
+  contour SVG invisible a été corrigé dans `269ec4d7`; le commit `abcd2d0a`
+  garde maintenant le suivi X/Y et le rabat en mouvement jusqu'au
+  relâchement, tout en gardant une fente géométriquement stable. E2E ouverture
+  (45 réussis, 1 scénario cloud ignoré), typecheck, ESLint et build passent.
+  Ce dernier correctif est poussé sur `main` ; CI (`38563130307`) et son
+  déploiement Vercel étaient en cours au dernier relevé. L'essai physique reste
+  à faire. Voir [D-084](decisions.md), [D-088](decisions.md),
+  [D-089](decisions.md) et le
   [rapport d'ouverture](booster-continuum-2026-10-12.md).
 - **Autres piliers :** Drop et Craft ont reçu leurs ajustements mobiles. Binder
   conserve la provenance d'obtention Live, tandis que le statut de direct actuel
