@@ -8,25 +8,27 @@ cette piste est donc provisoire. Le master est conservé en entier (142 s),
 réencodé en MP3 mono 24 kHz/48 kbit/s (~834 KiB). La source est mesurée à
 `-15,5 LUFS` et `-0,6 dBTP` ; ce fichier remplace la nappe bourdonnante de 24 s.
 
-Les gains relatifs sont `0,32` au hub, `0,16` pendant le pack et `0` au
-Tribunal. Ainsi la piste reste présente pendant l'ouverture, environ 6 dB plus
-basse qu'au hub, au lieu de tomber presque au silence. Le niveau acoustique réel
-dépend toujours du téléphone et de son volume média.
+Les gains relatifs sont maintenant `0,08` au hub, `0,04` pendant le pack et `0`
+au Tribunal. La musique commence à l'entrée dans le jeu, après le bouton de fin
+du tutoriel pour un nouveau joueur, ou au premier geste de jeu d'un joueur de
+retour. Elle ne dépend plus de l'ouverture du booster pour démarrer. Son volume
+est fortement réduit ; le niveau acoustique réel dépend toujours du téléphone
+et de son volume média.
 
 Le préchargement des bruitages peut créer l'AudioContext au montage, mais ne
-démarre pas la musique. La boucle unique ne démarre que dans l'action de jeu
-qui ouvre réellement un booster ou le cadeau tutoriel, afin de conserver un
-geste utilisateur valide sur navigateur mobile. La navigation et la fin de
-l'onboarding restent muettes. `creator-deck-app.tsx` est l'unique propriétaire
+démarre pas la musique. Pour les nouveaux joueurs, le bouton de fin du tutoriel
+démarre la boucle avant l'écriture cloud asynchrone ; pour les joueurs de retour,
+le premier geste de jeu après chargement la démarre. Ces gestes déverrouillent
+l'audio Web sur mobile. `creator-deck-app.tsx` est l'unique propriétaire
 des scènes ; `setMusicScene()` ne crée jamais de lecteur ni de source et les
 composants de reveal ne restaurent pas eux-mêmes le hub au démontage. Si le
 décodage termine après le premier geste, le moteur reprend l'AudioContext
 suspendu avant de démarrer. Le garde `musicStopped` empêche un mute intervenu
 pendant le chargement de lancer la piste en retard. Unmute ou redémarrage
 explicite crée une nouvelle source en boucle, sans doublon. Au hub la musique
-reste en fond ; elle baisse à `0,16` pendant le booster et tout le reveal ; le
+reste en fond ; elle baisse à `0,04` pendant le booster et tout le reveal ; le
 Tribunal la coupe à `0` pour laisser respirer les sons de tampon et de marteau.
-Le gain hub est `0,32`. Deux réglages séparés
+Le gain hub est `0,08`. Deux réglages séparés
 dans Toi pilotent désormais les sons de jeu (bruitages et synthèse) et la
 musique. Ils sont activés par défaut et mémorisés séparément. Les crans de
 volume dans l'application ont été retirés : le volume média du téléphone règle
@@ -37,9 +39,9 @@ reste activé par défaut si aucun choix n'est enregistré ;
 
 Les tests unitaires instrumentent la source Web Audio pour vérifier boucle,
 mute/unmute, arrêt/redémarrage et scènes. Les E2E simulent le graphe audio :
-ils vérifient qu'aucune boucle ne démarre durant l'onboarding, qu'un clic de jeu
-en démarre une seule, que le gain est `0,16` pendant déchirure/reveal et revient
-à `0,32` après fermeture. Cela ne prouve pas le niveau acoustique sur le
+ils vérifient qu'une boucle démarre à l'entrée dans le jeu, qu'un booster ne crée
+pas de seconde boucle, que le gain est `0,04` pendant déchirure/reveal et revient
+à `0,08` après fermeture. Cela ne prouve pas le niveau acoustique sur le
 haut-parleur d'un téléphone ; le ressenti doit encore être contrôlé sur Vercel.
 
 ## Direction et exemples d'écoute — choix final en attente

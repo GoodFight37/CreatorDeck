@@ -49,10 +49,11 @@ D-092, [le problème connu](known-issues.md) et le dernier checkpoint.
 
 **Audio :** les deux pistes fournies restent des références provisoires. À sa
 demande, `springly_sprigs` remplace maintenant la nappe bourdonnante dans
-`public/music/hub-late-night.mp3` ; `snow_day` reste hors dépôt. Gain réduit au
-hub (`0,32`) et conservé à mi-niveau relatif durant booster/reveal (`0,16`) pour
-que la musique ne semble plus s'arrêter. Le choix final et l'écoute Vercel sur
-téléphone restent ouverts. Voir [audio-assets.md](audio-assets.md).
+`public/music/hub-late-night.mp3` ; `snow_day` reste hors dépôt. Elle commence
+à l'entrée dans le jeu et son gain est désormais très bas (`0,08` au hub, `0,04`
+pendant booster/reveal), au lieu de démarrer à l'ouverture du booster. Les tests
+audio 22/22, typecheck et ESLint ciblé passent. Le choix final et l'écoute Vercel
+sur téléphone restent ouverts. Voir [audio-assets.md](audio-assets.md).
 
 **Avance des cartes :** un appui pendant le flip était mis en file et exécuté
 au terme de l'animation ; un second appui pouvait alors agir sur la carte

@@ -1,9 +1,9 @@
 ## Piste bourdonnante et double appui qui saute une révélation — corrigés localement, 14 octobre 2026
 
 Le prototype de 24 s a été remplacé par `springly_sprigs` (asset CC0 fourni par
-Malik, 142 s), réencodé mono 24 kHz/48 kbit/s. Le gain hub est ramené à `0,32` ;
-pendant le booster/reveal, la piste reste audible à `0,16` au lieu de presque
-s'arrêter à `0,018`. Le choix de piste reste provisoire.
+Malik, 142 s), réencodé mono 24 kHz/48 kbit/s. Les gains initiaux hub `0,32` et
+pack/reveal `0,16` ont depuis été abaissés au quart (`0,08` et `0,04`) après le
+retour de volume trop fort. Le choix de piste reste provisoire.
 
 Le bouton « Carte suivante » est désormais désactivé jusqu'à la fin du flip et
 les appuis pendant l'animation ne sont plus mis en file. Cela supprime la chaîne
@@ -17,6 +17,14 @@ double appui), migrations, cloud simulé et build. Le check Vercel de ce commit
 est `success` ; l'API détaillée Vercel répond 403, donc son état `READY` ne peut
 pas être affirmé indépendamment ici. L'écoute sur téléphone et le choix musical
 final restent ouverts.
+
+Après le retour « beaucoup trop forte » et « musique dès le lancement du jeu » :
+gain abaissé au quart (`0,08` au hub, `0,04` durant booster/reveal). La musique
+démarre maintenant au bouton de fin du tutoriel, ou au premier geste après
+chargement pour un joueur de retour ; l'ouverture du booster ne la démarre plus.
+Validation ciblée : tests audio 22/22, typecheck et ESLint touché réussis. Le test
+Playwright du moment de démarrage est actualisé, mais la suite E2E complète n'a
+pas été relancée pour cette révision courte.
 
 ## Audit du démarrage musical et des tailles Drop — corrigé et publié, 14 octobre 2026
 

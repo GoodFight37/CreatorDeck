@@ -385,6 +385,24 @@ export function CreatorDeckApp() {
   const onboardingReady = !cloud.configured || Boolean(cloud.userId && cloud.onboarding && !cloud.onboardingBusy);
   const showTutorial = tutorialStep !== null || (!welcomeSeen && (completedTutorialKey === null || completedTutorial) && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
 
+  useEffect(() => {
+    if (!game || showTutorial) return;
+    // For returning players, autoplay is unlocked by their first real gesture
+    // after they enter the game, not by navigating through the welcome flow.
+    const startOnFirstGesture = (event: Event) => {
+      if (!event.isTrusted) return;
+      startGameAudio("hub");
+      window.removeEventListener("pointerdown", startOnFirstGesture, true);
+      window.removeEventListener("keydown", startOnFirstGesture, true);
+    };
+    window.addEventListener("pointerdown", startOnFirstGesture, true);
+    window.addEventListener("keydown", startOnFirstGesture, true);
+    return () => {
+      window.removeEventListener("pointerdown", startOnFirstGesture, true);
+      window.removeEventListener("keydown", startOnFirstGesture, true);
+    };
+  }, [game, showTutorial]);
+
   function replayWelcomeTutorial() {
     try {
       window.localStorage.removeItem(welcomeKey);
@@ -397,6 +415,9 @@ export function CreatorDeckApp() {
   }
 
   async function finishWelcomeTutorial() {
+    // This button is the transition into the game for a new player. Start now,
+    // before awaiting the optional cloud write, to retain mobile user gesture.
+    startGameAudio("hub");
     if (cloud.configured && cloud.userId) {
       const saved = await cloudStore.completeTutorial();
       if (!saved) { showError("Impossible d’enregistrer la fin du tutoriel. Réessaie."); return; }
@@ -410,7 +431,6 @@ export function CreatorDeckApp() {
 
   async function claimAndOpenWelcomeGift() {
     if (giftBusy) return;
-    startGameAudio("hub");
     setGiftBusy(true);
     try {
       if (!cloud.onboarding?.giftClaimed) {
@@ -437,9 +457,6 @@ export function CreatorDeckApp() {
    * until both the draw and the gesture have completed, with no empty frame.
    */
   function commencerDechirure(kind: "live" | "scene"): Promise<void> {
-    // Start inside the trusted gameplay gesture so mobile browsers unlock
-    // Web Audio. The scene effect immediately applies the pack duck.
-    startGameAudio("hub");
     pendingPresentationLeft.current = false;
     // Capture before the opening button is disabled, and keep it through reveal.
     setPresentationReturnFocus(document.activeElement instanceof HTMLElement

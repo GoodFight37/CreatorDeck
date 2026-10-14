@@ -2,14 +2,26 @@
 
 ## Checkpoint courant — BGM remplacée, avances de révélation protégées
 
+- Dernière demande : BGM trop forte et démarrant seulement à l'ouverture d'un
+  booster. Gain désormais `0,08` au hub et `0,04` en pack (un quart des gains
+  précédents). Démarrage au bouton « Terminer » du tutoriel, avant l'écriture
+  cloud, et au premier geste de jeu pour les joueurs de retour ; un seul moteur
+  et une seule boucle.
+- Vérification ciblée de cette petite révision : audio 22/22, typecheck,
+  ESLint des fichiers touchés et `git diff --check` réussis. Playwright global
+  non relancé à la demande de Malik ; son test audio a été mis à jour pour le
+  nouveau moment de démarrage et les nouveaux gains.
+
 - Reprise locale depuis `main` / `origin/main` au SHA documentaire
   `86871af7cb50ae95ef7481ea9d3e2ed2e9afb790`. L'API GitHub confirme ce HEAD ;
   `git ls-remote` ne passe pas actuellement le proxy de cet environnement.
 - Audio : l'asset bourdonnant de 24 s est remplacé par la piste provisoire
   `springly_sprigs` fournie par Malik (OpenGameArt CC0), 142 s, compressée en MP3
-  mono 24 kHz/48 kbit/s (~834 KiB). Gain hub `0,32`, pack/reveal `0,16`, Tribunal
-  `0`. La boucle reste unique et le pack n'est plus presque silencieux. Le
-  réglage Son de l'application et celui de Musique restent distincts.
+  mono 24 kHz/48 kbit/s (~834 KiB). Les gains initiaux `0,32` au hub et `0,16`
+  en pack ont ensuite été abaissés au quart (`0,08`/`0,04`) à la demande du
+  joueur. Le démarrage se fait à l'entrée du jeu, pas à l'ouverture du booster.
+  La boucle reste unique et les réglages Son de l'application et Musique sont
+  distincts.
 - Cartes : une avance demandée pendant le retournement était mise en file puis
   exécutée au flip end ; un tap suivant pouvait donc avancer la carte suivante.
   Le bouton est maintenant désactivé jusqu'à la fin de l'animation, et les taps

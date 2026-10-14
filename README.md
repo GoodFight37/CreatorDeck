@@ -58,10 +58,10 @@ pas résolu. L'état, le SHA et la prochaine priorité sont dans la
 [roadmap](docs/roadmap.md) et la [passation](docs/agent-handoff.md).
 
 L'audio a deux interrupteurs séparés (« Son de l’application » et « Musique »).
-La musique `springly_sprigs` remplace provisoirement la nappe bourdonnante ; son
-gain est modéré au hub et ne tombe plus presque au silence pendant l'ouverture.
-La piste finale et le niveau réel sur téléphone restent à confirmer. La boucle
-Web Audio unique démarre par une action de jeu. Pendant le reveal, le bouton
+La musique `springly_sprigs` remplace provisoirement la nappe bourdonnante ;
+elle commence à l'entrée dans le jeu, à très faible volume, et reste en fond
+pendant l'ouverture. La piste finale et le niveau réel sur téléphone restent à
+confirmer. La boucle Web Audio unique démarre par un geste joueur. Pendant le reveal, le bouton
 suivant reste désactivé jusqu'à la fin du retournement ; les appuis pendant
 l'animation ne sont pas mis en file. Le Drop garde son grand booster sur les
 petits écrans et fait défiler son contenu. Le rendu physique reste à confirmer. Pour le reste,

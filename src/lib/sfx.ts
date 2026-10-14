@@ -353,11 +353,10 @@ let muted = false;
 let musicMuted = false;
 let loaded = false;
 export type MusicScene = "hub" | "pack" | "tribunal";
-/** Gains relatifs de BGM : fond discret, légèrement atténué pendant le pack. */
+/** Gains relatifs de BGM, gardés très bas à la demande du joueur. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  // L'asset de référence est maîtrisé à -15,5 LUFS ; garder un fond modéré.
-  hub: 0.32,
-  pack: 0.16,
+  hub: 0.08,
+  pack: 0.04,
   tribunal: 0,
 };
 

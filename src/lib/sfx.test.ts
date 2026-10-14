@@ -86,9 +86,9 @@ describe("plans de sons", () => {
 });
 
 describe("mix de la musique", () => {
-  it("garde la musique modérée au hub, un peu plus basse pendant un pack et absente au Tribunal", () => {
-    expect(MUSIC_SCENE_GAIN.hub).toBeGreaterThanOrEqual(0.25);
-    expect(MUSIC_SCENE_GAIN.hub).toBeLessThanOrEqual(0.4);
+  it("garde la musique basse au démarrage, plus basse pendant un pack et absente au Tribunal", () => {
+    expect(MUSIC_SCENE_GAIN.hub).toBe(0.08);
+    expect(MUSIC_SCENE_GAIN.pack).toBe(0.04);
     expect(MUSIC_SCENE_GAIN.pack / MUSIC_SCENE_GAIN.hub).toBeCloseTo(0.5);
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
