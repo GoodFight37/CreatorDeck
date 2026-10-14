@@ -1,3 +1,15 @@
+## BGM du hub trop abstraite, choix d'une vraie musique en attente — 14 octobre 2026
+
+Malik entend la piste actuelle comme un son plutôt qu'une musique. Le fichier
+est bien une nappe synthétique prototype de 24 secondes, sans rythme ni
+percussion ; ce comportement est conforme à sa composition, mais ne donne pas
+au hub l'identité musicale souhaitée. Une sélection de quatre pistes de
+synthwave/electronica est préparée dans [audio-assets.md](audio-assets.md), avec
+licences d'utilisation dans un jeu et crédit requis. Aucune candidate n'est
+intégrée avant le choix du joueur. Les réglages locaux séparent désormais
+« Son de l’application » de « Musique » et retirent les niveaux de volume ;
+test écoute sur téléphone et sélection restent à faire.
+
 ## Pulsation « tac-tac » de la musique du hub — corrigée et publiée, 14 octobre 2026
 
 Malik entendait une pulsation ressemblant à des coups, toutes les ~0,5–1 s.

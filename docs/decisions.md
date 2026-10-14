@@ -1,5 +1,21 @@
 # Décisions CreatorDeck
 
+## D-087 — 14 octobre 2026 : séparer les interrupteurs audio et choisir la BGM à l'écoute
+
+Malik indique que la boucle actuelle ressemble à un son de fond plutôt qu'à
+une musique, et veut contrôler séparément la musique et les sons de jeu. Toi
+présente maintenant deux interrupteurs persistants : « Son de l’application »
+(bruitages et synthèse) et « Musique » (BGM). Ils sont activés par défaut pour
+les nouveaux joueurs. Un ancien choix Son ON/OFF est recopié aux deux au
+premier démarrage après mise à jour ; ensuite chacun est mémorisé séparément. Le
+volume passe par les boutons physiques du téléphone, donc l'interface ne propose
+plus de niveaux Discret/Normal/Fort. La liste de candidats et leurs licences
+est dans [audio-assets.md](audio-assets.md). Aucune piste externe n'est encore
+intégrée : Malik l'écoutera et choisira avant remplacement. Le ducking du pack,
+le silence du Tribunal, les timings de reveal et les effets restent inchangés.
+Les interrupteurs et le mix séparé sont validés par les tests ciblés ; le rendu
+des candidats et le nouvel asset restent à choisir et à écouter sur téléphone.
+
 ## D-086 — 14 octobre 2026 : retirer la pulsation percussive de la BGM
 
 Malik entendait un « tac-tac » régulier quand Son était activé. Le MP3 servi par

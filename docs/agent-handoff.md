@@ -1,3 +1,19 @@
+## Audio — interrupteurs séparés et sélection d'une BGM, travail local, 14 octobre 2026
+
+Malik préfère deux options indépendantes (« Son de l’application » et
+« Musique ») et le volume média du téléphone au choix Discret/Normal/Fort. Le
+code local implémente ces deux interrupteurs, persistés séparément ; le son
+actuel reste le prototype de nappe de 24 s. Une shortlist à écouter (Neon Noir,
+Resonance, Assembly Not Required, Nightchaser) et les crédits/licences requis
+sont dans [audio-assets.md](audio-assets.md). N'intègre pas de candidat avant
+son choix. Tests locaux ciblés : `src/lib/sfx.test.ts` 22/22,
+`ecrans-sons.test.tsx` 6/6, typecheck, ESLint ciblé, build statique cloudless
+et `git diff --check` réussis. Vérifier la CI avant publication. L'ancien
+choix global Son OFF est migré vers les deux interrupteurs OFF au premier
+démarrage, pour ne pas rallumer l'audio d'un joueur existant.
+SHA de départ `b5e240363fb841df6e1a4d8c541e592e0c6301f9`,
+branche `main` ; modifications locales non publiées. Un seul écrivain : Codex.
+
 ## Pulsation de la BGM — nouvel asset local à vérifier, 14 octobre 2026
 
 Après que Malik a décrit une pulsation « tac-tac » rapprochée, j'ai comparé

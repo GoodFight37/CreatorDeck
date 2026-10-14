@@ -19,10 +19,9 @@
  * `scripts/sfx-niveaux.mjs`, appliquée ici, et revérifiée par le test, qui relit
  * les vrais .wav. Le gain de lecture est le chemin entre les deux.
  *
- * **3. Un seul volume pour tout.** Les bruitages, la synthèse et les effets de
- * la révélation passent tous par le même nœud de sortie : l'interrupteur
- * **Son** coupe tout, et le réglage de **volume** (`discret`, `normal`, `fort`)
- * baisse tout d'un cran sans qu'aucun son ne soit oublié.
+ * **3. Deux interrupteurs indépendants.** `Son de l'application` coupe les
+ * bruitages et la synthèse ; `Musique` coupe la BGM. Le volume suit celui du
+ * téléphone : l'application n'ajoute pas de cran de volume concurrent.
  *
  * Deux familles, et chacune sert à quelque chose :
  *
@@ -38,12 +37,9 @@
  * Les deux peuvent sonner ensemble : le retournement d'une carte, c'est le
  * papier (bruitage) **plus** la gamme (synthèse).
  *
- * Le son est actif par défaut ; un bouton dans les réglages le coupe et le
- * choix est mémorisé (`localStorage`). **Tout passe par `isMuted()`** — les
- * bruitages comme la synthèse — donc l'interrupteur du joueur coupe bien
- * l'application entière. Tout repose sur un geste de l'utilisateur (ouverture
- * de booster, appui, swipe) : c'est exactement le moment où le navigateur
- * autorise l'audio.
+ * Les deux interrupteurs sont actifs par défaut et mémorisés séparément dans
+ * `localStorage`. Tout repose sur un geste du joueur : c'est ce qui déverrouille
+ * l'audio sur mobile.
  *
  * Les plans de notes et le **catalogue des bruitages** sont purs ; les fichiers
  * sont vérifiés sur disque par `src/lib/sfx.test.ts` (en-tête RIFF, durée), donc
@@ -65,7 +61,7 @@ export type Note = {
 };
 
 const STORAGE_KEY = "creatordeck.muted";
-const LEVEL_KEY = "creatordeck.sfx-level";
+const MUSIC_STORAGE_KEY = "creatordeck.music-muted";
 
 /**
  * Onde de base par rareté.
@@ -353,39 +349,16 @@ type AudioContextLike = {
 
 let context: AudioContextLike | null = null;
 let muted = false;
+let musicMuted = false;
 let loaded = false;
-
-/**
- * Le volume d'ensemble : un cran, pas un curseur.
- *
- * Trois crans suffisent, et ils se mémorisent : c'est un réglage qu'on cherche
- * quand un son dérange, pas une balance à ajuster. Le cran est appliqué **au
- * nœud de sortie** (`bus`), donc il vaut pour les bruitages, pour la synthèse
- * et pour tout ce qui viendra s'y brancher.
- */
-export type SfxLevel = "discret" | "normal" | "fort";
-
-/** Les trois crans, dans l'ordre, et leur étiquette à l'écran. */
-export const SFX_LEVELS: readonly SfxLevel[] = ["discret", "normal", "fort"] as const;
-export const SFX_LEVEL_LABELS: Record<SfxLevel, string> = {
-  discret: "Discret",
-  normal: "Normal",
-  fort: "Fort",
-};
-
-/** Ce que vaut chaque cran, en gain linéaire (−8 dB, −2,5 dB, 0 dB). */
-const LEVEL_GAIN: Record<SfxLevel, number> = { discret: 0.4, normal: 0.75, fort: 1 };
 export type MusicScene = "hub" | "pack" | "tribunal";
 /** Gains relatifs de BGM avant le volume global : hub présent, pack très ducké. */
 export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
-  // Le volume global est appliqué une seule fois sur le bus partagé.
   // 0,9 laisse la boucle en fond tout en gardant plus de 13 dB de marge en crête.
   hub: 0.9,
   pack: 0.018,
   tribunal: 0,
 };
-
-let level: SfxLevel = "normal";
 
 function loadPreference(): void {
   if (loaded) return;
@@ -393,11 +366,14 @@ function loadPreference(): void {
   if (typeof window === "undefined") return;
   try {
     muted = window.localStorage.getItem(STORAGE_KEY) === "1";
-    const choisi = window.localStorage.getItem(LEVEL_KEY);
-    if (choisi === "discret" || choisi === "normal" || choisi === "fort") level = choisi;
+    const savedMusicPreference = window.localStorage.getItem(MUSIC_STORAGE_KEY);
+    // Avant la séparation, le mute coupait ensemble musique et sons. Conserve
+    // ce choix existant au premier démarrage après mise à jour.
+    musicMuted = savedMusicPreference === null ? muted : savedMusicPreference === "1";
   } catch {
-    // Mode privé ou stockage refusé : on reste avec le son actif, cran normal.
+    // Mode privé ou stockage refusé : les deux options restent actives.
     muted = false;
+    musicMuted = false;
   }
 }
 
@@ -406,29 +382,16 @@ export function isMuted(): boolean {
   return muted;
 }
 
-/** Le cran de volume choisi par le joueur. */
-export function getSfxLevel(): SfxLevel {
+export function isMusicMuted(): boolean {
   loadPreference();
-  return level;
+  return musicMuted;
 }
 
-/** Change le cran de volume — appliqué tout de suite, même en pleine partie. */
-export function setSfxLevel(value: SfxLevel): void {
-  loadPreference();
-  level = value;
-  if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(LEVEL_KEY, level);
-  } catch {
-    // Le choix ne survivra pas au rechargement, ce n'est pas bloquant.
-  }
-}
-
+/** Active ou coupe uniquement les bruitages et la synthèse de l'application. */
 export function setMuted(value: boolean): void {
   loadPreference();
   muted = Boolean(value);
-  if (bus) bus.gain.value = muted ? 0 : LEVEL_GAIN[level];
+  if (bus) bus.gain.value = muted ? 0 : 1;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, muted ? "1" : "0");
@@ -437,12 +400,23 @@ export function setMuted(value: boolean): void {
   }
 }
 
+/** Active ou coupe uniquement la musique ; son choix est mémorisé à part. */
+export function setMusicMuted(value: boolean): void {
+  loadPreference();
+  musicMuted = Boolean(value);
+  if (musicGain && context) applyMusicScene(context);
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(MUSIC_STORAGE_KEY, musicMuted ? "1" : "0");
+  } catch {
+    // Le choix ne survivra pas au rechargement, ce n'est pas bloquant.
+  }
+  if (!musicMuted) startGameAudio(musicScene);
+}
+
 /**
- * Le nœud de sortie : **un seul**, et tout passe par lui.
- *
- * C'est ce qui rend le réglage de volume honnête — il n'y a pas un son oublié
- * quelque part qui joue à plein volume. Créé au premier son, il prend le cran
- * choisi par le joueur.
+ * Bus distinct des bruitages/synthèse : la musique a son propre gain et son
+ * interrupteur, mais les deux sortent par le volume média du téléphone.
  */
 let bus: GainNode | null = null;
 let musicGain: GainNode | null = null;
@@ -454,25 +428,23 @@ let musicScene: MusicScene = "hub";
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
   bus = ctx.createGain();
-  bus.gain.value = LEVEL_GAIN[getSfxLevel()];
+  bus.gain.value = muted ? 0 : 1;
   bus.connect(ctx.destination);
   return bus;
 }
 
 function applyMusicScene(ctx: AudioContextLike): void {
   if (!musicGain) return;
-  // The shared bus already applies the player's master volume and mute.
-  // Applying them here too would square the volume for music only.
-  const target = MUSIC_SCENE_GAIN[musicScene];
+  const target = musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene];
   const parameter = musicGain.gain;
-  parameter.setTargetAtTime(isMuted() ? 0 : target, ctx.currentTime, 0.22);
+  parameter.setTargetAtTime(target, ctx.currentTime, 0.22);
 }
 
 function startMusicSource(ctx: AudioContextLike): void {
   if (!musicBuffer || musicSource) return;
   try {
     musicGain = ctx.createGain();
-    musicGain.connect(masterBus(ctx));
+    musicGain.connect(ctx.destination);
     musicSource = ctx.createBufferSource();
     musicSource.buffer = musicBuffer;
     musicSource.loop = true;
@@ -488,7 +460,7 @@ function startMusicSource(ctx: AudioContextLike): void {
 /** Déverrouille l'audio sur le premier geste joueur et lance la boucle du hub. */
 export function startGameAudio(scene: MusicScene = "hub"): void {
   musicScene = scene;
-  if (isMuted()) return;
+  if (isMusicMuted()) return;
   const ctx = audioContext();
   if (!ctx) return;
   if (ctx.state === "suspended") void ctx.resume();

@@ -5,14 +5,12 @@ import NIVEAUX_SFX from "@/data/sfx-niveaux.json";
 import {
   SAMPLES,
   MUSIC_SCENE_GAIN,
-  SFX_LEVELS,
-  SFX_LEVEL_LABELS,
   SFX_USUELS,
   tearPlan,
   legendaryStingerPlan,
   perfectStingerPlan,
   tribunalEndStingerPlan,
-  getSfxLevel,
+  isMusicMuted,
   isMuted,
   packOpeningPlan,
   playSample,
@@ -21,8 +19,7 @@ import {
   sampleGain,
   sampleUrl,
   setMuted,
-  setSfxLevel,
-  type SfxLevel,
+  setMusicMuted,
   type SampleName,
 } from "@/lib/sfx";
 
@@ -96,7 +93,7 @@ describe("mix de la musique", () => {
     expect(MUSIC_SCENE_GAIN.tribunal).toBe(0);
   });
 
-  it("démarre une seule boucle et applique le mix hub, pack, Tribunal puis muet", async () => {
+  it("démarre une boucle, applique les scènes et sépare les deux interrupteurs", async () => {
     const targetHistory: number[] = [];
     const gainNodes: Array<{ gain: { value: number; setTargetAtTime: (value: number) => void }; connect: () => void }> = [];
     const sources: Array<{ loop: boolean; start: ReturnType<typeof vi.fn>; connect: () => void }> = [];
@@ -145,17 +142,13 @@ describe("mix de la musique", () => {
       expect(targetHistory.at(-1)).toBe(0);
       audio.setMusicScene("hub");
       expect(targetHistory.at(-1)).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
-      expect(gainNodes[1].gain.value).toBeCloseTo(0.75);
-      audio.setSfxLevel("fort");
-      expect(gainNodes[1].gain.value).toBeCloseTo(1);
-      audio.setSfxLevel("discret");
-      expect(gainNodes[1].gain.value).toBeCloseTo(0.4);
       audio.setMuted(true);
-      expect(gainNodes[1].gain.value).toBe(0);
-      audio.setMuted(false);
-      expect(gainNodes[1].gain.value).toBeCloseTo(0.4);
       expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
-      audio.setSfxLevel("normal");
+      audio.setMuted(false);
+      audio.setMusicMuted(true);
+      expect(targetHistory.at(-1)).toBe(0);
+      audio.setMusicMuted(false);
+      expect(gainNodes[0].gain.value).toBeCloseTo(MUSIC_SCENE_GAIN.hub);
       expect(sources).toHaveLength(1);
     } finally {
       vi.unstubAllGlobals();
@@ -371,6 +364,7 @@ describe("les bruitages embarqués", () => {
     vi.resetModules();
     const audioNeuf = await import("@/lib/sfx");
     expect(audioNeuf.isMuted()).toBe(false);
+    expect(audioNeuf.isMusicMuted()).toBe(false);
     audioNeuf.setMuted(true);
     expect(audioNeuf.isMuted()).toBe(true);
     audioNeuf.setMuted(false);
@@ -382,33 +376,24 @@ describe("les bruitages embarqués", () => {
   });
 });
 
-/**
- * Le volume d'ensemble : trois crans, mémorisés, et **un seul nœud de sortie**
- * par lequel passe tout le son de l'application. Ce que ces tests tiennent :
- * l'ordre des crans, et le fait que le choix se retrouve au démarrage suivant.
- */
-describe("le volume du jeu", () => {
-  it("propose trois crans, du plus discret au plus fort", () => {
-    expect(SFX_LEVELS).toEqual(["discret", "normal", "fort"]);
-    for (const cran of SFX_LEVELS) {
-      expect(SFX_LEVEL_LABELS[cran], `${cran} sans étiquette`).toBeTruthy();
-    }
+describe("préférences audio indépendantes", () => {
+  it("garde les bruitages et la musique dans deux préférences séparées", () => {
+    setMuted(true);
+    setMusicMuted(false);
+    expect(isMuted()).toBe(true);
+    expect(isMusicMuted()).toBe(false);
+    setMuted(false);
+    setMusicMuted(true);
+    expect(isMuted()).toBe(false);
+    expect(isMusicMuted()).toBe(true);
+    setMusicMuted(false);
   });
 
-  it("change de cran à la demande", () => {
-    const avant = getSfxLevel();
-    setSfxLevel("discret");
-    expect(getSfxLevel()).toBe("discret");
-    setSfxLevel("fort");
-    expect(getSfxLevel()).toBe("fort");
-    setSfxLevel(avant);
-    expect(getSfxLevel()).toBe(avant);
-  });
-
-  it("relit le cran gardé au démarrage suivant", async () => {
-    // Le module lit ses préférences **une fois** : on repart donc d'un module
-    // neuf, avec un `localStorage` qui contient déjà un choix.
-    const memoire = new Map<string, string>([["creatordeck.sfx-level", "discret"]]);
+  it("relit les deux choix au démarrage suivant", async () => {
+    const memoire = new Map<string, string>([
+      ["creatordeck.muted", "1"],
+      ["creatordeck.music-muted", "1"],
+    ]);
     vi.stubGlobal("window", {
       localStorage: {
         getItem: (cle: string) => memoire.get(cle) ?? null,
@@ -417,27 +402,30 @@ describe("le volume du jeu", () => {
     });
     vi.resetModules();
     try {
-      const frais = (await import("@/lib/sfx")) as typeof import("@/lib/sfx");
-      expect(frais.getSfxLevel()).toBe("discret");
-      frais.setSfxLevel("fort" as SfxLevel);
-      expect(memoire.get("creatordeck.sfx-level")).toBe("fort");
+      const frais = await import("@/lib/sfx");
+      expect(frais.isMuted()).toBe(true);
+      expect(frais.isMusicMuted()).toBe(true);
+      frais.setMuted(false);
+      expect(memoire.get("creatordeck.muted")).toBe("0");
+      expect(memoire.get("creatordeck.music-muted")).toBe("1");
     } finally {
       vi.unstubAllGlobals();
       vi.resetModules();
     }
   });
 
-  it("retombe sur « normal » si la mémoire contient autre chose", async () => {
+  it("préserve un ancien mute global pour ne pas rallumer le téléphone après mise à jour", async () => {
     vi.stubGlobal("window", {
       localStorage: {
-        getItem: () => "hurle",
+        getItem: (cle: string) => cle === "creatordeck.muted" ? "1" : null,
         setItem: () => {},
       },
     });
     vi.resetModules();
     try {
-      const frais = (await import("@/lib/sfx")) as typeof import("@/lib/sfx");
-      expect(frais.getSfxLevel()).toBe("normal");
+      const frais = await import("@/lib/sfx");
+      expect(frais.isMuted()).toBe(true);
+      expect(frais.isMusicMuted()).toBe(true);
     } finally {
       vi.unstubAllGlobals();
       vi.resetModules();

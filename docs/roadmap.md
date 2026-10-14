@@ -2,7 +2,7 @@
 
 ## État actuel — 14 octobre 2026
 
-**État du code :** `main` au SHA `67a9319452e27cb792032584e28448a6c6cc7fe7` ;
+**État de départ de cette reprise :** `main` au SHA `b5e240363fb841df6e1a4d8c541e592e0c6301f9` ;
 les boosters de test ont un solde distinct, et le plafond de recharge ordinaire
 reste intact. CI GitHub `38490854882` verte (6/6), migration Supabase 0051
 appliquée par `38491098387` et Vercel Production READY. La correction précédente
@@ -11,13 +11,17 @@ du sachet et du lancement audio est au SHA `8bf36ba0` ; l'écoute sur téléphon
   du peel publié à ce SHA, CI `38494377386` verte (6/6), Vercel Production
   `READY`. Voir le [checkpoint](agent-handoff.md) pour les preuves et limites.
 
-- **Audio :** la double atténuation du volume est corrigée et publiée (`-29,8 LUFS`
-  estimés au réglage Normal). Après le retour de Malik sur la pulsation
-  percussive, un nouvel asset sans percussion a été publié : 24 s, `-22,7 LUFS`
-  source, niveau de mix estimé `-26,1 LUFS`. CI
+- **Audio :** un nouvel asset sans percussion a été publié après le retour de
+  Malik sur le « tac-tac » : 24 s, `-22,7 LUFS` source. La reprise locale
+  sépare maintenant l'interrupteur Son de l'application de celui de la Musique
+  et retire les niveaux de volume ; la shortlist de pistes à écouter est dans
+  [audio-assets.md](audio-assets.md). Aucun morceau externe choisi ou intégré
+  pour l'instant. Le mix conserve son ducking du pack et le silence Tribunal.
+  CI
   [`38497830790`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38497830790)
-  verte (6/6), Vercel Production READY ; SHA-256 distant identique. Écoute
-  physique encore nécessaire. Voir
+  verte (6/6), Vercel Production READY pour l'ancien code publié ; les contrôles
+  séparés sont encore locaux. Écoute physique et choix d'une piste nécessaires.
+  Voir
   [D-085](decisions.md), [D-086](decisions.md) et [audio-assets.md](audio-assets.md).
 
 - **Sync compte :** publié sur `main` (`fc5b47ff`) ; la sauvegarde en ligne

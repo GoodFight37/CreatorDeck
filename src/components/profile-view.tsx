@@ -21,14 +21,10 @@ import { sellableCards } from "@/lib/market";
 import { regionLabel } from "@/lib/regions";
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 import {
-  SFX_LEVEL_LABELS,
-  SFX_LEVELS,
-  getSfxLevel,
+  isMusicMuted,
   isMuted,
+  setMusicMuted,
   setMuted,
-  setSfxLevel,
-  startGameAudio,
-  type SfxLevel,
 } from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
@@ -127,7 +123,7 @@ export function ProfileView({
   const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
 
   const [soundOn, setSoundOn] = useState(() => !isMuted());
-  const [soundLevel, setSoundLevel] = useState<SfxLevel>(() => getSfxLevel());
+  const [musicOn, setMusicOn] = useState(() => !isMusicMuted());
 
   useEffect(() => {
     applyTiltChoice();
@@ -163,12 +159,12 @@ export function ProfileView({
     const next = !soundOn;
     setSoundOn(next);
     setMuted(!next);
-    if (next) startGameAudio();
   }
 
-  function choisirVolume(cran: SfxLevel) {
-    setSoundLevel(cran);
-    setSfxLevel(cran);
+  function toggleMusic() {
+    const next = !musicOn;
+    setMusicOn(next);
+    setMusicMuted(!next);
   }
 
   async function handleReset() {
@@ -423,30 +419,23 @@ export function ProfileView({
           aria-checked={soundOn}
           onClick={toggleSound}
         >
-          <span>Son</span>
+          <span>Son de l’application</span>
           <span className="switch" data-on={soundOn ? "on" : "off"} aria-hidden="true">
             <i />
           </span>
         </button>
-
-        {soundOn ? (
-          <div className="menu-row sound-row" style={{ paddingTop: "0.2rem", paddingBottom: "0.2rem" }}>
-            <span id="volume-label">Volume</span>
-            <div className="sound-choice" role="group" aria-labelledby="volume-label">
-              {SFX_LEVELS.map((cran) => (
-                <button
-                  key={cran}
-                  type="button"
-                  className={soundLevel === cran ? "sound-chip active" : "sound-chip"}
-                  aria-pressed={soundLevel === cran}
-                  onClick={() => choisirVolume(cran)}
-                >
-                  {SFX_LEVEL_LABELS[cran]}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : null}
+        <button
+          type="button"
+          className="menu-row"
+          role="switch"
+          aria-checked={musicOn}
+          onClick={toggleMusic}
+        >
+          <span>Musique</span>
+          <span className="switch" data-on={musicOn ? "on" : "off"} aria-hidden="true">
+            <i />
+          </span>
+        </button>
 
         {canTilt ? (
           <button

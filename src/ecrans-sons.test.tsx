@@ -1,11 +1,8 @@
 /**
- * Le réglage du son **au doigt** : l'interrupteur, et les trois crans de volume.
+ * Les deux interrupteurs audio, indépendants et mémorisés.
  *
  * Ce que le banc regarde, et rien d'autre : que l'interrupteur existe et dise la
- * vérité, que le volume apparaisse **sous** lui quand le son est actif (et
- * disparaisse quand il est coupé), qu'un appui marque le cran choisi, et que le
- * choix soit **gardé** — c'est un réglage qu'on cherche une fois parce qu'un son
- * dérange, pas à chaque lancement.
+ * vérité, qu'ils restent indépendants, et que les deux choix soient gardés.
  */
 import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -26,6 +23,7 @@ describe("le réglage du son", () => {
     banc.nettoyer();
     vi.useRealTimers();
     window.localStorage.clear();
+    vi.resetModules();
   });
 
   async function ecranToi() {
@@ -34,40 +32,33 @@ describe("le réglage du son", () => {
     banc.appuyer("Toi");
   }
 
-  function chips() {
-    return [...document.querySelectorAll<HTMLButtonElement>(".sound-row .sound-chip")];
+  function switches() {
+    return [...document.querySelectorAll<HTMLButtonElement>('.menu-row[role="switch"]')].filter(
+      (bouton) => bouton.textContent?.includes("Son de l’application") || bouton.textContent?.includes("Musique"),
+    );
   }
 
-  it("montre l'interrupteur du son, et le volume juste en dessous", async () => {
+  it("montre deux interrupteurs indépendants, sans réglage de volume", async () => {
     await ecranToi();
-    const son = [...document.querySelectorAll<HTMLButtonElement>(".menu-row")].find(
-      (bouton) => bouton.getAttribute("role") === "switch" && bouton.textContent?.includes("Son"),
-    );
-    expect(son, "l'interrupteur du son a disparu de l'écran Toi").toBeTruthy();
-    expect(son!.getAttribute("aria-checked")).toBe("true");
-
-    // Le volume n'est pas un curseur : trois crans, nommés.
-    expect(chips().map((chip) => chip.textContent)).toEqual(["Discret", "Normal", "Fort"]);
-    const actif = chips().find((chip) => chip.getAttribute("aria-pressed") === "true");
-    expect(actif?.textContent).toBe("Normal");
+    expect(switches().map((bouton) => bouton.textContent?.trim())).toEqual([
+      "Son de l’application",
+      "Musique",
+    ]);
+    expect(switches().map((bouton) => bouton.getAttribute("aria-checked"))).toEqual(["true", "true"]);
+    expect(document.querySelector(".sound-row"), "le choix de volume devrait avoir disparu").toBeNull();
     banc.ecran("41-toi-son");
   });
 
-  it("garde le cran choisi, et le dit à l'écran", async () => {
+  it("garde les choix séparément et ne coupe pas l'autre canal", async () => {
     await ecranToi();
-    const discret = chips().find((chip) => chip.textContent === "Discret")!;
-    banc.appuyer("Discret");
-    expect(discret.getAttribute("aria-pressed")).toBe("true");
-    // Le choix est mémorisé : c'est le module du son qui le relira au prochain
-    // démarrage (le banc regarde la mémoire du navigateur, pas la constante du
-    // composant).
-    expect(window.localStorage.getItem("creatordeck.sfx-level")).toBe("discret");
+    banc.appuyer("Musique");
+    expect(window.localStorage.getItem("creatordeck.music-muted")).toBe("1");
+    expect(switches()[0]?.getAttribute("aria-checked")).toBe("true");
+    expect(switches()[1]?.getAttribute("aria-checked")).toBe("false");
 
-    banc.appuyer("Fort");
-    expect(window.localStorage.getItem("creatordeck.sfx-level")).toBe("fort");
-    expect(chips().find((chip) => chip.getAttribute("aria-pressed") === "true")?.textContent).toBe(
-      "Fort",
-    );
+    banc.appuyer("Son de l’application");
+    expect(window.localStorage.getItem("creatordeck.muted")).toBe("1");
+    expect(switches().map((bouton) => bouton.getAttribute("aria-checked"))).toEqual(["false", "false"]);
   });
 
   it("ne joue rien quand on se déplace : onglets et réglages sont muets", async () => {
@@ -138,17 +129,13 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "la déchirure n'a rien joué").toBeGreaterThan(avant);
   });
 
-  it("cache le volume quand le son est coupé", async () => {
+  it("coupe les sons du jeu sans ajouter de contrôle de volume", async () => {
     await ecranToi();
-    expect(chips()).toHaveLength(3);
-
-    banc.appuyer("Son");
-    // Coupé : l'interrupteur le dit, et régler le volume de rien n'a pas de sens.
-    const son = [...document.querySelectorAll<HTMLButtonElement>(".menu-row")].find(
-      (bouton) => bouton.getAttribute("role") === "switch" && bouton.textContent?.includes("Son"),
-    );
-    expect(son!.getAttribute("aria-checked")).toBe("false");
-    expect(chips()).toHaveLength(0);
+    expect(switches()[0]?.getAttribute("aria-checked")).toBe("true");
+    banc.appuyer("Son de l’application");
+    expect(switches()[0]?.getAttribute("aria-checked")).toBe("false");
+    expect(switches()[1]?.getAttribute("aria-checked")).toBe("true");
+    expect(document.querySelector(".sound-row")).toBeNull();
     banc.ecran("42-toi-son-coupe");
   });
 });
