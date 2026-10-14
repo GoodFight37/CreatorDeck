@@ -2,11 +2,13 @@
 
 ## État actuel — 14 octobre 2026
 
-**Lot Craft / Atelier (D-100) — implémenté et vérifié localement :** aperçu de
+**Lot Craft / Atelier (D-100) — clos, publié et vérifié sur Vercel :** aperçu de
 carte avant confirmation, coût/solde/monnaie, manque et refus visibles, attente
 verrouillée, résultat création/recyclage avec suite directe classeur/recettes.
 Live et dernière copie protégés comme avant. 14 DOM réussis, trois scénarios
-navigateur uniques réussis à 320/390 px ; publication au checkpoint courant.
+navigateur uniques réussis à 320/390 px. Code `88d5cfa1`, Vercel Production
+`READY` / `success` ; aperçu, solde insuffisant, focus et recyclage vide
+contrôlés sur le site publié sans transaction réelle. Détails au checkpoint.
 Aucun moteur, prix, tirage, audio ou Supabase modifié.
 
 **Lot Binder complet — clos, publié et vérifié sur Vercel :** finir ensemble feuilletage,

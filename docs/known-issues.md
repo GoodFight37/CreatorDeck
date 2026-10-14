@@ -7,7 +7,9 @@ D-100 : présentation avec aperçu/confirmation, verrou commun anti-double clic,
 refus et exception visibles, résultat persistant et delta réel du hook ; le
 bilan partiel groupé n'est pas transformé en succès intégral. Live exclus du
 groupé et dernière copie restent protégés. Tests DOM 14/14 et trois scénarios
-navigateur uniques réussis ; publication/déploiement au checkpoint courant.
+navigateur uniques réussis. Code `88d5cfa1`, Vercel Production `READY` /
+`success` ; parcours invité contrôlé à 320/390 px (aperçu, solde insuffisant,
+focus, recyclage vide). Détails au checkpoint courant.
 Limite : transactions serveur réelles non dépensées en production ; les cas
 refus/partiel sont simulés et le parcours complet fonctionne dans le moteur
 local. Le ressenti sur appareil n'est pas certifié par Chromium.

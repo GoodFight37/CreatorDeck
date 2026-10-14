@@ -1,6 +1,6 @@
 # Reprise rapide — 14 octobre 2026
 
-## Checkpoint courant — lot Atelier terminé localement, publication en cours
+## Checkpoint courant — lot Atelier complet publié, Vercel vérifié
 
 - Demande : lot Craft complet autorisé par « Go », après Binder clos. Base
   `main` propre `f9cee11fd285194782666791d02553bedfac09bb`, identique à GitHub
@@ -26,10 +26,21 @@
   GPU ; capture fraîche 390 et mesures DOM confirment le contenu non coupé.
 - Build final `npm run build` réussi (export des cinq pages).
   Build local sans variables Supabase : preuve de compilation, pas de cloud.
-- Publication : à compléter après commit/push normal et contrôle Vercel.
-  Actions sur la base : aucun run retourné, donc aucune CI générale revendiquée.
-  Contrôle Production prévu sans achat ni recyclage réel, transactions testées
-  localement et refus/partiels simulés. Le ressenti tactile reste non certifié.
+- Publication code/tests/docs : [`88d5cfa107657933eea692461525c8f1740df8c5`](https://github.com/GoodFight37/CreatorDeck/commit/88d5cfa107657933eea692461525c8f1740df8c5),
+  push normal `main` et SHA confirmés par ls-remote ; documentation relue via
+  GitHub. Vercel Production du même SHA
+  [`GuTJRqohoChEav6FcgGg3ZnVcAa6`](https://vercel.com/hafsi37-2386/creator-deckk/GuTJRqohoChEav6FcgGg3ZnVcAa6)
+  `READY`, contrôle `success`. Aucun run Actions retourné pour ce commit :
+  aucune CI générale revendiquée.
+- Site [creator-deckk.vercel.app](https://creator-deckk.vercel.app/) contrôlé
+  dans Chromium mobile : aperçu, achat bloqué si solde insuffisant, app inerte,
+  Escape/focus restauré, recyclage vide et largeurs 320/390 passent ; aucune
+  erreur JavaScript observée. Premier script attendait un tutoriel absent dans
+  ce parcours invité ; rendu prêt attendu puis étape traitée comme facultative.
+  Aucune transaction réelle ni donnée factice injectée en production.
+  Transactions testées localement et refus/partiels simulés ; le ressenti
+  tactile reste non certifié. Lot clos, pas de sous-lot Craft restant proposé.
+  Réservation libérée après ce checkpoint documentaire.
 
 ## Checkpoint précédent — lot Binder complet publié, Vercel vérifié
 

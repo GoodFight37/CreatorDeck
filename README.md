@@ -67,7 +67,8 @@ courant pour les tests et les limites de cette émulation mobile.
 L’Atelier propose un aperçu avant création ou recyclage, avec confirmation,
 coût et solde, attente protégée contre les doubles clics, puis carte créée ou
 bilan des points réellement obtenus. Accès direct au classeur ou aux recettes ;
-prix et règles inchangés. Vérifications et publication : checkpoint courant,
+prix et règles inchangés. Publié sur Vercel (`88d5cfa1`), parcours invité
+contrôlé à 320/390 px. Vérifications et limites : checkpoint courant,
 décision D-100.
 
 Le lot Binder complet regroupe désormais les pages physiques, les matières
