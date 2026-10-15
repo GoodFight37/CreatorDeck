@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — identité du Perfect en vérification
+## Checkpoint courant — identité du Perfect publiée, Vercel vérifié
 
 - Base `main` propre `762ff5126921a4d8323e7dfea9769194cffa8277`,
   identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
@@ -18,7 +18,15 @@
   capture : celle-ci vérifie la disposition, pas la qualité des images.
   `npm run build` réussi, cinq pages exportées ; variables Supabase locales
   absentes, donc compilation seulement. ESLint, typecheck et diff-check finaux
-  réussis. Publication/Vercel en cours ; ressenti tactile du peel inchangé.
+  réussis.
+- Code/tests/note joueur/docs publiés au commit
+  [`7a0b182e178ea145178e8cb41afbf36f1a66cd29`](https://github.com/GoodFight37/CreatorDeck/commit/7a0b182e178ea145178e8cb41afbf36f1a66cd29),
+  push normal et SHA confirmé par `ls-remote`. Déploiement GitHub Production
+  `7087479879` du même SHA terminé `success`, contrôle
+  [Vercel](https://vercel.com/hafsi37-2386/creator-deckk/3cBov7MaR75foEggnPg9NQWUcHbF)
+  `success`, site public HTTP 200. Aucun Perfect réel tiré sur un compte en
+  production ; preuves d'interface via fixtures DOM et rendu Chromium du HTML
+  capturé. Ressenti tactile du peel et APK non vérifiés. Lot clos.
 
 
 ## Checkpoint courant — export Story de profil publié, Vercel vérifié
