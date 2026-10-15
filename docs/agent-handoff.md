@@ -4,7 +4,7 @@
 
 - Base GitHub/locale `main` vérifiée avant modification : `39d17e55df35dcfd6a45e461f34345e054ef18a4`, arbre propre. Rapport reçu dans `1-ai_studio_code-2-.txt` ; cinq constats examinés : la carte 0 est un faux positif, car SQL numérote les cartes de 1 à 5. Wishlist était déjà chargée par Toi, mais la feuille assure désormais sa fraîcheur. Les faux positifs du rapport ne justifient pas de changement.
 - Code : chargement Amis, Hôtel des ventes, Last Pack et Wishlist au changement de compte ; réponses de variantes invalidées lors d’un changement de partenaire/compte ; soumission d’échange verrouillée jusqu’à sa réponse. Note joueur, décision et défauts connus mis à jour. Aucune règle serveur ni économie modifiée.
-- Vérifications locales : tests DOM 181/181 (dont 8 Échanges et 5 feuilles sociales), unitaires 1 186/1 186, TypeScript, ESLint complet, build statique et diff check réussis. Avant livraison : commit, push normal `main`, CI et Vercel à contrôler. Le DOM simulé ne prouve pas les gestes ni le réseau réels sur téléphone.
+- Vérifications locales : tests DOM 181/181 (dont 8 Échanges et 5 feuilles sociales), unitaires 1 186/1 186, TypeScript, ESLint complet, build statique et diff check réussis. Code et docs publiés par `d4c0592ae0c695cdd2e8ce465e6622502ca0d7c3` sur `main` (SHA distant confirmé). Vercel Production `READY` sur ce SHA, alias `creator-deckk.vercel.app` actif et `/` HTTP 200. CI [run 38785081118](https://github.com/GoodFight37/CreatorDeck/actions/runs/38785081118) verte (6/6 jobs : qualité, trois lots navigateur, SQL jetable et cloud simulé). Le DOM simulé et le cloud factice ne prouvent pas les gestes ni le réseau réels sur téléphone.
 
 
 ## Checkpoint D-118 — vocabulaire Échanges et CI
