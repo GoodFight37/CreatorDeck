@@ -1,6 +1,31 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — D-114 revue IA Studio Binder/Atelier
+## Checkpoint courant — D-115 suite du rapport IA Studio Collection/Craft
+
+- Base main propre avant cette suite : `8ccfa0280fe2c0dc0cd360aee4d0e0745a8cf6a1`.
+  Malik a collé le rapport complet, dont le premier fichier joint était tronqué.
+  Verdicts confirmés : texte de fiche erroné pour Sortant non craftable ; lien
+  Twitch déclenchant aussi l’inspection et imbriqué dans un `role=button` ;
+  focus perdu sur « Choisir une carte » ; import `Radio` inutilisé. Le crash
+  Atelier reste un faux positif (map active + Sortants depuis `a06847c65`).
+- Corrections locales : fiche Sortant fidèle ; article de carte avec vrai bouton
+  d’inspection superposé et lien Twitch indépendant ; retour du focus via
+  `closeAction`; retrait de `Radio`. Aucun changement de tirage, économie,
+  coûts ni recyclage. Note joueur, revue complète, D-115, roadmap et problèmes
+  connus mis à jour.
+- Tests ciblés relancés après la correction : 40/40 (Binder, Atelier, fiche
+  Sortant, carte interactive, focus et notes). TypeScript, ESLint ciblé et
+  build passent. `npm test` : 1 185/1 186 ; l’unique échec est le texte
+  « serveur » dans Trades, inchangé et hors périmètre.
+  Reste à vérifier diff, commit/push sur main, GitHub Actions et Vercel.
+  CI D-114 (run `38755525613`) a réussi build, TS/lint/catalogue, migrations,
+  cloud simulé et les 3 shards E2E ; son unique job rouge portait sur le texte
+  « serveur » dans Compte/Trades inchangé, 1 test jargon et 2 assertions Compte
+  lié. Ne pas modifier ces domaines.
+- Validation tactile réelle côté joueur sur le site ; aucun APK. Les Sortants
+  réels sont absents du catalogue, fixtures synthétiques.
+
+## Historique — D-114 revue IA Studio Binder/Atelier
 
 - Base main locale/GitHub au départ : `0180eb57048fbd223a6dbf2264822c2e4f180fbf`.
   Pièce reçue : `/tmp/codex-remote-attachments/.../1-ai_studio_code.txt`, bilan
@@ -31,7 +56,8 @@
   reste rouge sur le seul mot « serveur » : un test jargon, deux tests
   `ecrans-compte-lie`; 1 185/1 186 unitaires, 167/169 écrans. Les fichiers
   concernés ne changent pas dans ce lot. Aucun test tactile physique ; APK hors
-  cible. La suite du bilan IA Studio reste à lire si son texte complet est reçu.
+  cible. Le rapport complet a ensuite été fourni ; ses derniers constats sont
+  traités dans le checkpoint D-115 ci-dessus.
 
 ## Checkpoint courant — D-113 deuxième bilan IA Studio
 

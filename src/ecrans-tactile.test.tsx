@@ -133,6 +133,29 @@ describe("les gestes qui se sentent", () => {
     expect(document.querySelector(".card-photo-placeholder")?.textContent?.trim()).toBeTruthy();
   });
 
+  it("sépare l’action d’inspection du lien Twitch de la carte", async () => {
+    const [{ CreatorCard }, { CREATORS }] = await Promise.all([
+      import("@/components/creator-card"),
+      import("@/lib/catalog"),
+    ]);
+    const creator = CREATORS[0];
+    const inspect = vi.fn();
+    await banc.monter(<CreatorCard creator={creator} compact onClick={inspect} liveStream={{
+      login: creator.login, displayName: creator.displayName, gameName: "Test",
+      title: "En direct", viewers: 12, startedAt: null,
+    }} />);
+
+    const card = document.querySelector<HTMLElement>(".creator-card")!;
+    const link = document.querySelector<HTMLAnchorElement>(".card-on-air")!;
+    const inspectButton = document.querySelector<HTMLButtonElement>(".creator-card-inspect")!;
+    expect(card.getAttribute("role")).not.toBe("button");
+    expect(link.closest("button")).toBeNull();
+    act(() => link.click());
+    expect(inspect).not.toHaveBeenCalled();
+    act(() => inspectButton.click());
+    expect(inspect).toHaveBeenCalledOnce();
+  });
+
   it("coupe tout le reflet quand le joueur le demande", async () => {
     const [{ CreatorCard }, { CREATORS }, { applyTiltChoice, setTiltEnabled }] = await Promise.all([
       import("@/components/creator-card"),

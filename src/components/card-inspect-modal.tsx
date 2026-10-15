@@ -9,6 +9,7 @@ import { CreatorCard } from "@/components/creator-card";
 import { RARITY_META, VARIANT_META, type CardVariant, type Creator } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
+import { isRetired } from "@/lib/retired";
 
 type CardInspectModalProps = {
   presentation?: "sheet" | "binder";
@@ -154,7 +155,9 @@ export function CardInspectModal({
               ) : (
                 <div className="inspect-earn">
                   <span>
-                    {creator.rarity === "legendary"
+                    {isRetired(creator.slug)
+                      ? "Ce Sortant ne tombe plus en booster et ne peut plus être rejoint à l'Atelier."
+                      : creator.rarity === "legendary"
                       ? "Une Légendaire ne s'artisine pas : elle se tire en booster — et le plancher de malchance en garantit une au plus tard au 12ᵉ."
                       : "Elle se tire en booster, ou se rejoint à l'Atelier si sa rareté le permet."}
                   </span>

@@ -53,6 +53,17 @@ describe("rituel Atelier", () => {
     expect(document.querySelector('[role="status"]')?.textContent).toContain("1 doublon recyclé · +8 points. Deuxième carte refusée.");
     banc.appuyer("Choisir une carte"); expect(document.querySelector('[role="dialog"]')).toBeNull();
   });
+  it("rend le focus à l’Atelier après Choisir une carte", async () => {
+    await mount(); recycleAll.mockResolvedValue({status: "done", count: 1, delta: 8});
+    banc.appuyer(/^Recycler/); banc.appuyer(/^Tout recycler/);
+    await act(async () => banc.appuyer(/^Recycler ·/));
+    banc.appuyer("Choisir une carte");
+    await act(async () => {
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    });
+    expect(document.activeElement).toBe(document.getElementById("atelier-heading"));
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
   it("confirme un Live séparément et ne le recycle jamais en masse", async () => {
     await mount(90, "live"); recycle.mockResolvedValue({status: "done", delta: 12});
     banc.appuyer(/^Recycler/);

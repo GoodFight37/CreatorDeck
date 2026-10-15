@@ -6,6 +6,7 @@ import { BINDER_COLLECTION_BY_ID, BINDER_COLLECTIONS } from "@/lib/binder-collec
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { HomeView } from "@/components/drop-view";
 import { CollectionView } from "@/components/binder-view";
+import { CardInspectModal } from "@/components/card-inspect-modal";
 
 const NOW = Date.UTC(2026, 9, 11, 12);
 vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
@@ -85,39 +86,46 @@ describe("le Binder guide la collection sans inventer de progression", () => {
 
   it("compte et filtre les Sortants obtenus dans Toutes et Obtenues", async () => {
     const base = CREATORS[0];
-    const retired: RetiredCreator = {
-      ...base,
-      slug: "audit-retired-binder-fixture",
-      displayName: "Créateur sortant de test",
-      login: "audit_retired_binder_fixture",
-      retiredEdition: 1,
-      retiredAt: "2026-10-15",
-    };
-    RETIRED_CREATORS.push(retired);
-    RETIRED_BY_SLUG.set(retired.slug, retired);
-    CREATOR_BY_SLUG.set(retired.slug, retired);
+    const retiredRecords: RetiredCreator[] = [
+      { ...base, slug: "audit-retired-binder-alpha", displayName: "Audit Sortant Alpha",
+        login: "audit_sort_fixture_alpha", retiredEdition: 1, retiredAt: "2026-10-15" },
+      { ...base, slug: "audit-retired-binder-omega", displayName: "Audit Sortant Omega",
+        login: "audit_sort_fixture_omega", retiredEdition: 1, retiredAt: "2026-10-15" },
+    ];
+    RETIRED_CREATORS.push(...retiredRecords);
+    for (const retired of retiredRecords) {
+      RETIRED_BY_SLUG.set(retired.slug, retired);
+      CREATOR_BY_SLUG.set(retired.slug, retired);
+    }
     try {
       const firstCollection = BINDER_COLLECTIONS[0];
-      await collection([...firstCollection.slugs, retired.slug]);
-      expect(banc.boutons().some(button => button.textContent === `Obtenues (${firstCollection.slugs.length + 1})`)).toBe(true);
+      await collection([...firstCollection.slugs, ...retiredRecords.map(creator => creator.slug)]);
+      expect(banc.boutons().some(button => button.textContent === `Obtenues (${firstCollection.slugs.length + 2})`)).toBe(true);
 
       act(() => document.querySelector<HTMLDetailsElement>(".binder-collections-picker summary")!.click());
       act(() => [...document.querySelectorAll<HTMLButtonElement>(".binder-collection-choices button")]
         .find(button => button.textContent?.includes(firstCollection.name))!.click());
       expect(document.querySelector(".binder-active-page")).not.toBeNull();
-      expect(document.body.textContent).not.toContain(retired.displayName);
+      for (const retired of retiredRecords) expect(document.body.textContent).not.toContain(retired.displayName);
 
       act(() => document.querySelector<HTMLButtonElement>('[aria-label="Retirer le filtre de page"]')!.click());
       const search = document.querySelector<HTMLInputElement>('input[aria-label="Rechercher un créateur"]')!;
-      banc.saisir(search, retired.displayName);
+      banc.saisir(document.querySelector<HTMLSelectElement>('select[aria-label="Trier le classeur"]')!, "alpha");
+      banc.saisir(search, "audit_sort_fixture");
+      const alphaSorted = [...document.querySelectorAll(".collection-grid .creator-card")]
+        .map(node => node.getAttribute("aria-label")?.split(", rang")[0]);
+      expect(alphaSorted).toEqual(["Audit Sortant Alpha", "Audit Sortant Omega"]);
+      banc.saisir(search, "audit_sort_fixture_alpha");
       expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(1);
-      expect(document.querySelector(".collection-grid")?.textContent).toContain(retired.displayName);
+      expect(document.querySelector(".collection-grid")?.textContent).toContain("Audit Sortant Alpha");
       banc.saisir(search, "absent du catalogue");
       expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(0);
     } finally {
-      RETIRED_CREATORS.splice(RETIRED_CREATORS.indexOf(retired), 1);
-      RETIRED_BY_SLUG.delete(retired.slug);
-      CREATOR_BY_SLUG.delete(retired.slug);
+      for (const retired of retiredRecords) {
+        RETIRED_CREATORS.splice(RETIRED_CREATORS.indexOf(retired), 1);
+        RETIRED_BY_SLUG.delete(retired.slug);
+        CREATOR_BY_SLUG.delete(retired.slug);
+      }
     }
   });
 
@@ -233,4 +241,27 @@ describe("les sabliers du Drop en ligne", () => {
       expect(onUseHourglass).not.toHaveBeenCalled();
     },
   );
+});
+
+describe("la fiche d’une carte Sortant", () => {
+  let banc: Banc;
+  beforeEach(() => { banc = creerBanc(); banc.preparer(); });
+  afterEach(() => banc.nettoyer());
+
+  it("ne promet pas un tirage booster pour un Sortant non artisanable", async () => {
+    const base = CREATORS[0];
+    const retired: RetiredCreator = { ...base, slug: "audit-retired-inspect-fixture",
+      displayName: "Sortant non disponible", login: "audit_retired_inspect_fixture",
+      retiredEdition: 1, retiredAt: "2026-10-15" };
+    RETIRED_BY_SLUG.set(retired.slug, retired);
+    try {
+      await banc.monter(<CardInspectModal creator={retired} ownedCount={0} variant="standard"
+        liveStream={null} quote={{ cost: null, craftable: false }} onClose={vi.fn()} />);
+      expect(document.body.textContent).toContain("ne tombe plus en booster");
+      expect(document.body.textContent).toContain("ne peut plus être rejoint à l'Atelier");
+      expect(document.body.textContent).not.toContain("se tire en booster");
+    } finally {
+      RETIRED_BY_SLUG.delete(retired.slug);
+    }
+  });
 });

@@ -13,7 +13,6 @@ import { cardEffectsAllowed } from "@/lib/tilt";
 import { isRetired } from "@/lib/retired";
 import { regionLabel } from "@/lib/regions";
 import { viewersLabel, type LiveStream } from "@/lib/live";
-import { Radio } from "lucide-react";
 
 type CreatorCardProps = {
   creator: Creator;
@@ -91,19 +90,14 @@ export function CreatorCard({
     "--rarity-glow": rarity.glow,
   } as CSSProperties;
 
-  const cardProps = onClick
-    ? {
-        onClick,
-        onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            onClick();
-          }
-        },
-        role: "button",
-        tabIndex: 0,
-      }
-    : {};
+  const inspectButton = onClick ? (
+    <button
+      type="button"
+      className="creator-card-inspect"
+      onClick={onClick}
+      aria-label={`Voir la fiche de ${creator.displayName}`}
+    />
+  ) : null;
 
   if (locked) {
     return (
@@ -111,12 +105,12 @@ export function CreatorCard({
         className={`creator-card rarity-${creator.rarity} is-locked ${compact ? "is-compact" : ""} ${className} ${onClick ? "is-clickable" : ""}`}
         style={style}
         aria-label={`${creator.displayName}, rang ${creator.rank}, ${rarity.label}, non obtenue`}
-        {...cardProps}
       >
         <div className="card-back" aria-hidden="true">
           <span className="card-back-word">CreatorDeck</span>
           <span className="card-back-rarity">{rarity.label}</span>
         </div>
+        {inspectButton}
       </article>
     );
   }
@@ -137,7 +131,6 @@ export function CreatorCard({
         foil.style.removeProperty("--px");
         foil.style.removeProperty("--py");
       }}
-      {...cardProps}
     >
       <div className="card-photo-wrap">
         {portraitFailed ? (
@@ -209,6 +202,7 @@ export function CreatorCard({
           {count > 1 ? <strong>×{count}</strong> : null}
         </div>
       </div>
+      {inspectButton}
     </article>
   );
 }

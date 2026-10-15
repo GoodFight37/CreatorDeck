@@ -2,12 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
-**Binder/Atelier après revue IA Studio (D-114) — corrigé :** les Sortants
+**Binder/Atelier après revue IA Studio (D-114/D-115) — corrigé :** les Sortants
 possédés figurent dans Obtenues et Toutes ; recherche et tri les incluent.
 Le compteur Toutes de l’Atelier conserve son total sous filtre de rareté.
 Un signalement de plantage Atelier était un faux positif : le registre des
-créateurs inclut déjà les Sortants. Revue reçue tronquée ; son dernier constat
-n’est pas vérifié. Voir [D-114](revue-ia-studio-binder-2026-10-15.md).
+créateurs inclut déjà les Sortants. Le rapport complet a été reçu ensuite ;
+les fiches Sortants, l’action directe Twitch et le focus Atelier sont aussi
+corrigés. Voir [la revue complète D-114/D-115](revue-ia-studio-binder-2026-10-15.md).
 
 **Deuxième bilan IA Studio vérifié (D-113) — publié et Vercel vérifié :**
 retour Android pendant le tirage sans annulation, marqueurs du tutoriel recalés
@@ -382,7 +383,8 @@ checkpoint de passation pour le dernier mix.
    clos en nouvelles petites passes sans défaut concret.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
    autres travaux sur une demande de test joueur ni retoucher les seuils sans
-   symptôme précis. Les filtres Sortants sont corrigés en D-114 ; surveiller
+   symptôme précis. Les filtres Sortants et les constats Lot 03 sont corrigés
+   en D-114/D-115 ; surveiller
    leur fonctionnement sur le vrai catalogue lors de sa prochaine mise à jour.
    Le parcours automatique du rituel sur Vercel a déjà passé.
 3. Musique mise de côté à la demande de Malik. Les deux pistes restent des

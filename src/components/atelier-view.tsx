@@ -165,7 +165,7 @@ export function AtelierView({
     <div className="view atelier-view">
       {action ? <AtelierTransaction action={action} points={points} balance={action.kind === "craft" && action.wallet === "tokens" ? game.tokens.count : game.player.points}
         onClose={closeAction} onNotice={onNotice} onError={onError}
-        onGoBinder={onGoBinder} onCreate={() => { setAction(null); setMode("craft"); setPage(0); }} /> : null}
+        onGoBinder={onGoBinder} onCreate={() => { closeAction(); setMode("craft"); setPage(0); }} /> : null}
       <p className="atelier-kicker">DOUBLONS → POINTS → TA PROCHAINE CARTE</p>
       <section className="page-title-row" style={{ marginBottom: "0.25rem" }}>
         <div>

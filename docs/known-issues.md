@@ -601,13 +601,12 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 ## Revue IA Studio Binder/Atelier — D-114
 
-Les défauts confirmés sur les cartes Sortants et le compteur Toutes de
-l’Atelier sont corrigés dans le lot D-114. Le crash Atelier évoqué dans
-l’audit est un faux positif : le registre de résolution comprend déjà les
-Sortants. L’audit joint s’interrompt à `[MOYEN] Informatio`; ses constats
-suivants restent non examinés. Le fichier des Sortants est vide aujourd’hui,
-donc leur rendu a été couvert par un fixture synthétique, pas par une fiche
-réelle. Détails : [revue D-114](revue-ia-studio-binder-2026-10-15.md).
+Les défauts confirmés du rapport Lot 03 sont corrigés en D-114/D-115. Le
+crash Atelier évoqué dans l’audit est un faux positif : le registre de
+résolution comprend déjà les Sortants. Le rapport complet a été fourni après
+la première pièce tronquée. Le fichier des Sortants est vide aujourd’hui, donc
+son rendu a été couvert par des fiches synthétiques, pas un compte réel.
+Détails : [revue IA Studio D-114/D-115](revue-ia-studio-binder-2026-10-15.md).
 
 La CI D-114 (run `38755525613`) confirme le build, TypeScript, ESLint,
 catalogue, migrations jetables, cloud simulé et les trois shards Playwright.
@@ -615,7 +614,8 @@ Le job unitaires/écrans reste rouge pour une seule cause hors de ce lot : le
 mot « serveur » dans l’interface Compte/Trades, repris par un test de jargon et
 deux assertions Compte lié (1 185/1 186 unitaires, 167/169 écrans). Ces fichiers
 n’ont pas changé depuis le SHA de départ ; le vocabulaire Compte/Trades n’est
-pas modifié par D-114.
+pas modifié par D-114. Le lot D-115 ajoute les tests d’inspection Sortant,
+focus Atelier et lien Twitch indépendants.
 
 ### Visages artificiels dans certains anciens portraits Upscayl — 13 octobre 2026
 

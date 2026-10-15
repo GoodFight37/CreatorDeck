@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-fiches-sortants", date: "2026-10-15", title: "Des fiches plus justes pour les Sortants",
+    summary: "Le statut des cartes Sortants et leurs commandes sont plus clairs.",
+    sections: [{ title: "Corrections", items: [
+      "La fiche d’un Sortant non artisanable précise qu’il ne revient plus dans les boosters.",
+      "Le lien Twitch d’une carte ouvre la chaîne sans ouvrir aussi sa fiche. Au clavier, chaque action a son propre bouton.",
+      "Après Choisir une carte à l’Atelier, le focus revient au titre de l’écran.",
+    ] }],
+  },
+  {
     id: "2026-10-15-binder-sortants", date: "2026-10-15", title: "Tes Sortants restent dans le Binder",
     summary: "Les cartes des créateurs Sortants suivent les filtres de ta collection.",
     sections: [{ title: "Correction", items: [

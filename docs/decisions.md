@@ -11,10 +11,21 @@ l’Atelier suivait à tort la liste déjà filtrée par rareté. La complétion
 continue de compter le catalogue actif comme avant. Aucune règle économique,
 de tirage, de fabrication ou de recyclage ne change.
 
-La revue reçue s’arrête au milieu d’un constat (`[MOYEN] Informatio`) : seuls
-les points complets visibles ont été vérifiés. Les Sortants actuels sont vides ;
-le test Binder ajoute un Sortant synthétique pour vérifier leur affichage. Voir
+La première pièce jointe était tronquée, puis Malik a fourni le rapport Lot 03
+complet. D-115 traite ses quatre autres points confirmés. Les Sortants actuels
+sont vides ; les tests ajoutent des fiches synthétiques. Voir
 [la revue IA Studio Binder/Atelier](revue-ia-studio-binder-2026-10-15.md).
+
+## D-115 — 15 octobre 2026 : terminer les corrections du rapport Collection et Craft
+
+À la réception du rapport Lot 03 complet, vérifier les constats restants sans
+élargir aux règles économiques. Corriger la fiche d’inspection qui promettait
+un tirage pour un Sortant non artisanable ; séparer sémantiquement le bouton
+d’inspection de la carte et le lien Twitch direct ; rendre le focus à l’Atelier
+après « Choisir une carte » ; retirer l’import inutilisé `Radio`. Aucun nouveau
+comportement de tirage, coût ou recyclage. Tests dédiés vérifient ces états.
+Le rapport initial était incomplet ; sa revue complète tient lieu de bilan et
+consigne les verdicts D-114/D-115.
 
 ## D-113 — 15 octobre 2026 : vérifier le deuxième bilan IA Studio
 
