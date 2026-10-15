@@ -1,3 +1,14 @@
+## Sachet Drop : clignotement après pression, idle et ombre — corrigé dans D-117
+
+Sur `d7a9de45`, l’entrée CSS était retirée sous `:active` puis redémarrait au
+relâchement ; l’idle débutait après un délai sans son état initial. Le bouton
+du sachet était désactivé quand le stock rechargeable était vide même si un
+booster de test était disponible, et l’ombre conservait un décalage de padding
+sur certains écrans courts. Le correctif D-117 sépare l’entrée de `transform`,
+applique l’état initial de l’idle, partage la condition d’ouverture et lie
+l’ombre au padding du stage. Contrôles ciblés dans le checkpoint courant.
+Le ressenti sur téléphone réel reste une appréciation distincte.
+
 ## Deuxième bilan IA Studio — D-113
 
 Revue des constats sur l’architecture de `7be3914b` : le risque `inert` est

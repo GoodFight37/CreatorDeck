@@ -1,5 +1,13 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-117 — sachet Drop après revue Claude
+
+- Base locale/GitHub vérifiée avant édition : `d7a9de45dc8accd6a7df9ca66cb4ae221799d8d4`, arbre propre.
+- Quatre défauts ciblés corrigés : entrée du sachet qui redémarrait au relâchement, saut au démarrage de l’idle, bouton sachet désactivé malgré des boosters de test, et ombre liée à un padding divergent sur écran court. Le CTA, la taille, les taux et l’économie ne changent pas. La règle globale `button:focus-visible` réfute l’alerte de focus absent ; extrusion/performance non prouvées, donc non modifiées.
+- Note joueur dans `src/lib/release-notes.ts`, décision D-117 et problème connu actualisé. Validation locale : 17/17 tests d’écran ciblés ; 4/4 scénarios navigateur sur profil téléphone (dont padding/ombre à 844, 680 et 568 px, pression et priorité du CTA) ; TypeScript, ESLint ciblé, build, diff check. Capture 390 × 844 inspectée : pack, ombre et CTA restent lisibles, sans débordement. Le ressenti tactile physique reste à juger sur le site.
+- Publication et état Vercel/CI : à relever après le push.
+
+
 ## Checkpoint D-116 — rapport IA Studio Lot 04
 
 - Base locale et GitHub vérifiée avant édition : `d12f155c26437c782fb7b3c2cde0500456b79628`, arbre propre.

@@ -1,5 +1,24 @@
 # Décisions CreatorDeck
 
+## D-117 — 15 octobre 2026 : stabiliser la présence tactile du sachet Drop
+
+Le partage Claude du 15 octobre a été confronté à `main` avant modification.
+L’animation d’entrée était retirée sous `:active`, puis redémarrait au
+relâchement ; l’idle commençait après 380 ms sans appliquer son premier état.
+Le sachet était désactivé lorsque la réserve rechargeable valait zéro même
+avec un booster de test disponible, alors que le CTA pouvait ouvrir ce booster.
+Sur écran court, la position de l’ombre suivait des valeurs de padding
+indépendantes, effectivement divergentes.
+
+L’entrée anime désormais `translate` et `scale` sans interrompre la pression,
+l’idle applique son état pendant le délai, le sachet et le CTA utilisent la
+même condition d’ouverture, et le padding/ombre partagent une variable CSS.
+Taille du sachet, CTA, règles d’ouverture, économie et taux conservés. Les
+autres suggestions Claude (extrusion, performance, perspective) n’étaient pas
+des défauts prouvés et ne sont pas reprises ; le focus visible existait déjà
+dans la règle globale des boutons.
+
+
 ## D-116 — 15 octobre 2026 : fiabiliser les parcours du lot Drop et annexes
 
 Revue du rapport IA Studio Lot 04 sur `d12f155c`. Les cinq constats sont

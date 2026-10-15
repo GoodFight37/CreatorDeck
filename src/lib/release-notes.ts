@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-sachet-stable", date: "2026-10-15", title: "Un sachet plus stable au toucher",
+    summary: "Le sachet réagit sans clignoter et reste ouvrable avec un booster de test.",
+    sections: [{ title: "Corrections", items: [
+      "L’entrée du sachet ne recommence plus après un appui ou un défilement.",
+      "Son léger mouvement démarre sans saut et son ombre reste sous lui sur les écrans courts.",
+      "Quand la réserve normale est vide, un booster de test disponible s’ouvre aussi en touchant le sachet.",
+    ] }],
+  },
+  {
     id: "2026-10-15-ouverture-arene", date: "2026-10-15", title: "Des actions qui répondent mieux",
     summary: "L’ouverture, le Tribunal et l’Arène gardent des repères clairs en cas d’incident.",
     sections: [{ title: "Corrections", items: [

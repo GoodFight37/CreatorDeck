@@ -2,6 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
+**Stabilité du sachet Drop (D-117) — implémentée :** après confrontation du
+partage Claude au code, l’entrée ne repart plus au relâchement, l’idle commence
+sans saut, le sachet reste activable avec un booster de test, et l’ombre suit
+le padding sur les hauteurs courtes. Note joueur et tests ciblés inclus ;
+voir [D-117](decisions.md). Le ressenti tactile physique reste ouvert.
+
+
 **Lot 04 IA Studio (D-116) — implémenté :** le paquet de l’overlay prend le bon
 habillage avant le peel ; Tribunal et Arène sortent de l’état occupé après une
 erreur, avec message et réessai ; la feuille de code accepte Retour et Échap ;

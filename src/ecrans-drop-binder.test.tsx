@@ -221,10 +221,14 @@ describe("les sabliers du Drop en ligne", () => {
       tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
       now={NOW} serverReserve={true} needsAccount={false} />);
     const button = banc.boutons().find((entry) => entry.textContent?.includes("Ouvrir un booster de test"))!;
+    const sachet = document.querySelector<HTMLButtonElement>(".pack-stage .pack-artwork")!;
     expect(button.disabled).toBe(false);
+    expect(sachet.disabled).toBe(false);
     expect(document.body.textContent).toContain("50 boosters de test");
-    act(() => button.click());
+    act(() => sachet.click());
     expect(onOpen).toHaveBeenCalledOnce();
+    act(() => button.click());
+    expect(onOpen).toHaveBeenCalledTimes(2);
   });
 
   it("ne montre qu’une note contextuelle compacte pour la réserve", async () => {

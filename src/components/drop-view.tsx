@@ -135,9 +135,10 @@ export function HomeView({
   const nextAt = game.player.nextPackAt;
   const tick = useNow(1_000);
   const needsLogin = needsAccount && !tutorialAvailable;
+  const cannotOpen = opening || (!needsAccount && stock <= 0 && promoPacks <= 0);
 
   function openArtwork(event: MouseEvent<HTMLButtonElement>) {
-    if (opening || (!needsAccount && stock <= 0 && promoPacks <= 0)) return;
+    if (cannotOpen) return;
     event.currentTarget.focus();
     buzz([8]);
     onOpen();
@@ -225,7 +226,7 @@ export function HomeView({
         aria-label={`${pack.label} : ${pack.size} cartes`}
       >
         <div className="pack-shadow" />
-        <PackArtwork onClick={openArtwork} disabled={opening || (!needsAccount && stock <= 0)} />
+        <PackArtwork onClick={openArtwork} disabled={cannotOpen} />
         <div className="pack-copy">
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
           <span>· {pack.size}</span>
@@ -236,7 +237,7 @@ export function HomeView({
         <button
           className="primary-action"
           onClick={onOpen}
-          disabled={opening || (!needsAccount && stock <= 0 && promoPacks <= 0)}
+          disabled={cannotOpen}
         >
           {opening ? (
             <LoaderCircle className="spin" size={19} />
