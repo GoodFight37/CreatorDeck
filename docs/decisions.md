@@ -18,7 +18,10 @@ de retour pendant l’ouverture.
 **Conséquences :** aucun taux, économie, contenu d’échange ou progression
 serveur ne change. Typecheck, lint ciblé, build et navigation bureau/téléphone
 réussissent. La suite DOM complète garde deux assertions connues sur le mot
-« serveur » dans Échanges ; détail et limites au checkpoint.
+« serveur » dans Échanges. Code `43e15f6d`, test d’intégration et passation
+`2ab3adeb`, push normal sur main et production Vercel `READY` / HTTP 200. Les
+deux CI étaient encore en cours ou attente au dernier contrôle ; détail et
+limites au checkpoint.
 
 ## D-112 — 15 octobre 2026 : vérifier le premier bilan IA Studio avant correction
 

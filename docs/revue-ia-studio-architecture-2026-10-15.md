@@ -21,6 +21,12 @@ appliqués sans les confronter à la version courante.
 - `src/ecrans-pack-pending.test.tsx` : 2/2, y compris le passage par la pile du bouton retour pendant l’ouverture en attente ; une seule requête de tirage.
 - `npm test -- src/lib/release-notes.test.ts` : 8/8.
 - `npm run ecrans` : le parcours d’ouverture en attente réussit ; 2 assertions de vocabulaire dans l’écran Échanges échouent sur « serveur », problème préexistant signalé par D-111 et hors du lot.
+- Code publié sur `main` à `43e15f6d`; couverture intégration et documentation
+  de livraison complétées à `2ab3adeb`. Le SHA distant et ce document sur
+  GitHub ont été confirmés. Production Vercel `READY` pour `2ab3adeb`, alias
+  `creator-deckk.vercel.app` et racine HTTP 200.
+- CI `43e15f6d` était toujours en cours et la CI de `2ab3adeb` en attente au
+  dernier contrôle ; voir les liens du checkpoint dans la passation.
 
 Le navigateur vérifie le site et le nom accessible, mais pas l’événement matériel
 retour Android. Aucun lecteur d’écran physique ni compte connecté réel n’a été

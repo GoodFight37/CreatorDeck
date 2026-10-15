@@ -16,8 +16,14 @@
   scénario de sortie du tirage en attente réussit ; son test via la pile retour
   réussit aussi (2/2). Aucun test matériel Android, compte connecté réel ou
   lecteur d’écran physique.
-- [Revue D-113](revue-ia-studio-architecture-2026-10-15.md). Publication,
-  CI et contrôle de production à compléter après commit.
+- Code livré par [43e15f6d](https://github.com/GoodFight37/CreatorDeck/commit/43e15f6d73bcb961679ac367944b9ceb4bc3147b), test d’intégration et passation
+  complémentaire dans le commit [2ab3adeb](https://github.com/GoodFight37/CreatorDeck/commit/2ab3adeb21cd01d830fae602a4c6e4f7ad43069a). Push normal sur `main`, SHA distant
+  confirmé ; blob de la [revue D-113](revue-ia-studio-architecture-2026-10-15.md)
+  vérifié sur GitHub. Déploiement Production Vercel `READY` sur `2ab3adeb`, alias
+  principal attribué et `/` répond HTTP 200. Pas de parcours tactile sur mobile.
+- [CI `43e15f6d`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38749352773)
+  encore en cours au dernier contrôle ; [CI `2ab3adeb`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38749551069)
+  en attente. Ne pas les annoncer vertes avant leur fin.
 
 ## Checkpoint courant — D-112 premier bilan IA Studio, publié et Vercel vérifié
 

@@ -2,7 +2,7 @@
 
 ## État actuel — 15 octobre 2026
 
-**Deuxième bilan IA Studio vérifié (D-113) — en cours de livraison :**
+**Deuxième bilan IA Studio vérifié (D-113) — publié et Vercel vérifié :**
 retour Android pendant le tirage sans annulation, marqueurs du tutoriel recalés
 par compte, polling Last Pack après résolution de la lecture et description
 accessible de Toi. L’alerte `inert` est un faux positif dans les composants
