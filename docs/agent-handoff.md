@@ -24,13 +24,17 @@
   Playwright : le shard 3 a échoué car l’E2E attendait le focus sur l’ancien
   article. Son sélecteur a été migré vers le vrai bouton d’inspection ; le
   fichier complet repasse localement 3/3 sur téléphone. Shards 1 et 2 encore
-  actifs au dernier contrôle. Le job qualité a 1 185/1 186 tests unitaires
+  actifs au dernier contrôle. Le run suivant, [CI `38758472719`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38758472719),
+  porte ces sélecteurs corrigés et est en cours sur le SHA `a1c2dd02`.
+  Sa Production Vercel est `READY`, alias principal actif, `/` HTTP 200.
+  Le job qualité du run initial a 1 185/1 186 tests unitaires
   réussis : l’unique échec est le jargon Trades déjà connu. Écrans : 169/172,
   avec deux assertions Compte lié portant sur le même terme hors périmètre et
   un test de vitrine qui cliquait l’ancien article ; ce dernier est corrigé
   dans le checkpoint actif et ses six suites passent localement 47/47. Le job
-  a aussi passé TS/lint/build/catalogue. Attendre les deux shards avant bilan
-  CI final ; le shard 3 doit aussi être relancé après l’adaptation locale.
+  a aussi passé TS/lint/build/catalogue. Le run initial a été annulé quand le
+  suivant est parti ; n’en tirer aucun verdict final. Attendre les résultats
+  du run `38758472719`.
   CI D-114 (run `38755525613`) a réussi build, TS/lint/catalogue, migrations,
   cloud simulé et les 3 shards E2E ; son unique job rouge portait sur le texte
   « serveur » dans Compte/Trades inchangé, 1 test jargon et 2 assertions Compte
