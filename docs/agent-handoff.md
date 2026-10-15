@@ -1,5 +1,12 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-120 — validation sociale réelle sur Vercel
+
+- Base `main` GitHub/locale `c8effc3b92aa819ca085ac54ab5fe5d3d6385544`, arbre propre avant ce rapport. Production Vercel `READY` sur ce SHA, `/` HTTP 200 ; D-119 CI verte 6/6 sur le SHA de code `d4c0592a`.
+- Chromium mobile 390 × 844, deux sessions invitées séparées contre Supabase Production : pseudos, demande/acceptation d’ami et listes synchronisées ; un booster normal ouvert par compte ; A propose Celetik contre Laniyelle, double activation = un seul appel `create_trade`, B accepte ; les deux Binder montrent le transfert et cinq cartes chacun. Wishlist épinglée et retrouvée après rechargement ; réponse réelle `player_variants` retardée puis écartée après changement de partenaire. Hôtel et Last Pack affichent leur contenu.
+- Rapport détaillé : [vérification sociale Vercel](verification-sociale-vercel-2026-10-15.md). Aucun code ni règle économique changé. Pas de vol Last Pack, d’achat/dépôt Hôtel, de connexion depuis une feuille sociale non connectée, ni de validation tactile physique. Plusieurs comptes invités de test restent en production ; les sessions locales temporaires sont à effacer. Publication documentaire à compléter.
+
+
 ## Checkpoint D-119 — audit IA Studio Lot 05, feuilles sociales et échanges
 
 - Base GitHub/locale `main` vérifiée avant modification : `39d17e55df35dcfd6a45e461f34345e054ef18a4`, arbre propre. Rapport reçu dans `1-ai_studio_code-2-.txt` ; cinq constats examinés : la carte 0 est un faux positif, car SQL numérote les cartes de 1 à 5. Wishlist était déjà chargée par Toi, mais la feuille assure désormais sa fraîcheur. Les faux positifs du rapport ne justifient pas de changement.
