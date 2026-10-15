@@ -8,7 +8,13 @@
 - Vérifications locales : 22/22 tests d’écran ciblés (dont refus et exception
   Tribunal, Échap/Retour code), 31/31 E2E Binder/Drop sur bureau et téléphone
   (un scénario marqué skipped), TypeScript, ESLint ciblé, build et diff check.
-  Contrôles de publication et de CI à compléter après le push.
+  Code publié par `901b0df82668e191cb8f9dfec81ec0315c4ddb1e`, push normal
+  sur `main` et SHA distant confirmé. Vercel Production `READY` pour ce SHA,
+  alias `creator-deckk.vercel.app` actif, `/` HTTP 200. La CI
+  [run 38764046743](https://github.com/GoodFight37/CreatorDeck/actions/runs/38764046743)
+  est en cours au contrôle ; consigner son verdict final dans le prochain
+  checkpoint. Les défauts de vocabulaire Trades et Compte lié précédemment
+  signalés restent hors périmètre de D-116.
 
 
 ## Checkpoint courant — D-115 suite du rapport IA Studio Collection/Craft
