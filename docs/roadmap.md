@@ -2,13 +2,14 @@
 
 ## État actuel — 15 octobre 2026
 
-**Trade Radar (D-107) — implémenté :** pistes à la demande depuis les souhaits
+**Trade Radar (D-107) — publié et vérifié sur Vercel :** pistes à la demande depuis les souhaits
 publics des amis et les variantes locales en double ; partenaire/carte offerte
 préparés, choix de la contrepartie et arbitrage serveur conservés. États vide,
 chargement, lecture partielle et changement de partenaire traités. Aucun SQL,
 économie ni collection tierce exposée. Logique/store/notes 172/172, écrans
-13/13, typecheck, ESLint, build et rendu 320/390 px réussis. Publication au
-checkpoint courant.
+13/13, typecheck, ESLint, build et rendu 320/390 px réussis. Code `6816e9e5`,
+Production et contrôle Vercel `success` ; note joueur visible sur le site.
+Scan sur compte réel non essayé ; checkpoint courant.
 
 **Perfect renforcé (D-106) — publié et vérifié sur Vercel :** noms/raretés et nouveautés des
 cinq cartes lisibles sous le tirage ; récapitulatif Perfect distinct. Aucun

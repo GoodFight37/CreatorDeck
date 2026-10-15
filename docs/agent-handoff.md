@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — Trade Radar en vérification
+## Checkpoint courant — Trade Radar publié, Vercel vérifié
 
 - Base `main` propre `13f26d5045685f18514e1b18dbfc24afe48fed94`,
   identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
@@ -26,7 +26,18 @@
   `/tmp/trade-radar-320.png` et `/tmp/trade-radar-390.png` inspectées.
   Fixtures : aucune lecture d'amis réels en Production. `npm run build`
   réussi, cinq pages exportées ; variables Supabase locales absentes, donc
-  compilation seulement. Publication/Vercel en cours.
+  compilation seulement.
+- Code/tests/note joueur/docs publiés au commit
+  [`6816e9e58604f92b3b625d866d6ff2a2ced9cb0e`](https://github.com/GoodFight37/CreatorDeck/commit/6816e9e58604f92b3b625d866d6ff2a2ced9cb0e),
+  push normal, SHA local et GitHub confirmés par `ls-remote` après une coupure
+  du transport de commande au retour du commit. Déploiement GitHub Production
+  `7087789472` du même SHA terminé `success`, contrôle
+  [Vercel](https://vercel.com/hafsi37-2386/creator-deckk/6bVjSU7LuZPieFZyRiwiqfKcKiqJ)
+  `success`. Site public HTTP 200 ; Chromium 390 × 844 : Toi → Nouveautés,
+  note « Des pistes pour échanger avec tes amis » visible, aucune erreur JS.
+  Aucun compte réel utilisé pour lancer le radar en Production : les lectures
+  réseau et l'offre sont couvertes par fixtures locales seulement. Pas de
+  transaction ni de migration. Lot clos.
 
 
 ## Checkpoint courant — identité du Perfect publiée, Vercel vérifié

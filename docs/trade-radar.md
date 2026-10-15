@@ -45,3 +45,7 @@ d'acceptation, de réciprocité ou de synchronisation n'est annoncée.
 - Build local sans variables Supabase : compilation seulement. Une lecture du
   compte réel sur Vercel est distincte des fixtures de test ; voir la passation
   pour ce qui a effectivement été essayé en Production.
+
+Publication initiale : commit `6816e9e5` sur `main`, Production Vercel et
+contrôle `success`. Le site public a été parcouru en invité jusqu'à la note
+Nouveautés ; aucun scan d'amis ou envoi d'offre réelle n'a été effectué.
