@@ -2,10 +2,10 @@
 
 ## État actuel — 15 octobre 2026
 
-**Vocabulaire Échanges (D-118) — corrigé dans le code :** les deux aides
+**Vocabulaire Échanges (D-118) — publié, CI verte :** les deux aides
 visibles du panneau Échanges utilisent les mots du joueur. Le garde de jargon
 et les deux assertions Compte lié qui rendaient la CI rouge restent actifs ;
-voir [la décision D-118](decisions.md) et la passation pour le résultat du run.
+voir [la décision D-118](decisions.md) et la passation pour le run 6/6 vert.
 Les échanges et leur arbitrage restent identiques.
 
 

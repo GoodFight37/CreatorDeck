@@ -4,7 +4,8 @@
 
 - Base `main` GitHub/locale vérifiée avant édition : `3fff40cfbdd80cef481573492ca3635bc8022ce1`, arbre propre.
 - Après question explicite de Malik sur la CI rouge, deux aides visibles du panneau Échanges ont été reformulées. Le texte du radar causait le test jargon et deux assertions Compte lié ; une seconde aide disait encore « cloud » et « serveur ». Aucun changement de logique Trade ou de règle économique.
-- Note joueur et décision D-118 ajoutées ; problème connu mis à jour. Tests locaux : 1 186/1 186 unitaires, 174/174 écrans, contrôle de jargon, TypeScript, ESLint ciblé, build et diff check réussis. CI et Vercel à relever après push.
+- Note joueur et décision D-118 ajoutées ; problème connu mis à jour. Tests locaux : 1 186/1 186 unitaires, 174/174 écrans, contrôle de jargon, TypeScript, ESLint ciblé, build et diff check réussis.
+- Code publié par `f0501d558fcecab3572e2b049aa9c8fff685a06a`, push normal `main` et SHA distant confirmé. Vercel Production `READY` pour ce SHA, alias `creator-deckk.vercel.app` actif et `/` HTTP 200. CI [run 38783488533](https://github.com/GoodFight37/CreatorDeck/actions/runs/38783488533) **verte (6/6 jobs)** : qualité, trois shards Playwright, SQL jetable et cloud simulé réussis. Le correctif suivant de passation rapporte seulement ce verdict, sans changement du jeu.
 
 
 ## Checkpoint D-117 — sachet Drop après revue Claude

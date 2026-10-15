@@ -5,7 +5,8 @@ Sur `3fff40cf` et plusieurs commits précédents, le panneau Échanges montrait
 l’écran Compte lié échouaient ; le reste de la CI qualité passait. Une autre
 aide visible employait aussi « cloud » et « serveur ». D-118 reformule ces
 phrases sans changer le fonctionnement des échanges et conserve les contrôles
-de rédaction. Résultat de la suite et du run dans la passation courante.
+de rédaction. Unitaires 1 186/1 186, écrans 174/174 et CI
+`38783488533` verte (6/6 jobs) ; détails dans la passation courante.
 
 ## Sachet Drop : clignotement après pression, idle et ombre — corrigé dans D-117
 
