@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — lien permanent Twitch implémenté, publication en cours
+## Checkpoint courant — lien permanent Twitch publié, Vercel vérifié
 
 - Base GitHub `main` `7e8f83e564df7f668617b3281033c620a2371ee6`,
   vérifiée par `ls-remote` et fetch. Checkout local initial `work` à
@@ -16,8 +16,15 @@
   `npm run build` réussis, cinq pages exportées. Build local sans variables
   Supabase : preuve de compilation uniquement. La première passe avant
   `npm ci` ne pouvait pas lancer jsdom et signalait des dépendances absentes ;
-  relance après installation réussie. En cours : commit/push et Vercel.
-  Aucun ressenti tactile du peel déduit de ce changement.
+  relance après installation réussie.
+- Code, test, note joueur et documentation publiés au commit
+  [`a48cf341561b25f70094039a9bacb69ec9a11e53`](https://github.com/GoodFight37/CreatorDeck/commit/a48cf341561b25f70094039a9bacb69ec9a11e53),
+  push normal, SHA confirmé par `ls-remote`. Déploiement GitHub Production
+  `7086754599` du même SHA terminé `success`, contrôle Vercel `success`,
+  [déploiement](https://vercel.com/hafsi37-2386/creator-deckk/4gfRm3xduCZWES6xhcBTVMXDMbVN).
+  Site public répond HTTP 200. Aucune navigation de fiche en compte réel sur
+  Production ; le test DOM couvre les états de fiche. Aucun ressenti tactile
+  du peel ou de l'APK déduit de ce changement. Lot clos.
 
 
 ## Checkpoint courant — Objectifs et saisons publié, Vercel vérifié

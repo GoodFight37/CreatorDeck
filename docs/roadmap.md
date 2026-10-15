@@ -2,10 +2,12 @@
 
 ## État actuel — 15 octobre 2026
 
-**Accès permanent Twitch (D-104) — implémenté :** chaque fiche de carte dans
+**Accès permanent Twitch (D-104) — publié et vérifié sur Vercel :** chaque fiche de carte dans
 le Binder et la vitrine Toi donne accès à la chaîne, avec ou sans direct. Le
 direct actuel reste une information distincte. Aucun effet sur les tirages ou
-les comptes ; note joueur dans Nouveautés. Vérification/publication au checkpoint.
+les comptes ; note joueur dans Nouveautés. DOM 13/13, TypeScript, ESLint et
+build réussis ; code `a48cf341`, Production et contrôle Vercel `success`.
+Parcours connecté sur site non essayé ; détails au checkpoint.
 
 **Objectifs et saisons (D-103) — clos, publié et vérifié sur Vercel :** quotidien,
 collection/jalons et saisons lisibles ; gains et prochaine étape, filtres et
