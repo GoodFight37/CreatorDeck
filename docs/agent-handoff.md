@@ -1,5 +1,26 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — identité du Perfect en vérification
+
+- Base `main` propre `762ff5126921a4d8323e7dfea9769194cffa8277`,
+  identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
+- D-106 : noms, raretés et nouveautés sous les cinq cartes du Perfect ;
+  récapitulatif conservant le titre Perfect, « cinq cartes d'exception »,
+  cinq Épiques ou mieux et le nombre réel de nouvelles cartes. Aucun taux,
+  gain, verrou, son, geste ou timing modifié. Note joueur ajoutée.
+- `npm run ecrans -- src/ecrans-effets.test.tsx
+  src/ecrans-release-notes.test.tsx` : 28/28 ; TypeScript et ESLint ciblé
+  réussis. HTML du Perfect et de son récapitulatif capturé par le banc DOM,
+  puis rendu avec les CSS de l'application dans Chromium à 320, 390 et
+  1024 px. Captures `/tmp/perfect-*.png` et `/tmp/perfect-recap-*.png`
+  inspectées : largeur conforme, CTA visible, récapitulatif défilable à
+  320 × 568 jusqu'aux deux dernières cartes. Portraits fictifs absents de la
+  capture : celle-ci vérifie la disposition, pas la qualité des images.
+  `npm run build` réussi, cinq pages exportées ; variables Supabase locales
+  absentes, donc compilation seulement. ESLint, typecheck et diff-check finaux
+  réussis. Publication/Vercel en cours ; ressenti tactile du peel inchangé.
+
+
 ## Checkpoint courant — export Story de profil publié, Vercel vérifié
 
 - Base `main` propre `f21fa090d9f8098aa4174360f9735a0254da2ede`,

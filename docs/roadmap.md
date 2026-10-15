@@ -2,6 +2,11 @@
 
 ## État actuel — 15 octobre 2026
 
+**Perfect renforcé (D-106) — implémenté :** noms/raretés et nouveautés des
+cinq cartes lisibles sous le tirage ; récapitulatif Perfect distinct. Aucun
+changement de taux, gain, son, geste ou timing. DOM 28/28, TypeScript, ESLint,
+build et rendu Chromium à 320/390/1024 px réussis ; publication au checkpoint.
+
 **Story de profil (D-105) — publié et vérifié sur Vercel :** export PNG 9:16 depuis la fiche
 publique, à côté de l'affiche 4:5 ; même modèle de faits serveur, vitrine vide
 et portraits manquants pris en charge. Aperçu adapté aux petites hauteurs et
@@ -319,7 +324,7 @@ checkpoint de passation pour le dernier mix.
 4. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
    avant toute intégration réelle de nouveaux univers. Le prototype et la
    simulation ne modifient ni catalogue, ni taux, ni économie.
-5. Backlog sans développement engagé : soundbites des créateurs, Perfect renforcé,
+5. Backlog sans développement engagé : soundbites des créateurs,
    événements Twitch, Trade Radar et Last Pack revanchard.
    Les règles et dépendances restent à définir avant développement.
 

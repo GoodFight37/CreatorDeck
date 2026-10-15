@@ -306,6 +306,28 @@ html:has(.booster-presentation) { overflow: hidden; }
 .reveal-game .reveal-perfect-grid .card-nameplate h3 { font-size: clamp(12px, 14cqw, 28px); }
 .reveal-game .reveal-perfect-grid .card-footerline { font-size: clamp(7px, 5cqw, 11px); }
 .reveal-game .reveal-perfect-grid .card-rank { font-size: clamp(9px, 6cqw, 12px); }
+.reveal-perfect-grid .perfect-card-caption {
+  display: grid;
+  gap: 2px;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.2;
+}
+.reveal-perfect-grid .perfect-card-caption strong {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  color: #fff3e3;
+  font-size: clamp(10px, 2.6vw, 15px);
+}
+.reveal-perfect-grid .perfect-card-caption span {
+  color: #eacfa7;
+  font-size: clamp(9px, 2.2vw, 12px);
+}
+.reveal-perfect-grid .perfect-card-new .perfect-card-caption span { color: #fff0a5; }
 .reveal-game .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 74px auto 0; }
 .reveal-game.reveal-perfect .reveal-header { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
 .booster-presentation .reveal-dos {

@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-perfect", date: "2026-10-15", title: "Un Perfect qui reste mémorable",
+    summary: "Le tirage Perfect garde son identité jusqu'au récapitulatif.",
+    sections: [{ title: "Amélioration", items: [
+      "Les cinq cartes du Perfect portent leur nom, leur rareté et le repère Nouvelle quand il s’applique.",
+      "Le récapitulatif annonce clairement le Perfect, les cinq cartes Épiques ou mieux et le nombre de nouvelles cartes.",
+      "Les chances de tirage, les gains, les sons et le rythme d’ouverture restent identiques.",
+    ] }],
+  },
+  {
     id: "2026-10-15-story", date: "2026-10-15", title: "Ta collection en Story",
     summary: "Ta fiche publique peut aussi devenir une image verticale à enregistrer.",
     sections: [{ title: "Amélioration", items: [

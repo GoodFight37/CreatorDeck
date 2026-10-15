@@ -1,5 +1,25 @@
 # Décisions CreatorDeck
 
+## D-106 — 15 octobre 2026 : identité du Perfect jusqu'au récapitulatif
+
+**Contexte :** le Perfect montrait déjà cinq cartes en cascade et jouait son
+stinger. Les noms étaient difficiles à lire sur mobile et le récapitulatif
+redevenait celui d'un booster ordinaire. Le backlog demandait un Perfect plus
+marquant, sans nouvelle règle définie.
+
+**Décision :** garder le tirage, le verrou de 2,6 s, la cascade, les sons et les
+gains. Ajouter sous chacune des cinq cartes un nom et une rareté lisibles, plus
+« Nouvelle » selon `isNew`. Le récapitulatif annonce explicitement Perfect,
+cinq cartes Épiques ou mieux et le nombre réel de nouveautés. Aucun nouvel
+effet bouclé, bonus, taux ou geste ; l'overlay 16:9 réutilise la même identité.
+
+**Vérification :** test DOM du Perfect et du récapitulatif, rendu du HTML
+capturé avec les CSS de l'application dans Chromium à 320, 390 et 1024 px.
+Le récapitulatif défile à 320 × 568 jusqu'aux dernières cartes, CTA visible.
+Les portraits du banc sont absents de ces captures ; ressenti tactile du peel
+hors de ce lot.
+
+
 ## D-105 — 15 octobre 2026 : Story verticale depuis la fiche publique
 
 **Contexte :** l'affiche de profil 4:5 et son téléchargement existaient. Le

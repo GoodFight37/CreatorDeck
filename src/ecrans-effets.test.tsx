@@ -186,6 +186,8 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".reveal-corner-handle"), "le Perfect garde ses cinq cartes immédiates").toBeNull();
     expect(document.querySelector(".reveal-fifth-card"), "le Perfect ne reçoit pas le temps de pose séquentiel").toBeNull();
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(0);
+    expect(document.querySelectorAll(".perfect-card-caption")).toHaveLength(5);
+    expect(document.querySelector(".perfect-card-new .perfect-card-caption")?.textContent).toContain("Nouvelle");
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;
     // Pendant le verrou, le bouton est bien verrouillé — mais il **montre**
@@ -208,6 +210,10 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 sablier");
     expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("1 nouvelle");
+    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("BOOSTER PERFECT");
+    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("Cinq cartes d'exception");
+    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("5 cartes Épiques ou mieux · 1 nouvelle");
+    banc.ecran("12-perfect-recap");
     expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
     expect(bouton().textContent).toContain("Retour au Drop");
     banc.appuyer("Retour au Drop");

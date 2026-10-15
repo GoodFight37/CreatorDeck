@@ -326,7 +326,7 @@ export function RevealOverlay({
           {cards.map((item) => {
             const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
             return dotCard ? (
-              <div key={item.id} className={`reveal-flip rarity-${item.rarity}`}>
+              <div key={item.id} className={`reveal-flip rarity-${item.rarity}${item.isNew ? " perfect-card-new" : ""}`}>
                 <div className="reveal-flip-face">
                   <CreatorCard
                     creator={dotCard}
@@ -338,6 +338,10 @@ export function RevealOverlay({
                     <span className="reveal-back-sigil"><CardBackEmblem /></span>
                   </span>
                 </div>
+                <div className="perfect-card-caption">
+                  <strong>{dotCard.displayName}</strong>
+                  <span>{RARITY_META[item.rarity].label}{item.isNew ? " · Nouvelle" : ""}</span>
+                </div>
               </div>
             ) : null;
           })}
@@ -345,9 +349,9 @@ export function RevealOverlay({
       ) : showSummary ? (
         <section className="reveal-summary" aria-label="Résumé du booster">
           <div className="reveal-summary-copy" aria-live="polite">
-            <span>{tutorial ? "PACK TUTORIEL" : "BOOSTER OUVERT"}</span>
-            <h2>{tutorial ? "À toi de collectionner" : `${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}`}</h2>
-            <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : `${cards.length} cartes dans ta collection`}</p>
+            <span>{tutorial ? "PACK TUTORIEL" : perfect ? "BOOSTER PERFECT" : "BOOSTER OUVERT"}</span>
+            <h2>{tutorial ? "À toi de collectionner" : perfect ? "Cinq cartes d'exception" : `${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}`}</h2>
+            <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : perfect ? `${cards.length} cartes Épiques ou mieux · ${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}` : `${cards.length} cartes dans ta collection`}</p>
           </div>
           <div className="reveal-summary-grid">
             {cards.map((item, summaryIndex) => {
