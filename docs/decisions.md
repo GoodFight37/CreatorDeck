@@ -1,5 +1,12 @@
 # Décisions CreatorDeck
 
+## D-119 — 15 octobre 2026 : fiabiliser les feuilles sociales et les échanges
+
+Le rapport IA Studio Lot 05 a été confronté au code de `main` (`39d17e55`). L’alerte sur la première carte du Last Pack est un faux positif : `_last_pack_cards` produit des index 1 à 5 via `WITH ORDINALITY`, et `last_pack_steal` refuse 0. La condition `index > 0` est correcte. Les feuilles Amis et Hôtel des ventes ne rechargeaient pas après une création de compte dans la feuille ; Last Pack avait le même défaut. Wishlist était déjà chargée à l’ouverture de Toi, mais sa propre feuille ne garantissait pas une lecture fraîche. Une réponse tardive des variantes pouvait survivre au changement de partenaire ; la comparaison avec une variable capturée, proposée dans le rapport, n’aurait pas suffi. Enfin, le bouton d’offre pouvait être réactivé pendant la requête réseau.
+
+Les feuilles suivent maintenant le compte courant ; la Wishlist se recharge à son ouverture. Les réponses de variantes portent une génération invalidée au changement de partenaire ou de compte. Un verrou local synchrone couvre toute la soumission de l’offre. Le serveur conserve la décision finale sur le vol et l’échange. Aucun taux, coût, limite, possession ou règle économique n’est modifié. Les faux positifs listés dans le rapport ne nécessitent pas de code.
+
+
 ## D-118 — 15 octobre 2026 : enlever le jargon du panneau Échanges
 
 La CI des chantiers D-114 à D-117 restait rouge : un contrôle de rédaction

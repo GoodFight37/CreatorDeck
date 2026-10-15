@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-social-fiable", date: "2026-10-15", title: "Des gestes sociaux plus fiables",
+    summary: "Les écrans sociaux ouverts après connexion répondent correctement.",
+    sections: [{ title: "Corrections", items: [
+      "Amis, Hôtel des ventes, Last Pack et Wishlist chargent leurs données après une connexion sans fermer la feuille.",
+      "Une ancienne recherche de variantes ne s’affiche plus sous un nouveau partenaire, et une offre ne peut plus partir deux fois pendant son envoi.",
+    ] }],
+  },
+  {
     id: "2026-10-15-echanges-clairs", date: "2026-10-15", title: "Des échanges plus clairs",
     summary: "Le radar et la proposition d’échange expliquent mieux les cartes vérifiées.",
     sections: [{ title: "Amélioration", items: [

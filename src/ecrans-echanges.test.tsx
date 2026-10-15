@@ -48,6 +48,7 @@ vi.mock("@/lib/cloud/cloud-store", () => ({
       scanned: 1, failed: 0, message: null,
     })),
     proposeTrade: vi.fn(async () => ({ status: "done", message: "" })),
+    playerVariants: vi.fn(async () => ({ variants: ["standard"], message: null })),
     searchPlayers: vi.fn(async () => ({ players: [monde.partenaire], message: null })),
     loadTrades: vi.fn(async () => {}),
     respondTrade: vi.fn(async () => {}),
@@ -82,6 +83,7 @@ describe("les échanges, « Tu donnes »", () => {
   afterEach(() => {
     banc.nettoyer();
     monde.etat = null;
+    vi.clearAllMocks();
   });
 
   async function panneau() {
@@ -214,5 +216,38 @@ describe("les échanges, « Tu donnes »", () => {
     expect(cartes().length).toBeGreaterThan(0);
     expect(cartes().length).toBeLessThan(24);
     banc.ecran("51-echanges-recherche");
+  });
+
+  it("écarte les variantes arrivées après un changement de partenaire", async () => {
+    monde.etat = { cards: await soixanteCartes() };
+    await panneau();
+    const { cloudStore } = await import("@/lib/cloud/cloud-store");
+    let terminer!: (result: { variants: string[]; message: null }) => void;
+    vi.mocked(cloudStore.playerVariants).mockImplementationOnce(() => new Promise((resolve) => { terminer = resolve; }));
+    banc.saisir(document.querySelector<HTMLInputElement>('input[placeholder="N\'importe quel créateur du catalogue"]')!, "kai");
+    act(() => document.querySelector<HTMLButtonElement>(".trade-wanted .trade-choice")!.click());
+    act(() => document.querySelector<HTMLButtonElement>('.trade-partner button[aria-label="Changer de partenaire"]')!.click());
+    await act(async () => terminer({ variants: ["holo"], message: null }));
+    expect(document.querySelector(".trade-variants")).toBeNull();
+    expect(document.querySelector(".trade-partner")).toBeNull();
+  });
+
+  it("verrouille la proposition jusqu'à la réponse du réseau", async () => {
+    monde.etat = { cards: await soixanteCartes() };
+    await panneau();
+    act(() => document.querySelector<HTMLButtonElement>(".trade-pick .trade-choice")!.click());
+    const { cloudStore } = await import("@/lib/cloud/cloud-store");
+    banc.saisir(document.querySelector<HTMLInputElement>('input[placeholder="N\'importe quel créateur du catalogue"]')!, "kai");
+    act(() => document.querySelector<HTMLButtonElement>(".trade-wanted .trade-choice")!.click());
+    await act(async () => {});
+    act(() => document.querySelector<HTMLButtonElement>(".trade-variants button")!.click());
+    let terminer!: (result: { status: "done"; message: string }) => void;
+    vi.mocked(cloudStore.proposeTrade).mockImplementationOnce(() => new Promise((resolve) => { terminer = resolve; }));
+    const envoyer = [...document.querySelectorAll<HTMLButtonElement>("button")].find((button) => button.textContent?.includes("Proposer l'échange"))!;
+    act(() => { envoyer.click(); envoyer.click(); });
+    expect(cloudStore.proposeTrade).toHaveBeenCalledTimes(1);
+    expect(envoyer.disabled).toBe(true);
+    await act(async () => terminer({ status: "done", message: "" }));
+    expect(cloudStore.proposeTrade).toHaveBeenCalledTimes(1);
   });
 });

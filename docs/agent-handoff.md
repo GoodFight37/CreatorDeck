@@ -1,5 +1,12 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-119 — audit IA Studio Lot 05, feuilles sociales et échanges
+
+- Base GitHub/locale `main` vérifiée avant modification : `39d17e55df35dcfd6a45e461f34345e054ef18a4`, arbre propre. Rapport reçu dans `1-ai_studio_code-2-.txt` ; cinq constats examinés : la carte 0 est un faux positif, car SQL numérote les cartes de 1 à 5. Wishlist était déjà chargée par Toi, mais la feuille assure désormais sa fraîcheur. Les faux positifs du rapport ne justifient pas de changement.
+- Code : chargement Amis, Hôtel des ventes, Last Pack et Wishlist au changement de compte ; réponses de variantes invalidées lors d’un changement de partenaire/compte ; soumission d’échange verrouillée jusqu’à sa réponse. Note joueur, décision et défauts connus mis à jour. Aucune règle serveur ni économie modifiée.
+- Vérifications locales : tests DOM 181/181 (dont 8 Échanges et 5 feuilles sociales), unitaires 1 186/1 186, TypeScript, ESLint complet, build statique et diff check réussis. Avant livraison : commit, push normal `main`, CI et Vercel à contrôler. Le DOM simulé ne prouve pas les gestes ni le réseau réels sur téléphone.
+
+
 ## Checkpoint D-118 — vocabulaire Échanges et CI
 
 - Base `main` GitHub/locale vérifiée avant édition : `3fff40cfbdd80cef481573492ca3635bc8022ce1`, arbre propre.

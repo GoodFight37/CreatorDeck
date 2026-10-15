@@ -111,6 +111,9 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const [wantedQuery, setWantedQuery] = useState("");
   const [variants, setVariants] = useState<Record<string, string[]>>({});
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
+  const variantsGeneration = useRef(0);
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
   const [radarWishes, setRadarWishes] = useState<RadarWish[] | null>(null);
   const [radarOwner, setRadarOwner] = useState(cloud.userId);
   const [radarScanned, setRadarScanned] = useState(0);
@@ -120,8 +123,15 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const wantedInput = useRef<HTMLInputElement>(null);
   useEffect(() => {
     radarGeneration.current += 1;
-    return () => { radarGeneration.current += 1; };
+    variantsGeneration.current += 1;
+    return () => { radarGeneration.current += 1; variantsGeneration.current += 1; };
   }, [cloud.userId]);
+
+  function changePartner(next: PlayerSearchResult | null) {
+    variantsGeneration.current += 1;
+    setLoadingSlug(null);
+    setPartner(next);
+  }
 
   // Mes cartes, une entrée par couple créateur + variante : la même carte en
   // double ne se propose pas deux fois dans une offre (le serveur la refuse).
@@ -171,7 +181,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
     if (partner && partner.userId !== match.friend.friendId && (given.length || wanted.length) &&
       !window.confirm("Changer de partenaire efface les cartes déjà choisies pour cette offre. Continuer ?")) return;
     const samePartner = partner?.userId === match.friend.friendId;
-    setPartner({ userId: match.friend.friendId, displayName: match.friend.friendName, level: 0, uniqueCreators: 0 });
+    changePartner({ userId: match.friend.friendId, displayName: match.friend.friendName, level: 0, uniqueCreators: 0 });
     setGiven(samePartner ? [...new Set([...given, match.key])] : [match.key]);
     setGivenQuery(match.slug);
     setGivenPage(0);
@@ -220,21 +230,25 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   function loadVariants(slug: string) {
     if (!partner || variants[slug] || loadingSlug) return;
     setLoadingSlug(slug);
+    const generation = variantsGeneration.current;
     void cloudStore
       .playerVariants(partner.userId, slug)
       .then((result) => {
+        if (generation !== variantsGeneration.current) return;
         setVariants((current) => ({ ...current, [slug]: result.variants }));
         if (result.message) setSearchMessage(result.message);
       })
-      .finally(() => setLoadingSlug(null));
+      .finally(() => { if (generation === variantsGeneration.current) setLoadingSlug(null); });
   }
 
   const ready = Boolean(partner) && given.length > 0 && wanted.length > 0;
 
-  function propose() {
-    if (!partner) return;
-    void cloudStore
-      .proposeTrade(
+  async function propose() {
+    if (!partner || !ready || submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      const outcome = await cloudStore.proposeTrade(
         partner.userId,
         given.map((key) => {
           const [creatorSlug, variant] = key.split("|");
@@ -244,13 +258,15 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
           const [creatorSlug, variant] = key.split("|");
           return { creatorSlug, variant };
         }),
-      )
-      .then((outcome) => {
-        if (outcome.status === "done") {
-          setGiven([]);
-          setWanted([]);
-        }
-      });
+      );
+      if (outcome.status === "done") {
+        setGiven([]);
+        setWanted([]);
+      }
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
   }
 
   const open = cloud.trades.filter((trade) => trade.status === "open");
@@ -415,7 +431,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
                 className={`trade-player${partner?.userId === player.userId ? " on" : ""}`}
                 aria-pressed={partner?.userId === player.userId}
                 onClick={() => {
-                  setPartner(player);
+                  changePartner(player);
                   setVariants({});
                   setWanted([]);
                 }}
@@ -440,7 +456,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
                 className="account-refresh"
                 aria-label="Changer de partenaire"
                 onClick={() => {
-                  setPartner(null);
+                  changePartner(null);
                   setVariants({});
                   setWanted([]);
                   setGiven([]);
@@ -587,7 +603,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
             </div>
 
             <div className="account-actions">
-              <button type="button" className="account-button" disabled={cloud.busy || !ready} onClick={propose}>
+              <button type="button" className="account-button" disabled={cloud.busy || submitting || !ready} onClick={() => void propose()}>
                 <ArrowLeftRight size={13} /> Proposer l&apos;échange
               </button>
             </div>

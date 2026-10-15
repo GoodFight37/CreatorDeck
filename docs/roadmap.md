@@ -2,6 +2,9 @@
 
 ## État actuel — 15 octobre 2026
 
+**Lot 05 IA Studio (D-119) — implémenté, publication en cours :** alerte carte 0 réfutée par le contrat SQL (index 1 à 5), feuilles sociales synchronisées après connexion et à l’ouverture, variantes d’un ancien partenaire écartées, proposition verrouillée jusqu’à sa réponse. Vérifications DOM ciblées ; parcours réel sur Vercel avec deux comptes restant à éprouver. Aucun changement d’économie ou de taux.
+
+
 **Vocabulaire Échanges (D-118) — publié, CI verte :** les deux aides
 visibles du panneau Échanges utilisent les mots du joueur. Le garde de jargon
 et les deux assertions Compte lié qui rendaient la CI rouge restent actifs ;

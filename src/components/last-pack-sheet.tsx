@@ -90,8 +90,7 @@ export function LastPackSheet({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     if (cloud.configured && cloud.userId) void cloudStore.loadLastPacks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cloud.configured, cloud.userId]);
 
   const load = useCallback(async () => {
     setChoisi(null);

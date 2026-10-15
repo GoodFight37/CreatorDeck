@@ -20,7 +20,7 @@
  * au serveur, et lit la réponse. Un épinglé affiché sans l'avoir été n'aurait
  * aucune valeur — c'est ce que les autres verront.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check, Info, Search, Target, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
 import { connecteToi } from "@/lib/cloud/store-text";
@@ -34,6 +34,10 @@ const MAX_RESULTS = 24;
 export function WishlistSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    if (cloud.configured && cloud.userId) void cloudStore.loadWishlist();
+  }, [cloud.configured, cloud.userId]);
 
   const picked = cloud.wishlistSlug ? CREATOR_BY_SLUG.get(cloud.wishlistSlug) ?? null : null;
 

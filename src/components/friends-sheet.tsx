@@ -66,8 +66,7 @@ export function FriendsSheet({
   // hors ligne. Le résultat vit dans l'état cloud, d'où `lists` ci-dessous.
   useEffect(() => {
     if (cloud.configured && cloud.userId) void cloudStore.loadFriends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cloud.configured, cloud.userId]);
 
   const lists: FriendLists = cloud.friends;
   const ready = cloud.friendsAt !== null;

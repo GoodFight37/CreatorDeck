@@ -50,6 +50,10 @@ export function creerBanc() {
     });
   }
 
+  async function rendre(element: React.ReactElement) {
+    await act(async () => { racine!.render(element); });
+  }
+
   /** Le HTML de l'écran courant, et sa copie sur disque si demandée. */
   function ecran(nom: string) {
     const html = document.body.innerHTML;
@@ -132,6 +136,7 @@ export function creerBanc() {
     nettoyer,
     vider,
     monter,
+    rendre,
     ecran,
     appuyer,
     appuyerNom,

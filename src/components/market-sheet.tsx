@@ -40,8 +40,7 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
   // hors ligne, comme la feuille des amis.
   useEffect(() => {
     if (cloud.configured && cloud.userId) void cloudStore.loadMarket();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [cloud.configured, cloud.userId]);
 
   const load = useCallback(async () => {
     await cloudStore.loadMarket();
