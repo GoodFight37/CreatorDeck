@@ -14,10 +14,16 @@
   coûts ni recyclage. Note joueur, revue complète, D-115, roadmap et problèmes
   connus mis à jour.
 - Tests ciblés relancés après la correction : 40/40 (Binder, Atelier, fiche
-  Sortant, carte interactive, focus et notes). TypeScript, ESLint ciblé et
-  build passent. `npm test` : 1 185/1 186 ; l’unique échec est le texte
-  « serveur » dans Trades, inchangé et hors périmètre.
-  Reste à vérifier diff, commit/push sur main, GitHub Actions et Vercel.
+  Sortant, carte interactive, focus et notes). TypeScript, ESLint ciblé,
+  build et `git diff --check` passent. `npm test` : 1 185/1 186 ; l’unique
+  échec est le texte « serveur » dans Trades, inchangé et hors périmètre.
+  Code publié par [0d38fff4](https://github.com/GoodFight37/CreatorDeck/commit/0d38fff45569de0bdbc557432769ce05bcb6336e), push normal sur `main`, SHA distant confirmé.
+  Vercel Production correspondant est `READY`, alias principal actif, `/`
+  HTTP 200. CI [run 38757768315](https://github.com/GoodFight37/CreatorDeck/actions/runs/38757768315)
+  encore en cours au dernier contrôle (15:11 UTC) : migrations SQL jetables
+  réussies ; qualité, cloud simulé et trois shards Playwright non terminés.
+  Ne pas annoncer la CI verte avant le résultat final ; le seul échec unitaire
+  local reste le jargon Trades connu.
   CI D-114 (run `38755525613`) a réussi build, TS/lint/catalogue, migrations,
   cloud simulé et les 3 shards E2E ; son unique job rouge portait sur le texte
   « serveur » dans Compte/Trades inchangé, 1 test jargon et 2 assertions Compte
@@ -80,9 +86,9 @@
   confirmé ; blob de la [revue D-113](revue-ia-studio-architecture-2026-10-15.md)
   vérifié sur GitHub. Déploiement Production Vercel `READY` sur `2ab3adeb`, alias
   principal attribué et `/` répond HTTP 200. Pas de parcours tactile sur mobile.
-- [CI `43e15f6d`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38749352773)
-  encore en cours au dernier contrôle ; [CI `2ab3adeb`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38749551069)
-  en attente. Ne pas les annoncer vertes avant leur fin.
+- CI D-113 déjà contrôlées après leur exécution : tous les contrôles sont verts,
+  sauf le même contrôle vocabulaire Trades hors périmètre. Voir les runs
+  archivés dans GitHub si un contrôle historique est nécessaire.
 
 ## Checkpoint courant — D-112 premier bilan IA Studio, publié et Vercel vérifié
 
