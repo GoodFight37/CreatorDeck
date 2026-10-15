@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — volume vivant du sachet D-110, publication en cours
+## Checkpoint courant — volume vivant du sachet D-110, publié et contrôlé sur Vercel
 
 - Base main locale et GitHub propre et identique `796cc2e1`, vérifiée avant
   modification. Demande limitée au volume/vie du pack ; décision D-110.
@@ -16,7 +16,16 @@
   avec variables CSS dans l’animation existante ; relance réussie 4/4
   (bureau/téléphone : géométrie 320/390, CTA, mouvement réduit). Build Next
   réussi, cinq pages statiques, sans cloud local : compilation seulement.
-- Publication et CI à consigner. Aucun ressenti sur appareil physique affirmé.
+- Code et note joueur au commit [b8b0b248](https://github.com/GoodFight37/CreatorDeck/commit/b8b0b2487155ed47a97cebe24c6dc2718fb4d069),
+  push normal main et SHA distant confirmés. Statut Vercel `success` ;
+  production `https://creator-deckk.vercel.app/` contrôlée à 390 × 844 :
+  matrices différentes après trois secondes, reflet 4 s, overflow visible,
+  document 390 px ; idle arrêté avec mouvement réduit. Capture production
+  `/tmp/creatordeck-volume-production.png`. Aucun ressenti sur appareil physique affirmé.
+- [CI GitHub](https://github.com/GoodFight37/CreatorDeck/actions/runs/38736932904)
+  en cours au dernier contrôle. Ne pas assimiler le build et les contrôles
+  ciblés locaux au succès de toute la CI. Ancien défaut de vocabulaire Trades
+  documenté dans D-109 ; aucune modification de ce pilier.
 
 ## Checkpoint courant — scène d’accueil Drop D-109, publiée sur Vercel
 

@@ -2,7 +2,7 @@
 
 ## État actuel — 15 octobre 2026
 
-**Volume vivant du sachet (D-110) — implémenté, publication en cours :**
+**Volume vivant du sachet (D-110) — publié et contrôlé sur Vercel :**
 oscillation sur trois axes en 4,8 s, foil et face avant renforcés, reflet 4 s,
 double ombre et spot bordeaux ; format et CTA jeu conservés. Réduction des
 animations respectée. Contrôles et déploiement dans la passation.
