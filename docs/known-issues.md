@@ -122,14 +122,15 @@ et `prefers-reduced-motion: no-preference`. Les retests OFF/réduit passent.
 Le ressenti physique du peel reste ouvert ; pas de correction tactile déclarée
 sur la seule base des tests.
 
-## Accueil Drop encore trop plat et administratif — correction D-109 en cours
+## Accueil Drop encore trop plat et administratif — correction D-109 publiée
 
 Malik rapporte que, malgré D-094/D-096, le premier viewport à 390 × 844
 garde un pack qui paraît être un PNG sur fond noir et un ticket crème dominant.
 Gravité UX : l’action fonctionne, mais l’écran ne donne pas l’impression d’une
 scène de jeu. Capture locale avant D-109 reproduite ; scène chaude, profondeur
-CSS, CTA sans ticket et infos secondaires repliées préparés. Publication et
-validation sur Vercel dans la passation ; appréciation tactile réelle ouverte.
+CSS, CTA sans ticket et infos secondaires repliées publiés sur Vercel au commit
+`bdb0dffb`. Capture de la production 390 × 844 inspectée ; appréciation
+tactile réelle ouverte.
 
 ## Drop trop plat et ticket trop formulaire — cause corrigée et déployée
 

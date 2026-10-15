@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — scène d’accueil Drop D-109, publication en cours
+## Checkpoint courant — scène d’accueil Drop D-109, publiée sur Vercel
 
 - Départ : main local propre `69e6951d14f2d924a6a86cd84dc6afe3f7de7bf0`,
   identique à GitHub après fetch ; aucune PR ouverte. Malik demande une refonte
@@ -27,8 +27,19 @@
   volet replié, puis scénario complet bureau/téléphone 2/2 après adaptation
   du test aux trois rechargements. E2E Drop/Binder complet 14/14 après
   corrections.
-- Note joueur, décision D-109, roadmap et problème connu actualisés.
-  Commit, push, Vercel et CI à consigner après publication.
+- Code et note joueur publiés sur `main` au commit `bdb0dffb5efb62d084c54f91e63a17f0fc68417f`
+  ([commit](https://github.com/GoodFight37/CreatorDeck/commit/bdb0dffb5efb62d084c54f91e63a17f0fc68417f)).
+  Statut GitHub Vercel `success`, production `https://creator-deckk.vercel.app/`
+  HTTP 200 et capture Chromium production 390 × 844 inspectée : scène,
+  booster, CTA et « Plus d’infos » visibles, sans débordement.
+  [Vérification GitHub](https://github.com/GoodFight37/CreatorDeck/actions/runs/38733835347)
+  encore en cours lors de ce checkpoint ; son job statique/build s'arrête
+  aux tests unitaires. Reproduction locale sur ce SHA : `npm test`, 1 185/1 186
+  tests réussis (75/76 fichiers), seul échec `src/lib/jargon.test.ts` sur
+  « serveur » dans `src/components/account/trades-panel.tsx:379`, déjà présent
+  avant D-109 et hors périmètre demandé. Les étapes suivantes de ce job sont
+  ignorées par CI, mais typecheck, lint ciblé et build ont réussi localement.
+  Ressenti tactile physique toujours à valider par le joueur.
 
 ## Checkpoint courant — finition du rituel D-108, Vercel vérifié
 

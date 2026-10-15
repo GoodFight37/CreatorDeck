@@ -2,13 +2,14 @@
 
 ## État actuel — 15 octobre 2026
 
-**Accueil Drop en scène (D-109) — implémenté, publication à vérifier :**
+**Accueil Drop en scène (D-109) — publié sur Vercel, ressenti physique ouvert :**
 pack Live Drop dominant dans une lumière chaude avec sol, ombre et pans foil ;
 entrée et respiration discrètes, réduites selon les préférences ; CTA plein
 largeur et « Plus d’infos » replié. Chrome de l’accueil allégé. Capture locale
 390 × 844 et 320 × 568 inspectée : action entière au-dessus de la navigation
 basse, pas de débordement. Aucun taux, ressource ou autre pilier modifié.
-Vérifications et déploiement détaillés dans la passation.
+Vérifications et déploiement détaillés dans la passation. Le verdict tactile
+sur appareil reste à faire par le joueur.
 
 **Finition du rituel d’ouverture (D-108) — publiée, Vercel vérifié :**
 les consignes TIRE / RELÂCHE, l’extraction à 1,2 s et l’impact Rare+ étaient
