@@ -179,7 +179,9 @@ export function CatalogueDemo() {
 
   function viewUniverse(universeId: DemoUniverseId) {
     setActiveFilter(universeId);
-    document.getElementById("classeur")?.scrollIntoView({
+    const binder = document.getElementById("classeur");
+    binder?.focus({ preventScroll: true });
+    binder?.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       block: "start",
     });

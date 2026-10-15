@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-accessibilite-compteurs", date: "2026-10-15", title: "Des repères plus accessibles",
+    summary: "Les compteurs du jeu sont mieux identifiés pour la lecture assistée.",
+    sections: [{ title: "Améliorations", items: [
+      "Les sabliers, les points et le niveau ont chacun un groupe nommé pour les lecteurs d’écran.",
+      "La barre de niveau garde un affichage valide si une ancienne sauvegarde contient un niveau et une expérience incohérents.",
+    ] }],
+  },
+  {
     id: "2026-10-15-drop-volume", date: "2026-10-15", title: "Le sachet prend du relief",
     summary: "Le booster bouge doucement dans la lumière du Drop.",
     sections: [{ title: "Améliorations", items: [

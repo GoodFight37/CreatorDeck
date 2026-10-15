@@ -1,5 +1,23 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — D-112 premier bilan IA Studio, publication en cours
+
+- Main local/GitHub propre et identique `7be3914b` au départ. Bilan externe
+  de cinq points reçu, vérifié contre les dépendances et la documentation
+  GitHub officielle. [Verdicts détaillés](revue-ia-studio-2026-10-15.md).
+- Faux positifs : le contexte d’événement `dry_run` est une chaîne ; fallback
+  `--top-bar-h` présent ; Lucide masque déjà ses SVG. Aucun workflow modifié,
+  aucune opération Supabase lancée pour ce bilan.
+- Corrections : compteurs `role=group`, barre de niveau bornée en affichage
+  pour import incohérent, focus du prototype avant scroll. Aucun état de jeu
+  changé. Note joueur ajoutée avec le code.
+- Typecheck/ESLint ciblé et notes 8/8 réussis ; clavier navigateur 2/2 ;
+  rendu ponctuel de trois sauvegardes assainies : 0/20/100 %, trois groupes
+  nommés et SVG masqués. Build Next réussi, cinq pages statiques sans cloud
+  local (compilation seulement). Commit et publication à relever.
+- Archive IA Studio antérieure reste sur `7be3914b` : fournir le bilan vérifié
+  au prochain lot pour ne pas recycler les alertes déjà traitées.
+
 ## Checkpoint courant — D-111 vérifications fiabilisées, complément DOM publié
 
 - Demande Malik : prochain chantier complet, docs et publication main.

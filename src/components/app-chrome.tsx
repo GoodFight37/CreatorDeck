@@ -38,7 +38,7 @@ export function TopBar({ game }: { game: GameView }) {
   const levelBase = Math.max(0, (game.player.level - 1) * 100);
   const levelProgress = Math.min(
     100,
-    ((game.player.xp - levelBase) / Math.max(100, game.player.xpNext - levelBase)) * 100,
+    Math.max(0, ((game.player.xp - levelBase) / Math.max(100, game.player.xpNext - levelBase)) * 100),
   );
   // La hauteur **réelle** de la barre part dans `--top-bar-h` : la barre du
   // classeur s'y colle, et cette hauteur change avec l'encoche du téléphone
@@ -66,17 +66,17 @@ export function TopBar({ game }: { game: GameView }) {
         </div>
       </div>
       <div className="top-actions">
-        <div className="currency-chip" title="Sabliers" aria-label={`${game.player.hourglasses} sabliers`}>
+        <div role="group" className="currency-chip" title="Sabliers" aria-label={`${game.player.hourglasses} sabliers`}>
           <Hourglass size={14} />
           <b>{game.player.hourglasses}</b>
           <small>Sab.</small>
         </div>
-        <div className="currency-chip warm" title="Points de collection" aria-label={`${formatNumber(game.player.points)} points`}>
+        <div role="group" className="currency-chip warm" title="Points de collection" aria-label={`${formatNumber(game.player.points)} points`}>
           <Coins size={14} />
           <b>{formatNumber(game.player.points)}</b>
           <small>Pts</small>
         </div>
-        <div className="level-chip" title={`Niveau ${game.player.level}`} aria-label={`Niveau ${game.player.level}`}>
+        <div role="group" className="level-chip" title={`Niveau ${game.player.level}`} aria-label={`Niveau ${game.player.level}`}>
           <span>{game.player.level}</span>
           <i style={{ width: `${levelProgress}%` }} />
           <small>Niv.</small>

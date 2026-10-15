@@ -39,7 +39,10 @@ test("les filtres et la recherche fonctionnent au clavier et annoncent les résu
   await expect(page.locator("[data-demo-card]")).toHaveCount(10);
   await expect(page.getByRole("button", { name: "Afficher tout le classeur" })).toHaveAttribute("aria-pressed", "true");
 
-  await page.getByRole("button", { name: "Voir les cartes de Chroniques de Velune" }).click();
+  const fictionRanking = page.getByRole("button", { name: "Voir les cartes de Chroniques de Velune" });
+  await fictionRanking.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#classeur")).toBeFocused();
   await expect(page.getByRole("button", { name: "Afficher Fiction, personnages fictifs" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator('[data-demo-card][data-universe="fiction"]')).toHaveCount(5);
 });

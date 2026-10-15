@@ -1,5 +1,20 @@
 # Décisions CreatorDeck
 
+## D-112 — 15 octobre 2026 : vérifier le premier bilan IA Studio avant correction
+
+**Contexte :** cinq constats externes sur `7be3914b`, dont deux incertitudes
+explicites sur le moteur et le fallback CSS. [Revue contradictoire](revue-ia-studio-2026-10-15.md).
+
+**Décision :** corriger le focus du classement démo, donner des rôles nommables
+aux compteurs et borner leur barre de niveau pour un import incohérent.
+Conserver le workflow Supabase : son contexte d’événement fournit bien une
+chaîne. Le fallback CSS et le masquage des SVG existent déjà ; aucun correctif
+spéculatif. Aucun calcul de niveau, XP, économie ou nouvelle fonctionnalité.
+
+**Preuves et conséquences :** typecheck/lint, notes 8/8, clavier navigateur
+2/2 et trois rendus issus de sauvegardes assainies passent. État du build et
+de Vercel dans la passation. Aucun verdict de CLS ou lecteur d’écran physique.
+
 ## D-111 — 15 octobre 2026 : rendre les contrôles de livraison exploitables
 
 **Contexte :** D-110 est déployé, mais les trois shards navigateur et le job
