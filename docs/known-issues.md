@@ -97,7 +97,8 @@ affichaient bien les cinq tirages, mais le retour était déverrouillé après
 650 ms (et immédiatement avec les effets coupés). Gravité UX modérée :
 le résultat pouvait être fermé avant sa lecture. La garde est désormais de
 1 500 ms pour tous les modes, sans fermeture automatique. Vérification DOM
-et statut de publication dans la passation. Le ressenti tactile du peel reste
+31/31 ciblée et déploiement Vercel `success` sur `36490080` ; détails et
+limite CI dans la passation. Le ressenti tactile du peel reste
 ouvert et distinct.
 
 ## Rituel trop sec — corrigé, déployé et vérifié sur Vercel, 14 octobre 2026

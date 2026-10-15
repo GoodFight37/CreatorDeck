@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — finition du rituel D-108, publication en cours
+## Checkpoint courant — finition du rituel D-108, Vercel vérifié
 
 - Main local et GitHub identiques au départ (`887f55a4cdc533d6a1e48583b091ce4dc5aef51a`),
   arbre propre, aucune PR ouverte. Demande de Malik limitée au rituel
@@ -20,7 +20,21 @@
   sachet CSS/peel/cinquième carte sur bureau et viewport téléphone.
   Ressenti tactile réel sur téléphone non vérifié.
 - Note joueur ajoutée, décisions D-108, roadmap et problème connu actualisés.
-  Commit, push et contrôle Vercel à consigner après publication.
+  Code, tests, note et docs au commit `36490080192b90cffaa479fb2c7cf29558cb1c14`,
+  push normal sur main, SHA GitHub confirmé. Déploiement Production
+  `7088095958` du même SHA `success`, statut Vercel `success` ; site
+  public HTTP 200. Chromium sur le site : Toi → Nouveautés affiche en tête
+  « Un booster qui prend son temps » à 390 × 844, sans erreur JS ni
+  débordement. Aucun peel au doigt sur appareil réel ni booster consommé.
+- CI GitHub `38708119278` : le job « Unitaires, écrans, statique et build »
+  échoue à l’étape unitaires sur `src/lib/jargon.test.ts` (1 échec,
+  1 185 réussites localement). Cause reproduite : le texte « le serveur la
+  vérifiera » dans `src/components/account/trades-panel.tsx:379`, issu du lot
+  Trade Radar antérieur. Malik exclut explicitement les échanges du présent
+  chantier ; aucun changement de ce fichier. Les contrôles suivants de ce job
+  sont sautés dans la CI, malgré leurs passes locales ciblées. Autres jobs
+  encore en cours au premier relevé ; voir l’état final du run.
+
 
 ## Checkpoint courant — Trade Radar publié, Vercel vérifié
 
