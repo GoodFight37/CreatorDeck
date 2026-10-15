@@ -1,3 +1,4 @@
+import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { AtelierView } from "@/components/atelier-view";
@@ -42,6 +43,16 @@ describe("atelier consultable sans doublons", () => {
     expect(craft).not.toHaveBeenCalled();
     expect(recycle).not.toHaveBeenCalled();
     expect(JSON.stringify(state)).toBe(before);
+  });
+
+  it("garde le total du filtre Toutes quand une rareté est sélectionnée", async () => {
+    await mount();
+    const all = () => banc.boutons().find(button => button.textContent?.startsWith("Toutes ("))!;
+    const totalBefore = all().textContent;
+    act(() => document.querySelector<HTMLDetailsElement>(".atelier-rarity-filters summary")!.click());
+    banc.appuyer(/^Rares/);
+    expect(document.querySelector<HTMLButtonElement>(".atelier-rarity-filters button.active")?.textContent).toContain("Rares");
+    expect(all().textContent).toBe(totalBefore);
   });
 
   it("compte les copies recyclables, pas les cartes uniques, sans masquer les recettes", async () => {

@@ -599,6 +599,16 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck
 
+## Revue IA Studio Binder/Atelier — D-114
+
+Les défauts confirmés sur les cartes Sortants et le compteur Toutes de
+l’Atelier sont corrigés dans le lot D-114. Le crash Atelier évoqué dans
+l’audit est un faux positif : le registre de résolution comprend déjà les
+Sortants. L’audit joint s’interrompt à `[MOYEN] Informatio`; ses constats
+suivants restent non examinés. Le fichier des Sortants est vide aujourd’hui,
+donc leur rendu a été couvert par un fixture synthétique, pas par une fiche
+réelle. Détails : [revue D-114](revue-ia-studio-binder-2026-10-15.md).
+
 ### Visages artificiels dans certains anciens portraits Upscayl — 13 octobre 2026
 
 Malik signale que plusieurs agrandissements IA reconstruisent les traits et

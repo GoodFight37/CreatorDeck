@@ -1,5 +1,21 @@
 # Décisions CreatorDeck
 
+## D-114 — 15 octobre 2026 : les cartes Sortants suivent les filtres de collection
+
+Dans le bilan IA Studio reçu après D-113, le signalement d’un plantage Atelier
+pour les Sortants est réfuté : `CREATOR_BY_SLUG` inclut le catalogue courant et
+les Sortants depuis `a06847c65`, avant le SHA audité. Deux problèmes d’interface
+sont confirmés et corrigés : les Sortants possédés étaient absents d’Obtenues,
+et le chemin Toutes contournait leur recherche/tri ; le compteur Toutes de
+l’Atelier suivait à tort la liste déjà filtrée par rareté. La complétion du jeu
+continue de compter le catalogue actif comme avant. Aucune règle économique,
+de tirage, de fabrication ou de recyclage ne change.
+
+La revue reçue s’arrête au milieu d’un constat (`[MOYEN] Informatio`) : seuls
+les points complets visibles ont été vérifiés. Les Sortants actuels sont vides ;
+le test Binder ajoute un Sortant synthétique pour vérifier leur affichage. Voir
+[la revue IA Studio Binder/Atelier](revue-ia-studio-binder-2026-10-15.md).
+
 ## D-113 — 15 octobre 2026 : vérifier le deuxième bilan IA Studio
 
 **Contexte :** cinq alertes externes sur l’architecture de `7be3914b`. Le bilan

@@ -123,7 +123,15 @@ export function CollectionView({
       }
       return true;
     };
-    if (filter === "retired") return retiredCards.filter(matches);
+    const matchingRetired = retiredCards.filter(matches);
+    if (filter === "retired") {
+      return sortBinder(
+        matchingRetired,
+        sort,
+        (slug) => owned.get(slug)?.count ?? 0,
+        (slug) => owned.get(slug)?.latestAt ?? 0,
+      );
+    }
     const current = CREATORS.filter((creator) => {
       if (!matches(creator)) return false;
       if (filter === "owned") return owned.has(creator.slug);
@@ -133,13 +141,15 @@ export function CollectionView({
       return true;
     });
 
-    const sorted = sortBinder(
-      current,
+    const candidates = filter === "all" || filter === "owned"
+      ? [...current, ...matchingRetired]
+      : current;
+    return sortBinder(
+      candidates,
       sort,
       (slug) => owned.get(slug)?.count ?? 0,
       (slug) => owned.get(slug)?.latestAt ?? 0,
     );
-    return filter === "all" ? [...sorted, ...retiredCards] : sorted;
   }, [filter, live, now, owned, pageGoal, query, sort]);
 
   function finishTurn() {
@@ -327,7 +337,7 @@ export function CollectionView({
           {(
             [
               ["all", `Toutes (${CREATORS.length})`],
-              ["owned", `Obtenues (${game.stats.uniqueCreators})`],
+              ["owned", `Obtenues (${game.stats.uniqueCreators + retiredOwned})`],
               ["missing", "À découvrir"],
               ...(retiredOwned
                 ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])

@@ -110,7 +110,7 @@ export function AtelierView({
     }).length;
   }, [game.cards, game.player.points, game.tokens.count, game.tokens.targetCost, retiredCraftable, wallet]);
 
-  const craftable = useMemo(() => {
+  const { craftable, allCraftableCount } = useMemo(() => {
     const q = query.toLocaleLowerCase("fr").trim();
     const owned = new Set(game.cards.map(card => card.creatorSlug));
     const price = (creator: (typeof CREATORS)[number]) => {
@@ -118,16 +118,20 @@ export function AtelierView({
       if (!meta.craftable) return Infinity;
       return wallet === "tokens" ? game.tokens.targetCost : meta.craftCost ?? Infinity;
     };
-    return [...retiredCraftable, ...CREATORS].filter((creator) => {
+    const candidates = [...retiredCraftable, ...CREATORS].filter((creator) => {
       if (owned.has(creator.slug)) return false;
       if (q && !`${creator.displayName} ${creator.login} ${creator.category} #${creator.rank}`.toLocaleLowerCase("fr").includes(q)) return false;
-      if (filter !== "all" && creator.rarity !== filter) return false;
-      // Search and explicit rarity filters can explore the full catalogue.
-      if (scope === "reachable" && !q && filter === "all") {
-        return Number.isFinite(price(creator)) && (affordableCount === 0 || price(creator) <= balance);
-      }
       return true;
     }).sort((a, b) => price(a) - price(b) || a.rank - b.rank);
+    // « Toutes » garde son propre total lorsque la liste est filtrée par rareté.
+    // Il représente exactement la liste vers laquelle mène ce bouton.
+    const allRecipes = scope === "reachable" && !q
+      ? candidates.filter((creator) => Number.isFinite(price(creator)) && (affordableCount === 0 || price(creator) <= balance))
+      : candidates;
+    const visibleRecipes = filter === "all"
+      ? allRecipes
+      : candidates.filter((creator) => creator.rarity === filter);
+    return { craftable: visibleRecipes, allCraftableCount: allRecipes.length };
   }, [filter, game.cards, query, retiredCraftable, wallet, game.tokens.targetCost, scope, balance, affordableCount]);
 
   const totalPages = Math.max(1, Math.ceil(craftable.length / PER_PAGE));
@@ -289,7 +293,7 @@ export function AtelierView({
           <div className="filter-chips" aria-label="Filtres de rareté" style={{ margin: "0.25rem 0" }}>
             {(
               [
-                ["all", `Toutes (${craftable.length})`],
+                ["all", `Toutes (${allCraftableCount})`],
                 ["legendary", "Légendaires"],
                 ["epic", "Épiques"],
                 ["rare", "Rares"],

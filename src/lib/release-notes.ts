@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-binder-sortants", date: "2026-10-15", title: "Tes Sortants restent dans le Binder",
+    summary: "Les cartes des créateurs Sortants suivent les filtres de ta collection.",
+    sections: [{ title: "Correction", items: [
+      "Les cartes Sortants obtenues apparaissent dans Toutes et Obtenues, avec le compteur correspondant. La recherche et le tri s’appliquent aussi à ces cartes.",
+      "À l’Atelier, le compteur Toutes reste le total disponible même quand tu choisis une rareté.",
+    ] }],
+  },
+  {
     id: "2026-10-15-retour-ouverture", date: "2026-10-15", title: "Le tirage continue si tu reviens",
     summary: "Le bouton retour ferme la scène d’ouverture sans annuler le booster en cours.",
     sections: [{ title: "Correction", items: [

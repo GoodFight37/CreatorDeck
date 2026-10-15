@@ -1,5 +1,36 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — D-114 revue IA Studio Binder/Atelier
+
+- Base main locale/GitHub au départ : `0180eb57048fbd223a6dbf2264822c2e4f180fbf`.
+  Pièce reçue : `/tmp/codex-remote-attachments/.../1-ai_studio_code.txt`, bilan
+  annoncé sur `7be3914b`. Le fichier reçu est tronqué à `[MOYEN] Informatio` ;
+  seuls les constats complets avant cette coupure sont vérifiés.
+- Faux positif confirmé par l’historique : `CREATOR_BY_SLUG` inclut déjà
+  `RETIRED_CREATORS` depuis `a06847c65`, donc les opérations Atelier savent
+  résoudre ces cartes. Deux bugs UI confirmés : le compteur Toutes de l’Atelier
+  suivait le filtre de rareté et les Sortants possédés étaient omis d’Obtenues /
+  ajoutés à Toutes après les filtres. Le pourcentage de complétion active ne
+  compte toujours pas les Sortants.
+- Corrections dans `atelier-view.tsx` et `binder-view.tsx`. Note joueur et
+  revue détaillée dans `release-notes.ts` et
+  [revue D-114](revue-ia-studio-binder-2026-10-15.md). Test DOM Atelier compare
+  le total Toutes avant/après rareté. Test Binder ajoute un Sortant synthétique
+  (le catalogue réel en contient zéro), vérifie Obtenues (2), présence, filtre
+  de page, recherche et résultat vide. Aucun changement économie, tirages,
+  craft, recyclage ou serveur.
+- Vérifié : DOM ciblé 20/20, notes joueur 3/3, TypeScript et ESLint ciblé
+  réussis ; `npm run build` réussit (compilation locale sans variables Cloud,
+  avertissement attendu). `npm test` : 1 185/1 186 ; l’unique échec est
+  l’assertion jargon Trades « serveur » déjà documentée, hors périmètre.
+  `git diff --check` propre. Aucun contrôle tactile demandé, l’APK est hors
+  cible.
+- Main GitHub était toujours au SHA de base juste avant livraison. Commit et
+  push restent à faire ; après push, contrôler Actions et déploiement Vercel
+  Production du SHA. Ne pas annoncer CI verte si elle est encore active ou
+  échoue hors périmètre. La suite du bilan IA Studio reste à lire lorsque sa
+  portion manquante sera disponible.
+
 ## Checkpoint courant — D-113 deuxième bilan IA Studio
 
 - Base vérifiée sur main `7eefe5f8` avant travaux ; bilan reçu sur l’archive

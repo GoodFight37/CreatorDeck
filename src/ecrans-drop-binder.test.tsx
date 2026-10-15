@@ -1,7 +1,7 @@
 import { act } from "react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
-import { CREATORS } from "@/lib/catalog";
+import { CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, type RetiredCreator } from "@/lib/catalog";
 import { BINDER_COLLECTION_BY_ID, BINDER_COLLECTIONS } from "@/lib/binder-collections";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { HomeView } from "@/components/drop-view";
@@ -21,7 +21,7 @@ describe("le Binder guide la collection sans inventer de progression", () => {
   async function collection(slugs: string[]) {
     const state = createInitialState(NOW);
     state.cards = slugs.map((slug, index) => ({ id: `owned-${index}`, creatorSlug: slug,
-      rarity: CREATORS.find((creator) => creator.slug === slug)!.rarity,
+      rarity: CREATOR_BY_SLUG.get(slug)!.rarity,
       variant: "standard" as const, obtainedAt: NOW - index * 1000, rareDrop: false }));
     const game = getGameView(state, NOW);
     const onGoDrop = vi.fn();
@@ -81,6 +81,44 @@ describe("le Binder guide la collection sans inventer de progression", () => {
   it("999 cartes ne sont pas annoncées comme une collection complète", async () => {
     await collection(CREATORS.slice(0, -1).map((creator) => creator.slug));
     expect(document.querySelector(".collection-score")?.textContent).toContain("99%");
+  });
+
+  it("compte et filtre les Sortants obtenus dans Toutes et Obtenues", async () => {
+    const base = CREATORS[0];
+    const retired: RetiredCreator = {
+      ...base,
+      slug: "audit-retired-binder-fixture",
+      displayName: "Créateur sortant de test",
+      login: "audit_retired_binder_fixture",
+      retiredEdition: 1,
+      retiredAt: "2026-10-15",
+    };
+    RETIRED_CREATORS.push(retired);
+    RETIRED_BY_SLUG.set(retired.slug, retired);
+    CREATOR_BY_SLUG.set(retired.slug, retired);
+    try {
+      const firstCollection = BINDER_COLLECTIONS[0];
+      await collection([...firstCollection.slugs, retired.slug]);
+      expect(banc.boutons().some(button => button.textContent === `Obtenues (${firstCollection.slugs.length + 1})`)).toBe(true);
+
+      act(() => document.querySelector<HTMLDetailsElement>(".binder-collections-picker summary")!.click());
+      act(() => [...document.querySelectorAll<HTMLButtonElement>(".binder-collection-choices button")]
+        .find(button => button.textContent?.includes(firstCollection.name))!.click());
+      expect(document.querySelector(".binder-active-page")).not.toBeNull();
+      expect(document.body.textContent).not.toContain(retired.displayName);
+
+      act(() => document.querySelector<HTMLButtonElement>('[aria-label="Retirer le filtre de page"]')!.click());
+      const search = document.querySelector<HTMLInputElement>('input[aria-label="Rechercher un créateur"]')!;
+      banc.saisir(search, retired.displayName);
+      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(1);
+      expect(document.querySelector(".collection-grid")?.textContent).toContain(retired.displayName);
+      banc.saisir(search, "absent du catalogue");
+      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(0);
+    } finally {
+      RETIRED_CREATORS.splice(RETIRED_CREATORS.indexOf(retired), 1);
+      RETIRED_BY_SLUG.delete(retired.slug);
+      CREATOR_BY_SLUG.delete(retired.slug);
+    }
   });
 
   it("permet de choisir une page encore vide sans inventer de cartes obtenues", async () => {
