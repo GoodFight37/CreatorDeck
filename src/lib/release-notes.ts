@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-rituel-finition", date: "2026-10-15", title: "Un booster qui prend son temps",
+    summary: "Le résultat du booster reste à l’écran assez longtemps pour voir les cinq cartes.",
+    sections: [{ title: "Améliorations", items: [
+      "Après la dernière carte, le récapitulatif des cinq tirages reste visible au moins 1,5 seconde avant de pouvoir revenir au Drop.",
+      "Le booster garde un reflet léger, des côtés plus marqués et une ombre mieux ajustée sur l’accueil.",
+      "Les consignes d’ouverture restent courtes : Tire, puis Relâche. Les cinq dos ont leur temps de sortie ; les cartes rares conservent un impact plus marqué.",
+    ] }],
+  },
+  {
     id: "2026-10-15-trade-radar", date: "2026-10-15", title: "Des pistes pour échanger avec tes amis",
     summary: "Trade Radar rapproche tes cartes en double des souhaits publics de tes amis.",
     sections: [{ title: "Nouveauté", items: [

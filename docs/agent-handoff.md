@@ -1,5 +1,27 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — finition du rituel D-108, publication en cours
+
+- Main local et GitHub identiques au départ (`887f55a4cdc533d6a1e48583b091ce4dc5aef51a`),
+  arbre propre, aucune PR ouverte. Demande de Malik limitée au rituel
+  d’ouverture et au polish du pack hero ; Drop accueil, trades, Story, Twitch,
+  Objectifs, BGM et économie exclus.
+- Constat dans le code : PackTear avait déjà TIRE / RELÂCHE et rien une fois
+  ouvert ; `PACK_TEAR_MS` était à 1 200 ms ; Rare+ avait déjà sa pause
+  d’impact et son glow/stinger ; les cinq cartes avaient déjà un récapitulatif.
+  Le retour de ce récap ne tenait que 650 ms. D-108 le verrouille 1 500 ms
+  pour tous les modes, sans fermeture automatique ; côtés 24 px plus contrastés,
+  sheen un peu renforcé et largeur de l’ombre mobile alignée en CSS.
+- `npm run ecrans -- src/ecrans-effets.test.tsx src/ecrans-tactile.test.tsx` :
+  31/31. `npm test -- src/lib/reveal.test.ts src/lib/release-notes.test.ts` :
+  21/21. Typecheck, ESLint ciblé et build : réussis. Build local sans
+  Supabase, compilation seulement. Playwright initial bloqué par le binaire
+  Chromium absent ; installé puis relancé : 2/2 géométrie/accueil, 6/6
+  sachet CSS/peel/cinquième carte sur bureau et viewport téléphone.
+  Ressenti tactile réel sur téléphone non vérifié.
+- Note joueur ajoutée, décisions D-108, roadmap et problème connu actualisés.
+  Commit, push et contrôle Vercel à consigner après publication.
+
 ## Checkpoint courant — Trade Radar publié, Vercel vérifié
 
 - Base `main` propre `13f26d5045685f18514e1b18dbfc24afe48fed94`,

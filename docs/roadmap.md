@@ -2,6 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
+**Finition du rituel d’ouverture (D-108) — implémentée, publication à vérifier :**
+les consignes TIRE / RELÂCHE, l’extraction à 1,2 s et l’impact Rare+ étaient
+déjà en place sur main. Le récapitulatif de chaque booster attend maintenant
+1,5 s avant le retour, même avec effets coupés. Côtés, reflet et ombre du pack
+hero ajustés en CSS sans toucher à la structure du Drop. Vérifications et
+déploiement consignés dans la passation ; jugement tactile sur téléphone ouvert.
+
 **Trade Radar (D-107) — publié et vérifié sur Vercel :** pistes à la demande depuis les souhaits
 publics des amis et les variantes locales en double ; partenaire/carte offerte
 préparés, choix de la contrepartie et arbitrage serveur conservés. États vide,

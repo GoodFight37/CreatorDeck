@@ -90,6 +90,16 @@ Toutes vérifié : 12 dos/page, flèches, verrou, swipe, retour et tap, nom long
 sans débordement à 320/390 px. Possession vérifiée dans les fixtures locales.
 Le ressenti physique n'est pas déduit des tests.
 
+## Récapitulatif trop bref — corrigé dans D-108, 15 octobre 2026
+
+Sur main avant D-108, toutes les ouvertures séquentielles et le Perfect
+affichaient bien les cinq tirages, mais le retour était déverrouillé après
+650 ms (et immédiatement avec les effets coupés). Gravité UX modérée :
+le résultat pouvait être fermé avant sa lecture. La garde est désormais de
+1 500 ms pour tous les modes, sans fermeture automatique. Vérification DOM
+et statut de publication dans la passation. Le ressenti tactile du peel reste
+ouvert et distinct.
+
 ## Rituel trop sec — corrigé, déployé et vérifié sur Vercel, 14 octobre 2026
 
 Reproduction sur `283f4086` : ouvrir un booster, relâcher une coupe suffisante ;

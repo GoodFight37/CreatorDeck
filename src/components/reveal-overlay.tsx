@@ -41,6 +41,7 @@ import { streakRewardLabel } from "@/lib/progression";
 import { cardEffectsAllowed } from "@/lib/tilt";
 
 const FIFTH_CARD_REVEAL_BEAT_MS = 360;
+const SUMMARY_HOLD_MS = 1_500;
 
 export function RevealOverlay({
   cards,
@@ -80,7 +81,7 @@ export function RevealOverlay({
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryReady, setSummaryReady] = useState(false);
-  const summaryLocked = showSummary && !summaryReady && cardEffectsAllowed();
+  const summaryLocked = showSummary && !summaryReady;
   const [flippedCardId, setFlippedCardId] = useState<string | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
@@ -90,8 +91,8 @@ export function RevealOverlay({
 
   useEffect(() => {
     if (!showSummary) return;
-    // Le second tap sur « Ranger » ne doit pas fermer les cartes en cascade.
-    const timer = window.setTimeout(() => setSummaryReady(true), 650);
+    // Le récap reste lisible 1,5 s, même après un double appui.
+    const timer = window.setTimeout(() => setSummaryReady(true), SUMMARY_HOLD_MS);
     return () => window.clearTimeout(timer);
   }, [showSummary]);
 

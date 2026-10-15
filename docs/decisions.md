@@ -1,5 +1,24 @@
 # Décisions CreatorDeck
 
+## D-108 — 15 octobre 2026 : finir le rythme du booster sans refaire le Drop
+
+**Contexte :** Malik demande un rituel moins proche d’une page web : consignes
+courtes, cinq dos visibles, rares qui frappent, récapitulatif durable, objet foil
+plus présent. Sur `main`, D-097 et D-096 avaient déjà livré « TIRE / RELÂCHE »,
+extraction JS/CSS à 1 200 ms, hit-stop Rare+ et récapitulatif manuel. La garde
+du récapitulatif ne durait que 650 ms.
+
+**Décision :** conserver le geste guidé et les timings du flip existants. Le
+récapitulatif reste ouvert jusqu’à une action explicite et ses commandes de
+retour sont verrouillées 1 500 ms, y compris avec les effets coupés ; le flip
+reste immédiat dans ce mode. Renforcer légèrement le contraste et l’épaisseur
+des côtés CSS, le reflet en boucle et aligner la largeur de l’ombre sur le pack
+mobile. La structure et la taille du pack hero ne changent pas.
+
+**Limite :** les essais DOM et navigateur vérifient les états et les timings,
+pas la sensation du peel au doigt. Aucun tirage, pity, audio BGM, autre pilier
+ou nouvel asset ne change.
+
 ## D-107 — 15 octobre 2026 : Trade Radar sur les souhaits publics des amis
 
 **Contexte :** les échanges et la wishlist publique existent. Trouver un ami

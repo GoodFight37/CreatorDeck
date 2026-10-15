@@ -218,7 +218,9 @@ describe("les effets de révélation", () => {
     expect(bouton().textContent).toContain("Retour au Drop");
     banc.appuyer("Retour au Drop");
     expect(fermer, "le double tap ne ferme pas le récap avant sa pose").not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_499); });
+    expect(bouton().disabled, "le récap doit rester lisible 1,5 s").toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     banc.appuyer("Retour au Drop");
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
@@ -238,7 +240,7 @@ describe("les effets de révélation", () => {
     expect(document.body.textContent).toContain("RÉCAP");
     expect(document.body.textContent).toContain("2 cartes dans ta collection");
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent).toContain("Retour au Drop");
-    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
     banc.appuyer("Retour au Drop");
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant).not.toHaveBeenCalled();
@@ -339,7 +341,7 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".reveal-summary")).toBeTruthy();
     expect(next).not.toHaveBeenCalled();
     expect(close).not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
     banc.appuyer("Retour au Drop");
     expect(close).toHaveBeenCalledOnce();
   });
@@ -413,6 +415,15 @@ describe("les effets de révélation", () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
       expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
         .toContain("Ranger dans le classeur");
+      // Le mode sobre saute le flip, mais garde le temps de lecture du résultat.
+      const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
+      act(() => bouton.click());
+      expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
+      expect(bouton.disabled).toBe(true);
+      await act(async () => { await vi.advanceTimersByTimeAsync(1_499); });
+      expect(bouton.disabled).toBe(true);
+      await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+      expect(bouton.disabled).toBe(false);
     } finally {
       delete document.documentElement.dataset.cardFx;
     }
