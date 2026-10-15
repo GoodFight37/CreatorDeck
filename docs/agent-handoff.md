@@ -1,5 +1,16 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-116 — rapport IA Studio Lot 04
+
+- Base locale et GitHub vérifiée avant édition : `d12f155c26437c782fb7b3c2cde0500456b79628`, arbre propre.
+- Rapport reçu dans `1-ai_studio_code-1-.txt`. Cinq points confirmés dans les composants Drop/Tribunal/Arène/code promo. Le refus normal de paiement du Tribunal empêchait aussi le réessai. Régression de feuilletage Binder détectée dans le CI précédent : le bouton d’inspection ajouté par D-115 absorbait le départ du geste.
+- Corrections D-116 : habillage avant peel ; réessai et état occupé libéré en cas d’échec Tribunal/Arène ; retour et Échap sur la feuille de code ; libellés de fin Arène ; feuilletage depuis la carte et attentes de focus E2E. Aucune règle économique modifiée. Note joueur ajoutée.
+- Vérifications locales : 22/22 tests d’écran ciblés (dont refus et exception
+  Tribunal, Échap/Retour code), 31/31 E2E Binder/Drop sur bureau et téléphone
+  (un scénario marqué skipped), TypeScript, ESLint ciblé, build et diff check.
+  Contrôles de publication et de CI à compléter après le push.
+
+
 ## Checkpoint courant — D-115 suite du rapport IA Studio Collection/Craft
 
 - Base main propre avant cette suite : `8ccfa0280fe2c0dc0cd360aee4d0e0745a8cf6a1`.

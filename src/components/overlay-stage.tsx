@@ -90,8 +90,8 @@ export function OverlayStage() {
         setProblem(result.message);
         return;
       }
-      await dechirer();
       setKind("live");
+      await dechirer();
       setCards(result.cards);
       setIndex(0);
     } catch (error) {
@@ -112,8 +112,8 @@ export function OverlayStage() {
         setProblem(result.message);
         return;
       }
-      await dechirer();
       setKind("scene");
+      await dechirer();
       setCards(result.cards);
       setIndex(0);
     } catch (error) {

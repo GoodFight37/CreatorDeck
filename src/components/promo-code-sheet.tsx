@@ -22,9 +22,13 @@ import { AlertTriangle, Info, Ticket, X } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
 import { RACCOURCIS_LISIBLES, connecteToi } from "@/lib/cloud/store-text";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { useBackHandler } from "@/hooks/use-back-handler";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
+  const dialog = usePresentationFocus();
+  useBackHandler(true, onClose);
   const [code, setCode] = useState("");
   const [result, setResult] = useState<{ message: string; isError: boolean } | null>(null);
 
@@ -42,7 +46,8 @@ export function PromoCodeSheet({ onClose }: { onClose: () => void }) {
   // profile page (and clipped by app-shell), so only its dimmed backdrop is
   // visible on mobile. Mount the dialog at document level like a real modal.
   return createPortal(
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="J'ai un code">
+    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="J'ai un code" tabIndex={-1} ref={dialog}
+      onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}>
       <div className="odds-panel">
         <header className="odds-head">
           <h2>J&apos;ai un code</h2>

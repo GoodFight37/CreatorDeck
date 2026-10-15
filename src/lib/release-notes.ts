@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-ouverture-arene", date: "2026-10-15", title: "Des actions qui répondent mieux",
+    summary: "L’ouverture, le Tribunal et l’Arène gardent des repères clairs en cas d’incident.",
+    sections: [{ title: "Corrections", items: [
+      "Le sachet affiché pendant le déchirement correspond au booster choisi.",
+      "Si une récompense du Tribunal ou une action d’Arène échoue, un message apparaît et l’action peut être retentée.",
+      "Le retour ferme la feuille de code ; les cartes du Binder se feuillettent à nouveau au départ d’une carte.",
+    ] }],
+  },
+  {
     id: "2026-10-15-fiches-sortants", date: "2026-10-15", title: "Des fiches plus justes pour les Sortants",
     summary: "Le statut des cartes Sortants et leurs commandes sont plus clairs.",
     sections: [{ title: "Corrections", items: [

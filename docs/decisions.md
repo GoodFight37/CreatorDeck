@@ -1,5 +1,18 @@
 # Décisions CreatorDeck
 
+## D-116 — 15 octobre 2026 : fiabiliser les parcours du lot Drop et annexes
+
+Revue du rapport IA Studio Lot 04 sur `d12f155c`. Les cinq constats sont
+confirmés dans le code : habillage du paquet affecté après le déchirement,
+attente non protégée du Tribunal et de l’Arène, feuille de code sans retour,
+libellé de semaine expirée incohérent. Le refus normal de paiement du Tribunal
+est également traité comme un refus réessayable ; auparavant il masquait le
+bouton de réclamation. Une régression D-115 du feuilletage Binder est corrigée
+en autorisant le geste depuis le bouton d’inspection, sans l’autoriser depuis
+les autres commandes. Les assertions de focus E2E suivent ce bouton réel.
+Aucun calcul de récompense, taux ou coût ne change.
+
+
 ## D-114 — 15 octobre 2026 : les cartes Sortants suivent les filtres de collection
 
 Dans le bilan IA Studio reçu après D-113, le signalement d’un plantage Atelier

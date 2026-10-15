@@ -171,9 +171,14 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
 
   const act = useCallback(async (run: () => Promise<CloudActionOutcome>) => {
     setBusy(true);
-    const result = await run();
-    if (result.message) setNotice({ message: result.message, isError: result.status !== "done" });
-    setBusy(false);
+    try {
+      const result = await run();
+      if (result.message) setNotice({ message: result.message, isError: result.status !== "done" });
+    } catch {
+      setNotice({ message: "Arène indisponible. Réessaie.", isError: true });
+    } finally {
+      setBusy(false);
+    }
   }, []);
 
   const mine = cloud.arenaMine;
@@ -255,7 +260,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                 {endsAt ? (
                   <span className="arena-week-left">
                     <CalendarClock size={13} />
-                    fini dans {formatLeft(Date.parse(endsAt) - now)}
+                    {Date.parse(endsAt) <= now ? "Semaine terminée" : `fini dans ${formatLeft(Date.parse(endsAt) - now)}`}
                   </span>
                 ) : null}
               </div>
@@ -455,7 +460,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
                 </h3>
                 <span>
                   {draftOpen
-                    ? `ouvert — se referme dans ${formatLeft(draftWindow.closesAt - now)}`
+                    ? draftWindow.closesAt <= now ? "Fenêtre terminée" : `ouvert — se referme dans ${formatLeft(draftWindow.closesAt - now)}`
                     : `ouvre ${formatMoment(draftWindow.opensAt)}`}
                 </span>
               </div>

@@ -2,6 +2,14 @@
 
 ## État actuel — 15 octobre 2026
 
+**Lot 04 IA Studio (D-116) — implémenté :** le paquet de l’overlay prend le bon
+habillage avant le peel ; Tribunal et Arène sortent de l’état occupé après une
+erreur, avec message et réessai ; la feuille de code accepte Retour et Échap ;
+les délais expirés de l’Arène ont un libellé cohérent. Le feuilletage Binder
+depuis une carte, régressé par D-115, et les attentes E2E de focus sont corrigés.
+Voir [la revue du lot 04](revue-ia-studio-lot04-2026-10-15.md) et [la décision D-116](decisions.md).
+
+
 **Binder/Atelier après revue IA Studio (D-114/D-115) — corrigé :** les Sortants
 possédés figurent dans Obtenues et Toutes ; recherche et tri les incluent.
 Le compteur Toutes de l’Atelier conserve son total sous filtre de rareté.

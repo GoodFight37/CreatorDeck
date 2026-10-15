@@ -40,7 +40,7 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
 
 test("la fiche présente les variantes possédées et leurs vrais compteurs", async ({ page }) => {
   await binder(page);
-  const trigger = page.locator(".collection-grid .rarity-legendary");
+  const trigger = page.locator(".collection-grid .rarity-legendary .creator-card-inspect");
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: `Carte de ${legendary.displayName}` });
   await expect(dialog).toHaveClass(/card-vault/);

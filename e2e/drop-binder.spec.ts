@@ -72,7 +72,7 @@ test("les pages à compléter montrent leurs manquantes ; les dernières reçues
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
   await finding.locator(".odds-head").getByRole("button", { name: "Fermer", exact: true }).click();
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
-  await expect(page.locator(".mini-card-row .creator-card").first()).toBeFocused();
+  await expect(page.locator(".mini-card-row .creator-card-inspect").first()).toBeFocused();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
   const goals = page.getByRole("region", { name: "Pages à compléter" });
   await expect(goals).toBeVisible();

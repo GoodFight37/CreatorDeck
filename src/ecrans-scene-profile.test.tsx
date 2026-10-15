@@ -1,3 +1,4 @@
+import { act } from "react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { EMPTY_CLOUD_STATE, type CloudState } from "@/lib/cloud/cloud-store";
@@ -6,6 +7,7 @@ import { gameDay } from "@/lib/progression";
 import { CREATORS } from "@/lib/catalog";
 import { HomeView } from "@/components/drop-view";
 import { ProfileView } from "@/components/profile-view";
+import { runBackHandler } from "@/lib/back-stack";
 
 const NOW = Date.UTC(2026, 9, 11, 16);
 const mocked = vi.hoisted(() => ({ cloud: {} as CloudState, packStatus: vi.fn() }));
@@ -136,6 +138,11 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(dialog?.parentElement).toBe(document.body);
     expect(dialog?.querySelector(".odds-panel h2")?.textContent).toBe("J'ai un code");
     expect(document.querySelector<HTMLInputElement>('[role="dialog"] input')?.placeholder).toBe("BOOSTER-2026");
+    act(() => { dialog?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+    expect(document.querySelector('[role="dialog"][aria-label="J\'ai un code"]')).toBeNull();
+    banc.appuyer("J'ai un code booster");
+    act(() => { expect(runBackHandler()).toBe(true); });
+    expect(document.querySelector('[role="dialog"][aria-label="J\'ai un code"]')).toBeNull();
   });
 
   it("affiche l’identifiant du build dans les réglages du profil", async () => {

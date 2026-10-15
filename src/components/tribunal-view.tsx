@@ -47,6 +47,7 @@ import type { OwnedCard, TribunalSeance, TribunalVerdict } from "@/lib/game-engi
 
 /** Ce que l'encaissement a donné, tel que l'écran l'affiche. */
 export type TribunalPayout = {
+  status: "done" | "refused";
   message: string;
   /** Points réellement versés (0 si la séance ne payait pas). */
   delta: number;
@@ -169,6 +170,7 @@ export function TribunalView({
   async function encaisser(verdicts: Record<string, TribunalVerdict>) {
     if (occupe) return null;
     setOccupe(true);
+    setAlerte(null);
     // Le serveur recalcule le karma et les points ; l'écran ne fait que
     // demander, avec ce qu'il a affiché.
     const evaluations = dossiers.flatMap((dossier) => {
@@ -177,21 +179,31 @@ export function TribunalView({
     });
     const finalKarma = karma(evaluations);
     const finalReward = recompenseSeance(finalKarma, stream !== null);
-    const resultat = await onClaim({
-      // La journée du jour : c'est elle qui garde le paiement « une fois par
-      // jour » côté serveur. Envoyer celle de la sauvegarde (vide au premier
-      // jugement) ferait refuser la récompense.
-      day: jour,
-      verdicts,
-      login: createurPresident?.login ?? null,
-      karma: finalKarma,
-      points: finalReward.points,
-    });
-    if (resultat.delta > 0) playCoins();
-    playTribunalEndStinger();
-    setPaiement(resultat);
-    setOccupe(false);
-    return resultat;
+    try {
+      const resultat = await onClaim({
+        // La journée du jour : c'est elle qui garde le paiement « une fois par
+        // jour » côté serveur. Envoyer celle de la sauvegarde (vide au premier
+        // jugement) ferait refuser la récompense.
+        day: jour,
+        verdicts,
+        login: createurPresident?.login ?? null,
+        karma: finalKarma,
+        points: finalReward.points,
+      });
+      if (resultat.status === "refused") {
+        setAlerte(resultat.message);
+        return null;
+      }
+      if (resultat.delta > 0) playCoins();
+      playTribunalEndStinger();
+      setPaiement(resultat);
+      return resultat;
+    } catch {
+      setAlerte("Récompense indisponible. Réessaie.");
+      return null;
+    } finally {
+      setOccupe(false);
+    }
   }
 
   function juger(verdict: Verdict) {
@@ -229,6 +241,7 @@ export function TribunalView({
         karmaPct={karmaPct}
         recompense={recompense}
         paiement={paiement}
+        alerte={alerte}
         occupe={occupe}
         multiplicateurLive={stream !== null}
         createurPresident={createurPresident}
@@ -427,6 +440,7 @@ function Bilan({
   karmaPct,
   recompense,
   paiement,
+  alerte,
   occupe,
   multiplicateurLive,
   createurPresident,
@@ -438,6 +452,7 @@ function Bilan({
   karmaPct: number;
   recompense: ReturnType<typeof recompenseSeance>;
   paiement: TribunalPayout | null;
+  alerte: string | null;
   occupe: boolean;
   multiplicateurLive: boolean;
   createurPresident: Creator | null;
@@ -496,6 +511,7 @@ function Bilan({
         </ul>
 
         <div className="tribunal-paye" role="status">
+          {alerte ? <p className="tribunal-alerte" role="alert">{alerte}</p> : null}
           {occupe ? <p>Encaissement…</p> : null}
           {!occupe && paiement ? (
             <p>
@@ -507,7 +523,7 @@ function Bilan({
             <p>En dessous de {recompense.seuil} %, la séance ne paie pas.</p>
           ) : null}
           {onRetry ? (
-            <button type="button" className="tribunal-next" onClick={onRetry}>
+            <button type="button" className="tribunal-next" onClick={onRetry} disabled={occupe}>
               Réclamer la récompense
             </button>
           ) : null}

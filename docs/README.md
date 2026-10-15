@@ -21,6 +21,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 - **Défauts encore ouverts** : `docs/known-issues.md`.
 - **Notes visibles par les joueurs** : [nouveautes.md](nouveautes.md), procédure
   de publication et lecture dans Toi → Nouveautés.
+- **Revue IA Studio Lot 04** : [constats vérifiés et corrections](revue-ia-studio-lot04-2026-10-15.md).
 - **Anciennes livraisons** : `docs/historique-livraisons.md`. C'est une archive,
   pas la liste des tâches encore ouvertes.
 - **Détails techniques d'une fonctionnalité** : le document spécialisé lié par

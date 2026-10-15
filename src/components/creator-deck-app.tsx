@@ -945,7 +945,7 @@ export function CreatorDeckApp() {
             // compte est connecté, l'appareil sinon — jamais les deux.
             const outcome = await points.claimTribunal(request);
             if (outcome.status === "refused") showError(outcome.message);
-            return { message: outcome.message, delta: outcome.delta };
+            return { status: outcome.status, message: outcome.message, delta: outcome.delta };
           }}
           onShowObjective={() => { setTribunalOpen(false); setTab("missions"); }}
           onClose={() => { setTribunalOpen(false); setTab("home"); }}

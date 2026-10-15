@@ -188,8 +188,9 @@ export function CollectionView({
   }
   function startPageSwipe(event: PointerEvent<HTMLDivElement>) {
     suppressClick.current = false;
+    const interactive = (event.target as Element).closest("a, button, input, select");
     if (!showPager || turnLock.current || event.button !== 0 || event.isPrimary === false ||
-      (event.target as Element).closest("a, button, input, select")) return;
+      (interactive && !interactive.classList.contains("creator-card-inspect"))) return;
     swipe.current = { id: event.pointerId, x: event.clientX, y: event.clientY, horizontal: false };
   }
 

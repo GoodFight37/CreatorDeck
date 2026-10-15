@@ -96,7 +96,7 @@ function Harness({
       }
       onClaim={async (request) => {
         etat.paiements.push(request.points);
-        return { message: `Séance payée : +${request.points} points.`, delta: request.points };
+        return { status: "done", message: `Séance payée : +${request.points} points.`, delta: request.points };
       }}
       onClose={() => {}}
     />
@@ -117,6 +117,29 @@ describe("le Tribunal des Bannis", () => {
     vi.useRealTimers();
     window.localStorage.clear();
     setMuted(false);
+  });
+
+  it.each([
+    ["refus", { status: "refused", message: "Service temporairement indisponible", delta: 0 }, "Service temporairement indisponible"],
+    ["erreur réseau", new Error("réseau coupé"), "Récompense indisponible"],
+  ])("garde la réclamation disponible après %s", async (_scenario, firstOutcome, alertText) => {
+    const verdicts = Object.fromEntries(dossiersDuJour(JOUR, JOUEUSE).map((dossier) => [dossier.id, "ban" as const]));
+    const onClaim = vi.fn();
+    if (firstOutcome instanceof Error) onClaim.mockRejectedValueOnce(firstOutcome);
+    else onClaim.mockResolvedValueOnce(firstOutcome);
+    onClaim.mockResolvedValueOnce({ status: "done", message: "Séance payée", delta: 10 });
+    await banc.monter(<TribunalView playerId={JOUEUSE}
+      seance={{ day: JOUR, verdicts, claimed: false }} cards={[]} live={EMPTY_LIVE} now={T0}
+      onVerdict={() => {}} onClaim={onClaim} onClose={() => {}} />);
+    const reclamer = () => [...document.querySelectorAll<HTMLButtonElement>("button")]
+      .find((button) => button.textContent?.trim() === "Réclamer la récompense")!;
+    await act(async () => { reclamer().click(); });
+    expect(document.querySelector(".tribunal-alerte")?.textContent).toContain(alertText);
+    expect(reclamer().disabled).toBe(false);
+    await act(async () => { reclamer().click(); });
+    expect(onClaim).toHaveBeenCalledTimes(2);
+    expect(document.querySelector(".tribunal-paye")?.textContent).toContain("Séance payée");
+    expect(document.querySelector(".tribunal-alerte")).toBeNull();
   });
 
   /**
