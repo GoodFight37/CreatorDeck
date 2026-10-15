@@ -1,5 +1,25 @@
 # Décisions CreatorDeck
 
+## D-113 — 15 octobre 2026 : vérifier le deuxième bilan IA Studio
+
+**Contexte :** cinq alertes externes sur l’architecture de `7be3914b`. Le bilan
+visait notamment le focus des dialogues, le retour pendant le tirage, les
+marqueurs locaux par compte, le polling Last Pack et l’annonce de la navigation.
+[Vérification détaillée](revue-ia-studio-architecture-2026-10-15.md).
+
+**Décision :** conserver `usePresentationFocus` : les dialogues concernés sont
+portalisés hors de `.app-shell`, qui sert de fond inerte. Corriger le retour
+Android pendant l’attente en quittant la scène sans annuler le tirage ; relire
+les marqueurs tutoriel par clé de compte ; attendre `loadLastPacks()` avant de
+planifier le prochain poll ; donner à la description de « Toi » une cible
+présente dans l’arbre accessible. Ajouter une note joueur pour le changement
+de retour pendant l’ouverture.
+
+**Conséquences :** aucun taux, économie, contenu d’échange ou progression
+serveur ne change. Typecheck, lint ciblé, build et navigation bureau/téléphone
+réussissent. La suite DOM complète garde deux assertions connues sur le mot
+« serveur » dans Échanges ; détail et limites au checkpoint.
+
 ## D-112 — 15 octobre 2026 : vérifier le premier bilan IA Studio avant correction
 
 **Contexte :** cinq constats externes sur `7be3914b`, dont deux incertitudes

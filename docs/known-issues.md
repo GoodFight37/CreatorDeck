@@ -1,3 +1,14 @@
+## Deuxième bilan IA Studio — D-113
+
+Revue des constats sur l’architecture de `7be3914b` : le risque `inert` est
+un faux positif dans les usages actuels, car les dialogues concernés sont
+portalisés hors de `.app-shell`. Le retour pendant le tirage, le réalignement
+des marqueurs tutoriel au changement de compte, la lecture prématurée du
+snapshot Last Pack et la description ARIA ont été corrigés. La preuve, les
+tests et les limites sont dans la [revue D-113](revue-ia-studio-architecture-2026-10-15.md)
+et le checkpoint de la passation. Le ressenti du bouton matériel Android,
+le compte connecté et le lecteur d’écran physique restent à valider en usage.
+
 ## Compteurs et focus du prototype — D-112 corrigé et publié
 
 Constats IA Studio sur `7be3914b` : compteurs nommés sans rôle adapté,

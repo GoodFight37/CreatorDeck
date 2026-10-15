@@ -48,6 +48,14 @@ test("la barre du bas montre les quatre piliers, dans l'ordre", async ({ page })
   for (const label of TABS) {
     await expect(tab(page, label)).toBeVisible();
   }
+  const profile = tab(page, "Toi");
+  const descriptionId = await profile.getAttribute("aria-describedby");
+  expect(descriptionId).toBe("release-notes-nav-description");
+  const description = page.locator(`#${descriptionId}`);
+  await expect(description).not.toHaveAttribute("hidden");
+  await expect(profile).toHaveAccessibleDescription(/note.*Nouveautés/);
+  const badge = profile.locator(".nav-badge");
+  if (await badge.count()) await expect(badge).toHaveAttribute("aria-hidden", "true");
 });
 
 test("la simulation de streameur n'est plus nulle part", async ({ page }) => {

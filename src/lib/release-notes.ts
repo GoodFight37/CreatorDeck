@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-retour-ouverture", date: "2026-10-15", title: "Le tirage continue si tu reviens",
+    summary: "Le bouton retour ferme la scène d’ouverture sans annuler le booster en cours.",
+    sections: [{ title: "Correction", items: [
+      "Pendant le tirage, le retour Android ferme l’animation en cours. Le résultat continue de se préparer et s’affiche sans lancer un second booster.",
+      "Les descriptions de Toi et de ses indicateurs sont aussi mieux annoncées par les lecteurs d’écran.",
+    ] }],
+  },
+  {
     id: "2026-10-15-accessibilite-compteurs", date: "2026-10-15", title: "Des repères plus accessibles",
     summary: "Les compteurs du jeu sont mieux identifiés pour la lecture assistée.",
     sections: [{ title: "Améliorations", items: [

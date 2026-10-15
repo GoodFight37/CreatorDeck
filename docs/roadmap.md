@@ -2,6 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
+**Deuxième bilan IA Studio vérifié (D-113) — en cours de livraison :**
+retour Android pendant le tirage sans annulation, marqueurs du tutoriel recalés
+par compte, polling Last Pack après résolution de la lecture et description
+accessible de Toi. L’alerte `inert` est un faux positif dans les composants
+actuels, tous portalisés hors de `.app-shell`. Détails :
+[revue du deuxième lot](revue-ia-studio-architecture-2026-10-15.md).
+
 **Premier bilan IA Studio vérifié (D-112) — publié et contrôlé sur Vercel :**
 deux faux positifs réfutés (contexte `dry_run`, fallback CSS), constat SVG
 réfuté, rôles de compteurs et focus du prototype corrigés ; barre de niveau

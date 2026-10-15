@@ -85,6 +85,11 @@ const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
 ];
 
+function readLocalMarker(key: string): boolean {
+  try { return typeof window !== "undefined" && window.localStorage.getItem(key) === "done"; }
+  catch { return false; }
+}
+
 
 export function CreatorDeckApp() {
   const { unreadCount: unreadReleaseNotes } = useReleaseNotes();
@@ -126,15 +131,20 @@ export function CreatorDeckApp() {
     // et toutes les trois minutes le reste du temps. Le minuteur se reprogramme
     // à chaque tour : il lit l'état frais du magasin, jamais une capture.
     let timer: number | undefined;
-    const schedule = () => {
-      void cloudStore.loadLastPacks();
+    let active = true;
+    const schedule = async () => {
+      await cloudStore.loadLastPacks();
+      if (!active) return;
       const snapshot = cloudStore.getSnapshot();
       const at = Date.now();
       const exposed = readySteals(snapshot.lastPacks, snapshot.lastPacksAt ?? at, at) > 0;
-      timer = window.setTimeout(schedule, exposed ? 30_000 : 3 * 60_000);
+      timer = window.setTimeout(() => void schedule(), exposed ? 30_000 : 3 * 60_000);
     };
-    schedule();
-    return () => window.clearTimeout(timer);
+    void schedule();
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
   }, [inboxReady]);
   // L'arène se lit au démarrage et toutes les dix minutes : c'est ce qui allume
   // la pastille « récompense à encaisser » du menu, et ce qui rafraîchit le
@@ -275,6 +285,9 @@ export function CreatorDeckApp() {
   // met de côté. L'ordre d'inscription est l'ordre du dessus vers le dessous :
   // le dernier inscrit est le premier servi (`src/lib/back-stack.ts`).
   useBackHandler(drawnCards.length > 0, closeReveal);
+  // Pendant le tirage, le retour quitte la scène mais laisse la requête vivre.
+  // Le résultat apparaîtra ensuite sans déclencher un second booster.
+  useBackHandler(tearing && drawnCards.length === 0, leavePendingPresentation);
   useBackHandler(themeOpen, fermerFeuille(setThemeOpen));
   useBackHandler(Boolean(cloud.profile || cloud.profileBusy), () => cloudStore.closeProfile());
   useBackHandler(accountOpen, () => {
@@ -375,19 +388,15 @@ export function CreatorDeckApp() {
   const [tutorialStep, setTutorialStep] = useState<number | null>(null);
   const [giftBusy, setGiftBusy] = useState(false);
   const welcomeKey = `creatordeck-tutorial:${cloud.userId ?? "local"}`;
-  const [welcomeSeenKey, setWelcomeSeenKey] = useState<string | null>(() => {
-    try { return typeof window !== "undefined" && window.localStorage.getItem(welcomeKey) === "done" ? welcomeKey : `not-done:${welcomeKey}`; }
-    catch { return `not-done:${welcomeKey}`; }
-  });
-  const welcomeSeen = welcomeSeenKey === welcomeKey;
+  const [welcomeMarker, setWelcomeMarker] = useState(() => ({ key: welcomeKey, done: readLocalMarker(welcomeKey) }));
+  if (welcomeMarker.key !== welcomeKey) setWelcomeMarker({ key: welcomeKey, done: readLocalMarker(welcomeKey) });
+  const welcomeSeen = welcomeMarker.key === welcomeKey && welcomeMarker.done;
   const tutorialCompletionKey = `creatordeck-tutorial:completed:${cloud.userId ?? "local"}`;
-  const [completedTutorialKey, setCompletedTutorialKey] = useState<string | null>(() => {
-    try { return typeof window !== "undefined" && window.localStorage.getItem(tutorialCompletionKey) === "done" ? tutorialCompletionKey : null; }
-    catch { return null; }
-  });
-  const completedTutorial = completedTutorialKey === tutorialCompletionKey;
+  const [completedTutorialMarker, setCompletedTutorialMarker] = useState(() => ({ key: tutorialCompletionKey, done: readLocalMarker(tutorialCompletionKey) }));
+  if (completedTutorialMarker.key !== tutorialCompletionKey) setCompletedTutorialMarker({ key: tutorialCompletionKey, done: readLocalMarker(tutorialCompletionKey) });
+  const completedTutorial = completedTutorialMarker.key === tutorialCompletionKey && completedTutorialMarker.done;
   const onboardingReady = !cloud.configured || Boolean(cloud.userId && cloud.onboarding && !cloud.onboardingBusy);
-  const showTutorial = tutorialStep !== null || (!welcomeSeen && (completedTutorialKey === null || completedTutorial) && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
+  const showTutorial = tutorialStep !== null || (!welcomeSeen && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
 
   useEffect(() => {
     if (!game || showTutorial) return;
@@ -412,8 +421,8 @@ export function CreatorDeckApp() {
       window.localStorage.removeItem(welcomeKey);
       window.localStorage.removeItem(tutorialCompletionKey);
     } catch { /* Le tutoriel reste rejouable dans cette session. */ }
-    setWelcomeSeenKey(null);
-    setCompletedTutorialKey(null);
+    setWelcomeMarker({ key: welcomeKey, done: false });
+    setCompletedTutorialMarker({ key: tutorialCompletionKey, done: false });
     setTutorialStep(0);
     setTab("home");
   }
@@ -429,8 +438,8 @@ export function CreatorDeckApp() {
     try { window.localStorage.setItem(welcomeKey, "done"); } catch { /* Le serveur conserve les comptes connectés. */ }
     try { window.localStorage.setItem(tutorialCompletionKey, "done"); } catch { /* La fin n'est mémorisée que sur cet appareil. */ }
     setTutorialStep(null);
-    setWelcomeSeenKey(welcomeKey);
-    setCompletedTutorialKey(tutorialCompletionKey);
+    setWelcomeMarker({ key: welcomeKey, done: true });
+    setCompletedTutorialMarker({ key: tutorialCompletionKey, done: true });
   }
 
   async function claimAndOpenWelcomeGift() {
@@ -444,7 +453,7 @@ export function CreatorDeckApp() {
         // masquerait le bouton suivant pendant cette ouverture en plusieurs boosters.
       }
       setTutorialStep(null);
-      setWelcomeSeenKey(welcomeKey);
+      setWelcomeMarker({ key: welcomeKey, done: true });
       const result = await cloudStore.openReturnGiftPack();
       if (result.status !== "drawn") { showError(result.message); return; }
       setWelcomeGiftReveal(true);
@@ -822,7 +831,10 @@ export function CreatorDeckApp() {
         ) : null}
       </div>
 
-      <span id="release-notes-nav-description" hidden>{unreadReleaseNotes} note{unreadReleaseNotes > 1 ? "s" : ""} non lue{unreadReleaseNotes > 1 ? "s" : ""} dans Nouveautés</span>
+      <span id="release-notes-nav-description" className="visually-hidden">
+        {unreadReleaseNotes > 0 ? `${unreadReleaseNotes} note${unreadReleaseNotes > 1 ? "s" : ""} non lue${unreadReleaseNotes > 1 ? "s" : ""} dans Nouveautés. ` : ""}
+        {navLastPack > 0 ? `${navLastPack} paquet${navLastPack > 1 ? "s" : ""} d’amis à prendre.` : ""}
+      </span>
       <nav className="bottom-nav" aria-label="Navigation principale">
         {NAV_ITEMS.map((item) => (
           <button
@@ -832,7 +844,7 @@ export function CreatorDeckApp() {
             // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
             onClick={() => setTab(item.id)}
             aria-current={tab === item.id ? "page" : undefined}
-            aria-describedby={item.id === "profile" && unreadReleaseNotes > 0 ? "release-notes-nav-description" : undefined}
+            aria-describedby={item.id === "profile" && (unreadReleaseNotes > 0 || navLastPack > 0) ? "release-notes-nav-description" : undefined}
           >
             {item.icon}
             <span>{item.label}</span>
@@ -841,7 +853,7 @@ export function CreatorDeckApp() {
                 maintenant ». Elle vit sur l'onglet qui mène au menu, comme
                 celle du carnet — pas de cinquième onglet. */}
             {item.id === "profile" && navLastPack > 0 ? (
-              <b className="nav-badge" aria-label={`${navLastPack} paquet(s) à prendre`}>
+              <b className="nav-badge" aria-hidden="true">
                 {navLastPack}
               </b>
             ) : null}

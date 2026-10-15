@@ -1,5 +1,23 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — D-113 deuxième bilan IA Studio
+
+- Base vérifiée sur main `7eefe5f8` avant travaux ; bilan reçu sur l’archive
+  `7be3914b`. L’alerte de focus `inert` est un faux positif : les composants
+  présents rendent leurs dialogues via `document.body` et restent hors de
+  `.app-shell`.
+- Corrections : handler Android pour quitter une ouverture en attente sans
+  interrompre le tirage ; marqueurs du tutoriel relus par compte ; poll Last
+  Pack après résolution de son appel asynchrone ; description accessible de Toi
+  et pastille visuelle masquée aux lecteurs d’écran. Note joueur ajoutée.
+- Vérifié : typecheck, ESLint TS/TSX ciblé, build Next (5 routes), note joueur
+  8/8, navigation Playwright 2/2 bureau/téléphone. `npm run ecrans` garde deux
+  échecs connus sur le mot « serveur » dans Échanges, hors périmètre ; le
+  scénario de sortie du tirage en attente réussit. Aucun test matériel Android,
+  compte connecté réel ou lecteur d’écran physique.
+- [Revue D-113](revue-ia-studio-architecture-2026-10-15.md). Publication,
+  CI et contrôle de production à compléter après commit.
+
 ## Checkpoint courant — D-112 premier bilan IA Studio, publié et Vercel vérifié
 
 - Main local/GitHub propre et identique `7be3914b` au départ. Bilan externe
