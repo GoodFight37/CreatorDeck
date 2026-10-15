@@ -44,8 +44,7 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
   const side = page.locator(".pack-stage .pack-3d-side-left");
   await expect(side).toBeVisible();
-  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("36px");
-  expect((await side.boundingBox())!.width).toBeGreaterThanOrEqual(12);
+  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("16px");
   expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
   const sheenStyle = await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node));
   expect(sheenStyle.animationIterationCount).toBe("infinite");

@@ -631,12 +631,12 @@
   width: var(--drop-pack-size);
   max-width: var(--drop-pack-size);
   border-radius: 10px;
-  transform: perspective(900px) rotateY(-13deg) rotateX(5deg);
+  transform: perspective(900px) rotateY(-7deg) rotateX(4deg);
   animation: drop-pack-arrive 380ms cubic-bezier(.2,.8,.2,1) backwards;
   transition: transform 100ms ease-out;
 }
 .home-view .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
-  transform: perspective(900px) rotateY(-13deg) rotateX(5deg) scale(.97);
+  transform: perspective(900px) rotateY(-7deg) rotateX(4deg) scale(.97);
 }
 .home-view .pack-idle {
   position: absolute;
@@ -646,8 +646,8 @@
   animation: drop-pack-idle 4.8s ease-in-out 380ms infinite backwards;
 }
 @keyframes drop-pack-arrive {
-  from { opacity: 0; translate: 0 12px; scale: .94; }
-  to { opacity: 1; translate: 0 0; scale: 1; }
+  from { opacity: 0; translate: 0 12px; scale: .94; transform: perspective(900px) rotateY(-7deg) rotateX(4deg); }
+  to { opacity: 1; translate: 0 0; scale: 1; transform: perspective(900px) rotateY(-7deg) rotateX(4deg); }
 }
 @keyframes drop-pack-idle {
   0%, 100% { transform: translateY(4px) rotateY(-3deg) rotateX(-1.5deg); }
@@ -659,17 +659,18 @@
   box-shadow: inset 2px 1px 4px rgb(255 237 219 / .34), inset -9px 0 14px rgb(9 0 12 / .48), 0 19px 30px -14px rgb(0 0 0 / .7);
 }
 .home-view .pack-stage .pack-3d-side-left {
-  /* 36px at 68deg gives a foil bevel about 13px wide before scene tilt. */
-  left: -33px; width: 36px;
-  transform: rotateY(68deg);
-  background: linear-gradient(90deg, #170910, #c9547b 24%, #ffe4c9 52%, #59102f 81%, #170711);
+  left: -14px; width: 16px;
+  transform: rotateY(90deg);
+  transform-origin: right center;
+  background: linear-gradient(90deg, #170910, #a84267 24%, #d889a2 52%, #59102f 81%, #170711);
 }
 .home-view .pack-stage .pack-3d-side-right {
-  right: -33px; width: 36px;
-  transform: rotateY(-68deg);
+  right: -14px; width: 16px;
+  transform: rotateY(-90deg);
+  transform-origin: left center;
   background: linear-gradient(90deg, #ffeacb, #d1537e 30%, #470b2c 62%, #160711);
 }
-.home-view .pack-stage .pack-3d-side-bottom { height: 21px; bottom: -20px; }
+.home-view .pack-stage .pack-3d-side-bottom { height: 12px; bottom: -11px; }
 .home-view .pack-stage .pack-specular {
   opacity: .72;
   --pack-specular-animation: drop-pack-specular-pass;
