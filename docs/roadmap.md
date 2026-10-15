@@ -2,12 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
-**Fiabilisation des vérifications (D-111) — implémentée, publication en cours :** reproduire les
+**Fiabilisation des vérifications (D-111) — publiée, Vercel vérifié :** reproduire les
 échecs navigateur de main, corriger les attentes périmées et stabiliser les
 cibles réelles ; rendre les échecs lisibles dans GitHub et permettre aux
 contrôles indépendants de tous s’exécuter. Aucune modification du jeu.
 18 exécutions ciblées réussies (14 scénarios uniques). Le défaut de vocabulaire
-Trades reste signalé et hors périmètre.
+Trades reste signalé et hors périmètre. CI complète du lot en cours au dernier
+contrôle ; détails et liens dans la passation.
 
 **Volume vivant du sachet (D-110) — publié et contrôlé sur Vercel :**
 oscillation sur trois axes en 4,8 s, foil et face avant renforcés, reflet 4 s,
@@ -353,9 +354,9 @@ checkpoint de passation pour le dernier mix.
 ## Prochaines étapes
 
 1. Les lots Binder/Atelier/Toi/Nouveautés/Objectifs (D-099 à D-103),
-   puis les finitions publiées jusqu’à D-110, sont livrés. Terminer D-111,
-   la fiabilisation des contrôles des parcours existants, avant de conclure
-   à une nouvelle régression sur la seule couleur rouge de la CI. Ajouter
+   puis les finitions publiées jusqu’à D-110, sont livrés. D-111 a fiabilisé
+   les contrôles des parcours existants : lire les causes exactes des échecs
+   et le SHA avant de conclure à une régression du jeu. Ajouter
    une note seulement pour une livraison visible. Ne plus découper les lots
    clos en nouvelles petites passes sans défaut concret.
 2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les

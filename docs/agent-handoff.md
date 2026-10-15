@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — D-111 fiabilisation des vérifications, prêt à publier
+## Checkpoint courant — D-111 fiabilisation des vérifications, publié et Vercel vérifié
 
 - Demande Malik : prochain chantier complet, docs et publication main.
   Base locale/GitHub propre `7c8ce001`, aucune PR ouverte. CI D-110
@@ -38,8 +38,18 @@
   Aucun build local supplémentaire : aucun fichier applicatif ni dépendance
   modifié. Les nouveaux reporters ont produit des JSON valides (6 pack,
   4 réglages/crédits, 6 journal, zéro unexpected/flaky/skipped).
-- Reste : commit/push main et contrôle Vercel. Aucun lot publié à ce
-  checkpoint ; ne pas déclarer la suite globale corrigée verte sans nouvelle preuve.
+- Lot publié sur main au commit [6cbb3926](https://github.com/GoodFight37/CreatorDeck/commit/6cbb39268839eb70d7cd00d0529b0cdca91e2aad),
+  push normal et SHA distant confirmés ; blob de cette passation vérifié
+  via l’API GitHub après publication. Vercel du SHA `success` ; production
+  `https://creator-deckk.vercel.app/` HTTP 200, Chromium 390 × 844 : pack,
+  ESSAYER et idle présents, largeur document 390, aucune erreur JS observée.
+- [CI de ce lot](https://github.com/GoodFight37/CreatorDeck/actions/runs/38740874237)
+  en cours lors du dernier contrôle, six jobs démarrés. La laisser terminer ;
+  ne pas annoncer toute la suite verte. Le défaut jargon Trades reste actif,
+  déjà reproduit avant ce lot et non modifié. Si un nouvel échec apparaît,
+  utiliser les annotations GitHub et JSON prévus par D-111.
+- Aucun changement visible ni nouvelle note joueur pour ce lot d’outillage.
+  Réservation libérée après publication ; ressenti physique non certifié.
 
 ## Checkpoint courant — volume vivant du sachet D-110, publié et contrôlé sur Vercel
 

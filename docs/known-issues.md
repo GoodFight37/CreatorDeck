@@ -1,4 +1,4 @@
-## Vérifications navigateur rouges après les lots UI — D-111 corrigée localement
+## Vérifications navigateur rouges après les lots UI — D-111 publiée
 
 Sur `b8b0b248`, les trois shards E2E échouent. Reproduction locale de plusieurs
 attentes périmées : reflet attendu à 5 s au lieu de 4 s, sondes Web Audio qui
@@ -14,7 +14,8 @@ Correction D-111 : attentes alignées sur les décisions déjà livrées, cibles
 réelles et clic explicite des volets ; rapports GitHub/JSON et contrôles
 qualité indépendants. Le contrôle vocabulaire Trades reste en échec et actif,
 son texte est hors périmètre de ce lot. 18 vérifications ciblées réussies après correction (14 scénarios uniques) ;
-publication et limites dans la passation.
+publiées au commit `6cbb3926`, Vercel `success`. La CI complète de ce SHA
+est encore en cours ; limites et lien dans la passation.
 
 ## Objectifs — faux succès groupé et doubles commandes, corrigés (15 octobre 2026)
 
