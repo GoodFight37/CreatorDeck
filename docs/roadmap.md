@@ -8,8 +8,9 @@ déjà en place sur main. Le récapitulatif de chaque booster attend maintenant
 1,5 s avant le retour, même avec effets coupés. Côtés, reflet et ombre du pack
 hero ajustés en CSS sans toucher à la structure du Drop. Production Vercel
 `success` sur `36490080`, note joueur visible ; tests ciblés et build réussis.
-CI complète bloquée par un texte du panneau Échanges hors périmètre de ce lot ;
-voir la passation. Jugement tactile sur téléphone ouvert.
+CI complète rouge (texte du panneau Échanges, scénario sablier simulé et
+shards E2E) ; parcours ciblé d’ouverture réussi localement, détails dans la
+passation. Jugement tactile sur téléphone ouvert.
 
 **Trade Radar (D-107) — publié et vérifié sur Vercel :** pistes à la demande depuis les souhaits
 publics des amis et les variantes locales en double ; partenaire/carte offerte

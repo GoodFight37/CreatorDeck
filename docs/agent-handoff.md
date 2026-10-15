@@ -26,14 +26,23 @@
   public HTTP 200. Chromium sur le site : Toi → Nouveautés affiche en tête
   « Un booster qui prend son temps » à 390 × 844, sans erreur JS ni
   débordement. Aucun peel au doigt sur appareil réel ni booster consommé.
-- CI GitHub `38708119278` : le job « Unitaires, écrans, statique et build »
-  échoue à l’étape unitaires sur `src/lib/jargon.test.ts` (1 échec,
-  1 185 réussites localement). Cause reproduite : le texte « le serveur la
-  vérifiera » dans `src/components/account/trades-panel.tsx:379`, issu du lot
-  Trade Radar antérieur. Malik exclut explicitement les échanges du présent
-  chantier ; aucun changement de ce fichier. Les contrôles suivants de ce job
-  sont sautés dans la CI, malgré leurs passes locales ciblées. Autres jobs
-  encore en cours au premier relevé ; voir l’état final du run.
+- CI GitHub `38708119278` terminée en échec. Le job « Unitaires, écrans,
+  statique et build » échoue à l’étape unitaires sur `src/lib/jargon.test.ts`
+  (1 échec, 1 185 réussites localement). Cause reproduite : le texte « le
+  serveur la vérifiera » dans `src/components/account/trades-panel.tsx:379`,
+  issu du lot Trade Radar antérieur. Malik exclut explicitement les échanges
+  du présent chantier ; aucun changement de ce fichier. Les contrôles
+  suivants de ce job sont sautés, malgré leurs passes locales ciblées.
+- Le job cloud simulé échoue sur `e2e/hourglass-online.spec.ts:65`, qui
+  attend zéro ancêtre `<details>` autour du bouton sablier ; reproduit localement
+  sur bureau et téléphone (8 autres scénarios simulés réussis). Le SQL jetable
+  réussit. Les trois shards E2E GitHub échouent aussi ; les journaux de ces
+  jobs n’ont pas été récupérés par `gh`. Les scénarios E2E du présent lot
+  réussissent localement : 2/2 Drop, 6/6 sachet/peel/cinquième carte et 2/2
+  extraction/récapitulatif. Aucun sablier, trade ou cloud modifié.
+- Commit documentaire `54af49af1198858c05881a1a0995ddeb2a717d0d`, push
+  normal et SHA distant confirmés. Ce SHA a aussi son déploiement Production
+  `7088161915` et son contrôle Vercel `success` ; arbre local propre.
 
 
 ## Checkpoint courant — Trade Radar publié, Vercel vérifié
