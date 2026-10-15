@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — export Story de profil en vérification
+## Checkpoint courant — export Story de profil publié, Vercel vérifié
 
 - Base `main` propre `f21fa090d9f8098aa4174360f9735a0254da2ede`,
   identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
@@ -21,7 +21,16 @@
   10/10 ; test dédié `npm run ecrans -- src/ecrans-profile-story.test.tsx`
   1/1 (format, nom de fichier, focus). Build final après ce test réussi,
   cinq pages exportées ; variables Supabase locales absentes, donc compilation
-  seulement. Publication/Vercel en cours.
+  seulement.
+- Code, test, note joueur et docs publiés au commit
+  [`e61bca4edae0cc48190b48366f8032c6188dae23`](https://github.com/GoodFight37/CreatorDeck/commit/e61bca4edae0cc48190b48366f8032c6188dae23)
+  par push normal, SHA confirmé par `ls-remote`. GitHub Production
+  `7087223814` du même SHA terminée `success`, contrôle
+  [Vercel](https://vercel.com/hafsi37-2386/creator-deckk/5uJDLfZxEMwocRtgSkHy9iHmyHrE)
+  `success` ; site public HTTP 200. Profil connecté et téléchargement réel
+  depuis Vercel non essayés ; format/rendu validés sur la fixture Chromium et
+  le parcours d'interface en DOM. APK et ressenti tactile du peel non testés.
+  Lot clos.
 
 
 ## Checkpoint courant — lien permanent Twitch publié, Vercel vérifié
