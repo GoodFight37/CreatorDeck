@@ -48,6 +48,9 @@ test("Nouveautés : lecture mobile, texte long et mouvements réduits", async ({
   const dialog = page.getByRole("dialog");
   for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1024, height: 768 }]) {
     await page.setViewportSize(viewport);
+    // Le viewport dynamique peut être actualisé au rendu suivant sur mobile.
+    await expect.poll(async () => (await dialog.boundingBox())?.height ?? Infinity)
+      .toBeLessThanOrEqual(viewport.height);
     const box = await dialog.boundingBox();
     expect(box!.x).toBeGreaterThanOrEqual(0); expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
     expect(box!.height).toBeLessThanOrEqual(viewport.height);

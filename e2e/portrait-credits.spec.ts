@@ -35,6 +35,7 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await expect(page.locator("#image-credits")).toHaveCount(0);
   await testInfo.attach("portraits-dans-les-cartes", { body: await page.screenshot(), contentType: "image/png" });
   await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.locator(".profile-settings-fold > summary").click();
   const settings = page.getByRole("region", { name: "Réglages" });
   const toggle = settings.getByRole("button", { name: "Crédits des images" });
   await toggle.click();

@@ -32,7 +32,8 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
   expect(await opacity("epic")).toBeGreaterThan(await opacity("rare"));
   expect(await opacity("legendary")).toBeGreaterThan(await opacity("epic"));
   await expect(page.locator(".collection-grid .rarity-rare .card-foil")).toHaveCSS("animation-name", "none");
-  await page.locator(".binder-surface").hover({ position: { x: 200, y: 70 } });
+  // Le survol doit viser une carte, sans tomber sur les outils sticky.
+  await page.locator(".collection-grid .creator-card").first().hover();
   expect(await page.locator(".binder-surface").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--binder-light-x"))).not.toBe("");
   await page.screenshot({ path: `test-results/binder-matieres-${test.info().project.name}.png`, fullPage: true });
 });

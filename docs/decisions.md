@@ -1,5 +1,29 @@
 # Décisions CreatorDeck
 
+## D-111 — 15 octobre 2026 : rendre les contrôles de livraison exploitables
+
+**Contexte :** D-110 est déployé, mais les trois shards navigateur et le job
+qualité sont rouges. Le contrôle unitaire de vocabulaire Trades empêche
+ensuite tous les contrôles qualité de s’exécuter ; les erreurs navigateur
+ne sont pas exposées dans les annotations GitHub.
+
+**Décision :** terminer la fiabilisation des vérifications des parcours
+existants avant d’entamer le backlog produit non cadré. Après installation
+réussie des dépendances, chaque contrôle qualité indépendant s’exécute même
+si un autre a échoué ; chaque échec conserve son code et le job reste rouge.
+Ajouter en CI les reporters GitHub et JSON aux rapports Playwright existants.
+Aucune exclusion de scénario ni assertion affaiblie pour obtenir du vert.
+Corriger seulement les attentes prouvées obsolètes et les cibles instables.
+Après redimensionnement mobile, réessayer la même assertion de hauteur du
+journal pour laisser son viewport dynamique se mettre à jour ; aucune
+tolérance de dépassement ajoutée.
+Le texte Trades reste hors périmètre ; sa détection doit rester active.
+
+**Conséquences :** aucune modification du jeu ni note joueur pour ce lot de
+vérification. SQL, taux, audio et écrans existants conservent leur comportement.
+Les tests automatiques n’établissent toujours pas le ressenti tactile.
+Preuves et état de publication dans la passation.
+
 ## D-110 — 15 octobre 2026 : donner vie et volume au sachet Drop
 
 **Contexte :** après D-109, Malik trouve encore le sachet plat. Le mouvement

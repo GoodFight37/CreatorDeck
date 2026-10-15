@@ -44,24 +44,33 @@ jobs:
           node-version: 22
           cache: npm
       - name: Installer les dépendances verrouillées
+        id: dependencies
         run: npm ci
       - name: Politique des migrations de production (sans secret)
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: |
           node scripts/supabase-deploy.mjs --check
           node scripts/supabase-deploy.test.mjs
       - name: Tests unitaires
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm test
       - name: Scénarios et captures d'écrans
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run ecrans
       - name: Vérification TypeScript
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run typecheck
       - name: ESLint
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run lint
       - name: Vocabulaire de l'interface
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: node scripts/check-jargon.mjs
       - name: Cohérence du catalogue et des saisons
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run catalog:ci
       - name: Build de production
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"

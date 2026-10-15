@@ -7,10 +7,10 @@ test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", a
     const createGain = AudioContext.prototype.createGain;
     AudioContext.prototype.createGain = function () {
       const node = createGain.call(this);
-      const schedule = node.gain.setTargetAtTime.bind(node.gain);
-      node.gain.setTargetAtTime = (value, time, constant) => {
+      const schedule = node.gain.linearRampToValueAtTime.bind(node.gain);
+      node.gain.linearRampToValueAtTime = (value, time) => {
         probe.gains.push(value);
-        return schedule(value, time, constant);
+        return schedule(value, time);
       };
       return node;
     };
@@ -53,10 +53,10 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
     const createGain = AudioContext.prototype.createGain;
     AudioContext.prototype.createGain = function () {
       const node = createGain.call(this);
-      const schedule = node.gain.setTargetAtTime.bind(node.gain);
-      node.gain.setTargetAtTime = (value, time, constant) => {
+      const schedule = node.gain.linearRampToValueAtTime.bind(node.gain);
+      node.gain.linearRampToValueAtTime = (value, time) => {
         probe.gains.push(value);
-        return schedule(value, time, constant);
+        return schedule(value, time);
       };
       return node;
     };
@@ -472,13 +472,13 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(page.locator(".pack-stage .pack-3d-side")).toHaveCount(3);
   await expect(page.locator(".pack-stage .pack-specular")).toBeAttached();
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName))
-    .toBe("pack-specular-pass");
+    .toBe("drop-pack-specular-pass");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => {
     const style = getComputedStyle(node);
     return { iterations: style.animationIterationCount, clip: style.clipPath };
   })).toMatchObject({ iterations: "infinite" });
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationDuration))
-    .toBe("5s");
+    .toBe("4s");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).clipPath))
     .toContain("polygon(");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).backgroundSize))

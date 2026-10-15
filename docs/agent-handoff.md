@@ -1,5 +1,46 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — D-111 fiabilisation des vérifications, prêt à publier
+
+- Demande Malik : prochain chantier complet, docs et publication main.
+  Base locale/GitHub propre `7c8ce001`, aucune PR ouverte. CI D-110
+  `38736932904` terminée rouge : qualité sur jargon Trades, trois shards
+  navigateur en échec ; SQL et RPC cloud simulés verts. Le backlog produit
+  restant demande du cadrage ; choix de fiabiliser les parcours existants.
+- Ne pas développer soundbites/Twitch/Last Pack sans règles ; préserver le
+  Drop et les piliers exclus. Aucun changement gameplay/économie prévu.
+- Investigation complète : `npm run e2e`, log
+  `/tmp/creatordeck-next-e2e.log` : 146 réussites, 12 échecs, 12 ignorés
+  (12,2 min, pas une suite verte). Échecs confirmés : sondes de fondu audio
+  obsolètes (méthode `setTargetAtTime` au lieu de `linearRampToValueAtTime`),
+  nom/durée du reflet ancien, survol à position fixe intercepté par outils
+  sticky, réglages/crédits cherchés sans ouvrir le volet de D-101.
+  Dernier échec : mesure immédiate du journal à 812 px (ancienne hauteur)
+  juste après redimensionnement à 768 px sur téléphone ; assertion rendue
+  réessayable sans modifier la borne. Une mesure isolée après rendu tient
+  à 736 px. Aucun défaut permanent de géométrie affirmé.
+  Aucun code du jeu modifié. Les artefacts CI distants sont refusés par le
+  réseau ; logs unitaires accessibles et défaut jargon Trades confirmé.
+- Corrections tests pack déjà validées : 6/6 bureau/téléphone, rapport JSON
+  `/tmp/creatordeck-next-pack.json` : expected 6, skipped/unexpected/flaky 0.
+  Survol d’une carte réelle plutôt que d’une coordonnée fixe : 2/2.
+  Le survol initial avait échoué une fois puis passé en isolation : correction
+  ciblée de son instabilité, aucune régression Binder affirmée.
+- CI locale : YAML lu avec `js-yaml`, huit contrôles indépendants après
+  installation réussie et sans `continue-on-error` ; typecheck et ESLint
+  ciblé réussis. Reporters GitHub/JSON ajoutés en CI aux rapports existants.
+- Réglages/crédits corrigés et validés : 4/4 bureau/téléphone ; JSON
+  `/tmp/creatordeck-next-settings.json`. Journal relancé trois fois
+  par format pour son intermittence : 6/6 réussis. Total ciblé : 18 exécutions
+  réussies, 14 scénarios uniques, aucun skip. Aucun scénario supprimé ou ignoré
+  en plus ; les 12 ignorés du diagnostic sont les conditions déjà existantes.
+- Typecheck, ESLint des six fichiers TS de ce lot et diff-check réussis.
+  Aucun build local supplémentaire : aucun fichier applicatif ni dépendance
+  modifié. Les nouveaux reporters ont produit des JSON valides (6 pack,
+  4 réglages/crédits, 6 journal, zéro unexpected/flaky/skipped).
+- Reste : commit/push main et contrôle Vercel. Aucun lot publié à ce
+  checkpoint ; ne pas déclarer la suite globale corrigée verte sans nouvelle preuve.
+
 ## Checkpoint courant — volume vivant du sachet D-110, publié et contrôlé sur Vercel
 
 - Base main locale et GitHub propre et identique `796cc2e1`, vérifiée avant

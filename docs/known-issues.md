@@ -1,3 +1,21 @@
+## Vérifications navigateur rouges après les lots UI — D-111 corrigée localement
+
+Sur `b8b0b248`, les trois shards E2E échouent. Reproduction locale de plusieurs
+attentes périmées : reflet attendu à 5 s au lieu de 4 s, sondes Web Audio qui
+écoutent `setTargetAtTime` alors que le fondu existant utilise
+`linearRampToValueAtTime`, tests réglages/crédits qui n’ouvrent pas le volet
+Réglages de D-101. Un survol à une coordonnée fixe du classeur est parfois
+intercepté par sa barre d’outils. La hauteur du journal a aussi été lue
+à son ancienne valeur après redimensionnement mobile ; mise à jour de rendu
+différée suspectée, mesure immédiate et non réessayable. Gravité : les contrôles ne distinguent plus
+une régression réelle d’un ancien scénario ; aucune panne de jeu déduite.
+
+Correction D-111 : attentes alignées sur les décisions déjà livrées, cibles
+réelles et clic explicite des volets ; rapports GitHub/JSON et contrôles
+qualité indépendants. Le contrôle vocabulaire Trades reste en échec et actif,
+son texte est hors périmètre de ce lot. 18 vérifications ciblées réussies après correction (14 scénarios uniques) ;
+publication et limites dans la passation.
+
 ## Objectifs — faux succès groupé et doubles commandes, corrigés (15 octobre 2026)
 
 Sur `51323720`, handleClaimSeason absorbait un refus en affichant une erreur

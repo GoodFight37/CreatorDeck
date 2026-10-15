@@ -35,3 +35,16 @@ Une ancienne section peut décrire un état remplacé depuis. En cas de divergen
 vérifier `main`, les commits et la CI, puis actualiser le checkpoint courant et
 la roadmap ; conserver l'ancienne information comme historique daté si elle
 explique une décision ou une régression.
+
+## Lire les contrôles de livraison
+
+Dans GitHub Actions → Vérification, lire chaque job du SHA audité. Les huit
+contrôles qualité indépendants s’exécutent après installation réussie, même
+si l’un échoue ; un échec conserve le statut rouge du job. Une annulation ou
+une installation refusée ne lance pas les contrôles suivants.
+
+Playwright ajoute en CI des annotations GitHub et un rapport
+`test-results/results.json` aux rapports HTML existants. En cas d’échec,
+les artefacts `creatordeck-playwright-report-<shard>` contiennent ces fichiers.
+Un scénario ignoré n’est pas une réussite ; le chemin cloud sans vraie base
+est vérifié séparément avec des RPC simulés. Voir D-111 et la passation.

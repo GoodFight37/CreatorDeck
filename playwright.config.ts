@@ -21,7 +21,10 @@ export default defineConfig({
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: process.env.CI
+    ? [["list"], ["github"], ["html", { open: "never" }],
+      ["json", { outputFile: "test-results/results.json" }]]
+    : [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://localhost:3000",
     trace: "on-first-retry",
