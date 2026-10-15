@@ -7,13 +7,18 @@ test("Drop garde le sachet accessible, sans débordement, en viewport mobile com
     const pack = page.locator(".pack-stage .pack-artwork");
     const packRect = (await pack.boundingBox())!;
     expect(packRect.y).toBeGreaterThanOrEqual(0);
-    expect(packRect.height).toBeGreaterThanOrEqual(Math.min(viewport.width * .58, 220, viewport.height * .34) - 1);
+    expect(packRect.height).toBeGreaterThanOrEqual(Math.min(viewport.width * (viewport.height <= 620 ? .52 : .58), 230, viewport.height * (viewport.height <= 620 ? .31 : .35)) * 1.4);
     await expect(page.locator(".pack-stage .pack-copy")).toBeVisible();
     const stage = (await page.locator(".pack-stage").boundingBox())!;
     const ticket = (await page.locator(".open-panel").boundingBox())!;
-    expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
+    expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(4);
     await expect(page.getByRole("button", { name: /Essayer|Ouvrir le booster/ })).toBeVisible();
+    await expect(page.locator(".drop-secondary-details")).not.toHaveAttribute("open", "");
     const cta = (await page.locator(".primary-action").boundingBox())!;
+    if (viewport.height <= 568) {
+      const nav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;
+      expect(cta.y + cta.height).toBeLessThanOrEqual(nav.y);
+    }
     const secondary = page.locator(".drop-secondary-details > summary");
     const pity = page.locator(".pity-row.now");
     const nextInfo = (await secondary.isVisible() ? await secondary.boundingBox() : await pity.boundingBox())!;
@@ -31,15 +36,15 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   expect(box.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
   expect(box.y).toBeGreaterThanOrEqual(0);
   expect(box.y + box.height).toBeLessThanOrEqual(844);
-  await expect(page.locator(".pack-stage .pack-copy")).toContainText("5 cartes");
+  await expect(page.locator(".pack-stage .pack-copy")).toContainText("· 5");
   await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
-  await expect(page.locator(".open-panel .primary-action")).toHaveCSS("min-height", "58px");
-  expect(await page.locator(".pack-stage").evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
+  await expect(page.locator(".open-panel .primary-action")).toHaveCSS("min-height", "64px");
+  expect(await page.locator(".pack-stage").evaluate((node) => getComputedStyle(node).overflow)).toBe("hidden");
   expect(await pack.evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
   const side = page.locator(".pack-stage .pack-3d-side-left");
   await expect(side).toBeVisible();
-  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("20px");
+  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("32px");
   expect((await side.boundingBox())!.width).toBeGreaterThanOrEqual(12);
   expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
   const sheenStyle = await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node));
@@ -47,11 +52,13 @@ test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page 
   expect(sheenStyle.animationDuration).toBe("5s");
   const stage = (await page.locator(".pack-stage").boundingBox())!;
   const ticket = (await page.locator(".open-panel").boundingBox())!;
-  expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(12);
+  expect(ticket.y - (stage.y + stage.height)).toBeGreaterThanOrEqual(4);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await expect(page.locator(".open-panel > .primary-action")).toBeVisible();
   await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
+  await expect(page.locator(".pack-idle")).toHaveCSS("animation-name", "drop-pack-idle");
   await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(page.locator(".pack-idle")).toHaveCSS("animation-name", "none");
   expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
 
   await page.locator(".open-panel").evaluate((panel) => {

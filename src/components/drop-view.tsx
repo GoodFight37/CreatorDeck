@@ -22,6 +22,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
+import { buzz } from "@/lib/haptics";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -55,21 +56,23 @@ export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent
         onClick(event);
       }}
       disabled={disabled} aria-label="Ouvrir le sachet Live Drop">
-      <span className="pack-3d-object" aria-hidden="true">
-        <span className="pack-3d-side pack-3d-side-left" />
-        <span className="pack-3d-side pack-3d-side-right" />
-        <span className="pack-3d-side pack-3d-side-bottom" />
-        <span className="pack-3d-front">
-          <Image
-            className="pack-foil-image"
-            src="/packs/live-opening.svg"
-            alt=""
-            fill
-            sizes="(max-width: 390px) 46vw, 180px"
-            draggable={false}
-            priority
-          />
-          <span className="pack-specular" />
+      <span className="pack-idle" aria-hidden="true">
+        <span className="pack-3d-object">
+          <span className="pack-3d-side pack-3d-side-left" />
+          <span className="pack-3d-side pack-3d-side-right" />
+          <span className="pack-3d-side pack-3d-side-bottom" />
+          <span className="pack-3d-front">
+            <Image
+              className="pack-foil-image"
+              src="/packs/live-opening.svg"
+              alt=""
+              fill
+              sizes="(max-width: 390px) 58vw, 230px"
+              draggable={false}
+              priority
+            />
+            <span className="pack-specular" />
+          </span>
         </span>
       </span>
     </button>
@@ -136,6 +139,7 @@ export function HomeView({
   function openArtwork(event: MouseEvent<HTMLButtonElement>) {
     if (opening || (!needsAccount && stock <= 0 && promoPacks <= 0)) return;
     event.currentTarget.focus();
+    buzz([8]);
     onOpen();
   }
 
@@ -211,7 +215,7 @@ export function HomeView({
   return (
     <div className="view home-view" style={themeStyle}>
       {/* En-tête concis : zéro blabla marketing */}
-      <header className="drop-intro" style={{ marginBottom: "0.4rem" }}>
+      <header className="drop-intro">
         <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
         <h1>Drop</h1>
       </header>
@@ -224,7 +228,7 @@ export function HomeView({
         <PackArtwork onClick={openArtwork} disabled={opening || (!needsAccount && stock <= 0)} />
         <div className="pack-copy">
           <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
-          <span>· {pack.size} cartes</span>
+          <span>· {pack.size}</span>
         </div>
       </section>
 
@@ -263,7 +267,7 @@ export function HomeView({
             ) : null}
           </div>
         ) : null}
-        <details className="drop-secondary-details" open={!needsAccount}>
+        <details className="drop-secondary-details">
           <summary>Plus d’infos</summary>
           <button type="button" className="pity-row now" onClick={onShowOdds}
             aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>

@@ -1,5 +1,35 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — scène d’accueil Drop D-109, publication en cours
+
+- Départ : main local propre `69e6951d14f2d924a6a86cd84dc6afe3f7de7bf0`,
+  identique à GitHub après fetch ; aucune PR ouverte. Malik demande une refonte
+  visuelle de l’accueil Drop seulement, sans autre pilier, audio, rates ou SQL.
+- Capture avant à 390 × 844 : pack grand mais posé sur fond noir, ticket crème
+  dominant. D-109 : scène bordeaux radiale, sol et double ombre, côtés foil
+  plus visibles, sheen, entrée 380 ms et idle 4 px avec réduction de mouvement ;
+  CTA plein large à pression visible ; label LIVE DROP · 5 sur une ligne ;
+  chrome Drop affiné, direct discret. Garantie, sabliers et jetons sous « Plus
+  d’infos » replié. Le sablier reste utilisable après ouverture du volet.
+  Vibration courte au tap du pack via la fonction déjà disponible, sans
+  vibration sur glissement. Aucun calcul de jeu ni BGM modifié.
+- Captures locales `/tmp/creatordeck-drop-before.png` et
+  `/tmp/creatordeck-drop-after-final-390.png` inspectées à 390 × 844 ; capture
+  320 × 568 inspectée. Largeur document = viewport ; CTA 320 entièrement
+  au-dessus de la navigation basse après correction des anciens overrides de
+  `drop-craft.css`.
+- DOM Drop/Binder/tactile/notes 24/24 ; note de version 8/8 ; TypeScript,
+  ESLint ciblé et build Next réussis.
+  E2E Drop/Binder 6/8 à la première passe, deux assertions sur l’ancienne
+  géométrie latérale en échec ; flanc biseauté corrigé, E2E 390 2/2.
+  Pack/art/drag 8/8 observés avant interruption de session, deux scénarios
+  téléphone restants rejoués 2/2. Cloud simulé sablier : échec initial car
+  volet replié, puis scénario complet bureau/téléphone 2/2 après adaptation
+  du test aux trois rechargements. E2E Drop/Binder complet 14/14 après
+  corrections.
+- Note joueur, décision D-109, roadmap et problème connu actualisés.
+  Commit, push, Vercel et CI à consigner après publication.
+
 ## Checkpoint courant — finition du rituel D-108, Vercel vérifié
 
 - Main local et GitHub identiques au départ (`887f55a4cdc533d6a1e48583b091ce4dc5aef51a`),

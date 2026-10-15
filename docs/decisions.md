@@ -1,5 +1,33 @@
 # Décisions CreatorDeck
 
+## D-109 — 15 octobre 2026 : l’accueil Drop devient une scène de jeu
+
+**Contexte :** capture locale avant changement à 390 × 844 : booster déjà grand
+mais sur un rectangle presque noir, ticket crème à trous occupant le premier
+écran, CTA encadré comme un formulaire. Malik demande un seul foyer visuel,
+une lumière chaude, un sol, un objet foil et une action au pouce.
+
+**Décision :** conserver l’art Live Drop et le format du booster (58 vw sur
+mobile normal, 52 vw seulement à 320 × 568). Remplacer le fond uniforme par
+une scène bordeaux en dégradés radiaux, sol diffus, ombre de contact et
+vignette. Incliner légèrement le booster, rendre ses pans foil plus lisibles
+avec CSS, ajouter une entrée de 380 ms et une respiration de 4 px. Le geste
+de défilement ne lance toujours aucun pack ; un appui valide peut produire
+la vibration courte existante si le navigateur et le réglage Son l’autorisent.
+Le mouvement s’arrête avec la réduction des animations ou les reflets coupés.
+
+Retirer l’apparence de ticket crème autour du CTA. Garder une seule commande
+pleine largeur, avec pression visible ; la réserve reste discrète et les
+informations de garantie, sabliers et jetons passent sous « Plus d’infos »
+replié pour tous les joueurs. Une barre de chrome plus fine ne s’applique
+qu’au Drop. Le direct, lorsqu’il est présent, est plus discret sous l’action.
+Aucun taux, économie, autre pilier, art ou audio modifié.
+
+**Preuves et limites :** capture locale avant/après à 390 × 844 et après à
+320 × 568 inspectées ; géométrie mesurée sans débordement, CTA entier au-dessus
+de la navigation basse. Tests et état Vercel dans la passation. Le ressenti sur
+téléphone physique reste une validation joueur.
+
 ## D-108 — 15 octobre 2026 : finir le rythme du booster sans refaire le Drop
 
 **Contexte :** Malik demande un rituel moins proche d’une page web : consignes

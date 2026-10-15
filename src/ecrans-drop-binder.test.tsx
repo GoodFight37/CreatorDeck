@@ -153,7 +153,10 @@ describe("les sabliers du Drop en ligne", () => {
   it("le sablier reste visible pour un joueur et crée un booster bonus à 4/4", async () => {
     const { button, onUseHourglass } = await drop({ packs: 4 });
     expect(button.disabled).toBe(false);
-    expect(button.closest<HTMLDetailsElement>("details.drop-secondary-details")?.open).toBe(true);
+    const details = button.closest<HTMLDetailsElement>("details.drop-secondary-details")!;
+    expect(details.open).toBe(false);
+    act(() => details.querySelector("summary")!.click());
+    expect(details.open).toBe(true);
     expect(button.textContent).toContain("2");
     expect(button.textContent).toContain("5/4");
     act(() => button.click());

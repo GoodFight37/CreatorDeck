@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-drop-scene", date: "2026-10-15", title: "Le Drop entre en scène",
+    summary: "Le booster occupe le devant de la scène dès l’accueil.",
+    sections: [{ title: "Améliorations", items: [
+      "Le booster Live Drop est posé dans une lumière chaude, avec une ombre au sol, des côtés foil plus visibles et un reflet discret en mouvement.",
+      "Le bouton d’ouverture est plus facile à repérer et à presser. Les informations sur la garantie, les sabliers et les jetons restent sous Plus d’infos.",
+      "Sur petit écran, le booster et l’action d’ouverture restent accessibles au premier regard. Les chances de tirage et les ressources ne changent pas.",
+    ] }],
+  },
+  {
     id: "2026-10-15-rituel-finition", date: "2026-10-15", title: "Un booster qui prend son temps",
     summary: "Le résultat du booster reste à l’écran assez longtemps pour voir les cinq cartes.",
     sections: [{ title: "Améliorations", items: [

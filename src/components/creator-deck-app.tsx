@@ -717,7 +717,7 @@ export function CreatorDeckApp() {
   ) : null;
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-current-tab={tab}>
       {showTutorial ? (
         <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="Tutoriel CreatorDeck">
           <section className="welcome-card">

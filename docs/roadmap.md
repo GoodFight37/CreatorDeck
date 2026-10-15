@@ -2,6 +2,14 @@
 
 ## État actuel — 15 octobre 2026
 
+**Accueil Drop en scène (D-109) — implémenté, publication à vérifier :**
+pack Live Drop dominant dans une lumière chaude avec sol, ombre et pans foil ;
+entrée et respiration discrètes, réduites selon les préférences ; CTA plein
+largeur et « Plus d’infos » replié. Chrome de l’accueil allégé. Capture locale
+390 × 844 et 320 × 568 inspectée : action entière au-dessus de la navigation
+basse, pas de débordement. Aucun taux, ressource ou autre pilier modifié.
+Vérifications et déploiement détaillés dans la passation.
+
 **Finition du rituel d’ouverture (D-108) — publiée, Vercel vérifié :**
 les consignes TIRE / RELÂCHE, l’extraction à 1,2 s et l’impact Rare+ étaient
 déjà en place sur main. Le récapitulatif de chaque booster attend maintenant
