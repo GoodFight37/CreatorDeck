@@ -1,6 +1,14 @@
 # Roadmap CreatorDeck
 
-## État actuel — 14 octobre 2026
+## État actuel — 15 octobre 2026
+
+**Objectifs et saisons (D-103) — lot implémenté, publication en cours :** quotidien,
+collection/jalons et saisons lisibles ; gains et prochaine étape, filtres et
+pages de huit saisons. Tout réclamer comprend les jalons et s'arrête sur un
+refus, avec bilan reçu/erreur et verrou contre les doubles clics. Choix de série
+séparé. Seuils, récompenses et règles identiques ; note joueur du 15 octobre.
+DOM 10/10, notes 8/8, trois scénarios navigateur uniques réussis, type/lint OK.
+Publication, build et contrôle Vercel consignés au checkpoint courant.
 
 **Journal Nouveautés (D-102) — clos, publié et vérifié sur Vercel :** historique
 joueur depuis Toi, détail/filtre, repère discret de non-lu, lecture explicite
@@ -281,7 +289,8 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Nouveautés (D-102) complète les lots Toi (D-101), Atelier (D-100) et Binder
+1. Objectifs et saisons (D-103) suit Nouveautés (D-102), Toi (D-101), Atelier
+   (D-100) et Binder
    (D-099). Ajouter les prochaines notes avec chaque livraison visible. Passer à un autre
    chantier cohérent autorisé ; ne plus proposer séparément les matières,
    dos, fiche et variantes de ce lot clos.

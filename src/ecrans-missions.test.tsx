@@ -12,8 +12,8 @@ describe("missions quotidiennes", () => {
   afterEach(() => banc.nettoyer());
 
   async function mount(state = createInitialState(NOW)) {
-    await banc.monter(<MissionsView game={getGameView(state, NOW)} onClaimSeason={() => {}}
-      onClaimMilestone={() => {}} onNotice={() => {}} onError={() => {}} />);
+    await banc.monter(<MissionsView game={getGameView(state, NOW)} onClaimSeason={() => ({ status: "done" })}
+      onClaimMilestone={() => ({ status: "done" })} onNotice={() => {}} onError={() => {}} />);
   }
 
   it("compte bien les quatre missions et explique l'action du Tribunal", async () => {

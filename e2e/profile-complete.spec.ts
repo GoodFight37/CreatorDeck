@@ -14,7 +14,7 @@ test("Toi vide : vitrine, parcours, objectifs directs et réglages repliés", as
   }
   await page.screenshot({ path: "test-results/profile-complete-empty.png", fullPage: true });
   await page.locator(".profile-objective").click();
-  await expect(page.getByRole("heading", { name: "Progression", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Objectifs et saisons", exact: true })).toBeVisible();
 });
 
 test("Toi rempli : noms complets, variantes exactes, focus et retour Binder", async ({ page }) => {

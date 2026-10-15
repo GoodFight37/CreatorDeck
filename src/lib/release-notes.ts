@@ -10,6 +10,18 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-objectifs", date: "2026-10-15", title: "Tes objectifs, tes récompenses",
+    summary: "Le quotidien, les jalons et les saisons sont plus faciles à suivre et à réclamer.",
+    sections: [{ title: "Améliorations", items: [
+      "Objectifs et saisons distingue les missions du jour, la collection et les familles à compléter, avec des accès directs entre les sections.",
+      "Les récompenses prêtes sont regroupées en tête. Tout réclamer récupère les missions, les jalons et les paliers de saison en série ; le choix de la série quotidienne reste séparé.",
+      "Les saisons disposent de filtres, de pages et du détail de leurs paliers. Tu vois la prochaine étape et ses récompenses, sans dérouler toutes les familles.",
+    ] }, { title: "Corrections", items: [
+      "Les commandes attendent la fin d’une réclamation pour éviter les doubles clics. Un refus arrête le groupe et le bilan conserve les résultats déjà reçus.",
+      "Une famille refusée n’est plus annoncée comme récupérée. Les seuils, les récompenses et les règles du jeu restent identiques.",
+    ] }],
+  },
+  {
     id: "2026-10-14-nouveautes", date: "2026-10-14", title: "Le journal de CreatorDeck est ouvert",
     summary: "Retrouve les changements du jeu et garde une trace de ce que tu as lu.",
     sections: [{ title: "Nouveautés", items: [

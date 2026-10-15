@@ -7,7 +7,9 @@
  * Les seuils ne sont pas écrits ici : le moteur et `src/data/progression.json`
  * les portent, et un chiffre recopié finit toujours par mentir à l'écran.
  */
-import { useState } from "react";
+import "./objectives.css";
+import type { PointsOutcome } from "@/hooks/use-points";
+import { useEffect, useRef, useState } from "react";
 
 import { BookOpen, Check, Gem, Gavel, Layers3, Radio, RotateCcw, Sparkles, Target, Trophy, Unlock, Zap } from "lucide-react";
 
@@ -17,7 +19,7 @@ import { CATALOG_AUDIENCE, CATALOG_LABEL, CATALOG_SIZE, CREATORS } from "@/lib/c
 
 import { type GameView } from "@/lib/game-engine";
 
-import { STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
+import { MISSION_REWARD, PROGRESSION, STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
 
 import { gameStore } from "@/lib/game-store";
 
@@ -101,6 +103,8 @@ function MissionRow({
   reward,
   claimed,
   onClaim,
+  busy,
+  claiming,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -110,9 +114,10 @@ function MissionRow({
   reward: { points: number; hourglasses: number };
   claimed: boolean;
   onClaim: () => void;
+  busy: boolean;
+  claiming: boolean;
 }) {
   const done = progress >= target;
-  const percent = Math.min(100, Math.round((progress / target) * 100));
   const gains = [
     reward.points > 0 ? `+${reward.points} pts` : "",
     reward.hourglasses > 0
@@ -122,7 +127,7 @@ function MissionRow({
     .filter(Boolean)
     .join(" · ");
   return (
-    <article className={`mission-row ${done ? "done" : ""}`}>
+    <article className={`mission-row ${done ? "done" : ""} ${claimed ? "claimed" : ""}`} data-state={claimed ? "claimed" : done ? "ready" : "progress"}>
       <div className="mission-icon">{done ? <Check size={19} /> : icon}</div>
       <div className="mission-content">
         <div>
@@ -135,12 +140,10 @@ function MissionRow({
         <div className="mission-progress-copy">
           <b>{Math.min(progress, target)}</b>/{target}
         </div>
-        <div className="progress-track">
-          <i style={{ width: `${percent}%` }} />
-        </div>
+        <progress className="objective-progress" aria-label={`Progression : ${label}`} value={Math.min(progress, target)} max={target} />
         {done && !claimed ? (
-          <button type="button" className="mission-claim" onClick={onClaim}>
-            <Unlock size={13} /> Réclamer
+          <button type="button" className="mission-claim" onClick={onClaim} disabled={busy} aria-label={`Réclamer : ${label}`}>
+            <Unlock size={13} /> {claiming ? "Réclamation…" : "Réclamer"}
           </button>
         ) : (
           <span className={`mission-state ${claimed ? "done" : ""}`}>
@@ -161,8 +164,8 @@ export function MissionsView({
   onError,
 }: {
   game: GameView;
-  onClaimSeason: (seasonId: string) => void | Promise<void>;
-  onClaimMilestone: (milestoneId: string) => void;
+  onClaimSeason: (seasonId: string) => PointsOutcome | Promise<PointsOutcome>;
+  onClaimMilestone: (milestoneId: string) => PointsOutcome | Promise<PointsOutcome>;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -171,55 +174,63 @@ export function MissionsView({
       ? "Toutes les missions du jour sont faites"
       : `${game.missions.filter((mission) => mission.done).length}/${game.missions.length} mission${
           game.missions.length > 1 ? "s" : ""
-        } du jour faite${game.missions.filter((mission) => mission.done).length > 1 ? "s" : ""}`;
-  const pendingMissionCount = game.missions.filter((mission) => mission.done && !mission.claimed).length;
-  const pendingSeasonCount = game.seasons.filter((season) => season.claimable > 0).length;
-  const pendingSeasonPoints = game.seasons.reduce((sum, season) => sum + season.claimablePoints, 0);
-  const pendingSeasonHourglasses = game.seasons.reduce(
-    (sum, season) => sum + season.claimableHourglasses,
-    0,
-  );
-  const hasPendingRewards = pendingMissionCount > 0 || pendingSeasonCount > 0;
-  const [claimingAll, setClaimingAll] = useState(false);
-
-  /**
-   * « Tout réclamer » : les sabliers des missions d'abord (ils sont locaux), puis
-   * les familles **l'une après l'autre**.
-   *
-   * Une famille se réclame palier par palier chez le serveur, et deux familles
-   * demandées en même temps mélangeraient deux sauvegardes : la seconde écraserait
-   * la première. On attend donc chaque famille avant de passer à la suivante.
-   */
-  async function handleClaimAll() {
-    if (claimingAll) return;
-    setClaimingAll(true);
-    try {
-      const gained = pendingMissionCount > 0 ? gameStore.claimMissions() : 0;
-      const readySeasons = game.seasons.filter((season) => season.claimable > 0);
-      for (const season of readySeasons) await onClaimSeason(season.id);
-      const summary = [
-        gained > 0 ? `+${gained} sablier${gained > 1 ? "s" : ""}` : "",
-        readySeasons.length > 0
-          ? `${readySeasons.length} famille${readySeasons.length > 1 ? "s" : ""}`
-          : "",
-      ].filter(Boolean);
-      onNotice(
-        summary.length > 0
-          ? `${summary.join(" · ")} réclamé${summary.length > 1 ? "s" : ""}.`
-          : "Aucune récompense n'était prête.",
-      );
-    } catch (caught) {
-      onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
-    } finally {
-      setClaimingAll(false);
-    }
+        } du jour faite${game.missions.length > 1 ? "s" : ""}`;
+  const pendingMissions = game.missions.filter((mission) => mission.done && !mission.claimed);
+  const pendingMilestones = game.milestones.filter((milestone) => milestone.progress >= milestone.target && !milestone.claimed);
+  const pendingSeasons = game.seasons.filter((season) => season.claimable > 0);
+  const pendingCount = pendingMissions.length + pendingMilestones.length + pendingSeasons.reduce((sum, season) => sum + season.claimable, 0);
+  const pendingPoints = pendingMilestones.reduce((sum, item) => sum + item.reward.points, 0) + pendingSeasons.reduce((sum, item) => sum + item.claimablePoints, 0);
+  const pendingHourglasses = pendingMissions.length * MISSION_REWARD.hourglasses + pendingMilestones.reduce((sum, item) => sum + item.reward.hourglasses, 0) + pendingSeasons.reduce((sum, item) => sum + item.claimableHourglasses, 0);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const busy = useRef(false);
+  const [feedback, setFeedback] = useState<{ error: boolean; title: string; messages: string[] } | null>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!feedback) return;
+    feedbackRef.current?.focus({ preventScroll: true });
+    feedbackRef.current?.scrollIntoView?.({ block: "nearest" });
+  }, [feedback]);
+  type ClaimStep = () => PointsOutcome | Promise<PointsOutcome>;
+  function claimMissions(): PointsOutcome {
+    const gained = gameStore.claimMissions();
+    return { status: "done", message: gained > 0 ? `Missions du jour : +${gained} sablier${gained > 1 ? "s" : ""}.` : "Aucune mission supplémentaire à réclamer." };
   }
+  async function runClaim(key: string, steps: ClaimStep[]) {
+    if (busy.current) return;
+    busy.current = true; setBusyKey(key); setFeedback(null);
+    const messages: string[] = [];
+    try {
+      for (const step of steps) {
+        const result = await step();
+        if (result.status === "refused") throw new Error(result.message);
+        messages.push(result.message ?? "Récompense récupérée.");
+      }
+      setFeedback({ error: false, title: "Réclamation terminée", messages });
+      onNotice(messages.length === 1 ? messages[0] : "Réclamation terminée. Le détail est affiché dans tes objectifs.");
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "Récompense indisponible.";
+      setFeedback({ error: true, title: messages.length ? "Réclamation interrompue" : "Réclamation impossible", messages: [...messages, message] });
+      onError(message);
+    } finally { busy.current = false; setBusyKey(null); }
+  }
+  function handleClaimAll() {
+    const steps: ClaimStep[] = [];
+    if (pendingMissions.length) steps.push(claimMissions);
+    for (const milestone of pendingMilestones) steps.push(() => onClaimMilestone(milestone.id));
+    for (const season of pendingSeasons) steps.push(() => onClaimSeason(season.id));
+    if (steps.length) void runClaim("all", steps);
+  }
+  const orderedMilestones = [...game.milestones].sort((a, b) => {
+    const rank = (item: typeof a) => item.claimed ? 2 : item.progress >= item.target ? 0 : 1;
+    return rank(a) - rank(b);
+  });
 
   return (
     <div className="view missions-view">
       <section className="page-title-row">
         <div>
-          <h1>Progression</h1>
+          <p className="objectives-kicker">TON PARCOURS DE COLLECTIONNEUR</p>
+          <h1>Objectifs et saisons</h1>
         </div>
         <div className="streak-pill">
           <Zap size={14} />
@@ -227,36 +238,29 @@ export function MissionsView({
         </div>
       </section>
 
-      {/* Le jour : trois gestes à faire, un sablier chacun, et la série qui
+      {/* Le jour : missions issues de la configuration, et la série qui
           avance tant qu'on ouvre un booster chaque jour. C'est la partie de
           l'écran qui se remet à zéro à 6 h UTC — pas à minuit, pour ne pas
           couper une soirée de streaming en deux. */}
-      {hasPendingRewards ? (
-        <div className="reward-summary-banner">
-          <div className="reward-summary-copy">
-            <strong>{pendingMissionCount + pendingSeasonCount} récompense{pendingMissionCount + pendingSeasonCount > 1 ? "s" : ""} prête{pendingMissionCount + pendingSeasonCount > 1 ? "s" : ""}</strong>
-            <span>
-              {pendingMissionCount > 0 ? `${pendingMissionCount} mission${pendingMissionCount > 1 ? "s" : ""} du jour` : ""}
-              {pendingMissionCount > 0 && pendingSeasonCount > 0 ? " · " : ""}
-              {pendingSeasonCount > 0 ? `${pendingSeasonCount} saison${pendingSeasonCount > 1 ? "s" : ""}` : ""}
-              {pendingSeasonPoints > 0 || pendingSeasonHourglasses > 0 ? ` · ${pendingSeasonPoints} pts` : ""}
-              {pendingSeasonHourglasses > 0 ? ` · ${pendingSeasonHourglasses} sablier${pendingSeasonHourglasses > 1 ? "s" : ""}` : ""}
-            </span>
-          </div>
-          <div className="reward-summary-actions">
-            <span className="reward-summary-pill">{pendingMissionCount > 0 ? `${pendingMissionCount} mission${pendingMissionCount > 1 ? "s" : ""}` : ""}</span>
-            <span className="reward-summary-pill">{pendingSeasonCount > 0 ? `${pendingSeasonCount} famille${pendingSeasonCount > 1 ? "s" : ""}` : ""}</span>
-            <button type="button" className="ghost-button" onClick={handleClaimAll} disabled={claimingAll}>
-              {claimingAll ? "Réclamation…" : "Tout réclamer"}
-            </button>
-          </div>
+      <nav className="objectives-sections" aria-label="Sections des objectifs"><a href="#objectives-day">Aujourd’hui</a><a href="#objectives-collection">Collection</a><a href="#objectives-seasons">Saisons</a></nav>
+      {pendingCount > 0 ? <section className="reward-summary-banner" aria-label="Récompenses prêtes" aria-busy={busyKey !== null}>
+        <div className="reward-summary-copy"><strong>{pendingCount} récompense{pendingCount > 1 ? "s" : ""} prête{pendingCount > 1 ? "s" : ""}</strong>
+          <span>{[pendingPoints > 0 ? `${pendingPoints} points` : "", pendingHourglasses > 0 ? `${pendingHourglasses} sablier${pendingHourglasses > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ")}</span>
+          <small>Missions, jalons et paliers de saison · hors choix de série</small>
         </div>
-      ) : null}
+        <button type="button" className="objectives-claim-all" onClick={handleClaimAll} disabled={busyKey !== null}>{busyKey === "all" ? "Réclamation…" : "Tout réclamer"}</button>
+      </section> : <p className="objectives-no-pending">Aucune récompense en attente. Tes prochains objectifs sont ci-dessous.</p>}
+      {busyKey ? <p className="objectives-wait" role="status">Réclamation en cours… Les autres récompenses attendent la réponse.</p> : null}
+      {feedback ? <div className={`objectives-feedback ${feedback.error ? "is-error" : ""}`} ref={feedbackRef} tabIndex={-1} role={feedback.error ? "alert" : "status"}>
+        <strong>{feedback.title}</strong><ul>{feedback.messages.map((message, index) => <li key={index}>{message}</li>)}</ul>
+        {feedback.error ? <p>Les récompenses déjà reçues restent acquises. Tu peux réessayer les suivantes.</p> : null}
+      </div> : null}
 
-      <section className="day-block">
+      <section className="day-block" id="objectives-day" aria-labelledby="objectives-day-title">
+
         <div className="day-head">
           <div>
-            <h2>Le jour</h2>
+            <h2 id="objectives-day-title">Aujourd’hui</h2>
             <span>{dayCopy}</span>
           </div>
           <div className={`streak-chip${game.streak.jackpot ? " hot" : ""}`}>
@@ -267,6 +271,7 @@ export function MissionsView({
           </div>
         </div>
 
+        <p className="objectives-reset">Nouvelles missions à {PROGRESSION.missions.resetHourUtc} h UTC · Les missions prêtes se récupèrent ensemble.</p>
         {/* Le planning de régie : sept cases, comme une semaine de diffusion.
             Chaque jour ouvert coche sa case ; la case du jour dit « à faire » ;
             la septième, c'est Le Grand Direct. Un jour manqué remet la série à
@@ -329,24 +334,16 @@ export function MissionsView({
             <div className="jackpot-actions">
               <button
                 type="button"
-                onClick={() => {
-                  gameStore.claimStreakJackpot("perfect");
-                  onNotice("Perfect garanti gardé pour ton prochain booster.");
-                }}
+                disabled={busyKey !== null}
+                onClick={() => void runClaim("jackpot", [() => { gameStore.claimStreakJackpot("perfect"); return { status: "done", message: "Perfect garanti gardé pour ton prochain booster." }; }])}
               >
                 Perfect
               </button>
               <button
                 type="button"
                 className="ghost"
-                onClick={() => {
-                  try {
-                    const gained = gameStore.claimStreakJackpot("hourglasses");
-                    onNotice(`+${gained} sablier${gained > 1 ? "s" : ""} : la série repart.`);
-                  } catch (caught) {
-                    onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
-                  }
-                }}
+                disabled={busyKey !== null}
+                onClick={() => void runClaim("jackpot", [() => { const gained = gameStore.claimStreakJackpot("hourglasses"); return { status: "done", message: `+${gained} sablier${gained > 1 ? "s" : ""} : la série repart.` }; }])}
               >
                 {game.streak.jackpotHourglasses} sabliers
               </button>
@@ -365,26 +362,17 @@ export function MissionsView({
                 detail={look?.detail ?? ""}
                 progress={mission.progress}
                 target={mission.target}
-                reward={{ points: 0, hourglasses: 1 }}
+                reward={{ points: 0, hourglasses: MISSION_REWARD.hourglasses }}
                 claimed={mission.claimed}
-                onClaim={() => {
-                  try {
-                    const gained = gameStore.claimMissions();
-                    onNotice(
-                      gained > 0
-                        ? `+${gained} sablier${gained > 1 ? "s" : ""} pour tes missions du jour.`
-                        : "Mission déjà réglée pour aujourd'hui.",
-                    );
-                  } catch (caught) {
-                    onError(caught instanceof Error ? caught.message : "Récompense indisponible.");
-                  }
-                }}
+                busy={busyKey !== null} claiming={busyKey === "missions"}
+                onClaim={() => void runClaim("missions", [claimMissions])}
               />
             );
           })}
         </div>
       </section>
 
+      <section id="objectives-collection" aria-label="Collection et jalons">
       <section className="mission-hero">
         <div className="mission-hero-icon">
           <Trophy size={27} />
@@ -415,7 +403,7 @@ export function MissionsView({
         </div>
       </div>
       <div className="mission-list">
-        {game.milestones.map((milestone) => {
+        {orderedMilestones.map((milestone) => {
           const look = MILESTONE_LOOK[milestone.id];
           return (
             <MissionRow
@@ -427,13 +415,16 @@ export function MissionsView({
               target={milestone.target}
               reward={milestone.reward}
               claimed={milestone.claimed}
-              onClaim={() => onClaimMilestone(milestone.id)}
+              busy={busyKey !== null} claiming={busyKey === `milestone-${milestone.id}`}
+              onClaim={() => void runClaim(`milestone-${milestone.id}`, [() => onClaimMilestone(milestone.id)])}
             />
           );
         })}
       </div>
 
-      <SeasonsSection seasons={game.seasons} onClaim={onClaimSeason} />
+      </section>
+      <SeasonsSection seasons={game.seasons} busy={busyKey !== null} busyKey={busyKey}
+        onClaim={(id) => void runClaim(`season-${id}`, [() => onClaimSeason(id)])} />
     </div>
   );
 }

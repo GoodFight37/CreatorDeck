@@ -44,7 +44,7 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
-## État actuel — 14 octobre 2026
+## État actuel — 15 octobre 2026
 
 Malik utilise **la version web de CreatorDeck sur Vercel**, connectée à
 Supabase. GitHub `main` alimente le site ; les changements deviennent visibles
@@ -63,6 +63,11 @@ pour les rares, puis résumé mobile des cinq cartes en deux rangées. Le bouton
 suivant reste verrouillé pendant le flip ; le retour depuis le résumé attend
 le joueur. Le tutoriel de Production passe à 390 × 844 ; voir le checkpoint
 courant pour les tests et les limites de cette émulation mobile.
+
+**Objectifs et saisons** distingue quotidien, jalons et familles, avec gains
+lisibles, filtres et paliers repliés. Tout réclamer récupère les récompenses
+existantes en série et garde un bilan en cas de refus, sans double commande.
+Aucun seuil ni récompense changé ; D-103, preuves au checkpoint courant.
 
 **Toi → Nouveautés** rassemble les mises à jour du jeu : historique, détail,
 notes non lues et marquage de lecture sur cet appareil, sans compte ni popup

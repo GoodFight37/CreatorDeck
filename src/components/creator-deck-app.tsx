@@ -31,7 +31,7 @@ import { ThemeSheet } from "@/components/theme-sheet";
 
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
-import { usePoints } from "@/hooks/use-points";
+import { usePoints, type PointsOutcome } from "@/hooks/use-points";
 import { usePush } from "@/hooks/use-push";
 import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { useInbox } from "@/hooks/use-inbox";
@@ -623,60 +623,39 @@ export function CreatorDeckApp() {
     }
   }
 
-  async function handleClaimSeason(seasonId: string) {
-    // La vue d'avant le clic décrit exactement ce qui vient d'être crédité.
+  async function handleClaimSeason(seasonId: string): Promise<PointsOutcome> {
     const before = game?.seasons.find((entry) => entry.id === seasonId);
     try {
-      // Le serveur paie (il compte les créateurs de la famille) : hors ligne ou
-      // sans compte, `usePoints` dit quoi faire plutôt que de payer en local.
       const credited = await points.claimSeason(seasonId);
-      if (credited.status === "refused") return showError(credited.message);
-      // Le serveur peut répondre « déjà payé » (réclamation faite sur un autre
-      // appareil) : on le dit, au lieu d'annoncer des points qui ne sont pas
-      // arrivés.
-      if (credited.delta === 0) return showNotice(credited.message ?? "Cette famille était déjà payée.");
+      if (credited.status === "refused") return credited;
+      if (credited.delta === 0) return { ...credited, message: credited.message ?? "Cette famille était déjà payée." };
       const parts = [
-        before && before.claimablePoints > 0 ? `+${before.claimablePoints} points` : "",
+        (credited.delta ?? before?.claimablePoints ?? 0) > 0 ? `+${credited.delta ?? before?.claimablePoints} points` : "",
         before && before.claimableHourglasses > 0 ? `+${before.claimableHourglasses} sabliers` : "",
-        before && before.claimable > 1 ? `${before.claimable} paliers` : "",
       ].filter(Boolean);
-      const emblem = before?.tiers.some((tier) => tier.emblem && !tier.claimed && tier.unlocked);
-      // **Un geste, un son.** Une récompense de saison se paie en points, en
-      // sabliers, en paliers et en emblème : c'est de l'argent qui tombe, et
-      // les pièces le disent mieux qu'un carillon doublé — le joueur entendait
-      // deux sons à la fois pour un seul appui.
+      const current = gameStore.getSnapshot();
+      const emblem = !before?.familyComplete && current && getGameView(current).seasons.find((season) => season.id === seasonId)?.familyComplete;
       playCoins();
-      showNotice(
-        before
-          ? `Saison ${before.id} : ${parts.join(", ") || "récompense réclamée"}${emblem ? " — emblème obtenu !" : ""}`
-          : "Récompense de saison réclamée.",
-      );
+      return { ...credited, message: `${before?.name ?? "Saison"} : ${parts.join(", ") || "récompense réclamée"}${emblem ? " — emblème obtenu !" : ""}` };
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+      return { status: "refused", message: caught instanceof Error ? caught.message : "Récompense indisponible." };
     }
   }
 
-  async function handleClaimMilestone(milestoneId: string) {
-    // La vue d'avant le clic décrit exactement ce qui va tomber.
+  async function handleClaimMilestone(milestoneId: string): Promise<PointsOutcome> {
     const before = game?.milestones.find((entry) => entry.id === milestoneId);
     try {
       const credited = await points.claimMilestone(milestoneId);
-      if (credited.status === "refused") return showError(credited.message);
-      if (credited.delta === 0) return showNotice(credited.message ?? "Ce palier était déjà payé.");
+      if (credited.status === "refused") return credited;
+      if (credited.delta === 0) return { ...credited, message: credited.message ?? "Ce palier était déjà payé." };
       playReward();
-      const gains = before
-        ? [
-            before.reward.points > 0 ? `+${before.reward.points} points` : "",
-            before.reward.hourglasses > 0
-              ? `+${before.reward.hourglasses} sablier${before.reward.hourglasses > 1 ? "s" : ""}`
-              : "",
-          ]
-            .filter(Boolean)
-            .join(", ")
-        : "";
-      showNotice(gains ? `Objectif atteint : ${gains} !` : "Récompense d'objectif réclamée.");
+      const gains = [
+        (credited.delta ?? before?.reward.points ?? 0) > 0 ? `+${credited.delta ?? before?.reward.points} points` : "",
+        before && before.reward.hourglasses > 0 ? `+${before.reward.hourglasses} sablier${before.reward.hourglasses > 1 ? "s" : ""}` : "",
+      ].filter(Boolean).join(", ");
+      return { ...credited, message: gains ? `Objectif atteint : ${gains} !` : "Récompense d'objectif réclamée." };
     } catch (caught) {
-      showError(caught instanceof Error ? caught.message : "Récompense indisponible.");
+      return { status: "refused", message: caught instanceof Error ? caught.message : "Récompense indisponible." };
     }
   }
 

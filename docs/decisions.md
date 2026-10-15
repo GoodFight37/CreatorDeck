@@ -1,5 +1,37 @@
 # Décisions CreatorDeck
 
+## D-103 — 15 octobre 2026 : un parcours Objectifs complet et un bilan de réclamation fiable
+
+**Contexte :** lot Objectifs et saisons autorisé après Nouveautés. Dans la base
+`51323720`, Tout réclamer ne comprenait pas les jalons ; un refus des familles
+était absorbé par le parent, puis le groupe annonçait les familles prévues.
+L'écran empilait le quotidien, les jalons et toutes les saisons détaillées.
+
+**Décision :** conserver GameView, barèmes et caisse existants ; organiser
+quotidien, collection et saisons avec accès directs, jauges natives et états
+reçu/en cours/prêt distincts. Missions et remise à zéro restent pilotées par
+la configuration. Planning mobile quatre puis trois cases pour lire les gains.
+Saisons : prêts d'abord, filtres, huit lignes/page, détail des paliers replié,
+prochaine étape et gains de chaque palier. Pas de nouveau mode de jeu.
+
+Les callbacks parent rendent `PointsOutcome`, y compris le refus. Un seul
+verrou synchrone protège les commandes de l'écran ; le groupe réclame missions,
+jalons puis saisons en série, s'arrête au premier refus et garde le bilan des
+réponses déjà reçues, avec message, focus et attente accessibles. Le choix de
+série Perfect/sabliers reste séparé du groupe ; ses erreurs sont aussi affichées.
+Les missions prêtes restent réclamées ensemble, comme dans le moteur existant.
+Un delta nul conserve le message déjà payé. Les points rendus par le serveur
+priment sur l'ancienne estimation ; emblème annoncé seulement si acquis dans
+l'état après la demande. Les gains attendus du récapitulatif ne sont pas un
+nouveau calcul de versement. Aucun audio, SQL, économie ou règle modifié.
+
+**Preuves :** DOM 10/10, note joueur testée 8/8, trois scénarios navigateur
+uniques passent ; soldes locaux exacts après double activation et rechargement.
+Une fixture non finançable a été corrigée via une saison réelle, sans modifier
+le seuil. Build/publication et limites serveur au checkpoint courant. Le
+bilan de groupe ne détaille pas les RPC internes d'un palier de saison refusé.
+
+
 ## D-102 — 14 octobre 2026 : un journal joueur livré avec chaque mise à jour
 
 **Contexte :** Malik demande des patch notes consultables, puis autorise un

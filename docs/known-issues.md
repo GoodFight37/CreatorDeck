@@ -1,3 +1,17 @@
+## Objectifs — faux succès groupé et doubles commandes, corrigés (15 octobre 2026)
+
+Sur `51323720`, handleClaimSeason absorbait un refus en affichant une erreur
+puis renvoyait void. Le groupe poursuivait et annonçait autant de familles que
+prévu, même refusées ; les jalons n'étaient pas compris dans Tout réclamer.
+D-103 fait remonter le statut, bloque les autres commandes pendant la demande,
+arrête le groupe au refus et restitue les réponses reçues. Les jalons existants
+sont inclus. Delta nul = message déjà payé ; emblème constaté après versement.
+Aucune règle ni caisse modifiée. DOM 10/10, notes 8/8, trois parcours navigateur
+uniques passent, dont soldes locaux exacts après double activation/rechargement.
+Limite : refus et partiels simulés ; pas de réclamation d'un compte réel en
+Production, ni détail des RPC internes des paliers dans le bilan UI.
+Publication et validation finale dans le checkpoint courant.
+
 ## Nouveautés — historique joueur ajouté (14 octobre 2026)
 
 Base `bf0dcbab` : les changements récents n'avaient pas de journal destiné aux

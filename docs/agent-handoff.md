@@ -1,6 +1,45 @@
-# Reprise rapide — 14 octobre 2026
+# Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — lot Nouveautés complet publié, Vercel vérifié
+## Checkpoint courant — Objectifs et saisons terminé localement, publication en cours
+
+- Demande : lot complet autorisé par « go », puis reprise après capture montrant
+  une limite d’usage Codex. Ce message n’était pas une erreur du jeu. Base
+  `main` `5132372077b5dc635d5d8872d27ff0946e74f5c1`, identique à GitHub
+  via ls-remote/fetch ; reprise sans perte des fichiers locaux, distant inchangé.
+- D-103 : sections quotidien/collection/saisons, accès directs, jauges natives,
+  gains issus du moteur, planning 4 + 3 lisible sur mobile, saisons filtrables
+  et paginées par huit avec paliers repliés et prochaines étapes.
+- Cause corrigée : les callbacks parent affichaient un refus puis retournaient
+  `void`, donc Tout réclamer poursuivait et annonçait les familles prévues comme
+  reçues. Ils retournent maintenant le résultat réel (`PointsOutcome`). Le lot
+  traite missions, jalons et saisons en série, verrou synchrone partagé avec
+  les commandes individuelles et le choix de série, arrêt sur refus et bilan
+  persistant des réponses déjà reçues. Le jackpot reste un choix séparé.
+- Aucun seuil, gain, monnaie, moteur, SQL ou fichier audio modifié. Les SFX
+  existants restent appelés dans le parent aux mêmes réussites ; aucun nouvel
+  audio. Les emblèmes ne sont annoncés qu'après constat dans l'état obtenu.
+- Tests exécutés : DOM Objectifs 10/10 (2 existants + 8 nouveaux), notes 8/8,
+  typecheck/ESLint ciblés réussis. Chromium : trois scénarios uniques réussis
+  (deux nouveaux et entrée depuis Toi). Premier essai 3 connexions refusées :
+  serveur précédent absent, redémarré. Puis 2/3 : fixture 12 cartes ne débloquait
+  aucun palier réel. Fixture corrigée pour choisir une saison depuis SEASONS,
+  sans changer ses seuils ; rerun deux nouveaux 2/2. Le test de réclamation
+  double l’activation dans le même tour JS et vérifie les soldes exacts ainsi
+  que leur conservation après rechargement. Refus/réseau/partiel simulés en DOM.
+- Captures finales jour/saisons/bilan inspectées à 390×844 ; contrôles de largeur
+  320/390 passent. Note joueur `2026-10-15-objectifs` ajoutée avec le code.
+  Build final `npm run build` réussi, cinq pages exportées. Variables Supabase
+  locales absentes : compilation validée, pas de réclamation cloud réelle.
+  Publication et contrôle invité Vercel à compléter avant clôture.
+- Fichiers : MissionsView, SeasonsSection, callbacks CreatorDeckApp, CSS
+  `objectives.css`, tests DOM/navigateur (titre d'arrivée Toi mis à jour),
+  `release-notes.ts` et docs. Tous sont locaux et non encore publiés ici.
+- Limites : aucune réclamation serveur réelle effectuée ; le bilan reçoit la
+  réponse finale de chaque saison, pas le détail des RPC internes de ses
+  paliers. Pas de changement de la caisse serveur. Ressenti tactile/APK non
+  certifiés. Ne pas relancer les suites déjà réussies sans nouveau changement.
+
+## Checkpoint précédent — lot Nouveautés complet publié, Vercel vérifié
 
 - Demande : gros lot autonome jusqu’à publication. Choix : système de patch
   notes proposé juste avant, accepté par l’autorisation générale de Malik.
