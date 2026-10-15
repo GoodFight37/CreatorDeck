@@ -14,8 +14,10 @@ Correction D-111 : attentes alignées sur les décisions déjà livrées, cibles
 réelles et clic explicite des volets ; rapports GitHub/JSON et contrôles
 qualité indépendants. Le contrôle vocabulaire Trades reste en échec et actif,
 son texte est hors périmètre de ce lot. 18 vérifications ciblées réussies après correction (14 scénarios uniques) ;
-publiées au commit `6cbb3926`, Vercel `success`. La CI complète de ce SHA
-est encore en cours ; limites et lien dans la passation.
+publiées au commit `6cbb3926`, Vercel `success`. Les trois shards navigateur de ce SHA sont verts. Sa CI qualité a exposé
+trois assertions DOM anciennes (Objectifs et aperçu Live), corrigées dans
+le complément : 25/25 ciblés. Deux échecs DOM et le test/scan de vocabulaire
+restent liés au texte Trades exclu. [Rapport D-111](verification-d111.md).
 
 ## Objectifs — faux succès groupé et doubles commandes, corrigés (15 octobre 2026)
 

@@ -7,8 +7,9 @@
 cibles réelles ; rendre les échecs lisibles dans GitHub et permettre aux
 contrôles indépendants de tous s’exécuter. Aucune modification du jeu.
 18 exécutions ciblées réussies (14 scénarios uniques). Le défaut de vocabulaire
-Trades reste signalé et hors périmètre. CI complète du lot en cours au dernier
-contrôle ; détails et liens dans la passation.
+Trades reste signalé et hors périmètre. Trois shards navigateur, SQL et cloud simulé verts sur `6cbb3926`.
+Complément des anciennes assertions DOM : 25/25 ciblés ; la qualité reste
+rouge sur le vocabulaire Trades exclu. [Rapport D-111](verification-d111.md).
 
 **Volume vivant du sachet (D-110) — publié et contrôlé sur Vercel :**
 oscillation sur trois axes en 4,8 s, foil et face avant renforcés, reflet 4 s,

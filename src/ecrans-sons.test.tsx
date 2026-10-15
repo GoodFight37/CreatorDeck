@@ -80,7 +80,7 @@ describe("le réglage du son", () => {
       // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.
       banc.appuyerNom("Fermer");
     }
-    banc.appuyer("Objectifs et saisons");
+    banc.appuyer(/^Objectifs et saisons/);
 
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });

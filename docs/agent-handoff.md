@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — D-111 fiabilisation des vérifications, publié et Vercel vérifié
+## Checkpoint courant — D-111 vérifications fiabilisées, complément DOM publié
 
 - Demande Malik : prochain chantier complet, docs et publication main.
   Base locale/GitHub propre `7c8ce001`, aucune PR ouverte. CI D-110
@@ -43,11 +43,19 @@
   via l’API GitHub après publication. Vercel du SHA `success` ; production
   `https://creator-deckk.vercel.app/` HTTP 200, Chromium 390 × 844 : pack,
   ESSAYER et idle présents, largeur document 390, aucune erreur JS observée.
-- [CI de ce lot](https://github.com/GoodFight37/CreatorDeck/actions/runs/38740874237)
-  en cours lors du dernier contrôle, six jobs démarrés. La laisser terminer ;
-  ne pas annoncer toute la suite verte. Le défaut jargon Trades reste actif,
-  déjà reproduit avant ce lot et non modifié. Si un nouvel échec apparaît,
-  utiliser les annotations GitHub et JSON prévus par D-111.
+- [CI du premier lot](https://github.com/GoodFight37/CreatorDeck/actions/runs/38740874237)
+  terminée : trois shards navigateur, SQL et cloud simulé verts ; qualité rouge
+  (unitaires jargon Trades, écrans et scanner jargon). Typecheck, lint,
+  catalogue et build exécutés et réussis malgré ces échecs.
+- Le job écrans nouvellement exécuté a révélé trois assertions DOM périmées :
+  libellé Objectifs enrichi et ancienne confirmation Live de l’Atelier.
+  Corrigées dans ce complément, aucun fichier du jeu touché. Diagnostic
+  `npm run ecrans` : 161/166 réussis ; relance des trois fichiers corrigés :
+  25/25. Les deux échecs compte lié restants viennent du texte Trades exclu.
+- [Rapport détaillé D-111](verification-d111.md) : commandes exactes,
+  compteurs, corrections, CI et limites. Le SHA de ce complément se retrouve
+  via `git log -1 --format=%H -- docs/verification-d111.md`. Lire sa nouvelle CI
+  sans confondre résultats de la première publication et dernier SHA.
 - Aucun changement visible ni nouvelle note joueur pour ce lot d’outillage.
   Réservation libérée après publication ; ressenti physique non certifié.
 

@@ -295,16 +295,18 @@ describe("mille créateurs dans l'Atelier", () => {
 
     // La règle du doublon Live n'a pas bougé non plus : il demande confirmation
     // avant de partir, même quand la recherche ne montre que deux lignes.
-    const live = document.querySelector<HTMLButtonElement>(
-      'button[title*="confirmation demandée"]',
+    const liveRow = [...document.querySelectorAll(".atelier-row")].find((row) =>
+      row.querySelector(".atelier-copy span")?.textContent?.trim().startsWith("Live ·"),
     );
+    const live = liveRow?.querySelector<HTMLButtonElement>("button.recycle") ?? null;
     expect(live).not.toBeNull();
     act(() => {
       live!.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
     });
-    expect(document.body.textContent).toContain("Recycler ce doublon Live ?");
+    expect(document.querySelector(".atelier-transaction .variant-live")).not.toBeNull();
+    expect(document.body.textContent).toContain("Tu confirmes le recyclage de ce doublon Live.");
     banc.appuyer("Annuler");
-    expect(document.body.textContent).not.toContain("Recycler ce doublon Live ?");
+    expect(document.querySelector(".atelier-transaction")).toBeNull();
 
     // Une recherche qui ne trouve rien le dit, au lieu de laisser une liste vide
     // sous un onglet qui annonce trois cents doublons.

@@ -47,4 +47,4 @@ Playwright ajoute en CI des annotations GitHub et un rapport
 `test-results/results.json` aux rapports HTML existants. En cas d’échec,
 les artefacts `creatordeck-playwright-report-<shard>` contiennent ces fichiers.
 Un scénario ignoré n’est pas une réussite ; le chemin cloud sans vraie base
-est vérifié séparément avec des RPC simulés. Voir D-111 et la passation.
+est vérifié séparément avec des RPC simulés. Voir le [rapport D-111](verification-d111.md) et la passation.

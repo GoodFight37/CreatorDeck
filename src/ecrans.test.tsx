@@ -96,7 +96,7 @@ describe("les écrans", () => {
     }
     banc.fermer();
 
-    banc.appuyer("Objectifs et saisons");
+    banc.appuyer(/^Objectifs et saisons/);
     expect(banc.ecran("06-objectifs")).toContain("Progression");
 
     banc.appuyer("Toi");

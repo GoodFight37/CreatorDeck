@@ -19,6 +19,11 @@ journal pour laisser son viewport dynamique se mettre à jour ; aucune
 tolérance de dépassement ajoutée.
 Le texte Trades reste hors périmètre ; sa détection doit rester active.
 
+La première CI du lot a exposé trois autres assertions DOM anciennes
+(Objectifs et confirmation Live) : elles sont adaptées au parcours existant,
+avec 25 tests ciblés réussis. Le détail reproductible est dans
+[le rapport D-111](verification-d111.md).
+
 **Conséquences :** aucune modification du jeu ni note joueur pour ce lot de
 vérification. SQL, taux, audio et écrans existants conservent leur comportement.
 Les tests automatiques n’établissent toujours pas le ressenti tactile.
