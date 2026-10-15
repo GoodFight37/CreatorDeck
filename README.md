@@ -67,7 +67,8 @@ courant pour les tests et les limites de cette émulation mobile.
 **Objectifs et saisons** distingue quotidien, jalons et familles, avec gains
 lisibles, filtres et paliers repliés. Tout réclamer récupère les récompenses
 existantes en série et garde un bilan en cas de refus, sans double commande.
-Aucun seuil ni récompense changé ; D-103, preuves au checkpoint courant.
+Aucun seuil ni récompense changé. Publié sur Vercel (`5f96ab58`), parcours
+invité contrôlé à 320/390 px ; D-103, preuves et limites au checkpoint courant.
 
 **Toi → Nouveautés** rassemble les mises à jour du jeu : historique, détail,
 notes non lues et marquage de lecture sur cet appareil, sans compte ni popup

@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — Objectifs et saisons terminé localement, publication en cours
+## Checkpoint courant — Objectifs et saisons publié, Vercel vérifié
 
 - Demande : lot complet autorisé par « go », puis reprise après capture montrant
   une limite d’usage Codex. Ce message n’était pas une erreur du jeu. Base
@@ -30,10 +30,22 @@
   320/390 passent. Note joueur `2026-10-15-objectifs` ajoutée avec le code.
   Build final `npm run build` réussi, cinq pages exportées. Variables Supabase
   locales absentes : compilation validée, pas de réclamation cloud réelle.
-  Publication et contrôle invité Vercel à compléter avant clôture.
+  Publication code/tests/patch note/docs :
+  [`5f96ab587297ba23ccca78174a967fcb685bca8a`](https://github.com/GoodFight37/CreatorDeck/commit/5f96ab587297ba23ccca78174a967fcb685bca8a),
+  push normal sur `main`, SHA confirmé par ls-remote. Vercel Production du même
+  SHA [`EtbzjW6ShGanathyNwv664cfNv91`](https://vercel.com/hafsi37-2386/creator-deckk/EtbzjW6ShGanathyNwv664cfNv91)
+  `READY`, contrôle `success`. Aucun run Actions retourné pour ce commit ;
+  aucune CI complète déclarée verte.
+- [Site publié](https://creator-deckk.vercel.app/) parcouru dans Chromium :
+  empreinte Web `5f96ab5`, entrée depuis Toi, quatre missions, absence de
+  récompense en attente pour le visiteur neuf, filtres de saison et état vide,
+  détail des gains/paliers, pagination 8 + 4, largeurs 320/390 conformes et
+  nouvelle note joueur au premier rang. Aucune erreur JavaScript observée.
+  Aucune récompense réelle réclamée, aucun compte ou donnée factice injectée
+  en Production. Lot clos ; réservation libérée après ce checkpoint final.
 - Fichiers : MissionsView, SeasonsSection, callbacks CreatorDeckApp, CSS
   `objectives.css`, tests DOM/navigateur (titre d'arrivée Toi mis à jour),
-  `release-notes.ts` et docs. Tous sont locaux et non encore publiés ici.
+  `release-notes.ts` et docs. Publication et preuves ci-dessus.
 - Limites : aucune réclamation serveur réelle effectuée ; le bilan reçoit la
   réponse finale de chaque saison, pas le détail des RPC internes de ses
   paliers. Pas de changement de la caisse serveur. Ressenti tactile/APK non

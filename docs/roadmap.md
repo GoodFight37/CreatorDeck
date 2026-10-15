@@ -2,13 +2,16 @@
 
 ## État actuel — 15 octobre 2026
 
-**Objectifs et saisons (D-103) — lot implémenté, publication en cours :** quotidien,
+**Objectifs et saisons (D-103) — clos, publié et vérifié sur Vercel :** quotidien,
 collection/jalons et saisons lisibles ; gains et prochaine étape, filtres et
 pages de huit saisons. Tout réclamer comprend les jalons et s'arrête sur un
 refus, avec bilan reçu/erreur et verrou contre les doubles clics. Choix de série
 séparé. Seuils, récompenses et règles identiques ; note joueur du 15 octobre.
 DOM 10/10, notes 8/8, trois scénarios navigateur uniques réussis, type/lint OK.
-Publication, build et contrôle Vercel consignés au checkpoint courant.
+Build final réussi. Code `5f96ab58`, Vercel Production `READY` / `success` ;
+parcours invité quotidien/saisons/paliers/pages et patch note contrôlés à
+320/390 px. Réclamations complètes testées localement, refus simulés en DOM.
+Détails et limites au checkpoint courant.
 
 **Journal Nouveautés (D-102) — clos, publié et vérifié sur Vercel :** historique
 joueur depuis Toi, détail/filtre, repère discret de non-lu, lecture explicite

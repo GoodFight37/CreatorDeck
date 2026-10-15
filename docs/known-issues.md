@@ -10,7 +10,9 @@ Aucune règle ni caisse modifiée. DOM 10/10, notes 8/8, trois parcours navigate
 uniques passent, dont soldes locaux exacts après double activation/rechargement.
 Limite : refus et partiels simulés ; pas de réclamation d'un compte réel en
 Production, ni détail des RPC internes des paliers dans le bilan UI.
-Publication et validation finale dans le checkpoint courant.
+Code `5f96ab58`, Vercel Production `READY` / `success`. Navigation, quotidien,
+saisons/paliers/pagination et nouvelle note contrôlés à 320/390 px, sans
+erreur JavaScript observée ni réclamation réelle. Détails au checkpoint.
 
 ## Nouveautés — historique joueur ajouté (14 octobre 2026)
 
