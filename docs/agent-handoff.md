@@ -5,7 +5,14 @@
 - Base locale/GitHub vérifiée avant édition : `d7a9de45dc8accd6a7df9ca66cb4ae221799d8d4`, arbre propre.
 - Quatre défauts ciblés corrigés : entrée du sachet qui redémarrait au relâchement, saut au démarrage de l’idle, bouton sachet désactivé malgré des boosters de test, et ombre liée à un padding divergent sur écran court. Le CTA, la taille, les taux et l’économie ne changent pas. La règle globale `button:focus-visible` réfute l’alerte de focus absent ; extrusion/performance non prouvées, donc non modifiées.
 - Note joueur dans `src/lib/release-notes.ts`, décision D-117 et problème connu actualisé. Validation locale : 17/17 tests d’écran ciblés ; 4/4 scénarios navigateur sur profil téléphone (dont padding/ombre à 844, 680 et 568 px, pression et priorité du CTA) ; TypeScript, ESLint ciblé, build, diff check. Capture 390 × 844 inspectée : pack, ombre et CTA restent lisibles, sans débordement. Le ressenti tactile physique reste à juger sur le site.
-- Publication et état Vercel/CI : à relever après le push.
+- Code publié par `a11864cc84bb8ea984b76e320b0c0e9e50944dee`, push normal
+  sur `main`, SHA distant confirmé. Vercel Production `READY` sur ce SHA,
+  alias `creator-deckk.vercel.app` actif, `/` HTTP 200. CI
+  [run 38782343031](https://github.com/GoodFight37/CreatorDeck/actions/runs/38782343031)
+  terminée : les trois shards Playwright, SQL jetable et cloud simulé passent.
+  Le job qualité reste rouge sur les mêmes trois assertions de vocabulaire
+  « serveur » dans Trades/Compte lié (unitaires 1 185/1 186, écrans 172/174),
+  déjà présentes avant D-117. TypeScript, lint, build et catalogue passent.
 
 
 ## Checkpoint D-116 — rapport IA Studio Lot 04
