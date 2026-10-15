@@ -13,17 +13,20 @@
   `closeAction`; retrait de `Radio`. Aucun changement de tirage, économie,
   coûts ni recyclage. Note joueur, revue complète, D-115, roadmap et problèmes
   connus mis à jour.
-- Tests ciblés relancés après la correction : 40/40 (Binder, Atelier, fiche
-  Sortant, carte interactive, focus et notes). TypeScript, ESLint ciblé,
+- Tests ciblés relancés après la correction : 47/47 (Binder, Atelier, fiche
+  Sortant, carte interactive, focus, vitrine et notes). TypeScript, ESLint ciblé,
   build et `git diff --check` passent. `npm test` : 1 185/1 186 ; l’unique
   échec est le texte « serveur » dans Trades, inchangé et hors périmètre.
   Code publié par [0d38fff4](https://github.com/GoodFight37/CreatorDeck/commit/0d38fff45569de0bdbc557432769ce05bcb6336e), push normal sur `main`, SHA distant confirmé.
   Vercel Production correspondant est `READY`, alias principal actif, `/`
   HTTP 200. CI [run 38757768315](https://github.com/GoodFight37/CreatorDeck/actions/runs/38757768315)
-  encore en cours au dernier contrôle (15:11 UTC) : migrations SQL jetables
-  réussies ; qualité, cloud simulé et trois shards Playwright non terminés.
-  Ne pas annoncer la CI verte avant le résultat final ; le seul échec unitaire
-  local reste le jargon Trades connu.
+  contrôle à 15:12 UTC : migrations SQL et cloud simulé réussis ; les 3 shards
+  Playwright encore actifs. Le job qualité a 1 185/1 186 tests unitaires
+  réussis : l’unique échec est le jargon Trades déjà connu. Écrans : 169/172,
+  avec deux assertions Compte lié portant sur le même terme hors périmètre et
+  un test de vitrine qui cliquait l’ancien article ; ce dernier est corrigé
+  dans le checkpoint actif et ses six suites passent localement 47/47. Le job
+  a aussi passé TS/lint/build/catalogue. Attendre les shards avant bilan CI final.
   CI D-114 (run `38755525613`) a réussi build, TS/lint/catalogue, migrations,
   cloud simulé et les 3 shards E2E ; son unique job rouge portait sur le texte
   « serveur » dans Compte/Trades inchangé, 1 test jargon et 2 assertions Compte

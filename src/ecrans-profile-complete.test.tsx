@@ -48,7 +48,7 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     expect(document.querySelectorAll('.profile-showcase-placeholder')).toHaveLength(2);
     expect(document.querySelector('.profile-showcase-slot figcaption')?.textContent).toContain(creator.displayName);
     expect(document.querySelector('.profile-showcase-slot figcaption')?.textContent).toContain('Gold');
-    act(() => document.querySelector<HTMLElement>('.profile-showcase .creator-card')!.click());
+    act(() => document.querySelector<HTMLButtonElement>('.profile-showcase .creator-card-inspect')!.click());
     const dialog = document.querySelector('[role="dialog"]')!;
     expect(dialog.parentElement).toBe(document.body);
     expect(dialog.textContent).toContain('Gold');
