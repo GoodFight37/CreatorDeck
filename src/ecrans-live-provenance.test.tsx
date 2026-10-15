@@ -28,7 +28,10 @@ describe("provenance Live et direct actuel restent distincts", () => {
     expect(document.querySelector(".creator-card")?.getAttribute("aria-label"))
       .toContain("carte obtenue pendant un direct");
     expect(document.querySelector(".card-on-air")).toBeNull();
-    expect(document.querySelector(".inspect-twitch-link")).toBeNull();
+    const link = document.querySelector<HTMLAnchorElement>(".inspect-twitch-link");
+    expect(link?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
+    expect(link?.getAttribute("aria-label")).toContain("dans un nouvel onglet");
+    expect(link?.textContent).toContain("Voir la chaîne sur Twitch");
     expect(document.querySelector(".odds-intro")?.textContent)
       .toContain("obtenu pendant un direct");
   });
@@ -45,7 +48,19 @@ describe("provenance Live et direct actuel restent distincts", () => {
     expect(actualLive?.getAttribute("target")).toBe("_blank");
     expect(actualLive?.getAttribute("rel")).toBe("noopener noreferrer");
     expect(actualLive?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
-    expect(link?.getAttribute("href")).toBe(`https://www.twitch.tv/${creator.login}`);
-    expect(link?.textContent).toContain("Ouvrir le live sur Twitch");
+    expect(link?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
+    expect(link?.getAttribute("target")).toBe("_blank");
+    expect(link?.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(link?.textContent).toContain("Voir la chaîne sur Twitch");
+  });
+
+  it("garde la chaîne accessible depuis une carte manquante du Binder", async () => {
+    await banc.monter(<CardInspectModal presentation="binder" creator={creator}
+      ownedCount={0} variant="standard" liveStream={null} onClose={() => {}} />);
+
+    const link = document.querySelector<HTMLAnchorElement>(".card-vault .inspect-twitch-link");
+    expect(link?.getAttribute("href")).toBe(`https://www.twitch.tv/${encodeURIComponent(creator.login)}`);
+    expect(link?.getAttribute("target")).toBe("_blank");
+    expect(document.querySelector(".card-vault .odds-stat:last-child")?.textContent).toContain("Manquante");
   });
 });

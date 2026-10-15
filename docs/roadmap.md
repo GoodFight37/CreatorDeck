@@ -2,6 +2,11 @@
 
 ## État actuel — 15 octobre 2026
 
+**Accès permanent Twitch (D-104) — implémenté :** chaque fiche de carte dans
+le Binder et la vitrine Toi donne accès à la chaîne, avec ou sans direct. Le
+direct actuel reste une information distincte. Aucun effet sur les tirages ou
+les comptes ; note joueur dans Nouveautés. Vérification/publication au checkpoint.
+
 **Objectifs et saisons (D-103) — clos, publié et vérifié sur Vercel :** quotidien,
 collection/jalons et saisons lisibles ; gains et prochaine étape, filtres et
 pages de huit saisons. Tout réclamer comprend les jalons et s'arrête sur un
@@ -305,8 +310,8 @@ checkpoint de passation pour le dernier mix.
 4. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
    avant toute intégration réelle de nouveaux univers. Le prototype et la
    simulation ne modifient ni catalogue, ni taux, ni économie.
-5. Backlog sans développement engagé : lien permanent Twitch depuis une carte,
-   soundbites des créateurs, Perfect renforcé, événements Twitch, Trade Radar, Last Pack revanchard et export Story.
+5. Backlog sans développement engagé : soundbites des créateurs, Perfect renforcé,
+   événements Twitch, Trade Radar, Last Pack revanchard et export Story.
    Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus

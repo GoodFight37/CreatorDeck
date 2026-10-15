@@ -1,5 +1,23 @@
 # Décisions CreatorDeck
 
+## D-104 — 15 octobre 2026 : accès permanent à la chaîne depuis la fiche carte
+
+**Contexte :** la roadmap gardait le lien permanent Twitch dans le backlog. La
+fiche proposait déjà un lien, mais seulement lorsqu'un direct était détecté.
+Une carte possédée ou manquante reste consultable sans direct dans le Binder ;
+la vitrine de Toi réutilise la même fiche.
+
+**Décision :** afficher le lien de chaîne dans chaque fiche de carte, séparé
+de l'indicateur de direct. Nommer l'action « Voir la chaîne sur Twitch » sans
+promettre un live. L'ouvrir dans un nouvel onglet avec `noopener noreferrer`,
+encoder le login dans l'URL et annoncer le nouvel onglet au lecteur d'écran.
+Conserver le lien de la pastille Live sur la carte, l'état du direct et le
+reste de la fiche. Aucun appel réseau, règle de jeu ou permission supplémentaire.
+
+**Preuve et limite :** test DOM de la fiche avec et sans direct, y compris le
+nom accessible et l'URL. La disponibilité d'une chaîne externe dépend de Twitch.
+
+
 ## D-103 — 15 octobre 2026 : un parcours Objectifs complet et un bilan de réclamation fiable
 
 **Contexte :** lot Objectifs et saisons autorisé après Nouveautés. Dans la base

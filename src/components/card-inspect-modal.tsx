@@ -172,12 +172,13 @@ export function CardInspectModal({
                     {viewersLabel(liveStream.viewers)}
                   </strong>
                 </div>
-                <a className="inspect-twitch-link" href={`https://www.twitch.tv/${creator.login}`}
-                  target="_blank" rel="noopener noreferrer">
-                  <ExternalLink size={15} aria-hidden="true" /> Ouvrir le live sur Twitch
-                </a>
               </>
             ) : null}
+            <a className="inspect-twitch-link" href={`https://www.twitch.tv/${encodeURIComponent(creator.login)}`}
+              target="_blank" rel="noopener noreferrer"
+              aria-label={`Ouvrir la chaîne Twitch de ${creator.displayName} dans un nouvel onglet`}>
+              <ExternalLink size={15} aria-hidden="true" /> Voir la chaîne sur Twitch
+            </a>
           </div>
 
           <div className="inspect-footer">

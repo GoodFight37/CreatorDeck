@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-chaine-twitch", date: "2026-10-15", title: "Retrouve la chaîne derrière chaque carte",
+    summary: "La fiche d’une carte donne toujours accès à sa chaîne Twitch.",
+    sections: [{ title: "Amélioration", items: [
+      "Depuis la fiche d’une carte dans le Binder ou ta vitrine, ouvre sa chaîne Twitch même si elle n’est pas en direct.",
+      "Le direct actuel reste indiqué séparément quand il est disponible. Le lien s’ouvre dans un nouvel onglet pour garder ta place dans le jeu.",
+    ] }],
+  },
+  {
     id: "2026-10-15-objectifs", date: "2026-10-15", title: "Tes objectifs, tes récompenses",
     summary: "Le quotidien, les jalons et les saisons sont plus faciles à suivre et à réclamer.",
     sections: [{ title: "Améliorations", items: [

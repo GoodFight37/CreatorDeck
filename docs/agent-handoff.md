@@ -1,5 +1,25 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — lien permanent Twitch implémenté, publication en cours
+
+- Base GitHub `main` `7e8f83e564df7f668617b3281033c620a2371ee6`,
+  vérifiée par `ls-remote` et fetch. Checkout local initial `work` à
+  `51323720`, deux commits distants examinés, puis nouvelle branche locale
+  `main` créée à la pointe distante ; aucun fichier initial modifié.
+- D-104 : lien permanent de chaîne dans la fiche de carte du Binder et de la
+  vitrine Toi, avec ou sans direct ; l'indication Live reste distincte.
+  Login encodé, nouvel onglet annoncé et sécurisé. Note joueur ajoutée.
+- `npm ci` réussi, lockfile inchangé. Passe finale `npm run ecrans --
+  src/ecrans-live-provenance.test.tsx src/ecrans-profile-complete.test.tsx
+  src/ecrans-release-notes.test.tsx` : 13/13, dont fiche avec/sans direct,
+  carte manquante du Binder et entrée vitrine. `npm run typecheck`, ESLint ciblé et
+  `npm run build` réussis, cinq pages exportées. Build local sans variables
+  Supabase : preuve de compilation uniquement. La première passe avant
+  `npm ci` ne pouvait pas lancer jsdom et signalait des dépendances absentes ;
+  relance après installation réussie. En cours : commit/push et Vercel.
+  Aucun ressenti tactile du peel déduit de ce changement.
+
+
 ## Checkpoint courant — Objectifs et saisons publié, Vercel vérifié
 
 - Demande : lot complet autorisé par « go », puis reprise après capture montrant
