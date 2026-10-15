@@ -609,6 +609,14 @@ suivants restent non examinés. Le fichier des Sortants est vide aujourd’hui,
 donc leur rendu a été couvert par un fixture synthétique, pas par une fiche
 réelle. Détails : [revue D-114](revue-ia-studio-binder-2026-10-15.md).
 
+La CI D-114 (run `38755525613`) confirme le build, TypeScript, ESLint,
+catalogue, migrations jetables, cloud simulé et les trois shards Playwright.
+Le job unitaires/écrans reste rouge pour une seule cause hors de ce lot : le
+mot « serveur » dans l’interface Compte/Trades, repris par un test de jargon et
+deux assertions Compte lié (1 185/1 186 unitaires, 167/169 écrans). Ces fichiers
+n’ont pas changé depuis le SHA de départ ; le vocabulaire Compte/Trades n’est
+pas modifié par D-114.
+
 ### Visages artificiels dans certains anciens portraits Upscayl — 13 octobre 2026
 
 Malik signale que plusieurs agrandissements IA reconstruisent les traits et

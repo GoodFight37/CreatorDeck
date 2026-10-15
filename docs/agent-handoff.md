@@ -19,17 +19,19 @@
   (le catalogue réel en contient zéro), vérifie Obtenues (2), présence, filtre
   de page, recherche et résultat vide. Aucun changement économie, tirages,
   craft, recyclage ou serveur.
-- Vérifié : DOM ciblé 20/20, notes joueur 3/3, TypeScript et ESLint ciblé
-  réussis ; `npm run build` réussit (compilation locale sans variables Cloud,
-  avertissement attendu). `npm test` : 1 185/1 186 ; l’unique échec est
-  l’assertion jargon Trades « serveur » déjà documentée, hors périmètre.
-  `git diff --check` propre. Aucun contrôle tactile demandé, l’APK est hors
-  cible.
-- Main GitHub était toujours au SHA de base juste avant livraison. Commit et
-  push restent à faire ; après push, contrôler Actions et déploiement Vercel
-  Production du SHA. Ne pas annoncer CI verte si elle est encore active ou
-  échoue hors périmètre. La suite du bilan IA Studio reste à lire lorsque sa
-  portion manquante sera disponible.
+- Vérifié localement : DOM ciblé 20/20, notes joueur 3/3, TypeScript,
+  ESLint ciblé, build de production et `git diff --check` réussis. Build local
+  sans variables Cloud (avertissement attendu). `npm test` : 1 185/1 186 ;
+  l’unique échec est le mot « serveur » dans le texte Trades déjà documenté.
+- Publié par [285628a2](https://github.com/GoodFight37/CreatorDeck/commit/285628a260c037437a66989a07958e023afefba5), push normal `main`, SHA distant confirmé.
+  Vercel Production `READY`, alias `creator-deckk.vercel.app`, page `/` HTTP
+  200. CI [run 38755525613](https://github.com/GoodFight37/CreatorDeck/actions/runs/38755525613)
+  terminée : build, TypeScript, ESLint, catalogue, migrations jetables, test
+  cloud simulé et 3 shards Playwright réussis. Le job unitaires/écrans/vocabulaire
+  reste rouge sur le seul mot « serveur » : un test jargon, deux tests
+  `ecrans-compte-lie`; 1 185/1 186 unitaires, 167/169 écrans. Les fichiers
+  concernés ne changent pas dans ce lot. Aucun test tactile physique ; APK hors
+  cible. La suite du bilan IA Studio reste à lire si son texte complet est reçu.
 
 ## Checkpoint courant — D-113 deuxième bilan IA Studio
 
