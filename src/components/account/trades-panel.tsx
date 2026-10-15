@@ -17,6 +17,7 @@ import { useGame } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { PlayerSearchResult, TradeCard, TradeStatus } from "@/lib/cloud/api";
 import { describeCards } from "@/lib/cloud/trades";
+import { tradeRadarMatches, type RadarWish } from "@/lib/trade-radar";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
@@ -110,6 +111,17 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const [wantedQuery, setWantedQuery] = useState("");
   const [variants, setVariants] = useState<Record<string, string[]>>({});
   const [loadingSlug, setLoadingSlug] = useState<string | null>(null);
+  const [radarWishes, setRadarWishes] = useState<RadarWish[] | null>(null);
+  const [radarOwner, setRadarOwner] = useState(cloud.userId);
+  const [radarScanned, setRadarScanned] = useState(0);
+  const [radarMessage, setRadarMessage] = useState<string | null>(null);
+  const [radarBusy, setRadarBusy] = useState(false);
+  const radarGeneration = useRef(0);
+  const wantedInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    radarGeneration.current += 1;
+    return () => { radarGeneration.current += 1; };
+  }, [cloud.userId]);
 
   // Mes cartes, une entrée par couple créateur + variante : la même carte en
   // double ne se propose pas deux fois dans une offre (le serveur la refuse).
@@ -124,6 +136,48 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
     }
     return list;
   }, [state]);
+  const hasDuplicates = (state?.cards.length ?? 0) > myCards.length;
+  const visibleRadarWishes = radarOwner === cloud.userId ? radarWishes : null;
+  const visibleRadarScanned = radarOwner === cloud.userId ? radarScanned : 0;
+  const visibleRadarMessage = radarOwner === cloud.userId ? radarMessage : null;
+  const visibleRadarBusy = radarOwner === cloud.userId && radarBusy;
+  const radarMatches = useMemo(
+    () => tradeRadarMatches(state?.cards ?? [], visibleRadarWishes ?? []),
+    [state, visibleRadarWishes],
+  );
+
+  async function scanRadar() {
+    if (visibleRadarBusy || !hasDuplicates) return;
+    setRadarOwner(cloud.userId);
+    setRadarWishes(null);
+    setRadarScanned(0);
+    setRadarBusy(true);
+    setRadarMessage(null);
+    const generation = radarGeneration.current;
+    try {
+      const result = await cloudStore.tradeRadar();
+      if (generation !== radarGeneration.current) return;
+      setRadarWishes(result.wishes);
+      setRadarScanned(result.scanned);
+      setRadarMessage(result.message);
+    } finally { if (generation === radarGeneration.current) setRadarBusy(false); }
+  }
+
+  function prepareRadarOffer(match: (typeof radarMatches)[number]) {
+    if (partner?.userId === match.friend.friendId && given.length >= TRADE_PICK_LIMIT && !given.includes(match.key)) {
+      setRadarMessage("Retire une carte de ton offre avant d'ajouter cette piste.");
+      return;
+    }
+    if (partner && partner.userId !== match.friend.friendId && (given.length || wanted.length) &&
+      !window.confirm("Changer de partenaire efface les cartes déjà choisies pour cette offre. Continuer ?")) return;
+    const samePartner = partner?.userId === match.friend.friendId;
+    setPartner({ userId: match.friend.friendId, displayName: match.friend.friendName, level: 0, uniqueCreators: 0 });
+    setGiven(samePartner ? [...new Set([...given, match.key])] : [match.key]);
+    setGivenQuery(match.slug);
+    setGivenPage(0);
+    if (!samePartner) { setWanted([]); setVariants({}); }
+    window.setTimeout(() => { wantedInput.current?.scrollIntoView?.({ block: "center" }); wantedInput.current?.focus(); }, 0);
+  }
 
   // La page de « Tu donnes » : l'état vit ici parce que la recherche la remet
   // à zéro (voir `onChange` plus bas) — la page 3 d'une autre recherche ne veut
@@ -302,6 +356,29 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
         ) : null}
       </div>
 
+      <section className="trade-radar" aria-label="Trade Radar">
+        <div className="trade-radar-head">
+          <div><h3>Trade Radar</h3><p>Les souhaits publics de tes amis qui correspondent à tes variantes en double.</p></div>
+          <button type="button" className="account-button" disabled={visibleRadarBusy || cloud.busy || !hasDuplicates} onClick={() => void scanRadar()}>
+            <Search size={13} /> {visibleRadarBusy ? "Recherche…" : visibleRadarWishes ? "Relancer le radar" : "Lancer le radar"}
+          </button>
+        </div>
+        {!hasDuplicates ? <p className="account-hint">Garde au moins deux exemplaires d’une même variante pour proposer une carte.</p> : null}
+        {visibleRadarMessage ? <p className="account-hint account-warning" role="status">{visibleRadarMessage}</p> : null}
+        {visibleRadarWishes !== null ? (
+          <div aria-live="polite">
+            <p className="account-hint">{visibleRadarScanned} ami{visibleRadarScanned > 1 ? "s" : ""} consulté{visibleRadarScanned > 1 ? "s" : ""} · {radarMatches.length} piste{radarMatches.length > 1 ? "s" : ""}</p>
+            {radarMatches.length ? <ul className="trade-radar-list">{radarMatches.map((match) => (
+              <li key={`${match.friend.friendId}-${match.key}`}>
+                <div><b>{match.friend.friendName}</b><span>cherche {CREATOR_BY_SLUG.get(match.slug)?.displayName ?? match.slug} · {VARIANT_META[match.variant].label} ×{match.copies} chez toi</span></div>
+                <button type="button" className="account-button" disabled={cloud.busy} onClick={() => prepareRadarOffer(match)}>Préparer l&apos;offre</button>
+              </li>
+            ))}</ul> : !visibleRadarMessage ? <p className="account-hint">{visibleRadarScanned ? "Aucun souhait ne correspond à tes cartes en double." : "Aucun ami à consulter pour le moment."}</p> : null}
+          </div>
+        ) : null}
+        <p className="account-hint">Le radar ne promet pas qu’un ami possède la carte que tu demandes. L’offre reste à compléter et le serveur la vérifiera.</p>
+      </section>
+
       <div className="trade-builder">
         <label className="account-field">
           <span>
@@ -449,6 +526,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
                 <Search size={10} /> Tu demandes ({wanted.length}/{TRADE_PICK_LIMIT})
               </span>
               <input
+                ref={wantedInput}
                 type="search"
                 placeholder="N'importe quel créateur du catalogue"
                 value={wantedQuery}

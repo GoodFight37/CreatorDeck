@@ -1,5 +1,34 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — Trade Radar en vérification
+
+- Base `main` propre `13f26d5045685f18514e1b18dbfc24afe48fed94`,
+  identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
+- D-107 : dans Compte → Échanges, scan manuel des amis acceptés et de leurs
+  souhaits publics existants, par quatre lectures parallèles. Une piste existe
+  si le joueur possède deux cartes de même créateur **et même variante**.
+  Préparer choisit partenaire et carte offerte, filtre cette carte puis place
+  le focus sur la contrepartie ; aucune offre envoyée automatiquement.
+  Chargement, vide, erreurs partielles, changement de partenaire et de compte
+  traités. Aucun RPC nouveau, migration, économie ou collection tierce exposée.
+  Note joueur, D-107 et `docs/trade-radar.md` ajoutés ; guide lié.
+- `npm test -- src/lib/trade-radar.test.ts src/lib/cloud/cloud-store.test.ts
+  src/lib/release-notes.test.ts` : 172/172 à la passe finale.
+  `npm run ecrans -- src/ecrans-echanges.test.tsx
+  src/ecrans-release-notes.test.tsx` : 7/7 ; le premier passage ciblé Échanges
+  a échoué 3/4 car l'ancien helper de test appuyait le premier « Chercher »
+  après l'ajout du radar. Sélecteur précisé, libellé radar différencié, relance
+  4/4. Passe finale après ajout des scénarios brouillon et sans doublon :
+  Échanges 6/6, notes 3/3, Compte 4/4, soit 13/13.
+  Typecheck/ESLint ciblés réussis. HTML de l'état piste capturé, puis
+  rendu avec les CSS dans Chromium à 320 et 390 px ; largeur conforme,
+  bouton visible après défilement à 320. Captures
+  `/tmp/trade-radar-320.png` et `/tmp/trade-radar-390.png` inspectées.
+  Fixtures : aucune lecture d'amis réels en Production. `npm run build`
+  réussi, cinq pages exportées ; variables Supabase locales absentes, donc
+  compilation seulement. Publication/Vercel en cours.
+
+
 ## Checkpoint courant — identité du Perfect publiée, Vercel vérifié
 
 - Base `main` propre `762ff5126921a4d8323e7dfea9769194cffa8277`,

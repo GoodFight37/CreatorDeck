@@ -1302,6 +1302,42 @@ describe("échanges côté store", () => {
     expect(variants).toEqual({ variants: ["standard", "gold"], message: null });
   });
 
+  it("lit les souhaits publics des amis sans ouvrir leurs collections", async () => {
+    const { store, api } = harness();
+    const friend = { id: 7, friendId: partnerId, friendName: "Bruno", createdAt: SERVER_NOW };
+    api.listFriends.mockResolvedValue([friend]);
+    api.wishlistSlug.mockResolvedValue("ibai");
+    const radar = await store.tradeRadar();
+    expect(api.listFriends).toHaveBeenCalledTimes(1);
+    expect(api.wishlistSlug).toHaveBeenCalledWith(partnerId);
+    expect(api.playerVariants).not.toHaveBeenCalled();
+    expect(radar).toEqual({ wishes: [{ friend, slug: "ibai" }], scanned: 1, failed: 0, message: null });
+  });
+
+  it("garde les pistes reçues si un souhait d'ami échoue", async () => {
+    const { store, api } = harness();
+    const first = { id: 7, friendId: partnerId, friendName: "Bruno", createdAt: SERVER_NOW };
+    const second = { id: 8, friendId: "33333333-3333-4333-8333-333333333333", friendName: "Ana", createdAt: SERVER_NOW };
+    api.listFriends.mockResolvedValue([first, second]);
+    api.wishlistSlug.mockImplementation(async (userId: string) => {
+      if (userId === second.friendId) throw new Error("réseau");
+      return "ibai";
+    });
+    const radar = await store.tradeRadar();
+    expect(radar.wishes).toEqual([{ friend: first, slug: "ibai" }]);
+    expect(radar.scanned).toBe(2);
+    expect(radar.failed).toBe(1);
+    expect(radar.message).toContain("1 souhait indisponible");
+  });
+
+  it("ne lit aucun souhait sans compte connecté", async () => {
+    const { store, api } = harness({ signedIn: false });
+    const radar = await store.tradeRadar();
+    expect(api.listFriends).not.toHaveBeenCalled();
+    expect(api.wishlistSlug).not.toHaveBeenCalled();
+    expect(radar.message).toMatch(/Connecte-toi/);
+  });
+
   it("dit quand la recherche ne trouve personne", async () => {
     const { store, api } = harness();
     api.searchPlayers.mockResolvedValue([]);

@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-trade-radar", date: "2026-10-15", title: "Des pistes pour échanger avec tes amis",
+    summary: "Trade Radar rapproche tes cartes en double des souhaits publics de tes amis.",
+    sections: [{ title: "Nouveauté", items: [
+      "Dans Compte puis Échanges, lance Trade Radar pour voir quels amis cherchent une carte dont tu as au moins deux exemplaires de la même variante.",
+      "Choisis une piste pour préparer le partenaire et la carte offerte. Tu choisis encore ce que tu demandes avant d’envoyer une offre.",
+      "La recherche se fait à ta demande. Elle ne révèle pas la collection des autres joueurs et ne garantit pas qu’une offre sera acceptée.",
+    ] }],
+  },
+  {
     id: "2026-10-15-perfect", date: "2026-10-15", title: "Un Perfect qui reste mémorable",
     summary: "Le tirage Perfect garde son identité jusqu'au récapitulatif.",
     sections: [{ title: "Amélioration", items: [

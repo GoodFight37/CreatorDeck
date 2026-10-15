@@ -2,6 +2,14 @@
 
 ## État actuel — 15 octobre 2026
 
+**Trade Radar (D-107) — implémenté :** pistes à la demande depuis les souhaits
+publics des amis et les variantes locales en double ; partenaire/carte offerte
+préparés, choix de la contrepartie et arbitrage serveur conservés. États vide,
+chargement, lecture partielle et changement de partenaire traités. Aucun SQL,
+économie ni collection tierce exposée. Logique/store/notes 172/172, écrans
+13/13, typecheck, ESLint, build et rendu 320/390 px réussis. Publication au
+checkpoint courant.
+
 **Perfect renforcé (D-106) — publié et vérifié sur Vercel :** noms/raretés et nouveautés des
 cinq cartes lisibles sous le tirage ; récapitulatif Perfect distinct. Aucun
 changement de taux, gain, son, geste ou timing. DOM 28/28, TypeScript, ESLint,
@@ -326,7 +334,7 @@ checkpoint de passation pour le dernier mix.
    avant toute intégration réelle de nouveaux univers. Le prototype et la
    simulation ne modifient ni catalogue, ni taux, ni économie.
 5. Backlog sans développement engagé : soundbites des créateurs,
-   événements Twitch, Trade Radar et Last Pack revanchard.
+   événements Twitch et Last Pack revanchard.
    Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus

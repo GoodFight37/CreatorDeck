@@ -43,6 +43,11 @@ vi.mock("@/hooks/use-cloud", () => ({
 
 vi.mock("@/lib/cloud/cloud-store", () => ({
   cloudStore: {
+    tradeRadar: vi.fn(async () => ({
+      wishes: [{ friend: { id: 7, friendId: "33333333-3333-4333-8333-333333333333", friendName: "Ana", createdAt: "2026-10-15T00:00:00Z" }, slug: "kaicenat" }],
+      scanned: 1, failed: 0, message: null,
+    })),
+    proposeTrade: vi.fn(async () => ({ status: "done", message: "" })),
     searchPlayers: vi.fn(async () => ({ players: [monde.partenaire], message: null })),
     loadTrades: vi.fn(async () => {}),
     respondTrade: vi.fn(async () => {}),
@@ -88,7 +93,7 @@ describe("les échanges, « Tu donnes »", () => {
     const pseudo = document.querySelector<HTMLInputElement>('input[placeholder="Pseudo au classement"]');
     expect(pseudo, "aucun champ de recherche de joueur").toBeTruthy();
     banc.saisir(pseudo!, "bot");
-    banc.appuyer("Chercher");
+    act(() => document.querySelector<HTMLButtonElement>(".trade-search button")!.click());
     await act(async () => {});
     // Le bouton du joueur porte deux lignes (« Bot de banc » puis son niveau) :
     // `appuyer` cherche le texte **exact**, donc on vise l'élément.
@@ -116,6 +121,57 @@ describe("les échanges, « Tu donnes »", () => {
     expect(cartes()).toHaveLength(24);
     expect(pager()).toContain("Cartes 1");
     expect(pager()).toContain("24 sur 60");
+  });
+
+  it("prépare une offre depuis le souhait d'une amie sans l'envoyer", async () => {
+    monde.etat = { cards: [
+      { id: "a", creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" },
+      { id: "b", creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" },
+    ] };
+    const { TradesPanel } = await import("@/components/account/trades-panel");
+    await banc.monter(<TradesPanel focus="trades" />);
+    const scan = document.querySelector<HTMLButtonElement>(".trade-radar-head button")!;
+    act(() => scan.click());
+    await act(async () => {});
+    expect(document.querySelectorAll(".trade-radar-list li")).toHaveLength(1);
+    expect(document.querySelector(".trade-radar-list")?.textContent).toContain("Ana");
+    act(() => document.querySelector<HTMLButtonElement>(".trade-radar-list button")!.click());
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+    expect(document.querySelector(".trade-partner")?.textContent).toContain("Ana");
+    expect(document.querySelector(".trade-pick")?.querySelector<HTMLButtonElement>(".trade-choice.on")?.textContent).toContain("Kai");
+    expect(document.querySelector<HTMLInputElement>('input[placeholder="Une de tes cartes"]')?.value).toBe("kaicenat");
+    expect(document.activeElement).toBe(document.querySelector('input[placeholder="N\'importe quel créateur du catalogue"]'));
+    const { cloudStore } = await import("@/lib/cloud/cloud-store");
+    expect(cloudStore.proposeTrade).not.toHaveBeenCalled();
+    banc.ecran("52-trade-radar");
+  });
+
+  it("protège le brouillon quand une piste change de partenaire", async () => {
+    monde.etat = { cards: [
+      { id: "a", creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" },
+      { id: "b", creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" },
+    ] };
+    await panneau();
+    act(() => document.querySelector<HTMLButtonElement>(".trade-pick .trade-choice")!.click());
+    banc.appuyer("Lancer le radar");
+    await act(async () => {});
+    const prepare = document.querySelector<HTMLButtonElement>(".trade-radar-list button")!;
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    act(() => prepare.click());
+    expect(document.querySelector(".trade-partner")?.textContent).toContain("Bot de banc");
+    expect(confirm).toHaveBeenCalledOnce();
+    confirm.mockReturnValue(true);
+    act(() => prepare.click());
+    expect(document.querySelector(".trade-partner")?.textContent).toContain("Ana");
+    confirm.mockRestore();
+  });
+
+  it("explique pourquoi le radar attend un doublon", async () => {
+    monde.etat = { cards: [{ id: "a", creatorSlug: "kaicenat", rarity: "legendary", variant: "standard" }] };
+    const { TradesPanel } = await import("@/components/account/trades-panel");
+    await banc.monter(<TradesPanel focus="trades" />);
+    expect(document.querySelector<HTMLButtonElement>(".trade-radar-head button")?.disabled).toBe(true);
+    expect(document.querySelector(".trade-radar")?.textContent).toContain("au moins deux exemplaires");
   });
 
   it("feuillette jusqu'au bout, sans jamais dépasser", async () => {

@@ -27,6 +27,8 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   la roadmap ou la passation.
 - **Boosters temporaires pour tester** : [codes privés](booster-test-access.md) ;
   réserve serveur plafonnée, sans reset de progression.
+- **Trade Radar** : [périmètre et fonctionnement](trade-radar.md) ; souhaits
+  publics des amis, doublons locaux, offre toujours arbitrée par le serveur.
 - **Assets audio et boucle BGM** : [audio-assets.md](audio-assets.md), avec la procédure pour remplacer le prototype.
 
 Une ancienne section peut décrire un état remplacé depuis. En cas de divergence,

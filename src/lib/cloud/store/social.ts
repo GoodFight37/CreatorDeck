@@ -7,6 +7,7 @@ import type { SendFriendRequestOutcome } from "@/lib/social/friends";
 import { EMPTY_FRIEND_LISTS } from "@/lib/social/friends";
 import { applyTradeResult } from "@/lib/game-engine";
 import { describeCards } from "@/lib/cloud/trades";
+import type { RadarWish } from "@/lib/trade-radar";
 
 /**
  * Les actions « social » du magasin cloud : mêmes corps qu'avant la
@@ -63,6 +64,30 @@ export function socialActions(ctx: CloudStoreContext) {
         return { variants: await ready.api.playerVariants(userId, slug), message: null };
       } catch (error) {
         return { variants: [], message: ctx.cloudRefusal(error, "Lecture des variantes impossible.").message };
+      }
+    },
+
+    /** Relit les souhaits publics des amis à la demande, sans ouvrir leurs collections. */
+    async tradeRadar(): Promise<{ wishes: RadarWish[]; scanned: number; failed: number; message: string | null }> {
+      const ready = ctx.tradeApi();
+      if ("refusal" in ready) return { wishes: [], scanned: 0, failed: 0, message: ready.refusal.message };
+      try {
+        const friends = await ready.api.listFriends();
+        const wishes: RadarWish[] = [];
+        let failed = 0;
+        // Quatre lectures à la fois : un grand carnet d'amis ne lance pas une
+        // rafale de requêtes simultanées, et chaque souhait reste public.
+        for (let start = 0; start < friends.length; start += 4) {
+          await Promise.all(friends.slice(start, start + 4).map(async (friend) => {
+            try {
+              const slug = await ready.api.wishlistSlug(friend.friendId);
+              if (slug) wishes.push({ friend, slug });
+            } catch { failed += 1; }
+          }));
+        }
+        return { wishes, scanned: friends.length, failed, message: failed ? `${failed} souhait${failed > 1 ? "s" : ""} indisponible${failed > 1 ? "s" : ""} : relance le radar plus tard.` : null };
+      } catch (error) {
+        return { wishes: [], scanned: 0, failed: 0, message: ctx.cloudRefusal(error, "Radar indisponible.").message };
       }
     },
 

@@ -101,6 +101,7 @@ export type CloudStoreActions = {
   openReturnGiftPack: ReturnType<typeof packActions>["openReturnGiftPack"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];
   playerVariants: ReturnType<typeof socialActions>["playerVariants"];
+  tradeRadar: ReturnType<typeof socialActions>["tradeRadar"];
   loadTrades: ReturnType<typeof socialActions>["loadTrades"];
   proposeTrade: ReturnType<typeof socialActions>["proposeTrade"];
   respondTrade: ReturnType<typeof socialActions>["respondTrade"];

@@ -1,5 +1,31 @@
 # Décisions CreatorDeck
 
+## D-107 — 15 octobre 2026 : Trade Radar sur les souhaits publics des amis
+
+**Contexte :** les échanges et la wishlist publique existent. Trouver un ami
+qui cherche une de ses cartes en double demandait d'ouvrir ses fiches une par
+une ; le formulaire savait déjà préparer et envoyer une offre, mais pas
+suggérer un partenaire. Le backlog citait Trade Radar sans en fixer les règles.
+
+**Décision :** recherche déclenchée par le joueur dans Compte → Échanges. Lire
+la liste d'amis acceptés, puis leur seul souhait public via le RPC existant
+`wishlist_slug()` par groupes de quatre requêtes. Rapprocher ces souhaits des
+cartes locales possédées en deux exemplaires ou plus de la **même variante**.
+Afficher les résultats et les échecs partiels ; aucun scan continu, aucune
+copie de collection tierce ni nouveau RPC. Une piste prépare le partenaire et
+la carte offerte, sans envoyer d'offre. Le joueur choisit la carte demandée ;
+le serveur garde ses contrôles actuels sur la proposition et l'acceptation.
+Changer de partenaire avec une offre en cours demande confirmation. Un
+changement de compte invalide les résultats locaux du radar.
+
+**Conséquences :** aucun prix, récompense, probabilité ou règle d'échange
+modifié ; aucune migration. Une piste n'est pas une garantie que l'ami possède
+la carte souhaitée en retour, ni que l'état local est synchronisé. Le scan
+sur demande coûte une lecture d'amis et une lecture de souhait par ami ; pas de
+nouveau service ni de notification. Détails et preuves : [Trade Radar](trade-radar.md)
+et checkpoint courant.
+
+
 ## D-106 — 15 octobre 2026 : identité du Perfect jusqu'au récapitulatif
 
 **Contexte :** le Perfect montrait déjà cinq cartes en cascade et jouait son
