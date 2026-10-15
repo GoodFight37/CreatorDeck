@@ -21,12 +21,16 @@
   Vercel Production correspondant est `READY`, alias principal actif, `/`
   HTTP 200. CI [run 38757768315](https://github.com/GoodFight37/CreatorDeck/actions/runs/38757768315)
   contrôle à 15:12 UTC : migrations SQL et cloud simulé réussis ; les 3 shards
-  Playwright encore actifs. Le job qualité a 1 185/1 186 tests unitaires
+  Playwright : le shard 3 a échoué car l’E2E attendait le focus sur l’ancien
+  article. Son sélecteur a été migré vers le vrai bouton d’inspection ; le
+  fichier complet repasse localement 3/3 sur téléphone. Shards 1 et 2 encore
+  actifs au dernier contrôle. Le job qualité a 1 185/1 186 tests unitaires
   réussis : l’unique échec est le jargon Trades déjà connu. Écrans : 169/172,
   avec deux assertions Compte lié portant sur le même terme hors périmètre et
   un test de vitrine qui cliquait l’ancien article ; ce dernier est corrigé
   dans le checkpoint actif et ses six suites passent localement 47/47. Le job
-  a aussi passé TS/lint/build/catalogue. Attendre les shards avant bilan CI final.
+  a aussi passé TS/lint/build/catalogue. Attendre les deux shards avant bilan
+  CI final ; le shard 3 doit aussi être relancé après l’adaptation locale.
   CI D-114 (run `38755525613`) a réussi build, TS/lint/catalogue, migrations,
   cloud simulé et les 3 shards E2E ; son unique job rouge portait sur le texte
   « serveur » dans Compte/Trades inchangé, 1 test jargon et 2 assertions Compte

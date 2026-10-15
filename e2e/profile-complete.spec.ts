@@ -34,7 +34,7 @@ test("Toi rempli : noms complets, variantes exactes, focus et retour Binder", as
   const caption = page.locator(".profile-showcase-slot figcaption strong");
   await expect(caption).toHaveText(selected.displayName);
   expect(await caption.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-  const trigger = page.locator(".profile-showcase .creator-card");
+  const trigger = page.locator(".profile-showcase .creator-card-inspect");
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: `Carte de ${selected.displayName}` });
   await expect(dialog).toBeFocused();
