@@ -1,11 +1,12 @@
-## Compteurs et focus du prototype — D-112 corrigé localement
+## Compteurs et focus du prototype — D-112 corrigé et publié
 
 Constats IA Studio sur `7be3914b` : compteurs nommés sans rôle adapté,
 classement démo défilant sans déplacer le focus et barre de niveau pouvant
 recevoir une largeur négative avec un import niveau/XP incohérent. Impact
 accessibilité/affichage ; aucune corruption de progression démontrée.
 Rôles de groupe, focus explicite et borne 0–100 ajoutés. Clavier 2/2 et rendus
-ponctuels passent. Deux autres alertes de ce bilan étaient des faux positifs ;
+ponctuels passent. Code `b97d706f`, Vercel `success`, compteurs/focus vérifiés
+sur la production à 390 × 844. Deux autres alertes étaient des faux positifs ;
 voir la [revue détaillée](revue-ia-studio-2026-10-15.md).
 
 ## Vérifications navigateur rouges après les lots UI — D-111 publiée

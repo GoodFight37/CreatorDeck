@@ -1,6 +1,6 @@
 # Reprise rapide — 15 octobre 2026
 
-## Checkpoint courant — D-112 premier bilan IA Studio, publication en cours
+## Checkpoint courant — D-112 premier bilan IA Studio, publié et Vercel vérifié
 
 - Main local/GitHub propre et identique `7be3914b` au départ. Bilan externe
   de cinq points reçu, vérifié contre les dépendances et la documentation
@@ -14,7 +14,15 @@
 - Typecheck/ESLint ciblé et notes 8/8 réussis ; clavier navigateur 2/2 ;
   rendu ponctuel de trois sauvegardes assainies : 0/20/100 %, trois groupes
   nommés et SVG masqués. Build Next réussi, cinq pages statiques sans cloud
-  local (compilation seulement). Commit et publication à relever.
+  local (compilation seulement).
+- Code, note joueur et revue publiés au commit
+  [b97d706f](https://github.com/GoodFight37/CreatorDeck/commit/b97d706f856ea8b04aba8d1e9abce32a82831175),
+  push normal main et SHA distant confirmés. Vercel du SHA `success`.
+  Production HTTP 200 à 390 × 844 : trois groupes nommés, deux SVG masqués,
+  document 390 px ; Entrée sur le classement Fiction → focus classeur et
+  cinq cartes Fiction. Aucune erreur JS observée ; lecteur d’écran physique
+  non testé. [CI](https://github.com/GoodFight37/CreatorDeck/actions/runs/38747666594)
+  encore en cours au dernier contrôle ; ne pas l’annoncer verte.
 - Archive IA Studio antérieure reste sur `7be3914b` : fournir le bilan vérifié
   au prochain lot pour ne pas recycler les alertes déjà traitées.
 

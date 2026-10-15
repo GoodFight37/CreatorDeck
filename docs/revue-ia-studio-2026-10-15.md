@@ -31,7 +31,10 @@ Booleans instead of converting them to strings. »
 - Revue du skill `react-best-practices` : calcul dérivé simple, focus dans le
   gestionnaire d’action, aucun nouvel effet, abonnement ou appel réseau.
 - `npm run build` : réussi, cinq pages statiques sans cloud local ; compilation
-  seulement. Déploiement consigné dans la passation après publication.
+  seulement. Code `b97d706f` publié sur main, Vercel `success` ; production
+  HTTP 200 à 390 × 844 : compteurs nommés, focus du classeur après Entrée et
+  cinq cartes Fiction, aucune erreur JS observée. CI complète en cours au
+  dernier relevé ; lien dans la passation.
 
 ## Limites et prochaine lecture
 

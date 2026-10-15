@@ -2,7 +2,7 @@
 
 ## État actuel — 15 octobre 2026
 
-**Premier bilan IA Studio vérifié (D-112) — implémenté, publication en cours :**
+**Premier bilan IA Studio vérifié (D-112) — publié et contrôlé sur Vercel :**
 deux faux positifs réfutés (contexte `dry_run`, fallback CSS), constat SVG
 réfuté, rôles de compteurs et focus du prototype corrigés ; barre de niveau
 bornée pour un import incohérent. Aucun changement des règles. Revue détaillée
