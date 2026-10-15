@@ -1,5 +1,12 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-121 — tutoriel et feuille de compte sans superposition
+
+- Défaut observé lors de D-120 sur Vercel, base initiale `67385de2` : création invitée dans « Mon compte », arrivée asynchrone de l’onboarding, tutoriel derrière la feuille puis appuis interceptés. Le correctif local a été conservé pendant le chantier CSS du sachet, puis repris sur `main` `118b21f067389291547e0ef6f11b8fdedb5198c6` ; SHA local et distant identiques, arbre propre avant sa reprise.
+- Correctif : tutoriel différé pendant une feuille ou scène ouverte ; retour au Drop à « Terminer » ; musique non démarrée pendant l’attente. Test DOM ciblé et note joueur ; décision et problème connu mis à jour. Aucun changement de règles ou d’économie.
+- Vérifications locales sur cette base : test ciblé 1/1, suite écrans 182/182 dans 29 fichiers, navigation Playwright téléphone 6/6, TypeScript, ESLint, build statique et `git diff --check` réussis. Le build local n’a pas les variables Supabase ; la connexion réelle n’y est donc pas exercée. Publication, CI et Vercel à contrôler. Ressenti tactile physique distinct des tests navigateur.
+
+
 ## Checkpoint D-120 — validation sociale réelle sur Vercel
 
 - Base `main` GitHub/locale `c8effc3b92aa819ca085ac54ab5fe5d3d6385544`, arbre propre avant ce rapport. Production Vercel `READY` sur ce SHA, `/` HTTP 200 ; D-119 CI verte 6/6 sur le SHA de code `d4c0592a`.

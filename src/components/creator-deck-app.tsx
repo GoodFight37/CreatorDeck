@@ -396,10 +396,18 @@ export function CreatorDeckApp() {
   if (completedTutorialMarker.key !== tutorialCompletionKey) setCompletedTutorialMarker({ key: tutorialCompletionKey, done: readLocalMarker(tutorialCompletionKey) });
   const completedTutorial = completedTutorialMarker.key === tutorialCompletionKey && completedTutorialMarker.done;
   const onboardingReady = !cloud.configured || Boolean(cloud.userId && cloud.onboarding && !cloud.onboardingBusy);
-  const showTutorial = tutorialStep !== null || (!welcomeSeen && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial);
+  const tutorialDue = !welcomeSeen && onboardingReady && !cloud.onboarding?.tutorialCompleted && !completedTutorial;
+  // Une connexion ou une réponse du serveur peut rendre le tutoriel dû alors
+  // qu'une feuille est ouverte. Attendre qu'elle se ferme évite deux dialogues
+  // superposés et un tutoriel qui intercepte les appuis derrière le compte.
+  const presentationOccupied = accountOpen || friendsOpen || marketOpen || lastPackOpen ||
+    wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || oddsOpen ||
+    themeOpen || studioOpen || Boolean(cloud.profile || cloud.profileBusy) ||
+    tearing || drawnCards.length > 0;
+  const showTutorial = tutorialStep !== null || (tutorialDue && !presentationOccupied);
 
   useEffect(() => {
-    if (!game || showTutorial) return;
+    if (!game || showTutorial || tutorialDue) return;
     // For returning players, autoplay is unlocked by their first real gesture
     // after they enter the game, not by navigating through the welcome flow.
     const startOnFirstGesture = (event: Event) => {
@@ -414,7 +422,7 @@ export function CreatorDeckApp() {
       window.removeEventListener("pointerdown", startOnFirstGesture, true);
       window.removeEventListener("keydown", startOnFirstGesture, true);
     };
-  }, [game, showTutorial]);
+  }, [game, showTutorial, tutorialDue]);
 
   function replayWelcomeTutorial() {
     try {
@@ -440,6 +448,7 @@ export function CreatorDeckApp() {
     setTutorialStep(null);
     setWelcomeMarker({ key: welcomeKey, done: true });
     setCompletedTutorialMarker({ key: tutorialCompletionKey, done: true });
+    setTab("home");
   }
 
   async function claimAndOpenWelcomeGift() {

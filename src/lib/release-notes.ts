@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-tutoriel-apres-compte", date: "2026-10-15", title: "Un accueil sans écran superposé",
+    summary: "Le tutoriel du nouveau compte attend que tu fermes la fenêtre en cours.",
+    sections: [{ title: "Correction", items: [
+      "Après avoir créé un compte, termine d’abord la fenêtre ouverte ; le tutoriel apparaît ensuite seul et te ramène au Drop.",
+    ] }],
+  },
+  {
     id: "2026-10-15-social-fiable", date: "2026-10-15", title: "Des gestes sociaux plus fiables",
     summary: "Les écrans sociaux ouverts après connexion répondent correctement.",
     sections: [{ title: "Corrections", items: [

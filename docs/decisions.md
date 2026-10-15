@@ -1,5 +1,12 @@
 # Décisions CreatorDeck
 
+## D-121 — 15 octobre 2026 : présenter le tutoriel après la feuille de connexion
+
+En vérifiant le parcours social sur Vercel, un compte invité neuf a reçu sa réponse d’onboarding alors que « Mon compte » était encore ouvert. Le tutoriel est devenu visible derrière cette feuille et a intercepté des appuis après sa fermeture ; deux dialogues modaux coexistaient. Le problème découle du recalcul de `showTutorial` au changement de compte et de l’arrivée asynchrone de l’état d’onboarding, sans tenir compte de la présentation déjà ouverte.
+
+Le tutoriel attendu est différé tant qu’une feuille ou une scène de présentation est ouverte, puis apparaît dès sa fermeture. Une reprise volontaire du tutoriel garde son accès direct. La musique ne démarre pas pendant cette attente, et « Terminer » replace le joueur sur Drop, conformément à la dernière étape. Le tutoriel par compte, son enregistrement serveur, les cadeaux, le tirage et les ressources restent identiques. Test de rendu et contrôle navigateur dans la passation.
+
+
 ## D-119 — 15 octobre 2026 : fiabiliser les feuilles sociales et les échanges
 
 Le rapport IA Studio Lot 05 a été confronté au code de `main` (`39d17e55`). L’alerte sur la première carte du Last Pack est un faux positif : `_last_pack_cards` produit des index 1 à 5 via `WITH ORDINALITY`, et `last_pack_steal` refuse 0. La condition `index > 0` est correcte. Les feuilles Amis et Hôtel des ventes ne rechargeaient pas après une création de compte dans la feuille ; Last Pack avait le même défaut. Wishlist était déjà chargée à l’ouverture de Toi, mais sa propre feuille ne garantissait pas une lecture fraîche. Une réponse tardive des variantes pouvait survivre au changement de partenaire ; la comparaison avec une variable capturée, proposée dans le rapport, n’aurait pas suffi. Enfin, le bouton d’offre pouvait être réactivé pendant la requête réseau.
