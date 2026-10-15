@@ -12,9 +12,12 @@
   sur `main` et SHA distant confirmé. Vercel Production `READY` pour ce SHA,
   alias `creator-deckk.vercel.app` actif, `/` HTTP 200. La CI
   [run 38764046743](https://github.com/GoodFight37/CreatorDeck/actions/runs/38764046743)
-  est en cours au contrôle ; consigner son verdict final dans le prochain
-  checkpoint. Les défauts de vocabulaire Trades et Compte lié précédemment
-  signalés restent hors périmètre de D-116.
+  est terminée : les trois shards Playwright, migrations SQL et chemin cloud
+  simulé sont verts. Le job qualité est rouge uniquement sur le mot « serveur »
+  déjà présent dans Trades/Compte lié : unitaires 1 185/1 186, écrans
+  172/174 ; TypeScript, lint, build et catalogue passent. Ce vocabulaire
+  hors périmètre de D-116 reste ouvert. Le commit de documentation suivant
+  reporte ce verdict sans modifier le jeu.
 
 
 ## Checkpoint courant — D-115 suite du rapport IA Studio Collection/Craft
