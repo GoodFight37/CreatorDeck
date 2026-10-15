@@ -13,8 +13,9 @@
 - Vérifié : typecheck, ESLint TS/TSX ciblé, build Next (5 routes), note joueur
   8/8, navigation Playwright 2/2 bureau/téléphone. `npm run ecrans` garde deux
   échecs connus sur le mot « serveur » dans Échanges, hors périmètre ; le
-  scénario de sortie du tirage en attente réussit. Aucun test matériel Android,
-  compte connecté réel ou lecteur d’écran physique.
+  scénario de sortie du tirage en attente réussit ; son test via la pile retour
+  réussit aussi (2/2). Aucun test matériel Android, compte connecté réel ou
+  lecteur d’écran physique.
 - [Revue D-113](revue-ia-studio-architecture-2026-10-15.md). Publication,
   CI et contrôle de production à compléter après commit.
 

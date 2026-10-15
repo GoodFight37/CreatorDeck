@@ -49,4 +49,26 @@ describe("présentation du booster pendant un tirage réseau", () => {
     expect(openLivePack).toHaveBeenCalledOnce();
     expect(gameStore.getSnapshot()?.openings).toBe(0);
   });
+
+  it("intercepte le retour pendant le tirage et garde la même ouverture en attente", async () => {
+    const { runBackHandler } = await import("@/lib/back-stack");
+    const { gameStore } = await import("@/lib/game-store");
+    const { CreatorDeckApp } = await import("@/components/creator-deck-app");
+    gameStore.reset(Date.UTC(2026, 9, 8, 12, 0, 0));
+    await banc.monter(<CreatorDeckApp />);
+
+    banc.appuyer("Ouvrir le booster");
+    banc.appuyer("Ouvrir sans déchirer");
+    await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
+
+    let handled = false;
+    act(() => { handled = runBackHandler(); });
+
+    expect(handled).toBe(true);
+    expect(document.querySelector(".opening-continuum")).toBeNull();
+    expect(document.querySelector(".reveal-overlay")).toBeNull();
+    expect(document.body.textContent).toContain("Le tirage continue");
+    expect(openLivePack).toHaveBeenCalledOnce();
+    expect(gameStore.getSnapshot()?.openings).toBe(0);
+  });
 });
