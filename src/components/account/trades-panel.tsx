@@ -376,7 +376,7 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
             ))}</ul> : !visibleRadarMessage ? <p className="account-hint">{visibleRadarScanned ? "Aucun souhait ne correspond à tes cartes en double." : "Aucun ami à consulter pour le moment."}</p> : null}
           </div>
         ) : null}
-        <p className="account-hint">Le radar ne promet pas qu’un ami possède la carte que tu demandes. L’offre reste à compléter et le serveur la vérifiera.</p>
+        <p className="account-hint">Le radar montre les souhaits de tes amis, pas leurs cartes. Choisis ce que tu demandes avant de proposer l’échange.</p>
       </section>
 
       <div className="trade-builder">
@@ -592,8 +592,8 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
               </button>
             </div>
             <p className="account-hint">
-              Une carte contre une carte (jusqu&apos;à cinq de chaque côté). Ta collection est envoyée au cloud juste
-              avant : c&apos;est elle que le serveur vérifie. Une offre reste valable jusqu&apos;à ce que le joueur
+              Une carte contre une carte (jusqu&apos;à cinq de chaque côté). Ta collection est synchronisée avant la
+              proposition pour vérifier les cartes que tu donnes. Une offre reste valable jusqu&apos;à ce que le joueur
               réponde ou que tu l&apos;annules.
             </p>
           </>

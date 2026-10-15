@@ -1,5 +1,12 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint D-118 — vocabulaire Échanges et CI
+
+- Base `main` GitHub/locale vérifiée avant édition : `3fff40cfbdd80cef481573492ca3635bc8022ce1`, arbre propre.
+- Après question explicite de Malik sur la CI rouge, deux aides visibles du panneau Échanges ont été reformulées. Le texte du radar causait le test jargon et deux assertions Compte lié ; une seconde aide disait encore « cloud » et « serveur ». Aucun changement de logique Trade ou de règle économique.
+- Note joueur et décision D-118 ajoutées ; problème connu mis à jour. Tests locaux : 1 186/1 186 unitaires, 174/174 écrans, contrôle de jargon, TypeScript, ESLint ciblé, build et diff check réussis. CI et Vercel à relever après push.
+
+
 ## Checkpoint D-117 — sachet Drop après revue Claude
 
 - Base locale/GitHub vérifiée avant édition : `d7a9de45dc8accd6a7df9ca66cb4ae221799d8d4`, arbre propre.

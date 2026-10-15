@@ -1,3 +1,12 @@
+## Vocabulaire Échanges qui rendait la CI rouge — corrigé dans D-118
+
+Sur `3fff40cf` et plusieurs commits précédents, le panneau Échanges montrait
+« serveur » dans l’aide du radar. Le test de jargon et deux assertions de
+l’écran Compte lié échouaient ; le reste de la CI qualité passait. Une autre
+aide visible employait aussi « cloud » et « serveur ». D-118 reformule ces
+phrases sans changer le fonctionnement des échanges et conserve les contrôles
+de rédaction. Résultat de la suite et du run dans la passation courante.
+
 ## Sachet Drop : clignotement après pression, idle et ombre — corrigé dans D-117
 
 Sur `d7a9de45`, l’entrée CSS était retirée sous `:active` puis redémarrait au

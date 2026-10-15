@@ -2,6 +2,13 @@
 
 ## État actuel — 15 octobre 2026
 
+**Vocabulaire Échanges (D-118) — corrigé dans le code :** les deux aides
+visibles du panneau Échanges utilisent les mots du joueur. Le garde de jargon
+et les deux assertions Compte lié qui rendaient la CI rouge restent actifs ;
+voir [la décision D-118](decisions.md) et la passation pour le résultat du run.
+Les échanges et leur arbitrage restent identiques.
+
+
 **Stabilité du sachet Drop (D-117) — implémentée :** après confrontation du
 partage Claude au code, l’entrée ne repart plus au relâchement, l’idle commence
 sans saut, le sachet reste activable avec un booster de test, et l’ombre suit

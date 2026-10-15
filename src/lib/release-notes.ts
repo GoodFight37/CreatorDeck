@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-echanges-clairs", date: "2026-10-15", title: "Des échanges plus clairs",
+    summary: "Le radar et la proposition d’échange expliquent mieux les cartes vérifiées.",
+    sections: [{ title: "Amélioration", items: [
+      "Le radar précise qu’il montre les souhaits de tes amis, pas leur collection.",
+      "L’aide de proposition explique quand tes cartes sont synchronisées et vérifiées.",
+    ] }],
+  },
+  {
     id: "2026-10-15-sachet-stable", date: "2026-10-15", title: "Un sachet plus stable au toucher",
     summary: "Le sachet réagit sans clignoter et reste ouvrable avec un booster de test.",
     sections: [{ title: "Corrections", items: [

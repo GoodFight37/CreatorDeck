@@ -1,5 +1,20 @@
 # Décisions CreatorDeck
 
+## D-118 — 15 octobre 2026 : enlever le jargon du panneau Échanges
+
+La CI des chantiers D-114 à D-117 restait rouge : un contrôle de rédaction
+signalait « serveur » dans l’aide du Trade Radar, puis deux tests de l’écran
+Compte reprenaient ce même texte. Une autre phrase visible du formulaire
+d’échange disait aussi « cloud » et « serveur ». La restriction temporaire de
+ces anciens chantiers ne s’applique plus : Malik a demandé explicitement de
+corriger la cause de la CI rouge.
+
+Les deux phrases sont réécrites pour expliquer les souhaits publics et la
+vérification des cartes que le joueur donne. Les gardes de vocabulaire restent
+actifs. Aucun appel réseau, règle d’échange, possession, coût ou donnée de
+collection ne change. Vérifications et déploiement dans la passation.
+
+
 ## D-117 — 15 octobre 2026 : stabiliser la présence tactile du sachet Drop
 
 Le partage Claude du 15 octobre a été confronté à `main` avant modification.
