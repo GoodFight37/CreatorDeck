@@ -1,5 +1,23 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — volume vivant du sachet D-110, publication en cours
+
+- Base main locale et GitHub propre et identique `796cc2e1`, vérifiée avant
+  modification. Demande limitée au volume/vie du pack ; décision D-110.
+- CSS Drop : idle 4,8 s, ±4 px / Y ±3° / X ±1,5°, face Z14, côtés foil
+  biseautés, reflet 4 s, deux ombres, spot renforcé et overflow visible.
+  CTA et dimensions conservés. Aucun asset ni logique de jeu modifié.
+- Chromium 390 × 844 : matrices différentes sur trois secondes, reflet 4 s,
+  scène visible et largeur document 390 ; capture `/tmp/creatordeck-volume-home.png`
+  inspectée après le tutoriel. Le premier contrôle photographiait le tutoriel,
+  donc il ne constituait pas une preuve visuelle du sachet.
+- Notes joueur 8/8. E2E ciblés initialement 2/4 : règle du reflet trop
+  spécifique réactivait son nom d’animation en mouvement réduit. Corrigée
+  avec variables CSS dans l’animation existante ; relance réussie 4/4
+  (bureau/téléphone : géométrie 320/390, CTA, mouvement réduit). Build Next
+  réussi, cinq pages statiques, sans cloud local : compilation seulement.
+- Publication et CI à consigner. Aucun ressenti sur appareil physique affirmé.
+
 ## Checkpoint courant — scène d’accueil Drop D-109, publiée sur Vercel
 
 - Départ : main local propre `69e6951d14f2d924a6a86cd84dc6afe3f7de7bf0`,

@@ -1,6 +1,6 @@
 /* Only the Drop and Atelier screens; no opening, Binder or profile selectors. */
 .home-view .drop-intro h1 { margin: 4px 0; font-size: 30px; }
-.home-view .pack-stage.stage-live { min-height: 0; height: auto; margin-top: 6px; margin-bottom: 0; padding: 25px 18px 24px; gap: 6px; overflow: hidden; }
+.home-view .pack-stage.stage-live { min-height: 0; height: auto; margin-top: 6px; margin-bottom: 0; padding: 25px 18px 24px; gap: 6px; overflow: visible; }
 .home-view .pack-copy { bottom: 4px; }
 .home-view .pack-shadow { bottom: 38px; }
 .home-view .open-panel.open-panel { padding: 0 2px; }

@@ -1,5 +1,23 @@
 # Décisions CreatorDeck
 
+## D-110 — 15 octobre 2026 : donner vie et volume au sachet Drop
+
+**Contexte :** après D-109, Malik trouve encore le sachet plat. Le mouvement
+était surtout vertical et les ombres se fondaient en un seul halo.
+
+**Décision :** conserver le format et l’art Live Drop. Oscillation CSS de
+4,8 s : translation ±4 px, rotation Y ±3° et X ±1,5°. Face avancée à 14 px,
+pans foil contrastés (36 px biseautés à 68°, environ 13 px avant perspective),
+reflet de 4 s, ombre de contact serrée et ombre diffuse distincte. Spot
+bordeaux renforcé ; scène sans clipping ; pression à 0,97 en 100 ms.
+Les préférences de mouvement réduit et effets OFF gardent leur arrêt des FX.
+Les paramètres du reflet sont des variables CSS afin de préserver les règles
+existantes d’arrêt pendant le reveal. Aucun nouvel asset ni règle de jeu.
+
+**Validation :** navigateur mobile simulé, matrices de rotation/translation
+observées pendant trois secondes, capture 390 × 844 inspectée ; tests et
+publication dans la passation. Le téléphone physique n’est pas validé.
+
 ## D-109 — 15 octobre 2026 : l’accueil Drop devient une scène de jeu
 
 **Contexte :** capture locale avant changement à 390 × 844 : booster déjà grand

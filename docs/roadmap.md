@@ -2,6 +2,11 @@
 
 ## État actuel — 15 octobre 2026
 
+**Volume vivant du sachet (D-110) — implémenté, publication en cours :**
+oscillation sur trois axes en 4,8 s, foil et face avant renforcés, reflet 4 s,
+double ombre et spot bordeaux ; format et CTA jeu conservés. Réduction des
+animations respectée. Contrôles et déploiement dans la passation.
+
 **Accueil Drop en scène (D-109) — publié sur Vercel, ressenti physique ouvert :**
 pack Live Drop dominant dans une lumière chaude avec sol, ombre et pans foil ;
 entrée et respiration discrètes, réduites selon les préférences ; CTA plein

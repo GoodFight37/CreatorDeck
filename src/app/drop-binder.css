@@ -600,10 +600,10 @@
   margin: 6px -18px 0;
   padding: 25px 18px 24px;
   gap: 6px;
-  overflow: hidden;
+  overflow: visible;
   background:
-    radial-gradient(ellipse 68% 59% at 50% 42%, rgb(136 47 72 / .38), transparent 78%),
-    radial-gradient(ellipse 92% 58% at 50% 97%, rgb(125 42 59 / .37), transparent 80%),
+    radial-gradient(ellipse 68% 59% at 50% 42%, rgb(161 48 80 / .52), transparent 78%),
+    radial-gradient(ellipse 92% 58% at 50% 97%, rgb(151 48 68 / .48), transparent 80%),
     linear-gradient(180deg, #0d0d10 0%, #25131f 49%, #0d0d10 100%);
 }
 .home-view .pack-stage.stage-live::before {
@@ -615,7 +615,7 @@
   transform: none;
   opacity: .8;
   border: 0;
-  background: radial-gradient(ellipse 62% 42% at 50% 48%, rgb(222 122 124 / .22), rgb(88 30 48 / .2) 51%, transparent 82%);
+  background: radial-gradient(ellipse 62% 42% at 50% 48%, rgb(237 128 136 / .32), rgb(104 32 54 / .26) 51%, transparent 82%);
   pointer-events: none;
 }
 .home-view .pack-stage.stage-live::after {
@@ -633,11 +633,11 @@
   border-radius: 10px;
   transform: perspective(900px) rotateY(-13deg) rotateX(5deg);
   animation: drop-pack-arrive 380ms cubic-bezier(.2,.8,.2,1) both;
-  transition: transform 130ms ease-out;
+  transition: transform 100ms ease-out;
 }
 .home-view .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
   animation: none;
-  transform: perspective(900px) rotateY(-13deg) rotateX(5deg) scale(.98);
+  transform: perspective(900px) rotateY(-13deg) rotateX(5deg) scale(.97);
 }
 .home-view .pack-idle {
   position: absolute;
@@ -651,27 +651,30 @@
   to { opacity: 1; transform: perspective(900px) rotateY(-13deg) rotateX(5deg); }
 }
 @keyframes drop-pack-idle {
-  0%, 100% { transform: translateY(0) rotateZ(-.25deg); }
-  50% { transform: translateY(-4px) rotateZ(.35deg); }
+  0%, 100% { transform: translateY(4px) rotateY(-3deg) rotateX(-1.5deg); }
+  50% { transform: translateY(-4px) rotateY(3deg) rotateX(1.5deg); }
 }
 .home-view .pack-stage .pack-3d-front {
   border: 2px solid rgb(255 218 200 / .57);
-  transform: translateZ(10px);
+  transform: translateZ(14px);
   box-shadow: inset 2px 1px 4px rgb(255 237 219 / .34), inset -9px 0 14px rgb(9 0 12 / .48), 0 19px 30px -14px rgb(0 0 0 / .7);
 }
 .home-view .pack-stage .pack-3d-side-left {
-  left: -29px; width: 32px;
-  transform: rotateY(73deg);
-  background: linear-gradient(90deg, #170910, #b04e6a 24%, #ffd4bc 52%, #6b1a39 81%, #170711);
+  /* 36px at 68deg gives a foil bevel about 13px wide before scene tilt. */
+  left: -33px; width: 36px;
+  transform: rotateY(68deg);
+  background: linear-gradient(90deg, #170910, #c9547b 24%, #ffe4c9 52%, #59102f 81%, #170711);
 }
 .home-view .pack-stage .pack-3d-side-right {
-  right: -29px; width: 32px;
-  transform: rotateY(-73deg);
-  background: linear-gradient(90deg, #ffe2c5, #b54c6d 30%, #5b1534 62%, #160711);
+  right: -33px; width: 36px;
+  transform: rotateY(-68deg);
+  background: linear-gradient(90deg, #ffeacb, #d1537e 30%, #470b2c 62%, #160711);
 }
 .home-view .pack-stage .pack-3d-side-bottom { height: 21px; bottom: -20px; }
 .home-view .pack-stage .pack-specular {
-  opacity: .58;
+  opacity: .72;
+  --pack-specular-animation: drop-pack-specular-pass;
+  --pack-specular-duration: 4s;
   background: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .08) 41%, rgb(255 250 224 / .83) 49%, rgb(255 171 205 / .32) 55%, transparent 64%);
   background-size: 230% 100%;
 }
@@ -683,7 +686,15 @@
   opacity: .96;
   background: radial-gradient(ellipse, rgb(0 0 0 / .87) 0 22%, rgb(17 3 12 / .66) 45%, rgb(202 68 94 / .26) 66%, transparent 100%);
   box-shadow: 0 21px 29px 5px rgb(28 7 19 / .45);
-  filter: blur(10px);
+  filter: blur(3px);
+}
+.home-view .pack-stage.stage-live .pack-shadow::after {
+  content: "";
+  position: absolute;
+  inset: -15px -22px -12px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(0 0 0 / .56), rgb(67 9 33 / .35) 48%, transparent 75%);
+  filter: blur(14px);
 }
 .home-view .pack-stage.stage-live .pack-copy {
   z-index: 2;

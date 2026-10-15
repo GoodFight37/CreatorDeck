@@ -122,6 +122,13 @@ et `prefers-reduced-motion: no-preference`. Les retests OFF/réduit passent.
 Le ressenti physique du peel reste ouvert ; pas de correction tactile déclarée
 sur la seule base des tests.
 
+## Sachet encore perçu comme plat après D-109 — correction D-110
+
+Retour joueur : le pack reste trop proche d’une affiche malgré la scène.
+Cause visuelle observée : mouvement surtout vertical et ombre très diffuse.
+D-110 ajoute une oscillation X/Y lisible, un bevel foil renforcé et deux
+ombres séparées. Capture 390 × 844 inspectée ; ressenti physique ouvert.
+
 ## Accueil Drop encore trop plat et administratif — correction D-109 publiée
 
 Malik rapporte que, malgré D-094/D-096, le premier viewport à 390 × 844

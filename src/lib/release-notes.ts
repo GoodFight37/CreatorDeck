@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-drop-volume", date: "2026-10-15", title: "Le sachet prend du relief",
+    summary: "Le booster bouge doucement dans la lumière du Drop.",
+    sections: [{ title: "Améliorations", items: [
+      "Le sachet oscille légèrement, ses côtés foil accrochent davantage la lumière et son reflet traverse en quatre secondes.",
+      "Une ombre de contact et une ombre diffuse renforcent son volume. La réduction des animations reste respectée.",
+    ] }],
+  },
+  {
     id: "2026-10-15-drop-scene", date: "2026-10-15", title: "Le Drop entre en scène",
     summary: "Le booster occupe le devant de la scène dès l’accueil.",
     sections: [{ title: "Améliorations", items: [

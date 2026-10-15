@@ -443,13 +443,20 @@ html:has(.booster-presentation) { overflow: hidden; }
   background-size: 230% 100%;
   background-position: 0% 50%;
   mix-blend-mode: screen;
-  animation: pack-specular-pass 5s ease-in-out 250ms infinite;
+  animation: var(--pack-specular-animation, pack-specular-pass) var(--pack-specular-duration, 5s) ease-in-out 250ms infinite;
 }
 @keyframes pack-specular-pass {
   0%, 8% { opacity: .1; background-position: 0% 50%; }
   45% { opacity: .64; background-position: 55% 50%; }
   78% { opacity: .34; background-position: 100% 50%; }
   100% { opacity: .1; background-position: 100% 50%; }
+}
+/* Drop home: stronger sweep; opening/reveal retain their own timing. */
+@keyframes drop-pack-specular-pass {
+  0%, 8% { opacity: .16; background-position: 0% 50%; }
+  45% { opacity: .82; background-position: 55% 50%; }
+  78% { opacity: .46; background-position: 100% 50%; }
+  100% { opacity: .16; background-position: 100% 50%; }
 }
 .pack-stage.pulling .pack-specular,
 body:has(.booster-cinematic.booster-presentation) .pack-specular,
