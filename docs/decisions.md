@@ -1,5 +1,26 @@
 # Décisions CreatorDeck
 
+## D-105 — 15 octobre 2026 : Story verticale depuis la fiche publique
+
+**Contexte :** l'affiche de profil 4:5 et son téléchargement existaient. Le
+backlog proposait un export Story sans format ni surface définis. La fiche
+publique fournit déjà les cartes de vitrine et les chiffres vérifiés par le
+serveur ; elle est accessible depuis le classement ou un lien de profil.
+
+**Décision :** proposer sur cette fiche deux exports PNG : l'affiche 4:5
+existante et une Story 9:16 (1080 × 1920). Dessiner la Story sur l'appareil à
+partir du même `posterModel`, sans nouveau calcul de progression, appel réseau
+ou partage automatique. Prévoir vitrine vide, portrait indisponible, noms longs,
+aperçu mobile et nom de fichier distinct. Garder le focus dans l'aperçu et le
+restituer au bouton de format après fermeture. Conserver le téléchargement manuel ;
+le navigateur ou l'application sociale choisit ensuite comment partager.
+
+**Limites :** le canvas ne peut exporter un portrait externe sans droit CORS ;
+les portraits locaux manquants ont un fond de rareté. Les chiffres reflètent la
+fiche reçue, sans mise à jour après génération. Aucun nouveau format de carte,
+gain ou permission n'est créé.
+
+
 ## D-104 — 15 octobre 2026 : accès permanent à la chaîne depuis la fiche carte
 
 **Contexte :** la roadmap gardait le lien permanent Twitch dans le backlog. La

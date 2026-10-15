@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-15-story", date: "2026-10-15", title: "Ta collection en Story",
+    summary: "Ta fiche publique peut aussi devenir une image verticale à enregistrer.",
+    sections: [{ title: "Amélioration", items: [
+      "Depuis une fiche publique, choisis Affiche de partage (4:5) ou Story verticale (9:16). Les deux images utilisent les cartes et chiffres de cette fiche.",
+      "La Story se fabrique sur ton appareil puis se télécharge en PNG. L’aperçu garde les commandes accessibles sur un petit écran.",
+    ] }],
+  },
+  {
     id: "2026-10-15-chaine-twitch", date: "2026-10-15", title: "Retrouve la chaîne derrière chaque carte",
     summary: "La fiche d’une carte donne toujours accès à sa chaîne Twitch.",
     sections: [{ title: "Amélioration", items: [

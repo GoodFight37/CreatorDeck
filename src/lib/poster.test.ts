@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlayerProfile } from "@/lib/cloud/api";
-import { POSTER_HEIGHT, POSTER_WIDTH, posterFileName, posterModel } from "@/lib/poster";
+import { POSTER_HEIGHT, POSTER_WIDTH, STORY_HEIGHT, STORY_WIDTH, posterFileName, posterModel, storyFileName } from "@/lib/poster";
 import { creatorPortraitUrl } from "@/lib/creator-portraits";
 
 /**
@@ -94,5 +94,11 @@ describe("affiche de partage", () => {
 
   it("garde le format 4:5 promis aux réseaux", () => {
     expect(POSTER_WIDTH / POSTER_HEIGHT).toBeCloseTo(0.8);
+  });
+
+  it("donne un fichier Story 9:16 sans changer le nom de l'affiche", () => {
+    expect(STORY_WIDTH / STORY_HEIGHT).toBeCloseTo(9 / 16);
+    expect(storyFileName("Amélie #42")).toBe("creatordeck-amelie-42-story.png");
+    expect(posterFileName("Amélie #42")).toBe("creatordeck-amelie-42.png");
   });
 });

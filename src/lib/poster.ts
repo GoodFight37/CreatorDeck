@@ -25,6 +25,8 @@ import type { PlayerProfile } from "@/lib/cloud/api";
 /** Format 4:5, celui qui passe partout (Discord, X, Instagram). */
 export const POSTER_WIDTH = 1080;
 export const POSTER_HEIGHT = 1350;
+export const STORY_WIDTH = 1080;
+export const STORY_HEIGHT = 1920;
 
 export type PosterCard = {
   slug: string;
@@ -124,6 +126,18 @@ export function posterFileName(displayName: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
   return `creatordeck-${slug || "joueur"}.png`;
+}
+
+export function storyFileName(displayName: string): string {
+  return posterFileName(displayName).replace(/\.png$/, "-story.png");
+}
+
+/** Ramène les noms longs dans l'espace disponible sans les couper par nombre de lettres. */
+function fitText(ctx: CanvasRenderingContext2D, value: string, maxWidth: number): string {
+  if (ctx.measureText(value).width <= maxWidth) return value;
+  let end = value.length;
+  while (end > 0 && ctx.measureText(`${value.slice(0, end)}…`).width > maxWidth) end -= 1;
+  return `${value.slice(0, end)}…`;
 }
 
 /** Coin arrondi, sans dépendre de `ctx.roundRect` (WebView anciens compris). */
@@ -263,4 +277,84 @@ export function drawPoster(
   ctx.fillStyle = "#6f66a0";
   ctx.font = "700 26px system-ui, -apple-system, 'Segoe UI', sans-serif";
   ctx.fillText(model.footer, 72, POSTER_HEIGHT - 96);
+}
+
+/** Story verticale prête à enregistrer, fabriquée avec les mêmes faits serveur. */
+export function drawStory(
+  canvas: HTMLCanvasElement,
+  model: PosterModel,
+  images: Map<string, CanvasImageSource> = new Map(),
+): void {
+  canvas.width = STORY_WIDTH;
+  canvas.height = STORY_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const background = ctx.createLinearGradient(0, 0, 0, STORY_HEIGHT);
+  background.addColorStop(0, "#261541");
+  background.addColorStop(0.56, "#120b25");
+  background.addColorStop(1, "#08060f");
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "#c9b6ff";
+  ctx.font = "800 35px system-ui, sans-serif";
+  ctx.fillText("CREATORDECK  /  MA COLLECTION", 72, 112);
+  ctx.fillStyle = "#f4f1ff";
+  ctx.font = "800 76px system-ui, sans-serif";
+  ctx.fillText(fitText(ctx, model.title, 936), 72, 187);
+  ctx.fillStyle = "#c7bee1";
+  ctx.font = "500 34px system-ui, sans-serif";
+  ctx.fillText(fitText(ctx, model.subtitle, 936), 72, 285);
+
+  const cards = model.cards.slice(0, 4);
+  if (cards.length === 0) {
+    roundedRect(ctx, 72, 390, 936, 550, 34);
+    ctx.fillStyle = "rgba(255,255,255,0.06)";
+    ctx.fill();
+    ctx.fillStyle = "#d5cdeb";
+    ctx.font = "600 43px system-ui, sans-serif";
+    ctx.fillText("Ta vitrine attend ses premières cartes", 125, 645);
+  } else {
+    cards.forEach((card, index) => {
+      const column = index % 2;
+      const row = Math.floor(index / 2);
+      const x = 72 + column * 478;
+      const y = 390 + row * 428;
+      roundedRect(ctx, x, y, 458, 400, 28);
+      ctx.fillStyle = "rgba(255,255,255,0.06)";
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = card.color;
+      ctx.stroke();
+      const portrait = images.get(card.slug);
+      ctx.save();
+      roundedRect(ctx, x + 24, y + 24, 410, 270, 20);
+      ctx.clip();
+      if (portrait) ctx.drawImage(portrait, x + 24, y + 24, 410, 270);
+      else { ctx.fillStyle = card.color; ctx.fillRect(x + 24, y + 24, 410, 270); }
+      ctx.restore();
+      ctx.fillStyle = "#f4f1ff";
+      ctx.font = "700 35px system-ui, sans-serif";
+      ctx.fillText(fitText(ctx, card.displayName, 410), x + 24, y + 316);
+      ctx.fillStyle = card.color;
+      ctx.font = "700 24px system-ui, sans-serif";
+      ctx.fillText(card.rarityLabel.toUpperCase(), x + 24, y + 362);
+    });
+  }
+
+  const statsTop = cards.length > 2 ? 1288 : cards.length ? 860 : 1060;
+  model.stats.slice(0, 6).forEach((stat, index) => {
+    const x = 72 + (index % 2) * 478;
+    const y = statsTop + Math.floor(index / 2) * 150;
+    ctx.fillStyle = "#ad9ecb";
+    ctx.font = "600 27px system-ui, sans-serif";
+    ctx.fillText(stat.label, x, y);
+    ctx.fillStyle = "#f4f1ff";
+    ctx.font = "800 53px system-ui, sans-serif";
+    ctx.fillText(fitText(ctx, stat.value, 430), x, y + 39);
+  });
+  ctx.fillStyle = "#a99fd0";
+  ctx.font = "600 29px system-ui, sans-serif";
+  ctx.fillText(fitText(ctx, model.footer, 936), 72, STORY_HEIGHT - 150);
 }

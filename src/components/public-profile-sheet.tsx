@@ -10,12 +10,12 @@
  * L'affiche de partage est dessinée sur place (voir `src/lib/poster.ts`) : pas
  * besoin d'un serveur pour fabriquer une « Open Graph image ».
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Bookmark, Check, Copy, Download, RefreshCw, Share2, Target, Trophy, X } from "lucide-react";
 import { ShowcaseCard } from "@/components/showcase-card";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { drawPoster, posterFileName, posterModel } from "@/lib/poster";
+import { drawPoster, drawStory, posterFileName, posterModel, storyFileName } from "@/lib/poster";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { describeCard, formatPoints } from "@/lib/market";
 import { seasonHue } from "@/lib/cosmetics";
@@ -57,10 +57,11 @@ function count(value: number): string {
 export function PublicProfileSheet() {
   const cloud = useCloud();
   const profile = cloud.profile;
-  const [poster, setPoster] = useState<{ url: string; name: string } | null>(null);
+  const [poster, setPoster] = useState<{ url: string; name: string; format: "affiche" | "story" } | null>(null);
   const [making, setMaking] = useState(false);
   const [copied, setCopied] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const posterDialogRef = useRef<HTMLDivElement>(null);
 
   const close = useCallback(() => {
     setPoster(null);
@@ -86,9 +87,30 @@ export function PublicProfileSheet() {
     return () => URL.revokeObjectURL(poster.url);
   }, [poster]);
 
+  useEffect(() => {
+    const dialog = posterDialogRef.current;
+    if (!poster || !dialog) return;
+    const previous = document.activeElement;
+    dialog.querySelector<HTMLAnchorElement>("a[download]")?.focus({ preventScroll: true });
+    const trapTab = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const controls = [...dialog.querySelectorAll<HTMLElement>("a[download], button:not(:disabled)")];
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    dialog.addEventListener("keydown", trapTab);
+    return () => {
+      dialog.removeEventListener("keydown", trapTab);
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, [poster]);
+
   if (!profile && !cloud.profileBusy) return null;
 
-  const makePoster = async () => {
+  const makePoster = async (format: "affiche" | "story") => {
     if (!profile) return;
     setMaking(true);
     setProblem(null);
@@ -102,10 +124,11 @@ export function PublicProfileSheet() {
         }),
       );
       const canvas = document.createElement("canvas");
-      drawPoster(canvas, model, images);
+      if (format === "story") drawStory(canvas, model, images);
+      else drawPoster(canvas, model, images);
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("affiche vide");
-      setPoster({ url: URL.createObjectURL(blob), name: posterFileName(model.title) });
+      setPoster({ url: URL.createObjectURL(blob), name: format === "story" ? storyFileName(model.title) : posterFileName(model.title), format });
     } catch {
       setProblem("Impossible de fabriquer l'image sur cet appareil.");
     } finally {
@@ -280,8 +303,11 @@ export function PublicProfileSheet() {
             </ul>
 
             <div className="account-actions">
-              <button type="button" className="account-button" disabled={making} onClick={() => void makePoster()}>
+              <button type="button" className="account-button" disabled={making} onClick={() => void makePoster("affiche")}>
                 <Share2 size={13} /> {making ? "Fabrication…" : "Affiche de partage"}
+              </button>
+              <button type="button" className="account-button" disabled={making} onClick={() => void makePoster("story")}>
+                <Share2 size={13} /> {making ? "Fabrication…" : "Story verticale"}
               </button>
               <button type="button" className="account-button ghost" onClick={() => void copyLink()}>
                 {copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "Lien copié" : "Copier le lien"}
@@ -290,18 +316,18 @@ export function PublicProfileSheet() {
             {problem ? <p className="account-hint account-warning">{problem}</p> : null}
             <p className="account-hint">
               Le lien de partage ouvre la fiche dans la version web (dans l&apos;app installée, l&apos;adresse est
-              locale) — l&apos;affiche, elle, partout.
+              locale) — l&apos;affiche et la Story peuvent être enregistrées partout.
             </p>
           </>
         )}
       </div>
 
       {poster ? (
-        <div className="poster-modal" role="dialog" aria-modal="true" aria-label="Affiche de partage">
+        <div ref={posterDialogRef} className="poster-modal" role="dialog" aria-modal="true" aria-label={poster.format === "story" ? "Story verticale" : "Affiche de partage"}>
           {/* Une URL `blob:` fabriquée à l'instant : `next/image` n'a rien à
               optimiser ici (le format est déjà du PNG, à la bonne taille). */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={poster.url} alt={`Affiche de ${profile?.displayName ?? "ce joueur"}`} />
+          <img src={poster.url} alt={`${poster.format === "story" ? "Story" : "Affiche"} de ${profile?.displayName ?? "ce joueur"}`} />
           <div className="poster-actions">
             <a className="account-button" href={poster.url} download={poster.name}>
               <Download size={13} /> Enregistrer l&apos;image

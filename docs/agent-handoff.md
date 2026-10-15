@@ -1,5 +1,29 @@
 # Reprise rapide — 15 octobre 2026
 
+## Checkpoint courant — export Story de profil en vérification
+
+- Base `main` propre `f21fa090d9f8098aa4174360f9735a0254da2ede`,
+  identique à GitHub par `ls-remote` et fetch ; aucune PR ouverte retournée.
+- D-105 : la fiche publique propose l'affiche 4:5 existante et une Story PNG
+  9:16 (1080 × 1920), issues du même modèle serveur. Quatre cartes de vitrine
+  au plus, noms bornés par largeur, repli coloré si portrait manquant, vitrine
+  vide prévue. Aperçu limité en hauteur pour garder les commandes accessibles ;
+  focus retenu dans l'aperçu puis rendu au bouton de format.
+  Note joueur du 15 octobre ajoutée ; aucune économie ou base modifiée.
+- `npm test -- src/lib/poster.test.ts src/lib/release-notes.test.ts` : 16/16.
+  `npm run typecheck`, ESLint ciblé et `git diff --check` réussis. Canvas Story
+  rendu dans Chromium avec quatre cartes fictives à 390 px : PNG 1080 × 1920,
+  largeur document 390 px, capture inspectée à
+  `/tmp/creatordeck-story-check.png` ; titres et statistiques lisibles, aucune
+  coupure observée. Portraits réels et téléchargement sur compte connecté non
+  vérifiés par cette capture. `npm run ecrans --
+  src/ecrans-release-notes.test.tsx src/ecrans-profile-complete.test.tsx` :
+  10/10 ; test dédié `npm run ecrans -- src/ecrans-profile-story.test.tsx`
+  1/1 (format, nom de fichier, focus). Build final après ce test réussi,
+  cinq pages exportées ; variables Supabase locales absentes, donc compilation
+  seulement. Publication/Vercel en cours.
+
+
 ## Checkpoint courant — lien permanent Twitch publié, Vercel vérifié
 
 - Base GitHub `main` `7e8f83e564df7f668617b3281033c620a2371ee6`,

@@ -2,6 +2,12 @@
 
 ## État actuel — 15 octobre 2026
 
+**Story de profil (D-105) — implémentée :** export PNG 9:16 depuis la fiche
+publique, à côté de l'affiche 4:5 ; même modèle de faits serveur, vitrine vide
+et portraits manquants pris en charge. Aperçu adapté aux petites hauteurs et
+focus restauré. 16 tests de logique/notes, 11 tests d'écran, typecheck, ESLint
+et build réussis ; rendu Chromium inspecté. Publication au checkpoint courant.
+
 **Accès permanent Twitch (D-104) — publié et vérifié sur Vercel :** chaque fiche de carte dans
 le Binder et la vitrine Toi donne accès à la chaîne, avec ou sans direct. Le
 direct actuel reste une information distincte. Aucun effet sur les tirages ou
@@ -313,7 +319,7 @@ checkpoint de passation pour le dernier mix.
    avant toute intégration réelle de nouveaux univers. Le prototype et la
    simulation ne modifient ni catalogue, ni taux, ni économie.
 5. Backlog sans développement engagé : soundbites des créateurs, Perfect renforcé,
-   événements Twitch, Trade Radar, Last Pack revanchard et export Story.
+   événements Twitch, Trade Radar et Last Pack revanchard.
    Les règles et dépendances restent à définir avant développement.
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus
