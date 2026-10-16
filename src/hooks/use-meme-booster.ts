@@ -147,7 +147,9 @@ export function useMemeBooster() {
     complete: () => setState((value) => ({ ...value, extracted: true })),
     close: () => setState((value) => ({ ...value, phase: "closed", result: null, extracted: false })),
     leavePending: () => setState((value) => ({ ...value, left: true, phase: "closed",
-      notice: "Le tirage continue. Retrouve les cartes dans le classeur Mèmes." })),
+      notice: value.result
+        ? "Booster ouvert : retrouve tes cartes dans le classeur Mèmes."
+        : "Le tirage continue. Retrouve les cartes dans le classeur Mèmes." })),
   };
 }
 export type MemeBooster = ReturnType<typeof useMemeBooster>;

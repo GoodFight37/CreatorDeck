@@ -108,6 +108,17 @@ describe("préparation et tirage Mèmes partagés", () => {
     expect(output().textContent).toContain("Booster ouvert");
   });
 
+  it("quitter après la réponse réussie annonce que les cartes sont déjà dans le classeur", async () => {
+    let resolve!: (value: typeof result) => void;
+    drawRpc.mockImplementation(() => new Promise((done) => { resolve = done; }));
+    await banc.monter(<Harness />); banc.appuyer("Préparer"); banc.appuyer("Valider");
+    await act(async () => resolve(result));
+    expect(output().getAttribute("data-result")).toBe("5");
+    banc.appuyer("Quitter l’attente");
+    expect(output().textContent).toContain("Booster ouvert");
+    expect(output().textContent).not.toContain("Le tirage continue");
+  });
+
   it("écarte une réponse tardive après un changement de compte", async () => {
     let resolve!: (value: typeof result) => void;
     drawRpc.mockImplementation(() => new Promise((done) => { resolve = done; }));
