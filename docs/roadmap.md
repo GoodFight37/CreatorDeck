@@ -2,7 +2,7 @@
 
 ## État actuel — 16 octobre 2026
 
-**Matière des cartes Mèmes (D-127) — implémentée, jugement physique ouvert :** audit différentiel des 59 observations d'animations et des 27 familles partielles du paquet réduit ; progression de cadre et de matière selon la rareté, Full Art plus ouvert, reflet au doigt limité à la grande fiche. Pas de sweep perpétuel ni de modification du booster physique, des cartes Twitch ou des règles. Voir [l'audit et les limites](audit-cartes-memes-reference.md). Le rendu sur téléphone réel reste à juger ; état des contrôles et du déploiement dans la passation.
+**Matière des cartes Mèmes (D-127) — publiée sur Vercel, jugement physique ouvert :** audit différentiel des 59 observations d'animations et des 27 familles partielles du paquet réduit ; progression de cadre et de matière selon la rareté, Full Art plus ouvert, reflet au doigt limité à la grande fiche. Pas de sweep perpétuel ni de modification du booster physique, des cartes Twitch ou des règles. Voir [l'audit et les captures comparables](audit-cartes-memes-reference.md). Code `40eb20f7`, CI 6/6, Production `READY`, fiche visible sur le domaine public ; le rendu sur téléphone réel reste à juger.
 
 **Ouverture tactile Mèmes (D-126) — publiée et vérifiée sur Vercel :** retour utilisateur sur D-125 : révélation trop statique. Le sachet Mèmes utilise désormais le peel, l’extraction des cinq dos, le flip automatique avec rareté différenciée et un récap maintenu 1,5 s. Taux, réserve et Twitch inchangés. Tests navigateur mobile simulé et connecté de production réussis sur `b8cff0f9` : peel, cinq flips, récap et réserve à 3. Déploiement Production, CI 6/6 et workflow Supabase réussis. Reste le ressenti tactile sur téléphone physique.
 

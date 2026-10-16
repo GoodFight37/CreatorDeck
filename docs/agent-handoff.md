@@ -1,11 +1,12 @@
 # Reprise rapide — 16 octobre 2026
 
-## Checkpoint D-127 — matière des cartes Mèmes (publication en cours)
+## Checkpoint D-127 — matière des cartes Mèmes (publié et vérifié)
 
 - Base `main` locale/GitHub vérifiée à `51bcddec6d458c4e071c5f7342c24605ddf985a9`, arbre propre. Malik demande un audit différentiel du paquet MyMemeCards, puis une amélioration visuelle originale des cartes Mèmes sans nouvel import, sans changement Twitch ni du booster physique. Le paquet réduit contient 27 familles observées une seule fois et toutes `partial/resource_cap` ; `animations.json` compte 59 observations, 8 complètes et 51 partielles. [Audit détaillé et captures mobiles comparables](audit-cartes-memes-reference.md).
 - Cartes Mèmes : couches de matière fixes et distinctes sur les cinq raretés, Full Art avec image plus ouverte et cartouche allégé, reflet au doigt limité à la grande fiche Épique+, ou Full Art. Reflets désactivés et `prefers-reduced-motion` coupent le reflet. Pas de sweep permanent, de nouveau média, de changement de taux, de catalogue, de SQL ni du sachet physique. Note joueur et décision D-127 incluses.
 - Vérifications locales : TypeScript, ESLint complet, garde de jargon, build statique, 1 186/1 186 unitaires, 28/28 écrans ciblés, Playwright mobile Mèmes/Binder 7/7, diff check réussis. Six captures de fiches à 390 × 844 ont été inspectées ; elles ne prouvent pas le rendu OLED ni le geste sur téléphone physique. Le build local n'a pas les variables Supabase ; aucun nouveau tirage connecté n'est revendiqué, les règles serveur sont inchangées.
-- Publication et CI/Vercel : à compléter après push ; le jugement visuel et tactile sur téléphone réel reste ouvert.
+- Code, test, note joueur, audit et six captures publiés sur `main` par [`40eb20f7`](https://github.com/GoodFight37/CreatorDeck/commit/40eb20f75d1c9454c30c5cc3552425f90cb9207b), SHA distant confirmé. [CI Vérification 38888638434](https://github.com/GoodFight37/CreatorDeck/actions/runs/38888638434) terminée verte 6/6, y compris trois lots Playwright, qualité, migrations jetables et cloud simulé. Vercel Production `dpl_FHgW9md8k7fubXY7PzC6Grbaj7bm` est `READY` sur ce SHA. `/memes` répond HTTP 200 sur `creator-deckk.vercel.app` ; en Chromium mobile 390 × 844, la fiche Mythique contient bien la couche de matière et son reflet, sans exception JavaScript. Ce parcours public sans compte ne teste pas un nouveau tirage ni la sensation sur téléphone physique.
+- Clôture documentaire post-CI : même code, aucun nouveau test d'application requis. Le jugement visuel et tactile sur téléphone réel reste ouvert.
 
 ## Checkpoint D-126 — rituel d’ouverture Mèmes (publié et vérifié)
 
