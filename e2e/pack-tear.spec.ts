@@ -568,7 +568,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await expect(homeSpecular).toBeAttached();
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
 
-  await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
   const openingPack = page.locator(".booster-physical-scene");
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").animationName))
     .toBe("none");
@@ -605,7 +605,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
-  await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
   const offPack = page.locator(".booster-physical-scene");
   const offSeam = page.getByRole("button", { name: /D.chirer le haut du sachet en passant le doigt/ });
   const offBounds = (await offSeam.boundingBox())!;
@@ -782,7 +782,7 @@ test("DIVERRON portrait resolves to the restored user-provided photo", async ({ 
 
 test("home sachet tap opens once and returns focus to the sachet", async ({ page }, testInfo) => {
   await gotoDeck(page);
-  const sachet = page.getByRole("button", { name: "Ouvrir le sachet Live Drop" });
+  const sachet = page.getByRole("button", { name: "Préparer le booster Live Drop" });
   await expect(sachet).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
   if (testInfo.project.name === "téléphone") await sachet.tap();
@@ -851,11 +851,11 @@ for (const selector of [".pack-stage", ".pack-artwork"]) {
 test("compact sachet keeps the weld within thumb reach and accepts both swipe directions", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await gotoDeck(page);
-  await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
   const touch = await page.context().newCDPSession(page);
   for (const reverse of [false, true]) {
-    await page.getByRole("button", { name: "Ouvrir le sachet Live Drop" }).click();
+    await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
     const dialog = page.locator(".opening-continuum");
     for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 800 }, { width: 412, height: 915 }]) {
       await page.setViewportSize(viewport);
@@ -894,7 +894,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   await touch.detach();
   await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 2}/4`);
   if (stock === 2) {
-    await expect(page.getByRole("button", { name: "Ouvrir le sachet Live Drop" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();
   }
 });

@@ -2,6 +2,8 @@
 
 ## État actuel — 16 octobre 2026
 
+**Choix des boosters sur Drop (D-129) — implémenté et vérifié localement, revue en attente :** carrousel Live Drop/Mèmes, voisin visible, glissement/clavier/boutons, présentation avec Retour sans consommation et tirage au geste validé. Réserves et règles distinctes. [Captures, états, vérifications et limites](drop-boosters.md). Prochaines conditions : revue indépendante Claude, jugement tactile de Malik, puis accord avant push, merge ou déploiement. Le Binder multi-univers reste une proposition non engagée.
+
 **Sachet Live Drop souple (D-128) — publié sur Vercel, ressenti physique ouvert :** silhouette et soudures arrondies, plis et volume dans l'impression existante, tranches moins rigides, reflet contenu et ombre recadrée. Taille, idle, CTA, peel et économie conservés. [Captures avant/après 390 et 320 px](sachet-live-d128.md) ; code `077a67ce`, CI 6/6 et Vercel Production `READY` avec SVG publics identiques aux fichiers publiés. Le rendu et le geste sur téléphone physique restent à juger par Malik.
 
 **Matière des cartes Mèmes (D-127) — publiée sur Vercel, jugement physique ouvert :** audit différentiel des 59 observations d'animations et des 27 familles partielles du paquet réduit ; progression de cadre et de matière selon la rareté, Full Art plus ouvert, reflet au doigt limité à la grande fiche. Pas de sweep perpétuel ni de modification du booster physique, des cartes Twitch ou des règles. Voir [l'audit et les captures comparables](audit-cartes-memes-reference.md). Code `40eb20f7`, CI 6/6, Production `READY`, fiche visible sur le domaine public ; le rendu sur téléphone réel reste à juger.

@@ -1,0 +1,55 @@
+/* Choix du booster sur Drop, avant toute consommation. */
+.home-view .pack-stage.stage-live.booster-carousel {
+  display: block; position: relative; isolation: isolate;
+  height: calc(var(--drop-pack-size) * 1.4667 + var(--drop-stage-pt) + var(--drop-stage-pb) + 28px);
+  overflow: hidden; overflow: clip; touch-action: pan-y pinch-zoom;
+}
+.booster-pack-slot {
+  position: absolute; left: 50%; top: var(--drop-stage-pt);
+  width: var(--drop-pack-size); height: calc(var(--drop-pack-size) * 1.4667);
+  z-index: 1; opacity: .72;
+  transform: translateX(calc(-50% + var(--booster-offset) * 76% + var(--booster-drag, 0px))) scale(.7) rotateY(-12deg);
+  transition: transform 360ms cubic-bezier(.2,.7,.2,1), opacity 300ms ease;
+}
+.booster-pack-slot[data-active="true"] {
+  z-index: 2; opacity: 1;
+  transform: translateX(calc(-50% + var(--booster-drag, 0px))) scale(1);
+}
+.booster-carousel[data-dragging] .booster-pack-slot { transition: none; }
+.home-view .booster-carousel .booster-pack-slot > button {
+  position: relative; display: block; width: 100%; height: 100%; max-width: none;
+  margin: 0; padding: 0; border: 0; background: none; overflow: visible; cursor: pointer;
+  touch-action: pan-y pinch-zoom; -webkit-tap-highlight-color: transparent;
+}
+.home-view .booster-carousel .booster-neighbor .pack-idle { animation: none; }
+.home-view .booster-carousel .booster-neighbor .pack-specular { display: none; }
+.home-view .pack-stage.stage-live.booster-carousel .pack-copy {
+  position: absolute; bottom: 5px; left: 0; right: 0; justify-content: center;
+}
+.home-view .booster-carousel .pack-copy h2 { margin: 0; }
+.booster-switcher { display: flex; justify-content: center; gap: 6px; margin: 0 auto; }
+.booster-switcher button {
+  min-height: 44px; padding: 8px 18px; border: 1px solid var(--line);
+  border-radius: 999px; background: var(--panel); color: var(--muted);
+  font: inherit; font-size: 13px; cursor: pointer;
+}
+.booster-switcher button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: white; }
+.booster-selection-hint { text-align: center; color: var(--muted); font-size: 11px; margin: 6px 0 12px; }
+.home-view .booster-panel[hidden] { display: none; }
+.home-view .meme-booster-panel { padding: 0 2px; }
+.home-view .meme-booster-panel .primary-action { width: 100%; min-height: 64px; }
+.meme-booster-reserve { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0; font-size: 13px; }
+.meme-booster-reserve span { color: var(--muted); }
+.booster-collection-link { display: block; padding: 12px 0; color: var(--accent); font-size: 13px; }
+.booster-preparation-back {
+  position: absolute; top: max(16px, env(safe-area-inset-top)); left: max(16px, env(safe-area-inset-left));
+  z-index: 20; min-width: 90px; min-height: 44px; padding: 10px 16px; border-radius: 999px;
+  color: #fff3eb; border: 1px solid rgb(255 239 225 / .35); background: rgb(23 12 29 / .85);
+  font: inherit; font-size: 14px; cursor: pointer;
+}
+@media (max-height: 620px) and (max-width: 430px) {
+  .home-view .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(46vw, 210px, 25dvh); }
+  .booster-switcher button { min-height: 44px; padding-block: 5px; }
+  .booster-selection-hint { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); }
+}
+@media (prefers-reduced-motion: reduce) { .booster-pack-slot { transition: none; } }

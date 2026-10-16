@@ -30,6 +30,27 @@ describe("présentation du booster pendant un tirage réseau", () => {
     vi.useRealTimers();
   });
 
+  it("Retour et Échap quittent la préparation sans aucun tirage", async () => {
+    const { gameStore } = await import("@/lib/game-store");
+    const { CreatorDeckApp } = await import("@/components/creator-deck-app");
+    const { runBackHandler } = await import("@/lib/back-stack");
+    gameStore.reset(Date.UTC(2026, 9, 8, 12));
+    await banc.monter(<CreatorDeckApp />);
+    const before = JSON.stringify(gameStore.getSnapshot());
+    banc.appuyer("Ouvrir le booster");
+    expect(openLivePack).not.toHaveBeenCalled();
+    banc.appuyer("← Retour");
+    expect(document.querySelector(".opening-continuum")).toBeNull();
+    banc.appuyer("Ouvrir le booster");
+    act(() => document.querySelector(".opening-continuum")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+    expect(document.querySelector(".opening-continuum")).toBeNull();
+    banc.appuyer("Ouvrir le booster");
+    act(() => { expect(runBackHandler()).toBe(true); });
+    expect(document.querySelector(".opening-continuum")).toBeNull();
+    expect(openLivePack).not.toHaveBeenCalled();
+    expect(JSON.stringify(gameStore.getSnapshot())).toBe(before);
+  });
+
   it("permet de quitter après une longue attente sans relancer le tirage", async () => {
     const { gameStore } = await import("@/lib/game-store");
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
@@ -37,8 +58,9 @@ describe("présentation du booster pendant un tirage réseau", () => {
     await banc.monter(<CreatorDeckApp />);
 
     banc.appuyer("Ouvrir le booster");
-    expect(openLivePack).toHaveBeenCalledOnce();
+    expect(openLivePack).not.toHaveBeenCalled();
     banc.appuyer("Ouvrir sans déchirer");
+    expect(openLivePack).toHaveBeenCalledOnce();
     await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
 
     expect(document.querySelector(".booster-premium-loading")).toBeTruthy();

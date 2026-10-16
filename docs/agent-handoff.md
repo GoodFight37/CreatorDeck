@@ -1,3 +1,19 @@
+# Chantier local D-129 — choix des boosters sur Drop — 16 octobre 2026
+
+**État : lot implémenté et vérifié localement, revue indépendante en attente, aucune publication.** Branche écrivain `codex/collaboration`, worktree `C:/Users/Administrator/Desktop/CreatorDeck-Codex`. Base commune vérifiée `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`, main GitHub inchangé lors de la reprise. Worktree Claude `C:/Users/Administrator/Desktop/CreatorDeck-Claude`, branche `claude/review` propre à cette base au départ. Le dépôt d’origine reste sur main `9659f95e`, avec son fichier .playwright-mcp préservé. Le dossier portraits de 9,6 Go a été retiré par Malik : ne plus le chercher ni le traiter comme contrainte active.
+
+Demande : carrousel Live Drop/Mèmes sur Drop, booster voisin visible, swipe horizontal et boutons, premier appui = présentation annulable avec Retour ; consommation uniquement au geste validé ou alternative clavier. Réutiliser les ouvertures actuelles, sans changement de taux, SQL, ressources ou collections. Le Binder unifié n’est pas engagé.
+
+Réalisé : carrousel, réserves par univers, préparation Live annulable, contrôleur Mèmes commun au Drop et à /memes, déclenchement du tirage reporté au geste. Fichiers nouveaux : booster-carousel.tsx/.css, meme-booster-opening.tsx, use-meme-booster.ts. Fichiers existants raccordés : drop-view, creator-deck-app, pack-tear, meme-deck. Note joueur et décision D-129. Dépendances installées dans le nouveau worktree par npm ci ; lockfile inchangé.
+
+Contrôles sur base + diff local final : écrans 188/188 puis 13/13 ciblés après deux cas supplémentaires ; notes unitaires 8/8 ; cloud simulé téléphone 8 réussis/1 ignoré, puis dernier run parcours bureau+téléphone 8/8 ; six cas Live réussis et trois contrôles historiques Drop corrigés puis réussis 3/3. TypeScript, lint complet, jargon, build statique sans cloud et diff check brut réussis. Les premiers échecs étaient des attentes au premier appui et des sélecteurs à un booster ; ils ont été adaptés et revérifiés. Rapport autonome, commandes, captures, limitations : [Drop multi-boosters](drop-boosters.md). Aucune preuve production ou téléphone physique pour ce lot.
+
+Contraintes de session : accès Git/réseau et aux worktrees frères via exécution autorisée hors sandbox ; pas de modification globale safe.directory, RTK ou Claude. Aucun push, merge, déploiement ou migration sans accord explicite de Malik.
+
+Prochaine action : commit local ciblé puis revue Claude du SHA de code (à retrouver par git log -1 --format=%H -- src/components/booster-carousel.tsx), sans nouvelle synchronisation GitHub. Claude place son worktree propre sur ce SHA en HEAD détaché ; jamais de bascule sur une branche déjà écrite par Codex. Réservation Codex libérée après ce checkpoint ; reprendre les corrections éventuelles sur codex/collaboration après vérification du HEAD. Le ressenti physique reste une validation de Malik. Aucun envoi avant son accord.
+
+---
+
 # Reprise rapide — 16 octobre 2026
 
 ## Checkpoint D-128 — sachet Live Drop assoupli (publié et vérifié)

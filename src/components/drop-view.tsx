@@ -1,13 +1,15 @@
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
-import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import { useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 import { ChevronRight, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
 
 import "./drop-craft.css";
+import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
+export { PackArtwork } from "@/components/booster-carousel";
+import { useMemeBooster } from "@/hooks/use-meme-booster";
+import { MemeBoosterOpening, MemeCollectionLink, MemePackComposition } from "@/components/meme-booster-opening";
 
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
@@ -36,50 +38,6 @@ function formatCountdown(date: number | null, now: number) {
     : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function PackArtwork({ onClick, disabled }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean }) {
-  const start = useRef<{ x: number; y: number } | null>(null);
-  const dragged = useRef(false);
-  return (
-    <button type="button" className="pack-artwork pack-live"
-      onPointerDown={(event) => {
-        start.current = { x: event.clientX, y: event.clientY };
-        dragged.current = false;
-      }}
-      onPointerMove={(event) => {
-        if (start.current && Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 8) {
-          dragged.current = true;
-        }
-      }}
-      onPointerUp={() => { start.current = null; }}
-      onPointerCancel={() => { start.current = null; dragged.current = true; }}
-      onClick={(event) => {
-        if (event.detail > 0 && dragged.current) return;
-        onClick(event);
-      }}
-      disabled={disabled} aria-label="Ouvrir le sachet Live Drop">
-      <span className="pack-idle" aria-hidden="true">
-        <span className="pack-3d-object">
-          <span className="pack-3d-side pack-3d-side-left" />
-          <span className="pack-3d-side pack-3d-side-right" />
-          <span className="pack-3d-side pack-3d-side-bottom" />
-          <span className="pack-3d-front">
-            <Image
-              className="pack-foil-image"
-              src="/packs/live-opening.svg"
-              alt=""
-              fill
-              sizes="(max-width: 390px) 58vw, 230px"
-              draggable={false}
-              priority
-            />
-            <span className="pack-specular" />
-          </span>
-        </span>
-      </span>
-    </button>
-  );
-}
-
 export function HomeView({
   game,
   themeStyle,
@@ -87,6 +45,7 @@ export function HomeView({
   onShowInbox,
   onShowCollection,
   onOpen,
+  onShowAccount,
   onUseHourglass,
   onShowOdds,
   onShowMissions,
@@ -111,6 +70,7 @@ export function HomeView({
   onShowInbox: () => void;
   onShowCollection: () => void;
   onOpen: () => void;
+  onShowAccount?: () => void;
   onOpenScene: () => void;
   sceneBusy: boolean;
   onUseHourglass: () => void;
@@ -130,19 +90,25 @@ export function HomeView({
   tutorialAvailable?: boolean;
 }) {
   const cloud = useCloud();
+  const memes = useMemeBooster();
+  const [universe, setUniverse] = useState<BoosterUniverse>("live");
   const pack = PACKS.live;
   const stock = game.player.packs;
   const promoPacks = cloud.configured && cloud.userId ? cloud.promoPacks : 0;
   const nextAt = game.player.nextPackAt;
   const tick = useNow(1_000);
   const needsLogin = needsAccount && !tutorialAvailable;
-  const cannotOpen = opening || (!needsAccount && stock <= 0 && promoPacks <= 0);
+  const cannotOpen = opening || memes.busy || (!needsAccount && stock <= 0 && promoPacks <= 0);
+  const memeCannotOpen = opening || memes.busy || (memes.account && (!memes.status || memes.status.stock < 1));
 
-  function openArtwork(event: MouseEvent<HTMLButtonElement>) {
-    if (cannotOpen) return;
-    event.currentTarget.focus();
+  function prepareBooster(kind: BoosterUniverse) {
+    if (opening || memes.busy) return;
     buzz([8]);
-    onOpen();
+    if (kind === "live" && !cannotOpen) onOpen();
+    if (kind === "memes" && !memeCannotOpen) {
+      if (!memes.account) onShowAccount?.();
+      else memes.prepare();
+    }
   }
 
   const [inspectCard, setInspectCard] = useState<GameView["cards"][number] | null>(null);
@@ -222,19 +188,10 @@ export function HomeView({
         <h1>Drop</h1>
       </header>
 
-      {/* Sachet + CTA d'abord : au-dessus du pli */}
-      <section className="pack-stage stage-live"
-        aria-label={`${pack.label} : ${pack.size} cartes`}
-      >
-        <div className="pack-shadow" />
-        <PackArtwork onClick={openArtwork} disabled={cannotOpen} />
-        <div className="pack-copy">
-          <h2 tabIndex={-1} data-presentation-focus-fallback>{pack.label}</h2>
-          <span>· {pack.size}</span>
-        </div>
-      </section>
+      <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
+        disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen} />
 
-      <section className="open-panel" data-tutorial={needsAccount ? "true" : "false"}>
+      <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         <button
           className="primary-action"
           onClick={onOpen}
@@ -311,6 +268,27 @@ export function HomeView({
           </details>
         </details>
       </section>
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
+        <button className="primary-action" type="button" disabled={memeCannotOpen}
+          onClick={() => prepareBooster("memes")}>
+          <Zap size={19} aria-hidden="true" />
+          <span>{!memes.account ? "Se connecter pour ouvrir" : memes.busy ? "Ouverture…"
+            : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge en cours" : "Ouvrir le booster Mèmes"}</span>
+          <ChevronRight size={19} aria-hidden="true" />
+        </button>
+        <div className="meme-booster-reserve" aria-live="polite">
+          {memes.status ? <><strong>Ta réserve Mèmes · {memes.status.stock}/4</strong>
+            <span>{memes.status.nextAt ? "+1 dans " + formatCountdown(Date.parse(memes.status.nextAt), tick) : "Réserve pleine"}</span></>
+            : <span>{memes.account ? "Lecture de ta réserve Mèmes…" : "Une réserve séparée pour tes cartes Mèmes."}</span>}
+        </div>
+        {memes.notice ? <p role="status">{memes.notice}</p> : null}
+        {memes.problem ? <div role="alert"><p>{memes.problem}</p>
+          <button type="button" disabled={memes.loading} onClick={() => void memes.refresh()}>Réessayer la lecture</button></div> : null}
+        <MemePackComposition />
+        <MemeCollectionLink />
+      </section>
+      <MemeBoosterOpening booster={memes} />
+
 
       {/* Direct sous le CTA */}
       {featured ? (
@@ -544,10 +522,6 @@ export function HomeView({
           </button>
         ) : null}
       </details>
-
-      <Link className="meme-drop-entry" href="/memes" aria-label="Decouvrir le booster et la collection Memes">
-        <span>UNIVERS 02</span><strong>Mèmes</strong><small>Un autre booster · un autre classeur</small><ChevronRight size={21} aria-hidden="true" />
-      </Link>
 
       <section className="section-block drop-findings">
         <div className="section-heading">

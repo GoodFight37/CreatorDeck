@@ -1,3 +1,13 @@
+## D-129 — 16 octobre 2026 : choisir et préparer son booster depuis Drop
+
+Malik demande un choix de boosters directement à l’arrivée sur Drop : Live Drop au centre, Mèmes partiellement visible derrière sur le côté, passage au doigt et présentation avec Retour avant l’ouverture. Sa démonstration distingue choix, préparation réversible et ouverture effective. Le premier lot envisagé de Binder unifié est remplacé par ce chantier de navigation ; le prototype fictif reste isolé.
+
+Le carrousel propose Live Drop et Mèmes, avec boutons d’univers et flèches du clavier. Le scroll vertical reste celui de la page ; un glissement ne prépare ni n’ouvre un paquet. L’univers actif fournit son propre habillage, sa réserve, sa recharge et ses aides. Le Paquet Scène conserve son accès et son fonctionnement dédiés. Le classeur Mèmes est accessible depuis son panneau.
+
+Le premier appui présente le sachet scellé avec Retour, Échap et prise en charge du retour natif via la pile existante. Il n’appelle aucun tirage. La déchirure validée au relâchement ou l’alternative « Ouvrir sans déchirer » engage le tirage une fois. Après engagement, le retour pendant une requête ne l’annule pas et ne relance rien. Live Drop conserve son hook et ses effets ; Mèmes utilise le même contrôleur sur Drop et /memes, avec sa clé idempotente conservée après perte de réponse. Les réponses d’un ancien compte sont écartées.
+
+Les taux, réserves, économies et collections restent distincts ; aucune migration ni règle de jeu nouvelle. Aucun nouveau média ni nouvel univers. Les tests ciblés et preuves de rendu sont consignés dans la passation de ce lot. La validation tactile physique et toute publication restent à faire ; Malik valide avant push, merge ou déploiement.
+
 ## D-128 — 16 octobre 2026 : faire lire le booster principal comme un sachet souple
 
 Après D-117 et D-127, Malik ouvre un chantier distinct sur le rendu du booster principal, encore perçu comme trop plat. Les captures 390 × 844 et 320 × 568 de `main` montrent un objet lisible mais très rectiligne : la tranche rose et le bord de la face évoquent une boîte rigide, et le reflet peut sembler posé sur le dessin. La taille et l'action du Drop sont déjà satisfaisantes.

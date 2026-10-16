@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-choix-boosters", date: "2026-10-16", title: "Choisis ton booster sur Drop",
+    summary: "Passe de Live Drop à Mèmes d’un glissement, puis prépare ton ouverture.",
+    sections: [{ title: "Drop", items: [
+      "Les boosters Live Drop et Mèmes se choisissent depuis le même écran, au doigt ou avec les boutons d’univers.",
+      "Touche un sachet pour le préparer. Retour permet de changer d’avis sans dépenser de booster.",
+      "Le booster est consommé quand tu valides la déchirure ou choisis Ouvrir sans déchirer.",
+    ] }],
+  },
+  {
     id: "2026-10-16-sachet-souple", date: "2026-10-16", title: "Un sachet moins rigide",
     summary: "Le booster Live Drop prend des plis et une silhouette de sachet souple.",
     sections: [{ title: "Drop", items: [

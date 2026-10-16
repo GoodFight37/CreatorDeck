@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Image from "next/image";
 import { createPortal } from "react-dom";
+import { useBackHandler } from "@/hooks/use-back-handler";
+import "./booster-carousel.css";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { isPeelOpenable, PEEL_MIN_APERTURE, PEEL_MIN_COVERAGE, PEEL_ZONE_Y, smoothPeelEdge } from "@/lib/peel-geometry";
@@ -20,6 +22,7 @@ export function PackTear({
   artwork: customArtwork,
   onComplete,
   onTear,
+  onCancel,
   onLeavePending,
   autoCompleteAfterMs,
   returnFocusTo,
@@ -30,6 +33,8 @@ export function PackTear({
   artwork?: string;
   onComplete: () => void;
   onTear?: () => void;
+  /** Retour possible uniquement avant le geste qui engage le tirage. */
+  onCancel?: () => void;
   /** Leaves the presentation only; the in-flight draw is not retried/cancelled. */
   onLeavePending?: () => void;
   autoCompleteAfterMs?: number;
@@ -61,6 +66,8 @@ export function PackTear({
   const done = useRef(false);
   const extractionCompleted = useRef(false);
   const revealing = Boolean(children);
+  const cancelPreparation = () => { if (!done.current) onCancel?.(); };
+  useBackHandler(!opened && Boolean(onCancel), cancelPreparation);
   const timer = useRef<number | null>(null);
   const slowTimer = useRef<number | null>(null);
   const completeRef = useRef(onComplete);
@@ -102,6 +109,12 @@ export function PackTear({
     setCut((current) => ({ ...current, start: 4, end: 96, progress: 100 }));
     setOpened(true);
 
+    try {
+      tearRef.current?.();
+    } catch {
+      console.warn("Son/vibration indisponible pendant l’ouverture.");
+    }
+
     const effects = cardEffectsAllowed();
     if (effects) {
       // Laisser les cinq dos se poser avant la première face.
@@ -114,11 +127,6 @@ export function PackTear({
       completeExtraction();
     }
 
-    try {
-      tearRef.current?.();
-    } catch {
-      console.warn("Son/vibration indisponible pendant l’ouverture.");
-    }
   }, [completeExtraction]);
 
   useEffect(() => {
@@ -175,7 +183,14 @@ export function PackTear({
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}
       aria-label={revealing ? "Résultat du booster" : "Ouvrir le booster"}
       aria-modal="true"
+      onKeyDown={(event) => {
+        if (event.key === "Escape" && !opened && onCancel) {
+          event.preventDefault(); event.stopPropagation(); cancelPreparation();
+        }
+      }}
     >
+      {!opened && onCancel ? <button className="booster-preparation-back" type="button"
+        onClick={cancelPreparation}>← Retour</button> : null}
       <div
         className={`booster-opening-stage booster-premium-stage booster-premium-${kind}${opened ? " is-ripped" : ""}`}
         aria-hidden={revealing || undefined}

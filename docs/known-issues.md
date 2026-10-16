@@ -1,3 +1,9 @@
+## D-129 — lecture Mèmes refusée après un tirage confirmé : correction locale
+
+Constat du 16 octobre 2026 sur la logique de `meme-deck.tsx` de `88daf0cd` : après `open_meme_pack`, l’ancienne implémentation attendait aussi `meme_status` avant de préparer la révélation. Si cette seconde lecture échouait, le catch fermait la scène malgré un tirage serveur déjà confirmé. Gravité moyenne : résultat invisible jusqu’au rejeu idempotent, sans perte de cartes démontrée. Reproduction ciblée : RPC de tirage valide puis rejet de la lecture de réserve. Le contrôleur partagé de D-129 conserve immédiatement les cinq cartes et la réserve confirmée pour les révéler ; une erreur de lecture permet de réessayer seulement la lecture. Test `ecrans-meme-booster.test.tsx` réussi. Correction locale sur la branche Codex, non publiée ; pas de nouvel essai en production.
+
+Le même contrôleur écarte les réponses d’un ancien compte et les lectures de réserve démarrées avant un tirage ; le changement de compte pendant une requête est couvert en DOM. Retour avant déchirure ne lance aucun tirage ; après engagement, quitter l’attente laisse la requête terminer. La validation tactile réelle reste à faire par Malik.
+
 ## Booster Mèmes sans rituel tactile — corrigé et publié dans D-126
 
 Sur `52b3738a`, ouvrir un booster Mèmes affichait un dialogue statique : aucun peel, aucune sortie des cinq dos, un bouton « RÉVÉLER » par carte. Les captures du joueur du 16 octobre 2026 montrent le décalage avec le Drop principal. Gravité moyenne : le tirage fonctionnait mais la sensation de jeu demandée manquait. D-126 réutilise `PackTear` avec un visuel Mèmes et ajoute flip automatique, glissement et récap tenu 1,5 s. Un scénario Playwright mobile avec RPC simulés vérifie le geste et les cinq cartes ; déploiement Vercel et parcours connecté réel réussis ; ressenti physique à confirmer. Aucun défaut de taux ou perte de carte observé.

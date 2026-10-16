@@ -189,6 +189,7 @@ export function CreatorDeckApp() {
   const [sceneOpening, setSceneOpening] = useState(false);
   /** Le paquet est en train de s'ouvrir : le moment entre le geste et la carte. */
   const [tearing, setTearing] = useState(false);
+  const [preparingLive, setPreparingLive] = useState(false);
   const [tearKind, setTearKind] = useState<"live" | "scene">("live");
   const tearResolve = useRef<(() => void) | null>(null);
   const pendingPresentationLeft = useRef(false);
@@ -208,8 +209,8 @@ export function CreatorDeckApp() {
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [tribunalOpen, setTribunalOpen] = useState(false);
   useEffect(() => {
-    setMusicScene(tribunalOpen ? "tribunal" : tearing || drawnCards.length > 0 ? "pack" : "hub");
-  }, [drawnCards.length, tearing, tribunalOpen]);
+    setMusicScene(tribunalOpen ? "tribunal" : preparingLive || tearing || drawnCards.length > 0 ? "pack" : "hub");
+  }, [drawnCards.length, tearing, preparingLive, tribunalOpen]);
   // La pastille de la barre : combien de paquets d'amis sont prenables là,
   // maintenant. Même calcul que la ligne du menu, même horloge (celle du
   // serveur) — une pastille qui resterait allumée après la fenêtre serait un
@@ -474,14 +475,14 @@ export function CreatorDeckApp() {
   }
 
   /**
-   * Show the real booster from the first tap, while the server draws the cards.
+   * Prepare the real booster without drawing. The validated tear starts the draw.
    * The tear can finish before the network does; the wrapper stays mounted
    * until both the draw and the gesture have completed, with no empty frame.
    */
-  function commencerDechirure(kind: "live" | "scene"): Promise<void> {
+  function commencerDechirure(kind: "live" | "scene", keepFocus = false): Promise<void> {
     pendingPresentationLeft.current = false;
     // Capture before the opening button is disabled, and keep it through reveal.
-    setPresentationReturnFocus(document.activeElement instanceof HTMLElement
+    if (!keepFocus) setPresentationReturnFocus(document.activeElement instanceof HTMLElement
       ? document.activeElement : null);
     setTearKind(kind);
     setTearing(true);
@@ -502,12 +503,20 @@ export function CreatorDeckApp() {
     showNotice("Le tirage continue. Aucun autre paquet n’est lancé.");
   }
 
-  async function handleOpenPack() {
+  function prepareLivePack() {
+    if (!game || opening || sceneOpening || preparingLive || drawnCards.length) return;
+    setPresentationReturnFocus(document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setTearKind("live");
+    setPreparingLive(true);
+  }
+
+  async function handleOpenPack(fromPreparation = false) {
     if (!game || opening || sceneOpening) return;
     setOpening(true);
     setError(null);
     setErrorHint(null);
-    const dechirureTerminee = commencerDechirure("live");
+    const dechirureTerminee = commencerDechirure("live", fromPreparation);
+    setPreparingLive(false);
     try {
       // The server/local engine draws while the physical booster stays visible.
       const result = await openLivePack();
@@ -771,7 +780,8 @@ export function CreatorDeckApp() {
             friendsOpening={friendsOpening}
             onShowInbox={() => setNotificationsOpen(true)}
             onShowCollection={() => setTab("collection")}
-            onOpen={() => void handleOpenPack()}
+            onOpen={prepareLivePack}
+            onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
             onUseHourglass={handleUseHourglass}
             onShowOdds={ouvrirFeuille(setOddsOpen)}
             onShowMissions={() => setTab("missions")}
@@ -905,7 +915,9 @@ export function CreatorDeckApp() {
           <button onClick={() => setNotice(null)} aria-label="Fermer"><X size={15} /></button>
         </div>
       ) : null}
-      {tearing ? <PackTear kind={tearKind} returnFocusTo={presentationReturnFocus} onTear={() => {
+      {tearing || preparingLive ? <PackTear kind={tearKind} returnFocusTo={presentationReturnFocus}
+        onCancel={preparingLive ? () => setPreparingLive(false) : undefined} onTear={() => {
+        if (preparingLive) void handleOpenPack(true);
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
       }} onComplete={terminerDechirure} onLeavePending={leavePendingPresentation}>{revealPresentation}</PackTear> : revealPresentation}
