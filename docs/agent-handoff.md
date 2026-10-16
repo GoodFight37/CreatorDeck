@@ -4591,19 +4591,23 @@ ajouter de vrais comptes ou licences dans cette tâche.
   limité au processus, sans modifier la configuration globale.
 - La première tentative `git ls-remote --heads origin` échouait dans le bac à
   sable (`Could not resolve host: github.com`). Avec l'accès réseau autorisé,
-  la référence distante a été vérifiée : `origin/main` est
-  `c9b3d59a2ecd8aa712553a1c0803828c5a287fe7`, parent direct de HEAD. CI, PR et
-  Vercel n'ont pas été vérifiés dans cette reprise ; aucune publication n'est
-  revendiquée.
+  la référence distante a été vérifiée : `origin/main` était
+  `c9b3d59a2ecd8aa712553a1c0803828c5a287fe7`, parent direct du HEAD de départ.
+  Le push normal a ensuite publié `40a3b81de773a761712179be3a7e17ce1480e2b8`
+  sur `main`; `ls-remote`, GitHub commit metadata et Vercel confirment ce SHA.
 - Lecture de la roadmap : aucun défaut de code reproduit ouvert dans le plan.
   Restent les essais de rendu/toucher/son sur le téléphone de Malik, le choix
   visuel des portraits, le code booster privé qui dépend de l'adresse du compte
   et du SQL Editor, et des parcours sociaux de production avec données de test.
   Les idées sans droits, contenu ou critères ne sont pas engagées. Aucun lot
   autonome de code identifié ; ne pas inventer de nouvelle fonctionnalité.
-- Aucun test lancé, aucune dépendance installée, aucun fichier de jeu modifié.
-  Le checkpoint est commité séparément ; le SVG reste le seul changement local
-  non commité. Aucun push effectué.
+- Aucun test applicatif lancé, aucune dépendance installée, aucun fichier de
+  jeu modifié. `git diff --check` passe sur le checkpoint. Le commit documentaire
+  initial `40a3b81d` ne contient que ce fichier et a été publié normalement.
+  Vercel Production est `READY` sur ce même SHA (`dpl_EpyzhkBemMfgHmRxkYcxqRxNS2W9`,
+  alias `https://creator-deckk.vercel.app/`). Le contrôle de statut GitHub du
+  SHA ne renvoie que Vercel `success`; aucun run Actions n'est associé par les
+  outils disponibles. Le SVG reste le seul changement local non commité.
 - Délégation Claude : script et garde-fous inspectés ; le test réel réussi
   consigné plus haut dans cette passation suffit à établir son fonctionnement.
   Aucun nouvel appel payant ni test de délégation relancé.
