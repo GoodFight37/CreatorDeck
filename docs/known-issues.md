@@ -1,4 +1,4 @@
-## Titre long tronqué pendant la révélation d’un booster Mèmes — corrigé localement
+## Titre long tronqué pendant la révélation d’un booster Mèmes — corrigé et publié
 
 Capture Malik du 16 octobre 2026 : dans les cartes 1/5 et 4/5, le nom est suivi
 de « … » alors que la fiche possède un titre complet. Reproduction visuelle sur
@@ -6,9 +6,9 @@ capture mobile ; cause prouvée dans `globals.css` : `.card-nameplate h3` impose
 `white-space: nowrap`, `overflow: hidden` et `text-overflow: ellipsis`, y
 compris dans la révélation. Gravité faible, lisibilité du contenu. Correctif
 local ciblé sur `.meme-reveal-front` : titre ajusté à la largeur et retour à la
-ligne, sans modifier la carte de collection ou le Binder. Le DOM/E2E de
-révélation doit confirmer l’affichage avant publication ; aucun essai physique
-post-correctif n’est encore réalisé.
+ligne, sans modifier la carte de collection ou le Binder. Le test de révélation
+et les trois shards Playwright ont réussi en CI au commit `3fa0e5c`, inclus dans
+`main` (`7c069711`). Aucun essai physique post-correctif n’est réalisé.
 
 ## D-129 — le glissement du carrousel ne change pas toujours de booster : corrigé
 
@@ -864,3 +864,14 @@ pour intégrer le correctif.
 ## Univers Mèmes FR : une fiche sans visuel distribué — D-125
 
 Au relevé du 16 octobre 2026, « Carte supprimée » (`juventus-rose`) avait un WebP de remplacement de 818 octets. D-131 retire la fiche du client et le script d’import l’exclut avec une garde sur son identifiant et son nom. La migration `0053` refuse de supprimer si une collection ou un tirage historique la référence. Première CI `38959520465` : deux anciennes attentes E2E et la fixture d’application SQL étaient périmées ; corrigées dans `83d212c8`. CI `38960335566` verte (6/6), SQL jetable compris ; workflow Supabase `38960850198` réussi, avec `0053` appliquée et vérifiée après application. Vercel Production READY sur `83d212c8`. Statut : résolu et publié.
+## Contraste de la sélection Live Drop/MEMES — corrigé localement
+
+Le sélecteur Drop affichait son texte blanc 13 px sur `#e8382c`, contraste
+calculé 4,17:1 (sous 4,5:1 WCAG AA). Relevé par revue ciblée Claude le
+16 octobre 2026 au SHA `7c069711`. Gravité faible, lisibilité de l’état actif.
+Correction : fond et bordure de la pill active passés à `#d52820` (5,06:1
+calculé). Le texte et les états sémantiques `aria-pressed` restent inchangés.
+`npm run ecrans -- drop-binder` : 17/17 ; `npm run typecheck` et
+`git diff --check` réussis au SHA de base `7c069711` avec correctif local. Le contraste
+est calculé selon la formule WCAG, sans audit visuel/lecteur d’écran ni essai
+physique. Publication à vérifier.

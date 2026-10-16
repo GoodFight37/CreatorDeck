@@ -2,11 +2,15 @@
 
 ## État actuel — 16 octobre 2026
 
+**Contraste du sélecteur Drop (D-134) — correction locale :** le texte de la
+pill active dépasse maintenant le seuil AA calculé (5,06:1). Écrans ciblés,
+typecheck et publication à vérifier. Voir [D-134](decisions.md).
+
 **D-131 — retrait de la fiche Mèmes sans illustration terminé et vérifié :** « Carte supprimée » (`juventus-rose`) a été retirée du catalogue client et serveur ; le classeur contient 2 150 cartes illustrées. La CI corrective `38960335566` est verte (6/6 jobs) sur `83d212c8`. Le workflow Supabase `38960850198` a appliqué `0053` et confirmé l’état attendu après application. Vercel Production `READY` sur ce SHA. Voir [décision et limites](decisions.md#d-131--16-octobre-2026--retirer-la-fiche-mèmes-sans-illustration).
 
-**Drop moins chargé et rituel préservé (D-132) — implémenté localement :** pills Live Drop/MEMES comme seul sélecteur ; le voisin est décoratif, réduit et atténué ; « Plus d’infos » et « Ouvrir sans déchirer » sont secondaires. La préparation reste annulable et le tirage commence seulement au geste validé. `PACK_TEAR_MS`, anti-skip, tranches et inclinaison du booster sont conservés. Tests ciblés et publication restent à vérifier dans le checkpoint courant ; toucher physique à confirmer par Malik. Voir [choix des boosters](drop-boosters.md) et [D-132](decisions.md#d-132--16-octobre-2026--une-seule-sélection-et-un-rituel-prioritaire).
+**Drop moins chargé et rituel préservé (D-132) — publié sur `main` :** pills Live Drop/MEMES comme seul sélecteur ; le voisin est décoratif, réduit et atténué ; « Plus d’infos » et « Ouvrir sans déchirer » sont secondaires. La préparation reste annulable et le tirage commence seulement au geste validé. `PACK_TEAR_MS`, anti-skip, tranches et inclinaison du booster sont conservés. CI complète 6/6 verte au commit `3fa0e5c` ; toucher physique à confirmer par Malik. Voir [choix des boosters](drop-boosters.md) et [D-132](decisions.md#d-132--16-octobre-2026--une-seule-sélection-et-un-rituel-prioritaire).
 
-**Titres complets à la révélation Mèmes (D-133) — correctif local :** les titres longs passent désormais à la ligne dans la carte révélée. Le contrôle navigateur de cette capture reste à exécuter avant publication ; Binder et cartes compactes ne changent pas.
+**Titres complets à la révélation Mèmes (D-133) — publié et vérifié en CI :** les titres longs passent désormais à la ligne dans la carte révélée. Le test de révélation et les trois shards Playwright ont réussi au commit `3fa0e5c`, inclus dans `main` (`7c069711`). Binder et cartes compactes ne changent pas ; essai physique non réalisé.
 
 **Focus visuel de Drop (D-130) — implémenté et contrôlé :** le booster actif est plus présent, les choix Live Drop/MEMES sont compacts et l’instruction redondante est retirée. Playwright 1/1 aux largeurs 320/390/1024 px ; toucher physique à confirmer.
 

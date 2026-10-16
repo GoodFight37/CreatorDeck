@@ -35,7 +35,7 @@
   border-radius: 999px; background: var(--panel); color: var(--muted);
   font: inherit; font-size: 13px; cursor: pointer;
 }
-.booster-switcher button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: white; }
+.booster-switcher button[aria-pressed="true"] { background: #d52820; border-color: #d52820; color: white; }
 .home-view .booster-panel[hidden] { display: none; }
 .home-view .meme-booster-panel { padding: 0 2px; }
 .home-view .meme-booster-panel .primary-action { width: 100%; min-height: 64px; }

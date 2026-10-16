@@ -4747,3 +4747,13 @@ ajouter de vrais comptes ou licences dans cette tâche.
   ensuite fournir un retour tactile/visuel concret, ou l'adresse exacte du
   compte pour le code privé; ces éléments ne sont pas remplaçables par des
   tests simulés.
+# Checkpoint — contraste du sélecteur Drop après revue Claude (16 octobre 2026)
+
+- Base locale : `codex/collaboration`, SHA `7c069711b7d0937f68acd0b674023629287d64dd` ; GitHub liste ce SHA comme dernier commit et son contrôle Vercel est `success`. `git ls-remote` échoue encore en DNS (`Could not resolve host: github.com`), donc la lecture distante directe reste indisponible.
+- Malik a demandé une tâche utile avec Claude. Le script existant `scripts/delegate-claude.mjs` a transmis une revue ciblée, en lecture seule, du sélecteur Drop ; premier essai bloqué par les droits Windows du worktree Claude, second réussi avec les droits requis. Aucun test ni changement Claude. Retour : pills button sémantiques, `aria-pressed`, focus visible et cibles 44 px ; voisin non interactif et masqué aux lecteurs d’écran. Défaut concret : texte blanc 13 px sur `#e8382c`, contraste calculé 4,17:1 ; Claude recommande assombrir la pill active. Risques secondaires non reproduits : mode `forced-colors` et `aria-label` sur conteneur sans rôle.
+- Correctif local D-134 : fond/bordure de pill active `#d52820`, contraste blanc calculé 5,06:1. Aucun changement du rituel, des taux, des données ou des autres piliers. Ajout d’une note joueur, décision, suivi de problème et roadmap ; les statuts D-132/D-133 sont réconciliés avec leur publication/CI déjà vérifiées.
+- Vérifications sur le diff local basé sur `7c069711` : `npm run ecrans -- drop-binder` réussi, 17/17 ; `npm run typecheck` réussi ; `git diff --check` réussi après correction des fins de fichiers. Le calcul WCAG a été exécuté avec Node ; aucun navigateur, lecteur d’écran ou téléphone testé. Aucun run CI du correctif local.
+- Fichiers de ce lot : `src/components/booster-carousel.css`, `src/lib/release-notes.ts`, `docs/decisions.md`, `docs/known-issues.md`, `docs/roadmap.md`, ce checkpoint. Prochaines étapes : vérifier le diff indexé sans inclure `public/packs/memes-opening.svg` ni `.codex-remote-attachments/`, commit explicite, tenter le push normal si le réseau est rétabli, contrôler CI/Vercel.
+- Préserver les modifications préexistantes : `public/packs/memes-opening.svg` modifié et `.codex-remote-attachments/` non suivi, tous deux hors commit.
+
+# Checkpoint — Drop allégé et rituel prioritaire (16 octobre 2026)

@@ -1702,3 +1702,13 @@ schéma de données n’a été requis.
   le rendu et l'épaisseur perçue des côtés ne sont pas confirmés. Correctif
   publié sur `main` (`47f5f4fa`), Vercel Production READY / contrôle `success`;
   validation visuelle mobile à 390 × 844 encore ouverte.
+## D-134 — 16 octobre 2026 : renforcer le contraste de l’univers sélectionné
+
+La revue ciblée Claude du sélecteur Drop a calculé un contraste de 4,17:1 pour
+le texte blanc 13 px sur l’accent `#e8382c`, sous le seuil WCAG AA de 4,5:1.
+Garder le texte blanc et assombrir uniquement le fond/bordure de la pill active
+à `#d52820` (contraste calculé : 5,06:1). Les couleurs des autres actions, les
+taux, le sachet et les autres piliers restent inchangés. Le contrôle local sur
+le diff du SHA `7c069711` : écrans Drop/Binder 17/17, typecheck et diff-check
+réussis. Le contraste est calculé selon la formule WCAG ; aucun outil d’audit
+visuel, lecteur d’écran ni téléphone n’a été exécuté.
