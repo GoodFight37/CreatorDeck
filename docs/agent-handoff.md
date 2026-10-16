@@ -1,29 +1,34 @@
-# Checkpoint — retrait de la fiche Mèmes sans visuel (16 octobre 2026)
+# Checkpoint — retrait Mèmes publié (16 octobre 2026)
 
 - Demande de Malik : retirer du classeur « Carte supprimée » ; portraits de
-  candidats en attente de choix manuel ; expliquer le parcours social réel.
-- Travail sur `codex/collaboration`, base locale `56ccc6297dc7b134d60917f1eddb1a8a7a5dde6b`.
-  Le SVG préexistant `public/packs/memes-opening.svg` est toujours intact et
-  exclu des changements de ce lot.
+  candidats en attente d’un choix manuel ; expliquer le parcours social réel.
+- Commit `f0f77fbf004d133670c34c00b9eef25a083ac075` publié normalement sur
+  `main` depuis `codex/collaboration`, parent `56ccc6297dc7b134d60917f1eddb1a8a7a5dde6b`.
+  Le SVG préexistant `public/packs/memes-opening.svg` est intact, non indexé et
+  absent du commit. GitHub confirme `main` à ce SHA.
 - Retrait client de `juventus-rose`, filtre protégé dans le script de synchro,
   test de régression, note joueur, documentation et migration additive `0053`.
-  Cette migration supprime la fiche serveur seulement si aucune collection ou
-  aucun tirage historique ne la référence ; sinon elle échoue sans supprimer.
-  `0052` reste inchangée. CI Linux et application Supabase restent à confirmer.
-- Contrôles : catalogue 1/1 ; écrans Mèmes 8/8 ; typecheck, syntaxe du script,
-  `git diff --check` et build Webpack réussis. Build Turbopack interrompu après
-  plus de 90 s sans sortie. `supabase:verify` bloqué : Postgres refuse de
-  démarrer sous le compte Windows administrateur ; aucun accès direct à la base
-  de production n’a été utilisé.
-- `git ls-remote origin` échoue actuellement sur résolution DNS de github.com ;
-  aucun push ni état GitHub/Vercel de ce lot n’est revendiqué. Le lot reste local.
-- Parcours sociaux réels : amitié et échange avec deux comptes invités déjà
-  vérifiés le 15 octobre. Restent les opérations d’achat/dépôt à l’Hôtel des
-  ventes et la prise d’une carte Last Pack éligible. Elles écrivent en production
-  et exigent deux comptes de test avec cartes/ressources ; pas exécutées.
-- Prochaine action : une fois le réseau disponible, fetcher `origin/main`,
-  comparer les commits, puis publier normalement le lot ciblé et relever CI,
-  migration Supabase et Vercel. Ne pas inclure le SVG.
+  La migration supprime la fiche serveur seulement si aucune collection ou aucun
+  tirage historique ne la référence ; sinon elle échoue sans supprimer. `0052`
+  reste inchangée.
+- Contrôles locaux : catalogue 1/1 ; écrans Mèmes 8/8 ; typecheck, syntaxe du
+  script, `git diff --check` et build Webpack réussis. Build Turbopack interrompu
+  après plus de 90 s sans sortie. `supabase:verify` bloqué : PostgreSQL refuse
+  le compte Windows administrateur ; aucune commande directe sur la production.
+- La CI `Vérification` est en cours, run
+  [38959520465](https://github.com/GoodFight37/CreatorDeck/actions/runs/38959520465)
+  (événement `push`, SHA exact `f0f77fbf`). Ne pas annoncer ses jobs verts avant
+  leur fin ; le workflow Supabase dépend de sa réussite.
+  Vercel Production est `READY` sur le SHA exact, déploiement
+  [`dpl_8sz9Jj7FNHfS6RKe6ijFpQtPdaLs`](https://vercel.com/hafsi37-2386/creator-deckk/8sz9Jj7FNHfS6RKe6ijFpQtPdaLs), URL
+  [`creator-deckk-2736a0mlu-hafsi37-2386.vercel.app`](https://creator-deckk-2736a0mlu-hafsi37-2386.vercel.app/).
+  La CI complète et l’application effective de `0053` restent à confirmer.
+- Parcours sociaux réels : amitié et échange entre deux comptes invités déjà
+  vérifiés le 15 octobre. Restent l’achat/dépôt à l’Hôtel des ventes et la prise
+  d’une carte Last Pack éligible. Ces opérations écrivent en production et
+  exigent des comptes de test et ressources ; elles n’ont pas été exécutées.
+- Prochaine action : relever la CI de ce SHA et le workflow Supabase ; vérifier
+  que `0053` s’applique avec succès. Ne pas inclure le SVG.
 
 # Checkpoint — correctif des sélecteurs et état des prochains lots (16 octobre 2026)
 

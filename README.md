@@ -44,7 +44,7 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
-## État actuel — 15 octobre 2026
+## État actuel — 16 octobre 2026
 
 Malik utilise **la version web de CreatorDeck sur Vercel**, connectée à
 Supabase. GitHub `main` alimente le site ; les changements deviennent visibles
@@ -56,6 +56,12 @@ Le peel libre s'ouvre normalement au test Vercel, mais Malik le trouve encore
 perfectible. Le ressenti reste ouvert ; les tests automatiques ne le déclarent
 pas résolu. L'état, le SHA et la prochaine priorité sont dans la
 [roadmap](docs/roadmap.md) et la [passation](docs/agent-handoff.md).
+
+Le catalogue Mèmes distribué compte 2 150 cartes illustrées : la fiche
+« Carte supprimée » sans illustration a été retirée. La migration serveur
+`0053` est protégée contre toute suppression si cette carte apparaît dans une
+collection ou un tirage historique ; son application est en attente de la CI.
+Voir la [source et l'état détaillé](docs/catalogue-memes-source.md).
 
 Le rituel d'ouverture est publié sur Vercel (`aabd4169`) et vérifié dans Chromium : consignes « TIRE /
 RELÂCHE », extraction des cinq dos à 1,2 s, pause d'impact et lumière renforcée
