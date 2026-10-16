@@ -1,6 +1,6 @@
 # Drop : choisir et préparer un booster — D-129
 
-Lot local du 16 octobre 2026, branche `codex/collaboration`, base vérifiée `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`. Le commit du lot se retrouve par `git log -1 --format=%H -- src/components/booster-carousel.tsx`. Aucun push, merge, déploiement ou changement SQL effectué. Validation de Malik requise avant publication.
+Lot D-129 livré le 16 octobre 2026 depuis `codex/collaboration` sur `main`, commit `8d99eabd7d016e5a68ba7dbe1510ae5b10e2946b`, base `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`. Push normal vérifié sur GitHub. Vercel Production `READY`, déploiement `dpl_7w6o3KvQA9fhqJvk7hK5ojWZebff`, alias `creator-deckk.vercel.app`. Aucun changement SQL.
 
 ## Parcours livré localement
 
@@ -44,8 +44,8 @@ Tous les runs ont utilisé la base ci-dessus avec le diff D-129 local ; le code 
 - `git diff --check` brut : code 0. Le fichier Drop possède déjà des fins de ligne mixtes dans la base ; celles des lignes existantes ont été préservées, les ajouts sont en LF, sans changement global de configuration.
 - Aucune migration, catalogue ou règle de tirage modifiés : suites SQL et catalogue non relancées. Pas d’APK ni d’essai tactile physique.
 
-## Revue indépendante suivante
+## Revue indépendante effectuée
 
-Dans son worktree propre, Claude peut se placer en HEAD détaché sur le commit Codex : les objets Git sont déjà partagés, sans fetch ni push. Vérifier d’abord son statut et préserver tout travail concurrent. Relire le diff à partir de la base indiquée, notamment le moment du tirage, Retour/focus, reprise idempotente, changement de compte et concurrence des lectures. Tester seulement un constat nouveau ou un risque insuffisamment couvert.
+Claude a relu le diff au SHA `921d71752d8e824eafc9afecc09a9c9a2039b426` et n’a relevé aucune régression. Le cas M1 « retour après réponse réussie » et celui « retour avant réponse » sont couverts; Codex a exécuté le test d’écran ciblé, 8/8. Claude n’a pas relancé de tests. La décision D-129 précise la transition de musique en scène « pack » pendant l’ouverture Mèmes sur Drop et `/memes`, puis « hub » à la fermeture; aucune règle antérieure ne l’interdit.
 
-Le ressenti du carrousel, du sachet, des vibrations et des sons sur téléphone réel reste à juger par Malik. Aucune CI GitHub ni Vercel ne peut être annoncée pour le nouveau lot avant publication autorisée.
+Le ressenti du carrousel, du sachet, des vibrations et des sons sur téléphone réel reste à juger par Malik. Prochaine étape : essai sur téléphone de la Production publiée, puis corrections ciblées sur retours concrets.
