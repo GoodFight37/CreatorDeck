@@ -48,6 +48,19 @@ test("les pills changent de booster sans préparer ni consommer", async ({ page 
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
+test("la pill choisie reste distinguable en couleurs forcées", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page);
+  const memes = page.getByRole("button", { name: "MEMES", exact: true });
+  await memes.click();
+  await page.locator(".pack-copy h2").focus();
+  await expect(memes).toHaveAttribute("aria-pressed", "true");
+  await expect.poll(() => memes.evaluate((button) => {
+    const style = getComputedStyle(button);
+    return `${style.outlineStyle} ${style.outlineWidth} ${style.outlineOffset}`;
+  })).toBe("solid 2px 2px");
+});
+
 
 test("le défilement tactile vertical garde le choix et ne lance aucune ouverture", async ({ page, context }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];

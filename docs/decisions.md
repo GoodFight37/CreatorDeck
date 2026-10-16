@@ -1712,3 +1712,15 @@ taux, le sachet et les autres piliers restent inchangés. Le contrôle local sur
 le diff du SHA `7c069711` : écrans Drop/Binder 17/17, typecheck et diff-check
 réussis. Le contraste est calculé selon la formule WCAG ; aucun outil d’audit
 visuel, lecteur d’écran ni téléphone n’a été exécuté.
+## D-135 — 17 octobre 2026 : garder la sélection visible en couleurs forcées
+
+La revue ciblée Claude avait signalé que le contraste de couleur seul ne
+garantit pas la distinction de la pill active lorsque le système impose une
+palette (`forced-colors`). Ajouter un contour système `Highlight` autour de la
+pill `aria-pressed="true"`, sans neutraliser les couleurs forcées ni modifier
+les autres actions. Vérification isolée dans Edge avec `forcedColors: active` :
+contour `solid 2px`, décalage `2px`, fond Highlight et texte HighlightText.
+`npm run ecrans -- drop-binder` 17/17, typecheck, garde-jargon et
+`git diff --check` réussis. Le scénario Playwright de l’application est ajouté
+mais n’a pas démarré : le serveur Next préexistant occupe le port 3000 sans
+répondre. Les règles du jeu et les autres piliers restent inchangés.

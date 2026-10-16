@@ -876,3 +876,10 @@ calculé). Le texte et les états sémantiques `aria-pressed` restent inchangés
 est calculé selon la formule WCAG, sans audit visuel/lecteur d’écran ni essai
 physique. Correctif publié dans `cc7a61d2` sur `main` ; contrôle GitHub Vercel
 `success` au SHA exact. Validation physique non faite.
+
+Le risque associé aux palettes `forced-colors` est aussi couvert par D-135 :
+la pill active reçoit un contour `Highlight` indépendant du focus. Contrôle
+isolé Edge réussi : contour système de 2 px, décalage de 2 px ; écrans ciblés
+17/17, typecheck, garde-jargon et `git diff --check` réussis. Le test E2E de
+l’application n’a pas démarré : le `next dev` préexistant sur le port 3000 ne
+répond pas. Correctif non publié à ce checkpoint.

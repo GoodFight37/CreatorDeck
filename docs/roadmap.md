@@ -2,6 +2,11 @@
 
 ## État actuel — 17 octobre 2026
 
+**État de sélection en couleurs forcées (D-135) — correction locale :** la pill
+active conserve un contour système distinct ; contrôle isolé Edge réussi,
+scénario E2E non lancé car le serveur Next existant sur le port 3000 ne répond
+pas. Publication après vérification E2E. Voir [D-135](decisions.md).
+
 **Contraste du sélecteur Drop (D-134) — publié :** le texte de la pill active
 dépasse le seuil AA calculé (5,06:1). Écrans ciblés 17/17, typecheck et
 diff-check réussis ; GitHub confirme le contrôle Vercel `success` sur

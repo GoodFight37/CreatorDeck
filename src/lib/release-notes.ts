@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-choix-booster-couleurs-forcees", date: "2026-10-17", title: "Un choix de booster visible dans tous les modes",
+    summary: "Le booster sélectionné garde un repère distinctif avec les couleurs forcées.",
+    sections: [{ title: "Accessibilité", items: [
+      "La sélection Live Drop ou MEMES reste identifiable lorsque ton appareil impose ses couleurs d’affichage.",
+    ] }],
+  },
+  {
     id: "2026-10-16-contraste-choix-booster", date: "2026-10-16", title: "Le booster choisi se lit mieux",
     summary: "Le bouton de l’univers sélectionné est plus lisible.",
     sections: [{ title: "Accessibilité", items: [
