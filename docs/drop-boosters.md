@@ -16,7 +16,7 @@ ouverte.
 
 ## Parcours livré localement
 
-Drop démarre sur Live Drop. Le sachet Mèmes reste une illustration secondaire sur le côté. Seules les pills changent le choix ; le scroll vertical ne change pas le booster et ne l’ouvre pas.
+Drop démarre sur Live Drop. Le sachet Mèmes peut rester une illustration secondaire en bordure ou sortir du premier regard sur les écrans étroits. Seules les pills changent le choix ; le scroll vertical ne change pas le booster et ne l’ouvre pas.
 
 Le sachet actif et le bouton d’ouverture affichent ensuite la présentation scellée. Retour et Échap ferment cette préparation ; le hook existant inscrit aussi cette fermeture dans la pile de retour natif. Aucun appel de tirage, aucune clé Mèmes et aucune dépense avant le geste validé. La déchirure achevée au relâchement ou « Ouvrir sans déchirer » engage le tirage une seule fois. La présentation reste montée jusqu’aux cartes. Après engagement, quitter une attente lente laisse le tirage vivre.
 

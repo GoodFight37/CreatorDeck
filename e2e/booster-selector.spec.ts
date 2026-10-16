@@ -126,7 +126,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   expect(errors).toEqual([]);
 });
 
-test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024 pixels", async ({ page }) => {
+test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 1024 pixels", async ({ page }) => {
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page);
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   for (const width of [320, 390, 1024]) {
@@ -153,8 +153,6 @@ test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024
       const actionBox = (await action.boundingBox())!;
       const navBox = (await page.locator(".bottom-nav").boundingBox());
       if (navBox) expect(actionBox.y + actionBox.height).toBeLessThanOrEqual(navBox.y);
-      expect(n.x + n.width).toBeGreaterThan(0);
-      expect(n.x).toBeLessThan(width);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       await page.screenshot({ path: `test-results/booster-selector-${width}-${universe}-${test.info().project.name}.png` });
     }
