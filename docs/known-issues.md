@@ -1,6 +1,6 @@
-## Booster Mèmes sans rituel tactile — corrigé localement dans D-126
+## Booster Mèmes sans rituel tactile — corrigé et publié dans D-126
 
-Sur `52b3738a`, ouvrir un booster Mèmes affichait un dialogue statique : aucun peel, aucune sortie des cinq dos, un bouton « RÉVÉLER » par carte. Les captures du joueur du 16 octobre 2026 montrent le décalage avec le Drop principal. Gravité moyenne : le tirage fonctionnait mais la sensation de jeu demandée manquait. D-126 réutilise `PackTear` avec un visuel Mèmes et ajoute flip automatique, glissement et récap tenu 1,5 s. Un scénario Playwright mobile avec RPC simulés vérifie le geste et les cinq cartes ; publication et ressenti physique à confirmer. Aucun défaut de taux ou perte de carte observé.
+Sur `52b3738a`, ouvrir un booster Mèmes affichait un dialogue statique : aucun peel, aucune sortie des cinq dos, un bouton « RÉVÉLER » par carte. Les captures du joueur du 16 octobre 2026 montrent le décalage avec le Drop principal. Gravité moyenne : le tirage fonctionnait mais la sensation de jeu demandée manquait. D-126 réutilise `PackTear` avec un visuel Mèmes et ajoute flip automatique, glissement et récap tenu 1,5 s. Un scénario Playwright mobile avec RPC simulés vérifie le geste et les cinq cartes ; déploiement Vercel et parcours connecté réel réussis ; ressenti physique à confirmer. Aucun défaut de taux ou perte de carte observé.
 
 ## Tutoriel derrière « Mon compte » après création invitée — corrigé dans D-121
 
