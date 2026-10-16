@@ -5,8 +5,9 @@
   toucher aux systèmes interdits. Checkout utilisé :
   `C:\Users\Administrator\Desktop\CreatorDeck-Codex`, branche locale
   `codex/collaboration`, base locale auditée `c15679b518bf1f344264ce97157e927adade3e28`.
-  Le commit atomique `b15a2e20dc90b4f27be04dd17535fcb6ab206075` a été poussé
-  normalement vers `main`.
+  Le commit atomique `b15a2e20dc90b4f27be04dd17535fcb6ab206075` et son correctif
+  `3c9a06f01cc57cb0d209cee483d778ac75525796` ont été poussés normalement vers
+  `main`.
 - Diff préexistant unique confirmé avant édition :
   `public/packs/memes-opening.svg`. Il a été préservé et n’est pas staged.
 - Claude a exécuté une revue ciblée en lecture seule du code et des tests, via
@@ -31,10 +32,11 @@
   typecheck réussis. Playwright téléphone tenté mais bloqué : un `next dev`
   occupe le port 3000 et `fetch http://localhost:3000` échoue ; le lancement
   Playwright a été retenté avec droits étendus sans succès ; aucun processus
-  n’a été arrêté. Après push, la CI a révélé un mauvais sélecteur pour tester
-  `aria-hidden` et le retrait accidentel du garde anti-clic après déplacement.
-  Le sélecteur cible maintenant `.booster-neighbor` et le garde est restauré ;
-  ce correctif local attend encore Playwright/CI.
+  n’a été arrêté. Après le premier push, la CI a révélé un mauvais sélecteur
+  pour tester `aria-hidden` et le retrait accidentel du garde anti-clic après
+  déplacement. `3c9a06f` cible le bon élément et restaure le garde. Les suites
+  d’écran, typecheck, lint et `diff --check` locaux sont verts ; la CI de ce
+  correctif est en cours.
 - Fichiers du lot Drop/rituel (10) : `src/components/booster-carousel.tsx`,
   `src/components/booster-carousel.css`, `src/app/drop-binder.css`,
   `src/app/booster-premium.css`, `src/lib/release-notes.ts`,
@@ -53,21 +55,21 @@
 - Après reprise autorisée par Malik, le verrou d’index s’est libéré sans
   intervention et aucun processus Git ne le détient. GitHub API revérifiée :
   `main` reste à
-  `b15a2e20dc90b4f27be04dd17535fcb6ab206075`. Aucune PR n’était ouverte avant
+  `3c9a06f01cc57cb0d209cee483d778ac75525796`. Aucune PR n’était ouverte avant
   publication. `git ls-remote` reste en panne DNS.
-- CI `38964331571` : SQL jetable et unitaires/écrans/statique/build verts ; les
-  trois shards Playwright ont échoué, défauts analysés ci-dessus. Le job RPC
-  simulé était encore en cours au dernier contrôle. Contrôle Vercel pending ;
-  le connecteur renvoie 403 pour le scope `hafsi37-2386` et aucun CLI Vercel
-  n’est présent localement. Pas de preuve de déploiement Production.
+- CI `38964331571` pour `b15a2e2` : SQL jetable et unitaires/écrans/statique/build
+  verts ; shards Playwright en échec sur les défauts corrigés. Le job RPC
+  simulé reste en cours au dernier contrôle. Pour `3c9a06f`, run
+  `38965129534` encore pending au dernier relevé. Contrôle Vercel pending ; le
+  connecteur renvoie 403 pour le scope `hafsi37-2386` et aucun CLI Vercel n’est
+  présent localement. Pas de preuve de déploiement Production.
 - E2E ciblés restants : `e2e/booster-selector.spec.ts`,
   `e2e/pack-tear.spec.ts`, `e2e/memes.spec.ts`; leur lancement n’a pas démarré
   à cause du serveur Next inaccessible sur le port 3000. Le diff check, les
   tests DOM et le typecheck sont verts.
-- Reste avant livraison : vérifier les deux correctifs E2E et lancer la suite
-  CI ; committer et pousser le correctif normalement après s’être assuré que
-  `main` n’a pas avancé ; contrôler CI et Vercel.
-  Malik devra juger le
+- Reste : laisser finir `38965129534`, vérifier ses shards Playwright et
+  l’état Vercel par une voie autorisée. Les E2E locaux restent impossibles tant
+  que le serveur Next occupe le port 3000 sans répondre. Malik devra juger le
   résultat au doigt sur son téléphone (320/390 px) ; aucune validation physique
   ne peut être prétendue.
 
