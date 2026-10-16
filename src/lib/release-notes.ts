@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-meme-fiche-retiree", date: "2026-10-16", title: "Une fiche retirée du classeur Mèmes",
+    summary: "La fiche sans illustration n’apparaît plus dans la collection.",
+    sections: [{ title: "Cartes Mèmes", items: [
+      "La fiche « Carte supprimée » a été retirée du classeur : son image n’était qu’un visuel de remplacement et la carte ne pouvait pas être obtenue en booster.",
+    ] }],
+  },
+  {
     id: "2026-10-16-drop-focus", date: "2026-10-16", title: "Un Drop plus lisible",
     summary: "Le sachet choisi prend sa place sur l’écran.",
     sections: [{ title: "Drop", items: [

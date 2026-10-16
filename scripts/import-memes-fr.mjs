@@ -14,6 +14,8 @@ const dataPath = path.join(root, "src/data/memes-fr.json");
 const imageDir = path.join(root, "public/memes-fr");
 const source = "https://mymemecards.com/cards-memes-fr.json";
 const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+// Fiche retirée à la demande de Malik : la source ne fournit qu'une image de remplacement.
+const excludedCardIds = new Set(["juventus-rose"]);
 
 async function curl(url, output) {
   await run("curl", ["--fail", "--location", "--silent", "--show-error", "--retry", "3",
@@ -33,8 +35,12 @@ async function sync() {
     if (!Array.isArray(rows) || rows.length !== 2151) {
       throw new Error(`Catalogue inattendu : ${Array.isArray(rows) ? rows.length : "format invalide"} fiches.`);
     }
+    const excludedRows = rows.filter((row) => excludedCardIds.has(row.id));
+    if (excludedRows.length !== 1 || (excludedRows[0].fr?.name || excludedRows[0].name) !== "Carte supprimée") {
+      throw new Error("La fiche source attendue « Carte supprimée » a changé ; vérifier avant de synchroniser.");
+    }
     const seen = new Set();
-    const cards = rows.map((row) => {
+    const cards = rows.filter((row) => !excludedCardIds.has(row.id)).map((row) => {
       if (row.pack !== "memes-fr" || !slug.test(row.id) || seen.has(row.id)) {
         throw new Error(`Identifiant ou pack invalide : ${row.id}`);
       }
@@ -60,6 +66,7 @@ async function sync() {
         retired: row.retired === true || row.outOfPrint === true,
       };
     });
+    if (cards.length !== 2150) throw new Error(`Catalogue distribué inattendu : ${cards.length} fiches.`);
     if (cards.filter((card) => card.fullArt).length !== 21) {
       throw new Error("Le nombre de Full Art a changé.");
     }

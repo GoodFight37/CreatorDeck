@@ -345,7 +345,9 @@ try {
   await client.query("insert into auth.users (id) values ($1)", [USER]);
 
   const memeCount = (await client.query("select count(*)::int n, count(*) filter (where pullable)::int available from public.meme_catalog")).rows[0];
-  check("Mèmes : 2 151 fiches, 2 150 tirables avec visuel", memeCount.n === 2151 && memeCount.available === 2150, JSON.stringify(memeCount));
+  check("Mèmes : 2 150 fiches, toutes tirables avec visuel", memeCount.n === 2150 && memeCount.available === 2150, JSON.stringify(memeCount));
+  const removedMeme = await client.query("select count(*)::int n from public.meme_catalog where id = 'juventus-rose'");
+  check("Mèmes : la fiche sans visuel est retirée du catalogue serveur", removedMeme.rows[0].n === 0);
   await client.query("select set_config('test.uid', $1, false)", [USER]);
   const memeStart = (await client.query("select public.meme_status() r")).rows[0].r;
   check("Mèmes : réserve propre de quatre boosters et collection vide", memeStart.stock === 4 && memeStart.owned.length === 0);

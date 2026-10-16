@@ -1,3 +1,30 @@
+# Checkpoint — retrait de la fiche Mèmes sans visuel (16 octobre 2026)
+
+- Demande de Malik : retirer du classeur « Carte supprimée » ; portraits de
+  candidats en attente de choix manuel ; expliquer le parcours social réel.
+- Travail sur `codex/collaboration`, base locale `56ccc6297dc7b134d60917f1eddb1a8a7a5dde6b`.
+  Le SVG préexistant `public/packs/memes-opening.svg` est toujours intact et
+  exclu des changements de ce lot.
+- Retrait client de `juventus-rose`, filtre protégé dans le script de synchro,
+  test de régression, note joueur, documentation et migration additive `0053`.
+  Cette migration supprime la fiche serveur seulement si aucune collection ou
+  aucun tirage historique ne la référence ; sinon elle échoue sans supprimer.
+  `0052` reste inchangée. CI Linux et application Supabase restent à confirmer.
+- Contrôles : catalogue 1/1 ; écrans Mèmes 8/8 ; typecheck, syntaxe du script,
+  `git diff --check` et build Webpack réussis. Build Turbopack interrompu après
+  plus de 90 s sans sortie. `supabase:verify` bloqué : Postgres refuse de
+  démarrer sous le compte Windows administrateur ; aucun accès direct à la base
+  de production n’a été utilisé.
+- `git ls-remote origin` échoue actuellement sur résolution DNS de github.com ;
+  aucun push ni état GitHub/Vercel de ce lot n’est revendiqué. Le lot reste local.
+- Parcours sociaux réels : amitié et échange avec deux comptes invités déjà
+  vérifiés le 15 octobre. Restent les opérations d’achat/dépôt à l’Hôtel des
+  ventes et la prise d’une carte Last Pack éligible. Elles écrivent en production
+  et exigent deux comptes de test avec cartes/ressources ; pas exécutées.
+- Prochaine action : une fois le réseau disponible, fetcher `origin/main`,
+  comparer les commits, puis publier normalement le lot ciblé et relever CI,
+  migration Supabase et Vercel. Ne pas inclure le SVG.
+
 # Checkpoint — correctif des sélecteurs et état des prochains lots (16 octobre 2026)
 
 - `main` publié et confirmé par l'API GitHub au SHA

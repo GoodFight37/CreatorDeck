@@ -25,6 +25,10 @@ Le fichier public `cards-memes-fr.json` a fourni 2 151 fiches, dont 21 Full Art.
 
 La migration `0052_meme_univers.sql` crée un catalogue, une réserve, une collection et un journal de tirages distincts. Elle ne reprend ni les taux ni la monnaie de MyMemeCards. Les 2 150 fiches pourvues de visuel sont distribuées, y compris celles marquées sorties de la source : cette mention est conservée dans les données, mais n’a pas de règle de retrait CreatorDeck. La page `/memes` lie booster, collection, recherche et fiche. Les crédits fournis par la source sont affichés en fiche. Les tirages Twitch et leur économie restent inchangés.
 
+## Retrait de la fiche sans illustration — D-131, 16 octobre 2026
+
+À la demande de Malik, `juventus-rose` (« Carte supprimée ») est retirée du classeur. La source générale compte toujours 2 151 entrées, mais l’import CreatorDeck exclut explicitement cette fiche ; le catalogue distribué compte 2 150 cartes, toutes munies d’un visuel. La migration additive `0053` enlève la ligne serveur lorsqu’elle sera appliquée et refuse la suppression si une collection ou un journal de tirage la référence. La vérification Postgres locale est bloquée par le compte Windows administrateur ; la CI Linux doit valider la migration avant l’application automatique. La migration initiale `0052` reste inchangée pour préserver l’historique. Voir [D-131](decisions.md).
+
 ## Exploitation visuelle D-127
 
 Le paquet de référence a été réexaminé pour ses observations de layouts, de couches et d'animations, sans nouvel import de catalogue ou de médias. Son extrait de 27 familles est intégralement partiel ; voir [l'audit différentiel des cartes](audit-cartes-memes-reference.md) pour les éléments retenus, écartés et les incertitudes. Le nouveau rendu CreatorDeck est original et limité aux cartes Mèmes.

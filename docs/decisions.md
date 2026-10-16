@@ -1,3 +1,11 @@
+## D-131 — 16 octobre 2026 : retirer la fiche Mèmes sans illustration
+
+La fiche source `juventus-rose` (« Carte supprimée ») ne contenait qu’une image WebP de remplacement de 818 octets. Elle était consultable dans le classeur mais déjà non tirable. À la demande de Malik, retirer cette fiche du catalogue distribué et du catalogue serveur : le classeur et son compteur passent de 2 151 à 2 150, toutes tirables avec image.
+
+Le synchroniseur filtre explicitement cet identifiant et vérifie que la source le décrit toujours comme « Carte supprimée » ; il s’arrête si elle change. La migration additive `0053` supprime la ligne uniquement si aucune collection ni aucun tirage historique ne la référence. Elle échoue avant suppression si une référence existe. Les migrations précédentes restent inchangées. Aucun visuel de remplacement n’est inventé et aucune autre fiche, règle de tirage ou donnée de collection n’est modifiée.
+
+Preuves locales sur le diff : test catalogue `npm test -- src/lib/memes.test.ts` 1/1, écrans Mèmes 8/8, `npm run typecheck`, `node --check scripts/import-memes-fr.mjs`, `git diff --check` et `npm run build -- --webpack` réussis. Le build standard Turbopack est resté silencieux plus de 90 s et a été interrompu ; la variante Webpack exporte `/memes` en statique. `npm run supabase:verify` n’a pas pu démarrer Postgres : le compte Windows administrateur est refusé par PostgreSQL ; aucune preuve SQL locale n’est revendiquée. La CI Linux doit vérifier les 2 150 lignes et l’absence de l’identifiant avant que le workflow Supabase automatique applique `0053`. Aucune commande directe sur la base de production n’a été exécutée.
+
 ## D-130 — 16 octobre 2026 : concentrer Drop sur le booster choisi
 
 Le premier carrousel affichait sous les boutons Live Drop/MEMES une instruction qui répétait déjà le geste et l’action disponibles. Pour alléger l’arrivée sur Drop, le sachet sélectionné devient le point focal : son format augmente légèrement, les boutons restent compacts avec une cible tactile de 44 px, et l’aide redondante est retirée. Le voisin reste visible et le choix reste possible au swipe, au clavier et avec les boutons.
