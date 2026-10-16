@@ -882,4 +882,5 @@ la pill active reçoit un contour `Highlight` indépendant du focus. Contrôle
 isolé Edge réussi : contour système de 2 px, décalage de 2 px ; écrans ciblés
 17/17, typecheck, garde-jargon et `git diff --check` réussis. Le test E2E de
 l’application n’a pas démarré : le `next dev` préexistant sur le port 3000 ne
-répond pas. Correctif non publié à ce checkpoint.
+répond pas. Correctif publié dans `f5f27f90` ; GitHub confirme le contrôle
+Vercel `success` sur ce SHA. Résultat CI Actions non vérifiable depuis ce chat.

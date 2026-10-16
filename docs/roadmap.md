@@ -4,8 +4,9 @@
 
 **État de sélection en couleurs forcées (D-135) — correction locale :** la pill
 active conserve un contour système distinct ; contrôle isolé Edge réussi,
-scénario E2E non lancé car le serveur Next existant sur le port 3000 ne répond
-pas. Publication après vérification E2E. Voir [D-135](decisions.md).
+scénario E2E ajouté mais non exécuté localement, car le serveur Next existant
+sur le port 3000 ne répond pas. Publié dans `f5f27f90`, Vercel `success` ; CI
+Actions non vérifiable via le connecteur. Voir [D-135](decisions.md).
 
 **Contraste du sélecteur Drop (D-134) — publié :** le texte de la pill active
 dépasse le seuil AA calculé (5,06:1). Écrans ciblés 17/17, typecheck et
