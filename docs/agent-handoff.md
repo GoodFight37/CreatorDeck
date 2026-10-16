@@ -1,3 +1,24 @@
+# Checkpoint — délégation locale Codex → Claude (16 octobre 2026)
+
+- Demande : permettre à Codex de consulter Claude Code localement pour une revue
+  ciblée, sans copier-coller manuel ni deuxième système de passation. Aucun
+  développement applicatif, push ou déploiement pour cette configuration.
+- Base locale avant travail : `5ce85c723ea6c9d04f694b18721acf460ba9a1c8`
+  sur `main`, `codex/collaboration` et `claude/review`; `main` GitHub demeure
+  `23e69ee188edc6fd3f781dd06102330965960ec7` (vérifié par `ls-remote`).
+- `scripts/delegate-claude.mjs` dans le worktree Codex : contrôle branches et
+  propreté Claude, avance rapide sûre si nécessaire, appel `claude -p` en mode
+  plan avec `Read,Glob,Grep`, délai de 120 s, sortie bornée et statut vérifié.
+  Demande et réponse sont ajoutées aux fichiers locaux existants
+  `CreatorDeck-Codex-vers-Claude.md` et `CreatorDeck-Retour-Claude.md`.
+- Test réel : question sur Playwright et RPC Supabase simulées; Claude a répondu
+  via le script, sortie 0, résultat lu dans le fichier de retour. Aucun test du
+  dépôt lancé et aucun fichier applicatif modifié. Le ressenti tactile réel
+  reste hors de portée de cette vérification.
+- Usage : `node scripts/delegate-claude.mjs "question ciblée"`; Codex décide
+  quand la revue est utile, lit la réponse et garde la responsabilité des
+  corrections. Ne pas pousser cette configuration seule.
+
 # Coordination actuelle et checkpoint D-129 — 16 octobre 2026
 
 **Coordination actuelle — 16 octobre 2026.** Codex est le développeur principal et seul écrivain ordinaire dans `C:/Users/Administrator/Desktop/CreatorDeck-Codex` (`codex/collaboration`). Le checkout d’origine `C:/Users/Administrator/Desktop/CreatorDeck` reste sur `main`; `C:/Users/Administrator/Desktop/CreatorDeck-Claude` sert aux revues ciblées/audits complexes sur `claude/review`. Préserver ces worktrees et ne synchroniser que par avance rapide après contrôle de propreté et d’ascendance. Les lots ordinaires peuvent être testés de façon ciblée, committés et poussés normalement sur `main` sans demander un accord à chaque fois; contrôler ensuite que le SHA Vercel Production correspond à `main`. Obtenir l’accord de Malik avant tout changement sensible (Supabase/données, migrations, authentification, sécurité, secrets, suppression de données ou action irréversible). Pas de push de la présente configuration seule.

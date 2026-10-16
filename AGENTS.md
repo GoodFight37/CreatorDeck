@@ -73,6 +73,15 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   créer, supprimer ni remplacer de worktrees. Claude intervient surtout pour
   les audits complexes, les revues indépendantes demandées et les bugs difficiles;
   il rend ses constats sans écrire sur la branche Codex.
+- Pour un bug complexe, un choix technique difficile ou une revue importante,
+  Codex peut lancer `node scripts/delegate-claude.mjs "question ciblée"` depuis
+  `CreatorDeck-Codex`. Le script avance `claude/review` uniquement en avance
+  rapide si son arbre est propre, appelle `claude -p` avec les seuls outils de
+  lecture, puis consigne demande et réponse dans les deux passations locales
+  existantes. Codex lit le retour et reprend lui-même le travail. Une seule
+  délégation par problème, sauf raison explicite; pas de boucle entre agents ni
+  de revue systématique des petites modifications. Si l'appel échoue, ne pas
+  présenter une revue comme réalisée.
 - Avant de reprendre un worktree, vérifier son état et son HEAD. Synchroniser
   `main`, `codex/collaboration` et `claude/review` uniquement par avance rapide
   quand l’arbre concerné est propre et que l’ancêtre commun est vérifié; sinon
