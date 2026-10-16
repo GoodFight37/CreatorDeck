@@ -1,5 +1,41 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Reprise vérifiée — 17 octobre 2026 (après D-135)
+
+- Checkout confirmé : `C:\Users\Administrator\Desktop\CreatorDeck-Codex`,
+  branche `codex/collaboration`, HEAD `db149a5d89eabcae04358f5fc99e08e3aaac1153`.
+  GitHub donne le même dernier commit sur `main`, aucune PR ouverte ; le statut
+  Vercel associé à ce SHA est `success`. `git ls-remote` reste inutilisable
+  dans cette session (erreur d'accès Git/MSYS) ; la comparaison distante vient
+  de l'API GitHub. Le refus `dubious ownership` de Git a été contourné par
+  `-c safe.directory=...` pour les seules lectures, sans modifier la config
+  globale.
+- Modifications locales à préserver, non indexées :
+  `public/packs/memes-opening.svg` et `.codex-remote-attachments/`. Aucun autre
+  fichier local modifié.
+- D-135 est publié dans `f5f27f904cb9b26a96b386a3f4953ab26c7863f7`, puis la
+  preuve de publication a été consignée dans `db149a5d89eabcae04358f5fc99e08e3aaac1153`.
+  Vérification isolée Edge du contour forcé réussie précédemment. Ce 17 octobre,
+  `rtk npm run e2e -- e2e/booster-selector.spec.ts -g "couleurs forcées"`
+  n'a exécuté aucun test : Next détecte le verrou `.next/dev/lock` associé au
+  PID 15724 et refuse de démarrer. Le port 3000 n'a aucun écouteur ; le journal
+  `.next/dev/logs/next-development.log` montre des erreurs répétées de
+  compilation CSS/Turbopack. L'interrogation Windows du PID échoue avec accès
+  refusé et `process.kill(pid, 0)` retourne `EPERM` : ne pas tuer le processus,
+  ni effacer le verrou sans pouvoir établir qu'il est arrêté. La suite E2E
+  intégrée demeure non vérifiée localement ; contrôles écran 17/17, typecheck,
+  garde-jargon et diff-check avaient réussi avant publication. Actions n'est
+  pas interrogeable pour ce push via le connecteur actuel.
+- Pas de défaut logiciel nouveau démontré ni de correction code restante
+  réalisable dans cette reprise. Actions dépendant du joueur : vérifier le Drop
+  et le rituel sur son téléphone ; les 542 portraits restent en attente de
+  sélection manuelle ; le code booster privé requiert son adresse de compte
+  et une intervention Supabase ; les parcours sociaux réels requièrent des
+  comptes/ressources de test et son accord avant écriture de données.
+- Pour lever le seul blocage technique restant, une session Windows autorisée
+  doit fermer proprement le `next dev` bloqué du checkout (PID 15724), puis
+  relancer le test E2E ciblé ci-dessus. Ne pas toucher au SVG Mèmes.
+
 - Base au début de cette reprise : `C:\Users\Administrator\Desktop\CreatorDeck-Codex`, branche `codex/collaboration`, HEAD `f30c637bab0816bb9f9cee9e5ffacf0b3b7ee9ba`. GitHub confirme `main` au même SHA ; aucune PR ouverte. `git ls-remote` échoue par DNS, donc comparaison de branche faite via l’API GitHub. Vercel status `success` sur le SHA exact. Les Actions complètes ne sont pas exposées par le connecteur disponible.
 - Modifications locales préexistantes seules : `public/packs/memes-opening.svg` modifié et `.codex-remote-attachments/` non suivi. Rien d’indexé ; ne pas les ajouter.
 - D-134 et ses notes sont publiés dans `cc7a61d2` : revue Claude ciblée sur l’accessibilité du sélecteur, contraste actif corrigé de 4,17:1 à 5,06:1 calculé ; `npm run ecrans -- drop-binder` 17/17, typecheck, garde-jargon et diff-check réussis. Le checkpoint/statuts de publication sont publiés dans `bacc6808`, Vercel `success`.
