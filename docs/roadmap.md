@@ -1,6 +1,6 @@
 # Roadmap CreatorDeck
 
-## État actuel — 16 octobre 2026
+## État actuel — 17 octobre 2026
 
 **Contraste du sélecteur Drop (D-134) — publié :** le texte de la pill active
 dépasse le seuil AA calculé (5,06:1). Écrans ciblés 17/17, typecheck et

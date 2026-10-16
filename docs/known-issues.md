@@ -864,7 +864,7 @@ pour intégrer le correctif.
 ## Univers Mèmes FR : une fiche sans visuel distribué — D-125
 
 Au relevé du 16 octobre 2026, « Carte supprimée » (`juventus-rose`) avait un WebP de remplacement de 818 octets. D-131 retire la fiche du client et le script d’import l’exclut avec une garde sur son identifiant et son nom. La migration `0053` refuse de supprimer si une collection ou un tirage historique la référence. Première CI `38959520465` : deux anciennes attentes E2E et la fixture d’application SQL étaient périmées ; corrigées dans `83d212c8`. CI `38960335566` verte (6/6), SQL jetable compris ; workflow Supabase `38960850198` réussi, avec `0053` appliquée et vérifiée après application. Vercel Production READY sur `83d212c8`. Statut : résolu et publié.
-## Contraste de la sélection Live Drop/MEMES — corrigé localement
+## Contraste de la sélection Live Drop/MEMES — corrigé et publié
 
 Le sélecteur Drop affichait son texte blanc 13 px sur `#e8382c`, contraste
 calculé 4,17:1 (sous 4,5:1 WCAG AA). Relevé par revue ciblée Claude le

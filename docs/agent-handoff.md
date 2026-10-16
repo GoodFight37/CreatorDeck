@@ -1,4 +1,12 @@
-# Checkpoint — Drop allégé et rituel prioritaire (16 octobre 2026)
+# Checkpoint — reprise autonome (17 octobre 2026)
+
+- Environnement actif : `C:\Users\Administrator\Desktop\CreatorDeck-Codex`, branche `codex/collaboration`, HEAD `bacc6808d2b85a87377dda202b9d53a0b1719c21`. GitHub confirme `main` au même SHA ; aucune PR ouverte. `git ls-remote` échoue par DNS, donc comparaison de branche faite via l’API GitHub. Vercel status `success` sur le SHA exact. Les Actions complètes ne sont pas exposées par le connecteur disponible.
+- Modifications locales préexistantes seules : `public/packs/memes-opening.svg` modifié et `.codex-remote-attachments/` non suivi. Rien d’indexé ; ne pas les ajouter.
+- D-134 et ses notes sont publiés dans `cc7a61d2` : revue Claude ciblée sur l’accessibilité du sélecteur, contraste actif corrigé de 4,17:1 à 5,06:1 calculé ; `npm run ecrans -- drop-binder` 17/17, typecheck, garde-jargon et diff-check réussis. Le checkpoint/statuts de publication sont publiés dans `bacc6808`, Vercel `success`.
+- La roadmap ne montre aucun défaut logiciel reproduit qui soit réalisable sans utilisateur. Restent : jugement physique tactile/visuel/audio sur le téléphone de Malik ; portraits en standby, choix manuels ; code booster privé nécessitant l’adresse du compte et SQL Editor ; scénarios sociaux réels nécessitant comptes/ressources de test ; idées de backlog sans contenu/droits/critères. Ne pas inventer de chantier produit, relancer l’audio mise de côté, ni toucher à Supabase/données.
+- À cette date, aucun chantier logiciel ciblé avec défaut reproduit ou critères manquants pouvant être complétés sans Malik n’apparaît dans la roadmap. Reprendre lorsqu’un défaut reproductible ou une tâche aux critères concrets apparaît. Le SVG Mèmes reste préservé.
+
+# Historique — Drop allégé et rituel prioritaire (16 octobre 2026)
 
 - Demande de Malik : sur `main`, réduire le chrome du Drop, ne laisser qu’un
   mécanisme de sélection et rendre « Ouvrir sans déchirer » secondaire, sans
