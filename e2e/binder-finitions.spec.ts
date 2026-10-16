@@ -31,6 +31,7 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
   expect(await opacity("rare")).toBeGreaterThan(0);
   expect(await opacity("epic")).toBeGreaterThan(await opacity("rare"));
   expect(await opacity("legendary")).toBeGreaterThan(await opacity("epic"));
+  await expect(page.locator(".collection-grid .rarity-legendary .card-identity")).toBeHidden();
   await expect(page.locator(".collection-grid .rarity-rare .card-foil")).toHaveCSS("animation-name", "none");
   // Le survol doit viser une carte, sans tomber sur les outils sticky.
   await page.locator(".collection-grid .creator-card").first().hover();
@@ -45,6 +46,10 @@ test("la fiche présente les variantes possédées et leurs vrais compteurs", as
   const dialog = page.getByRole("dialog", { name: `Carte de ${legendary.displayName}` });
   await expect(dialog).toHaveClass(/card-vault/);
   await expect(dialog).toBeFocused();
+  await expect(dialog.locator(".card-rarity-label")).toHaveText("Légendaire");
+  await expect(dialog.locator(".binder-feature-card")).toHaveCSS("animation-name", "card-vault-ink");
+  expect(await dialog.locator(".binder-feature-card").evaluate((node) =>
+    Number.parseFloat(getComputedStyle(node, "::after").borderTopWidth))).toBe(3);
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
   const variants = dialog.getByRole("group", { name: "Variantes possédées" });
   await expect(variants.getByRole("button")).toHaveCount(4);
@@ -90,6 +95,7 @@ for (const mode of ["off", "reduce"] as const) {
     await expect(page.locator(".collection-grid .rarity-legendary .card-foil")).toHaveCSS("display", "none");
     await page.locator(".collection-grid .rarity-legendary").click();
     await expect(page.locator(".card-vault .card-foil")).toHaveCSS("display", "none");
+    await expect(page.locator(".card-vault .binder-feature-card")).toHaveCSS("animation-name", "none");
     await expect(page.locator(".binder-feature-card")).toHaveCSS("transform", "none");
     await page.keyboard.press("Escape");
     await expect(page.locator(".card-vault")).toHaveCount(0);

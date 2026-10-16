@@ -2,6 +2,10 @@
 
 ## État actuel — 16 octobre 2026
 
+**Cartes Twitch, référence visuelle (D-123) — implémentées, publication en cours :** cadre de rareté plus lisible, cartouche de nom et libellé de rareté sur les grandes cartes ; petites cartes compactes, courte pose à l'ouverture de la fiche, reflets au geste et révélation existante préservés. Aucun catalogue ni média du ZIP de référence importé. Écrans ciblés 45/45, navigateur mobile 5/5, TypeScript, ESLint ciblé et build réussis ; captures 412 × 915 inspectées. Déploiement à consigner dans la passation ; appréciation visuelle sur téléphone physique encore ouverte.
+
+**Direction mèmes séparée — intention à cadrer :** Malik veut à terme des cartes mèmes dans leur propre collection et leur propre booster, distincts des cartes Twitch, avec éventuellement un style voisin. Avant toute intégration : choisir les médias et leurs droits, le catalogue, le parcours et les règles serveur. Le prototype `/catalogue-demo` reste isolé ; aucun ajout de mème ou de taux dans ce chantier.
+
 **Tutoriel après connexion (D-121) — publié et vérifié sur le site :** la création d’un compte invité ne superpose plus « Mon compte » et le tutoriel. Celui-ci attend la fermeture de la feuille, puis sa fin revient au Drop. Test ciblé 1/1, écrans 182/182, navigation téléphone 6/6, TypeScript, ESLint et build réussis ; CI 6/6 sur `6a1c0069`. Le 16 octobre, un compte invité neuf a parcouru la production Vercel à 390 × 844 : aucune superposition ni exception JavaScript. Seul le ressenti sur téléphone physique reste à juger. [Décision D-121](decisions.md). Aucun changement des cadeaux, taux ou ressources.
 
 **Sachet Drop affiné — publié dans `118b21f0` :** angle ramené à 7° sur Y et 4° sur X, tranches foil de 16 px, dessous de 12 px, couleur centrale moins claire ; taille, idle, reflet, ombre et CTA conservés. Build local, quatre scénarios navigateur téléphone, CI 6/6 et Vercel Production `READY`. Une note joueur rétrospective est ajoutée le 16 octobre ; appréciation visuelle et tactile physique toujours côté joueur.

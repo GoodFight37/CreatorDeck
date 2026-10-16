@@ -498,6 +498,15 @@
   width: min(66vw, 250px, 34dvh); max-height: none;
   transform: perspective(1000px) rotateY(calc(-4deg + var(--card-tilt-y, 0deg))) rotateX(calc(2deg + var(--card-tilt-x, 0deg))); box-shadow: 10px 20px 28px -16px #000;
 }
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-card-fx="off"]) .card-vault .binder-feature-card {
+    animation: card-vault-ink 320ms ease-out both;
+  }
+}
+@keyframes card-vault-ink {
+  from { opacity: .45; filter: brightness(.76); }
+  to { opacity: 1; filter: brightness(1); }
+}
 .card-vault .binder-feature-card .card-foil {
   opacity: var(--finish-strength, 0);
   background: radial-gradient(ellipse at var(--px, 32%) var(--py, 18%),

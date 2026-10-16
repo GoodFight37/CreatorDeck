@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-cartes-twitch", date: "2026-10-16", title: "Les cartes Twitch prennent du relief",
+    summary: "Le cadre et le nom des cartes se lisent mieux selon leur rareté.",
+    sections: [{ title: "Amélioration", items: [
+      "Un bord plus affirmé et un cartouche plus net distinguent les cartes, tout en gardant les portraits au centre.",
+      "Sur une grande carte, la rareté est maintenant écrite à côté de la région. Les petites cartes gardent leur présentation compacte.",
+      "La carte agrandie se pose brièvement à l’ouverture de sa fiche, avec la réduction des animations respectée.",
+    ] }],
+  },
+  {
     id: "2026-10-16-sachet-affine", date: "2026-10-16", title: "Un sachet plus fin",
     summary: "Le booster du Drop garde son relief avec des tranches foil plus discrètes.",
     sections: [{ title: "Amélioration", items: [

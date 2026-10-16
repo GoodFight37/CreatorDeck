@@ -1,5 +1,11 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-123 — cartes Twitch et référence visuelle (publication en cours)
+
+- Base locale et GitHub `main` vérifiée à `201521976f657b84ba50875797375a2e6389a87f`, arbre propre avant édition. ZIP utilisateur lu comme référence visuelle, sans importer catalogue, textes, liens de médias ni images MyMemeCards. Les cartes Twitch actuelles gagnent un bord de rareté, un cartouche de nom et un libellé de rareté sur les grandes cartes. Reflets au geste et animation de reveal existants conservés.
+- Malik précise la direction suivante : collection et booster mèmes séparés des cartes Twitch, éventuellement un langage graphique commun. Aucun catalogue, droit des médias, règle de tirage ou intégration du prototype multi-univers n'est fixé ; ce chantier ne les implémente pas.
+- Fichiers du lot : `src/components/creator-card.tsx`, `src/app/globals.css`, `src/app/drop-binder.css`, `e2e/binder-finitions.spec.ts`, `src/lib/release-notes.ts`, `docs/decisions.md`, `docs/roadmap.md`, cette passation. `npm run typecheck`, ESLint ciblé, `npm run ecrans -- src/ecrans-drop-binder.test.tsx src/ecrans-effets.test.tsx src/ecrans-release-notes.test.tsx` (45/45), `npx playwright test e2e/binder-finitions.spec.ts --project=téléphone` (5/5), `npm run build` sans variables cloud locales et `git diff --check` réussis. Captures de la grille et de la fiche mobiles inspectées ; elles ne prouvent pas le ressenti sur téléphone physique. Commit, SHA distant et état Vercel à compléter après publication.
+
 ## Checkpoint D-122 — inventaire des restes et vérification réelle du tutoriel
 
 - Départ : `main` local/GitHub `04f05a018686bde932931ce6401a01bce7071535`, arbre propre et Production Vercel `READY`. Le domaine public `https://creator-deckk.vercel.app/` répond HTTP 200 ; l’URL spécifique du déploiement était protégée. Le parcours D-121 a été repris sur ce domaine avec Chromium mobile 390 × 844 et un nouveau compte invité de production : la feuille « Mon compte » reste seule pendant la réponse d’onboarding, le tutoriel apparaît après sa fermeture et « Terminer » revient au Drop ; zéro exception JavaScript. Le contexte navigateur a été fermé ; le compte invité de test reste en base. Cette preuve ne remplace pas le ressenti physique.

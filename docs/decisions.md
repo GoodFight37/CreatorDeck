@@ -1,5 +1,13 @@
 # Décisions CreatorDeck
 
+## D-123 — 16 octobre 2026 : adapter la référence aux cartes Twitch existantes
+
+Le paquet de référence MyMemeCards fourni par Malik sert uniquement à observer des principes visuels : hiérarchie portrait/identité, cadre de rareté et cartouche de lecture. Il n'est pas une source de catalogue, de texte, de médias, de règles ou de code à importer. Les captures et les observations d'animation ne fournissent aucune confirmation de droits ; aucun de ces contenus n'entre dans le dépôt.
+
+Sur les cartes Twitch existantes, le bord imprimé gagne en présence avec une épaisseur plus marquée pour Épique et Légendaire. Le nom repose sur un cartouche sombre délimité, qui indique aussi la rareté et la région sur les grandes cartes. Les vignettes restent compactes. Une pose de 320 ms à l'ouverture de la fiche n'anime que luminosité et opacité ; elle s'arrête avec Reflets désactivés ou la réduction du mouvement. Les reflets au geste et l'animation de révélation déjà différenciée sont conservés, sans balayage perpétuel : la décision D-099 sur la lisibilité reste applicable. Aucun portrait, donnée de créateur, variante, taux ou économie n'est modifié.
+
+Malik envisage un futur booster et une collection de cartes mèmes séparés des cartes Twitch, avec éventuellement un langage graphique voisin. La direction est notée comme intention produit, sans catalogue, droits des médias, règles de tirage ni parcours décidés. Le démonstrateur multi-univers D-076 reste isolé ; l'intégration n'est pas engagée par ce lot.
+
 ## D-122 — 16 octobre 2026 : fermer les vérifications autonomes et distinguer les décisions produit
 
 Le correctif CSS du sachet publié dans `118b21f0` réduit l’angle et l’épaisseur des tranches sans changer la taille, l’animation idle, le reflet ni le CTA. Sa note joueur, omise à cause du périmètre CSS strict de cette livraison, est ajoutée rétrospectivement. Le rendu mobile local et les quatre scénarios navigateur avaient passé ; le jugement de matière au toucher appartient au joueur.

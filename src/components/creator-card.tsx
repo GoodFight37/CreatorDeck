@@ -195,7 +195,10 @@ export function CreatorCard({
       ) : null}
 
       <div className="card-nameplate">
-        <span className="card-region">{regionLabel(creator.region)}</span>
+        <div className="card-identity">
+          <span className="card-rarity-label">{rarity.label}</span>
+          <span className="card-region">{regionLabel(creator.region)}</span>
+        </div>
         <h3>{creator.displayName}</h3>
         <div className="card-footerline">
           <span>{formatFollowersCount(creator.followers)}</span>
