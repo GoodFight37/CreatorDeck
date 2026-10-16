@@ -141,7 +141,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
-  await expect(page.locator(".meme-collection-head strong")).toHaveText("5 / 2151");
+  await expect(page.locator(".meme-collection-head strong")).toHaveText("5 / 2150");
   expect(errors).toEqual([]);
 });
 

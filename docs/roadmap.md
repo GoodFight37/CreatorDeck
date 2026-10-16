@@ -2,7 +2,7 @@
 
 ## État actuel — 16 octobre 2026
 
-**D-131 — fiche sans illustration retirée du catalogue client; migration serveur en attente :** « Carte supprimée » (`juventus-rose`) ne figure plus dans le classeur, qui passe à 2 150 cartes toutes illustrées. La migration `0053` supprime la ligne serveur uniquement sans possession ni tirage historique ; CI Linux et workflow Supabase automatiques attendus après publication. Voir [décision et limites](decisions.md#d-131--16-octobre-2026--retirer-la-fiche-mèmes-sans-illustration).
+**D-131 — fiche sans illustration retirée du catalogue client; correction du vérificateur en cours :** « Carte supprimée » (`juventus-rose`) ne figure plus dans le classeur, qui passe à 2 150 cartes toutes illustrées. La première CI a révélé que le test SQL omettait la migration `0053` et que deux assertions E2E attendaient encore l’ancien compteur 2 151. Ces fixtures sont corrigées dans le lot de suivi ; attendre la nouvelle CI avant l’application Supabase. Voir [décision et limites](decisions.md#d-131--16-octobre-2026--retirer-la-fiche-mèmes-sans-illustration).
 
 **Choix des boosters sur Drop (D-129) — publié; correction tactile suite au retour joueur :** carrousel Live Drop/MEMES, voisin visible, glissement/clavier/boutons, préparation annulable avant tirage et engagement au geste validé. Retour de Malik : le geste tactile faisait bouger le sachet sans toujours changer l’univers. Cause reproduite dans le transfert de capture entre le sachet enfant et le carrousel; le correctif et le test tactile Playwright couvrent les deux directions. [Captures, états, vérifications et limites](drop-boosters.md). À confirmer par Malik au doigt sur son téléphone. Le Binder multi-univers reste une proposition non engagée.
 

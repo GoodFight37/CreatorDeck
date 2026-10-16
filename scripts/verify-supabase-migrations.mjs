@@ -229,6 +229,7 @@ try {
     ["0050_skyrozz_identity.sql", skyrozzIdentity],
     ["0051_boosters_promo_personnels.sql", promoBoosters],
     ["0052_meme_univers.sql", await readFile(path.join(MIGRATIONS, "0052_meme_univers.sql"), "utf8")],
+    ["0053_retirer_carte_meme_sans_visuel.sql", await readFile(path.join(MIGRATIONS, "0053_retirer_carte_meme_sans_visuel.sql"), "utf8")],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //

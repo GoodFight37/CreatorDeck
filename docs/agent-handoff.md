@@ -4,6 +4,8 @@
   candidats en attente d’un choix manuel ; expliquer le parcours social réel.
 - Commit `f0f77fbf004d133670c34c00b9eef25a083ac075` publié normalement sur
   `main` depuis `codex/collaboration`, parent `56ccc6297dc7b134d60917f1eddb1a8a7a5dde6b`.
+  Le README et les guides ont ensuite été actualisés dans
+  `9986694c529703eff6ca16719f286b0147bdbb7f`, alors que la CI du code tournait.
   Le SVG préexistant `public/packs/memes-opening.svg` est intact, non indexé et
   absent du commit. GitHub confirme `main` à ce SHA.
 - Retrait client de `juventus-rose`, filtre protégé dans le script de synchro,
@@ -17,8 +19,14 @@
   le compte Windows administrateur ; aucune commande directe sur la production.
 - La CI `Vérification` est en cours, run
   [38959520465](https://github.com/GoodFight37/CreatorDeck/actions/runs/38959520465)
-  (événement `push`, SHA exact `f0f77fbf`). Ne pas annoncer ses jobs verts avant
-  leur fin ; le workflow Supabase dépend de sa réussite.
+  (événement `push`, SHA exact `f0f77fbf`). Unitaire/statique/build réussi,
+  Playwright shard 2/3 réussi ; shard 1/3 échoue car il attend encore `0 / 2151` ;
+  Postgres jetable échoue parce que `scripts/verify-supabase-migrations.mjs`
+  n'appliquait pas `0053`, donc voyait encore 2 151 fiches. Shard 3/3 et chemin
+  RPC simulé étaient encore en cours au dernier relevé. Correctif préparé dans
+  `scripts/verify-supabase-migrations.mjs` et les assertions E2E concernées ;
+  nouvelle CI requise. Le workflow Supabase ne peut pas réussir sur la révision
+  actuelle tant que ces contrôles restent rouges.
   Vercel Production est `READY` sur le SHA exact, déploiement
   [`dpl_8sz9Jj7FNHfS6RKe6ijFpQtPdaLs`](https://vercel.com/hafsi37-2386/creator-deckk/8sz9Jj7FNHfS6RKe6ijFpQtPdaLs), URL
   [`creator-deckk-2736a0mlu-hafsi37-2386.vercel.app`](https://creator-deckk-2736a0mlu-hafsi37-2386.vercel.app/).
@@ -27,8 +35,9 @@
   vérifiés le 15 octobre. Restent l’achat/dépôt à l’Hôtel des ventes et la prise
   d’une carte Last Pack éligible. Ces opérations écrivent en production et
   exigent des comptes de test et ressources ; elles n’ont pas été exécutées.
-- Prochaine action : relever la CI de ce SHA et le workflow Supabase ; vérifier
-  que `0053` s’applique avec succès. Ne pas inclure le SVG.
+- Prochaine action : publier le correctif du vérificateur/fixtures avec cette
+  mise à jour de statut, puis relever la nouvelle CI et le workflow Supabase ;
+  vérifier que `0053` s’applique avec succès. Ne pas inclure le SVG.
 
 # Checkpoint — correctif des sélecteurs et état des prochains lots (16 octobre 2026)
 

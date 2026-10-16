@@ -8,7 +8,7 @@ test("l'univers Mèmes présente un booster et un classeur séparés sur télép
   await page.goto("/memes");
   await expect(page.getByRole("heading", { name: "MÈMES", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "OUVRIR UN BOOSTER" })).toBeDisabled();
-  await expect(page.getByText("0 / 2151")).toBeVisible();
+  await expect(page.getByText("0 / 2150")).toBeVisible();
   await expect(page.locator(".meme-grid .meme-slot")).toHaveCount(12);
   await page.screenshot({ path: `test-results/memes-${test.info().project.name}.png` });
   await page.locator(".meme-grid .meme-slot").first().click();
@@ -100,6 +100,6 @@ test("avec le serveur : le booster Mèmes se déchire, retourne cinq cartes et t
   await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
   await scene.locator(".meme-reveal-next").click();
   await expect(scene).toHaveCount(0);
-  await expect(page.locator(".meme-collection-head strong")).toHaveText("5 / 2151");
+  await expect(page.locator(".meme-collection-head strong")).toHaveText("5 / 2150");
   expect(draws).toBe(1);
 });
