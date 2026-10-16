@@ -1,3 +1,35 @@
+# Checkpoint — correctif des sélecteurs et état des prochains lots (16 octobre 2026)
+
+- `main` publié et confirmé par l'API GitHub au SHA
+  `7922f6e80b22c13243ce0c0cec19516ae761800e` (push normal depuis `codex/collaboration`).
+  Commit : [Corrige les sélecteurs E2E du sachet dans le carrousel](https://github.com/GoodFight37/CreatorDeck/commit/7922f6e80b22c13243ce0c0cec19516ae761800e).
+- Le commit met à jour `e2e/pack-tear.spec.ts` pour viser le sachet actif parmi
+  les deux paquets montés par le carrousel ; la cause et la preuve sont notées
+  dans `docs/known-issues.md`. Les assertions de révélation ne sont pas retirées.
+- Claude a examiné la roadmap et D-076 en lecture seule sur le SHA publié. Il
+  confirme que D-125 a déjà établi Mèmes FR comme univers distinct avec son
+  classeur et sa progression ; `/catalogue-demo` reste un prototype fictif.
+  Aucun changement de gameplay n'est recommandé sans besoin démontré de réunir
+  ces deux classeurs. Les compteurs existent déjà séparément dans chaque écran.
+- `docs/roadmap.md` est actualisée : retrait de l'état périmé D-121 et
+  clarification de `/catalogue-demo`. Les actions restantes sont principalement
+  des validations physiques, des identifiants/données de test ou des idées sans
+  critères/droits ; elles ne peuvent pas être honnêtement marquées terminées
+  depuis cette session.
+- CI GitHub run `38945759473` (commit exact `7922f6e…`) terminé `success` :
+  qualité/unitaires/écrans/statique/build, SQL jetable, cloud RPC simulés et les
+  trois shards Playwright sont verts. [Run GitHub](https://github.com/GoodFight37/CreatorDeck/actions/runs/38945759473).
+- Vercel Production est `READY` sur ce même SHA :
+  [`creator-deckk-f20fkg450-hafsi37-2386.vercel.app`](https://creator-deckk-f20fkg450-hafsi37-2386.vercel.app/),
+  déploiement `dpl_6RcGmTKMJUzQXtoLe8TyZQJY8box`.
+- Le diff Edge local ciblé a passé quatre cas sur six ; les deux cas CSS-only
+  sont arrêtés sur les snapshots Linux absents sous Windows après les assertions
+  du sachet actif. Aucun snapshot n'a été régénéré. `git diff --check` réussi.
+- État des worktrees vérifié : le checkout `CreatorDeck` est sur `main` au SHA
+  antérieur `cb3e18e0` et conserve ses dossiers non suivis
+  `.codex-remote-attachments/` et `.playwright-mcp/`. Les worktrees Codex et
+  Claude sont sur `7922f6e`; Codex est le seul écrivain. Le brouillon modifié
+  `public/packs/memes-opening.svg` reste exclu de tout commit.
 # Checkpoint — reprise de la CI D-130 (16 octobre 2026)
 
 - `origin/main` vérifié au SHA `fa8124d27604c3fcfaf7266eeea627523e663072` ;

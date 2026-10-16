@@ -419,18 +419,19 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-La CI du code D-121 est verte et son parcours invité réel est passé sur Vercel.
-Les lots Binder/Atelier/Toi/Nouveautés/Objectifs, ouverture et feuilles sociales
-sont publiés. Aucun défaut de code reproduit ne reste ouvert dans ce plan.
-Les anciennes cases plus bas sont des relevés historiques, pas des ordres de
-rejouer une migration ou un reset.
+Les lots Binder/Atelier/Toi/Nouveautés/Objectifs, ouverture, carrousel D-129,
+univers Mèmes D-125 et focus Drop D-130 sont publiés sur `main`. Aucun défaut de
+code reproduit n'est actuellement ouvert dans ce plan ; le correctif des
+sélecteurs E2E D-130 est confirmé par la CI GitHub verte du 16 octobre. Les
+anciennes cases plus bas sont des relevés historiques, pas des ordres de rejouer
+une migration ou un reset.
 
 | Reste réel | Statut et prochaine condition |
 | --- | --- |
 | Sensation du peel, feuilletage Binder, volume du sachet et écoute des sons | Essais physiques du joueur sur le site Vercel. Les tests navigateur ne tranchent pas le ressenti ; conserver les valeurs actuelles tant qu’aucun symptôme précis n’est rapporté. La sélection BGM est mise de côté à sa demande. |
 | Portraits encore sur avatar | Revue visuelle des 542 profils relevés le 13 octobre, avec identité, source et qualité à valider avant remplacement. Le pilote ne publie rien automatiquement ; `SERPAPI_API_KEY` est absent dans cet environnement. Les 454 choix manuels restent protégés. |
 | Code privé `MALIK` pour boosters de test | Option personnelle non créée dans le dépôt : nécessite l’adresse exacte du compte cible et l’accès au SQL Editor Supabase. [Procédure](booster-test-access.md). Les boosters ordinaires fonctionnent sans ce code. |
-| Démonstrateur `/catalogue-demo` | Prototype isolé livré ; HTTP 200, largeur 390 px sans débordement ni exception JavaScript contrôlés sur Vercel le 16 octobre. Son intégration multi-univers exige un choix produit sur le catalogue, les règles et les droits ; aucun changement du jeu réel n’est engagé par D-076. |
+| Démonstrateur `/catalogue-demo` | Prototype isolé de référence UI ; son ancien choix d'univers fictifs est remplacé par D-125 : Mèmes FR est déjà un univers jouable avec classeur et progression séparés. Les compteurs Twitch et Mèmes existent dans leurs écrans distincts ; les réunir dans un Binder multi-univers demanderait une navigation/état partagé qui n'est pas justifiée par la démo. Aucun nouveau code engagé. |
 | Soundbites de créateurs, événements Twitch, Last Pack revanchard | Idées de backlog sans sons fournis, droits, règles ni critères d’acceptation. Aucun développement lancé ; ne pas inventer ces mécanismes à partir d’un « Next » général. |
 | Vol Last Pack, achat/dépôt Hôtel et autres transactions sociales réelles non parcourues | Vérifications en Production encore possibles avec comptes et cartes de test ; le moteur et les interfaces ont des tests simulés. Ne pas annoncer ces transactions vérifiées en conditions réelles avant leur exécution. |
 
