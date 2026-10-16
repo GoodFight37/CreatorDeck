@@ -1,10 +1,9 @@
 # Checkpoint — délégation locale Codex → Claude (16 octobre 2026)
 
 - Demande : permettre à Codex de consulter Claude Code localement pour une revue
-  ciblée, sans copier-coller manuel ni deuxième système de passation. Aucun
-  développement applicatif, push ou déploiement pour cette configuration.
+  ciblée, sans copier-coller manuel ni deuxième système de passation.
 - Base locale avant travail : `5ce85c723ea6c9d04f694b18721acf460ba9a1c8`
-  sur `main`, `codex/collaboration` et `claude/review`; `main` GitHub demeure
+  sur `main`, `codex/collaboration` et `claude/review`; GitHub `main` était
   `23e69ee188edc6fd3f781dd06102330965960ec7` (vérifié par `ls-remote`).
 - `scripts/delegate-claude.mjs` dans le worktree Codex : contrôle branches et
   propreté Claude, avance rapide sûre si nécessaire, appel `claude -p` en mode
@@ -17,11 +16,17 @@
   reste hors de portée de cette vérification.
 - Usage : `node scripts/delegate-claude.mjs "question ciblée"`; Codex décide
   quand la revue est utile, lit la réponse et garde la responsabilité des
-  corrections. Ne pas pousser cette configuration seule.
+  corrections.
+- Publication après accord explicite de Malik : commit `50c0f322` poussé sur
+  GitHub `main`, SHA distant vérifié `50c0f32202b2ae47b6e183b30d5754d3f3430e71`.
+  Vercel Production `dpl_8SCZQ1LTJo3aHHjLez8dxoC2Ckz` est `READY` sur le même
+  SHA (`creator-deckk-b6mkvxhlg-hafsi37-2386.vercel.app`). L'accès de contrôle
+  à la page depuis cette session a été refusé en 403; Malik peut vérifier
+  l'alias Vercel habituel.
 
 # Coordination actuelle et checkpoint D-129 — 16 octobre 2026
 
-**Coordination actuelle — 16 octobre 2026.** Codex est le développeur principal et seul écrivain ordinaire dans `C:/Users/Administrator/Desktop/CreatorDeck-Codex` (`codex/collaboration`). Le checkout d’origine `C:/Users/Administrator/Desktop/CreatorDeck` reste sur `main`; `C:/Users/Administrator/Desktop/CreatorDeck-Claude` sert aux revues ciblées/audits complexes sur `claude/review`. Préserver ces worktrees et ne synchroniser que par avance rapide après contrôle de propreté et d’ascendance. Les lots ordinaires peuvent être testés de façon ciblée, committés et poussés normalement sur `main` sans demander un accord à chaque fois; contrôler ensuite que le SHA Vercel Production correspond à `main`. Obtenir l’accord de Malik avant tout changement sensible (Supabase/données, migrations, authentification, sécurité, secrets, suppression de données ou action irréversible). Pas de push de la présente configuration seule.
+**Coordination actuelle — 16 octobre 2026.** Codex est le développeur principal et seul écrivain ordinaire dans `C:/Users/Administrator/Desktop/CreatorDeck-Codex` (`codex/collaboration`). Le checkout d’origine `C:/Users/Administrator/Desktop/CreatorDeck` reste sur `main`; `C:/Users/Administrator/Desktop/CreatorDeck-Claude` sert aux revues ciblées/audits complexes sur `claude/review`. Préserver ces worktrees et ne synchroniser que par avance rapide après contrôle de propreté et d’ascendance. Les lots ordinaires peuvent être testés de façon ciblée, committés et poussés normalement sur `main` sans demander un accord à chaque fois; contrôler ensuite que le SHA Vercel Production correspond à `main`. Obtenir l’accord de Malik avant tout changement sensible (Supabase/données, migrations, authentification, sécurité, secrets, suppression de données ou action irréversible). La configuration de délégation a été publiée sur `main` au SHA `50c0f32202b2ae47b6e183b30d5754d3f3430e71` après l’accord explicite du 16 octobre.
 
 Synchronisation locale : commit de consignes `5698310d08b68d866cbc2cfbfda5d07b5bde8055` présent dans l’historique des trois branches locales; les trois ont été alignées par avance rapide. Les worktrees Codex et Claude sont propres; le checkout d’origine conserve les dossiers non suivis `.codex-remote-attachments/` et `.playwright-mcp/`. `origin/main` reste au code publié `23e69ee188edc6fd3f781dd06102330965960ec7`; la configuration locale n’est pas poussée. Revérifier les HEAD au prochain démarrage.
 
