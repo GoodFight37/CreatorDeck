@@ -4,7 +4,8 @@
 
 - Défaut observé lors de D-120 sur Vercel, base initiale `67385de2` : création invitée dans « Mon compte », arrivée asynchrone de l’onboarding, tutoriel derrière la feuille puis appuis interceptés. Le correctif local a été conservé pendant le chantier CSS du sachet, puis repris sur `main` `118b21f067389291547e0ef6f11b8fdedb5198c6` ; SHA local et distant identiques, arbre propre avant sa reprise.
 - Correctif : tutoriel différé pendant une feuille ou scène ouverte ; retour au Drop à « Terminer » ; musique non démarrée pendant l’attente. Test DOM ciblé et note joueur ; décision et problème connu mis à jour. Aucun changement de règles ou d’économie.
-- Vérifications locales sur cette base : test ciblé 1/1, suite écrans 182/182 dans 29 fichiers, navigation Playwright téléphone 6/6, TypeScript, ESLint, build statique et `git diff --check` réussis. Le build local n’a pas les variables Supabase ; la connexion réelle n’y est donc pas exercée. Publication, CI et Vercel à contrôler. Ressenti tactile physique distinct des tests navigateur.
+- Vérifications locales sur cette base : test ciblé 1/1, suite écrans 182/182 dans 29 fichiers, navigation Playwright téléphone 6/6, TypeScript, ESLint, build statique et `git diff --check` réussis. Le build local n’a pas les variables Supabase ; la connexion réelle n’y est donc pas exercée.
+- Code, test, note joueur et docs publiés par `6a1c0069070cf0ef45cd30c72c7d215ad2be7047` sur `main`, SHA distant confirmé. Vercel Production `READY` sur ce SHA. CI [run 38826862407](https://github.com/GoodFight37/CreatorDeck/actions/runs/38826862407) terminée verte (6/6 jobs : qualité, trois lots navigateur, SQL jetable et cloud simulé). L’URL de production est protégée par la connexion Vercel dans cette session : le parcours connecté réel sur le site et le ressenti tactile physique restent à vérifier côté joueur, sans les déduire des tests simulés.
 
 
 ## Checkpoint D-120 — validation sociale réelle sur Vercel
