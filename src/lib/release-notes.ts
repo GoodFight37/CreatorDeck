@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-rituel-ouverture-sans-action-concurrente", date: "2026-10-17", title: "Le geste d’ouverture reste au premier plan",
+    summary: "L’ouverture sans déchirure est maintenant un lien discret en bas de l’écran.",
+    sections: [{ title: "Drop", items: [
+      "Le geste TIRE / RELÂCHE reste l’action principale ; l’ouverture de secours reste disponible tout en bas, sans concurrencer le sachet.",
+    ] }],
+  },
+  {
     id: "2026-10-17-choix-booster-couleurs-forcees", date: "2026-10-17", title: "Un choix de booster visible dans tous les modes",
     summary: "Le booster sélectionné garde un repère distinctif avec les couleurs forcées.",
     sections: [{ title: "Accessibilité", items: [

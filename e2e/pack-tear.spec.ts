@@ -902,7 +902,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   }
 });
 
-test("l’ouverture alternative reste secondaire sous le geste de déchirure", async ({ page }) => {
+test("l’ouverture alternative reste discrète en bas, après le geste de déchirure", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await gotoDeck(page);
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
@@ -914,9 +914,11 @@ test("l’ouverture alternative reste secondaire sous le geste de déchirure", a
   const tearBox = (await tear.boundingBox())!;
   const alternativeBox = (await alternative.boundingBox())!;
   expect(alternativeBox.y).toBeGreaterThan(tearBox.y + tearBox.height);
+  expect(alternativeBox.y).toBeGreaterThan(568 - 90);
   expect(alternativeBox.height).toBeGreaterThanOrEqual(44);
   expect(alternativeBox.y + alternativeBox.height).toBeLessThanOrEqual(568);
   expect(await alternative.evaluate((node) => getComputedStyle(node).fontSize)).toBe("11px");
+  expect(Number(await alternative.evaluate((node) => getComputedStyle(node).opacity))).toBeLessThanOrEqual(.2);
   await alternative.click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
 });

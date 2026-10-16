@@ -1,5 +1,35 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Lot D-136 — rituel d’ouverture (17 octobre 2026)
+
+- Demande : retirer le poids visuel concurrent de « Ouvrir sans déchirer » sans
+  toucher au Drop d’accueil, au peel, à l’anti-skip ou à `PACK_TEAR_MS`.
+- Correctif local : le lien de secours reste accessible et de taille tactile
+  44 px, mais est déplacé au bas de la scène à 20 % d’opacité ; le survol et le
+  focus clavier le rendent visible. TIRE / RELÂCHE reste la seule consigne
+  centrale. Test navigateur adapté pour contrôler position, opacité, cible et
+  fonctionnement. Note joueur, décision D-136, roadmap et guide Drop ajoutés.
+- Fichiers : `src/app/booster-premium.css`, `e2e/pack-tear.spec.ts`,
+  `src/lib/release-notes.ts`, `docs/decisions.md`, `docs/roadmap.md`,
+  `docs/drop-boosters.md` et ce checkpoint. Aucun changement du SVG Mèmes ni
+  des pièces jointes préexistantes.
+- Vérifications au SHA de travail avant commit : `rtk npm run ecrans --
+  src/ecrans.test.tsx src/ecrans-pack-pending.test.tsx` 14/14 ; `rtk npm test --
+  src/lib/release-notes.test.ts` 8/8 ; `rtk npm run typecheck` réussi ;
+  `rtk npm run lint -- e2e/pack-tear.spec.ts src/lib/release-notes.ts` réussi
+  (le script lance ESLint sur le dépôt entier) ; `rtk node
+  scripts/check-jargon.mjs` et `git diff --check` réussis. Build réussi avec
+  `rtk npm run build -- --webpack` : 6 routes statiques, code 0 ; cloud guard
+  avertit que les variables Supabase ne sont pas présentes localement.
+- `rtk npm run e2e -- e2e/pack-tear.spec.ts -g "ouverture alternative reste
+  discrète"` n’a exécuté aucun test : démarrage Next refusé par le verrou PID
+  15724. Le build par défaut est resté en compilation sans progrès et a été
+  interrompu ; le build Webpack ci-dessus a réussi. Ne pas arrêter le serveur
+  bloqué ni supprimer son verrou sans accès pour vérifier son propriétaire.
+- Base de travail : commit publié `a186cda01e713fc3d49f1d65a25bc9f1139088f4`,
+  branche `codex/collaboration`. Avant publication, contrôler les fichiers
+  indexés, le HEAD distant `main`, le commit, le push et le statut Vercel exact.
+
 ## Reprise vérifiée — 17 octobre 2026 (après D-135)
 
 - Checkout confirmé : `C:\Users\Administrator\Desktop\CreatorDeck-Codex`,

@@ -2,6 +2,14 @@
 
 ## État actuel — 17 octobre 2026
 
+**Rituel d’ouverture allégé (D-136) — implémenté localement :** l’ouverture de
+secours sans déchirure reste disponible mais se place en bas de l’écran, à
+faible opacité, et ressort au focus clavier. Le geste TIRE / RELÂCHE conserve
+la priorité. Build Webpack, typecheck, lint ciblé, garde-jargon, notes joueur
+8/8 et écrans concernés 14/14 réussis. Le scénario navigateur ciblé n’a pas
+démarré : verrou du serveur Next associé au PID 15724. Publication à consigner
+après le push ; aucun changement du Drop d’accueil ou des règles.
+
 **État de sélection en couleurs forcées (D-135) — correction locale :** la pill
 active conserve un contour système distinct ; contrôle isolé Edge réussi,
 scénario E2E ajouté mais non exécuté localement, car le serveur Next existant

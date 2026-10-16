@@ -14,6 +14,16 @@ accessible ; « TIRE » / « RELÂCHE », les protections anti-saut et
 `PACK_TEAR_MS` (1 200 ms) restent inchangés. La validation physique reste
 ouverte.
 
+## D-136 — ouverture de secours discrète
+
+Le lien « Ouvrir sans déchirer » reste disponible tout en bas de la scène,
+à faible opacité (20 %) et hors du centre. Le survol ou le focus clavier le
+fait ressortir ; la cible tactile reste de 44 px. « TIRE » / « RELÂCHE » demeure
+la seule consigne centrale. Le test navigateur dédié couvre position, opacité
+et activation, mais n’a pas pu démarrer localement car Next signale le verrou
+du serveur de développement PID 15724. Build Webpack et vérifications DOM
+réussis ; preuve navigateur et appréciation sur téléphone restent ouvertes.
+
 ## Parcours livré localement
 
 Drop démarre sur Live Drop. Le sachet Mèmes peut rester une illustration secondaire en bordure ou sortir du premier regard sur les écrans étroits. Seules les pills changent le choix ; le scroll vertical ne change pas le booster et ne l’ouvre pas.

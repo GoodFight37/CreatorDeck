@@ -1,3 +1,15 @@
+## D-136 — 17 octobre 2026 : garder l’ouverture de secours hors du rituel visuel
+
+Dans la scène scellée, « Ouvrir sans déchirer » restait un bouton de 44 px juste
+sous le sachet. Le conserver comme solution de secours, mais le placer tout en
+bas avec une opacité faible, hors du centre et du geste TIRE / RELÂCHE. Le
+contraste revient au survol ou au focus clavier ; sa cible tactile reste de
+44 px. Aucun texte d’instruction, peel, garde anti-saut, `PACK_TEAR_MS`, Drop,
+réserve, taux, Binder, Craft ou audio ne change. Le scénario Playwright est
+ajusté pour vérifier position, opacité, cible et ouverture effective ; il n’a
+pas démarré localement à cause du verrou du serveur Next (PID 15724). Build
+Webpack réussi ; les limites de vérification sont consignées dans le checkpoint.
+
 ## D-131 — 16 octobre 2026 : retirer la fiche Mèmes sans illustration
 
 La fiche source `juventus-rose` (« Carte supprimée ») ne contenait qu’une image WebP de remplacement de 818 octets. Elle était consultable dans le classeur mais déjà non tirable. À la demande de Malik, retirer cette fiche du catalogue distribué et du catalogue serveur : le classeur et son compteur passent de 2 151 à 2 150, toutes tirables avec image.
@@ -1724,3 +1736,5 @@ contour `solid 2px`, décalage `2px`, fond Highlight et texte HighlightText.
 `git diff --check` réussis. Le scénario Playwright de l’application est ajouté
 mais n’a pas démarré : le serveur Next préexistant occupe le port 3000 sans
 répondre. Les règles du jeu et les autres piliers restent inchangés.
+
+\n

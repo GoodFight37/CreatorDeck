@@ -250,6 +250,14 @@
   min-height: 58px;
   gap: 4px;
 }
+.booster-premium-actions:has(> .booster-open-link) {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  bottom: max(0px, env(safe-area-inset-bottom));
+  min-height: 0;
+  pointer-events: none;
+}
 .booster-premium-gesture {
   margin: 0;
   text-align: center;
@@ -268,9 +276,12 @@
   font: 500 11px/1.25 var(--font-body, Arial), sans-serif;
   text-decoration: underline;
   text-underline-offset: 4px;
+  opacity: .2;
+  pointer-events: auto;
 }
 .booster-cinematic .booster-open-link:hover {
   color: #fff1db;
+  opacity: .8;
 }
 .booster-premium-loading {
   color: #fff0e4;
@@ -285,6 +296,7 @@
 .booster-cinematic .booster-open-link:focus-visible {
   outline: 2px solid #fff1db;
   outline-offset: 6px;
+  opacity: 1;
 }
 @media (max-height: 660px) {
   .booster-cinematic .booster-premium-stage { gap: 5px; }
@@ -295,6 +307,9 @@
   .booster-cinematic .booster-foil-open .booster-foil-glow,
   .booster-cinematic .booster-foil-open .booster-premium-lightburst,
   .booster-premium-loading { animation-duration: .01ms; }
+}
+@media (forced-colors: active) {
+  .booster-cinematic .booster-open-link { opacity: 1; }
 }
 
 
