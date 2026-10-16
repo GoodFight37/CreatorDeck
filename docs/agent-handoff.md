@@ -28,6 +28,20 @@
 - Aucun tirage ni appel Supabase dans le scénario tactile. Malik doit confirmer
   le ressenti et l’apparence sur son vrai téléphone après publication.
 
+# Checkpoint — délégation malgré un brouillon local (16 octobre 2026)
+
+- Demande : débloquer l’échange Codex ↔ Claude sans exposer ni écraser un
+  changement local non publié.
+- Le refus précédent venait du garde-fou de `scripts/delegate-claude.mjs` : il
+  exigeait à tort un worktree Codex parfaitement propre. Le brouillon concerné
+  est `public/packs/memes-opening.svg`; il reste intact et hors de la revue.
+- Correctif préparé : la revue cible exclusivement `HEAD` commité; les changements
+  Codex non commités sont seulement signalés comme exclus. Le worktree Claude
+  doit toujours être propre et ne reçoit que l’avance rapide sûre.
+- Prochaine preuve : commit/push normal du correctif de coordination, puis appel
+  réel du script et lecture de la réponse Claude. Aucun code applicatif, merge ou
+  déploiement n’est dans ce lot.
+
 # Checkpoint — délégation locale Codex → Claude (16 octobre 2026)
 
 - Demande : permettre à Codex de consulter Claude Code localement pour une revue

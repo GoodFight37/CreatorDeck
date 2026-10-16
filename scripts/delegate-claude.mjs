@@ -31,9 +31,7 @@ async function main() {
   if (git(codex, "branch", "--show-current") !== "codex/collaboration") {
     throw new Error("Exécuter depuis la branche codex/collaboration.");
   }
-  if (git(codex, "status", "--porcelain")) {
-    throw new Error("Worktree Codex modifié : committer le lot ciblé avant une revue de son SHA.");
-  }
+  const codexChanges = git(codex, "status", "--porcelain");
   if (git(claude, "branch", "--show-current") !== "claude/review") {
     throw new Error("Le worktree Claude doit rester sur claude/review.");
   }
@@ -48,8 +46,8 @@ async function main() {
   }
   const cli = process.env.CLAUDE_CLI || "claude";
   const stamp = new Date().toISOString();
-  const mission = `Revue ciblée en lecture seule, SHA ${target}. ${question}\nRéponds en français, brièvement : faits vérifiés, hypothèses, fichiers utiles et tests réellement lancés. Aucun fichier à modifier, aucun test à lancer sauf nécessité explicitement justifiée. N'appelle aucun autre agent.`;
-  append(requestFile, `## Délégation automatique — ${stamp}\n\nSHA : \`${target}\`\nMission : ${question}`);
+  const mission = `Revue ciblée en lecture seule du commit ${target}, présent dans ton worktree. ${question}\nIgnore tout état non commité du worktree Codex : il n'est pas transmis et ne fait pas partie de la revue.\nRéponds en français, brièvement : faits vérifiés, hypothèses, fichiers utiles et tests réellement lancés. Aucun fichier à modifier, aucun test à lancer sauf nécessité explicitement justifiée. N'appelle aucun autre agent.`;
+  append(requestFile, `## Délégation automatique — ${stamp}\n\nSHA : \`${target}\`\nÉtat local Codex non commité : ${codexChanges ? "présent, exclu de la revue" : "aucun"}\nMission : ${question}`);
   const args = ["-p", "--output-format", "text", "--permission-mode", "plan", "--tools", "Read,Glob,Grep", "--max-turns", "4", "--max-budget-usd", "0.50", mission];
   let output = "";
   let errors = "";
