@@ -1,8 +1,10 @@
 # Roadmap CreatorDeck
 
-## État actuel — 15 octobre 2026
+## État actuel — 16 octobre 2026
 
-**Tutoriel après connexion (D-121) — publié, CI verte, Vercel prêt :** la création d’un compte invité ne superpose plus « Mon compte » et le tutoriel. Celui-ci attend la fermeture de la feuille, puis sa fin revient au Drop. Test ciblé 1/1, écrans 182/182, navigation téléphone 6/6, TypeScript, ESLint et build réussis ; CI 6/6 sur `6a1c0069`. La connexion réelle sur le site protégé et le ressenti tactile physique restent à vérifier côté joueur. [Décision D-121](decisions.md). Aucun changement des cadeaux, taux ou ressources.
+**Tutoriel après connexion (D-121) — publié et vérifié sur le site :** la création d’un compte invité ne superpose plus « Mon compte » et le tutoriel. Celui-ci attend la fermeture de la feuille, puis sa fin revient au Drop. Test ciblé 1/1, écrans 182/182, navigation téléphone 6/6, TypeScript, ESLint et build réussis ; CI 6/6 sur `6a1c0069`. Le 16 octobre, un compte invité neuf a parcouru la production Vercel à 390 × 844 : aucune superposition ni exception JavaScript. Seul le ressenti sur téléphone physique reste à juger. [Décision D-121](decisions.md). Aucun changement des cadeaux, taux ou ressources.
+
+**Sachet Drop affiné — publié dans `118b21f0` :** angle ramené à 7° sur Y et 4° sur X, tranches foil de 16 px, dessous de 12 px, couleur centrale moins claire ; taille, idle, reflet, ombre et CTA conservés. Build local, quatre scénarios navigateur téléphone, CI 6/6 et Vercel Production `READY`. Une note joueur rétrospective est ajoutée le 16 octobre ; appréciation visuelle et tactile physique toujours côté joueur.
 
 
 **Lot 05 IA Studio (D-119) — publié et vérifié sur Vercel :** alerte carte 0 réfutée par le contrat SQL (index 1 à 5), feuilles sociales synchronisées, variantes d’un ancien partenaire écartées, proposition verrouillée jusqu’à sa réponse. 181/181 écrans, 1 186/1 186 unitaires, CI 6/6. Deux comptes invités ont ensuite vérifié sur la production l’amitié, l’offre unique malgré un double appui, son acceptation et les cinq cartes finales de chaque Binder. Wishlist persiste après rechargement ; une réponse de variantes retardée est écartée. Vol Last Pack, transaction à l’Hôtel et ressenti tactile physique restent ouverts. [Preuves et limites](verification-sociale-vercel-2026-10-15.md). Aucun changement d’économie ou de taux.
@@ -403,26 +405,20 @@ checkpoint de passation pour le dernier mix.
 
 ## Prochaines étapes
 
-1. Les lots Binder/Atelier/Toi/Nouveautés/Objectifs (D-099 à D-103),
-   puis les finitions publiées jusqu’à D-110, sont livrés. D-111 a fiabilisé
-   les contrôles des parcours existants : lire les causes exactes des échecs
-   et le SHA avant de conclure à une régression du jeu. Ajouter
-   une note seulement pour une livraison visible. Ne plus découper les lots
-   clos en nouvelles petites passes sans défaut concret.
-2. Le ressenti tactile du peel et du Binder reste ouvert ; ne pas bloquer les
-   autres travaux sur une demande de test joueur ni retoucher les seuils sans
-   symptôme précis. Les filtres Sortants et les constats Lot 03 sont corrigés
-   en D-114/D-115 ; surveiller
-   leur fonctionnement sur le vrai catalogue lors de sa prochaine mise à jour.
-   Le parcours automatique du rituel sur Vercel a déjà passé.
-3. Musique mise de côté à la demande de Malik. Les deux pistes restent des
-   références provisoires ; aucune nouvelle sélection engagée.
-4. Recueillir le retour produit sur `/catalogue-demo`, puis décider du périmètre
-   avant toute intégration réelle de nouveaux univers. Le prototype et la
-   simulation ne modifient ni catalogue, ni taux, ni économie.
-5. Backlog sans développement engagé : soundbites des créateurs,
-   événements Twitch et Last Pack revanchard.
-   Les règles et dépendances restent à définir avant développement.
+La CI du code D-121 est verte et son parcours invité réel est passé sur Vercel.
+Les lots Binder/Atelier/Toi/Nouveautés/Objectifs, ouverture et feuilles sociales
+sont publiés. Aucun défaut de code reproduit ne reste ouvert dans ce plan.
+Les anciennes cases plus bas sont des relevés historiques, pas des ordres de
+rejouer une migration ou un reset.
+
+| Reste réel | Statut et prochaine condition |
+| --- | --- |
+| Sensation du peel, feuilletage Binder, volume du sachet et écoute des sons | Essais physiques du joueur sur le site Vercel. Les tests navigateur ne tranchent pas le ressenti ; conserver les valeurs actuelles tant qu’aucun symptôme précis n’est rapporté. La sélection BGM est mise de côté à sa demande. |
+| Portraits encore sur avatar | Revue visuelle des 542 profils relevés le 13 octobre, avec identité, source et qualité à valider avant remplacement. Le pilote ne publie rien automatiquement ; `SERPAPI_API_KEY` est absent dans cet environnement. Les 454 choix manuels restent protégés. |
+| Code privé `MALIK` pour boosters de test | Option personnelle non créée dans le dépôt : nécessite l’adresse exacte du compte cible et l’accès au SQL Editor Supabase. [Procédure](booster-test-access.md). Les boosters ordinaires fonctionnent sans ce code. |
+| Démonstrateur `/catalogue-demo` | Prototype isolé livré ; HTTP 200, largeur 390 px sans débordement ni exception JavaScript contrôlés sur Vercel le 16 octobre. Son intégration multi-univers exige un choix produit sur le catalogue, les règles et les droits ; aucun changement du jeu réel n’est engagé par D-076. |
+| Soundbites de créateurs, événements Twitch, Last Pack revanchard | Idées de backlog sans sons fournis, droits, règles ni critères d’acceptation. Aucun développement lancé ; ne pas inventer ces mécanismes à partir d’un « Next » général. |
+| Vol Last Pack, achat/dépôt Hôtel et autres transactions sociales réelles non parcourues | Vérifications en Production encore possibles avec comptes et cartes de test ; le moteur et les interfaces ont des tests simulés. Ne pas annoncer ces transactions vérifiées en conditions réelles avant leur exécution. |
 
 ## Historique — statuts à leur date, remplacés par le plan ci-dessus
 

@@ -1,5 +1,14 @@
 # Décisions CreatorDeck
 
+## D-122 — 16 octobre 2026 : fermer les vérifications autonomes et distinguer les décisions produit
+
+Le correctif CSS du sachet publié dans `118b21f0` réduit l’angle et l’épaisseur des tranches sans changer la taille, l’animation idle, le reflet ni le CTA. Sa note joueur, omise à cause du périmètre CSS strict de cette livraison, est ajoutée rétrospectivement. Le rendu mobile local et les quatre scénarios navigateur avaient passé ; le jugement de matière au toucher appartient au joueur.
+
+Le tutoriel D-121 a ensuite été rejoué sur le domaine public Vercel avec un compte invité neuf et un navigateur mobile 390 × 844 : pas de superposition pendant « Mon compte », tutoriel après fermeture, retour au Drop après « Terminer », aucune exception JavaScript. Une session de test éphémère a été fermée ; le compte invité reste dans la base de production. Cette preuve ferme la validation navigateur réelle de D-121, sans conclure sur le ressenti physique.
+
+La roadmap active distingue désormais les essais de perception et les travaux qui exigent des ressources ou règles absentes. Le prototype multi-univers reste isolé conformément à D-076 ; soundbites, événements Twitch et Last Pack revanchard restent des idées non spécifiées. Aucun nouveau catalogue, son, événement, tarif ou mécanisme de vol n’est déduit de la demande de finir les chantiers existants.
+
+
 ## D-121 — 15 octobre 2026 : présenter le tutoriel après la feuille de connexion
 
 En vérifiant le parcours social sur Vercel, un compte invité neuf a reçu sa réponse d’onboarding alors que « Mon compte » était encore ouvert. Le tutoriel est devenu visible derrière cette feuille et a intercepté des appuis après sa fermeture ; deux dialogues modaux coexistaient. Le problème découle du recalcul de `showTutorial` au changement de compte et de l’arrivée asynchrone de l’état d’onboarding, sans tenir compte de la présentation déjà ouverte.

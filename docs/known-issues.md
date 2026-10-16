@@ -1,6 +1,6 @@
 ## Tutoriel derrière « Mon compte » après création invitée — corrigé dans D-121
 
-Sur `67385de2`, ouvrir « Mon compte », créer un compte invité, puis attendre la réponse d’onboarding pouvait superposer le tutoriel à la feuille de compte. La feuille restait devant, mais le tutoriel interceptait ensuite les appuis destinés à Toi. Gravité moyenne : parcours d’entrée confus, sans perte de cartes démontrée. D-121 attend la fermeture de la présentation courante avant de montrer le tutoriel, et termine sur Drop. Publié dans `6a1c0069` : test DOM ciblé 1/1, écrans 182/182, CI 6/6 et Vercel Production `READY`. Le parcours connecté réel sur le site protégé et l’essai sur écran tactile physique restent distincts des tests simulés.
+Sur `67385de2`, ouvrir « Mon compte », créer un compte invité, puis attendre la réponse d’onboarding pouvait superposer le tutoriel à la feuille de compte. La feuille restait devant, mais le tutoriel interceptait ensuite les appuis destinés à Toi. Gravité moyenne : parcours d’entrée confus, sans perte de cartes démontrée. D-121 attend la fermeture de la présentation courante avant de montrer le tutoriel, et termine sur Drop. Publié dans `6a1c0069` : test DOM ciblé 1/1, écrans 182/182, CI 6/6 et Vercel Production `READY`. Le 16 octobre, le parcours invité réel sur `creator-deckk.vercel.app` a réussi dans Chromium mobile 390 × 844 : aucune superposition, retour au Drop, zéro exception JavaScript. Le ressenti sur écran tactile physique reste distinct.
 
 ## Lot 05 IA Studio — défauts sociaux corrigés dans D-119
 

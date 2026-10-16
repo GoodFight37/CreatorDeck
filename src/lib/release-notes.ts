@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-sachet-affine", date: "2026-10-16", title: "Un sachet plus fin",
+    summary: "Le booster du Drop garde son relief avec des tranches foil plus discrètes.",
+    sections: [{ title: "Amélioration", items: [
+      "Les côtés et le dessous du sachet sont plus fins ; son léger mouvement, son reflet et sa taille restent les mêmes.",
+    ] }],
+  },
+  {
     id: "2026-10-15-tutoriel-apres-compte", date: "2026-10-15", title: "Un accueil sans écran superposé",
     summary: "Le tutoriel du nouveau compte attend que tu fermes la fenêtre en cours.",
     sections: [{ title: "Correction", items: [
