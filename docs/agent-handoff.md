@@ -1,11 +1,11 @@
 # Reprise rapide — 16 octobre 2026
 
-## Checkpoint D-128 — sachet Live Drop assoupli (publication en cours)
+## Checkpoint D-128 — sachet Live Drop assoupli (publié et vérifié)
 
 - Base `main` locale et GitHub vérifiée à `9659f95e82c61692a462dca9f2621519587ff27d`, arbre propre avant intervention. Chantier séparé du rendu physique du sachet principal. Aucun changement de peel, révélation, taille du pack, CTA, économie ou cartes.
 - `live-opening.svg` et son masque foil ont une silhouette et des soudures courbes, des plis et un éclairage intégrés à l'impression existante. Face CSS sans cadre rectangulaire, flancs foil amincis à 9 px, reflet atténué et ombre de contact alignée. [Captures avant/après 390 et 320 px](sachet-live-d128.md), snapshots scellé/déchiré téléphone et bureau, décision D-128 et note joueur.
 - Vérifications locales : TypeScript, ESLint, build, garde de jargon et `git diff --check` réussis ; écrans ciblés 45/45, note joueur 3/3 et unitaires de notes 8/8 ; Playwright téléphone Drop/ouverture 39 réussis, 2 ignorés (scénario obsolète et cloud absent) ; snapshots d'ouverture téléphone/bureau 2/2 après le dernier ajustement. Les captures ont été inspectées ; elles ne mesurent pas le rendu ni le geste sur téléphone physique. Pas de SQL ni de changement de taux.
-- Commit, CI et Vercel restent à consigner après publication.
+- Code, captures et documentation publiés sur `main` par `077a67ce274dd3e6d230c1f97a65ceacc3364e33`, SHA distant confirmé. [CI Vérification 38921513188](https://github.com/GoodFight37/CreatorDeck/actions/runs/38921513188) terminée verte 6/6, dont les trois lots Playwright et le cloud simulé. Vercel Production `dpl_GBPSeKvE43heuDAX4LKHsjHMeZsC` est `READY` sur ce SHA ; les deux SVG du sachet répondent HTTP 200 sur `creator-deckk.vercel.app` et leurs empreintes SHA-256 correspondent aux fichiers publiés. Ce contrôle de disponibilité ne prouve pas le rendu ou le geste sur un téléphone réel.
 
 ## Checkpoint D-127 — matière des cartes Mèmes (publié et vérifié)
 

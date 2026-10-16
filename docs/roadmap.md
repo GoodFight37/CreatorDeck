@@ -2,7 +2,7 @@
 
 ## État actuel — 16 octobre 2026
 
-**Sachet Live Drop souple (D-128) — implémenté, publication et ressenti physique à confirmer :** silhouette et soudures arrondies, plis et volume dans l'impression existante, tranches moins rigides, reflet contenu et ombre recadrée. Taille, idle, CTA, peel et économie conservés. [Captures avant/après 390 et 320 px](sachet-live-d128.md) ; vérifications et publication consignées dans la passation. Le rendu et le geste sur téléphone Vercel restent à juger par Malik.
+**Sachet Live Drop souple (D-128) — publié sur Vercel, ressenti physique ouvert :** silhouette et soudures arrondies, plis et volume dans l'impression existante, tranches moins rigides, reflet contenu et ombre recadrée. Taille, idle, CTA, peel et économie conservés. [Captures avant/après 390 et 320 px](sachet-live-d128.md) ; code `077a67ce`, CI 6/6 et Vercel Production `READY` avec SVG publics identiques aux fichiers publiés. Le rendu et le geste sur téléphone physique restent à juger par Malik.
 
 **Matière des cartes Mèmes (D-127) — publiée sur Vercel, jugement physique ouvert :** audit différentiel des 59 observations d'animations et des 27 familles partielles du paquet réduit ; progression de cadre et de matière selon la rareté, Full Art plus ouvert, reflet au doigt limité à la grande fiche. Pas de sweep perpétuel ni de modification du booster physique, des cartes Twitch ou des règles. Voir [l'audit et les captures comparables](audit-cartes-memes-reference.md). Code `40eb20f7`, CI 6/6, Production `READY`, fiche visible sur le domaine public ; le rendu sur téléphone réel reste à juger.
 
