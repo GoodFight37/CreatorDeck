@@ -9,6 +9,7 @@
   `3c9a06f01cc57cb0d209cee483d778ac75525796` (garde anti-déplacement),
   `0cd6ce5ee258c1d4c4be34a692f62195b5570330` (checkpoint) et
   `61734930dcca445b5c292c2c3809961010a5f126` (assertion du voisin hors écran)
+  et `3fa0e5c5578d4aec20a50089eed0e76be8e962be` (sélecteur RPC Mèmes)
   ont été poussés normalement vers `main`.
 - Diff préexistant unique confirmé avant édition :
   `public/packs/memes-opening.svg`. Il a été préservé et n’est pas staged.
@@ -39,7 +40,9 @@
   déplacement. `3c9a06f` cible le bon élément et restaure le garde. Les shards
   1/3 et 2/3 ont ensuite révélé une ancienne assertion imposant que le voisin
   reste dans le viewport, contrairement à la demande ; `6173493` la retire et
-  conserve l’absence de scroll horizontal.
+  conserve l’absence de scroll horizontal. La CI a ensuite signalé un ancien
+  clic sur le voisin dans un scénario RPC ; `3fa0e5c` sélectionne Mèmes avec sa
+  pill et passe l’ensemble de la CI.
 - Fichiers du lot Drop/rituel (10) : `src/components/booster-carousel.tsx`,
   `src/components/booster-carousel.css`, `src/app/drop-binder.css`,
   `src/app/booster-premium.css`, `src/lib/release-notes.ts`,
@@ -58,7 +61,7 @@
 - Après reprise autorisée par Malik, le verrou d’index s’est libéré sans
   intervention et aucun processus Git ne le détient. GitHub API revérifiée :
   `main` reste à
-  `61734930dcca445b5c292c2c3809961010a5f126`. Aucune PR n’était ouverte avant
+  `3fa0e5c5578d4aec20a50089eed0e76be8e962be`. Aucune PR n’était ouverte avant
   publication. `git ls-remote` reste en panne DNS.
 - CI `38964331571` pour `b15a2e2` : SQL jetable et unitaires/écrans/statique/build
   verts ; shards Playwright en échec sur les défauts corrigés. Le job RPC
@@ -66,19 +69,18 @@
   `38965129534` : SQL et unitaires/build verts, shard 3/3 vert ; shards 1/3 et
   2/3 ont échoué sur l’ancienne assertion du voisin. Nouveau run
   `38965828232` sur `6173493` : SQL jetable, unitaires/build et trois shards
-  Playwright réussis. Le job RPC simulé a échoué car son scénario Mèmes cliquait
-  encore le voisin non interactif ; le test est corrigé localement pour choisir
-  l’univers avec la pill MEMES, et doit repasser en CI. Vercel GitHub check du
-  SHA `6173493` : `success`.
+  Playwright réussis ; seul un ancien scénario RPC Mèmes cliquait le voisin.
+  Correction publiée dans `3fa0e5c`. Son run `38966936387` est vert 6/6 :
+  unitaires/écrans/statique/build, SQL jetable, RPC simulés et trois shards
+  Playwright. Le contrôle GitHub Vercel du SHA `3fa0e5c` est `success`.
   L’interface du connecteur Vercel renvoie 403 pour le scope `hafsi37-2386` ;
   le statut GitHub `Vercel` associe cependant la réussite au SHA. Aucun CLI
   Vercel local.
 - Tests navigateur locaux non exécutés : le `next dev` préexistant occupe le
   port 3000 mais ne répond pas aux requêtes ; aucune instance n’a été arrêtée.
-  Le run CI `6173493` couvre toutefois Drop, ouverture et Mèmes sur bureau et
-  téléphone ; le parcours RPC simulé Mèmes corrigé reste à revérifier en CI.
-  Les vérifications manuelles au téléphone par Malik restent à
-  faire, sans bloquer les corrections de code livrées.
+  Les trois shards CI du SHA `3fa0e5c` couvrent Drop, ouverture et Mèmes sur
+  bureau et téléphone. La validation tactile physique par Malik reste
+  distincte et n’a pas été effectuée.
   résultat au doigt sur son téléphone (320/390 px) ; aucune validation physique
   ne peut être prétendue.
 
