@@ -4575,3 +4575,40 @@ Avant toute prochaine publication, revérifier le SHA distant de
 Prochaine étape produit : recueillir le retour sur l’interface et cadrer
 explicitement les univers/règles avant tout branchement en production ; ne pas
 ajouter de vrais comptes ou licences dans cette tâche.
+# Checkpoint — reprise locale du 16 octobre 2026
+
+- Demande de Malik : reprendre `CreatorDeck-Codex` sur `codex/collaboration`,
+  préserver `ea1135c` et le SVG Mèmes non commité, lire l'état/roadmap et avancer
+  sans intervention sur les tâches autonomes.
+- Au début de la reprise, branche `codex/collaboration`, HEAD
+  `ea1135c6b830c9d0a70e1c9318cec59a1c9f7f2d`; commit précédent
+  `c9b3d59a` (`origin/main` local). Deux changements non commités observés :
+  ce checkpoint dans `docs/agent-handoff.md` et le brouillon
+  `public/packs/memes-opening.svg`; le SVG est conservé intact et exclu de toute
+  action.
+- Git a refusé initialement les commandes à cause de `dubious ownership`.
+  Contrôles locaux ensuite réussis avec `git -c safe.directory=<checkout>`
+  limité au processus, sans modifier la configuration globale.
+- La première tentative `git ls-remote --heads origin` échouait dans le bac à
+  sable (`Could not resolve host: github.com`). Avec l'accès réseau autorisé,
+  la référence distante a été vérifiée : `origin/main` est
+  `c9b3d59a2ecd8aa712553a1c0803828c5a287fe7`, parent direct de HEAD. CI, PR et
+  Vercel n'ont pas été vérifiés dans cette reprise ; aucune publication n'est
+  revendiquée.
+- Lecture de la roadmap : aucun défaut de code reproduit ouvert dans le plan.
+  Restent les essais de rendu/toucher/son sur le téléphone de Malik, le choix
+  visuel des portraits, le code booster privé qui dépend de l'adresse du compte
+  et du SQL Editor, et des parcours sociaux de production avec données de test.
+  Les idées sans droits, contenu ou critères ne sont pas engagées. Aucun lot
+  autonome de code identifié ; ne pas inventer de nouvelle fonctionnalité.
+- Aucun test lancé, aucune dépendance installée, aucun fichier de jeu modifié.
+  Le checkpoint est commité séparément ; le SVG reste le seul changement local
+  non commité. Aucun push effectué.
+- Délégation Claude : script et garde-fous inspectés ; le test réel réussi
+  consigné plus haut dans cette passation suffit à établir son fonctionnement.
+  Aucun nouvel appel payant ni test de délégation relancé.
+- Prochaine action : avant une publication ultérieure, fetcher et comparer la
+  branche distante au HEAD courant. Malik peut
+  ensuite fournir un retour tactile/visuel concret, ou l'adresse exacte du
+  compte pour le code privé; ces éléments ne sont pas remplaçables par des
+  tests simulés.
