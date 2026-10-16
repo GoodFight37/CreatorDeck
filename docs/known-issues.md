@@ -874,4 +874,5 @@ calculé). Le texte et les états sémantiques `aria-pressed` restent inchangés
 `npm run ecrans -- drop-binder` : 17/17 ; `npm run typecheck` et
 `git diff --check` réussis au SHA de base `7c069711` avec correctif local. Le contraste
 est calculé selon la formule WCAG, sans audit visuel/lecteur d’écran ni essai
-physique. Publication à vérifier.
+physique. Correctif publié dans `cc7a61d2` sur `main` ; contrôle GitHub Vercel
+`success` au SHA exact. Validation physique non faite.

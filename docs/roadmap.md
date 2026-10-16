@@ -2,9 +2,10 @@
 
 ## État actuel — 16 octobre 2026
 
-**Contraste du sélecteur Drop (D-134) — correction locale :** le texte de la
-pill active dépasse maintenant le seuil AA calculé (5,06:1). Écrans ciblés,
-typecheck et publication à vérifier. Voir [D-134](decisions.md).
+**Contraste du sélecteur Drop (D-134) — publié :** le texte de la pill active
+dépasse le seuil AA calculé (5,06:1). Écrans ciblés 17/17, typecheck et
+diff-check réussis ; GitHub confirme le contrôle Vercel `success` sur
+`cc7a61d2`. Aucun essai physique. Voir [D-134](decisions.md).
 
 **D-131 — retrait de la fiche Mèmes sans illustration terminé et vérifié :** « Carte supprimée » (`juventus-rose`) a été retirée du catalogue client et serveur ; le classeur contient 2 150 cartes illustrées. La CI corrective `38960335566` est verte (6/6 jobs) sur `83d212c8`. Le workflow Supabase `38960850198` a appliqué `0053` et confirmé l’état attendu après application. Vercel Production `READY` sur ce SHA. Voir [décision et limites](decisions.md#d-131--16-octobre-2026--retirer-la-fiche-mèmes-sans-illustration).
 
