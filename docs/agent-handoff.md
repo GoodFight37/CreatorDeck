@@ -1,6 +1,8 @@
-# Chantier local D-129 — choix des boosters sur Drop — 16 octobre 2026
+# Coordination actuelle et checkpoint D-129 — 16 octobre 2026
 
-**État : lot implémenté, vérifié localement, relu par Claude et publié sur Production.** Branche de travail `codex/collaboration`, worktree `C:/Users/Administrator/Desktop/CreatorDeck-Codex`. Base `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`; SHA revu par Claude `921d71752d8e824eafc9afecc09a9c9a2039b426`; commit publié sur `main` `8d99eabd7d016e5a68ba7dbe1510ae5b10e2946b`. Vercel Production `READY`, déploiement `dpl_7w6o3KvQA9fhqJvk7hK5ojWZebff`; alias `creator-deckk.vercel.app`. Retour Claude : `C:/Users/Administrator/Desktop/CreatorDeck-Retour-Claude-D129.md`. Le worktree Claude est en HEAD détaché sur le SHA relu. Le dépôt d’origine reste sur main `9659f95e`, avec ses fichiers non suivis préservés. Le dossier portraits de 9,6 Go a été retiré par Malik : ne plus le chercher ni le traiter comme contrainte active.
+**Coordination actuelle — 16 octobre 2026.** Codex est le développeur principal et seul écrivain ordinaire dans `C:/Users/Administrator/Desktop/CreatorDeck-Codex` (`codex/collaboration`). Le checkout d’origine `C:/Users/Administrator/Desktop/CreatorDeck` reste sur `main`; `C:/Users/Administrator/Desktop/CreatorDeck-Claude` sert aux revues ciblées/audits complexes sur `claude/review`. Préserver ces worktrees et ne synchroniser que par avance rapide après contrôle de propreté et d’ascendance. Les lots ordinaires peuvent être testés de façon ciblée, committés et poussés normalement sur `main` sans demander un accord à chaque fois; contrôler ensuite que le SHA Vercel Production correspond à `main`. Obtenir l’accord de Malik avant tout changement sensible (Supabase/données, migrations, authentification, sécurité, secrets, suppression de données ou action irréversible). Pas de push de la présente configuration seule.
+
+État livré : D-129 sur le SHA publié `23e69ee188edc6fd3f781dd06102330965960ec7`; le code a été relu par Claude au SHA `921d71752d8e824eafc9afecc09a9c9a2039b426`; Vercel Production est `READY` pour `23e69ee`, alias `https://creator-deckk.vercel.app/`. Retour : `C:/Users/Administrator/Desktop/CreatorDeck-Retour-Claude-D129.md`. Le correctif M1 passe 8/8 tests ciblés. Prochaine étape produit : Malik essaie le parcours sur son téléphone et rapporte les défauts concrets. Le dossier portraits de 9,6 Go a été déplacé par Malik; ne pas le rechercher.
 
 Demande : carrousel Live Drop/Mèmes sur Drop, booster voisin visible, swipe horizontal et boutons, premier appui = présentation annulable avec Retour ; consommation uniquement au geste validé ou alternative clavier. Réutiliser les ouvertures actuelles, sans changement de taux, SQL, ressources ou collections. Le Binder unifié n’est pas engagé.
 
@@ -10,7 +12,7 @@ Contrôles locaux du lot : écrans 188/188 puis 13/13 ciblés; notes unitaires 8
 
 Contraintes de session : accès Git/réseau et aux worktrees frères via exécution autorisée hors sandbox ; pas de modification globale safe.directory, RTK ou Claude. Malik souhaite les lots prêts poussés normalement sur `main` pour les essayer directement. Pas de push forcé, réécriture d’historique ni merge de PR.
 
-Prochaine action : Malik teste `https://creator-deckk.vercel.app/` sur téléphone : choisir Mèmes par glissement, ouvrir puis revenir sans consommer, recommencer et déchirer une fois; juger aussi le ressenti et la musique. Reprendre ensuite les défauts concrets sur `codex/collaboration`, vérifier la base courante de `main`, corriger, puis pousser normalement pour qu’il reteste. Aucun push forcé ni réécriture d’historique.
+Prochaine action : poursuivre les demandes de Malik dans le worktree Codex. Pour une revue Claude, décrire dans le fichier de passation existant le SHA exact, les questions ciblées et le chemin de retour; ne pas lancer de revue de routine.
 
 ---
 

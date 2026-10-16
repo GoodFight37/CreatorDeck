@@ -1,8 +1,9 @@
 # Coordination permanente — Codex Cloud, Codex PC, ChatGPT
 
 CreatorDeck est un jeu de collection Android (Capacitor + Next.js en export
-statique) avec Supabase. Le produit est en ligne ; le build sans cloud sert au
-développement et aux tests. Communiquer et documenter en français.
+statique) avec Supabase. Le projet est en développement privé; Malik est le seul
+à tester l’application et Vercel sert d’environnement de test. Communiquer et
+documenter en français.
 
 ## À chaque début et reprise de session
 
@@ -50,20 +51,32 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
 
 ## Protection du travail et publication
 
-- Malik autorise de façon permanente les modifications de code et de
-  documentation correspondant à ses demandes, leur commit ciblé et leur push
-  normal direct sur `main`, ainsi que les migrations Supabase nécessaires en
-  production après réussite des vérifications automatiques. Ne pas interrompre
-  ces étapes pour redemander son accord. Les resets/réparations d'historique ou
-  de données, force-push, réécriture d'historique, suppression de branches et
-  fusion de PR restent hors de cette autorisation. Respecter aussi tout refus
-  explicite du périmètre.
+- Pour les demandes ordinaires, Malik autorise les modifications ciblées, les
+  tests adaptés, les commits explicites et le push normal direct sur `main`;
+  ne pas redemander son accord à chaque livraison. Vercel est l’environnement
+  de test : après le push, vérifier que le déploiement Production correspond au
+  SHA publié et transmettre son état réel. Claude n’a pas à relire chaque petite
+  modification; Codex mène le développement et les audits ciblés.
+- Demander l’accord explicite de Malik avant de publier toute modification
+  sensible touchant Supabase, migrations ou données, authentification,
+  sécurité, secrets, suppression de données ou opération irréversible. Ne jamais
+  committer un secret ou `.env.local`. Les resets, réparations d’historique,
+  force-push, réécriture d’historique, suppression de branches et fusion de PR
+  restent interdits sans accord explicite.
 - Ne jamais écraser les modifications, commits ou fichiers d'un autre agent.
   Pas de push forcé, de suppression de branche ou de réécriture d'historique dans
   une reprise ordinaire. Les anciennes recettes de reset/mise à plat ne sont
   pas des autorisations : sauvegarder et vérifier avant toute récupération.
-- Le cloud est déjà isolé : utiliser le checkout existant ; pas de worktree
-  sauf demande explicite. Sur PC, choisir une branche sûre après vérification.
+- Préserver les worktrees existants : `C:/Users/Administrator/Desktop/CreatorDeck`
+  sur `main`, `CreatorDeck-Codex` sur `codex/collaboration` comme seul checkout
+  écrivain, et `CreatorDeck-Claude` sur `claude/review` pour les revues. Ne pas
+  créer, supprimer ni remplacer de worktrees. Claude intervient surtout pour
+  les audits complexes, les revues indépendantes demandées et les bugs difficiles;
+  il rend ses constats sans écrire sur la branche Codex.
+- Avant de reprendre un worktree, vérifier son état et son HEAD. Synchroniser
+  `main`, `codex/collaboration` et `claude/review` uniquement par avance rapide
+  quand l’arbre concerné est propre et que l’ancêtre commun est vérifié; sinon
+  préserver le travail et signaler le blocage.
 - Si HEAD/index changent inopinément, arrêter l'édition : consulter
   [les incidents d'atelier](docs/atelier-et-problemes.md), archiver les fichiers
   réellement touchés hors dépôt et diagnostiquer. Ne pas ajouter des milliers
@@ -74,9 +87,11 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   fetcher et examiner tout nouveau commit. Une avance distante doit être
   intégrée sans perte sur une copie sûre ; en cas de doute, arrêter l'envoi et
   documenter le conflit. Le push doit rester normal, sans `--force`.
-- Pousser vers la branche appropriée, puis vérifier avec `git ls-remote` que son
-  SHA correspond au commit publié. Vérifier aussi le contenu distant des docs.
-  Conserver les liens de branche, PR et commit dans la passation et le compte rendu.
+- Pour un lot ordinaire prêt, pousser normalement `codex/collaboration` vers
+  `main`, puis vérifier `git ls-remote`, les contrôles GitHub et le déploiement
+  Vercel. Confirmer que le SHA du déploiement correspond au SHA publié; ne jamais
+  annoncer un déploiement terminé sans cette preuve. Mettre à jour la passation
+  existante et y garder les liens de commit et l’état vérifié.
 - Aucun secret, session, token ou fichier `.env.local` dans les docs/commits.
   Ne pas déployer une base ou réparer son historique sans vérifier la cible et
   l'autorisation correspondante. Une clé service ne va jamais dans le client.
@@ -124,8 +139,8 @@ l'état réel des contrôles GitHub, puis laisser les suites longues tourner san
 surveillance jusqu'à leur fin ; ne pas annoncer vert ce qui est encore en cours.
 Malik peut revenir avec un échec pour analyse. Lorsqu'une action lui revient,
 expliquer où aller, quoi lancer, le résultat attendu et quoi renvoyer, pas une
-commande seule. Les migrations nécessaires restent autorisées après les
-vérifications automatiques ; les protections SQL/TLS/historique restent requises.
+commande seule. Pour tout changement sensible défini plus haut, obtenir l’accord
+avant publication puis appliquer les protections SQL/TLS/historique requises.
 
 Utiliser le lockfile (`npm ci` après changement de branche/de dépendances).
 `npm run dev:setup` prépare notamment `embedded-postgres` et `pg`, hors manifest ;
