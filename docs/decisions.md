@@ -1,3 +1,9 @@
+## D-125 — 16 octobre 2026 : univers Mèmes FR séparé
+
+Malik demande toutes les cartes « Memes FR » dans un booster et une collection distincts de Twitch. Il affirme disposer d’un accord écrit, sans pouvoir partager ses clauses. L’étendue des droits et des crédits contractuels n’a donc pas été vérifiée par le dépôt ; les crédits présents dans la source sont affichés. La décision D-124, prise avant cette affirmation, est remplacée pour l’intégration.
+
+Le catalogue source est figé à 2 151 fiches et 2 147 WebP distincts ; une fiche sans visuel exploitable n’est pas tirable. Le tirage et la collection vivent dans les tables et RPC propres à l’univers Mèmes. Chaque booster donne trois Communes, une carte variable (55 % Commune, 35 % Rare, 8 % Épique, 1,8 % Légendaire, 0,2 % Mythique) et une Rare ou mieux (82 % Rare, 15 % Épique, 2,5 % Légendaire, 0,5 % Mythique). Quatre boosters au maximum, recharge de 30 minutes, sans monnaie, XP ni passerelle avec les cartes Twitch. Un identifiant de requête permet de rejouer la réponse sans débiter deux fois. Ces taux sont propres à CreatorDeck et visibles dans la page Mèmes ; la sélection parmi les cartes d’une rareté est uniforme. Le statut « sortie » de la source ne retire pas une carte du tirage CreatorDeck, faute de saison Mèmes décidée. La migration ne touche ni `open_pack()` ni ses tables.
+
 # Décisions CreatorDeck
 
 ## D-124 — 16 octobre 2026 : examiner MyMemeCards avant un univers mèmes séparé

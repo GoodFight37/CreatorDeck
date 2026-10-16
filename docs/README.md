@@ -31,7 +31,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 - **Trade Radar** : [périmètre et fonctionnement](trade-radar.md) ; souhaits
   publics des amis, doublons locaux, offre toujours arbitrée par le serveur.
 - **Parcours sociaux réels sur Vercel** : [vérification du 15 octobre](verification-sociale-vercel-2026-10-15.md) ; deux comptes invités, amitié, offre acceptée et collections après transfert.
-- **Source envisagée pour un univers mèmes séparé** : [étude MyMemeCards](catalogue-memes-source.md) ; volumes, nature du ZIP, droits et conditions avant toute intégration.
+- **Univers Mèmes FR** : [source et intégration D-125](catalogue-memes-source.md) ; import figé, réserve et classeur séparés, limites connues.
 - **Assets audio et boucle BGM** : [audio-assets.md](audio-assets.md), avec la procédure pour remplacer le prototype.
 
 Une ancienne section peut décrire un état remplacé depuis. En cas de divergence,

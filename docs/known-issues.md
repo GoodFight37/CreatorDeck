@@ -818,3 +818,6 @@ TypeScript et lint ciblé réussis. Publiée sur `main` au SHA
 [`38492822813`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38492822813)
 verte (6/6) et Vercel Production READY. L'APK Capacitor devra être reconstruite
 pour intégrer le correctif.
+## Univers Mèmes FR : une fiche sans visuel distribué — D-125
+
+Au relevé source du 16 octobre 2026, « Carte supprimée » possède une réponse WebP de 818 octets qui affiche un remplacement au lieu d'une illustration. Gravité faible : cette fiche reste consultable avec un dos neutre, mais n'est pas tirable dans les boosters CreatorDeck. Les 2 150 autres fiches sont tirables ; `scripts/import-memes-fr.mjs --sync` signale ce cas. Statut ouvert jusqu'à fourniture d'un visuel exploitable. L'accord écrit affirmé par Malik n'est pas accessible au dépôt ; sa portée documentaire n'a pas été auditée.

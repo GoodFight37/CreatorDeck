@@ -228,6 +228,7 @@ try {
     ["0049_pack_refresh_ancre.sql", await readFile(path.join(MIGRATIONS, "0049_pack_refresh_ancre.sql"), "utf8")],
     ["0050_skyrozz_identity.sql", skyrozzIdentity],
     ["0051_boosters_promo_personnels.sql", promoBoosters],
+    ["0052_meme_univers.sql", await readFile(path.join(MIGRATIONS, "0052_meme_univers.sql"), "utf8")],
   ];
   // Droits de table façon Supabase, posés **avant** les migrations.
   //
@@ -342,6 +343,19 @@ try {
 
   const USER = "11111111-1111-4111-8111-111111111111";
   await client.query("insert into auth.users (id) values ($1)", [USER]);
+
+  const memeCount = (await client.query("select count(*)::int n, count(*) filter (where pullable)::int available from public.meme_catalog")).rows[0];
+  check("Mèmes : 2 151 fiches, 2 150 tirables avec visuel", memeCount.n === 2151 && memeCount.available === 2150, JSON.stringify(memeCount));
+  await client.query("select set_config('test.uid', $1, false)", [USER]);
+  const memeStart = (await client.query("select public.meme_status() r")).rows[0].r;
+  check("Mèmes : réserve propre de quatre boosters et collection vide", memeStart.stock === 4 && memeStart.owned.length === 0);
+  const memeRequest = "55555555-5555-4555-8555-555555555555";
+  const memeFirst = (await client.query("select public.open_meme_pack($1::uuid) r", [memeRequest])).rows[0].r;
+  const memeRetry = (await client.query("select public.open_meme_pack($1::uuid) r", [memeRequest])).rows[0].r;
+  check("Mèmes : cinq cartes différentes, dernière rare ou mieux", memeFirst.cards.length === 5 && new Set(memeFirst.cards).size === 5 && (await client.query("select rarity from public.meme_catalog where id=$1", [memeFirst.cards[4]])).rows[0].rarity !== "common");
+  check("Mèmes : reprise du même tirage sans consommer un booster", memeRetry.replayed === true && JSON.stringify(memeRetry.cards) === JSON.stringify(memeFirst.cards) && (await client.query("select public.meme_status() r")).rows[0].r.stock === 3);
+  check("Mèmes : collection serveur isolée de Twitch", (await client.query("select count(*)::int n from public.meme_collection where user_id=$1", [USER])).rows[0].n === 5 && (await client.query("select count(*)::int n from public.pack_draws where user_id=$1", [USER])).rows[0].n === 0);
+  await client.query("select set_config('test.uid', '', false)");
 
   const creators = await client.query("select count(*)::int as n from public.creators");
   check("catalogue : 1000 créateurs", creators.rows[0].n === 1000, String(creators.rows[0].n));

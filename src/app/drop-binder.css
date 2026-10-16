@@ -800,3 +800,21 @@
   .home-view .open-panel .primary-action { min-height: 56px; }
 }
 [data-card-fx="off"] .home-view .pack-stage.stage-live .pack-artwork.pack-live { animation: none; }
+.home-view .meme-drop-entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  max-width: 520px;
+  margin: 28px auto 12px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  color: #fff2ed;
+  background: radial-gradient(circle at 85% 20%, rgb(241 116 154 / .3), transparent 55%), #31202e;
+  box-shadow: inset 0 1px rgb(255 244 237 / .18), 0 12px 28px rgb(10 4 12 / .22);
+  text-decoration: none;
+}
+.home-view .meme-drop-entry span,
+.home-view .meme-drop-entry small { grid-column: 1; color: #d5b6c2; font: 700 11px var(--font-display); letter-spacing: .1em; }
+.home-view .meme-drop-entry strong { grid-column: 1; font: 800 23px var(--font-display); }
+.home-view .meme-drop-entry svg { grid-column: 2; grid-row: 1 / 4; }
+.home-view .meme-drop-entry:active { transform: scale(.985); }

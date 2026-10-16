@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-univers-memes", date: "2026-10-16", title: "Les Mèmes arrivent dans CreatorDeck",
+    summary: "Un booster et un classeur Mèmes FR séparés de tes cartes Twitch.",
+    sections: [{ title: "Nouvel univers", items: [
+      "Depuis le Drop, ouvre un booster Mèmes de cinq cartes et retrouve tes découvertes dans leur propre collection.",
+      "La réserve Mèmes se recharge séparément : un booster toutes les 30 minutes, jusqu’à quatre prêts. Tes cartes et ressources Twitch ne changent pas.",
+      "Le catalogue compte 2 151 fiches, dont une carte au visuel indisponible qui ne sort pas en booster. Les chances de la dernière carte sont affichées sur l’écran Mèmes.",
+    ] }],
+  },
+  {
     id: "2026-10-16-cartes-twitch", date: "2026-10-16", title: "Les cartes Twitch prennent du relief",
     summary: "Le cadre et le nom des cartes se lisent mieux selon leur rareté.",
     sections: [{ title: "Amélioration", items: [

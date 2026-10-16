@@ -41,6 +41,8 @@ import type {
 import * as wallet from "./wallet";
 import * as streamer from "./streamer";
 import * as tribunal from "./tribunal";
+import * as memes from "./memes";
+import type { MemeOpening, MemeStatus } from "./memes";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
@@ -66,6 +68,15 @@ export class CloudApi {
    * transport, seulement la session et les deux portes réseau.
    */
   private readonly core: CloudCore;
+
+  /** Univers Mèmes isolé des sauvegardes et tirages Twitch. */
+  async memeStatus(): Promise<MemeStatus> {
+    return memes.memeStatus(this.core);
+  }
+
+  async openMemePack(requestId: string): Promise<MemeOpening> {
+    return memes.openMemePack(this.core, requestId);
+  }
 
   constructor(
     private readonly config: CloudConfig,

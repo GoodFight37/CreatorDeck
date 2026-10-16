@@ -1,5 +1,13 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-125 — univers Mèmes FR distinct (publication en cours)
+
+- Base `main` locale et GitHub vérifiée à `316ffa53f95476845662b25c5e9ff35bbf5aa4dc` avant l'implémentation ; le commit D-124 était documentaire. Malik demande l'intégration complète des cartes Mèmes FR et affirme posséder un accord écrit non partageable. La portée contractuelle n'est pas vérifiée dans le dépôt ; ne pas présenter cette affirmation comme un audit juridique.
+- Source publique figée : 2 151 fiches et 21 Full Art, 2 147 fichiers WebP distincts dans `public/memes-fr/` (46 Mo). Une fiche « Carte supprimée » a un WebP de remplacement de 818 octets ; elle est visible sans illustration et non distribuée. `scripts/import-memes-fr.mjs --sync` reproduit l'import. Catalogue `src/data/memes-fr.json` et `src/lib/memes.ts`.
+- Page `/memes` avec pack, collection, recherche, pagination, fiche, révélation de cinq cartes et récap ; entrée secondaire sous le Drop. RPC et tables dédiées dans `0052_meme_univers.sql` : réserve 4, recharge 30 minutes, trois Communes, un slot variable et une Rare ou mieux en dernière ; tirage serveur sans doublon dans le pack, request ID idempotent. Aucun changement à Twitch, son économie et ses taux. Note joueur `2026-10-16-univers-memes`.
+- Vérifications locales : `npm run typecheck` réussi ; ESLint ciblé réussi ; `npm run build` réussi avec `/memes` exporté ; `npm run supabase:verify` réussi, incluant cinq assertions Mèmes (catalogue, réserve, tirage, replay, isolation) ; Playwright téléphone `e2e/memes.spec.ts` 1/1, sans débordement ni erreur JavaScript. `npm run lint` réussi ; `npm test` 1 186/1 186 ; `npm run catalog:ci` réussi ; écrans Drop et notes 20/20 ; `git diff --check` réussi. Le navigateur local sans variables cloud ne prouve pas l'ouverture connectée en production. Ressenti tactile sur téléphone réel non mesuré.
+- Prochaine action : contrôler diff/branche/HEAD distant, commit ciblé et push normal main ; vérifier CI, migration 0052 appliquée en production, déploiement Vercel et page `/memes`. Mettre à jour ce checkpoint avec les SHAs et les verdicts réels.
+
 ## Checkpoint D-124 — étude de la source MyMemeCards (sans import)
 
 - Départ `main` local et distant `7dba0b6b4506e7d26d4e5ef443fe7e62f4027877`, arbre propre. Malik veut ajouter des cartes MyMemeCards pour diversifier le jeu, dans un booster et une collection mèmes séparés des cartes Twitch. Source consultée le 16 octobre : accueil français, conditions générales, mentions légales, `robots.txt` et inventaire du ZIP remis.

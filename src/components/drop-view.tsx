@@ -3,6 +3,7 @@
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
 import { useMemo, useRef, useState, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import { ChevronRight, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
 
@@ -543,6 +544,10 @@ export function HomeView({
           </button>
         ) : null}
       </details>
+
+      <Link className="meme-drop-entry" href="/memes" aria-label="Decouvrir le booster et la collection Memes">
+        <span>UNIVERS 02</span><strong>Mèmes</strong><small>Un autre booster · un autre classeur</small><ChevronRight size={21} aria-hidden="true" />
+      </Link>
 
       <section className="section-block drop-findings">
         <div className="section-heading">
