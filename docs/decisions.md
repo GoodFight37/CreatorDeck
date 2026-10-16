@@ -1,5 +1,11 @@
 # Décisions CreatorDeck
 
+## D-124 — 16 octobre 2026 : examiner MyMemeCards avant un univers mèmes séparé
+
+Malik souhaite récupérer les cartes MyMemeCards pour diversifier CreatorDeck. Le site annonce 2 130 cartes pour « Memes FR » ; le ZIP remis recense 23 766 fiches sur plusieurs catalogues, sans illustration autorisée copiée. Les mentions légales attribuent le design et les textes à OGROUP SRL et les mèmes à leurs auteurs. La visibilité publique des pages et l'accès permis par `robots.txt` ne constituent pas une licence de republication. Ne pas confondre l'inventaire de métadonnées et un catalogue de jeu publiable.
+
+Le futur booster et le futur classeur mèmes restent séparés de Twitch. Aucun tirage, taux, économie, carte ou média tiers n'est importé tant que le périmètre des contenus utilisables et les règles du nouvel univers ne sont pas établis. Les constats et le chemin d'intégration figurent dans [l'étude de source](catalogue-memes-source.md). Ce choix protège aussi le jeu existant d'une fusion implicite de catalogues et de possessions.
+
 ## D-123 — 16 octobre 2026 : adapter la référence aux cartes Twitch existantes
 
 Le paquet de référence MyMemeCards fourni par Malik sert uniquement à observer des principes visuels : hiérarchie portrait/identité, cadre de rareté et cartouche de lecture. Il n'est pas une source de catalogue, de texte, de médias, de règles ou de code à importer. Les captures et les observations d'animation ne fournissent aucune confirmation de droits ; aucun de ces contenus n'entre dans le dépôt.

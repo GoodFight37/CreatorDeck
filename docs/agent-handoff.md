@@ -1,5 +1,11 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-124 — étude de la source MyMemeCards (sans import)
+
+- Départ `main` local et distant `7dba0b6b4506e7d26d4e5ef443fe7e62f4027877`, arbre propre. Malik veut ajouter des cartes MyMemeCards pour diversifier le jeu, dans un booster et une collection mèmes séparés des cartes Twitch. Source consultée le 16 octobre : accueil français, conditions générales, mentions légales, `robots.txt` et inventaire du ZIP remis.
+- Le site annonce 2 130 cartes « Memes FR » ; le ZIP recense 23 766 fiches multi-catalogues et zéro média autorisé copié. Les mentions légales réservent design/textes à OGROUP SRL et attribuent les mèmes à leurs auteurs ; aucune licence de republication n'a été trouvée. Malik a été interrogé sur une éventuelle autorisation couvrant ces contenus ; réponse attendue. Aucun téléchargement massif, import de catalogue, modification du jeu ou des règles.
+- Étude et conditions d'intégration : `docs/catalogue-memes-source.md`, décision D-124, roadmap. Après la réponse, préparer un petit catalogue aux contenus autorisés, puis spécifier le stockage et le tirage serveur du booster séparé sans toucher aux possessions Twitch.
+
 ## Checkpoint D-123 — cartes Twitch et référence visuelle (publié)
 
 - Base locale et GitHub `main` vérifiée à `201521976f657b84ba50875797375a2e6389a87f`, arbre propre avant édition. ZIP utilisateur lu comme référence visuelle, sans importer catalogue, textes, liens de médias ni images MyMemeCards. Les cartes Twitch actuelles gagnent un bord de rareté, un cartouche de nom et un libellé de rareté sur les grandes cartes. Reflets au geste et animation de reveal existants conservés.
