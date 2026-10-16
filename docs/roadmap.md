@@ -2,7 +2,7 @@
 
 ## État actuel — 16 octobre 2026
 
-**Cartes Twitch, référence visuelle (D-123) — implémentées, publication en cours :** cadre de rareté plus lisible, cartouche de nom et libellé de rareté sur les grandes cartes ; petites cartes compactes, courte pose à l'ouverture de la fiche, reflets au geste et révélation existante préservés. Aucun catalogue ni média du ZIP de référence importé. Écrans ciblés 45/45, navigateur mobile 5/5, TypeScript, ESLint ciblé et build réussis ; captures 412 × 915 inspectées. Déploiement à consigner dans la passation ; appréciation visuelle sur téléphone physique encore ouverte.
+**Cartes Twitch, référence visuelle (D-123) — publiées sur Vercel :** cadre de rareté plus lisible, cartouche de nom et libellé de rareté sur les grandes cartes ; petites cartes compactes, courte pose à l'ouverture de la fiche, reflets au geste et révélation existante préservés. Aucun catalogue ni média du ZIP de référence importé. Écrans ciblés 45/45, navigateur mobile 5/5, TypeScript, ESLint ciblé et build réussis ; captures 412 × 915 inspectées. Commit `89936291`, CI 6/6 et statut GitHub du déploiement Production réussis ; note joueur lue sur le site 390 × 844. Appréciation visuelle sur téléphone physique encore ouverte.
 
 **Direction mèmes séparée — intention à cadrer :** Malik veut à terme des cartes mèmes dans leur propre collection et leur propre booster, distincts des cartes Twitch, avec éventuellement un style voisin. Avant toute intégration : choisir les médias et leurs droits, le catalogue, le parcours et les règles serveur. Le prototype `/catalogue-demo` reste isolé ; aucun ajout de mème ou de taux dans ce chantier.
 
