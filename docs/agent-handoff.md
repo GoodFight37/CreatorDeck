@@ -1,5 +1,12 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-127 — matière des cartes Mèmes (publication en cours)
+
+- Base `main` locale/GitHub vérifiée à `51bcddec6d458c4e071c5f7342c24605ddf985a9`, arbre propre. Malik demande un audit différentiel du paquet MyMemeCards, puis une amélioration visuelle originale des cartes Mèmes sans nouvel import, sans changement Twitch ni du booster physique. Le paquet réduit contient 27 familles observées une seule fois et toutes `partial/resource_cap` ; `animations.json` compte 59 observations, 8 complètes et 51 partielles. [Audit détaillé et captures mobiles comparables](audit-cartes-memes-reference.md).
+- Cartes Mèmes : couches de matière fixes et distinctes sur les cinq raretés, Full Art avec image plus ouverte et cartouche allégé, reflet au doigt limité à la grande fiche Épique+, ou Full Art. Reflets désactivés et `prefers-reduced-motion` coupent le reflet. Pas de sweep permanent, de nouveau média, de changement de taux, de catalogue, de SQL ni du sachet physique. Note joueur et décision D-127 incluses.
+- Vérifications locales : TypeScript, ESLint complet, garde de jargon, build statique, 1 186/1 186 unitaires, 28/28 écrans ciblés, Playwright mobile Mèmes/Binder 7/7, diff check réussis. Six captures de fiches à 390 × 844 ont été inspectées ; elles ne prouvent pas le rendu OLED ni le geste sur téléphone physique. Le build local n'a pas les variables Supabase ; aucun nouveau tirage connecté n'est revendiqué, les règles serveur sont inchangées.
+- Publication et CI/Vercel : à compléter après push ; le jugement visuel et tactile sur téléphone réel reste ouvert.
+
 ## Checkpoint D-126 — rituel d’ouverture Mèmes (publié et vérifié)
 
 - Base `main` et GitHub vérifiée à `161b7a0d55af2a4f2ac11d14fb9406ab1aa90a20`, arbre propre avant intervention. Malik montre deux captures du booster Mèmes D-125 : une boîte statique et un bouton « RÉVÉLER » ; il demande le même ressenti d’ouverture que le booster principal. Défaut confirmé dans `meme-deck.tsx` : `<dialog>` spécifique sans `PackTear`, sans extraction ni flip automatique.

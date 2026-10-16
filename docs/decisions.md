@@ -1,3 +1,9 @@
+## D-127 — 16 octobre 2026 : matière graduée des cartes Mèmes
+
+Le paquet de référence MyMemeCards compte 59 observations d'animations (8 complètes, 51 partielles) et 35 familles de layouts annoncées. Son extrait contient 27 familles observées une seule fois, toutes `partial/resource_cap` : ce ne sont pas 27 modèles garantis. Les captures montrent une hiérarchie cadre/illustration/identité et une Full Art plus ouverte ; certaines captures ont des médias absents. Les boucles `mythic-glow` (2,8 s), `mk-sweep` (7 s) et `mk-jackpot-rim` (5 s, observations partielles) décrivent la source, sans prescrire leur reproduction. Voir [l'audit différentiel](audit-cartes-memes-reference.md).
+
+CreatorDeck conserve le cartouche et le cadre Twitch de D-123. Pour les Mèmes uniquement, Commune reste mate, Rare reçoit une tranche froide, Épique une matière nacrée discrète, Légendaire une tranche chaude et Mythique un cadre plus dense. Full Art ouvre la fenêtre de l'illustration et allège le cartouche. Le reflet suit le doigt sur la grande fiche des cartes Épique et mieux ainsi que Full Art, avec écriture directe de variables CSS sans re-rendu React ; il est absent de la grille et coupé par Reflets désactivés ou `prefers-reduced-motion`. Aucun balayage lumineux perpétuel, jackpot copié, nouveau média, règle de tirage ou changement du booster physique. Les effets statiques restent peu coûteux, mais la lisibilité et la matière doivent être jugées sur téléphone réel.
+
 ## D-126 — 16 octobre 2026 : un seul rituel tactile pour les deux boosters
 
 Les captures du joueur montrent que D-125 révélait les Mèmes dans une boîte fixe avec un bouton « RÉVÉLER », sans déchirure ni extraction des dos. Ce parcours paraît plus sec que le booster Twitch. La correction réutilise `PackTear` et ses seuils de peel, son délai d'extraction et son secours clavier, avec une impression Mèmes propre ; le sachet de l'accueil reprend cette même impression.

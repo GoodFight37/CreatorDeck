@@ -32,6 +32,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   publics des amis, doublons locaux, offre toujours arbitrée par le serveur.
 - **Parcours sociaux réels sur Vercel** : [vérification du 15 octobre](verification-sociale-vercel-2026-10-15.md) ; deux comptes invités, amitié, offre acceptée et collections après transfert.
 - **Univers Mèmes FR** : [source et intégration D-125](catalogue-memes-source.md) ; import figé, réserve et classeur séparés, limites connues.
+- **Cartes Mèmes D-127** : [audit visuel et captures comparables](audit-cartes-memes-reference.md) ; preuves partielles du paquet de référence et rendu par rareté.
 - **Assets audio et boucle BGM** : [audio-assets.md](audio-assets.md), avec la procédure pour remplacer le prototype.
 
 Une ancienne section peut décrire un état remplacé depuis. En cas de divergence,

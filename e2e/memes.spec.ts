@@ -23,6 +23,29 @@ test("l'univers Mèmes présente un booster et un classeur séparés sur télép
   expect(errors).toEqual([]);
 });
 
+test("la grande carte Mèmes réagit au geste et respecte Reflets désactivés", async ({ page }) => {
+  await page.goto("/memes");
+  await page.getByPlaceholder("Nom ou numéro").fill("Non mais allô, quoi");
+  await page.locator(".meme-slot").first().click();
+  const card = page.locator(".meme-inspect .meme-card");
+  const foil = card.locator(".meme-card-foil");
+  await expect(card).toHaveClass(/is-reactive/);
+  const box = (await card.boundingBox())!;
+  await page.mouse.move(box.x + box.width * .75, box.y + box.height * .35);
+  await expect.poll(() => foil.evaluate((element) => element.style.getPropertyValue("--px"))).toBe("75.0%");
+  await page.evaluate(() => document.documentElement.setAttribute("data-card-fx", "off"));
+  await expect(foil).toHaveCSS("display", "none");
+  await page.mouse.move(box.x + box.width * .25, box.y + box.height * .6);
+  await expect(foil).toHaveAttribute("style", /--px: 75\.0%/);
+  await page.evaluate(() => document.documentElement.removeAttribute("data-card-fx"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(foil).toHaveCSS("display", "none");
+  await page.getByRole("button", { name: "Fermer" }).click();
+  await page.getByPlaceholder("Nom ou numéro").fill("Martine — Full Art");
+  await page.locator(".meme-slot").first().click();
+  await expect(page.locator(".meme-inspect .meme-card")).toHaveClass(/is-full-art/);
+});
+
 test("avec le serveur : le booster Mèmes se déchire, retourne cinq cartes et tient son récap", async ({ page }) => {
   test.skip(!cloudUrl(), "Cloud factice requis pour simuler les RPC Mèmes.");
   const ids = [

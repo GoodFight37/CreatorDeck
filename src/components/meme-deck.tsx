@@ -181,7 +181,7 @@ export function MemeDeck() {
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
       aria-label={"Carte " + selected.name}>
       <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>
-      <MemeCard card={selected} copies={copies.get(selected.id) ?? 0} />
+      <MemeCard card={selected} copies={copies.get(selected.id) ?? 0} interactiveFoil />
       <div className="meme-inspect-copy"><p className="meme-eyebrow">#{String(selected.number).padStart(3, "0")} · {MEME_RARITY[selected.rarity].label}{selected.fullArt ? " · Full Art" : ""}</p>
         <h2>{selected.name}</h2>{selected.flavor ? <p>{selected.flavor}</p> : null}
         <small>{selected.credit ? "Source : " + selected.credit + " · " : ""}MyMemeCards{selected.year ? " · " + selected.year : ""}</small>

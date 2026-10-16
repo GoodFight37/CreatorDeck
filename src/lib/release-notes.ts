@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-memes-matiere", date: "2026-10-16", title: "Des Mèmes qui ont leur matière",
+    summary: "Les cartes Mèmes se distinguent davantage selon leur rareté et leur format Full Art.",
+    sections: [{ title: "Cartes Mèmes", items: [
+      "Les cadres et les reflets changent progressivement de la Commune à la Mythique, en gardant l'image lisible.",
+      "Les Full Art laissent plus de place à l'illustration. Sur une grande carte rare, épique ou supérieure, le reflet répond au doigt si les effets sont activés.",
+    ] }],
+  },
+  {
     id: "2026-10-16-memes-ouverture-tactile", date: "2026-10-16", title: "Les Mèmes se déchirent aussi",
     summary: "Le booster Mèmes reprend le geste d’ouverture et la révélation animée du Drop.",
     sections: [{ title: "Ouverture", items: [
