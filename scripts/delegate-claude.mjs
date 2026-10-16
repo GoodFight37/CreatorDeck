@@ -14,7 +14,8 @@ const question = process.argv.slice(2).join(" ").trim();
 const limit = 16_000;
 
 function git(cwd, ...args) {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8", windowsHide: true });
+  const safeDirectory = path.resolve(cwd).replace(/\\/g, "/");
+  const result = spawnSync("git", ["-c", `safe.directory=${safeDirectory}`, ...args], { cwd, encoding: "utf8", windowsHide: true });
   if (result.status !== 0) throw new Error(`git ${args[0]} : ${(result.stderr || result.stdout).trim()}`);
   return result.stdout.trim();
 }
@@ -49,7 +50,7 @@ async function main() {
   const stamp = new Date().toISOString();
   const mission = `Revue ciblée en lecture seule du commit ${target}, présent dans ton worktree. ${question}\nFichiers inclus dans ce commit (statut Git) :\n${commitFiles}\nReste dans ton worktree Claude. L'état non commité Codex n'est pas inclus dans cette mission et ne fait pas partie de la revue.\nRéponds en français, brièvement : faits vérifiés, hypothèses, fichiers utiles et tests réellement lancés. Aucun fichier à modifier, aucun test à lancer sauf nécessité explicitement justifiée. N'appelle aucun autre agent.`;
   append(requestFile, `## Délégation automatique — ${stamp}\n\nSHA : \`${target}\`\nÉtat local Codex non commité : ${codexChanges ? "présent, exclu de la revue" : "aucun"}\nMission : ${question}`);
-  const args = ["-p", "--output-format", "text", "--permission-mode", "plan", "--tools", "Read,Glob,Grep", "--max-turns", "4", "--max-budget-usd", "0.50", mission];
+  const args = ["-p", "--model", "sonnet", "--output-format", "text", "--permission-mode", "plan", "--tools", "Read,Glob,Grep", "--max-turns", "4", "--max-budget-usd", "0.50", mission];
   let output = "";
   let errors = "";
   let timedOut = false;
@@ -68,7 +69,12 @@ async function main() {
   });
   clearTimeout(timer);
   const success = !timedOut && !result.error && result.code === 0 && output.trim();
-  const body = success ? output.trim() : `ÉCHEC : ${timedOut ? "délai de 120 s dépassé" : result.error || `sortie ${result.code ?? result.signal}`}. ${errors.trim()}`;
+  const failureDetails = [errors.trim(), output.trim()].filter(Boolean).join("\n");
+  const cliVersion = success || failureDetails
+    ? ""
+    : spawnSync(cli, ["--version"], { cwd: claude, encoding: "utf8", windowsHide: true }).stdout.trim();
+  const failure = `ÉCHEC : ${timedOut ? "délai de 120 s dépassé" : result.error || `sortie ${result.code ?? result.signal}`}.`;
+  const body = success ? output.trim() : [failure, failureDetails || `Aucune sortie stdout/stderr.${cliVersion ? ` CLI ${cliVersion}.` : ""}`].join("\n");
   append(responseFile, `## Délégation automatique — ${stamp}\n\nSHA examiné : \`${target}\`\nMission : ${question}\nRésultat : ${success ? "succès" : "échec"}\n\n${body}`);
   if (!success) throw new Error(body);
   console.log(body);
