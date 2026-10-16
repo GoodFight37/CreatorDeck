@@ -1,3 +1,23 @@
+# Checkpoint — correction du swipe du carrousel (16 octobre 2026)
+
+- Départ : `codex/collaboration` et `origin/main` vérifiés à
+  `2b2eea7b878e58a4eaa0c2145fb88526af844c5b`; arbre propre avant correction.
+- Retour de Malik depuis la Production : le sachet suivait légèrement le doigt
+  puis revenait sans changer d’univers. Reproduction par toucher Playwright :
+  `lostpointercapture` d’un bouton enfant remontait au stage et annulait le
+  geste avant son relâchement. Le seuil tactile de 45 px rendait aussi les
+  glissements courts inefficaces.
+- Correction : le stage ignore les pertes de capture de ses descendants; seuil
+  tactile plus court et adapté à la largeur; un glissement horizontal sélectionne
+  l’autre univers dans les deux directions. Le paquet et les contrôles montrent
+  désormais `MEMES` sans accent.
+- Vérifications : `npm run e2e -- e2e/booster-selector.spec.ts --project=téléphone`
+  via Edge installé (configuration temporaire, retirée après run) : **4 passés,
+  2 ignorés**; `npm run typecheck` réussi; ESLint ciblé réussi; `git diff --check`
+  réussi. Chromium Playwright attendu absent; aucun outil installé.
+- Aucun tirage ni appel Supabase dans le scénario tactile. Malik doit confirmer
+  le ressenti et l’apparence sur son vrai téléphone après publication.
+
 # Checkpoint — délégation locale Codex → Claude (16 octobre 2026)
 
 - Demande : permettre à Codex de consulter Claude Code localement pour une revue

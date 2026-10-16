@@ -7,7 +7,7 @@ import "./booster-carousel.css";
 export type BoosterUniverse = "live" | "memes";
 const BOOSTERS = [
   { id: "live", label: "Live Drop", artwork: "/packs/live-opening.svg" },
-  { id: "memes", label: "Mèmes", artwork: "/packs/memes-opening.svg" },
+  { id: "memes", label: "MEMES", artwork: "/packs/memes-opening.svg" },
 ] as const;
 
 export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.svg",
@@ -40,7 +40,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
   value: BoosterUniverse; onChange: (value: BoosterUniverse) => void;
   onPrepare: (value: BoosterUniverse) => void; disabled: boolean; canPrepare: boolean;
 }) {
-  const gesture = useRef<{ x: number; y: number; horizontal: boolean; moved: boolean } | null>(null);
+  const gesture = useRef<{ x: number; y: number; horizontal: boolean; moved: boolean; pointerType: string } | null>(null);
   const suppressClick = useRef(false);
   const stage = useRef<HTMLElement>(null);
   const index = value === "live" ? 0 : 1;
@@ -66,19 +66,20 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
       onPointerDown={(event) => {
         if (!event.isPrimary || event.button !== 0 || disabled) return;
         suppressClick.current = false;
-        gesture.current = { x: event.clientX, y: event.clientY, horizontal: false, moved: false };
+        gesture.current = { x: event.clientX, y: event.clientY, horizontal: false, moved: false, pointerType: event.pointerType };
       }}
       onPointerMove={(event) => {
         const g = gesture.current;
         if (!g) return;
         const dx = event.clientX - g.x, dy = event.clientY - g.y;
         if (Math.hypot(dx, dy) > 10) g.moved = true;
-        if (!g.horizontal && Math.abs(dx) > 14 && Math.abs(dx) > Math.abs(dy) * 1.3) {
+        const intentThreshold = g.pointerType === "touch" ? 8 : 14;
+        if (!g.horizontal && Math.abs(dx) > intentThreshold && Math.abs(dx) > Math.abs(dy) * 1.2) {
           g.horizontal = true; event.currentTarget.setPointerCapture(event.pointerId);
         }
         if (g.horizontal) {
           event.currentTarget.dataset.dragging = "true";
-          event.currentTarget.style.setProperty("--booster-drag", Math.max(-100, Math.min(100, dx)) * .45 + "px");
+          event.currentTarget.style.setProperty("--booster-drag", Math.max(-100, Math.min(100, dx)) * (g.pointerType === "touch" ? .7 : .55) + "px");
         }
       }}
       onPointerUp={(event) => {
@@ -86,11 +87,17 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
         if (!g) return;
         suppressClick.current = g.moved;
         const dx = event.clientX - g.x;
-        if (g.horizontal && Math.abs(dx) >= 45) choose(dx < 0 ? "memes" : "live");
+        const touchThreshold = Math.max(18, Math.min(28, event.currentTarget.clientWidth * .06));
+        const threshold = g.pointerType === "touch" ? touchThreshold : 40;
+        if (g.horizontal && Math.abs(dx) >= threshold) choose(value === "live" ? "memes" : "live");
         endGesture();
       }}
       onPointerCancel={() => { suppressClick.current = true; endGesture(); }}
-      onLostPointerCapture={endGesture}
+      onLostPointerCapture={(event) => {
+        // La perte de capture d'un bouton enfant remonte aussi jusqu'au stage;
+        // seul le stage doit pouvoir terminer le geste qu'il a capturé.
+        if (event.target === event.currentTarget) endGesture();
+      }}
       onClickCapture={(event) => {
         if (event.detail > 0 && suppressClick.current) { event.preventDefault(); event.stopPropagation(); }
       }}>

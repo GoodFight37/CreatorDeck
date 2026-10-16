@@ -33,7 +33,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 - **Parcours sociaux réels sur Vercel** : [vérification du 15 octobre](verification-sociale-vercel-2026-10-15.md) ; deux comptes invités, amitié, offre acceptée et collections après transfert.
 - **Univers Mèmes FR** : [source et intégration D-125](catalogue-memes-source.md) ; import figé, réserve et classeur séparés, limites connues.
 - **Cartes Mèmes D-127** : [audit visuel et captures comparables](audit-cartes-memes-reference.md) ; preuves partielles du paquet de référence et rendu par rareté.
-- **Choix des boosters D-129** : [parcours, vérifications et captures](drop-boosters.md) ; préparation annulable avant tirage, lot local en attente de revue et de publication autorisée.
+- **Choix des boosters D-129** : [parcours, vérifications et captures](drop-boosters.md) ; carrousel publié, préparation annulable avant tirage, corrections tactiles suivies après retour joueur.
 - **Sachet Live Drop D-128** : [revue et captures avant/après](sachet-live-d128.md), décision D-128 ; silhouette, plis et matière sans changement du peel.
 - **Assets audio et boucle BGM** : [audio-assets.md](audio-assets.md), avec la procédure pour remplacer le prototype.
 

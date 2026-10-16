@@ -34,23 +34,34 @@ async function fakeAccount(page: Page) {
   return calls;
 }
 
-test("le choix au doigt, au clavier et par boutons ne prépare ni ne consomme de booster", async ({ page }) => {
+test("un swipe tactile horizontal change de booster sans préparer ni consommer", async ({ page, context }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "live");
   const box = (await carousel.boundingBox())!;
-  await page.mouse.move(box.x + box.width * .7, box.y + box.height * .4);
-  await page.mouse.down();
-  await page.mouse.move(box.x + box.width * .2, box.y + box.height * .4, { steps: 12 });
-  await page.mouse.up();
+  const cdp = await context.newCDPSession(page);
+  const x = box.x + box.width * .7, y = box.y + box.height * .4;
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove", touchPoints: [{ x: x + i * 5, y }],
+  });
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
   await expect(carousel).toHaveAttribute("data-universe", "memes");
   await expect(page.locator(".opening-continuum")).toHaveCount(0);
-  await carousel.getByRole("button", { name: "Préparer le booster Mèmes" }).focus();
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x + 30, y }] });
+  for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove", touchPoints: [{ x: x + 30 - i * 5, y }],
+  });
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(carousel).toHaveAttribute("data-universe", "live");
+  await carousel.getByRole("button", { name: "Choisir le booster MEMES" }).focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(carousel).toHaveAttribute("data-universe", "memes");
   await page.keyboard.press("ArrowLeft");
   await expect(carousel).toHaveAttribute("data-universe", "live");
   await expect(carousel.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeFocused();
-  await page.getByRole("button", { name: "Mèmes", exact: true }).click();
+  await page.getByRole("button", { name: "MEMES", exact: true }).click();
   await expect(carousel).toHaveAttribute("data-universe", "memes");
   await expect(page.locator(".opening-continuum")).toHaveCount(0);
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
@@ -100,8 +111,8 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  await page.getByRole("button", { name: "Choisir le booster Mèmes" }).click();
-  const trigger = page.getByRole("button", { name: "Préparer le booster Mèmes" });
+  await page.getByRole("button", { name: "Choisir le booster MEMES" }).click();
+  const trigger = page.getByRole("button", { name: "Préparer le booster MEMES" });
   await expect(page.getByText("Ta réserve Mèmes · 4/4")).toBeVisible();
   await trigger.click();
   const scene = page.locator(".opening-continuum");
@@ -139,7 +150,7 @@ test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   for (const width of [320, 390, 1024]) {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });
-    for (const universe of ["Live Drop", "Mèmes"]) {
+    for (const universe of ["Live Drop", "MEMES"]) {
       await page.getByRole("button", { name: universe, exact: true }).click();
       await page.locator(".booster-carousel").evaluate(async (node) => {
         await Promise.all(node.getAnimations({ subtree: true })
