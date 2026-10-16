@@ -1,3 +1,25 @@
+# Checkpoint — reprise de la CI D-130 (16 octobre 2026)
+
+- `origin/main` vérifié au SHA `fa8124d27604c3fcfaf7266eeea627523e663072` ;
+  Vercel Production `READY` sur ce même SHA (`dpl_759bEHQhZingHQMXS3Lx3YaR7FYY`).
+- CI `38943531594` : jobs unitaires/écrans/statique/build, cloud simulé, SQL et
+  shard Playwright 1/3 réussis ; shards 2/3 et 3/3 échouent sur trois scénarios
+  chacun. Cause vérifiée dans les logs : les anciens sélecteurs de `pack-tear`
+  supposent un seul sachet alors que le carrousel conserve le voisin. Un slot actif
+  cible maintenant les assertions ; les vérifications de révélation sont gardées.
+- Claude a relu le cas en lecture seule sur `f4362c3a` (même code publié à
+  `fa8124d2`) et confirmé les sélecteurs concernés, y compris les assertions qui
+  auraient échoué ensuite. Réponse dans `CreatorDeck-Retour-Claude.md`.
+- Vérification Edge locale : `e2e/pack-tear.spec.ts`, trois scénarios sur bureau
+  et téléphone : **4/6 passent**. Les deux cas restants s'arrêtent uniquement sur
+  snapshots de référence Linux absents sous Windows ; leurs assertions de slot
+  actif passent avant ce point. Les snapshots n'ont pas été régénérés. La CI Linux
+  après publication est la vérification finale requise.
+- Configuration Edge temporaire retirée. Le seul autre changement de worktree
+  est le brouillon préexistant `public/packs/memes-opening.svg`, toujours exclu.
+- Prochaine action : commit ciblé des tests et cette entrée de problème, push
+  normal sur `main`, puis relever la CI et Vercel du nouveau SHA.
+
 # Checkpoint — focus visuel du carrousel Drop (16 octobre 2026)
 
 - Base de travail : branche codex/collaboration à cb3e18e0db7a260b49b56e278fb2d2b5fff2f859, identique à main avant ce lot.

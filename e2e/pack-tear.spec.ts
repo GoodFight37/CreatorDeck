@@ -466,22 +466,24 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await gotoDeck(page);
   const open = page.getByRole("button", { name: "Ouvrir le booster" });
   await expect(open).toBeVisible({ timeout: 30_000 });
-  const homeArt = page.locator(".pack-stage .pack-foil-image");
+  const homePack = page.locator('.booster-pack-slot[data-active="true"] .pack-artwork');
+  const homeArt = homePack.locator(".pack-foil-image");
+  const homeSpecular = homePack.locator(".pack-specular");
   await expect(homeArt).toBeVisible();
   await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.svg");
-  await expect(page.locator(".pack-stage .pack-3d-side")).toHaveCount(3);
-  await expect(page.locator(".pack-stage .pack-specular")).toBeAttached();
-  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationName))
+  await expect(homePack.locator(".pack-3d-side")).toHaveCount(3);
+  await expect(homeSpecular).toBeAttached();
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName))
     .toBe("drop-pack-specular-pass");
-  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => {
+  expect(await homeSpecular.evaluate((node) => {
     const style = getComputedStyle(node);
     return { iterations: style.animationIterationCount, clip: style.clipPath };
   })).toMatchObject({ iterations: "infinite" });
-  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).animationDuration))
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationDuration))
     .toBe("4s");
-  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).clipPath))
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).clipPath))
     .toContain("polygon(");
-  expect(await page.locator(".pack-stage .pack-specular").evaluate((node) => getComputedStyle(node).backgroundSize))
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).backgroundSize))
     .toBe("230% 100%");
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
@@ -556,7 +558,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(dialog.locator(".foil-top-piece")).toBeAttached();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
-  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   await expect(page.locator(".opening-continuum")).toHaveCount(1);
   await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
 });
@@ -564,7 +566,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
 test("reduced motion and the card-reflection switch stop the heavy pack and foil effects", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoDeck(page);
-  const homeSpecular = page.locator(".pack-specular");
+  const homeSpecular = page.locator('.booster-pack-slot[data-active="true"] .pack-artwork .pack-specular');
   await expect(homeSpecular).toBeAttached();
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
 
@@ -597,7 +599,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   expect(reducedPackOpacity[".foil-depth-side"]).toBe("0");
   expect(reducedPackOpacity[".foil-back-card"]).toBe("1");
   await expect(reveal).toBeVisible();
-  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   expect(await reveal.locator(".card-foil").first().evaluate((node) => getComputedStyle(node).display))
     .toBe("none");
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
@@ -635,6 +637,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
 
 test("finger cuts the plastic where it passes, top peels, backs rise, then reveal", async ({ page }) => {
   await gotoDeck(page);
+  const homeSpecular = page.locator('.booster-pack-slot[data-active="true"] .pack-artwork .pack-specular');
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   const dialog = page.locator(".opening-continuum");
   await expect(dialog).toBeVisible();
@@ -667,7 +670,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(bounds.x + bounds.width * .96, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
-  expect(await page.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
   expect(await dialog.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).animationName))
     .toBe("scene-cap-fold");
   expect(await dialog.locator(".foil-body-piece").evaluate((node) => getComputedStyle(node).animationName))

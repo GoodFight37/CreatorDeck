@@ -642,6 +642,21 @@ K-031 reste inchangé ; parcours sur téléphone physique non validé.
 
 # Problèmes connus CreatorDeck
 
+## D-130 — sélecteurs E2E du sachet ambigus après ajout du voisin — corrigés en local, CI à revérifier
+
+Sur le commit Production `fa8124d27604c3fcfaf7266eeea627523e663072`, le run CI
+[`38943531594`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38943531594)
+échoue sur deux shards Playwright. Les scénarios historiques du sachet
+utilisaient des sélecteurs globaux et attendaient trois tranches 3D ; le nouveau
+carrousel garde deux packs montés, donc les sélecteurs trouvaient deux lumières
+et six tranches. Aucun défaut du parcours de jeu n'est établi par ces erreurs.
+Les tests ciblent maintenant le slot actif `data-active="true"` et conservent
+les assertions d'image, de tranches, de reflet et de révélation. Edge sous
+Windows : 4 scénarios concernés passent ; 2 scénarios CSS-only atteignent leurs
+captures mais ne peuvent comparer les snapshots Linux absents, avant leurs
+assertions suivantes. La CI Linux du commit contenant ce correctif doit confirmer
+la clôture ; aucune capture de référence n'a été régénérée sur Windows.
+
 ## Revue IA Studio Binder/Atelier — D-114
 
 Les défauts confirmés du rapport Lot 03 sont corrigés en D-114/D-115. Le
