@@ -1,3 +1,9 @@
+## D-126 — 16 octobre 2026 : un seul rituel tactile pour les deux boosters
+
+Les captures du joueur montrent que D-125 révélait les Mèmes dans une boîte fixe avec un bouton « RÉVÉLER », sans déchirure ni extraction des dos. Ce parcours paraît plus sec que le booster Twitch. La correction réutilise `PackTear` et ses seuils de peel, son délai d'extraction et son secours clavier, avec une impression Mèmes propre ; le sachet de l'accueil reprend cette même impression.
+
+Après l'extraction, chaque carte Mèmes se retourne sans appui préalable. Le geste de glissement et le bouton avancent seulement quand le flip est fini ; Rare et mieux ont une pause de retournement et une lumière plus présente, tandis que Commune reste sobre. Le récap des cinq reste au moins 1,5 seconde. Les animations cessent selon `prefers-reduced-motion` et le réglage Reflets. Aucune règle de tirage, réserve, économie ni carte Twitch ne change. Le contrôle navigateur mobile avec RPC simulés vérifie le seuil du peel, les cinq cartes et le verrou du récap ; le ressenti physique reste à apprécier sur téléphone.
+
 ## D-125 — 16 octobre 2026 : univers Mèmes FR séparé
 
 Malik demande toutes les cartes « Memes FR » dans un booster et une collection distincts de Twitch. Il affirme disposer d’un accord écrit, sans pouvoir partager ses clauses. L’étendue des droits et des crédits contractuels n’a donc pas été vérifiée par le dépôt ; les crédits présents dans la source sont affichés. La décision D-124, prise avant cette affirmation, est remplacée pour l’intégration.

@@ -9,7 +9,13 @@ import { cloudConfig } from "@/lib/cloud/config";
 import { deviceStorage } from "@/lib/storage";
 import { MEME_BY_ID, MEME_CARDS, MEME_RARITY, type MemeCard as MemeCardData, type MemeRarity } from "@/lib/memes";
 import { MemeCard } from "@/components/meme-card";
+import { MemeReveal } from "@/components/meme-reveal";
+import { PackTear } from "@/components/pack-tear";
+import { buzz } from "@/lib/haptics";
+import { PACK_TEAR_HAPTIC } from "@/lib/reveal";
+import { playPackOpening } from "@/lib/sfx";
 import "./meme-deck.css";
+import "./meme-reveal.css";
 
 const PAGE_SIZE = 12;
 const PENDING_PREFIX = "creatordeck.meme.pending:";
@@ -35,16 +41,16 @@ export function MemeDeck() {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState("");
   const [opening, setOpening] = useState<MemeOpening | null>(null);
-  const [step, setStep] = useState(0);
-  const [face, setFace] = useState(false);
+  const [tearing, setTearing] = useState(false);
+  const [extracted, setExtracted] = useState(false);
+  const [presentationReturnFocus, setPresentationReturnFocus] = useState<HTMLElement | null>(null);
   const [selected, setSelected] = useState<MemeCardData | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [rarity, setRarity] = useState<MemeRarity | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
   const [now, setNow] = useState(0);
-  const [recapReady, setRecapReady] = useState(false);
-  const revealRef = useRef<HTMLDialogElement>(null);
+  const openButtonRef = useRef<HTMLButtonElement>(null);
   const inspectRef = useRef<HTMLDialogElement>(null);
   const pendingRef = useRef(false);
 
@@ -69,16 +75,6 @@ export function MemeDeck() {
     return () => { active = false; };
   }, [api, status, now]);
   useEffect(() => {
-    if (step < 5) return;
-    const timer = window.setTimeout(() => setRecapReady(true), 1500);
-    return () => window.clearTimeout(timer);
-  }, [step]);
-  useEffect(() => {
-    const dialog = revealRef.current;
-    if (opening && dialog && !dialog.open) dialog.showModal();
-    if (!opening && dialog?.open) dialog.close();
-  }, [opening]);
-  useEffect(() => {
     const dialog = inspectRef.current;
     if (selected && dialog && !dialog.open) dialog.showModal();
     if (!selected && dialog?.open) dialog.close();
@@ -99,12 +95,16 @@ export function MemeDeck() {
   const pulled = opening?.cards.map((id) => MEME_BY_ID.get(id)).filter((card): card is MemeCardData => Boolean(card)) ?? [];
 
   async function openPack() {
-    if (!api || busy || opening || pendingRef.current) return;
+    if (!api || busy || tearing || pendingRef.current) return;
     const session = api.session();
     if (!session) { setProblem("Connecte-toi depuis Toi pour conserver tes cartes Mèmes."); return; }
     pendingRef.current = true;
     setBusy(true);
     setProblem("");
+    setOpening(null);
+    setExtracted(false);
+    setPresentationReturnFocus(openButtonRef.current);
+    setTearing(true);
     const key = PENDING_PREFIX + session.userId;
     try {
       const requestId = deviceStorage()?.getItem(key) ?? crypto.randomUUID();
@@ -114,24 +114,17 @@ export function MemeDeck() {
       const next = await api.memeStatus();
       setStatus(next);
       setOpening(result);
-      setStep(0);
-      setFace(false);
-      setRecapReady(false);
       deviceStorage()?.removeItem(key);
     } catch (error) {
       // Une réponse réseau perdue peut cacher un tirage validé : conserver la
       // même clé et récupérer ce tirage au prochain appui.
       if (error instanceof CloudError && error.status >= 400 && error.status < 500) deviceStorage()?.removeItem(key);
       setProblem(errorText(error));
+      setTearing(false);
     } finally {
       pendingRef.current = false;
       setBusy(false);
     }
-  }
-
-  function advance() {
-    if (!face) setFace(true);
-    else { setStep((value) => value + 1); setFace(false); }
   }
 
   return <main className="meme-world">
@@ -139,9 +132,9 @@ export function MemeDeck() {
     <section className="meme-hero" aria-labelledby="meme-heading">
       <p className="meme-eyebrow">COLLECTION MÈMES FR</p><h1 id="meme-heading">MÈMES</h1>
       <div className="meme-pack-scene"><div className="meme-pack-floor" aria-hidden="true" />
-        <div className="meme-pack-object" aria-hidden="true"><span>CREATORDECK</span><strong>MÈMES</strong><small>5 CARTES</small></div></div>
+        <div className="meme-pack-object" aria-hidden="true" /></div>
       <p className="meme-hero-line">5 cartes · 1 Rare ou mieux</p>
-      <button className="meme-open" type="button" disabled={!api || !account || !status || status.stock < 1 || busy || Boolean(opening)}
+      <button ref={openButtonRef} className="meme-open" type="button" disabled={!api || !account || !status || status.stock < 1 || busy || tearing}
         onClick={() => void openPack()}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
       <p className="meme-status" aria-live="polite">{status
         ? String(status.stock) + " booster(s) prêts · " + countdown(status.nextAt, now)
@@ -180,17 +173,11 @@ export function MemeDeck() {
       </nav>
       <p className="meme-credit">Cartes issues de MyMemeCards. Illustrations créditées sur chaque fiche lorsqu’un auteur est indiqué.</p>
     </section>
-    {opening ? <dialog className="meme-dialog meme-reveal" ref={revealRef}
-      onCancel={(event) => { event.preventDefault(); if (step >= 5) setOpening(null); }}>
-      {step < 5 ? <><p className="meme-eyebrow">CARTE {step + 1} / 5</p>
-        <div className={"meme-reveal-stage" + (face ? " is-face" : "")}>
-          {face && pulled[step] ? <MemeCard card={pulled[step]} copies={copies.get(pulled[step].id) ?? 1} />
-            : <div className="meme-card-back"><span>CREATORDECK</span><strong>MÈMES</strong></div>}</div>
-        <button className="meme-open" type="button" onClick={advance}>{face ? (step === 4 ? "VOIR LES 5 CARTES" : "CARTE SUIVANTE") : "RÉVÉLER"}</button>
-      </> : <><p className="meme-eyebrow">BOOSTER OUVERT</p><h2>Tes 5 cartes</h2>
-        <div className="meme-recap">{pulled.map((card) => <div key={card.id}><MemeCard card={card} compact /><span>{card.name}</span></div>)}</div>
-        <button className="meme-open" type="button" disabled={!recapReady} onClick={() => setOpening(null)}>VOIR MA COLLECTION</button></>}
-    </dialog> : null}
+    {tearing ? <PackTear artwork="/packs/memes-opening.svg" returnFocusTo={presentationReturnFocus}
+      onTear={() => { playPackOpening(); buzz(PACK_TEAR_HAPTIC); }} onComplete={() => setExtracted(true)}>
+      {opening && extracted && pulled.length === 5 ? <MemeReveal cards={pulled} copies={copies}
+        onClose={() => { setTearing(false); setOpening(null); setExtracted(false); }} /> : null}
+    </PackTear> : null}
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
       aria-label={"Carte " + selected.name}>
       <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>

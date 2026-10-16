@@ -1,3 +1,7 @@
+## Booster Mèmes sans rituel tactile — corrigé localement dans D-126
+
+Sur `52b3738a`, ouvrir un booster Mèmes affichait un dialogue statique : aucun peel, aucune sortie des cinq dos, un bouton « RÉVÉLER » par carte. Les captures du joueur du 16 octobre 2026 montrent le décalage avec le Drop principal. Gravité moyenne : le tirage fonctionnait mais la sensation de jeu demandée manquait. D-126 réutilise `PackTear` avec un visuel Mèmes et ajoute flip automatique, glissement et récap tenu 1,5 s. Un scénario Playwright mobile avec RPC simulés vérifie le geste et les cinq cartes ; publication et ressenti physique à confirmer. Aucun défaut de taux ou perte de carte observé.
+
 ## Tutoriel derrière « Mon compte » après création invitée — corrigé dans D-121
 
 Sur `67385de2`, ouvrir « Mon compte », créer un compte invité, puis attendre la réponse d’onboarding pouvait superposer le tutoriel à la feuille de compte. La feuille restait devant, mais le tutoriel interceptait ensuite les appuis destinés à Toi. Gravité moyenne : parcours d’entrée confus, sans perte de cartes démontrée. D-121 attend la fermeture de la présentation courante avant de montrer le tutoriel, et termine sur Drop. Publié dans `6a1c0069` : test DOM ciblé 1/1, écrans 182/182, CI 6/6 et Vercel Production `READY`. Le 16 octobre, le parcours invité réel sur `creator-deckk.vercel.app` a réussi dans Chromium mobile 390 × 844 : aucune superposition, retour au Drop, zéro exception JavaScript. Le ressenti sur écran tactile physique reste distinct.

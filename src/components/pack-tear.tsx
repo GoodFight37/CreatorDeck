@@ -17,6 +17,7 @@ import { CardBackEmblem } from "@/components/card-back-emblem";
  */
 export function PackTear({
   kind = "live",
+  artwork: customArtwork,
   onComplete,
   onTear,
   onLeavePending,
@@ -25,6 +26,8 @@ export function PackTear({
   children,
 }: {
   kind?: "live" | "scene";
+  /** Same peel and extraction with the artwork of another card universe. */
+  artwork?: string;
   onComplete: () => void;
   onTear?: () => void;
   /** Leaves the presentation only; the in-flight draw is not retried/cancelled. */
@@ -160,7 +163,7 @@ export function PackTear({
   const boundary = edge.length > 1
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
     : "0% 15.45%, 100% 15.45%";
-  const artwork = kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg";
+  const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
 
   return createPortal(
     <div

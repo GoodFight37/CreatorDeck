@@ -1,5 +1,12 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-126 — rituel d’ouverture Mèmes (travail local)
+
+- Base `main` et GitHub vérifiée à `161b7a0d55af2a4f2ac11d14fb9406ab1aa90a20`, arbre propre avant intervention. Malik montre deux captures du booster Mèmes D-125 : une boîte statique et un bouton « RÉVÉLER » ; il demande le même ressenti d’ouverture que le booster principal. Défaut confirmé dans `meme-deck.tsx` : `<dialog>` spécifique sans `PackTear`, sans extraction ni flip automatique.
+- Correction : `PackTear` accepte une impression optionnelle Mèmes ; le sachet de l’accueil utilise la même image. Le même peel guidé, ses seuils, le délai de 1 200 ms et l’alternative clavier/fallback s’appliquent. `MemeReveal` retourne automatiquement chaque carte, autorise glissement/tap après le flip, renforce l’arrivée Rare et mieux, respecte Reflets/réduction du mouvement et tient le récap au moins 1,5 s. Son de déchirure et vibrations de rareté réutilisés ; aucun changement BGM, SQL, rates, réserve ou cartes Twitch. Note joueur et décision D-126 incluses.
+- Vérifications déjà exécutées : Playwright Chromium téléphone avec RPC Mèmes simulés 1/1 : peel TIRE/RELÂCHE, image Mèmes, cinq cartes, anti-skip, récap 1,5 s, collection persistée, un seul appel de tirage. Captures locales du sachet, de la première carte et du récap inspectées. TypeScript, lint complet, garde de jargon, build statique et diff check réussis après les retouches ; écrans Drop et notes 20/20 ; Playwright Mèmes sans cloud 1/1 et peel du booster principal 1/1. La base et les taux ne sont pas modifiés, donc pas de migration à rejouer.
+- Suite : relever les tests finaux, vérifier diff et distant, commit/push `main`, contrôler CI et Vercel, puis rejouer une ouverture connectée sur production sans confondre Chromium et ressenti physique.
+
 ## Checkpoint D-125 — univers Mèmes FR distinct (publié et vérifié)
 
 - Base `main` locale et GitHub vérifiée à `316ffa53f95476845662b25c5e9ff35bbf5aa4dc` avant l'implémentation ; le commit D-124 était documentaire. Malik demande l'intégration complète des cartes Mèmes FR et affirme posséder un accord écrit non partageable. La portée contractuelle n'est pas vérifiée dans le dépôt ; ne pas présenter cette affirmation comme un audit juridique.

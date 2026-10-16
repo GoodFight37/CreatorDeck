@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-memes-ouverture-tactile", date: "2026-10-16", title: "Les Mèmes se déchirent aussi",
+    summary: "Le booster Mèmes reprend le geste d’ouverture et la révélation animée du Drop.",
+    sections: [{ title: "Ouverture", items: [
+      "Tire sur la soudure du sachet Mèmes : les cinq dos sortent avant que les cartes se retournent.",
+      "Chaque carte se révèle automatiquement ; glisse ou touche la carte pour avancer. Les cartes rares marquent davantage leur arrivée.",
+      "Les cinq cartes restent réunies dans un récap avant le retour au classeur.",
+    ] }],
+  },
+  {
     id: "2026-10-16-univers-memes", date: "2026-10-16", title: "Les Mèmes arrivent dans CreatorDeck",
     summary: "Un booster et un classeur Mèmes FR séparés de tes cartes Twitch.",
     sections: [{ title: "Nouvel univers", items: [
