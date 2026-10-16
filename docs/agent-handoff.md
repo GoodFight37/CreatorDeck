@@ -28,19 +28,28 @@
 - Aucun tirage ni appel Supabase dans le scénario tactile. Malik doit confirmer
   le ressenti et l’apparence sur son vrai téléphone après publication.
 
-# Checkpoint — délégation malgré un brouillon local (16 octobre 2026)
+# Checkpoint — échange Codex ↔ Claude vérifié (16 octobre 2026)
 
 - Demande : débloquer l’échange Codex ↔ Claude sans exposer ni écraser un
   changement local non publié.
 - Le refus précédent venait du garde-fou de `scripts/delegate-claude.mjs` : il
   exigeait à tort un worktree Codex parfaitement propre. Le brouillon concerné
   est `public/packs/memes-opening.svg`; il reste intact et hors de la revue.
-- Correctif préparé : la revue cible exclusivement `HEAD` commité; les changements
-  Codex non commités sont seulement signalés comme exclus. Le worktree Claude
-  doit toujours être propre et ne reçoit que l’avance rapide sûre.
-- Prochaine preuve : commit/push normal du correctif de coordination, puis appel
-  réel du script et lecture de la réponse Claude. Aucun code applicatif, merge ou
-  déploiement n’est dans ce lot.
+- Correctif testé : `scripts/delegate-claude.mjs` ne bloque plus sur les
+  modifications locales Codex; il cible `HEAD` commité et les signale comme hors
+  périmètre. Le worktree Claude reste propre et n'avance qu'en fast-forward.
+- Test réel réussi, exit 0 : Claude a lu le commit local
+  `29379377550c5b4a1d52f7280b83b7ed269328c7`, puis sa réponse a été récupérée
+  dans `CreatorDeck-Retour-Claude.md`. Aucun test du dépôt lancé par Claude.
+- Retour Claude : les garde-fous de branche, propreté Claude, fast-forward,
+  lecture seule, timeout et sortie bornée sont présents. Il relève que le résumé
+  des fichiers du commit manquait et que l'exclusion du brouillon est une consigne,
+  pas une interdiction OS de lire tout chemin absolu. Le script ajoute désormais
+  la liste des fichiers commis à la mission. Le brouillon MEMES n'a pas été lu,
+  modifié ou inclus dans les fichiers transmis.
+- Commit de coordination local `2937937`; aucune publication GitHub/Vercel pour
+  cette configuration. Le correctif du résumé et cette mise à jour de passation
+  restent à committer localement. Aucun code applicatif n’est dans ce lot.
 
 # Checkpoint — délégation locale Codex → Claude (16 octobre 2026)
 

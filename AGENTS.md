@@ -76,8 +76,9 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
 - Pour un bug complexe, un choix technique difficile ou une revue importante,
   Codex peut lancer `node scripts/delegate-claude.mjs "question ciblée"` depuis
   `CreatorDeck-Codex`. Le script transmet uniquement le SHA commité de Codex;
-  les changements locaux non commités sont signalés comme exclus, jamais copiés
-  ni examinés. Il avance `claude/review` uniquement en avance rapide si son
+  les changements locaux non commités sont signalés comme hors périmètre et ne
+  sont pas transmis. Le résumé des fichiers du commit cible accompagne la mission.
+  Il avance `claude/review` uniquement en avance rapide si son
   arbre est propre, appelle `claude -p` avec les seuls outils de lecture, puis
   consigne demande et réponse dans les deux passations locales existantes.
   Codex lit le retour et reprend lui-même le travail. Une seule

@@ -39,6 +39,7 @@ async function main() {
     throw new Error("Worktree Claude modifié : préserver son travail et résoudre avant délégation.");
   }
   const target = git(codex, "rev-parse", "HEAD");
+  const commitFiles = git(codex, "show", "--format=", "--name-status", target);
   const reviewHead = git(claude, "rev-parse", "HEAD");
   if (reviewHead !== target) {
     git(claude, "merge-base", "--is-ancestor", reviewHead, target);
@@ -46,7 +47,7 @@ async function main() {
   }
   const cli = process.env.CLAUDE_CLI || "claude";
   const stamp = new Date().toISOString();
-  const mission = `Revue ciblée en lecture seule du commit ${target}, présent dans ton worktree. ${question}\nIgnore tout état non commité du worktree Codex : il n'est pas transmis et ne fait pas partie de la revue.\nRéponds en français, brièvement : faits vérifiés, hypothèses, fichiers utiles et tests réellement lancés. Aucun fichier à modifier, aucun test à lancer sauf nécessité explicitement justifiée. N'appelle aucun autre agent.`;
+  const mission = `Revue ciblée en lecture seule du commit ${target}, présent dans ton worktree. ${question}\nFichiers inclus dans ce commit (statut Git) :\n${commitFiles}\nReste dans ton worktree Claude. L'état non commité Codex n'est pas inclus dans cette mission et ne fait pas partie de la revue.\nRéponds en français, brièvement : faits vérifiés, hypothèses, fichiers utiles et tests réellement lancés. Aucun fichier à modifier, aucun test à lancer sauf nécessité explicitement justifiée. N'appelle aucun autre agent.`;
   append(requestFile, `## Délégation automatique — ${stamp}\n\nSHA : \`${target}\`\nÉtat local Codex non commité : ${codexChanges ? "présent, exclu de la revue" : "aucun"}\nMission : ${question}`);
   const args = ["-p", "--output-format", "text", "--permission-mode", "plan", "--tools", "Read,Glob,Grep", "--max-turns", "4", "--max-budget-usd", "0.50", mission];
   let output = "";
