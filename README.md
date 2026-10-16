@@ -58,10 +58,9 @@ pas résolu. L'état, le SHA et la prochaine priorité sont dans la
 [roadmap](docs/roadmap.md) et la [passation](docs/agent-handoff.md).
 
 Le catalogue Mèmes distribué compte 2 150 cartes illustrées : la fiche
-« Carte supprimée » sans illustration a été retirée. La migration serveur
-`0053` est protégée contre toute suppression si cette carte apparaît dans une
-collection ou un tirage historique ; son application est en attente de la CI.
-Voir la [source et l'état détaillé](docs/catalogue-memes-source.md).
+« Carte supprimée » sans illustration a été retirée du client et du serveur.
+La migration `0053` a été vérifiée en CI, appliquée sur Supabase, puis contrôlée
+après application. Voir la [source et l'état détaillé](docs/catalogue-memes-source.md).
 
 Le rituel d'ouverture est publié sur Vercel (`aabd4169`) et vérifié dans Chromium : consignes « TIRE /
 RELÂCHE », extraction des cinq dos à 1,2 s, pause d'impact et lumière renforcée

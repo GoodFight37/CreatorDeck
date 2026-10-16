@@ -27,7 +27,7 @@ La migration `0052_meme_univers.sql` crée un catalogue, une réserve, une colle
 
 ## Retrait de la fiche sans illustration — D-131, 16 octobre 2026
 
-À la demande de Malik, `juventus-rose` (« Carte supprimée ») est retirée du classeur. La source générale compte toujours 2 151 entrées, mais l’import CreatorDeck exclut explicitement cette fiche ; le catalogue distribué compte 2 150 cartes, toutes munies d’un visuel. La migration additive `0053` enlève la ligne serveur lorsqu’elle sera appliquée et refuse la suppression si une collection ou un journal de tirage la référence. La première CI a révélé que le vérificateur SQL omettait `0053` et que deux attentes E2E conservaient l’ancien compteur ; le correctif est en cours de validation. La migration initiale `0052` reste inchangée pour préserver l’historique. Voir [D-131](decisions.md).
+À la demande de Malik, `juventus-rose` (« Carte supprimée ») est retirée du classeur. La source générale compte toujours 2 151 entrées, mais l’import CreatorDeck exclut explicitement cette fiche ; le catalogue distribué compte 2 150 cartes, toutes munies d’un visuel. La migration additive `0053` retire la ligne serveur et refuse la suppression si une collection ou un journal de tirage la référence. Après correction du vérificateur SQL et des attentes E2E (`83d212c8`), la CI `38960335566` a réussi 6/6 ; le workflow Supabase `38960850198` a appliqué `0053` et confirmé l’état attendu après application. La migration initiale `0052` reste inchangée pour préserver l’historique. Voir [D-131](decisions.md).
 
 ## Exploitation visuelle D-127
 
