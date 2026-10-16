@@ -22,7 +22,9 @@ fait ressortir ; la cible tactile reste de 44 px. « TIRE » / « RELÂCHE » de
 la seule consigne centrale. Le test navigateur dédié couvre position, opacité
 et activation, mais n’a pas pu démarrer localement car Next signale le verrou
 du serveur de développement PID 15724. Build Webpack et vérifications DOM
-réussis ; preuve navigateur et appréciation sur téléphone restent ouvertes.
+réussis ; code publié dans [`8c116ab6`](https://github.com/GoodFight37/CreatorDeck/commit/8c116ab69972e2fd163d7e655453f87ec30fff0c),
+statut Vercel `success`. Preuve navigateur et appréciation sur téléphone
+restent ouvertes.
 
 ## Parcours livré localement
 

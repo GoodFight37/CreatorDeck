@@ -27,8 +27,10 @@
   interrompu ; le build Webpack ci-dessus a réussi. Ne pas arrêter le serveur
   bloqué ni supprimer son verrou sans accès pour vérifier son propriétaire.
 - Base de travail : commit publié `a186cda01e713fc3d49f1d65a25bc9f1139088f4`,
-  branche `codex/collaboration`. Avant publication, contrôler les fichiers
-  indexés, le HEAD distant `main`, le commit, le push et le statut Vercel exact.
+  branche `codex/collaboration`. Code D-136 publié par avance rapide sur
+  `main` dans [`8c116ab6`](https://github.com/GoodFight37/CreatorDeck/commit/8c116ab69972e2fd163d7e655453f87ec30fff0c) ;
+  GitHub confirme le SHA et le statut Vercel associé est `success`. Aucune PR
+  ouverte. SVG Mèmes et pièces jointes restent locaux, inchangés et hors commit.
 
 ## Reprise vérifiée — 17 octobre 2026 (après D-135)
 
