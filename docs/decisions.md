@@ -1,3 +1,9 @@
+## D-130 — 16 octobre 2026 : concentrer Drop sur le booster choisi
+
+Le premier carrousel affichait sous les boutons Live Drop/MEMES une instruction qui répétait déjà le geste et l’action disponibles. Pour alléger l’arrivée sur Drop, le sachet sélectionné devient le point focal : son format augmente légèrement, les boutons restent compacts avec une cible tactile de 44 px, et l’aide redondante est retirée. Le voisin reste visible et le choix reste possible au swipe, au clavier et avec les boutons.
+
+Le swipe seul est écarté : les boutons rendent le changement d’univers visible et accessible. Les tranches 3D, la déchirure, la révélation, l’audio, les taux, les réserves et les règles restent inchangés. Le contrôle Playwright ciblé passe sur 320, 390 et 1024 px ; il vérifie que le sachet actif domine le voisin, que l’aide a disparu et que l’action reste au-dessus de la navigation. L’impression et le toucher sur téléphone réel restent à apprécier par Malik.
+
 ## D-129 — 16 octobre 2026 : choisir et préparer son booster depuis Drop
 
 Malik demande un choix de boosters directement à l’arrivée sur Drop : Live Drop au centre, Mèmes partiellement visible derrière sur le côté, passage au doigt et présentation avec Retour avant l’ouverture. Sa démonstration distingue choix, préparation réversible et ouverture effective. Le premier lot envisagé de Binder unifié est remplacé par ce chantier de navigation ; le prototype fictif reste isolé.

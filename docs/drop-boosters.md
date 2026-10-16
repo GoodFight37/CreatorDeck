@@ -53,3 +53,10 @@ Le ressenti du carrousel, du sachet, des vibrations et des sons sur téléphone 
 ## Correction du swipe après retour joueur — 16 octobre 2026
 
 Sur la Production publiée, Malik observe que le sachet suit légèrement le doigt puis revient sans changer de booster. Reproduction avec un véritable événement tactile Playwright : la perte de capture du bouton enfant remontait jusqu'au stage et annulait le geste avant pointerup. Le seuil de sélection (45 px) rendait aussi les gestes courts muets. Le stage ignore désormais la perte de capture de ses descendants; le seuil tactile est adapté au téléphone, les deux sens de glissement alternent les deux boosters, et le visuel suit davantage le doigt. Le nom du sachet et les commandes du sélecteur sont `MEMES`, sans accent. Contrôle Playwright téléphone sous Edge, swipe gauche→droite puis droite→gauche, clavier et bouton, sans RPC d'ouverture : 1/1 réussi. Cela ne valide pas le ressenti tactile sur le téléphone de Malik.
+
+
+## D-130 — focus visuel du carrousel — 16 octobre 2026
+
+Le booster sélectionné gagne légèrement en taille ; Live Drop et MEMES restent visibles dans des boutons plus compacts, avec une cible d’au moins 44 px. Le texte « Glisse pour choisir · touche pour préparer » a été retiré parce qu’il répétait les commandes déjà présentes. Les tranches 3D et le parcours d’ouverture n’ont pas changé.
+
+Le scénario Playwright téléphone sous Edge réussit 1/1 et vérifie le focus, la dominance du sachet sur son voisin, l’absence d’aide répétée et la place du CTA sur 320, 390 et 1024 px. Cela ne valide pas le ressenti sur téléphone physique.

@@ -1,3 +1,13 @@
+# Checkpoint — focus visuel du carrousel Drop (16 octobre 2026)
+
+- Base de travail : branche codex/collaboration à cb3e18e0db7a260b49b56e278fb2d2b5fff2f859, identique à main avant ce lot.
+- Malik demande un Drop plus léger, centré sur le booster sélectionné. Pas de nouveau contenu Mèmes ni de chantier social.
+- Modifications D-130 : sachet sélectionné légèrement agrandi, boutons Live Drop/MEMES plus compacts, consigne redondante supprimée. Aucune modification des tranches 3D, du peel, de la révélation, du son, des taux ou réserves.
+- Le worktree contenait déjà M public/packs/memes-opening.svg avant ce lot. Le changement est préservé mais exclu du commit D-130.
+- Vérification : Playwright Edge, configuration temporaire retirée après usage : scénario du voisin/focus/CTA 1/1, tailles 320, 390 et 1024 px. git diff --check réussi. Ce contrôle navigateur ne remplace pas l’essai visuel et tactile sur le téléphone.
+- L’appel au script Claude a été refusé par sa vérification de propreté à cause du changement MEMES préexistant ; aucun message n’a été envoyé et aucune réponse Claude n’est revendiquée. Pas de revue indépendante pour ce petit changement d’interface.
+- Suite : relire le diff indexé, commit atomique des seuls fichiers D-130, puis publication ordinaire et vérification du SHA distant si l’accès GitHub fonctionne.
+
 # Checkpoint — correction du swipe du carrousel (16 octobre 2026)
 
 - Départ : `codex/collaboration` et `origin/main` vérifiés à

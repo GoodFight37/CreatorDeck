@@ -161,6 +161,8 @@ test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024
       const neighbor = page.locator('.booster-pack-slot[data-active="false"]');
       const a = (await active.boundingBox())!, n = (await neighbor.boundingBox())!;
       expect(a.width).toBeGreaterThan(100);
+      expect(a.width).toBeGreaterThan(n.width);
+      await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
       expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
       const action = page.locator('.booster-panel:not([hidden]) .primary-action');
       const actionBox = (await action.boundingBox())!;

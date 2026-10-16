@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-drop-focus", date: "2026-10-16", title: "Un Drop plus lisible",
+    summary: "Le sachet choisi prend sa place sur l’écran.",
+    sections: [{ title: "Drop", items: [
+      "Le booster sélectionné ressort davantage. Les choix Live Drop et MEMES sont plus compacts et le texte d’aide en doublon disparaît.",
+    ] }],
+  },
+  {
     id: "2026-10-16-choix-boosters", date: "2026-10-16", title: "Choisis ton booster sur Drop",
     summary: "Passe de Live Drop à Mèmes d’un glissement, puis prépare ton ouverture.",
     sections: [{ title: "Drop", items: [

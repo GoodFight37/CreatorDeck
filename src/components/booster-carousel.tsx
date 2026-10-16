@@ -120,6 +120,5 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
       {BOOSTERS.map((booster) => <button key={booster.id} type="button" aria-pressed={value === booster.id}
         disabled={disabled} onClick={() => choose(booster.id)}>{booster.label}</button>)}
     </div>
-    <p className="booster-selection-hint">Glisse pour choisir · touche pour préparer</p>
   </div>;
 }

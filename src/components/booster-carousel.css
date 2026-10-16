@@ -1,5 +1,6 @@
 /* Choix du booster sur Drop, avant toute consommation. */
 .home-view .pack-stage.stage-live.booster-carousel {
+  --drop-pack-size: min(62vw, 250px, 37dvh);
   display: block; position: relative; isolation: isolate;
   height: calc(var(--drop-pack-size) * 1.4667 + var(--drop-stage-pt) + var(--drop-stage-pb) + 28px);
   overflow: hidden; overflow: clip; touch-action: pan-y pinch-zoom;
@@ -29,7 +30,7 @@
 .home-view .booster-carousel .pack-copy h2 { margin: 0; }
 .booster-switcher { display: flex; justify-content: center; gap: 6px; margin: 0 auto; }
 .booster-switcher button {
-  min-height: 44px; padding: 8px 18px; border: 1px solid var(--line);
+  min-height: 44px; padding: 6px 14px; border: 1px solid var(--line);
   border-radius: 999px; background: var(--panel); color: var(--muted);
   font: inherit; font-size: 13px; cursor: pointer;
 }
