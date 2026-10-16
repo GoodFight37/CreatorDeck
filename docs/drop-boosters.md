@@ -2,9 +2,21 @@
 
 Lot D-129 livré le 16 octobre 2026 depuis `codex/collaboration` sur `main`, commit `8d99eabd7d016e5a68ba7dbe1510ae5b10e2946b`, base `88daf0cd4d7a08f4e27aa2f910b8d60a8ff7ddab`. Push normal vérifié sur GitHub. Vercel Production `READY`, déploiement `dpl_7w6o3KvQA9fhqJvk7hK5ojWZebff`, alias `creator-deckk.vercel.app`. Aucun changement SQL.
 
+## Évolution D-132 — sélection simplifiée et rituel prioritaire
+
+La mise à jour D-132 garde les pills Live Drop/MEMES comme seule façon de
+changer de booster. Le swipe, les flèches et le clic sur le pack voisin sont
+retirés ; le voisin reste une illustration décorative atténuée. Le booster
+actif est le seul pack dominant et le seul bouton de préparation. « Plus
+d’infos » est plus discret. Dans la scène scellée, « Ouvrir sans déchirer »
+reste un lien de secours visuellement secondaire avec sa cible tactile
+accessible ; « TIRE » / « RELÂCHE », les protections anti-saut et
+`PACK_TEAR_MS` (1 200 ms) restent inchangés. La validation physique reste
+ouverte.
+
 ## Parcours livré localement
 
-Drop démarre sur Live Drop. Le sachet Mèmes dépasse sur le côté ; un glissement horizontal, un appui sur le voisin, les boutons d’univers ou les flèches du clavier changent le choix. Le scroll vertical ne change pas le booster et ne l’ouvre pas.
+Drop démarre sur Live Drop. Le sachet Mèmes reste une illustration secondaire sur le côté. Seules les pills changent le choix ; le scroll vertical ne change pas le booster et ne l’ouvre pas.
 
 Le sachet actif et le bouton d’ouverture affichent ensuite la présentation scellée. Retour et Échap ferment cette préparation ; le hook existant inscrit aussi cette fermeture dans la pile de retour natif. Aucun appel de tirage, aucune clé Mèmes et aucune dépense avant le geste validé. La déchirure achevée au relâchement ou « Ouvrir sans déchirer » engage le tirage une seule fois. La présentation reste montée jusqu’aux cartes. Après engagement, quitter une attente lente laisse le tirage vivre.
 
@@ -12,7 +24,7 @@ Mèmes affiche sa propre réserve et sa recharge, ses règles existantes et un l
 
 ## Changements à relire
 
-- `booster-carousel.tsx/.css` : sélection, voisin partiellement visible, glissement, clavier, blocage du clic après déplacement, petits écrans et mouvement réduit.
+- `booster-carousel.tsx/.css` : sélection par pills uniquement, voisin décoratif discret, petits écrans et mouvement réduit.
 - `drop-view.tsx` : carrousel et panneau de l’univers sélectionné, réserve Mèmes, accès au compte et au classeur.
 - `creator-deck-app.tsx` : préparation Live distincte du tirage, focus initial conservé jusqu’à la révélation.
 - `pack-tear.tsx` : Retour avant engagement, Échap et ordre des callbacks compatible avec le mouvement réduit. Les seuils de peel sont conservés.

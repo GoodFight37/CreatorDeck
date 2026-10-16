@@ -8,9 +8,21 @@ Preuves locales sur le diff initial : test catalogue `npm test -- src/lib/memes.
 
 ## D-130 — 16 octobre 2026 : concentrer Drop sur le booster choisi
 
-Le premier carrousel affichait sous les boutons Live Drop/MEMES une instruction qui répétait déjà le geste et l’action disponibles. Pour alléger l’arrivée sur Drop, le sachet sélectionné devient le point focal : son format augmente légèrement, les boutons restent compacts avec une cible tactile de 44 px, et l’aide redondante est retirée. Le voisin reste visible et le choix reste possible au swipe, au clavier et avec les boutons.
+Le premier carrousel affichait sous les boutons Live Drop/MEMES une instruction qui répétait déjà le geste et l’action disponibles. Pour alléger l’arrivée sur Drop, le sachet sélectionné devient le point focal : son format augmente légèrement, les boutons restent compacts avec une cible tactile de 44 px, et l’aide redondante est retirée. Le voisin reste visible et le choix reste possible au swipe, au clavier et avec les boutons (comportement ensuite remplacé par D-132).
 
 Le swipe seul est écarté : les boutons rendent le changement d’univers visible et accessible. Les tranches 3D, la déchirure, la révélation, l’audio, les taux, les réserves et les règles restent inchangés. Le contrôle Playwright ciblé passe sur 320, 390 et 1024 px ; il vérifie que le sachet actif domine le voisin, que l’aide a disparu et que l’action reste au-dessus de la navigation. L’impression et le toucher sur téléphone réel restent à apprécier par Malik.
+
+## D-132 — 16 octobre 2026 : une seule sélection et un rituel prioritaire
+
+Le premier écran du Drop proposait simultanément pills, swipe, flèches et clic sur le sachet voisin. Cette redondance disperse l’attention alors que l’action attendue est d’ouvrir le booster affiché. Garder les pills Live Drop/MEMES comme unique moyen de sélection ; le sachet voisin devient une illustration secondaire non interactive, nettement atténuée et réduite. Le sachet actif reste le seul grand bouton qui prépare son propre booster. « Plus d’infos » perd du contraste et de la hauteur. Le hint de sélection reste absent.
+
+Dans la scène scellée, « TIRE » / « RELÂCHE » reste la consigne principale. « Ouvrir sans déchirer » reste accessible comme lien bas discret, avec sa cible tactile de 44 px, et passe par les mêmes gardes d’ouverture. Ne pas toucher `PACK_TEAR_MS` (1 200 ms), les protections anti-saut de révélation, l’inclinaison du booster ou ses tranches. Aucun changement de son, taux, Binder, Craft, social, échanges, tirage ou données.
+
+Le scénario Playwright ciblé vérifie la sélection par pills sans RPC de tirage, l’absence d’interaction du voisin, sa moindre présence sur 320/390/1024 px et la position secondaire du lien dans les viewports courts ; les tests du rituel contrôlent la révélation. La vérification sur téléphone physique reste à faire par Malik.
+
+## D-133 — 16 octobre 2026 : garder les noms entiers pendant la révélation Mèmes
+
+Capture mobile de Malik : des titres de cartes étaient visiblement coupés par des points de suspension pendant l’ouverture d’un booster Mèmes. La donnée source contient les noms complets ; la règle globale du cartouche de carte force une seule ligne. Pour la seule carte Mèmes montrée en grand pendant la révélation, permettre un retour à la ligne et réduire légèrement le corps du titre. Garder les règles de la collection et des autres cartes inchangées. Le correctif doit conserver la taille de carte, le compteur, le geste, le bouton suivant et le rituel d’ouverture. Test navigateur ciblé en attente car l’instance `next dev` existante bloque le lanceur Playwright local ; la capture de Malik reste la preuve du défaut initial, pas du correctif.
 
 ## D-129 — 16 octobre 2026 : choisir et préparer son booster depuis Drop
 

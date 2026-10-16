@@ -34,35 +34,16 @@ async function fakeAccount(page: Page) {
   return calls;
 }
 
-test("un swipe tactile horizontal change de booster sans préparer ni consommer", async ({ page, context }) => {
+test("les pills changent de booster sans préparer ni consommer", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "live");
-  const box = (await carousel.boundingBox())!;
-  const cdp = await context.newCDPSession(page);
-  const x = box.x + box.width * .7, y = box.y + box.height * .4;
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
-  for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchMove", touchPoints: [{ x: x + i * 5, y }],
-  });
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await expect(carousel).toHaveAttribute("data-universe", "memes");
-  await expect(page.locator(".opening-continuum")).toHaveCount(0);
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: x + 30, y }] });
-  for (let i = 1; i <= 6; i++) await cdp.send("Input.dispatchTouchEvent", {
-    type: "touchMove", touchPoints: [{ x: x + 30 - i * 5, y }],
-  });
-  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
-  await expect(carousel).toHaveAttribute("data-universe", "live");
-  await carousel.getByRole("button", { name: "Choisir le booster MEMES" }).focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(carousel).toHaveAttribute("data-universe", "memes");
-  await page.keyboard.press("ArrowLeft");
-  await expect(carousel).toHaveAttribute("data-universe", "live");
-  await expect(carousel.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeFocused();
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
   await expect(carousel).toHaveAttribute("data-universe", "memes");
+  await expect(page.locator(".opening-continuum")).toHaveCount(0);
+  await page.getByRole("button", { name: "Live Drop", exact: true }).click();
+  await expect(carousel).toHaveAttribute("data-universe", "live");
   await expect(page.locator(".opening-continuum")).toHaveCount(0);
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
@@ -162,6 +143,10 @@ test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024
       const a = (await active.boundingBox())!, n = (await neighbor.boundingBox())!;
       expect(a.width).toBeGreaterThan(100);
       expect(a.width).toBeGreaterThan(n.width);
+      await expect(neighbor).toHaveAttribute("aria-hidden", "true");
+      await expect(neighbor.locator("button")).toHaveCount(0);
+      const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
+      expect(neighborOpacity).toBeLessThan(.3);
       await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
       expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
       const action = page.locator('.booster-panel:not([hidden]) .primary-action');

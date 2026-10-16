@@ -69,7 +69,7 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
     };
   });
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
   const scene = page.locator(".opening-continuum");
   await expect.poll(() => page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.04) ?? false,
@@ -900,6 +900,25 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
     await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();
   }
+});
+
+test("l’ouverture alternative reste secondaire sous le geste de déchirure", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await gotoDeck(page);
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Ouvrir le booster" });
+  const tear = dialog.locator(".booster-tear-track");
+  const alternative = dialog.getByRole("button", { name: "Ouvrir sans déchirer" });
+  await expect(tear).toBeVisible();
+  await expect(alternative).toBeVisible();
+  const tearBox = (await tear.boundingBox())!;
+  const alternativeBox = (await alternative.boundingBox())!;
+  expect(alternativeBox.y).toBeGreaterThan(tearBox.y + tearBox.height);
+  expect(alternativeBox.height).toBeGreaterThanOrEqual(44);
+  expect(alternativeBox.y + alternativeBox.height).toBeLessThanOrEqual(568);
+  expect(await alternative.evaluate((node) => getComputedStyle(node).fontSize)).toBe("11px");
+  await alternative.click();
+  await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
 });
 
 test("peel follows curved Y samples and opens after a broad cross-band swipe", async ({ page }) => {

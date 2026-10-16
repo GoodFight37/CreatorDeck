@@ -1,3 +1,69 @@
+# Checkpoint — Drop allégé et rituel prioritaire (16 octobre 2026)
+
+- Demande de Malik : sur `main`, réduire le chrome du Drop, ne laisser qu’un
+  mécanisme de sélection et rendre « Ouvrir sans déchirer » secondaire, sans
+  toucher aux systèmes interdits. Checkout utilisé :
+  `C:\Users\Administrator\Desktop\CreatorDeck-Codex`, branche locale
+  `codex/collaboration`, base locale auditée `c15679b518bf1f344264ce97157e927adade3e28`.
+  GitHub API/connector à revérifier avant publication ; `git ls-remote` a échoué
+  ici sur la résolution DNS de `github.com`. Aucun commit ni push de ce lot.
+- Diff préexistant unique confirmé avant édition :
+  `public/packs/memes-opening.svg`. Il a été préservé et n’est pas staged.
+- Claude a exécuté une revue ciblée en lecture seule du code et des tests, via
+  `scripts/delegate-claude.mjs`. Il a confirmé les pills, swipe, clic voisin et
+  flèches comme quatre voies distinctes, proposé de rendre le voisin non
+  interactif et recommandé de garder la cible tactile 44 px du lien alternatif.
+  Il a listé comme invariants `PACK_TEAR_MS` (1 200 ms), `done.current`,
+  `extractionCompleted`, seuil de peel et ordre de révélation. Aucune édition ni
+  test Claude ; le transfert a réussi au SHA `c15679b5` après un premier appel
+  arrêté par la limite de tours de Claude.
+- Modifications locales du lot : D-132 choisit les pills comme seule sélection;
+  le voisin est décoratif et atténué; « Plus d’infos » et le lien alternatif
+  sont moins proéminents. Le code d’ouverture/anti-skip et `PACK_TEAR_MS` ne sont
+  pas modifiés. Inclinaison actif `-7deg` et tranches 3D ne sont pas modifiées.
+  Ajout d’une note joueur actualisée, d’une entrée D-132 et tests E2E adaptés.
+- Suivi de capture envoyé ensuite par Malik : les titres longs des cartes
+  Mèmes sont coupés à une ligne pendant la révélation. Cause identifiée dans la
+  règle globale `.card-nameplate h3` ; correction locale limitée à
+  `src/components/meme-reveal.css`, avec retour à la ligne et corps ajusté.
+  Ajout de l’assertion `e2e/memes.spec.ts`, de la note joueur D-133 et des
+  documents `known-issues.md`, roadmap et décision. Tests d’écran Mèmes 8/8 et
+  typecheck réussis. Playwright téléphone tenté mais bloqué : un `next dev`
+  occupe le port 3000 et `fetch http://localhost:3000` échoue ; le lancement
+  Playwright a été retenté avec droits étendus sans succès ; aucun processus
+  n’a été arrêté.
+- Fichiers du lot Drop/rituel (10) : `src/components/booster-carousel.tsx`,
+  `src/components/booster-carousel.css`, `src/app/drop-binder.css`,
+  `src/app/booster-premium.css`, `src/lib/release-notes.ts`,
+  `e2e/booster-selector.spec.ts`, `e2e/pack-tear.spec.ts`,
+  `docs/decisions.md`, `docs/drop-boosters.md`, `docs/roadmap.md`.
+- Fichiers ajoutés pour la capture : `src/components/meme-reveal.css`,
+  `e2e/memes.spec.ts`, `docs/known-issues.md`, avec note complémentaire dans
+  `src/lib/release-notes.ts`, `docs/decisions.md` et `docs/roadmap.md`.
+- Vérifications sur le code local : `npm run typecheck` réussi ;
+  `npm run ecrans -- drop-binder drop-craft-priorites` réussi, 20/20 tests ;
+  `npm run lint -- src/components/booster-carousel.tsx src/lib/release-notes.ts`
+  lint ciblé terminé sans erreur ; `git diff --check` réussi. E2E ciblé non exécuté :
+  le serveur Playwright n’a pas démarré car un `next dev` existant du checkout
+  occupe le port 3000. Un test de sélection de filtres erroné (`ecrans -- e2e`)
+  a été tenté, sans test trouvé ; non compté.
+- Après reprise autorisée par Malik, le verrou d’index s’est libéré sans
+  intervention et aucun processus Git ne le détient. GitHub API revérifiée :
+  `main` reste à
+  `c15679b518bf1f344264ce97157e927adade3e28`, identique à la base locale ; aucune
+  PR ouverte n’a été examinée ici. `git ls-remote` reste en panne DNS. Pas de
+  commit/push encore.
+- E2E ciblés restants : `e2e/booster-selector.spec.ts`,
+  `e2e/pack-tear.spec.ts`, `e2e/memes.spec.ts`; leur lancement n’a pas démarré
+  à cause du serveur Next inaccessible sur le port 3000. Le diff check, les
+  tests DOM et le typecheck sont verts.
+- Reste avant livraison : stage les fichiers produit/doc/tests de ces deux
+  corrections explicitement, exclure le SVG et les pièces jointes ; revérifier
+  `main` et l’index avant commit ; push normal puis contrôler la CI et Vercel.
+  Malik devra juger le
+  résultat au doigt sur son téléphone (320/390 px) ; aucune validation physique
+  ne peut être prétendue.
+
 # Checkpoint — retrait Mèmes vérifié en production (16 octobre 2026)
 
 - Demande de Malik : retirer du classeur « Carte supprimée » ; portraits de

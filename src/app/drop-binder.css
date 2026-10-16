@@ -764,10 +764,11 @@
 .home-view .drop-secondary-details { margin-top: 7px; color: #8b8081; text-align: center; }
 .home-view .drop-secondary-details > summary {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 32px;
   align-items: center;
-  color: #aaa0a0;
-  font-size: 12px;
+  padding: 2px 8px;
+  color: #766b6c;
+  font-size: 11px;
   letter-spacing: .02em;
 }
 .home-view .drop-secondary-details[open] {

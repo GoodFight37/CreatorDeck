@@ -1,3 +1,15 @@
+## Titre long tronqué pendant la révélation d’un booster Mèmes — corrigé localement
+
+Capture Malik du 16 octobre 2026 : dans les cartes 1/5 et 4/5, le nom est suivi
+de « … » alors que la fiche possède un titre complet. Reproduction visuelle sur
+capture mobile ; cause prouvée dans `globals.css` : `.card-nameplate h3` impose
+`white-space: nowrap`, `overflow: hidden` et `text-overflow: ellipsis`, y
+compris dans la révélation. Gravité faible, lisibilité du contenu. Correctif
+local ciblé sur `.meme-reveal-front` : titre ajusté à la largeur et retour à la
+ligne, sans modifier la carte de collection ou le Binder. Le DOM/E2E de
+révélation doit confirmer l’affichage avant publication ; aucun essai physique
+post-correctif n’est encore réalisé.
+
 ## D-129 — le glissement du carrousel ne change pas toujours de booster : corrigé
 
 Retour de Malik sur la Production : le sachet bouge légèrement puis revient sans sélectionner l’autre univers. Reproduit avec un événement tactile Playwright. Le `lostpointercapture` d’un bouton enfant remontait au carrousel et terminait le geste avant le relâchement; le seuil tactile de 45 px aggravait le cas des petits glissements. Correction : ignorer la perte de capture d’un descendant, capturer au stage, reconnaître les gestes tactiles courts et faire basculer les deux univers dans les deux sens. Test Playwright téléphone avec Edge installé : swipe tactile gauche→droite et droite→gauche, clavier et boutons, sans préparation ni RPC de tirage. Le test a réussi 1/1 au SHA local `2b2eea7b` + diff courant. Ressenti sur téléphone physique à confirmer.

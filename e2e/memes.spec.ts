@@ -81,6 +81,13 @@ test("avec le serveur : le booster Mèmes se déchire, retourne cinq cartes et t
   await page.mouse.up();
   await expect(scene.locator(".foil-back-card")).toHaveCount(5);
   await expect(scene.locator(".meme-reveal-flow")).toBeVisible();
+  const revealedTitle = scene.locator(".meme-reveal-front .meme-card .card-nameplate h3");
+  await expect(revealedTitle).toBeVisible();
+  await expect.poll(() => revealedTitle.evaluate((node) => ({
+    text: node.textContent,
+    whiteSpace: getComputedStyle(node).whiteSpace,
+    overflow: getComputedStyle(node).textOverflow,
+  }))).toMatchObject({ whiteSpace: "normal", overflow: "clip" });
   await expect(scene.locator(".meme-reveal-next")).toBeDisabled();
   for (let i = 0; i < 5; i++) {
     await expect(scene.locator(".meme-reveal-counter")).toHaveText(`CARTE ${i + 1} / 5`);

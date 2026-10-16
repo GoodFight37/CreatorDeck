@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-meme-reveal-title", date: "2026-10-16", title: "Les titres des cartes Mèmes en entier",
+    summary: "Les noms ne sont plus coupés pendant la révélation.",
+    sections: [{ title: "Cartes Mèmes", items: [
+      "Pendant l’ouverture d’un booster, les noms longs des cartes peuvent maintenant tenir sur plusieurs lignes.",
+    ] }],
+  },
+  {
     id: "2026-10-16-meme-fiche-retiree", date: "2026-10-16", title: "Une fiche retirée du classeur Mèmes",
     summary: "La fiche sans illustration n’apparaît plus dans la collection.",
     sections: [{ title: "Cartes Mèmes", items: [
@@ -20,7 +27,7 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     id: "2026-10-16-drop-focus", date: "2026-10-16", title: "Un Drop plus lisible",
     summary: "Le sachet choisi prend sa place sur l’écran.",
     sections: [{ title: "Drop", items: [
-      "Le booster sélectionné ressort davantage. Les choix Live Drop et MEMES sont plus compacts et le texte d’aide en doublon disparaît.",
+      "Le booster sélectionné ressort davantage. Les choix Live Drop et MEMES sont plus compacts; le sachet voisin et les informations secondaires prennent moins de place visuelle.",
     ] }],
   },
   {
