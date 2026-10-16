@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-16-sachet-souple", date: "2026-10-16", title: "Un sachet moins rigide",
+    summary: "Le booster Live Drop prend des plis et une silhouette de sachet souple.",
+    sections: [{ title: "Drop", items: [
+      "Le sachet Live Drop garde sa taille et son visuel, avec des soudures et des plis plus naturels.",
+      "Ses tranches sont plus fines et son ombre suit mieux sa base pendant qu'il flotte. Le geste d'ouverture reste le même.",
+    ] }],
+  },
+  {
     id: "2026-10-16-memes-matiere", date: "2026-10-16", title: "Des Mèmes qui ont leur matière",
     summary: "Les cartes Mèmes se distinguent davantage selon leur rareté et leur format Full Art.",
     sections: [{ title: "Cartes Mèmes", items: [

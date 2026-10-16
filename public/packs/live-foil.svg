@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="600" height="880" viewBox="0 0 600 880">
 <title>CreatorDeck — paquet LIVE DROP</title>
 <defs>
- <clipPath id="foil"><path d="M25 9H575L591 28V851L572 872H26L9 852V28Z"/></clipPath>
+ <clipPath id="foil"><path d="M22 10Q300 5 578 10L589 35L581 78L566 139C577 322 584 563 567 766L584 835L573 869Q300 877 27 869L16 835L33 766C16 563 23 322 34 139L19 78L11 35Z"/></clipPath>
  <linearGradient id="laminate" x1="0" y1="0" x2="1" y2=".27">
  <stop offset="0" stop-color="#100918"/><stop offset=".055" stop-color="#fff0da"/><stop offset=".095" stop-color="#7b294b"/>
  <stop offset=".2" stop-color="#250b25"/><stop offset=".33" stop-color="#7b294b"/><stop offset=".52" stop-color="#250b25"/>
@@ -79,5 +79,5 @@
 <path d="M150 791H450" stroke="#fff0da" stroke-opacity=".2" stroke-width="2"/>
 <text x="300" y="829" fill="#fff0da" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="16" letter-spacing="5" text-anchor="middle">5 CARTES • ÉDITION I</text>
 </g>
-<path d="M25 9H575L591 28V851L572 872H26L9 852V28Z" fill="none" stroke="#fff0da" stroke-opacity=".68" stroke-width="3"/>
+<path d="M22 10Q300 5 578 10L589 35L581 78L566 139C577 322 584 563 567 766L584 835L573 869Q300 877 27 869L16 835L33 766C16 563 23 322 34 139L19 78L11 35Z" fill="none" stroke="#fff0da" stroke-opacity=".68" stroke-width="3"/>
 </svg>

@@ -1,9 +1,10 @@
 /* One stage, one card size and one focal point from the pouch to the reveal.
    Scoped to the game: the OBS presentation keeps its own 16:9 layout. */
 :root {
-  /* Same eight corners as the printed path in /packs/live-foil.svg (600×880). */
-  --live-foil-clip: polygon(4.167% 1.023%, 95.833% 1.023%, 98.5% 3.182%,
-    98.5% 96.705%, 95.333% 99.091%, 4.333% 99.091%, 1.5% 96.818%, 1.5% 3.182%);
+  /* Approximation des plis de la nouvelle silhouette imprimée, 600×880. */
+  --live-foil-clip: polygon(3.7% 1.1%, 96.3% 1.1%, 98.2% 4%, 96.8% 8.9%,
+    94.3% 15.8%, 96.2% 45%, 97% 63%, 94.5% 87%, 97.3% 95%, 95.5% 98.8%,
+    4.5% 98.8%, 2.7% 95%, 5.5% 87%, 3% 63%, 3.8% 45%, 5.7% 15.8%, 3.2% 8.9%, 1.8% 4%);
 }
 .booster-presentation {
   --scene-height: max(100dvh, 520px);
@@ -453,10 +454,10 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 /* Drop home: stronger sweep; opening/reveal retain their own timing. */
 @keyframes drop-pack-specular-pass {
-  0%, 8% { opacity: .16; background-position: 0% 50%; }
-  45% { opacity: .82; background-position: 55% 50%; }
-  78% { opacity: .46; background-position: 100% 50%; }
-  100% { opacity: .16; background-position: 100% 50%; }
+  0%, 8% { opacity: .1; background-position: 0% 50%; }
+  45% { opacity: .5; background-position: 55% 50%; }
+  78% { opacity: .28; background-position: 100% 50%; }
+  100% { opacity: .1; background-position: 100% 50%; }
 }
 .pack-stage.pulling .pack-specular,
 body:has(.booster-cinematic.booster-presentation) .pack-specular,

@@ -1,5 +1,12 @@
 # Reprise rapide — 16 octobre 2026
 
+## Checkpoint D-128 — sachet Live Drop assoupli (publication en cours)
+
+- Base `main` locale et GitHub vérifiée à `9659f95e82c61692a462dca9f2621519587ff27d`, arbre propre avant intervention. Chantier séparé du rendu physique du sachet principal. Aucun changement de peel, révélation, taille du pack, CTA, économie ou cartes.
+- `live-opening.svg` et son masque foil ont une silhouette et des soudures courbes, des plis et un éclairage intégrés à l'impression existante. Face CSS sans cadre rectangulaire, flancs foil amincis à 9 px, reflet atténué et ombre de contact alignée. [Captures avant/après 390 et 320 px](sachet-live-d128.md), snapshots scellé/déchiré téléphone et bureau, décision D-128 et note joueur.
+- Vérifications locales : TypeScript, ESLint, build, garde de jargon et `git diff --check` réussis ; écrans ciblés 45/45, note joueur 3/3 et unitaires de notes 8/8 ; Playwright téléphone Drop/ouverture 39 réussis, 2 ignorés (scénario obsolète et cloud absent) ; snapshots d'ouverture téléphone/bureau 2/2 après le dernier ajustement. Les captures ont été inspectées ; elles ne mesurent pas le rendu ni le geste sur téléphone physique. Pas de SQL ni de changement de taux.
+- Commit, CI et Vercel restent à consigner après publication.
+
 ## Checkpoint D-127 — matière des cartes Mèmes (publié et vérifié)
 
 - Base `main` locale/GitHub vérifiée à `51bcddec6d458c4e071c5f7342c24605ddf985a9`, arbre propre. Malik demande un audit différentiel du paquet MyMemeCards, puis une amélioration visuelle originale des cartes Mèmes sans nouvel import, sans changement Twitch ni du booster physique. Le paquet réduit contient 27 familles observées une seule fois et toutes `partial/resource_cap` ; `animations.json` compte 59 observations, 8 complètes et 51 partielles. [Audit détaillé et captures mobiles comparables](audit-cartes-memes-reference.md).

@@ -1,3 +1,11 @@
+## D-128 — 16 octobre 2026 : faire lire le booster principal comme un sachet souple
+
+Après D-117 et D-127, Malik ouvre un chantier distinct sur le rendu du booster principal, encore perçu comme trop plat. Les captures 390 × 844 et 320 × 568 de `main` montrent un objet lisible mais très rectiligne : la tranche rose et le bord de la face évoquent une boîte rigide, et le reflet peut sembler posé sur le dessin. La taille et l'action du Drop sont déjà satisfaisantes.
+
+L'impression Live Drop existante est conservée : ses bords et soudures sont courbés, avec des ombres de film et des plis discrets dans le SVG original du jeu. Le masque foil épouse cette silhouette. Sur la scène d'accueil, la bordure rectangulaire de la face disparaît, les tranches reculent derrière le film, l'ombre de contact suit le format effectif et le reflet est moins blanc. Le mouvement idle, les préférences Reflets et mouvement réduit, le CTA et le peel restent inchangés. Les formats portrait, le tirage, les cartes et le son ne sont pas modifiés. Aucun nouveau média externe ni WebGL.
+
+Captures comparables [avant/après sur 390 × 844 et 320 × 568](sachet-live-d128.md) inspectées ; elles montrent la silhouette et la lecture du CTA. Les tests de géométrie, le snapshot scellé/déchiré et le parcours d'ouverture vérifient l'intégrité technique, pas la sensation de foil sur téléphone physique. Garder cette appréciation ouverte.
+
 ## D-127 — 16 octobre 2026 : matière graduée des cartes Mèmes
 
 Le paquet de référence MyMemeCards compte 59 observations d'animations (8 complètes, 51 partielles) et 35 familles de layouts annoncées. Son extrait contient 27 familles observées une seule fois, toutes `partial/resource_cap` : ce ne sont pas 27 modèles garantis. Les captures montrent une hiérarchie cadre/illustration/identité et une Full Art plus ouverte ; certaines captures ont des médias absents. Les boucles `mythic-glow` (2,8 s), `mk-sweep` (7 s) et `mk-jackpot-rim` (5 s, observations partielles) décrivent la source, sans prescrire leur reproduction. Voir [l'audit différentiel](audit-cartes-memes-reference.md).
