@@ -5,8 +5,8 @@
   toucher aux systèmes interdits. Checkout utilisé :
   `C:\Users\Administrator\Desktop\CreatorDeck-Codex`, branche locale
   `codex/collaboration`, base locale auditée `c15679b518bf1f344264ce97157e927adade3e28`.
-  GitHub API/connector à revérifier avant publication ; `git ls-remote` a échoué
-  ici sur la résolution DNS de `github.com`. Aucun commit ni push de ce lot.
+  Le commit atomique `b15a2e20dc90b4f27be04dd17535fcb6ab206075` a été poussé
+  normalement vers `main`.
 - Diff préexistant unique confirmé avant édition :
   `public/packs/memes-opening.svg`. Il a été préservé et n’est pas staged.
 - Claude a exécuté une revue ciblée en lecture seule du code et des tests, via
@@ -31,7 +31,10 @@
   typecheck réussis. Playwright téléphone tenté mais bloqué : un `next dev`
   occupe le port 3000 et `fetch http://localhost:3000` échoue ; le lancement
   Playwright a été retenté avec droits étendus sans succès ; aucun processus
-  n’a été arrêté.
+  n’a été arrêté. Après push, la CI a révélé un mauvais sélecteur pour tester
+  `aria-hidden` et le retrait accidentel du garde anti-clic après déplacement.
+  Le sélecteur cible maintenant `.booster-neighbor` et le garde est restauré ;
+  ce correctif local attend encore Playwright/CI.
 - Fichiers du lot Drop/rituel (10) : `src/components/booster-carousel.tsx`,
   `src/components/booster-carousel.css`, `src/app/drop-binder.css`,
   `src/app/booster-premium.css`, `src/lib/release-notes.ts`,
@@ -50,16 +53,20 @@
 - Après reprise autorisée par Malik, le verrou d’index s’est libéré sans
   intervention et aucun processus Git ne le détient. GitHub API revérifiée :
   `main` reste à
-  `c15679b518bf1f344264ce97157e927adade3e28`, identique à la base locale ; aucune
-  PR ouverte n’a été examinée ici. `git ls-remote` reste en panne DNS. Pas de
-  commit/push encore.
+  `b15a2e20dc90b4f27be04dd17535fcb6ab206075`. Aucune PR n’était ouverte avant
+  publication. `git ls-remote` reste en panne DNS.
+- CI `38964331571` : SQL jetable et unitaires/écrans/statique/build verts ; les
+  trois shards Playwright ont échoué, défauts analysés ci-dessus. Le job RPC
+  simulé était encore en cours au dernier contrôle. Contrôle Vercel pending ;
+  le connecteur renvoie 403 pour le scope `hafsi37-2386` et aucun CLI Vercel
+  n’est présent localement. Pas de preuve de déploiement Production.
 - E2E ciblés restants : `e2e/booster-selector.spec.ts`,
   `e2e/pack-tear.spec.ts`, `e2e/memes.spec.ts`; leur lancement n’a pas démarré
   à cause du serveur Next inaccessible sur le port 3000. Le diff check, les
   tests DOM et le typecheck sont verts.
-- Reste avant livraison : stage les fichiers produit/doc/tests de ces deux
-  corrections explicitement, exclure le SVG et les pièces jointes ; revérifier
-  `main` et l’index avant commit ; push normal puis contrôler la CI et Vercel.
+- Reste avant livraison : vérifier les deux correctifs E2E et lancer la suite
+  CI ; committer et pousser le correctif normalement après s’être assuré que
+  `main` n’a pas avancé ; contrôler CI et Vercel.
   Malik devra juger le
   résultat au doigt sur son téléphone (320/390 px) ; aucune validation physique
   ne peut être prétendue.

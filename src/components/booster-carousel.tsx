@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type MouseEvent } from "react";
+import { useRef, type CSSProperties, type MouseEvent } from "react";
 import Image from "next/image";
 import "./booster-carousel.css";
 
@@ -15,6 +15,8 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
 }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean;
   artwork?: string; label?: string; active?: boolean;
 }) {
+  const start = useRef<{ x: number; y: number } | null>(null);
+  const dragged = useRef(false);
   if (!active) return <div className="booster-neighbor" aria-hidden="true">
     <span className="pack-idle"><span className="pack-3d-object">
       <span className="pack-3d-side pack-3d-side-left" /><span className="pack-3d-side pack-3d-side-right" />
@@ -25,7 +27,14 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     </span></span>
   </div>;
   return <button type="button" className="pack-artwork pack-live"
-    onClick={onClick} disabled={disabled} aria-label={label}>
+    onPointerDown={(event) => { start.current = { x: event.clientX, y: event.clientY }; dragged.current = false; }}
+    onPointerMove={(event) => {
+      if (start.current && Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 8) dragged.current = true;
+    }}
+    onPointerUp={() => { start.current = null; }}
+    onPointerCancel={() => { start.current = null; dragged.current = true; }}
+    onClick={(event) => { if (event.detail > 0 && dragged.current) return; onClick(event); }}
+    disabled={disabled} aria-label={label}>
     <span className="pack-idle" aria-hidden="true"><span className="pack-3d-object">
       <span className="pack-3d-side pack-3d-side-left" /><span className="pack-3d-side pack-3d-side-right" />
       <span className="pack-3d-side pack-3d-side-bottom" />

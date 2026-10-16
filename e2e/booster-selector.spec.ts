@@ -139,7 +139,7 @@ test("le voisin reste visible et les commandes sont lisibles à 320, 390 et 1024
           .map((animation) => animation.finished));
       });
       const active = page.locator('.booster-pack-slot[data-active="true"]');
-      const neighbor = page.locator('.booster-pack-slot[data-active="false"]');
+      const neighbor = page.locator('.booster-pack-slot[data-active="false"] .booster-neighbor');
       const a = (await active.boundingBox())!, n = (await neighbor.boundingBox())!;
       expect(a.width).toBeGreaterThan(100);
       expect(a.width).toBeGreaterThan(n.width);
