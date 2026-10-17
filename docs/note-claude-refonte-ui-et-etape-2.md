@@ -25,5 +25,19 @@ Branche : `etape-1-mes-chaines` (HEAD 1f1c0c6). Rédigée le 17/10/2026.
 - APK : `npm run android:sync` puis `node scripts/android-gradle.mjs assembleDebug --max-workers=2` (ANDROID_HOME=/opt/android-sdk, `.env.local` requis). Il se télécharge en `.apk.zip` : renommer en `.apk`.
 - Le hook « commits non poussés » est périmé : vérifier avec `git ls-remote`.
 
-## Étape 2 (à faire)
-Second verbe : « qui est en direct dans mon cercle ». La rangée existe déjà visuellement ; il reste à en faire un vrai geste de jeu (voir le prompt dans la conversation de passation).
+## Étape 2 — faite le 17/10/2026 (commit 6c85336, D-138)
+- Encadré « En direct dans ton cercle » sous le bouton (lean) : `src/components/circle-live-moment.tsx`, logique pure `src/lib/circle-live.ts`.
+- Bénéfice = bonus Direct existant (lu dans `DIRECT_BONUS`) ; réserve vide → prochaine recharge + raccourci sablier existant. Aucune règle, migration ni notification.
+- `circle-strip.tsx` : états personne / périmé / hors ligne (Réessayer → `liveStore.refresh({ force: true })`) / version sans suivi ; correction du défilement qui cachait les chaînes en direct.
+- Vérifié automatiquement : `npm test` 1227/1227, `npm run ecrans` 200/200, check-jargon, tsc, eslint ; captures `docs/captures/etape-2/` (direct simulé, compte invité : la ligne « C’est le moment d’ouvrir » et le sablier ne sont visibles qu’avec un compte, couverts par les tests d’écran).
+- Non vérifié : téléphone réel (lien Twitch qui ouvre l’app Twitch ou le navigateur, rendu de l’encadré au-dessus du dock, données live réelles).
+
+### APK de cette session
+- Construit dans un environnement cloud neuf : SDK Android installé dans `/opt/android-sdk`, `.env.local` recréé (non commité) avec l’URL et la clé publique déjà servies par le site Vercel.
+- Le dépôt ne fixe **aucune clé de signature debug** : chaque machine signe avec la sienne. Si Android refuse la mise à jour (« Application non installée »), il faut désinstaller l’ancienne version d’abord ; les données de l’appareil (cercle, partie invitée) sont alors perdues, celles du compte en ligne restent. Piste à décider : committer une clé debug dédiée.
+- Maven Central a renvoyé des 429 : relancer Gradle avec `--max-workers=1` suffit.
+
+## Proposé, non fait (accord de Malik requis)
+- Notification push « X vient de lancer son direct ».
+- Bonus propre au cercle (règle de jeu + miroir SQL).
+- Étapes 3 à 5 du plan.
