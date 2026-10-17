@@ -1,5 +1,7 @@
 # Mise à jour de l'APK de test depuis l'appli (D-144)
 
+**État vérifié le 18 octobre 2026 :** dépôt public et trois secrets Actions en place. Le [workflow APK](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077656829) a publié [v871307](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) depuis `bb6cf0a` ; APK et `latest.json` accessibles, taille et empreinte concordantes. Les étapes 1 à 4 ci-dessous sont faites. Il reste l'installation initiale sur téléphone (étape 5), puis l'essai d'une mise à jour ultérieure (étape 6). Aucun comportement natif n'a encore été validé sur appareil.
+
 Une APK installée à la main se met à jour toute seule : quand une version plus
 récente est publiée, l'appli affiche **« Nouvelle version disponible → Mettre à
 jour »**. Un appui télécharge l'APK ; Android ouvre alors sa fenêtre

@@ -8,10 +8,8 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 1. [README du dépôt](../README.md) : produit, installation et commandes.
 2. [Périmètre](perimetre.md) : contraintes produit et choix déjà refusés.
 3. [Roadmap](roadmap.md) : chantiers ouverts, prochaine étape et backlog.
-   Le chantier « Mes chaînes » (branche `etape-1-mes-chaines`) suit son propre
-   plan : [plan des cinq premières minutes](plan-premiere-session.md), avec les
-   notes de passation Claude [étape 1](note-claude-etape-1-mes-chaines.md) et
-   [refonte UI + étapes 2 et 3](note-claude-refonte-ui-et-etape-2.md).
+   Les étapes 1 à 3 de « Mes chaînes » sont publiées ; voir le
+   [plan des cinq premières minutes](plan-premiere-session.md) et le checkpoint.
 4. [Passation active](agent-handoff.md) : dernier checkpoint daté ; lire d'abord
    le bloc en haut, puis seulement les sections liées à la tâche.
 
@@ -30,6 +28,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   pas la liste des tâches encore ouvertes.
 - **Détails techniques d'une fonctionnalité** : le document spécialisé lié par
   la roadmap ou la passation.
+- **Mise à jour de l'APK de test (D-144)** : [guide et état vérifié](mise-a-jour-apk.md) ; release publique, installation initiale et mise à jour ensuite.
 - **Boosters temporaires pour tester** : [codes privés](booster-test-access.md) ;
   réserve serveur plafonnée, sans reset de progression.
 - **Trade Radar** : [périmètre et fonctionnement](trade-radar.md) ; souhaits
