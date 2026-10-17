@@ -4,29 +4,33 @@
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.
 
-## État actuel — 17 octobre 2026
+## État actuel — 18 octobre 2026
 
-**Chantier « Mes chaînes » — branche `etape-1-mes-chaines` (pas sur `main`, pas
-déployée sur Vercel) :** plan des cinq premières minutes,
-[`plan-premiere-session.md`](plan-premiere-session.md). Testé par APK debug
-installé à la main ; jamais vérifié en Production.
+**Chantier « Mes chaînes » — étapes 1 à 3 publiées sur `main` :** code
+`338b2d0`, [Vérification 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074226607), migrations 0054 et 0055
+[appliquées et vérifiées](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074582249),
+Vercel Production `READY` sur le SHA du code. Voir le [checkpoint](agent-handoff.md)
+et le [plan](plan-premiere-session.md). Les essais sur téléphone réel ne sont pas
+revendiqués par ces contrôles.
 
 | Étape | Statut | Référence |
 | --- | --- | --- |
-| 1 — « Mes chaînes », premier booster dans le cercle, accueil épuré | implémentée, APK installé par Malik | migration 0054, [note](note-claude-etape-1-mes-chaines.md) |
-| Refonte visuelle (accueil, rangée « Ton cercle », dock) | implémentée | commit `1f1c0c6`, [note](note-claude-refonte-ui-et-etape-2.md) |
-| 2 — « qui est en direct dans mon cercle » | implémentée et testée, non vérifiée sur téléphone | [D-138](decisions.md), commit `6c85336` |
-| Clé de signature debug partagée | faite | [D-139](decisions.md), commit `8f2cb54` |
-| 3 — Binder au service du cercle, « Modifier mes chaînes », jetons aplatis | implémentée et testée, non vérifiée sur téléphone | [D-140](decisions.md), commit `d6f9d9e` |
-| 3 — booster MEMES après 10 boosters (joueur avec cercle) | implémenté et testé | [D-141](decisions.md) |
-| 3 — Légendaire garanti tiré dans le cercle | **écrit et vérifié sur Postgres jetable** ; actif en Production quand Malik aura appliqué **0055** (manuelle, après 0054) | [D-142](decisions.md) |
-| Cercle enregistré en ligne (`set_circle` + relecture) | **écrit et testé**, sans migration (0054 suffit) | [D-143](decisions.md) |
-| 4 — rétention honnête ; 5 — finition visible | non commencées, attendent le feu vert de Malik | plan § 5 et § 6 |
+| 1 — « Mes chaînes », premier booster dans le cercle, accueil épuré | publiée, CI 6/6 ; téléphone non vérifié ici | migration 0054, [note](note-claude-etape-1-mes-chaines.md) |
+| Refonte visuelle (accueil, rangée « Ton cercle », dock) | publiée, CI 6/6 | commit `1f1c0c6`, [note](note-claude-refonte-ui-et-etape-2.md) |
+| 2 — direct dans le cercle | publiée, CI 6/6 ; téléphone non vérifié ici | [D-138](decisions.md) |
+| Clé de signature debug partagée | publiée | [D-139](decisions.md) |
+| 3 — Binder du cercle et modification des chaînes | publiée, CI 6/6 ; téléphone non vérifié ici | [D-140](decisions.md) |
+| MEMES après 10 boosters pour un joueur avec cercle | publiée, CI 6/6 | [D-141](decisions.md) |
+| Légendaire garanti tiré dans le cercle | publiée ; 0055 appliquée en Production et historique vérifié | [D-142](decisions.md) |
+| Cercle enregistré en ligne | publié, CI 6/6 | [D-143](decisions.md) |
+| 4 — rétention honnête | non commencée ; branche dédiée `etape-4-…` | plan § 5 |
+| 5 — finition visible | non commencée ; branche dédiée `etape-5-…` après l’étape 4 | plan § 6 |
 
-Avant toute fusion dans `main` : vérifier que 0054 puis 0055 sont appliquées en
-Production (0055 avant d'installer un APK qui annonce la garantie du cercle), relancer la CI complète (dont Playwright, jamais lancé sur cette
-branche) et essayer l'APK sur téléphone. Critères d'acceptation de chaque
-étape : tests cités dans la décision correspondante.
+Chaque étape suivante a un seul écrivain sur sa branche et rejoint `main` après
+une CI verte. Toute nouvelle règle de jeu, migration ou notification push est
+d'abord proposée à Malik. Pour `open_pack()`, la définition actuelle est 0055 ;
+une future migration doit repartir de cette version. La prochaine migration est
+0056.
 
 **Rituel d’ouverture allégé (D-136) — implémenté localement :** l’ouverture de
 secours sans déchirure reste disponible mais se place en bas de l’écran, à
