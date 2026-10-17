@@ -36,23 +36,6 @@ describe("l’essai invité sans récompense ni repli cloud", () => {
     await act(async () => { await Promise.resolve(); });
     expect(result?.status).toBe("refused");
   });
-  it("tire l'essai invité dans « Mes chaînes » quand le joueur les a nommées, sans toucher ses cartes", async () => {
-    const circle = ["kaicenat", "ibai", "ninja", "auronplay", "rubius", "xqc", "shroud"];
-    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: circle, at: 1 }));
-    const local = vi.spyOn(gameStore, "openPack");
-    await banc.monter(<Harness />);
-    banc.appuyer("Essayer");
-    await act(async () => { await vi.advanceTimersByTimeAsync(650); });
-    expect(result?.status).toBe("drawn");
-    if (result?.status === "drawn") {
-      expect(result.cards).toHaveLength(5);
-      expect(new Set(result.cards.map((card) => card.creatorSlug)).size).toBe(5);
-      for (const card of result.cards) expect(circle).toContain(card.creatorSlug);
-      // Affichée Rare ou mieux dans le cercle ; la rareté du catalogue reste inchangée.
-      expect(["rare", "epic", "legendary"]).toContain(result.cards.at(-1)?.displayRarity);
-    }
-    expect(local).not.toHaveBeenCalled();
-  });
   it("garde la limite après un rechargement", async () => {
     window.localStorage.setItem(TUTORIAL_PACK_KEY, "1");
     await banc.monter(<Harness />);

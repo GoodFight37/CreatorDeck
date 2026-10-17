@@ -154,7 +154,7 @@ export const gameStore = {
    */
   openPack(
     now = Date.now(),
-    options: { liveLogins?: LiveLogins } = {},
+    options: { liveLogins?: LiveLogins; circle?: readonly string[] } = {},
   ): { cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
     const result = engineOpenPack(current(), now, options);
     persist(result.state);

@@ -68,6 +68,7 @@ import {
   type CollectionTheme,
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
+import { drawCirclePack, isValidCircle } from "@/lib/circle";
 import { canCraftRetired } from "@/lib/retired";
 // Le Tribunal : le tirage du jour est calculé par son propre module (pur), le
 // moteur ne fait que **garder** les verdicts et payer la séance.
@@ -1806,10 +1807,29 @@ export function claimSeason(
  * Ouvre un booster : consomme un exemplaire, crédite points/XP/niveaux et
  * ajoute les cartes tirées à la collection.
  */
+function drawCircleCards(
+  circle: readonly string[],
+  owned: ReadonlySet<string>,
+  liveLogins?: LiveLogins,
+): DrawnCard[] {
+  return drawCirclePack(circle).map((card) => {
+    const creator = CREATOR_BY_SLUG.get(card.creatorSlug)!;
+    return {
+      id: randomUUID(),
+      creatorSlug: creator.slug,
+      rarity: creator.rarity,
+      displayRarity: card.rarity,
+      variant: chooseVariant(ACTIVE_PACK, creator, false, liveLogins),
+      isNew: !owned.has(creator.slug),
+      rareDrop: false,
+    };
+  });
+}
+
 export function openPack(
   state: PlayerState,
   now = Date.now(),
-  options: { liveLogins?: LiveLogins; rareDrop?: boolean } = {},
+  options: { liveLogins?: LiveLogins; rareDrop?: boolean; circle?: readonly string[] } = {},
 ): { state: PlayerState; cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
   const refreshed = refreshBalances(state, now);
   if (refreshed.packs <= 0) {
@@ -1825,11 +1845,16 @@ export function openPack(
   // Le booster Perfect de la série (`streakJackpot`) force aussi le tirage
   // rare — c'est la promesse du 7ᵉ jour.
   
-  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed), {
-    ...options,
-    rareDrop: options.rareDrop ?? (refreshed.streakJackpot ? true : undefined),
-    pity,
-  });
+  // Tout premier booster d'une partie sans serveur : tiré dans « Mes chaînes »
+  // (même règle que `open_circle_gift_pack` côté serveur). La rareté enregistrée
+  // reste celle du catalogue ; celle du cercle n'est qu'affichée.
+  const cards = options.circle && refreshed.openings === 0 && isValidCircle(options.circle)
+    ? drawCircleCards(options.circle, ownedSlugs(refreshed), options.liveLogins)
+    : drawPack(ACTIVE_PACK, ownedSlugs(refreshed), {
+      liveLogins: options.liveLogins,
+      rareDrop: options.rareDrop ?? (refreshed.streakJackpot ? true : undefined),
+      pity,
+    });
 
   // Même application qu'un tirage serveur : un seul endroit calcule les
   // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`
@@ -1892,6 +1917,8 @@ export function applyPackResult(
     rarity: Rarity;
     variant: CardVariant;
     rareDrop: boolean;
+    /** Rareté « de mon cercle », affichage seul (premier booster). */
+    displayRarity?: Rarity;
   }>,
   serverPacks: number,
   serverLastRegenAt: string | number,
@@ -1963,6 +1990,7 @@ export function applyPackResult(
     variant: card.variant,
     isNew: !owned.has(card.creatorSlug),
     rareDrop: card.rareDrop,
+    ...(card.displayRarity ? { displayRarity: card.displayRarity } : {}),
   }));
 
   // Série de jours : une journée de jeu « suit » la précédente (+1), sinon

@@ -105,6 +105,7 @@ export function usePackOpening(game: GameView | null): {
       // streame » est celui d'il y a dix secondes.
       const { cards, streakReward } = gameStore.openPack(Date.now(), {
         liveLogins: liveLogins(liveStore.getSnapshot()),
+        circle: readCircle(),
       });
       preload(cards);
       return { status: "drawn", kind: "live", cards, streakReward };
