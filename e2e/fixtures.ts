@@ -13,14 +13,16 @@ export async function answerCircle(dialog: ReturnType<Page["getByRole"]>): Promi
   await dialog.getByRole("button", { name: "Voir mon premier booster", exact: true }).click();
 }
 
-/** Préparer le joueur via la vraie question d'accueil, après hydratation. */
+/** Préparer un joueur déjà accueilli pour les scénarios des écrans historiques. */
 export async function gotoDeck(page: Page, tutorial = true): Promise<void> {
+  if (tutorial) {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("creatordeck-tutorial:local", "done");
+      window.localStorage.setItem("creatordeck-tutorial:completed:local", "done");
+    });
+  }
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Mes chaînes" });
-  if (tutorial) {
-    await expect(dialog).toBeVisible();
-    await answerCircle(dialog);
-  }
   await expect(dialog).toHaveCount(0);
 }
 

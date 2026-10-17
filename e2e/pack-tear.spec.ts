@@ -27,6 +27,7 @@ test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", a
     };
   });
   await gotoDeck(page);
+  await page.getByRole("button", { name: "Drop", exact: true }).click();
   await expect.poll(() => page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { loops: boolean[] } }).__creatorDeckAudioProbe?.loops.filter(Boolean).length ?? 0,
   )).toBe(1);
