@@ -133,7 +133,9 @@ export function packActions(ctx: CloudStoreContext) {
       if (!api?.session()) return { status: "unavailable", reason: "no-session", message: "Connecte-toi pour ouvrir le cadeau." };
       try {
         ctx.publish({ busy: true });
-        const result = await api.openReturnGiftPack(circle);
+        // Chaque cadeau transmet le cercle ; le serveur relit la collection et tire.
+        const selectedCircle = circle ?? readCircle();
+        const result = await api.openReturnGiftPack(selectedCircle.length ? selectedCircle : undefined);
         await this.refreshOnboarding();
         const local = ctx.deps.readState();
         if (!local || result.cards.length !== 5) throw new CloudError("Le tirage cadeau est incomplet.", "invalid_response", 0);

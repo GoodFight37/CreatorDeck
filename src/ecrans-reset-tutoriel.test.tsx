@@ -47,6 +47,6 @@ it("réinitialise le compte, rejoue le tutoriel puis retrouve les quatre cadeaux
   await act(async () => { banc.appuyer("Ouvrir un booster cadeau · 4 restants"); });
   expect(claim).not.toHaveBeenCalled();
   expect(open).toHaveBeenCalledOnce();
-  // Seul le tout premier booster (5 restants) est tiré dans le cercle : ici il en reste 4.
-  expect(open).toHaveBeenCalledWith(undefined);
+  // Le cadeau suivant garde aussi les chaînes choisies : ici il en reste 4.
+  expect(open).toHaveBeenCalledWith(expect.arrayContaining([expect.any(String)]));
 });

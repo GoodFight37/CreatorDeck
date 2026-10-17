@@ -1,3 +1,35 @@
+## D-145 — 18 octobre 2026 : garder les absentes du cercle dans tous les Live Drop
+
+Malik autorise explicitement cette seule règle sur `etape-4-cercle-vrai`, issue
+de `main` `2fa29aaa` : chaque Live Drop et chaque cadeau réservent les slots
+1, 2 et 5 aux chaînes du cercle absentes de la **collection actuelle**, toutes
+variantes confondues. Le serveur lit `user_cards`, pas les droits historiques
+de `card_claims` : une chaîne échangée ou recyclée redevient absente.
+
+La dernière absente est réservée avant les autres slots. Avec trois absentes
+ou plus, les cinq identités restent différentes. Avec une ou deux, des
+répétitions d'absentes sont nécessaires pour tenir trois cartes sur cinq.
+Les autres slots restent mondiaux, hors absentes réservées. Les raretés sont
+tirées avec les poids existants renormalisés sur les candidates ; si aucun
+poids ne correspond, toutes les raretés présentes deviennent admissibles à
+poids égal. Dans une rareté, le bonus Direct reste ×1,5 et la position 0
+remplace une candidate de même poids. Aucun poids de `pull-rates.json` changé.
+
+La complétion prime sur les garanties de rareté des slots concernés, y compris
+sous pity/Perfect : une absente Commune peut occuper le dernier slot. Les
+déclencheurs, compteurs et variantes existants restent ceux de 0055. La couche
+de rareté affichée du premier cadeau garde les seuils de 0054 ; elle n'est pas
+étendue aux autres cadeaux. Une collection complète revient au tirage mondial
+et affiche « Ton cercle est complet. Les boosters s’ouvrent au classement. »
+
+`0056_cercle_vrai.sql` est une nouvelle migration manuelle : aucune réécriture
+de 0054/0055. Les deux portes cadeau appliquent la même règle et partagent le
+verrou de réserve avec `open_pack`. Miroir pur `circle-draw.ts` appelé par le
+moteur ; tests SQL exécutables dans `verify-circle-draw.mjs`, intégrés à
+`supabase:verify` après les scénarios historiques. Publication Production non
+effectuée à ce checkpoint ; les preuves courantes figurent dans la passation.
+Ni missions, ni bouton de recharge, ni polish, ni autre partie de l'étape 4.
+
 ## D-144 — 18 octobre 2026 : mettre à jour l'APK de test depuis l'appli
 
 **Contexte.** Malik installait chaque APK à la main (téléchargée en `.apk.zip`,

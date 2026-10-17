@@ -83,16 +83,13 @@ describe("moteur local — circlePityPool et drawPack", () => {
     }
   });
 
-  it("cercle déjà complet ou hors garantie : tirage d'avant", () => {
+  it("cercle déjà complet : tirage d'avant ; cercle incomplet : 0056 prend le relais hors garantie", () => {
     const allOwned = new Set(CIRCLE);
     const complete = drawPack("live", allOwned, { pity: true, circle: CIRCLE });
     expect(complete.at(-1)!.rarity).toBe("legendary");
-    let fromCircle = 0;
     for (let run = 0; run < 60; run += 1) {
       const cards = drawPack("live", new Set(), { pity: false, circle: CIRCLE, rareDrop: false });
-      if (CIRCLE.includes(cards.at(-1)!.creatorSlug) && cards.at(-1)!.rarity === "legendary") fromCircle += 1;
+      expect(CIRCLE).toContain(cards.at(-1)!.creatorSlug);
     }
-    // Sans garantie, une Légendaire du cercle en dernière carte reste rarissime (3 % × 5/50).
-    expect(fromCircle).toBeLessThan(5);
   });
 });

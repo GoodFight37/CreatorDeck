@@ -32,6 +32,7 @@ import { CircleLiveMoment } from "@/components/circle-live-moment";
 import { circleLiveState } from "@/lib/circle-live";
 import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
 import { circlePityPool } from "@/lib/game-engine";
+import { missingCircle } from "@/lib/circle-draw";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -366,7 +367,12 @@ export function HomeView({
         />
       ) : null}
       {lean ? (
-        <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+        <>
+          {missingCircle(circle, ownedSlugs).length === 0 ? (
+            <p role="status">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
+          ) : null}
+          <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+        </>
       ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">

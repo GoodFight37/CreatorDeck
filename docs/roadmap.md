@@ -6,6 +6,14 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
+**Règle « cercle vrai » (D-145) — branche `etape-4-cercle-vrai`, vérification
+en cours :** nouvelle migration manuelle 0056, miroir TypeScript et cadeaux
+serveur : trois cartes sur cinq et la dernière parmi les chaînes actuellement
+absentes du cercle ; préférée prioritaire à poids égal. Retour au classement
+et message dédié quand le cercle est complet. Ce lot est limité à cette règle,
+pas à toute l'étape 4. Aucun déploiement Production à ce stade. Preuves et
+limites : [checkpoint](agent-handoff.md).
+
 **Mise à jour de l'APK de test depuis l'appli (D-144) — publiée, téléphone non vérifié :** `main` contient `15c1f1a` et le correctif workflow `bb6cf0a`, [CI 6/6 verte](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076819637). La [première release publique](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) contient l'APK signée debug et `latest.json` ; [workflow APK vert](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077656829). Vercel Production est `READY` sur `bb6cf0a`. L'installation initiale et une mise à jour réelle sur téléphone restent non vérifiées. [Guide](mise-a-jour-apk.md).
 
 **Chantier « Mes chaînes » — étapes 1 à 3 publiées sur `main` :** code

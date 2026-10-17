@@ -497,7 +497,7 @@ export function CreatorDeckApp() {
       }
       setTutorialStep(null);
       setWelcomeMarker({ key: welcomeKey, done: true });
-      const result = await cloudStore.openReturnGiftPack(circle.length && (cloud.onboarding?.giftRemaining ?? 0) >= 5 ? circle : undefined);
+      const result = await cloudStore.openReturnGiftPack(circle.length ? circle : undefined);
       if (result.status !== "drawn") { showError(result.message); return; }
       setWelcomeGiftReveal(true);
       setRevealKind("live");

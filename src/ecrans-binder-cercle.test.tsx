@@ -162,6 +162,18 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(document.querySelector(".pity-row")!.textContent).not.toContain("une de tes chaînes");
   });
 
+  it("0056 : l'accueil annonce le retour au classement seulement quand le cercle est complet", async () => {
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
+    const noop = () => {};
+    await banc.monter(<HomeView game={gameWith(CIRCLE)} friendsOpening={0}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
+      sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
+      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
+      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={false} needsAccount={false} />);
+    expect(document.body.textContent).toContain("Ton cercle est complet. Les boosters s’ouvrent au classement.");
+  });
+
   it("« Mes chaînes » en modification ne parle pas de premier booster", async () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();

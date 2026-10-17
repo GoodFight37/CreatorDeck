@@ -68,7 +68,8 @@ import {
   type CollectionTheme,
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
-import { drawCirclePack, isValidCircle } from "@/lib/circle";
+import { circleTiers } from "@/lib/circle";
+import { circleDrawSlots, missingCircle } from "@/lib/circle-draw";
 import { canCraftRetired } from "@/lib/retired";
 // Le Tribunal : le tirage du jour est calculé par son propre module (pur), le
 // moteur ne fait que **garder** les verdicts et payer la séance.
@@ -1085,6 +1086,9 @@ export function drawPack(
   // Les poids nominaux restent inchangés ; seuls les choix impossibles sont retirés.
   const finalWeights: RarityWeights = pity ? { legendary: 1 } :
     rareDrop && packType !== "scene" ? table.rareDrop.weights : table.guaranteed.weights;
+  const missing = packType === "live" ? missingCircle(options.circle ?? [], alreadyOwned) : [];
+  const circleSlots = circleDrawSlots(missing, options.circle?.[0] ?? "",
+    [...Array.from({ length: 4 }, (_, i) => weightsFor(i)), finalWeights], liveLogins);
   const eligible = CREATORS.filter(c => !RETIRED_BY_SLUG.has(c.slug) &&
     (!family || c.region === family) && (packType !== "scene" || c.rarity !== "legendary"));
   // Si le paquet a au plus autant de candidats finaux que de slots ordinaires,
@@ -1102,6 +1106,7 @@ export function drawPack(
     const remaining = eligible.filter(c => !used.has(c.slug));
     const reserved = remaining.filter(c => (finalWeights[c.rarity] ?? 0) > 0);
     const excluded = new Set(used);
+    if (circleSlots) for (const creator of missing) excluded.add(creator.slug);
     if (reservedSlug) excluded.add(reservedSlug);
     else if (reserved.length === 1) excluded.add(reserved[0].slug);
     let weights = weightsFor(index);
@@ -1111,7 +1116,7 @@ export function drawPack(
       weights = remaining.some(c => c.rarity === "epic" && !excluded.has(c.slug))
         ? table.rareDrop.weights : table.slots[index].weights;
     }
-    const creator = chooseCreator(weights, excluded, liveLogins, family);
+    const creator = circleSlots?.[index] ?? chooseCreator(weights, excluded, liveLogins, family);
     used.add(creator.slug);
     drawn.push({
       id: randomUUID(),
@@ -1130,9 +1135,9 @@ export function drawPack(
     eligible.some(c => c.rarity === "epic" && !used.has(c.slug));
   const circlePool = pity && packType === "live" && options.circle
     ? circlePityPool(options.circle, used, alreadyOwned) : [];
-  const guaranteed = circlePool.length
+  const guaranteed = circleSlots?.[4] ?? (circlePool.length
     ? circlePool[randomInt(circlePool.length)]
-    : chooseCreator(sceneEpicsRemain ? table.rareDrop.weights : finalWeights, used, liveLogins, family);
+    : chooseCreator(sceneEpicsRemain ? table.rareDrop.weights : finalWeights, used, liveLogins, family));
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,
@@ -1835,29 +1840,7 @@ export function claimSeason(
   };
 }
 
-/**
- * Ouvre un booster : consomme un exemplaire, crédite points/XP/niveaux et
- * ajoute les cartes tirées à la collection.
- */
-function drawCircleCards(
-  circle: readonly string[],
-  owned: ReadonlySet<string>,
-  liveLogins?: LiveLogins,
-): DrawnCard[] {
-  return drawCirclePack(circle).map((card) => {
-    const creator = CREATOR_BY_SLUG.get(card.creatorSlug)!;
-    return {
-      id: randomUUID(),
-      creatorSlug: creator.slug,
-      rarity: creator.rarity,
-      displayRarity: card.rarity,
-      variant: chooseVariant(ACTIVE_PACK, creator, false, liveLogins),
-      isNew: !owned.has(creator.slug),
-      rareDrop: false,
-    };
-  });
-}
-
+/** Ouvre un booster et applique le même tirage que le serveur. */
 export function openPack(
   state: PlayerState,
   now = Date.now(),
@@ -1877,17 +1860,17 @@ export function openPack(
   // Le booster Perfect de la série (`streakJackpot`) force aussi le tirage
   // rare — c'est la promesse du 7ᵉ jour.
   
-  // Tout premier booster d'une partie sans serveur : tiré dans « Mes chaînes »
-  // (même règle que `open_circle_gift_pack` côté serveur). La rareté enregistrée
-  // reste celle du catalogue ; celle du cercle n'est qu'affichée.
-  const cards = options.circle && refreshed.openings === 0 && isValidCircle(options.circle)
-    ? drawCircleCards(options.circle, ownedSlugs(refreshed), options.liveLogins)
-    : drawPack(ACTIVE_PACK, ownedSlugs(refreshed), {
+  const cards = drawPack(ACTIVE_PACK, ownedSlugs(refreshed), {
       liveLogins: options.liveLogins,
       rareDrop: options.rareDrop ?? (refreshed.streakJackpot ? true : undefined),
       pity,
       circle: options.circle,
     });
+  // Conserver la couche d'affichage du premier booster, sans changer ses seuils.
+  if (options.circle && refreshed.openings === 0) {
+    const tiers = circleTiers(options.circle);
+    for (const card of cards) if (tiers[card.creatorSlug]) card.displayRarity = tiers[card.creatorSlug];
+  }
 
   // Même application qu'un tirage serveur : un seul endroit calcule les
   // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`

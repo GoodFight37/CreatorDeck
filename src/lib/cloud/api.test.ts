@@ -680,6 +680,16 @@ describe("tirage serveur", () => {
     expect(calls.map((call) => call.url.split("/").at(-1))).toEqual(["onboarding_status", "complete_tutorial", "claim_return_gift", "open_return_gift_pack"]);
   });
 
+  it("0056 : les cadeaux suivants restent sur la RPC cercle sans repli mondial", async () => {
+    const circle = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"];
+    const { api, calls } = client(() => ({ body: { gift_remaining: 3, cards: [], save: null } }), signedIn());
+    await api.openReturnGiftPack(circle);
+    await api.openReturnGiftPack(circle);
+    expect(calls).toHaveLength(2);
+    expect(calls.every(c => c.url.endsWith("/open_circle_gift_pack"))).toBe(true);
+    expect(JSON.parse(String(calls[1].init?.body))).toEqual({ p_slugs: circle });
+  });
+
   it("D-143 : envoie le cercle par set_circle et relit le sien dans player_circles", async () => {
     const slugs = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"];
     const { api, calls } = client((url) => (url.includes("player_circles")

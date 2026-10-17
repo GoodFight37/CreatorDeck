@@ -1,3 +1,17 @@
+## Le cercle disparaissait des tirages après le premier cadeau — corrigé sur branche (18 octobre 2026)
+
+Sur `main` `2fa29aaa`, seul le premier cadeau utilise 0054 ; les cadeaux
+suivants et Live Drop reviennent au monde, sauf la garantie Légendaire de
+0055. Gravité produit élevée : les chaînes choisies n'orientent plus la
+collection. Cause vérifiée : restriction au premier cadeau dans l'appelant
+et la RPC, absence de règle de complétion dans `open_pack`.
+
+Correction D-145 sur `etape-4-cercle-vrai` : migration 0056 et miroir du moteur,
+trois absentes sur cinq, dernière absente, cadeaux serveur à chaque ouverture.
+Tests ciblés et typecheck réussis ; la preuve PostgreSQL locale est bloquée
+par le compte Windows Administrateur et doit être obtenue sur le runner CI.
+Non appliqué en Production ; pas de contournement client revendiqué.
+
 ## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)
 
 - **Cercle seulement sur l'appareil — corrigé dans le code (D-143)** pour un

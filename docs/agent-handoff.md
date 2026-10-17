@@ -1,3 +1,36 @@
+# Checkpoint — règle cercle vrai D-145 préparée (18 octobre 2026)
+
+- Demande explicite et autorisée : **seulement** le tirage de trois absentes du
+  cercle sur cinq dans chaque Live Drop/cadeau, dernière absente, préférence à
+  poids égal et message du cercle complet. Ni rareté affichée, ni bouton de
+  recharge, ni missions ou polish à refondre. Branche `etape-4-cercle-vrai`
+  créée depuis `main` distant vérifié `2fa29aaa8a3587066867043269e8e818e1a53f93`.
+- Travail local antérieur à l'abri : stash `Travail local preserve avant
+  etape-4-cercle-vrai` et copie vérifiée de 38 fichiers dans
+  `C:/Users/Administrator/AppData/Local/Temp/creatordeck-etape4-cvxbjnuq`.
+  SVG et correctif Claude non inclus dans ce lot ; pièces jointes et artefacts
+  restent présents. Aucun nouveau worktree, reset, force-push ou appel Claude.
+- Implémentation : `0056_cercle_vrai.sql` repart de `open_pack` de 0055 et
+  remplace les deux portes cadeau ; `circle-draw.ts` est appelé par le moteur.
+  Collection actuelle lue côté serveur, dernière carte réservée, doublons
+  nécessaires sous trois absentes ; complétion prioritaire même sous pity et
+  Perfect. Les poids mondiaux, fichiers 0054/0055 et seuils de rareté affichée
+  ne changent pas. Les appels cadeau transmettent le cercle à chaque ouverture.
+- Preuves locales sur le diff basé sur `2fa29aaa` : nouveaux tests d'abord
+  rouges (8/9 échecs), puis `npm test --` sur cercle, miroir SQL, moteur,
+  API/store et progression : **274/274**. `npm run ecrans --
+  src/ecrans-reset-tutoriel.test.tsx src/ecrans-binder-cercle.test.tsx` :
+  **13/13** après correction d'une fixture du nouveau test. `npm run typecheck`
+  réussi ; ESLint ciblé, garde-jargon et politique des migrations réussis.
+  `npm run supabase:verify` : échec avant les tests, PostgreSQL refuse le compte
+  Windows Administrateur. Cela ne constitue pas une preuve SQL réussie.
+- Prochaine action : publier la branche, vérifier le job SQL Linux contenant
+  les scénarios `0056` de `scripts/verify-circle-draw.mjs`, puis consigner son
+  résultat exact. Migration **manuelle et non appliquée en Production** ; aucun
+  changement de main, déploiement SQL réel ou essai téléphone revendiqué.
+  Checkpoint en cours de commit ; SHA du document par `git log -1 --format=%H
+  -- docs/agent-handoff.md`.
+
 # Checkpoint — APK de test D-144 publiée (18 octobre 2026)
 
 - Claude étant à court de quota, Codex a repris `maj-apk` (`132b16a`) sur le `main` courant dans `codex/maj-apk-integration`, sans réécrire la branche Claude ni toucher aux worktrees. Commit du code `15c1f1a0aa6f74d149af32b08d3a5a9dc03600c9`, avancé normalement dans `main`. Les anciens échecs E2E de `maj-apk` étaient déjà corrigés dans `main` ; [CI branche 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076165277) et [CI main 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076466368).

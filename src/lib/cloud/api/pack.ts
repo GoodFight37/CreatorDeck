@@ -351,14 +351,8 @@ export async function claimReturnGift(core: CloudCore): Promise<void> {
 export async function openReturnGiftPack(core: CloudCore, circle?: readonly string[]): Promise<{ cards: Array<{ creatorSlug: string; rarity: string; variant: string; rareDrop: boolean; circleRarity?: string }>; giftRemaining: number; save: RemoteSaveRow | null }> {
   let raw: unknown;
   if (circle && circle.length) {
-    // Premier booster tiré dans « Mes chaînes » (0054). Si le serveur dit que
-    // le booster de cercle est déjà ouvert, on retombe sur le cadeau ordinaire.
-    try {
-      raw = await core.rpc("open_circle_gift_pack", { p_slugs: [...circle] });
-    } catch (error) {
-      if (!(error instanceof CloudError) || !/déjà ouvert/.test(error.message)) throw error;
-      raw = await core.rpc("open_return_gift_pack", {});
-    }
+    // 0056 : même règle pour chaque cadeau, sans repli sur un ancien tirage.
+    raw = await core.rpc("open_circle_gift_pack", { p_slugs: [...circle] });
   } else {
     raw = await core.rpc("open_return_gift_pack", {});
   }
