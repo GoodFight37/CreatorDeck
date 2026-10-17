@@ -31,6 +31,18 @@
   `main` dans [`8c116ab6`](https://github.com/GoodFight37/CreatorDeck/commit/8c116ab69972e2fd163d7e655453f87ec30fff0c) ;
   GitHub confirme le SHA et le statut Vercel associé est `success`. Aucune PR
   ouverte. SVG Mèmes et pièces jointes restent locaux, inchangés et hors commit.
+- Vérification complète manuelle déclenchée sur `main`, SHA
+  `e65a8554e1b100c0b1b24b771527da01b56e7677` : [run GitHub Actions 38986021051](https://github.com/GoodFight37/CreatorDeck/actions/runs/38986021051)
+  terminé avec succès. Les six jobs sont verts : unitaires/écrans/statique/build,
+  SQL sur PostgreSQL jetable, RPC simulés et trois shards Playwright. Aucune
+  donnée de Production touchée. Le déclenchement manuel était requis car ce SHA
+  documentaire est ignoré par le filtre `paths-ignore` des pushes. La tentative
+  SQL locale échoue toujours sous le compte Windows administrateur ; ce n’est
+  plus un blocage pour valider ce SHA grâce au runner Linux CI.
+- Vérification `gh auth status` après la reconnexion annoncée par Malik : le
+  terminal de cette session affiche encore le jeton GitHub `GoodFight37` comme
+  invalide. Les pushes ordinaires de code déclenchent la CI automatiquement ;
+  seuls les déclenchements manuels depuis le terminal restent indisponibles ici.
 
 ## Reprise vérifiée — 17 octobre 2026 (après D-135)
 

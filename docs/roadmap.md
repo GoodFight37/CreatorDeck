@@ -7,9 +7,11 @@ secours sans déchirure reste disponible mais se place en bas de l’écran, à
 faible opacité, et ressort au focus clavier. Le geste TIRE / RELÂCHE conserve
 la priorité. Publié dans [`8c116ab6`](https://github.com/GoodFight37/CreatorDeck/commit/8c116ab69972e2fd163d7e655453f87ec30fff0c),
 Vercel `success`. Build Webpack, typecheck, lint, garde-jargon, notes joueur
-8/8 et écrans concernés 14/14 réussis. Le scénario navigateur ciblé n’a pas
-démarré : verrou du serveur Next associé au PID 15724. Aucun changement du
-Drop d’accueil ou des règles.
+8/8 et écrans concernés 14/14 réussis. L’essai navigateur local ciblé n’a pas
+démarré (verrou du serveur Next associé au PID 15724), mais la CI complète
+[`38986021051`](https://github.com/GoodFight37/CreatorDeck/actions/runs/38986021051)
+sur `e65a8554` a ensuite réussi : SQL jetable, qualité/build, RPC simulés et
+trois shards Playwright. Aucun changement du Drop d’accueil ou des règles.
 
 **État de sélection en couleurs forcées (D-135) — correction locale :** la pill
 active conserve un contour système distinct ; contrôle isolé Edge réussi,
