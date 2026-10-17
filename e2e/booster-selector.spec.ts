@@ -36,7 +36,7 @@ async function fakeAccount(page: Page) {
 
 test("les pills changent de booster sans préparer ni consommer", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
-  if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
+  if (cloudUrl()) await page.goto("/"); else await gotoDeck(page, true, { withoutCircle: true });
   const carousel = page.locator(".booster-carousel");
   await expect(carousel).toHaveAttribute("data-universe", "live");
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
@@ -50,7 +50,7 @@ test("les pills changent de booster sans préparer ni consommer", async ({ page 
 
 test("la pill choisie reste distinguable en couleurs forcées", async ({ page }) => {
   await page.emulateMedia({ forcedColors: "active" });
-  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page);
+  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   const memes = page.getByRole("button", { name: "MEMES", exact: true });
   await memes.click();
   await page.locator(".pack-copy h2").focus();
@@ -140,7 +140,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
 });
 
 test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 1024 pixels", async ({ page }) => {
-  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page);
+  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
   for (const width of [320, 390, 1024]) {
     await page.setViewportSize({ width, height: width === 320 ? 568 : 844 });

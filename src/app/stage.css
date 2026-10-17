@@ -60,7 +60,9 @@
 }
 @keyframes halo-breathe { from { opacity: .34; transform: translateX(-50%) scale(1); } to { opacity: .5; transform: translateX(-50%) scale(1.06); } }
 
-.home-view.is-lean .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(54vw, 232px, 30dvh); margin-top: 0; }
+/* Taille du sachet : celle du carrousel, inchangée (préférence de Malik, contrôlée par
+   e2e/drop-craft-priorites.spec.ts). La refonte UI l'avait réduite à min(54vw, 232px, 30dvh). */
+.home-view.is-lean .pack-stage.stage-live.booster-carousel { margin-top: 0; }
 .is-lean .pack-stage::before { opacity: .07; }
 
 /* Le billet de papier devient un seul geste : le bouton, et sa réserve. */

@@ -13,8 +13,15 @@ export async function answerCircle(dialog: ReturnType<Page["getByRole"]>): Promi
   await dialog.getByRole("button", { name: "Voir mon premier booster", exact: true }).click();
 }
 
-/** Préparer le joueur via la vraie question d'accueil, après hydratation. */
-export async function gotoDeck(page: Page, tutorial = true): Promise<void> {
+/**
+ * Préparer le joueur via la vraie question d'accueil, après hydratation.
+ *
+ * `withoutCircle` : le joueur répond, puis son cercle est effacé de l'appareil.
+ * C'est l'état d'un joueur d'avant « Mes chaînes » (accueil complet, Binder par
+ * pages, Paquet Scène, MEMES dès le début) : les scénarios qui vérifient ces
+ * écrans-là l'utilisent. Le parcours avec cercle a ses propres scénarios.
+ */
+export async function gotoDeck(page: Page, tutorial = true, options: { withoutCircle?: boolean } = {}): Promise<void> {
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Mes chaînes" });
   if (tutorial) {
@@ -22,6 +29,12 @@ export async function gotoDeck(page: Page, tutorial = true): Promise<void> {
     await answerCircle(dialog);
   }
   await expect(dialog).toHaveCount(0);
+  if (options.withoutCircle) {
+    await page.evaluate(() => localStorage.removeItem("creatordeck.circle.v1"));
+    await page.reload();
+    await expect(page.locator(".home-view")).toBeVisible();
+    await expect(page.locator(".home-view.is-lean")).toHaveCount(0);
+  }
 }
 
 /** Même configuration publique que Next dev ; aucun RPC réel dans les scénarios cloud. */

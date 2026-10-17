@@ -7,7 +7,7 @@ const common = creatorData.find((creator) => creator.rarity === "common")!;
 const rare = creatorData.find((creator) => creator.rarity === "rare")!;
 const epic = creatorData.find((creator) => creator.rarity === "epic")!;
 async function binder(page: Page) {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await page.evaluate(({ legendary, common, rare, epic }) => {
     const key = Object.keys(localStorage).find((entry) => /^creatordeck.save.v\d+$/.test(entry))!;
     const state = JSON.parse(localStorage.getItem(key)!);

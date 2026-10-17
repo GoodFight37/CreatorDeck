@@ -85,7 +85,7 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
 });
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   const open = page.locator(".scene-action");
   await expect(open).toBeEnabled();
   await open.focus();
@@ -164,7 +164,7 @@ for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 999
         return original(array);
       } });
     }, seed);
-    await gotoDeck(page);
+    await gotoDeck(page, true, { withoutCircle: true });
     await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
     await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
     const reveal = page.locator(".reveal-game");
