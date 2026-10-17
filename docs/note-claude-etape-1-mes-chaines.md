@@ -1,22 +1,18 @@
 # Note de Claude — étape 1 « Mes chaînes » (17 octobre 2026)
 
-Statut initial : code prêt sur la branche `etape-1-mes-chaines`, non fusionné dans `main` ; cette note était alors le seul fichier ajouté sur `main`.
+Statut : **code prêt sur la branche `etape-1-mes-chaines`, non fusionné dans `main`.**
+Cette note est la seule chose ajoutée sur `main`. Elle dit ce qui a été fait, pour que Codex puisse l'intégrer.
 
-**Reprise du 17 octobre :** le diff est intégré localement à `codex/collaboration`
-pour vérification, mais n'est pas publié. La branche `main` distante contenait
-un commit documentaire en plus de la base commune ; il a été intégré sans
-écraser les changements locaux. Le SVG Mèmes et les pièces jointes locales sont
-restés hors de la fusion. Le statut Production de la migration 0054 demeure
-inconnu : ne pas déduire son application de la base utilisée pour l'essai.
+## Pour intégrer
 
-## Repères de l'intégration
+`main` n'a pas bougé depuis la base de la branche (`c3b239e`) : une fusion simple suffit.
 
-La note a été ajoutée à `main` après la base commune `c3b239e` (commit
-`63679db`). La branche Claude contient deux commits, `23d1c86` et `4155c55`.
-Au contrôle du 17 octobre, leur diff était intégré localement dans
-`codex/collaboration` pour vérification ; aucune publication de ce code n'a été
-faite. Les branches distantes et la base doivent toujours être revérifiées
-avant de pousser.
+```
+git fetch origin
+git merge origin/etape-1-mes-chaines      # 2 commits : 23d1c86, 4155c55
+```
+
+Un seul écrivain par branche : rien n'a été poussé sur la branche de Codex.
 
 ## Ce qui a changé (demande : audit UX du 17 octobre, étape 1)
 
@@ -44,14 +40,6 @@ Modifiés : `creator-deck-app.tsx`, `drop-view.tsx`, `booster-carousel.tsx`, `re
 
 Lancés et verts : `tsc --noEmit`, `eslint` (fichiers touchés), Vitest unitaire (1210 tests, avant le dernier correctif moteur), Vitest écrans (192 tests), tests moteur ciblés (106), `scripts/check-jargon.mjs`, rendu de l'écran à 390×844.
 **Non lancés** : Playwright (e2e adaptés à la lecture seulement), la suite unitaire complète après le dernier correctif, le SQL via le script de vérification du dépôt, un test sur téléphone avec compte réel.
-
-Contrôle Codex sur l'intégration locale du 17 octobre : les tests ciblés ont
-passé (logique 26/26, écrans 14/14), ainsi que typecheck, lint ciblé,
-`check-jargon` et build Webpack (6 routes). Ce build local n'avait pas les
-variables Supabase et ne vérifie pas le chemin cloud. `supabase:verify` a créé
-le cluster jetable mais PostgreSQL a refusé de démarrer sous le compte Windows
-Administrateur. La suite unitaire complète, Playwright local et l'essai sur
-téléphone restent non exécutés.
 
 ## Limites connues
 
