@@ -1,6 +1,8 @@
+-- creatordeck-deploy: manual
 -- 0054 — « Mes chaînes » : le premier booster ne tire que dans le cercle du joueur.
 --
--- NON APPLIQUÉE : à relire et à approuver par Malik avant toute publication.
+-- Production : état à vérifier par le workflow avant exécution. Malik a autorisé
+-- la vérification et l'application si absente le 17 octobre 2026.
 -- Miroir TypeScript : `src/lib/circle.ts` (seuils, poids, algorithme).
 -- Test de non-divergence : `src/lib/supabase-cercle.test.ts`.
 --
