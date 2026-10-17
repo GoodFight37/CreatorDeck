@@ -174,4 +174,3 @@ begin
 end $$;
 revoke all on function public.open_circle_gift_pack(text[]) from public, anon;
 grant execute on function public.open_circle_gift_pack(text[]) to authenticated;
-
