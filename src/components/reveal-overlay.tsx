@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
@@ -44,7 +44,7 @@ const FIFTH_CARD_REVEAL_BEAT_MS = 360;
 const SUMMARY_HOLD_MS = 1_500;
 
 export function RevealOverlay({
-  cards,
+  cards: drawnCards,
   index,
   kind = "live",
   overlay = false,
@@ -69,8 +69,18 @@ export function RevealOverlay({
   returnFocusTo?: HTMLElement | null;
 }) {
   const dialogRef = usePresentationFocus(!overlay && !embedded, returnFocusTo);
+  // Premier booster : la rareté « dans mon cercle » remplace celle du catalogue
+  // à l'écran (son, durée, étiquette, matière) ; la carte enregistrée ne change pas.
+  const cards = useMemo(
+    () => drawnCards.map((item) => (item.displayRarity ? { ...item, rarity: item.displayRarity } : item)),
+    [drawnCards],
+  );
   const card = cards[index];
-  const creator = card ? CREATOR_BY_SLUG.get(card.creatorSlug) : undefined;
+  const creatorFor = (slug: string, shown: Rarity) => {
+    const base = CREATOR_BY_SLUG.get(slug);
+    return base && base.rarity !== shown ? { ...base, rarity: shown } : base;
+  };
+  const creator = card ? creatorFor(card.creatorSlug, card.rarity) : undefined;
   const live = useLive();
   const now = useNow(60_000);
   const cloud = useCloud();
@@ -295,7 +305,7 @@ export function RevealOverlay({
         <div className="reveal-dots">
           {cards.map((item, dotIndex) => {
             const shown = perfect || dotIndex <= index;
-            const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
+            const dotCard = creatorFor(item.creatorSlug, item.rarity);
             if (!dotCard) return null;
             return (
               <i
@@ -325,7 +335,7 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className="reveal-rare-aura reveal-rare-aura-perfect" style={glowStyle} aria-hidden="true" />
           ) : null}
           {cards.map((item) => {
-            const dotCard = CREATOR_BY_SLUG.get(item.creatorSlug);
+            const dotCard = creatorFor(item.creatorSlug, item.rarity);
             return dotCard ? (
               <div key={item.id} className={`reveal-flip rarity-${item.rarity}${item.isNew ? " perfect-card-new" : ""}`}>
                 <div className="reveal-flip-face">
@@ -356,7 +366,7 @@ export function RevealOverlay({
           </div>
           <div className="reveal-summary-grid">
             {cards.map((item, summaryIndex) => {
-              const itemCreator = CREATOR_BY_SLUG.get(item.creatorSlug);
+              const itemCreator = creatorFor(item.creatorSlug, item.rarity);
               if (!itemCreator) return null;
               return (
                 <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>

@@ -21,7 +21,8 @@
  */
 import { useCallback, useSyncExternalStore } from "react";
 import { useCloud } from "@/hooks/use-cloud";
-import { tutorialPack, hasSeenTutorialPack, subscribeTutorialPack, consumeTutorialPack } from "@/lib/tutorial-pack";
+import { readCircle } from "@/lib/circle-store";
+import { circlePreviewPack, tutorialPack, hasSeenTutorialPack, subscribeTutorialPack, consumeTutorialPack } from "@/lib/tutorial-pack";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { DrawnCard, GameView, StreakRewardGrant } from "@/lib/game-engine";
 import { gameStore } from "@/lib/game-store";
@@ -112,7 +113,8 @@ export function usePackOpening(game: GameView | null): {
       if (tutorialAvailable && !hasSeenTutorialPack()) {
         consumeTutorialPack();
         await suspense();
-        const cards = tutorialPack();
+        const circle = readCircle();
+        const cards = circle.length ? circlePreviewPack(circle) : tutorialPack();
         preload(cards);
         return { status: "drawn", kind: "live", cards, tutorial: true };
       }

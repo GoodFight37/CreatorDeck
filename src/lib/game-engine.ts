@@ -144,6 +144,11 @@ export type DrawnCard = {
   isNew: boolean;
   /** Toutes les cartes d'un même booster partagent ce drapeau. */
   rareDrop: boolean;
+  /**
+   * Rareté « dans mon cercle » (premier booster) : n'est que de l'affichage.
+   * La carte enregistrée garde `rarity`, celle du catalogue.
+   */
+  displayRarity?: Rarity;
 };
 
 /** État complet d'une partie — c'est exactement ce qui est sauvegardé. */

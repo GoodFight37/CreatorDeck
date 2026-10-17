@@ -45,11 +45,14 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
   </button>;
 }
 
-export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepare }: {
+export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepare, universes }: {
   value: BoosterUniverse; onChange: (value: BoosterUniverse) => void;
   onPrepare: (value: BoosterUniverse) => void; disabled: boolean; canPrepare: boolean;
+  /** Univers proposés ; par défaut les deux. Un seul : pas de sélecteur. */
+  universes?: readonly BoosterUniverse[];
 }) {
-  const index = value === "live" ? 0 : 1;
+  const boosters = universes ? BOOSTERS.filter((booster) => universes.includes(booster.id)) : BOOSTERS;
+  const index = Math.max(0, boosters.findIndex((booster) => booster.id === value));
   function choose(next: BoosterUniverse) {
     if (disabled) return;
     onChange(next);
@@ -57,7 +60,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
   return <div className="booster-selector" aria-label="Choix du booster">
     <section className="pack-stage stage-live booster-carousel" data-universe={value} aria-label="Booster sélectionné">
       <div className="pack-shadow" />
-      {BOOSTERS.map((booster, i) => <div key={booster.id} className="booster-pack-slot" data-booster={booster.id}
+      {boosters.map((booster, i) => <div key={booster.id} className="booster-pack-slot" data-booster={booster.id}
         data-active={value === booster.id} style={{ "--booster-offset": i - index } as CSSProperties}>
         <PackArtwork artwork={booster.artwork} active={value === booster.id} disabled={disabled || (value === booster.id && !canPrepare)}
           label={`Préparer le booster ${booster.label}`}
@@ -68,12 +71,12 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
           }} />
       </div>)}
       <div className="pack-copy" aria-live="polite" aria-atomic="true">
-        <h2 tabIndex={-1} data-presentation-focus-fallback>{BOOSTERS[index].label}</h2><span>· 5 cartes</span>
+        <h2 tabIndex={-1} data-presentation-focus-fallback>{boosters[index].label}</h2><span>· 5 cartes</span>
       </div>
     </section>
-    <div className="booster-switcher" role="group" aria-label="Choisir un univers">
-      {BOOSTERS.map((booster) => <button key={booster.id} type="button" aria-pressed={value === booster.id}
+    {boosters.length > 1 ? <div className="booster-switcher" role="group" aria-label="Choisir un univers">
+      {boosters.map((booster) => <button key={booster.id} type="button" aria-pressed={value === booster.id}
         disabled={disabled} onClick={() => choose(booster.id)}>{booster.label}</button>)}
-    </div>
+    </div> : null}
   </div>;
 }

@@ -746,7 +746,8 @@ export class CloudApi {
   async onboardingStatus(): ReturnType<typeof pack.onboardingStatus> { return pack.onboardingStatus(this.core); }
   async completeTutorial(): Promise<void> { return pack.completeTutorial(this.core); }
   async claimReturnGift(): Promise<void> { return pack.claimReturnGift(this.core); }
-  async openReturnGiftPack(): ReturnType<typeof pack.openReturnGiftPack> { return pack.openReturnGiftPack(this.core); }
+  async openReturnGiftPack(circle?: readonly string[]): ReturnType<typeof pack.openReturnGiftPack> { return pack.openReturnGiftPack(this.core, circle); }
+  async setCircle(slugs: readonly string[]): Promise<void> { await this.core.rpc("set_circle", { p_slugs: [...slugs] }); }
 
   // ---------------------------------------------------------------- échanges
 
