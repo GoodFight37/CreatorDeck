@@ -1,5 +1,9 @@
 # Roadmap CreatorDeck
 
+**Drop — nom `MEMES` sans accent (17 octobre 2026) :** libellés d’ouverture et
+de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
+et publication : checkpoint de reprise.
+
 ## État actuel — 17 octobre 2026
 
 **Rituel d’ouverture allégé (D-136) — implémenté localement :** l’ouverture de

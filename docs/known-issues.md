@@ -1,3 +1,12 @@
+## Nom du booster accentué de façon incohérente sur Drop — corrigé (17 octobre 2026)
+
+**Reproduction :** sur l’accueil Drop, le sélecteur affichait `MEMES`, mais le
+bouton et la réserve affichaient `Mèmes`. **Gravité :** faible, incohérence de
+marque. **Cause :** libellés de l’interface écrits séparément. **Correction :**
+les libellés du bouton, de la réserve et du message de réserve séparée reprennent
+`MEMES`, selon la décision D-137. Vérification ciblée et publication à consigner
+dans le checkpoint de passation. Aucun contournement nécessaire.
+
 ## Titre long tronqué pendant la révélation d’un booster Mèmes — corrigé et publié
 
 Capture Malik du 16 octobre 2026 : dans les cartes 1/5 et 4/5, le nom est suivi

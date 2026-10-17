@@ -1,3 +1,11 @@
+## D-137 — 17 octobre 2026 : écrire le nom du booster MEMES sans accent
+
+Sur le Drop, le sélecteur de booster affichait `MEMES`, tandis que le bouton et
+la réserve utilisaient `Mèmes`. Malik demande que le nom visible reste
+`MEMES`, sans accent, même si la graphie française courante de « mème » en
+comporte un. Les libellés du bouton et de la réserve suivent désormais le nom
+du sélecteur. Aucun nom de carte ni contenu du catalogue n’est modifié.
+
 ## D-136 — 17 octobre 2026 : garder l’ouverture de secours hors du rituel visuel
 
 Dans la scène scellée, « Ouvrir sans déchirer » restait un bouton de 44 px juste

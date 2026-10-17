@@ -273,13 +273,13 @@ export function HomeView({
           onClick={() => prepareBooster("memes")}>
           <Zap size={19} aria-hidden="true" />
           <span>{!memes.account ? "Se connecter pour ouvrir" : memes.busy ? "Ouverture…"
-            : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge en cours" : "Ouvrir le booster Mèmes"}</span>
+            : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge en cours" : "Ouvrir le booster MEMES"}</span>
           <ChevronRight size={19} aria-hidden="true" />
         </button>
         <div className="meme-booster-reserve" aria-live="polite">
-          {memes.status ? <><strong>Ta réserve Mèmes · {memes.status.stock}/4</strong>
+          {memes.status ? <><strong>Ta réserve MEMES · {memes.status.stock}/4</strong>
             <span>{memes.status.nextAt ? "+1 dans " + formatCountdown(Date.parse(memes.status.nextAt), tick) : "Réserve pleine"}</span></>
-            : <span>{memes.account ? "Lecture de ta réserve Mèmes…" : "Une réserve séparée pour tes cartes Mèmes."}</span>}
+            : <span>{memes.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}</span>}
         </div>
         {memes.notice ? <p role="status">{memes.notice}</p> : null}
         {memes.problem ? <div role="alert"><p>{memes.problem}</p>

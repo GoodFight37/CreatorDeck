@@ -1,5 +1,16 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Correction du nom MEMES sur Drop — 17 octobre 2026
+
+- Demande de Malik : retirer l’accent dans le nom du booster affiché sur
+  l’accueil, notamment « Ouvrir le booster ».
+- Correction ciblée : bouton d’ouverture, réserve et texte de réserve séparée
+  utilisent `MEMES`, alignés sur le sélecteur. Aucun catalogue, contenu de carte,
+  rituel ou donnée serveur touché. Le SVG Mèmes modifié et les pièces jointes
+  restent préservés hors commit.
+- D-137, note joueur, roadmap et problème connu mis à jour. Consigner ci-dessous
+  les tests, SHA distant et état Vercel après vérification.
+
 ## Lot D-136 — rituel d’ouverture (17 octobre 2026)
 
 - Demande : retirer le poids visuel concurrent de « Ouvrir sans déchirer » sans

@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-drop-nom-memes-sans-accent", date: "2026-10-17", title: "Le nom MEMES reste sans accent sur Drop",
+    summary: "Le bouton et la réserve affichent le nom MEMES comme le sélecteur de booster.",
+    sections: [{ title: "Drop", items: [
+      "Le nom MEMES est maintenant écrit de la même façon sur le bouton d’ouverture et la réserve.",
+    ] }],
+  },
+  {
     id: "2026-10-17-rituel-ouverture-sans-action-concurrente", date: "2026-10-17", title: "Le geste d’ouverture reste au premier plan",
     summary: "L’ouverture sans déchirure est maintenant un lien discret en bas de l’écran.",
     sections: [{ title: "Drop", items: [
