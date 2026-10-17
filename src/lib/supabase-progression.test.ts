@@ -91,9 +91,9 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     // Le seuil vit dans la **dernière** définition d'`open_pack` : `0032`, qui
     // reprend le corps de `0031` à l'identique — avec la récompense de série.
     expect(CODE_SERIE).toContain(`v_pity + 1 >= ${PITY.threshold}`);
-    // Trois endroits : la décision du tirage, la conversion en Perfect, et ce
-    // que la réponse annonce.
-    expect(CODE_SERIE.match(new RegExp(`v_pity \\+ 1 >= ${PITY.threshold}`, "g"))).toHaveLength(3);
+    // Quatre endroits : la décision du tirage, la conversion en Perfect, la
+    // garantie du cercle (0055, D-142), et ce que la réponse annonce.
+    expect(CODE_SERIE.match(new RegExp(`v_pity \\+ 1 >= ${PITY.threshold}`, "g"))).toHaveLength(4);
   });
 
   it("la série est payée, et la table est celle du fichier des règles", () => {

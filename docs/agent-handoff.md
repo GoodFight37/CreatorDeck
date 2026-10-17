@@ -11,7 +11,7 @@
   du cercle (D-140) ; booster MEMES après 10 boosters pour un joueur avec cercle
   (D-141, seuil choisi par Claude à la demande de Malik) ; garantie du cercle
   choisie sous la forme « le Légendaire garanti vient du cercle » (D-142, **pas
-  active** : attend le cercle en ligne).
+  active** au premier passage ; écrite ensuite, voir plus bas).
 - **Aucune migration, règle de tirage ou notification ajoutée.** Rien sur
   `main`, rien en Production.
 - **Vérifié automatiquement (dernier passage) :** `npm test` 1236/1236,
@@ -28,11 +28,16 @@
   `/opt/android-sdk` ; `.env.local` recréé localement (non commité) avec l'URL et
   la clé publique déjà servies par le site Vercel ; Maven Central renvoie parfois
   des 429 → relancer Gradle avec `--max-workers=1`.
-- **Décision attendue de Malik :** envoyer le cercle en ligne (`set_circle`,
-  plan § 3 bis). Ensuite seulement : implémenter D-142 (migration modifiant
-  `open_pack()`, appliquée à la main par Malik). Étapes 4 et 5 : feu vert requis.
-- **Prochaine action précise :** installer le dernier APK, faire les essais
-  ci-dessus, puis décider du cercle en ligne.
+- **Ajout du soir (feu vert de Malik) :** cercle en ligne (D-143, sans
+  migration) et garantie du cercle (D-142) écrite dans
+  `supabase/migrations/0055_garantie_cercle.sql` (**manuelle, non appliquée**).
+  Le vérificateur SQL applique désormais 0054 et 0055 et contient les scénarios
+  « 0055 : … » ; il doit tourner sous un utilisateur non root
+  (`sudo -u <utilisateur> env TMPDIR=<dossier accessible> node
+  scripts/verify-supabase-migrations.mjs`). Étapes 4 et 5 : feu vert requis.
+- **Prochaine action précise (Malik) :** dans Supabase → SQL Editor, vérifier
+  que `player_circles` existe (0054), coller 0055, puis installer le dernier
+  APK et faire les essais ci-dessus.
 
 
 ## Correction du nom MEMES sur Drop — 17 octobre 2026

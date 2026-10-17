@@ -1057,6 +1057,12 @@ export function drawPack(
     pity?: boolean;
     /** Famille d'où tirer exclusivement les cartes (Paquet Scène). */
     family?: string | null;
+    /**
+     * « Mes chaînes » (D-142) : sous le plancher de malchance, le Légendaire
+     * garanti est tiré parmi les Légendaires du cercle que le joueur n'a pas
+     * encore. Sans candidat, la garantie reste celle d'avant.
+     */
+    circle?: readonly string[];
   } = {},
 ): DrawnCard[] {
   const table = PULL_RATES[packType];
@@ -1122,8 +1128,11 @@ export function drawPack(
   // plancher de malchance, elle est **Légendaire**, quoi qu'en dise le tirage.
   const sceneEpicsRemain = packType === "scene" && rareDrop &&
     eligible.some(c => c.rarity === "epic" && !used.has(c.slug));
-  const guaranteed = chooseCreator(sceneEpicsRemain ? table.rareDrop.weights : finalWeights,
-    used, liveLogins, family);
+  const circlePool = pity && packType === "live" && options.circle
+    ? circlePityPool(options.circle, used, alreadyOwned) : [];
+  const guaranteed = circlePool.length
+    ? circlePool[randomInt(circlePool.length)]
+    : chooseCreator(sceneEpicsRemain ? table.rareDrop.weights : finalWeights, used, liveLogins, family);
   drawn.push({
     id: randomUUID(),
     creatorSlug: guaranteed.slug,
@@ -1136,6 +1145,29 @@ export function drawPack(
   });
 
   return drawn;
+}
+
+/**
+ * Les candidats de la garantie du cercle (D-142) : les Légendaires du cercle,
+ * tirables (pas sortantes), absentes du booster en cours et jamais obtenues.
+ * Même règle que `_pack_circle_legendary()` côté serveur (0055). Le nombre de
+ * Légendaires ne change pas : seule l'identité de la garantie change.
+ */
+export function circlePityPool(
+  circle: readonly string[],
+  used: ReadonlySet<string>,
+  owned: ReadonlySet<string>,
+): Creator[] {
+  const seen = new Set<string>();
+  const pool: Creator[] = [];
+  for (const slug of circle) {
+    const creator = CREATOR_BY_SLUG.get(slug);
+    if (!creator || seen.has(slug)) continue;
+    seen.add(slug);
+    if (creator.rarity !== "legendary" || RETIRED_BY_SLUG.has(slug) || used.has(slug) || owned.has(slug)) continue;
+    pool.push(creator);
+  }
+  return pool;
 }
 
 /** Les slugs possédés : un par créateur, quel que soit le nombre de doublons. */
@@ -1854,6 +1886,7 @@ export function openPack(
       liveLogins: options.liveLogins,
       rareDrop: options.rareDrop ?? (refreshed.streakJackpot ? true : undefined),
       pity,
+      circle: options.circle,
     });
 
   // Même application qu'un tirage serveur : un seul endroit calcule les

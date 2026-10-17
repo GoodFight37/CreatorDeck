@@ -103,6 +103,16 @@ Le serveur applique la même règle (`supabase/migrations/0011_direct.sql`), et
 deux tests verrouillent la correspondance : `src/lib/supabase-direct.test.ts`
 (les valeurs) et `scripts/verify-supabase-migrations.mjs` (l'exécution).
 
+## La garantie du cercle (D-142, migration 0055)
+
+Elle ne change **aucune** probabilité ni le nombre de Légendaires : quand le
+Légendaire garanti tombe (seuil `pity`), il est tiré parmi les Légendaires du
+cercle du joueur qu'il n'a **jamais** obtenues. Sans cercle connu du serveur
+(D-143), ou si toutes ses Légendaires sont déjà obtenues, la garantie est celle
+d'avant. Le serveur (`_pack_circle_legendary`, 0055) et le moteur local
+(`circlePityPool`) appliquent la même règle ; `supabase-cercle-garantie.test.ts`
+et le Postgres jetable vérifient la correspondance.
+
 ## Le Paquet Scène
 
 Le second paquet du jeu a sa propre table (`packs.scene`), publiée elle aussi —

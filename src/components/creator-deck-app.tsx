@@ -392,6 +392,11 @@ export function CreatorDeckApp() {
   const [giftBusy, setGiftBusy] = useState(false);
   const circle = useCircle();
   const [circleBusy, setCircleBusy] = useState(false);
+  // D-143 : à chaque connexion, réconcilier le cercle de l'appareil et celui du compte.
+  useEffect(() => {
+    if (!cloud.configured || !cloud.userId) return;
+    void cloudStore.syncCircle();
+  }, [cloud.configured, cloud.userId]);
   // Étape 3 : « Mes chaînes » se rouvre à tout moment pour définir ou modifier le cercle.
   const [circleEditOpen, setCircleEditOpen] = useState(false);
   useBackHandler(circleEditOpen, () => setCircleEditOpen(false));
@@ -465,6 +470,8 @@ export function CreatorDeckApp() {
     setCircleBusy(true);
     try {
       if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+      // D-143 : un compte connecté garde aussi son cercle en ligne (jamais bloquant).
+      void cloudStore.pushCircle(slugs);
       await finishWelcomeTutorial();
     } finally { setCircleBusy(false); }
   }
@@ -472,6 +479,7 @@ export function CreatorDeckApp() {
   /** Enregistre un cercle modifié : seulement sur l'appareil, comme à l'étape 1. */
   function saveEditedCircle(slugs: string[]) {
     if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+    void cloudStore.pushCircle(slugs);
     setCircleEditOpen(false);
     showNotice("Tes chaînes sont enregistrées.");
   }

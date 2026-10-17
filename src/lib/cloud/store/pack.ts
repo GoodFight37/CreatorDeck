@@ -5,6 +5,8 @@ import { CLOUD_DISABLED_HINT } from "@/lib/cloud/config";
 import { CloudError } from "@/lib/cloud/api";
 import { applyPackResult, applyScenePackResult, applyServerProgression, SAVE_VERSION } from "@/lib/game-engine";
 import { sanitizeState } from "@/lib/save-store";
+import { decideCircleSync, type CircleSyncAction } from "@/lib/circle-sync";
+import { readCircle, readCircleSavedAt, writeCircle } from "@/lib/circle-store";
 
 /**
  * Les actions « pack » du magasin cloud : mêmes corps qu'avant la
@@ -98,6 +100,32 @@ export function packActions(ctx: CloudStoreContext) {
         await this.refreshOnboarding();
         return { status: "done", message: "Cadeau réclamé : 5 boosters attendent dans ta boîte cadeau." };
       } catch (error) { return ctx.cloudRefusal(error, "Cadeau indisponible."); }
+    },
+
+    /**
+     * Envoie le cercle au compte (D-143). Sans danger : jamais bloquant, et le
+     * cercle de l'appareil reste la référence d'affichage si l'envoi échoue.
+     */
+    async pushCircle(slugs: readonly string[]): Promise<boolean> {
+      const api = ctx.resolve();
+      if (!api?.session()) return false;
+      try { await api.setCircle(slugs); return true; } catch { return false; }
+    },
+
+    /**
+     * À la connexion : réconcilie le cercle de l'appareil et celui du compte
+     * (`decideCircleSync`). Renvoie ce qui a été fait, `null` si rien n'a pu
+     * être lu (pas de compte, réseau, 0054 absente).
+     */
+    async syncCircle(): Promise<CircleSyncAction["kind"] | null> {
+      const api = ctx.resolve();
+      if (!api?.session()) return null;
+      let remote: Awaited<ReturnType<typeof api.circle>>;
+      try { remote = await api.circle(); } catch { return null; }
+      const action = decideCircleSync({ slugs: readCircle(), savedAt: readCircleSavedAt() }, remote, ctx.deps.now());
+      if (action.kind === "push") { try { await api.setCircle(action.slugs); } catch { return null; } }
+      if (action.kind === "adopt") writeCircle(action.slugs, action.at);
+      return action.kind;
     },
 
     async openReturnGiftPack(circle?: readonly string[]): Promise<PackOpenOutcome> {

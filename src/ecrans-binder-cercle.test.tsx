@@ -143,6 +143,25 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(universes()).toEqual(["Live Drop", "MEMES"]);
   });
 
+  it("D-142 : la garantie Légendaire annonce une de tes chaînes tant qu'une Légendaire du cercle manque", async () => {
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
+    await home();
+    expect(document.querySelector(".pity-row")!.textContent).toContain("· une de tes chaînes");
+  });
+
+  it("D-142 : rien à promettre quand toutes les Légendaires du cercle sont obtenues", async () => {
+    // CIRCLE ne contient qu'une Légendaire (ibai).
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
+    const noop = () => {};
+    await banc.monter(<HomeView game={gameWith(["ibai"])} friendsOpening={0}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
+      sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
+      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
+      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      now={NOW} serverReserve={false} needsAccount={false} />);
+    expect(document.querySelector(".pity-row")!.textContent).not.toContain("une de tes chaînes");
+  });
+
   it("« Mes chaînes » en modification ne parle pas de premier booster", async () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();

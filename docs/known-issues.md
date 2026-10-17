@@ -1,8 +1,11 @@
 ## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)
 
-- **Cercle seulement sur l'appareil.** Perdu si l'app est désinstallée ou ses
-  données effacées, absent sur un autre appareil et sur le site, inconnu du
-  serveur. Décision attendue (plan § 3 bis) ; bloque D-142.
+- **Cercle seulement sur l'appareil — corrigé dans le code (D-143)** pour un
+  compte connecté ; reste vrai pour un joueur sans compte (par choix). Dépend de
+  0054 en Production, non vérifiée par Claude.
+- **0055 non appliquée :** tant qu'elle ne l'est pas, l'accueil annonce « une de
+  tes chaînes » alors que le serveur tire encore la garantie ordinaire.
+  Appliquer 0055 avant d'installer l'APK qui l'annonce.
 - **360×740 :** la rangée « Ton cercle » passe en partie sous le dock au premier
   écran (relevé de la refonte UI, non corrigé).
 - **ESLint sur un poste ayant construit l'APK :** `npx eslint .` lit les

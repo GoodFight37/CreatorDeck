@@ -27,7 +27,7 @@ Le texte d'origine ci-dessous est conservé ; les statuts à jour sont dans le t
 | 0 | Gel : ni taux, ni schéma, ni économie avant que l'étape 1 soit jouable. 0054 ajoute des objets, ne modifie aucune fonction existante. | tenu |
 | 1 | « Mes chaînes » + premier booster tiré dans le cercle + accueil épuré | **fait**, APK installé par Malik |
 | 2 | Un second verbe minuscule : « qui est en direct dans MON cercle » (A) | **écrit et testé** (D-138), non vérifié sur téléphone ; écart au plan : le bouton « Recharge en cours » n’est pas transformé (encadré juste dessous) |
-| 3 | Binder au service du désir | **écrit et testé** (D-140, MEMES après 10 boosters D-141), non vérifié sur téléphone ; garantie du cercle **choisie** (D-142), active quand le cercle sera en ligne (§ 3 bis) |
+| 3 | Binder au service du désir | **écrit et testé** (D-140, MEMES après 10 boosters D-141), non vérifié sur téléphone ; garantie du cercle **écrite** (D-142, migration 0055 à appliquer), cercle en ligne fait (D-143) |
 | 4 | Rétention honnête | non écrit |
 | 5 | Finition visible à budget limité | non écrit |
 
@@ -90,7 +90,7 @@ src/components/drop-view.tsx          MODIFIÉ  accueil épuré quand un cercle 
 Argument : (1) le jeu sait déjà qui est en direct (`useLive`, bonus Direct) : zéro contenu à produire pour un développeur seul ; (2) il donne une raison de revenir à un moment précis, qui n'est pas une minuterie de réserve ; (3) il est vrai ou faux sans arbitrage : la chaîne est en direct ou non, donc pas de verdict secret ; (4) le micro-jeu (B) demande des questions, un équilibrage et de la triche à gérer.
 Forme : une ligne au-dessus des cartes, « 2 de tes chaînes sont en direct », un appui ouvre la chaîne (Twitch) et la carte du cercle correspondante est marquée. Session vide : le bouton « Recharge en cours » devient « Voir qui est en direct dans mon cercle ». Arène et Tribunal quittent l'accueil (déjà fait pour les joueurs avec cercle) ; le Tribunal, s'il reste, devient un mode séparé sans verdict caché conditionnant le sablier.
 
-## 3 bis. Cercle enregistré en ligne — décision de Malik attendue
+## 3 bis. Cercle enregistré en ligne — fait (D-143), texte d'origine conservé
 
 Aujourd'hui le cercle n'existe que sur le téléphone (`creatordeck.circle.v1`).
 `set_circle()` et la table `player_circles` existent depuis 0054 et
@@ -100,6 +100,10 @@ autre appareil ou sur le site, et inconnu du serveur (donc pas de garantie du
 cercle D-142, pas de notification « ton cercle est en direct »). Proposition :
 envoyer le cercle à l'enregistrement (compte connecté) et le relire à la
 connexion ; aucune nouvelle migration si 0054 est appliquée.
+
+**Réalisé le 17 octobre 2026 (D-143) :** envoi à chaque enregistrement, relecture
+à chaque connexion, le plus récent gagne. La garantie du cercle (D-142) est
+écrite dans 0055, à appliquer à la main après 0054.
 
 ## 4. Étape 3 — le Binder au service du désir (faite : D-140, D-141 ; D-142 choisie, en attente)
 

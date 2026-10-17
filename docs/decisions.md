@@ -1,4 +1,27 @@
-## D-142 — 17 octobre 2026 : la garantie du cercle (choisie, pas encore active)
+## D-143 — 17 octobre 2026 : le cercle enregistré en ligne
+
+**Contexte.** Le cercle ne vivait que sur l'appareil : perdu à la
+désinstallation, absent sur un autre appareil, inconnu du serveur (donc D-142
+impossible). Malik demande une explication, puis laisse Claude décider.
+
+**Décision.** Pour un compte connecté, le cercle est envoyé par `set_circle`
+(0054) à chaque enregistrement (« Mes chaînes », première fois ou « Modifier »)
+et relu à chaque connexion dans `player_circles` (lecture réservée au
+propriétaire). Réconciliation (`src/lib/circle-sync.ts`) : rien en ligne →
+envoi ; rien sur l'appareil → reprise ; différents → le plus récent gagne
+(date d'enregistrement de l'appareil contre `updated_at`) ; sans date côté
+appareil, le compte gagne. Jamais bloquant : si l'envoi échoue, l'appareil
+garde son cercle. **Aucune nouvelle migration** (0054 suffit).
+
+**Refusé.** Faire du serveur la seule source (le cercle doit marcher sans
+compte et hors ligne) ; fusionner deux cercles différents (l'ordre compte : la
+première chaîne est la préférée).
+
+**Preuves.** `circle-sync.test.ts` 7/7 ; `api.test.ts` (envoi `set_circle`,
+lecture `player_circles`, absence → `null`). Non vérifié en Production : dépend
+de 0054 appliquée.
+
+## D-142 — 17 octobre 2026 : la garantie du cercle (écrite ; active quand Malik aura appliqué 0055)
 
 **Contexte.** Malik laisse Claude choisir la « garantie carte du cercle »
 proposée à l'étape 3, et demande que le choix soit écrit ici en entier.
@@ -33,14 +56,32 @@ inchangé).
   chaîne de 2 % à ~6 % des Légendaires tirées ; effet presque invisible pour une
   modification de `open_pack`.
 
-**Pas encore active, pourquoi.** Le serveur doit connaître le cercle, or le
-cercle ne vit aujourd'hui que sur le téléphone (voir « cercle en ligne »,
-décision attendue de Malik). Dès que le cercle est envoyé en ligne
-(`set_circle`, déjà dans 0054), la règle demande : une migration qui modifie
-`open_pack()` (branche garantie uniquement), le miroir dans `game-engine.ts`,
-l'écran « Taux de drop » et `docs/taux-de-drop.md`, et un test de
-non-divergence SQL ↔ TS comme `supabase-cercle.test.ts`. Migration appliquée à
-la main par Malik.
+**Mise en œuvre (17 octobre 2026, soir, feu vert de Malik).**
+- Serveur : `supabase/migrations/0055_garantie_cercle.sql` (manuelle, après
+  0054). Ajoute `_pack_circle_legendary()` et recopie `open_pack()` de 0051 à
+  l'identique sauf trois points : la variable `v_circle_slug`, le choix de la
+  carte garantie, le champ `pity_circle` dans la réponse. Candidats : Légendaires
+  du cercle (`player_circles`), non sortantes, absentes du booster, **jamais
+  obtenues** d'après `card_claims` (une carte recyclée ou échangée compte donc
+  comme obtenue). Tirage uniforme parmi eux. Retour arrière : réappliquer
+  l'`open_pack` de 0051.
+- Appli sans compte : `circlePityPool()` dans `game-engine.ts`, même règle avec
+  la collection actuelle de l'appareil.
+- Affichage : « Légendaire garanti dans N boosters · une de tes chaînes » sur
+  l'accueil quand une Légendaire du cercle manque ; ligne « Tes chaînes » dans
+  l'écran des taux ; `docs/taux-de-drop.md`.
+- Le serveur ne connaît le cercle que s'il a été envoyé (D-143) : sans cercle en
+  ligne, 0055 laisse le tirage exactement comme avant.
+- **Ordre à respecter :** appliquer 0055 avant d'installer l'APK qui l'annonce ;
+  sinon l'accueil promet une chaîne que le serveur ne donne pas encore.
+
+**Preuves.** Postgres jetable (`npm run supabase:verify`, lancé sous un
+utilisateur non root) : contrôles « 0055 : … » (chaîne manquante tirée, cercle
+complet → garantie ordinaire, sans cercle → inchangé, hors garantie → aucun
+détournement, fonction fermée aux joueurs, rejouable) et seuil porté par
+`open_pack` désormais à quatre occurrences. `supabase-cercle-garantie.test.ts` :
+diff `open_pack` 0051 → 0055 limité aux trois points, mêmes candidats que le
+moteur. Écrans : annonce sur l'accueil (avec et sans Légendaire manquante).
 
 ## D-141 — 17 octobre 2026 : le booster MEMES après 10 boosters, pour un joueur avec cercle
 

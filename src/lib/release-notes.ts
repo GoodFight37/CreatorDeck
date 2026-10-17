@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-legendaire-garanti-cercle", date: "2026-10-17", title: "Ton Légendaire garanti vient de tes chaînes",
+    summary: "Quand la garantie Légendaire tombe, c’est une de tes chaînes Légendaires qui te manque.",
+    sections: [{ title: "Drop", items: [
+      "Après 12 boosters sans Légendaire, le Légendaire garanti est maintenant une Légendaire de ton cercle que tu n’as pas encore, s’il en reste une. Le nombre de Légendaires ne change pas.",
+      "L’accueil l’indique à côté du compteur, et l’écran des taux l’explique.",
+    ] }, { title: "Mes chaînes", items: [
+      "Avec un compte, tes chaînes sont aussi enregistrées en ligne : tu les retrouves sur un autre appareil ou après une réinstallation.",
+    ] }],
+  },
+  {
     id: "2026-10-17-memes-apres-dix-boosters", date: "2026-10-17", title: "Le booster MEMES arrive après tes premiers boosters",
     summary: "Si tu as défini tes chaînes, le Drop commence par le Live Drop seul.",
     sections: [{ title: "Drop", items: [

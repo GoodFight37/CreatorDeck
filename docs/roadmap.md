@@ -19,12 +19,12 @@ installé à la main ; jamais vérifié en Production.
 | Clé de signature debug partagée | faite | [D-139](decisions.md), commit `8f2cb54` |
 | 3 — Binder au service du cercle, « Modifier mes chaînes », jetons aplatis | implémentée et testée, non vérifiée sur téléphone | [D-140](decisions.md), commit `d6f9d9e` |
 | 3 — booster MEMES après 10 boosters (joueur avec cercle) | implémenté et testé | [D-141](decisions.md) |
-| 3 — Légendaire garanti tiré dans le cercle | **choisi, pas actif** : attend le cercle en ligne | [D-142](decisions.md) |
-| Cercle enregistré en ligne (`set_circle`) | **décision de Malik attendue** | [plan § 3 bis](plan-premiere-session.md) |
+| 3 — Légendaire garanti tiré dans le cercle | **écrit et vérifié sur Postgres jetable** ; actif en Production quand Malik aura appliqué **0055** (manuelle, après 0054) | [D-142](decisions.md) |
+| Cercle enregistré en ligne (`set_circle` + relecture) | **écrit et testé**, sans migration (0054 suffit) | [D-143](decisions.md) |
 | 4 — rétention honnête ; 5 — finition visible | non commencées, attendent le feu vert de Malik | plan § 5 et § 6 |
 
-Avant toute fusion dans `main` : vérifier que 0054 est appliquée en
-Production, relancer la CI complète (dont Playwright, jamais lancé sur cette
+Avant toute fusion dans `main` : vérifier que 0054 puis 0055 sont appliquées en
+Production (0055 avant d'installer un APK qui annonce la garantie du cercle), relancer la CI complète (dont Playwright, jamais lancé sur cette
 branche) et essayer l'APK sur téléphone. Critères d'acceptation de chaque
 étape : tests cités dans la décision correspondante.
 

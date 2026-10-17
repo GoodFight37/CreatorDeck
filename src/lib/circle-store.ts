@@ -55,12 +55,30 @@ function notify(): void {
   for (const listener of listeners) listener();
 }
 
-/** Enregistre le cercle (5 à 15 chaînes différentes) ; refuse tout le reste. */
-export function writeCircle(slugs: readonly string[]): boolean {
+/**
+ * Date (ms) du dernier enregistrement du cercle sur cet appareil, `null` si
+ * inconnue. Sert à départager l'appareil et le compte en ligne (D-143).
+ */
+export function readCircleSavedAt(): number | null {
+  try {
+    const raw = typeof window === "undefined" ? null : window.localStorage.getItem(CIRCLE_STORAGE_KEY);
+    if (!raw) return null;
+    const at = (JSON.parse(raw) as { at?: unknown }).at;
+    return typeof at === "number" && Number.isFinite(at) ? at : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Enregistre le cercle (5 à 15 chaînes différentes) ; refuse tout le reste.
+ * `at` permet de garder la date du compte en ligne quand c'est lui qui gagne.
+ */
+export function writeCircle(slugs: readonly string[], at: number = Date.now()): boolean {
   if (!isValidCircle(slugs)) return false;
   const value = Object.freeze([...slugs]);
   try {
-    window.localStorage.setItem(CIRCLE_STORAGE_KEY, JSON.stringify({ v: 1, slugs: value, at: Date.now() }));
+    window.localStorage.setItem(CIRCLE_STORAGE_KEY, JSON.stringify({ v: 1, slugs: value, at }));
     memoryCircle = null;
   } catch {
     // Pas de stockage : on garde au moins la session en cours.

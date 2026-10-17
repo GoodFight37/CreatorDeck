@@ -340,6 +340,12 @@ try {
   await client.query(cadeauClaimRetry);
   await client.query(resetTutorial);
   check("reset global : migration idempotente et progression postérieure intacte", (await client.query("select state->>'xp' xp from public.saves where user_id=$1", [RESET_A])).rows[0].xp === "12345");
+  // 0054 s'appuie sur la table du cadeau de 0044 : elle passe donc après la
+  // réapplication de 0044/0045 ci-dessus, puis 0055 qui s'appuie sur 0054.
+  for (const name of ["0054_cercle.sql", "0055_garantie_cercle.sql"]) {
+    await client.query(await readFile(path.join(MIGRATIONS, name), "utf8"));
+    migrations.push([name, ""]);
+  }
   console.log(`→ migrations ${migrations.map(([name]) => name.slice(0, 4)).join(", ")} exécutées\n`);
 
   const USER = "11111111-1111-4111-8111-111111111111";
@@ -1606,6 +1612,9 @@ try {
   await client.query(depart);
   await client.query(protege);
   await client.query(jetons);
+  // `0055` réécrit `open_pack()` après `0051` : elle repasse donc en dernier,
+  // sinon la garantie du cercle disparaîtrait de la base du contrôle.
+  await client.query(await readFile(path.join(MIGRATIONS, "0055_garantie_cercle.sql"), "utf8"));
   check(
     "migration échanges rejouable : les refus de `0022` survivent au recollage",
     (
@@ -3663,15 +3672,16 @@ try {
     String((await client.query("select public._pack_pity($1) as n", [PITY])).rows[0].n),
   );
 
-  // La fonction **installée** doit porter ce seuil, et lui seul : trois
-  // occurrences (la décision, la conversion en Perfect, la réponse `pity_hit`).
+  // La fonction **installée** doit porter ce seuil, et lui seul : quatre
+  // occurrences (la décision, la conversion en Perfect, la garantie du cercle
+  // ajoutée par 0055, la réponse `pity_hit`).
   const defPity = (
     await client.query("select pg_get_functiondef('public.open_pack(text)'::regprocedure) as d")
   ).rows[0].d;
   const seuilsBase = defPity.match(/v_pity \+ 1 >= \d+/g) ?? [];
   check(
     "pity : la fonction installée porte le seuil du fichier des taux, et lui seul",
-    seuilsBase.length === 3 && seuilsBase.every((x) => x === `v_pity + 1 >= ${seuilPity}`),
+    seuilsBase.length === 4 && seuilsBase.every((x) => x === `v_pity + 1 >= ${seuilPity}`),
     seuilsBase.join(" | "),
   );
 
@@ -3715,6 +3725,62 @@ try {
     "pity : une Légendaire de chance remet le compteur à zéro",
     (await client.query("select public._pack_pity($1) as n", [LUCK])).rows[0].n === 0,
   );
+
+  // --- 0055 : la garantie du cercle (D-142) --------------------------------
+  // Sous la garantie, le Légendaire vient du cercle s'il en manque un ; sinon
+  // le tirage est celui d'avant. Le joueur PITY ci-dessus (sans cercle) a déjà
+  // prouvé que le chemin ordinaire tient toujours.
+  const CERCLE = "5a5a5a5a-1b1b-4c2c-8d3d-4e4e4e4e4e4e";
+  const CERCLE_PLEIN = "6b6b6b6b-2c2c-4d3d-8e4e-5f5f5f5f5f5f";
+  const cercleSlugs = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"];
+  for (const [id, name] of [[CERCLE, "Cléo"], [CERCLE_PLEIN, "Paul"]]) {
+    await player(id, name, []);
+    await asPlayer(id, "select public.set_circle($1::text[])", [cercleSlugs]);
+    await seedDraws(id, seuilPity - 1, 0, sansLegendaire);
+    await client.query(
+      "insert into public.pack_state (user_id, packs, last_regen_at) values ($1, 4, now()) on conflict (user_id) do update set packs = 4, last_regen_at = now()",
+      [id],
+    );
+  }
+  // Cléo a déjà obtenu quatre chaînes de son cercle : seule rubius manque.
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [CERCLE, JSON.stringify(
+    cercleSlugs.slice(0, 4).map((slug) => ({ creatorSlug: slug, rarity: "legendary", variant: "standard" })),
+  )]);
+  // Paul les a toutes : la garantie reste celle d'avant.
+  await client.query("select public.card_claim_add($1, $2::jsonb, 'tirage')", [CERCLE_PLEIN, JSON.stringify(
+    cercleSlugs.map((slug) => ({ creatorSlug: slug, rarity: "legendary", variant: "standard" })),
+  )]);
+  const cleo = (await asPlayer(CERCLE, "select public.open_pack() as r")).rows[0].r;
+  check(
+    "0055 : sous la garantie, le Légendaire est la chaîne du cercle jamais obtenue",
+    cleo.pity_hit === true && cleo.pity_circle === true &&
+      cleo.cards.at(-1).creatorSlug === "rubius" && cleo.cards.at(-1).rarity === "legendary",
+    JSON.stringify({ hit: cleo.pity_hit, circle: cleo.pity_circle, last: cleo.cards.at(-1) }),
+  );
+  check(
+    "0055 : la garantie du cercle remet le compteur à zéro comme l'autre",
+    cleo.pity === 0,
+  );
+  const paul = (await asPlayer(CERCLE_PLEIN, "select public.open_pack() as r")).rows[0].r;
+  check(
+    "0055 : cercle déjà complet → garantie ordinaire (Légendaire, pas forcément du cercle)",
+    paul.pity_hit === true && paul.pity_circle === false && paul.cards.at(-1).rarity === "legendary",
+    JSON.stringify({ hit: paul.pity_hit, circle: paul.pity_circle, last: paul.cards.at(-1) }),
+  );
+  const payeurSansCercle = payeur.pity_circle === false || payeur.pity_circle === undefined;
+  check("0055 : sans cercle enregistré, la garantie ne parle pas de cercle", payeurSansCercle, String(payeur.pity_circle));
+  // Hors garantie, le cercle ne change rien : un booster ordinaire de Cléo ne passe pas par le cercle.
+  const cleoOrdinaire = (await asPlayer(CERCLE, "select public.open_pack() as r")).rows[0].r;
+  check(
+    "0055 : hors garantie, aucun tirage n'est détourné vers le cercle",
+    cleoOrdinaire.pity_hit === false && cleoOrdinaire.pity_circle === false,
+    JSON.stringify({ hit: cleoOrdinaire.pity_hit, circle: cleoOrdinaire.pity_circle }),
+  );
+  await refuses("0055 : un joueur n'appelle pas le tirage du cercle directement", CERCLE,
+    "select public._pack_circle_legendary($1, '{}'::text[])", [CERCLE], "permission denied");
+  // La migration se rejoue sans erreur (create or replace).
+  await client.query(await readFile(path.join(MIGRATIONS, "0055_garantie_cercle.sql"), "utf8"));
+  check("0055 : la migration se rejoue sans erreur", true);
 
 
   // Série : un joueur neuf ouvre son premier booster (jour 1), puis rien le
@@ -3931,7 +3997,7 @@ try {
   // On laisse le journal comme on l'a trouvé : ces boosters de contrôle ne sont
   // pas de vrais paquets, et `pack_draws` ne doit pas en garder la trace — le
   // contrôle de rejouabilité, plus bas, compare les deux journaux.
-  await client.query("delete from public.pack_draws where user_id in ($1, $2, $3)", [SERIE, SEPT, TROU]);
+  await client.query("delete from public.pack_draws where user_id in ($1, $2, $3, $4, $5)", [SERIE, SEPT, TROU, CERCLE, CERCLE_PLEIN]);
 
   await client.query("alter table public.pack_draws enable trigger pack_draws_last_pack");
   await client.query("delete from public.pack_draws where user_id in ($1, $2, $3, $4)", [
@@ -7144,6 +7210,8 @@ try {
   // `0036` ferme la pile à son tour : elle réécrit `schema_versions()`, donc
   // c'est elle la dernière recollée.
   await client.query(chaine);
+  // `0055` est la dernière à écrire `open_pack()` : elle repasse après la pile.
+  await client.query(await readFile(path.join(MIGRATIONS, "0055_garantie_cercle.sql"), "utf8"));
   // Puis `0037`, puis `0038`, puis `0039` : chacune réécrit quelque chose de la
   // précédente (`push_targets()` pour l'une, `streamer_status()`,
   // `streamer_visit()` et `schema_versions()` pour les suivantes), donc l'ordre

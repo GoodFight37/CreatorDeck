@@ -99,6 +99,8 @@ export type CloudStoreActions = {
   completeTutorial: ReturnType<typeof packActions>["completeTutorial"];
   claimReturnGift: ReturnType<typeof packActions>["claimReturnGift"];
   openReturnGiftPack: ReturnType<typeof packActions>["openReturnGiftPack"];
+  pushCircle: ReturnType<typeof packActions>["pushCircle"];
+  syncCircle: ReturnType<typeof packActions>["syncCircle"];
   searchPlayers: ReturnType<typeof socialActions>["searchPlayers"];
   playerVariants: ReturnType<typeof socialActions>["playerVariants"];
   tradeRadar: ReturnType<typeof socialActions>["tradeRadar"];

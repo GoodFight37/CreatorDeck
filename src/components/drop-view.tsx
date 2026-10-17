@@ -31,6 +31,7 @@ import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
 import { circleLiveState } from "@/lib/circle-live";
 import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
+import { circlePityPool } from "@/lib/game-engine";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -131,6 +132,8 @@ export function HomeView({
   const lean = circle.length > 0;
   // D-141 : un seul univers au début pour un joueur avec cercle ; MEMES arrive après 10 boosters.
   const showMemes = memesUnlocked(lean, game.stats.openings);
+  // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
+  const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
   const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
     ?? game.missions.find((mission) => !mission.done)
@@ -203,7 +206,7 @@ export function HomeView({
     <>
           <button type="button" className="pity-row now" onClick={onShowOdds}
             aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
-            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
+            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}{circlePity ? " · une de tes chaînes" : ""}</span>
             <ChevronRight size={14} />
           </button>
           <button

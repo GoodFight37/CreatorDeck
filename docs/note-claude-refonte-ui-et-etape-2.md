@@ -50,8 +50,10 @@ Branche : `etape-1-mes-chaines` (HEAD 1f1c0c6). Rédigée le 17/10/2026.
 - Seuil MEMES : 10 boosters ouverts pour un joueur avec cercle (D-141), fait.
 - Garantie du cercle : « le Légendaire garanti vient du cercle » (D-142), choisie, **pas active** tant que le cercle n'est pas en ligne.
 
+## Fait ensuite (feu vert de Malik, 17/10 soir)
+- Cercle en ligne (D-143) : `circle-sync.ts`, `cloudStore.pushCircle` / `syncCircle`, `api.circle()`.
+- Garantie du cercle (D-142) : migration `0055_garantie_cercle.sql` (manuelle, **à appliquer par Malik après 0054**), miroir `circlePityPool()`, annonces accueil + taux, scénarios dans `verify-supabase-migrations.mjs`.
+
 ## Proposé, non fait (accord de Malik requis)
-- Cercle enregistré en ligne (`set_circle`, plan § 3 bis) — Malik a demandé une explication avant de décider.
-- Puis : implémentation de D-142 (migration sur `open_pack()`, appliquée à la main).
 - Notification push « X vient de lancer son direct ».
 - Étapes 4 et 5 du plan.
