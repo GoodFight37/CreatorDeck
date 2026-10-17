@@ -131,7 +131,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await expect(scene).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "memes");
-  await expect(page.getByText("Ta réserve Mèmes · 3/4")).toBeVisible();
+  await expect(page.getByText("Ta réserve MEMES · 3/4")).toBeVisible();
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
