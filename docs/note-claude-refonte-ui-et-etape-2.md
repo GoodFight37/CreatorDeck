@@ -1,4 +1,4 @@
-# Note de passation Claude — refonte UI + point de départ de l'étape 2
+# Note de passation Claude — refonte UI, étapes 2 et 3
 
 Branche : `etape-1-mes-chaines` (HEAD 1f1c0c6). Rédigée le 17/10/2026.
 
@@ -46,9 +46,12 @@ Branche : `etape-1-mes-chaines` (HEAD 1f1c0c6). Rédigée le 17/10/2026.
 - Jetons aplatis dans le panneau Réserve de l'accueil épuré.
 - Vérifié : 1233 unitaires, 208 écrans, jargon, tsc, eslint (`--ignore-pattern 'android/**/build/**' --ignore-pattern 'android/app/src/main/assets/**'` : fichiers générés). APK construit et vérifié. Non vérifié sur téléphone.
 
+## Choix délégués par Malik (17/10/2026, soir)
+- Seuil MEMES : 10 boosters ouverts pour un joueur avec cercle (D-141), fait.
+- Garantie du cercle : « le Légendaire garanti vient du cercle » (D-142), choisie, **pas active** tant que le cercle n'est pas en ligne.
+
 ## Proposé, non fait (accord de Malik requis)
+- Cercle enregistré en ligne (`set_circle`, plan § 3 bis) — Malik a demandé une explication avant de décider.
+- Puis : implémentation de D-142 (migration sur `open_pack()`, appliquée à la main).
 - Notification push « X vient de lancer son direct ».
-- Bonus propre au cercle, ou garantie « carte du cercle » (règle de jeu + miroir SQL).
-- Seuil d'accès aux Mèmes (valeur à choisir).
-- Synchronisation du cercle en ligne (`set_circle`, dépend de 0054).
 - Étapes 4 et 5 du plan.

@@ -1,3 +1,71 @@
+## D-142 — 17 octobre 2026 : la garantie du cercle (choisie, pas encore active)
+
+**Contexte.** Malik laisse Claude choisir la « garantie carte du cercle »
+proposée à l'étape 3, et demande que le choix soit écrit ici en entier.
+
+**Constat qui oriente le choix.** Les chaînes que les joueurs nomment sont
+surtout les plus suivies, donc des **Légendaires du catalogue** (50 sur 1000,
+non fabricables). Avec l'artisanat (D-140), un cercle se complète déjà pour les
+Communes → Épiques ; ce qui bloque, ce sont les Légendaires.
+
+**Décision : « Ton Légendaire garanti vient de ton cercle ».** Quand la
+garantie Légendaire existante se déclenche (12ᵉ booster Live Drop sans
+Légendaire, `pull-rates.json` → `pity`), le Légendaire est tiré **parmi les
+Légendaires du cercle du joueur, celles qu'il n'a pas encore d'abord** ; s'il
+les a toutes, ou si son cercle n'en contient pas, le tirage reste celui
+d'aujourd'hui. Variante Live si la chaîne est en direct (bonus Direct
+inchangé).
+
+**Pourquoi celle-là.**
+- Aucune inflation : le **nombre** de Légendaires tirées ne change pas (même
+  seuil, mêmes taux) ; seul *qui* tombe change, exactement comme le bonus
+  Direct. Le marché et les échanges ne voient pas plus de Légendaires.
+- Un effet fort et lisible : « Légendaire garanti dans 4 boosters — ce sera une
+  de tes chaînes » donne une raison concrète de revenir.
+- Pas de nouveau compteur, pas de table : la garantie actuelle est déjà
+  calculée depuis l'historique des tirages (`_pack_pity`).
+
+**Refusé.**
+- Garantie « une carte du cercle tous les N boosters » : pour un cercle de
+  Légendaires, elle ajouterait jusqu'à une Légendaire tous les N boosters, soit
+  presque le double du rythme actuel (~1,1 pour 10 boosters) : inflation.
+- Bonus de poids « ×N pour le cercle » : sur 50 Légendaires, ×3 fait passer une
+  chaîne de 2 % à ~6 % des Légendaires tirées ; effet presque invisible pour une
+  modification de `open_pack`.
+
+**Pas encore active, pourquoi.** Le serveur doit connaître le cercle, or le
+cercle ne vit aujourd'hui que sur le téléphone (voir « cercle en ligne »,
+décision attendue de Malik). Dès que le cercle est envoyé en ligne
+(`set_circle`, déjà dans 0054), la règle demande : une migration qui modifie
+`open_pack()` (branche garantie uniquement), le miroir dans `game-engine.ts`,
+l'écran « Taux de drop » et `docs/taux-de-drop.md`, et un test de
+non-divergence SQL ↔ TS comme `supabase-cercle.test.ts`. Migration appliquée à
+la main par Malik.
+
+## D-141 — 17 octobre 2026 : le booster MEMES après 10 boosters, pour un joueur avec cercle
+
+**Contexte.** Le plan (étape 3) prévoit « une seule vue d'univers au premier
+lancement, Mèmes derrière un seuil ». Malik laisse Claude choisir le seuil.
+
+**Décision.** Pour un joueur **avec cercle**, le sélecteur Live Drop / MEMES
+n'apparaît sur le Drop qu'à partir de **10 boosters ouverts**
+(`MEMES_UNLOCK_OPENINGS`, `src/lib/memes-unlock.ts`). Avant, le panneau
+« Réserve, taux et sabliers » dit « Le booster MEMES arrive après 10 boosters
+ouverts (3/10) ». Joueur sans cercle : rien ne change.
+
+**Pourquoi 10.** La réserve Live Drop donne un booster toutes les 30 minutes
+(4 au plus) : 10 boosters, c'est la première journée de jeu, dont 5 boosters
+cadeau. Assez pour que le cercle et le Live Drop soient compris avant un
+second univers ; pas assez pour cacher MEMES à un joueur régulier.
+
+**Ce que ce n'est pas.** Une règle : la réserve MEMES existe et se recharge en
+ligne comme avant, rien n'est perdu ni retiré ; le compteur est
+`game.stats.openings`, le même que les jalons. Aucune migration.
+
+**Preuves.** `memes-unlock.test.ts` 3/3 ; écran dans
+`ecrans-binder-cercle.test.tsx` (3 boosters : un seul univers et la phrase ;
+10 : Live Drop + MEMES) ; capture `docs/captures/etape-3/e3-memes-cmp.png`.
+
 ## D-140 — 17 octobre 2026 : le Binder au service du cercle (étape 3)
 
 **Contexte.** Étape 3 du plan des cinq premières minutes, feu vert de Malik.
@@ -22,9 +90,10 @@ Contrainte : aucune règle de jeu, migration ou notification sans accord.
 - Panneau « Réserve, taux et sabliers » : les jetons sont une ligne, plus un
   accordéon imbriqué.
 
-**Non fait, à décider par Malik.** Garantie « carte du cercle » (pity ciblé :
-règle + SQL miroir) ; Mèmes derrière un seuil (valeur à choisir) ;
-synchronisation du cercle en ligne via `set_circle` (dépend de 0054).
+**Non fait à la date de D-140.** Garantie « carte du cercle » et seuil Mèmes,
+depuis choisis par Claude à la demande de Malik : voir D-141 (fait) et D-142
+(choisi, pas actif). Synchronisation du cercle en ligne via `set_circle` :
+décision de Malik attendue.
 
 **Preuves.** `npm test` 1233/1233 (dont `circle-goal.test.ts` 6),
 `npm run ecrans` 208/208 (dont `ecrans-binder-cercle.test.tsx` 8),

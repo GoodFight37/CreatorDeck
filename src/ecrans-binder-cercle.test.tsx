@@ -121,6 +121,28 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(tokens.closest("details.drop-token-details")).toBeNull();
   });
 
+  it("D-141 : avec un cercle, MEMES n'apparaît qu'après 10 boosters ouverts", async () => {
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
+    const universes = () => [...document.querySelectorAll('[aria-label="Choisir un univers"] button')].map((b) => b.textContent?.trim());
+    const noop = () => {};
+    const mount = async (openings: number) => {
+      const state = { ...createInitialState(NOW), openings };
+      await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
+        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
+        sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
+        onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
+        tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+        now={NOW} serverReserve={false} needsAccount={false} />);
+    };
+    await mount(3);
+    expect(universes()).not.toContain("MEMES");
+    expect(document.querySelector(".memes-unlock-note")!.textContent).toBe("Le booster MEMES arrive après 10 boosters ouverts (3/10).");
+    banc.nettoyer(); banc = creerBanc(); banc.preparer();
+    await mount(10);
+    expect(document.querySelector(".memes-unlock-note")).toBeNull();
+    expect(universes()).toEqual(["Live Drop", "MEMES"]);
+  });
+
   it("« Mes chaînes » en modification ne parle pas de premier booster", async () => {
     const onConfirm = vi.fn();
     const onCancel = vi.fn();

@@ -381,3 +381,6 @@
 .binder-featured-page, .binder-page-button, .binder-collection-choices button, .binder-auto-goal { min-height: 44px; }
 .collection-view [aria-pressed][class*="binder-"], .profile-view button, .profile-view summary { min-height: 44px; }
 .binder-next-pages > button { min-height: 48px; }
+
+/* D-141 : le booster MEMES arrive après le seuil, dit dans le panneau Réserve. */
+.is-lean .memes-unlock-note { margin: 10px 14px 12px; color: var(--muted); font-size: 12.5px; line-height: 1.4; }

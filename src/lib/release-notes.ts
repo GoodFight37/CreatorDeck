@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-memes-apres-dix-boosters", date: "2026-10-17", title: "Le booster MEMES arrive après tes premiers boosters",
+    summary: "Si tu as défini tes chaînes, le Drop commence par le Live Drop seul.",
+    sections: [{ title: "Drop", items: [
+      "Avec tes chaînes définies, le booster MEMES apparaît sur le Drop après 10 boosters ouverts. Le panneau « Réserve, taux et sabliers » t’indique où tu en es.",
+      "Ta réserve MEMES continue de se recharger pendant ce temps : rien n’est perdu.",
+    ] }],
+  },
+  {
     id: "2026-10-17-binder-mon-cercle", date: "2026-10-17", title: "Ton Binder s’ouvre sur tes chaînes",
     summary: "Le Binder montre d’abord ton cercle, ce qu’il te manque et ce que tu peux fabriquer.",
     sections: [{ title: "Binder", items: [

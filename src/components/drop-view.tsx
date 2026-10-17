@@ -30,6 +30,7 @@ import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
 import { circleLiveState } from "@/lib/circle-live";
+import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -128,6 +129,8 @@ export function HomeView({
   const haloImage = haloCreator ? creatorImage(haloCreator) : null;
   // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
   const lean = circle.length > 0;
+  // D-141 : un seul univers au début pour un joueur avec cercle ; MEMES arrive après 10 boosters.
+  const showMemes = memesUnlocked(lean, game.stats.openings);
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
   const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
     ?? game.missions.find((mission) => !mission.done)
@@ -304,7 +307,7 @@ export function HomeView({
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
-        universes={lean ? ["live"] : undefined} />
+        universes={showMemes ? undefined : ["live"]} />
 
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         <button
@@ -599,6 +602,7 @@ export function HomeView({
       <details className="drop-secondary">
         <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
         {lean ? reserveControls : null}
+        {!showMemes ? <p className="memes-unlock-note">{memesUnlockLine(game.stats.openings)}</p> : null}
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (

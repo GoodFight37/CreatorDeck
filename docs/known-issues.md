@@ -1,3 +1,15 @@
+## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)
+
+- **Cercle seulement sur l'appareil.** Perdu si l'app est désinstallée ou ses
+  données effacées, absent sur un autre appareil et sur le site, inconnu du
+  serveur. Décision attendue (plan § 3 bis) ; bloque D-142.
+- **360×740 :** la rangée « Ton cercle » passe en partie sous le dock au premier
+  écran (relevé de la refonte UI, non corrigé).
+- **ESLint sur un poste ayant construit l'APK :** `npx eslint .` lit les
+  fichiers Android générés (`android/**/build/**`, `android/app/src/main/assets/**`)
+  et signale une erreur qui n'est pas dans le code du jeu. Utiliser les
+  `--ignore-pattern` notés dans la passation.
+
 ## « Ton cercle » cachait les chaînes en direct — corrigé (17 octobre 2026, D-138)
 
 Les chaînes en direct passaient en tête de la rangée, mais la rangée restait

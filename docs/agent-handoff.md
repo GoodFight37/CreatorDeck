@@ -1,5 +1,40 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Chantier « Mes chaînes » — branche `etape-1-mes-chaines` — 17 octobre 2026 (soir, Claude)
+
+- **Où :** branche `etape-1-mes-chaines` sur GitHub, **pas fusionnée dans
+  `main`**, pas déployée sur Vercel. Les SHA du code : étape 2 `6c85336`, clé
+  debug `8f2cb54`, étape 3 `d6f9d9e` ; ce checkpoint est dans le commit suivant
+  (`git log -1 --format=%H -- docs/agent-handoff.md`).
+- **Fait (demandes de Malik) :** étape 2 « qui est en direct dans mon cercle »
+  (D-138) ; clé de signature debug partagée (D-139) ; étape 3 Binder au service
+  du cercle (D-140) ; booster MEMES après 10 boosters pour un joueur avec cercle
+  (D-141, seuil choisi par Claude à la demande de Malik) ; garantie du cercle
+  choisie sous la forme « le Légendaire garanti vient du cercle » (D-142, **pas
+  active** : attend le cercle en ligne).
+- **Aucune migration, règle de tirage ou notification ajoutée.** Rien sur
+  `main`, rien en Production.
+- **Vérifié automatiquement (dernier passage) :** `npm test` 1236/1236,
+  `npm run ecrans` 209/209, `node scripts/check-jargon.mjs`, `npm run typecheck`,
+  `npx eslint . --ignore-pattern 'android/**/build/**' --ignore-pattern
+  'android/app/src/main/assets/**'` (fichiers Android générés exclus, cf.
+  AGENTS.md). Captures `docs/captures/etape-2/` et `etape-3/`. APK debug
+  construit (`npm run android:sync` + `node scripts/android-gradle.mjs
+  assembleDebug --max-workers=1`), contenu et signature contrôlés.
+- **Non vérifié :** téléphone réel (lien Twitch, rendu au-dessus du dock,
+  enregistrement de « Modifier mes chaînes », artisanat depuis la cible),
+  Playwright (jamais lancé sur la branche), Production.
+- **Environnement de la session :** clone neuf ; SDK Android installé dans
+  `/opt/android-sdk` ; `.env.local` recréé localement (non commité) avec l'URL et
+  la clé publique déjà servies par le site Vercel ; Maven Central renvoie parfois
+  des 429 → relancer Gradle avec `--max-workers=1`.
+- **Décision attendue de Malik :** envoyer le cercle en ligne (`set_circle`,
+  plan § 3 bis). Ensuite seulement : implémenter D-142 (migration modifiant
+  `open_pack()`, appliquée à la main par Malik). Étapes 4 et 5 : feu vert requis.
+- **Prochaine action précise :** installer le dernier APK, faire les essais
+  ci-dessus, puis décider du cercle en ligne.
+
+
 ## Correction du nom MEMES sur Drop — 17 octobre 2026
 
 - Demande de Malik : retirer l’accent dans le nom du booster affiché sur
