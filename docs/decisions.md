@@ -74,6 +74,13 @@ inchangé).
   ligne, 0055 laisse le tirage exactement comme avant.
 - **Ordre à respecter :** appliquer 0055 avant d'installer l'APK qui l'annonce ;
   sinon l'accueil promet une chaîne que le serveur ne donne pas encore.
+- **Application (Malik, SQL Editor) sans toucher à l'historique.** Le workflow
+  « Mise à jour Supabase » n'applique que `main` (garde-fou volontaire) et Malik
+  garde le travail sur la branche jusqu'à l'étape 5. 0055 est donc collée à la
+  main et **non inscrite** dans `supabase_migrations.schema_migrations` : une
+  version présente en base mais absente de `main` arrêterait le workflow à
+  chaque push de `main`. Après la fusion, le workflow la rejouera (approbation
+  manuelle) sans effet, 0055 étant rejouable (vérifié sur Postgres jetable).
 
 **Preuves.** Postgres jetable (`npm run supabase:verify`, lancé sous un
 utilisateur non root) : contrôles « 0055 : … » (chaîne manquante tirée, cercle

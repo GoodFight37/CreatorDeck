@@ -35,9 +35,12 @@
   « 0055 : … » ; il doit tourner sous un utilisateur non root
   (`sudo -u <utilisateur> env TMPDIR=<dossier accessible> node
   scripts/verify-supabase-migrations.mjs`). Étapes 4 et 5 : feu vert requis.
-- **Prochaine action précise (Malik) :** dans Supabase → SQL Editor, vérifier
-  que `player_circles` existe (0054), coller 0055, puis installer le dernier
-  APK et faire les essais ci-dessus.
+- **Prochaine action précise (Malik) :** dans Supabase → SQL Editor, coller
+  0055 (elle s'arrête seule si 0054 manque), **sans** l'inscrire dans
+  l'historique des migrations (D-142), vérifier `garantie_cercle_installee =
+  true`, puis installer le dernier APK et faire les essais ci-dessus.
+- **Malik a décidé (17/10, 23 h 15) :** tout reste sur `etape-1-mes-chaines`
+  jusqu'à l'étape 5 ; pas de fusion dans `main` avant.
 
 
 ## Correction du nom MEMES sur Drop — 17 octobre 2026
