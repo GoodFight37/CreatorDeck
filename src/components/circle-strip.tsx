@@ -7,10 +7,13 @@
  * dans l'ombre. Aucune règle de jeu ici : tout vient de ce que le joueur a déjà.
  */
 import Image from "next/image";
+import { useLayoutEffect, useRef } from "react";
 
 import { CREATOR_BY_SLUG, RARITY_META, creatorImage } from "@/lib/catalog";
 import { circleTiers } from "@/lib/circle";
+import { canRetryLive, circleLiveState, circleLiveStatusLine, twitchUrl } from "@/lib/circle-live";
 import { liveFor, type LiveSnapshot } from "@/lib/live";
+import { liveStore } from "@/lib/live-store";
 
 export function CircleStrip({
   circle,
@@ -18,12 +21,15 @@ export function CircleStrip({
   live,
   now,
   onOpenCollection,
+  onRetryLive = () => void liveStore.refresh({ force: true }),
 }: {
   circle: readonly string[];
   owned: ReadonlySet<string>;
   live: LiveSnapshot;
   now: number;
   onOpenCollection: () => void;
+  /** Relancer la lecture du direct (hors ligne, donnée périmée). */
+  onRetryLive?: () => void;
 }) {
   const tiers = circleTiers(circle);
   const entries = circle
@@ -36,6 +42,19 @@ export function CircleStrip({
     .sort((a, b) => Number(Boolean(b.stream)) - Number(Boolean(a.stream)));
   const liveCount = entries.filter((entry) => entry.stream).length;
   const ownedCount = entries.filter((entry) => entry.has).length;
+  const state = circleLiveState(circle, live, owned, now);
+  const status = circleLiveStatusLine(state);
+
+  // Les chaînes en direct passent en tête : la rangée doit alors revenir au
+  // début, sinon elle garde son défilement et les cache hors de l'écran.
+  const rowRef = useRef<HTMLUListElement>(null);
+  const liveKey = entries.filter((entry) => entry.stream).map((entry) => entry.creator.slug).join(",");
+  useLayoutEffect(() => {
+    if (liveKey && rowRef.current) rowRef.current.scrollLeft = 0;
+  }, [liveKey]);
+
+  // Un cercle dont aucune chaîne n'est reconnue n'a rien à montrer.
+  if (entries.length === 0) return null;
 
   return (
     <section className="circle-strip" aria-label="Ton cercle">
@@ -47,7 +66,17 @@ export function CircleStrip({
             : `${ownedCount} sur ${entries.length} dans ta collection`}
         </p>
       </header>
-      <ul className="circle-strip-row">
+      {status ? (
+        <p className="circle-strip-status" data-state={state.kind} role="status">
+          <span>{status}</span>
+          {canRetryLive(state) ? (
+            <button type="button" onClick={onRetryLive} disabled={live.loading}>
+              {live.loading ? "Lecture…" : "Réessayer"}
+            </button>
+          ) : null}
+        </p>
+      ) : null}
+      <ul className="circle-strip-row" ref={rowRef}>
         {entries.map(({ creator, stream, has, tier }) => {
           const tone = RARITY_META[tier].color;
           const face = (
@@ -64,7 +93,7 @@ export function CircleStrip({
               {stream ? (
                 <a
                   className="circle-item"
-                  href={`https://www.twitch.tv/${encodeURIComponent(creator.login)}`}
+                  href={twitchUrl(creator.login)}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`${creator.displayName} est en direct. Ouvrir sur Twitch`}

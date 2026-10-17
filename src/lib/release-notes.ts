@@ -10,6 +10,16 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-direct-dans-ton-cercle", date: "2026-10-17", title: "Tes chaînes en direct, sur l’accueil",
+    summary: "Quand une chaîne de ton cercle streame, l’accueil te le dit avec un lien vers Twitch.",
+    sections: [{ title: "Drop", items: [
+      "Sous le bouton d’ouverture, un encadré montre les chaînes de ton cercle en direct, avec leur jeu, leurs spectateurs et un lien pour les regarder sur Twitch.",
+      "Il rappelle le bonus Direct déjà en place : pendant le direct, la carte de la chaîne tombe plus souvent et peut sortir en version Live. Si ta réserve est vide, il indique la prochaine recharge et propose d’utiliser un sablier.",
+      "La rangée « Ton cercle » dit maintenant quand personne n’est en direct, quand l’information est trop ancienne ou indisponible, avec un bouton pour réessayer.",
+      "Correction : les chaînes en direct, placées en tête de la rangée, n’étaient pas visibles au premier écran ; la rangée revient maintenant au début.",
+    ] }],
+  },
+  {
     id: "2026-10-17-drop-nom-memes-sans-accent", date: "2026-10-17", title: "Le nom MEMES reste sans accent sur Drop",
     summary: "Le bouton et la réserve affichent le nom MEMES comme le sélecteur de booster.",
     sections: [{ title: "Drop", items: [

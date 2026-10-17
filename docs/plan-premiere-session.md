@@ -23,7 +23,7 @@ Branche locale `etape-1-mes-chaines`, aucun commit, aucun push.
 |---|---------|------|
 | 0 | Gel : ni taux, ni schéma, ni économie avant que l'étape 1 soit jouable. 0054 ajoute des objets, ne modifie aucune fonction existante. | tenu |
 | 1 | « Mes chaînes » + premier booster tiré dans le cercle + accueil épuré | **écrit** |
-| 2 | Un second verbe minuscule : « qui est en direct dans MON cercle » (A) | décidé, non écrit |
+| 2 | Un second verbe minuscule : « qui est en direct dans MON cercle » (A) | **écrit et testé** (D-138), non vérifié sur téléphone |
 | 3 | Binder au service du désir | non écrit |
 | 4 | Rétention honnête | non écrit |
 | 5 | Finition visible à budget limité | non écrit |

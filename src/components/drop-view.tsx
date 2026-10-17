@@ -28,6 +28,8 @@ import { type GameView } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
 import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
+import { CircleLiveMoment } from "@/components/circle-live-moment";
+import { circleLiveState } from "@/lib/circle-live";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -137,6 +139,9 @@ export function HomeView({
     [game.cards],
   );
   const live = useLive();
+  // Étape 2 : qui, dans le cercle du joueur, est en direct maintenant.
+  const circleLive = lean ? circleLiveState(circle, live, ownedSlugs, now) : null;
+  const circleLiveEntries = circleLive?.kind === "live" ? circleLive.entries : [];
   const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
     ? cloud.sceneStatus : null;
   const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
@@ -328,6 +333,17 @@ export function HomeView({
           </details>
         ) : null}
       </section>
+      {circleLiveEntries.length ? (
+        <CircleLiveMoment
+          entries={circleLiveEntries}
+          now={tick}
+          canOpen={!needsAccount && (stock > 0 || promoPacks > 0)}
+          nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `dans ${formatCountdown(nextAt, tick)}` : null}
+          hourglass={!needsAccount && stock <= 0 && promoPacks <= 0 && game.player.hourglasses > 0
+            ? { count: game.player.hourglasses, busy: usingHourglass, onUse: onUseHourglass }
+            : null}
+        />
+      ) : null}
       {lean ? (
         <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} />
       ) : null}
@@ -354,8 +370,8 @@ export function HomeView({
       <MemeBoosterOpening booster={memes} />
 
 
-      {/* Direct sous le CTA */}
-      {featured ? (
+      {/* Direct sous le CTA (le moment du cercle le remplace quand une de ses chaînes streame) */}
+      {featured && !circleLiveEntries.length ? (
         <button
           type="button"
           className="live-bar"

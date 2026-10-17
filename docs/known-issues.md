@@ -1,3 +1,10 @@
+## « Ton cercle » cachait les chaînes en direct — corrigé (17 octobre 2026, D-138)
+
+Les chaînes en direct passaient en tête de la rangée, mais la rangée restait
+défilée vers la droite (184 px mesurés à 390×844) : elles étaient hors écran au
+premier affichage. La rangée revient maintenant au début quand le direct change.
+Test : `src/ecrans-circle-live.test.tsx`, captures `docs/captures/etape-2/`.
+
 ## Nom du booster accentué de façon incohérente sur Drop — corrigé (17 octobre 2026)
 
 **Reproduction :** sur l’accueil Drop, le sélecteur affichait `MEMES`, mais le

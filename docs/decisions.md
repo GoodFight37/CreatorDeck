@@ -1,3 +1,43 @@
+## D-138 — 17 octobre 2026 : le second verbe « qui est en direct dans mon cercle » (étape 2)
+
+**Contexte.** L’étape 1 a donné au joueur un cercle de 5 à 15 chaînes. La rangée
+« Ton cercle » montrait déjà qui streame, mais rien ne poussait à ouvrir l’app à
+ce moment-là. Malik demande d’en faire un geste de jeu sans toucher à l’économie
+existante, et de proposer d’abord toute règle, migration ou notification.
+
+**Décision.** Quand une chaîne du cercle est en direct (donnée de moins de dix
+minutes), l’accueil épuré affiche sous le bouton un encadré « En direct dans ton
+cercle » : jusqu’à trois chaînes dans l’ordre du cercle, jeu, spectateurs, durée,
+« Dans ta collection » ou « À trouver », et un lien « Twitch » par chaîne. Le
+bénéfice annoncé est le **bonus Direct déjà publié** (×1,5 dans la rareté, 20 %
+de variante Live), lu dans `DIRECT_BONUS` et jamais recopié. Réserve vide : il
+indique la prochaine recharge et propose le sablier existant (même action que le
+panneau Réserve). La barre générique « En direct · X sur 1000 » s’efface tant que
+l’encadré est visible. La rangée gagne une phrase d’état : personne en direct
+(heure de vérification), donnée trop vieille ou hors ligne (avec « Réessayer »,
+qui force une relecture), version sans suivi du direct. Logique pure dans
+`src/lib/circle-live.ts`, rendu dans `circle-live-moment.tsx` et `circle-strip.tsx`.
+
+**Défaut prouvé et corrigé au passage.** Les chaînes en direct étaient triées en
+tête de la rangée, mais la rangée gardait un défilement horizontal de 184 px
+(mesuré dans Chromium, 390×844) : les chaînes en direct étaient hors écran. La
+rangée revient au début quand l’ensemble des chaînes en direct change.
+
+**Écarts au plan.** Le plan prévoyait que le bouton « Recharge en cours »
+devienne « Voir qui est en direct dans mon cercle » : non retenu, l’encadré est
+juste dessous et le bouton garde un seul sens (ouvrir). Aucune notification
+push, aucune règle de jeu, aucune migration : rien n’a été nécessaire.
+
+**Refusé / proposé pour plus tard (accord de Malik requis).** Notification
+« X vient de lancer son direct » ; bonus propre au cercle (règle de jeu et
+miroir SQL) ; marquage de carte dans le Binder (étape 3).
+
+**Preuves.** `npm test` 1227/1227, `npm run ecrans` 200/200 dont
+`src/ecrans-circle-live.test.tsx` 8/8, `src/lib/circle-live.test.ts` 14/14,
+`check-jargon`, `tsc`, `eslint` propres. Captures avant/après 390×844 et
+1280×800 dans `docs/captures/etape-2/` (données du direct simulées, compte
+invité). Non vérifié sur téléphone réel.
+
 ## D-137 — 17 octobre 2026 : écrire le nom du booster MEMES sans accent
 
 Sur le Drop, le sélecteur de booster affichait `MEMES`, tandis que le bouton et
