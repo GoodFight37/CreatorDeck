@@ -680,6 +680,25 @@ describe("tirage serveur", () => {
     expect(calls.map((call) => call.url.split("/").at(-1))).toEqual(["onboarding_status", "complete_tutorial", "claim_return_gift", "open_return_gift_pack"]);
   });
 
+  it("D-143 : envoie le cercle par set_circle et relit le sien dans player_circles", async () => {
+    const slugs = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"];
+    const { api, calls } = client((url) => (url.includes("player_circles")
+      ? { body: [{ slugs, updated_at: "2026-10-17T20:00:00Z" }] }
+      : { body: { slugs } }), signedIn());
+    await api.setCircle(slugs);
+    await expect(api.circle()).resolves.toEqual({ slugs, updatedAt: Date.parse("2026-10-17T20:00:00Z") });
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/set_circle");
+    expect(calls[1]?.url).toContain("/rest/v1/player_circles?user_id=eq.");
+    expect(calls[1]?.url).toContain("select=slugs,updated_at");
+  });
+
+  it("D-143 : pas de cercle en ligne, ou pas de session → null", async () => {
+    const { api } = client(() => ({ body: [] }), signedIn());
+    await expect(api.circle()).resolves.toBeNull();
+    const { api: guest } = client(() => ({ body: [] }));
+    await expect(guest.circle()).resolves.toBeNull();
+  });
+
   it("refuse sans session", async () => {
     const { api } = client(() => ({ body: {} }));
     await expect(api.openPack()).rejects.toThrowError(/Connecte-toi/);

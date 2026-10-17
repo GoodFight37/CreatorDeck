@@ -2,6 +2,8 @@
 
 # Le dépôt, en clair
 
+> **État du 18 octobre 2026 :** les sections datées des 5–9 octobre ci-dessous décrivent l'ancien fonctionnement ; leurs recettes de mise à plat ne sont pas des consignes actuelles. `main` déclenche la Vérification ; après un run vert, le [workflow APK de test](mise-a-jour-apk.md) publie une release dans `GoodFight37/creatordeck-apk`. [v871307](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) est publiée. Les règles en vigueur sont dans [AGENTS.md](../AGENTS.md).
+
 But : **un dépôt, une branche de référence, un historique léger.**
 
 ## État au 5 octobre 2026

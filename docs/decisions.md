@@ -1,3 +1,254 @@
+## D-144 — 18 octobre 2026 : mettre à jour l'APK de test depuis l'appli
+
+**Contexte.** Malik installait chaque APK à la main (téléchargée en `.apk.zip`,
+renommée). Il demande un bouton « mettre à jour » qui récupère et installe la
+dernière version, et laisse Claude choisir la solution optimale.
+
+**Décision.**
+- Workflow `.github/workflows/apk.yml` : après chaque « Vérification » verte sur
+  `main` (ou à la demande), construit l'APK debug (clé D-139), numéro de version
+  automatique (minutes écoulées, `android/app/build.gradle`), et la publie comme
+  release du dépôt public `GoodFight37/creatordeck-apk` avec `latest.json`
+  (`scripts/apk-manifest.mjs`). Garde les 10 dernières.
+- Appli : plugin natif `AppUpdaterPlugin.java` (téléchargement, SHA-256, nom de
+  paquet, numéro plus récent, installateur Android via FileProvider) ;
+  `useAppUpdate` + `AppUpdateBanner` sous la barre du haut ; rien sur le site.
+- Guide et réglages : [`mise-a-jour-apk.md`](mise-a-jour-apk.md).
+
+**Limite assumée.** Android exige un appui sur « Installer » : l'installation
+silencieuse n'est possible que pour une appli propriétaire de l'appareil ou du
+Play Store.
+
+**Refusé.**
+- Stockage Supabase : APK ~110 Mo, limite de 50 Mo par fichier en offre
+  gratuite (portraits 56 Mo, images MEMES 41 Mo).
+- Releases du dépôt `CreatorDeck` : dépôt privé, le téléchargement demanderait
+  un jeton dans l'appli.
+- Mise à jour « en direct » du seul contenu web (type Capgo) : service tiers ou
+  serveur à maintenir, et les changements natifs demanderaient quand même une
+  APK.
+
+**Réglages requis (Malik).** Dépôt public `creatordeck-apk`, jeton
+fine-grained `APK_RELEASE_TOKEN` (Contents : read/write sur ce seul dépôt),
+secrets `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Le proxy
+de la session Claude refuse l'accès aux secrets GitHub (403) : Claude ne peut
+pas les poser.
+
+**Preuves.** `app-update.test.ts` 5/5 (manifeste du script relu par l'appli,
+refus des manifestes douteux), `ecrans-app-update.test.tsx` 6/6 (site : rien ;
+à jour : rien ; téléchargement puis installateur ; autorisation la première
+fois ; erreur ; « Plus tard »). APK compilée : `AppUpdaterPlugin` présent,
+permission `REQUEST_INSTALL_PACKAGES`, `versionCode` 871242, clé D-139. Non
+vérifié : le workflow (jamais lancé, secrets absents), l'installation réelle sur
+téléphone.
+
+## D-143 — 17 octobre 2026 : le cercle enregistré en ligne
+
+**Contexte.** Le cercle ne vivait que sur l'appareil : perdu à la
+désinstallation, absent sur un autre appareil, inconnu du serveur (donc D-142
+impossible). Malik demande une explication, puis laisse Claude décider.
+
+**Décision.** Pour un compte connecté, le cercle est envoyé par `set_circle`
+(0054) à chaque enregistrement (« Mes chaînes », première fois ou « Modifier »)
+et relu à chaque connexion dans `player_circles` (lecture réservée au
+propriétaire). Réconciliation (`src/lib/circle-sync.ts`) : rien en ligne →
+envoi ; rien sur l'appareil → reprise ; différents → le plus récent gagne
+(date d'enregistrement de l'appareil contre `updated_at`) ; sans date côté
+appareil, le compte gagne. Jamais bloquant : si l'envoi échoue, l'appareil
+garde son cercle. **Aucune nouvelle migration** (0054 suffit).
+
+**Refusé.** Faire du serveur la seule source (le cercle doit marcher sans
+compte et hors ligne) ; fusionner deux cercles différents (l'ordre compte : la
+première chaîne est la préférée).
+
+**Preuves.** `circle-sync.test.ts` 7/7 ; `api.test.ts` (envoi `set_circle`,
+lecture `player_circles`, absence → `null`). Non vérifié en Production : dépend
+de 0054 appliquée.
+
+## D-142 — 17 octobre 2026 : la garantie du cercle (écrite ; active quand Malik aura appliqué 0055)
+
+**Contexte.** Malik laisse Claude choisir la « garantie carte du cercle »
+proposée à l'étape 3, et demande que le choix soit écrit ici en entier.
+
+**Constat qui oriente le choix.** Les chaînes que les joueurs nomment sont
+surtout les plus suivies, donc des **Légendaires du catalogue** (50 sur 1000,
+non fabricables). Avec l'artisanat (D-140), un cercle se complète déjà pour les
+Communes → Épiques ; ce qui bloque, ce sont les Légendaires.
+
+**Décision : « Ton Légendaire garanti vient de ton cercle ».** Quand la
+garantie Légendaire existante se déclenche (12ᵉ booster Live Drop sans
+Légendaire, `pull-rates.json` → `pity`), le Légendaire est tiré **parmi les
+Légendaires du cercle du joueur, celles qu'il n'a pas encore d'abord** ; s'il
+les a toutes, ou si son cercle n'en contient pas, le tirage reste celui
+d'aujourd'hui. Variante Live si la chaîne est en direct (bonus Direct
+inchangé).
+
+**Pourquoi celle-là.**
+- Aucune inflation : le **nombre** de Légendaires tirées ne change pas (même
+  seuil, mêmes taux) ; seul *qui* tombe change, exactement comme le bonus
+  Direct. Le marché et les échanges ne voient pas plus de Légendaires.
+- Un effet fort et lisible : « Légendaire garanti dans 4 boosters — ce sera une
+  de tes chaînes » donne une raison concrète de revenir.
+- Pas de nouveau compteur, pas de table : la garantie actuelle est déjà
+  calculée depuis l'historique des tirages (`_pack_pity`).
+
+**Refusé.**
+- Garantie « une carte du cercle tous les N boosters » : pour un cercle de
+  Légendaires, elle ajouterait jusqu'à une Légendaire tous les N boosters, soit
+  presque le double du rythme actuel (~1,1 pour 10 boosters) : inflation.
+- Bonus de poids « ×N pour le cercle » : sur 50 Légendaires, ×3 fait passer une
+  chaîne de 2 % à ~6 % des Légendaires tirées ; effet presque invisible pour une
+  modification de `open_pack`.
+
+**Mise en œuvre (17 octobre 2026, soir, feu vert de Malik).**
+- Serveur : `supabase/migrations/0055_garantie_cercle.sql` (manuelle, après
+  0054). Ajoute `_pack_circle_legendary()` et recopie `open_pack()` de 0051 à
+  l'identique sauf trois points : la variable `v_circle_slug`, le choix de la
+  carte garantie, le champ `pity_circle` dans la réponse. Candidats : Légendaires
+  du cercle (`player_circles`), non sortantes, absentes du booster, **jamais
+  obtenues** d'après `card_claims` (une carte recyclée ou échangée compte donc
+  comme obtenue). Tirage uniforme parmi eux. Retour arrière : réappliquer
+  l'`open_pack` de 0051.
+- Appli sans compte : `circlePityPool()` dans `game-engine.ts`, même règle avec
+  la collection actuelle de l'appareil.
+- Affichage : « Légendaire garanti dans N boosters · une de tes chaînes » sur
+  l'accueil quand une Légendaire du cercle manque ; ligne « Tes chaînes » dans
+  l'écran des taux ; `docs/taux-de-drop.md`.
+- Le serveur ne connaît le cercle que s'il a été envoyé (D-143) : sans cercle en
+  ligne, 0055 laisse le tirage exactement comme avant.
+- **Ordre à respecter :** appliquer 0055 avant d'installer l'APK qui l'annonce ;
+  sinon l'accueil promet une chaîne que le serveur ne donne pas encore.
+- **Application (Malik, SQL Editor) sans toucher à l'historique.** Le workflow
+  « Mise à jour Supabase » n'applique que `main` (garde-fou volontaire) et Malik
+  garde le travail sur la branche jusqu'à l'étape 5. 0055 est donc collée à la
+  main et **non inscrite** dans `supabase_migrations.schema_migrations` : une
+  version présente en base mais absente de `main` arrêterait le workflow à
+  chaque push de `main`. Après la fusion, le workflow la rejouera (approbation
+  manuelle) sans effet, 0055 étant rejouable (vérifié sur Postgres jetable).
+
+**Preuves.** Postgres jetable (`npm run supabase:verify`, lancé sous un
+utilisateur non root) : contrôles « 0055 : … » (chaîne manquante tirée, cercle
+complet → garantie ordinaire, sans cercle → inchangé, hors garantie → aucun
+détournement, fonction fermée aux joueurs, rejouable) et seuil porté par
+`open_pack` désormais à quatre occurrences. `supabase-cercle-garantie.test.ts` :
+diff `open_pack` 0051 → 0055 limité aux trois points, mêmes candidats que le
+moteur. Écrans : annonce sur l'accueil (avec et sans Légendaire manquante).
+
+## D-141 — 17 octobre 2026 : le booster MEMES après 10 boosters, pour un joueur avec cercle
+
+**Contexte.** Le plan (étape 3) prévoit « une seule vue d'univers au premier
+lancement, Mèmes derrière un seuil ». Malik laisse Claude choisir le seuil.
+
+**Décision.** Pour un joueur **avec cercle**, le sélecteur Live Drop / MEMES
+n'apparaît sur le Drop qu'à partir de **10 boosters ouverts**
+(`MEMES_UNLOCK_OPENINGS`, `src/lib/memes-unlock.ts`). Avant, le panneau
+« Réserve, taux et sabliers » dit « Le booster MEMES arrive après 10 boosters
+ouverts (3/10) ». Joueur sans cercle : rien ne change.
+
+**Pourquoi 10.** La réserve Live Drop donne un booster toutes les 30 minutes
+(4 au plus) : 10 boosters, c'est la première journée de jeu, dont 5 boosters
+cadeau. Assez pour que le cercle et le Live Drop soient compris avant un
+second univers ; pas assez pour cacher MEMES à un joueur régulier.
+
+**Ce que ce n'est pas.** Une règle : la réserve MEMES existe et se recharge en
+ligne comme avant, rien n'est perdu ni retiré ; le compteur est
+`game.stats.openings`, le même que les jalons. Aucune migration.
+
+**Preuves.** `memes-unlock.test.ts` 3/3 ; écran dans
+`ecrans-binder-cercle.test.tsx` (3 boosters : un seul univers et la phrase ;
+10 : Live Drop + MEMES) ; capture `docs/captures/etape-3/e3-memes-cmp.png`.
+
+## D-140 — 17 octobre 2026 : le Binder au service du cercle (étape 3)
+
+**Contexte.** Étape 3 du plan des cinq premières minutes, feu vert de Malik.
+Contrainte : aucune règle de jeu, migration ou notification sans accord.
+
+**Décision.**
+- Binder d'un joueur avec cercle : vue par défaut « Mon cercle (x/y) », puis
+  « En direct », puis les vues habituelles. Le tri choisi s'applique aussi au
+  cercle (l'étiquette du sélecteur reste vraie). La pagination par 12 reste un
+  mode (« Parcourir par pages de 12 », replié).
+- L'objectif affiché devient « Ton cercle à compléter » ; les pages par famille
+  de langue ne sont plus mises en avant pour ce joueur.
+- Cible d'artisanat : la première chaîne manquante du cercle **qui se fabrique
+  déjà** (`craftQuote`, mêmes coûts que l'Atelier et le serveur) ; l'appui ouvre
+  sa fiche, qui porte le bouton existant. Les Légendaires (non fabricables) sont
+  dites « se tirent en booster, plus souvent pendant leur direct » (bonus Direct).
+- « Définir mes chaînes » sur l'accueil d'un joueur sans cercle (masqué pendant
+  le parcours sans compte, où la question est déjà posée) ; « Modifier » sur la
+  rangée « Ton cercle » (accueil et Binder). Enregistrement sur l'appareil
+  seulement, comme à l'étape 1 ; textes de « Mes chaînes » adaptés à la
+  modification.
+- Panneau « Réserve, taux et sabliers » : les jetons sont une ligne, plus un
+  accordéon imbriqué.
+
+**Non fait à la date de D-140.** Garantie « carte du cercle » et seuil Mèmes,
+depuis choisis par Claude à la demande de Malik : voir D-141 (fait) et D-142
+(choisi, pas actif). Synchronisation du cercle en ligne via `set_circle` :
+décision de Malik attendue.
+
+**Preuves.** `npm test` 1233/1233 (dont `circle-goal.test.ts` 6),
+`npm run ecrans` 208/208 (dont `ecrans-binder-cercle.test.tsx` 8),
+check-jargon, tsc, eslint. Captures `docs/captures/etape-3/` (version sans
+compte en ligne). Non vérifié sur téléphone.
+
+## D-139 — 17 octobre 2026 : une clé de signature debug partagée dans le dépôt
+
+**Contexte.** Aucune clé n'était fixée : chaque machine (PC, sessions cloud)
+signait l'APK de test avec sa propre clé debug, et Android refusait la mise à
+jour (« Application non installée »), forçant une désinstallation qui efface
+les données de l'appareil (cercle, partie invitée).
+
+**Décision.** `android/app/creatordeck-debug.keystore` est commité et utilisé
+par le type `debug` (`signingConfigs.debug`, mots de passe standard Android
+`android` / alias `androiddebugkey`). C'est la clé qui a signé l'APK de
+l'étape 2 (SHA-256 `aa0b0f24…3e75`) : depuis cet APK, toute nouvelle version
+debug s'installe par-dessus.
+
+**Limites.** Clé de test uniquement : elle ne signe jamais une version
+publiée (le type `release` n'est pas touché). Les APK debug signés par une
+autre clé avant ce commit demandent une dernière désinstallation.
+
+## D-138 — 17 octobre 2026 : le second verbe « qui est en direct dans mon cercle » (étape 2)
+
+**Contexte.** L’étape 1 a donné au joueur un cercle de 5 à 15 chaînes. La rangée
+« Ton cercle » montrait déjà qui streame, mais rien ne poussait à ouvrir l’app à
+ce moment-là. Malik demande d’en faire un geste de jeu sans toucher à l’économie
+existante, et de proposer d’abord toute règle, migration ou notification.
+
+**Décision.** Quand une chaîne du cercle est en direct (donnée de moins de dix
+minutes), l’accueil épuré affiche sous le bouton un encadré « En direct dans ton
+cercle » : jusqu’à trois chaînes dans l’ordre du cercle, jeu, spectateurs, durée,
+« Dans ta collection » ou « À trouver », et un lien « Twitch » par chaîne. Le
+bénéfice annoncé est le **bonus Direct déjà publié** (×1,5 dans la rareté, 20 %
+de variante Live), lu dans `DIRECT_BONUS` et jamais recopié. Réserve vide : il
+indique la prochaine recharge et propose le sablier existant (même action que le
+panneau Réserve). La barre générique « En direct · X sur 1000 » s’efface tant que
+l’encadré est visible. La rangée gagne une phrase d’état : personne en direct
+(heure de vérification), donnée trop vieille ou hors ligne (avec « Réessayer »,
+qui force une relecture), version sans suivi du direct. Logique pure dans
+`src/lib/circle-live.ts`, rendu dans `circle-live-moment.tsx` et `circle-strip.tsx`.
+
+**Défaut prouvé et corrigé au passage.** Les chaînes en direct étaient triées en
+tête de la rangée, mais la rangée gardait un défilement horizontal de 184 px
+(mesuré dans Chromium, 390×844) : les chaînes en direct étaient hors écran. La
+rangée revient au début quand l’ensemble des chaînes en direct change.
+
+**Écarts au plan.** Le plan prévoyait que le bouton « Recharge en cours »
+devienne « Voir qui est en direct dans mon cercle » : non retenu, l’encadré est
+juste dessous et le bouton garde un seul sens (ouvrir). Aucune notification
+push, aucune règle de jeu, aucune migration : rien n’a été nécessaire.
+
+**Refusé / proposé pour plus tard (accord de Malik requis).** Notification
+« X vient de lancer son direct » ; bonus propre au cercle (règle de jeu et
+miroir SQL) ; marquage de carte dans le Binder (étape 3).
+
+**Preuves.** `npm test` 1227/1227, `npm run ecrans` 200/200 dont
+`src/ecrans-circle-live.test.tsx` 8/8, `src/lib/circle-live.test.ts` 14/14,
+`check-jargon`, `tsc`, `eslint` propres. Captures avant/après 390×844 et
+1280×800 dans `docs/captures/etape-2/` (données du direct simulées, compte
+invité). Non vérifié sur téléphone réel.
+
 ## D-137 — 17 octobre 2026 : écrire le nom du booster MEMES sans accent
 
 Sur le Drop, le sélecteur de booster affichait `MEMES`, tandis que le bouton et
@@ -5,26 +256,6 @@ la réserve utilisaient `Mèmes`. Malik demande que le nom visible reste
 `MEMES`, sans accent, même si la graphie française courante de « mème » en
 comporte un. Les libellés du bouton et de la réserve suivent désormais le nom
 du sélecteur. Aucun nom de carte ni contenu du catalogue n’est modifié.
-
-## D-138 — 17 octobre 2026 : demander les chaînes suivies avant le premier booster
-
-Pour la première session, demander au joueur de choisir 5 à 15 chaînes qu’il
-regarde. Le premier booster cadeau est composé de cinq chaînes distinctes de ce
-cercle ; sa dernière carte est Rare ou mieux selon la rareté locale calculée par
-position dans la sélection. Cette rareté locale ne modifie jamais la rareté
-catalogue enregistrée, les taux ordinaires, la réserve ni les monnaies. Un
-joueur invité voit un aperçu sans écriture ; un compte connecté passe par la
-fonction serveur `open_circle_gift_pack` et la migration additive `0054`.
-
-Le Drop se simplifie pour un cercle déjà choisi : booster, action principale,
-cinq cartes récentes et un panneau secondaire. Les autres activités restent
-accessibles par leurs écrans existants. Les comptes déjà accueillis conservent
-leur accueil actuel ; l’entrée pour définir ou modifier le cercle est reportée
-à l’étape 3. Le plan et les limites sont consignés dans
-[`plan-premiere-session.md`](plan-premiere-session.md). Les tests locaux ciblés
-passent, mais la vérification SQL jetable Windows est bloquée par le compte
-Administrateur et l’état de `0054` sur Production n’est pas établi ; aucune
-application sur une base réelle n’est incluse dans cette décision.
 
 ## D-136 — 17 octobre 2026 : garder l’ouverture de secours hors du rituel visuel
 

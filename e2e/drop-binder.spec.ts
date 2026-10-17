@@ -3,7 +3,7 @@ import creatorData from "../src/data/creators.json";
 
 test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await page.getByRole("button", { name: "Binder", exact: true }).click();
   await expect(page.locator(".binder-next-pages")).toHaveCount(0);
   await page.locator(".binder-collections-picker summary").click();
@@ -34,7 +34,7 @@ test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", 
 
 test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await expect(page.getByRole("heading", { name: "Drop", exact: true })).toBeVisible();
   const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(open).toBeEnabled();
@@ -53,7 +53,7 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
 });
 
 test("les pages à compléter montrent leurs manquantes ; les dernières reçues retrouvent les obtenues", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   const creators = creatorData.filter((creator) => creator.region === "S01").slice(0, 3);
   await page.evaluate((cards) => {
     const key = Object.keys(localStorage).find((entry) => /^creatordeck.save.v\d+$/.test(entry));
@@ -99,4 +99,25 @@ test("Drop et Binder restent contenus à 320 px", async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     await expect(page.getByRole("navigation", { name: "Navigation principale" })).toBeInViewport();
   }
+});
+
+test("avec un cercle, le Binder s'ouvre sur « Mon cercle » et montre l'objectif du cercle (D-140)", async ({ page }) => {
+  await gotoDeck(page);
+  // Accueil épuré : le sachet garde la taille du Drop (préférence de Malik ; la refonte UI l'avait réduit).
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".home-view.is-lean")).toBeVisible();
+  const packBox = (await page.locator(".pack-stage .pack-artwork").boundingBox())!;
+  expect(packBox.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
+  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  const chip = page.locator(".filter-chips button").first();
+  await expect(chip).toHaveText(/^Mon cercle \(\d+\/5\)$/);
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".collection-grid .binder-pocket")).toHaveCount(5);
+  await expect(page.locator(".binder-circle-goal")).toContainText("Mon cercle ·");
+  await expect(page.locator(".binder-next-pages")).toHaveCount(0);
+  await page.getByRole("button", { name: "Modifier mes chaînes" }).click();
+  await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toContainText("Ton accueil et ton Binder se recentrent sur eux.");
+  await page.getByRole("button", { name: "Annuler", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(page.viewportSize()!.width);
 });

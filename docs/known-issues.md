@@ -1,31 +1,24 @@
-## K-050 — Parcours cloud « Mes chaînes » dépend de la migration 0054 — publication bloquée
+## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)
 
-**Mise à jour du 17 octobre 2026 :** Malik a autorisé la vérification
-Production et l’application si absente. La migration locale porte désormais
-`creatordeck-deploy: manual`, requis par la politique de déploiement ; la CI de
-l’étape 1 ne l’a pas encore vérifiée et aucun accès Production n’a eu lieu.
+- **Cercle seulement sur l'appareil — corrigé dans le code (D-143)** pour un
+  compte connecté ; reste vrai pour un joueur sans compte (par choix). Dépend de
+  0054 en Production, non vérifiée par Claude.
+- **0055 non appliquée :** tant qu'elle ne l'est pas, l'accueil annonce « une de
+  tes chaînes » alors que le serveur tire encore la garantie ordinaire.
+  Appliquer 0055 avant d'installer l'APK qui l'annonce.
+- **360×740 :** la rangée « Ton cercle » passe en partie sous le dock au premier
+  écran (relevé de la refonte UI, non corrigé).
+- **ESLint sur un poste ayant construit l'APK :** `npx eslint .` lit les
+  fichiers Android générés (`android/**/build/**`, `android/app/src/main/assets/**`)
+  et signale une erreur qui n'est pas dans le code du jeu. Utiliser les
+  `--ignore-pattern` notés dans la passation.
 
-Le premier booster cadeau d’un joueur connecté appelle `open_circle_gift_pack`,
-créée par `supabase/migrations/0054_cercle.sql`. La note Claude indique une
-application manuelle sur la base utilisée pour l’essai, tandis que le plan de
-première session décrit `0054` comme non appliquée ; aucun élément ne confirme
-que la base Supabase utilisée par Production possède la fonction. **Gravité :**
-élevée pour le nouveau parcours d’accueil connecté : sans la fonction, son
-ouverture échoue. **Statut :** état Production inconnu, à vérifier avant le
-déploiement. `npm run supabase:verify` n’a pas pu lancer PostgreSQL sur cette
-machine Windows : le compte Administrateur est refusé par PostgreSQL. Aucun
-accès ni écriture en Production n’a été tenté. **Contournement sûr :** différer
-le déploiement jusqu’à vérification de l’état réel ; si la migration manque,
-faire relire puis autoriser son application via le workflow Supabase existant.
+## « Ton cercle » cachait les chaînes en direct — corrigé (17 octobre 2026, D-138)
 
-## K-051 — Les joueurs déjà accueillis ne peuvent pas définir leur cercle
-
-Après l’étape 1, un joueur qui a déjà terminé son tutoriel et n’a pas de cercle
-garde son Drop actuel, sans entrée « Mes chaînes ». L’écran et l’API disposent
-d’un mode édition, mais le bouton de configuration est reporté à l’étape 3 du
-[plan de première session](plan-premiere-session.md). **Gravité :** faible,
-limitation de découvrabilité, sans perte de progression. Aucun contournement
-dans l’interface actuelle ; le parcours existant reste disponible.
+Les chaînes en direct passaient en tête de la rangée, mais la rangée restait
+défilée vers la droite (184 px mesurés à 390×844) : elles étaient hors écran au
+premier affichage. La rangée revient maintenant au début quand le direct change.
+Test : `src/ecrans-circle-live.test.tsx`, captures `docs/captures/etape-2/`.
 
 ## Nom du booster accentué de façon incohérente sur Drop — corrigé (17 octobre 2026)
 

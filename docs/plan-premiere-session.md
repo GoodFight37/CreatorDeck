@@ -1,16 +1,11 @@
 # Plan « les cinq premières minutes » — 17 octobre 2026
 
-Statut au 17 octobre : **étape 1 intégrée localement dans `codex/collaboration`, non publiée**.
-La branche Claude contient les commits `23d1c86` et `4155c55`. Sur le checkout
-fusionné, logique ciblée 26/26, écrans ciblés 14/14, suite unitaire 1 202/1 202
-hors `push-essai.test.ts`, typecheck, lint ciblé, garde-jargon et build Webpack
-réussissent. Les 11 tests de ce fichier échouent à créer des dépôts Git
-temporaires dans l'environnement Windows ; Playwright local n'a pas été lancé.
-`supabase:verify` reste bloqué sur Windows :
-PostgreSQL refuse le compte Administrateur. La note Claude rapporte que 0054 a
-été appliquée à la main sur la base utilisée pour l'essai ; cette information
-ne prouve pas l'état de la base Production. Aucun déploiement ni écriture sur
-Supabase réelle n'a été fait.
+Statut au 17 octobre 2026 (soir) : étapes **1, 2 et 3 implémentées** sur la branche
+`etape-1-mes-chaines` (poussée sur GitHub, **pas fusionnée dans `main`**, pas déployée sur Vercel),
+testées par Vitest (unitaires + écrans), tsc, eslint, check-jargon et captures ; essayées par APK debug.
+Playwright n'a jamais tourné sur cette branche. Étapes 4 et 5 : non commencées.
+Le texte d'origine ci-dessous est conservé ; les statuts à jour sont dans le tableau du § 2 et la roadmap.
+*(Historique : à la rédaction, l'étape 1 n'était ni exécutée ni commitée, le registre npm étant bloqué.)*
 
 ## 1. Diagnostic (10 lignes)
 
@@ -30,9 +25,9 @@ Supabase réelle n'a été fait.
 | # | Contenu | État |
 |---|---------|------|
 | 0 | Gel : ni taux, ni schéma, ni économie avant que l'étape 1 soit jouable. 0054 ajoute des objets, ne modifie aucune fonction existante. | tenu |
-| 1 | « Mes chaînes » + premier booster tiré dans le cercle + accueil épuré | **écrit** |
-| 2 | Un second verbe minuscule : « qui est en direct dans MON cercle » (A) | décidé, non écrit |
-| 3 | Binder au service du désir | non écrit |
+| 1 | « Mes chaînes » + premier booster tiré dans le cercle + accueil épuré | **fait**, APK installé par Malik |
+| 2 | Un second verbe minuscule : « qui est en direct dans MON cercle » (A) | **écrit et testé** (D-138), non vérifié sur téléphone ; écart au plan : le bouton « Recharge en cours » n’est pas transformé (encadré juste dessous) |
+| 3 | Binder au service du désir | **écrit et testé** (D-140, MEMES après 10 boosters D-141), non vérifié sur téléphone ; garantie du cercle **écrite** (D-142, migration 0055 à appliquer), cercle en ligne fait (D-143) |
 | 4 | Rétention honnête | non écrit |
 | 5 | Finition visible à budget limité | non écrit |
 
@@ -84,7 +79,7 @@ src/components/drop-view.tsx          MODIFIÉ  accueil épuré quand un cercle 
 
 ### Risques connus de l'étape 1
 
-- L'état SQL de 0054 est contradictoire entre cette note de plan et la note Claude : seule cette dernière rapporte une application manuelle sur la base utilisée pour l'essai. Le vérificateur jetable du dépôt est bloqué par le compte Windows Administrateur. Vérifier la base visée avant tout déploiement ; ne pas déduire l'état Production du test.
+- Le SQL n'a jamais été exécuté (pas de base disponible). À passer par `scripts/verify-supabase-migrations.mjs` sur une base d'essai.
 - `tsc` et `next build` n'ont pas tourné : un type peut encore casser (notamment le spread `displayRarity` dans le store).
 - Les joueurs existants n'ont pas de cercle : ils gardent l'ancien accueil. Il manque une entrée « Définir mes chaînes » (étape 3 ; l'écran sait déjà fonctionner en mode `edit`).
 - Un joueur avec cercle perd l'accès à Tribunal / Scène / arène depuis l'accueil : ils restent atteignables par Missions et les feuilles existantes, mais aucun chemin ne les remet en avant tant que l'étape 2 n'est pas écrite.
@@ -95,7 +90,30 @@ src/components/drop-view.tsx          MODIFIÉ  accueil épuré quand un cercle 
 Argument : (1) le jeu sait déjà qui est en direct (`useLive`, bonus Direct) : zéro contenu à produire pour un développeur seul ; (2) il donne une raison de revenir à un moment précis, qui n'est pas une minuterie de réserve ; (3) il est vrai ou faux sans arbitrage : la chaîne est en direct ou non, donc pas de verdict secret ; (4) le micro-jeu (B) demande des questions, un équilibrage et de la triche à gérer.
 Forme : une ligne au-dessus des cartes, « 2 de tes chaînes sont en direct », un appui ouvre la chaîne (Twitch) et la carte du cercle correspondante est marquée. Session vide : le bouton « Recharge en cours » devient « Voir qui est en direct dans mon cercle ». Arène et Tribunal quittent l'accueil (déjà fait pour les joueurs avec cercle) ; le Tribunal, s'il reste, devient un mode séparé sans verdict caché conditionnant le sablier.
 
-## 4. Étape 3 — le Binder au service du désir (à écrire)
+## 3 bis. Cercle enregistré en ligne — fait (D-143), texte d'origine conservé
+
+Aujourd'hui le cercle n'existe que sur le téléphone (`creatordeck.circle.v1`).
+`set_circle()` et la table `player_circles` existent depuis 0054 et
+`api.setCircle()` existe côté client, mais **rien ne l'appelle**. Conséquences :
+cercle perdu si l'app est désinstallée ou ses données effacées, absent sur un
+autre appareil ou sur le site, et inconnu du serveur (donc pas de garantie du
+cercle D-142, pas de notification « ton cercle est en direct »). Proposition :
+envoyer le cercle à l'enregistrement (compte connecté) et le relire à la
+connexion ; aucune nouvelle migration si 0054 est appliquée.
+
+**Réalisé le 17 octobre 2026 (D-143) :** envoi à chaque enregistrement, relecture
+à chaque connexion, le plus récent gagne. La garantie du cercle (D-142) est
+écrite dans 0055, à appliquer à la main après 0054.
+
+## 4. Étape 3 — le Binder au service du désir (faite : D-140, D-141 ; D-142 choisie, en attente)
+
+Réalisé le 17 octobre 2026 : vue « Mon cercle » par défaut, objectif « Ton cercle
+à compléter », cible d'artisanat dans le cercle (règles d'artisanat relues :
+Commune → Épique, coûts 45 / 90 / 220 / 600, Légendaire non fabricable),
+« Définir / Modifier mes chaînes », jetons aplatis, MEMES après 10 boosters.
+La garantie ciblée est choisie sous la forme « le Légendaire garanti vient du
+cercle » (D-142), sans inflation ; elle attend le cercle en ligne. Texte
+d'origine :
 
 - Vue par défaut : mes chaînes (obtenues / manquantes), puis « en direct » ; la pagination par 12 devient un mode.
 - Les familles de langues disparaissent des objectifs affichés.
@@ -115,10 +133,10 @@ Cadre portrait sans étirer l'avatar carré ; une seule matière de rareté lisi
 | Reporté | Pourquoi invisible |
 |---------|-------------------|
 | Tribunal, objectif du jour, paquet Scène, rangée d'amis, arène (accueil) | masqués pour un joueur avec cercle ; restent sous Missions et feuilles |
-| Mèmes | sélecteur absent tant que le joueur a un cercle ; seuil à définir à l'étape 3 |
-| Entrée « Définir mes chaînes » pour les joueurs existants | étape 3 |
-| Aplatir les jetons / taux dans le panneau secondaire | étape 3 |
-| `set_circle` côté interface (mode édition) | l'API et le SQL existent, l'écran aussi ; pas de bouton |
+| Mèmes | joueur avec cercle : sélecteur après 10 boosters ouverts (D-141) |
+| Entrée « Définir mes chaînes » pour les joueurs existants | **fait** (D-140) |
+| Aplatir les jetons / taux dans le panneau secondaire | jetons **faits** (D-140) ; taux déjà une ligne |
+| `set_circle` côté interface (mode édition) | bouton « Modifier » **fait** (D-140), enregistrement sur l'appareil seulement ; envoi en ligne : § 3 bis |
 | Série protégée, états vides sociaux, jour 1 sans mission impossible | étape 4 |
 | Cadre portrait, matière de rareté, audio | étape 5 |
 | Débats de `docs/perimetre.md` | aucun rouvert ; une seule dérogation à nommer : le tutoriel en trois écrans est remplacé, parce que le brief le demande |

@@ -748,6 +748,11 @@ export class CloudApi {
   async claimReturnGift(): Promise<void> { return pack.claimReturnGift(this.core); }
   async openReturnGiftPack(circle?: readonly string[]): ReturnType<typeof pack.openReturnGiftPack> { return pack.openReturnGiftPack(this.core, circle); }
   async setCircle(slugs: readonly string[]): Promise<void> { await this.core.rpc("set_circle", { p_slugs: [...slugs] }); }
+  /** Le cercle enregistré en ligne pour le compte connecté, ou `null`. */
+  async circle(): ReturnType<typeof pack.fetchCircle> {
+    const userId = this.session()?.userId;
+    return userId ? pack.fetchCircle(this.core, userId) : null;
+  }
 
   // ---------------------------------------------------------------- échanges
 

@@ -8,6 +8,8 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 1. [README du dépôt](../README.md) : produit, installation et commandes.
 2. [Périmètre](perimetre.md) : contraintes produit et choix déjà refusés.
 3. [Roadmap](roadmap.md) : chantiers ouverts, prochaine étape et backlog.
+   Les étapes 1 à 3 de « Mes chaînes » sont publiées ; voir le
+   [plan des cinq premières minutes](plan-premiere-session.md) et le checkpoint.
 4. [Passation active](agent-handoff.md) : dernier checkpoint daté ; lire d'abord
    le bloc en haut, puis seulement les sections liées à la tâche.
 
@@ -26,12 +28,12 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
   pas la liste des tâches encore ouvertes.
 - **Détails techniques d'une fonctionnalité** : le document spécialisé lié par
   la roadmap ou la passation.
+- **Mise à jour de l'APK de test (D-144)** : [guide et état vérifié](mise-a-jour-apk.md) ; release publique, installation initiale et mise à jour ensuite.
 - **Boosters temporaires pour tester** : [codes privés](booster-test-access.md) ;
   réserve serveur plafonnée, sans reset de progression.
 - **Trade Radar** : [périmètre et fonctionnement](trade-radar.md) ; souhaits
   publics des amis, doublons locaux, offre toujours arbitrée par le serveur.
 - **Parcours sociaux réels sur Vercel** : [vérification du 15 octobre](verification-sociale-vercel-2026-10-15.md) ; deux comptes invités, amitié, offre acceptée et collections après transfert.
-- **Première session « Mes chaînes » (D-138)** : [plan et état de reprise](plan-premiere-session.md) ; choix du cercle, premier booster, étapes restantes et dépendance Supabase 0054.
 - **Univers Mèmes FR** : [source et intégration D-125](catalogue-memes-source.md) ; import figé, réserve et classeur séparés. Le retrait D-131 de la fiche sans illustration et l’état de sa migration serveur sont consignés dans cette même fiche et dans le premier checkpoint de passation.
 - **Cartes Mèmes D-127** : [audit visuel et captures comparables](audit-cartes-memes-reference.md) ; preuves partielles du paquet de référence et rendu par rareté.
 - **Choix des boosters D-129** : [parcours, vérifications et captures](drop-boosters.md) ; carrousel publié, préparation annulable avant tirage, corrections tactiles suivies après retour joueur.

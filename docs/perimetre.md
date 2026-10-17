@@ -21,7 +21,7 @@ les gains de sabliers restent calculés sur l'appareil. Depuis le correctif
 synchronisé et avance atomiquement la réserve serveur de 15 minutes. Les sources
 de ces gains ne sont pas intégralement validées côté serveur (D-032).
 
-Depuis D-125, un **univers Mèmes FR** séparé ajoute son propre booster, sa réserve et son classeur. Les règles Twitch ci-dessous restent inchangées ; le nouveau tirage et ses chances sont décrits dans [D-125](decisions.md).
+Depuis D-125, un **univers Mèmes FR** séparé ajoute son propre booster, sa réserve et son classeur. Depuis D-141, un joueur qui a défini ses chaînes ne voit le booster MEMES sur le Drop qu’après 10 boosters ouverts (affichage seulement ; la réserve MEMES ne change pas). Les règles Twitch ci-dessous restent inchangées ; le nouveau tirage et ses chances sont décrits dans [D-125](decisions.md).
 
 ## Les règles non négociables
 

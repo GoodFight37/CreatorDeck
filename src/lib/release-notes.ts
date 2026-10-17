@@ -10,12 +10,52 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
-    id: "2026-10-17-mes-chaines-premier-booster", date: "2026-10-17", title: "Ton premier booster vient de tes chaînes",
-    summary: "Choisis les chaînes que tu regardes et retrouve-les dans ton premier booster cadeau.",
-    sections: [{ title: "Première session", items: [
-      "Indique de 5 à 15 chaînes que tu regardes avant ton premier booster.",
-      "Les cinq cartes du premier booster cadeau viennent de cette sélection. Sa dernière carte est Rare ou mieux selon la rareté de ton cercle ; la rareté enregistrée et les règles de tirage restent inchangées.",
-      "Le Drop se concentre ensuite sur ton booster, son ouverture, tes cinq cartes récentes et les informations secondaires.",
+    id: "2026-10-18-mise-a-jour-apk", date: "2026-10-18", title: "L’appli se met à jour d’un appui",
+    summary: "Sur Android, une nouvelle version s’annonce et s’installe depuis l’appli.",
+    sections: [{ title: "Application", items: [
+      "Quand une nouvelle version est disponible, un bandeau « Mettre à jour » apparaît sous la barre du haut. Un appui la télécharge, puis Android te demande de confirmer l’installation.",
+      "La première fois, Android te demande d’autoriser CreatorDeck à installer des applis : l’appli ouvre directement le bon réglage.",
+    ] }],
+  },
+  {
+    id: "2026-10-17-legendaire-garanti-cercle", date: "2026-10-17", title: "Ton Légendaire garanti vient de tes chaînes",
+    summary: "Quand la garantie Légendaire tombe, c’est une de tes chaînes Légendaires qui te manque.",
+    sections: [{ title: "Drop", items: [
+      "Après 12 boosters sans Légendaire, le Légendaire garanti est maintenant une Légendaire de ton cercle que tu n’as pas encore, s’il en reste une. Le nombre de Légendaires ne change pas.",
+      "L’accueil l’indique à côté du compteur, et l’écran des taux l’explique.",
+    ] }, { title: "Mes chaînes", items: [
+      "Avec un compte, tes chaînes sont aussi enregistrées en ligne : tu les retrouves sur un autre appareil ou après une réinstallation.",
+    ] }],
+  },
+  {
+    id: "2026-10-17-memes-apres-dix-boosters", date: "2026-10-17", title: "Le booster MEMES arrive après tes premiers boosters",
+    summary: "Si tu as défini tes chaînes, le Drop commence par le Live Drop seul.",
+    sections: [{ title: "Drop", items: [
+      "Avec tes chaînes définies, le booster MEMES apparaît sur le Drop après 10 boosters ouverts. Le panneau « Réserve, taux et sabliers » t’indique où tu en es.",
+      "Ta réserve MEMES continue de se recharger pendant ce temps : rien n’est perdu.",
+    ] }],
+  },
+  {
+    id: "2026-10-17-binder-mon-cercle", date: "2026-10-17", title: "Ton Binder s’ouvre sur tes chaînes",
+    summary: "Le Binder montre d’abord ton cercle, ce qu’il te manque et ce que tu peux fabriquer.",
+    sections: [{ title: "Binder", items: [
+      "Le Binder s’ouvre sur « Mon cercle » : tes chaînes, obtenues ou à trouver. Les autres vues restent à un appui.",
+      "L’objectif affiché est maintenant de compléter ton cercle, avec la prochaine chaîne que tu peux fabriquer et son prix en points.",
+    ] }, { title: "Mes chaînes", items: [
+      "Tu peux modifier tes chaînes à tout moment avec « Modifier », sur l’accueil ou dans le Binder.",
+      "Si tu n’avais pas encore de chaînes, l’accueil te propose de les définir.",
+    ] }, { title: "Drop", items: [
+      "Dans « Réserve, taux et sabliers », tes jetons s’affichent directement.",
+    ] }],
+  },
+  {
+    id: "2026-10-17-direct-dans-ton-cercle", date: "2026-10-17", title: "Tes chaînes en direct, sur l’accueil",
+    summary: "Quand une chaîne de ton cercle streame, l’accueil te le dit avec un lien vers Twitch.",
+    sections: [{ title: "Drop", items: [
+      "Sous le bouton d’ouverture, un encadré montre les chaînes de ton cercle en direct, avec leur jeu, leurs spectateurs et un lien pour les regarder sur Twitch.",
+      "Il rappelle le bonus Direct déjà en place : pendant le direct, la carte de la chaîne tombe plus souvent et peut sortir en version Live. Si ta réserve est vide, il indique la prochaine recharge et propose d’utiliser un sablier.",
+      "La rangée « Ton cercle » dit maintenant quand personne n’est en direct, quand l’information est trop ancienne ou indisponible, avec un bouton pour réessayer.",
+      "Correction : les chaînes en direct, placées en tête de la rangée, n’étaient pas visibles au premier écran ; la rangée revient maintenant au début.",
     ] }],
   },
   {

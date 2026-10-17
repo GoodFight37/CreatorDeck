@@ -1,0 +1,101 @@
+name: APK de test
+
+# D-144 : à chaque `main` vérifiée (workflow « Vérification » vert), construit
+# l'APK debug signée avec la clé partagée (D-139) et la publie comme release du
+# dépôt public GoodFight37/creatordeck-apk, avec `latest.json`. L'appli Android
+# lit ce fichier et propose « Mettre à jour ».
+#
+# Réglages nécessaires (Settings → Secrets and variables → Actions) :
+#   secrets.APK_RELEASE_TOKEN              jeton « fine-grained », Contents: Read and write,
+#                                          limité au dépôt GoodFight37/creatordeck-apk
+#   secrets.NEXT_PUBLIC_SUPABASE_URL       les deux valeurs publiques déjà utilisées
+#   secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY  par Vercel (sans elles : APK sans compte)
+
+on:
+  workflow_run:
+    workflows: ["Vérification"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: creatordeck-apk
+  cancel-in-progress: true
+
+env:
+  RELEASE_REPO: GoodFight37/creatordeck-apk
+  KEEP_RELEASES: 10
+
+jobs:
+  apk:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Vérifier les réglages
+        env:
+          TOKEN: ${{ secrets.APK_RELEASE_TOKEN }}
+          URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          missing=""
+          [ -n "$TOKEN" ] || missing="$missing APK_RELEASE_TOKEN"
+          [ -n "$URL" ] || missing="$missing NEXT_PUBLIC_SUPABASE_URL"
+          [ -n "$KEY" ] || missing="$missing NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Secrets manquants :$missing (voir docs/mise-a-jour-apk.md). Aucune APK publiée."
+            exit 1
+          fi
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools'
+      - name: Installer
+        run: npm ci
+      - name: Construire l'APK
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          npm run android:sync
+          node scripts/android-gradle.mjs assembleDebug --max-workers=2 "-PcdVersionName=${SHA:0:7}"
+      - name: Publier la release
+        env:
+          GH_TOKEN: ${{ secrets.APK_RELEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          OUT=android/app/build/outputs/apk/debug
+          SHA="$(git rev-parse HEAD)"
+          CODE="$(node -p "require('./$OUT/output-metadata.json').elements[0].versionCode")"
+          TAG="v$CODE"
+          cp "$OUT/app-debug.apk" creatordeck.apk
+          node scripts/apk-manifest.mjs creatordeck.apk "$OUT/output-metadata.json" "$SHA" "$TAG" "$RELEASE_REPO" > latest.json
+          cat latest.json
+          gh release create "$TAG" creatordeck.apk latest.json --repo "$RELEASE_REPO" \
+            --title "CreatorDeck ${SHA:0:7}" \
+            --notes "APK de test construite depuis GoodFight37/CreatorDeck@$SHA (main vérifiée). Version $CODE."
+          # Garder les dernières releases seulement.
+          gh release list --repo "$RELEASE_REPO" --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[].tagName' |
+            tail -n +"$((KEEP_RELEASES + 1))" |
+            while read -r old; do gh release delete "$old" --repo "$RELEASE_REPO" --yes --cleanup-tag; done

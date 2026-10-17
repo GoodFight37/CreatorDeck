@@ -1,57 +1,65 @@
+# Checkpoint — APK de test D-144 publiée (18 octobre 2026)
+
+- Claude étant à court de quota, Codex a repris `maj-apk` (`132b16a`) sur le `main` courant dans `codex/maj-apk-integration`, sans réécrire la branche Claude ni toucher aux worktrees. Commit du code `15c1f1a0aa6f74d149af32b08d3a5a9dc03600c9`, avancé normalement dans `main`. Les anciens échecs E2E de `maj-apk` étaient déjà corrigés dans `main` ; [CI branche 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076165277) et [CI main 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076466368).
+- Premier workflow APK : échec sur le paquet Android `tools` retiré. Correctif `bb6cf0a1882767a7f5870521c4b0730fd7995103` : `setup-android@v3` demande `platform-tools` ; [CI main 6/6 verte](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076819637). Le deuxième workflow a compilé l'APK mais reçu 403 à la publication ; Malik a remplacé `APK_RELEASE_TOKEN` par un jeton ayant Contents en écriture sur le dépôt APK.
+- [Workflow APK final](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077656829) **vert** ; [release publique v871307](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) : `creatordeck.apk` (110 585 510 octets) et `latest.json`. Le manifeste publié pointe vers `bb6cf0a1882767a7f5870521c4b0730fd7995103`, code 871307, SHA-256 `c1d0a41032a834885e2077a0ee8f60204fa4e545710bdc876272abb447b9b58c`, identique au digest de l'asset GitHub. L'URL APK répond HTTP 200. Pas d'essai sur téléphone réel : installation initiale et geste de mise à jour restent non vérifiés.
+- [Vercel Production](https://vercel.com/hafsi37-2386/creator-deckk/H16C9wmdJ5qE586BZbcBjmQdookM) **READY** sur `bb6cf0a` ; [workflow Supabase automatique](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077082752) vert, aucune migration D-144. Dépôt public `GoodFight37/creatordeck-apk` avec README et trois secrets Actions configurés ; aucune valeur secrète documentée.
+- Quand Malik voudra tester l'APK, il devra installer une dernière fois [v871307](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) sur son téléphone ; une future version permettra ensuite de vérifier le bouton « Mettre à jour ». Voir [le guide](mise-a-jour-apk.md). Aucun essai physique n'est revendiqué.
+- `CreatorDeck-Codex` reste sur `codex/collaboration` (`ce7caaaf`), avec le SVG Mèmes et les autres changements locaux préexistants intacts. Ce checkpoint est publié séparément du code ; son SHA est donné par `git log -1 --format=%H -- docs/agent-handoff.md`.
+
+# Checkpoint — « Mes chaînes » publié (18 octobre 2026)
+
+- Malik a autorisé la fusion des étapes 1 à 3 et des décisions D-138 à D-143. La branche `etape-1-mes-chaines` a été avancée dans `main` sans commit de fusion : SHA du code `338b2d00b28a970567572e423f5e92fe6d62f404` ; origine de `main` avant l'avance rapide : `8b7ce93bee8cc8e2684ec61a75f227ba3d03c801`. `git ls-remote` a confirmé le SHA publié.
+- [Vérification de la branche](https://github.com/GoodFight37/CreatorDeck/actions/runs/39073880384) et [Vérification de main](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074226607) : **6/6 jobs verts chacune**, au même SHA (unitaires/écrans/statique/build, SQL sur Postgres jetable, trois shards Playwright et chemin cloud RPC simulés).
+- [Dry-run Supabase avant application](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074239863) : succès en lecture seule ; **0054 et 0055 étaient toutes deux absentes de l'historique**. 0054 a été relue avant approbation ; ses objets existants sont créés si besoin et ses fonctions remplacées. [Application manuelle approuvée](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074582249) : succès ; le journal montre 0054 puis 0055 appliquées et « Historique et objets attendus vérifiés après application ». [Dry-run de contrôle](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074638550) : succès, « La base est déjà à jour et vérifiée. Aucun SQL de migration exécuté. »
+- Vercel Production : déploiement `dpl_3MFREEfeAqpfDkiXGBqLRCdH6tsq` **READY**, branche `main`, SHA `338b2d00b28a970567572e423f5e92fe6d62f404`, [inspection](https://vercel.com/hafsi37-2386/creator-deckk/3MFREEfeAqpfDkiXGBqLRCdH6tsq). Les contrôles navigateur sont simulés ; aucun nouvel essai sur téléphone réel n'est revendiqué.
+- Étapes 4 et 5 : chacune sur sa propre branche, un seul écrivain, fusion après CI verte. Toute nouvelle règle de jeu, migration ou notification push est d'abord proposée à Malik. Toute redéfinition d'`open_pack()` doit repartir de 0055 ; prochaine migration 0056.
+- Le checkout Codex reste sur `codex/collaboration` (`ce7caaaf`) avec ses modifications préexistantes, notamment le SVG Mèmes et le correctif local de délégation Claude, laissées intactes. Ce checkpoint est publié séparément du code ; son SHA se retrouve avec `git log -1 --format=%H -- docs/agent-handoff.md`. L'ancien checkpoint ci-dessous est conservé comme historique daté.
+
 # Checkpoint — reprise autonome (17 octobre 2026)
 
-## Mise à jour — autorisation Supabase et CI (17 octobre 2026)
+## Chantier « Mes chaînes » — branche `etape-1-mes-chaines` — 17 octobre 2026 (soir, Claude)
 
-Malik a explicitement autorisé la vérification de la migration 0054 en
-Production, son application si elle manque, puis la publication de l’étape 1
-sur `main` après contrôles verts. Le workflow existant exige une exécution
-manuelle avec `approve_manual=true` pour appliquer cette migration. Le run
-GitHub Actions #530 est vert sur l’ancien SHA `e65a8554e1b100c0b1b24b771527da01b56e7677`
-de `main` (qualité/build, Postgres jetable, RPC simulés, trois shards E2E) ;
-il ne couvre pas l’étape 1. La vérification locale a trouvé que 0054 manquait
-l’en-tête `creatordeck-deploy: manual`, maintenant ajouté. `--check` passe ;
-le test de politique a 27 succès et un échec Windows de permissions (mode
-attendu 0600, reçu 0666). Aucun accès à Production ni publication n’a eu lieu.
-Le navigateur GitHub de cette session n’est pas authentifié et le connecteur ne
-permet pas de lancer `workflow_dispatch`; la suite doit employer les accès
-d’action déjà établis depuis l’interface GitHub.
+- **Où :** branche `etape-1-mes-chaines` sur GitHub, **pas fusionnée dans
+  `main`**, pas déployée sur Vercel. Les SHA du code : étape 2 `6c85336`, clé
+  debug `8f2cb54`, étape 3 `d6f9d9e` ; ce checkpoint est dans le commit suivant
+  (`git log -1 --format=%H -- docs/agent-handoff.md`).
+- **Fait (demandes de Malik) :** étape 2 « qui est en direct dans mon cercle »
+  (D-138) ; clé de signature debug partagée (D-139) ; étape 3 Binder au service
+  du cercle (D-140) ; booster MEMES après 10 boosters pour un joueur avec cercle
+  (D-141, seuil choisi par Claude à la demande de Malik) ; garantie du cercle
+  choisie sous la forme « le Légendaire garanti vient du cercle » (D-142, **pas
+  active** au premier passage ; écrite ensuite, voir plus bas).
+- **Aucune migration, règle de tirage ou notification ajoutée.** Rien sur
+  `main`, rien en Production.
+- **Vérifié automatiquement (dernier passage) :** `npm test` 1236/1236,
+  `npm run ecrans` 209/209, `node scripts/check-jargon.mjs`, `npm run typecheck`,
+  `npx eslint . --ignore-pattern 'android/**/build/**' --ignore-pattern
+  'android/app/src/main/assets/**'` (fichiers Android générés exclus, cf.
+  AGENTS.md). Captures `docs/captures/etape-2/` et `etape-3/`. APK debug
+  construit (`npm run android:sync` + `node scripts/android-gradle.mjs
+  assembleDebug --max-workers=1`), contenu et signature contrôlés.
+- **Non vérifié :** téléphone réel (lien Twitch, rendu au-dessus du dock,
+  enregistrement de « Modifier mes chaînes », artisanat depuis la cible),
+  Playwright (jamais lancé sur la branche), Production.
+- **Environnement de la session :** clone neuf ; SDK Android installé dans
+  `/opt/android-sdk` ; `.env.local` recréé localement (non commité) avec l'URL et
+  la clé publique déjà servies par le site Vercel ; Maven Central renvoie parfois
+  des 429 → relancer Gradle avec `--max-workers=1`.
+- **Ajout du soir (feu vert de Malik) :** cercle en ligne (D-143, sans
+  migration) et garantie du cercle (D-142) écrite dans
+  `supabase/migrations/0055_garantie_cercle.sql` (**manuelle, non appliquée**).
+  Le vérificateur SQL applique désormais 0054 et 0055 et contient les scénarios
+  « 0055 : … » ; il doit tourner sous un utilisateur non root
+  (`sudo -u <utilisateur> env TMPDIR=<dossier accessible> node
+  scripts/verify-supabase-migrations.mjs`). Étapes 4 et 5 : feu vert requis.
+- **Prochaine action précise (Malik) :** dans Supabase → SQL Editor, coller
+  0055 (elle s'arrête seule si 0054 manque), **sans** l'inscrire dans
+  l'historique des migrations (D-142), vérifier `garantie_cercle_installee =
+  true`, puis installer le dernier APK et faire les essais ci-dessus.
+- **Malik a décidé (17/10, 23 h 15) :** tout reste sur `etape-1-mes-chaines`
+  jusqu'à l'étape 5 ; pas de fusion dans `main` avant.
 
-## Étape 1 « Mes chaînes » préparée depuis la branche Claude — 17 octobre 2026
-
-- Demande de Malik : intégrer au `main` le travail de Claude ; checkout confirmé
-  dans `CreatorDeck-Codex`, branche `codex/collaboration`. GitHub a confirmé
-  `main` à `63679db3d3803065df37c41e32a54b2f66b07ce1` et la branche Claude
-  `etape-1-mes-chaines` à `4155c552426ebd91a5815abad70812e34ce56527`, deux
-  commits issus de `c3b239ed17ab9d073b0f47a6c8f5b097ae09b6ea`. Le commit
-  documentaire de `main` a été intégré localement avant le code Claude.
-- L’étape 1 ajoute l’écran « Quelles chaînes regardes-tu déjà ? », le premier
-  booster cadeau tiré dans 5–15 chaînes, la rareté de cercle à l’affichage et
-  un Drop épuré lorsque le joueur a un cercle. Les règles économiques
-  enregistrées restent celles du catalogue. Le diff comprend 28 fichiers de
-  l’étape Claude ; note joueur, décision D-138, roadmap, README, problèmes
-  connus, guide documentaire et ce plan/checkpoint ont aussi été actualisés.
-- **Blocage avant publication :** l’API cloud appelle `open_circle_gift_pack`
-  (migration `0054`). Le plan initial dit qu’elle n’a pas été appliquée ; la
-  note Claude rapporte une application manuelle sur la base d’essai, sans
-  prouver l’état Production. Le contrôle `npm run supabase:verify` crée bien
-  le cluster jetable, mais PostgreSQL refuse de démarrer sous le compte Windows
-  Administrateur. Ne pas pousser vers `main`/Vercel tant que l’état de la base
-  utilisée par Production n’est pas établi ; si 0054 manque, son application
-  exige l’accord de Malik. Aucun accès ou changement de base réelle n’a été fait.
-- Vérifications sur la fusion locale : unitaires ciblés 26/26, écrans 14/14,
-  suite unitaire 1 202/1 202 en excluant `src/lib/push-essai.test.ts`,
-  `npm run typecheck`, lint ciblé et `node scripts/check-jargon.mjs` réussis.
-  Les 11 tests exclus échouent dans cet environnement Windows lors de la
-  création de faux dépôts Git temporaires, sans rapport avec ce lot.
-  `npm run build -- --webpack` réussit avec six routes statiques ; le cloud
-  guard signale l’absence locale des deux variables Supabase, donc ce build ne
-  vérifie pas le parcours connecté. Playwright local et téléphone non testés.
-  La CI GitHub n’a pas été lancée pour ce diff.
-- Le SVG `public/packs/memes-opening.svg` et `.codex-remote-attachments/`
-  restent inchangés, non indexés et hors commit. La fusion locale est commitée
-  dans la branche Codex ; aucun push, déploiement Vercel ni déploiement SQL.
-- Le SHA du commit contenant ce checkpoint se relève avec
-  `git log -1 --format=%H -- docs/agent-handoff.md`.
 
 ## Correction du nom MEMES sur Drop — 17 octobre 2026
 

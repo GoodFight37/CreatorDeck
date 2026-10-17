@@ -2,7 +2,7 @@ import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
 test("Scène explique son rôle et reste fermé après consommation et rechargement", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   const scene = page.getByRole("region", { name: "Ton paquet de famille du jour" });
   await expect(scene.locator("details")).toHaveCount(0);
   await expect(scene).toContainText("Pas de Légendaire dans ce paquet.");
@@ -21,7 +21,7 @@ test("Scène explique son rôle et reste fermé après consommation et rechargem
 });
 
 test("Toi montre sa vitrine, ses pages réunies et retrouve la collection choisie", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   const cards = creatorData.filter((creator) => creator.region === "S01").slice(0, 12);
   await page.evaluate((cards) => {
     const key = Object.keys(localStorage).find((entry) => /^creatordeck.save.v\d+$/.test(entry))!;

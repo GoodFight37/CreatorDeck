@@ -370,3 +370,20 @@ export async function openReturnGiftPack(core: CloudCore, circle?: readonly stri
     save: parseSaveRow(record.save),
   };
 }
+
+/**
+ * Le cercle enregistré en ligne (`player_circles`, 0054), ou `null`. Lecture
+ * directe : la table n'est lisible que par son propriétaire (règle « lecture
+ * cercle personnel »).
+ */
+export async function fetchCircle(core: CloudCore, userId: string): Promise<{ slugs: string[]; updatedAt: number | null } | null> {
+  const token = (await core.accessToken()) ?? undefined;
+  const { body } = await core.send(
+    `${core.config.url}/rest/v1/player_circles?user_id=eq.${encodeURIComponent(userId)}&select=slugs,updated_at`,
+    { method: "GET", token, raw: true },
+  );
+  const record = asRecord(Array.isArray(body) ? body[0] : null);
+  if (!record || !Array.isArray(record.slugs)) return null;
+  const updated = typeof record.updated_at === "string" ? Date.parse(record.updated_at) : Number.NaN;
+  return { slugs: record.slugs.map(String), updatedAt: Number.isFinite(updated) ? updated : null };
+}

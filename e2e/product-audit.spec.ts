@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 
 test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Tribunal accessible", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await page.setViewportSize({ width: 320, height: 568 });
   const pack = page.locator(".home-view .pack-stage .pack-artwork");
   const open = page.getByRole("button", { name: "Ouvrir le booster", exact: true });

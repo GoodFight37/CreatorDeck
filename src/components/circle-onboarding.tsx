@@ -91,7 +91,9 @@ export function CircleOnboarding({
         <span className="welcome-eyebrow">MES CHAÎNES</span>
         <h1>Quelles chaînes regardes-tu déjà ?</h1>
         <p className="circle-lead">
-          Cite entre {CIRCLE_MIN} et {CIRCLE_MAX} streameurs. Ton premier booster ne contient qu’eux.
+          Cite entre {CIRCLE_MIN} et {CIRCLE_MAX} streameurs. {mode === "edit"
+            ? "Ton accueil et ton Binder se recentrent sur eux."
+            : "Ton premier booster ne contient qu’eux."}
         </p>
 
         <form className="circle-form" onSubmit={submit}>
@@ -158,7 +160,7 @@ export function CircleOnboarding({
         <p className="circle-count" aria-live="polite">
           {slugs.length} / {CIRCLE_MAX}
           {missing > 0
-            ? ` · encore ${missing} pour ouvrir ton premier booster`
+            ? ` · encore ${missing} pour ${mode === "edit" ? "enregistrer" : "ouvrir ton premier booster"}`
             : " · la première est la plus précieuse : touche ★ pour en changer"}
         </p>
 

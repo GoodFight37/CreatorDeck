@@ -4,9 +4,35 @@
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.
 
-## État actuel — 17 octobre 2026
+## État actuel — 18 octobre 2026
 
-**Étape 1 « Mes chaînes » — intégrée localement, publication suspendue au contrôle de `0054` :** le nouvel accueil demande 5 à 15 chaînes et le premier booster cadeau en tire cinq sans doublon dans cette sélection ; sa dernière carte est Rare ou mieux selon une rareté d’affichage qui ne change ni la carte enregistrée ni l’économie. Pour un joueur qui a déjà choisi son cercle, Drop garde le booster, son action, cinq cartes récentes et un panneau secondaire. Les joueurs déjà accueillis n’ont pas encore d’entrée pour créer/modifier leur cercle (étape 3). Vérifications locales : logique ciblée 26/26, écrans 14/14, suite unitaire 1 202/1 202 hors `push-essai.test.ts`, typecheck, lint ciblé, garde-jargon et build Webpack réussis. Les 11 tests de `push-essai.test.ts` échouent dans cet environnement Windows lors de la création de dépôts Git temporaires ; ce fichier ne fait pas partie du lot. Le build local n’avait pas les variables Supabase ; `supabase:verify` échoue sous le compte Windows Administrateur avant le démarrage du serveur. Le plan de première session et la note Claude se contredisent sur l’application manuelle de `0054` ; son état Production reste inconnu. L’ouverture connectée appelle cette fonction : vérifier/appliquer `0054` après revue et autorisation avant la publication Vercel. Aucun test téléphone ni E2E local n’est revendiqué. Voir [D-138](decisions.md#d-138--17-octobre-2026--demander-les-chaînes-suivies-avant-le-premier-booster), [plan](plan-premiere-session.md) et [passation](agent-handoff.md).
+**Mise à jour de l'APK de test depuis l'appli (D-144) — publiée, téléphone non vérifié :** `main` contient `15c1f1a` et le correctif workflow `bb6cf0a`, [CI 6/6 verte](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076819637). La [première release publique](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) contient l'APK signée debug et `latest.json` ; [workflow APK vert](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077656829). Vercel Production est `READY` sur `bb6cf0a`. L'installation initiale et une mise à jour réelle sur téléphone restent non vérifiées. [Guide](mise-a-jour-apk.md).
+
+**Chantier « Mes chaînes » — étapes 1 à 3 publiées sur `main` :** code
+`338b2d0`, [Vérification 6/6](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074226607), migrations 0054 et 0055
+[appliquées et vérifiées](https://github.com/GoodFight37/CreatorDeck/actions/runs/39074582249),
+Vercel Production `READY` sur le SHA du code. Voir le [checkpoint](agent-handoff.md)
+et le [plan](plan-premiere-session.md). Les essais sur téléphone réel ne sont pas
+revendiqués par ces contrôles.
+
+| Étape | Statut | Référence |
+| --- | --- | --- |
+| 1 — « Mes chaînes », premier booster dans le cercle, accueil épuré | publiée, CI 6/6 ; téléphone non vérifié ici | migration 0054, [note](note-claude-etape-1-mes-chaines.md) |
+| Refonte visuelle (accueil, rangée « Ton cercle », dock) | publiée, CI 6/6 | commit `1f1c0c6`, [note](note-claude-refonte-ui-et-etape-2.md) |
+| 2 — direct dans le cercle | publiée, CI 6/6 ; téléphone non vérifié ici | [D-138](decisions.md) |
+| Clé de signature debug partagée | publiée | [D-139](decisions.md) |
+| 3 — Binder du cercle et modification des chaînes | publiée, CI 6/6 ; téléphone non vérifié ici | [D-140](decisions.md) |
+| MEMES après 10 boosters pour un joueur avec cercle | publiée, CI 6/6 | [D-141](decisions.md) |
+| Légendaire garanti tiré dans le cercle | publiée ; 0055 appliquée en Production et historique vérifié | [D-142](decisions.md) |
+| Cercle enregistré en ligne | publié, CI 6/6 | [D-143](decisions.md) |
+| 4 — rétention honnête | non commencée ; branche dédiée `etape-4-…` | plan § 5 |
+| 5 — finition visible | non commencée ; branche dédiée `etape-5-…` après l’étape 4 | plan § 6 |
+
+Chaque étape suivante a un seul écrivain sur sa branche et rejoint `main` après
+une CI verte. Toute nouvelle règle de jeu, migration ou notification push est
+d'abord proposée à Malik. Pour `open_pack()`, la définition actuelle est 0055 ;
+une future migration doit repartir de cette version. La prochaine migration est
+0056.
 
 **Rituel d’ouverture allégé (D-136) — implémenté localement :** l’ouverture de
 secours sans déchirure reste disponible mais se place en bas de l’écran, à

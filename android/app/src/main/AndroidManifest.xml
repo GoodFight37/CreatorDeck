@@ -3,6 +3,8 @@
 
     <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- D-144 : ouvrir l'installateur d'Android pour la mise à jour de l'APK de test. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Notifications : Android 13 et plus ne les affiche qu'après un accord
          explicite. La demande est faite par l'application (src/lib/push.ts) au
          premier lancement connecté ; sans cette ligne, la demande n'a rien à

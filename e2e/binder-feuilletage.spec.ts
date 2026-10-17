@@ -6,7 +6,7 @@ const longName = [...creatorData].sort((a, b) => b.displayName.length - a.displa
 const collection = [...creatorData.slice(0, 35), longName];
 
 async function openBinder(page: Page) {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   // Collection factice du navigateur de test uniquement ; aucun RPC ni compte.
   await page.evaluate((creators) => {
     const key = Object.keys(localStorage).find((entry) => /^creatordeck.save.v\d+$/.test(entry));

@@ -18,7 +18,7 @@ import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
+import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS, creatorImage } from "@/lib/catalog";
 import { formatViewers, liveFor } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -27,6 +27,11 @@ import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
 import { useCircle } from "@/lib/circle-store";
+import { CircleStrip } from "@/components/circle-strip";
+import { CircleLiveMoment } from "@/components/circle-live-moment";
+import { circleLiveState } from "@/lib/circle-live";
+import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
+import { circlePityPool } from "@/lib/game-engine";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -64,6 +69,7 @@ export function HomeView({
   serverReserve,
   needsAccount,
   tutorialAvailable = false,
+  onEditCircle,
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
@@ -89,6 +95,8 @@ export function HomeView({
   serverReserve: boolean;
   needsAccount: boolean;
   tutorialAvailable?: boolean;
+  /** Ouvrir « Mes chaînes » (définir ou modifier le cercle). */
+  onEditCircle?: () => void;
 }) {
   const cloud = useCloud();
   const memes = useMemeBooster();
@@ -117,8 +125,15 @@ export function HomeView({
   const findingFocus = usePresentationFocus(inspectCard !== null);
   const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const circle = useCircle();
+  const ownedSlugs = useMemo(() => new Set(game.cards.map((card) => card.creatorSlug)), [game.cards]);
+  const haloCreator = circle.length ? CREATOR_BY_SLUG.get(circle[0]) : undefined;
+  const haloImage = haloCreator ? creatorImage(haloCreator) : null;
   // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
   const lean = circle.length > 0;
+  // D-141 : un seul univers au début pour un joueur avec cercle ; MEMES arrive après 10 boosters.
+  const showMemes = memesUnlocked(lean, game.stats.openings);
+  // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
+  const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
   const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
     ?? game.missions.find((mission) => !mission.done)
@@ -133,6 +148,9 @@ export function HomeView({
     [game.cards],
   );
   const live = useLive();
+  // Étape 2 : qui, dans le cercle du joueur, est en direct maintenant.
+  const circleLive = lean ? circleLiveState(circle, live, ownedSlugs, now) : null;
+  const circleLiveEntries = circleLive?.kind === "live" ? circleLive.entries : [];
   const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
     ? cloud.sceneStatus : null;
   const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
@@ -188,7 +206,7 @@ export function HomeView({
     <>
           <button type="button" className="pity-row now" onClick={onShowOdds}
             aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
-            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
+            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}{circlePity ? " · une de tes chaînes" : ""}</span>
             <ChevronRight size={14} />
           </button>
           <button
@@ -213,6 +231,17 @@ export function HomeView({
             <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
           ) : null}
 
+          {/* Étape 3 : dans le panneau unique de l'accueil épuré, les jetons sont une ligne, pas un second accordéon. */}
+          {lean ? (
+            <div className="token-row">
+              <Coins size={14} />
+              <span>
+                <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
+                  ? `encore ${game.tokens.missing} pour une carte`
+                  : "une carte au choix disponible"}
+              </span>
+            </div>
+          ) : (
           <details className="drop-token-details">
             <summary>Jetons <strong>{game.tokens.count}</strong></summary>
             <div className="token-row">
@@ -224,6 +253,7 @@ export function HomeView({
               </span>
             </div>
           </details>
+          )}
     </>
   );
 
@@ -265,16 +295,22 @@ export function HomeView({
   );
 
   return (
-    <div className="view home-view" style={themeStyle}>
+    <div className={`view home-view${lean ? " is-lean" : ""}`} style={themeStyle}>
+      {lean ? (
+        // La chaîne préférée du joueur éclaire la scène : son visage, flou, derrière le pack.
+        <div className="stage-halo" aria-hidden="true" style={haloImage ? { backgroundImage: `url(${haloImage})` } : undefined} />
+      ) : null}
       {/* En-tête concis : zéro blabla marketing */}
-      <header className="drop-intro">
-        <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1>Drop</h1>
-      </header>
+      {lean ? <h1 className="sr-only">Drop</h1> : (
+        <header className="drop-intro">
+          <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+          <h1>Drop</h1>
+        </header>
+      )}
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
-        universes={lean ? ["live"] : undefined} />
+        universes={showMemes ? undefined : ["live"]} />
 
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         <button
@@ -318,6 +354,20 @@ export function HomeView({
           </details>
         ) : null}
       </section>
+      {circleLiveEntries.length ? (
+        <CircleLiveMoment
+          entries={circleLiveEntries}
+          now={tick}
+          canOpen={!needsAccount && (stock > 0 || promoPacks > 0)}
+          nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `dans ${formatCountdown(nextAt, tick)}` : null}
+          hourglass={!needsAccount && stock <= 0 && promoPacks <= 0 && game.player.hourglasses > 0
+            ? { count: game.player.hourglasses, busy: usingHourglass, onUse: onUseHourglass }
+            : null}
+        />
+      ) : null}
+      {lean ? (
+        <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+      ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
         <button className="primary-action" type="button" disabled={memeCannotOpen}
@@ -339,10 +389,19 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       <MemeBoosterOpening booster={memes} />
+      {!lean && onEditCircle && !needsAccount ? (
+        <section className="circle-invite" aria-labelledby="circle-invite-title">
+          <div>
+            <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
+            <p>Nomme 5 à 15 chaînes : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
+          </div>
+          <button type="button" onClick={onEditCircle}>Définir mes chaînes <ChevronRight size={16} aria-hidden="true" /></button>
+        </section>
+      ) : null}
 
 
-      {/* Direct sous le CTA */}
-      {featured ? (
+      {/* Direct sous le CTA (le moment du cercle le remplace quand une de ses chaînes streame) */}
+      {featured && !circleLiveEntries.length ? (
         <button
           type="button"
           className="live-bar"
@@ -546,6 +605,7 @@ export function HomeView({
       <details className="drop-secondary">
         <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
         {lean ? reserveControls : null}
+        {!showMemes ? <p className="memes-unlock-note">{memesUnlockLine(game.stats.openings)}</p> : null}
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (

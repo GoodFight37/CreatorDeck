@@ -223,6 +223,10 @@ function PackOddsBlock({
               </tr>
             ) : null}
             <tr>
+              <th scope="row">Tes chaînes</th>
+              <td>la Légendaire garantie est une Légendaire de ton cercle que tu n’as pas encore, s’il en reste une</td>
+            </tr>
+            <tr>
               <th scope="row">Remise à zéro</th>
               <td>à chaque Légendaire, quel que soit le slot</td>
             </tr>
