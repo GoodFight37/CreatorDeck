@@ -1,5 +1,21 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Mise à jour — autorisation Supabase et CI (17 octobre 2026)
+
+Malik a explicitement autorisé la vérification de la migration 0054 en
+Production, son application si elle manque, puis la publication de l’étape 1
+sur `main` après contrôles verts. Le workflow existant exige une exécution
+manuelle avec `approve_manual=true` pour appliquer cette migration. Le run
+GitHub Actions #530 est vert sur l’ancien SHA `e65a8554e1b100c0b1b24b771527da01b56e7677`
+de `main` (qualité/build, Postgres jetable, RPC simulés, trois shards E2E) ;
+il ne couvre pas l’étape 1. La vérification locale a trouvé que 0054 manquait
+l’en-tête `creatordeck-deploy: manual`, maintenant ajouté. `--check` passe ;
+le test de politique a 27 succès et un échec Windows de permissions (mode
+attendu 0600, reçu 0666). Aucun accès à Production ni publication n’a eu lieu.
+Le navigateur GitHub de cette session n’est pas authentifié et le connecteur ne
+permet pas de lancer `workflow_dispatch`; la suite doit employer les accès
+d’action déjà établis depuis l’interface GitHub.
+
 ## Étape 1 « Mes chaînes » préparée depuis la branche Claude — 17 octobre 2026
 
 - Demande de Malik : intégrer au `main` le travail de Claude ; checkout confirmé

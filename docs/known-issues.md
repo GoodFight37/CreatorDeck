@@ -1,5 +1,10 @@
 ## K-050 — Parcours cloud « Mes chaînes » dépend de la migration 0054 — publication bloquée
 
+**Mise à jour du 17 octobre 2026 :** Malik a autorisé la vérification
+Production et l’application si absente. La migration locale porte désormais
+`creatordeck-deploy: manual`, requis par la politique de déploiement ; la CI de
+l’étape 1 ne l’a pas encore vérifiée et aucun accès Production n’a eu lieu.
+
 Le premier booster cadeau d’un joueur connecté appelle `open_circle_gift_pack`,
 créée par `supabase/migrations/0054_cercle.sql`. La note Claude indique une
 application manuelle sur la base utilisée pour l’essai, tandis que le plan de
