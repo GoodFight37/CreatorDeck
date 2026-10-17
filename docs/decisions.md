@@ -1,3 +1,20 @@
+## D-139 — 17 octobre 2026 : une clé de signature debug partagée dans le dépôt
+
+**Contexte.** Aucune clé n'était fixée : chaque machine (PC, sessions cloud)
+signait l'APK de test avec sa propre clé debug, et Android refusait la mise à
+jour (« Application non installée »), forçant une désinstallation qui efface
+les données de l'appareil (cercle, partie invitée).
+
+**Décision.** `android/app/creatordeck-debug.keystore` est commité et utilisé
+par le type `debug` (`signingConfigs.debug`, mots de passe standard Android
+`android` / alias `androiddebugkey`). C'est la clé qui a signé l'APK de
+l'étape 2 (SHA-256 `aa0b0f24…3e75`) : depuis cet APK, toute nouvelle version
+debug s'installe par-dessus.
+
+**Limites.** Clé de test uniquement : elle ne signe jamais une version
+publiée (le type `release` n'est pas touché). Les APK debug signés par une
+autre clé avant ce commit demandent une dernière désinstallation.
+
 ## D-138 — 17 octobre 2026 : le second verbe « qui est en direct dans mon cercle » (étape 2)
 
 **Contexte.** L’étape 1 a donné au joueur un cercle de 5 à 15 chaînes. La rangée
