@@ -7,6 +7,7 @@ import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
 import { CollectionView } from "@/components/binder-view";
 import { CircleOnboarding } from "@/components/circle-onboarding";
+import { AppUpdateBanner } from "@/components/app-update-banner";
 import { useCircle, writeCircle } from "@/lib/circle-store";
 import { HomeView } from "@/components/drop-view";
 import { MissionsView } from "@/components/missions-view";
@@ -798,6 +799,7 @@ export function CreatorDeckApp() {
         </div>
       ) : null}
       <TopBar game={game} />
+      <AppUpdateBanner />
       <div className="app-content">
         {tab === "home" ? (
           <HomeView

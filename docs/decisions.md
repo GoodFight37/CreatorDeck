@@ -1,3 +1,47 @@
+## D-144 — 18 octobre 2026 : mettre à jour l'APK de test depuis l'appli
+
+**Contexte.** Malik installait chaque APK à la main (téléchargée en `.apk.zip`,
+renommée). Il demande un bouton « mettre à jour » qui récupère et installe la
+dernière version, et laisse Claude choisir la solution optimale.
+
+**Décision.**
+- Workflow `.github/workflows/apk.yml` : après chaque « Vérification » verte sur
+  `main` (ou à la demande), construit l'APK debug (clé D-139), numéro de version
+  automatique (minutes écoulées, `android/app/build.gradle`), et la publie comme
+  release du dépôt public `GoodFight37/creatordeck-apk` avec `latest.json`
+  (`scripts/apk-manifest.mjs`). Garde les 10 dernières.
+- Appli : plugin natif `AppUpdaterPlugin.java` (téléchargement, SHA-256, nom de
+  paquet, numéro plus récent, installateur Android via FileProvider) ;
+  `useAppUpdate` + `AppUpdateBanner` sous la barre du haut ; rien sur le site.
+- Guide et réglages : [`mise-a-jour-apk.md`](mise-a-jour-apk.md).
+
+**Limite assumée.** Android exige un appui sur « Installer » : l'installation
+silencieuse n'est possible que pour une appli propriétaire de l'appareil ou du
+Play Store.
+
+**Refusé.**
+- Stockage Supabase : APK ~110 Mo, limite de 50 Mo par fichier en offre
+  gratuite (portraits 56 Mo, images MEMES 41 Mo).
+- Releases du dépôt `CreatorDeck` : dépôt privé, le téléchargement demanderait
+  un jeton dans l'appli.
+- Mise à jour « en direct » du seul contenu web (type Capgo) : service tiers ou
+  serveur à maintenir, et les changements natifs demanderaient quand même une
+  APK.
+
+**Réglages requis (Malik).** Dépôt public `creatordeck-apk`, jeton
+fine-grained `APK_RELEASE_TOKEN` (Contents : read/write sur ce seul dépôt),
+secrets `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Le proxy
+de la session Claude refuse l'accès aux secrets GitHub (403) : Claude ne peut
+pas les poser.
+
+**Preuves.** `app-update.test.ts` 5/5 (manifeste du script relu par l'appli,
+refus des manifestes douteux), `ecrans-app-update.test.tsx` 6/6 (site : rien ;
+à jour : rien ; téléchargement puis installateur ; autorisation la première
+fois ; erreur ; « Plus tard »). APK compilée : `AppUpdaterPlugin` présent,
+permission `REQUEST_INSTALL_PACKAGES`, `versionCode` 871242, clé D-139. Non
+vérifié : le workflow (jamais lancé, secrets absents), l'installation réelle sur
+téléphone.
+
 ## D-143 — 17 octobre 2026 : le cercle enregistré en ligne
 
 **Contexte.** Le cercle ne vivait que sur l'appareil : perdu à la

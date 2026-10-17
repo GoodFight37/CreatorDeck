@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-mise-a-jour-apk", date: "2026-10-18", title: "L’appli se met à jour d’un appui",
+    summary: "Sur Android, une nouvelle version s’annonce et s’installe depuis l’appli.",
+    sections: [{ title: "Application", items: [
+      "Quand une nouvelle version est disponible, un bandeau « Mettre à jour » apparaît sous la barre du haut. Un appui la télécharge, puis Android te demande de confirmer l’installation.",
+      "La première fois, Android te demande d’autoriser CreatorDeck à installer des applis : l’appli ouvre directement le bon réglage.",
+    ] }],
+  },
+  {
     id: "2026-10-17-legendaire-garanti-cercle", date: "2026-10-17", title: "Ton Légendaire garanti vient de tes chaînes",
     summary: "Quand la garantie Légendaire tombe, c’est une de tes chaînes Légendaires qui te manque.",
     sections: [{ title: "Drop", items: [

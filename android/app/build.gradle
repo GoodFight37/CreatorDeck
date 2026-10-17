@@ -17,8 +17,12 @@ android {
         applicationId "com.creatordeck.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        // D-144 : un numéro qui augmente à chaque compilation, sur toutes les
+        // machines (minutes depuis 2025-02-13 environ) ; Android refuse une mise
+        // à jour dont le numéro n'est pas plus grand. `-PcdVersionCode=…`
+        // l'impose si besoin. Le nom porte le commit (`-PcdVersionName=abc1234`).
+        versionCode((project.findProperty("cdVersionCode") ?: (System.currentTimeMillis().intdiv(60000L) - 29000000L)).toString().toInteger())
+        versionName((project.findProperty("cdVersionName") ?: "dev").toString())
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
