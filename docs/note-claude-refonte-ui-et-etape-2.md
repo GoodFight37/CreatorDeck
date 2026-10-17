@@ -37,7 +37,18 @@ Branche : `etape-1-mes-chaines` (HEAD 1f1c0c6). Rédigée le 17/10/2026.
 - Le dépôt ne fixe **aucune clé de signature debug** : chaque machine signe avec la sienne. Si Android refuse la mise à jour (« Application non installée »), il faut désinstaller l’ancienne version d’abord ; les données de l’appareil (cercle, partie invitée) sont alors perdues, celles du compte en ligne restent. Piste à décider : committer une clé debug dédiée.
 - Maven Central a renvoyé des 429 : relancer Gradle avec `--max-workers=1` suffit.
 
+## Clé de signature (D-139, commit 8f2cb54)
+`android/app/creatordeck-debug.keystore` signe tous les APK debug (SHA-256 `aa0b0f24…3e75`, celle de l'APK étape 2). Plus de désinstallation entre deux versions.
+
+## Étape 3 — faite le 17/10/2026 (commit d6f9d9e, D-140)
+- Binder : vue par défaut « Mon cercle », objectif « Ton cercle à compléter », cible d'artisanat (`src/lib/circle-goal.ts`, sans nouvelle règle).
+- « Définir mes chaînes » (accueil sans cercle) et « Modifier » (rangée) → `CircleOnboarding mode="edit"` ouvert par `creator-deck-app.tsx` (`circleEditOpen`).
+- Jetons aplatis dans le panneau Réserve de l'accueil épuré.
+- Vérifié : 1233 unitaires, 208 écrans, jargon, tsc, eslint (`--ignore-pattern 'android/**/build/**' --ignore-pattern 'android/app/src/main/assets/**'` : fichiers générés). APK construit et vérifié. Non vérifié sur téléphone.
+
 ## Proposé, non fait (accord de Malik requis)
 - Notification push « X vient de lancer son direct ».
-- Bonus propre au cercle (règle de jeu + miroir SQL).
-- Étapes 3 à 5 du plan.
+- Bonus propre au cercle, ou garantie « carte du cercle » (règle de jeu + miroir SQL).
+- Seuil d'accès aux Mèmes (valeur à choisir).
+- Synchronisation du cercle en ligne (`set_circle`, dépend de 0054).
+- Étapes 4 et 5 du plan.
