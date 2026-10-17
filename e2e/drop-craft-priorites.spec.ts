@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
 test("Drop garde le sachet accessible, sans débordement, en viewport mobile compact", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   for (const viewport of [{ width: 360, height: 740 }, { width: 320, height: 568 }]) {
     await page.setViewportSize(viewport); await page.evaluate(() => window.scrollTo(0, 0));
     const pack = page.locator(".pack-stage .pack-artwork");
@@ -29,7 +29,7 @@ test("Drop garde le sachet accessible, sans débordement, en viewport mobile com
 });
 
 test("Drop conserve le grand sachet et ses labels à 390 × 844", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await page.setViewportSize({ width: 390, height: 844 });
   const pack = page.locator(".pack-stage .pack-artwork");
   const box = (await pack.boundingBox())!;

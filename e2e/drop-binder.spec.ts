@@ -103,6 +103,11 @@ test("Drop et Binder restent contenus à 320 px", async ({ page }) => {
 
 test("avec un cercle, le Binder s'ouvre sur « Mon cercle » et montre l'objectif du cercle (D-140)", async ({ page }) => {
   await gotoDeck(page);
+  // Accueil épuré : le sachet garde la taille du Drop (préférence de Malik ; la refonte UI l'avait réduit).
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator(".home-view.is-lean")).toBeVisible();
+  const packBox = (await page.locator(".pack-stage .pack-artwork").boundingBox())!;
+  expect(packBox.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
   await page.getByRole("button", { name: "Binder", exact: true }).click();
   const chip = page.locator(".filter-chips button").first();
   await expect(chip).toHaveText(/^Mon cercle \(\d+\/5\)$/);

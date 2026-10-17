@@ -360,7 +360,7 @@ test("la carte garantie se retourne automatiquement, sans languette ni second ge
       },
     });
   });
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const pack = page.locator(".opening-continuum");
   await pack.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -445,7 +445,7 @@ test("le raccourci de révélation complète garde son parcours", async ({ page 
 });
 
 test("home pack artwork stays named and the long gesture hint is removed", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   await expect(page.locator(".drop-edition")).not.toContainText("DROP");
   await expect(page.locator(".drop-intro h1")).toHaveText("Drop");
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeVisible();
@@ -463,7 +463,7 @@ test("home pack artwork stays named and the long gesture hint is removed", async
 
 /** Pack is a single printed image, finger tears its weld, and cards emerge before the reveal. */
 test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ page }) => {
-  await gotoDeck(page);
+  await gotoDeck(page, true, { withoutCircle: true });
   const open = page.getByRole("button", { name: "Ouvrir le booster" });
   await expect(open).toBeVisible({ timeout: 30_000 });
   const homePack = page.locator('.booster-pack-slot[data-active="true"] .pack-artwork');

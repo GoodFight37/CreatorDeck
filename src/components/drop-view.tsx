@@ -368,15 +368,6 @@ export function HomeView({
       {lean ? (
         <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
       ) : null}
-      {!lean && onEditCircle && !needsAccount ? (
-        <section className="circle-invite" aria-labelledby="circle-invite-title">
-          <div>
-            <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
-            <p>Nomme 5 à 15 chaînes : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
-          </div>
-          <button type="button" onClick={onEditCircle}>Définir mes chaînes <ChevronRight size={16} aria-hidden="true" /></button>
-        </section>
-      ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
         <button className="primary-action" type="button" disabled={memeCannotOpen}
@@ -398,6 +389,15 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       <MemeBoosterOpening booster={memes} />
+      {!lean && onEditCircle && !needsAccount ? (
+        <section className="circle-invite" aria-labelledby="circle-invite-title">
+          <div>
+            <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
+            <p>Nomme 5 à 15 chaînes : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
+          </div>
+          <button type="button" onClick={onEditCircle}>Définir mes chaînes <ChevronRight size={16} aria-hidden="true" /></button>
+        </section>
+      ) : null}
 
 
       {/* Direct sous le CTA (le moment du cercle le remplace quand une de ses chaînes streame) */}
