@@ -4,8 +4,9 @@
 bouton et la réserve affichaient `Mèmes`. **Gravité :** faible, incohérence de
 marque. **Cause :** libellés de l’interface écrits séparément. **Correction :**
 les libellés du bouton, de la réserve et du message de réserve séparée reprennent
-`MEMES`, selon la décision D-137. Vérification ciblée et publication à consigner
-dans le checkpoint de passation. Aucun contournement nécessaire.
+`MEMES`, selon la décision D-137. La première CI a révélé une attente Playwright
+qui utilisait l’ancien libellé ; le test a été aligné et la nouvelle CI est en
+cours. Aucun contournement nécessaire.
 
 ## Titre long tronqué pendant la révélation d’un booster Mèmes — corrigé et publié
 

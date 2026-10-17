@@ -107,7 +107,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await page.goto("/");
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
   const trigger = page.getByRole("button", { name: "Préparer le booster MEMES" });
-  await expect(page.getByText("Ta réserve Mèmes · 4/4")).toBeVisible();
+  await expect(page.getByText("Ta réserve MEMES · 4/4")).toBeVisible();
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /memes-opening/);

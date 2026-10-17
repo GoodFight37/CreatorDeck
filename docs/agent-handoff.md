@@ -8,8 +8,11 @@
   utilisent `MEMES`, alignés sur le sélecteur. Aucun catalogue, contenu de carte,
   rituel ou donnée serveur touché. Le SVG Mèmes modifié et les pièces jointes
   restent préservés hors commit.
-- D-137, note joueur, roadmap et problème connu mis à jour. Consigner ci-dessous
-  les tests, SHA distant et état Vercel après vérification.
+- D-137, note joueur, roadmap et problème connu mis à jour. Le commit
+  `52c79c07602d82a863077c06555d77096263498f` est sur `main` et Vercel Production
+  est READY sur ce SHA. Écrans Drop 17/17, notes 8/8 et typecheck passent en
+  local. CI #531 a révélé une attente E2E obsolète sur l’ancien libellé ; test
+  corrigé dans le commit de suivi, nouvelle CI à vérifier.
 
 ## Lot D-136 — rituel d’ouverture (17 octobre 2026)
 
