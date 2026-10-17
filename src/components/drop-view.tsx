@@ -67,6 +67,7 @@ export function HomeView({
   serverReserve,
   needsAccount,
   tutorialAvailable = false,
+  onEditCircle,
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
@@ -92,6 +93,8 @@ export function HomeView({
   serverReserve: boolean;
   needsAccount: boolean;
   tutorialAvailable?: boolean;
+  /** Ouvrir « Mes chaînes » (définir ou modifier le cercle). */
+  onEditCircle?: () => void;
 }) {
   const cloud = useCloud();
   const memes = useMemeBooster();
@@ -222,6 +225,17 @@ export function HomeView({
             <small className="hourglass-note">Tu n’as pas de sablier disponible.</small>
           ) : null}
 
+          {/* Étape 3 : dans le panneau unique de l'accueil épuré, les jetons sont une ligne, pas un second accordéon. */}
+          {lean ? (
+            <div className="token-row">
+              <Coins size={14} />
+              <span>
+                <strong>{game.tokens.count}</strong> jetons · {game.tokens.missing > 0
+                  ? `encore ${game.tokens.missing} pour une carte`
+                  : "une carte au choix disponible"}
+              </span>
+            </div>
+          ) : (
           <details className="drop-token-details">
             <summary>Jetons <strong>{game.tokens.count}</strong></summary>
             <div className="token-row">
@@ -233,6 +247,7 @@ export function HomeView({
               </span>
             </div>
           </details>
+          )}
     </>
   );
 
@@ -345,7 +360,16 @@ export function HomeView({
         />
       ) : null}
       {lean ? (
-        <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} />
+        <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+      ) : null}
+      {!lean && onEditCircle && !needsAccount ? (
+        <section className="circle-invite" aria-labelledby="circle-invite-title">
+          <div>
+            <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
+            <p>Nomme 5 à 15 chaînes : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
+          </div>
+          <button type="button" onClick={onEditCircle}>Définir mes chaînes <ChevronRight size={16} aria-hidden="true" /></button>
+        </section>
       ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">

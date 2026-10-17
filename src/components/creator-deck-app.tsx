@@ -392,6 +392,9 @@ export function CreatorDeckApp() {
   const [giftBusy, setGiftBusy] = useState(false);
   const circle = useCircle();
   const [circleBusy, setCircleBusy] = useState(false);
+  // Étape 3 : « Mes chaînes » se rouvre à tout moment pour définir ou modifier le cercle.
+  const [circleEditOpen, setCircleEditOpen] = useState(false);
+  useBackHandler(circleEditOpen, () => setCircleEditOpen(false));
   const welcomeKey = `creatordeck-tutorial:${cloud.userId ?? "local"}`;
   const [welcomeMarker, setWelcomeMarker] = useState(() => ({ key: welcomeKey, done: readLocalMarker(welcomeKey) }));
   if (welcomeMarker.key !== welcomeKey) setWelcomeMarker({ key: welcomeKey, done: readLocalMarker(welcomeKey) });
@@ -406,7 +409,7 @@ export function CreatorDeckApp() {
   // qu'une feuille est ouverte. Attendre qu'elle se ferme évite deux dialogues
   // superposés et un tutoriel qui intercepte les appuis derrière le compte.
   const presentationOccupied = accountOpen || friendsOpen || marketOpen || lastPackOpen ||
-    wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || oddsOpen ||
+    wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || oddsOpen || circleEditOpen ||
     themeOpen || studioOpen || Boolean(cloud.profile || cloud.profileBusy) ||
     tearing || drawnCards.length > 0;
   const showTutorial = tutorialStep !== null || (tutorialDue && !presentationOccupied);
@@ -464,6 +467,13 @@ export function CreatorDeckApp() {
       if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
       await finishWelcomeTutorial();
     } finally { setCircleBusy(false); }
+  }
+
+  /** Enregistre un cercle modifié : seulement sur l'appareil, comme à l'étape 1. */
+  function saveEditedCircle(slugs: string[]) {
+    if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+    setCircleEditOpen(false);
+    showNotice("Tes chaînes sont enregistrées.");
   }
 
   async function claimAndOpenWelcomeGift() {
@@ -765,6 +775,13 @@ export function CreatorDeckApp() {
           busy={circleBusy}
           onConfirm={(slugs) => void confirmCircle(slugs)}
         />
+      ) : circleEditOpen ? (
+        <CircleOnboarding
+          initial={circle}
+          mode="edit"
+          onConfirm={saveEditedCircle}
+          onCancel={() => setCircleEditOpen(false)}
+        />
       ) : null}
       {welcomeSeen && cloud.userId && cloud.onboarding?.giftAvailable && !drawnCards.length ? (
         <div className="welcome-gift-card" role="status">
@@ -800,10 +817,12 @@ export function CreatorDeckApp() {
             serverReserve={cloud.configured}
             tutorialAvailable={tutorialAvailable}
             needsAccount={cloud.configured && !cloud.userId}
+            onEditCircle={() => setCircleEditOpen(true)}
           />
         ) : null}
         {tab === "collection" ? (
-          <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} onGoDrop={() => setTab("home")} />
+          <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} onGoDrop={() => setTab("home")}
+            onEditCircle={() => setCircleEditOpen(true)} />
         ) : null}
         {tab === "missions" ? (
           <MissionsView

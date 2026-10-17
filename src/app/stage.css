@@ -213,6 +213,48 @@
 .circle-live-hourglass:disabled { opacity: .6; }
 @media (prefers-reduced-motion: reduce) { .circle-live-face { animation: none; } }
 
+/* Étape 3 : modifier le cercle depuis sa rangée. */
+.circle-strip-head p { margin-left: auto; }
+.circle-strip-edit {
+  min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--accent-soft, var(--muted));
+  font: 600 13px/1 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.circle-strip-edit:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 8px; }
+
+/* Étape 3 : un joueur sans cercle peut en définir un depuis l'accueil. */
+.circle-invite {
+  display: grid; gap: 10px; margin: 16px 0 0; padding: 14px;
+  border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .035);
+}
+.circle-invite h2 { margin: 0; font: 650 16px/1.25 var(--font-body); letter-spacing: 0; text-transform: none; }
+.circle-invite p { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
+.circle-invite button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px;
+  border: 1px solid var(--accent); border-radius: 999px; background: rgb(var(--accent-rgb) / .14); color: var(--text);
+  font: 650 14px/1 var(--font-body);
+}
+
+/* Étape 3 : l'objectif du Binder est le cercle. */
+.binder-circle-goal {
+  display: grid; gap: 8px; margin: 10px 0; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .035);
+}
+.binder-circle-goal .drop-section-label { display: flex; align-items: center; justify-content: space-between; font-size: .72rem; }
+.binder-circle-goal-main, .binder-circle-craft {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0;
+  border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.binder-circle-goal-main > span, .binder-circle-craft > span { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.binder-circle-goal-main strong { font: 650 15px/1.25 var(--font-body); }
+.binder-circle-goal small, .binder-circle-booster { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.binder-circle-goal progress { width: 100%; height: 4px; }
+.binder-circle-craft { padding: 8px 10px; border: 1px solid rgb(255 255 255 / .1); border-radius: 12px; background: rgb(255 255 255 / .03); }
+.binder-circle-craft strong { font: 600 14px/1.25 var(--font-body); }
+.binder-circle-booster { margin: 0; }
+.binder-circle-goal-main:focus-visible, .binder-circle-craft:focus-visible, .circle-invite button:focus-visible {
+  outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 12px;
+}
+
 /* ----------------------------------------------- dernières trouvailles : une main */
 .is-lean .drop-findings { margin-top: 20px; padding-top: 0; border-top: 0; }
 .is-lean .drop-findings .drop-section-kicker { display: none; }

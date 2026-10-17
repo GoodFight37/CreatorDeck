@@ -22,6 +22,7 @@ export function CircleStrip({
   now,
   onOpenCollection,
   onRetryLive = () => void liveStore.refresh({ force: true }),
+  onEdit,
 }: {
   circle: readonly string[];
   owned: ReadonlySet<string>;
@@ -30,6 +31,8 @@ export function CircleStrip({
   onOpenCollection: () => void;
   /** Relancer la lecture du direct (hors ligne, donnée périmée). */
   onRetryLive?: () => void;
+  /** Ouvrir « Mes chaînes » pour modifier la liste. */
+  onEdit?: () => void;
 }) {
   const tiers = circleTiers(circle);
   const entries = circle
@@ -60,6 +63,9 @@ export function CircleStrip({
     <section className="circle-strip" aria-label="Ton cercle">
       <header className="circle-strip-head">
         <h2>Ton cercle</h2>
+        {onEdit ? (
+          <button type="button" className="circle-strip-edit" onClick={onEdit} aria-label="Modifier mes chaînes">Modifier</button>
+        ) : null}
         <p aria-live="polite">
           {liveCount > 0
             ? <><i className="circle-live-dot" aria-hidden="true" />{liveCount} en direct</>

@@ -9,6 +9,7 @@ import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } f
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CircleStrip } from "@/components/circle-strip";
 import { useCircle } from "@/lib/circle-store";
+import { circleGoal, missingPreview } from "@/lib/circle-goal";
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { BINDER_FAMILIES, BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -23,7 +24,7 @@ import { craftQuote, type GameView } from "@/lib/game-engine";
 import { cardEffectsAllowed } from "@/lib/tilt";
 import { playPageTurn } from "@/lib/sfx";
 
-type CollectionFilter = "all" | "owned" | "missing" | "live" | "retired" | Rarity;
+type CollectionFilter = "circle" | "all" | "owned" | "missing" | "live" | "retired" | Rarity;
 
 const RARITY_COUNTS = CREATORS.reduce<Record<Rarity, number>>(
   (acc, creator) => {
@@ -38,13 +39,20 @@ export function CollectionView({
   themeStyle,
   onCraft,
   onGoDrop,
+  onEditCircle,
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
   onCraft: (slug: string) => Promise<boolean>;
   onGoDrop?: () => void;
+  /** Ouvrir « Mes chaînes » pour définir ou modifier le cercle. */
+  onEditCircle?: () => void;
 }) {
-  const [filter, setFilter] = useState<CollectionFilter>("owned");
+  const circle = useCircle();
+  // Étape 3 : un joueur qui a nommé ses chaînes ouvre le Binder sur elles.
+  const [chosenFilter, setFilter] = useState<CollectionFilter>(() => (circle.length ? "circle" : "owned"));
+  // Si le cercle disparaît (stockage effacé), la vue « Mon cercle » n'a plus de sens.
+  const filter: CollectionFilter = chosenFilter === "circle" && !circle.length ? "owned" : chosenFilter;
   const [pageGoal, setPageGoal] = useState<string | null>(null);
   const [savedGoal, saveGoal] = useBinderGoal();
   const [collectionFamily, setCollectionFamily] = useState<string | null>(null);
@@ -74,7 +82,6 @@ export function CollectionView({
   useBackHandler(inspect !== null, () => setInspect(null));
   const live = useLive();
   const now = useNow(60_000);
-  const circle = useCircle();
   const perPage = 12;
 
   const owned = useMemo(() => {
@@ -127,6 +134,18 @@ export function CollectionView({
       return true;
     };
     const matchingRetired = retiredCards.filter(matches);
+    if (filter === "circle") {
+      const mine = circle
+        .map((slug) => CREATOR_BY_SLUG.get(slug))
+        .filter((creator): creator is Creator => creator !== undefined && matches(creator));
+      // Le tri affiché s'applique aussi au cercle : l'étiquette du sélecteur doit dire vrai.
+      return sortBinder(
+        mine,
+        sort,
+        (slug) => owned.get(slug)?.count ?? 0,
+        (slug) => owned.get(slug)?.latestAt ?? 0,
+      );
+    }
     if (filter === "retired") {
       return sortBinder(
         matchingRetired,
@@ -153,7 +172,7 @@ export function CollectionView({
       (slug) => owned.get(slug)?.count ?? 0,
       (slug) => owned.get(slug)?.latestAt ?? 0,
     );
-  }, [filter, live, now, owned, pageGoal, query, sort]);
+  }, [circle, filter, live, now, owned, pageGoal, query, sort]);
 
   function finishTurn() {
     if (turnTimer.current !== null) clearTimeout(turnTimer.current);
@@ -259,6 +278,17 @@ export function CollectionView({
     resetPage();
   }
 
+  const ownedSlugs = useMemo(() => new Set(owned.keys()), [owned]);
+  const goal = useMemo(
+    () => (circle.length ? circleGoal(circle, ownedSlugs, game.player.points) : null),
+    [circle, ownedSlugs, game.player.points],
+  );
+
+  function inspectCreator(creator: Creator) {
+    const item = owned.get(creator.slug);
+    setInspect({ creator, count: item?.count ?? 0, variant: item?.bestVariant ?? "standard", liveStream: liveFor(live, creator.login, now) });
+  }
+
   const retiredOwned = useMemo(
     () => [...owned.keys()].filter((slug) => RETIRED_BY_SLUG.has(slug)).length,
     [owned],
@@ -295,10 +325,11 @@ export function CollectionView({
       {circle.length > 0 ? (
         <CircleStrip
           circle={circle}
-          owned={new Set(owned.keys())}
+          owned={ownedSlugs}
           live={live}
           now={now}
-          onOpenCollection={() => { setFilter("all"); setPageGoal(null); resetPage(); }}
+          onOpenCollection={() => { setFilter("circle"); setPageGoal(null); setQuery(""); resetPage(); }}
+          onEdit={onEditCircle}
         />
       ) : null}
 
@@ -350,14 +381,18 @@ export function CollectionView({
         <div className="filter-chips" aria-label="Filtres de collection" style={{ display: "flex", flexWrap: "nowrap", overflowX: "auto", paddingBottom: "0.2rem" }}>
           {(
             [
+              // Étape 3 : mes chaînes d'abord, puis qui est en direct, puis le reste.
+              ...(goal
+                ? ([["circle", `Mon cercle (${goal.owned}/${goal.total})`]] as [CollectionFilter, string][])
+                : []),
+              ...(live.configured && live.count && !live.stale
+                ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
+                : []),
               ["all", `Toutes (${CREATORS.length})`],
               ["owned", `Obtenues (${game.stats.uniqueCreators + retiredOwned})`],
               ["missing", "À découvrir"],
               ...(retiredOwned
                 ? ([["retired", `Sortants (${retiredOwned})`]] as [CollectionFilter, string][])
-                : []),
-              ...(live.configured && live.count && !live.stale
-                ? ([["live", `En direct (${live.count})`]] as [CollectionFilter, string][])
                 : []),
               ["legendary", `Légendaires (${RARITY_COUNTS.legendary})`],
               ["epic", `Épiques (${RARITY_COUNTS.epic})`],
@@ -499,8 +534,46 @@ export function CollectionView({
         </div>
       ) : null}
 
+      {/* Étape 3 : l'objectif affiché est le cercle, plus une page de famille de langue. */}
+      {goal ? (
+        <section className="binder-circle-goal" aria-label="Ton cercle à compléter">
+          <div className="drop-section-label">
+            <span>{goal.missing.length ? "TON CERCLE À COMPLÉTER" : "TON CERCLE EST COMPLET"}</span>
+            <BookOpen size={13} aria-hidden="true" />
+          </div>
+          <button type="button" className="binder-circle-goal-main" aria-pressed={filter === "circle" && !pageGoal && !query}
+            onClick={() => { setFilter("circle"); setPageGoal(null); setQuery(""); resetPage(); }}>
+            <span>
+              <strong>Mon cercle · {goal.owned} / {goal.total}</strong>
+              <small>{missingPreview(goal.missing)}</small>
+            </span>
+            <ChevronRight size={15} aria-hidden="true" />
+          </button>
+          <progress aria-label="Progression de ton cercle" value={goal.owned} max={Math.max(1, goal.total)} />
+          {goal.craftTarget ? (
+            <button type="button" className="binder-circle-craft" onClick={() => inspectCreator(goal.craftTarget!.creator)}>
+              <span>
+                <strong>À fabriquer : {goal.craftTarget.creator.displayName}</strong>
+                <small>
+                  {RARITY_META[goal.craftTarget.creator.rarity].label} · {goal.craftTarget.cost} points
+                  {goal.craftTarget.affordable ? " · tu as assez de points" : ` · encore ${goal.craftTarget.missingPoints} points`}
+                </small>
+              </span>
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+          ) : null}
+          {goal.boosterOnly.length ? (
+            <p className="binder-circle-booster">
+              {goal.boosterOnly.length === 1
+                ? `${goal.boosterOnly[0].displayName} ne se fabrique pas : sa carte se tire en booster, et tombe plus souvent pendant son direct.`
+                : `${goal.boosterOnly.length} de tes chaînes ne se fabriquent pas : leurs cartes se tirent en booster, et tombent plus souvent pendant leur direct.`}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
+
       {/* Pages à compléter : bandeau placé après la grille pour ne pas masquer les cartes */}
-      {featuredCollection ? (
+      {featuredCollection && !goal ? (
         <section className="binder-next-pages" aria-label="Pages à compléter" style={{ padding: "0.35rem 0.6rem", margin: "0.25rem 0" }}>
           <div className="drop-section-label" style={{ marginBottom: "0.2rem", fontSize: "0.72rem" }}>
             <span>{featuredCollection.missing.length ? "TA COLLECTION À COMPLÉTER" : "COLLECTION COMPLÉTÉE"}</span>
@@ -539,7 +612,7 @@ export function CollectionView({
 
       {/* Sélecteur replié */}
       <details className="binder-collections-picker" style={{ margin: "0.2rem 0" }}>
-        <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>Choisir une collection <ChevronRight size={14} /></summary>
+        <summary style={{ fontSize: "0.78rem", padding: "0.25rem 0" }}>{goal ? "Parcourir par pages de 12" : "Choisir une collection"} <ChevronRight size={14} /></summary>
         <p style={{ fontSize: "0.72rem" }}>Les pages font 12 cartes. Ton choix est gardé sur cet appareil.</p>
         <label style={{ fontSize: "0.72rem" }}>Famille
           <select aria-label="Famille de collection" value={pickerFamily} onChange={(event) => setCollectionFamily(event.target.value)}>

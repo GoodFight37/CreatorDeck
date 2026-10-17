@@ -1,3 +1,36 @@
+## D-140 — 17 octobre 2026 : le Binder au service du cercle (étape 3)
+
+**Contexte.** Étape 3 du plan des cinq premières minutes, feu vert de Malik.
+Contrainte : aucune règle de jeu, migration ou notification sans accord.
+
+**Décision.**
+- Binder d'un joueur avec cercle : vue par défaut « Mon cercle (x/y) », puis
+  « En direct », puis les vues habituelles. Le tri choisi s'applique aussi au
+  cercle (l'étiquette du sélecteur reste vraie). La pagination par 12 reste un
+  mode (« Parcourir par pages de 12 », replié).
+- L'objectif affiché devient « Ton cercle à compléter » ; les pages par famille
+  de langue ne sont plus mises en avant pour ce joueur.
+- Cible d'artisanat : la première chaîne manquante du cercle **qui se fabrique
+  déjà** (`craftQuote`, mêmes coûts que l'Atelier et le serveur) ; l'appui ouvre
+  sa fiche, qui porte le bouton existant. Les Légendaires (non fabricables) sont
+  dites « se tirent en booster, plus souvent pendant leur direct » (bonus Direct).
+- « Définir mes chaînes » sur l'accueil d'un joueur sans cercle (masqué pendant
+  le parcours sans compte, où la question est déjà posée) ; « Modifier » sur la
+  rangée « Ton cercle » (accueil et Binder). Enregistrement sur l'appareil
+  seulement, comme à l'étape 1 ; textes de « Mes chaînes » adaptés à la
+  modification.
+- Panneau « Réserve, taux et sabliers » : les jetons sont une ligne, plus un
+  accordéon imbriqué.
+
+**Non fait, à décider par Malik.** Garantie « carte du cercle » (pity ciblé :
+règle + SQL miroir) ; Mèmes derrière un seuil (valeur à choisir) ;
+synchronisation du cercle en ligne via `set_circle` (dépend de 0054).
+
+**Preuves.** `npm test` 1233/1233 (dont `circle-goal.test.ts` 6),
+`npm run ecrans` 208/208 (dont `ecrans-binder-cercle.test.tsx` 8),
+check-jargon, tsc, eslint. Captures `docs/captures/etape-3/` (version sans
+compte en ligne). Non vérifié sur téléphone.
+
 ## D-139 — 17 octobre 2026 : une clé de signature debug partagée dans le dépôt
 
 **Contexte.** Aucune clé n'était fixée : chaque machine (PC, sessions cloud)

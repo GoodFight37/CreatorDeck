@@ -10,6 +10,19 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-binder-mon-cercle", date: "2026-10-17", title: "Ton Binder s’ouvre sur tes chaînes",
+    summary: "Le Binder montre d’abord ton cercle, ce qu’il te manque et ce que tu peux fabriquer.",
+    sections: [{ title: "Binder", items: [
+      "Le Binder s’ouvre sur « Mon cercle » : tes chaînes, obtenues ou à trouver. Les autres vues restent à un appui.",
+      "L’objectif affiché est maintenant de compléter ton cercle, avec la prochaine chaîne que tu peux fabriquer et son prix en points.",
+    ] }, { title: "Mes chaînes", items: [
+      "Tu peux modifier tes chaînes à tout moment avec « Modifier », sur l’accueil ou dans le Binder.",
+      "Si tu n’avais pas encore de chaînes, l’accueil te propose de les définir.",
+    ] }, { title: "Drop", items: [
+      "Dans « Réserve, taux et sabliers », tes jetons s’affichent directement.",
+    ] }],
+  },
+  {
     id: "2026-10-17-direct-dans-ton-cercle", date: "2026-10-17", title: "Tes chaînes en direct, sur l’accueil",
     summary: "Quand une chaîne de ton cercle streame, l’accueil te le dit avec un lien vers Twitch.",
     sections: [{ title: "Drop", items: [
