@@ -6,6 +6,26 @@ la réserve utilisaient `Mèmes`. Malik demande que le nom visible reste
 comporte un. Les libellés du bouton et de la réserve suivent désormais le nom
 du sélecteur. Aucun nom de carte ni contenu du catalogue n’est modifié.
 
+## D-138 — 17 octobre 2026 : demander les chaînes suivies avant le premier booster
+
+Pour la première session, demander au joueur de choisir 5 à 15 chaînes qu’il
+regarde. Le premier booster cadeau est composé de cinq chaînes distinctes de ce
+cercle ; sa dernière carte est Rare ou mieux selon la rareté locale calculée par
+position dans la sélection. Cette rareté locale ne modifie jamais la rareté
+catalogue enregistrée, les taux ordinaires, la réserve ni les monnaies. Un
+joueur invité voit un aperçu sans écriture ; un compte connecté passe par la
+fonction serveur `open_circle_gift_pack` et la migration additive `0054`.
+
+Le Drop se simplifie pour un cercle déjà choisi : booster, action principale,
+cinq cartes récentes et un panneau secondaire. Les autres activités restent
+accessibles par leurs écrans existants. Les comptes déjà accueillis conservent
+leur accueil actuel ; l’entrée pour définir ou modifier le cercle est reportée
+à l’étape 3. Le plan et les limites sont consignés dans
+[`plan-premiere-session.md`](plan-premiere-session.md). Les tests locaux ciblés
+passent, mais la vérification SQL jetable Windows est bloquée par le compte
+Administrateur et l’état de `0054` sur Production n’est pas établi ; aucune
+application sur une base réelle n’est incluse dans cette décision.
+
 ## D-136 — 17 octobre 2026 : garder l’ouverture de secours hors du rituel visuel
 
 Dans la scène scellée, « Ouvrir sans déchirer » restait un bouton de 44 px juste

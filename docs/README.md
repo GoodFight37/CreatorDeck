@@ -31,6 +31,7 @@ ne pas déduire le statut du projet à partir d'une ancienne livraison.
 - **Trade Radar** : [périmètre et fonctionnement](trade-radar.md) ; souhaits
   publics des amis, doublons locaux, offre toujours arbitrée par le serveur.
 - **Parcours sociaux réels sur Vercel** : [vérification du 15 octobre](verification-sociale-vercel-2026-10-15.md) ; deux comptes invités, amitié, offre acceptée et collections après transfert.
+- **Première session « Mes chaînes » (D-138)** : [plan et état de reprise](plan-premiere-session.md) ; choix du cercle, premier booster, étapes restantes et dépendance Supabase 0054.
 - **Univers Mèmes FR** : [source et intégration D-125](catalogue-memes-source.md) ; import figé, réserve et classeur séparés. Le retrait D-131 de la fiche sans illustration et l’état de sa migration serveur sont consignés dans cette même fiche et dans le premier checkpoint de passation.
 - **Cartes Mèmes D-127** : [audit visuel et captures comparables](audit-cartes-memes-reference.md) ; preuves partielles du paquet de référence et rendu par rareté.
 - **Choix des boosters D-129** : [parcours, vérifications et captures](drop-boosters.md) ; carrousel publié, préparation annulable avant tirage, corrections tactiles suivies après retour joueur.

@@ -1,5 +1,42 @@
 # Checkpoint — reprise autonome (17 octobre 2026)
 
+## Étape 1 « Mes chaînes » préparée depuis la branche Claude — 17 octobre 2026
+
+- Demande de Malik : intégrer au `main` le travail de Claude ; checkout confirmé
+  dans `CreatorDeck-Codex`, branche `codex/collaboration`. GitHub a confirmé
+  `main` à `63679db3d3803065df37c41e32a54b2f66b07ce1` et la branche Claude
+  `etape-1-mes-chaines` à `4155c552426ebd91a5815abad70812e34ce56527`, deux
+  commits issus de `c3b239ed17ab9d073b0f47a6c8f5b097ae09b6ea`. Le commit
+  documentaire de `main` a été intégré localement avant le code Claude.
+- L’étape 1 ajoute l’écran « Quelles chaînes regardes-tu déjà ? », le premier
+  booster cadeau tiré dans 5–15 chaînes, la rareté de cercle à l’affichage et
+  un Drop épuré lorsque le joueur a un cercle. Les règles économiques
+  enregistrées restent celles du catalogue. Le diff comprend 28 fichiers de
+  l’étape Claude ; note joueur, décision D-138, roadmap, README, problèmes
+  connus, guide documentaire et ce plan/checkpoint ont aussi été actualisés.
+- **Blocage avant publication :** l’API cloud appelle `open_circle_gift_pack`
+  (migration `0054`). Le plan initial dit qu’elle n’a pas été appliquée ; la
+  note Claude rapporte une application manuelle sur la base d’essai, sans
+  prouver l’état Production. Le contrôle `npm run supabase:verify` crée bien
+  le cluster jetable, mais PostgreSQL refuse de démarrer sous le compte Windows
+  Administrateur. Ne pas pousser vers `main`/Vercel tant que l’état de la base
+  utilisée par Production n’est pas établi ; si 0054 manque, son application
+  exige l’accord de Malik. Aucun accès ou changement de base réelle n’a été fait.
+- Vérifications sur la fusion locale : unitaires ciblés 26/26, écrans 14/14,
+  suite unitaire 1 202/1 202 en excluant `src/lib/push-essai.test.ts`,
+  `npm run typecheck`, lint ciblé et `node scripts/check-jargon.mjs` réussis.
+  Les 11 tests exclus échouent dans cet environnement Windows lors de la
+  création de faux dépôts Git temporaires, sans rapport avec ce lot.
+  `npm run build -- --webpack` réussit avec six routes statiques ; le cloud
+  guard signale l’absence locale des deux variables Supabase, donc ce build ne
+  vérifie pas le parcours connecté. Playwright local et téléphone non testés.
+  La CI GitHub n’a pas été lancée pour ce diff.
+- Le SVG `public/packs/memes-opening.svg` et `.codex-remote-attachments/`
+  restent inchangés, non indexés et hors commit. La fusion locale est commitée
+  dans la branche Codex ; aucun push, déploiement Vercel ni déploiement SQL.
+- Le SHA du commit contenant ce checkpoint se relève avec
+  `git log -1 --format=%H -- docs/agent-handoff.md`.
+
 ## Correction du nom MEMES sur Drop — 17 octobre 2026
 
 - Demande de Malik : retirer l’accent dans le nom du booster affiché sur

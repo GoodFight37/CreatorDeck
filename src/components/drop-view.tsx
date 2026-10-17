@@ -26,6 +26,7 @@ import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
+import { useCircle } from "@/lib/circle-store";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -115,7 +116,10 @@ export function HomeView({
   useBackHandler(inspectCard !== null, () => setInspectCard(null));
   const findingFocus = usePresentationFocus(inspectCard !== null);
   const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
-  const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, 4);
+  const circle = useCircle();
+  // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
+  const lean = circle.length > 0;
+  const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
   const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
     ?? game.missions.find((mission) => !mission.done)
     ?? game.missions.find((mission) => mission.done && !mission.claimed)
@@ -180,54 +184,8 @@ export function HomeView({
     return top;
   }, [live]);
 
-  return (
-    <div className="view home-view" style={themeStyle}>
-      {/* En-tête concis : zéro blabla marketing */}
-      <header className="drop-intro">
-        <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1>Drop</h1>
-      </header>
-
-      <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
-        disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen} />
-
-      <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
-        <button
-          className="primary-action"
-          onClick={onOpen}
-          disabled={cannotOpen}
-        >
-          {opening ? (
-            <LoaderCircle className="spin" size={19} />
-          ) : needsAccount ? (
-            <Zap size={19} />
-          ) : (
-            <Zap size={19} />
-          )}
-          <span>
-            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
-          </span>
-          {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
-        </button>
-        {!needsAccount ? (
-          <div className="stock-row">
-            <div>
-              <span>Ta réserve</span>
-              <strong>{stock}<small>/{pack.max}</small></strong>
-            </div>
-            {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
-            {promoPacks > 0 ? (
-              <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
-                {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
-              </span>
-            ) : null}
-            {nextAt !== null ? (
-              <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
-            ) : null}
-          </div>
-        ) : null}
-        <details className="drop-secondary-details">
-          <summary>Plus d’infos</summary>
+  const reserveControls = (
+    <>
           <button type="button" className="pity-row now" onClick={onShowOdds}
             aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
             <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}</span>
@@ -266,8 +224,101 @@ export function HomeView({
               </span>
             </div>
           </details>
-        </details>
+    </>
+  );
+
+  const findingsSection = (
+      <section className="section-block drop-findings">
+        <div className="section-heading">
+          <div>
+            <span className="drop-section-kicker">LES NOMS QUI RESTENT</span>
+            <h2>Dernières trouvailles</h2>
+          </div>
+          <button type="button" className="drop-binder-link" onClick={onShowCollection}>Mon Binder <ChevronRight size={15} /></button>
+        </div>
+        {latest.length ? (
+          <div className="mini-card-row">
+            {latest.map((card) => {
+              const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
+              return creator ? (
+                <CreatorCard
+                  key={card.id}
+                  creator={creator}
+                  variant={card.variant}
+                  compact
+                  onClick={() => setInspectCard(card)}
+                  liveStream={liveFor(live, creator.login, now)}
+                />
+              ) : null;
+            })}
+          </div>
+        ) : (
+          <div className="empty-collection">
+            <Layers3 size={25} />
+            <div>
+              <strong>Ton classeur de {CATALOG_SIZE} streameurs t’attend</strong>
+              <span>Ouvre ton premier booster pour lancer la collection.</span>
+            </div>
+          </div>
+        )}
       </section>
+  );
+
+  return (
+    <div className="view home-view" style={themeStyle}>
+      {/* En-tête concis : zéro blabla marketing */}
+      <header className="drop-intro">
+        <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+        <h1>Drop</h1>
+      </header>
+
+      <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
+        disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
+        universes={lean ? ["live"] : undefined} />
+
+      <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
+        <button
+          className="primary-action"
+          onClick={onOpen}
+          disabled={cannotOpen}
+        >
+          {opening ? (
+            <LoaderCircle className="spin" size={19} />
+          ) : needsAccount ? (
+            <Zap size={19} />
+          ) : (
+            <Zap size={19} />
+          )}
+          <span>
+            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
+          </span>
+          {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
+        </button>
+        {!needsAccount ? (
+          <div className="stock-row">
+            <div>
+              <span>Ta réserve</span>
+              <strong>{stock}<small>/{pack.max}</small></strong>
+            </div>
+            {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
+            {promoPacks > 0 ? (
+              <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
+                {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
+              </span>
+            ) : null}
+            {nextAt !== null ? (
+              <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
+            ) : null}
+          </div>
+        ) : null}
+        {!lean ? (
+          <details className="drop-secondary-details">
+            <summary>Plus d’infos</summary>
+            {reserveControls}
+          </details>
+        ) : null}
+      </section>
+      {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
         <button className="primary-action" type="button" disabled={memeCannotOpen}
           onClick={() => prepareBooster("memes")}>
@@ -309,6 +360,8 @@ export function HomeView({
         </button>
       ) : null}
 
+      {!lean ? (
+        <>
       {/* Priorités & Missions compactées sans doublon */}
       <section className="drop-priorities" aria-label="À jouer aujourd’hui">
         {dailyMission?.id === "tribunal" ? (
@@ -487,8 +540,12 @@ export function HomeView({
         </button>
       ) : null}
 
+        </>
+      ) : null}
+
       <details className="drop-secondary">
-        <summary>Progression, taux et activités <ChevronRight size={15} /></summary>
+        <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
+        {lean ? reserveControls : null}
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (
@@ -509,7 +566,7 @@ export function HomeView({
           </button>
         ) : null}
 
-        {arenaLine ? (
+        {arenaLine && !lean ? (
           <button
             type="button"
             className={`pity-row arena-row ${arenaLine.tone}`}
@@ -523,40 +580,7 @@ export function HomeView({
         ) : null}
       </details>
 
-      <section className="section-block drop-findings">
-        <div className="section-heading">
-          <div>
-            <span className="drop-section-kicker">LES NOMS QUI RESTENT</span>
-            <h2>Dernières trouvailles</h2>
-          </div>
-          <button type="button" className="drop-binder-link" onClick={onShowCollection}>Mon Binder <ChevronRight size={15} /></button>
-        </div>
-        {latest.length ? (
-          <div className="mini-card-row">
-            {latest.map((card) => {
-              const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
-              return creator ? (
-                <CreatorCard
-                  key={card.id}
-                  creator={creator}
-                  variant={card.variant}
-                  compact
-                  onClick={() => setInspectCard(card)}
-                  liveStream={liveFor(live, creator.login, now)}
-                />
-              ) : null;
-            })}
-          </div>
-        ) : (
-          <div className="empty-collection">
-            <Layers3 size={25} />
-            <div>
-              <strong>Ton classeur de {CATALOG_SIZE} streameurs t’attend</strong>
-              <span>Ouvre ton premier booster pour lancer la collection.</span>
-            </div>
-          </div>
-        )}
-      </section>
+      {!lean ? findingsSection : null}
       {inspectCard && inspectedCreator ? createPortal(
         <div ref={findingFocus} tabIndex={-1}>
           <CardInspectModal creator={inspectedCreator} variant={inspectCard.variant}

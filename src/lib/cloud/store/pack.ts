@@ -100,12 +100,12 @@ export function packActions(ctx: CloudStoreContext) {
       } catch (error) { return ctx.cloudRefusal(error, "Cadeau indisponible."); }
     },
 
-    async openReturnGiftPack(): Promise<PackOpenOutcome> {
+    async openReturnGiftPack(circle?: readonly string[]): Promise<PackOpenOutcome> {
       const api = ctx.resolve();
       if (!api?.session()) return { status: "unavailable", reason: "no-session", message: "Connecte-toi pour ouvrir le cadeau." };
       try {
         ctx.publish({ busy: true });
-        const result = await api.openReturnGiftPack();
+        const result = await api.openReturnGiftPack(circle);
         await this.refreshOnboarding();
         const local = ctx.deps.readState();
         if (!local || result.cards.length !== 5) throw new CloudError("Le tirage cadeau est incomplet.", "invalid_response", 0);
@@ -117,6 +117,7 @@ export function packActions(ctx: CloudStoreContext) {
           obtainedAt: ctx.deps.now(),
           rareDrop: card.rareDrop,
           isNew: !local.cards.some((owned) => owned.creatorSlug === card.creatorSlug),
+          ...(card.circleRarity ? { displayRarity: card.circleRarity as "common"|"uncommon"|"rare"|"epic"|"legendary" } : {}),
         }));
         const remoteSave = result.save;
         const remote = remoteSave ? sanitizeState(remoteSave.state, ctx.deps.now()) : null;

@@ -105,25 +105,24 @@ describe("les écrans", () => {
     banc.fermer();
   });
 
-  it("présente le tutoriel court avant l'accueil et affiche le cadeau distinct ensuite", async () => {
+  it("pose une seule question avant l'accueil, puis range la réponse sur l'appareil", async () => {
     window.localStorage.setItem("creatordeck-tutorial:local", "done");
     await application();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(document.body.textContent).not.toContain("CREATORDECK · PREMIERS PAS");
+    expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
     banc.vider();
     window.localStorage.clear();
     await application();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(document.body.textContent).toContain("CREATORDECK · PREMIERS PAS");
-    expect(document.body.textContent).toContain("1 / 3");
-    banc.appuyer("Continuer");
-    expect(document.body.textContent).toContain("Construis ton Binder");
-    banc.appuyer("Continuer");
-    expect(document.body.textContent).toContain("Reviens au Drop");
-    banc.appuyer("Terminer");
+    expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
+    expect(document.body.textContent).not.toContain("Construis ton Binder");
+    expect((document.querySelector(".circle-actions .welcome-primary") as HTMLButtonElement).disabled).toBe(true);
+    banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
+    banc.appuyer("Voir mon premier booster");
     expect(document.body.textContent).not.toContain("Un cadeau t’attend");
     expect(window.localStorage.getItem("creatordeck-tutorial:local")).toBe("done");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
+    expect(JSON.parse(window.localStorage.getItem("creatordeck.circle.v1") ?? "{}").slugs).toHaveLength(5);
   });
 
   it("rejoue le tutoriel après une réinitialisation et mémorise sa nouvelle fin", async () => {
@@ -133,14 +132,12 @@ describe("les écrans", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     banc.appuyer("Toi");
     banc.appuyer("Réinitialiser la progression");
-    expect(document.body.textContent).toContain("CREATORDECK · PREMIERS PAS");
-    expect(document.body.textContent).toContain("1 / 3");
+    expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBeNull();
-    banc.appuyer("Continuer");
-    banc.appuyer("Continuer");
-    banc.appuyer("Terminer");
+    banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
+    banc.appuyer("Voir mon premier booster");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
-    expect(document.body.textContent).not.toContain("CREATORDECK · PREMIERS PAS");
+    expect(document.body.textContent).not.toContain("Quelles chaînes regardes-tu déjà ?");
     confirm.mockRestore();
   });
 

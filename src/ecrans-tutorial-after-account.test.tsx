@@ -33,14 +33,13 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
   connection.onboarding = { tutorialCompleted: false, giftAvailable: false, giftClaimed: false, giftRemaining: 0, message: "" };
   await banc.rendre(<CreatorDeckApp />);
   expect(document.querySelector('[role="dialog"][aria-label="Mon compte"]')).toBeTruthy();
-  expect(document.querySelector('[role="dialog"][aria-label="Tutoriel CreatorDeck"]')).toBeNull();
+  expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
 
   banc.fermer();
-  expect(document.querySelector('[role="dialog"][aria-label="Tutoriel CreatorDeck"]')).toBeTruthy();
-  banc.appuyer("Continuer");
-  banc.appuyer("Continuer");
-  await act(async () => { banc.appuyer("Terminer"); });
+  expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeTruthy();
+  banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
+  await act(async () => { banc.appuyer("Voir mon premier booster"); });
   expect(cloudStore.completeTutorial).toHaveBeenCalledOnce();
-  expect(document.querySelector('[role="dialog"][aria-label="Tutoriel CreatorDeck"]')).toBeNull();
+  expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
   expect(document.querySelector(".app-shell")?.getAttribute("data-current-tab")).toBe("home");
 });

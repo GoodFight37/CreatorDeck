@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-17-mes-chaines-premier-booster", date: "2026-10-17", title: "Ton premier booster vient de tes chaînes",
+    summary: "Choisis les chaînes que tu regardes et retrouve-les dans ton premier booster cadeau.",
+    sections: [{ title: "Première session", items: [
+      "Indique de 5 à 15 chaînes que tu regardes avant ton premier booster.",
+      "Les cinq cartes du premier booster cadeau viennent de cette sélection. Sa dernière carte est Rare ou mieux selon la rareté de ton cercle ; la rareté enregistrée et les règles de tirage restent inchangées.",
+      "Le Drop se concentre ensuite sur ton booster, son ouverture, tes cinq cartes récentes et les informations secondaires.",
+    ] }],
+  },
+  {
     id: "2026-10-17-drop-nom-memes-sans-accent", date: "2026-10-17", title: "Le nom MEMES reste sans accent sur Drop",
     summary: "Le bouton et la réserve affichent le nom MEMES comme le sélecteur de booster.",
     sections: [{ title: "Drop", items: [

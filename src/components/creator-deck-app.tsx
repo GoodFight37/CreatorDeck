@@ -6,6 +6,8 @@ import { BookOpen, CircleUserRound, Hammer, X, Zap } from "lucide-react";
 import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
 import { CollectionView } from "@/components/binder-view";
+import { CircleOnboarding } from "@/components/circle-onboarding";
+import { useCircle, writeCircle } from "@/lib/circle-store";
 import { HomeView } from "@/components/drop-view";
 import { MissionsView } from "@/components/missions-view";
 import { ProfileView } from "@/components/profile-view";
@@ -388,6 +390,8 @@ export function CreatorDeckApp() {
 
   const [tutorialStep, setTutorialStep] = useState<number | null>(null);
   const [giftBusy, setGiftBusy] = useState(false);
+  const circle = useCircle();
+  const [circleBusy, setCircleBusy] = useState(false);
   const welcomeKey = `creatordeck-tutorial:${cloud.userId ?? "local"}`;
   const [welcomeMarker, setWelcomeMarker] = useState(() => ({ key: welcomeKey, done: readLocalMarker(welcomeKey) }));
   if (welcomeMarker.key !== welcomeKey) setWelcomeMarker({ key: welcomeKey, done: readLocalMarker(welcomeKey) });
@@ -452,6 +456,16 @@ export function CreatorDeckApp() {
     setTab("home");
   }
 
+  /** La réponse à « Quelles chaînes regardes-tu ? » remplace les trois écrans du tutoriel. */
+  async function confirmCircle(slugs: string[]) {
+    if (circleBusy) return;
+    setCircleBusy(true);
+    try {
+      if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+      await finishWelcomeTutorial();
+    } finally { setCircleBusy(false); }
+  }
+
   async function claimAndOpenWelcomeGift() {
     if (giftBusy) return;
     setGiftBusy(true);
@@ -464,7 +478,7 @@ export function CreatorDeckApp() {
       }
       setTutorialStep(null);
       setWelcomeMarker({ key: welcomeKey, done: true });
-      const result = await cloudStore.openReturnGiftPack();
+      const result = await cloudStore.openReturnGiftPack(circle.length && (cloud.onboarding?.giftRemaining ?? 0) >= 5 ? circle : undefined);
       if (result.status !== "drawn") { showError(result.message); return; }
       setWelcomeGiftReveal(true);
       setRevealKind("live");
@@ -746,29 +760,16 @@ export function CreatorDeckApp() {
   return (
     <main className="app-shell" data-current-tab={tab}>
       {showTutorial ? (
-        <div className="welcome-overlay" role="dialog" aria-modal="true" aria-label="Tutoriel CreatorDeck">
-          <section className="welcome-card">
-            <span className="welcome-eyebrow">CREATORDECK · PREMIERS PAS</span>
-            <span className="welcome-count">{(tutorialStep ?? 0) + 1} / 3</span>
-            <h1>{["Ouvre un booster", "Construis ton Binder", "Reviens au Drop"][tutorialStep ?? 0]}</h1>
-            <p>{[
-              "Déchire un booster pour découvrir cinq créateurs. La dernière carte garde son moment de révélation.",
-              "Chaque tirage rejoint ta collection. Les doublons peuvent ensuite servir à façonner ta collection.",
-              "Tes missions et tes amis t’attendent dans les autres espaces. Le cadeau de reprise arrive juste après ce tutoriel.",
-            ][tutorialStep ?? 0]}</p>
-            <div className="welcome-actions">
-              {(tutorialStep ?? 0) > 0 ? <button type="button" className="welcome-secondary" onClick={() => setTutorialStep((step) => Math.max(0, (step ?? 1) - 1))}>Retour</button> : null}
-              <button type="button" className="welcome-primary" onClick={() => (tutorialStep ?? 0) < 2 ? setTutorialStep((tutorialStep ?? 0) + 1) : void finishWelcomeTutorial()}>
-                {(tutorialStep ?? 0) < 2 ? "Continuer" : "Terminer"}
-              </button>
-            </div>
-          </section>
-        </div>
+        <CircleOnboarding
+          initial={circle}
+          busy={circleBusy}
+          onConfirm={(slugs) => void confirmCircle(slugs)}
+        />
       ) : null}
       {welcomeSeen && cloud.userId && cloud.onboarding?.giftAvailable && !drawnCards.length ? (
         <div className="welcome-gift-card" role="status">
-          <div><strong>Un cadeau t’attend</strong><p>{cloud.onboarding.message || "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters."}</p></div>
-          <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : cloud.onboarding.giftClaimed ? `Ouvrir un booster cadeau · ${cloud.onboarding.giftRemaining} restants` : "Réclamer mes 5 boosters"}</button>
+          <div><strong>Tes boosters de bienvenue</strong><p>{circle.length ? "Le premier est tiré dans tes chaînes." : "Cinq boosters t’attendent."}</p></div>
+          <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : cloud.onboarding.giftClaimed ? `Ouvrir un booster cadeau · ${cloud.onboarding.giftRemaining} restants` : "Ouvrir mon premier booster"}</button>
         </div>
       ) : null}
       <TopBar game={game} />

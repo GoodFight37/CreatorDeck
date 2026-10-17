@@ -3,15 +3,23 @@ import { readCloudConfig } from "../src/lib/cloud/config";
 import { expect, type Page } from "@playwright/test";
 export { expect, test } from "@playwright/test";
 
-/** Préparer le joueur via les trois étapes réelles, après hydratation. */
+/** Les cinq chaînes que les scénarios nomment : les cinq premières du catalogue. */
+export const E2E_CIRCLE = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"] as const;
+
+/** Répondre à « Quelles chaînes regardes-tu déjà ? » comme le ferait un joueur. */
+export async function answerCircle(dialog: ReturnType<Page["getByRole"]>): Promise<void> {
+  await dialog.getByLabel("Nom d’une chaîne").fill(E2E_CIRCLE.join(", "));
+  await dialog.getByRole("button", { name: "Ajouter", exact: true }).click();
+  await dialog.getByRole("button", { name: "Voir mon premier booster", exact: true }).click();
+}
+
+/** Préparer le joueur via la vraie question d'accueil, après hydratation. */
 export async function gotoDeck(page: Page, tutorial = true): Promise<void> {
   await page.goto("/");
-  const dialog = page.getByRole("dialog", { name: "Tutoriel CreatorDeck" });
+  const dialog = page.getByRole("dialog", { name: "Mes chaînes" });
   if (tutorial) {
     await expect(dialog).toBeVisible();
-    await dialog.getByRole("button", { name: "Continuer", exact: true }).click();
-    await dialog.getByRole("button", { name: "Continuer", exact: true }).click();
-    await dialog.getByRole("button", { name: "Terminer", exact: true }).click();
+    await answerCircle(dialog);
   }
   await expect(dialog).toHaveCount(0);
 }

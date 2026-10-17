@@ -44,7 +44,7 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 > [`docs/historique-livraisons.md`](docs/historique-livraisons.md), et la
 > **feuille de route** dans [`docs/roadmap.md`](docs/roadmap.md).
 
-## État actuel — 16 octobre 2026
+## État actuel — 17 octobre 2026
 
 Malik utilise **la version web de CreatorDeck sur Vercel**, connectée à
 Supabase. GitHub `main` alimente le site ; les changements deviennent visibles
@@ -61,6 +61,15 @@ Le catalogue Mèmes distribué compte 2 150 cartes illustrées : la fiche
 « Carte supprimée » sans illustration a été retirée du client et du serveur.
 La migration `0053` a été vérifiée en CI, appliquée sur Supabase, puis contrôlée
 après application. Voir la [source et l'état détaillé](docs/catalogue-memes-source.md).
+
+Le lot « Mes chaînes » (étape 1 du [plan de première session](docs/plan-premiere-session.md))
+est intégré au checkout Codex : un nouveau joueur choisit 5 à 15 chaînes, puis
+son premier booster cadeau est tiré dans cette sélection. La rareté propre au
+cercle sert à l'affichage ; la rareté enregistrée et l'économie restent celles
+du catalogue. Le parcours existant des joueurs déjà accueillis n'a pas encore
+d'écran pour créer ou modifier leur cercle. Le chemin connecté dépend de la
+migration `0054` ; son état sur la base Production n'est pas confirmé, donc le
+lot n'est pas encore annoncé comme publié. Voir la [passation](docs/agent-handoff.md).
 
 Le rituel d'ouverture est publié sur Vercel (`aabd4169`) et vérifié dans Chromium : consignes « TIRE /
 RELÂCHE », extraction des cinq dos à 1,2 s, pause d'impact et lumière renforcée

@@ -205,7 +205,7 @@ test("avec le serveur : cartes serveur et missions locales synchronisées sans �
   );
 
   await openDeck(page, false);
-  await expect(page.getByRole("dialog", { name: "Tutoriel CreatorDeck" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toHaveCount(0);
   await page.getByRole("button", { name: "Ouvrir le booster" }).click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible({ timeout: 30_000 });
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();

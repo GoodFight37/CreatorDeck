@@ -1,8 +1,11 @@
-import { expect, test, cloudUrl } from "./fixtures";
+import { answerCircle, expect, test, cloudUrl } from "./fixtures";
 
 const SESSION_KEY = "creatordeck.cloud.session";
 const USER_ID = "11111111-1111-4111-8111-111111111111";
+// Le serveur peut encore envoyer l'ancien message : le client ne l'affiche plus.
 const GIFT_MESSAGE = "Malik a décidé de réinitialiser la progression de tout le monde pour implémenter le tutoriel et il vous offre 5 boosters.";
+const WELCOME_TITLE = "Tes boosters de bienvenue";
+const FIRST_BUTTON = "Ouvrir mon premier booster";
 
 test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'ouvrent sans nouveau claim", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario demande le cloud configuré ; exécuté avec les RPC simulées dans le job cloud.");
@@ -45,7 +48,7 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
       giftClaimed = true;
       return answer({ ok: true });
     }
-    if (name === "open_return_gift_pack") {
+    if (name === "open_return_gift_pack" || name === "open_circle_gift_pack") {
       if (!tutorialCompleted || !giftClaimed || giftRemaining <= 0) return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "Cadeau indisponible." }) });
       const cards = Array.from({ length: 5 }, (_, index) => ({
         creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][index],
@@ -76,24 +79,23 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
   }, [SESSION_KEY, USER_ID] as const);
 
   await page.goto("/");
-  const tutorial = page.getByRole("dialog", { name: "Tutoriel CreatorDeck" });
+  const tutorial = page.getByRole("dialog", { name: "Mes chaînes" });
   await expect(tutorial).toBeVisible();
-  await expect(page.getByRole("status").filter({ hasText: GIFT_MESSAGE })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Réclamer mes 5 boosters" })).toHaveCount(0);
+  await expect(page.getByRole("status").filter({ hasText: WELCOME_TITLE })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: FIRST_BUTTON })).toHaveCount(0);
 
-  await tutorial.getByRole("button", { name: "Continuer", exact: true }).click();
-  await tutorial.getByRole("button", { name: "Continuer", exact: true }).click();
-  await tutorial.getByRole("button", { name: "Terminer", exact: true }).click();
+  await answerCircle(tutorial);
 
-  const gift = page.getByRole("status").filter({ hasText: GIFT_MESSAGE });
+  const gift = page.getByRole("status").filter({ hasText: WELCOME_TITLE });
   await expect(gift).toBeVisible();
+  await expect(gift).not.toContainText("Malik");
   expect(calls.indexOf("complete_tutorial")).toBeGreaterThan(-1);
-  await expect(gift.getByRole("button", { name: "Réclamer mes 5 boosters" })).toBeVisible();
+  await expect(gift.getByRole("button", { name: FIRST_BUTTON })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ouvrir le booster" })).toBeEnabled();
 
   for (let opened = 1; opened <= 5; opened += 1) {
     const giftButton = gift.getByRole("button");
-    await expect(giftButton).toHaveText(opened === 1 ? "Réclamer mes 5 boosters" : `Ouvrir un booster cadeau · ${6 - opened} restants`);
+    await expect(giftButton).toHaveText(opened === 1 ? FIRST_BUTTON : `Ouvrir un booster cadeau · ${6 - opened} restants`);
     await giftButton.click();
     if (opened === 1) {
       await expect.poll(() => calls.includes("claim_return_gift")).toBe(true);
@@ -120,7 +122,9 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
   expect(giftDraws).toHaveLength(5);
   expect(giftDraws.every((cards) => cards.length === 5)).toBe(true);
   expect(calls.filter((call) => call === "claim_return_gift")).toHaveLength(1);
-  expect(calls.filter((call) => call === "open_return_gift_pack")).toHaveLength(5);
+  // Le premier booster est tiré dans le cercle, les quatre suivants sont ordinaires.
+  expect(calls.filter((call) => call === "open_circle_gift_pack")).toHaveLength(1);
+  expect(calls.filter((call) => call === "open_return_gift_pack")).toHaveLength(4);
   expect(standardPacks).toBe(2);
-  expect(calls.indexOf("claim_return_gift")).toBeLessThan(calls.indexOf("open_return_gift_pack"));
+  expect(calls.indexOf("claim_return_gift")).toBeLessThan(calls.indexOf("open_circle_gift_pack"));
 });

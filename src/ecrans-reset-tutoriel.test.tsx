@@ -35,15 +35,18 @@ it("réinitialise le compte, rejoue le tutoriel puis retrouve les quatre cadeaux
   await banc.monter(<CreatorDeckApp />);
   banc.appuyer("Toi");
   await act(async () => { banc.appuyer("Réinitialiser la progression"); });
-  expect(document.body.textContent).toContain("1 / 3");
+  expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
   expect(document.body.textContent).not.toContain("Ouvrir un booster cadeau");
   expect(window.localStorage.getItem(completionKey)).toBeNull();
-  banc.appuyer("Continuer");
-  banc.appuyer("Continuer");
-  await act(async () => { banc.appuyer("Terminer"); });
-  expect(document.body.textContent).toContain(account.onboarding.message);
+  banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
+  await act(async () => { banc.appuyer("Voir mon premier booster"); });
+  // L'ancien message du serveur n'est plus affiché.
+  expect(document.body.textContent).toContain("Tes boosters de bienvenue");
+  expect(document.body.textContent).not.toContain("Malik");
   expect(document.body.textContent).toContain("Ouvrir un booster cadeau · 4 restants");
   await act(async () => { banc.appuyer("Ouvrir un booster cadeau · 4 restants"); });
   expect(claim).not.toHaveBeenCalled();
   expect(open).toHaveBeenCalledOnce();
+  // Seul le tout premier booster (5 restants) est tiré dans le cercle : ici il en reste 4.
+  expect(open).toHaveBeenCalledWith(undefined);
 });

@@ -348,11 +348,24 @@ export async function claimReturnGift(core: CloudCore): Promise<void> {
   await core.rpc("claim_return_gift", {});
 }
 
-export async function openReturnGiftPack(core: CloudCore): Promise<{ cards: Array<{ creatorSlug: string; rarity: string; variant: string; rareDrop: boolean }>; giftRemaining: number; save: RemoteSaveRow | null }> {
-  const record = asRecord(await core.rpc("open_return_gift_pack", {}));
+export async function openReturnGiftPack(core: CloudCore, circle?: readonly string[]): Promise<{ cards: Array<{ creatorSlug: string; rarity: string; variant: string; rareDrop: boolean; circleRarity?: string }>; giftRemaining: number; save: RemoteSaveRow | null }> {
+  let raw: unknown;
+  if (circle && circle.length) {
+    // Premier booster tiré dans « Mes chaînes » (0054). Si le serveur dit que
+    // le booster de cercle est déjà ouvert, on retombe sur le cadeau ordinaire.
+    try {
+      raw = await core.rpc("open_circle_gift_pack", { p_slugs: [...circle] });
+    } catch (error) {
+      if (!(error instanceof CloudError) || !/déjà ouvert/.test(error.message)) throw error;
+      raw = await core.rpc("open_return_gift_pack", {});
+    }
+  } else {
+    raw = await core.rpc("open_return_gift_pack", {});
+  }
+  const record = asRecord(raw);
   if (!record || !Array.isArray(record.cards)) throw new CloudError("Réponse du cadeau illisible.", "invalid_response", 0);
   return {
-    cards: record.cards.map((item) => { const card = asRecord(item); return { creatorSlug: String(card?.creatorSlug ?? ""), rarity: String(card?.rarity ?? ""), variant: String(card?.variant ?? "standard"), rareDrop: card?.rareDrop === true }; }),
+    cards: record.cards.map((item) => { const card = asRecord(item); return { creatorSlug: String(card?.creatorSlug ?? ""), rarity: String(card?.rarity ?? ""), variant: String(card?.variant ?? "standard"), rareDrop: card?.rareDrop === true, circleRarity: typeof card?.circleRarity === "string" ? card.circleRarity : undefined }; }),
     giftRemaining: Number(record.gift_remaining ?? 0),
     save: parseSaveRow(record.save),
   };

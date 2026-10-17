@@ -1,3 +1,27 @@
+## K-050 — Parcours cloud « Mes chaînes » dépend de la migration 0054 — publication bloquée
+
+Le premier booster cadeau d’un joueur connecté appelle `open_circle_gift_pack`,
+créée par `supabase/migrations/0054_cercle.sql`. La note Claude indique une
+application manuelle sur la base utilisée pour l’essai, tandis que le plan de
+première session décrit `0054` comme non appliquée ; aucun élément ne confirme
+que la base Supabase utilisée par Production possède la fonction. **Gravité :**
+élevée pour le nouveau parcours d’accueil connecté : sans la fonction, son
+ouverture échoue. **Statut :** état Production inconnu, à vérifier avant le
+déploiement. `npm run supabase:verify` n’a pas pu lancer PostgreSQL sur cette
+machine Windows : le compte Administrateur est refusé par PostgreSQL. Aucun
+accès ni écriture en Production n’a été tenté. **Contournement sûr :** différer
+le déploiement jusqu’à vérification de l’état réel ; si la migration manque,
+faire relire puis autoriser son application via le workflow Supabase existant.
+
+## K-051 — Les joueurs déjà accueillis ne peuvent pas définir leur cercle
+
+Après l’étape 1, un joueur qui a déjà terminé son tutoriel et n’a pas de cercle
+garde son Drop actuel, sans entrée « Mes chaînes ». L’écran et l’API disposent
+d’un mode édition, mais le bouton de configuration est reporté à l’étape 3 du
+[plan de première session](plan-premiere-session.md). **Gravité :** faible,
+limitation de découvrabilité, sans perte de progression. Aucun contournement
+dans l’interface actuelle ; le parcours existant reste disponible.
+
 ## Nom du booster accentué de façon incohérente sur Drop — corrigé (17 octobre 2026)
 
 **Reproduction :** sur l’accueil Drop, le sélecteur affichait `MEMES`, mais le

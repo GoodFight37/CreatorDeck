@@ -58,7 +58,7 @@ test("avec le serveur : sablier en ligne, réponse perdue, rejeu unique et rése
     localStorage.setItem("creatordeck.cloud.session", JSON.stringify({ accessToken: "fake-token", refreshToken: "fake-refresh", expiresAt: Date.now() + 3_600_000, userId: user, email: "test@example.invalid" }));
   }, { seed, user: USER });
   await page.goto("/");
-  await expect(page.getByRole("dialog", { name: "Tutoriel CreatorDeck" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toHaveCount(0);
   await page.locator(".drop-secondary-details > summary").click();
   const button = page.getByRole("button", { name: /Utiliser 1 sablier/ });
   await expect(button).toContainText("2");
