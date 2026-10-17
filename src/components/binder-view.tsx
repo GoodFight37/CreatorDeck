@@ -7,6 +7,8 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerE
 import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CardBackEmblem } from "@/components/card-back-emblem";
+import { CircleStrip } from "@/components/circle-strip";
+import { useCircle } from "@/lib/circle-store";
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { BINDER_FAMILIES, BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -72,6 +74,7 @@ export function CollectionView({
   useBackHandler(inspect !== null, () => setInspect(null));
   const live = useLive();
   const now = useNow(60_000);
+  const circle = useCircle();
   const perPage = 12;
 
   const owned = useMemo(() => {
@@ -287,6 +290,16 @@ export function CollectionView({
             <span>{game.stats.totalCards} cartes obtenues</span>
           </div>
         </div>
+      ) : null}
+
+      {circle.length > 0 ? (
+        <CircleStrip
+          circle={circle}
+          owned={new Set(owned.keys())}
+          live={live}
+          now={now}
+          onOpenCollection={() => { setFilter("all"); setPageGoal(null); resetPage(); }}
+        />
       ) : null}
 
       {/* Outils compacts : recherche, tri et puces scrollables en 1 seule ligne */}

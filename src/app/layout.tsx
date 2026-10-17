@@ -17,6 +17,7 @@ import "./booster-premium.css";
 import "./reveal-premium.css";
 import "./booster-continuity.css";
 import "./drop-binder.css";
+import "./stage.css";
 
 // Titre et description suivent le périmètre du catalogue (FR ou monde) : en
 // changer ne demande aucune retouche de ce fichier.

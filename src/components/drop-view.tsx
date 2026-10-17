@@ -18,7 +18,7 @@ import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
-import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS } from "@/lib/catalog";
+import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS, creatorImage } from "@/lib/catalog";
 import { formatViewers, liveFor } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -27,6 +27,7 @@ import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
 import { useCircle } from "@/lib/circle-store";
+import { CircleStrip } from "@/components/circle-strip";
 
 function formatCountdown(date: number | null, now: number) {
   if (!date) return "Réserve pleine";
@@ -117,6 +118,9 @@ export function HomeView({
   const findingFocus = usePresentationFocus(inspectCard !== null);
   const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const circle = useCircle();
+  const ownedSlugs = useMemo(() => new Set(game.cards.map((card) => card.creatorSlug)), [game.cards]);
+  const haloCreator = circle.length ? CREATOR_BY_SLUG.get(circle[0]) : undefined;
+  const haloImage = haloCreator ? creatorImage(haloCreator) : null;
   // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
   const lean = circle.length > 0;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
@@ -265,12 +269,18 @@ export function HomeView({
   );
 
   return (
-    <div className="view home-view" style={themeStyle}>
+    <div className={`view home-view${lean ? " is-lean" : ""}`} style={themeStyle}>
+      {lean ? (
+        // La chaîne préférée du joueur éclaire la scène : son visage, flou, derrière le pack.
+        <div className="stage-halo" aria-hidden="true" style={haloImage ? { backgroundImage: `url(${haloImage})` } : undefined} />
+      ) : null}
       {/* En-tête concis : zéro blabla marketing */}
-      <header className="drop-intro">
-        <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
-        <h1>Drop</h1>
-      </header>
+      {lean ? <h1 className="sr-only">Drop</h1> : (
+        <header className="drop-intro">
+          <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+          <h1>Drop</h1>
+        </header>
+      )}
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
@@ -318,6 +328,9 @@ export function HomeView({
           </details>
         ) : null}
       </section>
+      {lean ? (
+        <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} />
+      ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
         <button className="primary-action" type="button" disabled={memeCannotOpen}
