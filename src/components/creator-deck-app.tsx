@@ -473,12 +473,12 @@ export function CreatorDeckApp() {
     setTab("home");
   }
 
-  /** La réponse à « Quelles chaînes regardes-tu ? » remplace les trois écrans du tutoriel. */
+  /** Le premier booster, avec ou sans chaînes nommées (0058 : zéro est valide). */
   async function confirmCircle(slugs: string[]) {
     if (circleBusy) return;
     setCircleBusy(true);
     try {
-      if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+      if (!writeCircle(slugs)) { showError("15 chaînes différentes au maximum."); return; }
       // D-143 : un compte connecté garde aussi son cercle en ligne (jamais bloquant).
       void cloudStore.pushCircle(slugs);
       await finishWelcomeTutorial();
@@ -487,7 +487,7 @@ export function CreatorDeckApp() {
 
   /** Enregistre un cercle modifié : seulement sur l'appareil, comme à l'étape 1. */
   function saveEditedCircle(slugs: string[]) {
-    if (!writeCircle(slugs)) { showError("Il faut entre 5 et 15 chaînes différentes."); return; }
+    if (!writeCircle(slugs)) { showError("15 chaînes différentes au maximum."); return; }
     void cloudStore.pushCircle(slugs);
     setCircleEditOpen(false);
     showNotice("Tes chaînes sont enregistrées.");

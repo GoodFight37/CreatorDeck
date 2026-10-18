@@ -64,6 +64,7 @@
 import { verifyHourglasses } from "./verify-hourglasses.mjs";
 import { verifyCircleDraw } from "./verify-circle-draw.mjs";
 import { verifyRetention } from "./verify-retention.mjs";
+import { verifyCircleOptional } from "./verify-circle-optional.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7453,6 +7454,8 @@ try {
     sql: await readFile(path.join(MIGRATIONS, "0056_cercle_vrai.sql"), "utf8") });
   await verifyRetention({ client, player, asPlayer, refuses, check,
     sql: await readFile(path.join(MIGRATIONS, "0057_retention.sql"), "utf8") });
+  await verifyCircleOptional({ client, player, asPlayer, refuses, check,
+    sql: await readFile(path.join(MIGRATIONS, "0058_cercle_facultatif.sql"), "utf8") });
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});

@@ -5,30 +5,48 @@ import { CircleOnboarding } from "@/components/circle-onboarding";
 const banc = creerBanc();
 beforeEach(() => banc.preparer());
 afterEach(() => banc.nettoyer());
-const popular = () => document.querySelector<HTMLButtonElement>(".circle-popular");
+const primary = () => document.querySelector<HTMLButtonElement>(".circle-actions .welcome-primary")!;
 function ajouter(text: string) {
   banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, text);
   banc.appuyer("Ajouter");
 }
 
-it("attend trois choix reconnus et ajoute au plus deux suggestions sans confirmer", async () => {
+it("ouvre le premier booster sans aucun nom, sans compteur ni liste remplie à sa place", async () => {
   const confirm = vi.fn();
   await banc.monter(<CircleOnboarding onConfirm={confirm} />);
-  expect(popular()).toBeNull();
-  ajouter("ibai, ninja");
-  expect(popular()).toBeNull();
-  ajouter("rubius");
-  expect(popular()).not.toBeNull();
-  banc.appuyer(/Compléter avec/);
-  expect(document.querySelectorAll(".circle-chip")).toHaveLength(5);
-  expect(confirm).not.toHaveBeenCalled();
+  expect(document.body.textContent).toContain("Ton premier booster t’attend");
+  expect(document.body.textContent).not.toMatch(/encore \d+ pour|Compléter avec|entre 5/);
+  expect(document.querySelector(".circle-popular")).toBeNull();
+  expect(primary().disabled).toBe(false);
+  // Le bouton du booster vient avant le champ facultatif.
+  expect(primary().compareDocumentPosition(document.querySelector(".circle-form")!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   banc.appuyer("Voir mon premier booster");
-  expect(confirm).toHaveBeenCalledWith(expect.arrayContaining(["ibai", "ninja", "rubius"]));
-  const slugs = confirm.mock.calls[0][0] as string[];
-  // Une suggestion automatique ne devient pas un choix personnel après retrait.
-  banc.appuyerNom("Retirer ibai");
-  expect(popular()).toBeNull();
-  expect(slugs).toHaveLength(5);
+  expect(confirm).toHaveBeenCalledWith([]);
+});
+
+it("une seule chaîne suffit ; un visage suggéré tapé devient un choix, un seul à la fois", async () => {
+  const confirm = vi.fn();
+  await banc.monter(<CircleOnboarding onConfirm={confirm} />);
+  const faces = [...document.querySelectorAll<HTMLButtonElement>(".circle-suggestions button")];
+  expect(faces.length).toBeGreaterThan(1);
+  expect(faces[0].querySelector("img")).not.toBeNull();
+  const label = faces[0].getAttribute("aria-label")!;
+  banc.appuyerNom(label);
+  expect(document.querySelectorAll(".circle-chip")).toHaveLength(1);
+  expect(document.querySelector(".circle-chip-name")!.textContent).toBe(label.replace(/^Ajouter /, ""));
+  banc.appuyer("Voir mon premier booster");
+  expect(confirm.mock.calls[0][0]).toHaveLength(1);
+});
+
+it("garde exactement les chaînes nommées, sans compléter jusqu'à cinq", async () => {
+  const confirm = vi.fn();
+  await banc.monter(<CircleOnboarding onConfirm={confirm} />);
+  ajouter("ibai");
+  expect(document.querySelectorAll(".circle-chip")).toHaveLength(1);
+  expect(primary().disabled).toBe(false);
+  ajouter("ninja");
+  banc.appuyer("Voir mon premier booster");
+  expect(confirm).toHaveBeenCalledWith(["ibai", "ninja"]);
 });
 
 it("ne remplace pas un nom inconnu par la première suggestion", async () => {
@@ -38,7 +56,18 @@ it("ne remplace pas un nom inconnu par la première suggestion", async () => {
   expect(document.querySelectorAll(".circle-chip")).toHaveLength(0);
 });
 
-it("refuse cinq entrées si une chaîne est absente du catalogue", async () => {
-  await banc.monter(<CircleOnboarding initial={["ibai", "ninja", "rubius", "xqc", "inconnue-xyz"]} onConfirm={vi.fn()} />);
-  expect(document.querySelector<HTMLButtonElement>(".circle-actions .welcome-primary")!.disabled).toBe(true);
+it("refuse une liste reçue si une chaîne est absente du catalogue", async () => {
+  await banc.monter(<CircleOnboarding initial={["ibai", "inconnue-xyz"]} onConfirm={vi.fn()} />);
+  expect(primary().disabled).toBe(true);
+});
+
+it("en modification, un cercle de cinq déjà enregistré reste tel quel, et vider est permis", async () => {
+  const confirm = vi.fn();
+  await banc.monter(<CircleOnboarding mode="edit" initial={["ibai", "ninja", "rubius", "xqc", "shroud"]} onConfirm={confirm} />);
+  expect(document.querySelectorAll(".circle-chip")).toHaveLength(5);
+  banc.appuyer("Enregistrer");
+  expect(confirm).toHaveBeenLastCalledWith(["ibai", "ninja", "rubius", "xqc", "shroud"]);
+  for (const name of ["ibai", "Ninja", "Rubius", "xQc", "shroud"]) banc.appuyerNom(`Retirer ${name}`);
+  banc.appuyer("Enregistrer");
+  expect(confirm).toHaveBeenLastCalledWith([]);
 });

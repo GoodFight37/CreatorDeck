@@ -30,9 +30,29 @@ describe("le premier booster d'une partie sans serveur", () => {
     expect(second.cards.filter(card => missing.includes(card.creatorSlug)).length).toBeGreaterThanOrEqual(3);
   });
 
-  it("ignore un cercle invalide et tire normalement", () => {
+  it("avec une seule chaîne nommée, la met dans le paquet (dernière carte)", () => {
+    for (let run = 0; run < 40; run += 1) {
+      const result = openPack(createInitialState(T0), T0, { circle: ["ibai"] });
+      expect(result.cards).toHaveLength(5);
+      expect(result.cards.at(-1)!.creatorSlug).toBe("ibai");
+    }
+  });
+
+  it("avec deux chaînes nommées, ces deux-là comptent", () => {
     const result = openPack(createInitialState(T0), T0, { circle: ["kaicenat", "ibai"] });
+    const named = result.cards.filter((card) => ["kaicenat", "ibai"].includes(card.creatorSlug));
+    expect(new Set(named.map((card) => card.creatorSlug))).toEqual(new Set(["kaicenat", "ibai"]));
+    expect(named.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("sans chaîne, n'invente rien : pool mondial", () => {
+    const result = openPack(createInitialState(T0), T0, { circle: [] });
     expect(result.cards).toHaveLength(5);
     expect(result.cards.every((card) => card.displayRarity === undefined)).toBe(true);
+  });
+
+  it("ignore un cercle invalide (doublon ou plus de quinze) et tire normalement", () => {
+    const result = openPack(createInitialState(T0), T0, { circle: ["kaicenat", "kaicenat"] });
+    expect(result.cards).toHaveLength(5);
   });
 });

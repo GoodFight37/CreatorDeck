@@ -1,6 +1,6 @@
 /** Un aperçu fixe, sans écriture de collection, de réserve ou de récompense. */
 import { CREATOR_BY_SLUG, CREATORS, type Rarity } from "@/lib/catalog";
-import { drawCirclePack, isValidCircle } from "@/lib/circle";
+import { CIRCLE_PACK_SIZE, drawCirclePack, isValidCircle } from "@/lib/circle";
 import type { DrawnCard } from "@/lib/game-engine";
 export const TUTORIAL_PACK_KEY = "creatordeck.tutorial-pack.seen";
 export function tutorialPack(): DrawnCard[] {
@@ -15,16 +15,22 @@ export function tutorialPack(): DrawnCard[] {
 }
 
 /**
- * Aperçu d'un joueur sans compte : cinq cartes tirées dans « Mes chaînes »,
- * sans rien écrire. Le serveur fait la même chose avec `open_circle_gift_pack`.
- * La rareté reste celle du catalogue, comme dans la collection.
+ * Aperçu d'un joueur sans compte, sans rien écrire. Cinq noms ou plus : cinq
+ * cartes tirées dans « Mes chaînes ». De un à quatre : ces chaînes-là, la
+ * préférée en dernière carte, complétées par le paquet tutoriel. Aucun nom :
+ * le paquet tutoriel. La rareté reste celle du catalogue.
  */
 export function circlePreviewPack(circle: readonly string[]): DrawnCard[] {
-  if (!isValidCircle(circle)) return tutorialPack();
-  return drawCirclePack(circle).map((card, i) => ({
-    id: `circle-${i}-${card.creatorSlug}`,
-    creatorSlug: card.creatorSlug,
-    rarity: CREATOR_BY_SLUG.get(card.creatorSlug)?.rarity ?? card.rarity,
+  const named = circle.filter((slug) => CREATOR_BY_SLUG.has(slug));
+  if (!isValidCircle(circle) || !named.length) return tutorialPack();
+  const cards = named.length >= CIRCLE_PACK_SIZE
+    ? drawCirclePack(named).map((card) => card.creatorSlug)
+    : [...tutorialPack().map((card) => card.creatorSlug).filter((slug) => !named.includes(slug))
+      .slice(0, CIRCLE_PACK_SIZE - named.length), ...named.slice(1), named[0]];
+  return cards.map((creatorSlug, i) => ({
+    id: `circle-${i}-${creatorSlug}`,
+    creatorSlug,
+    rarity: CREATOR_BY_SLUG.get(creatorSlug)!.rarity,
     variant: "standard" as const,
     isNew: false,
     rareDrop: false,

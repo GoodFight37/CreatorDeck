@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-carte-pleine-cercle-facultatif", date: "2026-10-18", title: "Des visages plein cadre, et plus aucun nom obligatoire",
+    summary: "Les portraits remplissent de nouveau la carte, et ton premier booster s’ouvre sans rien taper.",
+    sections: [{ title: "Cartes", items: [
+      "Le visage remplit toute la carte, sans bande noire ; Holo, Gold et Live retrouvent leur reflet.",
+    ] }, { title: "Mes chaînes", items: [
+      "Ton premier booster s’ouvre tout de suite, sans nom à saisir. Ajouter des chaînes reste possible, à ton rythme : une seule suffit pour qu’elle compte dans tes boosters.",
+    ] }],
+  },
+  {
     id: "2026-10-18-cercle-vrai", date: "2026-10-18", title: "Tes boosters gardent tes chaînes en vue",
     summary: "Le Live Drop et les cadeaux t’aident à compléter ton cercle à chaque ouverture.",
     sections: [{ title: "Ton cercle", items: [
