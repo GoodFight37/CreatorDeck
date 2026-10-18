@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { buildManifest } from "../../scripts/apk-manifest.mjs";
 import {
   UPDATE_REPO,
@@ -51,5 +52,14 @@ describe("D-144 : mise à jour de l'APK de test", () => {
     expect(downloadPercent(50, 200)).toBe(25);
     expect(downloadPercent(300, 200)).toBe(100);
     expect(downloadPercent(10, -1)).toBeNull();
+  });
+});
+
+describe("le plugin Android de mise à jour", () => {
+  it("lit versionCode sans dépendre du type Long (bug « Mise à jour invalide »)", () => {
+    const java = readFileSync("android/app/src/main/java/com/creatordeck/app/AppUpdaterPlugin.java", "utf8");
+    // Capacitor : un entier JSON < 2^31 est un Integer ; getLong() le lit comme null.
+    expect(java).not.toMatch(/getLong\("versionCode"\)/);
+    expect(java).toContain('call.getData().optLong("versionCode", -1L)');
   });
 });

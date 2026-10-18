@@ -85,8 +85,10 @@ public class AppUpdaterPlugin extends Plugin {
     public void downloadAndInstall(PluginCall call) {
         String url = call.getString("url");
         String expected = call.getString("sha256");
-        Long minVersion = call.getLong("versionCode");
-        if (url == null || !url.startsWith(ALLOWED_PREFIX) || expected == null || expected.length() != 64 || minVersion == null) {
+        // Un nombre JSON comme 872293 arrive en Integer : PluginCall.getLong()
+        // ne lit que les Long et renverrait null. optLong lit les deux.
+        long minVersion = call.getData().optLong("versionCode", -1L);
+        if (url == null || !url.startsWith(ALLOWED_PREFIX) || expected == null || expected.length() != 64 || minVersion <= 0) {
             call.reject("Mise à jour invalide.");
             return;
         }
