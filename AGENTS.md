@@ -173,6 +173,9 @@ le résultat, le nombre de tests effectivement exécutés et ses limites :
 - statique : `npm run typecheck`, `npm run lint`,
   `node scripts/check-jargon.mjs`, `npm run catalog:ci` ;
 - compilation : `npm run build` ; navigateur : `npm run e2e` ;
+  avant tout push sur `main` qui change des écrans, lancer `npm run e2e` en
+  entier (Chromium Playwright installé localement) ou attendre la CI verte
+  d'une branche : D-148 a cassé dix e2e non relancés ;
 - Android selon la tâche : `npm run android:sync`, puis la cible Gradle adaptée,
   signature/contenu et test sur appareil si l'on affirme le comportement natif.
 
