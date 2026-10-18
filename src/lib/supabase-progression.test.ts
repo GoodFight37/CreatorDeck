@@ -161,7 +161,7 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     // décision), sinon un `v_weights` lointain ferait passer le test.
     const decision = `v_pity + 1 >= ${PITY.threshold} or v_jackpot then`;
     const garantie = `v_weights := '{"legendary": 1}'::jsonb;`;
-    const debutPoids = CODE_SERIE.indexOf(decision);
+    const debutPoids = CODE_SERIE.lastIndexOf(decision);
     expect(debutPoids).toBeGreaterThan(-1);
     expect(CODE_SERIE.slice(debutPoids, debutPoids + 240)).toContain(garantie);
   });

@@ -89,9 +89,9 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
     const derniere = derniereDefinition("open_pack");
     const corps = corpsFonction(derniere, "open_pack");
     expect(corps).toMatch(/values \(v_user_id, public\._pack_initial_packs\(\), v_now, 0, v_now\)/);
-    // Et c'est bien `0035` qui porte la dernière définition, avec sa prime de
-    // jetons et la même référence de journée de jeu que les points.
-    expect(derniere).toContain("0035");
+    // Les migrations suivantes doivent conserver les écritures de jetons de
+    // 0035, pas seulement citer son numéro dans leur en-tête.
+    expect(corps).toContain("public._tokens_apply");
     expect(corps).toMatch(/v_tokens_serie := public\._streak_reward_tokens\(v_jour\)/);
     expect(corps).toMatch(/'serie-j' \|\| v_jour::text \|\| '-' \|\| public\._pack_game_day\(v_now\)::text/);
     // La réponse porte les jetons du jour, et l'écran ne les invente pas.

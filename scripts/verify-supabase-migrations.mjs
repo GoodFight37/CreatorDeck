@@ -62,6 +62,7 @@
  *     classement par famille lit `user_cards` sans jamais l'exposer.
  */
 import { verifyHourglasses } from "./verify-hourglasses.mjs";
+import { verifyCircleDraw } from "./verify-circle-draw.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7419,6 +7420,8 @@ try {
   });
 
   console.log("");
+  await verifyCircleDraw({ client, player, asPlayer, refuses, check,
+    sql: await readFile(path.join(MIGRATIONS, "0056_cercle_vrai.sql"), "utf8") });
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});

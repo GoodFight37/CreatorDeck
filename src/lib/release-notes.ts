@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-cercle-vrai", date: "2026-10-18", title: "Tes boosters gardent tes chaînes en vue",
+    summary: "Le Live Drop et les cadeaux t’aident à compléter ton cercle à chaque ouverture.",
+    sections: [{ title: "Ton cercle", items: [
+      "Tant qu’il manque une de tes chaînes, au moins trois cartes sur cinq viennent des chaînes de ton cercle encore absentes. La dernière en fait toujours partie.",
+      "À poids égal, ta préférée passe en premier. S’il ne manque qu’une ou deux chaînes, elles peuvent apparaître plusieurs fois dans le même booster.",
+      "Quand ton cercle est complet, les boosters reprennent le classement mondial.",
+    ] }],
+  },
+  {
     id: "2026-10-18-mise-a-jour-apk", date: "2026-10-18", title: "L’appli se met à jour d’un appui",
     summary: "Sur Android, une nouvelle version s’annonce et s’installe depuis l’appli.",
     sections: [{ title: "Application", items: [
