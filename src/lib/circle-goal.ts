@@ -73,3 +73,11 @@ export function missingPreview(missing: readonly Creator[], shown = 3): string {
   const others = missing.length - shown;
   return `À trouver : ${names}${others > 0 ? ` et ${others} autre${others > 1 ? "s" : ""}` : ""}.`;
 }
+
+/** Le catalogue et craftQuote décident seuls si une carte se fabrique. */
+export function boosterOnlyMessage(creators: readonly Creator[]): string {
+  if (!creators.length) return "";
+  return creators.length === 1
+    ? `${creators[0].displayName} ne se fabrique pas : à tirer en booster, plus souvent pendant son direct.`
+    : `${creators.length} de tes chaînes ne se fabriquent pas : à tirer en booster, plus souvent pendant leur direct.`;
+}

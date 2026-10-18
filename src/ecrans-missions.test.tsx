@@ -17,7 +17,7 @@ describe("missions quotidiennes", () => {
   }
 
   it("compte bien les quatre missions et explique l'action du Tribunal", async () => {
-    await mount();
+    await mount({ ...createInitialState(NOW), createdAt: NOW - 86_400_000 });
     expect(document.querySelectorAll(".day-missions .mission-row")).toHaveLength(4);
     const tribunal = [...document.querySelectorAll(".day-missions .mission-row")]
       .find((row) => row.textContent?.includes("Juge 5 dossiers"));

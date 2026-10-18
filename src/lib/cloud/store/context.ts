@@ -46,6 +46,7 @@ export type CloudStoreContext = {
 
 /** L'ensemble des actions exposées à l'interface. */
 export type CloudStoreActions = {
+  hasOtherPlayers: ReturnType<typeof accountActions>["hasOtherPlayers"];
   requestCode: ReturnType<typeof accountActions>["requestCode"];
   verifyCode: ReturnType<typeof accountActions>["verifyCode"];
   signInAsGuest: ReturnType<typeof accountActions>["signInAsGuest"];

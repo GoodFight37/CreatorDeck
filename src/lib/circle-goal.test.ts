@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { RARITY_META } from "@/lib/catalog";
-import { circleGoal, missingPreview } from "@/lib/circle-goal";
+import { boosterOnlyMessage, circleGoal, missingPreview } from "@/lib/circle-goal";
 
 // ibai : Légendaire · anyme023 : Épique · jeanmassiet : Rare · swehyt : Peu commune · zeusspezial : Commune
 const CIRCLE = ["ibai", "anyme023", "jeanmassiet", "swehyt", "zeusspezial"];
@@ -33,6 +33,15 @@ describe("circleGoal : l'objectif « Ton cercle à compléter »", () => {
     const goal = circleGoal(["kaicenat", "ibai", "ninja", "auronplay", "rubius"], new Set(["ninja"]), 9_999);
     expect(goal.craftTarget).toBeNull();
     expect(goal.boosterOnly).toHaveLength(4);
+    expect(boosterOnlyMessage(goal.boosterOnly)).toContain("à tirer en booster");
+  });
+
+  it("une préférée Commune reste fabricable au prix Commune du catalogue", () => {
+    const circle = ["zeusspezial", ...CIRCLE.filter(slug => slug !== "zeusspezial")];
+    const goal = circleGoal(circle, new Set(), 9999);
+    expect(goal.craftTarget?.creator.rarity).toBe("common");
+    expect(goal.craftTarget?.cost).toBe(RARITY_META.common.craftCost);
+    expect(boosterOnlyMessage(goal.boosterOnly)).toContain("ibai ne se fabrique pas : à tirer");
   });
 
   it("cercle complet ou inconnu : aucune cible", () => {

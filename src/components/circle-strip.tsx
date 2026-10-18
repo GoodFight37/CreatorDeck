@@ -3,14 +3,14 @@
 /**
  * « Ton cercle » : les chaînes que le joueur a nommées, comme une rangée de
  * stories. Une chaîne en direct s'allume et mène à Twitch ; une carte obtenue
- * prend la couleur de sa rareté dans le cercle ; une carte manquante reste
+ * prend la couleur de sa rareté du catalogue ; une carte manquante reste
  * dans l'ombre. Aucune règle de jeu ici : tout vient de ce que le joueur a déjà.
  */
 import Image from "next/image";
 import { useLayoutEffect, useRef } from "react";
 
 import { CREATOR_BY_SLUG, RARITY_META, creatorImage } from "@/lib/catalog";
-import { circleTiers } from "@/lib/circle";
+import { circleLabel } from "@/lib/circle";
 import { canRetryLive, circleLiveState, circleLiveStatusLine, twitchUrl } from "@/lib/circle-live";
 import { liveFor, type LiveSnapshot } from "@/lib/live";
 import { liveStore } from "@/lib/live-store";
@@ -34,11 +34,10 @@ export function CircleStrip({
   /** Ouvrir « Mes chaînes » pour modifier la liste. */
   onEdit?: () => void;
 }) {
-  const tiers = circleTiers(circle);
   const entries = circle
     .map((slug) => {
       const creator = CREATOR_BY_SLUG.get(slug);
-      return creator ? { creator, stream: liveFor(live, creator.login, now), has: owned.has(slug), tier: tiers[slug] } : null;
+      return creator ? { creator, stream: liveFor(live, creator.login, now), has: owned.has(slug), tier: creator.rarity } : null;
     })
     .filter((entry): entry is NonNullable<typeof entry> => entry !== null)
     // Les chaînes en direct d'abord : c'est la raison de regarder cette rangée.
@@ -91,6 +90,7 @@ export function CircleStrip({
                 <Image src={creatorImage(creator)} alt="" width={56} height={56} draggable={false} />
               </span>
               <span className="circle-name">{creator.displayName}</span>
+              <small>{circleLabel(circle, creator.slug)}</small>
               {stream ? <b className="circle-live-tag">En direct</b> : <small>{has ? RARITY_META[tier].label : "À trouver"}</small>}
             </>
           );

@@ -928,9 +928,9 @@ describe("store cloud", () => {
   });
 
   it.each([
-    ["la sauvegarde serveur ne contient pas le gain local", 2, 3],
-    ["la sauvegarde serveur contient déjà le gain local", 3, 3],
-  ])("conserve le sablier local de la série J2 quand %s", async (_case, remoteHourglasses, expected) => {
+    ["la sauvegarde serveur contient le solde initial", 2, 2],
+    ["la sauvegarde serveur contient déjà un autre gain", 3, 3],
+  ])("adopte le booster de série J2 sans ajouter un sablier quand %s", async (_case, remoteHourglasses, expected) => {
     const local = saveWith({
       hourglasses: 2,
       streak: 1,
@@ -958,7 +958,7 @@ describe("store cloud", () => {
       ],
       pity: 0,
       streak: 2,
-      streakReward: { day: 2, points: 0, tokens: 0 },
+      streakReward: { day: 2, points: 0, tokens: 0, packs: 1 },
       save: remoteRow({
         ...local,
         packs: 2,
@@ -974,7 +974,8 @@ describe("store cloud", () => {
 
     expect(outcome.status).toBe("drawn");
     if (outcome.status !== "drawn") throw new Error("tirage attendu");
-    expect(outcome.streakReward).toMatchObject({ day: 2, hourglasses: 1 });
+    expect(outcome.streakReward).toMatchObject({ day: 2, packs: 1, hourglasses: 0 });
+    expect(applied.at(-1)?.packs).toBe(2);
     expect(applied.at(-1)?.hourglasses).toBe(expected);
     expect(getGameView(applied.at(-1)!, T0).player.hourglasses).toBe(expected);
   });

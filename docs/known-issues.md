@@ -1,3 +1,36 @@
+## Rétention punitive et accueil sans cercle encombré — corrigés localement (18 octobre 2026)
+
+Sur la base `3f23ae65`, une absence d'un jour remettait la série à J1, les
+récompenses mêlaient trois monnaies et recyclage/Tribunal arrivaient dès J1.
+Sans cercle, l'ancien mur Tribunal/Scène/Arène réapparaissait. Gravité produit
+moyenne. D-148 : une absence protégée par cycle, booster quotidien J1–J6,
+missions avancées à partir de J2 et trois activités repliées dans Objectifs.
+Les surfaces sociales sans autre joueur proposent une carte du cercle à
+partager ; Last Pack devient consultatif. Tests ciblés et deux parcours
+Chrome 390×844 réussis. Migration locale 0057 préparée, pas appliquée ; essai
+Postgres bloqué par le compte Windows administrateur. Non publié.
+
+## Réserve vide sans action et cercle rempli automatiquement — corrigés localement (18 octobre 2026)
+
+Sur la base `3f23ae65`, avec réserve vide et cercle, l’action principale était
+désactivée (« Recharge en cours »). Le complément des chaînes était proposé
+dès zéro choix et un nom incomplet pouvait être remplacé silencieusement par
+la première suggestion. Gravité produit moyenne. D-147 : action vers un direct
+frais du cercle ou sa rangée, complément limité après trois choix personnels
+reconnus, nom inconnu signalé et cinq chaînes réelles distinctes requises.
+37 tests d’écrans ciblés et typecheck réussis. Local uniquement, non publié ;
+pas de validation téléphone. Sablier conservé dans les détails de réserve.
+
+## La préférée changeait de rareté après sa révélation — corrigé localement (18 octobre 2026)
+
+Sur le code publié `3f23ae65`, les métadonnées de cercle remplaçaient la rareté
+de la carte pendant la révélation (cadre, nom, effets et son), mais pas dans
+la collection. Gravité produit élevée : une préférée Commune pouvait être
+annoncée Légendaire. D-146 : substitution retirée, rareté catalogue unique et
+signe de cercle commun. Tests avec une vraie Commune et une ancienne
+`displayRarity: legendary`, comparée à son Binder, plus vérification du son.
+Correction locale uniquement ; aucun SQL, commit ou déploiement.
+
 ## Le cercle disparaissait des tirages après le premier cadeau — corrigé et publié (18 octobre 2026)
 
 Sur `main` `2fa29aaa`, seul le premier cadeau utilise 0054 ; les cadeaux

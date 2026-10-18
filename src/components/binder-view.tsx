@@ -9,7 +9,8 @@ import { ArrowDownWideNarrow, BookOpen, ChevronLeft, ChevronRight, Search, X } f
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CircleStrip } from "@/components/circle-strip";
 import { useCircle } from "@/lib/circle-store";
-import { circleGoal, missingPreview } from "@/lib/circle-goal";
+import { boosterOnlyMessage, circleGoal, missingPreview } from "@/lib/circle-goal";
+import { circleLabel } from "@/lib/circle";
 import { CreatorCard } from "@/components/creator-card";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { BINDER_FAMILIES, BINDER_COLLECTION_BY_ID, binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
@@ -495,6 +496,7 @@ export function CollectionView({
                     <strong>{creator.displayName}</strong>
                     <small>{RARITY_META[creator.rarity].label}{!item ? " · À découvrir" : item.bestVariant !== "standard" ? ` · ${VARIANT_META[item.bestVariant].label}` : ""}</small>
                   </span>
+                  {circleLabel(circle, creator.slug) ? <small>{circleLabel(circle, creator.slug)}</small> : null}
                 </div>
               );
             })}
@@ -564,9 +566,7 @@ export function CollectionView({
           ) : null}
           {goal.boosterOnly.length ? (
             <p className="binder-circle-booster">
-              {goal.boosterOnly.length === 1
-                ? `${goal.boosterOnly[0].displayName} ne se fabrique pas : sa carte se tire en booster, et tombe plus souvent pendant son direct.`
-                : `${goal.boosterOnly.length} de tes chaînes ne se fabriquent pas : leurs cartes se tirent en booster, et tombent plus souvent pendant leur direct.`}
+              {boosterOnlyMessage(goal.boosterOnly)}
             </p>
           ) : null}
         </section>

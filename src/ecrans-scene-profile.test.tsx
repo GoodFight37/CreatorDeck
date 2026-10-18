@@ -6,6 +6,7 @@ import { createInitialState, getGameView } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
 import { CREATORS } from "@/lib/catalog";
 import { HomeView } from "@/components/drop-view";
+import { MissionsView } from "@/components/missions-view";
 import { ProfileView } from "@/components/profile-view";
 import { runBackHandler } from "@/lib/back-stack";
 
@@ -44,6 +45,14 @@ describe("statut Scène et identité de collectionneur", () => {
     return { onOpen, onShowInbox, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
 
+  async function objectives() {
+    const onOpen = vi.fn(); const onShowTribunal = vi.fn();
+    await banc.monter(<MissionsView game={getGameView(createInitialState(NOW), NOW)}
+      onOpenScene={onOpen} onShowTribunal={onShowTribunal} onShowArena={() => {}}
+      onClaimSeason={vi.fn()} onClaimMilestone={vi.fn()} onNotice={vi.fn()} onError={vi.fn()} />);
+    return { onOpen, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
+  }
+
   it("surface les ouvertures récentes des amis sans replier l’accès au Carnet", async () => {
     const { onShowInbox } = await drop(2);
     const friends = document.querySelector<HTMLButtonElement>(".friends-row")!;
@@ -55,16 +64,16 @@ describe("statut Scène et identité de collectionneur", () => {
 
   it("ne propose aucune ouverture avant le statut serveur", async () => {
     mocked.cloud.sceneStatusLoading = true;
-    const { button } = await drop();
+    const { button } = await objectives();
     expect(document.querySelector(".friends-row")).toBeNull();
     expect(button.disabled).toBe(true);
     expect(document.querySelector(".scene-state")?.textContent).toBe("Vérification…");
-    expect(button.closest("details")).toBeNull();
+    expect(button.closest("details")!.open).toBe(false);
   });
 
   it("le serveur déjà ouvert prime sur une partie locale disponible", async () => {
     mocked.cloud.sceneStatus = { userId: "joueur", day: gameDay(NOW), ready: false };
-    const { button, onOpen } = await drop();
+    const { button, onOpen } = await objectives();
     expect(button.disabled).toBe(true);
     expect(document.querySelector(".scene-state")?.textContent).toBe("Ouvert aujourd’hui");
     expect(button.textContent).toContain("Déjà ouvert · demain matin");
@@ -74,7 +83,7 @@ describe("statut Scène et identité de collectionneur", () => {
 
   it("un statut périmé ou d’un autre compte propose une vérification, pas une ouverture", async () => {
     mocked.cloud.sceneStatus = { userId: "autre", day: gameDay(NOW), ready: true };
-    const { button, onOpen } = await drop();
+    const { button, onOpen } = await objectives();
     banc.appuyer("Vérifier la disponibilité");
     expect(mocked.packStatus).toHaveBeenCalledOnce();
     expect(onOpen).not.toHaveBeenCalled();
@@ -83,7 +92,7 @@ describe("statut Scène et identité de collectionneur", () => {
 
   it("un statut disponible permet l’appui explicite", async () => {
     mocked.cloud.sceneStatus = { userId: "joueur", day: gameDay(NOW), ready: true };
-    const { button, onOpen } = await drop();
+    const { button, onOpen } = await objectives();
     expect(button.disabled).toBe(false);
     banc.appuyer("Ouvrir le Paquet Scène");
     expect(onOpen).toHaveBeenCalledOnce();
@@ -152,14 +161,11 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(version?.title).toMatch(/Commit complet|Build local/);
   });
 
-  it("annonce un Tribunal déjà payé tout en gardant l'accès pour rejouer", async () => {
-    const { onShowTribunal } = await drop(0, true);
-    expect(document.querySelector(".tribunal-row")).toBeNull();
-    const objective = document.querySelector<HTMLButtonElement>(".daily-goal")!;
-    expect(objective.textContent).toContain("Juge 5 dossiers");
-    expect(objective.textContent).toContain("Séance déjà récompensée · tu peux rejouer");
-    expect(objective.textContent).not.toContain("récompense à réclamer");
-    objective.click();
+  it("garde le Tribunal dans Objectifs, replié", async () => {
+    const { onShowTribunal } = await objectives();
+    const details = [...document.querySelectorAll("details")].find((d) => d.querySelector("summary")?.textContent === "Autres activités")!;
+    expect(details.open).toBe(false);
+    banc.appuyer("Tribunal des Bannis");
     expect(onShowTribunal).toHaveBeenCalledOnce();
   });
 

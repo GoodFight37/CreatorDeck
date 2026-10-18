@@ -147,7 +147,6 @@ export function packActions(ctx: CloudStoreContext) {
           obtainedAt: ctx.deps.now(),
           rareDrop: card.rareDrop,
           isNew: !local.cards.some((owned) => owned.creatorSlug === card.creatorSlug),
-          ...(card.circleRarity ? { displayRarity: card.circleRarity as "common"|"uncommon"|"rare"|"epic"|"legendary" } : {}),
         }));
         const remoteSave = result.save;
         const remote = remoteSave ? sanitizeState(remoteSave.state, ctx.deps.now()) : null;
@@ -223,6 +222,8 @@ export function packActions(ctx: CloudStoreContext) {
             rewardDay: result.streakReward?.day ?? null,
             rewardPoints: result.streakReward?.points ?? null,
             rewardTokens: result.streakReward?.tokens ?? null,
+            rewardPacks: result.streakReward?.packs ?? 0,
+            streakProtectionUsed: result.streakProtectionUsed,
           },
         );
         // Les compteurs du serveur font foi pour le plancher de malchance et
@@ -260,11 +261,9 @@ export function packActions(ctx: CloudStoreContext) {
             typeof remoteVersion === "number" && remoteVersion < SAVE_VERSION
               ? { ...remote, tribunal: local.tribunal }
               : remote;
-          // XP, niveaux et sabliers de série sont encore calculés localement.
-          // `open_pack()` écrit les cartes et la réserve, mais son blob peut
-          // précéder le gain local du jour (notamment le sablier de J2). Garder
-          // le plus haut des deux soldes préserve ce gain sans le doubler si le
-          // serveur l'avait déjà enregistré.
+          // XP, niveaux et leurs sabliers restent calculés localement.
+          // La série verse désormais un booster au serveur ; garder le plus
+          // haut solde de sabliers préserve seulement les autres gains locaux.
           const adoptedWithHourglasses = {
             ...adopted,
             hourglasses: Math.max(adopted.hourglasses, applied.state.hourglasses),
@@ -282,6 +281,10 @@ export function packActions(ctx: CloudStoreContext) {
             pityCounter: applied.state.pityCounter,
             missionDay: applied.state.missionDay,
             missions: applied.state.missions,
+            streak: applied.state.streak,
+            streakDay: applied.state.streakDay,
+            streakProtectionUsed: applied.state.streakProtectionUsed,
+            streakJackpot: applied.state.streakJackpot,
           });
           // Le RPC persiste déjà les cartes et la réserve, mais le calcul des
           // missions reste côté client. Enregistrer l'état fusionné maintenant

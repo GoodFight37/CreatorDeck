@@ -51,10 +51,10 @@ import {
   PROGRESSION,
   START,
   TOKEN_TARGET_COST,
-  follows,
   gameDay,
   isPrimeTime,
   streakRewardFor,
+  advanceStreak,
   tokensForPack,
   type MissionId,
 } from "@/lib/progression";
@@ -68,7 +68,7 @@ import {
   type CollectionTheme,
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
-import { circleTiers, isValidCircle } from "@/lib/circle";
+import { isValidCircle } from "@/lib/circle";
 import { circleDrawSlots, missingCircle } from "@/lib/circle-draw";
 import { canCraftRetired } from "@/lib/retired";
 // Le Tribunal : le tirage du jour est calculé par son propre module (pur), le
@@ -147,8 +147,7 @@ export type DrawnCard = {
   /** Toutes les cartes d'un même booster partagent ce drapeau. */
   rareDrop: boolean;
   /**
-   * Rareté « dans mon cercle » (premier booster) : n'est que de l'affichage.
-   * La carte enregistrée garde `rarity`, celle du catalogue.
+   * Ancien champ conservé pour lire les données historiques ; ignoré à l'affichage.
    */
   displayRarity?: Rarity;
 };
@@ -225,6 +224,7 @@ export type PlayerState = {
    */
   streakDay: string;
   streak: number;
+  streakProtectionUsed?: boolean;
   /**
    * Vrai quand le 7ᵉ jour de la série a été atteint et que la récompense
    * attend : un booster Perfect garanti **ou** 3 sabliers.
@@ -1238,7 +1238,8 @@ export type MissionView = {
 
 export function missionViews(state: PlayerState, now = Date.now()): MissionView[] {
   const fresh = state.missionDay === gameDay(now) ? state.missions : {};
-  return MISSIONS.map((mission) => {
+  const dayNumber = Math.floor((Date.parse(gameDay(now)) - Date.parse(gameDay(state.createdAt))) / 86_400_000) + 1;
+  return MISSIONS.filter((mission) => dayNumber >= (mission.fromDay ?? 1)).map((mission) => {
     const raw = fresh[mission.id] ?? 0;
     // Convention d'écriture : `target + 1` veut dire « réclamée » (voir
     // `claimMissions`). La progression affichée reste bornée au seuil, donc
@@ -1263,7 +1264,7 @@ export function claimMissions(state: PlayerState, now = Date.now()): PlayerState
   const current = state.missionDay === day ? { ...state.missions } : {};
   // Exactement au seuil : une mission déjà réclamée est à `target + 1`, donc
   // elle ne repaie pas si le joueur appuie deux fois.
-  const done = MISSIONS.filter((mission) => (current[mission.id] ?? 0) === mission.target);
+  const done = missionViews(state, now).filter((mission) => (current[mission.id] ?? 0) === mission.target);
   if (!done.length) {
     throw new GameError("Aucune mission terminée pour l'instant.", "NO_MISSION_READY");
   }
@@ -1866,11 +1867,6 @@ export function openPack(
       pity,
       circle: options.circle,
     });
-  // Conserver la couche d'affichage du premier booster, sans changer ses seuils.
-  if (options.circle && isValidCircle(options.circle) && refreshed.openings === 0) {
-    const tiers = circleTiers(options.circle);
-    for (const card of cards) if (tiers[card.creatorSlug]) card.displayRarity = tiers[card.creatorSlug];
-  }
 
   // Même application qu'un tirage serveur : un seul endroit calcule les
   // points, l'XP, les niveaux et le rangement des cartes. `refreshBalances`
@@ -1933,7 +1929,7 @@ export function applyPackResult(
     rarity: Rarity;
     variant: CardVariant;
     rareDrop: boolean;
-    /** Rareté « de mon cercle », affichage seul (premier booster). */
+    /** Ancien champ accepté mais ignoré. */
     displayRarity?: Rarity;
   }>,
   serverPacks: number,
@@ -1988,6 +1984,9 @@ export function applyPackResult(
      * aurait annoncé des points que le serveur n'a pas donnés.
      */
     rewardPoints?: number | null;
+    /** Quantité réellement versée par 0057 ; absente sur un ancien serveur. */
+    rewardPacks?: number | null;
+    streakProtectionUsed?: boolean;
   } = {},
 ): { state: PlayerState; cards: DrawnCard[]; streakReward: StreakRewardGrant | null } {
   const owned = ownedSlugs(state);
@@ -2006,7 +2005,6 @@ export function applyPackResult(
     variant: card.variant,
     isNew: !owned.has(card.creatorSlug),
     rareDrop: card.rareDrop,
-    ...(card.displayRarity ? { displayRarity: card.displayRarity } : {}),
   }));
 
   // Série de jours : une journée de jeu « suit » la précédente (+1), sinon
@@ -2017,15 +2015,11 @@ export function applyPackResult(
   // second booster du jour repartait à « Série 1/7 » — et aurait reversé la
   // récompense du jour 1 autant de fois qu'on ouvre de boosters.
   const sameDay = state.streakDay === day;
-  const continued = Boolean(state.streakDay) && follows(state.streakDay, day);
   // Le cycle fait 1 → 7 puis recommence : le 8ᵉ jour d'affilée est un nouveau
   // jour 1, pas un deuxième jackpot. Le compteur affiché reste donc dans 1..7,
   // comme celui du serveur (`((v_streak - 1) % 7) + 1`, `0032`).
-  let streak = sameDay
-    ? state.streak
-    : continued
-      ? (state.streak % PROGRESSION.streak.days) + 1
-      : 1;
+  const advanced = advanceStreak(state, day);
+  const streak = advanced.streak;
   const reached = !sameDay && streak === PROGRESSION.streak.days;
 
   // Ce que le jour coché paie. Le 7ᵉ jour paie le jackpot, jamais une
@@ -2033,12 +2027,11 @@ export function applyPackResult(
   const jourSerie =
     typeof options.rewardDay === "number" && options.rewardDay > 0 ? options.rewardDay : streak;
   const jourPaye = streakRewardFor(jourSerie);
-  // Le serveur a annoncé 0 point pour un jour qui en vaut : la journée de jeu
-  // était déjà payée (un autre booster l'a fait avancer). Le jour qui paie 0
-  // point **par nature** (J2, un sablier) n'est pas concerné : lui aussi annonce
-  // 0, et il doit bien créditer son sablier.
-  const dejaPaye = options.rewardPoints === 0 && (jourPaye?.points ?? 0) > 0;
-  const granted = sameDay || dejaPaye ? null : jourPaye;
+  // En ligne, seule la quantité de boosters confirmée par le serveur paie.
+  const serverReward = options.pointsFromServer === true;
+  const granted = serverReward
+    ? jourPaye && (options.rewardPacks ?? 0) > 0 ? { ...jourPaye, packs: options.rewardPacks! } : null
+    : sameDay ? null : jourPaye;
   // Une récompense en attente reste allumée jusqu'à ce qu'un tirage la
   // consomme (`consumeJackpot`, posé par `openPack`) ou que le joueur la
   // troque contre des sabliers. Le 7ᵉ jour, lui, n'allume qu'une fois : le
@@ -2048,7 +2041,7 @@ export function applyPackResult(
   const next: PlayerState = {
     ...state,
     updatedAt: now,
-    packs: clampPacks(serverPacks),
+    packs: clampPacks(serverPacks + (serverReward ? 0 : granted?.packs ?? 0)),
     lastPackRegen: lastRegenMs,
     // Le paquet paie ses points (`pack.points`) ; la récompense de série s'y
     // ajoute, **sauf en ligne** : là, c'est le serveur qui les a versés
@@ -2097,6 +2090,7 @@ export function applyPackResult(
     missions: missionsAfterPack(state, now),
     streakDay: day,
     streak,
+    streakProtectionUsed: options.streakProtectionUsed ?? advanced.streakProtectionUsed,
     streakJackpot,
   } as PlayerState;
 
@@ -2115,15 +2109,7 @@ export function applyPackResult(
     };
   }
 
-  // Ce que l'écran annonce. En ligne, la part « jetons » vient de la réponse du
-  // serveur : il peut n'avoir rien versé (le jour était déjà payé), et l'écran
-  // ne doit pas promettre un gain qui n'a pas eu lieu.
-  const annonce =
-    granted && options.tokensFromServer === true && typeof options.rewardTokens === "number"
-      ? { ...granted, tokens: options.rewardTokens }
-      : granted;
-
-  return { state: next, cards, streakReward: annonce };
+  return { state: next, cards, streakReward: granted };
 }
 
 /**

@@ -24,6 +24,8 @@ import { useGame } from "@/hooks/use-game";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
 import type { MarketListing } from "@/lib/cloud/api";
 import { describeCard, formatPoints, payoutOf, sellableCards } from "@/lib/market";
+import { useOtherPlayers } from "@/hooks/use-other-players";
+import { CircleShareEmpty } from "@/components/circle-share-empty";
 
 /** Le nom affiché d'un créateur, avec un repli si le catalogue est en retard. */
 function creatorName(slug: string): string {
@@ -32,6 +34,7 @@ function creatorName(slug: string): string {
 
 export function MarketSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
+  const others = useOtherPlayers();
   const game = useGame();
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -63,6 +66,15 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
   const duplicates = game ? sellableCards(game.cards) : [];
   const shelf: MarketListing[] = cloud.market;
   const ready = cloud.marketAt !== null;
+
+  if (others === false) return (
+    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">
+      <div className="odds-panel">
+        <header className="odds-head"><h2>Hôtel des ventes</h2><button type="button" onClick={onClose} aria-label="Fermer"><X size={18} /></button></header>
+        <CircleShareEmpty />
+      </div>
+    </div>
+  );
 
   return (
     <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">

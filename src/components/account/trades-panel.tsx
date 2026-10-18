@@ -18,6 +18,8 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import type { PlayerSearchResult, TradeCard, TradeStatus } from "@/lib/cloud/api";
 import { describeCards } from "@/lib/cloud/trades";
 import { tradeRadarMatches, type RadarWish } from "@/lib/trade-radar";
+import { useOtherPlayers } from "@/hooks/use-other-players";
+import { CircleShareEmpty } from "@/components/circle-share-empty";
 import {
   CREATORS,
   CREATOR_BY_SLUG,
@@ -79,6 +81,7 @@ function TradeCardTag({ card }: { card: TradeCard }) {
  */
 export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const cloud = useCloud();
+  const others = useOtherPlayers();
   const state = useGame();
   const [playerQuery, setPlayerQuery] = useState("");
   // Le panneau est replié par défaut : c'est un panneau, pas la première chose
@@ -272,6 +275,12 @@ export function TradesPanel({ focus = null }: { focus?: AccountFocus }) {
   const open = cloud.trades.filter((trade) => trade.status === "open");
   const resolved = cloud.trades.filter((trade) => trade.status !== "open").slice(0, 5);
   const names = useMemo(() => new Map([...CREATOR_BY_SLUG].map(([slug, creator]) => [slug, creator.displayName])), []);
+
+  if (others === false) return <details className="account-details trade-details" ref={panneau}
+    open={ouvert} onToggle={(event) => setOuvert(event.currentTarget.open)}>
+    <summary><ArrowLeftRight size={12} /> Échanges</summary>
+    <CircleShareEmpty />
+  </details>;
 
   return (
     <details

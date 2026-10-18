@@ -22,6 +22,10 @@ import { type GameView } from "@/lib/game-engine";
 import { MISSION_REWARD, PROGRESSION, STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
 
 import { gameStore } from "@/lib/game-store";
+import { useCloud } from "@/hooks/use-cloud";
+import { useNow } from "@/hooks/use-game";
+import { cloudStore } from "@/lib/cloud/cloud-store";
+import { gameDay } from "@/lib/progression";
 
 /** Jalons de collection, exprimés en part du catalogue (25 puis 100 sur 500). */
 /**
@@ -162,13 +166,27 @@ export function MissionsView({
   onClaimMilestone,
   onNotice,
   onError,
+  onOpenScene,
+  onShowTribunal,
+  onShowArena,
+  sceneBusy = false,
 }: {
   game: GameView;
   onClaimSeason: (seasonId: string) => PointsOutcome | Promise<PointsOutcome>;
   onClaimMilestone: (milestoneId: string) => PointsOutcome | Promise<PointsOutcome>;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
+  onOpenScene?: () => void;
+  onShowTribunal?: () => void;
+  onShowArena?: () => void;
+  sceneBusy?: boolean;
 }) {
+  const cloud = useCloud();
+  const now = useNow(1_000);
+  const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
+    ? cloud.sceneStatus : null;
+  const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
+  const sceneOpened = !cloud.configured ? game.scene.opened : verifiedScene?.ready === false;
   const dayCopy =
     game.missions.filter((mission) => mission.done).length === game.missions.length
       ? "Toutes les missions du jour sont faites"
@@ -274,8 +292,8 @@ export function MissionsView({
         <p className="objectives-reset">Nouvelles missions à {PROGRESSION.missions.resetHourUtc} h UTC · Les missions prêtes se récupèrent ensemble.</p>
         {/* Le planning de régie : sept cases, comme une semaine de diffusion.
             Chaque jour ouvert coche sa case ; la case du jour dit « à faire » ;
-            la septième, c'est Le Grand Direct. Un jour manqué remet la série à
-            J1 — c'est la règle du moteur, l'écran ne fait que la montrer. */}
+            la septième, c'est Le Grand Direct. Une absence d'un jour est
+            protégée une fois par cycle. */}
         <div className="streak-plan" role="list" aria-label="Planning de la semaine, sept jours">
           {Array.from({ length: game.streak.target }, (_, index) => {
             const day = index + 1;
@@ -300,7 +318,6 @@ export function MissionsView({
                   {final ? (
                     <>
                       <span>Perfect</span>
-                      <span>ou {game.streak.jackpotHourglasses} sabliers</span>
                     </>
                   ) : (
                     (() => {
@@ -317,7 +334,7 @@ export function MissionsView({
           })}
         </div>
         <p className="streak-rule">
-          Un booster ouvert par jour fait avancer la série. Un jour manqué la remet à J1 ;
+          Un booster ouvert par jour fait avancer la série. Une absence d’un jour est protégée une fois par cycle ;
           la septième case, c&apos;est <strong>Le Grand Direct</strong>.
         </p>
 
@@ -325,10 +342,9 @@ export function MissionsView({
           <div className="streak-jackpot">
             <Sparkles size={15} />
             <div>
-              <strong>Sept jours d&apos;affilée : le Perfect du jour t&apos;attend</strong>
+              <strong>Sept jours joués : ton booster Perfect t&apos;attend</strong>
               <span>
-                Ton prochain booster part avec le tirage Perfect garanti — ou prends les{" "}
-                {game.streak.jackpotHourglasses} sabliers.
+                Ton prochain booster part avec le tirage Perfect garanti.
               </span>
             </div>
             <div className="jackpot-actions">
@@ -339,18 +355,23 @@ export function MissionsView({
               >
                 Perfect
               </button>
-              <button
-                type="button"
-                className="ghost"
-                disabled={busyKey !== null}
-                onClick={() => void runClaim("jackpot", [() => { const gained = gameStore.claimStreakJackpot("hourglasses"); return { status: "done", message: `+${gained} sablier${gained > 1 ? "s" : ""} : la série repart.` }; }])}
-              >
-                {game.streak.jackpotHourglasses} sabliers
-              </button>
             </div>
           </div>
         ) : null}
 
+        <details>
+          <summary>Autres activités</summary>
+          {onShowTribunal ? <button type="button" className="text-link" onClick={onShowTribunal}>Tribunal des Bannis</button> : null}
+          {onOpenScene ? <>
+            <span className="scene-state">{sceneOpened ? "Ouvert aujourd’hui" : cloud.sceneStatusLoading ? "Vérification…" : sceneReady ? "Disponible" : "À vérifier"}</span>
+            <button type="button" className={`text-link scene-action${sceneOpened ? " is-opened" : ""}`}
+              onClick={cloud.configured && cloud.userId && !sceneReady && !sceneOpened ? () => void cloudStore.packStatus() : onOpenScene}
+              disabled={sceneBusy || sceneOpened || cloud.sceneStatusLoading || !game.scene.family}>
+              {sceneBusy ? "Ouverture…" : sceneOpened ? "Déjà ouvert · demain matin" : cloud.configured && cloud.userId && !sceneReady ? "Vérifier la disponibilité" : "Ouvrir le Paquet Scène"}
+            </button>
+          </> : null}
+          {onShowArena ? <button type="button" className="text-link" onClick={onShowArena}>Arène</button> : null}
+        </details>
         <div className="mission-list day-missions">
           {game.missions.map((mission) => {
             const look = MISSION_LOOK[mission.id];

@@ -12,7 +12,7 @@ it("le store transmet le cercle aux cinq cadeaux et adopte chaque tirage serveur
     session: () => ({ userId: "joueur" }),
     onboardingStatus: vi.fn(async () => ({ giftRemaining: remaining })),
     openReturnGiftPack: vi.fn(async () => ({
-      cards: CIRCLE.map(creatorSlug => ({ creatorSlug, rarity: "legendary", variant: "standard", rareDrop: false })),
+      cards: CIRCLE.map(creatorSlug => ({ creatorSlug, rarity: "legendary", circleRarity: "common", variant: "standard", rareDrop: false })),
       giftRemaining: --remaining,
       save: { state: createInitialState(1000), updatedAt: new Date(1000).toISOString() },
     })),
@@ -24,7 +24,14 @@ it("le store transmet le cercle aux cinq cadeaux et adopte chaque tirage serveur
     cloudRefusal: (error: unknown) => { throw error; },
   } as unknown as CloudStoreContext;
   const actions = packActions(ctx);
-  for (let i = 0; i < 5; i++) expect((await actions.openReturnGiftPack()).status).toBe("drawn");
+  for (let i = 0; i < 5; i++) {
+    const result = await actions.openReturnGiftPack();
+    expect(result.status).toBe("drawn");
+    if (result.status === "drawn") {
+      expect(result.cards.every(card => card.rarity === "legendary")).toBe(true);
+      expect(result.cards.every(card => card.displayRarity === undefined)).toBe(true);
+    }
+  }
   expect(api.openReturnGiftPack).toHaveBeenCalledTimes(5);
   for (const call of api.openReturnGiftPack.mock.calls) expect(call).toEqual([CIRCLE]);
   expect(applyState).toHaveBeenCalledTimes(5);

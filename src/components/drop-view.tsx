@@ -1,9 +1,9 @@
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useRef, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
-import { ChevronRight, Clock3, Coins, Gavel, Hourglass, Layers3, LoaderCircle, Swords, Users, Zap } from "lucide-react";
+import { ChevronRight, Clock3, Coins, Hourglass, Layers3, LoaderCircle, Users, Zap } from "lucide-react";
 
 import "./drop-craft.css";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
@@ -22,14 +22,13 @@ import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS, creatorIm
 import { formatViewers, liveFor } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { arenaDraftWindow } from "@/lib/arena";
 import { craftableRetired } from "@/lib/retired";
 import { type GameView } from "@/lib/game-engine";
 import { buzz } from "@/lib/haptics";
 import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
-import { circleLiveState } from "@/lib/circle-live";
+import { circleLiveState, twitchUrl } from "@/lib/circle-live";
 import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
 import { circlePityPool } from "@/lib/game-engine";
 import { missingCircle } from "@/lib/circle-draw";
@@ -57,15 +56,8 @@ export function HomeView({
   onShowOdds,
   onShowMissions,
   onShowAtelier,
-  onShowArena,
-  onOpenScene,
-  onShowTribunal,
-  tribunalRestants,
-  tribunalClose,
-  tribunalPaid = false,
   opening,
   usingHourglass,
-  sceneBusy,
   now,
   serverReserve,
   needsAccount,
@@ -136,11 +128,6 @@ export function HomeView({
   // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
   const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
-  const dailyMission = (game.stats.openings > 0 ? game.missions.find((mission) => mission.id === "tribunal" && !mission.done) : null)
-    ?? game.missions.find((mission) => !mission.done)
-    ?? game.missions.find((mission) => mission.done && !mission.claimed)
-    ?? null;
-
   const retiredLeft = useMemo(
     () =>
       craftableRetired().filter(
@@ -152,48 +139,13 @@ export function HomeView({
   // Étape 2 : qui, dans le cercle du joueur, est en direct maintenant.
   const circleLive = lean ? circleLiveState(circle, live, ownedSlugs, now) : null;
   const circleLiveEntries = circleLive?.kind === "live" ? circleLive.entries : [];
-  const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
-    ? cloud.sceneStatus : null;
-  const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;
-  const sceneOpened = !cloud.configured ? game.scene.opened : verifiedScene?.ready === false;
-
-  const arenaNow = useNow(30_000);
-  const arenaLine = useMemo(() => {
-    if (!cloud.configured || !cloud.userId) return null;
-    const pending = cloud.arenaMine?.pending.length ?? 0;
-    if (pending > 0) {
-      return {
-        tone: "reward" as const,
-        label:
-          pending === 1
-            ? "Une récompense d'arène t'attend"
-            : `${pending} récompenses d'arène t'attendent`,
-      };
-    }
-    const window = arenaDraftWindow(arenaNow);
-    if (cloud.arenaMine?.draftOpen ?? window.open) {
-      const left = Math.max(0, window.closesAt - arenaNow);
-      const hours = Math.floor(left / 3_600_000);
-      const minutes = Math.floor((left % 3_600_000) / 60_000);
-      return {
-        tone: "hot" as const,
-        label: `Draft du week-end ouvert · ${hours} h ${String(minutes).padStart(2, "0")} min pour le boucler`,
-      };
-    }
-    const entry = cloud.arenaMine?.entry;
-    if (entry) {
-      const rank = cloud.arenaMine?.rank;
-      return {
-        tone: "done" as const,
-        label: `Ton arène : ${entry.score.toLocaleString("fr-FR")} viewers${rank ? ` · ${rank === 1 ? "1er" : `${rank}e`}` : ""}`,
-      };
-    }
-    return {
-      tone: "idle" as const,
-      label: "Arène : aucune équipe cette semaine",
-    };
-  }, [cloud.configured, cloud.userId, cloud.arenaMine, arenaNow]);
-
+  const circleRow = useRef<HTMLDivElement>(null);
+  const emptyCircleReserve = lean && !needsAccount && stock <= 0 && promoPacks <= 0;
+  const firstLive = circleLiveEntries[0];
+  function showCircle() {
+    circleRow.current?.scrollIntoView?.({ block: "center" });
+    circleRow.current?.focus({ preventScroll: true });
+  }
   const featured = useMemo(() => {
     if (live.stale || !live.count) return null;
     let top: { login: string; viewers: number } | null = null;
@@ -314,10 +266,16 @@ export function HomeView({
         universes={showMemes ? undefined : ["live"]} />
 
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
-        <button
+        {emptyCircleReserve && firstLive ? (
+          <a className="primary-action" href={twitchUrl(firstLive.creator.login)} target="_blank" rel="noopener noreferrer">
+            <Zap size={19} aria-hidden="true" />
+            <span>Voir {firstLive.creator.displayName} en direct</span>
+            <ChevronRight size={19} aria-hidden="true" />
+          </a>
+        ) : <button
           className="primary-action"
-          onClick={onOpen}
-          disabled={cannotOpen}
+          onClick={emptyCircleReserve ? showCircle : onOpen}
+          disabled={emptyCircleReserve ? opening || memes.busy : cannotOpen}
         >
           {opening ? (
             <LoaderCircle className="spin" size={19} />
@@ -327,10 +285,10 @@ export function HomeView({
             <Zap size={19} />
           )}
           <span>
-            {needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
+            {emptyCircleReserve ? "Personne de tes chaînes en direct" : needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
           </span>
           {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
-        </button>
+        </button>}
         {!needsAccount ? (
           <div className="stock-row">
             <div>
@@ -361,9 +319,7 @@ export function HomeView({
           now={tick}
           canOpen={!needsAccount && (stock > 0 || promoPacks > 0)}
           nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `dans ${formatCountdown(nextAt, tick)}` : null}
-          hourglass={!needsAccount && stock <= 0 && promoPacks <= 0 && game.player.hourglasses > 0
-            ? { count: game.player.hourglasses, busy: usingHourglass, onUse: onUseHourglass }
-            : null}
+          hourglass={null}
         />
       ) : null}
       {lean ? (
@@ -371,7 +327,9 @@ export function HomeView({
           {missingCircle(circle, ownedSlugs).length === 0 ? (
             <p role="status">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
           ) : null}
-          <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+          <div ref={circleRow} tabIndex={-1}>
+            <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+          </div>
         </>
       ) : null}
       {lean ? findingsSection : null}
@@ -395,7 +353,7 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       <MemeBoosterOpening booster={memes} />
-      {!lean && onEditCircle && !needsAccount ? (
+      {!lean && onEditCircle ? (
         <section className="circle-invite" aria-labelledby="circle-invite-title">
           <div>
             <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
@@ -425,168 +383,6 @@ export function HomeView({
         </button>
       ) : null}
 
-      {!lean ? (
-        <>
-      {/* Priorités & Missions compactées sans doublon */}
-      <section className="drop-priorities" aria-label="À jouer aujourd’hui">
-        {dailyMission?.id === "tribunal" ? (
-          <button
-            type="button"
-            className={`daily-goal tribunal-entry${tribunalClose ? " done" : ""}`}
-            onClick={onShowTribunal}
-            aria-label={
-              tribunalPaid
-                ? "Objectif du jour : Tribunal des Bannis (séance déjà récompensée, tu peux rejouer)"
-                : tribunalClose
-                ? "Objectif du jour : Tribunal des Bannis (séance close, bilan disponible)"
-                : `Objectif du jour : Tribunal des Bannis (${tribunalRestants} dossier(s) en attente)`
-            }
-          >
-            <Gavel size={20} />
-            <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-              <span>OBJECTIF DU JOUR · TRIBUNAL</span>
-              <strong>{dailyMission.label}</strong>
-              <small>
-                {tribunalPaid
-                  ? "Séance déjà récompensée · tu peux rejouer"
-                  : tribunalRestants > 0
-                  ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
-                  : dailyMission.done
-                  ? "Terminé · récompense à réclamer"
-                  : "Séance close · bilan disponible"}
-              </small>
-            </div>
-            {tribunalRestants > 0 ? (
-              <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b>
-            ) : (
-              <ChevronRight size={17} />
-            )}
-          </button>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="daily-goal"
-              onClick={onShowMissions}
-              aria-label="Voir l’objectif du jour"
-            >
-              <span>OBJECTIF DU JOUR</span>
-              {dailyMission ? (
-                <>
-                  <strong>{dailyMission.label}</strong>
-                  <small>
-                    {dailyMission.done
-                      ? "Terminé · récompense à réclamer"
-                      : `${dailyMission.progress} / ${dailyMission.target}`}
-                  </small>
-                </>
-              ) : (
-                <>
-                  <strong>Tes missions du jour sont terminées</strong>
-                  <small>Reviens demain pour un nouvel objectif.</small>
-                </>
-              )}
-              <ChevronRight size={17} />
-            </button>
-            <button
-              type="button"
-              className={`tribunal-entry tribunal-row${tribunalClose ? " done" : ""}`}
-              onClick={onShowTribunal}
-              aria-label={
-                tribunalPaid
-                  ? "Ouvrir le Tribunal des Bannis : séance déjà récompensée, tu peux rejouer"
-                  : tribunalClose
-                  ? "Ouvrir le Tribunal des Bannis : séance close, bilan disponible"
-                  : `Ouvrir le Tribunal des Bannis : ${tribunalRestants} dossier(s) en attente`
-              }
-            >
-              <Gavel size={20} />
-              <span>
-                <strong>Tribunal</strong> ·{" "}
-                {tribunalPaid
-                  ? "Séance déjà récompensée · tu peux rejouer"
-                  : tribunalRestants > 0
-                  ? `${tribunalRestants} dossier${tribunalRestants > 1 ? "s" : ""} en attente`
-                  : "séance close, bilan disponible"}
-              </span>
-              {tribunalRestants > 0 ? (
-                <b className="tribunal-entry-badge" aria-label="Dossiers restants">{tribunalRestants}</b>
-              ) : null}
-              <ChevronRight size={14} />
-            </button>
-          </>
-        )}
-      </section>
-
-      {/* Paquet Scène avec statut neutre */}
-      <section
-        className={`scene-block${sceneOpened ? " done is-neutral" : ""}`}
-        aria-label="Ton paquet de famille du jour"
-        data-ready={sceneOpened ? "done" : sceneReady ? "true" : "false"}
-      >
-        <div className="scene-head">
-          <div>
-            <h2 tabIndex={-1} data-presentation-focus-fallback>{game.scene.label}</h2>
-            <span>5 cartes de ta famille · 1 paquet par jour</span>
-          </div>
-          <span
-            className={`scene-state${sceneOpened ? " scene-state-neutral is-neutral" : ""}`}
-          >
-            {sceneOpened ? "Ouvert aujourd’hui" : !cloud.configured || sceneReady ? "Disponible" : !cloud.userId ? "Compte requis" : cloud.sceneStatusLoading ? "Vérification…" : "À vérifier"}
-          </span>
-        </div>
-
-        <p className="scene-purpose">Pas de Légendaire dans ce paquet.</p>
-        {game.scene.family ? (
-          <div className="scene-family">
-            <div className="scene-family-copy">
-              <strong>{game.scene.family.name}</strong>
-              <span>
-                {game.scene.family.owned}/{game.scene.family.total} découverts · il t&apos;en
-                manque {game.scene.family.total - game.scene.family.owned}
-              </span>
-            </div>
-            <div className="progress-track">
-              <i
-                style={{
-                  width: `${Math.round(
-                    (game.scene.family.owned / game.scene.family.total) * 100,
-                  )}%`,
-                }}
-              />
-            </div>
-          </div>
-        ) : (
-          <span className="scene-empty">
-            Aucune famille n&apos;est assez grande pour un paquet — le Live Drop reste là.
-          </span>
-        )}
-
-        <button
-          type="button"
-          className={`scene-action${sceneOpened ? " is-opened" : ""}`}
-          onClick={cloud.configured && cloud.userId && !sceneReady && !sceneOpened ? () => void cloudStore.packStatus() : onOpenScene}
-          disabled={sceneBusy || opening || sceneOpened || cloud.sceneStatusLoading || !game.scene.family}
-        >
-          {sceneBusy ? (
-            <LoaderCircle className="spin" size={17} />
-          ) : sceneOpened ? (
-            <Clock3 size={17} />
-          ) : (
-            <Layers3 size={17} />
-          )}
-          <span>
-            {sceneBusy
-              ? "Ouverture…"
-              : sceneOpened
-                ? "Déjà ouvert · demain matin"
-                : cloud.configured && !cloud.userId ? "Se connecter pour ouvrir"
-                  : cloud.configured && !sceneReady ? "Vérifier la disponibilité"
-                    : `Ouvrir le ${game.scene.label}`}
-          </span>
-        </button>
-      </section>
-
       {friendsOpening > 0 ? (
         <button
           type="button"
@@ -603,9 +399,6 @@ export function HomeView({
           </span>
           <ChevronRight size={14} />
         </button>
-      ) : null}
-
-        </>
       ) : null}
 
       <details className="drop-secondary">
@@ -632,18 +425,6 @@ export function HomeView({
           </button>
         ) : null}
 
-        {arenaLine && !lean ? (
-          <button
-            type="button"
-            className={`pity-row arena-row ${arenaLine.tone}`}
-            onClick={onShowArena}
-            aria-label={`Ouvrir l'arène : ${arenaLine.label}`}
-          >
-            <Swords size={14} />
-            <span>{arenaLine.label}</span>
-            <ChevronRight size={14} />
-          </button>
-        ) : null}
       </details>
 
       {!lean ? findingsSection : null}

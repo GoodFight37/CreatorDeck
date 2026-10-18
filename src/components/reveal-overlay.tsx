@@ -39,6 +39,8 @@ import { bestCardOf } from "@/lib/social/inbox";
 import type { DrawnCard, StreakRewardGrant } from "@/lib/game-engine";
 import { streakRewardLabel } from "@/lib/progression";
 import { cardEffectsAllowed } from "@/lib/tilt";
+import { useCircle } from "@/lib/circle-store";
+import { circleLabel } from "@/lib/circle";
 
 const FIFTH_CARD_REVEAL_BEAT_MS = 360;
 const SUMMARY_HOLD_MS = 1_500;
@@ -69,18 +71,18 @@ export function RevealOverlay({
   returnFocusTo?: HTMLElement | null;
 }) {
   const dialogRef = usePresentationFocus(!overlay && !embedded, returnFocusTo);
-  // Premier booster : la rareté « dans mon cercle » remplace celle du catalogue
-  // à l'écran (son, durée, étiquette, matière) ; la carte enregistrée ne change pas.
+  // Les anciens champs d'affichage ne peuvent plus modifier une rareté.
   const cards = useMemo(
-    () => drawnCards.map((item) => (item.displayRarity ? { ...item, rarity: item.displayRarity } : item)),
+    () => drawnCards.map(item => {
+      const rarity = CREATOR_BY_SLUG.get(item.creatorSlug)?.rarity ?? item.rarity;
+      return rarity === item.rarity ? item : { ...item, rarity };
+    }),
     [drawnCards],
   );
+  const circle = useCircle();
   const card = cards[index];
-  const creatorFor = (slug: string, shown: Rarity) => {
-    const base = CREATOR_BY_SLUG.get(slug);
-    return base && base.rarity !== shown ? { ...base, rarity: shown } : base;
-  };
-  const creator = card ? creatorFor(card.creatorSlug, card.rarity) : undefined;
+  const creatorFor = (slug: string) => CREATOR_BY_SLUG.get(slug);
+  const creator = card ? creatorFor(card.creatorSlug) : undefined;
   const live = useLive();
   const now = useNow(60_000);
   const cloud = useCloud();
@@ -305,7 +307,7 @@ export function RevealOverlay({
         <div className="reveal-dots">
           {cards.map((item, dotIndex) => {
             const shown = perfect || dotIndex <= index;
-            const dotCard = creatorFor(item.creatorSlug, item.rarity);
+            const dotCard = creatorFor(item.creatorSlug);
             if (!dotCard) return null;
             return (
               <i
@@ -335,7 +337,7 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className="reveal-rare-aura reveal-rare-aura-perfect" style={glowStyle} aria-hidden="true" />
           ) : null}
           {cards.map((item) => {
-            const dotCard = creatorFor(item.creatorSlug, item.rarity);
+            const dotCard = creatorFor(item.creatorSlug);
             return dotCard ? (
               <div key={item.id} className={`reveal-flip rarity-${item.rarity}${item.isNew ? " perfect-card-new" : ""}`}>
                 <div className="reveal-flip-face">
@@ -352,6 +354,7 @@ export function RevealOverlay({
                 <div className="perfect-card-caption">
                   <strong>{dotCard.displayName}</strong>
                   <span>{RARITY_META[item.rarity].label}{item.isNew ? " · Nouvelle" : ""}</span>
+                  {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
                 </div>
               </div>
             ) : null;
@@ -366,7 +369,7 @@ export function RevealOverlay({
           </div>
           <div className="reveal-summary-grid">
             {cards.map((item, summaryIndex) => {
-              const itemCreator = creatorFor(item.creatorSlug, item.rarity);
+              const itemCreator = creatorFor(item.creatorSlug);
               if (!itemCreator) return null;
               return (
                 <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>
@@ -378,6 +381,7 @@ export function RevealOverlay({
                   />
                   <span className="reveal-summary-card-name">{itemCreator.displayName}</span>
                   <span className="reveal-summary-card-rarity">{RARITY_META[item.rarity].label}</span>
+                  {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
                   {item.isNew ? <i aria-label="Nouvelle carte">NOUVELLE</i> : null}
                 </div>
               );
@@ -433,6 +437,7 @@ export function RevealOverlay({
             </div>
           </div>
           <div className="reveal-name">
+            {circleLabel(circle, card.creatorSlug) ? <span>{circleLabel(circle, card.creatorSlug)}</span> : null}
             <p>
               {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
             </p>

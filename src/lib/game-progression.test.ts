@@ -213,6 +213,7 @@ describe("missions du jour", () => {
 
   it("paie un sablier par mission terminée, une seule fois", () => {
     const state = makeState({
+      createdAt: MIDI - DAY,
       hourglasses: 2,
       missionDay: gameDay(MIDI),
       missions: { pack: 1, recycle: 1 },
@@ -230,6 +231,7 @@ describe("missions du jour", () => {
 
   it("montre trois missions, jamais « 2/1 »", () => {
     const state = makeState({
+      createdAt: MIDI - DAY,
       missionDay: gameDay(MIDI),
       missions: { pack: 1, recycle: 2 },
     });
@@ -265,7 +267,7 @@ describe("série de jours", () => {
     ).state;
   }
 
-  it("compte les jours d'affilée et repart après un jour manqué", () => {
+  it("compte les jours joués et protège une absence", () => {
     let state = makeState({ streakDay: "", streak: 0 });
     state = openOn(state, 0);
     expect(state.streak).toBe(1);
@@ -273,9 +275,9 @@ describe("série de jours", () => {
     expect(state.streak).toBe(2);
     state = openOn(state, 2);
     expect(state.streak).toBe(3);
-    // Deux jours plus tard : la série est cassée, on repart de 1.
+    // Deux jours plus tard : une absence est protégée.
     state = openOn(state, 4);
-    expect(state.streak).toBe(1);
+    expect(state.streak).toBe(4);
   });
 
   it("allume la récompense au 7ᵉ jour, et pas avant", () => {
@@ -336,7 +338,7 @@ describe("série de jours", () => {
       expect(granted.day).toBe(reward.day);
       // Chaque jour paie quelque chose : une case cochée sans rien recevoir
       // serait une frustration, pas une récompense.
-      expect(granted.points + granted.hourglasses + granted.tokens).toBeGreaterThan(0);
+      expect(granted.packs).toBeGreaterThan(0);
     }
     expect(streakRewardFor(PROGRESSION.streak.days)).toBeNull();
     expect(streakRewardFor(0)).toBeNull();
@@ -383,61 +385,18 @@ describe("série de jours", () => {
     expect(second.state.points).toBe(premier.state.points + PACKS.live.points);
   });
 
-  it("en ligne, un jour déjà payé par le serveur n'est pas repayé localement", () => {
-    // Le serveur dit le jour **et** les points qu'il a versés (`0032`). Quand il
-    // annonce 0 point pour un jour qui en vaut, c'est que la journée de jeu
-    // était déjà payée : le moteur ne doit alors rien créditer du tout — ni
-    // sabliers, ni jetons — sinon l'écran verserait une deuxième fois ce que le
-    // serveur a déjà donné. Et quand un jour ne paie pas de points **par
-    // nature** (J2, un sablier), il est annoncé 0 lui aussi : là, le sablier
-    // doit bien tomber.
-    const base = makeState({ streakDay: "", streak: 0, hourglasses: 0 });
-    const carte = {
-      creatorSlug: commonSlug(),
-      rarity: "common" as const,
-      variant: "standard" as const,
-      rareDrop: false,
-    };
-    /** Ouvre un booster cloud, avec ce que le serveur annonce. */
-    function ouvrir(depuis: PlayerState, day: number | null, points: number | null) {
-      stubRandom([0]);
-      return applyPackResult(depuis, [carte], 2, MIDI, 1, MIDI + 2 * DAY, {
-        pointsFromServer: true,
-        rewardDay: day,
-        rewardPoints: points,
-      });
-    }
-
-    // La référence : un jour 1 frais, qui ne donne ni sablier ni jeton.
-    const temoin = ouvrir(base, 1, 40);
-    const jetonsDuBooster = temoin.state.tokens - base.tokens;
-    const sabliersDuBooster = temoin.state.hourglasses - base.hourglasses;
-    const pointsDuBooster = temoin.state.points - base.points;
-    expect(temoin.streakReward?.day).toBe(1);
-    expect(jetonsDuBooster).toBeGreaterThan(0);
-
-    // Jour 4 frais : les 10 jetons du barème tombent, les points restent au
-    // serveur (le moteur ne les compte pas deux fois).
-    const jour4 = ouvrir(base, 4, 80);
-    expect(jour4.streakReward?.day).toBe(4);
-    expect(jour4.state.tokens).toBe(base.tokens + jetonsDuBooster + 10);
-    expect(jour4.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster);
-    expect(jour4.state.points).toBe(base.points + pointsDuBooster);
-
-    // Le deuxième booster du même jour de jeu : le serveur annonce le jour et
-    // 0 point → rien n'est crédité, et rien n'est annoncé à l'écran.
-    const repete = ouvrir(base, 4, 0);
-    expect(repete.streakReward).toBeNull();
-    expect(repete.state.tokens).toBe(base.tokens + jetonsDuBooster);
-    expect(repete.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster);
-
-    // Jour 2 : le serveur verse 0 point (c'est un sablier, il vit ici), et le
-    // sablier tombe bien.
-    const jour2 = ouvrir(base, 2, 0);
-    expect(jour2.streakReward?.day).toBe(2);
-    expect(jour2.streakReward?.hourglasses).toBe(1);
-    expect(jour2.state.hourglasses).toBe(base.hourglasses + sabliersDuBooster + 1);
-    expect(jour2.state.tokens).toBe(base.tokens + jetonsDuBooster);
+  it("en ligne, annonce uniquement le booster réellement versé par le serveur", () => {
+    const state = makeState({ packs: 2 });
+    const paid = applyPackResult(state, [], 2, MIDI, 1, MIDI, {
+      pointsFromServer: true, tokensFromServer: true, rewardDay: 4, rewardPacks: 1,
+    });
+    expect(paid.streakReward).toMatchObject({ day: 4, packs: 1, points: 0, tokens: 0, hourglasses: 0 });
+    expect(paid.state.packs).toBe(2);
+    const repeated = applyPackResult(state, [], 1, MIDI, 1, MIDI, {
+      pointsFromServer: true, rewardDay: 4, rewardPacks: 0,
+    });
+    expect(repeated.streakReward).toBeNull();
+    expect(repeated.state.packs).toBe(1);
   });
 
   it("le 8ᵉ jour d'affilée est un jour 1, pas un deuxième jackpot", () => {
@@ -571,7 +530,7 @@ describe("la vue publiée", () => {
 
 describe("la mission quotidienne du Tribunal", () => {
   it("compte les dossiers distincts, paie une fois et repart à zéro le lendemain", () => {
-    let state = makeState();
+    let state = makeState({ createdAt: MIDI - DAY });
     const dossiers = dossiersDuJour(gameDay(MIDI), state.playerId);
     for (const dossier of dossiers) state = recordVerdict(state, dossier.id, "ban", MIDI);
     state = recordVerdict(state, dossiers[0].id, "deban", MIDI);

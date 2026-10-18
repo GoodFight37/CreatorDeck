@@ -17,7 +17,7 @@ export function tutorialPack(): DrawnCard[] {
 /**
  * Aperçu d'un joueur sans compte : cinq cartes tirées dans « Mes chaînes »,
  * sans rien écrire. Le serveur fait la même chose avec `open_circle_gift_pack`.
- * La rareté enregistrée reste celle du catalogue ; celle du cercle s'affiche.
+ * La rareté reste celle du catalogue, comme dans la collection.
  */
 export function circlePreviewPack(circle: readonly string[]): DrawnCard[] {
   if (!isValidCircle(circle)) return tutorialPack();
@@ -25,7 +25,6 @@ export function circlePreviewPack(circle: readonly string[]): DrawnCard[] {
     id: `circle-${i}-${card.creatorSlug}`,
     creatorSlug: card.creatorSlug,
     rarity: CREATOR_BY_SLUG.get(card.creatorSlug)?.rarity ?? card.rarity,
-    displayRarity: card.rarity,
     variant: "standard" as const,
     isNew: false,
     rareDrop: false,

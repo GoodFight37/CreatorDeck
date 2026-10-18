@@ -6,6 +6,38 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
+### Finition courte — locale, non publiée (18 octobre 2026)
+
+- Les quatre lots précédents sont présents : tirage du cercle, rareté unique, bouton et rétention.
+- Les visages restent proportionnés, avec le portrait entier dans le cadre vertical de la carte.
+- La matière suit une seule règle de rareté catalogue dans les différentes vues, sans légende ajoutée.
+- Atelier désigne le même écran dans la barre, le titre et les textes accessibles.
+- La piste musicale existante reste à 8 % sur l’accueil et 4 % pendant l’ouverture ; aucune autre piste.
+- Vérifications : 46 tests d’écrans, 23 tests audio, un parcours Chrome en 390×844, typecheck et build réussis.
+- Export local sans cloud ; aucun changement du tirage, du SQL, des missions ou du geste d’ouverture.
+- Pas d’essai sur vrai téléphone ni d’écoute physique, d’installation ou de mise à jour APK ; aucun commit ou déploiement.
+
+**Rétention (D-148) — implémentée localement, non publiée :** une absence
+protégée par cycle, récompenses en boosters, missions recyclage/Tribunal à
+partir de J2, activités dans Objectifs repliées et partage de carte sans autre
+joueur. Last Pack sans vol. Moteur/contrat SQL miroir et typecheck vérifiés ;
+deux accueils vérifiés dans Chrome en 390×844. Migration 0057 seulement locale,
+exécution Postgres bloquée sous le compte administrateur Windows. Aucun commit
+ni essai téléphone physique. Détails et limites : premier checkpoint.
+
+**Réserve vide et complément (D-147) — corrigés localement, non publiés :**
+action vers le direct du cercle ou sa rangée ; recharge secondaire, sablier
+dans les détails. Complément après trois choix personnels reconnus seulement,
+deux suggestions au plus et confirmation séparée ; cinq chaînes du catalogue
+requises. 37 tests d’écrans et typecheck réussis. Aucun essai téléphone,
+SQL, mission, polish ou commit pour ce lot.
+
+**Rareté unique (D-146) — corrigée localement, non publiée :** rareté du
+catalogue à l'ouverture comme dans le Binder, la fiche et le craft ; signe
+« Préférée » / « Dans tes chaînes » commun aux vues. Anciens champs de rareté
+d'affichage ignorés. Aucun SQL, bouton de recharge, mission ou polish modifié.
+Tests ciblés et typecheck réussis ; aucun commit demandé pour ce lot.
+
 **Règle « cercle vrai » (D-145) — publiée et vérifiée :** code `0fe66715` sur
 `main` et `etape-4-cercle-vrai`, CI 6/6 sur les deux branches ; migration
 manuelle 0056 appliquée et historique vérifié en Production. Miroir TypeScript et cadeaux

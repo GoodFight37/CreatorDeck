@@ -72,7 +72,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
 
 /*
- * **Quatre piliers, et c'est tout** : Drop, Binder, Craft, Toi. Les Objectifs
+ * **Quatre piliers, et c'est tout** : Drop, Binder, Atelier, Toi. Les Objectifs
  * restent hors de la barre — c'est un rendez-vous quotidien, pas un endroit où
  * l'on vit — et s'ouvrent depuis le Drop et depuis le menu.
  *
@@ -84,7 +84,7 @@ type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
   { id: "home", label: "Drop", icon: <Zap size={22} /> },
   { id: "collection", label: "Binder", icon: <BookOpen size={22} /> },
-  { id: "atelier", label: "Craft", icon: <Hammer size={22} /> },
+  { id: "atelier", label: "Atelier", icon: <Hammer size={22} /> },
   { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
 ];
 
@@ -400,6 +400,14 @@ export function CreatorDeckApp() {
   }, [cloud.configured, cloud.userId]);
   // Étape 3 : « Mes chaînes » se rouvre à tout moment pour définir ou modifier le cercle.
   const [circleEditOpen, setCircleEditOpen] = useState(false);
+  useEffect(() => {
+    function defineCircle() {
+      setMarketOpen(false); setLastPackOpen(false); setAccountOpen(false);
+      setCircleEditOpen(true);
+    }
+    window.addEventListener("creatordeck:define-circle", defineCircle);
+    return () => window.removeEventListener("creatordeck:define-circle", defineCircle);
+  }, []);
   useBackHandler(circleEditOpen, () => setCircleEditOpen(false));
   const welcomeKey = `creatordeck-tutorial:${cloud.userId ?? "local"}`;
   const [welcomeMarker, setWelcomeMarker] = useState(() => ({ key: welcomeKey, done: readLocalMarker(welcomeKey) }));
@@ -822,7 +830,7 @@ export function CreatorDeckApp() {
             tribunalPaid={tribunal.claimed}
             opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
-            sceneBusy={sceneOpening}
+            sceneBusy={sceneOpening || opening}
             now={now}
             serverReserve={cloud.configured}
             tutorialAvailable={tutorialAvailable}
@@ -837,6 +845,10 @@ export function CreatorDeckApp() {
         {tab === "missions" ? (
           <MissionsView
             game={game}
+            onOpenScene={() => void handleOpenScenePack()}
+            sceneBusy={sceneOpening}
+            onShowTribunal={ouvrirFeuille(setTribunalOpen)}
+            onShowArena={ouvrirFeuille(setArenaOpen)}
             onClaimSeason={handleClaimSeason}
             onClaimMilestone={handleClaimMilestone}
             onNotice={showNotice}

@@ -6,6 +6,8 @@ import type { AccountFocus } from "@/lib/account-display";
 import { useCloud } from "@/hooks/use-cloud";
 import { cloudStore, type LeaderboardMetric } from "@/lib/cloud/cloud-store";
 import { CATCH_ALL_REGION, REGION_FAMILIES } from "@/lib/regions";
+import { useOtherPlayers } from "@/hooks/use-other-players";
+import { CircleShareEmpty } from "@/components/circle-share-empty";
 
 const METRICS: { id: LeaderboardMetric; label: string }[] = [
   { id: "unique_creators", label: "Cartes uniques" },
@@ -46,6 +48,7 @@ const PER_PAGE = 20;
  */
 export function LeaderboardSection({ focus }: { focus?: AccountFocus }) {
   const cloud = useCloud();
+  const others = useOtherPlayers();
   const leaderboardRef = useRef<HTMLElement | null>(null);
   const [page, setPage] = useState(0);
 
@@ -62,6 +65,10 @@ export function LeaderboardSection({ focus }: { focus?: AccountFocus }) {
     () => cloud.leaderboard.slice(safePage * PER_PAGE, (safePage + 1) * PER_PAGE),
     [cloud.leaderboard, safePage],
   );
+
+  if (others === false) return <section className="account-card" id="classement" ref={leaderboardRef}>
+    <h3>Classement mondial</h3><CircleShareEmpty />
+  </section>;
 
   return (
           <section className="account-card" id="classement" ref={leaderboardRef}>

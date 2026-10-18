@@ -378,6 +378,7 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     missions: sanitizeMissions(raw.missions),
     streakDay: typeof raw.streakDay === "string" ? raw.streakDay : "",
     streak: nonNegativeInt(raw.streak, 0),
+    streakProtectionUsed: raw.streakProtectionUsed === true,
     streakJackpot: raw.streakJackpot === true,
     // v8 : journée du dernier Paquet Scène (chaîne vide = jamais ouvert).
     sceneDay: typeof raw.sceneDay === "string" ? raw.sceneDay : "",

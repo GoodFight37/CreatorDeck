@@ -18,7 +18,7 @@ import { expect, test, gotoDeck } from "./fixtures";
  */
 
 /** Les quatre piliers, dans l'ordre de la barre. */
-const TABS = ["Drop", "Binder", "Craft", "Toi"] as const;
+const TABS = ["Drop", "Binder", "Atelier", "Toi"] as const;
 
 /** La barre du bas (`aria-label="Navigation principale"`). */
 function bar(page: Page) {
@@ -129,7 +129,7 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
   });
 
   await openDeck(page);
-  for (const label of ["Binder", "Craft", "Toi", "Drop"] as const) {
+  for (const label of ["Binder", "Atelier", "Toi", "Drop"] as const) {
     await tab(page, label).click();
     await expect(tab(page, label)).toHaveAttribute("aria-current", "page");
   }

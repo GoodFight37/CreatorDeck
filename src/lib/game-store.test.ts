@@ -91,7 +91,7 @@ describe("gameStore", () => {
     const store = await freshStore();
     store.subscribe(() => {});
     // Épuise les boosters d'accueil (le départ en donne deux).
-    for (let i = 0; i < 2; i += 1) store.openPack();
+    for (let i = 0; i < 3; i += 1) store.openPack();
     const before = store.getSnapshot();
     expect(() => store.openPack()).toThrowError(/booster/i);
     expect(store.getSnapshot()).toBe(before);

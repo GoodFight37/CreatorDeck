@@ -57,7 +57,8 @@ export async function openPack(
    * `tokens` vaut `0` quand le jour ne paie pas de jetons **ou** quand il a
    * déjà été payé : l'écran ne doit annoncer que du vrai.
    */
-  streakReward: { day: number; points: number; tokens: number } | null;
+  streakReward: { day: number; points: number; tokens: number; packs?: number } | null;
+  streakProtectionUsed?: boolean;
   /**
    * La sauvegarde **telle que le serveur vient de l'écrire** (`0022`) : les
    * cinq cartes y sont déjà, avec des identifiants nés côté serveur. Le
@@ -101,12 +102,13 @@ export async function openPack(
     streak: Number(record.streak ?? 0),
     pityHit: record.pity_hit === true,
     jackpot: record.jackpot === true,
+    streakProtectionUsed: typeof record.streak_protection_used === "boolean" ? record.streak_protection_used : undefined,
     streakReward: (() => {
       const reward = asRecord(record.streak_reward);
       if (!reward) return null;
       const day = Number(reward.day ?? 0);
       if (!Number.isFinite(day) || day <= 0) return null;
-      return { day, points: Number(reward.points ?? 0), tokens: Number(reward.tokens ?? 0) };
+      return { day, points: Number(reward.points ?? 0), tokens: Number(reward.tokens ?? 0), packs: Number(reward.packs ?? 0) };
     })(),
     save: parseSaveRow(record.save),
   };

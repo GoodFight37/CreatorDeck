@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "note": "Ce que le jeu rend au joueur en plus des cartes : jetons, missions du jour, série de jours et Prime Time. Les taux de tirage vivent dans pull-rates.json ; ici, ce sont les règles de progression. Elles sont affichées dans l'app (Atelier, Objectifs) et vérifiées par les tests — un chiffre écrit ici ne peut pas exister seulement dans la tête du développeur.",
   "start": {
     "points": 40,
@@ -25,7 +25,7 @@
     "reward": {
       "hourglasses": 1
     },
-    "note": "Quatre missions par jour, remises à zéro à 6 h UTC. Chacune paie 1 sablier ; le Tribunal compte cinq dossiers distincts.",
+    "note": "Missions remises à zéro à 6 h UTC. Recyclage et Tribunal ne sont proposés qu’à partir du deuxième jour et ne conditionnent pas la récompense de série.",
     "list": [
       {
         "id": "pack",
@@ -37,7 +37,8 @@
         "id": "recycle",
         "label": "Recycle un doublon",
         "detail": "Une copie en trop, à l'Atelier",
-        "target": 1
+        "target": 1,
+        "fromDay": 2
       },
       {
         "id": "family",
@@ -49,42 +50,41 @@
         "id": "tribunal",
         "label": "Juge 5 dossiers",
         "detail": "Termine la séance du Tribunal des Bannis",
-        "target": 5
+        "target": 5,
+        "fromDay": 2
       }
     ]
   },
   "streak": {
     "days": 7,
     "jackpotHourglasses": 3,
-    "note": "Sept jours d'affilée avec au moins un booster ouvert. Le 7ᵉ jour donne un booster Perfect garanti — ou 3 sabliers, au choix. Les six premiers jours paient chacun une petite récompense, versée au booster qui fait avancer la série : un jour coché sans rien recevoir serait une frustration, pas une récompense. Le total d'une semaine pleine : 450 points, 2 sabliers et 25 jetons — de quoi fabriquer dix cartes communes à l'Atelier (45 points l'unité), jamais une Légendaire. Un jour manqué remet la série à zéro (le jour commence à 6 h UTC, comme les missions), et le même jour ne paie qu'une fois : c'est la journée de jeu qui sert de référence, pas le nombre de boosters.",
+    "note": "Sept jours joués : une absence d’un seul jour est protégée une fois par cycle. J1 à J6 donnent chacun un booster, une fois par journée de jeu. J7 garde le booster Perfect garanti. La journée commence à 6 h UTC.",
     "rewards": [
       {
         "day": 1,
-        "points": 40
+        "packs": 1
       },
       {
         "day": 2,
-        "hourglasses": 1
+        "packs": 1
       },
       {
         "day": 3,
-        "points": 60
+        "packs": 1
       },
       {
         "day": 4,
-        "points": 80,
-        "tokens": 10
+        "packs": 1
       },
       {
         "day": 5,
-        "points": 120,
-        "hourglasses": 1
+        "packs": 1
       },
       {
         "day": 6,
-        "points": 150,
-        "tokens": 15
+        "packs": 1
       }
-    ]
+    ],
+    "protectedMisses": 1
   }
 }

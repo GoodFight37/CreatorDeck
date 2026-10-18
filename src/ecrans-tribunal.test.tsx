@@ -327,20 +327,15 @@ describe("le Tribunal des Bannis", () => {
     expect(document.querySelector(".tribunal-count")?.textContent).toContain("Dossier 2");
   });
 
-  it("s'ouvre depuis l'accueil, avec le compte des dossiers du jour", async () => {
-    // Le branchement : l'accueil annonce la séance, et le bandeau ouvre bien
-    // l'écran. C'est le seul test qui monte l'application entière.
+  it("s'ouvre depuis les activités repliées d'Objectifs", async () => {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
-    const accueil = banc.ecran("53-tribunal-accueil");
-    expect(accueil, "le bandeau du Tribunal a disparu de l'accueil").toContain("Tribunal des Bannis");
-    expect(accueil).toContain("5 dossiers en attente");
-
-    const bandeau = [...document.querySelectorAll<HTMLButtonElement>(".tribunal-row")][0];
-    expect(bandeau, "le bandeau n'est pas un bouton").toBeTruthy();
-    act(() => {
-      bandeau!.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    });
+    expect(document.querySelector(".home-view")!.textContent).not.toContain("Tribunal");
+    banc.appuyer("Toi");
+    banc.appuyer(/^Objectifs et saisons/);
+    const details = [...document.querySelectorAll("details")].find((d) => d.querySelector("summary")?.textContent === "Autres activités")!;
+    expect(details.open).toBe(false);
+    banc.appuyer("Tribunal des Bannis");
 
     // Le classeur est vide sur une partie neuve : le Tribunal siège quand même.
     expect(document.querySelector(".tribunal-overlay")).toBeTruthy();

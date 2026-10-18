@@ -104,7 +104,7 @@ describe("la feuille de compte (cloud configuré)", () => {
     banc.vider();
 
     await banc.monter(<TradesPanel />);
-    expect(banc.ecran("17-echanges")).toContain("Pseudo au classement");
+    expect(banc.ecran("17-echanges")).toContain("Définir mes chaînes");
     banc.vider();
 
     await banc.monter(<LeaderboardSection focus="leaderboard" />);

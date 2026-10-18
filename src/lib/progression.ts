@@ -20,6 +20,7 @@ export type MissionDef = {
   label: string;
   detail: string;
   target: number;
+  fromDay?: number;
 };
 
 type ProgressionData = {
@@ -42,11 +43,12 @@ type ProgressionData = {
   };
   streak: {
     days: number;
+    protectedMisses: number;
     jackpotHourglasses: number;
     /**
      * Ce que la série paie **avant** le 7ᵉ jour : une petite récompense par
-     * jour coché. Le 7ᵉ jour n'est pas ici — il paie le jackpot (Perfect garanti
-     * ou les sabliers du choix), qui ne se cumule pas avec une micro-récompense.
+     * jour coché. Le 7ᵉ jour n'est pas ici — il paie le booster Perfect garanti,
+     * qui ne se cumule pas avec le booster quotidien.
      */
     rewards: StreakReward[];
     note: string;
@@ -62,6 +64,7 @@ export type StreakReward = {
   points?: number;
   hourglasses?: number;
   tokens?: number;
+  packs?: number;
 };
 
 /** Les six micro-récompenses, dans l'ordre des jours. */
@@ -84,11 +87,12 @@ export function streakRewardFor(day: number): Required<Omit<StreakReward, "day">
     points: reward.points ?? 0,
     hourglasses: reward.hourglasses ?? 0,
     tokens: reward.tokens ?? 0,
+    packs: reward.packs ?? 0,
   };
 }
 
 /**
- * La récompense en une phrase, pour l'écran : « +80 points · 10 jetons ».
+ * La récompense en une phrase, pour l'écran : « +1 booster ».
  *
  * Écrite ici et pas dans un composant : c'est la même phrase qui s'affiche
  * pendant la révélation, dans la notification, et dans les tests.
@@ -97,6 +101,7 @@ export function streakRewardLabel(reward: {
   points?: number;
   hourglasses?: number;
   tokens?: number;
+  packs?: number;
 }): string {
   return streakRewardParts(reward, "points").join(" · ");
 }
@@ -106,13 +111,15 @@ export function streakRewardLabel(reward: {
  * « +10 jetons ». Les cases du planning n'ont pas la place d'une phrase.
  */
 export function streakRewardParts(
-  reward: { points?: number; hourglasses?: number; tokens?: number },
+  reward: { points?: number; hourglasses?: number; tokens?: number; packs?: number },
   pointsWord = "pts",
 ): string[] {
   const points = reward.points ?? 0;
   const hourglasses = reward.hourglasses ?? 0;
   const tokens = reward.tokens ?? 0;
+  const packs = reward.packs ?? 0;
   return [
+    packs > 0 ? `+${packs} booster${packs > 1 ? "s" : ""}` : "",
     points > 0 ? `+${points} ${pointsWord}` : "",
     hourglasses > 0 ? `+${hourglasses} sablier${hourglasses > 1 ? "s" : ""}` : "",
     tokens > 0 ? `+${tokens} jetons` : "",
@@ -160,6 +167,23 @@ export function nextGameDay(day: string): string {
 /** Deux journées qui se suivent (la série continue) ou non (elle repart). */
 export function follows(previous: string, day: string): boolean {
   return nextGameDay(previous) === day;
+}
+
+/** Une absence d'un jour protégée une fois par cycle de sept jours joués. */
+export function advanceStreak(
+  state: { streakDay: string; streak: number; streakProtectionUsed?: boolean },
+  day: string,
+): { streak: number; streakProtectionUsed: boolean } {
+  if (state.streakDay === day) return { streak: state.streak, streakProtectionUsed: state.streakProtectionUsed === true };
+  const newCycle = state.streak % PROGRESSION.streak.days === 0;
+  const used = !newCycle && state.streakProtectionUsed === true;
+  const protectedGap = Boolean(state.streakDay) && !used && PROGRESSION.streak.protectedMisses > 0
+    && nextGameDay(nextGameDay(state.streakDay)) === day;
+  const continues = Boolean(state.streakDay) && (follows(state.streakDay, day) || protectedGap);
+  return {
+    streak: continues ? state.streak % PROGRESSION.streak.days + 1 : 1,
+    streakProtectionUsed: continues && (used || protectedGap),
+  };
 }
 
 /**

@@ -2,31 +2,28 @@
  * « Mes chaînes » — le cercle du joueur.
  *
  * Une question, posée avant tout le reste : *quelles chaînes regardes-tu déjà ?*
- * Entre 5 et 15 noms. Le premier booster ne tire que dans ce cercle, et la
- * rareté y est **celle du cercle**, pas le rang mondial : la première chaîne de
- * la liste est la plus précieuse, la dernière la plus commune. C'est le joueur
- * qui écrit la valeur de ses cartes, ce qui règle d'un coup « les têtes
- * désirables sont toutes Légendaires » pour le premier booster.
- *
- * Ce module est **pur** : aucun accès à `window`, au réseau ni au catalogue. Le
- * catalogue lui est passé en argument, ce qui le rend testable seul et permet au
- * serveur de refaire exactement les mêmes calculs (`0054_cercle.sql` recopie les
- * seuils et les poids ci-dessous ; `supabase-cercle.test.ts` tombe si l'un des
- * deux côtés bouge sans l'autre).
- *
- * Ce que le module ne fait PAS : toucher à `pull-rates.json`, à l'économie ou
- * aux cartes déjà possédées. La rareté du cercle est une **couche d'affichage**
- * du premier booster ; la carte enregistrée garde sa rareté mondiale, qui pilote
- * le recyclage et l'artisanat.
+ * Entre 5 et 15 noms. Le cercle exprime ce que le joueur regarde, pas une
+ * autre rareté : chaque carte garde la rareté du catalogue à l'ouverture,
+ * dans le classeur et pour l'artisanat. Son seul signe personnel est
+ * « Préférée » (position 0) ou « Dans tes chaînes ».
+ * Les coefficients historiques de 0054 restent internes à l'aperçu invité ;
+ * ils ne changent ni les cartes, ni leur cadre, leur libellé ou leur son.
+ * Aucun accès au réseau ou au stockage, aucun changement des tirages serveur.
  */
-import type { Rarity } from "@/lib/catalog";
+import { CREATOR_BY_SLUG, type Rarity } from "@/lib/catalog";
+
+/** Un seul signe de cercle, commun à la révélation et au classeur. */
+export function circleLabel(circle: readonly string[], slug: string): "Préférée" | "Dans tes chaînes" | null {
+  const position = circle.indexOf(slug);
+  return position < 0 ? null : position === 0 ? "Préférée" : "Dans tes chaînes";
+}
 
 export const CIRCLE_MIN = 5;
 export const CIRCLE_MAX = 15;
 /** Un booster du cercle compte cinq cartes, comme le Live Drop. */
 export const CIRCLE_PACK_SIZE = 5;
 
-/** Du plus précieux au plus courant : l'ordre des raretés dans le cercle. */
+/** Ordre des coefficients de sélection historiques, sans effet visuel. */
 export const CIRCLE_RARITY_ORDER: readonly Rarity[] = [
   "legendary",
   "epic",
@@ -36,19 +33,14 @@ export const CIRCLE_RARITY_ORDER: readonly Rarity[] = [
 ];
 
 /**
- * Seuils de rareté **en pourcentage de la liste** (position 0 = 0 %, dernière
- * position = 100 %). La première chaîne est toujours « Légendaire » ; ensuite,
- * jusqu'à 30 % Épique, 55 % Rare, 80 % Peu commune, le reste Commune. Avec
- * cinq chaînes, le cercle contient exactement une carte de chaque rareté.
+ * Coefficients historiques de l'aperçu, conservés pour son choix des slugs.
+ * Leurs noms ne décrivent jamais la rareté d'une carte et ne sont pas affichés.
  */
 export const CIRCLE_TIER_THRESHOLDS = { epic: 30, rare: 55, uncommon: 80 } as const;
 
 /**
- * Poids du premier booster : quatre cartes ordinaires, puis une carte finale
- * garantie Rare ou mieux (dans le cercle). **Ces chiffres ne viennent pas de
- * `pull-rates.json`** : c'est un booster d'accueil, volontairement plus généreux
- * que le Live Drop. À régler au premier essai réel ; ils sont publiés avec les
- * autres taux avant toute mise en ligne (voir le plan, étape 1).
+ * Poids historiques du choix des slugs de l'aperçu invité. Ils ne garantissent
+ * aucune rareté visuelle ; les cartes retournées portent celle du catalogue.
  */
 export const CIRCLE_SLOT_WEIGHTS: Readonly<Record<Rarity, number>> = {
   common: 30,
@@ -227,11 +219,11 @@ export function isValidCircle(slugs: readonly string[]): boolean {
 }
 
 /* ------------------------------------------------------------------------- */
-/* La rareté du cercle                                                        */
+/* Coefficients historiques de sélection                                      */
 /* ------------------------------------------------------------------------- */
 
 /**
- * La rareté d'une position dans un cercle de `size` chaînes. Arithmétique
+ * Le coefficient historique d'une position dans `size` chaînes. Arithmétique
  * entière uniquement : le serveur calcule la même chose en SQL, et un arrondi
  * flottant n'aurait pas le même résultat des deux côtés.
  */
@@ -244,7 +236,7 @@ export function circleTier(position: number, size: number): Rarity {
   return "common";
 }
 
-/** La rareté de chaque chaîne du cercle, par `slug`. */
+/** Coefficients historiques de sélection de 0054 ; jamais une rareté à afficher. */
 export function circleTiers(slugs: readonly string[]): Record<string, Rarity> {
   const out: Record<string, Rarity> = {};
   slugs.forEach((slug, position) => {
@@ -298,11 +290,8 @@ function pickFrom(
 }
 
 /**
- * Tire le premier booster dans le cercle : cinq chaînes **différentes**, dont la
- * dernière — celle qu'on garde pour la fin de la révélation — est Rare ou mieux
- * *dans le cercle*. Elle est tirée la première, pour que les quatre autres ne
- * puissent pas épuiser les chaînes précieuses ; l'ordre de révélation reste
- * « quatre cartes, puis la carte forte ».
+ * Aperçu invité : cinq chaînes différentes, toutes à leur rareté du catalogue.
+ * Les coefficients historiques sélectionnent les slugs, sans rareté alternative.
  *
  * Ne sert qu'à l'aperçu d'un joueur sans compte : aucune carte n'est écrite, et
  * le tirage qui compte est décidé en ligne (`0054_cercle.sql`).
@@ -311,7 +300,7 @@ export function drawCirclePack(
   slugs: readonly string[],
   random: RandomInt = defaultRandom,
 ): CircleCard[] {
-  if (!isValidCircle(slugs)) {
+  if (!isValidCircle(slugs) || slugs.some(slug => !CREATOR_BY_SLUG.has(slug))) {
     throw new Error("Il faut entre 5 et 15 chaînes différentes pour ouvrir ce booster.");
   }
   const tiers = circleTiers(slugs);
@@ -323,8 +312,8 @@ export function drawCirclePack(
   for (let slot = 0; slot < CIRCLE_PACK_SIZE - 1; slot += 1) {
     const slug = pickFrom(pool, tiers, CIRCLE_SLOT_WEIGHTS, random)!;
     pool = pool.filter((item) => item !== slug);
-    cards.push({ creatorSlug: slug, rarity: tiers[slug] });
+    cards.push({ creatorSlug: slug, rarity: CREATOR_BY_SLUG.get(slug)!.rarity });
   }
-  cards.push({ creatorSlug: last, rarity: tiers[last] });
+  cards.push({ creatorSlug: last, rarity: CREATOR_BY_SLUG.get(last)!.rarity });
   return cards;
 }

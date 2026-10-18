@@ -63,10 +63,12 @@
  */
 import { verifyHourglasses } from "./verify-hourglasses.mjs";
 import { verifyCircleDraw } from "./verify-circle-draw.mjs";
+import { verifyRetention } from "./verify-retention.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const MIGRATIONS = path.join(ROOT, "supabase", "migrations");
@@ -100,16 +102,42 @@ const server = new EmbeddedPostgres({
   password: "postgres",
   port,
   persistent: false,
+  initdbFlags: process.platform === "win32" ? ["--encoding=UTF8"] : [],
 });
 
-await server.initialise();
-await server.start();
-await server.createDatabase("verification");
+// Le paquet embedded lance postgres directement. Sous Windows administrateur,
+// pg_ctl crée le processus avec un jeton restreint, sans changer de compte.
+const pgCtl = process.platform === "win32"
+  ? path.join(path.dirname((await import("@embedded-postgres/windows-x64")).postgres), "pg_ctl.exe")
+  : null;
+function controlWindowsPostgres(args) {
+  // Des pipes hérités par le serveur empêcheraient pg_ctl de rendre la main.
+  execFileSync(pgCtl, args, { windowsHide: true, stdio: "ignore", timeout: 30_000 });
+}
 
 const client = new pg.Client({ host: "127.0.0.1", port, user: "postgres", password: "postgres", database: "verification" });
-await client.connect();
+let serverStarted = false;
 
 try {
+  await server.initialise();
+  if (pgCtl) {
+    controlWindowsPostgres(["start", "-D", dataDir, "-l", path.join(dataDir, "server.log"),
+      "-o", `-p ${port} -h 127.0.0.1`, "-w", "-t", "20"]);
+    serverStarted = true;
+    // embedded-postgres ne connaît pas le processus lancé par pg_ctl.
+    const admin = new pg.Client({ host: "127.0.0.1", port, user: "postgres", password: "postgres", database: "postgres" });
+    try {
+      await admin.connect();
+      await admin.query("create database verification encoding 'UTF8'");
+    } finally {
+      await admin.end().catch(() => {});
+    }
+  } else {
+    await server.start();
+    serverStarted = true;
+    await server.createDatabase("verification");
+  }
+  await client.connect();
   // --- Le strict nécessaire de l'environnement Supabase --------------------
   // Tout le reste (profils, sauvegardes, statistiques, classement) vient des
   // vraies migrations : on ne teste pas une maquette de la base.
@@ -3875,7 +3903,8 @@ try {
   const solde = async (userId) =>
     Number((await client.query("select public._wallet_ensure($1) as p", [userId])).rows[0].p);
   const bareme = new Map(
-    (progressionData.streak.rewards ?? []).map((reward) => [reward.day, reward.points ?? 0]),
+    // Barème historique 0032 : 0057 est appliquée et comparée au fichier en fin de suite.
+    [[1, 40], [2, 0], [3, 60], [4, 80], [5, 120], [6, 150]],
   );
   const pointsAnnonces = [];
   for (const day of [1, 2, 3, 4, 5, 6, 7, 9]) {
@@ -7422,10 +7451,20 @@ try {
   console.log("");
   await verifyCircleDraw({ client, player, asPlayer, refuses, check,
     sql: await readFile(path.join(MIGRATIONS, "0056_cercle_vrai.sql"), "utf8") });
+  await verifyRetention({ client, player, asPlayer, refuses, check,
+    sql: await readFile(path.join(MIGRATIONS, "0057_retention.sql"), "utf8") });
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});
-  await server.stop().catch(() => {});
+  if (serverStarted && pgCtl) {
+    controlWindowsPostgres(["stop", "-D", dataDir, "-m", "fast", "-w", "-t", "20"]);
+  } else if (serverStarted) {
+    await server.stop().catch(() => {});
+  }
+  // Ne nettoyer que le dossier jetable créé ci-dessus, après arrêt du serveur.
+  if (path.dirname(path.resolve(dataDir)) !== path.resolve(tmpdir()) || !path.basename(dataDir).startsWith("creatordeck-pg-")) {
+    throw new Error("Dossier Postgres temporaire inattendu : nettoyage refusé.");
+  }
   await rm(dataDir, { recursive: true, force: true }).catch(() => {});
 }
 

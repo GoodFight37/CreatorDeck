@@ -106,9 +106,9 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(onEditCircle).toHaveBeenCalledOnce();
   });
 
-  it("pas d'invitation pendant le parcours sans compte (la question y est déjà posée)", async () => {
+  it("garde Définir mes chaînes sans cercle, même sans compte", async () => {
     await home({ needsAccount: true });
-    expect(document.querySelector(".circle-invite")).toBeNull();
+    expect(document.querySelector(".circle-invite")!.textContent).toContain("Définir mes chaînes");
   });
 
   it("avec un cercle : « Modifier » sur la rangée, et les jetons sur une seule ligne", async () => {

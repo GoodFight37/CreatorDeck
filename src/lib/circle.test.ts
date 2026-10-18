@@ -5,12 +5,10 @@ import {
   CIRCLE_MAX,
   CIRCLE_MIN,
   CIRCLE_PACK_SIZE,
-  CIRCLE_RARITY_ORDER,
   CIRCLE_SLOT_WEIGHTS,
   buildCreatorIndex,
   circleProgress,
-  circleTier,
-  circleTiers,
+  circleLabel,
   completeWithPopular,
   drawCirclePack,
   isValidCircle,
@@ -34,8 +32,6 @@ function seeded(seed: number) {
     return Math.floor((((t ^ (t >>> 14)) >>> 0) / 4294967296) * max);
   };
 }
-
-const rank = (rarity: string) => CIRCLE_RARITY_ORDER.indexOf(rarity as never);
 
 describe("lire ce que le joueur écrit", () => {
   it("ramène un nom, un @, un lien collé ou un accent à la même forme", () => {
@@ -96,39 +92,20 @@ describe("lire ce que le joueur écrit", () => {
   });
 });
 
-describe("la rareté du cercle", () => {
-  it("donne à cinq chaînes exactement une carte de chaque rareté", () => {
-    const tiers = [0, 1, 2, 3, 4].map((position) => circleTier(position, 5));
-    expect(tiers).toEqual(["legendary", "epic", "rare", "uncommon", "common"]);
-  });
-
-  it("commence toujours par une Légendaire et ne remonte jamais, de 5 à 15 chaînes", () => {
-    for (let size = CIRCLE_MIN; size <= CIRCLE_MAX; size += 1) {
-      const tiers = Array.from({ length: size }, (_, position) => circleTier(position, size));
-      expect(tiers[0]).toBe("legendary");
-      expect(tiers.filter((tier) => tier === "legendary")).toHaveLength(1);
-      for (let i = 1; i < size; i += 1) {
-        expect(rank(tiers[i]) >= rank(tiers[i - 1])).toBe(true);
-      }
-      // De quoi garantir une dernière carte « Rare ou mieux » sans jamais la répéter.
-      expect(tiers.filter((tier) => rank(tier) <= rank("rare")).length).toBeGreaterThanOrEqual(3);
-    }
-  });
-
-  it("relie chaque chaîne du cercle à sa rareté et compte les cartes déjà obtenues", () => {
+describe("le signe du cercle", () => {
+  it("distingue la préférée et les autres chaînes sans inventer une rareté", () => {
     const circle = POPULAR.slice(0, 6);
-    const tiers = circleTiers(circle);
-    expect(Object.keys(tiers)).toEqual(circle);
-    expect(tiers[circle[0]]).toBe("legendary");
+    expect(circleLabel(circle, circle[0])).toBe("Préférée");
+    expect(circleLabel(circle, circle[1])).toBe("Dans tes chaînes");
+    expect(circleLabel(circle, "hors-cercle")).toBeNull();
     expect(circleProgress(circle, new Set([circle[1], "hors-cercle"]))).toEqual({ owned: 1, total: 6 });
   });
 });
 
 describe("le premier booster", () => {
-  it("n'est tiré que dans le cercle : cinq chaînes différentes, la dernière Rare ou mieux", () => {
+  it("n'est tiré que dans le cercle : cinq chaînes différentes à leur rareté du catalogue", () => {
     for (let size = CIRCLE_MIN; size <= CIRCLE_MAX; size += 1) {
       const circle = POPULAR.slice(0, size);
-      const tiers = circleTiers(circle);
       const random = seeded(size * 7919);
       for (let draw = 0; draw < 300; draw += 1) {
         const pack = drawCirclePack(circle, random);
@@ -137,9 +114,8 @@ describe("le premier booster", () => {
         expect(new Set(slugs).size).toBe(CIRCLE_PACK_SIZE);
         for (const card of pack) {
           expect(circle).toContain(card.creatorSlug);
-          expect(card.rarity).toBe(tiers[card.creatorSlug]);
+          expect(card.rarity).toBe(CREATORS.find(creator => creator.slug === card.creatorSlug)!.rarity);
         }
-        expect(rank(pack[CIRCLE_PACK_SIZE - 1].rarity) <= rank("rare")).toBe(true);
       }
     }
   });
@@ -154,9 +130,9 @@ describe("le premier booster", () => {
     const circle = POPULAR.slice(0, 10);
     const random = seeded(42);
     const lasts = new Set<string>();
-    for (let draw = 0; draw < 400; draw += 1) lasts.add(drawCirclePack(circle, random).at(-1)!.rarity);
-    expect(lasts.has("legendary")).toBe(true);
-    expect(lasts.has("rare") || lasts.has("epic")).toBe(true);
+    for (let draw = 0; draw < 400; draw += 1) lasts.add(drawCirclePack(circle, random).at(-1)!.creatorSlug);
+    expect(lasts.has(circle[0])).toBe(true);
+    expect(lasts.size).toBeGreaterThan(1);
   });
 
   it("refuse un cercle trop court, trop long ou avec un doublon", () => {

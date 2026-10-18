@@ -18,6 +18,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
+import { CREATORS } from "@/lib/catalog";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -32,7 +33,7 @@ type Rarete = "common" | "uncommon" | "rare" | "epic" | "legendary";
 function carte(rarity: Rarete, id: string = rarity) {
   return {
     id,
-    creatorSlug: "kamet0",
+    creatorSlug: CREATORS.find(creator => creator.rarity === rarity)!.slug,
     rarity,
     variant: "standard" as const,
     isNew: false,
@@ -181,7 +182,7 @@ describe("les effets de révélation", () => {
     cinq[2]!.isNew = true;
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
-      <RevealOverlay cards={cinq as never} index={0} streakReward={{ day: 2, points: 0, hourglasses: 1, tokens: 0 }} onNext={suivant} onClose={fermer} />,
+      <RevealOverlay cards={cinq as never} index={0} streakReward={{ day: 2, packs: 1, points: 0, hourglasses: 0, tokens: 0 }} onNext={suivant} onClose={fermer} />,
     );
     expect(document.querySelector(".reveal-corner-handle"), "le Perfect garde ses cinq cartes immédiates").toBeNull();
     expect(document.querySelector(".reveal-fifth-card"), "le Perfect ne reçoit pas le temps de pose séquentiel").toBeNull();
@@ -207,7 +208,7 @@ describe("les effets de révélation", () => {
 
     banc.appuyer("Ranger dans le classeur");
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(1);
-    expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 sablier");
+    expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 booster");
     expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("1 nouvelle");
     expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("BOOSTER PERFECT");

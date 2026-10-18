@@ -66,8 +66,8 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
     // Les primes de série du fichier, jour par jour — la même table que
     // `_streak_reward_tokens()`, lue là où elle vit.
     const jetonsParJour = new Map(PROGRESSION.streak.rewards.map((r) => [r.day, r.tokens ?? 0]));
-    expect(jetonsParJour.get(4)).toBe(10);
-    expect(jetonsParJour.get(6)).toBe(15);
+    expect(jetonsParJour.get(4)).toBe(0);
+    expect(jetonsParJour.get(6)).toBe(0);
     for (const day of [1, 2, 3, 5]) expect(jetonsParJour.get(day) ?? 0).toBe(0);
   });
 
@@ -91,9 +91,9 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
     expect(corps).toMatch(/values \(v_user_id, public\._pack_initial_packs\(\), v_now, 0, v_now\)/);
     // Les migrations suivantes doivent conserver les écritures de jetons de
     // 0035, pas seulement citer son numéro dans leur en-tête.
-    expect(corps).toContain("public._tokens_apply");
-    expect(corps).toMatch(/v_tokens_serie := public\._streak_reward_tokens\(v_jour\)/);
-    expect(corps).toMatch(/'serie-j' \|\| v_jour::text \|\| '-' \|\| public\._pack_game_day\(v_now\)::text/);
+    expect(corps).not.toContain("public._tokens_apply");
+    expect(corps).toContain("v_tokens_serie := 0");
+    expect(corps).toContain("public._streak_reward_packs(v_jour)");
     // La réponse porte les jetons du jour, et l'écran ne les invente pas.
     expect(FLAT).toMatch(/'streak_reward', jsonb_build_object\('day', v_jour, 'points', v_points_serie, 'tokens', v_tokens_serie\)/);
     // Signatures inchangées : `create or replace` remplace, il ne surcharge pas.
@@ -186,12 +186,14 @@ describe("0035_jetons.sql (les jetons au serveur)", () => {
       rewardDay: 4,
       rewardPoints: 80,
       rewardTokens: 10,
+      rewardPacks: 1,
     });
     expect(serveur.state.tokens).toBe(state.tokens);
     // L'annonce, elle, dit ce que le serveur a vraiment versé : le jour 4 paie
     // 10 jetons, et la réponse le confirme.
-    expect(serveur.streakReward?.tokens).toBe(10);
-    expect(serveur.streakReward?.points).toBe(80);
+    expect(serveur.streakReward?.packs).toBe(1);
+    expect(serveur.streakReward?.tokens).toBe(0);
+    expect(serveur.streakReward?.points).toBe(0);
     // Un jour déjà payé (le serveur dit 0) : il n'y a **rien** à annoncer, et
     // surtout pas des jetons que le serveur n'a pas versés.
     const dejaPaye = applyPackResult(state, cartes, 2, tirage, 1, tirage, {

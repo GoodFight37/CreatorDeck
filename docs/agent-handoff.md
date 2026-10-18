@@ -1,4 +1,122 @@
-# Checkpoint — D-145 publié et vérifié (18 octobre 2026)
+# Checkpoint — finition courte, locale, 18 octobre 2026
+
+- Tirage, rareté unique, bouton et rétention présents avant cette finition ; lots préservés.
+- Le portrait entier garde ses proportions dans le cadre vertical de CreatorCard, sans étirement.
+- Une matière commune par rareté catalogue, dans le classeur, la fiche et la révélation ; aucune légende ajoutée.
+- Atelier est le nom de l’onglet, du titre et des textes ; aucun nouveau nom d’écran.
+- Même piste musicale conservée, gains existants de 8 % à l’accueil et 4 % pendant l’ouverture.
+- Preuves locales : 46 tests d’écrans, 23 tests audio et un parcours Chrome 390×844 réussis ; typecheck et build verts.
+- Export compilé sans cloud : aucune validation du serveur de production ; tirage, SQL, missions et geste du sachet inchangés.
+- Aucun vrai téléphone, écoute physique, APK ou mise à jour sur appareil essayé ici ; local non commité, HEAD 3f23ae65, réservation libérée.
+
+# Historique — D-148 rétention, local uniquement (18 octobre 2026)
+
+- Demande : rétention seulement, fichiers locaux, aucun commit. Branche
+  `etape-4-cercle-vrai`, HEAD `3f23ae655b322f7e459bf66d22e49e0094268f6b`.
+  Aucun clone, accès GitHub, fetch, push, SQL distant ou délégation.
+  Lots locaux D-146/D-147 et protections de travail préservés.
+- Série : une absence d'un seul jour protégée une fois par cycle de sept jours
+  joués ; une seconde absence ou deux jours d'absence consécutifs repartent à
+  J1. J1–J6 offrent chacun un booster, une fois par journée de jeu ; J7 conserve
+  le booster Perfect. Fin de l'affichage des trois monnaies et du choix sabliers.
+  Moteur, sauvegarde du drapeau et adoption du résultat serveur alignés.
+- Le serveur verse déjà la série (0056 appelle les barèmes points/jetons) :
+  nouvelle migration **locale et manuelle** `0057_retention.sql`. Elle repart
+  d'`open_pack` de 0056, conserve son tirage de cercle, crédite la réserve sous
+  verrou, déduit la série du journal Live Drop et ferme `last_pack_steal` aux
+  clients. Aucune migration précédente modifiée, aucune application distante.
+- Recyclage et Tribunal : missions à partir de J2, hors réclamation J1 ; ils
+  ne conditionnent pas la récompense de série. Tribunal, Scène et Arène retirés
+  des deux accueils, disponibles dans « Autres activités » fermé d'Objectifs.
+  Disponibilité serveur du Scène préservée. « Définir mes chaînes » conservé.
+- Hôtel, échanges et classement : lecture indépendante du classement mondial
+  pour distinguer le joueur des autres (ni le tri par famille ni une liste
+  d'amis vide ne suffisent). Sans autre joueur : une action de partage d'une
+  carte du cercle, partage système ou copie du texte, sans transfert. Sans
+  cercle : accès à sa définition. Last Pack devient consultatif, sans vol.
+- Tests : cas rouges reproduits puis **345 unitaires ciblés réussis** via
+  `npm test -- src/lib/game-progression.test.ts src/lib/game-engine.test.ts
+  src/lib/supabase-progression.test.ts src/lib/supabase-jetons.test.ts
+  src/lib/cloud/cloud-store.test.ts src/lib/retention.test.ts
+  src/lib/supabase-retention.test.ts src/lib/game-store.test.ts`, plus **4 tests**
+  `src/lib/cloud/store/retention.test.ts` réussis séparément.
+  `npm run ecrans -- --exclude src/ecrans-app-update.test.tsx` : **223/223**,
+  35 fichiers, suite APK exclue explicitement pour l'erreur d'import ci-dessous.
+  Avertissements `act` dans deux anciens scénarios d'accueil, pas d'échec.
+  `npm run typecheck` final réussi, lint ciblé et garde-jargon réussis.
+- **Téléphone simulé : 2/2 Playwright réussis**, Chrome installé, viewport
+  390×844, requêtes hors localhost bloquées. Config temporaire hors dépôt pour
+  utiliser `channel: chrome`, serveur local Next `--webpack` (Turbopack avait
+  expiré à 120 s ; le Chromium headless demandé par défaut est absent, aucun
+  téléchargement). Captures locales `test-results/retention-avec-cercle.png`
+  et `test-results/retention-sans-cercle.png` relues. Pas un essai Android réel.
+- **Limites explicites :** `npm run supabase:verify` échoue avant les scénarios,
+  PostgreSQL refusant le compte Windows administrateur. Contrat miroir 0057
+  testé ; exécution SQL préparée dans `scripts/verify-retention.mjs`, intégrée
+  en fin de vérification après les migrations historiques. Pas d'affirmation
+  de SQL exécuté. La suite large unitaire a 1 282 assertions réussies mais sort
+  en échec de chargement sur `app-update.test.ts` ; même import défaillant dans
+  `ecrans-app-update.test.tsx` : `apk-manifest.mjs`, inchangé, « Invalid or
+  unexpected token ». `node --check` du script réussit ; APK hors périmètre.
+- État : local non commité, non déployé. Aucun polish de carte ni changement
+  de poids mondiaux. Prochaine action : essai de Malik ; la migration reste
+  à exécuter sur Postgres jetable compatible avant toute publication sensible.
+  Réservation libérée à l'issue des contrôles ; HEAD inchangé.
+
+# Historique — D-147 réserve vide et choix personnels, local uniquement (18 octobre 2026)
+
+- Demande limitée : action utile à réserve vide et complément après trois
+  chaînes reconnues choisies personnellement. Aucun commit demandé.
+- Branche `etape-4-cercle-vrai`, HEAD inchangé
+  `3f23ae655b322f7e459bf66d22e49e0094268f6b`. Aucun accès GitHub, clone,
+  fetch, push, migration ou délégation. Travail local D-146 préservé.
+- `drop-view.tsx` : réserve vide avec cercle, lien vers le premier direct
+  frais du cercle, sinon bouton actif « Personne de tes chaînes en direct »
+  qui fait défiler et place le focus sur la rangée. Recharge en ligne
+  secondaire ; sablier seulement dans « Réserve, taux et sabliers ».
+- `circle-onboarding.tsx` : trois choix personnels reconnus avant le
+  complément, au plus deux suggestions, confirmation explicite séparée.
+  Nom inconnu signalé sans remplacement automatique ; validation exige cinq
+  chaînes distinctes présentes dans le catalogue. Retirer un choix personnel
+  le retire aussi du seuil de trois ; les suggestions ne comptent pas.
+- Tests rouges reproduits (5 échecs attendus), puis `npm run ecrans --
+  src/ecrans-circle-live.test.tsx src/ecrans-circle-onboarding.test.tsx
+  src/ecrans-binder-cercle.test.tsx src/ecrans.test.tsx
+  src/ecrans-reset-tutoriel.test.tsx src/ecrans-tutorial-after-account.test.tsx` :
+  **37/37 réussis** sur ce diff. Anciens scénarios d’accueil adaptés pour
+  saisir trois vrais noms avant le complément. Quelques avertissements React
+  `act` dans les deux scénarios d’accueil intégrés ; aucun test échoué.
+  `npm run typecheck` réussi. Essais jsdom, aucun essai téléphone revendiqué.
+- Checkpoint local non commité. Réservation libérée ; prochaine action :
+  essai de Malik. Aucun SQL, mission, polish ou publication pour ce lot.
+
+# Historique — D-146 rareté unique, local uniquement (18 octobre 2026)
+
+- Demande : utiliser uniquement la rareté catalogue et le même signe
+  « Préférée » / « Dans tes chaînes » à la révélation et au Binder. Aucun SQL,
+  changement de tirage serveur, recharge, mission ou polish ; **pas de commit**.
+- Base locale vérifiée : `etape-4-cercle-vrai`, HEAD
+  `3f23ae655b322f7e459bf66d22e49e0094268f6b`. Aucun clone, fetch ou accès GitHub
+  pour cette tâche. D-145 reste intact. Seuls les deux dossiers d'artefacts
+  non suivis préexistaient ; ils sont préservés.
+- Retrait de la substitution dans RevealOverlay et de la propagation des
+  métadonnées depuis le cadeau, le moteur et l'aperçu invité. Champs anciens
+  encore acceptés mais ignorés. Rangée de chaînes basée sur la rareté réelle ;
+  signe commun via circleLabel. Objectif de craft au prix réel du catalogue et
+  mention « à tirer » quand interdit. Tests exigeant la fausse rareté retirés ;
+  fixtures d'effets rendues cohérentes avec le catalogue, sans changer les effets.
+- Preuves sur le diff basé sur ce HEAD : test rouge reproduit sur la préférée
+  Commune affichée Légendaire, puis **41/41 unitaires ciblés**, **40/40 écrans**
+  (circle-pack, binder-cercle, effets), `npm run typecheck` réussi. Vérifie
+  explicitement la même Commune, « Préférée », le récap et le son ; la Commune
+  préférée reste fabricable au prix Commune. Tests jsdom, pas un essai téléphone.
+- Pas de SQL exécuté ou modifié, aucun commit, push ou déploiement. Correctif
+  conservé uniquement dans les fichiers locaux ; réservation libérée après
+  les derniers contrôles. Prochaine action : essai de Malik ou commit seulement
+  sur sa demande explicite. ESLint ciblé, garde-jargon et `git diff --check`
+  réussis ; HEAD final inchangé, aucun fichier SQL ou du tirage D-145 modifié.
+
+# Historique — D-145 publié et vérifié (18 octobre 2026)
 
 - **Terminé :** règle cercle vrai publiée sur `main` et
   `etape-4-cercle-vrai`, code `0fe66715ab07203ff00ce6eedf08653aa92aa995`.

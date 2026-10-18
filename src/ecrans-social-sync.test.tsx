@@ -1,4 +1,5 @@
 import { act } from "react";
+vi.mock("@/hooks/use-other-players", () => ({ useOtherPlayers: () => true }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 
@@ -51,7 +52,7 @@ describe("les feuilles sociales après connexion", () => {
     expect(cloudStore[method]).toHaveBeenCalledOnce();
   });
 
-  it("la première carte, numérotée 1 par le serveur, reste sélectionnable", async () => {
+  it("les cartes des amis se consultent sans action de vol", async () => {
     const { LastPackSheet } = await import("@/components/last-pack-sheet");
     const { cloudStore } = await import("@/lib/cloud/cloud-store");
     monde.cloud.userId = "11111111-1111-4111-8111-111111111111";
@@ -62,10 +63,9 @@ describe("les feuilles sociales après connexion", () => {
       cards: [{ index: 1, creatorSlug: "kaicenat", rarity: "common", variant: "standard", taken: false, stealable: true }],
     }] } as never;
     await banc.monter(<LastPackSheet onClose={() => {}} />);
-    act(() => document.querySelector<HTMLButtonElement>(".last-pack-card")!.click());
-    expect(document.querySelector(".last-pack-card")?.getAttribute("aria-pressed")).toBe("true");
-    banc.appuyer(/Prendre cette carte/);
-    await act(async () => {});
-    expect(cloudStore.stealLastPack).toHaveBeenCalledWith(8, 1);
+    expect(document.body.textContent).toContain("KaiCenat");
+    expect(document.querySelector(".last-pack-card, .last-pack-take")).toBeNull();
+    expect(document.body.textContent).not.toContain("Prendre cette carte");
+    expect(cloudStore.stealLastPack).not.toHaveBeenCalled();
   });
 });

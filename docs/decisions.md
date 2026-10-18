@@ -1,3 +1,46 @@
+## D-148 — 18 octobre 2026 : rétention sans perte immédiate de série (local, non publié)
+
+Malik demande cette seule étape. Choix d'implémentation : une absence isolée
+protégée par cycle de sept jours joués, avec drapeau persistant ; après usage,
+une nouvelle absence repart à J1. J1–J6 donnent un booster chacun au lieu de
+points/sabliers/jetons ; J7 conserve le Perfect, sans choix monétaire affiché.
+La série est indépendante des missions ; recyclage et Tribunal commencent à
+J2. Les trois activités sont retirées de l'accueil avec ou sans cercle et
+restent dans un panneau fermé d'Objectifs. Les états sociaux sans autre joueur
+proposent le partage d'une carte du cercle, sans transfert de propriété.
+Last Pack est consultatif ; 0057 retire aussi le droit client de vol.
+
+Le code existant prouve le versement serveur de la série : migration locale
+0057 requise pour changer le barème et la protection, sans modifier 0054–0056
+ni le tirage de cercle. Scénarios communs TS/SQL et test du barème, tests moteur,
+store, écrans et deux parcours Chrome au format téléphone (avec/sans cercle).
+Exécution PostgreSQL locale bloquée par le compte administrateur Windows ;
+aucune application distante, publication ou validation sur appareil revendiquée.
+
+## D-147 — 18 octobre 2026 : réserve vide utile et complément limité (local, non publié)
+
+À la demande de Malik, avec un cercle et sans booster disponible, l’action
+principale ouvre le premier direct frais du cercle ; sinon elle reste active
+et mène à la rangée des chaînes. Le décompte reste secondaire et le sablier
+reste dans les détails de réserve. Un complément automatique exige trois
+chaînes reconnues choisies personnellement, ajoute au plus deux suggestions
+du classement mondial et ne confirme jamais à la place du joueur. Un nom
+inconnu reste une erreur ; seuls cinq noms distincts du catalogue permettent
+de confirmer. L’ancienne substitution par la première suggestion est retirée.
+Tests d’écrans ciblés et typecheck réussis. Aucun SQL, mission, polish ou commit.
+
+## D-146 — 18 octobre 2026 : une seule rareté, celle du catalogue (local, non publié)
+
+Malik retire la décision d'afficher une rareté différente dans le premier
+booster. Cadre, libellé, matière et son suivent désormais la rareté du
+catalogue, comme le classeur, la fiche et le craft. Les anciens champs
+`displayRarity`/`circleRarity` sont ignorés ; les coefficients historiques
+restent seulement internes à la sélection de l'aperçu, sans changement SQL.
+Le seul signe personnel est « Préférée » ou « Dans tes chaînes », commun à
+l'ouverture, son récapitulatif et au Binder. Le craft interdit est dit « à
+tirer ». D-145 et ses tirages serveur restent inchangés. Demande locale seule :
+aucun commit, push, déploiement ou travail de polish.
+
 ## D-145 — 18 octobre 2026 : garder les absentes du cercle dans tous les Live Drop
 
 Malik autorise explicitement cette seule règle sur `etape-4-cercle-vrai`, issue

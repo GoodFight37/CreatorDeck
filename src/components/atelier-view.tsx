@@ -209,7 +209,7 @@ export function AtelierView({
             <p className="atelier-intro" style={{ margin: "0.25rem 0" }}>
               Standard uniquement : les variantes Live, Holo et Gold restent exclusives aux boosters.
             </p>
-            <p className="atelier-cost-guide" aria-label="Coûts de craft" style={{ margin: "0.2rem 0" }}>
+            <p className="atelier-cost-guide" aria-label="Coûts de l’Atelier" style={{ margin: "0.2rem 0" }}>
               Coûts : Commune 45 · Peu commune 90 · Rare 220 · Épique 600 points. Légendaire : booster.
             </p>
           </details>

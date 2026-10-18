@@ -102,16 +102,15 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     // l'écran en annoncerait un autre.
     for (const reward of STREAK_REWARDS) {
       const attendu = reward.points ?? 0;
-      const ligne = CODE_BAREME.match(new RegExp(`when ${reward.day} then (\\d+)`));
-      expect(ligne?.[1], `jour ${reward.day}`).toBe(String(attendu));
+      expect(attendu, `jour ${reward.day}`).toBe(0);
     }
     // Le 7ᵉ jour ne paie rien : c'est le jackpot, décidé ailleurs.
     expect(STREAK_REWARDS.some((reward) => reward.day === 7)).toBe(false);
-    expect(CODE_BAREME).toMatch(/else 0/);
+    expect(CODE_BAREME).toMatch(/select 0/);
     // Les points sont versés par `_wallet_apply` — jamais une écriture directe
     // du solde, qui contournerait le journal à usage unique.
-    expect(CODE_SERIE).toContain("public._wallet_apply(");
-    expect(CODE_SERIE).toContain("'streak'");
+    expect(CODE_SERIE).not.toContain("public._wallet_apply(");
+    expect(CODE_SERIE).toContain("public._streak_reward_packs(");
     expect(CODE_SERIE).toContain("public._pack_game_day(v_now)");
     expect(CODE_SERIE).not.toMatch(/update public\.wallets/i);
     // Même signature, pas de `drop` : un recollage remplace, il n'empile pas.
@@ -126,7 +125,7 @@ describe("0013_progression.sql (plancher de malchance et série)", () => {
     // réserve d'accueil se sépareraient alors de l'écran en silence.
     expect(OPEN_PACK.fichier).toMatch(/^00\d\d_/);
     expect(CODE_SERIE).toContain(`v_pity + 1 >= ${PITY.threshold}`);
-    expect(CODE_SERIE).toContain("public._streak_reward_points(");
+    expect(CODE_SERIE).toContain("public._streak_reward_packs(");
     expect(CODE_SERIE).toContain("public._pack_initial_packs()");
     // Et la suite de l'historique ne le redéfinit plus après.
     const apres = migrations.filter((f) => f > OPEN_PACK.fichier).some((f) =>

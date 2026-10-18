@@ -71,7 +71,7 @@ describe("le réglage du son", () => {
     const avant = sons.oscillateurs + sons.bruitages;
 
     // Un tour complet des onglets, dans les deux sens.
-    for (const onglet of ["Drop", "Binder", "Craft", "Toi", "Drop", "Toi"]) banc.appuyer(onglet);
+    for (const onglet of ["Drop", "Binder", "Atelier", "Toi", "Drop", "Toi"]) banc.appuyer(onglet);
     // Puis les portes de l'écran Toi : le compte, les taux, les objectifs, le
     // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
     // d'écran, toutes muettes.

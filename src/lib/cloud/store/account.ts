@@ -21,6 +21,18 @@ import { MAX_SHOWCASE } from "@/lib/cloud/showcase";
 export function accountActions(ctx: CloudStoreContext) {
   let autoSync: Promise<void> | null = null;
   return {
+    /** Présence globale indépendante du tri ou des amis du joueur. */
+    async hasOtherPlayers(): Promise<boolean | null> {
+      const api = ctx.resolve();
+      const userId = ctx.currentUserId();
+      if (!api || !userId) return null;
+      try {
+        const rows = await api.leaderboard(2, "unique_creators", null);
+        return rows.some((row) => row.userId !== userId);
+      } catch {
+        return null;
+      }
+    },
     async requestCode(email: string): Promise<void> {
       const api = ctx.resolve();
       if (!api) {

@@ -48,7 +48,8 @@ describe("les écrans", () => {
     const drop = banc.ecran("01-accueil");
     expect(drop).toContain("Ouvrir le booster");
     expect(document.documentElement.dataset.cardFx).toBe("on");
-    expect(drop).toContain("OBJECTIF DU JOUR");
+    expect(drop).not.toContain("Tribunal");
+    expect(drop).not.toContain("Pas de Légendaire dans ce paquet");
     expect(document.querySelector(".top-actions")?.textContent).toContain("Sab.");
     expect(document.querySelector(".top-actions")?.textContent).toContain("Pts");
     expect(document.querySelector(".top-actions")?.textContent).toContain("Niv.");
@@ -58,7 +59,7 @@ describe("les écrans", () => {
     expect(binder).toContain("binder-tools");
     expect(binder).toContain("Ta collection commence avec le prochain booster.");
 
-    banc.appuyer("Craft");
+    banc.appuyer("Atelier");
     banc.ecran("03-craft");
     expect(document.querySelector(".view.atelier-view h1")?.textContent).toBe("Atelier");
 
@@ -68,7 +69,7 @@ describe("les écrans", () => {
     // ordre est celui du jeu.
     expect(
       [...document.querySelectorAll(".bottom-nav button span")].map((n) => n.textContent),
-    ).toEqual(["Drop", "Binder", "Craft", "Toi"]);
+    ).toEqual(["Drop", "Binder", "Atelier", "Toi"]);
 
     banc.appuyer("Toi");
     // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
@@ -117,6 +118,8 @@ describe("les écrans", () => {
     expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
     expect(document.body.textContent).not.toContain("Construis ton Binder");
     expect((document.querySelector(".circle-actions .welcome-primary") as HTMLButtonElement).disabled).toBe(true);
+    banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
+    banc.appuyer("Ajouter");
     banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
     banc.appuyer("Voir mon premier booster");
     expect(document.body.textContent).not.toContain("Un cadeau t’attend");
@@ -134,6 +137,8 @@ describe("les écrans", () => {
     banc.appuyer("Réinitialiser la progression");
     expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBeNull();
+    banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
+    banc.appuyer("Ajouter");
     banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
     banc.appuyer("Voir mon premier booster");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");

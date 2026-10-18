@@ -12,6 +12,7 @@
  * remplacé, le store cloud réel n'est pas configuré et ne parle à personne.
  */
 import { act } from "react";
+vi.mock("@/hooks/use-other-players", () => ({ useOtherPlayers: () => true }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 

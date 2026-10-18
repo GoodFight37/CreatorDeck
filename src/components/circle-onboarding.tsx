@@ -42,12 +42,15 @@ export function CircleOnboarding({
   onCancel?: () => void;
 }) {
   const [slugs, setSlugs] = useState<string[]>(() => [...initial]);
+  const [personal, setPersonal] = useState(() => new Set(initial.filter((slug) => CREATOR_BY_SLUG.has(slug))));
   const [draft, setDraft] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const suggestions = searchCreators(draft, INDEX, slugs);
   const missing = Math.max(0, CIRCLE_MIN - slugs.length);
-  const ready = missing === 0 && slugs.length <= CIRCLE_MAX;
+  const ready = missing === 0 && slugs.length <= CIRCLE_MAX
+    && new Set(slugs).size === slugs.length && slugs.every((slug) => CREATOR_BY_SLUG.has(slug));
+  const canComplete = missing > 0 && slugs.filter((slug) => personal.has(slug) && CREATOR_BY_SLUG.has(slug)).length >= 3;
 
   function add(next: string[], notice: string | null = null) {
     setSlugs(next);
@@ -55,28 +58,28 @@ export function CircleOnboarding({
     setMessage(notice);
   }
 
+  function addPersonal(next: string[], notice: string | null = null) {
+    setPersonal((previous) => new Set([...previous, ...next.filter((slug) => !slugs.includes(slug) && CREATOR_BY_SLUG.has(slug))]));
+    add(next, notice);
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     const text = draft.trim();
     if (!text) return;
     const result = resolveCircleInput(text, INDEX, slugs);
-    // Une frappe incomplète (« kam ») ajoute la première suggestion plutôt que
-    // de répondre « inconnu » : sur un téléphone, personne n'écrit un login entier.
-    if (result.slugs.length === slugs.length && result.unknown.length && suggestions.length) {
-      add([...slugs, suggestions[0].slug]);
-      return;
-    }
     let notice: string | null = null;
     if (result.unknown.length) {
       notice = `« ${result.unknown[0]} » n’est pas dans le jeu${result.unknown.length > 1 ? ` (et ${result.unknown.length - 1} autre${result.unknown.length > 2 ? "s" : ""})` : ""}.`;
     } else if (result.overflow) {
       notice = `${CIRCLE_MAX} chaînes au maximum.`;
     }
-    add(result.slugs, notice);
+    addPersonal(result.slugs, notice);
   }
 
   function remove(slug: string) {
     setSlugs((list) => list.filter((item) => item !== slug));
+    setPersonal((previous) => new Set([...previous].filter((item) => item !== slug)));
     setMessage(null);
   }
 
@@ -118,7 +121,7 @@ export function CircleOnboarding({
           <ul className="circle-suggestions" aria-label="Suggestions">
             {suggestions.map((creator) => (
               <li key={creator.slug}>
-                <button type="button" onClick={() => add([...slugs, creator.slug])}>
+                <button type="button" onClick={() => addPersonal([...slugs, creator.slug])}>
                   <strong>{creator.displayName}</strong>
                   <span>@{creator.login}</span>
                 </button>
@@ -164,8 +167,8 @@ export function CircleOnboarding({
             : " · la première est la plus précieuse : touche ★ pour en changer"}
         </p>
 
-        {missing > 0 ? (
-          <button type="button" className="circle-popular" onClick={() => add(completeWithPopular(slugs, INDEX))}>
+        {canComplete ? (
+          <button type="button" className="circle-popular" onClick={() => add(completeWithPopular(slugs, INDEX).slice(0, slugs.length + 2))}>
             Pas d’idée ? Compléter avec les chaînes les plus suivies
           </button>
         ) : null}

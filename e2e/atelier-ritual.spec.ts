@@ -13,7 +13,7 @@ test("Atelier : recyclage confirmé, création, résultat et classeur sur mobile
     localStorage.setItem(key, JSON.stringify(state));
   }, creator);
   await page.reload();
-  await page.getByRole("button", { name: "Craft", exact: true }).click();
+  await page.getByRole("button", { name: "Atelier", exact: true }).click();
   await page.getByRole("button", { name: /^Recycler/ }).click();
   await page.getByRole("button", { name: /^Tout recycler/ }).click();
   let dialog = page.getByRole("dialog", { name: "Transformer en points" });
@@ -48,7 +48,7 @@ test("Atelier : recyclage confirmé, création, résultat et classeur sur mobile
 
 test("Atelier : aperçu sans achat et retour du focus, effets coupés", async ({ page }) => {
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Craft", exact: true }).click();
+  await page.getByRole("button", { name: "Atelier", exact: true }).click();
   await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
   const preview = page.locator(".atelier-preview-name").first();
   await preview.click();

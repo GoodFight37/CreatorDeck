@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState, openPack } from "@/lib/game-engine";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
-import { circleTiers } from "@/lib/circle";
 
 const CIRCLE = ["kaicenat", "ibai", "ninja", "auronplay", "rubius", "xqc", "shroud"];
 const T0 = Date.UTC(2026, 9, 17, 10, 0, 0);
@@ -14,7 +13,7 @@ describe("le premier booster d'une partie sans serveur", () => {
     expect(first.cards.filter(card => CIRCLE.includes(card.creatorSlug)).length).toBeGreaterThanOrEqual(3);
     for (const card of first.cards) {
       expect(card.rarity).toBe(CREATOR_BY_SLUG.get(card.creatorSlug)!.rarity);
-      expect(card.displayRarity).toBe(circleTiers(CIRCLE)[card.creatorSlug]);
+      expect(card.displayRarity).toBeUndefined();
     }
     expect(CIRCLE).toContain(first.cards.at(-1)!.creatorSlug);
     expect(first.state.openings).toBe(1);
