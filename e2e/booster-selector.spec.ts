@@ -34,7 +34,7 @@ async function fakeAccount(page: Page) {
   return calls;
 }
 
-test("les pills changent de booster sans préparer ni consommer", async ({ page }) => {
+test("le choix d'univers change de booster sans préparer ni consommer", async ({ page }) => {
   const calls = cloudUrl() ? await fakeAccount(page) : [];
   if (cloudUrl()) await page.goto("/"); else await gotoDeck(page, true, { withoutCircle: true });
   const carousel = page.locator(".booster-carousel");
@@ -79,11 +79,29 @@ test("le défilement tactile vertical garde le choix et ne lance aucune ouvertur
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
+test("un geste horizontal passe du Live à MEMES et revient, sans rien ouvrir", async ({ page }) => {
+  const calls = cloudUrl() ? await fakeAccount(page) : [];
+  if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
+  const stage = page.locator(".booster-carousel");
+  await expect(stage).toHaveAttribute("data-universe", "live");
+  const box = (await stage.boundingBox())!;
+  const y = box.y + box.height * .5;
+  for (const [from, to, expected] of [[.8, .2, "memes"], [.2, .8, "live"]] as const) {
+    await page.mouse.move(box.x + box.width * from, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * to, y, { steps: 6 });
+    await page.mouse.up();
+    await expect(stage).toHaveAttribute("data-universe", expected);
+  }
+  await expect(page.locator(".opening-continuum")).toHaveCount(0);
+  expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
+});
+
 test("avec le serveur : Retour et Échap quittent la préparation Live sans requête de tirage", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);
   await page.goto("/");
-  const trigger = page.getByRole("button", { name: "Préparer le booster Live Drop" });
+  const trigger = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene).toHaveAttribute("data-opening-phase", "sealed");
@@ -106,8 +124,8 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
-  const trigger = page.getByRole("button", { name: "Préparer le booster MEMES" });
-  await expect(page.getByText("Ta réserve MEMES · 4/4")).toBeVisible();
+  const trigger = page.getByRole("button", { name: "Ouvrir le booster MEMES", exact: true });
+  await expect(page.locator(".meme-booster-reserve")).toContainText("4 MEMES restants");
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /memes-opening/);
@@ -131,7 +149,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await expect(scene).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "memes");
-  await expect(page.getByText("Ta réserve MEMES · 3/4")).toBeVisible();
+  await expect(page.locator(".meme-booster-reserve")).toContainText("3 MEMES restants");
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
@@ -159,10 +177,14 @@ test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 
       await expect(neighbor).toHaveAttribute("aria-hidden", "true");
       await expect(neighbor.locator("button")).toHaveCount(0);
       const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
-      expect(neighborOpacity).toBeLessThan(.3);
+      // Nuit de direct : le second paquet se voit, en retrait derrière celui de devant.
+      expect(neighborOpacity).toBeGreaterThan(.3);
+      expect(neighborOpacity).toBeLessThan(.7);
       await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
       expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
-      const action = page.locator('.booster-panel:not([hidden]) .primary-action');
+      // Le paquet de devant EST le bouton : plus de pilule séparée.
+      await expect(page.locator(".booster-panel .primary-action")).toHaveCount(0);
+      const action = active.locator("button.pack-artwork");
       const actionBox = (await action.boundingBox())!;
       const navBox = (await page.locator(".bottom-nav").boundingBox());
       if (navBox) expect(actionBox.y + actionBox.height).toBeLessThanOrEqual(navBox.y);

@@ -10,6 +10,18 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-nuit-de-direct", date: "2026-10-18", title: "Une nuit de direct",
+    summary: "L’accueil, les cartes et la révélation changent d’allure.",
+    sections: [{ title: "Accueil", items: [
+      "Le visage de ta chaîne préférée éclaire le haut de l’écran. Le paquet est le bouton : appuie dessus pour l’ouvrir.",
+      "Tes boosters forment une pile derrière le paquet, avec une seule ligne dessous. MEMES attend à droite : glisse pour passer de l’un à l’autre.",
+      "Tes chaînes sont des ronds au pied du paquet ; celle qui est en direct a un anneau rouge.",
+    ] }, { title: "Cartes", items: [
+      "La photo remplit toute la carte, le nom est imprimé en grand en bas, et la rareté se voit à la lumière du bord.",
+      "Une carte nouvelle arrive avec un flash de sa couleur, puis son nom. Un doublon rejoint une petite pile sans rejouer la scène.",
+    ] }],
+  },
+  {
     id: "2026-10-18-cercle-vrai", date: "2026-10-18", title: "Tes boosters gardent tes chaînes en vue",
     summary: "Le Live Drop et les cadeaux t’aident à compléter ton cercle à chaque ouverture.",
     sections: [{ title: "Ton cercle", items: [

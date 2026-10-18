@@ -18,7 +18,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
-import { CREATORS } from "@/lib/catalog";
+import { CREATORS, CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -36,7 +36,8 @@ function carte(rarity: Rarete, id: string = rarity) {
     creatorSlug: CREATORS.find(creator => creator.rarity === rarity)!.slug,
     rarity,
     variant: "standard" as const,
-    isNew: false,
+    // Les effets de rareté se jouent sur une carte nouvelle ; un doublon rejoint la pile.
+    isNew: true,
     rareDrop: false,
   };
 }
@@ -179,6 +180,7 @@ describe("les effets de révélation", () => {
     const fermer = vi.fn();
     const cinq = [carte("epic", "a"), carte("epic", "b"), carte("epic", "c"), carte("epic", "d"), carte("epic", "e")];
     cinq[0]!.rareDrop = true;
+    for (const item of cinq) item.isNew = false;
     cinq[2]!.isNew = true;
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     await banc.monter(
@@ -490,5 +492,35 @@ describe("les effets de révélation", () => {
     expect(html).not.toContain("fx-burst");
     expect(html).toContain("reveal-rare-aura-legendary");
     expect(html).toContain("fx-flash");
+  });
+});
+
+describe("nuit de direct : nouvelle ou doublon", () => {
+  let banc: Banc;
+  beforeEach(() => { vi.useFakeTimers({ now: T0 }); banc = creerBanc(); banc.preparer(); });
+  afterEach(() => { banc.nettoyer(); vi.useRealTimers(); });
+
+  it("une carte nouvelle a son flash de rareté puis son nom", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const nouvelle = carte("rare");
+    await banc.monter(<RevealOverlay cards={[nouvelle] as never} index={0} onNext={vi.fn()} onClose={vi.fn()} />);
+    const flash = document.querySelector<HTMLElement>(".reveal-new-flash")!;
+    expect(flash.style.getPropertyValue("--flash-color")).toBe(RARITY_META.rare.color);
+    expect(document.querySelector(".reveal-big-name")?.textContent).toBe(CREATOR_BY_SLUG.get(nouvelle.creatorSlug)!.displayName);
+    expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
+  });
+
+  it("un doublon ne rejoue pas la scène : pas de flash ni d'aura, il rejoint la pile", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const doublon = { ...carte("legendary"), isNew: false };
+    await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon] as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
+    expect(document.querySelector(".reveal-stage.is-duplicate")).not.toBeNull();
+    expect(document.querySelector(".reveal-new-flash")).toBeNull();
+    expect(document.querySelector(".reveal-rare-aura")).toBeNull();
+    expect(document.querySelector(".reveal-cinematic-field")).toBeNull();
+    expect(document.querySelector(".reveal-dupe-pile")?.getAttribute("aria-label")).toBe("Doublons de ce booster : 1");
+    // Pas de retournement à attendre : la carte est lisible tout de suite.
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(false);
   });
 });

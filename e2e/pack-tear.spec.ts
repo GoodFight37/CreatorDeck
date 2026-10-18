@@ -69,7 +69,7 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
     };
   });
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const scene = page.locator(".opening-continuum");
   await expect.poll(() => page.evaluate(() =>
     (window as typeof window & { __creatorDeckAudioProbe?: { gains: number[] } }).__creatorDeckAudioProbe?.gains.includes(0.04) ?? false,
@@ -455,7 +455,8 @@ test("home pack artwork stays named and the long gesture hint is removed", async
     const copy = await page.locator(".pack-stage .pack-copy").boundingBox();
     expect(artwork).not.toBeNull();
     expect(copy).not.toBeNull();
-    expect(artwork!.y + artwork!.height, `illustration au-dessus du titre à ${width}px`).toBeLessThanOrEqual(copy!.y);
+    // Nuit de direct : le titre est discret, en haut du plateau, jamais sur le paquet.
+    expect(copy!.y + copy!.height, `titre au-dessus du paquet à ${width}px`).toBeLessThanOrEqual(artwork!.y);
     await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
@@ -570,7 +571,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await expect(homeSpecular).toBeAttached();
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
 
-  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const openingPack = page.locator(".booster-physical-scene");
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").animationName))
     .toBe("none");
@@ -607,7 +608,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
-  await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
+  await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const offPack = page.locator(".booster-physical-scene");
   const offSeam = page.getByRole("button", { name: /D.chirer le haut du sachet en passant le doigt/ });
   const offBounds = (await offSeam.boundingBox())!;
@@ -785,7 +786,7 @@ test("DIVERRON portrait resolves to the restored user-provided photo", async ({ 
 
 test("home sachet tap opens once and returns focus to the sachet", async ({ page }, testInfo) => {
   await gotoDeck(page);
-  const sachet = page.getByRole("button", { name: "Préparer le booster Live Drop" });
+  const sachet = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(sachet).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
   if (testInfo.project.name === "téléphone") await sachet.tap();
@@ -796,7 +797,7 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
   await expect(sachet).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
@@ -815,13 +816,13 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   await page.mouse.move(x, y - 30, { steps: 5 });
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x, y - 110, { steps: 10 });
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
   await sachet.click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -829,7 +830,7 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
 });
 
 for (const selector of [".pack-stage", ".pack-artwork"]) {
@@ -856,11 +857,11 @@ for (const selector of [".pack-stage", ".pack-artwork"]) {
 test("compact sachet keeps the weld within thumb reach and accepts both swipe directions", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
   await gotoDeck(page);
-  await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
   const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
   const touch = await page.context().newCDPSession(page);
   for (const reverse of [false, true]) {
-    await page.getByRole("button", { name: "Préparer le booster Live Drop" }).click();
+    await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
     const dialog = page.locator(".opening-continuum");
     for (const viewport of [{ width: 320, height: 568 }, { width: 360, height: 800 }, { width: 412, height: 915 }]) {
       await page.setViewportSize(viewport);
@@ -898,9 +899,9 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   }
   await touch.detach();
   // D-148 : deux ouvertures, mais la première du jour rend un booster (jour 1).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}`);
   if (stock === 1) {
-    await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();
   }
 });

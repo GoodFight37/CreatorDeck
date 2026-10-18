@@ -32,17 +32,14 @@ type CreatorCardProps = {
   liveStream?: LiveStream | null;
 };
 
-// Une même matière à l'ouverture, dans le classeur et dans la fiche.
-const MATERIAL_OPACITY: Record<Creator["rarity"], number> = {
-  common: 0.04, uncommon: 0.08, rare: 0.23, epic: 0.32, legendary: 0.4,
-};
-
 /**
  * Une carte — une vraie planche, pas une vignette.
  *
  * Ce qui fait une carte de TCG, et qui manquait ici :
  *
- *   * le portrait entier, à ses proportions d'origine dans le cadre vertical ;
+ *   * le **portrait plein cadre** : le carré Twitch est rogné (`object-fit:
+ *     cover`, CSS), jamais rétréci au milieu d'un cadre noir ;
+ *   * le **nom en affiche**, énorme et condensé, en bas ; le rang petit en haut ;
  *   * la **rareté comme cadre** — épaisseur, teinte et texture du bord — au lieu
  *     d'une lettre dans une pastille : ça se lit à deux mètres ;
  *   * une **nameplate opaque** en bas, barre pleine, nom en display condensée ;
@@ -91,6 +88,8 @@ export function CreatorCard({
   const style = {
     "--rarity": rarity.color,
     "--rarity-glow": rarity.glow,
+    // Le nom remplit la largeur comme sur une affiche : plus il est court, plus il est grand.
+    "--name-len": Math.max(4, creator.displayName.length),
   } as CSSProperties;
 
   const inspectButton = onClick ? (
@@ -146,7 +145,6 @@ export function CreatorCard({
             src={portrait}
             alt={`Portrait de ${creator.displayName}`}
             fill
-            style={{ objectFit: "contain", objectPosition: "center" }}
             draggable={false}
             onError={() => setFailedPortrait(portrait)}
           />
@@ -154,10 +152,8 @@ export function CreatorCard({
         <div className="card-photo-shade" />
       </div>
 
-      <div className="card-foil" ref={foilRef} aria-hidden="true" style={{
-        opacity: MATERIAL_OPACITY[creator.rarity],
-        background: "radial-gradient(circle at var(--px, 32%) var(--py, 18%), rgba(255,255,255,.6), var(--rarity) 30%, transparent 70%)",
-      }} />
+      {/* La matière vient du CSS (rareté, Holo, Gold, Live) : aucun style ici. */}
+      <div className="card-foil" ref={foilRef} aria-hidden="true" />
 
       <div className="card-topline">
         <div className="card-topleft">

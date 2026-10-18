@@ -1,7 +1,7 @@
 import { test, expect } from "./fixtures";
 import creators from "../src/data/creators.json";
 
-test("téléphone : portrait proportionné et même nom Atelier dans la barre et le titre", async ({ page }) => {
+test("téléphone : portrait plein cadre et même nom Atelier dans la barre et le titre", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route("**/*", (route) => ["localhost", "127.0.0.1"].includes(new URL(route.request().url()).hostname)
     ? route.continue() : route.abort());
@@ -24,11 +24,17 @@ test("téléphone : portrait proportionné et même nom Atelier dans la barre et
   await page.getByRole("button", { name: "Voir la fiche de ibai", exact: true }).click();
   const photo = page.locator(".card-vault .card-photo");
   await expect(photo).toBeVisible();
-  await expect(photo).toHaveCSS("object-fit", "contain");
+  // Plein cadre : le carré Twitch est rogné, jamais rétréci au milieu d'un cadre noir.
+  await expect(photo).toHaveCSS("object-fit", "cover");
   await expect(photo).toHaveCSS("transform", "none");
   await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBe(true);
-  const bounds = await photo.boundingBox();
-  expect(bounds!.height).toBeGreaterThan(bounds!.width);
+  const bounds = (await photo.boundingBox())!;
+  const wrap = (await page.locator(".card-vault .card-photo-wrap").boundingBox())!;
+  for (const [a, b] of [[bounds.x, wrap.x], [bounds.y, wrap.y], [bounds.x + bounds.width, wrap.x + wrap.width], [bounds.y + bounds.height, wrap.y + wrap.height]]) {
+    expect(Math.abs(a - b)).toBeLessThanOrEqual(1);
+  }
+  expect(bounds.height).toBeGreaterThan(bounds.width);
+  await expect(page.locator(".card-vault .card-foil")).not.toHaveAttribute("style", /./);
   await page.screenshot({ path: "test-results/finition-portrait-cercle.png" });
   await page.locator('.card-vault button[aria-label="Fermer"]').click();
   await page.getByRole("button", { name: "Atelier", exact: true }).click();
