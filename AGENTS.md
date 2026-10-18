@@ -167,6 +167,9 @@ le résultat, le nombre de tests effectivement exécutés et ses limites :
 - logique : `npm test` ; interfaces : `npm run ecrans` (configuration distincte,
   jsdom/HTML, pas une preuve visuelle sur téléphone) ;
 - SQL : `npm run supabase:verify` (Postgres jetable, pas la production) ;
+  les nouvelles migrations portent `-- creatordeck-deploy: automatic` (Malik
+  est le seul testeur, décision du 18 octobre 2026) : elles s'appliquent après
+  la CI verte de `main`. `manual` seulement si Malik le demande ;
 - statique : `npm run typecheck`, `npm run lint`,
   `node scripts/check-jargon.mjs`, `npm run catalog:ci` ;
 - compilation : `npm run build` ; navigateur : `npm run e2e` ;
