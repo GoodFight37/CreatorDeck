@@ -35,13 +35,12 @@ it("réinitialise le compte, rejoue le tutoriel puis retrouve les quatre cadeaux
   await banc.monter(<CreatorDeckApp />);
   banc.appuyer("Toi");
   await act(async () => { banc.appuyer("Réinitialiser la progression"); });
-  expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
+  expect(document.body.textContent).toContain("Ton premier booster t’attend");
   expect(document.body.textContent).not.toContain("Ouvrir un booster cadeau");
   expect(window.localStorage.getItem(completionKey)).toBeNull();
   banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
   banc.appuyer("Ajouter");
-  banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
-  await act(async () => { banc.appuyer("Voir mon premier booster"); });
+    await act(async () => { banc.appuyer("Voir mon premier booster"); });
   // L'ancien message du serveur n'est plus affiché.
   expect(document.body.textContent).toContain("Tes boosters de bienvenue");
   expect(document.body.textContent).not.toContain("Malik");

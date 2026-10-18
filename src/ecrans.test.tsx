@@ -115,17 +115,16 @@ describe("les écrans", () => {
     window.localStorage.clear();
     await application();
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
+    expect(document.body.textContent).toContain("Ton premier booster t’attend");
     expect(document.body.textContent).not.toContain("Construis ton Binder");
-    expect((document.querySelector(".circle-actions .welcome-primary") as HTMLButtonElement).disabled).toBe(true);
-    banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
-    banc.appuyer("Ajouter");
-    banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
+    // 0058 : aucun nom exigé, le premier booster s'ouvre tout de suite.
+    expect((document.querySelector(".circle-actions .welcome-primary") as HTMLButtonElement).disabled).toBe(false);
+    expect(document.querySelector('[aria-label="Mes chaînes"]')!.textContent).not.toMatch(/encore \d+ pour|Compléter avec/);
     banc.appuyer("Voir mon premier booster");
     expect(document.body.textContent).not.toContain("Un cadeau t’attend");
     expect(window.localStorage.getItem("creatordeck-tutorial:local")).toBe("done");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
-    expect(JSON.parse(window.localStorage.getItem("creatordeck.circle.v1") ?? "{}").slugs).toHaveLength(5);
+    expect(JSON.parse(window.localStorage.getItem("creatordeck.circle.v1") ?? "{}").slugs).toEqual([]);
   });
 
   it("rejoue le tutoriel après une réinitialisation et mémorise sa nouvelle fin", async () => {
@@ -135,14 +134,13 @@ describe("les écrans", () => {
     const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     banc.appuyer("Toi");
     banc.appuyer("Réinitialiser la progression");
-    expect(document.body.textContent).toContain("Quelles chaînes regardes-tu déjà ?");
+    expect(document.body.textContent).toContain("Ton premier booster t’attend");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBeNull();
     banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
     banc.appuyer("Ajouter");
-    banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
-    banc.appuyer("Voir mon premier booster");
+        banc.appuyer("Voir mon premier booster");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
-    expect(document.body.textContent).not.toContain("Quelles chaînes regardes-tu déjà ?");
+    expect(document.body.textContent).not.toContain("Ton premier booster t’attend");
     confirm.mockRestore();
   });
 

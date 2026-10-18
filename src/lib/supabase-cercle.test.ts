@@ -12,7 +12,6 @@ import { describe, expect, it } from "vitest";
 import {
   CIRCLE_LAST_SLOT_WEIGHTS,
   CIRCLE_MAX,
-  CIRCLE_MIN,
   CIRCLE_PACK_SIZE,
   CIRCLE_SLOT_WEIGHTS,
   CIRCLE_TIER_THRESHOLDS,
@@ -42,9 +41,9 @@ describe("0054 — le miroir du cercle", () => {
     expect(last).toEqual(CIRCLE_LAST_SLOT_WEIGHTS);
   });
 
-  it("garde les mêmes bornes de cercle et la même taille de booster", () => {
-    expect(CODE).toContain(`array_length(slugs, 1) between ${CIRCLE_MIN} and ${CIRCLE_MAX}`);
-    expect(CODE).toContain(`v_n < ${CIRCLE_MIN} or v_n > ${CIRCLE_MAX}`);
+  it("garde la même taille de booster ; bornes historiques 5..15 relâchées par 0058", () => {
+    expect(CODE).toContain(`array_length(slugs, 1) between 5 and ${CIRCLE_MAX}`);
+    expect(CODE).toContain(`v_n < 5 or v_n > ${CIRCLE_MAX}`);
     expect(CODE).toContain(`for v_i in 1..${CIRCLE_PACK_SIZE - 1} loop`);
     expect(CODE).toContain(`for v_i in 1..${CIRCLE_PACK_SIZE} loop`);
   });
@@ -86,7 +85,7 @@ describe("0054 — le miroir du cercle", () => {
 
   it("garde la fonction SQL de rareté d'accord avec celle du client (positions 0..n-1)", () => {
     // Même formule en entiers : si le SQL change, ce calcul de référence casse.
-    for (let size = CIRCLE_MIN; size <= CIRCLE_MAX; size += 1) {
+    for (let size = 2; size <= CIRCLE_MAX; size += 1) {
       for (let pos = 0; pos < size; pos += 1) {
         const percent = Math.floor((pos * 100) / (size - 1));
         const sql = pos <= 0 ? "legendary"

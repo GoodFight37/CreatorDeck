@@ -27,7 +27,13 @@ describe("D-143 : synchroniser le cercle entre l'appareil et le compte", () => {
     expect(decideCircleSync({ slugs: A, savedAt: null }, { slugs: B, updatedAt: 10 }, NOW).kind).toBe("adopt");
   });
   it("un cercle invalide en ligne n'est jamais recopié", () => {
-    expect(decideCircleSync({ slugs: A, savedAt: 1 }, { slugs: ["ibai"], updatedAt: 99 }, NOW)).toEqual({ kind: "push", slugs: A });
-    expect(decideCircleSync({ slugs: [], savedAt: null }, { slugs: ["ibai"], updatedAt: 99 }, NOW)).toEqual({ kind: "nothing" });
+    expect(decideCircleSync({ slugs: A, savedAt: 1 }, { slugs: ["ibai", "ibai"], updatedAt: 99 }, NOW)).toEqual({ kind: "push", slugs: A });
+    expect(decideCircleSync({ slugs: [], savedAt: null }, { slugs: ["ibai", "ibai"], updatedAt: 99 }, NOW)).toEqual({ kind: "nothing" });
+  });
+
+  it("0058 : une seule chaîne est un cercle ; un cercle vide ne vide jamais le compte", () => {
+    expect(decideCircleSync({ slugs: [], savedAt: null }, { slugs: ["ibai"], updatedAt: 99 }, NOW)).toEqual({ kind: "adopt", slugs: ["ibai"], at: 99 });
+    expect(decideCircleSync({ slugs: [], savedAt: 500 }, { slugs: A, updatedAt: 99 }, NOW)).toEqual({ kind: "adopt", slugs: A, at: 99 });
+    expect(decideCircleSync({ slugs: [], savedAt: 500 }, null, NOW)).toEqual({ kind: "nothing" });
   });
 });

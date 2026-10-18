@@ -13,7 +13,8 @@
  *     Sans date côté appareil, le compte gagne : c'est la seule date sûre.
  *
  * Le serveur revérifie toujours le cercle (`_circle_clean`) : un cercle
- * illisible en ligne est ignoré, jamais recopié.
+ * illisible en ligne est ignoré, jamais recopié. Un cercle vide (0058) vaut
+ * « rien à synchroniser » : il ne vide jamais un cercle enregistré ailleurs.
  */
 import { isValidCircle } from "@/lib/circle";
 
@@ -27,8 +28,8 @@ export function decideCircleSync(
   remote: { slugs: readonly string[]; updatedAt: number | null } | null,
   now: number,
 ): CircleSyncAction {
-  const localOk = isValidCircle(local.slugs);
-  const remoteOk = remote !== null && isValidCircle(remote.slugs);
+  const localOk = local.slugs.length > 0 && isValidCircle(local.slugs);
+  const remoteOk = remote !== null && remote.slugs.length > 0 && isValidCircle(remote.slugs);
   if (!remoteOk) return localOk ? { kind: "push", slugs: local.slugs } : { kind: "nothing" };
   const remoteAt = remote.updatedAt ?? now;
   if (!localOk) return { kind: "adopt", slugs: remote.slugs, at: remoteAt };

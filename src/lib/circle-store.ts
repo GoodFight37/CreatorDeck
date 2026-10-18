@@ -28,8 +28,8 @@ function parse(raw: string | null): readonly string[] {
     const data = JSON.parse(raw) as { v?: number; slugs?: unknown };
     if (data?.v !== 1 || !Array.isArray(data.slugs)) return EMPTY;
     const slugs = data.slugs.filter((slug): slug is string => typeof slug === "string");
-    // Un cercle abîmé (trop court, trop long, doublon) vaut « pas de cercle » :
-    // mieux reposer la question que tirer dans une liste fausse.
+    // Un cercle abîmé (trop long, doublon) vaut « pas de cercle » : mieux
+    // reposer la question que tirer dans une liste fausse. Vide est valide.
     return isValidCircle(slugs) ? Object.freeze(slugs) : EMPTY;
   } catch {
     return EMPTY;
@@ -71,7 +71,8 @@ export function readCircleSavedAt(): number | null {
 }
 
 /**
- * Enregistre le cercle (5 à 15 chaînes différentes) ; refuse tout le reste.
+ * Enregistre le cercle (0 à 15 chaînes différentes) ; refuse tout le reste.
+ * Zéro chaîne est un choix valide : il est mémorisé, avec sa date.
  * `at` permet de garder la date du compte en ligne quand c'est lui qui gagne.
  */
 export function writeCircle(slugs: readonly string[], at: number = Date.now()): boolean {

@@ -343,7 +343,7 @@ export function HomeView({
         <section className="circle-invite" aria-labelledby="circle-invite-title">
           <div>
             <h2 id="circle-invite-title">Quelles chaînes regardes-tu ?</h2>
-            <p>Ajoute les chaînes que tu regardes : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
+            <p>Ajoute les chaînes que tu regardes, une seule suffit : ton accueil et ton Binder se recentrent sur elles, et tu vois quand elles sont en direct.</p>
           </div>
           <button type="button" onClick={onEditCircle}>Définir mes chaînes <ChevronRight size={16} aria-hidden="true" /></button>
         </section>

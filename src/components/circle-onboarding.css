@@ -27,6 +27,9 @@
   background: rgb(255 255 255 / .04); color: inherit; font: inherit; text-align: left; cursor: pointer;
 }
 .circle-suggestions span { color: #b9a8b5; font-size: 12px; }
+.circle-suggestions button { align-items: center; }
+.circle-suggestions img { flex: none; border-radius: 50%; }
+.circle-suggestions strong { flex: 1; min-width: 0; }
 
 .circle-card .circle-notice { min-height: 0; margin: 10px 0 0; color: #ffb4a6; font-size: 13px; }
 
@@ -47,11 +50,8 @@
 .circle-chip-fav { display: inline-flex; align-items: center; gap: 3px; color: #ffd6b7; font-size: 12px; }
 
 .circle-card .circle-count { min-height: 0; margin: 12px 0 0; color: #d8cbd5; font-size: 13px; line-height: 1.4; }
-.circle-popular {
-  min-height: 44px; margin-top: 8px; padding: 0; border: 0; background: none;
-  color: #ffd6b7; font: inherit; font-size: 13px; text-align: left; text-decoration: underline; cursor: pointer;
-}
 .circle-actions { position: sticky; bottom: 0; margin-top: 16px; }
+.circle-card h1 + .circle-lead + .circle-actions { position: static; }
 .circle-actions .welcome-primary:disabled { opacity: .4; }
 
 @media (prefers-reduced-motion: no-preference) {

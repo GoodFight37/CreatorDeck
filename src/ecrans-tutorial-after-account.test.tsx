@@ -39,8 +39,7 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeTruthy();
   banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
   banc.appuyer("Ajouter");
-  banc.appuyer("Pas d’idée ? Compléter avec les chaînes les plus suivies");
-  await act(async () => { banc.appuyer("Voir mon premier booster"); });
+    await act(async () => { banc.appuyer("Voir mon premier booster"); });
   expect(cloudStore.completeTutorial).toHaveBeenCalledOnce();
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
   expect(document.querySelector(".app-shell")?.getAttribute("data-current-tab")).toBe("home");
