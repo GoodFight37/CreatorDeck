@@ -6,10 +6,10 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
-### Qualité autonome — chantier local sur `codex/autonomous-tests`
+### Qualité autonome — PR #13 sur `codex/autonomous-tests`
 
 - Tests mobiles et rapports locaux implémentés ; tâche Windows limitée toutes les quatre heures, première exécution automatique réussie. Voir [qualité autonome](qualite-autonome.md).
-- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; validation distante et publication de ce lot encore à faire.
+- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; [PR #13](https://github.com/GoodFight37/CreatorDeck/pull/13) ouverte au SHA `82bfaff4`, vérification distante 6/6 verte. Une économie de runs push/PR est préparée ; sa CI et la publication sur `main` restent à vérifier.
 - Diagnostic web/Android volontaire, local et effaçable ; essai sur vrai téléphone et collecte distante non faits.
 - Émulateur : image Android 36 et `CreatorDeck_API36` préparés, deux APK debug construites ; `HypervisorPlatform` exige un redémarrage Windows avant le premier démarrage. Parcours natif, bandeau de mise à jour et données du jeu après installation restent à vérifier.
 - Observation à confirmer sur WebView : sur un passage Chrome de développement, Binder a eu 2 images espacées de plus de 50 ms à 320 px (maximum 169 ms), puis 1 à 390/412 px ; une image de révélation a atteint 146 ms. Priorité : répéter sur émulateur et appareil avant une optimisation ciblée.

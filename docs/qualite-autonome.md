@@ -35,7 +35,8 @@ contrôles n'interrogent pas la production. Les parcours d'observation bloquent
 aussi les requêtes hors `localhost`. Les rapports retirent les valeurs de clés,
 jetons et mots de passe des sorties courtes. La CI GitHub existante continue à
 tester les branches ; elle joint maintenant les observations mobiles pendant
-trois jours. Elle n'a pas de secret dans son job navigateur.
+trois jours. Push et PR du même SHA partagent une clé de concurrence pour éviter
+deux séries complètes en parallèle. Elle n'a pas de secret dans son job navigateur.
 
 Dans Toi → Réglages, « Diagnostics sur cet appareil » est **désactivé par
 défaut**. Une fois activé, le journal local garde au plus 100 types d'erreurs

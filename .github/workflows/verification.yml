@@ -25,7 +25,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: creatordeck-verification-${{ github.ref }}
+  # Un push suivi de l'ouverture d'une PR vérifie le même SHA une seule fois.
+  group: creatordeck-verification-${{ github.event.pull_request.head.sha || github.sha }}
   cancel-in-progress: true
 
 jobs:
