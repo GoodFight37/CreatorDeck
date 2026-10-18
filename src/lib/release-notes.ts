@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-maj-apk-reparee", date: "2026-10-18", title: "« Mettre à jour » fonctionne",
+    summary: "Le bandeau de mise à jour n’affiche plus « Mise à jour invalide ».",
+    sections: [{ title: "Application", items: [
+      "Un appui sur « Mettre à jour » télécharge bien la nouvelle version, puis Android te demande de confirmer l’installation.",
+    ] }],
+  },
+  {
     id: "2026-10-18-nuit-de-direct", date: "2026-10-18", title: "Une nuit de direct",
     summary: "L’accueil, les cartes et la révélation changent d’allure.",
     sections: [{ title: "Accueil", items: [
