@@ -6,6 +6,14 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
+### Publié le 18 octobre 2026 (main `5f0a77c`, CI, Supabase, APK et Vercel verts)
+
+- **D-149** visages plein cadre et « Mes chaînes » facultatif (0 à 15), migration 0058 appliquée.
+- **D-150** « nuit de direct » : accueil (paquet-bouton, pile, MEMES visible), carte affiche, révélation nouvelle/doublon.
+- **D-151** bandeau « Mettre à jour » réparé ; installation manuelle unique requise depuis une APK plus ancienne.
+- Ouvert : une même chaîne au plus une fois par booster (migration à prévoir) ; carte révélée plus grande (capture de référence à régénérer en CI).
+- Pas encore validé sur vrai téléphone : rendu Android du nouvel accueil, geste horizontal, mise à jour par le bandeau.
+
 ### Finition courte — locale, non publiée (18 octobre 2026)
 
 - Les quatre lots précédents sont présents : tirage du cercle, rareté unique, bouton et rétention.

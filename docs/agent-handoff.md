@@ -1,3 +1,22 @@
+# Checkpoint — D-149, D-150, D-151 publiés (18 octobre 2026)
+
+- main `5f0a77c` : PR #9 (`e5852e1`, cercle 0–15 et 0058), PR #10 (`1179169`,
+  nuit de direct), PR #11 (`5f0a77c`, plugin de mise à jour). Pour chaque
+  merge : « Vérification », « Mise à jour Supabase » et « APK de test » verts ;
+  APK publiée `5f0a77c` (versionCode 872315) ; Vercel Production vert sur `1179169`.
+- Conflit #9/#10 résolu dans `fd1ac20` (carte de #10, texte « une seule
+  suffit » de #9, deux notes de version, tests de finition réunis).
+- Tests du dernier lot : `npm test` 1299/1299, `npm run ecrans` 235/235,
+  typecheck vert, e2e complets en CI. Localement, `pack-tear:466` échoue à cause
+  d'un Chromium 141 différent de celui de la CI (153) ; vert en CI.
+- Limites de l'environnement cloud : téléchargement Playwright, artefacts et
+  logs bruts de la CI bloqués par le proxy ; `npm run supabase:verify` impossible
+  en root (initdb), exécuté par la CI.
+- Ouverts : une chaîne au plus une fois par booster (migration + miroir TS) ;
+  carte révélée plus grande (régénérer `torn-sachet` en CI). Malik doit
+  installer une fois l'APK `5f0a77c` à la main ; non vérifié sur appareil.
+- Réservation libérée.
+
 # Checkpoint — D-148 publié, CI verte, 0057 appliquée (18 octobre 2026)
 
 - Code vérifié : `main` = `7324c7d9b493ae6d69637d53fa3e7e07747bf263`, avance
