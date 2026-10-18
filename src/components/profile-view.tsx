@@ -37,6 +37,7 @@ import { type GameView } from "@/lib/game-engine";
 import { BUILD_COMMIT, BUILD_VERSION } from "@/lib/build-version";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
+import { diagnosticsEnabled, exportDiagnostics, setDiagnosticsEnabled } from "@/lib/local-diagnostics";
 
 const RARITY_SCORE: Record<Rarity, number> = {
   common: 0,
@@ -145,6 +146,7 @@ export function ProfileView({
 
   const [soundOn, setSoundOn] = useState(() => !isMuted());
   const [musicOn, setMusicOn] = useState(() => !isMusicMuted());
+  const [diagnosticsOn, setDiagnosticsOn] = useState(() => diagnosticsEnabled());
 
   useEffect(() => {
     applyTiltChoice();
@@ -188,6 +190,27 @@ export function ProfileView({
     const next = !musicOn;
     setMusicOn(next);
     setMusicMuted(!next);
+  }
+
+  function toggleDiagnostics() {
+    const next = !diagnosticsOn;
+    setDiagnosticsEnabled(next);
+    setDiagnosticsOn(next);
+  }
+
+  async function shareDiagnostics() {
+    const text = exportDiagnostics();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: "Diagnostic CreatorDeck", text });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        onNotice("Diagnostic copié.");
+      } else onError("Le partage est indisponible sur cet appareil.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      onError("Le diagnostic n’a pas pu être partagé.");
+    }
   }
 
   async function handleReset() {
@@ -489,6 +512,17 @@ export function ProfileView({
             <span className="switch" data-on={tiltOn ? "on" : "off"} aria-hidden="true">
               <i />
             </span>
+          </button>
+        ) : null}
+
+        <button type="button" className="menu-row" role="switch" aria-checked={diagnosticsOn} onClick={toggleDiagnostics}>
+          <span>Diagnostics sur cet appareil</span>
+          <span className="switch" data-on={diagnosticsOn ? "on" : "off"} aria-hidden="true"><i /></span>
+        </button>
+        <small>Erreurs et lenteurs seulement, gardées ici. Aucun envoi automatique. Couper efface le journal.</small>
+        {diagnosticsOn ? (
+          <button type="button" className="menu-row" onClick={() => void shareDiagnostics()}>
+            <span>Partager le diagnostic</span><ChevronRight size={16} />
           </button>
         ) : null}
 

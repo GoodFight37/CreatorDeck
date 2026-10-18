@@ -135,6 +135,16 @@ jobs:
           path: test-results/booster-*.png
           if-no-files-found: warn
           retention-days: 7
+      - name: Joindre les observations mobiles (captures et mesures)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-mobile-observation-${{ matrix.shard }}
+          path: |
+            test-results/mobile-observation-*/**/*
+            test-results/results.json
+          if-no-files-found: ignore
+          retention-days: 3
       - name: Joindre les rapports du navigateur en cas d'échec
         if: ${{ failure() }}
         uses: actions/upload-artifact@v4

@@ -1,3 +1,12 @@
+# Checkpoint — qualité mobile autonome, local (18 octobre 2026)
+
+- Base GitHub vérifiée : `main` `c4c458eebe0446ffd8e91a48ff118bbdb08c2fa7` ; travail dans le checkout Codex existant, branche `codex/autonomous-tests`, sans nouveau worktree. Deux dossiers non suivis préexistants préservés.
+- Routine locale `npm run quality:mobile` : typecheck, sept scénarios Chrome tactiles dont déchirure et réglages du son, captures et mesures archivées dans `reports/mobile-quality/<date>-<SHA>/`. Dernier passage vérifié : 7/7, rapport local `reports/mobile-quality/2026-10-18T21-59-56-246Z-c4c458ee/summary.md` (ignoré par Git). Le mode complet est préparé, pas encore exécuté. Les mesures pendant l'action signalent des images lentes dans Binder et une à la révélation ; observation navigateur de développement, à confirmer avant correction.
+- Tâche Windows `CreatorDeck-Qualite-Mobile` créée avec droits limités, une instance et délai 25 min ; répétition toutes les quatre heures en session ouverte. Déclenchement manuel puis premier passage planifié : codes de sortie 0. Aucun appel IA, secret ou production.
+- Diagnostic opt-in dans Toi : événements et durées uniquement, 100 entrées maximum, aucun envoi, effacement à l'arrêt. Preuves locales : mobile 7/7, unitaires 1301/1301 avec deux workers, écrans 235/235, typecheck, jargon, build statique, `cap sync` et Gradle debug verts. Un premier run unitaire très parallèle a eu 2 échecs dans les tests Git temporaires ; ces 11 tests passent isolés et la suite complète passe avec deux workers. Aucun essai cloud de production.
+- Android : outils de ligne de commande officiels vérifiés par SHA-256 ; image Android 36 installée et AVD `CreatorDeck_API36` créé. `HypervisorPlatform` activé avec `-NoRestart` ; `emulator -accel-check` reste rouge jusqu'au redémarrage. `cap sync` et deux APK debug sans cloud (`872393`, `872394`) construits. `quality:android` préparé, aucun démarrage d'émulateur, essai APK, mise à jour native ou conservation des données du jeu revendiqué.
+- GitHub Actions : ajout des captures et mesures du navigateur aux artefacts ; CI de cette branche et Vercel non encore vérifiés. Runner auto-hébergé non installé sur le PC personnel, voir [décision D-152](decisions.md). Publication de la branche à vérifier au checkpoint suivant.
+
 # Checkpoint — D-149, D-150, D-151 publiés (18 octobre 2026)
 
 - main `5f0a77c` : PR #9 (`e5852e1`, cercle 0–15 et 0058), PR #10 (`1179169`,

@@ -6,6 +6,14 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
+### Qualité autonome — chantier local sur `codex/autonomous-tests`
+
+- Tests mobiles et rapports locaux implémentés ; tâche Windows limitée toutes les quatre heures, première exécution automatique réussie. Voir [qualité autonome](qualite-autonome.md).
+- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; validation distante et publication de ce lot encore à faire.
+- Diagnostic web/Android volontaire, local et effaçable ; essai sur vrai téléphone et collecte distante non faits.
+- Émulateur : image Android 36 et `CreatorDeck_API36` préparés, deux APK debug construites ; `HypervisorPlatform` exige un redémarrage Windows avant le premier démarrage. Parcours natif, bandeau de mise à jour et données du jeu après installation restent à vérifier.
+- Observation à confirmer sur WebView : sur un passage Chrome de développement, Binder a eu 2 images espacées de plus de 50 ms à 320 px (maximum 169 ms), puis 1 à 390/412 px ; une image de révélation a atteint 146 ms. Priorité : répéter sur émulateur et appareil avant une optimisation ciblée.
+
 ### Publié le 18 octobre 2026 (main `5f0a77c`, CI, Supabase, APK et Vercel verts)
 
 - **D-149** visages plein cadre et « Mes chaînes » facultatif (0 à 15), migration 0058 appliquée.

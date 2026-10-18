@@ -2113,4 +2113,14 @@ contour `solid 2px`, décalage `2px`, fond Highlight et texte HighlightText.
 mais n’a pas démarré : le serveur Next préexistant occupe le port 3000 sans
 répondre. Les règles du jeu et les autres piliers restent inchangés.
 
-\n
+## D-152 — 18 octobre 2026 : tests périodiques locaux et diagnostic volontaire (local)
+
+Contexte : les parcours mobiles et les ralentissements doivent être observés
+sans demander un essai manuel de chaque changement. Décision : réutiliser
+Vitest/Playwright, faire tourner un contrôle Chrome tactile toutes les quatre
+heures sous tâche Windows limitée, garder les rapports locaux et joindre les
+captures à la CI existante. Le diagnostic réel est opt-in, borné à 100 mesures
+sans contenu, stocké sur l'appareil et partagé seulement par le joueur. Aucun
+collecteur distant ni appel IA périodique. Le runner GitHub auto-hébergé sur le
+PC personnel est reporté tant qu'il ne dispose pas d'une isolation contre le
+code des PR publiques. Preuves et limites : [qualité autonome](qualite-autonome.md).

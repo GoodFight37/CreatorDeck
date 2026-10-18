@@ -10,6 +10,14 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-18-diagnostic-local", date: "2026-10-18", title: "Un diagnostic à partager si tu le souhaites",
+    summary: "Dans Toi, tu peux activer un journal local des erreurs et lenteurs.",
+    sections: [{ title: "Confidentialité", items: [
+      "Le journal reste sur cet appareil et ne garde ni nom, ni carte, ni message d’erreur. Rien n’est envoyé automatiquement.",
+      "Tu peux le partager toi-même. Couper l’option efface les mesures enregistrées.",
+    ] }],
+  },
+  {
     id: "2026-10-18-maj-apk-reparee", date: "2026-10-18", title: "« Mettre à jour » fonctionne",
     summary: "Le bandeau de mise à jour n’affiche plus « Mise à jour invalide ».",
     sections: [{ title: "Application", items: [
