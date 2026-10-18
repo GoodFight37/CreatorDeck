@@ -1,4 +1,49 @@
-# Checkpoint — D-145, serveur appliqué et client en publication (18 octobre 2026)
+# Checkpoint — D-145 publié et vérifié (18 octobre 2026)
+
+- **Terminé :** règle cercle vrai publiée sur `main` et
+  `etape-4-cercle-vrai`, code `0fe66715ab07203ff00ce6eedf08653aa92aa995`.
+  [CI main 39095971227](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095971227)
+  et [CI branche 39095971355](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095971355)
+  **6/6 vertes**, SHA exact relu. Compteurs du run main : 1 273 unitaires,
+  218 écrans, 289 contrôles SQL 0056, 16 scénarios cloud simulés ; Playwright
+  178 réussis et 18 ignorés sur trois shards. Typecheck, lint, catalogue et
+  build réussis. Aucun test ignoré n'est compté comme réussi.
+- **Production SQL :** [0056 appliquée](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095857620)
+  après CI main et diagnostic TLS/historique, puis [relecture après application](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095932681)
+  réussie : base à jour et vérifiée, aucun SQL réexécuté. Aucune réparation
+  d'historique et aucune modification des fichiers 0054/0055.
+- **Production web :** déploiement GitHub `7149734313`, environnement
+  `Production`, état `success` au SHA `0fe66715`,
+  [inspection associée](https://vercel.com/hafsi37-2386/creator-deckk/9WrsiRYB3tyKsKRcoYnFnMzpcCcd).
+  Le JavaScript servi par `https://creator-deckk.vercel.app` contient la phrase
+  du cercle complet. Preuve via GitHub et lecture HTTP publique ; API Vercel
+  directe refusée 403, CLI absent, donc pas d'affirmation de lecture API READY.
+- **APK :** [workflow automatique client 39096211340](https://github.com/GoodFight37/CreatorDeck/actions/runs/39096211340)
+  en cours au dernier relevé sur `0fe66715`, laissé tourner sans surveillance.
+  Ni fin de construction ni installation/mise à jour physique revendiquée.
+  L'infrastructure APK et les secrets existants n'ont pas été modifiés.
+- **Périmètre :** 3/5 absentes et dernière absente à chaque Live Drop/cadeau,
+  préférence à poids égal, monde après complétion et phrase demandée. Sous
+  trois absentes, répétitions nécessaires. Poids mondiaux, seuils de rareté
+  affichée, bouton de recharge, missions et polish inchangés. Aucun appel
+  Claude. Travail local antérieur conservé dans le stash et la copie indiqués
+  plus bas ; aucune suppression ou nouveau worktree.
+- Ce commit final ne change que les statuts documentaires ; le code audité
+  reste `0fe66715`. Son SHA se retrouve par `git log -1 --format=%H --
+  docs/agent-handoff.md`. Aucune autre action de développement de ce lot.
+  Réservation libérée ; ne pas relancer les contrôles déjà verts sans changement.
+
+# Historique — serveur appliqué et client en publication (18 octobre 2026)
+
+**Client poussé :** `0fe66715ab07203ff00ce6eedf08653aa92aa995`, confirmé par
+`git ls-remote` sur `main` et `etape-4-cercle-vrai`.
+[CI main](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095971227)
+et [CI branche](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095971355)
+en cours. [Dry-run après application](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095932681)
+**success** : « La base est déjà à jour et vérifiée. Aucun SQL de migration
+exécuté. » Le statut Vercel de ce SHA est encore en attente au dernier relevé.
+Prochaine action : attendre la CI main et relever le statut de déploiement
+`Production` de ce même SHA ; aucun autre changement de code nécessaire connu.
 
 - Autorisation : règle et publication explicitement demandées par Malik ;
   périmètre limité au cercle vrai. Branche conservée `etape-4-cercle-vrai`.

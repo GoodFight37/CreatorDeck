@@ -6,13 +6,14 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 18 octobre 2026
 
-**Règle « cercle vrai » (D-145) — serveur appliqué, client en publication :**
-branche `etape-4-cercle-vrai` validée 6/6 ; migration manuelle 0056 appliquée
-et historique vérifié en Production. Miroir TypeScript et cadeaux
+**Règle « cercle vrai » (D-145) — publiée et vérifiée :** code `0fe66715` sur
+`main` et `etape-4-cercle-vrai`, CI 6/6 sur les deux branches ; migration
+manuelle 0056 appliquée et historique vérifié en Production. Miroir TypeScript et cadeaux
 serveur : trois cartes sur cinq et la dernière parmi les chaînes actuellement
 absentes du cercle ; préférée prioritaire à poids égal. Retour au classement
 et message dédié quand le cercle est complet. Ce lot est limité à cette règle,
-pas à toute l'étape 4. Publication du client et contrôle final en cours. Preuves et
+pas à toute l'étape 4. Production web `success` au SHA du code, 289 contrôles
+SQL 0056 réussis et typecheck vert ; aucun essai téléphone revendiqué. Preuves et
 limites : [checkpoint](agent-handoff.md).
 
 **Mise à jour de l'APK de test depuis l'appli (D-144) — publiée, téléphone non vérifié :** `main` contient `15c1f1a` et le correctif workflow `bb6cf0a`, [CI 6/6 verte](https://github.com/GoodFight37/CreatorDeck/actions/runs/39076819637). La [première release publique](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v871307) contient l'APK signée debug et `latest.json` ; [workflow APK vert](https://github.com/GoodFight37/CreatorDeck/actions/runs/39077656829). Vercel Production est `READY` sur `bb6cf0a`. L'installation initiale et une mise à jour réelle sur téléphone restent non vérifiées. [Guide](mise-a-jour-apk.md).
