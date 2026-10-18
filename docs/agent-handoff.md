@@ -1,5 +1,27 @@
 # Checkpoint — règle cercle vrai D-145 préparée (18 octobre 2026)
 
+**Suivi du 18 octobre après reprise de l'accès :** code initial
+`fb2cea37e92241ca1be202aeaccc1fed15ad1fe0` poussé et SHA distant confirmé.
+[CI 39079182728](https://github.com/GoodFight37/CreatorDeck/actions/runs/39079182728)
+terminée : SQL jetable et trois shards Playwright verts ; qualité et RPC simulés
+rouges. **Preuve SQL acquise : 956 contrôles réussis au total, dont 289 pour
+0056 ; 45 vérifient explicitement la dernière carte absente**, compteurs relus
+dans les logs du job. Typecheck, build et
+218 écrans réussis en CI ; 1 269 unitaires réussis, 4 échecs dans d'anciens
+contrats du premier booster/SQL. RPC simulés : ancienne attente 1 appel cercle
+au lieu des 5 réellement reçus, échec sur bureau et téléphone.
+
+Correction de suivi : cercle invalide ignoré aussi par le nouveau miroir ;
+tests du premier booster et du cadeau adaptés à la règle 3/5 ; contrats SQL
+vérifiant les écritures de jetons plutôt qu'un commentaire et repérant le
+dernier bloc de garantie. Contrôle local : 35/35 tests concernés et typecheck
+réussis. Aucun changement SQL après la preuve ci-dessus. Nouvelle CI à relever
+après publication du correctif. Relecture Codex demandée mais aucun retour
+indépendant reçu ; requête interrompue, aucun appel Claude. Le refus temporaire
+de l'approbation automatique (limite d'usage) n'est plus un blocage d'accès.
+`main` reste `2fa29aaa` ; aucune application de 0056 en Production. Réservation
+de correction limitée à cette branche, libérée à la livraison du checkpoint.
+
 - Demande explicite et autorisée : **seulement** le tirage de trois absentes du
   cercle sur cinq dans chaque Live Drop/cadeau, dernière absente, préférence à
   poids égal et message du cercle complet. Ni rareté affichée, ni bouton de

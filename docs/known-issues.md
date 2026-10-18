@@ -8,8 +8,10 @@ et la RPC, absence de règle de complétion dans `open_pack`.
 
 Correction D-145 sur `etape-4-cercle-vrai` : migration 0056 et miroir du moteur,
 trois absentes sur cinq, dernière absente, cadeaux serveur à chaque ouverture.
-Tests ciblés et typecheck réussis ; la preuve PostgreSQL locale est bloquée
-par le compte Windows Administrateur et doit être obtenue sur le runner CI.
+Tests ciblés et typecheck réussis ; preuve PostgreSQL obtenue sur le runner CI
+([job SQL](https://github.com/GoodFight37/CreatorDeck/actions/runs/39079182728/job/117532470964)) :
+289 contrôles 0056 réussis, dont les tirages successifs et les cinq cadeaux.
+Le compte Windows Administrateur reste incompatible avec PostgreSQL local.
 Non appliqué en Production ; pas de contournement client revendiqué.
 
 ## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)

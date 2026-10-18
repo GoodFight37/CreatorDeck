@@ -122,9 +122,9 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
   expect(giftDraws).toHaveLength(5);
   expect(giftDraws.every((cards) => cards.length === 5)).toBe(true);
   expect(calls.filter((call) => call === "claim_return_gift")).toHaveLength(1);
-  // Le premier booster est tiré dans le cercle, les quatre suivants sont ordinaires.
-  expect(calls.filter((call) => call === "open_circle_gift_pack")).toHaveLength(1);
-  expect(calls.filter((call) => call === "open_return_gift_pack")).toHaveLength(4);
+  // Chaque cadeau garde le cercle : aucun repli vers l'ancienne porte mondiale.
+  expect(calls.filter((call) => call === "open_circle_gift_pack")).toHaveLength(5);
+  expect(calls.filter((call) => call === "open_return_gift_pack")).toHaveLength(0);
   expect(standardPacks).toBe(2);
   expect(calls.indexOf("claim_return_gift")).toBeLessThan(calls.indexOf("open_circle_gift_pack"));
 });

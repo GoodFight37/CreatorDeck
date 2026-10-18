@@ -68,7 +68,7 @@ import {
   type CollectionTheme,
 } from "@/lib/cosmetics";
 import { randomInt, randomUUID } from "@/lib/random";
-import { circleTiers } from "@/lib/circle";
+import { circleTiers, isValidCircle } from "@/lib/circle";
 import { circleDrawSlots, missingCircle } from "@/lib/circle-draw";
 import { canCraftRetired } from "@/lib/retired";
 // Le Tribunal : le tirage du jour est calculé par son propre module (pur), le
@@ -1086,7 +1086,8 @@ export function drawPack(
   // Les poids nominaux restent inchangés ; seuls les choix impossibles sont retirés.
   const finalWeights: RarityWeights = pity ? { legendary: 1 } :
     rareDrop && packType !== "scene" ? table.rareDrop.weights : table.guaranteed.weights;
-  const missing = packType === "live" ? missingCircle(options.circle ?? [], alreadyOwned) : [];
+  const missing = packType === "live" && options.circle && isValidCircle(options.circle)
+    ? missingCircle(options.circle, alreadyOwned) : [];
   const circleSlots = circleDrawSlots(missing, options.circle?.[0] ?? "",
     [...Array.from({ length: 4 }, (_, i) => weightsFor(i)), finalWeights], liveLogins);
   const eligible = CREATORS.filter(c => !RETIRED_BY_SLUG.has(c.slug) &&
@@ -1867,7 +1868,7 @@ export function openPack(
       circle: options.circle,
     });
   // Conserver la couche d'affichage du premier booster, sans changer ses seuils.
-  if (options.circle && refreshed.openings === 0) {
+  if (options.circle && isValidCircle(options.circle) && refreshed.openings === 0) {
     const tiers = circleTiers(options.circle);
     for (const card of cards) if (tiers[card.creatorSlug]) card.displayRarity = tiers[card.creatorSlug];
   }
