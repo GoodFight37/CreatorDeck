@@ -83,7 +83,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(card.querySelector("h2")!.textContent).toBe("ibai est en direct");
     expect(card.textContent).toContain("Prochain booster dans");
     expect(card.textContent).not.toContain("C’est le moment");
-    const action = document.querySelector<HTMLAnchorElement>(".open-panel a.primary-action")!;
+    const action = document.querySelector<HTMLAnchorElement>(".open-panel a.reserve-action")!;
     expect(action.textContent).toContain("Voir ibai en direct");
     expect(action.href).toBe("https://www.twitch.tv/ibai");
     expect(action.target).toBe("_blank");
@@ -96,7 +96,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
 
   it("réserve vide sans direct : le bouton actif ouvre la rangée du cercle", async () => {
     await home({ packs: 0 });
-    const button = document.querySelector<HTMLButtonElement>(".open-panel .primary-action")!;
+    const button = document.querySelector<HTMLButtonElement>(".open-panel .reserve-action")!;
     expect(button.disabled).toBe(false);
     expect(button.textContent).toContain("Personne de tes chaînes en direct");
     expect(button.textContent).not.toContain("Recharge en cours");

@@ -99,6 +99,9 @@ export function RevealOverlay({
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
+  // Un doublon ne rejoue pas la scène : pas de retournement, il rejoint la pile.
+  const duplicate = Boolean(card) && !tutorial && !perfect && card.isNew === false;
+  const duplicatesSoFar = perfect ? [] : cards.slice(0, index + 1).filter((item) => !tutorial && item.isNew === false);
   const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal);
 
   useEffect(() => {
@@ -113,7 +116,7 @@ export function RevealOverlay({
 
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     const effectsAllowed = cardEffectsAllowed();
-    const immediate = !effectsAllowed;
+    const immediate = !effectsAllowed || duplicate;
     const fifthRevealBeat = effectsAllowed && isFifthSequentialReveal ? FIFTH_CARD_REVEAL_BEAT_MS : 0;
     const reducedFallback = immediate
       ? window.setTimeout(() => {
@@ -136,7 +139,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, isFifthSequentialReveal, perfect, rarity]);
+  }, [cardId, duplicate, isFifthSequentialReveal, perfect, rarity]);
 
   useEffect(() => {
     if (!card || perfect) return;
@@ -167,9 +170,9 @@ export function RevealOverlay({
   const spotlight = deservesSpotlight(card.rarity, perfect);
   const posterAvailable = !overlay && cloud.configured && Boolean(cloud.userId) &&
     (perfect || cards.some((item) => item.rarity === "legendary"));
-  const rareGlow = perfect || card.rarity === "epic" || card.rarity === "legendary";
-  const rarityAura = rareGlow || card.rarity === "rare";
-  const flash = flashFor(card.rarity, perfect);
+  const rareGlow = !duplicate && (perfect || card.rarity === "epic" || card.rarity === "legendary");
+  const rarityAura = rareGlow || (!duplicate && card.rarity === "rare");
+  const flash = !duplicate && flashFor(card.rarity, perfect);
   const glowDelay = perfect ? 0 : overlay ? silenceBefore(card.rarity) : timing.impactMs;
   const glowStyle = {
     "--rare-delay": `${glowDelay}ms`,
@@ -395,7 +398,28 @@ export function RevealOverlay({
           ) : null}
         </section>
       ) : (
-        <div className="reveal-stage">
+        <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
+          {card.isNew && !tutorial ? (
+            // Nouvelle : un flash de la couleur de sa rareté, puis son nom.
+            <>
+              <span key={`new-flash-${card.id}`} className="reveal-new-flash" aria-hidden="true"
+                style={{ ...glowStyle, "--flash-color": RARITY_META[card.rarity].color } as CSSProperties} />
+              <p key={`new-name-${card.id}`} className="reveal-big-name" style={glowStyle}>{creator.displayName}</p>
+            </>
+          ) : null}
+          {duplicatesSoFar.length ? (
+            <div className="reveal-dupe-pile" aria-label={`Doublons de ce booster : ${duplicatesSoFar.length}`}>
+              {duplicatesSoFar.slice(-3).map((item, pileIndex) => {
+                const pileCreator = creatorFor(item.creatorSlug);
+                return pileCreator ? (
+                  <span key={item.id} className="reveal-dupe-pile-card" style={{ "--pile-i": pileIndex } as CSSProperties} aria-hidden="true">
+                    <CreatorCard creator={pileCreator} variant={item.variant} compact />
+                  </span>
+                ) : null;
+              })}
+              <span className="reveal-dupe-pile-count">Doublons ×{duplicatesSoFar.length}</span>
+            </div>
+          ) : null}
           {rareGlow && !perfect ? (
             <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true" style={glowStyle}>
               <span>CARTE D&apos;EXCEPTION</span>
@@ -406,6 +430,7 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
+          {duplicate ? <span className="reveal-dupe-note">Déjà dans ta collection · rejoint la pile</span> : null}
           <div
             ref={anchorRef}
             style={glowStyle}

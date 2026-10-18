@@ -4602,3 +4602,72 @@ input:focus-visible {
 .profile-view .profile-build-version { display: block; margin: 24px 0 8px; color: var(--muted); font-size: 11px; }
 .profile-view .profile-card h1 { overflow-wrap: anywhere; }
 :is(.profile-identity-action, .profile-collection-goal):focus-visible { outline: 2px solid var(--accent-light); outline-offset: 2px; }
+
+/* ================================================================ carte affiche
+   Une carte de nuit de direct : la photo remplit la planche (rognée, jamais
+   rétrécie), le nom est imprimé en grand en bas comme une affiche, le rang est
+   petit en haut. La rareté est une lumière sur le bord : un filet froid pour
+   la Commune, un bord or qui déborde pour la Légendaire. Pas de pastilles. */
+.creator-card { container-type: inline-size; background: #050507; }
+.creator-card .card-photo { object-fit: cover; object-position: center 32%; }
+/* Imprimée, pas vide : une trame fine et un voile d'encre sur la photo. */
+.creator-card .card-photo-shade {
+  background:
+    radial-gradient(rgb(255 255 255 / .06) .6px, transparent .9px) 0 0 / 3px 3px,
+    linear-gradient(180deg, rgb(0 0 0 / .42) 0%, transparent 18%),
+    linear-gradient(180deg, transparent 46%, rgb(4 4 6 / .55) 66%, rgb(4 4 6 / .94) 100%);
+  box-shadow: inset 0 0 60px rgb(0 0 0 / .45);
+}
+.creator-card .card-nameplate {
+  padding: 0 7% 6.5%; border-top: 0; background: none; box-shadow: none;
+}
+.creator-card .card-identity { justify-content: flex-start; gap: 8px; }
+.creator-card .card-rarity-label { flex: none; font-size: clamp(8px, 5.4cqw, 13px); text-shadow: 0 1px 6px rgb(0 0 0 / .9); }
+.creator-card .card-region { min-width: 0; }
+.creator-card .card-region { font-size: clamp(8px, 4.6cqw, 12px); color: rgb(255 255 255 / .62); }
+.creator-card .card-nameplate h3 {
+  margin: .5cqw 0 0;
+  font-size: min(21cqw, calc(158cqw / var(--name-len, 8)));
+  font-stretch: condensed; font-weight: 700; line-height: .86; letter-spacing: -.01em;
+  text-overflow: clip;
+  text-shadow: 0 2px 0 rgb(0 0 0 / .5), 0 6px 22px rgb(0 0 0 / .7);
+}
+.creator-card .card-footerline {
+  margin-top: 2.4cqw; padding-top: 0; border-top: 0;
+  font-size: clamp(8px, 4.2cqw, 12px); color: rgb(255 255 255 / .58);
+}
+.creator-card .card-rank { font-size: clamp(9px, 5.2cqw, 14px); letter-spacing: .1em; opacity: .85; }
+.creator-card.is-compact .card-nameplate { padding: 0 7% 7%; }
+.creator-card.is-compact .card-nameplate h3 { font-size: min(22cqw, calc(160cqw / var(--name-len, 8))); }
+.creator-card.is-compact .card-rank { font-size: clamp(8px, 9cqw, 12px); }
+/* Pas de pastilles : le direct, la variante Live et Sortant sont du texte imprimé. */
+.creator-card .card-on-air, .creator-card .card-live, .creator-card .card-retired {
+  border: 0; background: none; box-shadow: none; text-shadow: 0 1px 6px rgb(0 0 0 / .95);
+}
+/* La rareté, une lumière sur le bord. */
+.creator-card::after { border-width: 1px; box-shadow: none; }
+.creator-card.rarity-common::after {
+  border: 1px solid rgb(196 214 236 / .5);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / .6), inset 0 0 14px rgb(176 200 230 / .1);
+}
+.creator-card.rarity-uncommon::after {
+  border: 1.5px solid color-mix(in srgb, var(--rarity) 80%, #fff);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--rarity) 22%, transparent);
+}
+.creator-card.rarity-rare::after {
+  border: 2px solid color-mix(in srgb, var(--rarity) 85%, #fff);
+  box-shadow: inset 0 0 22px color-mix(in srgb, var(--rarity) 32%, transparent);
+}
+.creator-card.rarity-epic::after {
+  border: 2.5px solid color-mix(in srgb, var(--rarity) 85%, #fff);
+  box-shadow: inset 0 0 28px color-mix(in srgb, var(--rarity) 40%, transparent);
+}
+.creator-card.rarity-legendary::after {
+  border: 3px solid #ffd27a;
+  box-shadow: inset 0 0 0 1px rgb(255 245 214 / .6), inset 0 0 34px rgb(255 189 69 / .45);
+}
+.creator-card.rarity-epic { box-shadow: 0 0 0 1px rgb(0 0 0 / .85), 0 0 16px -2px rgb(164 108 255 / .45), 0 14px 26px -16px rgb(0 0 0 / .95); }
+/* La Légendaire déborde : son or éclaire autour de la carte. */
+.creator-card.rarity-legendary {
+  box-shadow: 0 0 0 1px rgb(255 214 130 / .9), 0 0 18px rgb(255 189 69 / .6), 0 0 46px rgb(255 189 69 / .28), 0 14px 26px -16px rgb(0 0 0 / .95);
+}

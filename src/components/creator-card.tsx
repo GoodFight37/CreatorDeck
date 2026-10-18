@@ -37,9 +37,9 @@ type CreatorCardProps = {
  *
  * Ce qui fait une carte de TCG, et qui manquait ici :
  *
- *   * le **portrait plein cadre** : l'avatar Twitch est carré, la carte
- *     verticale ; `object-fit: cover` (CSS) remplit la carte en rognant les
- *     bords, sans déformer ni laisser de bandes noires ;
+ *   * le **portrait plein cadre** : le carré Twitch est rogné (`object-fit:
+ *     cover`, CSS), jamais rétréci au milieu d'un cadre noir ;
+ *   * le **nom en affiche**, énorme et condensé, en bas ; le rang petit en haut ;
  *   * la **rareté comme cadre** — épaisseur, teinte et texture du bord — au lieu
  *     d'une lettre dans une pastille : ça se lit à deux mètres ;
  *   * une **nameplate opaque** en bas, barre pleine, nom en display condensée ;
@@ -88,6 +88,8 @@ export function CreatorCard({
   const style = {
     "--rarity": rarity.color,
     "--rarity-glow": rarity.glow,
+    // Le nom remplit la largeur comme sur une affiche : plus il est court, plus il est grand.
+    "--name-len": Math.max(4, creator.displayName.length),
   } as CSSProperties;
 
   const inspectButton = onClick ? (
@@ -150,7 +152,7 @@ export function CreatorCard({
         <div className="card-photo-shade" />
       </div>
 
-      {/* La matière vient du CSS (rareté, Holo, Gold, Live) : pas de style ici. */}
+      {/* La matière vient du CSS (rareté, Holo, Gold, Live) : aucun style ici. */}
       <div className="card-foil" ref={foilRef} aria-hidden="true" />
 
       <div className="card-topline">

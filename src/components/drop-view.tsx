@@ -29,7 +29,6 @@ import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
 import { circleLiveState, twitchUrl } from "@/lib/circle-live";
-import { memesUnlocked, memesUnlockLine } from "@/lib/memes-unlock";
 import { circlePityPool } from "@/lib/game-engine";
 import { missingCircle } from "@/lib/circle-draw";
 
@@ -119,12 +118,23 @@ export function HomeView({
   const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const circle = useCircle();
   const ownedSlugs = useMemo(() => new Set(game.cards.map((card) => card.creatorSlug)), [game.cards]);
-  const haloCreator = circle.length ? CREATOR_BY_SLUG.get(circle[0]) : undefined;
+  const live = useLive();
+  // La lumière du plateau : le visage de la chaîne préférée, sinon celui du
+  // direct le plus suivi. Rien d'inventé quand on ne connaît ni l'un ni l'autre.
+  const topLive = useMemo(() => {
+    if (live.stale || !live.count) return null;
+    let top: { login: string; viewers: number } | null = null;
+    for (const stream of live.byLogin.values()) {
+      if (!top || stream.viewers > top.viewers) top = { login: stream.login, viewers: stream.viewers };
+    }
+    return top;
+  }, [live]);
+  const haloCreator = circle.length ? CREATOR_BY_SLUG.get(circle[0])
+    : topLive ? [...CREATOR_BY_SLUG.values()].find((creator) => creator.login === topLive.login) : undefined;
   const haloImage = haloCreator ? creatorImage(haloCreator) : null;
   // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
   const lean = circle.length > 0;
-  // D-141 : un seul univers au début pour un joueur avec cercle ; MEMES arrive après 10 boosters.
-  const showMemes = memesUnlocked(lean, game.stats.openings);
+  // MEMES est un second paquet, visible à droite dès le départ ; Live reste devant.
   // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
   const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
   const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
@@ -135,7 +145,6 @@ export function HomeView({
       ).length,
     [game.cards],
   );
-  const live = useLive();
   // Étape 2 : qui, dans le cercle du joueur, est en direct maintenant.
   const circleLive = lean ? circleLiveState(circle, live, ownedSlugs, now) : null;
   const circleLiveEntries = circleLive?.kind === "live" ? circleLive.entries : [];
@@ -146,14 +155,11 @@ export function HomeView({
     circleRow.current?.scrollIntoView?.({ block: "center" });
     circleRow.current?.focus({ preventScroll: true });
   }
-  const featured = useMemo(() => {
-    if (live.stale || !live.count) return null;
-    let top: { login: string; viewers: number } | null = null;
-    for (const stream of live.byLogin.values()) {
-      if (!top || stream.viewers > top.viewers) top = { login: stream.login, viewers: stream.viewers };
-    }
-    return top;
-  }, [live]);
+  const featured = topLive;
+  const liveLabel = needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster"
+    : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours";
+  const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
+    : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge MEMES en cours" : "Ouvrir le booster MEMES";
 
   const reserveControls = (
     <>
@@ -249,9 +255,9 @@ export function HomeView({
 
   return (
     <div className={`view home-view${lean ? " is-lean" : ""}`} style={themeStyle}>
-      {lean ? (
-        // La chaîne préférée du joueur éclaire la scène : son visage, flou, derrière le pack.
-        <div className="stage-halo" aria-hidden="true" style={haloImage ? { backgroundImage: `url(${haloImage})` } : undefined} />
+      {haloImage ? (
+        // Une lumière de plateau : le visage, flou et fort, couvre le haut de l'écran.
+        <div className="stage-halo" aria-hidden="true" style={{ backgroundImage: `url(${haloImage})` }} />
       ) : null}
       {/* En-tête concis : zéro blabla marketing */}
       {lean ? <h1 className="sr-only">Drop</h1> : (
@@ -263,38 +269,32 @@ export function HomeView({
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
-        universes={showMemes ? undefined : ["live"]} />
+        labels={{ live: liveLabel, memes: memeLabel }}
+        piles={{ live: needsAccount ? 1 : stock + promoPacks, memes: memes.status?.stock ?? 1 }} />
+      {lean ? (
+        // Les chaînes du joueur : des ronds qui chevauchent le bas du paquet.
+        <div ref={circleRow} tabIndex={-1} className="drop-circle-faces">
+          <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+        </div>
+      ) : null}
 
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {emptyCircleReserve && firstLive ? (
-          <a className="primary-action" href={twitchUrl(firstLive.creator.login)} target="_blank" rel="noopener noreferrer">
-            <Zap size={19} aria-hidden="true" />
+          <a className="reserve-action" href={twitchUrl(firstLive.creator.login)} target="_blank" rel="noopener noreferrer">
+            <Zap size={15} aria-hidden="true" />
             <span>Voir {firstLive.creator.displayName} en direct</span>
-            <ChevronRight size={19} aria-hidden="true" />
+            <ChevronRight size={15} aria-hidden="true" />
           </a>
-        ) : <button
-          className="primary-action"
-          onClick={emptyCircleReserve ? showCircle : onOpen}
-          disabled={emptyCircleReserve ? opening || memes.busy : cannotOpen}
-        >
-          {opening ? (
-            <LoaderCircle className="spin" size={19} />
-          ) : needsAccount ? (
-            <Zap size={19} />
-          ) : (
-            <Zap size={19} />
-          )}
-          <span>
-            {emptyCircleReserve ? "Personne de tes chaînes en direct" : needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster" : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours"}
-          </span>
-          {needsAccount || stock > 0 || promoPacks > 0 ? <ChevronRight size={19} /> : null}
-        </button>}
+        ) : emptyCircleReserve ? (
+          <button type="button" className="reserve-action" onClick={showCircle} disabled={opening || memes.busy}>
+            {opening ? <LoaderCircle className="spin" size={15} /> : <Zap size={15} aria-hidden="true" />}
+            <span>Personne de tes chaînes en direct</span>
+          </button>
+        ) : null}
         {!needsAccount ? (
-          <div className="stock-row">
-            <div>
-              <span>Ta réserve</span>
-              <strong>{stock}<small>/{pack.max}</small></strong>
-            </div>
+          // Une seule ligne, petite : la pile au-dessus montre déjà ce qu'on a.
+          <p className="stock-row">
+            <span><strong>{stock}</strong> restant{stock > 1 ? "s" : ""}</span>
             {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
             {promoPacks > 0 ? (
               <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
@@ -302,9 +302,9 @@ export function HomeView({
               </span>
             ) : null}
             {nextAt !== null ? (
-              <div className="timer-copy"><Clock3 size={14} /><span>{stock > pack.max ? "Recharge après ouverture · " : "+1 dans "}{formatCountdown(nextAt, tick)}</span></div>
+              <span className="timer-copy">{stock > pack.max ? "recharge après ouverture" : `+1 dans ${formatCountdown(nextAt, tick)}`}</span>
             ) : null}
-          </div>
+          </p>
         ) : null}
         {!lean ? (
           <details className="drop-secondary-details">
@@ -322,30 +322,16 @@ export function HomeView({
           hourglass={null}
         />
       ) : null}
-      {lean ? (
-        <>
-          {missingCircle(circle, ownedSlugs).length === 0 ? (
-            <p role="status">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
-          ) : null}
-          <div ref={circleRow} tabIndex={-1}>
-            <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
-          </div>
-        </>
+      {lean && missingCircle(circle, ownedSlugs).length === 0 ? (
+        <p role="status" className="drop-circle-complete">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
       ) : null}
       {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
-        <button className="primary-action" type="button" disabled={memeCannotOpen}
-          onClick={() => prepareBooster("memes")}>
-          <Zap size={19} aria-hidden="true" />
-          <span>{!memes.account ? "Se connecter pour ouvrir" : memes.busy ? "Ouverture…"
-            : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge en cours" : "Ouvrir le booster MEMES"}</span>
-          <ChevronRight size={19} aria-hidden="true" />
-        </button>
-        <div className="meme-booster-reserve" aria-live="polite">
-          {memes.status ? <><strong>Ta réserve MEMES · {memes.status.stock}/4</strong>
-            <span>{memes.status.nextAt ? "+1 dans " + formatCountdown(Date.parse(memes.status.nextAt), tick) : "Réserve pleine"}</span></>
+        <p className="meme-booster-reserve stock-row" aria-live="polite">
+          {memes.status ? <><span><strong>{memes.status.stock}</strong> MEMES restant{memes.status.stock > 1 ? "s" : ""}</span>
+            <span className="timer-copy">{memes.status.nextAt ? "+1 dans " + formatCountdown(Date.parse(memes.status.nextAt), tick) : "réserve pleine"}</span></>
             : <span>{memes.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}</span>}
-        </div>
+        </p>
         {memes.notice ? <p role="status">{memes.notice}</p> : null}
         {memes.problem ? <div role="alert"><p>{memes.problem}</p>
           <button type="button" disabled={memes.loading} onClick={() => void memes.refresh()}>Réessayer la lecture</button></div> : null}
@@ -404,7 +390,6 @@ export function HomeView({
       <details className="drop-secondary">
         <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
         {lean ? reserveControls : null}
-        {!showMemes ? <p className="memes-unlock-note">{memesUnlockLine(game.stats.openings)}</p> : null}
         <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (

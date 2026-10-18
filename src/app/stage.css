@@ -400,3 +400,192 @@
 }
 .app-update-banner .app-update-later { min-width: 44px; padding: 0; background: none; color: var(--muted); }
 .app-update-banner button:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
+
+/* ================================================================ nuit de direct
+   L'accueil n'est plus une appli noire avec un bouton : le visage de la chaîne
+   préférée éclaire le plateau, le paquet est le bouton, la réserve est une pile.
+   La couleur vient du streameur ; le fond reste noir. */
+.home-view { position: relative; isolation: isolate; }
+.home-view .stage-halo {
+  position: absolute; z-index: -1; top: -24px; left: 50%;
+  width: 100vw; max-width: 760px; height: min(66dvh, 600px);
+  transform: translateX(-50%);
+  background-color: transparent; background-repeat: no-repeat;
+  background-size: cover; background-position: center 26%;
+  filter: blur(14px) saturate(1.5) brightness(1.05) contrast(1.05);
+  opacity: .95;
+  -webkit-mask-image: linear-gradient(#000 0 38%, rgb(0 0 0 / .55) 62%, transparent 100%);
+          mask-image: linear-gradient(#000 0 38%, rgb(0 0 0 / .55) 62%, transparent 100%);
+  animation: none;
+}
+.home-view .booster-selector { position: relative; }
+.home-view .booster-selector .pack-stage.stage-live.booster-carousel {
+  --drop-pack-size: min(78vw, 320px, calc(52dvh / 1.4667));
+  --drop-stage-pt: clamp(48px, calc(24dvh - 78px), 200px);
+  --drop-stage-pb: 0px;
+  margin: 0 -18px; background: none; touch-action: pan-y pinch-zoom;
+}
+.home-view .booster-selector .pack-stage.stage-live::before,
+.home-view .booster-selector .pack-stage.stage-live::after { content: none; }
+.home-view .booster-selector .pack-stage.stage-live.booster-carousel .pack-copy {
+  top: 8px; bottom: auto; left: 18px; right: auto; justify-content: flex-start;
+  color: rgb(255 255 255 / .82); font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  text-shadow: 0 1px 8px rgb(0 0 0 / .8);
+}
+.home-view .booster-selector .pack-copy h2 { font-size: 13px; letter-spacing: .14em; }
+/* Le paquet voisin : visible à droite (ou à gauche), en retrait, derrière. */
+.home-view .booster-selector .booster-pack-slot {
+  transform: translateX(calc(-50% + var(--booster-offset) * 74%)) scale(.62) rotateY(calc(var(--booster-offset) * -16deg));
+  opacity: .5; filter: brightness(.6) saturate(.85);
+}
+.home-view .booster-selector .booster-pack-slot[data-active="true"] { transform: translateX(-50%); opacity: 1; filter: none; }
+/* Le paquet de devant : un objet qu'on presse. Pas de filtre sur le bouton :
+   il aplatirait les faces 3D du sachet. L'ombre vit sur .pack-shadow. */
+.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 120ms ease-out; }
+.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
+  transform: perspective(900px) rotateY(-7deg) rotateX(9deg) translateY(5px) scale(.955);
+}
+.home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
+.home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
+/* La pile : les dos des paquets qu'on a encore, derrière celui de devant. */
+.pack-pile { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.pack-pile-back {
+  position: absolute; inset: 1.5% 3%;
+  border-radius: 7px;
+  background:
+    repeating-linear-gradient(135deg, rgb(255 255 255 / .035) 0 2px, transparent 2px 9px),
+    linear-gradient(165deg, #3b1b22, #160a0e 52%, #09070a);
+  border: 1px solid rgb(255 214 200 / .16);
+  box-shadow: 0 14px 24px rgb(0 0 0 / .65), inset 0 1px rgb(255 255 255 / .1);
+  transform: translate(calc(var(--pile-i) * 10px), calc(var(--pile-i) * -13px)) rotate(calc(var(--pile-i) * 2.6deg));
+}
+[data-booster="memes"] .pack-pile-back { background: repeating-linear-gradient(135deg, rgb(255 255 255 / .035) 0 2px, transparent 2px 9px), linear-gradient(165deg, #2b2a12, #11100a 52%, #09090a); }
+/* Le choix d'univers : deux mots discrets, pas une seconde pilule rouge. */
+.home-view .booster-switcher { position: absolute; z-index: 5; top: 0; right: -6px; gap: 0; }
+.home-view .booster-switcher button {
+  min-height: 44px; padding: 6px 10px; border: 0; border-radius: 0; background: none;
+  color: rgb(255 255 255 / .55); font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  text-shadow: 0 1px 8px rgb(0 0 0 / .8);
+}
+.home-view .booster-switcher button[aria-pressed="true"] { background: none; border: 0; color: #fff; box-shadow: inset 0 -2px #fff; }
+/* Les chaînes du joueur : des ronds qui chevauchent le bas du paquet. */
+.home-view .drop-circle-faces { position: relative; z-index: 4; margin-top: -54px; outline: none; }
+.home-view .drop-circle-faces .circle-strip {
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; margin: 0; padding: 0 12px;
+}
+.home-view .drop-circle-faces .circle-strip-head { display: contents; }
+.home-view .drop-circle-faces .circle-strip-head h2,
+.home-view .drop-circle-faces .circle-strip-head p,
+.home-view .drop-circle-faces .circle-strip-status,
+.home-view .drop-circle-faces .circle-name,
+.home-view .drop-circle-faces .circle-item small,
+.home-view .drop-circle-faces .circle-live-tag {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.home-view .drop-circle-faces .circle-strip-row {
+  order: 1; display: flex; justify-content: safe center; gap: 0; max-width: 100%;
+  margin: 0; padding: 4px 6px; overflow-x: auto;
+}
+.home-view .drop-circle-faces .circle-strip-row > li + li { margin-left: -12px; }
+.home-view .drop-circle-faces .circle-item { display: block; min-width: 0; padding: 0; gap: 0; }
+.home-view .drop-circle-faces .circle-avatar {
+  width: 52px; height: 52px; padding: 0; border: 3px solid #050507; border-radius: 50%;
+  background: #050507; box-shadow: 0 0 0 1.5px var(--ring, rgb(255 255 255 / .3)), 0 8px 18px rgb(0 0 0 / .6);
+  animation: none;
+}
+.home-view .drop-circle-faces .circle-avatar img { width: 100%; height: 100%; border: 0; border-radius: 50%; object-fit: cover; }
+.home-view .drop-circle-faces li[data-owned="false"] .circle-avatar { border-style: solid; box-shadow: 0 0 0 1px rgb(255 255 255 / .18), 0 8px 18px rgb(0 0 0 / .6); }
+.home-view .drop-circle-faces li[data-owned="false"] .circle-avatar img { filter: grayscale(.85) brightness(.62); }
+.home-view .drop-circle-faces li[data-live="true"] { position: relative; z-index: 2; }
+.home-view .drop-circle-faces li[data-live="true"] .circle-avatar {
+  background: #050507;
+  box-shadow: 0 0 0 2.5px #ff2d43, 0 0 18px rgb(255 45 67 / .65), 0 8px 18px rgb(0 0 0 / .6);
+}
+.home-view .drop-circle-faces .circle-strip-edit {
+  order: 2; width: 44px; min-width: 44px; height: 44px; margin-left: 4px; padding: 0;
+  border: 1px dashed rgb(255 255 255 / .35); border-radius: 50%; background: rgb(5 5 7 / .7);
+  color: transparent; font-size: 0;
+}
+.home-view .drop-circle-faces .circle-strip-edit::before { content: "+"; color: rgb(255 255 255 / .8); font-size: 22px; line-height: 42px; }
+/* La réserve : une seule ligne, petite, sous la pile. */
+.home-view .open-panel, .home-view .meme-booster-panel {
+  margin: 10px 0 0; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none;
+}
+.home-view .open-panel::before, .home-view .open-panel::after { content: none; display: none; }
+.home-view .stock-row {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 8px;
+  margin: 0; padding: 0; border: 0; background: none; color: var(--muted); font-size: 13px;
+}
+.home-view .stock-row strong { color: var(--text); font-size: 13px; font-weight: 650; }
+.home-view .stock-row .timer-copy { display: inline; color: var(--muted); font-size: 13px; }
+.home-view .stock-row .timer-copy::before { content: "· "; }
+.home-view .reserve-action {
+  display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px;
+  margin: 0 0 4px; padding: 6px 10px; border: 0; background: none; color: var(--text);
+  font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.home-view .drop-circle-complete { margin: 8px 0 0; color: var(--muted); font-size: 13px; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .home-view .booster-selector .pack-artwork.pack-live { transition: none; }
+}
+
+/* ================================================================ révélation, nuit
+   Une carte à la fois, dans la scène plein écran, qui sort du paquet (même
+   taille que la carte extraite : la continuité est testée). Nouvelle : un
+   flash de la couleur de sa rareté, puis son nom. Doublon : pas de retournement,
+   elle rejoint une petite pile. Les tailles restent partagées avec l'extraction. */
+.reveal-game .reveal-rarity-kicker { top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 84px); }
+.reveal-game .reveal-stage > .new-badge { top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 15px); z-index: 4; }
+.reveal-new-flash {
+  position: fixed; inset: 0; z-index: 3; pointer-events: none;
+  background: radial-gradient(circle at 50% 47%, var(--flash-color) 0%,
+    color-mix(in srgb, var(--flash-color) 55%, transparent) 26%, transparent 68%);
+  mix-blend-mode: screen; opacity: 0;
+  animation: reveal-new-flash 760ms ease-out calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) * .72) both;
+}
+@keyframes reveal-new-flash { 0% { opacity: 0; } 16% { opacity: .95; } 100% { opacity: 0; } }
+.reveal-game .reveal-big-name {
+  position: absolute; z-index: 4; left: 0; right: 0;
+  top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 10px);
+  margin: 0; color: #fff; text-align: center;
+  font: 700 min(11vw, 60px)/.9 var(--font-display); letter-spacing: .01em; text-transform: uppercase;
+  text-shadow: 0 0 22px var(--rarity-glow, rgb(255 255 255 / .3)), 0 3px 12px rgb(0 0 0 / .9);
+  opacity: 0;
+  animation: reveal-big-name 420ms cubic-bezier(.2, .8, .2, 1) calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 260ms) both;
+}
+@keyframes reveal-big-name { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
+.reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 14px + min(11vw, 60px)); }
+/* Doublon : pas de scène rejouée, la carte rejoint la pile. */
+.reveal-game .reveal-stage.is-duplicate .reveal-flip,
+.reveal-game .reveal-stage.is-duplicate .reveal-flip-face { animation: none; }
+.reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: reveal-dupe-join 520ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes reveal-dupe-join { from { opacity: 0; transform: translate(-50%, -46%) scale(.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(.78); } }
+.reveal-game .reveal-stage.is-duplicate > .reveal-anchor { transform: translate(-50%, -50%) scale(.78); }
+.reveal-dupe-note {
+  position: absolute; left: 0; right: 0; z-index: 4;
+  top: calc(var(--scene-center) - var(--scene-card-height) * .39 - 34px);
+  color: var(--muted); font-size: 12px; letter-spacing: .08em; text-align: center; text-transform: uppercase;
+}
+.reveal-dupe-pile {
+  position: absolute; z-index: 4; left: 18px; bottom: calc(92px + env(safe-area-inset-bottom));
+  width: 58px; height: 82px;
+}
+.reveal-dupe-pile-card {
+  position: absolute; inset: 0; display: block;
+  transform: translate(calc(var(--pile-i) * 5px), calc(var(--pile-i) * -5px)) rotate(calc(var(--pile-i) * 4deg - 4deg));
+}
+.reveal-dupe-pile-card .creator-card { width: 100%; }
+.reveal-dupe-pile-count {
+  position: absolute; left: 0; top: calc(100% + 6px); white-space: nowrap;
+  color: var(--muted); font-size: 11px; letter-spacing: .06em;
+}
+.reveal-game .reveal-swipe-prompt {
+  position: absolute; left: 0; right: 0; top: auto; bottom: calc(78px + env(safe-area-inset-bottom));
+  display: flex; justify-content: center; gap: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal-new-flash { display: none; }
+  .reveal-game .reveal-big-name, .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: none; opacity: 1; }
+}
+[data-card-fx="off"] .reveal-new-flash { display: none; }
+[data-card-fx="off"] .reveal-game .reveal-big-name { animation: none; opacity: 1; }

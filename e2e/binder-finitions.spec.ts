@@ -27,6 +27,8 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
   await binder(page);
   const opacity = (rarity: string) => page.locator(`.collection-grid .rarity-${rarity} .card-foil`)
     .evaluate((node) => Number(getComputedStyle(node).opacity));
+  // Sans style inline, la Commune n'a pas de reflet dans le classeur : sa
+  // rareté se lit au filet froid du bord. Les autres reprennent leur CSS.
   expect(await opacity("common")).toBe(0);
   expect(await opacity("rare")).toBeGreaterThan(0);
   expect(await opacity("epic")).toBeGreaterThan(await opacity("rare"));

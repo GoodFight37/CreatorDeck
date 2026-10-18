@@ -6,7 +6,7 @@ import { CREATOR_BY_SLUG } from "@/lib/catalog";
 
 const banc = creerBanc();
 afterEach(() => banc.nettoyer());
-it("remplit la carte avec le portrait et laisse la matière au CSS des variantes", async () => {
+it("remplit la carte avec le portrait, nom en affiche, matière laissée au CSS des variantes", async () => {
   banc.preparer();
   const creator = CREATOR_BY_SLUG.get("ibai")!;
   await banc.monter(<><CreatorCard creator={creator} /><CreatorCard creator={creator} variant="gold" /></>);
@@ -23,8 +23,13 @@ it("remplit la carte avec le portrait et laisse la matière au CSS des variantes
   expect(photo).toContain("width: 100%");
   expect(photo).toContain("height: 100%");
   expect(/\.card-photo-wrap \{([^}]*)\}/.exec(css)?.[1]).toContain("inset: 0");
+  expect(css).toMatch(/\.creator-card \.card-photo \{ object-fit: cover;/);
+  expect(css).not.toMatch(/\.card-photo[^{]*\{[^}]*object-fit: contain/);
   // Le foil n'écrase plus Holo, Gold et Live.
   for (const foil of document.querySelectorAll<HTMLElement>(".card-foil")) expect(foil.getAttribute("style")).toBeNull();
   expect(document.querySelectorAll(".creator-card.variant-gold .card-foil")).toHaveLength(1);
   expect(css).toMatch(/\.creator-card\.variant-gold \.card-foil \{[^}]*background/);
+  // Nom en affiche et Légendaire qui déborde.
+  expect(document.querySelector<HTMLElement>(".creator-card")!.style.getPropertyValue("--name-len")).toBe("4");
+  expect(css).toMatch(/\.creator-card\.rarity-legendary \{\s*box-shadow:[^}]*rgb\(255 189 69/);
 });

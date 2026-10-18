@@ -121,7 +121,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(tokens.closest("details.drop-token-details")).toBeNull();
   });
 
-  it("D-141 : avec un cercle, MEMES n'apparaît qu'après 10 boosters ouverts", async () => {
+  it("avec un cercle, MEMES est visible à droite dès le premier lancement", async () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
     const universes = () => [...document.querySelectorAll('[aria-label="Choisir un univers"] button')].map((b) => b.textContent?.trim());
     const noop = () => {};
@@ -134,13 +134,12 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
         tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
         now={NOW} serverReserve={false} needsAccount={false} />);
     };
-    await mount(3);
-    expect(universes()).not.toContain("MEMES");
-    expect(document.querySelector(".memes-unlock-note")!.textContent).toBe("Le booster MEMES arrive après 10 boosters ouverts (3/10).");
-    banc.nettoyer(); banc = creerBanc(); banc.preparer();
-    await mount(10);
-    expect(document.querySelector(".memes-unlock-note")).toBeNull();
+    // Nuit de direct : MEMES est un second paquet visible dès le départ, Live devant.
+    await mount(0);
     expect(universes()).toEqual(["Live Drop", "MEMES"]);
+    expect(document.querySelector('[data-booster="live"]')!.getAttribute("data-active")).toBe("true");
+    expect(document.querySelector('[data-booster="memes"] .booster-neighbor')).not.toBeNull();
+    expect(document.querySelector(".memes-unlock-note")).toBeNull();
   });
 
   it("D-142 : la garantie Légendaire annonce une de tes chaînes tant qu'une Légendaire du cercle manque", async () => {
