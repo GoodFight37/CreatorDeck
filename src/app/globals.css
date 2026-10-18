@@ -4622,7 +4622,8 @@ input:focus-visible {
   padding: 0 7% 6.5%; border-top: 0; background: none; box-shadow: none;
 }
 .creator-card .card-identity { justify-content: flex-start; gap: 8px; }
-.creator-card .card-rarity-label { font-size: clamp(8px, 5.4cqw, 13px); text-shadow: 0 1px 6px rgb(0 0 0 / .9); }
+.creator-card .card-rarity-label { flex: none; font-size: clamp(8px, 5.4cqw, 13px); text-shadow: 0 1px 6px rgb(0 0 0 / .9); }
+.creator-card .card-region { min-width: 0; }
 .creator-card .card-region { font-size: clamp(8px, 4.6cqw, 12px); color: rgb(255 255 255 / .62); }
 .creator-card .card-nameplate h3 {
   margin: .5cqw 0 0;

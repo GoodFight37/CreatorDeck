@@ -530,13 +530,10 @@
 }
 
 /* ================================================================ révélation, nuit
-   Une carte à la fois, presque plein écran, qui sort du paquet. Nouvelle : un
+   Une carte à la fois, dans la scène plein écran, qui sort du paquet (même
+   taille que la carte extraite : la continuité est testée). Nouvelle : un
    flash de la couleur de sa rareté, puis son nom. Doublon : pas de retournement,
    elle rejoint une petite pile. Les tailles restent partagées avec l'extraction. */
-.booster-presentation {
-  --scene-card-width: min(88vw, 420px, calc((var(--scene-height) - 320px) * .715));
-  --scene-center: calc(var(--scene-height) * .47);
-}
 .reveal-game .reveal-rarity-kicker { top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 84px); }
 .reveal-game .reveal-stage > .new-badge { top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 15px); z-index: 4; }
 .reveal-new-flash {
