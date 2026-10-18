@@ -551,6 +551,12 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
       animation.currentTime = 700;
     }
   });
+  if (process.env.CI) {
+    const shot = (await dialog.locator(".booster-physical-scene").screenshot({ animations: "allow", caret: "hide", scale: "css" })).toString("base64");
+    const tag = `TORNSNAP-${test.info().project.name}`;
+    for (let i = 0; i < shot.length; i += 3000) console.log(`${tag} ${String(i / 3000).padStart(4, "0")} ${shot.slice(i, i + 3000)}`);
+    console.log(`${tag} END ${shot.length}`);
+  }
   await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "allow" });
   await dialog.locator(".booster-physical-scene").evaluate((node) => {
     for (const animation of node.getAnimations({ subtree: true })) animation.play();
