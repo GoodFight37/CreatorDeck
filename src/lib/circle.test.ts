@@ -9,7 +9,6 @@ import {
   buildCreatorIndex,
   circleProgress,
   circleLabel,
-  completeWithPopular,
   drawCirclePack,
   isValidCircle,
   normalizeChannelName,
@@ -80,15 +79,13 @@ describe("lire ce que le joueur écrit", () => {
     expect(searchCreators("a", INDEX)).toEqual([]);
   });
 
-  it("complète un cercle trop court avec les plus suivis, sans doublon", () => {
-    const [a] = POPULAR;
-    const full = completeWithPopular([a], INDEX);
-    expect(full).toHaveLength(CIRCLE_MIN);
-    expect(full[0]).toBe(a);
-    expect(new Set(full).size).toBe(CIRCLE_MIN);
-    expect(isValidCircle(full)).toBe(true);
-    expect(isValidCircle(full.slice(0, 4))).toBe(false);
-    expect(isValidCircle([a, a, a, a, a])).toBe(false);
+  it("accepte de 0 à 15 chaînes différentes, jamais un doublon", () => {
+    expect(CIRCLE_MIN).toBe(0);
+    expect(isValidCircle([])).toBe(true);
+    expect(isValidCircle(POPULAR.slice(0, 1))).toBe(true);
+    expect(isValidCircle(POPULAR.slice(0, CIRCLE_MAX))).toBe(true);
+    expect(isValidCircle([...POPULAR.slice(0, CIRCLE_MAX), "de-trop"])).toBe(false);
+    expect(isValidCircle([POPULAR[0], POPULAR[0]])).toBe(false);
   });
 });
 
@@ -104,7 +101,7 @@ describe("le signe du cercle", () => {
 
 describe("le premier booster", () => {
   it("n'est tiré que dans le cercle : cinq chaînes différentes à leur rareté du catalogue", () => {
-    for (let size = CIRCLE_MIN; size <= CIRCLE_MAX; size += 1) {
+    for (let size = CIRCLE_PACK_SIZE; size <= CIRCLE_MAX; size += 1) {
       const circle = POPULAR.slice(0, size);
       const random = seeded(size * 7919);
       for (let draw = 0; draw < 300; draw += 1) {

@@ -1,8 +1,8 @@
 /**
  * « Mes chaînes » — le cercle du joueur.
  *
- * Une question, posée avant tout le reste : *quelles chaînes regardes-tu déjà ?*
- * Entre 5 et 15 noms. Le cercle exprime ce que le joueur regarde, pas une
+ * Une proposition, jamais une condition : *quelles chaînes regardes-tu déjà ?*
+ * De 0 à 15 noms (0058) ; zéro est un état valide et laisse le pool mondial. Le cercle exprime ce que le joueur regarde, pas une
  * autre rareté : chaque carte garde la rareté du catalogue à l'ouverture,
  * dans le classeur et pour l'artisanat. Son seul signe personnel est
  * « Préférée » (position 0) ou « Dans tes chaînes ».
@@ -18,7 +18,8 @@ export function circleLabel(circle: readonly string[], slug: string): "Préfér�
   return position < 0 ? null : position === 0 ? "Préférée" : "Dans tes chaînes";
 }
 
-export const CIRCLE_MIN = 5;
+/** Aucun nom n'est exigé (0058) : un cercle vide vaut « pas de cercle ». */
+export const CIRCLE_MIN = 0;
 export const CIRCLE_MAX = 15;
 /** Un booster du cercle compte cinq cartes, comme le Live Drop. */
 export const CIRCLE_PACK_SIZE = 5;
@@ -191,25 +192,17 @@ export function searchCreators(
   return [...prefix, ...inside].slice(0, limit);
 }
 
-/** Les chaînes les plus suivies, pour qui n'a pas d'idée : jamais un doublon. */
+/** Les chaînes les plus suivies, proposées une à une : jamais un doublon. */
 export function popularCreators(
   index: CreatorIndex,
   exclude: readonly string[] = [],
-  limit = CIRCLE_MIN,
+  limit = 6,
 ): CircleCreator[] {
   const skip = new Set(exclude);
   return index.list.filter((creator) => !skip.has(creator.slug)).slice(0, limit);
 }
 
-/** Complète un cercle trop court avec les chaînes les plus suivies. */
-export function completeWithPopular(slugs: readonly string[], index: CreatorIndex): string[] {
-  const out = [...slugs];
-  if (out.length >= CIRCLE_MIN) return out;
-  for (const creator of popularCreators(index, out, CIRCLE_MIN - out.length)) out.push(creator.slug);
-  return out;
-}
-
-/** Un cercle est jouable : entre 5 et 15 chaînes, toutes différentes. */
+/** Un cercle est valide : de 0 à 15 chaînes, toutes différentes. */
 export function isValidCircle(slugs: readonly string[]): boolean {
   return (
     slugs.length >= CIRCLE_MIN &&
@@ -291,6 +284,8 @@ function pickFrom(
 
 /**
  * Aperçu invité : cinq chaînes différentes, toutes à leur rareté du catalogue.
+ * Il faut donc au moins cinq noms ; en dessous, `circlePreviewPack` complète
+ * l'aperçu avec le paquet tutoriel (rien n'est inventé dans le cercle).
  * Les coefficients historiques sélectionnent les slugs, sans rareté alternative.
  *
  * Ne sert qu'à l'aperçu d'un joueur sans compte : aucune carte n'est écrite, et
@@ -300,8 +295,8 @@ export function drawCirclePack(
   slugs: readonly string[],
   random: RandomInt = defaultRandom,
 ): CircleCard[] {
-  if (!isValidCircle(slugs) || slugs.some(slug => !CREATOR_BY_SLUG.has(slug))) {
-    throw new Error("Il faut entre 5 et 15 chaînes différentes pour ouvrir ce booster.");
+  if (!isValidCircle(slugs) || slugs.length < CIRCLE_PACK_SIZE || slugs.some(slug => !CREATOR_BY_SLUG.has(slug))) {
+    throw new Error("Un aperçu entièrement tiré dans le cercle demande cinq chaînes différentes.");
   }
   const tiers = circleTiers(slugs);
   const last =

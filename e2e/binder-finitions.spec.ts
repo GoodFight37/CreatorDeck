@@ -27,9 +27,8 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
   await binder(page);
   const opacity = (rarity: string) => page.locator(`.collection-grid .rarity-${rarity} .card-foil`)
     .evaluate((node) => Number(getComputedStyle(node).opacity));
-  // D-148 : chaque rareté a sa matière, la Commune comprise (la plus discrète).
-  expect(await opacity("common")).toBeGreaterThan(0);
-  expect(await opacity("rare")).toBeGreaterThan(await opacity("common"));
+  expect(await opacity("common")).toBe(0);
+  expect(await opacity("rare")).toBeGreaterThan(0);
   expect(await opacity("epic")).toBeGreaterThan(await opacity("rare"));
   expect(await opacity("legendary")).toBeGreaterThan(await opacity("epic"));
   await expect(page.locator(".collection-grid .rarity-legendary .card-identity")).toBeHidden();
