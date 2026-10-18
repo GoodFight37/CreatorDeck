@@ -9,9 +9,9 @@ et publication : checkpoint de reprise.
 ### Qualité autonome — PR #13 sur `codex/autonomous-tests`
 
 - Tests mobiles et rapports locaux implémentés ; tâche Windows limitée toutes les quatre heures, première exécution automatique réussie. Voir [qualité autonome](qualite-autonome.md).
-- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; [PR #13](https://github.com/GoodFight37/CreatorDeck/pull/13) ouverte au SHA `82bfaff4`, vérification distante 6/6 verte. Une économie de runs push/PR est préparée ; sa CI et la publication sur `main` restent à vérifier.
+- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; [PR #13](https://github.com/GoodFight37/CreatorDeck/pull/13) ouverte au SHA `6570237c`, [vérification distante](https://github.com/GoodFight37/CreatorDeck/actions/runs/39170938187) 6/6 verte, y compris l'économie des runs push/PR. Publication sur `main` non faite.
 - Diagnostic web/Android volontaire, local et effaçable ; essai sur vrai téléphone et collecte distante non faits.
-- Émulateur : image Android 36 et `CreatorDeck_API36` préparés, deux APK debug construites ; `HypervisorPlatform` exige un redémarrage Windows avant le premier démarrage. Parcours natif, bandeau de mise à jour et données du jeu après installation restent à vérifier.
+- Émulateur : après redémarrage, WHPX fonctionne ; deux APK debug sans cloud (`872393` → `872394`) installées successivement sur `CreatorDeck_API36`. L'app atteint l'accueil après chargement et un marqueur de stockage privé survit à la mise à jour. Rapport : `reports/android-smoke/2026-10-18T22-24-05-376Z/`. Le bandeau de mise à jour, les données du jeu et le vrai téléphone restent à vérifier.
 - Observation à confirmer sur WebView : sur un passage Chrome de développement, Binder a eu 2 images espacées de plus de 50 ms à 320 px (maximum 169 ms), puis 1 à 390/412 px ; une image de révélation a atteint 146 ms. Priorité : répéter sur émulateur et appareil avant une optimisation ciblée.
 
 ### Publié le 18 octobre 2026 (main `5f0a77c`, CI, Supabase, APK et Vercel verts)

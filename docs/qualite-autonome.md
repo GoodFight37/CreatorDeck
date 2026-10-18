@@ -50,19 +50,20 @@ Le SDK Android et `emulator.exe` étaient présents, mais aucun appareil virtuel
 ni image système n'étaient configurés au début de ce chantier. Les outils de
 ligne de commande officiels ont été téléchargés avec le SHA-256 attendu ;
 l'image Android 36 et l'AVD `CreatorDeck_API36` sont maintenant présents.
-`HypervisorPlatform` a été activé, mais **Windows exige un redémarrage** avant
-que l'émulateur puisse utiliser WHPX. `npm run quality:android -- <premiere.apk>
+Après redémarrage Windows, WHPX est utilisable et l'AVD a démarré.
+`npm run quality:android -- <premiere.apk>
 [mise-a-jour.apk]` fournit un essai sur un seul émulateur : installation,
 démarrage, captures et, avec deux APK debug, versionCode croissant et marqueur
 de stockage privé conservé. Ce marqueur ne prouve pas la conservation de la
-collection ni des préférences du jeu. Aucun test Android natif, installation de
-release ou mise à jour par le bandeau n'est donc revendiqué avant une exécution
-effective. Deux APK debug locales sans configuration cloud sont prêtes dans
-`reports/android-smoke/` (`initial-872393.apk`, `update-872394.apk`) ; la
-compilation Gradle et `cap sync` ont réussi. Après redémarrage, vérifier
-`emulator.exe -accel-check`, démarrer `CreatorDeck_API36`, puis lancer
-`npm run quality:android -- reports/android-smoke/initial-872393.apk
-reports/android-smoke/update-872394.apk`. Le runner GitHub auto-hébergé
+collection ni des préférences du jeu. Deux APK debug locales sans configuration
+cloud ont été construites (`initial-872393.apk`, `update-872394.apk`) ; la
+compilation Gradle et `cap sync` ont réussi. Le test sur `CreatorDeck_API36` a
+terminé avec le code 0 : installation, lancement, versionCode `872393` →
+`872394` et marqueur conservé. Rapport et captures :
+`reports/android-smoke/2026-10-18T22-24-05-376Z/`. Les captures immédiates du
+script étaient encore sur le chargement ; une capture après attente et l'arbre
+d'accessibilité confirment l'accueil. Installation de release, bandeau de mise
+à jour, données du jeu et vrai téléphone restent non vérifiés. Le runner GitHub auto-hébergé
 n'est pas installé : exécuter des PR d'un dépôt public sur le PC personnel
 donnerait au code soumis accès à la session Windows. La tâche locale et les
 runners GitHub hébergés couvrent pour l'instant les contrôles sûrs, sans nouveau
