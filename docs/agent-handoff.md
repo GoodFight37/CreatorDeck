@@ -1,3 +1,28 @@
+# Checkpoint — D-148 publié, CI verte, 0057 appliquée (18 octobre 2026)
+
+- Code vérifié : `main` = `7324c7d9b493ae6d69637d53fa3e7e07747bf263`, avance
+  rapide depuis `e87903e`, après CI verte sur `claude/loving-galileo-5pllme`
+  (run 39104492105).
+- Les e2e rouges depuis `2d39f3c` sont alignés sur D-148 : 2 missions à J1,
+  réserve inchangée au premier booster du jour (+1 de série), Scène et Tribunal
+  ouverts via « Autres activités » d'Objectifs (`openOtherActivities` dans
+  `e2e/fixtures.ts`), matière Commune non nulle, cadeau cloud simulé avec une
+  chaîne par rareté du catalogue (les cinq du cercle sont Légendaires).
+- Vrai bug corrigé : Scène consommée depuis Objectifs, focus perdu sur `body` ;
+  repli `data-presentation-focus-fallback` sur le titre « Aujourd’hui »
+  (`missions-view.tsx`). Échec reproduit sans le correctif.
+- Local (Chromium 141 préinstallé, téléchargement Playwright refusé par le
+  réseau) : `npm test` 1287/1287, `npm run ecrans` 230/230, typecheck OK,
+  `npm run e2e` 182 réussis / 18 ignorés (cloud) / 2 échecs de capture
+  `sealed-sachet` (pack-tear:465, écart de version Chromium, vert en CI),
+  cloud simulé 16/16.
+- GitHub sur `7324c7d` : « Vérification » verte (run 39105047368) ; « Mise à
+  jour Supabase » automatique refusée comme prévu (0057 manual), puis
+  dispatch `dry_run=false`, `approve_manual=true` réussi (run 39105304767 :
+  0057 appliquée, historique et objets vérifiés) ; « APK de test » réussi
+  (run 39105296785) ; Vercel Production `success` sur ce SHA.
+- Pas d'essai sur vrai téléphone. Réservation libérée.
+
 # Checkpoint — finition courte, locale, 18 octobre 2026
 
 - Tirage, rareté unique, bouton et rétention présents avant cette finition ; lots préservés.
