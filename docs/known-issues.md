@@ -1,4 +1,29 @@
-## Rétention punitive et accueil sans cercle encombré — corrigés localement (18 octobre 2026)
+## Une même chaîne peut sortir plusieurs fois dans un booster — ouvert (18 octobre 2026)
+
+Avec moins de trois chaînes du cercle encore absentes de la collection, 0056
+(repris par 0057) complète les trois cases du cercle en répétant ces chaînes ;
+avec une seule chaîne nommée, elle peut sortir trois fois. Malik veut au plus
+une fois, le reste venant du classement. Cause prouvée : `open_pack()` et son
+miroir `circleDrawSlots` (`src/lib/circle-draw.ts`). Correction = migration +
+miroir TS ; non faite dans D-150, qui interdisait toute migration. Gravité
+produit moyenne. À traiter dans un lot dédié.
+
+## « Mettre à jour » affichait « Mise à jour invalide » — corrigé et publié (18 octobre 2026)
+
+Reproduit sur téléphone avec l'APK `7324c7d` : refus immédiat, sans
+téléchargement. Cause prouvée : `PluginCall.getLong("versionCode")` renvoie
+null pour un entier JSON lu en `Integer`. Corrigé par D-151 (`5f0a77c`), APK
+`5f0a77c` publiée. Contournement pour les APK antérieures : installer une fois
+à la main la dernière release de `creatordeck-apk`. Pas encore vérifié sur
+appareil.
+
+## Visages minuscules dans un cadre noir — corrigé et publié (18 octobre 2026)
+
+D-148 avait passé le portrait en `object-fit: contain` et un style inline
+réglait la Commune à 4 % en écrasant Holo/Gold/Live. Corrigé par D-149 puis
+D-150 (`cover`, styles retirés) ; e2e : portrait qui touche les quatre bords.
+
+## Rétention punitive et accueil sans cercle encombré — corrigés et publiés (18 octobre 2026, `2d39f3c`)
 
 Sur la base `3f23ae65`, une absence d'un jour remettait la série à J1, les
 récompenses mêlaient trois monnaies et recyclage/Tribunal arrivaient dès J1.

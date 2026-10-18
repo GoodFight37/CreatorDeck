@@ -1,4 +1,44 @@
-## D-148 — 18 octobre 2026 : rétention sans perte immédiate de série (local, non publié)
+## D-151 — 18 octobre 2026 : lire versionCode quel que soit son type (publié)
+
+« Mettre à jour » affichait toujours « Mise à jour invalide. » : le plugin
+Android lisait `versionCode` avec `PluginCall.getLong()`, qui ne renvoie que
+les `Long`, alors que Capacitor transmet 872293 en `Integer`. Lecture par
+`getData().optLong()`, test de contrat dans `src/lib/app-update.test.ts`.
+L'APK installée avant ce correctif garde le défaut : une installation manuelle
+unique est nécessaire, les suivantes passent par le bandeau. PR #11, `5f0a77c`.
+
+## D-150 — 18 octobre 2026 : « nuit de direct » sur trois écrans (publié)
+
+Malik annule explicitement les consignes « pas de polish / pas de nouveau
+visuel » pour trois écrans seulement : accueil, carte, révélation. Accueil :
+visage flou de la chaîne préférée en haut, paquet-bouton `min(78vw, 320px)`
+dans la moitié basse (plus de pilule rouge), réserve en pile de dos et une
+ligne « N restants · +1 dans … », MEMES visible à droite dès le départ avec
+geste horizontal, chaînes en ronds qui chevauchent le paquet (anneau rouge en
+direct). Carte : photo `cover`, nom en affiche, rang petit, rareté en lumière
+de bord, trame d'impression. Révélation : flash de rareté puis nom pour une
+nouvelle carte ; doublon sans retournement, rejoint une pile.
+
+Refusés ou reportés : agrandir la carte révélée (changeait la capture de
+référence `torn-sachet`, impossible à régénérer avec le Chromium de la CI
+depuis le conteneur) ; « une même chaîne au plus une fois par booster » (règle
+du tirage serveur 0056/0057, migration interdite par la demande) — voir
+known-issues. Tests réécrits pour le nouvel écran ; captures
+`docs/captures/ui-nuit/`. PR #10, merge `1179169`.
+
+## D-149 — 18 octobre 2026 : visages plein cadre et « Mes chaînes » facultatif (publié)
+
+Portrait en `object-fit: cover`, styles inline du foil retirés (Holo, Gold,
+Live retrouvent leur CSS). Le cercle compte de 0 à 15 chaînes : premier écran
+« Ton premier booster t'attend », bouton actif sans nom, visages suggérés un par
+un, plus de compteur ni de complétion automatique. Migration 0058 (automatic) :
+contrainte 0..15, `_circle_clean` 0..15, `set_circle([])` retire la ligne.
+`open_pack()` n'est pas redéfinie : sa logique de cercle (0056, reprise par
+0057) accepte déjà toute taille, et la reconstruire depuis 0056 aurait effacé
+0057. Scénarios Postgres `scripts/verify-circle-optional.mjs`. PR #9, merge
+`e5852e1`, 0058 appliquée par « Mise à jour Supabase ».
+
+## D-148 — 18 octobre 2026 : rétention sans perte immédiate de série (publié : `2d39f3c`, 0057 appliquée)
 
 Malik demande cette seule étape. Choix d'implémentation : une absence isolée
 protégée par cycle de sept jours joués, avec drapeau persistant ; après usage,
