@@ -9,7 +9,8 @@ test("Objectifs : quotidien, collection, saisons et filtres sur téléphone",asy
  await page.getByRole('button',{name:'Toi',exact:true}).click();
  await page.locator('.profile-objective').click();
  await expect(page.getByRole('heading',{name:'Objectifs et saisons',exact:true})).toBeVisible();
- await expect(page.locator('.day-missions .mission-row')).toHaveCount(4);
+ // D-148 : deux missions au jour 1, Recyclage et Tribunal arrivent à partir du jour 2.
+ await expect(page.locator('.day-missions .mission-row')).toHaveCount(2);
  await expect(page.locator('.objectives-no-pending')).toBeVisible();
  for(const width of [320,390]){
   await page.setViewportSize({width,height:844});

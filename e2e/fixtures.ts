@@ -42,3 +42,16 @@ export function cloudUrl(): string | null {
   loadEnvConfig(process.cwd(), true);
   return readCloudConfig()?.url ?? null;
 }
+
+/**
+ * Depuis D-148, Tribunal, Scène et Arène vivent dans « Autres activités »
+ * (replié) de Objectifs, et non plus sur l'accueil. Ouvre ce volet et le rend.
+ */
+export async function openOtherActivities(page: Page) {
+  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.locator(".profile-objective").click();
+  const details = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Autres activités$/ }) });
+  await details.locator("summary").click();
+  await expect(details).toHaveAttribute("open", "");
+  return details;
+}

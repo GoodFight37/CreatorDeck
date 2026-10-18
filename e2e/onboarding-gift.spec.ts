@@ -50,8 +50,10 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
     }
     if (name === "open_return_gift_pack" || name === "open_circle_gift_pack") {
       if (!tutorialCompleted || !giftClaimed || giftRemaining <= 0) return route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ message: "Cadeau indisponible." }) });
+      // L'écran affiche la rareté du catalogue (D-146) : une chaîne par rareté,
+      // pas les cinq chaînes du cercle, toutes Légendaires.
       const cards = Array.from({ length: 5 }, (_, index) => ({
-        creatorSlug: ["kaicenat", "ibai", "ninja", "auronplay", "rubius"][index],
+        creatorSlug: ["kaicenat", "anyme023", "jeanmassiet", "swehyt", "retroislandgaming"][index],
         rarity: ["legendary", "epic", "rare", "uncommon", "common"][index],
         variant: "standard",
         rareDrop: false,

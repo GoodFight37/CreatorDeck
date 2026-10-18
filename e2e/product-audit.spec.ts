@@ -1,6 +1,6 @@
-import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
+import { expect, test, gotoDeck, cloudUrl, openOtherActivities } from "./fixtures";
 
-test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Tribunal accessible", async ({ page }) => {
+test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Tribunal accessible depuis Objectifs", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
   await page.setViewportSize({ width: 320, height: 568 });
   const pack = page.locator(".home-view .pack-stage .pack-artwork");
@@ -14,17 +14,11 @@ test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Trib
   await open.scrollIntoViewIfNeeded();
   await expect(open).toBeInViewport();
 
-  await page.setViewportSize({ width: 412, height: 915 });
-  const entry = page.getByRole("button", { name: /Ouvrir le Tribunal des Bannis/ });
-  const tallBox = await entry.boundingBox();
-  await expect(entry.locator(".tribunal-entry-badge")).toHaveText("5");
-  expect(tallBox).not.toBeNull();
+  // D-148 : le Tribunal a quitté l'accueil pour « Autres activités » d'Objectifs.
+  await expect(page.locator(".home-view")).not.toContainText("Tribunal");
+  const entry = (await openOtherActivities(page)).getByRole("button", { name: "Tribunal des Bannis", exact: true });
   await entry.scrollIntoViewIfNeeded();
   await expect(entry).toBeInViewport();
-
-  await page.setViewportSize({ width: 320, height: 568 });
-  await entry.scrollIntoViewIfNeeded();
-  await expect(entry).toBeVisible();
   await entry.click();
   await expect(page.getByRole("dialog", { name: "Tribunal des Bannis", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Accorder la grâce" })).toBeVisible();

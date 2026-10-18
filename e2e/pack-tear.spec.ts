@@ -1,4 +1,4 @@
-import { expect, test, gotoDeck } from "./fixtures";
+import { expect, test, gotoDeck, openOtherActivities } from "./fixtures";
 
 test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", async ({ page }) => {
   await page.addInitScript(() => {
@@ -86,7 +86,7 @@ test("le gain BGM reste atténué pendant déchirure et reveal, puis revient au 
 
 test("closing a consumed Scene pack returns focus to its section heading", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
-  const open = page.locator(".scene-action");
+  const open = (await openOtherActivities(page)).locator(".scene-action");
   await expect(open).toBeEnabled();
   await open.focus();
   await open.click();
@@ -95,7 +95,7 @@ test("closing a consumed Scene pack returns focus to its section heading", async
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   await expect(open).toBeDisabled();
-  await expect(page.locator(".scene-head h2")).toBeFocused();
+  await expect(page.locator("#objectives-day-title")).toBeFocused();
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
 });
 
@@ -795,7 +795,8 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+  // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
   await expect(sachet).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
@@ -827,7 +828,8 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+  // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}/4`);
 });
 
 for (const selector of [".pack-stage", ".pack-artwork"]) {
@@ -895,8 +897,9 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
     await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   }
   await touch.detach();
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 2}/4`);
-  if (stock === 2) {
+  // D-148 : deux ouvertures, mais la première du jour rend un booster (jour 1).
+  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}/4`);
+  if (stock === 1) {
     await expect(page.getByRole("button", { name: "Préparer le booster Live Drop" })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();
   }

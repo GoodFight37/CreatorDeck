@@ -1,12 +1,13 @@
-import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
+import { expect, test, gotoDeck, cloudUrl, openOtherActivities } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
-test("Scène explique son rôle et reste fermé après consommation et rechargement", async ({ page }) => {
+test("Scène, rangé dans Autres activités, reste fermé après consommation et rechargement", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
-  const scene = page.getByRole("region", { name: "Ton paquet de famille du jour" });
-  await expect(scene.locator("details")).toHaveCount(0);
-  await expect(scene).toContainText("Pas de Légendaire dans ce paquet.");
+  // D-148 : la Scène a quitté l'accueil pour « Autres activités » d'Objectifs.
+  await expect(page.locator(".home-view .scene-block")).toHaveCount(0);
   const reserve = await page.locator(".stock-row strong").innerText();
+  let scene = await openOtherActivities(page);
+  await expect(scene.locator(".scene-state")).toHaveText("Disponible");
   await scene.getByRole("button", { name: "Ouvrir le Paquet Scène" }).click();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
@@ -14,8 +15,10 @@ test("Scène explique son rôle et reste fermé après consommation et rechargem
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   await expect(scene.locator(".scene-action")).toBeDisabled();
   await expect(scene.locator(".scene-state")).toHaveText("Ouvert aujourd’hui");
+  await page.getByRole("button", { name: "Drop", exact: true }).click();
   await expect(page.locator(".stock-row strong")).toHaveText(reserve);
   await page.reload();
+  scene = await openOtherActivities(page);
   await expect(scene.locator(".scene-action")).toBeDisabled();
   await expect(scene.locator(".scene-state")).toHaveText("Ouvert aujourd’hui");
 });
@@ -100,7 +103,8 @@ test("avec le serveur : Scène attend le statut puis revalide avant toute déchi
       expiresAt: Date.now() + 3_600_000, userId: user, email: "test@example.invalid" }));
   }, { seed, user });
   await page.goto("/");
-  const scene = page.locator(".scene-block");
+  // D-148 : la Scène est dans « Autres activités » d'Objectifs.
+  const scene = await openOtherActivities(page);
   await expect(scene.locator(".scene-state")).toHaveText("Vérification…");
   await expect(scene.locator(".scene-action")).toBeDisabled();
   release();

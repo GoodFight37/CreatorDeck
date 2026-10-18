@@ -278,7 +278,7 @@ export function MissionsView({
 
         <div className="day-head">
           <div>
-            <h2 id="objectives-day-title">Aujourd’hui</h2>
+            <h2 id="objectives-day-title" tabIndex={-1} data-presentation-focus-fallback>Aujourd’hui</h2>
             <span>{dayCopy}</span>
           </div>
           <div className={`streak-chip${game.streak.jackpot ? " hot" : ""}`}>
