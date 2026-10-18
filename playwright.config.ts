@@ -24,15 +24,18 @@ export default defineConfig({
   reporter: process.env.CI
     ? [["list"], ["github"], ["html", { open: "never" }],
       ["json", { outputFile: "test-results/results.json" }]]
-    : [["list"], ["html", { open: "never" }]],
+    : process.env.CREATORDECK_LOCAL_QUALITY
+      ? [["list"], ["html", { open: "never" }], ["json", { outputFile: "test-results/mobile-quality-results.json" }]]
+      : [["list"], ["html", { open: "never" }]],
   use: {
     baseURL: "http://localhost:3000",
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    screenshot: "only-on-failure",
   },
   webServer: {
-    command: "npm run dev",
+    command: process.env.CREATORDECK_LOCAL_QUALITY ? "npm run dev -- --webpack" : "npm run dev",
     url: "http://localhost:3000",
-    timeout: 120_000,
+    timeout: process.env.CREATORDECK_LOCAL_QUALITY ? 180_000 : 120_000,
     // Un serveur déjà lancé (le `npm run dev` du joueur) est réutilisé : les
     // tests ne se battent pas avec lui pour le port 3000.
     reuseExistingServer: !process.env.CI,
@@ -50,6 +53,7 @@ export default defineConfig({
         isMobile: true,
         hasTouch: true,
         deviceScaleFactor: 2,
+        ...(process.env.CREATORDECK_BROWSER_CHANNEL ? { channel: process.env.CREATORDECK_BROWSER_CHANNEL } : {}),
       },
     },
   ],
