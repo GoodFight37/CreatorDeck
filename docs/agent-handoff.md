@@ -1,4 +1,57 @@
-# Checkpoint — règle cercle vrai D-145 préparée (18 octobre 2026)
+# Checkpoint — D-145, serveur appliqué et client en publication (18 octobre 2026)
+
+- Autorisation : règle et publication explicitement demandées par Malik ;
+  périmètre limité au cercle vrai. Branche conservée `etape-4-cercle-vrai`.
+- Code client `67297ba0bb9151fa17d3bfe0fcdb170eae8a62de`,
+  [CI branche 39095301010](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095301010)
+  **6/6 verte** : 1 273 unitaires, 218 écrans, TypeScript, lint, catalogue,
+  build et 956 contrôles SQL (289 pour 0056, dont 45 dernières absentes).
+  RPC simulés : 16 réussis ; trois shards navigateur : 59/61/58 réussis,
+  7/4/7 ignorés, qui ne sont pas présentés comme exécutés.
+- Publication progressive : serveur seul `8c306e6077150466df32bb7dae461c0f3c4b974b`
+  sur `main`, [CI main serveur 39095604456](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095604456)
+  **6/6 verte**. [Dry-run 39095605013](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095605013)
+  vert : cible, TLS et historique confirmés, seule 0056 en attente.
+  [Application manuelle 39095857620](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095857620)
+  **success** : 0056 appliquée puis historique et objets attendus vérifiés.
+  L'automatique 39095853978 a refusé la migration manuelle, sans l'appliquer,
+  avant ce succès. Aucun historique réparé ni ancienne migration réécrite.
+- La fusion `81b0508` conserve serveur et branche client ; son arbre est
+  identique à celui de `67297ba0` testé. Le commit suivant ne fait qu'ajouter
+  ce checkpoint, actualiser les statuts et corriger un commentaire de règle.
+  Le client est prêt à pousser normalement vers main, puis relever sa CI et
+  le déploiement Production du SHA exact. Le [contrôle SQL après application](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095932681)
+  vient d'être lancé en lecture seule, résultat à relever.
+- Vercel Production du serveur : environnement GitHub `Production`, déploiement
+  `7149673955`, statut `success`, SHA `8c306e60`. L'API Vercel directe est refusée
+  403 et son CLI absent ; ces preuves viennent de GitHub. Aucun essai physique.
+- 0054, 0055 et `pull-rates.json` identiques à main de départ. Pas de refonte
+  de rareté affichée, missions, bouton de recharge ou polish. Aucun appel Claude.
+  Travaux préexistants préservés dans le stash et la copie externe indiqués
+  ci-dessous. Prochaine action : push du client, CI et statut Production.
+
+# Historique — règle cercle vrai D-145 préparée (18 octobre 2026)
+
+**Publication progressive en cours (18 octobre) :** la correction `67297ba0`
+est validée **6/6** par [CI 39095301010](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095301010).
+Malik a demandé de terminer les opérations nécessaires, avec les autorisations
+déjà données pour cette règle. Pour éviter que les nouveaux appels cadeau
+arrivent avant 0056, le serveur seul (migration, tests SQL, contrats existants
+et note joueur) a été poussé normalement sur `main` dans `8c306e6077150466df32bb7dae461c0f3c4b974b`.
+L'ancien client reste présent jusqu'à application contrôlée de 0056.
+[CI main serveur](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095604456)
+en cours ; [dry-run 0056](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095605013)
+terminé avec succès, logs à relire avant application. La fusion locale
+`81b0508` conserve les deux historiques et son arbre est identique à celui de
+`67297ba0` déjà validé. Ce suivi est local, en attente du checkpoint final.
+Prochaine action : confirmer que seule 0056 est en attente, attendre la CI main
+serveur verte puis déclencher le workflow existant avec `dry_run=false`,
+`approve_manual=true`. Après application vérifiée, publier le client et
+contrôler son SHA de Production. Aucun nouveau travail produit hors D-145.
+
+Vercel : connecteur refusé 403 pour l'équipe attendue ; CLI absent. Vérifier
+les déploiements et leur SHA via les statuts/environnements GitHub ; ne pas
+présenter cela comme une lecture directe de l'état READY par l'API Vercel.
 
 **Suivi du 18 octobre après reprise de l'accès :** code initial
 `fb2cea37e92241ca1be202aeaccc1fed15ad1fe0` poussé et SHA distant confirmé.

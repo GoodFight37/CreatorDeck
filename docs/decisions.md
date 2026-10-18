@@ -26,8 +26,10 @@ et affiche « Ton cercle est complet. Les boosters s’ouvrent au classement. »
 de 0054/0055. Les deux portes cadeau appliquent la même règle et partagent le
 verrou de réserve avec `open_pack`. Miroir pur `circle-draw.ts` appelé par le
 moteur ; tests SQL exécutables dans `verify-circle-draw.mjs`, intégrés à
-`supabase:verify` après les scénarios historiques. Publication Production non
-effectuée à ce checkpoint ; les preuves courantes figurent dans la passation.
+`supabase:verify` après les scénarios historiques. Migration 0056 appliquée et
+historique vérifié en Production le 18 octobre (workflow 39095857620), après
+CI 6/6 et dry-run limité à cette migration ; client publié ensuite pour ne pas
+appeler le nouveau contrat avant le serveur. Preuves courantes dans la passation.
 Ni missions, ni bouton de recharge, ni polish, ni autre partie de l'étape 4.
 
 ## D-144 — 18 octobre 2026 : mettre à jour l'APK de test depuis l'appli

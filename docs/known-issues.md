@@ -1,4 +1,4 @@
-## Le cercle disparaissait des tirages après le premier cadeau — corrigé sur branche (18 octobre 2026)
+## Le cercle disparaissait des tirages après le premier cadeau — serveur corrigé, client en publication (18 octobre 2026)
 
 Sur `main` `2fa29aaa`, seul le premier cadeau utilise 0054 ; les cadeaux
 suivants et Live Drop reviennent au monde, sauf la garantie Légendaire de
@@ -12,7 +12,8 @@ Tests ciblés et typecheck réussis ; preuve PostgreSQL obtenue sur le runner CI
 ([job SQL](https://github.com/GoodFight37/CreatorDeck/actions/runs/39079182728/job/117532470964)) :
 289 contrôles 0056 réussis, dont les tirages successifs et les cinq cadeaux.
 Le compte Windows Administrateur reste incompatible avec PostgreSQL local.
-Non appliqué en Production ; pas de contournement client revendiqué.
+0056 appliquée et historique vérifié en Production par le [workflow manuel](https://github.com/GoodFight37/CreatorDeck/actions/runs/39095857620).
+CI branche corrigée 6/6 ; publication du client et contrôle du SHA final en cours.
 
 ## Chantier « Mes chaînes » : points ouverts (17 octobre 2026)
 

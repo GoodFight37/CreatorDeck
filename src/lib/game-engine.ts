@@ -1059,9 +1059,8 @@ export function drawPack(
     /** Famille d'où tirer exclusivement les cartes (Paquet Scène). */
     family?: string | null;
     /**
-     * « Mes chaînes » (D-142) : sous le plancher de malchance, le Légendaire
-     * garanti est tiré parmi les Légendaires du cercle que le joueur n'a pas
-     * encore. Sans candidat, la garantie reste celle d'avant.
+     * D-145 : trois absentes du cercle, dernière comprise, à chaque Live Drop.
+     * Cette priorité prime sur la rareté du slot ; cercle complet = monde.
      */
     circle?: readonly string[];
   } = {},
