@@ -36,8 +36,15 @@ export function renderSummary(summary) {
     "",
     `SHA : \`${summary.sha}\` · Mode : ${summary.mode} · Début : ${summary.startedAt}`,
     "",
-    ...summary.stages.map((stage) => `- ${stage.exitCode === 0 ? "OK" : "ÉCHEC"} · \`${stage.command}\` · ${(stage.durationMs / 1000).toFixed(1)} s${stage.tests ? ` · ${stage.tests.passed} réussis, ${stage.tests.failed} échoués` : ""}`),
+    ...summary.stages.map((stage) => `- ${stage.exitCode === 0 ? "OK" : "ÉCHEC"} · \`${stage.command}\` · ${(stage.durationMs / 1000).toFixed(1)} s${stage.initialExitCode !== undefined ? ` · premier essai ${stage.initialExitCode === 0 ? "réussi" : "échoué"}, une reprise` : ""}${stage.tests ? ` · ${stage.tests.passed} réussis, ${stage.tests.failed} échoués` : ""}`),
   ];
+  if (summary.classification === "transient") lines.push("", "Échec transitoire : une reprise unique a réussi. Aucun appel IA n’a été fait.");
+  if (summary.classification === "confirmed") {
+    const repeated = summary.incident?.status === "confirmed-duplicate";
+    lines.push("", repeated ? "Incident confirmé déjà connu; aucune nouvelle intervention n’a été déclenchée." : "Incident confirmé après une reprise.");
+    if (summary.incident?.resumePath) lines.push("", `[Paquet de reprise Codex](${summary.incident.resumePath})`);
+    if (!repeated) lines.push("", "Aucune session IA n’a été lancée automatiquement; le paquet contient le SHA, la commande et un diagnostic expurgé.");
+  }
   if (summary.ok) lines.push("", "Aucune intervention nécessaire.");
   if (summary.captures?.length) {
     lines.push("", "Captures conservées :", "", ...summary.captures.map((file) => `- [${file.split("/").at(-1).replace(/\.png$/, "")}](${file})`));

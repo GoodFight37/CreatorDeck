@@ -37,3 +37,17 @@ test("un échec Playwright remonte sa cause et le nombre de scénarios", () => {
     passed: 1, failed: 1, details: ["onglet tactile : un portail masque le bouton"],
   });
 });
+
+test("le résumé distingue une reprise transitoire et une reprise Codex persistante", () => {
+  const transient = buildSummary({ sha: "abc", mode: "rapide", startedAt: "2026-10-19T10:00:00.000Z",
+    classification: "transient", stages: [{ name: "mobile", command: "npm run e2e", exitCode: 0,
+      initialExitCode: 1, retryCount: 1, durationMs: 100, output: "retry ok" }] });
+  assert.match(renderSummary(transient), /transitoire/i);
+
+  const confirmed = buildSummary({ sha: "abc", mode: "rapide", startedAt: "2026-10-19T10:00:00.000Z",
+    classification: "confirmed", incident: { status: "confirmed-new", resumePath: "reports/incidents/reprise.md" },
+    stages: [{ name: "mobile", command: "npm run e2e", exitCode: 1, initialExitCode: 1,
+      retryCount: 1, durationMs: 100, output: "failure" }] });
+  assert.match(renderSummary(confirmed), /Incident confirmé/);
+  assert.match(renderSummary(confirmed), /reports\/incidents\/reprise\.md/);
+});

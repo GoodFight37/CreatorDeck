@@ -2124,3 +2124,28 @@ sans contenu, stocké sur l'appareil et partagé seulement par le joueur. Aucun
 collecteur distant ni appel IA périodique. Le runner GitHub auto-hébergé sur le
 PC personnel est reporté tant qu'il ne dispose pas d'une isolation contre le
 code des PR publiques. Preuves et limites : [qualité autonome](qualite-autonome.md).
+
+## D-153 — 19 octobre 2026 : diagnostic sans IA des échecs persistants et provenance APK
+
+Contexte : finir l’autonomie sans exposer la session Windows, appeler un modèle
+après chaque test ou publier une APK depuis une révision non vérifiée. Décision :
+les étapes locales échouées sont rejouées une fois; un succès à la reprise est
+classé transitoire, et un échec répété est dédupliqué par SHA/scénario avec un
+paquet de reprise court, expurgé et une commande Codex en lecture seule. Le
+générateur n’appelle aucun modèle, ne corrige rien et ne publie rien. La CI ne
+produit un artefact d’incident sans ticket que si un job échoue. L’APK n’est plus
+déclenchable par `workflow_dispatch` : elle part uniquement du run réussi de
+« Vérification » sur un push `main` du même dépôt et du SHA examiné; un job APK
+en échec peut être relancé dans ce run d’origine. Le runner perso reste reporté
+sans isolation des PR publiques. Détails/tests et limites :
+[qualité autonome](qualite-autonome.md) et checkpoint de la passation.
+
+## D-154 — 19 octobre 2026 : diagnostics du téléphone sans remontée distante
+
+Contexte : Malik demande à repérer les lenteurs de son usage Android normal,
+avec opt-in, désactivation et aucune donnée personnelle. Décision : conserver le
+journal local borné déjà présent et son partage initié par Malik; ne pas ajouter
+de canal réseau tant qu’un transport sans identifiant ni contenu, authentifié
+contre les abus et démontrable sur l’APK n’est pas disponible. Une identité de
+compte ou un identifiant d’installation contredirait la contrainte de non-collecte
+personnelle. Aucun service, migration, coût ou upload distant n’est introduit.
