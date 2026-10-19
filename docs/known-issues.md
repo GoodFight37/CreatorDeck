@@ -18,7 +18,14 @@ Le fix du script et la configuration AVD sont locaux au moment de ce constat ; l
 GitHub et un AVD SwiftShader ne sont pas validés. Le marqueur ne représente pas
 les données réelles du jeu.
 
-## Une même chaîne peut sortir plusieurs fois dans un booster — ouvert (18 octobre 2026)
+## Une même chaîne peut sortir plusieurs fois dans un booster — corrigé localement, migration 0059 à appliquer (19 octobre 2026)
+
+**19 octobre :** `0059_cercle_une_fois.sql` (automatique, appliquée au push sur `main`) et le miroir
+`circleDrawSlots` renvoient au classement les cases du cercle sans absente
+inutilisée, dans `open_pack()` et `open_return_gift_pack()`. Contrat :
+`src/lib/supabase-cercle-unique.test.ts` ; preuve Postgres
+`scripts/verify-circle-once.mjs` : `npm run supabase:verify` 1002/1002 sur
+Postgres jetable local (dépendances installées en `--no-save`).
 
 Avec moins de trois chaînes du cercle encore absentes de la collection, 0056
 (repris par 0057) complète les trois cases du cercle en répétant ces chaînes ;

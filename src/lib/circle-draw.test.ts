@@ -5,16 +5,25 @@ import { createInitialState, drawPack, openPack } from "@/lib/game-engine";
 const CIRCLE = CREATORS.filter(c => c.rarity === "common").slice(0, 8).map(c => c.slug);
 
 describe("le cercle reste le pool de chaque Live Drop", () => {
-  it.each([0, 1, 2, 5, 7])("avec %i chaînes déjà obtenues : trois absentes et la dernière absente", count => {
+  it.each([0, 1, 2, 5, 6, 7])("avec %i chaînes déjà obtenues : jusqu'à trois absentes, chacune une fois", count => {
     const owned = new Set(CIRCLE.slice(0, count));
     const missing = CIRCLE.filter(slug => !owned.has(slug));
     for (let run = 0; run < 25; run++) {
       const cards = drawPack("live", owned, { circle: CIRCLE, rareDrop: false });
       expect(cards).toHaveLength(5);
-      expect(cards.filter(c => missing.includes(c.creatorSlug)).length).toBeGreaterThanOrEqual(3);
+      // 0059 : une chaîne du cercle au plus une fois, le reste vient du classement.
+      expect(cards.filter(c => missing.includes(c.creatorSlug)).length).toBe(Math.min(3, missing.length));
       expect(missing).toContain(cards[4].creatorSlug);
-      // Les doublons ne sont nécessaires qu'en dessous de trois absentes.
-      if (missing.length >= 3) expect(new Set(cards.map(c => c.creatorSlug)).size).toBe(5);
+      expect(new Set(cards.map(c => c.creatorSlug)).size).toBe(5);
+    }
+  });
+
+  it("une seule chaîne nommée ne sort qu'une fois, en dernière carte", () => {
+    const [only] = CIRCLE;
+    for (let run = 0; run < 25; run++) {
+      const cards = drawPack("live", new Set(), { circle: [only], rareDrop: false });
+      expect(cards.filter(c => c.creatorSlug === only)).toHaveLength(1);
+      expect(cards[4].creatorSlug).toBe(only);
     }
   });
 

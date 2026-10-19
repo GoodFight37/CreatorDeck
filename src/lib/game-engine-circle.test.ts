@@ -42,7 +42,8 @@ describe("le premier booster d'une partie sans serveur", () => {
     const result = openPack(createInitialState(T0), T0, { circle: ["kaicenat", "ibai"] });
     const named = result.cards.filter((card) => ["kaicenat", "ibai"].includes(card.creatorSlug));
     expect(new Set(named.map((card) => card.creatorSlug))).toEqual(new Set(["kaicenat", "ibai"]));
-    expect(named.length).toBeGreaterThanOrEqual(3);
+    // 0059 : chacune une seule fois ; les trois autres cartes viennent du classement.
+    expect(named).toHaveLength(2);
   });
 
   it("sans chaîne, n'invente rien : pool mondial", () => {

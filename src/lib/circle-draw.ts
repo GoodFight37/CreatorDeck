@@ -38,7 +38,11 @@ export function pickMissingCircle(
   return favorite && weight(favorite) === weight(chosen) ? favorite : chosen;
 }
 
-/** Les slots 1, 2 et 5 sont absents au début du tirage ; les autres restent mondiaux. */
+/**
+ * Les slots 1, 2 et 5 sont absents au début du tirage ; les autres restent mondiaux.
+ * Une chaîne du cercle sort au plus une fois (0059) : sans absente inutilisée, le
+ * slot vaut `null` et revient au classement, comme les slots 3 et 4.
+ */
 export function circleDrawSlots(
   missing: readonly Creator[], preferred: string, weights: readonly RarityWeights[],
   liveLogins?: ReadonlySet<string>,
@@ -49,8 +53,8 @@ export function circleDrawSlots(
   const slots: (Creator | null)[] = [];
   for (let index = 0; index < 2; index++) {
     const available = missing.filter(c => !used.has(c.slug));
-    const creator = pickMissingCircle(available.length ? available : missing, weights[index], preferred, liveLogins);
-    used.add(creator.slug);
+    const creator = available.length ? pickMissingCircle(available, weights[index], preferred, liveLogins) : null;
+    if (creator) used.add(creator.slug);
     slots.push(creator);
   }
   return [...slots, null, null, last];
