@@ -439,30 +439,45 @@ html:has(.booster-presentation) { overflow: hidden; }
   clip-path: var(--live-foil-clip);
   mask-image: url("/packs/live-foil.svg"); mask-size: 100% 100%; mask-repeat: no-repeat;
   pointer-events: none; opacity: .48;
-  background: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .04) 41%,
-    rgb(255 249 230 / .62) 49%, rgb(255 166 205 / .2) 55%, transparent 64%);
-  background-size: 230% 100%;
-  background-position: 0% 50%;
   mix-blend-mode: screen;
   animation: var(--pack-specular-animation, pack-specular-pass) var(--pack-specular-duration, 5s) ease-in-out 250ms infinite;
 }
+/* Le balayage bouge par transform, pas par background-position : celui-ci se
+   repeignait à chaque image (masque + fusion sur la face 3D), et faisait tomber
+   l'accueil à ~12 i/s dans la WebView Android. Le dégradé fait 230 % de large :
+   une position de p % vaut translateX(-56.52% × p), même rendu qu'avant. */
+.pack-specular::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 230%;
+  background: var(--pack-specular-gradient, linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .04) 41%,
+    rgb(255 249 230 / .62) 49%, rgb(255 166 205 / .2) 55%, transparent 64%));
+  animation: pack-specular-sweep var(--pack-specular-duration, 5s) ease-in-out 250ms infinite;
+}
+@keyframes pack-specular-sweep {
+  0%, 8% { transform: translateX(0); }
+  45% { transform: translateX(-31.09%); }
+  78%, 100% { transform: translateX(-56.52%); }
+}
 @keyframes pack-specular-pass {
-  0%, 8% { opacity: .1; background-position: 0% 50%; }
-  45% { opacity: .64; background-position: 55% 50%; }
-  78% { opacity: .34; background-position: 100% 50%; }
-  100% { opacity: .1; background-position: 100% 50%; }
+  0%, 8% { opacity: .1; }
+  45% { opacity: .64; }
+  78% { opacity: .34; }
+  100% { opacity: .1; }
 }
 /* Drop home: stronger sweep; opening/reveal retain their own timing. */
 @keyframes drop-pack-specular-pass {
-  0%, 8% { opacity: .1; background-position: 0% 50%; }
-  45% { opacity: .5; background-position: 55% 50%; }
-  78% { opacity: .28; background-position: 100% 50%; }
-  100% { opacity: .1; background-position: 100% 50%; }
+  0%, 8% { opacity: .1; }
+  45% { opacity: .5; }
+  78% { opacity: .28; }
+  100% { opacity: .1; }
 }
 .pack-stage.pulling .pack-specular,
 body:has(.booster-cinematic.booster-presentation) .pack-specular,
 body:has(.reveal-overlay) .pack-specular,
 body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
+.pack-stage.pulling .pack-specular::before,
+body:has(.booster-cinematic.booster-presentation) .pack-specular::before,
+body:has(.reveal-overlay) .pack-specular::before,
+body:has(.perfect-banner) .pack-specular::before { animation: none; }
 
 .booster-cinematic.booster-presentation .foil-top-piece {
   transform-style: preserve-3d; transform-origin: var(--peel-origin-x, 50%) 15.45%; backface-visibility: hidden;
@@ -655,6 +670,7 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
 [data-card-fx="off"] .booster-foil-shine { animation: none; }
 body:has(.reveal-overlay) .pack-specular,
 body:has(.booster-cinematic.booster-presentation .booster-foil-open) .pack-specular { animation: none; }
+body:has(.booster-cinematic.booster-presentation .booster-foil-open) .pack-specular::before { animation: none; }
 .booster-foil-open .booster-foil-shine,
 body:has(.reveal-overlay) .booster-foil,
 body:has(.reveal-overlay) .booster-foil-shine,

@@ -342,6 +342,7 @@
 @media (prefers-reduced-motion: reduce) {
   .drop-findings .mini-card-row .creator-card { transform: none; }
   .home-view .pack-specular { animation: none; opacity: .2; }
+  .home-view .pack-specular::before { animation: none; }
 }
 
 
@@ -701,8 +702,7 @@
   opacity: .52;
   --pack-specular-animation: drop-pack-specular-pass;
   --pack-specular-duration: 4s;
-  background: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .06) 41%, rgb(255 250 224 / .48) 49%, rgb(255 171 205 / .2) 55%, transparent 64%);
-  background-size: 230% 100%;
+  --pack-specular-gradient: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .06) 41%, rgb(255 250 224 / .48) 49%, rgb(255 171 205 / .2) 55%, transparent 64%);
 }
 .home-view .pack-stage.stage-live .pack-shadow {
   z-index: 1;
