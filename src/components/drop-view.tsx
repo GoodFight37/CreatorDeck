@@ -161,6 +161,24 @@ export function HomeView({
   const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
     : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge MEMES en cours" : "Ouvrir le booster MEMES";
 
+  // Le bouton « Ouvrir » sous le sachet (D-153) : l'état du booster lisible d'un
+  // coup d'œil, comme dans un TCG de poche. Prêt : « Ouvrir ». Vide : le compte
+  // à rebours et une jauge de recharge. Le sachet reste le bouton accessible ;
+  // celui-ci le double pour le pouce, sans être annoncé deux fois.
+  const memeNextAt = memes.status?.nextAt ? Date.parse(memes.status.nextAt) : null;
+  const cta = universe === "live"
+    ? needsLogin ? { ready: true, label: "Se connecter", detail: "pour ouvrir" }
+      : needsAccount ? { ready: true, label: "Essayer", detail: "5 cartes" }
+      : stock > 0 || promoPacks > 0 ? { ready: true, label: "Ouvrir", detail: "5 cartes" }
+      : { ready: false, label: "Prochain booster", detail: nextAt !== null ? formatCountdown(nextAt, tick) : "bientôt",
+        progress: nextAt !== null ? Math.min(1, Math.max(0, 1 - (nextAt - tick) / pack.regenMs)) : null }
+    : !memes.account ? { ready: true, label: "Se connecter", detail: "pour ouvrir" }
+      : !memes.status ? { ready: false, label: "Lecture…", detail: "" }
+      : memes.status.stock >= 1 ? { ready: true, label: "Ouvrir", detail: "5 cartes" }
+      : { ready: false, label: "Prochain MEMES", detail: memeNextAt !== null ? formatCountdown(memeNextAt, tick) : "bientôt" };
+  const ctaProgress = "progress" in cta && typeof cta.progress === "number" ? cta.progress : null;
+  const ctaDisabled = !cta.ready || opening || memes.busy;
+
   const reserveControls = (
     <>
           <button type="button" className="pity-row now" onClick={onShowOdds}
@@ -219,10 +237,7 @@ export function HomeView({
   const findingsSection = (
       <section className="section-block drop-findings">
         <div className="section-heading">
-          <div>
-            <span className="drop-section-kicker">LES NOMS QUI RESTENT</span>
-            <h2>Dernières trouvailles</h2>
-          </div>
+          <h2>Dernières trouvailles</h2>
           <button type="button" className="drop-binder-link" onClick={onShowCollection}>Mon Binder <ChevronRight size={15} /></button>
         </div>
         {latest.length ? (
@@ -271,12 +286,16 @@ export function HomeView({
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
         labels={{ live: liveLabel, memes: memeLabel }}
         piles={{ live: needsAccount ? 1 : stock + promoPacks, memes: memes.status?.stock ?? 1 }} />
-      {lean ? (
-        // Les chaînes du joueur : des ronds qui chevauchent le bas du paquet.
-        <div ref={circleRow} tabIndex={-1} className="drop-circle-faces">
-          <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
-        </div>
-      ) : null}
+      <div className="drop-cta" data-ready={cta.ready ? "true" : "false"}>
+        <button type="button" className="drop-open" aria-hidden="true" tabIndex={-1}
+          disabled={ctaDisabled} onClick={() => prepareBooster(universe)}>
+          <span className="drop-open-label">{cta.label}</span>
+          {cta.detail ? <span className="drop-open-detail">{cta.detail}</span> : null}
+          {ctaProgress !== null ? (
+            <i className="drop-open-progress" style={{ "--progress": ctaProgress } as CSSProperties} />
+          ) : null}
+        </button>
+      </div>
 
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {emptyCircleReserve && firstLive ? (
@@ -313,6 +332,12 @@ export function HomeView({
           </details>
         ) : null}
       </section>
+      {lean ? (
+        // Les chaînes du joueur, sous le statut du booster : elles ne couvrent plus le sachet.
+        <div ref={circleRow} tabIndex={-1} className="drop-circle-faces">
+          <CircleStrip circle={circle} owned={ownedSlugs} live={live} now={now} onOpenCollection={onShowCollection} onEdit={onEditCircle} />
+        </div>
+      ) : null}
       {circleLiveEntries.length ? (
         <CircleLiveMoment
           entries={circleLiveEntries}

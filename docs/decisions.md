@@ -1,3 +1,18 @@
+## D-153 — 19 octobre 2026 : accueil Drop, en-tête et barre façon TCG de poche (publié)
+
+Carte blanche de Malik sur l'accueil, l'en-tête et la barre du bas, sans
+toucher au jeu. Révise D-150 sur trois points : un bouton « Ouvrir » sous le
+sachet (prêt : « Ouvrir · 5 cartes » ; vide : « Prochain booster » + compte à
+rebours + jauge de recharge sur 30 min) double l'appui sur le sachet, qui reste
+le bouton accessible (le nouveau est `aria-hidden`, hors tabulation) ; le
+sélecteur Live/Mèmes devient un interrupteur centré et le titre au-dessus du
+sachet passe en lecture d'écran seule (le nom était affiché trois fois) ; les
+chaînes du joueur passent sous le statut au lieu de couvrir le bas du sachet.
+En-tête compact (52 px, compteurs regroupés, « Niv. » lisible), en-tête et
+barre opaques sans backdrop-filter (coût GPU sous Android), visage du plateau
+assombri, surtitre « Les noms qui restent » retiré. Sous 700 px de haut, le
+sachet prend 44 dvh au lieu de 52. Tests e2e et écrans adaptés.
+
 ## D-152 — 19 octobre 2026 : révélation, doublons rares mis en scène, plus de grand nom (publié)
 
 Révise la révélation de D-150 à la demande de Malik, après test sur APK.

@@ -2,7 +2,8 @@ import { expect, test, gotoDeck } from "./fixtures";
 
 // Nuit de direct : le paquet EST le bouton, large (min(78vw, 320px)), posé
 // dans la moitié basse ; la réserve est une pile et une seule ligne dessous.
-const packWidth = (width: number, height: number) => Math.min(width * .78, 320, height * .52 / 1.4667);
+// D-153 : sous 700 px de haut, le sachet laisse la place au bouton « Ouvrir » et à la réserve.
+const packWidth = (width: number, height: number) => Math.min(width * .78, 320, height * (height <= 700 ? .44 : .52) / 1.4667);
 
 test("Drop garde le paquet-bouton accessible, sans débordement, en viewport mobile compact", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
@@ -45,6 +46,12 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(page.locator(".open-panel .stock-row")).not.toContainText("/4");
   expect(Number.parseFloat(await page.locator(".open-panel .stock-row strong").evaluate((node) => getComputedStyle(node).fontSize))).toBeLessThanOrEqual(14);
   await expect(pack.locator(".pack-pile-back")).toHaveCount(Math.max(0, Math.min(3, stock - 1)));
+  // D-153 : l'état du booster en un bouton sous le sachet, au-dessus de la barre du bas.
+  const cta = (await page.locator(".drop-cta .drop-open").boundingBox())!;
+  expect(cta.y).toBeGreaterThanOrEqual(box.y + box.height - 1);
+  const ctaNav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;
+  expect(cta.y + cta.height).toBeLessThanOrEqual(ctaNav.y);
+  await expect(page.locator(".drop-cta .drop-open")).toHaveAttribute("aria-hidden", "true");
   // Le voisin est rogné sur les côtés ; l'ombre ambiante du sachet n'est pas coupée en bas.
   const stageOverflow = await page.locator(".pack-stage").evaluate((node) => ({ x: getComputedStyle(node).overflowX, y: getComputedStyle(node).overflowY }));
   expect(["clip", "hidden"]).toContain(stageOverflow.x);

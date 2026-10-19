@@ -66,20 +66,21 @@ export function TopBar({ game }: { game: GameView }) {
         </div>
       </div>
       <div className="top-actions">
-        <div role="group" className="currency-chip" title="Sabliers" aria-label={`${game.player.hourglasses} sabliers`}>
-          <Hourglass size={14} />
-          <b>{game.player.hourglasses}</b>
-          <small>Sab.</small>
-        </div>
-        <div role="group" className="currency-chip warm" title="Points de collection" aria-label={`${formatNumber(game.player.points)} points`}>
-          <Coins size={14} />
-          <b>{formatNumber(game.player.points)}</b>
-          <small>Pts</small>
+        {/* Un seul porte-monnaie : icône + nombre, le nom complet reste dans l'étiquette accessible. */}
+        <div className="top-wallet">
+          <div role="group" className="currency-chip" title="Sabliers" aria-label={`${game.player.hourglasses} sabliers`}>
+            <Hourglass size={14} aria-hidden="true" />
+            <b>{game.player.hourglasses}</b>
+          </div>
+          <div role="group" className="currency-chip warm" title="Points de collection" aria-label={`${formatNumber(game.player.points)} points`}>
+            <Coins size={14} aria-hidden="true" />
+            <b>{formatNumber(game.player.points)}</b>
+          </div>
         </div>
         <div role="group" className="level-chip" title={`Niveau ${game.player.level}`} aria-label={`Niveau ${game.player.level}`}>
+          <small>Niv.</small>
           <span>{game.player.level}</span>
           <i style={{ width: `${levelProgress}%` }} />
-          <small>Niv.</small>
         </div>
       </div>
     </header>

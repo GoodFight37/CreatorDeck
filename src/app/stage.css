@@ -584,3 +584,134 @@
   .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: none; opacity: 1; }
 }
 [data-card-fx="off"] .reveal-new-flash { display: none; }
+
+/* =========================================================================
+   D-153 — Accueil façon TCG de poche (19 octobre 2026)
+   Un en-tête compact et opaque, un sélecteur d'univers centré, le sachet sur un
+   plateau moins chargé, et sous lui l'état du booster en un bouton : « Ouvrir »
+   quand il est prêt, compte à rebours et jauge quand il recharge. Les chaînes
+   du joueur passent sous ce statut au lieu de couvrir le sachet.
+   ========================================================================= */
+
+/* En-tête : opaque, sans backdrop-filter (recalculé à chaque image sous Android). */
+.app-shell > .top-bar,
+.app-shell[data-current-tab="home"] > .top-bar {
+  min-height: 52px;
+  padding-block: calc(6px + env(safe-area-inset-top)) 6px;
+  background: rgb(11 10 15 / .97);
+  border-bottom: 1px solid rgb(255 255 255 / .06);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+}
+.top-bar .brand-lockup strong { font-size: 20px; letter-spacing: .05em; }
+.top-bar .brand-lockup small {
+  display: block; max-width: 46vw; margin-top: 2px;
+  overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis;
+}
+.app-shell .top-bar .top-actions { gap: 6px; }
+.top-bar .top-wallet {
+  display: flex; align-items: center; height: 34px; padding: 0 2px;
+  border-radius: 999px; background: rgb(255 255 255 / .055);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07);
+}
+.app-shell .top-bar .currency-chip {
+  height: 34px; min-width: 0; padding: 0 9px; gap: 5px;
+  border: 0; border-radius: 999px; background: none;
+}
+.app-shell .top-bar .currency-chip + .currency-chip { box-shadow: inset 1px 0 rgb(255 255 255 / .08); border-radius: 0 999px 999px 0; }
+.app-shell .top-bar .currency-chip b { font-size: 13px; font-variant-numeric: tabular-nums; }
+.app-shell .top-bar .level-chip {
+  height: 34px; min-width: 0; padding: 0 11px 0 10px; gap: 4px;
+  border: 0; border-radius: 999px; background: rgb(255 255 255 / .055);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07);
+}
+.app-shell .top-bar .level-chip small { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.app-shell .top-bar .level-chip span { font-size: 14px; font-variant-numeric: tabular-nums; }
+.app-shell .top-bar .level-chip i { left: 10px; right: 10px; bottom: 5px; width: auto; max-width: calc(100% - 20px); height: 2px; border-radius: 2px; }
+
+/* Plateau : le visage reste une lumière, plus une tache qui avale le sachet. */
+.home-view .stage-halo {
+  opacity: .55;
+  filter: blur(18px) saturate(1.15) brightness(.78);
+  -webkit-mask-image: linear-gradient(#000 0 26%, rgb(0 0 0 / .45) 54%, transparent 88%);
+          mask-image: linear-gradient(#000 0 26%, rgb(0 0 0 / .45) 54%, transparent 88%);
+}
+
+/* Le nom du booster est déjà imprimé sur le sachet et dans le sélecteur :
+   on le garde pour les lecteurs d'écran et le retour du focus, pas à l'écran. */
+.home-view .booster-selector .pack-stage.stage-live.booster-carousel .pack-copy {
+  top: 0; left: 50%; right: auto; width: 1px; height: 1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+/* Sélecteur d'univers : un interrupteur centré, au-dessus du sachet. */
+.home-view .booster-switcher {
+  top: 6px; right: auto; left: 50%; transform: translateX(-50%);
+  padding: 2px; gap: 2px; border-radius: 999px;
+  background: rgb(10 9 14 / .78); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09), 0 6px 18px rgb(0 0 0 / .35);
+}
+.home-view .booster-switcher button {
+  min-height: 40px; padding: 0 16px; border-radius: 999px;
+  color: rgb(255 255 255 / .62); font-size: 12px; font-weight: 600; letter-spacing: .1em;
+  text-shadow: none; transition: background-color 160ms ease, color 160ms ease;
+}
+.home-view .booster-switcher button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: none; }
+.home-view .booster-switcher button:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
+
+/* Le sachet monte d'un cran : le sélecteur occupe le haut du plateau. Sur un
+   écran court, il rétrécit pour laisser le bouton et la réserve au-dessus de
+   la barre du bas. */
+.home-view .booster-selector .pack-stage.stage-live.booster-carousel {
+  --drop-stage-pt: clamp(58px, calc(20dvh - 70px), 160px);
+}
+@media (max-height: 700px) {
+  .home-view .booster-selector .pack-stage.stage-live.booster-carousel {
+    --drop-pack-size: min(78vw, 320px, calc(44dvh / 1.4667));
+  }
+}
+.home-view .booster-switcher button { white-space: nowrap; }
+
+/* L'état du booster : un bouton, sous le sachet. */
+.home-view .drop-cta { position: relative; z-index: 3; display: flex; justify-content: center; margin: 14px 0 4px; }
+.home-view .drop-open {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-width: min(72vw, 280px); min-height: 52px; padding: 0 26px; overflow: hidden;
+  border: 0; border-radius: 999px; background: var(--accent); color: var(--paper);
+  box-shadow: 0 10px 26px rgb(var(--accent-rgb) / .34), inset 0 1px rgb(255 255 255 / .22);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms ease;
+}
+.home-view .drop-open:active:not(:disabled) { transform: scale(.97); }
+.home-view .drop-open-label { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.home-view .drop-open-detail { font-size: 13px; font-weight: 600; opacity: .82; font-variant-numeric: tabular-nums; }
+.home-view .drop-cta[data-ready="true"] .drop-open:disabled { opacity: .55; cursor: default; }
+.home-view .drop-cta[data-ready="false"] .drop-open {
+  background: rgb(255 255 255 / .05); color: var(--text); cursor: default;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .1);
+}
+.home-view .drop-cta[data-ready="false"] .drop-open-label { color: var(--muted); font-size: 15px; letter-spacing: .08em; }
+.home-view .drop-cta[data-ready="false"] .drop-open-detail { font-size: 17px; font-weight: 600; opacity: 1; }
+.home-view .drop-open-progress {
+  position: absolute; left: 0; bottom: 0; width: 100%; height: 3px;
+  background: var(--accent); transform: scaleX(var(--progress, 0)); transform-origin: left center;
+  transition: transform 1s linear;
+}
+.home-view .open-panel .stock-row { justify-content: center; }
+/* En recharge, le compte à rebours est dans le bouton : pas deux fois. */
+.home-view .drop-cta[data-ready="false"] + .open-panel .timer-copy { display: none; }
+
+/* Les chaînes du joueur : une rangée sous le statut, plus sur le sachet. */
+.home-view .drop-circle-faces { margin-top: 10px; }
+.home-view .drop-circle-faces .circle-strip-row { justify-content: center; }
+
+/* Barre du bas : opaque, sans flou ; le contenu s'arrête au-dessus d'elle. */
+.bottom-nav {
+  background: rgb(16 14 21 / .97);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
+}
+.app-content { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-view .drop-open, .home-view .drop-open-progress, .home-view .booster-switcher button { transition: none; }
+}

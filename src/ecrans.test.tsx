@@ -50,8 +50,9 @@ describe("les écrans", () => {
     expect(document.documentElement.dataset.cardFx).toBe("on");
     expect(drop).not.toContain("Tribunal");
     expect(drop).not.toContain("Pas de Légendaire dans ce paquet");
-    expect(document.querySelector(".top-actions")?.textContent).toContain("Sab.");
-    expect(document.querySelector(".top-actions")?.textContent).toContain("Pts");
+    // Icône + nombre à l'écran ; le nom de chaque compteur reste lu par les lecteurs d'écran.
+    expect(document.querySelector(".top-actions [aria-label$=' sabliers']")).not.toBeNull();
+    expect(document.querySelector(".top-actions [aria-label$=' points']")).not.toBeNull();
     expect(document.querySelector(".top-actions")?.textContent).toContain("Niv.");
 
     banc.appuyer("Binder");
