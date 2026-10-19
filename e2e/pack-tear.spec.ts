@@ -484,8 +484,15 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
     .toBe("4s");
   expect(await homeSpecular.evaluate((node) => getComputedStyle(node).clipPath))
     .toContain("polygon(");
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).backgroundSize))
-    .toBe("230% 100%");
+  // Le balayage vit sur ::before (230 % de large), animé en transform pour
+  // ne pas repeindre la face 3D à chaque image (cd41e1d).
+  expect(await homeSpecular.evaluate((node) => {
+    const sweep = getComputedStyle(node, "::before");
+    return {
+      ratio: Math.round((parseFloat(sweep.width) / parseFloat(getComputedStyle(node).width)) * 10) / 10,
+      name: sweep.animationName, duration: sweep.animationDuration, iterations: sweep.animationIterationCount,
+    };
+  })).toEqual({ ratio: 2.3, name: "pack-specular-sweep", duration: "4s", iterations: "infinite" });
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
 
