@@ -5,6 +5,31 @@ statique) avec Supabase. Le projet est en développement privé; Malik est le se
 à tester l’application et Vercel sert d’environnement de test. Communiquer et
 documenter en français.
 
+## Priorité de travail et validation par Codex (19 octobre 2026)
+
+- Priorité au développement du jeu : terminer les fonctionnalités et corrections
+  demandées. Réutiliser les outils déjà présents ; ne construire ni runner,
+  orchestrateur, ni surveillance supplémentaire sans nécessité démontrée par
+  un blocage concret du développement.
+- Pour chaque changement visible ou fonctionnel, Codex lance réellement
+  l'application, vérifie le parcours concerné, examine le rendu et les preuves
+  (captures, traces, logs), corrige les défauts observés puis reteste avant de
+  livrer. Choisir les tests automatisés adaptés : Playwright, émulateur Android,
+  APK et suites ciblées, sans répéter des suites sans nouvel élément.
+- Pour animations, boosters, gestes tactiles et interfaces mobiles, privilégier
+  l'émulateur Android et l'APK ; Playwright navigateur seul ne suffit pas à
+  valider le comportement Android. Vérifier visuellement les captures et tester
+  aussi les interactions, pas uniquement la compilation ou la présence d'un écran.
+- Ne solliciter Malik pour un essai sur téléphone physique qu'en dernier recours,
+  si une limite matérielle précise empêche une vérification équivalente avec les
+  outils locaux. Expliquer cette limite, achever les vérifications indépendantes
+  et distinguer clairement émulateur, navigateur et téléphone réel. Ne jamais
+  présenter une simulation comme une validation sur appareil physique.
+- Claude peut relire ponctuellement un problème complexe. Aucun appel
+  automatique à Claude s'il consomme un coût ou un quota supplémentaire non
+  autorisé ; Codex mène le diagnostic, la correction et les tests. Les règles
+  de protection, de preuve et de publication ci-dessous restent applicables.
+
 ## À chaque début et reprise de session
 
 ### Exception de lecture : reprise du chantier portraits (12 octobre 2026)
