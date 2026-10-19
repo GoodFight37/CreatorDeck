@@ -190,14 +190,13 @@ export function CreatorCard({
         ) : null}
       </div>
 
-      {liveStream && !compact ? (
-        <p className="card-broadcast">
-          <i aria-hidden="true" />
-          {`En direct · ${liveStream.viewers > 0 ? viewersLabel(liveStream.viewers) : "à l'antenne"}`}
-        </p>
-      ) : null}
-
       <div className="card-nameplate">
+        {liveStream && !compact ? (
+          <p className="card-broadcast">
+            <i aria-hidden="true" />
+            {`En direct · ${liveStream.viewers > 0 ? viewersLabel(liveStream.viewers) : "à l'antenne"}`}
+          </p>
+        ) : null}
         <div className="card-identity">
           <span className="card-rarity-label">{rarity.label}</span>
           <span className="card-region">{regionLabel(creator.region)}</span>
