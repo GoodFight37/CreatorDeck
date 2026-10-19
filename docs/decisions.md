@@ -1,3 +1,18 @@
+## D-156 — 19 octobre 2026 : carrousel du Drop en vrai 3D, façon TCG de poche (publié)
+
+Retour de Malik sur l'APK : la bascule Live/Mèmes sautait et le sachet « n'a rien
+de 3D ». Causes : le paquet sortant passait d'un bouton à un div (React recréait
+l'image et l'objet 3D, et l'arrivée de 380 ms se rejouait) ; le sachet ne tournait
+que de 7°, sa tranche de 24 px faisait ~3 px à l'écran. Désormais un seul bouton
+par paquet (le voisin est `inert`, `aria-hidden`, hors tabulation) ; le carrousel
+suit le doigt et chaque paquet se place selon sa distance au centre (translation,
+recul en Z, rotation de 44° par cran), se cale au relâché (seuil 22 % d'un cran,
+résistance au bout de la file) ; balancement au repos porté à ±11°. Plus
+d'arrivée rejouée à chaque bascule. Transform et opacity seulement ; coupé en
+mouvement réduit. Côté Binder et fiche : surtitre « CARTE #… » retiré (le numéro
+et la rareté sont sur la carte et dans la fiche), recherche raccourcie (« Nom,
+rang ou jeu… » au lieu d'un texte coupé), liseré d'accent de la page active retiré.
+
 ## D-155 — 19 octobre 2026 : moins de texte répété, résumé qui désigne sa meilleure carte (publié)
 
 Suite à l'audit Impeccable du Binder et de la révélation. La ligne « rareté ·

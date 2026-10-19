@@ -344,7 +344,7 @@ export function CollectionView({
               setQuery(event.target.value);
               resetPage();
             }}
-            placeholder={`Rechercher un streameur, rang (#1 à #${CATALOG_SIZE}) ou jeu…`}
+            placeholder="Nom, rang ou jeu…"
             aria-label="Rechercher un créateur"
           />
           {query ? (

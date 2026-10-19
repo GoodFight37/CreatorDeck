@@ -61,3 +61,26 @@
   .booster-switcher button { min-height: 44px; padding-block: 5px; }
 }
 @media (prefers-reduced-motion: reduce) { .booster-pack-slot { transition: none; } }
+
+/* D-156 — carrousel en vrai 3D, façon TCG de poche. Chaque paquet se place selon
+   sa distance au centre (--o = position + glissé du doigt) : il glisse, recule
+   et tourne sur lui-même, ce qui montre sa tranche. Transform et opacity seulement. */
+.home-view .booster-selector .booster-carousel { perspective: 1000px; perspective-origin: 50% 42%; }
+.home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) {
+  --o: calc(var(--booster-offset) + var(--drag, 0));
+  --a: max(var(--o), calc(var(--o) * -1));
+  transform-style: preserve-3d;
+  transform: translateX(calc(-50% + var(--o) * 80%)) translateZ(calc(min(var(--a), 1.2) * -190px))
+    rotateY(calc(var(--o) * -44deg));
+  opacity: calc(1 - min(var(--a), 1) * .5);
+  filter: none;
+  transition: transform 460ms cubic-bezier(.2, .8, .2, 1), opacity 460ms ease, z-index 0s linear 200ms;
+}
+.home-view .booster-selector .booster-carousel.is-dragging .booster-pack-slot:is([data-active]) { transition: none; }
+/* Pas d'arrivée rejouée à chaque bascule : seul le premier affichage en a une. */
+.home-view .booster-selector .booster-carousel[data-switched] .booster-pack-slot .pack-artwork.pack-live { animation: none; }
+.home-view .booster-selector .booster-carousel .booster-neighbor { cursor: default; pointer-events: none; }
+.home-view .booster-selector .booster-carousel .booster-neighbor:disabled { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) { transition: none; }
+}

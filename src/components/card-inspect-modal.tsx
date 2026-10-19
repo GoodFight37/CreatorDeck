@@ -60,7 +60,6 @@ export function CardInspectModal({
       <div className="odds-panel inspect-panel">
         <header className="odds-head">
           <div>
-            <p className="eyebrow">{binder ? `CARTE #${String(creator.rank).padStart(3, "0")} · ${rarity.label}` : "Fiche créateur"}</p>
             <h2>{creator.displayName}</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Fermer">

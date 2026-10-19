@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties, type MouseEvent } from "react";
+import { useLayoutEffect, useRef, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
 import Image from "next/image";
 import "./booster-carousel.css";
 
@@ -29,17 +29,11 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
-  if (!active) return <div className="booster-neighbor" aria-hidden="true">
-    <PackPile count={pile} />
-    <span className="pack-idle"><span className="pack-3d-object">
-      <span className="pack-3d-side pack-3d-side-left" /><span className="pack-3d-side pack-3d-side-right" />
-      <span className="pack-3d-side pack-3d-side-bottom" />
-      <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
-        sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
-        <span className="pack-bulge" /><span className="pack-specular" /></span>
-    </span></span>
-  </div>;
-  return <button type="button" className="pack-artwork pack-live"
+  // Un seul élément pour le paquet de devant et le voisin : changer d'univers ne
+  // recrée ni l'image ni l'objet 3D (le remplacement d'un div par un bouton
+  // faisait sauter l'image et relançait l'arrivée à chaque bascule).
+  return <button type="button" className={active ? "pack-artwork pack-live" : "booster-neighbor"}
+    inert={!active} aria-hidden={active ? undefined : "true"} tabIndex={active ? undefined : -1}
     onPointerDown={(event) => { start.current = { x: event.clientX, y: event.clientY }; dragged.current = false; }}
     onPointerMove={(event) => {
       if (start.current && Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 8) dragged.current = true;
@@ -47,9 +41,9 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     onPointerUp={() => { start.current = null; }}
     onPointerCancel={() => { start.current = null; dragged.current = true; }}
     onClick={(event) => { if (event.detail > 0 && dragged.current) return; onClick(event); }}
-    disabled={disabled}>
+    disabled={active ? disabled : true}>
     {/* Le paquet EST le bouton : son nom est l'action, lue mais pas affichée. */}
-    <span className="sr-only">{label}</span>
+    {active ? <span className="sr-only">{label}</span> : null}
     <PackPile count={pile} />
     <span className="pack-idle" aria-hidden="true"><span className="pack-3d-object">
       <span className="pack-3d-side pack-3d-side-left" /><span className="pack-3d-side pack-3d-side-right" />
@@ -73,26 +67,64 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
 }) {
   const boosters = universes ? BOOSTERS.filter((booster) => universes.includes(booster.id)) : BOOSTERS;
   const index = Math.max(0, boosters.findIndex((booster) => booster.id === value));
-  const swipe = useRef<{ x: number; y: number } | null>(null);
+  const swipe = useRef<{ x: number; y: number; id: number; dragging: boolean } | null>(null);
+  const stage = useRef<HTMLElement>(null);
+  // Le changement d'univers et la remise à zéro du glissé arrivent dans la même
+  // image : le paquet part de là où le doigt l'a laissé, sans revenir en arrière.
+  function releaseDrag() {
+    const node = stage.current;
+    if (!node) return;
+    node.classList.remove("is-dragging");
+    node.style.setProperty("--drag", "0");
+  }
+  useLayoutEffect(() => { releaseDrag(); }, [index]);
   function choose(next: BoosterUniverse) {
     if (disabled) return;
+    // Après une première bascule, le paquet qui passe devant ne rejoue pas son arrivée.
+    if (stage.current) stage.current.dataset.switched = "true";
     onChange(next);
   }
-  // Un geste horizontal franc passe d'un paquet à l'autre ; un tap reste un tap.
-  function endSwipe(x: number, y: number) {
-    const start = swipe.current;
+  // Le carrousel suit le doigt : les paquets glissent et tournent sur eux-mêmes,
+  // puis se calent sur le plus proche au relâché. Un tap reste un tap.
+  function spacing() {
+    const slot = stage.current?.querySelector<HTMLElement>(".booster-pack-slot");
+    return Math.max(80, (slot?.offsetWidth ?? 250) * 0.78);
+  }
+  function moveSwipe(event: PointerEvent<HTMLElement>) {
+    const gesture = swipe.current;
+    const node = stage.current;
+    if (!gesture || !node || gesture.id !== event.pointerId || boosters.length < 2 || disabled) return;
+    const dx = event.clientX - gesture.x;
+    const dy = event.clientY - gesture.y;
+    if (!gesture.dragging) {
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      gesture.dragging = true;
+      node.classList.add("is-dragging");
+      try { node.setPointerCapture(event.pointerId); } catch { /* capture */ }
+    }
+    let drag = dx / spacing();
+    // Au bout de la file, le paquet résiste au lieu de partir dans le vide.
+    if ((index === 0 && drag > 0) || (index === boosters.length - 1 && drag < 0)) drag *= 0.3;
+    node.style.setProperty("--drag", String(Math.max(-1.15, Math.min(1.15, drag))));
+  }
+  function endSwipe(event: PointerEvent<HTMLElement>) {
+    const gesture = swipe.current;
     swipe.current = null;
-    if (!start || boosters.length < 2) return;
-    const dx = x - start.x;
-    if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(y - start.y) * 1.4) return;
-    const next = boosters[Math.max(0, Math.min(boosters.length - 1, index + (dx < 0 ? 1 : -1)))];
-    if (next.id !== value) choose(next.id);
+    if (!gesture || gesture.id !== event.pointerId) return;
+    if (!gesture.dragging) return;
+    const drag = (event.clientX - gesture.x) / spacing();
+    const step = Math.abs(drag) > 0.22 ? (drag < 0 ? 1 : -1) : 0;
+    const next = boosters[Math.max(0, Math.min(boosters.length - 1, index + step))];
+    if (next.id !== value && !disabled) choose(next.id);
+    else releaseDrag();
   }
   return <div className="booster-selector" aria-label="Choix du booster">
-    <section className="pack-stage stage-live booster-carousel" data-universe={value} aria-label="Booster sélectionné"
-      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY }; }}
-      onPointerUp={(event) => endSwipe(event.clientX, event.clientY)}
-      onPointerCancel={() => { swipe.current = null; }}>
+    <section ref={stage} className="pack-stage stage-live booster-carousel" data-universe={value} aria-label="Booster sélectionné"
+      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY, id: event.pointerId, dragging: false }; }}
+      onPointerMove={moveSwipe}
+      onPointerUp={endSwipe}
+      onPointerCancel={() => { swipe.current = null; releaseDrag(); }}
+      onLostPointerCapture={() => { if (swipe.current?.dragging) { swipe.current = null; releaseDrag(); } }}>
       <div className="pack-shadow" />
       {boosters.map((booster, i) => <div key={booster.id} className="booster-pack-slot" data-booster={booster.id}
         data-active={value === booster.id} style={{ "--booster-offset": i - index } as CSSProperties}>
