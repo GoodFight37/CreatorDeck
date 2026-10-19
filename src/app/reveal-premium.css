@@ -146,12 +146,6 @@
   57% { opacity: 1; transform: translate(-50%, -4px) scale(1.07); }
   100% { opacity: 1; transform: translateX(-50%) scale(1); }
 }
-.reveal-rarity-epic .reveal-stage > div:has(> .reveal-flip) {
-  filter: drop-shadow(0 13px 36px rgba(250, 92, 197, .34));
-}
-.reveal-rarity-legendary .reveal-stage > div:has(> .reveal-flip) {
-  filter: drop-shadow(0 17px 43px rgba(255, 191, 93, .45));
-}
 .reveal-rarity-epic .reveal-name > p:first-child {
   color: #ffbfeb;
   text-shadow: 0 0 20px rgba(243, 128, 219, .45);

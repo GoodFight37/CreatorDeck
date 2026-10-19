@@ -219,13 +219,9 @@ export function CollectionView({
 
   function movePageSwipe(event: PointerEvent<HTMLDivElement>) {
     const gesture = swipe.current;
-    if (!gesture) {
-      if (cardEffectsAllowed()) {
-        const bounds = event.currentTarget.getBoundingClientRect();
-        event.currentTarget.style.setProperty("--binder-light-x", `${((event.clientX - bounds.left) / bounds.width) * 100}%`);
-      }
-      return;
-    }
+    // La lumière du classeur est fixe : la faire suivre le doigt repeignait les
+    // douze reflets (masqués, fusionnés) à chaque mouvement.
+    if (!gesture) return;
     if (gesture.id !== event.pointerId) return;
     const dx = event.clientX - gesture.x;
     const dy = event.clientY - gesture.y;

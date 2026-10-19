@@ -110,11 +110,14 @@ export function RevealOverlay({
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
   const alreadyOwned = Boolean(card) && !tutorial && !perfect && card.isNew === false;
   // Un doublon commun ou peu commun ne rejoue pas la scène : pas de retournement,
-  // il rejoint la pile. Rare, épique et légendaire gardent toute leur mise en
-  // scène, même déjà possédées (décision de Malik, 19 octobre 2026).
+  // il rejoint la pile. Rare, épique et légendaire déjà possédées gardent leur
+  // aura et l'étiquette DOUBLON, sans le silence ni le flash (D-157).
   const duplicate = alreadyOwned && (card.rarity === "common" || card.rarity === "uncommon");
   const duplicatesSoFar = perfect ? [] : cards.slice(0, index + 1).filter((item) => !tutorial && item.isNew === false);
-  const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal);
+  // Commune et Peu commune : retournement bref, sans flash.
+  const quickFlip = rarity === "common" || rarity === "uncommon";
+  // Doublon Rare ou mieux : l'aura et l'étiquette DOUBLON restent, ni silence ni flash.
+  const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal, alreadyOwned);
 
   useEffect(() => {
     if (!showSummary) return;
@@ -139,7 +142,7 @@ export function RevealOverlay({
       ? null
       : window.setTimeout(() => {
           setFlippedCardId(cardId);
-        }, 1_200 + silenceBefore(rarity) + fifthRevealBeat);
+        }, 1_200 + (alreadyOwned ? 0 : silenceBefore(rarity)) + fifthRevealBeat);
     const onMotionChange = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setFlippedCardId(cardId);
@@ -151,7 +154,7 @@ export function RevealOverlay({
       if (fallback !== null) window.clearTimeout(fallback);
       reducedMotion?.removeEventListener?.("change", onMotionChange);
     };
-  }, [cardId, duplicate, isFifthSequentialReveal, perfect, rarity]);
+  }, [alreadyOwned, cardId, duplicate, isFifthSequentialReveal, perfect, rarity]);
 
   useEffect(() => {
     if (!card || perfect) return;
@@ -184,7 +187,7 @@ export function RevealOverlay({
     (perfect || cards.some((item) => item.rarity === "legendary"));
   const rareGlow = !duplicate && (perfect || card.rarity === "epic" || card.rarity === "legendary");
   const rarityAura = rareGlow || (!duplicate && card.rarity === "rare");
-  const flash = !duplicate && flashFor(card.rarity, perfect);
+  const flash = !alreadyOwned && flashFor(card.rarity, perfect);
   const glowDelay = perfect ? 0 : overlay ? silenceBefore(card.rarity) : timing.impactMs;
   const glowStyle = {
     "--rare-delay": `${glowDelay}ms`,
@@ -410,7 +413,7 @@ export function RevealOverlay({
         </section>
       ) : (
         <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
-          {card.isNew && !tutorial ? (
+          {card.isNew && !tutorial && !quickFlip ? (
             // Nouvelle : un flash de la couleur de sa rareté. Pas de second nom :
             // celui de la carte suffit.
             <span key={`new-flash-${card.id}`} className="reveal-new-flash" aria-hidden="true"

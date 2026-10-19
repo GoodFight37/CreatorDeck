@@ -478,26 +478,10 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(homeArt).toBeVisible();
   await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.svg");
   await expect(homePack.locator(".pack-3d-side")).toHaveCount(3);
-  await expect(homeSpecular).toBeAttached();
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName))
-    .toBe("drop-pack-specular-pass");
-  expect(await homeSpecular.evaluate((node) => {
-    const style = getComputedStyle(node);
-    return { iterations: style.animationIterationCount, clip: style.clipPath };
-  })).toMatchObject({ iterations: "infinite" });
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationDuration))
-    .toBe("4s");
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).clipPath))
-    .toContain("polygon(");
-  // Le balayage vit sur ::before (230 % de large), animé en transform pour
-  // ne pas repeindre la face 3D à chaque image (cd41e1d).
-  expect(await homeSpecular.evaluate((node) => {
-    const sweep = getComputedStyle(node, "::before");
-    return {
-      ratio: Math.round((parseFloat(sweep.width) / parseFloat(getComputedStyle(node).width)) * 10) / 10,
-      name: sweep.animationName, duration: sweep.animationDuration, iterations: sweep.animationIterationCount,
-    };
-  })).toEqual({ ratio: 2.3, name: "pack-specular-sweep", duration: "4s", iterations: "infinite" });
+  // Plus de reflet en boucle sur le sachet de l'accueil : seul son balancement anime l'accueil.
+  await expect(homeSpecular).toHaveCount(0);
+  await expect(homePack.locator(".pack-idle")).toHaveCSS("animation-name", "drop-pack-idle");
+  await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "none");
   await expect(page.locator(".pack-stage .pack-people")).toHaveCount(0);
   await open.click();
 
@@ -571,7 +555,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(dialog.locator(".foil-top-piece")).toBeAttached();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))
     .toBeVisible({ timeout: 15_000 });
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  await expect(homeSpecular).toHaveCount(0);
   await expect(page.locator(".opening-continuum")).toHaveCount(1);
   await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
 });
@@ -580,8 +564,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoDeck(page);
   const homeSpecular = page.locator('.booster-pack-slot[data-active="true"] .pack-artwork .pack-specular');
-  await expect(homeSpecular).toBeAttached();
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
+  await expect(homeSpecular).toHaveCount(0);
 
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const openingPack = page.locator(".booster-physical-scene");
@@ -612,14 +595,14 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   expect(reducedPackOpacity[".foil-depth-side"]).toBe("0");
   expect(reducedPackOpacity[".foil-back-card"]).toBe("1");
   await expect(reveal).toBeVisible();
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  await expect(homeSpecular).toHaveCount(0);
   expect(await reveal.locator(".card-foil").first().evaluate((node) => getComputedStyle(node).display))
     .toBe("none");
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
 
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.evaluate(() => { document.documentElement.dataset.cardFx = "off"; });
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).display)).toBe("none");
+  await expect(homeSpecular).toHaveCount(0);
   await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
   const offPack = page.locator(".booster-physical-scene");
   const offSeam = page.getByRole("button", { name: /D.chirer le haut du sachet en passant le doigt/ });
@@ -683,7 +666,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   await page.mouse.move(bounds.x + bounds.width * .96, y, { steps: 8 });
   await page.mouse.up();
   await expect(dialog.locator(".booster-foil-open")).toBeVisible();
-  expect(await homeSpecular.evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
+  await expect(homeSpecular).toHaveCount(0);
   expect(await dialog.locator(".foil-top-piece").evaluate((node) => getComputedStyle(node).animationName))
     .toBe("scene-cap-fold");
   expect(await dialog.locator(".foil-body-piece").evaluate((node) => getComputedStyle(node).animationName))

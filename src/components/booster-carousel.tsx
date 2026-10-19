@@ -50,7 +50,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       <span className="pack-3d-side pack-3d-side-bottom" />
       <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
-        <span className="pack-bulge" /><span className="pack-specular" /></span>
+        <span className="pack-bulge" /></span>
     </span></span>
   </button>;
 }
@@ -67,7 +67,8 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
 }) {
   const boosters = universes ? BOOSTERS.filter((booster) => universes.includes(booster.id)) : BOOSTERS;
   const index = Math.max(0, boosters.findIndex((booster) => booster.id === value));
-  const swipe = useRef<{ x: number; y: number; id: number; dragging: boolean } | null>(null);
+  const swipe = useRef<{ x: number; y: number; id: number; dragging: boolean;
+    samples: { x: number; t: number }[] } | null>(null);
   const stage = useRef<HTMLElement>(null);
   // Le changement d'univers et la remise à zéro du glissé arrivent dans la même
   // image : le paquet part de là où le doigt l'a laissé, sans revenir en arrière.
@@ -102,6 +103,8 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
       node.classList.add("is-dragging");
       try { node.setPointerCapture(event.pointerId); } catch { /* capture */ }
     }
+    gesture.samples.push({ x: event.clientX, t: event.timeStamp });
+    if (gesture.samples.length > 6) gesture.samples.shift();
     let drag = dx / spacing();
     // Au bout de la file, le paquet résiste au lieu de partir dans le vide.
     if ((index === 0 && drag > 0) || (index === boosters.length - 1 && drag < 0)) drag *= 0.3;
@@ -113,14 +116,21 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
     if (!gesture || gesture.id !== event.pointerId) return;
     if (!gesture.dragging) return;
     const drag = (event.clientX - gesture.x) / spacing();
-    const step = Math.abs(drag) > 0.22 ? (drag < 0 ? 1 : -1) : 0;
+    // Un coup de pouce rapide suffit : au-delà de ~0,11 px/ms, on change de
+    // paquet même sous 22 % d'un cran (vitesse mesurée sur les ~100 dernières ms).
+    const recent = gesture.samples.filter((sample) => event.timeStamp - sample.t <= 100);
+    const first = recent[0];
+    const elapsed = first ? event.timeStamp - first.t : 0;
+    const velocity = first && elapsed > 0 ? (event.clientX - first.x) / elapsed : 0;
+    const flick = Math.abs(velocity) > 0.11 && Math.sign(velocity) === Math.sign(drag);
+    const step = Math.abs(drag) > 0.22 || flick ? (drag < 0 ? 1 : -1) : 0;
     const next = boosters[Math.max(0, Math.min(boosters.length - 1, index + step))];
     if (next.id !== value && !disabled) choose(next.id);
     else releaseDrag();
   }
   return <div className="booster-selector" aria-label="Choix du booster">
     <section ref={stage} className="pack-stage stage-live booster-carousel" data-universe={value} aria-label="Booster sélectionné"
-      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY, id: event.pointerId, dragging: false }; }}
+      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY, id: event.pointerId, dragging: false, samples: [{ x: event.clientX, t: event.timeStamp }] }; }}
       onPointerMove={moveSwipe}
       onPointerUp={endSwipe}
       onPointerCancel={() => { swipe.current = null; releaseDrag(); }}

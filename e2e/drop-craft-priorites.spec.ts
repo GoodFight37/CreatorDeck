@@ -62,17 +62,16 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(side).toBeVisible();
   expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("9px");
   expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
-  const sheenStyle = await pack.locator(".pack-specular").evaluate((node) => getComputedStyle(node));
-  expect(sheenStyle.animationIterationCount).toBe("infinite");
-  expect(sheenStyle.animationDuration).toBe("4s");
+  // Plus de reflet en boucle : l'élément n'existe plus.
+  await expect(pack.locator(".pack-specular")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
   await expect(pack.locator(".pack-idle")).toHaveCSS("animation-name", "drop-pack-idle");
-  await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "drop-pack-shadow-idle");
+  // L'ombre est fixe : seul le sachet balance.
+  await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "none");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(pack.locator(".pack-idle")).toHaveCSS("animation-name", "none");
   await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "none");
-  expect(await pack.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
 
   await page.locator(".open-panel").evaluate((panel) => {
     panel.dataset.tutorial = "true";

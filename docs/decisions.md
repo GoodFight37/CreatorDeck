@@ -1,3 +1,18 @@
+## D-157 — 19 octobre 2026 : fluidité de l'ouverture (branche fluidite-ouverture, PR)
+
+Plan issu de l'audit improve-animations, validé par Malik. Une seule animation
+signature : la déchirure, inchangée. Coupé : les `drop-shadow` de la carte qui se
+retourne (Épique, Légendaire), remplacés par une lueur fixe derrière elle ; la
+lumière du Binder qui suivait le doigt (fixe à 32 %) ; sur l'accueil, le reflet en
+boucle du sachet (élément `pack-specular` et ses deux animations) et la respiration
+de l'ombre — seul le balancement du sachet reste ; la mise en scène des Communes et
+Peu communes (retournement de 280 ms, `cubic-bezier(0.23, 1, 0.32, 1)`, sans
+flash). Carrousel : un coup de pouce de plus de ~0,11 px/ms change de paquet même
+sous 22 % d'un cran ; en mouvement réduit, fondu de 200 ms au lieu d'une coupure.
+Révise D-152 avec l'accord de Malik : un doublon Rare ou mieux garde son aura et
+l'étiquette DOUBLON, sans le silence de 520 ms ni le flash. Dock inchangé, aucune
+librairie ajoutée.
+
 ## D-156 — 19 octobre 2026 : carrousel du Drop en vrai 3D, façon TCG de poche (publié)
 
 Retour de Malik sur l'APK : la bascule Live/Mèmes sautait et le sachet « n'a rien

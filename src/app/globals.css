@@ -4304,9 +4304,8 @@ input:focus-visible {
 }
 .reveal-stage > .new-badge,
 .reveal-stage > .reveal-name { position: relative; z-index: 3; }
-/* Small, restrained highlight along the rare card edge itself. */
-.reveal-card.rarity-epic { filter: drop-shadow(0 0 9px rgb(237 141 121 / .25)); }
-.reveal-card.rarity-legendary { filter: drop-shadow(0 0 15px rgb(255 207 139 / .38)); }
+/* Plus de drop-shadow sur la carte qui se retourne : un filtre aplatit la 3D et
+   la repeint à chaque image. La lueur est fixe, derrière (.reveal-stage::before). */
 @media (prefers-reduced-motion: reduce) {
   .reveal-rare-aura { animation: none; opacity: .52; transform: translate(-50%, -50%); }
 }
@@ -4406,8 +4405,6 @@ input:focus-visible {
   background: radial-gradient(ellipse at center,
     rgb(255 231 155 / .48), rgb(252 169 87 / .24) 45%, transparent 79%);
 }
-.reveal-flip.rarity-epic { filter: drop-shadow(0 9px 20px rgb(239 118 134 / .24)); }
-.reveal-flip.rarity-legendary { filter: drop-shadow(0 13px 30px rgb(255 206 111 / .34)); }
 
 /* Visible physical depth on the edge of the flexible foil, not just a drop shadow. */
 .booster-foil-body {

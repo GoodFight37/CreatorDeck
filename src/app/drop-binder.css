@@ -341,8 +341,6 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .drop-findings .mini-card-row .creator-card { transform: none; }
-  .home-view .pack-specular { animation: none; opacity: .2; }
-  .home-view .pack-specular::before { animation: none; }
 }
 
 
@@ -432,7 +430,7 @@
 .collection-view .binder-pocket:has(.variant-gold) { --finish-strength: .34; }
 .collection-view .binder-card-slot .card-foil {
   opacity: var(--finish-strength);
-  background: radial-gradient(ellipse at var(--binder-light-x, 32%) 22%,
+  background: radial-gradient(ellipse at 32% 22%,
     rgb(255 247 217 / .65), color-mix(in srgb, var(--pocket-rarity) 30%, transparent) 30%, transparent 68%);
   mask-image: linear-gradient(#000 0% 58%, transparent 86%);
   mix-blend-mode: screen;
@@ -699,12 +697,6 @@
   height: 8px; bottom: -7px;
   background: linear-gradient(180deg, #7d555a, #311825 46%, #080a10);
 }
-.home-view .pack-stage .pack-specular {
-  opacity: .52;
-  --pack-specular-animation: drop-pack-specular-pass;
-  --pack-specular-duration: 4s;
-  --pack-specular-gradient: linear-gradient(108deg, transparent 34%, rgb(255 244 218 / .06) 41%, rgb(255 250 224 / .48) 49%, rgb(255 171 205 / .2) 55%, transparent 64%);
-}
 .home-view .pack-stage.stage-live .pack-shadow {
   z-index: 1;
   top: calc(25px + var(--drop-pack-size) * 1.4667 - 8px);
@@ -714,12 +706,7 @@
   background: radial-gradient(ellipse, rgb(0 0 0 / .88) 0 22%, rgb(13 5 12 / .55) 45%, rgb(131 45 65 / .16) 70%, transparent 100%);
   box-shadow: 0 16px 25px 4px rgb(19 5 17 / .3);
   filter: blur(4px);
-  /* Même rythme que `.pack-idle` : le sachet monte, son ombre s'étale et pâlit. */
-  animation: drop-pack-shadow-idle 4.8s ease-in-out 380ms infinite backwards;
-}
-@keyframes drop-pack-shadow-idle {
-  0%, 100% { scale: 1; opacity: .95; }
-  50% { scale: .88 .8; opacity: .72; }
+  /* Ombre fixe : seul le sachet balance, l'ombre ne respire plus. */
 }
 .home-view .pack-stage.stage-live .pack-shadow::after {
   content: "";

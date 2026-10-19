@@ -26,7 +26,6 @@
 }
 .home-view .booster-carousel .booster-pack-slot > button { cursor: pointer; }
 .home-view .booster-carousel .booster-neighbor .pack-idle { animation: none; }
-.home-view .booster-carousel .booster-neighbor .pack-specular { display: none; }
 .home-view .pack-stage.stage-live.booster-carousel .pack-copy {
   position: absolute; bottom: 5px; left: 0; right: 0; justify-content: center;
 }
@@ -81,6 +80,13 @@
 .home-view .booster-selector .booster-carousel[data-switched] .booster-pack-slot .pack-artwork.pack-live { animation: none; }
 .home-view .booster-selector .booster-carousel .booster-neighbor { cursor: default; pointer-events: none; }
 .home-view .booster-selector .booster-carousel .booster-neighbor:disabled { opacity: 1; }
+/* Mouvement réduit : les paquets ne glissent ni ne tournent. Ils sont superposés
+   au centre et le changement est un fondu de 200 ms, pas une coupure sèche. */
 @media (prefers-reduced-motion: reduce) {
-  .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) { transition: none; }
+  .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) {
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 200ms ease, z-index 0s linear 100ms;
+  }
+  .home-view .booster-selector .booster-carousel .booster-pack-slot[data-active="true"] { opacity: 1; }
 }

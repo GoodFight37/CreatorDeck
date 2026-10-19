@@ -10,10 +10,12 @@ import {
   PACK_TEAR_HAPTIC,
   PACK_TEAR_MS,
   PERFECT_LOCK_MS,
+  QUICK_FLIP_MS,
   RESIST_SHAKE_MS,
   resistCount,
   resistHaptic,
   revealHaptic,
+  revealTiming,
   silenceBefore,
   TEAR_HAPTIC,
   tearDurationMs,
@@ -201,5 +203,21 @@ describe("la révélation", () => {
     const somme = PACK_TEAR_HAPTIC.reduce((total, value) => total + value, 0);
     expect(PACK_TEAR_HAPTIC.length).toBeGreaterThan(1);
     expect(somme).toBeGreaterThan(TEAR_HAPTIC.reduce((total, value) => total + value, 0));
+  });
+});
+
+describe("fluidité de la révélation (D-157)", () => {
+  it("retourne une Commune ou une Peu commune en 280 ms, sans silence", () => {
+    expect(QUICK_FLIP_MS).toBe(280);
+    expect(revealTiming("common", true)).toEqual({ flipMs: 280, leadMs: 0, impactMs: 0 });
+    expect(revealTiming("uncommon", true).flipMs).toBe(280);
+    expect(revealTiming("rare", true).flipMs).toBeGreaterThan(QUICK_FLIP_MS);
+  });
+
+  it("ôte le silence d'un doublon Rare ou mieux, garde celui d'une nouvelle", () => {
+    expect(revealTiming("legendary", true).leadMs).toBe(EPIC_SILENCE_MS);
+    expect(revealTiming("legendary", true, false, true).leadMs).toBe(0);
+    expect(revealTiming("epic", true, false, true).flipMs).toBe(revealTiming("epic", true).flipMs);
+    expect(revealTiming("legendary", false, false, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
   });
 });
