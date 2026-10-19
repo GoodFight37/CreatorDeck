@@ -16,7 +16,6 @@ on:
     workflows: ["Vérification"]
     types: [completed]
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -30,12 +29,29 @@ env:
   KEEP_RELEASES: 10
 
 jobs:
-  apk:
+  provenance:
+    name: Vérifier la révision autorisée
     if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_repository.full_name == github.repository)
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Exiger une Vérification réussie du même SHA
+        run: node scripts/apk-release-gate.mjs
+
+  apk:
+    needs: provenance
+    if: needs.provenance.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

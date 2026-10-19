@@ -4,14 +4,25 @@
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.
 
-## État actuel — 18 octobre 2026
+## État actuel — 19 octobre 2026
 
-### Qualité autonome — PR #13 sur `codex/autonomous-tests`
+### Qualité autonome phase 2 — locale, non publiée
+
+- Checkout `codex/autonomous-tests` au SHA `13ed8945fddbd23772031c755ec97c0667f7913e`; GitHub `main` confirmé à `ad360bd9278f84dc54e0942c838c931e54b6558e`. La lecture `git ls-remote` échoue dans cette session (DNS GitHub); aucune modification phase 2 n’est publiée ni passée en CI/Vercel/APK.
+- 14 tests Node d’orchestration verts; `npm test -- --maxWorkers=2` passe 1 301/1 301 (94 fichiers); typecheck, ESLint ciblé, syntaxe et parse YAML verts. Le build Next.js 16.3.6 génère les six pages statiques sans configuration cloud.
+- `npm run quality:mobile` passe en manuel et via la tâche Windows planifiée : 7/7 E2E dans les deux rapports (`2026-10-18T23-55-53-846Z-13ed8945` et `2026-10-19T00-11-58-241Z-13ed8945`). La tâche est `Ready`, toutes les 4 h, compte Administrator en mode limité; déclenchement réel `LastTaskResult=0`.
+- Le smoke Android a échoué deux fois après le boot, ADB perdant `emulator-5554` pendant le lancement/app readiness. Rapports sous `reports/android-smoke/2026-10-19T00-03-36-853Z/` et `00-06-04-241Z/`. Aucun résultat sur la mise à jour APK 872393→872394 ou la sauvegarde; l’émulateur existant n’a pas été effacé.
+- Les erreurs persistantes produisent un incident local dédupliqué et un paquet de reprise; aucun appel Codex/Claude, correctif ou ticket automatique. Les scénarios artificiels valident le classifieur et le registre, pas un vrai bug de l’application.
+- Le job CI d’échec produit un artefact structuré sans IA. L’APK est désormais déclenchée seulement après une Vérification réussie sur `main`; `workflow_dispatch` est retiré. Tests unitaires locaux, workflow GitHub pas encore rejoué.
+- Auto-hébergé : aucun processus runner observé; services non inspectables avec les privilèges de cette session. Tâche Windows non trouvée par `Get-ScheduledTask` ici. Android : attente réelle WebView et navigation Binder/Atelier/Drop ajoutées, mais ADB/émulateur non accessibles dans cette session; validation APK mise à jour non exécutée.
+- Diagnostic téléphone toujours opt-in local, sans collecte distante ni donnée personnelle. Les changements locaux sont décrits dans [qualité autonome](qualite-autonome.md), [D-153/D-154](decisions.md) et le premier checkpoint de passation.
+
+### Qualité autonome — publiée sur `main` `ad360bd9`
 
 - Tests mobiles et rapports locaux implémentés ; tâche Windows limitée toutes les quatre heures, première exécution automatique réussie. Voir [qualité autonome](qualite-autonome.md).
-- CI : captures et mesures mobiles ajoutées aux artefacts des branches ; [PR #13](https://github.com/GoodFight37/CreatorDeck/pull/13) ouverte au SHA `6570237c`, [vérification distante](https://github.com/GoodFight37/CreatorDeck/actions/runs/39170938187) 6/6 verte, y compris l'économie des runs push/PR. Publication sur `main` non faite.
-- Diagnostic web/Android volontaire, local et effaçable ; essai sur vrai téléphone et collecte distante non faits.
-- Émulateur : après redémarrage, WHPX fonctionne ; deux APK debug sans cloud (`872393` → `872394`) installées successivement sur `CreatorDeck_API36`. L'app atteint l'accueil après chargement et un marqueur de stockage privé survit à la mise à jour. Rapport : `reports/android-smoke/2026-10-18T22-24-05-376Z/`. Le bandeau de mise à jour, les données du jeu et le vrai téléphone restent à vérifier.
+- CI : captures et mesures mobiles ajoutées aux artefacts ; [PR #13](https://github.com/GoodFight37/CreatorDeck/pull/13) fusionnée, [vérification de `main`](https://github.com/GoodFight37/CreatorDeck/actions/runs/39172783913) 6/6 verte, Vercel `success`, [APK v872721](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v872721) publiée. La concurrence par SHA évite les doubles runs push/PR.
+- Diagnostic web/Android volontaire, local et effaçable ; aucune collecte distante. Malik confirme sur téléphone la mise à jour depuis le bandeau v872315 → v872721 et la conservation de ses cartes/réglages ; pas de capture ni journal d'appareil.
+- Émulateur : après redémarrage, WHPX fonctionne ; deux APK debug sans cloud (`872393` → `872394`) installées successivement sur `CreatorDeck_API36`. L'app atteint l'accueil après chargement et un marqueur de stockage privé survit à la mise à jour. Rapport : `reports/android-smoke/2026-10-18T22-24-05-376Z/`.
 - Observation à confirmer sur WebView : sur un passage Chrome de développement, Binder a eu 2 images espacées de plus de 50 ms à 320 px (maximum 169 ms), puis 1 à 390/412 px ; une image de révélation a atteint 146 ms. Priorité : répéter sur émulateur et appareil avant une optimisation ciblée.
 
 ### Publié le 18 octobre 2026 (main `5f0a77c`, CI, Supabase, APK et Vercel verts)

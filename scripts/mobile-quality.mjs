@@ -2,15 +2,16 @@
 // Contrôles locaux séquentiels : aucun appel IA, compte ni secret requis.
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { copyFile, mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { copyFile, cp, mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildSummary, renderSummary, summarizePlaywright } from "./lib/mobile-quality-report.mjs";
+import { classifyQualityRun, recordConfirmedIncident } from "./lib/quality-incidents.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const full = process.argv.includes("--full");
 const stages = [
-  { name: "Rapports", args: ["--test", "scripts/mobile-quality.test.mjs"], binary: "node" },
+  { name: "Orchestration autonome", args: ["run", "test:autonomy"] },
   ...(full ? [
     { name: "Unitaires", args: ["test", "--", "--maxWorkers=2"] },
     { name: "Écrans", args: ["run", "ecrans", "--", "--maxWorkers=2"] },
@@ -24,7 +25,7 @@ const maxOutput = 64_000;
 const maxDurationMs = full ? 20 * 60_000 : 8 * 60_000;
 const keptCaptures = new Set(["390-Drop", "390-Binder", "390-Atelier", "390-Toi", "sachet-ferme", "revelation"]);
 
-async function archiveObservations(report, runDir) {
+async function archiveObservations(report, runDir, prefix = "") {
   const captures = [];
   const metrics = {};
   const outputRoot = path.join(root, "test-results") + path.sep;
@@ -34,10 +35,10 @@ async function archiveObservations(report, runDir) {
         if (keptCaptures.has(attachment.name) && attachment.path && attachment.contentType === "image/png") {
           const source = path.resolve(attachment.path);
           if (!source.toLowerCase().startsWith(outputRoot.toLowerCase())) continue;
-          const target = path.join(runDir, "captures", `${attachment.name}.png`);
+          const target = path.join(runDir, "captures", `${prefix}${attachment.name}.png`);
           await mkdir(path.dirname(target), { recursive: true });
           await copyFile(source, target);
-          const relative = `captures/${attachment.name}.png`;
+          const relative = `captures/${prefix}${attachment.name}.png`;
           if (!captures.includes(relative)) captures.push(relative);
         }
         if (/^(mesures-|fluidite-)/.test(attachment.name) && attachment.body) {
@@ -49,6 +50,28 @@ async function archiveObservations(report, runDir) {
   }
   if (Object.keys(metrics).length) await writeFile(path.join(runDir, "metrics.json"), `${JSON.stringify(metrics, null, 2)}\n`, "utf8");
   return { captures, metricsFile: Object.keys(metrics).length ? "metrics.json" : null };
+}
+
+async function preserveFailedBrowserEvidence(runDir) {
+  const evidence = path.join(runDir, "premier-essai");
+  for (const folder of ["test-results", "playwright-report"]) {
+    const source = path.join(root, folder);
+    if (existsSync(source)) await cp(source, path.join(evidence, folder), { recursive: true, force: true });
+  }
+  return path.relative(root, evidence).replace(/\\/g, "/");
+}
+
+async function collectPlaywright(result, runDir, prefix = "") {
+  if (result.name !== "Navigateur mobile") return { captures: [], metricsFile: null };
+  const json = path.join(root, "test-results", "mobile-quality-results.json");
+  try {
+    if ((await stat(json)).mtimeMs < result.startedAtMs - 1000) return { captures: [], metricsFile: null };
+    const report = JSON.parse(await readFile(json, "utf8"));
+    result.tests = summarizePlaywright(report);
+    const artifacts = await archiveObservations(report, runDir, prefix);
+    if (result.tests.failed) result.output += `\n${result.tests.details.join("\n")}`;
+    return artifacts;
+  } catch { return { captures: [], metricsFile: null }; }
 }
 
 function runStage(stage) {
@@ -96,25 +119,50 @@ async function main() {
   const runDir = path.join(root, "reports", "mobile-quality", `${startedAt.replace(/[:.]/g, "-")}-${sha.slice(0, 8)}`);
   await mkdir(runDir, { recursive: true });
   const results = [];
+  const initialResults = [];
+  const retryResults = [];
   let artifacts = { captures: [], metricsFile: null };
   for (const stage of stages) {
     process.stdout.write(`${stage.name}…\n`);
-    const result = await runStage(stage);
-    if (stage.name === "Navigateur mobile") {
-      const json = path.join(root, "test-results", "mobile-quality-results.json");
-      try {
-        if ((await stat(json)).mtimeMs >= result.startedAtMs - 1000) {
-          const report = JSON.parse(await readFile(json, "utf8"));
-          result.tests = summarizePlaywright(report);
-          artifacts = await archiveObservations(report, runDir);
-          if (result.tests.failed) result.output += `\n${result.tests.details.join("\n")}`;
-        }
-      } catch { /* Le serveur peut échouer avant que Playwright écrive son JSON. */ }
+    const first = await runStage(stage);
+    initialResults.push(first);
+    const firstArtifacts = await collectPlaywright(first, runDir,
+      first.exitCode === 0 ? "" : "premier-essai-");
+    artifacts.captures.push(...firstArtifacts.captures);
+    if (firstArtifacts.metricsFile) artifacts.metricsFile = firstArtifacts.metricsFile;
+
+    let result = first;
+    if (first.exitCode !== 0) {
+      const preserved = stage.name === "Navigateur mobile" ? await preserveFailedBrowserEvidence(runDir) : null;
+      process.stdout.write(`${stage.name} : reprise unique après échec…\n`);
+      const retry = await runStage(stage);
+      retryResults.push(retry);
+      const retryArtifacts = await collectPlaywright(retry, runDir, "reprise-");
+      artifacts.captures.push(...retryArtifacts.captures);
+      if (retryArtifacts.metricsFile) artifacts.metricsFile = retryArtifacts.metricsFile;
+      result = { ...retry, initialExitCode: first.exitCode, retryCount: 1,
+        initialOutput: first.output, evidenceDir: preserved,
+        output: `Premier essai (code ${first.exitCode}):\n${first.output}\nReprise (code ${retry.exitCode}):\n${retry.output}` };
+    } else {
+      retryResults.push({ name: first.name, command: first.command, exitCode: 0, output: "" });
     }
     results.push(result);
     process.stdout.write(`${result.exitCode === 0 ? "OK" : "ÉCHEC"} (${Math.round(result.durationMs / 1000)} s)\n`);
   }
-  const summary = buildSummary({ sha, mode: full ? "complet" : "rapide", startedAt, stages: results, ...artifacts });
+  const classification = classifyQualityRun(initialResults, retryResults);
+  let incident = null;
+  if (classification.status === "confirmed") {
+    incident = await recordConfirmedIncident({
+      directory: path.join(root, "reports", "mobile-quality", "incidents"),
+      sha,
+      startedAt,
+      failures: classification.failures,
+      resumeCommand: full ? "npm run quality:mobile:full" : "npm run quality:mobile",
+      evidenceDir: path.relative(root, runDir).replace(/\\/g, "/"),
+    });
+  }
+  const summary = buildSummary({ sha, mode: full ? "complet" : "rapide", startedAt,
+    stages: results, classification: classification.status, incident, ...artifacts });
   await writeFile(path.join(runDir, "summary.json"), `${JSON.stringify(summary, null, 2)}\n`, "utf8");
   await writeFile(path.join(runDir, "summary.md"), renderSummary(summary), "utf8");
   process.stdout.write(`${path.join(runDir, "summary.md")}\n`);

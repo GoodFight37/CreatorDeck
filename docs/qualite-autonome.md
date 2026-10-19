@@ -1,4 +1,60 @@
-# Qualité mobile autonome — état local du 18 octobre 2026
+# Qualité autonome — phase 2 locale, 19 octobre 2026
+
+## État vérifié dans cette reprise
+
+- Les contrôles `npm run test:autonomy` couvrent
+  14 contrats Node : provenance APK, rapport CI, attente Android, retry local,
+  diagnostic expurgé et déduplication. Résultat : 14/14, aucun échec/ignoré.
+  `npm test -- --maxWorkers=2` : 1301/1301 sur 94 fichiers. `npm run typecheck`
+  et ESLint ciblé sont verts.
+- `npm run lint -- --ignore-pattern 'android/**/build/**'` sort avec code 0 et
+  une alerte dans un bundle généré sous `android/app/src/main/assets/public/`;
+  ce n’est pas une erreur de source. Le contrôle n’a pas ignoré cet asset.
+- ESLint ciblé sur tous les scripts MJS ajoutés/modifiés et `node --check` sur
+  les scripts d’entrée passent (code 0). `git diff --check` passe, avec seulement
+  les avertissements CRLF de Git sur des fichiers Windows.
+- `npm run build` passe : Next.js 16.3.6 compile et génère les six pages
+  statiques, sans variables Supabase cloud dans l’environnement local.
+- `npm run quality:mobile` passe en manuel : rapports et captures dans
+  `reports/mobile-quality/2026-10-18T23-55-53-846Z-13ed8945/summary.md`;
+  orchestrateur, typecheck et 7/7 scénarios E2E téléphone.
+- La tâche Windows planifiée `CreatorDeck-Qualite-Mobile` existe (`Ready`,
+  répétition 4 h, compte Administrator à RunLevel limité). Déclenchée avec
+  `Start-ScheduledTask`, elle termine `LastTaskResult=0` et produit
+  `reports/mobile-quality/2026-10-19T00-11-58-241Z-13ed8945/summary.md` :
+  7/7 scénarios E2E téléphone.
+- Le lanceur rejoue une étape en échec une seule fois. Une reprise réussie est
+  transitoire et ne crée pas d’incident. Un échec persistant est dédupliqué par
+  SHA et empreinte; seul le premier constat écrit `reports/mobile-quality/incidents/`
+  et une commande de diagnostic Codex en lecture seule. Aucun appel Codex,
+  aucune correction ni publication n’est lancé par ce code.
+- La CI produit un petit artefact sans IA ni ticket si un job échoue, avec le
+  SHA, le lien du run, les jobs échoués et les noms de scénarios Playwright
+  expurgés. Cette modification locale n’a pas encore tourné dans GitHub Actions.
+- `.github/workflows/apk.yml` n’a plus de `workflow_dispatch`. La publication
+  reste automatique après une Vérification réussie sur le push `main`; pour
+  reprendre une APK échouée, relancer le job du run APK original. Le garde de
+  provenance a 3 tests locaux; le workflow n’a pas encore été exécuté après ce
+  changement.
+- `js-yaml` parse localement les deux workflows (APK : 2 jobs; Vérification :
+  5 jobs), sans erreur. Aucun run GitHub n’a validé les expressions ou
+  permissions en conditions réelles.
+- `codex` est installé et connecté dans cette session; la CLI Claude aussi.
+  Aucun appel modèle n’a été fait. L’auto-correction reste désactivée tant que
+  l’isolation hors ligne et l’exécution de tests dans un export séparé ne sont
+  pas démontrées. `delegate-claude.mjs` reste une revue manuelle conditionnelle.
+- Les diagnostics Android restent opt-in, sur l’appareil, bornés à 100
+  événements, effaçables et sans contenu/URL/identité. Aucune télémétrie
+  distante ni donnée personnelle n’est ajoutée.
+- Aucun service Runner GitHub auto-hébergé n’est installé. Le SDK/AVD, eux,
+  existent. Le smoke test Android a échoué deux fois après boot : l’émulateur
+  disparaît pendant l’attente WebView ou le lancement de l’activité, et ADB
+  renvoie `device 'emulator-5554' not found`. Rapports :
+  `reports/android-smoke/2026-10-19T00-03-36-853Z/result.json` et
+  `reports/android-smoke/2026-10-19T00-06-04-241Z/result.json`. Version 872394,
+  navigation et conservation de la sauvegarde après mise à jour non validées.
+
+# Qualité mobile autonome — état de la phase 1 (18 octobre 2026)
 
 `npm run quality:mobile` lance en série les tests du rapport, le typecheck et sept
 parcours Chrome tactiles. Les captures couvrent 320×568, 390×844, 412×915, les
@@ -18,8 +74,8 @@ captures choisies dans `reports/mobile-quality/<date>-<SHA>/`. Le rapport HTML
 complet est dans `playwright-report/index.html`, les autres captures et traces
 dans `test-results/` jusqu'au prochain passage.
 Ces trois dossiers sont ignorés par Git. Un succès ne déclenche aucun appel IA.
-Un échec laisse une commande, un SHA, un compte de tests, la cause et les
-preuves à fournir à Codex. Le lanceur ne tente aucune correction automatique.
+Un échec persistant laisse un paquet avec SHA, commande, cause courte et preuves
+à fournir à Codex. Le lanceur ne tente aucune correction automatique.
 
 Sur ce PC, la tâche Windows `CreatorDeck-Qualite-Mobile` lance le mode rapide
 toutes les quatre heures quand la session de Malik reste ouverte. Elle utilise
@@ -62,8 +118,10 @@ terminé avec le code 0 : installation, lancement, versionCode `872393` →
 `872394` et marqueur conservé. Rapport et captures :
 `reports/android-smoke/2026-10-18T22-24-05-376Z/`. Les captures immédiates du
 script étaient encore sur le chargement ; une capture après attente et l'arbre
-d'accessibilité confirment l'accueil. Installation de release, bandeau de mise
-à jour, données du jeu et vrai téléphone restent non vérifiés. Le runner GitHub auto-hébergé
+d'accessibilité confirment l'accueil. Depuis, Malik a confirmé sur son téléphone
+une mise à jour depuis le bandeau vers l'APK publiée v872721, sans erreur et avec
+ses cartes/réglages conservés. Ce retour n'inclut pas de capture ni de journal
+technique de l'appareil. Le runner GitHub auto-hébergé
 n'est pas installé : exécuter des PR d'un dépôt public sur le PC personnel
 donnerait au code soumis accès à la session Windows. La tâche locale et les
 runners GitHub hébergés couvrent pour l'instant les contrôles sûrs, sans nouveau

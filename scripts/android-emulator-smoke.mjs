@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 // Essai Android local, un seul émulateur déjà démarré. Aucune donnée distante.
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { chromium } from "@playwright/test";
+import { waitForAndroidApp } from "./lib/android-app-ready.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const [initialApk, updateApk] = process.argv.slice(2).map((file) => path.resolve(file));
@@ -40,6 +43,66 @@ async function capture(serial, destination) {
   await writeFile(destination, result.stdout);
 }
 
+async function connectReadyWebView(serial) {
+  const unix = run(["-s", serial, "shell", "cat", "/proc/net/unix"]);
+  const socket = unix.match(/webview_devtools_remote_(\d+)/)?.[0];
+  if (!socket) return { ready: false, detail: "Socket de diagnostic WebView absent." };
+
+  const forwarded = run(["forward", "tcp:0", `localabstract:${socket}`]).trim();
+  const port = Number(forwarded);
+  if (!Number.isInteger(port) || port < 1) return { ready: false, detail: "ADB n’a pas fourni de port de diagnostic." };
+  let browser;
+  try {
+    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 2_000 });
+    const page = browser.contexts().flatMap(context => context.pages())[0];
+    if (!page) throw new Error("Aucun onglet WebView n’est exposé.");
+    await page.waitForFunction(() => {
+      const nav = document.querySelector('nav[aria-label="Navigation principale"]');
+      const labels = nav?.innerText ?? "";
+      return nav?.getBoundingClientRect().height > 0
+        && ["Drop", "Binder", "Atelier", "Toi"].every(label => labels.includes(label));
+    }, null, { timeout: 1_500 });
+    return { ready: true, detail: "Navigation principale visible dans la WebView.", value: { browser, page, port } };
+  } catch (error) {
+    await browser?.close().catch(() => {});
+    run(["forward", "--remove", `tcp:${port}`]);
+    return { ready: false, detail: String(error.message || error).slice(0, 250) };
+  }
+}
+
+async function openReadyApp(serial) {
+  const result = await waitForAndroidApp({ probe: () => connectReadyWebView(serial), timeoutMs: 60_000, intervalMs: 1_000 });
+  if (!result.ready) throw new Error(`Application Android non prête après ${result.elapsedMs} ms : ${result.lastDetail}`);
+  return { ...result.value, elapsedMs: result.elapsedMs };
+}
+
+async function exerciseApp(page) {
+  const welcome = page.getByRole("dialog", { name: "Mes chaînes" });
+  if (await welcome.isVisible().catch(() => false)) {
+    await welcome.getByRole("button", { name: "Voir mon premier booster" }).click();
+  }
+  const nav = page.getByRole("navigation", { name: "Navigation principale" });
+  const path = [];
+  for (const [label, heading] of [["Binder", "Mon classeur"], ["Atelier", "Atelier"], ["Drop", null]]) {
+    const button = nav.getByRole("button", { name: label, exact: true });
+    await button.click();
+    if (heading) await page.getByRole("heading", { name: heading }).waitFor({ state: "visible", timeout: 10_000 });
+    if (await button.getAttribute("aria-current") !== "page") throw new Error(`L’onglet ${label} n’est pas devenu actif.`);
+    path.push(label);
+  }
+  const savedValue = await page.evaluate(() => {
+    const entry = Object.entries(localStorage).find(([key]) => /^creatordeck\.save\.v\d+$/.test(key));
+    return entry?.[1] ?? null;
+  });
+  if (!savedValue) throw new Error("Sauvegarde locale du jeu absente après le démarrage.");
+  return { path, saveFingerprint: createHash("sha256").update(savedValue).digest("hex") };
+}
+
+async function closeReadyApp(serial, app) {
+  await app?.browser?.close().catch(() => {});
+  if (app?.port) run(["forward", "--remove", `tcp:${app.port}`]);
+}
+
 async function main() {
   if (!initialApk || !existsSync(initialApk) || !existsSync(adb)) {
     throw new Error("Usage : npm run quality:android -- <premiere.apk> [mise-a-jour.apk] ; Android SDK et APK requis.");
@@ -51,17 +114,23 @@ async function main() {
   const runDir = path.join(root, "reports", "android-smoke", new Date().toISOString().replace(/[:.]/g, "-"));
   await mkdir(runDir, { recursive: true });
   const report = { serial, initialApk: path.basename(initialApk), updateApk: updateApk ? path.basename(updateApk) : null,
-    initialVersion: null, updateVersion: null, launch: "non essayé", markerPreserved: null, captures: [], limits: [
+    initialVersion: null, updateVersion: null, launch: "non essayé", appReadyWaitMs: null,
+    navigation: [], savePreserved: null, markerPreserved: null, captures: [], limits: [
       "La présence d'un marqueur dans les fichiers de l'application ne valide pas les préférences du jeu.",
-      "L'installateur de mise à jour ouvert depuis l'application et le téléphone réel restent à essayer séparément.",
+      "L’installateur du bandeau et le téléphone réel restent à essayer séparément.",
     ] };
+  let app = null;
   try {
     run(["-s", serial, "install", "-r", initialApk]);
     report.initialVersion = installedVersion(serial);
     const start = run(["-s", serial, "shell", "am", "start", "-W", "-n", `${applicationId}/.MainActivity`]);
     if (!start.includes("Status: ok")) throw new Error(`Démarrage Android non confirmé : ${start}`);
     report.launch = "confirmé par ActivityManager";
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    app = await openReadyApp(serial);
+    report.appReadyWaitMs = app.elapsedMs;
+    const initialState = await exerciseApp(app.page);
+    report.navigation = initialState.path;
+    report.initialSaveFingerprint = initialState.saveFingerprint;
     await capture(serial, path.join(runDir, "initial.png"));
     report.captures.push("initial.png");
     if (updateApk) {
@@ -74,9 +143,16 @@ async function main() {
       const marker = run(["-s", serial, "shell", "run-as", applicationId, "ls", "files/creatordeck-quality-marker"]);
       report.markerPreserved = marker.includes("creatordeck-quality-marker");
       if (!report.markerPreserved) throw new Error("Les fichiers privés ont disparu après install -r.");
+      await closeReadyApp(serial, app);
+      app = null;
       run(["-s", serial, "shell", "am", "force-stop", applicationId]);
-      run(["-s", serial, "shell", "am", "start", "-W", "-n", `${applicationId}/.MainActivity`]);
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const updatedStart = run(["-s", serial, "shell", "am", "start", "-W", "-n", `${applicationId}/.MainActivity`]);
+      if (!updatedStart.includes("Status: ok")) throw new Error(`Relancement Android non confirmé après mise à jour : ${updatedStart}`);
+      app = await openReadyApp(serial);
+      report.appReadyAfterUpdateWaitMs = app.elapsedMs;
+      const updatedState = await exerciseApp(app.page);
+      report.savePreserved = updatedState.saveFingerprint === initialState.saveFingerprint;
+      if (!report.savePreserved) throw new Error("La sauvegarde locale du jeu a changé après install -r.");
       await capture(serial, path.join(runDir, "apres-mise-a-jour.png"));
       report.captures.push("apres-mise-a-jour.png");
     }
@@ -86,6 +162,7 @@ async function main() {
     report.error = String(error.message || error).slice(0, 500);
     process.exitCode = 1;
   }
+  await closeReadyApp(serial, app).catch(() => {});
   await writeFile(path.join(runDir, "result.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
   console.log(path.join(runDir, "result.json"));
   if (!report.ok) console.error(report.error);

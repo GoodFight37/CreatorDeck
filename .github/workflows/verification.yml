@@ -55,6 +55,9 @@ jobs:
       - name: Tests unitaires
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm test
+      - name: Contrats de l'orchestration autonome
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: npm run test:autonomy
       - name: Scénarios et captures d'écrans
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run ecrans
@@ -198,3 +201,44 @@ jobs:
             test-results/
           if-no-files-found: warn
           retention-days: 7
+
+  diagnostic:
+    name: Résumer un échec (sans IA)
+    if: >-
+      always() &&
+      (needs.quality.result == 'failure' || needs.supabase.result == 'failure' ||
+      needs.navigateur.result == 'failure' || needs.navigateur-cloud.result == 'failure')
+    needs: [quality, supabase, navigateur, navigateur-cloud]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Récupérer la révision vérifiée
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Récupérer les rapports Playwright des jobs en échec
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: creatordeck-playwright-report-*
+          path: incident/playwright
+          merge-multiple: true
+          run-id: ${{ github.run_id }}
+          github-token: ${{ github.token }}
+      - name: Produire le diagnostic structuré sans IA
+        env:
+          CREATORDECK_JOBS: '{"quality":"${{ needs.quality.result }}","supabase":"${{ needs.supabase.result }}","navigateur":"${{ needs.navigateur.result }}","navigateur-cloud":"${{ needs.navigateur-cloud.result }}"}'
+        run: node scripts/ci-incident-report.mjs incident/playwright incident/incident.json
+      - name: Conserver le paquet d'incident et ses preuves Playwright
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creatordeck-incident-${{ github.run_id }}-${{ github.run_attempt }}
+          path: incident/
+          if-no-files-found: warn
+          retention-days: 14
