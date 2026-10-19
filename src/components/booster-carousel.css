@@ -10,7 +10,9 @@
   width: var(--drop-pack-size); height: calc(var(--drop-pack-size) * 1.4667);
   z-index: 1; opacity: .22; filter: saturate(.55) brightness(.75);
   transform: translateX(calc(-50% + var(--booster-offset) * 145%)) scale(.52) rotateY(-12deg);
-  transition: transform 360ms cubic-bezier(.2,.7,.2,1), opacity 300ms ease, filter 300ms ease;
+  /* z-index bascule à mi-course : le sachet qui arrive ne passe devant
+     qu'une fois l'autre assez reculé, sinon il le traverse. */
+  transition: transform 360ms cubic-bezier(.2,.7,.2,1), opacity 300ms ease, filter 300ms ease, z-index 0s linear 180ms;
 }
 .booster-pack-slot[data-active="true"] {
   z-index: 2; opacity: 1; filter: none;
