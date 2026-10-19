@@ -110,8 +110,10 @@ jobs:
           gh release create "$TAG" creatordeck.apk latest.json --repo "$RELEASE_REPO" \
             --title "CreatorDeck ${SHA:0:7}" \
             --notes "APK de test construite depuis GoodFight37/CreatorDeck@$SHA (main vérifiée). Version $CODE."
-          # Garder les dernières releases seulement.
-          gh release list --repo "$RELEASE_REPO" --limit 100 --json tagName,createdAt \
-            --jq 'sort_by(.createdAt) | reverse | .[].tagName' |
+          # Garder les dernières releases seulement, triées par versionCode (le tag).
+          # createdAt vaut la date du commit du dépôt de releases, identique pour
+          # toutes : à égalité, la release qu'on venait de publier était supprimée.
+          gh release list --repo "$RELEASE_REPO" --limit 100 --json tagName \
+            --jq 'map(select(.tagName | test("^v[0-9]+$"))) | sort_by(.tagName | ltrimstr("v") | tonumber) | reverse | .[].tagName' |
             tail -n +"$((KEEP_RELEASES + 1))" |
             while read -r old; do gh release delete "$old" --repo "$RELEASE_REPO" --yes --cleanup-tag; done
