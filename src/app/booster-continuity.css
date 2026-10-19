@@ -931,3 +931,33 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 }
 [data-card-fx="off"] .booster-foil-open .foil-chamber-mask { animation: none; }
 @media (prefers-reduced-motion: reduce) { .booster-foil-open .foil-chamber-mask { animation: none; } }
+
+/* D-155 — moins de texte répété, un résumé qui désigne sa meilleure carte. */
+.reveal-meta-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+@media (max-width: 480px) {
+  /* Sans « meilleure carte » : trois par rang, le dernier rang centré (pas calé à gauche). */
+  .reveal-game .reveal-summary-grid:not(.has-best) { display: flex; flex-wrap: wrap; justify-content: center; }
+  .reveal-game .reveal-summary-grid:not(.has-best) > .reveal-summary-card { flex: 0 0 calc((100% - 20px) / 3); }
+}
+/* Avec une carte Rare ou mieux : elle occupe la moitié gauche, les quatre autres se rangent à droite. */
+.reveal-game .reveal-summary-grid.has-best {
+  grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 10px;
+  width: min(100%, 380px); margin-inline: auto;
+}
+.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card .summary-card-art { max-width: none; }
+.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card.is-best {
+  grid-column: 1 / span 2; grid-row: 1 / span 2; order: -1;
+}
+.reveal-game .reveal-summary-card.is-best .summary-card-art {
+  box-shadow: 0 0 0 1px var(--rarity, rgb(255 255 255 / .3)),
+    0 18px 38px -14px color-mix(in srgb, var(--rarity, #fff) 70%, transparent);
+}
+.reveal-game .reveal-summary-card.is-best .reveal-summary-card-name { font-size: 15px; }
+.reveal-game .reveal-summary-card.is-best .reveal-summary-card-rarity { font-size: 12px; }
+.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card:not(.is-best) .reveal-summary-card-name {
+  overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal;
+}
+.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card:not(.is-best) .reveal-summary-card-rarity { font-size: 10px; }

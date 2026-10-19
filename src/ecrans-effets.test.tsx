@@ -213,7 +213,7 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 booster");
     expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("1 nouvelle");
-    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("BOOSTER PERFECT");
+    expect(document.querySelector(".reveal-summary-copy")?.textContent).not.toMatch(/BOOSTER|RÉCAP/);
     expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("Cinq cartes d'exception");
     expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("5 cartes Épiques ou mieux · 1 nouvelle");
     banc.ecran("12-perfect-recap");

@@ -1,3 +1,16 @@
+## D-155 — 19 octobre 2026 : moins de texte répété, résumé qui désigne sa meilleure carte (publié)
+
+Suite à l'audit Impeccable du Binder et de la révélation. La ligne « rareté ·
+région » sous une carte révélée répétait celle imprimée sur la carte : elle reste
+pour les lecteurs d'écran, plus à l'œil. Dans le Binder, le nom n'est plus répété
+sous une carte possédée (il l'est seulement sous une carte à découvrir, qui ne
+l'imprime pas). Résumé de booster : plus de surtitre (« BOOSTER OUVERT »,
+« PACK TUTORIEL », « BOOSTER PERFECT » : le titre dit déjà la même chose) ; quand
+le booster compte une carte Rare ou mieux, elle passe en grand à gauche et les
+quatre autres se rangent à droite ; quand tout est nouveau, plus d'étiquette
+NOUVELLE sur chaque portrait (le titre « 5 nouvelles » le dit) ; sans carte
+d'exception, trois par rang, dernier rang centré. Aucune règle de jeu changée.
+
 ## D-154 — 19 octobre 2026 : le sachet contient les cartes, façon TCG de poche (publié)
 
 Demande de Malik : le même concept de booster que Pokémon TCG Pocket, un sachet

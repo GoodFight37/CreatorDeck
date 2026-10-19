@@ -136,7 +136,8 @@ test("les noms longs et les pochettes restent lisibles à 320 et 390 px", async 
   await page.getByRole("textbox", { name: "Rechercher un créateur" }).fill(longName.displayName);
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
-    const caption = page.locator(".binder-card-caption strong");
+    // Le nom est imprimé sur la carte (plus répété dans la légende d'une carte possédée).
+    const caption = page.locator(".collection-grid .creator-card h3");
     await expect(caption).toHaveText(longName.displayName);
     expect(await caption.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);

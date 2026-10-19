@@ -29,7 +29,9 @@ describe("étape 3 : le Binder au service de mon cercle", () => {
   const setCircle = (slugs: string[]) =>
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs, at: 1 }));
   const pressedChip = () => document.querySelector<HTMLButtonElement>('.filter-chips button[aria-pressed="true"]')!.textContent;
-  const gridNames = () => [...document.querySelectorAll(".collection-grid .binder-card-caption strong")].map((node) => node.textContent);
+  // Une carte possédée imprime son nom (h3) ; seule une carte à découvrir le porte dans sa légende.
+  const gridNames = () => [...document.querySelectorAll(".collection-grid .binder-pocket")]
+    .map((pocket) => (pocket.querySelector(".binder-card-caption strong") ?? pocket.querySelector(".creator-card h3"))?.textContent);
 
   it("s'ouvre sur « Mon cercle », dans l'ordre du joueur, avec l'objectif du cercle", async () => {
     setCircle(CIRCLE);

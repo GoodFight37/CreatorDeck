@@ -90,6 +90,15 @@ export function RevealOverlay({
   const perfect = isPerfect(cards);
   const rarity = card?.rarity ?? "common";
   const newCardCount = cards.filter((item) => item.isNew).length;
+  // Tout est nouveau : le titre le dit, pas besoin de cinq étiquettes sur les portraits.
+  const allNew = newCardCount === cards.length;
+  // La meilleure carte (Rare ou mieux) passe en grand dans le résumé d'un booster de cinq.
+  const bestId = (() => {
+    if (cards.length !== 5) return null;
+    const rank = (rarity: string) => ["common", "uncommon", "rare", "epic", "legendary"].indexOf(rarity);
+    const best = cards.reduce((top, item) => (rank(item.rarity) > rank(top.rarity) ? item : top), cards[0]);
+    return rank(best.rarity) >= 2 ? best.id : null;
+  })();
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryReady, setSummaryReady] = useState(false);
@@ -369,16 +378,15 @@ export function RevealOverlay({
       ) : showSummary ? (
         <section className="reveal-summary" aria-label="Résumé du booster">
           <div className="reveal-summary-copy" aria-live="polite">
-            <span>{tutorial ? "PACK TUTORIEL" : perfect ? "BOOSTER PERFECT" : "BOOSTER OUVERT"}</span>
             <h2>{tutorial ? "À toi de collectionner" : perfect ? "Cinq cartes d'exception" : `${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}`}</h2>
             <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : perfect ? `${cards.length} cartes Épiques ou mieux · ${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}` : `${cards.length} cartes dans ta collection`}</p>
           </div>
-          <div className="reveal-summary-grid">
+          <div className={`reveal-summary-grid${bestId ? " has-best" : ""}`}>
             {cards.map((item, summaryIndex) => {
               const itemCreator = creatorFor(item.creatorSlug);
               if (!itemCreator) return null;
               return (
-                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>
+                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}${item.id === bestId ? " is-best" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>
                   <CreatorCard
                     creator={itemCreator}
                     variant={item.variant}
@@ -388,7 +396,7 @@ export function RevealOverlay({
                   <span className="reveal-summary-card-name">{itemCreator.displayName}</span>
                   <span className="reveal-summary-card-rarity">{RARITY_META[item.rarity].label}</span>
                   {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
-                  {item.isNew ? <i aria-label="Nouvelle carte">NOUVELLE</i> : null}
+                  {item.isNew && !allNew ? <i aria-label="Nouvelle carte">NOUVELLE</i> : null}
                 </div>
               );
             })}
@@ -465,7 +473,8 @@ export function RevealOverlay({
           </div>
           <div className="reveal-name">
             {circleLabel(circle, card.creatorSlug) ? <span>{circleLabel(circle, card.creatorSlug)}</span> : null}
-            <p>
+            {/* Déjà imprimé sur la carte : lu par les lecteurs d'écran, pas répété à l'œil. */}
+            <p className="reveal-meta-sr">
               {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
             </p>
             {onAir ? (

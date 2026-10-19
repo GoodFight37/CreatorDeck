@@ -239,11 +239,16 @@ test("les cinq dos se posent avant le reveal et le récapitulatif attend le joue
   await expect(pack.locator(".reveal-summary-card")).toHaveCount(5);
   const summary = pack.locator(".reveal-summary-grid");
   const geometry = await summary.evaluate((node) => ({
-    columns: getComputedStyle(node).gridTemplateColumns.split(" ").length,
+    best: node.classList.contains("has-best"),
+    // Grille : colonnes déclarées ; sinon (rangs centrés) : cartes qui tiennent sur une ligne.
+    columns: getComputedStyle(node).display === "grid"
+      ? getComputedStyle(node).gridTemplateColumns.split(" ").length
+      : Math.floor(node.clientWidth / node.querySelector(".reveal-summary-card")!.getBoundingClientRect().width),
     width: document.documentElement.scrollWidth,
     viewport: window.innerWidth,
   }));
-  expect(geometry.columns).toBe(geometry.viewport <= 480 ? 3 : 5);
+  // Une carte Rare ou mieux passe en grand : 4 colonnes (elle en prend 2), sinon 3 ou 5 selon l'écran.
+  expect(geometry.columns).toBe(geometry.best ? 4 : geometry.viewport <= 480 ? 3 : 5);
   expect(geometry.width).toBe(geometry.viewport);
   await pack.locator(".reveal-summary-grid").evaluate(async (node) => {
     await Promise.all([...node.querySelectorAll(".reveal-summary-card")]

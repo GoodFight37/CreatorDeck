@@ -493,7 +493,8 @@ export function CollectionView({
                     ) : null}
                   </div>
                   <span className="binder-card-caption" aria-hidden="true">
-                    <strong>{creator.displayName}</strong>
+                    {/* Une carte possédée imprime déjà son nom : on ne le répète que pour une carte à découvrir. */}
+                    {!item ? <strong>{creator.displayName}</strong> : null}
                     <small>{RARITY_META[creator.rarity].label}{!item ? " · À découvrir" : item.bestVariant !== "standard" ? ` · ${VARIANT_META[item.bestVariant].label}` : ""}</small>
                   </span>
                   {circleLabel(circle, creator.slug) ? <small>{circleLabel(circle, creator.slug)}</small> : null}
