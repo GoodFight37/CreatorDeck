@@ -451,7 +451,11 @@
 .home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
 /* La pile : les dos des paquets qu'on a encore, derrière celui de devant. */
-.pack-pile { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.pack-pile { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  /* Le sachet est en preserve-3d : z-index n'y trie rien. À z = 0, la pile
+     passait devant le haut du sachet dès qu'il basculait en arrière (repos,
+     appui), surtout dans la WebView Android. 60 px derrière, aucun doute. */
+  transform: translateZ(-60px); }
 .pack-pile-back {
   position: absolute; inset: 1.5% 3%;
   border-radius: 7px;
@@ -554,10 +558,19 @@
   font: 700 min(11vw, 60px)/.9 var(--font-display); letter-spacing: .01em; text-transform: uppercase;
   text-shadow: 0 0 22px var(--rarity-glow, rgb(255 255 255 / .3)), 0 3px 12px rgb(0 0 0 / .9);
   opacity: 0;
-  animation: reveal-big-name 420ms cubic-bezier(.2, .8, .2, 1) calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 260ms) both;
+  animation: reveal-big-name 1500ms cubic-bezier(.2, .8, .2, 1) calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 260ms) both;
 }
-@keyframes reveal-big-name { from { opacity: 0; transform: translateY(10px) scale(.96); } to { opacity: 1; transform: none; } }
-.reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 14px + min(11vw, 60px)); }
+/* Un moment, pas un doublon du nom déjà imprimé sur la carte : il monte, tient
+   environ 0,8 s, puis s'efface et laisse la légende reprendre sa place. */
+@keyframes reveal-big-name {
+  0% { opacity: 0; transform: translateY(10px) scale(.96); }
+  20%, 72% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+.reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name {
+  animation: reveal-name-after 280ms ease-out calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 1660ms) both;
+}
+@keyframes reveal-name-after { from { opacity: 0; } to { opacity: 1; } }
 /* Doublon : pas de scène rejouée, la carte rejoint la pile. */
 .reveal-game .reveal-stage.is-duplicate .reveal-flip,
 .reveal-game .reveal-stage.is-duplicate .reveal-flip-face { animation: none; }
@@ -588,7 +601,11 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .reveal-new-flash { display: none; }
-  .reveal-game .reveal-big-name, .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: none; opacity: 1; }
+  .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: none; opacity: 1; }
+  /* Sans mouvement, pas de moment : le nom resterait un doublon. */
+  .reveal-game .reveal-big-name { display: none; }
+  .reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { animation: none; }
 }
 [data-card-fx="off"] .reveal-new-flash { display: none; }
-[data-card-fx="off"] .reveal-game .reveal-big-name { animation: none; opacity: 1; }
+[data-card-fx="off"] .reveal-game .reveal-big-name { display: none; }
+[data-card-fx="off"] .reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { animation: none; }

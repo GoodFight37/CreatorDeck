@@ -581,9 +581,9 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
     rotate(var(--reveal-drag-rotate, 0deg));
 }
 .reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: preserve-3d; }
-.reveal-game .reveal-stage .reveal-card {
-  filter: drop-shadow(0 22px 26px rgb(0 0 0 / .62)) drop-shadow(0 8px 10px rgb(0 0 0 / .42));
-}
+/* Pas de filter: drop-shadow sur la carte qui se retourne : il aplatit la 3D et
+   la fait repeindre à chaque image (saccades dans la WebView Android). Son
+   ombre portée vient déjà de sa box-shadow. */
 .reveal-game .reveal-stage .reveal-flip.rarity-common { animation: common-card-arrive 440ms cubic-bezier(.2,.7,.24,1) both; }
 .reveal-game .reveal-stage .reveal-flip.rarity-uncommon { animation: common-card-arrive 520ms cubic-bezier(.2,.7,.24,1) both; }
 .reveal-game .reveal-stage .reveal-flip.rarity-rare { animation: rare-card-punch 650ms cubic-bezier(.18,.8,.2,1) both; }
