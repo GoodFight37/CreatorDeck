@@ -555,12 +555,12 @@
 .reveal-game .reveal-stage.is-duplicate .reveal-flip,
 .reveal-game .reveal-stage.is-duplicate .reveal-flip-face { animation: none; }
 .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: reveal-dupe-join 520ms cubic-bezier(.2, .8, .2, 1) both; }
-@keyframes reveal-dupe-join { from { opacity: 0; transform: translate(-50%, -46%) scale(.9); } to { opacity: 1; transform: translate(-50%, -50%) scale(.78); } }
-.reveal-game .reveal-stage.is-duplicate > .reveal-anchor { transform: translate(-50%, -50%) scale(.78); }
-.reveal-dupe-note {
-  position: absolute; left: 0; right: 0; z-index: 4;
-  top: calc(var(--scene-center) - var(--scene-card-height) * .39 - 34px);
-  color: var(--muted); font-size: 12px; letter-spacing: .08em; text-align: center; text-transform: uppercase;
+/* Pleine taille, comme la carte extraite du sachet : réduite, elle se lisait
+   comme une carte au rabais ou un bug. L'étiquette DOUBLON dit le statut. */
+@keyframes reveal-dupe-join { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } to { opacity: 1; transform: translate(-50%, -50%); } }
+.reveal-game .reveal-stage > .new-badge.is-owned {
+  background: rgb(10 10 16 / .72); color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 .reveal-dupe-pile {
   position: absolute; z-index: 4; left: 18px; bottom: calc(92px + env(safe-area-inset-bottom));

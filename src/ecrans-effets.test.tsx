@@ -519,6 +519,7 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-rare-aura")).toBeNull();
     expect(document.querySelector(".reveal-cinematic-field")).toBeNull();
     expect(document.querySelector(".reveal-dupe-pile")?.getAttribute("aria-label")).toBe("Doublons de ce booster : 1");
+    expect(document.querySelector(".new-badge.is-owned")?.textContent).toContain("DOUBLON");
     // Pas de retournement à attendre : la carte est lisible tout de suite.
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(false);
@@ -531,7 +532,7 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
     expect(document.querySelector(".reveal-rare-aura")).not.toBeNull();
     expect(document.querySelector(".reveal-new-flash")).toBeNull();
-    expect(document.querySelector(".reveal-dupe-note")).not.toBeNull();
+    expect(document.querySelector(".new-badge.is-owned")?.textContent).toContain("DOUBLON");
     // Le retournement se joue : la carte suivante attend la fin de la scène.
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);

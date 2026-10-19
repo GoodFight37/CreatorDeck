@@ -11,7 +11,7 @@
  */
 import { useEffect, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, ChevronRight, Share2, Sparkles, X, Zap } from "lucide-react";
+import { BookOpen, ChevronRight, Copy, Share2, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
 import { EffectFlash } from "@/components/effect-burst";
@@ -431,7 +431,8 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          {alreadyOwned ? <span className="reveal-dupe-note">Déjà dans ta collection · rejoint la pile</span> : null}
+          {/* Même emplacement que NOUVELLE : la carte garde sa taille, l'étiquette dit si on l'a déjà. */}
+          {alreadyOwned ? <span className="new-badge is-owned"><Copy size={12} /> DOUBLON</span> : null}
           <div
             ref={anchorRef}
             style={glowStyle}

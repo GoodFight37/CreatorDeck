@@ -7,6 +7,9 @@ toujours la scène et rejoint la pile ; un doublon rare, épique ou légendaire
 garde retournement, aura et bandeau « carte d'exception », sans le flash de
 nouveauté, avec la mention « Déjà dans ta collection ». Une légendaire tirée en
 doublon s'affichait jusqu'ici comme une commune. Aucune règle de tirage changée.
+Doublon affiché pleine taille (plus de réduction à 78 %, lue comme une carte
+au rabais) avec l'étiquette DOUBLON au même emplacement que NOUVELLE ; la
+phrase « Déjà dans ta collection · rejoint la pile » est retirée.
 
 ## D-151 — 18 octobre 2026 : lire versionCode quel que soit son type (publié)
 
