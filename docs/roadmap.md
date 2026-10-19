@@ -6,15 +6,15 @@ et publication : checkpoint de reprise.
 
 ## État actuel — 19 octobre 2026
 
-### Qualité autonome phase 2 — locale, non publiée
+### Qualité autonome phase 2 — publiée sur `main`
 
-- Checkout `codex/autonomous-tests` au SHA `13ed8945fddbd23772031c755ec97c0667f7913e`; GitHub `main` confirmé à `ad360bd9278f84dc54e0942c838c931e54b6558e`. La lecture `git ls-remote` échoue dans cette session (DNS GitHub); aucune modification phase 2 n’est publiée ni passée en CI/Vercel/APK.
+- PR #14 fusionnée : commit de code `abd093973c4407876d155637794851d5ac1d3d73`; SHA `main` `21ef428ed4455cd086d4a133d911489f3e110140`. CI PR `39179902283` et main `39180481883` vertes. Vercel Production `READY` sur le SHA de main. Release APK `v872830` publiée après vérification verte du même SHA (run `39180896682`); workflow Supabase `39180896697` vert.
 - 14 tests Node d’orchestration verts; `npm test -- --maxWorkers=2` passe 1 301/1 301 (94 fichiers); typecheck, ESLint ciblé, syntaxe et parse YAML verts. Le build Next.js 16.3.6 génère les six pages statiques sans configuration cloud.
 - `npm run quality:mobile` passe en manuel et via la tâche Windows planifiée : 7/7 E2E dans les deux rapports (`2026-10-18T23-55-53-846Z-13ed8945` et `2026-10-19T00-11-58-241Z-13ed8945`). La tâche est `Ready`, toutes les 4 h, compte Administrator en mode limité; déclenchement réel `LastTaskResult=0`.
-- Le smoke Android a échoué deux fois après le boot, ADB perdant `emulator-5554` pendant le lancement/app readiness. Rapports sous `reports/android-smoke/2026-10-19T00-03-36-853Z/` et `00-06-04-241Z/`. Aucun résultat sur la mise à jour APK 872393→872394 ou la sauvegarde; l’émulateur existant n’a pas été effacé.
+- Le smoke Android a échoué trois fois après le boot, ADB perdant `emulator-5554` pendant le lancement/app readiness. Rapports sous `reports/android-smoke/2026-10-19T00-03-36-853Z/`, `00-06-04-241Z/` et `00-09-49-572Z/`. Aucun résultat sur la mise à jour APK 872393→872394 ou la sauvegarde; l’émulateur existant n’a pas été effacé.
 - Les erreurs persistantes produisent un incident local dédupliqué et un paquet de reprise; aucun appel Codex/Claude, correctif ou ticket automatique. Les scénarios artificiels valident le classifieur et le registre, pas un vrai bug de l’application.
-- Le job CI d’échec produit un artefact structuré sans IA. L’APK est désormais déclenchée seulement après une Vérification réussie sur `main`; `workflow_dispatch` est retiré. Tests unitaires locaux, workflow GitHub pas encore rejoué.
-- Auto-hébergé : aucun processus runner observé; services non inspectables avec les privilèges de cette session. Tâche Windows non trouvée par `Get-ScheduledTask` ici. Android : attente réelle WebView et navigation Binder/Atelier/Drop ajoutées, mais ADB/émulateur non accessibles dans cette session; validation APK mise à jour non exécutée.
+- Le job CI d’échec produit un artefact structuré sans IA. Le workflow APK ne s’exécute qu’après une Vérification réussie sur `main`; il a publié v872830. `workflow_dispatch` est retiré. Le chemin de diagnostic sur une vraie CI échouée reste non exercé (aucun échec n’a eu lieu).
+- Runner auto-hébergé : aucun processus/service GitHub Actions runner observé. Tâche Windows `CreatorDeck-Qualite-Mobile` installée, `Ready`, compte Administrator en mode limité; exécution réelle confirmée. Android : attente réelle WebView et navigation Binder/Atelier/Drop ajoutées, mais l’émulateur perd ADB; validation mise à jour non exécutée.
 - Diagnostic téléphone toujours opt-in local, sans collecte distante ni donnée personnelle. Les changements locaux sont décrits dans [qualité autonome](qualite-autonome.md), [D-153/D-154](decisions.md) et le premier checkpoint de passation.
 
 ### Qualité autonome — publiée sur `main` `ad360bd9`

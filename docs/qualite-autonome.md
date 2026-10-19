@@ -1,6 +1,16 @@
-# Qualité autonome — phase 2 locale, 19 octobre 2026
+# Qualité autonome — phase 2 publiée, 19 octobre 2026
 
 ## État vérifié dans cette reprise
+
+- Commit de code `abd093973c4407876d155637794851d5ac1d3d73` ; PR
+  [#14](https://github.com/GoodFight37/CreatorDeck/pull/14) fusionnée dans
+  `main` au SHA `21ef428ed4455cd086d4a133d911489f3e110140`.
+  Vérifications PR [39179902283](https://github.com/GoodFight37/CreatorDeck/actions/runs/39179902283)
+  et main [39180481883](https://github.com/GoodFight37/CreatorDeck/actions/runs/39180481883)
+  réussies. Supabase [39180896697](https://github.com/GoodFight37/CreatorDeck/actions/runs/39180896697)
+  réussi. APK [v872830](https://github.com/GoodFight37/creatordeck-apk/releases/tag/v872830)
+  publiée par le run [39180896682](https://github.com/GoodFight37/CreatorDeck/actions/runs/39180896682).
+  Vercel Production est `READY` sur le SHA de `main`.
 
 - Les contrôles `npm run test:autonomy` couvrent
   14 contrats Node : provenance APK, rapport CI, attente Android, retry local,
@@ -30,15 +40,16 @@
   aucune correction ni publication n’est lancé par ce code.
 - La CI produit un petit artefact sans IA ni ticket si un job échoue, avec le
   SHA, le lien du run, les jobs échoués et les noms de scénarios Playwright
-  expurgés. Cette modification locale n’a pas encore tourné dans GitHub Actions.
+  expurgés. Les jobs de Vérification ont réussi; aucun artefact d’échec n’a été
+  généré car aucun job n’a échoué.
 - `.github/workflows/apk.yml` n’a plus de `workflow_dispatch`. La publication
   reste automatique après une Vérification réussie sur le push `main`; pour
   reprendre une APK échouée, relancer le job du run APK original. Le garde de
-  provenance a 3 tests locaux; le workflow n’a pas encore été exécuté après ce
-  changement.
+  provenance a 3 tests locaux; le run APK `39180896682` a confirmé la Vérification
+  verte du même SHA et a publié la release `v872830`.
 - `js-yaml` parse localement les deux workflows (APK : 2 jobs; Vérification :
-  5 jobs), sans erreur. Aucun run GitHub n’a validé les expressions ou
-  permissions en conditions réelles.
+  5 jobs), sans erreur. Vérification, workflow Supabase et workflow APK ont
+  tous été exécutés avec succès après le merge.
 - `codex` est installé et connecté dans cette session; la CLI Claude aussi.
   Aucun appel modèle n’a été fait. L’auto-correction reste désactivée tant que
   l’isolation hors ligne et l’exécution de tests dans un export séparé ne sont
@@ -47,11 +58,12 @@
   événements, effaçables et sans contenu/URL/identité. Aucune télémétrie
   distante ni donnée personnelle n’est ajoutée.
 - Aucun service Runner GitHub auto-hébergé n’est installé. Le SDK/AVD, eux,
-  existent. Le smoke test Android a échoué deux fois après boot : l’émulateur
+  existent. Le smoke test Android a échoué trois fois après boot : l’émulateur
   disparaît pendant l’attente WebView ou le lancement de l’activité, et ADB
   renvoie `device 'emulator-5554' not found`. Rapports :
-  `reports/android-smoke/2026-10-19T00-03-36-853Z/result.json` et
-  `reports/android-smoke/2026-10-19T00-06-04-241Z/result.json`. Version 872394,
+  `reports/android-smoke/2026-10-19T00-03-36-853Z/result.json`,
+  `reports/android-smoke/2026-10-19T00-06-04-241Z/result.json` et
+  `reports/android-smoke/2026-10-19T00-09-49-572Z/result.json`. Version 872394,
   navigation et conservation de la sauvegarde après mise à jour non validées.
 
 # Qualité mobile autonome — état de la phase 1 (18 octobre 2026)
