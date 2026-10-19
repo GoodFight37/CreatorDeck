@@ -424,6 +424,9 @@
   --drop-stage-pt: clamp(48px, calc(24dvh - 78px), 200px);
   --drop-stage-pb: 0px;
   margin: 0 -18px; background: none; touch-action: pan-y pinch-zoom;
+  /* Rogner seulement sur les côtés (le voisin) : l'ombre ambiante du sachet
+     déborde sous la scène au lieu d'être coupée net. */
+  overflow-x: clip; overflow-y: visible;
 }
 .home-view .booster-selector .pack-stage.stage-live::before,
 .home-view .booster-selector .pack-stage.stage-live::after { content: none; }
@@ -441,9 +444,9 @@
 .home-view .booster-selector .booster-pack-slot[data-active="true"] { transform: translateX(-50%); opacity: 1; filter: none; }
 /* Le paquet de devant : un objet qu'on presse. Pas de filtre sur le bouton :
    il aplatirait les faces 3D du sachet. L'ombre vit sur .pack-shadow. */
-.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 120ms ease-out; }
+.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 100ms cubic-bezier(0.23, 1, 0.32, 1); }
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
-  transform: perspective(900px) rotateY(-7deg) rotateX(9deg) translateY(5px) scale(.955);
+  transform: perspective(900px) rotateY(-7deg) rotateX(4deg) scale(.97);
 }
 .home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }

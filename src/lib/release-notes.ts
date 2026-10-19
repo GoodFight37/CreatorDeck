@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-19-sachet-net", date: "2026-10-19", title: "Un paquet plus net qui respire",
+    summary: "Sur l’accueil, le paquet est imprimé net et son ombre suit son flottement.",
+    sections: [{ title: "Accueil", items: [
+      "Les textes du paquet ne sont plus flous ni crénelés, même pendant qu’il flotte.",
+      "Quand le paquet monte, son ombre s’étale et pâlit ; elle n’est plus coupée en bas.",
+      "Appuyer dessus l’enfonce légèrement, tout de suite, sans le basculer.",
+    ] }],
+  },
+  {
     id: "2026-10-18-diagnostic-local", date: "2026-10-18", title: "Un diagnostic à partager si tu le souhaites",
     summary: "Dans Toi, tu peux activer un journal local des erreurs et lenteurs.",
     sections: [{ title: "Confidentialité", items: [

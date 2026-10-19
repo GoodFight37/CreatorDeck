@@ -45,7 +45,10 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(page.locator(".open-panel .stock-row")).not.toContainText("/4");
   expect(Number.parseFloat(await page.locator(".open-panel .stock-row strong").evaluate((node) => getComputedStyle(node).fontSize))).toBeLessThanOrEqual(14);
   await expect(pack.locator(".pack-pile-back")).toHaveCount(Math.max(0, Math.min(3, stock - 1)));
-  expect(["clip", "hidden"]).toContain(await page.locator(".pack-stage").evaluate((node) => getComputedStyle(node).overflow));
+  // Le voisin est rogné sur les côtés ; l'ombre ambiante du sachet n'est pas coupée en bas.
+  const stageOverflow = await page.locator(".pack-stage").evaluate((node) => ({ x: getComputedStyle(node).overflowX, y: getComputedStyle(node).overflowY }));
+  expect(["clip", "hidden"]).toContain(stageOverflow.x);
+  expect(stageOverflow.y).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
   const side = pack.locator(".pack-3d-side-left");
@@ -58,8 +61,10 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.screenshot({ path: `test-results/drop-390x844-${test.info().project.name}.png` });
   await expect(pack.locator(".pack-idle")).toHaveCSS("animation-name", "drop-pack-idle");
+  await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "drop-pack-shadow-idle");
   await page.emulateMedia({ reducedMotion: "reduce" });
   await expect(pack.locator(".pack-idle")).toHaveCSS("animation-name", "none");
+  await expect(page.locator(".pack-stage .pack-shadow")).toHaveCSS("animation-name", "none");
   expect(await pack.locator(".pack-specular").evaluate((node) => getComputedStyle(node).animationName)).toBe("none");
 
   await page.locator(".open-panel").evaluate((panel) => {
@@ -90,6 +95,10 @@ test("l'ombre suit le sachet et la pression ne relance pas son arrivée", async 
   const box = (await pack.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
+  // Pression : 0,97 atteint en 100 ms.
+  await page.waitForTimeout(140);
+  const pressedScale = await pack.evaluate((node) => { const m = new DOMMatrix(getComputedStyle(node).transform); return Math.hypot(m.m11, m.m12, m.m13); });
+  expect(Math.abs(pressedScale - .97)).toBeLessThan(.003);
   await page.mouse.move(box.x + box.width / 2 - 20, box.y + box.height / 2);
   await page.mouse.up();
   await expect(pack).toHaveCSS("animation-name", "drop-pack-arrive");

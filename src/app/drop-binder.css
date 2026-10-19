@@ -666,9 +666,18 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  transform: translateZ(9px);
   box-shadow: none;
-  filter: drop-shadow(2px 14px 9px rgb(0 0 0 / .42));
+  overflow: visible;
+  /* Chromium rastérise une face en perspective (et animée) en basse définition :
+     l'impression devenait crénelée ou floue. Dessinée à 150 % puis réduite,
+     elle reste nette sans quadrupler la texture. */
+  width: 150%;
+  height: 150%;
+  transform: translateZ(9px) scale(calc(2 / 3));
+  transform-origin: 0 0;
+  /* Aucun `filter` sur la face ni sur son image : il en fait une surface aplatie
+     que Chromium trie mal avec la tranche gauche, tracée alors en liseré clair
+     devant les soudures. Le contact au sol reste porté par `.pack-shadow`. */
 }
 .home-view .pack-stage .pack-3d-side-left {
   left: 2px; width: 9px;
@@ -704,6 +713,12 @@
   background: radial-gradient(ellipse, rgb(0 0 0 / .88) 0 22%, rgb(13 5 12 / .55) 45%, rgb(131 45 65 / .16) 70%, transparent 100%);
   box-shadow: 0 16px 25px 4px rgb(19 5 17 / .3);
   filter: blur(4px);
+  /* Même rythme que `.pack-idle` : le sachet monte, son ombre s'étale et pâlit. */
+  animation: drop-pack-shadow-idle 4.8s ease-in-out 380ms infinite backwards;
+}
+@keyframes drop-pack-shadow-idle {
+  0%, 100% { scale: 1; opacity: .95; }
+  50% { scale: .88 .8; opacity: .72; }
 }
 .home-view .pack-stage.stage-live .pack-shadow::after {
   content: "";
@@ -791,9 +806,11 @@
 .home-view .live-bar-boost { border: 0; background: none; font-size: 10px; }
 @media (prefers-reduced-motion: reduce) {
   .home-view .pack-stage.stage-live .pack-artwork.pack-live,
-  .home-view .pack-idle { animation: none; }
+  .home-view .pack-idle,
+  .home-view .pack-stage.stage-live .pack-shadow { animation: none; }
 }
-[data-card-fx="off"] .home-view .pack-idle { animation: none; }
+[data-card-fx="off"] .home-view .pack-idle,
+[data-card-fx="off"] .home-view .pack-stage.stage-live .pack-shadow { animation: none; }
 .home-view .open-panel:not([data-tutorial="true"]) .drop-secondary-details > summary { display: inline-flex; }
 @media (max-width: 360px) {
   .app-shell[data-current-tab="home"] .currency-chip small,
