@@ -811,3 +811,9 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
 
 /* Le sachet accompagne le reveal, puis laisse la collection occuper le récap. */
 .opening-continuum:has(.reveal-summary-open) .booster-opening-stage { visibility: hidden; }
+
+/* Pendant l'ouverture, la scène modale est opaque : l'accueil reste dessous
+   avec son sachet 3D animé en boucle (repos, ombre, reflet), recomposé à chaque
+   image pour rien. On le masque et on fige ses animations le temps de la scène. */
+body:has(.pack-tear[aria-modal="true"]) .home-view { visibility: hidden; }
+body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: paused; }
