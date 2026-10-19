@@ -1,3 +1,13 @@
+## D-152 — 19 octobre 2026 : révélation, doublons rares mis en scène, plus de grand nom (publié)
+
+Révise la révélation de D-150 à la demande de Malik, après test sur APK.
+Le grand nom sous une nouvelle carte est retiré : il répétait le nom imprimé
+sur la carte ; le flash de rareté reste. Un doublon commun ou peu commun saute
+toujours la scène et rejoint la pile ; un doublon rare, épique ou légendaire
+garde retournement, aura et bandeau « carte d'exception », sans le flash de
+nouveauté, avec la mention « Déjà dans ta collection ». Une légendaire tirée en
+doublon s'affichait jusqu'ici comme une commune. Aucune règle de tirage changée.
+
 ## D-151 — 18 octobre 2026 : lire versionCode quel que soit son type (publié)
 
 « Mettre à jour » affichait toujours « Mise à jour invalide. » : le plugin

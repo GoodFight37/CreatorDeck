@@ -510,9 +510,9 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
   });
 
-  it("un doublon ne rejoue pas la scène : pas de flash ni d'aura, il rejoint la pile", async () => {
+  it("un doublon commun ne rejoue pas la scène : pas de flash ni d'aura, il rejoint la pile", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
-    const doublon = { ...carte("legendary"), isNew: false };
+    const doublon = { ...carte("common"), isNew: false };
     await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon] as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
     expect(document.querySelector(".reveal-stage.is-duplicate")).not.toBeNull();
     expect(document.querySelector(".reveal-new-flash")).toBeNull();
@@ -522,5 +522,18 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     // Pas de retournement à attendre : la carte est lisible tout de suite.
     await act(async () => { await vi.advanceTimersByTimeAsync(1); });
     expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(false);
+  });
+
+  it("une légendaire déjà possédée garde sa mise en scène, sans flash de nouveauté", async () => {
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    const doublon = { ...carte("legendary"), isNew: false };
+    await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon] as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
+    expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
+    expect(document.querySelector(".reveal-rare-aura")).not.toBeNull();
+    expect(document.querySelector(".reveal-new-flash")).toBeNull();
+    expect(document.querySelector(".reveal-dupe-note")).not.toBeNull();
+    // Le retournement se joue : la carte suivante attend la fin de la scène.
+    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
   });
 });

@@ -99,8 +99,11 @@ export function RevealOverlay({
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
-  // Un doublon ne rejoue pas la scène : pas de retournement, il rejoint la pile.
-  const duplicate = Boolean(card) && !tutorial && !perfect && card.isNew === false;
+  const alreadyOwned = Boolean(card) && !tutorial && !perfect && card.isNew === false;
+  // Un doublon commun ou peu commun ne rejoue pas la scène : pas de retournement,
+  // il rejoint la pile. Rare, épique et légendaire gardent toute leur mise en
+  // scène, même déjà possédées (décision de Malik, 19 octobre 2026).
+  const duplicate = alreadyOwned && (card.rarity === "common" || card.rarity === "uncommon");
   const duplicatesSoFar = perfect ? [] : cards.slice(0, index + 1).filter((item) => !tutorial && item.isNew === false);
   const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal);
 
@@ -428,7 +431,7 @@ export function RevealOverlay({
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
           {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          {duplicate ? <span className="reveal-dupe-note">Déjà dans ta collection · rejoint la pile</span> : null}
+          {alreadyOwned ? <span className="reveal-dupe-note">Déjà dans ta collection · rejoint la pile</span> : null}
           <div
             ref={anchorRef}
             style={glowStyle}
