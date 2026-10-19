@@ -93,23 +93,21 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   une reprise ordinaire. Les anciennes recettes de reset/mise à plat ne sont
   pas des autorisations : sauvegarder et vérifier avant toute récupération.
 - Préserver les worktrees existants : `C:/Users/Administrator/Desktop/CreatorDeck`
-  sur `main`, `CreatorDeck-Codex` sur `codex/collaboration` comme seul checkout
-  écrivain, et `CreatorDeck-Claude` sur `claude/review` pour les revues. Ne pas
-  créer, supprimer ni remplacer de worktrees. Claude intervient surtout pour
-  les audits complexes, les revues indépendantes demandées et les bugs difficiles;
-  il rend ses constats sans écrire sur la branche Codex.
-- Pour un bug complexe, un choix technique difficile ou une revue importante,
-  Codex peut lancer `node scripts/delegate-claude.mjs "question ciblée"` depuis
-  `CreatorDeck-Codex`. Le script transmet uniquement le SHA commité de Codex;
-  les changements locaux non commités sont signalés comme hors périmètre et ne
-  sont pas transmis. Le résumé des fichiers du commit cible accompagne la mission.
-  Il avance `claude/review` uniquement en avance rapide si son
-  arbre est propre, appelle `claude -p` avec les seuls outils de lecture, puis
-  consigne demande et réponse dans les deux passations locales existantes.
-  Codex lit le retour et reprend lui-même le travail. Une seule
-  délégation par problème, sauf raison explicite; pas de boucle entre agents ni
-  de revue systématique des petites modifications. Si l'appel échoue, ne pas
-  présenter une revue comme réalisée.
+  sur `main`, `CreatorDeck-Codex` comme checkout de travail à jour, et
+  `CreatorDeck-Claude` sur `claude/review` pour les relectures. Ne pas créer,
+  supprimer ni remplacer de worktrees. Quand Malik demande à Claude de réaliser
+  un chantier, Claude peut modifier les fichiers directement dans
+  `CreatorDeck-Codex` : c'est alors l'unique écrivain de ce checkout jusqu'à sa
+  passation à Codex. Codex ne travaille pas en parallèle sur les mêmes fichiers;
+  il reprend ensuite le diff, exécute les tests et validations adaptés, corrige
+  les problèmes et livre le résultat. Le checkout `CreatorDeck-Claude` reste
+  réservé aux relectures indépendantes, sans écriture sur le travail Codex.
+- Pour une revue indépendante demandée, le script
+  `node scripts/delegate-claude.mjs` reste un outil distinct, en lecture seule,
+  limité au SHA commité et au worktree `claude/review`. Il ne sert pas à déléguer une
+  implémentation. Les appels Claude qui coûtent du quota ou de l'argent ne sont
+  lancés que si Malik les a autorisés pour ce travail ; si un appel échoue, ne
+  pas présenter la revue comme réalisée.
 - Avant de reprendre un worktree, vérifier son état et son HEAD. Synchroniser
   `main`, `codex/collaboration` et `claude/review` uniquement par avance rapide
   quand l’arbre concerné est propre et que l’ancêtre commun est vérifié; sinon
