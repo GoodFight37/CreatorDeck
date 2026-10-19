@@ -18,7 +18,7 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
-import { CREATORS, CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
+import { CREATORS, RARITY_META } from "@/lib/catalog";
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -500,13 +500,13 @@ describe("nuit de direct : nouvelle ou doublon", () => {
   beforeEach(() => { vi.useFakeTimers({ now: T0 }); banc = creerBanc(); banc.preparer(); });
   afterEach(() => { banc.nettoyer(); vi.useRealTimers(); });
 
-  it("une carte nouvelle a son flash de rareté puis son nom", async () => {
+  it("une carte nouvelle a son flash de rareté, sans second nom sous la carte", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     const nouvelle = carte("rare");
     await banc.monter(<RevealOverlay cards={[nouvelle] as never} index={0} onNext={vi.fn()} onClose={vi.fn()} />);
     const flash = document.querySelector<HTMLElement>(".reveal-new-flash")!;
     expect(flash.style.getPropertyValue("--flash-color")).toBe(RARITY_META.rare.color);
-    expect(document.querySelector(".reveal-big-name")?.textContent).toBe(CREATOR_BY_SLUG.get(nouvelle.creatorSlug)!.displayName);
+    expect(document.querySelector(".reveal-big-name")).toBeNull();
     expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
   });
 

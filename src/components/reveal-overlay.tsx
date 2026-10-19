@@ -400,12 +400,10 @@ export function RevealOverlay({
       ) : (
         <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
           {card.isNew && !tutorial ? (
-            // Nouvelle : un flash de la couleur de sa rareté, puis son nom.
-            <>
-              <span key={`new-flash-${card.id}`} className="reveal-new-flash" aria-hidden="true"
-                style={{ ...glowStyle, "--flash-color": RARITY_META[card.rarity].color } as CSSProperties} />
-              <p key={`new-name-${card.id}`} className="reveal-big-name" style={glowStyle}>{creator.displayName}</p>
-            </>
+            // Nouvelle : un flash de la couleur de sa rareté. Pas de second nom :
+            // celui de la carte suffit.
+            <span key={`new-flash-${card.id}`} className="reveal-new-flash" aria-hidden="true"
+              style={{ ...glowStyle, "--flash-color": RARITY_META[card.rarity].color } as CSSProperties} />
           ) : null}
           {duplicatesSoFar.length ? (
             <div className="reveal-dupe-pile" aria-label={`Doublons de ce booster : ${duplicatesSoFar.length}`}>

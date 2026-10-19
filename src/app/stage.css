@@ -551,26 +551,6 @@
   animation: reveal-new-flash 760ms ease-out calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) * .72) both;
 }
 @keyframes reveal-new-flash { 0% { opacity: 0; } 16% { opacity: .95; } 100% { opacity: 0; } }
-.reveal-game .reveal-big-name {
-  position: absolute; z-index: 4; left: 0; right: 0;
-  top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 10px);
-  margin: 0; color: #fff; text-align: center;
-  font: 700 min(11vw, 60px)/.9 var(--font-display); letter-spacing: .01em; text-transform: uppercase;
-  text-shadow: 0 0 22px var(--rarity-glow, rgb(255 255 255 / .3)), 0 3px 12px rgb(0 0 0 / .9);
-  opacity: 0;
-  animation: reveal-big-name 1500ms cubic-bezier(.2, .8, .2, 1) calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 260ms) both;
-}
-/* Un moment, pas un doublon du nom déjà imprimé sur la carte : il monte, tient
-   environ 0,8 s, puis s'efface et laisse la légende reprendre sa place. */
-@keyframes reveal-big-name {
-  0% { opacity: 0; transform: translateY(10px) scale(.96); }
-  20%, 72% { opacity: 1; transform: none; }
-  100% { opacity: 0; transform: translateY(-6px); }
-}
-.reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name {
-  animation: reveal-name-after 280ms ease-out calc(var(--flip-delay, 0ms) + var(--flip-ms, 760ms) + 1660ms) both;
-}
-@keyframes reveal-name-after { from { opacity: 0; } to { opacity: 1; } }
 /* Doublon : pas de scène rejouée, la carte rejoint la pile. */
 .reveal-game .reveal-stage.is-duplicate .reveal-flip,
 .reveal-game .reveal-stage.is-duplicate .reveal-flip-face { animation: none; }
@@ -602,10 +582,5 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal-new-flash { display: none; }
   .reveal-game .reveal-stage.is-duplicate > .reveal-anchor { animation: none; opacity: 1; }
-  /* Sans mouvement, pas de moment : le nom resterait un doublon. */
-  .reveal-game .reveal-big-name { display: none; }
-  .reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { animation: none; }
 }
 [data-card-fx="off"] .reveal-new-flash { display: none; }
-[data-card-fx="off"] .reveal-game .reveal-big-name { display: none; }
-[data-card-fx="off"] .reveal-game .reveal-stage:has(.reveal-big-name) .reveal-name { animation: none; }

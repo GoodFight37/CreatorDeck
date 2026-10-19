@@ -580,7 +580,10 @@ body:has(.perfect-banner) .pack-specular { animation: none; opacity: 0; }
     translate(var(--reveal-drag-x, 0px), var(--reveal-drag-y, 0px))
     rotate(var(--reveal-drag-rotate, 0deg));
 }
-.reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: preserve-3d; }
+/* flat, pas preserve-3d : en 3D, chaque enfant (photo, textes) garde son
+   propre recto et la WebView Android le montrait à l'envers pendant le
+   retournement. Aplatie, la carte entière obéit à son backface-visibility. */
+.reveal-game .reveal-stage .reveal-card { transform: translateZ(8px); transform-style: flat; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
 /* Pas de filter: drop-shadow sur la carte qui se retourne : il aplatit la 3D et
    la fait repeindre à chaque image (saccades dans la WebView Android). Son
    ombre portée vient déjà de sa box-shadow. */
