@@ -1,3 +1,23 @@
+## Smoke Android interrompu par QEMU SwiftShader — corrigé localement (19 octobre 2026)
+
+Sur `CreatorDeck_API36`, QEMU disparaissait au lancement de la WebView; ADB
+perdait ensuite l’appareil. Les six dumps WER analysés par Claude montraient une
+violation d’accès dans le renderer SwiftShader (`libGLESv2.dll`). Avec le
+renderer NVIDIA matériel, le smoke passe. Le script détecte SwiftShader et
+échoue immédiatement avec une consigne au lieu d’attendre 60 s. Il utilise
+également l’API Android de Playwright (CDP ne prend pas en charge cette WebView),
+sélectionne celle du PID actif après `install -r`, borne la connexion à 5 s et
+augmente la limite de capture de 1 à 64 Mio. L’installation de la baseline
+utilise aussi `adb install -r -d` afin qu’un passage répété puisse repartir de
+872393 après 872394 sans effacer ses données. Rapports positifs :
+`reports/android-smoke/2026-10-19T01-33-05-764Z/result.json` et
+`reports/android-smoke/2026-10-19T01-35-58-377Z/result.json`; la relance
+répétable par Codex est dans `reports/android-smoke/2026-10-19T01-45-28-650Z/result.json`
+et valide 872393→872394, navigation, empreinte de sauvegarde et marqueur privé.
+Le fix du script et la configuration AVD sont locaux au moment de ce constat ; le runner
+GitHub et un AVD SwiftShader ne sont pas validés. Le marqueur ne représente pas
+les données réelles du jeu.
+
 ## Une même chaîne peut sortir plusieurs fois dans un booster — ouvert (18 octobre 2026)
 
 Avec moins de trois chaînes du cercle encore absentes de la collection, 0056

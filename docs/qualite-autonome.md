@@ -1,5 +1,15 @@
 # Qualité autonome — phase 2 publiée, 19 octobre 2026
 
+Le 19 octobre, le correctif local du smoke Android a réussi sur l'AVD matériel :
+`reports/android-smoke/2026-10-19T01-45-28-650Z/result.json`. Le helper de
+revue Claude exige maintenant `CREATORDECK_ALLOW_PAID_CLAUDE=1` pour chaque appel
+consenti ; par défaut il s'arrête avant toute invocation. Aucun appel Codex ou
+Claude n'a été réalisé dans cette reprise. Le scénario d'incident artificiel
+vérifie la reprise unique, l'expurgation et la déduplication, mais ne prouve pas
+une correction automatique. `npm.cmd run test:autonomy` : 15/15, typecheck : vert.
+Le runner auto-hébergé et la correction automatique restent désactivés tant
+qu'une isolation sûre et des limites d'exécution vérifiées ne sont pas en place.
+
 ## État vérifié dans cette reprise
 
 - Commit de code `abd093973c4407876d155637794851d5ac1d3d73` ; PR
@@ -57,14 +67,23 @@
 - Les diagnostics Android restent opt-in, sur l’appareil, bornés à 100
   événements, effaçables et sans contenu/URL/identité. Aucune télémétrie
   distante ni donnée personnelle n’est ajoutée.
-- Aucun service Runner GitHub auto-hébergé n’est installé. Le SDK/AVD, eux,
-  existent. Le smoke test Android a échoué trois fois après boot : l’émulateur
-  disparaît pendant l’attente WebView ou le lancement de l’activité, et ADB
-  renvoie `device 'emulator-5554' not found`. Rapports :
-  `reports/android-smoke/2026-10-19T00-03-36-853Z/result.json`,
-  `reports/android-smoke/2026-10-19T00-06-04-241Z/result.json` et
-  `reports/android-smoke/2026-10-19T00-09-49-572Z/result.json`. Version 872394,
-  navigation et conservation de la sauvegarde après mise à jour non validées.
+- Aucun service Runner GitHub auto-hébergé n’est installé. Le SDK/AVD existe.
+  Le 19 octobre, Claude a attribué les six crashes QEMU à SwiftShader via les
+  dumps WER; le renderer NVIDIA matériel (`-gpu host`) les évite. L’AVD local
+  `CreatorDeck_API36` a été réglé sur `hw.gpu.enabled=yes`, `hw.gpu.mode=host`;
+  sa sauvegarde est hors dépôt. Le script smoke rejette désormais SwiftShader,
+  inspecte la WebView via l’API Android Playwright en filtrant le PID courant,
+  impose 5 s à sa connexion et autorise les captures jusqu’à 64 Mio. La passe
+  `npm run quality:android -- reports/android-smoke/initial-872393.apk
+  reports/android-smoke/update-872394.apk` a terminé code 0 : 872393→872394,
+  navigation Binder/Atelier/Drop, sauvegarde et marqueur conservés. Preuve :
+  `reports/android-smoke/2026-10-19T01-35-58-377Z/result.json`; après ajout de
+  `install -r -d` pour rendre les passages répétés possibles sans effacer les
+  données, Codex a refait la passe avec code 0 dans
+  `reports/android-smoke/2026-10-19T01-45-28-650Z/result.json`. Passe `-gpu host`
+  aussi verte dans `01-33-05-764Z/`. Ce marqueur ne prouve pas la conservation
+  des préférences/collections réelles du joueur; l’installateur du bandeau reste
+  un parcours distinct. Aucun test Android n’a encore tourné sur runner GitHub.
 
 # Qualité mobile autonome — état de la phase 1 (18 octobre 2026)
 

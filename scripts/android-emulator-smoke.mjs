@@ -6,7 +6,7 @@ import { existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "@playwright/test";
+import { _android } from "@playwright/test";
 import { waitForAndroidApp } from "./lib/android-app-ready.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -36,42 +36,46 @@ function installedVersion(serial) {
 
 async function capture(serial, destination) {
   const result = spawnSync(adb, ["-s", serial, "exec-out", "screencap", "-p"],
-    { cwd: root, encoding: "buffer", windowsHide: true, timeout: 30_000 });
+    { cwd: root, encoding: "buffer", windowsHide: true, timeout: 30_000, maxBuffer: 64 * 1024 * 1024 });
   if (result.error || result.status !== 0 || !result.stdout?.length) {
     throw new Error(`Capture Android impossible : ${result.error?.message || result.stderr?.toString() || result.status}`);
   }
   await writeFile(destination, result.stdout);
 }
 
-async function connectReadyWebView(serial) {
-  const unix = run(["-s", serial, "shell", "cat", "/proc/net/unix"]);
-  const socket = unix.match(/webview_devtools_remote_(\d+)/)?.[0];
-  if (!socket) return { ready: false, detail: "Socket de diagnostic WebView absent." };
+// Le rendu SwiftShader de l'émulateur fait planter QEMU dès que la WebView dessine (dumps WER du 19/10/2026).
+function graphicsRenderer(serial) {
+  const gles = run(["-s", serial, "shell", "dumpsys", "SurfaceFlinger"]).match(/^GLES: (.+)$/m)?.[1]?.trim();
+  if (!gles) throw new Error("Moteur de rendu Android introuvable dans SurfaceFlinger.");
+  if (/swiftshader/i.test(gles)) throw new Error(`Émulateur en rendu SwiftShader (${gles}) : relancer l’AVD avec -gpu host.`);
+  return gles;
+}
 
-  const forwarded = run(["forward", "tcp:0", `localabstract:${socket}`]).trim();
-  const port = Number(forwarded);
-  if (!Number.isInteger(port) || port < 1) return { ready: false, detail: "ADB n’a pas fourni de port de diagnostic." };
-  let browser;
+// connectOverCDP échoue sur une WebView (Browser.setDownloadBehavior refusé) ; l'API _android la prend en charge.
+// install -r et force-stop laissent la WebView de l'ancien processus listée : page() y reste bloquée sans fin.
+async function connectReadyWebView(device, serial) {
+  const pid = Number(run(["-s", serial, "shell", "pidof", applicationId]).trim());
+  const webView = device.webViews().find(candidate => candidate.pkg() === applicationId && candidate.pid() === pid);
+  if (!webView) return { ready: false, detail: `WebView du processus ${pid} pas encore exposée.` };
   try {
-    browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 2_000 });
-    const page = browser.contexts().flatMap(context => context.pages())[0];
-    if (!page) throw new Error("Aucun onglet WebView n’est exposé.");
+    let timer;
+    const page = await Promise.race([webView.page(), new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("Connexion à la WebView trop longue.")), 5_000);
+    })]).finally(() => clearTimeout(timer));
     await page.waitForFunction(() => {
       const nav = document.querySelector('nav[aria-label="Navigation principale"]');
       const labels = nav?.innerText ?? "";
       return nav?.getBoundingClientRect().height > 0
         && ["Drop", "Binder", "Atelier", "Toi"].every(label => labels.includes(label));
     }, null, { timeout: 1_500 });
-    return { ready: true, detail: "Navigation principale visible dans la WebView.", value: { browser, page, port } };
+    return { ready: true, detail: "Navigation principale visible dans la WebView.", value: { page } };
   } catch (error) {
-    await browser?.close().catch(() => {});
-    run(["forward", "--remove", `tcp:${port}`]);
     return { ready: false, detail: String(error.message || error).slice(0, 250) };
   }
 }
 
-async function openReadyApp(serial) {
-  const result = await waitForAndroidApp({ probe: () => connectReadyWebView(serial), timeoutMs: 60_000, intervalMs: 1_000 });
+async function openReadyApp(device, serial) {
+  const result = await waitForAndroidApp({ probe: () => connectReadyWebView(device, serial), timeoutMs: 60_000, intervalMs: 1_000 });
   if (!result.ready) throw new Error(`Application Android non prête après ${result.elapsedMs} ms : ${result.lastDetail}`);
   return { ...result.value, elapsedMs: result.elapsedMs };
 }
@@ -98,11 +102,6 @@ async function exerciseApp(page) {
   return { path, saveFingerprint: createHash("sha256").update(savedValue).digest("hex") };
 }
 
-async function closeReadyApp(serial, app) {
-  await app?.browser?.close().catch(() => {});
-  if (app?.port) run(["forward", "--remove", `tcp:${app.port}`]);
-}
-
 async function main() {
   if (!initialApk || !existsSync(initialApk) || !existsSync(adb)) {
     throw new Error("Usage : npm run quality:android -- <premiere.apk> [mise-a-jour.apk] ; Android SDK et APK requis.");
@@ -114,19 +113,24 @@ async function main() {
   const runDir = path.join(root, "reports", "android-smoke", new Date().toISOString().replace(/[:.]/g, "-"));
   await mkdir(runDir, { recursive: true });
   const report = { serial, initialApk: path.basename(initialApk), updateApk: updateApk ? path.basename(updateApk) : null,
-    initialVersion: null, updateVersion: null, launch: "non essayé", appReadyWaitMs: null,
+    renderer: null, initialVersion: null, updateVersion: null, launch: "non essayé", appReadyWaitMs: null,
     navigation: [], savePreserved: null, markerPreserved: null, captures: [], limits: [
       "La présence d'un marqueur dans les fichiers de l'application ne valide pas les préférences du jeu.",
       "L’installateur du bandeau et le téléphone réel restent à essayer séparément.",
     ] };
   let app = null;
+  let device = null;
   try {
-    run(["-s", serial, "install", "-r", initialApk]);
+    report.renderer = graphicsRenderer(serial);
+    device = (await _android.devices()).find(candidate => candidate.serial() === serial);
+    if (!device) throw new Error(`Playwright ne voit pas l’émulateur ${serial}.`);
+    // Allow repeated runs after a previous test left the newer APK installed; -r keeps app data intact.
+    run(["-s", serial, "install", "-r", "-d", initialApk]);
     report.initialVersion = installedVersion(serial);
     const start = run(["-s", serial, "shell", "am", "start", "-W", "-n", `${applicationId}/.MainActivity`]);
     if (!start.includes("Status: ok")) throw new Error(`Démarrage Android non confirmé : ${start}`);
     report.launch = "confirmé par ActivityManager";
-    app = await openReadyApp(serial);
+    app = await openReadyApp(device, serial);
     report.appReadyWaitMs = app.elapsedMs;
     const initialState = await exerciseApp(app.page);
     report.navigation = initialState.path;
@@ -143,12 +147,11 @@ async function main() {
       const marker = run(["-s", serial, "shell", "run-as", applicationId, "ls", "files/creatordeck-quality-marker"]);
       report.markerPreserved = marker.includes("creatordeck-quality-marker");
       if (!report.markerPreserved) throw new Error("Les fichiers privés ont disparu après install -r.");
-      await closeReadyApp(serial, app);
       app = null;
       run(["-s", serial, "shell", "am", "force-stop", applicationId]);
       const updatedStart = run(["-s", serial, "shell", "am", "start", "-W", "-n", `${applicationId}/.MainActivity`]);
       if (!updatedStart.includes("Status: ok")) throw new Error(`Relancement Android non confirmé après mise à jour : ${updatedStart}`);
-      app = await openReadyApp(serial);
+      app = await openReadyApp(device, serial);
       report.appReadyAfterUpdateWaitMs = app.elapsedMs;
       const updatedState = await exerciseApp(app.page);
       report.savePreserved = updatedState.saveFingerprint === initialState.saveFingerprint;
@@ -162,7 +165,7 @@ async function main() {
     report.error = String(error.message || error).slice(0, 500);
     process.exitCode = 1;
   }
-  await closeReadyApp(serial, app).catch(() => {});
+  await device?.close().catch(() => {});
   await writeFile(path.join(runDir, "result.json"), `${JSON.stringify(report, null, 2)}\n`, "utf8");
   console.log(path.join(runDir, "result.json"));
   if (!report.ok) console.error(report.error);

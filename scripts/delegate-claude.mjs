@@ -26,6 +26,9 @@ function append(file, value) {
 
 async function main() {
   if (!question) throw new Error('Usage : node scripts/delegate-claude.mjs "question ciblée"');
+  if (process.env.CREATORDECK_ALLOW_PAID_CLAUDE !== "1") {
+    throw new Error("Appel Claude désactivé : accord explicite requis, puis CREATORDECK_ALLOW_PAID_CLAUDE=1 pour cet appel uniquement.");
+  }
   if (!existsSync(claude) || !existsSync(requestFile) || !existsSync(responseFile)) {
     throw new Error("Worktree Claude ou fichiers de passation existants introuvables.");
   }
