@@ -1,3 +1,20 @@
+## D-154 — 19 octobre 2026 : le sachet contient les cartes, façon TCG de poche (publié)
+
+Demande de Malik : le même concept de booster que Pokémon TCG Pocket, un sachet
+qui donne l'impression de contenir quelque chose. L'art CreatorDeck est gardé ;
+le geste et la mise en scène changent. Au repos, un renflement (la pile de
+cartes sous le film, plis sur les côtés) se lit sur le sachet de l'accueil et de
+l'ouverture. Pendant le geste, la lumière et la tranche des cinq cartes sortent
+de la fente, proportionnelles à l'avancée de la déchirure. Au relâché, un éclat
+et des rayons partent de la soudure, puis les cartes glissent hors du sachet
+(visibles seulement au-dessus de la soudure tant qu'elles sont dedans, puis le
+masque s'ouvre) au lieu d'apparaître ; le devant du sachet s'efface plus vite
+pour ne plus ghoster les dos. Tout est statique ou animé par transform/opacity
+(WebView Android) ; coupé avec les effets désactivés et en mouvement réduit.
+Aucune règle de jeu changée. Captures de référence torn-sachet régénérées,
+tolérance de quelques centaines de pixels sur sealed/torn (rendu variable
+entre machines).
+
 ## D-153 — 19 octobre 2026 : accueil Drop, en-tête et barre façon TCG de poche (publié)
 
 Carte blanche de Malik sur l'accueil, l'en-tête et la barre du bas, sans

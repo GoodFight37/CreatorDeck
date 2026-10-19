@@ -220,6 +220,13 @@ export function PackTear({
           <span className="foil-depth-side foil-depth-right" aria-hidden="true" />
           <span className="foil-depth-bottom" aria-hidden="true" />
           <div className="foil-inner-shadow" aria-hidden="true" />
+          {/* L'intérieur : tant que le sachet est fermé on ne voit rien, mais dès
+              que la soudure cède, la lumière et la tranche des cartes en sortent. */}
+          <div className="foil-interior" aria-hidden="true">
+            <span className="foil-interior-light" />
+            <span className="foil-interior-edges" />
+          </div>
+          <div className="foil-chamber-mask" aria-hidden="true">
           <div
             ref={chamberRef}
             className="foil-card-chamber"
@@ -234,8 +241,10 @@ export function PackTear({
               </span>
             ))}
           </div>
+          </div>
           <div className="foil-body-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
+            <span className="pack-bulge" />
           </div>
           <div className="foil-top-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
@@ -376,6 +385,7 @@ export function PackTear({
             }}
           />
           <div className="booster-foil-glow" aria-hidden="true" />
+          <span className="foil-burst" aria-hidden="true" />
         </div>
         <div className="booster-premium-actions">
           {!opened ? (

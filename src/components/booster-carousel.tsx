@@ -36,7 +36,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       <span className="pack-3d-side pack-3d-side-bottom" />
       <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
-        <span className="pack-specular" /></span>
+        <span className="pack-bulge" /><span className="pack-specular" /></span>
     </span></span>
   </div>;
   return <button type="button" className="pack-artwork pack-live"
@@ -56,7 +56,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       <span className="pack-3d-side pack-3d-side-bottom" />
       <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
-        <span className="pack-specular" /></span>
+        <span className="pack-bulge" /><span className="pack-specular" /></span>
     </span></span>
   </button>;
 }

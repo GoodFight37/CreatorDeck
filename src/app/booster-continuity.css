@@ -105,8 +105,8 @@
   animation-name: scene-card-settle;
 }
 @keyframes scene-cards-rise {
-  0%, 17% { opacity: 0; transform: translate(-50%, -12%) scale(.65); }
-  38% { opacity: .36; transform: translate(-50%, -22%) scale(.72); }
+  0%, 17% { opacity: 1; transform: translate(-50%, -12%) scale(.65); }
+  38% { opacity: 1; transform: translate(-50%, -26%) scale(.76); }
   48% { opacity: 1; transform: translate(-50%, -40%) scale(.9); }
   72%, 100% { opacity: 1; transform: translate(-50%, -50%); }
 }
@@ -550,9 +550,9 @@ body:has(.perfect-banner) .pack-specular::before { animation: none; }
 @keyframes scene-body-fold {
   0%, 18% { opacity: 1; transform: translateZ(0) rotateX(0) rotateY(0) rotateZ(0); }
   37% { opacity: 1; transform: translateY(3%) translateZ(7px) rotateX(-23deg) rotateY(4deg) rotateZ(2deg); }
-  54% { opacity: .62; transform: translate(-2%, 8%) translateZ(1px) rotateX(-13deg) rotateY(-7deg) rotateZ(-3deg); }
-  78% { opacity: .55; transform: translateY(25%) translateZ(-8px) rotateX(-25deg) rotateY(4deg); }
-  100% { opacity: .35; transform: translateY(34%) translateZ(-12px) rotateX(-28deg) rotateY(4deg); }
+  54% { opacity: .36; transform: translate(-2%, 8%) translateZ(1px) rotateX(-13deg) rotateY(-7deg) rotateZ(-3deg); }
+  78% { opacity: .3; transform: translateY(25%) translateZ(-8px) rotateX(-25deg) rotateY(4deg); }
+  100% { opacity: .26; transform: translateY(34%) translateZ(-12px) rotateX(-28deg) rotateY(4deg); }
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-cut-glow { animation: scene-cut-light 620ms ease-out both; }
 @keyframes scene-cut-light {
@@ -569,9 +569,9 @@ body:has(.perfect-banner) .pack-specular::before { animation: none; }
   animation-timing-function: cubic-bezier(.18, .74, .22, 1);
 }
 @keyframes scene-card-extract {
-  0%, 10% { opacity: 0; transform: translateY(36%) translateZ(-28px) rotateX(12deg)
+  0%, 10% { opacity: 1; transform: translateY(36%) translateZ(-28px) rotateX(12deg)
     rotateY(calc((var(--card-i) - 2) * 3deg)) scale(.82); }
-  44% { opacity: .92; transform: translateY(4%) translateZ(calc(var(--card-i) * 7px))
+  44% { opacity: 1; transform: translateY(4%) translateZ(calc(var(--card-i) * 7px))
     rotateX(4deg) rotateY(calc((var(--card-i) - 2) * 2deg)) scale(.94); }
   60%, 82% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 12px),
     calc((4 - var(--card-i)) * -4px)) rotate(calc((4 - var(--card-i)) * -2deg)); }
@@ -836,3 +836,98 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
    image pour rien. On le masque et on fige ses animations le temps de la scène. */
 body:has(.pack-tear[aria-modal="true"]) .home-view { visibility: hidden; }
 body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: paused; }
+
+/* D-154 — un sachet qui contient quelque chose (façon TCG de poche).
+   1. Au repos, le film épouse une pile de cartes : renflement, plis sur les côtés.
+   2. Pendant le geste, la lumière et la tranche des cartes sortent de la fente.
+   3. Au relâché, un éclat, puis les cartes glissent hors du sachet.
+   Tout est statique ou animé par transform/opacity (WebView Android). */
+.pack-bulge {
+  position: absolute; z-index: 1; inset: 0; pointer-events: none;
+  clip-path: var(--live-foil-clip);
+}
+.pack-bulge::before {
+  content: ""; position: absolute; left: 10%; right: 10%; top: 20%; bottom: 11%;
+  border-radius: 6% / 4%;
+  background:
+    linear-gradient(112deg, rgb(255 238 222 / .16), transparent 34%, transparent 64%, rgb(0 0 0 / .2)),
+    linear-gradient(180deg, transparent 70%, rgb(0 0 0 / .18));
+  box-shadow:
+    inset 2px 2px 7px rgb(255 236 220 / .24),
+    inset -3px -6px 10px rgb(0 0 0 / .5),
+    0 0 0 1px rgb(0 0 0 / .32),
+    1px 1px 0 1px rgb(255 232 214 / .1);
+}
+.pack-bulge::after {
+  content: ""; position: absolute; inset: 15% 0 9%;
+  background:
+    repeating-linear-gradient(173deg, rgb(255 236 220 / .13) 0 1px, transparent 1px 6px) 0 0 / 10% 100% no-repeat,
+    repeating-linear-gradient(7deg, rgb(255 236 220 / .13) 0 1px, transparent 1px 6px) 100% 0 / 10% 100% no-repeat;
+}
+
+.foil-interior {
+  position: absolute; z-index: 2; inset: 0; pointer-events: none;
+  opacity: min(1, calc(var(--peel-progress, 0) * 1.8));
+}
+.foil-interior-light {
+  position: absolute;
+  left: calc(var(--cut-start, 7%) - 4%);
+  width: calc(var(--cut-end, 7%) - var(--cut-start, 7%) + 8%);
+  bottom: calc(84.55% - 3%);
+  height: calc(6% + var(--peel-progress, 0) * 26%);
+  background: radial-gradient(ellipse 62% 100% at 50% 100%,
+    rgb(255 249 226 / .98), rgb(255 200 166 / .58) 42%, rgb(240 111 151 / .16) 66%, transparent 82%);
+}
+.foil-interior-edges {
+  position: absolute;
+  left: calc(var(--cut-start, 7%) + 3%);
+  width: calc(var(--cut-end, 7%) - var(--cut-start, 7%) - 6%);
+  top: calc(15.45% - 12px);
+  height: 12px;
+  border-radius: 3px 3px 0 0;
+  background: repeating-linear-gradient(180deg, #f6e6d6 0 1.5px, #4a2447 1.5px 3px);
+  box-shadow: 0 -3px 10px rgb(255 214 180 / .55);
+  transform: translateY(calc((1 - var(--peel-progress, 0)) * 12px));
+}
+.booster-foil-open .foil-interior { animation: foil-interior-out 900ms ease-out both; opacity: 1; }
+@keyframes foil-interior-out {
+  0%, 30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.foil-burst {
+  position: absolute; z-index: 6; pointer-events: none;
+  left: 50%; top: 15.45%; width: 260%; aspect-ratio: 1; margin: -130% 0 0 -130%;
+  border-radius: 50%; opacity: 0; transform: translateZ(40px) scale(.12);
+  background: radial-gradient(circle, rgb(255 249 228 / .96) 0, rgb(255 196 160 / .58) 13%,
+    rgb(240 111 151 / .22) 32%, transparent 56%);
+}
+.foil-burst::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: repeating-conic-gradient(from 8deg at 50% 50%, rgb(255 240 210 / .5) 0 3deg, transparent 3deg 13deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0, transparent 52%);
+  mask-image: radial-gradient(circle, #000 0, transparent 52%);
+}
+.booster-foil-open .foil-burst { animation: foil-burst 900ms cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes foil-burst {
+  0% { opacity: 0; transform: translateZ(40px) scale(.12) rotate(0deg); }
+  14% { opacity: 1; transform: translateZ(40px) scale(.5) rotate(5deg); }
+  100% { opacity: 0; transform: translateZ(40px) scale(1.5) rotate(18deg); }
+}
+[data-card-fx="off"] .foil-burst,
+[data-card-fx="off"] .foil-interior { display: none; }
+@media (prefers-reduced-motion: reduce) {
+  .foil-burst { display: none; }
+  .booster-foil-open .foil-interior { animation: none; opacity: 0; }
+}
+
+/* Les cartes sortent du sachet : tant qu'elles sont dedans, on ne les voit qu'au-dessus
+   de la soudure (15,45 % de la hauteur), puis le masque s'ouvre en grand. */
+.foil-chamber-mask { position: absolute; inset: 0; pointer-events: none; }
+.booster-foil-open .foil-chamber-mask { animation: foil-chamber-unmask var(--pack-extraction-ms, 1200ms) linear both; }
+@keyframes foil-chamber-unmask {
+  0%, 30% { clip-path: inset(-400% -100% 84.55% -100%); }
+  52%, 100% { clip-path: inset(-400% -100% -400% -100%); }
+}
+[data-card-fx="off"] .booster-foil-open .foil-chamber-mask { animation: none; }
+@media (prefers-reduced-motion: reduce) { .booster-foil-open .foil-chamber-mask { animation: none; } }

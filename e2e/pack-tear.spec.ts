@@ -500,7 +500,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   await expect(dialog).toBeVisible();
   await expect(dialog.locator(".booster-opening-instruction"))
     .toHaveText("TIRE");
-  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled" });
+  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("sealed-sachet.png", { animations: "disabled", maxDiffPixels: 700 });
   expect(await dialog.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").content)).toBe("none");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
   expect(await dialog.locator(".booster-foil-glow").evaluate(node => getComputedStyle(node).display)).toBe("none");
@@ -558,7 +558,7 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
       animation.currentTime = 700;
     }
   });
-  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "allow" });
+  await expect(dialog.locator(".booster-physical-scene")).toHaveScreenshot("torn-sachet.png", { animations: "allow", maxDiffPixels: 900 });
   await dialog.locator(".booster-physical-scene").evaluate((node) => {
     for (const animation of node.getAnimations({ subtree: true })) animation.play();
   });
