@@ -519,7 +519,7 @@ export function ProfileView({
           <span>Diagnostics sur cet appareil</span>
           <span className="switch" data-on={diagnosticsOn ? "on" : "off"} aria-hidden="true"><i /></span>
         </button>
-        <small>Erreurs et lenteurs seulement, gardées ici. Aucun envoi automatique. Couper efface le journal.</small>
+        <small>Erreurs, lenteurs et fluidité des ouvertures, avec l’écran concerné. Gardées ici, aucun envoi automatique. Couper efface le journal.</small>
         {diagnosticsOn ? (
           <button type="button" className="menu-row" onClick={() => void shareDiagnostics()}>
             <span>Partager le diagnostic</span><ChevronRight size={16} />
