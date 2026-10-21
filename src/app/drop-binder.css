@@ -612,7 +612,7 @@
   box-shadow: inset 1px 0 rgb(252 212 191 / .28), inset -2px 0 rgb(4 4 10 / .8);
 }
 .home-view .pack-stage .pack-3d-side-right {
-  right: 2px; width: 9px;
+  top: 14px; right: 2px; width: 9px;
   transform: rotateY(-90deg);
   transform-origin: left center;
   background: linear-gradient(90deg, #e3ba9f, #906475 30%, #362436 62%, #090910);

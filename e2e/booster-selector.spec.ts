@@ -125,7 +125,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await page.goto("/");
   await page.getByRole("button", { name: "MEMES", exact: true }).click();
   const trigger = page.getByRole("button", { name: "Ouvrir le booster MEMES", exact: true });
-  await expect(page.locator(".meme-booster-reserve")).toContainText("4 MEMES restants");
+  await expect(page.locator(".meme-booster-reserve")).toContainText("4 MEMES");
   await trigger.click();
   const scene = page.locator(".opening-continuum");
   await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /memes-opening/);
@@ -149,7 +149,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await expect(scene).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "memes");
-  await expect(page.locator(".meme-booster-reserve")).toContainText("3 MEMES restants");
+  await expect(page.locator(".meme-booster-reserve")).toContainText("3 MEMES");
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();

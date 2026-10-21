@@ -8,6 +8,12 @@ lots mécaniques bien délimités à Codex (plugin `codex:codex-rescue`) ou lui 
 un second avis. Avant d'écrire, vérifie `git status` et `git log` ; ne remplace jamais un
 travail local non publié d'un autre agent.
 
+## Règle d’or : les skills, à chaque décision (Malik, 21 octobre 2026)
+
+Malik n’a pas à les rappeler. **Avant** toute décision ou tout changement de design, d’animation, de mise en page, de texte d’interface ou de robustesse visuelle, invoquer le skill adapté (`impeccable`, `emil-design-eng`, `animate`, `review-animations`, `break-ui`, `mobile-native`), puis regarder de vraies captures. Pour un bug : `superpowers:systematic-debugging` avant de corriger. Pour un lot mécanique : `codex:codex-rescue`. Ne pas s’en passer parce que le changement paraît petit.
+
+Malik a aussi levé les interdits de décisions passées (ex. D-132, tranches du sachet) quand ils empêchent d’améliorer. Restent les limites du `CLAUDE.md` global : règles du jeu, économie et taux, migration de base, notification push, suppression de données.
+
 ## Cadre
 
 - **Où :** le checkout de travail est `CreatorDeck-Codex` (nom historique du dossier).
