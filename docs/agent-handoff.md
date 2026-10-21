@@ -7,7 +7,7 @@
   - Chantier « TCG de poche » (cg8) : feuilles CSS commitées telles quelles (`globals.css`, `stage.css`, `drop-binder.css`, etc.). Il reste le balayage de style cg8.2 (tailles de police sous 12 px, cibles tactiles sous 44 px).
 - **Audit IA, point par point :** vérifieur SQL 0060 confirmé et corrigé ; chargement paresseux des Mèmes confirmé et traité (`MemeDeck` n'est pas sur l'accueil, il n'était donc pas en cause). Le reste de la liste de l'audit n'a pas été relu.
 - **Validation :** tout est vérifié dans un navigateur et par les scripts, **pas sur Android**. Le parcours invité et l'arène existent dans la copie locale ; l'APK construite depuis `main` doit être vérifiée par Malik sur son téléphone.
-- **Reste :** cg8.2 (style) ; mesurer le gain du chargement paresseux ; répondre au reste de l'audit ; trancher `e2e/_diag.spec.ts` (non suivi, à supprimer s'il est jetable) ; `next.config.ts` et `scripts/delegate-claude.mjs` restent non commités (le premier contient l'IP locale, le second est à l'autre agent).
+- **Reste (suivi dans `bd`) :** `CreatorDeck-Codex-cg8.10` (cg8.2, style) ; `CreatorDeck-Codex-u6b` (reste de l'audit IA, la liste complète n'a pas été relue : à redemander à Malik ou à consigner dans `docs/`) ; `CreatorDeck-Codex-e5y` (mesurer le gain des Mèmes) ; trancher `e2e/_diag.spec.ts` (non suivi, à supprimer s'il est jetable) ; `next.config.ts` et `scripts/delegate-claude.mjs` restent non commités (le premier contient l'IP locale, le second est à l'autre agent).
 - **Sécurité des migrations :** aucune migration dans ce commit. Le push sur `main` n'applique donc rien en production.
 
 # Checkpoint Claude — scène « TCG de poche » (21 octobre 2026) — TERMINÉ sauf le balayage de style cg8.2
