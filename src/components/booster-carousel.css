@@ -36,7 +36,7 @@
   border-radius: 999px; background: var(--panel); color: var(--muted);
   font: inherit; font-size: 13px; cursor: pointer;
 }
-.booster-switcher button[aria-pressed="true"] { background: #d52820; border-color: #d52820; color: white; }
+.booster-switcher button[aria-pressed="true"] { background: var(--paper); border-color: var(--paper); color: var(--ink); }
 @media (forced-colors: active) {
   .booster-switcher button[aria-pressed="true"] {
     background: Highlight; border-color: Highlight; color: HighlightText;

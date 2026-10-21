@@ -63,14 +63,14 @@
 .meme-slot { min-width: 0; padding: 0; border: 0; color: #fff4ed; background: transparent; text-align: left; cursor: pointer; }
 .meme-slot .creator-card { width: 100%; }
 .meme-slot-name { display: block; margin-top: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 13px var(--font-display); }
-.meme-slot-meta { display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c7b0be; font-size: 11px; }
+.meme-slot-meta { display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c7b0be; font-size: 12px; }
 .meme-empty { padding: 35px 8px; color: #c7b0be; text-align: center; }
 .meme-pager { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 24px; }
 .meme-pager button { display: inline-flex; align-items: center; gap: 2px; min-height: 44px; padding: 0 8px;
   border: 1px solid #584152; border-radius: 7px; color: #fff4ed; background: #251a26; font-size: 12px; }
 .meme-pager button:disabled { opacity: .4; }
 .meme-pager span { color: #c7b0be; font-size: 12px; }
-.meme-credit { margin: 30px 0 0; color: #a9939d; font-size: 11px; line-height: 1.5; }
+.meme-credit { margin: 30px 0 0; color: #a9939d; font-size: 12px; line-height: 1.5; }
 .meme-card { background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--rarity) 24%, #15111b), #110f18 75%); }
 .meme-card .card-photo-wrap { z-index: 1; }
 .meme-card .card-photo { object-fit: contain; filter: none; }
@@ -99,7 +99,7 @@
 .meme-card.is-full-art::after { border-color: color-mix(in srgb, var(--rarity) 82%, #ffe9af); box-shadow: inset 0 0 0 2px #170d18, inset 0 0 0 5px color-mix(in srgb, var(--rarity) 46%, transparent); }
 .meme-card.is-full-art:not(.is-compact) { box-shadow: 0 0 0 1px #170d18, 0 0 22px -10px color-mix(in srgb, var(--rarity) 62%, transparent), 0 16px 28px -13px rgb(0 0 0 / .88); }
 .meme-full-art { color: #fff; background: #7d2852; padding: 2px 4px; font: 700 10px var(--font-display); letter-spacing: .05em; }
-.meme-card.is-compact .meme-full-art { font-size: 7px; }
+.meme-card.is-compact .meme-full-art { font-size: 12px; }
 .meme-dialog { position: fixed; inset: 0; width: min(100vw - 28px, 640px); max-height: calc(100dvh - 28px); margin: auto;
   padding: 22px; border: 1px solid #8d6074; border-radius: 18px; color: #fff4ed;
   background: radial-gradient(ellipse at 50% 35%, #3e2139, #120e19 80%); box-shadow: 0 25px 80px #000; }

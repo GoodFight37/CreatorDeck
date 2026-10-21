@@ -1,14 +1,17 @@
 "use client";
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
-import { useMemo, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useMemo, useRef, useState, type CSSProperties } from "react";
 import { ChevronRight, Clock3, Coins, Hourglass, Users } from "lucide-react";
 
 import "./drop-craft.css";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
 export { PackArtwork } from "@/components/booster-carousel";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
-import { MemeBoosterOpening, MemeCollectionLink, MemePackComposition } from "@/components/meme-booster-opening";
+import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-parts";
+
+// Chargé seulement à l'ouverture d'un booster Mèmes : l'accueil ne paie pas PackTear ni MemeReveal.
+const MemeBoosterOpening = lazy(() => import("@/components/meme-booster-opening").then((m) => ({ default: m.MemeBoosterOpening })));
 
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
@@ -262,7 +265,7 @@ export function HomeView({
         <MemePackComposition />
         <MemeCollectionLink />
       </section>
-      <MemeBoosterOpening booster={memes} />
+      {memes.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={memes} /></Suspense> : null}
       {!lean && onEditCircle ? (
         <section className="circle-invite" aria-labelledby="circle-invite-title">
           <div>

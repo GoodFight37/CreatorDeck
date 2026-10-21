@@ -1,4 +1,4 @@
-.missions-view .objectives-kicker { color: var(--muted); font-size: 9px; letter-spacing: .15em; margin: 8px 0; }
+.missions-view .objectives-kicker { color: var(--muted); font-size: 12px; letter-spacing: .15em; margin: 8px 0; }
 .missions-view .page-title-row { align-items: flex-end; gap: 10px; }
 .missions-view .page-title-row > div:first-child { min-width: 0; }
 .missions-view h1 { font-size: clamp(28px, 7vw, 38px); line-height: 1.05; }
@@ -8,28 +8,28 @@
 .missions-view :is(#objectives-day, #objectives-collection, #objectives-seasons) { scroll-margin-top: 90px; }
 .missions-view .reward-summary-banner { display: grid; gap: 16px; padding: 20px 16px; border: 1px solid #d4b78e66; border-radius: 14px; background: radial-gradient(ellipse at top left, #652b3e88, #241d27); }
 .missions-view .reward-summary-copy strong { font: 30px var(--font-display); }
-.missions-view .reward-summary-copy small { display: block; color: var(--muted); font-size: 10px; margin-top: 8px; line-height: 1.6; }
+.missions-view .reward-summary-copy small { display: block; color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.6; }
 .objectives-claim-all { min-height: 48px; width: 100%; padding: 12px; border: 0; border-radius: 8px; color: #21171e; background: #e5cba1; font: 21px var(--font-display); }
-.objectives-no-pending, .objectives-reset { font-size: 11px; line-height: 1.7; color: var(--muted); }
+.objectives-no-pending, .objectives-reset { font-size: 12px; line-height: 1.7; color: var(--muted); }
 .objectives-wait { font-size: 12px; padding: 12px; color: #e5cba1; border: 1px solid #b99b7755; border-radius: 8px; }
 .objectives-feedback { padding: 16px; margin: 16px 0; border: 1px solid #9aaf8d88; border-radius: 12px; color: #e5ebdd; background: #273029; scroll-margin-top: 90px; }
 .objectives-feedback.is-error { border-color: #c88c7f88; background: #342128; color: #f1d5c9; }
 .objectives-feedback > strong { font: 25px var(--font-display); }
 .objectives-feedback ul { padding-left: 18px; font-size: 12px; line-height: 1.7; margin-bottom: 0; }
-.objectives-feedback p { font-size: 11px; line-height: 1.6; }
+.objectives-feedback p { font-size: 12px; line-height: 1.6; }
 .missions-view .day-block { margin-top: 20px; padding: 18px 12px; border-radius: 14px; background: linear-gradient(150deg, #2c202b55, var(--panel)); border: 1px solid var(--line); }
 .missions-view .day-head { align-items: flex-start; gap: 10px; flex-wrap: wrap; }
 .missions-view .streak-plan { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .missions-view .plan-cell { min-width: 0; padding: 9px 2px; }
-.missions-view .plan-gift { font-size: 8px; line-height: 1.4; overflow-wrap: anywhere; }
-.missions-view .plan-mark { font-size: 9px; }
-.missions-view .streak-rule { font-size: 11px; line-height: 1.65; }
+.missions-view .plan-gift { font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+.missions-view .plan-mark { font-size: 12px; }
+.missions-view .streak-rule { font-size: 12px; line-height: 1.65; }
 .missions-view .mission-row { padding: 16px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); align-items: start; }
 .missions-view .mission-row[data-state="ready"] { border-color: #d7b48a77; background: linear-gradient(120deg, #6d403a2c, var(--panel)); }
 .missions-view .mission-row.claimed { opacity: .72; }
 .missions-view .mission-content { min-width: 0; }
 .missions-view .mission-content strong { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
-.missions-view .mission-content > div:first-child > span { font-size: 11px; line-height: 1.6; }
+.missions-view .mission-content > div:first-child > span { font-size: 12px; line-height: 1.6; }
 .missions-view .mission-reward { color: #e2c7a0; }
 .objective-progress { display: block; width: 100%; height: 5px; margin: 10px 0; border: 0; overflow: hidden; border-radius: 6px; background: #ffffff13; accent-color: #d5b58b; }
 .objective-progress::-webkit-progress-bar { background: #ffffff13; }
@@ -42,19 +42,19 @@
 .objectives-season-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
 .objectives-season-filters button, .objectives-season-pages button, .objectives-season-empty button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); background: var(--panel); font-size: 12px; }
 .objectives-season-filters [aria-pressed="true"] { background: #e5cba1; color: #21171e; }
-.objectives-seasons .season-summary { margin: 12px 0; font-size: 11px; gap: 10px; flex-wrap: wrap; }
+.objectives-seasons .season-summary { margin: 12px 0; font-size: 12px; gap: 10px; flex-wrap: wrap; }
 .objectives-seasons .season-row { padding: 16px 12px; border-radius: 12px; min-width: 0; }
 .objectives-seasons .season-head { gap: 10px; align-items: flex-start; }
 .objectives-seasons .season-title { min-width: 0; }
 .objectives-seasons .season-title strong { white-space: normal; overflow-wrap: anywhere; line-height: 1.4; }
 .objectives-seasons .season-title > .emblem { flex-shrink: 0; }
 .objectives-seasons .season-head > b { white-space: nowrap; font-size: 12px; }
-.season-next { font-size: 11px; line-height: 1.5; color: var(--muted); }
-.season-tier-details { margin: 12px 0; font-size: 11px; color: var(--muted); }
+.season-next { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.season-tier-details { margin: 12px 0; font-size: 12px; color: var(--muted); }
 .season-tier-details > summary { min-height: 44px; display: list-item; align-content: center; cursor: pointer; }
 .objectives-seasons .season-tiers { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .objectives-seasons .season-tier { display: flex; gap: 6px; padding: 10px 6px; flex-wrap: wrap; align-items: center; min-width: 0; }
-.objectives-seasons .season-tier span { width: 100%; text-align: left; font-size: 10px; }
+.objectives-seasons .season-tier span { width: 100%; text-align: left; font-size: 12px; }
 .objectives-seasons .season-foot { gap: 10px; flex-wrap: wrap; }
 .objectives-season-pages { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 18px; font-size: 12px; }
 .objectives-season-empty { padding: 24px 12px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); font-size: 12px; text-align: center; }
@@ -62,10 +62,10 @@
 .missions-view button:disabled { opacity: .5; }
 @media (max-width: 350px) { .missions-view .streak-plan { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .missions-view .plan-cell { padding: 10px 4px; } }
 
-.season-family-mark { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; background: #ffffff06; color: var(--muted); font-size: 10px; }
+.season-family-mark { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 7px; background: #ffffff06; color: var(--muted); font-size: 12px; }
 .missions-view .mission-content > .objective-progress { grid-column: 1 / -1; }
 .missions-view .mission-progress-copy { white-space: nowrap; }
 
-@media (max-width: 480px) { .missions-view .streak-plan { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .missions-view .plan-gift { font-size: 10px; } .missions-view .plan-mark { font-size: 10px; } }
+@media (max-width: 480px) { .missions-view .streak-plan { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; } .missions-view .plan-gift { font-size: 12px; } .missions-view .plan-mark { font-size: 12px; } }
 .objectives-seasons { overflow-anchor: none; }
 .objectives-seasons .season-tier { opacity: 1; border-radius: 8px; color: var(--muted); }

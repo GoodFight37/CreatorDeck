@@ -1,3 +1,15 @@
+# Checkpoint Claude — 0060, Mèmes différés, audit IA (21 octobre 2026) — poussé sur `main`
+
+- **Fait et vérifié :**
+  - Vérifieur SQL 0060 réparé : le pseudo de test « Chaîne hors catalogue 0060 » (26 caractères, limite 24 de `0001_comptes_cloud.sql`) devient « Chaîne 0060 », avec une garde qui lève une erreur si un nom dépasse 24 caractères (`scripts/verify-circle-hors-catalogue.mjs`). `npm run supabase:verify` : **toutes les vérifications passent**.
+  - Mèmes hors du premier chargement de l'accueil : `MemePackComposition` et `MemeCollectionLink` sortent de `meme-booster-opening.tsx` vers le nouveau `src/components/meme-pack-parts.tsx` ; `MemeBoosterOpening` se charge à la demande dans `drop-view.tsx` (`lazy` + `Suspense`, seulement quand le sachet Mèmes est présenté). `meme-deck.tsx` importe les deux nouveaux emplacements. Le gain de poids n'est pas mesuré (pas de build de comparaison).
+  - `tsc` 0 erreur ; ESLint propre sur les fichiers touchés ; 100 tests vitest ciblés (cercle, mèmes) verts ; `e2e/memes.spec.ts` 6/6 verts (bureau et téléphone) dans le navigateur.
+  - Chantier « TCG de poche » (cg8) : feuilles CSS commitées telles quelles (`globals.css`, `stage.css`, `drop-binder.css`, etc.). Il reste le balayage de style cg8.2 (tailles de police sous 12 px, cibles tactiles sous 44 px).
+- **Audit IA, point par point :** vérifieur SQL 0060 confirmé et corrigé ; chargement paresseux des Mèmes confirmé et traité (`MemeDeck` n'est pas sur l'accueil, il n'était donc pas en cause). Le reste de la liste de l'audit n'a pas été relu.
+- **Validation :** tout est vérifié dans un navigateur et par les scripts, **pas sur Android**. Le parcours invité et l'arène existent dans la copie locale ; l'APK construite depuis `main` doit être vérifiée par Malik sur son téléphone.
+- **Reste :** cg8.2 (style) ; mesurer le gain du chargement paresseux ; répondre au reste de l'audit ; trancher `e2e/_diag.spec.ts` (non suivi, à supprimer s'il est jetable) ; `next.config.ts` et `scripts/delegate-claude.mjs` restent non commités (le premier contient l'IP locale, le second est à l'autre agent).
+- **Sécurité des migrations :** aucune migration dans ce commit. Le push sur `main` n'applique donc rien en production.
+
 # Checkpoint Claude — scène « TCG de poche » (21 octobre 2026) — TERMINÉ sauf le balayage de style cg8.2
 
 - **Mise à jour du 21/10 (fin de session) :** `npm run ecrans` 241/241 ; `tsc` et ESLint propres ; e2e complet lancé une fois : 180 réussis, 13 échoués, tous des specs périmées (`.stock-row strong`, « Mon Binder », `.mini-card-row`, `.drop-cta`, `.binder-collections-picker`, animation `scene-card-turn` de la Commune devenue `card-turn-quick`) réécrites sur l'app réelle, puis `drop-binder`, `drop-craft-priorites`, `scene-profile`, `binder-finitions`, `pack-tear`, `booster-selector` relancés verts (les 5 ignorés sont « avec le serveur », sans cloud en local). Chaînes hors catalogue (0060, `refresh-live`, `circle-onboarding`) relues : complètes. DESIGN.md aligné (filtres, barre du bas, carte, deux écarts). Décision Malik : `variant-gold` gardée comme matière rare, seule exception à la règle de l'or.

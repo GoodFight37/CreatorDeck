@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
 import { useNow } from "@/hooks/use-game";
-import { MemeBoosterOpening, MemePackComposition } from "@/components/meme-booster-opening";
+import { MemeBoosterOpening } from "@/components/meme-booster-opening";
+import { MemePackComposition } from "@/components/meme-pack-parts";
 import Link from "next/link";
 import { ArrowLeft, ChevronLeft, ChevronRight, X } from "lucide-react";
 import { MEME_CARDS, MEME_RARITY, type MemeCard as MemeCardData, type MemeRarity } from "@/lib/memes";
