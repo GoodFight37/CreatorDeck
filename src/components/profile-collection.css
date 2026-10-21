@@ -45,3 +45,6 @@
 @media (max-width: 350px) { .profile-view .profile-streak { max-width: 100%; } .profile-view .profile-showcase-heading { gap: 12px; } }
 
 .profile-account-feedback { padding: 10px 12px; border-left: 2px solid #da8f85; color: #efb6ac; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
+
+/* <small> sans classe : 0,83 em de 14 px = 11,7 px, sous le plancher de 12 px. */
+.profile-view small { font-size: max(12px, .83em); }

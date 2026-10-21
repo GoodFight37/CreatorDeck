@@ -46,6 +46,8 @@ Capacitor 8 (Android) · Supabase · Vitest · Playwright.
 
 ## État actuel — 16 octobre 2026
 
+**Dernier point (21 octobre 2026) :** balayage de style fait (textes d’interface ≥ 12 px, cibles ≥ 44 px), e2e complet 193 réussis / 23 ignorés / 0 échoué, `supabase:verify` vert. Restent ouverts : l’audit IA (liste à redemander à Malik), le liseré du sachet sur Android, le tri rouge/or des feuilles. Détail et pièges dans la [passation](docs/agent-handoff.md).
+
 Malik utilise **la version web de CreatorDeck sur Vercel**, connectée à
 Supabase. GitHub `main` alimente le site ; les changements deviennent visibles
 après la fin du déploiement Vercel. L'empreinte affichée dans Toi permet de

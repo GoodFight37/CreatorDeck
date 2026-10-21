@@ -1,5 +1,5 @@
 .atelier-view #atelier-heading { margin: 0; font-size: 1.9rem; }
-.atelier-kicker { margin: .6rem 0; color: #bcae9b; font-size: .64rem; letter-spacing: .13em; }
+.atelier-kicker { margin: .6rem 0; color: #bcae9b; font-size: .75rem; letter-spacing: .13em; }
 .atelier-view .atelier-preview-name { padding: 0; border: 0; background: none; color: inherit; text-align: left; text-decoration: underline; text-underline-offset: 3px; }
 .atelier-view .atelier-row { min-height: 66px; border-color: #ffffff12; }
 .atelier-view .atelier-thumb { border-radius: 7px; }

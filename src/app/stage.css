@@ -209,7 +209,7 @@
   display: grid; gap: 8px; margin: 10px 0; padding: 12px 14px;
   border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .035);
 }
-.binder-circle-goal .drop-section-label { display: flex; align-items: center; justify-content: space-between; font-size: .72rem; }
+.binder-circle-goal .drop-section-label { display: flex; align-items: center; justify-content: space-between; font-size: .75rem; }
 .binder-circle-goal-main, .binder-circle-craft {
   display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0;
   border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;

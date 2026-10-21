@@ -6,7 +6,7 @@
 .home-view .open-panel.open-panel { padding: 0 2px; }
 .home-view .stock-row { margin-bottom: 8px; }
 .home-view .open-panel .pity-row.now { margin-top: 6px; padding: 5px 0; border: 0; background: none; font-size: 12px; }
-.home-view .hourglass-action { min-height: 38px; margin-top: 5px; font-size: 12px; }
+.home-view .hourglass-action { min-height: 44px; margin-top: 5px; font-size: 12px; }
 .home-view .token-row { margin-top: 6px; font-size: 12px; }
 .home-view .drop-priorities { display: grid; gap: 6px; margin-top: 10px; }
 .home-view .drop-priorities .daily-goal { min-height: 56px; margin: 0; padding-block: 8px; }

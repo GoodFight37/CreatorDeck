@@ -295,11 +295,11 @@ html:has(.booster-presentation) { overflow: hidden; }
   -webkit-line-clamp: 2;
   line-clamp: 2;
   color: #fff3e3;
-  font-size: clamp(10px, 2.6vw, 15px);
+  font-size: clamp(12px, 2.6vw, 15px);
 }
 .reveal-perfect-grid .perfect-card-caption span {
   color: #eacfa7;
-  font-size: clamp(9px, 2.2vw, 12px);
+  font-size: 12px;
 }
 .reveal-perfect-grid .perfect-card-new .perfect-card-caption span { color: #fff0a5; }
 .reveal-game .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 74px auto 0; }
