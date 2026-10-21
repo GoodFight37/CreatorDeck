@@ -466,7 +466,9 @@ test("CSS-only pouch keeps its printed sachet and extraction usable", async ({ p
   const homeSpecular = homePack.locator(".pack-specular");
   await expect(homeArt).toBeVisible();
   await expect(homeArt).toHaveAttribute("src", "/packs/live-opening.svg");
-  await expect(homePack.locator(".pack-3d-side")).toHaveCount(3);
+  // Sachet plat : plus de tranches 3D (le liseré venait d'elles), un reflet découpé par l'impression.
+  await expect(homePack.locator(".pack-3d-side")).toHaveCount(0);
+  await expect(homePack.locator(".pack-glint")).toHaveCount(1);
   // Plus de reflet en boucle sur le sachet de l'accueil : seul son balancement anime l'accueil.
   await expect(homeSpecular).toHaveCount(0);
   await expect(homePack.locator(".pack-idle")).toHaveCSS("animation-name", "drop-pack-idle");

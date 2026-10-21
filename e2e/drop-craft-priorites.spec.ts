@@ -58,10 +58,9 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   expect(stageOverflow.y).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).overflow)).toBe("visible");
   expect(await pack.evaluate((node) => getComputedStyle(node).filter)).toBe("none");
-  const side = pack.locator(".pack-3d-side-left");
-  await expect(side).toBeVisible();
-  expect(await side.evaluate((node) => getComputedStyle(node).width)).toBe("9px");
-  expect(await side.evaluate((node) => getComputedStyle(node).backgroundImage)).toContain("linear-gradient");
+  // Sachet plat façon TCG de poche : aucune tranche 3D, un reflet découpé par l'impression.
+  await expect(pack.locator(".pack-3d-side")).toHaveCount(0);
+  await expect(pack.locator(".pack-glint")).toHaveCount(1);
   // Plus de reflet en boucle : l'élément n'existe plus.
   await expect(pack.locator(".pack-specular")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);

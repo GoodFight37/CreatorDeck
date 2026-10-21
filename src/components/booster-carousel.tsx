@@ -45,12 +45,13 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     {/* Le paquet EST le bouton : son nom est l'action, lue mais pas affichée. */}
     {active ? <span className="sr-only">{label}</span> : null}
     <PackPile count={pile} />
+    {/* Sachet plat, façon TCG de poche : l'épaisseur n'est plus modélisée (les tranches
+        3D donnaient le liseré), le volume vient de l'impression et du reflet. */}
     <span className="pack-idle" aria-hidden="true"><span className="pack-3d-object">
-      <span className="pack-3d-side pack-3d-side-left" /><span className="pack-3d-side pack-3d-side-right" />
-      <span className="pack-3d-side pack-3d-side-bottom" />
       <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
-        <span className="pack-bulge" /></span>
+        <span className="pack-bulge" />
+        <span className="pack-glint" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} /></span>
     </span></span>
   </button>;
 }

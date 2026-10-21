@@ -82,35 +82,6 @@
   transform-style: preserve-3d;
   transform: rotateX(var(--pack-tilt-x, 0deg)) rotateY(var(--pack-tilt-y, 0deg));
 }
-.home-view .pack-3d-side {
-  position: absolute;
-  pointer-events: none;
-  backface-visibility: hidden;
-}
-.home-view .pack-3d-side-left {
-  z-index: 1;
-  top: 2px; bottom: 4px; left: -18px; width: 20px;
-  transform: rotateY(90deg);
-  transform-origin: right center;
-  background: linear-gradient(90deg, #220b18, #b75470 28%, #f2a1ad 55%, #6d1a3b 82%, #290d1c);
-  box-shadow: inset 2px 0 rgba(255,235,226,.7), inset -2px 0 rgba(15,0,12,.72), 0 0 8px rgba(185,47,91,.22);
-}
-.home-view .pack-3d-side-right {
-  z-index: 3;
-  top: 2px; bottom: 4px; right: -18px; width: 20px;
-  transform: rotateY(-90deg);
-  transform-origin: left center;
-  background: linear-gradient(90deg, #f4c7ad, #a44162 28%, #5c1537 56%, #200a19);
-  box-shadow: inset 2px 0 rgba(255,235,226,.65), inset -3px 0 rgba(12,0,10,.7);
-}
-.home-view .pack-3d-side-bottom {
-  z-index: 3;
-  left: 2px; right: 2px; bottom: -17px; height: 18px;
-  transform: rotateX(90deg);
-  transform-origin: center top;
-  background: linear-gradient(180deg, #f0a0a7, #8a2447 42%, #210a19);
-  box-shadow: inset 0 2px rgba(255,230,220,.62), inset 0 -3px rgba(12,0,10,.7);
-}
 .home-view .pack-3d-front {
   display: block;
   width: 100%;
@@ -564,12 +535,12 @@
   width: var(--drop-pack-size);
   max-width: var(--drop-pack-size);
   border-radius: 10px;
-  transform: perspective(900px) rotateY(-7deg) rotateX(4deg);
+  transform: perspective(900px) rotateX(2deg);
   animation: drop-pack-arrive 380ms cubic-bezier(.2,.8,.2,1) backwards;
   transition: transform 100ms ease-out;
 }
 .home-view .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
-  transform: perspective(900px) rotateY(-7deg) rotateX(4deg) scale(.97);
+  transform: perspective(900px) rotateX(2deg) scale(.97);
 }
 .home-view .pack-idle {
   position: absolute;
@@ -579,14 +550,32 @@
   animation: drop-pack-idle 4.8s ease-in-out 380ms infinite backwards;
 }
 @keyframes drop-pack-arrive {
-  from { opacity: 0; translate: 0 12px; scale: .94; transform: perspective(900px) rotateY(-7deg) rotateX(4deg); }
-  to { opacity: 1; translate: 0 0; scale: 1; transform: perspective(900px) rotateY(-7deg) rotateX(4deg); }
+  from { opacity: 0; translate: 0 12px; scale: .94; transform: perspective(900px) rotateX(2deg); }
+  to { opacity: 1; translate: 0 0; scale: 1; transform: perspective(900px) rotateX(2deg); }
 }
 @keyframes drop-pack-idle {
-  /* ±11° : assez pour voir la tranche du sachet passer d'un côté à l'autre. */
-  0%, 100% { transform: translateY(4px) rotateY(-11deg) rotateX(-2deg); }
-  50% { transform: translateY(-4px) rotateY(11deg) rotateX(2deg); }
+  /* Sachet plat qui flotte : ±5 px, ±1,4° de roulis, ±6° de lacet. Transform seulement. */
+  0%, 100% { transform: translateY(5px) rotateZ(-1.4deg) rotateY(-6deg); }
+  50% { transform: translateY(-5px) rotateZ(1.4deg) rotateY(6deg); }
 }
+/* Le reflet du film : un passage de lumière de temps en temps, découpé par l'impression
+   elle-même (masque alpha du SVG), donc jamais en dehors du sachet. */
+.home-view .pack-glint {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  -webkit-mask: var(--pack-art) center / 100% 100% no-repeat;
+  mask: var(--pack-art) center / 100% 100% no-repeat;
+}
+.home-view .pack-glint::after {
+  content: ""; position: absolute; top: -10%; bottom: -10%; left: 0; width: 34%;
+  background: linear-gradient(105deg, transparent, rgb(255 255 255 / .38) 42%, rgb(255 255 255 / .7) 50%, rgb(255 255 255 / .38) 58%, transparent);
+  transform: translateX(-140%) skewX(-14deg);
+  animation: drop-pack-glint 5.6s cubic-bezier(.4, 0, .2, 1) 1.4s infinite;
+}
+@keyframes drop-pack-glint {
+  0%, 64% { transform: translateX(-140%) skewX(-14deg); }
+  88%, 100% { transform: translateX(340%) skewX(-14deg); }
+}
+.home-view .booster-neighbor .pack-glint::after { animation: none; }
 .home-view .pack-stage .pack-3d-front {
   border: 0;
   border-radius: 0;
@@ -603,24 +592,6 @@
   /* Aucun `filter` sur la face ni sur son image : il en fait une surface aplatie
      que Chromium trie mal avec la tranche gauche, tracée alors en liseré clair
      devant les soudures. Le contact au sol reste porté par `.pack-shadow`. */
-}
-.home-view .pack-stage .pack-3d-side-left {
-  left: 2px; width: 9px;
-  transform: rotateY(90deg);
-  transform-origin: right center;
-  background: linear-gradient(90deg, #0b0c13, #5d4550 24%, #e4baa1 52%, #412638 81%, #080a10);
-  box-shadow: inset 1px 0 rgb(252 212 191 / .28), inset -2px 0 rgb(4 4 10 / .8);
-}
-.home-view .pack-stage .pack-3d-side-right {
-  top: 14px; right: 2px; width: 9px;
-  transform: rotateY(-90deg);
-  transform-origin: left center;
-  background: linear-gradient(90deg, #e3ba9f, #906475 30%, #362436 62%, #090910);
-  box-shadow: inset 1px 0 rgb(255 228 205 / .24), inset -2px 0 rgb(4 4 10 / .78);
-}
-.home-view .pack-stage .pack-3d-side-bottom {
-  height: 8px; bottom: -7px;
-  background: linear-gradient(180deg, #7d555a, #311825 46%, #080a10);
 }
 .home-view .pack-stage.stage-live .pack-shadow {
   z-index: 1;
@@ -703,9 +674,11 @@
 @media (prefers-reduced-motion: reduce) {
   .home-view .pack-stage.stage-live .pack-artwork.pack-live,
   .home-view .pack-idle,
+  .home-view .pack-glint::after,
   .home-view .pack-stage.stage-live .pack-shadow { animation: none; }
 }
 [data-card-fx="off"] .home-view .pack-idle,
+[data-card-fx="off"] .home-view .pack-glint::after,
 [data-card-fx="off"] .home-view .pack-stage.stage-live .pack-shadow { animation: none; }
 .home-view .open-panel:not([data-tutorial="true"]) .drop-secondary-details > summary { display: inline-flex; }
 @media (max-width: 360px) {

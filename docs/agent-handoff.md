@@ -1,3 +1,12 @@
+# Checkpoint Claude — refonte des sachets du Drop, façon TCG de poche (21 octobre 2026)
+
+- **Demande de Malik :** un vrai nouveau design, style Pokémon TCG Pocket, avec une DA Streamer pour Live Drop et une DA mèmes d'internet pour MEMES. Interdits D-132 (tranches) levés par lui.
+- **Fait (skills `impeccable`, `emil-design-eng`, `animate`, `animation-performance`) :** les deux SVG sont redessinés par `scripts/build-pack-art.py` (lettres tracées en vecteur depuis Barlow Condensed, aucune police système). Même gabarit 600 × 880 et même soudure à 15,45 % : la déchirure (`pack-tear`) n'a pas bougé et reste continue. Sachet **plat** : tranches 3D supprimées du composant et du CSS (le liseré qb0 disparaît avec elles), `.foil-depth-*` de la scène d'ouverture rendues transparentes, renflement `.pack-bulge` réduit à un reflet doux. Flottement 4,8 s (±5 px, ±1,4° roulis, ±6° lacet) et un reflet de film toutes les 5,6 s (`.pack-glint`, `transform` seulement, masque alpha de l'impression). Mouvement réduit et `data-card-fx="off"` coupent les deux. Pile de réserve aux couleurs de chaque univers. Détails dans DESIGN.md, « Sachets du Drop ».
+- **Vérifié :** captures relues à 320, 390 et 1024 px (pixel ×3) pour les deux univers, plus l'ouverture Live (scellé et déchirure en cours). `tsc` 0 erreur, ESLint propre sur les fichiers touchés. E2e ciblés `pack-tear`, `booster-selector`, `memes`, `drop-binder`, `drop-craft-priorites` : verts après avoir aligné deux assertions qui exigeaient les tranches 3D. Le détecteur impeccable ne relève rien de neuf (alertes préexistantes aux lignes non touchées).
+- **Non vérifié :** **aucun test Android** ; la déchirure MEMES n'a pas été capturée à l'œil (mon script d'essai a échoué, le test `memes.spec` de déchirure est vert) ; fluidité du masque + reflet sur WebView à valider sur téléphone ; `review-animations` et `break-ui` non passés en revue formelle.
+- **CI à surveiller :** les captures de référence `sealed-sachet-*-linux.png` et `torn-sachet-*-linux.png` ne peuvent pas être produites sous Windows. J'y ai copié les rendus win32 : si « Vérification » échoue sur ces deux tests, régénérer les `-linux.png` depuis l'artefact du rapport Playwright.
+- **Pas de migration, pas de règle de jeu, pas d'économie touchées.** `next.config.ts` et `scripts/delegate-claude.mjs` non commités.
+
 # Checkpoint Claude — ouverture : plus aucune carte n'avance seule (21 octobre 2026, nuit)
 
 - **Signalement de Malik :** à l'ouverture d'un booster, des cartes « montent et s'ouvrent toutes seules » après l'appui.

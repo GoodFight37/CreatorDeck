@@ -358,7 +358,7 @@
    il aplatirait les faces 3D du sachet. L'ombre vit sur .pack-shadow. */
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 100ms cubic-bezier(0.23, 1, 0.32, 1); }
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
-  transform: perspective(900px) rotateY(-7deg) rotateX(4deg) scale(.97);
+  transform: perspective(900px) rotateX(2deg) scale(.97);
 }
 .home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
@@ -370,15 +370,13 @@
   transform: translateZ(-60px); }
 .pack-pile-back {
   position: absolute; inset: 1.5% 3%;
-  border-radius: 7px;
-  background:
-    repeating-linear-gradient(135deg, rgb(255 255 255 / .035) 0 2px, transparent 2px 9px),
-    linear-gradient(165deg, #3b1b22, #160a0e 52%, #09070a);
-  border: 1px solid rgb(255 214 200 / .16);
-  box-shadow: 0 14px 24px rgb(0 0 0 / .65), inset 0 1px rgb(255 255 255 / .1);
+  border-radius: 12px;
+  background: linear-gradient(165deg, #7a5ff0, #3a2096 52%, #1a0e5c);
+  border: 2px solid rgb(255 255 255 / .38);
+  box-shadow: 0 14px 24px rgb(0 0 0 / .55), inset 0 2px rgb(255 255 255 / .22);
   transform: translate(calc(var(--pile-i) * 10px), calc(var(--pile-i) * -13px)) rotate(calc(var(--pile-i) * 2.6deg));
 }
-[data-booster="memes"] .pack-pile-back { background: repeating-linear-gradient(135deg, rgb(255 255 255 / .035) 0 2px, transparent 2px 9px), linear-gradient(165deg, #2b2a12, #11100a 52%, #09090a); }
+[data-booster="memes"] .pack-pile-back { background: linear-gradient(165deg, #86f080, #2fb67f 52%, #137a58); border-color: #0b0b0b; box-shadow: 0 14px 24px rgb(0 0 0 / .55), inset 0 2px rgb(255 255 255 / .3); }
 /* Le choix d'univers : deux mots discrets, pas une seconde pilule rouge. */
 .home-view .booster-switcher { position: absolute; z-index: 5; top: 0; right: -6px; gap: 0; }
 .home-view .booster-switcher button {
