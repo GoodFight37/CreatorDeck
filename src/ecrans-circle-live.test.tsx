@@ -76,17 +76,40 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(status()).toBeNull();
   });
 
+  it("une chaîne hors catalogue (0060) : visage en initiales, « sans carte », lien Twitch, jamais « À trouver »", async () => {
+    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: ["twitch:petite_chaine", "ibai"], at: 1 }));
+    setLive({ streams: [{ ...stream("petite_chaine", 42), displayName: "Petite_Chaine" }] });
+    await home();
+    const card = moment()!;
+    expect(card.querySelector("h2")!.textContent).toBe("Petite_Chaine est en direct");
+    expect(card.querySelector("a.circle-live-watch")!.getAttribute("href")).toBe("https://www.twitch.tv/petite_chaine");
+    expect(card.querySelector("a.circle-live-watch")!.getAttribute("aria-label")).toBe("Regarder Petite_Chaine sur Twitch");
+    expect(card.textContent).toContain("sans carte");
+    expect(card.textContent).not.toMatch(/À trouver|Dans ta collection|Live Drop \(/);
+    const item = document.querySelector<HTMLLIElement>('.circle-strip-row > li[data-custom="true"]')!;
+    expect(item.dataset.live).toBe("true");
+    expect(item.querySelector("img")).toBeNull();
+    expect(item.textContent).not.toContain("À trouver");
+    expect(item.querySelector("a")!.getAttribute("href")).toBe("https://www.twitch.tv/petite_chaine");
+    // Hors direct : toujours dans la rangée, « sans carte ».
+    setLive();
+    await home();
+    const quiet = document.querySelector<HTMLLIElement>('.circle-strip-row > li[data-custom="true"]')!;
+    expect(quiet.dataset.live).toBe("false");
+    expect(quiet.textContent).toContain("sans carte");
+    expect(quiet.textContent).not.toContain("À trouver");
+  });
+
   it("réserve vide : ouvre le direct du cercle et garde le sablier dans les détails", async () => {
     setLive({ streams: [stream("ibai", 100)] });
     const { onUseHourglass } = await home({ packs: 0, hourglasses: 3 });
     const card = moment()!;
     expect(card.querySelector("h2")!.textContent).toBe("ibai est en direct");
-    expect(card.textContent).toContain("Prochain booster dans");
+    expect(card.textContent).toMatch(/Prochain booster à \d\d h \d\d/);
     expect(card.textContent).not.toContain("C’est le moment");
-    const action = document.querySelector<HTMLAnchorElement>(".open-panel a.reserve-action")!;
-    expect(action.textContent).toContain("Voir ibai en direct");
-    expect(action.href).toBe("https://www.twitch.tv/ibai");
-    expect(action.target).toBe("_blank");
+    // Un seul endroit mène au direct : le moment du cercle, pas une seconde action sous le sachet.
+    expect(document.querySelector(".open-panel .reserve-action")).toBeNull();
+    expect(document.querySelector(".open-panel .stock-row")!.textContent).toMatch(/^Prochain sachet à \d\d h \d\d$/);
     expect(card.querySelector(".circle-live-hourglass")).toBeNull();
     const button = document.querySelector<HTMLButtonElement>(".hourglass-action")!;
     expect(button.closest("details")!.querySelector("summary")!.textContent).toContain("Réserve, taux et sabliers");
@@ -94,15 +117,12 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(onUseHourglass).toHaveBeenCalledOnce();
   });
 
-  it("réserve vide sans direct : le bouton actif ouvre la rangée du cercle", async () => {
+  it("réserve vide sans direct : une seule ligne dit l'heure du prochain sachet", async () => {
     await home({ packs: 0 });
-    const button = document.querySelector<HTMLButtonElement>(".open-panel .reserve-action")!;
-    expect(button.disabled).toBe(false);
-    expect(button.textContent).toContain("Personne de tes chaînes en direct");
-    expect(button.textContent).not.toContain("Recharge en cours");
-    act(() => button.click());
-    expect(document.activeElement?.contains(document.querySelector(".circle-strip"))).toBe(true);
-    expect(document.querySelector(".timer-copy")!.textContent).toContain("+1 dans");
+    expect(document.querySelector(".open-panel .reserve-action")).toBeNull();
+    const line = document.querySelector(".open-panel .stock-row")!.textContent!;
+    expect(line).toMatch(/^Prochain sachet à \d\d h \d\d$/);
+    expect(document.body.textContent).not.toContain("Recharge en cours");
     expect(moment()).toBeNull();
   });
 

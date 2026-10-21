@@ -103,49 +103,6 @@
   42% { opacity: .84; transform: translate(-50%, -50%) rotate(-31deg) rotateX(68deg) scale(1.12); }
   100% { opacity: .36; transform: translate(-50%, -50%) rotate(-14deg) rotateX(68deg) scale(1); }
 }
-.reveal-rarity-kicker {
-  position: absolute;
-  top: clamp(2%, 4vh, 6%);
-  left: 50%;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  gap: 4px;
-  width: min(90%, 400px);
-  text-align: center;
-  transform: translateX(-50%);
-  pointer-events: none;
-  opacity: 0;
-  animation: reveal-kicker-arrive 900ms cubic-bezier(.13,.8,.25,1)
-    var(--rare-delay, 0ms) both;
-}
-.reveal-rarity-kicker span {
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .3em;
-  color: rgba(255, 220, 233, .7);
-}
-.reveal-rarity-kicker strong {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(24px, 7vw, 39px);
-  letter-spacing: .14em;
-  color: #ffb9e5;
-  text-shadow: 0 0 30px rgba(240, 86, 190, .65), 0 0 60px rgba(168, 83, 239, .27);
-}
-.reveal-rarity-kicker.rarity-legendary span {
-  color: rgba(255, 238, 198, .8);
-}
-.reveal-rarity-kicker.rarity-legendary strong {
-  color: #ffe0a0;
-  text-shadow: 0 0 30px rgba(250, 183, 91, .73), 0 0 64px rgba(247, 117, 65, .35);
-}
-@keyframes reveal-kicker-arrive {
-  0%, 18% { opacity: 0; transform: translate(-50%, 20px) scale(.86); letter-spacing: .45em; }
-  57% { opacity: 1; transform: translate(-50%, -4px) scale(1.07); }
-  100% { opacity: 1; transform: translateX(-50%) scale(1); }
-}
 .reveal-rarity-epic .reveal-name > p:first-child {
   color: #ffbfeb;
   text-shadow: 0 0 20px rgba(243, 128, 219, .45);
@@ -184,11 +141,8 @@
   font-size: clamp(32px, 11vw, 62px);
   text-shadow: 0 0 18px rgba(252, 187, 177, .59);
 }
-[data-card-fx="off"] .reveal-cinematic-field,
-[data-card-fx="off"] .reveal-rarity-kicker { display: none; }
+[data-card-fx="off"] .reveal-cinematic-field { display: none; }
 @media (prefers-reduced-motion: reduce) {
-  .reveal-cinematic-field span,
-  .reveal-rarity-kicker { animation: none; opacity: .42; }
-  .reveal-rarity-kicker { transform: translateX(-50%); opacity: 1; }
+  .reveal-cinematic-field span { animation: none; opacity: .42; }
   .reveal-field-corona { transform: translate(-50%,-50%) scale(1); }
 }

@@ -21,6 +21,34 @@ export function circleLabel(circle: readonly string[], slug: string): "Préfér�
 /** Aucun nom n'est exigé (0058) : un cercle vide vaut « pas de cercle ». */
 export const CIRCLE_MIN = 0;
 export const CIRCLE_MAX = 15;
+/**
+ * Une chaîne regardée hors du catalogue (0060) : `twitch:<login>`. Elle n'a
+ * aucune carte et ne sort jamais d'un booster ; elle sert à voir son direct.
+ */
+export const CUSTOM_PREFIX = "twitch:";
+const TWITCH_LOGIN = /^[a-z0-9_]{4,25}$/;
+
+/** Le login d'une entrée hors catalogue, `null` pour un slug du catalogue ou une entrée abîmée. */
+export function customLogin(entry: string): string | null {
+  if (!entry.startsWith(CUSTOM_PREFIX)) return null;
+  const login = entry.slice(CUSTOM_PREFIX.length);
+  return TWITCH_LOGIN.test(login) ? login : null;
+}
+
+/** Un nom tapé devenu login Twitch (`@x`, lien collé acceptés), ou `null` s'il n'en a pas la forme. */
+export function twitchLogin(raw: string): string | null {
+  const login = raw.trim().toLowerCase()
+    .replace(/^(https?:\/\/)?(www\.|m\.)?twitch\.tv\//, "")
+    .replace(/[/?#].*$/, "")
+    .replace(/^@/, "");
+  return TWITCH_LOGIN.test(login) ? login : null;
+}
+
+/** Deux lettres pour le visage d'une chaîne sans portrait. */
+export function channelInitials(name: string): string {
+  return name.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2).toUpperCase() || "?";
+}
+
 /** Un booster du cercle compte cinq cartes, comme le Live Drop. */
 export const CIRCLE_PACK_SIZE = 5;
 
@@ -121,8 +149,10 @@ export function buildCreatorIndex(creators: readonly CircleCreator[]): CreatorIn
 export type ResolvedCircleInput = {
   /** Le cercle après ajout : l'ordre est conservé, sans doublon, 15 au plus. */
   slugs: string[];
-  /** Les noms que le jeu ne connaît pas (hors du classement). */
+  /** Les noms qui n'ont ni carte ni la forme d'un login Twitch. */
   unknown: string[];
+  /** Les chaînes ajoutées sans carte (`twitch:<login>`), hors du catalogue. */
+  custom: string[];
   /** Combien de noms valides n'ont pas trouvé de place (au-delà de 15). */
   overflow: number;
 };
@@ -138,20 +168,31 @@ export function resolveCircleInput(
 ): ResolvedCircleInput {
   const slugs = [...already];
   const unknown: string[] = [];
+  const custom: string[] = [];
   let overflow = 0;
   const known = new Set(slugs);
 
-  const take = (token: string): boolean => {
-    const creator = index.byName.get(normalizeChannelName(token));
-    if (!creator) return false;
-    if (known.has(creator.slug)) return true;
+  const push = (entry: string): void => {
+    if (known.has(entry)) return;
     if (slugs.length >= CIRCLE_MAX) {
       overflow += 1;
-      return true;
+      return;
     }
-    known.add(creator.slug);
-    slugs.push(creator.slug);
-    return true;
+    known.add(entry);
+    slugs.push(entry);
+    if (entry.startsWith(CUSTOM_PREFIX)) custom.push(entry);
+  };
+  // Le catalogue d'abord ; sinon une chaîne Twitch sans carte (0060).
+  const entryFor = (token: string): string | null => {
+    const creator = index.byName.get(normalizeChannelName(token));
+    if (creator) return creator.slug;
+    const login = twitchLogin(token);
+    return login ? CUSTOM_PREFIX + login : null;
+  };
+  const take = (token: string): boolean => {
+    const entry = entryFor(token);
+    if (entry) push(entry);
+    return entry !== null;
   };
 
   for (const chunk of text.split(/[\n,;]+/)) {
@@ -161,13 +202,13 @@ export function resolveCircleInput(
     // « kameto squeezie » : un nom affiché peut contenir une espace, un login
     // jamais. On retente mot à mot avant de déclarer le nom inconnu.
     const words = token.split(/\s+/).filter(Boolean);
-    if (words.length > 1 && words.every((word) => index.byName.has(normalizeChannelName(word)))) {
+    if (words.length > 1 && words.every((word) => entryFor(word) !== null)) {
       for (const word of words) take(word);
     } else {
       unknown.push(token);
     }
   }
-  return { slugs, unknown, overflow };
+  return { slugs, unknown, custom, overflow };
 }
 
 /** Suggestions pendant la frappe : préfixe d'abord, puis le reste, du plus gros au plus petit. */
@@ -202,12 +243,13 @@ export function popularCreators(
   return index.list.filter((creator) => !skip.has(creator.slug)).slice(0, limit);
 }
 
-/** Un cercle est valide : de 0 à 15 chaînes, toutes différentes. */
+/** Un cercle est valide : de 0 à 15 chaînes, toutes différentes ; une entrée `twitch:` a un login valide. */
 export function isValidCircle(slugs: readonly string[]): boolean {
   return (
     slugs.length >= CIRCLE_MIN &&
     slugs.length <= CIRCLE_MAX &&
-    new Set(slugs).size === slugs.length
+    new Set(slugs).size === slugs.length &&
+    slugs.every((slug) => !slug.startsWith(CUSTOM_PREFIX) || customLogin(slug) !== null)
   );
 }
 

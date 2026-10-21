@@ -43,7 +43,8 @@ test("la matière distingue les raretés sans animation continue ni portrait mas
 
 test("la fiche présente les variantes possédées et leurs vrais compteurs", async ({ page }) => {
   await binder(page);
-  const trigger = page.locator(".collection-grid .rarity-legendary .creator-card-inspect");
+  // Les dos à découvrir suivent les cartes obtenues sur la même page : viser la Légendaire possédée.
+  const trigger = page.locator(".collection-grid .rarity-legendary:not(.is-locked) .creator-card-inspect");
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: `Carte de ${legendary.displayName}` });
   await expect(dialog).toHaveClass(/card-vault/);
@@ -71,7 +72,9 @@ test("la fiche présente les variantes possédées et leurs vrais compteurs", as
 
 test("les dos et la fiche manquante restent anonymes et consultables", async ({ page }) => {
   await binder(page);
-  await page.getByRole("button", { name: "À découvrir", exact: true }).click();
+  // Les quatre obtenues ouvrent l'album ; la page suivante n'a que des dos.
+  await page.getByRole("button", { name: "Suivant", exact: true }).click();
+  await expect(page.locator(".binder-page")).toHaveAttribute("data-page", "2");
   await expect(page.locator(".binder-back-seal")).toHaveCount(12);
   await expect(page.locator(".collection-grid .card-photo")).toHaveCount(0);
   await page.locator(".collection-grid .creator-card").first().click();
@@ -94,8 +97,8 @@ for (const mode of ["off", "reduce"] as const) {
     if (mode === "off") await page.addInitScript(() => localStorage.setItem("creatordeck.tilt", "off"));
     else await page.emulateMedia({ reducedMotion: "reduce" });
     await binder(page);
-    await expect(page.locator(".collection-grid .rarity-legendary .card-foil")).toHaveCSS("display", "none");
-    await page.locator(".collection-grid .rarity-legendary").click();
+    await expect(page.locator(".collection-grid .rarity-legendary:not(.is-locked) .card-foil")).toHaveCSS("display", "none");
+    await page.locator(".collection-grid .rarity-legendary:not(.is-locked) .creator-card-inspect").click();
     await expect(page.locator(".card-vault .card-foil")).toHaveCSS("display", "none");
     await expect(page.locator(".card-vault .binder-feature-card")).toHaveCSS("animation-name", "none");
     await expect(page.locator(".binder-feature-card")).toHaveCSS("transform", "none");

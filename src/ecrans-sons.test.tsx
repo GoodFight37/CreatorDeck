@@ -85,7 +85,7 @@ describe("le réglage du son", () => {
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
 
-  it("garde les filtres muets, mais donne un son bref au feuilletage", async () => {
+  it("garde la recherche muette, mais donne un son bref au feuilletage", async () => {
     await ecranToi();
     await act(async () => {});
     const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
@@ -93,13 +93,13 @@ describe("le réglage du son", () => {
     banc.appuyer("Binder");
     const avant = sons.oscillateurs + sons.bruitages;
 
-    // Les filtres sont de la navigation ; seuls les tours de page sont sonores.
-    const filtres = [...document.querySelectorAll<HTMLButtonElement>(".filter-chips button")];
-    expect(filtres.length, "aucun filtre dans le classeur").toBeGreaterThan(1);
-    // Le classeur s'ouvre sur les obtenues (vide au premier lancement) : on
-    // choisit le catalogue explicitement avant de feuilleter ses pages.
-    banc.appuyer(filtres[0]!.textContent!.trim());
-    expect(sons.oscillateurs + sons.bruitages, "un filtre a sonné").toBe(avant);
+    // L'album n'a plus de filtres ; chercher un nom est de la navigation muette,
+    // seuls les tours de page sont sonores.
+    expect(document.querySelector(".filter-chips"), "des filtres dans le classeur").toBeNull();
+    const champ = document.querySelector<HTMLInputElement>('input[aria-label="Rechercher un créateur"]')!;
+    banc.saisir(champ, "a");
+    banc.saisir(champ, "");
+    expect(sons.oscillateurs + sons.bruitages, "la recherche a sonné").toBe(avant);
     banc.appuyer("Suivant");
     expect(sons.oscillateurs + sons.bruitages, "la page n'a pas sonné").toBe(avant + 1);
     // jsdom ne joue pas le tour de feuille : attendre son filet de sécurité.

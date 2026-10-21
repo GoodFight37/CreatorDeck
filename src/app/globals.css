@@ -263,17 +263,14 @@ input:focus-visible {
   height: 31px;
   gap: 4px;
   padding: 0 8px;
-  color: var(--accent-light);
-  border: 1px solid rgb(var(--accent-rgb) / 0.2);
-  border-radius: 10px;
-  background: rgb(var(--accent-rgb) / 0.1);
+  color: var(--paper);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.04);
 }
 
-.currency-chip.warm {
-  color: #ffd17f;
-  border-color: rgba(255, 190, 85, 0.18);
-  background: rgba(255, 190, 85, 0.08);
-}
+/* Les sabliers ne sont pas une légendaire : pas d'or, la même étiquette. */
+.currency-chip.warm { color: var(--paper); }
 
 .currency-chip b {
   color: var(--text);
@@ -283,7 +280,7 @@ input:focus-visible {
 
 .currency-chip small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .02em;
 }
@@ -312,7 +309,7 @@ input:focus-visible {
   position: relative;
   z-index: 1;
   color: var(--muted);
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -321,12 +318,12 @@ input:focus-visible {
   bottom: 0;
   left: 0;
   height: 3px;
-  background: var(--accent);
+  background: var(--paper);
 }
 
 .eyebrow {
   margin: 0 0 5px;
-  color: var(--accent-light);
+  color: var(--muted);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.16em;

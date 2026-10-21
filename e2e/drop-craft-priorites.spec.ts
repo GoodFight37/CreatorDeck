@@ -41,17 +41,17 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(page.locator(".pack-stage .pack-copy")).toContainText("· 5");
   await expect(page.locator(".pack-stage .pull-hint")).toHaveCount(0);
   await expect(page.locator(".primary-action")).toHaveCount(0);
-  const stock = Number(await page.locator(".stock-row strong").first().innerText());
-  await expect(page.locator(".open-panel .stock-row")).toContainText(/restants?/);
-  await expect(page.locator(".open-panel .stock-row")).not.toContainText("/4");
-  expect(Number.parseFloat(await page.locator(".open-panel .stock-row strong").evaluate((node) => getComputedStyle(node).fontSize))).toBeLessThanOrEqual(14);
+  // La seule ligne de réserve : « N sachets · prochain à … », en texte simple.
+  const reserve = page.locator(".open-panel .stock-row");
+  await expect(reserve).toHaveCount(1);
+  await expect(reserve).toContainText(/^\d+ sachets?/);
+  await expect(reserve).not.toContainText("/4");
+  const stock = Number((await reserve.innerText()).match(/^\d+/)![0]);
   await expect(pack.locator(".pack-pile-back")).toHaveCount(Math.max(0, Math.min(3, stock - 1)));
-  // D-153 : l'état du booster en un bouton sous le sachet, au-dessus de la barre du bas.
-  const cta = (await page.locator(".drop-cta .drop-open").boundingBox())!;
-  expect(cta.y).toBeGreaterThanOrEqual(box.y + box.height - 1);
+  // Un seul geste d'ouverture : le sachet lui-même, au-dessus de la barre du bas.
+  await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
   const ctaNav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;
-  expect(cta.y + cta.height).toBeLessThanOrEqual(ctaNav.y);
-  await expect(page.locator(".drop-cta .drop-open")).toHaveAttribute("aria-hidden", "true");
+  expect(box.y + box.height).toBeLessThanOrEqual(ctaNav.y + 1);
   // Le voisin est rogné sur les côtés ; l'ombre ambiante du sachet n'est pas coupée en bas.
   const stageOverflow = await page.locator(".pack-stage").evaluate((node) => ({ x: getComputedStyle(node).overflowX, y: getComputedStyle(node).overflowY }));
   expect(["clip", "hidden"]).toContain(stageOverflow.x);

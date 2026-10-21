@@ -1,12 +1,13 @@
 import { act } from "react";
-vi.mock("@/hooks/use-other-players", () => ({ useOtherPlayers: () => true }));
+vi.mock("@/hooks/use-other-players", () => ({ useOtherPlayers: () => monde.others }));
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 
 const monde = vi.hoisted(() => ({
+  others: true as boolean | null,
   cloud: {
     configured: true, userId: null as string | null, busy: false,
-    friends: { friends: [], incoming: [], outgoing: [] }, friendsAt: null,
+    friends: { friends: [], incoming: [], outgoing: [] }, friendsAt: null as number | null,
     market: [], marketAt: null, wishlistSlug: null, lastPacks: null, lastPacksAt: null,
     lastPacksBusy: false,
   },
@@ -26,10 +27,31 @@ describe("les feuilles sociales après connexion", () => {
   beforeEach(() => {
     banc = creerBanc(); banc.preparer();
     monde.cloud.userId = null;
+    monde.others = true;
+    monde.cloud.friendsAt = null;
     monde.cloud.lastPacks = null;
     vi.clearAllMocks();
   });
   afterEach(() => banc.nettoyer());
+
+  it.each([false, true, null])("propose le partage sans amis (autres joueurs : %s)", async (others) => {
+    monde.others = others;
+    monde.cloud.userId = 'joueur';
+    monde.cloud.friendsAt = Date.now();
+    const { FriendsSheet } = await import('@/components/friends-sheet');
+    await banc.monter(<FriendsSheet onClose={() => {}} />);
+    expect(document.querySelector('[aria-label="Partager une carte du cercle"]')).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Aucun ami');
+    expect(document.querySelector('[aria-label="Fermer"]')).not.toBeNull();
+  });
+
+  it("propose le partage hors ligne sans demander de compte", async () => {
+    monde.others = false;
+    const { FriendsSheet } = await import('@/components/friends-sheet');
+    await banc.monter(<FriendsSheet onClose={() => {}} />);
+    expect(document.querySelector('[aria-label="Partager une carte du cercle"]')).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Créer un compte invité');
+  });
 
   it.each([
     ["friends", "FriendsSheet", "loadFriends"],

@@ -82,18 +82,21 @@ test("glisser feuillette, un petit geste revient et un tap ouvre toujours la fic
   await expect(page.getByRole("dialog", { name: /^Carte de / })).toBeVisible();
 });
 
-test("les bords et les filtres annulent le feuilletage sans avance différée", async ({ page }) => {
+test("les bords et la recherche annulent le feuilletage sans avance différée", async ({ page }) => {
   await openBinder(page);
   const sheet = page.locator(".binder-page");
   await dragPage(page, 150);
   await expect(sheet).toHaveAttribute("data-page", "1");
   await page.getByRole("button", { name: "Suivant", exact: true }).click();
-  await page.getByRole("button", { name: "À découvrir", exact: true }).click();
+  await page.getByRole("textbox", { name: "Rechercher un créateur" }).fill(collection[0].displayName);
   await expect(sheet).toHaveAttribute("data-page", "1");
   await expect(sheet).toHaveAttribute("data-turn", "none");
   await page.waitForTimeout(450); // L'ancien secours ne doit pas rétablir sa page.
   await expect(sheet).toHaveAttribute("data-page", "1");
-  await expect(page.locator(".collection-grid .creator-card.is-locked")).toHaveCount(12);
+  await page.getByRole("textbox", { name: "Rechercher un créateur" }).fill("");
+  await expect(sheet).toHaveAttribute("data-page", "1");
+  // Les 36 obtenues d'abord : aucun dos sur la première page.
+  await expect(page.locator(".collection-grid .creator-card.is-locked")).toHaveCount(0);
   const surface = page.locator(".binder-surface");
   await surface.focus();
   await page.keyboard.press("ArrowRight");

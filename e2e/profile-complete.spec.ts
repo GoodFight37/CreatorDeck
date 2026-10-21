@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
-test("Toi vide : vitrine, parcours, objectifs directs et réglages repliés", async ({ page }) => {
+test("Toi vide : vitrine, parcours, activités et réglages repliés", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: "Toi", exact: true }).click();
   await expect(page.locator(".profile-showcase-empty")).toBeVisible();
@@ -13,7 +13,10 @@ test("Toi vide : vitrine, parcours, objectifs directs et réglages repliés", as
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   }
   await page.screenshot({ path: "test-results/profile-complete-empty.png", fullPage: true });
-  await page.locator(".profile-objective").click();
+  await expect(page.getByRole("button", { name: "Objectifs et saisons", exact: true })).not.toBeVisible();
+  await expect(page.getByRole("button", { name: "Tribunal des Bannis", exact: true })).not.toBeVisible();
+  await page.locator(".profile-online-fold > summary").click();
+  await page.getByRole("button", { name: "Objectifs et saisons", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Objectifs et saisons", exact: true })).toBeVisible();
 });
 

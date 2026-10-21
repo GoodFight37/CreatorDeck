@@ -2,7 +2,6 @@ import { act } from "react";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { CREATORS, CREATOR_BY_SLUG, RETIRED_BY_SLUG, RETIRED_CREATORS, type RetiredCreator } from "@/lib/catalog";
-import { BINDER_COLLECTION_BY_ID, BINDER_COLLECTIONS } from "@/lib/binder-collections";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { HomeView } from "@/components/drop-view";
 import { CollectionView } from "@/components/binder-view";
@@ -14,7 +13,7 @@ vi.mock("@/hooks/use-live", () => ({ useLive: () => ({ byLogin: new Map(), count
 const cloudMock = vi.hoisted(() => ({ current: { configured: false, userId: null as string | null, promoPacks: 0 } }));
 vi.mock("@/hooks/use-cloud", () => ({ useCloud: () => cloudMock.current }));
 
-describe("le Binder guide la collection sans inventer de progression", () => {
+describe("le Binder se feuillette, ses visages d’abord", () => {
   let banc: Banc;
   beforeEach(() => { banc = creerBanc(); banc.preparer(); });
   afterEach(() => { banc.nettoyer(); cloudMock.current = { configured: false, userId: null, promoPacks: 0 }; });
@@ -30,32 +29,25 @@ describe("le Binder guide la collection sans inventer de progression", () => {
     return { game, onGoDrop };
   }
 
-  it("le classeur vide propose le Drop et n’invente pas de page avancée", async () => {
+  const gridCards = () => [...document.querySelectorAll(".collection-grid .creator-card")];
+
+  it("le classeur vide propose le Drop et montre les dos à découvrir", async () => {
     const { onGoDrop } = await collection([]);
-    expect(document.querySelector(".binder-next-pages")).toBeNull();
+    expect(document.body.textContent).toContain("Ta collection commence avec le prochain booster.");
+    expect(gridCards()).toHaveLength(12);
+    expect(gridCards().every((node) => node.classList.contains("is-locked"))).toBe(true);
     banc.appuyer("Retour au Drop");
     expect(onGoDrop).toHaveBeenCalledOnce();
   });
 
-  it("les doublons ne gonflent pas les pages et leurs filtres ne montrent que les manquantes", async () => {
-    const family = CREATORS.filter((creator) => creator.region === "S01").slice(0, 2);
-    await collection([family[0].slug, family[0].slug, family[1].slug]);
-    const goal = document.querySelector<HTMLButtonElement>(".binder-next-pages > button")!;
-    const season = BINDER_COLLECTIONS.find((entry) => goal.textContent?.includes(entry.name))!;
-    expect(goal.textContent).toContain(`2 / ${season.slugs.length}`);
-    act(() => goal.click());
-    const allowed = new Set(BINDER_COLLECTION_BY_ID.get(season.id)!.slugs);
-    const labels = [...document.querySelectorAll(".collection-grid .creator-card")].map((node) => node.getAttribute("aria-label")!);
-    expect(labels).toHaveLength(season.slugs.length - 2);
-    for (const label of labels) {
-      expect(label).toContain("non obtenue");
-      const creator = CREATORS.find((entry) => label.startsWith(`${entry.displayName},`))!;
-      expect(allowed.has(creator.slug)).toBe(true);
-      expect(family.some((entry) => entry.slug === creator.slug)).toBe(false);
-    }
-    banc.appuyer("Dernières reçues");
-    expect(document.querySelector(".binder-active-page")).toBeNull();
-    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(2);
+  it("les doublons ne s'affichent que dans la fiche, pas sur la pochette", async () => {
+    const [first, second] = CREATORS;
+    await collection([first.slug, first.slug, second.slug]);
+    expect(gridCards()[0].getAttribute("aria-label")).toContain(first.displayName);
+    expect(gridCards()[1].getAttribute("aria-label")).toContain(second.displayName);
+    expect(document.querySelector(".collection-grid")!.textContent).not.toContain("×2");
+    act(() => document.querySelector<HTMLButtonElement>(".collection-grid .creator-card-inspect")!.click());
+    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("Possédée ×2");
   });
 
   it("garde les douze cartes et ignore un second feuilletage avant la pose", async () => {
@@ -64,27 +56,22 @@ describe("le Binder guide la collection sans inventer de progression", () => {
       await collection(CREATORS.slice(0, 25).map((creator) => creator.slug));
       const sheet = () => document.querySelector(".binder-page")!;
       expect(sheet().getAttribute("data-page")).toBe("1");
+      expect(document.querySelector(".binder-pager")!.textContent).toContain(`/ ${Math.ceil(CREATORS.length / 12)}`);
       banc.appuyer("Suivant");
       expect(sheet().getAttribute("data-page")).toBe("2");
-      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
+      expect(gridCards()).toHaveLength(12);
       banc.appuyer("Suivant");
       expect(sheet().getAttribute("data-page")).toBe("2");
       await act(async () => { await vi.advanceTimersByTimeAsync(420); });
       banc.appuyer("Suivant");
       expect(sheet().getAttribute("data-page")).toBe("3");
-      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(1);
-      await act(async () => { await vi.advanceTimersByTimeAsync(420); });
-      banc.appuyer("Suivant");
-      expect(sheet().getAttribute("data-page")).toBe("3");
+      // La 25e obtenue ouvre la page 3, les dos à découvrir suivent.
+      expect(gridCards()[0].classList.contains("is-locked")).toBe(false);
+      expect(gridCards().slice(1).every((node) => node.classList.contains("is-locked"))).toBe(true);
     } finally { vi.useRealTimers(); }
   });
 
-  it("999 cartes ne sont pas annoncées comme une collection complète", async () => {
-    await collection(CREATORS.slice(0, -1).map((creator) => creator.slug));
-    expect(document.querySelector(".collection-score")?.textContent).toContain("99%");
-  });
-
-  it("compte et filtre les Sortants obtenus dans Toutes et Obtenues", async () => {
+  it("range les Sortants obtenus parmi ses cartes et les retrouve par la recherche", async () => {
     const base = CREATORS[0];
     const retiredRecords: RetiredCreator[] = [
       { ...base, slug: "audit-retired-binder-alpha", displayName: "Audit Sortant Alpha",
@@ -98,28 +85,17 @@ describe("le Binder guide la collection sans inventer de progression", () => {
       CREATOR_BY_SLUG.set(retired.slug, retired);
     }
     try {
-      const firstCollection = BINDER_COLLECTIONS[0];
-      await collection([...firstCollection.slugs, ...retiredRecords.map(creator => creator.slug)]);
-      expect(banc.boutons().some(button => button.textContent === `Obtenues (${firstCollection.slugs.length + 2})`)).toBe(true);
-
-      act(() => document.querySelector<HTMLDetailsElement>(".binder-collections-picker summary")!.click());
-      act(() => [...document.querySelectorAll<HTMLButtonElement>(".binder-collection-choices button")]
-        .find(button => button.textContent?.includes(firstCollection.name))!.click());
-      expect(document.querySelector(".binder-active-page")).not.toBeNull();
-      for (const retired of retiredRecords) expect(document.body.textContent).not.toContain(retired.displayName);
-
-      act(() => document.querySelector<HTMLButtonElement>('[aria-label="Retirer le filtre de page"]')!.click());
+      await collection(retiredRecords.map(creator => creator.slug));
+      // Obtenues d'abord, la plus récente en tête.
+      expect(gridCards().slice(0, 2).map(node => node.getAttribute("aria-label")?.split(", rang")[0]))
+        .toEqual(["Audit Sortant Alpha", "Audit Sortant Omega"]);
       const search = document.querySelector<HTMLInputElement>('input[aria-label="Rechercher un créateur"]')!;
-      banc.saisir(document.querySelector<HTMLSelectElement>('select[aria-label="Trier le classeur"]')!, "alpha");
-      banc.saisir(search, "audit_sort_fixture");
-      const alphaSorted = [...document.querySelectorAll(".collection-grid .creator-card")]
-        .map(node => node.getAttribute("aria-label")?.split(", rang")[0]);
-      expect(alphaSorted).toEqual(["Audit Sortant Alpha", "Audit Sortant Omega"]);
       banc.saisir(search, "audit_sort_fixture_alpha");
-      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(1);
+      expect(gridCards()).toHaveLength(1);
       expect(document.querySelector(".collection-grid")?.textContent).toContain("Audit Sortant Alpha");
       banc.saisir(search, "absent du catalogue");
-      expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(0);
+      expect(gridCards()).toHaveLength(0);
+      expect(document.body.textContent).toContain("Aucune carte ne correspond à cette recherche.");
     } finally {
       for (const retired of retiredRecords) {
         RETIRED_CREATORS.splice(RETIRED_CREATORS.indexOf(retired), 1);
@@ -127,29 +103,6 @@ describe("le Binder guide la collection sans inventer de progression", () => {
         CREATOR_BY_SLUG.delete(retired.slug);
       }
     }
-  });
-
-  it("permet de choisir une page encore vide sans inventer de cartes obtenues", async () => {
-    await collection([]);
-    const choice = document.querySelector<HTMLButtonElement>(".binder-collection-choices button")!;
-    act(() => choice.click());
-    expect(document.querySelector(".binder-next-pages")?.textContent).toContain("0 / 12");
-    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
-    expect([...document.querySelectorAll(".collection-grid .creator-card")].every((node) => node.getAttribute("aria-label")?.includes("non obtenue"))).toBe(true);
-    banc.appuyer("Revenir à la suggestion automatique");
-    expect(document.querySelector(".binder-next-pages")).toBeNull();
-    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(0);
-  });
-
-  it("affiche une page choisie complétée avec ses cartes et son compteur exact", async () => {
-    const first = BINDER_COLLECTIONS[0];
-    await collection(first.slugs);
-    const choice = document.querySelector<HTMLButtonElement>(".binder-collection-choices button")!;
-    act(() => choice.click());
-    expect(document.querySelector(".binder-next-pages")?.textContent).toContain("COLLECTION COMPLÉTÉE");
-    expect(document.querySelector(".binder-next-pages progress")?.getAttribute("value")).toBe("12");
-    expect(document.querySelectorAll(".collection-grid .creator-card")).toHaveLength(12);
-    expect([...document.querySelectorAll(".collection-grid .creator-card")].every((node) => !node.getAttribute("aria-label")?.includes("non obtenue"))).toBe(true);
   });
 });
 
@@ -224,7 +177,7 @@ describe("les sabliers du Drop en ligne", () => {
     const sachet = document.querySelector<HTMLButtonElement>(".pack-stage .pack-artwork")!;
     expect(button.disabled).toBe(false);
     expect(sachet.disabled).toBe(false);
-    expect(document.body.textContent).toContain("50 boosters de test");
+    expect(document.querySelector(".open-panel .stock-row")!.textContent).toMatch(/^50 sachets · prochain à \d\d h \d\d$/);
     act(() => sachet.click());
     expect(onOpen).toHaveBeenCalledOnce();
     act(() => button.click());

@@ -5,7 +5,7 @@ test("Scène, rangé dans Autres activités, reste fermé après consommation et
   await gotoDeck(page, true, { withoutCircle: true });
   // D-148 : la Scène a quitté l'accueil pour « Autres activités » d'Objectifs.
   await expect(page.locator(".home-view .scene-block")).toHaveCount(0);
-  const reserve = await page.locator(".stock-row strong").innerText();
+  const reserve = await page.locator(".open-panel .stock-row").innerText();
   let scene = await openOtherActivities(page);
   await expect(scene.locator(".scene-state")).toHaveText("Disponible");
   await scene.getByRole("button", { name: "Ouvrir le Paquet Scène" }).click();
@@ -16,14 +16,14 @@ test("Scène, rangé dans Autres activités, reste fermé après consommation et
   await expect(scene.locator(".scene-action")).toBeDisabled();
   await expect(scene.locator(".scene-state")).toHaveText("Ouvert aujourd’hui");
   await page.getByRole("button", { name: "Drop", exact: true }).click();
-  await expect(page.locator(".stock-row strong")).toHaveText(reserve);
+  await expect(page.locator(".open-panel .stock-row")).toHaveText(reserve);
   await page.reload();
   scene = await openOtherActivities(page);
   await expect(scene.locator(".scene-action")).toBeDisabled();
   await expect(scene.locator(".scene-state")).toHaveText("Ouvert aujourd’hui");
 });
 
-test("Toi montre sa vitrine, ses pages réunies et retrouve la collection choisie", async ({ page }) => {
+test("Toi montre sa vitrine et ses pages réunies", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
   const cards = creatorData.filter((creator) => creator.region === "S01").slice(0, 12);
   await page.evaluate((cards) => {
@@ -36,23 +36,17 @@ test("Toi montre sa vitrine, ses pages réunies et retrouve la collection choisi
   }, cards);
   await page.reload();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
-  await page.locator(".binder-collections-picker summary").click();
-  const first = page.locator(".binder-collection-choices button").first();
-  const name = await first.locator("strong").innerText();
-  await first.click();
   await page.getByRole("button", { name: "Toi", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Mon profil de collectionneur" })).toBeVisible();
   await expect(page.locator(".profile-showcase .creator-card")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Mes collections réunies" })).toContainText("1 page réunie");
-  await expect(page.locator(".profile-collection-goal")).toContainText(name);
+  // L'album n'a plus de choix de collection : pas d'objectif en cours à afficher.
+  await expect(page.locator(".profile-collection-goal")).toHaveCount(0);
   for (const viewport of [{ width: 320, height: 568 }, { width: 412, height: 915 }]) {
     await page.setViewportSize(viewport);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width);
   }
   await page.locator(".profile-showcase").screenshot({ path: `test-results/profile-showcase-${test.info().project.name}.png` });
-  await page.locator(".profile-collection-goal").click();
-  await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
-  await expect(page.locator(".binder-next-pages")).toContainText(name);
 });
 
 test("la feuille du code booster reste entièrement visible sur téléphone", async ({ page }) => {

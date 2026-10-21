@@ -13,18 +13,32 @@
  * que rien. Donnée absente, périmée ou illisible → on le dit, sans badge.
  */
 import { CREATOR_BY_SLUG, type Creator } from "@/lib/catalog";
+import { customLogin } from "@/lib/circle";
 import { isLiveFresh, type LiveSnapshot, type LiveStream } from "@/lib/live";
 import { DIRECT_BONUS } from "@/lib/pull-rates";
 
 export type CircleLiveEntry = {
-  creator: Creator;
+  /** L'entrée du cercle : un slug du catalogue ou `twitch:<login>`. */
+  slug: string;
+  login: string;
+  displayName: string;
+  /** `null` : chaîne hors catalogue, sans carte (0060). */
+  creator: Creator | null;
   stream: LiveStream;
-  /** La carte est déjà dans la collection du joueur. */
+  /** La carte est déjà dans la collection du joueur (toujours faux sans carte). */
   owned: boolean;
 };
 
+/** Une entrée du cercle lisible : catalogue ou chaîne sans carte ; `null` si abîmée. */
+export function circleChannel(slug: string): { slug: string; login: string; displayName: string; creator: Creator | null } | null {
+  const creator = CREATOR_BY_SLUG.get(slug);
+  if (creator) return { slug, login: creator.login.toLowerCase(), displayName: creator.displayName, creator };
+  const login = customLogin(slug);
+  return login ? { slug, login, displayName: login, creator: null } : null;
+}
+
 export type CircleLiveState =
-  /** Aucune chaîne du cercle n'est reconnue dans le catalogue. */
+  /** Aucune chaîne du cercle n'est lisible (ni catalogue, ni `twitch:`). */
   | { kind: "empty" }
   /** Cette version de l'app ne lit pas le direct (build sans compte en ligne). */
   | { kind: "unavailable" }
@@ -50,10 +64,8 @@ export function circleLiveState(
   owned: ReadonlySet<string>,
   now: number,
 ): CircleLiveState {
-  const creators = circle
-    .map((slug) => CREATOR_BY_SLUG.get(slug))
-    .filter((creator): creator is Creator => creator !== undefined);
-  if (creators.length === 0) return { kind: "empty" };
+  const channels = circle.map(circleChannel).filter((channel) => channel !== null);
+  if (channels.length === 0) return { kind: "empty" };
   if (!live.configured) return { kind: "unavailable" };
 
   const fresh = !live.stale && isLiveFresh(live.refreshedAt, now);
@@ -69,16 +81,18 @@ export function circleLiveState(
 
   const checkedAt = live.refreshedAt as number;
   const entries: CircleLiveEntry[] = [];
-  for (const creator of creators) {
-    const stream = live.byLogin.get(creator.login.toLowerCase());
-    if (stream) entries.push({ creator, stream, owned: owned.has(creator.slug) });
+  for (const channel of channels) {
+    const stream = live.byLogin.get(channel.login);
+    if (!stream) continue;
+    const displayName = channel.creator ? channel.displayName : stream.displayName || channel.login;
+    entries.push({ ...channel, displayName, stream, owned: channel.creator !== null && owned.has(channel.slug) });
   }
   return entries.length ? { kind: "live", entries, checkedAt } : { kind: "quiet", checkedAt };
 }
 
 /** « ibai est en direct » ou « 3 de tes chaînes sont en direct ». */
 export function circleLiveHeadline(entries: readonly CircleLiveEntry[]): string {
-  if (entries.length === 1) return `${entries[0].creator.displayName} est en direct`;
+  if (entries.length === 1) return `${entries[0].displayName} est en direct`;
   return `${entries.length} de tes chaînes sont en direct`;
 }
 

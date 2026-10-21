@@ -214,10 +214,12 @@ describe("fluidité de la révélation (D-157)", () => {
     expect(revealTiming("rare", true).flipMs).toBeGreaterThan(QUICK_FLIP_MS);
   });
 
-  it("ôte le silence d'un doublon Rare ou mieux, garde celui d'une nouvelle", () => {
+  it("un doublon de toute rareté ne se retourne pas ; une nouvelle garde son silence", () => {
     expect(revealTiming("legendary", true).leadMs).toBe(EPIC_SILENCE_MS);
-    expect(revealTiming("legendary", true, false, true).leadMs).toBe(0);
-    expect(revealTiming("epic", true, false, true).flipMs).toBe(revealTiming("epic", true).flipMs);
+    for (const rarity of ["common", "uncommon", "rare", "epic", "legendary"] as const) {
+      expect(revealTiming(rarity, true, false, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
+      expect(revealTiming(rarity, true, true, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
+    }
     expect(revealTiming("legendary", false, false, true)).toEqual({ flipMs: 0, leadMs: 0, impactMs: 0 });
   });
 });

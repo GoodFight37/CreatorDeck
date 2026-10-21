@@ -65,7 +65,8 @@ function branches(origin: string): string[] {
     .filter(Boolean);
 }
 
-describe("essai:push — ranger le travail d'un autre outil sur une branche à part", () => {
+// Chaque test lance de vrais `git` (~2 s) : 5 s ne suffisent pas quand toute la suite tourne.
+describe("essai:push — ranger le travail d'un autre outil sur une branche à part", { timeout: 20_000 }, () => {
   it("ne fait rien quand il n'y a rien à envoyer", () => {
     const { racine } = depot();
     const { sortie, status } = lancer(racine);

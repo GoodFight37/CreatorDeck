@@ -26,6 +26,8 @@ import {
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { useOtherPlayers } from "@/hooks/use-other-players";
+import { CircleShareEmpty } from "@/components/circle-share-empty";
 import { connecteToi } from "@/lib/cloud/store-text";
 import { useNow } from "@/hooks/use-game";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -55,6 +57,7 @@ export function FriendsSheet({
   initialTab?: Tab;
 }) {
   const cloud = useCloud();
+  const others = useOtherPlayers();
   const now = useNow(60_000);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
@@ -107,7 +110,7 @@ export function FriendsSheet({
           </button>
         </header>
 
-        {!cloud.configured ? (
+        {others === false ? <CircleShareEmpty /> : !cloud.configured ? (
           <div className="account-note neutral">
             <Info size={15} />
             <div>
@@ -229,10 +232,7 @@ export function FriendsSheet({
                     ))}
                   </div>
                 ) : (
-                  <p className="account-hint">
-                    Aucun ami pour l&apos;instant. Cherche un pseudo ci-dessus : la demande part
-                    tout de suite.
-                  </p>
+                  <CircleShareEmpty />
                 )}
               </section>
             ) : null}

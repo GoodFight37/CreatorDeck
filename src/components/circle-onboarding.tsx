@@ -16,9 +16,11 @@ import { Plus, Star, X } from "lucide-react";
 
 import "./circle-onboarding.css";
 import { CREATOR_BY_SLUG, CREATORS, creatorImage } from "@/lib/catalog";
+import { ChannelInitials } from "@/components/circle-strip";
 import {
   CIRCLE_MAX,
   buildCreatorIndex,
+  customLogin,
   isValidCircle,
   popularCreators,
   resolveCircleInput,
@@ -48,7 +50,8 @@ export function CircleOnboarding({
   const full = slugs.length >= CIRCLE_MAX;
   // Sans frappe : quelques visages proposés, un appui = un choix du joueur.
   const suggestions = full ? [] : draft.trim() ? searchCreators(draft, INDEX, slugs) : popularCreators(INDEX, slugs, 6);
-  const ready = isValidCircle(slugs) && slugs.every((slug) => CREATOR_BY_SLUG.has(slug));
+  // Une chaîne hors catalogue est acceptée sans carte (0060) : elle ne sert qu'au direct.
+  const ready = isValidCircle(slugs) && slugs.every((slug) => CREATOR_BY_SLUG.has(slug) || customLogin(slug) !== null);
 
   function add(next: string[], notice: string | null = null) {
     setSlugs(next);
@@ -63,9 +66,11 @@ export function CircleOnboarding({
     const result = resolveCircleInput(text, INDEX, slugs);
     let notice: string | null = null;
     if (result.unknown.length) {
-      notice = `« ${result.unknown[0]} » n’est pas dans le jeu${result.unknown.length > 1 ? ` (et ${result.unknown.length - 1} autre${result.unknown.length > 2 ? "s" : ""})` : ""}.`;
+      notice = `Ce nom de chaîne Twitch n’est pas valide : « ${result.unknown[0]} ».`;
     } else if (result.overflow) {
       notice = `${CIRCLE_MAX} chaînes au maximum.`;
+    } else if (result.custom.length) {
+      notice = `@${customLogin(result.custom[0])} ajoutée sans carte : tu verras quand elle est en direct.`;
     }
     add(result.slugs, notice);
   }
@@ -149,22 +154,29 @@ export function CircleOnboarding({
           <ol className="circle-list" aria-label="Tes chaînes, de la plus précieuse à la plus courante">
             {slugs.map((slug, position) => {
               const creator = CREATOR_BY_SLUG.get(slug);
-              if (!creator) return null;
+              const login = creator ? null : customLogin(slug);
+              if (!creator && !login) return null;
+              const name = creator?.displayName ?? login!;
               return (
-                <li key={slug} className="circle-chip" data-first={position === 0}>
+                <li key={slug} className="circle-chip" data-first={position === 0} data-custom={!creator || undefined}>
                   <span className="circle-chip-rank">{position + 1}</span>
-                  <Image src={creatorImage(creator)} alt="" width={32} height={32} draggable={false} />
-                  <span className="circle-chip-name">{creator.displayName}</span>
+                  {creator
+                    ? <Image src={creatorImage(creator)} alt="" width={32} height={32} draggable={false} />
+                    : <ChannelInitials name={name} size={32} />}
+                  <span className="circle-chip-name">
+                    {name}
+                    {creator ? null : <small className="circle-chip-nocard">sans carte</small>}
+                  </span>
                   {position > 0 ? (
                     <button type="button" className="circle-chip-star" onClick={() => promote(slug)}
-                      aria-label={`Mettre ${creator.displayName} en première position`}>
+                      aria-label={`Mettre ${name} en première position`}>
                       <Star size={15} aria-hidden="true" />
                     </button>
                   ) : (
                     <span className="circle-chip-fav"><Star size={15} aria-hidden="true" /> préférée</span>
                   )}
                   <button type="button" className="circle-chip-remove" onClick={() => remove(slug)}
-                    aria-label={`Retirer ${creator.displayName}`}>
+                    aria-label={`Retirer ${name}`}>
                     <X size={16} aria-hidden="true" />
                   </button>
                 </li>

@@ -49,7 +49,8 @@ export function cloudUrl(): string | null {
  */
 export async function openOtherActivities(page: Page) {
   await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-objective").click();
+  await page.locator(".profile-online-fold > summary").click();
+  await page.getByRole("button", { name: "Objectifs et saisons", exact: true }).click();
   const details = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Autres activités$/ }) });
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");

@@ -56,3 +56,25 @@ export function sortBinder(
       return copy.sort((a, b) => a.rank - b.rank);
   }
 }
+
+/**
+ * L'ordre de l'album qu'on feuillette : ses propres visages d'abord. Les cartes
+ * possédées passent devant (chaînes du cercle en tête, dans l'ordre du joueur,
+ * puis les plus récentes), les manquantes suivent en dos de carte (cercle en
+ * tête, puis rang Twitch) — jamais mêlées devant.
+ */
+export function albumOrder(
+  creators: Creator[],
+  circle: readonly string[],
+  latestOf: (slug: string) => number | undefined,
+): Creator[] {
+  const place = (slug: string) => {
+    const index = circle.indexOf(slug);
+    return index < 0 ? circle.length : index;
+  };
+  return [...creators].sort((a, b) =>
+    Number(latestOf(a.slug) === undefined) - Number(latestOf(b.slug) === undefined)
+    || place(a.slug) - place(b.slug)
+    || (latestOf(b.slug) ?? 0) - (latestOf(a.slug) ?? 0)
+    || a.rank - b.rank);
+}

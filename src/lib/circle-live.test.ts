@@ -37,8 +37,19 @@ describe("circleLiveState : un seul état par situation", () => {
     const state = circleLiveState(CIRCLE, snapshot({ streams: [stream("rubius", 90_000), stream("ibai", 10)] }), new Set(["ibai"]), NOW);
     expect(state.kind).toBe("live");
     if (state.kind !== "live") return;
-    expect(state.entries.map((entry) => entry.creator.slug)).toEqual(["ibai", "rubius"]);
+    expect(state.entries.map((entry) => entry.slug)).toEqual(["ibai", "rubius"]);
     expect(state.entries.map((entry) => entry.owned)).toEqual([true, false]);
+  });
+
+  it("une chaîne hors catalogue (0060) est suivie par son login, sans carte", () => {
+    const circle = ["twitch:petite_chaine", "ibai"];
+    const state = circleLiveState(circle, snapshot({ streams: [{ ...stream("petite_chaine"), displayName: "Petite_Chaine" }] }), new Set(["twitch:petite_chaine"]), NOW);
+    expect(state.kind).toBe("live");
+    if (state.kind !== "live") return;
+    expect(state.entries).toHaveLength(1);
+    expect(state.entries[0]).toMatchObject({ slug: "twitch:petite_chaine", login: "petite_chaine", displayName: "Petite_Chaine", creator: null, owned: false });
+    expect(circleLiveHeadline(state.entries)).toBe("Petite_Chaine est en direct");
+    expect(circleLiveState(["twitch:petite_chaine"], snapshot(), new Set(), NOW).kind).toBe("quiet");
   });
 
   it("ignore les directs hors du cercle", () => {

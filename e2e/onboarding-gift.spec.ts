@@ -106,14 +106,16 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
     await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
     const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
     await expect(reveal.locator(".reveal-card")).toHaveCount(1);
-    for (let shown = 1; shown < 5; shown += 1) {
-      await expect(reveal.locator(".reveal-header")).toContainText(`${shown} / 5`);
-      await reveal.getByRole("button", { name: "Carte suivante" }).click();
+    // Un doublon rejoint la pile tout seul : on n'appuie que pour les nouvelles.
+    for (let i = 0; i < 5; i += 1) {
+      const next = reveal.locator(".reveal-next");
+      await expect(next).toBeEnabled();
+      if ((await next.textContent())?.includes("Ranger dans le classeur")) break;
+      await next.click();
     }
     await expect(reveal.locator(".reveal-header")).toContainText("5 / 5");
     await reveal.getByRole("button", { name: "Ranger dans le classeur" }).click();
-    await expect(reveal.getByRole("region", { name: "Résumé du booster" }).locator(".reveal-summary-card")).toHaveCount(5);
-    await reveal.getByRole("button", { name: "Retour au Drop" }).click();
+    await expect(reveal).toHaveCount(0);
 
     if (opened < 5) {
       await expect(gift.getByRole("button")).toHaveText(`Ouvrir un booster cadeau · ${5 - opened} restants`);

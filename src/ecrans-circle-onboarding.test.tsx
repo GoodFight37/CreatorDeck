@@ -49,11 +49,24 @@ it("garde exactement les chaînes nommées, sans compléter jusqu'à cinq", asyn
   expect(confirm).toHaveBeenCalledWith(["ibai", "ninja"]);
 });
 
-it("ne remplace pas un nom inconnu par la première suggestion", async () => {
+it("ne remplace pas un nom invalide par la première suggestion", async () => {
   await banc.monter(<CircleOnboarding onConfirm={vi.fn()} />);
   ajouter("kam");
-  expect(document.querySelector(".circle-notice")!.textContent).toContain("n’est pas dans le jeu");
+  expect(document.querySelector(".circle-notice")!.textContent).toContain("Ce nom de chaîne Twitch n’est pas valide");
   expect(document.querySelectorAll(".circle-chip")).toHaveLength(0);
+});
+
+it("accepte une chaîne hors du catalogue, sans carte ni portrait", async () => {
+  const confirm = vi.fn();
+  await banc.monter(<CircleOnboarding onConfirm={confirm} />);
+  ajouter("@Petite_Chaine_Xyz");
+  const chip = document.querySelector(".circle-chip")!;
+  expect(chip.querySelector("img")).toBeNull();
+  expect(chip.querySelector(".circle-chip-nocard")!.textContent).toBe("sans carte");
+  expect(document.querySelector(".circle-notice")!.textContent).not.toMatch(/pas dans le jeu|pas valide/);
+  expect(primary().disabled).toBe(false);
+  banc.appuyer("Voir mon premier booster");
+  expect(confirm).toHaveBeenCalledWith(["twitch:petite_chaine_xyz"]);
 });
 
 it("refuse une liste reçue si une chaîne est absente du catalogue", async () => {

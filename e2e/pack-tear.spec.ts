@@ -1,4 +1,8 @@
 import { expect, test, gotoDeck, openOtherActivities } from "./fixtures";
+import type { Page } from "@playwright/test";
+
+/** La réserve se lit dans « N sachets · prochain à … » ; sans sachet, le texte ne commence pas par un nombre. */
+const stockOf = async (page: Page) => Number((await page.locator(".open-panel .stock-row").innerText()).match(/^\d+/)?.[0] ?? 0);
 
 test("la musique commence à l'entrée dans le jeu et ne crée qu'une boucle", async ({ page }) => {
   await page.addInitScript(() => {
@@ -185,7 +189,7 @@ for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 999
     });
     await expect(reveal.locator(".reveal-next")).toBeDisabled();
     if (rarity === "common") {
-      expect(motion.name).toBe("scene-card-turn");
+      expect(motion.name).toBe("card-turn-quick");
       expect(motion.impact).not.toEqual(motion.held);
       await expect(reveal.locator(".reveal-rare-aura")).toHaveCount(0);
     } else {
@@ -230,33 +234,18 @@ test("les cinq dos se posent avant le reveal et le récapitulatif attend le joue
   expect(probe?.phaseAtOneSecond).toBe("extracting");
   expect(probe?.backs).toBe(5);
   expect(probe!.revealAfterMs).toBeGreaterThanOrEqual(1_100);
-  // Each face must finish before advancing; no forced reveal or skipped animation.
+  // Each new face must finish before advancing; a duplicate joins the pile on its own.
+  // The last tap puts the cards away: no summary grid, back to the Drop.
   for (let i = 0; i < 5; i++) {
-    await expect(pack.locator(".reveal-next")).toBeEnabled();
-    await pack.locator(".reveal-next").click();
-    if (await pack.locator(".reveal-summary").count()) break; // Perfect has one step.
+    const next = pack.locator(".reveal-next");
+    await expect(next).toBeEnabled();
+    if ((await next.textContent())?.includes("Ranger dans le classeur")) break;
+    await next.click();
   }
-  await expect(pack.locator(".reveal-summary-card")).toHaveCount(5);
-  const summary = pack.locator(".reveal-summary-grid");
-  const geometry = await summary.evaluate((node) => ({
-    best: node.classList.contains("has-best"),
-    // Grille : colonnes déclarées ; sinon (rangs centrés) : cartes qui tiennent sur une ligne.
-    columns: getComputedStyle(node).display === "grid"
-      ? getComputedStyle(node).gridTemplateColumns.split(" ").length
-      : Math.floor(node.clientWidth / node.querySelector(".reveal-summary-card")!.getBoundingClientRect().width),
-    width: document.documentElement.scrollWidth,
-    viewport: window.innerWidth,
-  }));
-  // Une carte Rare ou mieux passe en grand : 4 colonnes (elle en prend 2), sinon 3 ou 5 selon l'écran.
-  expect(geometry.columns).toBe(geometry.best ? 4 : geometry.viewport <= 480 ? 3 : 5);
-  expect(geometry.width).toBe(geometry.viewport);
-  await pack.locator(".reveal-summary-grid").evaluate(async (node) => {
-    await Promise.all([...node.querySelectorAll(".reveal-summary-card")]
-      .flatMap((card) => card.getAnimations()).map((animation) => animation.finished));
-  });
-  await expect(pack.locator(".booster-opening-stage")).toBeHidden();
-  await page.screenshot({ path: `test-results/ritual-summary-${test.info().project.name}.png` });
-  await pack.getByRole("button", { name: "Retour au Drop", exact: true }).click();
+  await expect(pack.locator(".reveal-next-pack")).toHaveText(/^(Prochain sachet à \d{2} h \d{2}|Un sachet t’attend)$/);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(await page.evaluate(() => window.innerWidth));
+  await page.screenshot({ path: `test-results/ritual-end-${test.info().project.name}.png` });
+  await pack.getByRole("button", { name: "Ranger dans le classeur", exact: true }).click();
   await expect(pack).toHaveCount(0);
 });
 
@@ -783,7 +772,7 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
   await gotoDeck(page);
   const sachet = page.getByRole("button", { name: "Ouvrir le booster", exact: true });
   await expect(sachet).toBeEnabled();
-  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  const stock = await stockOf(page);
   if (testInfo.project.name === "téléphone") await sachet.tap();
   else await sachet.click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
@@ -792,7 +781,7 @@ test("home sachet tap opens once and returns focus to the sachet", async ({ page
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
+  await expect.poll(() => stockOf(page)).toBe(stock);
   await expect(sachet).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
@@ -802,7 +791,7 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   await gotoDeck(page);
   const sachet = page.locator(".pack-artwork");
   await expect(sachet).toBeEnabled();
-  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  const stock = await stockOf(page);
   const bounds = (await sachet.boundingBox())!;
   const x = bounds.x + bounds.width / 2;
   const y = bounds.y + bounds.height / 2;
@@ -811,13 +800,13 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   await page.mouse.move(x, y - 30, { steps: 5 });
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
+  await expect.poll(() => stockOf(page)).toBe(stock);
   await page.mouse.move(x, y);
   await page.mouse.down();
   await page.mouse.move(x, y - 110, { steps: 10 });
   await page.mouse.up();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
+  await expect.poll(() => stockOf(page)).toBe(stock);
   await sachet.click();
   await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toBeVisible();
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
@@ -825,14 +814,14 @@ test("home drags never open a booster; an intentional tap opens its separate sce
   await expect(reveal).toBeVisible();
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   // D-148 : le premier booster du jour paie le jour 1 de la série (+1 booster).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock}`);
+  await expect.poll(() => stockOf(page)).toBe(stock);
 });
 
 for (const selector of [".pack-stage", ".pack-artwork"]) {
   test(`touch scrolling from ${selector} does not open or consume a booster`, async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await gotoDeck(page);
-    const stock = await page.locator(".stock-row strong").innerText();
+    const stock = await stockOf(page);
     const touch = await page.context().newCDPSession(page);
     const bounds = (await page.locator(selector).boundingBox())!;
     const x = selector === ".pack-stage" ? bounds.x + 8 : bounds.x + bounds.width / 2;
@@ -845,7 +834,7 @@ for (const selector of [".pack-stage", ".pack-artwork"]) {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(20);
     await expect(page.getByRole("dialog", { name: "Ouvrir le booster" })).toHaveCount(0);
     await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toHaveCount(0);
-    await expect(page.locator(".stock-row strong")).toHaveText(stock);
+    await expect.poll(() => stockOf(page)).toBe(stock);
   });
 }
 
@@ -853,7 +842,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   await page.setViewportSize({ width: 360, height: 800 });
   await gotoDeck(page);
   await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
-  const stock = Number((await page.locator(".stock-row strong").innerText()).split("/")[0]);
+  const stock = await stockOf(page);
   const touch = await page.context().newCDPSession(page);
   for (const reverse of [false, true]) {
     await page.getByRole("button", { name: "Ouvrir le booster", exact: true }).click();
@@ -894,7 +883,7 @@ test("compact sachet keeps the weld within thumb reach and accepts both swipe di
   }
   await touch.detach();
   // D-148 : deux ouvertures, mais la première du jour rend un booster (jour 1).
-  await expect(page.locator(".stock-row strong")).toHaveText(`${stock - 1}`);
+  await expect.poll(() => stockOf(page)).toBe(stock - 1);
   if (stock === 1) {
     await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeDisabled();
     await expect(page.locator(".pack-copy h2")).toBeFocused();

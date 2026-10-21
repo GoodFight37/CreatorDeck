@@ -5,7 +5,6 @@
 .home-view .pack-shadow { bottom: 38px; }
 .home-view .open-panel.open-panel { padding: 0 2px; }
 .home-view .stock-row { margin-bottom: 8px; }
-.home-view .open-panel .primary-action { min-height: 64px; }
 .home-view .open-panel .pity-row.now { margin-top: 6px; padding: 5px 0; border: 0; background: none; font-size: 12px; }
 .home-view .hourglass-action { min-height: 38px; margin-top: 5px; font-size: 12px; }
 .home-view .token-row { margin-top: 6px; font-size: 12px; }
@@ -42,5 +41,4 @@
 
 @media (max-height: 620px) and (max-width: 430px) {
   .home-view .pack-stage.stage-live { --drop-stage-pt: 8px; --drop-stage-pb: 8px; margin-top: 4px; gap: 4px; }
-  .home-view .open-panel .primary-action { min-height: 56px; }
 }

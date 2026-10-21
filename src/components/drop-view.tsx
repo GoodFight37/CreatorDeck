@@ -2,8 +2,7 @@
 
 /** Le Drop défile librement ; seul un appui prépare la scène de déchirure. */
 import { useMemo, useRef, useState, type CSSProperties } from "react";
-import { createPortal } from "react-dom";
-import { ChevronRight, Clock3, Coins, Hourglass, Layers3, LoaderCircle, Users, Zap } from "lucide-react";
+import { ChevronRight, Clock3, Coins, Hourglass, Users } from "lucide-react";
 
 import "./drop-craft.css";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
@@ -11,15 +10,11 @@ export { PackArtwork } from "@/components/booster-carousel";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
 import { MemeBoosterOpening, MemeCollectionLink, MemePackComposition } from "@/components/meme-booster-opening";
 
-import { CreatorCard } from "@/components/creator-card";
-import { CardInspectModal } from "@/components/card-inspect-modal";
-import { useBackHandler } from "@/hooks/use-back-handler";
-import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { useCloud } from "@/hooks/use-cloud";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS, creatorImage } from "@/lib/catalog";
-import { formatViewers, liveFor } from "@/lib/live";
+import { formatViewers } from "@/lib/live";
 import { gameDay } from "@/lib/progression";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { craftableRetired } from "@/lib/retired";
@@ -28,19 +23,13 @@ import { buzz } from "@/lib/haptics";
 import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
-import { circleLiveState, twitchUrl } from "@/lib/circle-live";
+import { circleLiveState } from "@/lib/circle-live";
 import { circlePityPool } from "@/lib/game-engine";
 import { missingCircle } from "@/lib/circle-draw";
 
-function formatCountdown(date: number | null, now: number) {
-  if (!date) return "Réserve pleine";
-  const remaining = Math.max(0, date - now);
-  const hours = Math.floor(remaining / 3_600_000);
-  const minutes = Math.floor((remaining % 3_600_000) / 60_000);
-  const seconds = Math.floor((remaining % 60_000) / 1_000);
-  return hours > 0
-    ? `${hours}h ${String(minutes).padStart(2, "0")}m`
-    : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+/** L'heure du prochain sachet, comme une horloge : « 14 h 30 ». */
+export function formatClock(date: number) {
+  return new Date(date).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
 }
 
 export function HomeView({
@@ -112,10 +101,6 @@ export function HomeView({
     }
   }
 
-  const [inspectCard, setInspectCard] = useState<GameView["cards"][number] | null>(null);
-  useBackHandler(inspectCard !== null, () => setInspectCard(null));
-  const findingFocus = usePresentationFocus(inspectCard !== null);
-  const inspectedCreator = inspectCard ? CREATOR_BY_SLUG.get(inspectCard.creatorSlug) : null;
   const circle = useCircle();
   const ownedSlugs = useMemo(() => new Set(game.cards.map((card) => card.creatorSlug)), [game.cards]);
   const live = useLive();
@@ -132,12 +117,11 @@ export function HomeView({
   const haloCreator = circle.length ? CREATOR_BY_SLUG.get(circle[0])
     : topLive ? [...CREATOR_BY_SLUG.values()].find((creator) => creator.login === topLive.login) : undefined;
   const haloImage = haloCreator ? creatorImage(haloCreator) : null;
-  // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le pack, le bouton, ses cinq dernières cartes.
+  // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le sachet, une ligne, ses chaînes.
   const lean = circle.length > 0;
   // MEMES est un second paquet, visible à droite dès le départ ; Live reste devant.
   // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
   const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
-  const latest = [...game.cards].sort((a, b) => b.obtainedAt - a.obtainedAt).slice(0, lean ? 5 : 4);
   const retiredLeft = useMemo(
     () =>
       craftableRetired().filter(
@@ -149,35 +133,18 @@ export function HomeView({
   const circleLive = lean ? circleLiveState(circle, live, ownedSlugs, now) : null;
   const circleLiveEntries = circleLive?.kind === "live" ? circleLive.entries : [];
   const circleRow = useRef<HTMLDivElement>(null);
-  const emptyCircleReserve = lean && !needsAccount && stock <= 0 && promoPacks <= 0;
-  const firstLive = circleLiveEntries[0];
-  function showCircle() {
-    circleRow.current?.scrollIntoView?.({ block: "center" });
-    circleRow.current?.focus({ preventScroll: true });
-  }
   const featured = topLive;
   const liveLabel = needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster"
-    : promoPacks > 0 ? "Ouvrir un booster de test" : "Recharge en cours";
-  const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
-    : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1 ? "Recharge MEMES en cours" : "Ouvrir le booster MEMES";
-
-  // Le bouton « Ouvrir » sous le sachet (D-153) : l'état du booster lisible d'un
-  // coup d'œil, comme dans un TCG de poche. Prêt : « Ouvrir ». Vide : le compte
-  // à rebours et une jauge de recharge. Le sachet reste le bouton accessible ;
-  // celui-ci le double pour le pouce, sans être annoncé deux fois.
+    : promoPacks > 0 ? "Ouvrir un booster de test" : nextAt !== null ? `Prochain sachet à ${formatClock(nextAt)}` : "Prochain sachet bientôt";
   const memeNextAt = memes.status?.nextAt ? Date.parse(memes.status.nextAt) : null;
-  const cta = universe === "live"
-    ? needsLogin ? { ready: true, label: "Se connecter", detail: "pour ouvrir" }
-      : needsAccount ? { ready: true, label: "Essayer", detail: "5 cartes" }
-      : stock > 0 || promoPacks > 0 ? { ready: true, label: "Ouvrir", detail: "5 cartes" }
-      : { ready: false, label: "Prochain booster", detail: nextAt !== null ? formatCountdown(nextAt, tick) : "bientôt",
-        progress: nextAt !== null ? Math.min(1, Math.max(0, 1 - (nextAt - tick) / pack.regenMs)) : null }
-    : !memes.account ? { ready: true, label: "Se connecter", detail: "pour ouvrir" }
-      : !memes.status ? { ready: false, label: "Lecture…", detail: "" }
-      : memes.status.stock >= 1 ? { ready: true, label: "Ouvrir", detail: "5 cartes" }
-      : { ready: false, label: "Prochain MEMES", detail: memeNextAt !== null ? formatCountdown(memeNextAt, tick) : "bientôt" };
-  const ctaProgress = "progress" in cta && typeof cta.progress === "number" ? cta.progress : null;
-  const ctaDisabled = !cta.ready || opening || memes.busy;
+  const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
+    : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1
+      ? memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt" : "Ouvrir le booster MEMES";
+  // Un seul geste ouvre : le sachet. Dessous, une ligne dit ce qu'on a et quand revient le prochain.
+  const packs = stock + promoPacks;
+  const reserveLine = needsLogin ? "Connecte-toi pour ouvrir"
+    : packs > 0 ? `${packs} sachet${packs > 1 ? "s" : ""}${nextAt !== null && stock <= pack.max ? ` · prochain à ${formatClock(nextAt)}` : ""}`
+    : nextAt !== null ? `Prochain sachet à ${formatClock(nextAt)}` : "Prochain sachet bientôt";
 
   const reserveControls = (
     <>
@@ -234,40 +201,6 @@ export function HomeView({
     </>
   );
 
-  const findingsSection = (
-      <section className="section-block drop-findings">
-        <div className="section-heading">
-          <h2>Dernières trouvailles</h2>
-          <button type="button" className="drop-binder-link" onClick={onShowCollection}>Mon Binder <ChevronRight size={15} /></button>
-        </div>
-        {latest.length ? (
-          <div className="mini-card-row">
-            {latest.map((card) => {
-              const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
-              return creator ? (
-                <CreatorCard
-                  key={card.id}
-                  creator={creator}
-                  variant={card.variant}
-                  compact
-                  onClick={() => setInspectCard(card)}
-                  liveStream={liveFor(live, creator.login, now)}
-                />
-              ) : null;
-            })}
-          </div>
-        ) : (
-          <div className="empty-collection">
-            <Layers3 size={25} />
-            <div>
-              <strong>Ton classeur de {CATALOG_SIZE} streameurs t’attend</strong>
-              <span>Ouvre ton premier booster pour lancer la collection.</span>
-            </div>
-          </div>
-        )}
-      </section>
-  );
-
   return (
     <div className={`view home-view${lean ? " is-lean" : ""}`} style={themeStyle}>
       {haloImage ? (
@@ -286,44 +219,10 @@ export function HomeView({
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
         labels={{ live: liveLabel, memes: memeLabel }}
         piles={{ live: needsAccount ? 1 : stock + promoPacks, memes: memes.status?.stock ?? 1 }} />
-      <div className="drop-cta" data-ready={cta.ready ? "true" : "false"}>
-        <button type="button" className="drop-open" aria-hidden="true" tabIndex={-1}
-          disabled={ctaDisabled} onClick={() => prepareBooster(universe)}>
-          <span className="drop-open-label">{cta.label}</span>
-          {cta.detail ? <span className="drop-open-detail">{cta.detail}</span> : null}
-          {ctaProgress !== null ? (
-            <i className="drop-open-progress" style={{ "--progress": ctaProgress } as CSSProperties} />
-          ) : null}
-        </button>
-      </div>
-
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
-        {emptyCircleReserve && firstLive ? (
-          <a className="reserve-action" href={twitchUrl(firstLive.creator.login)} target="_blank" rel="noopener noreferrer">
-            <Zap size={15} aria-hidden="true" />
-            <span>Voir {firstLive.creator.displayName} en direct</span>
-            <ChevronRight size={15} aria-hidden="true" />
-          </a>
-        ) : emptyCircleReserve ? (
-          <button type="button" className="reserve-action" onClick={showCircle} disabled={opening || memes.busy}>
-            {opening ? <LoaderCircle className="spin" size={15} /> : <Zap size={15} aria-hidden="true" />}
-            <span>Personne de tes chaînes en direct</span>
-          </button>
-        ) : null}
-        {!needsAccount ? (
-          // Une seule ligne, petite : la pile au-dessus montre déjà ce qu'on a.
-          <p className="stock-row">
-            <span><strong>{stock}</strong> restant{stock > 1 ? "s" : ""}</span>
-            {stock > pack.max ? <span className="reserve-bonus">+1 sablier</span> : null}
-            {promoPacks > 0 ? (
-              <span className="reserve-bonus" aria-label={`${promoPacks} boosters de test disponibles`}>
-                {promoPacks} booster{promoPacks === 1 ? "" : "s"} de test
-              </span>
-            ) : null}
-            {nextAt !== null ? (
-              <span className="timer-copy">{stock > pack.max ? "recharge après ouverture" : `+1 dans ${formatCountdown(nextAt, tick)}`}</span>
-            ) : null}
-          </p>
+        {!needsAccount || needsLogin ? (
+          // La seule ligne de l'accueil : la pile au-dessus montre déjà ce qu'on a.
+          <p className="stock-row" data-empty={packs > 0 ? "false" : "true"}>{reserveLine}</p>
         ) : null}
         {!lean ? (
           <details className="drop-secondary-details">
@@ -343,19 +242,19 @@ export function HomeView({
           entries={circleLiveEntries}
           now={tick}
           canOpen={!needsAccount && (stock > 0 || promoPacks > 0)}
-          nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `dans ${formatCountdown(nextAt, tick)}` : null}
+          nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `à ${formatClock(nextAt)}` : null}
           hourglass={null}
         />
       ) : null}
       {lean && missingCircle(circle, ownedSlugs).length === 0 ? (
         <p role="status" className="drop-circle-complete">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
       ) : null}
-      {lean ? findingsSection : null}
       <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
         <p className="meme-booster-reserve stock-row" aria-live="polite">
-          {memes.status ? <><span><strong>{memes.status.stock}</strong> MEMES restant{memes.status.stock > 1 ? "s" : ""}</span>
-            <span className="timer-copy">{memes.status.nextAt ? "+1 dans " + formatCountdown(Date.parse(memes.status.nextAt), tick) : "réserve pleine"}</span></>
-            : <span>{memes.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}</span>}
+          {memes.status ? memes.status.stock > 0
+            ? `${memes.status.stock} MEMES${memeNextAt !== null ? ` · prochain à ${formatClock(memeNextAt)}` : ""}`
+            : memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt"
+            : memes.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes MEMES."}
         </p>
         {memes.notice ? <p role="status">{memes.notice}</p> : null}
         {memes.problem ? <div role="alert"><p>{memes.problem}</p>
@@ -415,7 +314,6 @@ export function HomeView({
       <details className="drop-secondary">
         <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
         {lean ? reserveControls : null}
-        <button type="button" className="text-link" onClick={onShowMissions}>Objectifs et saisons <ChevronRight size={15} /></button>
         <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (
           <button
@@ -437,14 +335,6 @@ export function HomeView({
 
       </details>
 
-      {!lean ? findingsSection : null}
-      {inspectCard && inspectedCreator ? createPortal(
-        <div ref={findingFocus} tabIndex={-1}>
-          <CardInspectModal creator={inspectedCreator} variant={inspectCard.variant}
-            ownedCount={game.cards.filter((card) => card.creatorSlug === inspectCard.creatorSlug && card.variant === inspectCard.variant).length}
-            liveStream={liveFor(live, inspectedCreator.login, now)} onClose={() => setInspectCard(null)} />
-        </div>, document.body
-      ) : null}
     </div>
   );
 }

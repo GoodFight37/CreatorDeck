@@ -1,11 +1,10 @@
-import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { CollectionView } from "@/components/binder-view";
 import { HomeView } from "@/components/drop-view";
 import { CircleOnboarding } from "@/components/circle-onboarding";
-import { CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
+import { CREATOR_BY_SLUG } from "@/lib/catalog";
 
 const NOW = Date.UTC(2026, 9, 17, 20, 30);
 vi.mock("@/hooks/use-game", () => ({ useNow: () => NOW }));
@@ -28,59 +27,36 @@ describe("étape 3 : le Binder au service de mon cercle", () => {
   afterEach(() => { banc.nettoyer(); window.localStorage.clear(); vi.restoreAllMocks(); });
   const setCircle = (slugs: string[]) =>
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs, at: 1 }));
-  const pressedChip = () => document.querySelector<HTMLButtonElement>('.filter-chips button[aria-pressed="true"]')!.textContent;
-  // Une carte possédée imprime son nom (h3) ; seule une carte à découvrir le porte dans sa légende.
-  const gridNames = () => [...document.querySelectorAll(".collection-grid .binder-pocket")]
-    .map((pocket) => (pocket.querySelector(".binder-card-caption strong") ?? pocket.querySelector(".creator-card h3"))?.textContent);
+  const name = (slug: string) => CREATOR_BY_SLUG.get(slug)!.displayName;
+  const grid = () => [...document.querySelectorAll(".collection-grid .creator-card")]
+    .map((card) => ({ name: card.getAttribute("aria-label")!.split(", rang")[0], locked: card.classList.contains("is-locked") }));
 
-  it("s'ouvre sur « Mon cercle », dans l'ordre du joueur, avec l'objectif du cercle", async () => {
+  it("s'ouvre sur mes visages : obtenues d'abord, cercle en tête, puis les dos à découvrir", async () => {
     setCircle(CIRCLE);
     const onEditCircle = vi.fn();
-    await banc.monter(<CollectionView game={gameWith(["jeanmassiet"])} onCraft={async () => true} onEditCircle={onEditCircle} />);
-    expect(pressedChip()).toBe("Mon cercle (1/5)");
-    // Les puces commencent par le cercle.
-    expect(document.querySelector(".filter-chips button")!.textContent).toBe("Mon cercle (1/5)");
-    expect(new Set(gridNames())).toEqual(new Set(CIRCLE.map((slug) => CREATOR_BY_SLUG.get(slug)!.displayName)));
-    // L'objectif affiché n'est plus une page de famille de langue.
-    const goal = document.querySelector<HTMLElement>(".binder-circle-goal")!;
-    expect(goal.textContent).toContain("Mon cercle · 1 / 5");
-    expect(goal.textContent).toContain("À trouver : ibai, Anyme023, SwehYT et 1 autre.");
-    expect(document.querySelector(".binder-next-pages")).toBeNull();
-    expect(document.querySelector(".binder-collections-picker summary")!.textContent).toContain("Parcourir par pages de 12");
-    // Cible d'artisanat : la première manquante fabricable, au prix réel ; jamais la Légendaire.
-    const craft = goal.querySelector<HTMLButtonElement>(".binder-circle-craft")!;
-    expect(craft.textContent).toContain("À fabriquer : Anyme023");
-    expect(craft.textContent).toContain(`${RARITY_META.epic.craftCost} points`);
-    expect(craft.textContent).toContain(`encore ${(RARITY_META.epic.craftCost as number) - 100} points`);
-    expect(goal.querySelector(".binder-circle-booster")!.textContent).toContain("ibai ne se fabrique pas");
-    // L'appui ouvre la fiche, qui porte déjà le bouton de fabrication.
-    act(() => craft.click());
-    expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Anyme023");
-    // Modifier mes chaînes.
+    // kaicenat est la plus récente, mais jeanmassiet est dans le cercle : il passe devant.
+    await banc.monter(<CollectionView game={gameWith(["kaicenat", "jeanmassiet"])} onCraft={async () => true} onEditCircle={onEditCircle} />);
+    const cards = grid();
+    expect(cards.slice(0, 2)).toEqual([{ name: name("jeanmassiet"), locked: false }, { name: name("kaicenat"), locked: false }]);
+    // Les manquantes suivent, en dos de carte, celles du cercle d'abord.
+    expect(cards.slice(2, 6)).toEqual(["ibai", "anyme023", "swehyt", "zeusspezial"].map((slug) => ({ name: name(slug), locked: true })));
+    expect(cards.slice(2).every((card) => card.locked)).toBe(true);
+    // Un album, pas un tableau : ni score, ni filtres, ni tri, ni objectifs.
+    for (const removed of [".collection-score", ".progress-track", ".filter-chips", 'select[aria-label="Trier le classeur"]',
+      ".binder-active-page", ".binder-circle-goal", ".binder-next-pages", ".binder-collections-picker", ".pocket-count", ".binder-card-caption"]) {
+      expect(document.querySelector(removed), removed).toBeNull();
+    }
+    expect(document.querySelector('input[aria-label="Rechercher un créateur"]')).not.toBeNull();
     banc.appuyer("Modifier");
     expect(onEditCircle).toHaveBeenCalledOnce();
   });
 
-  it("garde les autres vues : un appui sur « Toutes » quitte le cercle", async () => {
-    setCircle(CIRCLE);
-    await banc.monter(<CollectionView game={gameWith([])} onCraft={async () => true} />);
-    banc.appuyer(/^Toutes \(/);
-    expect(pressedChip()).toMatch(/^Toutes/);
-    expect(gridNames().length).toBe(12);
-  });
-
-  it("cercle de Légendaires : rien à fabriquer, et on le dit", async () => {
-    setCircle(["kaicenat", "ibai", "ninja", "auronplay", "rubius"]);
-    await banc.monter(<CollectionView game={gameWith(["ninja"], 9_999)} onCraft={async () => true} />);
-    expect(document.querySelector(".binder-circle-craft")).toBeNull();
-    expect(document.querySelector(".binder-circle-booster")!.textContent).toContain("4 de tes chaînes ne se fabriquent pas");
-  });
-
-  it("sans cercle : le Binder d'avant (obtenues, pages par famille)", async () => {
-    await banc.monter(<CollectionView game={gameWith(["jeanmassiet"])} onCraft={async () => true} />);
-    expect(pressedChip()).toMatch(/^Obtenues/);
-    expect(document.querySelector(".binder-circle-goal")).toBeNull();
-    expect([...document.querySelectorAll(".filter-chips button")].some((chip) => chip.textContent?.startsWith("Mon cercle"))).toBe(false);
+  it("sans cercle : les plus récentes d'abord, puis le reste au rang Twitch", async () => {
+    await banc.monter(<CollectionView game={gameWith(["jeanmassiet", "ibai"])} onCraft={async () => true} />);
+    const cards = grid();
+    expect(cards.slice(0, 2)).toEqual([{ name: name("jeanmassiet"), locked: false }, { name: name("ibai"), locked: false }]);
+    expect(cards.slice(2).every((card) => card.locked)).toBe(true);
+    expect(cards).toHaveLength(12);
   });
 });
 

@@ -18,6 +18,19 @@ describe("le cercle reste le pool de chaque Live Drop", () => {
     }
   });
 
+  it("une chaîne hors catalogue (0060) ne sort jamais : seule celle du catalogue compte", () => {
+    const [only] = CIRCLE;
+    const circle = ["twitch:petite_chaine", only, "twitch:autre_chaine"];
+    for (let run = 0; run < 25; run++) {
+      const cards = drawPack("live", new Set(), { circle, rareDrop: false });
+      expect(cards).toHaveLength(5);
+      expect(cards.every(c => !c.creatorSlug.startsWith("twitch:"))).toBe(true);
+      expect(cards[4].creatorSlug).toBe(only);
+    }
+    const custom = drawPack("live", new Set(), { circle: ["twitch:petite_chaine"], rareDrop: false });
+    expect(custom.every(c => !c.creatorSlug.startsWith("twitch:"))).toBe(true);
+  });
+
   it("une seule chaîne nommée ne sort qu'une fois, en dernière carte", () => {
     const [only] = CIRCLE;
     for (let run = 0; run < 25; run++) {

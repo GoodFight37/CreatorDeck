@@ -214,11 +214,6 @@ export function CreatorDeckApp() {
   useEffect(() => {
     setMusicScene(tribunalOpen ? "tribunal" : preparingLive || tearing || drawnCards.length > 0 ? "pack" : "hub");
   }, [drawnCards.length, tearing, preparingLive, tribunalOpen]);
-  // La pastille de la barre : combien de paquets d'amis sont prenables là,
-  // maintenant. Même calcul que la ligne du menu, même horloge (celle du
-  // serveur) — une pastille qui resterait allumée après la fenêtre serait un
-  // mensonge.
-  const navLastPack = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? now, now);
   const [accountOpen, setAccountOpen] = useState(false);
   const [accountFocus, setAccountFocus] = useState<AccountFocus>(null);
   // L'onglet sur lequel ouvrir la feuille des amis : le carnet sait qu'une
@@ -894,7 +889,6 @@ export function CreatorDeckApp() {
 
       <span id="release-notes-nav-description" className="visually-hidden">
         {unreadReleaseNotes > 0 ? `${unreadReleaseNotes} note${unreadReleaseNotes > 1 ? "s" : ""} non lue${unreadReleaseNotes > 1 ? "s" : ""} dans Nouveautés. ` : ""}
-        {navLastPack > 0 ? `${navLastPack} paquet${navLastPack > 1 ? "s" : ""} d’amis à prendre.` : ""}
       </span>
       <nav className="bottom-nav" aria-label="Navigation principale">
         {NAV_ITEMS.map((item) => (
@@ -905,19 +899,11 @@ export function CreatorDeckApp() {
             // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
             onClick={() => setTab(item.id)}
             aria-current={tab === item.id ? "page" : undefined}
-            aria-describedby={item.id === "profile" && (unreadReleaseNotes > 0 || navLastPack > 0) ? "release-notes-nav-description" : undefined}
+            aria-describedby={item.id === "profile" && unreadReleaseNotes > 0 ? "release-notes-nav-description" : undefined}
           >
             {item.icon}
             <span>{item.label}</span>
             {item.id === "profile" && unreadReleaseNotes > 0 ? <i className="nav-news-dot" aria-hidden="true" /> : null}
-            {/* La pastille du Last Pack : « il y a un paquet à prendre, là,
-                maintenant ». Elle vit sur l'onglet qui mène au menu, comme
-                celle du carnet — pas de cinquième onglet. */}
-            {item.id === "profile" && navLastPack > 0 ? (
-              <b className="nav-badge" aria-hidden="true">
-                {navLastPack}
-              </b>
-            ) : null}
           </button>
         ))}
       </nav>

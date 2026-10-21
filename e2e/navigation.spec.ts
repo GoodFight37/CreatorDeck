@@ -54,8 +54,8 @@ test("la barre du bas montre les quatre piliers, dans l'ordre", async ({ page })
   const description = page.locator(`#${descriptionId}`);
   await expect(description).not.toHaveAttribute("hidden");
   await expect(profile).toHaveAccessibleDescription(/note.*Nouveautés/);
-  const badge = profile.locator(".nav-badge");
-  if (await badge.count()) await expect(badge).toHaveAttribute("aria-hidden", "true");
+  await expect(profile.locator(".nav-badge")).toHaveCount(0);
+  await expect(description).not.toContainText(/paquets? d’amis/);
 });
 
 test("la simulation de streameur n'est plus nulle part", async ({ page }) => {
@@ -89,9 +89,10 @@ test("« Toi » propose d'ouvrir son compte", async ({ page }) => {
   await openDeck(page);
   await tab(page, "Toi").click();
   await expect(tab(page, "Toi")).toHaveAttribute("aria-current", "page");
-  const online = page.getByText("Fonctionnalités en ligne", { exact: true });
+  const online = page.locator(".profile-online-fold > summary");
+  await expect(online).toHaveText("Autres activités");
   await expect(online).toBeVisible();
-  await expect(page.getByRole("button", { name: "Mon compte", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Mon compte", exact: true })).not.toBeVisible();
   await online.click();
   // Le compte reste disponible, mais dans le volet en ligne replié par défaut.
   const account = page.getByRole("button", { name: "Mon compte", exact: true });

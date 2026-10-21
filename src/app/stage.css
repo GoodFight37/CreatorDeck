@@ -37,10 +37,11 @@
   border-radius: 19px;
   transition: background-color 180ms ease, color 180ms ease;
 }
-.bottom-nav button.active { background: rgb(var(--accent-rgb) / .17); color: #fff; }
+/* Le rouge est réservé au sachet prêt et au direct : l'onglet actif est du papier. */
+.bottom-nav button.active { background: rgb(255 255 255 / .08); color: var(--paper); }
 .bottom-nav button.active::before { display: none; }
-.bottom-nav button.active svg { color: var(--accent-soft); filter: drop-shadow(0 0 7px rgb(var(--accent-rgb) / .75)); }
-.bottom-nav button:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: -2px; }
+.bottom-nav button.active svg { color: var(--paper); filter: none; }
+.bottom-nav button:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
 .bottom-nav .nav-badge { top: 3px; right: calc(50% - 24px); }
 @media (min-width: 700px) { .bottom-nav { border-inline: 1px solid rgb(255 255 255 / .12); } }
 
@@ -71,39 +72,6 @@
   background: none; box-shadow: none; color: var(--text);
 }
 .is-lean .open-panel::before, .is-lean .open-panel::after { display: none; }
-.is-lean .primary-action {
-  position: relative; overflow: hidden; isolation: isolate;
-  width: 100%; min-height: 60px; gap: 10px;
-  border: 1px solid rgb(255 235 228 / .35); border-radius: 999px;
-  background: linear-gradient(135deg, #ff6a52 0%, #e8382c 52%, #b0201a 100%);
-  color: #fff;
-  font: 700 21px/1 var(--font-display); letter-spacing: .03em; text-transform: none;
-  text-shadow: 0 1px 2px rgb(60 6 0 / .45);
-  box-shadow: 0 12px 34px rgb(var(--accent-rgb) / .42), inset 0 1px rgb(255 255 255 / .38), inset 0 -3px 0 rgb(80 8 4 / .28);
-  transition: transform 120ms ease, box-shadow 160ms ease;
-}
-.is-lean .primary-action::after {
-  content: ""; position: absolute; z-index: -1; inset: 0 auto 0 -60%; width: 40%;
-  background: linear-gradient(100deg, transparent, rgb(255 255 255 / .38), transparent);
-  transform: skewX(-18deg);
-  animation: cta-sheen 6.5s ease-in-out 2s infinite;
-}
-@keyframes cta-sheen { 0%, 70% { left: -60%; } 100% { left: 130%; } }
-.is-lean .primary-action:active:not(:disabled) { transform: scale(.975); box-shadow: 0 6px 18px rgb(var(--accent-rgb) / .4), inset 0 1px rgb(255 255 255 / .3); }
-.is-lean .primary-action:disabled { background: #3a2a33; color: #cdbcc6; opacity: 1; box-shadow: inset 0 1px rgb(255 255 255 / .1); }
-.is-lean .primary-action:disabled::after { display: none; }
-.is-lean .primary-action:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-
-.is-lean .stock-row {
-  display: flex; justify-content: center; align-items: center; gap: 16px;
-  margin: 12px 0 0; color: var(--muted);
-}
-.is-lean .stock-row > div:first-child { display: flex; align-items: baseline; gap: 8px; }
-.is-lean .stock-row > div:first-child > span { color: var(--muted); font-size: 13px; }
-.is-lean .stock-row strong { color: var(--text); font-size: 24px; }
-.is-lean .stock-row strong small { color: var(--muted-2); font-size: 16px; }
-.is-lean .timer-copy { color: var(--muted); font-size: 13px; }
-.is-lean .reserve-bonus { color: var(--gold); }
 
 /* ------------------------------------------------------------- Ton cercle */
 .circle-strip { margin: 26px -16px 0; }
@@ -257,29 +225,6 @@
   outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 12px;
 }
 
-/* ----------------------------------------------- dernières trouvailles : une main */
-.is-lean .drop-findings { margin-top: 20px; padding-top: 0; border-top: 0; }
-.is-lean .drop-findings .drop-section-kicker { display: none; }
-.is-lean .drop-findings .section-heading h2 { font: 600 17px/1.2 var(--font-body); letter-spacing: 0; text-transform: none; }
-.is-lean .drop-binder-link { min-height: 44px; padding-inline: 4px; }
-.is-lean .mini-card-row {
-  display: flex; gap: 0; margin: 4px -16px 0; padding: 22px 34px 24px;
-  overflow-x: auto; scrollbar-width: none;
-}
-.is-lean .mini-card-row::-webkit-scrollbar { display: none; }
-.is-lean .mini-card-row > * {
-  position: relative; flex: 0 0 112px; width: 112px; margin-left: -34px;
-  transform-origin: 50% 120%;
-  transition: transform 200ms cubic-bezier(.2, .7, .2, 1);
-}
-.is-lean .mini-card-row > :first-child { margin-left: 0; }
-.is-lean .mini-card-row > :nth-child(1) { z-index: 5; transform: rotate(-5deg) translateY(2px); }
-.is-lean .mini-card-row > :nth-child(2) { z-index: 4; transform: rotate(-2.5deg) translateY(-3px); }
-.is-lean .mini-card-row > :nth-child(3) { z-index: 3; transform: rotate(0deg) translateY(-6px); }
-.is-lean .mini-card-row > :nth-child(4) { z-index: 2; transform: rotate(2.5deg) translateY(-3px); }
-.is-lean .mini-card-row > :nth-child(5) { z-index: 1; transform: rotate(5deg) translateY(2px); }
-.is-lean .mini-card-row > :active { transform: translateY(-14px) scale(1.04); z-index: 9; }
-
 /* --------------------------------------------------- un seul panneau secondaire */
 .is-lean .drop-secondary {
   margin-top: 8px; border: 1px solid var(--line); border-radius: 16px; background: rgb(255 255 255 / .03);
@@ -288,59 +233,25 @@
 .is-lean .drop-secondary .text-link, .is-lean .drop-secondary .pity-row, .is-lean .drop-secondary .hourglass-action { min-height: 44px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage-halo, .is-lean .primary-action::after, .circle-live-dot, .circle-strip li[data-live="true"] .circle-avatar { animation: none; }
-  .is-lean .mini-card-row > *, .circle-avatar, .is-lean .primary-action { transition: none; }
+  .stage-halo, .circle-live-dot, .circle-strip li[data-live="true"] .circle-avatar { animation: none; }
+  .circle-avatar { transition: none; }
 }
 
 /* ------------------------------------------------------------------- Binder */
 .collection-view .page-title-row { align-items: flex-end; margin-bottom: 6px; }
 .collection-view .page-title-row h1 { font-size: 30px !important; letter-spacing: .01em; }
-.collection-view .collection-score { align-items: flex-end; }
-.collection-view .collection-score strong { color: var(--gold); font-size: 26px; }
-.collection-view .progress-track { height: 6px !important; border-radius: 999px; overflow: hidden; background: rgb(255 255 255 / .08); }
-.collection-view .progress-track i { border-radius: 999px; background: linear-gradient(90deg, var(--accent), var(--gold)); }
 .collection-view .circle-strip { margin-top: 18px; }
 
-/* Outils : recherche + tri sur une ligne, filtres en pastilles de 44 px. */
-.binder-tools {
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px;
-  margin: 0 -16px; padding: 10px 16px 8px;
-  background: rgb(var(--bg-rgb) / .9);
-}
-.binder-tools .search-field, .binder-tools .sort-field {
-  height: 46px; margin: 0; border-radius: 14px; background: rgb(255 255 255 / .05);
-}
-.binder-tools .search-field:focus-within, .binder-tools .sort-field:focus-within { border-color: var(--accent-soft); }
-.binder-tools .search-field button { width: 32px; height: 32px; border-radius: 10px; }
-.binder-tools .sort-field { padding-inline: 12px 8px; }
-.binder-tools .sort-field .sort-label { display: none; }
-.binder-tools .sort-field select { width: 118px; flex: none; text-overflow: ellipsis; }
-.binder-tools .filter-chips { grid-column: 1 / -1; gap: 8px; margin: 0 -16px; padding: 2px 16px 4px; }
-.binder-tools .filter-chips button {
-  min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px;
-  background: rgb(255 255 255 / .04); color: var(--muted); font-size: 14px;
-  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
-}
-.binder-tools .filter-chips button.active {
-  color: #fff; border-color: transparent; background: linear-gradient(135deg, #ff6a52, #c0281d);
-  box-shadow: 0 6px 16px rgb(var(--accent-rgb) / .3);
-}
-.binder-tools .filter-chips button:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; }
+/* Une seule recherche, discrète : l'album se feuillette, il ne se filtre pas. */
+.binder-tools { margin: 0 -16px; padding: 10px 16px 8px; }
+.binder-tools .search-field { height: 46px; margin: 0; border-radius: 6px; background: rgb(255 255 255 / .04); }
+.binder-tools .search-field:focus-within { border-color: var(--paper); }
+.collection-view .search-field button { min-width: 44px; min-height: 44px; border-radius: 6px; }
 .filter-chips button { min-height: 44px; }
 
 .binder-pager { gap: 10px; }
-.binder-pager > span { flex: 1; text-align: center; font-size: 12.5px; }
-.binder-pager button { min-height: 44px; min-width: 44px; justify-content: center; padding: 0 14px; border-radius: 999px; }
-.binder-active-page button, .collection-view .search-field button { min-width: 44px; min-height: 44px; }
-
-/* Barre de navigation : texte plus lisible au travers du verre. */
-.bottom-nav { background: rgb(18 16 24 / .9); }
-
-/* Les trouvailles en éventail : moins de recouvrement pour garder les noms lisibles. */
-.is-lean .mini-card-row { padding-inline: 28px; }
-.is-lean .mini-card-row > * { flex-basis: 118px; width: 118px; margin-left: -22px; }
-
-@media (prefers-reduced-motion: reduce) { .binder-tools .filter-chips button { transition: none; } }
+.binder-pager > span { flex: 1; text-align: center; font-size: 13px; }
+.binder-pager button { min-height: 44px; min-width: 44px; justify-content: center; padding: 0 14px; border-radius: 6px; }
 
 /* Grand écran : la scène reste une colonne lisible, centrée. */
 @media (min-width: 900px) {
@@ -351,12 +262,13 @@
 /* ------------------------------------------------------------------- Craft */
 .atelier-kicker { margin: 0 0 4px; color: var(--muted); font: 500 13px/1.3 var(--font-body); letter-spacing: 0; text-transform: none; }
 .atelier-view .page-title-row h1 { font-size: 30px; }
-.atelier-view .filter-chips { gap: 6px; margin: 10px 0 0 !important; padding: 4px; overflow: visible; border: 1px solid var(--line); border-radius: 999px; background: rgb(255 255 255 / .04); }
+.atelier-view .filter-chips { gap: 6px; margin: 10px 0 0 !important; padding: 4px; overflow: visible; border: 1px solid var(--line); border-radius: 6px; background: rgb(255 255 255 / .04); }
 .atelier-view .filter-chips > button:not(.text-link) {
-  flex: 1 1 0; min-height: 44px; padding: 0 12px; border: 0; border-radius: 999px; color: var(--muted); text-align: center;
+  flex: 1 1 0; min-height: 44px; padding: 0 12px; border: 0; border-radius: 4px; color: var(--muted); text-align: center;
   transition: background-color 160ms ease, color 160ms ease;
 }
-.atelier-view .filter-chips > button.active { color: #fff; background: linear-gradient(135deg, #ff6a52, #c0281d); box-shadow: 0 4px 14px rgb(var(--accent-rgb) / .28); }
+/* Onglet actif : papier sur carton, pas de rouge (réservé au sachet prêt et au direct). */
+.atelier-view .filter-chips > button.active { color: var(--ink); background: var(--paper); box-shadow: none; }
 .atelier-view .filter-chips > button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 .atelier-view .atelier-recycle-link, .atelier-view .atelier-rules-details > summary, .atelier-view .atelier-rarity-filters > summary { min-height: 44px; display: flex; align-items: center; }
 .atelier-view .atelier-scope { flex-wrap: wrap; }
@@ -523,14 +435,8 @@
   display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; gap: 4px 8px;
   margin: 0; padding: 0; border: 0; background: none; color: var(--muted); font-size: 13px;
 }
-.home-view .stock-row strong { color: var(--text); font-size: 13px; font-weight: 650; }
-.home-view .stock-row .timer-copy { display: inline; color: var(--muted); font-size: 13px; }
-.home-view .stock-row .timer-copy::before { content: "· "; }
-.home-view .reserve-action {
-  display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 44px;
-  margin: 0 0 4px; padding: 6px 10px; border: 0; background: none; color: var(--text);
-  font: inherit; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
-}
+/* Vide : la ligne est l'information principale, l'heure du prochain sachet. */
+.home-view .stock-row[data-empty="true"] { color: var(--text); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .home-view .drop-circle-complete { margin: 8px 0 0; color: var(--muted); font-size: 13px; text-align: center; }
 @media (prefers-reduced-motion: reduce) {
   .home-view .booster-selector .pack-artwork.pack-live { transition: none; }
@@ -606,26 +512,28 @@
 .top-bar .brand-lockup strong { font-size: 20px; letter-spacing: .05em; }
 .top-bar .brand-lockup small {
   display: block; max-width: 46vw; margin-top: 2px;
-  overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis;
+  overflow: hidden; font-size: 12px; white-space: nowrap; text-overflow: ellipsis;
 }
 .app-shell .top-bar .top-actions { gap: 6px; }
+/* Carton, pas verre : des étiquettes à peine arrondies, 44 px sous le pouce. */
 .top-bar .top-wallet {
-  display: flex; align-items: center; height: 34px; padding: 0 2px;
-  border-radius: 999px; background: rgb(255 255 255 / .055);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07);
+  display: flex; align-items: center; height: 44px; padding: 0 2px;
+  border-radius: 6px; background: rgb(255 255 255 / .04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09);
 }
 .app-shell .top-bar .currency-chip {
-  height: 34px; min-width: 0; padding: 0 9px; gap: 5px;
-  border: 0; border-radius: 999px; background: none;
+  height: 44px; min-width: 0; padding: 0 9px; gap: 5px;
+  border: 0; border-radius: 6px; background: none;
 }
-.app-shell .top-bar .currency-chip + .currency-chip { box-shadow: inset 1px 0 rgb(255 255 255 / .08); border-radius: 0 999px 999px 0; }
-.app-shell .top-bar .currency-chip b { font-size: 13px; font-variant-numeric: tabular-nums; }
+.app-shell .top-bar .currency-chip + .currency-chip { box-shadow: inset 1px 0 rgb(255 255 255 / .09); border-radius: 0 6px 6px 0; }
+.app-shell .top-bar .currency-chip b { font-size: 14px; font-variant-numeric: tabular-nums; }
+.app-shell .top-bar .currency-chip small { font-size: 12px; }
 .app-shell .top-bar .level-chip {
-  height: 34px; min-width: 0; padding: 0 11px 0 10px; gap: 4px;
-  border: 0; border-radius: 999px; background: rgb(255 255 255 / .055);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07);
+  height: 44px; min-width: 0; padding: 0 11px 0 10px; gap: 4px;
+  border: 0; border-radius: 6px; background: rgb(255 255 255 / .04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09);
 }
-.app-shell .top-bar .level-chip small { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.app-shell .top-bar .level-chip small { color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
 .app-shell .top-bar .level-chip span { font-size: 14px; font-variant-numeric: tabular-nums; }
 .app-shell .top-bar .level-chip i { left: 10px; right: 10px; bottom: 5px; width: auto; max-width: calc(100% - 20px); height: 2px; border-radius: 2px; }
 
@@ -671,34 +579,7 @@
 }
 .home-view .booster-switcher button { white-space: nowrap; }
 
-/* L'état du booster : un bouton, sous le sachet. */
-.home-view .drop-cta { position: relative; z-index: 3; display: flex; justify-content: center; margin: 14px 0 4px; }
-.home-view .drop-open {
-  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  min-width: min(72vw, 280px); min-height: 52px; padding: 0 26px; overflow: hidden;
-  border: 0; border-radius: 999px; background: var(--accent); color: var(--paper);
-  box-shadow: 0 10px 26px rgb(var(--accent-rgb) / .34), inset 0 1px rgb(255 255 255 / .22);
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: transform 120ms cubic-bezier(0.23, 1, 0.32, 1), opacity 160ms ease;
-}
-.home-view .drop-open:active:not(:disabled) { transform: scale(.97); }
-.home-view .drop-open-label { font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
-.home-view .drop-open-detail { font-size: 13px; font-weight: 600; opacity: .82; font-variant-numeric: tabular-nums; }
-.home-view .drop-cta[data-ready="true"] .drop-open:disabled { opacity: .55; cursor: default; }
-.home-view .drop-cta[data-ready="false"] .drop-open {
-  background: rgb(255 255 255 / .05); color: var(--text); cursor: default;
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .1);
-}
-.home-view .drop-cta[data-ready="false"] .drop-open-label { color: var(--muted); font-size: 15px; letter-spacing: .08em; }
-.home-view .drop-cta[data-ready="false"] .drop-open-detail { font-size: 17px; font-weight: 600; opacity: 1; }
-.home-view .drop-open-progress {
-  position: absolute; left: 0; bottom: 0; width: 100%; height: 3px;
-  background: var(--accent); transform: scaleX(var(--progress, 0)); transform-origin: left center;
-  transition: transform 1s linear;
-}
 .home-view .open-panel .stock-row { justify-content: center; }
-/* En recharge, le compte à rebours est dans le bouton : pas deux fois. */
-.home-view .drop-cta[data-ready="false"] + .open-panel .timer-copy { display: none; }
 
 /* Les chaînes du joueur : une rangée sous le statut, plus sur le sachet. */
 .home-view .drop-circle-faces { margin-top: 10px; }
@@ -713,5 +594,5 @@
 .app-content { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-view .drop-open, .home-view .drop-open-progress, .home-view .booster-switcher button { transition: none; }
+  .home-view .booster-switcher button { transition: none; }
 }

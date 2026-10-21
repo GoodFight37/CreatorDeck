@@ -9,17 +9,16 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
-import { BookOpen, ChevronRight, Copy, Share2, Sparkles, X, Zap } from "lucide-react";
+import { BookOpen, ChevronRight, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CreatorCard } from "@/components/creator-card";
 import { EffectFlash } from "@/components/effect-burst";
-import { useCloud } from "@/hooks/use-cloud";
+import { NextPackLine, PackEndLive } from "@/components/pack-end-live";
 import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { usePresentationFocus } from "@/hooks/use-presentation-focus";
-import { cloudStore } from "@/lib/cloud/cloud-store";
 import { flashFor } from "@/lib/fx";
 import { buzz } from "@/lib/haptics";
 import { CREATOR_BY_SLUG, RARITY_META, type CardVariant, type Rarity } from "@/lib/catalog";
@@ -44,6 +43,8 @@ import { circleLabel } from "@/lib/circle";
 
 const FIFTH_CARD_REVEAL_BEAT_MS = 360;
 const SUMMARY_HOLD_MS = 1_500;
+/** Le temps pour un doublon de rejoindre la pile avant la carte suivante. */
+const DUPLICATE_PILE_MS = 420;
 
 export function RevealOverlay({
   cards: drawnCards,
@@ -85,20 +86,9 @@ export function RevealOverlay({
   const creator = card ? creatorFor(card.creatorSlug) : undefined;
   const live = useLive();
   const now = useNow(60_000);
-  const cloud = useCloud();
 
   const perfect = isPerfect(cards);
   const rarity = card?.rarity ?? "common";
-  const newCardCount = cards.filter((item) => item.isNew).length;
-  // Tout est nouveau : le titre le dit, pas besoin de cinq étiquettes sur les portraits.
-  const allNew = newCardCount === cards.length;
-  // La meilleure carte (Rare ou mieux) passe en grand dans le résumé d'un booster de cinq.
-  const bestId = (() => {
-    if (cards.length !== 5) return null;
-    const rank = (rarity: string) => ["common", "uncommon", "rare", "epic", "legendary"].indexOf(rarity);
-    const best = cards.reduce((top, item) => (rank(item.rarity) > rank(top.rarity) ? item : top), cards[0]);
-    return rank(best.rarity) >= 2 ? best.id : null;
-  })();
   const [locked, setLocked] = useState(perfect);
   const [showSummary, setShowSummary] = useState(false);
   const [summaryReady, setSummaryReady] = useState(false);
@@ -108,15 +98,15 @@ export function RevealOverlay({
   const swipeStart = useRef<{ x: number; y: number; moved: boolean } | null>(null);
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
-  const alreadyOwned = Boolean(card) && !tutorial && !perfect && card.isNew === false;
-  // Un doublon commun ou peu commun ne rejoue pas la scène : pas de retournement,
-  // il rejoint la pile. Rare, épique et légendaire déjà possédées gardent leur
-  // aura et l'étiquette DOUBLON, sans le silence ni le flash (D-157).
-  const duplicate = alreadyOwned && (card.rarity === "common" || card.rarity === "uncommon");
+  // Un doublon, quelle que soit sa rareté, ne rejoue pas la scène : pas de
+  // retournement, il rejoint la pile et la carte suivante arrive toute seule.
+  const duplicate = Boolean(card) && !tutorial && !perfect && card.isNew === false;
+  const alreadyOwned = duplicate;
+  const isLast = index === cards.length - 1;
+  const piling = duplicate && !isLast;
   const duplicatesSoFar = perfect ? [] : cards.slice(0, index + 1).filter((item) => !tutorial && item.isNew === false);
   // Commune et Peu commune : retournement bref, sans flash.
   const quickFlip = rarity === "common" || rarity === "uncommon";
-  // Doublon Rare ou mieux : l'aura et l'étiquette DOUBLON restent, ni silence ni flash.
   const timing = revealTiming(rarity, cardEffectsAllowed(), isFifthSequentialReveal, alreadyOwned);
 
   useEffect(() => {
@@ -158,7 +148,7 @@ export function RevealOverlay({
 
   useEffect(() => {
     if (!card || perfect) return;
-    const silence = overlay ? silenceBefore(card.rarity) : timing.impactMs;
+    const silence = alreadyOwned ? 0 : overlay ? silenceBefore(card.rarity) : timing.impactMs;
     const timer = window.setTimeout(() => {
       if (silenceBefore(card.rarity) > 0 || (!overlay && card.rarity === "rare")) playBang(card.rarity, card.variant);
       else playReveal(card.rarity, card.variant);
@@ -166,7 +156,15 @@ export function RevealOverlay({
       buzz(revealHaptic(card.rarity, card.variant));
     }, silence);
     return () => window.clearTimeout(timer);
-  }, [card, perfect, overlay, timing.impactMs]);
+  }, [card, perfect, overlay, alreadyOwned, timing.impactMs]);
+
+  const nextCard = useEffectEvent(() => onNext());
+  useEffect(() => {
+    if (!piling) return;
+    // Planifié après le son de la carte (délai 0 pour un doublon) : l'ordre des sons ne bouge pas.
+    const timer = window.setTimeout(nextCard, cardEffectsAllowed() ? DUPLICATE_PILE_MS : 0);
+    return () => window.clearTimeout(timer);
+  }, [piling, cardId]);
 
   useEffect(() => {
     if (!perfect) return;
@@ -179,12 +177,13 @@ export function RevealOverlay({
   }, [perfect, cards]);
 
   if (!card || !creator) return null;
-  const isLast = index === cards.length - 1;
   const termine = perfect || isLast;
   const onAir = liveFor(live, creator.login, now);
   const spotlight = deservesSpotlight(card.rarity, perfect);
-  const posterAvailable = !overlay && cloud.configured && Boolean(cloud.userId) &&
-    (perfect || cards.some((item) => item.rarity === "legendary"));
+  // La dernière chaîne du paquet est en direct : l'écran de fin, c'est elle.
+  const endCreator = creatorFor(cards[cards.length - 1].creatorSlug);
+  const endStream = !overlay && !tutorial && endCreator ? liveFor(live, endCreator.login, now) : null;
+  const endReady = termine && (perfect ? !locked : flippedCardId === cardId);
   const rareGlow = !duplicate && (perfect || card.rarity === "epic" || card.rarity === "legendary");
   const rarityAura = rareGlow || (!duplicate && card.rarity === "rare");
   const flash = !alreadyOwned && flashFor(card.rarity, perfect);
@@ -259,13 +258,6 @@ export function RevealOverlay({
     setFlippedCardId(card.id);
   }
 
-  function makePoster() {
-    const selfId = cloud.userId;
-    if (!selfId) return;
-    onClose();
-    void cloudStore.openProfile(selfId);
-  }
-
   function skipRemainingCards() {
     onSkipAll?.();
   }
@@ -276,8 +268,8 @@ export function RevealOverlay({
     // et révéler la carte suivante avant que le joueur ait pu la voir.
     if (!perfect && !showSummary && flippedCardId !== card.id) return;
     if (termine) {
-      if (overlay) onClose();
-      else setShowSummary(true);
+      if (endStream) setShowSummary(true);
+      else onClose();
     } else onNext();
   }
 
@@ -312,7 +304,7 @@ export function RevealOverlay({
           </span>
         </div>
       ) : null}
-      {streakReward && showSummary ? (
+      {streakReward && endReady && !showSummary ? (
         <div className="streak-gain" role="status">
           <Zap size={13} />
           <span>
@@ -321,7 +313,7 @@ export function RevealOverlay({
         </div>
       ) : null}
       <div className="reveal-header">
-        <span>{showSummary ? "RÉCAP" : perfect ? `${cards.length} / ${cards.length}` : `${index + 1} / ${cards.length}`}</span>
+        <span>{perfect ? `${cards.length} / ${cards.length}` : `${index + 1} / ${cards.length}`}</span>
         <div className="reveal-dots">
           {cards.map((item, dotIndex) => {
             const shown = perfect || dotIndex <= index;
@@ -378,41 +370,14 @@ export function RevealOverlay({
             ) : null;
           })}
         </div>
-      ) : showSummary ? (
-        <section className="reveal-summary" aria-label="Résumé du booster">
-          <div className="reveal-summary-copy" aria-live="polite">
-            <h2>{tutorial ? "À toi de collectionner" : perfect ? "Cinq cartes d'exception" : `${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}`}</h2>
-            <p>{tutorial ? "Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé." : perfect ? `${cards.length} cartes Épiques ou mieux · ${newCardCount} nouvelle${newCardCount === 1 ? "" : "s"}` : `${cards.length} cartes dans ta collection`}</p>
-          </div>
-          <div className={`reveal-summary-grid${bestId ? " has-best" : ""}`}>
-            {cards.map((item, summaryIndex) => {
-              const itemCreator = creatorFor(item.creatorSlug);
-              if (!itemCreator) return null;
-              return (
-                <div className={`reveal-summary-card rarity-${item.rarity}${item.isNew ? " is-new" : ""}${item.id === bestId ? " is-best" : ""}`} key={item.id} style={{ "--summary-i": summaryIndex } as CSSProperties}>
-                  <CreatorCard
-                    creator={itemCreator}
-                    variant={item.variant}
-                    className={`summary-card-art rarity-${item.rarity}`}
-                    compact
-                  />
-                  <span className="reveal-summary-card-name">{itemCreator.displayName}</span>
-                  <span className="reveal-summary-card-rarity">{RARITY_META[item.rarity].label}</span>
-                  {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
-                  {item.isNew && !allNew ? <i aria-label="Nouvelle carte">NOUVELLE</i> : null}
-                </div>
-              );
-            })}
-          </div>
-          {posterAvailable ? (
-            <button type="button" className="reveal-poster" onClick={makePoster}>
-              <Share2 size={15} />
-              <span>Faire une affiche</span>
-            </button>
-          ) : null}
-        </section>
-      ) : (
-        <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
+      ) : null}
+      {perfect && !showSummary && endReady && !endStream && !overlay ? (
+        <NextPackLine now={now} className="reveal-next-pack" />
+      ) : null}
+      {showSummary && endStream && endCreator ? (
+        <PackEndLive creator={endCreator} stream={endStream} onWatch={onClose} />
+      ) : perfect || showSummary ? null : (
+        <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}${piling ? " is-piling" : ""}`}>
           {card.isNew && !tutorial && !quickFlip ? (
             // Nouvelle : un flash de la couleur de sa rareté. Pas de second nom :
             // celui de la carte suffit.
@@ -432,18 +397,9 @@ export function RevealOverlay({
               <span className="reveal-dupe-pile-count">Doublons ×{duplicatesSoFar.length}</span>
             </div>
           ) : null}
-          {rareGlow && !perfect ? (
-            <div className={`reveal-rarity-kicker rarity-${card.rarity}`} aria-hidden="true" style={glowStyle}>
-              <span>CARTE D&apos;EXCEPTION</span>
-              <strong>{card.rarity === "legendary" ? "LÉGENDAIRE" : card.rarity === "epic" ? "ÉPIQUE" : "RARE"}</strong>
-            </div>
-          ) : null}
           {rarityAura ? (
             <span key={`rare-glow-${card.id}`} className={`reveal-rare-aura reveal-rare-aura-${card.rarity}`} style={glowStyle} aria-hidden="true" />
           ) : null}
-          {card.isNew ? <span className="new-badge"><Sparkles size={12} /> NOUVELLE</span> : null}
-          {/* Même emplacement que NOUVELLE : la carte garde sa taille, l'étiquette dit si on l'a déjà. */}
-          {alreadyOwned ? <span className="new-badge is-owned"><Copy size={12} /> DOUBLON</span> : null}
           <div
             ref={anchorRef}
             style={glowStyle}
@@ -476,9 +432,10 @@ export function RevealOverlay({
           </div>
           <div className="reveal-name">
             {circleLabel(circle, card.creatorSlug) ? <span>{circleLabel(circle, card.creatorSlug)}</span> : null}
-            {/* Déjà imprimé sur la carte : lu par les lecteurs d'écran, pas répété à l'œil. */}
+            {/* Imprimé sur la carte ou dit par la lumière : lu par les lecteurs d'écran, pas répété à l'œil. */}
             <p className="reveal-meta-sr">
               {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
+              {tutorial ? "" : duplicate ? " · Doublon, rejoint la pile" : card.isNew ? " · Nouvelle" : ""}
             </p>
             {onAir ? (
               spotlight ? (
@@ -499,14 +456,18 @@ export function RevealOverlay({
                 </p>
               )
             ) : null}
-            {isLast && !perfect ? (
+            {endReady && tutorial ? (
+              <p className="reveal-next-pack">Aperçu gratuit · connecte-toi pour commencer ta collection. Aucun point ni jeton dépensé.</p>
+            ) : endReady && !endStream && !overlay ? (
+              <NextPackLine now={now} className="reveal-next-pack" />
+            ) : isLast ? (
               <span className="reveal-guaranteed">Carte garantie du booster</span>
             ) : null}
           </div>
         </div>
       )}
 
-      {!showSummary && !perfect && !locked && flippedCardId === cardId ? (
+      {!showSummary && !perfect && !locked && !piling && !termine && flippedCardId === cardId ? (
         <div className="reveal-swipe-prompt" aria-hidden="true">
           <span className="reveal-swipe-arrow">‹</span>
           <span className="reveal-swipe-label">Glisse la carte</span>
@@ -515,14 +476,14 @@ export function RevealOverlay({
       ) : null}
 
       <button
-        className={`reveal-next${locked ? " locked" : ""}${!showSummary && !perfect ? " is-secondary" : ""}`}
+        className={`reveal-next${locked ? " locked" : ""}${showSummary || !perfect ? " is-secondary" : ""}`}
         onClick={showSummary ? () => { if (!summaryLocked) onClose(); } : advance}
         disabled={locked || summaryLocked || (!perfect && !showSummary && flippedCardId !== cardId)}
         style={{ "--lock-ms": `${PERFECT_LOCK_MS}ms` } as CSSProperties}
       >
         <span>
           {showSummary
-            ? tutorial ? "Commencer ma collection" : "Retour au Drop"
+            ? "Ranger"
             : locked
             ? "Perfect…"
             : !perfect && flippedCardId !== card.id
@@ -532,7 +493,7 @@ export function RevealOverlay({
                 : "Carte suivante"}
         </span>
         {showSummary ? (
-          <Sparkles size={18} />
+          <BookOpen size={16} />
         ) : locked ? (
           <Sparkles size={18} />
         ) : termine ? (

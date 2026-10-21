@@ -189,14 +189,6 @@
   80% { transform: rotateY(5deg); }
   100% { transform: rotateY(0); }
 }
-.reveal-game .reveal-rarity-kicker {
-  top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 104px);
-}
-.reveal-game .reveal-stage > .new-badge {
-  position: absolute;
-  top: calc(var(--scene-center) - var(--scene-card-height) / 2 - 36px);
-  margin: 0;
-}
 .reveal-game .reveal-name {
   position: absolute;
   top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 14px);
@@ -204,11 +196,6 @@
   margin: 0;
 }
 .reveal-game .reveal-name p { font-size: 11px; letter-spacing: .1em; }
-.reveal-game .reveal-poster {
-  position: absolute;
-  bottom: 90px;
-  margin: 0;
-}
 .reveal-game .reveal-next {
   top: calc(var(--scene-height) - 76px - env(safe-area-inset-bottom));
   bottom: auto;
@@ -240,20 +227,6 @@
   margin: auto;
   padding: 20px 18px;
 }
-.reveal-summary-copy { text-align: center; }
-.reveal-summary-copy > span { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .2em; }
-.reveal-summary-copy h2 { margin: 6px 0 2px; color: var(--paper); font-family: var(--font-display); font-size: clamp(38px, 12vw, 58px); line-height: .95; }
-.reveal-summary-copy p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
-.reveal-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: start; gap: 8px; }
-.reveal-summary-card { position: relative; min-width: 0; text-align: center; }
-.reveal-summary-card .summary-card-art { width: 100%; border-radius: 5px; box-shadow: 0 8px 18px -12px #000; }
-.reveal-summary-card .summary-card-art .card-nameplate,
-.reveal-summary-card .summary-card-art .card-rank,
-.reveal-summary-card .summary-card-art .card-region { display: none; }
-.reveal-summary-card-name { display: block; overflow-wrap: anywhere; margin-top: 6px; color: var(--paper); font-size: 12px; font-weight: 650; line-height: 1.2; }
-.reveal-summary-card-rarity { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
-.reveal-summary-card > i { position: absolute; top: 4px; left: 50%; padding: 3px 5px; transform: translateX(-50%); border: 1px solid rgba(255,255,255,.26); border-radius: 99px; background: rgba(117,23,47,.94); color: #fff; font-size: 7px; font-style: normal; font-weight: 800; letter-spacing: .06em; white-space: nowrap; }
-.reveal-summary-card.is-new .summary-card-art { box-shadow: 0 0 0 1px rgba(192,77,105,.7), 0 10px 22px -12px rgba(192,77,105,.7); }
 .reveal-summary-open .reveal-perfect-grid,
 .reveal-summary-open .reveal-stage,
 .reveal-summary-open .reveal-cinematic-field,
@@ -347,9 +320,6 @@ html:has(.booster-presentation) { overflow: hidden; }
   .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(5) { grid-column: 2; margin-left: 50%; }
 }
 @media (max-height: 650px) {
-  .reveal-game .reveal-rarity-kicker { top: 65px; gap: 0; }
-  .reveal-game .reveal-rarity-kicker span { display: none; }
-  .reveal-game .reveal-rarity-kicker strong { font-size: 22px; }
   .reveal-game .reveal-name p { font-size: 10px; }
   .reveal-game .reveal-perfect-grid { margin-top: 20px; max-width: 650px; }
   .reveal-game .reveal-perfect-grid .reveal-card { width: min(100%, 103px); margin: 0 auto; max-height: none; }
@@ -759,19 +729,6 @@ body:has(.perfect-banner) .booster-foil-shine { animation: none; }
   overflow-y: auto;
   justify-content: safe center;
 }
-@media (max-width: 480px) {
-  .reveal-game .reveal-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 10px; }
-  .reveal-game .reveal-summary-card .summary-card-art { max-width: 100px; margin-inline: auto; }
-}
-@media (prefers-reduced-motion: no-preference) {
-  html:not([data-card-fx="off"]) .reveal-game .reveal-summary-card {
-    animation: summary-card-settle 360ms ease-out calc(var(--summary-i) * 65ms) both;
-  }
-}
-@keyframes summary-card-settle {
-  from { opacity: 0; transform: translateY(12px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
 [data-card-fx="off"] .reveal-game .reveal-stage .reveal-flip .reveal-flip-face { animation: none; }
 @media (prefers-reduced-motion: reduce) {
   .reveal-game .reveal-stage .reveal-flip .reveal-flip-face { animation: none; }
@@ -890,31 +847,6 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0;
   overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
-@media (max-width: 480px) {
-  /* Sans « meilleure carte » : trois par rang, le dernier rang centré (pas calé à gauche). */
-  .reveal-game .reveal-summary-grid:not(.has-best) { display: flex; flex-wrap: wrap; justify-content: center; }
-  .reveal-game .reveal-summary-grid:not(.has-best) > .reveal-summary-card { flex: 0 0 calc((100% - 20px) / 3); }
-}
-/* Avec une carte Rare ou mieux : elle occupe la moitié gauche, les quatre autres se rangent à droite. */
-.reveal-game .reveal-summary-grid.has-best {
-  grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px 10px;
-  width: min(100%, 380px); margin-inline: auto;
-}
-.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card .summary-card-art { max-width: none; }
-.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card.is-best {
-  grid-column: 1 / span 2; grid-row: 1 / span 2; order: -1;
-}
-.reveal-game .reveal-summary-card.is-best .summary-card-art {
-  box-shadow: 0 0 0 1px var(--rarity, rgb(255 255 255 / .3)),
-    0 18px 38px -14px color-mix(in srgb, var(--rarity, #fff) 70%, transparent);
-}
-.reveal-game .reveal-summary-card.is-best .reveal-summary-card-name { font-size: 15px; }
-.reveal-game .reveal-summary-card.is-best .reveal-summary-card-rarity { font-size: 12px; }
-.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card:not(.is-best) .reveal-summary-card-name {
-  overflow: hidden; font-size: 11px; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal;
-}
-.reveal-game .reveal-summary-grid.has-best > .reveal-summary-card:not(.is-best) .reveal-summary-card-rarity { font-size: 10px; }
-
 /* Fluidité — lueur fixe derrière la carte révélée (Épique, Légendaire).
    Elle ne bouge pas avec la carte : seule son opacité apparaît, une fois. */
 .reveal-game.reveal-rarity-epic .reveal-stage::before,
@@ -946,3 +878,52 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   from { transform: rotateY(-180deg); }
   to { transform: rotateY(0); }
 }
+
+/* Fin de booster (D-158) : un doublon rejoint la pile sans prendre une étape,
+   la dernière chaîne en direct occupe l'écran de fin, sinon une ligne dit
+   quand le prochain sachet arrive. */
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-card-fx="off"]) .reveal-game .reveal-stage.is-duplicate.is-piling > .reveal-anchor {
+    animation: reveal-dupe-to-pile 420ms cubic-bezier(.4, 0, .7, .2) both;
+  }
+}
+@keyframes reveal-dupe-to-pile {
+  from { opacity: 1; transform: translate(-50%, -50%); }
+  to { opacity: 0; transform: translate(calc(-50% - 34vw), calc(-50% + 26vh)) scale(.24) rotate(-6deg); }
+}
+.reveal-next-pack {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+.reveal-game .reveal-name .reveal-next-pack { font-size: 13px; letter-spacing: .02em; text-transform: none; }
+.reveal-game .reveal-perfect-grid + .reveal-next-pack { position: relative; z-index: 3; margin-top: 18px; }
+.reveal-game.reveal-summary-open .pack-end-live {
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.pack-end-face {
+  display: block;
+  width: min(78vw, 340px, 46vh);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 18px;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / .14), 0 24px 60px -24px #000;
+}
+.pack-end-face img { width: 100%; height: 100%; object-fit: cover; }
+.pack-end-kicker {
+  display: inline-flex; align-items: center; gap: 7px; margin: 8px 0 0;
+  color: #ff8fa3; font-size: 11px; font-weight: 750; letter-spacing: .18em; text-transform: uppercase;
+}
+.pack-end-kicker i { width: 8px; height: 8px; border-radius: 50%; background: #ff3b5c; box-shadow: 0 0 10px #ff3b5c; }
+.pack-end-live h2 { margin: 0; color: var(--paper); font-family: var(--font-display); font-size: clamp(34px, 10vw, 52px); line-height: .95; }
+.pack-end-details { margin: 0; color: var(--muted); font-size: 13px; }
+.pack-end-watch {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: min(100%, 420px); min-height: 54px; margin-top: 8px; padding: 0 18px;
+  border-radius: 999px; background: #9146ff; color: #fff;
+  font-size: 15px; font-weight: 750; text-decoration: none;
+}
+.pack-end-watch:active { transform: scale(.985); }

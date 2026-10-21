@@ -58,9 +58,8 @@ describe("l’essai invité tiré dans « Mes chaînes »", () => {
     expect(reveal).toHaveBeenCalledWith("common", "standard");
     expect(bang).not.toHaveBeenCalled();
     expect(legendary).not.toHaveBeenCalled();
-    banc.appuyer("Ranger dans le classeur");
-    expect(document.querySelector(".reveal-summary-card")?.textContent).toContain("Commune");
-    expect(document.querySelector(".reveal-summary-card")?.textContent).toContain("Préférée");
+    // Plus de récap en grille : la carte rangée se retrouve, Commune, dans le classeur.
+    expect(document.querySelector(".reveal-meta-sr")?.textContent).toContain("Commune");
     const state = createInitialState(1000);
     state.cards = [{ ...card, obtainedAt: 1000 }];
     await banc.rendre(<CollectionView game={getGameView(state, 1000)} onCraft={async () => true} />);

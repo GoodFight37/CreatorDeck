@@ -20,11 +20,7 @@ import { Capacitor } from "@capacitor/core";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useCloud } from "@/hooks/use-cloud";
-import { useInbox } from "@/hooks/use-inbox";
-import { useNow } from "@/hooks/use-game";
 import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, VARIANT_META, type Rarity } from "@/lib/catalog";
-import { readySteals } from "@/lib/last-pack";
-import { sellableCards } from "@/lib/market";
 import { regionLabel } from "@/lib/regions";
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 import {
@@ -92,12 +88,7 @@ export function ProfileView({
   onGoDrop?: () => void;
 }) {
   const cloud = useCloud();
-  const { unread: inboxUnread } = useInbox();
-  const lastPackNow = useNow(15_000);
-  const lastPackReady = readySteals(cloud.lastPacks, cloud.lastPacksAt ?? lastPackNow, lastPackNow);
-  const arenaRewards = cloud.arenaMine?.pending.length ?? 0;
   const arenaCards = new Set(game.cards.map((card) => card.creatorSlug)).size;
-  const marketDuplicates = sellableCards(game.cards).length;
 
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
@@ -133,9 +124,6 @@ export function ProfileView({
     return [...counts].map(([variant, count]) => ({ variant, count }));
   }, [ownedCards, inspectSlug]);
   useBackHandler(inspectSlug !== null, () => setInspectSlug(null));
-  const readyMissions = game.missions.filter((mission) => mission.done && !mission.claimed).length;
-  const nextMission = game.missions.find((mission) => !mission.done);
-  const completedMissions = game.missions.filter((mission) => mission.done).length;
   const xp = Math.max(0, Math.min(game.player.xp, game.player.xpNext));
 
   const [binderGoal] = useBinderGoal();
@@ -311,10 +299,6 @@ export function ProfileView({
         <progress className="profile-xp" aria-label="Expérience vers le prochain niveau" value={xp} max={game.player.xpNext} />
         <div className="profile-collection-total"><strong>{game.stats.uniqueCreators}<small> / {CREATORS.length}</small></strong><span>créateurs réunis</span></div>
         <progress className="profile-collection-meter" aria-label="Collection de créateurs" value={game.stats.uniqueCreators} max={CREATORS.length} />
-        <button type="button" className="profile-objective" onClick={onShowMissions}>
-          <Target size={20} /><span><strong>Objectifs et saisons</strong><small>{readyMissions > 0 ? `${readyMissions} objectif${readyMissions > 1 ? "s" : ""} à réclamer` : nextMission ? `${nextMission.label} · ${nextMission.progress}/${nextMission.target}` : `${completedMissions}/${game.missions.length} objectifs du jour terminés`}</small></span><ChevronRight size={18} />
-        </button>
-        {onShowTribunal ? <button type="button" className="profile-journey-link" onClick={onShowTribunal}>Tribunal des Bannis <ChevronRight size={16} /></button> : null}
       </section>
 
       {game.stats.totalCards > 0 ? (
@@ -365,7 +349,11 @@ export function ProfileView({
       {showReleaseNotes ? <ReleaseNotesSheet onClose={() => setShowReleaseNotes(false)} /> : null}
 
       <details className="profile-online-fold">
-        <summary>Fonctionnalités en ligne</summary>
+        <summary>Autres activités</summary>
+        <button type="button" className="menu-row" onClick={onShowMissions}>
+          <span>Objectifs et saisons</span><ChevronRight size={16} />
+        </button>
+        {onShowTribunal ? <button type="button" className="menu-row" onClick={onShowTribunal}><span>Tribunal des Bannis</span><ChevronRight size={16} /></button> : null}
         <button type="button" className="account-button ghost" onClick={() => setShowPromoCode(true)}>
           J&apos;ai un code booster
         </button>
@@ -426,7 +414,7 @@ export function ProfileView({
               <span className="menu-label">
                 Hôtel des ventes
                 <small className="menu-state">
-                  {marketDuplicates} doublon{marketDuplicates === 1 ? "" : "s"} à vendre · {game.player.points.toLocaleString("fr-FR")} pts
+                  {game.player.points.toLocaleString("fr-FR")} pts
                 </small>
               </span>
               <ChevronRight size={16} />
@@ -438,17 +426,14 @@ export function ProfileView({
                   {arenaCards < 5 ? `${arenaCards}/5 cartes distinctes` : `${arenaCards} cartes · minimum 5`} · 1 créateur en direct au dépôt
                 </small>
               </span>
-              {arenaRewards > 0 ? <b className="menu-count">{arenaRewards}</b> : null}
               <ChevronRight size={16} />
             </button>
             <button type="button" className="menu-row" onClick={onShowLastPack}>
               <span>Last Pack</span>
-              {lastPackReady > 0 ? <b className="menu-count">{lastPackReady}</b> : null}
               <ChevronRight size={16} />
             </button>
             <button type="button" className="menu-row" onClick={onShowNotifications}>
               <span>Notifications</span>
-              {inboxUnread > 0 ? <b className="menu-count">{inboxUnread}</b> : null}
               <ChevronRight size={16} />
             </button>
           </>

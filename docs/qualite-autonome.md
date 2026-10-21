@@ -1,5 +1,14 @@
 # Qualité autonome — phase 2 publiée, 19 octobre 2026
 
+## État actuel — 20 octobre 2026
+
+À la demande de Malik, la tâche Windows `CreatorDeck-Qualite-Mobile` a été
+supprimée. Elle ne lance plus de contrôles périodiques sur ce PC. Son dernier
+rapport, du 20 octobre à 06:47 (heure de Paris), est réussi : tests d'autonomie,
+typecheck et 7/7 tests Playwright mobiles. Les rapports et captures existants
+sont conservés ; les commandes de qualité manuelles et la CI restent disponibles.
+Ne pas réinstaller cette tâche sans nouvelle demande de Malik.
+
 Le 19 octobre, le correctif local du smoke Android a réussi sur l'AVD matériel :
 `reports/android-smoke/2026-10-19T01-45-28-650Z/result.json`. Le helper de
 revue Claude exige maintenant `CREATORDECK_ALLOW_PAID_CLAUDE=1` pour chaque appel

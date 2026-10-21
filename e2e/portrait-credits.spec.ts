@@ -19,9 +19,7 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   }, creators.filter((creator) => displayedPortraits.includes(creator.slug)));
   await page.reload();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
-  // Le Binder s’ouvre sur sa collection à compléter ; cette vue regroupe les
-  // cartes obtenues de toutes les familles avant de vérifier les portraits.
-  await page.getByRole("button", { name: "Dernières reçues" }).click();
+  // Le Binder s’ouvre sur les cartes obtenues, avant les dos à découvrir.
   for (const slug of displayedPortraits) {
     const manual = manualPortraits[slug as keyof typeof manualPortraits];
     const curated = curatedPortraits[slug as keyof typeof curatedPortraits];

@@ -45,7 +45,6 @@
 }
 .home-view .booster-panel[hidden] { display: none; }
 .home-view .meme-booster-panel { padding: 0 2px; }
-.home-view .meme-booster-panel .primary-action { width: 100%; min-height: 64px; }
 .meme-booster-reserve { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin: 10px 0; font-size: 13px; }
 .meme-booster-reserve span { color: var(--muted); }
 .booster-collection-link { display: block; padding: 12px 0; color: var(--accent); font-size: 13px; }

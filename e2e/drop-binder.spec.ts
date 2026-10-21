@@ -1,35 +1,21 @@
 import { expect, test, gotoDeck } from "./fixtures";
 import creatorData from "../src/data/creators.json";
 
-test("une collection choisie reste mémorisée sans remplacer la vue Obtenues", async ({ page }) => {
+test("le Binder est un album calme : ni score, ni filtres, ni objectifs, à 320 px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await gotoDeck(page, true, { withoutCircle: true });
   await page.getByRole("button", { name: "Binder", exact: true }).click();
-  await expect(page.locator(".binder-next-pages")).toHaveCount(0);
-  await page.locator(".binder-collections-picker summary").click();
-  const family = page.getByRole("combobox", { name: "Famille de collection" });
-  const secondFamily = await family.locator("option").nth(1).getAttribute("value");
-  await family.selectOption(secondFamily!);
-  const choice = page.locator(".binder-collection-choices button").first();
-  const name = await choice.locator("strong").innerText();
-  await choice.click();
-  await expect(page.locator(".binder-next-pages")).toContainText(name);
-  await expect(page.locator(".binder-next-pages")).toContainText("0 / 12");
-  await expect(page.locator(".collection-grid .creator-card")).toHaveCount(12);
-  const firstLabels = await page.locator(".collection-grid .creator-card").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
-  expect(firstLabels.every((label) => label?.includes("non obtenue"))).toBe(true);
+  await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
+  for (const removed of [".collection-score", ".filter-chips", ".binder-next-pages", ".binder-circle-goal",
+    ".binder-collections-picker", ".binder-active-page", ".pocket-count", ".binder-card-caption"]) {
+    await expect(page.locator(removed)).toHaveCount(0);
+  }
+  await expect(page.getByRole("combobox", { name: "Trier le classeur" })).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Rechercher un créateur" })).toBeVisible();
+  // Un classeur neuf se feuillette déjà : douze dos à découvrir.
+  await expect(page.locator(".collection-grid .creator-card.is-locked")).toHaveCount(12);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
-  await page.reload();
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
-  await expect(page.getByRole("button", { name: /^Obtenues/ })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".collection-grid .creator-card")).toHaveCount(0);
-  await expect(page.locator(".binder-next-pages")).toContainText(name);
-  await page.locator(".binder-collections-picker summary").click();
-  await expect(family).toHaveValue(secondFamily!);
-  await page.locator(".binder-next-pages > button").click();
-  const restoredLabels = await page.locator(".collection-grid .creator-card").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
-  expect(restoredLabels).toEqual(firstLabels);
-  await page.locator(".binder-next-pages").screenshot({ path: `test-results/binder-collection-${test.info().project.name}.png` });
+  await page.screenshot({ path: `test-results/binder-album-${test.info().project.name}.png` });
 });
 
 test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page }) => {
@@ -46,13 +32,13 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
   await hourglass.scrollIntoViewIfNeeded();
   await expect(hourglass).toBeInViewport();
   await expect(page.locator(".drop-secondary-details")).toHaveAttribute("open", "");
-  await page.getByRole("button", { name: "Mon Binder", exact: false }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
-  await page.getByRole("button", { name: "Retour au Drop", exact: true }).click();
+  await page.getByRole("button", { name: "Drop", exact: true }).click();
   await expect(open).toBeEnabled();
 });
 
-test("les pages à compléter montrent leurs manquantes ; les dernières reçues retrouvent les obtenues", async ({ page }) => {
+test("le Binder s’ouvre sur les dernières reçues, les manquantes après", async ({ page }) => {
   await gotoDeck(page, true, { withoutCircle: true });
   const creators = creatorData.filter((creator) => creator.region === "S01").slice(0, 3);
   await page.evaluate((cards) => {
@@ -65,29 +51,14 @@ test("les pages à compléter montrent leurs manquantes ; les dernières reçues
     localStorage.setItem(key, JSON.stringify(state));
   }, creators);
   await page.reload();
-  await page.locator(".mini-card-row .creator-card").first().click();
-  const finding = page.getByRole("dialog", { name: /^Carte de / });
-  await expect(finding).toBeVisible();
-  await expect(finding).toBeInViewport();
-  await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
-  await finding.locator(".odds-head").getByRole("button", { name: "Fermer", exact: true }).click();
-  await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
-  await expect(page.locator(".mini-card-row .creator-card-inspect").first()).toBeFocused();
   await page.getByRole("button", { name: "Binder", exact: true }).click();
-  const goals = page.getByRole("region", { name: "Pages à compléter" });
-  await expect(goals).toBeVisible();
-  await goals.getByRole("button").first().click();
-  await expect(page.getByRole("button", { name: "À découvrir", exact: true })).toHaveAttribute("aria-pressed", "true");
+  // Ses visages d'abord, la plus récente en tête ; les manquantes suivent en dos.
   const cards = page.locator(".collection-grid .creator-card");
-  await expect(goals).toContainText("3 / 12");
-  await expect(cards).toHaveCount(9);
+  await expect(cards).toHaveCount(12);
   const labels = await cards.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("aria-label")));
-  expect(labels.every((label) => label?.includes("non obtenue"))).toBe(true);
-  for (const creator of creators) expect(labels.some((label) => label?.startsWith(`${creator.displayName},`))).toBe(false);
-  await page.getByRole("button", { name: "Dernières reçues" }).click();
-  await expect(page.locator(".binder-active-page")).toHaveCount(0);
-  await expect(cards).toHaveCount(3);
-  await expect(cards.first()).toHaveAttribute("aria-label", new RegExp(`^${creators[2].displayName},`));
+  expect(labels.slice(0, 3).map((label) => label?.split(", rang")[0])).toEqual([creators[2], creators[1], creators[0]].map((creator) => creator.displayName));
+  expect(labels.slice(0, 3).some((label) => label?.includes("non obtenue"))).toBe(false);
+  expect(labels.slice(3).every((label) => label?.includes("non obtenue"))).toBe(true);
 });
 
 test("Drop et Binder restent contenus à 320 px", async ({ page }) => {
@@ -101,7 +72,7 @@ test("Drop et Binder restent contenus à 320 px", async ({ page }) => {
   }
 });
 
-test("avec un cercle, le Binder s'ouvre sur « Mon cercle » et montre l'objectif du cercle (D-140)", async ({ page }) => {
+test("avec un cercle, le Binder s'ouvre sur ses visages sans objectif affiché (D-140)", async ({ page }) => {
   await gotoDeck(page);
   // Accueil épuré : le sachet garde la taille du Drop (préférence de Malik ; la refonte UI l'avait réduit).
   await page.setViewportSize({ width: 390, height: 844 });
@@ -109,12 +80,12 @@ test("avec un cercle, le Binder s'ouvre sur « Mon cercle » et montre l'objecti
   const packBox = (await page.locator(".pack-stage .pack-artwork").boundingBox())!;
   expect(packBox.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
   await page.getByRole("button", { name: "Binder", exact: true }).click();
-  const chip = page.locator(".filter-chips button").first();
-  await expect(chip).toHaveText(/^Mon cercle \(\d+\/5\)$/);
-  await expect(chip).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".collection-grid .binder-pocket")).toHaveCount(5);
-  await expect(page.locator(".binder-circle-goal")).toContainText("Mon cercle ·");
-  await expect(page.locator(".binder-next-pages")).toHaveCount(0);
+  // Plus de puce « Mon cercle » ni d'objectif : l'album s'ouvre sur ses visages, cercle en tête.
+  await expect(page.locator(".filter-chips")).toHaveCount(0);
+  await expect(page.locator(".binder-circle-goal")).toHaveCount(0);
+  await expect(page.locator(".circle-strip")).toBeVisible();
+  const locked = await page.locator(".collection-grid .creator-card").evaluateAll((nodes) => nodes.map((node) => node.classList.contains("is-locked")));
+  expect(locked.indexOf(false) < 0 || locked.lastIndexOf(false) < locked.indexOf(true)).toBe(true);
   await page.getByRole("button", { name: "Modifier mes chaînes" }).click();
   await expect(page.getByRole("dialog", { name: "Mes chaînes" })).toContainText("Ton accueil et ton Binder se recentrent sur eux.");
   await page.getByRole("button", { name: "Annuler", exact: true }).click();

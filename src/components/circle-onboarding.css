@@ -43,6 +43,7 @@
 .circle-chip-rank { color: #b9a8b5; font: 600 15px var(--font-display, inherit); text-align: center; }
 .circle-chip img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
 .circle-chip-name { overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.circle-chip-nocard { display: block; color: #b9a8b5; font-size: 12px; font-weight: 500; }
 .circle-chip-star, .circle-chip-remove {
   display: grid; width: 44px; min-height: 44px; place-items: center; padding: 0;
   border: 0; background: none; color: #d8cbd5; cursor: pointer;

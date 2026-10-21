@@ -2213,6 +2213,13 @@ collecteur distant ni appel IA périodique. Le runner GitHub auto-hébergé sur 
 PC personnel est reporté tant qu'il ne dispose pas d'une isolation contre le
 code des PR publiques. Preuves et limites : [qualité autonome](qualite-autonome.md).
 
+Le 20 octobre 2026, à la demande de Malik, la tâche périodique Windows a été
+supprimée : les rapports n'étaient pas consultés et n'apportaient pas d'utilité
+directe suffisante. Ne pas la réinstaller sans demande explicite. Les tests
+manuels et les contrôles CI demeurent disponibles ; les rapports déjà produits
+sont conservés. Cette mise à jour remplace la partie « toutes les quatre heures »
+de la décision pour l'état actuel de la machine.
+
 ## D-153 — 19 octobre 2026 : diagnostic sans IA des échecs persistants et provenance APK
 
 Contexte : finir l’autonomie sans exposer la session Windows, appeler un modèle

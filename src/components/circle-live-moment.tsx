@@ -16,6 +16,7 @@
 import Image from "next/image";
 import { ExternalLink, Hourglass } from "lucide-react";
 
+import { ChannelInitials } from "@/components/circle-strip";
 import { creatorImage } from "@/lib/catalog";
 import {
   circleLiveHeadline,
@@ -48,31 +49,37 @@ export function CircleLiveMoment({
   if (entries.length === 0) return null;
   const shown = entries.slice(0, MAX_ROWS);
   const hidden = entries.length - shown.length;
+  // Le bonus Direct ne vaut que pour une carte : une chaîne hors catalogue n'en a pas (0060).
+  const carded = entries.filter((entry) => entry.creator).length;
 
   return (
     <section className="circle-live-moment" aria-labelledby="circle-live-title">
       <p className="circle-live-kicker"><i className="circle-live-dot" aria-hidden="true" />En direct dans ton cercle</p>
       <h2 id="circle-live-title">{circleLiveHeadline(entries)}</h2>
       <ul className="circle-live-list">
-        {shown.map(({ creator, stream, owned }) => {
+        {shown.map(({ slug, login, displayName, creator, stream, owned }) => {
           const since = liveSinceLabel(stream.startedAt, now);
           const details = [stream.gameName, viewersLabel(stream.viewers), since].filter(Boolean).join(" · ");
           return (
-            <li key={creator.slug}>
+            <li key={slug}>
               <span className="circle-live-face">
-                <Image src={creatorImage(creator)} alt="" width={44} height={44} draggable={false} />
+                {creator
+                  ? <Image src={creatorImage(creator)} alt="" width={44} height={44} draggable={false} />
+                  : <ChannelInitials name={displayName} size={40} />}
               </span>
               <span className="circle-live-copy">
-                <strong>{creator.displayName}</strong>
+                <strong>{displayName}</strong>
                 <span>{details}</span>
-                <small data-owned={owned}>{owned ? "Dans ta collection" : "À trouver"}</small>
+                {creator
+                  ? <small data-owned={owned}>{owned ? "Dans ta collection" : "À trouver"}</small>
+                  : <small>sans carte</small>}
               </span>
               <a
                 className="circle-live-watch"
-                href={twitchUrl(creator.login)}
+                href={twitchUrl(login)}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Regarder ${creator.displayName} sur Twitch`}
+                aria-label={`Regarder ${displayName} sur Twitch`}
               >
                 Twitch <ExternalLink size={14} aria-hidden="true" />
               </a>
@@ -81,13 +88,13 @@ export function CircleLiveMoment({
         })}
       </ul>
       {hidden > 0 ? <p className="circle-live-more">+ {hidden} autre{hidden > 1 ? "s" : ""} dans la rangée « Ton cercle »</p> : null}
-      <p className="circle-live-benefit">{directBenefitLine(entries.length)}</p>
-      {canOpen ? (
+      {carded ? <p className="circle-live-benefit">{directBenefitLine(carded)}</p> : null}
+      {!carded ? null : canOpen ? (
         <p className="circle-live-next">C’est le moment d’ouvrir un booster.</p>
       ) : nextPackLabel ? (
         <p className="circle-live-next">Prochain booster {nextPackLabel}. Le bonus compte si le direct dure encore.</p>
       ) : null}
-      {!canOpen && hourglass ? (
+      {carded && !canOpen && hourglass ? (
         <button type="button" className="circle-live-hourglass" onClick={hourglass.onUse} disabled={hourglass.busy}
           aria-label={hourglass.busy ? "Utilisation du sablier" : `Utiliser 1 sablier pour avancer la recharge de 15 minutes, ${hourglass.count} disponibles`}>
           <Hourglass size={16} aria-hidden="true" />

@@ -114,7 +114,7 @@ test("avec le serveur : Retour et Échap quittent la préparation Live sans requ
   await trigger.click(); await page.keyboard.press("Escape");
   await expect(scene).toHaveCount(0);
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
-  await expect(page.locator(".stock-row strong").first()).toContainText("4");
+  await expect(page.locator(".open-panel .stock-row")).toContainText(/^4 /);
 });
 
 test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste ouvre cinq cartes et retrouve sa réserve", async ({ page }) => {

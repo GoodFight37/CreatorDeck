@@ -31,12 +31,19 @@ describe("Toi : vitrine, parcours et menus complets", () => {
       onShowWishlist={noop} onGoBinder={noop} onGoDrop={noop} onShowTribunal={noop} />);
     return { game, creator, onShowMissions, onShowAccount };
   }
-  it("rend la progression et les objectifs accessibles sans ouvrir les fonctions en ligne", async () => {
+  it("garde la progression visible et les activités secondaires repliées", async () => {
     const { game, onShowMissions } = await profile();
     const xp = document.querySelector<HTMLProgressElement>('.profile-xp')!;
     expect(xp.value).toBe(game.player.xp); expect(xp.max).toBe(game.player.xpNext);
-    const objective = document.querySelector('.profile-objective')!;
-    expect(objective.closest('details')).toBeNull(); banc.appuyer(/^Objectifs et saisons/);
+    const fold = document.querySelector<HTMLDetailsElement>('.profile-online-fold')!;
+    expect(fold.open).toBe(false);
+    expect(fold.querySelector('summary')?.textContent).toBe('Autres activités');
+    expect(document.querySelector('.profile-journey')?.textContent).not.toMatch(/Objectifs|Tribunal/);
+    const objective = [...fold.querySelectorAll('button')].find((button) => button.textContent === 'Objectifs et saisons')!;
+    expect(objective.closest('details')).toBe(fold);
+    expect(fold.textContent).toContain('Tribunal des Bannis');
+    act(() => { fold.open = true; });
+    banc.appuyer(/^Objectifs et saisons/);
     expect(onShowMissions).toHaveBeenCalledOnce();
     expect(document.querySelector('.profile-collection-total')?.textContent).toContain('0 / 1000');
   });
@@ -80,11 +87,13 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     expect(document.querySelector('.profile-account-status')?.textContent).toContain('Sauvegarde en cours');
     expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(1);
   });
-  it("signale les objectifs déjà accomplis à réclamer depuis les valeurs du moteur", async () => {
+  it("ne transforme pas les récompenses disponibles en appels à revenir", async () => {
+    mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', arenaMine:{pending:[{}]} as CloudState['arenaMine']};
     const { game } = await profile(0, true);
     const count = game.missions.filter((mission) => mission.done && !mission.claimed).length;
     expect(count).toBeGreaterThan(0);
-    expect(document.querySelector('.profile-objective')?.textContent).toContain(`${count} objectif${count > 1 ? "s" : ""} à réclamer`);
+    expect(document.querySelector('.profile-online-fold')?.textContent).not.toMatch(/à réclamer|doublons? à vendre/);
+    expect(document.querySelector('.menu-count')).toBeNull();
   });
   it("garde la wishlist visible et bloque ses commandes pendant un retrait", async () => {
     mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', wishlistBusy:true, wishlistSlug:CREATORS[0].slug};

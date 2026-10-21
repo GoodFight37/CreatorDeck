@@ -103,13 +103,14 @@ export function silenceBefore(rarity: Rarity): number {
  * Timings du flip physique. Le son et la lumière frappent au début du hit-stop.
  *
  * Commune et Peu commune : un retournement bref (280 ms), sans mise en scène.
- * `owned` : un doublon Rare ou mieux garde son aura mais pas le silence.
+ * `owned` : un doublon, quelle que soit sa rareté, ne se retourne pas, il
+ * rejoint la pile — ni silence, ni retournement, ni impact.
  */
 export const QUICK_FLIP_MS = 280;
 export function revealTiming(rarity: Rarity, effectsOn: boolean, fifth = false, owned = false) {
-  if (!effectsOn) return { flipMs: 0, leadMs: 0, impactMs: 0 };
+  if (!effectsOn || owned) return { flipMs: 0, leadMs: 0, impactMs: 0 };
   const flipMs = rarity === "legendary" ? 1_120 : rarity === "epic" ? 960 : rarity === "rare" ? 840 : QUICK_FLIP_MS;
-  const leadMs = (owned ? 0 : silenceBefore(rarity)) + (fifth ? 360 : 0);
+  const leadMs = silenceBefore(rarity) + (fifth ? 360 : 0);
   const impactMs = leadMs + (["rare", "epic", "legendary"].includes(rarity) ? Math.round(flipMs * 0.48) : 0);
   return { flipMs, leadMs, impactMs };
 }

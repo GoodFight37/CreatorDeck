@@ -66,6 +66,7 @@ import { verifyCircleDraw } from "./verify-circle-draw.mjs";
 import { verifyRetention } from "./verify-retention.mjs";
 import { verifyCircleOptional } from "./verify-circle-optional.mjs";
 import { verifyCircleOnce } from "./verify-circle-once.mjs";
+import { verifyCircleHorsCatalogue } from "./verify-circle-hors-catalogue.mjs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -7459,6 +7460,8 @@ try {
     sql: await readFile(path.join(MIGRATIONS, "0058_cercle_facultatif.sql"), "utf8") });
   await verifyCircleOnce({ client, player, asPlayer, check,
     sql: await readFile(path.join(MIGRATIONS, "0059_cercle_une_fois.sql"), "utf8") });
+  await verifyCircleHorsCatalogue({ client, player, asPlayer, refuses, check,
+    sql: await readFile(path.join(MIGRATIONS, "0060_cercle_hors_catalogue.sql"), "utf8") });
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});

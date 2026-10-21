@@ -9,11 +9,13 @@ import {
   buildCreatorIndex,
   circleProgress,
   circleLabel,
+  customLogin,
   drawCirclePack,
   isValidCircle,
   normalizeChannelName,
   popularCreators,
   resolveCircleInput,
+  twitchLogin,
   searchCreators,
 } from "@/lib/circle";
 
@@ -51,12 +53,25 @@ describe("lire ce que le joueur écrit", () => {
     expect(overflow).toBe(0);
   });
 
-  it("garde l'ordre, ajoute à un cercle existant et signale les inconnus", () => {
+  it("garde l'ordre, ajoute à un cercle existant ; un login hors catalogue entre sans carte", () => {
     const [a, b, c] = POPULAR;
     const loginOf = (slug: string) => CREATORS.find((creator) => creator.slug === slug)!.login;
-    const { slugs, unknown } = resolveCircleInput(`${loginOf(c)}, personne_nexiste_pas_zzz`, INDEX, [a, b]);
-    expect(slugs).toEqual([a, b, c]);
-    expect(unknown).toEqual(["personne_nexiste_pas_zzz"]);
+    const { slugs, unknown, custom } = resolveCircleInput(`${loginOf(c)}, Personne_Nexiste_Pas_Zzz, twitch.tv/petite_chaine?x=1, @${loginOf(c)}`, INDEX, [a, b]);
+    expect(slugs).toEqual([a, b, c, "twitch:personne_nexiste_pas_zzz", "twitch:petite_chaine"]);
+    expect(custom).toEqual(["twitch:personne_nexiste_pas_zzz", "twitch:petite_chaine"]);
+    expect(unknown).toEqual([]);
+  });
+
+  it("signale un nom qui n'a pas la forme d'un login Twitch, sans l'ajouter", () => {
+    const { slugs, unknown } = resolveCircleInput("abc, nom-avec-tiret, ééé", INDEX);
+    expect(slugs).toEqual([]);
+    expect(unknown).toEqual(["abc", "nom-avec-tiret", "ééé"]);
+    expect(twitchLogin("@Petite_Chaine")).toBe("petite_chaine");
+    expect(twitchLogin("https://www.twitch.tv/petite_chaine/videos")).toBe("petite_chaine");
+    expect(twitchLogin("a".repeat(26))).toBeNull();
+    expect(customLogin("twitch:petite_chaine")).toBe("petite_chaine");
+    expect(customLogin("twitch:ab")).toBeNull();
+    expect(customLogin(POPULAR[0])).toBeNull();
   });
 
   it("n'accepte jamais plus de quinze chaînes et compte celles qui restent dehors", () => {
@@ -86,6 +101,9 @@ describe("lire ce que le joueur écrit", () => {
     expect(isValidCircle(POPULAR.slice(0, CIRCLE_MAX))).toBe(true);
     expect(isValidCircle([...POPULAR.slice(0, CIRCLE_MAX), "de-trop"])).toBe(false);
     expect(isValidCircle([POPULAR[0], POPULAR[0]])).toBe(false);
+    expect(isValidCircle([POPULAR[0], "twitch:petite_chaine"])).toBe(true);
+    expect(isValidCircle(["twitch:petite_chaine", "twitch:petite_chaine"])).toBe(false);
+    expect(isValidCircle(["twitch:a-b"])).toBe(false);
   });
 });
 

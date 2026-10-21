@@ -125,36 +125,37 @@ describe("mille cartes dans le classeur", () => {
     await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
 
     // Le classeur s'ouvre sur ce qu'on possède : 1 000 cartes, pages courtes.
-    expect(document.body.textContent).toContain(`/ ${CATALOG_SIZE}`);
+    expect(document.querySelector(".binder-pager")!.textContent).toContain(`/ ${Math.ceil(CATALOG_SIZE / CARTES_PAR_PAGE)}`);
     expect(pose().cartes).toBe(CARTES_PAR_PAGE);
     // Douze portraits maximum, pas mille : c'est le décodage d'images qui coûte.
     expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
 
     // Feuilleter ne change rien au poids : la page suivante remplace la
     // précédente, elle ne s'y ajoute pas.
-    for (let tour = 0; tour < 3; tour += 1) {
-      banc.appuyer(/^Suivant/);
-      expect(pose().cartes).toBe(CARTES_PAR_PAGE);
-      expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
-    }
+    vi.useFakeTimers();
+    try {
+      for (let tour = 0; tour < 3; tour += 1) {
+        banc.appuyer(/^Suivant/);
+        expect(pose().cartes).toBe(CARTES_PAR_PAGE);
+        expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
+        // jsdom ne joue pas le tour de feuille : attendre son filet de sécurité.
+        await act(async () => { await vi.advanceTimersByTimeAsync(420); });
+      }
+    } finally { vi.useRealTimers(); }
     expect(document.body.textContent).toContain("Page 4");
   });
 
-  it("commence sur les cartes obtenues et évite le mur vide à l'arrivée", async () => {
+  it("à l'arrivée : une phrase d'accueil, puis une page de dos à feuilleter, sans compteurs", async () => {
     const { CollectionView } = await import("@/components/binder-view");
     const game = getGameView(createInitialState(T0), T0);
     await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
 
     expect(document.body.textContent).not.toContain("0 / 1000");
-    expect(document.body.textContent).toContain("ta première carte");
+    expect(document.body.textContent).not.toContain("complété");
     expect(document.body.textContent).toContain("Ta collection commence avec le prochain booster.");
-    expect(pose().cartes).toBe(0);
-    expect(document.body.textContent).not.toContain("Page 1 sur 112");
-    expect(document.querySelector(".binder-pager")).toBeNull();
-
-    banc.appuyer("Voir les créateurs à découvrir");
     expect(pose().cartes).toBe(CARTES_PAR_PAGE);
-    expect(document.body.textContent).toContain("Toutes (1000)");
+    expect(document.querySelectorAll(".collection-grid .creator-card.is-locked")).toHaveLength(CARTES_PAR_PAGE);
+    expect(document.querySelector(".binder-pager")).not.toBeNull();
   });
 
   it("garde le plafond quand la recherche matche des centaines de noms", async () => {
@@ -173,19 +174,6 @@ describe("mille cartes dans le classeur", () => {
     expect(pose().cartes).toBeGreaterThan(0);
     expect(pose().cartes).toBe(CARTES_PAR_PAGE);
     expect(pose().portraits).toBeLessThanOrEqual(CARTES_PAR_PAGE + 3);
-  });
-
-  it("ne pose jamais plus d'une page quand on filtre par rareté", async () => {
-    const { CollectionView } = await import("@/components/binder-view");
-    const game = getGameView(collectionComplete(T0), T0);
-    await banc.monter(<CollectionView game={game} onCraft={async () => true} />);
-
-    banc.appuyer(/^Communes/);
-    expect(pose().cartes).toBe(CARTES_PAR_PAGE);
-    banc.appuyer(/^Légendaires/);
-    expect(pose().cartes).toBe(CARTES_PAR_PAGE);
-    banc.appuyer(/^Toutes/);
-    expect(pose().cartes).toBe(CARTES_PAR_PAGE);
   });
 });
 

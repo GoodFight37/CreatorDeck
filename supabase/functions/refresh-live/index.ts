@@ -5,7 +5,9 @@
  *   1. elle regarde depuis quand le cache n'a pas été rafraîchi (`live_state`) ;
  *      si c'est plus récent que 90 secondes, elle s'arrête là — c'est ce qui
  *      protège le quota Twitch, puisque n'importe qui peut l'appeler ;
- *   2. elle lit les `login` du catalogue (`creators`, via le catalogue SQL) ;
+ *   2. elle lit les `login` du catalogue (`creators`, via le catalogue SQL),
+ *      puis ceux des chaînes nommées hors catalogue dans « Mes chaînes »
+ *      (`live_circle_logins()`, 0060 : des logins seuls, jamais qui les suit) ;
  *   3. elle demande un jeton d'application à Twitch
  *      (`client_credentials` : la clé secrète ne sort jamais d'ici) ;
  *   4. elle interroge Helix `GET /helix/streams` par lots de 100 créateurs —
@@ -180,6 +182,20 @@ async function catalogueLogins(): Promise<string[]> {
   }
 }
 
+/**
+ * Les logins hors catalogue nommés dans « Mes chaînes » (0060).
+ * shortcut: 500 logins au plus (plafond aussi en SQL), à relever avec le quota
+ * Twitch ou à remplacer par EventSub quand plus de joueurs en nomment.
+ */
+const CIRCLE_LOGINS_MAX = 500;
+async function circleLogins(): Promise<string[]> {
+  const logins = (await rest("rpc/live_circle_logins", {
+    method: "POST",
+    body: JSON.stringify({ p_limit: CIRCLE_LOGINS_MAX }),
+  })) as unknown;
+  return Array.isArray(logins) ? logins.filter((login): login is string => typeof login === "string") : [];
+}
+
 async function helixStreams(logins: string[], token: string): Promise<StreamRow[]> {
   const streams: StreamRow[] = [];
   for (let index = 0; index < logins.length; index += BATCH) {
@@ -316,10 +332,16 @@ Deno.serve(async (req) => {
       return json({ skipped: true, age_ms: age, streams: state[0]?.streams ?? 0 });
     }
 
-    const logins = await catalogueLogins();
-    if (!logins.length) {
+    const catalogue = await catalogueLogins();
+    if (!catalogue.length) {
       return json({ error: "Le catalogue est vide : les logins manquent dans public.creators." }, 500);
     }
+    // Sans 0060 (ou en cas d'erreur), le catalogue seul : le direct ne tombe pas pour autant.
+    const custom = await circleLogins().catch((error) => {
+      console.error(`refresh-live : chaînes hors catalogue non lues (${error instanceof Error ? error.message : String(error)})`);
+      return [] as string[];
+    });
+    const logins = [...new Set([...catalogue.map((login) => login.toLowerCase()), ...custom])];
 
     const token = await appToken();
     const streams = await helixStreams(logins, token);

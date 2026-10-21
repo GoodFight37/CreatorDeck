@@ -4,9 +4,14 @@
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.
 
-## État actuel — 19 octobre 2026
+## État actuel — 20 octobre 2026
 
 ### Qualité autonome phase 2 — publiée sur `main`
+
+- Le 20 octobre, à la demande de Malik, la tâche Windows `CreatorDeck-Qualite-Mobile`
+  a été supprimée. Elle ne lance plus de tests périodiques sur ce PC ; rapports
+  existants, lancement manuel et CI sont conservés. Ne pas la réinstaller sans
+  demande explicite. Son dernier rapport (06:47, heure de Paris) est réussi, 7/7.
 
 - Reprise du 19 octobre : le smoke Android 872393 → 872394 passe localement après correction du script et du rendu de l'AVD ; rapport `reports/android-smoke/2026-10-19T01-45-28-650Z/result.json`. Le contrôle d'incident artificiel et la barrière d'accord avant Claude passent 15/15 tests Node. La correction par Codex et l'exécution Android par runner GitHub restent non opérationnelles : aucun runner isolé sur ce PC public, aucun appel modèle autorisé pour un essai. Ne pas confondre la tâche Windows locale avec un runner GitHub.
 
@@ -32,10 +37,10 @@ et publication : checkpoint de reprise.
 - **D-149** visages plein cadre et « Mes chaînes » facultatif (0 à 15), migration 0058 appliquée.
 - **D-150** « nuit de direct » : accueil (paquet-bouton, pile, MEMES visible), carte affiche, révélation nouvelle/doublon.
 - **D-151** bandeau « Mettre à jour » réparé ; installation manuelle unique requise depuis une APK plus ancienne.
-- Ouvert : une même chaîne au plus une fois par booster (migration à prévoir) ; carte révélée plus grande (capture de référence à régénérer en CI).
+- Fait : une même chaîne au plus une fois par booster (migration 0059, `a38cdf88`, appliquée). Ouvert : carte révélée plus grande (capture de référence à régénérer en CI).
 - Pas encore validé sur vrai téléphone : rendu Android du nouvel accueil, geste horizontal, mise à jour par le bandeau.
 
-### Finition courte — locale, non publiée (18 octobre 2026)
+### Finition courte — publiée dans `2d39f3c5` (18 octobre 2026)
 
 - Les quatre lots précédents sont présents : tirage du cercle, rareté unique, bouton et rétention.
 - Les visages restent proportionnés, avec le portrait entier dans le cadre vertical de la carte.
@@ -44,24 +49,22 @@ et publication : checkpoint de reprise.
 - La piste musicale existante reste à 8 % sur l’accueil et 4 % pendant l’ouverture ; aucune autre piste.
 - Vérifications : 46 tests d’écrans, 23 tests audio, un parcours Chrome en 390×844, typecheck et build réussis.
 - Export local sans cloud ; aucun changement du tirage, du SQL, des missions ou du geste d’ouverture.
-- Pas d’essai sur vrai téléphone ni d’écoute physique, d’installation ou de mise à jour APK ; aucun commit ou déploiement.
+- Pas d’essai sur vrai téléphone ni d’écoute physique, d’installation ou de mise à jour APK.
 
-**Rétention (D-148) — implémentée localement, non publiée :** une absence
+**Rétention (D-148) — publiée (`2d39f3c5`, 0057 appliquée, `ee7c61c9`) :** une absence
 protégée par cycle, récompenses en boosters, missions recyclage/Tribunal à
 partir de J2, activités dans Objectifs repliées et partage de carte sans autre
 joueur. Last Pack sans vol. Moteur/contrat SQL miroir et typecheck vérifiés ;
-deux accueils vérifiés dans Chrome en 390×844. Migration 0057 seulement locale,
-exécution Postgres bloquée sous le compte administrateur Windows. Aucun commit
-ni essai téléphone physique. Détails et limites : premier checkpoint.
+deux accueils vérifiés dans Chrome en 390×844. Pas d'essai téléphone physique.
 
-**Réserve vide et complément (D-147) — corrigés localement, non publiés :**
+**Réserve vide et complément (D-147) — publiés dans `2d39f3c5` :**
 action vers le direct du cercle ou sa rangée ; recharge secondaire, sablier
 dans les détails. Complément après trois choix personnels reconnus seulement,
 deux suggestions au plus et confirmation séparée ; cinq chaînes du catalogue
 requises. 37 tests d’écrans et typecheck réussis. Aucun essai téléphone,
 SQL, mission, polish ou commit pour ce lot.
 
-**Rareté unique (D-146) — corrigée localement, non publiée :** rareté du
+**Rareté unique (D-146) — publiée dans `2d39f3c5` :** rareté du
 catalogue à l'ouverture comme dans le Binder, la fiche et le craft ; signe
 « Préférée » / « Dans tes chaînes » commun aux vues. Anciens champs de rareté
 d'affichage ignorés. Aucun SQL, bouton de recharge, mission ou polish modifié.
@@ -105,7 +108,7 @@ d'abord proposée à Malik. Pour `open_pack()`, la définition actuelle est 0055
 une future migration doit repartir de cette version. La prochaine migration est
 0056.
 
-**Rituel d’ouverture allégé (D-136) — implémenté localement :** l’ouverture de
+**Rituel d’ouverture allégé (D-136) — publié :** l’ouverture de
 secours sans déchirure reste disponible mais se place en bas de l’écran, à
 faible opacité, et ressort au focus clavier. Le geste TIRE / RELÂCHE conserve
 la priorité. Publié dans [`8c116ab6`](https://github.com/GoodFight37/CreatorDeck/commit/8c116ab69972e2fd163d7e655453f87ec30fff0c),
@@ -116,7 +119,7 @@ démarré (verrou du serveur Next associé au PID 15724), mais la CI complète
 sur `e65a8554` a ensuite réussi : SQL jetable, qualité/build, RPC simulés et
 trois shards Playwright. Aucun changement du Drop d’accueil ou des règles.
 
-**État de sélection en couleurs forcées (D-135) — correction locale :** la pill
+**État de sélection en couleurs forcées (D-135) — publié :** la pill
 active conserve un contour système distinct ; contrôle isolé Edge réussi,
 scénario E2E ajouté mais non exécuté localement, car le serveur Next existant
 sur le port 3000 ne répond pas. Publié dans `f5f27f90`, Vercel `success` ; CI

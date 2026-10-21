@@ -18,7 +18,17 @@ import { act } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { PERFECT_LOCK_MS, revealTiming, silenceBefore } from "@/lib/reveal";
-import { CREATORS, RARITY_META } from "@/lib/catalog";
+import { CREATORS, PACKS, RARITY_META } from "@/lib/catalog";
+import { createInitialState } from "@/lib/game-engine";
+import { gameStore } from "@/lib/game-store";
+import { EMPTY_LIVE, indexLive, type LiveSnapshot } from "@/lib/live";
+
+// Le direct est lu tel quel, sauf quand un test pose une chaîne en direct.
+const liveMock = vi.hoisted(() => ({ current: null as unknown }));
+vi.mock("@/hooks/use-live", async (original) => {
+  const actual = await original<typeof import("@/hooks/use-live")>();
+  return { ...actual, useLive: () => (liveMock.current as LiveSnapshot | null) ?? actual.useLive() };
+});
 
 vi.hoisted(() => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://exemple.supabase.co";
@@ -168,7 +178,7 @@ describe("les effets de révélation", () => {
     expect(html).toContain("fx-flash");
   });
 
-  it("récapitule les cinq cartes du Perfect et permet de rouvrir", async () => {
+  it("range les cinq cartes du Perfect d’un appui une fois le verrou levé", async () => {
     /*
      * Le bogue du 9 octobre 2026 : un joueur ouvre un booster, les **cinq**
      * cartes apparaissent ensemble — c'est le tirage Perfect, voulu — et le
@@ -206,25 +216,13 @@ describe("les effets de révélation", () => {
     expect(bouton().disabled, "le Perfect reste verrouillé").toBe(false);
     expect(bouton().textContent).toContain("Ranger dans le classeur");
     expect(bouton().textContent).not.toContain("Carte suivante");
-    banc.ecran("12-perfect-range");
-
-    banc.appuyer("Ranger dans le classeur");
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(1);
     expect(document.querySelector(".streak-gain")?.textContent).toContain("Série J2 — +1 booster");
-    expect(fermer, "le récapitulatif ferme trop tôt").not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("1 nouvelle");
-    expect(document.querySelector(".reveal-summary-copy")?.textContent).not.toMatch(/BOOSTER|RÉCAP/);
-    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("Cinq cartes d'exception");
-    expect(document.querySelector(".reveal-summary-copy")?.textContent).toContain("5 cartes Épiques ou mieux · 1 nouvelle");
-    banc.ecran("12-perfect-recap");
-    expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
-    expect(bouton().textContent).toContain("Retour au Drop");
-    banc.appuyer("Retour au Drop");
-    expect(fermer, "le double tap ne ferme pas le récap avant sa pose").not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_499); });
-    expect(bouton().disabled, "le récap doit rester lisible 1,5 s").toBe(true);
-    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    banc.appuyer("Retour au Drop");
+    banc.ecran("12-perfect-range");
+
+    // Personne en direct : les cartes se rangent d'un appui, sans récap à lire.
+    banc.appuyer("Ranger dans le classeur");
+    expect(document.querySelector(".reveal-summary")).toBeNull();
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant, "le Perfect repart en arrière").not.toHaveBeenCalled();
   });
@@ -240,11 +238,7 @@ describe("les effets de révélation", () => {
     banc.ecran(`jeu-derniere-${rarity}`);
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200 + silenceBefore(rarity)); });
     banc.appuyer("Ranger dans le classeur");
-    expect(document.body.textContent).toContain("RÉCAP");
-    expect(document.body.textContent).toContain("2 cartes dans ta collection");
-    expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent).toContain("Retour au Drop");
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
-    banc.appuyer("Retour au Drop");
+    expect(document.querySelector(".reveal-summary")).toBeNull();
     expect(fermer).toHaveBeenCalledTimes(1);
     expect(suivant).not.toHaveBeenCalled();
   });
@@ -329,7 +323,7 @@ describe("les effets de révélation", () => {
     expect(anchor.style.getPropertyValue("--reveal-drag-x")).toBe("");
   });
 
-  it("le balayage de la dernière carte ouvre le récapitulatif sans fermer ni avancer", async () => {
+  it("le balayage de la dernière carte range le paquet sans avancer", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
     const next = vi.fn(), close = vi.fn();
     await banc.monter(<RevealOverlay cards={[carte("common", "a")] as never}
@@ -341,11 +335,8 @@ describe("les effets de révélation", () => {
       anchor.dispatchEvent(new window.MouseEvent("pointermove", { bubbles: true, clientX: 100, clientY: 90 }));
       anchor.dispatchEvent(new window.MouseEvent("pointerup", { bubbles: true, clientX: 100, clientY: 90 }));
     });
-    expect(document.querySelector(".reveal-summary")).toBeTruthy();
+    expect(document.querySelector(".reveal-summary")).toBeNull();
     expect(next).not.toHaveBeenCalled();
-    expect(close).not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
-    banc.appuyer("Retour au Drop");
     expect(close).toHaveBeenCalledOnce();
   });
 
@@ -411,22 +402,17 @@ describe("les effets de révélation", () => {
     document.documentElement.dataset.cardFx = "off";
     try {
       const cinq = Array.from({ length: 5 }, (_, index) => carte("common", `sobre-${index}`));
+      const fermer = vi.fn();
       const { RevealOverlay } = await import("@/components/reveal-overlay");
-      await banc.monter(<RevealOverlay cards={cinq as never} index={4} onNext={() => {}} onClose={() => {}} />);
+      await banc.monter(<RevealOverlay cards={cinq as never} index={4} onNext={() => {}} onClose={fermer} />);
       expect(document.querySelector(".reveal-flip.reveal-fifth-card .reveal-flip-face"),
         "Reflets OFF garde le même emplacement sans la pause CSS").not.toBeNull();
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
       expect(document.querySelector<HTMLButtonElement>(".reveal-next")?.textContent)
         .toContain("Ranger dans le classeur");
-      // Le mode sobre saute le flip, mais garde le temps de lecture du résultat.
-      const bouton = document.querySelector<HTMLButtonElement>(".reveal-next")!;
-      act(() => bouton.click());
-      expect(document.querySelectorAll(".reveal-summary-card")).toHaveLength(5);
-      expect(bouton.disabled).toBe(true);
-      await act(async () => { await vi.advanceTimersByTimeAsync(1_499); });
-      expect(bouton.disabled).toBe(true);
-      await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-      expect(bouton.disabled).toBe(false);
+      // Le mode sobre saute le flip ; personne en direct, un appui range le paquet.
+      act(() => document.querySelector<HTMLButtonElement>(".reveal-next")!.click());
+      expect(fermer).toHaveBeenCalledOnce();
     } finally {
       delete document.documentElement.dataset.cardFx;
     }
@@ -510,31 +496,112 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
   });
 
-  it("un doublon commun ne rejoue pas la scène : pas de flash ni d'aura, il rejoint la pile", async () => {
+  it.each(["common", "rare", "legendary"] as const)("un doublon %s ne prend pas d'étape : il rejoint la pile et la suivante arrive", async (rarity) => {
+    const sounds = await import("@/lib/sfx");
+    const bang = vi.spyOn(sounds, "playBang").mockImplementation(() => {});
+    const reveal = vi.spyOn(sounds, "playReveal").mockImplementation(() => {});
     const { RevealOverlay } = await import("@/components/reveal-overlay");
-    const doublon = { ...carte("common"), isNew: false };
-    await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon] as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
-    expect(document.querySelector(".reveal-stage.is-duplicate")).not.toBeNull();
-    expect(document.querySelector(".reveal-new-flash")).toBeNull();
-    expect(document.querySelector(".reveal-rare-aura")).toBeNull();
-    expect(document.querySelector(".reveal-cinematic-field")).toBeNull();
-    expect(document.querySelector(".reveal-dupe-pile")?.getAttribute("aria-label")).toBe("Doublons de ce booster : 1");
-    expect(document.querySelector(".new-badge.is-owned")?.textContent).toContain("DOUBLON");
-    // Pas de retournement à attendre : la carte est lisible tout de suite.
-    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(false);
+    const doublon = { ...carte(rarity, "doublon"), isNew: false };
+    const suivant = vi.fn();
+    try {
+      await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon, carte("common", "c")] as never}
+        index={1} onNext={suivant} onClose={vi.fn()} />);
+      expect(document.querySelector(".reveal-stage.is-duplicate.is-piling")).not.toBeNull();
+      expect(document.querySelector(".reveal-new-flash")).toBeNull();
+      expect(document.querySelector(".reveal-rare-aura")).toBeNull();
+      expect(document.querySelector(".reveal-cinematic-field")).toBeNull();
+      expect(document.querySelector(".fx-flash")).toBeNull();
+      expect(document.querySelector(".new-badge")).toBeNull();
+      expect(document.querySelector(".reveal-rarity-kicker")).toBeNull();
+      expect(document.querySelector(".reveal-dupe-pile")?.getAttribute("aria-label")).toBe("Doublons de ce booster : 1");
+      // La rareté et le statut restent lus par les lecteurs d'écran.
+      expect(document.querySelector(".reveal-meta-sr")?.textContent).toContain(`${RARITY_META[rarity].label}`);
+      expect(document.querySelector(".reveal-meta-sr")?.textContent).toContain("Doublon");
+      expect(document.querySelector(".reveal-swipe-prompt")).toBeNull();
+      // Le son part tout de suite, avant que la carte suivante n'arrive.
+      await act(async () => { await vi.advanceTimersByTimeAsync(0); });
+      expect(bang.mock.calls.length + reveal.mock.calls.length).toBe(1);
+      expect(suivant).not.toHaveBeenCalled();
+      await act(async () => { await vi.advanceTimersByTimeAsync(420); });
+      expect(suivant, "le doublon doit laisser la place tout seul").toHaveBeenCalledOnce();
+    } finally {
+      bang.mockRestore();
+      reveal.mockRestore();
+    }
   });
 
-  it("une légendaire déjà possédée garde sa mise en scène, sans flash de nouveauté", async () => {
+  it("un doublon en dernière carte rejoint la pile et le paquet se range d'un appui", async () => {
     const { RevealOverlay } = await import("@/components/reveal-overlay");
-    const doublon = { ...carte("legendary"), isNew: false };
-    await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon] as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
-    expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
-    expect(document.querySelector(".reveal-rare-aura")).not.toBeNull();
-    expect(document.querySelector(".reveal-new-flash")).toBeNull();
-    expect(document.querySelector(".new-badge.is-owned")?.textContent).toContain("DOUBLON");
-    // Le retournement se joue : la carte suivante attend la fin de la scène.
-    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
-    expect(document.querySelector<HTMLButtonElement>(".reveal-next")!.disabled).toBe(true);
+    const suivant = vi.fn(), fermer = vi.fn();
+    await banc.monter(<RevealOverlay cards={[carte("rare", "a"), { ...carte("epic"), isNew: false }] as never}
+      index={1} onNext={suivant} onClose={fermer} />);
+    expect(document.querySelector(".reveal-stage.is-duplicate")).not.toBeNull();
+    expect(document.querySelector(".reveal-stage.is-piling")).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_000); });
+    expect(suivant).not.toHaveBeenCalled();
+    banc.appuyer("Ranger dans le classeur");
+    expect(fermer).toHaveBeenCalledOnce();
+  });
+});
+
+describe("fin du booster : regarder ou ranger", () => {
+  let banc: Banc;
+  beforeEach(() => { vi.useFakeTimers({ now: T0 }); banc = creerBanc(); banc.preparer(); });
+  afterEach(() => { liveMock.current = null; banc.nettoyer(); vi.useRealTimers(); });
+
+  const deux = () => [carte("common", "un"), carte("rare", "deux")];
+
+  it("la dernière chaîne est en direct : son visage et un bouton pour la regarder", async () => {
+    const last = CREATORS.find(creator => creator.rarity === "rare")!;
+    liveMock.current = {
+      ...EMPTY_LIVE, configured: true, stale: false, refreshedAt: T0 - 60_000, count: 1,
+      byLogin: indexLive([{ login: last.login, displayName: last.displayName, gameName: "Just Chatting", title: "", viewers: 4120, startedAt: new Date(T0 - 3_600_000).toISOString() }]),
+    } satisfies LiveSnapshot;
+    const fermer = vi.fn();
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={fermer} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(document.querySelector(".reveal-next-pack"), "pas d'heure de sachet quand on va regarder").toBeNull();
+    banc.appuyer("Ranger dans le classeur");
+    expect(fermer).not.toHaveBeenCalled();
+    const fin = document.querySelector(".pack-end-live")!;
+    expect(fin.querySelector(".pack-end-face img")).not.toBeNull();
+    expect(fin.textContent).toContain(last.displayName);
+    const watch = fin.querySelector<HTMLAnchorElement>("a.pack-end-watch")!;
+    expect(watch.textContent).toContain(`Regarder ${last.displayName} sur Twitch`);
+    expect(watch.href).toBe(`https://www.twitch.tv/${encodeURIComponent(last.login)}`);
+    expect(watch.target).toBe("_blank");
+    // « Ranger » reste discret et ne part pas sur un double appui.
+    const ranger = document.querySelector<HTMLButtonElement>(".reveal-next")!;
+    expect(ranger.textContent).toContain("Ranger");
+    expect(ranger.className).toContain("is-secondary");
+    expect(ranger.disabled).toBe(true);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_500); });
+    banc.appuyer("Ranger");
+    expect(fermer).toHaveBeenCalledOnce();
+  });
+
+  it("personne en direct : une ligne dit l'heure du prochain sachet", async () => {
+    const state = createInitialState(T0);
+    state.packs = 0;
+    state.lastPackRegen = T0;
+    gameStore.replaceState(state);
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
+    expect(document.querySelector(".reveal-next-pack")).toBeNull();
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    const heure = new Date(T0 + PACKS.live.regenMs).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+    expect(document.querySelector(".reveal-next-pack")?.textContent).toBe(`Prochain sachet à ${heure}`);
+    expect(document.querySelectorAll(".reveal-next-pack")).toHaveLength(1);
+  });
+
+  it("un sachet en réserve : la ligne le dit", async () => {
+    const state = createInitialState(T0);
+    state.packs = 1;
+    gameStore.replaceState(state);
+    const { RevealOverlay } = await import("@/components/reveal-overlay");
+    await banc.monter(<RevealOverlay cards={deux() as never} index={1} onNext={vi.fn()} onClose={vi.fn()} />);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
+    expect(document.querySelector(".reveal-next-pack")?.textContent).toBe("Un sachet t’attend");
   });
 });
