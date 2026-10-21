@@ -1,3 +1,12 @@
+# Checkpoint Claude — fin de cg8.10 : or et rouge ramenés à leur rôle (21 octobre 2026, soir)
+
+- **Fait avec les skills** `impeccable` (contexte, plancher de qualité, détecteur) et `emil-design-eng`, captures regardées à l'œil.
+- **Or (`globals.css`, `objectives.css`, `release-notes.css`, `profile-collection.css`, `atelier-ritual.css`) :** l'or ne reste que pour la légendaire (jeton `--gold`, cartes, sachet). Série, récompenses, portefeuille, saisons, Sortants, tableau du jeu : papier translucide (`rgb(243 238 226 / x)`) et `--text`. Le bouton « Réclamer » des saisons passe du dégradé or au bouton papier (`--paper` / `--ink`). Les beiges `#e5cba1` et voisins (barres de progression, anneaux de focus, filtres actifs) passent à `--paper`.
+- **Rouge :** 44 règles d'information (pastilles, minuteries, icônes, compteurs, titres, barres, lignes Arène/Wishlist) passent au papier. Le rouge reste sur : booster prêt, badge LIVE, actions (envoyer, confirmer), états choisis (`.on`, `.chosen`, `.equipped`), erreurs, jauge de niveau. Le tri des 77 règles est une décision de ma part ; un état « choisi » reste rouge, sans avoir été revu écran par écran (l'Arène demande un compte).
+- **Planche :** `.card-live` compact se réduit à son point (libellé lu par `aria-label`), `drop-binder.css` ; `.card-on-air` l'était déjà. **Tranche droite du sachet** : `top: 14px` pour démarrer sous le biseau (qb0).
+- **Vérifié :** captures Toi (320, 390, 1024), Atelier (320, 1024), Objectifs (390) relues : plus d'ambre sur la pastille de série ni sur le badge. Specs objectifs, profil, notes, atelier, scène, Binder, navigation, Drop : 73 réussis, 0 échoué. Lint : 0 erreur. **Non vérifié :** l'Arène, le Tribunal et les échanges en ligne (compte requis), l'Android.
+- **Restent hors périmètre :** `#80561e` (texte brun sur le papier de l'accueil), `rgb(255 204 146)` (flash d'effet), les alertes du détecteur sur des règles non touchées (`border-left` des listes à raretés, courbes avec dépassement).
+
 # Checkpoint Claude — balayage de style cg8.10, e2e complet, nettoyage (21 octobre 2026, soir)
 
 - **Fait et vérifié :**

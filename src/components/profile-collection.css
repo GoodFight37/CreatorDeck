@@ -25,10 +25,10 @@
 .profile-journey-head h2 { margin: 0 0 16px; font: 24px var(--font-display); }
 .profile-journey-head > span { font-size: 12px; color: var(--paper); }
 .profile-xp-label { font-size: 12px; color: var(--muted); }
-.profile-journey progress { display: block; width: 100%; height: 5px; margin: 9px 0 18px; border: 0; border-radius: 8px; overflow: hidden; background: #ffffff10; accent-color: #d4b68b; }
+.profile-journey progress { display: block; width: 100%; height: 5px; margin: 9px 0 18px; border: 0; border-radius: 8px; overflow: hidden; background: #ffffff10; accent-color: var(--paper); }
 .profile-journey progress::-webkit-progress-bar { background: #ffffff10; }
-.profile-journey progress::-webkit-progress-value { background: #d4b68b; }
-.profile-journey progress::-moz-progress-bar { background: #d4b68b; }
+.profile-journey progress::-webkit-progress-value { background: var(--paper); }
+.profile-journey progress::-moz-progress-bar { background: var(--paper); }
 .profile-collection-total { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .profile-collection-total > strong { font: 32px var(--font-display); }
 .profile-collection-total small, .profile-collection-total > span { font: 12px var(--font-body, sans-serif); color: var(--muted); }
@@ -41,7 +41,7 @@
 .profile-view .profile-online-fold > summary, .profile-settings-fold > summary { min-height: 44px; cursor: pointer; color: var(--paper); font-size: 13px; }
 .profile-danger-fold { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; color: var(--muted); font-size: 12px; }
 .profile-danger-fold p { line-height: 1.5; }
-.profile-view :is(button, summary, [role="button"]):focus-visible { outline: 2px solid #e4c89b; outline-offset: 4px; }
+.profile-view :is(button, summary, [role="button"]):focus-visible { outline: 2px solid var(--paper); outline-offset: 4px; }
 @media (max-width: 350px) { .profile-view .profile-streak { max-width: 100%; } .profile-view .profile-showcase-heading { gap: 12px; } }
 
 .profile-account-feedback { padding: 10px 12px; border-left: 2px solid #da8f85; color: #efb6ac; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }

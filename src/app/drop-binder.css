@@ -751,3 +751,7 @@
 .home-view .drop-token-details summary,
 .home-view .drop-secondary-details > summary { display: flex; align-items: center; }
 .home-view .live-bar { align-items: center; }
+
+/* Sur la planche, la variante Live se réduit à son point (le libellé reste lu par aria-label) : 12 cartes par page, 12 libellés de 8 px, c'était du bruit. */
+.creator-card.is-compact .card-live { gap: 0; padding: 3px 4px; font-size: 0; letter-spacing: 0; }
+.creator-card.is-compact .card-live i { width: 6px; height: 6px; }
