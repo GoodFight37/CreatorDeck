@@ -1,3 +1,10 @@
+# Checkpoint Claude — pile retirée, glissement tactile réparé, palette par sachet (21 octobre 2026, soir)
+
+- **Glissement entre sachets (bug réel, cause prouvée) :** au doigt, un glissement démarré sur le sachet était annulé dès le premier pixel : la capture implicite du bouton se perd quand le carrousel prend la sienne, et son `lostpointercapture` remontait au carrousel. Reproduit avec de vrais événements tactiles (CDP), corrigé par un filtre sur `event.target`, test permanent dans `booster-selector.spec.ts`. Commit `07e56daa`. **Non validé sur téléphone physique.**
+- **Pile de sachets derrière le sachet :** supprimée (`PackPile`, prop `piles`, règles `.pack-pile*`). Assertion de `drop-craft-priorites.spec.ts` adaptée.
+- **Palette par sachet :** `PackTear` pose `data-universe` (`live`, `memes`, `vault` selon l'artwork) ; la scène d'ouverture et les dos de carte lisent des variables CSS (voir DESIGN.md). Captures relues pour Live et MEMES, bureau et téléphone. Les captures de référence `-linux.png` de `pack-tear` sont les rendus Windows recopiés : si la CI échoue là, les régénérer depuis l'artefact.
+- **Vérifié :** `tsc`, ESLint, `npm run ecrans` (241 tests), e2e ciblés Drop, déchirure, sélecteur, Mèmes. **Non fait :** volume du sachet (relief, parallaxe en couches), troisième sachet, pixel art, langue, 100 cartes Imgflip, thème d'application : voir le prompt de la session suivante.
+
 # Checkpoint Claude — refonte des sachets du Drop, façon TCG de poche (21 octobre 2026)
 
 - **Demande de Malik :** un vrai nouveau design, style Pokémon TCG Pocket, avec une DA Streamer pour Live Drop et une DA mèmes d'internet pour MEMES. Interdits D-132 (tranches) levés par lui.

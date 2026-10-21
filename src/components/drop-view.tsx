@@ -220,8 +220,7 @@ export function HomeView({
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
         disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
-        labels={{ live: liveLabel, memes: memeLabel }}
-        piles={{ live: needsAccount ? 1 : stock + promoPacks, memes: memes.status?.stock ?? 1 }} />
+        labels={{ live: liveLabel, memes: memeLabel }} />
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {!needsAccount || needsLogin ? (
           // La seule ligne de l'accueil : la pile au-dessus montre déjà ce qu'on a.

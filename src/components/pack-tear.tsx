@@ -172,12 +172,16 @@ export function PackTear({
     ? edge.map((point) => `${point.x}% ${point.y}%`).join(", ")
     : "0% 15.45%, 100% 15.45%";
   const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
+  // La palette de la scène et des dos de carte suit le sachet ouvert (booster-continuity.css).
+  const universe = customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes"
+    : kind === "live" ? "live" : undefined;
 
   return createPortal(
     <div
       ref={dialogRef}
       tabIndex={-1}
       className={`pack-tear opening-continuum booster-interactive booster-cinematic booster-presentation scene-${kind}${revealing ? " is-revealing" : ""}`}
+      data-universe={universe}
       role="dialog"
       style={{ "--pack-extraction-ms": `${PACK_TEAR_MS}ms` } as CSSProperties}
       data-opening-phase={revealing ? "revealing" : opened ? "extracting" : "sealed"}

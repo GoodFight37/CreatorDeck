@@ -10,22 +10,10 @@ const BOOSTERS = [
   { id: "memes", label: "MEMES", artwork: "/packs/memes-opening.svg" },
 ] as const;
 
-/** Les dos des paquets qu'on a encore, empilés derrière celui de devant. */
-function PackPile({ count }: { count: number }) {
-  const backs = Math.max(0, Math.min(3, count - 1));
-  if (!backs) return null;
-  return <span className="pack-pile" aria-hidden="true">
-    {Array.from({ length: backs }, (_, i) => <span key={i} className="pack-pile-back"
-      style={{ "--pile-i": backs - i } as CSSProperties} />)}
-  </span>;
-}
-
 export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.svg",
-  label = "Ouvrir le sachet Live Drop", active = true, pile = 0,
+  label = "Ouvrir le sachet Live Drop", active = true,
 }: { onClick: (event: MouseEvent<HTMLButtonElement>) => void; disabled: boolean;
   artwork?: string; label?: string; active?: boolean;
-  /** Boosters en réserve : au-delà du premier, leurs dos se voient derrière. */
-  pile?: number;
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
@@ -44,7 +32,6 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     disabled={active ? disabled : true}>
     {/* Le paquet EST le bouton : son nom est l'action, lue mais pas affichée. */}
     {active ? <span className="sr-only">{label}</span> : null}
-    <PackPile count={pile} />
     {/* Sachet plat, façon TCG de poche : l'épaisseur n'est plus modélisée (les tranches
         3D donnaient le liseré), le volume vient de l'impression et du reflet. */}
     <span className="pack-idle" aria-hidden="true"><span className="pack-3d-object">
@@ -56,15 +43,13 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
   </button>;
 }
 
-export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepare, universes, labels, piles }: {
+export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepare, universes, labels }: {
   value: BoosterUniverse; onChange: (value: BoosterUniverse) => void;
   onPrepare: (value: BoosterUniverse) => void; disabled: boolean; canPrepare: boolean;
   /** Univers proposés ; par défaut les deux. Un seul : pas de sélecteur. */
   universes?: readonly BoosterUniverse[];
   /** Ce que fait un appui sur le paquet de devant (« Ouvrir le booster »…). */
   labels?: Partial<Record<BoosterUniverse, string>>;
-  /** Boosters en réserve par univers, pour la pile visible derrière. */
-  piles?: Partial<Record<BoosterUniverse, number>>;
 }) {
   const boosters = universes ? BOOSTERS.filter((booster) => universes.includes(booster.id)) : BOOSTERS;
   const index = Math.max(0, boosters.findIndex((booster) => booster.id === value));
@@ -145,7 +130,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
       {boosters.map((booster, i) => <div key={booster.id} className="booster-pack-slot" data-booster={booster.id}
         data-active={value === booster.id} style={{ "--booster-offset": i - index } as CSSProperties}>
         <PackArtwork artwork={booster.artwork} active={value === booster.id} disabled={disabled || (value === booster.id && !canPrepare)}
-          label={labels?.[booster.id] ?? `Ouvrir le booster ${booster.label}`} pile={piles?.[booster.id] ?? 0}
+          label={labels?.[booster.id] ?? `Ouvrir le booster ${booster.label}`}
           onClick={(event) => {
             event.currentTarget.focus();
             if (value === booster.id) onPrepare(booster.id);

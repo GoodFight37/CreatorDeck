@@ -362,21 +362,6 @@
 }
 .home-view .booster-selector .pack-artwork:disabled .pack-idle { opacity: .55; }
 .home-view .booster-selector .pack-stage.stage-live .pack-shadow { width: min(70%, 300px); height: 34px; opacity: .95; }
-/* La pile : les dos des paquets qu'on a encore, derrière celui de devant. */
-.pack-pile { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  /* Le sachet est en preserve-3d : z-index n'y trie rien. À z = 0, la pile
-     passait devant le haut du sachet dès qu'il basculait en arrière (repos,
-     appui), surtout dans la WebView Android. 60 px derrière, aucun doute. */
-  transform: translateZ(-60px); }
-.pack-pile-back {
-  position: absolute; inset: 1.5% 3%;
-  border-radius: 12px;
-  background: linear-gradient(165deg, #7a5ff0, #3a2096 52%, #1a0e5c);
-  border: 2px solid rgb(255 255 255 / .38);
-  box-shadow: 0 14px 24px rgb(0 0 0 / .55), inset 0 2px rgb(255 255 255 / .22);
-  transform: translate(calc(var(--pile-i) * 10px), calc(var(--pile-i) * -13px)) rotate(calc(var(--pile-i) * 2.6deg));
-}
-[data-booster="memes"] .pack-pile-back { background: linear-gradient(165deg, #86f080, #2fb67f 52%, #137a58); border-color: #0b0b0b; box-shadow: 0 14px 24px rgb(0 0 0 / .55), inset 0 2px rgb(255 255 255 / .3); }
 /* Le choix d'univers : deux mots discrets, pas une seconde pilule rouge. */
 .home-view .booster-switcher { position: absolute; z-index: 5; top: 0; right: -6px; gap: 0; }
 .home-view .booster-switcher button {

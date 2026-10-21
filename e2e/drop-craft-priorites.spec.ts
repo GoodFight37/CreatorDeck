@@ -47,7 +47,9 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
   await expect(reserve).toContainText(/^\d+ sachets?/);
   await expect(reserve).not.toContainText("/4");
   const stock = Number((await reserve.innerText()).match(/^\d+/)![0]);
-  await expect(pack.locator(".pack-pile-back")).toHaveCount(Math.max(0, Math.min(3, stock - 1)));
+  // Plus de pile de sachets derrière : la réserve se lit dans la ligne de texte.
+  await expect(pack.locator(".pack-pile-back")).toHaveCount(0);
+  void stock;
   // Un seul geste d'ouverture : le sachet lui-même, au-dessus de la barre du bas.
   await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeEnabled();
   const ctaNav = (await page.getByRole("navigation", { name: "Navigation principale" }).boundingBox())!;

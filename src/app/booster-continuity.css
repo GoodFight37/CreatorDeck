@@ -28,6 +28,50 @@
     radial-gradient(ellipse 80% 68% at 52% 62%, rgba(52, 35, 106, .25), transparent 90%),
     #080810;
 }
+/* Palette par sachet : la scène d'ouverture, les dos de carte et leur emblème reprennent les
+   couleurs du sachet ouvert (data-universe posé par PackTear). Sans attribut : bordeaux d'origine. */
+.booster-presentation[data-universe="live"] {
+  --scene-background:
+    radial-gradient(ellipse 50% 46% at 50% 54%, rgba(138, 92, 255, .34), transparent 90%),
+    radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 79, 163, .12), transparent 90%),
+    #07051c;
+  --back-surface:
+    radial-gradient(circle at 51% 40%, rgba(255, 122, 200, .3), transparent 64%),
+    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .07) 15px 16px),
+    linear-gradient(146deg, #6a47e8, #1c0f5e 52%, #8a5cff);
+  --back-edge: rgba(233, 224, 255, .85);
+  --back-inset: rgba(233, 224, 255, .16);
+  --back-ink: #fff4e6;
+  --back-glow: rgba(255, 122, 200, .3);
+}
+.booster-presentation[data-universe="memes"] {
+  --scene-background:
+    radial-gradient(ellipse 50% 46% at 50% 54%, rgba(124, 238, 116, .26), transparent 90%),
+    radial-gradient(ellipse 80% 70% at 50% 66%, rgba(255, 108, 188, .12), transparent 90%),
+    #050d09;
+  --back-surface:
+    radial-gradient(circle at 51% 40%, rgba(217, 255, 58, .3), transparent 64%),
+    radial-gradient(circle, rgba(11, 11, 11, .16) 2.2px, transparent 2.6px) 0 0 / 16px 16px,
+    linear-gradient(146deg, #8cf27a, #137a58 52%, #d9ff3a);
+  --back-edge: #0b0b0b;
+  --back-inset: rgba(11, 11, 11, .28);
+  --back-ink: #0b0b0b;
+  --back-glow: rgba(255, 255, 255, .35);
+}
+.booster-presentation[data-universe="vault"] {
+  --scene-background:
+    radial-gradient(ellipse 50% 46% at 50% 54%, rgba(46, 230, 255, .26), transparent 90%),
+    radial-gradient(ellipse 80% 70% at 50% 66%, rgba(31, 75, 255, .2), transparent 90%),
+    #040a14;
+  --back-surface:
+    radial-gradient(circle at 51% 40%, rgba(160, 255, 235, .3), transparent 64%),
+    repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255, 255, 255, .07) 15px 16px),
+    linear-gradient(146deg, #2ee6ff, #1f4bff 50%, #0b1f7a);
+  --back-edge: rgba(220, 250, 255, .85);
+  --back-inset: rgba(220, 250, 255, .16);
+  --back-ink: #f2fffb;
+  --back-glow: rgba(160, 255, 235, .3);
+}
 .booster-cinematic.booster-presentation .booster-premium-stage {
   height: var(--scene-height);
   min-height: var(--scene-height);
@@ -539,13 +583,13 @@ html:has(.booster-presentation) { overflow: hidden; }
 
 .opening-continuum .foil-back-card,
 .opening-continuum .reveal-dos {
-  border: 2px solid rgba(255,224,187,.76);
+  border: 2px solid var(--back-edge, rgba(255,224,187,.76));
   border-radius: 4.5% / 3.4%;
-  background:
+  background: var(--back-surface,
     radial-gradient(circle at 51% 40%, rgba(215,104,181,.29), transparent 64%),
     repeating-linear-gradient(-33deg, transparent 0 14px, rgba(255,212,223,.055) 15px 16px),
-    linear-gradient(146deg, #4c2249, #1b122e 50%, #652c54);
-  box-shadow: inset 0 0 0 5px rgba(245,197,194,.13);
+    linear-gradient(146deg, #4c2249, #1b122e 50%, #652c54));
+  box-shadow: inset 0 0 0 5px var(--back-inset, rgba(245,197,194,.13));
 }
 .opening-continuum .reveal-dos::before {
   content: ""; position: absolute; inset: 11%;
@@ -553,9 +597,9 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 .opening-continuum .foil-back-emblem,
 .opening-continuum .reveal-back-sigil {
-  width: 62%; border: 2px solid rgba(255,214,189,.62);
-  box-shadow: 0 0 0 7px rgba(255,199,185,.09), inset 0 0 35px rgba(234,123,170,.18);
-  color: rgba(255,228,196,.94); font-size: clamp(30px, 8vw, 56px);
+  width: 62%; border: 2px solid var(--back-edge, rgba(255,214,189,.62));
+  box-shadow: 0 0 0 7px var(--back-inset, rgba(255,199,185,.09)), inset 0 0 35px var(--back-glow, rgba(234,123,170,.18));
+  color: var(--back-ink, rgba(255,228,196,.94)); font-size: clamp(30px, 8vw, 56px);
   text-shadow: none;
 }
 [data-card-fx="off"] .foil-material-sheen { display: none; }
