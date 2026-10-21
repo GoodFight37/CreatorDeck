@@ -1,17 +1,22 @@
-# Coordination permanente — Codex Cloud, Codex PC, ChatGPT
+# Coordination permanente — Claude, Codex, ChatGPT
 
 CreatorDeck est un jeu de collection Android (Capacitor + Next.js en export
 statique) avec Supabase. Le projet est en développement privé; Malik est le seul
 à tester l’application et Vercel sert d’environnement de test. Communiquer et
 documenter en français.
 
-## Priorité de travail et validation par Codex (19 octobre 2026)
+**Claude et Codex sont à égalité sur ce dépôt** (21 octobre 2026). Malik utilise l'un
+ou l'autre selon le moment ; les règles ci-dessous valent pour les deux, et « l'agent »
+désigne celui qui travaille. Chacun peut confier un lot délimité à l'autre ou lui
+demander un second avis. Claude lit aussi [`CLAUDE.md`](CLAUDE.md).
+
+## Priorité de travail et validation par l'agent (19 octobre 2026)
 
 - Priorité au développement du jeu : terminer les fonctionnalités et corrections
   demandées. Réutiliser les outils déjà présents ; ne construire ni runner,
   orchestrateur, ni surveillance supplémentaire sans nécessité démontrée par
   un blocage concret du développement.
-- Pour chaque changement visible ou fonctionnel, Codex lance réellement
+- Pour chaque changement visible ou fonctionnel, l'agent lance réellement
   l'application, vérifie le parcours concerné, examine le rendu et les preuves
   (captures, traces, logs), corrige les défauts observés puis reteste avant de
   livrer. Choisir les tests automatisés adaptés : Playwright, émulateur Android,
@@ -25,10 +30,13 @@ documenter en français.
   outils locaux. Expliquer cette limite, achever les vérifications indépendantes
   et distinguer clairement émulateur, navigateur et téléphone réel. Ne jamais
   présenter une simulation comme une validation sur appareil physique.
-- Claude peut relire ponctuellement un problème complexe. Aucun appel
-  automatique à Claude s'il consomme un coût ou un quota supplémentaire non
-  autorisé ; Codex mène le diagnostic, la correction et les tests. Les règles
-  de protection, de preuve et de publication ci-dessous restent applicables.
+- L'agent qui travaille mène le diagnostic, la correction et les tests. Un agent
+  peut en appeler un autre (plugin Codex, script de revue) ; aucun appel
+  automatique qui consomme un coût ou un quota supplémentaire non autorisé. Les
+  règles de protection, de preuve et de publication ci-dessous restent applicables.
+- La tâche Windows planifiée `CreatorDeck-Qualite-Mobile` a été supprimée le
+  20 octobre 2026 à la demande de Malik. Ne pas la réinstaller
+  sans nouvelle demande explicite. Les tests manuels et la CI restent disponibles.
 
 ## À chaque début et reprise de session
 
@@ -62,11 +70,6 @@ du chantier portraits, reprendre les lectures générales correspondantes.
    `git fetch origin refs/heads/<branche>:refs/remotes/origin/<branche>`.
    Examiner les commits divergents avant de choisir la suite ; aucune reprise
    sur un ancien commit, aucune substitution silencieuse de branche.
-5. Vérifier qui écrit. **Un seul écrivain par branche** : la réservation dans
-   la passation est une convention, pas un verrou GitHub. Une session ancienne
-   ne prouve pas qu'un autre agent est encore actif ; vérifier avec l'opérateur.
-   Si une activité concurrente est détectée, préserver le travail et coordonner
-   les fichiers ou utiliser une branche distincte, sans écraser l'autre agent.
 
 Si GitHub est inaccessible, noter l'opération refusée et poursuivre seulement
 les actions locales sûres ; ne jamais prétendre avoir vérifié la PR ou publié.
@@ -80,8 +83,8 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   tests adaptés, les commits explicites et le push normal direct sur `main`;
   ne pas redemander son accord à chaque livraison. Vercel est l’environnement
   de test : après le push, vérifier que le déploiement Production correspond au
-  SHA publié et transmettre son état réel. Claude n’a pas à relire chaque petite
-  modification; Codex mène le développement et les audits ciblés.
+  SHA publié et transmettre son état réel. Une petite modification n'exige pas de
+  relecture par l'autre agent ; l'agent qui travaille mène développement et audits ciblés.
 - Demander l’accord explicite de Malik avant de publier toute modification
   sensible touchant Supabase, migrations ou données, authentification,
   sécurité, secrets, suppression de données ou opération irréversible. Ne jamais
@@ -95,17 +98,12 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
 - Préserver les worktrees existants : `C:/Users/Administrator/Desktop/CreatorDeck`
   sur `main`, `CreatorDeck-Codex` comme checkout de travail à jour, et
   `CreatorDeck-Claude` sur `claude/review` pour les relectures. Ne pas créer,
-  supprimer ni remplacer de worktrees. Quand Malik demande à Claude de réaliser
-  un chantier, Claude peut modifier les fichiers directement dans
-  `CreatorDeck-Codex` : c'est alors l'unique écrivain de ce checkout jusqu'à sa
-  passation à Codex. Codex ne travaille pas en parallèle sur les mêmes fichiers;
-  il reprend ensuite le diff, exécute les tests et validations adaptés, corrige
-  les problèmes et livre le résultat. Le checkout `CreatorDeck-Claude` reste
-  réservé aux relectures indépendantes, sans écriture sur le travail Codex.
+  supprimer ni remplacer de worktrees.
 - Pour une revue indépendante demandée, le script
-  `node scripts/delegate-claude.mjs` reste un outil distinct, en lecture seule,
-  limité au SHA commité et au worktree `claude/review`. Il ne sert pas à déléguer une
-  implémentation. Les appels Claude qui coûtent du quota ou de l'argent ne sont
+  `node scripts/delegate-claude.mjs` (Codex appelle Claude) reste un outil de revue
+  distinct, en lecture seule, limité au SHA commité et au worktree `claude/review`.
+  Claude, quand Malik le lance directement, implémente lui-même. Les appels qui
+  coûtent du quota ou de l'argent ne sont
   lancés que si Malik les a autorisés pour ce travail ; si un appel échoue, ne
   pas présenter la revue comme réalisée.
 - Avant de reprendre un worktree, vérifier son état et son HEAD. Synchroniser
@@ -122,7 +120,7 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   fetcher et examiner tout nouveau commit. Une avance distante doit être
   intégrée sans perte sur une copie sûre ; en cas de doute, arrêter l'envoi et
   documenter le conflit. Le push doit rester normal, sans `--force`.
-- Pour un lot ordinaire prêt, pousser normalement `codex/collaboration` vers
+- Pour un lot ordinaire prêt, pousser normalement la branche de travail vers
   `main`, puis vérifier `git ls-remote`, les contrôles GitHub et le déploiement
   Vercel. Confirmer que le SHA du déploiement correspond au SHA publié; ne jamais
   annoncer un déploiement terminé sans cette preuve. Mettre à jour la passation
@@ -231,7 +229,7 @@ réservation de travail. Le SHA du code audité est explicite ; le SHA du commit
 contenant le document se retrouve par `git log -1 --format=%H -- docs/agent-handoff.md`
 pour éviter une autoréférence impossible dans son propre commit.
 
-## Reprise par ChatGPT sans conversation Codex
+## Reprise par ChatGPT sans conversation Claude ou Codex
 
 Ouvrir GitHub **sur la branche indiquée et vérifiée**, lire les quatre documents
 de coordination et ce fichier, comparer les SHAs et la PR. Suivre les mêmes

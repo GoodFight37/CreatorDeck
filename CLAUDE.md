@@ -1,35 +1,35 @@
-# Claude : chantiers confiés et revues
+# Claude : instructions pour CreatorDeck
 
-Quand Malik confie un chantier à Claude, Claude l'implémente directement dans
-`CreatorDeck-Codex`. Il met à jour le
-checkpoint de travail dans [`docs/agent-handoff.md`](docs/agent-handoff.md) et
-écrit son compte rendu dans [`CreatorDeck-Retour-Claude.md`](CreatorDeck-Retour-Claude.md).
-Pour une revue indépendante, Claude travaille dans `CreatorDeck-Claude` sans
-écrire sur le travail de Codex.
+Claude et Codex travaillent sur le même dépôt, à égalité : Malik utilise l'un ou
+l'autre selon le moment (depuis le 21 octobre 2026, surtout Claude). Celui qui
+travaille implémente, corrige, lance les tests adaptés et publie sur `main`, selon les
+mêmes règles ([`AGENTS.md`](AGENTS.md)). Ils peuvent aussi s'aider : Claude confie des
+lots mécaniques bien délimités à Codex (plugin `codex:codex-rescue`) ou lui demande
+un second avis. Avant d'écrire, vérifie `git status` et `git log` ; ne remplace jamais un
+travail local non publié d'un autre agent.
 
-## Rôle de revue
+## Cadre
 
-Codex est le développeur principal de CreatorDeck : il implémente, corrige,
-lance les tests adaptés et publie les lots ordinaires sur `main`. Claude sert
-principalement aux audits complexes, aux revues indépendantes demandées et aux
-bugs difficiles; une petite modification ne nécessite pas une revue Claude.
+- **Où :** le checkout de travail est `CreatorDeck-Codex` (nom historique du dossier).
+  Les autres worktrees, `CreatorDeck` (sur `main`) et `CreatorDeck-Claude` (sur
+  `claude/review`), se préservent : ne pas en créer, supprimer ni remplacer.
+- **À lire au démarrage :** `bd ready`, puis le haut de
+  [`docs/agent-handoff.md`](docs/agent-handoff.md). [`AGENTS.md`](AGENTS.md) donne le cadre
+  du dépôt (jeu, sécurité, règles de produit, publication) et vaut pour les deux agents.
+- **Validation :** lancer réellement l'app, regarder les captures et corriger ce qu'on
+  voit. Malik teste sur son téléphone avec l'APK construite depuis `main`. Ne jamais
+  présenter une simulation navigateur comme une validation Android.
+- **Passation :** le checkpoint en tête de `docs/agent-handoff.md` et `bd` à chaque fin de lot.
 
-Au début d’une revue, lis [`AGENTS.md`](AGENTS.md), le checkpoint actuel de
-[`docs/agent-handoff.md`](docs/agent-handoff.md), puis seulement les décisions,
-le périmètre et les fichiers concernés. Vérifie le SHA et l’état du worktree
-`CreatorDeck-Claude`; ne remplace jamais un travail local non publié.
+## Échanges avec Codex
 
-Rends un avis concis avec le SHA examiné, les défauts prouvés séparés des
-hypothèses, les fichiers/étapes de reproduction et les tests réellement lancés.
-Privilégie une validation ciblée lorsque la lecture révèle un risque; ne relance
-pas les suites déjà réussies sans raison. Transmets le résultat par le système
-existant : lis [`CreatorDeck-Codex-vers-Claude.md`](CreatorDeck-Codex-vers-Claude.md).
-En session interactive, écris le retour dans
-[`CreatorDeck-Retour-Claude.md`](CreatorDeck-Retour-Claude.md). Si Codex t'appelle
-via `node scripts/delegate-claude.mjs`, réponds uniquement sur la sortie standard :
-le script consigne lui-même ta réponse dans ce fichier, sans outil d'écriture.
-Ne pousse rien et ne modifie pas la branche ou le worktree Codex.
-
+- [`CreatorDeck-Codex-vers-Claude.md`](CreatorDeck-Codex-vers-Claude.md) : ce que Codex laisse à Claude.
+- [`CreatorDeck-Retour-Claude.md`](CreatorDeck-Retour-Claude.md) : ce que Claude lui répond.
+- Si Codex t'appelle via `node scripts/delegate-claude.mjs`, réponds uniquement sur la
+  sortie standard : le script consigne lui-même ta réponse, sans outil d'écriture.
+- Pour une revue indépendante demandée, travaille dans `CreatorDeck-Claude`. Rends un
+  avis concis : SHA examiné, défauts prouvés séparés des hypothèses, étapes de
+  reproduction, tests réellement lancés.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:1105d646 -->
 ## Beads Issue Tracker
@@ -88,12 +88,15 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 
 ## Mode autonome (CreatorDeck)
 
-Le cadre général est dans le `CLAUDE.md` global. Ici, le propre à CreatorDeck :
+Le cadre général (quand s'arrêter, quels outils, économie de tokens) est dans le
+`CLAUDE.md` global. Ici, le propre à CreatorDeck :
 
-- **Démarrage :** `bd ready`, puis le haut de [`docs/agent-handoff.md`](docs/agent-handoff.md).
-- **Branche :** on travaille sur `main` et on pousse, parce que l'APK ne se construit que
-  depuis `main` et que Malik teste sur son téléphone.
+- **Autorisation permanente (Malik, 21 octobre 2026) :** commiter et pousser sur `main`
+  sans redemander. Cela prime sur le profil « Conservative » du bloc Beads ci-dessus.
+  Jamais de push forcé, de suppression de branche ni de réécriture d'historique.
+- **Branche :** on travaille sur `main`, parce que l'APK ne se construit que depuis `main`.
 - **Avant de pousser :** `tsc`, ESLint et les tests ciblés. Un push sur `main` applique
-  automatiquement les migrations Supabase en production : prévenir Malik avant.
+  automatiquement les migrations Supabase en production : prévenir Malik et attendre son
+  accord avant de pousser une migration.
 - **Ne jamais commiter** `next.config.ts` (il contient l'IP locale).
-- **Fin de lot :** mettre à jour `bd` et le haut de `docs/agent-handoff.md`.
+- **Le reste est décidé sans demander :** choix visuels, implémentation, tests, ordre des chantiers.
