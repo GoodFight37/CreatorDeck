@@ -1,9 +1,9 @@
 :root {
   /* ------------------------------------------------------------------
-   * THÈME PAR DÉFAUT « Pocket » (21 octobre 2026) : le chrome prolonge le
-   * langage des sachets du Drop — aplats vifs, contours nets, accents
-   * saturés. Fond indigo encre (le pied du sachet Live), crème pour le texte
-   * et les plaques, rose pour l'accent, vert acide pour l'action (le MEMES).
+   * THÈME PAR DÉFAUT « Pocket » (21 octobre 2026, revu le soir même) : un fond
+   * neutre presque noir, pour que la couleur vienne des sachets et des objets
+   * dessinés. Crème pour le texte et les plaques, rose pour l'accent, vert
+   * acide pour l'action (le MEMES). L'indigo partout faisait « unicolore ».
    *
    * Trois rôles de couleur, jamais mélangés :
    *   * l'ACTION  (`--action`)  — le bouton plein, l'onglet actif ;
@@ -20,15 +20,15 @@
    *
    * Règle : aucune couleur d'interface en dur ailleurs que dans ces blocs.
    * ------------------------------------------------------------------ */
-  --bg-deep: #0d0630;
-  --bg: #140a3d;
-  --bg-soft: #1b1050;
-  --panel: #231568;
-  --panel-2: #2c1c82;
-  --panel-3: #3a269c;
+  --bg-deep: #08080c;
+  --bg: #0e0d14;
+  --bg-soft: #14131c;
+  --panel: #1b1a25;
+  --panel-2: #23222f;
+  --panel-3: #2e2d3c;
   --text: #fff6e6;
-  --muted: #c3b7f4;
-  --muted-2: #9d8fe2;
+  --muted: #b6b2c6;
+  --muted-2: #8f8ba3;
   /* Accent : le rose des sachets. */
   --accent: #ff4fa3;
   --accent-light: #ff8ec6;
@@ -40,17 +40,17 @@
   --accent-rgb: 255 79 163;
   --accent-light-rgb: 255 142 198;
   --accent-dark-rgb: 110 16 72;
-  --bg-rgb: 13 6 48;
+  --bg-rgb: 14 13 20;
   --accent-glow: rgb(var(--accent-rgb) / 0.3);
   /* L'action : le vert acide du sachet MEMES, texte encre dessus. */
   --action: #d9ff3a;
   --action-rgb: 217 255 58;
-  --action-ink: #1a0c4a;
+  --action-ink: #0a0a0d;
   /* Le papier : plaques claires, nameplates, dos de carte, texte clair. */
   --paper: #fff4dc;
   --paper-rgb: 255 244 220;
-  --ink: #1a0c4a;
-  --ink-rgb: 10 4 32;
+  --ink: #0a0a0d;
+  --ink-rgb: 0 0 0;
   /* Contour net et relief « sticker » : un filet encre, une ombre dure. */
   --outline: rgb(var(--ink-rgb) / 0.9);
   --lift: 0 3px 0 rgb(var(--ink-rgb) / 0.85);
@@ -60,9 +60,9 @@
   /* L'or n'existe que pour une chose : la légendaire. */
   --gold: #ffbe55;
   --glow: rgb(var(--accent-rgb) / 0.14);
-  /* Filets : lavande translucide, lisibles sur l'indigo. */
-  --line: rgb(190 170 255 / 0.16);
-  --line-strong: rgb(190 170 255 / 0.3);
+  /* Filets : blancs translucides, sur un fond neutre. */
+  --line: rgb(255 255 255 / 0.1);
+  --line-strong: rgb(255 255 255 / 0.2);
   /* Couleurs porteuses de sens : hors thème. */
   --green: #2fe0a8;
   --danger: #ff6d82;
@@ -2151,20 +2151,6 @@ input:focus-visible {
 .credits-list dt { color: var(--text); font-size: 13px; font-weight: 600; }
 .credits-list dd { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
 .credits-list dd em { display: block; margin-top: 1px; color: var(--muted-2); font-size: 12px; font-style: normal; }
-.menu-reset {
-  width: 100%;
-  min-height: 48px;
-  margin-top: 34px;
-  color: var(--accent);
-  border: 1px solid rgb(var(--accent-rgb) / .35);
-  border-radius: 3px;
-  background: none;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: 15px;
-  font-weight: 500;
-}
-
 /* L'interrupteur du son : un vrai switch, pas une case à cocher. */
 .switch {
   position: relative;
@@ -2219,11 +2205,10 @@ input:focus-visible {
   bottom: 0;
   left: max(0px, calc((100vw - 560px) / 2));
   display: grid;
-  /* **Quatre** colonnes, et c'est le nombre de piliers : Drop, Binder, Craft,
-     Toi. (Le cinquième onglet est parti le 8 octobre 2026 avec la simulation de
-     streameur — une barre à cinq colonnes pour quatre boutons laissait une case
-     vide à droite et décalait tout le monde à gauche.) */
-  grid-template-columns: repeat(4, 1fr);
+  /* **Trois** objets (21 octobre 2026) : Binder, Drop au centre et plus large,
+     Objectifs. Le nombre de colonnes suit le nombre d'onglets, sinon tout se
+     décale à gauche. */
+  grid-template-columns: 1fr 1.4fr 1fr;
   min-height: calc(63px + env(safe-area-inset-bottom));
   padding: 7px 7px env(safe-area-inset-bottom);
   border-top: 1px solid var(--line);
@@ -2619,7 +2604,7 @@ input:focus-visible {
 @keyframes sheet-in { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .odds-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .odds-head h2 { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: .01em; text-transform: uppercase; }
-.odds-head button { display: grid; width: 32px; height: 32px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; background: none; cursor: pointer; }
+.odds-head button { display: grid; width: 44px; height: 44px; place-items: center; color: var(--muted); border: 1px solid var(--line); border-radius: 3px; background: none; cursor: pointer; }
 .odds-intro { margin: 12px 0 16px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .odds-intro code { padding: 1px 4px; color: var(--text); border-radius: 5px; background: rgb(var(--paper-rgb) / .14); font-size: 13px; }
 .odds-block { padding: 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.025); }

@@ -43,7 +43,7 @@ describe("les écrans", () => {
     await banc.monter(<CreatorDeckApp />);
   }
 
-  it("ouvre les quatre piliers, chacun avec son écran", async () => {
+  it("ouvre les trois objets de la barre dans l’ordre Binder, Drop, Objectifs", async () => {
     await application();
     const drop = banc.ecran("01-accueil");
     expect(drop).toContain("Ouvrir le booster");
@@ -53,7 +53,7 @@ describe("les écrans", () => {
     // Icône + nombre à l'écran ; le nom de chaque compteur reste lu par les lecteurs d'écran.
     expect(document.querySelector(".top-actions [aria-label$=' sabliers']")).not.toBeNull();
     expect(document.querySelector(".top-actions [aria-label$=' points']")).not.toBeNull();
-    expect(document.querySelector(".top-actions")?.textContent).toContain("Niv.");
+    expect(document.querySelector(".level-badge")?.textContent).toContain("Niv.");
 
     banc.appuyer("Binder");
     const binder = banc.ecran("02-binder");
@@ -69,39 +69,40 @@ describe("les écrans", () => {
     // ligne d'accueil, ni écran. La barre porte les quatre piliers, et son
     // ordre est celui du jeu.
     expect(
-      [...document.querySelectorAll(".bottom-nav button span")].map((n) => n.textContent),
-    ).toEqual(["Drop", "Binder", "Atelier", "Toi"]);
+      [...document.querySelectorAll(".bottom-nav .nav-object-label")].map((n) => n.textContent),
+    ).toEqual(["Binder", "Drop", "Objectifs"]);
 
-    banc.appuyer("Toi");
+    banc.appuyerNom(/^Ton profil/);
     // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
     const profile = banc.ecran("04-toi");
-    expect(profile).toContain("Mon compte");
     expect(profile).toContain("Ta vitrine");
     expect(profile).toContain("Ta première carte t’attend.");
-    expect(profile).toMatch(/Version (?:Android|Web) · (?:[a-f0-9]{7}|locale)/);
     expect(profile).not.toContain("0/1000");
     expect(profile).not.toContain("0 boosters");
   });
 
   it("ouvre les feuilles : le compte, les objectifs, les taux", async () => {
     await application();
-    banc.appuyer("Toi");
-
-    banc.appuyer("Mon compte");
+    banc.appuyerNom(/^Réglages/);
+    banc.appuyer(/^Mon compte/);
     // Sans rien en ligne, la feuille le dit au lieu de proposer une connexion —
     // et elle le dit en français de jeu, pas en vocabulaire d'atelier.
     const feuille = banc.ecran("05-compte");
     expect(feuille).toContain("Mon compte");
     expect(feuille).toContain("Joue pour toi, sur cet appareil");
+    // Le vocabulaire se lit dans le **texte** de la feuille, pas dans le HTML :
+    // les noms de classes (`token-row` du Drop, derrière la feuille) ne se lisent pas.
+    const texte = document.querySelector('[role="dialog"][aria-label="Mon compte"]')?.textContent ?? "";
+    expect(texte).toContain("Mon compte");
     for (const mot of ["cloud", "Supabase", "serveur", ".json", ".sql", "token"]) {
-      expect(feuille.toLowerCase()).not.toContain(mot);
+      expect(texte.toLowerCase()).not.toContain(mot);
     }
+    act(() => document.querySelector<HTMLButtonElement>('[aria-label="Mon compte"] button[aria-label="Fermer"]')!.click());
     banc.fermer();
-
-    banc.appuyer(/^Objectifs et saisons/);
+    banc.appuyer("Objectifs");
     expect(banc.ecran("06-objectifs")).toContain("Progression");
 
-    banc.appuyer("Toi");
+    banc.appuyerNom(/^Réglages/);
     banc.appuyer("Taux officiels");
     expect(banc.ecran("07-taux")).toContain("Taux de drop des boosters");
     banc.fermer();
@@ -126,23 +127,6 @@ describe("les écrans", () => {
     expect(window.localStorage.getItem("creatordeck-tutorial:local")).toBe("done");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
     expect(JSON.parse(window.localStorage.getItem("creatordeck.circle.v1") ?? "{}").slugs).toEqual([]);
-  });
-
-  it("rejoue le tutoriel après une réinitialisation et mémorise sa nouvelle fin", async () => {
-    window.localStorage.setItem("creatordeck-tutorial:local", "done");
-    window.localStorage.setItem("creatordeck-tutorial:completed:local", "done");
-    await application();
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
-    banc.appuyer("Toi");
-    banc.appuyer("Réinitialiser la progression");
-    expect(document.body.textContent).toContain("Ton premier booster t’attend");
-    expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBeNull();
-    banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
-    banc.appuyer("Ajouter");
-        banc.appuyer("Voir mon premier booster");
-    expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
-    expect(document.body.textContent).not.toContain("Ton premier booster t’attend");
-    confirm.mockRestore();
   });
 
   it("tire un booster et montre la révélation", async () => {

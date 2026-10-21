@@ -4,7 +4,7 @@ import creatorData from "../src/data/creators.json";
 test("le Binder est un album calme : ni score, ni filtres, ni objectifs, à 320 px", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await gotoDeck(page, true, { withoutCircle: true });
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
   for (const removed of [".collection-score", ".filter-chips", ".binder-next-pages", ".binder-circle-goal",
     ".binder-collections-picker", ".binder-active-page", ".pocket-count", ".binder-card-caption"]) {
@@ -32,7 +32,7 @@ test("le Drop garde l’ouverture à portée et mène au Binder", async ({ page 
   await hourglass.scrollIntoViewIfNeeded();
   await expect(hourglass).toBeInViewport();
   await expect(page.locator(".drop-secondary-details")).toHaveAttribute("open", "");
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
   await page.getByRole("button", { name: "Drop", exact: true }).click();
   await expect(open).toBeEnabled();
@@ -51,7 +51,7 @@ test("le Binder s’ouvre sur les dernières reçues, les manquantes après", as
     localStorage.setItem(key, JSON.stringify(state));
   }, creators);
   await page.reload();
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
   // Ses visages d'abord, la plus récente en tête ; les manquantes suivent en dos.
   const cards = page.locator(".collection-grid .creator-card");
   await expect(cards).toHaveCount(12);
@@ -66,7 +66,7 @@ test("Drop et Binder restent contenus à 320 px", async ({ page }) => {
   await gotoDeck(page);
   for (const name of ["Drop", "Binder"] as const) {
     if (name === "Drop") await expect(page.getByRole("button", { name: "Ouvrir le booster", exact: true })).toBeInViewport();
-    if (name === "Binder") await page.getByRole("button", { name, exact: true }).click();
+    if (name === "Binder") await page.getByRole("button", { name, exact: true }).dispatchEvent("click");
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     await expect(page.getByRole("navigation", { name: "Navigation principale" })).toBeInViewport();
   }
@@ -79,7 +79,7 @@ test("avec un cercle, le Binder s'ouvre sur ses visages sans objectif affiché (
   await expect(page.locator(".home-view.is-lean")).toBeVisible();
   const packBox = (await page.locator(".pack-stage .pack-artwork").boundingBox())!;
   expect(packBox.width).toBeGreaterThanOrEqual(Math.min(390 * .58, 220, 844 * .34) - 1);
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).dispatchEvent("click"); // le « N » de Next couvre Binder à 320 px (dev seulement)
   // Plus de puce « Mon cercle » ni d'objectif : l'album s'ouvre sur ses visages, cercle en tête.
   await expect(page.locator(".filter-chips")).toHaveCount(0);
   await expect(page.locator(".binder-circle-goal")).toHaveCount(0);

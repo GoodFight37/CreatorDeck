@@ -169,6 +169,11 @@ export function MissionsView({
   onOpenScene,
   onShowTribunal,
   onShowArena,
+  onShowMarket,
+  onShowFriends,
+  onShowLastPack,
+  onShowLeaderboard,
+  onShowAccount,
   sceneBusy = false,
 }: {
   game: GameView;
@@ -179,6 +184,12 @@ export function MissionsView({
   onOpenScene?: () => void;
   onShowTribunal?: () => void;
   onShowArena?: () => void;
+  /** Les activités en ligne vivent ici depuis la barre à trois objets (21 octobre 2026). */
+  onShowMarket?: () => void;
+  onShowFriends?: () => void;
+  onShowLastPack?: () => void;
+  onShowLeaderboard?: () => void;
+  onShowAccount?: () => void;
   sceneBusy?: boolean;
 }) {
   const cloud = useCloud();
@@ -371,6 +382,14 @@ export function MissionsView({
             </button>
           </> : null}
           {onShowArena ? <button type="button" className="text-link" onClick={onShowArena}>Arène</button> : null}
+          {cloud.configured && cloud.userId ? <>
+            {onShowMarket ? <button type="button" className="text-link" onClick={onShowMarket}>Hôtel des ventes</button> : null}
+            {onShowFriends ? <button type="button" className="text-link" onClick={onShowFriends}>Amis</button> : null}
+            {onShowLeaderboard ? <button type="button" className="text-link" onClick={onShowLeaderboard}>Classement mondial</button> : null}
+            {onShowLastPack ? <button type="button" className="text-link" onClick={onShowLastPack}>Last Pack</button> : null}
+          </> : cloud.configured && onShowAccount ? (
+            <button type="button" className="text-link" onClick={onShowAccount}>Se connecter pour l’Hôtel des ventes, les Amis et le Classement</button>
+          ) : null}
         </details>
         <div className="mission-list day-missions">
           {game.missions.map((mission) => {

@@ -7,6 +7,7 @@ import { gameDay } from "@/lib/progression";
 import { CREATORS } from "@/lib/catalog";
 import { HomeView } from "@/components/drop-view";
 import { MissionsView } from "@/components/missions-view";
+import { SettingsSheet } from "@/components/settings-sheet";
 import { ProfileView } from "@/components/profile-view";
 import { runBackHandler } from "@/lib/back-stack";
 
@@ -38,9 +39,8 @@ describe("statut Scène et identité de collectionneur", () => {
       state.tribunal = { day: gameDay(NOW), verdicts: {}, claimed: true };
     }
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={friendsOpening}
-      onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop} onOpenScene={onOpen} sceneBusy={false}
-      onUseHourglass={noop} onShowOdds={noop} onShowMissions={noop} onShowAtelier={noop} onShowArena={noop}
-      onShowTribunal={onShowTribunal} tribunalRestants={5} tribunalClose={false} tribunalPaid={tribunalPaid} opening={false} usingHourglass={false}
+      onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop}
+      onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve needsAccount={false} />);
     return { onOpen, onShowInbox, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
@@ -105,10 +105,7 @@ describe("statut Scène et identité de collectionneur", () => {
     const noop = () => {};
     const onGoDrop = vi.fn();
     const onShowAccount = vi.fn();
-    await banc.monter(<ProfileView game={getGameView(state, NOW)} onNotice={noop} onError={noop}
-      onShowOdds={noop} onShowMissions={noop} onShowThemes={noop} onShowStudio={noop} onShowAccount={onShowAccount}
-      onShowLeaderboard={noop} onShowFriends={noop} onShowMarket={noop} onShowLastPack={noop} onShowArena={noop}
-      onShowNotifications={noop} onShowOwnProfile={noop} onShowWishlist={noop} onGoDrop={onGoDrop} onGoBinder={noop} />);
+    await banc.monter(<ProfileView game={getGameView(state, NOW)} onShowStudio={noop} onShowAccount={onShowAccount} onShowOwnProfile={noop} onShowWishlist={noop} onGoDrop={onGoDrop} onGoBinder={noop} />);
     return { onGoDrop, onShowAccount };
   }
 
@@ -133,15 +130,12 @@ describe("statut Scène et identité de collectionneur", () => {
     const { onGoDrop } = await profile([]);
     expect(document.querySelector(".profile-milestones")).toBeNull();
     expect(document.querySelector(".profile-collection-goal")).toBeNull();
-    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("0/5 cartes distinctes");
-    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("40 pts");
-    expect(document.querySelector('[aria-label="Compte"]')?.textContent).not.toContain("doublons à vendre");
     banc.appuyer("Trouver ma première carte");
     expect(onGoDrop).toHaveBeenCalledOnce();
   });
 
   it("ouvre la feuille de rédemption des boosters depuis les fonctions en ligne", async () => {
-    await profile([]);
+    await settings();
     banc.appuyer("J'ai un code booster");
     const dialog = document.querySelector('[role="dialog"][aria-label="J\'ai un code"]');
     expect(dialog).not.toBeNull();
@@ -155,8 +149,13 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(document.querySelector('[role="dialog"][aria-label="J\'ai un code"]')).toBeNull();
   });
 
+  async function settings() {
+    const noop = vi.fn();
+    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={noop} onShowNotifications={noop} onShowThemes={noop} onShowOdds={noop} onNotice={noop} onError={noop} />);
+  }
+
   it("affiche l’identifiant du build dans les réglages du profil", async () => {
-    await profile([]);
+    await settings();
     const version = document.querySelector<HTMLElement>(".profile-build-version");
     expect(version?.textContent).toMatch(/^Version (Android|Web) · ([a-f0-9]{7}|locale)$/);
     expect(version?.title).toMatch(/Commit complet|Build local/);
@@ -170,8 +169,4 @@ describe("statut Scène et identité de collectionneur", () => {
     expect(onShowTribunal).toHaveBeenCalledOnce();
   });
 
-  it("présente le total d'arène comme un minimum une fois cinq cartes atteintes", async () => {
-    await profile(CREATORS.slice(0, 6).map((creator) => creator.slug));
-    expect(document.querySelector('[aria-label="Compte"]')?.textContent).toContain("6 cartes · minimum 5");
-  });
 });

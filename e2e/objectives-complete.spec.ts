@@ -6,9 +6,7 @@ import { gameDay, MISSION_REWARD } from "../src/lib/progression";
 
 test("Objectifs : quotidien, collection, saisons et filtres sur téléphone",async({page})=>{
  await gotoDeck(page);
- await page.getByRole('button',{name:'Toi',exact:true}).click();
- await page.locator('.profile-online-fold > summary').click();
- await page.getByRole('button',{name:'Objectifs et saisons',exact:true}).click();
+ await page.getByRole('button',{name:'Objectifs',exact:true}).click({force:true});
  await expect(page.getByRole('heading',{name:'Objectifs et saisons',exact:true})).toBeVisible();
  // D-148 : deux missions au jour 1, Recyclage et Tribunal arrivent à partir du jour 2.
  await expect(page.locator('.day-missions .mission-row')).toHaveCount(2);
@@ -50,9 +48,7 @@ test("Objectifs : tout réclamer crédite missions, jalons et saisons une seule 
  const points=pending.reduce((sum,item)=>sum+item.reward.points,0)+view.seasons.reduce((sum,item)=>sum+item.claimablePoints,0);
  const hourglasses=view.missions.filter((item)=>item.done&&!item.claimed).length*MISSION_REWARD.hourglasses+pending.reduce((sum,item)=>sum+item.reward.hourglasses,0)+view.seasons.reduce((sum,item)=>sum+item.claimableHourglasses,0);
  expect(view.seasons.some((season)=>season.claimable>0)).toBe(true);
- await page.getByRole('button',{name:'Toi',exact:true}).click();
- await page.locator('.profile-online-fold > summary').click();
- await page.getByRole('button',{name:'Objectifs et saisons',exact:true}).click();
+ await page.getByRole('button',{name:'Objectifs',exact:true}).click({force:true});
  const button=page.getByRole('button',{name:'Tout réclamer',exact:true});
  await button.evaluate((node)=>{(node as HTMLButtonElement).click();(node as HTMLButtonElement).click();});
  await expect(page.locator('.objectives-feedback')).toContainText('Réclamation terminée');

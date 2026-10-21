@@ -45,7 +45,6 @@ export function HomeView({
   onShowAccount,
   onUseHourglass,
   onShowOdds,
-  onShowMissions,
   onShowAtelier,
   opening,
   usingHourglass,
@@ -62,17 +61,9 @@ export function HomeView({
   onShowCollection: () => void;
   onOpen: () => void;
   onShowAccount?: () => void;
-  onOpenScene: () => void;
-  sceneBusy: boolean;
   onUseHourglass: () => void;
   onShowOdds: () => void;
-  onShowMissions: () => void;
   onShowAtelier: () => void;
-  onShowArena: () => void;
-  onShowTribunal: () => void;
-  tribunalRestants: number;
-  tribunalClose: boolean;
-  tribunalPaid?: boolean;
   opening: boolean;
   usingHourglass: boolean;
   now: number;

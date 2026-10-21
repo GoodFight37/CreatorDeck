@@ -4,7 +4,6 @@
 .profile-news small { color: var(--muted); font-size: 12px; line-height: 1.4; }
 .profile-news svg { flex-shrink: 0; }
 .profile-news b { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--paper); color: var(--ink); font-size: 12px; }
-.bottom-nav .nav-news-dot { position: absolute; top: 8px; left: calc(50% - 22px); width: 7px; height: 7px; border-radius: 50%; background: var(--paper); box-shadow: 0 0 0 3px var(--bg-soft); }
 .release-notes-overlay { position: fixed; inset: 0; z-index: 240; display: grid; place-items: center; padding: 16px; background: rgb(var(--bg-rgb) / 0.9215686275); backdrop-filter: blur(10px); }
 .release-notes-panel { display: flex; flex-direction: column; width: min(100%, 660px); height: min(850px, calc(100dvh - 32px)); overflow: hidden; border: 1px solid var(--line-strong); border-radius: 18px; background: var(--panel); color: var(--text); box-shadow: 0 25px 90px #000a; }
 .release-notes-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 20px 18px 16px; background: linear-gradient(115deg, var(--panel), var(--panel)); border-bottom: 1px solid #ffffff12; flex-shrink: 0; }

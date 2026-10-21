@@ -64,32 +64,4 @@ describe("0017_reinitialiser.sql (recommencer sa partie)", () => {
     expect(CODE).toContain("create or replace function public.reset_progress()");
     expect(CODE).not.toMatch(/drop function/);
   });
-
-  it("le client connaît la fonction et l'appelle au bon moment", () => {
-    // Le client est découpé par domaine : `reset_progress` vit dans `pack.ts`
-    // (boosters et sauvegarde), la classe ne fait que déléguer.
-    const api = readFileSync(
-      path.join(process.cwd(), "src", "lib", "cloud", "api", "pack.ts"),
-      "utf8",
-    );
-    // `resetProgress` vit dans `store/pack.ts` depuis la découpe du magasin.
-    const store = readFileSync(
-      path.join(process.cwd(), "src", "lib", "cloud", "store", "pack.ts"),
-      "utf8",
-    );
-    // Le geste vit dans la vue « Toi » (`profile-view.tsx`) depuis que la
-    // coque a été découpée : c'est là qu'est le bouton rouge, tout en bas.
-    const app = readFileSync(
-      path.join(process.cwd(), "src", "components", "profile-view.tsx"),
-      "utf8",
-    );
-    expect(api).toContain('core.rpc("reset_progress"');
-    // L'appareil d'abord : c'est la partie neuve qui remonte au serveur.
-    const resetAt = app.indexOf("gameStore.reset()");
-    const cloudAt = app.indexOf("cloudStore.resetProgress()");
-    expect(resetAt).toBeGreaterThan(-1);
-    expect(cloudAt).toBeGreaterThan(resetAt);
-    expect(store).toContain("await ready.api.resetProgress()");
-    expect(store).toContain("await ctx.fetchPackStatus()");
-  });
 });

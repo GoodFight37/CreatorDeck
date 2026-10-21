@@ -2,17 +2,17 @@
 name: CreatorDeck
 description: Jeu de collection de cartes de créateurs, téléphone d'abord, sur fond noir de plateau de diffusion.
 colors:
-  bg-deep: "#0d0630"
-  bg: "#140a3d"
-  bg-soft: "#1b1050"
-  panel: "#231568"
-  panel-2: "#2c1c82"
-  panel-3: "#3a269c"
+  bg-deep: "#08080c"
+  bg: "#0e0d14"
+  bg-soft: "#14131c"
+  panel: "#1b1a25"
+  panel-2: "#23222f"
+  panel-3: "#2e2d3c"
   text: "#fff6e6"
-  muted: "#c3b7f4"
-  muted-2: "#9d8fe2"
-  line: "rgb(190 170 255 / 0.16)"
-  line-strong: "rgb(190 170 255 / 0.3)"
+  muted: "#b6b2c6"
+  muted-2: "#8f8ba3"
+  line: "rgb(255 255 255 / 0.1)"
+  line-strong: "rgb(255 255 255 / 0.2)"
   accent: "#ff4fa3"
   accent-light: "#ff8ec6"
   accent-soft: "#ffa9d4"
@@ -21,10 +21,10 @@ colors:
   accent-dark: "#6e1048"
   accent-night: "#3a0a2a"
   action: "#d9ff3a"
-  action-ink: "#1a0c4a"
+  action-ink: "#0a0a0d"
   live: "#e11d3f"
   paper: "#fff4dc"
-  ink: "#1a0c4a"
+  ink: "#0a0a0d"
   gold: "#ffbe55"
   green: "#50d9a0"
   danger: "#ff6d82"
@@ -138,7 +138,7 @@ components:
 
 ## Overview
 
-> **Thème d'application « Pocket » (21 octobre 2026, Malik).** Le chrome prolonge le langage des sachets du Drop : fond indigo encre, aplats vifs, contours encre nets et ombre dure (« relief sticker »), accent rose, action vert acide, texte et plaques crème, lettrage Barlow Condensed. Il remplace le noir chaud et le bordeaux d'avant partout (fond, panneaux, boutons, onglets, en-têtes, feuilles). Les sections ci-dessous décrivent encore parfois l'ancien relevé du 19 octobre : en cas de conflit, c'est la section « Thèmes d'application » qui fait foi.
+> **Thème d'application « Pocket » (21 octobre 2026, revu le soir même avec Malik).** Fond neutre presque noir : la couleur vient des sachets et des objets dessinés de la barre, pas du chrome (l'indigo partout faisait « unicolore »). Accent rose, action vert acide, texte et plaques crème, lettrage Barlow Condensed. Plus de contour ni d'ombre dure sur chaque panneau (« quand tout est mis en relief, plus rien ne l'est ») : le relief reste aux boutons pleins. Navigation à **trois objets** (Binder | Drop | Objectifs), en-tête avec badge de niveau (profil) et engrenage (réglages), Atelier en mode du Binder. En cas de conflit avec l'ancien relevé ci-dessous, ce paragraphe, la section « Thèmes d'application » et « Navigation » font foi.
 
 **Creative North Star : « Le plateau de diffusion »**
 
@@ -212,7 +212,7 @@ Trois rôles de couleur, jamais mélangés : **action** (`--action`/`--action-in
 
 | Thème | Fond / panneaux | Accent | Action |
 | --- | --- | --- | --- |
-| Pocket (défaut) | indigo `#0d0630` → `#3a269c` | rose `#ff4fa3` | vert acide `#d9ff3a` |
+| Pocket (défaut) | neutre `#08080c` → `#2e2d3c` | rose `#ff4fa3` | vert acide `#d9ff3a` |
 | Live | violet électrique `#10063f` → `#4c30c4` | rose | lavande `#b79bff` |
 | MEMES | vert forêt `#04110b` → `#1f5d48` | rose vif `#ff2e93` | vert acide |
 | MEME VAULT | cobalt `#030a2e` → `#1f45c4` | bleu `#6f8dff` | cyan `#2ee6ff` |
@@ -248,7 +248,7 @@ L'échelle déclarée dans `:root` : `--t-caption` 12 px, `--t-small` 13 px, `--
 - **Colonne de téléphone.** `.app-shell` fait 100 % de large, 560 px au plus, centré, avec un filet latéral à 3,5 % de blanc et une ombre de 70 px. Elle utilise `overflow: clip` (pas `hidden`) pour que la barre du haut et la recherche du classeur restent `sticky`. Au-delà de 900 px, l'accueil épuré reste une colonne de 560 px centrée.
 - **Marges de vue.** `.view` : `20px 18px 26px`. Les sections s'espacent de 27 à 28 px (`.section-block`, `.drop-findings`). Les rangées défilantes (cercle, trouvailles, outils du Binder) débordent de 16 à 18 px de chaque côté pour aller jusqu'au bord de l'écran.
 - **Barre du haut.** `sticky`, 68 px au moins, fond `bg-deep` à 91 % avec flou de 18 px, filet bas `line`, et marge de zone sûre en haut.
-- **Barre du bas.** Quatre colonnes, une par pilier (Drop, Binder, Craft, Toi). Dans la scène actuelle, c'est une barre flottante de `min(100vw - 24px, 420px)`, à 10 px du bas plus la zone sûre, 62 px de haut. Le contenu réserve `112px + env(safe-area-inset-bottom)` en bas.
+- **Barre du bas.** Trois colonnes (`1fr 1.4fr 1fr`) : Binder, Drop au centre, Objectifs. Barre pleine, collée au bas avec la zone sûre ; seul le sachet du Drop dépasse au-dessus. Le contenu réserve `100px + env(safe-area-inset-bottom)` en bas.
 - **Rythme.** Pas d'échelle d'espacement en tokens : les écarts relevés vont de 4 à 15 px entre éléments (6, 7, 8, 9, 10, 12 px reviennent le plus), 14 à 17 px de padding interne de panneau.
 - **Zones tactiles.** « Tout ce qui se touche fait au moins 44 px de haut » (`stage.css`) : boutons, `summary`, pastilles de filtre, pagination.
 - **Scène plein écran.** L'ouverture du booster et la révélation partagent une géométrie : `--scene-height: max(100dvh, 520px)`, carte de `min(74vw, 370px, …)` au ratio 0,715, centre à 46 % de la hauteur, sachet de `min(72vw, 320px, 38dvh)` centré à 58 %. Sur l'accueil, le sachet du carrousel fait `min(78vw, 320px, calc(52dvh / 1.4667))`.
@@ -310,8 +310,8 @@ Du papier ou du rouge, jamais de dégradé dans la version de base (`globals.css
 - **Focus :** anneau global `accent-light` ; dans le Binder et l'Atelier, la bordure du champ passe à `accent-soft` (`:focus-within`).
 
 ### Navigation
-- **Barre du bas :** quatre piliers à icône et libellé, 52 px par bouton. Actif : texte et icône en papier, avec un trait de 2 px au-dessus du bouton ; ni fond rouge ni halo. Seule la pastille de notification (`.nav-badge`) porte l'accent.
-- **Barre du haut :** mot-symbole et saison à gauche (saison sur deux lignes au plus, 190 px), compteurs à droite.
+- **Barre du bas (21 octobre 2026) :** trois objets dessinés (`nav-objects.tsx`) : un classeur (Binder), un sachet (Drop, au centre, 62 px, qui dépasse de la barre), une cible (Objectifs). Pas de plaque ni de contour : l'objet actif se lève (`translateY(-4px) scale(1.12)`, 180 ms) et affiche son nom au-dessus d'un trait vert acide ; les autres restent à 72 % d'opacité, sans nom. Une pastille rouge dit « un booster est prêt » (Drop) ou « une récompense est à réclamer » (Objectifs) ; le sachet se balance (±4°, 2,6 s) seulement si un booster est prêt et que le joueur est ailleurs. Mouvement coupé sous `prefers-reduced-motion`. L'Atelier n'est plus un onglet : c'est un mode du Binder (« Ma collection | Atelier »).
+- **Barre du haut :** à gauche le badge de niveau (rond rose, « Niv. N » et sa jauge vert acide) qui ouvre le profil ; à droite les sabliers et les points en pastilles plates, puis l'engrenage (44 px) qui ouvre les réglages (compte, notifications, code booster, son, musique, reflets, thème, nouveautés, taux, crédits, et « Avancé » replié pour le diagnostic et la version). Une pastille rouge sur l'engrenage seulement si le compte demande une action. Sous 360 px, la jauge se cache et le rond reste.
 - **Pagination :** boutons ronds de 44 px ; libellé masqué sous 520 px de large mais conservé pour le lecteur d'écran.
 
 ### La carte créateur (signature)
@@ -327,7 +327,7 @@ Sur le Drop (scène TCG de poche, 21 octobre), un interrupteur centré choisit L
 « Mon classeur » se feuillette par pages de 12 : ses cartes d'abord (chaînes du cercle dans son ordre, puis les plus récentes), les manquantes ensuite en dos de carte. Une seule recherche discrète ; plus de score, de barre de progression, de filtres, de tri ni de compteurs. Le nombre d'exemplaires n'apparaît que dans la fiche.
 
 ### Le parcours
-Sachet → carte → direct → album. Tribunal, Arène, Paquet Scène, Hôtel, échanges, Last Pack et missions restent accessibles, repliés dans « Autres activités » de Toi, sans badge ni compteur qui appelle à revenir. Sans autre joueur, les surfaces sociales proposent de partager une carte (`CircleShareEmpty`).
+Sachet → carte → direct → album. Tribunal, Arène, Paquet Scène, Hôtel des ventes, Amis, Classement et Last Pack vivent dans « Autres activités » de l'écran Objectifs (replié). La pastille de l'onglet Objectifs signale une récompense à réclamer (règle « aucune pastille qui appelle à revenir » levée par Malik le 21 octobre 2026). Sans autre joueur, les surfaces sociales proposent de partager une carte (`CircleShareEmpty`).
 
 ## Do's and Don'ts
 

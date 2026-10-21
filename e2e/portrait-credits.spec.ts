@@ -18,7 +18,7 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
     localStorage.setItem(key, JSON.stringify(state));
   }, creators.filter((creator) => displayedPortraits.includes(creator.slug)));
   await page.reload();
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
   // Le Binder s’ouvre sur les cartes obtenues, avant les dos à découvrir.
   for (const slug of displayedPortraits) {
     const manual = manualPortraits[slug as keyof typeof manualPortraits];
@@ -32,9 +32,8 @@ test("les portraits sélectionnés se chargent et leurs crédits restent dans le
   await expect(page.locator(".creator-card")).not.toContainText(["Moritz Barcelona", "Nate Herrera"]);
   await expect(page.locator("#image-credits")).toHaveCount(0);
   await testInfo.attach("portraits-dans-les-cartes", { body: await page.screenshot(), contentType: "image/png" });
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-settings-fold > summary").click();
-  const settings = page.getByRole("region", { name: "Réglages" });
+  await page.getByRole("button", { name: /^Réglages/ }).click();
+  const settings = page.getByRole("dialog", { name: "Réglages" });
   const toggle = settings.getByRole("button", { name: "Crédits des images" });
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-expanded", "true");

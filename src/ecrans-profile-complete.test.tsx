@@ -5,6 +5,7 @@ import { EMPTY_CLOUD_STATE, type CloudState } from "@/lib/cloud/cloud-store";
 import { createInitialState, getGameView } from "@/lib/game-engine";
 import { gameDay } from "@/lib/progression";
 import { CREATORS } from "@/lib/catalog";
+import { SettingsSheet } from "@/components/settings-sheet";
 import { ProfileView } from "@/components/profile-view";
 const NOW = Date.UTC(2026, 9, 14, 16);
 const mocked = vi.hoisted(() => ({ cloud: {} as CloudState }));
@@ -28,27 +29,17 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     });
     if (rewardReady) { state.missionDay = gameDay(NOW); state.missions = { pack: 1 }; }
     const game = getGameView(state, NOW);
-    const onShowMissions = vi.fn(), onShowAccount = vi.fn(); const noop = vi.fn();
-    await banc.monter(<ProfileView game={game} onNotice={noop} onError={noop} onShowOdds={noop} onShowMissions={onShowMissions}
-      onShowThemes={noop} onShowStudio={noop} onShowAccount={onShowAccount} onShowLeaderboard={noop} onShowFriends={noop}
-      onShowMarket={noop} onShowLastPack={noop} onShowArena={noop} onShowNotifications={noop} onShowOwnProfile={noop}
-      onShowWishlist={noop} onGoBinder={noop} onGoDrop={noop} onShowTribunal={noop} />);
-    return { game, creator, onShowMissions, onShowAccount };
+    const onShowAccount = vi.fn(); const noop = vi.fn();
+    await banc.monter(<ProfileView game={game} onShowStudio={noop} onShowAccount={onShowAccount} onShowOwnProfile={noop}
+      onShowWishlist={noop} onGoBinder={noop} onGoDrop={noop} />);
+    return { game, creator, onShowAccount };
   }
-  it("garde la progression visible et les activités secondaires repliées", async () => {
-    const { game, onShowMissions } = await profile();
+  it("garde la progression visible et les activités hors du profil", async () => {
+    const { game } = await profile();
     const xp = document.querySelector<HTMLProgressElement>('.profile-xp')!;
     expect(xp.value).toBe(game.player.xp); expect(xp.max).toBe(game.player.xpNext);
-    const fold = document.querySelector<HTMLDetailsElement>('.profile-online-fold')!;
-    expect(fold.open).toBe(false);
-    expect(fold.querySelector('summary')?.textContent).toBe('Autres activités');
+    expect(document.querySelector('.profile-online-fold')).toBeNull();
     expect(document.querySelector('.profile-journey')?.textContent).not.toMatch(/Objectifs|Tribunal/);
-    const objective = [...fold.querySelectorAll('button')].find((button) => button.textContent === 'Objectifs et saisons')!;
-    expect(objective.closest('details')).toBe(fold);
-    expect(fold.textContent).toContain('Tribunal des Bannis');
-    act(() => { fold.open = true; });
-    banc.appuyer(/^Objectifs et saisons/);
-    expect(onShowMissions).toHaveBeenCalledOnce();
     expect(document.querySelector('.profile-collection-total')?.textContent).toContain('0 / 1000');
   });
   it("expose une carte possédée une seule fois même si la liste épinglée contient un doublon", async () => {
@@ -83,34 +74,41 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     await profile(6, false, true);
     expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(4);
   });
-  it("replie réglages et réinitialisation et conserve les deux interrupteurs distincts", async () => {
-    await profile();
-    expect(document.querySelector<HTMLDetailsElement>('.profile-settings-fold')!.open).toBe(false);
-    expect(document.querySelector<HTMLDetailsElement>('.profile-danger-fold')!.open).toBe(false);
+  async function settings() {
+    const noop = vi.fn(), onShowAccount = vi.fn();
+    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={onShowAccount} onShowNotifications={noop} onShowThemes={noop} onShowOdds={noop} onNotice={noop} onError={noop} />);
+    return { onShowAccount };
+  }
+  it("replie les réglages et conserve les deux interrupteurs distincts", async () => {
+    await settings();
+    expect(document.querySelector<HTMLDetailsElement>('.settings-advanced')!.open).toBe(false);
     const labels = [...document.querySelectorAll('[role="switch"]')].map((node) => node.textContent);
     expect(labels).toContain('Son de l’application'); expect(labels).toContain('Musique');
-    expect(document.querySelector('.menu-reset')?.closest('.profile-settings-fold')).not.toBeNull();
     expect(document.querySelector('.profile-build-version')).not.toBeNull();
   });
   it("annonce un conflit de synchronisation et l’erreur réelle sans prétendre sauvegarder", async () => {
     mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', syncNeedsChoice:true, isError:true, message:'Connexion indisponible'};
-    const { onShowAccount } = await profile();
-    expect(document.querySelector('.profile-account-status')?.textContent).toContain('Synchronisation à vérifier');
+    await profile();
     expect(document.querySelector('[role="alert"]')?.textContent).toBe('Connexion indisponible');
-    banc.appuyer('Synchronisation à vérifier'); expect(onShowAccount).toHaveBeenCalledOnce();
+    banc.vider();
+    const { onShowAccount } = await settings();
+    expect(document.querySelector('.menu-state')?.textContent).toContain('Synchronisation à vérifier');
+    banc.appuyer(/^Mon compte/); expect(onShowAccount).toHaveBeenCalledOnce();
   });
   it("annonce l’attente de sauvegarde sans masquer la collection existante", async () => {
     mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', saveSyncing:true};
     await profile(1);
-    expect(document.querySelector('.profile-account-status')?.textContent).toContain('Sauvegarde en cours');
     expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(1);
+    banc.vider();
+    await settings();
+    expect(document.querySelector('.menu-state')?.textContent).toContain('Sauvegarde en cours');
   });
   it("ne transforme pas les récompenses disponibles en appels à revenir", async () => {
     mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', arenaMine:{pending:[{}]} as CloudState['arenaMine']};
     const { game } = await profile(0, true);
     const count = game.missions.filter((mission) => mission.done && !mission.claimed).length;
     expect(count).toBeGreaterThan(0);
-    expect(document.querySelector('.profile-online-fold')?.textContent).not.toMatch(/à réclamer|doublons? à vendre/);
+    expect(document.querySelector('.profile-view')?.textContent).not.toMatch(/à réclamer|doublons? à vendre/);
     expect(document.querySelector('.menu-count')).toBeNull();
   });
   it("garde la wishlist visible et bloque ses commandes pendant un retrait", async () => {

@@ -3,11 +3,11 @@ import creatorData from "../src/data/creators.json";
 
 test("Toi vide : vitrine, parcours, activités et réglages repliés", async ({ page }) => {
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: /^Ton profil/ }).click();
   await expect(page.locator(".profile-showcase-empty")).toBeVisible();
   await expect(page.locator(".profile-collection-total")).toContainText("0 / 1000");
-  await expect(page.locator(".profile-settings-fold")).not.toHaveAttribute("open");
-  await expect(page.locator(".profile-online-fold")).not.toHaveAttribute("open");
+  await expect(page.locator(".profile-settings-fold")).toHaveCount(0);
+  await expect(page.locator(".profile-online-fold")).toHaveCount(0);
   for (const width of [320, 390]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -15,8 +15,7 @@ test("Toi vide : vitrine, parcours, activités et réglages repliés", async ({ 
   await page.screenshot({ path: "test-results/profile-complete-empty.png", fullPage: true });
   await expect(page.getByRole("button", { name: "Objectifs et saisons", exact: true })).not.toBeVisible();
   await expect(page.getByRole("button", { name: "Tribunal des Bannis", exact: true })).not.toBeVisible();
-  await page.locator(".profile-online-fold > summary").click();
-  await page.getByRole("button", { name: "Objectifs et saisons", exact: true }).click();
+  await page.getByRole("button", { name: "Objectifs", exact: true }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Objectifs et saisons", exact: true })).toBeVisible();
 });
 
@@ -31,7 +30,7 @@ test("Toi rempli : noms complets, variantes exactes, focus et retour Binder", as
     localStorage.setItem(key, JSON.stringify(state));
   }, selected);
   await page.reload();
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: /^Ton profil/ }).click();
   await expect(page.locator(".profile-showcase-slot")).toHaveCount(1);
   await expect(page.locator(".profile-showcase-placeholder")).toHaveCount(2);
   const caption = page.locator(".profile-showcase-slot figcaption strong");
@@ -54,25 +53,14 @@ test("Toi rempli : noms complets, variantes exactes, focus et retour Binder", as
   await expect(page.getByRole("heading", { name: "Mon classeur" })).toBeVisible();
 });
 
-test("Toi : réglages existants accessibles et reset annulé sans perte", async ({ page }) => {
+test("Toi : réglages existants accessibles", async ({ page }) => {
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-settings-fold > summary").click();
+  await page.getByRole("button", { name: /^Ton profil/ }).click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await expect(page.getByRole("switch", { name: "Musique", exact: true })).toBeVisible();
   await expect(page.getByRole("switch", { name: "Son de l’application", exact: true })).toBeVisible();
+  await page.locator(".settings-advanced > summary").click();
   await expect(page.locator(".profile-build-version")).toBeVisible();
   await page.getByRole("switch", { name: "Reflets des cartes" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-card-fx", "off");
-  await page.locator(".profile-danger-fold > summary").click();
-  const readSave = () => page.evaluate(() => {
-    const key = Object.keys(localStorage).find((entry) => /^creatordeck.save.v\d+$/.test(entry))!;
-    return JSON.parse(localStorage.getItem(key)!);
-  });
-  const before = await readSave();
-  page.once("dialog", (dialog) => dialog.dismiss());
-  await page.getByRole("button", { name: "Réinitialiser la progression", exact: true }).click();
-  expect((await readSave()).cards).toEqual(before.cards);
-  expect((await readSave()).points).toEqual(before.points);
-  await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-card-fx", "off");
 });

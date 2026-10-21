@@ -30,7 +30,7 @@ describe("les crédits de l'écran Toi", () => {
   async function ecranToi() {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
-    banc.appuyer("Toi");
+    banc.appuyerNom(/^Réglages/);
   }
 
   it("garde les crédits repliés, et les ouvre d'un appui", async () => {
@@ -43,7 +43,7 @@ describe("les crédits de l'écran Toi", () => {
     expect(bouton.getAttribute("aria-expanded")).toBe("false");
     expect(document.querySelector(".credits-list")).toBeNull();
     // Les réglages sont toujours là, et le rouge reste la dernière chose.
-    expect(banc.ecran("40-toi-credits-fermes")).toContain("Réinitialiser la progression");
+    expect(banc.ecran("40-toi-credits-fermes")).toContain("Crédits");
 
     banc.appuyer("Crédits");
     const ouvert = banc.ecran("40-toi-credits-ouverts");
@@ -63,7 +63,7 @@ describe("les crédits de l'écran Toi", () => {
   it("présente les auteurs et licences des nouveaux portraits dans les réglages seulement", async () => {
     await ecranToi();
     expect(document.querySelector("#image-credits")).toBeNull();
-    const settings = document.querySelector('[aria-label="Réglages"]');
+    const settings = document.querySelector('[role="dialog"][aria-label="Réglages"]');
     expect(settings?.textContent).toContain("Crédits des images");
     banc.appuyer("Crédits des images");
     const credits = document.querySelector("#image-credits")!;

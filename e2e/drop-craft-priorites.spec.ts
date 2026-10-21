@@ -118,7 +118,8 @@ test("Craft démarre sur les recettes à portée et le recyclage reste utile à 
     const state = JSON.parse(localStorage.getItem(key)!); state.points = 90; state.cards = [];
     localStorage.setItem(key, JSON.stringify(state));
   });
-  await page.reload(); await page.getByRole("button", { name: "Atelier", exact: true }).click();
+  await page.reload(); await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: "Atelier", exact: true }).click();
   await expect(page.locator(".atelier-scope button").first()).toHaveAttribute("aria-pressed", "true");
   await expect(page.locator(".atelier-rules-details")).not.toHaveAttribute("open");
   await expect(page.locator(".craft-locked")).toHaveCount(0);

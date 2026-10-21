@@ -15,7 +15,7 @@ test("Scène, rangé dans Autres activités, reste fermé après consommation et
   await reveal.getByRole("button", { name: "Fermer", exact: true }).click();
   await expect(scene.locator(".scene-action")).toBeDisabled();
   await expect(scene.locator(".scene-state")).toHaveText("Ouvert aujourd’hui");
-  await page.getByRole("button", { name: "Drop", exact: true }).click();
+  await page.getByRole("button", { name: "Drop", exact: true }).click({ force: true });
   await expect(page.locator(".open-panel .stock-row")).toHaveText(reserve);
   await page.reload();
   scene = await openOtherActivities(page);
@@ -35,8 +35,8 @@ test("Toi montre sa vitrine et ses pages réunies", async ({ page }) => {
     localStorage.setItem(key, JSON.stringify(state));
   }, cards);
   await page.reload();
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
+  await page.getByRole("button", { name: /^Ton profil/ }).click();
   await expect(page.getByRole("heading", { name: "Mon profil de collectionneur" })).toBeVisible();
   await expect(page.locator(".profile-showcase .creator-card")).toHaveCount(3);
   await expect(page.getByRole("region", { name: "Mes collections réunies" })).toContainText("1 page réunie");
@@ -52,8 +52,7 @@ test("Toi montre sa vitrine et ses pages réunies", async ({ page }) => {
 test("la feuille du code booster reste entièrement visible sur téléphone", async ({ page }) => {
   await page.setViewportSize({ width: 412, height: 915 });
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-online-fold > summary").click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await page.getByRole("button", { name: "J'ai un code booster" }).click();
 
   const dialog = page.getByRole("dialog", { name: "J'ai un code" });

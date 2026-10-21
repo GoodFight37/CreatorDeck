@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
-import { BookOpen, CircleUserRound, Hammer, X, Zap } from "lucide-react";
+import { X } from "lucide-react";
 import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
 import { CollectionView } from "@/components/binder-view";
@@ -11,6 +11,8 @@ import { AppUpdateBanner } from "@/components/app-update-banner";
 import { useCircle, writeCircle } from "@/lib/circle-store";
 import { HomeView } from "@/components/drop-view";
 import { MissionsView } from "@/components/missions-view";
+import { BinderObject, SachetObject, TargetObject } from "@/components/nav-objects";
+import { SettingsSheet } from "@/components/settings-sheet";
 import { ProfileView } from "@/components/profile-view";
 
 import { FriendsSheet } from "@/components/friends-sheet";
@@ -36,7 +38,6 @@ import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
 import { usePoints, type PointsOutcome } from "@/hooks/use-points";
 import { usePush } from "@/hooks/use-push";
-import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { useInbox } from "@/hooks/use-inbox";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useTwitchReturn } from "@/hooks/use-twitch-return";
@@ -61,7 +62,6 @@ import { gameDay } from "@/lib/progression";
 import {
   PACK_TEAR_HAPTIC,
 } from "@/lib/reveal";
-import { dossiersDuJour } from "@/lib/tribunal";
 
 import { DEFAULT_THEME_ID, THEME_VAR_NAMES } from "@/lib/cosmetics";
 import { applyTiltChoice } from "@/lib/tilt";
@@ -69,12 +69,12 @@ import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 
 
-type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
+type Tab = "home" | "collection" | "missions" | "profile";
 
 /*
- * **Quatre piliers, et c'est tout** : Drop, Binder, Atelier, Toi. Les Objectifs
- * restent hors de la barre — c'est un rendez-vous quotidien, pas un endroit où
- * l'on vit — et s'ouvrent depuis le Drop et depuis le menu.
+ * **Trois objets** (Malik, 21 octobre 2026) : le Binder, le Drop au centre et
+ * plus gros, les Objectifs. L'Atelier est un mode du Binder ; le profil s'ouvre
+ * par le badge de niveau de l'en-tête, les réglages par l'engrenage.
  *
  * La simulation de streameur (« Ta chaîne ») a quitté l'application le
  * 8 octobre 2026 : ni onglet, ni ligne d'accueil, ni écran. Son moteur est
@@ -82,10 +82,9 @@ type Tab = "home" | "collection" | "missions" | "atelier" | "profile";
  * migrations) — mais rien de tout ça n'est affiché.
  */
 const NAV_ITEMS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "home", label: "Drop", icon: <Zap size={22} /> },
-  { id: "collection", label: "Binder", icon: <BookOpen size={22} /> },
-  { id: "atelier", label: "Atelier", icon: <Hammer size={22} /> },
-  { id: "profile", label: "Toi", icon: <CircleUserRound size={22} /> },
+  { id: "collection", label: "Binder", icon: <BinderObject /> },
+  { id: "home", label: "Drop", icon: <SachetObject /> },
+  { id: "missions", label: "Objectifs", icon: <TargetObject /> },
 ];
 
 function readLocalMarker(key: string): boolean {
@@ -95,7 +94,6 @@ function readLocalMarker(key: string): boolean {
 
 
 export function CreatorDeckApp() {
-  const { unreadCount: unreadReleaseNotes } = useReleaseNotes();
   useEffect(() => {
     applyTiltChoice();
   }, []);
@@ -211,6 +209,9 @@ export function CreatorDeckApp() {
   const [arenaOpen, setArenaOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
   const [tribunalOpen, setTribunalOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  // L'Atelier vit dans le Binder : un mode, pas un onglet.
+  const [binderMode, setBinderMode] = useState<"collection" | "atelier">("collection");
   useEffect(() => {
     setMusicScene(tribunalOpen ? "tribunal" : preparingLive || tearing || drawnCards.length > 0 ? "pack" : "hub");
   }, [drawnCards.length, tearing, preparingLive, tribunalOpen]);
@@ -287,6 +288,8 @@ export function CreatorDeckApp() {
   // Pendant le tirage, le retour quitte la scène mais laisse la requête vivre.
   // Le résultat apparaîtra ensuite sans déclencher un second booster.
   useBackHandler(tearing && drawnCards.length === 0, leavePendingPresentation);
+  // Les réglages sous les feuilles qu'ils ouvrent (compte, thème, taux, notifications).
+  useBackHandler(settingsOpen, fermerFeuille(setSettingsOpen));
   useBackHandler(themeOpen, fermerFeuille(setThemeOpen));
   useBackHandler(Boolean(cloud.profile || cloud.profileBusy), () => cloudStore.closeProfile());
   useBackHandler(accountOpen, () => {
@@ -330,27 +333,6 @@ export function CreatorDeckApp() {
   // Vue dérivée : la recharge passive est recalculée à chaque tick d'horloge,
   // donc les boosters « arrivent » à l'écran sans action de l'utilisateur.
   const game = useMemo(() => (state ? getGameView(state, now) : null), [state, now]);
-
-  /**
-   * Le Tribunal du jour, en un coup d'œil : combien de dossiers attendent, et
-   * si la séance est déjà close.
-   *
-   * Le tirage est recalculé ici **pour l'affichage seulement** : le Tribunal,
-   * lui, se retire tout seul (même fonction, même journée, même joueur), donc
-   * les deux ne peuvent pas se contredire.
-   */
-  const tribunal = useMemo(() => {
-    const jour = gameDay(now);
-    if (!state) return { restants: 5, close: false, claimed: false };
-    const seance = state.tribunal.day === jour ? state.tribunal : null;
-    const rendus = seance ? Object.keys(seance.verdicts).length : 0;
-    const total = dossiersDuJour(jour, state.playerId).length;
-    return {
-      restants: Math.max(0, total - rendus),
-      close: rendus >= total && total > 0,
-      claimed: seance?.claimed ?? false,
-    };
-  }, [state, now]);
 
   // Un seul endroit décide qui tire (le serveur ou l'appareil) : l'écran ne
   // fait qu'afficher ce qui revient — l'overlay 16:9 passe par le même module.
@@ -419,7 +401,7 @@ export function CreatorDeckApp() {
   // superposés et un tutoriel qui intercepte les appuis derrière le compte.
   const presentationOccupied = accountOpen || friendsOpen || marketOpen || lastPackOpen ||
     wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || oddsOpen || circleEditOpen ||
-    themeOpen || studioOpen || Boolean(cloud.profile || cloud.profileBusy) ||
+    themeOpen || studioOpen || settingsOpen || Boolean(cloud.profile || cloud.profileBusy) ||
     tearing || drawnCards.length > 0;
   const showTutorial = tutorialStep !== null || (tutorialDue && !presentationOccupied);
 
@@ -440,17 +422,6 @@ export function CreatorDeckApp() {
       window.removeEventListener("keydown", startOnFirstGesture, true);
     };
   }, [game, showTutorial, tutorialDue]);
-
-  function replayWelcomeTutorial() {
-    try {
-      window.localStorage.removeItem(welcomeKey);
-      window.localStorage.removeItem(tutorialCompletionKey);
-    } catch { /* Le tutoriel reste rejouable dans cette session. */ }
-    setWelcomeMarker({ key: welcomeKey, done: false });
-    setCompletedTutorialMarker({ key: tutorialCompletionKey, done: false });
-    setTutorialStep(0);
-    setTab("home");
-  }
 
   async function finishWelcomeTutorial() {
     // This button is the transition into the game for a new player. Start now,
@@ -762,6 +733,11 @@ export function CreatorDeckApp() {
   }
 
   if (!game) return <LoadingScreen />;
+  const boosterReady = game.player.packs > 0;
+  const objectivesWaiting =
+    game.missions.some((mission) => mission.done && !mission.claimed) ||
+    game.milestones.some((milestone) => milestone.progress >= milestone.target && !milestone.claimed) ||
+    game.seasons.some((season) => season.claimable > 0);
 
   const revealPresentation = drawnCards.length ? (
         <RevealOverlay
@@ -803,7 +779,12 @@ export function CreatorDeckApp() {
           <button type="button" disabled={giftBusy} onClick={() => void claimAndOpenWelcomeGift()}>{giftBusy ? "Préparation…" : cloud.onboarding.giftClaimed ? `Ouvrir un booster cadeau · ${cloud.onboarding.giftRemaining} restants` : "Ouvrir mon premier booster"}</button>
         </div>
       ) : null}
-      <TopBar game={game} />
+      <TopBar
+        game={game}
+        onShowProfile={() => setTab("profile")}
+        onShowSettings={ouvrirFeuille(setSettingsOpen)}
+        settingsAlert={cloud.syncNeedsChoice || cloud.isError}
+      />
       <AppUpdateBanner />
       <div className="app-content">
         {tab === "home" ? (
@@ -817,17 +798,9 @@ export function CreatorDeckApp() {
             onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
             onUseHourglass={handleUseHourglass}
             onShowOdds={ouvrirFeuille(setOddsOpen)}
-            onShowMissions={() => setTab("missions")}
-            onShowAtelier={() => setTab("atelier")}
-            onShowArena={ouvrirFeuille(setArenaOpen)}
-            onOpenScene={() => void handleOpenScenePack()}
-            onShowTribunal={ouvrirFeuille(setTribunalOpen)}
-            tribunalRestants={tribunal.restants}
-            tribunalClose={tribunal.close}
-            tribunalPaid={tribunal.claimed}
+            onShowAtelier={() => { setBinderMode("atelier"); setTab("collection"); }}
             opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
-            sceneBusy={sceneOpening || opening}
             now={now}
             serverReserve={cloud.configured}
             tutorialAvailable={tutorialAvailable}
@@ -837,7 +810,8 @@ export function CreatorDeckApp() {
         ) : null}
         {tab === "collection" ? (
           <CollectionView game={game} themeStyle={themeStyle} onCraft={handleCraftFromBinder} onGoDrop={() => setTab("home")}
-            onEditCircle={() => setCircleEditOpen(true)} />
+            onEditCircle={() => setCircleEditOpen(true)} mode={binderMode} onModeChange={setBinderMode}
+            onNotice={showNotice} onError={showError} />
         ) : null}
         {tab === "missions" ? (
           <MissionsView
@@ -846,42 +820,28 @@ export function CreatorDeckApp() {
             sceneBusy={sceneOpening}
             onShowTribunal={ouvrirFeuille(setTribunalOpen)}
             onShowArena={ouvrirFeuille(setArenaOpen)}
+            onShowMarket={ouvrirFeuille(setMarketOpen)}
+            onShowFriends={ouvrirFeuille(setFriendsOpen)}
+            onShowLastPack={ouvrirFeuille(setLastPackOpen)}
+            onShowLeaderboard={() => { setAccountFocus("leaderboard"); setAccountOpen(true); }}
+            onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
             onClaimSeason={handleClaimSeason}
             onClaimMilestone={handleClaimMilestone}
             onNotice={showNotice}
             onError={showError}
           />
         ) : null}
-        {tab === "atelier" ? (
-          <AtelierView game={game} onNotice={showNotice} onError={showError} onGoDrop={() => setTab("home")} onGoBinder={() => setTab("collection")} />
-        ) : null}
         {tab === "profile" ? (
           <ProfileView
-            onProgressReset={replayWelcomeTutorial}
             game={game}
-            onNotice={showNotice}
-            onError={showError}
-            onShowOdds={ouvrirFeuille(setOddsOpen)}
-            onShowMissions={() => setTab("missions")}
-            onShowThemes={ouvrirFeuille(setThemeOpen)}
             onShowStudio={ouvrirFeuille(setStudioOpen)}
             onShowAccount={() => {
               setAccountFocus(null);
               setAccountOpen(true);
             }}
-            onShowLeaderboard={() => {
-              setAccountFocus("leaderboard");
-              setAccountOpen(true);
-            }}
-            onShowFriends={ouvrirFeuille(setFriendsOpen)}
-            onShowMarket={ouvrirFeuille(setMarketOpen)}
-            onShowLastPack={ouvrirFeuille(setLastPackOpen)}
-            onShowArena={ouvrirFeuille(setArenaOpen)}
-            onShowTribunal={ouvrirFeuille(setTribunalOpen)}
             onGoBinder={() => setTab("collection")}
             onGoDrop={() => setTab("home")}
             onShowWishlist={ouvrirFeuille(setWishlistOpen)}
-            onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
             onShowOwnProfile={() => {
               if (cloud.userId) void cloudStore.openProfile(cloud.userId);
             }}
@@ -889,25 +849,29 @@ export function CreatorDeckApp() {
         ) : null}
       </div>
 
-      <span id="release-notes-nav-description" className="visually-hidden">
-        {unreadReleaseNotes > 0 ? `${unreadReleaseNotes} note${unreadReleaseNotes > 1 ? "s" : ""} non lue${unreadReleaseNotes > 1 ? "s" : ""} dans Nouveautés. ` : ""}
-      </span>
+      <span id="nav-drop-ready" className="visually-hidden">Un booster est prêt.</span>
+      <span id="nav-objectives-ready" className="visually-hidden">Une récompense est à réclamer.</span>
       <nav className="bottom-nav" aria-label="Navigation principale">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            className={tab === item.id ? "active" : ""}
-            // Changer d'onglet **ne sonne pas** : on se déplace (8 octobre
-            // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
-            onClick={() => setTab(item.id)}
-            aria-current={tab === item.id ? "page" : undefined}
-            aria-describedby={item.id === "profile" && unreadReleaseNotes > 0 ? "release-notes-nav-description" : undefined}
-          >
-            {item.icon}
-            <span>{item.label}</span>
-            {item.id === "profile" && unreadReleaseNotes > 0 ? <i className="nav-news-dot" aria-hidden="true" /> : null}
-          </button>
-        ))}
+        {NAV_ITEMS.map((item) => {
+          const ready = item.id === "home" ? boosterReady : item.id === "missions" ? objectivesWaiting : false;
+          return (
+            <button
+              key={item.id}
+              className={`nav-object${item.id === "home" ? " hub" : ""}${tab === item.id ? " active" : ""}${ready ? " ready" : ""}`}
+              // Changer d'onglet **ne sonne pas** : on se déplace (8 octobre
+              // 2026). Le son du jeu accompagne ce qu'on fait, pas où l'on va.
+              onClick={() => {
+                if (item.id === "collection") setBinderMode("collection");
+                setTab(item.id);
+              }}
+              aria-current={tab === item.id ? "page" : undefined}
+              aria-describedby={ready ? (item.id === "home" ? "nav-drop-ready" : "nav-objectives-ready") : undefined}
+            >
+              <span className="nav-object-art">{item.icon}{ready ? <i className="nav-ready-dot" aria-hidden="true" /> : null}</span>
+              <span className="nav-object-label">{item.label}</span>
+            </button>
+          );
+        })}
       </nav>
 
       {error ? (
@@ -951,6 +915,18 @@ export function CreatorDeckApp() {
         playPackOpening();
         buzz(PACK_TEAR_HAPTIC);
       }} onComplete={terminerDechirure} onLeavePending={leavePendingPresentation}>{revealPresentation}</PackTear> : revealPresentation}
+      {/* Les réglages d'abord : les feuilles qu'ils ouvrent (taux, compte, notifications) passent par-dessus. */}
+      {settingsOpen ? (
+        <SettingsSheet
+          onClose={fermerFeuille(setSettingsOpen)}
+          onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
+          onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
+          onShowThemes={ouvrirFeuille(setThemeOpen)}
+          onShowOdds={ouvrirFeuille(setOddsOpen)}
+          onNotice={showNotice}
+          onError={showError}
+        />
+      ) : null}
       {oddsOpen ? (
         <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
@@ -999,7 +975,7 @@ export function CreatorDeckApp() {
             return { status: outcome.status, message: outcome.message, delta: outcome.delta };
           }}
           onShowObjective={() => { setTribunalOpen(false); setTab("missions"); }}
-          onClose={() => { setTribunalOpen(false); setTab("home"); }}
+          onClose={() => setTribunalOpen(false)}
         />
       ) : null}
 

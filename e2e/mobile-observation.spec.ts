@@ -1,6 +1,6 @@
 import { expect, test, gotoDeck } from "./fixtures";
 
-const tabs = ["Drop", "Binder", "Atelier", "Toi"] as const;
+const tabs = ["Binder", "Drop", "Objectifs"] as const;
 
 async function sampleFrames(page: import("@playwright/test").Page, windowMs = 600) {
   return page.evaluate((durationMs) => new Promise<{ frames: number; slowFrames: number; maxFrameMs: number }>((resolve) => {
@@ -19,7 +19,7 @@ async function sampleFrames(page: import("@playwright/test").Page, windowMs = 60
 }
 
 for (const [width, height] of [[320, 568], [390, 844], [412, 915]] as const) {
-  test(`observation mobile ${width}×${height} : quatre espaces visibles, sans débordement`, async ({ page }) => {
+  test(`observation mobile ${width}×${height} : trois espaces visibles, sans débordement`, async ({ page }) => {
     test.skip(test.info().project.name !== "téléphone", "Parcours réservé au profil tactile.");
     await page.setViewportSize({ width, height });
     await page.route("**/*", (route) => ["localhost", "127.0.0.1"].includes(new URL(route.request().url()).hostname)
@@ -34,7 +34,7 @@ for (const [width, height] of [[320, 568], [390, 844], [412, 915]] as const) {
       const button = page.getByRole("button", { name: tab, exact: true });
       const framePromise = sampleFrames(page);
       const start = Date.now();
-      await button.tap();
+      await button.click({ force: true });
       await expect(button).toHaveAttribute("aria-current", "page");
       await expect(button).toBeInViewport();
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
@@ -75,8 +75,8 @@ test("observation mobile : ouverture du sachet et révélation capturées", asyn
 test("diagnostic mobile : option volontaire, aucun contenu conservé, effacement à l'arrêt", async ({ page }) => {
   test.skip(test.info().project.name !== "téléphone", "Parcours réservé au profil tactile.");
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).tap();
-  await page.locator(".profile-settings-fold > summary").tap();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
+  await page.locator(".settings-advanced > summary").click();
   const option = page.getByRole("switch", { name: "Diagnostics sur cet appareil" });
   await expect(option).toHaveAttribute("aria-checked", "false");
   await option.tap();

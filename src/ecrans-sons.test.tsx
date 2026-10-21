@@ -29,7 +29,7 @@ describe("le réglage du son", () => {
   async function ecranToi() {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
-    banc.appuyer("Toi");
+    banc.appuyerNom(/^Réglages/);
   }
 
   function switches() {
@@ -71,16 +71,19 @@ describe("le réglage du son", () => {
     const avant = sons.oscillateurs + sons.bruitages;
 
     // Un tour complet des onglets, dans les deux sens.
-    for (const onglet of ["Drop", "Binder", "Atelier", "Toi", "Drop", "Toi"]) banc.appuyer(onglet);
+    banc.fermer();
+    for (const onglet of ["Binder", "Atelier", "Drop", "Objectifs", "Drop"]) banc.appuyer(onglet);
     // Puis les portes de l'écran Toi : le compte, les taux, les objectifs, le
     // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
     // d'écran, toutes muettes.
     for (const porte of ["Mon compte", "Taux officiels", "Thème du classeur"]) {
-      banc.appuyer(porte);
+      banc.appuyerNom(/^Réglages/);
+      banc.appuyer(new RegExp(`^${porte}`));
       // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.
-      banc.appuyerNom("Fermer");
+      act(() => [...document.querySelectorAll<HTMLButtonElement>('button[aria-label="Fermer"]')].at(-1)!.click());
+      if (document.querySelector('.settings-overlay')) banc.fermer();
     }
-    banc.appuyer(/^Objectifs et saisons/);
+    banc.appuyer("Objectifs");
 
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
@@ -90,6 +93,7 @@ describe("le réglage du son", () => {
     await act(async () => {});
     const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
       .__sons;
+    banc.fermer();
     banc.appuyer("Binder");
     const avant = sons.oscillateurs + sons.bruitages;
 

@@ -1,40 +1,26 @@
 "use client";
 
 /**
- * L'écran **Toi** : vitrine, progression et réglages essentiels.
+ * Le profil (ouvert depuis le badge de niveau de l'en-tête) : vitrine,
+ * progression, collection, wishlist. Les réglages vivent derrière l'engrenage
+ * (`settings-sheet.tsx`), les activités dans les Objectifs.
  */
 import "./profile-collection.css";
-import { ReleaseNotesSheet } from "@/components/release-notes-sheet";
-import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { useBackHandler } from "@/hooks/use-back-handler";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
-import { CreditsBlock } from "@/components/credits";
-import { ImageCredits } from "@/components/image-credits";
-import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { CreatorCard } from "@/components/creator-card";
-import { Capacitor } from "@capacitor/core";
 import { useBinderGoal } from "@/hooks/use-binder-goal";
 import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binder-collections";
 import { useCloud } from "@/hooks/use-cloud";
 import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, VARIANT_META, type Rarity } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
 import { MAX_SHOWCASE } from "@/lib/cloud/showcase";
-import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
-import {
-  isMusicMuted,
-  isMuted,
-  setMusicMuted,
-  setMuted,
-} from "@/lib/sfx";
 import { type GameView } from "@/lib/game-engine";
-import { BUILD_COMMIT, BUILD_VERSION } from "@/lib/build-version";
-import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { diagnosticsEnabled, exportDiagnostics, setDiagnosticsEnabled } from "@/lib/local-diagnostics";
 
 const RARITY_SCORE: Record<Rarity, number> = {
   common: 0,
@@ -47,49 +33,22 @@ const VARIANT_SCORE = { standard: 0, live: 1, holo: 2, gold: 3 } as const;
 
 export function ProfileView({
   game,
-  onNotice,
-  onProgressReset,
-  onError,
-  onShowOdds,
-  onShowMissions,
-  onShowThemes,
   onShowStudio,
   onShowAccount,
-  onShowLeaderboard,
-  onShowFriends,
-  onShowMarket,
-  onShowLastPack,
-  onShowArena,
-  onShowNotifications,
   onShowOwnProfile,
   onShowWishlist,
-  onShowTribunal,
   onGoBinder,
   onGoDrop,
 }: {
   game: GameView;
-  onProgressReset?: () => void;
-  onNotice: (message: string) => void;
-  onError: (message: string) => void;
-  onShowOdds: () => void;
-  onShowMissions: () => void;
-  onShowThemes?: () => void;
   onShowStudio: () => void;
   onShowAccount: () => void;
-  onShowLeaderboard: () => void;
-  onShowFriends: () => void;
-  onShowMarket: () => void;
-  onShowLastPack: () => void;
-  onShowArena: () => void;
-  onShowNotifications: () => void;
   onShowOwnProfile: () => void;
   onShowWishlist: () => void;
-  onShowTribunal?: () => void;
   onGoBinder?: () => void;
   onGoDrop?: () => void;
 }) {
   const cloud = useCloud();
-  const arenaCards = new Set(game.cards.map((card) => card.creatorSlug)).size;
 
   useEffect(() => {
     if (!cloud.configured || !cloud.userId) return;
@@ -135,22 +94,9 @@ export function ProfileView({
   const completedPages = collections.filter((collection) => collection.missing.length === 0).length;
   const legendaryNames = new Set(ownedCards.filter((card) => card.rarity === "legendary").map((card) => card.creatorSlug)).size;
 
-  const [soundOn, setSoundOn] = useState(() => !isMuted());
-  const [musicOn, setMusicOn] = useState(() => !isMusicMuted());
-  const [diagnosticsOn, setDiagnosticsOn] = useState(() => diagnosticsEnabled());
-
-  useEffect(() => {
-    applyTiltChoice();
-  }, []);
-
-  const [tiltOn, setTiltOn] = useState(() => tiltEnabled());
-  const canTilt = true;
   const studioAvailable = process.env.NODE_ENV !== "production";
   const [tools, setTools] = useState(0);
   const [lastTap, setLastTap] = useState(0);
-  const [showPromoCode, setShowPromoCode] = useState(false);
-  const [showReleaseNotes, setShowReleaseNotes] = useState(false);
-  const { unreadCount: unreadNotes } = useReleaseNotes();
 
   function tapLevel() {
     if (!studioAvailable) return;
@@ -162,65 +108,6 @@ export function ProfileView({
       onShowStudio();
     } else {
       setTools(count);
-    }
-  }
-
-  function toggleTilt() {
-    const next = !tiltOn;
-    setTiltOn(next);
-    setTiltEnabled(next);
-  }
-
-  function toggleSound() {
-    const next = !soundOn;
-    setSoundOn(next);
-    setMuted(!next);
-  }
-
-  function toggleMusic() {
-    const next = !musicOn;
-    setMusicOn(next);
-    setMusicMuted(!next);
-  }
-
-  function toggleDiagnostics() {
-    const next = !diagnosticsOn;
-    setDiagnosticsEnabled(next);
-    setDiagnosticsOn(next);
-  }
-
-  async function shareDiagnostics() {
-    const text = exportDiagnostics();
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "Diagnostic CreatorDeck", text });
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text);
-        onNotice("Diagnostic copié.");
-      } else onError("Le partage est indisponible sur cet appareil.");
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      onError("Le diagnostic n’a pas pu être partagé.");
-    }
-  }
-
-  async function handleReset() {
-    if (!window.confirm("Réinitialiser la progression ? Toutes tes cartes seront perdues.\n\nSi tu joues connecté, ce qui est enregistré en ligne est effacé aussi.")) {
-      return;
-    }
-    gameStore.reset();
-    if (!cloud.configured || !cloud.userId) {
-      onProgressReset?.();
-      onNotice("Nouvelle partie lancée.");
-      return;
-    }
-    onNotice("Nouvelle partie lancée.");
-    const outcome = await cloudStore.resetProgress();
-    if (outcome.status === "done") {
-      onProgressReset?.();
-      onNotice(outcome.message);
-    } else if (outcome.status === "unavailable") {
-      onError(`Partie locale remise à zéro. En ligne : ${outcome.message}`);
     }
   }
 
@@ -244,11 +131,6 @@ export function ProfileView({
           <span>{CATALOG_EDITION}</span>
         </div>
       </section>
-
-      <button type="button" className="profile-account-status" onClick={onShowAccount}>
-        <span>{!cloud.configured ? "Profil de développement" : !cloud.userId ? "Lie ton compte pour retrouver ta collection" : cloud.syncNeedsChoice ? "Synchronisation à vérifier" : cloud.saveSyncing ? "Sauvegarde en cours…" : cloud.pending ? "Sauvegarde en attente" : cloud.isError ? "Compte · une action demande ton attention" : "Compte connecté"}</span>
-        <ChevronRight size={16} />
-      </button>
 
       {cloud.isError && cloud.message ? <p className="profile-account-feedback" role="alert">{cloud.message}</p> : null}
 
@@ -345,22 +227,7 @@ export function ProfileView({
         </button>
       ) : null}
 
-      <button type="button" className="profile-news" onClick={() => setShowReleaseNotes(true)} aria-label={`Nouveautés${unreadNotes ? ` · ${unreadNotes} notes non lues` : " · Tout est lu"}`}>
-        <BookOpen size={22} /><span><strong>Nouveautés</strong><small>Les mises à jour de CreatorDeck</small></span>
-        {unreadNotes > 0 ? <b aria-hidden="true">{unreadNotes}</b> : <ChevronRight size={18} />}
-      </button>
-      {showReleaseNotes ? <ReleaseNotesSheet onClose={() => setShowReleaseNotes(false)} /> : null}
-
-      <details className="profile-online-fold">
-        <summary>Autres activités</summary>
-        <button type="button" className="menu-row" onClick={onShowMissions}>
-          <span>Objectifs et saisons</span><ChevronRight size={16} />
-        </button>
-        {onShowTribunal ? <button type="button" className="menu-row" onClick={onShowTribunal}><span>Tribunal des Bannis</span><ChevronRight size={16} /></button> : null}
-        <button type="button" className="account-button ghost" onClick={() => setShowPromoCode(true)}>
-          J&apos;ai un code booster
-        </button>
-        {/* Wishlist */}
+      {/* Wishlist */}
       {cloud.configured ? (
         <section className="wishlist-block" aria-label="Wishlist">
           <div className="wishlist-title">
@@ -391,148 +258,11 @@ export function ProfileView({
         </section>
       ) : null}
 
-      {/* Compte & En ligne */}
-      <section className="menu-group" aria-label="Compte">
-        <h2>Compte</h2>
-        <button type="button" className="menu-row" onClick={onShowAccount}>
-          <span>Mon compte</span>
-          <ChevronRight size={16} />
+      {cloud.configured && cloud.userId ? (
+        <button type="button" className="profile-identity-action" onClick={onShowOwnProfile}>
+          Ma fiche publique <ChevronRight size={16} />
         </button>
-
-        {cloud.configured && cloud.userId ? (
-          <>
-            <button type="button" className="menu-row" onClick={onShowLeaderboard}>
-              <span>Classement mondial</span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowOwnProfile}>
-              <span>Ma fiche publique</span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowFriends}>
-              <span>Amis</span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowMarket}>
-              <span className="menu-label">
-                Hôtel des ventes
-                <small className="menu-state">
-                  {game.player.points.toLocaleString("fr-FR")} pts
-                </small>
-              </span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowArena}>
-              <span className="menu-label">
-                Arène
-                <small className="menu-state">
-                  {arenaCards < 5 ? `${arenaCards}/5 cartes distinctes` : `${arenaCards} cartes · minimum 5`} · 1 créateur en direct au dépôt
-                </small>
-              </span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowLastPack}>
-              <span>Last Pack</span>
-              <ChevronRight size={16} />
-            </button>
-            <button type="button" className="menu-row" onClick={onShowNotifications}>
-              <span>Notifications</span>
-              <ChevronRight size={16} />
-            </button>
-          </>
-        ) : cloud.configured ? (
-          <button type="button" className="menu-row" onClick={onShowAccount}>
-            <span className="menu-label">
-              Fonctionnalités en ligne
-              <small className="menu-state">Arène, Ventes, Amis · Connexion requise</small>
-            </span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-      </section>
-      </details>
-
-      {/* Réglages */}
-      <details className="profile-settings-fold">
-      <summary>Réglages et informations</summary>
-      <section className="menu-group" aria-label="Réglages">
-        <h2>Réglages</h2>
-        {onShowThemes ? (
-          <button type="button" className="menu-row" onClick={onShowThemes}>
-            <span>Thème du classeur</span>
-            <ChevronRight size={16} />
-          </button>
-        ) : null}
-        <button
-          type="button"
-          className="menu-row"
-          role="switch"
-          aria-checked={soundOn}
-          onClick={toggleSound}
-        >
-          <span>Son de l’application</span>
-          <span className="switch" data-on={soundOn ? "on" : "off"} aria-hidden="true">
-            <i />
-          </span>
-        </button>
-        <button
-          type="button"
-          className="menu-row"
-          role="switch"
-          aria-checked={musicOn}
-          onClick={toggleMusic}
-        >
-          <span>Musique</span>
-          <span className="switch" data-on={musicOn ? "on" : "off"} aria-hidden="true">
-            <i />
-          </span>
-        </button>
-
-        {canTilt ? (
-          <button
-            type="button"
-            className="menu-row"
-            role="switch"
-            aria-checked={tiltOn}
-            onClick={toggleTilt}
-          >
-            <span>Reflets des cartes</span>
-            <span className="switch" data-on={tiltOn ? "on" : "off"} aria-hidden="true">
-              <i />
-            </span>
-          </button>
-        ) : null}
-
-        <button type="button" className="menu-row" role="switch" aria-checked={diagnosticsOn} onClick={toggleDiagnostics}>
-          <span>Diagnostics sur cet appareil</span>
-          <span className="switch" data-on={diagnosticsOn ? "on" : "off"} aria-hidden="true"><i /></span>
-        </button>
-        <small>Erreurs, lenteurs et fluidité des ouvertures, avec l’écran concerné. Gardées ici, aucun envoi automatique. Couper efface le journal.</small>
-        {diagnosticsOn ? (
-          <button type="button" className="menu-row" onClick={() => void shareDiagnostics()}>
-            <span>Partager le diagnostic</span><ChevronRight size={16} />
-          </button>
-        ) : null}
-
-        <button type="button" className="menu-row" onClick={onShowOdds}><span>Taux officiels</span><ChevronRight size={16} /></button>
-        <ImageCredits />
-        <small
-          className="profile-build-version"
-          title={BUILD_COMMIT ? `Commit complet : ${BUILD_COMMIT}` : "Build local sans commit Git"}
-          aria-label={`Version ${Capacitor.isNativePlatform() ? "Android" : "Web"} ${BUILD_VERSION}`}
-        >
-          Version {Capacitor.isNativePlatform() ? "Android" : "Web"} · {BUILD_VERSION}
-        </small>
-      </section>
-
-      <CreditsBlock />
-
-      <details className="profile-danger-fold"><summary>Gestion de la progression</summary>
-        <p>La réinitialisation efface les cartes et la progression. Une confirmation sera demandée.</p>
-        <button type="button" className="menu-reset" onClick={() => void handleReset()}>Réinitialiser la progression</button>
-      </details>
-      </details>
-      {showPromoCode ? <PromoCodeSheet onClose={() => setShowPromoCode(false)} /> : null}
+      ) : null}
     </div>
   );
 }

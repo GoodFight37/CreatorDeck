@@ -3,13 +3,12 @@ import { RELEASE_NOTES, RELEASE_NOTES_READ_KEY } from "../src/lib/release-notes"
 
 test("Nouveautés : découverte, lecture choisie, focus et persistance", async ({ page }) => {
   await gotoDeck(page);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await expect(page.locator(".nav-news-dot")).toBeVisible();
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await expect(page.getByRole("dialog").last()).toHaveCount(0);
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   const trigger = page.getByRole("button", { name: /^Nouveautés ·/ });
   await expect(trigger).toContainText(`${RELEASE_NOTES.length}`);
   await trigger.click();
-  let dialog = page.getByRole("dialog");
+  let dialog = page.getByRole("dialog").last();
   await expect(dialog).toHaveAccessibleName("Nouveautés");
   await expect(dialog).toBeFocused();
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", true);
@@ -27,15 +26,15 @@ test("Nouveautés : découverte, lecture choisie, focus et persistance", async (
   await expect(page.locator(".app-shell")).toHaveJSProperty("inert", false);
   await expect(trigger).toContainText(`${RELEASE_NOTES.length - 1}`);
   await page.reload();
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await page.getByRole("button", { name: /^Nouveautés ·/ }).click();
-  dialog = page.getByRole("dialog");
+  dialog = page.getByRole("dialog").last();
   await expect(dialog.locator(".release-note-seen")).toHaveCount(1);
   await dialog.getByRole("button", { name: /^Non lues/ }).click();
   await expect(dialog.locator(".release-note-row")).toHaveCount(RELEASE_NOTES.length - 1);
   await dialog.getByRole("button", { name: "Tout marquer comme lu" }).click();
   await expect(dialog.getByRole("heading", { name: "Tu es à jour" })).toBeVisible();
-  await expect(page.locator(".nav-news-dot")).toHaveCount(0);
+  await expect(page.locator(".settings-panel .menu-count")).toHaveCount(0);
   await dialog.getByRole("button", { name: "Voir toutes les mises à jour" }).click();
   await expect(dialog.locator(".release-note-row")).toHaveCount(RELEASE_NOTES.length);
 });
@@ -43,9 +42,9 @@ test("Nouveautés : découverte, lecture choisie, focus et persistance", async (
 test("Nouveautés : lecture mobile, texte long et mouvements réduits", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await page.getByRole("button", { name: /^Nouveautés ·/ }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole("dialog").last();
   for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 1024, height: 768 }]) {
     await page.setViewportSize(viewport);
     // Le viewport dynamique peut être actualisé au rendu suivant sur mobile.
@@ -76,14 +75,14 @@ test("Nouveautés : stockage refusé, lecture valable pour la session", async ({
     };
   }, RELEASE_NOTES_READ_KEY);
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await page.getByRole("button", { name: /^Nouveautés ·/ }).click();
-  const dialog = page.getByRole("dialog");
+  const dialog = page.getByRole("dialog").last();
   await dialog.getByRole("button", { name: "Tout marquer comme lu" }).click();
   await expect(dialog.getByRole("status")).toContainText("cette session seulement");
   await expect(page.locator(".nav-news-dot")).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: /^Nouveautés · Tout est lu/ }).click();
+  await page.getByRole("button", { name: "Nouveautés", exact: true }).click();
   await expect(dialog.locator(".release-note-seen")).toHaveCount(RELEASE_NOTES.length);
 });
 
@@ -92,13 +91,13 @@ test("Nouveautés : les lectures se propagent entre deux onglets", async ({ page
   await gotoDeck(page);
   const other = await context.newPage();
   await gotoDeck(other, false);
-  await expect(other.locator(".nav-news-dot")).toBeVisible();
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
+  await other.getByRole("button", { name: /^Réglages/ }).click();
+  await expect(other.locator(".settings-panel .menu-count")).toBeVisible();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await page.getByRole("button", { name: /^Nouveautés ·/ }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Tout marquer comme lu" }).click();
-  await expect(other.locator(".nav-news-dot")).toHaveCount(0);
-  await other.getByRole("button", { name: "Toi", exact: true }).click();
-  await other.getByRole("button", { name: /^Nouveautés · Tout est lu/ }).click();
-  await expect(other.getByRole("dialog").locator(".release-note-seen")).toHaveCount(RELEASE_NOTES.length);
+  await page.getByRole("dialog").last().getByRole("button", { name: "Tout marquer comme lu" }).click();
+  await expect(other.locator(".settings-panel .menu-count")).toHaveCount(0);
+  await other.getByRole("button", { name: "Nouveautés", exact: true }).click();
+  await expect(other.getByRole("dialog").last().locator(".release-note-seen")).toHaveCount(RELEASE_NOTES.length);
   await other.close();
 });

@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { CircleStrip } from "@/components/circle-strip";
+import { AtelierView } from "@/components/atelier-view";
 import { useCircle } from "@/lib/circle-store";
 import { circleLabel } from "@/lib/circle";
 import { CreatorCard } from "@/components/creator-card";
@@ -28,6 +29,10 @@ export function CollectionView({
   onCraft,
   onGoDrop,
   onEditCircle,
+  mode = "collection",
+  onModeChange,
+  onNotice,
+  onError,
 }: {
   game: GameView;
   themeStyle?: CSSProperties;
@@ -35,6 +40,11 @@ export function CollectionView({
   onGoDrop?: () => void;
   /** Ouvrir « Mes chaînes » pour définir ou modifier le cercle. */
   onEditCircle?: () => void;
+  /** L'Atelier est un mode du classeur (21 octobre 2026), plus un onglet. */
+  mode?: "collection" | "atelier";
+  onModeChange?: (mode: "collection" | "atelier") => void;
+  onNotice?: (message: string) => void;
+  onError?: (message: string) => void;
 }) {
   const circle = useCircle();
   const [query, setQuery] = useState("");
@@ -192,8 +202,25 @@ export function CollectionView({
   );
   const ownedSlugs = useMemo(() => new Set(owned.keys()), [owned]);
 
+  const modeSwitch = onModeChange ? (
+    <div className="binder-modes" role="group" aria-label="Classeur">
+      <button type="button" aria-pressed={mode === "collection"} onClick={() => onModeChange("collection")}>Ma collection</button>
+      <button type="button" aria-pressed={mode === "atelier"} onClick={() => onModeChange("atelier")}>Atelier</button>
+    </div>
+  ) : null;
+
+  if (mode === "atelier" && onNotice && onError) {
+    return (
+      <>
+        <div className="binder-modes-bar">{modeSwitch}</div>
+        <AtelierView game={game} onNotice={onNotice} onError={onError} onGoDrop={onGoDrop} onGoBinder={() => onModeChange?.("collection")} />
+      </>
+    );
+  }
+
   return (
     <div className="view collection-view" style={themeStyle}>
+      {modeSwitch}
       {/* L'album se feuillette : ses visages d'abord, sans tableau de bord. */}
       <section className="page-title-row" style={{ marginBottom: "0.2rem" }}>
         <h1 style={{ fontSize: "1.35rem", margin: 0 }}>Mon classeur</h1>

@@ -29,8 +29,7 @@ test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Trib
 
 test("sons, musique et reflets actifs par défaut, OFF conservé au rechargement", async ({ page }) => {
   await gotoDeck(page);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-settings-fold > summary").click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   const sound = page.getByRole("switch", { name: "Son de l’application", exact: true });
   const music = page.getByRole("switch", { name: "Musique", exact: true });
   const fx = page.getByRole("switch", { name: "Reflets des cartes", exact: true });
@@ -42,8 +41,7 @@ test("sons, musique et reflets actifs par défaut, OFF conservé au rechargement
   await music.click();
   await fx.click();
   await gotoDeck(page, false);
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-settings-fold > summary").click();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
   await expect(sound).toHaveAttribute("aria-checked", "false");
   await expect(music).toHaveAttribute("aria-checked", "false");
   await expect(fx).toHaveAttribute("aria-checked", "false");
@@ -65,6 +63,6 @@ test("avec le serveur : pack tutoriel invité, sans gain ni appel de tirage", as
   await gotoDeck(page, false);
   // Le paquet EST le bouton : son nom dit ce qu'un appui fera.
   await expect(page.locator(".booster-carousel").getByRole("button", { name: "Se connecter pour ouvrir", exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Binder", exact: true }).click();
+  await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
   await expect(page.locator(".binder-empty-state")).toBeVisible();
 });

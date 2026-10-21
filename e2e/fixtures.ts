@@ -48,9 +48,7 @@ export function cloudUrl(): string | null {
  * (replié) de Objectifs, et non plus sur l'accueil. Ouvre ce volet et le rend.
  */
 export async function openOtherActivities(page: Page) {
-  await page.getByRole("button", { name: "Toi", exact: true }).click();
-  await page.locator(".profile-online-fold > summary").click();
-  await page.getByRole("button", { name: "Objectifs et saisons", exact: true }).click();
+  await page.getByRole("button", { name: "Objectifs", exact: true }).click({ force: true });
   const details = page.locator("details").filter({ has: page.locator("summary", { hasText: /^Autres activités$/ }) });
   await details.locator("summary").click();
   await expect(details).toHaveAttribute("open", "");

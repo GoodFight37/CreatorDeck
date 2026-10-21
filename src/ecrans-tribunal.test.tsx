@@ -331,8 +331,7 @@ describe("le Tribunal des Bannis", () => {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
     expect(document.querySelector(".home-view")!.textContent).not.toContain("Tribunal");
-    banc.appuyer("Toi");
-    banc.appuyer(/^Objectifs et saisons/);
+    banc.appuyer("Objectifs");
     const details = [...document.querySelectorAll("details")].find((d) => d.querySelector("summary")?.textContent === "Autres activités")!;
     expect(details.open).toBe(false);
     banc.appuyer("Tribunal des Bannis");

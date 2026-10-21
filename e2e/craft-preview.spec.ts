@@ -18,6 +18,7 @@ test("Craft montre les recettes et bloque un achat sous son coût", async ({ pag
     return JSON.parse(localStorage.getItem(key)!).cards;
   });
   const before = await readCards();
+  await page.getByRole("button", { name: "Binder", exact: true }).click({ force: true });
   await page.getByRole("button", { name: "Atelier", exact: true }).click();
   await expect(page.getByRole("button", { name: "Créer", exact: true })).toBeVisible();
   await expect(page.locator(".atelier-rules-details")).not.toHaveAttribute("open");

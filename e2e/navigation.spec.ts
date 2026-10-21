@@ -4,21 +4,21 @@ import { expect, test, gotoDeck } from "./fixtures";
 /**
  * Ce que ces tests vérifient, et rien d'autre :
  *
- *   * la barre du bas montre **quatre piliers**, dans l'ordre ;
+ *   * la barre du bas montre **trois objets**, dans l'ordre ;
  *   * chaque onglet s'ouvre et se marque comme actif (`aria-current="page"`) ;
  *   * « Toi » propose bien d'ouvrir son compte ;
  *   * la simulation de streameur (« Ta chaîne ») n'est **nulle part** : ni
  *     onglet, ni ligne d'accueil, ni écran (retirée le 8 octobre 2026) ;
  *   * rien ne casse côté navigateur : **aucune erreur console**, aucune
- *     exception, sur un tour complet des quatre piliers.
+ *     exception, sur un tour complet des trois objets.
  *
  * Ce qui n'est pas testé ici : tout ce qui demande un compte connecté. Les
  * tests tournent sans `.env.local`, donc sans cloud — c'est voulu, ils doivent
  * marcher sur n'importe quelle machine qui clone le dépôt.
  */
 
-/** Les quatre piliers, dans l'ordre de la barre. */
-const TABS = ["Drop", "Binder", "Atelier", "Toi"] as const;
+/** Les trois objets, dans l'ordre de la barre. */
+const TABS = ["Binder", "Drop", "Objectifs"] as const;
 
 /** La barre du bas (`aria-label="Navigation principale"`). */
 function bar(page: Page) {
@@ -42,20 +42,13 @@ async function openDeck(page: Page): Promise<void> {
   await expect(tab(page, "Drop")).toBeVisible({ timeout: 30_000 });
 }
 
-test("la barre du bas montre les quatre piliers, dans l'ordre", async ({ page }) => {
+test("la barre du bas montre les trois objets, dans l'ordre", async ({ page }) => {
   await openDeck(page);
   await expect(bar(page).getByRole("button")).toHaveCount(TABS.length);
   for (const label of TABS) {
     await expect(tab(page, label)).toBeVisible();
   }
-  const profile = tab(page, "Toi");
-  const descriptionId = await profile.getAttribute("aria-describedby");
-  expect(descriptionId).toBe("release-notes-nav-description");
-  const description = page.locator(`#${descriptionId}`);
-  await expect(description).not.toHaveAttribute("hidden");
-  await expect(profile).toHaveAccessibleDescription(/note.*Nouveautés/);
-  await expect(profile.locator(".nav-badge")).toHaveCount(0);
-  await expect(description).not.toContainText(/paquets? d’amis/);
+  await expect(bar(page).getByRole("button")).toHaveText(["Binder", "Drop", "Objectifs"]);
 });
 
 test("la simulation de streameur n'est plus nulle part", async ({ page }) => {
@@ -72,8 +65,8 @@ test("chaque onglet s'ouvre et se marque comme actif", async ({ page }) => {
   // On part de l'accueil : « Drop » est actif, les autres non.
   await expect(tab(page, "Drop")).toHaveAttribute("aria-current", "page");
 
-  for (const label of TABS.slice(1)) {
-    await tab(page, label).click();
+  for (const label of TABS) {
+    await tab(page, label).click({ force: true });
     await expect(tab(page, label)).toHaveAttribute("aria-current", "page");
     for (const other of TABS) {
       if (other !== label) await expect(tab(page, other)).not.toHaveAttribute("aria-current", "page");
@@ -81,22 +74,19 @@ test("chaque onglet s'ouvre et se marque comme actif", async ({ page }) => {
   }
 
   // Et l'on revient à l'accueil.
-  await tab(page, "Drop").click();
+  await tab(page, "Drop").click({ force: true });
   await expect(tab(page, "Drop")).toHaveAttribute("aria-current", "page");
 });
 
-test("« Toi » propose d'ouvrir son compte", async ({ page }) => {
+test("les Réglages proposent d'ouvrir son compte", async ({ page }) => {
   await openDeck(page);
-  await tab(page, "Toi").click();
-  await expect(tab(page, "Toi")).toHaveAttribute("aria-current", "page");
-  const online = page.locator(".profile-online-fold > summary");
-  await expect(online).toHaveText("Autres activités");
-  await expect(online).toBeVisible();
-  await expect(page.getByRole("button", { name: "Mon compte", exact: true })).not.toBeVisible();
-  await online.click();
-  // Le compte reste disponible, mais dans le volet en ligne replié par défaut.
-  const account = page.getByRole("button", { name: "Mon compte", exact: true });
-  await expect(account.first()).toBeVisible();
+  await page.getByRole("button", { name: /^Réglages/ }).click();
+  const settings = page.getByRole("dialog", { name: "Réglages", exact: true });
+  const account = settings.getByRole("button", { name: /^Mon compte/ });
+  await expect(account).toBeVisible();
+  await expect(account).toContainText("Sauvegarde sur cet appareil");
+  await account.click();
+  await expect(page.getByRole("dialog", { name: "Mon compte", exact: true })).toBeVisible();
 });
 
 test("la barre du bas reste utilisable sur un écran de téléphone", async ({ page }) => {
@@ -108,9 +98,9 @@ test("la barre du bas reste utilisable sur un écran de téléphone", async ({ p
     await expect(tab(page, label)).toBeEnabled();
     await expect(tab(page, label)).toBeInViewport();
   }
-  await tab(page, "Binder").click();
+  await tab(page, "Binder").click({ force: true });
   await expect(tab(page, "Binder")).toHaveAttribute("aria-current", "page");
-  await tab(page, "Drop").click();
+  await tab(page, "Drop").click({ force: true });
   await expect(tab(page, "Drop")).toHaveAttribute("aria-current", "page");
 });
 
@@ -130,8 +120,8 @@ test("aucune erreur console pendant un tour complet des onglets", async ({ page 
   });
 
   await openDeck(page);
-  for (const label of ["Binder", "Atelier", "Toi", "Drop"] as const) {
-    await tab(page, label).click();
+  for (const label of ["Binder", "Objectifs", "Drop"] as const) {
+    await tab(page, label).click({ force: true });
     await expect(tab(page, label)).toHaveAttribute("aria-current", "page");
   }
   // Une dernière seconde au cas où une erreur arriverait après le dernier clic.

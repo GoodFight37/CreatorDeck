@@ -584,18 +584,142 @@
   .home-view .booster-switcher button { transition: none; }
 }
 
-/* ------------------------------------------------------------------ relief
- * Le chrome des sachets : contour encre net et ombre dure, comme un
- * autocollant posé sur le fond. Couleurs seulement par jetons (`:root`). */
-.profile-journey,
-.profile-news,
-.profile-showcase,
-.profile-view .profile-showcase,
-.daily-goal,
-.release-notes-panel,
-.atelier-warmup,
-.search-field {
-  border: 2px solid var(--outline);
-  box-shadow: var(--lift);
+/* ------------------------------------------- trois objets (21 octobre 2026)
+ * Barre du bas : Binder | Drop (au centre, plus gros) | Objectifs. Des objets
+ * dessinés, sans plaque ni contour : l'objet actif se lève et dit son nom.
+ * On change d'onglet des dizaines de fois par jour : 120 à 180 ms, sans rebond.
+ * Seul le sachet bouge tout seul, et seulement quand un booster est prêt. */
+.bottom-nav {
+  left: 50%; right: auto; bottom: 0; transform: translateX(-50%);
+  width: min(100%, 560px); min-height: 0;
+  padding: 0 10px calc(8px + env(safe-area-inset-bottom)); gap: 0;
+  align-items: flex-end;
+  border: 0; border-radius: 0; box-shadow: none;
+  background: rgb(var(--bg-rgb) / .97); border-top: 1px solid var(--line);
+  backdrop-filter: none;
 }
-@media (max-width: 360px) { .top-bar .brand-lockup small { max-width: 28vw; } }
+@media (min-width: 700px) { .bottom-nav { border-inline: 0; } }
+.bottom-nav .nav-object {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px;
+  min-height: 62px; padding: 6px 0 0; border: 0; border-radius: 14px; background: none; box-shadow: none;
+  color: var(--muted); font-size: 12px; font-weight: 700;
+  touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms var(--ease-out), color 160ms ease-out;
+}
+.bottom-nav .nav-object:active { transform: scale(.95); }
+.bottom-nav .nav-object.active { background: none; box-shadow: none; color: var(--text); }
+.bottom-nav .nav-object.active::before { display: none; }
+.bottom-nav .nav-object:focus-visible { outline: 2px solid var(--action); outline-offset: -2px; }
+.nav-object-art { position: relative; display: block; width: 36px; height: 36px; opacity: .72; transition: transform 180ms var(--ease-out), opacity 160ms ease-out; }
+.nav-object-art svg { display: block; width: 100%; height: 100%; }
+.nav-object.active .nav-object-art { opacity: 1; transform: translateY(-4px) scale(1.12); }
+.nav-object-label { opacity: 0; transform: translateY(-3px); transition: opacity 160ms ease-out, transform 180ms var(--ease-out); }
+.nav-object.active .nav-object-label { opacity: 1; transform: none; }
+.nav-object.active::after { content: ""; width: 18px; height: 3px; border-radius: 3px; background: var(--action); }
+.nav-object:not(.active)::after { content: ""; height: 3px; }
+/* Le Drop : au centre, plus gros, il dépasse de la barre. */
+.bottom-nav .nav-object.hub { flex: 1.4; margin-top: -26px; }
+.nav-object.hub .nav-object-art { width: 62px; height: 62px; opacity: .94; filter: drop-shadow(0 6px 8px rgb(0 0 0 / .5)); transform-origin: 50% 90%; }
+.nav-object.hub.active .nav-object-art { transform: translateY(-3px) scale(1.06); }
+.nav-ready-dot {
+  position: absolute; top: -1px; right: -3px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--live); box-shadow: 0 0 0 2.5px var(--bg);
+}
+.nav-object.hub .nav-ready-dot { top: 2px; right: 4px; }
+/* Un booster est prêt et le joueur est ailleurs : le sachet se balance. */
+.nav-object.hub.ready:not(.active) .nav-object-art { animation: nav-sachet-sway 2.6s ease-in-out infinite; }
+@keyframes nav-sachet-sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) translateY(-2px); } }
+.app-content { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+
+/* ------------------------------------------------------------ en-tête A3
+ * À gauche le niveau et sa jauge (le profil), à droite les ressources et
+ * l'engrenage. Des pastilles plates : plus de boîtes à contour. */
+.app-shell > .top-bar,
+.app-shell[data-current-tab="home"] > .top-bar {
+  gap: 8px; border-bottom: 1px solid var(--line); background: var(--bg-deep);
+}
+.top-bar .level-badge {
+  display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; padding: 0 6px 0 0;
+  border: 0; background: none; color: var(--text); cursor: pointer; text-align: left;
+  touch-action: manipulation; transition: transform 120ms var(--ease-out);
+}
+.top-bar .level-badge:active { transform: scale(.97); }
+.top-bar .level-badge:focus-visible, .top-bar .settings-button:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+.level-badge-num {
+  display: grid; flex: none; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  background: var(--accent); color: var(--ink); font: 700 18px/1 var(--font-display);
+}
+.level-badge-meta { display: grid; gap: 5px; }
+.level-badge-meta small { color: var(--text); font-size: 13px; font-weight: 700; }
+.level-badge-meta i { display: block; width: 84px; height: 6px; overflow: hidden; border-radius: 6px; background: rgb(255 255 255 / .14); }
+.level-badge-meta u { display: block; height: 100%; background: var(--action); }
+.app-shell .top-bar .top-actions { gap: 6px; }
+.top-bar .top-wallet { gap: 6px; height: auto; padding: 0; background: none; box-shadow: none; }
+.app-shell .top-bar .currency-chip,
+.app-shell .top-bar .currency-chip + .currency-chip {
+  height: 36px; padding: 0 11px; border-radius: 999px; background: rgb(255 255 255 / .08); box-shadow: none;
+}
+.top-bar .settings-button {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px;
+  border: 0; border-radius: 50%; background: rgb(255 255 255 / .08); color: var(--text); cursor: pointer;
+  touch-action: manipulation; transition: transform 120ms var(--ease-out);
+}
+.top-bar .settings-button:active { transform: scale(.95); }
+.settings-dot { position: absolute; top: 7px; right: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 2px var(--bg-deep); }
+@media (max-width: 360px) { .level-badge-meta { display: none; } }
+
+/* ------------------------------------------------------------ réglages */
+.settings-panel .menu-group { margin: 0; padding: 0; border: 0; background: none; }
+.settings-panel .menu-group h3,
+.settings-advanced > summary {
+  margin: 20px 0 6px; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+}
+.settings-advanced { margin-top: 8px; }
+.settings-advanced > summary { display: flex; align-items: center; min-height: 44px; margin: 12px 0 0; cursor: pointer; }
+.settings-advanced small { display: block; margin: 4px 0 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.menu-count { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--paper); color: var(--ink); font-size: 12px; }
+
+/* ------------------------------------------------- l'Atelier dans le Binder */
+.binder-modes { display: flex; gap: 4px; margin: 0 0 14px; padding: 4px; border-radius: 999px; background: rgb(255 255 255 / .06); }
+.binder-modes button {
+  flex: 1; min-height: 44px; border: 0; border-radius: 999px; background: none; color: var(--muted);
+  font-size: 14px; font-weight: 700; cursor: pointer; touch-action: manipulation;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+.binder-modes button[aria-pressed="true"] { background: var(--action); color: var(--action-ink); }
+.binder-modes button:focus-visible { outline: 2px solid var(--action); outline-offset: 2px; }
+.binder-modes-bar { padding: 18px 18px 0; }
+.binder-modes-bar + .atelier-view { padding-top: 4px; }
+
+/* ------------------------------------------------------- Drop épuré (C2)
+ * Le sachet est roi : plus grand, et plus rien au-dessus de lui. Le choix
+ * d'univers passe dessous : le nom de l'univers actif, un point pour l'autre. */
+.home-view .booster-selector .pack-stage.stage-live.booster-carousel {
+  --drop-pack-size: min(84vw, 340px, calc(56dvh / 1.4667));
+  --drop-stage-pt: clamp(16px, calc(12dvh - 60px), 96px);
+}
+@media (max-height: 700px) {
+  .home-view .booster-selector .pack-stage.stage-live.booster-carousel { --drop-pack-size: min(80vw, 320px, calc(48dvh / 1.4667)); }
+}
+.home-view .booster-switcher {
+  position: static; transform: none; display: flex; justify-content: center; align-items: center; gap: 4px;
+  margin: 4px auto 0; padding: 0; border-radius: 0; background: none; box-shadow: none;
+}
+.home-view .booster-switcher button {
+  display: grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px;
+  border: 0; border-radius: 999px; background: none; box-shadow: none;
+  color: transparent; font-size: 0; letter-spacing: 0;
+}
+.home-view .booster-switcher button::before {
+  content: ""; width: 9px; height: 9px; border-radius: 50%; background: rgb(255 255 255 / .32);
+  transition: background-color 160ms ease-out;
+}
+.home-view .booster-switcher button[aria-pressed="true"] {
+  background: none; color: var(--text); font: 700 18px/1 var(--font-display); letter-spacing: .1em; text-transform: uppercase;
+}
+.home-view .booster-switcher button[aria-pressed="true"]::before { content: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav .nav-object, .nav-object-art, .nav-object-label, .top-bar .level-badge, .top-bar .settings-button, .binder-modes button { transition: none; }
+  .nav-object.hub.ready:not(.active) .nav-object-art { animation: none; }
+}

@@ -41,10 +41,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     const onUseHourglass = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={onUseHourglass} onShowOdds={noop}
-      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={busy}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={false} needsAccount={false} onEditCircle={noop} />);
     return { onUseHourglass };
   }

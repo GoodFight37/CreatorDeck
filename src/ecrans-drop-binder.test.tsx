@@ -117,10 +117,7 @@ describe("les sabliers du Drop en ligne", () => {
     const onShowOdds = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={onUseHourglass} onShowOdds={onShowOdds}
-      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={busy}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowOdds={onShowOdds} onShowAtelier={noop} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={true} needsAccount={needsAccount} />);
     const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
     return { button, onUseHourglass, onShowOdds };
@@ -168,10 +165,7 @@ describe("les sabliers du Drop en ligne", () => {
     const state = { ...createInitialState(NOW), packs: 0 };
     const onOpen = vi.fn();
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onOpenScene={vi.fn()}
-      sceneBusy={false} onUseHourglass={vi.fn()} onShowOdds={vi.fn()}
-      onShowMissions={vi.fn()} onShowAtelier={vi.fn()} onShowArena={vi.fn()} onShowTribunal={vi.fn()}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onUseHourglass={vi.fn()} onShowOdds={vi.fn()} onShowAtelier={vi.fn()} opening={false} usingHourglass={false}
       now={NOW} serverReserve={true} needsAccount={false} />);
     const button = banc.boutons().find((entry) => entry.textContent?.includes("Ouvrir un booster de test"))!;
     const sachet = document.querySelector<HTMLButtonElement>(".pack-stage .pack-artwork")!;

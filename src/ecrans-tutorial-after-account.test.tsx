@@ -25,8 +25,8 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
 
   const { CreatorDeckApp } = await import("@/components/creator-deck-app");
   await banc.monter(<CreatorDeckApp />);
-  banc.appuyer("Toi");
-  act(() => document.querySelector<HTMLButtonElement>(".profile-account-status")!.click());
+  banc.appuyerNom(/^Réglages/);
+  banc.appuyer(/^Mon compte/);
   expect(document.querySelector('[role="dialog"][aria-label="Mon compte"]')).toBeTruthy();
 
   connection.userId = "11111111-1111-4111-8111-111111111111";
@@ -35,7 +35,8 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
   expect(document.querySelector('[role="dialog"][aria-label="Mon compte"]')).toBeTruthy();
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
 
-  banc.fermer();
+  act(() => document.querySelector<HTMLButtonElement>('[aria-label="Mon compte"] button[aria-label="Fermer"]')!.click());
+  if (document.querySelector(".settings-overlay")) banc.fermer();
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeTruthy();
   banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
   banc.appuyer("Ajouter");

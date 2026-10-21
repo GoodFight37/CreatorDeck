@@ -69,10 +69,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     const onEditCircle = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={gameWith([])} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
-      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve={false} needsAccount={needsAccount} onEditCircle={onEditCircle} />);
     return onEditCircle;
   }
@@ -106,10 +103,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     const mount = async (openings: number) => {
       const state = { ...createInitialState(NOW), openings };
       await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-        sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
-        onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-        tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
         now={NOW} serverReserve={false} needsAccount={false} />);
     };
     // Nuit de direct : MEMES est un second paquet visible dès le départ, Live devant.
@@ -131,10 +125,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
     const noop = () => {};
     await banc.monter(<HomeView game={gameWith(["ibai"])} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
-      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve={false} needsAccount={false} />);
     expect(document.querySelector(".pity-row")!.textContent).not.toContain("une de tes chaînes");
   });
@@ -143,10 +134,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
     const noop = () => {};
     await banc.monter(<HomeView game={gameWith(CIRCLE)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onOpenScene={noop}
-      sceneBusy={false} onUseHourglass={noop} onShowOdds={noop}
-      onShowMissions={noop} onShowAtelier={noop} onShowArena={noop} onShowTribunal={noop}
-      tribunalRestants={0} tribunalClose={true} opening={false} usingHourglass={false}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve={false} needsAccount={false} />);
     expect(document.body.textContent).toContain("Ton cercle est complet. Les boosters s’ouvrent au classement.");
   });

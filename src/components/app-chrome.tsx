@@ -7,7 +7,7 @@
  */
 import { useEffect, useRef } from "react";
 
-import { Coins, Hourglass, LoaderCircle } from "lucide-react";
+import { Coins, Hourglass, LoaderCircle, Settings } from "lucide-react";
 
 import { CATALOG_LABEL } from "@/lib/catalog";
 
@@ -30,11 +30,23 @@ export function LoadingScreen() {
 }
 
 
-export function TopBar({ game }: { game: GameView }) {
-  // La saison affichée est celle que le joueur remplit, calculée depuis sa
-  // collection : « S01 » était écrit en dur, même pour une partie sans une
-  // seule carte française.
-  const season = game.currentSeason;
+/**
+ * L'en-tête : à gauche le badge de niveau (il ouvre le profil), au milieu les
+ * ressources, à droite l'engrenage des réglages. Plus de nom d'app ni de
+ * saison : le joueur sait où il est, il veut savoir ce qu'il a.
+ */
+export function TopBar({
+  game,
+  onShowProfile,
+  onShowSettings,
+  settingsAlert = false,
+}: {
+  game: GameView;
+  onShowProfile: () => void;
+  onShowSettings: () => void;
+  /** Le compte demande une action (synchronisation à vérifier, erreur). */
+  settingsAlert?: boolean;
+}) {
   const levelBase = Math.max(0, (game.player.level - 1) * 100);
   const levelProgress = Math.min(
     100,
@@ -57,14 +69,13 @@ export function TopBar({ game }: { game: GameView }) {
   }, []);
   return (
     <header className="top-bar" ref={bar}>
-      <div className="brand-lockup">
-        <div>
-          <strong>CreatorDeck</strong>
-          <small title={season ? season.name : CATALOG_LABEL}>
-            {season ? `${season.familyId} · ${season.name}` : CATALOG_LABEL}
-          </small>
-        </div>
-      </div>
+      <button type="button" className="level-badge" onClick={onShowProfile} aria-label={`Ton profil · niveau ${game.player.level}`}>
+        <span className="level-badge-num" aria-hidden="true">{game.player.level}</span>
+        <span className="level-badge-meta" aria-hidden="true">
+          <small>Niv. {game.player.level}</small>
+          <i><u style={{ width: `${levelProgress}%` }} /></i>
+        </span>
+      </button>
       <div className="top-actions">
         {/* Un seul porte-monnaie : icône + nombre, le nom complet reste dans l'étiquette accessible. */}
         <div className="top-wallet">
@@ -77,11 +88,10 @@ export function TopBar({ game }: { game: GameView }) {
             <b>{formatNumber(game.player.points)}</b>
           </div>
         </div>
-        <div role="group" className="level-chip" title={`Niveau ${game.player.level}`} aria-label={`Niveau ${game.player.level}`}>
-          <small>Niv.</small>
-          <span>{game.player.level}</span>
-          <i style={{ width: `${levelProgress}%` }} />
-        </div>
+        <button type="button" className="settings-button" onClick={onShowSettings} aria-label={settingsAlert ? "Réglages · une action t’attend" : "Réglages"}>
+          <Settings size={20} aria-hidden="true" />
+          {settingsAlert ? <i className="settings-dot" aria-hidden="true" /> : null}
+        </button>
       </div>
     </header>
   );
