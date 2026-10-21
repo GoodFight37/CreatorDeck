@@ -234,7 +234,7 @@ test("les cinq dos se posent avant le reveal et le récapitulatif attend le joue
   expect(probe?.phaseAtOneSecond).toBe("extracting");
   expect(probe?.backs).toBe(5);
   expect(probe!.revealAfterMs).toBeGreaterThanOrEqual(1_100);
-  // Each new face must finish before advancing; a duplicate joins the pile on its own.
+  // Each new face must finish before advancing; a duplicate waits for the tap like any card.
   // The last tap puts the cards away: no summary grid, back to the Drop.
   for (let i = 0; i < 5; i++) {
     const next = pack.locator(".reveal-next");

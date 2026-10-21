@@ -9,7 +9,7 @@
  * Les deux contextes n'ont qu'une différence, mais elle compte : l'overlay
  * n'offre **aucun raccourci**.
  */
-import { useEffect, useEffectEvent, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type AnimationEvent, type CSSProperties, type PointerEvent } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, ChevronRight, Sparkles, X, Zap } from "lucide-react";
 import { CardBackEmblem } from "@/components/card-back-emblem";
@@ -43,8 +43,6 @@ import { circleLabel } from "@/lib/circle";
 
 const FIFTH_CARD_REVEAL_BEAT_MS = 360;
 const SUMMARY_HOLD_MS = 1_500;
-/** Le temps pour un doublon de rejoindre la pile avant la carte suivante. */
-const DUPLICATE_PILE_MS = 420;
 
 export function RevealOverlay({
   cards: drawnCards,
@@ -99,11 +97,11 @@ export function RevealOverlay({
   const cardId = card?.id;
   const isFifthSequentialReveal = !perfect && cards.length === 5 && index === 4;
   // Un doublon, quelle que soit sa rareté, ne rejoue pas la scène : pas de
-  // retournement, il rejoint la pile et la carte suivante arrive toute seule.
+  // retournement lent. Il attend pourtant l’appui du joueur, comme toute carte :
+  // rien n’avance sans lui (21 octobre 2026).
   const duplicate = Boolean(card) && !tutorial && !perfect && card.isNew === false;
   const alreadyOwned = duplicate;
   const isLast = index === cards.length - 1;
-  const piling = duplicate && !isLast;
   const duplicatesSoFar = perfect ? [] : cards.slice(0, index + 1).filter((item) => !tutorial && item.isNew === false);
   // Commune et Peu commune : retournement bref, sans flash.
   const quickFlip = rarity === "common" || rarity === "uncommon";
@@ -157,14 +155,6 @@ export function RevealOverlay({
     }, silence);
     return () => window.clearTimeout(timer);
   }, [card, perfect, overlay, alreadyOwned, timing.impactMs]);
-
-  const nextCard = useEffectEvent(() => onNext());
-  useEffect(() => {
-    if (!piling) return;
-    // Planifié après le son de la carte (délai 0 pour un doublon) : l'ordre des sons ne bouge pas.
-    const timer = window.setTimeout(nextCard, cardEffectsAllowed() ? DUPLICATE_PILE_MS : 0);
-    return () => window.clearTimeout(timer);
-  }, [piling, cardId]);
 
   useEffect(() => {
     if (!perfect) return;
@@ -377,7 +367,7 @@ export function RevealOverlay({
       {showSummary && endStream && endCreator ? (
         <PackEndLive creator={endCreator} stream={endStream} onWatch={onClose} />
       ) : perfect || showSummary ? null : (
-        <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}${piling ? " is-piling" : ""}`}>
+        <div className={`reveal-stage${duplicate ? " is-duplicate" : ""}`}>
           {card.isNew && !tutorial && !quickFlip ? (
             // Nouvelle : un flash de la couleur de sa rareté. Pas de second nom :
             // celui de la carte suffit.
@@ -435,7 +425,7 @@ export function RevealOverlay({
             {/* Imprimé sur la carte ou dit par la lumière : lu par les lecteurs d'écran, pas répété à l'œil. */}
             <p className="reveal-meta-sr">
               {RARITY_META[card.rarity].label} · {regionLabel(creator.region)}
-              {tutorial ? "" : duplicate ? " · Doublon, rejoint la pile" : card.isNew ? " · Nouvelle" : ""}
+              {tutorial ? "" : duplicate ? " · Doublon" : card.isNew ? " · Nouvelle" : ""}
             </p>
             {onAir ? (
               spotlight ? (
@@ -467,7 +457,7 @@ export function RevealOverlay({
         </div>
       )}
 
-      {!showSummary && !perfect && !locked && !piling && !termine && flippedCardId === cardId ? (
+      {!showSummary && !perfect && !locked && !termine && flippedCardId === cardId ? (
         <div className="reveal-swipe-prompt" aria-hidden="true">
           <span className="reveal-swipe-arrow">‹</span>
           <span className="reveal-swipe-label">Glisse la carte</span>

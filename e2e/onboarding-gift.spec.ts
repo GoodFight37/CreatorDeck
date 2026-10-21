@@ -106,7 +106,7 @@ test("avec le serveur : tutoriel puis cadeau unique, les cinq boosters cadeau s'
     await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
     const reveal = page.getByRole("dialog", { name: "Résultat du booster" });
     await expect(reveal.locator(".reveal-card")).toHaveCount(1);
-    // Un doublon rejoint la pile tout seul : on n'appuie que pour les nouvelles.
+    // Chaque carte attend un appui, doublon compris : rien n'avance seul.
     for (let i = 0; i < 5; i += 1) {
       const next = reveal.locator(".reveal-next");
       await expect(next).toBeEnabled();

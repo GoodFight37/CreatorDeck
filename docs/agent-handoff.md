@@ -1,3 +1,12 @@
+# Checkpoint Claude — ouverture : plus aucune carte n'avance seule (21 octobre 2026, nuit)
+
+- **Signalement de Malik :** à l'ouverture d'un booster, des cartes « montent et s'ouvrent toutes seules » après l'appui.
+- **Cause racine (lue dans le code, pas devinée) :** `reveal-overlay.tsx` planifiait, pour toute carte déjà possédée qui n'était pas la dernière, un `setTimeout(onNext, 420)` (« le doublon rejoint la pile et la suivante arrive toute seule », D-158) et jouait l'animation CSS `reveal-dupe-to-pile` (la carte s'envole vers la pile). Plusieurs doublons de suite s'enchaînaient sans aucun appui.
+- **Correction :** minuteur, état `piling`, classe `is-piling` et animation retirés. Un doublon garde ses allégements (pas de flash, pas d'aura, retournement immédiat, compteur « Doublons ×N ») mais attend l'appui comme toute carte. Le libellé lu par les lecteurs d'écran devient « Doublon ».
+- **Tests :** le test unitaire qui exigeait l'avancement automatique exige maintenant le contraire (5 s sans appui : `onNext` jamais appelé ; un appui : une seule fois). Commentaires de `onboarding-gift` et `pack-tear` alignés.
+- **Vérifié :** typecheck, ESLint, 57 tests d'écrans de révélation verts ; e2e `pack-tear`, `onboarding-gift`, `pack-crash`, `memes` : 66 réussis, 7 ignorés, 1 raté de timing (`Reflets OFF`, repassé au vert seul, bureau et téléphone). **Non prouvé en navigateur** : trois ouvertures d'une partie neuve n'ont produit aucun doublon, donc le cas doublon n'est couvert que par le test unitaire ; pas vérifié sur Android.
+- **Ce qui reste automatique, par décision antérieure :** la montée des dos depuis le sachet et le retournement de chaque carte après un court délai (« sans languette ni second geste »). Si Malik veut que le retournement aussi attende un appui, c'est un autre changement (`revealTiming`, `reveal.ts`).
+
 # Checkpoint Claude — fin de cg8.10 : or et rouge ramenés à leur rôle (21 octobre 2026, soir)
 
 - **Fait avec les skills** `impeccable` (contexte, plancher de qualité, détecteur) et `emil-design-eng`, captures regardées à l'œil.

@@ -879,18 +879,9 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   to { transform: rotateY(0); }
 }
 
-/* Fin de booster (D-158) : un doublon rejoint la pile sans prendre une étape,
-   la dernière chaîne en direct occupe l'écran de fin, sinon une ligne dit
-   quand le prochain sachet arrive. */
-@media (prefers-reduced-motion: no-preference) {
-  html:not([data-card-fx="off"]) .reveal-game .reveal-stage.is-duplicate.is-piling > .reveal-anchor {
-    animation: reveal-dupe-to-pile 420ms cubic-bezier(.4, 0, .7, .2) both;
-  }
-}
-@keyframes reveal-dupe-to-pile {
-  from { opacity: 1; transform: translate(-50%, -50%); }
-  to { opacity: 0; transform: translate(calc(-50% - 34vw), calc(-50% + 26vh)) scale(.24) rotate(-6deg); }
-}
+/* Fin de booster (D-158) : la dernière chaîne en direct occupe l’écran de fin,
+   sinon une ligne dit quand le prochain sachet arrive. Un doublon n’avance plus
+   seul : le joueur le pose d’un appui, comme les autres. */
 .reveal-next-pack {
   margin: 10px 0 0;
   color: var(--muted);

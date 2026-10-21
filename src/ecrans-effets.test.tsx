@@ -496,7 +496,7 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     expect(document.querySelector(".reveal-stage.is-duplicate")).toBeNull();
   });
 
-  it.each(["common", "rare", "legendary"] as const)("un doublon %s ne prend pas d'étape : il rejoint la pile et la suivante arrive", async (rarity) => {
+  it.each(["common", "rare", "legendary"] as const)("un doublon %s reste affiché sans effets et n'avance jamais sans l'appui du joueur", async (rarity) => {
     const sounds = await import("@/lib/sfx");
     const bang = vi.spyOn(sounds, "playBang").mockImplementation(() => {});
     const reveal = vi.spyOn(sounds, "playReveal").mockImplementation(() => {});
@@ -506,7 +506,8 @@ describe("nuit de direct : nouvelle ou doublon", () => {
     try {
       await banc.monter(<RevealOverlay cards={[carte("rare", "a"), doublon, carte("common", "c")] as never}
         index={1} onNext={suivant} onClose={vi.fn()} />);
-      expect(document.querySelector(".reveal-stage.is-duplicate.is-piling")).not.toBeNull();
+      expect(document.querySelector(".reveal-stage.is-duplicate")).not.toBeNull();
+      expect(document.querySelector(".reveal-stage.is-piling")).toBeNull();
       expect(document.querySelector(".reveal-new-flash")).toBeNull();
       expect(document.querySelector(".reveal-rare-aura")).toBeNull();
       expect(document.querySelector(".reveal-cinematic-field")).toBeNull();
@@ -522,8 +523,10 @@ describe("nuit de direct : nouvelle ou doublon", () => {
       await act(async () => { await vi.advanceTimersByTimeAsync(0); });
       expect(bang.mock.calls.length + reveal.mock.calls.length).toBe(1);
       expect(suivant).not.toHaveBeenCalled();
-      await act(async () => { await vi.advanceTimersByTimeAsync(420); });
-      expect(suivant, "le doublon doit laisser la place tout seul").toHaveBeenCalledOnce();
+      await act(async () => { await vi.advanceTimersByTimeAsync(5_000); });
+      expect(suivant, "un doublon ne doit jamais avancer sans appui").not.toHaveBeenCalled();
+      banc.appuyer("Carte suivante");
+      expect(suivant).toHaveBeenCalledOnce();
     } finally {
       bang.mockRestore();
       reveal.mockRestore();
