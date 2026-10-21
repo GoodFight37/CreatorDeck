@@ -97,6 +97,26 @@ test("un geste horizontal passe du Live à MEMES et revient, sans rien ouvrir", 
   expect(calls.some((name) => name.startsWith("open_"))).toBe(false);
 });
 
+// Régression : au doigt, un glissement démarré SUR le sachet était annulé dès le premier pixel
+// (la capture implicite du bouton se perdait et son événement remontait au carrousel).
+// La souris n'a pas cette capture, d'où des tests verts alors que le téléphone échouait.
+test("un vrai glissement tactile démarré sur le sachet change de booster, dans les deux sens", async ({ page, context }) => {
+  if (cloudUrl()) await page.goto("/"); else await gotoDeck(page);
+  const stage = page.locator(".booster-carousel");
+  const cdp = await context.newCDPSession(page);
+  const box = (await stage.boundingBox())!;
+  const x = box.x + box.width / 2, y = box.y + box.height * .5;
+  for (const [dx, dy, expected] of [[-150, 0, "memes"], [150, 32, "live"], [-90, 8, "memes"]] as const) {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    for (let i = 1; i <= 8; i++) await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove", touchPoints: [{ x: x + dx * i / 8, y: y + dy * i / 8 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await expect(stage).toHaveAttribute("data-universe", expected);
+    await expect(page.locator(".opening-continuum")).toHaveCount(0);
+  }
+});
+
 test("avec le serveur : Retour et Échap quittent la préparation Live sans requête de tirage", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);

@@ -135,7 +135,12 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
       onPointerMove={moveSwipe}
       onPointerUp={endSwipe}
       onPointerCancel={() => { swipe.current = null; releaseDrag(); }}
-      onLostPointerCapture={() => { if (swipe.current?.dragging) { swipe.current = null; releaseDrag(); } }}>
+      onLostPointerCapture={(event) => {
+        // Au doigt, la capture implicite du bouton se perd quand le carrousel prend la sienne :
+        // cet événement remonte ici et annulait le glissement dès son premier pixel.
+        if (event.target !== event.currentTarget) return;
+        if (swipe.current?.dragging) { swipe.current = null; releaseDrag(); }
+      }}>
       <div className="pack-shadow" />
       {boosters.map((booster, i) => <div key={booster.id} className="booster-pack-slot" data-booster={booster.id}
         data-active={value === booster.id} style={{ "--booster-offset": i - index } as CSSProperties}>
