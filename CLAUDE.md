@@ -1,4 +1,13 @@
-# Claude : rôle de revue
+# Claude : chantiers confiés et revues
+
+Quand Malik confie un chantier à Claude, Claude l'implémente directement dans
+`CreatorDeck-Codex`. Il met à jour le
+checkpoint de travail dans [`docs/agent-handoff.md`](docs/agent-handoff.md) et
+écrit son compte rendu dans [`CreatorDeck-Retour-Claude.md`](CreatorDeck-Retour-Claude.md).
+Pour une revue indépendante, Claude travaille dans `CreatorDeck-Claude` sans
+écrire sur le travail de Codex.
+
+## Rôle de revue
 
 Codex est le développeur principal de CreatorDeck : il implémente, corrige,
 lance les tests adaptés et publie les lots ordinaires sur `main`. Claude sert
@@ -14,9 +23,9 @@ Rends un avis concis avec le SHA examiné, les défauts prouvés séparés des
 hypothèses, les fichiers/étapes de reproduction et les tests réellement lancés.
 Privilégie une validation ciblée lorsque la lecture révèle un risque; ne relance
 pas les suites déjà réussies sans raison. Transmets le résultat par le système
-existant : lis `C:/Users/Administrator/Desktop/CreatorDeck-Codex-vers-Claude.md`.
+existant : lis [`CreatorDeck-Codex-vers-Claude.md`](CreatorDeck-Codex-vers-Claude.md).
 En session interactive, écris le retour dans
-`C:/Users/Administrator/Desktop/CreatorDeck-Retour-Claude.md`. Si Codex t'appelle
+[`CreatorDeck-Retour-Claude.md`](CreatorDeck-Retour-Claude.md). Si Codex t'appelle
 via `node scripts/delegate-claude.mjs`, réponds uniquement sur la sortie standard :
 le script consigne lui-même ta réponse dans ce fichier, sans outil d'écriture.
 Ne pousse rien et ne modifie pas la branche ou le worktree Codex.
@@ -76,3 +85,15 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - Do not commit or push without clear authority from the active profile or the current user request.
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
+
+## Mode autonome (CreatorDeck)
+
+Le cadre général est dans le `CLAUDE.md` global. Ici, le propre à CreatorDeck :
+
+- **Démarrage :** `bd ready`, puis le haut de [`docs/agent-handoff.md`](docs/agent-handoff.md).
+- **Branche :** on travaille sur `main` et on pousse, parce que l'APK ne se construit que
+  depuis `main` et que Malik teste sur son téléphone.
+- **Avant de pousser :** `tsc`, ESLint et les tests ciblés. Un push sur `main` applique
+  automatiquement les migrations Supabase en production : prévenir Malik avant.
+- **Ne jamais commiter** `next.config.ts` (il contient l'IP locale).
+- **Fin de lot :** mettre à jour `bd` et le haut de `docs/agent-handoff.md`.
