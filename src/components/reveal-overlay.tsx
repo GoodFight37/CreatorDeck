@@ -268,6 +268,8 @@ export function RevealOverlay({
       ref={dialogRef}
       tabIndex={-1}
       data-reveal-index={index}
+      // Quand la révélation sort de PackTear, elle garde la palette du sachet Live (booster-continuity.css).
+      data-universe={!overlay && kind === "live" ? "live" : undefined}
       style={glowStyle}
       className={`reveal-overlay${overlay ? "" : ` reveal-game booster-presentation scene-${kind}`} reveal-rarity-${rarity}${perfect ? " reveal-perfect" : ""}${spotlight ? " reveal-spotlight" : ""}${showSummary ? " reveal-summary-open" : ""}${embedded ? " reveal-embedded" : ""}`}
       role={embedded ? undefined : "dialog"}

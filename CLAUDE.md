@@ -14,6 +14,19 @@ Malik n’a pas à les rappeler. **Avant** toute décision ou tout changement de
 
 Malik a aussi levé les interdits de décisions passées (ex. D-132, tranches du sachet) quand ils empêchent d’améliorer. Restent les limites du `CLAUDE.md` global : règles du jeu, économie et taux, migration de base, notification push, suppression de données.
 
+## Outils obligatoires : à utiliser pour de vrai, et à prouver (Malik, 21 octobre 2026)
+
+Citer un plugin ne suffit pas : Malik veut qu'ils servent. Le 21 octobre, une session a sauté
+`claude-mem`, `review-animations`, `break-ui`, `mobile-native` et `codex:codex-rescue` ; cela ne doit plus arriver.
+
+1. **Au démarrage :** `bd ready`, `claude-mem:mem-search` (ce qui a déjà été fait ou essayé sur le sujet), `superpowers:brainstorming` pour toute fonctionnalité nouvelle.
+2. **Avant toute décision de design ou d'animation :** `impeccable`, `emil-design-eng`, `animate`, `apple-design`, `animation-vocabulary`, `animation-performance`.
+3. **Codex (`codex:codex-rescue`) est obligatoire dans trois cas :** (a) tout lot mécanique délimité (CSS, renommages, tests, specs) avec une liste stricte de fichiers ; (b) un second avis indépendant avant de pousser un chantier de plus de cinq fichiers ou qui touche le geste, l'ouverture du sachet ou Android ; (c) un bug resté sans cause après deux essais. Si Codex n'est pas joignable, le dire, ne pas l'ignorer en silence.
+4. **Relecture avant de pousser :** `ecc:typescript-reviewer` et `ecc:react-reviewer` (TSX), `ecc:database-reviewer` (SQL), `ecc:security-reviewer` (compte, entrées, paiement) ; `review-animations`, `break-ui` et `mobile-native` sur tout changement visuel ; `impeccable detect` sur les CSS modifiés. Traiter les défauts prouvés avant le push.
+5. **Bug :** `superpowers:systematic-debugging` avant de corriger ; reproduire avec de vrais événements (tactile, pas souris). **Fonctionnalité :** `superpowers:test-driven-development`. **Avant d'annoncer fini :** `superpowers:verification-before-completion`.
+6. **Autres :** `context7` pour la doc d'une bibliothèque, `context-mode` pour les sorties volumineuses, Playwright pour voir l'app (captures à 320, 390 et 1024 px, pixel x3).
+7. **Preuve :** la note de passation contient une ligne « Outils utilisés : … » ; tout outil de cette liste non utilisé se justifie en une phrase. En fin de lot : `bd close` et `bd remember` pour ce qui doit survivre à la session.
+
 ## Cadre
 
 - **Où :** le checkout de travail est `CreatorDeck-Codex` (nom historique du dossier).
