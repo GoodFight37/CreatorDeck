@@ -2,26 +2,29 @@
 name: CreatorDeck
 description: Jeu de collection de cartes de créateurs, téléphone d'abord, sur fond noir de plateau de diffusion.
 colors:
-  bg-deep: "#08080a"
-  bg: "#0d0d10"
-  bg-soft: "#131317"
-  panel: "#17171c"
-  panel-2: "#1c1c22"
-  panel-3: "#26262e"
-  text: "#f2eee6"
-  muted: "#9a958c"
-  muted-2: "#6d6963"
-  line: "rgba(255, 255, 255, 0.08)"
-  line-strong: "rgba(255, 255, 255, 0.14)"
-  accent: "#e8382c"
-  accent-light: "#ff7a6b"
-  accent-soft: "#ff9d90"
-  accent-tint: "#ffd0c9"
-  accent-deep: "#a81f16"
-  accent-dark: "#6d1710"
-  accent-night: "#3d120e"
-  paper: "#f3eee2"
-  ink: "#14110e"
+  bg-deep: "#0d0630"
+  bg: "#140a3d"
+  bg-soft: "#1b1050"
+  panel: "#231568"
+  panel-2: "#2c1c82"
+  panel-3: "#3a269c"
+  text: "#fff6e6"
+  muted: "#c3b7f4"
+  muted-2: "#9d8fe2"
+  line: "rgb(190 170 255 / 0.16)"
+  line-strong: "rgb(190 170 255 / 0.3)"
+  accent: "#ff4fa3"
+  accent-light: "#ff8ec6"
+  accent-soft: "#ffa9d4"
+  accent-tint: "#ffd9ec"
+  accent-deep: "#c41f7a"
+  accent-dark: "#6e1048"
+  accent-night: "#3a0a2a"
+  action: "#d9ff3a"
+  action-ink: "#1a0c4a"
+  live: "#e11d3f"
+  paper: "#fff4dc"
+  ink: "#1a0c4a"
   gold: "#ffbe55"
   green: "#50d9a0"
   danger: "#ff6d82"
@@ -86,15 +89,15 @@ spacing:
   shell-max: "560px"
 components:
   button-primary:
-    backgroundColor: "{colors.paper}"
-    textColor: "{colors.ink}"
+    backgroundColor: "{colors.action}"
+    textColor: "{colors.action-ink}"
     typography: "{typography.headline}"
-    rounded: "{rounded.button}"
+    rounded: "10px"
     height: "56px"
     width: "100%"
   button-primary-ready:
-    backgroundColor: "{colors.accent}"
-    textColor: "{colors.paper}"
+    backgroundColor: "{colors.live}"
+    textColor: "#ffffff"
     rounded: "{rounded.button}"
     height: "56px"
   button-primary-disabled:
@@ -134,6 +137,8 @@ components:
      Rien n'a été rendu à l'écran pour ce relevé : tout vient de la lecture du code. -->
 
 ## Overview
+
+> **Thème d'application « Pocket » (21 octobre 2026, Malik).** Le chrome prolonge le langage des sachets du Drop : fond indigo encre, aplats vifs, contours encre nets et ombre dure (« relief sticker »), accent rose, action vert acide, texte et plaques crème, lettrage Barlow Condensed. Il remplace le noir chaud et le bordeaux d'avant partout (fond, panneaux, boutons, onglets, en-têtes, feuilles). Les sections ci-dessous décrivent encore parfois l'ancien relevé du 19 octobre : en cas de conflit, c'est la section « Thèmes d'application » qui fait foi.
 
 **Creative North Star : « Le plateau de diffusion »**
 
@@ -193,11 +198,26 @@ Le Drop et l'ouverture du booster ont leur propre lumière, bordeaux et prune su
 `drop-binder.css` déclare aussi un fond bordeaux radial pour `.home-view .pack-stage` (`rgba(112,20,53,.34)` et `rgba(146,49,84,.12)`). Dans le carrousel actuel, la règle plus spécifique de `stage.css` (`.home-view .booster-selector .pack-stage.stage-live.booster-carousel { background: none }`) l'annule : sur l'accueil, le bordeaux vit dans le sachet, son ombre et sa pile, pas dans le fond.
 
 ### Named Rules
-**La règle du seul rouge.** Le rouge est réservé à ce qui est vivant : booster prêt, badge LIVE, action. Le chrome reste noir et papier.
+**La règle du seul rouge.** Le rouge (`--live`, #e11d3f, un cran plus sombre que le badge LIVE des sachets pour tenir 4,5:1 sous du texte blanc) est réservé à ce qui est vivant : booster prêt, badge LIVE, révélation suivante. L'accent est rose, l'action vert acide : le chrome n'est plus rouge.
 
-**La règle du chrome fixe.** Le fond, les panneaux, le texte et les boutons ne dépendent jamais du thème équipé ; les thèmes ne teintent que le classeur et ses cartes.
+**La règle du chrome par jetons (remplace « le chrome fixe », levée par Malik le 21 octobre 2026).** Le fond, les panneaux, le texte et les boutons viennent du thème d'application (`:root` + `data-theme`), jamais du thème de collection équipé : celui-ci ne réécrit que les `--accent*` du classeur, et rien du tout pour le thème d'origine.
 
 **La règle de la carte sans interface.** La carte ne porte aucune couleur d'interface, ni accent ni violet : elle a sa propre palette (rareté et matière), ce qui la fait ressortir sur le noir.
+
+## Thèmes d'application
+
+Source unique : le bloc `:root` de `src/app/globals.css` (thème par défaut « Pocket »), suivi des blocs `:root[data-theme="live"|"memes"|"vault"]` qui ne réécrivent que les jetons qu'ils changent. `src/lib/app-theme.ts` pose l'attribut sur `<html>` et lit `localStorage["creatordeck.app-theme"]` ; **aucun écran ne l'appelle** : les thèmes ne sont pas proposés au joueur. Leur déblocage (collection entière, palier à force de jouer, façon mode sombre/clair) est à décider par Malik, suivi dans bd (CreatorDeck-Codex-1nu).
+
+Trois rôles de couleur, jamais mélangés : **action** (`--action`/`--action-ink`, bouton plein, onglet actif, filtre actif, jauge), **accent** (`--accent*`, liens, focus, pastilles), **direct** (`--live`). Relief : `--outline` (contour encre) et `--lift` (ombre dure de 3 px), recalculés par chaque thème depuis `--ink-rgb`. Un appui enfonce l'objet de 2 px sur son ombre.
+
+| Thème | Fond / panneaux | Accent | Action |
+| --- | --- | --- | --- |
+| Pocket (défaut) | indigo `#0d0630` → `#3a269c` | rose `#ff4fa3` | vert acide `#d9ff3a` |
+| Live | violet électrique `#10063f` → `#4c30c4` | rose | lavande `#b79bff` |
+| MEMES | vert forêt `#04110b` → `#1f5d48` | rose vif `#ff2e93` | vert acide |
+| MEME VAULT | cobalt `#030a2e` → `#1f45c4` | bleu `#6f8dff` | cyan `#2ee6ff` |
+
+`src/lib/app-theme.test.ts` lit ces blocs et exige, pour chacun, texte/fond ≥ 12, secondaire/panneau ≥ 4,5, bouton plein ≥ 7. Ajouter un thème : un bloc de plus dans `globals.css` et son id dans `APP_THEMES`. Restent hors thème : le rouge du direct, l'or de la légendaire, le vert et le danger, les raretés. Les scènes d'ouverture et les dos de carte gardent leur palette par sachet (`data-universe`).
 
 ## Typography
 

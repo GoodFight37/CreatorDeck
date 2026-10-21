@@ -63,7 +63,7 @@ import {
 } from "@/lib/reveal";
 import { dossiersDuJour } from "@/lib/tribunal";
 
-import { THEME_VAR_NAMES } from "@/lib/cosmetics";
+import { DEFAULT_THEME_ID, THEME_VAR_NAMES } from "@/lib/cosmetics";
 import { applyTiltChoice } from "@/lib/tilt";
 import { gameStore } from "@/lib/game-store";
 import { cloudStore } from "@/lib/cloud/cloud-store";
@@ -722,14 +722,16 @@ export function CreatorDeckApp() {
     }
   }
 
-  // Le thème est un jeu de variables CSS posé **sur le classeur**, pas sur
-  // `<html>` : le chrome de l'application (noir studio, blanc chaud, rouge live)
-  // ne change jamais, et un thème reste un objet qu'on équipe pour son binder.
+  // Le thème de collection est un jeu de variables CSS posé **sur le classeur**,
+  // pas sur `<html>`. Il ne réécrit que les accents : fond, panneaux et texte
+  // viennent du thème d'application (`:root`, `data-theme`), et le thème
+  // d'origine n'écrit rien du tout.
   const themeStyle = useMemo(() => {
     const equipped = game?.themes.find((theme) => theme.equipped);
-    if (!equipped) return undefined;
+    if (!equipped || equipped.id === DEFAULT_THEME_ID) return undefined;
     const style: Record<string, string> = {};
     for (const [token, name] of Object.entries(THEME_VAR_NAMES)) {
+      if (!token.startsWith("accent")) continue;
       style[name] = equipped.tokens[token as keyof typeof THEME_VAR_NAMES];
     }
     return style as CSSProperties;

@@ -6,18 +6,18 @@
 .objectives-sections { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
 .objectives-sections a { display: grid; place-items: center; min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); text-decoration: none; font-size: 12px; }
 .missions-view :is(#objectives-day, #objectives-collection, #objectives-seasons) { scroll-margin-top: 90px; }
-.missions-view .reward-summary-banner { display: grid; gap: 16px; padding: 20px 16px; border: 1px solid #d4b78e66; border-radius: 14px; background: radial-gradient(ellipse at top left, #652b3e88, #241d27); }
+.missions-view .reward-summary-banner { display: grid; gap: 16px; padding: 20px 16px; border: 1px solid var(--line-strong); border-radius: 14px; background: radial-gradient(ellipse at top left, rgb(var(--accent-dark-rgb) / 0.5333333333), var(--panel)); }
 .missions-view .reward-summary-copy strong { font: 30px var(--font-display); }
 .missions-view .reward-summary-copy small { display: block; color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.6; }
-.objectives-claim-all { min-height: 48px; width: 100%; padding: 12px; border: 0; border-radius: 8px; color: #21171e; background: var(--paper); font: 21px var(--font-display); }
+.objectives-claim-all { min-height: 48px; width: 100%; padding: 12px; border: 0; border-radius: 8px; color: var(--ink); background: var(--paper); font: 21px var(--font-display); }
 .objectives-no-pending, .objectives-reset { font-size: 12px; line-height: 1.7; color: var(--muted); }
-.objectives-wait { font-size: 12px; padding: 12px; color: var(--paper); border: 1px solid #b99b7755; border-radius: 8px; }
+.objectives-wait { font-size: 12px; padding: 12px; color: var(--paper); border: 1px solid var(--line-strong); border-radius: 8px; }
 .objectives-feedback { padding: 16px; margin: 16px 0; border: 1px solid #9aaf8d88; border-radius: 12px; color: #e5ebdd; background: #273029; scroll-margin-top: 90px; }
-.objectives-feedback.is-error { border-color: #c88c7f88; background: #342128; color: #f1d5c9; }
+.objectives-feedback.is-error { border-color: color-mix(in srgb, var(--danger) 53.3333333333%, transparent); background: var(--panel); color: var(--danger); }
 .objectives-feedback > strong { font: 25px var(--font-display); }
 .objectives-feedback ul { padding-left: 18px; font-size: 12px; line-height: 1.7; margin-bottom: 0; }
 .objectives-feedback p { font-size: 12px; line-height: 1.6; }
-.missions-view .day-block { margin-top: 20px; padding: 18px 12px; border-radius: 14px; background: linear-gradient(150deg, #2c202b55, var(--panel)); border: 1px solid var(--line); }
+.missions-view .day-block { margin-top: 20px; padding: 18px 12px; border-radius: 14px; background: linear-gradient(150deg, rgb(var(--accent-dark-rgb) / 0.3333333333), var(--panel)); border: 1px solid var(--line); }
 .missions-view .day-head { align-items: flex-start; gap: 10px; flex-wrap: wrap; }
 .missions-view .streak-plan { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .missions-view .plan-cell { min-width: 0; padding: 9px 2px; }
@@ -25,7 +25,7 @@
 .missions-view .plan-mark { font-size: 12px; }
 .missions-view .streak-rule { font-size: 12px; line-height: 1.65; }
 .missions-view .mission-row { padding: 16px 12px; border-radius: 10px; background: var(--panel); border: 1px solid var(--line); align-items: start; }
-.missions-view .mission-row[data-state="ready"] { border-color: #d7b48a77; background: linear-gradient(120deg, #6d403a2c, var(--panel)); }
+.missions-view .mission-row[data-state="ready"] { border-color: var(--line-strong); background: linear-gradient(120deg, rgb(var(--accent-dark-rgb) / 0.1725490196), var(--panel)); }
 .missions-view .mission-row.claimed { opacity: .72; }
 .missions-view .mission-content { min-width: 0; }
 .missions-view .mission-content strong { font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
@@ -41,7 +41,7 @@
 .objectives-seasons .section-heading p { color: var(--muted); font-size: 12px; line-height: 1.6; margin: 8px 0 0; }
 .objectives-season-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0; }
 .objectives-season-filters button, .objectives-season-pages button, .objectives-season-empty button { min-height: 44px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--paper); background: var(--panel); font-size: 12px; }
-.objectives-season-filters [aria-pressed="true"] { background: var(--paper); color: #21171e; }
+.objectives-season-filters [aria-pressed="true"] { background: var(--paper); color: var(--ink); }
 .objectives-seasons .season-summary { margin: 12px 0; font-size: 12px; gap: 10px; flex-wrap: wrap; }
 .objectives-seasons .season-row { padding: 16px 12px; border-radius: 12px; min-width: 0; }
 .objectives-seasons .season-head { gap: 10px; align-items: flex-start; }

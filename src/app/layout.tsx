@@ -53,7 +53,7 @@ export const viewport: Viewport = {
   // pour qui en a besoin — et le Play Store le reproche. Le jeu n'y perd rien :
   // le défilement et les gestes de carte restent les mêmes.
   viewportFit: "cover",
-  themeColor: "#090812",
+  themeColor: "#0d0630",
   colorScheme: "dark",
 };
 

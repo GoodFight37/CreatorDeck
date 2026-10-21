@@ -279,18 +279,21 @@
   opacity: .2;
   pointer-events: auto;
 }
-.booster-cinematic .booster-open-link:hover {
-  color: #fff1db;
-  opacity: .8;
+@media (hover: hover) and (pointer: fine) {
+  .booster-cinematic .booster-open-link:hover {
+    color: #fff1db;
+    opacity: .8;
+  }
 }
 .booster-premium-loading {
   color: #fff0e4;
-  animation: premium-loading 1180ms ease-out both;
+  letter-spacing: .12em;
+  animation: premium-loading 1180ms var(--ease-out) both;
 }
 @keyframes premium-loading {
-  0% { opacity: 0; letter-spacing: .4em; }
+  0% { opacity: 0; transform: translateY(6px); }
   35% { opacity: 1; }
-  100% { opacity: .7; letter-spacing: .12em; }
+  100% { opacity: .7; transform: none; }
 }
 .booster-cinematic .booster-tear-track:focus-visible,
 .booster-cinematic .booster-open-link:focus-visible {

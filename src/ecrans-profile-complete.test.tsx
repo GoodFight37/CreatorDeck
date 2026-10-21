@@ -17,11 +17,15 @@ describe("Toi : vitrine, parcours et menus complets", () => {
   let banc: Banc;
   beforeEach(() => { banc = creerBanc(); banc.preparer(); mocked.cloud = { ...EMPTY_CLOUD_STATE }; });
   afterEach(() => banc.nettoyer());
-  async function profile(copies = 0, rewardReady = false) {
+  async function profile(copies = 0, rewardReady = false, distinct = false) {
     const creator = CREATORS.find((entry) => entry.rarity === "common")!;
+    const commons = CREATORS.filter((entry) => entry.rarity === "common");
     const state = createInitialState(NOW);
-    state.cards = Array.from({length: copies}, (_, i) => ({ id: `card-${i}`, creatorSlug: creator.slug, rarity: creator.rarity,
-      variant: i === 2 ? "gold" as const : "standard" as const, obtainedAt: NOW + i, rareDrop: false }));
+    state.cards = Array.from({length: copies}, (_, i) => {
+      const owner = distinct ? commons[i] : creator;
+      return { id: `card-${i}`, creatorSlug: owner.slug, rarity: owner.rarity,
+        variant: i === 2 ? "gold" as const : "standard" as const, obtainedAt: NOW + i, rareDrop: false };
+    });
     if (rewardReady) { state.missionDay = gameDay(NOW); state.missions = { pack: 1 }; }
     const game = getGameView(state, NOW);
     const onShowMissions = vi.fn(), onShowAccount = vi.fn(); const noop = vi.fn();
@@ -64,6 +68,20 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     expect(dialog.querySelector('.odds-intro')?.textContent).toContain('Standard : 2');
     act(() => dialog.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape', bubbles:true})));
     expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+  it("expose les quatre cartes que le sélecteur de vitrine permet d’épingler", async () => {
+    const commons = CREATORS.filter((entry) => entry.rarity === "common").slice(0, 4);
+    mocked.cloud.showcase = commons.map((entry) => entry.slug);
+    await profile(5, false, true);
+    expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(4);
+    expect(document.querySelectorAll('.profile-showcase-placeholder')).toHaveLength(0);
+    expect(document.querySelector<HTMLElement>('.profile-showcase-cards')!.style.getPropertyValue('--showcase-cols')).toBe('4');
+  });
+  it('ne dépasse pas la limite de la vitrine si le cloud en renvoie trop', async () => {
+    const commons = CREATORS.filter((entry) => entry.rarity === 'common').slice(0, 6);
+    mocked.cloud.showcase = commons.map((entry) => entry.slug);
+    await profile(6, false, true);
+    expect(document.querySelectorAll('.profile-showcase-slot')).toHaveLength(4);
   });
   it("replie réglages et réinitialisation et conserve les deux interrupteurs distincts", async () => {
     await profile();

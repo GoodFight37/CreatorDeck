@@ -9,7 +9,7 @@ import { useReleaseNotes } from "@/hooks/use-release-notes";
 import { CardInspectModal } from "@/components/card-inspect-modal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 import { useBackHandler } from "@/hooks/use-back-handler";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { BookOpen, ChevronRight, Layers3, Target, Zap } from "lucide-react";
 
 import { CreditsBlock } from "@/components/credits";
@@ -22,6 +22,7 @@ import { binderCollectionProgress, recommendBinderCollection } from "@/lib/binde
 import { useCloud } from "@/hooks/use-cloud";
 import { CATALOG_EDITION, CREATORS, CREATOR_BY_SLUG, RARITY_META, VARIANT_META, type Rarity } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
+import { MAX_SHOWCASE } from "@/lib/cloud/showcase";
 import { applyTiltChoice, setTiltEnabled, tiltEnabled } from "@/lib/tilt";
 import {
   isMusicMuted,
@@ -113,8 +114,10 @@ export function ProfileView({
     const pinnedSlugs = new Set(pinned.map((card) => card.creatorSlug));
     const automatic = [...bestByCreator.values()].filter((card) => !pinnedSlugs.has(card.creatorSlug))
       .sort((a, b) => score(b) - score(a) || b.obtainedAt - a.obtainedAt);
-    return [...pinned, ...automatic].slice(0, 3);
+    // Trois emplacements au minimum ; toutes les cartes épinglées s'affichent, jusqu'à la limite du sélecteur.
+    return [...pinned, ...automatic].slice(0, Math.min(MAX_SHOWCASE, Math.max(3, pinned.length)));
   }, [ownedCards, cloud.showcase]);
+  const showcaseSlots = Math.min(MAX_SHOWCASE, Math.max(3, showcase.length));
 
   const [inspectSlug, setInspectSlug] = useState<string | null>(null);
   const inspectCreator = inspectSlug ? CREATOR_BY_SLUG.get(inspectSlug) : undefined;
@@ -267,7 +270,7 @@ export function ProfileView({
           </div>
         </div>
         {showcase.length ? (
-          <div className="profile-showcase-cards">
+          <div className="profile-showcase-cards" style={{ "--showcase-cols": showcaseSlots } as CSSProperties}>
             {showcase.map((card) => {
               const creator = CREATOR_BY_SLUG.get(card.creatorSlug);
               return creator ? (
@@ -277,7 +280,7 @@ export function ProfileView({
                 </figure>
               ) : null;
             })}
-            {Array.from({ length: 3 - showcase.length }, (_, index) => <div className="profile-showcase-placeholder" key={`empty-${index}`} aria-hidden="true"><CardBackEmblem /><span>Prochaine trouvaille</span></div>)}
+            {Array.from({ length: showcaseSlots - showcase.length }, (_, index) => <div className="profile-showcase-placeholder" key={`empty-${index}`} aria-hidden="true"><CardBackEmblem /><span>Prochaine trouvaille</span></div>)}
           </div>
         ) : (
           <div className="profile-showcase-empty">

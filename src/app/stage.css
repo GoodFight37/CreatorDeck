@@ -26,24 +26,23 @@
   padding: 5px;
   gap: 2px;
   transform: translateX(-50%);
-  border: 1px solid rgb(255 255 255 / .12);
+  border: 2px solid var(--outline);
   border-radius: 24px;
-  background: rgb(22 20 28 / .72);
-  box-shadow: 0 18px 44px rgb(0 0 0 / .55), inset 0 1px rgb(255 255 255 / .07);
-  backdrop-filter: blur(24px) saturate(1.5);
+  background: var(--panel);
+  box-shadow: var(--lift), 0 16px 32px rgb(var(--ink-rgb) / .5);
 }
 .bottom-nav button {
   min-height: 52px; gap: 2px;
   border-radius: 19px;
-  transition: background-color 180ms ease, color 180ms ease;
+  transition: background-color 180ms ease-out, color 180ms ease-out, box-shadow 180ms ease-out;
 }
 /* Le rouge est réservé au sachet prêt et au direct : l'onglet actif est du papier. */
-.bottom-nav button.active { background: rgb(255 255 255 / .08); color: var(--paper); }
+.bottom-nav button.active { background: var(--action); color: var(--action-ink); box-shadow: inset 0 0 0 2px var(--outline), var(--lift); }
 .bottom-nav button.active::before { display: none; }
-.bottom-nav button.active svg { color: var(--paper); filter: none; }
+.bottom-nav button.active svg { color: var(--action-ink); filter: none; }
 .bottom-nav button:focus-visible { outline: 2px solid var(--paper); outline-offset: -2px; }
 .bottom-nav .nav-badge { top: 3px; right: calc(50% - 24px); }
-@media (min-width: 700px) { .bottom-nav { border-inline: 1px solid rgb(255 255 255 / .12); } }
+@media (min-width: 700px) { .bottom-nav { border-inline: 2px solid var(--outline); } }
 
 /* ------------------------------------------------------------- accueil épuré */
 .home-view.is-lean { position: relative; isolation: isolate; padding-top: 0; }
@@ -53,7 +52,7 @@
   width: min(140vw, 760px); height: 560px; transform: translateX(-50%);
   background: radial-gradient(circle at 50% 40%, rgb(var(--accent-rgb) / .35), transparent 62%) center / cover no-repeat;
   background-size: cover; background-position: center 28%;
-  filter: blur(64px) saturate(1.6); opacity: .42;
+  filter: blur(40px) saturate(1.6); opacity: .42;
   -webkit-mask-image: linear-gradient(#000 52%, transparent);
           mask-image: linear-gradient(#000 52%, transparent);
   pointer-events: none;
@@ -82,10 +81,15 @@
 .circle-strip-head h2 { margin: 0; font: 600 17px/1.2 var(--font-body); letter-spacing: 0; text-transform: none; }
 .circle-strip-head p { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--muted); font-size: 13px; }
 .circle-live-dot {
-  width: 8px; height: 8px; border-radius: 50%; background: #ff4d5e;
-  box-shadow: 0 0 0 0 rgb(255 77 94 / .6); animation: live-pulse 1.8s ease-out infinite;
+  position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--live);
 }
-@keyframes live-pulse { 70%, 100% { box-shadow: 0 0 0 8px rgb(255 77 94 / 0); } }
+/* Anneau du direct : un disque qui grandit et s'efface (transform + opacity, pas de repeinture d'ombre). */
+.circle-live-dot::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--live); opacity: .6;
+  animation: live-ring 1.8s ease-out infinite;
+}
+@keyframes live-ring { 70%, 100% { transform: scale(3); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .circle-live-dot::after { animation: none; opacity: 0; } }
 .circle-strip-row {
   display: flex; gap: 12px; margin: 0; padding: 12px 16px 6px; list-style: none;
   overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: none;
@@ -103,7 +107,7 @@
   display: block; width: 64px; height: 64px; padding: 3px; border-radius: 50%;
   background: conic-gradient(var(--ring), color-mix(in srgb, var(--ring) 35%, transparent), var(--ring));
   box-shadow: 0 6px 18px rgb(0 0 0 / .4);
-  transition: transform 140ms ease;
+  transition: transform 140ms var(--ease-out);
 }
 .circle-item:active .circle-avatar { transform: scale(.94); }
 .circle-avatar img {
@@ -122,7 +126,7 @@
 .circle-name { max-width: 72px; overflow: hidden; font: 600 12.5px/1.2 var(--font-body); text-overflow: ellipsis; white-space: nowrap; }
 .circle-item small { color: var(--muted); font-size: 12px; line-height: 1.2; }
 .circle-live-tag {
-  padding: 1px 7px; border-radius: 999px; background: #e23347; color: #fff;
+  padding: 1px 7px; border-radius: 999px; background: var(--live); color: #fff;
   font: 700 10.5px/1.5 var(--font-body); letter-spacing: .01em;
 }
 
@@ -265,10 +269,10 @@
 .atelier-view .filter-chips { gap: 6px; margin: 10px 0 0 !important; padding: 4px; overflow: visible; border: 1px solid var(--line); border-radius: 6px; background: rgb(255 255 255 / .04); }
 .atelier-view .filter-chips > button:not(.text-link) {
   flex: 1 1 0; min-height: 44px; padding: 0 12px; border: 0; border-radius: 4px; color: var(--muted); text-align: center;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition: background-color 160ms ease-out, color 160ms ease-out, box-shadow 160ms ease-out;
 }
 /* Onglet actif : papier sur carton, pas de rouge (réservé au sachet prêt et au direct). */
-.atelier-view .filter-chips > button.active { color: var(--ink); background: var(--paper); box-shadow: none; }
+.atelier-view .filter-chips > button.active { color: var(--action-ink); background: var(--action); box-shadow: inset 0 0 0 2px var(--outline); }
 .atelier-view .filter-chips > button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 .atelier-view .atelier-recycle-link, .atelier-view .atelier-rules-details > summary, .atelier-view .atelier-rarity-filters > summary { min-height: 44px; display: flex; align-items: center; }
 .atelier-view .atelier-scope { flex-wrap: wrap; }
@@ -307,7 +311,7 @@
 .app-update-banner p { flex: 1; min-width: 0; margin: 0; font-size: 13px; line-height: 1.35; }
 .app-update-banner progress { order: 3; width: 100%; height: 4px; }
 .app-update-banner button {
-  min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--accent); color: #fff;
+  min-height: 44px; padding: 0 14px; border: 0; border-radius: 999px; background: var(--accent); color: var(--ink);
   font: 650 13.5px/1 var(--font-body);
 }
 .app-update-banner .app-update-later { min-width: 44px; padding: 0; background: none; color: var(--muted); }
@@ -356,7 +360,7 @@
 .home-view .booster-selector .booster-pack-slot[data-active="true"] { transform: translateX(-50%); opacity: 1; filter: none; }
 /* Le paquet de devant : un objet qu'on presse. Pas de filtre sur le bouton :
    il aplatirait les faces 3D du sachet. L'ombre vit sur .pack-shadow. */
-.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 100ms cubic-bezier(0.23, 1, 0.32, 1); }
+.home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live { transition: transform 100ms var(--ease-out); }
 .home-view .booster-selector .pack-stage.stage-live .pack-artwork.pack-live:active:not(:disabled) {
   transform: perspective(900px) rotateX(2deg) scale(.97);
 }
@@ -391,8 +395,8 @@
 .home-view .drop-circle-faces .circle-strip-row > li + li { margin-left: -12px; }
 .home-view .drop-circle-faces .circle-item { display: block; min-width: 0; padding: 0; gap: 0; }
 .home-view .drop-circle-faces .circle-avatar {
-  width: 52px; height: 52px; padding: 0; border: 3px solid #050507; border-radius: 50%;
-  background: #050507; box-shadow: 0 0 0 1.5px var(--ring, rgb(255 255 255 / .3)), 0 8px 18px rgb(0 0 0 / .6);
+  width: 52px; height: 52px; padding: 0; border: 3px solid var(--bg-deep); border-radius: 50%;
+  background: var(--bg-deep); box-shadow: 0 0 0 1.5px var(--ring, rgb(255 255 255 / .3)), 0 8px 18px rgb(0 0 0 / .6);
   animation: none;
 }
 .home-view .drop-circle-faces .circle-avatar img { width: 100%; height: 100%; border: 0; border-radius: 50%; object-fit: cover; }
@@ -400,12 +404,12 @@
 .home-view .drop-circle-faces li[data-owned="false"] .circle-avatar img { filter: grayscale(.85) brightness(.62); }
 .home-view .drop-circle-faces li[data-live="true"] { position: relative; z-index: 2; }
 .home-view .drop-circle-faces li[data-live="true"] .circle-avatar {
-  background: #050507;
-  box-shadow: 0 0 0 2.5px #ff2d43, 0 0 18px rgb(255 45 67 / .65), 0 8px 18px rgb(0 0 0 / .6);
+  background: var(--bg-deep);
+  box-shadow: 0 0 0 2.5px var(--live), 0 0 18px rgb(var(--live-rgb) / .65), 0 8px 18px rgb(0 0 0 / .6);
 }
 .home-view .drop-circle-faces .circle-strip-edit {
   order: 2; width: 44px; min-width: 44px; height: 44px; margin-left: 4px; padding: 0;
-  border: 1px dashed rgb(255 255 255 / .35); border-radius: 50%; background: rgb(5 5 7 / .7);
+  border: 1px dashed rgb(255 255 255 / .35); border-radius: 50%; background: rgb(var(--bg-rgb) / .7);
   color: transparent; font-size: 0;
 }
 .home-view .drop-circle-faces .circle-strip-edit::before { content: "+"; color: rgb(255 255 255 / .8); font-size: 22px; line-height: 42px; }
@@ -448,7 +452,7 @@
    comme une carte au rabais ou un bug. L'étiquette DOUBLON dit le statut. */
 @keyframes reveal-dupe-join { from { opacity: 0; transform: translate(-50%, -48%) scale(.97); } to { opacity: 1; transform: translate(-50%, -50%); } }
 .reveal-game .reveal-stage > .new-badge.is-owned {
-  background: rgb(10 10 16 / .72); color: var(--muted);
+  background: rgb(var(--bg-rgb) / .72); color: var(--muted);
   box-shadow: inset 0 0 0 1px var(--line-strong);
 }
 .reveal-dupe-pile {
@@ -487,8 +491,8 @@
 .app-shell[data-current-tab="home"] > .top-bar {
   min-height: 52px;
   padding-block: calc(6px + env(safe-area-inset-top)) 6px;
-  background: rgb(11 10 15 / .97);
-  border-bottom: 1px solid rgb(255 255 255 / .06);
+  background: var(--bg-deep);
+  border-bottom: 2px solid var(--outline);
   -webkit-backdrop-filter: none;
           backdrop-filter: none;
 }
@@ -501,20 +505,20 @@
 /* Carton, pas verre : des étiquettes à peine arrondies, 44 px sous le pouce. */
 .top-bar .top-wallet {
   display: flex; align-items: center; height: 44px; padding: 0 2px;
-  border-radius: 6px; background: rgb(255 255 255 / .04);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09);
+  border-radius: 10px; background: var(--panel-2);
+  box-shadow: inset 0 0 0 2px var(--outline), var(--lift);
 }
 .app-shell .top-bar .currency-chip {
   height: 44px; min-width: 0; padding: 0 9px; gap: 5px;
   border: 0; border-radius: 6px; background: none;
 }
-.app-shell .top-bar .currency-chip + .currency-chip { box-shadow: inset 1px 0 rgb(255 255 255 / .09); border-radius: 0 6px 6px 0; }
+.app-shell .top-bar .currency-chip + .currency-chip { box-shadow: inset 2px 0 var(--outline); border-radius: 0 8px 8px 0; }
 .app-shell .top-bar .currency-chip b { font-size: 14px; font-variant-numeric: tabular-nums; }
 .app-shell .top-bar .currency-chip small { font-size: 12px; }
 .app-shell .top-bar .level-chip {
   height: 44px; min-width: 0; padding: 0 11px 0 10px; gap: 4px;
-  border: 0; border-radius: 6px; background: rgb(255 255 255 / .04);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09);
+  border: 0; border-radius: 10px; background: var(--panel-2);
+  box-shadow: inset 0 0 0 2px var(--outline), var(--lift);
 }
 .app-shell .top-bar .level-chip small { color: var(--muted); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
 .app-shell .top-bar .level-chip span { font-size: 14px; font-variant-numeric: tabular-nums; }
@@ -539,7 +543,7 @@
 .home-view .booster-switcher {
   top: 6px; right: auto; left: 50%; transform: translateX(-50%);
   padding: 2px; gap: 2px; border-radius: 999px;
-  background: rgb(10 9 14 / .78); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09), 0 6px 18px rgb(0 0 0 / .35);
+  background: rgb(var(--bg-rgb) / .78); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .09), 0 6px 18px rgb(0 0 0 / .35);
 }
 .home-view .booster-switcher button {
   min-height: 44px; padding: 0 16px; border-radius: 999px;
@@ -570,7 +574,7 @@
 
 /* Barre du bas : opaque, sans flou ; le contenu s'arrête au-dessus d'elle. */
 .bottom-nav {
-  background: rgb(16 14 21);
+  background: var(--bg-soft);
   -webkit-backdrop-filter: none;
           backdrop-filter: none;
 }
@@ -579,3 +583,19 @@
 @media (prefers-reduced-motion: reduce) {
   .home-view .booster-switcher button { transition: none; }
 }
+
+/* ------------------------------------------------------------------ relief
+ * Le chrome des sachets : contour encre net et ombre dure, comme un
+ * autocollant posé sur le fond. Couleurs seulement par jetons (`:root`). */
+.profile-journey,
+.profile-news,
+.profile-showcase,
+.profile-view .profile-showcase,
+.daily-goal,
+.release-notes-panel,
+.atelier-warmup,
+.search-field {
+  border: 2px solid var(--outline);
+  box-shadow: var(--lift);
+}
+@media (max-width: 360px) { .top-bar .brand-lockup small { max-width: 28vw; } }
