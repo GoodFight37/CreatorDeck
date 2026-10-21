@@ -587,7 +587,7 @@
 
 /* Barre du bas : opaque, sans flou ; le contenu s'arrête au-dessus d'elle. */
 .bottom-nav {
-  background: rgb(16 14 21 / .97);
+  background: rgb(16 14 21);
   -webkit-backdrop-filter: none;
           backdrop-filter: none;
 }

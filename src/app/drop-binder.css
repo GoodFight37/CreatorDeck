@@ -10,7 +10,7 @@
   font-weight: 600;
   letter-spacing: .12em;
 }
-.drop-edition > span:first-child { color: var(--accent-light); }
+.drop-edition > span:first-child { color: var(--muted); }
 .drop-intro h1 {
   margin: 12px 0 8px;
   color: var(--paper);

@@ -2207,10 +2207,10 @@ input:focus-visible {
   align-self: center;
   margin: 12px auto 0;
   padding: 7px 12px;
-  color: var(--accent-tint);
-  border: 1px solid rgb(var(--accent-rgb) / .35);
+  color: var(--text);
+  border: 1px solid rgb(255 255 255 / .18);
   border-radius: 999px;
-  background: rgb(var(--accent-rgb) / .1);
+  background: rgb(255 255 255 / .06);
   font-size: 12.5px;
 }
 .streak-gain strong { color: var(--text); font-weight: 600; }

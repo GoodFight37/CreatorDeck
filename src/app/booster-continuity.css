@@ -240,7 +240,7 @@
   max-width: calc(100% - 32px);
   margin: 0;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   transform: translateX(-50%);
 }
@@ -898,6 +898,8 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
   text-align: center;
 }
 .reveal-game .reveal-name .reveal-next-pack { font-size: 13px; letter-spacing: .02em; text-transform: none; }
+/* Sous la carte, le sachet fantôme passe derrière : texte clair et cerclé d'ombre pour rester net. */
+.reveal-game .reveal-name :is(small, .reveal-next-pack) { color: var(--text); text-shadow: 0 1px 8px #000, 0 0 3px #000; }
 .reveal-game .reveal-perfect-grid + .reveal-next-pack { position: relative; z-index: 3; margin-top: 18px; }
 .reveal-game.reveal-summary-open .pack-end-live {
   align-items: center;
