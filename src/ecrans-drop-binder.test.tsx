@@ -139,7 +139,7 @@ describe("les sabliers du Drop en ligne", () => {
     await drop({ needsAccount: true });
     const details = document.querySelector<HTMLDetailsElement>(".drop-secondary-details")!;
     expect(details.open).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("Plus d’infos");
+    expect(details.querySelector("summary")?.textContent).toBe("More info");
     expect(details.querySelector(".pity-row.now")).not.toBeNull();
     expect(details.querySelector(".hourglass-action")).not.toBeNull();
     act(() => details.querySelector("summary")!.click());

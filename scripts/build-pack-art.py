@@ -77,9 +77,9 @@ def sparkles(items, fill):
 
 def pouch(body, crimp, ids, rim, label_bg, label_ink, crimp_light, crimp_dark, title_attr):
     # La flèche n'est pas dans le sous-ensemble latin de la police : elle est dessinée.
-    top, w = text("TIRE SUR LA SOUDURE", 31, 270, 85, weight=800, track=1.5)
+    top, w = text("TEAR ALONG THE SEAL", 31, 270, 85, weight=800, track=1.5)
     ax = 270 + w / 2 + 18
-    bottom, _ = text("5 CARTES · ÉDITION 01", 31, 300, 826, weight=800, track=1.5)
+    bottom, _ = text("5 CARDS · EDITION 01", 31, 300, 826, weight=800, track=1.5)
     return f'''<svg xmlns="http://www.w3.org/2000/svg" width="600" height="880" viewBox="0 0 600 880">
 <title>{title_attr}</title>
 <defs>
@@ -129,9 +129,9 @@ def live():
                        for sx in (-1, 1) for sy in (-1, 1))
     live_t, _ = text("LIVE", 32, 40, 29, anchor="start")
     views_t, _ = text("12,4 K", 29, 40, 29, anchor="start")
-    follow_t, _ = text("+1 ABONNÉ", 27, 62, 31, anchor="start", weight=800)
+    follow_t, _ = text("+1 FOLLOW", 27, 62, 31, anchor="start", weight=800)
     brand_t, _ = text("CREATORDECK", 30, 300, 190, track=7, weight=800)
-    tag_t, _ = text("COLLECTION DE CRÉATEURS", 25, 300, 715, track=3.5, weight=800)
+    tag_t, _ = text("CREATOR COLLECTION", 25, 300, 715, track=3.5, weight=800)
     body = f'''
  <path d="M0 0H600V880H0Z" fill="url(#bg)"/>
  <g fill="#fff" opacity=".07">{rays}</g>
@@ -177,7 +177,7 @@ def live():
  {lettering("LIVE DROP", 106, 644, -9, "url(#ink)", "#150a4d", "#ff4fa3", edge_w=18, drop=9, track=1)}
  <path d="{tag_t}" fill="#fff" opacity=".9"/>'''
     crimp = '<stop stop-color="#e9e0ff"/><stop offset=".5" stop-color="#a893f2"/><stop offset="1" stop-color="#6a4fd0"/>'
-    return pouch(body, crimp, ids, "#fff", "#150a4d", "#fff", "#fff", "#2b1a82", "CreatorDeck — sachet LIVE DROP")
+    return pouch(body, crimp, ids, "#fff", "#150a4d", "#fff", "#fff", "#2b1a82", "CreatorDeck — LIVE DROP pack")
 
 
 def memes():
@@ -190,12 +190,12 @@ def memes():
  <radialGradient id="face" cx=".4" cy=".32" r=".8"><stop stop-color="#ffa6dc"/><stop offset="1" stop-color="#ff5db4"/></radialGradient>
  <clipPath id="img"><rect x="-176" y="-136" width="352" height="272" rx="6"/></clipPath>'''
     lens = "M-92 -26H-8V-2H-22V10H-38V22H-62V10H-78V-2H-92Z"
-    top_t, _ = text("QUAND TU TIRES", 38, 0, -98, weight=900)
-    bot_t, _ = text("UNE LÉGENDAIRE", 38, 0, 118, weight=900)
+    top_t, _ = text("WHEN YOU PULL", 38, 0, -98, weight=900)
+    bot_t, _ = text("A LEGENDARY", 38, 0, 118, weight=900)
     x5, _ = text("×5", 54, 0, 12)
-    cartes, _ = text("CARTES", 21, 0, 38, weight=800)
+    cartes, _ = text("CARDS", 21, 0, 38, weight=800)
     lol, _ = text("LOL", 40, 0, 0)
-    tag_t, _ = text("COLLECTION DE MÈMES", 27, 300, 716, track=3.5, weight=800)
+    tag_t, _ = text("MEME COLLECTION", 27, 300, 716, track=3.5, weight=800)
     body = f'''
  <path d="M0 0H600V880H0Z" fill="url(#bg)"/>
  <rect width="600" height="880" fill="url(#dots)" opacity=".34" mask="url(#dotMask)"/>

@@ -202,7 +202,7 @@ export function HomeView({
       {/* En-tête concis : zéro blabla marketing */}
       {lean ? <h1 className="sr-only">Drop</h1> : (
         <header className="drop-intro">
-          <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+          <div className="drop-edition"><span>EDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
           <h1>Drop</h1>
         </header>
       )}
@@ -217,7 +217,7 @@ export function HomeView({
         ) : null}
         {!lean ? (
           <details className="drop-secondary-details">
-            <summary>Plus d’infos</summary>
+            <summary>More info</summary>
             {reserveControls}
           </details>
         ) : null}
