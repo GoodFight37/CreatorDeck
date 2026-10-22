@@ -527,7 +527,6 @@ function Bilan({
           {!occupe && paiement ? (
             <p>
               {paiement.message}
-              {paiement.delta > 0 ? <strong> +{paiement.delta} points</strong> : null}
             </p>
           ) : null}
           {!occupe && !paiement && !recompense.paye ? (

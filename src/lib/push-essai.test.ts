@@ -76,7 +76,8 @@ describe("essai:push — ranger le travail d'un autre outil sur une branche à p
     expect(git(racine, ["branch", "--list", "essai/*"])).toBe("");
   });
 
-  it("envoie les modifications sur une branche essai et revient au point de départ", () => {
+  // Les vrais appels Git peuvent dépasser 5 s sous charge.
+  it("envoie les modifications sur une branche essai et revient au point de départ", { timeout: 20_000 }, () => {
     const { racine, origin } = depot();
     writeFileSync(path.join(racine, "jeu.ts"), "export const version = 2;\n");
     writeFileSync(path.join(racine, "neuf.ts"), "// fichier neuf\n");
