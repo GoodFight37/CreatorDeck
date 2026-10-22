@@ -37,6 +37,12 @@ du rappel de fermeture dans `creator-deck-app.tsx`. Correctif local autorisé :
 « Fermer le bilan », sans changement du retour. Assertion d’écran rouge avant,
 verte après. Non publié. Suivi `CreatorDeck-Codex-0i9`.
 
+## Contrôle général E2E cloud — ouvert, 21 octobre 2026
+
+Reproduction : `npx playwright test --workers=1 --max-failures=3` dans le checkout local incluant le chantier Imgflip. Résultat : 34 réussis, 3 échecs, 2 ignorés, 183 non exécutés. `booster-selector.spec.ts` attend une réserve Live de 4 et une réserve Mèmes de 4 ; il observe 2 sachets locaux et une réserve Mèmes non chargée. `hourglass-online.spec.ts` rencontre le dialogue Mes chaînes au moment du clic sur le sablier. Cause suspectée : préparation des comptes/RPC factices et timing du nouvel accueil ; pas de cause produit établie. Gravité : contrôle de publication bloquant. Suivi `CreatorDeck-Codex-xxo`.
+
+La fixture commune attendait aussi un dialogue automatique devenu optionnel ; elle ouvre désormais le bouton existant. Les 2 tests Atelier repassent, mais cela ne résout pas les trois échecs ci-dessus. Les 12 parcours ciblés Mèmes/éditeur passent séparément. Ne pas présenter cette validation ciblée comme une suite générale verte. Aucun déploiement du chantier Imgflip à ce stade.
+
 ## Smoke Android interrompu par QEMU SwiftShader — corrigé localement (19 octobre 2026)
 
 Sur `CreatorDeck_API36`, QEMU disparaissait au lancement de la WebView; ADB
