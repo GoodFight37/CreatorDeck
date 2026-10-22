@@ -7,22 +7,22 @@
 > décision de produit : il ne reste, côté joueur, que les **quatre piliers** du
 > jeu de cartes (Drop, Binder, Craft, Toi).
 >
-> **Ce fichier reste la référence** de ce qui avait été construit : les étapes,
-> les règles, les chiffres, les décisions. Rien n'a été perdu côté moteur —
-> `src/lib/streamer.ts`, `src/data/streamer.json`, `src/lib/live-game.ts`,
-> `src/lib/swipe.ts`, les migrations `0036` à `0041` et leurs tests sont
-> **toujours dans le dépôt**, et **aucune migration n'est à recoller** si l'écran
-> revient un jour. Ce qui n'existe plus : le composant (`studio-view.tsx`), le
-> mini-jeu (`streamer-live-game.tsx`), la ligne de l'accueil qui les ouvrait, et
-> leurs styles.
+> **Archive historique, état vérifié le 22 octobre 2026 :** le moteur et les
+> données streamer côté client ont été retirés du dépôt (`src/lib/streamer.ts`,
+> `src/data/streamer.json`, `src/lib/live-game.ts`, `src/lib/swipe.ts` et les
+> composants associés). Les migrations `0036` à `0041` et les vérifications
+> des fonctions SQL restent conservées. Aucune migration n'a été retirée ou
+> appliquée pour décommissionner ces fonctions. Les descriptions ci-dessous
+> racontent les étapes livrées avant ce retrait et ne décrivent plus le code
+> client actuel.
 >
 > Ce qui reste **vivant** dans la suite du jeu : les **bruitages** (tous sous
 > l'interrupteur *Son*), les **cartes** et leurs effets de rareté, et l'**Arène**
 > (l'emblème qui se gagnait dans l'Arène ne se pose plus nulle part : il se lit
 > dans l'Arène).
 
-> **Ce fichier est la feuille de route du chantier.** Les cases disent l'état
-> **réel**, pas l'intention : une case se coche quand la chose est **livrée et
+> **Ce fichier est l'archive du chantier.** Les cases disent l'état historique
+> au moment décrit, pas l'intention : une case se coche quand la chose est **livrée et
 > poussée** sur la branche de travail, jamais avant. À chaque livraison ou
 > modification du chantier, les cases de ce fichier sont mises à jour dans le
 > même commit. Ce qui est décidé mais pas encore écrit se dit ici, en clair.
@@ -309,8 +309,8 @@
   d'Arène sur l'étagère** (`studio-emblem.ts`), l'**arrivée des paliers** en
   fumée (`studio-install.ts`), la pose des 25 sprites
   (`studio-room.ts` + `studio-room.json`), les **2,7 Mo du kit Kenney** et deux
-  fichiers d'effets (`fumee.png`, `couronne.png`). Ce qui **reste, à
-  l'identique** : tout le moteur (`src/lib/streamer.ts`), les règles
+  fichiers d'effets (`fumee.png`, `couronne.png`). Ce qui **restait au
+  8 octobre 2026, avant le retrait client du 22 octobre** : le moteur (`src/lib/streamer.ts`), les règles
   (`src/data/streamer.json`), les paliers et leur achat, les **invités** (le
   bureau est maintenant une grille de deux places, avec la vraie `CreatorCard`
   et son badge « EN DIRECT »), l'**imprévu** à deux réponses, la **vidéo du
@@ -321,7 +321,10 @@
   allumé, il fallait une sortie du même côté que l'entrée. Le HUD (rang, jauge
   d'abonnés, rythme du jour, jetons) est désormais **en texte** — mêmes
   chiffres, mêmes calculs, l'écran les écrit au lieu de les dessiner.
-  **Aucune migration à coller** : retirer un décor ne touche aucune table.
+  **État remplacé le 22 octobre 2026 (`83533e65`) :** le moteur, ses données et
+  ses écrans client ont été supprimés. Les migrations `0036` à `0041` et les
+  fonctions SQL restent conservées, sans purge serveur. Le vérificateur local
+  les exerce toujours (`66f0794`) ; le déploiement réel n'est pas attesté ici.
 
 ## 2. En cours
 

@@ -1,3 +1,16 @@
+## D-STREAMER-20261022 — retrait du moteur client, maintien du serveur
+
+Le 22 octobre 2026, le moteur et les données streamer du client sont retirés
+du dépôt après abandon de la fonctionnalité (commit `83533e65`). Les migrations `0036` à `0041`
+et les contrôles qui exercent les fonctions SQL restent en place : la base
+serveur peut encore contenir ces tables et fonctions. Aucun changement de
+migration, effacement de données ou décommissionnement serveur n'est inclus.
+Le vérificateur ne compare plus le SQL à des JSON client supprimés ; il garde
+des assertions sur les résultats SQL. Un retour de l'interface demanderait une
+nouvelle décision produit et un travail client séparé. Preuve locale : commit
+`66f0794`, vérificateur Postgres jetable à 1 028 contrôles réussis ; état des
+fonctions déployées en production non vérifié dans ce lot.
+
 ## D-GEMINI-20261022 — corriger les défauts prouvés et préserver la durabilité
 
 Après la contre-expertise, Malik demande les corrections. Refresh partagé par session/jeton et rejet des résultats périmés ; clés Edge reconnues explicitement ; confinement modal commun sans rendre l'ancêtre de la feuille inerte. Un essai Android volumineux prouve un crash de parcel Capacitor : préparer un fichier privé et retirer le base64 avant SAF. Les originaux des portraits restent versionnés, seuls leurs doublons masqués sont exclus de out/. La persistance immédiate, les gestes et le préchargement sonore sont conservés en attendant des mesures ; pas de purge serveur implicite de streamer, pas d'option lucide redondante. [Preuves et compromis](corrections-gemini-2026-10-22.md). Ce lot n'est pas publié au checkpoint ; la règle d'accord avant publication Auth/Supabase reste applicable.
@@ -1641,7 +1654,7 @@ inventées par cet audit. Consulter les liens avant de réouvrir un sujet.
 | ID / date source | Décision | Justification / source |
 |---|---|---|
 | H-001 / 2026-10-07 à 09 | Jeu en ligne ; tirage, points, jetons tenus par serveur ; dev sans cloud autorisé | Intégrité des échanges/classements. Règles miroir TS/SQL. Pas de repli silencieux en client cloud. [Périmètre](perimetre.md), [revue](revue-externe-2026-10.md), migrations `0019` à `0035`. |
-| H-002 / 2026-10-08 | Quatre piliers Drop/Binder/Craft/Toi ; simulation de streameur retirée de l'interface | Direction produit, pas une dette à réactiver. Moteur et migrations conservés. [Ta chaîne](ta-chaine.md), [journal](historique-livraisons.md), roadmap historique. |
+| H-002 / 2026-10-08, mise à jour 2026-10-22 | Quatre piliers Drop/Binder/Craft/Toi ; simulation de streameur retirée, puis moteur client supprimé | Direction produit. Migrations et fonctions SQL conservées sans décommissionnement. [Ta chaîne](ta-chaine.md), [journal](historique-livraisons.md), roadmap historique. |
 | H-003 / 2026-10-08 | Déplacements et navigation silencieux ; sons réservés aux actions | Préférence joueur et fatigue sonore. Interrupteur/volume existants ; [sons](assets-sonores.md) et tests d'écran/son. |
 | H-004 / 2026-10-07 à 09 | Pas de Server Actions, secret de service dans l'APK, refonte relationnelle ou promesse 100 % en ligne | Export statique, transport Capacitor/web et intégrité. i18n/analytics différés, découpage dynamique mesuré puis refusé. [Périmètre](perimetre.md), [revue § 3](revue-externe-2026-10.md). |
 | H-005 / 2026-10-09 | Sachet en image imprimée ; WebGL et slider retirés | Visibilité garantie et geste tactile de soudure ; les expériences WebGL précédentes ne représentent plus la direction active. Commits `135376c`, `27965c7`, `beadb63` ; `pack-tear.tsx`, images foil Live/Scène. |

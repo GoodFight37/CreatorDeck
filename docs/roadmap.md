@@ -2,7 +2,7 @@
 
 ## Corrections de la contre-expertise Gemini — 22 octobre 2026, local
 
-Sessions, autorisation refresh-live, focus Compte/Marché/Arène, export natif volumineux, dépendances mortes, portraits masqués dans l'export et champs tactiles corrigés localement. Tests : 1 343 unitaires, 240 écrans puis deux nouveaux cas Marché, 95 E2E réussis et neuf ignorés ; export natif de 21 Mo identique sur API 36. Build statique vert. Publication Auth/Edge en attente d'accord explicite ; travaux Imgflip exclus de toute publication implicite. Retrait client streamer et optimisations conditionnées à des mesures encore ouverts. [État précis et limites](corrections-gemini-2026-10-22.md).
+Sessions, autorisation refresh-live, focus Compte/Marché/Arène et Tribunal, export natif volumineux, dépendances mortes, portraits masqués dans l'export et champs tactiles corrigés localement. Le retrait du moteur streamer client est également réalisé localement le 22 octobre : les contrôles SQL serveur restent en place et vérifient les fonctions existantes. Tests antérieurs du lot Gemini : 1 343 unitaires, 240 écrans puis deux nouveaux cas Marché, 95 E2E réussis et neuf ignorés ; export natif de 21 Mo identique sur API 36. Build statique vert. Publication Auth/Edge en attente d'accord explicite ; travaux Imgflip exclus de toute publication implicite. [État précis et limites](corrections-gemini-2026-10-22.md).
 
 ## Navigation à trois objets — vérifications complémentaires du 22 octobre 2026
 
@@ -996,8 +996,10 @@ tests priment sur une ancienne case cochée. Voir [passation](agent-handoff.md),
 
 **Vision :** jeu de collection Twitch mobile, quatre piliers Drop/Binder/Craft/Toi,
 des ouvertures lisibles et tactiles, économie multijoueur tenue par Supabase.
-La simulation « Ta chaîne » reste retirée de l'interface ; son moteur conservé
-n'est pas une fonctionnalité à remettre par défaut. Aucune refonte dans cet audit.
+La simulation « Ta chaîne » et son moteur client ont été retirés du dépôt le
+22 octobre 2026. Les migrations et fonctions SQL serveur restent conservées et
+vérifiées ; aucune purge ni désactivation serveur n'est incluse. Aucune refonte
+dans cet audit.
 
 **Révision auditée :** `4955d9bbd489777c6ffd74229613075a332cc9e9`, branche
 `design/booster-reveal-polish`. [PR #8](https://github.com/GoodFight37/CreatorDeck/pull/8)
@@ -1015,7 +1017,7 @@ instructions de reset ou d'envoi vers main.
 | Comptes, sauvegarde, échanges, amis, hôtel, Last Pack, arène | Implémenté côté client et migrations | Une implémentation ne prouve pas le déploiement Supabase actuel |
 | Direct Twitch, notifications, fonctions Edge | Code présent | Configuration distante/FCM et appareil à vérifier |
 | Tribunal des Bannis | Implémenté, migration `0042` présente | Présence de `0042` en production non vérifiée par cet audit |
-| Simulation « Ta chaîne » | Retirée de l'interface, moteur/tests conservés | Retour hors roadmap sans décision produit |
+| Simulation « Ta chaîne » | Moteur client retiré le 22 octobre 2026 ; schéma et fonctions SQL conservés | Retour client hors roadmap sans décision produit ; décommissionnement serveur séparé |
 | CI qualité, SQL et navigateur | Workflow `verification.yml` présent | État des runs GitHub à consulter séparément |
 | Ouverture imprimée Live/Scène et révélation continue | Implémentée sur branche, **validation en cours** | PR #8 ; critères ci-dessous |
 
@@ -1079,7 +1081,14 @@ ne signifie plus que ces suites seraient absentes : elles existent maintenant.
 
 ## 🎮 Volet 2 : Mini-Jeu "Ta Chaîne" (Streamer Simulator)
 
-### En place & Validé
+### Historique livré avant le retrait client
+
+État au 22 octobre 2026 : les cases ci-dessous relatent les anciennes livraisons.
+Le moteur client, ses JSON et ses écrans ont été supprimés dans `83533e65`.
+Les migrations `0036` à `0041`, leurs tables et fonctions restent dans le dépôt ;
+le vérificateur SQL les exerce encore (`66f0794`, 1 028 contrôles réussis au total).
+Aucun décommissionnement serveur ni retour client n'est planifié ici.
+
 - [x] Mécanique pure (formats de vidéo, 5 paliers de notoriété, JSON)
 - [x] Tables SQL Supabase & gestion des abonnés (`0036`)
 - [x] Écran d'accueil & feuille de chaîne basique
@@ -1097,9 +1106,13 @@ ne signifie plus que ces suites seraient absentes : elles existent maintenant.
 Les propositions suivantes proviennent d’un audit ancien et ne font pas partie
 du plan actif. Ne pas les reprendre sans nouvelle demande de Malik.
 - [x] **Paliers de setup avancés (Tycoon étendu) :** Financement des paliers 6+ via le sacrifice de doublons de cartes (Rares/Épiques) — livré le 8 octobre 2026 (`0040`, étape 7 de `docs/ta-chaine.md` : Rare = 1, Épique = 2, Légendaire jamais, une carte ne part qu'une fois)
-- [x] **Retirer la simulation de streameur de l'application** (8 octobre 2026, le soir) : le décor isométrique ne rentre pas dans la direction que prend le jeu, et le joueur a demandé qu'on l'enlève **complètement** — plus d'onglet, plus de ligne d'accueil, plus d'écran. Le **moteur reste** (`src/lib/streamer.ts`, ses données, ses migrations, ses tests) : rien n'est perdu, rien n'est à recoller, et son dossier est `docs/ta-chaine.md`
+- [x] **Retirer la simulation de streameur de l'interface** (8 octobre 2026, le soir) : le décor isométrique ne rentre pas dans la direction que prend le jeu — plus d'onglet, de ligne d'accueil ou d'écran. Le moteur client, alors conservé, a été retiré du dépôt le 22 octobre 2026. Les migrations SQL restent en place ; voir la mise à jour ci-dessous et `docs/ta-chaine.md`.
+
+> **Mise à jour du 22 octobre 2026 :** le moteur et les données client cités dans
+> cette ancienne entrée ont depuis été retirés. Les migrations et vérifications
+> SQL serveur restent conservées ; aucun décommissionnement de base n'a été fait.
 - [ ] **Et ensuite ?** Rien n'est prévu pour la simulation : la remettre dans le jeu demanderait une direction visuelle ou un mode assumé — c'est une décision de produit, pas une dette
 - [x] **Se déplacer ne sonne pas — jusqu'au bout** (8 octobre 2026) : onglets, portes, feuilles et réglages muets, puis les **deux derniers** sons de déplacement — le **filtre du Binder** et ses **pages** — retirés à la demande du joueur, le soir même. Il ne reste que ce qu'on **fait** : ouvrir un booster, révéler une carte, encaisser une récompense, refuser. Vérifié par un compteur dans le banc d'écrans (onglets, feuilles, filtre et pages : zéro son ; `docs/assets-sonores.md`)
 - [x] **Les sons mesurés, et un volume réglable** (8 octobre 2026) : chaque bruitage est mesuré (RMS, crête) et ramené à sa cible de volume perçu — ce qu'on entend le plus souvent est le plus discret — et un réglage **Volume** (Discret / Normal / Fort) baisse toute l'application d'un cran, sous l'interrupteur *Son* (`docs/assets-sonores.md`)
 - [x] **L'ouverture d'un paquet devient un moment** (8 octobre 2026, au soir) : entrée de carte avec rebond et halo par rareté, refus qui rougit, cascade sur le Perfect, et une **déchirure** de 700 ms entre le geste et la première carte (`src/components/pack-tear.tsx`). Rien ne boucle, tout est coupé par le réglage « Reflets des cartes » et par « moins d'animations » — un test le vérifie
-- [ ] **Bilan & équilibrage des gains :** Ajustement des courbes de croissance (abonnés, vidéos, imprévus) après tests de jeu réels — **l'outil de mesure est là** (`npm run streamer:bilan`, 8 octobre 2026) : paliers et délais, gain moyen par format et par palier, choix d'imprévus, prix du setup, trente journées simulées (313 690 abonnés sans un point dépensé, 3 363 428 avec tout le setup). Il lit `src/data/streamer.json` par les fonctions du jeu et **n'équilibre rien** : la décision se prend en jouant
+- [ ] **Bilan & équilibrage des gains** (historique du 8 octobre 2026) : l'outil `streamer:bilan` mesurait alors les paliers et gains à partir du moteur client. Il a été retiré avec ce moteur le 22 octobre ; cette ancienne tâche n'est plus active.
