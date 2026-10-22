@@ -1,3 +1,33 @@
+## Tribunal : focus du dialogue principal — corrigé localement, 22 octobre 2026
+
+Version constatée : `d6ecc0d6`, gravité P2 (accessibilité clavier). Avant le bilan,
+ouvrir le Tribunal puis Tab/Maj+Tab ou Échap : le dialogue principal n'armait
+pas `usePresentationFocus`, contrairement au bilan. Correctif : le dialogue
+principal monté porte désormais le hook via `TribunalDialog`. Les 15 tests
+d'écran passent, dont quatre cas de focus (présidence, séance, bilan, transition) ;
+les 26 tests logique/notes passent. Playwright ciblé : 2/2 (bureau et téléphone
+simulé), quatre captures examinées. Aucun changement de paiement ni de sauvegarde.
+Android et appareil physique non testés pour ce correctif clavier.
+
+## Helper E2E des chaînes : ancien bouton attendu — ouvert, 22 octobre 2026
+
+Version constatée : `d6ecc0d6`, gravité P2 (tests bloqués avant le parcours).
+`gotoDeck(page, true)` ouvre le formulaire facultatif en mode édition, puis
+`answerCircle` attend « Voir mon premier booster » au lieu d'« Enregistrer ».
+Deux échecs reproduits avant l'ouverture du Tribunal. Le nouveau test ciblé
+utilise `gotoDeck(page, false)` car les chaînes sont facultatives. Adapter le
+helper général avant la suite complète ; suivi `CreatorDeck-Codex-04e` ouvert.
+La suite E2E complète n'a pas été lancée, conformément à la demande de Malik.
+
+## Vérificateur SQL : JSON client supprimés — corrigé localement, 22 octobre 2026
+
+Version constatée : `d6ecc0d6`, gravité P2 (vérification locale bloquée).
+`npm run supabase:verify` lisait `streamer.json` et `live-game.json`, retirés
+avec le moteur client. `66f0794` retire ces comparaisons et garde les assertions
+SQL serveur. Un appel résiduel à `reglagesPart` a été reproduit puis corrigé
+avant commit. Preuve : 1 028 contrôles réussis sur Postgres jetable, code 0.
+Contournement inutile après ce correctif ; aucune migration source modifiée.
+
 ## Contre-expertise Gemini — corrections locales du 22 octobre 2026
 
 Refresh concurrent et effacement de session sur panne temporaire corrigés avec tests ; bearers inconnus de refresh-live refusés localement, sans déploiement Edge. Focus Compte/Marché/Arène corrigé et vérifié. Export Android local : l'essai de 20 Mio a prouvé une TransactionTooLargeException de l'état Capacitor, corrigée par cache privé et options légères ; sauvegarde réelle, annulation, mauvais format et nettoyage vérifiés sur API 36. Reste une chaîne base64 sur le bridge, donc aucune immunité OOM générale annoncée. Portraits masqués exclus seulement de out/, sources conservées. [Commandes, résultats et limites](corrections-gemini-2026-10-22.md). Publication sensible non autorisée pour ce nouveau lot à ce checkpoint.

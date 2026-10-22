@@ -197,6 +197,54 @@ describe("le Tribunal des Bannis", () => {
     return { presider, juger, etat, rendre };
   }
 
+  it.each(["choix", "séance", "bilan"])("confine le clavier et restaure le focus : %s", async (etat) => {
+    const visible = vi.spyOn(HTMLElement.prototype, "getClientRects").mockReturnValue({ length: 1 } as DOMRectList);
+    const entree = document.createElement("button");
+    document.body.append(entree);
+    entree.focus();
+    const onClose = vi.fn();
+    const verdicts = etat === "bilan"
+      ? Object.fromEntries(dossiersDuJour(JOUR, JOUEUSE).map((dossier) => [dossier.id, "ban" as const]))
+      : {};
+    try {
+      await banc.monter(<TribunalView playerId={JOUEUSE}
+        seance={{ day: JOUR, verdicts, claimed: false }}
+        cards={etat === "choix" ? [{ id: "president", creatorSlug: premierCreateur().slug,
+          rarity: "rare", variant: "standard", obtainedAt: T0, rareDrop: false }] : []}
+        live={EMPTY_LIVE} now={T0} onVerdict={() => {}}
+        onClaim={async () => ({ status: "done", message: "", delta: 0 })} onClose={onClose} />);
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+      expect(document.activeElement).toBe(dialog);
+      expect(entree.inert).toBe(true);
+      expect(dialog.closest("[inert]")).toBeNull();
+      const controls = dialog.querySelectorAll<HTMLButtonElement>("button:not(:disabled)");
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", shiftKey: true, bubbles: true }));
+      expect(document.activeElement).toBe(last);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab", bubbles: true }));
+      expect(document.activeElement).toBe(first);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      expect(onClose).toHaveBeenCalledTimes(1);
+      banc.vider();
+      expect(document.activeElement).toBe(entree);
+      expect(entree.inert).not.toBe(true);
+    } finally {
+      entree.remove();
+      visible.mockRestore();
+    }
+  });
+
+  it("transmet le focus au bilan après les cinq dossiers", async () => {
+    const { presider, juger } = await ouvrir();
+    presider();
+    for (let i = 0; i < 5; i++) await juger("ban");
+    const bilan = document.querySelector<HTMLElement>('[aria-label="Bilan de la séance"]');
+    expect(bilan).not.toBeNull();
+    expect(document.activeElement).toBe(bilan);
+    expect(bilan?.closest("[inert]")).toBeNull();
+  });
+
   it("montre le dossier à lire avant les boutons", async () => {
     const { presider } = await ouvrir();
     presider();

@@ -1,3 +1,12 @@
+## D-TRIBUNAL-FOCUS-20261022 — focus sur le dialogue visible
+
+Le 22 octobre 2026, `TribunalDialog` porte le hook `usePresentationFocus` pour
+le choix de présidence et la séance. Il se démonte avant le bilan, qui conserve
+son propre hook. Ce découpage minimal arme le confinement uniquement sur le
+dialogue monté, sans modifier les verdicts, paiements ou parcours. Tab/Maj+Tab,
+Échap, restauration et transfert au bilan sont couverts par quatre nouveaux
+tests d'écran ; une note joueur distincte accompagne le correctif.
+
 ## D-STREAMER-20261022 — retrait du moteur client, maintien du serveur
 
 Le 22 octobre 2026, le moteur et les données streamer du client sont retirés

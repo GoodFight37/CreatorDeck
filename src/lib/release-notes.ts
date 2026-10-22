@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-22-tribunal-clavier", date: "2026-10-22", title: "Le Tribunal au clavier",
+    summary: "Le clavier reste dans le Tribunal pendant toute la séance.",
+    sections: [{ title: "Navigation", items: [
+      "Tab et Maj+Tab restent dans le Tribunal et son bilan. Échap ferme la séance et rend le focus au bouton précédent.",
+    ] }],
+  },
+  {
     id: "2026-10-22-session-feuilles", date: "2026-10-22", title: "Une connexion plus fiable",
     summary: "Les renouvellements de connexion se coordonnent, et les feuilles du compte, du marché et de l’Arène gardent le clavier.",
     sections: [{ title: "Confort", items: [

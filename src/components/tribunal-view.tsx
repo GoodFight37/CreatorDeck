@@ -24,7 +24,7 @@
  * l'interrupteur du joueur les coupe comme les autres. Rien ne sonne à
  * l'ouverture, ni à la fermeture : se déplacer ne sonne pas.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ChevronLeft, Search, Gavel, Stamp } from "lucide-react";
 
 import { CreatorCard } from "@/components/creator-card";
@@ -259,7 +259,7 @@ export function TribunalView({
 
   if (!siegeOuvert) {
     return (
-      <div className="tribunal-overlay" role="dialog" aria-modal="true" aria-label="Tribunal des Bannis">
+      <TribunalDialog onClose={onClose}>
         <header className="tribunal-top">
           <button type="button" className="tribunal-quit" onClick={onClose}>
             <ChevronLeft size={18} aria-hidden="true" />
@@ -302,12 +302,12 @@ export function TribunalView({
             <p className="tribunal-note">Aucune carte de ce nom dans ton classeur.</p>
           ) : null}
         </div>
-      </div>
+      </TribunalDialog>
     );
   }
 
   return (
-    <div className="tribunal-overlay" role="dialog" aria-modal="true" aria-label="Tribunal des Bannis">
+    <TribunalDialog onClose={onClose}>
       <header className="tribunal-top">
         <button type="button" className="tribunal-quit" onClick={onClose}>
           <ChevronLeft size={18} aria-hidden="true" />
@@ -380,6 +380,15 @@ export function TribunalView({
           </button>
         </div>
       ) : null}
+    </TribunalDialog>
+  );
+}
+
+function TribunalDialog({ children, onClose }: { children: ReactNode; onClose: () => void }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
+  return (
+    <div className="tribunal-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Tribunal des Bannis">
+      {children}
     </div>
   );
 }
