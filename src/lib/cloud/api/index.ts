@@ -732,18 +732,6 @@ export class CloudApi {
     return pack.pullSave(this.core);
   }
 
-  /**
-   * Rejoue la partie à zéro **côté serveur** (`0017_reinitialiser.sql`).
-   *
-   * Sans ça, « Réinitialiser la progression » ne remettait à zéro que
-   * l'appareil : le serveur gardait sa réserve de boosters, son journal de
-   * tirages et le Paquet Scène du jour, si bien qu'un joueur qui repartait de
-   * zéro attendait quand même la recharge de la partie qu'il venait d'effacer.
-   */
-  async resetProgress(): Promise<void> {
-    return pack.resetProgress(this.core);
-  }
-
   async onboardingStatus(): ReturnType<typeof pack.onboardingStatus> { return pack.onboardingStatus(this.core); }
   async completeTutorial(): Promise<void> { return pack.completeTutorial(this.core); }
   async claimReturnGift(): Promise<void> { return pack.claimReturnGift(this.core); }

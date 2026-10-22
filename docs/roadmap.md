@@ -1,5 +1,19 @@
 # Roadmap CreatorDeck
 
+## Navigation à trois objets — vérifications complémentaires du 22 octobre 2026
+
+Le commit publié `42df5b4` est vérifié à 1024 px et sur émulateur API 36 avec
+l’APK officielle v877048 : navigation, Atelier, Retour Android et ouverture
+MEMES complète par geste natif (RPC factices). Deux défauts d’interface sont
+corrigés localement avec l’accord de Malik : focus clavier des Réglages et
+libellé de fermeture du bilan du Tribunal. Publication interdite pour cette
+reprise ; corrections validées : 1 317 tests unitaires, 240 d’écrans, 56 E2E
+réussis et quatre ignorés cloud, plus six vérifications dans l’APK locale
+isolée sur émulateur. Malik a ensuite autorisé le retrait complet du reset et
+le push ciblé sur main : exports clients retirés, migration 0061 sans effacement
+de données, application serveur prévue après CI verte.
+[Preuves, commandes et limites](verification-navigation-42df5b4.md).
+
 **Drop — nom `MEMES` sans accent (17 octobre 2026) :** libellés d’ouverture et
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.

@@ -1,3 +1,33 @@
+## D-RESET-20261022 — retrait définitif de la remise à zéro
+
+Malik autorise explicitement le retrait complet puis le push ciblé sur main.
+La migration 0061 retire seulement `public.reset_progress()`, sans `CASCADE`
+ni suppression de données. Les exports clients inutilisés sont supprimés.
+Les migrations historiques 0017 et 0046 restent immuables ; leurs tests
+historiques sont conservés, puis la suite SQL applique 0061 et vérifie son
+rejeu, le refus des appels et l’intégrité des sauvegardes, cartes, réserves,
+portefeuilles, cadeaux et dépenses de sabliers. Le workflow de déploiement
+vérifie l’absence effective de la fonction après application et l’historique.
+Aucun reset de joueur n’est exécuté en production pour vérifier ce retrait.
+
+## D-NAV-20261022 — clavier des Réglages et fermeture du bilan
+
+Après reprise de la navigation `42df5b4`, Malik autorise explicitement les deux
+correctifs d’interface, sans commit, push ou modification Supabase. Les Réglages
+conservent Tab/Maj+Tab dans le dialogue visible supérieur et rendent le focus à
+l’engrenage. Les dialogues ouverts depuis les Réglages gardent la priorité ;
+aucune modification générale du hook de présentation des boosters. Une
+modification commune de ce hook ou un passage des Réglages en portail aurait
+aussi affecté l’inertie des feuilles du compte et des taux : ces changements
+plus larges sont évités. Les contrôles d’un `details` fermé sont exclus avec
+`checkVisibility`, car la seule longueur de `getClientRects()` les incluait.
+
+Le bouton du bilan devient « Fermer le bilan » : le texte décrit sa fermeture
+sans promettre un retour au Drop désormais supprimé. Aucun changement des
+verdicts, récompenses ou destinations. Régressions reproduites avant correction,
+tests d’écrans et navigateur après ; preuves :
+[vérification navigation](verification-navigation-42df5b4.md).
+
 ## D-157 — 19 octobre 2026 : fluidité de l'ouverture (branche fluidite-ouverture, PR)
 
 Plan issu de l'audit improve-animations, validé par Malik. Une seule animation

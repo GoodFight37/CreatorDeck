@@ -30,6 +30,28 @@ function tab(page: Page, label: string) {
   return page.getByRole("button", { name: label, exact: true });
 }
 
+test("les Réglages gardent le clavier dans la feuille et rendent le focus à l’engrenage", async ({ page }) => {
+  await gotoDeck(page);
+  const trigger = page.getByRole("button", { name: /^Réglages/ });
+  await trigger.click();
+  const settings = page.getByRole("dialog", { name: "Réglages", exact: true });
+  const close = settings.getByRole("button", { name: "Fermer", exact: true });
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(settings.locator(".settings-advanced > summary")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+
+  await settings.getByRole("button", { name: /^Mon compte/ }).click();
+  await page.getByRole("dialog", { name: "Mon compte", exact: true })
+    .getByRole("button", { name: "Fermer", exact: true }).click();
+  await page.keyboard.press("Tab");
+  await expect.poll(() => settings.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(settings).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
 /**
  * Ouvre le jeu et attend qu'il soit prêt.
  *

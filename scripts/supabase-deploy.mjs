@@ -49,6 +49,10 @@ export async function verifyRecordedMigrations(client, files) {
   if (files.some(file => !result.rows.some(row => row.version === file.version))) {
     throw new Error('Vérification après application : une version attendue manque dans l’historique. Aucune relance automatique.');
   }
+  if (files.some(file => file.version === '0061')) {
+    const reset = await client.query("select to_regprocedure('public.reset_progress()') is null as removed");
+    if (!reset.rows[0]?.removed) throw new Error('Vérification après application : le reset de progression existe encore.');
+  }
   if (files.some(file => file.version === '0047')) {
     const objects = await client.query(`select
       to_regclass('public.hourglass_spends') is not null as registry,

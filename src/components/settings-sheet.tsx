@@ -55,7 +55,34 @@ export function SettingsSheet({
   const [showPromoCode, setShowPromoCode] = useState(false);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const closeButton = useRef<HTMLButtonElement | null>(null);
-  useEffect(() => { closeButton.current?.focus(); }, []);
+  useEffect(() => {
+    const previous = document.activeElement;
+    closeButton.current?.focus();
+    return () => {
+      if (previous instanceof HTMLElement && previous.isConnected) previous.focus({ preventScroll: true });
+    };
+  }, []);
+  useEffect(() => {
+    const dialog = closeButton.current?.closest('[role="dialog"]');
+    if (!dialog) return;
+    const onKey = (event: KeyboardEvent) => {
+      // Les feuilles du compte, des taux et des nouveautés gardent la priorité.
+      const dialogs = [...document.querySelectorAll('[role="dialog"]')].filter((node) => node.checkVisibility({ visibilityProperty: true }));
+      if (dialogs.at(-1) !== dialog) return;
+      if (event.key === "Escape") { event.preventDefault(); event.stopPropagation(); onClose(); return; }
+      if (event.key !== "Tab") return;
+      const controls = [...dialog.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), summary, [tabindex="0"]')]
+        .filter((node) => node.checkVisibility({ visibilityProperty: true }));
+      const first = controls[0], last = controls.at(-1);
+      if (!first || !last) return;
+      if (!dialog.contains(document.activeElement) || (event.shiftKey && document.activeElement === first) || (!event.shiftKey && document.activeElement === last)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const accountState = !cloud.configured
     ? "Sauvegarde sur cet appareil"
@@ -86,8 +113,7 @@ export function SettingsSheet({
   }
 
   return (
-    <div className="odds-overlay settings-overlay" role="dialog" aria-modal="true" aria-label="Réglages"
-      onKeyDown={(event) => { if (event.key === "Escape" && !showPromoCode && !showReleaseNotes) onClose(); }}>
+    <div className="odds-overlay settings-overlay" role="dialog" aria-modal="true" aria-label="Réglages">
       <div className="odds-panel settings-panel">
         <header className="odds-head">
           <h2>Réglages</h2>

@@ -7462,6 +7462,29 @@ try {
     sql: await readFile(path.join(MIGRATIONS, "0059_cercle_une_fois.sql"), "utf8") });
   await verifyCircleHorsCatalogue({ client, player, asPlayer, refuses, check,
     sql: await readFile(path.join(MIGRATIONS, "0060_cercle_hors_catalogue.sql"), "utf8") });
+  // Les scénarios précédents vérifient l'historique ; la dernière migration ferme le reset.
+  const removeReset = await readFile(path.join(MIGRATIONS, "0061_retrait_reinitialisation.sql"), "utf8");
+  const preservedTables = ["saves", "pack_state", "pack_draws", "pack_scene", "user_cards", "wallets", "tokens", "return_gifts", "hourglass_spends"];
+  const beforeRemoval = [];
+  for (const table of preservedTables) {
+    beforeRemoval.push(JSON.stringify((await client.query(`select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text), '[]'::jsonb) as data from public.${table} t`)).rows[0].data));
+  }
+  await client.query(removeReset);
+  await client.query(removeReset);
+  check("0061 : le reset est absent, même après rejeu", (await client.query("select to_regprocedure('public.reset_progress()') is null as removed")).rows[0].removed);
+  for (const role of ["anon", "authenticated"]) {
+    await client.query(`set role ${role}`);
+    try {
+      await client.query("select public.reset_progress()");
+      check(`0061 : ${role} ne peut plus appeler le reset`, false);
+    } catch (error) {
+      check(`0061 : ${role} ne peut plus appeler le reset`, error.code === "42883");
+    } finally { await client.query("reset role"); }
+  }
+  for (const [index, table] of preservedTables.entries()) {
+    const after = JSON.stringify((await client.query(`select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text), '[]'::jsonb) as data from public.${table} t`)).rows[0].data);
+    check(`0061 : ${table} intégralement conservée`, after === beforeRemoval[index]);
+  }
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});

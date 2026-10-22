@@ -1,3 +1,34 @@
+## Reset de progression — retrait complet préparé, 22 octobre 2026
+
+Malik autorise le retrait complet puis le push sur main. La commande de remise
+à zéro avait déjà quitté l’interface dans `42df5b4` ; les exports clients
+inutilisés sont maintenant retirés. La migration 0061 ne supprime que la
+fonction serveur, sans modifier de données. Suite SQL verte, avec neuf tables
+comparées intégralement avant/après et refus des appels anonymes/authentifiés.
+Application en production conditionnée à la CI et au workflow Supabase : ne
+pas confondre le fichier préparé avec une fonction déjà retirée en production.
+Suivi `CreatorDeck-Codex-lzp`.
+
+## Réglages : sortie du focus clavier — corrigé localement, 22 octobre 2026
+
+Version constatée : `42df5b4`. Reproduction Chromium à 1024 px : ouvrir Réglages,
+Maj+Tab depuis Fermer ; le focus passe à Objectifs derrière la fenêtre et Échap
+ne ferme plus les Réglages. Gravité : accessibilité clavier, P2. Cause prouvée :
+focus initial sans confinement ni restauration dans `settings-sheet.tsx`.
+Correctif local autorisé par Malik : clavier limité au dialogue supérieur,
+contrôles cachés d’Avancé exclus, focus rendu à l’engrenage. Le nouveau test
+échoue avant et passe après, bureau et téléphone (2/2). Non publié.
+Suivi `CreatorDeck-Codex-052` ; [rapport](verification-navigation-42df5b4.md).
+
+## Tribunal : faux « Retour au Drop » — corrigé localement, 22 octobre 2026
+
+Version constatée : `42df5b4`. Après cinq verdicts depuis Objectifs, le bouton
+« Retour au Drop » du bilan conserve Objectifs. Gravité : libellé trompeur, P3.
+Cause prouvée : `tribunal-view.tsx` conservait l’ancien texte après changement
+du rappel de fermeture dans `creator-deck-app.tsx`. Correctif local autorisé :
+« Fermer le bilan », sans changement du retour. Assertion d’écran rouge avant,
+verte après. Non publié. Suivi `CreatorDeck-Codex-0i9`.
+
 ## Smoke Android interrompu par QEMU SwiftShader — corrigé localement (19 octobre 2026)
 
 Sur `CreatorDeck_API36`, QEMU disparaissait au lancement de la WebView; ADB

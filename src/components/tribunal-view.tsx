@@ -528,7 +528,7 @@ function Bilan({
             </button>
           ) : null}
         </div>
-        <button type="button" className="tribunal-next" onClick={onClose}>Retour au Drop</button>
+        <button type="button" className="tribunal-next" onClick={onClose}>Fermer le bilan</button>
         {onShowObjective ? <button type="button" className="tribunal-next" onClick={onShowObjective}>Voir mon objectif du jour</button> : null}
       </section>
     </div>

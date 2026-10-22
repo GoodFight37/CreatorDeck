@@ -8,6 +8,15 @@ import { checkTarget, validateMigrationFiles, migrationPlan, PROJECT, connection
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
+test('après 0061 : seule l’absence réelle du reset confirme le retrait', async () => {
+  for (const removed of [false, true]) {
+    const client = { query: async sql => sql.includes('schema_migrations')
+      ? { rows: [{ version: '0061' }] } : { rows: [{ removed }] } };
+    const result = verifyRecordedMigrations(client, [{ version: '0061' }]);
+    if (removed) await result;
+    else await assert.rejects(result, /reset de progression existe encore/);
+  }
+});
 const manual = { ...next, sql: '-- creatordeck-deploy: manual\nselect 1;' };
 test('validation locale accepte manual sans inventer un historique ou une approbation', () => {
   validateMigrationFiles([old, manual], baseline);
@@ -52,7 +61,8 @@ test('CLI utilise la même CA, verify-full et un fichier privé temporaire', asy
     assert.equal(secured.searchParams.get('sslmode'), 'verify-full');
     path = secured.searchParams.get('sslrootcert');
     assert.equal(await readFile(path, 'utf8'), rootCertificates[0]);
-    assert.equal((await stat(path)).mode & 0o777, 0o600);
+    // Windows représente les permissions avec des ACL, pas avec ces bits POSIX.
+    if (process.platform !== 'win32') assert.equal((await stat(path)).mode & 0o777, 0o600);
   });
   assert.equal(url.searchParams.has('sslrootcert'), false);
   await assert.rejects(stat(path), { code: 'ENOENT' });

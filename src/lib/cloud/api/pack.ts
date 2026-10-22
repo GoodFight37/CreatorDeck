@@ -324,18 +324,6 @@ export async function pullSave(core: CloudCore): Promise<RemoteSaveRow | null> {
   return parseSaveRow(result);
 }
 
-/**
- * Rejoue la partie à zéro **côté serveur** (`0017_reinitialiser.sql`).
- *
- * Sans ça, « Réinitialiser la progression » ne remettait à zéro que
- * l'appareil : le serveur gardait sa réserve de boosters, son journal de
- * tirages et le Paquet Scène du jour, si bien qu'un joueur qui repartait de
- * zéro attendait quand même la recharge de la partie qu'il venait d'effacer.
- */
-export async function resetProgress(core: CloudCore): Promise<void> {
-  await core.rpc("reset_progress", {});
-}
-
 export async function onboardingStatus(core: CloudCore): Promise<{ tutorialCompleted: boolean; giftAvailable: boolean; giftClaimed: boolean; giftRemaining: number; message: string }> {
   const record = asRecord(await core.rpc("onboarding_status", {}));
   if (!record) throw new CloudError("Statut du tutoriel illisible.", "invalid_response", 0);

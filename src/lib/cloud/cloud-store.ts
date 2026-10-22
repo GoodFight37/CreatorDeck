@@ -270,7 +270,7 @@ export function createCloudStore(deps: CloudDeps) {
 
   /**
    * Envoie la partie **après une action décidée par le serveur** (échange, hôtel,
-   * Last Pack, arène, réinitialisation).
+   * Last Pack, arène).
    *
    * Le serveur vient d'écrire sa version : pousser en forçant écraserait en
    * silence la ligne qu'il vient de produire. On relit donc sa version, puis on
