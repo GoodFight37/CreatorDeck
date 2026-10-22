@@ -12,8 +12,9 @@ Le run général correct a isolé deux échecs supplémentaires dans le test Tri
 `gotoDeck(page, false)` laissait l'accueil sans cloud ouvert. Le scénario utilise
 maintenant `gotoDeck(page)`, le helper réparé. Preuves : 203 réussites, 23 ignorés,
 2 échecs initiaux sur 228 ; après correction, Tribunal sans cloud 2/2 et parcours
-cloud + Tribunal 18/18, zéro ignoré dans ces relances. Aucun run intégral vert
-unique revendiqué après cette correction d'une ligne de test. Suivi
+cloud + Tribunal 18/18, zéro ignoré dans ces relances locales. La CI publiée
+39819805982 a ensuite terminé avec succès : 205 E2E réussis, 23 ignorés et
+16/16 cloud simulés, aucun échec. Suivi
 `CreatorDeck-Codex-1ny`, rapports locaux dans `reports/reprise-claude-2026-10-22/`.
 
 ## Bilan du Tribunal : montant affiché deux fois — ouvert, 22 octobre 2026

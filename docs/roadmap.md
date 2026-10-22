@@ -5,8 +5,10 @@ Publication du 22 octobre : le main regroupé est poussé au commit
 Vercel Production du même SHA vérifié terminé. Le retrait du moteur streamer
 client, son vérificateur SQL conservé et le focus Tribunal sont donc publiés ;
 les anciens statuts « local » ci-dessous restent des observations datées.
-Les contrôles GitHub sont encore en cours et l'APK de cette version attend leur
-réussite. Résultats, limites et liens dans le [checkpoint courant](agent-handoff.md).
+Les six jobs de vérification GitHub sont maintenant réussis : 1 206 unitaires,
+246 écrans, 205 E2E réussis/23 ignorés et 16 cloud simulés, plus 1 028 contrôles SQL.
+L'APK de test est en construction distante au dernier relevé. Résultats, limites
+et liens dans le [checkpoint courant](agent-handoff.md).
 
 ## Corrections de la contre-expertise Gemini — 22 octobre 2026, local
 
