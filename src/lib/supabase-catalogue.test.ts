@@ -59,7 +59,7 @@ describe("seed Supabase du catalogue", () => {
       rank: number;
       region: string;
     }>;
-    const sql = readFileSync(path.join(ROOT, "supabase", "migrations", "0003_catalogue.sql"), "utf8");
+    const sql = readFileSync(path.join(ROOT, "supabase", "migrations", "0003_catalogue.sql"), "utf8").replace(/\r\n/g, "\n");
     expect(sql).toContain(`-- ${creators.length} créateurs au classement`);
     // Premier et dernier du catalogue : de quoi détecter une troncature.
     for (const creator of [creators[0], creators[creators.length - 1]]) {

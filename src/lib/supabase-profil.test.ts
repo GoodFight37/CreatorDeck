@@ -26,7 +26,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const ROOT = process.cwd();
-const SQL = readFileSync(path.join(ROOT, "supabase", "migrations", "0006_profil_public.sql"), "utf8");
+const SQL = readFileSync(path.join(ROOT, "supabase", "migrations", "0006_profil_public.sql"), "utf8").replace(/\r\n/g, "\n");
 const CODE = SQL.split("\n")
   .map((line) => line.replace(/--.*$/, ""))
   .join("\n");
