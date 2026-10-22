@@ -68,6 +68,8 @@ export class CloudApi {
    * transport, seulement la session et les deux portes réseau.
    */
   private readonly core: CloudCore;
+  private sessionRevision = 0;
+  private readonly refreshes = new Map<string, Promise<CloudSession | null>>();
 
   /** Univers Mèmes isolé des sauvegardes et tirages Twitch. */
   async memeStatus(): Promise<MemeStatus> {
@@ -128,6 +130,7 @@ export class CloudApi {
   }
 
   private setSession(session: CloudSession | null) {
+    this.sessionRevision += 1;
     if (!this.storage) return;
     if (session) this.storage.setItem(CLOUD_SESSION_KEY, JSON.stringify(session));
     else this.storage.removeItem(CLOUD_SESSION_KEY);
@@ -149,18 +152,37 @@ export class CloudApi {
     return refreshed?.accessToken ?? null;
   }
 
-  private async refresh(refreshToken: string): Promise<CloudSession | null> {
+  private refresh(refreshToken: string): Promise<CloudSession | null> {
+    const previous = this.session();
+    if (!previous || previous.refreshToken !== refreshToken) return Promise.resolve(null);
+    const revision = this.sessionRevision;
+    const key = JSON.stringify([revision, previous.userId, refreshToken]);
+    const pending = this.refreshes.get(key);
+    if (pending) return pending;
+    const refresh = this.refreshSession(previous, revision).finally(() => this.refreshes.delete(key));
+    this.refreshes.set(key, refresh);
+    return refresh;
+  }
+
+  private async refreshSession(previous: CloudSession, revision: number): Promise<CloudSession | null> {
+    const stillCurrent = () => {
+      const current = this.session();
+      return this.sessionRevision === revision && current?.userId === previous.userId
+        && current.refreshToken === previous.refreshToken && current.accessToken === previous.accessToken;
+    };
     try {
       const response = await this.request(`${this.config.url}/auth/v1/token?grant_type=refresh_token`, {
         method: "POST",
         headers: this.headers(),
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        body: JSON.stringify({ refresh_token: previous.refreshToken }),
       });
       if (!response.ok) {
-        this.setSession(null);
+        if (stillCurrent() && [400, 401, 403].includes(response.status)) this.setSession(null);
         return null;
       }
       const session = parseSession(await response.json());
+      // Un logout ou un autre compte a pu remplacer la session pendant le réseau.
+      if (!session || session.userId !== previous.userId || !stillCurrent()) return null;
       this.setSession(session);
       return session;
     } catch {

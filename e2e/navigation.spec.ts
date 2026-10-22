@@ -1,5 +1,5 @@
 import { type Page } from "@playwright/test";
-import { expect, test, gotoDeck } from "./fixtures";
+import { expect, test, gotoDeck, openOtherActivities } from "./fixtures";
 
 /**
  * Ce que ces tests vérifient, et rien d'autre :
@@ -43,12 +43,38 @@ test("les Réglages gardent le clavier dans la feuille et rendent le focus à l�
   await expect(close).toBeFocused();
 
   await settings.getByRole("button", { name: /^Mon compte/ }).click();
-  await page.getByRole("dialog", { name: "Mon compte", exact: true })
-    .getByRole("button", { name: "Fermer", exact: true }).click();
+  const account = page.getByRole("dialog", { name: "Mon compte", exact: true });
+  await expect.poll(() => account.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  for (const key of ["Tab", "Shift+Tab"]) {
+    for (let index = 0; index < 12; index++) {
+      await page.keyboard.press(key);
+      await expect.poll(() => account.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    }
+  }
+  await page.keyboard.press("Escape");
+  await expect(account).toHaveCount(0);
   await page.keyboard.press("Tab");
   await expect.poll(() => settings.evaluate((node) => node.contains(document.activeElement))).toBe(true);
   await page.keyboard.press("Escape");
   await expect(settings).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+});
+
+test("l’Arène garde le clavier et rend le focus à son activité", async ({ page }) => {
+  await gotoDeck(page);
+  await openOtherActivities(page);
+  const trigger = page.getByRole("button", { name: /Arène/ });
+  await trigger.click();
+  const arena = page.getByRole("dialog", { name: "Arène", exact: true });
+  await expect.poll(() => arena.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+  for (const key of ["Shift+Tab", "Tab"]) {
+    for (let index = 0; index < 12; index++) {
+      await page.keyboard.press(key);
+      await expect.poll(() => arena.evaluate((node) => node.contains(document.activeElement))).toBe(true);
+    }
+  }
+  await page.keyboard.press("Escape");
+  await expect(arena).toHaveCount(0);
   await expect(trigger).toBeFocused();
 });
 

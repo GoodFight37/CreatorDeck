@@ -24,6 +24,11 @@ function countdown(nextAt: string | null, now: number) {
   return String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
 }
 
+function BoosterCountdown({ stock, nextAt }: { stock: number; nextAt: string | null }) {
+  const now = useNow(1000);
+  return <>{String(stock)} booster(s) prêts · {countdown(nextAt, now)}</>;
+}
+
 export function MemeDeck() {
   const booster = useMemeBooster();
   const { account, status, busy, problem, copies } = booster;
@@ -32,7 +37,6 @@ export function MemeDeck() {
   const [rarity, setRarity] = useState<MemeRarity | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
-  const now = useNow(1000);
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const inspectRef = useRef<HTMLDialogElement>(null);
 
@@ -63,7 +67,7 @@ export function MemeDeck() {
       <button ref={openButtonRef} className="meme-open" type="button" disabled={!account || !status || status.stock < 1 || busy}
         onClick={booster.prepare}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
       <p className="meme-status" aria-live="polite">{status
-        ? String(status.stock) + " booster(s) prêts · " + countdown(status.nextAt, now)
+        ? <BoosterCountdown stock={status.stock} nextAt={status.nextAt} />
         : account ? "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
       {booster.notice ? <p role="status">{booster.notice}</p> : null}
       {problem ? <div className="meme-problem" role="alert"><p>{problem}</p>

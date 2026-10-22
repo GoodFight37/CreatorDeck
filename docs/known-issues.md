@@ -1,3 +1,7 @@
+## Contre-expertise Gemini — corrections locales du 22 octobre 2026
+
+Refresh concurrent et effacement de session sur panne temporaire corrigés avec tests ; bearers inconnus de refresh-live refusés localement, sans déploiement Edge. Focus Compte/Marché/Arène corrigé et vérifié. Export Android local : l'essai de 20 Mio a prouvé une TransactionTooLargeException de l'état Capacitor, corrigée par cache privé et options légères ; sauvegarde réelle, annulation, mauvais format et nettoyage vérifiés sur API 36. Reste une chaîne base64 sur le bridge, donc aucune immunité OOM générale annoncée. Portraits masqués exclus seulement de out/, sources conservées. [Commandes, résultats et limites](corrections-gemini-2026-10-22.md). Publication sensible non autorisée pour ce nouveau lot à ce checkpoint.
+
 ## Archives Upscayl et prototype dans chaque export — corrigé localement (D-158, 22 octobre 2026)
 
 Constat de l'audit : 699 WebP (20 Mo) copiés dans `out/creators/upscaled/`, et `out/catalogue-demo.html` exporté. Corrigé : archives déplacées vers `archive/upscaled/`, prototype retiré de `out/` après `next build`. Reste ouvert : les JSON de surcharge citent encore `/creators/upscaled/…`, chemins qui ne sont plus servis (historique seulement).

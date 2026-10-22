@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { CREATOR_BY_SLUG, RARITY_META, type Creator } from "@/lib/catalog";
 import { useCloud } from "@/hooks/use-cloud";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { connecteToi } from "@/lib/cloud/store-text";
 import { useGame, useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
@@ -89,6 +90,7 @@ function lineupLabel(slugs: readonly string[]): string {
 }
 
 export function ArenaSheet({ onClose }: { onClose: () => void }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const cloud = useCloud();
   const state = useGame();
   const live = useLive();
@@ -210,7 +212,7 @@ export function ArenaSheet({ onClose }: { onClose: () => void }) {
   const draftReady = draftSlots.length > 0 && draftLineup.length === draftSlots.length;
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Arène">
+    <div ref={dialogRef} tabIndex={-1} className="odds-overlay" role="dialog" aria-modal="true" aria-label="Arène">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>

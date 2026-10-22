@@ -72,6 +72,62 @@ function client(handler: Parameters<typeof fakeFetch>[0], storage = memoryStorag
   return { api: new CloudApi(CONFIG, storage, impl), calls, storage };
 }
 
+describe("rafraîchissement concurrent de session", () => {
+  function expired() {
+    const storage = memoryStorage();
+    storage.setItem(CLOUD_SESSION_KEY, JSON.stringify({ accessToken: "ancien", refreshToken: "refresh-1", expiresAt: 0, userId: SESSION_BODY.user.id }));
+    return storage;
+  }
+
+  it("partage le renouvellement entre les appels concurrents", async () => {
+    let finish!: (response: Response) => void;
+    const request = vi.fn(() => new Promise<Response>((resolve) => { finish = resolve; }));
+    const api = new CloudApi(CONFIG, expired(), request);
+    const first = api.accessToken(), second = api.accessToken();
+    expect(request).toHaveBeenCalledTimes(1);
+    finish(Response.json(SESSION_BODY));
+    await expect(Promise.all([first, second])).resolves.toEqual(["access-1", "access-1"]);
+  });
+
+  it.each([429, 500, 503])("conserve la session après HTTP %s et permet de réessayer", async (status) => {
+    let attempts = 0;
+    const { api } = client(() => ++attempts === 1 ? { status } : { body: SESSION_BODY }, expired());
+    expect(await api.accessToken()).toBeNull();
+    expect(api.session()?.refreshToken).toBe("refresh-1");
+    expect(await api.accessToken()).toBe("access-1");
+  });
+
+  it.each([400, 401, 403])("oublie une session réellement refusée (HTTP %s)", async (status) => {
+    const { api } = client(() => ({ status }), expired());
+    expect(await api.accessToken()).toBeNull();
+    expect(api.session()).toBeNull();
+  });
+
+  it("ne réinstalle pas une session après déconnexion", async () => {
+    let finish!: (response: Response) => void;
+    const request: CloudFetch = (url) => url.includes("refresh_token")
+      ? new Promise<Response>((resolve) => { finish = resolve; }) : Promise.resolve(Response.json({}));
+    const api = new CloudApi(CONFIG, expired(), request);
+    const pending = api.accessToken();
+    await api.signOut();
+    finish(Response.json(SESSION_BODY));
+    expect(await pending).toBeNull();
+    expect(api.session()).toBeNull();
+  });
+
+  it.each([200, 400])("ne remplace ni n'efface un compte changé dans un autre onglet (HTTP %s)", async (status) => {
+    let finish!: (response: Response) => void;
+    const storage = expired();
+    const api = new CloudApi(CONFIG, storage, () => new Promise<Response>((resolve) => { finish = resolve; }));
+    const pending = api.accessToken();
+    const other = { accessToken: "autre", refreshToken: "autre-refresh", expiresAt: Date.now() + 3600_000, userId: "autre-compte" };
+    storage.setItem(CLOUD_SESSION_KEY, JSON.stringify(other));
+    finish(Response.json(SESSION_BODY, { status }));
+    expect(await pending).toBeNull();
+    expect(api.session()?.userId).toBe(other.userId);
+  });
+});
+
 describe("authentification par code", () => {
   it("demande un code sans créer de session", async () => {
     const { api, calls, storage } = client(() => ({ body: {} }));

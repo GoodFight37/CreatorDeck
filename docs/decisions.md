@@ -1,3 +1,7 @@
+## D-GEMINI-20261022 — corriger les défauts prouvés et préserver la durabilité
+
+Après la contre-expertise, Malik demande les corrections. Refresh partagé par session/jeton et rejet des résultats périmés ; clés Edge reconnues explicitement ; confinement modal commun sans rendre l'ancêtre de la feuille inerte. Un essai Android volumineux prouve un crash de parcel Capacitor : préparer un fichier privé et retirer le base64 avant SAF. Les originaux des portraits restent versionnés, seuls leurs doublons masqués sont exclus de out/. La persistance immédiate, les gestes et le préchargement sonore sont conservés en attendant des mesures ; pas de purge serveur implicite de streamer, pas d'option lucide redondante. [Preuves et compromis](corrections-gemini-2026-10-22.md). Ce lot n'est pas publié au checkpoint ; la règle d'accord avant publication Auth/Supabase reste applicable.
+
 ## D-RESET-20261022 — retrait définitif de la remise à zéro
 
 Malik autorise explicitement le retrait complet puis le push ciblé sur main.

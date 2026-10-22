@@ -193,7 +193,7 @@ export function MissionsView({
   sceneBusy?: boolean;
 }) {
   const cloud = useCloud();
-  const now = useNow(1_000);
+  const now = useNow(60_000);
   const verifiedScene = cloud.sceneStatus?.userId === cloud.userId && cloud.sceneStatus?.day === gameDay(now)
     ? cloud.sceneStatus : null;
   const sceneReady = !cloud.configured ? !game.scene.opened : verifiedScene?.ready === true;

@@ -53,6 +53,24 @@ describe("les feuilles sociales après connexion", () => {
     expect(document.body.textContent).not.toContain('Créer un compte invité');
   });
 
+  it.each([false, true])("isole le marché sans rendre la feuille inerte et restaure le fond (autres joueurs : %s)", async (others) => {
+    monde.others = others;
+    const visible = vi.spyOn(HTMLElement.prototype, "getClientRects").mockReturnValue({ length: 1 } as DOMRectList);
+    const onClose = vi.fn();
+    try {
+      const { MarketSheet } = await import("@/components/market-sheet");
+      await banc.monter(<div className="app-shell"><button id="background">Fond</button><MarketSheet onClose={onClose} /></div>);
+      const dialog = document.querySelector<HTMLElement>('[role="dialog"]')!;
+      expect(document.getElementById("background")!.inert).toBe(true);
+      expect(dialog.inert).not.toBe(true);
+      expect(document.activeElement).toBe(dialog);
+      await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); });
+      expect(onClose).toHaveBeenCalledOnce();
+      await banc.rendre(<div className="app-shell"><button id="background">Fond</button></div>);
+      expect(document.getElementById("background")!.inert).not.toBe(true);
+    } finally { visible.mockRestore(); }
+  });
+
   it.each([
     ["friends", "FriendsSheet", "loadFriends"],
     ["market", "MarketSheet", "loadMarket"],

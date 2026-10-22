@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-22-session-feuilles", date: "2026-10-22", title: "Une connexion plus fiable",
+    summary: "Les renouvellements de connexion se coordonnent, et les feuilles du compte, du marché et de l’Arène gardent le clavier.",
+    sections: [{ title: "Confort", items: [
+      "Une panne temporaire pendant le renouvellement de connexion ne supprime plus ta session.",
+      "Tab et Maj+Tab restent dans Mon compte, l’Hôtel des ventes et l’Arène. Échap ferme la feuille et rend le focus au bouton précédent.",
+      "Les champs de recherche et du compte sont plus lisibles sur écran tactile.",
+    ] }],
+  },
+  {
     id: "2026-10-22-reglages-clavier-retour-tribunal", date: "2026-10-22", title: "Des réglages plus faciles au clavier",
     summary: "Le clavier reste dans les Réglages, et fermer le bilan du Tribunal conserve ton écran.",
     sections: [{ title: "Navigation", items: [
