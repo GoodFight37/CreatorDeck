@@ -25,6 +25,8 @@ export async function gotoDeck(page: Page, tutorial = true, options: { withoutCi
   await page.goto("/");
   const dialog = page.getByRole("dialog", { name: "Mes chaînes" });
   if (tutorial) {
+    await expect(page.locator(".home-view")).toBeVisible();
+    if (!await dialog.isVisible()) await page.getByRole("button", { name: "Définir mes chaînes", exact: true }).click();
     await expect(dialog).toBeVisible();
     await answerCircle(dialog);
   }

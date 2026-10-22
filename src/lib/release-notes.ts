@@ -27,6 +27,15 @@ export const RELEASE_NOTES: readonly ReleaseNote[] = [
     ] }],
   },
   {
+    id: "2026-10-21-createur-memes", date: "2026-10-21", title: "Crée un mème avec tes cartes",
+    summary: "Une carte Mèmes obtenue peut devenir une nouvelle création, sans changer ta carte.",
+    sections: [{ title: "Créations", items: [
+      "Ouvre une carte obtenue et choisis Créer un mème : ajoute plusieurs textes, déplace-les et règle leur taille et leur couleur.",
+      "Enregistre une nouvelle image. Les modèles GIF restent animés, avec leurs durées et leurs boucles.",
+      "Le texte et la création restent sur ton appareil. Ta carte et tes exemplaires sont conservés.",
+    ] }],
+  },
+  {
     id: "2026-10-19-sachet-net", date: "2026-10-19", title: "Un paquet plus net qui respire",
     summary: "Sur l’accueil, le paquet est imprimé net et son ombre suit son flottement.",
     sections: [{ title: "Accueil", items: [

@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
   // Pas de serveur d'optimisation d'images en export statique : les portraits
   // sont pré-encodés à la taille utile (600×600, voir scripts/lib/avatars.mjs).
   images: { unoptimized: true },
+  // Développement seulement : laisser un téléphone du réseau local ouvrir `next dev`.
+  allowedDevOrigins: ["10.10.145.105", "192.168.*.*"],
 };
 
 export default nextConfig;

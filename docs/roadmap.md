@@ -18,6 +18,10 @@ le push ciblé sur main : exports clients retirés, migration 0061 sans effaceme
 de données, application serveur prévue après CI verte.
 [Preuves, commandes et limites](verification-navigation-42df5b4.md).
 
+## Imgflip et créations locales — 21 octobre 2026
+
+Chantier `CreatorDeck-Codex-zgr` : raccordement du catalogue sous contrôle des droits et éditeur PNG/GIF depuis une carte possédée implémentés localement. L’inventaire serveur existant reste l’autorité ; aucune carte originale n’est modifiée. Douze parcours navigateur et un export GIF réellement enregistré sur émulateur Android sont validés. Publication retenue : contrôle général encore rouge (`CreatorDeck-Codex-xxo`) et droits des 200 médias Imgflip non établis. Les modèles non autorisés ne sont pas distribués. Détails et preuves dans [le guide](imgflip-editor.md) et le checkpoint courant.
+
 **Drop — nom `MEMES` sans accent (17 octobre 2026) :** libellés d’ouverture et
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications
 et publication : checkpoint de reprise.

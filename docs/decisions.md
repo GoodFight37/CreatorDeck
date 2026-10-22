@@ -35,6 +35,11 @@ tests d’écrans et navigateur après ; preuves :
 ## D-159 — 22 octobre 2026 : dépendances de production sans vulnérabilité haute
 
 Contexte : l'audit relève 3 vulnérabilités hautes en production (next, sharp, source-map-js), toutes avec correctif. Décision : mise à jour du seul lockfile par `npm audit fix --package-lock-only` ; package.json inchangé. next passe de 16.3.6 à 16.4.2 (mineure), sharp et source-map-js en correctif. Porte CI : `npm audit --omit=dev --audit-level=high` dans verification.yml. Preuves : copie propre de origin/main avec ce lockfile, `npm ci`, tsc, 1340/1340 unitaires, `npm run build` verts. E2E complet non relancé sur cette copie : à faire avant de conclure sur next 16.4.
+## D-IMGFLIP-20261021 — créations locales et catalogue sous contrôle des droits
+
+À la demande de Malik : réutiliser le catalogue Mèmes et les possessions Supabase, conserver l’importateur SQLite séparé. `imgflip-<id>` isole les nouvelles identités. Le pont d’import exige des permissions documentées et une politique de rareté/numérotation explicite ; aucun des 200 modèles collectés n’est déclaré publiable par défaut. Il ne contacte pas Supabase et génère seulement des ajouts SQL à relire. Les justificatifs détaillés restent dans le fichier opérateur, pas dans le catalogue client.
+
+L’éditeur travaille localement sur une copie, relit `meme_status` avant de créer un fichier et ne modifie ni le catalogue ni les exemplaires. Canvas et le décodeur natif sont réutilisés ; seul `gifenc` est ajouté pour encoder les GIF. Durées/boucles conservées, aperçu pouvant être mis en pause, mouvement réduit respecté. Android réutilise le mécanisme de plugin maison pour `ACTION_CREATE_DOCUMENT`, sans permission globale de stockage. Pas d’appel Imgflip de génération, de serveur d’édition, d’inventaire parallèle ou de refonte des boosters. Preuves et limites : [imgflip-editor.md](imgflip-editor.md), checkpoint actuel. Publication retenue tant que les droits et le contrôle général ne sont pas validés.
 
 ## D-158 — 22 octobre 2026 : archives Upscayl hors de public/, prototype retiré de l'export
 
