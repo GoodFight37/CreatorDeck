@@ -40,7 +40,8 @@ describe("portraits sélectionnés", () => {
       expect(creatorPortraitUrl(slug)).toBe(expectedPath);
       expect(creatorImage({ slug })).toBe(expectedPath);
       expect(imagePath).toMatch(/^\/creators\/upscaled\/[a-z0-9-]+\.webp$/);
-      const image = sharp(`public${imagePath}`);
+      // Archives hors de public/ : elles ne partent plus dans out/.
+      const image = sharp(imagePath.replace("/creators/upscaled/", "archive/upscaled/"));
       const info = await image.metadata();
       expect(info).toMatchObject({ format: "webp", width: 720, height: 720 });
       await expect(image.raw().toBuffer()).resolves.toBeInstanceOf(Buffer);

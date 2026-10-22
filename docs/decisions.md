@@ -28,6 +28,10 @@ verdicts, récompenses ou destinations. Régressions reproduites avant correctio
 tests d’écrans et navigateur après ; preuves :
 [vérification navigation](verification-navigation-42df5b4.md).
 
+## D-158 — 22 octobre 2026 : archives Upscayl hors de public/, prototype retiré de l'export
+
+Contexte : l'audit du HEAD relève 20 Mo d'archives WebP copiées dans chaque export (`public/creators/upscaled/`) et la route `/catalogue-demo` présente dans `out/`. Décision : les 699 archives sortent de `public/` vers `archive/upscaled/` (suivies par git, non servies). Le test des archives lit ce nouveau dossier ; les JSON de surcharge gardent leurs chemins historiques, qui ne sont plus servis. `/catalogue-demo` reste disponible en développement et en E2E ; `scripts/prune-prototypes.mjs`, lancé après `next build`, retire `out/catalogue-demo*`. Preuves : `vitest` sur `creator-portraits.test.ts` (33/33), `tsc`, ESLint, `npm run build` (out/ passe de 111 à 92 Mo, sans `catalogue-demo*` ni `creators/upscaled`).
+
 ## D-157 — 19 octobre 2026 : fluidité de l'ouverture (branche fluidite-ouverture, PR)
 
 Plan issu de l'audit improve-animations, validé par Malik. Une seule animation

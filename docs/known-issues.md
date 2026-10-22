@@ -1,3 +1,7 @@
+## Archives Upscayl et prototype dans chaque export — corrigé localement (D-158, 22 octobre 2026)
+
+Constat de l'audit : 699 WebP (20 Mo) copiés dans `out/creators/upscaled/`, et `out/catalogue-demo.html` exporté. Corrigé : archives déplacées vers `archive/upscaled/`, prototype retiré de `out/` après `next build`. Reste ouvert : les JSON de surcharge citent encore `/creators/upscaled/…`, chemins qui ne sont plus servis (historique seulement).
+
 ## Reset de progression — retrait complet préparé, 22 octobre 2026
 
 Malik autorise le retrait complet puis le push sur main. La commande de remise

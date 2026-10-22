@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/cloud-guard.mjs && next build",
+    "build": "node scripts/cloud-guard.mjs && next build && node scripts/prune-prototypes.mjs",
     "start": "serve out",
     "lint": "eslint .",
     "e2e": "playwright test",
