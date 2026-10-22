@@ -12,6 +12,12 @@ import { buzz } from "@/lib/haptics";
 import { PACK_TEAR_MS, TEAR_HAPTIC } from "@/lib/reveal";
 import { CardBackEmblem } from "@/components/card-back-emblem";
 
+type PeelFrame = {
+  trace: { x: number; y: number }[];
+  pull: { x: number; y: number; angle: number };
+  cut: { start: number; end: number; progress: number; direction: number; origin: number };
+};
+
 /**
  * Opening keeps the foil art as one printed image, cuts it where the finger
  * passes, peels the upper weld off, then exposes and lifts actual card backs.
@@ -48,6 +54,28 @@ export function PackTear({
   const [returning, setReturning] = useState(false);
   const [pull, setPull] = useState({ x: 0, y: 0, angle: 0 });
   const pullProgress = useRef(0);
+  // Les mouvements du doigt arrivent plus vite que l'écran : un seul rendu par image.
+  const peelFrame = useRef<{ id: number; next: PeelFrame | null }>({ id: 0, next: null });
+  const scheduleCut = useCallback((next: PeelFrame) => {
+    const frame = peelFrame.current;
+    frame.next = next;
+    if (frame.id) return;
+    frame.id = requestAnimationFrame(() => {
+      frame.id = 0;
+      const latest = frame.next;
+      frame.next = null;
+      if (!latest) return;
+      setTrace(latest.trace);
+      setPull(latest.pull);
+      setCut(latest.cut);
+    });
+  }, []);
+  const cancelScheduledCut = () => {
+    const frame = peelFrame.current;
+    if (frame.id) cancelAnimationFrame(frame.id);
+    frame.id = 0;
+    frame.next = null;
+  };
   const [opened, setOpened] = useState(false);
   const [releaseReady, setReleaseReady] = useState(false);
   const [showSlowFallback, setShowSlowFallback] = useState(false);
@@ -101,6 +129,7 @@ export function PackTear({
     if (done.current) return;
     done.current = true;
     start.current = null;
+    cancelScheduledCut();
     sceneRef.current?.classList.remove("is-pulling");
     sceneRef.current?.style.removeProperty("--opening-tilt-x");
     sceneRef.current?.style.removeProperty("--opening-tilt-y");
@@ -148,10 +177,12 @@ export function PackTear({
   useEffect(() => () => {
     if (timer.current !== null) window.clearTimeout(timer.current);
     if (slowTimer.current !== null) window.clearTimeout(slowTimer.current);
+    cancelScheduledCut();
   }, []);
 
   const retract = () => {
     start.current = null;
+    cancelScheduledCut();
     if (done.current) return;
     sceneRef.current?.classList.remove("is-pulling");
     for (const key of ["--opening-tilt-x", "--opening-tilt-y", "--opening-light-x"]) {
@@ -337,18 +368,20 @@ export function PackTear({
               ) * 100));
               pullProgress.current = progress / 100;
 
-              setTrace([...gesture.points]);
-              setPull({
-                x: 28 * Math.tanh(dx / 180),
-                y: dy < 0 ? 68 * Math.tanh(dy / 150) : 30 * Math.tanh(dy / 100),
-                angle: Math.max(-14, Math.min(14, (Math.atan2(dy, bounds.width * 0.5) * 180) / Math.PI)),
-              });
-              setCut({
-                start: minX,
-                end: maxX,
-                progress,
-                direction: dx >= 0 ? 1 : -1,
-                origin: gesture.percent,
+              scheduleCut({
+                trace: [...gesture.points],
+                pull: {
+                  x: 28 * Math.tanh(dx / 180),
+                  y: dy < 0 ? 68 * Math.tanh(dy / 150) : 30 * Math.tanh(dy / 100),
+                  angle: Math.max(-14, Math.min(14, (Math.atan2(dy, bounds.width * 0.5) * 180) / Math.PI)),
+                },
+                cut: {
+                  start: minX,
+                  end: maxX,
+                  progress,
+                  direction: dx >= 0 ? 1 : -1,
+                  origin: gesture.percent,
+                },
               });
 
               const scene = sceneRef.current;
