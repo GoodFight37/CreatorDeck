@@ -432,7 +432,7 @@ export function PackTear({
           ) : showSlowFallback && !revealing ? (
             <div className="booster-premium-loading" aria-live="polite">
               <p className="booster-premium-gesture">
-                <span aria-hidden="true">✦</span> CHARGEMENT DES CARTES…
+                <span aria-hidden="true">✦</span> LOADING CARDS…
               </p>
               {onLeavePending ? (
                 <button className="booster-open-link" type="button" onClick={onLeavePending}>

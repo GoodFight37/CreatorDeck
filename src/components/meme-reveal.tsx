@@ -51,13 +51,13 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     }} onPointerUp={endGesture} onPointerCancel={() => { start.current = null; }}>
       <div className={`meme-reveal-flip rarity-${card.rarity}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
         <div className="meme-reveal-front"><MemeCard card={card} copies={copies} /></div>
-        <div className="meme-reveal-back" aria-hidden="true"><span>CREATORDECK</span><strong>MÈMES</strong><small>5 CARTES</small></div>
+        <div className="meme-reveal-back" aria-hidden="true"><span>CREATORDECK</span><strong>MEMES</strong><small>5 CARDS</small></div>
       </div>
     </div>
     <p className="meme-reveal-rarity">{ready ? MEME_RARITY[card.rarity].label : ""}</p>
     <p className="meme-reveal-gesture" aria-hidden="true">{ready ? "GLISSE LA CARTE" : ""}</p>
     <button className="meme-reveal-next" type="button" disabled={!ready} onClick={onAdvance}>
-      {ready ? number === 4 ? "VOIR LES 5 CARTES" : "CARTE SUIVANTE" : "RÉVÉLATION…"}
+      {ready ? number === 4 ? "SEE THE 5 CARDS" : "NEXT CARD" : "REVEALING…"}
     </button>
   </>;
 }

@@ -75,9 +75,9 @@
 <text x="300" y="185" fill="#fff0da" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="20" letter-spacing="7" text-anchor="middle">CREATORDECK</text>
 <path d="M122 209H478" stroke="#fff0da" stroke-opacity=".26" stroke-width="2"/>
 <text x="300" y="710" fill="#fff0da" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="28" letter-spacing="8" text-anchor="middle">LIVE DROP</text>
-<text x="300" y="739" fill="#fff0da" fill-opacity=".62" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="13" letter-spacing="4" text-anchor="middle">ÉDITION CRÉATEURS</text>
+<text x="300" y="739" fill="#fff0da" fill-opacity=".62" font-family="Arial,Helvetica,sans-serif" font-weight="700" font-size="13" letter-spacing="4" text-anchor="middle">CREATOR EDITION</text>
 <path d="M150 791H450" stroke="#fff0da" stroke-opacity=".2" stroke-width="2"/>
-<text x="300" y="829" fill="#fff0da" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="16" letter-spacing="5" text-anchor="middle">5 CARTES • ÉDITION I</text>
+<text x="300" y="829" fill="#fff0da" font-family="Arial,Helvetica,sans-serif" font-weight="800" font-size="16" letter-spacing="5" text-anchor="middle">5 CARDS • EDITION I</text>
 </g>
 <path d="M22 10Q300 5 578 10L589 35L581 78L566 139C577 322 584 563 567 766L584 835L573 869Q300 877 27 869L16 835L33 766C16 563 23 322 34 139L19 78L11 35Z" fill="none" stroke="#fff0da" stroke-opacity=".68" stroke-width="3"/>
 </svg>

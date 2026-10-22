@@ -49,7 +49,7 @@ export function MemeCard({ card, compact = false, copies = 0, interactiveFoil = 
           <span className="card-region">Mèmes FR</span>
         </div>
         <h3 title={card.name}>{card.name}</h3>
-        {!compact ? <div className="card-footerline"><span>ÉDITION MÈMES</span>{copies > 1 ? <strong>×{copies}</strong> : null}</div> : null}
+        {!compact ? <div className="card-footerline"><span>MEMES EDITION</span>{copies > 1 ? <strong>×{copies}</strong> : null}</div> : null}
       </div>
     </article>
   );
