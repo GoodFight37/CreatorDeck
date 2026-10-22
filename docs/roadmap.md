@@ -1,5 +1,13 @@
 # Roadmap CreatorDeck
 
+Publication du 22 octobre : le main regroupé est poussé au commit
+[`c8ad0328`](https://github.com/GoodFight37/CreatorDeck/commit/c8ad0328bae09e5cb116db7b4472aeb63cb1283e),
+Vercel Production du même SHA vérifié terminé. Le retrait du moteur streamer
+client, son vérificateur SQL conservé et le focus Tribunal sont donc publiés ;
+les anciens statuts « local » ci-dessous restent des observations datées.
+Les contrôles GitHub sont encore en cours et l'APK de cette version attend leur
+réussite. Résultats, limites et liens dans le [checkpoint courant](agent-handoff.md).
+
 ## Corrections de la contre-expertise Gemini — 22 octobre 2026, local
 
 Sessions, autorisation refresh-live, focus Compte/Marché/Arène et Tribunal, export natif volumineux, dépendances mortes, portraits masqués dans l'export et champs tactiles corrigés localement. Le retrait du moteur streamer client est également réalisé localement le 22 octobre : les contrôles SQL serveur restent en place et vérifient les fonctions existantes. Tests antérieurs du lot Gemini : 1 343 unitaires, 240 écrans puis deux nouveaux cas Marché, 95 E2E réussis et neuf ignorés ; export natif de 21 Mo identique sur API 36. Build statique vert. Publication Auth/Edge en attente d'accord explicite ; travaux Imgflip exclus de toute publication implicite. [État précis et limites](corrections-gemini-2026-10-22.md).

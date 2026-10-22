@@ -1,4 +1,4 @@
-## Préparation E2E : modes cloud mélangés et accueil du Tribunal — corrigé localement, 22 octobre 2026
+## Préparation E2E : modes cloud mélangés et accueil du Tribunal — correctif publié, 22 octobre 2026
 
 Version : `87454815`, gravité P2 pour la validation. `npm run e2e` avec la
 configuration Supabase de `.env.local` faisait attendre des boutons/récompenses
@@ -26,7 +26,7 @@ double versement ; règles et serveur inchangés. Capture téléphone simulé :
 `reports/reprise-claude-2026-10-22/tribunal-sans-cloud-test-results/tribunal-focus-le-Tribunal-c0765-ilan-et-le-rend-à-la-sortie-téléphone/bilan.png`.
 Suivi distinct `CreatorDeck-Codex-zmo` ; aucun contournement nécessaire pour jouer.
 
-## Tribunal : focus du dialogue principal — corrigé localement, 22 octobre 2026
+## Tribunal : focus du dialogue principal — correctif publié, 22 octobre 2026
 
 Version constatée : `d6ecc0d6`, gravité P2 (accessibilité clavier). Avant le bilan,
 ouvrir le Tribunal puis Tab/Maj+Tab ou Échap : le dialogue principal n'armait
@@ -37,7 +37,7 @@ les 26 tests logique/notes passent. Playwright ciblé : 2/2 (bureau et télépho
 simulé), quatre captures examinées. Aucun changement de paiement ni de sauvegarde.
 Android et appareil physique non testés pour ce correctif clavier.
 
-## Helper E2E des chaînes : ancien bouton attendu — corrigé localement, 22 octobre 2026
+## Helper E2E des chaînes : ancien bouton attendu — correctif publié, 22 octobre 2026
 
 Version constatée : `d6ecc0d6`, gravité P2 (tests bloqués avant le parcours).
 `gotoDeck(page, true)` ouvre le formulaire facultatif en mode édition, puis
@@ -53,7 +53,7 @@ simulé), dont enregistrement persistant, `withoutCircle`, rechargement avec
 finales examinées. Aucun contournement nécessaire ; suivi `CreatorDeck-Codex-04e`.
 La suite E2E complète reste à Malik ; Android et production non testés ici.
 
-## Vérificateur SQL : JSON client supprimés — corrigé localement, 22 octobre 2026
+## Vérificateur SQL : JSON client supprimés — correctif publié, 22 octobre 2026
 
 Version constatée : `d6ecc0d6`, gravité P2 (vérification locale bloquée).
 `npm run supabase:verify` lisait `streamer.json` et `live-game.json`, retirés
