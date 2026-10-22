@@ -6,15 +6,15 @@ export { expect, test } from "@playwright/test";
 /** Les cinq chaînes que les scénarios nomment : les cinq premières du catalogue. */
 export const E2E_CIRCLE = ["kaicenat", "ibai", "ninja", "auronplay", "rubius"] as const;
 
-/** Répondre à « Quelles chaînes regardes-tu déjà ? » comme le ferait un joueur. */
+/** Renseigner les chaînes à l'accueil ou en édition, comme le ferait un joueur. */
 export async function answerCircle(dialog: ReturnType<Page["getByRole"]>): Promise<void> {
   await dialog.getByLabel("Nom d’une chaîne").fill(E2E_CIRCLE.join(", "));
   await dialog.getByRole("button", { name: "Ajouter", exact: true }).click();
-  await dialog.getByRole("button", { name: "Voir mon premier booster", exact: true }).click();
+  await dialog.getByRole("button", { name: /^(Voir mon premier booster|Enregistrer)$/ }).click();
 }
 
 /**
- * Préparer le joueur via la vraie question d'accueil, après hydratation.
+ * Préparer le joueur via le formulaire de chaînes, après hydratation.
  *
  * `withoutCircle` : le joueur répond, puis son cercle est effacé de l'appareil.
  * C'est l'état d'un joueur d'avant « Mes chaînes » (accueil complet, Binder par

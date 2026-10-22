@@ -9,15 +9,21 @@ les 26 tests logique/notes passent. Playwright ciblé : 2/2 (bureau et télépho
 simulé), quatre captures examinées. Aucun changement de paiement ni de sauvegarde.
 Android et appareil physique non testés pour ce correctif clavier.
 
-## Helper E2E des chaînes : ancien bouton attendu — ouvert, 22 octobre 2026
+## Helper E2E des chaînes : ancien bouton attendu — corrigé localement, 22 octobre 2026
 
 Version constatée : `d6ecc0d6`, gravité P2 (tests bloqués avant le parcours).
 `gotoDeck(page, true)` ouvre le formulaire facultatif en mode édition, puis
 `answerCircle` attend « Voir mon premier booster » au lieu d'« Enregistrer ».
-Deux échecs reproduits avant l'ouverture du Tribunal. Le nouveau test ciblé
-utilise `gotoDeck(page, false)` car les chaînes sont facultatives. Adapter le
-helper général avant la suite complète ; suivi `CreatorDeck-Codex-04e` ouvert.
-La suite E2E complète n'a pas été lancée, conformément à la demande de Malik.
+Deux échecs avaient été reproduits avant l'ouverture du Tribunal. Reproduction
+confirmée sur `8e42a397` : un test ciblé échoue sur cet ancien bouton alors que
+la capture montre « Enregistrer ». `answerCircle` accepte maintenant les deux
+libellés exacts, sans modifier les appelants ni le formulaire du jeu.
+Preuve sur cette base + correctif : 6/6 scénarios Playwright (bureau et téléphone
+simulé), dont enregistrement persistant, `withoutCircle`, rechargement avec
+`tutorial=false` et onboarding connecté avec cadeau unique puis cinq boosters
+(RPC factices de CI). Typecheck et ESLint ciblé : code 0 ; quatre captures
+finales examinées. Aucun contournement nécessaire ; suivi `CreatorDeck-Codex-04e`.
+La suite E2E complète reste à Malik ; Android et production non testés ici.
 
 ## Vérificateur SQL : JSON client supprimés — corrigé localement, 22 octobre 2026
 
