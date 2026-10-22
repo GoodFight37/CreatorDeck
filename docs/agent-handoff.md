@@ -559,6 +559,14 @@ de correction limitée à cette branche, libérée à la livraison du checkpoint
   changement de main, déploiement SQL réel ou essai téléphone revendiqué.
   Checkpoint en cours de commit ; SHA du document par `git log -1 --format=%H
   -- docs/agent-handoff.md`.
+# Checkpoint — checkout Codex réconcilié (18 octobre 2026)
+
+- Malik a autorisé la sauvegarde et la réconciliation après le constat de divergence. Branche conservée : `codex/collaboration`. Fusion normale `239dab5`, parents Codex `ce7caaaf11b1cb03635449b872bb5c331cfc4d15` et main `2fa29aaa8a3587066867043269e8e818e1a53f93` ; aucun reset, force-push, changement de branche ou nouveau worktree.
+- Sauvegarde externe vérifiée de 38 fichiers dans `C:/Users/Administrator/AppData/Local/Temp/creatordeck-reprise-20261018-4hs9vh8n` (manifest SHA-256 et patch binaire). Stash `Sauvegarde reprise autorisee 18 octobre 2026` conservé après application ; ne pas le réappliquer sans examiner les fichiers déjà restaurés.
+- Résolution : versions publiées de main pour les anciens conflits E2E, notes joueur et documents remplacés ; les deux historiques restent ancêtres du HEAD. Aucun nouveau comportement applicatif ajouté. Les ajouts du correctif Claude ont été réappliqués aux documents actuels ; SVG, scripts, pièces jointes et artefacts restent locaux, hors commit.
+- Vérifications au code de fusion `239dab5` avec correctif local restauré : `rtk node --test --test-isolation=none scripts/delegate-claude.test.mjs` : 26/26, zéro ignoré, uniquement des appels factices. ESLint ciblé et contrôle du diff réussis ; 34 fichiers locaux vérifiés identiques octet par octet à la sauvegarde, les quatre autres documents conservent leurs ajouts avec le contenu publié. Aucun appel Claude réel, installation, build APK ou accès Supabase exécuté. Installation initiale et mise à jour téléphone toujours non vérifiées.
+- Le code publié reste main `2fa29aaa` : CI 6/6 sur `bb6cf0a`, workflow APK final vert et statut GitHub Vercel success sur `2fa29aaa`, vérifiés pendant cette reprise. Aucun nouveau déploiement applicatif revendiqué. Étapes 4 et 5 non commencées ; prochain lot à cadrer selon la roadmap actuelle.
+- Ce checkpoint est prévu pour publication sur `codex/collaboration` seulement ; confirmer son SHA distant après push. Les modifications préexistantes ne sont pas incluses dans ce commit documentaire. Réservation de synchronisation libérée à la fin des contrôles.
 
 # Checkpoint — APK de test D-144 publiée (18 octobre 2026)
 
