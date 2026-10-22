@@ -85,10 +85,7 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   de test : après le push, vérifier que le déploiement Production correspond au
   SHA publié et transmettre son état réel. Une petite modification n'exige pas de
   relecture par l'autre agent ; l'agent qui travaille mène développement et audits ciblés.
-- Demander l’accord explicite de Malik avant de publier toute modification
-  sensible touchant Supabase, migrations ou données, authentification,
-  sécurité, secrets, suppression de données ou opération irréversible. Ne jamais
-  committer un secret ou `.env.local`. Les resets, réparations d’historique,
+- Ne jamais committer un secret ou `.env.local`. Les resets, réparations d’historique,
   force-push, réécriture d’historique, suppression de branches et fusion de PR
   restent interdits sans accord explicite.
 - Ne jamais écraser les modifications, commits ou fichiers d'un autre agent.
