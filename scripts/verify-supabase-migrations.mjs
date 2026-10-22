@@ -5852,25 +5852,6 @@ try {
     JSON.stringify(paliers),
   );
 
-  // Le mini-jeu du direct (`src/lib/live-game.ts`) n'a **pas** de table : il ne
-  // paie rien, donc il n'y a rien à garder côté serveur. Ce qui doit en
-  // revanche rester d'accord, c'est le **nombre de paliers** : une cadence de
-  // chat et un nombre de bulles par palier de notoriété. Si un sixième palier
-  // apparaît dans le SQL sans que le fichier du live suive, le dernier palier
-  // vivrait une scène de palier inférieur sans que rien ne le dise.
-  const sceneLive = JSON.parse(
-    await readFile(path.join(ROOT, "src", "data", "live-game.json"), "utf8"),
-  );
-  const paliersSql = 5; // voir le contrôle ci-dessus : 0, 2500, 25 000, 250 000, 1 000 000
-  check(
-    "live : la scène suit les paliers du serveur (5 cadences, 5 nombres de bulles)",
-    sceneLive.chat.perMinute.length === paliersSql &&
-      sceneLive.alerts.count.length === paliersSql &&
-      sceneLive.chat.perMinute.every((n, i) => i === 0 || n > sceneLive.chat.perMinute[i - 1]) &&
-      sceneLive.alerts.count.every((n, i) => i === 0 || n > sceneLive.alerts.count[i - 1]),
-    JSON.stringify({ cadences: sceneLive.chat.perMinute, bulles: sceneLive.alerts.count }),
-  );
-
   const chaineNeuve = (await asPlayer(CHAINE, "select public.streamer_status() as r")).rows[0].r;
   check(
     "chaîne : une chaîne neuve part de zéro, aucune vidéo publiée",
@@ -6612,9 +6593,8 @@ try {
   //
   // Ce qui se vérifie ici : la rareté des invités pèse sur le gain de la vidéo
   // du jour, le direct ajoute le moment « RAID ! » (gain **et** chance de buzz),
-  // et rien de tout ça ne vient du client. Le barème est relu dans le **fichier**
-  // (`src/data/streamer.json`), comme pour les parts du raid : deux copies, un
-  // seul chiffre.
+  // et rien de tout ça ne vient du client. Les résultats attendus sont vérifiés
+  // directement contre les fonctions SQL serveur.
   const COLLAB_A = "8a8a8a8a-6666-4666-8666-8a8a8a8a8a8a";
   const COLLAB_B = "8b8b8b8b-6666-4666-8666-8b8b8b8b8b8b";
   const COLLAB_C = "8c8c8c8c-6666-4666-8666-8c8c8c8c8c8c";
@@ -6623,28 +6603,22 @@ try {
   await player(COLLAB_B, "Berthe plateau", [carteCollab]);
   await player(COLLAB_C, "Céline plateau", [carteCollab]);
 
-  const reglagesCollab = JSON.parse(
-    await readFile(path.join(ROOT, "src", "data", "streamer.json"), "utf8"),
-  ).guests.collab;
   const permillesCollab = (
     await client.query("select rarity, permille from public._streamer_collab_values() order by rarity")
   ).rows;
   const collabSql = Object.fromEntries(permillesCollab.map((row) => [row.rarity, Number(row.permille)]));
   const liveSql = (await client.query("select * from public._streamer_collab_live()")).rows[0];
   check(
-    "plateau : les parts de rareté sont celles du fichier, et rien d'autre",
+    "plateau : le serveur applique les parts de rareté attendues",
     permillesCollab.length === 5 &&
-      Object.entries(reglagesCollab.videoPermille).every(
-        ([rarity, permille]) => collabSql[rarity] === permille,
-      ) &&
-      Object.keys(collabSql).join(",").length > 0,
-    JSON.stringify({ collabSql, fichier: reglagesCollab.videoPermille }),
+      collabSql.common === 20 && collabSql.uncommon === 30 && collabSql.rare === 50 &&
+      collabSql.epic === 80 && collabSql.legendary === 120,
+    JSON.stringify(collabSql),
   );
   check(
-    "plateau : le direct ajoute son gain et sa chance de buzz, comme le fichier",
-    Number(liveSql.permille) === reglagesCollab.livePermille &&
-      Number(liveSql.buzz_permille) === reglagesCollab.liveBuzzPermille,
-    JSON.stringify({ liveSql, fichier: reglagesCollab }),
+    "plateau : le direct ajoute son gain et sa chance de buzz côté serveur",
+    Number(liveSql.permille) === 150 && Number(liveSql.buzz_permille) === 250,
+    JSON.stringify(liveSql),
   );
 
   const sansInvite = (await asPlayer(COLLAB_A, "select public.streamer_status() as r")).rows[0].r;
@@ -6821,14 +6795,8 @@ try {
   await player(BUREAU, "Victoria", [carteBureau]);
   await player(AUTRE, "Anouk", [carteAutre]);
 
-  // Les invités du fichier et ceux du SQL disent la même chose : c'est le
-  // miroir que le test unitaire tient à l'écriture, et que le vérificateur
-  // rejoue ici sur la **vraie** fonction, pas sur le texte de la migration.
-  const reglagesBureau = JSON.parse(
-    await readFile(path.join(ROOT, "src", "data", "streamer.json"), "utf8"),
-  ).guests;
-  const reglagesPart = (carte) => reglagesBureau.raidPermille[carte.rarity] ?? 0;
-  const partBureau = reglagesPart(carteBureau);
+  const partsRaid = { common: 15, uncommon: 25, rare: 40, epic: 60, legendary: 90 };
+  const partBureau = partsRaid[carteBureau.rarity] ?? 0;
   const permillesSql = (
     await client.query(
       `select public._streamer_guest_permille('common') as a,
@@ -6840,14 +6808,13 @@ try {
     )
   ).rows[0];
   check(
-    "invités : les parts du raid sont celles du fichier (15/25/40/60/90, 0 sinon)",
-    permillesSql.a === reglagesBureau.raidPermille.common &&
-      permillesSql.b === reglagesBureau.raidPermille.uncommon &&
-      permillesSql.c === reglagesBureau.raidPermille.rare &&
-      permillesSql.d === reglagesBureau.raidPermille.epic &&
-      permillesSql.e === reglagesBureau.raidPermille.legendary &&
-      Number(permillesSql.f) === 0 &&
-      reglagesBureau.slots === 2,
+    "invités : le serveur applique les parts du raid attendues (15/25/40/60/90, 0 sinon)",
+    permillesSql.a === partsRaid.common &&
+      permillesSql.b === partsRaid.uncommon &&
+      permillesSql.c === partsRaid.rare &&
+      permillesSql.d === partsRaid.epic &&
+      permillesSql.e === partsRaid.legendary &&
+      Number(permillesSql.f) === 0,
     JSON.stringify(permillesSql),
   );
 
@@ -6997,7 +6964,7 @@ try {
     "invités : un direct périmé (vingt minutes) ne paie pas, le même frais paie",
     Number(perime.raid.gained) === 0 &&
       Number(frais.raid.gained) ===
-        Math.floor((Number(frais.per_day) * reglagesPart(carteAutre)) / 1000),
+        Math.floor((Number(frais.per_day) * (partsRaid[carteAutre.rarity] ?? 0)) / 1000),
     JSON.stringify({ perime: perime.raid, frais: frais.raid, per_day: frais.per_day }),
   );
 

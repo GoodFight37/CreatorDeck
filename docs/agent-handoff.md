@@ -1,3 +1,22 @@
+# Checkpoint — reprise des restes, commits locaux uniquement (22 octobre 2026)
+
+- Demande active de Malik : cinq points dans l'ordre, un commit local par point ; aucun push, suppression, changement de migration SQL ou travail Imgflip/éditeur. Ne pas lancer la suite E2E complète.
+- Base locale vérifiée : `main`, `d6ecc0d68cbd99f15df26e6ed4fe06feb51b7470`. `origin/main` récupéré et vérifié à `19cfcf8ff8072306ce3a35554fce9df0b6cac2e1`, ancêtre du HEAD local ; pas de fusion ni de publication nécessaire pour ce lot. CLI GitHub : listes PR ouvertes et trois derniers runs main vides, aucun état CI déduit.
+- Point 1 prêt : le vérificateur ne lit plus les JSON client retirés ; contrôles des taux, fonctions et droits SQL conservés. Un appel résiduel à `reglagesPart` dans le brouillon repris a été corrigé après reproduction réelle.
+- Validation point 1, base ci-dessus + diff du script : `npm run typecheck` code 0 ; `npx eslint scripts/verify-supabase-migrations.mjs` code 0 ; `npx vitest run src/lib/supabase` code 0, 224/224 tests dans 23 fichiers ; `npm run supabase:verify` code 0, 1 028 contrôles réussis, aucun échec, Postgres jetable local. Première tentative bloquée par permission Windows, première relance interrompue sur `reglagesPart`, dernière exécution complète verte hors bac à sable. Aucune base distante testée.
+- Points suivants : aligner les trois documents ; découper minimalement le dialogue Tribunal et tester le focus ; constater les références Windows ; vérifier le rapport des portraits sans supprimer d'image. Modifications préexistantes conservées et exclues des commits ciblés.
+- Snapshots constatés : quatre Linux et quatre `win32` déjà suivis à la base locale ; aucun ajout/modification de capture prévu.
+- Checkpoint local ; le commit contenant ce document se retrouve avec `git log -1 --format=%H -- docs/agent-handoff.md`. Le checkpoint précédent ci-dessous décrit la tentative antérieure et ses blocages désormais dépassés.
+
+# Checkpoint Codex — retrait client streamer, docs, focus Tribunal (22 octobre 2026, local)
+
+- Demande : corriger `supabase:verify` après suppression des JSON streamer client, aligner roadmap/guide/décisions, poser le focus sur les dialogues visibles du Tribunal, signaler les snapshots Windows sans les modifier, et lister les candidats portraits sans supprimer d'asset.
+- Modifié localement : `scripts/verify-supabase-migrations.mjs` ne lit plus `streamer.json` ni `live-game.json`; les assertions SQL gardent les taux attendus. Docs alignés sur retrait client du 22/10 et maintien des migrations/fonctions serveur. Focus clavier du Tribunal lié au dialogue principal; le bilan garde son piège distinct. Note joueur mise à jour. Rapport §2.1 liste les 454 slugs avec override manuel et fichier racine correspondant. Aucun fichier `public/creators` supprimé.
+- E2E : aucune suite lancée. Le dossier contient actuellement 8 snapshots suivis, dont les versions `win32`; aucune capture modifiée.
+- Validation : `npm run typecheck` code 0 ; `npx eslint scripts/verify-supabase-migrations.mjs src/components/tribunal-view.tsx src/lib/release-notes.ts` code 0 ; `node --check scripts/verify-supabase-migrations.mjs` code 0 ; `git diff --check` code 0. `npm run supabase:verify` et `npx vitest run src/ecrans-tribunal.test.tsx src/lib/release-notes.test.ts` échouent avant exécution sur `spawn EPERM` (embedded-postgres / esbuild).
+- Commits demandés non créés : création de `.git/index.lock` refusée (`Permission denied`); `.git` est en lecture seule dans le bac à sable. `git ls-remote --heads origin main` inaccessible (proxy GitHub refusé). Pas de push, pas de modification de migration SQL. Le commit initial reste `d6ecc0d68cbd99f15df26e6ed4fe06feb51b7470` sur `main`; arbre sale préexistant préservé.
+- Reprise : dans un environnement où `.git` est inscriptible, vérifier à nouveau `HEAD`, la branche et la distance distante, puis faire des commits séparés à partir des seuls fichiers de chaque point; rejouer `npm run supabase:verify` et Vitest ciblé. Les changements et ce checkpoint sont locaux, non commités et non publiés.
+
 # Checkpoint Claude — chantiers du rapport Antigravity (22 octobre 2026)
 
 - Base `origin/main` 19cfcf8f. Branche `claude/chantiers-audit-2026-10-22` poussée (commit `33f98223`), **non fusionnée sur main**. Worktree dédié `CreatorDeck-Chantiers` ; la copie principale et le worktree Codex n'ont pas été touchés.
