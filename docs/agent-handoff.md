@@ -1,3 +1,11 @@
+# Checkpoint Claude — chantiers du rapport Antigravity (22 octobre 2026)
+
+- Base `origin/main` 19cfcf8f. Branche `claude/chantiers-audit-2026-10-22` poussée (commit `33f98223`), **non fusionnée sur main**. Worktree dédié `CreatorDeck-Chantiers` ; la copie principale et le worktree Codex n'ont pas été touchés.
+- Rapport vérifié point par point contre le code. Déjà traités avant ce lot (le rapport est périmé) : 1.1 déduplication du refresh (`refreshes` Map), 1.2 clé de service/anon vérifiée dans `refresh-live`, 1.3 `MemeExportPlugin.java` absent, 2.3 `googleapis`/`three`/`pack-foil-renderer` absents.
+- Fait dans ce lot : 2.5 (`PackTear`, un rendu par image au lieu de trois setState par mouvement) et 5.1 partiel (`.sort-field select` à 16 px sur tactile). Vérifié : typecheck, 1 340/1 340 unitaires, `pack-tear.spec.ts` 59 réussis et 1 échec de snapshot qui passe ensuite 2/2 en isolé (instable, pas causé par le changement).
+- **Non faits, décision à prendre par Malik :** 2.2 retrait du moteur streamer (touche le format de sauvegarde `PlayerState`, donc les données joueur) ; 2.4 debounce de `localStorage` (risque de perte de données à la fermeture si mal flushé) ; 2.1 suppression des 454 portraits masqués de `public/creators/` (actifs du workflow portraits) ; `upscaled-portrait-overrides.json` est utilisé par les crédits et par les tests, donc conservé.
+- Non vérifiés : 5.2 (`optimizePackageImports lucide-react`, non confirmé par défaut dans Next 16) ; 5.3 imports dynamiques ; 5.4 focus des modales restantes.
+
 # Checkpoint Codex — publication Gemini autorisée, copie propre validée (22 octobre 2026)
 
 - Malik autorise explicitement le push et le déploiement Auth/Edge. Lot préparé sur main 3647867bee92a80e97ff80f2316ab5a38de049e9 dans une copie distincte et un index temporaire : aucun remplacement du checkout ni de son index partagé. Claude a confirmé par CreatorDeck-Retour-Claude.md qu'il réserve ces fichiers et prévient avant tout nouveau push. L'éditeur Imgflip et le plugin Android corrigé restent locaux, hors publication.
