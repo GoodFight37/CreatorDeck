@@ -1,3 +1,14 @@
+# Checkpoint Claude (cloud) — état du sachet sur `main`, constats seuls (22 octobre 2026)
+
+- **Demande de Malik :** faire le point sur le design du sachet et sa révélation ; il réalise les corrections lui-même avec Claude Code sur son PC. **Aucun code modifié** : ce checkpoint et l'entrée de `docs/known-issues.md` sont les seuls changements.
+- **Base :** `origin/main` `957d22fb`. Attention : `codex/phase2-completion` s'arrête au 21/10 (`d140bf4`) et ne contient pas la refonte des sachets ; un premier bilan fait sur cette branche était périmé et a été retiré.
+- **Déjà fait sur `main` (rien à refaire) :** SVG Live et MEMES redessinés façon TCG Pocket (`scripts/build-pack-art.py`), sachet plat sans tranches (liseré qb0 réglé), flottement 4,8 s et reflet `.pack-glint` toutes les 5,6 s, pile aux couleurs de chaque univers, scène d'ouverture et dos aux couleurs du sachet, plus aucune carte qui avance seule.
+- **Captures relues** (Chromium Playwright, téléphone, DPR 2, `next dev`, sans cloud, partie neuve) : accueil Live à 320×568, 390×844 et 1024×768, accueil MEMES à 390, sachet scellé et première révélation à 390.
+- **Défaut prouvé :** à 320×568 et 1024×768, l'objet Drop de la barre du bas (`nav-objects.tsx`, centre surélevé) recouvre la ligne de réserve `.stock-row` (« 2 sachets · prochain à … ») : à 1024 on lit « 2 sachets · [icône] à 23 h 20 », à 320 la ligne est entièrement dessous. À 390×844, rien n'est caché. Voir `docs/known-issues.md`.
+- **Jamais vérifié (d'après les checkpoints du 21-22/10, et pas vérifié ici non plus) :** nouveaux sachets sur Android (émulateur, APK, téléphone) ; déchirure MEMES à l'œil ; cas doublon dans le navigateur (seulement en test unitaire) ; `review-animations` et `break-ui` sur les sachets.
+- **Préférences, non tranchées :** l'impression « TIRE SUR LA SOUDURE → » s'affiche aussi sur l'accueil, où un appui suffit à ouvrir (même SVG que la scène de déchirure) ; région de la carte révélée tronquée à 390 (« EUROPE DU NORD & GERM… ») ; le point de pagination à côté du nom de l'univers paraît décentré. Ressenti du peel toujours ouvert (entrée du 14/10), sans symptôme précis.
+- **Suggestion d'ordre :** (1) corriger le recouvrement de la réserve (réserver la hauteur de l'objet Drop sous le contenu de l'accueil, ou remonter la ligne), puis vérifier à 320, 360, 390 et 1024 ; (2) capturer la déchirure MEMES et un doublon ; (3) passer les sachets sur l'émulateur puis l'APK.
+
 # Checkpoint — CI entièrement verte, extinction demandée (22 octobre 2026)
 
 - Dernière demande explicite de Malik : « Éteint mon pc dès que t'as fini tout les test ». Les tests publiés sont terminés ; sauvegarder ce bilan et le pousser normalement avant de lancer l'extinction Windows. Aucun nouveau test local ou outil de surveillance à installer.
