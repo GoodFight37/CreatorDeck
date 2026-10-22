@@ -1,7 +1,7 @@
 import { expect, test, gotoDeck, openOtherActivities } from "./fixtures";
 
 test("le Tribunal confine le clavier, transmet le focus au bilan et le rend à la sortie", async ({ page }, testInfo) => {
-  await gotoDeck(page, false);
+  await gotoDeck(page);
   const entry = (await openOtherActivities(page)).getByRole("button", { name: "Tribunal des Bannis", exact: true });
   await entry.click();
   const tribunal = page.getByRole("dialog", { name: "Tribunal des Bannis", exact: true });

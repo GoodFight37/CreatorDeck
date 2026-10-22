@@ -1,3 +1,31 @@
+## Préparation E2E : modes cloud mélangés et accueil du Tribunal — corrigé localement, 22 octobre 2026
+
+Version : `87454815`, gravité P2 pour la validation. `npm run e2e` avec la
+configuration Supabase de `.env.local` faisait attendre des boutons/récompenses
+du mode local à des tests exécutés comme invité cloud. Le run Claude arrêté
+comptait 48 réussites, 9 échecs et 7 ignorés. Reprendre la recette CI : suite
+générale avec les deux variables Supabase vides dans le processus, puis seulement
+les scénarios « avec le serveur » avec configuration factice et RPC interceptés.
+Ne pas modifier `.env.local` ni le jeu pour contourner ce mélange.
+
+Le run général correct a isolé deux échecs supplémentaires dans le test Tribunal :
+`gotoDeck(page, false)` laissait l'accueil sans cloud ouvert. Le scénario utilise
+maintenant `gotoDeck(page)`, le helper réparé. Preuves : 203 réussites, 23 ignorés,
+2 échecs initiaux sur 228 ; après correction, Tribunal sans cloud 2/2 et parcours
+cloud + Tribunal 18/18, zéro ignoré dans ces relances. Aucun run intégral vert
+unique revendiqué après cette correction d'une ligne de test. Suivi
+`CreatorDeck-Codex-1ny`, rapports locaux dans `reports/reprise-claude-2026-10-22/`.
+
+## Bilan du Tribunal : montant affiché deux fois — ouvert, 22 octobre 2026
+
+Version : `87454815`, gravité P3, affichage. Terminer les cinq verdicts en mode
+local : le bilan peut afficher « Séance payée : +40 points. +40 points ».
+Cause de rendu confirmée : `paiement.message` contient déjà le montant, puis
+`paiement.delta` est affiché à nouveau dans un élément fort. Aucune preuve de
+double versement ; règles et serveur inchangés. Capture téléphone simulé :
+`reports/reprise-claude-2026-10-22/tribunal-sans-cloud-test-results/tribunal-focus-le-Tribunal-c0765-ilan-et-le-rend-à-la-sortie-téléphone/bilan.png`.
+Suivi distinct `CreatorDeck-Codex-zmo` ; aucun contournement nécessaire pour jouer.
+
 ## Tribunal : focus du dialogue principal — corrigé localement, 22 octobre 2026
 
 Version constatée : `d6ecc0d6`, gravité P2 (accessibilité clavier). Avant le bilan,
@@ -73,11 +101,17 @@ du rappel de fermeture dans `creator-deck-app.tsx`. Correctif local autorisé :
 « Fermer le bilan », sans changement du retour. Assertion d’écran rouge avant,
 verte après. Non publié. Suivi `CreatorDeck-Codex-0i9`.
 
-## Contrôle général E2E cloud — ouvert, 21 octobre 2026
+## Contrôle général E2E cloud — cas réexaminés et verts localement, 22 octobre 2026
 
 Reproduction : `npx playwright test --workers=1 --max-failures=3` dans le checkout local incluant le chantier Imgflip. Résultat : 34 réussis, 3 échecs, 2 ignorés, 183 non exécutés. `booster-selector.spec.ts` attend une réserve Live de 4 et une réserve Mèmes de 4 ; il observe 2 sachets locaux et une réserve Mèmes non chargée. `hourglass-online.spec.ts` rencontre le dialogue Mes chaînes au moment du clic sur le sablier. Cause suspectée : préparation des comptes/RPC factices et timing du nouvel accueil ; pas de cause produit établie. Gravité : contrôle de publication bloquant. Suivi `CreatorDeck-Codex-xxo`.
 
 La fixture commune attendait aussi un dialogue automatique devenu optionnel ; elle ouvre désormais le bouton existant. Les 2 tests Atelier repassent, mais cela ne résout pas les trois échecs ci-dessus. Les 12 parcours ciblés Mèmes/éditeur passent séparément. Ne pas présenter cette validation ciblée comme une suite générale verte. Aucun déploiement du chantier Imgflip à ce stade.
+
+Réexamen du 22 octobre sur `87454815` + préparation Tribunal corrigée : les deux
+cas `booster-selector` et le cas `hourglass-online` passent sur bureau et téléphone
+dans le run cloud factice de 18/18 scénarios. Le relevé du 21 octobre reste
+historique ; aucune correction de l'économie ni validation de l'éditeur Imgflip
+déduite de ce nouveau run. Détail du contrôle général dans le checkpoint courant.
 
 ## Smoke Android interrompu par QEMU SwiftShader — corrigé localement (19 octobre 2026)
 
