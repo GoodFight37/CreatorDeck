@@ -26,6 +26,7 @@ import {
   resolveCircleInput,
   searchCreators,
 } from "@/lib/circle";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 // Construit une fois à l'import : mille entrées, quelques millisecondes.
 const INDEX = buildCreatorIndex(CREATORS);
@@ -43,6 +44,7 @@ export function CircleOnboarding({
   onConfirm: (slugs: string[]) => void;
   onCancel?: () => void;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onCancel);
   const [slugs, setSlugs] = useState<string[]>(() => [...initial]);
   const [draft, setDraft] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -97,7 +99,7 @@ export function CircleOnboarding({
   );
 
   return (
-    <div className="welcome-overlay circle-overlay" role="dialog" aria-modal="true" aria-label="Mes chaînes">
+    <div className="welcome-overlay circle-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Mes chaînes">
       <section className="welcome-card circle-card">
         <span className="welcome-eyebrow">MES CHAÎNES</span>
         {mode === "edit" ? (

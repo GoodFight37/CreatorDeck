@@ -3,7 +3,6 @@ import { CREATORS, PACKS } from "@/lib/catalog";
 import { SAVE_VERSION, createInitialState, openPack } from "@/lib/game-engine";
 import { SEASON_BY_ID, SEASONS } from "@/lib/seasons";
 import { gameDay } from "@/lib/progression";
-import { setupBonusPermille } from "@/lib/streamer";
 import {
   LEGACY_SAVE_KEYS,
   SAVE_KEY,
@@ -174,6 +173,38 @@ describe("migration", () => {
     expect(state?.tribunal).toEqual({ day: "", verdicts: {}, claimed: false });
     expect(storage.data.has("creatordeck.save.v8")).toBe(false);
     expect(JSON.parse(storage.data.get(SAVE_KEY) ?? "{}").version).toBe(SAVE_VERSION);
+  });
+
+  it("charge une sauvegarde v9 qui porte encore l'ancienne chaîne, sans erreur ni perte", () => {
+    // Le bloc `streamer` (retiré du client) reste dans les sauvegardes écrites
+    // avant ce retrait : il doit être ignoré, le reste du joueur intact.
+    const avecChaine = {
+      ...createInitialState(T0),
+      points: 480,
+      cards: [
+        { id: "carte-chaine", creatorSlug: "squeezie", rarity: "epic", variant: "standard", obtainedAt: T0, rareDrop: false },
+      ],
+      streamer: {
+        subscribers: 2640,
+        lastSeenAt: T0,
+        tokensDay: "2026-01-01",
+        tokensToday: 6,
+        video: { day: "2026-01-01", format: "letsplay", success: true, buzz: false, badBuzz: false, gained: 240, tokens: 6, collab: 0, raid: false },
+        event: null,
+        setup: ["webcam"],
+        guests: [],
+        raid: null,
+      },
+    };
+    const storage = memoryStorage();
+    storage.setItem(SAVE_KEY, JSON.stringify(avecChaine));
+
+    const state = loadState(storage, T0 + 5);
+
+    expect(state).not.toBeNull();
+    expect(state?.points).toBe(480);
+    expect(state?.cards).toEqual(avecChaine.cards);
+    expect("streamer" in (state ?? {})).toBe(false);
   });
 
   it("met à niveau une sauvegarde v5 : les jalons redeviennent réclamables", () => {

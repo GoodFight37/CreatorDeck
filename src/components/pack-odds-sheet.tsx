@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { PACKS, RARITY_META } from "@/lib/catalog";
 import { DIRECT_BONUS, PITY, RARITIES, packOdds } from "@/lib/pull-rates";
 import type { PackType } from "@/lib/catalog";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 const percent = new Intl.NumberFormat("fr-FR", {
   style: "percent",
@@ -41,11 +42,12 @@ export function PackOddsSheet({
   /** Paquet montré à l'ouverture (le joueur vient d'en ouvrir un, par exemple). */
   initialPack?: PackType;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const [shown, setShown] = useState<PackType>(initialPack);
   return (
     <div
       className="odds-overlay"
-      role="dialog"
+      role="dialog" tabIndex={-1} ref={dialogRef}
       aria-modal="true"
       aria-label="Taux de drop des boosters"
     >

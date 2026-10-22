@@ -6,6 +6,7 @@ import { RARITY_META } from "@/lib/catalog";
 import { RARITIES } from "@/lib/pull-rates";
 import { runStudio } from "@/lib/tirage-studio";
 import type { StudioResult } from "@/lib/tirage-studio";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 const percent = new Intl.NumberFormat("fr-FR", {
   style: "percent",
@@ -23,6 +24,7 @@ const COUNTS = [25, 100, 500] as const;
  * répartition obtenue aux taux publiés. Aucun effet sur la partie.
  */
 export function StudioSheet({ onClose }: { onClose: () => void }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const [count, setCount] = useState<number>(100);
   const [result, setResult] = useState<StudioResult | null>(null);
 
@@ -32,7 +34,7 @@ export function StudioSheet({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Studio de tirages">
+    <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Studio de tirages">
       <div className="odds-panel">
         <header className="odds-head">
           <div>

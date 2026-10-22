@@ -38,6 +38,7 @@ import {
   relativeDay,
   type FriendLists,
 } from "@/lib/social/friends";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /** En dessous, la recherche de joueur ne renvoie rien d'utile. */
 const QUERY_MIN = 3;
@@ -56,6 +57,7 @@ export function FriendsSheet({
    */
   initialTab?: Tab;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const cloud = useCloud();
   const others = useOtherPlayers();
   const now = useNow(60_000);
@@ -101,7 +103,7 @@ export function FriendsSheet({
   const outgoing = byNewestFirst(lists.outgoing);
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Amis">
+    <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Amis">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>Amis</h2>

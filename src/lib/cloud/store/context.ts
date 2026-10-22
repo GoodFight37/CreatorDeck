@@ -4,7 +4,6 @@ import { socialActions } from "./social";
 import { marketActions } from "./market";
 import { arenaActions } from "./arena";
 import { walletActions } from "./wallet";
-import { streamerActions } from "./streamer";
 import type { CloudApi, TradeListItem } from "@/lib/cloud/api";
 import type { PlayerState, TradeCard as EngineTradeCard } from "@/lib/game-engine";
 import type {
@@ -83,12 +82,6 @@ export type CloudStoreActions = {
   recycleDoublon: ReturnType<typeof walletActions>["recycleDoublon"];
   craftWithPoints: ReturnType<typeof walletActions>["craftWithPoints"];
   syncTokens: ReturnType<typeof walletActions>["syncTokens"];
-  openStreamer: ReturnType<typeof streamerActions>["openStreamer"];
-  publishStreamerVideo: ReturnType<typeof streamerActions>["publishStreamerVideo"];
-  chooseStreamerEvent: ReturnType<typeof streamerActions>["chooseStreamerEvent"];
-  buyStreamerSetup: ReturnType<typeof streamerActions>["buyStreamerSetup"];
-  sacrificeStreamerSetup: ReturnType<typeof streamerActions>["sacrificeStreamerSetup"];
-  setStreamerGuest: ReturnType<typeof streamerActions>["setStreamerGuest"];
   craftWithTokens: ReturnType<typeof walletActions>["craftWithTokens"];
   claimMilestone: ReturnType<typeof walletActions>["claimMilestone"];
   claimSeason: ReturnType<typeof walletActions>["claimSeason"];

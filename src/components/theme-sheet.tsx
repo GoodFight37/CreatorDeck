@@ -2,6 +2,7 @@
 
 import { Check, Lock, Paintbrush, X } from "lucide-react";
 import type { ThemeView } from "@/lib/game-engine";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /**
  * Sélecteur de thème de collection : les cosmétiques gagnés en complétant les
@@ -16,10 +17,11 @@ export function ThemeSheet({
   onEquip: (themeId: string) => void;
   onClose: () => void;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const unlocked = themes.filter((theme) => theme.unlocked).length;
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Thème du classeur">
+    <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Thème du classeur">
       <div className="odds-panel">
         <header className="odds-head">
           <div>

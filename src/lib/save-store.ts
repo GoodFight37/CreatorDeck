@@ -20,16 +20,6 @@ import {
 import { SEASON_BY_ID } from "@/lib/seasons";
 import { MISSIONS, gameDay } from "@/lib/progression";
 import { DEFAULT_THEME_ID, themeById } from "@/lib/cosmetics";
-import {
-  EVENTS,
-  GUEST_SLOTS,
-  SETUP_LEVELS,
-  STREAMER_TOKEN_CAP,
-  formatById,
-  newStreamerState,
-  type StreamerEventState,
-  type StreamerVideoState,
-} from "@/lib/streamer";
 
 /** Clé courante de la sauvegarde. */
 export const SAVE_KEY = `creatordeck.save.v${SAVE_VERSION}`;
@@ -182,123 +172,6 @@ function sanitizeSeasons(value: unknown): string[] {
  * `target + 1` est celle qu'écrit `claimMissions()` pour dire « réclamée » —
  * elle est donc valide, et c'est la borne haute.
  */
-/**
- * La **chaîne** (`0036`) : un état relu sans être cru sur parole.
- *
- * Une sauvegarde bricolée ne doit pas offrir un million d'abonnés ni des jetons
- * de chaîne au-delà du plafond : les abonnés sont des nombres positifs, le
- * compteur du jour est borné par le plafond du fichier, et la vidéo n'est gardée
- * que si son format existe vraiment. Tout ce qui ne se relit pas retombe sur un
- * état neuf — l'écran, lui, s'affiche quand même.
- */
-function sanitizeStreamerVideo(value: unknown): StreamerVideoState | null {
-  if (!isRecord(value)) return null;
-  if (typeof value.day !== "string" || typeof value.format !== "string") return null;
-  if (!formatById(value.format)) return null;
-  const gained = typeof value.gained === "number" && Number.isFinite(value.gained) ? Math.trunc(value.gained) : 0;
-  return {
-    day: value.day,
-    format: value.format,
-    success: value.success === true,
-    buzz: value.buzz === true,
-    badBuzz: value.badBuzz === true,
-    gained,
-    tokens: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokens, 0)),
-    // Le plateau de la vidéo (`0041`) : le bonus appliqué et le raid. Ils se
-    // relisent tels quels — une sauvegarde d'avant la `0041` retombe sur zéro,
-    // ce qui est exactement ce qu'elle valait.
-    collab: nonNegativeInt(value.collab, 0),
-    raid: value.raid === true,
-  };
-}
-
-/**
- * La réponse à un **imprévu** (`0038`) : gardée seulement si la carte et le côté
- * existent encore dans le fichier de règles. Une carte retirée du jeu ne doit
- * pas rester dans une sauvegarde pour être réaffichée comme si de rien n'était.
- */
-function sanitizeStreamerEvent(value: unknown): StreamerEventState | null {
-  if (!isRecord(value)) return null;
-  if (typeof value.day !== "string" || typeof value.event !== "string") return null;
-  const carte = EVENTS.find((event) => event.id === value.event);
-  if (!carte) return null;
-  const cote = carte.choices.find((choice) => choice.id === value.choice);
-  if (!cote) return null;
-  const gained = typeof value.gained === "number" && Number.isFinite(value.gained) ? Math.trunc(value.gained) : 0;
-  return {
-    day: value.day,
-    event: carte.id,
-    choice: cote.id,
-    success: value.success === true,
-    buzz: value.buzz === true,
-    badBuzz: value.badBuzz === true,
-    gained,
-  };
-}
-
-/**
- * Les paliers de **setup** achetés : on ne garde que des identifiants connus, et
- * **dans l'ordre du fichier** — c'est l'ordre qui fait le bonus, et une
- * sauvegarde bricolée ne doit pas s'offrir le studio sans le micro.
- */
-function sanitizeSetup(value: unknown): string[] {
-  if (!Array.isArray(value)) return [];
-  const achetes: string[] = [];
-  for (const level of SETUP_LEVELS) {
-    if (value.includes(level.id)) achetes.push(level.id);
-  }
-  return achetes;
-}
-
-function sanitizeStreamer(value: unknown, now: number): PlayerState["streamer"] {
-  if (!isRecord(value)) return newStreamerState(now);
-  return {
-    subscribers: nonNegativeInt(value.subscribers, 0),
-    lastSeenAt: epochMs(value.lastSeenAt, now),
-    tokensDay: typeof value.tokensDay === "string" ? value.tokensDay : "",
-    tokensToday: Math.min(STREAMER_TOKEN_CAP, nonNegativeInt(value.tokensToday, 0)),
-    video: sanitizeStreamerVideo(value.video),
-    event: sanitizeStreamerEvent(value.event),
-    setup: sanitizeSetup(value.setup),
-    guests: sanitizeGuests(value.guests),
-    raid: sanitizeRaid(value.raid),
-  };
-}
-
-/** Le bureau : au plus deux invités, deux créateurs différents, des raretés connues. */
-function sanitizeGuests(value: unknown): PlayerState["streamer"]["guests"] {
-  if (!Array.isArray(value)) return [];
-  const result: PlayerState["streamer"]["guests"] = [];
-  const vus = new Set<string>();
-  for (const raw of value) {
-    if (!isRecord(raw)) continue;
-    const slot = Math.floor(Number(raw.slot));
-    const slug = typeof raw.slug === "string" ? raw.slug.toLowerCase() : "";
-    const cardId = typeof raw.cardId === "string" ? raw.cardId : "";
-    const rarity = String(raw.rarity ?? "") as Rarity;
-    const variant = String(raw.variant ?? "") as CardVariant;
-    if (slot < 1 || slot > GUEST_SLOTS) continue;
-    if (!slug || !cardId) continue;
-    if (!RARITIES.has(rarity) || !VARIANTS.has(variant)) continue;
-    if (vus.has(slug) || result.some((guest) => guest.slot === slot)) continue;
-    vus.add(slug);
-    result.push({ slot, cardId, slug, rarity, variant });
-  }
-  return result.sort((a, b) => a.slot - b.slot);
-}
-
-/** Le dernier raid : une journée connue, un gain positif, des créateurs. */
-function sanitizeRaid(value: unknown): PlayerState["streamer"]["raid"] {
-  if (!isRecord(value)) return null;
-  const day = typeof value.day === "string" ? value.day : "";
-  const gained = nonNegativeInt(value.gained, 0);
-  if (!day || gained <= 0) return null;
-  const slugs = Array.isArray(value.slugs)
-    ? value.slugs.filter((slug): slug is string => typeof slug === "string").map((slug) => slug.toLowerCase())
-    : [];
-  return { day, gained, slugs };
-}
-
 function sanitizeMissions(value: unknown): PlayerState["missions"] {
   if (!isRecord(value)) return {};
   const result: PlayerState["missions"] = {};
@@ -372,7 +245,6 @@ export function sanitizeState(raw: unknown, now = Date.now()): PlayerState | nul
     // Une sauvegarde v6 démarre à zéro partout, ce qui est exact : elle n'a
     // jamais rien gagné de ces mécaniques.
     tokens: nonNegativeInt(raw.tokens, 0),
-    streamer: sanitizeStreamer(raw.streamer, now),
     pityCounter: nonNegativeInt(raw.pityCounter, 0),
     missionDay: typeof raw.missionDay === "string" ? raw.missionDay : gameDay(now),
     missions: sanitizeMissions(raw.missions),

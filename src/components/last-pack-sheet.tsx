@@ -9,15 +9,17 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { describeCard } from "@/lib/market";
 import { CircleShareEmpty } from "@/components/circle-share-empty";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 export function LastPackSheet({ onClose }: { onClose: () => void }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const cloud = useCloud();
   const others = useOtherPlayers();
   useEffect(() => {
     if (cloud.configured && cloud.userId) void cloudStore.loadLastPacks();
   }, [cloud.configured, cloud.userId]);
   const friends = cloud.lastPacks?.packs.filter((pack) => !pack.mine) ?? [];
-  return <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Last Pack">
+  return <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Last Pack">
     <div className="odds-panel">
       <header className="odds-head"><h2>Last Pack</h2>
         <button type="button" onClick={onClose} aria-label="Fermer"><X size={18} /></button>
