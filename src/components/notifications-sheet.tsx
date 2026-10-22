@@ -40,6 +40,7 @@ import { cloudStore } from "@/lib/cloud/cloud-store";
 import { pushSupported } from "@/lib/push";
 import { cibleDe, type InboxItem, type InboxKind, type InboxTarget } from "@/lib/social/inbox";
 import { relativeDay } from "@/lib/social/friends";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /** L'icône de chaque famille de nouvelles. */
 const ICONS: Record<InboxKind, React.ReactNode> = {
@@ -66,6 +67,7 @@ export function NotificationsSheet({
    */
   onGo: (target: InboxTarget, section?: string) => void;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const cloud = useCloud();
   const now = useNow(30_000);
   const { items } = useInbox();
@@ -94,7 +96,7 @@ export function NotificationsSheet({
   }, []);
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Notifications">
+    <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Notifications">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>Notifications</h2>

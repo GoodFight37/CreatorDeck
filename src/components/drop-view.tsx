@@ -14,7 +14,6 @@ import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-
 const MemeBoosterOpening = lazy(() => import("@/components/meme-booster-opening").then((m) => ({ default: m.MemeBoosterOpening })));
 
 import { useCloud } from "@/hooks/use-cloud";
-import { useNow } from "@/hooks/use-game";
 import { useLive } from "@/hooks/use-live";
 import { CATALOG_EDITION_NUMBER, CATALOG_SIZE, CREATOR_BY_SLUG, PACKS, creatorImage } from "@/lib/catalog";
 import { formatViewers } from "@/lib/live";
@@ -80,7 +79,6 @@ export function HomeView({
   const stock = game.player.packs;
   const promoPacks = cloud.configured && cloud.userId ? cloud.promoPacks : 0;
   const nextAt = game.player.nextPackAt;
-  const tick = useNow(1_000);
   const needsLogin = needsAccount && !tutorialAvailable;
   const cannotOpen = opening || memes.busy || (!needsAccount && stock <= 0 && promoPacks <= 0);
   const memeCannotOpen = opening || memes.busy || (memes.account && (!memes.status || memes.status.stock < 1));
@@ -233,7 +231,7 @@ export function HomeView({
       {circleLiveEntries.length ? (
         <CircleLiveMoment
           entries={circleLiveEntries}
-          now={tick}
+          now={now}
           canOpen={!needsAccount && (stock > 0 || promoPacks > 0)}
           nextPackLabel={!needsAccount && stock <= 0 && promoPacks <= 0 && nextAt !== null ? `à ${formatClock(nextAt)}` : null}
           hourglass={null}

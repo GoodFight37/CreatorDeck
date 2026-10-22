@@ -4774,5 +4774,5 @@ input:focus-visible {
 
 @media (pointer: coarse) {
   .search-field input, .account-field input, .arena-search input,
-  .tribunal-search input, .save-editor textarea { font-size: 16px; }
+  .tribunal-search input, .sort-field select, .save-editor textarea { font-size: 16px; }
 }

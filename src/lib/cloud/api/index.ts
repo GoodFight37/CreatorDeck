@@ -28,18 +28,7 @@ import * as pack from "./pack";
 import * as social from "./social";
 import * as market from "./market";
 import * as arena from "./arena";
-import type {
-  StreamerEventResult,
-  StreamerEventToday,
-  StreamerGuestsResult,
-  StreamerReturn,
-  StreamerSetupPurchase,
-  StreamerSetupSacrifice,
-  StreamerStatus,
-  StreamerVideo,
-} from "./streamer";
 import * as wallet from "./wallet";
-import * as streamer from "./streamer";
 import * as tribunal from "./tribunal";
 import * as memes from "./memes";
 import type { MemeOpening, MemeStatus } from "./memes";
@@ -47,19 +36,6 @@ import type { MemeOpening, MemeStatus } from "./memes";
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
 export * from "./types";
-export type {
-  StreamerEventResult,
-  StreamerEventToday,
-  StreamerGuestRow,
-  StreamerGuestsResult,
-  StreamerRaidShare,
-  StreamerRaidToday,
-  StreamerReturn,
-  StreamerSetupPurchase,
-  StreamerSetupSacrifice,
-  StreamerStatus,
-  StreamerVideo,
-} from "./streamer";
 export { CLOUD_SESSION_KEY, CloudError, familyRatio } from "./core";
 
 export class CloudApi {
@@ -643,90 +619,6 @@ export class CloudApi {
   /** Rejoint un créateur contre 400 jetons — le serveur relit le prix. */
   async tokensSpend(slug: string): Promise<{ spent: number; tokens: number }> {
     return wallet.tokensSpend(this.core, slug);
-  }
-
-  // ------------------------------------------------------------------ chaîne
-
-  /**
-   * L'état de la chaîne (`0036_streamer.sql`).
-   *
-   * C'est le serveur qui porte les abonnés : la partie locale en garde un
-   * miroir pour l'affichage, jamais l'autorité.
-   */
-  async streamerStatus(): Promise<StreamerStatus> {
-    return streamer.streamerStatus(this.core);
-  }
-
-  /**
-   * Le retour du joueur : la chaîne a grandi pendant son absence.
-   *
-   * Les journées comptées viennent de l'horloge **du serveur**, plafonnées à
-   * sept ; reculer l'horloge du téléphone ne crédite rien.
-   */
-  async streamerVisit(): Promise<StreamerReturn> {
-    return streamer.streamerVisit(this.core);
-  }
-
-  /**
-   * Publie la vidéo du jour et rend son résultat.
-   *
-   * Le tirage est fait par le serveur : le client envoie un nom de format et
-   * rien d'autre. Une seconde publication le même jour relit la première.
-   */
-  async streamerPublish(format: string): Promise<StreamerVideo> {
-    return streamer.streamerPublish(this.core, format);
-  }
-
-  /**
-   * La carte d'imprévu du jour (`0038_imprevus_setup.sql`).
-   *
-   * Le serveur ne renvoie qu'un identifiant de carte : le texte vit dans
-   * `src/data/streamer.json`. Un imprévu déjà joué ressort avec sa réponse.
-   */
-  async streamerEventToday(): Promise<StreamerEventToday> {
-    return streamer.streamerEventToday(this.core);
-  }
-
-  /**
-   * Répond à l'imprévu du jour : on envoie la carte **et** le côté choisi.
-   *
-   * Le serveur refuse une carte qui n'est pas celle du jour et relit la
-   * première réponse si on appelle deux fois — comme la vidéo, l'imprévu ne se
-   * rejoue pas.
-   */
-  async streamerChoose(event: string, choice: string): Promise<StreamerEventResult> {
-    return streamer.streamerChoose(this.core, event, choice);
-  }
-
-  /**
-   * Achète un palier de **setup** (`0038_imprevus_setup.sql`) : le prix est
-   * celui du serveur, la dépense passe par le wallet, et le palier ne
-   * s'installe qu'une fois, dans l'ordre.
-   */
-  async streamerSetupBuy(level: string): Promise<StreamerSetupPurchase> {
-    return streamer.streamerSetupBuy(this.core, level);
-  }
-
-  /**
-   * Sacrifie des **doublons** pour le prochain palier du studio (`0040`) : les
-   * cartes quittent le classeur, et le serveur renvoie celles qu'il a prises.
-   */
-  async streamerSetupSacrifice(cardIds: string[]): Promise<StreamerSetupSacrifice> {
-    return streamer.streamerSetupSacrifice(this.core, cardIds);
-  }
-
-  /**
-   * Pose un invité sur le **bureau**, ou libère sa place (`0039`).
-   *
-   * Le client envoie la carte telle qu'elle est dans sa collection ; le serveur
-   * vérifie qu'elle est bien au joueur (même règle que les échanges et
-   * l'hôtel), refuse deux fois le même créateur, et renvoie le bureau complet.
-   */
-  async streamerGuestSet(
-    slot: number,
-    card: { id: string; creatorSlug: string; rarity: string; variant: string } | null,
-  ): Promise<StreamerGuestsResult> {
-    return streamer.streamerGuestSet(this.core, slot, card);
   }
 
   // ------------------------------------------------------------------ saves

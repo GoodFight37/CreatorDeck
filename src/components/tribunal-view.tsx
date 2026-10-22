@@ -44,6 +44,7 @@ import {
   type Verdict,
 } from "@/lib/tribunal";
 import type { OwnedCard, TribunalSeance, TribunalVerdict } from "@/lib/game-engine";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /** Ce que l'encaissement a donné, tel que l'écran l'affiche. */
 export type TribunalPayout = {
@@ -460,8 +461,9 @@ function Bilan({
   onShowObjective?: () => void;
   onClose: () => void;
 }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   return (
-    <div className="tribunal-overlay" role="dialog" aria-modal="true" aria-label="Bilan de la séance">
+    <div className="tribunal-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Bilan de la séance">
       <header className="tribunal-top">
         <button type="button" className="tribunal-quit" onClick={onClose}>
           <ChevronLeft size={18} aria-hidden="true" />

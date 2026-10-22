@@ -27,11 +27,13 @@ import { connecteToi } from "@/lib/cloud/store-text";
 import { cloudStore } from "@/lib/cloud/cloud-store";
 import { CATALOG_SIZE, CREATORS, CREATOR_BY_SLUG, RARITY_META } from "@/lib/catalog";
 import { regionLabel } from "@/lib/regions";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 
 /** Nombre de propositions affichées : au-delà, la liste devient un annuaire. */
 const MAX_RESULTS = 24;
 
 export function WishlistSheet({ onClose }: { onClose: () => void }) {
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const cloud = useCloud();
   const [query, setQuery] = useState("");
 
@@ -55,7 +57,7 @@ export function WishlistSheet({ onClose }: { onClose: () => void }) {
   }, [query]);
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Wishlist">
+    <div className="odds-overlay" role="dialog" tabIndex={-1} ref={dialogRef} aria-modal="true" aria-label="Wishlist">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>Wishlist</h2>

@@ -173,7 +173,9 @@ export function CreatorDeckApp() {
   // charge à l'ouverture de son onglet.)
   useEffect(() => {
     preloadSamples(SFX_USUELS);
-    preloadGameMusic();
+    // La musique (854 Ko à télécharger et décoder) attend que l'écran d'accueil soit posé.
+    const later = window.setTimeout(preloadGameMusic, 2_000);
+    return () => window.clearTimeout(later);
   }, []);
   const [tab, setTab] = useState<Tab>("home");
   const [tutorialReveal, setTutorialReveal] = useState(false);
