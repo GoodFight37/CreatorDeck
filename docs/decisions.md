@@ -32,6 +32,10 @@ verdicts, récompenses ou destinations. Régressions reproduites avant correctio
 tests d’écrans et navigateur après ; preuves :
 [vérification navigation](verification-navigation-42df5b4.md).
 
+## D-159 — 22 octobre 2026 : dépendances de production sans vulnérabilité haute
+
+Contexte : l'audit relève 3 vulnérabilités hautes en production (next, sharp, source-map-js), toutes avec correctif. Décision : mise à jour du seul lockfile par `npm audit fix --package-lock-only` ; package.json inchangé. next passe de 16.3.6 à 16.4.2 (mineure), sharp et source-map-js en correctif. Porte CI : `npm audit --omit=dev --audit-level=high` dans verification.yml. Preuves : copie propre de origin/main avec ce lockfile, `npm ci`, tsc, 1340/1340 unitaires, `npm run build` verts. E2E complet non relancé sur cette copie : à faire avant de conclure sur next 16.4.
+
 ## D-158 — 22 octobre 2026 : archives Upscayl hors de public/, prototype retiré de l'export
 
 Contexte : l'audit du HEAD relève 20 Mo d'archives WebP copiées dans chaque export (`public/creators/upscaled/`) et la route `/catalogue-demo` présente dans `out/`. Décision : les 699 archives sortent de `public/` vers `archive/upscaled/` (suivies par git, non servies). Le test des archives lit ce nouveau dossier ; les JSON de surcharge gardent leurs chemins historiques, qui ne sont plus servis. `/catalogue-demo` reste disponible en développement et en E2E ; `scripts/prune-prototypes.mjs`, lancé après `next build`, retire `out/catalogue-demo*`. Preuves : `vitest` sur `creator-portraits.test.ts` (33/33), `tsc`, ESLint, `npm run build` (out/ passe de 111 à 92 Mo, sans `catalogue-demo*` ni `creators/upscaled`).

@@ -67,6 +67,9 @@ jobs:
       - name: ESLint
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run lint
+      - name: Audit des dépendances de production
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: npm audit --omit=dev --audit-level=high
       - name: Vocabulaire de l'interface
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: node scripts/check-jargon.mjs
