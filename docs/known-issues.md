@@ -1,3 +1,13 @@
+## Drop : la ligne de réserve passe sous l'objet Drop de la barre du bas — ouvert, 22 octobre 2026
+
+Version : `main` `957d22fb`. Gravité P2, lisibilité. Constat sur capture Playwright
+(téléphone, `next dev`, partie neuve) : à 320×568 et à 1024×768, l'objet Drop
+surélevé au centre de la barre du bas (`nav-objects.tsx`) recouvre `.stock-row`
+(« 2 sachets · prochain à … ») ; à 1024 l'icône masque « prochain », à 320 toute
+la ligne est cachée. À 390×844 la ligne est lisible. Non vérifié sur Android.
+Piste : réserver sous le contenu de l'accueil la hauteur réelle de l'objet Drop,
+pas seulement celle de la barre. Aucune correction faite.
+
 ## Préparation E2E : modes cloud mélangés et accueil du Tribunal — correctif publié, 22 octobre 2026
 
 Version : `87454815`, gravité P2 pour la validation. `npm run e2e` avec la
