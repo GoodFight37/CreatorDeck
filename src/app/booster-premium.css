@@ -522,49 +522,12 @@
   font-size: clamp(30px, 8vw, 56px);
   text-shadow: 0 0 22px rgba(241,154,196,.43);
 }
-.booster-cinematic .booster-foil-open .foil-top-piece {
-  animation: foil-actual-cap-peel 1250ms cubic-bezier(.17,.8,.16,1) both;
-}
-.booster-cinematic .booster-foil-open .foil-body-piece {
-  animation: foil-actual-body-drop 1550ms cubic-bezier(.19,.7,.3,1) both;
-}
-.booster-cinematic .booster-foil-open .foil-card-chamber {
-  animation: foil-cards-chamber-rise 1700ms cubic-bezier(.13,.7,.2,1) both;
-}
-.booster-cinematic .booster-foil-open .foil-back-card {
-  animation: foil-card-exit 1650ms cubic-bezier(.13,.7,.2,1) both;
-  animation-delay: calc(var(--card-i) * 43ms);
-}
+/* Les animations de l'ouverture sont réglées en un seul endroit :
+   booster-continuity.css (règles complètes). Rien à écraser ici. */
 .booster-cinematic .booster-foil-open .foil-cut-slit,
 .booster-cinematic .booster-foil-open .foil-cut-glow { animation: foil-cut-fade 600ms ease-out both; }
 .booster-cinematic .booster-foil-open .booster-foil-glow {
   animation: foil-restrained-open-light 1650ms ease-out both;
-}
-@keyframes foil-actual-cap-peel {
-  0%, 8% { opacity: 1; transform: translate(0,0) rotate(0) rotateX(0deg); }
-  37% { opacity: 1; transform: translate(6%,-12%) rotate(15deg) rotateX(22deg); }
-  68% { opacity: .96; transform: translate(32%,-35%) rotate(34deg) rotateX(48deg); }
-  93%, 100% { opacity: 0; transform: translate(145%,-108%) rotate(71deg) rotateX(66deg); }
-}
-@keyframes foil-actual-body-drop {
-  0%, 20% { opacity: 1; transform: none; }
-  52% { opacity: 1; transform: translateY(8%) rotateX(-8deg); }
-  80% { opacity: .36; transform: translateY(43%) rotateX(-29deg) scale(.9); }
-  100% { opacity: 0; transform: translateY(77%) rotateX(-55deg) scale(.75); }
-}
-@keyframes foil-cards-chamber-rise {
-  0%, 17% { opacity: 0; transform: translateY(23%) scale(.88); }
-  38% { opacity: .36; transform: translateY(6%) scale(.9); }
-  60% { opacity: 1; transform: translateY(-5%) scale(.97); }
-  100% { opacity: 1; transform: translateY(-23%) scale(1.05); }
-}
-@keyframes foil-card-exit {
-  0%, 23% { opacity: 0; transform: translateY(39%) scale(.84); }
-  43% { opacity: .95; transform: translateY(7%) scale(.89); }
-  69% { opacity: 1; transform: translateY(-3%) scale(.97); }
-  100% { opacity: 1; transform: translateY(calc(-8% - var(--card-i) * 2%))
-    translateX(calc((var(--card-i) - 2) * 5px))
-    rotate(calc((var(--card-i) - 2) * 3deg)) scale(1); }
 }
 @keyframes foil-cut-fade { from { opacity: 1; } to { opacity: 0; } }
 @keyframes foil-restrained-open-light {

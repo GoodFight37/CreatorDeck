@@ -1,6 +1,7 @@
 "use client";
 
-import { useLayoutEffect, useRef, type CSSProperties, type MouseEvent, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, type CSSProperties, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { cardEffectsAllowed } from "@/lib/tilt";
 import Image from "next/image";
 import "./booster-carousel.css";
 
@@ -18,10 +19,86 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
 }) {
   const start = useRef<{ x: number; y: number } | null>(null);
   const dragged = useRef(false);
+  const pack = useRef<HTMLButtonElement>(null);
+  const object3d = useRef<HTMLSpanElement>(null);
+  const holo = useRef<HTMLSpanElement>(null);
+
+  // Le sachet penche sous le capteur (téléphone) ou la souris (ordinateur), et le
+  // reflet holographique glisse avec l'angle. Écriture directe une image sur deux
+  // ou trois, lissée : aucune variable CSS sur un parent (cf. glissé du carrousel).
+  useEffect(() => {
+    const node = object3d.current;
+    const film = holo.current;
+    const bouton = pack.current;
+    if (!active || !node || !film || !bouton || !cardEffectsAllowed()) return;
+
+    let cibleX = 0;
+    let cibleY = 0;
+    let courantX = 0;
+    let courantY = 0;
+    let frame = 0;
+    let betaZero: number | null = null;
+    const borne = (value: number, max: number) => Math.max(-max, Math.min(max, value));
+    const distrait = () => document.visibilityState !== "visible" || Boolean(node.closest(".is-dragging"));
+    const remettre = () => {
+      node.style.transform = "";
+      film.style.backgroundPosition = "";
+    };
+    const ecrire = () => {
+      frame = 0;
+      if (document.documentElement.dataset.cardFx === "off") { remettre(); return; }
+      courantX += (cibleX - courantX) * 0.18;
+      courantY += (cibleY - courantY) * 0.18;
+      node.style.transform = `rotateX(${courantX.toFixed(2)}deg) rotateY(${courantY.toFixed(2)}deg)`;
+      film.style.backgroundPosition = `${(50 + courantY * 4).toFixed(1)}% ${(50 + courantX * 4).toFixed(1)}%`;
+      if (Math.abs(cibleX - courantX) > 0.05 || Math.abs(cibleY - courantY) > 0.05) {
+        frame = requestAnimationFrame(ecrire);
+      }
+    };
+    const lancer = () => { if (!frame) frame = requestAnimationFrame(ecrire); };
+
+    const auPointeur = (event: PointerEvent) => {
+      // Seule la souris incline : au doigt, le geste appartient au carrousel.
+      if (event.pointerType !== "mouse") return;
+      if (distrait()) { cibleX = 0; cibleY = 0; lancer(); return; }
+      const rect = bouton.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      cibleY = borne((((event.clientX - rect.left) / rect.width) - 0.5) * 2, 1) * 10;
+      cibleX = borne((((event.clientY - rect.top) / rect.height) - 0.5) * 2, 1) * -8;
+      lancer();
+    };
+    const auSortie = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      cibleX = 0; cibleY = 0; lancer();
+    };
+    const auCapteur = (event: DeviceOrientationEvent) => {
+      if (event.gamma === null && event.beta === null) return;
+      if (betaZero === null && event.beta !== null) betaZero = event.beta;
+      if (distrait()) { cibleX = 0; cibleY = 0; lancer(); return; }
+      const deltaBeta = event.beta !== null && betaZero !== null ? event.beta - betaZero : 0;
+      cibleY = borne((event.gamma ?? 0) / 3, 10);
+      cibleX = borne(deltaBeta * -0.4, 8);
+      lancer();
+    };
+
+    // Les deux sources restent branchées : la souris ne se manifeste que sur
+    // ordinateur (`pointerType`), le capteur ne parle que sur téléphone.
+    bouton.addEventListener("pointermove", auPointeur);
+    bouton.addEventListener("pointerleave", auSortie);
+    window.addEventListener("deviceorientation", auCapteur);
+    return () => {
+      cancelAnimationFrame(frame);
+      bouton.removeEventListener("pointermove", auPointeur);
+      bouton.removeEventListener("pointerleave", auSortie);
+      window.removeEventListener("deviceorientation", auCapteur);
+      remettre();
+    };
+  }, [active]);
+
   // Un seul élément pour le paquet de devant et le voisin : changer d'univers ne
   // recrée ni l'image ni l'objet 3D (le remplacement d'un div par un bouton
   // faisait sauter l'image et relançait l'arrivée à chaque bascule).
-  return <button type="button" className={active ? "pack-artwork pack-live" : "booster-neighbor"}
+  return <button ref={pack} type="button" className={active ? "pack-artwork pack-live" : "booster-neighbor"}
     inert={!active} aria-hidden={active ? undefined : "true"} tabIndex={active ? undefined : -1}
     onPointerDown={(event) => { start.current = { x: event.clientX, y: event.clientY }; dragged.current = false; }}
     onPointerMove={(event) => {
@@ -35,11 +112,12 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     {active ? <span className="sr-only">{label}</span> : null}
     {/* Sachet plat, façon TCG de poche : l'épaisseur n'est plus modélisée (les tranches
         3D donnaient le liseré), le volume vient de l'impression et du reflet. */}
-    <span className="pack-idle" aria-hidden="true"><span className="pack-3d-object">
+    <span className="pack-idle" aria-hidden="true"><span ref={object3d} className="pack-3d-object">
       <span className="pack-3d-front"><Image className="pack-foil-image" src={artwork} alt="" fill
         sizes="(max-width: 390px) 58vw, 230px" draggable={false} priority />
         <span className="pack-bulge" />
-        <span className="pack-glint" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} /></span>
+        <span className="pack-glint" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} />
+        <span ref={holo} className="pack-holo" style={{ "--pack-art": `url(${artwork})` } as CSSProperties} /></span>
     </span></span>
   </button>;
 }
@@ -55,17 +133,41 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
   const boosters = universes ? BOOSTERS.filter((booster) => universes.includes(booster.id)) : BOOSTERS;
   const index = Math.max(0, boosters.findIndex((booster) => booster.id === value));
   const swipe = useRef<{ x: number; y: number; id: number; dragging: boolean;
-    samples: { x: number; t: number }[] } | null>(null);
+    samples: { x: number; t: number }[]; step: number; drag: number; slots: HTMLElement[] } | null>(null);
   const stage = useRef<HTMLElement>(null);
+  const frame = useRef(0);
+  // Pendant le glissé, on écrit transform/opacity directement sur les trois
+  // emplacements, une fois par image : plus de variable CSS sur le parent (elle
+  // recalculait tout le sous-arbre à chaque movement) ni de lecture de mise en
+  // page par événement. Mêmes formules que le CSS au repos.
+  function paint() {
+    frame.current = 0;
+    const gesture = swipe.current;
+    if (!gesture?.dragging) return;
+    // Mouvement réduit : les paquets restent superposés au centre, sans glissé.
+    if (typeof window !== "undefined" && !cardEffectsAllowed()) return;
+    gesture.slots.forEach((slot, i) => {
+      const o = i - index + gesture.drag;
+      const a = Math.abs(o);
+      slot.style.transform = `translateX(calc(-50% + ${o * 80}%)) translateZ(${-Math.min(a, 1.2) * 190}px) rotateY(${o * -44}deg)`;
+      slot.style.opacity = String(1 - Math.min(a, 1) * 0.5);
+    });
+  }
   // Le changement d'univers et la remise à zéro du glissé arrivent dans la même
   // image : le paquet part de là où le doigt l'a laissé, sans revenir en arrière.
   function releaseDrag() {
     const node = stage.current;
     if (!node) return;
+    cancelAnimationFrame(frame.current);
+    frame.current = 0;
     node.classList.remove("is-dragging");
-    node.style.setProperty("--drag", "0");
+    node.querySelectorAll<HTMLElement>(".booster-pack-slot").forEach((slot) => {
+      slot.style.transform = "";
+      slot.style.opacity = "";
+    });
   }
   useLayoutEffect(() => { releaseDrag(); }, [index]);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
   function choose(next: BoosterUniverse) {
     if (disabled) return;
     // Après une première bascule, le paquet qui passe devant ne rejoue pas son arrivée.
@@ -78,7 +180,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
     const slot = stage.current?.querySelector<HTMLElement>(".booster-pack-slot");
     return Math.max(80, (slot?.offsetWidth ?? 250) * 0.78);
   }
-  function moveSwipe(event: PointerEvent<HTMLElement>) {
+  function moveSwipe(event: ReactPointerEvent<HTMLElement>) {
     const gesture = swipe.current;
     const node = stage.current;
     if (!gesture || !node || gesture.id !== event.pointerId || boosters.length < 2 || disabled) return;
@@ -87,22 +189,26 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
     if (!gesture.dragging) {
       if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
       gesture.dragging = true;
+      // Largeur de cran et emplacements mesurés une seule fois, au départ.
+      gesture.step = spacing();
+      gesture.slots = [...node.querySelectorAll<HTMLElement>(".booster-pack-slot")];
       node.classList.add("is-dragging");
       try { node.setPointerCapture(event.pointerId); } catch { /* capture */ }
     }
     gesture.samples.push({ x: event.clientX, t: event.timeStamp });
     if (gesture.samples.length > 6) gesture.samples.shift();
-    let drag = dx / spacing();
+    let drag = dx / gesture.step;
     // Au bout de la file, le paquet résiste au lieu de partir dans le vide.
     if ((index === 0 && drag > 0) || (index === boosters.length - 1 && drag < 0)) drag *= 0.3;
-    node.style.setProperty("--drag", String(Math.max(-1.15, Math.min(1.15, drag))));
+    gesture.drag = Math.max(-1.15, Math.min(1.15, drag));
+    if (!frame.current) frame.current = requestAnimationFrame(paint);
   }
-  function endSwipe(event: PointerEvent<HTMLElement>) {
+  function endSwipe(event: ReactPointerEvent<HTMLElement>) {
     const gesture = swipe.current;
     swipe.current = null;
     if (!gesture || gesture.id !== event.pointerId) return;
     if (!gesture.dragging) return;
-    const drag = (event.clientX - gesture.x) / spacing();
+    const drag = (event.clientX - gesture.x) / gesture.step;
     // Un coup de pouce rapide suffit : au-delà de ~0,11 px/ms, on change de
     // paquet même sous 22 % d'un cran (vitesse mesurée sur les ~100 dernières ms).
     const recent = gesture.samples.filter((sample) => event.timeStamp - sample.t <= 100);
@@ -117,7 +223,7 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
   }
   return <div className="booster-selector" aria-label="Choix du booster">
     <section ref={stage} className="pack-stage stage-live booster-carousel" data-universe={value} aria-label="Booster sélectionné"
-      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY, id: event.pointerId, dragging: false, samples: [{ x: event.clientX, t: event.timeStamp }] }; }}
+      onPointerDown={(event) => { swipe.current = { x: event.clientX, y: event.clientY, id: event.pointerId, dragging: false, samples: [{ x: event.clientX, t: event.timeStamp }], step: 1, drag: 0, slots: [] }; }}
       onPointerMove={moveSwipe}
       onPointerUp={endSwipe}
       onPointerCancel={() => { swipe.current = null; releaseDrag(); }}

@@ -65,7 +65,7 @@
    et tourne sur lui-même, ce qui montre sa tranche. Transform et opacity seulement. */
 .home-view .booster-selector .booster-carousel { perspective: 1000px; perspective-origin: 50% 42%; }
 .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) {
-  --o: calc(var(--booster-offset) + var(--drag, 0));
+  --o: var(--booster-offset);
   --a: max(var(--o), calc(var(--o) * -1));
   transform-style: preserve-3d;
   transform: translateX(calc(-50% + var(--o) * 80%)) translateZ(calc(min(var(--a), 1.2) * -190px))
@@ -75,6 +75,10 @@
   transition: transform 460ms cubic-bezier(.2, .8, .2, 1), opacity 460ms ease, z-index 0s linear 200ms;
 }
 .home-view .booster-selector .booster-carousel.is-dragging .booster-pack-slot:is([data-active]) { transition: none; }
+/* Pendant le glissé, les animations du sachet (flottement, reflet) dorment :
+   elles n'ont pas à tourner dans une scène qui suit déjà le doigt. */
+.home-view .booster-selector .booster-carousel.is-dragging .pack-idle,
+.home-view .booster-selector .booster-carousel.is-dragging .pack-glint::after { animation-play-state: paused; }
 /* Pas d'arrivée rejouée à chaque bascule : seul le premier affichage en a une. */
 .home-view .booster-selector .booster-carousel[data-switched] .booster-pack-slot .pack-artwork.pack-live { animation: none; }
 .home-view .booster-selector .booster-carousel .booster-neighbor { cursor: default; pointer-events: none; }

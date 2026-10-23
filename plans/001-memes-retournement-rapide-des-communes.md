@@ -1,6 +1,6 @@
 # 001 — Retourner les cartes Mèmes communes en 280 ms
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: HIGH
 - **Category**: Easing & duration / Cohesion

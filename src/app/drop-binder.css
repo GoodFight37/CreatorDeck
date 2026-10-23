@@ -575,6 +575,21 @@
   88%, 100% { transform: translateX(340%) skewX(-14deg); }
 }
 .home-view .booster-neighbor .pack-glint::after { animation: none; }
+/* Reflet holographique : même découpe que l'impression du sachet, dégradé
+   arc-en-ciel dont la position suit l'inclinaison (écrite par le composant). */
+.home-view .pack-holo {
+  position: absolute; inset: 0; pointer-events: none;
+  -webkit-mask: var(--pack-art) center / 100% 100% no-repeat;
+  mask: var(--pack-art) center / 100% 100% no-repeat;
+  background: linear-gradient(115deg,
+    transparent 20%, rgb(255 92 186 / .9) 32%, rgb(255 214 92 / .9) 40%,
+    rgb(92 255 196 / .9) 48%, rgb(92 170 255 / .9) 56%, rgb(186 92 255 / .9) 64%, transparent 76%) 50% 50% / 300% 300%;
+  mix-blend-mode: color-dodge;
+  opacity: .28;
+}
+.home-view .booster-neighbor .pack-holo,
+[data-card-fx="off"] .home-view .pack-holo { display: none; }
+@media (prefers-reduced-motion: reduce) { .home-view .pack-holo { display: none; } }
 .home-view .pack-stage .pack-3d-front {
   border: 0;
   border-radius: 0;

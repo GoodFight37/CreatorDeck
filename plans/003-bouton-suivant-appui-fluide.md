@@ -1,6 +1,6 @@
 # 003 — Donner un appui fluide au bouton « suivant » de la révélation Mèmes
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: LOW
 - **Category**: Physicality (press feedback)

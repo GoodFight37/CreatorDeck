@@ -1,6 +1,6 @@
 # 005 — Régler chaque animation d'ouverture dans un seul fichier
 
-- **Status**: TODO (optionnel, à faire en dernier)
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: LOW
 - **Category**: Cohesion & tokens

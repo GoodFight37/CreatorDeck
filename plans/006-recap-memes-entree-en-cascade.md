@@ -1,6 +1,6 @@
 # 006 — Faire entrer les 5 cartes du récapitulatif Mèmes en cascade
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: LOW (occasion manquée)
 - **Category**: Missed opportunity / Cohesion (stagger)
