@@ -3,6 +3,8 @@ import type { Page } from "@playwright/test";
 import source from "../src/data/memes-fr.json";
 import imgflipSource from "../src/data/imgflip.json";
 
+const imgflipIds = imgflipSource.filter((card) => card.image).slice(0, 5).map((card) => card.id);
+
 /** La collection Mèmes compte les deux catalogues affichés (FR + Imgflip). */
 const MEME_COLLECTION_TOTAL = source.length + imgflipSource.length;
 
@@ -27,6 +29,11 @@ async function fakeAccount(page: Page) {
       return answer({ stock: drawn ? 3 : 4, next_at: null, openings: drawn ? 1 : 0, owned: drawn ? ids.map((id) => ({ id, copies: 1 })) : [] });
     }
     if (name === "open_meme_pack") return answer({ cards: ids, stock: 3, next_at: null, replayed: false });
+    if (name === "imgflip_status") {
+      const drawn = calls.includes("open_imgflip_pack");
+      return answer({ stock: drawn ? 3 : 4, next_at: null, openings: drawn ? 1 : 0, owned: drawn ? imgflipIds.map((id) => ({ id, copies: 1 })) : [] });
+    }
+    if (name === "open_imgflip_pack") return answer({ cards: imgflipIds, stock: 3, next_at: null, replayed: false });
     return answer({});
   });
   await page.addInitScript((owner) => {
@@ -177,6 +184,48 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
+  await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
+  expect(errors).toEqual([]);
+});
+
+test("avec le serveur : Imgflip se prépare sans consommation, puis un seul geste ouvre cinq cartes serveur", async ({ page }) => {
+  test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
+  const calls = await fakeAccount(page);
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/");
+  await page.getByRole("button", { name: "IMGFLIP", exact: true }).click();
+  const trigger = page.getByRole("button", { name: "Ouvrir le booster IMGFLIP", exact: true });
+  await expect(page.locator(".imgflip-booster-reserve")).toContainText("4 IMGFLIP");
+  await trigger.click();
+  const scene = page.locator(".opening-continuum");
+  await expect(scene.locator(".foil-printed-art").first()).toHaveAttribute("src", /imgflip-opening/);
+  await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+  await page.screenshot({ path: `test-results/booster-preparation-imgflip-${test.info().project.name}.png` });
+  await scene.getByRole("button", { name: "← Retour", exact: true }).click();
+  expect(calls.filter((name) => name === "open_imgflip_pack")).toHaveLength(0);
+  await expect(trigger).toBeFocused();
+  await trigger.click();
+  await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+  await expect(scene.getByRole("button", { name: "← Retour", exact: true })).toHaveCount(0);
+  await expect(scene.locator(".meme-reveal-flow")).toBeVisible();
+  for (let i = 0; i < 5; i++) {
+    await expect(scene.locator(".meme-reveal-counter")).toHaveText(`CARTE ${i + 1} / 5`);
+    await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
+    await scene.locator(".meme-reveal-next").click();
+  }
+  await expect(scene.locator(".meme-reveal-summary-grid > div")).toHaveCount(5);
+  await expect(scene.locator(".meme-reveal-next")).toBeEnabled();
+  await scene.locator(".meme-reveal-next").click();
+  await expect(scene).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  await expect(page.locator(".booster-carousel")).toHaveAttribute("data-universe", "imgflip");
+  await expect(page.locator(".imgflip-booster-reserve")).toContainText("3 IMGFLIP");
+  expect(calls.filter((name) => name === "open_imgflip_pack")).toHaveLength(1);
+  expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(0);
+  expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
+  // Les cinq cartes tirées sont des possessions persistantes du classeur Mèmes.
+  await page.goto("/memes");
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);
 });

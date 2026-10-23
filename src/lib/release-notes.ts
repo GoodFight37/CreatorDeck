@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-23-imgflip-serveur", date: "2026-10-23", title: "Le booster IMGFLIP devient un vrai booster",
+    summary: "Le troisième sachet a désormais sa réserve, ses cartes gardées et ses tirages comptés comme les autres.",
+    sections: [{ title: "Nouveauté", items: [
+      "Le booster IMGFLIP puise dans sa propre réserve : quatre sachets au maximum, un nouveau toutes les 30 minutes.",
+      "Les cartes IMGFLIP obtenues restent dans ton classeur Mèmes, avec leurs exemplaires.",
+      "Un tirage interrompu par une coupure réseau se reprend sans jamais être compté deux fois.",
+    ] }],
+  },
+  {
     id: "2026-10-23-revelation-sans-filtres", date: "2026-10-23", title: "Une révélation plus légère",
     summary: "Les cartes Épiques et Légendaires gardent leur mouvement avec une lumière plus stable.",
     sections: [{ title: "Confort", items: [

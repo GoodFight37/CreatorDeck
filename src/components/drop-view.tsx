@@ -79,14 +79,18 @@ export function HomeView({
   const promoPacks = cloud.configured && cloud.userId ? cloud.promoPacks : 0;
   const nextAt = game.player.nextPackAt;
   const needsLogin = needsAccount && !tutorialAvailable;
-  const cannotOpen = opening || memes.busy || (!needsAccount && stock <= 0 && promoPacks <= 0);
+  const cannotOpen = opening || memes.busy || imgflip.busy || (!needsAccount && stock <= 0 && promoPacks <= 0);
   const memeCannotOpen = opening || memes.busy || (memes.account && (!memes.status || memes.status.stock < 1));
+  const imgflipCannotOpen = opening || imgflip.busy || (imgflip.account && (!imgflip.status || imgflip.status.stock < 1));
 
   function prepareBooster(kind: BoosterUniverse) {
-    if (opening || memes.busy || memes.presenting || imgflip.presenting) return;
+    if (opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting) return;
     buzz([8]);
     if (kind === "live" && !cannotOpen) onOpen();
-    if (kind === "imgflip") imgflip.prepare();
+    if (kind === "imgflip" && !imgflipCannotOpen) {
+      if (!imgflip.account) onShowAccount?.();
+      else imgflip.prepare();
+    }
     if (kind === "memes" && !memeCannotOpen) {
       if (!memes.account) onShowAccount?.();
       else memes.prepare();
@@ -131,6 +135,10 @@ export function HomeView({
   const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
     : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1
       ? memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt" : "Ouvrir le booster MEMES";
+  const imgflipNextAt = imgflip.status?.nextAt ? Date.parse(imgflip.status.nextAt) : null;
+  const imgflipLabel = !imgflip.account ? "Se connecter pour ouvrir IMGFLIP" : imgflip.busy ? "Ouverture…"
+    : !imgflip.status ? "Lecture de ta réserve…" : imgflip.status.stock < 1
+      ? imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt" : "Ouvrir le booster IMGFLIP";
   // Un seul geste ouvre : le sachet. Dessous, une ligne dit ce qu'on a et quand revient le prochain.
   const packs = stock + promoPacks;
   const reserveLine = needsLogin ? "Connecte-toi pour ouvrir"
@@ -202,9 +210,9 @@ export function HomeView({
       )}
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
-        disabled={opening || memes.busy || memes.presenting || imgflip.presenting}
-        canPrepare={universe === "live" ? !cannotOpen : universe === "memes" ? !memeCannotOpen : true}
-        labels={{ live: liveLabel, memes: memeLabel, imgflip: "Try the IMGFLIP booster" }} />
+        disabled={opening || memes.busy || imgflip.busy || memes.presenting || imgflip.presenting}
+        canPrepare={universe === "live" ? !cannotOpen : universe === "memes" ? !memeCannotOpen : !imgflipCannotOpen}
+        labels={{ live: liveLabel, memes: memeLabel, imgflip: imgflipLabel }} />
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {!needsAccount || needsLogin ? (
           // La seule ligne de l'accueil : la pile au-dessus montre déjà ce qu'on a.
@@ -249,9 +257,16 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       {memes.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={memes} /></Suspense> : null}
-      <section className="meme-booster-panel booster-panel" hidden={universe !== "imgflip"} aria-label="IMGFLIP">
-        <p className="stock-row">Local preview · 5 cards · No cards saved</p>
-        <p>Live Drop rarity rates · Rare or better guaranteed</p>
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "imgflip"} aria-label="Réserve Imgflip">
+        <p className="imgflip-booster-reserve stock-row" aria-live="polite">
+          {imgflip.status ? imgflip.status.stock > 0
+            ? `${imgflip.status.stock} IMGFLIP${imgflipNextAt !== null ? ` · prochain à ${formatClock(imgflipNextAt)}` : ""}`
+            : imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt"
+            : imgflip.account ? "Lecture de ta réserve…" : "Une réserve séparée pour tes cartes Imgflip."}
+        </p>
+        {imgflip.notice ? <p role="status">{imgflip.notice}</p> : null}
+        {imgflip.problem ? <div role="alert"><p>{imgflip.problem}</p>
+          <button type="button" disabled={imgflip.loading} onClick={() => void imgflip.refresh()}>Réessayer la lecture</button></div> : null}
       </section>
       {imgflip.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={imgflip} artwork="/packs/imgflip-opening.svg" /></Suspense> : null}
       {!lean && onEditCircle ? (

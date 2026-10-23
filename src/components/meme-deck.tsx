@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
+import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
 import { useNow } from "@/hooks/use-game";
 import { MemeBoosterOpening } from "@/components/meme-booster-opening";
 import { MemePackComposition } from "@/components/meme-pack-parts";
@@ -31,7 +32,15 @@ function BoosterCountdown({ stock, nextAt }: { stock: number; nextAt: string | n
 
 export function MemeDeck() {
   const booster = useMemeBooster();
-  const { account, status, busy, problem, copies } = booster;
+  const imgflipBooster = useImgflipBooster();
+  const { account, status, busy, problem } = booster;
+  // Les possessions Imgflip (0062) rejoignent le même classeur : les identifiants
+  // sont disjoints (`imgflip-…`), la fusion ne peut pas écraser une carte Mèmes.
+  const copies = useMemo(() => {
+    const merged = new Map(booster.copies);
+    for (const [id, count] of imgflipBooster.copies) merged.set(id, (merged.get(id) ?? 0) + count);
+    return merged;
+  }, [booster.copies, imgflipBooster.copies]);
   const [selected, setSelected] = useState<MemeCardData | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [rarity, setRarity] = useState<MemeRarity | "all">("all");
