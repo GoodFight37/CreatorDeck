@@ -1,6 +1,10 @@
 import { expect, test, gotoDeck, cloudUrl } from "./fixtures";
 import type { Page } from "@playwright/test";
 import source from "../src/data/memes-fr.json";
+import imgflipSource from "../src/data/imgflip.json";
+
+/** La collection Mèmes compte les deux catalogues affichés (FR + Imgflip). */
+const MEME_COLLECTION_TOTAL = source.length + imgflipSource.length;
 
 async function fakeAccount(page: Page) {
   const userId = "11111111-1111-4111-8111-111111111111";
@@ -173,7 +177,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
   await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
-  await expect(page.locator(".meme-collection-head strong")).toHaveText("5 / 2150");
+  await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);
 });
 
@@ -190,16 +194,21 @@ test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 
           .map((animation) => animation.finished));
       });
       const active = page.locator('.booster-pack-slot[data-active="true"]');
-      const neighbor = page.locator('.booster-pack-slot[data-active="false"] .booster-neighbor');
-      const a = (await active.boundingBox())!, n = (await neighbor.boundingBox())!;
+      const neighbors = page.locator('.booster-pack-slot[data-active="false"] .booster-neighbor');
+      // Trois univers : les deux paquets en retrait encadrent celui de devant.
+      await expect(neighbors).toHaveCount(2);
+      const a = (await active.boundingBox())!;
       expect(a.width).toBeGreaterThan(100);
-      expect(a.width).toBeGreaterThan(n.width);
-      await expect(neighbor).toHaveAttribute("aria-hidden", "true");
-      await expect(neighbor.locator("button")).toHaveCount(0);
-      const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
-      // Nuit de direct : le second paquet se voit, en retrait derrière celui de devant.
-      expect(neighborOpacity).toBeGreaterThan(.3);
-      expect(neighborOpacity).toBeLessThan(.7);
+      for (const neighbor of await neighbors.all()) {
+        const n = (await neighbor.boundingBox())!;
+        expect(a.width).toBeGreaterThan(n.width);
+        await expect(neighbor).toHaveAttribute("aria-hidden", "true");
+        await expect(neighbor.locator("button")).toHaveCount(0);
+        const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
+        // Nuit de direct : les paquets voisins se voient, en retrait derrière celui de devant.
+        expect(neighborOpacity).toBeGreaterThan(.3);
+        expect(neighborOpacity).toBeLessThan(.7);
+      }
       await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
       expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
       // Le paquet de devant EST le bouton : plus de pilule séparée.

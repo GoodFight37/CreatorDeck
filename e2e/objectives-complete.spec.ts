@@ -14,11 +14,12 @@ test("Objectifs : quotidien, collection, saisons et filtres sur téléphone",asy
   await page.setViewportSize({width,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
  }
- await page.getByRole('link',{name:'Saisons',exact:true}).click();
+ // Les saisons vivent dans la même page, sous les missions : plus d'onglet séparé.
+ await expect(page.getByRole('heading',{name:'Saisons de collection',exact:true})).toBeVisible();
  await page.getByRole('button',{name:'À réclamer',exact:true}).click();
  await expect(page.locator('.objectives-season-empty')).toBeVisible();
  await page.getByRole('button',{name:'Voir toutes les saisons',exact:true}).click();
- await expect(page.locator('.season-row')).toHaveCount(8);
+ await expect(page.locator('.season-row')).toHaveCount(Math.min(8, SEASONS.length));
  await page.locator('.season-tier-details summary').first().click();
  await expect(page.locator('.season-tier-details').first()).toContainText('points');
  await page.screenshot({path:'test-results/objectives-seasons-390.png'});
