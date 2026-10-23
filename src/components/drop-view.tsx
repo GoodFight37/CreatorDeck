@@ -26,7 +26,6 @@ import { useCircle } from "@/lib/circle-store";
 import { CircleStrip } from "@/components/circle-strip";
 import { CircleLiveMoment } from "@/components/circle-live-moment";
 import { circleLiveState } from "@/lib/circle-live";
-import { circlePityPool } from "@/lib/game-engine";
 import { missingCircle } from "@/lib/circle-draw";
 
 /** L'heure du prochain sachet, comme une horloge : « 14 h 30 ». */
@@ -43,7 +42,6 @@ export function HomeView({
   onOpen,
   onShowAccount,
   onUseHourglass,
-  onShowOdds,
   onShowAtelier,
   opening,
   usingHourglass,
@@ -61,7 +59,6 @@ export function HomeView({
   onOpen: () => void;
   onShowAccount?: () => void;
   onUseHourglass: () => void;
-  onShowOdds: () => void;
   onShowAtelier: () => void;
   opening: boolean;
   usingHourglass: boolean;
@@ -113,7 +110,6 @@ export function HomeView({
   const lean = circle.length > 0;
   // MEMES est un second paquet, visible à droite dès le départ ; Live reste devant.
   // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
-  const circlePity = lean && circlePityPool(circle, new Set<string>(), ownedSlugs).length > 0;
   const retiredLeft = useMemo(
     () =>
       craftableRetired().filter(
@@ -140,11 +136,6 @@ export function HomeView({
 
   const reserveControls = (
     <>
-          <button type="button" className="pity-row now" onClick={onShowOdds}
-            aria-label={`Voir les taux : Légendaire garanti ${game.pity.remaining <= 1 ? "au prochain booster" : `dans ${game.pity.remaining} boosters`}`}>
-            <span>Légendaire garanti {game.pity.remaining <= 1 ? "au prochain" : `dans ${game.pity.remaining} boosters`}{circlePity ? " · une de tes chaînes" : ""}</span>
-            <ChevronRight size={14} />
-          </button>
           <button
             className="hourglass-action"
             onClick={onUseHourglass}
@@ -267,12 +258,7 @@ export function HomeView({
 
       {/* Direct sous le CTA (le moment du cercle le remplace quand une de ses chaînes streame) */}
       {featured && !circleLiveEntries.length ? (
-        <button
-          type="button"
-          className="live-bar"
-          onClick={onShowOdds}
-          aria-label={`${live.count} créateurs en direct. Bonus Direct actif : voir les taux publiés.`}
-        >
+        <div className="live-bar" role="status">
           <i aria-hidden="true" />
           <span className="live-bar-tag">En direct</span>
           <span className="live-bar-who">
@@ -281,7 +267,7 @@ export function HomeView({
             {featured.viewers > 0 ? ` ${formatViewers(featured.viewers)}` : ""}
           </span>
           <span className="live-bar-boost">Bonus Direct</span>
-        </button>
+        </div>
       ) : null}
 
       {friendsOpening > 0 ? (
@@ -303,9 +289,8 @@ export function HomeView({
       ) : null}
 
       <details className="drop-secondary">
-        <summary>{lean ? "Réserve, taux et sabliers" : "Progression, taux et activités"} <ChevronRight size={15} /></summary>
+        <summary>{lean ? "Réserve et sabliers" : "Progression et activités"} <ChevronRight size={15} /></summary>
         {lean ? reserveControls : null}
-        <button type="button" className="text-link" onClick={onShowOdds}>Taux officiels <ChevronRight size={15} /></button>
         {retiredLeft > 0 ? (
           <button
             type="button"

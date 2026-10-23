@@ -41,7 +41,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     const onUseHourglass = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={busy}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowAtelier={noop} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={false} needsAccount={false} onEditCircle={noop} />);
     return { onUseHourglass };
   }
@@ -109,7 +109,7 @@ describe("étape 2 : qui est en direct dans mon cercle", () => {
     expect(document.querySelector(".open-panel .stock-row")!.textContent).toMatch(/^Prochain sachet à \d\d h \d\d$/);
     expect(card.querySelector(".circle-live-hourglass")).toBeNull();
     const button = document.querySelector<HTMLButtonElement>(".hourglass-action")!;
-    expect(button.closest("details")!.querySelector("summary")!.textContent).toContain("Réserve, taux et sabliers");
+    expect(button.closest("details")!.querySelector("summary")!.textContent).toContain("Réserve et sabliers");
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
   });

@@ -26,7 +26,6 @@ import { friendsOpenedRecently } from "@/lib/social/inbox";
 import { AtelierView } from "@/components/atelier-view";
 
 import { PackTear } from "@/components/pack-tear";
-import { PackOddsSheet } from "@/components/pack-odds-sheet";
 import { RevealOverlay } from "@/components/reveal-overlay";
 import { TribunalView, type TribunalPayout } from "@/components/tribunal-view";
 import { WishlistSheet } from "@/components/wishlist-sheet";
@@ -201,7 +200,6 @@ export function CreatorDeckApp() {
   // Raccourci affiché dans le bandeau d'erreur (« Mon compte »).
   const [errorHint, setErrorHint] = useState<"account" | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [oddsOpen, setOddsOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [studioOpen, setStudioOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
@@ -306,7 +304,6 @@ export function CreatorDeckApp() {
   useBackHandler(marketOpen, fermerFeuille(setMarketOpen));
   useBackHandler(friendsOpen, fermerFeuille(setFriendsOpen));
   useBackHandler(studioOpen, fermerFeuille(setStudioOpen));
-  useBackHandler(oddsOpen, fermerFeuille(setOddsOpen));
 
   useAndroidBack(() => {
     // Plus rien à fermer : on revient à l'accueil, et si on y est déjà, l'app
@@ -402,7 +399,7 @@ export function CreatorDeckApp() {
   // qu'une feuille est ouverte. Attendre qu'elle se ferme évite deux dialogues
   // superposés et un tutoriel qui intercepte les appuis derrière le compte.
   const presentationOccupied = accountOpen || friendsOpen || marketOpen || lastPackOpen ||
-    wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || oddsOpen || circleEditOpen ||
+    wishlistOpen || notificationsOpen || arenaOpen || tribunalOpen || circleEditOpen ||
     themeOpen || studioOpen || settingsOpen || Boolean(cloud.profile || cloud.profileBusy) ||
     tearing || drawnCards.length > 0;
   const showTutorial = tutorialStep !== null || (tutorialDue && !presentationOccupied);
@@ -799,7 +796,6 @@ export function CreatorDeckApp() {
             onOpen={prepareLivePack}
             onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
             onUseHourglass={handleUseHourglass}
-            onShowOdds={ouvrirFeuille(setOddsOpen)}
             onShowAtelier={() => { setBinderMode("atelier"); setTab("collection"); }}
             opening={opening || sceneOpening}
             usingHourglass={usingHourglass}
@@ -924,13 +920,9 @@ export function CreatorDeckApp() {
           onShowAccount={() => { setAccountFocus(null); setAccountOpen(true); }}
           onShowNotifications={ouvrirFeuille(setNotificationsOpen)}
           onShowThemes={ouvrirFeuille(setThemeOpen)}
-          onShowOdds={ouvrirFeuille(setOddsOpen)}
           onNotice={showNotice}
           onError={showError}
         />
-      ) : null}
-      {oddsOpen ? (
-        <PackOddsSheet onClose={fermerFeuille(setOddsOpen)} current={game} />
       ) : null}
       {process.env.NODE_ENV !== "production" && studioOpen ? <StudioSheet onClose={fermerFeuille(setStudioOpen)} /> : null}
       {friendsOpen ? <FriendsSheet initialTab={friendsTab} onClose={fermerFeuille(setFriendsOpen)} /> : null}

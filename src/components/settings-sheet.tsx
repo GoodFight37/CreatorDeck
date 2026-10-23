@@ -9,8 +9,6 @@ import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import { ChevronRight, X } from "lucide-react";
 
-import { CreditsBlock } from "@/components/credits";
-import { ImageCredits } from "@/components/image-credits";
 import { PromoCodeSheet } from "@/components/promo-code-sheet";
 import { ReleaseNotesSheet } from "@/components/release-notes-sheet";
 import { useCloud } from "@/hooks/use-cloud";
@@ -34,7 +32,6 @@ export function SettingsSheet({
   onShowAccount,
   onShowNotifications,
   onShowThemes,
-  onShowOdds,
   onNotice,
   onError,
 }: {
@@ -42,7 +39,6 @@ export function SettingsSheet({
   onShowAccount: () => void;
   onShowNotifications: () => void;
   onShowThemes: () => void;
-  onShowOdds: () => void;
   onNotice: (message: string) => void;
   onError: (message: string) => void;
 }) {
@@ -153,9 +149,6 @@ export function SettingsSheet({
             <span>Nouveautés</span>
             {unreadCount > 0 ? <b className="menu-count" aria-hidden="true">{unreadCount}</b> : <ChevronRight size={16} />}
           </button>
-          <button type="button" className="menu-row" onClick={onShowOdds}><span>Taux officiels</span><ChevronRight size={16} /></button>
-          <ImageCredits />
-          <CreditsBlock />
         </section>
 
         {/* Pour signaler un problème : replié, ce n'est pas un réglage de jeu. */}

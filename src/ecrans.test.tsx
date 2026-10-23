@@ -103,8 +103,7 @@ describe("les écrans", () => {
     expect(banc.ecran("06-objectifs")).toContain("Progression");
 
     banc.appuyerNom(/^Réglages/);
-    banc.appuyer("Taux officiels");
-    expect(banc.ecran("07-taux")).toContain("Taux de drop des boosters");
+    expect(document.querySelector(".settings-overlay")?.textContent ?? "").not.toContain("Taux officiels");
     banc.fermer();
   });
 
