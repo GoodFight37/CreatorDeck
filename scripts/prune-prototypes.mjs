@@ -11,7 +11,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const PROTOTYPES = ["catalogue-demo.html", "catalogue-demo.txt", "catalogue-demo"];
+const PROTOTYPES = [
+  "catalogue-demo.html",
+  "catalogue-demo.txt",
+  "catalogue-demo",
+  // Laboratoire audio : développement uniquement, jamais exposé aux joueurs.
+  "audio-lab.html",
+  "audio-lab.txt",
+  "audio-lab",
+];
 
 // Les originaux restent dans le dépôt pour le sourcing et les restaurations.
 const manual = JSON.parse(await readFile(path.join(root, "src/data/manual-portrait-overrides.json"), "utf8"));

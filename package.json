@@ -10,7 +10,7 @@
     "quality:mobile": "node scripts/mobile-quality.mjs",
     "quality:mobile:full": "node scripts/mobile-quality.mjs --full",
     "quality:android": "node scripts/android-emulator-smoke.mjs",
-    "test:autonomy": "node --test scripts/apk-release-gate.test.mjs scripts/android-emulator-smoke.test.mjs scripts/ci-incident-report.test.mjs scripts/delegate-claude.test.mjs scripts/mobile-quality.test.mjs scripts/quality-incidents.test.mjs",
+    "test:autonomy": "node --test scripts/apk-release-gate.test.mjs scripts/android-emulator-smoke.test.mjs scripts/ci-incident-report.test.mjs scripts/delegate-claude.test.mjs scripts/elevenlabs-generate.test.mjs scripts/mobile-quality.test.mjs scripts/quality-incidents.test.mjs",
     "sfx:niveaux": "node scripts/sfx-niveaux.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

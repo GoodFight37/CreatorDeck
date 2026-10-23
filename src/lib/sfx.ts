@@ -361,6 +361,35 @@ export const MUSIC_SCENE_GAIN: Readonly<Record<MusicScene, number>> = {
   tribunal: 0,
 };
 
+const MUSIC_VOLUME_KEY = "creatordeck.music-volume";
+const SFX_VOLUME_KEY = "creatordeck.sfx-volume";
+const MUSIC_TRACK_KEY = "creatordeck.music-track";
+/** Multiplicateurs de volume (0 à 2, 1 = équilibre réglé par le jeu). */
+let musicVolume = 1;
+let sfxVolume = 1;
+/** Piste musicale sélectionnée (voir MUSIC_TRACKS), défaut : piste actuelle. */
+let musicTrackId = "hub-late-night";
+
+/** Pistes musicales que le moteur sait enchaîner avec un fondu. */
+export const MUSIC_TRACKS: readonly { id: string; label: string; src: string }[] = [
+  { id: "hub-late-night", label: "Late Night (actuelle)", src: MUSIC_SRC },
+];
+
+export function clampVolume(value: number): number {
+  if (!Number.isFinite(value)) return 1;
+  return Math.min(2, Math.max(0, value));
+}
+
+function readStoredVolume(key: string): number {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (raw === null) return 1;
+    return clampVolume(Number.parseFloat(raw));
+  } catch {
+    return 1;
+  }
+}
+
 function loadPreference(): void {
   if (loaded) return;
   loaded = true;
@@ -371,6 +400,9 @@ function loadPreference(): void {
     // Avant la séparation, le mute coupait ensemble musique et sons. Conserve
     // ce choix existant au premier démarrage après mise à jour.
     musicMuted = savedMusicPreference === null ? muted : savedMusicPreference === "1";
+    musicVolume = readStoredVolume(MUSIC_VOLUME_KEY);
+    sfxVolume = readStoredVolume(SFX_VOLUME_KEY);
+    musicTrackId = window.localStorage.getItem(MUSIC_TRACK_KEY) ?? musicTrackId;
   } catch {
     // Mode privé ou stockage refusé : les deux options restent actives.
     muted = false;
@@ -392,7 +424,7 @@ export function isMusicMuted(): boolean {
 export function setMuted(value: boolean): void {
   loadPreference();
   muted = Boolean(value);
-  if (bus) bus.gain.value = muted ? 0 : 1;
+  if (bus) bus.gain.value = muted ? 0 : sfxVolume;
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(STORAGE_KEY, muted ? "1" : "0");
@@ -406,7 +438,7 @@ export function setMusicMuted(value: boolean): void {
   loadPreference();
   musicMuted = Boolean(value);
   if (musicGain && context) {
-    rampMusicGain(context, musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene], musicMuted ? MUSIC_MUTE_FADE_SECONDS : MUSIC_FADE_IN_SECONDS);
+    rampMusicGain(context, musicGainTarget(), musicMuted ? MUSIC_MUTE_FADE_SECONDS : MUSIC_FADE_IN_SECONDS);
   }
   if (typeof window === "undefined") return;
   try {
@@ -423,6 +455,79 @@ export function setMusicMuted(value: boolean): void {
   }
 }
 
+/** Niveau cible de la BGM : scène × préférence de volume (0 si muette). */
+function musicGainTarget(): number {
+  return musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene] * musicVolume;
+}
+
+function persistPreference(key: string, value: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Le choix ne survivra pas au rechargement, ce n'est pas bloquant.
+  }
+}
+
+/** Volume relatif de la musique (1 = équilibre du jeu, 0 à 2). */
+export function getMusicVolume(): number {
+  loadPreference();
+  return musicVolume;
+}
+
+/** Change le volume musique et l'applique immédiatement, en fondu court. */
+export function setMusicVolume(value: number): void {
+  loadPreference();
+  musicVolume = clampVolume(value);
+  persistPreference(MUSIC_VOLUME_KEY, String(musicVolume));
+  if (musicGain && context) rampMusicGain(context, musicGainTarget(), 0.15);
+  if (previewMusicGain && context) {
+    previewMusicGain.gain.cancelScheduledValues(context.currentTime);
+    previewMusicGain.gain.setValueAtTime(previewMusicGain.gain.value, context.currentTime);
+    previewMusicGain.gain.linearRampToValueAtTime(previewMusicTarget(), context.currentTime + 0.15);
+  }
+}
+
+/** Volume relatif des bruitages et de la synthèse (1 = équilibre du jeu). */
+export function getSfxVolume(): number {
+  loadPreference();
+  return sfxVolume;
+}
+
+/** Change le volume des effets ; le bus maître suit aussitôt. */
+export function setSfxVolume(value: number): void {
+  loadPreference();
+  sfxVolume = clampVolume(value);
+  persistPreference(SFX_VOLUME_KEY, String(sfxVolume));
+  if (bus) bus.gain.value = muted ? 0 : sfxVolume;
+}
+
+/** Piste musicale actuellement sélectionnée. */
+export function getMusicTrackId(): string {
+  loadPreference();
+  return musicTrackId;
+}
+
+/**
+ * Bascule la BGM vers une autre piste du catalogue, en fondu : l'ancienne
+ * s'arrête, la nouvelle est chargée puis lancée si la musique jouait.
+ * Sert au laboratoire audio ; le jeu ne propose que la piste actuelle tant
+ * qu'aucune autre n'est validée.
+ */
+export function setMusicTrack(id: string): void {
+  loadPreference();
+  const track = MUSIC_TRACKS.find((candidate) => candidate.id === id);
+  if (!track || id === musicTrackId) return;
+  musicTrackId = id;
+  persistPreference(MUSIC_TRACK_KEY, id);
+  const relancer = musicRequested && !musicStopped;
+  stopHubMusic();
+  musicBuffer = null;
+  musicBufferTrackId = "";
+  musicStopped = false;
+  if (relancer) startGameAudio(musicScene);
+}
+
 /**
  * Bus distinct des bruitages/synthèse : la musique a son propre gain et son
  * interrupteur, mais les deux sortent par le volume média du téléphone.
@@ -431,6 +536,7 @@ let bus: GainNode | null = null;
 let musicGain: GainNode | null = null;
 let musicSource: AudioBufferSourceNode | null = null;
 let musicBuffer: AudioBuffer | null = null;
+let musicBufferTrackId = "";
 let musicLoading: Promise<void> | null = null;
 let musicScene: MusicScene = "hub";
 let musicStopped = false;
@@ -443,15 +549,14 @@ const MUSIC_LOOP_CROSSFADE_SECONDS = 1.2;
 function masterBus(ctx: AudioContextLike): GainNode {
   if (bus) return bus;
   bus = ctx.createGain();
-  bus.gain.value = muted ? 0 : 1;
+  bus.gain.value = muted ? 0 : sfxVolume;
   bus.connect(ctx.destination);
   return bus;
 }
 
 function applyMusicScene(ctx: AudioContextLike): void {
   if (!musicGain) return;
-  const target = musicMuted ? 0 : MUSIC_SCENE_GAIN[musicScene];
-  rampMusicGain(ctx, target, 0.28);
+  rampMusicGain(ctx, musicGainTarget(), 0.28);
 }
 
 function rampMusicGain(ctx: AudioContextLike, target: number, duration: number): void {
@@ -496,7 +601,7 @@ function startMusicSource(ctx: AudioContextLike): void {
     musicSource.loopStart = musicLoopStart;
     musicSource.loopEnd = musicBuffer.duration;
     musicSource.connect(musicGain);
-    rampMusicGain(ctx, MUSIC_SCENE_GAIN[musicScene], MUSIC_FADE_IN_SECONDS);
+    rampMusicGain(ctx, musicGainTarget(), MUSIC_FADE_IN_SECONDS);
     musicSource.start();
   } catch {
     musicSource = null;
@@ -526,12 +631,17 @@ export function preloadGameMusic(): void {
   if (musicBuffer || musicLoading || isMusicMuted()) return;
   const ctx = audioContext();
   if (!ctx) return;
-  musicLoading = fetch(MUSIC_SRC)
+  const trackId = musicTrackId;
+  const src = MUSIC_TRACKS.find((track) => track.id === trackId)?.src ?? MUSIC_SRC;
+  musicLoading = fetch(src)
     .then((response) => response.ok ? response.arrayBuffer() : Promise.reject(new Error("BGM unavailable")))
     .then((data) => ctx.decodeAudioData(data))
     .then((buffer) => {
+      // La piste a pu changer pendant le chargement : ne pas jouer l'ancienne.
+      if (trackId !== musicTrackId) return;
       const loop = crossfadeLoopSeam(ctx, buffer);
       musicBuffer = loop.buffer;
+      musicBufferTrackId = trackId;
       musicLoopStart = loop.loopStart;
       if (musicRequested) {
         if (ctx.state === "suspended") void ctx.resume();
@@ -836,4 +946,102 @@ export function playCardPlace(): void {
 /** Une publication est encaissée. */
 export function playChime(): void {
   playSample("chime");
+}
+
+// ---------------------------------------------------------------------------
+// Aperçus du laboratoire audio (développement uniquement).
+//
+// Ces lectures jouent des fichiers arbitraires PAR les bus du jeu — musique
+// au gain de scène × préférence de volume, effets par le bus maître — pour
+// comparer des candidats dans les mêmes conditions que le jeu, sans jamais
+// toucher aux fichiers en place. Rien dans le jeu ne les appelle.
+// ---------------------------------------------------------------------------
+
+let previewMusicSource: AudioBufferSourceNode | null = null;
+let previewMusicGain: GainNode | null = null;
+let previewToken = 0;
+const previewBuffers = new Map<string, Promise<AudioBuffer | null>>();
+
+function previewMusicTarget(): number {
+  return musicMuted ? 0 : MUSIC_SCENE_GAIN.hub * musicVolume;
+}
+
+function loadPreviewBuffer(ctx: AudioContextLike, src: string): Promise<AudioBuffer | null> {
+  const cached = previewBuffers.get(src);
+  if (cached) return cached;
+  const pending = fetch(src)
+    .then((response) => (response.ok ? response.arrayBuffer() : Promise.reject(new Error("aperçu indisponible"))))
+    .then((data) => ctx.decodeAudioData(data))
+    .catch(() => {
+      previewBuffers.delete(src);
+      return null;
+    });
+  previewBuffers.set(src, pending);
+  return pending;
+}
+
+/** Joue un fichier musical en boucle, au niveau d'écoute du hub. */
+export async function previewMusic(src: string): Promise<boolean> {
+  loadPreference();
+  stopPreviewMusic();
+  const token = ++previewToken;
+  const ctx = audioContext();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") void ctx.resume();
+  const buffer = await loadPreviewBuffer(ctx, src);
+  if (!buffer || token !== previewToken) return false;
+  try {
+    previewMusicGain = ctx.createGain();
+    previewMusicGain.gain.setValueAtTime(0, ctx.currentTime);
+    previewMusicGain.gain.linearRampToValueAtTime(previewMusicTarget(), ctx.currentTime + 0.3);
+    previewMusicGain.connect(ctx.destination);
+    previewMusicSource = ctx.createBufferSource();
+    previewMusicSource.buffer = buffer;
+    previewMusicSource.loop = true;
+    previewMusicSource.connect(previewMusicGain);
+    previewMusicSource.start();
+    return true;
+  } catch {
+    previewMusicSource = null;
+    previewMusicGain = null;
+    return false;
+  }
+}
+
+/** Arrête l'aperçu musical en fondu court. */
+export function stopPreviewMusic(): void {
+  previewToken += 1;
+  if (previewMusicSource && previewMusicGain && context) {
+    const source = previewMusicSource;
+    const gain = previewMusicGain;
+    try {
+      gain.gain.cancelScheduledValues(context.currentTime);
+      gain.gain.setValueAtTime(gain.gain.value, context.currentTime);
+      gain.gain.linearRampToValueAtTime(0, context.currentTime + 0.12);
+      source.stop(context.currentTime + 0.15);
+    } catch {
+      try { source.stop(); } catch { /* Déjà arrêté. */ }
+    }
+  }
+  previewMusicSource = null;
+  previewMusicGain = null;
+}
+
+/** Joue un fichier d'effet par le bus des bruitages (volume et mute du jeu). */
+export async function previewSfx(src: string): Promise<boolean> {
+  loadPreference();
+  const ctx = audioContext();
+  if (!ctx) return false;
+  if (ctx.state === "suspended") void ctx.resume();
+  const buffer = await loadPreviewBuffer(ctx, src);
+  if (!buffer) return false;
+  try {
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(masterBus(ctx));
+    source.start();
+    return true;
+  } catch {
+    return false;
+  }
 }

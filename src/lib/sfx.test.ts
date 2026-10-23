@@ -5,8 +5,13 @@ import NIVEAUX_SFX from "@/data/sfx-niveaux.json";
 import {
   SAMPLES,
   MUSIC_SCENE_GAIN,
+  MUSIC_TRACKS,
   SFX_USUELS,
+  clampVolume,
   tearPlan,
+  getMusicTrackId,
+  getMusicVolume,
+  getSfxVolume,
   legendaryStingerPlan,
   perfectStingerPlan,
   tribunalEndStingerPlan,
@@ -18,8 +23,11 @@ import {
   rewardPlan,
   sampleGain,
   sampleUrl,
+  setMusicTrack,
+  setMusicVolume,
   setMuted,
   setMusicMuted,
+  setSfxVolume,
   type SampleName,
 } from "@/lib/sfx";
 
@@ -482,5 +490,36 @@ describe("préférences audio indépendantes", () => {
       vi.unstubAllGlobals();
       vi.resetModules();
     }
+  });
+});
+
+describe("volumes séparés et pistes (laboratoire audio)", () => {
+  it("borne les volumes entre 0 et 2, avec 1 par défaut", () => {
+    expect(clampVolume(2.5)).toBe(2);
+    expect(clampVolume(-1)).toBe(0);
+    expect(clampVolume(Number.NaN)).toBe(1);
+    expect(clampVolume(0.5)).toBe(0.5);
+  });
+
+  it("applique et relit les deux volumes indépendamment", () => {
+    try {
+      setMusicVolume(0.4);
+      setSfxVolume(1.6);
+      expect(getMusicVolume()).toBe(0.4);
+      expect(getSfxVolume()).toBe(1.6);
+      setMusicVolume(99);
+      expect(getMusicVolume()).toBe(2);
+    } finally {
+      setMusicVolume(1);
+      setSfxVolume(1);
+    }
+  });
+
+  it("ne connaît qu'une piste tant qu'aucune autre n'est validée", () => {
+    expect(MUSIC_TRACKS).toHaveLength(1);
+    expect(MUSIC_TRACKS[0]).toMatchObject({ id: "hub-late-night", src: "/music/hub-late-night.mp3" });
+    expect(getMusicTrackId()).toBe("hub-late-night");
+    setMusicTrack("piste-inconnue");
+    expect(getMusicTrackId()).toBe("hub-late-night");
   });
 });
