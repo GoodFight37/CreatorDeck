@@ -62,6 +62,7 @@
  *     classement par famille lit `user_cards` sans jamais l'exposer.
  */
 import { verifyHourglasses } from "./verify-hourglasses.mjs";
+import { verifyImgflipBooster } from "./verify-imgflip-booster.mjs";
 import { verifyCircleDraw } from "./verify-circle-draw.mjs";
 import { verifyRetention } from "./verify-retention.mjs";
 import { verifyCircleOptional } from "./verify-circle-optional.mjs";
@@ -7452,6 +7453,8 @@ try {
     const after = JSON.stringify((await client.query(`select coalesce(jsonb_agg(to_jsonb(t) order by to_jsonb(t)::text), '[]'::jsonb) as data from public.${table} t`)).rows[0].data);
     check(`0061 : ${table} intégralement conservée`, after === beforeRemoval[index]);
   }
+  await verifyImgflipBooster({ client, player, asPlayer, refuses, check,
+    sql: await readFile(path.join(MIGRATIONS, "0062_imgflip_univers.sql"), "utf8") });
   console.log(failures === 0 ? "🎉 Toutes les vérifications passent." : `⚠️ ${failures} vérification(s) en échec.`);
 } finally {
   await client.end().catch(() => {});

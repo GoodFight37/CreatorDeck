@@ -8,6 +8,21 @@ import { checkTarget, validateMigrationFiles, migrationPlan, PROJECT, connection
 const old = { name: '0046_reset.sql', version: '0046', hash: 'known', sql: 'select 1;' };
 const next = { name: '0047_fix.sql', version: '0047', hash: 'new', sql: '-- creatordeck-deploy: automatic\nselect 1;' };
 const baseline = { [old.name]: old.hash };
+
+test('après 0062 : tables RLS, RPC et 999 raretés doivent réellement exister', async () => {
+  for (const missing of ['tables', 'rpc', 'catalog', null]) {
+    const queries = [];
+    const action = verifyRecordedMigrations({ query: async sql => {
+      queries.push(sql);
+      if (sql.includes('schema_migrations')) return { rows: [{ version: '0062' }] };
+      if (sql.includes('pg_class')) return { rows: [{ tables: missing !== 'tables', rpc: missing !== 'rpc' }] };
+      return { rows: [{ total: missing === 'catalog' ? 998 : 999, legendary: 49, epic: 120, rare: 230, uncommon: 300, common: 300 }] };
+    } }, [{ version: '0062' }]);
+    if (missing) await assert.rejects(action, /Vérification après application/);
+    else await action;
+    assert.ok(queries.every(sql => /^select\s/.test(sql)));
+  }
+});
 test('après 0061 : seule l’absence réelle du reset confirme le retrait', async () => {
   for (const removed of [false, true]) {
     const client = { query: async sql => sql.includes('schema_migrations')

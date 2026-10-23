@@ -1,3 +1,12 @@
+## Révélation : filtres animés Épique/Légendaire — correction du 23 octobre 2026
+
+Les keyframes `card-reveal-epic` / `card-reveal-legendary` de `globals.css`
+animaient brightness et drop-shadow pendant les transformations. Ces filtres
+sont retirés au profit d'ombres fixes, sans changement de rythme. Correction
+ciblée demandée par Malik ; aucun gain de performances chiffré ou essai Android
+revendiqué. Les animations plus spécifiques de `booster-continuity.css` restent
+inchangées. Vérifications et publication dans le checkpoint courant.
+
 ## Drop : la ligne de réserve passe sous l'objet Drop de la barre du bas — ouvert, 22 octobre 2026
 
 Version : `main` `957d22fb`. Gravité P2, lisibilité. Constat sur capture Playwright

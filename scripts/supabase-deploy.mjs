@@ -43,7 +43,7 @@ export async function withDeploymentDirectory(files, action) {
     return await action(directory);
   } finally { await rm(directory, { recursive: true, force: true }); }
 }
-/** Un succès CLI ne suffit pas : relire les versions et les objets de 0047. */
+/** Un succès CLI ne suffit pas : relire les versions et les objets attendus. */
 export async function verifyRecordedMigrations(client, files) {
   const result = await client.query('select version from supabase_migrations.schema_migrations order by version');
   if (files.some(file => !result.rows.some(row => row.version === file.version))) {
@@ -52,6 +52,28 @@ export async function verifyRecordedMigrations(client, files) {
   if (files.some(file => file.version === '0061')) {
     const reset = await client.query("select to_regprocedure('public.reset_progress()') is null as removed");
     if (!reset.rows[0]?.removed) throw new Error('Vérification après application : le reset de progression existe encore.');
+  }
+  if (files.some(file => file.version === '0062')) {
+    const objects = await client.query(`select
+      (select count(*) = 4 and bool_and(relrowsecurity) from pg_class where oid = any(array[
+        to_regclass('public.imgflip_catalog'), to_regclass('public.imgflip_profile'),
+        to_regclass('public.imgflip_collection'), to_regclass('public.imgflip_openings')])) as tables,
+      to_regprocedure('public.imgflip_status()') is not null
+        and to_regprocedure('public.open_imgflip_pack(uuid)') is not null as rpc`);
+    if (!objects.rows[0]?.tables || !objects.rows[0]?.rpc) {
+      throw new Error('Vérification après application : objets Imgflip de 0062 incomplets.');
+    }
+    const catalog = await client.query(`select count(*)::int as total,
+      count(*) filter (where rarity = 'legendary')::int as legendary,
+      count(*) filter (where rarity = 'epic')::int as epic,
+      count(*) filter (where rarity = 'rare')::int as rare,
+      count(*) filter (where rarity = 'uncommon')::int as uncommon,
+      count(*) filter (where rarity = 'common')::int as common from public.imgflip_catalog`);
+    const expected = { total: 999, legendary: 49, epic: 120, rare: 230, uncommon: 300, common: 300 };
+    if (Object.entries(expected).some(([key, value]) => catalog.rows[0]?.[key] !== value)) {
+      throw new Error('Vérification après application : catalogue Imgflip de 0062 incomplet.');
+    }
+    console.log('0062 vérifiée : quatre tables RLS, deux RPC, 999 cartes et raretés attendues.');
   }
   if (files.some(file => file.version === '0047')) {
     const objects = await client.query(`select

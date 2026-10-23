@@ -1525,46 +1525,39 @@ input:focus-visible {
  * Le halo de fin reste à l'écran (c'est un style, pas une boucle) — et il
  * s'éteint avec le réglage « Reflets des cartes », plus bas.
  */
-.reveal-flip.rarity-epic { animation-name: card-reveal-epic; }
-.reveal-flip.rarity-legendary { animation-name: card-reveal-legendary; }
+.reveal-flip.rarity-epic { animation-name: card-reveal-epic; box-shadow: 0 0 12px rgba(168, 85, 247, 0.35); }
+.reveal-flip.rarity-legendary { animation-name: card-reveal-legendary; box-shadow: 0 0 18px rgba(255, 190, 85, 0.45); }
 
 @keyframes card-reveal-epic {
   0% {
     transform: translateY(90px) scale(0.5);
-    filter: brightness(0.3) drop-shadow(0 0 0 transparent);
   }
   40% {
     transform: translateY(-28px) scale(1.18);
-    filter: brightness(1.5) drop-shadow(0 0 28px rgba(168, 85, 247, 0.7));
   }
   100% {
     transform: none;
-    filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.35));
   }
 }
 
 @keyframes card-reveal-legendary {
   0% {
     transform: translateY(110px) scale(0.4) rotateZ(-6deg);
-    filter: brightness(0.2) drop-shadow(0 0 0 transparent);
   }
   35% {
     transform: translateY(-40px) scale(1.25) rotateZ(4deg);
-    filter: brightness(1.8) drop-shadow(0 0 48px rgba(255, 190, 85, 0.95));
   }
   65% {
     transform: translateY(8px) scale(0.96);
-    filter: brightness(1.2) drop-shadow(0 0 24px rgba(255, 190, 85, 0.6));
   }
   100% {
     transform: none;
-    filter: drop-shadow(0 0 18px rgba(255, 190, 85, 0.45));
   }
 }
 
 /* Le réglage de secours : couper les reflets coupe **tout**, halo compris. */
 [data-card-fx="off"] .reveal-flip.rarity-epic,
-[data-card-fx="off"] .reveal-flip.rarity-legendary { animation-name: card-reveal-punch; }
+[data-card-fx="off"] .reveal-flip.rarity-legendary { animation-name: card-reveal-punch; box-shadow: none; }
 @media (prefers-reduced-motion: reduce) {
   /* Sans animation, la face reste face : le dos ne se montre jamais. */
   .reveal-flip,

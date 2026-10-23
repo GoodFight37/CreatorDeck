@@ -1,5 +1,12 @@
 # Roadmap CreatorDeck
 
+**Imgflip serveur, 23 octobre 2026 :** migration 0062 préparée et validée sur
+Postgres jetable (999 cartes, réserve et possessions séparées, taux Live).
+Malik a explicitement autorisé son application en production après sa demande
+initiale de la retenir ; publication, CI et application en cours au checkpoint.
+Le raccordement du sachet client aux nouvelles RPC reste à faire : il utilise
+encore le tirage temporaire local. État réel dans la [passation](agent-handoff.md).
+
 Publication du 22 octobre : le main regroupé est poussé au commit
 [`c8ad0328`](https://github.com/GoodFight37/CreatorDeck/commit/c8ad0328bae09e5cb116db7b4472aeb63cb1283e),
 Vercel Production du même SHA vérifié terminé. Le retrait du moteur streamer

@@ -10,6 +10,13 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-23-revelation-sans-filtres", date: "2026-10-23", title: "Une révélation plus légère",
+    summary: "Les cartes Épiques et Légendaires gardent leur mouvement avec une lumière plus stable.",
+    sections: [{ title: "Confort", items: [
+      "Le halo reste fixe pendant l'arrivée des cartes Épiques et Légendaires. Le rythme de la révélation est conservé.",
+    ] }],
+  },
+  {
     id: "2026-10-22-tribunal-clavier", date: "2026-10-22", title: "Le Tribunal au clavier",
     summary: "Le clavier reste dans le Tribunal pendant toute la séance.",
     sections: [{ title: "Navigation", items: [
