@@ -1548,6 +1548,47 @@ describe("connexion Twitch", () => {
 });
 
 
+describe("booster Imgflip (serveur, 0062)", () => {
+  function signedIn() {
+    const storage = memoryStorage();
+    storage.setItem(
+      CLOUD_SESSION_KEY,
+      JSON.stringify({ ...SESSION_BODY, accessToken: "a", refreshToken: "r", expiresAt: Date.now() + 3600_000, userId: SESSION_BODY.user.id }),
+    );
+    return storage;
+  }
+
+  it("lit la réserve et la collection via imgflip_status", async () => {
+    const { api, calls } = client(
+      () => ({ body: { stock: 3, next_at: "2026-10-23T12:30:00Z", openings: 2, owned: [{ id: "imgflip-1", copies: 2 }] } }),
+      signedIn(),
+    );
+    await expect(api.imgflipStatus()).resolves.toEqual({
+      stock: 3, nextAt: "2026-10-23T12:30:00Z", openings: 2, owned: [{ id: "imgflip-1", copies: 2 }],
+    });
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/imgflip_status");
+  });
+
+  it("ouvre via open_imgflip_pack avec la clé de rejeu et renvoie cartes + réserve", async () => {
+    const cards = ["imgflip-1", "imgflip-2", "imgflip-3", "imgflip-4", "imgflip-5"];
+    const { api, calls } = client(
+      () => ({ body: { cards, stock: 3, next_at: null, replayed: false } }),
+      signedIn(),
+    );
+    await expect(api.openImgflipPack("12345678-1234-4234-8234-123456789012"))
+      .resolves.toEqual({ cards, stock: 3, nextAt: null, replayed: false });
+    expect(calls[0]?.url).toBe("https://projet.supabase.co/rest/v1/rpc/open_imgflip_pack");
+    expect(JSON.parse(String(calls[0]?.init?.body))).toEqual({ p_request_id: "12345678-1234-4234-8234-123456789012" });
+  });
+
+  it("refuse un tirage incomplet ou une réserve illisible, sans annoncer un succès", async () => {
+    const incomplet = client(() => ({ body: { cards: ["imgflip-1"], stock: 3, next_at: null } }), signedIn());
+    await expect(incomplet.api.openImgflipPack("12345678-1234-4234-8234-123456789012")).rejects.toThrow("incomplet");
+    const illisible = client(() => ({ body: { stock: 9, next_at: null, openings: 0, owned: [] } }), signedIn());
+    await expect(illisible.api.imgflipStatus()).rejects.toThrow("illisible");
+  });
+});
+
 describe("recharge par sablier", () => {
   it("envoie uniquement la clé de rejeu et lit la sauvegarde confirmée", async () => {
     const { api, calls } = client((url) => url.includes("/auth/") ? { body: SESSION_BODY } : { body: {

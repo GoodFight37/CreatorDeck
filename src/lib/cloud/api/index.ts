@@ -32,6 +32,8 @@ import * as wallet from "./wallet";
 import * as tribunal from "./tribunal";
 import * as memes from "./memes";
 import type { MemeOpening, MemeStatus } from "./memes";
+import * as imgflip from "./imgflip";
+import type { ImgflipOpening, ImgflipStatus } from "./imgflip";
 
 // Tout ce que le reste de l'application importait depuis `@/lib/cloud/api`
 // continue de fonctionner : les types viennent de `types.ts`.
@@ -54,6 +56,15 @@ export class CloudApi {
 
   async openMemePack(requestId: string): Promise<MemeOpening> {
     return memes.openMemePack(this.core, requestId);
+  }
+
+  /** Univers Imgflip : même contrat que les Mèmes, réserve et collection propres (0062). */
+  async imgflipStatus(): Promise<ImgflipStatus> {
+    return imgflip.imgflipStatus(this.core);
+  }
+
+  async openImgflipPack(requestId: string): Promise<ImgflipOpening> {
+    return imgflip.openImgflipPack(this.core, requestId);
   }
 
   constructor(

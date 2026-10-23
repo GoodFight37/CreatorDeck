@@ -1,3 +1,7 @@
+## D-160 — 23 octobre 2026 : le booster Imgflip est raccordé aux RPC 0062
+
+Contexte : la migration 0062 (tables, réserve et RPC Imgflip) est appliquée en production, mais le client ouvrait encore le troisième sachet en essai local, sans sauvegarde (« Local preview · No cards saved »). Décision : raccorder le client aux RPC existantes `imgflip_status()` et `open_imgflip_pack(uuid)`, en copiant le patron du booster Mèmes — préparation sans consommation, clé de requête persistée par compte (`creatordeck.imgflip.pending:<userId>`) reprise après réponse perdue, effacée sur refus 4xx, réserve serveur affichée (4 max, recharge 30 min) et possessions Imgflip fusionnées dans le classeur Mèmes (identifiants `imgflip-…` disjoints). Le tirage local `drawImgflipPack` est retiré : le serveur seul décide des cartes. Aucune migration ajoutée ou réappliquée, aucun taux modifié. Preuves : tests ciblés ci-dessous ; la CI complète de la PR fait foi pour les suites navigateur.
+
 ## D-TRIBUNAL-FOCUS-20261022 — focus sur le dialogue visible
 
 Le 22 octobre 2026, `TribunalDialog` porte le hook `usePresentationFocus` pour

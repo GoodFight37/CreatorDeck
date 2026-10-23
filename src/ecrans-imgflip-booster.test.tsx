@@ -3,31 +3,48 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { creerBanc, type Banc } from "@/ecrans-banc";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
 import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
-import { drawImgflipPack } from "@/lib/imgflip-booster";
+import { IMGFLIP_POOL } from "@/lib/imgflip-booster";
+import { CloudError } from "@/lib/cloud/api";
 
-vi.mock("@/lib/imgflip-booster", async importOriginal => {
-  const original = await importOriginal<typeof import("@/lib/imgflip-booster")>();
-  return { ...original, drawImgflipPack: vi.fn(original.drawImgflipPack) };
-});
+const { identity, statusRpc, drawRpc } = vi.hoisted(() => ({
+  identity: { userId: "compte-a" as string | null }, statusRpc: vi.fn(), drawRpc: vi.fn(),
+}));
+vi.mock("@/hooks/use-cloud", () => ({ useCloud: () => ({ configured: true, userId: identity.userId }) }));
+vi.mock("@/lib/cloud/cloud-store", () => ({ cloudStore: { getSnapshot: () => ({ userId: identity.userId }) } }));
+vi.mock("@/lib/cloud/config", () => ({ cloudConfig: () => ({ url: "https://example.invalid", anonKey: "test" }) }));
+vi.mock("@/lib/cloud/api", () => ({
+  CloudApi: class { session() { return { userId: identity.userId }; } imgflipStatus = statusRpc; openImgflipPack = drawRpc; },
+  CloudError: class extends Error { status: number; constructor(message: string, _code?: string, status = 0) { super(message); this.status = status; } },
+}));
+
+const ids = IMGFLIP_POOL.slice(0, 5).map((card) => card.id);
+const initial = { stock: 4, nextAt: null, openings: 0, owned: [] as { id: string; copies: number }[] };
+const result = { cards: ids, stock: 3, nextAt: null, replayed: false };
+const PENDING_KEY = "creatordeck.imgflip.pending:compte-a";
 
 function Harness() {
-  const [universe, select] = useState<BoosterUniverse>("live");
-  const booster = useImgflipBooster();
-  return <><BoosterCarousel value={universe} onChange={select} disabled={false} canPrepare
-    onPrepare={kind => { if (kind === "imgflip") booster.prepare(); }} />
-    <button onClick={booster.commit}>Déchirer</button><button onClick={booster.cancel}>Annuler</button>
-    <button onClick={booster.complete}>Extraire</button><button onClick={booster.close}>Fermer</button>
-    <output data-prepared={booster.prepared} data-presenting={booster.presenting} data-extracted={booster.extracted}>
-      {booster.opening?.cards.join(",")}
-    </output></>;
+  const b = useImgflipBooster();
+  return <div><button onClick={b.prepare}>Préparer</button>
+    <button onClick={b.cancel}>Retour</button>
+    <button onClick={b.leavePending}>Quitter l’attente</button>
+    <button onClick={() => void b.commit()} disabled={!b.prepared}>Valider</button>
+    <output data-stock={b.status?.stock} data-copies={b.copies.size} data-result={b.opening?.cards.length ?? 0}
+      data-prepared={b.prepared} data-busy={b.busy}>{b.problem}{b.notice}</output>
+  </div>;
 }
 
-describe("troisième sachet Imgflip", () => {
+function CarouselHarness() {
+  const [universe, select] = useState<BoosterUniverse>("live");
+  return <BoosterCarousel value={universe} onChange={select} disabled={false} canPrepare onPrepare={() => {}} />;
+}
+
+describe("troisième sachet Imgflip : carrousel", () => {
   let banc: Banc;
-  beforeEach(() => { banc = creerBanc(); banc.preparer(); vi.clearAllMocks(); });
+  beforeEach(() => { banc = creerBanc(); banc.preparer(); });
   afterEach(() => banc.nettoyer());
+
   it("place Imgflip après MEMES et garde un seul sachet accessible", async () => {
-    await banc.monter(<Harness />);
+    await banc.monter(<CarouselHarness />);
     expect([...document.querySelectorAll("[data-booster]")].map(node => node.getAttribute("data-booster")))
       .toEqual(["live", "memes", "imgflip"]);
     banc.appuyer("IMGFLIP");
@@ -36,31 +53,10 @@ describe("troisième sachet Imgflip", () => {
     expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("imgflip");
     banc.appuyer("MEMES");
     expect(document.querySelector('.booster-carousel')?.getAttribute("data-universe")).toBe("memes");
-    expect(drawImgflipPack).not.toHaveBeenCalled();
-  });
-
-  it("ne tire qu'à la déchirure, protège le double geste et ne sauvegarde rien", async () => {
-    await banc.monter(<Harness />);
-    banc.appuyer("IMGFLIP"); banc.appuyer("Ouvrir le booster IMGFLIP");
-    expect(document.querySelector("output")?.getAttribute("data-prepared")).toBe("true");
-    banc.appuyer("Annuler");
-    expect(drawImgflipPack).not.toHaveBeenCalled();
-    banc.appuyer("Ouvrir le booster IMGFLIP");
-    const tear = banc.boutons().find(button => button.textContent === "Déchirer")!;
-    act(() => { tear.click(); tear.click(); });
-    expect(drawImgflipPack).toHaveBeenCalledOnce();
-    const ids = document.querySelector("output")!.textContent!.split(",");
-    expect(ids).toHaveLength(5);
-    expect(ids.every(id => id.startsWith("imgflip-"))).toBe(true);
-    banc.appuyer("Extraire");
-    expect(document.querySelector("output")?.getAttribute("data-extracted")).toBe("true");
-    banc.appuyer("Fermer");
-    expect(document.querySelector("output")?.getAttribute("data-presenting")).toBe("false");
-    expect(window.localStorage.length).toBe(0);
   });
 
   it("glisse de MEMES à IMGFLIP et résiste au bout du carrousel sans ouvrir", async () => {
-    await banc.monter(<Harness />);
+    await banc.monter(<CarouselHarness />);
     banc.appuyer("MEMES");
     const stage = document.querySelector(".booster-carousel")!;
     function swipe(from: number, to: number) {
@@ -78,6 +74,76 @@ describe("troisième sachet Imgflip", () => {
     expect(stage.getAttribute("data-universe")).toBe("imgflip");
     swipe(100, 250);
     expect(stage.getAttribute("data-universe")).toBe("memes");
-    expect(drawImgflipPack).not.toHaveBeenCalled();
+  });
+});
+
+describe("troisième sachet Imgflip : tirage serveur (0062)", () => {
+  let banc: Banc;
+  beforeEach(() => {
+    banc = creerBanc(); banc.preparer(); identity.userId = "compte-a"; vi.clearAllMocks();
+    statusRpc.mockReset(); drawRpc.mockReset();
+    statusRpc.mockResolvedValue(initial); drawRpc.mockResolvedValue(result);
+  });
+  afterEach(() => banc.nettoyer());
+  const output = () => document.querySelector("output")!;
+
+  it("préparer et revenir ne tire rien et ne crée pas de clé de tirage", async () => {
+    await banc.monter(<Harness />);
+    expect(output().getAttribute("data-stock")).toBe("4");
+    banc.appuyer("Préparer"); expect(output().getAttribute("data-prepared")).toBe("true");
+    banc.appuyer("Retour");
+    expect(drawRpc).not.toHaveBeenCalled();
+    expect(output().getAttribute("data-prepared")).toBe("false");
+    expect(window.localStorage.getItem(PENDING_KEY)).toBeNull();
+  });
+
+  it("un double engagement n’envoie qu’un seul tirage et adopte la réserve serveur", async () => {
+    statusRpc.mockResolvedValueOnce(initial).mockResolvedValue({ ...initial, stock: 3, owned: ids.map((id) => ({ id, copies: 1 })) });
+    await banc.monter(<Harness />); banc.appuyer("Préparer");
+    const button = banc.boutons().find((b) => b.textContent === "Valider")!;
+    await act(async () => { button.click(); button.click(); });
+    expect(drawRpc).toHaveBeenCalledOnce();
+    expect(output().getAttribute("data-stock")).toBe("3");
+    expect(output().getAttribute("data-copies")).toBe("5");
+    expect(output().getAttribute("data-result")).toBe("5");
+  });
+
+  it("une réponse perdue reprend la même clé au prochain geste", async () => {
+    drawRpc.mockRejectedValueOnce(new Error("Réponse perdue")).mockResolvedValueOnce(result);
+    await banc.monter(<Harness />); banc.appuyer("Préparer");
+    await act(async () => banc.appuyer("Valider"));
+    expect(output().textContent).toContain("Réponse perdue");
+    const key = window.localStorage.getItem(PENDING_KEY);
+    expect(key).toBeTruthy();
+    banc.appuyer("Préparer"); await act(async () => banc.appuyer("Valider"));
+    expect(drawRpc.mock.calls.map((args) => args[0])).toEqual([key, key]);
+    expect(window.localStorage.getItem(PENDING_KEY)).toBeNull();
+  });
+
+  it("un refus du serveur (4xx) efface la clé et affiche son message", async () => {
+    const refus = new CloudError("Aucun booster Imgflip disponible pour le moment.", "refus_serveur", 400);
+    drawRpc.mockRejectedValueOnce(refus);
+    await banc.monter(<Harness />); banc.appuyer("Préparer");
+    await act(async () => banc.appuyer("Valider"));
+    expect(output().textContent).toContain("Aucun booster Imgflip disponible");
+    expect(output().getAttribute("data-prepared")).toBe("false");
+    expect(window.localStorage.getItem(PENDING_KEY)).toBeNull();
+  });
+
+  it("une carte hors catalogue Imgflip est refusée, rien n’est présenté", async () => {
+    drawRpc.mockResolvedValueOnce({ ...result, cards: ["meme-hors-imgflip", ...ids.slice(1)] });
+    await banc.monter(<Harness />); banc.appuyer("Préparer");
+    await act(async () => banc.appuyer("Valider"));
+    expect(output().getAttribute("data-result")).toBe("0");
+    expect(output().textContent).toContain("manque au catalogue");
+  });
+
+  it("sans compte : pas de réserve lue, préparer ne fait rien", async () => {
+    identity.userId = null;
+    await banc.monter(<Harness />);
+    expect(statusRpc).not.toHaveBeenCalled();
+    banc.appuyer("Préparer");
+    expect(output().getAttribute("data-prepared")).toBe("false");
+    expect(drawRpc).not.toHaveBeenCalled();
   });
 });
