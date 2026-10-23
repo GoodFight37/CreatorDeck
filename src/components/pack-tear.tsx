@@ -204,7 +204,7 @@ export function PackTear({
     : "0% 15.45%, 100% 15.45%";
   const artwork = customArtwork ?? (kind === "scene" ? "/packs/scene-opening.svg" : "/packs/live-opening.svg");
   // La palette de la scène et des dos de carte suit le sachet ouvert (booster-continuity.css).
-  const universe = customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes"
+  const universe = customArtwork?.includes("vault") ? "vault" : customArtwork?.includes("memes") ? "memes" : customArtwork?.includes("imgflip") ? "imgflip"
     : kind === "live" ? "live" : undefined;
 
   return createPortal(

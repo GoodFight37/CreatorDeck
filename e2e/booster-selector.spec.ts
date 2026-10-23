@@ -188,6 +188,34 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   expect(errors).toEqual([]);
 });
 
+for (const label of ["MEMES", "IMGFLIP"]) {
+  test(`avec le serveur : la carte révélée ${label} garde la taille et le dos des cartes sorties du sachet`, async ({ page }) => {
+    test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
+    await fakeAccount(page);
+    await page.goto("/");
+    await page.addStyleTag({ content: "nextjs-portal { display: none !important; }" });
+    await page.getByRole("button", { name: label, exact: true }).click();
+    await page.getByRole("button", { name: `Ouvrir le booster ${label}`, exact: true }).click();
+    const scene = page.locator(".opening-continuum");
+    await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
+    const back = (selector: string) => scene.locator(selector).first().evaluate((el) => ({
+      // Largeur de mise en page : les animations appliquent des scale qui fausseraient le rectangle affiché.
+      width: (el as HTMLElement).offsetWidth, surface: getComputedStyle(el).backgroundImage,
+    }));
+    const pouch = await back(".foil-back-card");
+    await page.screenshot({ path: `test-results/dos-${label}-sortie-${test.info().project.name}.png` });
+    // Le dos ne dure qu'un instant avant le retournement : mesure dès qu'il apparaît, en un seul passage.
+    const reveal = await (await page.waitForFunction(() => {
+      const el = document.querySelector<HTMLElement>(".opening-continuum .meme-reveal-back");
+      return el && { width: el.offsetWidth, surface: getComputedStyle(el).backgroundImage, emblem: !!el.querySelector(".foil-back-emblem svg") };
+    })).jsonValue();
+    await page.screenshot({ path: `test-results/dos-${label}-revelation-${test.info().project.name}.png` });
+    expect(reveal!.emblem).toBe(true);
+    expect(reveal!.surface).toBe(pouch.surface);
+    expect(Math.abs(reveal!.width - pouch.width)).toBeLessThanOrEqual(2);
+  });
+}
+
 test("avec le serveur : Imgflip se prépare sans consommation, puis un seul geste ouvre cinq cartes serveur", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);

@@ -133,7 +133,7 @@
 /* État du direct sous le titre de la rangée (personne, périmé, hors ligne). */
 .circle-strip-status {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 6px 0 0; padding-inline: 16px; color: var(--muted); font-size: 12.5px; line-height: 1.35;
+  margin: 6px 0 0; padding-inline: 16px; color: var(--muted); font-size: 13px; line-height: 1.35;
 }
 .circle-strip-status button {
   flex: none; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px;
@@ -165,7 +165,7 @@
 .circle-live-face img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--bg); }
 .circle-live-copy { display: grid; flex: 1; min-width: 0; gap: 1px; }
 .circle-live-copy strong { overflow: hidden; font: 650 15px/1.25 var(--font-body); text-overflow: ellipsis; white-space: nowrap; }
-.circle-live-copy span, .circle-live-copy small { color: var(--muted); font-size: 12.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.circle-live-copy span, .circle-live-copy small { color: var(--muted); font-size: 13px; line-height: 1.3; overflow-wrap: anywhere; }
 .circle-live-copy small[data-owned="false"] { color: var(--paper); }
 .circle-live-watch {
   display: inline-flex; flex: none; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px;
@@ -174,8 +174,8 @@
 .circle-live-watch:focus-visible, .circle-live-hourglass:focus-visible, .circle-strip-status button:focus-visible {
   outline: 2px solid var(--accent-soft); outline-offset: 2px;
 }
-.circle-live-more { margin: 8px 0 0; color: var(--muted); font-size: 12.5px; }
-.circle-live-benefit { margin: 10px 0 0; color: var(--text); font-size: 13.5px; line-height: 1.4; }
+.circle-live-more { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.circle-live-benefit { margin: 10px 0 0; color: var(--text); font-size: 14px; line-height: 1.4; }
 .circle-live-next { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.4; }
 .circle-live-hourglass {
   display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 10px; padding: 0 14px;
@@ -220,7 +220,7 @@
 }
 .binder-circle-goal-main > span, .binder-circle-craft > span { display: grid; flex: 1; gap: 2px; min-width: 0; }
 .binder-circle-goal-main strong { font: 650 15px/1.25 var(--font-body); }
-.binder-circle-goal small, .binder-circle-booster { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.binder-circle-goal small, .binder-circle-booster { color: var(--muted); font-size: 13px; line-height: 1.4; }
 .binder-circle-goal progress { width: 100%; height: 4px; }
 .binder-circle-craft { padding: 8px 10px; border: 1px solid rgb(255 255 255 / .1); border-radius: 12px; background: rgb(255 255 255 / .03); }
 .binder-circle-craft strong { font: 600 14px/1.25 var(--font-body); }
@@ -301,7 +301,7 @@
 .binder-next-pages > button { min-height: 48px; }
 
 /* D-141 : le booster MEMES arrive après le seuil, dit dans le panneau Réserve. */
-.is-lean .memes-unlock-note { margin: 10px 14px 12px; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.is-lean .memes-unlock-note { margin: 10px 14px 12px; color: var(--muted); font-size: 13px; line-height: 1.4; }
 
 /* D-144 : bandeau de mise à jour de l'APK (absent sur le site). */
 .app-update-banner {

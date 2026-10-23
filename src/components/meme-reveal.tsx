@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { CardBackEmblem } from "@/components/card-back-emblem";
 import { MemeCard } from "@/components/meme-card";
 import { buzz } from "@/lib/haptics";
 import { MEME_RARITY, type MemeCard as MemeCardData } from "@/lib/memes";
@@ -59,7 +60,8 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     }} onPointerUp={endGesture} onPointerCancel={() => { start.current = null; }}>
       <div className={`meme-reveal-flip rarity-${card.rarity}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
         {showBack
-          ? <div className="meme-reveal-back" aria-hidden="true"><span>CREATORDECK</span><strong>MEMES</strong><small>5 CARDS</small></div>
+          // Le dos des cartes sorties du sachet, emblème compris : la carte qu'on retourne est la même.
+          ? <div className="meme-reveal-back" aria-hidden="true"><span className="foil-back-emblem"><CardBackEmblem /></span></div>
           : <div className="meme-reveal-front"><MemeCard card={card} copies={copies} /></div>}
       </div>
     </div>

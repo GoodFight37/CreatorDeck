@@ -101,7 +101,7 @@
   margin: 0;
   color: rgba(255, 238, 231, .92);
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 800;
   text-align: center;
   letter-spacing: .16em;
   text-shadow: 0 1px 18px rgba(252, 122, 158, .25);
@@ -263,7 +263,7 @@
   text-align: center;
   letter-spacing: .13em;
   font-size: 12px;
-  font-weight: 750;
+  font-weight: 700;
   color: rgba(255, 201, 203, .56);
 }
 .booster-cinematic .booster-open-link {

@@ -6,7 +6,7 @@
   background: radial-gradient(ellipse at 50% 48%, rgb(var(--accent-dark-rgb) / .36), transparent 63%);
 }
 .meme-reveal-counter, .meme-reveal-summary-title span {
-  margin: 0; color: var(--accent-soft); font: 700 12px var(--font-display); letter-spacing: .2em;
+  margin: 0; color: var(--pack-accent, var(--accent-soft)); font: 700 12px var(--font-display); letter-spacing: .2em;
 }
 .meme-reveal-aura { position: absolute; top: 28%; width: min(85vw, 420px); aspect-ratio: 1; border-radius: 50%;
   background: radial-gradient(circle, color-mix(in srgb, var(--meme-aura, #f5bb68) 42%, transparent), transparent 68%);
@@ -16,7 +16,7 @@
 .meme-reveal-aura.rarity-epic { --meme-aura: #b78aea; opacity: .55; }
 .meme-reveal-aura.rarity-legendary { --meme-aura: #f5bb68; opacity: .7; }
 .meme-reveal-aura.rarity-mythic { --meme-aura: #f27d9b; opacity: .8; }
-.meme-reveal-card-wrap { position: relative; z-index: 1; display: grid; place-items: center; width: min(66vw, 285px, 36dvh); aspect-ratio: .715;
+.meme-reveal-card-wrap { position: relative; z-index: 1; display: grid; place-items: center; width: var(--scene-card-width, min(66vw, 285px, 36dvh)); aspect-ratio: .715;
   margin: auto 0 0; perspective: 1000px; touch-action: none; cursor: grab; }
 .meme-reveal-flip { position: relative; width: 100%; height: 100%;
   animation: meme-reveal-turn var(--meme-flip-ms) cubic-bezier(.2,.7,.2,1) var(--meme-flip-delay) both; }
@@ -30,12 +30,13 @@
   text-overflow: clip;
   white-space: normal;
 }
-.meme-reveal-back { display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-  padding: 9% 5%; border: 4px double var(--accent-soft); border-radius: 9px; color: var(--text);
-  background: radial-gradient(circle at center, var(--accent-dark), var(--accent-night)); box-shadow: 0 14px 30px #0008;
+/* Même dos que les cartes sorties du sachet (booster-premium.css) : palette posée par PackTear via data-universe. */
+.meme-reveal-back { display: grid; place-items: center;
+  border: 2px solid var(--back-edge, var(--accent-soft)); border-radius: 4.5% / 3.4%;
+  background: var(--back-surface, radial-gradient(circle at center, var(--accent-dark), var(--accent-night)));
+  box-shadow: inset 0 0 0 5px var(--back-inset, transparent), 0 0 0 1px rgb(0 0 0 / .95), 0 12px 25px rgb(0 0 0 / .38);
   }
-.meme-reveal-back span, .meme-reveal-back small { font: 700 12px var(--font-display); letter-spacing: .17em; }
-.meme-reveal-back strong { font: 800 clamp(28px, 10vw, 44px) var(--font-display); }
+.meme-reveal-back::before { content: ""; position: absolute; inset: 11%; border: 1px solid var(--back-inset, rgb(255 255 255 / .2)); border-radius: 3%; }
 @keyframes meme-reveal-turn {
   0%, 35% { transform: translateY(24px) scale(.91); }
   53% { transform: translateY(0) scale(1) scaleX(.02); }
@@ -49,7 +50,7 @@
 .meme-reveal-gesture { z-index: 1; min-height: 20px; margin: 2px 0 auto; color: var(--muted);
   font: 700 11px var(--font-display); letter-spacing: .17em; }
 .meme-reveal-next { z-index: 2; width: min(100%, 420px); min-height: 56px; border: 0; border-radius: 12px;
-  color: white; background: var(--live); box-shadow: 0 8px 0 rgb(var(--ink-rgb) / .85);
+  color: var(--pack-accent-ink, white); background: var(--pack-accent, var(--live)); box-shadow: 0 8px 0 rgb(var(--ink-rgb) / .85);
   font: 800 18px var(--font-display); letter-spacing: .07em; cursor: pointer; }
 .meme-reveal-next:disabled { opacity: .45; cursor: default; }
 .meme-reveal-next:not(:disabled):active { transform: translateY(4px) scale(.985); box-shadow: 0 4px 0 rgb(var(--ink-rgb) / .85); }
