@@ -19,7 +19,7 @@ import { CATALOG_AUDIENCE, CATALOG_LABEL, CATALOG_SIZE, CREATORS } from "@/lib/c
 
 import { type GameView } from "@/lib/game-engine";
 
-import { MISSION_REWARD, PROGRESSION, STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
+import { MISSION_REWARD, STREAK_REWARDS, streakRewardParts } from "@/lib/progression";
 
 import { gameStore } from "@/lib/game-store";
 import { useCloud } from "@/hooks/use-cloud";
@@ -149,11 +149,9 @@ function MissionRow({
           <button type="button" className="mission-claim" onClick={onClaim} disabled={busy} aria-label={`Réclamer : ${label}`}>
             <Unlock size={13} /> {claiming ? "Réclamation…" : "Réclamer"}
           </button>
-        ) : (
-          <span className={`mission-state ${claimed ? "done" : ""}`}>
-            {claimed ? "Réclamé" : "En cours"}
-          </span>
-        )}
+        ) : claimed ? (
+          <span className="mission-state done">Réclamé</span>
+        ) : null}
       </div>
     </article>
   );
@@ -254,11 +252,28 @@ export function MissionsView({
     return rank(a) - rank(b);
   });
 
+  const renderMilestone = (milestone: (typeof orderedMilestones)[number]) => {
+  const look = MILESTONE_LOOK[milestone.id];
+  return (
+    <MissionRow
+      key={milestone.id}
+      icon={look?.icon ?? <Sparkles size={19} />}
+      label={look?.label ?? milestone.id}
+      detail={look ? look.detail(milestone.target) : ""}
+      progress={milestone.progress}
+      target={milestone.target}
+      reward={milestone.reward}
+      claimed={milestone.claimed}
+      busy={busyKey !== null} claiming={busyKey === `milestone-${milestone.id}`}
+      onClaim={() => void runClaim(`milestone-${milestone.id}`, [() => onClaimMilestone(milestone.id)])}
+    />
+  );
+  };
+
   return (
     <div className="view missions-view">
       <section className="page-title-row">
         <div>
-          <p className="objectives-kicker">TON PARCOURS DE COLLECTIONNEUR</p>
           <h1>Objectifs et saisons</h1>
         </div>
         <div className="streak-pill">
@@ -271,14 +286,13 @@ export function MissionsView({
           avance tant qu'on ouvre un booster chaque jour. C'est la partie de
           l'écran qui se remet à zéro à 6 h UTC — pas à minuit, pour ne pas
           couper une soirée de streaming en deux. */}
-      <nav className="objectives-sections" aria-label="Sections des objectifs"><a href="#objectives-day">Aujourd’hui</a><a href="#objectives-collection">Collection</a><a href="#objectives-seasons">Saisons</a></nav>
       {pendingCount > 0 ? <section className="reward-summary-banner" aria-label="Récompenses prêtes" aria-busy={busyKey !== null}>
         <div className="reward-summary-copy"><strong>{pendingCount} récompense{pendingCount > 1 ? "s" : ""} prête{pendingCount > 1 ? "s" : ""}</strong>
           <span>{[pendingPoints > 0 ? `${pendingPoints} points` : "", pendingHourglasses > 0 ? `${pendingHourglasses} sablier${pendingHourglasses > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ")}</span>
           <small>Missions, jalons et paliers de saison · hors choix de série</small>
         </div>
         <button type="button" className="objectives-claim-all" onClick={handleClaimAll} disabled={busyKey !== null}>{busyKey === "all" ? "Réclamation…" : "Tout réclamer"}</button>
-      </section> : <p className="objectives-no-pending">Aucune récompense en attente. Tes prochains objectifs sont ci-dessous.</p>}
+      </section> : null}
       {busyKey ? <p className="objectives-wait" role="status">Réclamation en cours… Les autres récompenses attendent la réponse.</p> : null}
       {feedback ? <div className={`objectives-feedback ${feedback.error ? "is-error" : ""}`} ref={feedbackRef} tabIndex={-1} role={feedback.error ? "alert" : "status"}>
         <strong>{feedback.title}</strong><ul>{feedback.messages.map((message, index) => <li key={index}>{message}</li>)}</ul>
@@ -300,7 +314,6 @@ export function MissionsView({
           </div>
         </div>
 
-        <p className="objectives-reset">Nouvelles missions à {PROGRESSION.missions.resetHourUtc} h UTC · Les missions prêtes se récupèrent ensemble.</p>
         {/* Le planning de régie : sept cases, comme une semaine de diffusion.
             Chaque jour ouvert coche sa case ; la case du jour dit « à faire » ;
             la septième, c'est Le Grand Direct. Une absence d'un jour est
@@ -344,10 +357,6 @@ export function MissionsView({
             );
           })}
         </div>
-        <p className="streak-rule">
-          Un booster ouvert par jour fait avancer la série. Une absence d’un jour est protégée une fois par cycle ;
-          la septième case, c&apos;est <strong>Le Grand Direct</strong>.
-        </p>
 
         {game.streak.jackpot ? (
           <div className="streak-jackpot">
@@ -443,24 +452,14 @@ export function MissionsView({
         </div>
       </div>
       <div className="mission-list">
-        {orderedMilestones.map((milestone) => {
-          const look = MILESTONE_LOOK[milestone.id];
-          return (
-            <MissionRow
-              key={milestone.id}
-              icon={look?.icon ?? <Sparkles size={19} />}
-              label={look?.label ?? milestone.id}
-              detail={look ? look.detail(milestone.target) : ""}
-              progress={milestone.progress}
-              target={milestone.target}
-              reward={milestone.reward}
-              claimed={milestone.claimed}
-              busy={busyKey !== null} claiming={busyKey === `milestone-${milestone.id}`}
-              onClaim={() => void runClaim(`milestone-${milestone.id}`, [() => onClaimMilestone(milestone.id)])}
-            />
-          );
-        })}
+        {orderedMilestones.slice(0, 3).map(renderMilestone)}
       </div>
+      {orderedMilestones.length > 3 ? (
+        <details className="milestones-more">
+          <summary>Voir les {orderedMilestones.length - 3} autres objectifs</summary>
+          <div className="mission-list">{orderedMilestones.slice(3).map(renderMilestone)}</div>
+        </details>
+      ) : null}
 
       </section>
       <SeasonsSection seasons={game.seasons} busy={busyKey !== null} busyKey={busyKey}
