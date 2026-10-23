@@ -106,11 +106,12 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
         onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
         now={NOW} serverReserve={false} needsAccount={false} />);
     };
-    // Nuit de direct : MEMES est un second paquet visible dès le départ, Live devant.
+    // Nuit de direct : MEMES puis IMGFLIP sont des paquets visibles dès le départ, Live devant.
     await mount(0);
-    expect(universes()).toEqual(["Live Drop", "MEMES"]);
+    expect(universes()).toEqual(["Live Drop", "MEMES", "IMGFLIP"]);
     expect(document.querySelector('[data-booster="live"]')!.getAttribute("data-active")).toBe("true");
     expect(document.querySelector('[data-booster="memes"] .booster-neighbor')).not.toBeNull();
+    expect(document.querySelector('[data-booster="imgflip"] .booster-neighbor')).not.toBeNull();
     expect(document.querySelector(".memes-unlock-note")).toBeNull();
   });
 

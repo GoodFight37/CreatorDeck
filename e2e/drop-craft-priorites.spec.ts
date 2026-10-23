@@ -77,9 +77,12 @@ test("Drop à 390 × 844 : grand paquet-bouton, pile et une seule ligne de rése
     panel.querySelector<HTMLDetailsElement>(".drop-secondary-details")!.open = false;
   });
   await expect(page.locator(".drop-secondary-details > summary")).toBeVisible();
-  await expect(page.locator(".pity-row.now")).toBeHidden();
+  // Le compteur de garantie a quitté l'interface : le détail replié ne porte
+  // plus que les actions de réserve (sablier, jetons), cachées tant qu'il est fermé.
+  await expect(page.locator(".pity-row.now")).toHaveCount(0);
+  await expect(page.locator(".drop-secondary-details .hourglass-action")).toBeHidden();
   await page.locator(".drop-secondary-details > summary").click();
-  await expect(page.locator(".pity-row.now")).toBeVisible();
+  await expect(page.locator(".drop-secondary-details .hourglass-action")).toBeVisible();
 });
 
 test("l'ombre suit le sachet et la pression ne relance pas son arrivée", async ({ page }) => {
