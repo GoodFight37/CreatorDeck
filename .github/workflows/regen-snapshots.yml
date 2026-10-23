@@ -5,12 +5,16 @@ name: Régénération des captures du sachet (temporaire)
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["arena/5e4b46f3-creatordeck"]
 
 permissions:
   contents: write
 
 jobs:
   snapshots:
+    # Le push des captures régénérées ne doit pas relancer une régénération.
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
