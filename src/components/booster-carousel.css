@@ -73,20 +73,13 @@
   transform-style: preserve-3d;
   transform: translateX(calc(-50% + var(--o) * 80%)) translateZ(calc(min(var(--a), 1.2) * -190px))
     rotateY(calc(var(--o) * -44deg));
-  opacity: calc(1 - min(var(--a), 1) * .5);
-  filter: none;
-  transition: transform 460ms cubic-bezier(.2, .8, .2, 1), opacity 460ms ease;
-}
-/* Le paquet choisi ne devient jamais translucide et passe devant tout de suite :
-   sinon celui qui sort se lit à travers lui pendant la bascule — une couture
-   verticale en plein milieu du sachet, sur toute sa hauteur. Seul le voisin
-   s'efface ; l'entrant est opaque dès la première image. */
-.home-view .booster-selector .booster-carousel .booster-pack-slot[data-active="true"] {
-  z-index: 2;
+  /* Opaque en permanence : un paquet translucide se lit à travers l'autre pendant
+     la bascule (couture verticale). La profondeur vient de la position 3D. */
   opacity: 1;
-  /* Pas d'opacité ni de z-index dans la liste : la valeur est appliquée d'un
-     coup, sans fondu. */
-  transition: transform 460ms cubic-bezier(.2, .8, .2, 1);
+  filter: none;
+  /* Le z-index ne bascule qu'à mi-course (230 ms sur 460 ms), quand l'entrant a
+     dépassé le sortant : il passe devant sans traverser ni être traversé. */
+  transition: transform 460ms cubic-bezier(.2, .8, .2, 1), z-index 0s linear 230ms;
 }
 .home-view .booster-selector .booster-carousel.is-dragging .booster-pack-slot:is([data-active]) { transition: none; }
 /* Pendant le glissé, les animations du sachet (flottement, reflet) dorment :

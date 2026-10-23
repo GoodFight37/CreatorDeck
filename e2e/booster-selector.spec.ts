@@ -282,9 +282,8 @@ test("le booster choisi domine et les commandes restent lisibles à 320, 390 et 
         await expect(neighbor).toHaveAttribute("aria-hidden", "true");
         await expect(neighbor.locator("button")).toHaveCount(0);
         const neighborOpacity = Number(await neighbor.evaluate((node) => getComputedStyle(node.parentElement!).opacity));
-        // Nuit de direct : les paquets voisins se voient, en retrait derrière celui de devant.
-        expect(neighborOpacity).toBeGreaterThan(.3);
-        expect(neighborOpacity).toBeLessThan(.7);
+        // Les voisins restent opaques (pas de translucidité pendant la bascule) ; ils sont en retrait par leur position 3D.
+        expect(neighborOpacity).toBe(1);
       }
       await expect(page.locator(".booster-selection-hint")).toHaveCount(0);
       expect(Math.abs(a.x + a.width / 2 - width / 2)).toBeLessThan(3);
@@ -356,6 +355,7 @@ test("la bascule de booster ne laisse jamais le sachet sortant devant ni translu
   // paquet entrant était encore à demi transparent (.5 -> 1). Les deux se
   // voyaient donc l'un à travers l'autre. L'entrant doit être opaque et devant
   // dès la première image ; le sortant descend d'un cran immédiatement.
+  // Depuis, tous les paquets restent opaques et le z-index ne bascule qu'à mi-course.
   if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
   const slots = page.locator(".booster-pack-slot");
   await expect(slots).toHaveCount(3);
@@ -365,24 +365,22 @@ test("la bascule de booster ne laisse jamais le sachet sortant devant ni translu
   const pendant = await slots.evaluateAll((nodes) => nodes.map((node) => ({
     booster: node.getAttribute("data-booster"),
     active: node.getAttribute("data-active") === "true",
-    z: Number(getComputedStyle(node).zIndex),
     opacity: Number(getComputedStyle(node).opacity),
     transition: getComputedStyle(node).transitionProperty,
   })));
   const entrant = pendant.find((s) => s.booster === "memes")!;
   const sortant = pendant.find((s) => s.booster === "live")!;
   expect(entrant.active).toBe(true);
-  expect(entrant.opacity).toBe(1);
-  expect(entrant.z).toBe(2);
-  expect(sortant.z).toBe(1);
-  // Ni opacité ni z-index dans la liste de transition : la valeur est appliquée net.
+  // Pendant toute la bascule, aucun paquet n'est translucide.
+  for (const node of pendant) expect(node.opacity).toBe(1);
+  // Le z-index bascule à mi-course (délai dans la transition), l'opacité ne bouge jamais.
+  expect(entrant.transition).toContain("z-index");
+  expect(sortant.transition).toContain("z-index");
   expect(entrant.transition).not.toContain("opacity");
-  expect(entrant.transition).not.toContain("z-index");
-  expect(sortant.transition).not.toContain("z-index");
   // Le filtre du voisin change d'un coup : l'animer re-rastérise tout le sachet.
   expect(sortant.transition).not.toContain("filter");
 
-  // Au repos, le paquet choisi reste plein et devant, les voisins en retrait.
+  // Au repos, le paquet choisi est devant ; les voisins, opaques, restent en retrait par leur position 3D.
   await page.locator(".booster-carousel").evaluate(async (node) => {
     await Promise.all(node.getAnimations({ subtree: true })
       .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
@@ -394,5 +392,5 @@ test("la bascule de booster ne laisse jamais le sachet sortant devant ni translu
     opacity: Number(getComputedStyle(node).opacity),
   })));
   expect(repos.filter((s) => s.active).map((s) => [s.z, s.opacity])).toEqual([[2, 1]]);
-  for (const voisin of repos.filter((s) => !s.active)) expect(voisin.opacity).toBeLessThan(1);
+  for (const voisin of repos.filter((s) => !s.active)) expect(voisin.opacity).toBe(1);
 });
