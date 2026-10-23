@@ -17,8 +17,10 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
   onAdvance: () => void;
 }) {
   const [ready, setReady] = useState(false);
-  const start = useRef<{ x: number; y: number } | null>(null);
+  // Un seul élément qui tourne : le dos, puis le recto au milieu du tour.
   const effects = cardEffectsAllowed();
+  const [showBack, setShowBack] = useState(effects);
+  const start = useRef<{ x: number; y: number } | null>(null);
   const special = card.rarity === "rare" || card.rarity === "epic" || card.rarity === "legendary" || card.rarity === "mythic";
   const duration = effects ? special ? 1_080 : 780 : 0;
   const delay = effects ? number === 4 ? 360 : special ? 210 : 80 : 0;
@@ -33,6 +35,12 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     const complete = window.setTimeout(() => setReady(true), delay + duration + 80);
     return () => { window.clearTimeout(impact); window.clearTimeout(complete); };
   }, [delay, duration, rarityForHaptic, special]);
+
+  useEffect(() => {
+    if (!effects) return;
+    const swap = window.setTimeout(() => setShowBack(false), delay + Math.round(duration * .53));
+    return () => window.clearTimeout(swap);
+  }, [delay, duration, effects]);
 
   function endGesture(event: PointerEvent<HTMLDivElement>) {
     const gesture = start.current;
@@ -50,8 +58,9 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
       if (event.button === 0 && event.isPrimary !== false) start.current = { x: event.clientX, y: event.clientY };
     }} onPointerUp={endGesture} onPointerCancel={() => { start.current = null; }}>
       <div className={`meme-reveal-flip rarity-${card.rarity}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
-        <div className="meme-reveal-front"><MemeCard card={card} copies={copies} /></div>
-        <div className="meme-reveal-back" aria-hidden="true"><span>CREATORDECK</span><strong>MEMES</strong><small>5 CARDS</small></div>
+        {showBack
+          ? <div className="meme-reveal-back" aria-hidden="true"><span>CREATORDECK</span><strong>MEMES</strong><small>5 CARDS</small></div>
+          : <div className="meme-reveal-front"><MemeCard card={card} copies={copies} /></div>}
       </div>
     </div>
     <p className="meme-reveal-rarity">{ready ? MEME_RARITY[card.rarity].label : ""}</p>

@@ -152,11 +152,11 @@
   72%, 100% { opacity: 1; transform: translate(-50%, -50%); }
 }
 @keyframes scene-card-settle {
-  0%, 23% { opacity: 0; transform: translateY(39%) scale(.84); }
-  43% { opacity: .95; transform: translateY(7%) scale(.89); }
-  69% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 6px), 0)
+  0%, 23% { transform: translateY(39%) scale(.84); }
+  43% { transform: translateY(7%) scale(.89); }
+  69% { transform: translate(calc((var(--card-i) - 4) * 6px), 0)
     rotate(calc((var(--card-i) - 4) * 3deg)); }
-  100% { opacity: 1; transform: translate(calc((var(--card-i) - 4) * 3px), calc((4 - var(--card-i)) * 3px))
+  100% { transform: translate(calc((var(--card-i) - 4) * 3px), calc((4 - var(--card-i)) * 3px))
     rotate(calc((var(--card-i) - 4) * 1deg)); }
 }
 .reveal-overlay.reveal-game {
@@ -552,22 +552,22 @@ html:has(.booster-presentation) { overflow: hidden; }
 .reveal-game .reveal-stage .reveal-flip.rarity-epic { animation: epic-card-punch 760ms cubic-bezier(.16,.9,.2,1) both; }
 .reveal-game .reveal-stage .reveal-flip.rarity-legendary { animation: legendary-card-punch 900ms cubic-bezier(.12,.92,.2,1) both; }
 @keyframes common-card-arrive {
-  from { opacity: .72; transform: translateY(14px) scale(.97); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { transform: translateY(14px) scale(.97); }
+  to { transform: translateY(0) scale(1); }
 }
 @keyframes rare-card-punch {
-  0% { opacity: .7; transform: translateY(28px) scale(.91) rotateZ(-1.5deg); }
-  68% { opacity: 1; transform: translateY(-7px) translateZ(24px) scale(1.025) rotateZ(.6deg); }
+  0% { transform: translateY(28px) scale(.91) rotateZ(-1.5deg); }
+  68% { transform: translateY(-7px) translateZ(24px) scale(1.025) rotateZ(.6deg); }
   100% { transform: translateZ(14px) scale(1); }
 }
 @keyframes epic-card-punch {
-  0% { opacity: .6; transform: translateY(42px) translateZ(-10px) scale(.86) rotateZ(-3deg); }
-  62% { opacity: 1; transform: translateY(-12px) translateZ(32px) scale(1.055) rotateZ(1.2deg); }
+  0% { transform: translateY(42px) translateZ(-10px) scale(.86) rotateZ(-3deg); }
+  62% { transform: translateY(-12px) translateZ(32px) scale(1.055) rotateZ(1.2deg); }
   100% { transform: translateZ(18px) scale(1); }
 }
 @keyframes legendary-card-punch {
-  0% { opacity: .45; transform: translateY(58px) translateZ(-20px) scale(.8) rotateZ(-5deg); }
-  58% { opacity: 1; transform: translateY(-18px) translateZ(42px) scale(1.09) rotateZ(1.8deg); }
+  0% { transform: translateY(58px) translateZ(-20px) scale(.8) rotateZ(-5deg); }
+  58% { transform: translateY(-18px) translateZ(42px) scale(1.09) rotateZ(1.8deg); }
   100% { transform: translateZ(22px) scale(1); }
 }
 .reveal-game .reveal-stage .reveal-card .card-foil { opacity: .72; }
@@ -806,7 +806,8 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 }
 .booster-foil-open .foil-interior { animation: foil-interior-out 900ms ease-out both; opacity: 1; }
 @keyframes foil-interior-out {
-  0%, 30% { opacity: 1; }
+  /* Opaque tant que les cartes sortent de la fente ; le fondu ne vient qu'après. */
+  0%, 80% { opacity: 1; }
   100% { opacity: 0; }
 }
 

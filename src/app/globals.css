@@ -1530,17 +1530,14 @@ input:focus-visible {
 
 @keyframes card-reveal-epic {
   0% {
-    opacity: 0;
     transform: translateY(90px) scale(0.5);
     filter: brightness(0.3) drop-shadow(0 0 0 transparent);
   }
   40% {
-    opacity: 1;
     transform: translateY(-28px) scale(1.18);
     filter: brightness(1.5) drop-shadow(0 0 28px rgba(168, 85, 247, 0.7));
   }
   100% {
-    opacity: 1;
     transform: none;
     filter: drop-shadow(0 0 12px rgba(168, 85, 247, 0.35));
   }
@@ -1548,12 +1545,10 @@ input:focus-visible {
 
 @keyframes card-reveal-legendary {
   0% {
-    opacity: 0;
     transform: translateY(110px) scale(0.4) rotateZ(-6deg);
     filter: brightness(0.2) drop-shadow(0 0 0 transparent);
   }
   35% {
-    opacity: 1;
     transform: translateY(-40px) scale(1.25) rotateZ(4deg);
     filter: brightness(1.8) drop-shadow(0 0 48px rgba(255, 190, 85, 0.95));
   }
@@ -1562,7 +1557,6 @@ input:focus-visible {
     filter: brightness(1.2) drop-shadow(0 0 24px rgba(255, 190, 85, 0.6));
   }
   100% {
-    opacity: 1;
     transform: none;
     filter: drop-shadow(0 0 18px rgba(255, 190, 85, 0.45));
   }
