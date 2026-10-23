@@ -236,8 +236,30 @@ def memes():
     return pouch(body, crimp, ids, "#0b0b0b", "#0b0b0b", "#d9ff3a", "#fff", "#7a0f4a", "CreatorDeck — sachet MEMES")
 
 
+def imgflip():
+    ids = '''<linearGradient id="bg" x2="1" y2="1"><stop stop-color="#123366"/><stop offset="1" stop-color="#07b7c9"/></linearGradient>'''
+    tag, _ = text("INTERNET CLASSICS", 30, 300, 710, track=2)
+    cards, _ = text("5 MEME CARDS", 31, 300, 536, track=2)
+    body = f'''<rect width="600" height="880" fill="url(#bg)"/>
+    {sparkles([(72, 210, 18, 1), (514, 260, 16, 1), (76, 650, 11, .8)], "#81ffdd")}
+    <g transform="translate(300 350) rotate(-9)" stroke="#09234b" stroke-width="8" stroke-linejoin="round">
+      <rect x="-153" y="-115" width="330" height="250" rx="18" fill="#ffce56" transform="rotate(15)"/>
+      <rect x="-175" y="-130" width="350" height="260" rx="18" fill="#f2ffff"/>
+      <path d="M-145 -80H145M-145 85H145" stroke-width="17"/>
+      <circle r="68" fill="#81ffdd"/>
+      <path d="M-47 -18H-9V5H-47ZM9 -18H47V5H9ZM-9 -12H9" fill="#09234b"/>
+      <path d="M-32 30Q0 62 32 30" fill="none" stroke-linecap="round"/>
+    </g>
+    <path d="{cards}" fill="#fff"/>
+    {lettering("IMGFLIP", 138, 651, -7, "#fff", "#09234b", "#ffce56", edge_w=16)}
+    <path d="{tag}" fill="#81ffdd"/>'''
+    crimp = '<stop stop-color="#a8fff2"/><stop offset=".5" stop-color="#14bdc8"/><stop offset="1" stop-color="#086290"/>'
+    return pouch(body, crimp, ids, "#fff", "#09234b", "#fff", "#fff", "#073a68", "CreatorDeck — IMGFLIP pack")
+
+
 if __name__ == "__main__":
     out = ROOT / "public/packs"
     (out / "live-opening.svg").write_text(live(), encoding="utf-8")
     (out / "memes-opening.svg").write_text(memes(), encoding="utf-8")
+    (out / "imgflip-opening.svg").write_text(imgflip(), encoding="utf-8")
     print("ok")

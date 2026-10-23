@@ -103,7 +103,7 @@ export function MemeDeck() {
         <span>{currentPage + 1} / {pageCount}</span>
         <button type="button" onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))} disabled={currentPage >= pageCount - 1}>Suivante <ChevronRight size={18} aria-hidden="true" /></button>
       </nav>
-      <p className="meme-credit">Cartes issues de MyMemeCards. Illustrations créditées sur chaque fiche lorsqu’un auteur est indiqué.</p>
+      <p className="meme-credit">Cartes MyMemeCards et modèles Imgflip. Sources indiquées sur les fiches.</p>
     </section>
     <MemeBoosterOpening booster={booster} />
     {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
@@ -112,7 +112,7 @@ export function MemeDeck() {
       <MemeCard card={selected} copies={copies.get(selected.id) ?? 0} interactiveFoil />
       <div className="meme-inspect-copy"><p className="meme-eyebrow">#{String(selected.number).padStart(3, "0")} · {MEME_RARITY[selected.rarity].label}{selected.fullArt ? " · Full Art" : ""}</p>
         <h2>{selected.name}</h2>{selected.flavor ? <p>{selected.flavor}</p> : null}
-        <small>{selected.credit ? "Source : " + selected.credit + " · " : ""}MyMemeCards{selected.year ? " · " + selected.year : ""}</small>
+        <small>Source : {selected.sourceName ?? (selected.credit ? selected.credit + " · MyMemeCards" : "MyMemeCards")}{selected.year ? " · " + selected.year : ""}</small>
         <p>{copies.has(selected.id) ? String(copies.get(selected.id)) + " exemplaire(s) obtenus" : selected.image ? "À découvrir en booster" : "Visuel indisponible · carte non distribuée"}</p></div>
     </dialog> : null}
   </main>;

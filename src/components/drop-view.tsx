@@ -8,6 +8,7 @@ import "./drop-craft.css";
 import { BoosterCarousel, type BoosterUniverse } from "@/components/booster-carousel";
 export { PackArtwork } from "@/components/booster-carousel";
 import { useMemeBooster } from "@/hooks/use-meme-booster";
+import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
 import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-parts";
 
 // Chargé seulement à l'ouverture d'un booster Mèmes : l'accueil ne paie pas PackTear ni MemeReveal.
@@ -71,6 +72,7 @@ export function HomeView({
 }) {
   const cloud = useCloud();
   const memes = useMemeBooster();
+  const imgflip = useImgflipBooster();
   const [universe, setUniverse] = useState<BoosterUniverse>("live");
   const pack = PACKS.live;
   const stock = game.player.packs;
@@ -81,9 +83,10 @@ export function HomeView({
   const memeCannotOpen = opening || memes.busy || (memes.account && (!memes.status || memes.status.stock < 1));
 
   function prepareBooster(kind: BoosterUniverse) {
-    if (opening || memes.busy) return;
+    if (opening || memes.busy || memes.presenting || imgflip.presenting) return;
     buzz([8]);
     if (kind === "live" && !cannotOpen) onOpen();
+    if (kind === "imgflip") imgflip.prepare();
     if (kind === "memes" && !memeCannotOpen) {
       if (!memes.account) onShowAccount?.();
       else memes.prepare();
@@ -108,7 +111,7 @@ export function HomeView({
   const haloImage = haloCreator ? creatorImage(haloCreator) : null;
   // Un joueur qui a nommé ses chaînes voit l'accueil épuré : le sachet, une ligne, ses chaînes.
   const lean = circle.length > 0;
-  // MEMES est un second paquet, visible à droite dès le départ ; Live reste devant.
+  // MEMES puis IMGFLIP à droite ; Live reste devant au départ.
   // D-142 : le Légendaire garanti viendra du cercle tant qu'une de ses Légendaires manque.
   const retiredLeft = useMemo(
     () =>
@@ -199,8 +202,9 @@ export function HomeView({
       )}
 
       <BoosterCarousel value={universe} onChange={setUniverse} onPrepare={prepareBooster}
-        disabled={opening || memes.busy} canPrepare={universe === "live" ? !cannotOpen : !memeCannotOpen}
-        labels={{ live: liveLabel, memes: memeLabel }} />
+        disabled={opening || memes.busy || memes.presenting || imgflip.presenting}
+        canPrepare={universe === "live" ? !cannotOpen : universe === "memes" ? !memeCannotOpen : true}
+        labels={{ live: liveLabel, memes: memeLabel, imgflip: "Try the IMGFLIP booster" }} />
       <section className="open-panel booster-panel" hidden={universe !== "live"} data-tutorial={needsAccount ? "true" : "false"}>
         {!needsAccount || needsLogin ? (
           // La seule ligne de l'accueil : la pile au-dessus montre déjà ce qu'on a.
@@ -245,6 +249,11 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       {memes.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={memes} /></Suspense> : null}
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "imgflip"} aria-label="IMGFLIP">
+        <p className="stock-row">Local preview · 5 cards · No cards saved</p>
+        <p>Live Drop rarity rates · Rare or better guaranteed</p>
+      </section>
+      {imgflip.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={imgflip} artwork="/packs/imgflip-opening.svg" /></Suspense> : null}
       {!lean && onEditCircle ? (
         <section className="circle-invite" aria-labelledby="circle-invite-title">
           <div>
