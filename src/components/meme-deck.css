@@ -77,6 +77,17 @@
 .meme-card .card-photo-shade { background: linear-gradient(180deg, rgb(0 0 0 / .42), transparent 19% 67%, rgb(0 0 0 / .48)); }
 .meme-card .card-nameplate { background: linear-gradient(150deg, rgb(15 13 20 / .94), rgb(12 10 17 / .98)); }
 .meme-card .card-nameplate h3 { font-size: clamp(15px, 5vw, 27px); }
+/* La vignette Mème garde la taille de cartouche du deck dans TOUS les écrans
+   (récapitulatif de booster compris) : la formule auto-ajustée des cartes
+   Créateur tombait sur son repli (8 caractères) et sortait le titre à 22,5 px
+   dans 97 px de large, coupé net. Une classe de plus que la règle globale,
+   donc l'ordre des feuilles n'a plus d'importance. */
+.creator-card.meme-card.is-compact .card-nameplate h3 {
+  font-size: clamp(11px, 3.3vw, 15px);
+  /* Nom plus long que le cartouche : « … » plutôt qu'une coupe au milieu d'un
+     mot. Le nom complet reste lisible sous la vignette (.meme-slot-name). */
+  text-overflow: ellipsis;
+}
 .meme-card.is-compact .card-nameplate h3 { font-size: clamp(11px, 3.3vw, 15px); }
 /* Matière imprimée, entre illustration et texte. Les grilles ne déclenchent
    aucune animation ; seule la grande carte réagit au doigt. */
