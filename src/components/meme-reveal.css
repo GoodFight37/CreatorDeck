@@ -42,6 +42,14 @@
   53% { transform: translateY(0) scale(1) scaleX(.02); }
   100% { transform: translateY(0) scale(1) scaleX(1); }
 }
+/* Commune et Peu commune : le geste sec de la révélation Live (280 ms, ease-out),
+   sans la pose immobile du début. Rare et mieux gardent leur mise en scène. */
+.meme-reveal-flip.is-quick { animation-name: meme-reveal-turn-quick; animation-timing-function: var(--ease-out); }
+@keyframes meme-reveal-turn-quick {
+  0% { transform: translateY(10px) scale(.97); }
+  53% { transform: translateY(0) scale(1) scaleX(.02); }
+  100% { transform: translateY(0) scale(1) scaleX(1); }
+}
 .meme-reveal-flip.rarity-rare, .meme-reveal-flip.rarity-epic,
 .meme-reveal-flip.rarity-legendary, .meme-reveal-flip.rarity-mythic {
   }
@@ -51,20 +59,36 @@
   font: 700 11px var(--font-display); letter-spacing: .17em; }
 .meme-reveal-next { z-index: 2; width: min(100%, 420px); min-height: 56px; border: 0; border-radius: 12px;
   color: var(--pack-accent-ink, white); background: var(--pack-accent, var(--live)); box-shadow: 0 8px 0 rgb(var(--ink-rgb) / .85);
-  font: 800 18px var(--font-display); letter-spacing: .07em; cursor: pointer; }
+  font: 800 18px var(--font-display); letter-spacing: .07em; cursor: pointer;
+  /* L'enfoncement de 4 px et l'allumage après la carte se font en fondu court. */
+  transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out), opacity 160ms var(--ease-out); }
 .meme-reveal-next:disabled { opacity: .45; cursor: default; }
 .meme-reveal-next:not(:disabled):active { transform: translateY(4px) scale(.985); box-shadow: 0 4px 0 rgb(var(--ink-rgb) / .85); }
 .meme-reveal-flow.is-summary { justify-content: center; gap: 30px; }
 .meme-reveal-summary-title h2 { margin: 4px 0 0; font: 800 clamp(30px, 9vw, 48px) var(--font-display); }
 .meme-reveal-summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px 8px;
   width: min(100%, 570px); margin: auto 0; }
-.meme-reveal-summary-grid > div { min-width: 0; }
+.meme-reveal-summary-grid > div { min-width: 0; animation: meme-summary-in 240ms var(--ease-out) calc(var(--i, 0) * 40ms) both; }
+@keyframes meme-summary-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) { .meme-reveal-summary-grid > div { animation: none; } }
+[data-card-fx="off"] .meme-reveal-summary-grid > div { animation: none; }
 .meme-reveal-summary-grid > div:nth-child(4) { grid-column: 1 / 2; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid > div:nth-child(5) { grid-column: 2 / 3; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid .creator-card { width: 100%; }
 .meme-reveal-summary-grid span { display: block; margin-top: 5px; overflow-wrap: anywhere;
   font: 700 11px/1.2 var(--font-display); }
+/* Mouvement réduit : moins de déplacement, pas zéro retour visuel. La carte
+   arrive en fondu (200 ms) ; le réglage Reflets coupé, lui, reste muet.
+   `.is-quick` est répété pour garder la priorité sur sa règle de keyframes. */
 @media (prefers-reduced-motion: reduce) {
-  .meme-reveal-flip { animation: none; }
+  .meme-reveal-flip,
+  .meme-reveal-flip.is-quick { animation: meme-reveal-fade 200ms var(--ease-out) both; }
+}
+@keyframes meme-reveal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 [data-card-fx="off"] .meme-reveal-flip { animation: none; }

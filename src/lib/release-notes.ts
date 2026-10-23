@@ -10,6 +10,23 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-23-animations-boosters", date: "2026-10-23", title: "Des boosters plus vifs et plus beaux",
+    summary: "La révélation Mèmes s'accélère, le sachet s'efface, et le booster du Drop s'incline avec le téléphone.",
+    sections: [
+      { title: "Révélation", items: [
+        "Les cartes Communes et Peu communes se retournent presque aussitôt, sans pause avant le geste. Les cartes Rare et mieux gardent leur mise en scène.",
+        "Le sachet déchiré quitte l'écran quand la première carte arrive, au lieu de rester en transparence dessous.",
+        "Les cinq cartes du récapitulatif entrent l'une après l'autre, et le bouton de la révélation s'enfonce en douceur.",
+        "Avec le réglage Mouvement réduit, la carte apparaît en fondu court au lieu d'un coup.",
+      ] },
+      { title: "Le sachet", items: [
+        "Sur le Drop, le sachet s'incline avec le téléphone (Android) ou suit la souris sur ordinateur, et un reflet arc-en-ciel glisse sur le film.",
+        "Glisser le doigt d'un booster à l'autre est plus fluide : la scène ne recalcule plus tout à chaque mouvement du doigt.",
+        "Couper Reflets désactive l'inclinaison et le reflet, comme le reste des effets de carte.",
+      ] },
+    ],
+  },
+  {
     id: "2026-10-23-imgflip-serveur", date: "2026-10-23", title: "Le booster IMGFLIP devient un vrai booster",
     summary: "Le troisième sachet a désormais sa réserve, ses cartes gardées et ses tirages comptés comme les autres.",
     sections: [{ title: "Nouveauté", items: [

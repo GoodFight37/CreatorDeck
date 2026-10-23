@@ -1,6 +1,6 @@
 # 002 — Faire disparaître le sachet déchiré quand la première carte arrive
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: MEDIUM
 - **Category**: Physicality / Cohesion

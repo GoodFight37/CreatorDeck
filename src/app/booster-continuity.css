@@ -159,25 +159,11 @@
   aspect-ratio: .715;
   transform: translate(-50%, -30%);
 }
-.booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber {
-  animation-name: scene-cards-rise;
-}
-.booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
-  animation-name: scene-card-settle;
-}
 @keyframes scene-cards-rise {
   0%, 17% { opacity: 1; transform: translate(-50%, -12%) scale(.65); }
   38% { opacity: 1; transform: translate(-50%, -26%) scale(.76); }
   48% { opacity: 1; transform: translate(-50%, -40%) scale(.9); }
   72%, 100% { opacity: 1; transform: translate(-50%, -50%); }
-}
-@keyframes scene-card-settle {
-  0%, 23% { transform: translateY(39%) scale(.84); }
-  43% { transform: translateY(7%) scale(.89); }
-  69% { transform: translate(calc((var(--card-i) - 4) * 6px), 0)
-    rotate(calc((var(--card-i) - 4) * 3deg)); }
-  100% { transform: translate(calc((var(--card-i) - 4) * 3px), calc((4 - var(--card-i)) * 3px))
-    rotate(calc((var(--card-i) - 4) * 1deg)); }
 }
 .reveal-overlay.reveal-game {
   z-index: 1500;
@@ -199,11 +185,14 @@
 .opening-continuum.is-revealing .booster-opening-instruction,
 .opening-continuum.is-revealing .booster-premium-actions { visibility: hidden; }
 .opening-continuum.is-revealing .booster-physical-scene {
-  animation: opening-shell-retire 450ms ease-out 120ms both;
+  animation: opening-shell-retire 300ms var(--ease-out) 120ms both;
 }
+/* Le sachet quitte la scène : il descend un peu et s'efface entièrement.
+   Le centrage passe par `transform` sur cet élément : on déplace donc avec
+   la propriété indépendante `translate`, qui ne l'écrase pas. */
 @keyframes opening-shell-retire {
-  from { opacity: 1; }
-  to { opacity: .75; }
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 0 6%; }
 }
 .opening-continuum.is-revealing .foil-card-chamber { visibility: hidden; }
 .reveal-embedded[data-reveal-index="0"] .reveal-stage .reveal-flip { animation: none; }
@@ -483,13 +472,14 @@ html:has(.booster-presentation) { overflow: hidden; }
   opacity: .42;
   filter: blur(2px);
 }
+/* Une seule règle complète par élément de l'ouverture : nom, durée, courbe,
+   délai et remplissage au même endroit (booster-premium.css ne fait plus que
+   la mise en forme). Valeurs identiques à ce qui était réellement joué. */
 .booster-cinematic.booster-presentation .booster-foil-open .foil-top-piece {
-  animation-name: scene-cap-fold; animation-duration: 680ms;
-  animation-timing-function: cubic-bezier(.18, .76, .2, 1);
+  animation: scene-cap-fold 680ms cubic-bezier(.18, .76, .2, 1) both;
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-body-piece {
-  animation-name: scene-body-fold; animation-duration: 900ms;
-  animation-timing-function: cubic-bezier(.2, .7, .24, 1);
+  animation: scene-body-fold 900ms cubic-bezier(.2, .7, .24, 1) both;
 }
 .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-side,
 .booster-cinematic.booster-presentation .booster-foil-open .foil-depth-bottom,
@@ -525,12 +515,11 @@ html:has(.booster-presentation) { overflow: hidden; }
   100% { opacity: 0; transform: scaleY(.55); }
 }
 
-.booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber { animation-duration: var(--pack-extraction-ms, 1200ms); }
+.booster-cinematic.booster-presentation .booster-foil-open .foil-card-chamber {
+  animation: scene-cards-rise var(--pack-extraction-ms, 1200ms) cubic-bezier(.13, .7, .2, 1) both;
+}
 .booster-cinematic.booster-presentation .booster-foil-open .foil-back-card {
-  animation-name: scene-card-extract;
-  animation-duration: calc(var(--pack-extraction-ms, 1200ms) - 250ms);
-  animation-delay: calc(var(--card-i) * 50ms);
-  animation-timing-function: cubic-bezier(.18, .74, .22, 1);
+  animation: scene-card-extract calc(var(--pack-extraction-ms, 1200ms) - 250ms) cubic-bezier(.18, .74, .22, 1) calc(var(--card-i) * 50ms) both;
 }
 @keyframes scene-card-extract {
   0%, 10% { opacity: 1; transform: translateY(36%) translateZ(-28px) rotateX(12deg)

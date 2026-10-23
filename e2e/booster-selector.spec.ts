@@ -308,3 +308,30 @@ test("le mode mouvement réduit termine aussi une ouverture Live après prépara
   await page.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
 });
+
+test("le sachet penche sous la souris et le reflet holographique suit l'angle", async ({ page }) => {
+  test.skip(Boolean(cloudUrl()), "Le tirage local suffit : rien à demander au serveur.");
+  await gotoDeck(page, true, { withoutCircle: true });
+  // Projection téléphone : pas de survol, l'effet passe par le capteur (non simulable ici).
+  test.skip(!await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches),
+    "Scénario souris : le projet tactile n'a pas de survol.");
+  const pack = page.locator('.booster-pack-slot[data-active="true"] button.pack-artwork');
+  const object = pack.locator(".pack-3d-object");
+  const holo = pack.locator(".pack-holo");
+  await expect(holo).toBeVisible();
+  await pack.hover({ position: { x: 24, y: 24 } });
+  await expect.poll(() => object.evaluate((node) => (node as HTMLElement).style.transform)).not.toBe("");
+  await expect.poll(() => holo.evaluate((node) => (node as HTMLElement).style.backgroundPosition)).not.toBe("");
+});
+
+test("Reflets coupés : le sachet ne penche pas et le reflet holographique reste absent", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("creatordeck.tilt", "off"));
+  await gotoDeck(page, true, { withoutCircle: true });
+  const pack = page.locator('.booster-pack-slot[data-active="true"] button.pack-artwork');
+  await expect(pack.locator(".pack-holo")).toBeHidden();
+  if (await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches)) {
+    await pack.hover({ position: { x: 24, y: 24 } });
+  }
+  await page.waitForTimeout(250);
+  expect(await pack.locator(".pack-3d-object").evaluate((node) => (node as HTMLElement).style.transform)).toBe("");
+});

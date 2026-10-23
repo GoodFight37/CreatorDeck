@@ -23,8 +23,8 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
   const [showBack, setShowBack] = useState(effects);
   const start = useRef<{ x: number; y: number } | null>(null);
   const special = card.rarity === "rare" || card.rarity === "epic" || card.rarity === "legendary" || card.rarity === "mythic";
-  const duration = effects ? special ? 1_080 : 780 : 0;
-  const delay = effects ? number === 4 ? 360 : special ? 210 : 80 : 0;
+  const duration = effects ? special ? 1_080 : 280 : 0;
+  const delay = effects ? number === 4 ? 360 : special ? 210 : 0 : 0;
   const rarityForHaptic = card.rarity === "mythic" ? "legendary" : card.rarity;
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     <div className="meme-reveal-card-wrap" onPointerDown={(event) => {
       if (event.button === 0 && event.isPrimary !== false) start.current = { x: event.clientX, y: event.clientY };
     }} onPointerUp={endGesture} onPointerCancel={() => { start.current = null; }}>
-      <div className={`meme-reveal-flip rarity-${card.rarity}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
+      <div className={`meme-reveal-flip rarity-${card.rarity}${special ? "" : " is-quick"}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
         {showBack
           // Le dos des cartes sorties du sachet, emblème compris : la carte qu'on retourne est la même.
           ? <div className="meme-reveal-back" aria-hidden="true"><span className="foil-back-emblem"><CardBackEmblem /></span></div>
@@ -91,8 +91,8 @@ export function MemeReveal({ cards, copies, onClose }: {
   return <section className={`meme-reveal-flow${summary ? " is-summary" : ""}`} aria-label="Résultat du booster Mèmes">
     {summary ? <>
       <div className="meme-reveal-summary-title"><span>BOOSTER OUVERT</span><h2>Tes 5 cartes</h2></div>
-      <div className="meme-reveal-summary-grid">{cards.map((card) =>
-        <div key={card.id}><MemeCard card={card} compact copies={copies.get(card.id) ?? 1} /><span>{card.name}</span></div>)}</div>
+      <div className="meme-reveal-summary-grid">{cards.map((card, i) =>
+        <div key={card.id} style={{ "--i": i } as CSSProperties}><MemeCard card={card} compact copies={copies.get(card.id) ?? 1} /><span>{card.name}</span></div>)}</div>
       <button className="meme-reveal-next" type="button" disabled={!summaryReady} onClick={onClose}>VOIR MA COLLECTION</button>
     </> : <MemeRevealCard key={cards[index].id} card={cards[index]} number={index}
       copies={copies.get(cards[index].id) ?? 1} onAdvance={() => setIndex((value) => value + 1)} />}

@@ -1,6 +1,6 @@
 # 007 — Rendre fluide le glissé du doigt entre les boosters
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: HIGH
 - **Category**: Performance

@@ -1,6 +1,6 @@
 # 008 — Booster holographique qui penche avec le téléphone et sous le doigt
 
-- **Status**: TODO (à faire après 007 : même composant)
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: — (amélioration demandée par Malik, pas un défaut)
 - **Category**: Missed opportunity / Delight

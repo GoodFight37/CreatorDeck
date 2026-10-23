@@ -1,6 +1,6 @@
 # 004 — Mouvement réduit : un fondu doux au lieu d'une apparition sèche
 
-- **Status**: TODO
+- **Status**: DONE — 23 octobre 2026 (branche `arena/46a8ddec-creatordeck`)
 - **Commit**: ebed7eec
 - **Severity**: LOW
 - **Category**: Accessibility

@@ -13,14 +13,14 @@ Android WebView).
 
 | # | Plan | Gravité | Statut |
 |---|---|---|---|
-| 001 | [Retourner les cartes Mèmes communes en 280 ms](001-memes-retournement-rapide-des-communes.md) | HIGH | TODO |
-| 002 | [Faire disparaître le sachet déchiré à la révélation](002-retrait-complet-du-sachet-a-la-revelation.md) | MEDIUM | TODO |
-| 003 | [Appui fluide du bouton « suivant »](003-bouton-suivant-appui-fluide.md) | LOW | TODO |
-| 004 | [Mouvement réduit : fondu doux](004-mouvement-reduit-fondu-de-la-carte.md) | LOW | TODO |
-| 006 | [Récapitulatif Mèmes en cascade](006-recap-memes-entree-en-cascade.md) | LOW | TODO |
-| 005 | [Une seule source par animation d'ouverture](005-regrouper-les-animations-d-ouverture.md) | LOW, optionnel | TODO |
-| 007 | [Glissé du doigt fluide entre les boosters](007-carrousel-glisse-fluide.md) | HIGH | TODO |
-| 008 | [Booster holographique qui penche](008-booster-holographique-qui-penche.md) | Amélioration | TODO |
+| 001 | [Retourner les cartes Mèmes communes en 280 ms](001-memes-retournement-rapide-des-communes.md) | HIGH | FAIT |
+| 002 | [Faire disparaître le sachet déchiré à la révélation](002-retrait-complet-du-sachet-a-la-revelation.md) | MEDIUM | FAIT |
+| 003 | [Appui fluide du bouton « suivant »](003-bouton-suivant-appui-fluide.md) | LOW | FAIT |
+| 004 | [Mouvement réduit : fondu doux](004-mouvement-reduit-fondu-de-la-carte.md) | LOW | FAIT |
+| 006 | [Récapitulatif Mèmes en cascade](006-recap-memes-entree-en-cascade.md) | LOW | FAIT |
+| 005 | [Une seule source par animation d'ouverture](005-regrouper-les-animations-d-ouverture.md) | LOW, optionnel | FAIT |
+| 007 | [Glissé du doigt fluide entre les boosters](007-carrousel-glisse-fluide.md) | HIGH | FAIT |
+| 008 | [Booster holographique qui penche](008-booster-holographique-qui-penche.md) | Amélioration | FAIT |
 
 ## Ordre recommandé
 
