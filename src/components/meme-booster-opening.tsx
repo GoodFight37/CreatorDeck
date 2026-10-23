@@ -20,6 +20,16 @@ export function MemeBoosterOpening({ booster }: { booster: MemeBooster }) {
     setMusicScene("pack");
     return () => setMusicScene("hub");
   }, [presenting]);
+  useEffect(() => {
+    // Les cinq images décodées avant la révélation : pas de carte qui arrive en retard.
+    for (const id of opening?.cards ?? []) {
+      const image = MEME_BY_ID.get(id)?.image;
+      if (!image) continue;
+      const img = new Image();
+      img.src = image;
+      void img.decode?.().catch(() => {});
+    }
+  }, [opening]);
   useBackHandler(presenting && !prepared, () => revealing ? booster.close() : booster.leavePending());
   if (!presenting) return null;
   return <PackTear artwork="/packs/memes-opening.svg" returnFocusTo={booster.returnFocusTo}
