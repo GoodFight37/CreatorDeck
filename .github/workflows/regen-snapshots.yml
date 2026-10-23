@@ -1,0 +1,43 @@
+# TEMPORAIRE — régénère les captures de référence du sachet puis les pousse
+# sur la branche. À supprimer dès que les captures sont à jour : la CI normale
+# (`verification.yml`) reste la seule porte.
+name: Régénération des captures du sachet (temporaire)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  snapshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Récupérer la branche
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Installer les dépendances verrouillées
+        run: npm ci
+      - name: Installer Chromium et ses dépendances système
+        run: npx playwright install --with-deps chromium
+      - name: Régénérer les captures du sachet (scellé et déchiré)
+        run: npx playwright test e2e/pack-tear.spec.ts --grep "CSS-only pouch" --update-snapshots
+        env:
+          CI: "true"
+          NEXT_TELEMETRY_DISABLED: "1"
+      - name: Pousser les captures régénérées sur la branche
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add e2e/pack-tear.spec.ts-snapshots
+          if git diff --cached --quiet; then
+            echo "Aucun changement de capture."
+            exit 0
+          fi
+          git commit -m "test(e2e): régénérer les captures du sachet après la nouvelle illustration"
+          git push origin HEAD:${{ github.ref_name }}
