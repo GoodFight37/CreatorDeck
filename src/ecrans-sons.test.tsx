@@ -73,10 +73,10 @@ describe("le réglage du son", () => {
     // Un tour complet des onglets, dans les deux sens.
     banc.fermer();
     for (const onglet of ["Binder", "Atelier", "Drop", "Objectifs", "Drop"]) banc.appuyer(onglet);
-    // Puis les portes de l'écran Toi : le compte, les taux, les objectifs, le
+    // Puis les portes de l'écran Toi : le compte, les objectifs, le
     // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
     // d'écran, toutes muettes.
-    for (const porte of ["Mon compte", "Taux officiels", "Thème du classeur"]) {
+    for (const porte of ["Mon compte", "Thème du classeur"]) {
       banc.appuyerNom(/^Réglages/);
       banc.appuyer(new RegExp(`^${porte}`));
       // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.

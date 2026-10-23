@@ -40,7 +40,7 @@ describe("statut Scène et identité de collectionneur", () => {
     }
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={friendsOpening}
       onShowInbox={onShowInbox} onShowCollection={noop} onOpen={noop}
-      onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
+      onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve needsAccount={false} />);
     return { onOpen, onShowInbox, onShowTribunal, button: document.querySelector<HTMLButtonElement>(".scene-action")! };
   }
@@ -151,7 +151,7 @@ describe("statut Scène et identité de collectionneur", () => {
 
   async function settings() {
     const noop = vi.fn();
-    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={noop} onShowNotifications={noop} onShowThemes={noop} onShowOdds={noop} onNotice={noop} onError={noop} />);
+    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={noop} onShowNotifications={noop} onShowThemes={noop} onNotice={noop} onError={noop} />);
   }
 
   it("affiche l’identifiant du build dans les réglages du profil", async () => {

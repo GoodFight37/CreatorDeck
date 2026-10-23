@@ -69,7 +69,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     const onEditCircle = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={gameWith([])} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve={false} needsAccount={needsAccount} onEditCircle={onEditCircle} />);
     return onEditCircle;
   }
@@ -103,7 +103,7 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     const mount = async (openings: number) => {
       const state = { ...createInitialState(NOW), openings };
       await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
+        onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
         now={NOW} serverReserve={false} needsAccount={false} />);
     };
     // Nuit de direct : MEMES est un second paquet visible dès le départ, Live devant.
@@ -114,27 +114,11 @@ describe("étape 3 : définir ou modifier mes chaînes", () => {
     expect(document.querySelector(".memes-unlock-note")).toBeNull();
   });
 
-  it("D-142 : la garantie Légendaire annonce une de tes chaînes tant qu'une Légendaire du cercle manque", async () => {
-    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
-    await home();
-    expect(document.querySelector(".pity-row")!.textContent).toContain("· une de tes chaînes");
-  });
-
-  it("D-142 : rien à promettre quand toutes les Légendaires du cercle sont obtenues", async () => {
-    // CIRCLE ne contient qu'une Légendaire (ibai).
-    window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
-    const noop = () => {};
-    await banc.monter(<HomeView game={gameWith(["ibai"])} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
-      now={NOW} serverReserve={false} needsAccount={false} />);
-    expect(document.querySelector(".pity-row")!.textContent).not.toContain("une de tes chaînes");
-  });
-
   it("0056 : l'accueil annonce le retour au classement seulement quand le cercle est complet", async () => {
     window.localStorage.setItem("creatordeck.circle.v1", JSON.stringify({ v: 1, slugs: CIRCLE, at: 1 }));
     const noop = () => {};
     await banc.monter(<HomeView game={gameWith(CIRCLE)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowOdds={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={noop} onShowAtelier={noop} opening={false} usingHourglass={false}
       now={NOW} serverReserve={false} needsAccount={false} />);
     expect(document.body.textContent).toContain("Ton cercle est complet. Les boosters s’ouvrent au classement.");
   });

@@ -76,7 +76,7 @@ describe("Toi : vitrine, parcours et menus complets", () => {
   });
   async function settings() {
     const noop = vi.fn(), onShowAccount = vi.fn();
-    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={onShowAccount} onShowNotifications={noop} onShowThemes={noop} onShowOdds={noop} onNotice={noop} onError={noop} />);
+    await banc.monter(<SettingsSheet onClose={noop} onShowAccount={onShowAccount} onShowNotifications={noop} onShowThemes={noop} onNotice={noop} onError={noop} />);
     return { onShowAccount };
   }
   it("replie les réglages et conserve les deux interrupteurs distincts", async () => {

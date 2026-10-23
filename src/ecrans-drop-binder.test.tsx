@@ -114,25 +114,22 @@ describe("les sabliers du Drop en ligne", () => {
   async function drop({ packs = 0, hourglasses = 2, needsAccount = false, busy = false } = {}) {
     const state = { ...createInitialState(NOW), packs, hourglasses };
     const onUseHourglass = vi.fn();
-    const onShowOdds = vi.fn();
     const noop = () => {};
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowOdds={onShowOdds} onShowAtelier={noop} opening={false} usingHourglass={busy}
+      onShowInbox={noop} onShowCollection={noop} onOpen={noop} onUseHourglass={onUseHourglass} onShowAtelier={noop} opening={false} usingHourglass={busy}
       now={NOW} serverReserve={true} needsAccount={needsAccount} />);
     const button = banc.boutons().find((b) => /Utiliser 1 sablier|Utilisation/.test(b.textContent ?? ""))!;
-    return { button, onUseHourglass, onShowOdds };
+    return { button, onUseHourglass };
   }
 
-  it("range les jetons dans les détails et garde la garantie légendaire accessible", async () => {
-    const { onShowOdds } = await drop();
+  it("range les jetons dans les détails, sans compteur de garantie ni lien vers les taux", async () => {
+    await drop();
     const tokens = document.querySelector(".token-row")!;
-    const pity = document.querySelector<HTMLButtonElement>(".pity-row.now")!;
     expect(tokens.closest("details")).not.toBeNull();
     expect((tokens.closest("details") as HTMLDetailsElement).open).toBe(false);
     expect(tokens.textContent).toMatch(/\d+ jetons · encore \d+ pour une carte/);
-    expect(pity.textContent).toMatch(/Légendaire garanti (dans \d+ boosters|au prochain)/);
-    act(() => pity.click());
-    expect(onShowOdds).toHaveBeenCalledOnce();
+    expect(document.querySelector(".pity-row.now")).toBeNull();
+    expect(document.body.textContent).not.toContain("Taux officiels");
   });
 
   it("replie les infos secondaires du tutoriel derrière un lien discret", async () => {
@@ -140,7 +137,6 @@ describe("les sabliers du Drop en ligne", () => {
     const details = document.querySelector<HTMLDetailsElement>(".drop-secondary-details")!;
     expect(details.open).toBe(false);
     expect(details.querySelector("summary")?.textContent).toBe("More info");
-    expect(details.querySelector(".pity-row.now")).not.toBeNull();
     expect(details.querySelector(".hourglass-action")).not.toBeNull();
     act(() => details.querySelector("summary")!.click());
     expect(details.open).toBe(true);
@@ -165,7 +161,7 @@ describe("les sabliers du Drop en ligne", () => {
     const state = { ...createInitialState(NOW), packs: 0 };
     const onOpen = vi.fn();
     await banc.monter(<HomeView game={getGameView(state, NOW)} friendsOpening={0}
-      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onUseHourglass={vi.fn()} onShowOdds={vi.fn()} onShowAtelier={vi.fn()} opening={false} usingHourglass={false}
+      onShowInbox={vi.fn()} onShowCollection={vi.fn()} onOpen={onOpen} onUseHourglass={vi.fn()} onShowAtelier={vi.fn()} opening={false} usingHourglass={false}
       now={NOW} serverReserve={true} needsAccount={false} />);
     const button = banc.boutons().find((entry) => entry.textContent?.includes("Ouvrir un booster de test"))!;
     const sachet = document.querySelector<HTMLButtonElement>(".pack-stage .pack-artwork")!;
