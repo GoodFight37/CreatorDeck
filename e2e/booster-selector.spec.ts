@@ -348,3 +348,51 @@ test("Reflets coupés : le sachet ne penche pas et le reflet holographique reste
   expect(transform).toBe("");
   expect(await object.evaluate((node) => (node as HTMLElement).style.transform)).toBe("");
 });
+
+test("la bascule de booster ne laisse jamais le sachet sortant devant ni translucide", async ({ page }) => {
+  // Défaut constaté à l'œil sur l'appli : une couture verticale en plein milieu du
+  // sachet, le temps de la bascule. Cause : le paquet sortant gardait `z-index: 2`
+  // pendant 200 ms (transition différée) tout en s'effaçant de 1 à .5, et le
+  // paquet entrant était encore à demi transparent (.5 -> 1). Les deux se
+  // voyaient donc l'un à travers l'autre. L'entrant doit être opaque et devant
+  // dès la première image ; le sortant descend d'un cran immédiatement.
+  if (cloudUrl()) { await fakeAccount(page); await page.goto("/"); } else await gotoDeck(page, true, { withoutCircle: true });
+  const slots = page.locator(".booster-pack-slot");
+  await expect(slots).toHaveCount(3);
+  await page.getByRole("button", { name: "MEMES", exact: true }).click();
+
+  // Juste après le clic, transition encore en cours : on lit l'état composité.
+  const pendant = await slots.evaluateAll((nodes) => nodes.map((node) => ({
+    booster: node.getAttribute("data-booster"),
+    active: node.getAttribute("data-active") === "true",
+    z: Number(getComputedStyle(node).zIndex),
+    opacity: Number(getComputedStyle(node).opacity),
+    transition: getComputedStyle(node).transitionProperty,
+  })));
+  const entrant = pendant.find((s) => s.booster === "memes")!;
+  const sortant = pendant.find((s) => s.booster === "live")!;
+  expect(entrant.active).toBe(true);
+  expect(entrant.opacity).toBe(1);
+  expect(entrant.z).toBe(2);
+  expect(sortant.z).toBe(1);
+  // Ni opacité ni z-index dans la liste de transition : la valeur est appliquée net.
+  expect(entrant.transition).not.toContain("opacity");
+  expect(entrant.transition).not.toContain("z-index");
+  expect(sortant.transition).not.toContain("z-index");
+  // Le filtre du voisin change d'un coup : l'animer re-rastérise tout le sachet.
+  expect(sortant.transition).not.toContain("filter");
+
+  // Au repos, le paquet choisi reste plein et devant, les voisins en retrait.
+  await page.locator(".booster-carousel").evaluate(async (node) => {
+    await Promise.all(node.getAnimations({ subtree: true })
+      .filter((animation) => animation.effect?.getTiming().iterations !== Infinity)
+      .map((animation) => animation.finished));
+  });
+  const repos = await slots.evaluateAll((nodes) => nodes.map((node) => ({
+    active: node.getAttribute("data-active") === "true",
+    z: Number(getComputedStyle(node).zIndex),
+    opacity: Number(getComputedStyle(node).opacity),
+  })));
+  expect(repos.filter((s) => s.active).map((s) => [s.z, s.opacity])).toEqual([[2, 1]]);
+  for (const voisin of repos.filter((s) => !s.active)) expect(voisin.opacity).toBeLessThan(1);
+});

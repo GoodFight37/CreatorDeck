@@ -10,9 +10,12 @@
   width: var(--drop-pack-size); height: calc(var(--drop-pack-size) * 1.4667);
   z-index: 1; opacity: .22; filter: saturate(.55) brightness(.75);
   transform: translateX(calc(-50% + var(--booster-offset) * 145%)) scale(.52) rotateY(-12deg);
-  /* z-index bascule à mi-course : le sachet qui arrive ne passe devant
-     qu'une fois l'autre assez reculé, sinon il le traverse. */
-  transition: transform 360ms cubic-bezier(.2,.7,.2,1), opacity 300ms ease, filter 300ms ease, z-index 0s linear 180ms;
+  /* z-index n'est pas animé : le paquet qui sort doit descendre d'un cran
+     immédiatement. Avec le moindre délai, il reste au-dessus du paquet entrant
+     et on le voit à travers, en plein milieu du sachet. `filter` n'est pas
+     animé non plus : aucun état ne le fait varier ici, et animer un filtre sur
+     une surface en 3D force Chromium à re-rastériser tout le sachet. */
+  transition: transform 360ms cubic-bezier(.2,.7,.2,1), opacity 300ms ease;
 }
 .booster-pack-slot[data-active="true"] {
   z-index: 2; opacity: 1; filter: none;
@@ -72,7 +75,18 @@
     rotateY(calc(var(--o) * -44deg));
   opacity: calc(1 - min(var(--a), 1) * .5);
   filter: none;
-  transition: transform 460ms cubic-bezier(.2, .8, .2, 1), opacity 460ms ease, z-index 0s linear 200ms;
+  transition: transform 460ms cubic-bezier(.2, .8, .2, 1), opacity 460ms ease;
+}
+/* Le paquet choisi ne devient jamais translucide et passe devant tout de suite :
+   sinon celui qui sort se lit à travers lui pendant la bascule — une couture
+   verticale en plein milieu du sachet, sur toute sa hauteur. Seul le voisin
+   s'efface ; l'entrant est opaque dès la première image. */
+.home-view .booster-selector .booster-carousel .booster-pack-slot[data-active="true"] {
+  z-index: 2;
+  opacity: 1;
+  /* Pas d'opacité ni de z-index dans la liste : la valeur est appliquée d'un
+     coup, sans fondu. */
+  transition: transform 460ms cubic-bezier(.2, .8, .2, 1);
 }
 .home-view .booster-selector .booster-carousel.is-dragging .booster-pack-slot:is([data-active]) { transition: none; }
 /* Pendant le glissé, les animations du sachet (flottement, reflet) dorment :
@@ -89,7 +103,9 @@
   .home-view .booster-selector .booster-carousel .booster-pack-slot:is([data-active]) {
     transform: translateX(-50%);
     opacity: 0;
-    transition: opacity 200ms ease, z-index 0s linear 100ms;
+    /* Pas de z-index différé : le paquet sortant passe derrière tout de suite,
+       comme en mouvement normal, sinon les deux se lisent l'un à travers l'autre. */
+    transition: opacity 200ms ease;
   }
   .home-view .booster-selector .booster-carousel .booster-pack-slot[data-active="true"] { opacity: 1; }
 }

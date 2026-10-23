@@ -1,3 +1,12 @@
+# Checkpoint — couture en plein milieu du sachet et saccade de bascule (23 octobre 2026)
+
+- **Signalement de Malik sur l'APK** : « une sorte de coupure en plein milieu du booster numéro 2 » + bascule non fluide. Reproduit, corrigé, testé.
+- **Cause** : pendant la bascule, le sachet sortant gardait `z-index: 2` (transition `z-index 0s linear 200ms`) tout en s'effaçant de 1 à .5, et le sachet entrant montait de .5 à 1. Les deux étaient translucides en même temps → le sortant se lisait **à travers** l'entrant, sur toute la hauteur du sachet. Les voisins à ±80 %, reculés et tournés, sont conformes à D-156 — leur taille n'était pas le défaut ; seule la transparence simultanée l'était.
+- **Correctif (`booster-carousel.css`)** : le paquet choisi est opaque et devant dès la première image (`opacity` et `z-index` hors de sa liste de transition) ; le sortant descend d'un cran immédiatement ; `filter` n'est plus animé (animer un filtre sur une surface 3D re-rastérise tout le sachet à chaque image — c'était la saccade). Fil principal innocent : 0 ms de tâche mesurée (CDP), tout le coût était au rendu.
+- **Preuve** : test `e2e/booster-selector.spec.ts` « la bascule de booster ne laisse jamais le sachet sortant devant ni translucide », **rouge sur l'ancien CSS** (opacité .5 au lieu de 1), vert après. Captures `reports/yeux/25-bascule-corrigee-*.png` et `26-bascule-repos.png` (dossier ignoré par git).
+- **Portes** : typecheck ✅, lint ✅, `test` **1218/1218**, `ecrans` **256/256**, `test:autonomy` **18/18**, build ✅. E2E local : 9 passés / 5 ignorés / 1 échec **préexistant** (« mouvement réduit termine aussi une ouverture Live »), vérifié en stashant le correctif. Décision **D-163**.
+- **Reste à Malik** : confirmer la fluidité ressentie sur son Redmi Note 12 Pro — aucune mesure de fps fiable n'est possible dans le bac à sable (headless sans compositeur, les mesures par rAF y sont faussées).
+
 # Checkpoint — inspection visuelle réelle de l'appli (23 octobre 2026)
 
 - **Méthode :** l'appli a été **regardée**, pas seulement mesurée : Chromium headless (`@sparticuz/chromium` + libs `al2023`) sur le serveur de dev, viewport 390×844 @2x, Supabase cloud factice (RPC interceptées). Captures dans `reports/yeux/` (dossier ignoré par git). Le téléphone de Malik (Redmi Note 12 Pro) reste **non testé**.
