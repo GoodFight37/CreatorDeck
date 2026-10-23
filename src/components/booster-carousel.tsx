@@ -168,6 +168,15 @@ export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepa
   }
   useLayoutEffect(() => { releaseDrag(); }, [index]);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
+  // Pendant la bascule (durée de la transition), le flottement du sachet se met en
+  // pause : une animation 3D infinie sur un sachet filtré refait tout le rendu à chaque image.
+  useEffect(() => {
+    const node = stage.current;
+    if (!node) return;
+    node.classList.add("is-switching");
+    const fin = window.setTimeout(() => node.classList.remove("is-switching"), 480);
+    return () => { window.clearTimeout(fin); node.classList.remove("is-switching"); };
+  }, [index]);
   function choose(next: BoosterUniverse) {
     if (disabled) return;
     // Après une première bascule, le paquet qui passe devant ne rejoue pas son arrivée.

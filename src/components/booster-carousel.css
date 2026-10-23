@@ -91,6 +91,7 @@
 .home-view .booster-selector .booster-carousel.is-dragging .booster-pack-slot:is([data-active]) { transition: none; }
 /* Pendant le glissé, les animations du sachet (flottement, reflet) dorment :
    elles n'ont pas à tourner dans une scène qui suit déjà le doigt. */
+.home-view .booster-selector .booster-carousel.is-switching .pack-idle,
 .home-view .booster-selector .booster-carousel.is-dragging .pack-idle,
 .home-view .booster-selector .booster-carousel.is-dragging .pack-glint::after { animation-play-state: paused; }
 /* Pas d'arrivée rejouée à chaque bascule : seul le premier affichage en a une. */
