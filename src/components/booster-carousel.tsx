@@ -4,10 +4,11 @@ import { useLayoutEffect, useRef, type CSSProperties, type MouseEvent, type Poin
 import Image from "next/image";
 import "./booster-carousel.css";
 
-export type BoosterUniverse = "live" | "memes";
+export type BoosterUniverse = "live" | "memes" | "imgflip";
 const BOOSTERS = [
   { id: "live", label: "Live Drop", artwork: "/packs/live-opening.svg" },
   { id: "memes", label: "MEMES", artwork: "/packs/memes-opening.svg" },
+  { id: "imgflip", label: "IMGFLIP", artwork: "/packs/imgflip-opening.svg" },
 ] as const;
 
 export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.svg",
@@ -46,7 +47,7 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
 export function BoosterCarousel({ value, onChange, onPrepare, disabled, canPrepare, universes, labels }: {
   value: BoosterUniverse; onChange: (value: BoosterUniverse) => void;
   onPrepare: (value: BoosterUniverse) => void; disabled: boolean; canPrepare: boolean;
-  /** Univers proposés ; par défaut les deux. Un seul : pas de sélecteur. */
+  /** Univers proposés ; par défaut les trois. Un seul : pas de sélecteur. */
   universes?: readonly BoosterUniverse[];
   /** Ce que fait un appui sur le paquet de devant (« Ouvrir le booster »…). */
   labels?: Partial<Record<BoosterUniverse, string>>;

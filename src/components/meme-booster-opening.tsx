@@ -11,7 +11,12 @@ import { PackTear } from "@/components/pack-tear";
 import { MemeReveal } from "@/components/meme-reveal";
 import "./meme-reveal.css";
 
-export function MemeBoosterOpening({ booster }: { booster: MemeBooster }) {
+type OpeningControls = Pick<MemeBooster, "copies" | "presenting" | "prepared" | "extracted" | "returnFocusTo" | "cancel" | "complete" | "close" | "leavePending"> & {
+  opening: { cards: string[] } | null;
+  commit: () => void | Promise<void>;
+};
+
+export function MemeBoosterOpening({ booster, artwork = "/packs/memes-opening.svg" }: { booster: OpeningControls; artwork?: string }) {
   const { opening, copies, presenting, prepared, extracted } = booster;
   const cards = opening?.cards.map((id) => MEME_BY_ID.get(id)).filter((card): card is MemeCard => Boolean(card)) ?? [];
   const revealing = Boolean(opening && extracted && cards.length === 5);
@@ -32,7 +37,7 @@ export function MemeBoosterOpening({ booster }: { booster: MemeBooster }) {
   }, [opening]);
   useBackHandler(presenting && !prepared, () => revealing ? booster.close() : booster.leavePending());
   if (!presenting) return null;
-  return <PackTear artwork="/packs/memes-opening.svg" returnFocusTo={booster.returnFocusTo}
+  return <PackTear artwork={artwork} returnFocusTo={booster.returnFocusTo}
     onCancel={prepared ? booster.cancel : undefined}
     onTear={() => { playPackOpening(); buzz(PACK_TEAR_HAPTIC); void booster.commit(); }}
     onComplete={booster.complete} onLeavePending={booster.leavePending}>
