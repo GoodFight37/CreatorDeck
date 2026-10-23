@@ -311,27 +311,40 @@ test("le mode mouvement réduit termine aussi une ouverture Live après prépara
 
 test("le sachet penche sous la souris et le reflet holographique suit l'angle", async ({ page }) => {
   test.skip(Boolean(cloudUrl()), "Le tirage local suffit : rien à demander au serveur.");
-  await gotoDeck(page, true, { withoutCircle: true });
-  // Projection téléphone : pas de survol, l'effet passe par le capteur (non simulable ici).
-  test.skip(!await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches),
-    "Scénario souris : le projet tactile n'a pas de survol.");
+  await gotoDeck(page);
   const pack = page.locator('.booster-pack-slot[data-active="true"] button.pack-artwork');
   const object = pack.locator(".pack-3d-object");
   const holo = pack.locator(".pack-holo");
   await expect(holo).toBeVisible();
   await pack.hover({ position: { x: 24, y: 24 } });
-  await expect.poll(() => object.evaluate((node) => (node as HTMLElement).style.transform)).not.toBe("");
+  // Le survol est un événement unique : s'il part avant l'hydratation, il ne
+  // reste rien. Chaque essai renvoie donc un pointermove souris au bouton, puis
+  // lit le style que la première image a écrit.
+  await expect.poll(() => object.evaluate((node) => {
+    node.closest("button")?.dispatchEvent(new PointerEvent("pointermove", {
+      bubbles: true, pointerType: "mouse", clientX: 30, clientY: 30,
+    }));
+    return (node as HTMLElement).style.transform;
+  })).not.toBe("");
   await expect.poll(() => holo.evaluate((node) => (node as HTMLElement).style.backgroundPosition)).not.toBe("");
 });
 
 test("Reflets coupés : le sachet ne penche pas et le reflet holographique reste absent", async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("creatordeck.tilt", "off"));
-  await gotoDeck(page, true, { withoutCircle: true });
+  await gotoDeck(page);
   const pack = page.locator('.booster-pack-slot[data-active="true"] button.pack-artwork');
+  const object = pack.locator(".pack-3d-object");
   await expect(pack.locator(".pack-holo")).toBeHidden();
-  if (await page.evaluate(() => matchMedia("(hover: hover) and (pointer: fine)").matches)) {
-    await pack.hover({ position: { x: 24, y: 24 } });
-  }
-  await page.waitForTimeout(250);
-  expect(await pack.locator(".pack-3d-object").evaluate((node) => (node as HTMLElement).style.transform)).toBe("");
+  await pack.hover({ position: { x: 24, y: 24 } });
+  // Un vrai geste souris est envoyé au bouton : rien ne doit être écrit, ni
+  // maintenant ni à l'image suivante.
+  const transform = await object.evaluate((node) => {
+    node.closest("button")?.dispatchEvent(new PointerEvent("pointermove", {
+      bubbles: true, pointerType: "mouse", clientX: 30, clientY: 30,
+    }));
+    return (node as HTMLElement).style.transform;
+  });
+  await page.waitForTimeout(200);
+  expect(transform).toBe("");
+  expect(await object.evaluate((node) => (node as HTMLElement).style.transform)).toBe("");
 });

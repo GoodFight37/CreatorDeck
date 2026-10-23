@@ -58,6 +58,8 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
     const lancer = () => { if (!frame) frame = requestAnimationFrame(ecrire); };
 
     const auPointeur = (event: PointerEvent) => {
+      // Seule la souris incline : au doigt, le geste appartient au carrousel.
+      if (event.pointerType !== "mouse") return;
       if (distrait()) { cibleX = 0; cibleY = 0; lancer(); return; }
       const rect = bouton.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
@@ -65,7 +67,10 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       cibleX = borne((((event.clientY - rect.top) / rect.height) - 0.5) * 2, 1) * -8;
       lancer();
     };
-    const auSortie = () => { cibleX = 0; cibleY = 0; lancer(); };
+    const auSortie = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      cibleX = 0; cibleY = 0; lancer();
+    };
     const auCapteur = (event: DeviceOrientationEvent) => {
       if (event.gamma === null && event.beta === null) return;
       if (betaZero === null && event.beta !== null) betaZero = event.beta;
@@ -76,21 +81,16 @@ export function PackArtwork({ onClick, disabled, artwork = "/packs/live-opening.
       lancer();
     };
 
-    const survol = window.matchMedia?.("(hover: hover) and (pointer: fine)").matches ?? false;
-    if (survol) {
-      bouton.addEventListener("pointermove", auPointeur);
-      bouton.addEventListener("pointerleave", auSortie);
-    } else {
-      window.addEventListener("deviceorientation", auCapteur);
-    }
+    // Les deux sources restent branchées : la souris ne se manifeste que sur
+    // ordinateur (`pointerType`), le capteur ne parle que sur téléphone.
+    bouton.addEventListener("pointermove", auPointeur);
+    bouton.addEventListener("pointerleave", auSortie);
+    window.addEventListener("deviceorientation", auCapteur);
     return () => {
       cancelAnimationFrame(frame);
-      if (survol) {
-        bouton.removeEventListener("pointermove", auPointeur);
-        bouton.removeEventListener("pointerleave", auSortie);
-      } else {
-        window.removeEventListener("deviceorientation", auCapteur);
-      }
+      bouton.removeEventListener("pointermove", auPointeur);
+      bouton.removeEventListener("pointerleave", auSortie);
+      window.removeEventListener("deviceorientation", auCapteur);
       remettre();
     };
   }, [active]);
