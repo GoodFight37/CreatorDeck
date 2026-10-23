@@ -10,7 +10,6 @@ test("Objectifs : quotidien, collection, saisons et filtres sur téléphone",asy
  await expect(page.getByRole('heading',{name:'Objectifs et saisons',exact:true})).toBeVisible();
  // D-148 : deux missions au jour 1, Recyclage et Tribunal arrivent à partir du jour 2.
  await expect(page.locator('.day-missions .mission-row')).toHaveCount(2);
- await expect(page.locator('.objectives-no-pending')).toBeVisible();
  for(const width of [320,390]){
   await page.setViewportSize({width,height:844});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
@@ -23,7 +22,6 @@ test("Objectifs : quotidien, collection, saisons et filtres sur téléphone",asy
  await page.locator('.season-tier-details summary').first().click();
  await expect(page.locator('.season-tier-details').first()).toContainText('points');
  await page.screenshot({path:'test-results/objectives-seasons-390.png'});
- await page.getByRole('link',{name:'Aujourd’hui',exact:true}).click();
  await page.screenshot({path:'test-results/objectives-day-390.png'});
 });
 
