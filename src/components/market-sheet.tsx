@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle, Info, RefreshCw, ShoppingBag, Store, UserPlus, X } from "lucide-react";
 import { CREATOR_BY_SLUG } from "@/lib/catalog";
 import { useCloud } from "@/hooks/use-cloud";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { connecteToi } from "@/lib/cloud/store-text";
 import { useGame } from "@/hooks/use-game";
 import { cloudStore, type CloudActionOutcome } from "@/lib/cloud/cloud-store";
@@ -34,6 +35,7 @@ function creatorName(slug: string): string {
 
 export function MarketSheet({ onClose }: { onClose: () => void }) {
   const cloud = useCloud();
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const others = useOtherPlayers();
   const game = useGame();
   const [notice, setNotice] = useState<{ message: string; isError: boolean } | null>(null);
@@ -68,7 +70,7 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
   const ready = cloud.marketAt !== null;
 
   if (others === false) return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">
+    <div ref={dialogRef} tabIndex={-1} className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">
       <div className="odds-panel">
         <header className="odds-head"><h2>Hôtel des ventes</h2><button type="button" onClick={onClose} aria-label="Fermer"><X size={18} /></button></header>
         <CircleShareEmpty />
@@ -77,7 +79,7 @@ export function MarketSheet({ onClose }: { onClose: () => void }) {
   );
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">
+    <div ref={dialogRef} tabIndex={-1} className="odds-overlay" role="dialog" aria-modal="true" aria-label="Hôtel des ventes">
       <div className="odds-panel">
         <header className="odds-head">
           <h2>Hôtel des ventes</h2>

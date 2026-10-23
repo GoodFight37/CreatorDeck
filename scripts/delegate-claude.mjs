@@ -8,8 +8,8 @@ import { fileURLToPath } from "node:url";
 const codex = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const desktop = path.resolve(codex, "..");
 const claude = path.join(desktop, "CreatorDeck-Claude");
-const requestFile = path.join(desktop, "CreatorDeck-Codex-vers-Claude.md");
-const responseFile = path.join(desktop, "CreatorDeck-Retour-Claude.md");
+const requestFile = path.join(codex, "CreatorDeck-Codex-vers-Claude.md");
+const responseFile = path.join(codex, "CreatorDeck-Retour-Claude.md");
 const question = process.argv.slice(2).join(" ").trim();
 const limit = 16_000;
 

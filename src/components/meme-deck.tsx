@@ -11,6 +11,9 @@ import { MEME_CARDS, MEME_RARITY, type MemeCard as MemeCardData, type MemeRarity
 import { MemeCard } from "@/components/meme-card";
 import "./meme-deck.css";
 import "./meme-reveal.css";
+import dynamic from "next/dynamic";
+
+const MemeEditor = dynamic(() => import("./meme-editor").then(module => module.MemeEditor), { ssr: false });
 
 const PAGE_SIZE = 12;
 type Filter = "all" | "owned";
@@ -24,15 +27,20 @@ function countdown(nextAt: string | null, now: number) {
   return String(minutes).padStart(2, "0") + ":" + String(seconds).padStart(2, "0");
 }
 
+function BoosterCountdown({ stock, nextAt }: { stock: number; nextAt: string | null }) {
+  const now = useNow(1000);
+  return <>{String(stock)} booster(s) prêts · {countdown(nextAt, now)}</>;
+}
+
 export function MemeDeck() {
   const booster = useMemeBooster();
   const { account, status, busy, problem, copies } = booster;
   const [selected, setSelected] = useState<MemeCardData | null>(null);
+  const [editing, setEditing] = useState(false);
   const [filter, setFilter] = useState<Filter>("all");
   const [rarity, setRarity] = useState<MemeRarity | "all">("all");
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
-  const now = useNow(1000);
   const openButtonRef = useRef<HTMLButtonElement>(null);
   const inspectRef = useRef<HTMLDialogElement>(null);
 
@@ -63,7 +71,7 @@ export function MemeDeck() {
       <button ref={openButtonRef} className="meme-open" type="button" disabled={!account || !status || status.stock < 1 || busy}
         onClick={booster.prepare}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
       <p className="meme-status" aria-live="polite">{status
-        ? String(status.stock) + " booster(s) prêts · " + countdown(status.nextAt, now)
+        ? <BoosterCountdown stock={status.stock} nextAt={status.nextAt} />
         : account ? "Lecture de ta réserve…" : "Connecte-toi dans Toi pour ouvrir et conserver tes cartes."}</p>
       {booster.notice ? <p role="status">{booster.notice}</p> : null}
       {problem ? <div className="meme-problem" role="alert"><p>{problem}</p>
@@ -99,17 +107,20 @@ export function MemeDeck() {
         <span>{currentPage + 1} / {pageCount}</span>
         <button type="button" onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))} disabled={currentPage >= pageCount - 1}>Suivante <ChevronRight size={18} aria-hidden="true" /></button>
       </nav>
-      <p className="meme-credit">Cartes issues de MyMemeCards. Illustrations créditées sur chaque fiche lorsqu’un auteur est indiqué.</p>
+      <p className="meme-credit">Sources et crédits indiqués sur chaque fiche lorsqu’un auteur est connu.</p>
     </section>
     <MemeBoosterOpening booster={booster} />
-    {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => setSelected(null)}
+    {selected ? <dialog className="meme-dialog meme-inspect" ref={inspectRef} onClose={() => { setSelected(null); setEditing(false); }}
       aria-label={"Carte " + selected.name}>
-      <button className="meme-close" type="button" onClick={() => setSelected(null)} aria-label="Fermer"><X aria-hidden="true" /></button>
+      <button className="meme-close" type="button" onClick={() => { setSelected(null); setEditing(false); }} aria-label="Fermer"><X aria-hidden="true" /></button>
+      {editing ? <MemeEditor key={selected.id} card={selected} copies={copies.get(selected.id) ?? 0} onClose={() => setEditing(false)} /> : <>
       <MemeCard card={selected} copies={copies.get(selected.id) ?? 0} interactiveFoil />
       <div className="meme-inspect-copy"><p className="meme-eyebrow">#{String(selected.number).padStart(3, "0")} · {MEME_RARITY[selected.rarity].label}{selected.fullArt ? " · Full Art" : ""}</p>
         <h2>{selected.name}</h2>{selected.flavor ? <p>{selected.flavor}</p> : null}
-        <small>{selected.credit ? "Source : " + selected.credit + " · " : ""}MyMemeCards{selected.year ? " · " + selected.year : ""}</small>
-        <p>{copies.has(selected.id) ? String(copies.get(selected.id)) + " exemplaire(s) obtenus" : selected.image ? "À découvrir en booster" : "Visuel indisponible · carte non distribuée"}</p></div>
+        <small>{selected.credit ? "Source : " + selected.credit + " · " : ""}{selected.sourceName ?? "MyMemeCards"}{selected.year ? " · " + selected.year : ""}</small>
+        <p>{copies.has(selected.id) ? String(copies.get(selected.id)) + " exemplaire(s) obtenus" : selected.image ? "À découvrir en booster" : "Visuel indisponible · carte non distribuée"}</p>
+        {selected.sourceUrl ? <a href={selected.sourceUrl} target="_blank" rel="noreferrer">Voir le modèle source</a> : null}
+        {account && (copies.get(selected.id) ?? 0) > 0 && selected.image ? <button type="button" className="meme-create" onClick={() => setEditing(true)}>Créer un mème avec cette carte</button> : null}</div></>}
     </dialog> : null}
   </main>;
 }

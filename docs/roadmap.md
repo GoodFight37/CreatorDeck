@@ -1,5 +1,9 @@
 # Roadmap CreatorDeck
 
+## Corrections de la contre-expertise Gemini — 22 octobre 2026, local
+
+Sessions, autorisation refresh-live, focus Compte/Marché/Arène, export natif volumineux, dépendances mortes, portraits masqués dans l'export et champs tactiles corrigés localement. Tests : 1 343 unitaires, 240 écrans puis deux nouveaux cas Marché, 95 E2E réussis et neuf ignorés ; export natif de 21 Mo identique sur API 36. Build statique vert. Publication Auth/Edge en attente d'accord explicite ; travaux Imgflip exclus de toute publication implicite. Retrait client streamer et optimisations conditionnées à des mesures encore ouverts. [État précis et limites](corrections-gemini-2026-10-22.md).
+
 ## Navigation à trois objets — vérifications complémentaires du 22 octobre 2026
 
 Le commit publié `42df5b4` est vérifié à 1024 px et sur émulateur API 36 avec
@@ -13,6 +17,10 @@ isolée sur émulateur. Malik a ensuite autorisé le retrait complet du reset et
 le push ciblé sur main : exports clients retirés, migration 0061 sans effacement
 de données, application serveur prévue après CI verte.
 [Preuves, commandes et limites](verification-navigation-42df5b4.md).
+
+## Imgflip et créations locales — 21 octobre 2026
+
+Chantier `CreatorDeck-Codex-zgr` : raccordement du catalogue sous contrôle des droits et éditeur PNG/GIF depuis une carte possédée implémentés localement. L’inventaire serveur existant reste l’autorité ; aucune carte originale n’est modifiée. Douze parcours navigateur et un export GIF réellement enregistré sur émulateur Android sont validés. Publication retenue : contrôle général encore rouge (`CreatorDeck-Codex-xxo`) et droits des 200 médias Imgflip non établis. Les modèles non autorisés ne sont pas distribués. Détails et preuves dans [le guide](imgflip-editor.md) et le checkpoint courant.
 
 **Drop — nom `MEMES` sans accent (17 octobre 2026) :** libellés d’ouverture et
 de réserve alignés sur le sélecteur, à la demande de Malik (D-137). Vérifications

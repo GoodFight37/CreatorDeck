@@ -1,0 +1,13 @@
+// Application de test isolée : préserver les données de CreatorDeck installé.
+allprojects { project ->
+    project.plugins.withId('com.android.application') {
+        project.android.buildTypes.debug.applicationIdSuffix = '.memeeditor'
+    }
+}
+gradle.projectsEvaluated {
+    rootProject.subprojects { project ->
+        project.tasks.matching { it.name == 'processDebugGoogleServices' }.configureEach {
+            googleServicesJsonFiles.set([project.rootProject.file('../scripts/meme-editor-google-services.fixture.json')])
+        }
+    }
+}

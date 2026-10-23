@@ -1,3 +1,7 @@
+## D-GEMINI-20261022 — corriger les défauts prouvés et préserver la durabilité
+
+Après la contre-expertise, Malik demande les corrections. Refresh partagé par session/jeton et rejet des résultats périmés ; clés Edge reconnues explicitement ; confinement modal commun sans rendre l'ancêtre de la feuille inerte. Un essai Android volumineux prouve un crash de parcel Capacitor : préparer un fichier privé et retirer le base64 avant SAF. Les originaux des portraits restent versionnés, seuls leurs doublons masqués sont exclus de out/. La persistance immédiate, les gestes et le préchargement sonore sont conservés en attendant des mesures ; pas de purge serveur implicite de streamer, pas d'option lucide redondante. [Preuves et compromis](corrections-gemini-2026-10-22.md). Ce lot n'est pas publié au checkpoint ; la règle d'accord avant publication Auth/Supabase reste applicable.
+
 ## D-RESET-20261022 — retrait définitif de la remise à zéro
 
 Malik autorise explicitement le retrait complet puis le push ciblé sur main.
@@ -27,6 +31,16 @@ sans promettre un retour au Drop désormais supprimé. Aucun changement des
 verdicts, récompenses ou destinations. Régressions reproduites avant correction,
 tests d’écrans et navigateur après ; preuves :
 [vérification navigation](verification-navigation-42df5b4.md).
+
+## D-IMGFLIP-20261021 — créations locales et catalogue sous contrôle des droits
+
+À la demande de Malik : réutiliser le catalogue Mèmes et les possessions Supabase, conserver l’importateur SQLite séparé. `imgflip-<id>` isole les nouvelles identités. Le pont d’import exige des permissions documentées et une politique de rareté/numérotation explicite ; aucun des 200 modèles collectés n’est déclaré publiable par défaut. Il ne contacte pas Supabase et génère seulement des ajouts SQL à relire. Les justificatifs détaillés restent dans le fichier opérateur, pas dans le catalogue client.
+
+L’éditeur travaille localement sur une copie, relit `meme_status` avant de créer un fichier et ne modifie ni le catalogue ni les exemplaires. Canvas et le décodeur natif sont réutilisés ; seul `gifenc` est ajouté pour encoder les GIF. Durées/boucles conservées, aperçu pouvant être mis en pause, mouvement réduit respecté. Android réutilise le mécanisme de plugin maison pour `ACTION_CREATE_DOCUMENT`, sans permission globale de stockage. Pas d’appel Imgflip de génération, de serveur d’édition, d’inventaire parallèle ou de refonte des boosters. Preuves et limites : [imgflip-editor.md](imgflip-editor.md), checkpoint actuel. Publication retenue tant que les droits et le contrôle général ne sont pas validés.
+
+## D-158 — 22 octobre 2026 : archives Upscayl hors de public/, prototype retiré de l'export
+
+Contexte : l'audit du HEAD relève 20 Mo d'archives WebP copiées dans chaque export (`public/creators/upscaled/`) et la route `/catalogue-demo` présente dans `out/`. Décision : les 699 archives sortent de `public/` vers `archive/upscaled/` (suivies par git, non servies). Le test des archives lit ce nouveau dossier ; les JSON de surcharge gardent leurs chemins historiques, qui ne sont plus servis. `/catalogue-demo` reste disponible en développement et en E2E ; `scripts/prune-prototypes.mjs`, lancé après `next build`, retire `out/catalogue-demo*`. Preuves : `vitest` sur `creator-portraits.test.ts` (33/33), `tsc`, ESLint, `npm run build` (out/ passe de 111 à 92 Mo, sans `catalogue-demo*` ni `creators/upscaled`).
 
 ## D-157 — 19 octobre 2026 : fluidité de l'ouverture (branche fluidite-ouverture, PR)
 

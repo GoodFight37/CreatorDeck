@@ -84,7 +84,7 @@ describe("configuration du cloud", () => {
     expect(warnIfCloudMissing({ [URL_VAR]: "https://abcd.supabase.co", [KEY_VAR]: KEY }, () => {})).toBe(false);
     // Et il tourne **avant** la compilation, sinon le journal serait déjà écrit.
     const pkg = JSON.parse(readFileSync(path.join(process.cwd(), "package.json"), "utf8"));
-    expect(pkg.scripts.build).toBe("node scripts/cloud-guard.mjs && next build");
+    expect(pkg.scripts.build).toBe("node scripts/cloud-guard.mjs && next build && node scripts/prune-prototypes.mjs");
   });
 
   it("refuse une adresse ou une clé recopiées de travers", () => {

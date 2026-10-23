@@ -111,6 +111,7 @@
 .meme-inspect-copy h2 { margin: 5px 0 8px; font: 800 27px var(--font-display); }
 .meme-inspect-copy p:not(.meme-eyebrow) { color: #e4d3d8; line-height: 1.45; }
 .meme-inspect-copy small { color: #c6aeb9; }
+.meme-create { display: block; min-height: 44px; margin-top: 14px; padding: 10px 14px; border: 1px solid #8d6074; border-radius: 8px; background: #462536; color: #fff4ed; font: inherit; }
 @media (min-width: 700px) { .meme-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) {
   .meme-pack-object, .meme-pack-object::after { animation: none; }

@@ -46,7 +46,7 @@ export function MemeCard({ card, compact = false, copies = 0, interactiveFoil = 
       <div className="card-nameplate">
         <div className="card-identity">
           <span className="card-rarity-label">{rarity.label}</span>
-          <span className="card-region">Mèmes FR</span>
+          <span className="card-region">{card.sourceName ?? "Mèmes FR"}</span>
         </div>
         <h3 title={card.name}>{card.name}</h3>
         {!compact ? <div className="card-footerline"><span>ÉDITION MÈMES</span>{copies > 1 ? <strong>×{copies}</strong> : null}</div> : null}

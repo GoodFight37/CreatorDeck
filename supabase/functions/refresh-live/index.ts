@@ -48,6 +48,23 @@ const CLIENT_ID = Deno.env.get("TWITCH_CLIENT_ID") ?? "";
 const CLIENT_SECRET = Deno.env.get("TWITCH_CLIENT_SECRET") ?? "";
 const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/+$/, "");
 
+function environmentKeys(names: string[]): string[] {
+  return names.flatMap((name) => {
+    const raw = (Deno.env.get(name) ?? "").trim();
+    if (!raw) return [];
+    if (!name.endsWith("_KEYS")) return [raw];
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      const values = typeof parsed === "string" ? [parsed]
+        : parsed && typeof parsed === "object" ? Object.values(parsed) : [];
+      return values.filter((value): value is string => typeof value === "string" && Boolean(value));
+    } catch { return []; }
+  });
+}
+
+const PUBLIC_KEYS = environmentKeys(["SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEY", "SUPABASE_PUBLISHABLE_KEYS"]);
+const SERVER_KEYS = environmentKeys(["SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEY", "SUPABASE_SECRET_KEYS"]);
+
 /**
  * La clé qui écrit (rôle de service). Deux nomenclatures coexistent : l'ancienne
  * variable `SUPABASE_SERVICE_ROLE_KEY` (un JWT) et la nouvelle
@@ -56,17 +73,7 @@ const SUPABASE_URL = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/+$/, "");
  * n'explique rien.
  */
 function serviceKey(): string {
-  const legacy = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  if (legacy) return legacy;
-  const raw = Deno.env.get("SUPABASE_SECRET_KEYS") ?? "";
-  try {
-    const parsed = JSON.parse(raw) as Record<string, string>;
-    const first = parsed.default ?? Object.values(parsed)[0];
-    if (typeof first === "string" && first) return first;
-  } catch {
-    // Variable absente ou d'un autre format : on retombe sur « pas de clé ».
-  }
-  return "";
+  return SERVER_KEYS[0] ?? "";
 }
 
 const SERVICE_ROLE = serviceKey();
@@ -242,13 +249,11 @@ Deno.serve(async (req) => {
 
   const params = new URL(req.url).searchParams;
   const bearer = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "").trim();
-  const isService = Boolean(SERVICE_ROLE) && bearer === SERVICE_ROLE;
+  const isService = SERVER_KEYS.includes(bearer);
 
-  // Sans jeton, rien du tout. L'app en envoie un (sa clé anon) ; un navigateur
-  // sans en-tête ne peut plus déclencher la fonction. À doubler côté tableau de
-  // bord en activant « Verify JWT ».
-  if (!bearer) {
-    return json({ error: "Authorization requis (clé anon du projet)." }, 401);
+  // La clé publique autorise le cache public ; diagnostic et push restent privés.
+  if (!bearer || (!isService && !PUBLIC_KEYS.includes(bearer))) {
+    return json({ error: "Clé du projet requise." }, 401);
   }
 
   // Mode diagnostic : ne parle **pas** à Twitch, ne consomme pas de quota.

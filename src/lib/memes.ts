@@ -1,4 +1,5 @@
 import source from "@/data/memes-fr.json";
+import imgflip from "@/data/imgflip.json";
 
 export type MemeRarity = "common" | "rare" | "epic" | "legendary" | "mythic";
 
@@ -15,10 +16,12 @@ export type MemeCard = {
   year: number | null;
   fullArt: boolean;
   retired: boolean;
+  sourceName?: "Imgflip";
+  sourceUrl?: string;
 };
 
 /** Univers distinct : ces identifiants ne sont jamais des creatorSlug Twitch. */
-export const MEME_CARDS = source as MemeCard[];
+export const MEME_CARDS = [...source, ...imgflip] as MemeCard[];
 export const MEME_BY_ID = new Map(MEME_CARDS.map((card) => [card.id, card]));
 
 export const MEME_RARITY: Record<MemeRarity, { label: string; color: string }> = {

@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { useCloud } from "@/hooks/use-cloud";
+import { usePresentationFocus } from "@/hooks/use-presentation-focus";
 import { useLive } from "@/hooks/use-live";
 import { liveStore } from "@/lib/live-store";
 import { useGame } from "@/hooks/use-game";
@@ -83,6 +84,7 @@ export function AccountSheet({
   focus?: AccountFocus;
 }) {
   const cloud = useCloud();
+  const dialogRef = usePresentationFocus(true, undefined, onClose);
   const live = useLive();
   const state = useGame();
   // Le seul geste qui remplace une partie : il demande deux appuis (le bouton
@@ -112,7 +114,7 @@ export function AccountSheet({
   const pendingName = (nameDraft ?? cloud.displayName ?? "").trim();
 
   return (
-    <div className="odds-overlay" role="dialog" aria-modal="true" aria-label="Mon compte">
+    <div ref={dialogRef} tabIndex={-1} className="odds-overlay" role="dialog" aria-modal="true" aria-label="Mon compte">
       <div className="odds-panel">
         <header className="odds-head">
           <div>

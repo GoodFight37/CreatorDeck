@@ -4771,3 +4771,8 @@ input:focus-visible {
 .creator-card.rarity-legendary {
   box-shadow: 0 0 0 1px rgb(255 214 130 / .9), 0 0 18px rgb(255 189 69 / .6), 0 0 46px rgb(255 189 69 / .28), 0 14px 26px -16px rgb(0 0 0 / .95);
 }
+
+@media (pointer: coarse) {
+  .search-field input, .account-field input, .arena-search input,
+  .tribunal-search input, .save-editor textarea { font-size: 16px; }
+}

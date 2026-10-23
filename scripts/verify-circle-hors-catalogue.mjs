@@ -1,12 +1,12 @@
+import { assertPseudoDeTest } from "./lib/fixture-pseudo.mjs";
+
 /** Preuves 0060 sur le vrai Postgres jetable : une chaîne hors catalogue, sans carte. */
 export async function verifyCircleHorsCatalogue({ client, player, asPlayer, refuses, check, sql }) {
   await client.query(sql);
   const pool = (await client.query("select slug from public.creators where not retired order by slug limit 2")).rows.map(c => c.slug);
   const login = (await client.query("select lower(login) as l from public.creators where login is not null limit 1")).rows[0].l;
   const user = "60606060-0000-4000-8000-000000000001";
-  const name = "Chaîne 0060";
-  // Garde : display_name est limité à 24 caractères (0001_comptes_cloud.sql).
-  if ([...name].length > 24) throw new Error(`pseudo de test trop long : ${name}`);
+  const name = assertPseudoDeTest("Chaîne 0060");
   await player(user, name, []);
 
   // Préférée hors catalogue, puis une chaîne du catalogue.

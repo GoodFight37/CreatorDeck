@@ -10,11 +10,29 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-22-session-feuilles", date: "2026-10-22", title: "Une connexion plus fiable",
+    summary: "Les renouvellements de connexion se coordonnent, et les feuilles du compte, du marché et de l’Arène gardent le clavier.",
+    sections: [{ title: "Confort", items: [
+      "Une panne temporaire pendant le renouvellement de connexion ne supprime plus ta session.",
+      "Tab et Maj+Tab restent dans Mon compte, l’Hôtel des ventes et l’Arène. Échap ferme la feuille et rend le focus au bouton précédent.",
+      "Les champs de recherche et du compte sont plus lisibles sur écran tactile.",
+    ] }],
+  },
+  {
     id: "2026-10-22-reglages-clavier-retour-tribunal", date: "2026-10-22", title: "Des réglages plus faciles au clavier",
     summary: "Le clavier reste dans les Réglages, et fermer le bilan du Tribunal conserve ton écran.",
     sections: [{ title: "Navigation", items: [
       "Tab et Maj+Tab restent dans les Réglages. Échap ferme la feuille et rend le focus à l’engrenage.",
       "Le bilan du Tribunal propose Fermer le bilan : tu retrouves l’écran depuis lequel tu l’as ouvert.",
+    ] }],
+  },
+  {
+    id: "2026-10-21-createur-memes", date: "2026-10-21", title: "Crée un mème avec tes cartes",
+    summary: "Une carte Mèmes obtenue peut devenir une nouvelle création, sans changer ta carte.",
+    sections: [{ title: "Créations", items: [
+      "Ouvre une carte obtenue et choisis Créer un mème : ajoute plusieurs textes, déplace-les et règle leur taille et leur couleur.",
+      "Enregistre une nouvelle image. Les modèles GIF restent animés, avec leurs durées et leurs boucles.",
+      "Le texte et la création restent sur ton appareil. Ta carte et tes exemplaires sont conservés.",
     ] }],
   },
   {
