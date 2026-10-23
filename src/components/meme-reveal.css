@@ -22,6 +22,16 @@
   animation: meme-reveal-turn var(--meme-flip-ms) cubic-bezier(.2,.7,.2,1) var(--meme-flip-delay) both; }
 .meme-reveal-front, .meme-reveal-back { position: absolute; inset: 0; }
 .meme-reveal-front .meme-card { width: 100%; height: 100%; }
+/* Grande carte : le cartouche couvre ce qu'il y a dessous. Les mèmes portent
+   souvent leur légende incrustée dans l'image (« Nous dormissons ») ; un voile
+   plus sombre ne suffit pas — blanc sur bandeau noir, il garde son contraste.
+   Le flou noie le texte de l'image, le fond opaque rétablit le contraste du
+   nom. Le dégradé laisse l'image respirer en haut du cartouche. */
+.meme-reveal-front .meme-card .card-nameplate {
+  background: linear-gradient(180deg, rgb(10 9 14 / .55) 0%, rgb(10 9 14 / .93) 38%, rgb(9 8 13 / .985) 100%);
+  -webkit-backdrop-filter: blur(10px) saturate(.92);
+  backdrop-filter: blur(10px) saturate(.92);
+}
 .meme-reveal-front .meme-card .card-nameplate h3 {
   overflow: visible;
   overflow-wrap: anywhere;
@@ -78,6 +88,16 @@
 .meme-reveal-summary-grid > div:nth-child(4) { grid-column: 1 / 2; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid > div:nth-child(5) { grid-column: 2 / 3; margin-left: 48%; width: 100%; }
 .meme-reveal-summary-grid .creator-card { width: 100%; }
+/* Vignette du récapitulatif : le cartouche garde la taille du deck Mèmes.
+   La formule auto-ajustée des cartes Créateur (globals.css) sortait le titre à
+   22,5 px dans 97 px de large, coupé net ; quatre classes pour que l'ordre des
+   feuilles n'ait aucune importance. */
+.meme-reveal-summary-grid .creator-card.meme-card .card-nameplate h3 {
+  font-size: clamp(11px, 3.3vw, 15px);
+  /* Un nom plus long que la vignette finit par « … » au lieu d'être coupé net :
+     le sous-titre sous la carte porte le nom complet. */
+  text-overflow: ellipsis;
+}
 .meme-reveal-summary-grid span { display: block; margin-top: 5px; overflow-wrap: anywhere;
   font: 700 11px/1.2 var(--font-display); }
 /* Mouvement réduit : moins de déplacement, pas zéro retour visuel. La carte
