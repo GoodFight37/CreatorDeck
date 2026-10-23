@@ -1,0 +1,62 @@
+{
+  "$commentaire": "Briefs de génération audio (ElevenLabs), source unique du laboratoire /audio-lab et de scripts/elevenlabs-generate.mjs. Aucun fichier n'a encore été généré : les candidats iront dans public/music/candidates/ et public/sfx/candidates/, sans jamais écraser les originaux.",
+  "credits": {
+    "musiqueParMinute": 900,
+    "effetParGeneration": 200,
+    "planStarterMensuel": 30000
+  },
+  "musique": {
+    "modele": "music_v2_5",
+    "format": "mp3_44100_128",
+    "directions": [
+      {
+        "id": "douce-melodique",
+        "label": "Douce et mélodique",
+        "description": "Piano feutré et cordes douces, une mélodie simple qui se répète sans lasser — la lecture « carte postale » d'un jeu de collection.",
+        "prompt": "Gentle melodic ambient loop for a cozy card-collecting game: felt piano playing a simple, memorable four-bar melody, soft warm strings underneath, a hint of music box, slow and calm around 70 BPM, no drums, no percussion peaks, no vocals, seamless loop, low and even dynamics, pleasant over hours of play.",
+        "negativeStyles": ["electronic", "synthesizer arpeggios", "drums", "percussion", "vocals", "dramatic crescendos", "sudden changes"],
+        "longueurMs": 60000,
+        "variantes": 2,
+        "seeds": [101, 202]
+      },
+      {
+        "id": "chaude-accueillante",
+        "label": "Chaleureuse et accueillante",
+        "description": "Guitare acoustique et clavier chaud, l'ambiance d'un café tranquille où l'on ouvre ses boosters — conviviale sans être présente.",
+        "prompt": "Warm welcoming background loop for a friendly trading-card game: fingerpicked acoustic guitar, mellow Rhodes piano chords, soft upright bass, very light brushed percussion kept far in the background, relaxed groove around 85 BPM, no vocals, no solos, seamless loop, even gentle dynamics that never fight the sound effects.",
+        "negativeStyles": ["electronic", "synthesizers", "loud drums", "vocals", "jazz improvisation solos", "dramatic changes"],
+        "longueurMs": 60000,
+        "variantes": 2,
+        "seeds": [303, 404]
+      },
+      {
+        "id": "minimale-discrète",
+        "label": "Minimaliste, très discrète",
+        "description": "Nappes espacées et notes rares : à peine un souffle sonore, pour les longues sessions et les joueurs qui veulent presque du silence.",
+        "prompt": "Extremely discreet minimal ambient loop for long play sessions: very sparse soft synth pads, a single gentle plucked note every few seconds, lots of space and near-silence between sounds, around 60 BPM, no melody hooks, no drums, no vocals, seamless loop, extremely low and flat dynamics, designed to be almost unnoticed.",
+        "negativeStyles": ["melody hooks", "drums", "percussion", "vocals", "bright tones", "dynamic changes", "tension"],
+        "longueurMs": 60000,
+        "variantes": 2,
+        "seeds": [505, 606]
+      }
+    ]
+  },
+  "effets": {
+    "modele": "eleven_text_to_sound_v2",
+    "format": "wav_44100",
+    "sons": [
+      { "nom": "card-draw", "label": "Carte tirée / papier", "prompt": "A single playing card sliding out of a paper booster pack, soft paper swish, close and dry, no music", "dureeSecondes": 0.6, "variantes": 3 },
+      { "nom": "card-turn", "label": "Carte retournée / page", "prompt": "A thick trading card flipping over on a table, soft paper snap, warm and short, no music", "dureeSecondes": 0.6, "variantes": 3 },
+      { "nom": "pack-tear", "label": "Déchirure du sachet (nouveau)", "prompt": "Tearing open a foil trading-card booster pack, crinkly foil and paper rip, satisfying but gentle, no music", "dureeSecondes": 1.2, "variantes": 3 },
+      { "nom": "chip-place", "label": "Tampon / carte posée", "prompt": "A rubber stamp pressing softly onto paper, one warm wooden thud with a tiny resonance, no music", "dureeSecondes": 0.5, "variantes": 3 },
+      { "nom": "click", "label": "Tap d'interface", "prompt": "Very soft short user-interface tap, rounded and woody, quiet, like touching a polished wooden button, no music", "dureeSecondes": 0.3, "variantes": 3 },
+      { "nom": "select", "label": "Confirmation douce", "prompt": "Gentle confirmation blip, one warm sine tone with a soft harmonic, pleasant and very short, no music", "dureeSecondes": 0.4, "variantes": 3 },
+      { "nom": "pop", "label": "Pop d'ouverture", "prompt": "Soft bubble pop, round and friendly, like a soap bubble bursting close to the microphone, no music", "dureeSecondes": 0.4, "variantes": 3 },
+      { "nom": "close", "label": "Fermeture / refus doux", "prompt": "Soft dismissive tap, muted paper closing, low and gentle, not negative, no music", "dureeSecondes": 0.4, "variantes": 3 },
+      { "nom": "coins", "label": "Pièces / récompense encaissée", "prompt": "A few small coins dropping gently into a wooden bowl, warm and sparse, not a casino sound, no music", "dureeSecondes": 0.8, "variantes": 3 },
+      { "nom": "menu-open", "label": "Ouverture de feuille", "prompt": "Soft paper sheet sliding open, quiet airy whoosh, subtle and short, no music", "dureeSecondes": 0.5, "variantes": 3 },
+      { "nom": "chime", "label": "Carillon de récompense", "prompt": "Warm reward chime, two soft bell tones with natural decay, gentle and premium, no music box harshness, no music", "dureeSecondes": 1.0, "variantes": 3 },
+      { "nom": "reveal-shimmer", "label": "Scintillement de révélation (nouveau)", "prompt": "Delicate magical shimmer for a rare card reveal, soft sparkling harmonics rising gently, luxurious but quiet, no music", "dureeSecondes": 1.2, "variantes": 3 }
+    ]
+  }
+}

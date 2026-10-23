@@ -1,3 +1,10 @@
+# Checkpoint — identité sonore : audit + laboratoire, génération en attente (23 octobre 2026)
+
+- **Livré (branche `arena/a034535a-creatordeck`) :** audit complet `docs/audit-audio-2026-10-23.md` ; moteur enrichi (volumes musique/effets séparés persistés, défaut 1 = aucun changement d'écoute ; bascule de piste `MUSIC_TRACKS`/`setMusicTrack` avec fondu) ; laboratoire **`/audio-lab` dev-only** (retiré de l'export prod par `scripts/prune-prototypes.mjs`, `noindex`) : 3 directions + piste actuelle + silence, originaux contre variantes, vraies animations (déchirure, pack, raretés, Tribunal, scènes), sélections persistées `creatordeck.audio-lab.v1` ; briefs `src/data/audio-briefs.json` ; script `scripts/elevenlabs-generate.mjs` verrouillé (dry-run défaut, `--budget` obligatoire, clé env uniquement, jamais d'écrasement, sorties `public/{music,sfx}/candidates/`). Décision **D-161**.
+- **Aucune dépense :** 0 crédit ElevenLabs consommé, pas de clé configurée. Budget à faire valider par Malik : palier complet **12 600 crédits** (6 min de musique + 36 effets) dans un Starter 30 000/mois ; paliers musique seule 5 400, économique 9 900. Après validation + clé fournie en secret d'env. : générer, écouter au labo, choisir, puis intégrer (couture de boucle, `sfx-niveaux.mjs`, portes) — **jamais de prod sans son accord**.
+- **Ne pas rouvrir :** règle joueur « se déplacer ne sonne pas » (échantillons en réserve volontaires) ; silence BGM du Tribunal (choix dramatique) ; curseurs de volume dans les Réglages = décision Malik en attente (défaut : labo seul).
+- **Vérifications :** portes locales relancées sur la branche (voir le résumé de PR) ; aucun SQL, aucun taux, aucune note joueur (rien d'audible ne change pour les joueurs).
+
 # Checkpoint — raccordement client du booster Imgflip aux RPC 0062 (23 octobre 2026)
 
 - **État de la migration :** Malik confirme que `0062_imgflip_univers.sql` est **déjà appliquée en production**. Ne pas la réappliquer ; les mentions « pas encore appliquée » des checkpoints ci-dessous sont anciennes.
