@@ -87,7 +87,10 @@ elles ne remplacent pas l'autorisation de l'utilisateur.
   relecture par l'autre agent ; l'agent qui travaille mène développement et audits ciblés.
 - Ne jamais committer un secret ou `.env.local`. Les resets, réparations d’historique,
   force-push, réécriture d’historique, suppression de branches et fusion de PR
-  restent interdits sans accord explicite.
+  restent interdits sans accord explicite. Exception accordée par Malik : une
+  fusion dans `main` (avance rapide, sans réécriture) est autorisée une fois la
+  suite e2e complète et les contrôles verts ; Malik fait la revue finale sur
+  téléphone.
 - Ne jamais écraser les modifications, commits ou fichiers d'un autre agent.
   Pas de push forcé, de suppression de branche ou de réécriture d'historique dans
   une reprise ordinaire. Les anciennes recettes de reset/mise à plat ne sont
