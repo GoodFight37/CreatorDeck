@@ -15,7 +15,16 @@ Cloud simulé : 21/22 puis le cas en délai rejoué vert ; mesure des dos rendue
 indépendante du temps de capture PNG, relance MEMES/IMGFLIP **4/4 verte**.
 Aucune décision du point 7 prise.
 Résultats et commandes : [rapport du chantier](optimisation-2026-10-24.md).
-Suivi `CreatorDeck-Codex-blp`. Aucun commit/push de ce chantier à ce checkpoint.
+Code audité et poussé normalement sur `main` :
+[`2e48cd76`](https://github.com/GoodFight37/CreatorDeck/commit/2e48cd7633a35d20e130053ac37eb3ff8a5fe847).
+SHA distant vérifié. Vercel Production du même SHA vérifié **réussi** le
+24 octobre à 12:24 UTC : [déploiement](https://creator-deckk-pmkwwpp9v-hafsi37-2386.vercel.app),
+déploiement GitHub `7298546779`, statut `success`.
+[CI Vérification](https://github.com/GoodFight37/CreatorDeck/actions/runs/40093728855)
+encore en cours au relevé après publication ; SQL réussi, cinq autres jobs en cours.
+Ne pas annoncer cette CI verte. Suivi `CreatorDeck-Codex-blp` clôturé.
+Le commit documentaire de ce checkpoint se retrouve par
+`git log -1 --format=%H -- docs/agent-handoff.md`.
 
 # Passation Claude → Codex — optimisation de l'app après audits (24 octobre 2026)
 

@@ -166,8 +166,14 @@ La mémoire externe a été refusée par le contrôle de confidentialité : suiv
 
 ## État de reprise
 
-Checkpoint local : lots 1 à 6 vérifiés ; revue 8 terminée, tests cloud simulés et publication à terminer.
-Aucun commit/push de ce chantier à ce stade.
+Lots 1 à 6 vérifiés, revue 8 terminée ; tests cloud simulés et publication effectués.
+Code audité : [`2e48cd7633a35d20e130053ac37eb3ff8a5fe847`](https://github.com/GoodFight37/CreatorDeck/commit/2e48cd7633a35d20e130053ac37eb3ff8a5fe847),
+poussé normalement sur `main`, SHA distant vérifié.
+Vercel Production : déploiement GitHub `7298546779` de ce SHA, statut `success`
+le 24 octobre à 12:24 UTC, [application](https://creator-deckk-pmkwwpp9v-hafsi37-2386.vercel.app).
+[CI distante](https://github.com/GoodFight37/CreatorDeck/actions/runs/40093728855)
+encore en cours au relevé après publication : SQL réussi, cinq autres jobs en cours.
+Cette observation ne vaut pas résultat vert de la CI. Bead `CreatorDeck-Codex-blp` clôturé.
 Modifications préexistantes préservées : bloc Kyara de la passation, quatre
 captures Windows et fichiers non suivis. AVD `CreatorDeck_API36` démarré avec
 `-gpu host`, visible par ADB hors bac à sable.

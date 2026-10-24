@@ -2,7 +2,8 @@
 
 Périmètre demandé : PackTear, MemeReveal et booster-continuity. Référentiel :
 skills `review-animations` et `animation-performance` d'Emil Kowalski, fichiers
-installés et standards lus. Base `481d27a3`, corrections locales de ce chantier.
+installés et standards lus. Base `481d27a3`, corrections publiées dans
+[`2e48cd76`](https://github.com/GoodFight37/CreatorDeck/commit/2e48cd7633a35d20e130053ac37eb3ff8a5fe847).
 Pas de relecteur externe ni d'appel consommant un quota supplémentaire.
 
 ## Constats et corrections

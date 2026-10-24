@@ -6,8 +6,10 @@ boucles de reflets allégées, confort tactile et textes (MEMES confirmé par Ma
 Scripts initiaux mesurés : 2,87 → 1,14 Mo ; gestes Live et barres système vus
 sur APK/émulateur API 36. Unitaires 1218/1218, écrans 261/261 ; E2E complet
 exécuté et anciennes attentes corrigées, revue d'animations terminée avec
-protection du geste MEMES. Relances cloud MEMES/IMGFLIP 4/4 vertes ; publication
-à effectuer après revue du diff indexé.
+protection du geste MEMES. Relances cloud MEMES/IMGFLIP 4/4 vertes ; code publié
+dans [`2e48cd76`](https://github.com/GoodFight37/CreatorDeck/commit/2e48cd7633a35d20e130053ac37eb3ff8a5fe847),
+Vercel Production du même SHA vérifié réussi. CI distante encore en cours au
+relevé après publication ; ne pas la considérer comme verte.
 Les arbitrages du point 7 restent à Malik. [Mesures et preuves](optimisation-2026-10-24.md).
 
 **Imgflip serveur, 23 octobre 2026 :** migration 0062 préparée et validée sur
