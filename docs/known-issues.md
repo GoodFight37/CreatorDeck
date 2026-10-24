@@ -1,3 +1,30 @@
+## Booster parfait : récapitulatif encombré — ouvert, 24 octobre 2026
+
+**Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), à reprendre.**
+Malik signale qu'après un booster parfait (« God Pack » dans son message),
+les cartes sont difficiles à voir à cause de l'accumulation d'informations.
+Sa capture Android montre le récapitulatif 5/5 : quatre Épiques et une Légendaire.
+La version de l'APK n'est pas établie par la capture ; le checkout à réception
+est `main` `09cf4399`. Constat sur capture, pas une reproduction de l'agent.
+
+Éléments qui concurrencent les cartes : grand bandeau « BOOSTER PERFECT »,
+noms et raretés répétés sous les cartes, mentions « Nouvelle », encart Direct
+et spectateurs sur le portrait de HoneyPuu, minuterie du prochain sachet et halos.
+La demande est de redonner la priorité visuelle aux cinq cartes et aux portraits.
+
+Reprise : reproduire ce récapitulatif de manière contrôlée en local sur
+APK/émulateur, étudier la réduction des bandeaux et informations redondantes,
+puis vérifier petits écrans, mouvements réduits et captures avant/après.
+Ce sont des pistes, aucune solution graphique n'est arrêtée. Cause technique
+non diagnostiquée, aucun contournement validé et aucune correction effectuée.
+Malik demande d'abord de conserver ce signalement pour une reprise ultérieure.
+
+Points d'entrée repérés pour la reprise : `src/components/reveal-overlay.tsx`
+(récapitulatif et bandeau), `src/components/pack-end-live.tsx` (prochain sachet),
+`src/app/globals.css` (section Booster Perfect). Ce repérage n'établit pas la cause.
+
+![Capture fournie par Malik : récapitulatif encombré du booster parfait](images/bugs/2026-10-24-booster-parfait-recap.jpg)
+
 ## Révélation MEMES : doigt secondaire et sortie de carte — publié, 24 octobre 2026
 
 Base `481d27a3`, gravité P2 (geste). La revue du point 8 montre que le geste

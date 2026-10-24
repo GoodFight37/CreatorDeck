@@ -1,5 +1,13 @@
 # Checkpoint Codex — optimisation après audits (24 octobre 2026)
 
+**Nouveau signalement à reprendre (24 octobre) :** Malik trouve le récapitulatif
+du booster parfait (« God Pack ») trop chargé : bandeaux et informations répétées
+empêchent de bien voir les cartes. Suivi ouvert **`CreatorDeck-Codex-ohb`, P2**.
+[Constat et capture conservée](known-issues.md), image dans
+`docs/images/bugs/2026-10-24-booster-parfait-recap.jpg`.
+Demande actuelle : noter pour plus tard ; aucune correction ni solution graphique
+arrêtée. Reproduire sur APK/émulateur avant de modifier la hiérarchie du récapitulatif.
+
 Reprise sur `main` `481d27a3`, SHA distant vérifié, dix skills installés.
 Lots 1 et 2 terminés localement : 2/2 E2E, 16/16 tests boosters et builds analysés
 réussis ; avec le lot 3, scripts initiaux 2 872 291 → 1 135 000 octets et 6/6 E2E.
