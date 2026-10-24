@@ -110,7 +110,7 @@ export function NotificationsSheet({
             <Info size={15} />
             <div>
               <strong>{connecteToi("Le carnet")}</strong>
-              <span>Cette version est hors ligne : il n&apos;y a personne pour t&apos;écrire.</span>
+              <span>Les notifications arrivent avec un compte.</span>
             </div>
           </div>
         ) : !cloud.userId ? (

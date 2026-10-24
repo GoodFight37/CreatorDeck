@@ -1,37 +1,42 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import dynamic from "next/dynamic";
 
 import { X } from "lucide-react";
-import { AccountSheet } from "@/components/account-sheet";
 import { LoadingScreen, TopBar } from "@/components/app-chrome";
-import { CollectionView } from "@/components/binder-view";
 import { CircleOnboarding } from "@/components/circle-onboarding";
 import { AppUpdateBanner } from "@/components/app-update-banner";
 import { useCircle, writeCircle } from "@/lib/circle-store";
 import { HomeView } from "@/components/drop-view";
-import { MissionsView } from "@/components/missions-view";
 import { BinderObject, SachetObject, TargetObject } from "@/components/nav-objects";
-import { SettingsSheet } from "@/components/settings-sheet";
-import { ProfileView } from "@/components/profile-view";
 
-import { FriendsSheet } from "@/components/friends-sheet";
-import { MarketSheet } from "@/components/market-sheet";
-import { LastPackSheet } from "@/components/last-pack-sheet";
-import { ArenaSheet } from "@/components/arena-sheet";
-import { NotificationsSheet } from "@/components/notifications-sheet";
 import type { AccountFocus } from "@/lib/account-display";
 import type { InboxTarget } from "@/lib/social/inbox";
 import { friendsOpenedRecently } from "@/lib/social/inbox";
-import { AtelierView } from "@/components/atelier-view";
 
-import { PackTear } from "@/components/pack-tear";
-import { RevealOverlay } from "@/components/reveal-overlay";
-import { TribunalView, type TribunalPayout } from "@/components/tribunal-view";
-import { WishlistSheet } from "@/components/wishlist-sheet";
-import { PublicProfileSheet } from "@/components/public-profile-sheet";
-import { StudioSheet } from "@/components/studio-sheet";
-import { ThemeSheet } from "@/components/theme-sheet";
+import type { TribunalPayout } from "@/components/tribunal-view";
+
+const AccountSheet = dynamic(() => import("@/components/account-sheet").then(m => m.AccountSheet), { ssr: false });
+const CollectionView = dynamic(() => import("@/components/binder-view").then(m => m.CollectionView), { ssr: false });
+const MissionsView = dynamic(() => import("@/components/missions-view").then(m => m.MissionsView), { ssr: false });
+const SettingsSheet = dynamic(() => import("@/components/settings-sheet").then(m => m.SettingsSheet), { ssr: false });
+const ProfileView = dynamic(() => import("@/components/profile-view").then(m => m.ProfileView), { ssr: false });
+const FriendsSheet = dynamic(() => import("@/components/friends-sheet").then(m => m.FriendsSheet), { ssr: false });
+const MarketSheet = dynamic(() => import("@/components/market-sheet").then(m => m.MarketSheet), { ssr: false });
+const LastPackSheet = dynamic(() => import("@/components/last-pack-sheet").then(m => m.LastPackSheet), { ssr: false });
+const ArenaSheet = dynamic(() => import("@/components/arena-sheet").then(m => m.ArenaSheet), { ssr: false });
+const NotificationsSheet = dynamic(() => import("@/components/notifications-sheet").then(m => m.NotificationsSheet), { ssr: false });
+const AtelierView = dynamic(() => import("@/components/atelier-view").then(m => m.AtelierView), { ssr: false });
+const loadPackTear = () => import("@/components/pack-tear");
+const loadReveal = () => import("@/components/reveal-overlay");
+const PackTear = dynamic(() => loadPackTear().then(m => m.PackTear), { ssr: false });
+const RevealOverlay = dynamic(() => loadReveal().then(m => m.RevealOverlay), { ssr: false });
+const TribunalView = dynamic(() => import("@/components/tribunal-view").then(m => m.TribunalView), { ssr: false });
+const WishlistSheet = dynamic(() => import("@/components/wishlist-sheet").then(m => m.WishlistSheet), { ssr: false });
+const PublicProfileSheet = dynamic(() => import("@/components/public-profile-sheet").then(m => m.PublicProfileSheet), { ssr: false });
+const StudioSheet = dynamic(() => import("@/components/studio-sheet").then(m => m.StudioSheet), { ssr: false });
+const ThemeSheet = dynamic(() => import("@/components/theme-sheet").then(m => m.ThemeSheet), { ssr: false });
 
 import { useCloud, useCloudAutoSync } from "@/hooks/use-cloud";
 import { usePackOpening } from "@/hooks/use-pack-opening";
@@ -511,6 +516,8 @@ export function CreatorDeckApp() {
 
   function prepareLivePack() {
     if (!game || opening || sceneOpening || preparingLive || drawnCards.length) return;
+    void loadPackTear().catch(() => {});
+    void loadReveal().catch(() => {});
     setPresentationReturnFocus(document.activeElement instanceof HTMLElement ? document.activeElement : null);
     setTearKind("live");
     setPreparingLive(true);

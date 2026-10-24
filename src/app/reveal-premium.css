@@ -69,7 +69,7 @@
   top: 44%;
   left: 50%;
   width: min(145vw, 700px);
-  height: min(69vh, 500px);
+  height: min(69dvh, 500px);
   border: 2px solid rgb(var(--cinema-hot) / .43);
   border-radius: 50%;
   box-shadow:
@@ -82,7 +82,7 @@
 }
 .reveal-field-orbit-second {
   width: min(150vw, 760px);
-  height: min(83vh, 610px);
+  height: min(83dvh, 610px);
   border-color: rgb(var(--cinema-main) / .24);
   transform: translate(-50%, -50%) rotate(37deg) rotateX(72deg) scale(.59);
   animation-delay: calc(var(--rare-delay, 0ms) + 105ms);

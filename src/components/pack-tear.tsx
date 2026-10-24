@@ -16,6 +16,7 @@ type PeelFrame = {
   trace: { x: number; y: number }[];
   pull: { x: number; y: number; angle: number };
   cut: { start: number; end: number; progress: number; direction: number; origin: number };
+  tilt: { x: number; y: number };
 };
 
 /**
@@ -52,7 +53,8 @@ export function PackTear({
   const [cut, setCut] = useState({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
   const [trace, setTrace] = useState<{ x: number; y: number }[]>([]);
   const [returning, setReturning] = useState(false);
-  const [pull, setPull] = useState({ x: 0, y: 0, angle: 0 });
+  const pull = useRef({ x: 0, y: 0, angle: 0 });
+  const topRef = useRef<HTMLDivElement>(null);
   const pullProgress = useRef(0);
   // Les mouvements du doigt arrivent plus vite que l'écran : un seul rendu par image.
   const peelFrame = useRef<{ id: number; next: PeelFrame | null }>({ id: 0, next: null });
@@ -66,7 +68,14 @@ export function PackTear({
       frame.next = null;
       if (!latest) return;
       setTrace(latest.trace);
-      setPull(latest.pull);
+      pull.current = latest.pull;
+      const top = topRef.current;
+      if (top) {
+        top.style.transform = `translate3d(${latest.pull.x}px, ${latest.pull.y}px, ${latest.cut.progress / 100 * 22}px) rotateX(${latest.cut.progress / 100 * 42}deg) rotateZ(${latest.pull.angle}deg)`;
+      }
+      if (sceneRef.current && cardEffectsAllowed()) {
+        sceneRef.current.style.transform = `translate(-50%, -50%) perspective(900px) rotateX(${latest.tilt.x + 1.5}deg) rotateY(${latest.tilt.y - 4}deg)`;
+      }
       setCut(latest.cut);
     });
   }, []);
@@ -131,9 +140,12 @@ export function PackTear({
     start.current = null;
     cancelScheduledCut();
     sceneRef.current?.classList.remove("is-pulling");
-    sceneRef.current?.style.removeProperty("--opening-tilt-x");
-    sceneRef.current?.style.removeProperty("--opening-tilt-y");
-    sceneRef.current?.style.removeProperty("--opening-light-x");
+    sceneRef.current?.style.removeProperty("transform");
+    const top = topRef.current;
+    top?.style.removeProperty("transform");
+    top?.style.setProperty("--peel-x", `${pull.current.x}px`);
+    top?.style.setProperty("--peel-y", `${pull.current.y}px`);
+    top?.style.setProperty("--peel-angle", `${pull.current.angle}deg`);
     sceneRef.current?.style.setProperty("--peel-release", String(pullProgress.current));
     setCut((current) => ({ ...current, start: 4, end: 96, progress: 100 }));
     setOpened(true);
@@ -185,14 +197,13 @@ export function PackTear({
     cancelScheduledCut();
     if (done.current) return;
     sceneRef.current?.classList.remove("is-pulling");
-    for (const key of ["--opening-tilt-x", "--opening-tilt-y", "--opening-light-x"]) {
-      sceneRef.current?.style.removeProperty(key);
-    }
+    sceneRef.current?.style.removeProperty("transform");
+    topRef.current?.style.removeProperty("transform");
     pullProgress.current = 0;
     setReturning(true);
     setReleaseReady(false);
     setTrace([]);
-    setPull({ x: 0, y: 0, angle: 0 });
+    pull.current = { x: 0, y: 0, angle: 0 };
     setCut({ start: 7, end: 7, progress: 0, direction: 1, origin: 7 });
   };
 
@@ -244,9 +255,6 @@ export function PackTear({
             "--peel-progress": cut.progress / 100,
             "--peel-direction": cut.direction,
             "--peel-origin-x": `${cut.origin}%`,
-            "--peel-x": `${pull.x}px`,
-            "--peel-y": `${pull.y}px`,
-            "--peel-angle": `${pull.angle}deg`,
             "--cut-top": `polygon(0% 0%, 100% 0%, 100% 15.45%, ${[...edge].reverse().map((point) => `${point.x}% ${point.y}%`).join(", ") || "0% 15.45%"}, 0% 15.45%)`,
             "--cut-body": `polygon(0% 15.45%, ${boundary}, 100% 15.45%, 100% 100%, 0% 100%)`,
           } as CSSProperties}
@@ -281,7 +289,7 @@ export function PackTear({
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
             <span className="pack-bulge" />
           </div>
-          <div className="foil-top-piece" aria-hidden="true">
+          <div ref={topRef} className="foil-top-piece" aria-hidden="true">
             <Image src={artwork} alt="" fill sizes="(max-width:438px) 64vw, 280px" className="foil-printed-art" priority />
           </div>
           <svg className="foil-cut-trace" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -324,7 +332,8 @@ export function PackTear({
               setReturning(false);
               setReleaseReady(false);
               setTrace([point]);
-              setPull({ x: 0, y: 0, angle: 0 });
+              pull.current = { x: 0, y: 0, angle: 0 };
+              for (const key of ["--peel-x", "--peel-y", "--peel-angle"]) topRef.current?.style.removeProperty(key);
               sceneRef.current?.classList.add("is-pulling");
               pullProgress.current = 0;
               setCut({ start: point.x, end: point.x, progress: 0, direction: 1, origin: point.x });
@@ -382,14 +391,11 @@ export function PackTear({
                   direction: dx >= 0 ? 1 : -1,
                   origin: gesture.percent,
                 },
+                tilt: {
+                  x: -Math.max(-1, Math.min(1, dy / bounds.height)) * 5,
+                  y: Math.max(-1, Math.min(1, dx / bounds.width)) * 7,
+                },
               });
-
-              const scene = sceneRef.current;
-              if (scene && cardEffectsAllowed()) {
-                scene.style.setProperty("--opening-tilt-x", `${-Math.max(-1, Math.min(1, dy / bounds.height)) * 5}deg`);
-                scene.style.setProperty("--opening-tilt-y", `${Math.max(-1, Math.min(1, dx / bounds.width)) * 7}deg`);
-                scene.style.setProperty("--opening-light-x", `${point.x}%`);
-              }
 
               // Require a broad stroke plus lift/aperture so a tap or tiny
               // local scratch cannot fold the entire flap.

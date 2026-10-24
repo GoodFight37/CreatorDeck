@@ -134,7 +134,7 @@ export function SettingsSheet({
 
         <section className="menu-group" aria-label="Son et affichage">
           <h3>Son et affichage</h3>
-          <Switch label="Son de l’application" on={soundOn} onToggle={() => { setSoundOn(!soundOn); setMuted(soundOn); }} />
+          <Switch label="Sons et vibrations" on={soundOn} onToggle={() => { setSoundOn(!soundOn); setMuted(soundOn); }} />
           <Switch label="Musique" on={musicOn} onToggle={() => { setMusicOn(!musicOn); setMusicMuted(musicOn); }} />
           <Switch label="Reflets des cartes" on={tiltOn} onToggle={() => { setTiltOn(!tiltOn); setTiltEnabled(!tiltOn); }} />
           <button type="button" className="menu-row" onClick={onShowThemes}>

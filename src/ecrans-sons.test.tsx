@@ -29,19 +29,19 @@ describe("le réglage du son", () => {
   async function ecranToi() {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
-    banc.appuyerNom(/^Réglages/);
+    await banc.appuyerNomEtAttendre(/^Réglages/);
   }
 
   function switches() {
     return [...document.querySelectorAll<HTMLButtonElement>('.menu-row[role="switch"]')].filter(
-      (bouton) => bouton.textContent?.includes("Son de l’application") || bouton.textContent?.includes("Musique"),
+      (bouton) => bouton.textContent?.includes("Sons et vibrations") || bouton.textContent?.includes("Musique"),
     );
   }
 
   it("montre deux interrupteurs indépendants, sans réglage de volume", async () => {
     await ecranToi();
     expect(switches().map((bouton) => bouton.textContent?.trim())).toEqual([
-      "Son de l’application",
+      "Sons et vibrations",
       "Musique",
     ]);
     expect(switches().map((bouton) => bouton.getAttribute("aria-checked"))).toEqual(["true", "true"]);
@@ -51,12 +51,12 @@ describe("le réglage du son", () => {
 
   it("garde les choix séparément et ne coupe pas l'autre canal", async () => {
     await ecranToi();
-    banc.appuyer("Musique");
+    await banc.appuyerEtAttendre("Musique");
     expect(window.localStorage.getItem("creatordeck.music-muted")).toBe("1");
     expect(switches()[0]?.getAttribute("aria-checked")).toBe("true");
     expect(switches()[1]?.getAttribute("aria-checked")).toBe("false");
 
-    banc.appuyer("Son de l’application");
+    await banc.appuyerEtAttendre("Sons et vibrations");
     expect(window.localStorage.getItem("creatordeck.muted")).toBe("1");
     expect(switches().map((bouton) => bouton.getAttribute("aria-checked"))).toEqual(["false", "false"]);
   });
@@ -72,18 +72,18 @@ describe("le réglage du son", () => {
 
     // Un tour complet des onglets, dans les deux sens.
     banc.fermer();
-    for (const onglet of ["Binder", "Atelier", "Drop", "Objectifs", "Drop"]) banc.appuyer(onglet);
+    for (const onglet of ["Binder", "Atelier", "Drop", "Objectifs", "Drop"]) await banc.appuyerEtAttendre(onglet);
     // Puis les portes de l'écran Toi : le compte, les objectifs, le
     // classeur de thèmes — celles qui ouvrent une feuille et celles qui changent
     // d'écran, toutes muettes.
     for (const porte of ["Mon compte", "Thème du classeur"]) {
-      banc.appuyerNom(/^Réglages/);
-      banc.appuyer(new RegExp(`^${porte}`));
+      await banc.appuyerNomEtAttendre(/^Réglages/);
+      await banc.appuyerEtAttendre(new RegExp(`^${porte}`));
       // Le bouton « Fermer » d'une feuille n'a pas de texte : il se nomme.
       act(() => [...document.querySelectorAll<HTMLButtonElement>('button[aria-label="Fermer"]')].at(-1)!.click());
       if (document.querySelector('.settings-overlay')) banc.fermer();
     }
-    banc.appuyer("Objectifs");
+    await banc.appuyerEtAttendre("Objectifs");
 
     expect(sons.oscillateurs + sons.bruitages, "un déplacement a sonné").toBe(avant);
   });
@@ -94,7 +94,7 @@ describe("le réglage du son", () => {
     const sons = (globalThis as unknown as { __sons: { oscillateurs: number; bruitages: number } })
       .__sons;
     banc.fermer();
-    banc.appuyer("Binder");
+    await banc.appuyerEtAttendre("Binder");
     const avant = sons.oscillateurs + sons.bruitages;
 
     // L'album n'a plus de filtres ; chercher un nom est de la navigation muette,
@@ -104,11 +104,11 @@ describe("le réglage du son", () => {
     banc.saisir(champ, "a");
     banc.saisir(champ, "");
     expect(sons.oscillateurs + sons.bruitages, "la recherche a sonné").toBe(avant);
-    banc.appuyer("Suivant");
+    await banc.appuyerEtAttendre("Suivant");
     expect(sons.oscillateurs + sons.bruitages, "la page n'a pas sonné").toBe(avant + 1);
     // jsdom ne joue pas le tour de feuille : attendre son filet de sécurité.
     await act(async () => { await vi.advanceTimersByTimeAsync(420); });
-    banc.appuyer("Précédent");
+    await banc.appuyerEtAttendre("Précédent");
 
     expect(sons.oscillateurs + sons.bruitages, "le retour de page n'a pas sonné").toBe(avant + 2);
   });
@@ -124,21 +124,21 @@ describe("le réglage du son", () => {
     await act(async () => {});
     const avant = sons.oscillateurs + sons.bruitages;
 
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1_500);
     });
 
     // Le premier appui ne déchire rien : le son doit attendre le geste.
     expect(sons.oscillateurs + sons.bruitages, "le son a joué avant la déchirure").toBe(avant);
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     expect(sons.oscillateurs + sons.bruitages, "la déchirure n'a rien joué").toBeGreaterThan(avant);
   });
 
   it("coupe les sons du jeu sans ajouter de contrôle de volume", async () => {
     await ecranToi();
     expect(switches()[0]?.getAttribute("aria-checked")).toBe("true");
-    banc.appuyer("Son de l’application");
+    await banc.appuyerEtAttendre("Sons et vibrations");
     expect(switches()[0]?.getAttribute("aria-checked")).toBe("false");
     expect(switches()[1]?.getAttribute("aria-checked")).toBe("true");
     expect(document.querySelector(".sound-row")).toBeNull();

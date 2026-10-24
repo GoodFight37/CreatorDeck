@@ -11,7 +11,7 @@ import { useMemeBooster } from "@/hooks/use-meme-booster";
 import { useImgflipBooster } from "@/hooks/use-imgflip-booster";
 import { MemeCollectionLink, MemePackComposition } from "@/components/meme-pack-parts";
 
-// Chargé seulement à l'ouverture d'un booster Mèmes : l'accueil ne paie pas PackTear ni MemeReveal.
+// Chargé seulement à l'ouverture d'un booster MEMES : l'accueil ne paie pas PackTear ni MemeReveal.
 const MemeBoosterOpening = lazy(() => import("@/components/meme-booster-opening").then((m) => ({ default: m.MemeBoosterOpening })));
 
 import { useCloud } from "@/hooks/use-cloud";
@@ -132,11 +132,11 @@ export function HomeView({
   const liveLabel = needsLogin ? "Se connecter pour ouvrir" : needsAccount ? "Essayer" : stock > 0 ? "Ouvrir le booster"
     : promoPacks > 0 ? "Ouvrir un booster de test" : nextAt !== null ? `Prochain sachet à ${formatClock(nextAt)}` : "Prochain sachet bientôt";
   const memeNextAt = memes.status?.nextAt ? Date.parse(memes.status.nextAt) : null;
-  const memeLabel = !memes.account ? "Se connecter pour ouvrir MEMES" : memes.busy ? "Ouverture…"
+  const memeLabel = !memes.account ? "Connecte-toi pour ouvrir MEMES" : memes.busy ? "Ouverture…"
     : !memes.status ? "Lecture de ta réserve…" : memes.status.stock < 1
       ? memeNextAt !== null ? `Prochain MEMES à ${formatClock(memeNextAt)}` : "Prochain MEMES bientôt" : "Ouvrir le booster MEMES";
   const imgflipNextAt = imgflip.status?.nextAt ? Date.parse(imgflip.status.nextAt) : null;
-  const imgflipLabel = !imgflip.account ? "Se connecter pour ouvrir IMGFLIP" : imgflip.busy ? "Ouverture…"
+  const imgflipLabel = !imgflip.account ? "Connecte-toi pour ouvrir IMGFLIP" : imgflip.busy ? "Ouverture…"
     : !imgflip.status ? "Lecture de ta réserve…" : imgflip.status.stock < 1
       ? imgflipNextAt !== null ? `Prochain IMGFLIP à ${formatClock(imgflipNextAt)}` : "Prochain IMGFLIP bientôt" : "Ouvrir le booster IMGFLIP";
   // Un seul geste ouvre : le sachet. Dessous, une ligne dit ce qu'on a et quand revient le prochain.
@@ -155,7 +155,7 @@ export function HomeView({
           >
             <Hourglass size={18} />
             <span>{usingHourglass ? "Utilisation…" : stock >= pack.max && stock < pack.maxWithHourglass
-              ? "Utiliser 1 sablier · passer à 5/4"
+              ? "Utiliser 1 sablier · ajouter un sachet bonus"
               : "Utiliser 1 sablier · avancer de 15 min"}</span>
             <strong>{game.player.hourglasses}</strong>
           </button>
@@ -204,7 +204,7 @@ export function HomeView({
       {/* En-tête concis : zéro blabla marketing */}
       {lean ? <h1 className="sr-only">Drop</h1> : (
         <header className="drop-intro">
-          <div className="drop-edition"><span>EDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
+          <div className="drop-edition"><span>ÉDITION {String(CATALOG_EDITION_NUMBER).padStart(2, "0")}</span></div>
           <h1>Drop</h1>
         </header>
       )}
@@ -220,7 +220,7 @@ export function HomeView({
         ) : null}
         {!lean ? (
           <details className="drop-secondary-details">
-            <summary>More info</summary>
+            <summary>Réserve et sabliers</summary>
             {reserveControls}
           </details>
         ) : null}
@@ -243,7 +243,7 @@ export function HomeView({
       {lean && missingCircle(circle, ownedSlugs).length === 0 ? (
         <p role="status" className="drop-circle-complete">Ton cercle est complet. Les boosters s’ouvrent au classement.</p>
       ) : null}
-      <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve Mèmes">
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "memes"} aria-label="Réserve MEMES">
         <p className="meme-booster-reserve stock-row" aria-live="polite">
           {memes.status ? memes.status.stock > 0
             ? `${memes.status.stock} MEMES${memeNextAt !== null ? ` · prochain à ${formatClock(memeNextAt)}` : ""}`
@@ -257,7 +257,7 @@ export function HomeView({
         <MemeCollectionLink />
       </section>
       {memes.presenting ? <Suspense fallback={null}><MemeBoosterOpening booster={memes} /></Suspense> : null}
-      <section className="meme-booster-panel booster-panel" hidden={universe !== "imgflip"} aria-label="Réserve Imgflip">
+      <section className="meme-booster-panel booster-panel" hidden={universe !== "imgflip"} aria-label="Réserve IMGFLIP">
         <p className="imgflip-booster-reserve stock-row" aria-live="polite">
           {imgflip.status ? imgflip.status.stock > 0
             ? `${imgflip.status.stock} IMGFLIP${imgflipNextAt !== null ? ` · prochain à ${formatClock(imgflipNextAt)}` : ""}`

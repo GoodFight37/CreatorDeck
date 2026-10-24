@@ -21,7 +21,7 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
   // Un seul élément qui tourne : le dos, puis le recto au milieu du tour.
   const effects = cardEffectsAllowed();
   const [showBack, setShowBack] = useState(effects);
-  const start = useRef<{ x: number; y: number } | null>(null);
+  const start = useRef<{ x: number; y: number; pointerId: number } | null>(null);
   const special = card.rarity === "rare" || card.rarity === "epic" || card.rarity === "legendary" || card.rarity === "mythic";
   const duration = effects ? special ? 1_080 : 280 : 0;
   const delay = effects ? number === 4 ? 360 : special ? 210 : 0 : 0;
@@ -45,8 +45,9 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
 
   function endGesture(event: PointerEvent<HTMLDivElement>) {
     const gesture = start.current;
+    if (!gesture || gesture.pointerId !== event.pointerId) return;
     start.current = null;
-    if (!gesture || !ready) return;
+    if (!ready) return;
     const dx = event.clientX - gesture.x;
     const dy = event.clientY - gesture.y;
     if (Math.abs(dx) >= 36 || dy <= -36 || Math.hypot(dx, dy) < 8) onAdvance();
@@ -56,8 +57,14 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     <p className="meme-reveal-counter">CARTE {number + 1} / 5</p>
     <div className={`meme-reveal-aura rarity-${card.rarity}`} aria-hidden="true" />
     <div className="meme-reveal-card-wrap" onPointerDown={(event) => {
-      if (event.button === 0 && event.isPrimary !== false) start.current = { x: event.clientX, y: event.clientY };
-    }} onPointerUp={endGesture} onPointerCancel={() => { start.current = null; }}>
+      if (start.current || event.button !== 0 || event.isPrimary === false) return;
+      start.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* capture */ }
+    }} onPointerUp={endGesture} onPointerCancel={(event) => {
+      if (start.current?.pointerId === event.pointerId) start.current = null;
+    }} onLostPointerCapture={(event) => {
+      if (start.current?.pointerId === event.pointerId) start.current = null;
+    }}>
       <div className={`meme-reveal-flip rarity-${card.rarity}${special ? "" : " is-quick"}`} style={{ "--meme-flip-ms": `${duration}ms`, "--meme-flip-delay": `${delay}ms`, "--rarity": MEME_RARITY[card.rarity].color } as CSSProperties}>
         {showBack
           // Le dos des cartes sorties du sachet, emblème compris : la carte qu'on retourne est la même.
@@ -68,7 +75,7 @@ function MemeRevealCard({ card, number, copies, onAdvance }: {
     <p className="meme-reveal-rarity">{ready ? MEME_RARITY[card.rarity].label : ""}</p>
     <p className="meme-reveal-gesture" aria-hidden="true">{ready ? "GLISSE LA CARTE" : ""}</p>
     <button className="meme-reveal-next" type="button" disabled={!ready} onClick={onAdvance}>
-      {ready ? number === 4 ? "SEE THE 5 CARDS" : "NEXT CARD" : "REVEALING…"}
+      {ready ? number === 4 ? "VOIR LES 5 CARTES" : "CARTE SUIVANTE" : "RÉVÉLATION…"}
     </button>
   </>;
 }
@@ -88,7 +95,7 @@ export function MemeReveal({ cards, copies, onClose }: {
     return () => window.clearTimeout(timer);
   }, [summary]);
 
-  return <section className={`meme-reveal-flow${summary ? " is-summary" : ""}`} aria-label="Résultat du booster Mèmes">
+  return <section className={`meme-reveal-flow${summary ? " is-summary" : ""}`} aria-label="Résultat du booster MEMES">
     {summary ? <>
       <div className="meme-reveal-summary-title"><span>BOOSTER OUVERT</span><h2>Tes 5 cartes</h2></div>
       <div className="meme-reveal-summary-grid">{cards.map((card, i) =>

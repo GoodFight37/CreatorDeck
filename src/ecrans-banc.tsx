@@ -9,6 +9,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { vi } from "vitest";
 
 /** Dossier où les écrans sont recopiés quand `ECRANS_DUMP` est défini. */
 const DUMP = process.env.ECRANS_DUMP;
@@ -82,6 +83,14 @@ export function creerBanc() {
     });
   }
 
+  /** Les feuilles chargées à la demande arrivent après l'appui. */
+  async function appuyerEtAttendre(libelle: string | RegExp) {
+    await act(async () => {
+      appuyer(libelle);
+      await vi.dynamicImportSettled();
+    });
+  }
+
   /**
    * Un appui **par nom accessible** : le socle d'un invité est un bouton sans
    * texte (le « + » n'est qu'un dessin), son nom est son `aria-label`.
@@ -100,6 +109,13 @@ export function creerBanc() {
     }
     act(() => {
       cible.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+  }
+
+  async function appuyerNomEtAttendre(nom: string | RegExp) {
+    await act(async () => {
+      appuyerNom(nom);
+      await vi.dynamicImportSettled();
     });
   }
 
@@ -139,7 +155,9 @@ export function creerBanc() {
     rendre,
     ecran,
     appuyer,
+    appuyerEtAttendre,
     appuyerNom,
+    appuyerNomEtAttendre,
     saisir,
     fermer,
     boutons,

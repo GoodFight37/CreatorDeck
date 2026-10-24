@@ -1,3 +1,22 @@
+# Checkpoint Codex — optimisation après audits (24 octobre 2026)
+
+Reprise sur `main` `481d27a3`, SHA distant vérifié, dix skills installés.
+Lots 1 et 2 terminés localement : 2/2 E2E, 16/16 tests boosters et builds analysés
+réussis ; avec le lot 3, scripts initiaux 2 872 291 → 1 135 000 octets et 6/6 E2E.
+Lot 4 vérifié sur navigateur et APK/émulateur API 36 avec vrais gestes tactiles.
+Lot 5 vérifié (cibles mesurées à 44 px, barre système sombre sur l'APK).
+Lot 6 appliqué, harmonisation globale MEMES explicitement confirmée par Malik.
+Revue 8 terminée, geste MEMES protégé contre le second doigt et la perte de
+capture. Trois modes MEMES vérifiés dans Chrome Android sur émulateur, fixture
+retirée de l'application. Unitaires 1218/1218, écrans 261/261, typecheck, lint,
+jargon, catalogue, build et APK réussis. E2E complet exécuté : 205 réussis,
+29 ignorés, quatre anciennes attentes corrigées puis 4/4 rejouées vertes.
+Cloud simulé : 21/22 puis le cas en délai rejoué vert ; mesure des dos rendue
+indépendante du temps de capture PNG, relance MEMES/IMGFLIP **4/4 verte**.
+Aucune décision du point 7 prise.
+Résultats et commandes : [rapport du chantier](optimisation-2026-10-24.md).
+Suivi `CreatorDeck-Codex-blp`. Aucun commit/push de ce chantier à ce checkpoint.
+
 # Passation Claude → Codex — optimisation de l'app après audits (24 octobre 2026)
 
 **Base :** `main` après le commit « fix(drop): sachet opaque en chargement et reflet holographique sans repeinture » (SHA dans `git log`). Malik veut que tout soit optimisé (vitesse, fluidité, design, textes, agencement, réglages) et ne peut pas filmer : chaque gain annoncé doit dire s'il est mesuré ou seulement lu dans le code.

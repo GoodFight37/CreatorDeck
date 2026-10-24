@@ -6,7 +6,6 @@ import { CloudApi, CloudError } from "@/lib/cloud/api";
 import type { MemeOpening, MemeStatus } from "@/lib/cloud/api/memes";
 import { cloudConfig } from "@/lib/cloud/config";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { MEME_BY_ID } from "@/lib/memes";
 import { deviceStorage } from "@/lib/storage";
 
 const PENDING_PREFIX = "creatordeck.meme.pending:";
@@ -26,7 +25,7 @@ const empty = (owner: string | null): State => ({
   owner, status: null, problem: "", notice: "", phase: "closed", result: null,
   extracted: false, left: false, pending: false, focus: null,
 });
-const message = (error: unknown) => error instanceof Error ? error.message : "Les Mèmes ne répondent pas. Réessaie.";
+const message = (error: unknown) => error instanceof Error ? error.message : "Les boosters MEMES ne répondent pas. Réessaie.";
 
 /** La présentation ne tire rien. La même requête est reprise après une réponse perdue. */
 export function useMemeBooster() {
@@ -111,7 +110,10 @@ export function useMemeBooster() {
     try {
       const requestId = storage?.getItem(key) ?? crypto.randomUUID();
       storage?.setItem(key, requestId);
-      const result = await api.openMemePack(requestId);
+      const [result, { MEME_BY_ID }] = await Promise.all([
+        api.openMemePack(requestId),
+        import("@/lib/memes"),
+      ]);
       if (revision.current !== version || cloudStore.getSnapshot().userId !== owner) return;
       if (result.cards.some((id) => !MEME_BY_ID.has(id))) throw new Error("Une carte du booster manque au catalogue. Recharge la page.");
       // The server's result is usable even if refreshing the collection fails.
@@ -120,7 +122,7 @@ export function useMemeBooster() {
       setState((value) => ({ ...value, result,
         status: value.status ? { ...value.status, stock: result.stock, nextAt: result.nextAt } : null,
         phase: value.left ? "closed" : "opening",
-        notice: value.left ? "Booster ouvert : retrouve tes cartes dans le classeur Mèmes." : "",
+        notice: value.left ? "Booster ouvert : retrouve tes cartes dans le classeur MEMES." : "",
       }));
       await refresh();
     } catch (error) {
@@ -148,8 +150,8 @@ export function useMemeBooster() {
     close: () => setState((value) => ({ ...value, phase: "closed", result: null, extracted: false })),
     leavePending: () => setState((value) => ({ ...value, left: true, phase: "closed",
       notice: value.result
-        ? "Booster ouvert : retrouve tes cartes dans le classeur Mèmes."
-        : "Le tirage continue. Retrouve les cartes dans le classeur Mèmes." })),
+        ? "Booster ouvert : retrouve tes cartes dans le classeur MEMES."
+        : "Le tirage continue. Retrouve les cartes dans le classeur MEMES." })),
   };
 }
 export type MemeBooster = ReturnType<typeof useMemeBooster>;

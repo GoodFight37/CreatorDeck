@@ -25,8 +25,8 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
 
   const { CreatorDeckApp } = await import("@/components/creator-deck-app");
   await banc.monter(<CreatorDeckApp />);
-  banc.appuyerNom(/^Réglages/);
-  banc.appuyer(/^Mon compte/);
+  await banc.appuyerNomEtAttendre(/^Réglages/);
+  await banc.appuyerEtAttendre(/^Mon compte/);
   expect(document.querySelector('[role="dialog"][aria-label="Mon compte"]')).toBeTruthy();
 
   connection.userId = "11111111-1111-4111-8111-111111111111";
@@ -39,8 +39,8 @@ it("attend la fermeture du compte avant de montrer le tutoriel du nouveau joueur
   if (document.querySelector(".settings-overlay")) banc.fermer();
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeTruthy();
   banc.saisir(document.querySelector<HTMLInputElement>(".circle-form input")!, "ibai, ninja, rubius");
-  banc.appuyer("Ajouter");
-    await act(async () => { banc.appuyer("Voir mon premier booster"); });
+  await banc.appuyerEtAttendre("Ajouter");
+    await act(async () => { await banc.appuyerEtAttendre("Voir mon premier booster"); });
   expect(cloudStore.completeTutorial).toHaveBeenCalledOnce();
   expect(document.querySelector('[role="dialog"][aria-label="Mes chaînes"]')).toBeNull();
   expect(document.querySelector(".app-shell")?.getAttribute("data-current-tab")).toBe("home");

@@ -35,7 +35,7 @@ export function MemeDeck() {
   const imgflipBooster = useImgflipBooster();
   const { account, status, busy, problem } = booster;
   // Les possessions Imgflip (0062) rejoignent le même classeur : les identifiants
-  // sont disjoints (`imgflip-…`), la fusion ne peut pas écraser une carte Mèmes.
+  // sont disjoints (`imgflip-…`), la fusion ne peut pas écraser une carte MEMES.
   const copies = useMemo(() => {
     const merged = new Map(booster.copies);
     for (const [id, count] of imgflipBooster.copies) merged.set(id, (merged.get(id) ?? 0) + count);
@@ -69,9 +69,9 @@ export function MemeDeck() {
   return <main className="meme-world">
     <header className="meme-world-head"><Link href="/"><ArrowLeft size={18} aria-hidden="true" /> Drop</Link><span>UNIVERS 02</span></header>
     <section className="meme-hero" aria-labelledby="meme-heading">
-      <p className="meme-eyebrow">COLLECTION MÈMES FR</p><h1 id="meme-heading">MÈMES</h1>
+      <p className="meme-eyebrow">COLLECTION MEMES FR</p><h1 id="meme-heading">MEMES</h1>
       <div className="meme-pack-scene"><div className="meme-pack-floor" aria-hidden="true" />
-        <div className="meme-pack-object" aria-hidden="true" /></div>
+        <div className="meme-pack-object" aria-hidden="true"><span className="meme-pack-film" /></div></div>
       <p className="meme-hero-line">5 cartes · 1 Rare ou mieux</p>
       <button ref={openButtonRef} className="meme-open" type="button" disabled={!account || !status || status.stock < 1 || busy}
         onClick={booster.prepare}>{busy ? "OUVERTURE…" : "OUVRIR UN BOOSTER"}</button>
@@ -107,7 +107,7 @@ export function MemeDeck() {
           <span className="meme-slot-name">{card.name}</span>
           <span className="meme-slot-meta">{MEME_RARITY[card.rarity].label}{copies.has(card.id) ? " · ×" + copies.get(card.id) : " · À découvrir"}</span>
         </button>)}</div> : <p className="meme-empty">{filter === "owned" ? "Aucune carte obtenue pour ce filtre." : "Aucune carte trouvée."}</p>}
-      <nav className="meme-pager" aria-label="Pages du classeur Mèmes">
+      <nav className="meme-pager" aria-label="Pages du classeur MEMES">
         <button type="button" onClick={() => setPage((value) => Math.max(0, value - 1))} disabled={currentPage === 0}><ChevronLeft size={18} aria-hidden="true" /> Précédente</button>
         <span>{currentPage + 1} / {pageCount}</span>
         <button type="button" onClick={() => setPage((value) => Math.min(pageCount - 1, value + 1))} disabled={currentPage >= pageCount - 1}>Suivante <ChevronRight size={18} aria-hidden="true" /></button>

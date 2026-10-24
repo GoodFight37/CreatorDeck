@@ -8,5 +8,5 @@ export function MemePackComposition() {
 }
 
 export function MemeCollectionLink() {
-  return <Link className="booster-collection-link" href="/memes">Voir le classeur Mèmes →</Link>;
+  return <Link className="booster-collection-link" href="/memes">Voir le classeur MEMES →</Link>;
 }

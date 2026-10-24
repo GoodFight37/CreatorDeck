@@ -6,7 +6,6 @@ import { CloudApi, CloudError } from "@/lib/cloud/api";
 import type { ImgflipOpening, ImgflipStatus } from "@/lib/cloud/api/imgflip";
 import { cloudConfig } from "@/lib/cloud/config";
 import { cloudStore } from "@/lib/cloud/cloud-store";
-import { IMGFLIP_BY_ID } from "@/lib/imgflip-booster";
 import { deviceStorage } from "@/lib/storage";
 
 const PENDING_PREFIX = "creatordeck.imgflip.pending:";
@@ -26,7 +25,7 @@ const empty = (owner: string | null): State => ({
   owner, status: null, problem: "", notice: "", phase: "closed", result: null,
   extracted: false, left: false, pending: false, focus: null,
 });
-const message = (error: unknown) => error instanceof Error ? error.message : "Les boosters Imgflip ne répondent pas. Réessaie.";
+const message = (error: unknown) => error instanceof Error ? error.message : "Les boosters IMGFLIP ne répondent pas. Réessaie.";
 
 /** La présentation ne tire rien. La même requête est reprise après une réponse perdue. */
 export function useImgflipBooster() {
@@ -111,7 +110,10 @@ export function useImgflipBooster() {
     try {
       const requestId = storage?.getItem(key) ?? crypto.randomUUID();
       storage?.setItem(key, requestId);
-      const result = await api.openImgflipPack(requestId);
+      const [result, { IMGFLIP_BY_ID }] = await Promise.all([
+        api.openImgflipPack(requestId),
+        import("@/lib/imgflip-booster"),
+      ]);
       if (revision.current !== version || cloudStore.getSnapshot().userId !== owner) return;
       if (result.cards.some((id) => !IMGFLIP_BY_ID.has(id))) throw new Error("Une carte du booster manque au catalogue. Recharge la page.");
       // Le résultat du serveur reste utilisable même si la relecture de la collection échoue.
@@ -120,7 +122,7 @@ export function useImgflipBooster() {
       setState((value) => ({ ...value, result,
         status: value.status ? { ...value.status, stock: result.stock, nextAt: result.nextAt } : null,
         phase: value.left ? "closed" : "opening",
-        notice: value.left ? "Booster ouvert : retrouve tes cartes dans le classeur Mèmes." : "",
+        notice: value.left ? "Booster ouvert : retrouve tes cartes dans le classeur MEMES." : "",
       }));
       await refresh();
     } catch (error) {
@@ -148,8 +150,8 @@ export function useImgflipBooster() {
     close: () => setState((value) => ({ ...value, phase: "closed", result: null, extracted: false })),
     leavePending: () => setState((value) => ({ ...value, left: true, phase: "closed",
       notice: value.result
-        ? "Booster ouvert : retrouve tes cartes dans le classeur Mèmes."
-        : "Le tirage continue. Retrouve les cartes dans le classeur Mèmes." })),
+        ? "Booster ouvert : retrouve tes cartes dans le classeur MEMES."
+        : "Le tirage continue. Retrouve les cartes dans le classeur MEMES." })),
   };
 }
 export type ImgflipBooster = ReturnType<typeof useImgflipBooster>;

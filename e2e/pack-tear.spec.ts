@@ -162,6 +162,12 @@ test("the revealed card keeps the extracted card's size and center in a full-scr
 for (const [rarity, seed] of [["common", 123], ["rare", 1080], ["legendary", 9999]] as const) {
   test(`le rituel ${rarity} respecte sa pause d'impact et son verrou`, async ({ page }) => {
     await page.addInitScript((seed) => {
+      // Les communes durent 280 ms : figer au départ, avant le polling Playwright.
+      document.addEventListener("animationstart", (event) => {
+        if (event.target instanceof HTMLElement && event.target.matches(".reveal-flip-face")) {
+          event.target.getAnimations().forEach(animation => animation.pause());
+        }
+      }, true);
       const original = crypto.getRandomValues.bind(crypto);
       Object.defineProperty(crypto, "getRandomValues", { configurable: true, value: (array: ArrayBufferView) => {
         if (array instanceof Uint32Array) { array.fill(seed); return array; }
@@ -567,7 +573,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.mouse.move(reducedBounds.x + reducedBounds.width * .15, reducedBounds.y + reducedBounds.height / 2);
   await page.mouse.down();
   await page.mouse.move(reducedBounds.x + reducedBounds.width * .45, reducedBounds.y + reducedBounds.height / 2);
-  expect(await openingPack.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-tilt-y")))
+  expect(await openingPack.evaluate((node) => (node as HTMLElement).style.transform))
     .toBe("");
   await page.mouse.up();
   expect(await openingPack.evaluate((node) => getComputedStyle(node, "::after").display)).toBe("none");
@@ -602,7 +608,7 @@ test("reduced motion and the card-reflection switch stop the heavy pack and foil
   await page.mouse.move(offBounds.x + offBounds.width * .15, offBounds.y + offBounds.height / 2);
   await page.mouse.down();
   await page.mouse.move(offBounds.x + offBounds.width * .45, offBounds.y + offBounds.height / 2);
-  expect(await offPack.evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-tilt-y")))
+  expect(await offPack.evaluate((node) => (node as HTMLElement).style.transform))
     .toBe("");
   await page.mouse.up();
   expect(await page.locator(".booster-physical-scene").evaluate((node) => getComputedStyle(node, "::after").display))
@@ -646,7 +652,7 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
     parseFloat(getComputedStyle(node).getPropertyValue("stroke-width")),
   )).toBeGreaterThan(0);
   expect(await slit.getAttribute("points")).toContain(",");
-  expect(await dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.getPropertyValue("--opening-light-x"))).not.toBe("");
+  await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => (node as HTMLElement).style.transform)).toContain("perspective(900px)");
   await expect(dialog.locator(".foil-material-sheen")).toHaveCount(0);
   await expect(dialog.locator("canvas")).toHaveCount(0);
   const pull = await dialog.locator(".booster-physical-scene").evaluate(node => Number((node as HTMLElement).style.getPropertyValue("--peel-progress")));
@@ -671,17 +677,19 @@ test("finger cuts the plastic where it passes, top peels, backs rise, then revea
   expect(milliseconds(cascade.duration)).toBeCloseTo(950, 0);
   expect(milliseconds(cascade.duration) + milliseconds(cascade.delay)).toBeLessThanOrEqual(1_200);
 
-  // The shell remains visible after the face; the duplicate backs are hidden.
+  // Plan 002 : la coque quitte la scène quand la première carte arrive.
   await expect(dialog).toHaveAttribute("data-opening-phase", "revealing");
   await expect(dialog.locator(".foil-card-chamber")).toBeHidden();
   await expect(dialog.locator(".foil-back-card")).toHaveCount(5);
-  const packetOpacity = await dialog.evaluate((node) =>
-    [".foil-top-piece", ".foil-body-piece", ".foil-depth-side", ".foil-depth-bottom"]
-      .map((selector) => Number(getComputedStyle(node.querySelector(selector)!).opacity)),
-  );
-  // A visible opened shell must survive the first face; no cut to isolated cards.
-  await expect.poll(() => dialog.locator(".booster-physical-scene").evaluate((node) => Number(getComputedStyle(node).opacity))).toBeGreaterThan(.5);
-  expect(packetOpacity[1]).toBeGreaterThan(.2);
+  const shell = dialog.locator(".booster-physical-scene");
+  const retirement = await shell.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { name: style.animationName, duration: style.animationDuration, delay: style.animationDelay };
+  });
+  expect(retirement.name).toBe("opening-shell-retire");
+  expect(milliseconds(retirement.duration)).toBe(300);
+  expect(milliseconds(retirement.delay)).toBe(120);
+  await expect.poll(() => shell.evaluate((node) => Number(getComputedStyle(node).opacity))).toBe(0);
   await expect(page.getByRole("dialog", { name: "Résultat du booster" })).toBeVisible();
   await page.screenshot({ path: "test-results/booster-" + test.info().project.name + "-opening.png" });
   await expect(page.getByRole("dialog", { name: "Résultat du booster" }))

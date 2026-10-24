@@ -1,5 +1,15 @@
 # Roadmap CreatorDeck
 
+**Optimisation après audits, 24 octobre 2026 :** lots 1 à 6 appliqués sur la
+base `481d27a3` : test de retrait réparé, catalogues et feuilles à la demande,
+boucles de reflets allégées, confort tactile et textes (MEMES confirmé par Malik).
+Scripts initiaux mesurés : 2,87 → 1,14 Mo ; gestes Live et barres système vus
+sur APK/émulateur API 36. Unitaires 1218/1218, écrans 261/261 ; E2E complet
+exécuté et anciennes attentes corrigées, revue d'animations terminée avec
+protection du geste MEMES. Relances cloud MEMES/IMGFLIP 4/4 vertes ; publication
+à effectuer après revue du diff indexé.
+Les arbitrages du point 7 restent à Malik. [Mesures et preuves](optimisation-2026-10-24.md).
+
 **Imgflip serveur, 23 octobre 2026 :** migration 0062 préparée et validée sur
 Postgres jetable (999 cartes, réserve et possessions séparées, taux Live).
 Malik a explicitement autorisé son application en production après sa demande

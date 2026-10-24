@@ -37,14 +37,14 @@ describe("présentation du booster pendant un tirage réseau", () => {
     gameStore.reset(Date.UTC(2026, 9, 8, 12));
     await banc.monter(<CreatorDeckApp />);
     const before = JSON.stringify(gameStore.getSnapshot());
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     expect(openLivePack).not.toHaveBeenCalled();
-    banc.appuyer("← Retour");
+    await banc.appuyerEtAttendre("← Retour");
     expect(document.querySelector(".opening-continuum")).toBeNull();
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     act(() => document.querySelector(".opening-continuum")!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
     expect(document.querySelector(".opening-continuum")).toBeNull();
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     act(() => { expect(runBackHandler()).toBe(true); });
     expect(document.querySelector(".opening-continuum")).toBeNull();
     expect(openLivePack).not.toHaveBeenCalled();
@@ -57,14 +57,14 @@ describe("présentation du booster pendant un tirage réseau", () => {
     gameStore.reset(Date.UTC(2026, 9, 8, 12, 0, 0));
     await banc.monter(<CreatorDeckApp />);
 
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     expect(openLivePack).not.toHaveBeenCalled();
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     expect(openLivePack).toHaveBeenCalledOnce();
     await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
 
     expect(document.querySelector(".booster-premium-loading")).toBeTruthy();
-    banc.appuyer("Retour au jeu pendant l’attente");
+    await banc.appuyerEtAttendre("Retour au jeu pendant l’attente");
     expect(document.querySelector(".opening-continuum")).toBeNull();
     expect(document.querySelector(".reveal-overlay")).toBeNull();
     expect(document.body.textContent).toContain("Le tirage continue");
@@ -79,8 +79,8 @@ describe("présentation du booster pendant un tirage réseau", () => {
     gameStore.reset(Date.UTC(2026, 9, 8, 12, 0, 0));
     await banc.monter(<CreatorDeckApp />);
 
-    banc.appuyer("Ouvrir le booster");
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
 
     let handled = false;

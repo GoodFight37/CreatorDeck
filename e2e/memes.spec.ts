@@ -3,14 +3,14 @@ import { cloudUrl } from "./fixtures";
 import source from "../src/data/memes-fr.json";
 import imgflipSource from "../src/data/imgflip.json";
 
-/** La collection Mèmes compte les deux catalogues affichés (FR + Imgflip). */
+/** La collection MEMES compte les deux catalogues affichés (FR + Imgflip). */
 const COLLECTION_TOTAL = source.length + imgflipSource.length;
 
-test("l'univers Mèmes présente un booster et un classeur séparés sur téléphone", async ({ page }) => {
+test("l'univers MEMES présente un booster et un classeur séparés sur téléphone", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/memes");
-  await expect(page.getByRole("heading", { name: "MÈMES", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "MEMES", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "OUVRIR UN BOOSTER" })).toBeDisabled();
   await expect(page.getByText(`0 / ${COLLECTION_TOTAL}`)).toBeVisible();
   await expect(page.locator(".meme-grid .meme-slot")).toHaveCount(12);
@@ -27,7 +27,7 @@ test("l'univers Mèmes présente un booster et un classeur séparés sur télép
   expect(errors).toEqual([]);
 });
 
-test("la grande carte Mèmes réagit au geste et respecte Reflets désactivés", async ({ page }) => {
+test("la grande carte MEMES réagit au geste et respecte Reflets désactivés", async ({ page }) => {
   await page.goto("/memes");
   await page.getByPlaceholder("Nom ou numéro").fill("Non mais allô, quoi");
   await page.locator(".meme-slot").first().click();
@@ -50,8 +50,8 @@ test("la grande carte Mèmes réagit au geste et respecte Reflets désactivés",
   await expect(page.locator(".meme-inspect .meme-card")).toHaveClass(/is-full-art/);
 });
 
-test("avec le serveur : le booster Mèmes se déchire, retourne cinq cartes et tient son récap", async ({ page }) => {
-  test.skip(!cloudUrl(), "Cloud factice requis pour simuler les RPC Mèmes.");
+test("avec le serveur : le booster MEMES se déchire, retourne cinq cartes et tient son récap", async ({ page }) => {
+  test.skip(!cloudUrl(), "Cloud factice requis pour simuler les RPC MEMES.");
   const ids = [
     ...source.filter((card) => card.rarity === "common" && card.image).slice(0, 3).map((card) => card.id),
     source.find((card) => card.rarity === "epic" && card.image)!.id,

@@ -55,7 +55,7 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     expect(dialog.parentElement).toBe(document.body);
     expect(dialog.textContent).toContain('Gold');
     expect(document.querySelector('.inspect-variants [aria-pressed="true"]')?.textContent).toContain('Gold ×1');
-    banc.appuyer(/^Standard/);
+    await banc.appuyerEtAttendre(/^Standard/);
     expect(dialog.querySelector('.odds-intro')?.textContent).toContain('Standard : 2');
     act(() => dialog.dispatchEvent(new KeyboardEvent('keydown', {key:'Escape', bubbles:true})));
     expect(document.querySelector('[role="dialog"]')).toBeNull();
@@ -83,7 +83,7 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     await settings();
     expect(document.querySelector<HTMLDetailsElement>('.settings-advanced')!.open).toBe(false);
     const labels = [...document.querySelectorAll('[role="switch"]')].map((node) => node.textContent);
-    expect(labels).toContain('Son de l’application'); expect(labels).toContain('Musique');
+    expect(labels).toContain('Sons et vibrations'); expect(labels).toContain('Musique');
     expect(document.querySelector('.profile-build-version')).not.toBeNull();
   });
   it("annonce un conflit de synchronisation et l’erreur réelle sans prétendre sauvegarder", async () => {
@@ -93,7 +93,7 @@ describe("Toi : vitrine, parcours et menus complets", () => {
     banc.vider();
     const { onShowAccount } = await settings();
     expect(document.querySelector('.menu-state')?.textContent).toContain('Synchronisation à vérifier');
-    banc.appuyer(/^Mon compte/); expect(onShowAccount).toHaveBeenCalledOnce();
+    await banc.appuyerEtAttendre(/^Mon compte/); expect(onShowAccount).toHaveBeenCalledOnce();
   });
   it("annonce l’attente de sauvegarde sans masquer la collection existante", async () => {
     mocked.cloud = {...EMPTY_CLOUD_STATE, configured:true, userId:'joueur', saveSyncing:true};

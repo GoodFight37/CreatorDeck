@@ -157,7 +157,7 @@ export function CardInspectModal({
                     {isRetired(creator.slug)
                       ? "Ce Sortant ne tombe plus en booster et ne peut plus être rejoint à l'Atelier."
                       : creator.rarity === "legendary"
-                      ? "Une Légendaire ne s'artisine pas : elle se tire en booster — et le plancher de malchance en garantit une au plus tard au 12ᵉ."
+                      ? "Une Légendaire ne se crée pas à l’Atelier : elle se tire en booster — et le plancher de malchance en garantit une au plus tard au 12ᵉ."
                       : "Elle se tire en booster, ou se rejoint à l'Atelier si sa rareté le permet."}
                   </span>
                 </div>

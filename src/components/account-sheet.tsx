@@ -148,7 +148,7 @@ export function AccountSheet({
                       {cloud.email ? masquerEmail(cloud.email) : "Sans adresse : ce compte vit sur cet appareil"}
                     </span>
                   </div>
-                  <span className="account-badge">compte lié</span>
+                  <span className="account-badge">{cloud.email ? "compte lié" : "compte invité"}</span>
                 </div>
                 <SyncBadge detail />
 

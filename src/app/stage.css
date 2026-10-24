@@ -9,7 +9,6 @@
  * `prefers-reduced-motion` demande le calme.
  */
 
-@property --ring-turn { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 
 .sr-only {
   position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
@@ -104,6 +103,7 @@
 }
 .circle-item:focus-visible { outline: 2px solid var(--accent-soft); outline-offset: 2px; border-radius: 14px; }
 .circle-avatar {
+  position: relative; isolation: isolate;
   display: block; width: 64px; height: 64px; padding: 3px; border-radius: 50%;
   background: conic-gradient(var(--ring), color-mix(in srgb, var(--ring) 35%, transparent), var(--ring));
   box-shadow: 0 6px 18px rgb(0 0 0 / .4);
@@ -117,12 +117,17 @@
 .circle-strip li[data-owned="false"] .circle-avatar { background: none; box-shadow: none; border: 1.5px dashed rgb(255 255 255 / .28); }
 .circle-strip li[data-owned="false"] .circle-avatar img { filter: grayscale(1) brightness(.5); border-color: transparent; }
 .circle-strip li[data-live="true"] .circle-avatar {
-  background: conic-gradient(from var(--ring-turn), #ff4d5e, #ffb07a, #9b6bff, #ff4d5e);
+  background: none;
   box-shadow: 0 0 22px rgb(255 77 94 / .5);
+}
+.circle-strip li[data-live="true"] .circle-avatar::before,
+.circle-live-face::before {
+  content: ""; position: absolute; z-index: -1; inset: 0; border-radius: inherit;
+  background: conic-gradient(#ff4d5e, #ffb07a, #9b6bff, #ff4d5e);
   animation: ring-turn 3.2s linear infinite;
 }
 .circle-strip li[data-live="true"] .circle-avatar img { filter: none; }
-@keyframes ring-turn { to { --ring-turn: 360deg; } }
+@keyframes ring-turn { to { transform: rotate(360deg); } }
 .circle-name { max-width: 72px; overflow: hidden; font: 600 12.5px/1.2 var(--font-body); text-overflow: ellipsis; white-space: nowrap; }
 .circle-item small { color: var(--muted); font-size: 12px; line-height: 1.2; }
 .circle-live-tag {
@@ -158,9 +163,8 @@
 .circle-live-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .circle-live-list > li { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .circle-live-face {
+  position: relative; isolation: isolate;
   flex: none; width: 48px; height: 48px; padding: 2px; border-radius: 50%;
-  background: conic-gradient(from var(--ring-turn), #ff4d5e, #ffb07a, #9b6bff, #ff4d5e);
-  animation: ring-turn 3.2s linear infinite;
 }
 .circle-live-face img { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 2px solid var(--bg); }
 .circle-live-copy { display: grid; flex: 1; min-width: 0; gap: 1px; }
@@ -185,7 +189,9 @@
 .circle-live-hourglass span { flex: 1; }
 .circle-live-hourglass strong { color: var(--paper); }
 .circle-live-hourglass:disabled { opacity: .6; }
-@media (prefers-reduced-motion: reduce) { .circle-live-face { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .circle-live-face::before, .circle-strip li[data-live="true"] .circle-avatar::before { animation: none; }
+}
 
 /* Étape 3 : modifier le cercle depuis sa rangée. */
 .circle-strip-head p { margin-left: auto; }
@@ -401,6 +407,7 @@
   animation: none;
 }
 .home-view .drop-circle-faces .circle-avatar img { width: 100%; height: 100%; border: 0; border-radius: 50%; object-fit: cover; }
+.home-view .drop-circle-faces .circle-avatar::before { display: none; }
 .home-view .drop-circle-faces li[data-owned="false"] .circle-avatar { border-style: solid; box-shadow: 0 0 0 1px rgb(255 255 255 / .18), 0 8px 18px rgb(0 0 0 / .6); }
 .home-view .drop-circle-faces li[data-owned="false"] .circle-avatar img { filter: grayscale(.85) brightness(.62); }
 .home-view .drop-circle-faces li[data-live="true"] { position: relative; z-index: 2; }
@@ -678,7 +685,6 @@
 .settings-advanced { margin-top: 8px; }
 .settings-advanced > summary { display: flex; align-items: center; min-height: 44px; margin: 12px 0 0; cursor: pointer; }
 .settings-advanced small { display: block; margin: 4px 0 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
-.menu-count { display: grid; place-items: center; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: var(--paper); color: var(--ink); font-size: 12px; }
 
 /* ------------------------------------------------- l'Atelier dans le Binder */
 .binder-modes { display: flex; gap: 4px; margin: 0 0 14px; padding: 4px; border-radius: 999px; background: rgb(255 255 255 / .06); }

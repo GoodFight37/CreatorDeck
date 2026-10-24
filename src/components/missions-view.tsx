@@ -37,37 +37,37 @@ const MILESTONE_LOOK: Record<string, { icon: React.ReactNode; label: string; det
   first: {
     icon: <Layers3 size={19} />,
     label: "Premier drop",
-    detail: () => "Ouvrir un booster",
+    detail: () => "Ouvre un booster",
   },
   ten: {
     icon: <BookOpen size={19} />,
     label: "Début du classeur",
-    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+    detail: (target) => `Découvre ${target} streameurs du ${CATALOG_LABEL}`,
   },
   twentyfive: {
     icon: <Layers3 size={19} />,
     label: "Le classeur prend forme",
-    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+    detail: (target) => `Découvre ${target} streameurs du ${CATALOG_LABEL}`,
   },
   fifty: {
     icon: <Gem size={19} />,
     label: "Chasseur de cartes",
-    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+    detail: (target) => `Découvre ${target} streameurs du ${CATALOG_LABEL}`,
   },
   hundred: {
     icon: <Target size={19} />,
     label: "Cent visages",
-    detail: (target) => `Découvrir ${target} streameurs du ${CATALOG_LABEL}`,
+    detail: (target) => `Découvre ${target} streameurs du ${CATALOG_LABEL}`,
   },
   legendary: {
     icon: <Sparkles size={19} />,
     label: "Premier Légendaire",
-    detail: () => "Sortir une carte Légendaire d'un booster",
+    detail: () => "Sors une carte Légendaire d'un booster",
   },
   master: {
     icon: <Trophy size={19} />,
     label: "Maître du Twitch Game",
-    detail: () => `Compléter les ${CATALOG_SIZE} ${CATALOG_AUDIENCE}`,
+    detail: () => `Complète les ${CATALOG_SIZE} ${CATALOG_AUDIENCE}`,
   },
 };
 

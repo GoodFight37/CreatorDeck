@@ -1,3 +1,22 @@
+## Révélation MEMES : doigt secondaire et sortie de carte — corrigé localement, 24 octobre 2026
+
+Base `481d27a3`, gravité P2 (geste). La revue du point 8 montre que le geste
+retenait seulement des coordonnées, sans identifiant de pointeur ni capture.
+Après un appui principal, le relâchement d'un second doigt pouvait donc avancer
+la carte ou effacer le geste principal ; sortir de la carte perdait le relâchement.
+Correction : capture du premier pointeur, événements des autres doigts ignorés,
+annulation à la perte de capture. Test de régression sur ces trois parcours ;
+validation Android et résultats exacts dans le rapport du chantier.
+
+## Test de déchirure : attente contraire au plan 002 — corrigé localement, 24 octobre 2026
+
+Base `481d27a3`, gravité P2 pour la validation. Le scénario bureau « finger cuts »
+échoue réellement : opacité reçue 0, attendue > .5 après la première carte.
+Cause : le test exigeait la coque visible malgré son retrait décidé dans le plan 002.
+Le scénario vérifie désormais le retrait de 300 ms, le délai de 120 ms,
+l'opacité finale nulle et la révélation toujours présente. Aucun seuil augmenté,
+aucun changement de l'animation. Résultat après correction dans la passation.
+
 ## Révélation : filtres animés Épique/Légendaire — correction du 23 octobre 2026
 
 Les keyframes `card-reveal-epic` / `card-reveal-legendary` de `globals.css`

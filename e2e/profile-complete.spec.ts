@@ -58,7 +58,7 @@ test("Toi : réglages existants accessibles", async ({ page }) => {
   await page.getByRole("button", { name: /^Ton profil/ }).click();
   await page.getByRole("button", { name: /^Réglages/ }).click();
   await expect(page.getByRole("switch", { name: "Musique", exact: true })).toBeVisible();
-  await expect(page.getByRole("switch", { name: "Son de l’application", exact: true })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Sons et vibrations", exact: true })).toBeVisible();
   await page.locator(".settings-advanced > summary").click();
   await expect(page.locator(".profile-build-version")).toBeVisible();
   await page.getByRole("switch", { name: "Reflets des cartes" }).click();

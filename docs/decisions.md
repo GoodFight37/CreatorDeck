@@ -1,3 +1,23 @@
+## D-164 — 24 octobre 2026 : alléger l'accueil et les mouvements, préserver les arbitrages produit
+
+Malik demande les lots 1 à 6 de la passation du 24 octobre dans l'ordre, puis une
+revue des animations (8), avec mesures et essais Android. Le découpage des feuilles,
+refusé sur une ancienne mesure de 85 Ko, est explicitement rouvert pour cette version :
+catalogues chargés à l'ouverture (gain mesuré 1 503 309 octets), puis dix-huit
+composants conditionnels à la demande (233 982 octets supplémentaires).
+Préchargement de la scène au geste de préparation ; validation serveur, reprises
+idempotentes et restauration du focus préservées. Les données restent dans l'APK.
+
+Les boucles d'anneau et de reflet déplacent un calque, sans recalculer le dégradé.
+Le rabat suit directement le geste ; sa géométrie découpée reste dessinée à chaque
+image utile. Les durées du rituel, raretés et règles ne changent pas. Commandes
+visées à 44 px, dvh, défilement contenu et icônes système claires sur fond sombre.
+Malik confirme explicitement pendant la session l'harmonisation globale « Mèmes → MEMES ».
+
+Les décisions du point 7 (architecture des Réglages, autres noms, Bonus Direct,
+CDN et textes au sens incertain) restent ouvertes. Ni refonte générale ni service
+de surveillance ajouté. [Protocole, mesures et limites](optimisation-2026-10-24.md).
+
 ## D-163 — 23 octobre 2026 : la bascule de booster ne se lit plus à travers elle-même
 
 Retour de Malik sur l'APK : « une sorte de coupure en plein milieu du booster numéro 2 », et une bascule qui n'est pas fluide. Reproduit à l'écran (Chromium 393×851 @2x/3x, RPC Supabase interceptées) et photographié image par image en gelant les transitions : pendant la bascule, le sachet sortant restait au-dessus (`z-index: 2` conservé par une transition différée de 200 ms) et s'effaçait de 1 à .5, pendant que le sachet entrant, lui, montait de .5 à 1. Les deux étaient donc translucides en même temps : le sortant se lisait à travers l'entrant — une couture verticale sur toute la hauteur du sachet. Les voisins à ±80 %, reculés de 190 px et tournés de 44°, sont conformes à D-156 : c'est le carrousel 3D voulu, pas un défaut. Le défaut est uniquement la **double transparence pendant le trajet**. Décision : (1) le paquet choisi est opaque et devant **dès la première image** — ni `opacity` ni `z-index` dans sa liste de transition, seul `transform` s'anime sur 460 ms ; (2) le sortant descend d'un cran immédiatement (`z-index` retiré des transitions, plus de délai de 200 ms) ; (3) `filter` retiré des listes de transition — aucun état ne le fait varier aujourd'hui (la règle 3D le fixe à `none` sur tous les emplacements), et l'y laisser exposerait à une re-rastérisation complète du sachet si un style voisin le réintroduisait. Le fil principal n'était pas en cause (0 ms de tâche mesurée pendant la bascule, CDP `Performance.getMetrics`) : le coût était entièrement au rendu. Le CSS d'origine laissait déjà une règle correcte (`[data-active="true"]`, `stage.css:360`), dominée par la règle 3D à trois classes ; les règles sont désormais explicites plutôt que dépendantes de l'ordre des feuilles. Test de non-régression ajouté (`e2e/booster-selector.spec.ts`), vérifié rouge sur l'ancien CSS (opacité .5 au lieu de 1) et vert après. **Non vérifié** : le téléphone de Malik — la fluidité ressentie reste à confirmer sur son Redmi Note 12 Pro ; aucune mesure de fps fiable n'est possible dans le bac à sable (headless sans compositeur).

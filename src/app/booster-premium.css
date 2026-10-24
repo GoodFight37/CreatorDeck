@@ -20,7 +20,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(9px, 2.3vh, 18px);
+  gap: clamp(9px, 2.3dvh, 18px);
   overflow: hidden;
   padding: max(16px, env(safe-area-inset-top)) 12px max(16px, env(safe-area-inset-bottom));
   background:
@@ -46,14 +46,14 @@
 }
 .booster-premium-stage::before {
   width: min(900px, 180vw);
-  height: min(900px, 115vh);
+  height: min(900px, 115dvh);
   transform: translate(-50%, -50%);
   background: radial-gradient(circle, transparent 33%, rgba(255, 172, 168, .055) 34%, transparent 34.3%,
     transparent 52%, rgba(226, 133, 176, .07) 52.3%, transparent 52.7%);
 }
 .booster-premium-stage::after {
   width: min(580px, 120vw);
-  height: min(540px, 83vh);
+  height: min(540px, 83dvh);
   transform: translate(-50%, -50%) rotate(-20deg);
   border: 1px solid rgba(237, 140, 174, .065);
   box-shadow: 0 0 85px rgba(212, 76, 132, .08);
@@ -63,7 +63,7 @@
   left: 50%;
   top: 49%;
   width: min(800px, 135vw);
-  height: min(760px, 94vh);
+  height: min(760px, 94dvh);
   transform: translate(-50%, -50%);
   z-index: -1;
   pointer-events: none;
@@ -109,7 +109,7 @@
 .booster-cinematic .booster-physical-scene {
   position: relative;
   isolation: isolate;
-  width: min(85vw, 386px, 48vh);
+  width: min(85vw, 386px, 48dvh);
   aspect-ratio: .71;
   flex: 0 0 auto;
   touch-action: none;
@@ -303,7 +303,7 @@
 }
 @media (max-height: 660px) {
   .booster-cinematic .booster-premium-stage { gap: 5px; }
-  .booster-cinematic .booster-physical-scene { width: min(70vw, 310px, 48vh); }
+  .booster-cinematic .booster-physical-scene { width: min(70vw, 310px, 48dvh); }
   .booster-premium-actions { min-height: 56px; gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -326,7 +326,7 @@
 .booster-cinematic::before { display: none; }
 @media (min-width: 900px) and (min-height: 700px) {
   .booster-cinematic .booster-physical-scene {
-    width: min(88vw, 460px, 51vh);
+    width: min(88vw, 460px, 51dvh);
   }
 }
 
@@ -376,7 +376,7 @@
 .booster-cinematic .booster-physical-scene {
   position: relative;
   isolation: isolate;
-  width: min(79vw, 356px, 47vh);
+  width: min(79vw, 356px, 47dvh);
   aspect-ratio: 600 / 880;
   overflow: visible;
   filter: drop-shadow(15px 26px 23px rgba(0,0,0,.63));
@@ -422,7 +422,7 @@
   background: linear-gradient(108deg, transparent 35%, rgba(255,242,220,.08) 42%,
     rgba(255,235,213,.48) 49%, rgba(255,205,225,.08) 54%, transparent 62%);
   background-size: 230% 100%;
-  background-position: var(--opening-light-x, 50%) 50%;
+  background-position: 50% 50%;
   mix-blend-mode: screen;
 }
 .booster-cinematic .booster-tear-track {

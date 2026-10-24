@@ -25,12 +25,9 @@
 /* Grande carte : le cartouche couvre ce qu'il y a dessous. Les mèmes portent
    souvent leur légende incrustée dans l'image (« Nous dormissons ») ; un voile
    plus sombre ne suffit pas — blanc sur bandeau noir, il garde son contraste.
-   Le flou noie le texte de l'image, le fond opaque rétablit le contraste du
-   nom. Le dégradé laisse l'image respirer en haut du cartouche. */
+   Le fond opaque masque le texte sans filtrer l'arrière-plan de la carte animée. */
 .meme-reveal-front .meme-card .card-nameplate {
-  background: linear-gradient(180deg, rgb(10 9 14 / .55) 0%, rgb(10 9 14 / .93) 38%, rgb(9 8 13 / .985) 100%);
-  -webkit-backdrop-filter: blur(10px) saturate(.92);
-  backdrop-filter: blur(10px) saturate(.92);
+  background: linear-gradient(180deg, #0a090e, #09080d);
 }
 .meme-reveal-front .meme-card .card-nameplate h3 {
   overflow: visible;

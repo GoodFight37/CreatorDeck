@@ -28,7 +28,7 @@ function Harness() {
       data-prepared={b.prepared} data-busy={b.busy}>{b.problem}{b.notice}</output>
   </div>;
 }
-describe("préparation et tirage Mèmes partagés", () => {
+describe("préparation et tirage MEMES partagés", () => {
   let banc: Banc;
   beforeEach(() => {
     banc = creerBanc(); banc.preparer(); identity.userId = "compte-a"; vi.clearAllMocks();

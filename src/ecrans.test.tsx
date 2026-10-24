@@ -55,12 +55,12 @@ describe("les écrans", () => {
     expect(document.querySelector(".top-actions [aria-label$=' points']")).not.toBeNull();
     expect(document.querySelector(".level-badge")?.textContent).toContain("Niv.");
 
-    banc.appuyer("Binder");
+    await banc.appuyerEtAttendre("Binder");
     const binder = banc.ecran("02-binder");
     expect(binder).toContain("binder-tools");
     expect(binder).toContain("Ta collection commence avec le prochain booster.");
 
-    banc.appuyer("Atelier");
+    await banc.appuyerEtAttendre("Atelier");
     banc.ecran("03-craft");
     expect(document.querySelector(".view.atelier-view h1")?.textContent).toBe("Atelier");
 
@@ -72,7 +72,7 @@ describe("les écrans", () => {
       [...document.querySelectorAll(".bottom-nav .nav-object-label")].map((n) => n.textContent),
     ).toEqual(["Binder", "Drop", "Objectifs"]);
 
-    banc.appuyerNom(/^Ton profil/);
+    await banc.appuyerNomEtAttendre(/^Ton profil/);
     // L'écran Toi ne nomme plus l'infrastructure : on y entre par « Mon compte ».
     const profile = banc.ecran("04-toi");
     expect(profile).toContain("Ta vitrine");
@@ -83,8 +83,8 @@ describe("les écrans", () => {
 
   it("ouvre les feuilles : le compte, les objectifs, les taux", async () => {
     await application();
-    banc.appuyerNom(/^Réglages/);
-    banc.appuyer(/^Mon compte/);
+    await banc.appuyerNomEtAttendre(/^Réglages/);
+    await banc.appuyerEtAttendre(/^Mon compte/);
     // Sans rien en ligne, la feuille le dit au lieu de proposer une connexion —
     // et elle le dit en français de jeu, pas en vocabulaire d'atelier.
     const feuille = banc.ecran("05-compte");
@@ -99,10 +99,10 @@ describe("les écrans", () => {
     }
     act(() => document.querySelector<HTMLButtonElement>('[aria-label="Mon compte"] button[aria-label="Fermer"]')!.click());
     banc.fermer();
-    banc.appuyer("Objectifs");
+    await banc.appuyerEtAttendre("Objectifs");
     expect(banc.ecran("06-objectifs")).toContain("Progression");
 
-    banc.appuyerNom(/^Réglages/);
+    await banc.appuyerNomEtAttendre(/^Réglages/);
     expect(document.querySelector(".settings-overlay")?.textContent ?? "").not.toContain("Taux officiels");
     banc.fermer();
   });
@@ -121,7 +121,7 @@ describe("les écrans", () => {
     // 0058 : aucun nom exigé, le premier booster s'ouvre tout de suite.
     expect((document.querySelector(".circle-actions .welcome-primary") as HTMLButtonElement).disabled).toBe(false);
     expect(document.querySelector('[aria-label="Mes chaînes"]')!.textContent).not.toMatch(/encore \d+ pour|Compléter avec/);
-    banc.appuyer("Voir mon premier booster");
+    await banc.appuyerEtAttendre("Voir mon premier booster");
     expect(document.body.textContent).not.toContain("Un cadeau t’attend");
     expect(window.localStorage.getItem("creatordeck-tutorial:local")).toBe("done");
     expect(window.localStorage.getItem("creatordeck-tutorial:completed:local")).toBe("done");
@@ -130,14 +130,14 @@ describe("les écrans", () => {
 
   it("tire un booster et montre la révélation", async () => {
     await application();
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     // Le tirage passe par des temporisations (silence, déchirure) : l'horloge
     // figée doit avancer à la main, sinon l'écran de révélation n'arrive jamais.
     await act(async () => {
       await vi.advanceTimersByTimeAsync(4_000);
     });
     expect(document.querySelector(".booster-interactive"), "le booster attend le geste du joueur").toBeTruthy();
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     await act(async () => {
       // Sans animationend dans jsdom, le filet termine l’extraction ; la scène reste montée.
       await vi.advanceTimersByTimeAsync(2_100);
@@ -150,7 +150,7 @@ describe("les écrans", () => {
 
   it("déchire le paquet avant de montrer la première carte", async () => {
     await application();
-    banc.appuyer("Ouvrir le booster");
+    await banc.appuyerEtAttendre("Ouvrir le booster");
     // Le tirage local observe un suspense de 650 ms : à 700 ms, les cartes sont
     // tirées et le paquet est en train de s'ouvrir à l'écran.
     await act(async () => {
@@ -170,7 +170,7 @@ describe("les écrans", () => {
     expect(document.querySelector(".pack-tear"), "le booster ne doit pas s'ouvrir tout seul").toBeTruthy();
     expect(document.querySelector(".reveal-overlay")).toBeNull();
 
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     await act(async () => {
       // Sans animationend dans jsdom, le filet termine l’extraction ; la scène reste montée.
       await vi.advanceTimersByTimeAsync(2_100);
@@ -189,7 +189,7 @@ describe("les écrans", () => {
     const completed = vi.fn();
     await banc.monter(<PackTear onComplete={completed} />);
     const scene = document.querySelector(".opening-continuum")!;
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     expect(completed).not.toHaveBeenCalled();
     const chamber = scene.querySelector(".foil-card-chamber")!;
     act(() => { chamber.querySelector(".foil-back-card")!.dispatchEvent(new Event("animationend", { bubbles: true })); });
@@ -210,7 +210,7 @@ describe("les écrans", () => {
     const completed = vi.fn();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     await banc.monter(<PackTear onComplete={completed} onTear={() => { throw new Error("audio indisponible"); }} />);
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     expect(completed).not.toHaveBeenCalled();
     await act(async () => { await vi.advanceTimersByTimeAsync(1_200); });
     expect(completed).toHaveBeenCalledOnce();
@@ -222,7 +222,7 @@ describe("les écrans", () => {
     const { PackTear } = await import("@/components/pack-tear");
     const completed = vi.fn();
     await banc.monter(<PackTear onComplete={completed} />);
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     act(() => { document.querySelector(".foil-card-chamber")!.dispatchEvent(new Event("animationcancel")); });
     expect(completed).toHaveBeenCalledOnce();
   });
@@ -231,9 +231,9 @@ describe("les écrans", () => {
     const { PackTear } = await import("@/components/pack-tear");
     const leave = vi.fn();
     await banc.monter(<PackTear onComplete={() => {}} onLeavePending={leave} />);
-    banc.appuyer("Ouvrir sans déchirer");
+    await banc.appuyerEtAttendre("Ouvrir sans déchirer");
     await act(async () => { await vi.advanceTimersByTimeAsync(2_200); });
-    banc.appuyer("Retour au jeu pendant l’attente");
+    await banc.appuyerEtAttendre("Retour au jeu pendant l’attente");
     expect(leave).toHaveBeenCalledOnce();
   });
 

@@ -7,6 +7,9 @@ const config: CapacitorConfig = {
   // pour régénérer `out/` puis le copier dans android/app/src/main/assets/public.
   webDir: "out",
   plugins: {
+    SystemBars: {
+      style: "DARK",
+    },
     // Client HTTP natif : indispensable au cloud dans l'APK.
     //
     // Le WebView sert l'app depuis `https://localhost` et envoie donc

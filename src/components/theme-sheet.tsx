@@ -34,9 +34,8 @@ export function ThemeSheet({
 
         <p className="odds-intro">
           Chaque famille complétée (son emblème récupéré) débloque sa teinte, et toutes les
-          compléter débloque le <strong>Grand chelem</strong>. Un thème repeint le fond, les
-          panneaux, les textes et les accents de l&apos;application : aucun téléchargement, tout
-          est calculé.
+          compléter débloque le <strong>Grand chelem</strong>. Un thème change les accents
+          de ton classeur.
         </p>
 
         <div className="theme-grid">

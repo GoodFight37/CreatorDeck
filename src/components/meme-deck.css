@@ -30,11 +30,12 @@
 }
 .meme-pack-object::before { content: ""; position: absolute; left: -10px; top: 8px; bottom: 7px; width: 9px;
   transform: skewY(4deg); background: linear-gradient(90deg, #411127, #d5869e, #5b203b); }
-.meme-pack-object::after { content: ""; position: absolute; inset: 1.5%; pointer-events: none;
-  background: linear-gradient(110deg, transparent 27%, rgb(255 255 255 / .2) 43%, transparent 56%) -120% 0 / 220% 100% no-repeat;
+.meme-pack-film { position: absolute; inset: 1.5%; overflow: hidden; pointer-events: none; }
+.meme-pack-film::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 27%, rgb(255 255 255 / .2) 43%, transparent 56%);
   animation: meme-pack-shine 5.5s ease-in-out infinite; }
 @keyframes meme-pack-idle { 0%, 100% { transform: translateY(2px) rotateY(-7deg) rotateX(3deg); } 50% { transform: translateY(-3px) rotateY(-4deg) rotateX(2deg); } }
-@keyframes meme-pack-shine { 0%, 23% { background-position: 110% 0; } 65%, 100% { background-position: -110% 0; } }
+@keyframes meme-pack-shine { 0%, 23% { transform: translateX(-120%); } 65%, 100% { transform: translateX(120%); } }
 .meme-hero-line { margin: 0 0 18px; color: #e8cfd3; font: 700 13px var(--font-display); letter-spacing: .1em; }
 .meme-open { display: block; width: min(100%, 420px); min-height: 55px; margin: 0 auto; border: 0; border-radius: 12px;
   background: linear-gradient(125deg, #f54762, #c92952); color: white; box-shadow: 0 8px 0 #671d39, 0 18px 32px rgb(0 0 0 / .3);
@@ -124,9 +125,9 @@
 .meme-inspect-copy small { color: #c6aeb9; }
 @media (min-width: 700px) { .meme-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) {
-  .meme-pack-object, .meme-pack-object::after { animation: none; }
+  .meme-pack-object, .meme-pack-film::after { animation: none; }
   .meme-open { transition: none; }
 }
-[data-card-fx="off"] .meme-pack-object, [data-card-fx="off"] .meme-pack-object::after { animation: none; }
+[data-card-fx="off"] .meme-pack-object, [data-card-fx="off"] .meme-pack-film::after { animation: none; }
 [data-card-fx="off"] .meme-card-foil { display: none; }
 @media (prefers-reduced-motion: reduce) { .meme-card-foil { display: none; } }

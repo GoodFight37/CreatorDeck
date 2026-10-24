@@ -5,7 +5,7 @@ import imgflipSource from "../src/data/imgflip.json";
 
 const imgflipIds = imgflipSource.filter((card) => card.image).slice(0, 5).map((card) => card.id);
 
-/** La collection Mèmes compte les deux catalogues affichés (FR + Imgflip). */
+/** La collection MEMES compte les deux catalogues affichés (FR + Imgflip). */
 const MEME_COLLECTION_TOTAL = source.length + imgflipSource.length;
 
 async function fakeAccount(page: Page) {
@@ -148,7 +148,7 @@ test("avec le serveur : Retour et Échap quittent la préparation Live sans requ
   await expect(page.locator(".open-panel .stock-row")).toContainText(/^4 /);
 });
 
-test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste ouvre cinq cartes et retrouve sa réserve", async ({ page }) => {
+test("avec le serveur : MEMES se prépare sans consommation, puis un seul geste ouvre cinq cartes et retrouve sa réserve", async ({ page }) => {
   test.skip(!cloudUrl(), "Ce scénario vérifie les RPC factices.");
   const calls = await fakeAccount(page);
   const errors: string[] = [];
@@ -183,7 +183,7 @@ test("avec le serveur : Mèmes se prépare sans consommation, puis un seul geste
   await expect(page.locator(".meme-booster-reserve")).toContainText("3 MEMES");
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
-  await page.getByRole("link", { name: "Voir le classeur Mèmes" }).click();
+  await page.getByRole("link", { name: "Voir le classeur MEMES" }).click();
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);
 });
@@ -197,6 +197,17 @@ for (const label of ["MEMES", "IMGFLIP"]) {
     await page.getByRole("button", { name: label, exact: true }).click();
     await page.getByRole("button", { name: `Ouvrir le booster ${label}`, exact: true }).click();
     const scene = page.locator(".opening-continuum");
+    // Capturer le dos dès son insertion : une capture PNG peut dépasser ses 148 ms.
+    const revealedBack = scene.evaluate((node) => new Promise<{ width: number; surface: string; emblem: boolean }>((resolve) => {
+      const observer = new MutationObserver(() => {
+        const el = node.querySelector<HTMLElement>(".meme-reveal-back");
+        if (!el) return;
+        observer.disconnect();
+        resolve({ width: el.offsetWidth, surface: getComputedStyle(el).backgroundImage,
+          emblem: Boolean(el.querySelector(".foil-back-emblem svg")) });
+      });
+      observer.observe(node, { childList: true, subtree: true });
+    }));
     await scene.getByRole("button", { name: "Ouvrir sans déchirer" }).click();
     const back = (selector: string) => scene.locator(selector).first().evaluate((el) => ({
       // Largeur de mise en page : les animations appliquent des scale qui fausseraient le rectangle affiché.
@@ -204,11 +215,7 @@ for (const label of ["MEMES", "IMGFLIP"]) {
     }));
     const pouch = await back(".foil-back-card");
     await page.screenshot({ path: `test-results/dos-${label}-sortie-${test.info().project.name}.png` });
-    // Le dos ne dure qu'un instant avant le retournement : mesure dès qu'il apparaît, en un seul passage.
-    const reveal = await (await page.waitForFunction(() => {
-      const el = document.querySelector<HTMLElement>(".opening-continuum .meme-reveal-back");
-      return el && { width: el.offsetWidth, surface: getComputedStyle(el).backgroundImage, emblem: !!el.querySelector(".foil-back-emblem svg") };
-    })).jsonValue();
+    const reveal = await revealedBack;
     await page.screenshot({ path: `test-results/dos-${label}-revelation-${test.info().project.name}.png` });
     expect(reveal!.emblem).toBe(true);
     expect(reveal!.surface).toBe(pouch.surface);
@@ -252,7 +259,7 @@ test("avec le serveur : Imgflip se prépare sans consommation, puis un seul gest
   expect(calls.filter((name) => name === "open_imgflip_pack")).toHaveLength(1);
   expect(calls.filter((name) => name === "open_meme_pack")).toHaveLength(0);
   expect(calls.filter((name) => name === "open_pack")).toHaveLength(0);
-  // Les cinq cartes tirées sont des possessions persistantes du classeur Mèmes.
+  // Les cinq cartes tirées sont des possessions persistantes du classeur MEMES.
   await page.goto("/memes");
   await expect(page.locator(".meme-collection-head strong")).toHaveText(`5 / ${MEME_COLLECTION_TOTAL}`);
   expect(errors).toEqual([]);

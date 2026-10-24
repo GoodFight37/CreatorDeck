@@ -102,9 +102,7 @@
   top: var(--scene-pack-center);
   left: 50%;
   width: var(--scene-pack-width);
-  transform: translate(-50%, -50%) perspective(900px)
-    rotateX(calc(var(--opening-tilt-x, 0deg) + 1.5deg))
-    rotateY(calc(var(--opening-tilt-y, 0deg) - 4deg));
+  transform: translate(-50%, -50%) perspective(900px) rotateX(1.5deg) rotateY(-4deg);
   transition: transform 140ms ease-out;
   perspective: 900px;
   transform-style: preserve-3d;
@@ -272,7 +270,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(18px, 4vh, 34px);
+  gap: clamp(18px, 4dvh, 34px);
   width: min(100%, 560px);
   margin: auto;
   padding: 20px 18px;
@@ -306,7 +304,7 @@ html:has(.booster-presentation) { overflow: hidden; }
   top: var(--scene-center);
   left: 50%;
   width: min(580px, 120vw);
-  height: min(540px, 83vh);
+  height: min(540px, 83dvh);
   border: 1px solid rgba(237,140,174,.065);
   border-radius: 50%;
   box-shadow: 0 0 85px rgba(212,76,132,.08);
@@ -315,7 +313,7 @@ html:has(.booster-presentation) { overflow: hidden; }
 }
 .reveal-game .reveal-perfect-grid {
   width: min(94%, 1120px);
-  margin: 12vh auto 0;
+  margin: 12dvh auto 0;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: clamp(8px, 2vw, 24px);
 }
@@ -365,7 +363,7 @@ html:has(.booster-presentation) { overflow: hidden; }
 .booster-presentation .reveal-dos::before { content: ""; position: absolute; inset: 11%; border: 1px solid rgba(255,227,193,.28); border-radius: 3%; }
 .booster-presentation .reveal-back-sigil { width: 62%; }
 @media (max-width: 600px) {
-  .reveal-game .reveal-perfect-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12vh; gap: 12px; }
+  .reveal-game .reveal-perfect-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12dvh; gap: 12px; }
   .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(4) { grid-column: 1; margin-left: 50%; }
   .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(5) { grid-column: 2; margin-left: 50%; }
 }
@@ -914,7 +912,7 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 }
 .pack-end-face {
   display: block;
-  width: min(78vw, 340px, 46vh);
+  width: min(78vw, 340px, 46dvh);
   aspect-ratio: 1;
   overflow: hidden;
   border-radius: 18px;

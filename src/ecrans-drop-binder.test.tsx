@@ -136,7 +136,7 @@ describe("les sabliers du Drop en ligne", () => {
     await drop({ needsAccount: true });
     const details = document.querySelector<HTMLDetailsElement>(".drop-secondary-details")!;
     expect(details.open).toBe(false);
-    expect(details.querySelector("summary")?.textContent).toBe("More info");
+    expect(details.querySelector("summary")?.textContent).toBe("Réserve et sabliers");
     expect(details.querySelector(".hourglass-action")).not.toBeNull();
     act(() => details.querySelector("summary")!.click());
     expect(details.open).toBe(true);
@@ -150,7 +150,7 @@ describe("les sabliers du Drop en ligne", () => {
     act(() => details.querySelector("summary")!.click());
     expect(details.open).toBe(true);
     expect(button.textContent).toContain("2");
-    expect(button.textContent).toContain("5/4");
+    expect(button.textContent).toContain("ajouter un sachet bonus");
     act(() => button.click());
     expect(onUseHourglass).toHaveBeenCalledOnce();
     expect(document.body.textContent).not.toContain("Sablier indisponible en ligne");

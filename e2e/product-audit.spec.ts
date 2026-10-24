@@ -30,7 +30,7 @@ test("Drop garde le sachet visible et le CTA accessible sur mobile compact, Trib
 test("sons, musique et reflets actifs par défaut, OFF conservé au rechargement", async ({ page }) => {
   await gotoDeck(page);
   await page.getByRole("button", { name: /^Réglages/ }).click();
-  const sound = page.getByRole("switch", { name: "Son de l’application", exact: true });
+  const sound = page.getByRole("switch", { name: "Sons et vibrations", exact: true });
   const music = page.getByRole("switch", { name: "Musique", exact: true });
   const fx = page.getByRole("switch", { name: "Reflets des cartes", exact: true });
   await expect(sound).toHaveAttribute("aria-checked", "true");

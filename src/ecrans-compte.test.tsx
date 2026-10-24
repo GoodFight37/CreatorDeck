@@ -33,6 +33,15 @@ describe("la feuille de compte (cloud configuré)", () => {
   afterEach(() => {
     banc.nettoyer();
     vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it.each([null, "compte@example.invalid"])("identifie correctement le compte avec adresse %s", async (email) => {
+    const { cloudStore } = await import("@/lib/cloud/cloud-store");
+    vi.spyOn(cloudStore, "getSnapshot").mockReturnValue({ ...cloudStore.getSnapshot(), configured: true, userId: "compte-test", email });
+    const { AccountSheet } = await import("@/components/account-sheet");
+    await banc.monter(<AccountSheet onClose={() => {}} />);
+    expect(document.querySelector(".account-badge")?.textContent).toBe(email ? "compte lié" : "compte invité");
   });
 
   it("montre la connexion, sans la tuyauterie", async () => {

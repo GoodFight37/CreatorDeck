@@ -10,6 +10,18 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-24-chargement-allege", date: "2026-10-24", title: "Un accueil plus léger",
+    summary: "Un chargement allégé, des commandes plus faciles à toucher et des textes plus clairs.",
+    sections: [{ title: "Chargement", items: [
+      "Le Drop charge les catalogues MEMES et IMGFLIP et les feuilles quand tu en as besoin.",
+      "Les reflets du sachet et les anneaux de direct gardent leur mouvement avec moins de travail de dessin.",
+      "Les petits boutons sont plus faciles à toucher et les fenêtres gardent leur propre défilement.",
+      "La barre système Android garde des icônes claires sur fond sombre.",
+      "Les textes te tutoient, le sablier décrit son sachet bonus et le nom MEMES est harmonisé.",
+      "Le geste de révélation MEMES garde le premier doigt, même si tu touches l’écran avec un second.",
+    ] }],
+  },
+  {
     id: "2026-10-24-bascule-boosters", date: "2026-10-24", title: "Passer d'un booster à l'autre sans accroc",
     summary: "Sur Android, changer de booster sur le Drop ne fige plus l'écran et ne coupe plus le sachet en deux.",
     sections: [

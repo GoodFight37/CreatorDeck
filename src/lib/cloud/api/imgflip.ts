@@ -17,14 +17,14 @@ export type ImgflipOpening = {
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new CloudError("Réponse des cartes Imgflip illisible. Réessaie.", "invalid_response", 0);
+    throw new CloudError("Réponse des cartes IMGFLIP illisible. Réessaie.", "invalid_response", 0);
   }
   return value as Record<string, unknown>;
 }
 
 function stock(value: unknown): number {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > 4) {
-    throw new CloudError("Réserve Imgflip illisible. Réessaie.", "invalid_response", 0);
+    throw new CloudError("Réserve IMGFLIP illisible. Réessaie.", "invalid_response", 0);
   }
   return value;
 }
@@ -36,12 +36,12 @@ function nextAt(value: unknown): string | null {
 export async function imgflipStatus(core: CloudCore): Promise<ImgflipStatus> {
   const response = record(await core.rpc("imgflip_status", {}));
   if (!Array.isArray(response.owned) || typeof response.openings !== "number") {
-    throw new CloudError("Collection Imgflip illisible. Réessaie.", "invalid_response", 0);
+    throw new CloudError("Collection IMGFLIP illisible. Réessaie.", "invalid_response", 0);
   }
   const owned = response.owned.map((item) => {
     const entry = record(item);
     if (typeof entry.id !== "string" || !Number.isInteger(entry.copies) || Number(entry.copies) < 1) {
-      throw new CloudError("Collection Imgflip illisible. Réessaie.", "invalid_response", 0);
+      throw new CloudError("Collection IMGFLIP illisible. Réessaie.", "invalid_response", 0);
     }
     return { id: entry.id, copies: Number(entry.copies) };
   });
@@ -53,7 +53,7 @@ export async function openImgflipPack(core: CloudCore, requestId: string): Promi
   if (!Array.isArray(response.cards) || response.cards.length !== 5
     || !response.cards.every((id) => typeof id === "string")
     || new Set(response.cards).size !== 5) {
-    throw new CloudError("Le booster Imgflip est incomplet. Recharge la collection.", "invalid_response", 0);
+    throw new CloudError("Le booster IMGFLIP est incomplet. Recharge la collection.", "invalid_response", 0);
   }
   return {
     cards: response.cards as string[],

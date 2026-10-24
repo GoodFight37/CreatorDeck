@@ -180,7 +180,7 @@ describe("le Tribunal des Bannis", () => {
 
     /** Rend un verdict, laisse la réaction s'afficher, puis passe au suivant. */
     async function juger(verdict: "deban" | "ban") {
-      banc.appuyer(verdict === "deban" ? "Accorder la grâce" : "Maintenir le ban");
+      await banc.appuyerEtAttendre(verdict === "deban" ? "Accorder la grâce" : "Maintenir le ban");
       await act(async () => {
         await Promise.resolve();
       });
@@ -356,7 +356,7 @@ describe("le Tribunal des Bannis", () => {
     // main » (sans enchaîner sur « Dossier suivant ») pour regarder l'écran au
     // moment exact où l'appui aurait dû mourir.
     etat.seance = { day: "", verdicts: {}, claimed: false };
-    banc.appuyer("Accorder la grâce");
+    await banc.appuyerEtAttendre("Accorder la grâce");
     await act(async () => {
       await Promise.resolve();
     });
@@ -369,7 +369,7 @@ describe("le Tribunal des Bannis", () => {
   it("passe automatiquement au dossier suivant après la réaction", async () => {
     const { presider } = await ouvrir();
     presider();
-    banc.appuyer("Accorder la grâce");
+    await banc.appuyerEtAttendre("Accorder la grâce");
     expect(document.querySelector(".tribunal-reaction")).toBeTruthy();
     await act(async () => { await vi.advanceTimersByTimeAsync(600); });
     expect(document.querySelector(".tribunal-reaction")).toBeNull();
@@ -380,10 +380,10 @@ describe("le Tribunal des Bannis", () => {
     const { CreatorDeckApp } = await import("@/components/creator-deck-app");
     await banc.monter(<CreatorDeckApp />);
     expect(document.querySelector(".home-view")!.textContent).not.toContain("Tribunal");
-    banc.appuyer("Objectifs");
+    await banc.appuyerEtAttendre("Objectifs");
     const details = [...document.querySelectorAll("details")].find((d) => d.querySelector("summary")?.textContent === "Autres activités")!;
     expect(details.open).toBe(false);
-    banc.appuyer("Tribunal des Bannis");
+    await banc.appuyerEtAttendre("Tribunal des Bannis");
 
     // Le classeur est vide sur une partie neuve : le Tribunal siège quand même.
     expect(document.querySelector(".tribunal-overlay")).toBeTruthy();
@@ -394,7 +394,7 @@ describe("le Tribunal des Bannis", () => {
     // dossiers de la journée vide de la sauvegarde, le moteur rangeait le verdict
     // dans celle du jour, et l'appui mourait sans rien dire. Ce test monte
     // l'application entière (donc le vrai moteur), lui seul a des dents.
-    banc.appuyer("Accorder la grâce");
+    await banc.appuyerEtAttendre("Accorder la grâce");
     await act(async () => {
       await Promise.resolve();
     });
