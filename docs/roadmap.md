@@ -5,7 +5,9 @@ encombré (`CreatorDeck-Codex-ohb`) : portraits dégagés, noms non répétés, 
 halos allégés, cinq cartes adaptées à la fenêtre. Implémenté et validé sur
 APK/émulateur (4 parcours natifs) et navigateur (4 E2E finaux), trois modes,
 petits écrans et paysage ; suite complète exécutée, attente du nouveau test
-corrigée après un échec puis scénarios concernés relancés verts. Publication à vérifier.
+corrigée après un échec puis scénarios concernés relancés verts. Publié dans
+`3937b84c` / `75ad0c8c`, Production Vercel `75ad0c8c` prête et SHA vérifié.
+CI encore en cours au relevé ; nouvelle APK automatique en attente de la CI verte.
 Critères : cinq cartes entières entre titre et bouton, mentions utiles conservées,
 direct accessible et rangement fonctionnel. Pas encore validé sur téléphone réel.
 

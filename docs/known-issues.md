@@ -1,6 +1,10 @@
-## Booster parfait : récapitulatif encombré — corrigé et validé localement, 24 octobre 2026
+## Booster parfait : récapitulatif encombré — corrigé et publié, 24 octobre 2026
 
 **Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), correction validée.**
+Publié dans [`3937b84c`](https://github.com/GoodFight37/CreatorDeck/commit/3937b84cfce6662f01da2f4051bc9c1345ec3a1a),
+preuves finales [`75ad0c8c`](https://github.com/GoodFight37/CreatorDeck/commit/75ad0c8c832fe1adb590d6cf7a5e6bca497a5050).
+Production Vercel du SHA `75ad0c8c` prête et vérifiée ; CI en cours et nouvelle
+APK en attente au relevé. Détails et liens dans le premier checkpoint.
 Malik signale qu'après un booster parfait (« God Pack » dans son message),
 les cartes sont difficiles à voir à cause de l'accumulation d'informations.
 Sa capture Android montre le récapitulatif 5/5 : quatre Épiques et une Légendaire.

@@ -5,8 +5,17 @@ Malik demande de corriger le dernier problème commité, avec Ponytail. Lot
 identique à `origin/main` après fetch ; aucune PR ouverte, CI précédente verte.
 Le checkout `CreatorDeck-Codex` conserve son ancien chantier et n'est pas modifié.
 
-**Code commité localement, pas encore publié :**
+**Publié et vérifié sur GitHub :** code fonctionnel
 [`3937b84c`](https://github.com/GoodFight37/CreatorDeck/commit/3937b84cfce6662f01da2f4051bc9c1345ec3a1a).
+Validation et captures finales publiées dans
+[`75ad0c8c`](https://github.com/GoodFight37/CreatorDeck/commit/75ad0c8c832fe1adb590d6cf7a5e6bca497a5050),
+SHA `origin/main` vérifié après push normal. Vercel Production de ce même SHA
+**READY** : [déploiement](https://creator-deckk-o07par3pj-hafsi37-2386.vercel.app),
+`dpl_6zzjvwDAdjhfNfH2nKnXNUJNmHq7`, métadonnée Git vérifiée le 24 octobre.
+[CI Vérification](https://github.com/GoodFight37/CreatorDeck/actions/runs/40114707546)
+de `75ad0c8c` **en cours** au relevé. APK automatique en attente de cette CI
+(`apk.yml` démarre après Vérification verte) ; aucune nouvelle release APK
+n'est encore annoncée publiée. Suivi Beads `CreatorDeck-Codex-ohb` fermé.
 Problème reproduit sur APK debug sans
 cloud, émulateur Android API 36, 412 × 842 CSS : cinq encarts de spectateurs
 recouvrent les portraits, cinq noms répétés. Directs simulés par cache local,
@@ -55,8 +64,9 @@ Le code fonctionnel audité est `3937b84c` ; le commit suivant ne change que le
 test d'attente, les captures et la documentation. Les 29 scénarios ignorés ne
 sont pas annoncés réussis. Pas de SQL modifié, aucune suite SQL relancée.
 
-**Suite précise :** publier normalement les commits locaux sur `main`, puis
-vérifier SHA distant, CI, Vercel et état de l'APK publiée. Aucun essai sur téléphone
+**Suite précise :** laisser la CI liée ci-dessus terminer sans surveillance,
+puis l'APK automatique ; en cas d'échec, reprendre le job et son SHA avant tout
+nouveau changement. Aucun essai sur téléphone
 physique ; les directs du test étaient simulés, aucun compte réel testé.
 Modifications préexistantes à préserver : Gradle généré, quatre PNG `pack-tear`,
 bloc Kyara non commité dans cette passation et fichiers non suivis.
