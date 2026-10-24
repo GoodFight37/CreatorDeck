@@ -1,6 +1,6 @@
-## Booster parfait : récapitulatif encombré — ouvert, 24 octobre 2026
+## Booster parfait : récapitulatif encombré — correction locale, 24 octobre 2026
 
-**Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), à reprendre.**
+**Suivi : `CreatorDeck-Codex-ohb`, P2 (lisibilité mobile), validation en cours.**
 Malik signale qu'après un booster parfait (« God Pack » dans son message),
 les cartes sont difficiles à voir à cause de l'accumulation d'informations.
 Sa capture Android montre le récapitulatif 5/5 : quatre Épiques et une Légendaire.
@@ -15,15 +15,29 @@ La demande est de redonner la priorité visuelle aux cinq cartes et aux portrait
 Reprise : reproduire ce récapitulatif de manière contrôlée en local sur
 APK/émulateur, étudier la réduction des bandeaux et informations redondantes,
 puis vérifier petits écrans, mouvements réduits et captures avant/après.
-Ce sont des pistes, aucune solution graphique n'est arrêtée. Cause technique
-non diagnostiquée, aucun contournement validé et aucune correction effectuée.
-Malik demande d'abord de conserver ce signalement pour une reprise ultérieure.
+Le signalement a d'abord été conservé seul ; Malik demande ensuite sa correction.
+Reproduit par l'agent sur APK debug sans cloud/émulateur API 36 (412 × 842 CSS),
+avec directs simulés par cache local. Cause vérifiée : mode complet de CreatorCard
+dans les petites cartes (bloc spectateurs sur le portrait), noms doublés dans la
+légende et grille espacée par marges indépendantes de la hauteur disponible.
+Correction D-165 : mode compact existant, titre court, suppression des seuls noms
+répétés et halos de fond, grille adaptée à la hauteur. Rareté, Nouvelle, cercle,
+lien Twitch, série et minuterie restent accessibles. Tests d'écran ciblés 33/33 ;
+quatre parcours Android réussis et captures inspectées. Un défaut supplémentaire
+de peinture des légendes avec Reflets coupés est corrigé par un plan explicite
+sur la légende ; retest de l'APK finale et E2E complète en cours. Aucun contournement
+nécessaire une fois la correction livrée ; téléphone physique non testé.
 
 Points d'entrée repérés pour la reprise : `src/components/reveal-overlay.tsx`
 (récapitulatif et bandeau), `src/components/pack-end-live.tsx` (prochain sachet),
 `src/app/globals.css` (section Booster Perfect). Ce repérage n'établit pas la cause.
 
 ![Capture fournie par Malik : récapitulatif encombré du booster parfait](images/bugs/2026-10-24-booster-parfait-recap.jpg)
+
+Captures de reproduction sur APK/émulateur (directs simulés, pas un téléphone
+physique) : [avant](images/bugs/2026-10-24-booster-parfait-avant-emulateur.png),
+[après](images/bugs/2026-10-24-booster-parfait-apres-emulateur.png),
+[petit écran](images/bugs/2026-10-24-booster-parfait-petit-emulateur.png).
 
 ## Révélation MEMES : doigt secondaire et sortie de carte — publié, 24 octobre 2026
 

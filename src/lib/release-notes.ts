@@ -10,6 +10,15 @@ export type ReleaseNote = {
 /** Plus récente en premier. Un identifiant publié ne change jamais. */
 export const RELEASE_NOTES: readonly ReleaseNote[] = [
   {
+    id: "2026-10-24-booster-parfait-lisible", date: "2026-10-24", title: "Les cinq cartes du booster parfait au premier plan",
+    summary: "Un récapitulatif plus léger pour profiter des portraits de ton booster parfait.",
+    sections: [{ title: "Lisibilité", items: [
+      "Les noms restent sur les cartes, avec la rareté et les mentions Nouvelle et de tes chaînes juste dessous.",
+      "Le direct garde son lien discret, sans recouvrir le portrait avec le nombre de spectateurs.",
+      "Le titre et les lumières s'effacent pour laisser de la place aux cinq cartes, même sur petit écran.",
+    ] }],
+  },
+  {
     id: "2026-10-24-chargement-allege", date: "2026-10-24", title: "Un accueil plus léger",
     summary: "Un chargement allégé, des commandes plus faciles à toucher et des textes plus clairs.",
     sections: [{ title: "Chargement", items: [

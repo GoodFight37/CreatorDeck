@@ -1,5 +1,12 @@
 # Roadmap CreatorDeck
 
+**Booster parfait, 24 octobre 2026 — D-165 :** correction locale du récapitulatif
+encombré (`CreatorDeck-Codex-ohb`) : portraits dégagés, noms non répétés, titre et
+halos allégés, cinq cartes adaptées à la fenêtre. Dépend de la validation visuelle
+APK/émulateur, petits écrans et mouvements réduits, puis E2E complète et publication.
+Critères : cinq cartes entières entre titre et bouton, mentions utiles conservées,
+direct accessible et rangement fonctionnel. Pas encore validé sur téléphone réel.
+
 **Optimisation après audits, 24 octobre 2026 :** lots 1 à 6 appliqués sur la
 base `481d27a3` : test de retrait réparé, catalogues et feuilles à la demande,
 boucles de reflets allégées, confort tactile et textes (MEMES confirmé par Malik).

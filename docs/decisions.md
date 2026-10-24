@@ -1,3 +1,22 @@
+## D-165 — 24 octobre 2026 : laisser les portraits du booster parfait lisibles
+
+Malik demande de corriger le récapitulatif signalé dans `CreatorDeck-Codex-ohb`.
+Reproduction sur APK/émulateur API 36, avec tirage local déterministe et directs
+simulés : le long bandeau, les noms répétés et les cinq blocs de spectateurs
+concurrencent les portraits. Réutiliser le mode compact de `CreatorCard` dans
+la grille du jeu : nom imprimé une seule fois, lien de direct conservé en point,
+sans compteur de spectateurs sur le portrait. La rareté, Nouvelle et les mentions
+du cercle restent sous la carte. Le titre devient « Booster parfait » ; les halos
+de fond disparaissent, les cadres de rareté et le retournement restent.
+La grille garde cinq cartes, trois puis deux centrées sur téléphone, et adapte
+leur taille à la hauteur disponible ; heure de recharge et gain de série restent
+près de l'action de rangement. Aucune nouvelle vue ni dépendance ; pas de refonte
+des cartes du classeur, du tirage, du son ou de la sortie vers Twitch.
+L'inspection de la capture Android avec Reflets coupés montre les légendes
+masquées par le contexte 3D ; un plan de peinture explicite sur la légende les
+rétablit (essai CSS injecté avant intégration, puis retest de l'APK requis).
+Tests et état de publication : premier checkpoint de `agent-handoff.md`.
+
 ## D-164 — 24 octobre 2026 : alléger l'accueil et les mouvements, préserver les arbitrages produit
 
 Malik demande les lots 1 à 6 de la passation du 24 octobre dans l'ordre, puis une

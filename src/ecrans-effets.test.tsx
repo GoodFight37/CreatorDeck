@@ -200,6 +200,8 @@ describe("les effets de révélation", () => {
     expect(document.querySelector(".reveal-fifth-card"), "le Perfect ne reçoit pas le temps de pose séquentiel").toBeNull();
     expect(document.querySelectorAll(".streak-gain")).toHaveLength(0);
     expect(document.querySelectorAll(".perfect-card-caption")).toHaveLength(5);
+    expect(document.querySelectorAll(".perfect-card-caption strong")).toHaveLength(0);
+    expect(document.querySelectorAll(".reveal-perfect-grid .creator-card.is-compact")).toHaveLength(5);
     expect(document.querySelector(".perfect-card-new .perfect-card-caption")?.textContent).toContain("Nouvelle");
 
     const bouton = () => document.querySelector<HTMLButtonElement>(".reveal-next")!;

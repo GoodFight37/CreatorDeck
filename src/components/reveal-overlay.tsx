@@ -291,8 +291,8 @@ export function RevealOverlay({
           <Sparkles size={13} />
           <span>
             {kind === "scene"
-              ? "Scène pleine : cinq Épiques de ta famille !"
-              : "Booster Perfect : toutes les cartes sont Épique ou mieux !"}
+              ? "Scène pleine"
+              : "Booster parfait"}
           </span>
         </div>
       ) : null}
@@ -346,6 +346,7 @@ export function RevealOverlay({
                   <CreatorCard
                     creator={dotCard}
                     variant={item.variant}
+                    compact={!overlay}
                     className={`reveal-card rarity-${item.rarity}`}
                     liveStream={liveFor(live, dotCard.login, now)}
                   />
@@ -354,7 +355,6 @@ export function RevealOverlay({
                   </span>
                 </div>
                 <div className="perfect-card-caption">
-                  <strong>{dotCard.displayName}</strong>
                   <span>{RARITY_META[item.rarity].label}{item.isNew ? " · Nouvelle" : ""}</span>
                   {circleLabel(circle, item.creatorSlug) ? <small>{circleLabel(circle, item.creatorSlug)}</small> : null}
                 </div>

@@ -311,11 +311,18 @@ html:has(.booster-presentation) { overflow: hidden; }
   transform: translate(-50%, -50%) rotate(-20deg);
   pointer-events: none;
 }
+.reveal-game.reveal-perfect { --scene-height: 100dvh; }
+.reveal-game.reveal-perfect .reveal-next { font-size: clamp(16px, 4.8vw, 22px); }
 .reveal-game .reveal-perfect-grid {
-  width: min(94%, 1120px);
-  margin: 12dvh auto 0;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(8px, 2vw, 24px);
+  --perfect-card-width: min(17vw, calc((100dvh - 280px) * .715), 190px);
+  position: absolute;
+  inset: calc(112px + env(safe-area-inset-top)) 0 calc(148px + env(safe-area-inset-bottom));
+  width: fit-content;
+  height: fit-content;
+  margin: auto;
+  padding: 0;
+  grid-template-columns: repeat(5, var(--perfect-card-width));
+  gap: 12px;
 }
 .reveal-game .reveal-perfect-grid .reveal-card { container-type: inline-size; }
 .reveal-game .reveal-perfect-grid .card-region {
@@ -325,32 +332,25 @@ html:has(.booster-presentation) { overflow: hidden; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.reveal-game .reveal-perfect-grid .card-nameplate h3 { font-size: clamp(12px, 14cqw, 28px); }
 .reveal-game .reveal-perfect-grid .card-footerline { font-size: clamp(7px, 5cqw, 11px); }
 .reveal-game .reveal-perfect-grid .card-rank { font-size: clamp(9px, 6cqw, 12px); }
 .reveal-perfect-grid .perfect-card-caption {
+  position: relative;
+  z-index: 3;
   display: grid;
   gap: 2px;
-  margin-top: 8px;
+  margin-top: 6px;
   text-align: center;
   line-height: 1.2;
-}
-.reveal-perfect-grid .perfect-card-caption strong {
-  display: -webkit-box;
-  overflow: hidden;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  color: #fff3e3;
-  font-size: clamp(12px, 2.6vw, 15px);
 }
 .reveal-perfect-grid .perfect-card-caption span {
   color: #eacfa7;
   font-size: 12px;
 }
 .reveal-perfect-grid .perfect-card-new .perfect-card-caption span { color: #fff0a5; }
-.reveal-game .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 74px auto 0; }
+.reveal-overlay.reveal-game.reveal-perfect .perfect-banner { top: auto; right: auto; left: auto; width: fit-content; max-width: 90%; margin: 68px auto 0; padding: 5px 10px; background: none; border: 0; box-shadow: none; }
+.reveal-game.reveal-perfect .reveal-cinematic-field,
+.reveal-game .reveal-rare-aura-perfect { display: none; }
 .reveal-game.reveal-perfect .reveal-header { position: absolute; top: 0; left: 50%; transform: translateX(-50%); }
 .booster-presentation .reveal-dos {
   border: 2px solid rgba(255,224,187,.76);
@@ -363,14 +363,15 @@ html:has(.booster-presentation) { overflow: hidden; }
 .booster-presentation .reveal-dos::before { content: ""; position: absolute; inset: 11%; border: 1px solid rgba(255,227,193,.28); border-radius: 3%; }
 .booster-presentation .reveal-back-sigil { width: 62%; }
 @media (max-width: 600px) {
-  .reveal-game .reveal-perfect-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 12dvh; gap: 12px; }
+  .reveal-game .reveal-perfect-grid {
+    --perfect-card-width: min(calc((100vw - 64px) / 3), calc((100dvh - 360px) * .715 / 2), 160px);
+    grid-template-columns: repeat(3, var(--perfect-card-width));
+  }
   .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(4) { grid-column: 1; margin-left: 50%; }
   .reveal-game .reveal-perfect-grid > .reveal-flip:nth-of-type(5) { grid-column: 2; margin-left: 50%; }
 }
 @media (max-height: 650px) {
   .reveal-game .reveal-name p { font-size: 12px; }
-  .reveal-game .reveal-perfect-grid { margin-top: 20px; max-width: 650px; }
-  .reveal-game .reveal-perfect-grid .reveal-card { width: min(100%, 103px); margin: 0 auto; max-height: none; }
   .reveal-swipe-prompt { top: calc(var(--scene-center) + var(--scene-card-height) / 2 + 36px); font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -904,7 +905,14 @@ body:has(.pack-tear[aria-modal="true"]) .home-view * { animation-play-state: pau
 .reveal-game .reveal-name .reveal-next-pack { font-size: 13px; letter-spacing: .02em; text-transform: none; }
 /* Sous la carte, le sachet fantôme passe derrière : texte clair et cerclé d'ombre pour rester net. */
 .reveal-game .reveal-name :is(small, .reveal-next-pack) { color: var(--text); text-shadow: 0 1px 8px #000, 0 0 3px #000; }
-.reveal-game .reveal-perfect-grid + .reveal-next-pack { position: relative; z-index: 3; margin-top: 18px; }
+.reveal-game .reveal-perfect-grid + .reveal-next-pack {
+  position: absolute;
+  z-index: 3;
+  bottom: calc(124px + env(safe-area-inset-bottom));
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+}
 .reveal-game.reveal-summary-open .pack-end-live {
   align-items: center;
   gap: 10px;

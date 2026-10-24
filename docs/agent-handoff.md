@@ -1,3 +1,48 @@
+# Checkpoint Codex — récapitulatif du booster parfait (24 octobre 2026)
+
+Malik demande de corriger le dernier problème commité, avec Ponytail. Lot
+`CreatorDeck-Codex-ohb` repris sur `main` `2b30420865711577f9d6b3c301dd4b698d2da302`,
+identique à `origin/main` après fetch ; aucune PR ouverte, CI précédente verte.
+Le checkout `CreatorDeck-Codex` conserve son ancien chantier et n'est pas modifié.
+
+**Checkpoint local, pas encore publié :** problème reproduit sur APK debug sans
+cloud, émulateur Android API 36, 412 × 842 CSS : cinq encarts de spectateurs
+recouvrent les portraits, cinq noms répétés. Directs simulés par cache local,
+tirage déterministe ; aucune modification de compte ou base distante.
+Correction dans `reveal-overlay.tsx` et `booster-continuity.css` : cartes compactes
+existantes, titre court, noms uniquement sur la carte, rareté/Nouvelle/cercle
+conservés dessous, grille dimensionnée à la fenêtre, halos de fond retirés.
+Pas de changement aux tirages, sons, verrou de 2,6 s ou à la fin vers Twitch.
+
+**Vérifié sur le diff de travail :** tests d'écran ciblés
+`src/ecrans-effets.test.tsx` **33/33**, nouveautés **8/8**, `npm run typecheck`,
+ESLint des quatre fichiers TS/TSX touchés et `node scripts/check-jargon.mjs` verts.
+APK avant/après compilées (`npm run android:debug`, variables publiques vides
+explicitement pour cet essai local). Premier Gradle refusé faute de SDK :
+`android/local.properties` local et ignoré ajouté. Un build lancé avec le serveur
+dev a échoué sur ses types générés ; relance séquentielle réussie.
+E2E ajouté dans `e2e/perfect-recap.spec.ts`, rouge avant correction sur les cinq
+noms répétés. Relance navigateur **2/2** verte (quatre fenêtres, deux modes de
+mouvement). APK/émulateur : quatre parcours réussis, appuis Android natifs,
+normal/réduit/Reflets coupés à 412 × 842 et petit écran 336 × 568, sans erreur JS.
+L'inspection des captures a ensuite révélé les légendes masquées en mode Reflets
+coupés ; un plan de peinture explicite (`position: relative; z-index: 3`) les
+rétablit, confirmé par injection CSS sur l'APK. Intégré au CSS, retest de l'APK
+compilée encore requis ; les E2E Perfect incluent maintenant ce troisième mode.
+Le lint global a parcouru les bundles/rapports générés locaux et échoué sur ces
+artefacts ; le contrôle ciblé des sources est vert. Aucun contrôle applicatif
+désactivé. Pour le diff CSS historiquement stocké en CRLF :
+`git -c core.whitespace=cr-at-eol diff --check`.
+Preuves/scripts locaux : `reports/recap-parfait-2026-10-24/`.
+
+**Suite précise :** laisser terminer la suite E2E complète déjà lancée
+(`reports/recap-parfait-2026-10-24/e2e.log`), reconstruire l'APK puis retester le
+dernier correctif de peinture, relancer les quatre E2E Perfect sur le CSS final.
+Actualiser le statut du défaut, committer seulement ce lot et publier
+normalement sur `main`, vérifier SHA distant, CI, Vercel et APK publiée.
+Modifications préexistantes à préserver : Gradle généré, quatre PNG `pack-tear`,
+bloc Kyara non commité dans cette passation et fichiers non suivis.
+
 # Checkpoint Codex — optimisation après audits (24 octobre 2026)
 
 **Nouveau signalement à reprendre (24 octobre) :** Malik trouve le récapitulatif
@@ -5,7 +50,7 @@ du booster parfait (« God Pack ») trop chargé : bandeaux et informations rép
 empêchent de bien voir les cartes. Suivi ouvert **`CreatorDeck-Codex-ohb`, P2**.
 [Constat et capture conservée](known-issues.md), image dans
 `docs/images/bugs/2026-10-24-booster-parfait-recap.jpg`.
-Demande actuelle : noter pour plus tard ; aucune correction ni solution graphique
+Demande initiale, remplacée par le chantier ci-dessus : noter pour plus tard ; aucune correction ni solution graphique
 arrêtée. Reproduire sur APK/émulateur avant de modifier la hiérarchie du récapitulatif.
 
 Reprise sur `main` `481d27a3`, SHA distant vérifié, dix skills installés.
